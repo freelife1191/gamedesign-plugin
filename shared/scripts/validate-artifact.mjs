@@ -9,6 +9,8 @@ const REQUIRED_DIRECTORIES = ['assets', 'decisions'];
 const FORMATS = ['md', 'pdf', 'docx', 'pptx'];
 const FORMAT_STATUSES = ['pending', 'passed', 'failed', 'unavailable'];
 const CONFIDENCE_LEVELS = ['low', 'medium', 'high'];
+const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const UNSAFE_MAPPING_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
 
 class YamlSyntaxError extends Error {
   constructor(message, line) {
@@ -18,29 +20,44 @@ class YamlSyntaxError extends Error {
 }
 
 function rejectUnsupportedYaml(source) {
-  let quote = null;
-  let escaped = false;
-  let syntaxOnly = '';
-  for (let index = 0; index < source.length; index += 1) {
-    const character = source[index];
-    if (quote === '"') {
-      syntaxOnly += character === '\n' ? '\n' : ' ';
-      if (escaped) escaped = false;
-      else if (character === '\\') escaped = true;
-      else if (character === '"') quote = null;
-    } else if (quote === "'") {
-      syntaxOnly += character === '\n' ? '\n' : ' ';
-      if (character === "'" && source[index + 1] === "'") {
-        syntaxOnly += ' ';
-        index += 1;
-      } else if (character === "'") quote = null;
-    } else if (character === '"' || character === "'") {
-      quote = character;
-      syntaxOnly += ' ';
-    } else {
-      syntaxOnly += character;
+  function maskQuotedText(line) {
+    let quote = null;
+    let escaped = false;
+    let masked = '';
+    for (let index = 0; index < line.length; index += 1) {
+      const character = line[index];
+      if (quote === '"') {
+        masked += ' ';
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === '"') quote = null;
+      } else if (quote === "'") {
+        masked += ' ';
+        if (character === "'" && line[index + 1] === "'") {
+          masked += ' ';
+          index += 1;
+        } else if (character === "'") quote = null;
+      } else if (character === '"' || character === "'") {
+        quote = character;
+        masked += ' ';
+      } else {
+        masked += character;
+      }
     }
+    return masked;
   }
+
+  let literalParentIndent = null;
+  const syntaxOnly = source.split('\n').map((line) => {
+    const indent = line.match(/^ */)[0].length;
+    if (literalParentIndent !== null) {
+      if (line.trim() === '' || indent > literalParentIndent) return ' '.repeat(line.length);
+      literalParentIndent = null;
+    }
+    const masked = maskQuotedText(line);
+    if (/:\s*\|\s*$/.test(masked)) literalParentIndent = indent;
+    return masked;
+  }).join('\n');
   const checks = [
     [/^\s*---\s*$/m, 'document separators'],
     [/^\s*\.\.\.\s*$/m, 'document terminators'],
@@ -52,6 +69,7 @@ function rejectUnsupportedYaml(source) {
     [/^\s*\?/m, 'complex mapping keys'],
     [/(^|:\s*)[\[{]/m, 'flow collections'],
     [/:\s*>[-+]?\s*$/m, 'folded block scalars'],
+    [/:\s*\|(?:[+-]|[1-9])[^\s#]*\s*$/m, 'block scalar indicators'],
   ];
   if (source.includes('\t')) throw new YamlSyntaxError('unsupported YAML tabs', 1);
   for (const [pattern, feature] of checks) {
@@ -80,7 +98,19 @@ function parseScalar(value, line) {
     if (!value.endsWith("'") || value.length === 1) {
       throw new YamlSyntaxError('invalid single-quoted scalar', line);
     }
-    return value.slice(1, -1).replace(/''/g, "'");
+    const interior = value.slice(1, -1);
+    let parsed = '';
+    for (let index = 0; index < interior.length; index += 1) {
+      if (interior[index] !== "'") {
+        parsed += interior[index];
+      } else if (interior[index + 1] === "'") {
+        parsed += "'";
+        index += 1;
+      } else {
+        throw new YamlSyntaxError('invalid single-quoted scalar; internal quotes must be doubled', line);
+      }
+    }
+    return parsed;
   }
   if (/[:]\s|\s#/.test(value)) {
     throw new YamlSyntaxError('plain scalars cannot contain colon-space or inline comments', line);
@@ -91,6 +121,7 @@ function parseScalar(value, line) {
 function splitMappingEntry(content, line) {
   const match = /^([A-Za-z_][A-Za-z0-9_-]*):(?:\s+(.*))?$/.exec(content);
   if (!match) throw new YamlSyntaxError('expected a simple mapping key followed by a colon', line);
+  if (UNSAFE_MAPPING_KEYS.has(match[1])) throw new YamlSyntaxError(`unsafe mapping key ${match[1]}`, line);
   return { key: match[1], rawValue: match[2] ?? '' };
 }
 
@@ -152,7 +183,7 @@ export function parseRestrictedYaml(source, sourceName = 'YAML') {
   }
 
   function parseMapping(indent, initialEntry) {
-    const result = {};
+    const result = Object.create(null);
     if (initialEntry) {
       assignEntry(result, initialEntry.key, initialEntry.rawValue, indent, initialEntry.line);
     }
@@ -224,12 +255,51 @@ function addError(errors, code, file, message) {
   errors.push({ code, file, message });
 }
 
+function hasOwn(object, field) {
+  return object !== null && typeof object === 'object' && Object.hasOwn(object, field);
+}
+
 function requireString(object, field, file, errors, context = '') {
-  if (typeof object?.[field] !== 'string' || object[field].trim() === '') {
+  if (!hasOwn(object, field) || typeof object[field] !== 'string' || object[field].trim() === '') {
     addError(errors, 'schema.required', file, `${context}${field} must be a nonempty string`);
     return false;
   }
   return true;
+}
+
+function rejectUnknownKeys(object, allowedKeys, file, errors, context = '') {
+  if (!object || typeof object !== 'object' || Array.isArray(object)) return;
+  for (const key of Object.keys(object)) {
+    if (!allowedKeys.includes(key)) addError(errors, 'schema.additional_property', file, `${context}unknown key: ${key}`);
+  }
+}
+
+function requireKebabCase(object, field, file, errors, context = '') {
+  if (requireString(object, field, file, errors, context) && !KEBAB_CASE.test(object[field])) {
+    addError(errors, 'schema.pattern', file, `${context}${field} must be kebab-case`);
+  }
+}
+
+function validateUri(value) {
+  if (typeof value !== 'string' || !/^[A-Za-z][A-Za-z0-9+.-]*:/.test(value)) return false;
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function validateCalendarDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1) return false;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day <= days[month - 1];
 }
 
 function validateEvidence(evidence, errors) {
@@ -238,6 +308,7 @@ function validateEvidence(evidence, errors) {
     addError(errors, 'evidence.schema', file, 'evidence must be a mapping');
     return;
   }
+  rejectUnknownKeys(evidence, ['version', 'claims'], file, errors);
   if (evidence.version !== 1) addError(errors, 'evidence.version', file, 'version must be 1');
   if (!Array.isArray(evidence.claims) || evidence.claims.length === 0) {
     addError(errors, 'evidence.claims', file, 'claims must be a nonempty list');
@@ -245,17 +316,24 @@ function validateEvidence(evidence, errors) {
   }
   evidence.claims.forEach((claim, index) => {
     const context = `claims[${index}].`;
-    requireString(claim, 'id', file, errors, context);
+    rejectUnknownKeys(claim, ['id', 'claim_type', 'claim', 'source', 'confidence', 'limitations'], file, errors, context);
+    requireKebabCase(claim, 'id', file, errors, context);
     requireString(claim, 'claim_type', file, errors, context);
     requireString(claim, 'claim', file, errors, context);
     if (!claim?.source || typeof claim.source !== 'object' || Array.isArray(claim.source)) {
       addError(errors, 'evidence.source', file, `${context}source must be a mapping`);
     } else {
+      rejectUnknownKeys(claim.source, ['title', 'url', 'locator', 'accessed_at'], file, errors, `${context}source.`);
       requireString(claim.source, 'title', file, errors, `${context}source.`);
       if (!requireString(claim.source, 'url', file, [], '') && !requireString(claim.source, 'locator', file, [], '')) {
         addError(errors, 'evidence.source', file, `${context}source requires url or locator`);
       }
-      requireString(claim.source, 'accessed_at', file, errors, `${context}source.`);
+      if (hasOwn(claim.source, 'url') && (!requireString(claim.source, 'url', file, errors, `${context}source.`) || !validateUri(claim.source.url))) {
+        addError(errors, 'schema.format', file, `${context}source.url must be an absolute URI`);
+      }
+      if (requireString(claim.source, 'accessed_at', file, errors, `${context}source.`) && !validateCalendarDate(claim.source.accessed_at)) {
+        addError(errors, 'schema.format', file, `${context}source.accessed_at must be an ISO calendar date`);
+      }
     }
     if (!CONFIDENCE_LEVELS.includes(claim?.confidence)) {
       addError(errors, 'evidence.confidence', file, `${context}confidence must be low, medium, or high`);
@@ -266,17 +344,23 @@ function validateEvidence(evidence, errors) {
 
 function validateManifest(manifest, requestedFormats, errors) {
   const file = 'export-manifest.yml';
-  requireString(manifest, 'artifact_id', file, errors);
+  rejectUnknownKeys(manifest, ['artifact_id', 'formats'], file, errors);
+  requireKebabCase(manifest, 'artifact_id', file, errors);
   if (!manifest?.formats || typeof manifest.formats !== 'object' || Array.isArray(manifest.formats)) {
     addError(errors, 'manifest.formats', file, 'formats must be a mapping');
     return;
   }
+  rejectUnknownKeys(manifest.formats, FORMATS, file, errors, 'formats.');
   for (const format of FORMATS) {
     const config = manifest.formats[format];
     if (!config || typeof config !== 'object' || Array.isArray(config)) {
       addError(errors, 'manifest.format', file, `formats.${format} must be a mapping`);
-    } else if (!FORMAT_STATUSES.includes(config.status)) {
-      addError(errors, 'manifest.status', file, `formats.${format}.status must be pending, passed, failed, or unavailable`);
+    } else {
+      const allowedKeys = format === 'pptx' ? ['status', 'audience', 'purpose', 'slide_outline'] : ['status'];
+      rejectUnknownKeys(config, allowedKeys, file, errors, `formats.${format}.`);
+      if (!hasOwn(config, 'status') || !FORMAT_STATUSES.includes(config.status)) {
+        addError(errors, 'manifest.status', file, `formats.${format}.status must be pending, passed, failed, or unavailable`);
+      }
     }
   }
   if (manifest.formats.md && ['failed', 'unavailable'].includes(manifest.formats.md.status)) {
@@ -295,6 +379,7 @@ function validateManifest(manifest, requestedFormats, errors) {
       addError(errors, 'manifest.pptx_outline', file, 'formats.pptx.slide_outline must be a nonempty list');
     } else {
       pptx.slide_outline.forEach((slide, index) => {
+        rejectUnknownKeys(slide, ['title'], file, errors, `formats.pptx.slide_outline[${index}].`);
         requireString(slide, 'title', file, errors, `formats.pptx.slide_outline[${index}].`);
       });
     }
@@ -310,8 +395,9 @@ async function validateMarkdown(source, artifactDir, errors) {
   } else {
     try {
       const metadata = parseRestrictedYaml(frontmatter[1], 'frontmatter');
+      rejectUnknownKeys(metadata, ['title', 'artifact_id', 'version'], file, errors, 'frontmatter.');
       requireString(metadata, 'title', file, errors, 'frontmatter.');
-      requireString(metadata, 'artifact_id', file, errors, 'frontmatter.');
+      requireKebabCase(metadata, 'artifact_id', file, errors, 'frontmatter.');
       if (!Number.isInteger(metadata.version) || metadata.version < 1) {
         addError(errors, 'markdown.frontmatter', file, 'frontmatter.version must be a positive integer');
       }
@@ -320,25 +406,51 @@ async function validateMarkdown(source, artifactDir, errors) {
     }
   }
   const body = frontmatter ? source.slice(frontmatter[0].length) : source;
-  const headings = [...body.matchAll(/^(#{1,6})\s+(.+)$/gm)];
-  const h1Count = headings.filter((heading) => heading[1].length === 1).length;
+  const visibleLines = [];
+  const headings = [];
+  let fence = null;
+  for (const line of body.split('\n')) {
+    if (fence) {
+      const closing = new RegExp(`^ {0,3}${fence.character}{${fence.length},}\\s*$`);
+      if (closing.test(line)) fence = null;
+      continue;
+    }
+    const opening = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (opening) {
+      fence = { character: opening[1][0], length: opening[1].length };
+      continue;
+    }
+    visibleLines.push(line);
+    const heading = /^ {0,3}(#{1,6})(?:[ \t]+)(.+)$/.exec(line);
+    if (heading) headings.push({ hashes: heading[1], text: heading[2], line });
+  }
+  const visibleBody = visibleLines.join('\n');
+  const h1Count = headings.filter((heading) => heading.hashes.length === 1).length;
   if (h1Count !== 1) addError(errors, 'markdown.h1', file, `Markdown must contain exactly one H1; found ${h1Count}`);
   const ids = new Set();
   for (const heading of headings) {
-    const id = /\s\{#([a-z0-9]+(?:-[a-z0-9]+)*)\}\s*$/.exec(heading[2])?.[1];
-    if (!id) addError(errors, 'markdown.heading_id', file, `heading requires a stable heading ID: ${heading[0]}`);
+    const id = /\s\{#([a-z0-9]+(?:-[a-z0-9]+)*)\}\s*$/.exec(heading.text)?.[1];
+    if (!id) addError(errors, 'markdown.heading_id', file, `heading requires a stable heading ID: ${heading.line}`);
     else if (ids.has(id)) addError(errors, 'markdown.heading_id', file, `duplicate stable heading ID: ${id}`);
     else ids.add(id);
   }
-  for (const image of body.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g)) {
+  if (/!\[[^\]\n]*\](?!\()/.test(visibleBody)) {
+    addError(errors, 'markdown.image_syntax', file, 'unsupported reference-style image syntax');
+  }
+  if (/!\[[^\]\n]*\]\(\s*<[^>\n]*>/.test(visibleBody)) {
+    addError(errors, 'markdown.image_syntax', file, 'unsupported angle-bracket image destination');
+  }
+  for (const image of visibleBody.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/g)) {
     const [, alt, assetPath] = image;
     if (alt.trim() === '') addError(errors, 'markdown.image_alt', file, 'images require nonempty alt text');
     const looksRemote = /^[A-Za-z][A-Za-z0-9+.-]*:/.test(assetPath) || assetPath.startsWith('//');
     const resolvedAsset = resolve(artifactDir, assetPath);
-    const relativeAsset = relative(artifactDir, resolvedAsset);
-    const escapesArtifact = relativeAsset === '..' || relativeAsset.startsWith(`..${sep}`);
-    if (isAbsolute(assetPath) || looksRemote || escapesArtifact || !assetPath.startsWith('assets/')) {
-      addError(errors, 'markdown.asset_path', file, `image must use a relative local asset path under assets/: ${assetPath}`);
+    const assetsRoot = resolve(artifactDir, 'assets');
+    const relativeAsset = relative(assetsRoot, resolvedAsset);
+    const insideAssets = relativeAsset !== '' && !isAbsolute(relativeAsset)
+      && relativeAsset !== '..' && !relativeAsset.startsWith(`..${sep}`);
+    if (isAbsolute(assetPath) || looksRemote || !insideAssets) {
+      addError(errors, 'markdown.asset_path', file, `image must use a relative local asset path inside assets/: ${assetPath}`);
     } else {
       try {
         const stat = await lstat(resolvedAsset);
@@ -348,7 +460,7 @@ async function validateMarkdown(source, artifactDir, errors) {
       }
     }
   }
-  if (/!\[[^\]]*\]\([^)]*\)/.test(body) === false && /<img\b/i.test(body)) {
+  if (/<img\b/i.test(visibleBody)) {
     addError(errors, 'markdown.image_syntax', file, 'HTML images are unsupported; use Markdown image syntax');
   }
 }
