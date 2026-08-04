@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { pathToFileURL, fileURLToPath } from "node:url";
+
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -540,6 +543,65 @@ test("prepare script blocks PPTX without an independently authored story outline
     assert.throws(() => prepareCareerExport(job), /independent story outline/iu);
     job.formats.pptx.outlineSource = "independent-story";
     assert.doesNotThrow(() => prepareCareerExport(job));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("export CLI executes through symlinked non-ASCII build paths and preserves wx overwrite safety", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-cli-"));
+  try {
+    const artifactRoot = path.join(root, "artifact 자료");
+    await mkdir(artifactRoot, { recursive: true });
+    await writeFile(path.join(artifactRoot, "content.md"), "# Portfolio\n", "utf8");
+    const input = path.join(root, "입력 job.json");
+    await writeFile(input, `${JSON.stringify(baseJob(artifactRoot), null, 2)}\n`, "utf8");
+
+    const stagingRoot = path.join(root, "실제 build 경로");
+    await mkdir(stagingRoot, { recursive: true });
+    await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const linkedRoot = path.join(root, "링크 build 경로");
+    await symlink(stagingRoot, linkedRoot, "dir");
+
+    const relativeScript = "game-design-career/skills/export-career-documents/scripts/prepare-career-export.mjs";
+    const normalScript = path.join(stagingRoot, relativeScript);
+    const linkedScript = path.join(linkedRoot, relativeScript);
+    const sourceScript = path.join(
+      pluginRoot,
+      "skills/export-career-documents/scripts/prepare-career-export.mjs",
+    );
+
+    const linkedOutput = path.join(root, "linked manifest.json");
+    const first = spawnSync(process.execPath, [linkedScript, input, linkedOutput], { encoding: "utf8" });
+    assert.equal(first.status, 0, first.stderr);
+    const firstBytes = await readFile(linkedOutput);
+    const prepared = JSON.parse(firstBytes.toString("utf8"));
+    assert.equal(prepared.artifactId, "career-portfolio");
+    assert.equal(prepared.formats.md.status, "blocked");
+
+    const second = spawnSync(process.execPath, [linkedScript, input, linkedOutput], { encoding: "utf8" });
+    assert.equal(second.status, 1, "second wx write must fail");
+    assert.match(second.stderr, /EEXIST|file already exists/iu);
+    assert.deepEqual(await readFile(linkedOutput), firstBytes, "failed overwrite must preserve the first manifest");
+
+    for (const [label, script] of [["source", sourceScript], ["normal-build", normalScript]]) {
+      const output = path.join(root, `${label} manifest.json`);
+      const run = spawnSync(process.execPath, [script, input, output], { encoding: "utf8" });
+      assert.equal(run.status, 0, `${label}: ${run.stderr}`);
+      assert.equal(JSON.parse(await readFile(output, "utf8")).artifactId, "career-portfolio");
+    }
+
+    const moduleUrl = pathToFileURL(sourceScript).href;
+    for (const setup of ["", 'process.argv[1] = "\\0";']) {
+      const imported = spawnSync(
+        process.execPath,
+        ["--input-type=module", "-e", `${setup} await import(${JSON.stringify(moduleUrl)}); process.stdout.write("imported");`],
+        { encoding: "utf8" },
+      );
+      assert.equal(imported.status, 0, imported.stderr);
+      assert.equal(imported.stdout, "imported");
+      assert.equal(imported.stderr, "");
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }

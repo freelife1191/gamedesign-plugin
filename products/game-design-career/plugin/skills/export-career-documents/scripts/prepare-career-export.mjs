@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const DOCUMENT_TYPES = new Set([
   "learning-plan",
@@ -264,6 +264,17 @@ export function main(argv) {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+export function isMainModule(metaUrl = import.meta.url, argvPath = process.argv[1]) {
+  if (typeof argvPath !== "string" || argvPath.length === 0) return false;
+  try {
+    const modulePath = realpathSync(fileURLToPath(metaUrl));
+    const invokedPath = realpathSync(fileURLToPath(pathToFileURL(argvPath)));
+    return modulePath === invokedPath;
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   process.exit(main(process.argv.slice(2)));
 }
