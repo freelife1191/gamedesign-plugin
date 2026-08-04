@@ -23,6 +23,53 @@ const optionsSchema = {
 };
 const MAX_BOUNDARY_DEPTH = 32;
 const MAX_BOUNDARY_NODES = 100_000;
+const MAX_REGULAR_FINDINGS = 64;
+const findingStates = new WeakMap();
+
+function createFindingList() {
+  const errors = [];
+  findingStates.set(errors, { complexity: false, regular: 0, truncated: false });
+  return errors;
+}
+
+function addError(errors, error) {
+  const state = findingStates.get(errors);
+  if (!state) return Array.prototype.push.call(errors, error);
+  if (error.code === "boundary-complexity") {
+    if (!state.complexity) {
+      Array.prototype.push.call(errors, error);
+      state.complexity = true;
+    }
+    return errors.length;
+  }
+  if (state.regular < MAX_REGULAR_FINDINGS) {
+    Array.prototype.push.call(errors, error);
+    state.regular += 1;
+  } else if (!state.truncated) {
+    Array.prototype.push.call(errors, finding(
+      "boundary-findings-truncated",
+      `Findings were truncated after ${MAX_REGULAR_FINDINGS} entries.`,
+      "$",
+    ));
+    state.truncated = true;
+  }
+  return errors.length;
+}
+
+function consumeBoundaryOperations(state, errors, count, path) {
+  if (state.exhausted) return false;
+  if (!Number.isSafeInteger(count) || count < 0 || count > MAX_BOUNDARY_NODES - state.operations) {
+    state.exhausted = true;
+    addError(errors, finding(
+      "boundary-complexity",
+      `Job evidence exceeds the ${MAX_BOUNDARY_NODES}-operation boundary budget.`,
+      path,
+    ));
+    return false;
+  }
+  state.operations += count;
+  return true;
+}
 
 function isPlainRecord(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -42,14 +89,12 @@ function schemaAllows(schema, type) {
   return allowed.includes(type);
 }
 
-function snapshotData(value, path, errors, schema, state = { depth: 0, nodes: 0, seen: new WeakSet() }) {
-  state.nodes += 1;
-  if (state.nodes > MAX_BOUNDARY_NODES) {
-    errors.push(finding("boundary-complexity", `Job evidence exceeds ${MAX_BOUNDARY_NODES} values.`, path));
-    return undefined;
-  }
+function snapshotData(value, path, errors, schema, state = {
+  depth: 0, exhausted: false, operations: 0, seen: new WeakSet(),
+}) {
+  if (!consumeBoundaryOperations(state, errors, 1, path)) return undefined;
   if (state.depth > MAX_BOUNDARY_DEPTH) {
-    errors.push(finding("boundary-depth", `Job evidence exceeds depth ${MAX_BOUNDARY_DEPTH}.`, path));
+    addError(errors, finding("boundary-depth", `Job evidence exceeds depth ${MAX_BOUNDARY_DEPTH}.`, path));
     return undefined;
   }
   if (value === null) return null;
@@ -57,61 +102,66 @@ function snapshotData(value, path, errors, schema, state = { depth: 0, nodes: 0,
   if (primitiveType !== "object") {
     if (primitiveType === "string" || primitiveType === "boolean") return value;
     if (primitiveType === "number" && Number.isFinite(value)) return value;
-    errors.push(finding("boundary-primitive", "Only null, strings, booleans, and finite numbers are accepted as data values.", path));
+    addError(errors, finding("boundary-primitive", "Only null, strings, booleans, and finite numbers are accepted as data values.", path));
     return undefined;
   }
   if (utilTypes.isProxy(value)) {
-    errors.push(finding("boundary-proxy", "Proxy values are not accepted at the job-evidence boundary.", path));
+    addError(errors, finding("boundary-proxy", "Proxy values are not accepted at the job-evidence boundary.", path));
     return undefined;
   }
   if (state.seen.has(value)) {
-    errors.push(finding("boundary-cycle", "Cyclic values are not accepted at the job-evidence boundary.", path));
+    addError(errors, finding("boundary-cycle", "Cyclic values are not accepted at the job-evidence boundary.", path));
     return undefined;
   }
   state.seen.add(value);
 
   if (Array.isArray(value)) {
     if (!schemaAllows(schema, "array")) {
-      errors.push(finding("schema-type", "Expected a non-array value.", path));
+      addError(errors, finding("schema-type", "Expected a non-array value.", path));
       state.seen.delete(value);
       return undefined;
     }
     if (Object.getPrototypeOf(value) !== Array.prototype) {
-      errors.push(finding("boundary-prototype", "Arrays must use the standard Array prototype.", path));
+      addError(errors, finding("boundary-prototype", "Arrays must use the standard Array prototype.", path));
       state.seen.delete(value);
       return undefined;
     }
-    if (value.length > MAX_BOUNDARY_NODES - state.nodes) {
-      errors.push(finding("boundary-complexity", `Array exceeds the ${MAX_BOUNDARY_NODES}-value boundary budget.`, path));
+    if (value.length > MAX_BOUNDARY_NODES - state.operations) {
+      addError(errors, finding("boundary-complexity", `Array exceeds the ${MAX_BOUNDARY_NODES}-value boundary budget.`, path));
+      state.exhausted = true;
       state.seen.delete(value);
       return undefined;
     }
     const keys = Reflect.ownKeys(value);
+    if (!consumeBoundaryOperations(state, errors, keys.length * 2, path)) {
+      state.seen.delete(value);
+      return undefined;
+    }
     const indexDescriptors = new Map();
     for (const key of keys) {
       if (typeof key === "symbol") {
-        errors.push(finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
+        addError(errors, finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
         continue;
       }
       if (key === "length") continue;
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (!isArrayIndex(key, value.length)) {
-        errors.push(finding("boundary-unknown-key", `Unexpected array key '${key}'.`, `${path}.${key}`));
+        addError(errors, finding("boundary-unknown-key", `Unexpected array key '${key}'.`, `${path}.${key}`));
       } else if (!descriptor || descriptor.get || descriptor.set || !Object.hasOwn(descriptor, "value")) {
-        errors.push(finding("boundary-accessor", "Array items must be own data properties.", `${path}[${key}]`));
+        addError(errors, finding("boundary-accessor", "Array items must be own data properties.", `${path}[${key}]`));
       } else if (!descriptor.enumerable) {
-        errors.push(finding("boundary-non-enumerable", "Array items must be enumerable.", `${path}[${key}]`));
+        addError(errors, finding("boundary-non-enumerable", "Array items must be enumerable.", `${path}[${key}]`));
       } else {
         indexDescriptors.set(Number(key), descriptor);
       }
     }
     if (indexDescriptors.size !== value.length) {
-      errors.push(finding("boundary-array-hole", "Sparse arrays are not accepted.", path));
+      addError(errors, finding("boundary-array-hole", "Sparse arrays are not accepted.", path));
       state.seen.delete(value);
       return undefined;
     }
     const snapshot = [];
-    for (let index = 0; index < value.length; index += 1) {
+    for (let index = 0; index < value.length && !state.exhausted; index += 1) {
       const descriptor = indexDescriptors.get(index);
       if (descriptor && Object.hasOwn(descriptor, "value")) {
         state.depth += 1;
@@ -126,45 +176,45 @@ function snapshotData(value, path, errors, schema, state = { depth: 0, nodes: 0,
   }
 
   if (!schemaAllows(schema, "object")) {
-    errors.push(finding("schema-type", "Expected a non-object value.", path));
+    addError(errors, finding("schema-type", "Expected a non-object value.", path));
     state.seen.delete(value);
     return undefined;
   }
   if (!isPlainRecord(value)) {
-    errors.push(finding("boundary-prototype", "Objects must use Object.prototype or a null prototype.", path));
+    addError(errors, finding("boundary-prototype", "Objects must use Object.prototype or a null prototype.", path));
     state.seen.delete(value);
     return undefined;
   }
   const snapshot = Object.create(null);
   const keys = Reflect.ownKeys(value);
-  if (keys.length > MAX_BOUNDARY_NODES - state.nodes) {
-    errors.push(finding("boundary-complexity", `Object exceeds the ${MAX_BOUNDARY_NODES}-value boundary budget.`, path));
+  if (!consumeBoundaryOperations(state, errors, keys.length * 3, path)) {
     state.seen.delete(value);
     return undefined;
   }
   for (const key of keys) {
     if (typeof key === "symbol") {
-      errors.push(finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
+      addError(errors, finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
       continue;
     }
     if (FORBIDDEN_KEYS.has(key)) {
-      errors.push(finding("boundary-forbidden-key", `Forbidden key '${key}'.`, `${path}.${key}`));
+      addError(errors, finding("boundary-forbidden-key", `Forbidden key '${key}'.`, `${path}.${key}`));
       continue;
     }
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (!descriptor || descriptor.get || descriptor.set || !Object.hasOwn(descriptor, "value")) {
-      errors.push(finding("boundary-accessor", "Object fields must be own data properties.", `${path}.${key}`));
+      addError(errors, finding("boundary-accessor", "Object fields must be own data properties.", `${path}.${key}`));
     } else if (!descriptor.enumerable) {
-      errors.push(finding("boundary-non-enumerable", "Object fields must be enumerable.", `${path}.${key}`));
+      addError(errors, finding("boundary-non-enumerable", "Object fields must be enumerable.", `${path}.${key}`));
     } else {
       const childSchema = schema?.properties?.[key];
       if (schema?.additionalProperties === false && !Object.hasOwn(schema.properties ?? {}, key)) {
-        errors.push(finding("boundary-unknown-key", `Unexpected field '${key}'.`, `${path}.${key}`));
+        addError(errors, finding("boundary-unknown-key", `Unexpected field '${key}'.`, `${path}.${key}`));
         continue;
       }
       state.depth += 1;
       snapshot[key] = snapshotData(descriptor.value, `${path}.${key}`, errors, childSchema, state);
       state.depth -= 1;
+      if (state.exhausted) break;
     }
   }
   state.seen.delete(value);
@@ -191,39 +241,39 @@ function validateSchema(value, schema, path, errors) {
   if (schema.type !== undefined) {
     const allowed = Array.isArray(schema.type) ? schema.type : [schema.type];
     if (!allowed.some((type) => matchesType(value, type))) {
-      errors.push(finding("schema-type", `Expected ${allowed.join(" or ")}.`, path));
+      addError(errors, finding("schema-type", `Expected ${allowed.join(" or ")}.`, path));
       return;
     }
   }
   if (value === null) return;
   if (schema.enum && !schema.enum.includes(value)) {
-    errors.push(finding("schema-enum", "Value is not in the approved enum.", path));
+    addError(errors, finding("schema-enum", "Value is not in the approved enum.", path));
   }
   if (typeof value === "string") {
     if (schema.minLength !== undefined && [...value].length < schema.minLength) {
-      errors.push(finding("schema-min-length", `String requires at least ${schema.minLength} characters.`, path));
+      addError(errors, finding("schema-min-length", `String requires at least ${schema.minLength} characters.`, path));
     }
     if (schema.pattern && !(new RegExp(schema.pattern, "u")).test(value)) {
-      errors.push(finding("schema-pattern", "String does not match the required pattern.", path));
+      addError(errors, finding("schema-pattern", "String does not match the required pattern.", path));
     }
     if (schema.format === "date" && !isIsoDate(value)) {
-      errors.push(finding("schema-format", "Value must be a real ISO calendar date.", path));
+      addError(errors, finding("schema-format", "Value must be a real ISO calendar date.", path));
     }
     if (schema.format === "uri") {
       try {
         const url = new URL(value);
         if (!url.protocol) throw new Error("missing protocol");
       } catch {
-        errors.push(finding("schema-format", "Value must be an absolute URI.", path));
+        addError(errors, finding("schema-format", "Value must be an absolute URI.", path));
       }
     }
   }
   if (Number.isInteger(value) && schema.minimum !== undefined && value < schema.minimum) {
-    errors.push(finding("schema-minimum", `Value must be at least ${schema.minimum}.`, path));
+    addError(errors, finding("schema-minimum", `Value must be at least ${schema.minimum}.`, path));
   }
   if (Array.isArray(value)) {
     if (schema.minItems !== undefined && value.length < schema.minItems) {
-      errors.push(finding("schema-min-items", `Array requires at least ${schema.minItems} items.`, path));
+      addError(errors, finding("schema-min-items", `Array requires at least ${schema.minItems} items.`, path));
     }
     const itemErrorStart = errors.length;
     if (schema.items) {
@@ -231,20 +281,20 @@ function validateSchema(value, schema, path, errors) {
     }
     if (schema.uniqueItems && errors.length === itemErrorStart
       && new Set(value.map(canonicalDataKey)).size !== value.length) {
-      errors.push(finding("schema-unique-items", "Array items must be unique.", path));
+      addError(errors, finding("schema-unique-items", "Array items must be unique.", path));
     }
   }
   if (isPlainRecord(value)) {
     const properties = schema.properties ?? {};
     for (const key of schema.required ?? []) {
       if (!Object.hasOwn(value, key)) {
-        errors.push(finding("schema-required", `Required field '${key}' is missing.`, `${path}.${key}`));
+        addError(errors, finding("schema-required", `Required field '${key}' is missing.`, `${path}.${key}`));
       }
     }
     if (schema.additionalProperties === false) {
       for (const key of Object.keys(value)) {
         if (!Object.hasOwn(properties, key)) {
-          errors.push(finding("schema-additional-property", `Unexpected field '${key}'.`, `${path}.${key}`));
+          addError(errors, finding("schema-additional-property", `Unexpected field '${key}'.`, `${path}.${key}`));
         }
       }
     }
@@ -274,7 +324,7 @@ function exactStringSet(actual, expected) {
 }
 
 export function validateJobEvidenceCollection(inputRecords, inputOptions) {
-  const boundaryErrors = [];
+  const boundaryErrors = createFindingList();
   const records = snapshotData(inputRecords, "$", boundaryErrors, collectionSchema);
   const options = inputOptions === undefined
     ? Object.create(null)
@@ -292,7 +342,7 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   }
   const { asOfDate } = options;
 
-  const errors = [];
+  const errors = createFindingList();
   validateSchema(options, optionsSchema, "$options", errors);
   records.forEach((record, recordIndex) => validateSchema(record, jobEvidenceSchema, `$[${recordIndex}]`, errors));
   if (errors.length > 0) return { valid: false, errors };
@@ -301,7 +351,7 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   records.forEach((record, recordIndex) => {
     const sourceId = typeof record?.sourceId === "string" ? record.sourceId.trim() : "";
     if (!sourceId) {
-      errors.push(finding("missing-source-id", "Every posting requires a non-empty sourceId.", `$[${recordIndex}].sourceId`));
+      addError(errors, finding("missing-source-id", "Every posting requires a non-empty sourceId.", `$[${recordIndex}].sourceId`));
       return;
     }
     sourceIdCounts.set(sourceId, (sourceIdCounts.get(sourceId) ?? 0) + 1);
@@ -309,7 +359,7 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
 
   for (const [sourceId, count] of sourceIdCounts) {
     if (count > 1) {
-      errors.push(finding("duplicate-source-id", `Posting sourceId '${sourceId}' occurs ${count} times.`, "$"));
+      addError(errors, finding("duplicate-source-id", `Posting sourceId '${sourceId}' occurs ${count} times.`, "$"));
     }
   }
 
@@ -321,17 +371,17 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   const hasRepeatedSignals = records.some((record) => Array.isArray(record?.repeatedSignals) && record.repeatedSignals.length > 0);
   const asOfIsValid = isIsoDate(asOfDate);
   if (hasRepeatedSignals && asOfDate === undefined) {
-    errors.push(finding("missing-as-of-date", "Repeated signals require an explicit asOfDate.", "$"));
+    addError(errors, finding("missing-as-of-date", "Repeated signals require an explicit asOfDate.", "$"));
   } else if (hasRepeatedSignals && !asOfIsValid) {
-    errors.push(finding("invalid-as-of-date", "asOfDate must be a real ISO calendar date.", "$"));
+    addError(errors, finding("invalid-as-of-date", "asOfDate must be a real ISO calendar date.", "$"));
   }
 
   records.forEach((record, recordIndex) => {
     if (record?.sampleSize !== denominator) {
-      errors.push(finding("sample-size-mismatch", `sampleSize must equal ${denominator} deduplicated postings.`, `$[${recordIndex}].sampleSize`));
+      addError(errors, finding("sample-size-mismatch", `sampleSize must equal ${denominator} deduplicated postings.`, `$[${recordIndex}].sampleSize`));
     }
     if (!exactStringSet(record?.sampleGeography, actualGeography)) {
-      errors.push(finding("sample-geography-mismatch", `sampleGeography must exactly match ${JSON.stringify(actualGeography)}.`, `$[${recordIndex}].sampleGeography`));
+      addError(errors, finding("sample-geography-mismatch", `sampleGeography must exactly match ${JSON.stringify(actualGeography)}.`, `$[${recordIndex}].sampleGeography`));
     }
   });
 
@@ -347,50 +397,50 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
       const uniqueSignalSourceIds = new Set(sourceRefs.map((ref) => ref?.sourceId));
 
       if (sourceRefs.length < 2) {
-        errors.push(finding("signal-source-ref-minimum", "Repeated signals require at least two sourceRefs.", `${signalPath}.sourceRefs`));
+        addError(errors, finding("signal-source-ref-minimum", "Repeated signals require at least two sourceRefs.", `${signalPath}.sourceRefs`));
       }
 
       if (typeof signal?.signalId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/u.test(signal.signalId)) {
-        errors.push(finding("missing-signal-id", "Every repeated signal requires a stable signalId.", `${signalPath}.signalId`));
+        addError(errors, finding("missing-signal-id", "Every repeated signal requires a stable signalId.", `${signalPath}.signalId`));
       } else if (signalIds.has(signal.signalId)) {
-        errors.push(finding("duplicate-signal-id", `Repeated signalId '${signal.signalId}' must be unique.`, `${signalPath}.signalId`));
+        addError(errors, finding("duplicate-signal-id", `Repeated signalId '${signal.signalId}' must be unique.`, `${signalPath}.signalId`));
       } else {
         signalIds.add(signal.signalId);
       }
       if (uniqueRefKeys.size !== sourceRefs.length || uniqueSignalSourceIds.size !== sourceRefs.length) {
-        errors.push(finding("duplicate-signal-source-ref", "Repeated-signal sourceRefs must identify distinct requirements in distinct postings.", `${signalPath}.sourceRefs`));
+        addError(errors, finding("duplicate-signal-source-ref", "Repeated-signal sourceRefs must identify distinct requirements in distinct postings.", `${signalPath}.sourceRefs`));
       }
 
       sourceRefs.forEach((ref, refIndex) => {
         const refPath = `${signalPath}.sourceRefs[${refIndex}]`;
         const source = postingById.get(ref?.sourceId);
         if (!source) {
-          errors.push(finding("orphan-source-id", `Repeated signal references unknown sourceId '${ref?.sourceId}'.`, `${refPath}.sourceId`));
+          addError(errors, finding("orphan-source-id", `Repeated signal references unknown sourceId '${ref?.sourceId}'.`, `${refPath}.sourceId`));
           return;
         }
         if (!REQUIREMENT_FIELDS.has(ref?.field)) {
-          errors.push(finding("signal-source-field", "field must name responsibilities, requiredSkills, or preferredSkills.", `${refPath}.field`));
+          addError(errors, finding("signal-source-field", "field must name responsibilities, requiredSkills, or preferredSkills.", `${refPath}.field`));
           return;
         }
         const requirements = source[ref.field];
         if (!Array.isArray(requirements) || !Number.isInteger(ref?.index) || ref.index < 0 || ref.index >= requirements.length) {
-          errors.push(finding("signal-source-index", "index must address an existing item in the cited posting field.", `${refPath}.index`));
+          addError(errors, finding("signal-source-index", "index must address an existing item in the cited posting field.", `${refPath}.index`));
           return;
         }
         const statement = requirements[ref.index];
         if (ref.statement !== statement) {
-          errors.push(finding("signal-statement-mismatch", "statement must byte-match the cited posting item.", `${refPath}.statement`));
+          addError(errors, finding("signal-statement-mismatch", "statement must byte-match the cited posting item.", `${refPath}.statement`));
         }
         const expectedRequirementId = `${ref.sourceId}:${ref.field}:${ref.index}`;
         if (ref.requirementId !== expectedRequirementId) {
-          errors.push(finding("signal-requirement-id", `requirementId must equal '${expectedRequirementId}'.`, `${refPath}.requirementId`));
+          addError(errors, finding("signal-requirement-id", `requirementId must equal '${expectedRequirementId}'.`, `${refPath}.requirementId`));
         }
         const normalized = normalizeRequirement(statement);
         if (ref.normalizedValue !== normalized || signal?.normalizedValue !== normalized || signal?.signal !== normalized) {
-          errors.push(finding("signal-normalization-mismatch", "signal and ref normalizedValue must equal the deterministic normalization of the cited statement.", refPath));
+          addError(errors, finding("signal-normalization-mismatch", "signal and ref normalizedValue must equal the deterministic normalization of the cited statement.", refPath));
         }
         if (source.sourceType !== "official-company-career-page") {
-          errors.push(finding("signal-source-not-primary", "Repeated signals may cite only official company career postings.", `${refPath}.sourceId`));
+          addError(errors, finding("signal-source-not-primary", "Repeated signals may cite only official company career postings.", `${refPath}.sourceId`));
         }
         let sourceUrl;
         try {
@@ -399,30 +449,30 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
           sourceUrl = null;
         }
         if (!sourceUrl || sourceUrl.protocol !== "https:") {
-          errors.push(finding("signal-source-url", "Repeated-signal sources require an HTTPS official career URL.", `${refPath}.sourceId`));
+          addError(errors, finding("signal-source-url", "Repeated-signal sources require an HTTPS official career URL.", `${refPath}.sourceId`));
         }
         const datesValid = isIsoDate(source.postedDate) && isIsoDate(source.retrievalDate) && isIsoDate(source.reviewAfter);
         if (!datesValid) {
-          errors.push(finding("signal-source-date", "Cited postings require real ISO postedDate, retrievalDate, and reviewAfter values.", `${refPath}.sourceId`));
+          addError(errors, finding("signal-source-date", "Cited postings require real ISO postedDate, retrievalDate, and reviewAfter values.", `${refPath}.sourceId`));
         } else {
           if (source.postedDate > source.retrievalDate || source.retrievalDate > source.reviewAfter
             || (asOfIsValid && source.retrievalDate > asOfDate)) {
-            errors.push(finding("signal-source-date-order", "Dates must satisfy postedDate <= retrievalDate <= asOfDate <= reviewAfter.", `${refPath}.sourceId`));
+            addError(errors, finding("signal-source-date-order", "Dates must satisfy postedDate <= retrievalDate <= asOfDate <= reviewAfter.", `${refPath}.sourceId`));
           }
           if (asOfIsValid && asOfDate > source.reviewAfter) {
-            errors.push(finding("signal-source-stale", `Cited posting evidence expired after ${source.reviewAfter}.`, `${refPath}.sourceId`));
+            addError(errors, finding("signal-source-stale", `Cited posting evidence expired after ${source.reviewAfter}.`, `${refPath}.sourceId`));
           }
         }
       });
 
       if (signal?.count !== uniqueSignalSourceIds.size) {
-        errors.push(finding("signal-count-mismatch", `count must equal ${uniqueSignalSourceIds.size} distinct cited postings.`, `${signalPath}.count`));
+        addError(errors, finding("signal-count-mismatch", `count must equal ${uniqueSignalSourceIds.size} distinct cited postings.`, `${signalPath}.count`));
       }
       if (signal?.denominator !== denominator) {
-        errors.push(finding("signal-denominator-mismatch", `denominator must equal ${denominator} deduplicated postings.`, `${signalPath}.denominator`));
+        addError(errors, finding("signal-denominator-mismatch", `denominator must equal ${denominator} deduplicated postings.`, `${signalPath}.denominator`));
       }
       if (typeof signal?.count === "number" && typeof signal?.denominator === "number" && signal.count > signal.denominator) {
-        errors.push(finding("signal-count-exceeds-denominator", "count must not exceed denominator.", signalPath));
+        addError(errors, finding("signal-count-exceeds-denominator", "count must not exceed denominator.", signalPath));
       }
     });
   });

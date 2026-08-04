@@ -148,6 +148,29 @@ function assertRoundThreeBoundary(validateJobEvidenceCollection, label) {
   }
 }
 
+function wideAliasCollection(size) {
+  const record = posting("wide-alias", [], { sampleSize: size });
+  for (let index = 0; index < size; index += 1) record[`unknown-${index}`] = null;
+  return Array.from({ length: size }, () => record);
+}
+
+function assertBoundedWideAliases(validateJobEvidenceCollection, label) {
+  let deterministic800;
+  for (const size of [200, 400, 800, 5_000]) {
+    const startedAt = performance.now();
+    let result;
+    assert.doesNotThrow(() => { result = validateJobEvidenceCollection(wideAliasCollection(size)); }, `${label} ${size}`);
+    const elapsed = performance.now() - startedAt;
+    assert.equal(result.valid, false, `${label} ${size}`);
+    assert.ok(elapsed < 2_000, `${label} ${size} took ${elapsed}ms`);
+    assert.ok(result.errors.length <= 66, `${label} ${size} emitted ${result.errors.length} errors`);
+    assert.equal(result.errors.filter(({ code }) => code === "boundary-complexity").length, 1, `${label} ${size}`);
+    assert.equal(result.errors.filter(({ code }) => code === "boundary-findings-truncated").length, 1, `${label} ${size}`);
+    if (size === 800) deterministic800 = result;
+  }
+  assert.deepEqual(validateJobEvidenceCollection(wideAliasCollection(800)), deterministic800, `${label} deterministic truncation`);
+}
+
 test("Role-map method requires the complete evidence-to-practice contract", async () => {
   const method = await read("references/methods/role-map.md");
   const requiredFields = [
@@ -498,6 +521,11 @@ test("Source public validator rejects non-JSON primitives and deep unknown paylo
   assertRoundThreeBoundary(validateJobEvidenceCollection, "source");
 });
 
+test("Source public validator caps wide repeated-alias work and findings", async () => {
+  const { validateJobEvidenceCollection } = await loadCollectionValidator();
+  assertBoundedWideAliases(validateJobEvidenceCollection, "source");
+});
+
 test("Clean-built public validator preserves the schema and data-only boundary", async () => {
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-job-boundary-"));
   try {
@@ -510,6 +538,7 @@ test("Clean-built public validator preserves the schema and data-only boundary",
     const partialResult = validateJobEvidenceCollection([{ sourceId: "partial", repeatedSignals: [] }]);
     assert.ok(partialResult.errors.some(({ code }) => code === "schema-required"));
     assertRoundThreeBoundary(validateJobEvidenceCollection, "built");
+    assertBoundedWideAliases(validateJobEvidenceCollection, "built");
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }
