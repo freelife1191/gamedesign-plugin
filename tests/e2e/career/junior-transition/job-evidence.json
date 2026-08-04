@@ -8,6 +8,7 @@
     "postedDate": "2026-08-01",
     "sourceUrl": "https://example.invalid/careers/systems-designer",
     "retrievalDate": "2026-08-04",
+    "reviewAfter": "2026-09-04",
     "responsibilities": ["Specify system rules", "Collaborate on implementation handoff", "Support live operations"],
     "requiredSkills": ["Systems design", "Clear documentation"],
     "preferredSkills": ["Live operations"],

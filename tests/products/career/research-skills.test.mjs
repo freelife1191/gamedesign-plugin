@@ -15,16 +15,61 @@ async function readJson(relativePath) {
   return JSON.parse(await read(relativePath));
 }
 
-async function validateCollection(records) {
+async function validateCollection(records, options) {
   const validatorUrl = pathToFileURL(
     path.join(pluginRoot, "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs"),
   );
   const { validateJobEvidenceCollection } = await import(validatorUrl.href);
-  return validateJobEvidenceCollection(records);
+  return validateJobEvidenceCollection(records, options);
 }
 
-function posting(sourceId, repeatedSignals = []) {
-  return { sourceId, repeatedSignals };
+function posting(sourceId, repeatedSignals = [], overrides = {}) {
+  return {
+    sourceId,
+    company: `Studio ${sourceId}`,
+    region: "KR",
+    postedDate: "2026-07-01",
+    sourceUrl: `https://careers.example.com/jobs/${sourceId}`,
+    retrievalDate: "2026-08-01",
+    reviewAfter: "2026-09-01",
+    responsibilities: ["Design combat systems"],
+    requiredSkills: ["Write clear specifications"],
+    preferredSkills: [],
+    repeatedSignals,
+    sampleSize: 3,
+    sampleGeography: ["KR"],
+    sourceType: "official-company-career-page",
+    ...overrides,
+  };
+}
+
+function repeatedSignal(overrides = {}) {
+  return {
+    signalId: "signal-design-combat-systems",
+    signal: "design combat systems",
+    normalizedValue: "design combat systems",
+    count: 2,
+    denominator: 3,
+    sourceRefs: [
+      {
+        sourceId: "posting-a",
+        field: "responsibilities",
+        index: 0,
+        statement: "Design combat systems",
+        normalizedValue: "design combat systems",
+        requirementId: "posting-a:responsibilities:0",
+      },
+      {
+        sourceId: "posting-b",
+        field: "responsibilities",
+        index: 0,
+        statement: "Design combat systems",
+        normalizedValue: "design combat systems",
+        requirementId: "posting-b:responsibilities:0",
+      },
+    ],
+    ...overrides,
+  };
 }
 
 test("Role-map method requires the complete evidence-to-practice contract", async () => {
@@ -73,6 +118,7 @@ test("Job evidence schema preserves every required field independently", async (
     "postedDate",
     "sourceUrl",
     "retrievalDate",
+    "reviewAfter",
     "responsibilities",
     "requiredSkills",
     "preferredSkills",
@@ -93,37 +139,34 @@ test("Job evidence schema preserves every required field independently", async (
   assert.equal(schema.additionalProperties, false);
   assert.notEqual(schema.properties.applicantEvidence, schema.properties.gaps);
   assert.notEqual(schema.properties.gaps, schema.properties.nonGeneralizable);
+  const signal = schema.properties.repeatedSignals.items;
+  assert.deepEqual(signal.required, ["signalId", "signal", "normalizedValue", "count", "denominator", "sourceRefs"]);
+  assert.deepEqual(signal.properties.sourceRefs.items.required, [
+    "sourceId", "field", "index", "statement", "normalizedValue", "requirementId",
+  ]);
+  assert.deepEqual(signal.properties.sourceRefs.items.properties.field.enum, [
+    "responsibilities", "requiredSkills", "preferredSkills",
+  ]);
 });
 
 test("Collection validator accepts linked repeated-signal evidence", async () => {
   const result = await validateCollection([
-    posting("posting-a", [
-      {
-        signal: "systems-design",
-        count: 2,
-        denominator: 3,
-        sourceIds: ["posting-a", "posting-b"],
-      },
-    ]),
+    posting("posting-a", [repeatedSignal()]),
     posting("posting-b"),
     posting("posting-c"),
-  ]);
+  ], { asOfDate: "2026-08-04" });
 
   assert.deepEqual(result, { valid: true, errors: [] });
 });
 
 test("Collection validator rejects orphan repeated-signal source IDs", async () => {
+  const signal = repeatedSignal();
+  signal.sourceRefs[1].sourceId = "missing-posting";
+  signal.sourceRefs[1].requirementId = "missing-posting:responsibilities:0";
   const result = await validateCollection([
-    posting("posting-a", [
-      {
-        signal: "systems-design",
-        count: 2,
-        denominator: 2,
-        sourceIds: ["posting-a", "missing-posting"],
-      },
-    ]),
-    posting("posting-b"),
-  ]);
+    posting("posting-a", [signal], { sampleSize: 2 }),
+    posting("posting-b", [], { sampleSize: 2 }),
+  ], { asOfDate: "2026-08-04" });
 
   assert.ok(result.errors.some(({ code }) => code === "orphan-source-id"));
 });
@@ -141,34 +184,22 @@ test("Collection validator rejects missing and duplicate posting source IDs", as
 });
 
 test("Collection validator rejects duplicate IDs inside one repeated signal", async () => {
+  const signal = repeatedSignal({ denominator: 2 });
+  signal.sourceRefs[1] = { ...signal.sourceRefs[0] };
   const result = await validateCollection([
-    posting("posting-a", [
-      {
-        signal: "systems-design",
-        count: 2,
-        denominator: 2,
-        sourceIds: ["posting-a", "posting-a"],
-      },
-    ]),
-    posting("posting-b"),
-  ]);
+    posting("posting-a", [signal], { sampleSize: 2 }),
+    posting("posting-b", [], { sampleSize: 2 }),
+  ], { asOfDate: "2026-08-04" });
 
-  assert.ok(result.errors.some(({ code }) => code === "duplicate-signal-source-id"));
+  assert.ok(result.errors.some(({ code }) => code === "duplicate-signal-source-ref"));
 });
 
 test("Collection validator rejects count and denominator mismatches", async () => {
   const result = await validateCollection([
-    posting("posting-a", [
-      {
-        signal: "systems-design",
-        count: 3,
-        denominator: 4,
-        sourceIds: ["posting-a", "posting-b"],
-      },
-    ]),
+    posting("posting-a", [repeatedSignal({ count: 3, denominator: 4 })]),
     posting("posting-b"),
     posting("posting-c"),
-  ]);
+  ], { asOfDate: "2026-08-04" });
   const codes = result.errors.map(({ code }) => code);
 
   assert.ok(codes.includes("signal-count-mismatch"));
@@ -177,18 +208,97 @@ test("Collection validator rejects count and denominator mismatches", async () =
 
 test("Collection validator rejects counts larger than the deduplicated sample", async () => {
   const result = await validateCollection([
-    posting("posting-a", [
-      {
-        signal: "systems-design",
-        count: 3,
-        denominator: 2,
-        sourceIds: ["posting-a", "posting-b", "posting-c"],
-      },
-    ]),
-    posting("posting-b"),
-  ]);
+    posting("posting-a", [repeatedSignal({ count: 3, denominator: 2 })], { sampleSize: 2 }),
+    posting("posting-b", [], { sampleSize: 2 }),
+  ], { asOfDate: "2026-08-04" });
 
   assert.ok(result.errors.some(({ code }) => code === "signal-count-exceeds-denominator"));
+});
+
+test("Collection validator binds every repeated signal to exact primary posting requirements", async () => {
+  for (const [label, mutate, expectedCode] of [
+    ["wrong field", (signal) => { signal.sourceRefs[0].field = "requiredSkills"; }, "signal-statement-mismatch"],
+    ["wrong index", (signal) => { signal.sourceRefs[0].index = 9; signal.sourceRefs[0].requirementId = "posting-a:responsibilities:9"; }, "signal-source-index"],
+    ["wrong statement", (signal) => { signal.sourceRefs[0].statement = "Invented market claim"; }, "signal-statement-mismatch"],
+    ["wrong requirement ID", (signal) => { signal.sourceRefs[0].requirementId = "forged"; }, "signal-requirement-id"],
+    ["invented normalized signal", (signal) => { signal.signal = "monetization"; signal.normalizedValue = "monetization"; for (const ref of signal.sourceRefs) ref.normalizedValue = "monetization"; }, "signal-normalization-mismatch"],
+  ]) {
+    const signal = repeatedSignal();
+    mutate(signal);
+    const result = await validateCollection([
+      posting("posting-a", [signal]), posting("posting-b"), posting("posting-c"),
+    ], { asOfDate: "2026-08-04" });
+    assert.equal(result.valid, false, label);
+    assert.ok(result.errors.some(({ code }) => code === expectedCode), `${label}: ${JSON.stringify(result.errors)}`);
+  }
+});
+
+test("Collection validator rejects secondary, file, stale, and reversed cited sources", async () => {
+  for (const [label, override, expectedCode] of [
+    ["secondary", { sourceType: "secondary-context" }, "signal-source-not-primary"],
+    ["file URL", { sourceUrl: "file:///tmp/forged-posting.json" }, "signal-source-url"],
+    ["posted after retrieval", { postedDate: "2026-08-02", retrievalDate: "2026-08-01" }, "signal-source-date-order"],
+    ["retrieval after review", { retrievalDate: "2026-09-02", reviewAfter: "2026-09-01" }, "signal-source-date-order"],
+    ["stale", { reviewAfter: "2026-08-03" }, "signal-source-stale"],
+  ]) {
+    const result = await validateCollection([
+      posting("posting-a", [repeatedSignal()], override), posting("posting-b"), posting("posting-c"),
+    ], { asOfDate: "2026-08-04" });
+    assert.equal(result.valid, false, label);
+    assert.ok(result.errors.some(({ code }) => code === expectedCode), `${label}: ${JSON.stringify(result.errors)}`);
+  }
+});
+
+test("Collection validator rejects forged large secondary samples and inconsistent scope", async () => {
+  const forged = repeatedSignal({ count: 2000, denominator: 999 });
+  forged.sourceRefs = Array.from({ length: 2000 }, (_, index) => ({
+    sourceId: index % 2 === 0 ? "posting-a" : "posting-b",
+    field: "responsibilities",
+    index: 0,
+    statement: "Design combat systems",
+    normalizedValue: "design combat systems",
+    requirementId: `${index % 2 === 0 ? "posting-a" : "posting-b"}:responsibilities:0`,
+  }));
+  const result = await validateCollection([
+    posting("posting-a", [forged], { sourceType: "secondary-context", sourceUrl: "file:///tmp/a.json", sampleSize: 999, sampleGeography: ["GLOBAL"] }),
+    posting("posting-b", [], { sourceType: "secondary-context", sourceUrl: "file:///tmp/b.json", sampleSize: 999, sampleGeography: ["GLOBAL"] }),
+    posting("posting-c", [], { sourceType: "secondary-context", sourceUrl: "file:///tmp/c.json", sampleSize: 999, sampleGeography: ["GLOBAL"] }),
+  ], { asOfDate: "2026-08-04" });
+  const codes = new Set(result.errors.map(({ code }) => code));
+  assert.ok(codes.has("duplicate-signal-source-ref"));
+  assert.ok(codes.has("signal-count-mismatch"));
+  assert.ok(codes.has("signal-denominator-mismatch"));
+  assert.ok(codes.has("sample-size-mismatch"));
+  assert.ok(codes.has("sample-geography-mismatch"));
+  assert.ok(codes.has("signal-source-not-primary"));
+  assert.ok(codes.has("signal-source-url"));
+});
+
+test("Collection validator requires an explicit valid as-of date for repeated signals", async () => {
+  const records = [posting("posting-a", [repeatedSignal()]), posting("posting-b"), posting("posting-c")];
+  assert.ok((await validateCollection(records)).errors.some(({ code }) => code === "missing-as-of-date"));
+  assert.ok((await validateCollection(records, { asOfDate: "2026-02-30" })).errors.some(({ code }) => code === "invalid-as-of-date"));
+});
+
+test("Collection validator preserves empty repeated signals and rejects undersized or duplicate signals", async () => {
+  const empty = await validateCollection([
+    posting("posting-a", [], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
+  ]);
+  assert.deepEqual(empty, { valid: true, errors: [] });
+
+  const undersized = repeatedSignal();
+  undersized.sourceRefs.pop();
+  undersized.count = 1;
+  const undersizedResult = await validateCollection([
+    posting("posting-a", [undersized], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
+  ], { asOfDate: "2026-08-04" });
+  assert.ok(undersizedResult.errors.some(({ code }) => code === "signal-source-ref-minimum"));
+
+  const duplicateResult = await validateCollection([
+    posting("posting-a", [repeatedSignal(), repeatedSignal()], { sampleSize: 3 }),
+    posting("posting-b"), posting("posting-c"),
+  ], { asOfDate: "2026-08-04" });
+  assert.ok(duplicateResult.errors.some(({ code }) => code === "duplicate-signal-id"));
 });
 
 test("Job evidence records sample scope, provenance, and blind spots", async () => {
@@ -212,6 +322,7 @@ test("Research method prefers fresh primary sources and retains retrieval metada
   assert.match(method, /official company career pages/iu);
   assert.match(method, /official project or platform sources/iu);
   assert.match(method, /retrievalDate/iu);
+  assert.match(method, /reviewAfter/iu);
   assert.match(method, /postedDate/iu);
   assert.match(method, /sampleSize/iu);
   assert.match(method, /sampleGeography/iu);
@@ -237,7 +348,9 @@ test("Research skill keeps candidate evidence and gaps honest", async () => {
   assert.match(skill, /Do not fabricate/iu);
   assert.match(skill, /missing evidence/iu);
   assert.match(skill, /validate-job-evidence\.mjs/iu);
-  assert.match(skill, /cross-reference.*sourceIds.*sourceId/isu);
+  assert.match(skill, /sourceRefs/iu);
+  assert.match(skill, /byte-exact/iu);
+  assert.match(skill, /--as-of/iu);
 });
 
 test("Both skills use portable trigger-only metadata and progressive references", async () => {

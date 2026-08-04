@@ -12,6 +12,7 @@
     "postedDate",
     "sourceUrl",
     "retrievalDate",
+    "reviewAfter",
     "responsibilities",
     "requiredSkills",
     "preferredSkills",
@@ -39,6 +40,7 @@
     "postedDate": { "type": ["string", "null"], "format": "date" },
     "sourceUrl": { "type": "string", "format": "uri" },
     "retrievalDate": { "type": "string", "format": "date" },
+    "reviewAfter": { "type": "string", "format": "date" },
     "responsibilities": { "type": "array", "items": { "type": "string" } },
     "requiredSkills": { "type": "array", "items": { "type": "string" } },
     "preferredSkills": { "type": "array", "items": { "type": "string" } },
@@ -46,12 +48,30 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["signal", "count", "denominator", "sourceIds"],
+        "required": ["signalId", "signal", "normalizedValue", "count", "denominator", "sourceRefs"],
         "properties": {
-          "signal": { "type": "string" },
+          "signalId": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$" },
+          "signal": { "type": "string", "minLength": 1 },
+          "normalizedValue": { "type": "string", "minLength": 1 },
           "count": { "type": "integer", "minimum": 2 },
           "denominator": { "type": "integer", "minimum": 2 },
-          "sourceIds": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string" } }
+          "sourceRefs": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["sourceId", "field", "index", "statement", "normalizedValue", "requirementId"],
+              "properties": {
+                "sourceId": { "type": "string", "minLength": 1 },
+                "field": { "type": "string", "enum": ["responsibilities", "requiredSkills", "preferredSkills"] },
+                "index": { "type": "integer", "minimum": 0 },
+                "statement": { "type": "string", "minLength": 1 },
+                "normalizedValue": { "type": "string", "minLength": 1 },
+                "requirementId": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
         },
         "additionalProperties": false
       }

@@ -20,10 +20,12 @@ Build a dated evidence set before making current-job claims. Keep each posting's
 1. Define the target role, level, region, employment type, retrieval date, and evidence question. If these are unclear, label the scope provisional rather than silently broadening it.
 2. Prefer official company career pages for postings and official project or platform sources for project facts. Use secondary sources only as leads or explicitly labeled context.
 3. Create one schema-valid record per posting with a stable, collection-unique `sourceId`. Keep `applicantEvidence`, `gaps`, and `nonGeneralizable` as independent fields; never collapse them into fit notes.
-4. Mark a requirement posting-specific unless it appears in distinct primary postings. Cross-reference every repeated-signal `sourceIds` member to an existing posting `sourceId`. Require unique IDs, `count` equal to the unique source count, `denominator` equal to the deduplicated posting sample, and `count <= denominator`.
-5. Compare the posting evidence with supplied candidate artifacts. Do not fabricate experience, metrics, ownership, results, applicant evidence, or missing evidence. A missing claim remains a gap or verification task.
-6. Do not infer hiring volume, market growth, compensation, suitability, or universal role requirements from a single posting or a convenience sample.
-7. From this skill directory, run `node scripts/validate-job-evidence.mjs <collection.json>`. Stop completion when it reports a missing or duplicate posting ID, orphan signal ID, duplicate signal ID, count mismatch, denominator mismatch, or count above denominator.
+4. Mark a requirement posting-specific unless its deterministic normalized value appears in at least two distinct official company career postings. For every repeated signal, preserve a stable `signalId` and exact `sourceRefs` with posting `sourceId`, allowed field, index, byte-exact statement, matching normalized value, and deterministic `<sourceId>:<field>:<index>` requirement ID. Never invent or paraphrase the signal text.
+5. Require each cited repeated-signal source to use an HTTPS official company career URL and real ISO dates satisfying `postedDate <= retrievalDate <= asOfDate <= reviewAfter`. Re-retrieve evidence after `reviewAfter`; do not use stale or secondary evidence for a current repeated signal.
+6. Require unique refs from distinct postings, at least two refs, `count` equal to the distinct cited posting count, `denominator` and `sampleSize` equal to the deduplicated collection size, and `sampleGeography` equal to the collection's actual distinct regions.
+7. Compare the posting evidence with supplied candidate artifacts. Do not fabricate experience, metrics, ownership, results, applicant evidence, or missing evidence. A missing claim remains a gap or verification task.
+8. Do not infer hiring volume, market growth, compensation, suitability, or universal role requirements from a single posting or a convenience sample.
+9. From this skill directory, run `node scripts/validate-job-evidence.mjs <collection.json> --as-of YYYY-MM-DD` when repeated signals exist. Stop completion on any source binding, provenance, freshness, date, scope, count, denominator, or uniqueness error. Empty `repeatedSignals` collections remain valid without `--as-of`.
 
 ## Output Contract
 
@@ -32,7 +34,7 @@ Return:
 - research scope and retrieval date;
 - schema-valid posting records;
 - posting-specific requirements;
-- repeated signals with numerator, denominator, and source IDs;
+- repeated signals with stable IDs, normalized values, numerator, denominator, and exact source refs;
 - independent `applicantEvidence`, `gaps`, and `nonGeneralizable` findings;
 - sample size, sample geography, source mix, blind spots, and inference limits;
 - gap-to-exercise-to-proof-artifact recommendations that do not promise hiring outcomes.
