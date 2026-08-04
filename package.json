@@ -6,6 +6,7 @@
     "test": "node --test",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:contracts": "node --test tests/contracts/*.test.mjs",
+    "test:shared-contract": "node --test tests/contracts/shared-contract.test.mjs",
     "build": "node tooling/build-snapshots.mjs",
     "validate": "node tooling/validate-suite.mjs"
   },
