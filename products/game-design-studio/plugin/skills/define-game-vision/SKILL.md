@@ -43,7 +43,7 @@ Produce `vision-pillars` with stable sections for target player, experience inte
 
 ## Responsible-design gates
 
-Read [gates.json](../../../../../shared/responsible-design/gates.json) as the authority before evaluating gates. Ask every gate's `applicability_questions`, gather its `evidence_fields`, and keep its declared approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When a gate is applicable, initialize `pending`; otherwise use `not-applicable`. Only `not-applicable`, `pending`, `blocked`, and `approved` are lifecycle values. Missing evidence cannot become approval.
+Read [gates.json](../../references/shared/responsible-design/gates.json) as the authority before evaluating gates. Ask every gate's `applicability_questions`, gather its `evidence_fields`, and keep its declared approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When a gate is applicable, initialize `pending`; otherwise use `not-applicable`. Only `not-applicable`, `pending`, `blocked`, and `approved` are lifecycle values. Missing evidence cannot become approval.
 
 ## Role reviewers
 

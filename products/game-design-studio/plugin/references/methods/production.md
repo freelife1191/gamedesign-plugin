@@ -27,7 +27,7 @@ For every quantitative or approval-relevant claim, record `source`, `assumption`
 
 ## Current evidence routing
 
-For platform policy, monetization, regulation, AI rights, and accessibility claims, read [2026-current-practices.md](../../../../../shared/knowledge/trends/2026-current-practices.md) and resolve its sources through [source-register.json](../../../../../shared/knowledge/trends/source-register.json). Create an evidence entry with `claimId`, `sourceIds`, `verifiedAt`, `reviewAfter`, `regionScope`, and `limitations`. When `reviewAfter` has expired, keep the claim pending or blocked until current primary evidence is reverified. Market or industry surveys are contextual planning signals, not a project capacity estimate or demand forecast.
+For platform policy, monetization, regulation, AI rights, and accessibility claims, read [2026-current-practices.md](../shared/knowledge/trends/2026-current-practices.md) and resolve its sources through [source-register.json](../shared/knowledge/trends/source-register.json). Create an evidence entry with `claimId`, `sourceIds`, `verifiedAt`, `reviewAfter`, `regionScope`, and `limitations`. When `reviewAfter` has expired, keep the claim pending or blocked until current primary evidence is reverified. Market or industry surveys are contextual planning signals, not a project capacity estimate or demand forecast.
 
 ## Hard No-Go conditions
 
@@ -39,7 +39,7 @@ For platform policy, monetization, regulation, AI rights, and accessibility clai
 
 ## Responsible-design gates
 
-Read [gates.json](../../../../../shared/responsible-design/gates.json) as authority. For `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`, ask `applicability_questions`, collect `evidence_fields`, and retain the named approver. When applicable, initialize pending; otherwise record not applicable. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence is never approved.
+Read [gates.json](../shared/responsible-design/gates.json) as authority. For `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`, ask `applicability_questions`, collect `evidence_fields`, and retain the named approver. When applicable, initialize pending; otherwise record not applicable. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence is never approved.
 
 ## Adversarial example
 

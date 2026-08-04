@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 10개, 이식 가능한 전문 역할 프롬프트 6개, Canonical Artifact 템플릿 15개, 세 가지 선택 프로필과 universal core, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 11개입니다.
+플러그인은 제품 스킬 10개, 이식 가능한 전문 역할 프롬프트 6개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 11개입니다.
 
 ## 설치
 
@@ -71,7 +71,7 @@ codex plugin marketplace remove game-design-suite
 - `shared/`는 Core/Current 지식, 책임 있는 설계, 내보내기 스키마·QA 계약, hooks, shared runtime scripts와 vendored Skillstead의 공동 입력입니다.
 - `plugins/game-design-studio`는 suite build가 두 원천을 깨끗한 staging 디렉터리에서 합성하는 generated independent snapshot입니다. 저장소나 다른 플러그인의 상대 경로 없이 독립 설치할 수 있어야 합니다.
 
-`plugins/game-design-studio`와 `BUILD-MANIFEST.json`은 suite build가 소유합니다. 생성 결과를 직접 편집하지 마십시오. 변경은 `products/` 또는 `shared/` 원천에 적용하고 검증한 뒤 다시 빌드합니다.
+`plugins/game-design-studio`는 suite build가 소유합니다. 생성 결과를 직접 편집하지 마십시오. 변경은 `products/` 또는 `shared/` 원천에 적용하고 검증한 뒤 다시 빌드합니다.
 
 배포 스냅샷은 다음 구조를 가집니다.
 
@@ -91,7 +91,7 @@ plugins/game-design-studio/
 │   └── validate-artifact.mjs
 ├── references/
 │   ├── <Studio routing, methods, profiles, export/visualization contracts>
-│   ├── profiles/
+│   ├── profiles/                    # 4개: universal core 1 + 선택 프로필 3
 │   ├── shared/
 │   │   ├── knowledge/
 │   │   │   ├── core/
@@ -102,6 +102,8 @@ plugins/game-design-studio/
 │   │       ├── qa-contracts/
 │   │       └── themes/
 │   └── source/docs/                 # 원문 49개
+├── examples/
+│   └── intent-invocation-contract/  # vendored Skillstead 상대 링크의 package-local target
 ├── assets/
 │   ├── product-mark.svg
 │   ├── templates/                   # Studio Canonical Artifact 15개
@@ -109,8 +111,12 @@ plugins/game-design-studio/
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
 ├── README.md
-└── BUILD-MANIFEST.json              # suite build가 만드는 파일 목록·해시
+└── BUILD-MANIFEST.json              # suite 통합 단계의 미래 release 산출물
 ```
+
+현재 `buildProduct` 출력에는 `BUILD-MANIFEST.json`이 없습니다. 위 항목은 suite 통합 단계의 미래 release 산출물이며, 현재 clean-built snapshot의 존재 파일로 간주하면 안 됩니다. 저수준 builder는 현재 파일 목록과 SHA-256을 반환할 뿐 manifest 파일을 쓰지 않습니다.
+
+제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
 검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (11개)`는 제품 스킬 10개와 `skills/svg-infographic/`이고 `agents/ (6개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
 
@@ -316,16 +322,21 @@ node --test tests/products/studio/*.test.mjs tests/e2e/studio/*.test.mjs
 10개 source skill의 공식 구조를 확인합니다.
 
 ```bash
-find products/game-design-studio/plugin/skills -name SKILL.md -print0 | xargs -0 -n1 dirname | while read skill_dir; do python3 /Users/freelife/.codex/skills/.system/skill-creator/scripts/quick_validate.py "$skill_dir"; done
+CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"
+find products/game-design-studio/plugin/skills -name SKILL.md -print0 |
+  while IFS= read -r -d '' skill_file; do
+    python3 "$CODEX_ROOT/skills/.system/skill-creator/scripts/quick_validate.py" "$(dirname "$skill_file")"
+  done
 ```
 
 source plugin manifest를 확인합니다.
 
 ```bash
-python3 /Users/freelife/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py products/game-design-studio/plugin
+CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"
+python3 "$CODEX_ROOT/skills/.system/plugin-creator/scripts/validate_plugin.py" products/game-design-studio/plugin
 ```
 
-절대 경로가 들어간 두 검증 예시는 이 저장소를 만든 로컬 개발 환경의 설치 위치를 사용합니다. 다른 환경에서는 설치된 `skill-creator`와 `plugin-creator`의 실제 경로로 바꾸십시오. Codex 설치 명령 문법은 로컬 `codex plugin ... --help`로 확인했습니다. 배포 snapshot 생성, 독립 설치 smoke와 전체 형식 render는 suite 통합 검증이 소유합니다.
+`CODEX_HOME`을 지정하지 않으면 명령은 `$HOME/.codex`를 사용합니다. 두 경로 모두 따옴표로 감싸므로 공백이 있는 홈이나 사용자 지정 Codex 디렉터리에서도 하나의 인자로 전달됩니다. Codex 설치 명령 문법은 로컬 `codex plugin ... --help`로 확인했습니다. 배포 snapshot 생성, 독립 설치 smoke와 전체 형식 render는 suite 통합 검증이 소유합니다.
 
 ## 라이선스
 

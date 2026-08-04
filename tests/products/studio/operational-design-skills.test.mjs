@@ -6,10 +6,11 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
-const gateRegistryPath = path.join(repoRoot, "shared/responsible-design/gates.json");
-const relativeGateRegistry = "../../../../../shared/responsible-design/gates.json";
-const currentPracticePath = "../../../../../shared/knowledge/trends/2026-current-practices.md";
-const currentRegisterPath = "../../../../../shared/knowledge/trends/source-register.json";
+const gateRegistryPath = path.join(pluginRoot, "references/shared/responsible-design/gates.json");
+const skillGateRegistry = "../../references/shared/responsible-design/gates.json";
+const methodGateRegistry = "../shared/responsible-design/gates.json";
+const currentPracticePath = "../shared/knowledge/trends/2026-current-practices.md";
+const currentRegisterPath = "../shared/knowledge/trends/source-register.json";
 
 const contracts = {
   "design-player-experience": {
@@ -463,7 +464,8 @@ test("all operational skills and methods use the exact canonical gate lifecycle"
   for (const [skillId, { method }] of Object.entries(contracts)) {
     for (const [label, markdown] of [[`${skillId}: skill`, await readSkill(skillId)], [`${skillId}: method`, await readMethod(method)]]) {
       const gates = section(markdown, "Responsible-design gates");
-      assert.match(gates, new RegExp(relativeGateRegistry.replaceAll(".", "\\."), "u"), `${label}: registry`);
+      const expectedRegistry = label.endsWith(": skill") ? skillGateRegistry : methodGateRegistry;
+      assert.match(gates, new RegExp(expectedRegistry.replaceAll(".", "\\."), "u"), `${label}: registry`);
       assert.match(gates, /applicability_questions/iu, `${label}: applicability`);
       assert.match(gates, /evidence_fields/iu, `${label}: evidence`);
       for (const gateId of gateIds) assert.match(gates, new RegExp(`\\b${gateId}\\b`, "u"), `${label}: ${gateId}`);

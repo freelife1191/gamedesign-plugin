@@ -6,8 +6,9 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
-const gateRegistryPath = path.join(repoRoot, "shared/responsible-design/gates.json");
-const relativeGateRegistry = "../../../../../shared/responsible-design/gates.json";
+const gateRegistryPath = path.join(pluginRoot, "references/shared/responsible-design/gates.json");
+const skillGateRegistry = "../../references/shared/responsible-design/gates.json";
+const methodGateRegistry = "../shared/responsible-design/gates.json";
 
 const contracts = {
   "define-game-vision": {
@@ -187,7 +188,7 @@ test("each skill independently owns its operating, output, review, and gate cont
     assertContains(section(skill, "Role reviewers"), contract.reviewers, `${skillId}: reviewers`);
 
     const gatePolicy = section(skill, "Responsible-design gates");
-    assert.match(gatePolicy, new RegExp(relativeGateRegistry.replaceAll(".", "\\."), "u"));
+    assert.match(gatePolicy, new RegExp(skillGateRegistry.replaceAll(".", "\\."), "u"));
     assert.match(gatePolicy, /applicability_questions/iu);
     assertContains(gatePolicy, ["not-applicable", "pending", "blocked", "approved"], `${skillId}: states`);
     assert.doesNotMatch(gatePolicy, /(?:state|status)[^\n]*`applicable`|`applicable`[^\n]*(?:state|status)/iu);
@@ -251,7 +252,8 @@ test("every skill and method reads the canonical registry and covers every gate 
     const [skill, methodText] = await Promise.all([readSkill(skillId), readMethod(method)]);
     for (const [label, markdown] of [[`${skillId}: skill`, skill], [`${skillId}: method`, methodText]]) {
       const gatePolicy = section(markdown, "Responsible-design gates");
-      assert.match(gatePolicy, new RegExp(relativeGateRegistry.replaceAll(".", "\\."), "u"), `${label}: registry`);
+      const expectedRegistry = label.endsWith(": skill") ? skillGateRegistry : methodGateRegistry;
+      assert.match(gatePolicy, new RegExp(expectedRegistry.replaceAll(".", "\\."), "u"), `${label}: registry`);
       assert.match(gatePolicy, /applicability_questions/iu, `${label}: applicability questions`);
       assert.match(gatePolicy, /evidence_fields/iu, `${label}: evidence fields`);
       assertContains(gatePolicy, gateIds, `${label}: gates`);

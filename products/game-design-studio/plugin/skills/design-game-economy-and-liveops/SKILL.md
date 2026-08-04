@@ -42,7 +42,7 @@ Produce either `economy-balance` or `liveops-experiment-event` with stable secti
 
 ## Responsible-design gates
 
-Read [gates.json](../../../../../shared/responsible-design/gates.json) as authority. Ask every gate's `applicability_questions`, collect its `evidence_fields`, and retain its approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When applicable, initialize pending; otherwise record not applicable. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence cannot become approval.
+Read [gates.json](../../references/shared/responsible-design/gates.json) as authority. Ask every gate's `applicability_questions`, collect its `evidence_fields`, and retain its approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When applicable, initialize pending; otherwise record not applicable. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence cannot become approval.
 
 ## Role reviewers
 
