@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "game-design-studio",
+  "displayName": "Game Design Studio",
+  "description": "Professional game design, review, visualization, and export workflows.",
+  "sharedModules": ["knowledge", "templates", "responsible-design", "export", "vendor"],
+  "sharedRuntime": true,
+  "sourceRoots": ["plugin"],
+  "sourceDocumentCategories": ["career", "fun-intent", "systems", "content", "feedback"]
+}
