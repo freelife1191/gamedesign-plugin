@@ -144,3 +144,26 @@ test("tree audit fails closed on unclosed shell quotes and deeply encoded vendor
     }
   }
 });
+
+test("tree audit tokenizes adjacent POSIX operators and decodes the vendor prefix before filtering", async (t) => {
+  for (const operator of ["|", "||", "&&", "&", ";", "<", ">", "(", ")"]) {
+    const root = await fixture(
+      t,
+      "SKILL.md",
+      `echo safe${operator}node skills/svg-infographic/scripts/render.mjs input.svg output.png\n`,
+    );
+    await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI/u);
+  }
+
+  for (const encodedPrefix of [
+    "%73vg-infographic",
+    `%${"25".repeat(32)}73vg-infographic`,
+  ]) {
+    const root = await fixture(
+      t,
+      "SKILL.md",
+      `node skills/${encodedPrefix}/scripts/check-svg.mjs output.svg\n`,
+    );
+    await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI|encoded shell path/i);
+  }
+});

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, lstat, mkdir, mkdtemp, readFile, realpath, rename as fsRename, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rename as fsRename, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -141,9 +141,29 @@ test("clean replacement touches only the two explicit plugin directories and che
   const unrelated = path.join(fixtureRepo, "plugins", "unrelated-private-plugin", "sentinel.txt");
   await mkdir(path.dirname(unrelated), { recursive: true });
   await writeFile(unrelated, "do not touch\n");
+  await chmod(path.join(fixtureRepo, "plugins"), 0o711);
+  const pluginsBefore = await lstat(path.join(fixtureRepo, "plugins"));
+  const unrelatedBefore = await lstat(path.dirname(unrelated));
 
-  await buildSnapshots({ repoRoot: fixtureRepo, mode: "clean" });
+  const builds = await buildSnapshots({ repoRoot: fixtureRepo, mode: "clean" });
+  t.after(() => rm(builds.recovery.recoveryRoot, { recursive: true, force: true }));
+  const pluginsAfter = await lstat(path.join(fixtureRepo, "plugins"));
+  const unrelatedAfter = await lstat(path.dirname(unrelated));
+  assert.equal(pluginsAfter.mode & 0o777, 0o711);
+  assert.deepEqual([pluginsAfter.dev, pluginsAfter.ino], [pluginsBefore.dev, pluginsBefore.ino]);
+  assert.deepEqual([unrelatedAfter.dev, unrelatedAfter.ino], [unrelatedBefore.dev, unrelatedBefore.ino]);
   assert.equal(await readFile(unrelated, "utf8"), "do not touch\n");
+  assert.equal(builds.recovery?.state, "committed-recovery-retained");
+  await assertCanonicalExisting(builds.recovery?.recoveryRoot);
+  const marker = JSON.parse(await readFile(path.join(builds.recovery.recoveryRoot, "SNAPSHOT-RECOVERY.json"), "utf8"));
+  assert.equal(marker.repoRoot, await realpath(fixtureRepo));
+  assert.deepEqual(marker.products, productNames);
+  for (const productName of productNames) {
+    assert.equal(
+      await readFile(path.join(builds.recovery.recoveryRoot, productName, "old.txt"), "utf8"),
+      `${productName} old\n`,
+    );
+  }
   assert.equal(await lstat(path.join(fixtureRepo, ".tmp")).then(() => true, (error) => error.code !== "ENOENT"), false);
   const before = await Promise.all(productNames.map((name) => collectTree(path.join(fixtureRepo, "plugins", name))));
   await buildSnapshots({ repoRoot: fixtureRepo, mode: "check" });
@@ -153,6 +173,39 @@ test("clean replacement touches only the two explicit plugin directories and che
     before.map((entries) => entries.map(({ relativePath, bytes }) => [relativePath, bytes.toString("hex")])),
   );
   assert.equal(await readFile(unrelated, "utf8"), "do not touch\n");
+});
+
+test("a successful clean retains only its current marked recovery bundle and isolates old-bundle GC failures", async (t) => {
+  const { fixtureRepo } = await createSnapshotFixture(t);
+  for (const productName of productNames) {
+    const destination = path.join(fixtureRepo, "plugins", productName);
+    await mkdir(destination, { recursive: true });
+    await writeFile(path.join(destination, "generation.txt"), "generation one\n");
+  }
+  const first = await buildSnapshots({ repoRoot: fixtureRepo, mode: "clean" });
+  const firstRecovery = first.recovery.recoveryRoot;
+  t.after(() => rm(firstRecovery, { recursive: true, force: true }));
+  await assertCanonicalExisting(firstRecovery);
+
+  const second = await buildSnapshots({
+    repoRoot: fixtureRepo,
+    mode: "clean",
+    operations: {
+      gcRm: async (target, options) => {
+        if (target === firstRecovery) throw new Error("injected old recovery GC failure");
+        return rm(target, options);
+      },
+    },
+  });
+  assert.notEqual(second.recovery.recoveryRoot, firstRecovery);
+  t.after(() => rm(second.recovery.recoveryRoot, { recursive: true, force: true }));
+  await assertCanonicalExisting(second.recovery.recoveryRoot);
+  await assertCanonicalExisting(firstRecovery);
+  assert.match(second.recovery.warnings.join("\n"), /old recovery GC failure/i);
+  for (const productName of productNames) {
+    assert.equal((await lstat(path.join(fixtureRepo, "plugins", productName))).isDirectory(), true);
+    await assertCanonicalExisting(path.join(second.recovery.recoveryRoot, productName));
+  }
 });
 
 test("snapshot installation rejects symlinked plugin boundaries before either destination changes", async (t) => {
@@ -262,25 +315,55 @@ test("snapshot replacement binds the plugins root entry across preflight and roo
     }
     assert.equal(await readFile(unrelated, "utf8"), "unrelated original\n");
   });
+
+  await t.test("late empty plugins directory cannot capture child installs", async (t) => {
+    const { fixtureRepo } = await createSnapshotFixture(t);
+    for (const productName of productNames) {
+      const destination = path.join(fixtureRepo, "plugins", productName);
+      await mkdir(destination, { recursive: true });
+      await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+    }
+    const displacedPlugins = path.join(fixtureRepo, "plugins-displaced");
+    await assert.rejects(() => buildSnapshots({
+      repoRoot: fixtureRepo,
+      mode: "clean",
+      operations: {
+        beforeRootInstall: async () => {
+          await fsRename(path.join(fixtureRepo, "plugins"), displacedPlugins);
+          await mkdir(path.join(fixtureRepo, "plugins"));
+        },
+      },
+    }), /plugins root|identity|visible/i);
+
+    assert.deepEqual(await readdir(path.join(fixtureRepo, "plugins")), []);
+    for (const productName of productNames) {
+      assert.equal(
+        await readFile(path.join(displacedPlugins, productName, "IRREPLACEABLE.txt"), "utf8"),
+        `${productName} original\n`,
+      );
+    }
+  });
 });
 
-test("snapshot replacement restores originals when the root install rename fails", async (t) => {
+test("snapshot replacement restores originals when a child install rename fails", async (t) => {
   const { fixtureRepo } = await createSnapshotFixture(t);
   for (const productName of productNames) {
     const destination = path.join(fixtureRepo, "plugins", productName);
     await mkdir(destination, { recursive: true });
     await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
   }
+  let installFailureInjected = false;
   const renameOperation = async (source, destination) => {
-    if (path.basename(source) === ".complete-plugins-root" && path.basename(destination) === "plugins") {
-      throw new Error("injected root install failure");
+    if (!installFailureInjected && path.basename(source) === "game-design-studio" && destination === "game-design-studio") {
+      installFailureInjected = true;
+      throw new Error("injected child install failure");
     }
     return fsRename(source, destination);
   };
 
   const error = await buildSnapshots({ repoRoot: fixtureRepo, mode: "clean", operations: { rename: renameOperation } })
     .then(() => undefined, (caught) => caught);
-  assert.match(error.message, /injected root install failure/i);
+  assert.match(error.message, /injected child install failure/i);
   assert.equal(error.recovery, undefined);
   for (const productName of productNames) {
     assert.equal(
@@ -302,24 +385,27 @@ test("snapshot transaction preserves originals or an external recovery copy acro
   }
 
   for (const phase of ["backup", "install"]) {
-    await t.test(`${phase} root rename failure`, async (t) => {
+    await t.test(`${phase} child rename failure`, async (t) => {
       const { fixtureRepo } = await fixtureWithOriginals(t);
+      let failureInjected = false;
       const error = await buildSnapshots({
         repoRoot: fixtureRepo,
         mode: "clean",
         operations: {
           rename: async (source, destination) => {
-            const isBackup = path.basename(source) === "plugins"
+            const isBackup = source === "game-design-career"
+              && path.basename(destination) === "game-design-career"
               && path.basename(path.dirname(destination)).startsWith("snapshot-recovery-");
-            const isInstall = path.basename(source) === ".complete-plugins-root" && path.basename(destination) === "plugins";
-            if ((phase === "backup" && isBackup) || (phase === "install" && isInstall)) {
-              throw new Error(`injected ${phase} root rename`);
+            const isInstall = path.basename(source) === "game-design-career" && destination === "game-design-career";
+            if (!failureInjected && ((phase === "backup" && isBackup) || (phase === "install" && isInstall))) {
+              failureInjected = true;
+              throw new Error(`injected ${phase} child rename`);
             }
             return fsRename(source, destination);
           },
         },
       }).then(() => undefined, (caught) => caught);
-      assert.match(error.message, new RegExp(`injected ${phase} root rename`, "i"));
+      assert.match(error.message, new RegExp(`injected ${phase} child rename`, "i"));
       assert.equal(error.recovery, undefined);
       for (const productName of productNames) {
         assert.equal(await readFile(path.join(fixtureRepo, "plugins", productName, "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
@@ -327,18 +413,18 @@ test("snapshot transaction preserves originals or an external recovery copy acro
     });
   }
 
-  await t.test("installed root quarantine failure", async (t) => {
+  await t.test("installed child quarantine failure", async (t) => {
     const { fixtureRepo } = await fixtureWithOriginals(t);
     const error = await buildSnapshots({
       repoRoot: fixtureRepo,
       mode: "clean",
       operations: {
         beforeRootInstall: async ({ stagedPluginsRoot }) => {
-          await writeFile(path.join(stagedPluginsRoot, "post-audit-mutation.txt"), "trigger rollback\n");
+          await writeFile(path.join(stagedPluginsRoot, "game-design-career/post-audit-mutation.txt"), "trigger rollback\n");
         },
         rename: async (source, destination) => {
-          if (path.basename(source) === "plugins" && path.basename(destination) === "failed-install") {
-            throw new Error("injected installed root quarantine failure");
+          if (source === "game-design-career" && path.basename(destination) === "failed-game-design-career") {
+            throw new Error("injected installed child quarantine failure");
           }
           return fsRename(source, destination);
         },
@@ -351,17 +437,16 @@ test("snapshot transaction preserves originals or an external recovery copy acro
     const career = error.recovery.products["game-design-career"];
     const studio = error.recovery.products["game-design-studio"];
     assert.equal(career.status, "recovery-required");
-    assert.equal(studio.status, "recovery-required");
+    assert.equal(studio.status, "restored");
     await assertCanonicalExisting(career.originalLocation);
     await assertCanonicalExisting(career.backupLocation);
     await assertCanonicalExisting(career.installedSnapshotLocation);
     assert.equal(career.originalLocation, career.backupLocation);
     assert.match(career.manualAction, /remove.*installed.*restore|restore.*backup/i);
     await assertCanonicalExisting(studio.originalLocation);
-    await assertCanonicalExisting(studio.backupLocation);
-    await assertCanonicalExisting(studio.installedSnapshotLocation);
-    assert.equal(studio.originalLocation, studio.backupLocation);
-    assert.match(studio.manualAction, /remove.*installed.*restore|restore.*backup/i);
+    assert.equal(studio.backupLocation, null);
+    assert.equal(studio.installedSnapshotLocation, null);
+    assert.match(studio.manualAction, /no manual recovery required/i);
     assert.equal(await readFile(path.join(career.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-career original\n");
     assert.equal(await readFile(path.join(studio.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-studio original\n");
     await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
@@ -375,10 +460,14 @@ test("snapshot transaction preserves originals or an external recovery copy acro
       mode: "clean",
       operations: {
         rename: async (source, destination) => {
-          if (path.basename(source) === ".complete-plugins-root" && path.basename(destination) === "plugins") {
+          if (path.basename(source) === "game-design-career"
+            && path.basename(path.dirname(source)).startsWith("snapshot-build-")
+            && destination === "game-design-career") {
             throw new Error("trigger restore rollback");
           }
-          if (path.basename(source) === "plugins" && path.basename(path.dirname(source)).startsWith("snapshot-recovery-") && path.basename(destination) === "plugins") {
+          if (path.basename(source) === "game-design-career"
+            && path.basename(path.dirname(source)).startsWith("snapshot-recovery-")
+            && destination === "game-design-career") {
             throw new Error("injected restore failure");
           }
           return fsRename(source, destination);
@@ -394,9 +483,9 @@ test("snapshot transaction preserves originals or an external recovery copy acro
     assert.equal(career.originalLocation, career.backupLocation);
     assert.equal(career.installedSnapshotLocation, null);
     assert.match(career.manualAction, /restore.*backup/i);
-    assert.equal(studio.status, "recovery-required");
+    assert.equal(studio.status, "restored");
     await assertCanonicalExisting(studio.originalLocation);
-    assert.equal(studio.originalLocation, studio.backupLocation);
+    assert.equal(studio.backupLocation, null);
     assert.equal(studio.installedSnapshotLocation, null);
     assert.equal(await readFile(path.join(career.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-career original\n");
     assert.equal(await readFile(path.join(studio.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-studio original\n");
@@ -404,22 +493,22 @@ test("snapshot transaction preserves originals or an external recovery copy acro
     await rm(error.recovery.stagingRoot, { recursive: true, force: true });
   });
 
-  await t.test("committed backup cleanup failure", async (t) => {
+  await t.test("committed backup is retained without destructive current cleanup", async (t) => {
     const { fixtureRepo } = await fixtureWithOriginals(t);
-    const error = await buildSnapshots({
+    const builds = await buildSnapshots({
       repoRoot: fixtureRepo,
       mode: "clean",
       operations: {
         rm: async (target, options) => {
-          if (path.basename(target).startsWith("snapshot-recovery-")) throw new Error("injected backup cleanup failure");
+          if (path.basename(target).startsWith("snapshot-recovery-")) throw new Error("current recovery must not be cleaned");
           return rm(target, options);
         },
       },
-    }).then(() => undefined, (caught) => caught);
+    });
 
-    assert.equal(error?.recovery?.state, "committed-recovery-retained");
+    assert.equal(builds.recovery.state, "committed-recovery-retained");
     for (const productName of productNames) {
-      const product = error.recovery.products[productName];
+      const product = builds.recovery.products[productName];
       assert.equal(product.status, "installed");
       await assertCanonicalExisting(product.originalLocation);
       await assertCanonicalExisting(product.backupLocation);
@@ -428,18 +517,22 @@ test("snapshot transaction preserves originals or an external recovery copy acro
       assert.match(product.manualAction, /verify.*installed.*remove.*backup/i);
       assert.equal(await readFile(path.join(product.originalLocation, "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
     }
-    await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
-    await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+    await rm(builds.recovery.recoveryRoot, { recursive: true, force: true });
   });
 
   await t.test("fully restored recovery cleanup failure", async (t) => {
     const { fixtureRepo } = await fixtureWithOriginals(t);
+    let installFailureInjected = false;
     const error = await buildSnapshots({
       repoRoot: fixtureRepo,
       mode: "clean",
       operations: {
         rename: async (source, destination) => {
-          if (path.basename(source) === ".complete-plugins-root" && path.basename(destination) === "plugins") {
+          if (!installFailureInjected
+            && path.basename(source) === "game-design-career"
+            && path.basename(path.dirname(source)).startsWith("snapshot-build-")
+            && destination === "game-design-career") {
+            installFailureInjected = true;
             throw new Error("trigger fully restored rollback");
           }
           return fsRename(source, destination);
@@ -451,7 +544,7 @@ test("snapshot transaction preserves originals or an external recovery copy acro
       },
     }).then(() => undefined, (caught) => caught);
 
-    assert.equal(error?.recovery?.state, "fully-restored-recovery-retained");
+    assert.equal(error?.recovery?.state, "fully-restored-cleanup-partial");
     for (const productName of productNames) {
       const product = error.recovery.products[productName];
       assert.equal(product.status, "restored");

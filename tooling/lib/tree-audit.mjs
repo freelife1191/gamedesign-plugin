@@ -95,6 +95,10 @@ function shellWords(text) {
       finishWord();
       continue;
     }
+    if (/[|&;<>()]/u.test(character)) {
+      finishWord();
+      continue;
+    }
     if (character === "'" || character === '"' || character === "`") {
       quote = character;
       hasWord = true;
@@ -133,8 +137,15 @@ function shellWords(text) {
 function containsRawVendorCli(text) {
   const logicalText = text.replace(/\\\r?\n|\^\r?\n/gu, "");
   for (const line of logicalText.split(/\r?\n/u)) {
-    if (!/(?:svg-infographic|svg-.*infographic)/u.test(line)) continue;
-    for (const rawToken of shellWords(line)) {
+    const decodedLine = decodeCommandText(line);
+    let words;
+    try {
+      words = shellWords(decodedLine);
+    } catch (error) {
+      if (/svg-infographic/u.test(decodedLine)) throw error;
+      continue;
+    }
+    for (const rawToken of words) {
       const token = rawToken
         .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
       if (vendorCliPath.test(path.posix.normalize(token))) return true;

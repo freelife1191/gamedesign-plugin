@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -8,8 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { collectTree } from "./lib/copy-tree.mjs";
 import { createSnapshotStaging } from "./lib/build-product.mjs";
-import { sha256 } from "./lib/hash.mjs";
-import { comparePaths, normalizeRelativePath } from "./lib/paths.mjs";
+import { hashFileEntries } from "./lib/hash.mjs";
 import { syncShared } from "./sync-shared.mjs";
 
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -76,7 +75,16 @@ async function preflightSnapshotDestinations(repoRoot) {
     }
     destinations.set(productName, destination);
   }
-  return { repoRoot: canonicalRepoRoot, pluginsRoot, destinations };
+  return {
+    repoRoot: canonicalRepoRoot,
+    pluginsRoot,
+    pluginsIdentity: {
+      dev: pluginsStats.dev,
+      ino: pluginsStats.ino,
+      mode: pluginsStats.mode & 0o777,
+    },
+    destinations,
+  };
 }
 
 async function canonicalExistingPath(candidate) {
@@ -142,213 +150,215 @@ async function pathExists(candidate) {
   });
 }
 
-async function inventoryPluginsRoot(root, label) {
-  const rootStats = await lstat(root);
-  if (rootStats.isSymbolicLink()) throw new Error(`${label} is a symlink`);
-  if (!rootStats.isDirectory()) throw new Error(`${label} is not a directory`);
-  const entries = [];
-
-  async function visit(directory, prefix = "") {
-    const children = await readdir(directory, { withFileTypes: true });
-    children.sort((left, right) => comparePaths(left.name.normalize("NFC"), right.name.normalize("NFC")));
-    for (const child of children) {
-      const rawRelativePath = prefix ? `${prefix}/${child.name}` : child.name;
-      const relativePath = normalizeRelativePath(rawRelativePath, label);
-      const childPath = path.join(directory, child.name);
-      const stats = await lstat(childPath);
-      if (stats.isSymbolicLink()) throw new Error(`${label} contains symlink ${relativePath}`);
-      const mode = stats.mode & 0o777;
-      if (stats.isDirectory()) {
-        entries.push({ kind: "directory", mode, path: relativePath });
-        await visit(childPath, rawRelativePath);
-      } else if (stats.isFile()) {
-        const bytes = await readFile(childPath);
-        entries.push({ kind: "file", mode, path: relativePath, sha256: sha256(bytes), size: bytes.length });
-      } else {
-        throw new Error(`${label} contains unsupported filesystem entry ${relativePath}`);
-      }
-    }
-  }
-
-  await visit(root);
-  return entries;
+function sameIdentity(stats, identity) {
+  return stats.isDirectory()
+    && !stats.isSymbolicLink()
+    && stats.dev === identity.dev
+    && stats.ino === identity.ino
+    && (stats.mode & 0o777) === identity.mode;
 }
 
-async function copyPreservedEntry(source, destination, label) {
-  const stats = await lstat(source);
-  if (stats.isSymbolicLink()) throw new Error(`${label} is a symlink; non-target plugin entries must be regular files or directories`);
-  const mode = stats.mode & 0o777;
-  if (stats.isDirectory()) {
-    await mkdir(destination, { mode });
-    const children = await readdir(source, { withFileTypes: true });
-    children.sort((left, right) => comparePaths(left.name.normalize("NFC"), right.name.normalize("NFC")));
-    for (const child of children) {
-      await copyPreservedEntry(path.join(source, child.name), path.join(destination, child.name), `${label}/${child.name}`);
-    }
-    await chmod(destination, mode);
-    return;
-  }
-  if (!stats.isFile()) throw new Error(`${label} is an unsupported filesystem entry`);
-  await writeFile(destination, await readFile(source), { mode });
-  await chmod(destination, mode);
+async function assertAnchoredIdentity(identity) {
+  const stats = await stat(".");
+  if (!sameIdentity(stats, identity)) throw new Error("anchored plugins root identity changed");
 }
 
-async function createCompletePluginsRoot({ stagingRoot, pluginsRoot, renameEntry }) {
-  const completeRoot = path.join(stagingRoot, ".complete-plugins-root");
-  await mkdir(completeRoot);
-  const entries = await readdir(pluginsRoot, { withFileTypes: true });
-  entries.sort((left, right) => comparePaths(left.name.normalize("NFC"), right.name.normalize("NFC")));
+async function assertVisibleRootIdentity(pluginsRoot, identity) {
+  const stats = await lstat(pluginsRoot).catch((error) => {
+    if (error.code === "ENOENT") throw new Error("visible plugins root is missing");
+    throw error;
+  });
+  if (!sameIdentity(stats, identity) || await realpath(pluginsRoot) !== pluginsRoot) {
+    throw new Error("visible plugins root identity changed");
+  }
+}
+
+async function verifyProductTree(expectedEntries, productName, label) {
+  const actual = await collectTree(productName, { label });
+  if (hashFileEntries(actual) !== hashFileEntries(expectedEntries)) {
+    throw new Error(`${productName}: ${label} differs from staged snapshot`);
+  }
+}
+
+async function writeRecoveryMarker({ recoveryRoot, repoRoot, products, expectedTrees }) {
+  const markerPath = path.join(recoveryRoot, "SNAPSHOT-RECOVERY.json");
+  const marker = {
+    schemaVersion: 1,
+    state: "committed-recovery-retained",
+    repoRoot,
+    recoveryRoot,
+    products: PRODUCT_NAMES,
+    backups: Object.fromEntries(PRODUCT_NAMES.map((productName) => [productName, {
+      path: path.join(recoveryRoot, productName),
+      treeSha256: products.get(productName).backupTreeSha256,
+      installedTreeSha256: hashFileEntries(expectedTrees.get(productName)),
+    }])),
+  };
+  const bytes = `${JSON.stringify(marker, null, 2)}\n`;
+  await writeFile(markerPath, bytes, { encoding: "utf8", flag: "wx", mode: 0o600 });
+  const verified = JSON.parse(await readFile(markerPath, "utf8"));
+  if (JSON.stringify(verified) !== JSON.stringify(marker)) throw new Error("recovery marker verification failed");
+  return marker;
+}
+
+async function garbageCollectOldRecoveries({ currentRecoveryRoot, repoRoot, operations }) {
+  const warnings = [];
+  const temporaryRoot = await realpath(tmpdir());
+  const entries = await readdir(temporaryRoot, { withFileTypes: true });
   for (const entry of entries) {
-    if (PRODUCT_NAMES.includes(entry.name)) continue;
-    await copyPreservedEntry(
-      path.join(pluginsRoot, entry.name),
-      path.join(completeRoot, entry.name),
-      `plugins/${entry.name}`,
-    );
+    if (!entry.isDirectory() || !entry.name.startsWith("snapshot-recovery-")) continue;
+    const candidate = path.join(temporaryRoot, entry.name);
+    if (candidate === currentRecoveryRoot) continue;
+    let marker;
+    try {
+      marker = JSON.parse(await readFile(path.join(candidate, "SNAPSHOT-RECOVERY.json"), "utf8"));
+    } catch {
+      continue;
+    }
+    if (marker.schemaVersion !== 1
+      || marker.state !== "committed-recovery-retained"
+      || marker.repoRoot !== repoRoot
+      || marker.recoveryRoot !== candidate) continue;
+    try {
+      await (operations.gcRm ?? rm)(candidate, { recursive: true, force: true });
+    } catch (error) {
+      warnings.push(`old recovery GC failure at ${candidate}: ${error.message}`);
+    }
   }
-  for (const productName of PRODUCT_NAMES) {
-    await renameEntry(path.join(stagingRoot, productName), path.join(completeRoot, productName));
-  }
-  return completeRoot;
+  return warnings;
 }
 
-function inventoriesMatch(left, right) {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
-async function replaceSnapshots({ stagingRoot, pluginsRoot, destinations, operations = {} }) {
+async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIdentity, destinations, operations = {} }) {
   const renameEntry = operations.rename ?? rename;
   const removeEntry = operations.rm ?? rm;
   const recoveryRoot = await mkdtemp(path.join(await realpath(tmpdir()), "snapshot-recovery-"));
-  const backupRoot = path.join(recoveryRoot, "plugins");
-  const failedInstallRoot = path.join(recoveryRoot, "failed-install");
-  const unexpectedRootEntry = path.join(recoveryRoot, "unexpected-plugins-entry");
   const products = new Map(PRODUCT_NAMES.map((productName) => [productName, {
     status: "untouched",
     originalLocation: destinations.get(productName),
     backupLocation: null,
     installedSnapshotLocation: null,
+    backupTreeSha256: null,
   }]));
-  let completeRoot;
-  let backupMoved = false;
-  let installed = false;
+  const expectedTrees = new Map();
+  for (const productName of PRODUCT_NAMES) {
+    expectedTrees.set(productName, await collectTree(path.join(stagingRoot, productName), { label: `staged ${productName}` }));
+  }
+  const previousCwd = process.cwd();
+  const movedBackups = [];
+  const installed = [];
+  let recovery;
   try {
-    const inventoryBeforeCopy = await inventoryPluginsRoot(pluginsRoot, "plugins root before staging");
-    completeRoot = await createCompletePluginsRoot({ stagingRoot, pluginsRoot, renameEntry });
-    const inventoryAfterCopy = await inventoryPluginsRoot(pluginsRoot, "plugins root after staging");
-    if (!inventoriesMatch(inventoryBeforeCopy, inventoryAfterCopy)) {
-      throw new Error("plugins root changed while the complete staged root was assembled");
-    }
-    const stagedInventory = await inventoryPluginsRoot(completeRoot, "complete staged plugins root");
-
-    await operations.beforeRootBackup?.({ pluginsRoot, recoveryRoot, stagedPluginsRoot: completeRoot });
-    await renameEntry(pluginsRoot, backupRoot);
-    backupMoved = true;
-    for (const productName of PRODUCT_NAMES) {
-      const backup = path.join(backupRoot, productName);
-      Object.assign(products.get(productName), {
-        status: "backed-up",
-        originalLocation: backup,
-        backupLocation: backup,
-      });
-    }
-    const movedInventory = await inventoryPluginsRoot(backupRoot, "moved plugins root");
-    if (!inventoriesMatch(inventoryAfterCopy, movedInventory)) {
-      throw new Error("plugins root entry changed after preflight and before backup");
-    }
-
-    await operations.beforeRootInstall?.({ pluginsRoot, recoveryRoot, stagedPluginsRoot: completeRoot });
-    if (await pathExists(pluginsRoot)) {
-      await renameEntry(pluginsRoot, unexpectedRootEntry);
-      throw new Error("unexpected plugins root entry appeared before install");
-    }
-    await renameEntry(completeRoot, pluginsRoot);
-    installed = true;
-    for (const productName of PRODUCT_NAMES) {
-      const destination = destinations.get(productName);
-      Object.assign(products.get(productName), {
-        status: "installed",
-        installedSnapshotLocation: destination,
-      });
-    }
-    const installedStats = await lstat(pluginsRoot);
-    if (installedStats.isSymbolicLink() || !installedStats.isDirectory() || await realpath(pluginsRoot) !== pluginsRoot) {
-      throw new Error("installed plugins root is not the expected real directory");
-    }
-    const installedInventory = await inventoryPluginsRoot(pluginsRoot, "installed plugins root");
-    if (!inventoriesMatch(stagedInventory, installedInventory)) throw new Error("installed plugins root differs from staged root");
-  } catch (error) {
-    const issues = [];
-    if (installed) {
-      try {
-        await renameEntry(pluginsRoot, failedInstallRoot);
-        installed = false;
-        for (const productName of PRODUCT_NAMES) {
-          Object.assign(products.get(productName), {
-            status: "backed-up",
-            installedSnapshotLocation: path.join(failedInstallRoot, productName),
-          });
-        }
-      } catch (rollbackError) {
-        for (const productName of PRODUCT_NAMES) products.get(productName).status = "recovery-required";
-        issues.push(`quarantine installed plugins root ${pluginsRoot}: ${rollbackError.message}`);
+    try {
+      process.chdir(pluginsRoot);
+      await assertAnchoredIdentity(pluginsIdentity);
+      await operations.beforeRootBackup?.({ pluginsRoot, recoveryRoot, stagedPluginsRoot: stagingRoot });
+      await assertAnchoredIdentity(pluginsIdentity);
+      await assertVisibleRootIdentity(pluginsRoot, pluginsIdentity);
+      for (const productName of PRODUCT_NAMES) {
+        const backup = path.join(recoveryRoot, productName);
+        await renameEntry(productName, backup);
+        const backupEntries = await collectTree(backup, { label: `backup ${productName}` });
+        Object.assign(products.get(productName), {
+          status: "backed-up",
+          originalLocation: backup,
+          backupLocation: backup,
+          backupTreeSha256: hashFileEntries(backupEntries),
+        });
+        movedBackups.push({ productName, backup });
       }
-    }
-    if (backupMoved) {
-      try {
-        if (await pathExists(pluginsRoot)) {
-          for (const productName of PRODUCT_NAMES) products.get(productName).status = "recovery-required";
-          issues.push(`restore blocked because plugins root still exists: ${pluginsRoot}`);
-        } else {
-          await renameEntry(backupRoot, pluginsRoot);
-          backupMoved = false;
-          for (const productName of PRODUCT_NAMES) {
-            Object.assign(products.get(productName), {
+      await operations.beforeRootInstall?.({ pluginsRoot, recoveryRoot, stagedPluginsRoot: stagingRoot });
+      await assertAnchoredIdentity(pluginsIdentity);
+      await assertVisibleRootIdentity(pluginsRoot, pluginsIdentity);
+      for (const productName of PRODUCT_NAMES) {
+        await renameEntry(path.join(stagingRoot, productName), productName);
+        installed.push(productName);
+        Object.assign(products.get(productName), {
+          status: "installed",
+          installedSnapshotLocation: destinations.get(productName),
+        });
+        await verifyProductTree(expectedTrees.get(productName), productName, `installed ${productName}`);
+        await assertAnchoredIdentity(pluginsIdentity);
+        await assertVisibleRootIdentity(pluginsRoot, pluginsIdentity);
+      }
+      const marker = await writeRecoveryMarker({ recoveryRoot, repoRoot, products, expectedTrees });
+      await assertAnchoredIdentity(pluginsIdentity);
+      await assertVisibleRootIdentity(pluginsRoot, pluginsIdentity);
+      recovery = {
+        state: marker.state,
+        recoveryRoot,
+        products: Object.fromEntries(PRODUCT_NAMES.map((productName) => {
+          const product = {
+            status: "installed",
+            originalLocation: path.join(recoveryRoot, productName),
+            backupLocation: path.join(recoveryRoot, productName),
+            installedSnapshotLocation: destinations.get(productName),
+          };
+          return [productName, { ...product, manualAction: manualRecoveryAction(productName, product) }];
+        })),
+        warnings: [],
+      };
+    } catch (error) {
+      const issues = [];
+      for (const productName of [...installed].reverse()) {
+        const failedInstall = path.join(recoveryRoot, `failed-${productName}`);
+        try {
+          await renameEntry(productName, failedInstall);
+          const product = products.get(productName);
+          product.status = "backed-up";
+          product.installedSnapshotLocation = failedInstall;
+        } catch (rollbackError) {
+          products.get(productName).status = "recovery-required";
+          issues.push(`quarantine installed ${productName}: ${rollbackError.message}`);
+        }
+      }
+      for (const { productName, backup } of [...movedBackups].reverse()) {
+        const product = products.get(productName);
+        try {
+          if (await pathExists(productName)) {
+            product.status = "recovery-required";
+            issues.push(`restore blocked because anchored leaf exists: ${productName}`);
+          } else {
+            await renameEntry(backup, productName);
+            const anchoredRoot = await realpath(".");
+            Object.assign(product, {
               status: "restored",
-              originalLocation: destinations.get(productName),
+              originalLocation: path.join(anchoredRoot, productName),
               backupLocation: null,
               installedSnapshotLocation: null,
             });
           }
+        } catch (rollbackError) {
+          product.status = "recovery-required";
+          issues.push(`restore ${backup} -> anchored ${productName}: ${rollbackError.message}`);
         }
-      } catch (rollbackError) {
-        for (const productName of PRODUCT_NAMES) products.get(productName).status = "recovery-required";
-        issues.push(`restore ${backupRoot} -> ${pluginsRoot}: ${rollbackError.message}`);
       }
+      if (issues.length > 0) {
+        throw await recoveryFailure("Snapshot replacement failed and automatic rollback was incomplete", {
+          state: "rollback-incomplete",
+          recoveryRoot,
+          stagingRoot,
+          products,
+          issues,
+        }, error);
+      }
+      try {
+        await removeEntry(recoveryRoot, { recursive: true, force: true });
+      } catch (cleanupError) {
+        throw await recoveryFailure("Snapshot replacement failed; originals were restored but recovery cleanup was partial", {
+          state: "fully-restored-cleanup-partial",
+          recoveryRoot,
+          stagingRoot,
+          products,
+          issues: [cleanupError.message],
+        }, error);
+      }
+      throw error;
     }
-    if (issues.length > 0) {
-      throw await recoveryFailure("Snapshot replacement failed and automatic rollback was incomplete", {
-        state: "rollback-incomplete",
-        recoveryRoot,
-        stagingRoot,
-        products,
-        issues,
-      }, error);
-    }
-    try {
-      await removeEntry(recoveryRoot, { recursive: true, force: true });
-    } catch (cleanupError) {
-      throw await recoveryFailure("Snapshot replacement failed; originals were restored but recovery cleanup failed", {
-        state: "fully-restored-recovery-retained",
-        recoveryRoot,
-        stagingRoot,
-        products,
-        issues: [cleanupError.message],
-      }, error);
-    }
-    throw error;
+  } finally {
+    process.chdir(previousCwd);
   }
-  try {
-    await removeEntry(recoveryRoot, { recursive: true, force: true });
-  } catch (error) {
-    throw await recoveryFailure("Snapshots were committed but original backups could not be removed", {
-      state: "committed-recovery-retained",
-      recoveryRoot,
-      stagingRoot,
-      products,
-      issues: [error.message],
-    }, error);
-  }
+  recovery.warnings = await garbageCollectOldRecoveries({ currentRecoveryRoot: recoveryRoot, repoRoot, operations });
+  return recovery;
 }
 
 export async function buildSnapshots({ repoRoot, mode = "clean", sourceDateEpoch = 0, operations = {} }) {
@@ -377,9 +387,11 @@ export async function buildSnapshots({ repoRoot, mode = "clean", sourceDateEpoch
       }
     } else if (mode === "clean") {
       const installPreflight = await preflightSnapshotDestinations(preflight.repoRoot);
-      await replaceSnapshots({
+      builds.recovery = await replaceSnapshots({
+        repoRoot: installPreflight.repoRoot,
         stagingRoot,
         pluginsRoot: installPreflight.pluginsRoot,
+        pluginsIdentity: installPreflight.pluginsIdentity,
         destinations: installPreflight.destinations,
         operations,
       });
@@ -408,6 +420,7 @@ async function main() {
   for (const build of builds) {
     process.stdout.write(`${mode} ${build.name}: ${build.files.length} files, ${build.manifest.treeSha256}\n`);
   }
+  if (builds.recovery) process.stdout.write(`SNAPSHOT_RECOVERY=${JSON.stringify(builds.recovery)}\n`);
 }
 
 const entryPath = process.argv[1] ? await realpath(process.argv[1]).catch(() => undefined) : undefined;
