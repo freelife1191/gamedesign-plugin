@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -26,6 +27,34 @@ function compose(...profiles) {
 
 async function readProfile(profileId) {
   return JSON.parse(await readFile(path.join(profileRoot, `${profileId}.json`), "utf8"));
+}
+
+async function composeMutated(mutator, ...profiles) {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "studio-profiles-"));
+  const fixturePlugin = path.join(fixtureRoot, "plugin");
+  const fixtureComposer = path.join(fixturePlugin, composerRelativePath);
+  const fixtureProfiles = path.join(fixturePlugin, "references/profiles");
+  try {
+    await mkdir(path.dirname(fixtureComposer), { recursive: true });
+    await mkdir(fixtureProfiles, { recursive: true });
+    await copyFile(composerPath, fixtureComposer);
+    const definitions = Object.fromEntries(await Promise.all(profileIds.map(async (profileId) => [profileId, await readProfile(profileId)])));
+    mutator(definitions);
+    await Promise.all(profileIds.map((profileId) => writeFile(
+      path.join(fixtureProfiles, `${profileId}.json`),
+      `${JSON.stringify(definitions[profileId], null, 2)}\n`,
+    )));
+    const result = spawnSync(process.execPath, [fixtureComposer, ...profiles], {
+      cwd: fixtureRoot,
+      encoding: "utf8",
+    });
+    return {
+      ...result,
+      json: result.status === 0 ? JSON.parse(result.stdout) : undefined,
+    };
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
 }
 
 test("profile composer is bundled with the orchestrator instead of forbidden top-level product scripts", async () => {
@@ -118,4 +147,69 @@ test("empty invocation composes only the universal baseline", () => {
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.json.profiles, ["universal-core"]);
   assert.deepEqual(result.json.conflicts, []);
+});
+
+test("profile loading rejects schema, filename identity, top-level key, and array-shape mutations", async () => {
+  const mutations = [
+    ["schemaVersion", (profiles) => { profiles.mobile.schemaVersion = 999; }],
+    ["id", (profiles) => { profiles.mobile.id = "mobile-forged"; }],
+    ["questions", (profiles) => { profiles.mobile.questions = "Who decides?"; }],
+    ["reviewRoles", (profiles) => { delete profiles.mobile.reviewRoles; }],
+    ["unexpected", (profiles) => { profiles.mobile.unexpected = []; }],
+    ["assumptions", (profiles) => { profiles.mobile.assumptions = ["valid", 42]; }],
+  ];
+  for (const [field, mutate] of mutations) {
+    const result = await composeMutated(mutate, "mobile");
+    assert.notEqual(result.status, 0, `${field} mutation accepted`);
+    assert.match(result.stderr, new RegExp(`Invalid profile mobile:.*${field}`, "isu"), field);
+    assert.equal(result.stdout, "");
+  }
+});
+
+test("conflicts reject missing extra wrong-type membership and position-map mutations", async () => {
+  const mutations = [
+    ["missing topic", (conflict) => { delete conflict.topic; }],
+    ["extra key", (conflict) => { conflict.resolution = "first wins"; }],
+    ["wrong status", (conflict) => { conflict.status = "resolved"; }],
+    ["wrong profiles type", (conflict) => { conflict.profiles = "mobile,pc-console"; }],
+    ["wrong positions type", (conflict) => { conflict.positions = []; }],
+    ["wrong decision fields type", (conflict) => { conflict.requiredDecisionRecordFields = "decision"; }],
+    ["non-member owner", (conflict) => { conflict.profiles = ["live-service-rpg", "pc-console"]; }],
+    ["missing position", (conflict) => { delete conflict.positions["pc-console"]; }],
+    ["extra position", (conflict) => { conflict.positions.forged = "FORGED"; }],
+    ["missing decision field", (conflict) => { conflict.requiredDecisionRecordFields = ["decision", "rationale", "owner", "approvalDate"]; }],
+  ];
+  for (const [label, mutate] of mutations) {
+    const result = await composeMutated((profiles) => mutate(profiles.mobile.conflicts[2]), "mobile", "pc-console");
+    assert.notEqual(result.status, 0, `${label} mutation accepted`);
+    assert.match(result.stderr, /Invalid profile mobile:.*conflicts/isu, label);
+    assert.equal(result.stdout, "");
+  }
+});
+
+test("identical duplicate conflict definitions dedupe deterministically", async () => {
+  const result = await composeMutated((profiles) => {
+    profiles["pc-console"].conflicts.push(structuredClone(profiles.mobile.conflicts[2]));
+  }, "pc-console", "mobile");
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(result.json.conflicts.map(({ id }) => id), [
+    "touch-vs-controller-first-input",
+    "monetization-vs-platform-policy",
+  ]);
+});
+
+test("duplicate conflict IDs with forged topic or positions fail instead of using the first definition", async () => {
+  for (const mutate of [
+    (conflict) => { conflict.topic = "forged"; },
+    (conflict) => { conflict.positions.mobile = "forged"; },
+  ]) {
+    const result = await composeMutated((profiles) => {
+      const duplicate = structuredClone(profiles.mobile.conflicts[2]);
+      mutate(duplicate);
+      profiles["pc-console"].conflicts.push(duplicate);
+    }, "mobile", "pc-console");
+    assert.notEqual(result.status, 0);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /Conflicting definitions for conflict ID: touch-vs-controller-first-input/u);
+  }
 });
