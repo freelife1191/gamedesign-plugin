@@ -11,7 +11,7 @@ Make relationships inspectable without turning assumptions into facts. Use a dia
 
 ## Load Contracts
 
-Read `../../references/visualization-presets.json` before selecting a diagram. Read the packaged `skills/svg-infographic/SKILL.md` and its required references before authoring SVG; use its bundled lint and canonical render scripts without copying or replacing them.
+Read `../../references/visualization-presets.json` before selecting a diagram. Read the packaged `skills/svg-infographic/SKILL.md` and its required references before authoring SVG; invoke its immutable lint and canonical render implementations only through the product-owned `scripts/run-skillstead.mjs` wrapper without copying or replacing them.
 
 ## Select the Representation
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
-import { readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { readFileSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { types as utilTypes } from "node:util";
 
 function finding(code, message, path) {
@@ -531,23 +531,36 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   return { valid: errors.length === 0, errors };
 }
 
-async function main() {
-  const [collectionPath, ...args] = process.argv.slice(2);
-  if (!collectionPath) {
-    console.error("Usage: node validate-job-evidence.mjs <collection.json> [--as-of YYYY-MM-DD]");
-    process.exitCode = 2;
-    return;
+function cliFailure(code, message) {
+  return { valid: false, errors: [finding(code, message, "$cli")] };
+}
+
+export async function main(argv = process.argv.slice(2)) {
+  const validShape = Array.isArray(argv)
+    && (argv.length === 1 || (argv.length === 3 && argv[1] === "--as-of"));
+  if (!validShape) {
+    process.stderr.write(`${JSON.stringify(cliFailure("cli.usage", "Usage: node validate-job-evidence.mjs <collection.json> [--as-of YYYY-MM-DD]"), null, 2)}\n`);
+    return 2;
   }
-
-  const records = JSON.parse(await readFile(collectionPath, "utf8"));
-  const asOfIndex = args.indexOf("--as-of");
-  const asOfDate = asOfIndex >= 0 ? args[asOfIndex + 1] : undefined;
-  const result = validateJobEvidenceCollection(records, asOfIndex >= 0 ? { asOfDate } : undefined);
-  const output = `${JSON.stringify(result, null, 2)}\n`;
-  (result.valid ? process.stdout : process.stderr).write(output);
-  if (!result.valid) process.exitCode = 1;
+  try {
+    const records = JSON.parse(await readFile(argv[0], "utf8"));
+    const result = validateJobEvidenceCollection(records, argv.length === 3 ? { asOfDate: argv[2] } : undefined);
+    const output = `${JSON.stringify(result, null, 2)}\n`;
+    (result.valid ? process.stdout : process.stderr).write(output);
+    return result.valid ? 0 : 1;
+  } catch (error) {
+    process.stderr.write(`${JSON.stringify(cliFailure("cli.input", error instanceof Error ? error.message : String(error)), null, 2)}\n`);
+    return 1;
+  }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await main();
+export function isMainModule(metaUrl = import.meta.url, argvPath = process.argv[1]) {
+  if (typeof argvPath !== "string" || argvPath.length === 0) return false;
+  try {
+    return realpathSync(fileURLToPath(metaUrl)) === realpathSync(argvPath);
+  } catch {
+    return false;
+  }
 }
+
+if (isMainModule()) process.exitCode = await main();

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { lstat, readFile, readdir } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -523,15 +524,33 @@ function fileURLToPathIfNeeded(value) {
   return value instanceof URL ? fileURLToPath(value) : value;
 }
 
-const invokedPath = process.argv[1] ? resolve(process.argv[1]) : '';
-if (invokedPath === fileURLToPath(import.meta.url)) {
-  const artifactDir = process.argv[2];
-  if (!artifactDir) {
-    console.error('Usage: node shared/scripts/validate-artifact.mjs <artifact-dir> [formats...]');
-    process.exitCode = 2;
-  } else {
-    const result = await validateArtifact(artifactDir, { requestedFormats: process.argv.slice(3) });
-    console.log(JSON.stringify(result, null, 2));
-    if (!result.ok) process.exitCode = 1;
+function cliFailure(code, message) {
+  return { ok: false, errors: [{ code, file: null, message }], warnings: [], files: [], requestedFormats: [] };
+}
+
+export async function main(argv = process.argv.slice(2)) {
+  if (!Array.isArray(argv) || argv.length < 1) {
+    process.stderr.write(`${JSON.stringify(cliFailure('cli.usage', 'Usage: node validate-artifact.mjs <artifact-dir> [formats...]'), null, 2)}\n`);
+    return 2;
+  }
+  try {
+    const result = await validateArtifact(argv[0], { requestedFormats: argv.slice(1) });
+    const output = `${JSON.stringify(result, null, 2)}\n`;
+    (result.ok ? process.stdout : process.stderr).write(output);
+    return result.ok ? 0 : 1;
+  } catch (error) {
+    process.stderr.write(`${JSON.stringify(cliFailure('cli.input', error instanceof Error ? error.message : String(error)), null, 2)}\n`);
+    return 1;
   }
 }
+
+export function isMainModule(metaUrl = import.meta.url, argvPath = process.argv[1]) {
+  if (typeof argvPath !== 'string' || argvPath.length === 0) return false;
+  try {
+    return realpathSync(fileURLToPath(metaUrl)) === realpathSync(argvPath);
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) process.exitCode = await main();

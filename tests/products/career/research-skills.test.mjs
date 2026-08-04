@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -637,6 +638,49 @@ test("Clean-built public validator preserves the schema and data-only boundary",
     assertBoundedWideAliases(validateJobEvidenceCollection, "built");
     assertSharedBoundaryBudget(validateJobEvidenceCollection, "built");
     assertEveryPostingFresh(validateJobEvidenceCollection, "built");
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("job-evidence CLI runs through a clean-built symlink and rejects malformed argument shapes", async () => {
+  const tempBase = process.platform === "darwin" ? "/tmp" : os.tmpdir();
+  const stagingRoot = await mkdtemp(path.join(tempBase, "career-job-cli-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const relativeScript = "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs";
+    const script = path.join(build.outputDir, relativeScript);
+    const canonicalScript = await realpath(script);
+    const ancestorAlias = path.join(stagingRoot, "linked-build");
+    await symlink(build.outputDir, ancestorAlias, "dir");
+    const alias = path.join(stagingRoot, "validate-job-evidence-link.mjs");
+    await symlink(canonicalScript, alias);
+    const input = path.join(stagingRoot, "job-evidence.json");
+    await writeFile(input, `${JSON.stringify([posting("posting-a", [], { sampleSize: 1 })], null, 2)}\n`, "utf8");
+
+    const sourceScript = path.join(pluginRoot, relativeScript);
+    for (const [label, invoked, cwd] of [
+      ["source-direct", sourceScript, repoRoot],
+      ["source-relative", path.relative(repoRoot, sourceScript), repoRoot],
+      ["built-canonical", canonicalScript, repoRoot],
+      ["built-relative", relativeScript, build.outputDir],
+      ["built-tmp-alias", script, repoRoot],
+      ["built-symlink-ancestor", path.join(ancestorAlias, relativeScript), repoRoot],
+      ["built-symlink-file", alias, repoRoot],
+    ]) {
+      const run = spawnSync(process.execPath, [invoked, input, "--as-of", "2026-08-04"], { cwd, encoding: "utf8" });
+      assert.equal(run.status, 0, `${label}: ${run.stderr}`);
+      assert.equal(run.stderr, "", label);
+      assert.equal(JSON.parse(run.stdout).valid, true, label);
+    }
+
+    for (const args of [[], [input, "unexpected"], [input, "--as-of"], [input, "--as-of", "2026-08-04", "extra"]]) {
+      const run = spawnSync(process.execPath, [script, ...args], { encoding: "utf8" });
+      assert.equal(run.status, 2, run.stderr);
+      const error = JSON.parse(run.stderr);
+      assert.equal(error.valid, false);
+      assert.ok(error.errors.length > 0);
+    }
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }

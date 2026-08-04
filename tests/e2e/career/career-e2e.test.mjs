@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { cp, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -227,6 +228,99 @@ test("clean-built plugin runs the reverse scenario contract without repository-o
     assert.equal(futureRejected.ok, false);
     assert.ok(futureRejected.errors.some(({ code }) => code === "reverse.analysis-date"), messages(futureRejected));
     assert.equal(build.files.includes("skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs"), true);
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("scenario CLI runs through canonical, relative, tmp-alias, and symlink paths with normalized output", async () => {
+  const tempBase = process.platform === "darwin" ? "/tmp" : os.tmpdir();
+  const stagingRoot = await mkdtemp(path.join(tempBase, "career-e2e-cli-"));
+  try {
+    const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const relativeScript = "skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs";
+    const tmpAliasScript = path.join(build.outputDir, relativeScript);
+    const canonicalScript = await realpath(tmpAliasScript);
+    const ancestorAlias = path.join(stagingRoot, "linked-build");
+    await symlink(build.outputDir, ancestorAlias, "dir");
+    const ancestorScript = path.join(ancestorAlias, relativeScript);
+    const fileAlias = path.join(stagingRoot, "validate-career-scenario-link.mjs");
+    await symlink(canonicalScript, fileAlias);
+    const sourceScript = fileURLToPath(runnerUrl);
+    const fixture = path.join(fixtureRoot, "reverse-design-portfolio");
+    const modes = [
+      ["source-direct", sourceScript, repoRoot],
+      ["source-relative", path.relative(repoRoot, sourceScript), repoRoot],
+      ["built-canonical", canonicalScript, repoRoot],
+      ["built-relative", relativeScript, build.outputDir],
+      ["built-tmp-alias", tmpAliasScript, repoRoot],
+      ["built-symlink-ancestor", ancestorScript, repoRoot],
+      ["built-symlink-file", fileAlias, repoRoot],
+    ];
+    for (const [label, script, cwd] of modes) {
+      const run = spawnSync(process.execPath, [script, fixture], { cwd, encoding: "utf8" });
+      assert.equal(run.status, 0, `${label}: ${run.stderr}`);
+      assert.equal(run.stderr, "", label);
+      assert.ok(run.stdout.trim(), `${label}: missing JSON output`);
+      assert.equal(JSON.parse(run.stdout).ok, true, label);
+    }
+
+    for (const [label, args, expectedStatus] of [
+      ["missing", [], 2],
+      ["extra", [fixture, "unexpected"], 2],
+      ["invalid", [path.join(stagingRoot, "missing-fixture")], 1],
+    ]) {
+      const run = spawnSync(process.execPath, [tmpAliasScript, ...args], { encoding: "utf8" });
+      assert.equal(run.status, expectedStatus, `${label}: ${run.stderr}`);
+      assert.equal(run.stdout, "", label);
+      const error = JSON.parse(run.stderr);
+      assert.equal(error.ok, false, label);
+      assert.ok(error.errors.length > 0, label);
+    }
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("packaged canonical validator CLI runs through tmp and symlink paths without silent success", async () => {
+  const tempBase = process.platform === "darwin" ? "/tmp" : os.tmpdir();
+  const stagingRoot = await mkdtemp(path.join(tempBase, "career-artifact-cli-"));
+  try {
+    const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const relativeScript = "scripts/validate-artifact.mjs";
+    const tmpAliasScript = path.join(build.outputDir, relativeScript);
+    const canonicalScript = await realpath(tmpAliasScript);
+    const ancestorAlias = path.join(stagingRoot, "linked-build");
+    await symlink(build.outputDir, ancestorAlias, "dir");
+    const fileAlias = path.join(stagingRoot, "validate-artifact-link.mjs");
+    await symlink(canonicalScript, fileAlias);
+    const artifact = path.join(build.outputDir, "assets/templates/reverse-design-document");
+    const sourceScript = path.join(repoRoot, "shared/scripts/validate-artifact.mjs");
+    for (const [label, script, cwd] of [
+      ["source-direct", sourceScript, repoRoot],
+      ["source-relative", path.relative(repoRoot, sourceScript), repoRoot],
+      ["canonical", canonicalScript, repoRoot],
+      ["relative", relativeScript, build.outputDir],
+      ["tmp-alias", tmpAliasScript, repoRoot],
+      ["symlink-ancestor", path.join(ancestorAlias, relativeScript), repoRoot],
+      ["symlink-file", fileAlias, repoRoot],
+    ]) {
+      const run = spawnSync(process.execPath, [script, artifact], { cwd, encoding: "utf8" });
+      assert.equal(run.status, 0, `${label}: ${run.stderr}`);
+      assert.equal(run.stderr, "", label);
+      assert.equal(JSON.parse(run.stdout).ok, true, label);
+    }
+    for (const [label, args, expectedStatus] of [
+      ["missing", [], 2],
+      ["invalid", [path.join(stagingRoot, "missing-artifact")], 1],
+    ]) {
+      const run = spawnSync(process.execPath, [tmpAliasScript, ...args], { encoding: "utf8" });
+      assert.equal(run.status, expectedStatus, `${label}: ${run.stderr}`);
+      assert.equal(run.stdout, "", label);
+      assert.equal(JSON.parse(run.stderr).ok, false, label);
+    }
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }

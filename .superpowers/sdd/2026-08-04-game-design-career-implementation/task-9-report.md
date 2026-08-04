@@ -77,3 +77,12 @@
 - Added equality-boundary acceptance at `2026-08-06` and fail-closed attacks for future dates, missing request/result snapshots, matching self-attested future snapshots, and matching cross-scenario snapshots. Request and result mutations cannot replace the registry date, and the clean-built runner rejects the same future-date attack.
 - Focused GREEN: 19/19; Career plus E2E 143/143; shared 1/1; repository tests 284/284; Skillstead 58/58; combined inventory 342/342.
 - Source and clean-built plugin validators passed, as did all 10 source and 11 built skill validators. The 259-file clean build SHA-256 is `48f94ab5a9bf87670c46e94dcbc019aa7f71a9b6f397519e7084bd5235855a5b`; source and built syntax, reverse normal/future-date smoke, JSON, symlink, static, and diff checks passed.
+
+## Fix Round 5
+
+- Reproduced raw `import.meta.url` main-guard failures as focused RED 0/2: the clean-built scenario CLI invoked through the macOS `/tmp` alias exited zero with no output, and the job-evidence CLI invoked through a symlink also emitted nothing.
+- Replaced raw URL identity checks in the scenario, job-evidence, and shared Canonical Artifact CLIs with realpath-safe module identity. Their supported argument shapes now always emit normalized JSON; missing, extra, malformed, and invalid inputs return nonzero instead of silent success.
+- Added a product-owned `run-skillstead.mjs` wrapper and kept all 48 vendored Skillstead files byte-identical. Career visualization validation, skill instructions, fixtures, and evidence recipes now address only the wrapper; the wrapper resolves immutable vendor CLIs by canonical realpath and rejects nonzero execution or zero-output success.
+- Added an eight-entry supported Career CLI inventory excluding vendored implementation entrypoints. Source direct/relative and clean-built canonical/relative/`/tmp` alias/symlink-ancestor/symlink-file executions produce nonempty valid output for scenario, job, canonical artifact, and Skillstead wrapper paths.
+- Expanded focused GREEN: 5/5; related Career CLI/output/research E2E 67/67; Career plus E2E 148/148; shared 1/1; repository tests 289/289; Skillstead 58/58; combined inventory 347/347.
+- Source and clean-built plugin validators passed, as did all 10 source and 11 built skill validators. The wrapper increases the deterministic clean build to 260 files with SHA-256 `8a0c85da5dd55464115b4127ede4d6e0fe2fcfe3e5eb880e6205830a32633b2f`; built scenario, artifact, and wrapper CLI smoke checks passed.

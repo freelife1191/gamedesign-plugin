@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+import { realpathSync } from "node:fs";
 import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import { prepareCareerExport } from "../../export-career-documents/scripts/prepare-career-export.mjs";
 import { validateJobEvidenceCollection } from "../../research-game-design-jobs/scripts/validate-job-evidence.mjs";
@@ -903,17 +904,29 @@ export async function validateCareerScenario(fixtureDirectory, { resultOverride 
   };
 }
 
-async function main() {
-  const [fixtureDirectory] = process.argv.slice(2);
-  if (!fixtureDirectory) {
-    console.error("usage: node validate-career-scenario.mjs <fixture-directory>");
-    process.exitCode = 2;
-    return;
+function cliError(code, message) {
+  return { ok: false, errors: [finding(code, message)] };
+}
+
+export async function main(argv = process.argv.slice(2)) {
+  if (!Array.isArray(argv) || argv.length !== 1) {
+    process.stderr.write(`${JSON.stringify(cliError("cli.usage", "usage: node validate-career-scenario.mjs <fixture-directory>"), null, 2)}\n`);
+    return 2;
   }
+  const [fixtureDirectory] = argv;
   const result = await validateCareerScenario(fixtureDirectory);
   const output = `${JSON.stringify(result, null, 2)}\n`;
   (result.ok ? process.stdout : process.stderr).write(output);
-  if (!result.ok) process.exitCode = 1;
+  return result.ok ? 0 : 1;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+export function isMainModule(metaUrl = import.meta.url, argvPath = process.argv[1]) {
+  if (typeof argvPath !== "string" || argvPath.length === 0) return false;
+  try {
+    return realpathSync(fileURLToPath(metaUrl)) === realpathSync(argvPath);
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) process.exitCode = await main();

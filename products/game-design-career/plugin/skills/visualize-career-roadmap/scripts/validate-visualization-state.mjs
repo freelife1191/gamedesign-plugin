@@ -5,35 +5,10 @@ import { existsSync, openSync, readFileSync, readSync, closeSync, realpathSync }
 import path from "node:path";
 import { TextDecoder } from "node:util";
 
-async function loadSkillstead() {
-  const candidates = [
-    {
-      check: new URL("../../../skills/svg-infographic/scripts/check-svg.mjs", import.meta.url),
-      render: new URL("../../../skills/svg-infographic/scripts/render.mjs", import.meta.url),
-    },
-    {
-      check: new URL("../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/check-svg.mjs", import.meta.url),
-      render: new URL("../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs", import.meta.url),
-    },
-  ];
-  let lastError;
-  for (const candidate of candidates) {
-    try {
-      const [check, render] = await Promise.all([import(candidate.check.href), import(candidate.render.href)]);
-      if (typeof check.lintSvg !== "function" || typeof render.isCompletePng !== "function") {
-        throw new Error("required Skillstead exports are missing");
-      }
-      return { lintSvg: check.lintSvg, isCompletePng: render.isCompletePng };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw new Error(`Skillstead validators are unavailable: ${lastError?.message ?? "unknown error"}`);
-}
-
-const { lintSvg, isCompletePng } = await loadSkillstead();
+import { isCompletePngFile, lintSvgSource } from "./run-skillstead.mjs";
 
 const AVAILABILITY = new Set(["unknown", "available", "unavailable"]);
+const SKILLSTEAD_WRAPPER = "node run-skillstead.mjs";
 const MAX_SVG_BYTES = 8_000_000;
 const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 
@@ -311,6 +286,7 @@ function validateAvailability(value, availability) {
   }
   const evidence = exactKeys(value, ["command", "result", "reason"], "availabilityEvidence");
   requireText(evidence.command, "availabilityEvidence.command");
+  if (evidence.command !== `${SKILLSTEAD_WRAPPER} probe`) throw new Error("availabilityEvidence.command must use the packaged Skillstead wrapper");
   requireText(evidence.reason, "availabilityEvidence.reason");
   const expected = availability === "available" ? "passed" : "failed";
   if (evidence.result !== expected) throw new Error(`${availability} PNG availability requires ${expected} evidence`);
@@ -354,9 +330,12 @@ export function validateVisualizationState(value) {
     if (evidence.result !== "passed") throw new Error("linted requires passed lintEvidence");
     const lintFile = safeExistingFile(root, evidence.file, ".svg", "lintEvidence.file");
     if (lintFile.relative !== svg.relative) throw new Error("lintEvidence.file must match svgFile");
+    if (evidence.command !== `${SKILLSTEAD_WRAPPER} lint ${lintFile.relative}`) {
+      throw new Error("lintEvidence.command must use the packaged Skillstead wrapper for the exact SVG");
+    }
     const svgBytes = readFileSync(svg.absolute);
     const svgSource = decodeSvgBytes(svgBytes);
-    const actualLint = lintSvg(svgSource, lintFile.relative);
+    const actualLint = lintSvgSource(svgSource, lintFile.relative);
     const errors = normalizeFindings(actualLint.errors);
     const warnings = normalizeFindings(actualLint.warnings);
     const sha256 = digest(svgBytes);
@@ -385,7 +364,7 @@ export function validateVisualizationState(value) {
   if (input.rendered) {
     if (input.pngAvailability !== "available") throw new Error("rendered requires available PNG capability");
     png = safeExistingFile(root, input.pngFile, ".png", "pngFile");
-    if (!isCompletePng(png.absolute)) throw new Error("pngFile must be a complete PNG with IEND exactly at EOF");
+    if (!isCompletePngFile(png.absolute)) throw new Error("pngFile must be a complete PNG with IEND exactly at EOF");
     validatePngCrc(png.absolute);
     const evidence = exactKeys(input.renderEvidence, [
       "command", "svgFile", "pngFile", "browser", "result", "scale",
@@ -398,6 +377,9 @@ export function validateVisualizationState(value) {
     const renderPng = safeExistingFile(root, evidence.pngFile, ".png", "renderEvidence.pngFile");
     if (renderSvg.relative !== svg.relative) throw new Error("renderEvidence.svgFile must match svgFile");
     if (renderPng.relative !== png.relative) throw new Error("renderEvidence.pngFile must match pngFile");
+    if (evidence.command !== `${SKILLSTEAD_WRAPPER} render ${renderSvg.relative} ${renderPng.relative}`) {
+      throw new Error("renderEvidence.command must use the packaged Skillstead wrapper for the exact assets");
+    }
     const viewBox = viewBoxDimensions(svg.absolute);
     const dimensions = pngDimensions(png.absolute);
     if (evidence.scale !== 2) throw new Error("renderEvidence.scale must be exactly 2");

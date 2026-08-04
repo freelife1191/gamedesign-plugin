@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -108,6 +108,14 @@ async function loadVisualizationModule() {
     "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
   ));
   return import(`${url.href}?test=${Date.now()}`);
+}
+
+async function loadSkillsteadWrapper(root = pluginRoot) {
+  const url = pathToFileURL(path.join(
+    root,
+    "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
+  ));
+  return import(`${url.href}?test=${Date.now()}-${Math.random()}`);
 }
 
 function pngFixture(width, height) {
@@ -300,9 +308,9 @@ test("plugin-owned visualization validator rejects impossible state and artifact
       svgFile: "career-map.svg",
       pngAvailability: "unavailable",
       altText: "Role evidence map",
-      availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "no Chromium found" },
+      availabilityEvidence: { command: "node run-skillstead.mjs probe", result: "failed", reason: "no Chromium found" },
       lintEvidence: {
-        command: "node check-svg.mjs career-map.svg",
+        command: "node run-skillstead.mjs lint career-map.svg",
         file: "career-map.svg",
         result: "passed",
         sha256: digest(Buffer.from(svgSource)),
@@ -319,6 +327,8 @@ test("plugin-owned visualization validator rejects impossible state and artifact
       { ...svgOnly, lintEvidence: null },
       { ...svgOnly, lintEvidence: { ...svgOnly.lintEvidence, sha256: "0".repeat(64) } },
       { ...svgOnly, lintEvidence: { ...svgOnly.lintEvidence, warningsDisposition: "No SVG lint warnings." } },
+      { ...svgOnly, lintEvidence: { ...svgOnly.lintEvidence, command: "node check-svg.mjs career-map.svg" } },
+      { ...svgOnly, availabilityEvidence: { ...svgOnly.availabilityEvidence, command: "node render.mjs --probe" } },
       { ...svgOnly, svgFile: "../outside.svg" },
       { ...svgOnly, svgFile: "missing.svg" },
       { ...svgOnly, rendered: true },
@@ -328,14 +338,14 @@ test("plugin-owned visualization validator rejects impossible state and artifact
     const verified = {
       ...svgOnly,
       pngAvailability: "available",
-      availabilityEvidence: { command: "node render.mjs --probe", result: "passed", reason: "Chromium found" },
+      availabilityEvidence: { command: "node run-skillstead.mjs probe", result: "passed", reason: "Chromium found" },
       rendered: true,
       verified: true,
       pngFile: "career-map.png",
       altText: "Role evidence map",
       visualQa: "No clipping; relationship labels inspected.",
       renderEvidence: {
-        command: "node render.mjs career-map.svg career-map.png",
+        command: "node run-skillstead.mjs render career-map.svg career-map.png",
         svgFile: "career-map.svg",
         pngFile: "career-map.png",
         browser: "Chromium 150",
@@ -354,6 +364,7 @@ test("plugin-owned visualization validator rejects impossible state and artifact
       { ...verified, renderEvidence: { ...verified.renderEvidence, outputWidth: 1199 } },
       { ...verified, renderEvidence: { ...verified.renderEvidence, svgFile: "missing.svg" } },
       { ...verified, renderEvidence: { ...verified.renderEvidence, pngFile: "other.png" } },
+      { ...verified, renderEvidence: { ...verified.renderEvidence, command: "node render.mjs career-map.svg career-map.png" } },
       { ...verified, altText: "" },
       { ...verified, altText: "Forged alt text" },
     ]) assert.throws(() => validateVisualizationState(mutation));
@@ -378,6 +389,81 @@ test("plugin-owned visualization validator rejects impossible state and artifact
     }
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("Career Skillstead wrapper owns execution identity and fails on nonzero or missing vendor output", async () => {
+  const { runSkillstead } = await loadSkillsteadWrapper();
+  const sink = { write() {} };
+  await assert.rejects(
+    () => runSkillstead("lint", ["diagram.svg"], {
+      spawn: () => ({ status: 0, stdout: "", stderr: "" }), stdout: sink, stderr: sink,
+    }),
+    /returned no output/iu,
+  );
+  await assert.rejects(
+    () => runSkillstead("lint", ["diagram.svg"], {
+      spawn: () => ({ status: 7, stdout: "", stderr: "vendor failed" }), stdout: sink, stderr: sink,
+    }),
+    /exit 7.*vendor failed/iu,
+  );
+
+  const tempBase = process.platform === "darwin" ? "/tmp" : os.tmpdir();
+  const stagingRoot = await mkdtemp(path.join(tempBase, "career-skillstead-wrapper-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const aliasRoot = path.join(stagingRoot, "linked-build");
+    await symlink(build.outputDir, aliasRoot, "dir");
+    const relativeWrapper = "skills/visualize-career-roadmap/scripts/run-skillstead.mjs";
+    const tmpAliasWrapper = path.join(build.outputDir, relativeWrapper);
+    const canonicalWrapper = await realpath(tmpAliasWrapper);
+    const wrapper = path.join(aliasRoot, relativeWrapper);
+    const fileAlias = path.join(stagingRoot, "run-skillstead-link.mjs");
+    await symlink(canonicalWrapper, fileAlias);
+    const svg = path.join(stagingRoot, "valid.svg");
+    await writeFile(svg, '<svg role="img" aria-label="Valid" viewBox="0 0 600 300"><title>Valid</title><desc>Valid diagram.</desc></svg>', "utf8");
+    const sourceWrapper = path.join(pluginRoot, relativeWrapper);
+    for (const [label, invoked, cwd] of [
+      ["source-direct", sourceWrapper, repoRoot],
+      ["source-relative", path.relative(repoRoot, sourceWrapper), repoRoot],
+      ["built-canonical", canonicalWrapper, repoRoot],
+      ["built-relative", relativeWrapper, build.outputDir],
+      ["built-tmp-alias", tmpAliasWrapper, repoRoot],
+      ["built-symlink-ancestor", wrapper, repoRoot],
+      ["built-symlink-file", fileAlias, repoRoot],
+    ]) {
+      const run = spawnSync(process.execPath, [invoked, "lint", svg], { cwd, encoding: "utf8" });
+      assert.equal(run.status, 0, `${label}: ${run.stderr}`);
+      assert.match(run.stdout, /check-svg:\s*0 error\(s\)/iu, label);
+    }
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("supported Career CLI inventory excludes immutable vendor internals and raw URL guards", async () => {
+  const supported = [
+    "scripts/capability-probe.mjs",
+    "scripts/stop-artifact-review.mjs",
+    "scripts/validate-artifact.mjs",
+    "skills/export-career-documents/scripts/prepare-career-export.mjs",
+    "skills/orchestrate-game-design-career/scripts/merge-role-findings.mjs",
+    "skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs",
+    "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs",
+    "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
+  ];
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-cli-inventory-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    for (const relative of supported) {
+      const source = await readFile(path.join(build.outputDir, relative), "utf8");
+      assert.match(source, /^#!\/usr\/bin\/env node/u, relative);
+      assert.doesNotMatch(source, /import\.meta\.url\s*===\s*pathToFileURL\(process\.argv\[1\]\)\.href/u, relative);
+      assert.equal(relative.includes("skills/svg-infographic/"), false, relative);
+    }
+    assert.equal(supported.length, 8);
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
   }
 });
 
@@ -420,9 +506,9 @@ test("source and clean-built visualization validators reject structural accessib
         svgFile: file,
         pngAvailability: "unavailable",
         altText: alt,
-        availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "test fallback" },
+        availabilityEvidence: { command: "node run-skillstead.mjs probe", result: "failed", reason: "test fallback" },
         lintEvidence: {
-          command: `node check-svg.mjs ${file}`,
+          command: `node run-skillstead.mjs lint ${file}`,
           file,
           result: "passed",
           sha256: digest(Buffer.from(source)),
@@ -450,9 +536,9 @@ test("source and clean-built visualization validators reject structural accessib
       svgFile: "comments.svg",
       pngAvailability: "unavailable",
       altText: alt,
-      availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "test fallback" },
+      availabilityEvidence: { command: "node run-skillstead.mjs probe", result: "failed", reason: "test fallback" },
       lintEvidence: {
-        command: "node check-svg.mjs comments.svg",
+        command: "node run-skillstead.mjs lint comments.svg",
         file: "comments.svg",
         result: "passed",
         sha256: digest(Buffer.from(attacks.comments)),
@@ -496,9 +582,9 @@ test("source and clean-built validators reject invalid UTF-8 and forbidden XML c
       svgFile: file,
       pngAvailability: "unavailable",
       altText: alt,
-      availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "test fallback" },
+      availabilityEvidence: { command: "node run-skillstead.mjs probe", result: "failed", reason: "test fallback" },
       lintEvidence: {
-        command: `node check-svg.mjs ${file}`,
+        command: `node run-skillstead.mjs lint ${file}`,
         file,
         result: "passed",
         sha256: digest(bytes),
