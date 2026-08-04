@@ -1,0 +1,12 @@
+version: 1
+claims:
+  - id: claim-accessibility-platform-matrix
+    claim_type: template-contract
+    claim: Accessibility and Platform Matrix defines a reviewable game-design workflow and explicit completion boundaries.
+    source:
+      title: Accessibility and Platform Matrix canonical seed
+      locator: content.md
+      accessed_at: 2026-08-04
+    confidence: low
+    limitations: |
+      This claim covers the template structure only. Replace it with project-specific evidence before approving design, production, release, monetization, experiment, rights, consent, or accessibility claims.

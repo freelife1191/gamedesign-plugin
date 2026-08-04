@@ -1,0 +1,16 @@
+artifact_id: ui-ux-flow-state
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: UX, design, engineering, QA, and accessibility reviewers
+    purpose: Explain critical flows, complete UI states, accessible interaction, recovery, and verification.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

@@ -1,0 +1,16 @@
+artifact_id: vision-pillars
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: game team and creative leadership
+    purpose: Explain the player promise, design pillars, anti-pillars, evidence, and success signals.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

@@ -1,0 +1,16 @@
+artifact_id: economy-balance
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: economy, product, data, legal, and player-safety reviewers
+    purpose: Review sources, sinks, progression, prices, probabilities, pity, risks, protections, and rollback.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

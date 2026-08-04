@@ -1,0 +1,16 @@
+artifact_id: rule-exception-matrix
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: design, engineering, and QA reviewers
+    purpose: Resolve precedence, concurrency, exceptions, test cases, and open decisions.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

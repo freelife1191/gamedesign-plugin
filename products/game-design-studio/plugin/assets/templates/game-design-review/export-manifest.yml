@@ -1,0 +1,16 @@
+artifact_id: game-design-review
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: artifact owners and multidisciplinary reviewers
+    purpose: Summarize evidence-backed findings, impacts, minimal repairs, disagreements, and approvals.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

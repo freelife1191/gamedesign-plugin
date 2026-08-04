@@ -1,0 +1,16 @@
+artifact_id: character-skill-combat-monster
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: combat, content, UX, engineering, and QA reviewers
+    purpose: Explain combat roles, strategy, rules, readability, counterplay, data, and balance evidence.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

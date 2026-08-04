@@ -1,0 +1,16 @@
+artifact_id: system-specification
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: design, engineering, QA, and product leads
+    purpose: Review deterministic rules, runtime mappings, failure handling, evidence, and approval gates.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate
