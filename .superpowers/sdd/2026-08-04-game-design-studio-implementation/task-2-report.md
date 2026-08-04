@@ -20,13 +20,36 @@
 - Official portable `quick_validate.py` resolution (`CODEX_HOME`, otherwise platform home `.codex`) → `Skill is valid!`
 - YAML/frontmatter/OpenAI interface assertions → passed; frontmatter contains only `name` and `description`, and `default_prompt` explicitly invokes `$orchestrate-game-design-project`.
 - Placeholder scan → no `TODO`, `PLACEHOLDER`, or `[TODO` content.
-- Line count → `SKILL.md` 32 lines; skill Markdown total 208 lines, each file below 500 lines.
+- Line count → `SKILL.md` 32 lines; skill Markdown total 177 lines, each file below 500 lines.
 - Node syntax and `git diff --check` → passed.
-- Studio tests: `node --test tests/products/studio/*.test.mjs` → 17 passed, 0 failed.
+- Studio tests: `node --test tests/products/studio/*.test.mjs` → 20 passed, 0 failed.
 - Shared contract: `npm run test:shared-contract` → 1 passed, 0 failed.
-- Full regression: `npm test` → 39 passed, 0 failed.
+- All repository test files: `node --test $(rg --files -g '*.test.mjs' | sort)` → 200 passed, 0 failed in this Task 2 worktree.
+- Independent review environment full suite → 216 passed, 0 failed.
 
 ## Scope
 
 - Changed only the Task 2 skill, `tests/products/studio/orchestrator.test.mjs`, and this Task 2 report.
 - Did not edit shared modules, Career paths, generated plugins, or Task 1 product/routing sources.
+
+## Fix Round 1
+
+- Removed copied direct-route mappings, reviewer caps, selected-role lists, and role-priority values from `references/workflow.md`.
+- Made `../../../references/routing.json` the required runtime source for `routes`, `skill`, `defaultReviewers`, `maxReviewers`, `roleIds`, and `rolePriority` before routing or reviewer selection.
+- Preserved the approved public review-policy names: `fallback.order` remains `rolePriority`, and merge keys remain `severity` → `affectedSectionId` → `rolePriority`. Their priority values now come only from the registry.
+- Cross-checked the Task 1 registry's ten direct route variants, nine unique specialist skill IDs, exact six-role priority, and maximum three reviewers.
+
+### Fix Round 1 TDD evidence
+
+- Drift probe before the fix: reversing `rolePriority`, changing the vision route skill, and raising its `maxReviewers` to four still left the old focused suite GREEN at 8/8.
+- RED: the registry-source and no-duplication contracts produced 5 passed, 4 failed against the pre-fix workflow.
+- Public-contract correction RED: restoring the approved `rolePriority` contract names produced 9 passed, 2 failed before the workflow correction.
+- Mutation proof: applying the three registry mutations after the test change produced 8 passed, 3 failed—one failure for route mapping, one for role priority, and one for reviewer cap.
+- GREEN: the restored authoritative registry and fixed workflow pass 11/11 focused tests.
+
+### Fix Round 1 verification
+
+- Studio tests → 20 passed, 0 failed.
+- Shared contract → 1 passed, 0 failed.
+- All 15 repository `*.test.mjs` files → 200 passed, 0 failed in this worktree.
+- Independent review evidence → 216 passed, 0 failed.

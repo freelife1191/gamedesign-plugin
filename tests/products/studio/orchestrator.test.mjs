@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const skillRoot = path.join(pluginRoot, "skills/orchestrate-game-design-project");
+const routingPath = path.join(pluginRoot, "references/routing.json");
 
 const roleIds = [
   "lead-game-designer",
@@ -19,6 +20,10 @@ const roleIds = [
 
 async function readSkill(relativePath) {
   return readFile(path.join(skillRoot, relativePath), "utf8");
+}
+
+async function readRouting() {
+  return JSON.parse(await readFile(routingPath, "utf8"));
 }
 
 function extractJsonContract(markdown, contractName) {
@@ -52,11 +57,12 @@ test("orchestrator skill uses the official minimal metadata and interface contra
   assert.match(openai, /default_prompt: "Use \$orchestrate-game-design-project /u);
 });
 
-test("direct requests route to all nine game-design domains without guessing", async () => {
-  const workflow = await readSkill("references/workflow.md");
-  const routing = extractJsonContract(workflow, "direct-routing");
+test("authoritative routing registry maps all ten direct route variants", async () => {
+  const routing = await readRouting();
+  const directRoutes = routing.routes.filter(({ id }) => id !== "project-orchestration");
+  const routeMap = Object.fromEntries(directRoutes.map(({ id, skill }) => [id, skill]));
 
-  assert.deepEqual(routing, {
+  assert.deepEqual(routeMap, {
     vision: "define-game-vision",
     systems: "design-game-systems",
     content: "design-game-content",
@@ -68,6 +74,55 @@ test("direct requests route to all nine game-design domains without guessing", a
     visualization: "visualize-game-design",
     export: "export-game-design-documents",
   });
+  assert.equal(directRoutes.length, 10);
+  assert.deepEqual([...new Set(directRoutes.map(({ skill }) => skill))], [
+    "define-game-vision",
+    "design-game-systems",
+    "design-game-content",
+    "design-player-experience",
+    "design-game-economy-and-liveops",
+    "plan-game-production",
+    "review-game-design",
+    "visualize-game-design",
+    "export-game-design-documents",
+  ]);
+});
+
+test("authoritative routing registry preserves all six declared roles in priority order", async () => {
+  const routing = await readRouting();
+
+  assert.deepEqual(routing.rolePriority, roleIds);
+  assert.deepEqual(routing.rolePriority, routing.roleIds);
+});
+
+test("authoritative routing registry caps every route at three reviewers", async () => {
+  const routing = await readRouting();
+
+  assert.ok(routing.routes.every(({ maxReviewers }) => maxReviewers <= 3));
+});
+
+test("workflow loads routing decisions from the registry instead of copying them", async () => {
+  const workflow = await readSkill("references/workflow.md");
+
+  assert.match(workflow, /read `\.\.\/\.\.\/\.\.\/references\/routing\.json` before (?:routing|selecting)/iu);
+  for (const field of ["routes", "skill", "defaultReviewers", "maxReviewers", "rolePriority"]) {
+    assert.match(workflow, new RegExp(`\\b${field}\\b`, "u"), field);
+  }
+  assert.doesNotMatch(workflow, /<!-- direct-routing:start -->/u);
+  assert.doesNotMatch(workflow, /"rolePriority"\s*:\s*\[/u);
+  for (const skillId of [
+    "define-game-vision",
+    "design-game-systems",
+    "design-game-content",
+    "design-player-experience",
+    "design-game-economy-and-liveops",
+    "plan-game-production",
+    "review-game-design",
+    "visualize-game-design",
+    "export-game-design-documents",
+  ]) {
+    assert.doesNotMatch(workflow, new RegExp(`\\b${skillId}\\b`, "u"), skillId);
+  }
   assert.match(workflow, /unknown or ambiguous intent[\s\S]*orchestrate-game-design-project/iu);
   assert.match(workflow, /never (?:invent|guess)[^\n]*specialist/iu);
 });
@@ -99,19 +154,26 @@ test("intake captures the full brief and asks only materially consequential ques
 });
 
 test("review dispatch uses exact envelopes and at most three declared roles", async () => {
-  const workflow = await readSkill("references/workflow.md");
+  const [workflow, routing] = await Promise.all([readSkill("references/workflow.md"), readRouting()]);
   const review = extractJsonContract(workflow, "review-policy");
+  const reviewRoute = routing.routes.find(({ id }) => id === "review");
 
-  assert.equal(review.maxRoles, 3);
-  assert.deepEqual(review.rolePriority, roleIds);
+  assert.deepEqual(Object.keys(review).sort(), [
+    "envelope",
+    "fallback",
+    "mergeKeys",
+    "parallel",
+    "severityOrder",
+  ]);
   assert.deepEqual(review.envelope, {
     artifact: "artifact-name/content.md",
     role: "lead-game-designer",
     questions: [],
     findingsPath: "artifact-name/decisions/review-lead-game-designer.md",
   });
-  assert.ok(review.selectedRoles.every((role) => roleIds.includes(role)));
-  assert.ok(review.selectedRoles.length <= 3);
+  assert.ok(reviewRoute.defaultReviewers.every((role) => routing.roleIds.includes(role)));
+  assert.ok(reviewRoute.defaultReviewers.length <= reviewRoute.maxReviewers);
+  assert.ok(reviewRoute.maxReviewers <= 3);
 });
 
 test("parallel and no-subagent fallback execute identical reviews deterministically", async () => {
@@ -152,18 +214,19 @@ test("completion gates protect the canonical artifact and requested formats", as
 });
 
 test("mixed launch readiness applies bounded reviews and responsible-design blockers", async () => {
-  const [workflow, gates] = await Promise.all([
+  const [workflow, gates, routing] = await Promise.all([
     readSkill("references/workflow.md"),
     readSkill("references/completion-gates.md"),
+    readRouting(),
   ]);
-  const review = extractJsonContract(workflow, "review-policy");
+  const reviewRoute = routing.routes.find(({ id }) => id === "review");
 
-  assert.deepEqual(review.selectedRoles, [
+  assert.deepEqual(reviewRoute.defaultReviewers, [
     "lead-game-designer",
-    "ux-accessibility-reviewer",
     "production-feasibility-critic",
+    "ux-accessibility-reviewer",
   ]);
-  assert.match(workflow, /mixed launch-readiness/iu);
+  assert.match(workflow, /mixed launch-readiness[^\n]*review[^\n]*defaultReviewers/iu);
   for (const gate of [
     "ai-rights-human-approval",
     "accessibility",

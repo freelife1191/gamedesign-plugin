@@ -1,51 +1,20 @@
 # Routing and review workflow
 
-Use `../../../references/routing.json` as the authoritative route and role registry. Match normalized trigger intent; never infer a role or skill outside that registry.
+Read `../../../references/routing.json` before routing or selecting reviewers. Treat that file as the sole authority for route and role decisions; reload it whenever the request changes the selected domain or review scope.
 
 ## Direct routing
 
-Route a direct request to the corresponding skill. Economy and LiveOps are separate variants of one domain skill because their inputs, artifacts, and gates differ.
-
-<!-- direct-routing:start -->
-```json
-{
-  "vision": "define-game-vision",
-  "systems": "design-game-systems",
-  "content": "design-game-content",
-  "player-experience": "design-player-experience",
-  "economy": "design-game-economy-and-liveops",
-  "liveops": "design-game-economy-and-liveops",
-  "production": "plan-game-production",
-  "review": "review-game-design",
-  "visualization": "visualize-game-design",
-  "export": "export-game-design-documents"
-}
-```
-<!-- direct-routing:end -->
+Normalize the request against each entry in `routes[].triggerIntents`. For a direct match, load that route's `skill`, `requiredInputs`, `references`, `artifactType`, and `completionGates`. Keep Economy and LiveOps as separate route variants even when their `skill` field resolves to the same value.
 
 Keep unknown or ambiguous intent with `orchestrate-game-design-project`; never guess a specialist. For mixed intent, select only the routes necessary to produce the requested artifact and make each route's required inputs and completion gates visible.
 
 ## Review selection
 
-Choose roles that answer distinct material questions. Use one to three declared roles. For a mixed launch-readiness review, select design integrity, critical-action accessibility, and production feasibility as shown below; replace roles only when the brief makes another declared specialty more relevant.
+Choose roles from each selected route's `defaultReviewers` that answer distinct material questions. Limit the selection with that route's `maxReviewers`, and reject any role absent from top-level `roleIds`. For mixed launch-readiness, use the `review` route's `defaultReviewers`; do not copy or reorder that list locally.
 
 <!-- review-policy:start -->
 ```json
 {
-  "maxRoles": 3,
-  "rolePriority": [
-    "lead-game-designer",
-    "system-economy-designer",
-    "content-narrative-designer",
-    "ux-accessibility-reviewer",
-    "liveops-data-designer",
-    "production-feasibility-critic"
-  ],
-  "selectedRoles": [
-    "lead-game-designer",
-    "ux-accessibility-reviewer",
-    "production-feasibility-critic"
-  ],
   "envelope": {
     "artifact": "artifact-name/content.md",
     "role": "lead-game-designer",
@@ -79,10 +48,10 @@ Choose roles that answer distinct material questions. Use one to three declared 
 
 Create one envelope per selected role by changing `role`, its targeted `questions`, and `findingsPath`. Keep `artifact` identical. Ensure every findings path is unique.
 
-When subagents are available, dispatch all `selectedReviews` as independent envelopes. Do not give a reviewer another reviewer's findings. On a host without subagents, execute the same envelope list with the same roles and questions in `rolePriority` order. Host capability may change concurrency, never review coverage.
+When subagents are available, dispatch all `selectedReviews` as independent envelopes. Do not give a reviewer another reviewer's findings. On a host without subagents, execute the same envelope list with the same roles and questions in the registry's `rolePriority` order. Host capability may change concurrency, never review coverage.
 
 ## Deterministic merge
 
-Require each finding to include severity, evidence, impact, affected stable section ID, minimal fix, role, and applicable responsible-design gate. Merge exact duplicates without discarding contributing roles. Sort first by severity (`blocker`, `high`, `medium`, `low`), then lexically by affected stable section ID, then by `rolePriority`.
+Require each finding to include severity, evidence, impact, affected stable section ID, minimal fix, role, and applicable responsible-design gate. Merge exact duplicates without discarding contributing roles. Sort first by severity (`blocker`, `high`, `medium`, `low`), then lexically by affected stable section ID, then by the registry's `rolePriority`.
 
 Retain conflicting recommendations as a decision item with both assumptions and a named decision owner. Never silently choose a winner or use arrival order as a merge key.
