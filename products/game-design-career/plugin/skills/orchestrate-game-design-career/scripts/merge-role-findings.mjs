@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -48,6 +48,8 @@ function assertExactKeys(value, allowed, label) {
 
 function assertNonEmptyString(value, label) {
   if (typeof value !== "string" || value.trim() === "") throw new Error(`${label} must be a non-empty string.`);
+  if (/[\u0000-\u001f\u007f]/u.test(value)) throw new Error(`${label} must not contain a control character.`);
+  if (value !== value.normalize("NFC")) throw new Error(`${label} must use Unicode NFC.`);
 }
 
 function validateProvenance(provenance, label) {
@@ -58,17 +60,20 @@ function validateProvenance(provenance, label) {
   for (const [index, source] of provenance.entries()) {
     assertExactKeys(source, provenanceKeys, `${label}[${index}]`);
     assertNonEmptyString(source.findingId, `${label}[${index}].findingId`);
+    assertNonEmptyString(source.role, `${label}[${index}].role`);
     if (!roleRank.has(source.role)) throw new Error(`${label}[${index}].role is unknown.`);
-    const key = `${source.role}\u0000${source.findingId}`;
+    const key = JSON.stringify([source.role, source.findingId]);
     if (seen.has(key)) throw new Error(`${label} contains duplicate provenance.`);
     seen.add(key);
   }
 }
 
-function validateFinding(value, index) {
+function validateFinding(value, index, { outputMode }) {
   const label = `findings[${index}]`;
   const hasProvenance = isPlainObject(value) && Object.hasOwn(value, "provenance");
-  assertExactKeys(value, hasProvenance ? mergedFindingKeys : findingKeys, label);
+  if (!outputMode && hasProvenance) throw new Error(`${label}.provenance is merger output only.`);
+  if (outputMode && !hasProvenance) throw new Error(`${label}.provenance is required for canonical output.`);
+  assertExactKeys(value, outputMode ? mergedFindingKeys : findingKeys, label);
   for (const key of [
     "findingId",
     "evidenceGapId",
@@ -77,6 +82,8 @@ function validateFinding(value, index) {
     "summary",
     "minimumRepair",
   ]) assertNonEmptyString(value[key], `${label}.${key}`);
+  assertNonEmptyString(value.role, `${label}.role`);
+  assertNonEmptyString(value.severity, `${label}.severity`);
   if (!roleRank.has(value.role)) throw new Error(`${label}.role is unknown.`);
   if (!severityRank.has(value.severity)) throw new Error(`${label}.severity is unknown.`);
   if (!Array.isArray(value.evidenceIds) || value.evidenceIds.length === 0) {
@@ -88,7 +95,7 @@ function validateFinding(value, index) {
     if (evidenceIds.has(evidenceId)) throw new Error(`${label}.evidenceIds must be unique.`);
     evidenceIds.add(evidenceId);
   }
-  if (hasProvenance) validateProvenance(value.provenance, `${label}.provenance`);
+  if (outputMode) validateProvenance(value.provenance, `${label}.provenance`);
 }
 
 function normalizedSources(finding) {
@@ -135,7 +142,7 @@ function mergeDuplicates(findings) {
     const provenanceByKey = new Map();
     for (const finding of group) {
       for (const source of normalizedSources(finding)) {
-        provenanceByKey.set(`${source.role}\u0000${source.findingId}`, source);
+        provenanceByKey.set(JSON.stringify([source.role, source.findingId]), source);
       }
     }
     const provenance = [...provenanceByKey.values()].sort((left, right) => (
@@ -163,7 +170,11 @@ function mergeDuplicates(findings) {
 function buildDecisions(findings) {
   const groups = new Map();
   for (const finding of findings) {
-    const key = `${finding.evidenceGapId}\u0000${finding.artifactSectionId}\u0000${finding.findingType}`;
+    const key = JSON.stringify([
+      finding.evidenceGapId,
+      finding.artifactSectionId,
+      finding.findingType,
+    ]);
     const group = groups.get(key) ?? [];
     group.push(finding);
     groups.set(key, group);
@@ -181,7 +192,7 @@ function buildDecisions(findings) {
     const options = [...recommendations.entries()].map(([minimumRepair, sources]) => ({
       minimumRepair,
       provenance: [...new Map(sources.map((source) => [
-        `${source.role}\u0000${source.findingId}`,
+        JSON.stringify([source.role, source.findingId]),
         source,
       ])).values()].sort((left, right) => (
         roleRank.get(left.role) - roleRank.get(right.role)
@@ -211,10 +222,22 @@ export function mergeRoleFindings(input) {
   assertExactKeys(input, hasDecisions ? outputKeys : inputKeys, "input");
   if (input.schemaVersion !== 1) throw new Error("input.schemaVersion must be 1.");
   if (!Array.isArray(input.findings)) throw new Error("input.findings must be an array.");
-  input.findings.forEach(validateFinding);
+  input.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: hasDecisions }));
+
+  const sourceIds = new Set();
+  for (const finding of input.findings) {
+    const sources = hasDecisions ? finding.provenance : [{ findingId: finding.findingId, role: finding.role }];
+    for (const source of sources) {
+      if (sourceIds.has(source.findingId)) throw new Error(`Duplicate findingId: ${source.findingId}`);
+      sourceIds.add(source.findingId);
+    }
+  }
 
   const findings = mergeDuplicates(input.findings);
   const decisions = buildDecisions(findings);
+  if (hasDecisions && JSON.stringify(input.findings) !== JSON.stringify(findings)) {
+    throw new Error("input.findings is not canonical merger output or has forged provenance.");
+  }
   if (hasDecisions && JSON.stringify(input.decisions) !== JSON.stringify(decisions)) {
     throw new Error("input.decisions does not match the deterministic finding decisions.");
   }
@@ -230,7 +253,15 @@ async function runCli() {
 }
 
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : null;
-if (invokedPath && invokedPath === fileURLToPath(import.meta.url)) {
+let invokedDirectly = false;
+if (invokedPath) {
+  try {
+    invokedDirectly = realpathSync(invokedPath) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    invokedDirectly = false;
+  }
+}
+if (invokedDirectly) {
   runCli().catch((error) => {
     process.stderr.write(`${error.message}\n`);
     process.exitCode = 1;
