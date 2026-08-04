@@ -38,9 +38,9 @@ Select one recipe from source artifact type and delivery purpose. A recipe contr
 - Require audience, purpose, and an independent story outline before preparation.
 - Build a decision story: conclusion → stakes → evidence → alternatives/trade-offs → recommendation → next gate.
 - The presentation must not split Markdown headings into slides. Slide titles form a coherent standalone narrative for the named audience and purpose.
+- Model every slide independently with a unique stable `id` plus nonempty `title`, `message`, and `purpose`; none may copy a Markdown structural heading.
 - QA emphasis: one decision per slide, source traceability, visual legibility, speaker-independent comprehension, and exact slide count.
 
 ## Evidence states
 
-For every format, keep `requested`, capability availability, generation status, renderer status, output path, digest, page/slide count, QA status, evidence, and limitations distinct. Allowed preparation states are `not-requested`, `blocked`, `unavailable`, and `pending`; only the downstream renderer-and-QA stage may promote a real file to `passed`.
-
+For every format, keep `requested`, capability availability, generation status, renderer status, output path, digest, page/slide count, QA status, evidence, and limitations distinct. MD uses packaged `canonical-markdown`; PDF, DOCX, and PPTX bind exactly to the probed `pdf`, `documents`, and `presentations` capabilities. Allowed preparation states are `not-requested`, `blocked`, `unavailable`, and `pending`; a requested terminal state records the exact `pending → passed|failed|unavailable` history. Only the downstream renderer-and-QA stage may promote a real file to `passed`, and every evidence record identifies the same derivative path, digest, count, command, and exit result.

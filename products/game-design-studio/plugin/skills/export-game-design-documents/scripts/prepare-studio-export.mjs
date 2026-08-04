@@ -36,17 +36,40 @@ function normalizeFormats(value) {
   return normalized;
 }
 
-function validatePresentation(requestedFormats, presentation) {
+function normalizedHeading(value) {
+  return value.trim().replace(/\s*\{#[a-z0-9-]+\}\s*$/iu, "").toLocaleLowerCase("en-US");
+}
+
+function validatePresentation(requestedFormats, presentation, canonicalHeadings) {
   if (!requestedFormats.includes("pptx")) return null;
   const audience = presentation?.audience;
   const purpose = presentation?.purpose;
   const slideOutline = presentation?.slideOutline;
   if (typeof audience !== "string" || audience.trim() === "") throw new Error("PPTX requires an audience");
   if (typeof purpose !== "string" || purpose.trim() === "") throw new Error("PPTX requires a purpose");
-  if (!Array.isArray(slideOutline) || slideOutline.length === 0 || slideOutline.some((title) => typeof title !== "string" || title.trim() === "")) {
+  if (!Array.isArray(slideOutline) || slideOutline.length === 0) {
     throw new Error("PPTX requires a nonempty independent slide outline");
   }
-  return { audience: audience.trim(), purpose: purpose.trim(), slideOutline: slideOutline.map((title) => title.trim()) };
+  const headingSet = new Set(canonicalHeadings.map(normalizedHeading));
+  const ids = new Set();
+  const normalizedSlides = slideOutline.map((slide) => {
+    if (!slide || typeof slide !== "object" || Array.isArray(slide) || Object.keys(slide).sort().join("\0") !== ["id", "message", "purpose", "title"].sort().join("\0")) {
+      throw new Error("PPTX requires a nonempty independent slide outline with id, title, message, and purpose");
+    }
+    const normalized = {};
+    for (const field of ["id", "title", "message", "purpose"]) {
+      if (typeof slide[field] !== "string" || slide[field].trim() === "") throw new Error(`PPTX slide outline ${field} is required`);
+      normalized[field] = slide[field].trim();
+    }
+    if (!KEBAB_CASE.test(normalized.id) || ids.has(normalized.id)) throw new Error("PPTX slide outline IDs must be unique kebab-case values");
+    ids.add(normalized.id);
+    for (const field of ["title", "message", "purpose"]) {
+      if (/^\s{0,3}#{1,6}\s+/u.test(normalized[field])) throw new Error("PPTX slide outline must not copy Markdown heading syntax");
+    }
+    if (headingSet.has(normalizedHeading(normalized.title))) throw new Error("PPTX slide outline must tell an independent story rather than copy structural headings");
+    return normalized;
+  });
+  return { audience: audience.trim(), purpose: purpose.trim(), slideOutline: normalizedSlides };
 }
 
 async function runPreflight(validatorPath, artifactDir, requestedFormats) {
@@ -75,6 +98,11 @@ async function readArtifactId(artifactDir) {
   const source = await readFile(path.join(artifactDir, "content.md"), "utf8").catch(() => "");
   const artifactId = source.match(/^---\n[\s\S]*?^artifact_id:\s*([^\n]+)$/mu)?.[1]?.trim();
   return artifactId && KEBAB_CASE.test(artifactId) ? artifactId : "invalid-artifact";
+}
+
+async function readCanonicalHeadings(artifactDir) {
+  const source = await readFile(path.join(artifactDir, "content.md"), "utf8").catch(() => "");
+  return [...source.matchAll(/^#{1,6}\s+(.+)$/gmu)].map(([, heading]) => heading.trim());
 }
 
 async function pathExists(value) {
@@ -121,12 +149,12 @@ export async function prepareStudioExportJob(options) {
   if (!options || typeof options !== "object" || Array.isArray(options)) throw new TypeError("options must be an object");
   const requestedFormats = normalizeFormats(options.requestedFormats);
   if (!RECIPES.has(options.recipeId)) throw new Error(`Unknown export recipe: ${options.recipeId}`);
-  const presentation = validatePresentation(requestedFormats, options.presentation);
   const [artifactDir, outputDir, validatorPath] = await Promise.all([
     assertExistingPath(options.artifactDir, "artifactDir", "directory"),
     assertExistingPath(options.outputDir, "outputDir", "directory"),
     assertExistingPath(options.validatorPath, "validatorPath", "file"),
   ]);
+  const presentation = validatePresentation(requestedFormats, options.presentation, await readCanonicalHeadings(artifactDir));
   const preflight = await runPreflight(validatorPath, artifactDir, requestedFormats);
   const artifactId = await readArtifactId(artifactDir);
   const capabilityProbe = normalizeCapabilityProbe(options.capabilities);
@@ -149,7 +177,7 @@ export async function prepareStudioExportJob(options) {
       extension: EXTENSIONS[format],
       capability,
       status,
-      statusHistory: [status],
+      statusHistory: status === "unavailable" ? ["pending", "unavailable"] : [status],
       generationStatus: "not-run",
       rendererStatus: "not-run",
       qaStatus: "not-run",

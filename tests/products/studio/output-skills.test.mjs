@@ -164,17 +164,29 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     schemaVersion: 1,
     presetId: "core-motivation-loop",
     requested: { svg: true, png: true },
-    planned: { status: "passed", sourceSectionIds: ["core-loop"], svgPath: "assets/loop.svg", pngPath: "assets/loop.png" },
-    generated: { status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg), evidence: [{ command: "author", exitCode: 0 }] },
-    linted: { status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg), evidence: [{ command: "node check-svg.mjs", exitCode: 0 }] },
+    planned: {
+      status: "passed", sourceSectionIds: ["core-loop"], altText: "Source-backed loop",
+      svgPath: "assets/loop.svg", pngPath: "assets/loop.png",
+    },
+    generated: {
+      status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg),
+      evidence: [{ command: "author", exitCode: 0, svgPath: "assets/loop.svg", svgDigest: sha256(svg), sourceSectionIds: ["core-loop"] }],
+    },
+    linted: {
+      status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg),
+      evidence: [{ command: "node check-svg.mjs", exitCode: 0, log: "0 errors, 0 warnings", svgPath: "assets/loop.svg", svgDigest: sha256(svg) }],
+    },
     rendered: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg), pngPath: "assets/loop.png",
-      pngDigest: sha256(png), scale: 2, width: 400, height: 120, renderer: "Chromium 140",
-      evidence: [{ command: "node render.mjs", exitCode: 0 }],
+      pngDigest: sha256(png), scale: 2, width: 400, height: 120, renderer: "Chromium", rendererVersion: "140",
+      evidence: [{
+        command: "node render.mjs", exitCode: 0, log: "rendered 400x120", renderer: "Chromium", rendererVersion: "140",
+        svgPath: "assets/loop.svg", svgDigest: sha256(svg), pngPath: "assets/loop.png", pngDigest: sha256(png), width: 400, height: 120,
+      }],
     },
     verified: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg), pngPath: "assets/loop.png",
-      pngDigest: sha256(png), width: 400, height: 120,
+      pngDigest: sha256(png), width: 400, height: 120, sourceSectionIds: ["core-loop"], altText: "Source-backed loop",
       checks: ["fit-to-page", "close-up", "alt-text", "source-fidelity"],
     },
   };
@@ -188,8 +200,17 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     ["all stages use the same SVG", (value) => { value.linted.svgPath = "assets/other.svg"; }],
     ["all render stages use the same PNG", (value) => { value.verified.pngPath = "assets/other.png"; }],
     ["PNG is exactly 2x the SVG viewBox", (value) => { value.rendered.width = 399; }],
+    ["preset is one of the packaged registry IDs", (value) => { value.presetId = "invented-preset"; }],
+    ["source section IDs are unique", (value) => { value.planned.sourceSectionIds.push("core-loop"); }],
+    ["passed evidence requires exit zero", (value) => { value.linted.evidence[0].exitCode = 1; }],
+    ["renderer name and version are independent", (value) => { value.rendered.rendererVersion = ""; }],
+    ["source mapping evidence remains identical", (value) => { value.generated.evidence[0].sourceSectionIds = ["other-section"]; }],
+    ["alt-text evidence remains identical", (value) => { value.verified.altText = "Different description"; }],
+    ["QA checks are exact", (value) => { value.verified.checks.push("invented-check"); }],
+    ["combined evidence attacks fail closed", (value) => { value.presetId = "invented-preset"; value.rendered.evidence[0].exitCode = 1; value.verified.altText = "forged"; }],
     ["asset traversal is rejected", (value) => { value.planned.svgPath = "../loop.svg"; }],
     ["unknown object keys fail closed", (value) => { value.rendered.untrusted = true; }],
+    ["malformed QA arrays fail closed", (value) => { value.verified.checks = null; }],
     ["prototype-sensitive keys fail closed", (value) => { value.generated.evidence[0].constructor = "pollute"; }],
   ];
   for (const [label, mutate] of mutations) {
@@ -199,6 +220,61 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     assert.equal(result.ok, false, label);
     assert.equal(result.normalized, null, label);
   }
+
+  for (const [label, invalidSvg] of [
+    ["actual SVG title is required", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><desc>Source-backed loop</desc></svg>\n'],
+    ["actual SVG desc is required", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><title>Loop</title></svg>\n'],
+  ]) {
+    await writeFile(svgPath, invalidSvg);
+    const candidate = structuredClone(record);
+    const invalidDigest = sha256(invalidSvg);
+    for (const stage of [candidate.generated, candidate.linted, candidate.rendered, candidate.verified]) stage.svgDigest = invalidDigest;
+    candidate.generated.evidence[0].svgDigest = invalidDigest;
+    candidate.linted.evidence[0].svgDigest = invalidDigest;
+    candidate.rendered.evidence[0].svgDigest = invalidDigest;
+    const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+    assert.equal(result.ok, false, label);
+  }
+  await writeFile(svgPath, svg);
+});
+
+test("visualization validator accepts a verified SVG fallback when PNG rendering fails", async () => {
+  const artifactRoot = await temporaryDirectory("studio-visualization-fallback-");
+  const assets = path.join(artifactRoot, "assets");
+  await mkdir(assets);
+  const svgPath = path.join(assets, "loop.svg");
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><title>Loop</title><desc>Source-backed loop</desc></svg>\n';
+  await writeFile(svgPath, svg);
+  const svgDigest = sha256(svg);
+  const record = {
+    schemaVersion: 1,
+    presetId: "core-motivation-loop",
+    requested: { svg: true, png: true },
+    planned: { status: "passed", sourceSectionIds: ["core-loop"], altText: "Source-backed loop", svgPath: "assets/loop.svg", pngPath: "assets/loop.png" },
+    generated: {
+      status: "passed", svgPath: "assets/loop.svg", svgDigest,
+      evidence: [{ command: "author", exitCode: 0, svgPath: "assets/loop.svg", svgDigest, sourceSectionIds: ["core-loop"] }],
+    },
+    linted: {
+      status: "passed", svgPath: "assets/loop.svg", svgDigest,
+      evidence: [{ command: "node check-svg.mjs", exitCode: 0, log: "0 errors, 0 warnings", svgPath: "assets/loop.svg", svgDigest }],
+    },
+    rendered: {
+      status: "failed", svgPath: "assets/loop.svg", svgDigest, pngPath: null, pngDigest: null,
+      scale: 2, width: null, height: null, renderer: "Chromium", rendererVersion: "140",
+      evidence: [{
+        command: "node render.mjs", exitCode: 1, log: "renderer failed", renderer: "Chromium", rendererVersion: "140",
+        svgPath: "assets/loop.svg", svgDigest, pngPath: null, pngDigest: null, width: null, height: null,
+      }],
+    },
+    verified: {
+      status: "unavailable", svgPath: "assets/loop.svg", svgDigest, pngPath: null, pngDigest: null,
+      width: null, height: null, sourceSectionIds: ["core-loop"], altText: "Source-backed loop", checks: [],
+    },
+  };
+  const { validateVisualizationEvidence } = await loadModule(visualizationValidatorScript);
+  const result = await validateVisualizationEvidence(record, { artifactRoot });
+  assert.equal(result.ok, true, result.errors.join("\n"));
 });
 
 test("export recipes are artifact-specific and presentations require an independent story", async () => {
@@ -234,7 +310,12 @@ test("export preparation emits a renderer-neutral pending manifest without fabri
     presentation: {
       audience: "studio leadership",
       purpose: "decide whether the combat brief advances",
-      slideOutline: ["Decision", "Player experience", "Evidence", "Risks and next gate"],
+      slideOutline: [
+        { id: "decision", title: "Advance the combat direction", message: "The prototype evidence supports a bounded next gate.", purpose: "request a decision" },
+        { id: "experience", title: "The intended play experience", message: "Timing and counterplay define the combat promise.", purpose: "align on experience" },
+        { id: "proof", title: "What the evidence establishes", message: "The canonical brief separates facts from assumptions.", purpose: "show decision evidence" },
+        { id: "next-gate", title: "Risks and the next gate", message: "Resolve the listed unknowns before production commitment.", purpose: "bound the investment" },
+      ],
     },
     capabilities: {
       node: { available: true, version: process.versions.node },
@@ -332,6 +413,18 @@ test("export preparation rejects PPTX without audience purpose and independent o
     }),
     /PPTX.*slide outline/iu,
   );
+  await assert.rejects(
+    () => prepareStudioExportJob({
+      artifactDir: fixtureArtifact,
+      outputDir,
+      recipeId: "executive-presentation",
+      requestedFormats: ["pptx"],
+      capabilities: { presentations: { available: true } },
+      presentation: { audience: "executives", purpose: "approve direction", slideOutline: ["# Player Experience"] },
+      validatorPath,
+    }),
+    /PPTX.*slide outline/iu,
+  );
 });
 
 test("export preparation rejects traversal symlinks and unsafe overwrites", async () => {
@@ -380,8 +473,16 @@ test("plugin-owned export validator enforces derivatives terminal transitions an
     artifactDir: fixtureArtifact,
     outputDir,
     recipeId: "review-report",
-    requestedFormats: ["md"],
-    capabilities: {},
+    requestedFormats: ["md", "pptx"],
+    capabilities: { presentations: { available: true, provider: "codex-bundled" } },
+    presentation: {
+      audience: "studio leadership",
+      purpose: "decide the review outcome",
+      slideOutline: [
+        { id: "decision", title: "Choose the review outcome", message: "The evidence supports a bounded decision.", purpose: "request a decision" },
+        { id: "risk", title: "Resolve the material risk", message: "One unknown remains before commitment.", purpose: "bound the next gate" },
+      ],
+    },
     validatorPath,
   });
   const derivativePath = prepared.formats.md.plannedOutputPath;
@@ -414,6 +515,20 @@ test("plugin-owned export validator enforces derivatives terminal transitions an
     ["capability probe states are mutually exclusive", (value) => { value.capabilityProbe.status = "missing"; value.capabilityProbe.capabilities.pdf = { available: true }; }],
     ["requested and not-requested are exact", (value) => { value.formats.pdf.requested = false; value.formats.pdf.status = "pending"; value.formats.pdf.statusHistory = ["pending"]; }],
     ["terminal transitions cannot reopen", (value) => { value.formats.md.statusHistory = ["pending", "passed", "pending"]; value.formats.md.status = "pending"; }],
+    ["terminal histories start at pending", (value) => { value.formats.md.statusHistory = ["passed"]; }],
+    ["passed preflight matches exit code and errors", (value) => { value.preflight.exitCode = 1; value.preflight.errors = [{ code: "FORGED", file: "content.md", message: "forged" }]; }],
+    ["passed evidence requires exit zero", (value) => { value.formats.md.evidence[0].exitCode = 1; }],
+    ["pending jobs cannot claim derivatives", (value) => { value.formats.pptx.outputPath = value.formats.pptx.plannedOutputPath; value.formats.pptx.digest = "0".repeat(64); }],
+    ["format capability identity is fixed", (value) => { value.formats.pptx.capability.name = "pdf"; }],
+    ["format capability equals its probe snapshot", (value) => { value.formats.pptx.capability.provider = "forged-provider"; }],
+    ["PPTX requests require presentation", (value) => { delete value.presentation; }],
+    ["presentation slides are independent stories", (value) => { value.presentation.slideOutline[0].title = "# Review report"; }],
+    ["presentation slides do not copy canonical headings", (value) => { value.presentation.slideOutline[0].title = "Player Experience"; }],
+    ["failed terminals require failed evidence", (value) => { value.formats.md.status = "failed"; value.formats.md.statusHistory = ["pending", "failed"]; }],
+    ["evidence count equals the derivative count", (value) => { value.formats.md.evidence[1].count = 2; }],
+    ["evidence digest equals the derivative digest", (value) => { value.formats.md.evidence[0].digest = "0".repeat(64); }],
+    ["evidence command is nonempty", (value) => { value.formats.md.evidence[0].command = ""; }],
+    ["malformed evidence arrays fail closed", (value) => { value.formats.pptx.evidence = null; }],
     ["unknown object keys fail closed", (value) => { value.formats.md.untrusted = true; }],
     ["prototype-sensitive keys fail closed", (value) => { value.formats.md.evidence[0].__proto__ = { polluted: true }; }],
   ];

@@ -6,6 +6,7 @@ import path from "node:path";
 
 const FORMATS = Object.freeze(["md", "pdf", "docx", "pptx"]);
 const CAPABILITIES = Object.freeze(["node", "chromium", "soffice", "documents", "pdf", "presentations"]);
+const FORMAT_CAPABILITIES = Object.freeze({ md: "canonical-markdown", pdf: "pdf", docx: "documents", pptx: "presentations" });
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const TRANSITIONS = Object.freeze({
   "not-requested": [],
@@ -53,6 +54,12 @@ function allowedKeys(value, allowed, required, errors, location) {
   for (const key of required) if (!Object.hasOwn(value, key)) add(errors, `${location}.${key} is required`);
 }
 
+function sameFlatObject(left, right) {
+  if (!left || !right || typeof left !== "object" || typeof right !== "object") return false;
+  const keys = Object.keys(left).sort();
+  return keys.join("\0") === Object.keys(right).sort().join("\0") && keys.every((key) => left[key] === right[key]);
+}
+
 function validateStatusHistory(job, errors, location) {
   if (!Array.isArray(job?.statusHistory) || job.statusHistory.length === 0) {
     add(errors, `${location}.statusHistory must be nonempty`);
@@ -69,6 +76,8 @@ function validateStatusHistory(job, errors, location) {
       add(errors, `${location}.statusHistory contains an invalid or reopened terminal transition`);
     }
   }
+  const expected = ["passed", "failed", "unavailable"].includes(job.status) ? ["pending", job.status] : [job.status];
+  if (job.statusHistory.join("\0") !== expected.join("\0")) add(errors, `${location}.statusHistory must be exactly ${expected.join(" -> ")}`);
 }
 
 function validateCapability(capability, errors, location) {
@@ -99,7 +108,11 @@ function validateProbe(probe, errors) {
     if (typeof capability?.available !== "boolean") add(errors, `capabilityProbe.capabilities.${name}.available must be boolean`);
     if (capability?.available === false && Object.keys(capability).some((key) => key !== "available")) add(errors, `unavailable ${name} cannot carry provider metadata`);
   }
-  probe.evidence.forEach((entry, index) => allowedKeys(entry, ["command", "exitCode"], ["command", "exitCode"], errors, `capabilityProbe.evidence[${index}]`));
+  probe.evidence.forEach((entry, index) => {
+    allowedKeys(entry, ["command", "exitCode"], ["command", "exitCode"], errors, `capabilityProbe.evidence[${index}]`);
+    if (typeof entry?.command !== "string" || entry.command.trim() === "") add(errors, `capabilityProbe.evidence[${index}].command is required`);
+    if (!Number.isInteger(entry?.exitCode)) add(errors, `capabilityProbe.evidence[${index}].exitCode must be an integer`);
+  });
 }
 
 function validatePreflight(preflight, errors) {
@@ -116,6 +129,8 @@ function validatePreflight(preflight, errors) {
     });
   }
   if (!Array.isArray(preflight?.files) || preflight.files.some((file) => typeof file !== "string")) add(errors, "preflight.files must be a string array");
+  if (preflight?.status === "passed" && (preflight.exitCode !== 0 || preflight.errors?.length !== 0)) add(errors, "passed preflight requires exit code 0 and no errors");
+  if (preflight?.status === "failed" && (preflight.exitCode === 0 || !Array.isArray(preflight.errors) || preflight.errors.length === 0)) add(errors, "failed preflight requires a nonzero exit code and errors");
 }
 
 function insideRoot(root, target) {
@@ -160,18 +175,27 @@ function validateEvidence(job, format, errors, location) {
     );
     if (!["generation", "renderer", "qa"].includes(entry?.stage)) add(errors, `${location}.evidence[${index}].stage is invalid`);
     if (!["passed", "failed"].includes(entry?.status)) add(errors, `${location}.evidence[${index}].status is invalid`);
+    if (typeof entry?.command !== "string" || entry.command.trim() === "") add(errors, `${location}.evidence[${index}].command is required`);
+    if (!Number.isInteger(entry?.exitCode)) add(errors, `${location}.evidence[${index}].exitCode must be an integer`);
+    if (entry?.status === "passed" && entry.exitCode !== 0) add(errors, `${location}.evidence[${index}] passed evidence requires exit code 0`);
+    if (entry?.status === "failed" && entry.exitCode === 0) add(errors, `${location}.evidence[${index}] failed evidence requires a nonzero exit code`);
     if (entry?.derivativePath !== job.outputPath) add(errors, `${location}.evidence[${index}] must reference the same derivative path`);
     if (entry?.digest !== job.digest) add(errors, `${location}.evidence[${index}] must reference the same derivative digest`);
+    if (Object.hasOwn(entry ?? {}, "count") && entry.count !== job.pageOrSlideCount) add(errors, `${location}.evidence[${index}].count must equal pageOrSlideCount`);
+    const expectedStatus = { generation: job.generationStatus, renderer: job.rendererStatus, qa: job.qaStatus }[entry?.stage];
+    if (entry?.status !== expectedStatus) add(errors, `${location}.evidence[${index}].status must match its stage status`);
+    if (stages.has(entry?.stage)) add(errors, `${location} may contain only one evidence entry per stage`);
     stages.add(entry?.stage);
   }
   if (job.status === "passed") {
     if (job.evidence.some(({ status }) => status === "failed")) add(errors, `${location} passed state cannot contain failed evidence`);
     if (!stages.has("generation") || !stages.has("qa")) add(errors, `${location} passed state requires generation and QA evidence`);
     if (format !== "md" && !stages.has("renderer")) add(errors, `${location} passed ${format} requires renderer evidence`);
+    if (format === "md" && stages.has("renderer")) add(errors, `${location} Markdown must not claim renderer evidence`);
   }
 }
 
-function validateJobShape(job, format, errors) {
+function validateJobShape(job, format, probe, errors) {
   const location = `formats.${format}`;
   exactKeys(job, [
     "requested", "extension", "capability", "status", "statusHistory", "generationStatus", "rendererStatus", "qaStatus",
@@ -180,6 +204,16 @@ function validateJobShape(job, format, errors) {
   if (typeof job?.requested !== "boolean") add(errors, `${location}.requested must be boolean`);
   if (job?.extension !== format) add(errors, `${location}.extension must be ${format}`);
   validateCapability(job?.capability, errors, `${location}.capability`);
+  const expectedCapability = FORMAT_CAPABILITIES[format];
+  if (job?.capability?.name !== expectedCapability) add(errors, `${location}.capability.name must be ${expectedCapability}`);
+  if (format === "md") {
+    if (job?.capability?.available !== true || Object.keys(job?.capability ?? {}).some((key) => !["name", "available"].includes(key))) add(errors, `${location} canonical Markdown capability must be built in`);
+  } else if (probe?.status === "provided") {
+    const expected = probe.capabilities?.[expectedCapability];
+    const actual = { ...job?.capability };
+    delete actual.name;
+    if (!sameFlatObject(actual, expected)) add(errors, `${location}.capability must equal the capability probe snapshot`);
+  } else if (job?.capability?.available !== false) add(errors, `${location} cannot claim an available capability without a probe`);
   validateStatusHistory(job, errors, location);
   if (!Array.isArray(job?.limitations)) add(errors, `${location}.limitations must be an array`);
   else if (job.limitations.some((limitation) => typeof limitation !== "string")) add(errors, `${location}.limitations must contain strings`);
@@ -187,10 +221,13 @@ function validateJobShape(job, format, errors) {
     add(errors, `${location}.plannedOutputPath must use .${format}`);
   }
   const notRequested = job?.status === "not-requested";
+  if (!["not-run", "passed", "failed"].includes(job?.generationStatus)) add(errors, `${location}.generationStatus is invalid`);
+  if (!["not-run", "not-required", "passed", "failed"].includes(job?.rendererStatus)) add(errors, `${location}.rendererStatus is invalid`);
+  if (!["not-run", "passed", "failed"].includes(job?.qaStatus)) add(errors, `${location}.qaStatus is invalid`);
   if (job?.requested === notRequested) add(errors, `${location}.requested must be the exact inverse of not-requested status`);
-  if (["not-requested", "blocked", "unavailable"].includes(job?.status)) {
+  if (["not-requested", "blocked", "unavailable", "pending"].includes(job?.status)) {
     if ([job.generationStatus, job.rendererStatus, job.qaStatus].some((status) => status !== "not-run")) add(errors, `${location} inactive states must remain not-run`);
-    if (job.outputPath !== null || job.digest !== null || job.pageOrSlideCount !== null || job.evidence.length !== 0) add(errors, `${location} inactive states cannot claim derivative evidence`);
+    if (job.outputPath !== null || job.digest !== null || job.pageOrSlideCount !== null || !Array.isArray(job.evidence) || job.evidence.length !== 0) add(errors, `${location} inactive states cannot claim derivative evidence`);
   }
   if (job?.status === "unavailable" && job.capability?.available !== false) add(errors, `${location} unavailable state requires unavailable capability`);
   if (["pending", "passed"].includes(job?.status) && job.capability?.available !== true) add(errors, `${location} active state requires available capability`);
@@ -201,7 +238,33 @@ function validateJobShape(job, format, errors) {
     if (!Number.isInteger(job.pageOrSlideCount) || job.pageOrSlideCount < 1) add(errors, `${location}.pageOrSlideCount must be positive`);
   }
   if (job?.status === "failed" && !job.evidence?.some(({ status }) => status === "failed")) add(errors, `${location} failed state requires failed evidence`);
+  if (job?.status === "failed" && ![job.generationStatus, job.rendererStatus, job.qaStatus].includes("failed")) add(errors, `${location} failed state requires an exact failed stage`);
   validateEvidence(job, format, errors, location);
+}
+
+function normalizedHeading(value) {
+  return value.trim().replace(/\s*\{#[a-z0-9-]+\}\s*$/iu, "").toLocaleLowerCase("en-US");
+}
+
+function validatePresentation(presentation, canonicalHeadings, errors) {
+  exactKeys(presentation, ["audience", "purpose", "slideOutline"], errors, "presentation");
+  if (typeof presentation?.audience !== "string" || presentation.audience.trim() === "") add(errors, "presentation.audience is required");
+  if (typeof presentation?.purpose !== "string" || presentation.purpose.trim() === "") add(errors, "presentation.purpose is required");
+  if (!Array.isArray(presentation?.slideOutline) || presentation.slideOutline.length === 0) {
+    add(errors, "presentation.slideOutline must be nonempty");
+    return;
+  }
+  const ids = new Set();
+  const headings = new Set(canonicalHeadings.map(normalizedHeading));
+  presentation.slideOutline.forEach((slide, index) => {
+    const location = `presentation.slideOutline[${index}]`;
+    exactKeys(slide, ["id", "title", "message", "purpose"], errors, location);
+    for (const field of ["id", "title", "message", "purpose"]) if (typeof slide?.[field] !== "string" || slide[field].trim() === "") add(errors, `${location}.${field} is required`);
+    if (typeof slide?.id === "string" && (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slide.id) || ids.has(slide.id))) add(errors, `${location}.id must be unique kebab-case`);
+    ids.add(slide?.id);
+    for (const field of ["title", "message", "purpose"]) if (typeof slide?.[field] === "string" && /^\s{0,3}#{1,6}\s+/u.test(slide[field])) add(errors, `${location}.${field} must not use Markdown heading syntax`);
+    if (typeof slide?.title === "string" && headings.has(normalizedHeading(slide.title))) add(errors, `${location}.title must not copy a canonical structural heading`);
+  });
 }
 
 export async function validateStudioExportManifest(manifest, { outputRoot } = {}) {
@@ -220,15 +283,22 @@ export async function validateStudioExportManifest(manifest, { outputRoot } = {}
   if (typeof manifest?.recipe?.id !== "string" || manifest.recipe.id === "") add(errors, "recipe.id is required");
   exactKeys(manifest?.artifactPreservation, ["canonicalArtifactMutated", "existingOutputsOverwritten"], errors, "artifactPreservation");
   if (manifest?.artifactPreservation?.canonicalArtifactMutated !== false || manifest?.artifactPreservation?.existingOutputsOverwritten !== false) add(errors, "artifact preservation must remain fail-closed");
-  if (Object.hasOwn(manifest ?? {}, "presentation")) {
-    exactKeys(manifest.presentation, ["audience", "purpose", "slideOutline"], errors, "presentation");
-    if (typeof manifest.presentation.audience !== "string" || manifest.presentation.audience === "") add(errors, "presentation.audience is required");
-    if (typeof manifest.presentation.purpose !== "string" || manifest.presentation.purpose === "") add(errors, "presentation.purpose is required");
-    if (!Array.isArray(manifest.presentation.slideOutline) || manifest.presentation.slideOutline.length === 0 || manifest.presentation.slideOutline.some((title) => typeof title !== "string" || title === "")) add(errors, "presentation.slideOutline must be nonempty strings");
-  }
   validateProbe(manifest?.capabilityProbe, errors);
   exactKeys(manifest?.formats, FORMATS, errors, "formats");
-  for (const format of FORMATS) validateJobShape(manifest?.formats?.[format], format, errors);
+  for (const format of FORMATS) validateJobShape(manifest?.formats?.[format], format, manifest?.capabilityProbe, errors);
+  const pptxRequested = manifest?.formats?.pptx?.requested === true;
+  if (pptxRequested && !Object.hasOwn(manifest ?? {}, "presentation")) add(errors, "requested PPTX requires presentation");
+  if (!pptxRequested && Object.hasOwn(manifest ?? {}, "presentation")) add(errors, "presentation is allowed only when PPTX is requested");
+  if (Object.hasOwn(manifest ?? {}, "presentation")) {
+    let headings = [];
+    try {
+      const source = await readFile(path.join(manifest.artifact.directory, "content.md"), "utf8");
+      headings = [...source.matchAll(/^#{1,6}\s+(.+)$/gmu)].map(([, heading]) => heading.trim());
+    } catch (cause) {
+      add(errors, `presentation source headings are unavailable: ${cause.message}`);
+    }
+    validatePresentation(manifest.presentation, headings, errors);
+  }
 
   let canonicalRoot;
   if (typeof outputRoot !== "string") add(errors, "outputRoot is required");
@@ -245,7 +315,7 @@ export async function validateStudioExportManifest(manifest, { outputRoot } = {}
     for (const format of FORMATS) {
       const job = manifest?.formats?.[format];
       if (typeof job?.plannedOutputPath === "string" && !insideRoot(canonicalRoot, path.resolve(job.plannedOutputPath))) add(errors, `formats.${format}.plannedOutputPath must stay inside outputRoot`);
-      if (job?.status === "passed") await validateOutputFile(job, format, canonicalRoot, errors, `formats.${format}`);
+      if (job?.status === "passed" || (job?.status === "failed" && typeof job.outputPath === "string")) await validateOutputFile(job, format, canonicalRoot, errors, `formats.${format}`);
     }
   }
   return { ok: errors.length === 0, errors, normalized: errors.length === 0 ? structuredClone(manifest) : null };

@@ -44,7 +44,7 @@ Map every generated node, connector, label, date, and numeric annotation to a so
 4. Run the preset's packaged `check-svg.mjs` command and retain command, exit code, stdout/stderr, input path, and source digest. `generated` is not `linted`.
 5. Run the packaged canonical Chromium renderer at 2×. Retain renderer executable/version, command, exit code, SVG and PNG paths/digests, viewBox, actual PNG dimensions, and render log. `rendered` is not `verified`.
 6. Inspect fit-to-page and close-up pixels. Record text, CJK, containment, connector, contrast, reading-order, source-fidelity, and alt-text results before marking verified.
-7. Run [validate-visualization-evidence.mjs](scripts/validate-visualization-evidence.mjs) against the evidence record and artifact root. It validates ordered predecessors, same-file digests, safe asset paths, and actual 2× PNG dimensions.
+7. Run [validate-visualization-evidence.mjs](scripts/validate-visualization-evidence.mjs) against the evidence record and artifact root. It validates one of the six packaged preset IDs, stable unique source IDs, SVG `<title>`/`<desc>`, ordered predecessors, same-file paths and digests, lint logs, renderer name/version, exact QA checks, and actual 2× PNG dimensions.
 8. Index only proven assets. On any failure, keep the canonical artifact and source SVG, record the exact fallback state, and never claim a successful PNG.
 
 ## Output contract
@@ -63,3 +63,4 @@ Produce `canonical-artifact` with stable sections for diagram decision, source m
 - Never mark linted, rendered, or verified without the actual command and file evidence, including exit status, paths, digests, and dimensions where applicable.
 - Require alt text, SVG `<title>`/`<desc>`, source mapping, successful packaged SVG lint, exact 2× PNG dimensions, renderer identity, and two-pass visual QA for verified SVG+PNG completion.
 - A missing browser, failed lint, failed render, or failed pixel review records its precise fallback and preserves the canonical artifact.
+- A failed PNG render preserves the passed, linted SVG and its source/alt-text evidence, records rendering as `failed`, and records PNG verification as `unavailable` without PNG success evidence.

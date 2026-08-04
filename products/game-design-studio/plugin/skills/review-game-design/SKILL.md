@@ -60,4 +60,3 @@ Produce `game-design-review` with stable sections for review scope, findings, de
 - Conflicting recommendations remain decision items until the named decision owner records a choice and rationale.
 - Blockers remain visible; an unresolved blocker cannot become an approved readiness verdict.
 - The review changes only the review package or decision log unless the user separately authorizes source edits.
-

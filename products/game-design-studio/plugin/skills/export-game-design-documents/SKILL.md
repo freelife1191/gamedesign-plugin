@@ -54,6 +54,7 @@ Produce `canonical-artifact` with stable sections for preflight, recipe, capabil
 
 - MD, PDF, DOCX, and PPTX cannot be `passed` until actual generation and format-specific QA complete; capability availability alone is never success.
 - Every passed format has an existing output path, SHA-256 digest, page or slide count when applicable, renderer or generator evidence, and QA evidence.
-- PPTX requires audience, purpose, and an independent story outline; Markdown heading split is prohibited.
+- PPTX requires audience, purpose, and a structured independent story. Every slide has a unique stable `id`, `title`, `message`, and `purpose`; Markdown heading syntax and copied canonical structural headings are prohibited.
+- Capability identity is exact: MD is packaged `canonical-markdown`; PDF, DOCX, and PPTX equal the `pdf`, `documents`, and `presentations` probe snapshots.
 - Unsafe traversal, symlink, or overwrite conditions fail closed without changing the canonical artifact or existing outputs.
 - Failed and unavailable formats remain explicit in the manifest while successful formats retain independent evidence.
