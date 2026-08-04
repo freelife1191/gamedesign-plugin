@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Game Design"
+  short_description: "Evidence-linked game design review and decisions"
+  default_prompt: "Use $review-game-design review a canonical game design artifact and return evidence-linked minimal fixes."

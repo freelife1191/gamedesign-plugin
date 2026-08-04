@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "skillstead": {
+    "packagePath": "skills/svg-infographic",
+    "sourceAuthority": "skills/svg-infographic/SKILL.md"
+  },
+  "presets": [
+    {
+      "id": "core-motivation-loop",
+      "suitedInputs": ["source-backed player actions, feedback, rewards, and repeat drivers"],
+      "unsuitableInputs": ["unsupported sample loops or data-accurate retention charts"],
+      "archetype": "flow",
+      "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
+      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
+    },
+    {
+      "id": "state-rule-flow",
+      "suitedInputs": ["states, rule precedence, transitions, guards, failures, and recovery"],
+      "unsuitableInputs": ["rules without source states or precedence"],
+      "archetype": "flow",
+      "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
+      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
+    },
+    {
+      "id": "quest-content-progression",
+      "suitedInputs": ["source-backed quest stages, branches, gates, outcomes, and repeat paths"],
+      "unsuitableInputs": ["unscoped content lists without progression relationships"],
+      "archetype": "flow",
+      "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
+      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
+    },
+    {
+      "id": "economy-source-sink",
+      "suitedInputs": ["currencies, source and sink nodes, exchange edges, caps, and ownership"],
+      "unsuitableInputs": ["price or probability values absent from the canonical evidence"],
+      "archetype": "topology-component",
+      "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
+      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
+    },
+    {
+      "id": "liveops-roadmap",
+      "suitedInputs": ["dated phases, milestones, gates, rollback points, and owners"],
+      "unsuitableInputs": ["invented schedules or statistical experiment charts"],
+      "archetype": "roadmap-timeline",
+      "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
+      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
+    },
+    {
+      "id": "production-role-structure",
+      "suitedInputs": ["roles, ownership, dependencies, handoffs, milestones, and escalation paths"],
+      "unsuitableInputs": ["unverified staffing estimates or a flat contact list"],
+      "archetype": "topology-component",
+      "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
+      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
+    }
+  ]
+}
