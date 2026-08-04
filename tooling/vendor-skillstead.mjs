@@ -87,25 +87,64 @@ async function writeSnapshot(entries, destination, fs) {
   }
 }
 
-async function rollbackInstall({ backup, destination, fs, installed, workRoot }) {
-  const rollbackErrors = [];
-  try {
-    if (installed) await fs.rename(destination, path.join(workRoot, "failed-next"));
-  } catch (error) {
-    rollbackErrors.push(error);
+async function retryRename(fs, from, to, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await fs.rename(from, to);
+      return;
+    } catch (error) {
+      lastError = error;
+    }
   }
-  try {
-    await fs.rename(backup, destination);
-  } catch (error) {
-    rollbackErrors.push(error);
+  throw lastError;
+}
+
+function recoveryError(message, recoveryPath, cause) {
+  const error = new Error(`${message}; recovery data preserved at ${recoveryPath}`, { cause });
+  error.recoveryPath = recoveryPath;
+  return error;
+}
+
+async function assertGeneration(root, expectedEntries) {
+  await verifyVendorRoot(root);
+  const actualEntries = await collectTree(root, { label: "rollback generation" });
+  if (!sameSnapshot(expectedEntries, actualEntries)) {
+    throw new Error("rollback generation differs from the pre-install byte snapshot");
   }
+}
+
+async function rollbackInstall({ backup, destination, fs, installed, previousEntries, workRoot }) {
+  try {
+    await assertGeneration(backup, previousEntries);
+  } catch (error) {
+    throw recoveryError("backup is not safe to restore", backup, error);
+  }
+
+  if (installed) {
+    try {
+      await retryRename(fs, destination, path.join(workRoot, "failed-next"));
+    } catch (error) {
+      throw recoveryError("could not move the failed installed generation aside", backup, error);
+    }
+  }
+
+  try {
+    await retryRename(fs, backup, destination);
+  } catch (error) {
+    throw recoveryError("could not restore the prior vendor generation", backup, error);
+  }
+
+  try {
+    await assertGeneration(destination, previousEntries);
+  } catch (error) {
+    throw recoveryError("restored vendor generation failed verification", destination, error);
+  }
+
   try {
     await fs.rm(workRoot, { recursive: true, force: true });
   } catch (error) {
-    rollbackErrors.push(error);
-  }
-  if (rollbackErrors.length > 0) {
-    throw new AggregateError(rollbackErrors, "vendor update rollback failed");
+    throw recoveryError("restored vendor generation but could not remove failed update data", workRoot, error);
   }
 }
 
@@ -129,13 +168,14 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
     await fs.writeFile(path.join(stagedVendorRoot, "vendor.lock.json"), `${JSON.stringify(lockFor(stagedEntries), null, 2)}\n`);
     await fs.writeFile(path.join(stagedVendorRoot, "THIRD_PARTY_NOTICES.md"), noticesForPackage());
     await verifyVendorRoot(stagedVendorRoot);
-    await hooks.afterSnapshot?.();
+    await hooks.afterSnapshot?.({ stagedVendorRoot, workRoot });
 
     const currentSourceEntries = await collectTree(source, { label: "Skillstead update source recheck" });
     if (!sameSnapshot(sourceEntries, currentSourceEntries)) {
       throw new Error("source changed during update; refusing mixed-generation install");
     }
-    await hooks.beforeInstall?.();
+    await hooks.beforeInstall?.({ stagedVendorRoot, workRoot });
+    await verifyVendorRoot(stagedVendorRoot);
   } catch (error) {
     await fs.rm(workRoot, { recursive: true, force: true });
     throw error;
@@ -143,6 +183,7 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
 
   let oldMoved = false;
   let installed = false;
+  let previousEntries;
   try {
     const hasExistingGeneration = await fs.lstat(vendorRoot).then(
       () => true,
@@ -152,24 +193,59 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
       },
     );
     if (hasExistingGeneration) {
+      await verifyVendorRoot(vendorRoot);
+      previousEntries = await collectTree(vendorRoot, { label: "pre-install vendor generation" });
       await fs.rename(vendorRoot, backup);
       oldMoved = true;
     }
     await fs.rename(stagedVendorRoot, vendorRoot);
     installed = true;
+    await hooks.afterInstall?.({ backup, vendorRoot, workRoot });
+    await verifyVendorRoot(vendorRoot);
   } catch (error) {
     if (oldMoved) {
       try {
-        await rollbackInstall({ backup, destination: vendorRoot, fs, installed, workRoot });
+        await rollbackInstall({
+          backup,
+          destination: vendorRoot,
+          fs,
+          installed,
+          previousEntries,
+          workRoot,
+        });
       } catch (rollbackError) {
-        throw new AggregateError([error, rollbackError], "vendor install and rollback failed");
+        throw new AggregateError(
+          [error, rollbackError],
+          `${rollbackError.message}; original failure: ${error.message}`,
+        );
       }
     } else {
       await fs.rm(workRoot, { recursive: true, force: true });
     }
     throw error;
   }
-  await fs.rm(workRoot, { recursive: true, force: true });
+
+  try {
+    await fs.rm(workRoot, { recursive: true, force: true });
+  } catch (error) {
+    if (!oldMoved) throw error;
+    try {
+      await rollbackInstall({
+        backup,
+        destination: vendorRoot,
+        fs,
+        installed,
+        previousEntries,
+        workRoot,
+      });
+    } catch (rollbackError) {
+      throw new AggregateError(
+        [error, rollbackError],
+        `${rollbackError.message}; cleanup failure: ${error.message}`,
+      );
+    }
+    throw error;
+  }
 }
 
 const modulePath = fileURLToPath(import.meta.url);

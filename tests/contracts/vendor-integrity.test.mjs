@@ -178,6 +178,8 @@ async function createUpdateFixture(options) {
 
 async function assertGenerationPreserved(fixture, before) {
   assert.deepEqual(await treeSnapshot(fixture.vendor), before);
+  const verification = run(verifier, ["--root", fixture.scratch]);
+  assert.equal(verification.status, 0, verification.stderr || verification.stdout);
   const siblings = await readdir(path.dirname(fixture.vendor));
   assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
 }
@@ -276,6 +278,144 @@ test("successful update bootstraps an absent vendor generation", async () => {
     assert.match(verification.stdout, /verified 5 files/);
     const siblings = await readdir(path.dirname(fixture.vendor));
     assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("transient rollback rename failure is retried before the old generation is restored", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  let installFailed = false;
+  let restoreFailed = false;
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (!installFailed && path.basename(from) === "next") {
+        installFailed = true;
+        throw new Error("injected install rename failure");
+      }
+      if (!restoreFailed && path.basename(from) === "previous" && path.basename(to) === "skillstead") {
+        restoreFailed = true;
+        throw new Error("injected transient rollback rename failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      /injected install rename failure/,
+    );
+    await assertGenerationPreserved(fixture, before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("permanent rollback failure preserves the recovery generation and reports its path", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  let installFailed = false;
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (!installFailed && path.basename(from) === "next") {
+        installFailed = true;
+        throw new Error("injected install rename failure");
+      }
+      if (path.basename(from) === "previous" && path.basename(to) === "skillstead") {
+        throw new Error("injected permanent rollback rename failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    let rejection;
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      (error) => {
+        rejection = error;
+        return true;
+      },
+    );
+    const workspaces = (await readdir(path.dirname(fixture.vendor)))
+      .filter((name) => name.startsWith(".skillstead-update-"));
+    assert.equal(workspaces.length, 1, "one recovery workspace must remain");
+    const recovery = path.join(path.dirname(fixture.vendor), workspaces[0], "previous");
+    assert.match(rejection.message, new RegExp(`recovery.*${recovery.replaceAll("/", "\\/")}`, "i"));
+    assert.deepEqual(await treeSnapshot(recovery), before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("staged mutation in beforeInstall is rejected before the live generation moves", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", {
+        hooks: {
+          async beforeInstall({ stagedVendorRoot }) {
+            await writeFile(
+              path.join(stagedVendorRoot, "svg-infographic/0.8.3/snapshot.txt"),
+              "mutated staged bytes\n",
+            );
+          },
+        },
+      }),
+      /modified vendored file/,
+    );
+    await assertGenerationPreserved(fixture, before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("installed-root verification failure rolls back to the verified prior generation", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", {
+        hooks: {
+          async afterInstall({ vendorRoot: installedRoot }) {
+            await writeFile(
+              path.join(installedRoot, "svg-infographic/0.8.3/snapshot.txt"),
+              "mutated installed bytes\n",
+            );
+          },
+        },
+      }),
+      /modified vendored file/,
+    );
+    await assertGenerationPreserved(fixture, before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("final cleanup failure rolls back while the prior backup is intact", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  let cleanupFailed = false;
+  const injectedFs = {
+    ...fs,
+    async rm(target, options) {
+      if (!cleanupFailed && path.basename(target).startsWith(".skillstead-update-")) {
+        cleanupFailed = true;
+        throw new Error("injected final cleanup failure");
+      }
+      return fs.rm(target, options);
+    },
+  };
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      /injected final cleanup failure/,
+    );
+    await assertGenerationPreserved(fixture, before);
   } finally {
     await rm(fixture.scratch, { recursive: true, force: true });
   }
