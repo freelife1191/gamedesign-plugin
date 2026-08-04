@@ -1,0 +1,32 @@
+{
+  "name": "game-design-suite",
+  "interface": {
+    "displayName": "Game Design Suite"
+  },
+  "plugins": [
+    {
+      "name": "game-design-studio",
+      "source": {
+        "source": "local",
+        "path": "./plugins/game-design-studio"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "productivity"
+    },
+    {
+      "name": "game-design-career",
+      "source": {
+        "source": "local",
+        "path": "./plugins/game-design-career"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "education"
+    }
+  ]
+}

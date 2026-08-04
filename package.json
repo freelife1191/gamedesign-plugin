@@ -1,0 +1,13 @@
+{
+  "name": "game-design-plugin-suite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:contracts": "node --test tests/contracts/*.test.mjs",
+    "build": "node tooling/build-snapshots.mjs",
+    "validate": "node tooling/validate-suite.mjs"
+  },
+  "engines": { "node": ">=18" }
+}
