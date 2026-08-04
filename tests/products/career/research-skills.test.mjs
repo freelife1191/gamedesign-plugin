@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -15,11 +18,15 @@ async function readJson(relativePath) {
   return JSON.parse(await read(relativePath));
 }
 
-async function validateCollection(records, options) {
+async function loadCollectionValidator(root = pluginRoot) {
   const validatorUrl = pathToFileURL(
-    path.join(pluginRoot, "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs"),
+    path.join(root, "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs"),
   );
-  const { validateJobEvidenceCollection } = await import(validatorUrl.href);
+  return import(`${validatorUrl.href}?boundary=${Date.now()}-${Math.random()}`);
+}
+
+async function validateCollection(records, options) {
+  const { validateJobEvidenceCollection } = await loadCollectionValidator();
   return validateJobEvidenceCollection(records, options);
 }
 
@@ -27,7 +34,9 @@ function posting(sourceId, repeatedSignals = [], overrides = {}) {
   return {
     sourceId,
     company: `Studio ${sourceId}`,
+    project: null,
     region: "KR",
+    employmentType: "full-time",
     postedDate: "2026-07-01",
     sourceUrl: `https://careers.example.com/jobs/${sourceId}`,
     retrievalDate: "2026-08-01",
@@ -36,9 +45,14 @@ function posting(sourceId, repeatedSignals = [], overrides = {}) {
     requiredSkills: ["Write clear specifications"],
     preferredSkills: [],
     repeatedSignals,
+    applicantEvidence: [],
+    gaps: [],
+    nonGeneralizable: [],
     sampleSize: 3,
     sampleGeography: ["KR"],
     sourceType: "official-company-career-page",
+    blindSpots: [],
+    inferenceLimits: [],
     ...overrides,
   };
 }
@@ -172,15 +186,14 @@ test("Collection validator rejects orphan repeated-signal source IDs", async () 
 });
 
 test("Collection validator rejects missing and duplicate posting source IDs", async () => {
-  const result = await validateCollection([
+  const duplicateResult = await validateCollection([
     posting("posting-a"),
     posting("posting-a"),
-    posting(""),
   ]);
-  const codes = result.errors.map(({ code }) => code);
+  assert.ok(duplicateResult.errors.some(({ code }) => code === "duplicate-source-id"));
 
-  assert.ok(codes.includes("duplicate-source-id"));
-  assert.ok(codes.includes("missing-source-id"));
+  const missingResult = await validateCollection([posting("", [], { sampleSize: 1 })]);
+  assert.ok(missingResult.errors.some(({ code }) => code === "schema-min-length" || code === "schema-pattern"));
 });
 
 test("Collection validator rejects duplicate IDs inside one repeated signal", async () => {
@@ -191,7 +204,15 @@ test("Collection validator rejects duplicate IDs inside one repeated signal", as
     posting("posting-b", [], { sampleSize: 2 }),
   ], { asOfDate: "2026-08-04" });
 
-  assert.ok(result.errors.some(({ code }) => code === "duplicate-signal-source-ref"));
+  assert.ok(result.errors.some(({ code }) => code === "schema-unique-items"));
+
+  const reordered = repeatedSignal({ denominator: 2 });
+  reordered.sourceRefs[1] = Object.fromEntries(Object.entries(reordered.sourceRefs[0]).reverse());
+  const reorderedResult = await validateCollection([
+    posting("posting-a", [reordered], { sampleSize: 2 }),
+    posting("posting-b", [], { sampleSize: 2 }),
+  ], { asOfDate: "2026-08-04" });
+  assert.ok(reorderedResult.errors.some(({ code }) => code === "schema-unique-items"));
 });
 
 test("Collection validator rejects count and denominator mismatches", async () => {
@@ -265,13 +286,16 @@ test("Collection validator rejects forged large secondary samples and inconsiste
     posting("posting-c", [], { sourceType: "secondary-context", sourceUrl: "file:///tmp/c.json", sampleSize: 999, sampleGeography: ["GLOBAL"] }),
   ], { asOfDate: "2026-08-04" });
   const codes = new Set(result.errors.map(({ code }) => code));
-  assert.ok(codes.has("duplicate-signal-source-ref"));
-  assert.ok(codes.has("signal-count-mismatch"));
-  assert.ok(codes.has("signal-denominator-mismatch"));
-  assert.ok(codes.has("sample-size-mismatch"));
-  assert.ok(codes.has("sample-geography-mismatch"));
-  assert.ok(codes.has("signal-source-not-primary"));
-  assert.ok(codes.has("signal-source-url"));
+  assert.deepEqual(codes, new Set(["schema-unique-items"]));
+
+  const inconsistentScope = await validateCollection([
+    posting("posting-a", [repeatedSignal()], { sampleSize: 999, sampleGeography: ["GLOBAL"] }),
+    posting("posting-b", [], { sampleSize: 999, sampleGeography: ["GLOBAL"] }),
+    posting("posting-c", [], { sampleSize: 999, sampleGeography: ["GLOBAL"] }),
+  ], { asOfDate: "2026-08-04" });
+  const scopeCodes = new Set(inconsistentScope.errors.map(({ code }) => code));
+  assert.ok(scopeCodes.has("sample-size-mismatch"));
+  assert.ok(scopeCodes.has("sample-geography-mismatch"));
 });
 
 test("Collection validator requires an explicit valid as-of date for repeated signals", async () => {
@@ -292,13 +316,135 @@ test("Collection validator preserves empty repeated signals and rejects undersiz
   const undersizedResult = await validateCollection([
     posting("posting-a", [undersized], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
   ], { asOfDate: "2026-08-04" });
-  assert.ok(undersizedResult.errors.some(({ code }) => code === "signal-source-ref-minimum"));
+  assert.ok(undersizedResult.errors.some(({ code }) => code === "schema-minimum" || code === "schema-min-items"));
 
   const duplicateResult = await validateCollection([
     posting("posting-a", [repeatedSignal(), repeatedSignal()], { sampleSize: 3 }),
     posting("posting-b"), posting("posting-c"),
   ], { asOfDate: "2026-08-04" });
   assert.ok(duplicateResult.errors.some(({ code }) => code === "duplicate-signal-id"));
+});
+
+test("Public collection validator enforces the complete record schema before semantic calculations", async () => {
+  const hugeSparse = [];
+  hugeSparse.length = 0xffffffff;
+  const unknownSignal = repeatedSignal({ denominator: 2, verified: true });
+  const unknownSignalRecords = [
+    posting("posting-a", [unknownSignal], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
+  ];
+  const unknownRefSignal = repeatedSignal({ denominator: 2 });
+  unknownRefSignal.sourceRefs[0].unexpected = true;
+  const unknownRefRecords = [
+    posting("posting-a", [unknownRefSignal], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
+  ];
+  const protoSignal = repeatedSignal({ denominator: 2 });
+  Object.defineProperty(protoSignal, "__proto__", { value: "forged", enumerable: true });
+  const protoSignalRecords = [
+    posting("posting-a", [protoSignal], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
+  ];
+  for (const [label, records, expectedCode] of [
+    ["missing required fields", [{ sourceId: "partial", repeatedSignals: [] }], "schema-required"],
+    ["unknown record key", [posting("posting-a", [], { verified: true, sampleSize: 1 })], "schema-additional-property"],
+    ["malformed string-array item", [posting("posting-a", [], { responsibilities: [42], sampleSize: 1 })], "schema-type"],
+    ["non-JSON bigint array item", [posting("posting-a", [], { applicantEvidence: [1n], sampleSize: 1 })], "schema-type"],
+    ["duplicate geography item", [posting("posting-a", [], { sampleGeography: ["KR", "KR"], sampleSize: 1 })], "schema-unique-items"],
+    ["wrong repeatedSignals type", [posting("posting-a", "forged", { sampleSize: 1 })], "schema-type"],
+    ["unknown signal key", unknownSignalRecords, "schema-additional-property"],
+    ["unexpected ref key", unknownRefRecords, "schema-additional-property"],
+    ["forbidden signal key", protoSignalRecords, "boundary-forbidden-key"],
+    ["huge sparse collection", hugeSparse, "boundary-array-hole"],
+  ]) {
+    const result = await validateCollection(records);
+    assert.equal(result.valid, false, label);
+    assert.ok(result.errors.some(({ code }) => code === expectedCode), `${label}: ${JSON.stringify(result.errors)}`);
+    assert.ok(result.errors.every(({ code }) => code.startsWith("schema-") || code.startsWith("boundary-")), label);
+  }
+});
+
+test("Public collection validator accepts only own enumerable data properties on plain JSON containers", async () => {
+  const complete = posting("posting-a", [], { sampleSize: 1 });
+  const inheritedRecord = Object.create(complete);
+
+  const inheritedSignal = Object.create(repeatedSignal({ denominator: 2 }));
+  const inheritedSignalRecords = [
+    posting("posting-a", [inheritedSignal], { sampleSize: 2 }),
+    posting("posting-b", [], { sampleSize: 2 }),
+  ];
+
+  const inheritedRef = Object.create(repeatedSignal().sourceRefs[0]);
+  const signalWithInheritedRef = repeatedSignal({ denominator: 2 });
+  signalWithInheritedRef.sourceRefs[0] = inheritedRef;
+  const inheritedRefRecords = [
+    posting("posting-a", [signalWithInheritedRef], { sampleSize: 2 }),
+    posting("posting-b", [], { sampleSize: 2 }),
+  ];
+
+  const accessorRecord = posting("posting-a", [], { sampleSize: 1 });
+  let getterCalls = 0;
+  Object.defineProperty(accessorRecord, "sourceId", {
+    enumerable: true,
+    get() { getterCalls += 1; return "posting-a"; },
+  });
+
+  const nonEnumerableRecord = posting("posting-a", [], { sampleSize: 1 });
+  Object.defineProperty(nonEnumerableRecord, "hidden", { value: true, enumerable: false });
+  const symbolRecord = posting("posting-a", [], { sampleSize: 1 });
+  symbolRecord[Symbol("hidden")] = true;
+  const protoKeyRecord = posting("posting-a", [], { sampleSize: 1 });
+  Object.defineProperty(protoKeyRecord, "__proto__", { value: "forged", enumerable: true });
+
+  for (const [label, records, expectedCode] of [
+    ["inherited record", [inheritedRecord], "boundary-prototype"],
+    ["inherited signal", inheritedSignalRecords, "boundary-prototype"],
+    ["inherited ref", inheritedRefRecords, "boundary-prototype"],
+    ["accessor", [accessorRecord], "boundary-accessor"],
+    ["non-enumerable", [nonEnumerableRecord], "boundary-non-enumerable"],
+    ["symbol", [symbolRecord], "boundary-symbol-key"],
+    ["forbidden key", [protoKeyRecord], "boundary-forbidden-key"],
+  ]) {
+    const result = await validateCollection(records, { asOfDate: "2026-08-04" });
+    assert.equal(result.valid, false, label);
+    assert.ok(result.errors.some(({ code }) => code === expectedCode), `${label}: ${JSON.stringify(result.errors)}`);
+  }
+  assert.equal(getterCalls, 0, "accessors must never execute");
+});
+
+test("Public collection validator rejects proxies before invoking their traps", async () => {
+  let trapCalls = 0;
+  const trappedRecord = new Proxy(posting("posting-a", [], { sampleSize: 1 }), {
+    getPrototypeOf() { trapCalls += 1; throw new Error("getPrototypeOf trap executed"); },
+    ownKeys() { trapCalls += 1; throw new Error("ownKeys trap executed"); },
+    getOwnPropertyDescriptor() { trapCalls += 1; throw new Error("descriptor trap executed"); },
+    get() { trapCalls += 1; throw new Error("get trap executed"); },
+  });
+  const result = await validateCollection([trappedRecord]);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(({ code }) => code === "boundary-proxy"), JSON.stringify(result.errors));
+  assert.equal(trapCalls, 0);
+
+  const trappedOptions = new Proxy({ asOfDate: "2026-08-04" }, {
+    ownKeys() { trapCalls += 1; throw new Error("options ownKeys trap executed"); },
+    get() { trapCalls += 1; throw new Error("options get trap executed"); },
+  });
+  const optionsResult = await validateCollection([], trappedOptions);
+  assert.ok(optionsResult.errors.some(({ code }) => code === "boundary-proxy"));
+  assert.equal(trapCalls, 0);
+});
+
+test("Clean-built public validator preserves the schema and data-only boundary", async () => {
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-job-boundary-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const { validateJobEvidenceCollection } = await loadCollectionValidator(build.outputDir);
+    const inherited = Object.create(posting("posting-a", [], { sampleSize: 1 }));
+    const inheritedResult = validateJobEvidenceCollection([inherited]);
+    assert.ok(inheritedResult.errors.some(({ code }) => code === "boundary-prototype"));
+
+    const partialResult = validateJobEvidenceCollection([{ sourceId: "partial", repeatedSignals: [] }]);
+    assert.ok(partialResult.errors.some(({ code }) => code === "schema-required"));
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
 });
 
 test("Job evidence records sample scope, provenance, and blind spots", async () => {

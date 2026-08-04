@@ -1,13 +1,196 @@
 #!/usr/bin/env node
 
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { types as utilTypes } from "node:util";
 
 function finding(code, message, path) {
   return { code, message, path };
 }
 
 const REQUIREMENT_FIELDS = new Set(["responsibilities", "requiredSkills", "preferredSkills"]);
+const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+const jobEvidenceSchema = JSON.parse(readFileSync(
+  new URL("../../../references/job-evidence-schema.json", import.meta.url),
+  "utf8",
+));
+
+function isPlainRecord(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isArrayIndex(key, length) {
+  if (!/^(?:0|[1-9]\d*)$/u.test(key)) return false;
+  const index = Number(key);
+  return Number.isSafeInteger(index) && index >= 0 && index < length && String(index) === key;
+}
+
+function snapshotData(value, path, errors, seen = new WeakSet()) {
+  if (value === null || typeof value !== "object") return value;
+  if (utilTypes.isProxy(value)) {
+    errors.push(finding("boundary-proxy", "Proxy values are not accepted at the job-evidence boundary.", path));
+    return undefined;
+  }
+  if (seen.has(value)) {
+    errors.push(finding("boundary-cycle", "Cyclic values are not accepted at the job-evidence boundary.", path));
+    return undefined;
+  }
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    if (Object.getPrototypeOf(value) !== Array.prototype) {
+      errors.push(finding("boundary-prototype", "Arrays must use the standard Array prototype.", path));
+      return undefined;
+    }
+    const keys = Reflect.ownKeys(value);
+    const indexDescriptors = new Map();
+    for (const key of keys) {
+      if (typeof key === "symbol") {
+        errors.push(finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
+        continue;
+      }
+      if (key === "length") continue;
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!isArrayIndex(key, value.length)) {
+        errors.push(finding("boundary-unknown-key", `Unexpected array key '${key}'.`, `${path}.${key}`));
+      } else if (!descriptor || descriptor.get || descriptor.set || !Object.hasOwn(descriptor, "value")) {
+        errors.push(finding("boundary-accessor", "Array items must be own data properties.", `${path}[${key}]`));
+      } else if (!descriptor.enumerable) {
+        errors.push(finding("boundary-non-enumerable", "Array items must be enumerable.", `${path}[${key}]`));
+      } else {
+        indexDescriptors.set(Number(key), descriptor);
+      }
+    }
+    if (indexDescriptors.size !== value.length) {
+      errors.push(finding("boundary-array-hole", "Sparse arrays are not accepted.", path));
+      seen.delete(value);
+      return undefined;
+    }
+    const snapshot = [];
+    for (let index = 0; index < value.length; index += 1) {
+      const descriptor = indexDescriptors.get(index);
+      if (descriptor && Object.hasOwn(descriptor, "value")) {
+        snapshot.push(snapshotData(descriptor.value, `${path}[${index}]`, errors, seen));
+      } else {
+        snapshot.push(undefined);
+      }
+    }
+    seen.delete(value);
+    return snapshot;
+  }
+
+  if (!isPlainRecord(value)) {
+    errors.push(finding("boundary-prototype", "Objects must use Object.prototype or a null prototype.", path));
+    return undefined;
+  }
+  const snapshot = Object.create(null);
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key === "symbol") {
+      errors.push(finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
+      continue;
+    }
+    if (FORBIDDEN_KEYS.has(key)) {
+      errors.push(finding("boundary-forbidden-key", `Forbidden key '${key}'.`, `${path}.${key}`));
+      continue;
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor || descriptor.get || descriptor.set || !Object.hasOwn(descriptor, "value")) {
+      errors.push(finding("boundary-accessor", "Object fields must be own data properties.", `${path}.${key}`));
+    } else if (!descriptor.enumerable) {
+      errors.push(finding("boundary-non-enumerable", "Object fields must be enumerable.", `${path}.${key}`));
+    } else {
+      snapshot[key] = snapshotData(descriptor.value, `${path}.${key}`, errors, seen);
+    }
+  }
+  seen.delete(value);
+  return snapshot;
+}
+
+function matchesType(value, type) {
+  if (type === "null") return value === null;
+  if (type === "object") return isPlainRecord(value);
+  if (type === "array") return Array.isArray(value);
+  if (type === "integer") return Number.isInteger(value);
+  return typeof value === type;
+}
+
+function canonicalDataKey(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalDataKey).join(",")}]`;
+  if (isPlainRecord(value)) {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalDataKey(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function validateSchema(value, schema, path, errors) {
+  if (schema.type !== undefined) {
+    const allowed = Array.isArray(schema.type) ? schema.type : [schema.type];
+    if (!allowed.some((type) => matchesType(value, type))) {
+      errors.push(finding("schema-type", `Expected ${allowed.join(" or ")}.`, path));
+      return;
+    }
+  }
+  if (value === null) return;
+  if (schema.enum && !schema.enum.includes(value)) {
+    errors.push(finding("schema-enum", "Value is not in the approved enum.", path));
+  }
+  if (typeof value === "string") {
+    if (schema.minLength !== undefined && [...value].length < schema.minLength) {
+      errors.push(finding("schema-min-length", `String requires at least ${schema.minLength} characters.`, path));
+    }
+    if (schema.pattern && !(new RegExp(schema.pattern, "u")).test(value)) {
+      errors.push(finding("schema-pattern", "String does not match the required pattern.", path));
+    }
+    if (schema.format === "date" && !isIsoDate(value)) {
+      errors.push(finding("schema-format", "Value must be a real ISO calendar date.", path));
+    }
+    if (schema.format === "uri") {
+      try {
+        const url = new URL(value);
+        if (!url.protocol) throw new Error("missing protocol");
+      } catch {
+        errors.push(finding("schema-format", "Value must be an absolute URI.", path));
+      }
+    }
+  }
+  if (Number.isInteger(value) && schema.minimum !== undefined && value < schema.minimum) {
+    errors.push(finding("schema-minimum", `Value must be at least ${schema.minimum}.`, path));
+  }
+  if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems) {
+      errors.push(finding("schema-min-items", `Array requires at least ${schema.minItems} items.`, path));
+    }
+    const itemErrorStart = errors.length;
+    if (schema.items) {
+      value.forEach((item, index) => validateSchema(item, schema.items, `${path}[${index}]`, errors));
+    }
+    if (schema.uniqueItems && errors.length === itemErrorStart
+      && new Set(value.map(canonicalDataKey)).size !== value.length) {
+      errors.push(finding("schema-unique-items", "Array items must be unique.", path));
+    }
+  }
+  if (isPlainRecord(value)) {
+    const properties = schema.properties ?? {};
+    for (const key of schema.required ?? []) {
+      if (!Object.hasOwn(value, key)) {
+        errors.push(finding("schema-required", `Required field '${key}' is missing.`, `${path}.${key}`));
+      }
+    }
+    if (schema.additionalProperties === false) {
+      for (const key of Object.keys(value)) {
+        if (!Object.hasOwn(properties, key)) {
+          errors.push(finding("schema-additional-property", `Unexpected field '${key}'.`, `${path}.${key}`));
+        }
+      }
+    }
+    for (const [key, childSchema] of Object.entries(properties)) {
+      if (Object.hasOwn(value, key)) validateSchema(value[key], childSchema, `${path}.${key}`, errors);
+    }
+  }
+}
 
 function isIsoDate(value) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
@@ -28,7 +211,11 @@ function exactStringSet(actual, expected) {
     && actual.every((value) => expected.includes(value));
 }
 
-export function validateJobEvidenceCollection(records, { asOfDate } = {}) {
+export function validateJobEvidenceCollection(inputRecords, inputOptions) {
+  const boundaryErrors = [];
+  const records = snapshotData(inputRecords, "$", boundaryErrors);
+  const options = inputOptions === undefined ? Object.create(null) : snapshotData(inputOptions, "$options", boundaryErrors);
+  if (boundaryErrors.length > 0) return { valid: false, errors: boundaryErrors };
   if (!Array.isArray(records)) {
     return {
       valid: false,
@@ -36,7 +223,18 @@ export function validateJobEvidenceCollection(records, { asOfDate } = {}) {
     };
   }
 
+  if (!isPlainRecord(options)) {
+    return { valid: false, errors: [finding("boundary-options", "Options must be a plain data object.", "$options")] };
+  }
+  const optionKeys = Object.keys(options);
+  if (optionKeys.some((key) => key !== "asOfDate")) {
+    return { valid: false, errors: [finding("boundary-unknown-key", "Only asOfDate is accepted in options.", "$options")] };
+  }
+  const { asOfDate } = options;
+
   const errors = [];
+  records.forEach((record, recordIndex) => validateSchema(record, jobEvidenceSchema, `$[${recordIndex}]`, errors));
+  if (errors.length > 0) return { valid: false, errors };
   const sourceIdCounts = new Map();
 
   records.forEach((record, recordIndex) => {
