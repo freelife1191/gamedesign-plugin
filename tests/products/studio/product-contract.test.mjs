@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { access, readFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -35,6 +37,31 @@ const roleIds = [
 
 const profileIds = ["live-service-rpg", "mobile", "pc-console"];
 
+const plannedPaths = {
+  skills: skillIds.map((skillId) => `skills/${skillId}/SKILL.md`),
+  roles: roleIds.map((roleId) => `agents/${roleId}.md`),
+  profiles: [
+    "references/profiles/universal-core.json",
+    "references/profiles/live-service-rpg.json",
+    "references/profiles/mobile.json",
+    "references/profiles/pc-console.json",
+  ],
+  references: [
+    "skills/orchestrate-game-design-project/references/intake.md",
+    "skills/orchestrate-game-design-project/references/workflow.md",
+    "skills/orchestrate-game-design-project/references/completion-gates.md",
+    "references/methods/vision.md",
+    "references/methods/system-specification.md",
+    "references/methods/content-specification.md",
+    "references/methods/player-experience.md",
+    "references/methods/economy-liveops.md",
+    "references/methods/production.md",
+    "assets/templates/game-design-review/content.md",
+    "references/visualization-presets.json",
+    "references/export-recipes.md",
+  ],
+};
+
 const routeContract = {
   "project-orchestration": {
     skill: "orchestrate-game-design-project",
@@ -61,7 +88,12 @@ const routeContract = {
     reference: "references/methods/player-experience.md",
     artifactType: "ui-ux-flow-state",
   },
-  "economy-liveops": {
+  economy: {
+    skill: "design-game-economy-and-liveops",
+    reference: "references/methods/economy-liveops.md",
+    artifactType: "economy-balance",
+  },
+  liveops: {
     skill: "design-game-economy-and-liveops",
     reference: "references/methods/economy-liveops.md",
     artifactType: "liveops-experiment-event",
@@ -79,17 +111,35 @@ const routeContract = {
   visualization: {
     skill: "visualize-game-design",
     reference: "references/visualization-presets.json",
-    artifactType: "decision-change-log",
+    artifactType: "canonical-artifact",
+    outputArtifacts: ["svg-assets", "png-2x-assets", "diagram-index"],
   },
   export: {
     skill: "export-game-design-documents",
     reference: "references/export-recipes.md",
-    artifactType: "decision-change-log",
+    artifactType: "canonical-artifact",
+    outputArtifacts: ["requested-md", "requested-pdf", "requested-docx", "requested-pptx", "qa-manifest"],
   },
 };
 
 async function readJson(relativePath) {
   return JSON.parse(await readFile(path.join(pluginRoot, relativePath), "utf8"));
+}
+
+function assertRepoManifestContract(manifest) {
+  const allowedTopLevel = ["author", "description", "interface", "name", "skills", "version"];
+  assert.deepEqual(Object.keys(manifest).sort(), allowedTopLevel);
+  assert.match(manifest.name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/u);
+  assert.match(manifest.version, /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/u);
+  assert.ok(manifest.description.trim());
+  assert.ok(manifest.author.name.trim());
+  assert.equal(manifest.skills, "./skills/");
+  for (const field of ["displayName", "shortDescription", "longDescription", "developerName", "category"]) {
+    assert.ok(manifest.interface[field].trim(), `interface.${field}`);
+  }
+  assert.ok(Array.isArray(manifest.interface.capabilities));
+  assert.ok(Array.isArray(manifest.interface.defaultPrompt));
+  assert.ok(manifest.interface.defaultPrompt.length > 0 && manifest.interface.defaultPrompt.length <= 3);
 }
 
 test("Studio product selects the complete shared contract and 49-document corpus", async () => {
@@ -125,19 +175,20 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.profileIds, profileIds);
   assert.deepEqual(routing.rolePriority, roleIds);
   assert.equal(routing.unknownIntentFallback, "orchestrate-game-design-project");
+  assert.deepEqual(routing.plannedPaths, plannedPaths);
 });
 
 test("Every Studio route is deterministic and points at its planned artifact source", async () => {
   const routing = await readJson("references/routing.json");
   assert.equal(routing.schemaVersion, 1);
-  assert.equal(routing.routes.length, 10);
+  assert.equal(routing.routes.length, 11);
 
   const routes = new Map(routing.routes.map((route) => [route.id, route]));
   assert.deepEqual([...routes.keys()], Object.keys(routeContract));
 
   for (const [routeId, expected] of Object.entries(routeContract)) {
     const route = routes.get(routeId);
-    assert.deepEqual(Object.keys(route).sort(), [
+    const expectedKeys = [
       "artifactType",
       "completionGates",
       "defaultReviewers",
@@ -148,7 +199,9 @@ test("Every Studio route is deterministic and points at its planned artifact sou
       "requiredInputs",
       "skill",
       "triggerIntents",
-    ]);
+      ...(expected.outputArtifacts ? ["outputArtifacts"] : []),
+    ].sort();
+    assert.deepEqual(Object.keys(route).sort(), expectedKeys);
     assert.deepEqual(
       { skill: route.skill, artifactType: route.artifactType },
       { skill: expected.skill, artifactType: expected.artifactType },
@@ -161,27 +214,120 @@ test("Every Studio route is deterministic and points at its planned artifact sou
     assert.equal(route.maxReviewers, 3, `${routeId}: maxReviewers`);
     assert.ok(route.defaultReviewers.length <= route.maxReviewers, `${routeId}: reviewer limit`);
     assert.ok(route.references.includes(expected.reference), `${routeId}: planned reference`);
-    assert.ok(route.references.every((reference) => !path.isAbsolute(reference)), `${routeId}: relative references`);
+    assert.ok(route.references.every((reference) => plannedPaths.references.includes(reference)), `${routeId}: allowlisted references`);
+    if (expected.outputArtifacts) assert.deepEqual(route.outputArtifacts, expected.outputArtifacts);
     assert.ok(route.completionGates.length > 0, `${routeId}: completionGates`);
   }
 });
 
-test("Studio manifest passes the local official validator without hooks", async () => {
+test("Studio trigger phrases are globally unique so routing never depends on a guess", async () => {
+  const routing = await readJson("references/routing.json");
+  const owners = new Map();
+
+  for (const route of routing.routes) {
+    for (const trigger of route.triggerIntents) {
+      const normalized = trigger.normalize("NFC").trim().toLocaleLowerCase("en-US");
+      assert.equal(owners.has(normalized), false, `${JSON.stringify(trigger)} is shared by ${owners.get(normalized)} and ${route.id}`);
+      owners.set(normalized, route.id);
+    }
+  }
+
+  assert.equal(owners.get("launch readiness"), "review");
+});
+
+test("Economy and LiveOps are separate route variants with domain-specific inputs and gates", async () => {
+  const routing = await readJson("references/routing.json");
+  const routes = new Map(routing.routes.map((route) => [route.id, route]));
+  const economy = routes.get("economy");
+  const liveops = routes.get("liveops");
+
+  assert.equal(economy.skill, "design-game-economy-and-liveops");
+  assert.equal(economy.artifactType, "economy-balance");
+  assert.deepEqual(economy.requiredInputs, [
+    "business model",
+    "currencies",
+    "progression target",
+    "target inventory",
+    "real-price policy",
+  ]);
+  assert.deepEqual(economy.completionGates, [
+    "sources-sinks-and-inflation-defined",
+    "price-probability-and-pity-transparent",
+    "target-inventory-and-progression-time-defined",
+  ]);
+
+  assert.equal(liveops.skill, "design-game-economy-and-liveops");
+  assert.equal(liveops.artifactType, "liveops-experiment-event");
+  assert.deepEqual(liveops.requiredInputs, [
+    "event goal",
+    "experiment hypothesis",
+    "control",
+    "sample and duration",
+    "protection metrics",
+  ]);
+  assert.deepEqual(liveops.completionGates, [
+    "hypothesis-control-and-single-variable-defined",
+    "success-and-protection-metrics-defined",
+    "stop-and-rollback-defined",
+  ]);
+});
+
+test("Visualization and export preserve the canonical input and declare their real outputs", async () => {
+  const routing = await readJson("references/routing.json");
+  const routes = new Map(routing.routes.map((route) => [route.id, route]));
+  const visualization = routes.get("visualization");
+  const exportRoute = routes.get("export");
+
+  assert.ok(visualization.requiredInputs.includes("valid canonical artifact"));
+  assert.equal(visualization.artifactType, "canonical-artifact");
+  assert.deepEqual(visualization.outputArtifacts, ["svg-assets", "png-2x-assets", "diagram-index"]);
+  assert.ok(visualization.completionGates.includes("canonical-artifact-preserved-on-failure"));
+
+  assert.ok(exportRoute.requiredInputs.includes("valid canonical artifact"));
+  assert.equal(exportRoute.artifactType, "canonical-artifact");
+  assert.deepEqual(exportRoute.outputArtifacts, [
+    "requested-md",
+    "requested-pdf",
+    "requested-docx",
+    "requested-pptx",
+    "qa-manifest",
+  ]);
+  assert.ok(exportRoute.completionGates.includes("canonical-artifact-preserved-on-failure"));
+});
+
+test("Every planned future path is normalized, relative, unique, and exact", async () => {
+  const routing = await readJson("references/routing.json");
+
+  for (const [kind, paths] of Object.entries(routing.plannedPaths)) {
+    assert.equal(new Set(paths).size, paths.length, `${kind}: duplicate path`);
+    for (const futurePath of paths) {
+      assert.equal(path.posix.normalize(futurePath), futurePath, `${kind}: normalized path`);
+      assert.equal(path.posix.isAbsolute(futurePath), false, `${kind}: relative path`);
+      assert.equal(futurePath.split("/").includes(".."), false, `${kind}: parent traversal`);
+    }
+  }
+
+  const routedReferences = [...new Set(routing.routes.flatMap((route) => route.references))];
+  assert.deepEqual(routedReferences, plannedPaths.references);
+});
+
+test("Studio manifest passes the portable repo contract and official validator when available", async () => {
   const manifest = await readJson(".codex-plugin/plugin.json");
+  assertRepoManifestContract(manifest);
   assert.equal(manifest.name, "game-design-studio");
   assert.equal(Object.hasOwn(manifest, "hooks"), false);
   assert.equal(manifest.interface.logo, "./assets/product-mark.svg");
   assert.equal(manifest.interface.composerIcon, "./assets/product-mark.svg");
 
-  const validation = spawnSync(
-    "python3",
-    [
-      "/Users/freelife/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py",
-      pluginRoot,
-    ],
-    { cwd: repoRoot, encoding: "utf8" },
+  const codexHome = process.env.CODEX_HOME ? path.resolve(process.env.CODEX_HOME) : path.join(homedir(), ".codex");
+  const officialValidator = path.join(
+    codexHome,
+    "skills/.system/plugin-creator/scripts/validate_plugin.py",
   );
-  assert.equal(validation.status, 0, validation.stdout + validation.stderr);
+  if (existsSync(officialValidator)) {
+    const validation = spawnSync("python3", [officialValidator, pluginRoot], { cwd: repoRoot, encoding: "utf8" });
+    assert.equal(validation.status, 0, validation.stdout + validation.stderr);
+  }
 });
 
 test("Studio scaffold includes an accessible product mark and overview", async () => {
