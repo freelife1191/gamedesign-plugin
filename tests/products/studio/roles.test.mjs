@@ -285,6 +285,80 @@ test("source finding identity is globally unique and canonical provenance cannot
   assert.throws(() => mergeRoleFindings(forged), /canonical|provenance/iu);
 });
 
+async function canonicalBlockerOutput() {
+  const { mergeRoleFindings } = await loadMerger();
+  return { mergeRoleFindings, valid: mergeRoleFindings({
+    schemaVersion: 1,
+    findings: [finding({
+      findingId: "source-lead",
+      role: "lead-game-designer",
+      severity: "blocker",
+      applicableGate: "scope-control",
+    })],
+  }) };
+}
+
+test("canonical re-input rejects appended fake provenance", async () => {
+  const { mergeRoleFindings, valid } = await canonicalBlockerOutput();
+  const fake = structuredClone(valid);
+  fake.findings[0].provenance.push({
+    findingId: "fake-production",
+    role: "production-feasibility-critic",
+  });
+  assert.throws(() => mergeRoleFindings(fake), /source|canonical|provenance/iu);
+});
+
+test("canonical re-input rejects a jointly replaced top finding and provenance", async () => {
+  const { mergeRoleFindings, valid } = await canonicalBlockerOutput();
+  const replaced = structuredClone(valid);
+  replaced.findings[0].findingId = "replacement";
+  replaced.findings[0].provenance = [{ findingId: "replacement", role: "lead-game-designer" }];
+  assert.throws(() => mergeRoleFindings(replaced), /source|canonical|provenance/iu);
+});
+
+test("canonical re-input rejects provenance whose role lacks blocker authority", async () => {
+  const { mergeRoleFindings, valid } = await canonicalBlockerOutput();
+  const unauthorized = structuredClone(valid);
+  unauthorized.findings[0].provenance.push({
+    findingId: "fake-ux",
+    role: "ux-accessibility-reviewer",
+  });
+  assert.throws(() => mergeRoleFindings(unauthorized), /authority|source|canonical|provenance/iu);
+});
+
+test("canonical re-input rejects missing provenance from an exact duplicate", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  const valid = mergeRoleFindings({
+    schemaVersion: 1,
+    findings: [
+      finding({ findingId: "duplicate-a", role: "lead-game-designer" }),
+      finding({ findingId: "duplicate-b", role: "ux-accessibility-reviewer" }),
+    ],
+  });
+  const missing = structuredClone(valid);
+  missing.findings[0].provenance.pop();
+  assert.throws(() => mergeRoleFindings(missing), /source|canonical|provenance/iu);
+});
+
+test("canonical re-input rejects finding identities crossed between semantic findings", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  const valid = mergeRoleFindings({
+    schemaVersion: 1,
+    findings: [
+      finding({ findingId: "section-a-source", role: "lead-game-designer", affectedSectionId: "section-a" }),
+      finding({ findingId: "section-b-source", role: "lead-game-designer", affectedSectionId: "section-b" }),
+    ],
+  });
+  const crossed = structuredClone(valid);
+  const firstId = crossed.findings[0].findingId;
+  crossed.findings[0].findingId = crossed.findings[1].findingId;
+  crossed.findings[1].findingId = firstId;
+  const firstProvenance = crossed.findings[0].provenance;
+  crossed.findings[0].provenance = crossed.findings[1].provenance;
+  crossed.findings[1].provenance = firstProvenance;
+  assert.throws(() => mergeRoleFindings(crossed), /source|canonical|provenance/iu);
+});
+
 test("CLI is stdin-only and executes through a symlinked Korean and spaced path", async () => {
   const script = path.join(pluginRoot, mergerRelativePath);
   const payload = JSON.stringify({ schemaVersion: 1, findings: [finding({ findingId: "f-1", role: "lead-game-designer" })] });

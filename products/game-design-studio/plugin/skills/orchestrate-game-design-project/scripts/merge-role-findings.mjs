@@ -32,7 +32,7 @@ const blockerGateByRole = new Map([
 const roleRank = new Map(rolePriority.map((role, index) => [role, index]));
 const severityRank = new Map(severityOrder.map((severity, index) => [severity, index]));
 const inputKeys = ["schemaVersion", "findings"];
-const outputKeys = ["schemaVersion", "findings", "decisions"];
+const outputKeys = ["schemaVersion", "sourceFindings", "findings", "decisions"];
 const findingKeys = [
   "findingId",
   "role",
@@ -124,7 +124,16 @@ function validateFinding(value, index, { outputMode }) {
   }
   validateStringArray(value.evidenceIds, `${label}.evidenceIds`);
   validateStringArray(value.assumptions, `${label}.assumptions`);
-  if (outputMode) validateProvenance(value.provenance, `${label}.provenance`);
+  if (outputMode) {
+    validateProvenance(value.provenance, `${label}.provenance`);
+    if (value.severity === "blocker") {
+      for (const source of value.provenance) {
+        if (blockerGateByRole.get(source.role) !== value.applicableGate) {
+          throw new Error(`${label}.provenance exceeds the source role's blocker authority.`);
+        }
+      }
+    }
+  }
 }
 
 function normalizeStrings(values) {
@@ -137,14 +146,6 @@ function normalizedFinding(finding) {
     evidenceIds: normalizeStrings(finding.evidenceIds),
     assumptions: normalizeStrings(finding.assumptions),
   };
-}
-
-function normalizedSources(finding) {
-  const sources = finding.provenance ?? [{ findingId: finding.findingId, role: finding.role }];
-  return [...sources].sort((left, right) => (
-    roleRank.get(left.role) - roleRank.get(right.role)
-    || compareText(left.findingId, right.findingId)
-  ));
 }
 
 function duplicateKey(finding) {
@@ -173,6 +174,10 @@ function findingComparator(left, right) {
     || compareText(left.findingId, right.findingId);
 }
 
+function canonicalSourceFindings(findings) {
+  return findings.map(normalizedFinding).sort(findingComparator);
+}
+
 function mergeDuplicates(findings) {
   const groups = new Map();
   for (const rawFinding of findings) {
@@ -187,9 +192,8 @@ function mergeDuplicates(findings) {
   for (const group of groups.values()) {
     const provenanceByIdentity = new Map();
     for (const finding of group) {
-      for (const source of normalizedSources(finding)) {
-        provenanceByIdentity.set(JSON.stringify([source.findingId, source.role]), source);
-      }
+      const source = { findingId: finding.findingId, role: finding.role };
+      provenanceByIdentity.set(JSON.stringify([source.findingId, source.role]), source);
     }
     const provenance = [...provenanceByIdentity.values()].sort((left, right) => (
       roleRank.get(left.role) - roleRank.get(right.role)
@@ -280,30 +284,38 @@ function buildDecisions(findings) {
 }
 
 export function mergeRoleFindings(input) {
-  const outputMode = isPlainObject(input) && Object.hasOwn(input, "decisions");
+  const outputMode = isPlainObject(input)
+    && (Object.hasOwn(input, "sourceFindings") || Object.hasOwn(input, "decisions"));
   assertExactKeys(input, outputMode ? outputKeys : inputKeys, "input");
   if (input.schemaVersion !== 1) throw new Error("input.schemaVersion must be 1.");
   if (!Array.isArray(input.findings)) throw new Error("input.findings must be an array.");
-  input.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode }));
-
-  const sourceIds = new Set();
-  for (const finding of input.findings) {
-    const sources = outputMode ? finding.provenance : [{ findingId: finding.findingId, role: finding.role }];
-    for (const source of sources) {
-      if (sourceIds.has(source.findingId)) throw new Error(`Duplicate findingId: ${source.findingId}`);
-      sourceIds.add(source.findingId);
-    }
+  if (outputMode && !Array.isArray(input.sourceFindings)) {
+    throw new Error("input.sourceFindings must be an array.");
   }
 
-  const findings = mergeDuplicates(input.findings);
+  const rawSources = outputMode ? input.sourceFindings : input.findings;
+  rawSources.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
+  if (outputMode) input.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: true }));
+
+  const sourceIds = new Set();
+  for (const source of rawSources) {
+    if (sourceIds.has(source.findingId)) throw new Error(`Duplicate findingId: ${source.findingId}`);
+    sourceIds.add(source.findingId);
+  }
+
+  const sourceFindings = canonicalSourceFindings(rawSources);
+  if (outputMode && JSON.stringify(input.sourceFindings) !== JSON.stringify(sourceFindings)) {
+    throw new Error("input.sourceFindings is not canonical source finding data.");
+  }
+  const findings = mergeDuplicates(sourceFindings);
   const decisions = buildDecisions(findings);
   if (outputMode && JSON.stringify(input.findings) !== JSON.stringify(findings)) {
-    throw new Error("input.findings is not canonical merger output or has forged provenance.");
+    throw new Error("input.findings or provenance does not match canonical source findings.");
   }
   if (outputMode && JSON.stringify(input.decisions) !== JSON.stringify(decisions)) {
     throw new Error("input.decisions does not match canonical decisions.");
   }
-  return { schemaVersion: 1, findings, decisions };
+  return { schemaVersion: 1, sourceFindings, findings, decisions };
 }
 
 async function runCli() {
