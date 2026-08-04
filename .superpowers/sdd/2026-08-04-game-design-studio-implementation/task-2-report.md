@@ -24,8 +24,8 @@
 - Node syntax and `git diff --check` → passed.
 - Studio tests: `node --test tests/products/studio/*.test.mjs` → 20 passed, 0 failed.
 - Shared contract: `npm run test:shared-contract` → 1 passed, 0 failed.
-- All repository test files: `node --test $(rg --files -g '*.test.mjs' | sort)` → 200 passed, 0 failed in this Task 2 worktree.
-- Independent review environment full suite → 216 passed, 0 failed.
+- All 15 repository test files: `node --test $(rg --files -g '*.test.mjs' | sort)` → 219 passed, 0 failed in the fresh Fix Round 2 reviewer run.
+- Initial independent review environment full suite → 216 passed, 0 failed. This is historical evidence from the earlier review, superseded as the current count by 219/219.
 
 ## Scope
 
@@ -51,5 +51,11 @@
 
 - Studio tests → 20 passed, 0 failed.
 - Shared contract → 1 passed, 0 failed.
-- All 15 repository `*.test.mjs` files → 200 passed, 0 failed in this worktree.
-- Independent review evidence → 216 passed, 0 failed.
+- Fix Round 1 implementer snapshot: all 15 repository `*.test.mjs` files → 200 passed, 0 failed. This count is historical.
+- Initial independent review evidence → 216 passed, 0 failed. This count is historical.
+
+## Fix Round 2
+
+- Updated the current full-suite evidence to the fresh reviewer's same-command result: 219 passed, 0 failed across all 15 repository test files.
+- Retained 216/216 only as the explicitly labeled initial-review historical result.
+- Made no product, test, or commit changes.
