@@ -72,18 +72,51 @@ function validatePresentation(requestedFormats, presentation, canonicalHeadings)
   return { audience: audience.trim(), purpose: purpose.trim(), slideOutline: normalizedSlides };
 }
 
+function normalizedValidatorResult(value, exitCode) {
+  if (!value || typeof value !== "object" || Array.isArray(value)
+    || Object.keys(value).sort().join("\0") !== ["ok", "errors", "warnings", "files", "requestedFormats"].sort().join("\0")) {
+    throw new Error("Canonical validator returned an invalid normalized object");
+  }
+  if (value.ok !== (exitCode === 0)) throw new Error("Canonical validator status conflicts with its normalized result");
+  for (const field of ["errors", "warnings"]) {
+    if (!Array.isArray(value[field])) throw new Error(`Canonical validator normalized ${field} must be an array`);
+    for (const entry of value[field]) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)
+        || Object.keys(entry).sort().join("\0") !== ["code", "file", "message"].sort().join("\0")
+        || typeof entry.code !== "string" || entry.code.trim() === ""
+        || !(entry.file === null || typeof entry.file === "string")
+        || typeof entry.message !== "string" || entry.message.trim() === "") {
+        throw new Error(`Canonical validator normalized ${field} contains an invalid diagnostic`);
+      }
+    }
+  }
+  if (exitCode === 0 && value.errors.length !== 0) throw new Error("Canonical validator successful result cannot contain errors");
+  if (exitCode === 1 && value.errors.length === 0) throw new Error("Canonical validator failed result requires errors");
+  for (const field of ["files", "requestedFormats"]) {
+    if (!Array.isArray(value[field]) || value[field].some((entry) => typeof entry !== "string")) {
+      throw new Error(`Canonical validator normalized ${field} must be a string array`);
+    }
+  }
+  return value;
+}
+
 async function runPreflight(validatorPath, artifactDir, requestedFormats) {
   const command = [process.execPath, validatorPath, artifactDir, ...requestedFormats];
   const result = spawnSync(command[0], command.slice(1), { encoding: "utf8" });
   if (![0, 1].includes(result.status)) {
     throw new Error(`Canonical validator failed to execute: ${result.stderr || `exit ${result.status}`}`);
   }
-  let validation;
+  const selected = result.status === 0 ? result.stdout : result.stderr;
+  const unselected = result.status === 0 ? result.stderr : result.stdout;
+  if (typeof selected !== "string" || selected.trim() === "") throw new Error("Canonical validator returned no normalized JSON");
+  if (typeof unselected === "string" && unselected.trim() !== "") throw new Error("Canonical validator returned conflicting output streams");
+  let parsed;
   try {
-    validation = JSON.parse(result.stdout);
+    parsed = JSON.parse(selected);
   } catch {
     throw new Error("Canonical validator returned invalid JSON");
   }
+  const validation = normalizedValidatorResult(parsed, result.status);
   return {
     status: validation.ok ? "passed" : "failed",
     command,

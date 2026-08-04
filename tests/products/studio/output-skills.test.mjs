@@ -58,6 +58,17 @@ async function loadPrepareModule() {
   return import(`${pathToFileURL(prepareScript).href}?test=${Date.now()}`);
 }
 
+async function writePreflightValidator(directory, name, { status, stdout = "", stderr = "" }) {
+  const validator = path.join(directory, `${name}.mjs`);
+  await writeFile(validator, [
+    `process.stdout.write(${JSON.stringify(stdout)});`,
+    `process.stderr.write(${JSON.stringify(stderr)});`,
+    `process.exitCode = ${status};`,
+    "",
+  ].join("\n"));
+  return validator;
+}
+
 async function loadModule(modulePath) {
   return import(`${pathToFileURL(modulePath).href}?test=${Date.now()}-${Math.random()}`);
 }
@@ -656,6 +667,73 @@ test("export preparation fails closed before jobs when canonical preflight fails
   assert.ok(manifest.preflight.errors.length > 0);
   assert.equal(manifest.formats.md.status, "blocked");
   assert.equal(manifest.formats.pdf.status, "blocked");
+});
+
+test("export preflight parses the status-selected normalized JSON stream and rejects ambiguity", async () => {
+  const root = await temporaryDirectory("studio-export-preflight-streams-");
+  const outputDir = path.join(root, "output");
+  await mkdir(outputDir);
+  const normalizedFailure = {
+    ok: false,
+    errors: [{ code: "artifact.invalid", file: "content.md", message: "invalid artifact" }],
+    warnings: [],
+    files: ["content.md"],
+    requestedFormats: ["md"],
+  };
+  const failureValidator = await writePreflightValidator(root, "failure", {
+    status: 1,
+    stderr: `${JSON.stringify(normalizedFailure)}\n`,
+  });
+  const stagingRoot = await temporaryDirectory("studio-export-preflight-built-");
+  const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const modules = [
+    ["source", await loadPrepareModule()],
+    ["clean-built", await loadModule(path.join(built.outputDir, "skills/export-game-design-documents/scripts/prepare-studio-export.mjs"))],
+  ];
+
+  for (const [label, module] of modules) {
+    const manifest = await module.prepareStudioExportJob({
+      artifactDir: fixtureArtifact,
+      outputDir,
+      recipeId: "gdd",
+      requestedFormats: ["md"],
+      capabilities: {},
+      validatorPath: failureValidator,
+    });
+    assert.equal(manifest.preflight.status, "failed", `${label}: stderr failure status`);
+    assert.deepEqual(manifest.preflight.errors, normalizedFailure.errors, `${label}: normalized errors preserved`);
+    assert.deepEqual(manifest.preflight.files, normalizedFailure.files, `${label}: normalized files preserved`);
+  }
+
+  const normalizedSuccess = { ok: true, errors: [], warnings: [], files: ["content.md"], requestedFormats: ["md"] };
+  const invalidCases = [
+    ["missing success stdout", { status: 0 }],
+    ["malformed success stdout", { status: 0, stdout: "not-json\n" }],
+    ["success with stderr", { status: 0, stdout: `${JSON.stringify(normalizedSuccess)}\n`, stderr: `${JSON.stringify(normalizedFailure)}\n` }],
+    ["missing failure stderr", { status: 1 }],
+    ["malformed failure stderr", { status: 1, stderr: "not-json\n" }],
+    ["failure with stdout", { status: 1, stdout: `${JSON.stringify(normalizedSuccess)}\n`, stderr: `${JSON.stringify(normalizedFailure)}\n` }],
+    ["success status conflicts with payload", { status: 0, stdout: `${JSON.stringify(normalizedFailure)}\n` }],
+    ["failure status conflicts with payload", { status: 1, stderr: `${JSON.stringify(normalizedSuccess)}\n` }],
+    ["malformed normalized contract", { status: 1, stderr: `${JSON.stringify({ ok: false, errors: "invalid", warnings: [], files: [], requestedFormats: [] })}\n` }],
+  ];
+  for (const [caseName, streams] of invalidCases) {
+    const invalidValidator = await writePreflightValidator(root, caseName.replaceAll(" ", "-"), streams);
+    for (const [label, module] of modules) {
+      await assert.rejects(
+        () => module.prepareStudioExportJob({
+          artifactDir: fixtureArtifact,
+          outputDir,
+          recipeId: "gdd",
+          requestedFormats: ["md"],
+          capabilities: {},
+          validatorPath: invalidValidator,
+        }),
+        /Canonical validator/iu,
+        `${label}: ${caseName}`,
+      );
+    }
+  }
 });
 
 test("export preparation rejects PPTX without audience purpose and independent outline", async () => {
