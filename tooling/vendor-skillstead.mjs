@@ -156,16 +156,14 @@ function cleanupWarning(cleanupPath, cause) {
   };
 }
 
-async function cleanupCommittedGeneration(workRoot, fs) {
+async function createCleanupTombstone(workRoot, fs) {
   const suffix = path.basename(workRoot).slice(".skillstead-update-".length);
   const tombstone = path.join(path.dirname(workRoot), `.skillstead-cleanup-${suffix}`);
-  try {
-    await fs.rename(workRoot, tombstone);
-  } catch (error) {
-    const warning = cleanupWarning(workRoot, error);
-    return { committed: true, cleanupPending: workRoot, warnings: [warning] };
-  }
+  await fs.rename(workRoot, tombstone);
+  return tombstone;
+}
 
+async function cleanupCommittedGeneration(tombstone, fs) {
   try {
     await fs.rm(tombstone, { recursive: true, force: true });
   } catch (error) {
@@ -211,6 +209,7 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
   let oldMoved = false;
   let installed = false;
   let previousEntries;
+  let cleanupTombstone;
   try {
     const hasExistingGeneration = await fs.lstat(vendorRoot).then(
       () => true,
@@ -229,6 +228,7 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
     installed = true;
     await hooks.afterInstall?.({ backup, vendorRoot, workRoot });
     await verifyVendorRoot(vendorRoot);
+    cleanupTombstone = await createCleanupTombstone(workRoot, fs);
   } catch (error) {
     if (oldMoved) {
       try {
@@ -252,7 +252,7 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
     throw error;
   }
 
-  return cleanupCommittedGeneration(workRoot, fs);
+  return cleanupCommittedGeneration(cleanupTombstone, fs);
 }
 
 const modulePath = fileURLToPath(import.meta.url);

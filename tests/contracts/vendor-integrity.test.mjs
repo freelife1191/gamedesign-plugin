@@ -181,7 +181,12 @@ async function assertGenerationPreserved(fixture, before) {
   const verification = run(verifier, ["--root", fixture.scratch]);
   assert.equal(verification.status, 0, verification.stderr || verification.stdout);
   const siblings = await readdir(path.dirname(fixture.vendor));
-  assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+  assert.deepEqual(
+    siblings.filter(
+      (name) => name.startsWith(".skillstead-update-") || name.startsWith(".skillstead-cleanup-"),
+    ),
+    [],
+  );
 }
 
 test("guarded update preserves the prior generation on preflight, write, and install rename failures", async (t) => {
@@ -262,7 +267,12 @@ test("successful update installs tree, lock, and notices from one staged snapsho
     assert.equal(verification.status, 0, verification.stderr || verification.stdout);
     assert.match(await readFile(path.join(fixture.vendor, "THIRD_PARTY_NOTICES.md"), "utf8"), /Version: 0\.8\.3/);
     const siblings = await readdir(path.dirname(fixture.vendor));
-    assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+    assert.deepEqual(
+      siblings.filter(
+        (name) => name.startsWith(".skillstead-update-") || name.startsWith(".skillstead-cleanup-"),
+      ),
+      [],
+    );
   } finally {
     await rm(fixture.scratch, { recursive: true, force: true });
   }
@@ -277,7 +287,111 @@ test("successful update bootstraps an absent vendor generation", async () => {
     assert.equal(verification.status, 0, verification.stderr || verification.stdout);
     assert.match(verification.stdout, /verified 5 files/);
     const siblings = await readdir(path.dirname(fixture.vendor));
-    assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+    assert.deepEqual(
+      siblings.filter(
+        (name) => name.startsWith(".skillstead-update-") || name.startsWith(".skillstead-cleanup-"),
+      ),
+      [],
+    );
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("tombstone rename failure rolls back instead of reporting a committed update", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected tombstone rename failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      /injected tombstone rename failure/,
+    );
+    await assertGenerationPreserved(fixture, before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("tombstone rename failure retries a transient rollback failure", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  let restoreFailed = false;
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected tombstone rename failure");
+      }
+      if (!restoreFailed && path.basename(from) === "previous" && path.basename(to) === "skillstead") {
+        restoreFailed = true;
+        throw new Error("injected transient rollback rename failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      /injected tombstone rename failure/,
+    );
+    await assertGenerationPreserved(fixture, before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("permanent rollback failure after tombstone rename failure preserves recovery data", async () => {
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected tombstone rename failure");
+      }
+      if (path.basename(from) === "previous" && path.basename(to) === "skillstead") {
+        throw new Error("injected permanent rollback rename failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    let rejection;
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      (error) => {
+        rejection = error;
+        return true;
+      },
+    );
+    assert.notEqual(rejection.committed, true);
+    const workspaces = (await readdir(path.dirname(fixture.vendor)))
+      .filter((name) => name.startsWith(".skillstead-update-"));
+    assert.equal(workspaces.length, 1, "one recovery workspace must remain");
+    const recovery = path.join(path.dirname(fixture.vendor), workspaces[0], "previous");
+    assert.match(rejection.message, new RegExp(`recovery.*${recovery.replaceAll("/", "\\/")}`, "i"));
+    assert.deepEqual(await treeSnapshot(recovery), before);
+    const cleanupResidue = (await readdir(path.dirname(fixture.vendor)))
+      .filter((name) => name.startsWith(".skillstead-cleanup-"));
+    assert.deepEqual(cleanupResidue, []);
   } finally {
     await rm(fixture.scratch, { recursive: true, force: true });
   }
