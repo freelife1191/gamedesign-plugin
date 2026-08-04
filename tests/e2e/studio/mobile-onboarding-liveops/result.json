@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "mobile-onboarding-liveops",
+  "routeIds": ["player-experience", "liveops", "visualization", "export"],
+  "roleIds": ["system-economy-designer", "ux-accessibility-reviewer", "liveops-data-designer"],
+  "templateIds": ["ui-ux-flow-state", "liveops-experiment-event"],
+  "evidenceRegistry": [
+    {"evidenceId": "device-test-1", "kind": "playtest", "source": "supported-device-matrix", "limitation": "small moderated sample"},
+    {"evidenceId": "guardrail-test-1", "kind": "experiment", "source": "staging onboarding experiment", "limitation": "no production traffic"}
+  ],
+  "responsibleGates": [
+    {"gateId": "accessibility", "status": "approved", "evidenceIds": ["device-test-1"], "approver": "accessibility-owner", "blocker": null},
+    {"gateId": "liveops-experiment", "status": "approved", "evidenceIds": ["guardrail-test-1"], "approver": "live-operations-owner", "blocker": null}
+  ],
+  "outputManifestPath": "output-manifest.json",
+  "domain": {
+    "onboarding": {"criticalAction": "complete-first-combat", "touchPath": "tap-target-with-remappable-alternative", "skip": "available-after-first-prompt", "revisit": "settings-training", "interruptionRecovery": "resume-last-safe-step", "accessibilityAlternative": "focus-order-and-screen-reader-labels"},
+    "liveops": {"experimentId": "first-session-prompt", "hypothesis": "one contextual prompt improves completion", "control": "no-contextual-prompt", "singleVariable": "prompt-timing", "guardrail": {"metric": "early-exit-rate", "direction": "must-not-increase", "threshold": 0.03}, "stopCondition": "guardrail-threshold-breach", "rollback": "disable-experiment-and-restore-control"},
+    "visualizationPresetId": "state-rule-flow"
+  }
+}

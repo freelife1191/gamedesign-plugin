@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "pc-console-ai-npc",
+  "routeIds": ["content", "systems", "review", "export"],
+  "roleIds": ["content-narrative-designer", "ux-accessibility-reviewer", "production-feasibility-critic"],
+  "templateIds": ["narrative-quest-npc", "system-specification", "game-design-review"],
+  "evidenceRegistry": [
+    {"evidenceId": "rights-record-1", "kind": "rights", "source": "signed performer and dataset register", "limitation": "approved project scope only"},
+    {"evidenceId": "safety-test-1", "kind": "test", "source": "adversarial NPC safety test", "limitation": "pre-release scenario set"}
+  ],
+  "responsibleGates": [
+    {"gateId": "ai-rights-human-approval", "status": "approved", "evidenceIds": ["rights-record-1"], "approver": "rights-and-legal-owner", "blocker": null},
+    {"gateId": "ai-npc-safety", "status": "approved", "evidenceIds": ["safety-test-1"], "approver": "ai-safety-owner", "blocker": null}
+  ],
+  "outputManifestPath": "output-manifest.json",
+  "domain": {
+    "npc": {"contentId": "guide-npc", "playerPurpose": "contextual quest guidance", "choiceConsequence": "decline-preserves-main-path", "questState": "chapter-one", "npcState": "available-safe", "fallback": {"mode": "authored-safe-dialogue", "trigger": "model-or-policy-failure", "owner": "narrative-owner"}, "killSwitch": {"enabled": true, "scope": "all-generative-responses", "owner": "safety-owner", "recovery": "authored-safe-dialogue"}},
+    "rightsConsent": {"source": "approved-dialogue-corpus", "creator": "internal-writing-team", "attribution": "project-rights-register", "usePurpose": "npc-dialogue-generation", "rightsStatus": "granted", "consentStatus": "documented", "privacy": "no-player-personal-data", "moderation": "pre-and-post-generation-filters", "approver": "rights-owner", "revocationPath": "disable-source-and-rebuild-index"}
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "live-service-rpg-economy",
+  "routeIds": ["economy", "liveops", "export"],
+  "roleIds": ["system-economy-designer", "ux-accessibility-reviewer", "liveops-data-designer"],
+  "templateIds": ["economy-balance", "liveops-experiment-event"],
+  "evidenceRegistry": [
+    {"evidenceId": "economy-sim-1", "kind": "simulation", "source": "economy-model-v1", "limitation": "pre-production cohort assumptions"},
+    {"evidenceId": "rollback-test-1", "kind": "test", "source": "staging rollback drill", "limitation": "staging scale only"}
+  ],
+  "responsibleGates": [
+    {"gateId": "economy-transparency", "status": "approved", "evidenceIds": ["economy-sim-1"], "approver": "economy-and-monetization-owner", "blocker": null},
+    {"gateId": "liveops-experiment", "status": "approved", "evidenceIds": ["rollback-test-1"], "approver": "live-operations-owner", "blocker": null}
+  ],
+  "outputManifestPath": "output-manifest.json",
+  "domain": {
+    "economy": {"resourceId": "soft-currency", "source": "daily-mission", "sink": "upgrade", "targetInventory": 5000, "inflationRisk": "weekly-source-sink-delta", "realPricePolicy": "no-hidden-conversion", "probabilityPolicy": "published-odds"},
+    "rollback": {"enabled": true, "trigger": "guardrail-breach", "mode": "automatic-on-threshold", "action": "restore-last-known-good-config", "owner": "liveops-owner", "recovery": "reconcile-ledger-and-notify", "evidenceIds": ["rollback-test-1"]},
+    "experiment": {"experimentId": "economy-source-tuning", "hypothesis": "bounded source tuning improves progression without inflation", "control": "current-source-rate", "singleVariable": "daily-mission-yield", "guardrail": "weekly-inflation-rate", "stopCondition": "guardrail-breach"}
+  }
+}
