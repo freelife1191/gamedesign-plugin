@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -164,6 +164,39 @@ test("trusted approval snapshots reject candidate evidence addition removal repl
   }
 });
 
+test("approval snapshot selection is registry-anchored and canonical bytes are digest-pinned", async () => {
+  const temporaryParent = await mkdtemp(path.join(os.tmpdir(), "studio-approval-anchor-"));
+  const scenarioRoot = path.join(temporaryParent, "scenario");
+  try {
+    await cp(path.join(fixtureRoot, "live-service-rpg-economy"), scenarioRoot, { recursive: true });
+    const [snapshot, synchronizedResult, request] = await Promise.all([
+      fixtureJson("live-service-rpg-economy", "approval-snapshot.json"),
+      fixtureJson("live-service-rpg-economy"),
+      fixtureJson("live-service-rpg-economy", "request.json"),
+    ]);
+    snapshot.evidenceRegistry[0].assertion = "not-satisfied";
+    synchronizedResult.evidenceRegistry = structuredClone(snapshot.evidenceRegistry);
+    synchronizedResult.responsibleGates = structuredClone(snapshot.responsibleGates);
+    await Promise.all([
+      writeFile(path.join(scenarioRoot, "alternate-approval-snapshot.json"), `${JSON.stringify(snapshot, null, 2)}\n`),
+      writeFile(path.join(scenarioRoot, "result.json"), `${JSON.stringify(synchronizedResult, null, 2)}\n`),
+    ]);
+
+    request.approvalSnapshotPath = "alternate-approval-snapshot.json";
+    let result = await validate("live-service-rpg-economy", undefined, scenarioRoot, request);
+    assert.equal(result.ok, false);
+    assert.ok(result.errors.some(({ code }) => code === "scenario.request-keys"), messages(result));
+
+    delete request.approvalSnapshotPath;
+    await writeFile(path.join(scenarioRoot, "approval-snapshot.json"), `${JSON.stringify(snapshot, null, 2)}\n`);
+    result = await validate("live-service-rpg-economy", undefined, scenarioRoot, request);
+    assert.equal(result.ok, false);
+    assert.ok(result.errors.some(({ code }) => code === "approval.snapshot-integrity"), messages(result));
+  } finally {
+    await rm(temporaryParent, { recursive: true, force: true });
+  }
+});
+
 test("protective LiveOps and AI fields use exact executable meanings", async () => {
   for (const mutate of [
     (value) => { value.domain.liveops.stopCondition = "continue-after-guardrail-breach"; },
@@ -241,11 +274,6 @@ test("path traversal and symlink traversal cannot escape or alias scenario evide
     assert.equal(result.ok, false);
     assert.ok(result.errors.some(({ code }) => code === "scenario.files"), messages(result));
 
-    const requestOverride = await fixtureJson("live-service-rpg-economy", "request.json");
-    requestOverride.approvalSnapshotPath = "../mobile-onboarding-liveops/approval-snapshot.json";
-    result = await validate("live-service-rpg-economy", undefined, undefined, requestOverride);
-    assert.equal(result.ok, false);
-    assert.ok(result.errors.some(({ code }) => code === "approval.snapshot-file"), messages(result));
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }
@@ -267,6 +295,12 @@ test("clean-built plugin runs the same professional workflow without repository-
     const cli = spawnSync(process.execPath, [fileURLToPath(builtRunner), path.join(fixtureRoot, "pc-console-ai-npc")], { encoding: "utf8" });
     assert.equal(cli.status, 0, cli.stderr || cli.stdout);
     assert.equal(JSON.parse(cli.stdout).ok, true);
+
+    const [sourceMobile, builtMobile] = await Promise.all([
+      validate("mobile-onboarding-liveops"),
+      validateStudioScenario(path.join(fixtureRoot, "mobile-onboarding-liveops")),
+    ]);
+    assert.deepEqual(builtMobile, sourceMobile, "source and clean-built runners must return identical validated state");
 
     await rm(path.join(build.outputDir, "skills/svg-infographic/scripts/check-svg.mjs"));
     const brokenMobile = await validateStudioScenario(path.join(fixtureRoot, "mobile-onboarding-liveops"));

@@ -24,7 +24,7 @@ const RESULT_KEYS = [
 ];
 const REQUEST_KEYS = [
   "schemaVersion", "scenarioId", "intents", "profileIds", "requestedFormats", "reviewMode",
-  "approvalSnapshotPath", "visualizationPath",
+  "visualizationPath",
 ];
 const SCENARIOS = Object.freeze({
   "live-service-rpg-economy": {
@@ -35,6 +35,8 @@ const SCENARIOS = Object.freeze({
     gates: ["economy-transparency", "liveops-experiment"],
     recipeId: "liveops-plan",
     exportTemplateId: "liveops-experiment-event",
+    approvalSnapshotFile: "approval-snapshot.json",
+    approvalSnapshotSha256: "6392b97464cdafd58fcab3882f88d8f9401fd7f56bb318358c8f71a1ed2f16d1",
     requiredProfileSections: ["liveops-calendar-and-rollback", "economy-sources-sinks-and-inflation"],
   },
   "mobile-onboarding-liveops": {
@@ -45,6 +47,8 @@ const SCENARIOS = Object.freeze({
     gates: ["accessibility", "liveops-experiment"],
     recipeId: "liveops-plan",
     exportTemplateId: "liveops-experiment-event",
+    approvalSnapshotFile: "approval-snapshot.json",
+    approvalSnapshotSha256: "02e27946eb7047c299f969f438a968412ce320edba2f73cb5c88d0148de61cb5",
     requiredProfileSections: ["touch-input-and-device-matrix", "short-session-and-interruption-recovery"],
   },
   "pc-console-ai-npc": {
@@ -55,6 +59,8 @@ const SCENARIOS = Object.freeze({
     gates: ["ai-rights-human-approval", "ai-npc-safety"],
     recipeId: "content-spec",
     exportTemplateId: "narrative-quest-npc",
+    approvalSnapshotFile: "approval-snapshot.json",
+    approvalSnapshotSha256: "50e9c5ab008f599bfcdc56178de0947527767e30978901c7ee10fc0e5d7c0569",
     requiredProfileSections: ["controller-and-keyboard-mouse-input", "platform-certification-and-entitlements"],
   },
 });
@@ -210,7 +216,6 @@ function validateRequest(request, errors) {
     || !Array.isArray(request.intents) || request.intents.length === 0 || !request.intents.every(isText)
     || !Array.isArray(request.profileIds) || !request.profileIds.every(isText)
     || !Array.isArray(request.requestedFormats) || request.requestedFormats.length === 0 || !request.requestedFormats.every(isText)
-    || !isText(request.approvalSnapshotPath)
     || (request.scenarioId === "mobile-onboarding-liveops" ? !isText(request.visualizationPath) : request.visualizationPath !== null)
     || request.reviewMode !== "sequential-fallback") {
     errors.push(finding("scenario.request-schema", "Scenario request has invalid field values."));
@@ -613,7 +618,13 @@ export async function validateStudioScenario(root, options = {}) {
   }
   let trustedSnapshot;
   try {
-    trustedSnapshot = await readScenarioFile(root, request.approvalSnapshotPath, "approvalSnapshotPath");
+    const snapshotPath = await assertPlainFile(scenario.approvalSnapshotFile, root, "approval snapshot");
+    const snapshotBytes = await readFile(snapshotPath);
+    if (sha256(snapshotBytes) !== scenario.approvalSnapshotSha256) {
+      errors.push(finding("approval.snapshot-integrity", "Canonical approval snapshot bytes do not match the scenario registry SHA-256."));
+      return { ok: false, scenarioId: request.scenarioId, errors };
+    }
+    trustedSnapshot = JSON.parse(snapshotBytes.toString("utf8"));
   } catch (error) {
     errors.push(finding("approval.snapshot-file", error.message));
     return { ok: false, scenarioId: request.scenarioId, errors };

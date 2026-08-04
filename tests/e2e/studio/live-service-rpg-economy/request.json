@@ -14,6 +14,5 @@
     "pdf"
   ],
   "reviewMode": "sequential-fallback",
-  "approvalSnapshotPath": "approval-snapshot.json",
   "visualizationPath": null
 }
