@@ -30,6 +30,11 @@ async function fixtureJson(fixtureId, file = "result.json") {
   return JSON.parse(await readFile(path.join(fixtureRoot, fixtureId, file), "utf8"));
 }
 
+function setReverseObservationDate(result, observationDate) {
+  result.analysisScope.observationDate = observationDate;
+  for (const source of result.analysisScope.sourceAccess) source.observationDate = observationDate;
+}
+
 test("entry: actual route, templates, competency-map SVG, and PDF request form a 12-week evidence roadmap", async () => {
   const result = await validate("entry-12-week-roadmap");
 
@@ -210,10 +215,17 @@ test("clean-built plugin runs the reverse scenario contract without repository-o
     const rejected = await validateCareerScenario(path.join(fixtureRoot, "reverse-design-portfolio"), {
       resultOverride: crossVersion,
     });
+    const futureObservation = await fixtureJson("reverse-design-portfolio");
+    setReverseObservationDate(futureObservation, "2099-12-31");
+    const futureRejected = await validateCareerScenario(path.join(fixtureRoot, "reverse-design-portfolio"), {
+      resultOverride: futureObservation,
+    });
 
     assert.equal(reverseResult.ok, true, messages(reverseResult));
     assert.equal(rejected.ok, false);
     assert.ok(rejected.errors.some(({ code }) => code === "reverse.analysis-scope"), messages(rejected));
+    assert.equal(futureRejected.ok, false);
+    assert.ok(futureRejected.errors.some(({ code }) => code === "reverse.analysis-date"), messages(futureRejected));
     assert.equal(build.files.includes("skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs"), true);
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
@@ -376,6 +388,69 @@ test("reverse analysis scope uses an exact typed contract", async () => {
       validation.errors.some(({ code }) => ["scenario.result-keys", "reverse.analysis-scope"].includes(code)),
       `${label}: ${messages(validation)}`,
     );
+  }
+});
+
+test("reverse observation dates cannot exceed the trusted scenario snapshot", async () => {
+  const equalityBoundary = await fixtureJson("reverse-design-portfolio");
+  setReverseObservationDate(equalityBoundary, "2026-08-06");
+  const equalityValidation = await validate("reverse-design-portfolio", equalityBoundary);
+  assert.equal(equalityValidation.ok, true, messages(equalityValidation));
+
+  const attacks = [
+    ["future observation", (result) => { setReverseObservationDate(result, "2099-12-31"); }],
+    ["self-attested future snapshot", (result) => {
+      result.asOfDate = "2099-12-31";
+      setReverseObservationDate(result, "2099-12-31");
+    }],
+    ["missing snapshot", (result) => {
+      delete result.asOfDate;
+      setReverseObservationDate(result, "2099-12-31");
+    }],
+    ["cross-scenario snapshot", (result) => {
+      result.asOfDate = "2026-08-08";
+      setReverseObservationDate(result, "2026-08-08");
+    }],
+  ];
+
+  for (const [label, mutate] of attacks) {
+    const result = await fixtureJson("reverse-design-portfolio");
+    mutate(result);
+    const validation = await validate("reverse-design-portfolio", result);
+    assert.equal(validation.ok, false, label);
+    assert.ok(validation.errors.some(({ code }) => code === "reverse.analysis-date"), `${label}: ${messages(validation)}`);
+  }
+
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-reverse-as-of-"));
+  try {
+    for (const [label, assertedDate] of [
+      ["missing request and result snapshot", null],
+      ["matching self-attested future snapshot", "2099-12-31"],
+      ["matching cross-scenario snapshot", "2026-08-08"],
+    ]) {
+      const fixture = path.join(stagingRoot, label.replaceAll(" ", "-"));
+      await cp(path.join(fixtureRoot, "reverse-design-portfolio"), fixture, { recursive: true });
+      const request = JSON.parse(await readFile(path.join(fixture, "request.json"), "utf8"));
+      const result = JSON.parse(await readFile(path.join(fixture, "result.json"), "utf8"));
+      if (assertedDate === null) {
+        delete request.asOfDate;
+        delete result.asOfDate;
+        setReverseObservationDate(result, "2099-12-31");
+      } else {
+        request.asOfDate = assertedDate;
+        result.asOfDate = assertedDate;
+        setReverseObservationDate(result, assertedDate);
+      }
+      await writeFile(path.join(fixture, "request.json"), `${JSON.stringify(request, null, 2)}\n`, "utf8");
+      await writeFile(path.join(fixture, "result.json"), `${JSON.stringify(result, null, 2)}\n`, "utf8");
+      const { validateCareerScenario } = await loadRunner();
+      const validation = await validateCareerScenario(fixture);
+      assert.equal(validation.ok, false, label);
+      assert.ok(validation.errors.some(({ code }) => code === "route.as-of-date"), `${label}: ${messages(validation)}`);
+      assert.ok(validation.errors.some(({ code }) => code === "reverse.analysis-date"), `${label}: ${messages(validation)}`);
+    }
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
   }
 });
 

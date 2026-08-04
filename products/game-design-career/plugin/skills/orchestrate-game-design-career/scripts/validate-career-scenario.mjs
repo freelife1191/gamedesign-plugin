@@ -504,7 +504,7 @@ function validateFactInferenceClaim(claim, schema, errors) {
   }
 }
 
-function validateReverseAnalysisScope(value, errors) {
+function validateReverseAnalysisScope(value, asOfDate, errors) {
   const outerKeys = [
     "game", "buildVersion", "platform", "region", "accountOrPlayerState", "observationDate",
     "sourceAccess", "limitations",
@@ -521,10 +521,17 @@ function validateReverseAnalysisScope(value, errors) {
     errors,
   );
   if (!outerFields) return new Map();
+  const observationDateValid = validCalendarDate(value.observationDate);
+  const trustedDateValid = validCalendarDate(asOfDate);
   if (!/^[A-Za-z0-9][A-Za-z0-9._+-]*$/u.test(value.buildVersion)
     || !/^[A-Z]{2}(?:-[A-Z0-9]+)?$/u.test(value.region)
-    || !validCalendarDate(value.observationDate)) {
+    || !observationDateValid) {
     errors.push(finding("reverse.analysis-scope", "Build version, region, and observation date must use valid bounded values."));
+  }
+  if (!trustedDateValid) {
+    errors.push(finding("reverse.analysis-date", "Reverse analysis requires a valid trusted scenario as-of date."));
+  } else if (observationDateValid && value.observationDate > asOfDate) {
+    errors.push(finding("reverse.analysis-date", "Reverse analysis observationDate cannot exceed the trusted scenario as-of date."));
   }
   if (!Array.isArray(value.sourceAccess) || Object.getPrototypeOf(value.sourceAccess) !== Array.prototype
     || value.sourceAccess.length === 0) {
@@ -541,10 +548,14 @@ function validateReverseAnalysisScope(value, errors) {
     if (byAddress.has(source.sourceAddress)) {
       errors.push(finding("reverse.analysis-scope", `Duplicate sourceAddress: ${source.sourceAddress}.`));
     }
+    const sourceDateValid = validCalendarDate(source.observationDate);
     if (!["observed-behavior", "cited-material"].includes(source.sourceType)
-      || !validCalendarDate(source.observationDate)
+      || !sourceDateValid
       || generalization.test(source.scope)) {
       errors.push(finding("reverse.analysis-scope", `${source.sourceAddress} has an invalid source type, date, or generalized scope.`));
+    }
+    if (trustedDateValid && sourceDateValid && source.observationDate > asOfDate) {
+      errors.push(finding("reverse.analysis-date", `${source.sourceAddress} observationDate cannot exceed the trusted scenario as-of date.`));
     }
     for (const field of ["buildVersion", "platform", "region", "accountOrPlayerState", "observationDate"]) {
       if (source[field] !== value[field]) {
@@ -580,11 +591,11 @@ function validateReverseObservationScopes(claims, sourceByAddress, errors) {
   }
 }
 
-async function validateReverse(result, errors) {
+async function validateReverse(result, errors, asOfDate) {
   if (result.userManualRejected !== true) {
     errors.push(finding("reverse.user-manual", "Reverse design must reject user-manual mode."));
   }
-  const sourceByAddress = validateReverseAnalysisScope(result.analysisScope, errors);
+  const sourceByAddress = validateReverseAnalysisScope(result.analysisScope, asOfDate, errors);
   const schema = await readJson(factInferenceSchemaPath);
   const claims = Array.isArray(result.claims) ? result.claims : [];
   if (claims.length === 0) errors.push(finding("reverse.claims", "Reverse design requires claim records."));
@@ -869,7 +880,7 @@ export async function validateCareerScenario(fixtureDirectory, { resultOverride 
   try {
     routes = await validateRoutesAndTemplates(request, result, errors);
     if (request.scenarioId === "entry-12-week-roadmap") acceptance = validateEntry(result, errors);
-    else if (request.scenarioId === "reverse-design-portfolio") acceptance = await validateReverse(result, errors);
+    else if (request.scenarioId === "reverse-design-portfolio") acceptance = await validateReverse(result, errors, routes.asOfDate);
     else if (request.scenarioId === "junior-transition") acceptance = await validateTransition(root, result, errors, routes.asOfDate);
     else errors.push(finding("scenario.acceptance", `No E2E acceptance contract for ${request.scenarioId}.`));
   } catch (error) {

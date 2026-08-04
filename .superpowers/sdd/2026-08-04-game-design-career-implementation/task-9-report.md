@@ -69,3 +69,11 @@
 - Migrated all three E2E export jobs from fixture `result.json` self-attestation to routed packaged Canonical Artifacts: Entry uses `learning-roadmap`, Reverse uses `reverse-design-document`, and Transition uses `transition-readiness`, each with `content.md`. The runner rejects an export artifact outside `artifactTemplateIds` and overwrites untrusted fixture roots with the packaged template root before the production export validator runs.
 - Focused GREEN: 16/16; Career plus E2E 128/128; shared 1/1; repository tests 269/269; Skillstead 58/58; combined inventory 327/327.
 - Source and clean-built plugin validators passed, as did all 10 source and 11 built skill validators. The 259-file clean build SHA-256 is `544b24c24f7283fcfbe0bde5c024a4aea869f721693db5d65a7242bdedd558c7`; the built runner accepts all three scenarios and rejects a cross-version reverse observation source.
+
+## Fix Round 4
+
+- Reproduced the future-observation bypass as focused RED 17/19: a coordinated `2099-12-31` mutation of the outer scope and every declared source passed both the source and clean-built reverse runner.
+- Threaded only the trusted routing scenario `asOfDate` through the acceptance path into `validateReverse` and `validateReverseAnalysisScope`. The outer observation date and every source-access observation date must be actual ISO calendar dates no later than that trusted snapshot, while the existing exact source equality and build/platform/region/account/scope bindings remain unchanged.
+- Added equality-boundary acceptance at `2026-08-06` and fail-closed attacks for future dates, missing request/result snapshots, matching self-attested future snapshots, and matching cross-scenario snapshots. Request and result mutations cannot replace the registry date, and the clean-built runner rejects the same future-date attack.
+- Focused GREEN: 19/19; Career plus E2E 143/143; shared 1/1; repository tests 284/284; Skillstead 58/58; combined inventory 342/342.
+- Source and clean-built plugin validators passed, as did all 10 source and 11 built skill validators. The 259-file clean build SHA-256 is `48f94ab5a9bf87670c46e94dcbc019aa7f71a9b6f397519e7084bd5235855a5b`; source and built syntax, reverse normal/future-date smoke, JSON, symlink, static, and diff checks passed.
