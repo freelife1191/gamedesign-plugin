@@ -1,0 +1,12 @@
+version: 1
+claims:
+  - id: claim-design-intent
+    claim_type: design-rationale
+    claim: The artifact states a reviewable player-experience goal.
+    source:
+      title: Initial design decision
+      locator: decisions/0001-decision.md
+      accessed_at: 2026-08-04
+    confidence: low
+    limitations: |
+      Replace this starter claim with project evidence before approval.
