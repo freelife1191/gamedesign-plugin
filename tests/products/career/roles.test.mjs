@@ -240,6 +240,39 @@ test("different findings in one section are not mislabeled as conflicting recomm
   assert.deepEqual(result.decisions, []);
 });
 
+test("decision identities structurally encode tuple boundaries and remain permutation-stable", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  const tupleFindings = [
+    finding({ findingId: "f-1a", role: "career-strategist", evidenceGapId: "a", artifactSectionId: "b:c", findingType: "d", minimumRepair: "Repair 1A." }),
+    finding({ findingId: "f-1b", role: "game-design-mentor", evidenceGapId: "a", artifactSectionId: "b:c", findingType: "d", minimumRepair: "Repair 1B." }),
+    finding({ findingId: "f-2a", role: "portfolio-reviewer", evidenceGapId: "a:b", artifactSectionId: "c", findingType: "d", minimumRepair: "Repair 2A." }),
+    finding({ findingId: "f-2b", role: "evidence-auditor", evidenceGapId: "a:b", artifactSectionId: "c", findingType: "d", minimumRepair: "Repair 2B." }),
+    finding({ findingId: "f-3a", role: "career-strategist", evidenceGapId: "a/b", artifactSectionId: "c%d", findingType: "type-\"quoted\"", minimumRepair: "Repair 3A." }),
+    finding({ findingId: "f-3b", role: "interview-coach", evidenceGapId: "a/b", artifactSectionId: "c%d", findingType: "type-\"quoted\"", minimumRepair: "Repair 3B." }),
+    finding({ findingId: "f-4a", role: "reverse-design-critic", evidenceGapId: "경력", artifactSectionId: "섹션", findingType: "유형", minimumRepair: "Repair 4A." }),
+    finding({ findingId: "f-4b", role: "evidence-auditor", evidenceGapId: "경력", artifactSectionId: "섹션", findingType: "유형", minimumRepair: "Repair 4B." }),
+  ];
+  const forward = mergeRoleFindings({ schemaVersion: 1, findings: tupleFindings });
+  const reversed = mergeRoleFindings({ schemaVersion: 1, findings: [...tupleFindings].reverse() });
+  assert.equal(forward.decisions.length, 4);
+  assert.equal(new Set(forward.decisions.map(({ decisionId }) => decisionId)).size, 4);
+  for (const { decisionId } of forward.decisions) {
+    assert.match(decisionId, /^decision:sha256:[0-9a-f]{64}$/u);
+  }
+  assert.deepEqual(reversed, forward);
+  assert.deepEqual(mergeRoleFindings(forward), forward);
+});
+
+test("every decision tuple component rejects an empty boundary", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  const base = finding({ findingId: "f-empty", role: "career-strategist" });
+  for (const invalid of [
+    { ...base, evidenceGapId: "" },
+    { ...base, artifactSectionId: "" },
+    { ...base, findingType: "" },
+  ]) assert.throws(() => mergeRoleFindings({ schemaVersion: 1, findings: [invalid] }), /non-empty/iu);
+});
+
 test("merger fails closed on unknown roles, severities, malformed records, and dangerous keys", async () => {
   const { mergeRoleFindings } = await loadMerger();
   const base = finding({ findingId: "f-1", role: "career-strategist" });

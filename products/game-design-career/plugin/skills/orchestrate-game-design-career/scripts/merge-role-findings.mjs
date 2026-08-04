@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -129,6 +130,15 @@ function findingComparator(left, right) {
     || compareText(left.findingId, right.findingId);
 }
 
+function decisionIdentity(finding) {
+  const canonicalTuple = JSON.stringify([
+    finding.evidenceGapId,
+    finding.artifactSectionId,
+    finding.findingType,
+  ]);
+  return `decision:sha256:${createHash("sha256").update(canonicalTuple, "utf8").digest("hex")}`;
+}
+
 function mergeDuplicates(findings) {
   const groups = new Map();
   for (const finding of findings) {
@@ -203,7 +213,7 @@ function buildDecisions(findings) {
       || compareText(left.minimumRepair, right.minimumRepair)
     ));
     decisions.push({
-      decisionId: `decision:${first.evidenceGapId}:${first.artifactSectionId}:${first.findingType}`,
+      decisionId: decisionIdentity(first),
       evidenceGapId: first.evidenceGapId,
       artifactSectionId: first.artifactSectionId,
       status: "human-decision-required",
