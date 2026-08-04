@@ -44,7 +44,7 @@ function decodeCommandText(text) {
 }
 
 function shellWords(text) {
-  const source = decodeCommandText(text).normalize("NFC").replace(/[\u2044\u2215\uFF0F]/gu, "/");
+  const source = text.normalize("NFC").replace(/[\u2044\u2215\uFF0F]/gu, "/");
   const words = [];
   let word = "";
   let hasWord = false;
@@ -137,18 +137,23 @@ function shellWords(text) {
 function containsRawVendorCli(text) {
   const logicalText = text.replace(/\\\r?\n|\^\r?\n/gu, "");
   for (const line of logicalText.split(/\r?\n/u)) {
-    const decodedLine = decodeCommandText(line);
-    let words;
-    try {
-      words = shellWords(decodedLine);
-    } catch (error) {
-      if (/svg-infographic/u.test(decodedLine)) throw error;
-      continue;
+    let malformedQuoteError;
+    for (const variant of [line, line.replaceAll("\\", "/")]) {
+      let words;
+      try {
+        words = shellWords(variant);
+      } catch (error) {
+        malformedQuoteError = error;
+        continue;
+      }
+      for (const rawToken of words) {
+        const token = decodeCommandText(rawToken)
+          .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
+        if (vendorCliPath.test(path.posix.normalize(token))) return true;
+      }
     }
-    for (const rawToken of words) {
-      const token = rawToken
-        .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
-      if (vendorCliPath.test(path.posix.normalize(token))) return true;
+    if (malformedQuoteError && /svg-infographic/u.test(line.replaceAll("\\", "/"))) {
+      throw malformedQuoteError;
     }
   }
   return false;

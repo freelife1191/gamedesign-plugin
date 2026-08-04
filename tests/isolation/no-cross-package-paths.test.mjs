@@ -167,3 +167,12 @@ test("tree audit tokenizes adjacent POSIX operators and decodes the vendor prefi
     await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI|encoded shell path/i);
   }
 });
+
+test("malformed percent text cannot mask a Windows raw vendor CLI on the same line", async (t) => {
+  const root = await fixture(
+    t,
+    "SKILL.md",
+    String.raw`echo malformed%ZZ&&node skills\svg-infographic\scripts\render.mjs input.svg output.png` + "\n",
+  );
+  await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI|encoded shell path/i);
+});
