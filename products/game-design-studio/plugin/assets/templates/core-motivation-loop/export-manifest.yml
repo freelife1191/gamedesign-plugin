@@ -1,0 +1,16 @@
+artifact_id: core-motivation-loop
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: gameplay team and product reviewers
+    purpose: Show how player choices, feedback, rewards, motivation, and protections form the repeatable loop.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

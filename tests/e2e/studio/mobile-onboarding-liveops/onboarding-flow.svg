@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" width="600" height="300" role="img" aria-labelledby="title description">
+  <title id="title">Accessible mobile onboarding and rollback flow</title>
+  <desc id="description">The first combat step leads to a guarded prompt. A guardrail breach disables the experiment and restores the control experience.</desc>
+  <style>
+    svg{ --ink:#1F2733; }
+    .card{ fill:#F7FAFD; stroke:#D6E0EC; }
+    .label{ font-size:16px; fill:var(--ink); }
+    .edge{ stroke:#44546a; stroke-width:2.5; fill:none; marker-end:url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path d="M2 2 L10 6 L2 10" fill="none" stroke="#44546a" stroke-width="2" stroke-linecap="round"/>
+    </marker>
+  </defs>
+  <rect class="card" x="30" y="70" width="150" height="90" rx="10"/>
+  <text class="label" x="48" y="115" dominant-baseline="central">First combat</text>
+  <rect class="card" x="225" y="70" width="150" height="90" rx="10"/>
+  <text class="label" x="243" y="115" dominant-baseline="central">Guarded prompt</text>
+  <rect class="card" x="420" y="70" width="150" height="90" rx="10"/>
+  <text class="label" x="438" y="108">Restore control</text>
+  <text class="label" x="438" y="132">on breach</text>
+  <path class="edge" d="M180 115 Q202 100 215 114"/>
+  <path class="edge" d="M375 115 Q397 100 410 114"/>
+</svg>

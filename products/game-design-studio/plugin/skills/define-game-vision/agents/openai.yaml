@@ -1,0 +1,4 @@
+interface:
+  display_name: "Define Game Vision"
+  short_description: "Turn game intent into evidence-backed vision pillars"
+  default_prompt: "Use $define-game-vision to define a testable game vision from this concept."

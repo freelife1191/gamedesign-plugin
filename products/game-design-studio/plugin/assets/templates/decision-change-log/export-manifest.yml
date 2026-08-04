@@ -1,0 +1,16 @@
+artifact_id: decision-change-log
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: artifact owners, approvers, and delivery leads
+    purpose: Trace decisions, alternatives, evidence, consequences, changes, rollback, and reopen conditions.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Production Planner"
+  short_description: "Plan evidence-backed scope milestones and prototype gates"
+  default_prompt: "Use $plan-game-production to create an evidence-backed production plan and scope decision."

@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "live-service-rpg-economy",
+  "decisionId": "approve-live-service-rpg-economy",
+  "approvalDate": "2026-08-04",
+  "evidenceRegistry": [
+    {
+      "evidenceId": "economy-transparency-price-and-odds-disclosure",
+      "gateId": "economy-transparency",
+      "field": "price_and_odds_disclosure",
+      "kind": "approval-evidence",
+      "subject": "economy-transparency.price_and_odds_disclosure",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/economy-transparency/price_and_odds_disclosure",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "economy-transparency-currency-conversion",
+      "gateId": "economy-transparency",
+      "field": "currency_conversion",
+      "kind": "approval-evidence",
+      "subject": "economy-transparency.currency_conversion",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/economy-transparency/currency_conversion",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "economy-transparency-player-value-analysis",
+      "gateId": "economy-transparency",
+      "field": "player_value_analysis",
+      "kind": "approval-evidence",
+      "subject": "economy-transparency.player_value_analysis",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/economy-transparency/player_value_analysis",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "economy-transparency-regional-review",
+      "gateId": "economy-transparency",
+      "field": "regional_review",
+      "kind": "approval-evidence",
+      "subject": "economy-transparency.regional_review",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/economy-transparency/regional_review",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "liveops-experiment-hypothesis",
+      "gateId": "liveops-experiment",
+      "field": "hypothesis",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.hypothesis",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/liveops-experiment/hypothesis",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "liveops-experiment-cohort-definition",
+      "gateId": "liveops-experiment",
+      "field": "cohort_definition",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.cohort_definition",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/liveops-experiment/cohort_definition",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "liveops-experiment-guardrail-metrics",
+      "gateId": "liveops-experiment",
+      "field": "guardrail_metrics",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.guardrail_metrics",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/liveops-experiment/guardrail_metrics",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "liveops-experiment-rollback-plan",
+      "gateId": "liveops-experiment",
+      "field": "rollback_plan",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.rollback_plan",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/liveops-experiment/rollback_plan",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    },
+    {
+      "evidenceId": "liveops-experiment-experiment-owner",
+      "gateId": "liveops-experiment",
+      "field": "experiment_owner",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.experiment_owner",
+      "assertion": "satisfied",
+      "source": "trusted-record://live-service-rpg-economy/liveops-experiment/experiment_owner",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-live-service-rpg-economy"
+    }
+  ],
+  "responsibleGates": [
+    {
+      "gateId": "economy-transparency",
+      "status": "approved",
+      "blocker": null,
+      "approver": "economy-and-monetization-owner",
+      "evidenceIds": [
+        "economy-transparency-price-and-odds-disclosure",
+        "economy-transparency-currency-conversion",
+        "economy-transparency-player-value-analysis",
+        "economy-transparency-regional-review"
+      ],
+      "evidenceFields": {
+        "price_and_odds_disclosure": "economy-transparency-price-and-odds-disclosure",
+        "currency_conversion": "economy-transparency-currency-conversion",
+        "player_value_analysis": "economy-transparency-player-value-analysis",
+        "regional_review": "economy-transparency-regional-review"
+      },
+      "decisionId": "approve-live-service-rpg-economy",
+      "approvalDate": "2026-08-04"
+    },
+    {
+      "gateId": "liveops-experiment",
+      "status": "approved",
+      "blocker": null,
+      "approver": "live-operations-owner",
+      "evidenceIds": [
+        "liveops-experiment-hypothesis",
+        "liveops-experiment-cohort-definition",
+        "liveops-experiment-guardrail-metrics",
+        "liveops-experiment-rollback-plan",
+        "liveops-experiment-experiment-owner"
+      ],
+      "evidenceFields": {
+        "hypothesis": "liveops-experiment-hypothesis",
+        "cohort_definition": "liveops-experiment-cohort-definition",
+        "guardrail_metrics": "liveops-experiment-guardrail-metrics",
+        "rollback_plan": "liveops-experiment-rollback-plan",
+        "experiment_owner": "liveops-experiment-experiment-owner"
+      },
+      "decisionId": "approve-live-service-rpg-economy",
+      "approvalDate": "2026-08-04"
+    }
+  ],
+  "approvedDomain": {
+    "economy": {
+      "resourceId": "soft-currency",
+      "source": "daily-mission",
+      "sink": "upgrade",
+      "targetInventory": 5000,
+      "inflationRisk": "weekly-source-sink-delta",
+      "realPricePolicy": "no-hidden-conversion",
+      "probabilityPolicy": "published-odds"
+    },
+    "rollback": {
+      "enabled": true,
+      "trigger": "guardrail-breach",
+      "mode": "automatic-on-threshold",
+      "action": "restore-last-known-good-config",
+      "owner": "liveops-owner",
+      "recovery": "reconcile-ledger-and-notify",
+      "evidenceIds": [
+        "liveops-experiment-rollback-plan"
+      ]
+    },
+    "experiment": {
+      "experimentId": "economy-source-tuning",
+      "hypothesis": "bounded source tuning improves progression without inflation",
+      "control": "current-source-rate",
+      "singleVariable": "daily-mission-yield",
+      "guardrail": "weekly-inflation-rate",
+      "stopCondition": "guardrail-breach"
+    }
+  }
+}

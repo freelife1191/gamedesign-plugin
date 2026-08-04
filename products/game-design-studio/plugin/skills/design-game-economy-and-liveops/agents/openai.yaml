@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Economy and LiveOps Designer"
+  short_description: "Design transparent economies and safe LiveOps experiments"
+  default_prompt: "Use $design-game-economy-and-liveops to design an evidence-backed economy or LiveOps experiment."

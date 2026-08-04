@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "pc-console-ai-npc",
+  "intents": [
+    "narrative",
+    "game system",
+    "design review",
+    "export"
+  ],
+  "profileIds": [
+    "pc-console"
+  ],
+  "requestedFormats": [
+    "md",
+    "docx"
+  ],
+  "reviewMode": "sequential-fallback",
+  "visualizationPath": null
+}

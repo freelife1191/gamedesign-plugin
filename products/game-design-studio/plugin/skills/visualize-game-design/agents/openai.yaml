@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visualize Game Design"
+  short_description: "Accessible verified game design diagrams"
+  default_prompt: "Use $visualize-game-design turn source-backed game design structure into an accessible verified diagram."

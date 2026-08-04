@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "pc-console",
+  "assumptions": [
+    "Controller-first interaction and keyboard-mouse parity may both be required by the supported platform set.",
+    "Platform certification, entitlement, save, commerce, and performance rules may constrain release scope."
+  ],
+  "questions": [
+    "Which critical actions are controller-first and where is keyboard-mouse parity required?",
+    "Which certification, entitlement, save, commerce, and refund policies apply per platform?",
+    "What performance budgets and hardware tiers define supported play?"
+  ],
+  "requiredSections": [
+    "controller-and-keyboard-mouse-input",
+    "platform-certification-and-entitlements",
+    "performance-budgets-and-hardware-tiers",
+    "save-commerce-and-release-operations"
+  ],
+  "responsibleGates": [
+    "accessibility",
+    "economy-transparency",
+    "scope-control"
+  ],
+  "reviewRoles": [
+    "ux-accessibility-reviewer",
+    "production-feasibility-critic",
+    "system-economy-designer"
+  ],
+  "conflicts": [],
+  "evidenceTriggers": [
+    "input-device-playtest",
+    "platform-certification-checklist",
+    "hardware-performance-capture",
+    "entitlement-and-save-recovery-test"
+  ]
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description" viewBox="0 0 128 128">
+  <title id="title">Game Design Studio</title>
+  <desc id="description">A game controller framed by four connected design nodes.</desc>
+  <rect width="128" height="128" rx="24" fill="#0f172a"/>
+  <g fill="none" stroke="#94a3b8" stroke-width="4" stroke-linecap="round">
+    <path d="M28 28 48 48M100 28 80 48M28 100l20-20M100 100 80 80"/>
+    <circle cx="24" cy="24" r="8" fill="#38bdf8" stroke="none"/>
+    <circle cx="104" cy="24" r="8" fill="#a78bfa" stroke="none"/>
+    <circle cx="24" cy="104" r="8" fill="#34d399" stroke="none"/>
+    <circle cx="104" cy="104" r="8" fill="#fbbf24" stroke="none"/>
+  </g>
+  <path d="M42 48h44c8 0 14 6 16 14l6 25c2 9-8 15-15 9L80 84H48L35 96c-7 6-17 0-15-9l6-25c2-8 8-14 16-14Z" fill="#f8fafc"/>
+  <path d="M43 62v14M36 69h14" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="83" cy="65" r="4" fill="#0f172a"/>
+  <circle cx="93" cy="75" r="4" fill="#0f172a"/>
+</svg>

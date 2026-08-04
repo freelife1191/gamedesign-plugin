@@ -1,0 +1,16 @@
+artifact_id: narrative-quest-npc
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: narrative, content, design, legal, and safety reviewers
+    purpose: Review player purpose, choice, quest and NPC states, production needs, rights, and consent.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

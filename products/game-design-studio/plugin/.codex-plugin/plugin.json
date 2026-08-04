@@ -1,0 +1,25 @@
+{
+  "name": "game-design-studio",
+  "version": "0.1.0",
+  "description": "Professional game design, review, visualization, and export workflows.",
+  "author": {
+    "name": "Game Design Plugin Contributors"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Game Design Studio",
+    "shortDescription": "Design, review, visualize, and export production-ready game plans.",
+    "longDescription": "Route game design work through focused vision, systems, content, experience, economy, production, review, visualization, and export workflows.",
+    "developerName": "Game Design Plugin Contributors",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": [
+      "Create a game design brief from my goals and constraints.",
+      "Review this game system and identify the smallest fixes.",
+      "Plan a responsible LiveOps economy and experiment."
+    ],
+    "brandColor": "#334155",
+    "composerIcon": "./assets/product-mark.svg",
+    "logo": "./assets/product-mark.svg"
+  }
+}

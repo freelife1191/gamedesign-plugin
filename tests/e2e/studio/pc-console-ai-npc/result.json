@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "pc-console-ai-npc",
+  "routeIds": [
+    "content",
+    "systems",
+    "review",
+    "export"
+  ],
+  "roleIds": [
+    "content-narrative-designer",
+    "ux-accessibility-reviewer",
+    "production-feasibility-critic"
+  ],
+  "templateIds": [
+    "narrative-quest-npc",
+    "system-specification",
+    "game-design-review"
+  ],
+  "evidenceRegistry": [
+    {
+      "evidenceId": "ai-rights-human-approval-source-provenance",
+      "gateId": "ai-rights-human-approval",
+      "field": "source_provenance",
+      "kind": "approval-evidence",
+      "subject": "ai-rights-human-approval.source_provenance",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-rights-human-approval/source_provenance",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-rights-human-approval-rights-or-consent-record",
+      "gateId": "ai-rights-human-approval",
+      "field": "rights_or_consent_record",
+      "kind": "approval-evidence",
+      "subject": "ai-rights-human-approval.rights_or_consent_record",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-rights-human-approval/rights_or_consent_record",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-rights-human-approval-human-approver",
+      "gateId": "ai-rights-human-approval",
+      "field": "human_approver",
+      "kind": "approval-evidence",
+      "subject": "ai-rights-human-approval.human_approver",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-rights-human-approval/human_approver",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-rights-human-approval-approval-date",
+      "gateId": "ai-rights-human-approval",
+      "field": "approval_date",
+      "kind": "approval-evidence",
+      "subject": "ai-rights-human-approval.approval_date",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-rights-human-approval/approval_date",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-npc-safety-behavior-boundaries",
+      "gateId": "ai-npc-safety",
+      "field": "behavior_boundaries",
+      "kind": "approval-evidence",
+      "subject": "ai-npc-safety.behavior_boundaries",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-npc-safety/behavior_boundaries",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-npc-safety-red-team-results",
+      "gateId": "ai-npc-safety",
+      "field": "red_team_results",
+      "kind": "approval-evidence",
+      "subject": "ai-npc-safety.red_team_results",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-npc-safety/red_team_results",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-npc-safety-disclosure-copy",
+      "gateId": "ai-npc-safety",
+      "field": "disclosure_copy",
+      "kind": "approval-evidence",
+      "subject": "ai-npc-safety.disclosure_copy",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-npc-safety/disclosure_copy",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-npc-safety-memory-and-privacy-policy",
+      "gateId": "ai-npc-safety",
+      "field": "memory_and_privacy_policy",
+      "kind": "approval-evidence",
+      "subject": "ai-npc-safety.memory_and_privacy_policy",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-npc-safety/memory_and_privacy_policy",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    },
+    {
+      "evidenceId": "ai-npc-safety-fallback-behavior",
+      "gateId": "ai-npc-safety",
+      "field": "fallback_behavior",
+      "kind": "approval-evidence",
+      "subject": "ai-npc-safety.fallback_behavior",
+      "assertion": "satisfied",
+      "source": "trusted-record://pc-console-ai-npc/ai-npc-safety/fallback_behavior",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-pc-console-ai-npc"
+    }
+  ],
+  "responsibleGates": [
+    {
+      "gateId": "ai-rights-human-approval",
+      "status": "approved",
+      "blocker": null,
+      "approver": "rights-and-legal-owner",
+      "evidenceIds": [
+        "ai-rights-human-approval-source-provenance",
+        "ai-rights-human-approval-rights-or-consent-record",
+        "ai-rights-human-approval-human-approver",
+        "ai-rights-human-approval-approval-date"
+      ],
+      "evidenceFields": {
+        "source_provenance": "ai-rights-human-approval-source-provenance",
+        "rights_or_consent_record": "ai-rights-human-approval-rights-or-consent-record",
+        "human_approver": "ai-rights-human-approval-human-approver",
+        "approval_date": "ai-rights-human-approval-approval-date"
+      },
+      "decisionId": "approve-pc-console-ai-npc",
+      "approvalDate": "2026-08-04"
+    },
+    {
+      "gateId": "ai-npc-safety",
+      "status": "approved",
+      "blocker": null,
+      "approver": "ai-safety-owner",
+      "evidenceIds": [
+        "ai-npc-safety-behavior-boundaries",
+        "ai-npc-safety-red-team-results",
+        "ai-npc-safety-disclosure-copy",
+        "ai-npc-safety-memory-and-privacy-policy",
+        "ai-npc-safety-fallback-behavior"
+      ],
+      "evidenceFields": {
+        "behavior_boundaries": "ai-npc-safety-behavior-boundaries",
+        "red_team_results": "ai-npc-safety-red-team-results",
+        "disclosure_copy": "ai-npc-safety-disclosure-copy",
+        "memory_and_privacy_policy": "ai-npc-safety-memory-and-privacy-policy",
+        "fallback_behavior": "ai-npc-safety-fallback-behavior"
+      },
+      "decisionId": "approve-pc-console-ai-npc",
+      "approvalDate": "2026-08-04"
+    }
+  ],
+  "outputManifestPath": "output-manifest.json",
+  "domain": {
+    "npc": {
+      "contentId": "guide-npc",
+      "playerPurpose": "contextual quest guidance",
+      "choiceConsequence": "decline-preserves-main-path",
+      "questState": "chapter-one",
+      "npcState": "available-safe",
+      "utility": "bounded-contextual-quest-guidance",
+      "costBoundary": "preapproved-inference-and-content-operations-budget",
+      "reviewTrigger": "model-policy-rights-or-scope-change",
+      "fallback": {
+        "mode": "authored-safe-dialogue",
+        "trigger": "model-or-policy-failure",
+        "owner": "narrative-owner"
+      },
+      "killSwitch": {
+        "enabled": true,
+        "scope": "all-generative-responses",
+        "owner": "safety-owner",
+        "recovery": "authored-safe-dialogue"
+      }
+    },
+    "rightsConsent": {
+      "source": "approved-dialogue-corpus",
+      "creator": "internal-writing-team",
+      "attribution": "project-rights-register",
+      "usePurpose": "npc-dialogue-generation",
+      "rightsStatus": "granted",
+      "consentStatus": "documented",
+      "privacy": "no-player-personal-data",
+      "moderation": "pre-and-post-generation-filters",
+      "approver": "rights-and-legal-owner",
+      "revocationPath": "disable-source-and-rebuild-index"
+    }
+  }
+}

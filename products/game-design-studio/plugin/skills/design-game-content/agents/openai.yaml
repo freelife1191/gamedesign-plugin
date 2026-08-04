@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Game Content"
+  short_description: "Specify playable content tied to systems and production evidence"
+  default_prompt: "Use $design-game-content to specify this content unit against its systems and production constraints."

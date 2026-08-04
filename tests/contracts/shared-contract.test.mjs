@@ -145,10 +145,17 @@ function assertSessionStartOutput(output) {
   assertCapability(output.capabilities.node, ["available", "version"]);
   assert.equal(output.capabilities.node.available, true);
   assert.equal(typeof output.capabilities.node.version, "string");
-  for (const name of ["chromium", "soffice"]) {
-    assertCapability(output.capabilities[name], ["available", "command"]);
-    if (output.capabilities[name].available) assert.equal(typeof output.capabilities[name].command, "string");
+  assertCapability(output.capabilities.chromium, ["available", "command", "version", "via"]);
+  if (output.capabilities.chromium.available) {
+    assert.equal(typeof output.capabilities.chromium.command, "string");
+    assert.equal(path.isAbsolute(output.capabilities.chromium.command), true);
+    assert.equal(typeof output.capabilities.chromium.version, "string");
+    assert.notEqual(output.capabilities.chromium.version.trim(), "");
+    assert.equal(typeof output.capabilities.chromium.via, "string");
+    assert.notEqual(output.capabilities.chromium.via.trim(), "");
   }
+  assertCapability(output.capabilities.soffice, ["available", "command"]);
+  if (output.capabilities.soffice.available) assert.equal(typeof output.capabilities.soffice.command, "string");
   for (const name of ["documents", "pdf", "presentations"]) {
     assertCapability(output.capabilities[name], ["available", "provider"]);
     if (output.capabilities[name].available) assert.equal(output.capabilities[name].provider, "codex-bundled");

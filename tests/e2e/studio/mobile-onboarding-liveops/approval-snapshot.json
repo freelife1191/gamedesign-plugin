@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "mobile-onboarding-liveops",
+  "decisionId": "approve-mobile-onboarding-liveops",
+  "approvalDate": "2026-08-04",
+  "evidenceRegistry": [
+    {
+      "evidenceId": "accessibility-target-standard",
+      "gateId": "accessibility",
+      "field": "target_standard",
+      "kind": "approval-evidence",
+      "subject": "accessibility.target_standard",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/accessibility/target_standard",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "accessibility-supported-modalities",
+      "gateId": "accessibility",
+      "field": "supported_modalities",
+      "kind": "approval-evidence",
+      "subject": "accessibility.supported_modalities",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/accessibility/supported_modalities",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "accessibility-test-results",
+      "gateId": "accessibility",
+      "field": "test_results",
+      "kind": "approval-evidence",
+      "subject": "accessibility.test_results",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/accessibility/test_results",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "accessibility-known-limitations",
+      "gateId": "accessibility",
+      "field": "known_limitations",
+      "kind": "approval-evidence",
+      "subject": "accessibility.known_limitations",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/accessibility/known_limitations",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "liveops-experiment-hypothesis",
+      "gateId": "liveops-experiment",
+      "field": "hypothesis",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.hypothesis",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/liveops-experiment/hypothesis",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "liveops-experiment-cohort-definition",
+      "gateId": "liveops-experiment",
+      "field": "cohort_definition",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.cohort_definition",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/liveops-experiment/cohort_definition",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "liveops-experiment-guardrail-metrics",
+      "gateId": "liveops-experiment",
+      "field": "guardrail_metrics",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.guardrail_metrics",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/liveops-experiment/guardrail_metrics",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "liveops-experiment-rollback-plan",
+      "gateId": "liveops-experiment",
+      "field": "rollback_plan",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.rollback_plan",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/liveops-experiment/rollback_plan",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    },
+    {
+      "evidenceId": "liveops-experiment-experiment-owner",
+      "gateId": "liveops-experiment",
+      "field": "experiment_owner",
+      "kind": "approval-evidence",
+      "subject": "liveops-experiment.experiment_owner",
+      "assertion": "satisfied",
+      "source": "trusted-record://mobile-onboarding-liveops/liveops-experiment/experiment_owner",
+      "limitation": "approved scenario scope only",
+      "decisionId": "approve-mobile-onboarding-liveops"
+    }
+  ],
+  "responsibleGates": [
+    {
+      "gateId": "accessibility",
+      "status": "approved",
+      "blocker": null,
+      "approver": "accessibility-owner",
+      "evidenceIds": [
+        "accessibility-target-standard",
+        "accessibility-supported-modalities",
+        "accessibility-test-results",
+        "accessibility-known-limitations"
+      ],
+      "evidenceFields": {
+        "target_standard": "accessibility-target-standard",
+        "supported_modalities": "accessibility-supported-modalities",
+        "test_results": "accessibility-test-results",
+        "known_limitations": "accessibility-known-limitations"
+      },
+      "decisionId": "approve-mobile-onboarding-liveops",
+      "approvalDate": "2026-08-04"
+    },
+    {
+      "gateId": "liveops-experiment",
+      "status": "approved",
+      "blocker": null,
+      "approver": "live-operations-owner",
+      "evidenceIds": [
+        "liveops-experiment-hypothesis",
+        "liveops-experiment-cohort-definition",
+        "liveops-experiment-guardrail-metrics",
+        "liveops-experiment-rollback-plan",
+        "liveops-experiment-experiment-owner"
+      ],
+      "evidenceFields": {
+        "hypothesis": "liveops-experiment-hypothesis",
+        "cohort_definition": "liveops-experiment-cohort-definition",
+        "guardrail_metrics": "liveops-experiment-guardrail-metrics",
+        "rollback_plan": "liveops-experiment-rollback-plan",
+        "experiment_owner": "liveops-experiment-experiment-owner"
+      },
+      "decisionId": "approve-mobile-onboarding-liveops",
+      "approvalDate": "2026-08-04"
+    }
+  ],
+  "approvedDomain": {
+    "onboarding": {
+      "criticalAction": "complete-first-combat",
+      "touchPath": "tap-target-with-remappable-alternative",
+      "skip": "available-after-first-prompt",
+      "revisit": "settings-training",
+      "interruptionRecovery": "resume-last-safe-step",
+      "accessibilityAlternative": "focus-order-and-screen-reader-labels"
+    },
+    "liveops": {
+      "experimentId": "first-session-prompt",
+      "hypothesis": "one contextual prompt improves completion",
+      "control": "no-contextual-prompt",
+      "singleVariable": "prompt-timing",
+      "guardrail": {
+        "metric": "early-exit-rate",
+        "direction": "must-not-increase",
+        "threshold": 0.03
+      },
+      "stopCondition": "guardrail-threshold-breach",
+      "rollback": "disable-experiment-and-restore-control"
+    },
+    "visualizationPresetId": "state-rule-flow"
+  }
+}
