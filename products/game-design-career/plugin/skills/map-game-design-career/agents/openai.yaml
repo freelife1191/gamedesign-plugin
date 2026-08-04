@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Game Design Career"
+  short_description: "Compare evidence-centered game design role paths"
+  default_prompt: "Use $map-game-design-career to compare plausible game-design role paths and turn my evidence gaps into practice artifacts."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Game Design Portfolio"
+  short_description: "Build inspectable game-design portfolio evidence"
+  default_prompt: "Use $build-game-design-portfolio to turn my project into an inspectable evidence-based portfolio case study."

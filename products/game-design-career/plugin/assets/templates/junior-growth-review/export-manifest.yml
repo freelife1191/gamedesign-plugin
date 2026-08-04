@@ -1,0 +1,16 @@
+artifact_id: junior-growth-review
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: junior designer, mentor, and manager
+    purpose: Convert project events into evidence and role-linked growth decisions.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

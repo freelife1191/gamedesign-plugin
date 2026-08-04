@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "axes": [
+    {
+      "id": "intent-problem",
+      "name": "Intent and problem",
+      "levels": [
+        {
+          "score": 0,
+          "observableEvidence": "No inspectable intent, affected user, constraint, or problem evidence is cited."
+        },
+        {
+          "score": 1,
+          "observableEvidence": "A stable section identifies an intent or problem, but affected user, constraint, or success evidence remains incomplete."
+        },
+        {
+          "score": 2,
+          "observableEvidence": "Cited sections and evidence identify the problem, affected user, constraints, and an evidence-qualified success definition."
+        },
+        {
+          "score": 3,
+          "observableEvidence": "Evidence also traces alternatives and explains why the chosen problem boundary supports the decision."
+        },
+        {
+          "score": 4,
+          "observableEvidence": "Multiple evidence sources, counterevidence, and change history show how the problem framing changed a consequential decision."
+        }
+      ]
+    },
+    {
+      "id": "player-experience-fun",
+      "name": "Player experience and fun",
+      "levels": [
+        {
+          "score": 0,
+          "observableEvidence": "No inspectable player-experience claim or supporting observation is cited."
+        },
+        {
+          "score": 1,
+          "observableEvidence": "A player-experience claim exists, but its choice, tension, feedback, or validation evidence is incomplete."
+        },
+        {
+          "score": 2,
+          "observableEvidence": "Cited evidence links intended experience to player choices, rules, feedback, and a bounded validation method."
+        },
+        {
+          "score": 3,
+          "observableEvidence": "Alternatives, observed responses, limitations, and resulting design changes are traceable."
+        },
+        {
+          "score": 4,
+          "observableEvidence": "Repeated evidence across relevant audiences or contexts supports a differentiated experience decision and its limits."
+        }
+      ]
+    },
+    {
+      "id": "implementation-data-validation",
+      "name": "Implementation, data, and validation",
+      "levels": [
+        {
+          "score": 0,
+          "observableEvidence": "No inspectable implementation boundary, data contract, or validation evidence is cited."
+        },
+        {
+          "score": 1,
+          "observableEvidence": "Some rules, states, data, handoff, or test material exists, but a reviewer cannot reproduce the decision chain."
+        },
+        {
+          "score": 2,
+          "observableEvidence": "Cited evidence defines rules, states, exceptions, data or content boundary, owner, test, and result status."
+        },
+        {
+          "score": 3,
+          "observableEvidence": "Implementation evidence traces defects, alternatives, iteration, and handoff decisions without overstating completion."
+        },
+        {
+          "score": 4,
+          "observableEvidence": "Independent review or repeatable validation evidence supports the implementation decision, tradeoffs, and remaining risks."
+        }
+      ]
+    },
+    {
+      "id": "readability-navigation",
+      "name": "Readability and navigation",
+      "levels": [
+        {
+          "score": 0,
+          "observableEvidence": "The reviewer cannot locate stable sections, claims, evidence, decisions, or scope."
+        },
+        {
+          "score": 1,
+          "observableEvidence": "Some navigation exists, but claim-to-evidence or decision links are incomplete or ambiguous."
+        },
+        {
+          "score": 2,
+          "observableEvidence": "Stable section and evidence IDs let a reviewer follow context, claim, evidence, decision, and limitation."
+        },
+        {
+          "score": 3,
+          "observableEvidence": "The short review path and deeper evidence path are both inspectable without duplicate or conflicting versions."
+        },
+        {
+          "score": 4,
+          "observableEvidence": "Independent reviewers can reproduce the same navigation path, evidence boundary, and current decision state."
+        }
+      ]
+    },
+    {
+      "id": "differentiation-decision-rationale-reflection",
+      "name": "Differentiation, decision rationale, and reflection",
+      "levels": [
+        {
+          "score": 0,
+          "observableEvidence": "No inspectable alternative, rationale, differentiated choice, or reflection evidence is cited."
+        },
+        {
+          "score": 1,
+          "observableEvidence": "A choice or reflection is stated, but alternatives, ownership, result, or limitation is not inspectable."
+        },
+        {
+          "score": 2,
+          "observableEvidence": "Cited evidence links alternatives, constraints, choice, rationale, result status, and reflection."
+        },
+        {
+          "score": 3,
+          "observableEvidence": "The artifact shows how feedback or counterevidence changed a differentiated decision and what remains uncertain."
+        },
+        {
+          "score": 4,
+          "observableEvidence": "Change history and independent evidence show durable judgment across alternatives while preserving failures, limits, and next verification."
+        }
+      ]
+    }
+  ],
+  "penalties": [
+    {
+      "id": "contradiction",
+      "observableTrigger": "Cited claims or a claim and its evidence cannot both be true within the recorded scope.",
+      "minimumRepair": "Resolve the conflict, narrow the scope, or preserve both positions as an explicit decision."
+    },
+    {
+      "id": "unsupported-certainty",
+      "observableTrigger": "Claim wording exceeds the cited evidence strength, status, attribution, or freshness.",
+      "minimumRepair": "Qualify the wording or add current inspectable evidence that supports the certainty."
+    },
+    {
+      "id": "duplication",
+      "observableTrigger": "Repeated material obscures the decision chain or creates inconsistent current versions.",
+      "minimumRepair": "Keep one canonical section and replace duplicates with stable links."
+    },
+    {
+      "id": "scope",
+      "observableTrigger": "Author, team, time, build, audience, responsibility, region, or decision boundary is ambiguous.",
+      "minimumRepair": "State the missing boundary and bind the claim to its exact scope."
+    },
+    {
+      "id": "source",
+      "observableTrigger": "A material claim lacks a locatable source, attribution, rights note, retrieval date, or freshness state.",
+      "minimumRepair": "Add the missing source record or remove the unsupported claim from the approved scope."
+    }
+  ],
+  "observationStates": {
+    "not-observed": "Condition was not inspectable; this is not no-defect and not an ability score of zero.",
+    "no-defect": "The cited sections and evidence were inspected and no defect of the named type was found.",
+    "defect-observed": "The cited sections and evidence directly support the named defect."
+  }
+}

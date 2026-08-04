@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "reverse-design-portfolio",
+  "stage": "new-hire",
+  "asOfDate": "2026-08-06",
+  "routeIds": ["new-hire-reverse-design", "new-hire-reverse-design-export"],
+  "artifactTemplateIds": ["reverse-design-document"],
+  "userManualRejected": true,
+  "analysisScope": {
+    "game": "Fixture Upgrade Loop",
+    "buildVersion": "1.4.2",
+    "platform": "PC",
+    "region": "KR",
+    "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+    "observationDate": "2026-08-04",
+    "sourceAccess": [
+      {
+        "sourceAddress": "capture:upgrade-01",
+        "sourceType": "observed-behavior",
+        "scope": "upgrade screen",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Direct captured observation",
+        "limitations": "One account state and one upgrade screen only."
+      },
+      {
+        "sourceAddress": "capture:upgrade-02",
+        "sourceType": "observed-behavior",
+        "scope": "tested levels 2 through 4",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Direct captured observation",
+        "limitations": "Promotion, offline, and insufficient-balance exceptions were not all observed."
+      },
+      {
+        "sourceAddress": "table:observed-costs",
+        "sourceType": "observed-behavior",
+        "scope": "levels 2 through 4",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Transcribed visible values",
+        "limitations": "Three levels cannot establish the full cost curve."
+      },
+      {
+        "sourceAddress": "https://example.invalid/official-event",
+        "sourceType": "cited-material",
+        "scope": "announced event window",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Official event notice retrieval",
+        "limitations": "The notice does not disclose implementation architecture."
+      }
+    ],
+    "limitations": "The analysis is bounded to build 1.4.2, PC, KR, one account state, one observation date, levels 2 through 4, and the declared official notice."
+  },
+  "claims": [
+    {
+      "claimId": "ui-upgrade-preview",
+      "domain": "UI",
+      "observation": [{ "statement": "The preview shows cost and resulting level before confirmation.", "sourceAddress": "capture:upgrade-01", "sourceType": "observed-behavior", "scope": "upgrade screen" }],
+      "inference": "The preview may reduce accidental spending.",
+      "confidence": "medium",
+      "counterexample": ["Players may confirm without reading the preview."],
+      "alternative": ["The preview primarily communicates progression excitement."],
+      "validationMethod": "Compare cancellation and mistaken-purchase reports with and without the preview."
+    },
+    {
+      "claimId": "rules-upgrade-gate",
+      "domain": "rules",
+      "observation": [{ "statement": "Confirmation is disabled below the displayed currency cost.", "sourceAddress": "capture:upgrade-02", "sourceType": "observed-behavior", "scope": "tested levels 2 through 4" }],
+      "inference": "The client enforces a visible affordability gate.",
+      "confidence": "high",
+      "counterexample": ["A server-side exception may apply in untested promotional states."],
+      "alternative": ["The disabled state may be presentation-only while the server remains authoritative."],
+      "validationMethod": "Test promotion, offline, and insufficient-balance exception states."
+    },
+    {
+      "claimId": "data-economy-cost",
+      "domain": "data",
+      "observation": [{ "statement": "Displayed costs rise from 100 to 160 to 250 in the observed levels.", "sourceAddress": "table:observed-costs", "sourceType": "observed-behavior", "scope": "levels 2 through 4" }],
+      "inference": "The economy curve may use tiered rather than linear cost growth.",
+      "confidence": "low",
+      "counterexample": ["Later levels may return to a linear curve."],
+      "alternative": ["Costs may be individually authored per level."],
+      "validationMethod": "Collect at least ten consecutive levels and fit competing curves."
+    },
+    {
+      "claimId": "operations-cost-event",
+      "domain": "operations",
+      "observation": [{ "statement": "An official event notice states upgrade costs are reduced during the event window.", "sourceAddress": "https://example.invalid/official-event", "sourceType": "cited-material", "scope": "announced event window" }],
+      "inference": "Operations can override the normal cost table for bounded events.",
+      "confidence": "medium",
+      "counterexample": ["The reduction may be implemented as a rebate rather than a table override."],
+      "alternative": ["A separate event currency may create the apparent reduction."],
+      "validationMethod": "Record pre-event, event, and post-event displayed and deducted values."
+    },
+    {
+      "claimId": "uncertainty-server-authority",
+      "domain": "uncertainty",
+      "observation": [],
+      "inference": null,
+      "confidence": "unassessed",
+      "counterexample": [],
+      "alternative": ["Client-authoritative", "Server-authoritative"],
+      "validationMethod": "Inspect network failure behavior without claiming undocumented architecture."
+    }
+  ],
+  "surfaces": {
+    "fact": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event"],
+    "inference": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event"],
+    "rules": ["rules-upgrade-gate"],
+    "exceptions": ["rules-upgrade-gate"],
+    "UI": ["ui-upgrade-preview"],
+    "data": ["data-economy-cost"],
+    "economy": ["data-economy-cost", "operations-cost-event"],
+    "operations": ["operations-cost-event"],
+    "alternatives": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event", "uncertainty-server-authority"],
+    "validation": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event", "uncertainty-server-authority"]
+  },
+  "export": { "jobPath": "export-job.json" },
+  "unverifiedCurrentClaims": []
+}

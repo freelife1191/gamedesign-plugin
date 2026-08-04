@@ -1,0 +1,12 @@
+version: 1
+claims:
+  - id: claim-five-axis-review
+    claim_type: template-contract
+    claim: Five-axis Portfolio Review defines a reviewable evidence workflow and explicit completion boundaries.
+    source:
+      title: Five-axis Portfolio Review canonical seed
+      locator: content.md
+      accessed_at: 2026-08-04
+    confidence: low
+    limitations: |
+      This claim covers the template structure only. Replace it with project-specific evidence before approving any candidate, portfolio, hiring, or transition claim.

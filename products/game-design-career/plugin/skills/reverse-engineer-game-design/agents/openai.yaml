@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reverse Engineer Game Design"
+  short_description: "Build falsifiable game reverse-design evidence"
+  default_prompt: "Use $reverse-engineer-game-design to analyze a game system as claim-level facts and falsifiable inferences."

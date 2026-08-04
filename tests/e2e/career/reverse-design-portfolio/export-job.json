@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "artifactRoot": ".",
+  "artifactId": "reverse-design-document",
+  "documentType": "reverse-design",
+  "canonicalValidation": {
+    "status": "passed",
+    "command": "node validate-career-scenario.mjs reverse-design-portfolio",
+    "file": "content.md",
+    "verification": "Fact-inference, surface coverage, route, and source template contracts passed."
+  },
+  "formats": {
+    "md": { "requested": true, "availability": "unknown", "status": "blocked", "evidence": [] },
+    "pdf": { "requested": false, "availability": "unknown", "status": "not-requested", "evidence": [] },
+    "docx": { "requested": true, "availability": "unknown", "status": "blocked", "evidence": [] },
+    "pptx": {
+      "requested": true,
+      "availability": "unknown",
+      "status": "blocked",
+      "evidence": [],
+      "audience": "portfolio reviewer",
+      "purpose": "Show observable behavior, bounded inference, alternatives, and validation decisions.",
+      "outlineSource": "independent-story",
+      "storyOutline": [
+        { "title": "Observed loop", "message": "Show only captured UI, rules, and cost evidence." },
+        { "title": "Competing explanations", "message": "Separate economy and operations inferences from facts." },
+        { "title": "Validation plan", "message": "Explain what evidence would confirm or reverse each claim." }
+      ]
+    }
+  }
+}

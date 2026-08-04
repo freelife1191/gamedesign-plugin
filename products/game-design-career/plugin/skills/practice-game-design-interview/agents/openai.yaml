@@ -1,0 +1,4 @@
+interface:
+  display_name: "Practice Game Design Interview"
+  short_description: "Ground interviews in career evidence IDs"
+  default_prompt: "Use $practice-game-design-interview to run an evidence-grounded game design interview."

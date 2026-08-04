@@ -1,0 +1,16 @@
+artifact_id: learning-roadmap
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: learner and mentor
+    purpose: Turn role requirements into observable learning work and feedback cycles.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

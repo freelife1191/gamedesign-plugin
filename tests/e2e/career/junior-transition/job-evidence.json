@@ -1,0 +1,25 @@
+[
+  {
+    "sourceId": "posting-transition-1",
+    "company": "Example Game Studio",
+    "project": "Unannounced live game",
+    "region": "KR",
+    "employmentType": "full-time",
+    "postedDate": "2026-08-01",
+    "sourceUrl": "https://example.invalid/careers/systems-designer",
+    "retrievalDate": "2026-08-04",
+    "reviewAfter": "2026-09-04",
+    "responsibilities": ["Specify system rules", "Collaborate on implementation handoff", "Support live operations"],
+    "requiredSkills": ["Systems design", "Clear documentation"],
+    "preferredSkills": ["Live operations"],
+    "repeatedSignals": [],
+    "applicantEvidence": ["portfolio-tutorial-spec", "playtest-session-log"],
+    "gaps": ["live operations", "cross-team handoff evidence"],
+    "nonGeneralizable": ["Requirements apply only to this posting."],
+    "sampleSize": 1,
+    "sampleGeography": ["KR"],
+    "sourceType": "official-company-career-page",
+    "blindSpots": ["No team-size or hiring-volume information."],
+    "inferenceLimits": ["A single posting is not a market signal."]
+  }
+]

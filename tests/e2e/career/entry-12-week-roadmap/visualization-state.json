@@ -1,0 +1,26 @@
+{
+  "artifactRoot": ".",
+  "requested": true,
+  "planned": true,
+  "generated": true,
+  "linted": true,
+  "rendered": false,
+  "verified": false,
+  "svgFile": "competency-map.svg",
+  "altText": "Entry competency map linking evidence gaps to practice and proof artifacts",
+  "pngAvailability": "unavailable",
+  "availabilityEvidence": {
+    "command": "node run-skillstead.mjs probe",
+    "result": "failed",
+    "reason": "The E2E fixture intentionally exercises the editable-SVG fallback."
+  },
+  "lintEvidence": {
+    "command": "node run-skillstead.mjs lint competency-map.svg",
+    "file": "competency-map.svg",
+    "result": "passed",
+    "sha256": "ebb34b3a0bdba0d27111692242508bb0b91003debb4ef5055744dddd564ac11e",
+    "errors": [],
+    "warnings": [],
+    "warningsDisposition": "No warnings."
+  }
+}
