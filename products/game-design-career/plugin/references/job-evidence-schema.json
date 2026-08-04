@@ -4,6 +4,7 @@
   "title": "Game Design Job Evidence Record",
   "type": "object",
   "required": [
+    "sourceId",
     "company",
     "project",
     "region",
@@ -25,6 +26,12 @@
     "inferenceLimits"
   ],
   "properties": {
+    "sourceId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "description": "Stable posting identifier that must be unique within the evidence collection."
+    },
     "company": { "type": "string", "minLength": 1 },
     "project": { "type": ["string", "null"] },
     "region": { "type": "string", "minLength": 1 },

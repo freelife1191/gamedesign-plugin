@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -13,6 +13,18 @@ async function read(relativePath) {
 
 async function readJson(relativePath) {
   return JSON.parse(await read(relativePath));
+}
+
+async function validateCollection(records) {
+  const validatorUrl = pathToFileURL(
+    path.join(pluginRoot, "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs"),
+  );
+  const { validateJobEvidenceCollection } = await import(validatorUrl.href);
+  return validateJobEvidenceCollection(records);
+}
+
+function posting(sourceId, repeatedSignals = []) {
+  return { sourceId, repeatedSignals };
 }
 
 test("Role-map method requires the complete evidence-to-practice contract", async () => {
@@ -53,6 +65,7 @@ test("Role mapping never ranks suitability by protected or background proxies", 
 test("Job evidence schema preserves every required field independently", async () => {
   const schema = await readJson("references/job-evidence-schema.json");
   const required = [
+    "sourceId",
     "company",
     "project",
     "region",
@@ -80,6 +93,102 @@ test("Job evidence schema preserves every required field independently", async (
   assert.equal(schema.additionalProperties, false);
   assert.notEqual(schema.properties.applicantEvidence, schema.properties.gaps);
   assert.notEqual(schema.properties.gaps, schema.properties.nonGeneralizable);
+});
+
+test("Collection validator accepts linked repeated-signal evidence", async () => {
+  const result = await validateCollection([
+    posting("posting-a", [
+      {
+        signal: "systems-design",
+        count: 2,
+        denominator: 3,
+        sourceIds: ["posting-a", "posting-b"],
+      },
+    ]),
+    posting("posting-b"),
+    posting("posting-c"),
+  ]);
+
+  assert.deepEqual(result, { valid: true, errors: [] });
+});
+
+test("Collection validator rejects orphan repeated-signal source IDs", async () => {
+  const result = await validateCollection([
+    posting("posting-a", [
+      {
+        signal: "systems-design",
+        count: 2,
+        denominator: 2,
+        sourceIds: ["posting-a", "missing-posting"],
+      },
+    ]),
+    posting("posting-b"),
+  ]);
+
+  assert.ok(result.errors.some(({ code }) => code === "orphan-source-id"));
+});
+
+test("Collection validator rejects missing and duplicate posting source IDs", async () => {
+  const result = await validateCollection([
+    posting("posting-a"),
+    posting("posting-a"),
+    posting(""),
+  ]);
+  const codes = result.errors.map(({ code }) => code);
+
+  assert.ok(codes.includes("duplicate-source-id"));
+  assert.ok(codes.includes("missing-source-id"));
+});
+
+test("Collection validator rejects duplicate IDs inside one repeated signal", async () => {
+  const result = await validateCollection([
+    posting("posting-a", [
+      {
+        signal: "systems-design",
+        count: 2,
+        denominator: 2,
+        sourceIds: ["posting-a", "posting-a"],
+      },
+    ]),
+    posting("posting-b"),
+  ]);
+
+  assert.ok(result.errors.some(({ code }) => code === "duplicate-signal-source-id"));
+});
+
+test("Collection validator rejects count and denominator mismatches", async () => {
+  const result = await validateCollection([
+    posting("posting-a", [
+      {
+        signal: "systems-design",
+        count: 3,
+        denominator: 4,
+        sourceIds: ["posting-a", "posting-b"],
+      },
+    ]),
+    posting("posting-b"),
+    posting("posting-c"),
+  ]);
+  const codes = result.errors.map(({ code }) => code);
+
+  assert.ok(codes.includes("signal-count-mismatch"));
+  assert.ok(codes.includes("signal-denominator-mismatch"));
+});
+
+test("Collection validator rejects counts larger than the deduplicated sample", async () => {
+  const result = await validateCollection([
+    posting("posting-a", [
+      {
+        signal: "systems-design",
+        count: 3,
+        denominator: 2,
+        sourceIds: ["posting-a", "posting-b", "posting-c"],
+      },
+    ]),
+    posting("posting-b"),
+  ]);
+
+  assert.ok(result.errors.some(({ code }) => code === "signal-count-exceeds-denominator"));
 });
 
 test("Job evidence records sample scope, provenance, and blind spots", async () => {
@@ -127,6 +236,8 @@ test("Research skill keeps candidate evidence and gaps honest", async () => {
   assert.match(skill, /nonGeneralizable/iu);
   assert.match(skill, /Do not fabricate/iu);
   assert.match(skill, /missing evidence/iu);
+  assert.match(skill, /validate-job-evidence\.mjs/iu);
+  assert.match(skill, /cross-reference.*sourceIds.*sourceId/isu);
 });
 
 test("Both skills use portable trigger-only metadata and progressive references", async () => {
