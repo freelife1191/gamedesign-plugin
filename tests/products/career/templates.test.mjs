@@ -74,6 +74,96 @@ const recordFields = {
   "transition-readiness": ["target-requirement", "current-evidence", "posting-evidence-id", "retrieval-date", "region", "gap", "alternative", "verification-task"],
 };
 
+const semanticContracts = {
+  "career-stage-goal": [
+    ["Stage and Target Role", "stage-and-target-role", "stage: Record entry, new-hire, junior-growth, or transition. target-role: Name a role family and level only when evidence supports it."],
+    ["Goal Contract", "goal-contract", "Define a bounded outcome, success evidence, time constraint, owner, and review date. Keep multiple paths when one correct career is not established."],
+  ],
+  "game-design-role-map": [
+    ["Role Families and Tradeoffs", "role-families-and-tradeoffs", "For each role-family, record target-level, current-evidence, gap, tradeoff, learning task, feedback cadence, and proof-artifact."],
+    ["Provisional Paths", "provisional-paths", "Keep at least two plausible paths when the target is unclear. Never rank by age, education, major, or employment gap."],
+  ],
+  "competency-matrix": [
+    ["Requirement Matrix", "requirement-matrix", "Each requirement-id links to a stable evidence-id, observation state, scope, and reviewer. Use not-observed when evidence is unavailable."],
+    ["Repair and Re-evaluation", "repair-and-re-evaluation", "Do not convert missing evidence into an ability score of zero. Record minimum-repair, owner, proof artifact, and re-evaluation date."],
+  ],
+  "learning-roadmap": [
+    ["Roadmap Commitments", "roadmap-commitments", "For every requirement-id, record a learning-task, owner, cadence, proof-artifact, reviewer, and re-evaluation decision."],
+    ["Sequence and Dependencies", "sequence-and-dependencies", "Mark durations as provisional until capacity evidence exists. Keep prerequisites, feedback points, and scope choices explicit."],
+  ],
+  "job-posting-evidence": [
+    ["Posting Records", "posting-records", "Each record requires source-id, company, project if stated, region, employment type, posted-date, source-url, retrieval-date, source-type, responsibilities, required skills, and preferred skills."],
+    ["Freshness and Sample Limits", "freshness-and-sample-limits", "Record freshness classification, sample size, sample-geography, blind spots, and non-generalizable requirements. A repeated signal requires multiple source IDs."],
+  ],
+  "portfolio-backlog": [
+    ["Backlog Records", "backlog-records", "Each item links claim-id, evidence-id, target competency, provenance, personal or team attribution, rights, privacy, strength, status, and inspectability."],
+    ["Minimum Repairs", "minimum-repairs", "Missing support receives a minimum-repair, recovery owner, action, proof artifact, and review gate before publication."],
+  ],
+  "portfolio-project-brief": [
+    ["Decision Chain", "decision-chain", "Use the exact sequence target-competency → problem-user → evidence → hypothesis-intent → rules/UI/data/content → constraints-alternatives → implementation-test → result-decision → retrospective."],
+    ["Publication Boundary", "publication-boundary", "Record personal/team attribution, third-party source, use purpose, rights, privacy, implementation status, and evidence limitations."],
+  ],
+  "reverse-design-document": [
+    ["Claim Records", "claim-records", "Each claim-id independently records observation, source address, scope, inference, confidence, counterexample, alternative, and validation-method."],
+    ["Fact and Inference Boundary", "fact-and-inference-boundary", "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact."],
+  ],
+  "creative-design-portfolio": [
+    ["Portfolio Story", "portfolio-story", "For every material claim-id, connect target competency, problem, decision rationale, alternative, implementation boundary, result, and reflection to an evidence-id."],
+    ["Third-party and Publication Rights", "third-party-and-publication-rights", "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability before publication."],
+  ],
+  "game-analysis-report": [
+    ["Analysis Claims", "analysis-claims", "For each stable claim, record observation, source-address, source type, scope, inference, confidence, counterexample, alternative, and validation-method."],
+    ["Decision Use", "decision-use", "State what a designer may learn, what remains unknown, and which evidence would change the analysis. Avoid reconstructing undocumented internal intent as fact."],
+  ],
+  "five-axis-review": [
+    ["Review Records", "review-records", "Every record carries finding ID, axis ID, stable section-id, stable evidence-id, observation state, score or not-scored, impact, and minimum-repair."],
+    ["Observation and Penalty Rules", "observation-and-penalty-rules", "Keep not-observed, no-defect, and defect-observed distinct. Apply each penalty separately for contradiction, unsupported certainty, duplication, scope, or source."],
+  ],
+  "interview-question-answer-log": [
+    ["Question Set", "question-set", "Trace every base-question, follow-up, objection, and situational question to a posting-evidence-id, portfolio-evidence-id, or explicit role-general source."],
+    ["Honest Answer Boundary", "honest-answer-boundary", "Connect claim, evidence, choice, alternative, result, and reflection. do-not-fabricate team size, revenue, retention, ownership, or implementation results; use an honest-answer and verification task when support is missing."],
+  ],
+  "introduction-motivation": [
+    ["Claim Map", "claim-map", "Every claim-id links a target-role requirement, evidence-id, personal/team scope, and source limitation. Separate motivation from verified experience."],
+    ["Honest and Private Boundary", "honest-and-private-boundary", "Use an honest-boundary for missing evidence. Remove unnecessary personal data and record privacy and publication approval before sharing."],
+  ],
+  "junior-growth-review": [
+    ["Quarterly Evidence", "quarterly-evidence", "Each requirement-id links project-event-evidence, personal/team attribution, decision, result status, limitation, and proof-artifact."],
+    ["Growth Commitments", "growth-commitments", "For every goal record owner, cadence, reviewer, input artifact, next-review-date, target depth or breadth, and re-evaluation rule."],
+  ],
+  "transition-readiness": [
+    ["Readiness Matrix", "readiness-matrix", "Link each target-requirement to current-evidence and posting-evidence-id. Record source URL, retrieval-date, region, source type, gap, scope, and freshness."],
+    ["Decision Options", "decision-options", "Keep alternative paths, tradeoffs, minimum evidence, owner, verification-task, review date, and no-hiring-promise boundary explicit."],
+  ],
+};
+
+const commonSemanticClauses = [
+  "An assumption is not an approved fact.",
+  "Automation cannot grant approval or rights.",
+  "current claims require a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
+  "Third-party material also records source, attribution, use purpose, rights or quotation notes, and privacy disposition.",
+  "Do not split Markdown mechanically by headings.",
+];
+
+function semanticSection(content, heading, id) {
+  const marker = `## ${heading} {#${id}}\n\n`;
+  const start = content.indexOf(marker);
+  assert.notEqual(start, -1, `missing semantic section ${id}`);
+  const bodyStart = start + marker.length;
+  const next = content.indexOf("\n## ", bodyStart);
+  return content.slice(bodyStart, next === -1 ? content.length : next).trim();
+}
+
+function assertSemanticContract(templateId, content) {
+  assert.deepEqual(Object.keys(semanticContracts).sort(), [...templateIds].sort());
+  for (const [heading, id, requiredMeaning] of semanticContracts[templateId]) {
+    assert.equal(semanticSection(content, heading, id), requiredMeaning, `${templateId}: semantic contract ${id}`);
+  }
+  for (const clause of commonSemanticClauses) {
+    assert.ok(content.includes(clause), `${templateId}: missing semantic clause ${clause}`);
+  }
+}
+
 afterEach(async () => {
   await Promise.all(temporaryDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
@@ -125,6 +215,7 @@ function assertUsableTemplate(templateId, content, evidence, manifest) {
     .filter((line) => /^\| `[^`]+` \|/u.test(line))
     .map((line) => line.split("|")[1].trim().replaceAll("`", ""));
   assert.deepEqual(actualRecordFields, recordFields[templateId], `${templateId}: exact working-record fields`);
+  assertSemanticContract(templateId, content);
   assert.equal(evidence.version, 1);
   assert.ok(Array.isArray(evidence.claims) && evidence.claims.length > 0);
   for (const claim of evidence.claims) {
@@ -188,6 +279,53 @@ test("type-specific completion gates reject diluted or generic seeds", async () 
       `${templateId}: type-specific mutation survived`,
     );
   }
+});
+
+test("semantic mutation guard rejects reversed safety and evidence meanings", async () => {
+  async function assertMutationRejected(templateId, mutate) {
+    const root = path.join(templateRoot, templateId);
+    const content = await readFile(path.join(root, "content.md"), "utf8");
+    const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
+    const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
+    const mutated = mutate(content);
+    assert.notEqual(mutated, content, `${templateId}: mutation must alter the fixture`);
+    assert.throws(() => assertUsableTemplate(templateId, mutated, evidence, manifest));
+  }
+
+  await assertMutationRejected("reverse-design-document", (content) => content.replace(
+    "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact.",
+    "When no observation exists, inference may be estimated and confidence is high. Internal intent or implementation may be presented as fact.",
+  ));
+  await assertMutationRejected("interview-question-answer-log", (content) => content.replace(
+    "do-not-fabricate team size, revenue, retention, ownership, or implementation results; use an honest-answer and verification task when support is missing.",
+    "do-not-fabricate is optional; use an estimated honest-answer instead of a verification task when support is missing.",
+  ));
+  await assertMutationRejected("creative-design-portfolio", (content) => content.replace(
+    "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability before publication.",
+    "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability as assumed approved before publication.",
+  ));
+  await assertMutationRejected("job-posting-evidence", (content) => content.replace(
+    "current claims require a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
+    "current claims may omit a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
+  ));
+});
+
+test("generic token-only prose cannot satisfy a type-specific semantic contract", async () => {
+  const templateId = "reverse-design-document";
+  const root = path.join(templateRoot, templateId);
+  const content = await readFile(path.join(root, "content.md"), "utf8");
+  const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
+  const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
+  const generic = content
+    .replace(
+      "Each claim-id independently records observation, source address, scope, inference, confidence, counterexample, alternative, and validation-method.",
+      "claim-id observation source address scope inference confidence counterexample alternative validation-method.",
+    )
+    .replace(
+      "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact.",
+      "observation inference confidence fact.",
+    );
+  assert.throws(() => assertUsableTemplate(templateId, generic, evidence, manifest));
 });
 
 test("five-axis rubric has exact axes, evidence-only levels, separate penalties, and minimum repairs", async () => {
