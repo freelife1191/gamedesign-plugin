@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+import { buildProduct } from '../../tooling/lib/build-product.mjs';
 
 const root = new URL('../../', import.meta.url);
 
@@ -14,6 +20,57 @@ test('hooks component declares only SessionStart and Stop command hooks', async 
     assert.equal(config.hooks[event][0].hooks.length, 1);
     assert.equal(config.hooks[event][0].hooks[0].type, 'command');
     assert.match(config.hooks[event][0].hooks[0].command, /^node /);
+    assert.match(config.hooks[event][0].hooks[0].command, /\$\{PLUGIN_ROOT\}\/scripts\//);
+    assert.doesNotMatch(config.hooks[event][0].hooks[0].command, /\/shared\/scripts\//);
+  }
+});
+
+test('production build emits runnable SessionStart and Stop hook commands', async (t) => {
+  const repoRoot = await mkdtemp(join(tmpdir(), 'game-design-hook-build-repo-'));
+  const stagingRoot = await mkdtemp(join(tmpdir(), 'game-design-hook-build-output-'));
+  t.after(() => Promise.all([
+    rm(repoRoot, { recursive: true, force: true }),
+    rm(stagingRoot, { recursive: true, force: true }),
+  ]));
+  await cp(new URL('shared/', root), join(repoRoot, 'shared'), { recursive: true });
+  await mkdir(join(repoRoot, 'products/game-design-studio/plugin/.codex-plugin'), { recursive: true });
+  await writeFile(join(repoRoot, 'products/game-design-studio/product.json'), `${JSON.stringify({
+    schemaVersion: 1,
+    name: 'game-design-studio',
+    displayName: 'Game Design Studio',
+    description: 'Hook build regression fixture',
+    sharedModules: ['knowledge', 'templates', 'responsible-design', 'export', 'vendor'],
+    sharedRuntime: true,
+    sourceRoots: ['plugin'],
+    sourceDocuments: [],
+  }, null, 2)}\n`);
+  await writeFile(join(repoRoot, 'products/game-design-studio/plugin/.codex-plugin/plugin.json'), JSON.stringify({
+    name: 'game-design-studio',
+    version: '0.1.0',
+    description: 'Hook build regression fixture',
+  }));
+
+  const built = await buildProduct({ repoRoot, stagingRoot, productName: 'game-design-studio' });
+  const hooks = JSON.parse(await readFile(join(built.outputDir, 'hooks/hooks.json'), 'utf8'));
+  for (const event of ['SessionStart', 'Stop']) {
+    const configured = hooks.hooks[event][0].hooks[0].command;
+    const command = configured.replaceAll('${PLUGIN_ROOT}', built.outputDir);
+    const result = spawnSync(command, {
+      cwd: built.outputDir,
+      env: { PATH: process.env.PATH ?? '' },
+      input: event === 'Stop' ? JSON.stringify({
+        cwd: built.outputDir,
+        turn_id: 'build-smoke',
+        stop_hook_active: false,
+        last_assistant_message: 'No artifact sentinel.',
+      }) : '{}',
+      encoding: 'utf8',
+      shell: true,
+    });
+    assert.equal(result.status, 0, `${event}: ${result.stderr}`);
+    assert.equal(result.stderr, '');
+    assert.notEqual(result.stdout, '', `${event}: command produced no JSON: ${command}`);
+    assert.doesNotThrow(() => JSON.parse(result.stdout), `${event}: ${result.stdout}`);
   }
 });
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, readdir } from 'node:fs/promises';
+import { access, readdir, realpath } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
@@ -128,6 +128,15 @@ export async function runCapabilityProbe() {
   };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+async function isDirectInvocation() {
+  if (!process.argv[1]) return false;
+  try {
+    return await realpath(process.argv[1]) === await realpath(fileURLToPath(import.meta.url));
+  } catch {
+    return resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  }
+}
+
+if (await isDirectInvocation()) {
   console.log(JSON.stringify(await runCapabilityProbe()));
 }

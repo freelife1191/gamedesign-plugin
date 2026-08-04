@@ -20,3 +20,5 @@ Link each material claim to `evidence.yml` and state important limitations.
 ## Decisions and Risks {#decisions-and-risks}
 
 Link durable decisions from `decisions/` and record unresolved risks.
+
+Runtime hooks are optional review helpers. This artifact, its evidence, and human approvals remain the correctness record when hooks are unavailable or untrusted.
