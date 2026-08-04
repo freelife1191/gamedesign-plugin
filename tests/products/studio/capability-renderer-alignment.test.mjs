@@ -1,0 +1,53 @@
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
+import { resolveBrowser } from "../../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+
+const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const temporaryDirectories = [];
+
+test.afterEach(async () => {
+  await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
+});
+
+test("clean-built SessionStart probe and Skillstead renderer report the same real browser identity", async (t) => {
+  if (!resolveBrowser()) return t.skip("no Chromium-based browser available for actual render alignment");
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-browser-alignment-"));
+  temporaryDirectories.push(stagingRoot);
+  const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const pluginRoot = await realpath(build.outputDir);
+  const probe = spawnSync(process.execPath, [path.join(pluginRoot, "scripts/capability-probe.mjs")], {
+    cwd: pluginRoot,
+    env: { ...process.env },
+    input: "{}",
+    encoding: "utf8",
+  });
+  assert.equal(probe.status, 0, probe.stderr);
+  const output = JSON.parse(probe.stdout);
+  assert.equal(output.capabilities.chromium.available, true);
+  assert.deepEqual(Object.keys(output.capabilities.chromium), ["available", "command", "version", "via"]);
+
+  const scripts = path.join(pluginRoot, "skills/svg-infographic/scripts");
+  const png = path.join(pluginRoot, "alignment-render.png");
+  const render = spawnSync(process.execPath, [path.join(scripts, "render.mjs"), path.join(scripts, "fixtures/valid.svg"), png], {
+    cwd: pluginRoot,
+    env: { ...process.env },
+    encoding: "utf8",
+    timeout: 30000,
+  });
+  assert.equal(render.status, 0, `${render.stdout}\n${render.stderr}`);
+  const identity = render.stdout.match(/^renderer: (.+) \((.+)\) \[via (.+)\]$/mu);
+  assert.ok(identity, render.stdout);
+  assert.equal(output.capabilities.chromium.command, await realpath(identity[1]));
+  assert.equal(output.capabilities.chromium.version, identity[2]);
+  assert.equal(output.capabilities.chromium.via, identity[3]);
+  const bytes = await readFile(png);
+  assert.equal(bytes.readUInt32BE(16), 1200);
+  assert.equal(bytes.readUInt32BE(20), 600);
+});
