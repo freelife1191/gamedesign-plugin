@@ -13,6 +13,19 @@ const contracts = {
   "define-game-vision": {
     method: "vision.md",
     reviewers: ["lead-game-designer", "content-narrative-designer"],
+    methodFields: [
+      "target player",
+      "experience intent",
+      "desired emotion",
+      "core fun",
+      "design pillars",
+      "core loop",
+      "motivation loop",
+      "meaningful choice",
+      "success metrics",
+      "assumptions",
+      "non-goals",
+    ],
     fields: [
       "target player",
       "experience intent",
@@ -30,6 +43,21 @@ const contracts = {
   "design-game-systems": {
     method: "system-specification.md",
     reviewers: ["system-economy-designer", "ux-accessibility-reviewer"],
+    methodFields: [
+      "input",
+      "preconditions",
+      "rules",
+      "state transitions",
+      "output and feedback",
+      "exceptions",
+      "priority and concurrency",
+      "failure and recovery",
+      "abuse cases",
+      "ui states",
+      "data schema",
+      "pk / fk",
+      "table/runtime mapping",
+    ],
     fields: [
       "input",
       "preconditions",
@@ -50,6 +78,16 @@ const contracts = {
   "design-game-content": {
     method: "content-specification.md",
     reviewers: ["content-narrative-designer", "lead-game-designer", "production-feasibility-critic"],
+    methodFields: [
+      "purpose",
+      "system inputs",
+      "production resources",
+      "player strategy",
+      "telegraph",
+      "outcomes",
+      "rewards",
+      "repeatability",
+    ],
     fields: [
       "purpose",
       "system inputs",
@@ -84,6 +122,25 @@ function assertContains(text, values, label) {
   for (const value of values) {
     assert.match(text, new RegExp(`\\b${value.replaceAll("/", "\\/")}\\b`, "iu"), `${label}: ${value}`);
   }
+}
+
+function parseFirstColumn(markdownTable, label) {
+  const rows = markdownTable
+    .split("\n")
+    .filter((line) => line.startsWith("|"))
+    .map((line) => line.split("|").slice(1, -1).map((cell) => cell.trim()));
+
+  assert.ok(rows.length >= 3, `${label}: table rows`);
+  assert.equal(rows[0][0], "Field", `${label}: first-column header`);
+  assert.match(rows[1][0], /^:?-{3,}:?$/u, `${label}: separator`);
+  assert.ok(rows.slice(2).every((row) => row.length === 2 && row[0] && row[1]), `${label}: two populated columns`);
+  return rows.slice(2).map(([field]) => field.toLocaleLowerCase("en-US"));
+}
+
+function extractLifecycleValues(gatePolicy, label) {
+  const sentence = gatePolicy.match(/(?:Only|Advance lifecycle only through)[^.]+\./iu)?.[0];
+  assert.ok(sentence, `${label}: lifecycle sentence`);
+  return [...sentence.matchAll(/`([^`]+)`/gu)].map(([, value]) => value);
 }
 
 test("core design skills use minimal trigger-only metadata and generated interfaces", async () => {
@@ -140,7 +197,7 @@ test("each skill independently owns its operating, output, review, and gate cont
 test("vision method independently defines schema, claim policy, and adversarial repair", async () => {
   const method = await readMethod("vision.md");
 
-  assertContains(section(method, "Output schema"), contracts["define-game-vision"].fields, "vision schema");
+  assert.deepEqual(parseFirstColumn(section(method, "Output schema"), "vision schema"), contracts["define-game-vision"].methodFields);
   const claims = section(method, "Claim policy");
   assertContains(claims, ["source", "baseline", "calibration owner", "validation plan"], "vision claims");
   assert.match(claims, /unsupported[^\n]*(?:age|demographic|success threshold)[^\n]*(?:assumption|provisional)/iu);
@@ -152,7 +209,7 @@ test("vision method independently defines schema, claim policy, and adversarial 
 test("system method independently defines executable schema, precedence, and provisional constants", async () => {
   const method = await readMethod("system-specification.md");
 
-  assertContains(section(method, "Output schema"), contracts["design-game-systems"].fields, "systems schema");
+  assert.deepEqual(parseFirstColumn(section(method, "Output schema"), "systems schema"), contracts["design-game-systems"].methodFields);
   const precedence = section(method, "Rule precedence");
   assertContains(precedence, ["tie-break", "idempotency", "locks", "conflict policy", "late-event handling"], "systems precedence");
   assert.match(precedence, /rules without precedence[^\n]*(?:undefined|blocked)/iu);
@@ -164,7 +221,7 @@ test("system method independently defines executable schema, precedence, and pro
 test("content method independently defines schema, dependency map, and observable estimates", async () => {
   const method = await readMethod("content-specification.md");
 
-  assertContains(section(method, "Output schema"), contracts["design-game-content"].fields, "content schema");
+  assert.deepEqual(parseFirstColumn(section(method, "Output schema"), "content schema"), contracts["design-game-content"].methodFields);
   const dependencies = section(method, "Canonical dependency map");
   assertContains(dependencies, ["systemId", "ruleId", "stateId", "eventId", "table.field", "pipelineStageId"], "content dependencies");
   assert.match(dependencies, /(?:disconnected|detached)[^\n]*canonical system data[^\n]*(?:blocked|block)/iu);
@@ -198,7 +255,12 @@ test("every skill and method reads the canonical registry and covers every gate 
       assert.match(gatePolicy, /applicability_questions/iu, `${label}: applicability questions`);
       assert.match(gatePolicy, /evidence_fields/iu, `${label}: evidence fields`);
       assertContains(gatePolicy, gateIds, `${label}: gates`);
-      assertContains(gatePolicy, allowedStates, `${label}: allowed states`);
+      assert.deepEqual(extractLifecycleValues(gatePolicy, label), registry.allowed_states, `${label}: exact lifecycle values`);
+      const knownCodeTokens = new Set([...gateIds, "applicability_questions", "evidence_fields", ...registry.allowed_states]);
+      const unknownCodeTokens = [...gatePolicy.matchAll(/`([^`]+)`/gu)]
+        .map(([, value]) => value)
+        .filter((value) => !knownCodeTokens.has(value));
+      assert.deepEqual(unknownCodeTokens, [], `${label}: unsupported contract token`);
       assert.match(gatePolicy, /applicable[^\n]*pending/iu, `${label}: applicable initializes pending`);
       assert.doesNotMatch(gatePolicy, /(?:state|status)[^\n]*`applicable`|`applicable`[^\n]*(?:state|status)/iu, `${label}: applicable is not a state`);
     }
