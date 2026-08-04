@@ -276,7 +276,7 @@ artifact-name/
 
 ### 문서 내보내기
 
-> 이 Canonical Artifact를 MD, PDF, DOCX와 의사결정자용 PPTX로 내보내 줘. PPTX는 제목을 기계적으로 나누지 말고 청중·목적·slide message가 있는 독립적인 스토리로 구성해. 형식별 capability, 생성, 파일, digest와 QA가 없으면 `passed`로 표시하지 마.
+> 이 Canonical Artifact의 MD, PDF, DOCX와 의사결정자용 PPTX 내보내기 작업을 준비해 줘. PPTX는 제목을 기계적으로 나누지 말고 청중·목적·slide message가 있는 독립적인 스토리로 구성해. 이 단계에서는 형식별 `passed`나 `failed`를 주장하지 말고 renderer-neutral 준비 manifest만 만들어 줘.
 
 ## Skillstead 도식화
 
@@ -288,7 +288,7 @@ artifact-name/
 
 ## MD, PDF, DOCX, PPTX 내보내기
 
-[export-game-design-documents](skills/export-game-design-documents/SKILL.md)는 Canonical Artifact preflight 뒤 format별 작업을 준비합니다. capability probe, generation, renderer, output file, SHA-256 digest와 형식별 QA를 독립적으로 기록하며 증거가 하나라도 없으면 fail-closed 상태를 유지합니다.
+[export-game-design-documents](skills/export-game-design-documents/SKILL.md)는 Canonical Artifact preflight 뒤 format별 renderer-neutral 작업만 준비합니다. 지원되는 요청은 `pending`, capability 부재는 `unavailable`, preflight 실패는 `blocked`로 남기며 generation·renderer·QA는 `not-run`, derivative path·digest·count는 null, format evidence는 빈 배열로 유지합니다. 이 플러그인의 준비 validator는 format-level `passed`와 `failed`를 fail-closed로 거부합니다.
 
 | 형식 | `passed`에 필요한 검증 |
 | --- | --- |
@@ -297,7 +297,7 @@ artifact-name/
 | DOCX | OOXML package/relationships, semantics 비교, 모든 page render와 visual QA |
 | PPTX | audience·purpose·독립적인 story outline, unique slide ID/message/purpose, overflow 검사, 모든 slide render QA |
 
-MD는 패키지의 canonical text export입니다. PDF, DOCX와 PPTX는 각각 감지된 PDF, documents, presentations capability에만 위임합니다. 준비되었거나 renderer가 파일을 반환했다는 사실만으로 성공 처리하지 않습니다. unsafe traversal, symlink, 기존 출력 overwrite는 원본을 보존하고 차단합니다.
+표의 검증은 별도의 신뢰된 renderer-and-QA 단계가 terminal 상태를 판단할 때 필요한 downstream 계약입니다. Studio 준비 manifest는 그 실행 결과를 소비하거나 검증하지 않습니다. MD는 canonical text capability로, PDF, DOCX와 PPTX는 각각 감지된 PDF, documents, presentations capability로 계획만 세웁니다. unsafe traversal, symlink, 기존 출력 overwrite는 원본을 보존하고 차단합니다.
 
 ## 책임 있는 설계 게이트
 

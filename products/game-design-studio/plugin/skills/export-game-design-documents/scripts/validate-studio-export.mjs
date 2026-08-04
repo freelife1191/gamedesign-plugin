@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 
@@ -8,14 +7,7 @@ const FORMATS = Object.freeze(["md", "pdf", "docx", "pptx"]);
 const CAPABILITIES = Object.freeze(["node", "chromium", "soffice", "documents", "pdf", "presentations"]);
 const FORMAT_CAPABILITIES = Object.freeze({ md: "canonical-markdown", pdf: "pdf", docx: "documents", pptx: "presentations" });
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
-const TRANSITIONS = Object.freeze({
-  "not-requested": [],
-  blocked: [],
-  unavailable: [],
-  pending: ["passed", "failed", "unavailable"],
-  passed: [],
-  failed: [],
-});
+const PREPARATION_STATUSES = new Set(["not-requested", "blocked", "unavailable", "pending"]);
 
 function add(errors, message) {
   errors.push(message);
@@ -66,18 +58,8 @@ function validateStatusHistory(job, errors, location) {
     add(errors, `${location}.statusHistory must be nonempty`);
     return;
   }
-  if (job.statusHistory.at(-1) !== job.status) add(errors, `${location}.status must equal the final history state`);
-  for (let index = 0; index < job.statusHistory.length; index += 1) {
-    const status = job.statusHistory[index];
-    if (!Object.hasOwn(TRANSITIONS, status)) {
-      add(errors, `${location}.statusHistory contains an invalid state`);
-      continue;
-    }
-    if (index > 0 && !TRANSITIONS[job.statusHistory[index - 1]].includes(status)) {
-      add(errors, `${location}.statusHistory contains an invalid or reopened terminal transition`);
-    }
-  }
-  const expected = ["passed", "failed", "unavailable"].includes(job.status) ? ["pending", job.status] : [job.status];
+  if (!PREPARATION_STATUSES.has(job?.status)) add(errors, `${location}.status must remain a non-terminal preparation state`);
+  const expected = job?.status === "unavailable" ? ["pending", "unavailable"] : [job?.status];
   if (job.statusHistory.join("\0") !== expected.join("\0")) add(errors, `${location}.statusHistory must be exactly ${expected.join(" -> ")}`);
 }
 
@@ -140,61 +122,13 @@ function insideRoot(root, target) {
   return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
-async function validateOutputFile(job, format, canonicalRoot, errors, location) {
-  if (typeof job.outputPath !== "string" || job.outputPath !== job.plannedOutputPath) {
-    add(errors, `${location}.outputPath must equal the planned derivative path`);
-    return;
-  }
-  const resolved = path.resolve(job.outputPath);
-  if (!insideRoot(canonicalRoot, resolved)) add(errors, `${location}.outputPath must stay inside outputRoot`);
-  if (path.extname(resolved).toLocaleLowerCase("en-US") !== `.${format}`) add(errors, `${location}.outputPath extension must be .${format}`);
-  try {
-    const stat = await lstat(resolved);
-    if (stat.isSymbolicLink() || !stat.isFile()) throw new Error("not a regular file");
-    const canonical = await realpath(resolved);
-    if (!insideRoot(canonicalRoot, canonical)) throw new Error("outside output root");
-    const bytes = await readFile(canonical);
-    const actualDigest = createHash("sha256").update(bytes).digest("hex");
-    if (job.digest !== actualDigest) add(errors, `${location}.digest does not match the actual derivative`);
-  } catch (cause) {
-    add(errors, `${location}.outputPath is unavailable or unsafe: ${cause.message}`);
-  }
-}
-
-function validateEvidence(job, format, errors, location) {
+function validateEvidence(job, errors, location) {
   if (!Array.isArray(job?.evidence)) {
     add(errors, `${location}.evidence must be an array`);
     return;
   }
-  const stages = new Set();
-  for (const [index, entry] of job.evidence.entries()) {
-    if (!allowedKeys(
-      entry,
-      ["stage", "status", "derivativePath", "digest", "command", "exitCode", "count", "details"],
-      ["stage", "status", "derivativePath", "digest", "command", "exitCode"],
-      errors,
-      `${location}.evidence[${index}]`,
-    )) continue;
-    if (!["generation", "renderer", "qa"].includes(entry?.stage)) add(errors, `${location}.evidence[${index}].stage is invalid`);
-    if (!["passed", "failed"].includes(entry?.status)) add(errors, `${location}.evidence[${index}].status is invalid`);
-    if (typeof entry?.command !== "string" || entry.command.trim() === "") add(errors, `${location}.evidence[${index}].command is required`);
-    if (!Number.isInteger(entry?.exitCode)) add(errors, `${location}.evidence[${index}].exitCode must be an integer`);
-    if (entry?.status === "passed" && entry.exitCode !== 0) add(errors, `${location}.evidence[${index}] passed evidence requires exit code 0`);
-    if (entry?.status === "failed" && entry.exitCode === 0) add(errors, `${location}.evidence[${index}] failed evidence requires a nonzero exit code`);
-    if (entry?.derivativePath !== job.outputPath) add(errors, `${location}.evidence[${index}] must reference the same derivative path`);
-    if (entry?.digest !== job.digest) add(errors, `${location}.evidence[${index}] must reference the same derivative digest`);
-    if (Object.hasOwn(entry ?? {}, "count") && entry.count !== job.pageOrSlideCount) add(errors, `${location}.evidence[${index}].count must equal pageOrSlideCount`);
-    const expectedStatus = { generation: job.generationStatus, renderer: job.rendererStatus, qa: job.qaStatus }[entry?.stage];
-    if (entry?.status !== expectedStatus) add(errors, `${location}.evidence[${index}].status must match its stage status`);
-    if (stages.has(entry?.stage)) add(errors, `${location} may contain only one evidence entry per stage`);
-    stages.add(entry?.stage);
-  }
-  if (job.status === "passed") {
-    if (job.evidence.some((entry) => entry?.status === "failed")) add(errors, `${location} passed state cannot contain failed evidence`);
-    if (!stages.has("generation") || !stages.has("qa")) add(errors, `${location} passed state requires generation and QA evidence`);
-    if (format !== "md" && !stages.has("renderer")) add(errors, `${location} passed ${format} requires renderer evidence`);
-    if (format === "md" && stages.has("renderer")) add(errors, `${location} Markdown must not claim renderer evidence`);
-  }
+  job.evidence.forEach((entry, index) => object(entry, errors, `${location}.evidence[${index}]`));
+  if (job.evidence.length !== 0) add(errors, `${location}.evidence is downstream-only and must be empty during preparation`);
 }
 
 function validateJobShape(job, format, probe, errors) {
@@ -223,25 +157,14 @@ function validateJobShape(job, format, probe, errors) {
     add(errors, `${location}.plannedOutputPath must use .${format}`);
   }
   const notRequested = job?.status === "not-requested";
-  if (!["not-run", "passed", "failed"].includes(job?.generationStatus)) add(errors, `${location}.generationStatus is invalid`);
-  if (!["not-run", "not-required", "passed", "failed"].includes(job?.rendererStatus)) add(errors, `${location}.rendererStatus is invalid`);
-  if (!["not-run", "passed", "failed"].includes(job?.qaStatus)) add(errors, `${location}.qaStatus is invalid`);
+  if (job?.generationStatus !== "not-run") add(errors, `${location}.generationStatus must remain not-run during preparation`);
+  if (job?.rendererStatus !== "not-run") add(errors, `${location}.rendererStatus must remain not-run during preparation`);
+  if (job?.qaStatus !== "not-run") add(errors, `${location}.qaStatus must remain not-run during preparation`);
   if (job?.requested === notRequested) add(errors, `${location}.requested must be the exact inverse of not-requested status`);
-  if (["not-requested", "blocked", "unavailable", "pending"].includes(job?.status)) {
-    if ([job.generationStatus, job.rendererStatus, job.qaStatus].some((status) => status !== "not-run")) add(errors, `${location} inactive states must remain not-run`);
-    if (job.outputPath !== null || job.digest !== null || job.pageOrSlideCount !== null || !Array.isArray(job.evidence) || job.evidence.length !== 0) add(errors, `${location} inactive states cannot claim derivative evidence`);
-  }
+  if (job.outputPath !== null || job.digest !== null || job.pageOrSlideCount !== null) add(errors, `${location} preparation cannot claim a derivative`);
   if (job?.status === "unavailable" && job.capability?.available !== false) add(errors, `${location} unavailable state requires unavailable capability`);
-  if (["pending", "passed"].includes(job?.status) && job.capability?.available !== true) add(errors, `${location} active state requires available capability`);
-  if (job?.status === "passed") {
-    if (job.generationStatus !== "passed" || job.qaStatus !== "passed") add(errors, `${location} passed state requires passed generation and QA`);
-    const expectedRenderer = format === "md" ? "not-required" : "passed";
-    if (job.rendererStatus !== expectedRenderer) add(errors, `${location}.rendererStatus must be ${expectedRenderer}`);
-    if (!Number.isInteger(job.pageOrSlideCount) || job.pageOrSlideCount < 1) add(errors, `${location}.pageOrSlideCount must be positive`);
-  }
-  if (job?.status === "failed" && (!Array.isArray(job.evidence) || !job.evidence.some((entry) => entry?.status === "failed"))) add(errors, `${location} failed state requires failed evidence`);
-  if (job?.status === "failed" && ![job.generationStatus, job.rendererStatus, job.qaStatus].includes("failed")) add(errors, `${location} failed state requires an exact failed stage`);
-  validateEvidence(job, format, errors, location);
+  if (job?.status === "pending" && job.capability?.available !== true) add(errors, `${location} active state requires available capability`);
+  validateEvidence(job, errors, location);
 }
 
 function normalizedHeading(value) {
@@ -317,7 +240,6 @@ export async function validateStudioExportManifest(manifest, { outputRoot } = {}
     for (const format of FORMATS) {
       const job = manifest?.formats?.[format];
       if (typeof job?.plannedOutputPath === "string" && !insideRoot(canonicalRoot, path.resolve(job.plannedOutputPath))) add(errors, `formats.${format}.plannedOutputPath must stay inside outputRoot`);
-      if (job?.status === "passed" || (job?.status === "failed" && typeof job.outputPath === "string")) await validateOutputFile(job, format, canonicalRoot, errors, `formats.${format}`);
     }
   }
   return { ok: errors.length === 0, errors, normalized: errors.length === 0 ? structuredClone(manifest) : null };

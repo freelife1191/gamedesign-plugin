@@ -534,6 +534,7 @@ test("visualization validator accepts a verified SVG fallback when PNG rendering
 
 test("export recipes are artifact-specific and presentations require an independent story", async () => {
   const recipes = await readFile(path.join(pluginRoot, "references/export-recipes.md"), "utf8");
+  const jobManifest = await readSkill("export-game-design-documents", "references/job-manifest.md");
   const ids = [...recipes.matchAll(/^### Recipe: `([a-z0-9-]+)`$/gmu)].map(([, id]) => id);
   assert.deepEqual(ids, [
     "gdd",
@@ -550,8 +551,12 @@ test("export recipes are artifact-specific and presentations require an independ
   assert.deepEqual(parseStableFields(section(skill, "Output contract"), "export output"), skillContracts["export-game-design-documents"].outputFields);
   assert.match(section(skill, "Workflow"), /validate-artifact\.mjs/iu);
   assert.match(section(skill, "Workflow"), /capability-probe\.mjs/iu);
-  assert.match(section(skill, "Completion checks"), /MD.*PDF.*DOCX.*PPTX.*actual.*QA/isu);
-  assert.match(section(skill, "Completion checks"), /passed.*output path.*digest.*count.*evidence/isu);
+  for (const format of ["MD", "PDF", "DOCX", "PPTX"]) assert.match(section(skill, "Completion checks"), new RegExp(`\\b${format}\\b`, "u"));
+  assert.match(section(skill, "Workflow"), /downstream.*generation.*actual-file.*digests.*counts.*evidence.*terminal/isu);
+  assert.match(section(skill, "Completion checks"), /preparation manifest.*passed.*failed/isu);
+  assert.match(section(skill, "Completion checks"), /not-run.*output path.*digest.*count.*evidence/isu);
+  assert.match(jobManifest, /before downstream generation.*rejects terminal status.*derivative claims.*format evidence/isu);
+  assert.doesNotMatch(jobManifest, /after downstream generation/iu);
 });
 
 test("export preparation emits a renderer-neutral pending manifest without fabricating outputs", async () => {
@@ -720,7 +725,7 @@ test("export preparation rejects traversal symlinks and unsafe overwrites", asyn
   assert.equal(await readFile(path.join(outputDir, "combat-brief.md"), "utf8"), "existing owner content\n");
 });
 
-test("plugin-owned export validator enforces derivatives terminal transitions and fail-closed normalization", async () => {
+test("plugin-owned export validator accepts only non-terminal preparation manifests", async () => {
   const outputDir = await temporaryDirectory("studio-export-validator-");
   const { prepareStudioExportJob } = await loadPrepareModule();
   const { validateStudioExportManifest } = await loadModule(exportValidatorScript);
@@ -740,52 +745,80 @@ test("plugin-owned export validator enforces derivatives terminal transitions an
     },
     validatorPath,
   });
+  const valid = await validateStudioExportManifest(prepared, { outputRoot: outputDir });
+  assert.equal(valid.ok, true, valid.errors.join("\n"));
+  assert.deepEqual(valid.normalized, prepared);
+
   const derivativePath = prepared.formats.md.plannedOutputPath;
-  const bytes = Buffer.from("# Review report\n", "utf8");
-  await writeFile(derivativePath, bytes);
-  prepared.formats.md = {
-    ...prepared.formats.md,
+  const derivativeBytes = Buffer.from("# Review report\n", "utf8");
+  await writeFile(derivativePath, derivativeBytes);
+  const terminalPassed = structuredClone(prepared);
+  terminalPassed.formats.md = {
+    ...terminalPassed.formats.md,
     status: "passed",
     statusHistory: ["pending", "passed"],
     generationStatus: "passed",
     rendererStatus: "not-required",
     qaStatus: "passed",
     outputPath: derivativePath,
-    digest: sha256(bytes),
+    digest: sha256(derivativeBytes),
     pageOrSlideCount: 1,
     evidence: [
-      { stage: "generation", status: "passed", derivativePath, digest: sha256(bytes), command: "canonical Markdown copy", exitCode: 0 },
-      { stage: "qa", status: "passed", derivativePath, digest: sha256(bytes), command: "Markdown QA", exitCode: 0, count: 1 },
+      { stage: "generation", status: "passed", derivativePath, digest: sha256(derivativeBytes), command: "canonical Markdown copy", exitCode: 0 },
+      { stage: "qa", status: "passed", derivativePath, digest: sha256(derivativeBytes), command: "Markdown QA", exitCode: 0, count: 1 },
     ],
   };
+  const rejectedPassed = await validateStudioExportManifest(terminalPassed, { outputRoot: outputDir });
+  assert.equal(rejectedPassed.ok, false, "preparation validator must reject a fully evidenced passed derivative");
+  assert.ok(rejectedPassed.errors.some((message) => /preparation|downstream|terminal/iu.test(message)));
 
-  const valid = await validateStudioExportManifest(prepared, { outputRoot: outputDir });
-  assert.equal(valid.ok, true, valid.errors.join("\n"));
-  assert.deepEqual(valid.normalized, prepared);
+  const terminalFailed = structuredClone(prepared);
+  terminalFailed.formats.md = {
+    ...terminalFailed.formats.md,
+    status: "failed",
+    statusHistory: ["pending", "failed"],
+    generationStatus: "failed",
+    evidence: [{ stage: "generation", status: "failed", derivativePath: null, digest: null, command: "generator", exitCode: 1 }],
+  };
+  const rejectedFailed = await validateStudioExportManifest(terminalFailed, { outputRoot: outputDir });
+  assert.equal(rejectedFailed.ok, false, "preparation validator must reject a fully evidenced failed derivative");
+  assert.ok(rejectedFailed.errors.some((message) => /preparation|downstream|terminal/iu.test(message)));
+
+  const stagingRoot = await temporaryDirectory("studio-export-validator-built-");
+  const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const builtValidator = await loadModule(path.join(
+    built.outputDir,
+    "skills/export-game-design-documents/scripts/validate-studio-export.mjs",
+  ));
+  for (const [label, candidate, expectedOk] of [
+    ["prepared", prepared, true],
+    ["passed", terminalPassed, false],
+    ["failed", terminalFailed, false],
+  ]) {
+    const result = await builtValidator.validateStudioExportManifest(candidate, { outputRoot: outputDir });
+    assert.equal(result.ok, expectedOk, `built validator: ${label}`);
+    if (!expectedOk) assert.ok(result.errors.some((message) => /preparation|downstream|terminal/iu.test(message)), `built validator: ${label} boundary`);
+  }
 
   const mutations = [
     ["extension must match format", (value) => { value.formats.md.extension = "pdf"; }],
-    ["generation and QA use one derivative", (value) => { value.formats.md.evidence[1].derivativePath = path.join(outputDir, "other.md"); }],
-    ["passed forbids failed evidence", (value) => { value.formats.md.evidence[1].status = "failed"; }],
     ["capability probe states are mutually exclusive", (value) => { value.capabilityProbe.status = "missing"; value.capabilityProbe.capabilities.pdf = { available: true }; }],
     ["requested and not-requested are exact", (value) => { value.formats.pdf.requested = false; value.formats.pdf.status = "pending"; value.formats.pdf.statusHistory = ["pending"]; }],
-    ["terminal transitions cannot reopen", (value) => { value.formats.md.statusHistory = ["pending", "passed", "pending"]; value.formats.md.status = "pending"; }],
-    ["terminal histories start at pending", (value) => { value.formats.md.statusHistory = ["passed"]; }],
+    ["passed format status is downstream-only", (value) => { value.formats.md.status = "passed"; value.formats.md.statusHistory = ["pending", "passed"]; }],
+    ["failed format status is downstream-only", (value) => { value.formats.md.status = "failed"; value.formats.md.statusHistory = ["pending", "failed"]; }],
+    ["generation terminal state is downstream-only", (value) => { value.formats.md.generationStatus = "passed"; }],
+    ["renderer terminal state is downstream-only", (value) => { value.formats.md.rendererStatus = "not-required"; }],
+    ["QA terminal state is downstream-only", (value) => { value.formats.md.qaStatus = "failed"; }],
     ["passed preflight matches exit code and errors", (value) => { value.preflight.exitCode = 1; value.preflight.errors = [{ code: "FORGED", file: "content.md", message: "forged" }]; }],
-    ["passed evidence requires exit zero", (value) => { value.formats.md.evidence[0].exitCode = 1; }],
     ["pending jobs cannot claim derivatives", (value) => { value.formats.pptx.outputPath = value.formats.pptx.plannedOutputPath; value.formats.pptx.digest = "0".repeat(64); }],
+    ["format evidence is downstream-only", (value) => { value.formats.md.evidence = [{ stage: "generation", status: "passed", derivativePath: value.formats.md.plannedOutputPath, digest: "0".repeat(64), command: "forged", exitCode: 0 }]; }],
     ["format capability identity is fixed", (value) => { value.formats.pptx.capability.name = "pdf"; }],
     ["format capability equals its probe snapshot", (value) => { value.formats.pptx.capability.provider = "forged-provider"; }],
     ["PPTX requests require presentation", (value) => { delete value.presentation; }],
     ["presentation slides are independent stories", (value) => { value.presentation.slideOutline[0].title = "# Review report"; }],
     ["presentation slides do not copy canonical headings", (value) => { value.presentation.slideOutline[0].title = "Player Experience"; }],
-    ["failed terminals require failed evidence", (value) => { value.formats.md.status = "failed"; value.formats.md.statusHistory = ["pending", "failed"]; }],
-    ["evidence count equals the derivative count", (value) => { value.formats.md.evidence[1].count = 2; }],
-    ["evidence digest equals the derivative digest", (value) => { value.formats.md.evidence[0].digest = "0".repeat(64); }],
-    ["evidence command is nonempty", (value) => { value.formats.md.evidence[0].command = ""; }],
     ["malformed evidence arrays fail closed", (value) => { value.formats.pptx.evidence = null; }],
     ["unknown object keys fail closed", (value) => { value.formats.md.untrusted = true; }],
-    ["prototype-sensitive keys fail closed", (value) => { value.formats.md.evidence[0].__proto__ = { polluted: true }; }],
   ];
   for (const [label, mutate] of mutations) {
     const candidate = structuredClone(prepared);
@@ -794,6 +827,23 @@ test("plugin-owned export validator enforces derivatives terminal transitions an
     assert.equal(result.ok, false, label);
     assert.equal(result.normalized, null, label);
   }
+
+  const invalidArtifact = await temporaryDirectory("studio-export-validator-preflight-");
+  await mkdir(path.join(invalidArtifact, "assets"));
+  await mkdir(path.join(invalidArtifact, "decisions"));
+  await writeFile(path.join(invalidArtifact, "content.md"), "# Invalid artifact\n");
+  const failedPreflight = await prepareStudioExportJob({
+    artifactDir: invalidArtifact,
+    outputDir,
+    recipeId: "review-report",
+    requestedFormats: ["md"],
+    capabilities: {},
+    validatorPath,
+  });
+  const preservedPreflight = await validateStudioExportManifest(failedPreflight, { outputRoot: outputDir });
+  assert.equal(preservedPreflight.ok, true, preservedPreflight.errors.join("\n"));
+  assert.equal(preservedPreflight.normalized.preflight.status, "failed");
+  assert.ok(preservedPreflight.normalized.preflight.errors.length > 0);
 
 
   for (const malformed of [null, {}, "invalid"]) {

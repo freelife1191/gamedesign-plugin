@@ -26,7 +26,7 @@ Collect the canonical artifact directory and version, requested formats, recipe 
 
 ## Assumption policy
 
-Preserve missing capability, brief, renderer, output, digest, count, and QA evidence as explicit unknown or unavailable states. Never label a planned, queued, capability-available, or renderer-returned file `passed` without inspecting the actual output.
+Preserve missing capability, brief, renderer, output, digest, count, and QA evidence as explicit unknown or unavailable states. This skill is a preparation boundary: it never accepts or emits format-level `passed`, `failed`, renderer, output, digest, count, or QA evidence.
 
 ## Workflow
 
@@ -35,10 +35,9 @@ Preserve missing capability, brief, renderer, output, digest, count, and QA evid
 3. Run packaged `scripts/capability-probe.mjs`; retain the probe result and evidence independently from generation, renderer, and QA evidence.
 4. For PPTX, require audience, purpose, and an independent story outline before preparing a job. Never split Markdown headings into slides as a presentation strategy.
 5. Run [prepare-studio-export.mjs](scripts/prepare-studio-export.mjs) with the artifact, recipe, formats, capability snapshot, and safe output directory. Use its renderer-neutral job manifest; do not add a renderer choice until execution.
-6. Delegate actual PDF, DOCX, and PPTX creation only to detected packaged capabilities. Markdown remains a canonical text export. Keep each format's capability, generation, renderer, output, and QA status separate.
-7. Inspect the format using packaged shared QA contracts. Only then attach output path, SHA-256 digest, page/slide count where applicable, validation evidence, limitations, and `passed` status.
-8. Run [validate-studio-export.mjs](scripts/validate-studio-export.mjs) before handoff. It enforces exact object keys, terminal status transitions, extension/path/digest identity, actual derivative files, mutually exclusive probe states, and fail-closed normalized output.
-9. Preserve the canonical artifact and all prior owner outputs on unavailable capabilities, failed generation, failed QA, or unsafe paths.
+6. Run [validate-studio-export.mjs](scripts/validate-studio-export.mjs) before handoff. It accepts only `not-requested`, `blocked`, `unavailable`, or `pending` format jobs with `not-run` execution stages, null derivative fields, and empty format evidence. Format-level `passed` or `failed` claims are downstream-only and rejected even when accompanied by plausible files or evidence.
+7. Hand the normalized renderer-neutral preparation manifest to a separately trusted renderer-and-QA workflow. That downstream workflow owns generation, actual-file inspection, digests, counts, evidence, and terminal outcomes; it must not feed a terminal manifest back into this preparation validator.
+8. Preserve the canonical artifact and all prior owner outputs on unavailable capabilities, failed preflight, or unsafe paths.
 
 ## Output contract
 
@@ -52,9 +51,9 @@ Produce `canonical-artifact` with stable sections for preflight, recipe, capabil
 
 ## Completion checks
 
-- MD, PDF, DOCX, and PPTX cannot be `passed` until actual generation and format-specific QA complete; capability availability alone is never success.
-- Every passed format has an existing output path, SHA-256 digest, page or slide count when applicable, renderer or generator evidence, and QA evidence.
+- The preparation manifest never contains format-level `passed` or `failed`; supported requested jobs remain `pending`, missing capabilities are `unavailable`, and failed preflight jobs are `blocked`.
+- Every format execution stage remains `not-run`; output path, digest, and page or slide count remain null; format evidence remains empty.
 - PPTX requires audience, purpose, and a structured independent story. Every slide has a unique stable `id`, `title`, `message`, and `purpose`; Markdown heading syntax and copied canonical structural headings are prohibited.
 - Capability identity is exact: MD is packaged `canonical-markdown`; PDF, DOCX, and PPTX equal the `pdf`, `documents`, and `presentations` probe snapshots.
 - Unsafe traversal, symlink, or overwrite conditions fail closed without changing the canonical artifact or existing outputs.
-- Failed and unavailable formats remain explicit in the manifest while successful formats retain independent evidence.
+- Failed canonical preflight evidence remains intact at the preflight boundary without being converted into a format-level terminal claim.
