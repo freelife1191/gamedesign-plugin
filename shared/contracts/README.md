@@ -18,6 +18,8 @@ Product lane은 루트에서 `npm run test:shared-contract`를 실행해 이 체
 
 Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `systems`, `content`, `feedback`을 선언해 49개 source document 전체를 선택한다. 명시적 문서 선택이 필요하면 `sourceDocuments`에 `shared/knowledge/reference-index.json`의 고유 ID를 사용한다. 알 수 없는 ID/category, 중복 ID/path, `docs/` 밖의 source는 build 실패다.
 
+공통 gate는 고정 경로를 probe하지 않고 `products/*/product.json`을 열거한다. 허용 product ID는 `game-design-studio`와 `game-design-career`뿐이며 directory 이름, `product.json`의 `name`, production loader의 `productName`이 같아야 한다. Product lane 시작 전에는 발견된 집합이 비어 있을 수 있고 각 lane 진행 중에는 허용 집합의 부분집합일 수 있다. 두 contract가 생성된 integration 시점에는 발견 집합이 두 ID와 정확히 같아진다. 발견된 모든 contract는 production loader와 `buildProduct`를 반드시 통과한다.
+
 ## Fixed build mapping and overrides
 
 `buildProduct`의 shared module mapping은 고정되어 있다.
@@ -34,6 +36,8 @@ Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `syste
 | product overlay | each `sourceRoots` tree | package root |
 
 Product files do not silently override shared files. 동일 destination에 같은 bytes가 들어오면 하나로 합치고, bytes가 다르거나 file/directory collision이 있으면 build를 거부한다. 모든 입력 경로는 NFC 정규화 상대 경로여야 하며 symlink와 root 탈출은 허용하지 않는다.
+
+`hooks/**`, `scripts/**`, `references/shared/knowledge/**`, `assets/shared/templates/**`, `references/shared/responsible-design/**`, `references/shared/export/**`, `skills/svg-infographic/**`, `references/source/docs/**`는 reserved destination이다. 각 built subtree는 위 표의 production source tree 또는 선택된 reference index와 정확히 일치해야 하며 product overlay가 파일을 추가하거나 바꿀 수 없다. `skills/svg-infographic/**`는 `shared/vendor/skillstead/vendor.lock.json`의 48개 path와 정확히 일치한다. Lock과 `shared/vendor/skillstead/THIRD_PARTY_NOTICES.md`는 고정 검증·귀속 입력이며 현재 vendor subtree destination에 스스로 복사되는 파일은 아니다.
 
 `buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch })`는 destination path 정렬, 파일 mode `0644`, 디렉터리 mode `0755`, 고정 timestamp, 정렬된 파일 목록 및 SHA-256으로 재현 가능한 결과를 만든다. 동일 입력과 `sourceDateEpoch`은 동일 파일 목록·bytes·hash를 산출해야 한다.
 
@@ -64,7 +68,7 @@ E2E fixture의 product ID와 lane ID mapping은 고정되어 있다.
 
 ## Hooks and artifact/export handoff
 
-Hooks 지원은 host에서 optional이다. Product manifest는 비표준 `hooks` 필드를 선언하지 않는다. 지원 host는 built `hooks/hooks.json`의 공식 `SessionStart` 및 `Stop` command 구조를 사용하며 `${PLUGIN_ROOT}/scripts/*`만 실행한다. 미지원 host에서도 skills와 canonical artifact 작성은 동작해야 한다.
+Hooks 지원은 host에서 optional이다. Product manifest는 비표준 `hooks` 필드를 선언하지 않는다. 지원 host는 built `hooks/hooks.json`의 공식 `SessionStart` 및 `Stop` command 구조를 사용하며 `${PLUGIN_ROOT}/scripts/*`만 실행한다. 두 event는 matcher 없이 각각 하나의 wrapper와 하나의 command hook만 갖는다. SessionStart는 `capability-probe.mjs`, timeout `10`, status message `Detecting optional game-design capabilities`; Stop은 `stop-artifact-review.mjs`, timeout `30`, status message `Reviewing canonical game-design artifact`를 정확히 사용하며 추가 key는 허용하지 않는다. 미지원 host에서도 skills와 canonical artifact 작성은 동작해야 한다.
 
 완성 artifact는 다음 sentinel을 assistant message의 마지막 내용으로 한 번만 공개한다.
 

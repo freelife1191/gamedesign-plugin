@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7,7 +7,6 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { reviewStopEvent } from "../../shared/scripts/stop-artifact-review.mjs";
 import { validateArtifact } from "../../shared/scripts/validate-artifact.mjs";
 import { discoverSourceFiles } from "../../tooling/index-references.mjs";
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
@@ -32,21 +31,36 @@ async function readJson(relativePath) {
   return JSON.parse(await readFile(path.join(repoRoot, relativePath), "utf8"));
 }
 
+async function mappedTreeFiles(sourceRoot, source, destination) {
+  return (await collectTree(path.join(sourceRoot, source), { label: source }))
+    .map(({ relativePath }) => `${destination}/${relativePath}`)
+    .sort();
+}
+
 async function assertBuiltProductContract({ build, product, sourceRoot, referenceIndex, vendorLock }) {
-  const builtFiles = new Set(build.files);
-  for (const moduleName of product.sharedModules) {
-    if (!sharedMappings.has(moduleName)) continue;
-    const [source, destination] = sharedMappings.get(moduleName);
-    for (const entry of await collectTree(path.join(sourceRoot, source), { label: source })) {
-      assert.ok(builtFiles.has(`${destination}/${entry.relativePath}`), `${product.name}: ${destination}/${entry.relativePath}`);
-    }
+  for (const [moduleName, [source, destination]] of sharedMappings) {
+    if (!product.sharedModules.includes(moduleName)) continue;
+    assert.deepEqual(
+      build.files.filter((file) => file.startsWith(`${destination}/`)).sort(),
+      await mappedTreeFiles(sourceRoot, source, destination),
+      `${product.name}: reserved ${destination}`,
+    );
   }
-  for (const script of ["capability-probe.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs"]) {
-    assert.ok(builtFiles.has(`scripts/${script}`), `${product.name}: scripts/${script}`);
-  }
-  for (const file of vendorLock.files) {
-    assert.ok(builtFiles.has(`skills/svg-infographic/${file.path}`), `${product.name}: vendor ${file.path}`);
-  }
+  assert.deepEqual(
+    build.files.filter((file) => file.startsWith("hooks/")).sort(),
+    await mappedTreeFiles(sourceRoot, "shared/hooks", "hooks"),
+    `${product.name}: reserved hooks`,
+  );
+  assert.deepEqual(
+    build.files.filter((file) => file.startsWith("scripts/")).sort(),
+    await mappedTreeFiles(sourceRoot, "shared/scripts", "scripts"),
+    `${product.name}: reserved scripts`,
+  );
+  assert.deepEqual(
+    build.files.filter((file) => file.startsWith("skills/svg-infographic/")).sort(),
+    vendorLock.files.map(({ path: vendorPath }) => `skills/svg-infographic/${vendorPath}`).sort(),
+    `${product.name}: reserved Skillstead vendor`,
+  );
 
   const categories = new Set(product.sourceDocumentCategories ?? []);
   const expectedSources = referenceIndex.documents
@@ -54,6 +68,61 @@ async function assertBuiltProductContract({ build, product, sourceRoot, referenc
     .map(({ sourcePath }) => `references/source/${sourcePath}`)
     .sort();
   assert.deepEqual(build.files.filter((file) => file.startsWith("references/source/")).sort(), expectedSources);
+}
+
+async function discoverProductContracts(sourceRoot) {
+  const productsRoot = path.join(sourceRoot, "products");
+  let entries;
+  try {
+    entries = await readdir(productsRoot, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  const names = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    try {
+      await access(path.join(productsRoot, entry.name, "product.json"), constants.R_OK);
+      names.push(entry.name);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+  return names.sort();
+}
+
+async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIndex, vendorLock }) {
+  const productNames = await discoverProductContracts(sourceRoot);
+  for (const productName of productNames) {
+    if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
+    const product = await loadProductContract({ repoRoot: sourceRoot, productName });
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor"]);
+    assert.equal(product.sharedRuntime, true);
+    assert.deepEqual(product.sourceRoots, ["plugin"]);
+    assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
+    const productBuild = await buildProduct({ repoRoot: sourceRoot, productName, stagingRoot, sourceDateEpoch: 0 });
+    await assertBuiltProductContract({
+      build: productBuild,
+      product,
+      sourceRoot,
+      referenceIndex,
+      vendorLock,
+    });
+  }
+  return productNames;
+}
+
+function runBuiltHook({ outputDir, scriptName, input }) {
+  const result = spawnSync(process.execPath, [path.join(outputDir, "scripts", scriptName)], {
+    cwd: outputDir,
+    env: { ...process.env },
+    input: JSON.stringify(input),
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, "");
+  return JSON.parse(result.stdout);
 }
 
 test("shared-contract-v1 exposes the complete product-lane contract", async (t) => {
@@ -64,6 +133,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   for (const requiredClause of [
     "shared-contract-v1",
     "products/<product-name>/product.json",
+    "products/*/product.json",
     "products/<product-name>/plugin/",
     "agents/<role-id>.md",
     "skills/<skill-name>/SKILL.md",
@@ -76,6 +146,8 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "`game-design-career` | `career` | `tests/e2e/career/<scenario>/`",
     "plugins/game-design-studio",
     "plugins/game-design-career",
+    "reserved destination",
+    "matcher 없이",
     "<!-- game-design-plugin:artifact {\"path\":\"<artifact-path>\",\"formats\":[]} -->",
   ]) {
     assert.match(contractReadme, new RegExp(requiredClause.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -99,25 +171,37 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   await mkdir(path.join(fixtureRoot, "products"), { recursive: true });
   await cp(
     path.join(repoRoot, "tests/fixtures/minimal-product"),
-    path.join(fixtureRoot, "products/minimal-product"),
+    path.join(fixtureRoot, "products/game-design-studio"),
+    { recursive: true },
+  );
+  await cp(
+    path.join(repoRoot, "tests/fixtures/minimal-product"),
+    path.join(fixtureRoot, "products/unexpected-product"),
     { recursive: true },
   );
 
-  const fixtureProduct = await loadProductContract({ repoRoot: fixtureRoot, productName: "minimal-product" });
-  assert.deepEqual(validateProductContract(fixtureProduct), fixtureProduct);
+  const fixtureProduct = await readJson("tests/fixtures/minimal-product/product.json");
   const selectableFixture = {
     ...fixtureProduct,
+    name: "game-design-studio",
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;
   await writeFile(
-    path.join(fixtureRoot, "products/minimal-product/product.json"),
+    path.join(fixtureRoot, "products/game-design-studio/product.json"),
     `${JSON.stringify(selectableFixture, null, 2)}\n`,
+  );
+  const loadedFixture = await loadProductContract({ repoRoot: fixtureRoot, productName: "game-design-studio" });
+  assert.deepEqual(validateProductContract(loadedFixture), loadedFixture);
+  const unexpectedFixture = { ...selectableFixture, name: "unexpected-product" };
+  await writeFile(
+    path.join(fixtureRoot, "products/unexpected-product/product.json"),
+    `${JSON.stringify(unexpectedFixture, null, 2)}\n`,
   );
 
   const referenceIndex = await readJson("shared/knowledge/reference-index.json");
   const vendorLock = await readJson("shared/vendor/skillstead/vendor.lock.json");
-  const built = await buildProduct({ repoRoot: fixtureRoot, productName: "minimal-product", stagingRoot, sourceDateEpoch: 0 });
+  const built = await buildProduct({ repoRoot: fixtureRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
   await assertBuiltProductContract({
     build: built,
     product: selectableFixture,
@@ -127,73 +211,94 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   });
   assert.equal(built.files.filter((file) => file.startsWith("references/source/docs/")).length, 49);
 
-  for (const productName of productLanes.keys()) {
-    const productPath = path.join(repoRoot, "products", productName, "product.json");
-    try {
-      await access(productPath, constants.R_OK);
-    } catch (error) {
-      if (error.code === "ENOENT") continue;
-      throw error;
-    }
-    const product = await loadProductContract({ repoRoot, productName });
-    assert.equal(product.name, productName);
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor"]);
-    assert.equal(product.sharedRuntime, true);
-    assert.deepEqual(product.sourceRoots, ["plugin"]);
-    assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
-    const productBuild = await buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch: 0 });
-    await assertBuiltProductContract({
-      build: productBuild,
-      product,
-      sourceRoot: repoRoot,
+  const discoveredProducts = await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLock });
+  assert.ok(discoveredProducts.every((productName) => productLanes.has(productName)));
+  await assert.rejects(
+    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
+    /Unexpected product contract: products\/unexpected-product\/product\.json/,
+  );
+  await rm(path.join(fixtureRoot, "products/unexpected-product"), { recursive: true, force: true });
+  await cp(
+    path.join(fixtureRoot, "products/game-design-studio"),
+    path.join(fixtureRoot, "products/game-design-career"),
+    { recursive: true },
+  );
+  await assert.rejects(
+    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
+    /Product name mismatch: expected game-design-career, received game-design-studio/,
+  );
+  await rm(path.join(fixtureRoot, "products/game-design-career"), { recursive: true, force: true });
+
+  await mkdir(path.join(fixtureRoot, "products/game-design-studio/plugin/hooks"), { recursive: true });
+  await writeFile(path.join(fixtureRoot, "products/game-design-studio/plugin/hooks/rogue.json"), "{}\n");
+  const rogueBuild = await buildProduct({
+    repoRoot: fixtureRoot,
+    productName: "game-design-studio",
+    stagingRoot,
+    sourceDateEpoch: 0,
+  });
+  await assert.rejects(
+    () => assertBuiltProductContract({
+      build: rogueBuild,
+      product: selectableFixture,
+      sourceRoot: fixtureRoot,
       referenceIndex,
       vendorLock,
-    });
-  }
+    }),
+    /reserved hooks/,
+  );
 
   const artifact = await validateArtifact(path.join(repoRoot, "shared/templates/canonical-artifact"));
   assert.equal(artifact.ok, true, artifact.errors.map(({ message }) => message).join("\n"));
 
-  const hooks = await readJson("shared/hooks/hooks.json");
-  assert.notDeepEqual(hooks, {});
-  assert.deepEqual(Object.keys(hooks), ["hooks"]);
-  assert.deepEqual(Object.keys(hooks.hooks).sort(), ["SessionStart", "Stop"]);
-  const hookScripts = {
-    SessionStart: "capability-probe.mjs",
-    Stop: "stop-artifact-review.mjs",
-  };
-  for (const [event, scriptName] of Object.entries(hookScripts)) {
-    assert.equal(hooks.hooks[event].length, 1);
-    assert.equal(hooks.hooks[event][0].hooks.length, 1);
-    const hook = hooks.hooks[event][0].hooks[0];
-    assert.equal(hook.type, "command");
-    assert.equal(hook.command, `node "\${PLUGIN_ROOT}/scripts/${scriptName}"`);
-    const result = spawnSync(process.execPath, [path.join(built.outputDir, "scripts", scriptName)], {
-      cwd: built.outputDir,
-      env: { ...process.env },
-      input: JSON.stringify(event === "Stop" ? {
-        hook_event_name: "Stop",
-        cwd: built.outputDir,
-        stop_hook_active: false,
-        last_assistant_message: "No artifact marker.",
-      } : { hook_event_name: "SessionStart" }),
-      encoding: "utf8",
-    });
-    assert.equal(result.status, 0, `${event}: ${result.stderr}`);
-    const output = JSON.parse(result.stdout);
-    if (event === "SessionStart") {
-      assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
-      assert.equal(typeof output.hookSpecificOutput.additionalContext, "string");
-    } else {
-      assert.deepEqual(output, { continue: true, status: "ignored", warnings: [] });
-    }
-  }
+  const hooks = JSON.parse(await readFile(path.join(built.outputDir, "hooks/hooks.json"), "utf8"));
+  assert.deepEqual(hooks, {
+    hooks: {
+      SessionStart: [{
+        hooks: [{
+          type: "command",
+          command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
+          timeout: 10,
+          statusMessage: "Detecting optional game-design capabilities",
+        }],
+      }],
+      Stop: [{
+        hooks: [{
+          type: "command",
+          command: 'node "${PLUGIN_ROOT}/scripts/stop-artifact-review.mjs"',
+          timeout: 30,
+          statusMessage: "Reviewing canonical game-design artifact",
+        }],
+      }],
+    },
+  });
+  const sessionStart = runBuiltHook({
+    outputDir: built.outputDir,
+    scriptName: "capability-probe.mjs",
+    input: { hook_event_name: "SessionStart" },
+  });
+  assert.equal(sessionStart.hookSpecificOutput.hookEventName, "SessionStart");
+  assert.equal(typeof sessionStart.hookSpecificOutput.additionalContext, "string");
 
   const invalidArtifact = path.join(fixtureRoot, "invalid-artifact");
   await mkdir(invalidArtifact);
   const marker = '<!-- game-design-plugin:artifact {"path":"invalid-artifact","formats":[]} -->';
-  const firstReview = await reviewStopEvent({ cwd: fixtureRoot, last_assistant_message: marker });
-  const retryReview = await reviewStopEvent({ cwd: fixtureRoot, last_assistant_message: marker, stop_hook_active: true });
+  const stopInput = {
+    hook_event_name: "Stop",
+    cwd: fixtureRoot,
+    stop_hook_active: false,
+    last_assistant_message: marker,
+  };
+  const firstReview = runBuiltHook({
+    outputDir: built.outputDir,
+    scriptName: "stop-artifact-review.mjs",
+    input: stopInput,
+  });
+  const retryReview = runBuiltHook({
+    outputDir: built.outputDir,
+    scriptName: "stop-artifact-review.mjs",
+    input: { ...stopInput, stop_hook_active: true },
+  });
   assert.equal(firstReview.decision, "block");
   assert.equal(firstReview.status, "corrective-pass-requested");
   assert.equal(retryReview.continue, true);
