@@ -1,0 +1,4 @@
+interface:
+  display_name: "Visualize Career Roadmap"
+  short_description: "Map career evidence and growth relationships"
+  default_prompt: "Use $visualize-career-roadmap to select and produce an evidence-safe career diagram."

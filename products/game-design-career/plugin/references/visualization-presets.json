@@ -1,0 +1,44 @@
+[
+  {
+    "id": "role-map",
+    "relationship": "mapping",
+    "renderer": "skills/svg-infographic",
+    "selectionQuestion": "Must the audience compare role families, responsibilities, evidence, and adjacent paths?",
+    "exclusionCondition": "Exclude when one role can be explained without cross-role mapping."
+  },
+  {
+    "id": "competency-map",
+    "relationship": "dependency",
+    "renderer": "skills/svg-infographic",
+    "selectionQuestion": "Must the audience see how competencies depend on or support one another?",
+    "exclusionCondition": "Exclude when competencies are only an unordered checklist."
+  },
+  {
+    "id": "learning-roadmap",
+    "relationship": "sequence",
+    "renderer": "skills/svg-infographic",
+    "selectionQuestion": "Must the audience see evidence-building tasks and prerequisite order over phases?",
+    "exclusionCondition": "Exclude when duration, order, and prerequisites are not supported."
+  },
+  {
+    "id": "development-process",
+    "relationship": "sequence",
+    "renderer": "skills/svg-infographic",
+    "selectionQuestion": "Must the audience inspect handoffs, feedback loops, decisions, or gates?",
+    "exclusionCondition": "Exclude when the process has no meaningful handoff or branch."
+  },
+  {
+    "id": "portfolio-information-architecture",
+    "relationship": "hierarchy",
+    "renderer": "skills/svg-infographic",
+    "selectionQuestion": "Must the audience understand portfolio navigation, case-study nesting, and evidence placement?",
+    "exclusionCondition": "Exclude when a short ordered section list is equally clear."
+  },
+  {
+    "id": "growth-path",
+    "relationship": "mapping",
+    "renderer": "skills/svg-infographic",
+    "selectionQuestion": "Must the audience compare multiple provisional growth paths, evidence gaps, and review points?",
+    "exclusionCondition": "Exclude when the source supports only one next action or would imply a guaranteed progression."
+  }
+]
