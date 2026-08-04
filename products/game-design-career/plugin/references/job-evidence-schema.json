@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "job-evidence-schema.json",
+  "title": "Game Design Job Evidence Record",
+  "type": "object",
+  "required": [
+    "company",
+    "project",
+    "region",
+    "employmentType",
+    "postedDate",
+    "sourceUrl",
+    "retrievalDate",
+    "responsibilities",
+    "requiredSkills",
+    "preferredSkills",
+    "repeatedSignals",
+    "applicantEvidence",
+    "gaps",
+    "nonGeneralizable",
+    "sampleSize",
+    "sampleGeography",
+    "sourceType",
+    "blindSpots",
+    "inferenceLimits"
+  ],
+  "properties": {
+    "company": { "type": "string", "minLength": 1 },
+    "project": { "type": ["string", "null"] },
+    "region": { "type": "string", "minLength": 1 },
+    "employmentType": { "type": "string", "minLength": 1 },
+    "postedDate": { "type": ["string", "null"], "format": "date" },
+    "sourceUrl": { "type": "string", "format": "uri" },
+    "retrievalDate": { "type": "string", "format": "date" },
+    "responsibilities": { "type": "array", "items": { "type": "string" } },
+    "requiredSkills": { "type": "array", "items": { "type": "string" } },
+    "preferredSkills": { "type": "array", "items": { "type": "string" } },
+    "repeatedSignals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["signal", "count", "denominator", "sourceIds"],
+        "properties": {
+          "signal": { "type": "string" },
+          "count": { "type": "integer", "minimum": 2 },
+          "denominator": { "type": "integer", "minimum": 2 },
+          "sourceIds": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "applicantEvidence": { "type": "array", "items": { "type": "string" } },
+    "gaps": { "type": "array", "items": { "type": "string" } },
+    "nonGeneralizable": { "type": "array", "items": { "type": "string" } },
+    "sampleSize": { "type": "integer", "minimum": 1 },
+    "sampleGeography": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "sourceType": {
+      "type": "string",
+      "enum": ["official-company-career-page", "official-project-or-platform", "secondary-context"]
+    },
+    "blindSpots": { "type": "array", "items": { "type": "string" } },
+    "inferenceLimits": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}
