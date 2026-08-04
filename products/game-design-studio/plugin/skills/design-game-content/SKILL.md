@@ -1,0 +1,59 @@
+---
+name: design-game-content
+description: Use when a quest, level, encounter, character, enemy, narrative unit, or repeatable activity needs a playable and production-aware specification.
+---
+
+# Design Game Content
+
+## Overview
+
+Specify a content unit as a playable expression of canonical systems. Connect player strategy and outcomes to explicit data dependencies and evidence-backed production resources.
+
+## Triggers
+
+- A quest, level, encounter, character, enemy, narrative beat, or repeatable activity needs detailed design.
+- A content idea needs system inputs, player telegraphs, rewards, repeatability, or production feasibility.
+
+## Non-triggers
+
+- Use `define-game-vision` for the overall player promise or design pillars.
+- Use `design-game-systems` when rules, state transitions, or schemas are not yet canonical.
+- Use `plan-game-production` for portfolio-wide staffing, milestones, or scheduling.
+
+## Required input
+
+Collect content purpose, target player state, canonical supporting system IDs, schema/table fields, production budget evidence, team and pipeline evidence, player strategy target, reward contract, repeatability target, accessibility needs, and owners.
+
+## Assumption policy
+
+Do not state person-day cost, team capacity, throughput, or schedule as fact without team and pipeline evidence. Tag estimates as `provisional`, show the observable unit count and rate basis, name an estimator and validation task, and attach every content dependency to a canonical system or data ID.
+
+## Workflow
+
+1. Read [content-specification.md](../../references/methods/content-specification.md).
+2. Define the content purpose, player context, strategy, and intended repeatability.
+3. Link system inputs, states, data fields, events, rewards, and failure behavior by canonical ID.
+4. Specify setup, telegraph, decision points, outcomes, rewards, variation, and replay behavior.
+5. Estimate production resources from observable content units and measured pipeline rates; otherwise keep the estimate provisional.
+6. Apply responsible-design gates and obtain content, design, and production reviews.
+
+## Output contract
+
+Produce `narrative-quest-npc` with stable sections for purpose, system inputs, canonical system/data dependencies, production resources, player strategy, telegraph, decision points, outcomes, rewards, repeatability, variation, failure/recovery, accessibility, evidence, assumptions, validation tasks, gate states, review findings, and owners.
+
+## Responsible-design gates
+
+Evaluate `accessibility` and `scope-control` for every content unit. Evaluate `ugc-safety` for player-authored or social content, `ai-npc-safety` for generated characters or dialogue, and `economy-transparency` for priced, randomized, or progression-linked rewards. Record evidence and owner for `not-applicable`, `pending`, `blocked`, or `approved`.
+
+## Role reviewers
+
+- `content-narrative-designer`: validate purpose, pacing, strategy, telegraph, outcomes, rewards, and repeatability.
+- `lead-game-designer`: validate vision, pillar, loop, and meaningful-choice alignment.
+- `production-feasibility-critic`: validate asset counts, dependencies, pipeline evidence, capacity, and scope.
+
+## Completion checks
+
+- Every content behavior and reward links to a canonical system/data dependency ID.
+- Content detached from production cost or system data is blocked, not treated as ready.
+- Person-day claims are supported by team/pipeline evidence or marked provisional with validation tasks.
+- Player strategy, telegraphs, outcomes, rewards, repeatability, reviews, and applicable gates are complete.
