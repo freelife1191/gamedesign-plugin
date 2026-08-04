@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "minimal-product",
+  "displayName": "Minimal Product",
+  "description": "Fixture",
+  "sharedModules": ["knowledge", "templates", "responsible-design", "export", "vendor"],
+  "sharedRuntime": true,
+  "sourceRoots": ["plugin"],
+  "sourceDocuments": []
+}

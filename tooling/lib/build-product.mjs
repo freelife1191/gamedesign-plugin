@@ -1,0 +1,185 @@
+import { chmod, lstat, mkdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { collectTree } from "./copy-tree.mjs";
+import { hashFileEntries } from "./hash.mjs";
+import { assertNoSymlinkPath, comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
+import { loadProductContract } from "./product-contract.mjs";
+
+const sharedMappings = {
+  knowledge: ["shared/knowledge", "references/shared/knowledge"],
+  templates: ["shared/templates", "assets/shared/templates"],
+  "responsible-design": ["shared/responsible-design", "references/shared/responsible-design"],
+  export: ["shared/export", "references/shared/export"],
+  vendor: ["shared/vendor/skillstead/svg-infographic/0.8.3", "skills/svg-infographic"],
+};
+
+function indexDocuments(index) {
+  if (Array.isArray(index)) return index;
+  if (Array.isArray(index.documents)) return index.documents;
+  if (Array.isArray(index.entries)) return index.entries;
+  throw new Error("Reference index must contain a documents array");
+}
+
+async function assertRegularFileWithoutSymlink(root, relativePath, label) {
+  let current = path.resolve(root);
+  for (const segment of relativePath.split("/")) {
+    current = path.join(current, segment);
+    const stats = await lstat(current).catch((error) => {
+      if (error.code === "ENOENT") throw new Error(`Missing indexed source document: ${relativePath}`);
+      throw error;
+    });
+    if (stats.isSymbolicLink()) throw new Error(`Symlink is not allowed in ${label}: ${relativePath}`);
+  }
+  const stats = await lstat(current);
+  if (!stats.isFile()) throw new Error(`Indexed source document is not a file: ${relativePath}`);
+  return current;
+}
+
+async function resolveSourceDocuments(repoRoot, product) {
+  const selectsDocuments = product.sourceDocuments !== undefined;
+  const selectors = selectsDocuments ? product.sourceDocuments : product.sourceDocumentCategories;
+  if (selectors.length === 0) return [];
+
+  const indexPath = path.join(repoRoot, "shared/knowledge/reference-index.json");
+  const indexStats = await lstat(indexPath).catch((error) => {
+    if (error.code === "ENOENT") throw new Error("Missing reference index: shared/knowledge/reference-index.json");
+    throw error;
+  });
+  if (indexStats.isSymbolicLink()) throw new Error("Symlink is not allowed: shared/knowledge/reference-index.json");
+  const documents = indexDocuments(JSON.parse(await readFile(indexPath, "utf8")));
+  const selected = [];
+
+  for (const selector of selectors) {
+    const matches = documents.filter((document) => document?.[selectsDocuments ? "id" : "category"] === selector);
+    if (matches.length === 0) {
+      throw new Error(`${selectsDocuments ? "Missing source ID" : "Missing source category"}: ${selector}`);
+    }
+    if (selectsDocuments && matches.length > 1) throw new Error(`Ambiguous source ID: ${selector}`);
+    selected.push(...matches);
+  }
+
+  const seenPaths = new Set();
+  const entries = [];
+  for (const document of selected) {
+    const sourcePath = normalizeRelativePath(document.sourcePath, "reference index sourcePath");
+    if (sourcePath !== "docs" && !sourcePath.startsWith("docs/")) {
+      throw new Error(`Unsafe path outside docs in reference index: ${document.sourcePath}`);
+    }
+    if (seenPaths.has(sourcePath)) throw new Error(`Duplicate normalized path in selected source documents: ${sourcePath}`);
+    seenPaths.add(sourcePath);
+    const sourceFile = await assertRegularFileWithoutSymlink(repoRoot, sourcePath, "indexed source documents");
+    entries.push({
+      bytes: await readFile(sourceFile),
+      relativePath: `references/source/${sourcePath}`,
+      sourcePath: sourceFile,
+    });
+  }
+  return entries.sort((left, right) => comparePaths(left.relativePath, right.relativePath));
+}
+
+function addEntry(targets, entry, destinationPrefix, sourceLabel) {
+  const relativePath = normalizeRelativePath(
+    destinationPrefix ? `${destinationPrefix}/${entry.relativePath}` : entry.relativePath,
+    "package destination",
+  );
+  const existing = targets.get(relativePath);
+  if (existing) {
+    if (!existing.bytes.equals(entry.bytes)) {
+      throw new Error(`Content collision at ${relativePath} between ${existing.sourceLabel} and ${sourceLabel}`);
+    }
+    return;
+  }
+  targets.set(relativePath, { bytes: entry.bytes, relativePath, sourceLabel });
+}
+
+function rejectFileDirectoryCollisions(entries) {
+  const files = new Set(entries.map(({ relativePath }) => relativePath));
+  for (const { relativePath } of entries) {
+    const segments = relativePath.split("/");
+    for (let index = 1; index < segments.length; index += 1) {
+      const ancestor = segments.slice(0, index).join("/");
+      if (files.has(ancestor)) throw new Error(`Content collision between file and directory at ${ancestor}`);
+    }
+  }
+}
+
+async function normalizeOutputMetadata(outputDir, entries, sourceDateEpoch) {
+  const timestamp = new Date(sourceDateEpoch * 1000);
+  const directories = new Set([outputDir]);
+  for (const { relativePath } of entries) {
+    const destination = path.join(outputDir, ...relativePath.split("/"));
+    await chmod(destination, 0o644);
+    await utimes(destination, timestamp, timestamp);
+    let directory = path.dirname(destination);
+    while (directory.startsWith(outputDir)) {
+      directories.add(directory);
+      if (directory === outputDir) break;
+      directory = path.dirname(directory);
+    }
+  }
+  for (const directory of [...directories].sort((left, right) => right.length - left.length || comparePaths(left, right))) {
+    await chmod(directory, 0o755);
+    await utimes(directory, timestamp, timestamp);
+  }
+}
+
+export async function buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch = 0 }) {
+  if (typeof repoRoot !== "string" || typeof stagingRoot !== "string") {
+    throw new Error("repoRoot and stagingRoot must be paths");
+  }
+  if (!Number.isInteger(sourceDateEpoch) || sourceDateEpoch < 0) {
+    throw new Error("sourceDateEpoch must be a non-negative integer");
+  }
+
+  const absoluteRepoRoot = path.resolve(repoRoot);
+  const absoluteStagingRoot = path.resolve(stagingRoot);
+  const product = await loadProductContract({ repoRoot: absoluteRepoRoot, productName });
+  const productRoot = path.join(absoluteRepoRoot, "products", productName);
+  const targets = new Map();
+
+  for (const moduleName of product.sharedModules) {
+    const [sourceRelative, destinationPrefix] = sharedMappings[moduleName];
+    await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
+    const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
+    for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+  }
+
+  for (const [sourceRelative, destinationPrefix] of [["shared/hooks", "hooks"], ["shared/scripts", "scripts"]]) {
+    await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared runtime");
+    const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
+    for (const entry of entries) addEntry(targets, entry, destinationPrefix, "shared:runtime");
+  }
+
+  for (const entry of await resolveSourceDocuments(absoluteRepoRoot, product)) {
+    addEntry(targets, { ...entry, relativePath: entry.relativePath }, "", "shared:source-documents");
+  }
+
+  for (const sourceRoot of product.sourceRoots) {
+    await assertNoSymlinkPath(absoluteRepoRoot, `products/${productName}/${sourceRoot}`, "source root");
+    const sourceDirectory = joinWithin(productRoot, sourceRoot, "product source root");
+    const entries = await collectTree(sourceDirectory, { label: `products/${productName}/${sourceRoot}` });
+    for (const entry of entries) addEntry(targets, entry, "", `product:${sourceRoot}`);
+  }
+
+  const entries = [...targets.values()].sort((left, right) => comparePaths(left.relativePath, right.relativePath));
+  rejectFileDirectoryCollisions(entries);
+
+  const outputDir = path.join(absoluteStagingRoot, productName);
+  await rm(outputDir, { recursive: true, force: true });
+  await mkdir(outputDir, { recursive: true });
+  for (const entry of entries) {
+    const destination = path.join(outputDir, ...entry.relativePath.split("/"));
+    await mkdir(path.dirname(destination), { recursive: true });
+    await writeFile(destination, entry.bytes, { mode: 0o644 });
+  }
+  await normalizeOutputMetadata(outputDir, entries, sourceDateEpoch);
+
+  return {
+    name: product.name,
+    outputDir,
+    files: entries.map(({ relativePath }) => relativePath),
+    sha256: hashFileEntries(entries),
+    sources: ["shared", "product"],
+  };
+}
