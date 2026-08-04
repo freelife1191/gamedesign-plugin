@@ -5,6 +5,65 @@
   "routeIds": ["new-hire-reverse-design", "new-hire-reverse-design-export"],
   "artifactTemplateIds": ["reverse-design-document"],
   "userManualRejected": true,
+  "analysisScope": {
+    "game": "Fixture Upgrade Loop",
+    "buildVersion": "1.4.2",
+    "platform": "PC",
+    "region": "KR",
+    "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+    "observationDate": "2026-08-04",
+    "sourceAccess": [
+      {
+        "sourceAddress": "capture:upgrade-01",
+        "sourceType": "observed-behavior",
+        "scope": "upgrade screen",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Direct captured observation",
+        "limitations": "One account state and one upgrade screen only."
+      },
+      {
+        "sourceAddress": "capture:upgrade-02",
+        "sourceType": "observed-behavior",
+        "scope": "tested levels 2 through 4",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Direct captured observation",
+        "limitations": "Promotion, offline, and insufficient-balance exceptions were not all observed."
+      },
+      {
+        "sourceAddress": "table:observed-costs",
+        "sourceType": "observed-behavior",
+        "scope": "levels 2 through 4",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Transcribed visible values",
+        "limitations": "Three levels cannot establish the full cost curve."
+      },
+      {
+        "sourceAddress": "https://example.invalid/official-event",
+        "sourceType": "cited-material",
+        "scope": "announced event window",
+        "buildVersion": "1.4.2",
+        "platform": "PC",
+        "region": "KR",
+        "accountOrPlayerState": "Level 4 test account with no promotional entitlement",
+        "observationDate": "2026-08-04",
+        "accessMethod": "Official event notice retrieval",
+        "limitations": "The notice does not disclose implementation architecture."
+      }
+    ],
+    "limitations": "The analysis is bounded to build 1.4.2, PC, KR, one account state, one observation date, levels 2 through 4, and the declared official notice."
+  },
   "claims": [
     {
       "claimId": "ui-upgrade-preview",

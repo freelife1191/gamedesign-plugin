@@ -27,7 +27,7 @@ const RESULT_KEYS = {
   ],
   "reverse-design-portfolio": [
     "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "userManualRejected",
-    "claims", "surfaces", "export", "unverifiedCurrentClaims",
+    "analysisScope", "claims", "surfaces", "export", "unverifiedCurrentClaims",
   ],
   "junior-transition": [
     "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "jobEvidencePath",
@@ -297,7 +297,10 @@ async function validateExport(root, request, result, errors) {
   try {
     const jobPath = await safeFixtureFile(root, result.export.jobPath, "export.jobPath");
     const job = await readJson(jobPath);
-    job.artifactRoot = root;
+    if (!Array.isArray(result.artifactTemplateIds) || !result.artifactTemplateIds.includes(job.artifactId)) {
+      throw new Error("Export artifactId must reference one routed canonical artifact template.");
+    }
+    job.artifactRoot = path.join(templateRoot, job.artifactId);
     const prepared = prepareCareerExport(job);
     const requestedDocumentFormats = request.requestedFormats
       .map((format) => format.toLowerCase())
@@ -480,10 +483,87 @@ function validateFactInferenceClaim(claim, schema, errors) {
   }
 }
 
+function validateReverseAnalysisScope(value, errors) {
+  const outerKeys = [
+    "game", "buildVersion", "platform", "region", "accountOrPlayerState", "observationDate",
+    "sourceAccess", "limitations",
+  ];
+  const sourceKeys = [
+    "sourceAddress", "sourceType", "scope", "buildVersion", "platform", "region",
+    "accountOrPlayerState", "observationDate", "accessMethod", "limitations",
+  ];
+  const outerExact = requireExactKeys(value, outerKeys, "reverse.analysis-scope", errors, "Reverse analysis scope");
+  const outerFields = outerExact && requireTextFields(
+    value,
+    ["game", "buildVersion", "platform", "region", "accountOrPlayerState", "observationDate", "limitations"],
+    "reverse.analysis-scope",
+    errors,
+  );
+  if (!outerFields) return new Map();
+  if (!/^[A-Za-z0-9][A-Za-z0-9._+-]*$/u.test(value.buildVersion)
+    || !/^[A-Z]{2}(?:-[A-Z0-9]+)?$/u.test(value.region)
+    || !validCalendarDate(value.observationDate)) {
+    errors.push(finding("reverse.analysis-scope", "Build version, region, and observation date must use valid bounded values."));
+  }
+  if (!Array.isArray(value.sourceAccess) || Object.getPrototypeOf(value.sourceAccess) !== Array.prototype
+    || value.sourceAccess.length === 0) {
+    errors.push(finding("reverse.analysis-scope", "sourceAccess must be a nonempty plain array."));
+    return new Map();
+  }
+
+  const byAddress = new Map();
+  const generalization = /\b(?:all|any)\s+(?:versions?|builds?|regions?|platforms?)\b|cross-version/iu;
+  for (const source of value.sourceAccess) {
+    const exact = requireExactKeys(source, sourceKeys, "reverse.analysis-scope", errors, "Reverse source access record");
+    const fields = exact && requireTextFields(source, sourceKeys, "reverse.analysis-scope", errors);
+    if (!fields) continue;
+    if (byAddress.has(source.sourceAddress)) {
+      errors.push(finding("reverse.analysis-scope", `Duplicate sourceAddress: ${source.sourceAddress}.`));
+    }
+    if (!["observed-behavior", "cited-material"].includes(source.sourceType)
+      || !validCalendarDate(source.observationDate)
+      || generalization.test(source.scope)) {
+      errors.push(finding("reverse.analysis-scope", `${source.sourceAddress} has an invalid source type, date, or generalized scope.`));
+    }
+    for (const field of ["buildVersion", "platform", "region", "accountOrPlayerState", "observationDate"]) {
+      if (source[field] !== value[field]) {
+        errors.push(finding("reverse.analysis-scope", `${source.sourceAddress} crosses the declared ${field} boundary.`));
+      }
+    }
+    byAddress.set(source.sourceAddress, source);
+  }
+  return byAddress;
+}
+
+function validateReverseObservationScopes(claims, sourceByAddress, errors) {
+  const usedAddresses = new Set();
+  const generalization = /\b(?:all|any)\s+(?:versions?|builds?|regions?|platforms?)\b|cross-version/iu;
+  for (const claim of claims) {
+    for (const observation of Array.isArray(claim?.observation) ? claim.observation : []) {
+      const source = sourceByAddress.get(observation?.sourceAddress);
+      if (!source
+        || source.sourceType !== observation.sourceType
+        || source.scope !== observation.scope
+        || generalization.test(observation.scope)) {
+        errors.push(finding(
+          "reverse.observation-scope",
+          `${claim?.claimId ?? "claim"} observation must exactly match one declared source address, type, and bounded scope.`,
+        ));
+      } else {
+        usedAddresses.add(observation.sourceAddress);
+      }
+    }
+  }
+  for (const address of sourceByAddress.keys()) {
+    if (!usedAddresses.has(address)) errors.push(finding("reverse.observation-scope", `Declared source ${address} is not referenced by an observation.`));
+  }
+}
+
 async function validateReverse(result, errors) {
   if (result.userManualRejected !== true) {
     errors.push(finding("reverse.user-manual", "Reverse design must reject user-manual mode."));
   }
+  const sourceByAddress = validateReverseAnalysisScope(result.analysisScope, errors);
   const schema = await readJson(factInferenceSchemaPath);
   const claims = Array.isArray(result.claims) ? result.claims : [];
   if (claims.length === 0) errors.push(finding("reverse.claims", "Reverse design requires claim records."));
@@ -495,6 +575,7 @@ async function validateReverse(result, errors) {
       else claimById.set(claim.claimId, claim);
     }
   }
+  validateReverseObservationScopes(claims, sourceByAddress, errors);
   if (!isRecord(result.surfaces)
     || !sameArray(Object.keys(result.surfaces).sort(), [...REVERSE_SURFACES].sort())) {
     errors.push(finding("reverse.surfaces", "Reverse design requires the exact approved surface set."));

@@ -114,6 +114,12 @@ test("semantic mutations cannot pass the three workflow acceptances", async () =
   assert.equal(reverseResult.ok, false);
   assert.ok(reverseResult.errors.some(({ code }) => code === "reverse.user-manual"), messages(reverseResult));
 
+  const unboundExport = await fixtureJson("reverse-design-portfolio");
+  unboundExport.artifactTemplateIds = ["learning-roadmap"];
+  const unboundExportResult = await validate("reverse-design-portfolio", unboundExport);
+  assert.equal(unboundExportResult.ok, false);
+  assert.ok(unboundExportResult.errors.some(({ code }) => code === "output.export"), messages(unboundExportResult));
+
   const transition = structuredClone((await import("./junior-transition/result.json", { with: { type: "json" } })).default);
   transition.unverifiedCurrentClaims.push("The target studio is expanding its design team.");
   const transitionResult = await validate("junior-transition", transition);
@@ -139,7 +145,7 @@ test("malformed results and cross-fixture paths fail closed", async () => {
   assert.ok(escapedEvidence.errors.some(({ code }) => code === "transition.job-evidence"), messages(escapedEvidence));
 });
 
-test("clean-built plugin runs the same scenario contract without repository-only imports", async () => {
+test("clean-built plugin runs the reverse scenario contract without repository-only imports", async () => {
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-e2e-build-"));
   try {
     const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
@@ -154,9 +160,16 @@ test("clean-built plugin runs the same scenario contract without repository-only
       "skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs",
     ));
     const { validateCareerScenario } = await import(`${builtRunner.href}?built=${Date.now()}`);
-    const result = await validateCareerScenario(path.join(fixtureRoot, "entry-12-week-roadmap"));
+    const reverseResult = await validateCareerScenario(path.join(fixtureRoot, "reverse-design-portfolio"));
+    const crossVersion = await fixtureJson("reverse-design-portfolio");
+    crossVersion.analysisScope.sourceAccess[0].buildVersion = "1.5.0";
+    const rejected = await validateCareerScenario(path.join(fixtureRoot, "reverse-design-portfolio"), {
+      resultOverride: crossVersion,
+    });
 
-    assert.equal(result.ok, true, messages(result));
+    assert.equal(reverseResult.ok, true, messages(reverseResult));
+    assert.equal(rejected.ok, false);
+    assert.ok(rejected.errors.some(({ code }) => code === "reverse.analysis-scope"), messages(rejected));
     assert.equal(build.files.includes("skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs"), true);
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
@@ -290,4 +303,55 @@ test("reverse surface validation is independent of JSON property order", async (
   assert.deepEqual(result.acceptance.reverseSurfaces, [
     "fact", "inference", "rules", "exceptions", "UI", "data", "economy", "operations", "alternatives", "validation",
   ]);
+});
+
+test("reverse analysis scope uses an exact typed contract", async () => {
+  const mutations = [
+    ["missing", (result) => { delete result.analysisScope; }],
+    ["extra", (result) => { result.analysisScope.verified = true; }],
+    ["wrong type", (result) => { result.analysisScope.sourceAccess = "all captures"; }],
+    ["wrong field type", (result) => { result.analysisScope.platform = 42; }],
+    ["missing source field", (result) => { delete result.analysisScope.sourceAccess[0].limitations; }],
+    ["extra source field", (result) => { result.analysisScope.sourceAccess[0].verified = true; }],
+    ["wrong source field type", (result) => { result.analysisScope.sourceAccess[0].observationDate = false; }],
+    ["version", (result) => { result.analysisScope.buildVersion = "2.0.0"; }],
+    ["region", (result) => { result.analysisScope.region = "GLOBAL"; }],
+    ["date", (result) => { result.analysisScope.observationDate = "2026-02-30"; }],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const result = await fixtureJson("reverse-design-portfolio");
+    mutate(result);
+    const validation = await validate("reverse-design-portfolio", result);
+    assert.equal(validation.ok, false, label);
+    assert.ok(
+      validation.errors.some(({ code }) => ["scenario.result-keys", "reverse.analysis-scope"].includes(code)),
+      `${label}: ${messages(validation)}`,
+    );
+  }
+});
+
+test("every reverse observation is bound to one declared source in the same build and scope", async () => {
+  const attacks = [
+    ["unknown address", "reverse.observation-scope", (result) => { result.claims[0].observation[0].sourceAddress = "capture:undeclared"; }],
+    ["scope mismatch", "reverse.observation-scope", (result) => { result.claims[0].observation[0].scope = "all platforms and regions"; }],
+    ["cross version", "reverse.analysis-scope", (result) => { result.analysisScope.sourceAccess[0].buildVersion = "1.5.0"; }],
+    ["cross platform", "reverse.analysis-scope", (result) => { result.analysisScope.sourceAccess[0].platform = "Mobile"; }],
+    ["cross region", "reverse.analysis-scope", (result) => { result.analysisScope.sourceAccess[0].region = "US"; }],
+    ["cross account state", "reverse.analysis-scope", (result) => { result.analysisScope.sourceAccess[0].accountOrPlayerState = "Fresh account"; }],
+    ["cross observation date", "reverse.analysis-scope", (result) => { result.analysisScope.sourceAccess[0].observationDate = "2026-08-05"; }],
+    ["cross-version generalization", "reverse.analysis-scope", (result) => {
+      result.analysisScope.sourceAccess[0].scope = "all builds";
+      result.claims[0].observation[0].scope = "all builds";
+    }],
+    ["source type mismatch", "reverse.observation-scope", (result) => { result.analysisScope.sourceAccess[0].sourceType = "cited-material"; }],
+  ];
+
+  for (const [label, expectedCode, mutate] of attacks) {
+    const result = await fixtureJson("reverse-design-portfolio");
+    mutate(result);
+    const validation = await validate("reverse-design-portfolio", result);
+    assert.equal(validation.ok, false, label);
+    assert.ok(validation.errors.some(({ code }) => code === expectedCode), `${label}: ${messages(validation)}`);
+  }
 });

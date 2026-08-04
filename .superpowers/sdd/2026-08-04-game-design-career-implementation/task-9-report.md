@@ -60,3 +60,12 @@
 - Made the reverse surface key-set comparison order-independent while retaining the exact ten-key set and canonical acceptance summary order.
 - Focused GREEN: 14/14; Career 115/115; shared 1/1; repository excluding vendor 256/256; Skillstead 58/58; combined inventory 314/314.
 - Source and clean-built plugin validators passed. The 256-file clean build SHA-256 is `b632c7d85fd57c3e67a5d7780e574a3169c3f0593542c9d1d3ac12099eb5daa3`; built E2E, Node syntax, 19 JSON files, symlink scan, and diff checks passed.
+
+## Fix Round 3
+
+- Reproduced the missing reverse-analysis boundary as focused RED 11/16: the valid scoped fixture and built runner were rejected until `analysisScope` became an approved result field, while absent scope and observation/source boundary attacks were not specifically rejected.
+- Added an exact result-level analysis scope containing game, build version, platform, region, account/player state, observation date, a declared source-access registry, and limitations. Every source record has an exact typed contract and is confined to the same build, platform, region, account state, and date.
+- Bound every observation deterministically to one unique declared `sourceAddress`, with exact source type and bounded scope equality. Missing/extra/wrong-typed scope data, undeclared or duplicate sources, observation scope mismatches, cross-version/platform/region/account/date records, and generalized all-build/all-region scopes fail closed.
+- Migrated all three E2E export jobs from fixture `result.json` self-attestation to routed packaged Canonical Artifacts: Entry uses `learning-roadmap`, Reverse uses `reverse-design-document`, and Transition uses `transition-readiness`, each with `content.md`. The runner rejects an export artifact outside `artifactTemplateIds` and overwrites untrusted fixture roots with the packaged template root before the production export validator runs.
+- Focused GREEN: 16/16; Career plus E2E 128/128; shared 1/1; repository tests 269/269; Skillstead 58/58; combined inventory 327/327.
+- Source and clean-built plugin validators passed, as did all 10 source and 11 built skill validators. The 259-file clean build SHA-256 is `544b24c24f7283fcfbe0bde5c024a4aea869f721693db5d65a7242bdedd558c7`; the built runner accepts all three scenarios and rejects a cross-version reverse observation source.

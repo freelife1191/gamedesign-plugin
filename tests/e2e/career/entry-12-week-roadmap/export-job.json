@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "artifactRoot": ".",
-  "artifactId": "entry-12-week-roadmap",
+  "artifactId": "learning-roadmap",
   "documentType": "learning-plan",
   "canonicalValidation": {
     "status": "passed",
     "command": "node validate-career-scenario.mjs entry-12-week-roadmap",
-    "file": "result.json",
+    "file": "content.md",
     "verification": "Route, templates, evidence roadmap, and visualization contract passed."
   },
   "formats": {

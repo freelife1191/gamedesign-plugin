@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "artifactRoot": ".",
-  "artifactId": "reverse-design-portfolio",
+  "artifactId": "reverse-design-document",
   "documentType": "reverse-design",
   "canonicalValidation": {
     "status": "passed",
     "command": "node validate-career-scenario.mjs reverse-design-portfolio",
-    "file": "result.json",
+    "file": "content.md",
     "verification": "Fact-inference, surface coverage, route, and source template contracts passed."
   },
   "formats": {

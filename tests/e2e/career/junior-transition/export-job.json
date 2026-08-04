@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "artifactRoot": ".",
-  "artifactId": "junior-transition",
+  "artifactId": "transition-readiness",
   "documentType": "transition-report",
   "canonicalValidation": {
     "status": "passed",
     "command": "node validate-career-scenario.mjs junior-transition",
-    "file": "result.json",
+    "file": "content.md",
     "verification": "Primary job evidence, project impact, interview, quarterly plan, route, and templates passed."
   },
   "formats": {
