@@ -1,7 +1,36 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { existsSync, openSync, readFileSync, readSync, closeSync, realpathSync } from "node:fs";
 import path from "node:path";
+
+async function loadSkillstead() {
+  const candidates = [
+    {
+      check: new URL("../../../skills/svg-infographic/scripts/check-svg.mjs", import.meta.url),
+      render: new URL("../../../skills/svg-infographic/scripts/render.mjs", import.meta.url),
+    },
+    {
+      check: new URL("../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/check-svg.mjs", import.meta.url),
+      render: new URL("../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs", import.meta.url),
+    },
+  ];
+  let lastError;
+  for (const candidate of candidates) {
+    try {
+      const [check, render] = await Promise.all([import(candidate.check.href), import(candidate.render.href)]);
+      if (typeof check.lintSvg !== "function" || typeof render.isCompletePng !== "function") {
+        throw new Error("required Skillstead exports are missing");
+      }
+      return { lintSvg: check.lintSvg, isCompletePng: render.isCompletePng };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error(`Skillstead validators are unavailable: ${lastError?.message ?? "unknown error"}`);
+}
+
+const { lintSvg, isCompletePng } = await loadSkillstead();
 
 const AVAILABILITY = new Set(["unknown", "available", "unavailable"]);
 
@@ -48,6 +77,31 @@ function viewBoxDimensions(svgPath) {
   const height = Number(match[2]);
   if (!(width > 0 && height > 0)) throw new Error("svgFile must contain a positive root viewBox");
   return { width, height };
+}
+
+function digest(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function normalizeFindings(findings) {
+  return findings.map(({ file: _file, line, rule, message, fix }) => ({ line, rule, message, fix }));
+}
+
+function sameJson(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function svgAccessibility(source, altText) {
+  const root = source.match(/<svg\b([^>]*)>/iu);
+  if (!root) throw new Error("svgFile must contain an SVG root");
+  const title = source.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/iu)?.[1]?.trim();
+  const description = source.match(/<desc(?:\s[^>]*)?>([\s\S]*?)<\/desc>/iu)?.[1]?.trim();
+  const ariaLabel = root[1].match(/\baria-label=["']([^"']*)["']/iu)?.[1]?.trim();
+  if (!title || !description) throw new Error("svgFile requires non-empty <title> and <desc> accessibility text");
+  if (title !== altText || ariaLabel !== altText) {
+    throw new Error("altText must exactly match both SVG <title> and aria-label");
+  }
+  return { title, description };
 }
 
 function pngDimensions(pngPath) {
@@ -107,23 +161,46 @@ export function validateVisualizationState(value) {
   else if (input.svgFile !== undefined) throw new Error("svgFile requires generated");
 
   if (input.linted) {
-    const evidence = exactKeys(input.lintEvidence, ["command", "file", "result", "warningsDisposition"], "lintEvidence");
+    const evidence = exactKeys(input.lintEvidence, [
+      "command", "file", "result", "sha256", "errors", "warnings", "warningsDisposition",
+    ], "lintEvidence");
     requireText(evidence.command, "lintEvidence.command");
     requireText(evidence.warningsDisposition, "lintEvidence.warningsDisposition");
     if (evidence.result !== "passed") throw new Error("linted requires passed lintEvidence");
     const lintFile = safeExistingFile(root, evidence.file, ".svg", "lintEvidence.file");
     if (lintFile.relative !== svg.relative) throw new Error("lintEvidence.file must match svgFile");
+    const svgBytes = readFileSync(svg.absolute);
+    if (svgBytes.length === 0) throw new Error("svgFile must not be empty");
+    const actualLint = lintSvg(svgBytes.toString("utf8"), lintFile.relative);
+    const errors = normalizeFindings(actualLint.errors);
+    const warnings = normalizeFindings(actualLint.warnings);
+    const sha256 = digest(svgBytes);
+    if (evidence.sha256 !== sha256) throw new Error("lintEvidence.sha256 must match the exact SVG bytes");
+    if (!sameJson(evidence.errors, errors) || !sameJson(evidence.warnings, warnings)) {
+      throw new Error("lintEvidence errors and warnings must match actual Skillstead lint output");
+    }
+    if (errors.length > 0) throw new Error("linted requires zero actual Skillstead lint errors");
+    const expectedDisposition = warnings.length === 0
+      ? "No warnings."
+      : `${warnings.length} warning(s): ${[...new Set(warnings.map(({ rule }) => rule))].join(", ")}`;
+    if (evidence.warningsDisposition !== expectedDisposition) {
+      throw new Error("lintEvidence.warningsDisposition must summarize actual Skillstead warnings");
+    }
     lintEvidence = {
       command: evidence.command,
       file: lintFile.relative,
       result: "passed",
-      warningsDisposition: evidence.warningsDisposition,
+      sha256,
+      errors,
+      warnings,
+      warningsDisposition: expectedDisposition,
     };
   } else if (input.lintEvidence !== undefined) throw new Error("lintEvidence requires linted");
 
   if (input.rendered) {
     if (input.pngAvailability !== "available") throw new Error("rendered requires available PNG capability");
     png = safeExistingFile(root, input.pngFile, ".png", "pngFile");
+    if (!isCompletePng(png.absolute)) throw new Error("pngFile must be a complete PNG with IEND exactly at EOF");
     const evidence = exactKeys(input.renderEvidence, [
       "command", "svgFile", "pngFile", "browser", "result", "scale",
       "sourceWidth", "sourceHeight", "outputWidth", "outputHeight",
@@ -166,11 +243,14 @@ export function validateVisualizationState(value) {
 
   let altText;
   let visualQa;
-  if (input.verified) {
+  if (input.linted) {
     altText = requireText(input.altText, "altText");
+    svgAccessibility(readFileSync(svg.absolute, "utf8"), altText);
+  }
+  if (input.verified) {
     visualQa = requireText(input.visualQa, "visualQa");
-  } else if (input.altText !== undefined || input.visualQa !== undefined) {
-    throw new Error("altText and visualQa require verified");
+  } else if (input.visualQa !== undefined) {
+    throw new Error("visualQa requires verified");
   }
 
   const normalized = {

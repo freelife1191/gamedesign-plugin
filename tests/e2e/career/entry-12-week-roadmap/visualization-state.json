@@ -7,6 +7,7 @@
   "rendered": false,
   "verified": false,
   "svgFile": "competency-map.svg",
+  "altText": "Entry competency map linking evidence gaps to practice and proof artifacts",
   "pngAvailability": "unavailable",
   "availabilityEvidence": {
     "command": "node render.mjs --probe",
@@ -17,6 +18,9 @@
     "command": "node check-svg.mjs competency-map.svg",
     "file": "competency-map.svg",
     "result": "passed",
-    "warningsDisposition": "No SVG lint warnings."
+    "sha256": "6442049587a93f6d9e7d772e5162b4539547e5e7d1d99f61107078558f69fbf8",
+    "errors": [],
+    "warnings": [],
+    "warningsDisposition": "No warnings."
   }
 }

@@ -6,9 +6,12 @@ import {
   realpathSync,
   writeFileSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { inflateRawSync } from "node:zlib";
 
 const DOCUMENT_TYPES = new Set([
   "learning-plan",
@@ -24,6 +27,12 @@ const AVAILABILITY = new Set(["unknown", "available", "unavailable"]);
 const STATUSES = new Set(["not-requested", "blocked", "pending", "passed", "failed", "unavailable"]);
 const EVIDENCE_KINDS = new Set(["capability-probe", "generation", "qa"]);
 const EVIDENCE_RESULTS = new Set(["passed", "failed"]);
+const QA_VALIDATORS = {
+  md: "career-export/md-canonical-identity-v1",
+  pdf: "career-export/pdf-structure-v1",
+  docx: "career-export/docx-ooxml-v1",
+  pptx: "career-export/pptx-ooxml-v1",
+};
 
 function requireRecord(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
@@ -75,12 +84,153 @@ function validateDerivativeFile(root, format, file, label) {
   return normalized;
 }
 
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function validatorPath() {
+  const candidates = [
+    new URL("../../../scripts/validate-artifact.mjs", import.meta.url),
+    new URL("../../../../../../shared/scripts/validate-artifact.mjs", import.meta.url),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const resolved = realpathSync(fileURLToPath(candidate));
+      if (existsSync(resolved)) return resolved;
+    } catch {}
+  }
+  throw new Error("shared validateArtifact is unavailable");
+}
+
+function validateCanonicalArtifact(root, artifactId, canonicalFile) {
+  if (canonicalFile !== "content.md") throw new Error("canonicalValidation.file must be content.md");
+  const run = spawnSync(process.execPath, [validatorPath(), root], { encoding: "utf8" });
+  let result;
+  try { result = JSON.parse(run.stdout); } catch { throw new Error(`canonical validator returned invalid output: ${run.stderr.trim()}`); }
+  if (run.status !== 0 || !result?.ok) {
+    const details = result?.errors?.map(({ code, message }) => `${code}: ${message}`).join("; ") || run.stderr.trim();
+    throw new Error(`canonical validation must pass before derivative preparation: ${details}`);
+  }
+  const bytes = readFileSync(path.join(root, canonicalFile));
+  const frontmatter = bytes.toString("utf8").match(/^---\n([\s\S]*?)\n---\n/u)?.[1] ?? "";
+  const canonicalId = frontmatter.match(/^artifact_id:\s*([^\n]+)$/mu)?.[1]?.trim();
+  if (canonicalId !== artifactId) throw new Error("artifactId must match content.md frontmatter artifact_id");
+  return { bytes, sha256: sha256(bytes), size: bytes.length };
+}
+
+function validatePdf(bytes) {
+  const text = bytes.toString("latin1");
+  if (!/^%PDF-1\.[0-9]/u.test(text) || !/%%EOF\s*$/u.test(text)) throw new Error("PDF requires a valid header and terminal EOF marker");
+  if (!/\bxref\b/u.test(text) || !/\btrailer\b/u.test(text) || !/\bstartxref\b/u.test(text)) {
+    throw new Error("PDF requires xref, trailer, and startxref structure");
+  }
+  if (!/\/Type\s*\/Catalog\b/u.test(text) || !/\/Type\s*\/Pages\b/u.test(text) || !/\/Type\s*\/Page\b/u.test(text)) {
+    throw new Error("PDF requires catalog, pages, and page objects");
+  }
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function readZipEntries(bytes) {
+  let eocd = -1;
+  for (let offset = Math.max(0, bytes.length - 65_557); offset <= bytes.length - 22; offset++) {
+    if (bytes.readUInt32LE(offset) === 0x06054b50) eocd = offset;
+  }
+  if (eocd < 0 || eocd + 22 > bytes.length || eocd + 22 + bytes.readUInt16LE(eocd + 20) !== bytes.length) {
+    throw new Error("OOXML requires an intact ZIP end-of-central-directory record at EOF");
+  }
+  const count = bytes.readUInt16LE(eocd + 10);
+  const centralSize = bytes.readUInt32LE(eocd + 12);
+  const centralOffset = bytes.readUInt32LE(eocd + 16);
+  if (centralOffset + centralSize !== eocd) throw new Error("OOXML ZIP central directory boundaries are invalid");
+  const entries = new Map();
+  let cursor = centralOffset;
+  for (let index = 0; index < count; index++) {
+    if (cursor + 46 > eocd || bytes.readUInt32LE(cursor) !== 0x02014b50) throw new Error("OOXML ZIP central directory entry is invalid");
+    const method = bytes.readUInt16LE(cursor + 10);
+    const expectedCrc = bytes.readUInt32LE(cursor + 16);
+    const compressedSize = bytes.readUInt32LE(cursor + 20);
+    const uncompressedSize = bytes.readUInt32LE(cursor + 24);
+    const nameLength = bytes.readUInt16LE(cursor + 28);
+    const extraLength = bytes.readUInt16LE(cursor + 30);
+    const commentLength = bytes.readUInt16LE(cursor + 32);
+    const localOffset = bytes.readUInt32LE(cursor + 42);
+    const name = bytes.toString("utf8", cursor + 46, cursor + 46 + nameLength);
+    if (!name || entries.has(name) || localOffset + 30 > centralOffset || bytes.readUInt32LE(localOffset) !== 0x04034b50) {
+      throw new Error("OOXML ZIP local entry identity is invalid");
+    }
+    const localNameLength = bytes.readUInt16LE(localOffset + 26);
+    const localExtraLength = bytes.readUInt16LE(localOffset + 28);
+    const localName = bytes.toString("utf8", localOffset + 30, localOffset + 30 + localNameLength);
+    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+    const compressed = bytes.subarray(dataStart, dataStart + compressedSize);
+    if (localName !== name || compressed.length !== compressedSize) throw new Error("OOXML ZIP local entry boundaries are invalid");
+    let data;
+    if (method === 0) data = compressed;
+    else if (method === 8) data = inflateRawSync(compressed);
+    else throw new Error(`OOXML ZIP compression method ${method} is unsupported`);
+    if (data.length !== uncompressedSize) throw new Error("OOXML ZIP uncompressed size is invalid");
+    if (crc32(data) !== expectedCrc || bytes.readUInt32LE(localOffset + 14) !== expectedCrc) {
+      throw new Error("OOXML ZIP entry CRC is invalid");
+    }
+    entries.set(name, data);
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+  if (cursor !== eocd) throw new Error("OOXML ZIP central directory count is invalid");
+  return entries;
+}
+
+function validateOoxml(bytes, format) {
+  const entries = readZipEntries(bytes);
+  const required = format === "docx"
+    ? ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/_rels/document.xml.rels"]
+    : ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml", "ppt/_rels/presentation.xml.rels", "ppt/slides/slide1.xml", "ppt/slides/_rels/slide1.xml.rels"];
+  for (const name of required) if (!entries.has(name)) throw new Error(`${format.toUpperCase()} package is missing required entry: ${name}`);
+  for (const name of required.filter((entry) => entry.endsWith(".rels"))) {
+    const relationships = entries.get(name).toString("utf8");
+    if (!/<Relationships\b/u.test(relationships) || !/<Relationship\b/u.test(relationships)) {
+      throw new Error(`${format.toUpperCase()} relationships are invalid: ${name}`);
+    }
+  }
+  const rootRels = entries.get("_rels/.rels").toString("utf8");
+  const packageTarget = format === "docx" ? "word/document.xml" : "ppt/presentation.xml";
+  if (!rootRels.includes(`Target="${packageTarget}"`)) throw new Error(`${format.toUpperCase()} root relationship target is invalid`);
+  if (format === "docx") {
+    if (!/<w:document\b/u.test(entries.get("word/document.xml").toString("utf8"))) throw new Error("DOCX document root is invalid");
+  } else {
+    const presentationRels = entries.get("ppt/_rels/presentation.xml.rels").toString("utf8");
+    if (!presentationRels.includes('Target="slides/slide1.xml"')) throw new Error("PPTX slide relationship target is invalid");
+    if (!/<p:presentation\b/u.test(entries.get("ppt/presentation.xml").toString("utf8"))
+      || !/<p:sld\b/u.test(entries.get("ppt/slides/slide1.xml").toString("utf8"))) {
+      throw new Error("PPTX presentation or slide root is invalid");
+    }
+  }
+}
+
+function validateDerivativeBytes(root, format, relative, canonicalBytes, qa) {
+  const bytes = readFileSync(path.join(root, relative));
+  if (bytes.length === 0) throw new Error(`${format} derivative must not be empty`);
+  if (qa.sha256 !== sha256(bytes) || qa.size !== bytes.length || qa.validatorId !== QA_VALIDATORS[format]) {
+    throw new Error(`${format} QA digest, size, and validatorId must match independently recomputed evidence`);
+  }
+  if (format === "md" && !bytes.equals(canonicalBytes)) throw new Error("Markdown derivative must be byte-identical to canonical content.md");
+  if (format === "pdf") validatePdf(bytes);
+  if (format === "docx" || format === "pptx") validateOoxml(bytes, format);
+}
+
 function validateEvidence(root, format, input) {
   const evidence = requireArray(input, `${format}.evidence`);
   const normalized = [];
   const byKind = new Map();
   for (const [index, value] of evidence.entries()) {
-    const item = exactKeys(value, ["kind", "command", "file", "result"], `${format}.evidence[${index}]`);
+    const item = exactKeys(value, ["kind", "command", "file", "result", "sha256", "size", "validatorId"], `${format}.evidence[${index}]`);
     if (!EVIDENCE_KINDS.has(item.kind)) throw new Error(`${format}.evidence[${index}].kind is invalid`);
     if (byKind.has(item.kind)) throw new Error(`${format}.evidence has contradictory or duplicate ${item.kind} evidence`);
     requireText(item.command, `${format}.evidence[${index}].command`);
@@ -90,6 +240,14 @@ function validateEvidence(root, format, input) {
       record.file = validateDerivativeFile(root, format, item.file, `${format}.evidence[${index}].file`);
     } else if (item.file !== undefined) {
       record.file = safeExistingFile(root, item.file, `${format}.evidence[${index}].file`);
+    }
+    if (item.kind === "qa" && item.result === "passed") {
+      requireText(item.sha256, `${format}.evidence[${index}].sha256`);
+      requireText(item.validatorId, `${format}.evidence[${index}].validatorId`);
+      if (!Number.isSafeInteger(item.size) || item.size < 1) throw new Error(`${format}.evidence[${index}].size must be a positive safe integer`);
+      Object.assign(record, { sha256: item.sha256, size: item.size, validatorId: item.validatorId });
+    } else if (item.sha256 !== undefined || item.size !== undefined || item.validatorId !== undefined) {
+      throw new Error(`${format} digest evidence is allowed only for passed QA`);
     }
     byKind.set(item.kind, record);
     normalized.push(record);
@@ -188,7 +346,7 @@ function validatePptx(job, status) {
   return { audience: job.audience, purpose: job.purpose, outlineSource: "independent-story", storyOutline };
 }
 
-function validateFormat(root, format, value) {
+function validateFormat(root, format, value, canonicalBytes) {
   const allowed = format === "pptx"
     ? ["requested", "availability", "status", "evidence", "audience", "purpose", "storyOutline", "outlineSource"]
     : ["requested", "availability", "status", "evidence"];
@@ -198,6 +356,7 @@ function validateFormat(root, format, value) {
   if (!STATUSES.has(input.status)) throw new Error(`${format}.status is invalid`);
   const { evidence, byKind } = validateEvidence(root, format, input.evidence);
   validateTransition(format, input.requested, input.availability, input.status, byKind);
+  if (input.status === "passed") validateDerivativeBytes(root, format, byKind.get("qa").file, canonicalBytes, byKind.get("qa"));
   const pptx = format === "pptx" && input.requested ? validatePptx(input, input.status) : null;
   const normalized = {
     requested: input.requested,
@@ -223,10 +382,11 @@ export function prepareCareerExport(value) {
   requireText(canonical.command, "canonicalValidation.command");
   requireText(canonical.verification, "canonicalValidation.verification");
   const canonicalFile = safeExistingFile(root, canonical.file, "canonicalValidation.file");
+  const canonicalEvidence = validateCanonicalArtifact(root, input.artifactId, canonicalFile);
 
   const inputFormats = exactKeys(input.formats, FORMATS, "formats");
   const formats = {};
-  for (const format of FORMATS) formats[format] = validateFormat(root, format, inputFormats[format]);
+  for (const format of FORMATS) formats[format] = validateFormat(root, format, inputFormats[format], canonicalEvidence.bytes);
   return {
     schemaVersion: 1,
     artifactRoot: root,
@@ -234,9 +394,12 @@ export function prepareCareerExport(value) {
     documentType: input.documentType,
     canonicalValidation: {
       status: "passed",
-      command: canonical.command,
+      command: `node ${path.basename(validatorPath())} ${path.basename(root)}`,
       file: canonicalFile,
-      verification: canonical.verification,
+      verification: "shared validateArtifact passed against the canonical artifact root",
+      validatorId: "shared.validateArtifact/v1",
+      sha256: canonicalEvidence.sha256,
+      size: canonicalEvidence.size,
     },
     formats,
   };
