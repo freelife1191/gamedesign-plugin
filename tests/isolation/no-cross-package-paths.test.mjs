@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -73,4 +74,42 @@ test("immutable vendored Skillstead documentation remains auditable while produc
   await writeFile(path.join(root, "README.md"), "Use the product wrapper.\n");
   const result = await auditTree({ root, packageName: "game-design-studio" });
   assert.equal(result.files, 2);
+});
+
+test("tree audit rejects POSIX-shell-equivalent raw vendor commands after quote and escape concatenation", async (t) => {
+  const shellWords = [
+    'skills/svg-"infographic"/scripts/render.mjs',
+    "'skills/svg-infographic/'\"scripts\"/check-svg.mjs",
+    "skills/svg-infographic/scripts/render\\.mjs",
+    "skills/svg-infographic/scripts/\\\nrender.mjs",
+  ];
+  for (const shellWord of shellWords) {
+    await t.test(JSON.stringify(shellWord), async (t) => {
+      const resolved = spawnSync("/bin/sh", ["-c", `set -- ${shellWord}; printf '%s' "$1"`], { encoding: "utf8" });
+      assert.equal(resolved.status, 0, resolved.stderr);
+      assert.match(resolved.stdout, /^skills\/svg-infographic\/scripts\/(?:check-svg|render)\.mjs$/u);
+      const root = await fixture(t, "SKILL.md", `node ${shellWord} input.svg output.png\n`);
+      await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI/u);
+    });
+  }
+});
+
+test("tree audit conservatively rejects recursive percent and Windows command concatenation while allowing wrappers", async (t) => {
+  const attacks = [
+    "node skills/svg-infographic/%25252573cripts/render.mjs input.svg output.png\n",
+    "node skills^/svg-infographic^/scripts^/render^.mjs input.svg output.png\n",
+    'node "skills/svg-""infographic/scripts/render.mjs" input.svg output.png\n',
+    "node\tskills/svg-infographic/scripts/\\\ncheck-svg.mjs\toutput.svg\n",
+  ];
+  for (const contents of attacks) {
+    const root = await fixture(t, "SKILL.md", contents);
+    await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI/u);
+  }
+
+  const wrapperRoot = await fixture(
+    t,
+    "SKILL.md",
+    "node skills/visualize-game-design/scripts/run-skillstead.mjs input.svg output.png\n",
+  );
+  assert.equal((await auditTree({ root: wrapperRoot, packageName: "game-design-studio" })).files, 1);
 });

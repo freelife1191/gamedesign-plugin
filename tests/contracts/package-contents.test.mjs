@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, lstat, mkdir, mkdtemp, readFile, rename as fsRename, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, realpath, rename as fsRename, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -38,6 +38,12 @@ async function createSnapshotFixture(t) {
     await cp(path.join(repoRoot, directory), path.join(fixtureRepo, directory), { recursive: true });
   }
   return { fixtureRepo, temporaryRoot };
+}
+
+async function assertCanonicalExisting(location) {
+  assert.equal(typeof location, "string");
+  await lstat(location);
+  assert.equal(await realpath(location), location);
 }
 
 function pathsUnder(files, prefix) {
@@ -202,10 +208,10 @@ test("snapshot replacement restores originals when the second install rename fai
     return fsRename(source, destination);
   };
 
-  await assert.rejects(
-    () => buildSnapshots({ repoRoot: fixtureRepo, mode: "clean", operations: { rename: renameOperation } }),
-    /injected second install failure/i,
-  );
+  const error = await buildSnapshots({ repoRoot: fixtureRepo, mode: "clean", operations: { rename: renameOperation } })
+    .then(() => undefined, (caught) => caught);
+  assert.match(error.message, /injected second install failure/i);
+  assert.equal(error.recovery, undefined);
   for (const productName of productNames) {
     assert.equal(
       await readFile(path.join(fixtureRepo, "plugins", productName, "IRREPLACEABLE.txt"), "utf8"),
@@ -229,7 +235,7 @@ test("snapshot transaction preserves originals or an external recovery copy acro
     await t.test(`backup rename ${failAt}`, async (t) => {
       const { fixtureRepo } = await fixtureWithOriginals(t);
       let renames = 0;
-      await assert.rejects(() => buildSnapshots({
+      const error = await buildSnapshots({
         repoRoot: fixtureRepo,
         mode: "clean",
         operations: {
@@ -239,7 +245,9 @@ test("snapshot transaction preserves originals or an external recovery copy acro
             return fsRename(source, destination);
           },
         },
-      }), new RegExp(`injected rename ${failAt}`, "i"));
+      }).then(() => undefined, (caught) => caught);
+      assert.match(error.message, new RegExp(`injected rename ${failAt}`, "i"));
+      assert.equal(error.recovery, undefined);
       for (const productName of productNames) {
         assert.equal(await readFile(path.join(fixtureRepo, "plugins", productName, "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
       }
@@ -271,7 +279,22 @@ test("snapshot transaction preserves originals or an external recovery copy acro
 
     assert.equal(error?.recovery?.state, "rollback-incomplete");
     assert.match(error.message, /SNAPSHOT_RECOVERY=/u);
-    assert.equal(await readFile(path.join(error.recovery.backups["game-design-career"], "IRREPLACEABLE.txt"), "utf8"), "game-design-career original\n");
+    assert.deepEqual(Object.keys(error.recovery.products), productNames);
+    const career = error.recovery.products["game-design-career"];
+    const studio = error.recovery.products["game-design-studio"];
+    assert.equal(career.status, "recovery-required");
+    assert.equal(studio.status, "restored");
+    await assertCanonicalExisting(career.originalLocation);
+    await assertCanonicalExisting(career.backupLocation);
+    await assertCanonicalExisting(career.installedSnapshotLocation);
+    assert.equal(career.originalLocation, career.backupLocation);
+    assert.match(career.manualAction, /remove.*installed.*restore|restore.*backup/i);
+    await assertCanonicalExisting(studio.originalLocation);
+    assert.equal(studio.backupLocation, null);
+    assert.equal(studio.installedSnapshotLocation, null);
+    assert.match(studio.manualAction, /no manual recovery required/i);
+    assert.equal(await readFile(path.join(career.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-career original\n");
+    assert.equal(await readFile(path.join(studio.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-studio original\n");
     await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
     await rm(error.recovery.stagingRoot, { recursive: true, force: true });
   });
@@ -297,8 +320,19 @@ test("snapshot transaction preserves originals or an external recovery copy acro
     }).then(() => undefined, (caught) => caught);
 
     assert.equal(error?.recovery?.state, "rollback-incomplete");
-    assert.equal(await readFile(path.join(error.recovery.backups["game-design-career"], "IRREPLACEABLE.txt"), "utf8"), "game-design-career original\n");
-    assert.equal(await readFile(path.join(fixtureRepo, "plugins/game-design-studio/IRREPLACEABLE.txt"), "utf8"), "game-design-studio original\n");
+    const career = error.recovery.products["game-design-career"];
+    const studio = error.recovery.products["game-design-studio"];
+    assert.equal(career.status, "recovery-required");
+    await assertCanonicalExisting(career.originalLocation);
+    assert.equal(career.originalLocation, career.backupLocation);
+    assert.equal(career.installedSnapshotLocation, null);
+    assert.match(career.manualAction, /restore.*backup/i);
+    assert.equal(studio.status, "restored");
+    await assertCanonicalExisting(studio.originalLocation);
+    assert.equal(studio.backupLocation, null);
+    assert.equal(studio.installedSnapshotLocation, null);
+    assert.equal(await readFile(path.join(career.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-career original\n");
+    assert.equal(await readFile(path.join(studio.originalLocation, "IRREPLACEABLE.txt"), "utf8"), "game-design-studio original\n");
     await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
     await rm(error.recovery.stagingRoot, { recursive: true, force: true });
   });
@@ -318,8 +352,50 @@ test("snapshot transaction preserves originals or an external recovery copy acro
 
     assert.equal(error?.recovery?.state, "committed-recovery-retained");
     for (const productName of productNames) {
-      assert.equal(await readFile(path.join(error.recovery.backups[productName], "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
+      const product = error.recovery.products[productName];
+      assert.equal(product.status, "installed");
+      await assertCanonicalExisting(product.originalLocation);
+      await assertCanonicalExisting(product.backupLocation);
+      await assertCanonicalExisting(product.installedSnapshotLocation);
+      assert.equal(product.originalLocation, product.backupLocation);
+      assert.match(product.manualAction, /verify.*installed.*remove.*backup/i);
+      assert.equal(await readFile(path.join(product.originalLocation, "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
     }
+    await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+    await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+  });
+
+  await t.test("fully restored recovery cleanup failure", async (t) => {
+    const { fixtureRepo } = await fixtureWithOriginals(t);
+    let installFailureInjected = false;
+    const error = await buildSnapshots({
+      repoRoot: fixtureRepo,
+      mode: "clean",
+      operations: {
+        rename: async (source, destination) => {
+          if (!installFailureInjected && path.basename(path.dirname(source)).startsWith("snapshot-build-")) {
+            installFailureInjected = true;
+            throw new Error("trigger fully restored rollback");
+          }
+          return fsRename(source, destination);
+        },
+        rm: async (target, options) => {
+          if (path.basename(target).startsWith("snapshot-recovery-")) throw new Error("injected restored cleanup failure");
+          return rm(target, options);
+        },
+      },
+    }).then(() => undefined, (caught) => caught);
+
+    assert.equal(error?.recovery?.state, "fully-restored-recovery-retained");
+    for (const productName of productNames) {
+      const product = error.recovery.products[productName];
+      assert.equal(product.status, "restored");
+      await assertCanonicalExisting(product.originalLocation);
+      assert.equal(product.backupLocation, null);
+      assert.equal(product.installedSnapshotLocation, null);
+      assert.match(product.manualAction, /no manual recovery required/i);
+    }
+    await assertCanonicalExisting(error.recovery.recoveryRoot);
     await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
     await rm(error.recovery.stagingRoot, { recursive: true, force: true });
   });

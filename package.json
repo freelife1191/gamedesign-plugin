@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test",
+    "test": "node tooling/run-repo-tests.mjs",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:contracts": "node --test tests/contracts/*.test.mjs",
     "test:shared-contract": "node --test tests/contracts/shared-contract.test.mjs",

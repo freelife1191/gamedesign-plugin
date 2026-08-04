@@ -1,0 +1,49 @@
+import assert from "node:assert/strict";
+import { lstat, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+
+async function writeTest(root, relativePath, marker) {
+  const target = path.join(root, relativePath);
+  const markerPath = path.join(root, `${marker}.ran`);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, `import { writeFileSync } from "node:fs"; import test from "node:test"; writeFileSync(${JSON.stringify(markerPath)}, "ran\\n"); test("${marker}", () => {});\n`);
+}
+
+test("npm test runs only canonical nested tests and excludes copied plugin tests", async (t) => {
+  const fixture = await mkdtemp(path.join(tmpdir(), "repo-test-runner-"));
+  t.after(() => rm(fixture, { recursive: true, force: true }));
+  await writeTest(fixture, "tests/top.test.mjs", "CANONICAL_TOP");
+  await writeTest(fixture, "tests/nested/deep.test.mjs", "CANONICAL_NESTED");
+  await writeTest(fixture, "plugins/game-design-career/skills/vendor/scripts/copied.test.mjs", "COPIED_PLUGIN");
+
+  const result = spawnSync("npm", ["test", "--", "--repo-root", fixture], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  await lstat(path.join(fixture, "CANONICAL_TOP.ran"));
+  await lstat(path.join(fixture, "CANONICAL_NESTED.ran"));
+  assert.equal(await lstat(path.join(fixture, "COPIED_PLUGIN.ran")).then(() => true, (error) => error.code !== "ENOENT"), false);
+});
+
+test("repo test runner rejects symlinks inside the canonical tests tree", async (t) => {
+  const fixture = await mkdtemp(path.join(tmpdir(), "repo-test-runner-symlink-"));
+  t.after(() => rm(fixture, { recursive: true, force: true }));
+  await writeTest(fixture, "outside.test.mjs", "OUTSIDE");
+  await mkdir(path.join(fixture, "tests"), { recursive: true });
+  await symlink(path.join(fixture, "outside.test.mjs"), path.join(fixture, "tests/copied.test.mjs"));
+
+  const result = spawnSync(process.execPath, [
+    path.join(repoRoot, "tooling/run-repo-tests.mjs"),
+    "--repo-root", fixture,
+  ], { encoding: "utf8" });
+  assert.notEqual(result.status, 0, result.stdout);
+  assert.match(result.stderr, /symlink/i);
+  assert.doesNotMatch(result.stdout, /OUTSIDE/u);
+});

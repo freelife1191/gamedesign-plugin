@@ -21,7 +21,7 @@ function normalizedForbiddenPaths(paths) {
 
 function decodePathToken(token) {
   let decoded = token;
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
     try {
       const next = decodeURIComponent(decoded);
       if (next === decoded) break;
@@ -33,11 +33,21 @@ function decodePathToken(token) {
   return decoded;
 }
 
+function canonicalizeCommandText(text) {
+  return decodePathToken(text)
+    .normalize("NFC")
+    .replace(/\\\r?\n|\^\r?\n/gu, "")
+    .replace(/\$(?=['"])/gu, "")
+    .replace(/\\([./\\'"` \t])/gu, "$1")
+    .replace(/\^([^\r\n])/gu, "$1")
+    .replaceAll("\\", "/")
+    .replace(/[\u2044\u2215\uFF0F]/gu, "/")
+    .replace(/['"`]/gu, "");
+}
+
 function containsRawVendorCli(text) {
-  for (const rawToken of text.split(/\s+/u)) {
-    const token = decodePathToken(rawToken)
-      .normalize("NFC")
-      .replace(/[\\\u2044\u2215\uFF0F]/gu, "/")
+  for (const rawToken of canonicalizeCommandText(text).split(/\s+/u)) {
+    const token = rawToken
       .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
     if (vendorCliPath.test(path.posix.normalize(token))) return true;
   }
