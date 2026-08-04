@@ -1,0 +1,16 @@
+artifact_id: portfolio-backlog
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate and portfolio reviewer
+    purpose: Prioritize inspectable portfolio evidence instead of visual polish.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

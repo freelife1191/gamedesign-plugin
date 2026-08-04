@@ -1,0 +1,16 @@
+artifact_id: portfolio-project-brief
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate, collaborator, and reviewer
+    purpose: Plan a portfolio project as an inspectable design decision chain.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

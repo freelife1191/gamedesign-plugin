@@ -1,0 +1,16 @@
+artifact_id: reverse-design-document
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate and reverse-design critic
+    purpose: Separate observed behavior from falsifiable design inference.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

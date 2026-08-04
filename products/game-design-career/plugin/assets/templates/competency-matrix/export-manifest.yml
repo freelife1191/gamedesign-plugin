@@ -1,0 +1,16 @@
+artifact_id: competency-matrix
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate, mentor, and reviewer
+    purpose: Trace target requirements to observable evidence and minimum repairs.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

@@ -1,0 +1,16 @@
+artifact_id: career-stage-goal
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate and career mentor
+    purpose: Align a career stage, target role, constraints, evidence, and approval boundary.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

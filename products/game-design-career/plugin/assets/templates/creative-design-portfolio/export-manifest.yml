@@ -1,0 +1,16 @@
+artifact_id: creative-design-portfolio
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: recruiter and game-design reviewer
+    purpose: Tell a short differentiated design story backed by inspectable evidence.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

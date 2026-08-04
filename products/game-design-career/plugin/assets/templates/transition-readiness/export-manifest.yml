@@ -1,0 +1,16 @@
+artifact_id: transition-readiness
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: designer and career strategist
+    purpose: Compare current evidence with fresh target-role requirements without hiring promises.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification
