@@ -89,9 +89,7 @@ function schemaAllows(schema, type) {
   return allowed.includes(type);
 }
 
-function snapshotData(value, path, errors, schema, state = {
-  depth: 0, exhausted: false, operations: 0, seen: new WeakSet(),
-}) {
+function snapshotData(value, path, errors, schema, state) {
   if (!consumeBoundaryOperations(state, errors, 1, path)) return undefined;
   if (state.depth > MAX_BOUNDARY_DEPTH) {
     addError(errors, finding("boundary-depth", `Job evidence exceeds depth ${MAX_BOUNDARY_DEPTH}.`, path));
@@ -325,10 +323,18 @@ function exactStringSet(actual, expected) {
 
 export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   const boundaryErrors = createFindingList();
-  const records = snapshotData(inputRecords, "$", boundaryErrors, collectionSchema);
+  const boundaryState = {
+    depth: 0,
+    exhausted: false,
+    operations: 0,
+    seen: new WeakSet(),
+  };
+  const records = snapshotData(inputRecords, "$", boundaryErrors, collectionSchema, boundaryState);
   const options = inputOptions === undefined
     ? Object.create(null)
-    : snapshotData(inputOptions, "$options", boundaryErrors, optionsSchema);
+    : boundaryState.exhausted
+      ? undefined
+      : snapshotData(inputOptions, "$options", boundaryErrors, optionsSchema, boundaryState);
   if (boundaryErrors.length > 0) return { valid: false, errors: boundaryErrors };
   if (!Array.isArray(records)) {
     return {

@@ -154,6 +154,11 @@ function wideAliasCollection(size) {
   return Array.from({ length: size }, () => record);
 }
 
+function knownAliasCollection(size) {
+  const record = posting("known-alias", [], { sampleSize: size });
+  return Array.from({ length: size }, () => record);
+}
+
 function assertBoundedWideAliases(validateJobEvidenceCollection, label) {
   let deterministic800;
   for (const size of [200, 400, 800, 5_000]) {
@@ -169,6 +174,45 @@ function assertBoundedWideAliases(validateJobEvidenceCollection, label) {
     if (size === 800) deterministic800 = result;
   }
   assert.deepEqual(validateJobEvidenceCollection(wideAliasCollection(800)), deterministic800, `${label} deterministic truncation`);
+}
+
+function assertSharedBoundaryBudget(validateJobEvidenceCollection, label) {
+  const wideOptions = Object.create(null);
+  for (let index = 0; index < 20_000; index += 1) wideOptions[`unknown-${index}`] = null;
+  const combined = validateJobEvidenceCollection(knownAliasCollection(350), wideOptions);
+  assert.equal(combined.valid, false, `${label} combined budget`);
+  assert.deepEqual(combined.errors, [{
+    code: "boundary-complexity",
+    message: "Job evidence exceeds the 100000-operation boundary budget.",
+    path: "$options",
+  }], `${label} combined budget emits one bounded finding`);
+
+  let accessorCalls = 0;
+  const accessorOptions = {};
+  Object.defineProperty(accessorOptions, "constructor", {
+    enumerable: true,
+    get() {
+      accessorCalls += 1;
+      return "not data";
+    },
+  });
+  const exhausted = validateJobEvidenceCollection(knownAliasCollection(5_000), accessorOptions);
+  assert.deepEqual(exhausted.errors, [{
+    code: "boundary-complexity",
+    message: "Job evidence exceeds the 100000-operation boundary budget.",
+    path: "$[789]",
+  }], `${label} stops after record exhaustion`);
+  assert.equal(accessorCalls, 0, `${label} options accessor was not invoked`);
+
+  let proxyTrapCalls = 0;
+  const proxyOptions = new Proxy({}, {
+    getOwnPropertyDescriptor() { proxyTrapCalls += 1; return undefined; },
+    getPrototypeOf() { proxyTrapCalls += 1; return Object.prototype; },
+    ownKeys() { proxyTrapCalls += 1; return []; },
+  });
+  const proxySkipped = validateJobEvidenceCollection(knownAliasCollection(5_000), proxyOptions);
+  assert.deepEqual(proxySkipped, exhausted, `${label} skips exhausted options proxy`);
+  assert.equal(proxyTrapCalls, 0, `${label} options proxy traps were not invoked`);
 }
 
 test("Role-map method requires the complete evidence-to-practice contract", async () => {
@@ -526,6 +570,11 @@ test("Source public validator caps wide repeated-alias work and findings", async
   assertBoundedWideAliases(validateJobEvidenceCollection, "source");
 });
 
+test("Source public validator shares one operation budget across records and options", async () => {
+  const { validateJobEvidenceCollection } = await loadCollectionValidator();
+  assertSharedBoundaryBudget(validateJobEvidenceCollection, "source");
+});
+
 test("Clean-built public validator preserves the schema and data-only boundary", async () => {
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-job-boundary-"));
   try {
@@ -539,6 +588,7 @@ test("Clean-built public validator preserves the schema and data-only boundary",
     assert.ok(partialResult.errors.some(({ code }) => code === "schema-required"));
     assertRoundThreeBoundary(validateJobEvidenceCollection, "built");
     assertBoundedWideAliases(validateJobEvidenceCollection, "built");
+    assertSharedBoundaryBudget(validateJobEvidenceCollection, "built");
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }
