@@ -44,7 +44,7 @@
       ]
     },
     "confidence": { "type": "string", "enum": ["unassessed", "low", "medium", "high"] },
-    "counterexample": { "type": "array", "items": { "type": "string" } },
+    "counterexample": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "alternative": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
     "validationMethod": { "type": "string", "minLength": 1 }
   },
