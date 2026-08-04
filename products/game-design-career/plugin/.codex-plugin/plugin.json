@@ -1,0 +1,18 @@
+{
+  "name": "game-design-career",
+  "version": "0.1.0",
+  "description": "Evidence-centered game design learning, portfolio, interview, and growth workflows.",
+  "author": {
+    "name": "Game Design Plugin Suite"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Game Design Career",
+    "shortDescription": "Build evidence for a game design career.",
+    "longDescription": "Map career paths, research current roles, and create reviewable learning, portfolio, interview, and growth artifacts.",
+    "developerName": "Game Design Plugin Suite",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Help me choose a game design career workflow and produce an evidence-backed artifact."
+  }
+}

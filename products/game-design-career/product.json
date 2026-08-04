@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "name": "game-design-career",
+  "displayName": "Game Design Career",
+  "description": "Evidence-centered game design learning, portfolio, interview, and growth workflows.",
+  "sharedModules": ["knowledge", "templates", "responsible-design", "export", "vendor"],
+  "sharedRuntime": true,
+  "sourceRoots": ["plugin"],
+  "sourceDocumentCategories": ["career", "fun-intent", "systems", "content", "feedback"]
+}

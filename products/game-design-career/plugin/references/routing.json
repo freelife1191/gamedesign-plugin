@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "skillIds": [
+    "orchestrate-game-design-career",
+    "map-game-design-career",
+    "research-game-design-jobs",
+    "build-game-design-portfolio",
+    "reverse-engineer-game-design",
+    "practice-game-design-interview",
+    "review-game-design-portfolio",
+    "plan-junior-growth",
+    "visualize-career-roadmap",
+    "export-career-documents"
+  ],
+  "roleIds": [
+    "career-strategist",
+    "game-design-mentor",
+    "portfolio-reviewer",
+    "reverse-design-critic",
+    "interview-coach",
+    "evidence-auditor"
+  ],
+  "stages": ["entry", "new-hire", "junior-growth", "transition"],
+  "routes": [
+    {
+      "id": "entry-intake",
+      "stage": "entry",
+      "intent": "diagnose goals, constraints, available evidence, and a useful first output",
+      "requiredEvidence": ["current-artifacts", "available-time", "constraints", "desired-output"],
+      "skill": "orchestrate-game-design-career",
+      "roles": ["career-strategist"],
+      "currentResearchTrigger": "Require fresh dated primary evidence for any current employer, project, posting, tool preference, or market claim.",
+      "artifactType": "career-stage-goal",
+      "completionGates": ["stage-and-intent-recorded", "assumptions-explicit", "next-workflow-selected"]
+    },
+    {
+      "id": "entry-role-map",
+      "stage": "entry",
+      "intent": "compare plausible game-design role families and evidence-building paths",
+      "requiredEvidence": ["interests", "current-capabilities", "constraints", "available-projects"],
+      "skill": "map-game-design-career",
+      "roles": ["career-strategist", "game-design-mentor"],
+      "currentResearchTrigger": "Use fresh dated current evidence before attaching employer demand or market outlook to a provisional path.",
+      "artifactType": "game-design-role-map",
+      "completionGates": ["multiple-paths-with-tradeoffs", "evidence-gaps-listed", "proof-artifacts-defined"]
+    },
+    {
+      "id": "new-hire-job-research",
+      "stage": "new-hire",
+      "intent": "research current target jobs and distinguish posting-specific requirements from repeated signals",
+      "requiredEvidence": ["target-role", "region", "official-job-postings", "retrieval-dates"],
+      "skill": "research-game-design-jobs",
+      "roles": ["career-strategist", "evidence-auditor"],
+      "currentResearchTrigger": "Always collect fresh dated primary evidence for current postings, companies, projects, hiring signals, and tool preferences.",
+      "artifactType": "job-posting-evidence",
+      "completionGates": ["primary-sources-cited", "sample-region-date-recorded", "generalization-limits-recorded"]
+    },
+    {
+      "id": "new-hire-portfolio-build",
+      "stage": "new-hire",
+      "intent": "make target competencies inspectable through portfolio evidence",
+      "requiredEvidence": ["target-competencies", "project-material", "constraints", "test-or-feedback-records"],
+      "skill": "build-game-design-portfolio",
+      "roles": ["game-design-mentor", "portfolio-reviewer", "evidence-auditor"],
+      "currentResearchTrigger": "Require fresh dated current evidence when portfolio positioning cites a live job, company, project, or tool preference.",
+      "artifactType": "portfolio-project-brief",
+      "completionGates": ["competency-is-inspectable", "claims-have-evidence", "third-party-rights-recorded"]
+    },
+    {
+      "id": "new-hire-reverse-design",
+      "stage": "new-hire",
+      "intent": "create a falsifiable reverse-design artifact rather than a user manual",
+      "requiredEvidence": ["observed-behavior", "cited-material", "counterexamples", "validation-plan"],
+      "skill": "reverse-engineer-game-design",
+      "roles": ["reverse-design-critic", "evidence-auditor"],
+      "currentResearchTrigger": "Use fresh dated evidence for current live-service behavior, operations, economy, patches, or platform facts.",
+      "artifactType": "reverse-design-document",
+      "completionGates": ["fact-and-inference-separated", "confidence-recorded", "alternatives-and-validation-included"]
+    },
+    {
+      "id": "new-hire-interview-practice",
+      "stage": "new-hire",
+      "intent": "practice evidence-grounded answers against a target role",
+      "requiredEvidence": ["job-posting", "portfolio", "candidate-experience", "known-evidence-gaps"],
+      "skill": "practice-game-design-interview",
+      "roles": ["interview-coach", "evidence-auditor"],
+      "currentResearchTrigger": "Refresh time-sensitive current posting and employer facts before generating questions or evaluating fit evidence.",
+      "artifactType": "interview-question-answer-log",
+      "completionGates": ["question-types-covered", "answers-trace-to-evidence", "no-fabricated-experience"]
+    },
+    {
+      "id": "transition-portfolio-review",
+      "stage": "transition",
+      "intent": "review portfolio evidence and prioritize minimum repairs for a target transition",
+      "requiredEvidence": ["target-role", "portfolio", "project-scope", "sources-and-rights"],
+      "skill": "review-game-design-portfolio",
+      "roles": ["portfolio-reviewer", "evidence-auditor"],
+      "currentResearchTrigger": "Require fresh dated current evidence for every target-role, employer, project, market, or tool claim used by the review.",
+      "artifactType": "five-axis-review",
+      "completionGates": ["scores-cite-evidence", "contradictions-and-gaps-separated", "repairs-prioritized"]
+    },
+    {
+      "id": "junior-growth-plan",
+      "stage": "junior-growth",
+      "intent": "turn project events and feedback into observable quarterly growth goals",
+      "requiredEvidence": ["project-events", "feedback", "current-responsibilities", "next-level-expectations"],
+      "skill": "plan-junior-growth",
+      "roles": ["game-design-mentor", "career-strategist"],
+      "currentResearchTrigger": "Validate current team, project, role-level, and tool expectations with fresh dated evidence before treating them as facts.",
+      "artifactType": "junior-growth-review",
+      "completionGates": ["impact-evidence-recorded", "quarterly-goals-observable", "feedback-cadence-defined"]
+    },
+    {
+      "id": "junior-growth-visualization",
+      "stage": "junior-growth",
+      "intent": "visualize dependencies, sequence, or competency relationships when spatial form improves comprehension",
+      "requiredEvidence": ["validated-source-artifact", "audience", "relationship-to-show"],
+      "skill": "visualize-career-roadmap",
+      "roles": ["game-design-mentor"],
+      "currentResearchTrigger": "Any time-sensitive current evidence shown in the visual must retain its source and date; refresh stale evidence first.",
+      "artifactType": "learning-roadmap",
+      "completionGates": ["visualization-need-justified", "source-data-preserved", "accessible-output-verified"]
+    },
+    {
+      "id": "transition-export",
+      "stage": "transition",
+      "intent": "export a verified career artifact for a defined audience and purpose",
+      "requiredEvidence": ["validated-source-artifact", "audience", "purpose", "requested-format"],
+      "skill": "export-career-documents",
+      "roles": ["evidence-auditor"],
+      "currentResearchTrigger": "Refresh stale time-sensitive current evidence before export and preserve dates, sources, and limitations in the output.",
+      "artifactType": "transition-readiness",
+      "completionGates": ["source-artifact-valid", "audience-and-purpose-recorded", "export-verified"]
+    }
+  ],
+  "unclearStage": {
+    "intent": "map plausible role families before selecting a stage-specific workflow",
+    "requiredEvidence": ["interests", "current-evidence", "constraints", "available-time"],
+    "skill": "map-game-design-career",
+    "roles": ["career-strategist", "game-design-mentor"],
+    "currentResearchTrigger": "Use fresh dated primary evidence before adding current employer, posting, tool, or market claims to any provisional path.",
+    "artifactType": "game-design-role-map",
+    "provisionalPaths": true,
+    "declareSingleCorrectCareer": false,
+    "completionGates": ["multiple-paths-with-tradeoffs", "assumptions-explicit", "verification-tasks-listed"]
+  }
+}
