@@ -143,3 +143,32 @@ for (const { name, mutate, expected } of invalidFixtures) {
     assert.match(result.errors.join("\n"), expected);
   });
 }
+
+test("scope and cross-platform synthesis stay within their local evidence", async () => {
+  const { auditEvidence } = await import("../../tooling/audit-evidence.mjs");
+  const result = await auditEvidence({ repoRoot });
+  assert.deepEqual(result.errors, []);
+
+  const claims = new Map(result.claims.map((claim) => [claim.id, claim]));
+  const scope = claims.get("CUR-SCOPE-METHOD-001");
+  assert.deepEqual(scope.sourceIds, ["career-7143bd076592"]);
+  for (const term of ["프로토타입", "가설", "마일스톤", "검증", "중단"]) assert.match(scope.guidance, new RegExp(term));
+  assert.doesNotMatch(
+    [scope.guidance, scope.applicability, ...scope.counterexamples, scope.limitations ?? ""].join(" "),
+    /제작 노력|유지비|의존성|외부 권리|must|should|could|won't/i,
+  );
+
+  const cross = claims.get("CUR-CROSS-CHECKLIST-001");
+  assert.deepEqual(cross.sourceIds, ["systems-7ccf322de528", "systems-081b21e5d10c", "systems-91d23bacb462"]);
+  for (const term of ["입력", "UI 상태", "정보 구조", "플랫폼", "표시", "상호작용"]) assert.match(cross.guidance, new RegExp(term));
+  assert.doesNotMatch(
+    [cross.guidance, cross.applicability, ...cross.counterexamples, cross.limitations].join(" "),
+    /성능 등급|매치 공정성|채팅 안전|스토어 권한|업적|장애 시 복구/,
+  );
+
+  const playFab = claims.get("CUR-CROSS-001");
+  for (const term of ["계정", "진행", "커뮤니티", "멀티플레이", "LiveOps", "경제", "텔레메트리"]) {
+    assert.match(playFab.guidance, new RegExp(term));
+  }
+  assert.doesNotMatch(playFab.guidance, /입력|UI|성능|공정성|스토어|업적|복구/);
+});
