@@ -160,3 +160,44 @@ test("README local links resolve inside the source plugin or repository", async 
     await access(path.resolve(pluginRoot, target));
   }
 });
+
+test("README explains the source overlay and complete independent built-plugin structure", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  assert.match(readme, /^## 플러그인 구조$/m);
+
+  for (const pathOrCount of [
+    "products/game-design-career/plugin",
+    "plugins/game-design-career",
+    ".codex-plugin/plugin.json",
+    "skills/ (11개)",
+    "skills/svg-infographic/",
+    "agents/ (6개)",
+    "hooks/hooks.json",
+    "scripts/",
+    "references/shared/knowledge/core/",
+    "references/shared/knowledge/trends/",
+    "references/source/docs/ (49개)",
+    "references/shared/export/schema/",
+    "assets/templates/ (15개)",
+    "assets/product-mark.svg",
+    "BUILD-MANIFEST.json",
+  ]) {
+    assert.ok(readme.includes(pathOrCount), `missing packaged structure: ${pathOrCount}`);
+  }
+
+  for (const contract of [
+    "source overlay",
+    "generated independent snapshot",
+    "suite build",
+    "SessionStart",
+    "capability-probe",
+    "Stop",
+    "one-retry",
+    "artifact review",
+    "shared runtime",
+    "product helper",
+    "생성 결과를 직접 편집하지",
+  ]) {
+    assert.ok(readme.includes(contract), `missing structure boundary: ${contract}`);
+  }
+});

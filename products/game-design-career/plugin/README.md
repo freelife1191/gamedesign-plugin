@@ -56,6 +56,65 @@ marketplace 자체도 더 이상 사용하지 않을 때만 별도로 제거합�
 codex plugin marketplace remove game-design-suite
 ```
 
+## 플러그인 구조
+
+저장소에는 편집 원천과 배포 결과가 분리되어 있습니다.
+
+- `products/game-design-career/plugin`은 Career 전용 source overlay입니다. 제품 스킬·역할·references·템플릿·문서만 여기서 편집합니다.
+- `shared/`는 지식, 책임 있는 설계, 내보내기 계약, hooks, shared runtime scripts와 vendored Skillstead의 공동 원천입니다.
+- `plugins/game-design-career`는 suite build가 두 원천을 깨끗한 staging 디렉터리에서 합성한 generated independent snapshot입니다. 다른 플러그인이나 저장소 상대 경로 없이 단독 설치할 수 있어야 합니다.
+
+`plugins/game-design-career` 생성은 suite build가 소유합니다. 생성 결과를 직접 편집하지 마십시오. 변경은 `products/` 또는 `shared/` 원천에 적용하고 테스트한 뒤 다시 빌드합니다.
+
+최종 배포 스냅샷의 구조는 다음과 같습니다. 괄호의 개수는 Career release 계약에서 고정한 수입니다.
+
+```text
+plugins/game-design-career/
+├── .codex-plugin/plugin.json
+├── skills/ (11개)
+│   ├── <10개 Career 제품 스킬>/
+│   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
+│   └── svg-infographic/             # vendored Skillstead 0.8.3
+├── agents/ (6개)                    # 이식 가능한 전문 역할 프롬프트
+├── hooks/
+│   └── hooks.json
+├── scripts/                         # shared runtime
+│   ├── capability-probe.mjs
+│   ├── stop-artifact-review.mjs
+│   └── validate-artifact.mjs
+├── references/
+│   ├── <Career routing, methods, rubric, product schemas>
+│   ├── shared/
+│   │   ├── knowledge/
+│   │   │   ├── core/
+│   │   │   └── trends/
+│   │   ├── responsible-design/
+│   │   └── export/
+│   │       ├── schema/
+│   │       ├── qa-contracts/
+│   │       └── themes/
+│   └── source/docs/                 # 원문 49개
+├── assets/
+│   ├── product-mark.svg
+│   ├── templates/                   # Career Canonical Artifact 15개
+│   └── shared/templates/
+├── LICENSE
+├── THIRD_PARTY_NOTICES.md
+├── README.md
+└── BUILD-MANIFEST.json              # suite build가 만드는 파일 목록·해시
+```
+
+경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고 Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다. Studio와 달리 Career에는 profile 합성 계층이 없습니다.
+
+`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (11개)`는 제품 스킬 10개와 `skills/svg-infographic/` 한 개이며, `agents/ (6개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 프롬프트입니다.
+
+`hooks/hooks.json`은 두 shared runtime 진입점을 연결합니다.
+
+- `SessionStart`는 `scripts/capability-probe.mjs`를 실행하는 capability-probe hook입니다. Node, Chromium, LibreOffice와 Codex 문서·PDF·프레젠테이션 capability를 감지하되 선택 기능 부재로 작업을 중단하지 않습니다.
+- `Stop`은 `scripts/stop-artifact-review.mjs`를 실행하는 one-retry artifact review hook입니다. 최종 artifact sentinel이 있을 때 Canonical Artifact를 검증하고, 실패하면 교정 패스를 한 번만 요청합니다. hook 재진입 상태에서는 다시 차단하지 않습니다.
+
+최상위 `scripts/`는 이 두 hook과 Canonical Artifact 검증을 위한 shared runtime입니다. Career 전용 product helper는 필요한 제품 스킬의 `skills/<skill-id>/scripts/`에 있으며, 역할 병합, E2E 시나리오, 채용 근거, 시각화 상태와 내보내기 job을 검증합니다. 최종 `BUILD-MANIFEST.json`은 제품 원천 파일이 아니라 suite build가 독립 스냅샷에 추가하는 생성물입니다.
+
 ## 작동 방식
 
 1. [오케스트레이터](skills/orchestrate-game-design-career/SKILL.md)가 목표, 경력 단계, 보유 자료, 제약, 요청 형식을 정규화합니다.
