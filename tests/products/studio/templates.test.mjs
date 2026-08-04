@@ -39,22 +39,82 @@ const requiredFiles = [
   "export-manifest.yml",
 ];
 
-const approvedContentHashes = {
-  "accessibility-platform-matrix": "3adbf68658f7abf56074aea607708723863ced3e529373bc800d0e8dc2cb89ee",
-  "character-skill-combat-monster": "009e06742aa8ef1b4ddb245a4c31f5853c742a2d8df6c4a5fa1d819d3f7b48f1",
-  "core-motivation-loop": "ec7c7b35bbe1bdfea429808403be9e24868c8d307d7cb6d8517a11349fbe04d2",
-  "data-schema-table-contract": "2727983332f51f181bbe0deed56d96a4e06a88599ff962821f8eb20196d5e0ef",
-  "decision-change-log": "d7ac34c536d5dd67bcc259c9446b5a88b85fdccceab218b80e088dd0031e1ef4",
-  "economy-balance": "d24d92a7c999fafa15d5a4eb7c48a85bcfd2934b7c443562478030324570a0ab",
-  "game-design-brief": "f418f40100f7d8dc6b118f14e2efb6b14f8018896ea9486a5ef843082fe77a18",
-  "game-design-review": "9f18f04fd32556c19b70a4a1235cd59062f89a8d31a41b0198b9c07b374adae8",
-  "liveops-experiment-event": "bad175ae9d3188b8dd8fd40d23c27127c319b10351e15a79519db23303215c10",
-  "narrative-quest-npc": "8f4518c8c2ae5e4efb70821c621778d2b324d93b688d83ccf769aa671308159f",
-  "production-scope-risk": "1e4c681a922d6231a08d3eebb4119aa94b387d2c9aef330be3550380d570c7e4",
-  "rule-exception-matrix": "e857bb7fdcf646c0a256ff01a3839d39dd6e754532971c279b82d17a3f37b0e8",
-  "system-specification": "598481b6d56be23e30549b02672045674c096f87595ac236df8213947f8bb450",
-  "ui-ux-flow-state": "16c9ea67d0d742eb4283fa0b248d9fc942de2ddbc12c45295f6fc6a1c611024f",
-  "vision-pillars": "2deee04d2b0cae6306ed87f7767b57497b8f898203b33cf58010480b8d92b25a",
+const approvedSeedHashes = {
+  "accessibility-platform-matrix/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "accessibility-platform-matrix/content.md": "3adbf68658f7abf56074aea607708723863ced3e529373bc800d0e8dc2cb89ee",
+  "accessibility-platform-matrix/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "accessibility-platform-matrix/evidence.yml": "5cc40446bea64211ff0c242e49af505826735d253abb51162c005e0f2496ff97",
+  "accessibility-platform-matrix/export-manifest.yml": "a0df5b01d7ab4662892bb06b8da1de586a9baa7c313fbeac28be3c491546b56b",
+  "character-skill-combat-monster/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "character-skill-combat-monster/content.md": "009e06742aa8ef1b4ddb245a4c31f5853c742a2d8df6c4a5fa1d819d3f7b48f1",
+  "character-skill-combat-monster/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "character-skill-combat-monster/evidence.yml": "24432843d612e0e87c12bf7e4a352f621d7871dad6ffd7d38d5edfa68ae6b20b",
+  "character-skill-combat-monster/export-manifest.yml": "b5a21c28d758fffacebab5eac10187767c8c9f687654130006ba36d8923e69f5",
+  "core-motivation-loop/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "core-motivation-loop/content.md": "ec7c7b35bbe1bdfea429808403be9e24868c8d307d7cb6d8517a11349fbe04d2",
+  "core-motivation-loop/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "core-motivation-loop/evidence.yml": "4ce9d79abe00b9531640ffa28da47f1af8dd727e4a910223080a4e68fc8e30cb",
+  "core-motivation-loop/export-manifest.yml": "d35deb851062f21cb36610bb1eef164d5dd21e7ae6a4dce052478074f2e69f02",
+  "data-schema-table-contract/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "data-schema-table-contract/content.md": "2727983332f51f181bbe0deed56d96a4e06a88599ff962821f8eb20196d5e0ef",
+  "data-schema-table-contract/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "data-schema-table-contract/evidence.yml": "6a672a07b5b4ff865fdc507f3e6f8af0faf5e6db934f0c7a582c6f1c96452c70",
+  "data-schema-table-contract/export-manifest.yml": "ca42b32d884f7f4d22a5aa9dc4197f8bedc053faddf1ab1bb70fd96389971e2d",
+  "decision-change-log/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "decision-change-log/content.md": "d7ac34c536d5dd67bcc259c9446b5a88b85fdccceab218b80e088dd0031e1ef4",
+  "decision-change-log/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "decision-change-log/evidence.yml": "fedc034c5c7c3ffe37c7286c612f0ce77919f8caea74c39b8b17605fbfe200ab",
+  "decision-change-log/export-manifest.yml": "132eabb61d4b264c2d908c19788071c75a9a04284dbd589dfc5fec2f20d87ed9",
+  "economy-balance/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "economy-balance/content.md": "d24d92a7c999fafa15d5a4eb7c48a85bcfd2934b7c443562478030324570a0ab",
+  "economy-balance/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "economy-balance/evidence.yml": "f5660aefba9fc8f67a97a86502a816fa2be16ff446f40c38b311ae8e129a0da7",
+  "economy-balance/export-manifest.yml": "aaec2e67c761dd661f8d86175b723e43b9ae897907d574e13b092e1b21fb0ca4",
+  "game-design-brief/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "game-design-brief/content.md": "f418f40100f7d8dc6b118f14e2efb6b14f8018896ea9486a5ef843082fe77a18",
+  "game-design-brief/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "game-design-brief/evidence.yml": "f19bb04d8077ba405dc1b22edb2b2e574d27b00499ea960cbe41e25290ddd5fb",
+  "game-design-brief/export-manifest.yml": "3b066e718628dcf059d803dc8be26ca646ae7c7d618b806334b0674f7a5883f3",
+  "game-design-review/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "game-design-review/content.md": "9f18f04fd32556c19b70a4a1235cd59062f89a8d31a41b0198b9c07b374adae8",
+  "game-design-review/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "game-design-review/evidence.yml": "65bb1f4de923bf3b71ecc9f419cc659c55af18fc4751cda50e4ea33747096c38",
+  "game-design-review/export-manifest.yml": "eca03c395d31e0fa49994446a0f7a8f2393cfeb21ccfdc837171611c9fd57aa0",
+  "liveops-experiment-event/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "liveops-experiment-event/content.md": "bad175ae9d3188b8dd8fd40d23c27127c319b10351e15a79519db23303215c10",
+  "liveops-experiment-event/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "liveops-experiment-event/evidence.yml": "a89d56b34a05e46354278b564c236d76fca03bff2332567415fef29c2f80c148",
+  "liveops-experiment-event/export-manifest.yml": "b6934f5d78951b0840436297658717f0404ef9dd3eda905a446698855c666a22",
+  "narrative-quest-npc/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "narrative-quest-npc/content.md": "8f4518c8c2ae5e4efb70821c621778d2b324d93b688d83ccf769aa671308159f",
+  "narrative-quest-npc/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "narrative-quest-npc/evidence.yml": "5204b30729fa4ada897664e433791500acef62f490719427c1be269e941fc56e",
+  "narrative-quest-npc/export-manifest.yml": "3ac51fc84152a138b78f5df7c62cb6778589869886e12e7fd834716fe16a2c48",
+  "production-scope-risk/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "production-scope-risk/content.md": "1e4c681a922d6231a08d3eebb4119aa94b387d2c9aef330be3550380d570c7e4",
+  "production-scope-risk/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "production-scope-risk/evidence.yml": "cb6f05e00e3fab3b9c58e1550ca54893d179d68098393eeb52c3698c25d196c2",
+  "production-scope-risk/export-manifest.yml": "83e311c5d931b49bd329a615ec81bfdd217605fd328cc355c92bbb879bf7ad36",
+  "rule-exception-matrix/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "rule-exception-matrix/content.md": "e857bb7fdcf646c0a256ff01a3839d39dd6e754532971c279b82d17a3f37b0e8",
+  "rule-exception-matrix/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "rule-exception-matrix/evidence.yml": "72838c93aadc5f48751dce8ff2e484d53dbcde4438b67a11b38513d26d8880c9",
+  "rule-exception-matrix/export-manifest.yml": "c286f34b582856310e947cbe99cc8094d9964552fbd08c61cdadf4a2aa18fc3f",
+  "system-specification/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "system-specification/content.md": "598481b6d56be23e30549b02672045674c096f87595ac236df8213947f8bb450",
+  "system-specification/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "system-specification/evidence.yml": "a22c6454fb2b8a1f2a5a3e7c5b6c3ffef5a69535454a04115cfeae15b3b40263",
+  "system-specification/export-manifest.yml": "b78dd77c281917c2e7e1099912d9144d8510b9e10621881d78008055d0e1bdf0",
+  "ui-ux-flow-state/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "ui-ux-flow-state/content.md": "16c9ea67d0d742eb4283fa0b248d9fc942de2ddbc12c45295f6fc6a1c611024f",
+  "ui-ux-flow-state/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "ui-ux-flow-state/evidence.yml": "9b571c210e2417bebb5a9eb614d87269d75996f1b39399c0d7c410514581e040",
+  "ui-ux-flow-state/export-manifest.yml": "365df35e89ce4faa3b109aca775e7a0ffafc3f18dbe91ff2f14b49b5112c093d",
+  "vision-pillars/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
+  "vision-pillars/content.md": "2deee04d2b0cae6306ed87f7767b57497b8f898203b33cf58010480b8d92b25a",
+  "vision-pillars/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "vision-pillars/evidence.yml": "5a32187a996c28f8d3042aa333865254037664eb7218b72e258c4db255af9bdc",
+  "vision-pillars/export-manifest.yml": "f48e93574eb4b19076afaaf9740c41472d1bae6fe2fcc0c2568b06739180b3b2",
 };
 
 const contracts = {
@@ -188,10 +248,20 @@ function parseFrontmatter(content) {
   return parseRestrictedYaml(match[1], "content.md frontmatter");
 }
 
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function assertApprovedSeed(relativePath, bytes, expectedHash) {
+  assert.match(expectedHash, /^[a-f0-9]{64}$/u, `${relativePath}: caller must pass an expected SHA-256`);
+  assert.equal(expectedHash, approvedSeedHashes[relativePath], `${relativePath}: expected hash must come from the approved map`);
+  assert.equal(sha256(bytes), expectedHash, `${relativePath}: approved seed bytes`);
+}
+
 function assertTemplateContract(templateId, content, evidence, manifest) {
   assert.equal(
     createHash("sha256").update(content, "utf8").digest("hex"),
-    approvedContentHashes[templateId],
+    approvedSeedHashes[`${templateId}/content.md`],
     `${templateId}: approved content seed bytes`,
   );
   const metadata = parseFrontmatter(content);
@@ -255,6 +325,72 @@ async function replaceIn(root, relativePath, before, after) {
   await writeFile(file, source.replace(before, after), "utf8");
 }
 
+async function assertSeedMutationRejected(templateId, relativeFile, before, after) {
+  const approvedPath = `${templateId}/${relativeFile}`;
+  const expectedHash = approvedSeedHashes[approvedPath];
+  const source = await readFile(path.join(templateRoot, approvedPath), "utf8");
+  assertApprovedSeed(approvedPath, source, expectedHash);
+  assert.ok(source.includes(before), `${approvedPath}: mutation source text`);
+  const mutated = source.replace(before, after);
+  assert.notEqual(mutated, source, `${approvedPath}: mutation must change bytes`);
+  assert.throws(() => assertApprovedSeed(approvedPath, mutated, expectedHash), undefined, `${approvedPath}: mutation survived`);
+}
+
+async function instantiateTemplate(templateId) {
+  const fixture = await temporaryTemplate(templateId);
+  const contentPath = path.join(fixture, "content.md");
+  let content = await readFile(contentPath, "utf8");
+  for (const field of contracts[templateId].fields) {
+    const seedRow = `| \`${field}\` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |`;
+    const projectRow = `| \`${field}\` | observed | Project Ember records a reviewed value for ${field} under claim-${templateId}. | studio-lead |`;
+    assert.ok(content.includes(seedRow), `${templateId}: seed row ${field}`);
+    content = content.replace(seedRow, projectRow);
+  }
+  content = content.replace(
+    "Record each assumption with a stable ID, evidence status, owner, validation action, affected decision, and expiration or review date. An assumption is not an approved fact.",
+    "Project Ember assumption A-001 is provisional, owned by studio-lead, validated by prototype session P-014, linked to decision D-001, and reviewed on 2026-08-18. An assumption is not an approved fact.",
+  );
+  content = content.replace(
+    "Name the artifact owner, evidence reviewer, discipline approvers, player-safety or accessibility reviewer where applicable, approval status, approval date, and reopen condition. Automation cannot grant approval, rights, or consent.",
+    "Artifact owner: studio-lead. Evidence reviewer: research-lead. Discipline approver: design-director. Player-safety and accessibility reviewer: access-lead. Approval status: approved for prototype on 2026-08-04; reopen if evidence P-014 changes. Automation cannot grant approval, rights, or consent.",
+  );
+  content = content.replace(
+    "| 1 | 2026-08-04 | artifact-owner | Created the reviewable production-design seed and its completion boundaries. | pending human review |",
+    "| 2 | 2026-08-04 | studio-lead | Instantiated Project Ember values, evidence, approval, and export story. | approved for prototype by design-director |",
+  );
+  await writeFile(contentPath, content, "utf8");
+
+  await writeFile(path.join(fixture, "evidence.yml"), `version: 1
+claims:
+  - id: claim-${templateId}
+    claim_type: project-design-evidence
+    claim: Project Ember contains reviewed representative values for every ${templateId} working field.
+    source:
+      title: Project Ember prototype review P-014
+      locator: content.md#working-record
+      accessed_at: 2026-08-04
+    confidence: medium
+    limitations: |
+      Prototype evidence supports design review only. Production and release approval remain governed by the artifact safety gates.
+`, "utf8");
+
+  const manifestPath = path.join(fixture, "export-manifest.yml");
+  const manifest = (await readFile(manifestPath, "utf8"))
+    .replace(/^    audience: .+$/mu, "    audience: Project Ember design review board")
+    .replace(/^    purpose: .+$/mu, `    purpose: Decide Project Ember ${templateId} prototype readiness from evidence and safety gates.`)
+    .replace("      - title: Context and target experience", "      - title: Project Ember context and target experience")
+    .replace("      - title: Design decision and alternatives", "      - title: Project Ember decision and alternatives")
+    .replace("      - title: Evidence risks and completion gate", "      - title: Project Ember evidence risks and completion gate");
+  await writeFile(manifestPath, manifest, "utf8");
+
+  await writeFile(path.join(fixture, "decisions/README.md"), `# Decision D-001 {#decision-d-001}
+
+Date: 2026-08-04. Owner: studio-lead. Status: approved for prototype. Context: instantiate ${templateId} for Project Ember. Alternatives considered: keep the seed uninstantiated or defer review. Evidence IDs: claim-${templateId}. Rationale: a representative artifact is required for validation. Consequences: production and release remain gated. Affected stable section IDs: working-record and owners-and-approvals. Approver: design-director. Approval date: 2026-08-04. Rollback path: restore the approved seed. Reopen condition: prototype evidence P-014 changes.
+`, "utf8");
+
+  return fixture;
+}
+
 function errors(result) {
   return result.errors.map(({ message }) => message).join("\n");
 }
@@ -289,8 +425,37 @@ test("every seed validates through the production Canonical Artifact validator",
   }
 });
 
+test("every template instantiates with representative project data and remains a valid Canonical Artifact", async () => {
+  for (const templateId of templateIds) {
+    const fixture = await instantiateTemplate(templateId);
+    const result = await validateArtifact(fixture, { requestedFormats: ["md", "pdf", "docx", "pptx"] });
+    assert.equal(result.ok, true, `${templateId}: ${errors(result)}`);
+
+    const content = await readFile(path.join(fixture, "content.md"), "utf8");
+    const metadata = parseFrontmatter(content);
+    const evidence = parseRestrictedYaml(await readFile(path.join(fixture, "evidence.yml"), "utf8"));
+    const manifest = parseRestrictedYaml(await readFile(path.join(fixture, "export-manifest.yml"), "utf8"));
+    assert.equal(metadata.artifact_id, templateId);
+    assert.equal(manifest.artifact_id, templateId);
+    assert.equal(evidence.claims[0].id, `claim-${templateId}`);
+    assert.match(content, /Project Ember/u);
+    assert.match(content, /approved for prototype by design-director/u);
+    assert.match(manifest.formats.pptx.audience, /Project Ember/u);
+    assert.match(manifest.formats.pptx.purpose, new RegExp(templateId, "u"));
+    assert.deepEqual(
+      content.split("\n").filter((line) => /^\| `[^`]+` \|/u.test(line)).map((line) => line.split("|")[1].trim().replaceAll("`", "")),
+      contracts[templateId].fields,
+      `${templateId}: instantiated required fields`,
+    );
+    for (const [heading, id, meaning] of contracts[templateId].sections) {
+      assert.equal(semanticSection(content, heading, id), meaning, `${templateId}: instantiated ${id}`);
+    }
+  }
+});
+
 test("clean product build preserves every template byte-for-byte", async () => {
-  assert.deepEqual(Object.keys(approvedContentHashes).sort(), [...templateIds].sort());
+  const exactSeedPaths = templateIds.flatMap((templateId) => requiredFiles.map((relativeFile) => `${templateId}/${relativeFile}`)).sort();
+  assert.deepEqual(Object.keys(approvedSeedHashes).sort(), exactSeedPaths);
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-template-build-"));
   temporaryDirs.push(stagingRoot);
   const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
@@ -300,8 +465,10 @@ test("clean product build preserves every template byte-for-byte", async () => {
       const source = await readFile(path.join(templateRoot, templateId, relativeFile));
       const built = await readFile(path.join(build.outputDir, "assets/templates", templateId, relativeFile));
       assert.deepEqual(built, source, `${templateId}/${relativeFile}`);
-      hashes[`${templateId}/${relativeFile}`] = createHash("sha256").update(source).digest("hex");
-      if (relativeFile === "content.md") assert.equal(hashes[`${templateId}/${relativeFile}`], approvedContentHashes[templateId]);
+      const approvedPath = `${templateId}/${relativeFile}`;
+      hashes[approvedPath] = sha256(source);
+      assertApprovedSeed(approvedPath, source, approvedSeedHashes[approvedPath]);
+      assertApprovedSeed(approvedPath, built, approvedSeedHashes[approvedPath]);
     }
   }
   assert.equal(Object.keys(hashes).length, 75);
@@ -356,6 +523,33 @@ test("generic tokens cannot replace exact type semantics", async () => {
     "hypothesis control single-variable sample duration success guardrail stop-condition rollback.",
   );
   assert.throws(() => assertTemplateContract(templateId, generic, evidence, manifest));
+});
+
+test("all five seed-file contracts reject safety and workflow meaning reversals", async () => {
+  await assertSeedMutationRejected(
+    "game-design-brief",
+    "evidence.yml",
+    "Replace it with project-specific evidence before approving design, production, release, monetization, experiment, rights, consent, or accessibility claims.",
+    "Release may proceed without project-specific evidence or completion boundaries.",
+  );
+  await assertSeedMutationRejected(
+    "vision-pillars",
+    "export-manifest.yml",
+    "Explain the player promise, design pillars, anti-pillars, evidence, and success signals.",
+    "Make some slides.",
+  );
+  await assertSeedMutationRejected(
+    "system-specification",
+    "decisions/README.md",
+    "A pending approval remains visibly pending.",
+    "Automation may approve decisions without evidence.",
+  );
+  await assertSeedMutationRejected(
+    "narrative-quest-npc",
+    "assets/README.md",
+    "Do not add an asset until those fields are reviewable.",
+    "Unlicensed assets may be added without attribution or consent.",
+  );
 });
 
 test("production validation rejects unsafe YAML, traversal, missing assets, and symlink assets", async () => {
