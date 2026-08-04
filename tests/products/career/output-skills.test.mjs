@@ -42,6 +42,7 @@ function assertVisualizationContract(presets, skill) {
   ]);
   for (const preset of presets) {
     assert.equal(preset.renderer, "skills/svg-infographic");
+    assert.equal(preset.activeContentPolicy, "reject-script-and-style-elements");
     assert.ok(["hierarchy", "dependency", "sequence", "mapping"].includes(preset.relationship));
     assert.ok(preset.selectionQuestion);
     assert.ok(preset.exclusionCondition);
@@ -62,6 +63,7 @@ function assertVisualizationContract(presets, skill) {
   assert.match(skill, /alt text/iu);
   assert.match(skill, /exactly one non-empty `<title>`.*direct children.*root `<svg>`/iu);
   assert.match(skill, /Comments.*CDATA.*processing instructions.*attributes.*script\/style.*escaped markup.*DTDs.*entities/iu);
+  assert.match(skill, /reject.*actual `<script>` or `<style>` element.*case.*namespace.*inline presentation.*style.*attributes/isu);
   assert.match(skill, /canonical valid UTF-8.*XML 1\.0 Fifth Edition `Char` production/iu);
   assert.match(skill, /XML 1\.0 Fifth Edition `Char` production.*#x9.*#xD7FF.*#xE000.*#xFFFD.*#x10000.*#x10FFFF/iu);
   assert.match(skill, /NUL.*forbidden C0.*surrogate encodings.*U\+FFFE.*U\+FFFF.*Korean.*C1.*U\+FDD0.*supplementary-plane/iu);
@@ -271,6 +273,7 @@ test("visualization mutation guard rejects missing presets and weakened evidence
   const mutations = [
     [presets.slice(1), skill],
     [presets.map((item, index) => index === 0 ? { ...item, renderer: "generic-svg" } : item), skill],
+    [presets.map((item, index) => index === 0 ? { ...item, activeContentPolicy: "allow-style-elements" } : item), skill],
     [presets, skill.replace("selectedPresetId", "diagramType")],
     [presets, skill.replace("requested", "wanted")],
     [presets, skill.replace(
@@ -551,6 +554,83 @@ test("source and clean-built visualization validators reject structural accessib
       () => sourceModule.validateVisualizationState(commentState),
       /exactly one non-empty direct-child <title> and <desc>/iu,
     );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("source and clean-built visualization validators reject active SVG elements before raw content can bypass tokenization", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-viz-active-"));
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-viz-active-build-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const sourceModule = await loadVisualizationModule();
+    const builtModule = await import(`${pathToFileURL(path.join(
+      build.outputDir,
+      "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
+    )).href}?active=${Date.now()}`);
+    const validators = [sourceModule.validateVisualizationState, builtModule.validateVisualizationState];
+    const alt = "Active-content-free roadmap";
+    const prefix = `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><title>${alt}</title><desc>Safe roadmap.</desc>`;
+    const suffix = "</svg>";
+    const attacks = {
+      "broken-script.svg": `${prefix}<script><broken</script>${suffix}`,
+      "broken-style.svg": `${prefix}<style><broken</style>${suffix}`,
+      "unclosed-script.svg": `${prefix}<script>broken${suffix}`,
+      "unclosed-style.svg": `${prefix}<style>broken${suffix}`,
+      "nested-script.svg": `${prefix}<script><script>nested</script></script>${suffix}`,
+      "nested-style.svg": `${prefix}<style><style>nested</style></style>${suffix}`,
+      "mixed-active.svg": `${prefix}<script><style>nested</style></script>${suffix}`,
+      "closing-spoof.svg": `${prefix}<script><broken</script   >${suffix}`,
+      "uppercase-script.svg": `${prefix}<SCRIPT/>${suffix}`,
+      "mixed-case-style.svg": `${prefix}<StYlE/>${suffix}`,
+      "namespaced-script.svg": `${prefix}<svg:script/>${suffix}`,
+      "namespaced-style.svg": `${prefix}<x:style/>${suffix}`,
+      "comment-spoof.svg": `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><!-- <title>${alt}</title><desc>Fake</desc><script>bad()</script> --></svg>`,
+      "cdata-spoof.svg": `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><![CDATA[<title>${alt}</title><desc>Fake</desc><style/>]]></svg>`,
+    };
+    const stateFor = (file, bytes) => ({
+      artifactRoot: root,
+      requested: true,
+      planned: true,
+      generated: true,
+      linted: true,
+      rendered: false,
+      verified: false,
+      svgFile: file,
+      pngAvailability: "unavailable",
+      altText: alt,
+      availabilityEvidence: { command: "node run-skillstead.mjs probe", result: "failed", reason: "test fallback" },
+      lintEvidence: {
+        command: `node run-skillstead.mjs lint ${file}`,
+        file,
+        result: "passed",
+        sha256: digest(bytes),
+        errors: [],
+        warnings: [],
+        warningsDisposition: "No warnings.",
+      },
+    });
+    for (const [file, source] of Object.entries(attacks)) {
+      const bytes = Buffer.from(source);
+      await writeFile(path.join(root, file), bytes);
+      for (const validator of validators) {
+        assert.throws(
+          () => validator(stateFor(file, bytes)),
+          file.includes("comment") || file.includes("cdata")
+            ? undefined
+            : /rejects active <(?:script|style)> elements/iu,
+          `${file} passed ${validator === sourceModule.validateVisualizationState ? "source" : "built"} validation`,
+        );
+      }
+    }
+    const safeInlineSource = `${prefix}<rect x="1" y="1" width="10" height="10" style="fill:#fff;stroke:#000"/>${suffix}`;
+    const safeInlineBytes = Buffer.from(safeInlineSource);
+    await writeFile(path.join(root, "safe-inline-style.svg"), safeInlineBytes);
+    for (const validator of validators) {
+      assert.doesNotThrow(() => validator(stateFor("safe-inline-style.svg", safeInlineBytes)));
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
     await rm(stagingRoot, { recursive: true, force: true });

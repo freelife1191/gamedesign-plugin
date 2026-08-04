@@ -152,12 +152,6 @@ function parseSvgAccessibility(source) {
   let elements = 0;
   let index = 0;
   while (index < source.length) {
-    const rawParent = stack.at(-1)?.name;
-    if (rawParent === "script" || rawParent === "style") {
-      const closing = new RegExp(`</${rawParent}\\s*>`, "iu").exec(source.slice(index));
-      if (!closing) throw new Error(`svgFile contains an unclosed <${rawParent}> element`);
-      index += closing.index;
-    }
     if (source[index] !== "<") {
       const next = source.indexOf("<", index);
       const end = next < 0 ? source.length : next;
@@ -196,6 +190,10 @@ function parseSvgAccessibility(source) {
       continue;
     }
     const parsed = parseStartTag(token);
+    const localName = parsed.name.split(":").at(-1).toLowerCase();
+    if (localName === "script" || localName === "style") {
+      throw new Error(`svgFile rejects active <${localName}> elements`);
+    }
     elements++;
     if (elements > 10_000 || stack.length >= 64) throw new Error("svgFile exceeds structural parser limits");
     if (stack.length === 0) {
