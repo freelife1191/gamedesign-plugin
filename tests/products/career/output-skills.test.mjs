@@ -62,6 +62,9 @@ function assertVisualizationContract(presets, skill) {
   assert.match(skill, /alt text/iu);
   assert.match(skill, /exactly one non-empty `<title>`.*direct children.*root `<svg>`/iu);
   assert.match(skill, /Comments.*CDATA.*processing instructions.*attributes.*script\/style.*escaped markup.*DTDs.*entities/iu);
+  assert.match(skill, /canonical valid UTF-8.*XML 1\.0 Fifth Edition `Char` production/iu);
+  assert.match(skill, /XML 1\.0 Fifth Edition `Char` production.*#x9.*#xD7FF.*#xE000.*#xFFFD.*#x10000.*#x10FFFF/iu);
+  assert.match(skill, /NUL.*forbidden C0.*surrogate encodings.*U\+FFFE.*U\+FFFF.*Korean.*C1.*U\+FDD0.*supplementary-plane/iu);
   assert.match(skill, /2.?×|2x/iu);
   assert.match(skill, /browser.*unavailable.*SVG.*PNG.*unavailable/isu);
   assert.doesNotMatch(skill, /\b\d+(?:\.\d+)?%/u, "skill contains an evidence-free percentage");
@@ -462,6 +465,80 @@ test("source and clean-built visualization validators reject structural accessib
       () => sourceModule.validateVisualizationState(commentState),
       /exactly one non-empty direct-child <title> and <desc>/iu,
     );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("source and clean-built validators reject invalid UTF-8 and forbidden XML character data", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-viz-chars-"));
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-viz-char-build-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const sourceModule = await loadVisualizationModule();
+    const builtModule = await import(`${pathToFileURL(path.join(
+      build.outputDir,
+      "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
+    )).href}?characters=${Date.now()}`);
+    const validators = [sourceModule.validateVisualizationState, builtModule.validateVisualizationState];
+    const alt = "역할 🧭 지도";
+    const allowedBoundaries = `\t\n\r \u0085\uD7FF\uE000\uFDD0\uFFFD\u{10000}\u{10FFFF}`;
+    const valid = `<svg role="img" aria-label="${alt}" data-note="한국어 🧭" viewBox="0 0 600 300"><title>${alt}</title><desc>증거와 연습을 연결하는 지도 🧭${allowedBoundaries}</desc></svg>`;
+    const stateFor = (file, bytes) => ({
+      artifactRoot: root,
+      requested: true,
+      planned: true,
+      generated: true,
+      linted: true,
+      rendered: false,
+      verified: false,
+      svgFile: file,
+      pngAvailability: "unavailable",
+      altText: alt,
+      availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "test fallback" },
+      lintEvidence: {
+        command: `node check-svg.mjs ${file}`,
+        file,
+        result: "passed",
+        sha256: digest(bytes),
+        errors: [],
+        warnings: [],
+        warningsDisposition: "No warnings.",
+      },
+    });
+    const validBytes = Buffer.from(valid, "utf8");
+    await writeFile(path.join(root, "valid-unicode.svg"), validBytes);
+    for (const validator of validators) assert.doesNotThrow(() => validator(stateFor("valid-unicode.svg", validBytes)));
+
+    const characterAttacks = {
+      "nul-title.svg": valid.replace(alt, `${alt}\u0000`),
+      "c0-desc.svg": valid.replace("증거와", "증거\u000B와"),
+      "control-viewbox.svg": valid.replace("0 0 600 300", "0 0\u001F 600 300"),
+      "fffe-attribute.svg": valid.replace("한국어 🧭", "한국어\uFFFE🧭"),
+      "ffff-desc.svg": valid.replace("지도 🧭", "지도\uFFFF🧭"),
+    };
+    for (const [file, source] of Object.entries(characterAttacks)) {
+      const bytes = Buffer.from(source, "utf8");
+      await writeFile(path.join(root, file), bytes);
+      for (const validator of validators) {
+        assert.throws(() => validator(stateFor(file, bytes)), /forbidden XML character U\+/iu);
+      }
+    }
+
+    const titlePrefix = Buffer.from(`<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><title>${alt}`);
+    const titleSuffix = Buffer.from(`</title><desc>설명</desc></svg>`);
+    const invalidUtf8 = {
+      "overlong.svg": Buffer.concat([titlePrefix, Buffer.from([0xc0, 0xaf]), titleSuffix]),
+      "surrogate.svg": Buffer.concat([titlePrefix, Buffer.from([0xed, 0xa0, 0x80]), titleSuffix]),
+      "invalid-byte.svg": Buffer.concat([titlePrefix, Buffer.from([0xff]), titleSuffix]),
+    };
+    for (const [file, bytes] of Object.entries(invalidUtf8)) {
+      await writeFile(path.join(root, file), bytes);
+      for (const validator of validators) {
+        assert.throws(() => validator(stateFor(file, bytes)), /canonical valid UTF-8 without replacement decoding/iu);
+      }
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
     await rm(stagingRoot, { recursive: true, force: true });

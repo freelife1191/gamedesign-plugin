@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, openSync, readFileSync, readSync, closeSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { TextDecoder } from "node:util";
 
 async function loadSkillstead() {
   const candidates = [
@@ -33,6 +34,8 @@ async function loadSkillstead() {
 const { lintSvg, isCompletePng } = await loadSkillstead();
 
 const AVAILABILITY = new Set(["unknown", "available", "unavailable"]);
+const MAX_SVG_BYTES = 8_000_000;
+const utf8Decoder = new TextDecoder("utf-8", { fatal: true });
 
 function requireRecord(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
@@ -69,8 +72,37 @@ function safeExistingFile(root, relativeFile, extension, label) {
   return { relative: normalized.split(path.sep).join("/"), absolute: candidateReal };
 }
 
+function validateXmlCharacters(source) {
+  for (const character of source) {
+    const codePoint = character.codePointAt(0);
+    const xml10Allowed = codePoint === 0x9
+      || codePoint === 0xa
+      || codePoint === 0xd
+      || (codePoint >= 0x20 && codePoint <= 0xd7ff)
+      || (codePoint >= 0xe000 && codePoint <= 0xfffd)
+      || (codePoint >= 0x10000 && codePoint <= 0x10ffff);
+    if (!xml10Allowed) {
+      throw new Error(`svgFile contains forbidden XML character U+${codePoint.toString(16).toUpperCase().padStart(4, "0")}`);
+    }
+  }
+}
+
+function decodeSvgBytes(bytes) {
+  if (!Buffer.isBuffer(bytes)) throw new Error("svgFile must be read as bytes before UTF-8 decoding");
+  if (bytes.length === 0) throw new Error("svgFile must not be empty");
+  if (bytes.length > MAX_SVG_BYTES) throw new Error("svgFile exceeds the UTF-8 byte limit");
+  let source;
+  try {
+    source = utf8Decoder.decode(bytes);
+  } catch {
+    throw new Error("svgFile must contain canonical valid UTF-8 without replacement decoding");
+  }
+  validateXmlCharacters(source);
+  return source;
+}
+
 function viewBoxDimensions(svgPath) {
-  const source = readFileSync(svgPath, "utf8");
+  const source = decodeSvgBytes(readFileSync(svgPath));
   const { attributes } = parseSvgAccessibility(source);
   const match = attributes.viewBox?.match(/^\s*-?[\d.]+[\s,]+-?[\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*$/u);
   if (!match) throw new Error("svgFile must contain a positive root viewBox");
@@ -323,8 +355,8 @@ export function validateVisualizationState(value) {
     const lintFile = safeExistingFile(root, evidence.file, ".svg", "lintEvidence.file");
     if (lintFile.relative !== svg.relative) throw new Error("lintEvidence.file must match svgFile");
     const svgBytes = readFileSync(svg.absolute);
-    if (svgBytes.length === 0) throw new Error("svgFile must not be empty");
-    const actualLint = lintSvg(svgBytes.toString("utf8"), lintFile.relative);
+    const svgSource = decodeSvgBytes(svgBytes);
+    const actualLint = lintSvg(svgSource, lintFile.relative);
     const errors = normalizeFindings(actualLint.errors);
     const warnings = normalizeFindings(actualLint.warnings);
     const sha256 = digest(svgBytes);
@@ -399,7 +431,7 @@ export function validateVisualizationState(value) {
   let visualQa;
   if (input.linted) {
     altText = requireText(input.altText, "altText");
-    svgAccessibility(readFileSync(svg.absolute, "utf8"), altText);
+    svgAccessibility(decodeSvgBytes(readFileSync(svg.absolute)), altText);
   }
   if (input.verified) {
     visualQa = requireText(input.visualQa, "visualQa");
