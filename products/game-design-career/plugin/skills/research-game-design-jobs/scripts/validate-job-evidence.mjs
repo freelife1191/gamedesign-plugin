@@ -15,6 +15,14 @@ const jobEvidenceSchema = JSON.parse(readFileSync(
   new URL("../../../references/job-evidence-schema.json", import.meta.url),
   "utf8",
 ));
+const collectionSchema = { type: "array", items: jobEvidenceSchema };
+const optionsSchema = {
+  type: "object",
+  properties: { asOfDate: { type: "string", format: "date" } },
+  additionalProperties: false,
+};
+const MAX_BOUNDARY_DEPTH = 32;
+const MAX_BOUNDARY_NODES = 100_000;
 
 function isPlainRecord(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
@@ -28,21 +36,54 @@ function isArrayIndex(key, length) {
   return Number.isSafeInteger(index) && index >= 0 && index < length && String(index) === key;
 }
 
-function snapshotData(value, path, errors, seen = new WeakSet()) {
-  if (value === null || typeof value !== "object") return value;
+function schemaAllows(schema, type) {
+  if (schema?.type === undefined) return true;
+  const allowed = Array.isArray(schema.type) ? schema.type : [schema.type];
+  return allowed.includes(type);
+}
+
+function snapshotData(value, path, errors, schema, state = { depth: 0, nodes: 0, seen: new WeakSet() }) {
+  state.nodes += 1;
+  if (state.nodes > MAX_BOUNDARY_NODES) {
+    errors.push(finding("boundary-complexity", `Job evidence exceeds ${MAX_BOUNDARY_NODES} values.`, path));
+    return undefined;
+  }
+  if (state.depth > MAX_BOUNDARY_DEPTH) {
+    errors.push(finding("boundary-depth", `Job evidence exceeds depth ${MAX_BOUNDARY_DEPTH}.`, path));
+    return undefined;
+  }
+  if (value === null) return null;
+  const primitiveType = typeof value;
+  if (primitiveType !== "object") {
+    if (primitiveType === "string" || primitiveType === "boolean") return value;
+    if (primitiveType === "number" && Number.isFinite(value)) return value;
+    errors.push(finding("boundary-primitive", "Only null, strings, booleans, and finite numbers are accepted as data values.", path));
+    return undefined;
+  }
   if (utilTypes.isProxy(value)) {
     errors.push(finding("boundary-proxy", "Proxy values are not accepted at the job-evidence boundary.", path));
     return undefined;
   }
-  if (seen.has(value)) {
+  if (state.seen.has(value)) {
     errors.push(finding("boundary-cycle", "Cyclic values are not accepted at the job-evidence boundary.", path));
     return undefined;
   }
-  seen.add(value);
+  state.seen.add(value);
 
   if (Array.isArray(value)) {
+    if (!schemaAllows(schema, "array")) {
+      errors.push(finding("schema-type", "Expected a non-array value.", path));
+      state.seen.delete(value);
+      return undefined;
+    }
     if (Object.getPrototypeOf(value) !== Array.prototype) {
       errors.push(finding("boundary-prototype", "Arrays must use the standard Array prototype.", path));
+      state.seen.delete(value);
+      return undefined;
+    }
+    if (value.length > MAX_BOUNDARY_NODES - state.nodes) {
+      errors.push(finding("boundary-complexity", `Array exceeds the ${MAX_BOUNDARY_NODES}-value boundary budget.`, path));
+      state.seen.delete(value);
       return undefined;
     }
     const keys = Reflect.ownKeys(value);
@@ -66,28 +107,42 @@ function snapshotData(value, path, errors, seen = new WeakSet()) {
     }
     if (indexDescriptors.size !== value.length) {
       errors.push(finding("boundary-array-hole", "Sparse arrays are not accepted.", path));
-      seen.delete(value);
+      state.seen.delete(value);
       return undefined;
     }
     const snapshot = [];
     for (let index = 0; index < value.length; index += 1) {
       const descriptor = indexDescriptors.get(index);
       if (descriptor && Object.hasOwn(descriptor, "value")) {
-        snapshot.push(snapshotData(descriptor.value, `${path}[${index}]`, errors, seen));
+        state.depth += 1;
+        snapshot.push(snapshotData(descriptor.value, `${path}[${index}]`, errors, schema?.items, state));
+        state.depth -= 1;
       } else {
         snapshot.push(undefined);
       }
     }
-    seen.delete(value);
+    state.seen.delete(value);
     return snapshot;
   }
 
+  if (!schemaAllows(schema, "object")) {
+    errors.push(finding("schema-type", "Expected a non-object value.", path));
+    state.seen.delete(value);
+    return undefined;
+  }
   if (!isPlainRecord(value)) {
     errors.push(finding("boundary-prototype", "Objects must use Object.prototype or a null prototype.", path));
+    state.seen.delete(value);
     return undefined;
   }
   const snapshot = Object.create(null);
-  for (const key of Reflect.ownKeys(value)) {
+  const keys = Reflect.ownKeys(value);
+  if (keys.length > MAX_BOUNDARY_NODES - state.nodes) {
+    errors.push(finding("boundary-complexity", `Object exceeds the ${MAX_BOUNDARY_NODES}-value boundary budget.`, path));
+    state.seen.delete(value);
+    return undefined;
+  }
+  for (const key of keys) {
     if (typeof key === "symbol") {
       errors.push(finding("boundary-symbol-key", "Symbol keys are not accepted.", path));
       continue;
@@ -102,10 +157,17 @@ function snapshotData(value, path, errors, seen = new WeakSet()) {
     } else if (!descriptor.enumerable) {
       errors.push(finding("boundary-non-enumerable", "Object fields must be enumerable.", `${path}.${key}`));
     } else {
-      snapshot[key] = snapshotData(descriptor.value, `${path}.${key}`, errors, seen);
+      const childSchema = schema?.properties?.[key];
+      if (schema?.additionalProperties === false && !Object.hasOwn(schema.properties ?? {}, key)) {
+        errors.push(finding("boundary-unknown-key", `Unexpected field '${key}'.`, `${path}.${key}`));
+        continue;
+      }
+      state.depth += 1;
+      snapshot[key] = snapshotData(descriptor.value, `${path}.${key}`, errors, childSchema, state);
+      state.depth -= 1;
     }
   }
-  seen.delete(value);
+  state.seen.delete(value);
   return snapshot;
 }
 
@@ -213,8 +275,10 @@ function exactStringSet(actual, expected) {
 
 export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   const boundaryErrors = [];
-  const records = snapshotData(inputRecords, "$", boundaryErrors);
-  const options = inputOptions === undefined ? Object.create(null) : snapshotData(inputOptions, "$options", boundaryErrors);
+  const records = snapshotData(inputRecords, "$", boundaryErrors, collectionSchema);
+  const options = inputOptions === undefined
+    ? Object.create(null)
+    : snapshotData(inputOptions, "$options", boundaryErrors, optionsSchema);
   if (boundaryErrors.length > 0) return { valid: false, errors: boundaryErrors };
   if (!Array.isArray(records)) {
     return {
@@ -226,13 +290,10 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   if (!isPlainRecord(options)) {
     return { valid: false, errors: [finding("boundary-options", "Options must be a plain data object.", "$options")] };
   }
-  const optionKeys = Object.keys(options);
-  if (optionKeys.some((key) => key !== "asOfDate")) {
-    return { valid: false, errors: [finding("boundary-unknown-key", "Only asOfDate is accepted in options.", "$options")] };
-  }
   const { asOfDate } = options;
 
   const errors = [];
+  validateSchema(options, optionsSchema, "$options", errors);
   records.forEach((record, recordIndex) => validateSchema(record, jobEvidenceSchema, `$[${recordIndex}]`, errors));
   if (errors.length > 0) return { valid: false, errors };
   const sourceIdCounts = new Map();
@@ -380,7 +441,7 @@ async function main() {
   const records = JSON.parse(await readFile(collectionPath, "utf8"));
   const asOfIndex = args.indexOf("--as-of");
   const asOfDate = asOfIndex >= 0 ? args[asOfIndex + 1] : undefined;
-  const result = validateJobEvidenceCollection(records, { asOfDate });
+  const result = validateJobEvidenceCollection(records, asOfIndex >= 0 ? { asOfDate } : undefined);
   const output = `${JSON.stringify(result, null, 2)}\n`;
   (result.valid ? process.stdout : process.stderr).write(output);
   if (!result.valid) process.exitCode = 1;

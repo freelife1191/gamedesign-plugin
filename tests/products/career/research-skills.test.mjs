@@ -86,6 +86,68 @@ function repeatedSignal(overrides = {}) {
   };
 }
 
+function deepUnknownPayload(depth = 20_000) {
+  const root = {};
+  let cursor = root;
+  for (let index = 0; index < depth; index += 1) {
+    const next = {};
+    cursor.next = next;
+    cursor = next;
+  }
+  return root;
+}
+
+function primitiveAttackCases(value) {
+  const signal = repeatedSignal();
+  signal.signal = value;
+  const refSignal = repeatedSignal();
+  refSignal.sourceRefs[0].statement = value;
+  return [
+    ["record", [posting("posting-a", [], { company: value, sampleSize: 1 })], undefined],
+    ["signal", [posting("posting-a", [signal]), posting("posting-b"), posting("posting-c")], { asOfDate: "2026-08-04" }],
+    ["sourceRef", [posting("posting-a", [refSignal]), posting("posting-b"), posting("posting-c")], { asOfDate: "2026-08-04" }],
+    ["options", [], { asOfDate: value }],
+  ];
+}
+
+function deepUnknownAttackCases() {
+  const record = posting("posting-a", [], { sampleSize: 1 });
+  record.unknown = deepUnknownPayload();
+  const signal = repeatedSignal();
+  signal.unknown = deepUnknownPayload();
+  const refSignal = repeatedSignal();
+  refSignal.sourceRefs[0].unknown = deepUnknownPayload();
+  return [
+    ["record", [record], undefined],
+    ["signal", [posting("posting-a", [signal]), posting("posting-b"), posting("posting-c")], { asOfDate: "2026-08-04" }],
+    ["sourceRef", [posting("posting-a", [refSignal]), posting("posting-b"), posting("posting-c")], { asOfDate: "2026-08-04" }],
+    ["options", [], { unknown: deepUnknownPayload() }],
+  ];
+}
+
+function assertRoundThreeBoundary(validateJobEvidenceCollection, label) {
+  const invalidPrimitives = [undefined, () => true, Symbol("forged"), 1n, Number.NaN, Infinity, -Infinity];
+  for (const value of invalidPrimitives) {
+    for (const [location, records, options] of primitiveAttackCases(value)) {
+      let result;
+      assert.doesNotThrow(() => { result = validateJobEvidenceCollection(records, options); }, `${label} ${location} ${typeof value}`);
+      assert.equal(result.valid, false, `${label} ${location} ${typeof value}`);
+      assert.ok(result.errors.some(({ code }) => code === "boundary-primitive"), `${label} ${location}: ${JSON.stringify(result.errors)}`);
+    }
+  }
+  for (const [location, records, options] of deepUnknownAttackCases()) {
+    let result;
+    assert.doesNotThrow(() => { result = validateJobEvidenceCollection(records, options); }, `${label} deep ${location}`);
+    assert.equal(result.valid, false, `${label} deep ${location}`);
+    assert.ok(result.errors.some(({ code }) => code === "boundary-unknown-key"), `${label} deep ${location}: ${JSON.stringify(result.errors)}`);
+  }
+  for (const asOfDate of [42, "2026-02-30", "not-a-date"] ) {
+    const result = validateJobEvidenceCollection([], { asOfDate });
+    assert.equal(result.valid, false, `${label} options ${asOfDate}`);
+    assert.ok(result.errors.some(({ code }) => code === "schema-type" || code === "schema-format"));
+  }
+}
+
 test("Role-map method requires the complete evidence-to-practice contract", async () => {
   const method = await read("references/methods/role-map.md");
   const requiredFields = [
@@ -301,7 +363,7 @@ test("Collection validator rejects forged large secondary samples and inconsiste
 test("Collection validator requires an explicit valid as-of date for repeated signals", async () => {
   const records = [posting("posting-a", [repeatedSignal()]), posting("posting-b"), posting("posting-c")];
   assert.ok((await validateCollection(records)).errors.some(({ code }) => code === "missing-as-of-date"));
-  assert.ok((await validateCollection(records, { asOfDate: "2026-02-30" })).errors.some(({ code }) => code === "invalid-as-of-date"));
+  assert.ok((await validateCollection(records, { asOfDate: "2026-02-30" })).errors.some(({ code }) => code === "schema-format"));
 });
 
 test("Collection validator preserves empty repeated signals and rejects undersized or duplicate signals", async () => {
@@ -344,15 +406,15 @@ test("Public collection validator enforces the complete record schema before sem
   ];
   for (const [label, records, expectedCode] of [
     ["missing required fields", [{ sourceId: "partial", repeatedSignals: [] }], "schema-required"],
-    ["unknown record key", [posting("posting-a", [], { verified: true, sampleSize: 1 })], "schema-additional-property"],
+    ["unknown record key", [posting("posting-a", [], { verified: true, sampleSize: 1 })], "boundary-unknown-key"],
     ["malformed string-array item", [posting("posting-a", [], { responsibilities: [42], sampleSize: 1 })], "schema-type"],
-    ["non-JSON bigint array item", [posting("posting-a", [], { applicantEvidence: [1n], sampleSize: 1 })], "schema-type"],
+    ["non-JSON bigint array item", [posting("posting-a", [], { applicantEvidence: [1n], sampleSize: 1 })], "boundary-primitive"],
     ["duplicate geography item", [posting("posting-a", [], { sampleGeography: ["KR", "KR"], sampleSize: 1 })], "schema-unique-items"],
     ["wrong repeatedSignals type", [posting("posting-a", "forged", { sampleSize: 1 })], "schema-type"],
-    ["unknown signal key", unknownSignalRecords, "schema-additional-property"],
-    ["unexpected ref key", unknownRefRecords, "schema-additional-property"],
+    ["unknown signal key", unknownSignalRecords, "boundary-unknown-key"],
+    ["unexpected ref key", unknownRefRecords, "boundary-unknown-key"],
     ["forbidden signal key", protoSignalRecords, "boundary-forbidden-key"],
-    ["huge sparse collection", hugeSparse, "boundary-array-hole"],
+    ["huge sparse collection", hugeSparse, "boundary-complexity"],
   ]) {
     const result = await validateCollection(records);
     assert.equal(result.valid, false, label);
@@ -431,6 +493,11 @@ test("Public collection validator rejects proxies before invoking their traps", 
   assert.equal(trapCalls, 0);
 });
 
+test("Source public validator rejects non-JSON primitives and deep unknown payloads at every boundary", async () => {
+  const { validateJobEvidenceCollection } = await loadCollectionValidator();
+  assertRoundThreeBoundary(validateJobEvidenceCollection, "source");
+});
+
 test("Clean-built public validator preserves the schema and data-only boundary", async () => {
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-job-boundary-"));
   try {
@@ -442,6 +509,7 @@ test("Clean-built public validator preserves the schema and data-only boundary",
 
     const partialResult = validateJobEvidenceCollection([{ sourceId: "partial", repeatedSignals: [] }]);
     assert.ok(partialResult.errors.some(({ code }) => code === "schema-required"));
+    assertRoundThreeBoundary(validateJobEvidenceCollection, "built");
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }
