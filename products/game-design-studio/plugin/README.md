@@ -91,6 +91,7 @@ plugins/game-design-studio/
 │   └── validate-artifact.mjs
 ├── references/
 │   ├── <Studio routing, methods, profiles, export/visualization contracts>
+│   ├── source-document-rights.json  # 원문 49개의 경로·해시·권리 상태
 │   ├── profiles/                    # 4개: universal core 1 + 선택 프로필 3
 │   ├── shared/
 │   │   ├── knowledge/
@@ -119,6 +120,30 @@ plugins/game-design-studio/
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
 검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (11개)`는 제품 스킬 10개와 `skills/svg-infographic/`이고 `agents/ (6개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
+
+## 원문 권리와 배포 모드
+
+`references/source/docs/`의 원문 49개는 사용자 제공 workspace에서 왔으며, 사용자가 요청한 로컬 플러그인 제작·사용을 위해 복사됩니다. [원문 권리 매니페스트](references/source-document-rights.json)는 각 문서의 정확한 package path와 SHA-256, `user-provided-workspace` origin, 로컬 포함 근거, MIT 제외 상태, 공개 재배포 상태, 검토일과 필요한 후속 조치를 기록합니다.
+
+플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.8.3에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
+
+[원문 재배포 가드](skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs)는 매니페스트 49개와 실제 package bytes를 대조합니다. `local`과 `private` 모드는 요청된 로컬·사설 사용을 허용합니다.
+
+```bash
+PLUGIN_ROOT="plugins/game-design-studio"
+node "$PLUGIN_ROOT/skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs" \
+  --mode local --plugin-root "$PLUGIN_ROOT"
+```
+
+`public`과 `distributable` 모드는 모든 문서에 명시적인 재배포 가능 license 또는 permission evidence가 없으면 실패합니다. 현재 매니페스트는 49개 모두 `not-established`이므로 다음 공개 배포 검사는 의도적으로 non-zero로 종료됩니다.
+
+```bash
+PLUGIN_ROOT="plugins/game-design-studio"
+node "$PLUGIN_ROOT/skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs" \
+  --mode public --plugin-root "$PLUGIN_ROOT"
+```
+
+공개 배포를 준비하려면 각 문서별로 명시적인 라이선스 또는 허가 증거를 package 내부에 보존하고, 그 파일의 SHA-256·검토일·공개 재배포 허용 사실을 매니페스트에 기록한 뒤 가드를 다시 실행해야 합니다. 근거가 없는 권리 상태를 추정하거나 자동 승인하지 마십시오.
 
 `hooks/hooks.json`은 두 shared runtime 진입점을 연결합니다.
 
@@ -294,6 +319,7 @@ MD는 패키지의 canonical text export입니다. PDF, DOCX와 PPTX는 각각 �
 
 - 플러그인은 재미, retention, 수익, 일정, 품질, 접근성 준수, 법적 적합성 또는 출시 성공을 예측하거나 보장하지 않습니다.
 - 원문 49개와 Core guidance는 시점 의존 정책·시장·도구 사실을 대체하지 않습니다. Current claim은 다시 조사해야 합니다.
+- 원문 49개는 로컬·사설 snapshot용으로만 포함됩니다. 공개 또는 배포 가능한 release에는 모든 문서의 명시적 재배포 권리 근거가 필요합니다.
 - 역할 프롬프트의 네이티브 발견과 병렬 서브에이전트 지원은 호스트에 따라 다릅니다. 순차 fallback은 역할·질문·merge order를 보존합니다.
 - PDF/DOCX/PPTX 생성과 PNG render는 설치 환경의 capability에 의존합니다. unavailable 또는 failed 상태를 성공으로 바꾸지 않습니다.
 - 템플릿은 빈칸을 승인된 사실로 채우지 않습니다. 사람의 결정, 권리·동의와 현재 근거가 필요한 게이트는 자동 완료되지 않습니다.
@@ -340,4 +366,4 @@ python3 "$CODEX_ROOT/skills/.system/plugin-creator/scripts/validate_plugin.py" p
 
 ## 라이선스
 
-Game Design Studio 자체는 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.8.3은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 프로젝트 제공 원문과 제3자 자료의 권리는 각각의 권리자에게 남습니다.
+Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.8.3은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.

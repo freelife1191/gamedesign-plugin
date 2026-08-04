@@ -19,3 +19,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Scope clarification
+
+This MIT License applies to the Game Design Studio plugin code and original
+plugin documentation, templates, and configuration authored for this project.
+It does not apply to the 49 user-provided source documents under
+`references/source/docs/`; those documents are not sublicensed. Their public
+redistribution rights are not established. Those source documents are excluded
+from the MIT-licensed work and
+must not be included in a public or otherwise distributable release until an
+explicit redistributable license or permission record has been obtained,
+reviewed, and recorded for every document.
