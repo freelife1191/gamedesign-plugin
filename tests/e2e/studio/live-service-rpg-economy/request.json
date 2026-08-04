@@ -1,8 +1,19 @@
 {
   "schemaVersion": 1,
   "scenarioId": "live-service-rpg-economy",
-  "intents": ["game economy", "LiveOps", "export"],
-  "profileIds": ["live-service-rpg"],
-  "requestedFormats": ["md", "pdf"],
-  "reviewMode": "sequential-fallback"
+  "intents": [
+    "game economy",
+    "LiveOps",
+    "export"
+  ],
+  "profileIds": [
+    "live-service-rpg"
+  ],
+  "requestedFormats": [
+    "md",
+    "pdf"
+  ],
+  "reviewMode": "sequential-fallback",
+  "approvalSnapshotPath": "approval-snapshot.json",
+  "visualizationPath": null
 }

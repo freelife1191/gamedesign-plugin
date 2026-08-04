@@ -1,8 +1,20 @@
 {
   "schemaVersion": 1,
   "scenarioId": "mobile-onboarding-liveops",
-  "intents": ["tutorial", "LiveOps", "diagram", "export"],
-  "profileIds": ["mobile"],
-  "requestedFormats": ["md", "pptx"],
-  "reviewMode": "sequential-fallback"
+  "intents": [
+    "tutorial",
+    "LiveOps",
+    "diagram",
+    "export"
+  ],
+  "profileIds": [
+    "mobile"
+  ],
+  "requestedFormats": [
+    "md",
+    "pptx"
+  ],
+  "reviewMode": "sequential-fallback",
+  "approvalSnapshotPath": "approval-snapshot.json",
+  "visualizationPath": "onboarding-flow.svg"
 }

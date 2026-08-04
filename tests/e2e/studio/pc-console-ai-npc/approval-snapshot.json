@@ -1,22 +1,8 @@
 {
   "schemaVersion": 1,
   "scenarioId": "pc-console-ai-npc",
-  "routeIds": [
-    "content",
-    "systems",
-    "review",
-    "export"
-  ],
-  "roleIds": [
-    "content-narrative-designer",
-    "ux-accessibility-reviewer",
-    "production-feasibility-critic"
-  ],
-  "templateIds": [
-    "narrative-quest-npc",
-    "system-specification",
-    "game-design-review"
-  ],
+  "decisionId": "approve-pc-console-ai-npc",
+  "approvalDate": "2026-08-04",
   "evidenceRegistry": [
     {
       "evidenceId": "ai-rights-human-approval-source-provenance",
@@ -161,38 +147,5 @@
       "decisionId": "approve-pc-console-ai-npc",
       "approvalDate": "2026-08-04"
     }
-  ],
-  "outputManifestPath": "output-manifest.json",
-  "domain": {
-    "npc": {
-      "contentId": "guide-npc",
-      "playerPurpose": "contextual quest guidance",
-      "choiceConsequence": "decline-preserves-main-path",
-      "questState": "chapter-one",
-      "npcState": "available-safe",
-      "fallback": {
-        "mode": "authored-safe-dialogue",
-        "trigger": "model-or-policy-failure",
-        "owner": "narrative-owner"
-      },
-      "killSwitch": {
-        "enabled": true,
-        "scope": "all-generative-responses",
-        "owner": "safety-owner",
-        "recovery": "authored-safe-dialogue"
-      }
-    },
-    "rightsConsent": {
-      "source": "approved-dialogue-corpus",
-      "creator": "internal-writing-team",
-      "attribution": "project-rights-register",
-      "usePurpose": "npc-dialogue-generation",
-      "rightsStatus": "granted",
-      "consentStatus": "documented",
-      "privacy": "no-player-personal-data",
-      "moderation": "pre-and-post-generation-filters",
-      "approver": "rights-and-legal-owner",
-      "revocationPath": "disable-source-and-rebuild-index"
-    }
-  }
+  ]
 }

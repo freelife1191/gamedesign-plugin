@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
 import { lstat, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
+import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import { prepareStudioExportJob } from "../../export-game-design-documents/scripts/prepare-studio-export.mjs";
@@ -12,13 +15,17 @@ import { composeProfiles } from "./compose-profiles.mjs";
 const pluginRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const routingPath = path.join(pluginRoot, "references/routing.json");
 const presetsPath = path.join(pluginRoot, "references/visualization-presets.json");
+const templateIntegrityPath = path.join(pluginRoot, "references/template-content-integrity.json");
 const templateRoot = path.join(pluginRoot, "assets/templates");
 const workflowPath = path.join(pluginRoot, "skills/orchestrate-game-design-project/references/workflow.md");
 const RESULT_KEYS = [
   "schemaVersion", "scenarioId", "routeIds", "roleIds", "templateIds", "evidenceRegistry",
   "responsibleGates", "outputManifestPath", "domain",
 ];
-const REQUEST_KEYS = ["schemaVersion", "scenarioId", "intents", "profileIds", "requestedFormats", "reviewMode"];
+const REQUEST_KEYS = [
+  "schemaVersion", "scenarioId", "intents", "profileIds", "requestedFormats", "reviewMode",
+  "approvalSnapshotPath", "visualizationPath",
+];
 const SCENARIOS = Object.freeze({
   "live-service-rpg-economy": {
     routes: ["economy", "liveops", "export"],
@@ -27,8 +34,8 @@ const SCENARIOS = Object.freeze({
     templates: ["economy-balance", "liveops-experiment-event"],
     gates: ["economy-transparency", "liveops-experiment"],
     recipeId: "liveops-plan",
+    exportTemplateId: "liveops-experiment-event",
     requiredProfileSections: ["liveops-calendar-and-rollback", "economy-sources-sinks-and-inflation"],
-    templateTokens: ["rollback", "guardrail"],
   },
   "mobile-onboarding-liveops": {
     routes: ["player-experience", "liveops", "visualization", "export"],
@@ -37,8 +44,8 @@ const SCENARIOS = Object.freeze({
     templates: ["ui-ux-flow-state", "liveops-experiment-event"],
     gates: ["accessibility", "liveops-experiment"],
     recipeId: "liveops-plan",
+    exportTemplateId: "liveops-experiment-event",
     requiredProfileSections: ["touch-input-and-device-matrix", "short-session-and-interruption-recovery"],
-    templateTokens: ["accessibility", "guardrail", "rollback"],
   },
   "pc-console-ai-npc": {
     routes: ["content", "systems", "review", "export"],
@@ -47,10 +54,11 @@ const SCENARIOS = Object.freeze({
     templates: ["narrative-quest-npc", "system-specification", "game-design-review"],
     gates: ["ai-rights-human-approval", "ai-npc-safety"],
     recipeId: "content-spec",
+    exportTemplateId: "narrative-quest-npc",
     requiredProfileSections: ["controller-and-keyboard-mouse-input", "platform-certification-and-entitlements"],
-    templateTokens: ["rights", "consent", "failure", "recovery", "finding-id"],
   },
 });
+const APPROVED_TEMPLATE_IDS = [...new Set(Object.values(SCENARIOS).flatMap(({ templates }) => templates))].sort();
 let canonicalValidatorPromise;
 let gateRegistryPromise;
 
@@ -80,6 +88,10 @@ function exactKeys(value, expected) {
 
 function exactTextRecord(value, keys) {
   return exactKeys(value, keys) && keys.every((key) => isText(value[key]));
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function hasExactKeys(value, keys, code, errors, label) {
@@ -156,6 +168,36 @@ async function loadGateRegistry() {
   return gateRegistryPromise;
 }
 
+export async function validateTemplateContentIntegrity(templateId, sourceOverride) {
+  const integrity = await readJson(templateIntegrityPath);
+  if (!exactKeys(integrity, ["schemaVersion", "algorithm", "contentHashes"])
+    || integrity.schemaVersion !== 1 || integrity.algorithm !== "sha256" || !isRecord(integrity.contentHashes)
+    || !sameArray(Object.keys(integrity.contentHashes).sort(), APPROVED_TEMPLATE_IDS)) {
+    return { valid: false, error: "Packaged template integrity registry is invalid." };
+  }
+  const expected = integrity.contentHashes[templateId];
+  if (typeof expected !== "string" || !/^[a-f0-9]{64}$/u.test(expected)) {
+    return { valid: false, error: `No approved content hash exists for ${templateId}.` };
+  }
+  const source = sourceOverride === undefined
+    ? await readFile(path.join(templateRoot, templateId, "content.md"))
+    : Buffer.from(sourceOverride);
+  const actual = sha256(source);
+  return { valid: actual === expected, expected, actual };
+}
+
+export function validateExportTemplateContract({ recipeId, exportTemplateId, templates }) {
+  const recipeTemplates = {
+    "liveops-plan": "liveops-experiment-event",
+    "content-spec": "narrative-quest-npc",
+  };
+  const expected = recipeTemplates[recipeId];
+  return expected !== undefined
+    && exportTemplateId === expected
+    && Array.isArray(templates)
+    && templates.includes(exportTemplateId);
+}
+
 function extractReviewPolicy(markdown) {
   const match = markdown.match(/<!-- review-policy:start -->\s*```json\s*([\s\S]*?)\s*```\s*<!-- review-policy:end -->/u);
   if (!match) throw new Error("review-policy contract is missing");
@@ -168,11 +210,18 @@ function validateRequest(request, errors) {
     || !Array.isArray(request.intents) || request.intents.length === 0 || !request.intents.every(isText)
     || !Array.isArray(request.profileIds) || !request.profileIds.every(isText)
     || !Array.isArray(request.requestedFormats) || request.requestedFormats.length === 0 || !request.requestedFormats.every(isText)
+    || !isText(request.approvalSnapshotPath)
+    || (request.scenarioId === "mobile-onboarding-liveops" ? !isText(request.visualizationPath) : request.visualizationPath !== null)
     || request.reviewMode !== "sequential-fallback") {
     errors.push(finding("scenario.request-schema", "Scenario request has invalid field values."));
     return null;
   }
-  return SCENARIOS[request.scenarioId] ?? null;
+  const scenario = SCENARIOS[request.scenarioId] ?? null;
+  if (scenario && !validateExportTemplateContract(scenario)) {
+    errors.push(finding("output.export-template", "Scenario export template does not match its recipe contract."));
+    return null;
+  }
+  return scenario;
 }
 
 async function validateRoutingProfilesAndRoles(request, result, scenario, errors) {
@@ -255,69 +304,111 @@ async function validateTemplates(result, scenario, errors) {
   }
   const { validateArtifact } = await loadCanonicalValidator();
   const validatedTemplateIds = [];
-  const contents = [];
   for (const templateId of scenario.templates) {
     const artifactRoot = path.join(templateRoot, templateId);
-    const validation = await validateArtifact(artifactRoot);
+    const [validation, integrity] = await Promise.all([
+      validateArtifact(artifactRoot),
+      validateTemplateContentIntegrity(templateId),
+    ]);
     if (!validation.ok) {
       errors.push(finding("template.invalid", `${templateId}: ${validation.errors.map(({ message }) => message).join("; ")}`));
       continue;
     }
-    validatedTemplateIds.push(templateId);
-    contents.push((await readFile(path.join(artifactRoot, "content.md"), "utf8")).toLocaleLowerCase("en-US"));
-  }
-  const combined = contents.join("\n");
-  for (const token of scenario.templateTokens) {
-    if (!combined.includes(token.toLocaleLowerCase("en-US"))) {
-      errors.push(finding("template.semantic-contract", `Canonical templates are missing required contract token: ${token}.`));
+    if (!integrity.valid) {
+      errors.push(finding("template.integrity", `${templateId} content does not match the Task 8 approved SHA-256.`));
+      continue;
     }
+    validatedTemplateIds.push(templateId);
   }
   return validatedTemplateIds;
 }
 
-async function validateEvidenceAndGates(result, scenario, errors) {
-  if (!Array.isArray(result.evidenceRegistry) || result.evidenceRegistry.length === 0) {
-    errors.push(finding("evidence.registry", "A nonempty evidence registry is required."));
+async function validateEvidenceAndGates(result, trustedSnapshot, scenario, errors) {
+  const snapshotKeys = [
+    "schemaVersion", "scenarioId", "decisionId", "approvalDate", "evidenceRegistry", "responsibleGates",
+  ];
+  if (!exactKeys(trustedSnapshot, snapshotKeys)
+    || trustedSnapshot.schemaVersion !== 1
+    || trustedSnapshot.scenarioId !== result.scenarioId
+    || !isText(trustedSnapshot.decisionId)
+    || !/^\d{4}-\d{2}-\d{2}$/u.test(trustedSnapshot.approvalDate)
+    || !Array.isArray(trustedSnapshot.evidenceRegistry)
+    || !Array.isArray(trustedSnapshot.responsibleGates)) {
+    errors.push(finding("approval.snapshot-schema", "Trusted approval snapshot has an invalid exact schema."));
     return;
   }
-  const evidenceIds = new Set();
-  for (const evidence of result.evidenceRegistry) {
-    if (!exactTextRecord(evidence, ["evidenceId", "kind", "source", "limitation"])) {
-      errors.push(finding("evidence.schema", "Evidence records require exact nonempty fields."));
+  if (!isDeepStrictEqual(result.evidenceRegistry, trustedSnapshot.evidenceRegistry)) {
+    errors.push(finding("approval.evidence-mismatch", "Result evidence must deep-exact match the trusted approval snapshot."));
+  }
+  if (!isDeepStrictEqual(result.responsibleGates, trustedSnapshot.responsibleGates)) {
+    errors.push(finding("approval.gate-mismatch", "Result gates must deep-exact match the trusted approval snapshot."));
+  }
+  const gateRegistry = await loadGateRegistry().catch((error) => {
+    errors.push(finding("gate.registry", error.message));
+    return null;
+  });
+  if (!gateRegistry) return;
+
+  if (!sameArray(
+    trustedSnapshot.responsibleGates.map((gate) => isRecord(gate) ? gate.gateId : undefined),
+    scenario.gates,
+  )) {
+    errors.push(finding("gate.selection", "Trusted gate order and identity must exactly cover the scenario."));
+  }
+  const evidenceById = new Map();
+  for (const evidence of trustedSnapshot.evidenceRegistry) {
+    const fields = [
+      "evidenceId", "gateId", "field", "kind", "subject", "assertion", "source", "limitation", "decisionId",
+    ];
+    if (!exactTextRecord(evidence, fields)) {
+      errors.push(finding("evidence.schema", "Trusted evidence requires exact gate, field, kind, subject, assertion, source, limitation, and decision linkage."));
       continue;
     }
-    if (evidenceIds.has(evidence.evidenceId)) errors.push(finding("evidence.id", "Evidence IDs must be unique."));
-    evidenceIds.add(evidence.evidenceId);
+    if (evidenceById.has(evidence.evidenceId)) errors.push(finding("evidence.id", "Trusted evidence IDs must be unique."));
+    evidenceById.set(evidence.evidenceId, evidence);
   }
-  if (!Array.isArray(result.responsibleGates) || result.responsibleGates.length !== scenario.gates.length) {
-    errors.push(finding("gate.selection", "Responsible gates must exactly cover the scenario."));
-    return;
-  }
-  if (!sameArray(result.responsibleGates.map((gate) => isRecord(gate) ? gate.gateId : undefined), scenario.gates)) {
-    errors.push(finding("gate.selection", "Responsible gate order and identity changed."));
-  }
-  let gateRegistry;
-  try {
-    gateRegistry = await loadGateRegistry();
-  } catch (error) {
-    errors.push(finding("gate.registry", error.message));
-    return;
-  }
-  for (const gate of result.responsibleGates) {
-    if (!hasExactKeys(gate, ["gateId", "status", "evidenceIds", "approver", "blocker"], "gate.schema", errors, "Gate")) continue;
+
+  const mappedIds = new Set();
+  for (const gate of trustedSnapshot.responsibleGates) {
+    const gateKeys = [
+      "gateId", "status", "blocker", "approver", "evidenceIds", "evidenceFields", "decisionId", "approvalDate",
+    ];
+    if (!hasExactKeys(gate, gateKeys, "gate.schema", errors, "Trusted gate")) continue;
     const registered = gateRegistry.gates?.find(({ id }) => id === gate.gateId);
-    if (!registered || !sameArray(registered.allowed_states, gateRegistry.allowed_states)
-      || !registered.allowed_states.includes(gate.status)) {
+    if (!registered || !sameArray(registered.allowed_states, gateRegistry.allowed_states)) {
       errors.push(finding("gate.registry", `${gate.gateId} is not a valid packaged responsible-design gate.`));
       continue;
     }
-    if (gate.status !== "approved" || gate.approver !== registered.approver || gate.blocker !== null
-      || !Array.isArray(gate.evidenceIds) || gate.evidenceIds.length === 0) {
-      errors.push(finding("gate.state", `${gate.gateId} cannot claim approval without registry approver, evidence, and no blocker.`));
+    const expectedFields = registered.evidence_fields;
+    if (gate.status !== "approved" || !registered.allowed_states.includes(gate.status)
+      || gate.blocker !== null || gate.approver !== registered.approver
+      || gate.decisionId !== trustedSnapshot.decisionId || gate.approvalDate !== trustedSnapshot.approvalDate
+      || !exactKeys(gate.evidenceFields, expectedFields)
+      || !sameArray(gate.evidenceIds, expectedFields.map((field) => gate.evidenceFields?.[field]))) {
+      errors.push(finding("gate.state", `${gate.gateId} must bind the registry approver and every evidence field to the trusted decision.`));
+      continue;
     }
-    if (gate.evidenceIds?.some((id) => !evidenceIds.has(id))) {
-      errors.push(finding("gate.evidence", `${gate.gateId} references undeclared evidence.`));
+    for (const field of expectedFields) {
+      const evidenceId = gate.evidenceFields[field];
+      const evidence = evidenceById.get(evidenceId);
+      if (!evidence
+        || mappedIds.has(evidenceId)
+        || evidence.gateId !== gate.gateId
+        || evidence.field !== field
+        || evidence.kind !== "approval-evidence"
+        || evidence.subject !== `${gate.gateId}.${field}`
+        || evidence.assertion !== "satisfied"
+        || evidence.decisionId !== trustedSnapshot.decisionId
+        || evidence.source !== `trusted-record://${result.scenarioId}/${gate.gateId}/${field}`
+        || evidence.limitation !== "approved scenario scope only") {
+        errors.push(finding("gate.evidence", `${gate.gateId}.${field} is not bound to exact positive trusted evidence.`));
+      } else {
+        mappedIds.add(evidenceId);
+      }
     }
+  }
+  if (mappedIds.size !== evidenceById.size) {
+    errors.push(finding("evidence.unrelated", "Every trusted evidence record must map exactly once to a required gate field."));
   }
 }
 
@@ -359,7 +450,9 @@ function validateMobile(domain, errors) {
     || !["experimentId", "hypothesis", "control", "singleVariable", "stopCondition", "rollback"].every((field) => isText(liveops?.[field]))
     || !exactKeys(liveops?.guardrail, ["metric", "direction", "threshold"])
     || !isText(liveops?.guardrail?.metric) || liveops?.guardrail?.direction !== "must-not-increase"
-    || !Number.isFinite(liveops?.guardrail?.threshold) || liveops.guardrail.threshold <= 0) {
+    || !Number.isFinite(liveops?.guardrail?.threshold) || liveops.guardrail.threshold <= 0
+    || liveops.stopCondition !== "guardrail-threshold-breach"
+    || liveops.rollback !== "disable-experiment-and-restore-control") {
     errors.push(finding("liveops.guardrail", "LiveOps requires a positive, protective guardrail plus stop and rollback behavior."));
   }
   return {
@@ -378,7 +471,8 @@ function validateAiNpc(domain, errors) {
     errors.push(finding("ai.npc-schema", "AI NPC must define content state, fallback, and kill switch."));
   }
   const fallbackReady = exactTextRecord(npc?.fallback, ["mode", "trigger", "owner"])
-    && npc.fallback.mode === "authored-safe-dialogue";
+    && npc.fallback.mode === "authored-safe-dialogue"
+    && npc.fallback.trigger === "model-or-policy-failure";
   if (!fallbackReady) errors.push(finding("ai.fallback", "AI NPC requires an owned authored safe-dialogue fallback."));
   const killSwitchReady = exactKeys(npc?.killSwitch, ["enabled", "scope", "owner", "recovery"])
     && npc.killSwitch.enabled === true && npc.killSwitch.scope === "all-generative-responses"
@@ -386,18 +480,60 @@ function validateAiNpc(domain, errors) {
   if (!killSwitchReady) errors.push(finding("ai.kill-switch", "AI NPC requires an enabled, owned, recoverable kill switch."));
   const rightsFields = ["source", "creator", "attribution", "usePurpose", "rightsStatus", "consentStatus", "privacy", "moderation", "approver", "revocationPath"];
   const rightsReady = exactTextRecord(domain.rightsConsent, rightsFields)
-    && domain.rightsConsent.rightsStatus === "granted" && domain.rightsConsent.consentStatus === "documented";
+    && domain.rightsConsent.rightsStatus === "granted"
+    && domain.rightsConsent.consentStatus === "documented"
+    && domain.rightsConsent.privacy === "no-player-personal-data"
+    && domain.rightsConsent.moderation === "pre-and-post-generation-filters"
+    && domain.rightsConsent.approver === "rights-and-legal-owner"
+    && domain.rightsConsent.revocationPath === "disable-source-and-rebuild-index";
   if (!rightsReady) errors.push(finding("ai.rights-consent", "AI NPC requires explicit source, rights, consent, privacy, moderation, approval, and revocation."));
   return { aiRightsConsentReady: rightsReady, aiFallbackReady: fallbackReady, aiKillSwitchReady: killSwitchReady };
 }
 
-async function validateVisualization(result, errors) {
-  if (result.scenarioId !== "mobile-onboarding-liveops") return;
+async function loadSkillsteadLinter() {
+  const packagedRuntime = await lstat(path.join(pluginRoot, "scripts/validate-artifact.mjs"))
+    .then((stat) => stat.isFile())
+    .catch(() => false);
+  if (packagedRuntime) {
+    return assertPlainFile("skills/svg-infographic/scripts/check-svg.mjs", pluginRoot, "Skillstead linter");
+  }
+  const repoRoot = path.resolve(pluginRoot, "../../..");
+  return assertPlainFile(
+    "shared/vendor/skillstead/svg-infographic/0.8.3/scripts/check-svg.mjs",
+    repoRoot,
+    "Skillstead linter",
+  );
+}
+
+async function validateVisualization(root, request, result, errors) {
+  if (result.scenarioId !== "mobile-onboarding-liveops") return null;
   const presets = await readJson(presetsPath);
   const preset = presets.presets?.find(({ id }) => id === result.domain?.visualizationPresetId);
   if (!preset || presets.skillstead?.packagePath !== "skills/svg-infographic"
     || preset.svgLint?.command !== "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>") {
     errors.push(finding("visualization.preset", "Mobile workflow must route through a packaged Skillstead preset and linter."));
+  }
+  try {
+    const [svgPath, linterPath] = await Promise.all([
+      assertPlainFile(request.visualizationPath, root, "visualizationPath"),
+      loadSkillsteadLinter(),
+    ]);
+    const execution = spawnSync(process.execPath, [linterPath, svgPath], { encoding: "utf8" });
+    const log = `${execution.stdout ?? ""}${execution.stderr ?? ""}`.trim();
+    if (execution.status !== 0 || execution.error) {
+      throw new Error(execution.error?.message || log || `exit ${execution.status}`);
+    }
+    const [svgBytes, linterBytes] = await Promise.all([readFile(svgPath), readFile(linterPath)]);
+    return {
+      path: request.visualizationPath,
+      svgDigest: sha256(svgBytes),
+      linterDigest: sha256(linterBytes),
+      exitCode: execution.status,
+      log,
+    };
+  } catch (error) {
+    errors.push(finding("visualization.lint", `Skillstead lint failed closed: ${error.message}.`));
+    return null;
   }
 }
 
@@ -429,7 +565,7 @@ async function validateOutput(root, request, result, scenario, errors) {
     const prepared = await prepareStudioExportJob({
       requestedFormats: request.requestedFormats,
       recipeId: scenario.recipeId,
-      artifactDir: path.join(templateRoot, scenario.templates[0]),
+      artifactDir: path.join(templateRoot, scenario.exportTemplateId),
       outputDir: temporaryOutput,
       validatorPath,
       capabilities: {},
@@ -455,13 +591,16 @@ export async function validateStudioScenario(root, options = {}) {
   try {
     const rootStat = await lstat(root);
     if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error("Scenario root must be a real directory.");
-    request = await readScenarioFile(root, "request.json", "request.json");
+    request = options.requestOverride === undefined
+      ? await readScenarioFile(root, "request.json", "request.json")
+      : structuredClone(options.requestOverride);
     result = options.resultOverride === undefined
       ? await readScenarioFile(root, "result.json", "result.json")
       : structuredClone(options.resultOverride);
   } catch (error) {
     return { ok: false, errors: [finding("scenario.files", error.message)] };
   }
+  if (!isRecord(request)) return { ok: false, errors: [finding("scenario.request-schema", "Scenario request must be a plain record.")] };
   if (!isRecord(result)) return { ok: false, errors: [finding("scenario.schema", "Scenario result must be a plain record.")] };
   hasExactKeys(result, RESULT_KEYS, "scenario.result-keys", errors, "Scenario result");
   if (result.schemaVersion !== 1 || result.scenarioId !== request.scenarioId || !isRecord(result.domain)) {
@@ -472,9 +611,16 @@ export async function validateStudioScenario(root, options = {}) {
     errors.push(finding("scenario.id", "Unknown or invalid professional scenario."));
     return { ok: false, scenarioId: request.scenarioId, errors };
   }
+  let trustedSnapshot;
+  try {
+    trustedSnapshot = await readScenarioFile(root, request.approvalSnapshotPath, "approvalSnapshotPath");
+  } catch (error) {
+    errors.push(finding("approval.snapshot-file", error.message));
+    return { ok: false, scenarioId: request.scenarioId, errors };
+  }
   const routing = await validateRoutingProfilesAndRoles(request, result, scenario, errors);
   const validatedTemplateIds = await validateTemplates(result, scenario, errors);
-  await validateEvidenceAndGates(result, scenario, errors);
+  await validateEvidenceAndGates(result, trustedSnapshot, scenario, errors);
   const evidenceIds = new Set(Array.isArray(result.evidenceRegistry)
     ? result.evidenceRegistry.filter(isRecord).map(({ evidenceId }) => evidenceId)
     : []);
@@ -482,7 +628,7 @@ export async function validateStudioScenario(root, options = {}) {
   if (result.scenarioId === "live-service-rpg-economy") acceptance = validateEconomy(result.domain, evidenceIds, errors);
   if (result.scenarioId === "mobile-onboarding-liveops") acceptance = validateMobile(result.domain, errors);
   if (result.scenarioId === "pc-console-ai-npc") acceptance = validateAiNpc(result.domain, errors);
-  await validateVisualization(result, errors);
+  const visualizationEvidence = await validateVisualization(root, request, result, errors);
   const outputs = await validateOutput(root, request, result, scenario, errors);
   return {
     ok: errors.length === 0,
@@ -494,12 +640,22 @@ export async function validateStudioScenario(root, options = {}) {
     validatedTemplateIds,
     acceptance,
     outputs,
+    visualizationEvidence,
     fallback: { mode: "sequential", order: routing.roleIds, preservesRolesAndQuestions: true },
     errors,
   };
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+async function directInvocation() {
+  if (!process.argv[1]) return false;
+  try {
+    return await realpath(process.argv[1]) === await realpath(fileURLToPath(import.meta.url));
+  } catch {
+    return path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  }
+}
+
+if (await directInvocation()) {
   const root = process.argv[2];
   if (!root || process.argv.length !== 3) {
     process.stderr.write("Usage: node validate-studio-scenario.mjs <scenario-directory>\n");
