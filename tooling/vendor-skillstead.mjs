@@ -1,10 +1,10 @@
-import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import * as defaultFs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { collectTree, copyTree } from "./lib/copy-tree.mjs";
+import { collectTree } from "./lib/copy-tree.mjs";
 import { sha256 } from "./lib/hash.mjs";
-import { verifyVendorHash } from "./verify-vendor-hash.mjs";
+import { verifyVendorHash, verifyVendorRoot } from "./verify-vendor-hash.mjs";
 
 const VERSION = "0.8.3";
 const REQUIRED_FILES = ["SKILL.md", "LICENSE.txt", "scripts/check-svg.mjs", "scripts/render.mjs"];
@@ -31,47 +31,34 @@ function declaredVersion(skill) {
   return frontMatter?.[1].match(/^\s*version:\s*([^\s]+)\s*$/m)?.[1];
 }
 
-async function validateSource(source, requestedVersion) {
+function validateSourceEntries(entries, requestedVersion) {
   if (requestedVersion !== VERSION) {
     throw new Error(`version mismatch: this vendor lock only permits ${VERSION}, received ${requestedVersion}`);
   }
-  const entries = await collectTree(source, { label: "Skillstead update source" });
-  const paths = new Set(entries.map((entry) => entry.relativePath));
+  const byPath = new Map(entries.map((entry) => [entry.relativePath, entry]));
   for (const required of REQUIRED_FILES) {
-    if (!paths.has(required)) throw new Error(`missing required upstream file: ${required}`);
+    if (!byPath.has(required)) throw new Error(`missing required upstream file: ${required}`);
   }
-  const skill = await readFile(path.join(source, "SKILL.md"), "utf8");
+  const skill = byPath.get("SKILL.md").bytes.toString("utf8");
   const sourceVersion = declaredVersion(skill);
   if (sourceVersion !== requestedVersion) {
     throw new Error(`version mismatch: source declares ${sourceVersion ?? "no version"}, expected ${requestedVersion}`);
   }
-  return entries;
 }
 
-async function updateVendor(repositoryRoot, source, requestedVersion) {
-  const sourceEntries = await validateSource(source, requestedVersion);
-  const vendorRoot = path.join(repositoryRoot, "shared/vendor/skillstead");
-  const packageParent = path.join(vendorRoot, PACKAGE.name);
-  const destination = path.join(packageParent, VERSION);
-  await mkdir(packageParent, { recursive: true });
-  const stagingRoot = await mkdtemp(path.join(packageParent, ".0.8.3-update-"));
+function lockFor(entries) {
+  return {
+    package: PACKAGE,
+    files: entries.map((entry) => ({
+      path: entry.relativePath,
+      sha256: sha256(entry.bytes),
+      size: entry.bytes.length,
+    })),
+  };
+}
 
-  try {
-    await copyTree(source, stagingRoot, { label: "Skillstead update source" });
-    await rm(destination, { recursive: true, force: true });
-    await rename(stagingRoot, destination);
-  } catch (error) {
-    await rm(stagingRoot, { recursive: true, force: true });
-    throw error;
-  }
-
-  const files = sourceEntries.map((entry) => ({
-    path: entry.relativePath,
-    sha256: sha256(entry.bytes),
-    size: entry.bytes.length,
-  }));
-  const lock = { package: PACKAGE, files };
-  const notices = `# Third-Party Notices
+function noticesForPackage() {
+  return `# Third-Party Notices
 
 ## Skillstead svg-infographic
 
@@ -82,22 +69,123 @@ async function updateVendor(repositoryRoot, source, requestedVersion) {
 
 The complete Apache License 2.0 text is preserved in \`${PACKAGE.name}/${PACKAGE.version}/LICENSE.txt\`.
 `;
-  await writeFile(path.join(vendorRoot, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
-  await writeFile(path.join(vendorRoot, "THIRD_PARTY_NOTICES.md"), notices);
+}
+
+function sameSnapshot(left, right) {
+  if (left.length !== right.length) return false;
+  return left.every((entry, index) => {
+    const other = right[index];
+    return entry.relativePath === other.relativePath && entry.bytes.equals(other.bytes);
+  });
+}
+
+async function writeSnapshot(entries, destination, fs) {
+  for (const entry of entries) {
+    const target = path.join(destination, ...entry.relativePath.split("/"));
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(target, entry.bytes);
+  }
+}
+
+async function rollbackInstall({ backup, destination, fs, installed, workRoot }) {
+  const rollbackErrors = [];
+  try {
+    if (installed) await fs.rename(destination, path.join(workRoot, "failed-next"));
+  } catch (error) {
+    rollbackErrors.push(error);
+  }
+  try {
+    await fs.rename(backup, destination);
+  } catch (error) {
+    rollbackErrors.push(error);
+  }
+  try {
+    await fs.rm(workRoot, { recursive: true, force: true });
+  } catch (error) {
+    rollbackErrors.push(error);
+  }
+  if (rollbackErrors.length > 0) {
+    throw new AggregateError(rollbackErrors, "vendor update rollback failed");
+  }
+}
+
+export async function updateVendor(repositoryRoot, source, requestedVersion, options = {}) {
+  const fs = options.fs ?? defaultFs;
+  const hooks = options.hooks ?? {};
+  const sourceEntries = await collectTree(source, { label: "Skillstead update source" });
+  validateSourceEntries(sourceEntries, requestedVersion);
+
+  const vendorParent = path.join(repositoryRoot, "shared/vendor");
+  const vendorRoot = path.join(vendorParent, "skillstead");
+  await fs.mkdir(vendorParent, { recursive: true });
+  const workRoot = await fs.mkdtemp(path.join(vendorParent, ".skillstead-update-"));
+  const stagedVendorRoot = path.join(workRoot, "next");
+  const stagedPackageRoot = path.join(stagedVendorRoot, PACKAGE.name, VERSION);
+  const backup = path.join(workRoot, "previous");
+
+  try {
+    await writeSnapshot(sourceEntries, stagedPackageRoot, fs);
+    const stagedEntries = await collectTree(stagedPackageRoot, { label: "staged Skillstead snapshot" });
+    await fs.writeFile(path.join(stagedVendorRoot, "vendor.lock.json"), `${JSON.stringify(lockFor(stagedEntries), null, 2)}\n`);
+    await fs.writeFile(path.join(stagedVendorRoot, "THIRD_PARTY_NOTICES.md"), noticesForPackage());
+    await verifyVendorRoot(stagedVendorRoot);
+    await hooks.afterSnapshot?.();
+
+    const currentSourceEntries = await collectTree(source, { label: "Skillstead update source recheck" });
+    if (!sameSnapshot(sourceEntries, currentSourceEntries)) {
+      throw new Error("source changed during update; refusing mixed-generation install");
+    }
+    await hooks.beforeInstall?.();
+  } catch (error) {
+    await fs.rm(workRoot, { recursive: true, force: true });
+    throw error;
+  }
+
+  let oldMoved = false;
+  let installed = false;
+  try {
+    const hasExistingGeneration = await fs.lstat(vendorRoot).then(
+      () => true,
+      (error) => {
+        if (error.code === "ENOENT") return false;
+        throw error;
+      },
+    );
+    if (hasExistingGeneration) {
+      await fs.rename(vendorRoot, backup);
+      oldMoved = true;
+    }
+    await fs.rename(stagedVendorRoot, vendorRoot);
+    installed = true;
+  } catch (error) {
+    if (oldMoved) {
+      try {
+        await rollbackInstall({ backup, destination: vendorRoot, fs, installed, workRoot });
+      } catch (rollbackError) {
+        throw new AggregateError([error, rollbackError], "vendor install and rollback failed");
+      }
+    } else {
+      await fs.rm(workRoot, { recursive: true, force: true });
+    }
+    throw error;
+  }
+  await fs.rm(workRoot, { recursive: true, force: true });
 }
 
 const modulePath = fileURLToPath(import.meta.url);
 const repositoryRoot = path.resolve(path.dirname(modulePath), "..");
 
-try {
-  const options = parseArgs(process.argv.slice(2));
-  if (options.update) {
-    await updateVendor(repositoryRoot, options.source, options.version);
-    console.log(`Updated Skillstead ${VERSION} vendor tree`);
+if (process.argv[1] && path.resolve(process.argv[1]) === modulePath) {
+  try {
+    const options = parseArgs(process.argv.slice(2));
+    if (options.update) {
+      await updateVendor(repositoryRoot, options.source, options.version);
+      console.log(`Updated Skillstead ${VERSION} vendor tree`);
+    }
+    const count = await verifyVendorHash(repositoryRoot);
+    console.log(`Skillstead vendor verified ${count} files`);
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
   }
-  const count = await verifyVendorHash(repositoryRoot);
-  console.log(`Skillstead vendor verified ${count} files`);
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
 }

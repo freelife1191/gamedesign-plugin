@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import * as fs from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+
+import * as vendorModule from "../../tooling/vendor-skillstead.mjs";
 
 const repoRoot = path.resolve(new URL("../../", import.meta.url).pathname);
 const vendorRoot = path.join(repoRoot, "shared/vendor/skillstead");
@@ -129,5 +132,151 @@ test("vendor command is check-only unless the exact guarded update arguments are
   ]) {
     const rejected = run(vendorCommand, args);
     assert.notEqual(rejected.status, 0, `unsafe arguments unexpectedly passed: ${args.join(" ")}`);
+  }
+});
+
+async function writeSource(source, { omit = [] } = {}) {
+  const files = new Map([
+    ["SKILL.md", "---\nmetadata:\n  version: 0.8.3\n---\n\n# staged skill\n"],
+    ["LICENSE.txt", "Apache-2.0 test fixture\n"],
+    ["scripts/check-svg.mjs", "export const check = true;\n"],
+    ["scripts/render.mjs", "export const render = true;\n"],
+    ["snapshot.txt", "captured generation\n"],
+  ]);
+  for (const [relativePath, contents] of files) {
+    if (omit.includes(relativePath)) continue;
+    const destination = path.join(source, relativePath);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await writeFile(destination, contents);
+  }
+}
+
+async function treeSnapshot(root) {
+  const snapshot = [];
+  async function visit(directory, prefix = "") {
+    const entries = await readdir(directory, { withFileTypes: true });
+    entries.sort((left, right) => left.name.localeCompare(right.name, "en"));
+    for (const entry of entries) {
+      const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) await visit(entryPath, relativePath);
+      else snapshot.push([relativePath, (await readFile(entryPath)).toString("hex")]);
+    }
+  }
+  await visit(root);
+  return snapshot;
+}
+
+async function createUpdateFixture(options) {
+  const scratch = await mkdtemp(path.join(tmpdir(), "skillstead-update-"));
+  await mkdir(path.join(scratch, "shared/vendor"), { recursive: true });
+  await cp(vendorRoot, path.join(scratch, "shared/vendor/skillstead"), { recursive: true });
+  const source = path.join(scratch, "source");
+  await writeSource(source, options);
+  return { scratch, source, vendor: path.join(scratch, "shared/vendor/skillstead") };
+}
+
+async function assertGenerationPreserved(fixture, before) {
+  assert.deepEqual(await treeSnapshot(fixture.vendor), before);
+  const siblings = await readdir(path.dirname(fixture.vendor));
+  assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+}
+
+test("guarded update preserves the prior generation on preflight, write, and install rename failures", async (t) => {
+  assert.equal(typeof vendorModule.updateVendor, "function", "updateVendor must expose the transactional seam");
+  for (const failure of ["preflight", "write", "rename"]) {
+    await t.test(failure, async () => {
+      const fixture = await createUpdateFixture(
+        failure === "preflight" ? { omit: ["scripts/render.mjs"] } : undefined,
+      );
+      const before = await treeSnapshot(fixture.vendor);
+      let injectedRename = false;
+      const injectedFs = {
+        ...fs,
+        async rename(from, to) {
+          if (failure === "rename" && !injectedRename && path.basename(from) === "next") {
+            injectedRename = true;
+            throw new Error("injected install rename failure");
+          }
+          return fs.rename(from, to);
+        },
+        async writeFile(destination, contents) {
+          if (failure === "write" && path.basename(destination) === "vendor.lock.json") {
+            throw new Error("injected staging write failure");
+          }
+          return fs.writeFile(destination, contents);
+        },
+      };
+      try {
+        await assert.rejects(
+          vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+          new RegExp(failure === "preflight" ? "missing required" : `injected .*${failure}`),
+        );
+        await assertGenerationPreserved(fixture, before);
+      } finally {
+        await rm(fixture.scratch, { recursive: true, force: true });
+      }
+    });
+  }
+});
+
+test("source mutation after capture aborts without replacing the prior generation", async () => {
+  assert.equal(typeof vendorModule.updateVendor, "function", "updateVendor must expose the transactional seam");
+  const fixture = await createUpdateFixture();
+  const before = await treeSnapshot(fixture.vendor);
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", {
+        hooks: {
+          async afterSnapshot() {
+            await writeFile(path.join(fixture.source, "snapshot.txt"), "changed after capture\n");
+          },
+        },
+      }),
+      /source changed during update/,
+    );
+    await assertGenerationPreserved(fixture, before);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("successful update installs tree, lock, and notices from one staged snapshot", async () => {
+  assert.equal(typeof vendorModule.updateVendor, "function", "updateVendor must expose the transactional seam");
+  const fixture = await createUpdateFixture();
+  try {
+    await vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3");
+    const installedRoot = path.join(fixture.vendor, "svg-infographic/0.8.3");
+    assert.equal(await readFile(path.join(installedRoot, "snapshot.txt"), "utf8"), "captured generation\n");
+    const lock = JSON.parse(await readFile(path.join(fixture.vendor, "vendor.lock.json"), "utf8"));
+    assert.deepEqual(lock.files.map(({ path }) => path), [
+      "LICENSE.txt",
+      "SKILL.md",
+      "scripts/check-svg.mjs",
+      "scripts/render.mjs",
+      "snapshot.txt",
+    ]);
+    const verification = run(verifier, ["--root", fixture.scratch]);
+    assert.equal(verification.status, 0, verification.stderr || verification.stdout);
+    assert.match(await readFile(path.join(fixture.vendor, "THIRD_PARTY_NOTICES.md"), "utf8"), /Version: 0\.8\.3/);
+    const siblings = await readdir(path.dirname(fixture.vendor));
+    assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("successful update bootstraps an absent vendor generation", async () => {
+  const fixture = await createUpdateFixture();
+  try {
+    await rm(fixture.vendor, { recursive: true, force: true });
+    await vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3");
+    const verification = run(verifier, ["--root", fixture.scratch]);
+    assert.equal(verification.status, 0, verification.stderr || verification.stdout);
+    assert.match(verification.stdout, /verified 5 files/);
+    const siblings = await readdir(path.dirname(fixture.vendor));
+    assert.deepEqual(siblings.filter((name) => name.startsWith(".skillstead-update-")), []);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
   }
 });

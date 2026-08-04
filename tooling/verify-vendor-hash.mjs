@@ -27,8 +27,7 @@ function assertPinnedMetadata(metadata) {
   }
 }
 
-export async function verifyVendorHash(repositoryRoot) {
-  const vendorRoot = path.join(repositoryRoot, "shared/vendor/skillstead");
+export async function verifyVendorRoot(vendorRoot) {
   const lockPath = path.join(vendorRoot, "vendor.lock.json");
   const lock = JSON.parse(await readFile(lockPath, "utf8"));
   assertPinnedMetadata(lock.package);
@@ -58,6 +57,10 @@ export async function verifyVendorHash(repositoryRoot) {
   if (lock.files.length !== actual.size) throw new Error("vendor lock file count mismatch");
 
   return actual.size;
+}
+
+export async function verifyVendorHash(repositoryRoot) {
+  return verifyVendorRoot(path.join(repositoryRoot, "shared/vendor/skillstead"));
 }
 
 const modulePath = fileURLToPath(import.meta.url);
