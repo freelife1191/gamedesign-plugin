@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "live-service-rpg",
+  "assumptions": [
+    "Long-term progression and recurring operations may be part of the intended experience.",
+    "Authoritative service state may be needed for persistent economy and progression integrity."
+  ],
+  "questions": [
+    "Which long-form progression arcs remain meaningful across recurring content cycles?",
+    "Which state must be server-authoritative and what degraded or offline behavior is acceptable?",
+    "How will LiveOps changes be measured, stopped, rolled back, and communicated?"
+  ],
+  "requiredSections": [
+    "long-term-progression",
+    "persistent-world-and-authority",
+    "liveops-calendar-and-rollback",
+    "economy-sources-sinks-and-inflation"
+  ],
+  "responsibleGates": [
+    "economy-transparency",
+    "liveops-experiment",
+    "ugc-safety"
+  ],
+  "reviewRoles": [
+    "system-economy-designer",
+    "liveops-data-designer",
+    "content-narrative-designer"
+  ],
+  "conflicts": [],
+  "evidenceTriggers": [
+    "progression-retention-cohort",
+    "economy-simulation",
+    "server-authority-threat-model",
+    "liveops-guardrail-and-rollback-test"
+  ]
+}

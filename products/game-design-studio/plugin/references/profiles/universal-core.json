@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "universal-core",
+  "assumptions": [
+    "The target player and intended experience can be stated and tested.",
+    "Material design claims may require inspectable evidence or an explicit assumption."
+  ],
+  "questions": [
+    "Who is the target player and what experience should they have?",
+    "Which constraints, non-goals, dependencies, and decision owners bound the design?",
+    "What evidence would validate or falsify each material assumption?"
+  ],
+  "requiredSections": [
+    "target-player-and-experience",
+    "core-loop-and-rules",
+    "assumptions-evidence-and-non-goals",
+    "dependencies-risks-and-decisions"
+  ],
+  "responsibleGates": [
+    "accessibility",
+    "scope-control"
+  ],
+  "reviewRoles": [
+    "lead-game-designer",
+    "production-feasibility-critic",
+    "ux-accessibility-reviewer"
+  ],
+  "conflicts": [],
+  "evidenceTriggers": [
+    "target-player-research",
+    "playtest-observation",
+    "technical-feasibility-evidence",
+    "decision-owner-approval"
+  ]
+}
