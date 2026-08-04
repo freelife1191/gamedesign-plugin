@@ -486,6 +486,100 @@ test("trusted verification rejects decision objects that spoof JSON serializatio
   );
 });
 
+test("trusted source accessor cannot swap snapshots across validation and derivation", async () => {
+  const { mergeRoleFindings, verifyMergedRoleFindings } = await loadMerger();
+  const trustedA = [finding({ findingId: "trusted-a", role: "lead-game-designer" })];
+  const trustedB = [finding({ findingId: "trusted-b", role: "lead-game-designer" })];
+  const candidate = mergeRoleFindings({ schemaVersion: 1, findings: trustedA });
+  let reads = 0;
+  const options = {};
+  Object.defineProperty(options, "trustedSourceFindings", {
+    enumerable: true,
+    get() {
+      reads += 1;
+      return reads === 1 ? trustedA : trustedB;
+    },
+  });
+  assert.throws(
+    () => verifyMergedRoleFindings(candidate, options),
+    /accessor|data-only|descriptor/iu,
+  );
+  assert.equal(reads, 0, "the trust-boundary getter must never execute");
+});
+
+test("raw finding getter cannot change medium into an unauthorized blocker after validation", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  const source = finding({
+    findingId: "severity-swap",
+    role: "ux-accessibility-reviewer",
+    applicableGate: "scope-control",
+  });
+  let reads = 0;
+  Object.defineProperty(source, "severity", {
+    enumerable: true,
+    get() {
+      reads += 1;
+      return reads < 4 ? "medium" : "blocker";
+    },
+  });
+  assert.throws(
+    () => mergeRoleFindings({ schemaVersion: 1, findings: [source] }),
+    /accessor|data-only|descriptor/iu,
+  );
+  assert.equal(reads, 0, "nested finding getter must never execute");
+});
+
+test("all merge and verification inputs enforce a strict data-only JSON boundary", async () => {
+  const { mergeRoleFindings, verifyMergedRoleFindings } = await loadMerger();
+  const source = finding({ findingId: "data-boundary", role: "lead-game-designer" });
+  const validRaw = { schemaVersion: 1, findings: [source] };
+  const candidate = mergeRoleFindings(validRaw);
+
+  const nonEnumerable = structuredClone(validRaw);
+  Object.defineProperty(nonEnumerable, "hidden", { value: true, enumerable: false });
+
+  const symbolKey = structuredClone(validRaw);
+  symbolKey[Symbol("hidden")] = true;
+
+  const nestedAccessor = structuredClone(validRaw);
+  Object.defineProperty(nestedAccessor.findings[0], "summary", {
+    enumerable: true,
+    get: () => "Accessor summary.",
+  });
+
+  const customPrototype = structuredClone(validRaw);
+  Object.setPrototypeOf(customPrototype.findings[0], { inherited: true });
+
+  const sparseArray = structuredClone(validRaw);
+  sparseArray.findings.length = 2;
+
+  const extendedArray = structuredClone(validRaw);
+  extendedArray.findings.extra = true;
+
+  const recursive = structuredClone(validRaw);
+  recursive.findings[0].impact = recursive;
+
+  for (const invalid of [
+    nonEnumerable,
+    symbolKey,
+    nestedAccessor,
+    customPrototype,
+    sparseArray,
+    extendedArray,
+    recursive,
+  ]) assert.throws(
+    () => mergeRoleFindings(invalid),
+    /data-only|accessor|symbol|enumerable|prototype|sparse|array|recursive|reference/iu,
+  );
+
+  const candidateWithHidden = structuredClone(candidate);
+  Object.defineProperty(candidateWithHidden, "hidden", { value: true, enumerable: false });
+  assert.throws(
+    () => verifyMergedRoleFindings(candidateWithHidden, { trustedSourceFindings: [source] }),
+    /data-only|enumerable/iu,
+  );
+});
+
 test("CLI is stdin-only and executes through a symlinked Korean and spaced path", async () => {
   const script = path.join(pluginRoot, mergerRelativePath);
   const payload = JSON.stringify({ schemaVersion: 1, findings: [finding({ findingId: "f-1", role: "lead-game-designer" })] });

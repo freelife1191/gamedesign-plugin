@@ -59,6 +59,60 @@ function isPlainObject(value) {
     && Object.getPrototypeOf(value) === Object.prototype;
 }
 
+function captureDataOnlyJson(value, label, seen = new WeakSet()) {
+  if (value === null || typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    if (/[\u0000-\u001f\u007f]/u.test(value)) throw new Error(`${label} contains a control character.`);
+    if (value !== value.normalize("NFC")) throw new Error(`${label} must use Unicode NFC.`);
+    return value;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || Object.is(value, -0)) throw new Error(`${label} must be a stable JSON number.`);
+    return value;
+  }
+  if (typeof value !== "object") throw new Error(`${label} must contain data-only JSON values.`);
+  if (seen.has(value)) throw new Error(`${label} contains a recursive or repeated object reference.`);
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    if (Object.getPrototypeOf(value) !== Array.prototype) throw new Error(`${label} has a custom array prototype.`);
+    const keys = Reflect.ownKeys(value);
+    if (keys.some((key) => typeof key === "symbol")) throw new Error(`${label} has a symbol key.`);
+    const expectedKeys = Array.from({ length: value.length }, (_, index) => String(index));
+    const actualElementKeys = keys.filter((key) => key !== "length");
+    if (actualElementKeys.length !== expectedKeys.length
+      || actualElementKeys.some((key, index) => key !== expectedKeys[index])) {
+      throw new Error(`${label} must be a dense array without extended keys.`);
+    }
+    const snapshot = [];
+    for (let index = 0; index < value.length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+      if (!descriptor || !descriptor.enumerable || !("value" in descriptor)) {
+        throw new Error(`${label}[${index}] must be an enumerable data-only descriptor, not an accessor.`);
+      }
+      snapshot.push(captureDataOnlyJson(descriptor.value, `${label}[${index}]`, seen));
+    }
+    seen.delete(value);
+    return snapshot;
+  }
+
+  if (Object.getPrototypeOf(value) !== Object.prototype) throw new Error(`${label} has a custom object prototype.`);
+  const snapshot = {};
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key === "symbol") throw new Error(`${label} has a symbol key.`);
+    if (["__proto__", "prototype", "constructor"].includes(key)) {
+      throw new Error(`${label}.${key} is not allowed at a data-only JSON boundary.`);
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor?.enumerable || !("value" in descriptor)) {
+      throw new Error(`${label}.${key} must be an enumerable data-only descriptor, not an accessor.`);
+    }
+    snapshot[key] = captureDataOnlyJson(descriptor.value, `${label}.${key}`, seen);
+  }
+  seen.delete(value);
+  return snapshot;
+}
+
 function assertExactKeys(value, expectedKeys, label) {
   if (!isPlainObject(value)) throw new Error(`${label} must be a plain JSON object.`);
   const actual = Object.keys(value).sort(compareText);
@@ -300,36 +354,39 @@ function buildMergedOutput(rawSources) {
 }
 
 export function mergeRoleFindings(input) {
-  assertExactKeys(input, inputKeys, "raw input");
-  if (input.schemaVersion !== 1) throw new Error("raw input.schemaVersion must be 1.");
-  if (!Array.isArray(input.findings)) throw new Error("raw input.findings must be an array.");
-  input.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
-  assertUniqueSourceIds(input.findings);
-  return buildMergedOutput(input.findings);
+  const snapshot = captureDataOnlyJson(input, "raw input");
+  assertExactKeys(snapshot, inputKeys, "raw input");
+  if (snapshot.schemaVersion !== 1) throw new Error("raw input.schemaVersion must be 1.");
+  if (!Array.isArray(snapshot.findings)) throw new Error("raw input.findings must be an array.");
+  snapshot.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
+  assertUniqueSourceIds(snapshot.findings);
+  return buildMergedOutput(snapshot.findings);
 }
 
 export function verifyMergedRoleFindings(candidate, options) {
-  assertExactKeys(options, ["trustedSourceFindings"], "verification options");
-  if (!Array.isArray(options.trustedSourceFindings)) {
+  const trustedEnvelope = captureDataOnlyJson(options, "verification options");
+  const candidateSnapshot = captureDataOnlyJson(candidate, "candidate output");
+  assertExactKeys(trustedEnvelope, ["trustedSourceFindings"], "verification options");
+  if (!Array.isArray(trustedEnvelope.trustedSourceFindings)) {
     throw new Error("verification options.trustedSourceFindings must be an immutable trusted snapshot array.");
   }
-  options.trustedSourceFindings.forEach((finding, index) => (
+  trustedEnvelope.trustedSourceFindings.forEach((finding, index) => (
     validateFinding(finding, index, { outputMode: false })
   ));
-  assertUniqueSourceIds(options.trustedSourceFindings);
+  assertUniqueSourceIds(trustedEnvelope.trustedSourceFindings);
 
-  assertExactKeys(candidate, outputKeys, "candidate output");
-  if (candidate.schemaVersion !== 1) throw new Error("candidate output.schemaVersion must be 1.");
-  if (!Array.isArray(candidate.sourceFindings)) {
+  assertExactKeys(candidateSnapshot, outputKeys, "candidate output");
+  if (candidateSnapshot.schemaVersion !== 1) throw new Error("candidate output.schemaVersion must be 1.");
+  if (!Array.isArray(candidateSnapshot.sourceFindings)) {
     throw new Error("candidate output.sourceFindings must be an array.");
   }
-  if (!Array.isArray(candidate.findings)) throw new Error("candidate output.findings must be an array.");
-  candidate.sourceFindings.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
-  assertUniqueSourceIds(candidate.sourceFindings);
-  candidate.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: true }));
+  if (!Array.isArray(candidateSnapshot.findings)) throw new Error("candidate output.findings must be an array.");
+  candidateSnapshot.sourceFindings.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
+  assertUniqueSourceIds(candidateSnapshot.sourceFindings);
+  candidateSnapshot.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: true }));
 
-  const expected = buildMergedOutput(options.trustedSourceFindings);
-  if (!isDeepStrictEqual(candidate, expected)) {
+  const expected = buildMergedOutput(trustedEnvelope.trustedSourceFindings);
+  if (!isDeepStrictEqual(candidateSnapshot, expected)) {
     throw new Error("candidate output does not match the immutable trusted source snapshot.");
   }
   return expected;
