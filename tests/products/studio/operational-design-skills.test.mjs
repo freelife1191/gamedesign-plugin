@@ -27,20 +27,20 @@ const contracts = {
       "accessibility",
     ],
     methodMeaning: {
-      "information priority": ["now", "player decisions"],
-      "interaction and ui states": ["entry", "recovery", "exit states"],
-      "first five minutes": ["launch", "meaningful choice"],
-      "first success": ["action", "understanding check", "continuation"],
-      "tutorial skip and revisit": ["skip effect", "replay path", "persistence"],
-      input: ["critical actions", "remapping", "conflicts"],
-      performance: ["latency", "frame pacing", "readability impact", "owner"],
-      "cross-platform": ["platform", "screen", "input", "entitlement differences"],
-      accessibility: ["modalities", "critical-task test results", "limitations", "owner"],
+      "information priority": "Now, next, and on-demand information mapped to player decisions",
+      "interaction and ui states": "Entry, focus, enabled, disabled, loading, success, error, recovery, and exit states",
+      "first five minutes": "Observable sequence from launch through the first meaningful choice",
+      "first success": "Action, feedback, reward, understanding check, and continuation",
+      "tutorial skip and revisit": "Skip effect, safe defaults, contextual reminder, replay path, and persistence",
+      input: "Critical actions, mappings, remapping, hold/toggle choice, alternatives, and conflicts",
+      performance: "Measured latency, frame pacing, loading, readability impact, target status, and owner",
+      "cross-platform": "Platform, screen, safe area, input, session, account, and entitlement differences",
+      accessibility: "Modalities, alternatives, critical-task test results, limitations, and owner",
     },
     blockers: ["inaccessible-critical-action", "unverified-current-accessibility"],
     blockerMeaning: {
-      "inaccessible-critical-action": ["critical path", "no usable alternative", "feedback", "recovery"],
-      "unverified-current-accessibility": ["current accessibility", "fresh authoritative evidence", "task testing"],
+      "inaccessible-critical-action": "A critical path has no usable alternative modality, input, feedback, or recovery",
+      "unverified-current-accessibility": "A current accessibility or platform threshold lacks fresh authoritative evidence and task testing",
     },
     outputFields: [
       "information priority",
@@ -83,23 +83,23 @@ const contracts = {
       "rollback plan",
     ],
     methodMeaning: {
-      sources: ["currency or item", "trigger", "cadence", "owner"],
-      sinks: ["cost", "purpose", "refund behavior", "owner"],
-      "target inventory": ["cohort", "timepoint target", "observed baseline", "acceptable range"],
-      "progression time": ["goal", "measured path", "variance", "validation status"],
-      inflation: ["supply-demand indicators", "velocity", "response", "owner"],
-      "real price": ["regional money conversion", "display", "refund", "evidence"],
-      probability: ["exact odds", "pool", "eligibility", "disclosure surface", "version", "evidence"],
-      pity: ["counter scope", "reset", "carryover", "guarantee", "edge cases"],
-      hypothesis: ["causal statement", "target population", "falsifier"],
-      control: ["eligibility", "allocation", "contamination protections", "baseline"],
-      "single variable": ["isolated treatment", "conflicting experiment"],
-      sample: ["power or precision basis", "exclusions", "representativeness limits"],
-      duration: ["start", "stop", "seasonality", "observation window", "rationale"],
-      "success metrics": ["primary outcome", "baseline", "threshold status", "owner"],
-      "guardrail metrics": ["harm", "spend", "access", "reliability", "fairness", "privacy"],
-      "stop criteria": ["automatic and human stop triggers", "monitoring cadence", "authority"],
-      "rollback plan": ["tested mechanism", "recovery time", "data repair", "player remedy", "owner"],
+      sources: "Currency or item, amount, trigger, cadence, cohort, cap, provenance, and owner",
+      sinks: "Cost, purpose, trigger, cadence, eligibility, refund behavior, and owner",
+      "target inventory": "Cohort and timepoint target with observed baseline and acceptable range",
+      "progression time": "Goal, player segment, measured path, variance, friction, and validation status",
+      inflation: "Supply-demand indicators, concentration, velocity, thresholds, response, and owner",
+      "real price": "Regional money conversion, tax/fee context, display, expiry, refund, and evidence",
+      probability: "Exact odds, pool, eligibility, disclosure surface, version, and evidence",
+      pity: "Counter scope, reset, carryover, guarantee, disclosure, and edge cases",
+      hypothesis: "Causal statement, target population, expected change, and falsifier",
+      control: "Eligibility, allocation, contamination protections, and baseline",
+      "single variable": "Precisely isolated treatment and conflicting experiment check",
+      sample: "Unit, power or precision basis, exclusions, and representativeness limits",
+      duration: "Start, stop, seasonality, ramp, observation window, and rationale",
+      "success metrics": "Primary outcome, baseline, direction, threshold status, and owner",
+      "guardrail metrics": "Harm, spend, access, reliability, support, fairness, and privacy signals",
+      "stop criteria": "Automatic and human stop triggers, monitoring cadence, and authority",
+      "rollback plan": "Tested mechanism, recovery time, data repair, player remedy, and owner",
     },
     blockers: [
       "missing-real-price",
@@ -109,11 +109,11 @@ const contracts = {
       "missing-ai-ugc-rights-consent",
     ],
     blockerMeaning: {
-      "missing-real-price": ["paid value", "verified real-money price", "disclosure path"],
-      "missing-probability": ["randomized reward odds", "unknown or undisclosed"],
-      "missing-rollback": ["cannot be restored", "tested plan"],
-      "unsafe-liveops-experiment": ["hypothesis", "control", "isolated variable", "guardrails", "owner", "missing"],
-      "missing-ai-ugc-rights-consent": ["provenance", "rights or consent", "human approval", "moderation", "appeal evidence"],
+      "missing-real-price": "Paid value or multi-step currency conversion lacks a verified real-money price and disclosure path",
+      "missing-probability": "Randomized reward odds, pool, eligibility, or material consequences are unknown or undisclosed",
+      "missing-rollback": "The changed configuration, state, data, or player remedy cannot be restored through a tested plan",
+      "unsafe-liveops-experiment": "Hypothesis, control, isolated variable, guardrails, treatment boundary, stop authority, or owner is missing",
+      "missing-ai-ugc-rights-consent": "AI or UGC lacks provenance, rights or consent, required human approval, moderation, or appeal evidence",
     },
     outputFields: [
       "sources",
@@ -159,24 +159,24 @@ const contracts = {
       "moscow scope",
     ],
     methodMeaning: {
-      "core-loop contribution": ["scope item", "player action", "target-experience link", "non-goal"],
-      effort: ["observable units", "throughput evidence", "range", "confidence", "owner"],
-      dependencies: ["upstream", "downstream", "sequencing", "fallback", "owner"],
-      "maintenance burden": ["recurring operations", "support", "moderation", "deprecation cost"],
-      "licensing risk": ["asset", "territory", "term", "restriction", "renewal", "approver"],
-      "outsource risk": ["deliverable", "vendor dependency", "acceptance", "rights", "contingency"],
-      "prototype hypothesis": ["riskiest falsifiable belief", "cheapest valid prototype", "observation", "decision rule"],
-      milestone: ["intended maturity", "evidence gate", "entry criteria", "exit criteria", "dependencies"],
-      owner: ["accountable role", "decision authority", "escalation", "backup"],
-      "definition of done": ["observable behavior", "quality evidence", "integration", "accepted limitations"],
-      "kill criterion": ["failure signal", "observation window", "decision owner", "stop action", "salvage"],
-      "moscow scope": ["must", "should", "could", "won't item", "rationale", "evidence", "approver"],
+      "core-loop contribution": "Scope item, player action, target-experience link, expected learning, and non-goal",
+      effort: "Observable units, disciplines, throughput evidence, range, assumptions, confidence, and owner",
+      dependencies: "Upstream, downstream, external, sequencing, availability, fallback, and owner",
+      "maintenance burden": "Recurring operations, content, support, moderation, data, platform, and deprecation cost",
+      "licensing risk": "Asset, technology, data, territory, term, restriction, renewal, evidence, and approver",
+      "outsource risk": "Deliverable, vendor dependency, acceptance, security, rights, rework, handoff, and contingency",
+      "prototype hypothesis": "Riskiest falsifiable belief, cheapest valid prototype, observation, and decision rule",
+      milestone: "Intended maturity, evidence gate, entry criteria, exit criteria, date status, and dependencies",
+      owner: "Accountable role, decision authority, review cadence, escalation, and backup",
+      "definition of done": "Observable behavior, quality evidence, integration, documentation, and accepted limitations",
+      "kill criterion": "Failure signal, observation window, decision owner, stop action, salvage, and communication",
+      "moscow scope": "Must, Should, Could, Won't item with rationale, dependency, evidence, and approver",
     },
     blockers: ["missing-target-experience", "missing-prototype-evidence", "unsupported-large-estimate"],
     blockerMeaning: {
-      "missing-target-experience": ["large commitment", "no stated", "approved", "traceable target experience"],
-      "missing-prototype-evidence": ["riskiest player or technology hypothesis", "no fit-for-purpose prototype result", "decision record"],
-      "unsupported-large-estimate": ["commitment", "invented or unvalidated estimates"],
+      "missing-target-experience": "A large commitment has no stated, approved, and traceable target experience",
+      "missing-prototype-evidence": "The riskiest player or technology hypothesis has no fit-for-purpose prototype result and decision record",
+      "unsupported-large-estimate": "Staffing, schedule, procurement, outsource, licensing, platform, or release commitment relies on invented or unvalidated estimates",
     },
     outputFields: [
       "core-loop contribution",
@@ -234,17 +234,23 @@ function parseTwoColumnTable(markdownTable, headers, label) {
   ]));
 }
 
+function normalizeMeaning(value) {
+  return value
+    .normalize("NFC")
+    .replace(/`+/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .toLocaleLowerCase("en-US");
+}
+
 function assertSemanticContract(actual, expected, label) {
-  assert.deepEqual([...actual.keys()], Object.keys(expected), `${label}: keys`);
-  for (const [key, requiredTokens] of Object.entries(expected)) {
-    const meaning = actual.get(key);
-    for (const token of requiredTokens) assert.ok(meaning.includes(token), `${label}: ${key} requires ${token}`);
-    assert.doesNotMatch(
-      meaning,
-      /\b(?:weakened|optional|ignore|ignored|omit|unnecessary|not required|must not validate|no evidence needed)\b/iu,
-      `${label}: ${key} contradictory meaning`,
-    );
-  }
+  const normalizedActual = Object.fromEntries(
+    [...actual].map(([key, meaning]) => [key, normalizeMeaning(meaning)]),
+  );
+  const normalizedExpected = Object.fromEntries(
+    Object.entries(expected).map(([key, meaning]) => [key, normalizeMeaning(meaning)]),
+  );
+  assert.deepEqual(normalizedActual, normalizedExpected, `${label}: exact canonical meanings`);
 }
 
 function parseStableFields(outputContract, label) {
@@ -320,6 +326,13 @@ test("method schemas preserve the exact operational design fields", async () => 
     assert.deepEqual([...blockers.keys()], contract.blockers);
     assertSemanticContract(fields, contract.methodMeaning, `${skillId}: schema meaning`);
     assertSemanticContract(blockers, contract.blockerMeaning, `${skillId}: blocker meaning`);
+
+    const presentationOnly = (rows) => new Map([...rows].map(([key, meaning]) => [
+      key,
+      `  \`${meaning.toLocaleUpperCase("en-US").replaceAll(", ", ",   ")}\`  `,
+    ]));
+    assertSemanticContract(presentationOnly(fields), contract.methodMeaning, `${skillId}: formatted schema meaning`);
+    assertSemanticContract(presentationOnly(blockers), contract.blockerMeaning, `${skillId}: formatted blocker meaning`);
   }
 });
 
@@ -368,10 +381,7 @@ test("contract parsers detect row, meaning, output-field, and lifecycle mutation
           : line)
         .join("\n");
       const parsed = parseTwoColumnTable(weakened, headers, `${skillId}: weakened ${heading}`);
-      assert.throws(
-        () => assertSemanticContract(parsed, expectedMeaning, `${skillId}: weakened ${heading}`),
-        /requires|contradictory meaning/u,
-      );
+      assert.throws(() => assertSemanticContract(parsed, expectedMeaning, `${skillId}: weakened ${heading}`));
     }
 
     const skill = await readSkill(skillId);
