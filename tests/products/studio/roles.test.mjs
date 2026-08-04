@@ -580,6 +580,105 @@ test("all merge and verification inputs enforce a strict data-only JSON boundary
   );
 });
 
+function trappedProxy(target) {
+  const calls = { getPrototypeOf: 0, ownKeys: 0, getOwnPropertyDescriptor: 0 };
+  const proxy = new Proxy(target, {
+    getPrototypeOf(value) {
+      calls.getPrototypeOf += 1;
+      return Reflect.getPrototypeOf(value);
+    },
+    ownKeys(value) {
+      calls.ownKeys += 1;
+      return Reflect.ownKeys(value);
+    },
+    getOwnPropertyDescriptor(value, key) {
+      calls.getOwnPropertyDescriptor += 1;
+      return Reflect.getOwnPropertyDescriptor(value, key);
+    },
+  });
+  return { proxy, calls };
+}
+
+test("raw options candidate and every nested proxy reject before any reflection trap", async () => {
+  const { mergeRoleFindings, verifyMergedRoleFindings } = await loadMerger();
+  const source = finding({ findingId: "proxy-source", role: "lead-game-designer" });
+  const candidate = mergeRoleFindings({ schemaVersion: 1, findings: [source] });
+
+  const rawTop = trappedProxy({ schemaVersion: 1, findings: [source] });
+  const rawNested = trappedProxy(structuredClone(source));
+  const optionsTop = trappedProxy({ trustedSourceFindings: [source] });
+  const optionsNested = trappedProxy(structuredClone(source));
+  const candidateTop = trappedProxy(structuredClone(candidate));
+  const candidateNested = trappedProxy(structuredClone(candidate.findings[0]));
+
+  const attacks = [
+    { run: () => mergeRoleFindings(rawTop.proxy), calls: rawTop.calls },
+    { run: () => mergeRoleFindings({ schemaVersion: 1, findings: [rawNested.proxy] }), calls: rawNested.calls },
+    { run: () => verifyMergedRoleFindings(candidate, optionsTop.proxy), calls: optionsTop.calls },
+    { run: () => verifyMergedRoleFindings(candidate, { trustedSourceFindings: [optionsNested.proxy] }), calls: optionsNested.calls },
+    { run: () => verifyMergedRoleFindings(candidateTop.proxy, { trustedSourceFindings: [source] }), calls: candidateTop.calls },
+    {
+      run: () => verifyMergedRoleFindings(
+        { ...structuredClone(candidate), findings: [candidateNested.proxy] },
+        { trustedSourceFindings: [source] },
+      ),
+      calls: candidateNested.calls,
+    },
+  ];
+
+  for (const attack of attacks) {
+    assert.throws(attack.run, /proxy|executable|data-only/iu);
+    assert.deepEqual(attack.calls, { getPrototypeOf: 0, ownKeys: 0, getOwnPropertyDescriptor: 0 });
+  }
+});
+
+test("maximum-length sparse arrays reject before allocation or Array.from", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  const findings = [];
+  findings.length = 0xffff_ffff;
+  const originalArrayFrom = Array.from;
+  let arrayFromCalls = 0;
+  Array.from = function guardedArrayFrom(value, ...rest) {
+    if (value === findings || value?.length === 0xffff_ffff) {
+      arrayFromCalls += 1;
+      throw new Error("Array length limit was not checked before Array.from.");
+    }
+    return originalArrayFrom.call(Array, value, ...rest);
+  };
+  try {
+    assert.throws(
+      () => mergeRoleFindings({ schemaVersion: 1, findings }),
+      /array.*(?:limit|length)|sparse/iu,
+    );
+    assert.equal(arrayFromCalls, 0);
+  } finally {
+    Array.from = originalArrayFrom;
+  }
+});
+
+test("raw trusted and candidate strings reject all controls bidi controls and unpaired surrogates", async () => {
+  const { mergeRoleFindings, verifyMergedRoleFindings } = await loadMerger();
+  const source = finding({ findingId: "unicode-source", role: "lead-game-designer" });
+  const candidate = mergeRoleFindings({ schemaVersion: 1, findings: [source] });
+  for (const unsafe of ["C1\u0085control", "bidi\u202eoverride", "isolate\u2066text", "high\ud800", "low\udc00"]) {
+    const invalidSource = { ...source, summary: unsafe };
+    assert.throws(
+      () => mergeRoleFindings({ schemaVersion: 1, findings: [invalidSource] }),
+      /control|bidi|surrogate|unicode|data-only/iu,
+    );
+    assert.throws(
+      () => verifyMergedRoleFindings(candidate, { trustedSourceFindings: [invalidSource] }),
+      /control|bidi|surrogate|unicode|data-only/iu,
+    );
+    const invalidCandidate = structuredClone(candidate);
+    invalidCandidate.sourceFindings[0].summary = unsafe;
+    assert.throws(
+      () => verifyMergedRoleFindings(invalidCandidate, { trustedSourceFindings: [source] }),
+      /control|bidi|surrogate|unicode|data-only/iu,
+    );
+  }
+});
+
 test("CLI is stdin-only and executes through a symlinked Korean and spaced path", async () => {
   const script = path.join(pluginRoot, mergerRelativePath);
   const payload = JSON.stringify({ schemaVersion: 1, findings: [finding({ findingId: "f-1", role: "lead-game-designer" })] });

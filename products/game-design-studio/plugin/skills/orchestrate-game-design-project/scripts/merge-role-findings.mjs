@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { isDeepStrictEqual } from "node:util";
+import { isDeepStrictEqual, types } from "node:util";
 
 const routing = JSON.parse(readFileSync(new URL("../../../references/routing.json", import.meta.url), "utf8"));
 const rolePriority = routing.rolePriority;
@@ -49,6 +49,7 @@ const findingKeys = [
 ];
 const mergedFindingKeys = [...findingKeys, "provenance"];
 const provenanceKeys = ["findingId", "role"];
+const maxJsonArrayLength = 100_000;
 
 function compareText(left, right) {
   return left < right ? -1 : left > right ? 1 : 0;
@@ -59,16 +60,36 @@ function isPlainObject(value) {
     && Object.getPrototypeOf(value) === Object.prototype;
 }
 
+function assertNoUnpairedSurrogate(value, label) {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(index + 1);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) throw new Error(`${label} contains an unpaired surrogate.`);
+      index += 1;
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      throw new Error(`${label} contains an unpaired surrogate.`);
+    }
+  }
+}
+
 function captureDataOnlyJson(value, label, seen = new WeakSet()) {
   if (value === null || typeof value === "boolean") return value;
   if (typeof value === "string") {
-    if (/[\u0000-\u001f\u007f]/u.test(value)) throw new Error(`${label} contains a control character.`);
+    if (/\p{Cc}/u.test(value)) throw new Error(`${label} contains a Unicode control character.`);
+    if (/[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u.test(value)) {
+      throw new Error(`${label} contains a forbidden bidirectional control character.`);
+    }
+    assertNoUnpairedSurrogate(value, label);
     if (value !== value.normalize("NFC")) throw new Error(`${label} must use Unicode NFC.`);
     return value;
   }
   if (typeof value === "number") {
     if (!Number.isFinite(value) || Object.is(value, -0)) throw new Error(`${label} must be a stable JSON number.`);
     return value;
+  }
+  if ((typeof value === "object" && value !== null) || typeof value === "function") {
+    if (types.isProxy(value)) throw new Error(`${label} must not contain an executable Proxy.`);
   }
   if (typeof value !== "object") throw new Error(`${label} must contain data-only JSON values.`);
   if (seen.has(value)) throw new Error(`${label} contains a recursive or repeated object reference.`);
@@ -78,15 +99,24 @@ function captureDataOnlyJson(value, label, seen = new WeakSet()) {
     if (Object.getPrototypeOf(value) !== Array.prototype) throw new Error(`${label} has a custom array prototype.`);
     const keys = Reflect.ownKeys(value);
     if (keys.some((key) => typeof key === "symbol")) throw new Error(`${label} has a symbol key.`);
-    const expectedKeys = Array.from({ length: value.length }, (_, index) => String(index));
+    const lengthDescriptor = Object.getOwnPropertyDescriptor(value, "length");
+    if (!lengthDescriptor || !("value" in lengthDescriptor)
+      || !Number.isSafeInteger(lengthDescriptor.value) || lengthDescriptor.value < 0) {
+      throw new Error(`${label} has an invalid array length descriptor.`);
+    }
+    const length = lengthDescriptor.value;
+    if (length > maxJsonArrayLength) {
+      throw new Error(`${label} array length exceeds the data-only JSON limit of ${maxJsonArrayLength}.`);
+    }
     const actualElementKeys = keys.filter((key) => key !== "length");
-    if (actualElementKeys.length !== expectedKeys.length
-      || actualElementKeys.some((key, index) => key !== expectedKeys[index])) {
+    if (actualElementKeys.length !== length) {
       throw new Error(`${label} must be a dense array without extended keys.`);
     }
     const snapshot = [];
-    for (let index = 0; index < value.length; index += 1) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    for (let index = 0; index < length; index += 1) {
+      const key = actualElementKeys[index];
+      if (key !== String(index)) throw new Error(`${label} must be a dense array without extended keys.`);
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (!descriptor || !descriptor.enumerable || !("value" in descriptor)) {
         throw new Error(`${label}[${index}] must be an enumerable data-only descriptor, not an accessor.`);
       }
