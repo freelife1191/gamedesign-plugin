@@ -22,20 +22,14 @@ export async function resolveSkillsteadCli(command) {
   const filename = COMMANDS[command];
   if (!filename) throw new Error(`Unsupported Skillstead command: ${command}`);
   const pluginRoot = await ownPluginRoot();
-  const candidates = [
-    path.join(pluginRoot, "skills/svg-infographic"),
-    path.resolve(pluginRoot, "../../../shared/vendor/skillstead/svg-infographic/0.8.3"),
-  ];
-  for (const candidate of candidates) {
-    try {
-      const packageRoot = await realpath(candidate);
-      const cliPath = await realpath(path.join(packageRoot, "scripts", filename));
-      const stat = await lstat(cliPath);
-      if (!stat.isFile() || !inside(packageRoot, cliPath)) throw new Error("unsafe Skillstead CLI path");
-      return cliPath;
-    } catch (error) {
-      if (!["ENOENT", "ENOTDIR"].includes(error?.code)) throw error;
-    }
+  try {
+    const packageRoot = await realpath(path.join(pluginRoot, "skills/svg-infographic"));
+    const cliPath = await realpath(path.join(packageRoot, "scripts", filename));
+    const stat = await lstat(cliPath);
+    if (!stat.isFile() || !inside(packageRoot, cliPath)) throw new Error("unsafe Skillstead CLI path");
+    return cliPath;
+  } catch (error) {
+    if (!["ENOENT", "ENOTDIR"].includes(error?.code)) throw error;
   }
   throw new Error(`Packaged Skillstead ${command} CLI is unavailable`);
 }

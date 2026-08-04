@@ -2,8 +2,10 @@
 
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { lstat, readFile, realpath } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
 
 import { resolveSkillsteadCli } from "./run-skillstead.mjs";
@@ -19,6 +21,11 @@ const STABLE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const LINTER_ID = "Skillstead svg-infographic";
 const LINTER_VERSION = "0.8.3";
 const WRAPPER_PATH = "skills/visualize-game-design/scripts/run-skillstead.mjs";
+const TRUSTED_RUNTIME_DIGESTS = Object.freeze({
+  wrapper: "ec34d0acb533ccff6f027d03d8828783d3faa6ede4fdaa87178125127235920a",
+  linter: "3990a96078ce8c0c4692213820ce72fc228a1b827459792d5ccc45932f5f9a41",
+  renderer: "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e",
+});
 const lintCache = new Map();
 
 function add(errors, message) { errors.push(message); }
@@ -165,6 +172,7 @@ export function inspectCompletePng(bytes) {
         interlace = bytes[dataStart + 12];
         if (!(width > 0) || !(height > 0)) add(errors, "PNG IHDR dimensions must be positive");
         if (bytes[dataStart + 10] !== 0 || bytes[dataStart + 11] !== 0 || ![0, 1].includes(bytes[dataStart + 12])) add(errors, "PNG IHDR methods are invalid");
+        if (interlace !== 0) add(errors, "PNG interlacing is unsupported; the packaged renderer emits non-interlaced PNGs");
       }
     } else if (type === "IDAT") {
       if (dataEnded) add(errors, "PNG IDAT chunks must be consecutive");
@@ -188,14 +196,14 @@ export function inspectCompletePng(bytes) {
     if (!channels || !validDepths?.includes(bitDepth)) add(errors, "PNG IHDR bit depth and color type are incompatible");
     try {
       const pixels = inflateSync(Buffer.concat(imageData), { maxOutputLength: 256 * 1024 * 1024 });
-      if (interlace === 0 && channels) {
+      if (interlace === 0 && channels && validDepths?.includes(bitDepth)) {
         const rowBytes = Math.ceil((width * channels * bitDepth) / 8);
         const expectedLength = height * (rowBytes + 1);
         if (pixels.length !== expectedLength) add(errors, "PNG decompressed image data length does not match IHDR");
         else {
           for (let row = 0; row < height; row += 1) if (pixels[row * (rowBytes + 1)] > 4) add(errors, `PNG row ${row} has an invalid filter type`);
         }
-      } else if (pixels.length === 0) add(errors, "PNG decompressed image data is empty");
+      }
     } catch (cause) {
       add(errors, `PNG IDAT zlib stream is invalid: ${cause.message}`);
     }
@@ -203,18 +211,80 @@ export function inspectCompletePng(bytes) {
   return { ok: errors.length === 0, errors, width, height };
 }
 
-async function skillsteadRuntime(errors) {
+async function canonicalRegularFile(filePath) {
+  const canonicalPath = await realpath(filePath);
+  const stat = await lstat(canonicalPath);
+  if (!stat.isFile()) throw new Error(`${filePath} is not a regular file`);
+  return canonicalPath;
+}
+
+async function skillsteadRuntime(errors, testRuntime) {
   try {
-    const [linterPath, rendererPath] = await Promise.all([
-      resolveSkillsteadCli("lint"),
-      resolveSkillsteadCli("render"),
-    ]);
-    const [linterBytes, rendererBytes] = await Promise.all([readFile(linterPath), readFile(rendererPath)]);
-    return { linterPath, rendererPath, linterDigest: digest(linterBytes), rendererDigest: digest(rendererBytes) };
+    const injected = testRuntime && typeof testRuntime === "object" && !Array.isArray(testRuntime);
+    const [wrapperPath, linterPath, rendererPath] = injected
+      ? await Promise.all([
+        canonicalRegularFile(testRuntime.wrapperPath),
+        canonicalRegularFile(testRuntime.linterPath),
+        canonicalRegularFile(testRuntime.rendererPath),
+      ])
+      : await Promise.all([
+        canonicalRegularFile(fileURLToPath(new URL("./run-skillstead.mjs", import.meta.url))),
+        resolveSkillsteadCli("lint"),
+        resolveSkillsteadCli("render"),
+      ]);
+    const [wrapperBytes, linterBytes, rendererBytes] = await Promise.all([readFile(wrapperPath), readFile(linterPath), readFile(rendererPath)]);
+    const runtime = {
+      wrapperPath,
+      linterPath,
+      rendererPath,
+      wrapperDigest: digest(wrapperBytes),
+      linterDigest: digest(linterBytes),
+      rendererDigest: digest(rendererBytes),
+    };
+    if (injected && Object.entries(TRUSTED_RUNTIME_DIGESTS).some(([name, expected]) => runtime[`${name}Digest`] !== expected)) {
+      throw new Error("test runtime bytes do not match the pinned packaged runtime");
+    }
+    return runtime;
   } catch (cause) {
     add(errors, `Packaged Skillstead runtime is unavailable: ${cause.message}`);
     return null;
   }
+}
+
+function rendererIdentity(log) {
+  const match = /^renderer:\s+(.+?)\s+\((.+?)\)\s+\[via .+\]$/imu.exec(log);
+  return match ? { renderer: match[1], rendererVersion: match[2], line: match[0] } : null;
+}
+
+async function independentlyRender(svgFile, runtime, errors) {
+  const directory = await mkdtemp(path.join(tmpdir(), "studio-independent-render-"));
+  const outputPath = path.join(directory, "verified.png");
+  let result;
+  try {
+    const execution = spawnSync(process.execPath, [runtime.wrapperPath, "render", svgFile.path, outputPath], {
+      encoding: "utf8",
+      maxBuffer: 4 * 1024 * 1024,
+      timeout: 150_000,
+    });
+    const log = `${execution.stdout ?? ""}${execution.stderr ?? ""}`.trim();
+    let bytes = null;
+    try { bytes = await readFile(outputPath); } catch { /* reported below */ }
+    result = {
+      status: execution.status,
+      error: execution.error?.message ?? null,
+      log,
+      bytes,
+      inspection: bytes ? inspectCompletePng(bytes) : null,
+      identity: rendererIdentity(log),
+    };
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+  if (result.error || result.status !== 0 || !result.bytes || !result.inspection?.ok || !result.identity) {
+    add(errors, `Independent Skillstead render failed: ${result.error || result.inspection?.errors.join("; ") || result.log || `exit ${result.status}`}`);
+    return null;
+  }
+  return result;
 }
 
 function independentlyLint(svgFile, runtime, errors) {
@@ -249,7 +319,7 @@ function validateEvidence(stage, expectedKeys, errors, location) {
   });
 }
 
-export async function validateVisualizationEvidence(record, { artifactRoot } = {}) {
+export async function validateVisualizationEvidence(record, { artifactRoot, testRuntime } = {}) {
   const errors = [];
   assertPlainTree(record, errors);
   exactKeys(record, ["schemaVersion", "presetId", "requested", "planned", "generated", "linted", "rendered", "verified"], errors, "record");
@@ -319,7 +389,7 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
     if (record?.rendered?.status === "passed" || record?.verified?.status === "passed") pngFile = await verifiedFile(artifactRoot, record?.planned?.pngPath, errors, "planned.pngPath");
   }
   if (svgFile) {
-    runtime = await skillsteadRuntime(errors);
+    runtime = await skillsteadRuntime(errors, testRuntime);
     const actualDigest = digest(svgFile.bytes);
     const metadata = svgMetadata(svgFile.bytes, errors);
     for (const [name, stage] of [["generated", record.generated], ["linted", record.linted], ["rendered", record.rendered], ["verified", record.verified]]) {
@@ -341,6 +411,17 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
       if (inspection.ok) {
         if (inspection.width !== metadata.width * 2 || inspection.height !== metadata.height * 2) add(errors, "actual PNG dimensions must be exactly 2x the SVG viewBox");
         if (record.rendered.width !== inspection.width || record.rendered.height !== inspection.height || record.verified.width !== inspection.width || record.verified.height !== inspection.height) add(errors, "recorded dimensions must match the actual PNG");
+      }
+      if (runtime && errors.length === 0) {
+        const independent = await independentlyRender(svgFile, runtime, errors);
+        if (independent) {
+          if (!pngFile.bytes.equals(independent.bytes)) add(errors, "Independent Skillstead render does not match the claimed PNG bytes");
+          if (record.rendered.pngDigest !== digest(independent.bytes)) add(errors, "PNG digest does not match the independent Skillstead render");
+          if (record.rendered.renderer !== independent.identity.renderer || record.rendered.rendererVersion !== independent.identity.rendererVersion) add(errors, "render stage does not identify the browser used by the independent Skillstead render");
+          for (const entry of Array.isArray(record.rendered.evidence) ? record.rendered.evidence : []) {
+            if (entry && typeof entry === "object" && !Array.isArray(entry) && !entry.log?.includes(independent.identity.line)) add(errors, "render evidence log does not contain the independent renderer identity");
+          }
+        }
       }
     }
   }

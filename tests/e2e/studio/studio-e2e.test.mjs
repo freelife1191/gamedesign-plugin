@@ -15,18 +15,25 @@ const runnerPath = path.join(
   "../../../products/game-design-studio/plugin/skills/orchestrate-game-design-project/scripts/validate-studio-scenario.mjs",
 );
 let sourceTestRuntimePromise;
+let sourceRuntimeBuildRoot;
+
+test.after(async () => {
+  if (sourceRuntimeBuildRoot) await rm(sourceRuntimeBuildRoot, { recursive: true, force: true });
+});
 
 function sourceTestRuntime() {
   sourceTestRuntimePromise ??= (async () => {
     const validatorPath = path.join(repoRoot, "shared/scripts/validate-artifact.mjs");
     const { validateArtifact } = await import(pathToFileURL(validatorPath).href);
+    sourceRuntimeBuildRoot = await mkdtemp(path.join(os.tmpdir(), "studio-e2e-source-runtime-"));
+    const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot: sourceRuntimeBuildRoot, sourceDateEpoch: 0 });
     return {
       validateArtifact,
       validatorPath,
       gateRegistry: JSON.parse(await readFile(path.join(repoRoot, "shared/responsible-design/gates.json"), "utf8")),
       skillsteadLinterPath: path.join(
-        repoRoot,
-        "products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs",
+        build.outputDir,
+        "skills/visualize-game-design/scripts/run-skillstead.mjs",
       ),
     };
   })();

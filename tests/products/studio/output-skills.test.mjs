@@ -66,6 +66,12 @@ function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+function parseRendererIdentity(log) {
+  const match = /^renderer:\s+(.+?)\s+\((.+?)\)\s+\[via .+\]$/imu.exec(log);
+  assert.ok(match, `renderer identity missing from log:\n${log}`);
+  return { renderer: match[1], rendererVersion: match[2], line: match[0] };
+}
+
 function crc32(bytes) {
   let crc = 0xffffffff;
   for (const byte of bytes) {
@@ -85,11 +91,15 @@ function pngChunk(type, data) {
   return chunk;
 }
 
-function completePngBytes(width, height, compressed = deflateSync(Buffer.alloc((1 + width * 4) * height))) {
+function completePngBytes(width, height, compressed = deflateSync(Buffer.alloc((1 + width * 4) * height)), {
+  bitDepth = 8,
+  colorType = 6,
+  interlace = 0,
+} = {}) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
-  header.set([8, 6, 0, 0, 0], 8);
+  header.set([bitDepth, colorType, 0, 0, interlace], 8);
   return Buffer.concat([
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     pngChunk("IHDR", header),
@@ -190,15 +200,30 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
   await mkdir(assets);
   const svgPath = path.join(assets, "loop.svg");
   const pngPath = path.join(assets, "loop.png");
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><title>Loop</title><desc>Source-backed loop</desc></svg>\n';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><title>Loop</title><desc>Source-backed loop</desc><rect x="10" y="10" width="180" height="40" fill="#3366ff"/></svg>\n';
   await writeFile(svgPath, svg);
-  const png = await writeCompletePng(pngPath, 400, 120);
+  const stagingRoot = await temporaryDirectory("studio-visualization-built-");
+  const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const builtWrapperPath = path.join(built.outputDir, visualizationWrapper);
+  const render = spawnSync(process.execPath, [builtWrapperPath, "render", svgPath, pngPath], { encoding: "utf8", timeout: 150_000 });
+  const renderLog = `${render.stdout ?? ""}${render.stderr ?? ""}`.trim();
+  assert.equal(render.status, 0, renderLog);
+  const rendererIdentity = parseRendererIdentity(renderLog);
+  const png = await readFile(pngPath);
   const [linterBytes, rendererBytes] = await Promise.all([
     readFile(path.join(skillsteadScriptRoot, "check-svg.mjs")),
     readFile(path.join(skillsteadScriptRoot, "render.mjs")),
   ]);
   const linterDigest = sha256(linterBytes);
   const rendererDigest = sha256(rendererBytes);
+  const sourceValidationOptions = {
+    artifactRoot,
+    testRuntime: {
+      wrapperPath: builtWrapperPath,
+      linterPath: path.join(skillsteadScriptRoot, "check-svg.mjs"),
+      rendererPath: path.join(skillsteadScriptRoot, "render.mjs"),
+    },
+  };
   const record = {
     schemaVersion: 1,
     presetId: "core-motivation-loop",
@@ -222,10 +247,11 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     },
     rendered: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg), pngPath: "assets/loop.png",
-      pngDigest: sha256(png), scale: 2, width: 400, height: 120, renderer: "Chromium", rendererVersion: "Chromium 140", rendererDigest,
+      pngDigest: sha256(png), scale: 2, width: 400, height: 120,
+      renderer: rendererIdentity.renderer, rendererVersion: rendererIdentity.rendererVersion, rendererDigest,
       evidence: [{
         command: `node ${visualizationWrapper} render assets/loop.svg assets/loop.png`, exitCode: 0,
-        log: "renderer: Chromium (Chromium 140); rendered 400x120", renderer: "Chromium", rendererVersion: "Chromium 140", rendererDigest,
+        log: renderLog, renderer: rendererIdentity.renderer, rendererVersion: rendererIdentity.rendererVersion, rendererDigest,
         svgPath: "assets/loop.svg", svgDigest: sha256(svg), pngPath: "assets/loop.png", pngDigest: sha256(png), width: 400, height: 120,
       }],
     },
@@ -236,7 +262,7 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     },
   };
   const { validateVisualizationEvidence } = await loadModule(visualizationValidatorScript);
-  const valid = await validateVisualizationEvidence(record, { artifactRoot });
+  const valid = await validateVisualizationEvidence(record, sourceValidationOptions);
   assert.equal(valid.ok, true, valid.errors.join("\n"));
   assert.deepEqual(valid.normalized, record);
 
@@ -266,7 +292,7 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
   for (const [label, mutate] of mutations) {
     const candidate = structuredClone(record);
     mutate(candidate);
-    const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+    const result = await validateVisualizationEvidence(candidate, sourceValidationOptions);
     assert.equal(result.ok, false, label);
     assert.equal(result.normalized, null, label);
   }
@@ -275,7 +301,7 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     for (const malformed of [null, {}, "invalid"]) {
       const candidate = structuredClone(record);
       candidate[stageName].evidence = malformed;
-      const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+      const result = await validateVisualizationEvidence(candidate, sourceValidationOptions);
       assert.equal(result.ok, false, `${stageName} malformed evidence container`);
       assert.ok(result.errors.includes(`${stageName}.evidence must be an array`), `${stageName} container error path`);
       assert.equal(result.normalized, null);
@@ -287,14 +313,14 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     ]) {
       const candidate = structuredClone(record);
       candidate[stageName].evidence = [malformed];
-      const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+      const result = await validateVisualizationEvidence(candidate, sourceValidationOptions);
       assert.equal(result.ok, false, `${stageName} malformed evidence item`);
       assert.ok(result.errors.includes(expectedError), `${stageName} item error path: ${expectedError}`);
       assert.equal(result.normalized, null);
     }
     const candidate = structuredClone(record);
     candidate[stageName].evidence = [Object.create({ polluted: true })];
-    const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+    const result = await validateVisualizationEvidence(candidate, sourceValidationOptions);
     assert.equal(result.ok, false, `${stageName} unsafe evidence prototype`);
     assert.ok(result.errors.includes(`record.${stageName}.evidence.0 has an unsafe prototype`));
     assert.equal(result.normalized, null);
@@ -311,18 +337,16 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     candidate.generated.evidence[0].svgDigest = invalidDigest;
     candidate.linted.evidence[0].svgDigest = invalidDigest;
     candidate.rendered.evidence[0].svgDigest = invalidDigest;
-    const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+    const result = await validateVisualizationEvidence(candidate, sourceValidationOptions);
     assert.equal(result.ok, false, label);
   }
   await writeFile(svgPath, svg);
 
-  const stagingRoot = await temporaryDirectory("studio-visualization-built-");
-  const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
   const builtValidatorPath = path.join(built.outputDir, "skills/visualize-game-design/scripts/validate-visualization-evidence.mjs");
   const builtValidator = await loadModule(builtValidatorPath);
-  for (const [label, validate] of [
-    ["source validator", validateVisualizationEvidence],
-    ["built validator", builtValidator.validateVisualizationEvidence],
+  for (const [label, validate, options] of [
+    ["source validator", validateVisualizationEvidence, sourceValidationOptions],
+    ["built validator", builtValidator.validateVisualizationEvidence, { artifactRoot }],
   ]) {
     const hardErrorSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><title>Loop</title><desc>Source-backed loop</desc><path d="M 0 0 L 10 10" marker-end="url(#missing)"/></svg>\n';
     await writeFile(svgPath, hardErrorSvg);
@@ -332,18 +356,47 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     forgedLint.generated.evidence[0].svgDigest = hardErrorDigest;
     forgedLint.linted.evidence[0].svgDigest = hardErrorDigest;
     forgedLint.rendered.evidence[0].svgDigest = hardErrorDigest;
-    const lintResult = await validate(forgedLint, { artifactRoot });
+    const lintResult = await validate(forgedLint, options);
     assert.equal(lintResult.ok, false, `${label}: hard-error SVG with forged pass evidence`);
     assert.ok(lintResult.errors.some((message) => /Skillstead lint/iu.test(message)), `${label}: independent linter result`);
     await writeFile(svgPath, svg);
 
     const zeroCrc = Buffer.from(png);
     zeroCrc.writeUInt32BE(0, 29);
+    const interlaced = completePngBytes(1, 1, deflateSync(Buffer.from([0])), { interlace: 1 });
+    await writeFile(pngPath, interlaced);
+    const interlacedCandidate = structuredClone(record);
+    const interlacedDigest = sha256(interlaced);
+    interlacedCandidate.rendered.pngDigest = interlacedDigest;
+    interlacedCandidate.verified.pngDigest = interlacedDigest;
+    interlacedCandidate.rendered.evidence[0].pngDigest = interlacedDigest;
+    for (const target of [interlacedCandidate.rendered, interlacedCandidate.verified, interlacedCandidate.rendered.evidence[0]]) {
+      target.width = 1;
+      target.height = 1;
+    }
+    const interlacedResult = await validate(interlacedCandidate, options);
+    assert.equal(interlacedResult.ok, false, `${label}: Adam7 PNG is unsupported`);
+    assert.ok(interlacedResult.errors.some((message) => /interlac/iu.test(message)), `${label}: explicit non-interlaced invariant`);
+    const alternateZeroPixels = completePngBytes(400, 120, deflateSync(Buffer.alloc((1 + 400 * 4) * 120), { level: 9 }));
+    await writeFile(pngPath, alternateZeroPixels);
+    const selfAttestedRender = structuredClone(record);
+    const alternateDigest = sha256(alternateZeroPixels);
+    selfAttestedRender.rendered.pngDigest = alternateDigest;
+    selfAttestedRender.verified.pngDigest = alternateDigest;
+    selfAttestedRender.rendered.evidence[0].pngDigest = alternateDigest;
+    selfAttestedRender.rendered.evidence[0].log = `forged ${selfAttestedRender.rendered.rendererVersion}`;
+    const selfAttestedResult = await validate(selfAttestedRender, options);
+    assert.equal(selfAttestedResult.ok, false, `${label}: structurally valid self-attested PNG`);
+    assert.ok(selfAttestedResult.errors.some((message) => /independent.*render|render.*independent/iu.test(message)), `${label}: independent render evidence`);
     const pngAttacks = [
       ["truncated PNG", png.subarray(0, -1), 400, 120],
       ["zero-CRC PNG", zeroCrc, 400, 120],
       ["extra-byte PNG", Buffer.concat([png, Buffer.from([0])]), 400, 120],
       ["invalid compressed PNG", completePngBytes(400, 120, Buffer.from([0])), 400, 120],
+      ["short scanline PNG", completePngBytes(400, 120, deflateSync(Buffer.alloc((1 + 400 * 4) * 120 - 1))), 400, 120],
+      ["extra scanline PNG", completePngBytes(400, 120, deflateSync(Buffer.alloc((1 + 400 * 4) * 120 + 1))), 400, 120],
+      ["invalid filter PNG", completePngBytes(400, 120, deflateSync(Buffer.concat([Buffer.from([5]), Buffer.alloc((1 + 400 * 4) * 120 - 1)]))), 400, 120],
+      ["unsupported RGBA bit depth PNG", completePngBytes(400, 120, undefined, { bitDepth: 4, colorType: 6 }), 400, 120],
       ["wrong-size PNG", await writeCompletePng(pngPath, 399, 120), 399, 120],
     ];
     for (const [attack, bytes, width, height] of pngAttacks) {
@@ -359,7 +412,7 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
       candidate.verified.height = height;
       candidate.rendered.evidence[0].width = width;
       candidate.rendered.evidence[0].height = height;
-      const result = await validate(candidate, { artifactRoot });
+      const result = await validate(candidate, options);
       assert.equal(result.ok, false, `${label}: ${attack}`);
       assert.equal(result.normalized, null, `${label}: ${attack}`);
     }
@@ -373,6 +426,13 @@ test("packaged Skillstead wrapper survives tmp realpath symlink and relative ali
   const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
   const wrapperPath = path.join(built.outputDir, visualizationWrapper);
   assert.equal((await lstat(wrapperPath)).isFile(), true, "packaged wrapper exists");
+  const wrapperSource = await readFile(wrapperPath, "utf8");
+  const forbiddenRepositoryFallback = /\.\.\/.*(?:shared\/vendor|products\/game-design)|\/Users\//u;
+  assert.doesNotMatch(wrapperSource, forbiddenRepositoryFallback, "shipped wrapper has no repository or host fallback");
+  for (const relativePath of built.files.filter((file) => /\.(?:mjs|md)$/u.test(file))) {
+    const source = await readFile(path.join(built.outputDir, relativePath), "utf8");
+    assert.doesNotMatch(source, forbiddenRepositoryFallback, `${relativePath}: release fallback scan`);
+  }
   const canonicalWrapper = await realpath(wrapperPath);
   const wrapperLink = path.join(stagingRoot, "skillstead-wrapper-link.mjs");
   await symlink(wrapperPath, wrapperLink);
@@ -403,6 +463,16 @@ test("packaged Skillstead wrapper survives tmp realpath symlink and relative ali
     await assert.rejects(lstat(outputPng), { code: "ENOENT" });
     assert.match(`${render.stdout}${render.stderr}`, /browser|chromium|render|unavailable|exit/iu);
   }
+
+  const sourceWrapperPath = path.join(pluginRoot, visualizationWrapper);
+  const sourceInvocation = spawnSync(process.execPath, [sourceWrapperPath, "lint", goodSvg], { encoding: "utf8" });
+  assert.notEqual(sourceInvocation.status, 0, "source overlay cannot fall back to repository sibling vendor bytes");
+  assert.match(`${sourceInvocation.stdout}${sourceInvocation.stderr}`, /packaged Skillstead.*unavailable/iu);
+
+  await rm(path.join(built.outputDir, "skills/svg-infographic/scripts/check-svg.mjs"));
+  const missingPackagedLinter = spawnSync(process.execPath, [wrapperPath, "lint", goodSvg], { encoding: "utf8" });
+  assert.notEqual(missingPackagedLinter.status, 0, "missing packaged linter fails closed");
+  assert.match(`${missingPackagedLinter.stdout}${missingPackagedLinter.stderr}`, /packaged Skillstead.*unavailable/iu);
 });
 
 test("visualization validator accepts a verified SVG fallback when PNG rendering fails", async () => {
@@ -451,7 +521,14 @@ test("visualization validator accepts a verified SVG fallback when PNG rendering
     },
   };
   const { validateVisualizationEvidence } = await loadModule(visualizationValidatorScript);
-  const result = await validateVisualizationEvidence(record, { artifactRoot });
+  const result = await validateVisualizationEvidence(record, {
+    artifactRoot,
+    testRuntime: {
+      wrapperPath: path.join(pluginRoot, visualizationWrapper),
+      linterPath: path.join(skillsteadScriptRoot, "check-svg.mjs"),
+      rendererPath: path.join(skillsteadScriptRoot, "render.mjs"),
+    },
+  });
   assert.equal(result.ok, true, result.errors.join("\n"));
 });
 
