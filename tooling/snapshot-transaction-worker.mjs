@@ -1,9 +1,14 @@
 #!/usr/bin/env node
 
+import { rm } from "node:fs/promises";
+import path from "node:path";
+
 import { runSnapshotTransaction } from "./lib/snapshot-transaction.mjs";
 
 let nextRequestId = 1;
 const replies = new Map();
+const startupFaults = JSON.parse(process.env.CODEX_SNAPSHOT_TRANSACTION_TEST_FAULTS ?? "[]");
+let sendCallbackFault;
 
 function rejectReplies(error) {
   for (const reply of replies.values()) reply.reject(error);
@@ -16,7 +21,12 @@ function send(message) {
       reject(new Error("snapshot worker IPC is disconnected"));
       return;
     }
-    process.send(message, (error) => (error ? reject(error) : resolve()));
+    process.send(message, (error) => {
+      const injected = sendCallbackFault;
+      sendCallbackFault = undefined;
+      if (error || injected) reject(error ?? new Error(injected));
+      else resolve();
+    });
   });
 }
 
@@ -50,6 +60,8 @@ process.on("message", async (message) => {
   if (message?.type !== "start") return;
   try {
     const protocolFaults = (message.config.protocolFaults ?? []).map((fault) => ({ ...fault, used: false }));
+    const workerFaults = (message.config.workerFaults ?? []).map((fault) => ({ ...fault, used: false }));
+    const registerFault = workerFaults.find((fault) => fault.phase === "register");
     async function phase(phaseName, payload) {
       const fault = protocolFaults.find((candidate) => !candidate.used
         && candidate.phase === phaseName
@@ -59,16 +71,30 @@ process.on("message", async (message) => {
         if (fault.action === "malformed") {
           await send({ type: "malformed", phase: phaseName });
           throw new Error(`Injected malformed IPC at ${phaseName}`);
-        } else if (fault.action === "disconnect" || fault.action === "send-failure") {
+        } else if (fault.action === "disconnect") {
           process.disconnect();
+        } else if (fault.action === "send-failure" || fault.action === "send-callback-error") {
+          sendCallbackFault = `Injected process.send callback error at ${phaseName}`;
         }
       }
       return request("phase", { phase: phaseName, payload });
     }
     const recovery = await runSnapshotTransaction(message.config, {
-      register: (registration) => request("registered", { registration }),
+      register: async (registration) => {
+        if (registerFault?.action === "withhold") return new Promise(() => {});
+        let reported = registration;
+        if (registerFault?.action === "malformed-registration") reported = { recoveryRoot: registration.recoveryRoot };
+        if (registerFault?.action === "wrong-staging-registration") reported = { ...registration, stagingRoot: `${registration.stagingRoot}-wrong` };
+        if (registerFault?.action === "missing-journal") {
+          await rm(path.join(registration.recoveryRoot, "SNAPSHOT-TRANSACTION-JOURNAL.json"));
+        }
+        return request("registered", { registration: reported });
+      },
       phase,
     });
+    if (workerFaults.some((fault) => fault.phase === "final" && fault.action === "withhold")) {
+      await new Promise(() => {});
+    }
     await send({ type: "result", recovery });
   } catch (error) {
     await send({
@@ -80,4 +106,6 @@ process.on("message", async (message) => {
   }
 });
 
-await send({ type: "spawned" });
+if (!startupFaults.some((fault) => fault.phase === "spawn" && fault.action === "withhold")) {
+  await send({ type: "spawned" });
+}

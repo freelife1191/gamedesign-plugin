@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 
 import { fork } from "node:child_process";
-import { lstat, realpath, rm } from "node:fs/promises";
+import { lstat, mkdtemp, realpath, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { collectTree } from "./lib/copy-tree.mjs";
+import { hashFileEntries } from "./lib/hash.mjs";
 import { createSnapshotStaging } from "./lib/build-product.mjs";
-import { readSnapshotRecoveryJournal } from "./lib/snapshot-transaction.mjs";
+import { readSnapshotRecoveryJournal, validateSnapshotWorkerRegistration } from "./lib/snapshot-transaction.mjs";
 import { syncShared } from "./sync-shared.mjs";
 
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -88,10 +90,36 @@ async function preflightSnapshotDestinations(repoRoot) {
 }
 
 async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIdentity, destinations, operations = {} }) {
+  const recoveryRoot = await mkdtemp(path.join(await realpath(tmpdir()), "snapshot-recovery-"));
+  const originalTreeHashes = new Map();
+  const stagedTreeHashes = new Map();
+  for (const productName of PRODUCT_NAMES) {
+    const [originalEntries, stagedEntries] = await Promise.all([
+      collectTree(destinations.get(productName), { label: `original ${productName}` }),
+      collectTree(path.join(stagingRoot, productName), { label: `staged ${productName}` }),
+    ]);
+    originalTreeHashes.set(productName, hashFileEntries(originalEntries));
+    stagedTreeHashes.set(productName, hashFileEntries(stagedEntries));
+  }
+  const recoveryContext = {
+    repoRoot,
+    recoveryRoot,
+    stagingRoot,
+    pluginsRoot,
+    pluginsIdentity,
+    originalTreeHashes,
+    stagedTreeHashes,
+  };
+  const workerEnv = { ...process.env };
+  delete workerEnv.CODEX_SNAPSHOT_TRANSACTION_TEST_FAULTS;
+  if (operations.workerFaults) {
+    workerEnv.CODEX_SNAPSHOT_TRANSACTION_TEST_FAULTS = JSON.stringify(operations.workerFaults);
+  }
   const workerPath = fileURLToPath(new URL("./snapshot-transaction-worker.mjs", import.meta.url));
   const child = fork(workerPath, [], {
     cwd: pluginsRoot,
     stdio: ["ignore", "ignore", "pipe", "ipc"],
+    env: workerEnv,
   });
   let stderr = "";
   child.stderr.setEncoding("utf8");
@@ -101,6 +129,7 @@ async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIde
     const configured = operations.deadlines ?? {};
     const deadlines = {
       spawn: configured.spawnMs ?? 30_000,
+      start: configured.startMs ?? 30_000,
       register: configured.registerMs ?? 30_000,
       phase: configured.phaseMs ?? 120_000,
       final: configured.finalMs ?? 120_000,
@@ -133,19 +162,15 @@ async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIde
     async function interruptedError(reason) {
       let recovery;
       const issues = [];
-      if (registration) {
-        try {
-          recovery = await readSnapshotRecoveryJournal(registration);
-        } catch (error) {
-          issues.push(error.message);
-        }
+      try {
+        recovery = await readSnapshotRecoveryJournal(recoveryContext);
+      } catch (error) {
+        issues.push(error.message);
       }
       if (!recovery) {
         recovery = {
           state: "worker-interrupted-before-registration",
-          recoveryRoot: typeof registration?.recoveryRoot === "string"
-            ? await realpath(registration.recoveryRoot).catch(() => null)
-            : null,
+          recoveryRoot: await realpath(recoveryRoot).catch(() => null),
           stagingRoot: await realpath(stagingRoot).catch(() => null),
           products: Object.fromEntries(PRODUCT_NAMES.map((productName) => [productName, {
             status: "recovery-required",
@@ -179,24 +204,31 @@ async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIde
     }
 
     arm("spawn", deadlines.spawn, () => { void abort("Snapshot transaction worker spawn timed out"); });
+    Promise.resolve(operations.afterFork?.({ workerPid: child.pid })).catch((error) => {
+      void abort(`Snapshot transaction worker after-fork hook failed: ${error.message}`);
+    });
     child.on("message", async (message) => {
-      if (finishing && message?.type !== "error") return;
+      if (finishing) return;
       if (message?.type === "spawned") {
         clearTimer("spawn");
+        arm("start", deadlines.start, () => { void abort("Snapshot transaction worker start timed out"); });
         try {
           await operations.afterWorkerSpawn?.({ pluginsRoot, stagedPluginsRoot: stagingRoot, workerPid: child.pid });
           await send({
             type: "start",
             config: {
               repoRoot,
+              recoveryRoot,
               stagingRoot,
               pluginsRoot,
               pluginsIdentity,
               destinations: [...destinations],
               faults: operations.faults ?? [],
               protocolFaults: operations.protocolFaults ?? [],
+              workerFaults: operations.workerFaults ?? [],
             },
           });
+          clearTimer("start");
           arm("register", deadlines.register, () => { void abort("Snapshot transaction worker registration timed out"); });
         } catch (error) {
           await abort(error.message);
@@ -205,9 +237,8 @@ async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIde
       }
       if (message?.type === "registered") {
         clearTimer("register");
-        registration = message.registration;
         try {
-          await readSnapshotRecoveryJournal(message.registration);
+          registration = await validateSnapshotWorkerRegistration(message.registration, recoveryContext);
           await send({ type: "registered-result", requestId: message.requestId });
           arm("final", deadlines.final, () => { void abort("Snapshot transaction worker final result timed out"); });
         } catch (error) {

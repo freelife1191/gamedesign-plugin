@@ -3,6 +3,7 @@ import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rename a
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -44,6 +45,19 @@ async function assertCanonicalExisting(location) {
   assert.equal(typeof location, "string");
   await lstat(location);
   assert.equal(await realpath(location), location);
+}
+
+async function assertProcessExited(pid) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    try {
+      process.kill(pid, 0);
+    } catch (error) {
+      if (error.code === "ESRCH") return;
+      throw error;
+    }
+    await delay(10);
+  }
+  assert.fail(`snapshot worker ${pid} remained alive`);
 }
 
 function pathsUnder(files, prefix) {
@@ -521,6 +535,161 @@ test("snapshot worker interruption always restores or reports every original", a
       });
     });
   }
+
+  await t.test("displaced visible root after first backup still reports both originals after SIGKILL", async (t) => {
+    const { fixtureRepo } = await createSnapshotFixture(t);
+    for (const productName of productNames) {
+      const destination = path.join(fixtureRepo, "plugins", productName);
+      await mkdir(destination, { recursive: true });
+      await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+    }
+    const unrelated = path.join(fixtureRepo, "plugins/unrelated-private-plugin/sentinel.txt");
+    await mkdir(path.dirname(unrelated), { recursive: true });
+    await writeFile(unrelated, "unrelated original\n");
+    const displacedPlugins = path.join(fixtureRepo, "plugins-displaced-after-backup");
+    let workerPid;
+    const error = await buildSnapshots({
+      repoRoot: fixtureRepo,
+      mode: "clean",
+      operations: {
+        afterBackup: async ({ productName, workerPid: pid }) => {
+          if (productName !== "game-design-career") return;
+          workerPid = pid;
+          await fsRename(path.join(fixtureRepo, "plugins"), displacedPlugins);
+          await mkdir(path.join(fixtureRepo, "plugins"));
+          process.kill(pid, "SIGKILL");
+        },
+      },
+    }).then(() => undefined, (caught) => caught);
+    assert.equal(error?.preserveStaging, true);
+    assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+    await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+    await assertCanonicalExisting(error?.recovery?.stagingRoot);
+    for (const productName of productNames) {
+      const originalLocation = error.recovery.products[productName].originalLocation;
+      await assertCanonicalExisting(originalLocation);
+      assert.equal(await readFile(path.join(originalLocation, "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
+    }
+    assert.equal(await readFile(path.join(displacedPlugins, "unrelated-private-plugin/sentinel.txt"), "utf8"), "unrelated original\n");
+    assert.deepEqual(await readdir(path.join(fixtureRepo, "plugins")), []);
+    await assertProcessExited(workerPid);
+    await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+    await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+  });
+
+  await t.test("afterWorkerSpawn never resolves but start deadline kills and reaps worker", async (t) => {
+    const { fixtureRepo } = await createSnapshotFixture(t);
+    for (const productName of productNames) {
+      const destination = path.join(fixtureRepo, "plugins", productName);
+      await mkdir(destination, { recursive: true });
+      await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+    }
+    let workerPid;
+    const error = await buildSnapshots({
+      repoRoot: fixtureRepo,
+      mode: "clean",
+      operations: {
+        afterWorkerSpawn: ({ workerPid: pid }) => {
+          workerPid = pid;
+          return new Promise(() => {});
+        },
+        deadlines: { startMs: 40, rollbackGraceMs: 40 },
+      },
+    }).then(() => undefined, (caught) => caught);
+    assert.match(error?.message ?? "", /start timed out/i);
+    assert.equal(error?.preserveStaging, true);
+    assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+    await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+    await assertCanonicalExisting(error?.recovery?.stagingRoot);
+    await assertProcessExited(workerPid);
+    await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+    await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+  });
+
+  for (const [label, workerFaults, deadlines, expected] of [
+    ["spawn", [{ phase: "spawn", action: "withhold" }], { spawnMs: 40 }, /spawn timed out/i],
+    ["register", [{ phase: "register", action: "withhold" }], { registerMs: 40 }, /registration timed out/i],
+    ["final", [{ phase: "final", action: "withhold" }], { finalMs: 40 }, /final result timed out/i],
+  ]) {
+    await t.test(`${label} never resolves but deadline kills and reaps worker`, async (t) => {
+      const { fixtureRepo } = await createSnapshotFixture(t);
+      for (const productName of productNames) {
+        const destination = path.join(fixtureRepo, "plugins", productName);
+        await mkdir(destination, { recursive: true });
+        await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+      }
+      let workerPid;
+      const error = await buildSnapshots({
+        repoRoot: fixtureRepo,
+        mode: "clean",
+        operations: {
+          afterFork: ({ workerPid: pid }) => { workerPid = pid; },
+          workerFaults,
+          deadlines: { ...deadlines, rollbackGraceMs: 40 },
+        },
+      }).then(() => undefined, (caught) => caught);
+      assert.match(error?.message ?? "", expected);
+      assert.equal(error?.preserveStaging, true);
+      assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+      await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+      await assertCanonicalExisting(error?.recovery?.stagingRoot);
+      await assertProcessExited(workerPid);
+      await rm(error.recovery.recoveryRoot, { recursive: true, force: true }).catch(() => {});
+      await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+    });
+  }
+
+  for (const action of ["malformed-registration", "missing-journal", "wrong-staging-registration"]) {
+    await t.test(`${action} is rejected before registration ACK`, async (t) => {
+      const { fixtureRepo } = await createSnapshotFixture(t);
+      for (const productName of productNames) {
+        const destination = path.join(fixtureRepo, "plugins", productName);
+        await mkdir(destination, { recursive: true });
+        await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+      }
+      const error = await buildSnapshots({
+        repoRoot: fixtureRepo,
+        mode: "clean",
+        operations: {
+          workerFaults: [{ phase: "register", action }],
+          deadlines: { rollbackGraceMs: 40 },
+        },
+      }).then(() => undefined, (caught) => caught);
+      assert.match(error?.message ?? "", /registration was rejected|malformed registration|journal/i);
+      assert.equal(error?.preserveStaging, true);
+      assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+      await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+      await assertCanonicalExisting(error?.recovery?.stagingRoot);
+      await rm(error.recovery.recoveryRoot, { recursive: true, force: true }).catch(() => {});
+      await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+    });
+  }
+
+  await t.test("actual process.send callback failure reports recovery and reaps worker", async (t) => {
+    const { fixtureRepo } = await createSnapshotFixture(t);
+    for (const productName of productNames) {
+      const destination = path.join(fixtureRepo, "plugins", productName);
+      await mkdir(destination, { recursive: true });
+      await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+    }
+    let workerPid;
+    const error = await buildSnapshots({
+      repoRoot: fixtureRepo,
+      mode: "clean",
+      operations: {
+        afterFork: ({ workerPid: pid }) => { workerPid = pid; },
+        protocolFaults: [{ action: "send-callback-error", phase: "afterBackup", productName: "game-design-career" }],
+        deadlines: { rollbackGraceMs: 40 },
+      },
+    }).then(() => undefined, (caught) => caught);
+    assert.match(error?.message ?? "", /send callback|phase reply failed|worker/i);
+    assert.equal(error?.preserveStaging, true);
+    assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+    await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+    await assertProcessExited(workerPid);
+    await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+    await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+  });
 });
 
 test("snapshot transaction preserves originals or an external recovery copy across injected filesystem failures", async (t) => {

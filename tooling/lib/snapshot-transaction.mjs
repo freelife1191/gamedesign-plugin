@@ -1,4 +1,4 @@
-import { lstat, mkdtemp, open, readFile, realpath, rename, stat, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdtemp, mkdir, open, readFile, realpath, rename, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -38,6 +38,8 @@ async function writeJournal(state) {
         pendingAction: product.pendingAction ?? null,
         destination: product.destination,
         backupCandidate: product.backupCandidate,
+        safetyCandidate: product.safetyCandidate,
+        originalTreeSha256: product.originalTreeSha256,
         failedInstallCandidate: product.failedInstallCandidate,
         originalLocation: product.originalLocation,
         backupLocation: product.backupLocation,
@@ -115,24 +117,85 @@ function isExactChild(parent, candidate, leaf) {
   return typeof candidate === "string" && candidate === path.join(parent, leaf);
 }
 
-export async function readSnapshotRecoveryJournal(registration) {
+async function assertSafeRecoveryRoot(recoveryRoot, expectedRecoveryRoot) {
+  if (recoveryRoot !== expectedRecoveryRoot || typeof recoveryRoot !== "string") {
+    throw new Error("snapshot worker recovery root does not match the parent capability");
+  }
+  const canonicalTemp = await realpath(tmpdir());
+  const stats = await lstat(recoveryRoot);
+  if (!stats.isDirectory() || stats.isSymbolicLink() || await realpath(recoveryRoot) !== recoveryRoot
+    || path.dirname(recoveryRoot) !== canonicalTemp || !path.basename(recoveryRoot).startsWith("snapshot-recovery-")) {
+    throw new Error("snapshot worker recovery root is not a canonical safe temporary child");
+  }
+}
+
+async function parseJournal(recoveryRoot) {
+  return JSON.parse(await readFile(path.join(recoveryRoot, JOURNAL_NAME), "utf8"));
+}
+
+function exactIdentity(left, right) {
+  return left && right && left.path === right.path && left.dev === right.dev && left.ino === right.ino && left.mode === right.mode;
+}
+
+export async function validateSnapshotWorkerRegistration(registration, expected) {
   if (!registration || typeof registration !== "object") throw new Error("snapshot worker registration is missing");
   const { recoveryRoot, stagingRoot, pluginsRoot, anchoredRoot, leaves } = registration;
-  if (typeof recoveryRoot !== "string" || typeof stagingRoot !== "string" || typeof pluginsRoot !== "string") {
-    throw new Error("snapshot worker registration paths are malformed");
-  }
-  if (!anchoredRoot || anchoredRoot.path !== pluginsRoot || !Array.isArray(leaves)
+  if (stagingRoot !== expected.stagingRoot || pluginsRoot !== expected.pluginsRoot
+    || !exactIdentity(anchoredRoot, { path: expected.pluginsRoot, ...expected.pluginsIdentity })
     || JSON.stringify(leaves) !== JSON.stringify(PRODUCT_NAMES)) {
-    throw new Error("snapshot worker registration identity or leaves are malformed");
+    throw new Error("snapshot worker registration fields do not match the parent capability");
   }
+  await assertSafeRecoveryRoot(recoveryRoot, expected.recoveryRoot);
+  if (await realpath(stagingRoot) !== stagingRoot) throw new Error("snapshot worker staging root is not canonical");
   const rootStats = await lstat(pluginsRoot);
   if (!sameIdentity(rootStats, anchoredRoot) || await realpath(pluginsRoot) !== pluginsRoot) {
     throw new Error("snapshot worker registered plugins identity is not current and canonical");
   }
+  const journal = await parseJournal(recoveryRoot);
+  if (journal.schemaVersion !== 1 || journal.repoRoot !== expected.repoRoot || journal.recoveryRoot !== recoveryRoot
+    || journal.stagingRoot !== stagingRoot || !exactIdentity(journal.anchoredRoot, anchoredRoot)
+    || JSON.stringify(journal.leaves) !== JSON.stringify(PRODUCT_NAMES)
+    || Object.keys(journal.products ?? {}).sort().join("\0") !== [...PRODUCT_NAMES].sort().join("\0")) {
+    throw new Error("journal registration fields do not match");
+  }
+  for (const productName of PRODUCT_NAMES) {
+    const recorded = journal.products[productName];
+    const expectedHash = expected.originalTreeHashes.get(productName);
+    if (recorded.destination !== path.join(pluginsRoot, productName)
+      || recorded.backupCandidate !== path.join(recoveryRoot, productName)
+      || recorded.safetyCandidate !== path.join(recoveryRoot, "safety", productName)
+      || recorded.failedInstallCandidate !== path.join(recoveryRoot, `failed-${productName}`)
+      || recorded.originalTreeSha256 !== expectedHash) {
+      throw new Error(`${productName}: journal registration product fields do not match`);
+    }
+    const safetyEntries = await collectTree(recorded.safetyCandidate, { label: `safety copy ${productName}` });
+    if (hashFileEntries(safetyEntries) !== expectedHash) throw new Error(`${productName}: safety copy hash does not match original`);
+  }
+  return Object.freeze({ ...registration });
+}
+
+async function verifiedCandidate(candidate, expectedHash, label, issues) {
+  try {
+    if (await canonicalExistingPath(candidate) !== candidate) return null;
+    const entries = await collectTree(candidate, { label });
+    if (hashFileEntries(entries) !== expectedHash) {
+      issues.push(`${label}: tree hash was rejected`);
+      return null;
+    }
+    return candidate;
+  } catch (error) {
+    issues.push(`${label}: ${error.message}`);
+    return null;
+  }
+}
+
+export async function readSnapshotRecoveryJournal(expected) {
+  const { recoveryRoot, stagingRoot, pluginsRoot, pluginsIdentity, originalTreeHashes, stagedTreeHashes } = expected;
+  await assertSafeRecoveryRoot(recoveryRoot, expected.recoveryRoot);
   let journal;
   const issues = [];
   try {
-    journal = JSON.parse(await readFile(path.join(recoveryRoot, JOURNAL_NAME), "utf8"));
+    journal = await parseJournal(recoveryRoot);
     if (journal.schemaVersion !== 1 || journal.recoveryRoot !== recoveryRoot || journal.stagingRoot !== stagingRoot
       || journal.anchoredRoot?.path !== pluginsRoot || JSON.stringify(journal.leaves) !== JSON.stringify(PRODUCT_NAMES)) {
       throw new Error("journal registration fields do not match");
@@ -146,21 +209,37 @@ export async function readSnapshotRecoveryJournal(registration) {
     const recorded = journal.products?.[productName] ?? {};
     const destination = path.join(pluginsRoot, productName);
     const backupCandidate = path.join(recoveryRoot, productName);
+    const safetyCandidate = path.join(recoveryRoot, "safety", productName);
     const failedInstallCandidate = path.join(recoveryRoot, `failed-${productName}`);
     if ((recorded.destination && !isExactChild(pluginsRoot, recorded.destination, productName))
       || (recorded.backupCandidate && !isExactChild(recoveryRoot, recorded.backupCandidate, productName))
+      || (recorded.safetyCandidate && recorded.safetyCandidate !== safetyCandidate)
       || (recorded.failedInstallCandidate && recorded.failedInstallCandidate !== failedInstallCandidate)) {
       issues.push(`${productName}: journal paths were rejected`);
     }
-    const backupLocation = await canonicalExistingPath(backupCandidate);
-    const failedInstall = await canonicalExistingPath(failedInstallCandidate);
-    const destinationLocation = await canonicalExistingPath(destination);
-    const originalLocation = backupLocation ?? (recorded.status === "restored" || recorded.status === "untouched"
-      || (recorded.pendingAction === "restore" && !backupLocation) ? destinationLocation : null);
-    const installedSnapshotLocation = failedInstall
-      ?? (recorded.status === "installed" || recorded.pendingAction === "install" ? destinationLocation : null);
+    const expectedHash = originalTreeHashes.get(productName);
+    const stagedHash = stagedTreeHashes.get(productName);
+    const backupLocation = await verifiedCandidate(backupCandidate, expectedHash, `${productName} backup`, issues);
+    const safetyLocation = await verifiedCandidate(safetyCandidate, expectedHash, `${productName} safety copy`, issues);
+    const failedInstall = await verifiedCandidate(failedInstallCandidate, stagedHash, `${productName} failed install`, issues);
+    let originalDestination = null;
+    let installedDestination = null;
+    try {
+      const rootStats = await lstat(pluginsRoot);
+      if (sameIdentity(rootStats, pluginsIdentity) && await realpath(pluginsRoot) === pluginsRoot) {
+        if (recorded.status === "installed" || recorded.pendingAction === "install") {
+          installedDestination = await verifiedCandidate(destination, stagedHash, `${productName} installed destination`, issues);
+        } else {
+          originalDestination = await verifiedCandidate(destination, expectedHash, `${productName} original destination`, issues);
+        }
+      }
+    } catch (error) {
+      issues.push(`${productName} visible destination: ${error.message}`);
+    }
+    const originalLocation = backupLocation ?? safetyLocation ?? originalDestination;
+    const installedSnapshotLocation = failedInstall ?? installedDestination;
     let status = recorded.status ?? "recovery-required";
-    if (backupLocation && installedSnapshotLocation) status = "recovery-required";
+    if ((backupLocation || safetyLocation) && installedSnapshotLocation) status = "recovery-required";
     else if (backupLocation) status = "backed-up";
     else if (originalLocation) status = "restored";
     else if (installedSnapshotLocation) status = "installed";
@@ -251,7 +330,8 @@ export async function runSnapshotTransaction(config, hooks = {}) {
   } = config;
   const destinations = new Map(destinationEntries);
   const injectFault = createFaultInjector(faults);
-  const recoveryRoot = await mkdtemp(path.join(await realpath(tmpdir()), "snapshot-recovery-"));
+  const recoveryRoot = config.recoveryRoot ?? await mkdtemp(path.join(await realpath(tmpdir()), "snapshot-recovery-"));
+  await assertSafeRecoveryRoot(recoveryRoot, recoveryRoot);
   const anchoredRoot = { path: await realpath("."), ...pluginsIdentity };
   const products = new Map(PRODUCT_NAMES.map((productName) => [productName, {
     status: "untouched",
@@ -261,7 +341,9 @@ export async function runSnapshotTransaction(config, hooks = {}) {
     backupTreeSha256: null,
     destination: path.join(anchoredRoot.path, productName),
     backupCandidate: path.join(recoveryRoot, productName),
+    safetyCandidate: path.join(recoveryRoot, "safety", productName),
     failedInstallCandidate: path.join(recoveryRoot, `failed-${productName}`),
+    originalTreeSha256: null,
     pendingAction: null,
   }]));
   const journalState = {
@@ -273,6 +355,19 @@ export async function runSnapshotTransaction(config, hooks = {}) {
     products,
     issues: [],
   };
+  await mkdir(path.join(recoveryRoot, "safety"), { mode: 0o700 });
+  for (const productName of PRODUCT_NAMES) {
+    const sourceEntries = await collectTree(productName, { label: `original ${productName}` });
+    const sourceHash = hashFileEntries(sourceEntries);
+    const safetyCandidate = products.get(productName).safetyCandidate;
+    await cp(productName, safetyCandidate, { recursive: true, errorOnExist: true, force: false, preserveTimestamps: true });
+    const safetyEntries = await collectTree(safetyCandidate, { label: `safety copy ${productName}` });
+    if (hashFileEntries(safetyEntries) !== sourceHash) throw new Error(`${productName}: safety copy verification failed`);
+    for (const entry of safetyEntries) await fsyncPath(entry.sourcePath);
+    await fsyncPath(safetyCandidate);
+    products.get(productName).originalTreeSha256 = sourceHash;
+  }
+  await fsyncPath(path.join(recoveryRoot, "safety"));
   await writeJournal(journalState);
   await hooks.register?.({
     recoveryRoot,
