@@ -15,9 +15,7 @@ const sharedMappings = {
 };
 
 function indexDocuments(index) {
-  if (Array.isArray(index)) return index;
   if (Array.isArray(index.documents)) return index.documents;
-  if (Array.isArray(index.entries)) return index.entries;
   throw new Error("Reference index must contain a documents array");
 }
 
@@ -42,6 +40,7 @@ async function resolveSourceDocuments(repoRoot, product) {
   if (selectors.length === 0) return [];
 
   const indexPath = path.join(repoRoot, "shared/knowledge/reference-index.json");
+  await assertNoSymlinkPath(repoRoot, "shared/knowledge/reference-index.json", "reference index");
   const indexStats = await lstat(indexPath).catch((error) => {
     if (error.code === "ENOENT") throw new Error("Missing reference index: shared/knowledge/reference-index.json");
     throw error;

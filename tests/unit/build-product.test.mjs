@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
+import { assertUniqueNormalizedTreePaths } from "../../tooling/lib/copy-tree.mjs";
 
 const fixtureRoot = new URL("../fixtures/minimal-product/", import.meta.url);
 
@@ -155,6 +156,13 @@ test("symlinks in declared trees are rejected", async (t) => {
   );
 });
 
+test("NFC-equivalent internal directory names are rejected before merging their files", () => {
+  assert.throws(
+    () => assertUniqueNormalizedTreePaths(["café/one.txt", "cafe\u0301/two.txt"]),
+    /duplicate normalized path/i,
+  );
+});
+
 test("symlinked ancestors of declared trees are rejected", async (t) => {
   const fixture = await createRepo(t, async ({ repoRoot }) => {
     await rename(path.join(repoRoot, "shared"), path.join(repoRoot, "shared-real"));
@@ -164,6 +172,21 @@ test("symlinked ancestors of declared trees are rejected", async (t) => {
   await assert.rejects(
     () => buildProduct({ ...fixture, productName: "minimal-product" }),
     /symlink/i,
+  );
+});
+
+test("a symlinked reference index ancestor is rejected when knowledge is not packaged", async (t) => {
+  const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+    contract.sharedModules = ["templates", "responsible-design", "export", "vendor"];
+    contract.sourceDocuments = ["guide-one"];
+    await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+    await rename(path.join(repoRoot, "shared/knowledge"), path.join(repoRoot, "shared/knowledge-real"));
+    await symlink(path.join(repoRoot, "shared/knowledge-real"), path.join(repoRoot, "shared/knowledge"));
+  });
+
+  await assert.rejects(
+    () => buildProduct({ ...fixture, productName: "minimal-product" }),
+    /symlink.*reference index/i,
   );
 });
 
@@ -210,6 +233,20 @@ test("source document IDs and categories resolve only through the reference inde
     });
     await assert.rejects(() => buildProduct({ ...fixture, productName: "minimal-product" }), /ambiguous source id/i);
   });
+});
+
+test("non-canonical reference index shapes are rejected", async (t) => {
+  const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+    contract.sourceDocuments = ["guide-one"];
+    await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+    await writeJson(path.join(repoRoot, "shared/knowledge/reference-index.json"), {
+      entries: [{ id: "guide-one", sourcePath: "docs/guides/one.md", category: "guides" }],
+    });
+  });
+  await assert.rejects(
+    () => buildProduct({ ...fixture, productName: "minimal-product" }),
+    /reference index.*documents/i,
+  );
 });
 
 test("clean builds have stable lexical files, hashes, bytes, and mtimes", async (t) => {
