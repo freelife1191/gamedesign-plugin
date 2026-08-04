@@ -33,6 +33,56 @@ const roleIds = [
 
 const stages = ["entry", "new-hire", "junior-growth", "transition"];
 
+const scenarioChains = [
+  {
+    id: "entry-12-week-roadmap",
+    stage: "entry",
+    skillChain: ["map-career-role-and-skill-gaps", "visualize-career-roadmap", "export-career-artifact"],
+    artifactFormats: ["SVG", "PDF"],
+  },
+  {
+    id: "new-graduate-system-design",
+    stage: "new-hire",
+    skillChain: [
+      "research-current-game-design-jobs",
+      "map-career-role-and-skill-gaps",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio",
+    ],
+    artifactFormats: ["MD"],
+  },
+  {
+    id: "reverse-design-portfolio",
+    stage: "new-hire",
+    skillChain: ["reverse-design-a-game", "export-career-artifact"],
+    artifactFormats: ["MD", "DOCX", "PPTX"],
+  },
+  {
+    id: "junior-project-impact",
+    stage: "junior-growth",
+    skillChain: ["plan-junior-growth", "visualize-career-roadmap", "export-career-artifact"],
+    artifactFormats: ["MD", "SVG", "PDF"],
+  },
+  {
+    id: "junior-transition",
+    stage: "transition",
+    skillChain: [
+      "research-current-game-design-jobs",
+      "practice-game-design-interview",
+      "plan-junior-growth",
+      "visualize-career-roadmap",
+      "export-career-artifact",
+    ],
+    artifactFormats: ["MD", "PDF"],
+  },
+  {
+    id: "unclear-stage-role-map",
+    stage: "unclear",
+    skillChain: ["orchestrate-game-design-career", "map-career-role-and-skill-gaps"],
+    artifactFormats: ["MD"],
+  },
+];
+
 async function readJson(relativePath) {
   return JSON.parse(await readFile(path.join(productRoot, relativePath), "utf8"));
 }
@@ -72,8 +122,72 @@ test("Every route declares deterministic evidence and completion decisions", asy
     assert.ok(route.roles.every((role) => roleIds.includes(role)), `${route.id}: approved roles`);
     assert.equal(typeof route.currentResearchTrigger, "string", `${route.id}: current research trigger`);
     assert.match(route.currentResearchTrigger, /current|fresh|dated|time-sensitive/i, `${route.id}: freshness trigger`);
+    assert.match(route.currentResearchTrigger, /primary (?:source|evidence)/i, `${route.id}: primary-source trigger`);
+    assert.match(route.currentResearchTrigger, /retrieval date/i, `${route.id}: retrieval-date trigger`);
     assert.equal(typeof route.artifactType, "string", `${route.id}: artifact type`);
     assert.ok(route.completionGates.length > 0, `${route.id}: completion gates`);
+  }
+});
+
+test("Approved scenarios declare ordered route chains, formats, and complete stage coverage", async () => {
+  const routing = await readJson("plugin/references/routing.json");
+
+  assert.deepEqual(routing.scenarioChains, scenarioChains);
+  assert.deepEqual(routing.scenarioRouteChains, {
+    "entry-12-week-roadmap": ["entry-role-map", "entry-competency-visualization", "entry-roadmap-export"],
+    "new-graduate-system-design": [
+      "new-hire-job-research",
+      "new-hire-role-map",
+      "new-hire-portfolio-build",
+      "new-hire-portfolio-review",
+    ],
+    "reverse-design-portfolio": ["new-hire-reverse-design", "new-hire-reverse-design-export"],
+    "junior-project-impact": ["junior-growth-plan", "junior-growth-visualization", "junior-growth-export"],
+    "junior-transition": [
+      "transition-job-research",
+      "transition-interview-practice",
+      "transition-growth-plan",
+      "transition-readiness-visualization",
+      "transition-export",
+    ],
+    "unclear-stage-role-map": [],
+  });
+  assert.deepEqual(routing.stageCoverage, {
+    entry: ["entry-12-week-roadmap"],
+    "new-hire": ["new-graduate-system-design", "reverse-design-portfolio"],
+    "junior-growth": ["junior-project-impact"],
+    transition: ["junior-transition"],
+    unclear: ["unclear-stage-role-map"],
+  });
+});
+
+test("Scenario route aliases resolve only to the approved ten skills", async () => {
+  const routing = await readJson("plugin/references/routing.json");
+
+  assert.deepEqual(routing.routeSkills, {
+    "orchestrate-game-design-career": "orchestrate-game-design-career",
+    "map-career-role-and-skill-gaps": "map-game-design-career",
+    "research-current-game-design-jobs": "research-game-design-jobs",
+    "build-game-design-portfolio": "build-game-design-portfolio",
+    "reverse-design-a-game": "reverse-engineer-game-design",
+    "practice-game-design-interview": "practice-game-design-interview",
+    "review-game-design-portfolio": "review-game-design-portfolio",
+    "plan-junior-growth": "plan-junior-growth",
+    "visualize-career-roadmap": "visualize-career-roadmap",
+    "export-career-artifact": "export-career-documents",
+  });
+  const usedAliases = new Set((routing.scenarioChains ?? []).flatMap(({ skillChain }) => skillChain));
+  assert.deepEqual(new Set(Object.keys(routing.routeSkills)), usedAliases);
+  assert.ok(Object.values(routing.routeSkills).every((skill) => skillIds.includes(skill)));
+
+  const routesById = new Map(routing.routes.map((route) => [route.id, route]));
+  for (const scenario of routing.scenarioChains.filter(({ stage }) => stage !== "unclear")) {
+    const routeChain = routing.scenarioRouteChains[scenario.id].map((routeId) => routesById.get(routeId));
+    assert.deepEqual(routeChain.map(({ stage }) => stage), scenario.skillChain.map(() => scenario.stage));
+    assert.deepEqual(
+      routeChain.map(({ skill }) => skill),
+      scenario.skillChain.map((alias) => routing.routeSkills[alias]),
+    );
   }
 });
 
@@ -81,6 +195,7 @@ test("An unclear stage yields a role map and provisional paths without a single-
   const { unclearStage } = await readJson("plugin/references/routing.json");
 
   assert.equal(unclearStage.skill, "map-game-design-career");
+  assert.deepEqual(unclearStage.skillChain, ["orchestrate-game-design-career", "map-career-role-and-skill-gaps"]);
   assert.equal(unclearStage.artifactType, "game-design-role-map");
   assert.equal(unclearStage.provisionalPaths, true);
   assert.equal(unclearStage.declareSingleCorrectCareer, false);
