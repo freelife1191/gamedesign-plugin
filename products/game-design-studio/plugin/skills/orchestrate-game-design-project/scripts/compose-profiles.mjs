@@ -96,13 +96,17 @@ function validateConflict(value, ownerProfileId, index) {
     requireString(value.positions[profileId], ownerProfileId, `${field}.positions.${profileId}`),
   ]));
   if (value.status !== "decision-record-required") fail(ownerProfileId, `${field}.status`, "must equal decision-record-required");
-  const decisionFields = requireStringArray(
-    value.requiredDecisionRecordFields,
-    ownerProfileId,
-    `${field}.requiredDecisionRecordFields`,
-  );
-  for (const requiredField of requiredDecisionRecordFields) {
-    if (!decisionFields.includes(requiredField)) fail(ownerProfileId, `${field}.requiredDecisionRecordFields`, `must include ${requiredField}`);
+  const decisionFields = value.requiredDecisionRecordFields;
+  if (
+    !Array.isArray(decisionFields)
+    || decisionFields.length !== requiredDecisionRecordFields.length
+    || decisionFields.some((decisionField, decisionIndex) => decisionField !== requiredDecisionRecordFields[decisionIndex])
+  ) {
+    fail(
+      ownerProfileId,
+      `${field}.requiredDecisionRecordFields`,
+      `must exactly equal ${requiredDecisionRecordFields.join(", ")}`,
+    );
   }
 
   return {
@@ -111,7 +115,7 @@ function validateConflict(value, ownerProfileId, index) {
     profiles,
     positions,
     status: "decision-record-required",
-    requiredDecisionRecordFields: decisionFields,
+    requiredDecisionRecordFields: [...decisionFields],
   };
 }
 

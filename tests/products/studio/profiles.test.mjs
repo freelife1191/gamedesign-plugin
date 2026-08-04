@@ -213,3 +213,29 @@ test("duplicate conflict IDs with forged topic or positions fail instead of usin
     assert.match(result.stderr, /Conflicting definitions for conflict ID: touch-vs-controller-first-input/u);
   }
 });
+
+test("decision record fields reject extra reverse duplicate and missing variants while canonical remains valid", async () => {
+  const canonical = ["decision", "rationale", "evidenceIds", "owner", "approvalDate"];
+  const accepted = await composeMutated((profiles) => {
+    profiles.mobile.conflicts[2].requiredDecisionRecordFields = [...canonical];
+  }, "mobile", "pc-console");
+  assert.equal(accepted.status, 0, accepted.stderr);
+
+  const mutations = [
+    [...canonical, "forged"],
+    [...canonical].reverse(),
+    ["decision", "rationale", "evidenceIds", "owner", "owner", "approvalDate"],
+    ["decision", "rationale", "evidenceIds", "owner"],
+  ];
+  for (const decisionFields of mutations) {
+    const result = await composeMutated((profiles) => {
+      profiles.mobile.conflicts[2].requiredDecisionRecordFields = decisionFields;
+    }, "mobile", "pc-console");
+    assert.notEqual(result.status, 0, `${JSON.stringify(decisionFields)} accepted`);
+    assert.equal(result.stdout, "");
+    assert.match(
+      result.stderr,
+      /Invalid profile mobile: conflicts\[2\]\.requiredDecisionRecordFields must exactly equal decision, rationale, evidenceIds, owner, approvalDate/u,
+    );
+  }
+});
