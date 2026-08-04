@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { runSnapshotTransaction } from "./lib/snapshot-transaction.mjs";
@@ -87,6 +87,12 @@ process.on("message", async (message) => {
         if (registerFault?.action === "wrong-staging-registration") reported = { ...registration, stagingRoot: `${registration.stagingRoot}-wrong` };
         if (registerFault?.action === "missing-journal") {
           await rm(path.join(registration.recoveryRoot, "SNAPSHOT-TRANSACTION-JOURNAL.json"));
+        }
+        if (registerFault?.action === "wrong-product-journal") {
+          const journalPath = path.join(registration.recoveryRoot, "SNAPSHOT-TRANSACTION-JOURNAL.json");
+          const journal = JSON.parse(await readFile(journalPath, "utf8"));
+          journal.products["game-design-career"].originalLocation = registration.recoveryRoot;
+          await writeFile(journalPath, `${JSON.stringify(journal, null, 2)}\n`);
         }
         return request("registered", { registration: reported });
       },

@@ -152,10 +152,11 @@ export async function validateSnapshotWorkerRegistration(registration, expected)
     throw new Error("snapshot worker registered plugins identity is not current and canonical");
   }
   const journal = await parseJournal(recoveryRoot);
-  if (journal.schemaVersion !== 1 || journal.repoRoot !== expected.repoRoot || journal.recoveryRoot !== recoveryRoot
+  if (journal.schemaVersion !== 1 || journal.state !== "registered" || journal.repoRoot !== expected.repoRoot || journal.recoveryRoot !== recoveryRoot
     || journal.stagingRoot !== stagingRoot || !exactIdentity(journal.anchoredRoot, anchoredRoot)
     || JSON.stringify(journal.leaves) !== JSON.stringify(PRODUCT_NAMES)
-    || Object.keys(journal.products ?? {}).sort().join("\0") !== [...PRODUCT_NAMES].sort().join("\0")) {
+    || Object.keys(journal.products ?? {}).sort().join("\0") !== [...PRODUCT_NAMES].sort().join("\0")
+    || !Array.isArray(journal.issues) || journal.issues.length !== 0) {
     throw new Error("journal registration fields do not match");
   }
   for (const productName of PRODUCT_NAMES) {
@@ -165,7 +166,10 @@ export async function validateSnapshotWorkerRegistration(registration, expected)
       || recorded.backupCandidate !== path.join(recoveryRoot, productName)
       || recorded.safetyCandidate !== path.join(recoveryRoot, "safety", productName)
       || recorded.failedInstallCandidate !== path.join(recoveryRoot, `failed-${productName}`)
-      || recorded.originalTreeSha256 !== expectedHash) {
+      || recorded.originalTreeSha256 !== expectedHash
+      || recorded.status !== "untouched" || recorded.pendingAction !== null
+      || recorded.originalLocation !== path.join(pluginsRoot, productName)
+      || recorded.backupLocation !== null || recorded.installedSnapshotLocation !== null) {
       throw new Error(`${productName}: journal registration product fields do not match`);
     }
     const safetyEntries = await collectTree(recorded.safetyCandidate, { label: `safety copy ${productName}` });

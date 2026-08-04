@@ -639,7 +639,7 @@ test("snapshot worker interruption always restores or reports every original", a
     });
   }
 
-  for (const action of ["malformed-registration", "missing-journal", "wrong-staging-registration"]) {
+  for (const action of ["malformed-registration", "missing-journal", "wrong-staging-registration", "wrong-product-journal"]) {
     await t.test(`${action} is rejected before registration ACK`, async (t) => {
       const { fixtureRepo } = await createSnapshotFixture(t);
       for (const productName of productNames) {
