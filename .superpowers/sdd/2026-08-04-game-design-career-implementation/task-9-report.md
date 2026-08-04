@@ -41,3 +41,13 @@
 
 - Requested derivative formats remain fail-closed as `blocked` while capability is `unknown`; the fixtures prove the request and evidence-state contracts without fabricating generated PDF, DOCX, or PPTX files.
 - The competency map exercises the verified editable-SVG fallback: SVG generation and lint evidence pass while PNG capability is explicitly unavailable.
+
+## Fix Round 1
+
+- Reproduced all review findings before implementation: focused RED was 6/11. Extra top-level self-attestation, embedded user-manual prose, duplicate/forged reverse claims, unbound entry evidence, unbound transition evidence/requirements, and incomplete job-schema validation all survived the initial runner.
+- Added scenario-specific exact top-level result schemas. Result payloads cannot carry `actualSkillIds`, an embedded `userManual`, self-attested output states, or any other undeclared field.
+- Added exact nested schemas and authoritative ID registries: Entry role candidates bind to `evidenceRegistry`; Reverse surfaces bind only to unique fact/inference claim IDs with domain/evidence semantics; Transition project impact and questions bind to `portfolioEvidenceRegistry`, target requirements bind to actual posting IDs, and quarterly goals bind to declared requirements with matching status.
+- Added a production-schema interpreter for `job-evidence-schema.json` covering type unions, required fields, `additionalProperties: false`, nonempty strings, patterns, enums, date/URI formats, integer minimums, array minimums/uniqueness, and nested item schemas. The existing collection validator still enforces cross-posting source/count/denominator invariants.
+- Corrected the transition fixture to the production `sampleGeography` array shape and changed every reverse surface entry to a claim ID.
+- Focused GREEN: 11/11; Career 112/112; shared 1/1; repository excluding vendor 253/253; Skillstead 58/58; combined inventory 311/311.
+- Source and clean-built plugin validators passed. The 256-file clean build SHA-256 is `43a09233e93f5d0afd3d5e5b9bc782f1efaaa339285b28d4c71fbb72f446e22a`; built E2E, Node syntax, 19 JSON files, symlink scan, and diff checks passed.

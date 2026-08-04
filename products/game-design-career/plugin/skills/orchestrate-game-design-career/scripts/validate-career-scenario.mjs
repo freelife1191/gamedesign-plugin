@@ -19,6 +19,22 @@ const QUESTION_TYPES = ["base", "follow-up", "objection", "situational"];
 const REVERSE_SURFACES = [
   "fact", "inference", "rules", "exceptions", "UI", "data", "economy", "operations", "alternatives", "validation",
 ];
+const RESULT_KEYS = {
+  "entry-12-week-roadmap": [
+    "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "evidenceRegistry",
+    "roleCandidates", "evidenceGaps", "weeks", "firstPortfolioBrief", "visualization", "export",
+    "unverifiedCurrentClaims",
+  ],
+  "reverse-design-portfolio": [
+    "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "userManualRejected",
+    "claims", "surfaces", "export", "unverifiedCurrentClaims",
+  ],
+  "junior-transition": [
+    "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "jobEvidencePath",
+    "portfolioEvidenceRegistry", "targetRequirements", "projectImpact", "evidenceGaps", "questions",
+    "answerFeedback", "quarterlyPlan", "export", "unverifiedCurrentClaims",
+  ],
+};
 let canonicalValidatorPromise;
 
 function loadCanonicalValidator() {
@@ -47,7 +63,9 @@ function finding(code, message) {
 }
 
 function isRecord(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function isText(value) {
@@ -58,6 +76,27 @@ function sameArray(actual, expected) {
   return Array.isArray(actual)
     && actual.length === expected.length
     && actual.every((value, index) => value === expected[index]);
+}
+
+function uniqueTextArray(value) {
+  return Array.isArray(value)
+    && value.length > 0
+    && value.every(isText)
+    && new Set(value).size === value.length;
+}
+
+function requireExactKeys(value, keys, code, errors, label) {
+  if (!isRecord(value)) {
+    errors.push(finding(code, `${label} must be a plain record.`));
+    return false;
+  }
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  if (!sameArray(actual, expected)) {
+    errors.push(finding(code, `${label} must use exact keys: ${expected.join(", ")}.`));
+    return false;
+  }
+  return true;
 }
 
 function requireTextFields(value, fields, code, errors) {
@@ -83,6 +122,92 @@ async function safeFixtureFile(root, relativeFile, label) {
   const candidate = await realpath(path.resolve(rootReal, relativeFile));
   if (!candidate.startsWith(`${rootReal}${path.sep}`)) throw new Error(`${label} must resolve inside the fixture`);
   return candidate;
+}
+
+function matchesType(value, type) {
+  if (type === "null") return value === null;
+  if (type === "object") return isRecord(value);
+  if (type === "array") return Array.isArray(value) && Object.getPrototypeOf(value) === Array.prototype;
+  if (type === "integer") return Number.isInteger(value);
+  return typeof value === type;
+}
+
+function validCalendarDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
+  if (!match) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.valueOf())
+    && date.getUTCFullYear() === Number(match[1])
+    && date.getUTCMonth() + 1 === Number(match[2])
+    && date.getUTCDate() === Number(match[3]);
+}
+
+function validateSchemaValue(value, schema, location, errors) {
+  const allowedTypes = Array.isArray(schema.type) ? schema.type : [schema.type];
+  if (!allowedTypes.some((type) => matchesType(value, type))) {
+    errors.push(finding("job.schema", `${location} must have type ${allowedTypes.join(" or ")}.`));
+    return;
+  }
+  if (value === null) return;
+  if (schema.enum && !schema.enum.includes(value)) {
+    errors.push(finding("job.schema", `${location} must be one of the approved enum values.`));
+  }
+  if (typeof value === "string") {
+    const minimum = Math.max(schema.minLength ?? 0, 1);
+    if (value.trim().length < minimum) errors.push(finding("job.schema", `${location} must be non-empty.`));
+    if (schema.pattern && !(new RegExp(schema.pattern, "u")).test(value)) {
+      errors.push(finding("job.schema", `${location} does not match its required pattern.`));
+    }
+    if (schema.format === "date" && !validCalendarDate(value)) {
+      errors.push(finding("job.schema", `${location} must be an actual ISO calendar date.`));
+    }
+    if (schema.format === "uri") {
+      try {
+        const url = new URL(value);
+        if (!url.protocol) throw new Error("missing protocol");
+      } catch {
+        errors.push(finding("job.schema", `${location} must be an absolute URI.`));
+      }
+    }
+  }
+  if (Number.isInteger(value) && schema.minimum !== undefined && value < schema.minimum) {
+    errors.push(finding("job.schema", `${location} must be at least ${schema.minimum}.`));
+  }
+  if (Array.isArray(value)) {
+    if (schema.minItems !== undefined && value.length < schema.minItems) {
+      errors.push(finding("job.schema", `${location} requires at least ${schema.minItems} items.`));
+    }
+    if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) {
+      errors.push(finding("job.schema", `${location} items must be unique.`));
+    }
+    value.forEach((item, index) => validateSchemaValue(item, schema.items, `${location}[${index}]`, errors));
+  }
+  if (isRecord(value)) {
+    const properties = schema.properties ?? {};
+    for (const field of schema.required ?? []) {
+      if (!Object.hasOwn(value, field)) errors.push(finding("job.schema", `${location}.${field} is required.`));
+    }
+    if (schema.additionalProperties === false) {
+      for (const field of Object.keys(value)) {
+        if (!Object.hasOwn(properties, field)) errors.push(finding("job.schema", `${location}.${field} is not allowed.`));
+      }
+    }
+    for (const [field, child] of Object.entries(value)) {
+      if (properties[field]) validateSchemaValue(child, properties[field], `${location}.${field}`, errors);
+    }
+  }
+}
+
+export async function validateJobEvidenceRecords(records) {
+  const errors = [];
+  if (!Array.isArray(records) || Object.getPrototypeOf(records) !== Array.prototype) {
+    return { valid: false, errors: [finding("job.schema", "Job evidence must be a plain array.")] };
+  }
+  const schema = await readJson(jobEvidenceSchemaPath);
+  records.forEach((record, index) => validateSchemaValue(record, schema, `$[${index}]`, errors));
+  const collection = validateJobEvidenceCollection(records);
+  errors.push(...collection.errors.map((error) => finding(`job.collection.${error.code}`, error.message)));
+  return { valid: errors.length === 0, errors };
 }
 
 async function validateRoutesAndTemplates(request, result, errors) {
@@ -192,14 +317,43 @@ async function validateVisualization(root, request, result, errors) {
 }
 
 function validateEntry(result, errors) {
+  const evidenceRegistry = Array.isArray(result.evidenceRegistry) ? result.evidenceRegistry : [];
+  const evidenceIds = new Set();
+  for (const evidence of evidenceRegistry) {
+    if (requireExactKeys(
+      evidence,
+      ["evidenceId", "kind", "source", "limitations"],
+      "entry.evidence-registry",
+      errors,
+      "Entry evidence record",
+    ) && requireTextFields(
+      evidence,
+      ["evidenceId", "kind", "source", "limitations"],
+      "entry.evidence-registry",
+      errors,
+    )) {
+      if (evidenceIds.has(evidence.evidenceId)) errors.push(finding("entry.evidence-registry", `Duplicate evidenceId: ${evidence.evidenceId}.`));
+      evidenceIds.add(evidence.evidenceId);
+    }
+  }
+  if (evidenceRegistry.length === 0) errors.push(finding("entry.evidence-registry", "Entry requires a declared evidence registry."));
+
   const roleCandidates = Array.isArray(result.roleCandidates) ? result.roleCandidates : [];
   const roleIds = new Set();
   for (const candidate of roleCandidates) {
-    if (requireTextFields(candidate, ["roleFamily", "tradeoff", "proofArtifact"], "entry.role-candidate", errors)) {
+    const exact = requireExactKeys(
+      candidate,
+      ["roleFamily", "tradeoff", "currentEvidenceIds", "proofArtifact"],
+      "entry.role-candidate-keys",
+      errors,
+      "Entry role candidate",
+    );
+    if (exact && requireTextFields(candidate, ["roleFamily", "tradeoff", "proofArtifact"], "entry.role-candidate", errors)) {
       roleIds.add(candidate.roleFamily);
     }
-    if (!Array.isArray(candidate?.currentEvidenceIds)) {
-      errors.push(finding("entry.role-candidate-evidence", "Every role candidate needs currentEvidenceIds."));
+    if (!uniqueTextArray(candidate?.currentEvidenceIds)
+      || candidate.currentEvidenceIds.some((id) => !evidenceIds.has(id))) {
+      errors.push(finding("entry.role-candidate-evidence", "Every role candidate needs nonempty unique currentEvidenceIds from the declared registry."));
     }
   }
   if (roleCandidates.length < 2 || roleIds.size !== roleCandidates.length) {
@@ -209,7 +363,14 @@ function validateEntry(result, errors) {
   const evidenceGaps = Array.isArray(result.evidenceGaps) ? result.evidenceGaps : [];
   const gapIds = new Set();
   for (const gap of evidenceGaps) {
-    if (requireTextFields(gap, ["gapId", "learningTask", "proofArtifact"], "entry.evidence-gap", errors)) {
+    const exact = requireExactKeys(
+      gap,
+      ["gapId", "learningTask", "proofArtifact"],
+      "entry.evidence-gap",
+      errors,
+      "Entry evidence gap",
+    );
+    if (exact && requireTextFields(gap, ["gapId", "learningTask", "proofArtifact"], "entry.evidence-gap", errors)) {
       gapIds.add(gap.gapId);
     }
   }
@@ -220,12 +381,19 @@ function validateEntry(result, errors) {
   const weeks = Array.isArray(result.weeks) ? result.weeks : [];
   if (weeks.length !== 12) errors.push(finding("entry.week-count", "The entry roadmap must contain exactly 12 weeks."));
   weeks.forEach((week, index) => {
-    if (week?.week !== index + 1 || !requireTextFields(week, ["learning", "practice", "feedback"], "entry.week", errors)) {
+    const exact = requireExactKeys(week, ["week", "learning", "practice", "feedback"], "entry.week", errors, "Roadmap week");
+    if (!exact || week?.week !== index + 1 || !requireTextFields(week, ["learning", "practice", "feedback"], "entry.week", errors)) {
       errors.push(finding("entry.week-sequence", `Week ${index + 1} must be contiguous and complete.`));
     }
   });
 
-  const briefReady = requireTextFields(
+  const briefReady = requireExactKeys(
+    result.firstPortfolioBrief,
+    ["targetCompetency", "problemUser", "evidenceIds", "hypothesisIntent", "constraintsAlternatives", "implementationTest", "resultDecision", "retrospective"],
+    "entry.portfolio-brief",
+    errors,
+    "First portfolio brief",
+  ) && requireTextFields(
     result.firstPortfolioBrief,
     ["targetCompetency", "problemUser", "hypothesisIntent", "implementationTest", "resultDecision", "retrospective"],
     "entry.portfolio-brief",
@@ -236,6 +404,8 @@ function validateEntry(result, errors) {
     && Array.isArray(result.firstPortfolioBrief.constraintsAlternatives)
     && result.firstPortfolioBrief.constraintsAlternatives.length > 0;
   if (!briefReady) errors.push(finding("entry.portfolio-brief", "First portfolio brief must link gaps, alternatives, implementation test, decision, and reflection."));
+  requireExactKeys(result.visualization, ["presetId", "statePath"], "entry.visualization", errors, "Entry visualization reference");
+  requireExactKeys(result.export, ["jobPath"], "entry.export", errors, "Entry export reference");
   if (!Array.isArray(result.unverifiedCurrentClaims) || result.unverifiedCurrentClaims.length !== 0) {
     errors.push(finding("entry.unverified-current-claims", "Entry roadmap cannot carry unverified current claims."));
   }
@@ -292,16 +462,46 @@ async function validateReverse(result, errors) {
   const schema = await readJson(factInferenceSchemaPath);
   const claims = Array.isArray(result.claims) ? result.claims : [];
   if (claims.length === 0) errors.push(finding("reverse.claims", "Reverse design requires claim records."));
-  for (const claim of claims) validateFactInferenceClaim(claim, schema, errors);
+  const claimById = new Map();
+  for (const claim of claims) {
+    validateFactInferenceClaim(claim, schema, errors);
+    if (isText(claim?.claimId)) {
+      if (claimById.has(claim.claimId)) errors.push(finding("reverse.claim-id", `Duplicate claimId: ${claim.claimId}.`));
+      else claimById.set(claim.claimId, claim);
+    }
+  }
   if (!isRecord(result.surfaces) || !sameArray(Object.keys(result.surfaces), REVERSE_SURFACES)) {
     errors.push(finding("reverse.surfaces", "Reverse design requires the exact approved surface set."));
   } else {
+    const surfaceAccepts = {
+      fact: (claim) => claim.observation.length > 0,
+      inference: (claim) => isText(claim.inference),
+      rules: (claim) => claim.domain === "rules",
+      exceptions: (claim) => claim.domain === "rules" && claim.counterexample.length > 0,
+      UI: (claim) => claim.domain === "UI",
+      data: (claim) => claim.domain === "data",
+      economy: (claim) => ["data", "operations"].includes(claim.domain),
+      operations: (claim) => claim.domain === "operations",
+      alternatives: (claim) => claim.alternative.length > 0,
+      validation: (claim) => isText(claim.validationMethod),
+    };
     for (const surface of REVERSE_SURFACES) {
-      if (!Array.isArray(result.surfaces[surface]) || result.surfaces[surface].length === 0) {
+      const references = result.surfaces[surface];
+      if (!uniqueTextArray(references)) {
         errors.push(finding("reverse.surface-empty", `${surface} requires at least one structured entry.`));
+        continue;
+      }
+      for (const claimId of references) {
+        const claim = claimById.get(claimId);
+        if (!claim) {
+          errors.push(finding("reverse.surface-reference", `${surface} references unknown claimId ${claimId}.`));
+        } else if (!surfaceAccepts[surface](claim)) {
+          errors.push(finding("reverse.surface-semantics", `${surface} cannot reference claimId ${claimId} with its current evidence/domain state.`));
+        }
       }
     }
   }
+  requireExactKeys(result.export, ["jobPath"], "reverse.export", errors, "Reverse export reference");
   if (!Array.isArray(result.unverifiedCurrentClaims) || result.unverifiedCurrentClaims.length !== 0) {
     errors.push(finding("reverse.unverified-current-claims", "Reverse design cannot carry unverified current claims."));
   }
@@ -313,16 +513,12 @@ async function validateTransition(root, result, errors) {
   try {
     const evidencePath = await safeFixtureFile(root, result.jobEvidencePath, "jobEvidencePath");
     jobEvidence = await readJson(evidencePath);
-    const collectionValidation = validateJobEvidenceCollection(jobEvidence);
-    if (!collectionValidation.valid) {
-      errors.push(finding("transition.job-evidence-links", collectionValidation.errors.map(({ message }) => message).join("; ")));
+    const validation = await validateJobEvidenceRecords(jobEvidence);
+    if (!validation.valid) {
+      errors.push(finding("transition.job-evidence-schema", validation.errors.map(({ message }) => message).join("; ")));
     }
-    const schema = await readJson(jobEvidenceSchemaPath);
-    for (const record of jobEvidence) {
-      if (!isRecord(record) || schema.required.some((field) => !Object.hasOwn(record, field))) {
-        errors.push(finding("transition.job-evidence-fields", "Current job evidence must satisfy the complete production schema."));
-        continue;
-      }
+    if (!Array.isArray(jobEvidence)) jobEvidence = [];
+    for (const record of Array.isArray(jobEvidence) ? jobEvidence : []) {
       if (record.sourceType !== "official-company-career-page" || !/^https:\/\//u.test(record.sourceUrl)
         || !/^\d{4}-\d{2}-\d{2}$/u.test(record.postedDate)
         || !/^\d{4}-\d{2}-\d{2}$/u.test(record.retrievalDate)) {
@@ -334,43 +530,142 @@ async function validateTransition(root, result, errors) {
   }
   const postingIds = new Set(jobEvidence.map(({ sourceId }) => sourceId));
 
+  const portfolioEvidence = Array.isArray(result.portfolioEvidenceRegistry) ? result.portfolioEvidenceRegistry : [];
+  const portfolioEvidenceIds = new Set();
+  for (const record of portfolioEvidence) {
+    const exact = requireExactKeys(
+      record,
+      ["evidenceId", "source", "owner", "limitations"],
+      "transition.portfolio-evidence",
+      errors,
+      "Portfolio evidence record",
+    );
+    if (exact && requireTextFields(record, ["evidenceId", "source", "owner", "limitations"], "transition.portfolio-evidence", errors)) {
+      if (portfolioEvidenceIds.has(record.evidenceId)) errors.push(finding("transition.portfolio-evidence", `Duplicate portfolio evidenceId: ${record.evidenceId}.`));
+      portfolioEvidenceIds.add(record.evidenceId);
+    }
+  }
+  if (portfolioEvidence.length === 0) errors.push(finding("transition.portfolio-evidence", "Transition requires a declared portfolio evidence registry."));
+  for (const posting of jobEvidence) {
+    if (Array.isArray(posting?.applicantEvidence)
+      && posting.applicantEvidence.some((id) => !portfolioEvidenceIds.has(id))) {
+      errors.push(finding("transition.job-applicant-evidence", `${posting.sourceId} references undeclared applicant evidence.`));
+    }
+  }
+
+  const targetRequirements = Array.isArray(result.targetRequirements) ? result.targetRequirements : [];
+  const requirementById = new Map();
+  for (const requirement of targetRequirements) {
+    const exact = requireExactKeys(
+      requirement,
+      ["requirementId", "postingEvidenceId", "statement", "status"],
+      "transition.target-requirement",
+      errors,
+      "Target requirement",
+    );
+    if (exact && requireTextFields(requirement, ["requirementId", "postingEvidenceId", "statement", "status"], "transition.target-requirement", errors)) {
+      if (requirementById.has(requirement.requirementId)
+        || !postingIds.has(requirement.postingEvidenceId)
+        || !["approved", "provisional"].includes(requirement.status)) {
+        errors.push(finding("transition.target-requirement", `${requirement.requirementId} must be unique and bound to an actual posting with an approved status.`));
+      } else {
+        requirementById.set(requirement.requirementId, requirement);
+      }
+    }
+  }
+  if (targetRequirements.length === 0) errors.push(finding("transition.target-requirement", "Transition requires declared target requirements."));
+
   const projectImpact = Array.isArray(result.projectImpact) ? result.projectImpact : [];
+  const impactIds = new Set();
   for (const impact of projectImpact) {
-    requireTextFields(impact, ["impactId", "claim", "choice", "alternative", "result", "limitations"], "transition.project-impact", errors);
-    if (!Array.isArray(impact?.evidenceIds) || impact.evidenceIds.length === 0) {
-      errors.push(finding("transition.project-impact-evidence", "Project impact must link stable evidence IDs."));
+    const exact = requireExactKeys(
+      impact,
+      ["impactId", "claim", "evidenceIds", "choice", "alternative", "result", "limitations"],
+      "transition.project-impact",
+      errors,
+      "Project impact",
+    );
+    if (exact && requireTextFields(impact, ["impactId", "claim", "choice", "alternative", "result", "limitations"], "transition.project-impact", errors)) {
+      if (impactIds.has(impact.impactId)) errors.push(finding("transition.project-impact", `Duplicate impactId: ${impact.impactId}.`));
+      impactIds.add(impact.impactId);
+    }
+    if (!uniqueTextArray(impact?.evidenceIds)
+      || impact.evidenceIds.some((id) => !portfolioEvidenceIds.has(id))) {
+      errors.push(finding("transition.project-impact-evidence", "Project impact must link unique IDs from the declared portfolio evidence registry."));
     }
   }
   if (projectImpact.length === 0) errors.push(finding("transition.project-impact", "Transition needs at least one bounded project-impact record."));
 
   const evidenceGaps = Array.isArray(result.evidenceGaps) ? result.evidenceGaps : [];
-  for (const gap of evidenceGaps) requireTextFields(gap, ["gapId", "verificationTask"], "transition.evidence-gap", errors);
+  const gapIds = new Set();
+  for (const gap of evidenceGaps) {
+    const exact = requireExactKeys(gap, ["gapId", "verificationTask"], "transition.evidence-gap", errors, "Transition evidence gap");
+    if (exact && requireTextFields(gap, ["gapId", "verificationTask"], "transition.evidence-gap", errors)) {
+      if (gapIds.has(gap.gapId)) errors.push(finding("transition.evidence-gap", `Duplicate gapId: ${gap.gapId}.`));
+      gapIds.add(gap.gapId);
+    }
+  }
   if (evidenceGaps.length === 0) errors.push(finding("transition.evidence-gaps", "Transition must preserve evidence gaps as verification tasks."));
 
   const questions = Array.isArray(result.questions) ? result.questions : [];
   const questionTypes = questions.map(({ questionType }) => questionType);
+  const questionIds = new Set();
   if (!sameArray(questionTypes, QUESTION_TYPES)) {
     errors.push(finding("transition.question-types", "Interview set must contain base, follow-up, objection, and situational in order."));
   }
   for (const question of questions) {
-    requireTextFields(question, ["questionId", "questionType", "verificationStatus", "prompt"], "transition.question", errors);
+    const exact = requireExactKeys(
+      question,
+      ["questionId", "questionType", "postingEvidenceIds", "portfolioEvidenceIds", "verificationStatus", "prompt"],
+      "transition.question",
+      errors,
+      "Interview question",
+    );
+    if (exact && requireTextFields(question, ["questionId", "questionType", "verificationStatus", "prompt"], "transition.question", errors)) {
+      if (questionIds.has(question.questionId)) errors.push(finding("transition.question", `Duplicate questionId: ${question.questionId}.`));
+      questionIds.add(question.questionId);
+    }
     if (question.verificationStatus !== "grounded"
-      || !Array.isArray(question.postingEvidenceIds) || question.postingEvidenceIds.length === 0
+      || !uniqueTextArray(question.postingEvidenceIds)
       || question.postingEvidenceIds.some((id) => !postingIds.has(id))
-      || !Array.isArray(question.portfolioEvidenceIds) || question.portfolioEvidenceIds.length === 0) {
+      || !uniqueTextArray(question.portfolioEvidenceIds)
+      || question.portfolioEvidenceIds.some((id) => !portfolioEvidenceIds.has(id))) {
       errors.push(finding("transition.question-evidence", `${question.questionId ?? "question"} must be grounded in current posting and portfolio evidence.`));
     }
   }
 
   const feedback = Array.isArray(result.answerFeedback) ? result.answerFeedback : [];
-  for (const item of feedback) requireTextFields(item, ["claim", "evidence", "choice", "alternative", "result", "reflection"], "transition.answer-feedback", errors);
+  for (const item of feedback) {
+    requireExactKeys(item, ["claim", "evidence", "choice", "alternative", "result", "reflection"], "transition.answer-feedback", errors, "Answer feedback");
+    requireTextFields(item, ["claim", "evidence", "choice", "alternative", "result", "reflection"], "transition.answer-feedback", errors);
+  }
   if (feedback.length === 0) errors.push(finding("transition.answer-feedback", "Transition requires answer feedback."));
 
   const quarterlyPlan = Array.isArray(result.quarterlyPlan) ? result.quarterlyPlan : [];
+  const goalIds = new Set();
   for (const goal of quarterlyPlan) {
-    requireTextFields(goal, ["goalId", "requirementId", "requirementStatus", "observableProject", "owner", "proofArtifact", "reEvaluationDecision"], "transition.quarterly-goal", errors);
-    if (!["approved", "provisional"].includes(goal?.requirementStatus)
-      || !requireTextFields(goal?.feedbackCadence, ["frequency", "reviewer", "inputArtifact", "nextReviewDate"], "transition.feedback-cadence", errors)) {
+    const exact = requireExactKeys(
+      goal,
+      ["goalId", "requirementId", "requirementStatus", "observableProject", "owner", "feedbackCadence", "proofArtifact", "reEvaluationDecision"],
+      "transition.quarterly-goal",
+      errors,
+      "Quarterly goal",
+    );
+    const fields = exact && requireTextFields(goal, ["goalId", "requirementId", "requirementStatus", "observableProject", "owner", "proofArtifact", "reEvaluationDecision"], "transition.quarterly-goal", errors);
+    const cadence = requireExactKeys(
+      goal?.feedbackCadence,
+      ["frequency", "reviewer", "inputArtifact", "nextReviewDate"],
+      "transition.feedback-cadence",
+      errors,
+      "Quarterly feedback cadence",
+    ) && requireTextFields(goal?.feedbackCadence, ["frequency", "reviewer", "inputArtifact", "nextReviewDate"], "transition.feedback-cadence", errors);
+    const requirement = requirementById.get(goal?.requirementId);
+    if (fields && goalIds.has(goal.goalId)) errors.push(finding("transition.quarterly-goal", `Duplicate goalId: ${goal.goalId}.`));
+    if (fields) goalIds.add(goal.goalId);
+    if (!requirement || requirement.status !== goal?.requirementStatus) {
+      errors.push(finding("transition.quarterly-requirement", `${goal?.goalId ?? "goal"} must bind to a declared requirement and matching status.`));
+    }
+    if (!cadence) {
       errors.push(finding("transition.quarterly-goal-contract", `${goal?.goalId ?? "goal"} has an invalid requirement or feedback cadence.`));
     }
   }
@@ -379,6 +674,7 @@ async function validateTransition(root, result, errors) {
   if (unverifiedCurrentClaims.length !== 0) {
     errors.push(finding("transition.unverified-current-claims", "Unverified current claims must be zero."));
   }
+  requireExactKeys(result.export, ["jobPath"], "transition.export", errors, "Transition export reference");
   return {
     questionTypes,
     primaryJobEvidenceCount: jobEvidence.filter(({ sourceType }) => sourceType === "official-company-career-page").length,
@@ -404,6 +700,10 @@ export async function validateCareerScenario(fixtureDirectory, { resultOverride 
   }
   if (!isRecord(request) || !isRecord(result) || request.schemaVersion !== 1 || result.schemaVersion !== 1) {
     errors.push(finding("scenario.schema", "Request and result must use schemaVersion 1 records."));
+  }
+  const allowedResultKeys = RESULT_KEYS[request?.scenarioId];
+  if (allowedResultKeys && isRecord(result)) {
+    requireExactKeys(result, allowedResultKeys, "scenario.result-keys", errors, `${request.scenarioId} result`);
   }
   if (request.scenarioId !== result.scenarioId) {
     errors.push(finding("scenario.identity", "Request and result scenario IDs must match."));

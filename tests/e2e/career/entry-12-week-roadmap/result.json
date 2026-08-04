@@ -4,6 +4,20 @@
   "stage": "entry",
   "routeIds": ["entry-role-map", "entry-competency-visualization", "entry-roadmap-export"],
   "artifactTemplateIds": ["game-design-role-map", "competency-matrix", "learning-roadmap"],
+  "evidenceRegistry": [
+    {
+      "evidenceId": "entry-interest-systems",
+      "kind": "intake-observation",
+      "source": "request.json",
+      "limitations": "An expressed interest is not evidence of current systems-design proficiency."
+    },
+    {
+      "evidenceId": "entry-interest-content",
+      "kind": "intake-observation",
+      "source": "request.json",
+      "limitations": "An expressed interest is not evidence of current content-design proficiency."
+    }
+  ],
   "roleCandidates": [
     {
       "roleFamily": "systems-design",

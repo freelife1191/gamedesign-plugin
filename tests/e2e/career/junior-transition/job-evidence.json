@@ -16,7 +16,7 @@
     "gaps": ["live operations", "cross-team handoff evidence"],
     "nonGeneralizable": ["Requirements apply only to this posting."],
     "sampleSize": 1,
-    "sampleGeography": "KR",
+    "sampleGeography": ["KR"],
     "sourceType": "official-company-career-page",
     "blindSpots": ["No team-size or hiring-volume information."],
     "inferenceLimits": ["A single posting is not a market signal."]

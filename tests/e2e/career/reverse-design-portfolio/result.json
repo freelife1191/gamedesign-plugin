@@ -61,13 +61,13 @@
     "fact": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event"],
     "inference": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event"],
     "rules": ["rules-upgrade-gate"],
-    "exceptions": ["promotion", "offline", "insufficient-balance"],
+    "exceptions": ["rules-upgrade-gate"],
     "UI": ["ui-upgrade-preview"],
     "data": ["data-economy-cost"],
     "economy": ["data-economy-cost", "operations-cost-event"],
     "operations": ["operations-cost-event"],
-    "alternatives": ["per-level authored costs", "event rebate"],
-    "validation": ["exception-state test", "ten-level curve sample", "event window comparison"]
+    "alternatives": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event", "uncertainty-server-authority"],
+    "validation": ["ui-upgrade-preview", "rules-upgrade-gate", "data-economy-cost", "operations-cost-event", "uncertainty-server-authority"]
   },
   "export": { "jobPath": "export-job.json" },
   "unverifiedCurrentClaims": []

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -24,6 +24,10 @@ async function validate(fixtureId, resultOverride) {
 
 function messages(result) {
   return result.errors.map(({ code, message }) => `${code}: ${message}`).join("\n");
+}
+
+async function fixtureJson(fixtureId, file = "result.json") {
+  return JSON.parse(await readFile(path.join(fixtureRoot, fixtureId, file), "utf8"));
 }
 
 test("entry: actual route, templates, competency-map SVG, and PDF request form a 12-week evidence roadmap", async () => {
@@ -156,5 +160,86 @@ test("clean-built plugin runs the same scenario contract without repository-only
     assert.equal(build.files.includes("skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs"), true);
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("scenario results reject extra self-attestation fields and embedded user-manual prose", async () => {
+  const entry = await fixtureJson("entry-12-week-roadmap");
+  entry.actualSkillIds = ["map-game-design-career"];
+  const entryResult = await validate("entry-12-week-roadmap", entry);
+  assert.equal(entryResult.ok, false);
+  assert.ok(entryResult.errors.some(({ code }) => code === "scenario.result-keys"), messages(entryResult));
+
+  const reverse = await fixtureJson("reverse-design-portfolio");
+  reverse.userManual = "Press the upgrade button, then confirm the purchase.";
+  const reverseResult = await validate("reverse-design-portfolio", reverse);
+  assert.equal(reverseResult.ok, false);
+  assert.ok(reverseResult.errors.some(({ code }) => code === "scenario.result-keys"), messages(reverseResult));
+});
+
+test("reverse claims are unique and every surface is bound to a known evidence-bearing claim", async () => {
+  const duplicate = await fixtureJson("reverse-design-portfolio");
+  duplicate.claims[1].claimId = duplicate.claims[0].claimId;
+  const duplicateResult = await validate("reverse-design-portfolio", duplicate);
+  assert.equal(duplicateResult.ok, false);
+  assert.ok(duplicateResult.errors.some(({ code }) => code === "reverse.claim-id"), messages(duplicateResult));
+
+  const forged = await fixtureJson("reverse-design-portfolio");
+  for (const surface of Object.keys(forged.surfaces)) forged.surfaces[surface] = ["forged-nonexistent-claim"];
+  const forgedResult = await validate("reverse-design-portfolio", forged);
+  assert.equal(forgedResult.ok, false);
+  assert.ok(forgedResult.errors.some(({ code }) => code === "reverse.surface-reference"), messages(forgedResult));
+});
+
+test("entry role evidence is exact, nonempty, unique, and bound to the declared registry", async () => {
+  for (const [label, mutate] of [
+    ["empty", (result) => { result.roleCandidates[0].currentEvidenceIds = []; }],
+    ["duplicate", (result) => { result.roleCandidates[0].currentEvidenceIds = ["entry-interest-systems", "entry-interest-systems"]; }],
+    ["unknown", (result) => { result.roleCandidates[0].currentEvidenceIds = ["forged-evidence"]; }],
+    ["extra", (result) => { result.roleCandidates[0].verified = true; }],
+  ]) {
+    const result = await fixtureJson("entry-12-week-roadmap");
+    mutate(result);
+    const validation = await validate("entry-12-week-roadmap", result);
+    assert.equal(validation.ok, false, label);
+    assert.ok(
+      validation.errors.some(({ code }) => code.startsWith("entry.role-candidate")),
+      `${label}: ${messages(validation)}`,
+    );
+  }
+});
+
+test("transition evidence and quarterly requirements cannot reference undeclared IDs", async () => {
+  for (const [code, mutate] of [
+    ["transition.project-impact-evidence", (result) => { result.projectImpact[0].evidenceIds = ["forged-evidence"]; }],
+    ["transition.question-evidence", (result) => { result.questions[0].portfolioEvidenceIds = ["forged-evidence"]; }],
+    ["transition.quarterly-requirement", (result) => { result.quarterlyPlan[0].requirementId = "forged-requirement"; }],
+    ["transition.target-requirement", (result) => { result.targetRequirements[0].postingEvidenceId = "forged-posting"; }],
+  ]) {
+    const result = await fixtureJson("junior-transition");
+    mutate(result);
+    const validation = await validate("junior-transition", result);
+    assert.equal(validation.ok, false, code);
+    assert.ok(validation.errors.some((error) => error.code === code), messages(validation));
+  }
+});
+
+test("job evidence applies the complete production schema and nested repeated-signal contract", async () => {
+  const { validateJobEvidenceRecords } = await loadRunner();
+  const baseline = await fixtureJson("junior-transition", "job-evidence.json");
+  const mutations = [
+    ["sample geography string", (records) => { records[0].sampleGeography = "KR"; }],
+    ["extra key", (records) => { records[0].verified = true; }],
+    ["missing required", (records) => { delete records[0].retrievalDate; }],
+    ["wrong array type", (records) => { records[0].responsibilities = "systems design"; }],
+    ["nested extra key", (records) => { records[0].repeatedSignals = [{ signal: "systems", count: 2, denominator: 2, sourceIds: ["posting-transition-1", "posting-transition-2"], verified: true }]; }],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const records = structuredClone(baseline);
+    mutate(records);
+    const validation = await validateJobEvidenceRecords(records);
+    assert.equal(validation.valid, false, label);
+    assert.ok(validation.errors.some(({ code }) => code === "job.schema"), `${label}: ${JSON.stringify(validation.errors)}`);
   }
 });

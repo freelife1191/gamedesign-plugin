@@ -5,6 +5,34 @@
   "routeIds": ["transition-job-research", "transition-interview-practice", "transition-growth-plan", "transition-readiness-visualization", "transition-export"],
   "artifactTemplateIds": ["job-posting-evidence", "interview-question-answer-log", "transition-readiness"],
   "jobEvidencePath": "job-evidence.json",
+  "portfolioEvidenceRegistry": [
+    {
+      "evidenceId": "portfolio-tutorial-spec",
+      "source": "candidate tutorial state specification",
+      "owner": "candidate",
+      "limitations": "The specification proves authored design scope, not shipped player impact."
+    },
+    {
+      "evidenceId": "playtest-session-log",
+      "source": "three internal observed sessions",
+      "owner": "candidate",
+      "limitations": "The internal sample does not represent external players or retention."
+    }
+  ],
+  "targetRequirements": [
+    {
+      "requirementId": "posting-transition-1-live-ops",
+      "postingEvidenceId": "posting-transition-1",
+      "statement": "Support live-operations system changes.",
+      "status": "approved"
+    },
+    {
+      "requirementId": "posting-transition-1-handoff",
+      "postingEvidenceId": "posting-transition-1",
+      "statement": "Collaborate on clear implementation handoff.",
+      "status": "approved"
+    }
+  ],
   "projectImpact": [
     {
       "impactId": "impact-tutorial-dropoff",
