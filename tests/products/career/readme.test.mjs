@@ -227,7 +227,7 @@ test("README keeps Career export preparation non-terminal and delegates trusted 
   assert.doesNotMatch(readme, /형식별 capability·생성·QA 증거가 있는 작업 manifest/u);
 });
 
-test("README distinguishes the current product build from the future suite manifest and stays machine-portable", async () => {
+test("README distinguishes the low-level product build from the current suite snapshot and stays machine-portable", async () => {
   const stage = await mkdtemp(path.join(os.tmpdir(), "career-readme-build-"));
   try {
     const result = await buildProduct({
@@ -240,8 +240,8 @@ test("README distinguishes the current product build from the future suite manif
     const builtReadme = await readFile(path.join(result.outputDir, "README.md"), "utf8");
 
     assert.equal(result.files.includes("BUILD-MANIFEST.json"), false);
-    assert.match(sourceReadme, /현재 `buildProduct\(\)` clean build에는 `BUILD-MANIFEST\.json`이 없습니다/u);
-    assert.match(sourceReadme, /suite 통합 Task 9.*미래 배포 스냅샷/isu);
+    assert.match(sourceReadme, /저수준 `buildProduct\(\)` 출력에는 `BUILD-MANIFEST\.json`이 없습니다/u);
+    assert.match(sourceReadme, /이 suite distribution snapshot에는 `BUILD-MANIFEST\.json`이 있으며/u);
     assert.doesNotMatch(sourceReadme, /└── BUILD-MANIFEST\.json\s+# suite build가 만드는 파일 목록·해시/u);
 
     for (const [label, root, readme] of [

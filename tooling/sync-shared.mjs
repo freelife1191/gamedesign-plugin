@@ -106,9 +106,9 @@ async function writeBuildManifest({ outputDir, productName, sourceDateEpoch }) {
   return manifest;
 }
 
-export async function syncShared({ repoRoot, productName, stagingRoot, sourceDateEpoch = 0 }) {
+export async function syncShared({ repoRoot, productName, stagingRoot, stagingCapability, sourceDateEpoch = 0 }) {
   if (!PRODUCT_NAMES.includes(productName)) throw new Error(`Unsupported snapshot product: ${productName}`);
-  const build = await buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch });
+  const build = await buildProduct({ repoRoot, productName, stagingRoot, stagingCapability, sourceDateEpoch });
   const transformed = await applyDeploymentTransforms(build.outputDir, productName, sourceDateEpoch);
   await addVendorLock({ repoRoot, outputDir: build.outputDir, sourceDateEpoch });
   const manifest = await writeBuildManifest({

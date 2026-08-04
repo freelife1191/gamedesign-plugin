@@ -350,6 +350,6 @@ test("README explains the source overlay and complete independent built-plugin s
     assert.ok(readme.includes(contract), `missing structure boundary: ${contract}`);
   }
   assert.ok(readme.includes("1개 universal core와 3개 선택 프로필"));
-  assert.ok(readme.includes("현재 `buildProduct` 출력에는 `BUILD-MANIFEST.json`이 없습니다"));
-  assert.ok(readme.includes("suite 통합 단계의 미래 release 산출물"));
+  assert.ok(readme.includes("저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다"));
+  assert.ok(readme.includes("이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며"));
 });

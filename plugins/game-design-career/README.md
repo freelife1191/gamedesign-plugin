@@ -104,7 +104,7 @@ codex plugin marketplace remove game-design-suite
 └── README.md
 ```
 
-현재 `buildProduct()` clean build에는 `BUILD-MANIFEST.json`이 없습니다. `BUILD-MANIFEST.json`은 suite 통합 Task 9가 marketplace package를 만들 때 추가할 미래 배포 스냅샷 산출물이며, product Task 10의 현재 inventory로 간주하지 않습니다.
+저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다. 이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며, suite 통합 빌드가 marketplace package를 만들 때 현재 원천에서 생성합니다.
 
 경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고 Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다. Studio와 달리 Career에는 profile 합성 계층이 없습니다.
 
@@ -115,7 +115,7 @@ codex plugin marketplace remove game-design-suite
 - `SessionStart`는 `scripts/capability-probe.mjs`를 실행하는 capability-probe hook입니다. Node, Chromium, LibreOffice와 Codex 문서·PDF·프레젠테이션 capability를 감지하되 선택 기능 부재로 작업을 중단하지 않습니다.
 - `Stop`은 `scripts/stop-artifact-review.mjs`를 실행하는 one-retry artifact review hook입니다. 최종 artifact sentinel이 있을 때 Canonical Artifact를 검증하고, 실패하면 교정 패스를 한 번만 요청합니다. hook 재진입 상태에서는 다시 차단하지 않습니다.
 
-최상위 `scripts/`는 이 두 hook과 Canonical Artifact 검증을 위한 shared runtime입니다. Career 전용 product helper는 필요한 제품 스킬의 `skills/<skill-id>/scripts/`에 있으며, 역할 병합, E2E 시나리오, 채용 근거, 시각화 상태와 내보내기 job을 검증합니다. 미래 `BUILD-MANIFEST.json`은 제품 원천이나 현재 clean build 파일이 아니라 suite 통합 Task 9가 distribution snapshot에 추가하는 생성물입니다.
+최상위 `scripts/`는 이 두 hook과 Canonical Artifact 검증을 위한 shared runtime입니다. Career 전용 product helper는 필요한 제품 스킬의 `skills/<skill-id>/scripts/`에 있으며, 역할 병합, E2E 시나리오, 채용 근거, 시각화 상태와 내보내기 job을 검증합니다. `BUILD-MANIFEST.json`은 제품 원천이나 저수준 clean build 파일이 아니라 suite 통합 빌드가 distribution snapshot에 추가하는 생성물입니다.
 
 ## 작동 방식
 

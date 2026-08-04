@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { lstat, mkdir, mkdtemp, readFile, readdir, rename, stat, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -275,5 +275,57 @@ test("clean builds have stable lexical files, hashes, bytes, and mtimes", async 
     );
     assert.equal(Math.floor((await stat(path.join(first.outputDir, relativePath))).mtimeMs / 1000), sourceDateEpoch);
     assert.equal((await lstat(path.join(first.outputDir, relativePath))).isSymbolicLink(), false);
+  }
+});
+
+test("destructive or overlapping staging destinations are rejected before source bytes change", async (t) => {
+  await t.test("source product overlap", async (t) => {
+    const fixture = await createRepo(t);
+    const sentinel = path.join(fixture.repoRoot, "products/minimal-product/product.json");
+    const before = await readFile(sentinel);
+    const error = await buildProduct({
+      repoRoot: fixture.repoRoot,
+      productName: "minimal-product",
+      stagingRoot: path.join(fixture.repoRoot, "products"),
+    }).then(() => undefined, (caught) => caught);
+
+    assert.match(String(error?.message), /staging|destination|source|overlap/i);
+    assert.deepEqual(await readFile(sentinel), before);
+  });
+
+  await t.test("non-empty destination", async (t) => {
+    const fixture = await createRepo(t);
+    const sentinel = path.join(fixture.stagingRoot, "minimal-product/IRREPLACEABLE/product.json");
+    await writeText(fixture.stagingRoot, "minimal-product/IRREPLACEABLE/product.json", "do not delete\n");
+    const before = await readFile(sentinel);
+    const error = await buildProduct({ ...fixture, productName: "minimal-product" })
+      .then(() => undefined, (caught) => caught);
+
+    assert.match(String(error?.message), /non-empty|empty|destination/i);
+    assert.deepEqual(await readFile(sentinel), before);
+  });
+
+  await t.test("symlinked staging ancestor", async (t) => {
+    const fixture = await createRepo(t);
+    const outside = path.join(path.dirname(fixture.stagingRoot), "outside");
+    const sentinel = path.join(outside, "minimal-product/IRREPLACEABLE/product.json");
+    await writeText(outside, "minimal-product/IRREPLACEABLE/product.json", "external bytes\n");
+    await symlink(outside, fixture.stagingRoot);
+    const before = await readFile(sentinel);
+    const error = await buildProduct({ ...fixture, productName: "minimal-product" })
+      .then(() => undefined, (caught) => caught);
+
+    assert.match(String(error?.message), /symlink|staging|ancestor/i);
+    assert.deepEqual(await readFile(sentinel), before);
+  });
+
+  for (const [name, stagingRoot] of [["filesystem root", path.parse(tmpdir()).root], ["home directory", homedir()]]) {
+    await t.test(name, async (t) => {
+      const fixture = await createRepo(t);
+      await assert.rejects(
+        () => buildProduct({ ...fixture, productName: "minimal-product", stagingRoot }),
+        /root|home|staging/i,
+      );
+    });
   }
 });

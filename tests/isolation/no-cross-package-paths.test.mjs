@@ -43,6 +43,11 @@ test("tree audit rejects invalid UTF-8, symlinks, escape links, sibling names, h
     ["repo-only shared fallback", "script.mjs", "new URL('../../../../shared/scripts/check.mjs', import.meta.url)\n", /repo-only shared fallback/u],
     ["raw packaged vendor CLI", "SKILL.md", "node skills/svg-infographic/scripts/render.mjs in.svg out.png\n", /raw vendor CLI/u],
     ["raw host vendor CLI", "SKILL.md", "node .claude/skills/svg-infographic/scripts/render.mjs in.svg out.png\n", /raw vendor CLI/u],
+    ["dot-segment vendor CLI", "SKILL.md", "node skills/svg-infographic/./scripts/render.mjs in.svg out.png\n", /raw vendor CLI/u],
+    ["parent-segment vendor CLI", "SKILL.md", "node skills/svg-infographic/tmp/../scripts/check-svg.mjs out.svg\n", /raw vendor CLI/u],
+    ["repeated-separator vendor CLI", "SKILL.md", "node skills//svg-infographic///scripts/render.mjs in.svg out.png\n", /raw vendor CLI/u],
+    ["percent-encoded vendor CLI", "SKILL.md", "node skills/svg-infographic/%73cripts/render.mjs in.svg out.png\n", /raw vendor CLI/u],
+    ["unicode-separator vendor CLI", "SKILL.md", "node skills∕svg-infographic∕scripts∕render.mjs in.svg out.png\n", /raw vendor CLI/u],
   ];
   for (const [name, relativePath, contents, expected] of cases) {
     await t.test(name, async (t) => {

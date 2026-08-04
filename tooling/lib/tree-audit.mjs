@@ -4,8 +4,8 @@ import path from "node:path";
 import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 
 const utf8 = new TextDecoder("utf-8", { fatal: true });
-const rawVendorCli = /(?:\.claude[/\\]skills[/\\]svg-infographic|\.agents[/\\]skills[/\\]svg-infographic|skills[/\\]svg-infographic)[/\\]scripts[/\\](?:check-svg|render)\.mjs/u;
 const relativeReference = /(?:^|[('"`\s])((?:\.\.[/\\])+[^)'"`\s]+)/gu;
+const vendorCliPath = /(?:^|\/)(?:\.claude\/skills\/svg-infographic|\.agents\/skills\/svg-infographic|skills\/svg-infographic)\/scripts\/(?:check-svg|render)\.mjs$/u;
 
 function inside(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -19,6 +19,31 @@ function normalizedForbiddenPaths(paths) {
     .sort((left, right) => right.length - left.length || comparePaths(left, right));
 }
 
+function decodePathToken(token) {
+  let decoded = token;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const next = decodeURIComponent(decoded);
+      if (next === decoded) break;
+      decoded = next;
+    } catch {
+      break;
+    }
+  }
+  return decoded;
+}
+
+function containsRawVendorCli(text) {
+  for (const rawToken of text.split(/\s+/u)) {
+    const token = decodePathToken(rawToken)
+      .normalize("NFC")
+      .replace(/[\\\u2044\u2215\uFF0F]/gu, "/")
+      .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
+    if (vendorCliPath.test(path.posix.normalize(token))) return true;
+  }
+  return false;
+}
+
 function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths }) {
   for (const sibling of siblingNames) {
     if (relativePath.includes(sibling) || text.includes(sibling)) {
@@ -28,7 +53,8 @@ function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbi
   for (const forbidden of forbiddenAbsolutePaths) {
     if (text.includes(forbidden)) throw new Error(`${relativePath} contains forbidden absolute path ${forbidden}`);
   }
-  if (relativePath !== "BUILD-MANIFEST.json" && !relativePath.startsWith("skills/svg-infographic/") && rawVendorCli.test(text)) {
+  const isVendoredSkillsteadFile = relativePath.startsWith("skills/svg-infographic/");
+  if (relativePath !== "BUILD-MANIFEST.json" && !isVendoredSkillsteadFile && containsRawVendorCli(text)) {
     throw new Error(`${relativePath} contains unsupported raw vendor CLI; use the product wrapper`);
   }
 

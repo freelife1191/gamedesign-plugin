@@ -112,10 +112,10 @@ plugins/game-design-studio/
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
 ├── README.md
-└── BUILD-MANIFEST.json              # suite 통합 단계의 미래 release 산출물
+└── BUILD-MANIFEST.json              # suite distribution snapshot 생성물
 ```
 
-현재 `buildProduct` 출력에는 `BUILD-MANIFEST.json`이 없습니다. 위 항목은 suite 통합 단계의 미래 release 산출물이며, 현재 clean-built snapshot의 존재 파일로 간주하면 안 됩니다. 저수준 builder는 현재 파일 목록과 SHA-256을 반환할 뿐 manifest 파일을 쓰지 않습니다.
+저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다. 이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며, suite 통합 빌드가 현재 원천에서 생성합니다. 저수준 builder는 파일 목록과 SHA-256을 반환할 뿐 manifest 파일을 쓰지 않습니다.
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 

@@ -104,7 +104,8 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
-    const productBuild = await buildProduct({ repoRoot: sourceRoot, productName, stagingRoot, sourceDateEpoch: 0 });
+    const productStagingRoot = await mkdtemp(path.join(stagingRoot, "discovered-"));
+    const productBuild = await buildProduct({ repoRoot: sourceRoot, productName, stagingRoot: productStagingRoot, sourceDateEpoch: 0 });
     await assertBuiltProductContract({
       build: productBuild,
       product,
@@ -297,10 +298,11 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
 
   await mkdir(path.join(fixtureRoot, "products/game-design-studio/plugin/hooks"), { recursive: true });
   await writeFile(path.join(fixtureRoot, "products/game-design-studio/plugin/hooks/rogue.json"), "{}\n");
+  const rogueStagingRoot = await mkdtemp(path.join(stagingRoot, "rogue-"));
   const rogueBuild = await buildProduct({
     repoRoot: fixtureRoot,
     productName: "game-design-studio",
-    stagingRoot,
+    stagingRoot: rogueStagingRoot,
     sourceDateEpoch: 0,
   });
   await assert.rejects(

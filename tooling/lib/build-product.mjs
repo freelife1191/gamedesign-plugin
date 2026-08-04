@@ -1,4 +1,5 @@
-import { chmod, lstat, mkdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, utimes, writeFile } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 
 import { collectTree } from "./copy-tree.mjs";
@@ -13,6 +14,142 @@ const sharedMappings = {
   export: ["shared/export", "references/shared/export"],
   vendor: ["shared/vendor/skillstead/svg-infographic/0.8.3", "skills/svg-infographic"],
 };
+const snapshotStagingCapabilities = new WeakSet();
+
+function isInside(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
+
+async function assertPathComponentsAreDirectoriesWithoutSymlinks(base, candidate, label) {
+  const relative = path.relative(base, candidate);
+  if (relative === "" || relative.startsWith(`..${path.sep}`) || relative === ".." || path.isAbsolute(relative)) {
+    throw new Error(`${label} is outside its approved root: ${candidate}`);
+  }
+  let cursor = base;
+  for (const segment of relative.split(path.sep)) {
+    cursor = path.join(cursor, segment);
+    const stats = await lstat(cursor).catch((error) => {
+      if (error.code === "ENOENT") return undefined;
+      throw error;
+    });
+    if (!stats) break;
+    if (stats.isSymbolicLink()) throw new Error(`${label} contains a symlink ancestor: ${cursor}`);
+    if (!stats.isDirectory()) throw new Error(`${label} ancestor is not a directory: ${cursor}`);
+  }
+}
+
+async function canonicalTemporaryRoot() {
+  return realpath(tmpdir());
+}
+
+async function temporaryRootCandidates() {
+  const requested = [...new Set([path.resolve(tmpdir()), path.resolve(path.parse(tmpdir()).root, "tmp")])];
+  return Promise.all(requested.map(async (root) => ({ requested: root, canonical: await realpath(root) })));
+}
+
+async function canonicalizeProspectivePath(candidate) {
+  const suffix = [];
+  let cursor = candidate;
+  while (true) {
+    const stats = await lstat(cursor).catch((error) => {
+      if (error.code === "ENOENT") return undefined;
+      throw error;
+    });
+    if (stats) return path.join(await realpath(cursor), ...suffix.reverse());
+    const parent = path.dirname(cursor);
+    if (parent === cursor) throw new Error(`Cannot resolve an existing ancestor for ${candidate}`);
+    suffix.push(path.basename(cursor));
+    cursor = parent;
+  }
+}
+
+async function assertExistingAncestorsHaveNoSymlinks(candidate, label) {
+  let cursor = candidate;
+  while (true) {
+    const stats = await lstat(cursor).catch((error) => {
+      if (error.code === "ENOENT") return undefined;
+      throw error;
+    });
+    if (stats?.isSymbolicLink()) throw new Error(`${label} contains a symlink ancestor: ${cursor}`);
+    const parent = path.dirname(cursor);
+    if (parent === cursor) return;
+    cursor = parent;
+  }
+}
+
+export async function createSnapshotStaging({ repoRoot }) {
+  const absoluteRepoRoot = path.resolve(repoRoot);
+  const canonicalRepoRoot = await realpath(absoluteRepoRoot);
+  const temporaryRoot = await canonicalTemporaryRoot();
+  const stagingRoot = await mkdtemp(path.join(temporaryRoot, "snapshot-build-"));
+  const capability = Object.freeze({ repoRoot: canonicalRepoRoot, stagingRoot });
+  snapshotStagingCapabilities.add(capability);
+  return capability;
+}
+
+async function prepareOutputDestination({ repoRoot, productName, stagingRoot, stagingCapability }) {
+  const canonicalRepoRoot = await realpath(repoRoot);
+  let absoluteStagingRoot;
+  if (stagingCapability !== undefined) {
+    if (!snapshotStagingCapabilities.has(stagingCapability)) throw new Error("Invalid snapshot staging capability");
+    if (stagingCapability.repoRoot !== canonicalRepoRoot) throw new Error("Snapshot staging capability belongs to another repository");
+    if (stagingRoot !== undefined && path.resolve(stagingRoot) !== stagingCapability.stagingRoot) {
+      throw new Error("stagingRoot does not match the snapshot staging capability");
+    }
+    absoluteStagingRoot = stagingCapability.stagingRoot;
+  } else {
+    if (typeof stagingRoot !== "string") throw new Error("stagingRoot must be a path");
+    absoluteStagingRoot = path.resolve(stagingRoot);
+  }
+
+  const requestedCandidate = path.resolve(absoluteStagingRoot);
+  const temporaryRoots = stagingCapability === undefined
+    ? await temporaryRootCandidates()
+    : [{ requested: await canonicalTemporaryRoot(), canonical: await canonicalTemporaryRoot() }];
+  const temporaryRoot = temporaryRoots.find(({ requested }) => isInside(requested, requestedCandidate) && requestedCandidate !== requested);
+  if (temporaryRoot) {
+    await assertPathComponentsAreDirectoriesWithoutSymlinks(temporaryRoot.requested, requestedCandidate, "staging root");
+  } else {
+    if (stagingCapability !== undefined) throw new Error(`Snapshot staging capability escaped the OS temporary root: ${absoluteStagingRoot}`);
+    if (requestedCandidate === path.parse(requestedCandidate).root) throw new Error("Filesystem root cannot be a staging root");
+    await assertExistingAncestorsHaveNoSymlinks(requestedCandidate, "staging root");
+  }
+  const canonicalCandidate = await canonicalizeProspectivePath(requestedCandidate);
+  if (temporaryRoot && (!isInside(temporaryRoot.canonical, canonicalCandidate) || canonicalCandidate === temporaryRoot.canonical)) {
+    throw new Error(`Staging root escapes the canonical OS temporary root: ${absoluteStagingRoot}`);
+  }
+  const canonicalHome = await realpath(homedir());
+  if (isInside(canonicalHome, canonicalCandidate) || isInside(canonicalCandidate, canonicalHome)) {
+    throw new Error(`Staging root must not be the home directory or overlap it: ${absoluteStagingRoot}`);
+  }
+  if (isInside(canonicalRepoRoot, canonicalCandidate) || isInside(canonicalCandidate, canonicalRepoRoot)) {
+    throw new Error(`Staging root overlaps repository sources: ${absoluteStagingRoot}`);
+  }
+
+  const stagingStats = await lstat(canonicalCandidate).catch((error) => {
+    if (error.code === "ENOENT") return undefined;
+    throw error;
+  });
+  if (stagingStats?.isSymbolicLink()) throw new Error(`Staging root is a symlink: ${canonicalCandidate}`);
+  if (stagingStats && !stagingStats.isDirectory()) throw new Error(`Staging root is not a directory: ${canonicalCandidate}`);
+
+  const outputDir = path.join(canonicalCandidate, productName);
+  if (path.dirname(outputDir) !== canonicalCandidate || path.basename(outputDir) !== productName) {
+    throw new Error(`Unsafe product destination: ${outputDir}`);
+  }
+  const outputStats = await lstat(outputDir).catch((error) => {
+    if (error.code === "ENOENT") return undefined;
+    throw error;
+  });
+  if (outputStats?.isSymbolicLink()) throw new Error(`Product destination is a symlink: ${outputDir}`);
+  if (outputStats && !outputStats.isDirectory()) throw new Error(`Product destination is not a directory: ${outputDir}`);
+  if (outputStats && (await readdir(outputDir)).length !== 0) {
+    throw new Error(`Product destination must be absent or empty: ${outputDir}`);
+  }
+
+  return outputDir;
+}
 
 function indexDocuments(index) {
   if (Array.isArray(index.documents)) return index.documents;
@@ -123,16 +260,21 @@ async function normalizeOutputMetadata(outputDir, entries, sourceDateEpoch) {
   }
 }
 
-export async function buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch = 0 }) {
-  if (typeof repoRoot !== "string" || typeof stagingRoot !== "string") {
-    throw new Error("repoRoot and stagingRoot must be paths");
+export async function buildProduct({ repoRoot, productName, stagingRoot, stagingCapability, sourceDateEpoch = 0 }) {
+  if (typeof repoRoot !== "string") {
+    throw new Error("repoRoot must be a path");
   }
   if (!Number.isInteger(sourceDateEpoch) || sourceDateEpoch < 0) {
     throw new Error("sourceDateEpoch must be a non-negative integer");
   }
 
   const absoluteRepoRoot = path.resolve(repoRoot);
-  const absoluteStagingRoot = path.resolve(stagingRoot);
+  const outputDir = await prepareOutputDestination({
+    repoRoot: absoluteRepoRoot,
+    productName,
+    stagingRoot,
+    stagingCapability,
+  });
   const product = await loadProductContract({ repoRoot: absoluteRepoRoot, productName });
   const productRoot = path.join(absoluteRepoRoot, "products", productName);
   const targets = new Map();
@@ -164,8 +306,6 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, sourceD
   const entries = [...targets.values()].sort((left, right) => comparePaths(left.relativePath, right.relativePath));
   rejectFileDirectoryCollisions(entries);
 
-  const outputDir = path.join(absoluteStagingRoot, productName);
-  await rm(outputDir, { recursive: true, force: true });
   await mkdir(outputDir, { recursive: true });
   for (const entry of entries) {
     const destination = path.join(outputDir, ...entry.relativePath.split("/"));
