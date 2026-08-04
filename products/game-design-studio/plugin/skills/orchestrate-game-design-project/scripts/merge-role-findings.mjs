@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 
 const routing = JSON.parse(readFileSync(new URL("../../../references/routing.json", import.meta.url), "utf8"));
 const rolePriority = routing.rolePriority;
@@ -283,39 +284,55 @@ function buildDecisions(findings) {
   ));
 }
 
-export function mergeRoleFindings(input) {
-  const outputMode = isPlainObject(input)
-    && (Object.hasOwn(input, "sourceFindings") || Object.hasOwn(input, "decisions"));
-  assertExactKeys(input, outputMode ? outputKeys : inputKeys, "input");
-  if (input.schemaVersion !== 1) throw new Error("input.schemaVersion must be 1.");
-  if (!Array.isArray(input.findings)) throw new Error("input.findings must be an array.");
-  if (outputMode && !Array.isArray(input.sourceFindings)) {
-    throw new Error("input.sourceFindings must be an array.");
-  }
-
-  const rawSources = outputMode ? input.sourceFindings : input.findings;
-  rawSources.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
-  if (outputMode) input.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: true }));
-
+function assertUniqueSourceIds(rawSources) {
   const sourceIds = new Set();
   for (const source of rawSources) {
     if (sourceIds.has(source.findingId)) throw new Error(`Duplicate findingId: ${source.findingId}`);
     sourceIds.add(source.findingId);
   }
+}
 
+function buildMergedOutput(rawSources) {
   const sourceFindings = canonicalSourceFindings(rawSources);
-  if (outputMode && JSON.stringify(input.sourceFindings) !== JSON.stringify(sourceFindings)) {
-    throw new Error("input.sourceFindings is not canonical source finding data.");
-  }
   const findings = mergeDuplicates(sourceFindings);
   const decisions = buildDecisions(findings);
-  if (outputMode && JSON.stringify(input.findings) !== JSON.stringify(findings)) {
-    throw new Error("input.findings or provenance does not match canonical source findings.");
-  }
-  if (outputMode && JSON.stringify(input.decisions) !== JSON.stringify(decisions)) {
-    throw new Error("input.decisions does not match canonical decisions.");
-  }
   return { schemaVersion: 1, sourceFindings, findings, decisions };
+}
+
+export function mergeRoleFindings(input) {
+  assertExactKeys(input, inputKeys, "raw input");
+  if (input.schemaVersion !== 1) throw new Error("raw input.schemaVersion must be 1.");
+  if (!Array.isArray(input.findings)) throw new Error("raw input.findings must be an array.");
+  input.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
+  assertUniqueSourceIds(input.findings);
+  return buildMergedOutput(input.findings);
+}
+
+export function verifyMergedRoleFindings(candidate, options) {
+  assertExactKeys(options, ["trustedSourceFindings"], "verification options");
+  if (!Array.isArray(options.trustedSourceFindings)) {
+    throw new Error("verification options.trustedSourceFindings must be an immutable trusted snapshot array.");
+  }
+  options.trustedSourceFindings.forEach((finding, index) => (
+    validateFinding(finding, index, { outputMode: false })
+  ));
+  assertUniqueSourceIds(options.trustedSourceFindings);
+
+  assertExactKeys(candidate, outputKeys, "candidate output");
+  if (candidate.schemaVersion !== 1) throw new Error("candidate output.schemaVersion must be 1.");
+  if (!Array.isArray(candidate.sourceFindings)) {
+    throw new Error("candidate output.sourceFindings must be an array.");
+  }
+  if (!Array.isArray(candidate.findings)) throw new Error("candidate output.findings must be an array.");
+  candidate.sourceFindings.forEach((finding, index) => validateFinding(finding, index, { outputMode: false }));
+  assertUniqueSourceIds(candidate.sourceFindings);
+  candidate.findings.forEach((finding, index) => validateFinding(finding, index, { outputMode: true }));
+
+  const expected = buildMergedOutput(options.trustedSourceFindings);
+  if (!isDeepStrictEqual(candidate, expected)) {
+    throw new Error("candidate output does not match the immutable trusted source snapshot.");
+  }
+  return expected;
 }
 
 async function runCli() {
