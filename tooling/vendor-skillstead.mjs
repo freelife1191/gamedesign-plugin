@@ -100,6 +100,19 @@ async function retryRename(fs, from, to, attempts = 3) {
   throw lastError;
 }
 
+async function retryRemove(fs, target, options, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await fs.rm(target, options);
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
+
 function recoveryError(message, recoveryPath, cause) {
   const error = new Error(`${message}; recovery data preserved at ${recoveryPath}`, { cause });
   error.recoveryPath = recoveryPath;
@@ -146,6 +159,58 @@ async function rollbackInstall({ backup, destination, fs, installed, previousEnt
   } catch (error) {
     throw recoveryError("restored vendor generation but could not remove failed update data", workRoot, error);
   }
+}
+
+function bootstrapRecoveryError(message, workRoot, destination, cause) {
+  const error = new Error(
+    `${message}; uncommitted installed generation remains at ${destination}; recovery workspace preserved at ${workRoot}`,
+    { cause },
+  );
+  error.installedPath = destination;
+  error.recoveryPath = workRoot;
+  return error;
+}
+
+async function rollbackBootstrapInstall({ destination, fs, workRoot }) {
+  const isolated = path.join(workRoot, "uncommitted-installed");
+  try {
+    await retryRename(fs, destination, isolated);
+  } catch (error) {
+    throw bootstrapRecoveryError(
+      "could not isolate the verified uncommitted installed generation",
+      workRoot,
+      destination,
+      error,
+    );
+  }
+
+  try {
+    await verifyVendorRoot(isolated);
+  } catch (error) {
+    throw recoveryError("isolated uncommitted installed generation failed verification", workRoot, error);
+  }
+
+  try {
+    await retryRemove(fs, workRoot, { recursive: true, force: true });
+  } catch (error) {
+    const cleanupError = new Error(
+      `live vendor path was cleared but failed update cleanup remains at ${workRoot}`,
+      { cause: error },
+    );
+    cleanupError.cleanupPath = workRoot;
+    throw cleanupError;
+  }
+}
+
+function rollbackFailure(originalError, rollbackError) {
+  const error = new AggregateError(
+    [originalError, rollbackError],
+    `${rollbackError.message}; original failure: ${originalError.message}`,
+  );
+  if (rollbackError.recoveryPath) error.recoveryPath = rollbackError.recoveryPath;
+  if (rollbackError.installedPath) error.installedPath = rollbackError.installedPath;
+  if (rollbackError.cleanupPath) error.cleanupPath = rollbackError.cleanupPath;
+  return error;
 }
 
 function cleanupWarning(cleanupPath, cause) {
@@ -241,10 +306,13 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
           workRoot,
         });
       } catch (rollbackError) {
-        throw new AggregateError(
-          [error, rollbackError],
-          `${rollbackError.message}; original failure: ${error.message}`,
-        );
+        throw rollbackFailure(error, rollbackError);
+      }
+    } else if (installed) {
+      try {
+        await rollbackBootstrapInstall({ destination: vendorRoot, fs, workRoot });
+      } catch (rollbackError) {
+        throw rollbackFailure(error, rollbackError);
       }
     } else {
       await fs.rm(workRoot, { recursive: true, force: true });

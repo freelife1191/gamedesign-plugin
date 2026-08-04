@@ -189,6 +189,17 @@ async function assertGenerationPreserved(fixture, before) {
   );
 }
 
+async function assertBootstrapRolledBack(fixture) {
+  await assert.rejects(fs.lstat(fixture.vendor), { code: "ENOENT" });
+  const siblings = await readdir(path.dirname(fixture.vendor));
+  assert.deepEqual(
+    siblings.filter(
+      (name) => name.startsWith(".skillstead-update-") || name.startsWith(".skillstead-cleanup-"),
+    ),
+    [],
+  );
+}
+
 test("guarded update preserves the prior generation on preflight, write, and install rename failures", async (t) => {
   assert.equal(typeof vendorModule.updateVendor, "function", "updateVendor must expose the transactional seam");
   for (const failure of ["preflight", "write", "rename"]) {
@@ -293,6 +304,157 @@ test("successful update bootstraps an absent vendor generation", async () => {
       ),
       [],
     );
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("bootstrap tombstone rename failure removes the uncommitted installed generation", async () => {
+  const fixture = await createUpdateFixture();
+  await rm(fixture.vendor, { recursive: true, force: true });
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected bootstrap tombstone rename failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    let rejection;
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      (error) => {
+        rejection = error;
+        return true;
+      },
+    );
+    assert.match(rejection.message, /injected bootstrap tombstone rename failure/);
+    assert.notEqual(rejection.committed, true);
+    await assertBootstrapRolledBack(fixture);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("bootstrap rollback retries a transient live-generation isolation failure", async () => {
+  const fixture = await createUpdateFixture();
+  await rm(fixture.vendor, { recursive: true, force: true });
+  let isolationFailed = false;
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected bootstrap tombstone rename failure");
+      }
+      if (
+        !isolationFailed
+        && from === fixture.vendor
+        && path.basename(path.dirname(to)).startsWith(".skillstead-update-")
+      ) {
+        isolationFailed = true;
+        throw new Error("injected transient bootstrap isolation failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      /injected bootstrap tombstone rename failure/,
+    );
+    await assertBootstrapRolledBack(fixture);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("bootstrap rollback retries a transient workspace cleanup failure", async () => {
+  const fixture = await createUpdateFixture();
+  await rm(fixture.vendor, { recursive: true, force: true });
+  let cleanupFailed = false;
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected bootstrap tombstone rename failure");
+      }
+      return fs.rename(from, to);
+    },
+    async rm(target, options) {
+      if (!cleanupFailed && path.basename(target).startsWith(".skillstead-update-")) {
+        cleanupFailed = true;
+        throw new Error("injected transient bootstrap cleanup failure");
+      }
+      return fs.rm(target, options);
+    },
+  };
+  try {
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      /injected bootstrap tombstone rename failure/,
+    );
+    await assertBootstrapRolledBack(fixture);
+  } finally {
+    await rm(fixture.scratch, { recursive: true, force: true });
+  }
+});
+
+test("permanent bootstrap isolation failure reports the uncommitted live generation and workspace", async () => {
+  const fixture = await createUpdateFixture();
+  await rm(fixture.vendor, { recursive: true, force: true });
+  const injectedFs = {
+    ...fs,
+    async rename(from, to) {
+      if (
+        path.basename(from).startsWith(".skillstead-update-")
+        && path.basename(to).startsWith(".skillstead-cleanup-")
+      ) {
+        throw new Error("injected bootstrap tombstone rename failure");
+      }
+      if (
+        from === fixture.vendor
+        && path.basename(path.dirname(to)).startsWith(".skillstead-update-")
+      ) {
+        throw new Error("injected permanent bootstrap isolation failure");
+      }
+      return fs.rename(from, to);
+    },
+  };
+  try {
+    let rejection;
+    await assert.rejects(
+      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
+      (error) => {
+        rejection = error;
+        return true;
+      },
+    );
+    assert.notEqual(rejection.committed, true);
+    const workspaces = (await readdir(path.dirname(fixture.vendor)))
+      .filter((name) => name.startsWith(".skillstead-update-"));
+    assert.equal(workspaces.length, 1, "one bootstrap recovery workspace must remain");
+    const workspace = path.join(path.dirname(fixture.vendor), workspaces[0]);
+    assert.match(rejection.message, /uncommitted installed generation/i);
+    assert.match(rejection.message, new RegExp(fixture.vendor.replaceAll("/", "\\/")));
+    assert.match(rejection.message, new RegExp(`recovery.*${workspace.replaceAll("/", "\\/")}`, "i"));
+    assert.equal(rejection.recoveryPath, workspace);
+    const verification = run(verifier, ["--root", fixture.scratch]);
+    assert.equal(verification.status, 0, verification.stderr || verification.stdout);
+    assert.match(verification.stdout, /verified 5 files/);
+    const cleanupResidue = (await readdir(path.dirname(fixture.vendor)))
+      .filter((name) => name.startsWith(".skillstead-cleanup-"));
+    assert.deepEqual(cleanupResidue, []);
   } finally {
     await rm(fixture.scratch, { recursive: true, force: true });
   }
