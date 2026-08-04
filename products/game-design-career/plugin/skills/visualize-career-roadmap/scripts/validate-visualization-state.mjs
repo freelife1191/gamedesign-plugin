@@ -71,7 +71,8 @@ function safeExistingFile(root, relativeFile, extension, label) {
 
 function viewBoxDimensions(svgPath) {
   const source = readFileSync(svgPath, "utf8");
-  const match = source.match(/<svg\b[^>]*\bviewBox=["']\s*-?[\d.]+[\s,]+-?[\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*["']/iu);
+  const { attributes } = parseSvgAccessibility(source);
+  const match = attributes.viewBox?.match(/^\s*-?[\d.]+[\s,]+-?[\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*$/u);
   if (!match) throw new Error("svgFile must contain a positive root viewBox");
   const width = Number(match[1]);
   const height = Number(match[2]);
@@ -91,13 +92,140 @@ function sameJson(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function svgAccessibility(source, altText) {
-  const root = source.match(/<svg\b([^>]*)>/iu);
+function readMarkupEnd(source, start) {
+  let quote = null;
+  for (let index = start; index < source.length; index++) {
+    const character = source[index];
+    if (quote) {
+      if (character === quote) quote = null;
+    } else if (character === '"' || character === "'") quote = character;
+    else if (character === ">") return index;
+  }
+  throw new Error("svgFile contains an unclosed XML tag");
+}
+
+function parseStartTag(raw) {
+  let source = raw.trim();
+  const selfClosing = source.endsWith("/");
+  if (selfClosing) source = source.slice(0, -1).trimEnd();
+  const nameMatch = source.match(/^([A-Za-z_][\w:.-]*)/u);
+  if (!nameMatch) throw new Error("svgFile contains a malformed XML start tag");
+  const name = nameMatch[1];
+  const attributes = Object.create(null);
+  let index = name.length;
+  while (index < source.length) {
+    while (/\s/u.test(source[index])) index++;
+    if (index >= source.length) break;
+    const attributeMatch = source.slice(index).match(/^([A-Za-z_][\w:.-]*)/u);
+    if (!attributeMatch) throw new Error(`svgFile contains a malformed attribute on <${name}>`);
+    const attribute = attributeMatch[1];
+    if (Object.hasOwn(attributes, attribute)) throw new Error(`svgFile contains duplicate attribute ${attribute}`);
+    index += attribute.length;
+    while (/\s/u.test(source[index])) index++;
+    if (source[index] !== "=") throw new Error(`svgFile attribute ${attribute} must have a quoted value`);
+    index++;
+    while (/\s/u.test(source[index])) index++;
+    const quote = source[index];
+    if (quote !== '"' && quote !== "'") throw new Error(`svgFile attribute ${attribute} must have a quoted value`);
+    const end = source.indexOf(quote, index + 1);
+    if (end < 0) throw new Error(`svgFile attribute ${attribute} is unclosed`);
+    const value = source.slice(index + 1, end);
+    if (value.includes("<") || value.includes("&")) throw new Error("svgFile rejects markup or entity references inside attributes");
+    attributes[attribute] = value;
+    index = end + 1;
+  }
+  return { name, attributes, selfClosing };
+}
+
+function parseSvgAccessibility(source) {
+  if (source.length > 2_000_000) throw new Error("svgFile exceeds the structural accessibility parser limit");
+  const stack = [];
+  const direct = { title: [], desc: [] };
+  let root = null;
+  let elements = 0;
+  let index = 0;
+  while (index < source.length) {
+    const rawParent = stack.at(-1)?.name;
+    if (rawParent === "script" || rawParent === "style") {
+      const closing = new RegExp(`</${rawParent}\\s*>`, "iu").exec(source.slice(index));
+      if (!closing) throw new Error(`svgFile contains an unclosed <${rawParent}> element`);
+      index += closing.index;
+    }
+    if (source[index] !== "<") {
+      const next = source.indexOf("<", index);
+      const end = next < 0 ? source.length : next;
+      const text = source.slice(index, end);
+      if (text.includes("&")) throw new Error("svgFile rejects entity references in accessibility text");
+      if (stack.length === 0 && text.trim() !== "") throw new Error("svgFile contains text outside the root element");
+      const parent = stack.at(-1);
+      if (parent?.capture) parent.text += text;
+      index = end;
+      continue;
+    }
+    if (source.startsWith("<!--", index)) {
+      const end = source.indexOf("-->", index + 4);
+      if (end < 0 || source.slice(index + 4, end).includes("--")) throw new Error("svgFile contains a malformed XML comment");
+      index = end + 3;
+      continue;
+    }
+    if (source.startsWith("<![CDATA[", index)) throw new Error("svgFile rejects CDATA in structural accessibility markup");
+    if (/^<!DOCTYPE\b/iu.test(source.slice(index))) throw new Error("svgFile rejects DOCTYPE and entity declarations");
+    if (source.startsWith("<!", index)) throw new Error("svgFile rejects unsafe XML declarations");
+    if (source.startsWith("<?", index)) {
+      const end = source.indexOf("?>", index + 2);
+      if (end < 0) throw new Error("svgFile contains an unclosed processing instruction");
+      index = end + 2;
+      continue;
+    }
+    const end = readMarkupEnd(source, index + 1);
+    const token = source.slice(index + 1, end);
+    if (token.startsWith("/")) {
+      const closing = token.slice(1).trim();
+      if (!/^[A-Za-z_][\w:.-]*$/u.test(closing)) throw new Error("svgFile contains a malformed XML closing tag");
+      const opened = stack.pop();
+      if (!opened || opened.name !== closing) throw new Error(`svgFile contains mismatched closing tag </${closing}>`);
+      if (opened.capture) direct[opened.name].push(opened.text.trim());
+      index = end + 1;
+      continue;
+    }
+    const parsed = parseStartTag(token);
+    elements++;
+    if (elements > 10_000 || stack.length >= 64) throw new Error("svgFile exceeds structural parser limits");
+    if (stack.length === 0) {
+      if (root || parsed.name !== "svg") throw new Error("svgFile must contain exactly one root <svg> element");
+      root = parsed;
+    } else if (parsed.name === "svg") throw new Error("svgFile rejects nested <svg> elements");
+    const parent = stack.at(-1);
+    if ((parsed.name === "title" || parsed.name === "desc") && parent?.name !== "svg") {
+      throw new Error(`<${parsed.name}> must be a direct child of the root <svg>`);
+    }
+    if (parent?.capture) throw new Error(`<${parent.name}> accessibility text cannot contain nested elements`);
+    const element = {
+      name: parsed.name,
+      capture: (parsed.name === "title" || parsed.name === "desc") && parent?.name === "svg",
+      text: "",
+    };
+    if (parsed.selfClosing) {
+      if (element.capture) direct[element.name].push("");
+      if (parsed.name === "svg") throw new Error("svgFile root <svg> cannot be self-closing");
+    } else stack.push(element);
+    index = end + 1;
+  }
+  if (stack.length !== 0) throw new Error(`svgFile contains an unclosed <${stack.at(-1).name}> element`);
   if (!root) throw new Error("svgFile must contain an SVG root");
-  const title = source.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/iu)?.[1]?.trim();
-  const description = source.match(/<desc(?:\s[^>]*)?>([\s\S]*?)<\/desc>/iu)?.[1]?.trim();
-  const ariaLabel = root[1].match(/\baria-label=["']([^"']*)["']/iu)?.[1]?.trim();
-  if (!title || !description) throw new Error("svgFile requires non-empty <title> and <desc> accessibility text");
+  if (direct.title.length !== 1 || direct.desc.length !== 1 || !direct.title[0] || !direct.desc[0]) {
+    throw new Error("svgFile requires exactly one non-empty direct-child <title> and <desc>");
+  }
+  return {
+    title: direct.title[0],
+    description: direct.desc[0],
+    ariaLabel: root.attributes["aria-label"]?.trim(),
+    attributes: root.attributes,
+  };
+}
+
+function svgAccessibility(source, altText) {
+  const { title, description, ariaLabel } = parseSvgAccessibility(source);
   if (title !== altText || ariaLabel !== altText) {
     throw new Error("altText must exactly match both SVG <title> and aria-label");
   }

@@ -42,7 +42,7 @@ Track these states independently:
 Never advance a state from intention. A command without its file and result is not evidence.
 
 1. Delegate structural SVG authoring to packaged `skills/svg-infographic`.
-2. Require root `<title>` and `<desc>` plus user-facing alt text that states the diagram's conclusion and important relationships.
+2. Require exactly one non-empty `<title>` and one non-empty `<desc>` as direct children of the root `<svg>`. Bind `<title>` and root `aria-label` exactly to the user-facing alt text. Comments, CDATA, processing instructions, attributes, script/style text, escaped markup, nested elements, DTDs, and entities never satisfy this contract.
 3. Run the packaged SVG lint. Preserve warnings and their disposition.
 4. When Chromium is available, use the packaged renderer and verify exact 2× PNG dimensions plus visual quality.
 5. When browser rendering is unavailable, preserve the linted editable SVG, set PNG availability to `unavailable`, and keep `rendered` and `verified` false. Do not claim PNG success.

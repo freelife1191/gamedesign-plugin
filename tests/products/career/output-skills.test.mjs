@@ -60,6 +60,8 @@ function assertVisualizationContract(presets, skill) {
   assert.match(skill, /data-accurate chart/iu);
   assert.match(skill, /skills\/svg-infographic/iu);
   assert.match(skill, /alt text/iu);
+  assert.match(skill, /exactly one non-empty `<title>`.*direct children.*root `<svg>`/iu);
+  assert.match(skill, /Comments.*CDATA.*processing instructions.*attributes.*script\/style.*escaped markup.*DTDs.*entities/iu);
   assert.match(skill, /2.?×|2x/iu);
   assert.match(skill, /browser.*unavailable.*SVG.*PNG.*unavailable/isu);
   assert.doesNotMatch(skill, /\b\d+(?:\.\d+)?%/u, "skill contains an evidence-free percentage");
@@ -373,6 +375,96 @@ test("plugin-owned visualization validator rejects impossible state and artifact
     }
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("source and clean-built visualization validators reject structural accessibility spoofs", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-viz-xml-"));
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-viz-build-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+    const sourceModule = await loadVisualizationModule();
+    const builtModule = await import(`${pathToFileURL(path.join(
+      build.outputDir,
+      "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
+    )).href}?attack=${Date.now()}`);
+    const alt = "Role evidence map";
+    const attacks = {
+      comments: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><!-- <title>${alt}</title><desc>Fake</desc> --></svg>`,
+      attribute: `<svg role="img" aria-label="${alt}" data-spoof="<title>${alt}</title><desc>Fake</desc>" viewBox="0 0 600 300"></svg>`,
+      style: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><style>.x{content:"<title>${alt}</title><desc>Fake</desc>"}</style></svg>`,
+      script: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><script>const x="<title>${alt}</title><desc>Fake</desc>";</script></svg>`,
+      nested: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><g><title>${alt}</title><desc>Fake</desc></g></svg>`,
+      duplicate: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><title>${alt}</title><title>${alt}</title><desc>Fake</desc></svg>`,
+      escaped: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300">&lt;title&gt;${alt}&lt;/title&gt;&lt;desc&gt;Fake&lt;/desc&gt;</svg>`,
+      processing: `<?fake <title>${alt}</title><desc>Fake</desc>?><svg role="img" aria-label="${alt}" viewBox="0 0 600 300"></svg>`,
+      cdata: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><![CDATA[<title>${alt}</title><desc>Fake</desc>]]></svg>`,
+      doctype: `<!DOCTYPE svg [<!ENTITY x "<title>${alt}</title><desc>Fake</desc>">]><svg role="img" aria-label="${alt}" viewBox="0 0 600 300">&x;</svg>`,
+      unclosed: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><title>${alt}</title><desc>Fake</desc>`,
+      mismatched: `<svg role="img" aria-label="${alt}" viewBox="0 0 600 300"><title>${alt}</desc><desc>Fake</desc></svg>`,
+    };
+    for (const [name, source] of Object.entries(attacks)) {
+      const file = `${name}.svg`;
+      await writeFile(path.join(root, file), source, "utf8");
+      const state = {
+        artifactRoot: root,
+        requested: true,
+        planned: true,
+        generated: true,
+        linted: true,
+        rendered: false,
+        verified: false,
+        svgFile: file,
+        pngAvailability: "unavailable",
+        altText: alt,
+        availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "test fallback" },
+        lintEvidence: {
+          command: `node check-svg.mjs ${file}`,
+          file,
+          result: "passed",
+          sha256: digest(Buffer.from(source)),
+          errors: [],
+          warnings: [],
+          warningsDisposition: "No warnings.",
+        },
+      };
+      for (const validator of [sourceModule.validateVisualizationState, builtModule.validateVisualizationState]) {
+        assert.throws(
+          () => validator(state),
+          undefined,
+          `${name} accessibility spoof passed ${validator === sourceModule.validateVisualizationState ? "source" : "built"} validation`,
+        );
+      }
+    }
+    const commentState = {
+      artifactRoot: root,
+      requested: true,
+      planned: true,
+      generated: true,
+      linted: true,
+      rendered: false,
+      verified: false,
+      svgFile: "comments.svg",
+      pngAvailability: "unavailable",
+      altText: alt,
+      availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "test fallback" },
+      lintEvidence: {
+        command: "node check-svg.mjs comments.svg",
+        file: "comments.svg",
+        result: "passed",
+        sha256: digest(Buffer.from(attacks.comments)),
+        errors: [],
+        warnings: [],
+        warningsDisposition: "No warnings.",
+      },
+    };
+    assert.throws(
+      () => sourceModule.validateVisualizationState(commentState),
+      /exactly one non-empty direct-child <title> and <desc>/iu,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(stagingRoot, { recursive: true, force: true });
   }
 });
 
