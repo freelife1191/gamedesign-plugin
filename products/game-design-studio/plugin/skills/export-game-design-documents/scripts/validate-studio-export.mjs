@@ -49,9 +49,10 @@ function exactKeys(value, keys, errors, location) {
 }
 
 function allowedKeys(value, allowed, required, errors, location) {
-  if (!object(value, errors, location)) return;
+  if (!object(value, errors, location)) return false;
   for (const key of Object.keys(value)) if (!allowed.includes(key)) add(errors, `${location}.${key} is not allowed`);
   for (const key of required) if (!Object.hasOwn(value, key)) add(errors, `${location}.${key} is required`);
+  return true;
 }
 
 function sameFlatObject(left, right) {
@@ -91,10 +92,11 @@ function validateCapability(capability, errors, location) {
 
 function validateProbe(probe, errors) {
   exactKeys(probe, ["status", "capabilities", "evidence"], errors, "capabilityProbe");
+  const evidence = Array.isArray(probe?.evidence) ? probe.evidence : [];
   if (!Array.isArray(probe?.evidence)) add(errors, "capabilityProbe.evidence must be an array");
   if (probe?.status === "missing") {
     if (!object(probe.capabilities, errors, "capabilityProbe.capabilities")) return;
-    if (Object.keys(probe.capabilities).length !== 0 || probe.evidence.length !== 0) add(errors, "missing capability probe cannot carry capabilities or evidence");
+    if (Object.keys(probe.capabilities).length !== 0 || evidence.length !== 0) add(errors, "missing capability probe cannot carry capabilities or evidence");
     return;
   }
   if (probe?.status !== "provided") {
@@ -108,8 +110,8 @@ function validateProbe(probe, errors) {
     if (typeof capability?.available !== "boolean") add(errors, `capabilityProbe.capabilities.${name}.available must be boolean`);
     if (capability?.available === false && Object.keys(capability).some((key) => key !== "available")) add(errors, `unavailable ${name} cannot carry provider metadata`);
   }
-  probe.evidence.forEach((entry, index) => {
-    allowedKeys(entry, ["command", "exitCode"], ["command", "exitCode"], errors, `capabilityProbe.evidence[${index}]`);
+  evidence.forEach((entry, index) => {
+    if (!allowedKeys(entry, ["command", "exitCode"], ["command", "exitCode"], errors, `capabilityProbe.evidence[${index}]`)) return;
     if (typeof entry?.command !== "string" || entry.command.trim() === "") add(errors, `capabilityProbe.evidence[${index}].command is required`);
     if (!Number.isInteger(entry?.exitCode)) add(errors, `capabilityProbe.evidence[${index}].exitCode must be an integer`);
   });
@@ -166,13 +168,13 @@ function validateEvidence(job, format, errors, location) {
   }
   const stages = new Set();
   for (const [index, entry] of job.evidence.entries()) {
-    allowedKeys(
+    if (!allowedKeys(
       entry,
       ["stage", "status", "derivativePath", "digest", "command", "exitCode", "count", "details"],
       ["stage", "status", "derivativePath", "digest", "command", "exitCode"],
       errors,
       `${location}.evidence[${index}]`,
-    );
+    )) continue;
     if (!["generation", "renderer", "qa"].includes(entry?.stage)) add(errors, `${location}.evidence[${index}].stage is invalid`);
     if (!["passed", "failed"].includes(entry?.status)) add(errors, `${location}.evidence[${index}].status is invalid`);
     if (typeof entry?.command !== "string" || entry.command.trim() === "") add(errors, `${location}.evidence[${index}].command is required`);
@@ -188,7 +190,7 @@ function validateEvidence(job, format, errors, location) {
     stages.add(entry?.stage);
   }
   if (job.status === "passed") {
-    if (job.evidence.some(({ status }) => status === "failed")) add(errors, `${location} passed state cannot contain failed evidence`);
+    if (job.evidence.some((entry) => entry?.status === "failed")) add(errors, `${location} passed state cannot contain failed evidence`);
     if (!stages.has("generation") || !stages.has("qa")) add(errors, `${location} passed state requires generation and QA evidence`);
     if (format !== "md" && !stages.has("renderer")) add(errors, `${location} passed ${format} requires renderer evidence`);
     if (format === "md" && stages.has("renderer")) add(errors, `${location} Markdown must not claim renderer evidence`);
@@ -237,7 +239,7 @@ function validateJobShape(job, format, probe, errors) {
     if (job.rendererStatus !== expectedRenderer) add(errors, `${location}.rendererStatus must be ${expectedRenderer}`);
     if (!Number.isInteger(job.pageOrSlideCount) || job.pageOrSlideCount < 1) add(errors, `${location}.pageOrSlideCount must be positive`);
   }
-  if (job?.status === "failed" && !job.evidence?.some(({ status }) => status === "failed")) add(errors, `${location} failed state requires failed evidence`);
+  if (job?.status === "failed" && (!Array.isArray(job.evidence) || !job.evidence.some((entry) => entry?.status === "failed"))) add(errors, `${location} failed state requires failed evidence`);
   if (job?.status === "failed" && ![job.generationStatus, job.rendererStatus, job.qaStatus].includes("failed")) add(errors, `${location} failed state requires an exact failed stage`);
   validateEvidence(job, format, errors, location);
 }

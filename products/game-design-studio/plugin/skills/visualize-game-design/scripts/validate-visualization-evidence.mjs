@@ -110,15 +110,16 @@ function pngDimensions(bytes, errors) {
 }
 
 function validateEvidence(stage, expectedKeys, errors, location) {
+  const evidence = Array.isArray(stage?.evidence) ? stage.evidence : [];
   if (!Array.isArray(stage?.evidence)) {
     add(errors, `${location}.evidence must be an array`);
     return;
   }
   const active = ["passed", "failed"].includes(stage.status);
-  if (active && stage.evidence.length === 0) add(errors, `${location}.evidence must be nonempty`);
-  if (!active && stage.evidence.length !== 0) add(errors, `${location} inactive states cannot claim evidence`);
-  stage.evidence.forEach((entry, index) => {
-    exactKeys(entry, expectedKeys, errors, `${location}.evidence[${index}]`);
+  if (active && evidence.length === 0) add(errors, `${location}.evidence must be nonempty`);
+  if (!active && evidence.length !== 0) add(errors, `${location} inactive states cannot claim evidence`);
+  evidence.forEach((entry, index) => {
+    if (!exactKeys(entry, expectedKeys, errors, `${location}.evidence[${index}]`)) return;
     nonempty(entry?.command, errors, `${location}.evidence[${index}].command`);
     if (!Number.isInteger(entry?.exitCode)) add(errors, `${location}.evidence[${index}].exitCode must be an integer`);
     if (stage.status === "passed" && entry?.exitCode !== 0) add(errors, `${location} passed evidence requires exit code 0`);
@@ -164,17 +165,20 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
   validateEvidence(record?.generated, ["command", "exitCode", "svgPath", "svgDigest", "sourceSectionIds"], errors, "generated");
   validateEvidence(record?.linted, ["command", "exitCode", "log", "svgPath", "svgDigest"], errors, "linted");
   validateEvidence(record?.rendered, ["command", "exitCode", "log", "renderer", "rendererVersion", "svgPath", "svgDigest", "pngPath", "pngDigest", "width", "height"], errors, "rendered");
-  for (const entry of record?.generated?.evidence ?? []) {
+  for (const entry of Array.isArray(record?.generated?.evidence) ? record.generated.evidence : []) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     if (entry.svgPath !== record.generated.svgPath || entry.svgDigest !== record.generated.svgDigest) add(errors, "generated evidence must identify the generated SVG");
     if (!sameArray(entry.sourceSectionIds, record.planned.sourceSectionIds)) add(errors, "generated evidence must preserve the planned source mapping");
   }
-  for (const entry of record?.linted?.evidence ?? []) {
+  for (const entry of Array.isArray(record?.linted?.evidence) ? record.linted.evidence : []) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     nonempty(entry.log, errors, "linted evidence log");
     if (entry.svgPath !== record.linted.svgPath || entry.svgDigest !== record.linted.svgDigest) add(errors, "lint evidence must identify the linted SVG");
   }
   nonempty(record?.rendered?.renderer, errors, "rendered.renderer");
   nonempty(record?.rendered?.rendererVersion, errors, "rendered.rendererVersion");
-  for (const entry of record?.rendered?.evidence ?? []) {
+  for (const entry of Array.isArray(record?.rendered?.evidence) ? record.rendered.evidence : []) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     nonempty(entry.log, errors, "render evidence log");
     if (entry.renderer !== record.rendered.renderer || entry.rendererVersion !== record.rendered.rendererVersion) add(errors, "render evidence must identify the renderer and version");
     for (const field of ["svgPath", "svgDigest", "pngPath", "pngDigest", "width", "height"]) if (entry[field] !== record.rendered[field]) add(errors, `render evidence ${field} must match the render stage`);

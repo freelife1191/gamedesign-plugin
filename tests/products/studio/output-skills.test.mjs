@@ -221,6 +221,35 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     assert.equal(result.normalized, null, label);
   }
 
+  for (const stageName of ["generated", "linted", "rendered"]) {
+    for (const malformed of [null, {}, "invalid"]) {
+      const candidate = structuredClone(record);
+      candidate[stageName].evidence = malformed;
+      const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+      assert.equal(result.ok, false, `${stageName} malformed evidence container`);
+      assert.ok(result.errors.includes(`${stageName}.evidence must be an array`), `${stageName} container error path`);
+      assert.equal(result.normalized, null);
+    }
+    for (const [malformed, expectedError] of [
+      [null, `${stageName}.evidence[0] must be an object`],
+      ["invalid", `${stageName}.evidence[0] must be an object`],
+      [JSON.parse('{"constructor":{"polluted":true}}'), `record.${stageName}.evidence.0.constructor is prohibited`],
+    ]) {
+      const candidate = structuredClone(record);
+      candidate[stageName].evidence = [malformed];
+      const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+      assert.equal(result.ok, false, `${stageName} malformed evidence item`);
+      assert.ok(result.errors.includes(expectedError), `${stageName} item error path: ${expectedError}`);
+      assert.equal(result.normalized, null);
+    }
+    const candidate = structuredClone(record);
+    candidate[stageName].evidence = [Object.create({ polluted: true })];
+    const result = await validateVisualizationEvidence(candidate, { artifactRoot });
+    assert.equal(result.ok, false, `${stageName} unsafe evidence prototype`);
+    assert.ok(result.errors.includes(`record.${stageName}.evidence.0 has an unsafe prototype`));
+    assert.equal(result.normalized, null);
+  }
+
   for (const [label, invalidSvg] of [
     ["actual SVG title is required", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><desc>Source-backed loop</desc></svg>\n'],
     ["actual SVG desc is required", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60"><title>Loop</title></svg>\n'],
@@ -538,5 +567,63 @@ test("plugin-owned export validator enforces derivatives terminal transitions an
     const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
     assert.equal(result.ok, false, label);
     assert.equal(result.normalized, null, label);
+  }
+
+
+  for (const malformed of [null, {}, "invalid"]) {
+    const candidate = structuredClone(prepared);
+    candidate.capabilityProbe.evidence = malformed;
+    const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
+    assert.equal(result.ok, false, "malformed capability evidence container");
+    assert.ok(result.errors.includes("capabilityProbe.evidence must be an array"));
+    assert.equal(result.normalized, null);
+  }
+  for (const [malformed, expectedError] of [
+    [null, "capabilityProbe.evidence[0] must be an object"],
+    ["invalid", "capabilityProbe.evidence[0] must be an object"],
+    [JSON.parse('{"constructor":{"polluted":true}}'), "manifest.capabilityProbe.evidence.0.constructor is prohibited"],
+  ]) {
+    const candidate = structuredClone(prepared);
+    candidate.capabilityProbe.evidence = [malformed];
+    const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
+    assert.equal(result.ok, false, "malformed capability evidence item");
+    assert.ok(result.errors.includes(expectedError), expectedError);
+    assert.equal(result.normalized, null);
+  }
+  {
+    const candidate = structuredClone(prepared);
+    candidate.capabilityProbe.evidence = [Object.create({ polluted: true })];
+    const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
+    assert.equal(result.ok, false, "unsafe capability evidence prototype");
+    assert.ok(result.errors.includes("manifest.capabilityProbe.evidence.0 has an unsafe prototype"));
+    assert.equal(result.normalized, null);
+  }
+  for (const format of ["md", "pdf", "docx", "pptx"]) {
+    for (const malformed of [null, {}, "invalid"]) {
+      const candidate = structuredClone(prepared);
+      candidate.formats[format].evidence = malformed;
+      const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
+      assert.equal(result.ok, false, `${format} malformed evidence container`);
+      assert.ok(result.errors.includes(`formats.${format}.evidence must be an array`), `${format} container error path`);
+      assert.equal(result.normalized, null);
+    }
+    for (const [malformed, expectedError] of [
+      [null, `formats.${format}.evidence[0] must be an object`],
+      ["invalid", `formats.${format}.evidence[0] must be an object`],
+      [JSON.parse('{"constructor":{"polluted":true}}'), `manifest.formats.${format}.evidence.0.constructor is prohibited`],
+    ]) {
+      const candidate = structuredClone(prepared);
+      candidate.formats[format].evidence = [malformed];
+      const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
+      assert.equal(result.ok, false, `${format} malformed evidence item`);
+      assert.ok(result.errors.includes(expectedError), `${format} item error path: ${expectedError}`);
+      assert.equal(result.normalized, null);
+    }
+    const candidate = structuredClone(prepared);
+    candidate.formats[format].evidence = [Object.create({ polluted: true })];
+    const result = await validateStudioExportManifest(candidate, { outputRoot: outputDir });
+    assert.equal(result.ok, false, `${format} unsafe evidence prototype`);
+    assert.ok(result.errors.includes(`manifest.formats.${format}.evidence.0 has an unsafe prototype`));
+    assert.equal(result.normalized, null);
   }
 });
