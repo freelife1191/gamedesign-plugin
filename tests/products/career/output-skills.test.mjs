@@ -78,13 +78,15 @@ function assertExportContract(recipes, skill) {
   assert.match(recipes, /availability.*status.*evidence/isu);
   assert.match(recipes, /`unknown` means no capability probe ran\./u);
   assert.match(recipes, /`unavailable` means a probe ran and proved the capability absent\./u);
-  assert.match(recipes, /`passed` means capability, generation, file existence, and format-appropriate QA all passed\./u);
-  assert.match(recipes, /generation.*format-appropriate.*verification/isu);
+  assert.match(recipes, /Preparation never accepts or emits terminal format status `passed` or `failed`/u);
+  assert.match(recipes, /trusted downstream.*generation.*format-verification/isu);
+  assert.match(recipes, /rejects `passed`, `failed`, generation evidence, QA evidence, and derivative file claims/isu);
   assert.match(recipes, /audience.*purpose.*story outline/isu);
   assert.match(recipes, /independent story.*not.*Markdown headings/isu);
   assert.match(skill, /Read `\.\.\/\.\.\/references\/export-recipes\.md`/u);
   assert.match(skill, /prepare-career-export\.mjs/u);
   assert.match(skill, /fail closed/iu);
+  assert.match(skill, /never accepts or emits format status `passed` or `failed`/u);
 }
 
 async function loadPrepareModule() {
@@ -105,16 +107,29 @@ async function loadVisualizationModule() {
 
 function pngFixture(width, height) {
   const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const ihdr = Buffer.alloc(25);
-  ihdr.writeUInt32BE(13, 0);
-  ihdr.write("IHDR", 4, "latin1");
-  ihdr.writeUInt32BE(width, 8);
-  ihdr.writeUInt32BE(height, 12);
-  ihdr[16] = 8;
-  ihdr[17] = 6;
-  const iend = Buffer.alloc(12);
-  iend.write("IEND", 4, "latin1");
-  return Buffer.concat([signature, ihdr, iend]);
+  const chunk = (type, data) => {
+    const value = Buffer.alloc(12 + data.length);
+    value.writeUInt32BE(data.length, 0);
+    value.write(type, 4, "latin1");
+    data.copy(value, 8);
+    value.writeUInt32BE(crc32(value.subarray(4, 8 + data.length)), 8 + data.length);
+    return value;
+  };
+  const ihdrData = Buffer.alloc(13);
+  ihdrData.writeUInt32BE(width, 0);
+  ihdrData.writeUInt32BE(height, 4);
+  ihdrData[8] = 8;
+  ihdrData[9] = 6;
+  return Buffer.concat([signature, chunk("IHDR", ihdrData), chunk("IDAT", Buffer.from([0])), chunk("IEND", Buffer.alloc(0))]);
+}
+
+function corruptPngChunkCrc(bytes, type, replacement = 0) {
+  const corrupted = Buffer.from(bytes);
+  const typeOffset = corrupted.indexOf(Buffer.from(type, "latin1"));
+  assert.ok(typeOffset >= 4, `missing PNG chunk ${type}`);
+  const length = corrupted.readUInt32BE(typeOffset - 4);
+  corrupted.writeUInt32BE(replacement >>> 0, typeOffset + 4 + length);
+  return corrupted;
 }
 
 function digest(bytes) {
@@ -132,17 +147,6 @@ async function writeCanonicalFixture(root) {
     "  docx:", "    status: unavailable", "  pptx:", "    status: pending", "    audience: recruiter",
     "    purpose: review evidence", "    slide_outline:", "      - title: Evidence", "",
   ].join("\n"), "utf8");
-}
-
-async function passedQa(file, format) {
-  const bytes = await readFile(file);
-  const validators = {
-    md: "career-export/md-canonical-identity-v1",
-    pdf: "career-export/pdf-structure-v1",
-    docx: "career-export/docx-ooxml-v1",
-    pptx: "career-export/pptx-ooxml-v1",
-  };
-  return { sha256: digest(bytes), size: bytes.length, validatorId: validators[format] };
 }
 
 function minimalPdf() {
@@ -356,6 +360,17 @@ test("plugin-owned visualization validator rejects impossible state and artifact
       pngFile: "partial.png",
       renderEvidence: { ...verified.renderEvidence, pngFile: "partial.png" },
     }), /complete PNG/iu);
+
+    const validPng = pngFixture(1200, 600);
+    for (const type of ["IHDR", "IDAT", "IEND"]) {
+      const file = `bad-${type.toLowerCase()}.png`;
+      await writeFile(path.join(root, file), corruptPngChunkCrc(validPng, type));
+      assert.throws(() => validateVisualizationState({
+        ...verified,
+        pngFile: file,
+        renderEvidence: { ...verified.renderEvidence, pngFile: file },
+      }), new RegExp(`${type}.*CRC32`, "iu"));
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -409,85 +424,32 @@ test("prepare script preserves unknown capability and blocks derivatives on cano
   }
 });
 
-test("prepare script requires probe generation and QA evidence before passed", async () => {
+test("prepare script rejects terminal status and all generation or QA evidence", async () => {
   const { prepareCareerExport } = await loadPrepareModule();
   const root = await mkdtemp(path.join(os.tmpdir(), "career-export-"));
   try {
     await writeCanonicalFixture(root);
     await writeFile(path.join(root, "portfolio.pdf"), minimalPdf());
-    const job = baseJob(root);
-    job.formats.pdf = {
-      requested: true,
-      availability: "available",
-      status: "passed",
-      evidence: [],
-    };
-    assert.throws(() => prepareCareerExport(job), /capability-probe.*generation.*qa/isu);
-
-    job.formats.pdf.evidence = [
-      { kind: "capability-probe", command: "renderer --version", result: "passed" },
-      { kind: "generation", command: "render portfolio.md portfolio.pdf", file: "portfolio.pdf", result: "passed" },
-      { kind: "qa", command: "verify-pdf portfolio.pdf", file: "portfolio.pdf", result: "passed", ...await passedQa(path.join(root, "portfolio.pdf"), "pdf") },
-    ];
-    assert.equal(prepareCareerExport(job).formats.pdf.status, "passed");
-  } finally {
-    await rm(root, { recursive: true, force: true });
-  }
-});
-
-test("prepare script rejects derivative identity and contradictory passed evidence mutations", async () => {
-  const { prepareCareerExport } = await loadPrepareModule();
-  const root = await mkdtemp(path.join(os.tmpdir(), "career-export-"));
-  try {
-    await writeCanonicalFixture(root);
-    await writeFile(path.join(root, "portfolio.pdf"), minimalPdf());
-    await writeFile(path.join(root, "other.pdf"), minimalPdf());
-    await writeFile(path.join(root, "wrong.docx"), "not a DOCX", "utf8");
-    const valid = baseJob(root);
-    valid.formats.pdf = {
-      requested: true,
-      availability: "available",
-      status: "passed",
-      evidence: [
-        { kind: "capability-probe", command: "renderer --version", result: "passed" },
-        { kind: "generation", command: "render", file: "portfolio.pdf", result: "passed" },
-        { kind: "qa", command: "verify", file: "portfolio.pdf", result: "passed", ...await passedQa(path.join(root, "portfolio.pdf"), "pdf") },
-      ],
-    };
-    assert.doesNotThrow(() => prepareCareerExport(valid));
-    const mutations = [];
-
-    const wrongExtension = structuredClone(valid);
-    wrongExtension.formats.pdf.evidence[1].file = "wrong.docx";
-    wrongExtension.formats.pdf.evidence[2].file = "wrong.docx";
-    mutations.push(wrongExtension);
-
-    const mismatchedFiles = structuredClone(valid);
-    mismatchedFiles.formats.pdf.evidence[2].file = "other.pdf";
-    mutations.push(mismatchedFiles);
-
-    const passedAndFailed = structuredClone(valid);
-    passedAndFailed.formats.pdf.evidence.push({
-      kind: "qa",
-      command: "verify again",
-      file: "portfolio.pdf",
-      result: "failed",
-    });
-    mutations.push(passedAndFailed);
-
-    const unknownTop = structuredClone(valid);
-    unknownTop.output = "portfolio.pdf";
-    mutations.push(unknownTop);
-
-    const unknownEvidence = structuredClone(valid);
-    unknownEvidence.formats.pdf.evidence[1].path = "portfolio.pdf";
-    mutations.push(unknownEvidence);
-
-    let survivors = 0;
-    for (const mutation of mutations) {
-      try { prepareCareerExport(mutation); survivors++; } catch {}
+    for (const status of ["passed", "failed"]) {
+      const terminal = baseJob(root);
+      terminal.formats.pdf = {
+        requested: true,
+        availability: "available",
+        status,
+        evidence: [{ kind: "capability-probe", command: "renderer --version", result: "passed" }],
+      };
+      assert.throws(() => prepareCareerExport(terminal), /preparation cannot accept terminal status/iu);
     }
-    assert.equal(survivors, 0, "all five export identity/schema mutations must be rejected");
+    for (const kind of ["generation", "qa"]) {
+      const evidence = baseJob(root);
+      evidence.formats.pdf = {
+        requested: true,
+        availability: "available",
+        status: "pending",
+        evidence: [{ kind, command: "forged command", file: "portfolio.pdf", result: "passed" }],
+      };
+      assert.throws(() => prepareCareerExport(evidence), /rejects generation and qa evidence/iu);
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -500,6 +462,22 @@ test("prepare script enforces exact availability, status, request, and evidence 
     await writeCanonicalFixture(root);
     await writeFile(path.join(root, "portfolio.pdf"), "% derivative fixture", "utf8");
     const valid = baseJob(root);
+    const pendingAvailable = structuredClone(valid);
+    pendingAvailable.formats.pdf = {
+      requested: true,
+      availability: "available",
+      status: "pending",
+      evidence: [{ kind: "capability-probe", command: "probe", result: "passed" }],
+    };
+    assert.equal(prepareCareerExport(pendingAvailable).formats.pdf.status, "pending");
+    const unavailable = structuredClone(valid);
+    unavailable.formats.pdf = {
+      requested: true,
+      availability: "unavailable",
+      status: "unavailable",
+      evidence: [{ kind: "capability-probe", command: "probe", result: "failed" }],
+    };
+    assert.equal(prepareCareerExport(unavailable).formats.pdf.status, "unavailable");
     const mutations = [];
 
     const probeConflict = structuredClone(valid);
@@ -619,7 +597,7 @@ test("prepare script rejects unknown and dangerous keys at every schema boundary
   }
 });
 
-test("prepare script rejects unsafe evidence paths and false unavailable transitions", async () => {
+test("prepare script rejects derivative path claims and false unavailable transitions", async () => {
   const { prepareCareerExport } = await loadPrepareModule();
   const root = await mkdtemp(path.join(os.tmpdir(), "career-export-"));
   try {
@@ -628,17 +606,16 @@ test("prepare script rejects unsafe evidence paths and false unavailable transit
     unsafe.formats.md = {
       requested: true,
       availability: "available",
-      status: "passed",
+      status: "pending",
       evidence: [
         { kind: "generation", command: "copy", file: "../outside.md", result: "passed" },
-        { kind: "qa", command: "verify-md", file: "../outside.md", result: "passed" },
       ],
     };
-    assert.throws(() => prepareCareerExport(unsafe), /safe relative path/iu);
+    assert.throws(() => prepareCareerExport(unsafe), /rejects generation and qa evidence/iu);
 
     const unprobed = baseJob(root);
     unprobed.formats.pdf = { requested: true, availability: "unavailable", status: "unavailable", evidence: [] };
-    assert.throws(() => prepareCareerExport(unprobed), /unavailable.*probe evidence/iu);
+    assert.throws(() => prepareCareerExport(unprobed), /unavailable.*failed capability-probe/iu);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -672,7 +649,7 @@ test("prepare script blocks PPTX without an independently authored story outline
   }
 });
 
-test("passed MD PDF DOCX and PPTX require independently verified bytes, not forged status strings", async () => {
+test("preparation rejects structurally valid and fake terminal-passed MD PDF DOCX and PPTX", async () => {
   const { prepareCareerExport } = await loadPrepareModule();
   const root = await mkdtemp(path.join(os.tmpdir(), "career-format-"));
   try {
@@ -681,9 +658,8 @@ test("passed MD PDF DOCX and PPTX require independently verified bytes, not forg
     await writeFile(path.join(root, "portfolio.docx"), minimalDocx());
     await writeFile(path.join(root, "portfolio.pptx"), minimalPptx());
     const files = { md: "content.md", pdf: "portfolio.pdf", docx: "portfolio.docx", pptx: "portfolio.pptx" };
-    const job = baseJob(root);
-    for (const format of Object.keys(files)) {
-      const file = files[format];
+    const assertTerminalRejected = (format, file) => {
+      const job = baseJob(root);
       job.formats[format] = {
         requested: true,
         availability: "available",
@@ -691,44 +667,24 @@ test("passed MD PDF DOCX and PPTX require independently verified bytes, not forg
         evidence: [
           { kind: "capability-probe", command: `${format}-tool --version`, result: "passed" },
           { kind: "generation", command: `generate ${file}`, file, result: "passed" },
-          { kind: "qa", command: `verify ${file}`, file, result: "passed", ...await passedQa(path.join(root, file), format) },
+          { kind: "qa", command: `verify ${file}`, file, result: "passed" },
         ],
       };
-    }
-    Object.assign(job.formats.pptx, {
-      audience: "recruiter",
-      purpose: "review evidence",
-      outlineSource: "independent-story",
-      storyOutline: [{ title: "Evidence", message: "Show the evidence chain." }],
-    });
-    assert.deepEqual(
-      Object.values(prepareCareerExport(job).formats).map(({ status }) => status),
-      ["passed", "passed", "passed", "passed"],
-    );
-
-    const forgedStatus = structuredClone(job);
-    await writeFile(path.join(root, "portfolio.pdf"), "not a PDF", "utf8");
-    Object.assign(forgedStatus.formats.pdf.evidence[2], await passedQa(path.join(root, "portfolio.pdf"), "pdf"));
-    assert.throws(() => prepareCareerExport(forgedStatus), /PDF requires/iu);
-
-    await writeFile(path.join(root, "portfolio.pdf"), minimalPdf());
-    const forgedDigest = structuredClone(job);
-    forgedDigest.formats.pdf.evidence[2].sha256 = "0".repeat(64);
-    assert.throws(() => prepareCareerExport(forgedDigest), /digest.*size.*validatorId/iu);
-
-    const corruptDocx = structuredClone(job);
-    const docxBytes = await readFile(path.join(root, "portfolio.docx"));
-    await writeFile(path.join(root, "portfolio.docx"), docxBytes.subarray(0, docxBytes.length - 5));
-    Object.assign(corruptDocx.formats.docx.evidence[2], await passedQa(path.join(root, "portfolio.docx"), "docx"));
-    assert.throws(() => prepareCareerExport(corruptDocx), /ZIP|OOXML/iu);
-
-    const invalidMarkdown = structuredClone(job);
-    await writeFile(path.join(root, "copy.md"), "# forged", "utf8");
-    invalidMarkdown.formats.md.evidence[1].file = "copy.md";
-    invalidMarkdown.formats.md.evidence[2] = {
-      ...invalidMarkdown.formats.md.evidence[2], file: "copy.md", ...await passedQa(path.join(root, "copy.md"), "md"),
+      if (format === "pptx") Object.assign(job.formats.pptx, {
+        audience: "recruiter",
+        purpose: "review evidence",
+        outlineSource: "independent-story",
+        storyOutline: [{ title: "Evidence", message: "Show the evidence chain." }],
+      });
+      assert.throws(() => prepareCareerExport(job), /preparation cannot accept terminal status passed/iu);
     };
-    assert.throws(() => prepareCareerExport(invalidMarkdown), /byte-identical/iu);
+    for (const [format, file] of Object.entries(files)) assertTerminalRejected(format, file);
+
+    await writeFile(path.join(root, "fake.md"), "fake Markdown", "utf8");
+    await writeFile(path.join(root, "portfolio.pdf"), "not a PDF", "utf8");
+    await writeFile(path.join(root, "portfolio.docx"), "not a DOCX", "utf8");
+    await writeFile(path.join(root, "portfolio.pptx"), "not a PPTX", "utf8");
+    for (const [format, file] of Object.entries({ ...files, md: "fake.md" })) assertTerminalRejected(format, file);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

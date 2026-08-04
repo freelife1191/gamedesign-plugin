@@ -17,9 +17,9 @@ Canonical validation must pass before derivative preparation. Every recipe produ
 
 Record `artifactRoot`, `artifactId`, `documentType`, canonical validation evidence, and exactly four format jobs: `md`, `pdf`, `docx`, and `pptx`. Each format keeps `requested`, `availability`, `status`, and `evidence` separate.
 
-`unknown` means no capability probe ran. `unavailable` means a probe ran and proved the capability absent. `passed` means capability, generation, file existence, and format-appropriate QA all passed. Never collapse unknown, unavailable, and passed into one boolean.
+`unknown` means no capability probe ran. `unavailable` means a probe ran and proved the capability absent. Preparation never accepts or emits terminal format status `passed` or `failed`; trusted downstream generation and format-verification workflows own those promotions. Never collapse unknown, unavailable, and downstream success into one boolean.
 
-Evidence records use `kind` (`capability-probe`, `generation`, or `qa`), exact `command`, optional safe artifact-relative `file`, and `result`. Generation and QA evidence require a file. An unavailable state requires failed capability-probe evidence.
+Preparation evidence records use only `kind: capability-probe`, exact `command`, and `result`. An unavailable state requires failed capability-probe evidence. Caller-supplied generation, QA, derivative paths, digests, structurally valid files, and command strings cannot prove a terminal result.
 
 The job, canonical validation, formats container, each format, every evidence item, and every PPTX slide are closed schemas. Reject unknown keys, dangerous prototype keys, and aliases such as `output`, `path`, or alternate command fields. Normalize by constructing a new object from approved fields only.
 
@@ -29,12 +29,10 @@ The job, canonical validation, formats container, each format, every evidence it
 | --- | --- | --- | --- |
 | `not-requested` | false | `unknown` | none |
 | `blocked` | true | `unknown` | none |
-| `pending` | true | `unknown` or `available` | none while unknown; passed probe and optionally passed generation while available |
-| `passed` | true | `available` | passed probe, passed generation, and passed QA |
-| `failed` | true | `available` | passed probe plus failed generation and no QA, or passed generation plus failed QA |
+| `pending` | true | `unknown` or `available` | none while unknown; one passed capability probe while available |
 | `unavailable` | true | `unavailable` | failed probe only |
 
-Probe results are mutually exclusive. Generation and QA must reference one identical derivative path whose extension matches the requested format. A `passed` job rejects any failed probe, generation, or QA record.
+Probe results are mutually exclusive. The preparation script rejects `passed`, `failed`, generation evidence, QA evidence, and derivative file claims without inspecting their apparent validity. Only trusted downstream renderers and format verifiers may add terminal evidence.
 
 ## Format recipes
 
@@ -47,12 +45,12 @@ Probe results are mutually exclusive. Generation and QA must reference one ident
 
 PPTX uses an independent story, not copied Markdown headings. The outline is authored for the audience and purpose, gives every slide a distinct message, and may link back to deeper canonical sections without turning each heading into a slide.
 
-MD/PDF/DOCX/PPTX requests are not successful outputs. Generation and format-appropriate verification must both complete before `passed`.
+MD/PDF/DOCX/PPTX requests are not successful outputs. This recipe stops at canonical validation and non-terminal capability preparation; generation and format-appropriate verification occur downstream.
 
 ## Failure behavior
 
 - Fail closed when canonical validation is not passed or lacks command, file, and verification evidence.
 - Preserve `unknown` when no capability probe ran.
-- Use `unavailable` only with failed probe evidence; use `failed` only after generation or QA reports a defect.
-- Reject absolute paths, parent traversal, and evidence files that resolve outside the artifact root.
+- Use `unavailable` only with failed probe evidence; never accept a caller-supplied terminal failure or success during preparation.
+- Reject derivative paths and generation or QA evidence entirely during preparation.
 - Preserve the canonical artifact and return the blocked format plus resumable next action.

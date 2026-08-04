@@ -104,6 +104,31 @@ function svgAccessibility(source, altText) {
   return { title, description };
 }
 
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function validatePngCrc(pngPath) {
+  const bytes = readFileSync(pngPath);
+  let offset = 8;
+  while (offset + 12 <= bytes.length) {
+    const length = bytes.readUInt32BE(offset);
+    const chunkEnd = offset + 12 + length;
+    if (chunkEnd > bytes.length) throw new Error("pngFile contains a truncated PNG chunk");
+    const type = bytes.toString("latin1", offset + 4, offset + 8);
+    const actual = crc32(bytes.subarray(offset + 4, offset + 8 + length));
+    const expected = bytes.readUInt32BE(offset + 8 + length);
+    if (actual !== expected) throw new Error(`pngFile has an invalid ${type} chunk CRC32`);
+    offset = chunkEnd;
+  }
+  if (offset !== bytes.length) throw new Error("pngFile contains trailing bytes outside PNG chunks");
+}
+
 function pngDimensions(pngPath) {
   const header = Buffer.alloc(24);
   const fd = openSync(pngPath, "r");
@@ -201,6 +226,7 @@ export function validateVisualizationState(value) {
     if (input.pngAvailability !== "available") throw new Error("rendered requires available PNG capability");
     png = safeExistingFile(root, input.pngFile, ".png", "pngFile");
     if (!isCompletePng(png.absolute)) throw new Error("pngFile must be a complete PNG with IEND exactly at EOF");
+    validatePngCrc(png.absolute);
     const evidence = exactKeys(input.renderEvidence, [
       "command", "svgFile", "pngFile", "browser", "result", "scale",
       "sourceWidth", "sourceHeight", "outputWidth", "outputHeight",
