@@ -112,6 +112,9 @@ function parseScalar(value, line) {
     }
     return parsed;
   }
+  if (value.startsWith('|') || value.startsWith('>')) {
+    throw new YamlSyntaxError('unsupported YAML scalar indicator; only an exact unquoted | is supported', line);
+  }
   if (/[:]\s|\s#/.test(value)) {
     throw new YamlSyntaxError('plain scalars cannot contain colon-space or inline comments', line);
   }
@@ -371,10 +374,12 @@ function validateManifest(manifest, requestedFormats, errors) {
       addError(errors, 'manifest.requested_format', file, `unsupported requested format: ${format}`);
     }
   }
-  if (requestedFormats.includes('pptx')) {
-    const pptx = manifest.formats.pptx;
-    requireString(pptx, 'audience', file, errors, 'formats.pptx.');
-    requireString(pptx, 'purpose', file, errors, 'formats.pptx.');
+  const pptx = manifest.formats.pptx;
+  const pptxRequested = requestedFormats.includes('pptx');
+  for (const field of ['audience', 'purpose']) {
+    if (pptxRequested || hasOwn(pptx, field)) requireString(pptx, field, file, errors, 'formats.pptx.');
+  }
+  if (pptxRequested || hasOwn(pptx, 'slide_outline')) {
     if (!Array.isArray(pptx?.slide_outline) || pptx.slide_outline.length === 0) {
       addError(errors, 'manifest.pptx_outline', file, 'formats.pptx.slide_outline must be a nonempty list');
     } else {
@@ -416,7 +421,8 @@ async function validateMarkdown(source, artifactDir, errors) {
       continue;
     }
     const opening = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
-    if (opening) {
+    const invalidBacktickInfo = opening?.[1][0] === '`' && opening[2].includes('`');
+    if (opening && !invalidBacktickInfo) {
       fence = { character: opening[1][0], length: opening[1].length };
       continue;
     }

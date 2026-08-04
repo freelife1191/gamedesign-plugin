@@ -386,3 +386,96 @@ test('rejects impossible ISO calendar dates', async () => {
   assert.equal(result.ok, false);
   assert.match(messages(result), /source\.accessed_at.*calendar date/i);
 });
+
+for (const scalar of ['|0', '|word', '|oops', '>2', '>word']) {
+  test(`rejects unsupported unquoted YAML scalar indicator ${scalar}`, async () => {
+    const dir = await temporaryArtifact();
+    await replaceIn(dir, 'evidence.yml', 'limitations: |', `limitations: ${scalar}`);
+
+    const result = await validateArtifact(dir);
+
+    assert.equal(result.ok, false);
+    assert.match(messages(result), /unsupported YAML.*scalar indicator/i);
+  });
+}
+
+test('validates unrequested PPTX slide outline item keys', async () => {
+  const dir = await temporaryArtifact();
+  await replaceIn(
+    dir,
+    'export-manifest.yml',
+    '      - title: Design goal\n',
+    '      - title: Design goal\n        unknown: value\n',
+  );
+
+  const result = await validateArtifact(dir);
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /slide_outline\[0\].*unknown key/i);
+});
+
+test('validates an unrequested PPTX slide_outline nested type', async () => {
+  const dir = await temporaryArtifact();
+  await replaceIn(
+    dir,
+    'export-manifest.yml',
+    '    slide_outline:\n      - title: Design goal\n      - title: Core loop\n      - title: Evidence and risks\n',
+    '    slide_outline: invalid\n',
+  );
+
+  const result = await validateArtifact(dir);
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /slide_outline must be a nonempty list/i);
+});
+
+const unsafeFixtureTargets = [
+  {
+    name: 'evidence',
+    path: 'evidence.yml',
+    before: 'version: 1\n',
+    replacement: (key) => `version: 1\n${key}: polluted\n`,
+  },
+  {
+    name: 'manifest',
+    path: 'export-manifest.yml',
+    before: 'artifact_id: combat-brief\n',
+    replacement: (key) => `artifact_id: combat-brief\n${key}: polluted\n`,
+  },
+  {
+    name: 'frontmatter',
+    path: 'content.md',
+    before: 'version: 1\n---',
+    replacement: (key) => `version: 1\n${key}: polluted\n---`,
+  },
+];
+
+for (const target of unsafeFixtureTargets) {
+  for (const key of ['__proto__', 'prototype', 'constructor']) {
+    test(`rejects ${key} at the ${target.name} production boundary`, async () => {
+      const dir = await temporaryArtifact();
+      await replaceIn(dir, target.path, target.before, target.replacement(key));
+
+      const result = await validateArtifact(dir);
+
+      assert.equal(result.ok, false);
+      assert.match(messages(result), /unsafe mapping key/i);
+    });
+  }
+}
+
+test('does not let a backtick in fence info hide headings or asset traversal', async () => {
+  const dir = await temporaryArtifact();
+  await replaceIn(
+    dir,
+    'content.md',
+    'The design is grounded in the linked playtest evidence.',
+    'The design is grounded in the linked playtest evidence.\n\n```md`pseudo\n# Hidden H1 {#hidden-h1}\n![Hidden traversal](assets/../content.md)\n```',
+  );
+
+  const result = await validateArtifact(dir);
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /exactly one H1/i);
+  assert.match(messages(result), /inside assets/i);
+});
