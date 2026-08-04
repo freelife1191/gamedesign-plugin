@@ -148,6 +148,33 @@ async function rollbackInstall({ backup, destination, fs, installed, previousEnt
   }
 }
 
+function cleanupWarning(cleanupPath, cause) {
+  return {
+    code: "VENDOR_CLEANUP_PENDING",
+    message: `vendor update committed; cleanup pending at ${cleanupPath}: ${cause.message}`,
+    path: cleanupPath,
+  };
+}
+
+async function cleanupCommittedGeneration(workRoot, fs) {
+  const suffix = path.basename(workRoot).slice(".skillstead-update-".length);
+  const tombstone = path.join(path.dirname(workRoot), `.skillstead-cleanup-${suffix}`);
+  try {
+    await fs.rename(workRoot, tombstone);
+  } catch (error) {
+    const warning = cleanupWarning(workRoot, error);
+    return { committed: true, cleanupPending: workRoot, warnings: [warning] };
+  }
+
+  try {
+    await fs.rm(tombstone, { recursive: true, force: true });
+  } catch (error) {
+    const warning = cleanupWarning(tombstone, error);
+    return { committed: true, cleanupPending: tombstone, warnings: [warning] };
+  }
+  return { committed: true, cleanupPending: null, warnings: [] };
+}
+
 export async function updateVendor(repositoryRoot, source, requestedVersion, options = {}) {
   const fs = options.fs ?? defaultFs;
   const hooks = options.hooks ?? {};
@@ -225,27 +252,7 @@ export async function updateVendor(repositoryRoot, source, requestedVersion, opt
     throw error;
   }
 
-  try {
-    await fs.rm(workRoot, { recursive: true, force: true });
-  } catch (error) {
-    if (!oldMoved) throw error;
-    try {
-      await rollbackInstall({
-        backup,
-        destination: vendorRoot,
-        fs,
-        installed,
-        previousEntries,
-        workRoot,
-      });
-    } catch (rollbackError) {
-      throw new AggregateError(
-        [error, rollbackError],
-        `${rollbackError.message}; cleanup failure: ${error.message}`,
-      );
-    }
-    throw error;
-  }
+  return cleanupCommittedGeneration(workRoot, fs);
 }
 
 const modulePath = fileURLToPath(import.meta.url);
@@ -255,8 +262,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === modulePath) {
   try {
     const options = parseArgs(process.argv.slice(2));
     if (options.update) {
-      await updateVendor(repositoryRoot, options.source, options.version);
+      const result = await updateVendor(repositoryRoot, options.source, options.version);
       console.log(`Updated Skillstead ${VERSION} vendor tree`);
+      for (const warning of result.warnings) console.warn(`warning: ${warning.message}`);
     }
     const count = await verifyVendorHash(repositoryRoot);
     console.log(`Skillstead vendor verified ${count} files`);

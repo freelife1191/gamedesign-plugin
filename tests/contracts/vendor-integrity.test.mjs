@@ -396,26 +396,48 @@ test("installed-root verification failure rolls back to the verified prior gener
   }
 });
 
-test("final cleanup failure rolls back while the prior backup is intact", async () => {
+test("partial post-commit cleanup failure keeps the verified install and reports only a cleanup tombstone", async () => {
   const fixture = await createUpdateFixture();
-  const before = await treeSnapshot(fixture.vendor);
   let cleanupFailed = false;
   const injectedFs = {
     ...fs,
     async rm(target, options) {
-      if (!cleanupFailed && path.basename(target).startsWith(".skillstead-update-")) {
+      if (!cleanupFailed && path.basename(target).startsWith(".skillstead-")) {
         cleanupFailed = true;
-        throw new Error("injected final cleanup failure");
+        await fs.rm(
+          path.join(target, "previous/svg-infographic/0.8.3/SKILL.md"),
+          { force: true },
+        );
+        throw new Error("injected partial tombstone cleanup failure");
       }
       return fs.rm(target, options);
     },
   };
   try {
-    await assert.rejects(
-      vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3", { fs: injectedFs }),
-      /injected final cleanup failure/,
+    const result = await vendorModule.updateVendor(
+      fixture.scratch,
+      fixture.source,
+      "0.8.3",
+      { fs: injectedFs },
     );
-    await assertGenerationPreserved(fixture, before);
+    assert.equal(result.committed, true);
+    assert.equal(typeof result.cleanupPending, "string");
+    assert.equal(path.basename(result.cleanupPending).startsWith(".skillstead-cleanup-"), true);
+    assert.deepEqual(result.warnings.map(({ code }) => code), ["VENDOR_CLEANUP_PENDING"]);
+    assert.match(result.warnings[0].message, /cleanup pending/);
+    assert.doesNotMatch(result.warnings[0].message, /recovery/i);
+    assert.equal(result.warnings[0].path, result.cleanupPending);
+
+    const verification = run(verifier, ["--root", fixture.scratch]);
+    assert.equal(verification.status, 0, verification.stderr || verification.stdout);
+    assert.match(verification.stdout, /verified 5 files/);
+    assert.equal((await fs.lstat(result.cleanupPending)).isDirectory(), true);
+
+    const nextUpdate = await vendorModule.updateVendor(fixture.scratch, fixture.source, "0.8.3");
+    assert.deepEqual(nextUpdate, { committed: true, cleanupPending: null, warnings: [] });
+    const nextVerification = run(verifier, ["--root", fixture.scratch]);
+    assert.equal(nextVerification.status, 0, nextVerification.stderr || nextVerification.stdout);
+    assert.equal((await fs.lstat(result.cleanupPending)).isDirectory(), true);
   } finally {
     await rm(fixture.scratch, { recursive: true, force: true });
   }
