@@ -43,7 +43,7 @@ Produce `system-specification` with stable sections for purpose, input, precondi
 
 ## Responsible-design gates
 
-Evaluate `accessibility` for interaction and feedback, `scope-control` for implementation/runtime cost, and `economy-transparency` when the system affects prices, odds, pity, or progression. Evaluate `ugc-safety` and `ai-npc-safety` when system inputs include UGC or generated behavior. Record evidence and owner for `not-applicable`, `pending`, `blocked`, or `approved`.
+Read [gates.json](../../../../../shared/responsible-design/gates.json) as the authority before evaluating gates. Ask every gate's `applicability_questions`, gather its `evidence_fields`, and keep its declared approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When a gate is applicable, initialize `pending`; otherwise use `not-applicable`. Only `not-applicable`, `pending`, `blocked`, and `approved` are lifecycle values. Missing evidence cannot become approval.
 
 ## Role reviewers
 

@@ -43,6 +43,6 @@ Treat timings, ratios, costs, probabilities, caps, cooldowns, and other balance 
 
 **Repair:** Assign stable rule IDs and precedence, define tie-break and authority, enumerate failure/recovery states, and tag `5 seconds` and `20%` provisional with validation tasks and owners.
 
-## Responsible-design gate record
+## Responsible-design gates
 
-Record each applicable gate as `pending`, `blocked`, or `approved`, or explain `not-applicable`; include evidence and owner. Evaluate `accessibility`, `scope-control`, and conditional `economy-transparency`, `ugc-safety`, and `ai-npc-safety`. Missing evidence is never approved.
+Read [gates.json](../../../../../shared/responsible-design/gates.json) as the authority. For `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`, ask the registry's `applicability_questions`, collect its `evidence_fields`, and retain the named approver. When a gate is applicable, initialize `pending`; otherwise record `not-applicable`. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence is never approved.

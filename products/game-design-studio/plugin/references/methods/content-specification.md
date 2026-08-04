@@ -38,6 +38,6 @@ Never state a person-day cost as fact from intuition alone. Without team/pipelin
 
 **Repair:** Link each quest archetype to its system, rule, event, schema, and reward IDs. Estimate unit counts by complexity using measured pipeline throughput; otherwise mark the range provisional, assign a sample-production task, and block schedule commitment.
 
-## Responsible-design gate record
+## Responsible-design gates
 
-Record `applicable`, `not-applicable`, `pending`, `blocked`, or `approved`, evidence, and owner for `accessibility`, `scope-control`, and conditional `ugc-safety`, `ai-npc-safety`, and `economy-transparency`. Missing evidence is never approved.
+Read [gates.json](../../../../../shared/responsible-design/gates.json) as the authority. For `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`, ask the registry's `applicability_questions`, collect its `evidence_fields`, and retain the named approver. When a gate is applicable, initialize `pending`; otherwise record `not-applicable`. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence is never approved.

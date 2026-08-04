@@ -31,6 +31,6 @@ Use this method to turn intent into a falsifiable vision artifact. Keep claims d
 
 **Repair:** Mark both audience and threshold provisional; name the research source, baseline, calibration owner, validation plan, and decision date. Rewrite fun as the specific player verb, decision tension, system feedback, and expected observable behavior.
 
-## Responsible-design gate record
+## Responsible-design gates
 
-For every gate, record `applicable`, `not-applicable`, `pending`, `blocked`, or `approved`, plus evidence and owner. Check `accessibility` for core experience paths, `scope-control` for feasibility, `ugc-safety` for player expression, `ai-npc-safety` for generated characters, and `economy-transparency` when the vision includes monetized progression. Missing evidence is never approved.
+Read [gates.json](../../../../../shared/responsible-design/gates.json) as the authority. For `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`, ask the registry's `applicability_questions`, collect its `evidence_fields`, and retain the named approver. When a gate is applicable, initialize `pending`; otherwise record `not-applicable`. Advance lifecycle only through `not-applicable`, `pending`, `blocked`, or `approved`. Missing evidence is never approved.
