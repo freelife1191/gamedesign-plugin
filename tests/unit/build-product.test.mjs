@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
-import { assertUniqueNormalizedTreePaths } from "../../tooling/lib/copy-tree.mjs";
+import * as copyTree from "../../tooling/lib/copy-tree.mjs";
 
 const fixtureRoot = new URL("../fixtures/minimal-product/", import.meta.url);
 
@@ -156,9 +156,18 @@ test("symlinks in declared trees are rejected", async (t) => {
   );
 });
 
-test("NFC-equivalent internal directory names are rejected before merging their files", () => {
+test("collectTree records directories in the NFC collision registry before recursion", async (t) => {
+  const fixture = await createRepo(t, async ({ repoRoot }) => {
+    await writeText(repoRoot, "products/minimal-product/plugin/café/one.txt", "one\n");
+  });
+  const registry = copyTree.createNormalizedPathRegistry("product fixture");
+  await copyTree.collectTree(path.join(fixture.repoRoot, "products/minimal-product/plugin"), {
+    label: "product fixture",
+    registry,
+  });
+
   assert.throws(
-    () => assertUniqueNormalizedTreePaths(["café/one.txt", "cafe\u0301/two.txt"]),
+    () => registry.record("cafe\u0301", "café", "directory"),
     /duplicate normalized path/i,
   );
 });

@@ -3,30 +3,28 @@ import path from "node:path";
 
 import { comparePaths, normalizeRelativePath } from "./paths.mjs";
 
-function recordNormalizedTreePath(paths, rawRelativePath, label) {
-  const rawPath = rawRelativePath.replaceAll("\\", "/");
-  const normalizedPath = normalizeRelativePath(rawPath, label);
-  const existing = paths.get(normalizedPath);
-  if (existing !== undefined && existing !== rawPath) {
-    throw new Error(`Duplicate normalized path in ${label}: ${normalizedPath}`);
-  }
-  paths.set(normalizedPath, rawPath);
-  return normalizedPath;
-}
-
-export function assertUniqueNormalizedTreePaths(relativePaths, label = "tree") {
+export function createNormalizedPathRegistry(label = "tree") {
   const paths = new Map();
-  return relativePaths.map((relativePath) => {
-    const rawPath = relativePath.replaceAll("\\", "/");
-    const segments = rawPath.split("/");
-    for (let index = 1; index <= segments.length; index += 1) {
-      recordNormalizedTreePath(paths, segments.slice(0, index).join("/"), label);
-    }
-    return normalizeRelativePath(rawPath, label);
-  });
+  return {
+    record(rawRelativePath, normalizedPath, kind) {
+      const rawPath = rawRelativePath.replaceAll("\\", "/");
+      const validatedPath = normalizeRelativePath(rawPath, label);
+      if (validatedPath !== normalizedPath) {
+        throw new Error(`Normalized path mismatch in ${label}: ${rawPath}`);
+      }
+      const existing = paths.get(normalizedPath);
+      if (existing !== undefined && (existing.rawPath !== rawPath || existing.kind !== kind)) {
+        throw new Error(`Duplicate normalized path in ${label}: ${normalizedPath}`);
+      }
+      paths.set(normalizedPath, { kind, rawPath });
+      return normalizedPath;
+    },
+  };
 }
 
-export async function collectTree(sourceRoot, { label = sourceRoot } = {}) {
+export async function collectTree(sourceRoot, options = {}) {
+  const label = options.label ?? sourceRoot;
+  const registry = options.registry ?? createNormalizedPathRegistry(label);
   const rootStats = await lstat(sourceRoot).catch((error) => {
     if (error.code === "ENOENT") throw new Error(`Missing source root: ${label}`);
     throw error;
@@ -35,7 +33,6 @@ export async function collectTree(sourceRoot, { label = sourceRoot } = {}) {
   if (!rootStats.isDirectory()) throw new Error(`Source root is not a directory: ${label}`);
 
   const collected = [];
-  const normalizedPaths = new Map();
 
   async function visit(directory, prefix) {
     const entries = await readdir(directory, { withFileTypes: true });
@@ -43,7 +40,9 @@ export async function collectTree(sourceRoot, { label = sourceRoot } = {}) {
     for (const entry of entries) {
       const sourcePath = path.join(directory, entry.name);
       const rawRelativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
-      const relativePath = recordNormalizedTreePath(normalizedPaths, rawRelativePath, label);
+      const relativePath = normalizeRelativePath(rawRelativePath, label);
+      const kind = entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other";
+      registry.record(rawRelativePath, relativePath, kind);
       if (entry.isSymbolicLink()) throw new Error(`Symlink is not allowed in ${label}: ${relativePath}`);
       if (entry.isDirectory()) {
         await visit(sourcePath, rawRelativePath);
