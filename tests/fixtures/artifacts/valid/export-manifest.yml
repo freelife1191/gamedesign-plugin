@@ -1,0 +1,16 @@
+artifact_id: combat-brief
+formats:
+  md:
+    status: passed
+  pdf:
+    status: pending
+  docx:
+    status: unavailable
+  pptx:
+    status: pending
+    audience: studio review panel
+    purpose: explain the combat loop and its evidence
+    slide_outline:
+      - title: Design goal
+      - title: Core loop
+      - title: Evidence and risks

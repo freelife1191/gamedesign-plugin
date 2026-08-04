@@ -1,0 +1,14 @@
+{
+  "name": "portfolio",
+  "version": 1,
+  "colors": {
+    "background": "#111318",
+    "foreground": "#F5F7FA",
+    "accent": "#F2B84B",
+    "muted": "#AAB2C0"
+  },
+  "typography": {
+    "heading": "Arial",
+    "body": "Arial"
+  }
+}

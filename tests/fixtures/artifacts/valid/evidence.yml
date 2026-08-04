@@ -1,0 +1,13 @@
+version: 1
+claims:
+  - id: claim-core-loop-clarity
+    claim_type: playtest
+    claim: Players understood the risk-reward loop after one encounter.
+    source:
+      title: Internal combat prototype playtest
+      locator: decisions/0001-core-loop.md
+      accessed_at: 2026-08-04
+    confidence: high
+    limitations: |
+      The test used five experienced action-game players.
+      Results do not yet represent new players.
