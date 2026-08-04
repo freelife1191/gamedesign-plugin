@@ -62,14 +62,15 @@ codex plugin marketplace remove game-design-suite
 
 - `products/game-design-career/plugin`은 Career 전용 source overlay입니다. 제품 스킬·역할·references·템플릿·문서만 여기서 편집합니다.
 - `shared/`는 지식, 책임 있는 설계, 내보내기 계약, hooks, shared runtime scripts와 vendored Skillstead의 공동 원천입니다.
-- `plugins/game-design-career`는 suite build가 두 원천을 깨끗한 staging 디렉터리에서 합성한 generated independent snapshot입니다. 다른 플러그인이나 저장소 상대 경로 없이 단독 설치할 수 있어야 합니다.
+- `buildProduct()`는 두 원천을 깨끗한 staging 디렉터리의 `game-design-career/`로 합성합니다. 이 product clean build는 다른 플러그인이나 저장소 상대 경로 없이 단독 실행할 수 있어야 합니다.
+- `plugins/game-design-career`는 이후 suite 통합 빌드가 marketplace용으로 생성·관리하는 generated independent snapshot 경로입니다.
 
 `plugins/game-design-career` 생성은 suite build가 소유합니다. 생성 결과를 직접 편집하지 마십시오. 변경은 `products/` 또는 `shared/` 원천에 적용하고 테스트한 뒤 다시 빌드합니다.
 
-최종 배포 스냅샷의 구조는 다음과 같습니다. 괄호의 개수는 Career release 계약에서 고정한 수입니다.
+현재 `buildProduct()` product clean build의 구조는 다음과 같습니다. 괄호의 개수는 Career release 계약에서 고정한 수입니다.
 
 ```text
-plugins/game-design-career/
+<staging>/game-design-career/
 ├── .codex-plugin/plugin.json
 ├── skills/ (11개)
 │   ├── <10개 Career 제품 스킬>/
@@ -100,9 +101,10 @@ plugins/game-design-career/
 │   └── shared/templates/
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
-├── README.md
-└── BUILD-MANIFEST.json              # suite build가 만드는 파일 목록·해시
+└── README.md
 ```
+
+현재 `buildProduct()` clean build에는 `BUILD-MANIFEST.json`이 없습니다. `BUILD-MANIFEST.json`은 suite 통합 Task 9가 marketplace package를 만들 때 추가할 미래 배포 스냅샷 산출물이며, product Task 10의 현재 inventory로 간주하지 않습니다.
 
 경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고 Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다. Studio와 달리 Career에는 profile 합성 계층이 없습니다.
 
@@ -113,7 +115,7 @@ plugins/game-design-career/
 - `SessionStart`는 `scripts/capability-probe.mjs`를 실행하는 capability-probe hook입니다. Node, Chromium, LibreOffice와 Codex 문서·PDF·프레젠테이션 capability를 감지하되 선택 기능 부재로 작업을 중단하지 않습니다.
 - `Stop`은 `scripts/stop-artifact-review.mjs`를 실행하는 one-retry artifact review hook입니다. 최종 artifact sentinel이 있을 때 Canonical Artifact를 검증하고, 실패하면 교정 패스를 한 번만 요청합니다. hook 재진입 상태에서는 다시 차단하지 않습니다.
 
-최상위 `scripts/`는 이 두 hook과 Canonical Artifact 검증을 위한 shared runtime입니다. Career 전용 product helper는 필요한 제품 스킬의 `skills/<skill-id>/scripts/`에 있으며, 역할 병합, E2E 시나리오, 채용 근거, 시각화 상태와 내보내기 job을 검증합니다. 최종 `BUILD-MANIFEST.json`은 제품 원천 파일이 아니라 suite build가 독립 스냅샷에 추가하는 생성물입니다.
+최상위 `scripts/`는 이 두 hook과 Canonical Artifact 검증을 위한 shared runtime입니다. Career 전용 product helper는 필요한 제품 스킬의 `skills/<skill-id>/scripts/`에 있으며, 역할 병합, E2E 시나리오, 채용 근거, 시각화 상태와 내보내기 job을 검증합니다. 미래 `BUILD-MANIFEST.json`은 제품 원천이나 현재 clean build 파일이 아니라 suite 통합 Task 9가 distribution snapshot에 추가하는 생성물입니다.
 
 ## 작동 방식
 
@@ -316,16 +318,21 @@ node --test tests/products/career/*.test.mjs tests/e2e/career/*.test.mjs
 10개 source skill의 공식 구조를 확인합니다.
 
 ```bash
-find products/game-design-career/plugin/skills -name SKILL.md -print0 | xargs -0 -n1 dirname | while read skill_dir; do python3 /Users/freelife/.codex/skills/.system/skill-creator/scripts/quick_validate.py "$skill_dir"; done
+CODEX_SKILL_CREATOR_ROOT="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"
+find products/game-design-career/plugin/skills -name SKILL.md -print0 |
+  while IFS= read -r -d '' skill_file; do
+    python3 "$CODEX_SKILL_CREATOR_ROOT/scripts/quick_validate.py" "${skill_file%/SKILL.md}"
+  done
 ```
 
 source plugin manifest를 확인합니다.
 
 ```bash
-python3 /Users/freelife/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py products/game-design-career/plugin
+CODEX_PLUGIN_CREATOR_ROOT="${CODEX_HOME:-$HOME/.codex}/skills/.system/plugin-creator"
+python3 "$CODEX_PLUGIN_CREATOR_ROOT/scripts/validate_plugin.py" products/game-design-career/plugin
 ```
 
-절대 경로가 포함된 두 검증 예시는 이 저장소를 만든 로컬 개발 환경의 설치 위치를 사용합니다. 다른 환경에서는 설치된 `skill-creator`와 `plugin-creator`의 실제 경로로 바꾸십시오. 배포 스냅샷 생성·독립 설치 smoke와 전체 형식 렌더 검증은 suite 통합 검증에서 실행합니다.
+두 명령은 `CODEX_HOME`이 설정되면 그 값을 우선하고, 없으면 `$HOME/.codex`를 사용합니다. 모든 경로 변수를 따옴표로 감싸므로 Codex 홈에 공백이 있어도 동작합니다. 배포 스냅샷 생성·독립 설치 smoke와 전체 형식 렌더 검증은 suite 통합 검증에서 실행합니다.
 
 ## 라이선스
 

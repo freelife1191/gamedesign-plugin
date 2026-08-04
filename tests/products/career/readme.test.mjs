@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -180,7 +184,6 @@ test("README explains the source overlay and complete independent built-plugin s
     "references/shared/export/schema/",
     "assets/templates/ (15개)",
     "assets/product-mark.svg",
-    "BUILD-MANIFEST.json",
   ]) {
     assert.ok(readme.includes(pathOrCount), `missing packaged structure: ${pathOrCount}`);
   }
@@ -222,4 +225,73 @@ test("README keeps Career export preparation non-terminal and delegates trusted 
 
   assert.doesNotMatch(exportSection, /각 형식은 capability probe, 생성, 파일 존재, 형식별 QA가 모두 통과해야 `passed`/u);
   assert.doesNotMatch(readme, /형식별 capability·생성·QA 증거가 있는 작업 manifest/u);
+});
+
+test("README distinguishes the current product build from the future suite manifest and stays machine-portable", async () => {
+  const stage = await mkdtemp(path.join(os.tmpdir(), "career-readme-build-"));
+  try {
+    const result = await buildProduct({
+      repoRoot,
+      productName: "game-design-career",
+      stagingRoot: stage,
+      sourceDateEpoch: 0,
+    });
+    const sourceReadme = await readFile(readmePath, "utf8");
+    const builtReadme = await readFile(path.join(result.outputDir, "README.md"), "utf8");
+
+    assert.equal(result.files.includes("BUILD-MANIFEST.json"), false);
+    assert.match(sourceReadme, /현재 `buildProduct\(\)` clean build에는 `BUILD-MANIFEST\.json`이 없습니다/u);
+    assert.match(sourceReadme, /suite 통합 Task 9.*미래 배포 스냅샷/isu);
+    assert.doesNotMatch(sourceReadme, /└── BUILD-MANIFEST\.json\s+# suite build가 만드는 파일 목록·해시/u);
+
+    for (const [label, root, readme] of [
+      ["source", pluginRoot, sourceReadme],
+      ["built", result.outputDir, builtReadme],
+    ]) {
+      assert.doesNotMatch(readme, /\/Users\/|\/home\/|[A-Za-z]:\\/u, `${label} README contains a machine absolute path`);
+      assert.match(readme, /\$\{CODEX_HOME:-\$HOME\/\.codex\}/u);
+      const links = [...readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)]
+        .map((match) => match[1])
+        .filter((target) => !target.startsWith("http") && !target.startsWith("#"));
+      for (const target of links) {
+        assert.equal(path.isAbsolute(target), false, `${label} README link must be relative: ${target}`);
+        const resolved = path.resolve(root, target);
+        assert.ok(resolved === root || resolved.startsWith(`${root}${path.sep}`), `${label} README link escapes package: ${target}`);
+        await access(resolved);
+      }
+    }
+  } finally {
+    await rm(stage, { recursive: true, force: true });
+  }
+});
+
+test("README validation commands honor a CODEX_HOME override containing spaces", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  const blocks = [...readme.matchAll(/```bash\n([\s\S]*?)```/g)].map((match) => match[1]);
+  const skillCommand = blocks.find((block) => block.includes("CODEX_SKILL_CREATOR_ROOT"));
+  const pluginCommand = blocks.find((block) => block.includes("CODEX_PLUGIN_CREATOR_ROOT"));
+  assert.ok(skillCommand, "missing portable skill validation command");
+  assert.ok(pluginCommand, "missing portable plugin validation command");
+
+  const scratch = await mkdtemp(path.join(os.tmpdir(), "career readme commands-"));
+  const codexHome = path.join(scratch, "Codex Home With Spaces");
+  try {
+    const skillScript = path.join(codexHome, "skills/.system/skill-creator/scripts/quick_validate.py");
+    const pluginScript = path.join(codexHome, "skills/.system/plugin-creator/scripts/validate_plugin.py");
+    await mkdir(path.dirname(skillScript), { recursive: true });
+    await mkdir(path.dirname(pluginScript), { recursive: true });
+    await writeFile(skillScript, "import sys\nprint('override-skill:' + sys.argv[1])\n", "utf8");
+    await writeFile(pluginScript, "import sys\nprint('override-plugin:' + sys.argv[1])\n", "utf8");
+
+    const environment = { ...process.env, CODEX_HOME: codexHome };
+    const skillRun = spawnSync("/bin/bash", ["-c", skillCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
+    assert.equal(skillRun.status, 0, skillRun.stderr);
+    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 10);
+
+    const pluginRun = spawnSync("/bin/bash", ["-c", pluginCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
+    assert.equal(pluginRun.status, 0, pluginRun.stderr);
+    assert.match(pluginRun.stdout, /^override-plugin:products\/game-design-career\/plugin$/m);
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
 });
