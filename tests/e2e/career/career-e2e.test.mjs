@@ -243,3 +243,51 @@ test("job evidence applies the complete production schema and nested repeated-si
     assert.ok(validation.errors.some(({ code }) => code === "job.schema"), `${label}: ${JSON.stringify(validation.errors)}`);
   }
 });
+
+test("reverse claims enforce the complete fact-inference schema", async () => {
+  const invalidId = await fixtureJson("reverse-design-portfolio");
+  const originalId = invalidId.claims[0].claimId;
+  invalidId.claims[0].claimId = " invalid claim id ";
+  for (const references of Object.values(invalidId.surfaces)) {
+    for (let index = 0; index < references.length; index += 1) {
+      if (references[index] === originalId) references[index] = " invalid claim id ";
+    }
+  }
+  const invalidIdResult = await validate("reverse-design-portfolio", invalidId);
+  assert.equal(invalidIdResult.ok, false);
+  assert.ok(invalidIdResult.errors.some(({ code }) => code === "reverse.claim-schema"), messages(invalidIdResult));
+
+  for (const [label, field] of [["counterexample", "counterexample"], ["alternative", "alternative"]]) {
+    const malformed = await fixtureJson("reverse-design-portfolio");
+    malformed.claims[0][field] = [null];
+    const validation = await validate("reverse-design-portfolio", malformed);
+    assert.equal(validation.ok, false, label);
+    assert.ok(validation.errors.some(({ code }) => code === "reverse.claim-schema"), `${label}: ${messages(validation)}`);
+  }
+});
+
+test("target requirements reproduce the exact referenced posting field item", async () => {
+  const fabricated = await fixtureJson("junior-transition");
+  fabricated.targetRequirements[0].statement = "Lead global live operations strategy.";
+  const fabricatedResult = await validate("junior-transition", fabricated);
+  assert.equal(fabricatedResult.ok, false);
+  assert.ok(fabricatedResult.errors.some(({ code }) => code === "transition.target-requirement-source"), messages(fabricatedResult));
+
+  const wrongAddress = await fixtureJson("junior-transition");
+  wrongAddress.targetRequirements[0].sourceField = "preferredSkills";
+  wrongAddress.targetRequirements[0].sourceIndex = 9;
+  const wrongAddressResult = await validate("junior-transition", wrongAddress);
+  assert.equal(wrongAddressResult.ok, false);
+  assert.ok(wrongAddressResult.errors.some(({ code }) => code === "transition.target-requirement-source"), messages(wrongAddressResult));
+});
+
+test("reverse surface validation is independent of JSON property order", async () => {
+  const reordered = await fixtureJson("reverse-design-portfolio");
+  reordered.surfaces = Object.fromEntries(Object.entries(reordered.surfaces).reverse());
+  const result = await validate("reverse-design-portfolio", reordered);
+
+  assert.equal(result.ok, true, messages(result));
+  assert.deepEqual(result.acceptance.reverseSurfaces, [
+    "fact", "inference", "rules", "exceptions", "UI", "data", "economy", "operations", "alternatives", "validation",
+  ]);
+});

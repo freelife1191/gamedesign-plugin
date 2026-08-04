@@ -51,3 +51,12 @@
 - Corrected the transition fixture to the production `sampleGeography` array shape and changed every reverse surface entry to a claim ID.
 - Focused GREEN: 11/11; Career 112/112; shared 1/1; repository excluding vendor 253/253; Skillstead 58/58; combined inventory 311/311.
 - Source and clean-built plugin validators passed. The 256-file clean build SHA-256 is `43a09233e93f5d0afd3d5e5b9bc782f1efaaa339285b28d4c71fbb72f446e22a`; built E2E, Node syntax, 19 JSON files, symlink scan, and diff checks passed.
+
+## Fix Round 2
+
+- Reproduced all three review findings as focused RED 10/14: invalid claim IDs and null counterexample/alternative items survived, target requirements were not bound to exact posting array items, and reverse surfaces depended on JSON property order.
+- Extended the generic schema evaluator with `anyOf`, `const`, `allOf`, `if`/`then`/`else`, and `maxItems`, then applied the complete `fact-inference-schema.json` to every reverse claim under the `reverse.claim-schema` boundary. Existing claim-level falsifiability and surface semantics remain enforced.
+- Added deterministic target-requirement source addresses: `postingEvidenceId`, `sourceField`, and integer `sourceIndex`. A requirement statement must exactly equal the referenced `responsibilities`, `requiredSkills`, or `preferredSkills` item; valid-posting fabricated prose and wrong field/index addresses fail closed.
+- Made the reverse surface key-set comparison order-independent while retaining the exact ten-key set and canonical acceptance summary order.
+- Focused GREEN: 14/14; Career 115/115; shared 1/1; repository excluding vendor 256/256; Skillstead 58/58; combined inventory 314/314.
+- Source and clean-built plugin validators passed. The 256-file clean build SHA-256 is `b632c7d85fd57c3e67a5d7780e574a3169c3f0593542c9d1d3ac12099eb5daa3`; built E2E, Node syntax, 19 JSON files, symlink scan, and diff checks passed.

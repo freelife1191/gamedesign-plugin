@@ -142,59 +142,83 @@ function validCalendarDate(value) {
     && date.getUTCDate() === Number(match[3]);
 }
 
-function validateSchemaValue(value, schema, location, errors) {
-  const allowedTypes = Array.isArray(schema.type) ? schema.type : [schema.type];
-  if (!allowedTypes.some((type) => matchesType(value, type))) {
-    errors.push(finding("job.schema", `${location} must have type ${allowedTypes.join(" or ")}.`));
-    return;
+function validateSchemaValue(value, schema, location, errors, code = "job.schema") {
+  if (schema.anyOf) {
+    const matches = schema.anyOf.some((candidate) => {
+      const candidateErrors = [];
+      validateSchemaValue(value, candidate, location, candidateErrors, code);
+      return candidateErrors.length === 0;
+    });
+    if (!matches) {
+      errors.push(finding(code, `${location} must satisfy at least one allowed schema.`));
+      return;
+    }
   }
+  if (schema.type !== undefined) {
+    const allowedTypes = Array.isArray(schema.type) ? schema.type : [schema.type];
+    if (!allowedTypes.some((type) => matchesType(value, type))) {
+      errors.push(finding(code, `${location} must have type ${allowedTypes.join(" or ")}.`));
+      return;
+    }
+  }
+  if (Object.hasOwn(schema, "const") && value !== schema.const) errors.push(finding(code, `${location} must equal its required constant.`));
   if (value === null) return;
   if (schema.enum && !schema.enum.includes(value)) {
-    errors.push(finding("job.schema", `${location} must be one of the approved enum values.`));
+    errors.push(finding(code, `${location} must be one of the approved enum values.`));
   }
   if (typeof value === "string") {
     const minimum = Math.max(schema.minLength ?? 0, 1);
-    if (value.trim().length < minimum) errors.push(finding("job.schema", `${location} must be non-empty.`));
+    if (value.trim().length < minimum) errors.push(finding(code, `${location} must be non-empty.`));
     if (schema.pattern && !(new RegExp(schema.pattern, "u")).test(value)) {
-      errors.push(finding("job.schema", `${location} does not match its required pattern.`));
+      errors.push(finding(code, `${location} does not match its required pattern.`));
     }
     if (schema.format === "date" && !validCalendarDate(value)) {
-      errors.push(finding("job.schema", `${location} must be an actual ISO calendar date.`));
+      errors.push(finding(code, `${location} must be an actual ISO calendar date.`));
     }
     if (schema.format === "uri") {
       try {
         const url = new URL(value);
         if (!url.protocol) throw new Error("missing protocol");
       } catch {
-        errors.push(finding("job.schema", `${location} must be an absolute URI.`));
+        errors.push(finding(code, `${location} must be an absolute URI.`));
       }
     }
   }
   if (Number.isInteger(value) && schema.minimum !== undefined && value < schema.minimum) {
-    errors.push(finding("job.schema", `${location} must be at least ${schema.minimum}.`));
+    errors.push(finding(code, `${location} must be at least ${schema.minimum}.`));
   }
   if (Array.isArray(value)) {
     if (schema.minItems !== undefined && value.length < schema.minItems) {
-      errors.push(finding("job.schema", `${location} requires at least ${schema.minItems} items.`));
+      errors.push(finding(code, `${location} requires at least ${schema.minItems} items.`));
+    }
+    if (schema.maxItems !== undefined && value.length > schema.maxItems) {
+      errors.push(finding(code, `${location} allows at most ${schema.maxItems} items.`));
     }
     if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) {
-      errors.push(finding("job.schema", `${location} items must be unique.`));
+      errors.push(finding(code, `${location} items must be unique.`));
     }
-    value.forEach((item, index) => validateSchemaValue(item, schema.items, `${location}[${index}]`, errors));
+    if (schema.items) value.forEach((item, index) => validateSchemaValue(item, schema.items, `${location}[${index}]`, errors, code));
   }
   if (isRecord(value)) {
     const properties = schema.properties ?? {};
     for (const field of schema.required ?? []) {
-      if (!Object.hasOwn(value, field)) errors.push(finding("job.schema", `${location}.${field} is required.`));
+      if (!Object.hasOwn(value, field)) errors.push(finding(code, `${location}.${field} is required.`));
     }
     if (schema.additionalProperties === false) {
       for (const field of Object.keys(value)) {
-        if (!Object.hasOwn(properties, field)) errors.push(finding("job.schema", `${location}.${field} is not allowed.`));
+        if (!Object.hasOwn(properties, field)) errors.push(finding(code, `${location}.${field} is not allowed.`));
       }
     }
     for (const [field, child] of Object.entries(value)) {
-      if (properties[field]) validateSchemaValue(child, properties[field], `${location}.${field}`, errors);
+      if (properties[field]) validateSchemaValue(child, properties[field], `${location}.${field}`, errors, code);
     }
+  }
+  for (const clause of schema.allOf ?? []) validateSchemaValue(value, clause, location, errors, code);
+  if (schema.if) {
+    const conditionErrors = [];
+    validateSchemaValue(value, schema.if, location, conditionErrors, code);
+    if (conditionErrors.length === 0 && schema.then) validateSchemaValue(value, schema.then, location, errors, code);
+    if (conditionErrors.length > 0 && schema.else) validateSchemaValue(value, schema.else, location, errors, code);
   }
 }
 
@@ -423,6 +447,7 @@ function validateFactInferenceClaim(claim, schema, errors) {
     errors.push(finding("reverse.claim", "Every reverse-design claim must be a record."));
     return;
   }
+  validateSchemaValue(claim, schema, `claims.${claim.claimId ?? "unknown"}`, errors, "reverse.claim-schema");
   const keys = Object.keys(claim);
   if (!sameArray(keys.sort(), [...schema.required].sort())) {
     errors.push(finding("reverse.claim-fields", `${claim.claimId ?? "claim"} must use the exact fact-inference fields.`));
@@ -470,7 +495,8 @@ async function validateReverse(result, errors) {
       else claimById.set(claim.claimId, claim);
     }
   }
-  if (!isRecord(result.surfaces) || !sameArray(Object.keys(result.surfaces), REVERSE_SURFACES)) {
+  if (!isRecord(result.surfaces)
+    || !sameArray(Object.keys(result.surfaces).sort(), [...REVERSE_SURFACES].sort())) {
     errors.push(finding("reverse.surfaces", "Reverse design requires the exact approved surface set."));
   } else {
     const surfaceAccepts = {
@@ -529,6 +555,7 @@ async function validateTransition(root, result, errors) {
     errors.push(finding("transition.job-evidence", error.message));
   }
   const postingIds = new Set(jobEvidence.map(({ sourceId }) => sourceId));
+  const postingById = new Map(jobEvidence.map((posting) => [posting.sourceId, posting]));
 
   const portfolioEvidence = Array.isArray(result.portfolioEvidenceRegistry) ? result.portfolioEvidenceRegistry : [];
   const portfolioEvidenceIds = new Set();
@@ -558,17 +585,39 @@ async function validateTransition(root, result, errors) {
   for (const requirement of targetRequirements) {
     const exact = requireExactKeys(
       requirement,
-      ["requirementId", "postingEvidenceId", "statement", "status"],
+      ["requirementId", "postingEvidenceId", "sourceField", "sourceIndex", "statement", "status"],
       "transition.target-requirement",
       errors,
       "Target requirement",
     );
-    if (exact && requireTextFields(requirement, ["requirementId", "postingEvidenceId", "statement", "status"], "transition.target-requirement", errors)) {
+    const fields = exact && requireTextFields(
+      requirement,
+      ["requirementId", "postingEvidenceId", "sourceField", "statement", "status"],
+      "transition.target-requirement",
+      errors,
+    );
+    if (fields) {
+      const posting = postingById.get(requirement.postingEvidenceId);
+      const allowedSourceFields = ["responsibilities", "requiredSkills", "preferredSkills"];
+      const source = allowedSourceFields.includes(requirement.sourceField)
+        ? posting?.[requirement.sourceField]
+        : undefined;
+      const sourceBound = Number.isInteger(requirement.sourceIndex)
+        && requirement.sourceIndex >= 0
+        && Array.isArray(source)
+        && requirement.sourceIndex < source.length
+        && source[requirement.sourceIndex] === requirement.statement;
+      if (!sourceBound) {
+        errors.push(finding(
+          "transition.target-requirement-source",
+          `${requirement.requirementId} statement must exactly reproduce its referenced posting field item.`,
+        ));
+      }
       if (requirementById.has(requirement.requirementId)
         || !postingIds.has(requirement.postingEvidenceId)
         || !["approved", "provisional"].includes(requirement.status)) {
         errors.push(finding("transition.target-requirement", `${requirement.requirementId} must be unique and bound to an actual posting with an approved status.`));
-      } else {
+      } else if (sourceBound) {
         requirementById.set(requirement.requirementId, requirement);
       }
     }

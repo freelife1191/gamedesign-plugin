@@ -23,13 +23,17 @@
     {
       "requirementId": "posting-transition-1-live-ops",
       "postingEvidenceId": "posting-transition-1",
-      "statement": "Support live-operations system changes.",
+      "sourceField": "responsibilities",
+      "sourceIndex": 2,
+      "statement": "Support live operations",
       "status": "approved"
     },
     {
       "requirementId": "posting-transition-1-handoff",
       "postingEvidenceId": "posting-transition-1",
-      "statement": "Collaborate on clear implementation handoff.",
+      "sourceField": "responsibilities",
+      "sourceIndex": 1,
+      "statement": "Collaborate on implementation handoff",
       "status": "approved"
     }
   ],
