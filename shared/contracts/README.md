@@ -49,7 +49,14 @@ Role prompt는 `products/<product-name>/plugin/agents/<role-id>.md`에 둔다(�
 
 Product template은 `products/<product-name>/plugin/assets/templates/<template-name>/`(built 경로 `assets/templates/<template-name>/`)에 둔다. `<template-name>`은 kebab-case artifact type이며 임의 별칭이나 대소문자 변형을 만들지 않는다. Canonical handoff가 필요한 template은 `content.md`, `evidence.yml`, `export-manifest.yml`, `assets/`, `decisions/` 구조를 유지하고 production `validateArtifact`를 통과해야 한다.
 
-E2E 입력 fixture는 `tests/e2e/<product-name>/fixtures/<scenario-name>/`에 둔다. Fixture는 고정 입력과 기대 artifact type/gate를 포함하고 네트워크, 현재 시각, 사용자 홈 경로에 의존하지 않는다. Expected artifact를 복제 validator로 검사하지 말고 production build/validator를 호출한다.
+E2E fixture의 product ID와 lane ID mapping은 고정되어 있다.
+
+| Product ID | Lane ID | Scenario root |
+| --- | --- | --- |
+| `game-design-studio` | `studio` | `tests/e2e/studio/<scenario>/` |
+| `game-design-career` | `career` | `tests/e2e/career/<scenario>/` |
+
+각 scenario root는 고정 입력과 기대 artifact type/gate를 포함하고 네트워크, 현재 시각, 사용자 홈 경로에 의존하지 않는다. 별도 `fixtures/` 계층이나 product ID를 E2E lane ID로 사용하지 않는다. Expected artifact를 복제 validator로 검사하지 말고 production build/validator를 호출한다.
 
 ## Generated snapshots
 
