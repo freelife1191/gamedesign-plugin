@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Game Design Portfolio"
+  short_description: "Audit portfolio evidence across five axes"
+  default_prompt: "Use $review-game-design-portfolio to audit a game design portfolio with traceable evidence."
