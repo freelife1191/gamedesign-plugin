@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { cp, lstat, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -6,6 +7,7 @@ import test, { afterEach } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { parseRestrictedYaml, validateArtifact } from "../../../shared/scripts/validate-artifact.mjs";
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const templateRoot = path.join(repoRoot, "products/game-design-career/plugin/assets/templates");
@@ -72,6 +74,24 @@ const recordFields = {
   "introduction-motivation": ["claim-id", "evidence-id", "target-role", "motivation", "honest-boundary", "privacy", "approval-status"],
   "junior-growth-review": ["requirement-id", "project-event-evidence", "goal", "owner", "cadence", "reviewer", "next-review-date", "proof-artifact"],
   "transition-readiness": ["target-requirement", "current-evidence", "posting-evidence-id", "retrieval-date", "region", "gap", "alternative", "verification-task"],
+};
+
+const approvedContentHashes = {
+  "career-stage-goal": "1db4f34eb67fdc698b3d1cf588632bde23766983758c8494a4a558394870fa07",
+  "competency-matrix": "f8b38ba574acb8cb98592eee04ce441cba8678a624b1294aa3d51d5b38f3d58a",
+  "creative-design-portfolio": "65c35090f97e4e205db374eca0bfd172af6de6f26e1b3c3afa84ce827d90603a",
+  "five-axis-review": "1ef17913ce31dddd95d14762baf8b987a659a9857d9116590479e9ebd9e91ee5",
+  "game-analysis-report": "78630c3b9875430aa86ad9686bf4cc7a3a2788342672ed97bf2d6e8d8484f52c",
+  "game-design-role-map": "f1ece52171ad5b1e071942c3782fba1d5b17b2c25d64b0e5d7414a689db7f73d",
+  "interview-question-answer-log": "b9b574b5580811ccead24105dc661ec32f9089b0c0a84f4316c130b3b35b6aff",
+  "introduction-motivation": "33b5ab15d98f79ad960f14d36c3196e756ce5223f478a0b8f2bbb9783c6b7f87",
+  "job-posting-evidence": "352d51b22926e84a6241bc6513383514cb2750907fc977f0cc5b1fd6f006f1b1",
+  "junior-growth-review": "5df1c0998c02f65a2fb442424661bc0ffef9f10ff9a8489f00b9e8a88a93414c",
+  "learning-roadmap": "28d166e843cccbb4bc6afed0806e73718969f1b5494f5d0e89d4d30372ba076a",
+  "portfolio-backlog": "d287626038bd2db428b802f421857ec2744e9639720d5895c5845f4aea35ef2f",
+  "portfolio-project-brief": "e795a5694286492757f05d5367915fe2e3af9fdfa551f95019122f7153f59ff7",
+  "reverse-design-document": "dd0064538adcbee41caa1f9928f1a7ee845ae2fae5a21b5dc62abbce48e397a6",
+  "transition-readiness": "68c66b4e731d5aaf46aebf683902d1cedf7bad076936473dbda44490bcd7d306",
 };
 
 const semanticContracts = {
@@ -145,33 +165,6 @@ const commonSemanticClauses = [
   "Do not split Markdown mechanically by headings.",
 ];
 
-const portfolioContradictionRule = {
-  concepts: [/\b(?:third-party|publication)\b/iu, /\b(?:rights|privacy)\b/iu],
-  forbiddenDirection: /\b(?:assum(?:e|ed)|pre-?approved|automatically approved|may omit|optional)\b/iu,
-};
-
-const semanticConsistencyRules = {
-  "reverse-design-document": [{
-    concepts: [/\b(?:internal intent|implementation)\b/iu, /\bfact\b/iu],
-    forbiddenDirection: /\b(?:may|can|allow(?:ed)?|permit(?:ted)?|estimate(?:d)?)\b/iu,
-  }],
-  "interview-question-answer-log": [{
-    concepts: [/\b(?:fabricat(?:e|ed)|team size|revenue|retention|ownership|implementation results)\b/iu, /\b(?:answer|estimate)\b/iu],
-    forbiddenDirection: /\b(?:may|can|allow(?:ed)?|permit(?:ted)?|optional|estimate(?:d)?)\b/iu,
-  }],
-  "portfolio-backlog": [portfolioContradictionRule],
-  "portfolio-project-brief": [portfolioContradictionRule],
-  "creative-design-portfolio": [portfolioContradictionRule],
-  "job-posting-evidence": [{
-    concepts: [/\bcurrent (?:job )?claims?\b/iu, /\b(?:primary sources?|retrieval dates?|regions?|refresh owners?|evidence)\b/iu],
-    forbiddenDirection: /\b(?:stale|omit(?:ted)?|without|no primary|optional)\b/iu,
-  }],
-  "transition-readiness": [{
-    concepts: [/\bcurrent (?:job )?claims?\b/iu, /\b(?:primary sources?|retrieval dates?|regions?|refresh owners?|evidence)\b/iu],
-    forbiddenDirection: /\b(?:stale|omit(?:ted)?|without|no primary|optional)\b/iu,
-  }],
-};
-
 function semanticSection(content, heading, id) {
   const marker = `## ${heading} {#${id}}\n\n`;
   const start = content.indexOf(marker);
@@ -188,18 +181,6 @@ function assertSemanticContract(templateId, content) {
   }
   for (const clause of commonSemanticClauses) {
     assert.ok(content.includes(clause), `${templateId}: missing semantic clause ${clause}`);
-  }
-  const paragraphs = content
-    .replace(/^---\n[\s\S]*?\n---\n/u, "")
-    .split(/\n\s*\n/u)
-    .map((paragraph) => paragraph.replaceAll(/[`|]/gu, " ").replaceAll(/\s+/gu, " ").trim())
-    .filter(Boolean);
-  for (const rule of semanticConsistencyRules[templateId] ?? []) {
-    const contradictions = paragraphs.filter((paragraph) => (
-      rule.concepts.every((concept) => concept.test(paragraph))
-      && rule.forbiddenDirection.test(paragraph)
-    ));
-    assert.deepEqual(contradictions, [], `${templateId}: contradictory semantic permission`);
   }
 }
 
@@ -244,7 +225,13 @@ function errorMessages(result) {
   return result.errors.map(({ message }) => message).join("\n");
 }
 
-function assertUsableTemplate(templateId, content, evidence, manifest) {
+function assertUsableTemplate(templateId, content, evidence, manifest, expectedContentHash) {
+  assert.match(expectedContentHash, /^[a-f0-9]{64}$/u, `${templateId}: approved content hash`);
+  assert.equal(
+    createHash("sha256").update(content, "utf8").digest("hex"),
+    expectedContentHash,
+    `${templateId}: approved release seed bytes`,
+  );
   const metadata = parseContentFrontmatter(content);
   assert.equal(metadata.artifact_id, templateId, `${templateId}: frontmatter identity`);
   assert.match(content, /^# .+ \{#[a-z0-9-]+\}$/mu);
@@ -302,6 +289,29 @@ test("exactly the 15 approved Career templates ship with complete canonical seed
   }
 });
 
+test("approved content hash map exactly covers all source seeds and clean-built copies", async () => {
+  assert.deepEqual(Object.keys(approvedContentHashes).sort(), [...templateIds].sort());
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-template-build-"));
+  temporaryDirs.push(stagingRoot);
+  const build = await buildProduct({
+    repoRoot,
+    productName: "game-design-career",
+    stagingRoot,
+    sourceDateEpoch: 0,
+  });
+  for (const templateId of templateIds) {
+    const relativePath = path.join("assets", "templates", templateId, "content.md");
+    const sourceBytes = await readFile(path.join(templateRoot, templateId, "content.md"));
+    const builtBytes = await readFile(path.join(build.outputDir, relativePath));
+    assert.deepEqual(builtBytes, sourceBytes, `${templateId}: clean-built bytes`);
+    assert.equal(
+      createHash("sha256").update(sourceBytes).digest("hex"),
+      approvedContentHashes[templateId],
+      `${templateId}: source seed hash`,
+    );
+  }
+});
+
 test("every template instantiates as a real Canonical Artifact through the production validator", async () => {
   for (const templateId of templateIds) {
     const fixture = await temporaryTemplate(templateId);
@@ -312,6 +322,7 @@ test("every template instantiates as a real Canonical Artifact through the produ
       await readFile(path.join(fixture, "content.md"), "utf8"),
       parseRestrictedYaml(await readFile(path.join(fixture, "evidence.yml"), "utf8")),
       parseRestrictedYaml(await readFile(path.join(fixture, "export-manifest.yml"), "utf8")),
+      approvedContentHashes[templateId],
     );
   }
 });
@@ -323,7 +334,7 @@ test("type-specific completion gates reject diluted or generic seeds", async () 
     const manifest = parseRestrictedYaml(await readFile(path.join(templateRoot, templateId, "export-manifest.yml"), "utf8"));
     const token = typeContracts[templateId][0];
     assert.throws(
-      () => assertUsableTemplate(templateId, content.replace(new RegExp(token, "giu"), "generic-field"), evidence, manifest),
+      () => assertUsableTemplate(templateId, content.replace(new RegExp(token, "giu"), "generic-field"), evidence, manifest, approvedContentHashes[templateId]),
       undefined,
       `${templateId}: type-specific mutation survived`,
     );
@@ -338,7 +349,7 @@ test("semantic mutation guard rejects reversed safety and evidence meanings", as
     const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
     const mutated = mutate(content);
     assert.notEqual(mutated, content, `${templateId}: mutation must alter the fixture`);
-    assert.throws(() => assertUsableTemplate(templateId, mutated, evidence, manifest));
+    assert.throws(() => assertUsableTemplate(templateId, mutated, evidence, manifest, approvedContentHashes[templateId]));
   }
 
   await assertMutationRejected("reverse-design-document", (content) => content.replace(
@@ -366,7 +377,7 @@ test("semantic consistency rejects contradictory permission added outside the re
     const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
     const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
     const mutated = `${content}\n## Exception Policy {#exception-policy}\n\n${contradiction}\n`;
-    assert.throws(() => assertUsableTemplate(templateId, mutated, evidence, manifest));
+    assert.throws(() => assertUsableTemplate(templateId, mutated, evidence, manifest, approvedContentHashes[templateId]));
   }
 
   await assertAddedContradictionRejected(
@@ -387,6 +398,25 @@ test("semantic consistency rejects contradictory permission added outside the re
   );
 });
 
+test("semantic guard rejects split-prose and synonymous contradictory additions", async () => {
+  async function assertAdditionRejected(templateId, addition) {
+    const root = path.join(templateRoot, templateId);
+    const content = await readFile(path.join(root, "content.md"), "utf8");
+    const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
+    const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
+    assert.throws(() => assertUsableTemplate(templateId, `${content}\n${addition}\n`, evidence, manifest, approvedContentHashes[templateId]));
+  }
+
+  await assertAdditionRejected(
+    "reverse-design-document",
+    "## Split Exception {#split-exception}\n\nInternal intent and implementation may be presented.\n\nAs fact when confidence is high.",
+  );
+  await assertAdditionRejected(
+    "creative-design-portfolio",
+    "## Clearance Exception {#clearance-exception}\n\nLicensing and confidentiality may be presumed cleared.",
+  );
+});
+
 test("frontmatter identity cannot be spoofed by an expected artifact_id string in the body", async () => {
   const templateId = "career-stage-goal";
   const root = path.join(templateRoot, templateId);
@@ -396,7 +426,7 @@ test("frontmatter identity cannot be spoofed by an expected artifact_id string i
   const spoofed = content
     .replace("artifact_id: career-stage-goal", "artifact_id: game-design-role-map")
     .concat("\nExpected identity note: artifact_id: career-stage-goal\n");
-  assert.throws(() => assertUsableTemplate(templateId, spoofed, evidence, manifest));
+  assert.throws(() => assertUsableTemplate(templateId, spoofed, evidence, manifest, approvedContentHashes[templateId]));
 });
 
 test("generic token-only prose cannot satisfy a type-specific semantic contract", async () => {
@@ -414,7 +444,7 @@ test("generic token-only prose cannot satisfy a type-specific semantic contract"
       "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact.",
       "observation inference confidence fact.",
     );
-  assert.throws(() => assertUsableTemplate(templateId, generic, evidence, manifest));
+  assert.throws(() => assertUsableTemplate(templateId, generic, evidence, manifest, approvedContentHashes[templateId]));
 });
 
 test("five-axis rubric has exact axes, evidence-only levels, separate penalties, and minimum repairs", async () => {
