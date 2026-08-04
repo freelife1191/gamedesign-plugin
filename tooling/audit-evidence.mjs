@@ -20,7 +20,13 @@ function nonEmpty(value) {
 }
 
 function validDate(value) {
-  return nonEmpty(value) && DATE.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+  if (!nonEmpty(value) || !DATE.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
+
+function sameSet(left, right) {
+  return left.size === right.size && [...left].every((value) => right.has(value));
 }
 
 function parseClaims(markdown, relativePath, errors) {
@@ -72,6 +78,11 @@ export async function auditEvidence({ repoRoot }) {
     errors.push(`shared/knowledge/trends/2026-current-practices.md: cannot be read (${error.message})`);
   }
 
+  return auditEvidenceData({ documents, index, register, initialErrors: errors });
+}
+
+export function auditEvidenceData({ documents, index, register, initialErrors = [] }) {
+  const errors = [...initialErrors];
   const claims = documents.flatMap(([relativePath, markdown]) => parseClaims(markdown, relativePath, errors));
   const localIds = new Set(index.documents?.map(({ id }) => id) ?? []);
   const externalSources = Array.isArray(register.sources) ? register.sources : [];
@@ -116,6 +127,17 @@ export async function auditEvidence({ repoRoot }) {
       }
       if (!claim.sourceIds?.some((sourceId) => externalIds.has(sourceId))) errors.push(`${label}: time-sensitive claim requires an external registered source`);
     }
+
+    const claimExternalIds = new Set(claim.sourceIds?.filter((sourceId) => externalIds.has(sourceId)) ?? []);
+    const reverseExternalIds = new Set(externalSources.filter(({ claimIds }) => claimIds?.includes(claim.id)).map(({ id }) => id));
+    if (!sameSet(claimExternalIds, reverseExternalIds)) {
+      errors.push(`${label}: external source mappings differ`);
+    }
+    if (claimExternalIds.size > 0) {
+      const registeredUrls = new Set(externalSources.filter(({ id }) => claimExternalIds.has(id)).map(({ url }) => url));
+      const claimUrls = new Set(claim.primaryUrls ?? []);
+      if (!sameSet(registeredUrls, claimUrls)) errors.push(`${label}: external source URLs differ`);
+    }
   }
 
   for (const source of externalSources) {
@@ -125,6 +147,7 @@ export async function auditEvidence({ repoRoot }) {
     }
     if (source.primary !== true) errors.push(`${label}: source must be marked primary`);
     if (!/^https:\/\//.test(source.url ?? "")) errors.push(`${label}: url must be HTTPS`);
+    if (source.retrievedAt !== "2026-08-04") errors.push(`${label}: retrievedAt must be 2026-08-04`);
     if (source.publishedOrUpdatedAt !== null && !validDate(source.publishedOrUpdatedAt)) {
       errors.push(`${label}: publishedOrUpdatedAt must be a date or null`);
     }

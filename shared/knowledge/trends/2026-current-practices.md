@@ -1,6 +1,6 @@
 # 2026 현재 실무 등록부
 
-검증일은 2026-08-04다. 이 문서는 현재 공식 자료에서 도출한 설계 검토 항목이며 법률 자문, 플랫폼 승인 보장, 업계 전체의 합의를 뜻하지 않는다. 각 영역은 `reviewAfter` 이전에도 정책이나 제품 변경이 있으면 즉시 재확인한다.
+검증일은 2026-08-04다. 이 문서는 현재 공식 자료에서 도출한 설계 검토 항목이며 법률 자문, 플랫폼 승인 보장, 업계 전체의 합의를 뜻하지 않는다. 갱신 조건은 각 `claim` 블록의 최신성 메타데이터에 기록한다.
 
 ## AI 제작: 권리·출처·사람의 승인
 
@@ -77,22 +77,37 @@
 }
 ```
 
-## 크로스플랫폼: 저장보다 넓은 계약
+## 크로스플랫폼 백엔드의 현재 제품 범위
 
 ```claim
 {
   "id": "CUR-CROSS-001",
   "type": "time-sensitive",
   "basis": "current-external-claim",
-  "guidance": "계정, 저장·진행, 입력과 UI, 성능 등급, 매치 공정성, 채팅 안전, 스토어 권한, 업적과 장애 시 복구를 플랫폼별 계약으로 설계한다.",
+  "guidance": "PlayFab Foundation Mode의 Public Preview는 통합 계정, 진행·저장, 커뮤니티, 멀티플레이, LiveOps 관리, 경제, 텔레메트리의 크로스플랫폼 백엔드 기능을 Xbox 출판 계약 범위의 선택지로 제공한다.",
   "sourceIds": ["EXT-PLAYFAB-FOUNDATION"],
   "applicability": "두 개 이상의 플랫폼에서 동일한 커뮤니티, 진행 또는 경제를 공유하는 게임에 적용한다.",
-  "counterexamples": ["단일 플레이 로컬 게임은 통합 계정보다 플랫폼 고유 저장과 입력 품질이 우선일 수 있다."],
+  "counterexamples": ["단일 플레이 로컬 게임이나 별도 백엔드를 이미 운영하는 팀에는 이 제품 범위가 필요하지 않을 수 있다."],
   "verifiedAt": "2026-08-04",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://developer.microsoft.com/en-us/games/articles/2026/03/gdc-2026-introducing-foundation-mode-for-playfab/"],
   "regionScope": "Xbox 출판 계약과 PlayFab Foundation Mode Public Preview 제품 범위",
   "limitations": "서비스 소개는 특정 구현 선택지이지 모든 게임의 의무나 성과 보장이 아니다. 각 플랫폼 인증·상거래·개인정보 요건은 별도 확인한다."
+}
+```
+
+## 크로스플랫폼 경험 체크리스트
+
+```claim
+{
+  "id": "CUR-CROSS-CHECKLIST-001",
+  "type": "contextual",
+  "basis": "synthesis",
+  "guidance": "크로스플랫폼 경험을 설계할 때 입력과 UI, 성능 등급, 매치 공정성, 채팅 안전, 스토어 권한, 업적, 장애 시 복구를 플랫폼별 계약으로 분리해 검토한다.",
+  "sourceIds": ["systems-7ccf322de528", "systems-081b21e5d10c", "systems-91d23bacb462"],
+  "applicability": "두 개 이상의 플랫폼에서 플레이 경험이나 커뮤니티를 공유하는 게임의 기획 검토에 적용한다.",
+  "counterexamples": ["공유 진행이나 멀티플레이가 없는 독립 빌드는 모든 항목을 통합할 필요가 없다."],
+  "limitations": "로컬 시스템·UI 원칙을 크로스플랫폼 검토표로 종합한 것이며 특정 플랫폼의 인증·안전·상거래 요구를 증명하지 않는다. 각 플랫폼의 최신 공식 기준을 별도로 확인한다."
 }
 ```
 
@@ -134,21 +149,35 @@
 }
 ```
 
-## 범위 통제: 포함 기준과 중단 기준을 함께 둔다
+## 현재 산업 압력은 계획 가정으로만 사용한다
 
 ```claim
 {
   "id": "CUR-SCOPE-001",
   "type": "time-sensitive",
   "basis": "current-external-claim",
-  "guidance": "후보 기능을 핵심 루프 기여, 제작 노력, 유지비, 의존성, 외부 권리, 프로토타입 가설, kill criteria로 비교하고 must·should·could·won't에 배치한다.",
+  "guidance": "GDC 2025·2026 업계 설문은 조사 응답자들이 해고, 자금·사업 압력, 생성형 AI 사용과 우려, 라이브 서비스 및 플랫폼 선택 변화를 경험한다고 보고한다. 이 결과는 범위와 일정의 외부 가정을 재검토하게 하는 현재 상황 신호로만 사용한다.",
   "sourceIds": ["EXT-GDC-STATE-2025", "EXT-GDC-STATE-2026"],
-  "applicability": "인력·자금 변동이 큰 프로젝트의 기능 승인, 마일스톤, 포트폴리오 샘플 범위를 정할 때 적용한다.",
-  "counterexamples": ["설문에서 많이 언급된 기술이나 장르라는 이유만으로 프로젝트 목표와 검증 없이 must에 넣지 않는다."],
+  "applicability": "인력·자금·도구·플랫폼에 관한 계획 가정이 현재 업계 상황과 어긋나는지 점검할 때 적용한다.",
+  "counterexamples": ["설문에서 많이 언급된 기술이나 장르를 개별 프로젝트의 수요 예측 또는 구현 우선순위로 직접 사용하지 않는다."],
   "verifiedAt": "2026-08-04",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://gdconf.com/article/gdc-2025-state-of-the-game-industry-devs-weigh-in-on-layoffs-ai-and-more/", "https://gdconf.com/article/gdc-2026-state-of-the-game-industry-reveals-impact-of-layoffs-generative-ai-and-more/"],
   "regionScope": "GDC가 조사한 게임 업계 종사자 표본과 해당 연도 산업 맥락",
   "limitations": "설문은 표본·역할·지역 편향이 있는 상황 자료이며 규범이나 개별 프로젝트 수요 예측이 아니다. 페이지 본문에서 정확한 게시일은 확인하지 못했다."
+}
+```
+
+## 범위 통제 방법은 프로젝트 근거로 결정한다
+
+```claim
+{
+  "id": "CUR-SCOPE-METHOD-001",
+  "type": "evergreen",
+  "basis": "synthesis",
+  "guidance": "후보 기능을 핵심 루프 기여, 제작 노력, 유지비, 의존성, 외부 권리, 프로토타입 가설, 중단 기준으로 비교하고 must·should·could·won't에 배치한다.",
+  "sourceIds": ["career-7143bd076592", "feedback-dae11a5c473c", "content-a82b6f42fafd"],
+  "applicability": "기능 승인, 마일스톤, 콘텐츠 로드맵, 포트폴리오 샘플의 범위를 정할 때 적용한다.",
+  "counterexamples": ["브랜드를 정의하는 고위험 실험은 단기 효율이 낮아도 명시적 가설과 중단 기준 아래 수행할 수 있다."]
 }
 ```

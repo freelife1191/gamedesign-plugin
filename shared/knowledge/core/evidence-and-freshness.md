@@ -35,16 +35,10 @@
   "id": "CORE-FRESHNESS-001",
   "type": "contextual",
   "basis": "synthesis",
-  "guidance": "안정 원칙은 evergreen, 사례·조직 의존 조언은 contextual, 정책·법률·플랫폼·시장·현재 도구는 time-sensitive로 분류해 필수 메타데이터와 재검토 시점을 다르게 적용한다.",
+  "guidance": "안정 원칙은 evergreen, 사례·조직 의존 조언은 contextual, 정책·법률·플랫폼·시장·현재 도구는 time-sensitive로 분류해 필수 메타데이터와 재검토 시점을 다르게 적용한다. 로컬 원문과 현재 공식 근거가 충돌하면 source-conflict를 기록하고 현재형 주장은 공식 근거를 우선한다. 법률·규제 자료는 준수 판정이 아니라 법무 검토 trigger로 사용한다. reviewAfter가 지나면 재확인 전까지 의사결정 근거로 사용하지 않는다는 경고를 붙인다.",
   "sourceIds": ["career-3b9cabd3bc3a", "career-880924f0c787", "systems-7ccf322de528"],
   "applicability": "서로 다른 수명의 지식을 한 저장소에서 유지할 때 적용한다.",
   "counterexamples": ["프로젝트 내부의 고정된 역사 기록은 최신성보다 변경 불가능한 당시 상태의 보존이 우선이다."],
   "limitations": "분류는 절대적이지 않다. 제품·지역·조직이 바뀌면 evergreen으로 보이던 지침도 contextual로 재분류할 수 있다."
 }
 ```
-
-## 운영 규칙
-
-- 로컬 원문과 현재 공식 근거가 충돌하면 `source-conflict`를 기록하고 현재형 주장은 공식 근거를 우선한다.
-- 법률·규제 자료는 법무 검토를 시작하는 신호일 뿐 준수 판정이 아니다.
-- `reviewAfter`가 지나면 주장을 삭제하지 말고, 재확인 전까지 의사결정 근거로 쓰지 않는다는 경고를 붙인다.
