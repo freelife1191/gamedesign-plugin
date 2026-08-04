@@ -11,8 +11,8 @@
       "unsuitableInputs": ["unsupported sample loops or data-accurate retention charts"],
       "archetype": "flow",
       "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
-      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
-      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "svgLint": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>", "evidence": ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "rendererDigest", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
       "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
     },
     {
@@ -21,8 +21,8 @@
       "unsuitableInputs": ["rules without source states or precedence"],
       "archetype": "flow",
       "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
-      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
-      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "svgLint": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>", "evidence": ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "rendererDigest", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
       "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
     },
     {
@@ -31,8 +31,8 @@
       "unsuitableInputs": ["unscoped content lists without progression relationships"],
       "archetype": "flow",
       "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
-      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
-      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "svgLint": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>", "evidence": ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "rendererDigest", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
       "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
     },
     {
@@ -41,8 +41,8 @@
       "unsuitableInputs": ["price or probability values absent from the canonical evidence"],
       "archetype": "topology-component",
       "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
-      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
-      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "svgLint": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>", "evidence": ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "rendererDigest", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
       "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
     },
     {
@@ -51,8 +51,8 @@
       "unsuitableInputs": ["invented schedules or statistical experiment charts"],
       "archetype": "roadmap-timeline",
       "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
-      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
-      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "svgLint": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>", "evidence": ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "rendererDigest", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
       "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
     },
     {
@@ -61,8 +61,8 @@
       "unsuitableInputs": ["unverified staffing estimates or a flat contact list"],
       "archetype": "topology-component",
       "accessibility": { "altTextRequired": true, "readingOrderRequired": true, "colorIndependentMeaning": true },
-      "svgLint": { "command": "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>", "evidence": ["command", "exitCode", "log", "svgPath", "svgDigest"] },
-      "pngRender": { "command": "node skills/svg-infographic/scripts/render.mjs <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
+      "svgLint": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>", "evidence": ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"] },
+      "pngRender": { "command": "node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>", "scale": 2, "evidence": ["renderer", "version", "rendererDigest", "command", "exitCode", "pngPath", "pngDigest", "dimensions"] },
       "fallback": { "status": "svg-only-unverified", "preserveCanonicalArtifact": true, "prohibitSuccessClaim": true }
     }
   ]

@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import { inflateSync } from "node:zlib";
+
+import { resolveSkillsteadCli } from "./run-skillstead.mjs";
 
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const STATUSES = new Set(["not-requested", "pending", "passed", "failed", "unavailable"]);
@@ -12,6 +16,10 @@ const PRESET_IDS = new Set([
 ]);
 const QA_CHECKS = Object.freeze(["fit-to-page", "close-up", "alt-text", "source-fidelity"]);
 const STABLE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const LINTER_ID = "Skillstead svg-infographic";
+const LINTER_VERSION = "0.8.3";
+const WRAPPER_PATH = "skills/visualize-game-design/scripts/run-skillstead.mjs";
+const lintCache = new Map();
 
 function add(errors, message) { errors.push(message); }
 
@@ -77,7 +85,7 @@ async function verifiedFile(root, relativePath, errors, location) {
     const [canonicalRoot, canonicalTarget] = await Promise.all([realpath(root), realpath(target)]);
     const relative = path.relative(canonicalRoot, canonicalTarget);
     if (relative === "" || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw new Error("outside artifact root");
-    return { bytes: await readFile(canonicalTarget) };
+    return { path: canonicalTarget, bytes: await readFile(canonicalTarget) };
   } catch (cause) {
     add(errors, `${location} is unavailable or unsafe: ${cause.message}`);
     return null;
@@ -100,13 +108,127 @@ function svgMetadata(bytes, errors) {
   return { width, height, description };
 }
 
-function pngDimensions(bytes, errors) {
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+export function inspectCompletePng(bytes) {
+  const errors = [];
   const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-  if (bytes.length < 24 || !bytes.subarray(0, 8).equals(signature) || bytes.toString("ascii", 12, 16) !== "IHDR") {
-    add(errors, "PNG requires a valid signature and IHDR");
+  if (!Buffer.isBuffer(bytes) || bytes.length < 8 || !bytes.subarray(0, 8).equals(signature)) {
+    return { ok: false, errors: ["PNG requires the canonical signature"], width: null, height: null };
+  }
+  let offset = 8;
+  let chunkIndex = 0;
+  let width = null;
+  let height = null;
+  let seenHeader = false;
+  let seenData = false;
+  let dataEnded = false;
+  let seenEnd = false;
+  let bitDepth = null;
+  let colorType = null;
+  let interlace = null;
+  const imageData = [];
+  while (offset < bytes.length && !seenEnd) {
+    if (offset + 12 > bytes.length) {
+      add(errors, `PNG chunk ${chunkIndex} is truncated`);
+      break;
+    }
+    const length = bytes.readUInt32BE(offset);
+    const type = bytes.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    const crcOffset = dataEnd;
+    if (!/^[A-Za-z]{4}$/u.test(type) || crcOffset + 4 > bytes.length) {
+      add(errors, `PNG chunk ${chunkIndex} has invalid framing`);
+      break;
+    }
+    const expectedCrc = bytes.readUInt32BE(crcOffset);
+    const actualCrc = crc32(bytes.subarray(offset + 4, dataEnd));
+    if (expectedCrc !== actualCrc) add(errors, `PNG ${type} chunk CRC32 mismatch`);
+    if (chunkIndex === 0 && type !== "IHDR") add(errors, "PNG IHDR must be the first chunk");
+    if (!seenHeader && type !== "IHDR") add(errors, `PNG ${type} appears before IHDR`);
+    if (type === "IHDR") {
+      if (seenHeader || chunkIndex !== 0 || length !== 13) add(errors, "PNG requires exactly one 13-byte leading IHDR");
+      else {
+        seenHeader = true;
+        width = bytes.readUInt32BE(dataStart);
+        height = bytes.readUInt32BE(dataStart + 4);
+        bitDepth = bytes[dataStart + 8];
+        colorType = bytes[dataStart + 9];
+        interlace = bytes[dataStart + 12];
+        if (!(width > 0) || !(height > 0)) add(errors, "PNG IHDR dimensions must be positive");
+        if (bytes[dataStart + 10] !== 0 || bytes[dataStart + 11] !== 0 || ![0, 1].includes(bytes[dataStart + 12])) add(errors, "PNG IHDR methods are invalid");
+      }
+    } else if (type === "IDAT") {
+      if (dataEnded) add(errors, "PNG IDAT chunks must be consecutive");
+      seenData = true;
+      imageData.push(bytes.subarray(dataStart, dataEnd));
+    } else if (seenData && type !== "IEND") dataEnded = true;
+    if (type === "IEND") {
+      if (length !== 0 || !seenData) add(errors, "PNG IEND requires prior image data and zero length");
+      seenEnd = true;
+      if (crcOffset + 4 !== bytes.length) add(errors, "PNG IEND must end exactly at EOF");
+    }
+    offset = crcOffset + 4;
+    chunkIndex += 1;
+  }
+  if (!seenHeader) add(errors, "PNG IHDR is missing");
+  if (!seenData) add(errors, "PNG IDAT is missing");
+  if (!seenEnd) add(errors, "PNG IEND is missing or truncated");
+  if (seenHeader && seenData) {
+    const channels = new Map([[0, 1], [2, 3], [3, 1], [4, 2], [6, 4]]).get(colorType);
+    const validDepths = new Map([[0, [1, 2, 4, 8, 16]], [2, [8, 16]], [3, [1, 2, 4, 8]], [4, [8, 16]], [6, [8, 16]]]).get(colorType);
+    if (!channels || !validDepths?.includes(bitDepth)) add(errors, "PNG IHDR bit depth and color type are incompatible");
+    try {
+      const pixels = inflateSync(Buffer.concat(imageData), { maxOutputLength: 256 * 1024 * 1024 });
+      if (interlace === 0 && channels) {
+        const rowBytes = Math.ceil((width * channels * bitDepth) / 8);
+        const expectedLength = height * (rowBytes + 1);
+        if (pixels.length !== expectedLength) add(errors, "PNG decompressed image data length does not match IHDR");
+        else {
+          for (let row = 0; row < height; row += 1) if (pixels[row * (rowBytes + 1)] > 4) add(errors, `PNG row ${row} has an invalid filter type`);
+        }
+      } else if (pixels.length === 0) add(errors, "PNG decompressed image data is empty");
+    } catch (cause) {
+      add(errors, `PNG IDAT zlib stream is invalid: ${cause.message}`);
+    }
+  }
+  return { ok: errors.length === 0, errors, width, height };
+}
+
+async function skillsteadRuntime(errors) {
+  try {
+    const [linterPath, rendererPath] = await Promise.all([
+      resolveSkillsteadCli("lint"),
+      resolveSkillsteadCli("render"),
+    ]);
+    const [linterBytes, rendererBytes] = await Promise.all([readFile(linterPath), readFile(rendererPath)]);
+    return { linterPath, rendererPath, linterDigest: digest(linterBytes), rendererDigest: digest(rendererBytes) };
+  } catch (cause) {
+    add(errors, `Packaged Skillstead runtime is unavailable: ${cause.message}`);
     return null;
   }
-  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+
+function independentlyLint(svgFile, runtime, errors) {
+  const key = `${runtime.linterDigest}:${digest(svgFile.bytes)}`;
+  let result = lintCache.get(key);
+  if (!result) {
+    const execution = spawnSync(process.execPath, [runtime.linterPath, svgFile.path], { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 });
+    const log = `${execution.stdout ?? ""}${execution.stderr ?? ""}`.trim();
+    result = { status: execution.status, error: execution.error?.message ?? null, log };
+    lintCache.set(key, result);
+  }
+  if (result.error || result.status !== 0 || !/check-svg:\s*0 error\(s\)/iu.test(result.log)) {
+    add(errors, `Independent Skillstead lint failed: ${result.error || result.log || `exit ${result.status}`}`);
+  }
 }
 
 function validateEvidence(stage, expectedKeys, errors, location) {
@@ -134,8 +256,8 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
   exactKeys(record?.requested, ["svg", "png"], errors, "requested");
   exactKeys(record?.planned, ["status", "sourceSectionIds", "altText", "svgPath", "pngPath"], errors, "planned");
   exactKeys(record?.generated, ["status", "svgPath", "svgDigest", "evidence"], errors, "generated");
-  exactKeys(record?.linted, ["status", "svgPath", "svgDigest", "evidence"], errors, "linted");
-  exactKeys(record?.rendered, ["status", "svgPath", "svgDigest", "pngPath", "pngDigest", "scale", "width", "height", "renderer", "rendererVersion", "evidence"], errors, "rendered");
+  exactKeys(record?.linted, ["status", "svgPath", "svgDigest", "linter", "linterVersion", "linterDigest", "evidence"], errors, "linted");
+  exactKeys(record?.rendered, ["status", "svgPath", "svgDigest", "pngPath", "pngDigest", "scale", "width", "height", "renderer", "rendererVersion", "rendererDigest", "evidence"], errors, "rendered");
   exactKeys(record?.verified, ["status", "svgPath", "svgDigest", "pngPath", "pngDigest", "width", "height", "sourceSectionIds", "altText", "checks"], errors, "verified");
   if (record?.schemaVersion !== 1) add(errors, "schemaVersion must be 1");
   if (!PRESET_IDS.has(record?.presetId)) add(errors, "presetId must identify a packaged visualization preset");
@@ -163,8 +285,8 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
   if (record?.rendered?.status === "passed" && (record.rendered.pngPath !== record.planned.pngPath || record?.verified?.pngPath !== record.planned.pngPath)) add(errors, "all passed render stages must reference the planned PNG path");
 
   validateEvidence(record?.generated, ["command", "exitCode", "svgPath", "svgDigest", "sourceSectionIds"], errors, "generated");
-  validateEvidence(record?.linted, ["command", "exitCode", "log", "svgPath", "svgDigest"], errors, "linted");
-  validateEvidence(record?.rendered, ["command", "exitCode", "log", "renderer", "rendererVersion", "svgPath", "svgDigest", "pngPath", "pngDigest", "width", "height"], errors, "rendered");
+  validateEvidence(record?.linted, ["command", "exitCode", "log", "linter", "linterVersion", "linterDigest", "svgPath", "svgDigest"], errors, "linted");
+  validateEvidence(record?.rendered, ["command", "exitCode", "log", "renderer", "rendererVersion", "rendererDigest", "svgPath", "svgDigest", "pngPath", "pngDigest", "width", "height"], errors, "rendered");
   for (const entry of Array.isArray(record?.generated?.evidence) ? record.generated.evidence : []) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     if (entry.svgPath !== record.generated.svgPath || entry.svgDigest !== record.generated.svgDigest) add(errors, "generated evidence must identify the generated SVG");
@@ -173,6 +295,8 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
   for (const entry of Array.isArray(record?.linted?.evidence) ? record.linted.evidence : []) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     nonempty(entry.log, errors, "linted evidence log");
+    if (entry.command !== `node ${WRAPPER_PATH} lint ${record.linted.svgPath}`) add(errors, "lint evidence must use the packaged Skillstead wrapper for the exact SVG");
+    if (entry.linter !== record.linted.linter || entry.linterVersion !== record.linted.linterVersion || entry.linterDigest !== record.linted.linterDigest) add(errors, "lint evidence must identify the exact linter");
     if (entry.svgPath !== record.linted.svgPath || entry.svgDigest !== record.linted.svgDigest) add(errors, "lint evidence must identify the linted SVG");
   }
   nonempty(record?.rendered?.renderer, errors, "rendered.renderer");
@@ -180,18 +304,22 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
   for (const entry of Array.isArray(record?.rendered?.evidence) ? record.rendered.evidence : []) {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
     nonempty(entry.log, errors, "render evidence log");
-    if (entry.renderer !== record.rendered.renderer || entry.rendererVersion !== record.rendered.rendererVersion) add(errors, "render evidence must identify the renderer and version");
+    if (entry.command !== `node ${WRAPPER_PATH} render ${record.rendered.svgPath} ${record.planned.pngPath}`) add(errors, "render evidence must use the packaged Skillstead wrapper for the exact assets");
+    if (entry.renderer !== record.rendered.renderer || entry.rendererVersion !== record.rendered.rendererVersion || entry.rendererDigest !== record.rendered.rendererDigest) add(errors, "render evidence must identify the renderer and version");
+    if (typeof entry.rendererVersion === "string" && !entry.log.includes(entry.rendererVersion)) add(errors, "render log must bind the renderer version");
     for (const field of ["svgPath", "svgDigest", "pngPath", "pngDigest", "width", "height"]) if (entry[field] !== record.rendered[field]) add(errors, `render evidence ${field} must match the render stage`);
   }
 
   let svgFile;
   let pngFile;
+  let runtime;
   if (typeof artifactRoot !== "string") add(errors, "artifactRoot is required");
   else {
     if ([record?.generated, record?.linted, record?.rendered, record?.verified].some((stage) => stage?.status === "passed") || record?.rendered?.status === "failed") svgFile = await verifiedFile(artifactRoot, record?.planned?.svgPath, errors, "planned.svgPath");
     if (record?.rendered?.status === "passed" || record?.verified?.status === "passed") pngFile = await verifiedFile(artifactRoot, record?.planned?.pngPath, errors, "planned.pngPath");
   }
   if (svgFile) {
+    runtime = await skillsteadRuntime(errors);
     const actualDigest = digest(svgFile.bytes);
     const metadata = svgMetadata(svgFile.bytes, errors);
     for (const [name, stage] of [["generated", record.generated], ["linted", record.linted], ["rendered", record.rendered], ["verified", record.verified]]) {
@@ -199,14 +327,20 @@ export async function validateVisualizationEvidence(record, { artifactRoot } = {
     }
     if (metadata.description !== record?.planned?.altText || metadata.description !== record?.verified?.altText) add(errors, "SVG desc, planned alt text, and verified alt text must match");
     if (!sameArray(record?.verified?.sourceSectionIds, record?.planned?.sourceSectionIds)) add(errors, "verified source mapping must match the planned source mapping");
+    if (runtime && record?.linted?.status === "passed") {
+      if (record.linted.linter !== LINTER_ID || record.linted.linterVersion !== LINTER_VERSION || record.linted.linterDigest !== runtime.linterDigest) add(errors, "lint stage does not identify the packaged Skillstead linter");
+      independentlyLint(svgFile, runtime, errors);
+    }
+    if (runtime && ["passed", "failed"].includes(record?.rendered?.status) && record.rendered.rendererDigest !== runtime.rendererDigest) add(errors, "render stage does not identify the packaged Skillstead renderer");
     if (pngFile && record?.rendered?.status === "passed") {
-      const dimensions = pngDimensions(pngFile.bytes, errors);
+      const inspection = inspectCompletePng(pngFile.bytes);
+      inspection.errors.forEach((message) => add(errors, message));
       const actualPngDigest = digest(pngFile.bytes);
       if (record.rendered.pngDigest !== actualPngDigest || record.verified.pngDigest !== actualPngDigest) add(errors, "PNG digests must match the actual PNG");
       if (record.rendered.scale !== 2) add(errors, "rendered.scale must be 2");
-      if (dimensions) {
-        if (dimensions.width !== metadata.width * 2 || dimensions.height !== metadata.height * 2) add(errors, "actual PNG dimensions must be exactly 2x the SVG viewBox");
-        if (record.rendered.width !== dimensions.width || record.rendered.height !== dimensions.height || record.verified.width !== dimensions.width || record.verified.height !== dimensions.height) add(errors, "recorded dimensions must match the actual PNG");
+      if (inspection.ok) {
+        if (inspection.width !== metadata.width * 2 || inspection.height !== metadata.height * 2) add(errors, "actual PNG dimensions must be exactly 2x the SVG viewBox");
+        if (record.rendered.width !== inspection.width || record.rendered.height !== inspection.height || record.verified.width !== inspection.width || record.verified.height !== inspection.height) add(errors, "recorded dimensions must match the actual PNG");
       }
     }
   }

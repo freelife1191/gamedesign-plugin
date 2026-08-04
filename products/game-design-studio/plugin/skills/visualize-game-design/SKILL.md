@@ -41,10 +41,10 @@ Map every generated node, connector, label, date, and numeric annotation to a so
 1. Load `../../references/visualization-presets.json` and select exactly one suitable preset.
 2. Load the packaged `skills/svg-infographic/SKILL.md`, then its required archetype and authoring references. Follow its preflight, numeric layout, SVG authoring, lint, render, and two-pass visual QA contract.
 3. Write editable SVG into the canonical artifact `assets/` directory with nonempty `<title>`, `<desc>`, stable source mapping, and adjacent alt text.
-4. Run the preset's packaged `check-svg.mjs` command and retain command, exit code, stdout/stderr, input path, and source digest. `generated` is not `linted`.
-5. Run the packaged canonical Chromium renderer at 2×. Retain renderer executable/version, command, exit code, SVG and PNG paths/digests, viewBox, actual PNG dimensions, and render log. `rendered` is not `verified`.
+4. Run the preset's product-owned `run-skillstead.mjs lint` wrapper and retain command, exit code, stdout/stderr, exact linter identity/digest, input path, and source digest. The wrapper resolves the vendored CLI by canonical realpath; never invoke the vendored CLI path directly. `generated` is not `linted`.
+5. Run `run-skillstead.mjs render` at 2×. Retain renderer executable/version and vendored renderer digest, command, exit code, SVG and PNG paths/digests, viewBox, actual PNG dimensions, and render log. `rendered` is not `verified`.
 6. Inspect fit-to-page and close-up pixels. Record text, CJK, containment, connector, contrast, reading-order, source-fidelity, and alt-text results before marking verified.
-7. Run [validate-visualization-evidence.mjs](scripts/validate-visualization-evidence.mjs) against the evidence record and artifact root. It validates one of the six packaged preset IDs, stable unique source IDs, SVG `<title>`/`<desc>`, ordered predecessors, same-file paths and digests, lint logs, renderer name/version, exact QA checks, and actual 2× PNG dimensions.
+7. Run [validate-visualization-evidence.mjs](scripts/validate-visualization-evidence.mjs) against the evidence record and artifact root. It independently executes the canonical-realpath vendored linter and validates one of the six packaged preset IDs, stable unique source IDs, SVG `<title>`/`<desc>`, ordered predecessors, exact runtime identities/digests, same-file paths and digests, renderer name/version, exact QA checks, and a CRC-valid complete PNG whose IEND is exactly at EOF and dimensions are actual 2×.
 8. Index only proven assets. On any failure, keep the canonical artifact and source SVG, record the exact fallback state, and never claim a successful PNG.
 
 ## Output contract
