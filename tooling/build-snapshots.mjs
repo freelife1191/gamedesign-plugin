@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { collectTree } from "./lib/copy-tree.mjs";
 import { createSnapshotStaging } from "./lib/build-product.mjs";
+import { readSnapshotRecoveryJournal } from "./lib/snapshot-transaction.mjs";
 import { syncShared } from "./sync-shared.mjs";
 
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -97,19 +98,94 @@ async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIde
   child.stderr.on("data", (chunk) => { stderr += chunk; });
 
   return new Promise((resolve, reject) => {
-    let settled = false;
-    function finish(error, recovery) {
-      if (settled) return;
-      settled = true;
-      if (child.connected) child.disconnect();
-      if (error) reject(error);
-      else resolve(recovery);
+    const configured = operations.deadlines ?? {};
+    const deadlines = {
+      spawn: configured.spawnMs ?? 30_000,
+      register: configured.registerMs ?? 30_000,
+      phase: configured.phaseMs ?? 120_000,
+      final: configured.finalMs ?? 120_000,
+      rollbackGrace: configured.rollbackGraceMs ?? 2_000,
+    };
+    const timers = new Map();
+    let registration;
+    let outcome;
+    let finishing = false;
+
+    function clearTimer(name) {
+      clearTimeout(timers.get(name));
+      timers.delete(name);
     }
-    child.on("message", async (message) => {
-      if (message?.type === "spawned") {
+    function arm(name, milliseconds, callback) {
+      clearTimer(name);
+      const timer = setTimeout(callback, milliseconds);
+      timer.unref();
+      timers.set(name, timer);
+    }
+    function send(message) {
+      return new Promise((sendResolve, sendReject) => {
+        if (!child.connected) {
+          sendReject(new Error("snapshot worker IPC is disconnected"));
+          return;
+        }
+        child.send(message, (error) => (error ? sendReject(error) : sendResolve()));
+      });
+    }
+    async function interruptedError(reason) {
+      let recovery;
+      const issues = [];
+      if (registration) {
         try {
-          await operations.afterWorkerSpawn?.({ pluginsRoot, stagedPluginsRoot: stagingRoot });
-          child.send({
+          recovery = await readSnapshotRecoveryJournal(registration);
+        } catch (error) {
+          issues.push(error.message);
+        }
+      }
+      if (!recovery) {
+        recovery = {
+          state: "worker-interrupted-before-registration",
+          recoveryRoot: typeof registration?.recoveryRoot === "string"
+            ? await realpath(registration.recoveryRoot).catch(() => null)
+            : null,
+          stagingRoot: await realpath(stagingRoot).catch(() => null),
+          products: Object.fromEntries(PRODUCT_NAMES.map((productName) => [productName, {
+            status: "recovery-required",
+            originalLocation: null,
+            backupLocation: null,
+            installedSnapshotLocation: null,
+            manualAction: `Preserve the staging directory and inspect the ${productName} destination before making changes.`,
+          }])),
+          issues,
+        };
+      }
+      const error = new Error(`${reason}${stderr ? `: ${stderr}` : ""}\nSNAPSHOT_RECOVERY=${JSON.stringify(recovery)}`);
+      error.recovery = recovery;
+      error.preserveStaging = true;
+      return error;
+    }
+    async function abort(reason) {
+      if (finishing) return;
+      finishing = true;
+      outcome = { abnormalReason: reason };
+      await send({ type: "rollback", reason }).catch(() => {});
+      arm("rollback", deadlines.rollbackGrace, () => child.kill("SIGKILL"));
+    }
+    function finishAfterExit() {
+      for (const name of [...timers.keys()]) clearTimer(name);
+      child.removeAllListeners();
+      child.stderr.removeAllListeners();
+      if (!outcome) return;
+      if (outcome.error) reject(outcome.error);
+      else resolve(outcome.recovery);
+    }
+
+    arm("spawn", deadlines.spawn, () => { void abort("Snapshot transaction worker spawn timed out"); });
+    child.on("message", async (message) => {
+      if (finishing && message?.type !== "error") return;
+      if (message?.type === "spawned") {
+        clearTimer("spawn");
+        try {
+          await operations.afterWorkerSpawn?.({ pluginsRoot, stagedPluginsRoot: stagingRoot, workerPid: child.pid });
+          await send({
             type: "start",
             config: {
               repoRoot,
@@ -118,34 +194,86 @@ async function replaceSnapshots({ repoRoot, stagingRoot, pluginsRoot, pluginsIde
               pluginsIdentity,
               destinations: [...destinations],
               faults: operations.faults ?? [],
+              protocolFaults: operations.protocolFaults ?? [],
             },
           });
+          arm("register", deadlines.register, () => { void abort("Snapshot transaction worker registration timed out"); });
         } catch (error) {
-          child.kill();
-          finish(error);
+          await abort(error.message);
+        }
+        return;
+      }
+      if (message?.type === "registered") {
+        clearTimer("register");
+        registration = message.registration;
+        try {
+          await readSnapshotRecoveryJournal(message.registration);
+          await send({ type: "registered-result", requestId: message.requestId });
+          arm("final", deadlines.final, () => { void abort("Snapshot transaction worker final result timed out"); });
+        } catch (error) {
+          await send({ type: "registered-result", requestId: message.requestId, error: error.message }).catch(() => {});
+          await abort(`Snapshot transaction worker registration was rejected: ${error.message}`);
         }
         return;
       }
       if (message?.type === "phase") {
+        if (!registration || typeof message.phase !== "string" || !Number.isInteger(message.requestId)) {
+          await abort("Snapshot transaction worker sent malformed phase IPC");
+          return;
+        }
+        let phaseCompleted = false;
+        arm("phase", deadlines.phase, () => {
+          if (!phaseCompleted) void abort(`Snapshot transaction phase timed out: ${message.phase}`);
+        });
         try {
-          await operations[message.phase]?.(message.payload);
-          child.send({ type: "phase-result", requestId: message.requestId });
+          await operations[message.phase]?.({ ...message.payload, workerPid: child.pid });
+          if (finishing) return;
+          phaseCompleted = true;
+          clearTimer("phase");
+          await send({ type: "phase-result", requestId: message.requestId });
         } catch (error) {
-          child.send({ type: "phase-result", requestId: message.requestId, error: error.message });
+          phaseCompleted = true;
+          clearTimer("phase");
+          await send({ type: "phase-result", requestId: message.requestId, error: error.message }).catch(async () => {
+            await abort(`Snapshot transaction phase reply failed: ${message.phase}`);
+          });
         }
         return;
       }
-      if (message?.type === "result") finish(null, message.recovery);
-      if (message?.type === "error") {
-        const error = new Error(message.message);
-        error.recovery = message.recovery;
-        error.preserveStaging = message.preserveStaging === true;
-        finish(error);
+      if (message?.type === "result") {
+        clearTimer("final");
+        outcome = { recovery: message.recovery };
+        finishing = true;
+        if (child.connected) child.disconnect();
+        return;
       }
+      if (message?.type === "error") {
+        let error = new Error(message.message);
+        if (message.recovery) {
+          error.recovery = message.recovery;
+          error.preserveStaging = message.preserveStaging === true;
+        } else {
+          error = await interruptedError(message.message);
+        }
+        clearTimer("final");
+        outcome = { error };
+        finishing = true;
+        if (child.connected) child.disconnect();
+        return;
+      }
+      await abort("Snapshot transaction worker sent malformed IPC");
     });
-    child.on("error", (error) => finish(error));
-    child.on("exit", (code, signal) => {
-      if (!settled) finish(new Error(`Snapshot transaction worker exited before reporting a result (${signal ?? code})${stderr ? `: ${stderr}` : ""}`));
+    child.on("error", (error) => { void abort(`Snapshot transaction worker error: ${error.message}`); });
+    child.on("disconnect", () => {
+      if (!finishing) void abort("Snapshot transaction worker IPC disconnected");
+    });
+    child.on("exit", async (code, signal) => {
+      if (!outcome?.error && !outcome?.recovery) {
+        const reason = outcome?.abnormalReason
+          ?? `Snapshot transaction worker exited before reporting a result (${signal ?? code})`;
+        outcome = { error: await interruptedError(reason) };
+      }
+      finishAfterExit();
     });
   });
 }

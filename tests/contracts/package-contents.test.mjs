@@ -445,12 +445,81 @@ test("snapshot replacement restores originals when a child install rename fails"
   })
     .then(() => undefined, (caught) => caught);
   assert.match(error.message, /injected child install failure/i);
-  assert.equal(error.recovery, undefined);
+  assert.equal(error.recovery.state, "fully-restored-recovery-retained");
+  assert.equal(error.preserveStaging, true);
   for (const productName of productNames) {
     assert.equal(
       await readFile(path.join(fixtureRepo, "plugins", productName, "IRREPLACEABLE.txt"), "utf8"),
       `${productName} original\n`,
     );
+  }
+  await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+  await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+});
+
+test("snapshot worker interruption always restores or reports every original", async (t) => {
+  async function runInterrupted(t, operations) {
+    const { fixtureRepo } = await createSnapshotFixture(t);
+    for (const productName of productNames) {
+      const destination = path.join(fixtureRepo, "plugins", productName);
+      await mkdir(destination, { recursive: true });
+      await writeFile(path.join(destination, "IRREPLACEABLE.txt"), `${productName} original\n`);
+    }
+    const unrelated = path.join(fixtureRepo, "plugins/unrelated-private-plugin/sentinel.txt");
+    await mkdir(path.dirname(unrelated), { recursive: true });
+    await writeFile(unrelated, "external untouched\n");
+
+    const error = await buildSnapshots({ repoRoot: fixtureRepo, mode: "clean", operations })
+      .then(() => undefined, (caught) => caught);
+    assert.equal(error?.preserveStaging, true);
+    assert.match(error?.message ?? "", /SNAPSHOT_RECOVERY=/u);
+    await assertCanonicalExisting(error?.recovery?.recoveryRoot);
+    await assertCanonicalExisting(error?.recovery?.stagingRoot);
+    assert.equal(await readFile(unrelated, "utf8"), "external untouched\n");
+    for (const productName of productNames) {
+      const product = error.recovery.products[productName];
+      await assertCanonicalExisting(product.originalLocation);
+      assert.equal(
+        await readFile(path.join(product.originalLocation, "IRREPLACEABLE.txt"), "utf8"),
+        `${productName} original\n`,
+      );
+    }
+    await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+    await rm(error.recovery.stagingRoot, { recursive: true, force: true });
+  }
+
+  const milestones = [
+    ["afterBackup", "game-design-career"],
+    ["afterBackup", "game-design-studio"],
+    ["afterInstall", "game-design-career"],
+    ["afterInstall", "game-design-studio"],
+  ];
+  for (const signal of ["SIGTERM", "SIGKILL"]) {
+    for (const [phase, productName] of milestones) {
+      await t.test(`${signal} ${phase} ${productName}`, async (t) => {
+        await runInterrupted(t, {
+          [phase]: ({ productName: currentProduct, workerPid }) => {
+            if (currentProduct === productName) process.kill(workerPid, signal);
+          },
+        });
+      });
+    }
+  }
+
+  await t.test("phase callback never replies", async (t) => {
+    await runInterrupted(t, {
+      beforeRootInstall: () => new Promise(() => {}),
+      deadlines: { phaseMs: 50, rollbackGraceMs: 500 },
+    });
+  });
+
+  for (const action of ["malformed", "disconnect", "send-failure"]) {
+    await t.test(`${action} IPC`, async (t) => {
+      await runInterrupted(t, {
+        protocolFaults: [{ action, phase: "afterBackup", productName: "game-design-career" }],
+        deadlines: { rollbackGraceMs: 500 },
+      });
+    });
   }
 });
 
@@ -476,10 +545,13 @@ test("snapshot transaction preserves originals or an external recovery copy acro
         },
       }).then(() => undefined, (caught) => caught);
       assert.match(error.message, new RegExp(`injected ${phase} child rename`, "i"));
-      assert.equal(error.recovery, undefined);
+      assert.equal(error.recovery.state, "fully-restored-recovery-retained");
+      assert.equal(error.preserveStaging, true);
       for (const productName of productNames) {
         assert.equal(await readFile(path.join(fixtureRepo, "plugins", productName, "IRREPLACEABLE.txt"), "utf8"), `${productName} original\n`);
       }
+      await rm(error.recovery.recoveryRoot, { recursive: true, force: true });
+      await rm(error.recovery.stagingRoot, { recursive: true, force: true });
     });
   }
 
