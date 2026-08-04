@@ -1,22 +1,14 @@
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { discoverSourceFiles } from "../../tooling/index-references.mjs";
+
 const repoRoot = path.resolve(new URL("../..", import.meta.url).pathname);
 
-async function discoverSourcePaths() {
-  const docsRoot = path.join(repoRoot, "docs");
-  const entries = await readdir(docsRoot, { recursive: true, withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
-    .map((entry) => path.relative(repoRoot, path.join(entry.parentPath, entry.name)).split(path.sep).join("/").normalize("NFC"))
-    .filter((sourcePath) => !sourcePath.startsWith("docs/superpowers/"))
-    .sort((left, right) => left.localeCompare(right, "en"));
-}
-
 test("the canonical reference index covers every one of the 49 source documents", async () => {
-  const sourcePaths = await discoverSourcePaths();
+  const sourcePaths = (await discoverSourceFiles({ repoRoot })).map(({ sourcePath }) => sourcePath);
   const index = JSON.parse(await readFile(path.join(repoRoot, "shared/knowledge/reference-index.json"), "utf8"));
 
   assert.equal(sourcePaths.length, 49);
@@ -25,7 +17,7 @@ test("the canonical reference index covers every one of the 49 source documents"
 
   const indexedPaths = index.documents.map((document) => document.sourcePath);
   assert.equal(new Set(indexedPaths).size, 49);
-  assert.deepEqual(indexedPaths.toSorted((left, right) => left.localeCompare(right, "en")), sourcePaths);
+  assert.deepEqual([...indexedPaths].sort(), sourcePaths);
   assert.equal(new Set(index.documents.map((document) => document.id)).size, 49);
   assert.equal(new Set(index.documents.map((document) => document.title)).size, 49);
 

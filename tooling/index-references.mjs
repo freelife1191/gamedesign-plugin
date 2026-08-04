@@ -58,15 +58,27 @@ export function rejectDuplicateNormalizedPaths(rawPaths) {
   }
 }
 
-export async function discoverSourceFiles({ repoRoot }) {
+async function walkDirectory(currentDirectory, readDirectory, files) {
+  const entries = await readDirectory(currentDirectory, { withFileTypes: true });
+  entries.sort((left, right) => compareStrings(left.name, right.name));
+  for (const entry of entries) {
+    const absolutePath = path.join(currentDirectory, entry.name);
+    if (entry.isDirectory()) {
+      await walkDirectory(absolutePath, readDirectory, files);
+    } else if (entry.isFile() && entry.name.endsWith(".md")) {
+      files.push(absolutePath);
+    }
+  }
+}
+
+export async function discoverSourceFiles({ repoRoot, readDirectory = readdir }) {
   const docsRoot = path.join(repoRoot, "docs");
-  const entries = await readdir(docsRoot, { recursive: true, withFileTypes: true });
+  const absolutePaths = [];
+  await walkDirectory(docsRoot, readDirectory, absolutePaths);
   const files = [];
   const rawPaths = [];
 
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
-    const absolutePath = path.join(entry.parentPath, entry.name);
+  for (const absolutePath of absolutePaths) {
     const rawPath = path.relative(repoRoot, absolutePath).split(path.sep).join("/");
     const sourcePath = rawPath.normalize("NFC");
     if (sourcePath.startsWith("docs/superpowers/")) continue;

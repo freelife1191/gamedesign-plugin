@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   buildReferenceIndex,
   checkReferenceIndex,
+  discoverSourceFiles,
   rejectDuplicateNormalizedPaths,
   serializeReferenceIndex,
 } from "../../tooling/index-references.mjs";
@@ -46,6 +47,24 @@ test("index generation normalizes paths to NFC and derives stable metadata", asy
     }],
   });
   assert.equal(serializeReferenceIndex(index).endsWith("\n"), true);
+});
+
+test("source discovery walks nested directories without the recursive readdir option", async (t) => {
+  const repoRoot = await createFixture(t);
+  await writeSource(repoRoot, "docs/03. 게임 시스템 기획/nested/rules.md", "# Rules\n");
+  const calls = [];
+  const readDirectory = async (directory, options) => {
+    assert.deepEqual(options, { withFileTypes: true });
+    calls.push(path.relative(repoRoot, directory).split(path.sep).join("/"));
+    return readdir(directory, options);
+  };
+
+  const files = await discoverSourceFiles({ repoRoot, readDirectory });
+
+  assert.deepEqual(files.map(({ sourcePath }) => sourcePath), [
+    "docs/03. 게임 시스템 기획/nested/rules.md",
+  ]);
+  assert.deepEqual(calls, ["docs", "docs/03. 게임 시스템 기획", "docs/03. 게임 시스템 기획/nested"]);
 });
 
 test("new source groups without an explicit category mapping are rejected", async (t) => {
