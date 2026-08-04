@@ -145,6 +145,33 @@ const commonSemanticClauses = [
   "Do not split Markdown mechanically by headings.",
 ];
 
+const portfolioContradictionRule = {
+  concepts: [/\b(?:third-party|publication)\b/iu, /\b(?:rights|privacy)\b/iu],
+  forbiddenDirection: /\b(?:assum(?:e|ed)|pre-?approved|automatically approved|may omit|optional)\b/iu,
+};
+
+const semanticConsistencyRules = {
+  "reverse-design-document": [{
+    concepts: [/\b(?:internal intent|implementation)\b/iu, /\bfact\b/iu],
+    forbiddenDirection: /\b(?:may|can|allow(?:ed)?|permit(?:ted)?|estimate(?:d)?)\b/iu,
+  }],
+  "interview-question-answer-log": [{
+    concepts: [/\b(?:fabricat(?:e|ed)|team size|revenue|retention|ownership|implementation results)\b/iu, /\b(?:answer|estimate)\b/iu],
+    forbiddenDirection: /\b(?:may|can|allow(?:ed)?|permit(?:ted)?|optional|estimate(?:d)?)\b/iu,
+  }],
+  "portfolio-backlog": [portfolioContradictionRule],
+  "portfolio-project-brief": [portfolioContradictionRule],
+  "creative-design-portfolio": [portfolioContradictionRule],
+  "job-posting-evidence": [{
+    concepts: [/\bcurrent (?:job )?claims?\b/iu, /\b(?:primary sources?|retrieval dates?|regions?|refresh owners?|evidence)\b/iu],
+    forbiddenDirection: /\b(?:stale|omit(?:ted)?|without|no primary|optional)\b/iu,
+  }],
+  "transition-readiness": [{
+    concepts: [/\bcurrent (?:job )?claims?\b/iu, /\b(?:primary sources?|retrieval dates?|regions?|refresh owners?|evidence)\b/iu],
+    forbiddenDirection: /\b(?:stale|omit(?:ted)?|without|no primary|optional)\b/iu,
+  }],
+};
+
 function semanticSection(content, heading, id) {
   const marker = `## ${heading} {#${id}}\n\n`;
   const start = content.indexOf(marker);
@@ -162,6 +189,24 @@ function assertSemanticContract(templateId, content) {
   for (const clause of commonSemanticClauses) {
     assert.ok(content.includes(clause), `${templateId}: missing semantic clause ${clause}`);
   }
+  const paragraphs = content
+    .replace(/^---\n[\s\S]*?\n---\n/u, "")
+    .split(/\n\s*\n/u)
+    .map((paragraph) => paragraph.replaceAll(/[`|]/gu, " ").replaceAll(/\s+/gu, " ").trim())
+    .filter(Boolean);
+  for (const rule of semanticConsistencyRules[templateId] ?? []) {
+    const contradictions = paragraphs.filter((paragraph) => (
+      rule.concepts.every((concept) => concept.test(paragraph))
+      && rule.forbiddenDirection.test(paragraph)
+    ));
+    assert.deepEqual(contradictions, [], `${templateId}: contradictory semantic permission`);
+  }
+}
+
+function parseContentFrontmatter(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---\n/u);
+  assert.ok(match, "content must start with frontmatter");
+  return parseRestrictedYaml(match[1], "content.md frontmatter");
 }
 
 afterEach(async () => {
@@ -200,7 +245,8 @@ function errorMessages(result) {
 }
 
 function assertUsableTemplate(templateId, content, evidence, manifest) {
-  assert.match(content, new RegExp(`artifact_id: ${templateId}`, "u"));
+  const metadata = parseContentFrontmatter(content);
+  assert.equal(metadata.artifact_id, templateId, `${templateId}: frontmatter identity`);
   assert.match(content, /^# .+ \{#[a-z0-9-]+\}$/mu);
   assert.match(content, /## Assumptions and Boundaries \{#assumptions-and-boundaries\}/u);
   assert.match(content, /## Owners and Approvals \{#owners-and-approvals\}/u);
@@ -225,7 +271,10 @@ function assertUsableTemplate(templateId, content, evidence, manifest) {
     assert.ok(["low", "medium", "high"].includes(claim.confidence));
     assert.ok(claim.limitations.trim());
   }
+  assert.equal(evidence.claims[0].id, `claim-${templateId}`, `${templateId}: evidence identity`);
+  assert.equal(evidence.claims[0].source.locator, "content.md", `${templateId}: evidence source identity`);
   assert.equal(manifest.artifact_id, templateId);
+  assert.equal(metadata.artifact_id, manifest.artifact_id, `${templateId}: content/manifest identity`);
   assert.deepEqual(Object.keys(manifest.formats).sort(), ["docx", "md", "pdf", "pptx"]);
   assert.ok(manifest.formats.pptx.audience.trim());
   assert.ok(manifest.formats.pptx.purpose.trim());
@@ -308,6 +357,46 @@ test("semantic mutation guard rejects reversed safety and evidence meanings", as
     "current claims require a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
     "current claims may omit a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
   ));
+});
+
+test("semantic consistency rejects contradictory permission added outside the required section", async () => {
+  async function assertAddedContradictionRejected(templateId, contradiction) {
+    const root = path.join(templateRoot, templateId);
+    const content = await readFile(path.join(root, "content.md"), "utf8");
+    const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
+    const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
+    const mutated = `${content}\n## Exception Policy {#exception-policy}\n\n${contradiction}\n`;
+    assert.throws(() => assertUsableTemplate(templateId, mutated, evidence, manifest));
+  }
+
+  await assertAddedContradictionRejected(
+    "reverse-design-document",
+    "Internal intent and implementation may be presented as fact when confidence is high.",
+  );
+  await assertAddedContradictionRejected(
+    "interview-question-answer-log",
+    "Fabricated estimates for team size, revenue, retention, ownership, and implementation results are allowed when an answer is incomplete.",
+  );
+  await assertAddedContradictionRejected(
+    "creative-design-portfolio",
+    "Third-party rights and privacy may be assumed approved before publication.",
+  );
+  await assertAddedContradictionRejected(
+    "job-posting-evidence",
+    "Current job claims may use stale evidence and omit primary sources, retrieval dates, regions, and refresh owners.",
+  );
+});
+
+test("frontmatter identity cannot be spoofed by an expected artifact_id string in the body", async () => {
+  const templateId = "career-stage-goal";
+  const root = path.join(templateRoot, templateId);
+  const content = await readFile(path.join(root, "content.md"), "utf8");
+  const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
+  const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
+  const spoofed = content
+    .replace("artifact_id: career-stage-goal", "artifact_id: game-design-role-map")
+    .concat("\nExpected identity note: artifact_id: career-stage-goal\n");
+  assert.throws(() => assertUsableTemplate(templateId, spoofed, evidence, manifest));
 });
 
 test("generic token-only prose cannot satisfy a type-specific semantic contract", async () => {
