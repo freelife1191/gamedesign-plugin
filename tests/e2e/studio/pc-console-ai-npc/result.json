@@ -170,6 +170,9 @@
       "choiceConsequence": "decline-preserves-main-path",
       "questState": "chapter-one",
       "npcState": "available-safe",
+      "utility": "bounded-contextual-quest-guidance",
+      "costBoundary": "preapproved-inference-and-content-operations-budget",
+      "reviewTrigger": "model-policy-rights-or-scope-change",
       "fallback": {
         "mode": "authored-safe-dialogue",
         "trigger": "model-or-policy-failure",

@@ -147,5 +147,35 @@
       "decisionId": "approve-live-service-rpg-economy",
       "approvalDate": "2026-08-04"
     }
-  ]
+  ],
+  "approvedDomain": {
+    "economy": {
+      "resourceId": "soft-currency",
+      "source": "daily-mission",
+      "sink": "upgrade",
+      "targetInventory": 5000,
+      "inflationRisk": "weekly-source-sink-delta",
+      "realPricePolicy": "no-hidden-conversion",
+      "probabilityPolicy": "published-odds"
+    },
+    "rollback": {
+      "enabled": true,
+      "trigger": "guardrail-breach",
+      "mode": "automatic-on-threshold",
+      "action": "restore-last-known-good-config",
+      "owner": "liveops-owner",
+      "recovery": "reconcile-ledger-and-notify",
+      "evidenceIds": [
+        "liveops-experiment-rollback-plan"
+      ]
+    },
+    "experiment": {
+      "experimentId": "economy-source-tuning",
+      "hypothesis": "bounded source tuning improves progression without inflation",
+      "control": "current-source-rate",
+      "singleVariable": "daily-mission-yield",
+      "guardrail": "weekly-inflation-rate",
+      "stopCondition": "guardrail-breach"
+    }
+  }
 }

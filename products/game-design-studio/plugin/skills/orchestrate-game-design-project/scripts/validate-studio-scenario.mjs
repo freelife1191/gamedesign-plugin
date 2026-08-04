@@ -2,12 +2,12 @@
 
 import { lstat, mkdtemp, readFile, realpath, rm } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
-import { isDeepStrictEqual } from "node:util";
-import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual, types } from "node:util";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { prepareStudioExportJob } from "../../export-game-design-documents/scripts/prepare-studio-export.mjs";
 import { composeProfiles } from "./compose-profiles.mjs";
@@ -36,7 +36,8 @@ const SCENARIOS = Object.freeze({
     recipeId: "liveops-plan",
     exportTemplateId: "liveops-experiment-event",
     approvalSnapshotFile: "approval-snapshot.json",
-    approvalSnapshotSha256: "6392b97464cdafd58fcab3882f88d8f9401fd7f56bb318358c8f71a1ed2f16d1",
+    approvalSnapshotSha256: "78871fa8b5be9d8c47d99d2cc3921d6fd4087d3087779dba71c28c582b10361a",
+    approvedDomainSha256: "63e5c96b6e6a10aa10b85d67296343cf501c63182a37afc4e8ec63b7597ecd8d",
     requiredProfileSections: ["liveops-calendar-and-rollback", "economy-sources-sinks-and-inflation"],
   },
   "mobile-onboarding-liveops": {
@@ -48,7 +49,8 @@ const SCENARIOS = Object.freeze({
     recipeId: "liveops-plan",
     exportTemplateId: "liveops-experiment-event",
     approvalSnapshotFile: "approval-snapshot.json",
-    approvalSnapshotSha256: "02e27946eb7047c299f969f438a968412ce320edba2f73cb5c88d0148de61cb5",
+    approvalSnapshotSha256: "81636e07e16a257bd00f6a0608d6b2f73831f48453796d9bd88659d8856ae1ab",
+    approvedDomainSha256: "b2f328a56a96394ff64933003ce762e6b4adfda1a8011d777c90334b72075863",
     requiredProfileSections: ["touch-input-and-device-matrix", "short-session-and-interruption-recovery"],
   },
   "pc-console-ai-npc": {
@@ -60,13 +62,12 @@ const SCENARIOS = Object.freeze({
     recipeId: "content-spec",
     exportTemplateId: "narrative-quest-npc",
     approvalSnapshotFile: "approval-snapshot.json",
-    approvalSnapshotSha256: "50e9c5ab008f599bfcdc56178de0947527767e30978901c7ee10fc0e5d7c0569",
+    approvalSnapshotSha256: "c1581a9326a073153647dd91f352293fb85064134b0040ec230633a6f8eeadd8",
+    approvedDomainSha256: "83c3b2694f6b397ace176150919522086c2bb318d11af893beca9cef865092d3",
     requiredProfileSections: ["controller-and-keyboard-mouse-input", "platform-certification-and-entitlements"],
   },
 });
 const APPROVED_TEMPLATE_IDS = [...new Set(Object.values(SCENARIOS).flatMap(({ templates }) => templates))].sort();
-let canonicalValidatorPromise;
-let gateRegistryPromise;
 
 function finding(code, message) {
   return { code, message };
@@ -98,6 +99,62 @@ function exactTextRecord(value, keys) {
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function cloneDataOnly(value, label = "value") {
+  if (value === null || typeof value === "boolean" || typeof value === "string") return value;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new TypeError(`${label} numbers must be finite.`);
+    return value;
+  }
+  if (typeof value !== "object" || types.isProxy(value)) throw new TypeError(`${label} must contain data-only JSON values.`);
+  const prototype = Object.getPrototypeOf(value);
+  if (Array.isArray(value)) {
+    if (prototype !== Array.prototype) throw new TypeError(`${label} must use a plain array.`);
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const symbols = Object.getOwnPropertySymbols(value);
+    if (symbols.length > 0 || !descriptors.length?.writable || typeof descriptors.length.value !== "number") {
+      throw new TypeError(`${label} must use a dense data-only array.`);
+    }
+    const keys = Object.keys(descriptors).filter((key) => key !== "length");
+    if (keys.length !== value.length || keys.some((key, index) => key !== String(index))) {
+      throw new TypeError(`${label} must use a dense data-only array.`);
+    }
+    return keys.map((key) => {
+      const descriptor = descriptors[key];
+      if (!descriptor.enumerable || !Object.hasOwn(descriptor, "value")) throw new TypeError(`${label}[${key}] must be data-only.`);
+      return cloneDataOnly(descriptor.value, `${label}[${key}]`);
+    });
+  }
+  if (prototype !== Object.prototype && prototype !== null) throw new TypeError(`${label} must use a plain object.`);
+  if (Object.getOwnPropertySymbols(value).length > 0) throw new TypeError(`${label} must not use symbol keys.`);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const clone = {};
+  for (const key of Object.keys(descriptors)) {
+    if (["__proto__", "prototype", "constructor"].includes(key)) throw new TypeError(`${label}.${key} is not an allowed data key.`);
+    const descriptor = descriptors[key];
+    if (!descriptor.enumerable || !Object.hasOwn(descriptor, "value")) throw new TypeError(`${label}.${key} must be data-only.`);
+    clone[key] = cloneDataOnly(descriptor.value, `${label}.${key}`);
+  }
+  return clone;
+}
+
+function canonicalData(value) {
+  if (Array.isArray(value)) return value.map(canonicalData);
+  if (isRecord(value)) {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalData(value[key])]));
+  }
+  return value;
+}
+
+function domainDigest(value) {
+  const detached = cloneDataOnly(value, "domain");
+  return createHash("sha256").update(JSON.stringify(canonicalData(detached))).digest();
+}
+
+function digestMatches(actual, expectedHex) {
+  if (typeof expectedHex !== "string" || !/^[a-f0-9]{64}$/u.test(expectedHex)) return false;
+  return timingSafeEqual(actual, Buffer.from(expectedHex, "hex"));
 }
 
 function hasExactKeys(value, keys, code, errors, label) {
@@ -134,44 +191,41 @@ async function readScenarioFile(root, file, label) {
   return readJson(await assertPlainFile(file, root, label));
 }
 
-async function loadCanonicalValidator() {
-  canonicalValidatorPromise ??= (async () => {
-    const candidates = [
-      new URL("../../../scripts/validate-artifact.mjs", import.meta.url),
-      new URL("../../../../../../shared/scripts/validate-artifact.mjs", import.meta.url),
-    ];
-    let lastError;
-    for (const candidate of candidates) {
-      try {
-        const module = await import(candidate.href);
-        if (typeof module.validateArtifact !== "function") throw new Error("validateArtifact export is missing");
-        return { validateArtifact: module.validateArtifact, validatorPath: fileURLToPath(candidate) };
-      } catch (error) {
-        lastError = error;
-      }
-    }
-    throw new Error(`Canonical validator unavailable: ${lastError?.message ?? "unknown error"}`);
-  })();
-  return canonicalValidatorPromise;
+async function assertTestRuntimeFile(value, label) {
+  if (!isText(value) || path.isAbsolute(value) === false) throw new Error(`${label} test dependency must be an absolute path.`);
+  const stat = await lstat(value);
+  if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`${label} test dependency must be a plain file.`);
+  return realpath(value);
 }
 
-async function loadGateRegistry() {
-  gateRegistryPromise ??= (async () => {
-    const candidates = [
-      path.join(pluginRoot, "references/shared/responsible-design/gates.json"),
-      path.resolve(pluginRoot, "../../../shared/responsible-design/gates.json"),
-    ];
-    let lastError;
-    for (const candidate of candidates) {
-      try {
-        return await readJson(candidate);
-      } catch (error) {
-        lastError = error;
-      }
+async function loadCanonicalValidator(testRuntime) {
+  if (testRuntime !== undefined) {
+    if (!isRecord(testRuntime) || typeof testRuntime.validateArtifact !== "function") {
+      throw new Error("testRuntime.validateArtifact is required for source-authoring tests.");
     }
-    throw new Error(`Responsible-design gate registry unavailable: ${lastError?.message ?? "unknown error"}`);
-  })();
-  return gateRegistryPromise;
+    return {
+      validateArtifact: testRuntime.validateArtifact,
+      validatorPath: await assertTestRuntimeFile(testRuntime.validatorPath, "Canonical validator"),
+    };
+  }
+  const validatorPath = await assertPlainFile("scripts/validate-artifact.mjs", pluginRoot, "Canonical validator");
+  const module = await import(pathToFileURL(validatorPath).href);
+  if (typeof module.validateArtifact !== "function") throw new Error("Packaged validateArtifact export is missing.");
+  return { validateArtifact: module.validateArtifact, validatorPath };
+}
+
+async function loadGateRegistry(testRuntime) {
+  if (testRuntime !== undefined) {
+    if (!isRecord(testRuntime) || !isRecord(testRuntime.gateRegistry)) {
+      throw new Error("testRuntime.gateRegistry is required for source-authoring tests.");
+    }
+    return cloneDataOnly(testRuntime.gateRegistry, "testRuntime.gateRegistry");
+  }
+  return readJson(await assertPlainFile(
+    "references/shared/responsible-design/gates.json",
+    pluginRoot,
+    "Responsible-design gate registry",
+  ));
 }
 
 export async function validateTemplateContentIntegrity(templateId, sourceOverride) {
@@ -303,11 +357,17 @@ async function validateRoutingProfilesAndRoles(request, result, scenario, errors
   return { routeIds, skillIds, profileIds: composed.profiles, roleIds: canonicalRoles };
 }
 
-async function validateTemplates(result, scenario, errors) {
+async function validateTemplates(result, scenario, errors, testRuntime) {
   if (!sameArray(result.templateIds, scenario.templates)) {
     errors.push(finding("template.chain", "Scenario templates must exactly match the approved professional workflow."));
   }
-  const { validateArtifact } = await loadCanonicalValidator();
+  let validateArtifact;
+  try {
+    ({ validateArtifact } = await loadCanonicalValidator(testRuntime));
+  } catch (error) {
+    errors.push(finding("template.runtime", error.message));
+    return [];
+  }
   const validatedTemplateIds = [];
   for (const templateId of scenario.templates) {
     const artifactRoot = path.join(templateRoot, templateId);
@@ -328,9 +388,9 @@ async function validateTemplates(result, scenario, errors) {
   return validatedTemplateIds;
 }
 
-async function validateEvidenceAndGates(result, trustedSnapshot, scenario, errors) {
+async function validateEvidenceAndGates(result, trustedSnapshot, scenario, errors, testRuntime) {
   const snapshotKeys = [
-    "schemaVersion", "scenarioId", "decisionId", "approvalDate", "evidenceRegistry", "responsibleGates",
+    "schemaVersion", "scenarioId", "decisionId", "approvalDate", "approvedDomain", "evidenceRegistry", "responsibleGates",
   ];
   if (!exactKeys(trustedSnapshot, snapshotKeys)
     || trustedSnapshot.schemaVersion !== 1
@@ -342,13 +402,26 @@ async function validateEvidenceAndGates(result, trustedSnapshot, scenario, error
     errors.push(finding("approval.snapshot-schema", "Trusted approval snapshot has an invalid exact schema."));
     return;
   }
+  try {
+    const trustedDomain = cloneDataOnly(trustedSnapshot.approvedDomain, "approvedDomain");
+    const candidateDomain = cloneDataOnly(result.domain, "result.domain");
+    const trustedDigest = domainDigest(trustedDomain);
+    const candidateDigest = domainDigest(candidateDomain);
+    if (!digestMatches(trustedDigest, scenario.approvedDomainSha256)) {
+      errors.push(finding("approval.domain-integrity", "Trusted approved domain does not match the scenario registry digest."));
+    } else if (!timingSafeEqual(candidateDigest, trustedDigest) || !isDeepStrictEqual(candidateDomain, trustedDomain)) {
+      errors.push(finding("approval.domain-mismatch", "Result domain must deep-exact match the immutable approved domain payload."));
+    }
+  } catch (error) {
+    errors.push(finding("approval.domain-schema", error.message));
+  }
   if (!isDeepStrictEqual(result.evidenceRegistry, trustedSnapshot.evidenceRegistry)) {
     errors.push(finding("approval.evidence-mismatch", "Result evidence must deep-exact match the trusted approval snapshot."));
   }
   if (!isDeepStrictEqual(result.responsibleGates, trustedSnapshot.responsibleGates)) {
     errors.push(finding("approval.gate-mismatch", "Result gates must deep-exact match the trusted approval snapshot."));
   }
-  const gateRegistry = await loadGateRegistry().catch((error) => {
+  const gateRegistry = await loadGateRegistry(testRuntime).catch((error) => {
     errors.push(finding("gate.registry", error.message));
     return null;
   });
@@ -472,7 +545,10 @@ function validateAiNpc(domain, errors) {
     return {};
   }
   const npc = domain.npc;
-  if (!exactKeys(npc, ["contentId", "playerPurpose", "choiceConsequence", "questState", "npcState", "fallback", "killSwitch"])) {
+  if (!exactKeys(npc, [
+    "contentId", "playerPurpose", "choiceConsequence", "questState", "npcState", "utility", "costBoundary",
+    "reviewTrigger", "fallback", "killSwitch",
+  ])) {
     errors.push(finding("ai.npc-schema", "AI NPC must define content state, fallback, and kill switch."));
   }
   const fallbackReady = exactTextRecord(npc?.fallback, ["mode", "trigger", "owner"])
@@ -495,35 +571,29 @@ function validateAiNpc(domain, errors) {
   return { aiRightsConsentReady: rightsReady, aiFallbackReady: fallbackReady, aiKillSwitchReady: killSwitchReady };
 }
 
-async function loadSkillsteadLinter() {
-  const packagedRuntime = await lstat(path.join(pluginRoot, "scripts/validate-artifact.mjs"))
-    .then((stat) => stat.isFile())
-    .catch(() => false);
-  if (packagedRuntime) {
-    return assertPlainFile("skills/svg-infographic/scripts/check-svg.mjs", pluginRoot, "Skillstead linter");
-  }
-  const repoRoot = path.resolve(pluginRoot, "../../..");
+async function loadSkillsteadLinter(testRuntime) {
+  if (testRuntime !== undefined) return assertTestRuntimeFile(testRuntime.skillsteadLinterPath, "Skillstead linter");
   return assertPlainFile(
-    "shared/vendor/skillstead/svg-infographic/0.8.3/scripts/check-svg.mjs",
-    repoRoot,
-    "Skillstead linter",
+    "skills/visualize-game-design/scripts/run-skillstead.mjs",
+    pluginRoot,
+    "Skillstead linter wrapper",
   );
 }
 
-async function validateVisualization(root, request, result, errors) {
+async function validateVisualization(root, request, result, errors, testRuntime) {
   if (result.scenarioId !== "mobile-onboarding-liveops") return null;
   const presets = await readJson(presetsPath);
   const preset = presets.presets?.find(({ id }) => id === result.domain?.visualizationPresetId);
   if (!preset || presets.skillstead?.packagePath !== "skills/svg-infographic"
-    || preset.svgLint?.command !== "node skills/svg-infographic/scripts/check-svg.mjs <svg-path>") {
+    || preset.svgLint?.command !== "node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>") {
     errors.push(finding("visualization.preset", "Mobile workflow must route through a packaged Skillstead preset and linter."));
   }
   try {
     const [svgPath, linterPath] = await Promise.all([
       assertPlainFile(request.visualizationPath, root, "visualizationPath"),
-      loadSkillsteadLinter(),
+      loadSkillsteadLinter(testRuntime),
     ]);
-    const execution = spawnSync(process.execPath, [linterPath, svgPath], { encoding: "utf8" });
+    const execution = spawnSync(process.execPath, [linterPath, "lint", svgPath], { encoding: "utf8" });
     const log = `${execution.stdout ?? ""}${execution.stderr ?? ""}`.trim();
     if (execution.status !== 0 || execution.error) {
       throw new Error(execution.error?.message || log || `exit ${execution.status}`);
@@ -542,7 +612,7 @@ async function validateVisualization(root, request, result, errors) {
   }
 }
 
-async function validateOutput(root, request, result, scenario, errors) {
+async function validateOutput(root, request, result, scenario, errors, testRuntime) {
   let manifest;
   try {
     manifest = await readScenarioFile(root, result.outputManifestPath, "outputManifestPath");
@@ -558,7 +628,7 @@ async function validateOutput(root, request, result, scenario, errors) {
   }
   const temporaryOutput = await mkdtemp(path.join(os.tmpdir(), "studio-scenario-export-"));
   try {
-    const { validatorPath } = await loadCanonicalValidator();
+    const { validatorPath } = await loadCanonicalValidator(testRuntime);
     const presentation = request.requestedFormats.includes("pptx") ? {
       audience: "game design review team",
       purpose: "Decide the scenario release boundary",
@@ -598,10 +668,10 @@ export async function validateStudioScenario(root, options = {}) {
     if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error("Scenario root must be a real directory.");
     request = options.requestOverride === undefined
       ? await readScenarioFile(root, "request.json", "request.json")
-      : structuredClone(options.requestOverride);
+      : cloneDataOnly(options.requestOverride, "requestOverride");
     result = options.resultOverride === undefined
       ? await readScenarioFile(root, "result.json", "result.json")
-      : structuredClone(options.resultOverride);
+      : cloneDataOnly(options.resultOverride, "resultOverride");
   } catch (error) {
     return { ok: false, errors: [finding("scenario.files", error.message)] };
   }
@@ -630,8 +700,8 @@ export async function validateStudioScenario(root, options = {}) {
     return { ok: false, scenarioId: request.scenarioId, errors };
   }
   const routing = await validateRoutingProfilesAndRoles(request, result, scenario, errors);
-  const validatedTemplateIds = await validateTemplates(result, scenario, errors);
-  await validateEvidenceAndGates(result, trustedSnapshot, scenario, errors);
+  const validatedTemplateIds = await validateTemplates(result, scenario, errors, options.testRuntime);
+  await validateEvidenceAndGates(result, trustedSnapshot, scenario, errors, options.testRuntime);
   const evidenceIds = new Set(Array.isArray(result.evidenceRegistry)
     ? result.evidenceRegistry.filter(isRecord).map(({ evidenceId }) => evidenceId)
     : []);
@@ -639,8 +709,8 @@ export async function validateStudioScenario(root, options = {}) {
   if (result.scenarioId === "live-service-rpg-economy") acceptance = validateEconomy(result.domain, evidenceIds, errors);
   if (result.scenarioId === "mobile-onboarding-liveops") acceptance = validateMobile(result.domain, errors);
   if (result.scenarioId === "pc-console-ai-npc") acceptance = validateAiNpc(result.domain, errors);
-  const visualizationEvidence = await validateVisualization(root, request, result, errors);
-  const outputs = await validateOutput(root, request, result, scenario, errors);
+  const visualizationEvidence = await validateVisualization(root, request, result, errors, options.testRuntime);
+  const outputs = await validateOutput(root, request, result, scenario, errors, options.testRuntime);
   return {
     ok: errors.length === 0,
     scenarioId: request.scenarioId,

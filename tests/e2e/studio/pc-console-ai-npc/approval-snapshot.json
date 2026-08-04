@@ -147,5 +147,40 @@
       "decisionId": "approve-pc-console-ai-npc",
       "approvalDate": "2026-08-04"
     }
-  ]
+  ],
+  "approvedDomain": {
+    "npc": {
+      "contentId": "guide-npc",
+      "playerPurpose": "contextual quest guidance",
+      "choiceConsequence": "decline-preserves-main-path",
+      "questState": "chapter-one",
+      "npcState": "available-safe",
+      "utility": "bounded-contextual-quest-guidance",
+      "costBoundary": "preapproved-inference-and-content-operations-budget",
+      "reviewTrigger": "model-policy-rights-or-scope-change",
+      "fallback": {
+        "mode": "authored-safe-dialogue",
+        "trigger": "model-or-policy-failure",
+        "owner": "narrative-owner"
+      },
+      "killSwitch": {
+        "enabled": true,
+        "scope": "all-generative-responses",
+        "owner": "safety-owner",
+        "recovery": "authored-safe-dialogue"
+      }
+    },
+    "rightsConsent": {
+      "source": "approved-dialogue-corpus",
+      "creator": "internal-writing-team",
+      "attribution": "project-rights-register",
+      "usePurpose": "npc-dialogue-generation",
+      "rightsStatus": "granted",
+      "consentStatus": "documented",
+      "privacy": "no-player-personal-data",
+      "moderation": "pre-and-post-generation-filters",
+      "approver": "rights-and-legal-owner",
+      "revocationPath": "disable-source-and-rebuild-index"
+    }
+  }
 }

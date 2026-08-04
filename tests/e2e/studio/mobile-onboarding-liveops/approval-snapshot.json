@@ -147,5 +147,29 @@
       "decisionId": "approve-mobile-onboarding-liveops",
       "approvalDate": "2026-08-04"
     }
-  ]
+  ],
+  "approvedDomain": {
+    "onboarding": {
+      "criticalAction": "complete-first-combat",
+      "touchPath": "tap-target-with-remappable-alternative",
+      "skip": "available-after-first-prompt",
+      "revisit": "settings-training",
+      "interruptionRecovery": "resume-last-safe-step",
+      "accessibilityAlternative": "focus-order-and-screen-reader-labels"
+    },
+    "liveops": {
+      "experimentId": "first-session-prompt",
+      "hypothesis": "one contextual prompt improves completion",
+      "control": "no-contextual-prompt",
+      "singleVariable": "prompt-timing",
+      "guardrail": {
+        "metric": "early-exit-rate",
+        "direction": "must-not-increase",
+        "threshold": 0.03
+      },
+      "stopCondition": "guardrail-threshold-breach",
+      "rollback": "disable-experiment-and-restore-control"
+    },
+    "visualizationPresetId": "state-rule-flow"
+  }
 }
