@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -81,9 +81,12 @@ async function discoverProductContracts(sourceRoot) {
   }
   const names = [];
   for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
+    const childPath = path.join(productsRoot, entry.name);
+    const child = await lstat(childPath);
+    if (child.isSymbolicLink()) throw new Error(`Unsupported products entry: products/${entry.name} is a symlink`);
+    if (!child.isDirectory()) throw new Error(`Unsupported products entry: products/${entry.name} is not a directory`);
     try {
-      await access(path.join(productsRoot, entry.name, "product.json"), constants.R_OK);
+      await lstat(path.join(childPath, "product.json"));
       names.push(entry.name);
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
@@ -125,6 +128,50 @@ function runBuiltHook({ outputDir, scriptName, input }) {
   return JSON.parse(result.stdout);
 }
 
+function assertCapability(capability, availableKeys) {
+  assert.equal(typeof capability, "object");
+  assert.equal(typeof capability.available, "boolean");
+  assert.deepEqual(Object.keys(capability).sort(), capability.available ? availableKeys.sort() : ["available"]);
+}
+
+function assertSessionStartOutput(output) {
+  assert.deepEqual(Object.keys(output).sort(), ["capabilities", "hookSpecificOutput", "warnings"]);
+  assert.deepEqual(Object.keys(output.hookSpecificOutput).sort(), ["additionalContext", "hookEventName"]);
+  assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
+  assert.equal(typeof output.hookSpecificOutput.additionalContext, "string");
+  assert.deepEqual(Object.keys(output.capabilities), [
+    "node", "chromium", "soffice", "documents", "pdf", "presentations",
+  ]);
+  assertCapability(output.capabilities.node, ["available", "version"]);
+  assert.equal(output.capabilities.node.available, true);
+  assert.equal(typeof output.capabilities.node.version, "string");
+  for (const name of ["chromium", "soffice"]) {
+    assertCapability(output.capabilities[name], ["available", "command"]);
+    if (output.capabilities[name].available) assert.equal(typeof output.capabilities[name].command, "string");
+  }
+  for (const name of ["documents", "pdf", "presentations"]) {
+    assertCapability(output.capabilities[name], ["available", "provider"]);
+    if (output.capabilities[name].available) assert.equal(output.capabilities[name].provider, "codex-bundled");
+  }
+  assert.ok(Array.isArray(output.warnings));
+  const optionalCapabilities = ["chromium", "soffice", "documents", "pdf", "presentations"];
+  assert.deepEqual(
+    output.warnings.map(({ code }) => code),
+    optionalCapabilities
+      .filter((name) => !output.capabilities[name].available)
+      .map((name) => `capability.${name}.absent`),
+  );
+  for (const warning of output.warnings) {
+    assert.deepEqual(Object.keys(warning).sort(), ["code", "message"]);
+    assert.equal(typeof warning.message, "string");
+    assert.notEqual(warning.message.trim(), "");
+  }
+  assert.deepEqual(
+    JSON.parse(output.hookSpecificOutput.additionalContext),
+    { capabilities: output.capabilities },
+  );
+}
+
 test("shared-contract-v1 exposes the complete product-lane contract", async (t) => {
   const packageJson = await readJson("package.json");
   assert.equal(packageJson.scripts["test:shared-contract"], "node --test tests/contracts/shared-contract.test.mjs");
@@ -134,6 +181,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "shared-contract-v1",
     "products/<product-name>/product.json",
     "products/*/product.json",
+    "symlink와 file/device/socket 같은 special entry",
     "products/<product-name>/plugin/",
     "agents/<role-id>.md",
     "skills/<skill-name>/SKILL.md",
@@ -148,6 +196,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "plugins/game-design-career",
     "reserved destination",
     "matcher 없이",
+    "hookSpecificOutput`, `capabilities`, `warnings",
     "<!-- game-design-plugin:artifact {\"path\":\"<artifact-path>\",\"formats\":[]} -->",
   ]) {
     assert.match(contractReadme, new RegExp(requiredClause.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -211,13 +260,23 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   });
   assert.equal(built.files.filter((file) => file.startsWith("references/source/docs/")).length, 49);
 
-  const discoveredProducts = await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLock });
-  assert.ok(discoveredProducts.every((productName) => productLanes.has(productName)));
+  await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLock });
   await assert.rejects(
     () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
     /Unexpected product contract: products\/unexpected-product\/product\.json/,
   );
   await rm(path.join(fixtureRoot, "products/unexpected-product"), { recursive: true, force: true });
+  await cp(
+    path.join(fixtureRoot, "products/game-design-studio"),
+    path.join(fixtureRoot, "unexpected-product-target"),
+    { recursive: true },
+  );
+  await symlink("../unexpected-product-target", path.join(fixtureRoot, "products/unexpected-product"));
+  await assert.rejects(
+    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
+    /Unsupported products entry: products\/unexpected-product is a symlink/,
+  );
+  await rm(path.join(fixtureRoot, "products/unexpected-product"), { force: true });
   await cp(
     path.join(fixtureRoot, "products/game-design-studio"),
     path.join(fixtureRoot, "products/game-design-career"),
@@ -277,8 +336,17 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     scriptName: "capability-probe.mjs",
     input: { hook_event_name: "SessionStart" },
   });
-  assert.equal(sessionStart.hookSpecificOutput.hookEventName, "SessionStart");
-  assert.equal(typeof sessionStart.hookSpecificOutput.additionalContext, "string");
+  assertSessionStartOutput(sessionStart);
+  const sessionMutations = [
+    { ...sessionStart, junk: true },
+    { ...sessionStart, capabilities: undefined },
+    { ...sessionStart, hookSpecificOutput: { ...sessionStart.hookSpecificOutput, junk: true } },
+    { ...sessionStart, hookSpecificOutput: { ...sessionStart.hookSpecificOutput, additionalContext: "{}" } },
+    { ...sessionStart, warnings: [{ code: "junk", message: "junk", extra: true }] },
+  ];
+  for (const mutation of sessionMutations) {
+    assert.throws(() => assertSessionStartOutput(mutation));
+  }
 
   const invalidArtifact = path.join(fixtureRoot, "invalid-artifact");
   await mkdir(invalidArtifact);

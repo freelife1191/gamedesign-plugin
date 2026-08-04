@@ -18,7 +18,7 @@ Product lane은 루트에서 `npm run test:shared-contract`를 실행해 이 체
 
 Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `systems`, `content`, `feedback`을 선언해 49개 source document 전체를 선택한다. 명시적 문서 선택이 필요하면 `sourceDocuments`에 `shared/knowledge/reference-index.json`의 고유 ID를 사용한다. 알 수 없는 ID/category, 중복 ID/path, `docs/` 밖의 source는 build 실패다.
 
-공통 gate는 고정 경로를 probe하지 않고 `products/*/product.json`을 열거한다. 허용 product ID는 `game-design-studio`와 `game-design-career`뿐이며 directory 이름, `product.json`의 `name`, production loader의 `productName`이 같아야 한다. Product lane 시작 전에는 발견된 집합이 비어 있을 수 있고 각 lane 진행 중에는 허용 집합의 부분집합일 수 있다. 두 contract가 생성된 integration 시점에는 발견 집합이 두 ID와 정확히 같아진다. 발견된 모든 contract는 production loader와 `buildProduct`를 반드시 통과한다.
+공통 gate는 고정 경로를 probe하지 않고 `products/*/product.json`을 열거한다. `products/`의 각 child는 `lstat` 기준 실제 directory여야 하며 symlink와 file/device/socket 같은 special entry는 `product.json` 유무와 관계없이 fail-closed로 거부한다. 허용 product ID는 `game-design-studio`와 `game-design-career`뿐이며 directory 이름, `product.json`의 `name`, production loader의 `productName`이 같아야 한다. Product lane 시작 전에는 발견된 집합이 비어 있을 수 있고 각 lane 진행 중에는 허용 집합의 부분집합일 수 있다. 두 contract가 생성된 integration 시점에는 발견 집합이 두 ID와 정확히 같아진다. 발견된 모든 contract는 production loader와 `buildProduct`를 반드시 통과한다.
 
 ## Fixed build mapping and overrides
 
@@ -69,6 +69,8 @@ E2E fixture의 product ID와 lane ID mapping은 고정되어 있다.
 ## Hooks and artifact/export handoff
 
 Hooks 지원은 host에서 optional이다. Product manifest는 비표준 `hooks` 필드를 선언하지 않는다. 지원 host는 built `hooks/hooks.json`의 공식 `SessionStart` 및 `Stop` command 구조를 사용하며 `${PLUGIN_ROOT}/scripts/*`만 실행한다. 두 event는 matcher 없이 각각 하나의 wrapper와 하나의 command hook만 갖는다. SessionStart는 `capability-probe.mjs`, timeout `10`, status message `Detecting optional game-design capabilities`; Stop은 `stop-artifact-review.mjs`, timeout `30`, status message `Reviewing canonical game-design artifact`를 정확히 사용하며 추가 key는 허용하지 않는다. 미지원 host에서도 skills와 canonical artifact 작성은 동작해야 한다.
+
+Built SessionStart CLI의 top-level output은 `hookSpecificOutput`, `capabilities`, `warnings`만 허용한다. `hookSpecificOutput`은 `hookEventName: SessionStart`와 JSON 문자열 `additionalContext`만 가지며, 이를 parse한 값은 `{ "capabilities": <top-level capabilities> }`와 정확히 같아야 한다. `capabilities` key 순서는 `node`, `chromium`, `soffice`, `documents`, `pdf`, `presentations`로 deterministic하다. 각 availability 값은 machine-dependent이므로 특정 binary 유무를 고정하지 않고 boolean과 availability별 metadata type만 고정한다. `warnings`는 위 optional capability 순서의 unavailable 항목과 정확히 대응한다. 현재 공식 SessionStart 출력에는 `continue`가 없으며 Stop 응답만 branch에 맞는 `continue` 또는 `decision`을 사용한다.
 
 완성 artifact는 다음 sentinel을 assistant message의 마지막 내용으로 한 번만 공개한다.
 
