@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://game-design-plugin.local/schema/evidence.schema.json",
+  "title": "Artifact Evidence Register",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "claims"],
+  "properties": {
+    "version": { "const": 1 },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "claim_type", "claim", "source", "confidence", "limitations"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "claim_type": { "type": "string", "minLength": 1 },
+          "claim": { "type": "string", "minLength": 1 },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["title", "accessed_at"],
+            "anyOf": [{ "required": ["url"] }, { "required": ["locator"] }],
+            "properties": {
+              "title": { "type": "string", "minLength": 1 },
+              "url": { "type": "string", "format": "uri" },
+              "locator": { "type": "string", "minLength": 1 },
+              "accessed_at": { "type": "string", "format": "date" }
+            }
+          },
+          "confidence": { "enum": ["low", "medium", "high"] },
+          "limitations": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

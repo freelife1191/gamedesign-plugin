@@ -1,0 +1,1313 @@
+{
+  "schemaVersion": 1,
+  "name": "game-design-career",
+  "sourceDateEpoch": 0,
+  "treeSha256": "742e534f8d9b822c49968043327bec9de346f570ed5b92b34563ba7852d0c884",
+  "files": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "9155d8e886d873133f8772a8b39bb071f76c63538156486bbf466ed4cc01e8df",
+      "size": 733
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "4ca6eb4e4a64818ec45e8fabff7389c240c45c02a8bc70c97d249574bea11f2f",
+      "size": 1094
+    },
+    {
+      "path": "README.md",
+      "sha256": "4c0b33488e432692111cde5b625f6585c22ab1cf93d892a6f66493e1586663e2",
+      "size": 25462
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "6b2defb1ce85bace2e4ff735512ae70bc95647f52db98843afc52f338336fe26",
+      "size": 1441
+    },
+    {
+      "path": "agents/career-strategist.md",
+      "sha256": "d0af8201429cf0ee96d4edd6abc7a96a05717764342b0666ee6c3f1df1ceea6b",
+      "size": 2558
+    },
+    {
+      "path": "agents/evidence-auditor.md",
+      "sha256": "fcec9180c980a53ad085aea32dad70976fd29fed68f882389f322f12b05e56a9",
+      "size": 2572
+    },
+    {
+      "path": "agents/game-design-mentor.md",
+      "sha256": "b703f4cd2abb27d0c629ece1302d519186ac25ed00d17217ba9e1de8c01b3a12",
+      "size": 2397
+    },
+    {
+      "path": "agents/interview-coach.md",
+      "sha256": "ab50cdf021e4a4637d07e7a7bdc941024e6aa8c5c93eb06e07f745482391dd64",
+      "size": 2506
+    },
+    {
+      "path": "agents/portfolio-reviewer.md",
+      "sha256": "717511bfbb3931d4413efb7b98953d86e783ed981b8c4fcc80e1acb031ccb168",
+      "size": 2508
+    },
+    {
+      "path": "agents/reverse-design-critic.md",
+      "sha256": "c1dbd6bd315d5f9332307102012fb8edbc61d64def11812be300796e0c73f5f1",
+      "size": 2451
+    },
+    {
+      "path": "assets/product-mark.svg",
+      "sha256": "04afc1aa3634cb8a4e6fee1c6ab7c4d28c659f86e15deda8d038a9568cd9f7bc",
+      "size": 452
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/content.md",
+      "sha256": "3ebd700f3565bdf6159c7e1a292513e570b4eb90aa2038e5e13ad498213a4cd9",
+      "size": 773
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/decisions/0001-decision.md",
+      "sha256": "7bc6946a0435aebea697f56ee0bc73137e5d44a357057cd2004a76e60b9908c9",
+      "size": 314
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/evidence.yml",
+      "sha256": "94fd7bba20f41bd624e339137575084cd69716384fbaf16081224d82554f6905",
+      "size": 380
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/export-manifest.yml",
+      "sha256": "8bb5c063a54fac966f2d6065c1da120a678398c0744abd8b7df78396e662a489",
+      "size": 174
+    },
+    {
+      "path": "assets/shared/templates/decision-log.md",
+      "sha256": "ba2ff84386ce3323352b9185a70b81a466f860f7f597f29b6539da8a603dda88",
+      "size": 482
+    },
+    {
+      "path": "assets/shared/templates/review-finding.md",
+      "sha256": "314680757d98e4ec69d134ee851e0775d23f77765ce206ad07027b7d860fbe19",
+      "size": 550
+    },
+    {
+      "path": "assets/templates/career-stage-goal/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/career-stage-goal/content.md",
+      "sha256": "1db4f34eb67fdc698b3d1cf588632bde23766983758c8494a4a558394870fa07",
+      "size": 3295
+    },
+    {
+      "path": "assets/templates/career-stage-goal/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/career-stage-goal/evidence.yml",
+      "sha256": "71addfd4120ddd4daab99c193a2bca4f458d2d9ff6b6394516ac84a2c808c71b",
+      "size": 509
+    },
+    {
+      "path": "assets/templates/career-stage-goal/export-manifest.yml",
+      "sha256": "e9043c5f2a36380c413697158a08af898ee05850c846a37701214b7369892aed",
+      "size": 443
+    },
+    {
+      "path": "assets/templates/competency-matrix/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/competency-matrix/content.md",
+      "sha256": "f8b38ba574acb8cb98592eee04ce441cba8678a624b1294aa3d51d5b38f3d58a",
+      "size": 3460
+    },
+    {
+      "path": "assets/templates/competency-matrix/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/competency-matrix/evidence.yml",
+      "sha256": "c8b40e5db4fdd181f448b0d1fd146e2d6e23bafccf160bb34f6ab70c47f2900a",
+      "size": 533
+    },
+    {
+      "path": "assets/templates/competency-matrix/export-manifest.yml",
+      "sha256": "3b61e798a84f627ecc20e135ab499e817e27f0124bbf7b52a82a3d1f78a7df02",
+      "size": 436
+    },
+    {
+      "path": "assets/templates/creative-design-portfolio/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/creative-design-portfolio/content.md",
+      "sha256": "65c35090f97e4e205db374eca0bfd172af6de6f26e1b3c3afa84ce827d90603a",
+      "size": 3646
+    },
+    {
+      "path": "assets/templates/creative-design-portfolio/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/creative-design-portfolio/evidence.yml",
+      "sha256": "618e0a3f4935d52642596b6556fc228aee20946b3bcc28cb38f6184b541ff2cd",
+      "size": 533
+    },
+    {
+      "path": "assets/templates/creative-design-portfolio/export-manifest.yml",
+      "sha256": "ca4d11487d6c0ee7d1c2562822fd60142049aac10da941cb2d27540638d761b9",
+      "size": 450
+    },
+    {
+      "path": "assets/templates/five-axis-review/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/five-axis-review/content.md",
+      "sha256": "1ef17913ce31dddd95d14762baf8b987a659a9857d9116590479e9ebd9e91ee5",
+      "size": 3482
+    },
+    {
+      "path": "assets/templates/five-axis-review/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/five-axis-review/evidence.yml",
+      "sha256": "7f4b24f74cf5727d80b0d801b9f1141cd8556804049a2593e154ce7fa973d459",
+      "size": 526
+    },
+    {
+      "path": "assets/templates/five-axis-review/export-manifest.yml",
+      "sha256": "0ba63d2e55c5af7a3b81e97611fcd5f0f2c013e8942eae50c906935e33b1ca0a",
+      "size": 427
+    },
+    {
+      "path": "assets/templates/game-analysis-report/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/game-analysis-report/content.md",
+      "sha256": "78630c3b9875430aa86ad9686bf4cc7a3a2788342672ed97bf2d6e8d8484f52c",
+      "size": 3699
+    },
+    {
+      "path": "assets/templates/game-analysis-report/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/game-analysis-report/evidence.yml",
+      "sha256": "5f7c16d8c5886591fe0c4111867a61df818398d07e02e55231cee687eb621c18",
+      "size": 518
+    },
+    {
+      "path": "assets/templates/game-analysis-report/export-manifest.yml",
+      "sha256": "9202531c94701e40b84cc76c26e8c17be76ed2ca5491b74eb9ad89cecbd59251",
+      "size": 429
+    },
+    {
+      "path": "assets/templates/game-design-role-map/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/game-design-role-map/content.md",
+      "sha256": "f1ece52171ad5b1e071942c3782fba1d5b17b2c25d64b0e5d7414a689db7f73d",
+      "size": 3427
+    },
+    {
+      "path": "assets/templates/game-design-role-map/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/game-design-role-map/evidence.yml",
+      "sha256": "9efe3d43f228ad840631fb4fe2b6e49a41653315f44db8c41a27cab8ce1989f5",
+      "size": 518
+    },
+    {
+      "path": "assets/templates/game-design-role-map/export-manifest.yml",
+      "sha256": "cf0cf2410c2820a99e81a5945ef9d0bf13b513b8e12d3cbcdc27c146e1314b6c",
+      "size": 449
+    },
+    {
+      "path": "assets/templates/interview-question-answer-log/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/interview-question-answer-log/content.md",
+      "sha256": "b9b574b5580811ccead24105dc661ec32f9089b0c0a84f4316c130b3b35b6aff",
+      "size": 3487
+    },
+    {
+      "path": "assets/templates/interview-question-answer-log/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/interview-question-answer-log/evidence.yml",
+      "sha256": "b22a5b412110a85e4cb3da478ad9575de0c8fed54735f0294316732f7e63ff2f",
+      "size": 553
+    },
+    {
+      "path": "assets/templates/interview-question-answer-log/export-manifest.yml",
+      "sha256": "930caefeee77ed7b480829b910c5a796688304cfe1ca299c72dde142f2ce46c1",
+      "size": 452
+    },
+    {
+      "path": "assets/templates/introduction-motivation/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/introduction-motivation/content.md",
+      "sha256": "33b5ab15d98f79ad960f14d36c3196e756ce5223f478a0b8f2bbb9783c6b7f87",
+      "size": 3346
+    },
+    {
+      "path": "assets/templates/introduction-motivation/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/introduction-motivation/evidence.yml",
+      "sha256": "ccee9b7ac64cebf67da69457f4ea9e876bc85cc6c0a6dc705d90ae897a10a28f",
+      "size": 535
+    },
+    {
+      "path": "assets/templates/introduction-motivation/export-manifest.yml",
+      "sha256": "7b3232275cd7632adbd3d1cb791c281f407e2bbbfca954b1c247e5d7f9664758",
+      "size": 434
+    },
+    {
+      "path": "assets/templates/job-posting-evidence/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/job-posting-evidence/content.md",
+      "sha256": "352d51b22926e84a6241bc6513383514cb2750907fc977f0cc5b1fd6f006f1b1",
+      "size": 3888
+    },
+    {
+      "path": "assets/templates/job-posting-evidence/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/job-posting-evidence/evidence.yml",
+      "sha256": "764e5cb734c0d1a830b2592e9fda5b17d60b354b2a7e430d36c62475184e53dd",
+      "size": 518
+    },
+    {
+      "path": "assets/templates/job-posting-evidence/export-manifest.yml",
+      "sha256": "517eb96c2d842b6c4898dae515bf836da4f708d5cbbe118e662a093135439022",
+      "size": 442
+    },
+    {
+      "path": "assets/templates/junior-growth-review/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/junior-growth-review/content.md",
+      "sha256": "5df1c0998c02f65a2fb442424661bc0ffef9f10ff9a8489f00b9e8a88a93414c",
+      "size": 3426
+    },
+    {
+      "path": "assets/templates/junior-growth-review/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/junior-growth-review/evidence.yml",
+      "sha256": "3f7124854b23d0f3a518a483308da43c40266cbcca2699e670d224f8371632a5",
+      "size": 518
+    },
+    {
+      "path": "assets/templates/junior-growth-review/export-manifest.yml",
+      "sha256": "db94289bb8400a4fdc9564e429de4da3509615133b444bf51ff4ec1f213ebd39",
+      "size": 445
+    },
+    {
+      "path": "assets/templates/learning-roadmap/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/learning-roadmap/content.md",
+      "sha256": "28d166e843cccbb4bc6afed0806e73718969f1b5494f5d0e89d4d30372ba076a",
+      "size": 3310
+    },
+    {
+      "path": "assets/templates/learning-roadmap/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/learning-roadmap/evidence.yml",
+      "sha256": "1471fda07e622b992eff95db80f15b34084891674cc6ba55596c95905bba8eb3",
+      "size": 530
+    },
+    {
+      "path": "assets/templates/learning-roadmap/export-manifest.yml",
+      "sha256": "03e266c10c0f3dad64aded87c95dde819101035a61878350a0b7460f40af6bb0",
+      "size": 426
+    },
+    {
+      "path": "assets/templates/portfolio-backlog/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/portfolio-backlog/content.md",
+      "sha256": "d287626038bd2db428b802f421857ec2744e9639720d5895c5845f4aea35ef2f",
+      "size": 3646
+    },
+    {
+      "path": "assets/templates/portfolio-backlog/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/portfolio-backlog/evidence.yml",
+      "sha256": "633d4a75e1c91c9479cb4c3dbf8dac731493c62f6db57754cd92dda9688c6a27",
+      "size": 509
+    },
+    {
+      "path": "assets/templates/portfolio-backlog/export-manifest.yml",
+      "sha256": "15241ca9732320362f50d14a820d9b578a0947642c1553b80cfcc413b2f81126",
+      "size": 435
+    },
+    {
+      "path": "assets/templates/portfolio-project-brief/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/portfolio-project-brief/content.md",
+      "sha256": "e795a5694286492757f05d5367915fe2e3af9fdfa551f95019122f7153f59ff7",
+      "size": 3797
+    },
+    {
+      "path": "assets/templates/portfolio-project-brief/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/portfolio-project-brief/evidence.yml",
+      "sha256": "c039c2fb2e404b2824279fb3def8b8b967d883e5ca7576d1be7d57b2cf2c88da",
+      "size": 527
+    },
+    {
+      "path": "assets/templates/portfolio-project-brief/export-manifest.yml",
+      "sha256": "382a0566657f4511c956bbff1c65c219bc15553b3cf5c7cc185ccd55723910cd",
+      "size": 444
+    },
+    {
+      "path": "assets/templates/reverse-design-document/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/reverse-design-document/content.md",
+      "sha256": "dd0064538adcbee41caa1f9928f1a7ee845ae2fae5a21b5dc62abbce48e397a6",
+      "size": 3581
+    },
+    {
+      "path": "assets/templates/reverse-design-document/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/reverse-design-document/evidence.yml",
+      "sha256": "376f5850cd95622973cc362755d10f66097bf9edc9b6029d43334c9557b07d52",
+      "size": 527
+    },
+    {
+      "path": "assets/templates/reverse-design-document/export-manifest.yml",
+      "sha256": "c7d567d552cc5624adb9eb2726a74984394bd0992bc8d71f5682c7fa887c91a9",
+      "size": 438
+    },
+    {
+      "path": "assets/templates/transition-readiness/assets/README.md",
+      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
+      "size": 282
+    },
+    {
+      "path": "assets/templates/transition-readiness/content.md",
+      "sha256": "68c66b4e731d5aaf46aebf683902d1cedf7bad076936473dbda44490bcd7d306",
+      "size": 3457
+    },
+    {
+      "path": "assets/templates/transition-readiness/decisions/README.md",
+      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
+      "size": 259
+    },
+    {
+      "path": "assets/templates/transition-readiness/evidence.yml",
+      "sha256": "596a2eeba4a1fcd7c11d824cdfa567ae902648c117f1b7f04705362d118e3a35",
+      "size": 518
+    },
+    {
+      "path": "assets/templates/transition-readiness/export-manifest.yml",
+      "sha256": "b358abf5a15ca08cb379e89452b6dd024cd15d1c9a1381360483cda3763cf871",
+      "size": 454
+    },
+    {
+      "path": "hooks/hooks.json",
+      "sha256": "485ccffbdac1921789b865f2747be75fbadb8be6a84da3ff43ab7eafab10fc1d",
+      "size": 633
+    },
+    {
+      "path": "references/career-stages.json",
+      "sha256": "40a511def4af0466428f451fde0416ca51b785e365eeb085278dc2afa9c1ff29",
+      "size": 4586
+    },
+    {
+      "path": "references/completion-gates.md",
+      "sha256": "e935c5e34d875c9605461c8625e8bf1a05f16756833766743df9553bc851641f",
+      "size": 1873
+    },
+    {
+      "path": "references/export-recipes.md",
+      "sha256": "109dc4e46f2845d3b0f87d909ab4aecf63e5f5ed1f7906ef7d53ed0467f2c289",
+      "size": 4637
+    },
+    {
+      "path": "references/fact-inference-schema.json",
+      "sha256": "53399b79836c70c554ecbb335031b4571977c3f9b6ba82c9d563597d3dc1e6c6",
+      "size": 2305
+    },
+    {
+      "path": "references/five-axis-rubric.json",
+      "sha256": "80f8bfb479cc88822ce5c8bbdccf38102dbda5d8d9d6136bb50df8750428ec63",
+      "size": 6972
+    },
+    {
+      "path": "references/intake.md",
+      "sha256": "14b27120dfe523008181022d46b2f312ccfb39d417eef189b290282d7a316663",
+      "size": 1414
+    },
+    {
+      "path": "references/job-evidence-schema.json",
+      "sha256": "38a24b8bf8000fd37037b1c677f228f0564b4ea16fbef4953da4e186ab29a87f",
+      "size": 3875
+    },
+    {
+      "path": "references/methods/five-axis-review.md",
+      "sha256": "3474fa7b12a68c2a99845ed853014a9bbd9fd89ad3445140947c68e4bcec2a24",
+      "size": 3748
+    },
+    {
+      "path": "references/methods/interview.md",
+      "sha256": "461490195ecd6c5549a0720304712a2d47ad6c1d875ef22857fc98bdc023f01f",
+      "size": 2921
+    },
+    {
+      "path": "references/methods/job-evidence.md",
+      "sha256": "ac15fa8d0a6f215607230389f9a3f87f129ba4128d25912b4eaa24d9452dbee4",
+      "size": 5046
+    },
+    {
+      "path": "references/methods/junior-growth.md",
+      "sha256": "48dfcd5ad82b0592e95110522351a28ac8747ee8bf20444af4f68e62c4cabb6d",
+      "size": 3328
+    },
+    {
+      "path": "references/methods/portfolio-evidence.md",
+      "sha256": "a326e1df6b8f8b0548c8c6cff0dc5b4b61c8b72de824d60657a6ebd779b5644d",
+      "size": 3153
+    },
+    {
+      "path": "references/methods/reverse-design.md",
+      "sha256": "4dc7c30a6c5ea284250be0ecd8095bd6181222dcd3a244a420afab171eb17765",
+      "size": 2862
+    },
+    {
+      "path": "references/methods/role-map.md",
+      "sha256": "ac40a1cb8482e6cc6a0c66844c3b73b7798a4d1c381449e1cb8f177ccbea1201",
+      "size": 2651
+    },
+    {
+      "path": "references/product-overview.md",
+      "sha256": "7e665fdf43cc6258e5f0a047565134588bbfec522c87d0eac4c9d1d6a0b0fba2",
+      "size": 1494
+    },
+    {
+      "path": "references/routing.json",
+      "sha256": "473cacc19077a4875c28112c12b286fcf816602186f61267d982ceaaa8d3bb61",
+      "size": 18935
+    },
+    {
+      "path": "references/shared/export/qa-contracts/docx.md",
+      "sha256": "7fded22baeb562bd3195a8dd31547e91363626d40ebd03ca238c4a81a60b884d",
+      "size": 446
+    },
+    {
+      "path": "references/shared/export/qa-contracts/md.md",
+      "sha256": "4e146eacbbc7dda85f80a1d8cae04e645d8a83af858476fe4518aac7a915ceea",
+      "size": 395
+    },
+    {
+      "path": "references/shared/export/qa-contracts/pdf.md",
+      "sha256": "5ca1603a98d6709d5934c2ac7b3a15fae9048ce52ba3ca689c88c1c97a2f11fc",
+      "size": 415
+    },
+    {
+      "path": "references/shared/export/qa-contracts/pptx.md",
+      "sha256": "ce13669089fe6797d3c9d25511a2c25565c473dbc8b34f40868ebf972377dd4d",
+      "size": 530
+    },
+    {
+      "path": "references/shared/export/schema/artifact.schema.json",
+      "sha256": "31d5ca265e6f992abfcfe7dad148b1587871fabd7b56d355df1ab616d76643b9",
+      "size": 652
+    },
+    {
+      "path": "references/shared/export/schema/evidence.schema.json",
+      "sha256": "6fe41159f5ab27bbe9c73324b59fcbe3d3eecc823cd2b87548bc23de2d27561a",
+      "size": 1454
+    },
+    {
+      "path": "references/shared/export/schema/export-manifest.schema.json",
+      "sha256": "0e85b2c3161680c390f9e80f7b52beab87f29bc45fd80b3a26aad274755932a6",
+      "size": 1892
+    },
+    {
+      "path": "references/shared/export/themes/portfolio.json",
+      "sha256": "fa5fbb470f6ee2b61ae73d789b979e7380a8432fb58a2284f48cd63575d51b4e",
+      "size": 234
+    },
+    {
+      "path": "references/shared/export/themes/professional.json",
+      "sha256": "6b48a1437aca5c25d1820bbb40d05a9ff0a8341de1c94bd4c796429b8a6c19ab",
+      "size": 237
+    },
+    {
+      "path": "references/shared/knowledge/core/career-and-portfolio.md",
+      "sha256": "05a5c03e87866da1b2e062852d9ccc1dfd3bfbff3676fdd6d762ca114f47537e",
+      "size": 2207
+    },
+    {
+      "path": "references/shared/knowledge/core/content-design.md",
+      "sha256": "56c0ff8dd8f36ef2970b6ce796a915f7f0b96f66117f10b2f8b3462385f97ff4",
+      "size": 2245
+    },
+    {
+      "path": "references/shared/knowledge/core/design-intent-and-fun.md",
+      "sha256": "e67834bba311668432f466a0981a0f7db988e646c23fe981b97b40cfae0dcb18",
+      "size": 2649
+    },
+    {
+      "path": "references/shared/knowledge/core/evidence-and-freshness.md",
+      "sha256": "be5a5daaa0d298776917a6f39acefd62d496e11305aed720c2394ac4d0d18a54",
+      "size": 2537
+    },
+    {
+      "path": "references/shared/knowledge/core/player-experience.md",
+      "sha256": "3fe8b125de1286b9cbcb213a573f31778b64d646d8bfa4588568b3382c6c915b",
+      "size": 2273
+    },
+    {
+      "path": "references/shared/knowledge/core/production-and-feedback.md",
+      "sha256": "3d9e2fb8bc2ad38e9e264b2b8a44289a4fab3f32c584ff48d2143ea724353786",
+      "size": 2147
+    },
+    {
+      "path": "references/shared/knowledge/core/system-design.md",
+      "sha256": "59ec501e29f37ebbaa01c7b4f464757b1439ff4572c58fe061e6b2137309105a",
+      "size": 2246
+    },
+    {
+      "path": "references/shared/knowledge/reference-index.json",
+      "sha256": "2a27b097cbe1b4fd2e535e91f994843a37859277abc2e85ed90769b9a6edb2e6",
+      "size": 25985
+    },
+    {
+      "path": "references/shared/knowledge/reference-index.schema.json",
+      "sha256": "5db8c8abe17e15e04f2cd2cb625e38feac7da5dee66fb736240b605722ace16a",
+      "size": 1430
+    },
+    {
+      "path": "references/shared/knowledge/source-policy.md",
+      "sha256": "a29b276c04629e66b0383956706bdb5a2ea633517478fd21f949f8d0eabaa5c3",
+      "size": 1704
+    },
+    {
+      "path": "references/shared/knowledge/trends/2026-current-practices.md",
+      "sha256": "e69b5433c4afc576c79804442b12044d6c696ddfd686f2b3df0fb2ff3168c2e7",
+      "size": 13075
+    },
+    {
+      "path": "references/shared/knowledge/trends/source-register.json",
+      "sha256": "9c3afdb5705c2364e5ea2d4163691736cb6326d1d640f9fd3894cbf50e6b2192",
+      "size": 9122
+    },
+    {
+      "path": "references/shared/responsible-design/README.md",
+      "sha256": "d11825ec97c3f91d5652dce4176f584382449bf4232f36757468e855d871cf4c",
+      "size": 1573
+    },
+    {
+      "path": "references/shared/responsible-design/gates.json",
+      "sha256": "ac569bb4bd6743ac4f0681262e78a2e0ae6b217d82f29b82095d716527c60ae5",
+      "size": 4196
+    },
+    {
+      "path": "references/shared/vendor/skillstead/vendor.lock.json",
+      "sha256": "5b0c73cecdbb5579f1a4a71ad4ba9764d316b88e8d2588fedbd6af3514ce3916",
+      "size": 8354
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/1. [게임 기획 취업] 게임 회사에 취업해야 하는 이유! - 자세한 리포트.md",
+      "sha256": "e472e7c056bfd053b553e69966fd9c3ad72e2d7757e027668501d9282c5dfa9a",
+      "size": 8532
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/3. [게임 기획 취업] 신입 기획 취업 메타 - 자세한 리포트.md",
+      "sha256": "ad34fa0a9d07dc9354e4dd5174722e30bf362d0015252b73c4e8f0946324ae92",
+      "size": 11109
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/4. [게임 기획 취업] 신입 게임 기획자로 빠르게 취직하는 법! - 자세한 리포트.md",
+      "sha256": "47de77f64cf98d32b8ec9ed75c6823450a0d3b6e8e9ad55fa40ee913a7f8ddcd",
+      "size": 7926
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/5. [게임 기획 취업] 게임 개발 팀의 구성 - 자세한 리포트.md",
+      "sha256": "3d3a59f3d0e1d7184fc187fc252da9df91d8c26b3d14643dfdd272705a564a62",
+      "size": 5831
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/6. [게임 기획 취업] 게임 기획의 종류 - 자세한 리포트.md",
+      "sha256": "c859d29a14de70e74e60966e0e6194bc484df647222b7ed0787cc7bb2b4a6a5c",
+      "size": 18766
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/7. [게임 기획 취업] 게임 개발 프로세스 - 자세한 리포트.md",
+      "sha256": "035e267cee751b36e123466751384bbad2939d37c2332257ce20e486bba34538",
+      "size": 12994
+    },
+    {
+      "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/9. [통합 게임 기획 취업 전략] 역할, 메타, 개발 프로세스 및 팀 구성 - 자세한 리포트.md",
+      "sha256": "2766c7a1ac9967c8bb121ac8678bc484b3cf530ea2d935bbeff7ae9cdfa75393",
+      "size": 19019
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/1. [게임 기획 취업] 게임이란 무엇인가_ - 자세한 리포트.md",
+      "sha256": "98cfc92fda0294eaf31a3d40325e3b11374d4d145517f974dc9a25397ff7c64e",
+      "size": 12104
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/10. [통합 게임 기획 취업] 재미, 동기부여, 몰입, 기획 의도 설계 - 자세한 리포트.md",
+      "sha256": "fcd32e25791b205f805d3e3064a76d550af2cd7514f66feb080732958bd908b9",
+      "size": 20217
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/2. [게임 기획 취업] 게임의 역사와 장르 - 자세한 리포트.md",
+      "sha256": "19cc9a2fe1ae0cdb1be18a78ffa54028797321a0560a1ad50c4256fcc666efb9",
+      "size": 11695
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/3. [게임 기획 취업] 재미란 무엇인가_ - 자세한 리포트.md",
+      "sha256": "802f9fc2c2f3b12d1ffe47e9b9bca864954f660bda8d28d77af139fd592ad2a4",
+      "size": 8888
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/4. [게임 기획 취업] 동기부여와 몰입 - 자세한 리포트.md",
+      "sha256": "c2f76346c485ee79f2d65e6b3f9db9fc7b60af3c408c03dc45e8340d4b6ee11b",
+      "size": 9991
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/5. [게임 기획 취업] 게임의 재미 설계 - 자세한 리포트.md",
+      "sha256": "d8cebcddef71e63496c08d0d4adba4dd7000b0ea6df8664e9e434f58343e0481",
+      "size": 14049
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/6. [게임 기획 취업] 기획의도의 중요성 - 자세한 리포트.md",
+      "sha256": "2309e779d08406a258926b34ac5e061f21507dc6e7eeace6524c95082ece1e84",
+      "size": 14763
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/7. [게임 기획 취업] 기획 의도의 종류 - 자세한 리포트.md",
+      "sha256": "977ea5708d7d1c136b71e0c00c1c0865b93fd7b750ed88e937e712a4bbebacb6",
+      "size": 16822
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/8. [게임 기획 취업] 기획 의도의 범위 - 자세한 리포트.md",
+      "sha256": "7fbf81667c014f6d0015c6acd52531fd0f4ef04d514518dcca809c6fbb87e767",
+      "size": 13081
+    },
+    {
+      "path": "references/source/docs/02. 게임의 재미와 기획 의도/9. [게임 기획 취업] 기획 의도의 설득 - 자세한 리포트.md",
+      "sha256": "d89444d0b54f737843aa28f9b652ec79566df2e9f7e744dc51b0af4a2522cb94",
+      "size": 16351
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/1. [게임 기획 취업] 시스템 기획이란_ - 자세한 리포트.md",
+      "sha256": "471ff6b02abd550d9f140aa636e738a926fdffed5beaead3cd51d42d3f986ff9",
+      "size": 13403
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/10. [게임 기획 취업] UI 구성 요소 - 자세한 리포트.md",
+      "sha256": "21e3d03016dcd9972b35f457d4f4f2494d8d591f409c98810db6649d30acf762",
+      "size": 24354
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/11. [게임 기획 취업] 데이터 테이블 - 자세한 리포트.md",
+      "sha256": "87a02ec1f2019e6d46cfd8977308ae6381e182458c0132df835665339e6787f4",
+      "size": 20517
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/12. [게임 기획 취업] 테이블의 설계 - 자세한 리포트.md",
+      "sha256": "eb8ce0dcdf4dca34cbcb3fa8fc489137fd844f8351d7a3313c83d7ce39b8f78d",
+      "size": 23723
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/13. [통합 게임 기획 취업] 시스템, 규칙, UI_UX 설계 및 데이터 관리 - 자세한 리포트.md",
+      "sha256": "f29de83ec490ce6143015b1957b924f879be8f6cef9bf800def2af0489773e4c",
+      "size": 30124
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/2. [게임 기획 취업] 시스템 기획자의 시야 - 자세한 리포트.md",
+      "sha256": "2378f6a459874a9f2bb890cf66c6e31b0bf31f32f510eaddb4aac099a0f94b8d",
+      "size": 17914
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/3. [게임 기획 취업] 시스템의 부분과 전체 - 자세한 리포트.md",
+      "sha256": "edbdad5dc4e1ea7012fff42e371652e6b67fb4000b3fdae6b7805e26d9a6b06e",
+      "size": 11603
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/4. [게임 기획 취업] 게임의 규칙 설계 - 자세한 리포트.md",
+      "sha256": "fbeaeb601abc98cc723ead72b5c9680b9c7c79cc335681eaa183db886a78f5f1",
+      "size": 23559
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/5. [게임 기획 취업] 규칙 설계 심화 - 자세한 리포트.md",
+      "sha256": "04b3f906e313d016bfee3b8a954f881d230e550e7ab042a452614d29f60c5aa9",
+      "size": 22501
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/6. [게임 기획 취업] 플로우 차트 - 자세한 리포트.md",
+      "sha256": "b69967e96130dda089888ff03e9aa3c5c3ecbf20ad977b947dcc0bc95ba69185",
+      "size": 15641
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/7. [게임 기획 취업] UI, UX란_ - 자세한 리포트.md",
+      "sha256": "878fc11997fc539f08508401f471012db9dcbd86ebc8193ca52bd43342745bc8",
+      "size": 10040
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/8. [게임 기획 취업] 유저 경험의 시작 - 자세한 리포트.md",
+      "sha256": "6e032e4de0601b517406355af33e8b42de5fdabae64986110692f43860d53b5d",
+      "size": 14072
+    },
+    {
+      "path": "references/source/docs/03. 게임 시스템 기획/9. [게임 기획 취업] 유저 경험의 완성 - 자세한 리포트.md",
+      "sha256": "f5306e8d013eb55d7b38b24062fdcc2a3e9553d773c051e02cb66156646b0677",
+      "size": 19363
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/1. [게임 기획 취업] 스토리텔링 기획 - 자세한 리포트.md",
+      "sha256": "b23e58c2dcb3fa01d1f74be2aef7d1b6633ecd86332f2d6fd0ce1ac7aeefb74a",
+      "size": 19950
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/10. [통합 게임 기획 취업] 스토리텔링, 퀘스트, NPC, 캐릭터, 스킬, 몬스터, 액션 기획.md",
+      "sha256": "84713e78f95b6f3ac65f4413a62af6042dae273fd67c8876b1ded956875e5b43",
+      "size": 44027
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/2. [게임 기획 취업] 게임 스토리텔링의 3요소 - 자세한 리포트.md",
+      "sha256": "d3f48fca70acab1f0cdbef1e565e15013d8514a85ad3766e2824a59ac1a5383f",
+      "size": 21700
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/3. [게임 기획 취업] 퀘스트 기획 - 자세한 리포트.md",
+      "sha256": "99ba75910be96b79b1f162e35ab77794218c6baff50a6f3864b96ca3d36fa1b0",
+      "size": 13444
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/4. [게임 기획 취업] 퀘스트의 구성 - 자세한 리포트.md",
+      "sha256": "5058cff69e086ed3f730887a02abe16e0cad1d0d1deb69afcc8537d548df35cd",
+      "size": 14560
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/5. [게임 기획 취업] NPC 기획 - 자세한 리포트.md",
+      "sha256": "755c3f7972fa4096c8a935e0b1a4cf847c40373a6aa5a82ce0e1b288fb1fe180",
+      "size": 16506
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/6. [게임 기획 취업] 플레이어 캐릭터 기획 - 자세한 리포트.md",
+      "sha256": "cc13eea20e12900132f0ee77148e0c6964d1a0d4e64b171752d72a465da276a2",
+      "size": 19946
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/7. [게임 기획 취업] 전투 스킬 기획 - 자세한 리포트.md",
+      "sha256": "ebee401d11f88a7c8572e2e308f31524c4c8c63e3758e581e68b129c1ff71c14",
+      "size": 21355
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/8. [게임 기획 취업] 전투 액션 기획 - 자세한 리포트.md",
+      "sha256": "9d100a542a1982111d4a3238c37f7e51fd1026b8c43511a75a53e0f4558b72c3",
+      "size": 17730
+    },
+    {
+      "path": "references/source/docs/04. 게임 콘텐츠 기획/9. [게임 기획 취업] 몬스터 기획 - 자세한 리포트.md",
+      "sha256": "f77270395d3f25b3c723995d723bc2bfa834781572997bc4a001fcd6243078d2",
+      "size": 21457
+    },
+    {
+      "path": "references/source/docs/기획서 피드백/1. [게임 기획 지망생 피드백 이벤트] 보스 창작 기획서 - 자세한 리포트.md",
+      "sha256": "8a472d7853b3361cab82208cc967823e79785690dfa42a7bb524172d21e57626",
+      "size": 13399
+    },
+    {
+      "path": "references/source/docs/기획서 피드백/2. [게임 기획 지망생 피드백 이벤트] 역기획서 - 자세한 리포트.md",
+      "sha256": "482909af7821f49ee421a56a2bdab4bdcd918fbc5ecd185d63b88ce6e1225ba8",
+      "size": 13120
+    },
+    {
+      "path": "references/source/docs/기획서 피드백/3. [통합 게임 기획서 피드백] 보스 창작 및 시스템 역기획 실무 가이드 - 자세한 리포트.md",
+      "sha256": "2b0653c145b7f09c19f3d5bc02202848aade7803fbe7117dbe92c88ec758199c",
+      "size": 15620
+    },
+    {
+      "path": "references/source/docs/유리링의 게임 기획 이야기/1. 게임 기획 신입 면접 때 반드시 나오는 질문! - 자세한 리포트.md",
+      "sha256": "cae0a24d77204f0357cd18dd775044e3fbfa19ea17b2d0cb8491b5bf67f84d3a",
+      "size": 10283
+    },
+    {
+      "path": "references/source/docs/유리링의 게임 기획 이야기/2. 게임 기획자는 말빨이 좋아야 할까요_ - 자세한 리포트.md",
+      "sha256": "a9fbd9383d9a200777730019e9eb285e1217e65a332c0faf3d8fc21d0244765f",
+      "size": 11142
+    },
+    {
+      "path": "references/source/docs/유리링의 게임 기획 이야기/3. 게임 기획 신입 지망생인데 포트폴리오로 뭘 써야 좋을까요_ - 자세한 리포트.md",
+      "sha256": "7cf26de8f3f237ea38d1e625c5c00af94226e03fef75d959331a5c46628a3eb1",
+      "size": 12841
+    },
+    {
+      "path": "references/source/docs/유리링의 게임 기획 이야기/4. 게임 기획자는 학벌이 좋아야 할까요_ 유리한 전공이나 자격증이 있을까요.md",
+      "sha256": "f0bbd9b50fa16b921fb44db97337578c167319908c74a3cd6c8134fb91b1caa9",
+      "size": 8702
+    },
+    {
+      "path": "references/source/docs/유리링의 게임 기획 이야기/5. 게임 기획 지망생에게 게임 개발 경험은 필수일까요_ - 자세한 리포트.md",
+      "sha256": "f8194ebc8512fa4cae2751b0aec79aa1b713a38da0fb426ff0ee59bc40306cf1",
+      "size": 6412
+    },
+    {
+      "path": "references/source/docs/유리링의 게임 기획 이야기/6. [통합 게임 기획자 취업 준비] 학벌, 경험, 면접, 말빨, 포트폴리오 전략.md",
+      "sha256": "beb6d548cc02ad04bf4604fbdc8ec70e6efb6624278284e0552972f7edb84064",
+      "size": 25458
+    },
+    {
+      "path": "references/visualization-presets.json",
+      "sha256": "41178fce9c4997273b0f2e8aa38b81cbc8df9b69412423134a90ac53bef749a2",
+      "size": 2319
+    },
+    {
+      "path": "scripts/capability-probe.mjs",
+      "sha256": "44b4c93e406458e96ed794f5ab90c47ec5c9f02b3e5de1c6cbddb4d8f02a340b",
+      "size": 9750
+    },
+    {
+      "path": "scripts/stop-artifact-review.mjs",
+      "sha256": "d436ab4d9a399e1faca6f9f38d519bf29ad1d7a7235d4e6d984c4a732f76c637",
+      "size": 8521
+    },
+    {
+      "path": "scripts/validate-artifact.mjs",
+      "sha256": "8c9c1d31ad921c2dde563c0502230b900e6dc596a05303cb7f9f19cfe5c10319",
+      "size": 23426
+    },
+    {
+      "path": "skills/build-game-design-portfolio/SKILL.md",
+      "sha256": "9dd6af3c1bc47b7a87b059046bbbf9ee07f728a1fab2d16275ceb95fa01993d4",
+      "size": 2608
+    },
+    {
+      "path": "skills/build-game-design-portfolio/agents/openai.yaml",
+      "sha256": "5a800d2cf93e3372fd5c962749648954e2ff2e91f6566857114b5ce22b7ccc04",
+      "size": 258
+    },
+    {
+      "path": "skills/export-career-documents/SKILL.md",
+      "sha256": "008903b696440973beb55dd62a8babcb99da1f4142071bd23cd0d4f6b870285f",
+      "size": 3463
+    },
+    {
+      "path": "skills/export-career-documents/agents/openai.yaml",
+      "sha256": "09a7c78a07f0e9fef0c1b1d0107b6ed3ee84bf62d18365b22cef74d012006296",
+      "size": 226
+    },
+    {
+      "path": "skills/export-career-documents/scripts/prepare-career-export.mjs",
+      "sha256": "ae7b3bd5c0f385413c9bc12ff3cac874d4ed58d82e2396f8b765b686ef8702e9",
+      "size": 11336
+    },
+    {
+      "path": "skills/map-game-design-career/SKILL.md",
+      "sha256": "977a718174cc381e555d405c3040fda4653ed0daef6258b40e8373264335e3da",
+      "size": 2401
+    },
+    {
+      "path": "skills/map-game-design-career/agents/openai.yaml",
+      "sha256": "dcc585354a7ec5ef7d0e92e4c08bb70c9ee6c8ee91943d0070be5d12fbca7a9a",
+      "size": 267
+    },
+    {
+      "path": "skills/orchestrate-game-design-career/SKILL.md",
+      "sha256": "487e96e4aa38bc90fff1c563ad203e68b31a594d047448f42522fb7a3718abb4",
+      "size": 3724
+    },
+    {
+      "path": "skills/orchestrate-game-design-career/agents/openai.yaml",
+      "sha256": "d6b80de317af5eee3da956e1ea3b252e5f6773c2c0d678b663a9407b982a3c2d",
+      "size": 262
+    },
+    {
+      "path": "skills/orchestrate-game-design-career/scripts/merge-role-findings.mjs",
+      "sha256": "21713825207153f1316dbd0066c41f3911b984fa337785f63813e9688871d474",
+      "size": 10813
+    },
+    {
+      "path": "skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs",
+      "sha256": "b9cedc199ffeb8a5f66e0da7e73e70988efc74a377af01d4d51cf238080f1dd3",
+      "size": 45375
+    },
+    {
+      "path": "skills/plan-junior-growth/SKILL.md",
+      "sha256": "d17b7184164839509f979212be0cd6b895c6ec5d7bcf9349e161213eeb5a1d1f",
+      "size": 2290
+    },
+    {
+      "path": "skills/plan-junior-growth/agents/openai.yaml",
+      "sha256": "843ef322571bb2c20c89d3539305ab4ddd57f81e3a0f6bad7b9316779347e502",
+      "size": 230
+    },
+    {
+      "path": "skills/practice-game-design-interview/SKILL.md",
+      "sha256": "1563dd0560ad0bcd473d9689d24ab0d129f112a07bd9a79b465ab6f407457bd2",
+      "size": 2293
+    },
+    {
+      "path": "skills/practice-game-design-interview/agents/openai.yaml",
+      "sha256": "eb0e0b72c5ef755fdf4b74b76b7349f04bca3730bef066188cce9fc4c84c6804",
+      "size": 231
+    },
+    {
+      "path": "skills/research-game-design-jobs/SKILL.md",
+      "sha256": "2ddc552b73d912e17efed3ba4b4dfb8b4a457e94ec7c782968e5ba7962365911",
+      "size": 4011
+    },
+    {
+      "path": "skills/research-game-design-jobs/agents/openai.yaml",
+      "sha256": "2631fea06d22d1e09494e03c265a21092faa4987dea250d3e266eb59c6c3bdd8",
+      "size": 275
+    },
+    {
+      "path": "skills/research-game-design-jobs/scripts/validate-job-evidence.mjs",
+      "sha256": "27d60ae7d4088d31821e2989d3860ad936437b8e89f038c8db081fb27a1b0233",
+      "size": 24712
+    },
+    {
+      "path": "skills/reverse-engineer-game-design/SKILL.md",
+      "sha256": "253e290055a56d29893371508361972d783db5ec2dd6d0fc9c58b6dab9552194",
+      "size": 2587
+    },
+    {
+      "path": "skills/reverse-engineer-game-design/agents/openai.yaml",
+      "sha256": "a6a2d83ffdb8856c9abe1adb374ead43701132f134acdd9c4cf45057feccb164",
+      "size": 256
+    },
+    {
+      "path": "skills/review-game-design-portfolio/SKILL.md",
+      "sha256": "0f205773b147698989138ec94f4730f22efaa494d0136634d739a363fc6f15e9",
+      "size": 2121
+    },
+    {
+      "path": "skills/review-game-design-portfolio/agents/openai.yaml",
+      "sha256": "081b161b6df8c8406f963457f316f0efe098fae3a60ab185bc52575485bb734c",
+      "size": 235
+    },
+    {
+      "path": "skills/svg-infographic/CHANGELOG.md",
+      "sha256": "794ca707fdc1647975030c97b171c31f1ae14b526483286696cfaf3d35e8329e",
+      "size": 2684
+    },
+    {
+      "path": "skills/svg-infographic/LICENSE.txt",
+      "sha256": "4739c79c8017b90a46ab26f8972fd4ac56c9ea459b89bf9671359b462f62a4a6",
+      "size": 11344
+    },
+    {
+      "path": "skills/svg-infographic/README.ko.md",
+      "sha256": "d981158c3087cc3f853004178a9a27505c74da9bb8bd4716caf04fa510e4ddaa",
+      "size": 16590
+    },
+    {
+      "path": "skills/svg-infographic/README.md",
+      "sha256": "ee63d45454d3147fbf14a927a28a74f9a3fe545e549b12dadc6c0867a65cdc51",
+      "size": 14103
+    },
+    {
+      "path": "skills/svg-infographic/SKILL.md",
+      "sha256": "6d5a2d278ca0aaa045b636d7a5faf83e825908ba7a28dac09faa6c01e442f2f1",
+      "size": 22012
+    },
+    {
+      "path": "skills/svg-infographic/references/archetypes.md",
+      "sha256": "f0c8de46fb2a25fdd13de021c22c0390f40b760af6224120d2f16957f216605f",
+      "size": 11548
+    },
+    {
+      "path": "skills/svg-infographic/references/authoring.md",
+      "sha256": "2b8239cd836a7753cab5c67840c631347b58b4806848bbffe2e0653d214b6317",
+      "size": 20718
+    },
+    {
+      "path": "skills/svg-infographic/references/sketch.md",
+      "sha256": "887c33236665d3e7645b3bedaff564a7326542c1de1b4ecc6497a007c7aa8403",
+      "size": 8431
+    },
+    {
+      "path": "skills/svg-infographic/scripts/check-svg.mjs",
+      "sha256": "3990a96078ce8c0c4692213820ce72fc228a1b827459792d5ccc45932f5f9a41",
+      "size": 41219
+    },
+    {
+      "path": "skills/svg-infographic/scripts/check-svg.test.mjs",
+      "sha256": "a3f73ff0ccd03189fbd8eb4dc45fd8ec72cf02024afbca9eada3c713d953c808",
+      "size": 14481
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/curve-head-unverified.svg",
+      "sha256": "48894c6edc6671feb2133164030802f9dc4ee47d5ad13957a6889a2ab9e44c7b",
+      "size": 642
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/dangling-ref.svg",
+      "sha256": "c65a722af8c8dfdb1b94d8968d1b11cf3935c9d6f7906f8bf111573daf2491f1",
+      "size": 380
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/exponent-coords.svg",
+      "sha256": "066233a756d23b2d7021e969f505676e43ca0119265d86093c96cd5e8281e87e",
+      "size": 933
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/exponent-markerwidth.svg",
+      "sha256": "a5d05eaba46a060ad4b929a2eb054eeb3444044617420401af39afefcd3484f2",
+      "size": 924
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-css-override-unsafe.svg",
+      "sha256": "1493957ad14af00d2344461c5b0608df33b1d92fc3dc367c583748356f48b152",
+      "size": 823
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-curved-connector.svg",
+      "sha256": "20cb5ad8a7c6ec6b0cf82c069080fcc016f337e6bc67c2b91174142ca7cf38c3",
+      "size": 778
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-horizontal-connectors.svg",
+      "sha256": "706dc9ea02819d827fd5ea5d34b8e8a05ce2369e226db0ee72d18665aba30526",
+      "size": 771
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-safe-userspace.svg",
+      "sha256": "e8b295c695f646b937b0809deb07286343c435ad4fea2363ba5c99ddb3c5cb2e",
+      "size": 793
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-unpainted-strokes.svg",
+      "sha256": "ad175d5a0c815757cf34193885797012985bd9ab707a58043cfff8827b61c9f4",
+      "size": 534
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-unresolved-strokewidth.svg",
+      "sha256": "8020447852a9b81e7bbe40c218a6f417a0ce125b5879aa449bb90a9f44f8f377",
+      "size": 596
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-userspace-calc-region.svg",
+      "sha256": "6d3f4a0f717b1a70f000a615a7987336e19cb638c4cd5d60b0e37681647e1dfa",
+      "size": 613
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-userspace-negative-region.svg",
+      "sha256": "03bdf95dfdc862650f63d6ebf7f189ed618c9bbd4d531fa432803b2aebcd7419",
+      "size": 606
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-userspace-percent-zero-region.svg",
+      "sha256": "3b4e3c55d60266fc68916d0ef7f2dbc81147273e757bb72cd267883fe4e50a07",
+      "size": 606
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-userspace-zero-region.svg",
+      "sha256": "45e9503872b09fbdabcb8f6a0fa85baa872241e72a9f4e455c32d4a497c13a82",
+      "size": 605
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-vertical-connectors.svg",
+      "sha256": "2decf3c1429a12edf4fd1ddd10702926d10642dfb9b218948545371a48a49ed4",
+      "size": 771
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/filtered-zero-strokewidth.svg",
+      "sha256": "2244bd9cee9e22588a3746d287349b9068080d2b4eb730311896ff0ca1bf25a2",
+      "size": 769
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/huge-viewport-small-glyph.svg",
+      "sha256": "dbb331b91ca32a50ee8240e0f9c1e86e0c9686eb76429746766994f82325b52b",
+      "size": 923
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/inline-style-oversized.svg",
+      "sha256": "4cadf4265f6c5ce3700a7ddf673b736066cbf5ff9ae8a0a24cf3a3cebb517a02",
+      "size": 602
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/korean-overflow.svg",
+      "sha256": "b40f230844438345595c9730cf0794371edb0f4e8ceb34b2a4897a87aea34cfa",
+      "size": 344
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/latin-overflow.svg",
+      "sha256": "655ff0cb3e4802db3b6d0d64a55fcc45abb5a0baed0fda81ac5b61d7d796f318",
+      "size": 336
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/missing-marker-units.svg",
+      "sha256": "1ecf88c9b6dc3701736f3ff9a1b912e94ff0a1dc1234b4f824e561a03d8c880e",
+      "size": 526
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/mixed-known-unknown.svg",
+      "sha256": "8ca65bdec0443da6b13ea075a0abab4e0f7df48e4043e05e244b72617e25d906",
+      "size": 895
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/multi-stroke-all-clean.svg",
+      "sha256": "e160b3cb55d83f2221da9aedf8fc1df7ebe6614e76d255336dca3f4cd34d8daa",
+      "size": 878
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/multi-stroke-thin-violation.svg",
+      "sha256": "6d4aa0d3d820579475f52556122cf3e25ae91bee6ed4f843a3a2bba6160b6bf6",
+      "size": 884
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/oversized-head.svg",
+      "sha256": "3f32fb831221b2c659699fb7ef5d77869b92bb32bd0b412dc5cc17d73b7c3a55",
+      "size": 577
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/oversized-visible-head.svg",
+      "sha256": "780ffe2f9396e5942909fef3b6324223639b34816d271fbbdab7108d40428534",
+      "size": 926
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/par-slice.svg",
+      "sha256": "c8308ae0402541b7e0c5fd5aaae4931b0f772ee942736535db38f4788310e914",
+      "size": 965
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/relative-path-oversized.svg",
+      "sha256": "bbc65e2c09641d414fee3ca17030b7823fafbb8e76056e2a069c0c92f837bc6a",
+      "size": 636
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/split-css-rules.svg",
+      "sha256": "f2f302614b414224dee8bc54027e08999689664863a8471b619301ff1601bcfd",
+      "size": 655
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/undersized-head.svg",
+      "sha256": "355ff911fda9ec5bb9c7b18bcc42495141891a00d14d0ca84016fadc0158e60d",
+      "size": 920
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/unknown-stroke-ref.svg",
+      "sha256": "bad76753e4db73d47ba3db15c1ca8a054038139c5dfac25f1bf8eb83cc17db16",
+      "size": 933
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/unproven-extreme-viewport.svg",
+      "sha256": "078726a7018f40ac748bba74929bb9b9b425bb11df92a154bafe2fd3b61d34de",
+      "size": 921
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/unused-css-rule.svg",
+      "sha256": "370b7ed3b8166b926d12c121c57853683ef7bc25b09eb87d9ac704fe8d4e2cb5",
+      "size": 977
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/valid.svg",
+      "sha256": "c6602e579d74b4cf84adf94510dd199afe7eec543aa91aa9562a00d0db8cd53d",
+      "size": 928
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/warning-transform.svg",
+      "sha256": "d8640a11bcb7f0f237b9b329f04afe863f30092270f66ee1624972aa9ec435f6",
+      "size": 346
+    },
+    {
+      "path": "skills/svg-infographic/scripts/render.mjs",
+      "sha256": "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e",
+      "size": 19876
+    },
+    {
+      "path": "skills/svg-infographic/scripts/render.sh",
+      "sha256": "1515fbab7fb6ec2b7a76e50055e8c9160a4c8bb974487e48d25c7259f70ade35",
+      "size": 2162
+    },
+    {
+      "path": "skills/svg-infographic/scripts/render.test.mjs",
+      "sha256": "40f3150dd8902527e6e7945366ad717e70b2bc7fb84e39b11f7a63fbe7b3fcb1",
+      "size": 17368
+    },
+    {
+      "path": "skills/visualize-career-roadmap/SKILL.md",
+      "sha256": "8f56adf7806feb72b258efa0605d89ffb15c718fa17397ebc0dc56368dfdf0a9",
+      "size": 4754
+    },
+    {
+      "path": "skills/visualize-career-roadmap/agents/openai.yaml",
+      "sha256": "bffe1502c95b731a45551de6a2adeec8a033a1c5fbddf0fceefe422ffd3ea3bd",
+      "size": 227
+    },
+    {
+      "path": "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
+      "sha256": "aadaefb302d309907c66e8c1d6cdf6abdc76a0810f31d88997a16fe8235a1c0c",
+      "size": 5027
+    },
+    {
+      "path": "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
+      "sha256": "c4a3576a58a557cce0c12cc329e114428957135897d692215bd0757f680b115c",
+      "size": 20841
+    }
+  ]
+}

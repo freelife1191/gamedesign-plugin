@@ -1,0 +1,16 @@
+artifact_id: interview-question-answer-log
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate and interview coach
+    purpose: Practice evidence-grounded answers without inventing experience or results.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Export Game Design Documents"
+  short_description: "Fail-closed multi-format game design export"
+  default_prompt: "Use $export-game-design-documents prepare fail-closed MD PDF DOCX and PPTX export jobs from a canonical artifact."

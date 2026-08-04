@@ -1,0 +1,16 @@
+artifact_id: five-axis-review
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: candidate and review panel
+    purpose: Produce evidence-qualified scores and prioritized minimum repairs.
+    slide_outline:
+      - title: Context and bounded goal
+      - title: Evidence and alternatives
+      - title: Decision and next verification

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Junior Growth"
+  short_description: "Bind growth goals to observable role evidence"
+  default_prompt: "Use $plan-junior-growth to build evidence-backed quarterly growth goals for a game designer."

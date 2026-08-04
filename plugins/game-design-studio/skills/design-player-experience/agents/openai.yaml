@@ -1,0 +1,4 @@
+interface:
+  display_name: "Player Experience Designer"
+  short_description: "Design accessible game UX flows and first-session learning"
+  default_prompt: "Use $design-player-experience to design an evidence-backed player experience flow."

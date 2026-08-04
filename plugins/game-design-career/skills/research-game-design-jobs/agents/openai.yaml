@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Game Design Jobs"
+  short_description: "Audit current game-design job evidence"
+  default_prompt: "Use $research-game-design-jobs to research current game-design postings and separate repeated signals from posting-specific requirements."

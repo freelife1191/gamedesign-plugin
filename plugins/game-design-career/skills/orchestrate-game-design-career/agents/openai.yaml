@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orchestrate Game Design Career"
+  short_description: "Route evidence-centered game design career work"
+  default_prompt: "Use $orchestrate-game-design-career to diagnose my career stage and route the next evidence-centered workflow."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Design Project Orchestrator"
+  short_description: "Route mixed game-design work into a verified project brief"
+  default_prompt: "Use $orchestrate-game-design-project to turn this mixed game-design request into a scoped, reviewed canonical artifact."

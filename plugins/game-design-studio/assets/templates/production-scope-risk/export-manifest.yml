@@ -1,0 +1,16 @@
+artifact_id: production-scope-risk
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: production, discipline leads, legal, and executive reviewers
+    purpose: Align scope with core-loop value, evidence, capacity, risks, kill criteria, and contingencies.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

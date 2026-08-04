@@ -1,0 +1,14 @@
+{
+  "name": "professional",
+  "version": 1,
+  "colors": {
+    "background": "#FFFFFF",
+    "foreground": "#172033",
+    "accent": "#2457A7",
+    "muted": "#667085"
+  },
+  "typography": {
+    "heading": "Arial",
+    "body": "Arial"
+  }
+}

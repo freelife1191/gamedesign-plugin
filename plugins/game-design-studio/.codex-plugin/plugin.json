@@ -1,18 +1,25 @@
 {
   "name": "game-design-studio",
   "version": "0.1.0",
-  "description": "Game Design Studio plugin",
+  "description": "Professional game design, review, visualization, and export workflows.",
   "author": {
-    "name": "Local developer"
+    "name": "Game Design Plugin Contributors"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Game Design Studio",
-    "shortDescription": "Use Game Design Studio in Codex.",
-    "longDescription": "Game Design Studio adds a local Codex plugin scaffold.",
-    "developerName": "Local developer",
+    "shortDescription": "Design, review, visualize, and export production-ready game plans.",
+    "longDescription": "Route game design work through focused vision, systems, content, experience, economy, production, review, visualization, and export workflows.",
+    "developerName": "Game Design Plugin Contributors",
     "category": "Productivity",
-    "capabilities": [],
-    "defaultPrompt": "Help me use Game Design Studio."
+    "capabilities": ["Write"],
+    "defaultPrompt": [
+      "Create a game design brief from my goals and constraints.",
+      "Review this game system and identify the smallest fixes.",
+      "Plan a responsible LiveOps economy and experiment."
+    ],
+    "brandColor": "#334155",
+    "composerIcon": "./assets/product-mark.svg",
+    "logo": "./assets/product-mark.svg"
   }
 }

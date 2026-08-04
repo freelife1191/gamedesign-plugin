@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "stages": [
+    {
+      "id": "unclear",
+      "signals": ["stage-undecided", "target-role-undecided"],
+      "output": "game-design-role-map",
+      "roles": ["career-strategist", "game-design-mentor"],
+      "provisionalPaths": true,
+      "declareSingleCorrectCareer": false
+    },
+    {
+      "id": "entry",
+      "signals": ["exploring-game-design", "no-target-level-yet"],
+      "output": "career-stage-goal",
+      "roles": ["career-strategist", "game-design-mentor"]
+    },
+    {
+      "id": "new-hire",
+      "signals": ["new-graduate", "first-game-design-role"],
+      "output": "portfolio-project-brief",
+      "roles": ["career-strategist", "game-design-mentor", "evidence-auditor"]
+    },
+    {
+      "id": "junior-growth",
+      "signals": ["current-junior", "document-project-impact", "grow-in-role"],
+      "output": "junior-growth-review",
+      "roles": ["game-design-mentor", "career-strategist"]
+    },
+    {
+      "id": "transition",
+      "signals": ["change-jobs", "change-role", "target-new-company"],
+      "output": "transition-readiness",
+      "roles": ["career-strategist", "interview-coach", "evidence-auditor"]
+    }
+  ],
+  "scenarioRoutes": {
+    "undecided-entrant": {
+      "stage": "unclear",
+      "skills": ["map-game-design-career"],
+      "roles": ["career-strategist", "game-design-mentor"],
+      "output": "game-design-role-map",
+      "provisionalPaths": true,
+      "declareSingleCorrectCareer": false
+    },
+    "new-graduate-system-design": {
+      "stage": "new-hire",
+      "skills": [
+        "research-game-design-jobs",
+        "map-game-design-career",
+        "build-game-design-portfolio",
+        "review-game-design-portfolio"
+      ],
+      "roles": ["career-strategist", "portfolio-reviewer", "evidence-auditor"],
+      "output": "portfolio-project-brief"
+    },
+    "junior-project-impact": {
+      "stage": "junior-growth",
+      "skills": ["plan-junior-growth"],
+      "roles": ["game-design-mentor", "career-strategist"],
+      "output": "junior-growth-review"
+    },
+    "two-year-designer-transition": {
+      "stage": "transition",
+      "skills": ["research-game-design-jobs", "practice-game-design-interview", "plan-junior-growth"],
+      "roles": ["career-strategist", "interview-coach", "evidence-auditor"],
+      "output": "transition-readiness"
+    }
+  },
+  "intentRoutes": {
+    "current-employer-or-job-facts": {
+      "skill": "research-game-design-jobs",
+      "roles": ["career-strategist", "evidence-auditor"],
+      "freshPrimaryEvidence": true,
+      "requiredSourceMetadata": ["source-url", "posted-date", "retrieval-date"]
+    },
+    "portfolio-review": {
+      "skill": "review-game-design-portfolio",
+      "roles": ["portfolio-reviewer", "evidence-auditor"]
+    },
+    "interview-practice": {
+      "skill": "practice-game-design-interview",
+      "roles": ["interview-coach", "portfolio-reviewer", "evidence-auditor"]
+    },
+    "reverse-design-review": {
+      "skill": "reverse-engineer-game-design",
+      "roles": ["reverse-design-critic", "evidence-auditor"]
+    }
+  },
+  "reviewDispatch": {
+    "rolePriority": [
+      "career-strategist",
+      "game-design-mentor",
+      "portfolio-reviewer",
+      "reverse-design-critic",
+      "interview-coach",
+      "evidence-auditor"
+    ],
+    "questionsByRole": {
+      "career-strategist": ["What is the largest evidence-backed career bottleneck now?"],
+      "game-design-mentor": ["Does the practice produce inspectable game-design judgment and artifacts?"],
+      "portfolio-reviewer": ["Which competency does each artifact prove, and where is that evidence inspectable?"],
+      "reverse-design-critic": ["Which claims cross from observation to inference without a validation path?"],
+      "interview-coach": ["Do answers connect claims, evidence, choices, alternatives, outcomes, and reflection?"],
+      "evidence-auditor": ["Which claims are stale, missing, generalized, non-primary, or unsupported?"]
+    },
+    "parallel": {
+      "rolesSource": "selectedRoles",
+      "questionsSource": "questionsByRole",
+      "independentEnvelopes": true
+    },
+    "sequential": {
+      "rolesSource": "selectedRoles",
+      "questionsSource": "questionsByRole",
+      "order": [
+        "career-strategist",
+        "game-design-mentor",
+        "portfolio-reviewer",
+        "reverse-design-critic",
+        "interview-coach",
+        "evidence-auditor"
+      ]
+    },
+    "severityOrder": ["blocker", "high", "medium", "low"],
+    "mergeKeys": ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"]
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Game Systems"
+  short_description: "Specify executable game rules, states, and data contracts"
+  default_prompt: "Use $design-game-systems to turn this mechanic into an executable system specification."

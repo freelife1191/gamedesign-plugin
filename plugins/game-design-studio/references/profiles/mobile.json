@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "mobile",
+  "assumptions": [
+    "Touch input, interruptions, device variation, and constrained session windows may shape the experience.",
+    "Store policy, regional policy, privacy, and purchase disclosure may constrain monetization."
+  ],
+  "questions": [
+    "Which critical actions work through touch and accessible alternatives across supported devices?",
+    "What is the minimum satisfying short session and how does interruption recovery work?",
+    "Which client-side actions require offline tolerance and which require authoritative validation?",
+    "Which store, regional, privacy, and purchase policies apply to every monetized surface?"
+  ],
+  "requiredSections": [
+    "touch-input-and-device-matrix",
+    "short-session-and-interruption-recovery",
+    "client-state-and-network-degradation",
+    "store-policy-privacy-and-monetization"
+  ],
+  "responsibleGates": [
+    "accessibility",
+    "economy-transparency",
+    "liveops-experiment"
+  ],
+  "reviewRoles": [
+    "ux-accessibility-reviewer",
+    "system-economy-designer",
+    "production-feasibility-critic"
+  ],
+  "conflicts": [
+    {
+      "id": "session-length-short-vs-long-form",
+      "topic": "session-length",
+      "profiles": ["live-service-rpg", "mobile"],
+      "positions": {
+        "live-service-rpg": "long-form progression and recurring content arcs",
+        "mobile": "short satisfying sessions with interruption recovery"
+      },
+      "status": "decision-record-required",
+      "requiredDecisionRecordFields": ["decision", "rationale", "evidenceIds", "owner", "approvalDate"]
+    },
+    {
+      "id": "client-vs-server-authority",
+      "topic": "runtime-authority",
+      "profiles": ["live-service-rpg", "mobile"],
+      "positions": {
+        "live-service-rpg": "server-authoritative persistent progression and economy",
+        "mobile": "client-tolerant degraded and offline interaction where justified"
+      },
+      "status": "decision-record-required",
+      "requiredDecisionRecordFields": ["decision", "rationale", "evidenceIds", "owner", "approvalDate"]
+    },
+    {
+      "id": "touch-vs-controller-first-input",
+      "topic": "primary-input",
+      "profiles": ["mobile", "pc-console"],
+      "positions": {
+        "mobile": "touch-first critical paths across device sizes",
+        "pc-console": "controller-first and keyboard-mouse parity where supported"
+      },
+      "status": "decision-record-required",
+      "requiredDecisionRecordFields": ["decision", "rationale", "evidenceIds", "owner", "approvalDate"]
+    },
+    {
+      "id": "monetization-vs-platform-policy",
+      "topic": "monetization-and-platform-policy",
+      "profiles": ["mobile", "pc-console"],
+      "positions": {
+        "mobile": "mobile-store regional policy, privacy, and purchase disclosure",
+        "pc-console": "platform-holder certification, commerce, entitlement, and refund policy"
+      },
+      "status": "decision-record-required",
+      "requiredDecisionRecordFields": ["decision", "rationale", "evidenceIds", "owner", "approvalDate"]
+    }
+  ],
+  "evidenceTriggers": [
+    "device-and-input-coverage",
+    "session-length-telemetry",
+    "interruption-recovery-test",
+    "store-and-regional-policy-review"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://game-design-plugin.local/schema/export-manifest.schema.json",
+  "title": "Artifact Export Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_id", "formats"],
+  "properties": {
+    "artifact_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "formats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["md", "pdf", "docx", "pptx"],
+      "properties": {
+        "md": { "$ref": "#/$defs/mdFormat" },
+        "pdf": { "$ref": "#/$defs/basicFormat" },
+        "docx": { "$ref": "#/$defs/basicFormat" },
+        "pptx": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status"],
+          "properties": {
+            "status": { "$ref": "#/$defs/formatStatus" },
+            "audience": { "type": "string", "minLength": 1 },
+            "purpose": { "type": "string", "minLength": 1 },
+            "slide_outline": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "formatStatus": { "enum": ["pending", "passed", "failed", "unavailable"] },
+    "mdFormat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": { "status": { "enum": ["pending", "passed"] } }
+    },
+    "basicFormat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": { "status": { "$ref": "#/$defs/formatStatus" } }
+    }
+  }
+}

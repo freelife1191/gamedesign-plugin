@@ -1,0 +1,16 @@
+artifact_id: game-design-brief
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
+    audience: project sponsors and cross-functional leads
+    purpose: Align the target experience, scope, evidence, and production decision.
+    slide_outline:
+      - title: Context and target experience
+      - title: Design decision and alternatives
+      - title: Evidence risks and completion gate

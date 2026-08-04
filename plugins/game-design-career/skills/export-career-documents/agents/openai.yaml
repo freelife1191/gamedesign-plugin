@@ -1,0 +1,4 @@
+interface:
+  display_name: "Export Career Documents"
+  short_description: "Prepare verified career document exports"
+  default_prompt: "Use $export-career-documents to prepare fail-closed MD, PDF, DOCX, and PPTX export jobs."

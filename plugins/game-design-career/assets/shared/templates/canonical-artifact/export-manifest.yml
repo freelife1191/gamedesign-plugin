@@ -1,0 +1,10 @@
+artifact_id: canonical-game-design-artifact
+formats:
+  md:
+    status: pending
+  pdf:
+    status: unavailable
+  docx:
+    status: unavailable
+  pptx:
+    status: unavailable
