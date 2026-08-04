@@ -61,35 +61,6 @@ function assertVisualizationContract(presets, skill) {
   assert.doesNotMatch(skill, /\b\d+(?:\.\d+)?%/u, "skill contains an evidence-free percentage");
 }
 
-function assertVisualizationState(record) {
-  for (const state of ["requested", "planned", "generated", "linted", "rendered", "verified"]) {
-    assert.equal(typeof record[state], "boolean", `${state} must be boolean`);
-  }
-  if (record.generated) assert.ok(record.svgFile, "generated requires svgFile");
-  if (record.linted) {
-    assert.equal(record.generated, true, "linted requires generated SVG");
-    for (const field of ["command", "file", "result"]) assert.ok(record.lintEvidence?.[field]);
-    assert.equal(record.lintEvidence.result, "passed");
-  }
-  if (record.rendered) {
-    assert.equal(record.linted, true, "rendered requires linted SVG");
-    for (const field of ["command", "svgFile", "pngFile", "browser", "result"]) {
-      assert.ok(record.renderEvidence?.[field]);
-    }
-    assert.equal(record.renderEvidence.result, "passed");
-  }
-  if (record.verified) {
-    assert.equal(record.rendered, true, "verified requires rendered PNG");
-    assert.ok(record.altText);
-    assert.ok(record.visualQa);
-    assert.equal(record.renderEvidence.scale, 2, "verified PNG must be 2x");
-  }
-  if (record.pngAvailability === "unavailable") {
-    assert.equal(record.rendered, false);
-    assert.equal(record.verified, false);
-  }
-}
-
 function assertExportContract(recipes, skill) {
   for (const type of [
     "learning-plan",
@@ -118,6 +89,24 @@ async function loadPrepareModule() {
     "skills/export-career-documents/scripts/prepare-career-export.mjs",
   ));
   return import(`${url.href}?test=${Date.now()}`);
+}
+
+async function loadVisualizationModule() {
+  const url = pathToFileURL(path.join(
+    pluginRoot,
+    "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
+  ));
+  return import(`${url.href}?test=${Date.now()}`);
+}
+
+function pngFixture(width, height) {
+  const png = Buffer.alloc(33);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(png, 0);
+  png.writeUInt32BE(13, 8);
+  png.write("IHDR", 12, "latin1");
+  png.writeUInt32BE(width, 16);
+  png.writeUInt32BE(height, 20);
+  return png;
 }
 
 function baseJob(root) {
@@ -172,42 +161,77 @@ test("visualization mutation guard rejects missing presets and weakened evidence
   }
 });
 
-test("visualization state fixtures reject generated, linted, rendered, or verified claims without evidence", () => {
-  const svgOnly = {
-    requested: true,
-    planned: true,
-    generated: true,
-    linted: true,
-    rendered: false,
-    verified: false,
-    svgFile: "career-map.svg",
-    pngAvailability: "unavailable",
-    lintEvidence: { command: "node check-svg.mjs career-map.svg", file: "career-map.svg", result: "passed" },
-  };
-  assert.doesNotThrow(() => assertVisualizationState(svgOnly));
-  assert.throws(() => assertVisualizationState({ ...svgOnly, generated: false }));
-  assert.throws(() => assertVisualizationState({ ...svgOnly, lintEvidence: null }));
-  assert.throws(() => assertVisualizationState({ ...svgOnly, rendered: true }));
-  assert.throws(() => assertVisualizationState({ ...svgOnly, verified: true }));
-
-  const verified = {
-    ...svgOnly,
-    pngAvailability: "available",
-    rendered: true,
-    verified: true,
-    altText: "Role evidence maps to two provisional paths.",
-    visualQa: "No clipping; relationship labels inspected.",
-    renderEvidence: {
-      command: "node render.mjs career-map.svg career-map.png",
+test("plugin-owned visualization validator rejects impossible state and artifact claims", async () => {
+  const { validateVisualizationState } = await loadVisualizationModule();
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-viz-"));
+  try {
+    await writeFile(path.join(root, "career-map.svg"), '<svg viewBox="0 0 600 300"></svg>', "utf8");
+    await writeFile(path.join(root, "career-map.png"), pngFixture(1200, 600));
+    await writeFile(path.join(root, "other.png"), pngFixture(1200, 600));
+    const svgOnly = {
+      artifactRoot: root,
+      requested: true,
+      planned: true,
+      generated: true,
+      linted: true,
+      rendered: false,
+      verified: false,
       svgFile: "career-map.svg",
+      pngAvailability: "unavailable",
+      availabilityEvidence: { command: "node render.mjs --probe", result: "failed", reason: "no Chromium found" },
+      lintEvidence: {
+        command: "node check-svg.mjs career-map.svg",
+        file: "career-map.svg",
+        result: "passed",
+        warningsDisposition: "no warnings",
+      },
+    };
+    assert.doesNotThrow(() => validateVisualizationState(svgOnly));
+    for (const mutation of [
+      { ...svgOnly, requested: false },
+      { ...svgOnly, planned: false },
+      { ...svgOnly, generated: false },
+      { ...svgOnly, lintEvidence: null },
+      { ...svgOnly, svgFile: "../outside.svg" },
+      { ...svgOnly, svgFile: "missing.svg" },
+      { ...svgOnly, rendered: true },
+      { ...svgOnly, verified: true },
+    ]) assert.throws(() => validateVisualizationState(mutation));
+
+    const verified = {
+      ...svgOnly,
+      pngAvailability: "available",
+      availabilityEvidence: { command: "node render.mjs --probe", result: "passed", reason: "Chromium found" },
+      rendered: true,
+      verified: true,
       pngFile: "career-map.png",
-      browser: "Chromium 150",
-      result: "passed",
-      scale: 2,
-    },
-  };
-  assert.doesNotThrow(() => assertVisualizationState(verified));
-  assert.throws(() => assertVisualizationState({ ...verified, renderEvidence: { ...verified.renderEvidence, scale: 1 } }));
+      altText: "Role evidence maps to two provisional paths.",
+      visualQa: "No clipping; relationship labels inspected.",
+      renderEvidence: {
+        command: "node render.mjs career-map.svg career-map.png",
+        svgFile: "career-map.svg",
+        pngFile: "career-map.png",
+        browser: "Chromium 150",
+        result: "passed",
+        scale: 2,
+        sourceWidth: 600,
+        sourceHeight: 300,
+        outputWidth: 1200,
+        outputHeight: 600,
+      },
+    };
+    assert.doesNotThrow(() => validateVisualizationState(verified));
+    for (const mutation of [
+      { ...verified, pngFile: "other.png" },
+      { ...verified, renderEvidence: { ...verified.renderEvidence, scale: 1 } },
+      { ...verified, renderEvidence: { ...verified.renderEvidence, outputWidth: 1199 } },
+      { ...verified, renderEvidence: { ...verified.renderEvidence, svgFile: "missing.svg" } },
+      { ...verified, renderEvidence: { ...verified.renderEvidence, pngFile: "other.png" } },
+      { ...verified, altText: "" },
+    ]) assert.throws(() => validateVisualizationState(mutation));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("export recipes and skill define renderer-neutral fail-closed jobs", async () => {
@@ -279,6 +303,190 @@ test("prepare script requires probe generation and QA evidence before passed", a
       { kind: "qa", command: "verify-pdf portfolio.pdf", file: "portfolio.pdf", result: "passed" },
     ];
     assert.equal(prepareCareerExport(job).formats.pdf.status, "passed");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("prepare script rejects derivative identity and contradictory passed evidence mutations", async () => {
+  const { prepareCareerExport } = await loadPrepareModule();
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-export-"));
+  try {
+    await writeFile(path.join(root, "content.md"), "# Portfolio\n", "utf8");
+    for (const file of ["portfolio.pdf", "other.pdf", "wrong.docx"]) {
+      await writeFile(path.join(root, file), "% derivative fixture", "utf8");
+    }
+    const valid = baseJob(root);
+    valid.formats.pdf = {
+      requested: true,
+      availability: "available",
+      status: "passed",
+      evidence: [
+        { kind: "capability-probe", command: "renderer --version", result: "passed" },
+        { kind: "generation", command: "render", file: "portfolio.pdf", result: "passed" },
+        { kind: "qa", command: "verify", file: "portfolio.pdf", result: "passed" },
+      ],
+    };
+    assert.doesNotThrow(() => prepareCareerExport(valid));
+    const mutations = [];
+
+    const wrongExtension = structuredClone(valid);
+    wrongExtension.formats.pdf.evidence[1].file = "wrong.docx";
+    wrongExtension.formats.pdf.evidence[2].file = "wrong.docx";
+    mutations.push(wrongExtension);
+
+    const mismatchedFiles = structuredClone(valid);
+    mismatchedFiles.formats.pdf.evidence[2].file = "other.pdf";
+    mutations.push(mismatchedFiles);
+
+    const passedAndFailed = structuredClone(valid);
+    passedAndFailed.formats.pdf.evidence.push({
+      kind: "qa",
+      command: "verify again",
+      file: "portfolio.pdf",
+      result: "failed",
+    });
+    mutations.push(passedAndFailed);
+
+    const unknownTop = structuredClone(valid);
+    unknownTop.output = "portfolio.pdf";
+    mutations.push(unknownTop);
+
+    const unknownEvidence = structuredClone(valid);
+    unknownEvidence.formats.pdf.evidence[1].path = "portfolio.pdf";
+    mutations.push(unknownEvidence);
+
+    let survivors = 0;
+    for (const mutation of mutations) {
+      try { prepareCareerExport(mutation); survivors++; } catch {}
+    }
+    assert.equal(survivors, 0, "all five export identity/schema mutations must be rejected");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("prepare script enforces exact availability, status, request, and evidence transitions", async () => {
+  const { prepareCareerExport } = await loadPrepareModule();
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-export-"));
+  try {
+    await writeFile(path.join(root, "content.md"), "# Portfolio\n", "utf8");
+    await writeFile(path.join(root, "portfolio.pdf"), "% derivative fixture", "utf8");
+    const valid = baseJob(root);
+    const mutations = [];
+
+    const probeConflict = structuredClone(valid);
+    probeConflict.formats.pdf = {
+      requested: true,
+      availability: "available",
+      status: "pending",
+      evidence: [
+        { kind: "capability-probe", command: "probe pass", result: "passed" },
+        { kind: "capability-probe", command: "probe fail", result: "failed" },
+      ],
+    };
+    mutations.push(probeConflict);
+
+    const requestedNotRequested = structuredClone(valid);
+    requestedNotRequested.formats.pdf = {
+      requested: true,
+      availability: "unknown",
+      status: "not-requested",
+      evidence: [],
+    };
+    mutations.push(requestedNotRequested);
+
+    const falseRequestedPassed = structuredClone(valid);
+    falseRequestedPassed.formats.pdf = {
+      requested: false,
+      availability: "unknown",
+      status: "passed",
+      evidence: [],
+    };
+    mutations.push(falseRequestedPassed);
+
+    const availableBlocked = structuredClone(valid);
+    availableBlocked.formats.pdf = {
+      requested: true,
+      availability: "available",
+      status: "blocked",
+      evidence: [{ kind: "capability-probe", command: "probe", result: "passed" }],
+    };
+    mutations.push(availableBlocked);
+
+    const unavailablePending = structuredClone(valid);
+    unavailablePending.formats.pdf = {
+      requested: true,
+      availability: "unavailable",
+      status: "pending",
+      evidence: [{ kind: "capability-probe", command: "probe", result: "failed" }],
+    };
+    mutations.push(unavailablePending);
+
+    const failedWithPassedQa = structuredClone(valid);
+    failedWithPassedQa.formats.pdf = {
+      requested: true,
+      availability: "available",
+      status: "failed",
+      evidence: [
+        { kind: "capability-probe", command: "probe", result: "passed" },
+        { kind: "generation", command: "render", file: "portfolio.pdf", result: "failed" },
+        { kind: "qa", command: "verify", file: "portfolio.pdf", result: "passed" },
+      ],
+    };
+    mutations.push(failedWithPassedQa);
+
+    let survivors = 0;
+    for (const mutation of mutations) {
+      try { prepareCareerExport(mutation); survivors++; } catch {}
+    }
+    assert.equal(survivors, 0, "invalid export state transitions must be rejected");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("prepare script rejects unknown and dangerous keys at every schema boundary", async () => {
+  const { prepareCareerExport } = await loadPrepareModule();
+  const root = await mkdtemp(path.join(os.tmpdir(), "career-export-"));
+  try {
+    await writeFile(path.join(root, "content.md"), "# Portfolio\n", "utf8");
+    const base = baseJob(root);
+    const mutations = [];
+    for (const [target, key] of [
+      [[], "__proto__"],
+      [[], "constructor"],
+      [["canonicalValidation"], "path"],
+      [["formats"], "prototype"],
+      [["formats", "md"], "output"],
+      [["formats", "md", "evidence"], "filePath"],
+    ]) {
+      const mutated = structuredClone(base);
+      let object = mutated;
+      for (const segment of target) object = object[segment];
+      if (Array.isArray(object)) object.push({ kind: "capability-probe", command: "probe", result: "passed", [key]: "x" });
+      else Object.defineProperty(object, key, { value: "x", enumerable: true, configurable: true });
+      mutations.push(mutated);
+    }
+
+    const pptx = structuredClone(base);
+    pptx.formats.pptx = {
+      requested: true,
+      availability: "available",
+      status: "pending",
+      evidence: [{ kind: "capability-probe", command: "probe", result: "passed" }],
+      audience: "recruiter",
+      purpose: "short review",
+      outlineSource: "independent-story",
+      storyOutline: [{ title: "Promise", message: "Evidence-led candidate promise", output: "slide.pptx" }],
+    };
+    mutations.push(pptx);
+
+    let survivors = 0;
+    for (const mutation of mutations) {
+      try { prepareCareerExport(mutation); survivors++; } catch {}
+    }
+    assert.equal(survivors, 0, "unknown or dangerous schema keys must be rejected");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

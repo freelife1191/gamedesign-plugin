@@ -46,6 +46,7 @@ Never advance a state from intention. A command without its file and result is n
 3. Run the packaged SVG lint. Preserve warnings and their disposition.
 4. When Chromium is available, use the packaged renderer and verify exact 2× PNG dimensions plus visual quality.
 5. When browser rendering is unavailable, preserve the linted editable SVG, set PNG availability to `unavailable`, and keep `rendered` and `verified` false. Do not claim PNG success.
+6. Import `scripts/validate-visualization-state.mjs` and invoke its exported `validateVisualizationState` function before reporting artifact states.
 
 ## Output Contract
 

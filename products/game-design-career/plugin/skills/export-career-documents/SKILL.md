@@ -25,14 +25,13 @@ Read `../../references/export-recipes.md` before preparing a job. Read the insta
 
 ## State Rules
 
-- `availability: unknown`: no capability probe has run. Do not convert it to unavailable or passed.
-- `availability: available`: a recorded probe passed; generation may proceed.
-- `availability: unavailable`: a recorded probe failed or proved the renderer absent. Preserve the probe evidence.
-- `status: pending`: preparation or verification remains unfinished.
-- `status: blocked`: a prerequisite such as canonical validation, capability, or PPTX brief is missing.
-- `status: passed`: capability, generation, file, and QA evidence all passed.
-- `status: failed`: generation or QA ran and reported a defect.
-- `status: unavailable`: capability was probed and proved unavailable.
+- Keep `requested` false exactly when status is `not-requested`; every other status is requested.
+- Keep `unknown` with no evidence for `blocked`, or for `pending` before a probe.
+- Keep `available` only with one passed probe. `pending` may then have no generation or one passed generation.
+- Set `passed` only with one passed probe, one passed generation, and one passed QA for the same format-correct derivative path.
+- Set `failed` only for a failed generation with no QA, or for passed generation followed by failed QA.
+- Set `unavailable` only with one failed probe and no generation or QA.
+- Reject duplicate or contradictory evidence, including any failed record in a passed job.
 
 Unknown capability is not unavailable capability. A requested format is not a generated format. A generated file is not a verified file.
 

@@ -21,6 +21,21 @@ Record `artifactRoot`, `artifactId`, `documentType`, canonical validation eviden
 
 Evidence records use `kind` (`capability-probe`, `generation`, or `qa`), exact `command`, optional safe artifact-relative `file`, and `result`. Generation and QA evidence require a file. An unavailable state requires failed capability-probe evidence.
 
+The job, canonical validation, formats container, each format, every evidence item, and every PPTX slide are closed schemas. Reject unknown keys, dangerous prototype keys, and aliases such as `output`, `path`, or alternate command fields. Normalize by constructing a new object from approved fields only.
+
+## Exact state transitions
+
+| Status | Requested | Availability | Exact evidence |
+| --- | --- | --- | --- |
+| `not-requested` | false | `unknown` | none |
+| `blocked` | true | `unknown` | none |
+| `pending` | true | `unknown` or `available` | none while unknown; passed probe and optionally passed generation while available |
+| `passed` | true | `available` | passed probe, passed generation, and passed QA |
+| `failed` | true | `available` | passed probe plus failed generation and no QA, or passed generation plus failed QA |
+| `unavailable` | true | `unavailable` | failed probe only |
+
+Probe results are mutually exclusive. Generation and QA must reference one identical derivative path whose extension matches the requested format. A `passed` job rejects any failed probe, generation, or QA record.
+
 ## Format recipes
 
 | Format | Preparation | Passed gate |
