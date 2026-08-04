@@ -201,3 +201,25 @@ test("README explains the source overlay and complete independent built-plugin s
     assert.ok(readme.includes(contract), `missing structure boundary: ${contract}`);
   }
 });
+
+test("README keeps Career export preparation non-terminal and delegates trusted terminal verification", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  const exportSection = readme.split("## MD, PDF, DOCX, PPTX 내보내기\n")[1]
+    ?.split("\n## ")[0] ?? "";
+
+  for (const contract of [
+    "preflight 전용",
+    "`not-requested`, `blocked`, `pending`, `unavailable`",
+    "`passed` 또는 `failed`를 수용하거나 생성하지",
+    "generation·QA·derivative terminal evidence",
+    "trusted bundled renderer",
+    "artifact digest",
+    "MD/PDF/DOCX/PPTX/SVG/PNG",
+    "suite Task 11",
+  ]) {
+    assert.ok(readme.includes(contract), `missing export trust boundary: ${contract}`);
+  }
+
+  assert.doesNotMatch(exportSection, /각 형식은 capability probe, 생성, 파일 존재, 형식별 QA가 모두 통과해야 `passed`/u);
+  assert.doesNotMatch(readme, /형식별 capability·생성·QA 증거가 있는 작업 manifest/u);
+});

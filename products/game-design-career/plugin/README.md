@@ -149,7 +149,7 @@ plugins/game-design-career/
 | `review-game-design-portfolio` | 포트폴리오를 5축으로 검토할 때 | 관찰 상태, 근거 한정 점수, 최소 수정 큐 |
 | `plan-junior-growth` | 분기 성장 목표와 이직 준비도를 계획할 때 | 요구사항 레지스터, 증거 프로젝트, 재평가 결정 |
 | `visualize-career-roadmap` | 관계·의존·순서가 공간적으로 더 명확할 때 | 접근 가능한 SVG, 선택 근거, 검증 상태 |
-| `export-career-documents` | MD/PDF/DOCX/PPTX 파생본이 필요할 때 | 형식별 capability·생성·QA 증거가 있는 작업 manifest |
+| `export-career-documents` | MD/PDF/DOCX/PPTX 파생본이 필요할 때 | Canonical Artifact digest와 capability probe를 담은 non-terminal preflight manifest |
 
 ## 전문 역할 프롬프트
 
@@ -250,28 +250,32 @@ artifact-name/
 
 ### 문서 내보내기
 
-> 이 Canonical Artifact를 MD와 PDF로, 리뷰어 발표용 PPTX로 내보내 줘. 각 형식의 capability probe, 생성, 파일 존재와 QA 증거를 기록해 줘.
+> 이 Canonical Artifact를 MD와 PDF로, 리뷰어 발표용 PPTX로 내보내 줘. 먼저 preflight manifest를 만들고, trusted bundled renderer와 형식 QA가 원본·파생본 artifact digest를 결합해 검증한 뒤에만 terminal 결과를 기록해 줘.
 
 ## Skillstead 도식화
 
 [visualize-career-roadmap](skills/visualize-career-roadmap/SKILL.md)는 관계가 실제로 더 명확해질 때만 Skillstead `svg-infographic` 0.8.3을 사용합니다. 역할 맵, 역량 의존도, 학습 순서, 개발 프로세스, 포트폴리오 정보 구조, 복수 성장 경로 프리셋을 비교하고 선택·제외 이유를 남깁니다. 단순 목록이나 근거 없는 수치는 표 또는 본문으로 유지합니다.
 
-SVG에는 `<title>`, `<desc>`, 결론을 설명하는 alt text가 필요합니다. 패키지의 SVG lint를 통과한 뒤 Chromium이 있으면 정확한 2× PNG로 렌더링하고 브라우저 식별자·크기·시각 QA를 기록합니다. 브라우저가 없으면 편집 가능한 lint 통과 SVG를 보존하고 PNG를 `unavailable`로 표시하며, 렌더·검증 성공을 주장하지 않습니다.
+SVG에는 `<title>`, `<desc>`, 결론을 설명하는 alt text가 필요합니다. 패키지의 SVG lint는 정확한 SVG bytes와 digest를 다시 검사합니다. Chromium이 있으면 2× PNG 렌더를 준비할 수 있지만, terminal 성공은 downstream trusted bundled renderer와 visual QA가 실제 SVG/PNG 파일, 정확한 크기와 artifact digest를 결합해 확인한 뒤에만 기록합니다. 브라우저가 없으면 편집 가능한 lint 통과 SVG를 보존하고 PNG를 `unavailable`로 표시하며, 렌더·검증 성공을 주장하지 않습니다.
 
 색, 면적, 위치나 진행률처럼 보이는 표현으로 채용 가능성·역량 수준·일정·결과를 암시하지 않습니다. 모든 수치에는 source, baseline, owner, validation이 필요합니다.
 
 ## MD, PDF, DOCX, PPTX 내보내기
 
-[export-career-documents](skills/export-career-documents/SKILL.md)는 요청을 성공한 파일이 아니라 검증이 필요한 작업으로 취급합니다. 먼저 Canonical Artifact 검증이 통과해야 하며, 각 형식은 capability probe, 생성, 파일 존재, 형식별 QA가 모두 통과해야 `passed`입니다. 그렇지 않으면 fail-closed 상태로 멈추고 원본과 재개 방법을 보존합니다.
+[export-career-documents](skills/export-career-documents/SKILL.md)의 `prepare-career-export.mjs`는 preflight 전용입니다. Canonical Artifact 검증이 없거나 실패하면 fail-closed로 중단합니다. 검증에 성공하면 digest를 기록하고 형식별 capability probe를 정규화하지만, 파생 파일을 생성하거나 terminal 결과를 판정하지 않습니다. 준비 단계가 기록할 수 있는 format status는 `not-requested`, `blocked`, `pending`, `unavailable`뿐입니다.
 
-| 형식 | 통과 조건 |
+Preflight는 `passed` 또는 `failed`를 수용하거나 생성하지 않으며, caller가 제시한 generation·QA·derivative terminal evidence도 겉보기에 유효한 파일이나 명령과 관계없이 거부합니다. 따라서 preflight manifest 자체는 MD/PDF/DOCX/PPTX 생성 성공이나 실패의 증거가 아닙니다.
+
+준비가 끝난 뒤에만 downstream trusted bundled renderer가 파생본을 만들고 format/visual QA를 실행합니다. 이 downstream 단계는 canonical source, 생성된 derivative, 검사 결과와 artifact digest를 결합해야 terminal `passed` 또는 `failed`를 판정할 수 있습니다. 실제 MD/PDF/DOCX/PPTX/SVG/PNG 성공 판정과 대표 출력 검증은 suite Task 11이 수행합니다.
+
+| 형식 | downstream terminal QA 계약 |
 | --- | --- |
 | MD | frontmatter, H1 하나, 안정 heading ID, NFC, 상대 자산과 alt text 검증 |
 | PDF | 텍스트 의미 비교와 모든 페이지 렌더 시각 QA |
 | DOCX | OOXML package·relationship, 의미 비교, 모든 페이지 렌더 시각 QA |
 | PPTX | 청중·목적·슬라이드별 메시지가 있는 독립적인 스토리, overflow 검사, 모든 슬라이드 렌더 QA |
 
-PPTX는 Markdown 제목을 기계적으로 나누지 않습니다. `unknown`, `available`, `unavailable` capability와 `blocked`, `pending`, `passed`, `failed`, `unavailable` 상태를 서로 바꾸어 쓰지 않습니다.
+PPTX는 Markdown 제목을 기계적으로 나누지 않습니다. Preflight의 capability `unknown`, `available`, `unavailable`과 준비 status `not-requested`, `blocked`, `pending`, `unavailable`을 downstream terminal status와 섞지 않습니다. Terminal promotion은 trusted renderer와 QA 경계 밖에서 추측하거나 대리 입력으로 만들 수 없습니다.
 
 ## 권리, 개인정보와 공정성
 
@@ -286,7 +290,7 @@ PPTX는 Markdown 제목을 기계적으로 나누지 않습니다. `unknown`, `a
 - 플러그인은 채용, 합격, 승진, 연봉, 일정 또는 포트폴리오 평가 결과를 예측하거나 보장하지 않습니다.
 - 채용 표본은 선택한 지역·시점·공고에 한정됩니다. 조사 결과는 전체 시장 통계가 아닙니다.
 - 네이티브 역할 자동 발견과 병렬 서브에이전트 지원은 호스트에 따라 다릅니다. 순차 fallback은 동일 질문과 병합 순서를 유지합니다.
-- PDF/DOCX/PPTX 생성과 PNG 렌더는 설치 환경의 renderer에 의존합니다. capability probe가 없거나 실패하면 성공으로 표시하지 않습니다.
+- PDF/DOCX/PPTX 생성과 PNG 렌더는 설치 환경의 renderer에 의존합니다. capability probe는 preflight 상태만 바꾸며 성공 증거가 아닙니다. Trusted downstream renderer·format/visual QA와 artifact digest 결합이 없으면 terminal 성공으로 표시하지 않습니다.
 - 로컬 원문과 템플릿은 출발점이며, 시점 의존 사실을 대체하지 않습니다.
 
 ## 문제 해결
@@ -297,7 +301,7 @@ PPTX는 Markdown 제목을 기계적으로 나누지 않습니다. `unknown`, `a
 | 업데이트가 반영되지 않음 | 올바른 로컬 marketplace가 설치되어 있는지 `codex plugin list`로 확인하고, cachebuster 갱신 후 재설치한 다음 새 작업을 시작합니다. |
 | 현재 채용 주장을 만들 수 없음 | 공식 공고 URL, 게시일, 검색일, 지역을 제공하거나 조사 범위를 좁힙니다. 근거가 없으면 검증 과제로 남깁니다. |
 | PNG가 생성되지 않음 | SVG lint 결과를 보존하고 Chromium probe 실패 근거를 기록합니다. SVG만 전달하고 PNG 검증을 주장하지 않습니다. |
-| 내보내기가 `blocked`임 | Canonical validation과 형식별 capability evidence를 확인합니다. renderer가 준비된 뒤 같은 작업 manifest에서 재개합니다. |
+| 내보내기가 `blocked`임 | Canonical validation과 형식별 capability evidence를 확인합니다. renderer가 준비되면 같은 preflight manifest를 trusted downstream 생성·QA 단계로 넘기고, 검증된 terminal 결과는 별도 증거로 기록합니다. |
 | 포트폴리오 점수가 비어 있음 | 해당 축의 section/evidence ID가 관찰 가능한지 확인합니다. 미관이나 서술만으로 점수를 채우지 않습니다. |
 
 ## 검증
