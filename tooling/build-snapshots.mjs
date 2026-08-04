@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { lstat, mkdtemp, realpath, rename, rm } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -8,6 +8,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { collectTree } from "./lib/copy-tree.mjs";
 import { createSnapshotStaging } from "./lib/build-product.mjs";
+import { sha256 } from "./lib/hash.mjs";
+import { comparePaths, normalizeRelativePath } from "./lib/paths.mjs";
 import { syncShared } from "./sync-shared.mjs";
 
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
@@ -140,72 +142,178 @@ async function pathExists(candidate) {
   });
 }
 
-async function replaceSnapshots({ stagingRoot, destinations, operations = {} }) {
+async function inventoryPluginsRoot(root, label) {
+  const rootStats = await lstat(root);
+  if (rootStats.isSymbolicLink()) throw new Error(`${label} is a symlink`);
+  if (!rootStats.isDirectory()) throw new Error(`${label} is not a directory`);
+  const entries = [];
+
+  async function visit(directory, prefix = "") {
+    const children = await readdir(directory, { withFileTypes: true });
+    children.sort((left, right) => comparePaths(left.name.normalize("NFC"), right.name.normalize("NFC")));
+    for (const child of children) {
+      const rawRelativePath = prefix ? `${prefix}/${child.name}` : child.name;
+      const relativePath = normalizeRelativePath(rawRelativePath, label);
+      const childPath = path.join(directory, child.name);
+      const stats = await lstat(childPath);
+      if (stats.isSymbolicLink()) throw new Error(`${label} contains symlink ${relativePath}`);
+      const mode = stats.mode & 0o777;
+      if (stats.isDirectory()) {
+        entries.push({ kind: "directory", mode, path: relativePath });
+        await visit(childPath, rawRelativePath);
+      } else if (stats.isFile()) {
+        const bytes = await readFile(childPath);
+        entries.push({ kind: "file", mode, path: relativePath, sha256: sha256(bytes), size: bytes.length });
+      } else {
+        throw new Error(`${label} contains unsupported filesystem entry ${relativePath}`);
+      }
+    }
+  }
+
+  await visit(root);
+  return entries;
+}
+
+async function copyPreservedEntry(source, destination, label) {
+  const stats = await lstat(source);
+  if (stats.isSymbolicLink()) throw new Error(`${label} is a symlink; non-target plugin entries must be regular files or directories`);
+  const mode = stats.mode & 0o777;
+  if (stats.isDirectory()) {
+    await mkdir(destination, { mode });
+    const children = await readdir(source, { withFileTypes: true });
+    children.sort((left, right) => comparePaths(left.name.normalize("NFC"), right.name.normalize("NFC")));
+    for (const child of children) {
+      await copyPreservedEntry(path.join(source, child.name), path.join(destination, child.name), `${label}/${child.name}`);
+    }
+    await chmod(destination, mode);
+    return;
+  }
+  if (!stats.isFile()) throw new Error(`${label} is an unsupported filesystem entry`);
+  await writeFile(destination, await readFile(source), { mode });
+  await chmod(destination, mode);
+}
+
+async function createCompletePluginsRoot({ stagingRoot, pluginsRoot, renameEntry }) {
+  const completeRoot = path.join(stagingRoot, ".complete-plugins-root");
+  await mkdir(completeRoot);
+  const entries = await readdir(pluginsRoot, { withFileTypes: true });
+  entries.sort((left, right) => comparePaths(left.name.normalize("NFC"), right.name.normalize("NFC")));
+  for (const entry of entries) {
+    if (PRODUCT_NAMES.includes(entry.name)) continue;
+    await copyPreservedEntry(
+      path.join(pluginsRoot, entry.name),
+      path.join(completeRoot, entry.name),
+      `plugins/${entry.name}`,
+    );
+  }
+  for (const productName of PRODUCT_NAMES) {
+    await renameEntry(path.join(stagingRoot, productName), path.join(completeRoot, productName));
+  }
+  return completeRoot;
+}
+
+function inventoriesMatch(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+async function replaceSnapshots({ stagingRoot, pluginsRoot, destinations, operations = {} }) {
   const renameEntry = operations.rename ?? rename;
   const removeEntry = operations.rm ?? rm;
   const recoveryRoot = await mkdtemp(path.join(await realpath(tmpdir()), "snapshot-recovery-"));
+  const backupRoot = path.join(recoveryRoot, "plugins");
+  const failedInstallRoot = path.join(recoveryRoot, "failed-install");
+  const unexpectedRootEntry = path.join(recoveryRoot, "unexpected-plugins-entry");
   const products = new Map(PRODUCT_NAMES.map((productName) => [productName, {
     status: "untouched",
     originalLocation: destinations.get(productName),
     backupLocation: null,
     installedSnapshotLocation: null,
   }]));
-  const movedBackups = [];
-  const installed = [];
+  let completeRoot;
+  let backupMoved = false;
+  let installed = false;
   try {
+    const inventoryBeforeCopy = await inventoryPluginsRoot(pluginsRoot, "plugins root before staging");
+    completeRoot = await createCompletePluginsRoot({ stagingRoot, pluginsRoot, renameEntry });
+    const inventoryAfterCopy = await inventoryPluginsRoot(pluginsRoot, "plugins root after staging");
+    if (!inventoriesMatch(inventoryBeforeCopy, inventoryAfterCopy)) {
+      throw new Error("plugins root changed while the complete staged root was assembled");
+    }
+    const stagedInventory = await inventoryPluginsRoot(completeRoot, "complete staged plugins root");
+
+    await operations.beforeRootBackup?.({ pluginsRoot, recoveryRoot, stagedPluginsRoot: completeRoot });
+    await renameEntry(pluginsRoot, backupRoot);
+    backupMoved = true;
     for (const productName of PRODUCT_NAMES) {
-      const destination = destinations.get(productName);
-      const backup = path.join(recoveryRoot, productName);
-      await renameEntry(destination, backup);
+      const backup = path.join(backupRoot, productName);
       Object.assign(products.get(productName), {
         status: "backed-up",
         originalLocation: backup,
         backupLocation: backup,
       });
-      movedBackups.push({ destination, backup });
     }
+    const movedInventory = await inventoryPluginsRoot(backupRoot, "moved plugins root");
+    if (!inventoriesMatch(inventoryAfterCopy, movedInventory)) {
+      throw new Error("plugins root entry changed after preflight and before backup");
+    }
+
+    await operations.beforeRootInstall?.({ pluginsRoot, recoveryRoot, stagedPluginsRoot: completeRoot });
+    if (await pathExists(pluginsRoot)) {
+      await renameEntry(pluginsRoot, unexpectedRootEntry);
+      throw new Error("unexpected plugins root entry appeared before install");
+    }
+    await renameEntry(completeRoot, pluginsRoot);
+    installed = true;
     for (const productName of PRODUCT_NAMES) {
       const destination = destinations.get(productName);
-      await renameEntry(path.join(stagingRoot, productName), destination);
       Object.assign(products.get(productName), {
         status: "installed",
         installedSnapshotLocation: destination,
       });
-      installed.push(destination);
     }
+    const installedStats = await lstat(pluginsRoot);
+    if (installedStats.isSymbolicLink() || !installedStats.isDirectory() || await realpath(pluginsRoot) !== pluginsRoot) {
+      throw new Error("installed plugins root is not the expected real directory");
+    }
+    const installedInventory = await inventoryPluginsRoot(pluginsRoot, "installed plugins root");
+    if (!inventoriesMatch(stagedInventory, installedInventory)) throw new Error("installed plugins root differs from staged root");
   } catch (error) {
     const issues = [];
-    for (const destination of [...installed].reverse()) {
-      const productName = path.basename(destination);
-      const product = products.get(productName);
+    if (installed) {
       try {
-        await removeEntry(destination, { recursive: true, force: true });
-        product.status = "backed-up";
-        product.installedSnapshotLocation = null;
-      } catch (rollbackError) {
-        product.status = "recovery-required";
-        issues.push(`remove installed ${destination}: ${rollbackError.message}`);
-      }
-    }
-    for (const { destination, backup } of [...movedBackups].reverse()) {
-      const productName = path.basename(destination);
-      const product = products.get(productName);
-      try {
-        if (await pathExists(destination)) {
-          product.status = "recovery-required";
-          issues.push(`restore blocked because destination still exists: ${destination}`);
-        } else {
-          await renameEntry(backup, destination);
-          Object.assign(product, {
-            status: "restored",
-            originalLocation: destination,
-            backupLocation: null,
-            installedSnapshotLocation: null,
+        await renameEntry(pluginsRoot, failedInstallRoot);
+        installed = false;
+        for (const productName of PRODUCT_NAMES) {
+          Object.assign(products.get(productName), {
+            status: "backed-up",
+            installedSnapshotLocation: path.join(failedInstallRoot, productName),
           });
         }
       } catch (rollbackError) {
-        product.status = "recovery-required";
-        issues.push(`restore ${backup} -> ${destination}: ${rollbackError.message}`);
+        for (const productName of PRODUCT_NAMES) products.get(productName).status = "recovery-required";
+        issues.push(`quarantine installed plugins root ${pluginsRoot}: ${rollbackError.message}`);
+      }
+    }
+    if (backupMoved) {
+      try {
+        if (await pathExists(pluginsRoot)) {
+          for (const productName of PRODUCT_NAMES) products.get(productName).status = "recovery-required";
+          issues.push(`restore blocked because plugins root still exists: ${pluginsRoot}`);
+        } else {
+          await renameEntry(backupRoot, pluginsRoot);
+          backupMoved = false;
+          for (const productName of PRODUCT_NAMES) {
+            Object.assign(products.get(productName), {
+              status: "restored",
+              originalLocation: destinations.get(productName),
+              backupLocation: null,
+              installedSnapshotLocation: null,
+            });
+          }
+        }
+      } catch (rollbackError) {
+        for (const productName of PRODUCT_NAMES) products.get(productName).status = "recovery-required";
+        issues.push(`restore ${backupRoot} -> ${pluginsRoot}: ${rollbackError.message}`);
       }
     }
     if (issues.length > 0) {
@@ -271,6 +379,7 @@ export async function buildSnapshots({ repoRoot, mode = "clean", sourceDateEpoch
       const installPreflight = await preflightSnapshotDestinations(preflight.repoRoot);
       await replaceSnapshots({
         stagingRoot,
+        pluginsRoot: installPreflight.pluginsRoot,
         destinations: installPreflight.destinations,
         operations,
       });

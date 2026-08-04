@@ -113,3 +113,34 @@ test("tree audit conservatively rejects recursive percent and Windows command co
   );
   assert.equal((await auditTree({ root: wrapperRoot, packageName: "game-design-studio" })).files, 1);
 });
+
+test("tree audit applies POSIX backslash escaping to every non-newline character", async (t) => {
+  const shellWords = [
+    "skills/svg-\\infographic/scripts/render.mjs",
+    "skills/\\svg-infographic/\\scripts/\\check-svg.mjs",
+  ];
+  for (const shellWord of shellWords) {
+    const resolved = spawnSync("/bin/sh", ["-c", `set -- ${shellWord}; printf '%s' "$1"`], { encoding: "utf8" });
+    assert.equal(resolved.status, 0, resolved.stderr);
+    assert.match(resolved.stdout, /^skills\/svg-infographic\/scripts\/(?:check-svg|render)\.mjs$/u);
+    const root = await fixture(t, "SKILL.md", `node ${shellWord} input.svg output.png\n`);
+    await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI/u);
+  }
+});
+
+test("tree audit fails closed on unclosed shell quotes and deeply encoded vendor paths", async (t) => {
+  const malformed = await fixture(t, "SKILL.md", "node 'skills/svg-infographic/scripts/render.mjs input.svg\n");
+  await assert.rejects(() => auditTree({ root: malformed, packageName: "game-design-studio" }), /malformed shell quoting/i);
+
+  for (const depth of [9, 33]) {
+    const encodedScripts = `%${"25".repeat(depth - 1)}73cripts`;
+    const encodedSlash = `%${"25".repeat(depth - 1)}2F`;
+    for (const command of [
+      `node skills/svg-infographic/${encodedScripts}/render.mjs input.svg output.png\n`,
+      `node skills${encodedSlash}svg-infographic${encodedSlash}scripts${encodedSlash}render.mjs input.svg output.png\n`,
+    ]) {
+      const root = await fixture(t, "SKILL.md", command);
+      await assert.rejects(() => auditTree({ root, packageName: "game-design-studio" }), /raw vendor CLI|encoded shell path/i);
+    }
+  }
+});

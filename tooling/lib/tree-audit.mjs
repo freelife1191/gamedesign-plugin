@@ -19,37 +19,126 @@ function normalizedForbiddenPaths(paths) {
     .sort((left, right) => right.length - left.length || comparePaths(left, right));
 }
 
-function decodePathToken(token) {
-  let decoded = token;
-  for (let attempt = 0; attempt < 8; attempt += 1) {
+function decodeCommandText(text) {
+  let decoded = text;
+  for (let attempt = 0; attempt < 32; attempt += 1) {
     try {
       const next = decodeURIComponent(decoded);
-      if (next === decoded) break;
+      if (next === decoded) return decoded;
       decoded = next;
     } catch {
-      break;
+      return decoded;
+    }
+  }
+  try {
+    if (decodeURIComponent(decoded) !== decoded) {
+      throw new Error("Encoded shell path exceeds the 32-pass normalization limit");
+    }
+  } catch (error) {
+    if (/normalization limit/u.test(error.message)) throw error;
+    if (/%[0-9a-f]{2}/iu.test(decoded)) {
+      throw new Error("Encoded shell path remains ambiguous at the 32-pass normalization limit");
     }
   }
   return decoded;
 }
 
-function canonicalizeCommandText(text) {
-  return decodePathToken(text)
-    .normalize("NFC")
-    .replace(/\\\r?\n|\^\r?\n/gu, "")
-    .replace(/\$(?=['"])/gu, "")
-    .replace(/\\([./\\'"` \t])/gu, "$1")
-    .replace(/\^([^\r\n])/gu, "$1")
-    .replaceAll("\\", "/")
-    .replace(/[\u2044\u2215\uFF0F]/gu, "/")
-    .replace(/['"`]/gu, "");
+function shellWords(text) {
+  const source = decodeCommandText(text).normalize("NFC").replace(/[\u2044\u2215\uFF0F]/gu, "/");
+  const words = [];
+  let word = "";
+  let hasWord = false;
+  let quote = null;
+
+  function finishWord() {
+    if (hasWord) words.push(word);
+    word = "";
+    hasWord = false;
+  }
+
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote === "'") {
+      if (character === "'") quote = null;
+      else word += character;
+      hasWord = true;
+      continue;
+    }
+    if (quote === '"' || quote === "`") {
+      if (character === quote) {
+        quote = null;
+        hasWord = true;
+        continue;
+      }
+      if (character === "\\") {
+        const next = source[index + 1];
+        if (next === "\n") {
+          index += 1;
+          continue;
+        }
+        if (next === "\r" && source[index + 2] === "\n") {
+          index += 2;
+          continue;
+        }
+        if (quote === '"' && next !== undefined && /[$`"\\]/u.test(next)) {
+          word += next;
+          index += 1;
+          hasWord = true;
+          continue;
+        }
+      }
+      word += character;
+      hasWord = true;
+      continue;
+    }
+    if (/\s/u.test(character)) {
+      finishWord();
+      continue;
+    }
+    if (character === "'" || character === '"' || character === "`") {
+      quote = character;
+      hasWord = true;
+      continue;
+    }
+    if (character === "$" && (source[index + 1] === "'" || source[index + 1] === '"')) {
+      quote = source[index + 1];
+      hasWord = true;
+      index += 1;
+      continue;
+    }
+    if (character === "\\" || character === "^") {
+      const next = source[index + 1];
+      if (next === undefined) throw new Error("Malformed shell quoting or trailing escape");
+      if (next === "\n") {
+        index += 1;
+        continue;
+      }
+      if (next === "\r" && source[index + 2] === "\n") {
+        index += 2;
+        continue;
+      }
+      word += next;
+      hasWord = true;
+      index += 1;
+      continue;
+    }
+    word += character;
+    hasWord = true;
+  }
+  if (quote !== null) throw new Error("Malformed shell quoting: unclosed quote");
+  finishWord();
+  return words;
 }
 
 function containsRawVendorCli(text) {
-  for (const rawToken of canonicalizeCommandText(text).split(/\s+/u)) {
-    const token = rawToken
-      .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
-    if (vendorCliPath.test(path.posix.normalize(token))) return true;
+  const logicalText = text.replace(/\\\r?\n|\^\r?\n/gu, "");
+  for (const line of logicalText.split(/\r?\n/u)) {
+    if (!/(?:svg-infographic|svg-.*infographic)/u.test(line)) continue;
+    for (const rawToken of shellWords(line)) {
+      const token = rawToken
+        .replace(/^[('"`<]+|[)'"`>,.;:]+$/gu, "");
+      if (vendorCliPath.test(path.posix.normalize(token))) return true;
+    }
   }
   return false;
 }
