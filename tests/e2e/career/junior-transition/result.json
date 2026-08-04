@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "junior-transition",
+  "stage": "transition",
+  "routeIds": ["transition-job-research", "transition-interview-practice", "transition-growth-plan", "transition-readiness-visualization", "transition-export"],
+  "artifactTemplateIds": ["job-posting-evidence", "interview-question-answer-log", "transition-readiness"],
+  "jobEvidencePath": "job-evidence.json",
+  "projectImpact": [
+    {
+      "impactId": "impact-tutorial-dropoff",
+      "claim": "I specified and tested a tutorial-state change.",
+      "evidenceIds": ["portfolio-tutorial-spec", "playtest-session-log"],
+      "choice": "Expose the recovery action before the first failure.",
+      "alternative": "Keep discovery implicit and add only a tooltip.",
+      "result": "Three internal sessions completed the recovery action; external-player impact remains unverified.",
+      "limitations": "No retention, revenue, or shipped-product effect is claimed."
+    }
+  ],
+  "evidenceGaps": [
+    { "gapId": "gap-live-operations", "verificationTask": "Create an event-rule change plan with rollback and monitoring states." },
+    { "gapId": "gap-cross-team-handoff", "verificationTask": "Obtain a developer review of a data and edge-case handoff." }
+  ],
+  "questions": [
+    { "questionId": "q-base", "questionType": "base", "postingEvidenceIds": ["posting-transition-1"], "portfolioEvidenceIds": ["portfolio-tutorial-spec"], "verificationStatus": "grounded", "prompt": "Which system-design decision best matches the target responsibility?" },
+    { "questionId": "q-follow", "questionType": "follow-up", "postingEvidenceIds": ["posting-transition-1"], "portfolioEvidenceIds": ["playtest-session-log"], "verificationStatus": "grounded", "prompt": "What evidence caused you to change the tutorial state?" },
+    { "questionId": "q-objection", "questionType": "objection", "postingEvidenceIds": ["posting-transition-1"], "portfolioEvidenceIds": ["portfolio-tutorial-spec"], "verificationStatus": "grounded", "prompt": "Why is the internal sample insufficient to claim player impact?" },
+    { "questionId": "q-situational", "questionType": "situational", "postingEvidenceIds": ["posting-transition-1"], "portfolioEvidenceIds": ["portfolio-tutorial-spec"], "verificationStatus": "grounded", "prompt": "How would you respond if implementation cost invalidated the preferred rule?" }
+  ],
+  "answerFeedback": [
+    {
+      "claim": "I improved tutorial recovery clarity.",
+      "evidence": "Three internal sessions plus the state specification.",
+      "choice": "Expose recovery before failure.",
+      "alternative": "Tooltip-only support.",
+      "result": "Observed internal completion only.",
+      "reflection": "Say the external impact is unknown and propose the next test."
+    }
+  ],
+  "quarterlyPlan": [
+    {
+      "goalId": "goal-live-ops",
+      "requirementId": "posting-transition-1-live-ops",
+      "requirementStatus": "approved",
+      "observableProject": "Write and review one bounded event-rule change with rollback states.",
+      "owner": "candidate",
+      "feedbackCadence": { "frequency": "biweekly", "reviewer": "senior systems designer", "inputArtifact": "event-rule specification", "nextReviewDate": "2026-08-18" },
+      "proofArtifact": "Reviewed event-rule decision record",
+      "reEvaluationDecision": "Continue only if rollback and monitoring cases pass review."
+    },
+    {
+      "goalId": "goal-handoff",
+      "requirementId": "posting-transition-1-handoff",
+      "requirementStatus": "approved",
+      "observableProject": "Package one feature's rules, data, UI states, and acceptance cases for implementation review.",
+      "owner": "candidate",
+      "feedbackCadence": { "frequency": "monthly", "reviewer": "gameplay developer", "inputArtifact": "implementation handoff", "nextReviewDate": "2026-09-01" },
+      "proofArtifact": "Developer-reviewed handoff and repair log",
+      "reEvaluationDecision": "Revise gaps before using the artifact as transition evidence."
+    }
+  ],
+  "export": { "jobPath": "export-job.json" },
+  "unverifiedCurrentClaims": []
+}

@@ -1,0 +1,22 @@
+{
+  "artifactRoot": ".",
+  "requested": true,
+  "planned": true,
+  "generated": true,
+  "linted": true,
+  "rendered": false,
+  "verified": false,
+  "svgFile": "competency-map.svg",
+  "pngAvailability": "unavailable",
+  "availabilityEvidence": {
+    "command": "node render.mjs --probe",
+    "result": "failed",
+    "reason": "The E2E fixture intentionally exercises the editable-SVG fallback."
+  },
+  "lintEvidence": {
+    "command": "node check-svg.mjs competency-map.svg",
+    "file": "competency-map.svg",
+    "result": "passed",
+    "warningsDisposition": "No SVG lint warnings."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "entry-12-week-roadmap",
+  "stage": "entry",
+  "availableHoursPerWeek": 8,
+  "constraints": ["No prior shipped game-design artifact", "Use a small solo prototype"],
+  "requestedFormats": ["SVG", "PDF"]
+}

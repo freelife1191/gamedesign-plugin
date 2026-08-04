@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "junior-transition",
+  "stage": "transition",
+  "targetRole": "systems game designer",
+  "region": "KR",
+  "requestedFormats": ["MD", "PDF"]
+}

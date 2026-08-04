@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "entry-12-week-roadmap",
+  "stage": "entry",
+  "routeIds": ["entry-role-map", "entry-competency-visualization", "entry-roadmap-export"],
+  "artifactTemplateIds": ["game-design-role-map", "competency-matrix", "learning-roadmap"],
+  "roleCandidates": [
+    {
+      "roleFamily": "systems-design",
+      "tradeoff": "Requires explicit rules, edge cases, data tables, and playtest evidence.",
+      "currentEvidenceIds": ["entry-interest-systems"],
+      "proofArtifact": "Small combat-resource loop specification"
+    },
+    {
+      "roleFamily": "content-design",
+      "tradeoff": "Requires repeatable content structure, pacing decisions, and production-ready handoff.",
+      "currentEvidenceIds": ["entry-interest-content"],
+      "proofArtifact": "Three-mission progression slice"
+    }
+  ],
+  "evidenceGaps": [
+    {
+      "gapId": "gap-rules-edge-cases",
+      "learningTask": "Write a finite-state rule table with failure and recovery cases.",
+      "proofArtifact": "Rules and exceptions sheet"
+    },
+    {
+      "gapId": "gap-playtest-learning",
+      "learningTask": "Run three observed sessions and record decisions changed by evidence.",
+      "proofArtifact": "Playtest decision log"
+    }
+  ],
+  "weeks": [
+    { "week": 1, "learning": "Core loop and player goal", "practice": "Describe one loop and its decision points", "feedback": "Mentor checks scope and observable verbs" },
+    { "week": 2, "learning": "Rules and state transitions", "practice": "Build a state table", "feedback": "Peer probes invalid transitions" },
+    { "week": 3, "learning": "Exceptions and failure recovery", "practice": "Add edge cases", "feedback": "Mentor challenges completeness" },
+    { "week": 4, "learning": "Data definitions", "practice": "Create tunable data fields", "feedback": "Developer reviews handoff clarity" },
+    { "week": 5, "learning": "UI feedback", "practice": "Map states to player-facing feedback", "feedback": "Peer performs comprehension review" },
+    { "week": 6, "learning": "Prototype scope", "practice": "Implement one playable slice", "feedback": "Mentor rejects out-of-scope features" },
+    { "week": 7, "learning": "Playtest observation", "practice": "Run one observed session", "feedback": "Observer separates behavior from inference" },
+    { "week": 8, "learning": "Evidence-led iteration", "practice": "Change one rule from evidence", "feedback": "Mentor reviews decision trace" },
+    { "week": 9, "learning": "Alternative design", "practice": "Compare two alternatives", "feedback": "Peer tests tradeoff statement" },
+    { "week": 10, "learning": "Implementation handoff", "practice": "Package rules, data, and acceptance cases", "feedback": "Developer checks ambiguity" },
+    { "week": 11, "learning": "Portfolio evidence", "practice": "Draft a decision-centered brief", "feedback": "Reviewer checks claim-to-evidence links" },
+    { "week": 12, "learning": "Retrospective and next gap", "practice": "Publish the bounded artifact", "feedback": "Mentor records the next verification task" }
+  ],
+  "firstPortfolioBrief": {
+    "targetCompetency": "Systems reasoning and implementation handoff",
+    "problemUser": "A prototype player cannot predict recovery after spending a resource.",
+    "evidenceIds": ["gap-rules-edge-cases", "gap-playtest-learning"],
+    "hypothesisIntent": "Explicit recovery states will make risk understandable.",
+    "constraintsAlternatives": ["One resource only", "Compare automatic and player-triggered recovery"],
+    "implementationTest": "State-table acceptance cases plus three observed sessions",
+    "resultDecision": "Pending evidence; do not claim an outcome before the sessions.",
+    "retrospective": "Record which rule changed and what remains unverified."
+  },
+  "visualization": {
+    "presetId": "competency-map",
+    "statePath": "visualization-state.json"
+  },
+  "export": {
+    "jobPath": "export-job.json"
+  },
+  "unverifiedCurrentClaims": []
+}

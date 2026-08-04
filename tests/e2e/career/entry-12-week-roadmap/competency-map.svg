@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entry competency map linking evidence gaps to practice and proof artifacts" viewBox="0 0 720 320">
+  <rect width="720" height="320" fill="#f8fafc" />
+  <g fill="#0f172a" font-family="sans-serif" font-size="16">
+    <text x="32" y="48">Evidence gap</text>
+    <text x="280" y="48">Weekly practice</text>
+    <text x="548" y="48">Proof artifact</text>
+    <text x="32" y="126">Rules and edge cases</text>
+    <text x="280" y="126">State-table exercises</text>
+    <text x="548" y="126">Rules sheet</text>
+    <text x="32" y="230">Playtest learning</text>
+    <text x="280" y="230">Observed sessions</text>
+    <text x="548" y="230">Decision log</text>
+  </g>
+  <g stroke="#2563eb" stroke-width="3" fill="none">
+    <path d="M210 120 H270" />
+    <path d="M470 120 H538" />
+    <path d="M210 224 H270" />
+    <path d="M470 224 H538" />
+  </g>
+</svg>
