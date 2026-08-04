@@ -215,6 +215,48 @@ function assertSharedBoundaryBudget(validateJobEvidenceCollection, label) {
   assert.equal(proxyTrapCalls, 0, `${label} options proxy traps were not invoked`);
 }
 
+function assertEveryPostingFresh(validateJobEvidenceCollection, label) {
+  const asOfDate = "2026-08-04";
+  assert.deepEqual(
+    validateJobEvidenceCollection([posting("fresh", [], { sampleSize: 1 })], { asOfDate }),
+    { valid: true, errors: [] },
+    `${label} fresh empty-signal posting`,
+  );
+  const missingAsOf = validateJobEvidenceCollection([posting("missing-as-of", [], { sampleSize: 1 })]);
+  assert.ok(missingAsOf.errors.some(({ code }) => code === "missing-as-of-date"), `${label} missing as-of`);
+
+  for (const [caseName, overrides, expectedCode] of [
+    ["secondary", { sourceType: "secondary-context" }, "posting-source-not-primary"],
+    ["http", { sourceUrl: "http://careers.example.com/jobs/insecure" }, "posting-source-url"],
+    ["file", { sourceUrl: "file:///tmp/forged.json" }, "posting-source-url"],
+    ["missing posted", { postedDate: null }, "posting-source-date"],
+    ["invalid posted", { postedDate: "2026-02-30" }, "schema-format"],
+    ["invalid retrieval", { retrievalDate: "2026-02-30" }, "schema-format"],
+    ["invalid review", { reviewAfter: "2026-02-30" }, "schema-format"],
+    ["posted after retrieval", { postedDate: "2026-08-02", retrievalDate: "2026-08-01" }, "posting-source-date-order"],
+    ["future retrieval", { retrievalDate: "2026-08-05" }, "posting-source-date-order"],
+    ["retrieval after review", { retrievalDate: "2026-09-02", reviewAfter: "2026-09-01" }, "posting-source-date-order"],
+    ["expired", { reviewAfter: "2026-08-03" }, "posting-source-stale"],
+  ]) {
+    const sourceId = `freshness-${caseName.replaceAll(" ", "-")}`;
+    const result = validateJobEvidenceCollection([posting(sourceId, [], { sampleSize: 1, ...overrides })], { asOfDate });
+    assert.equal(result.valid, false, `${label} ${caseName}`);
+    assert.ok(result.errors.some(({ code }) => code === expectedCode), `${label} ${caseName}: ${JSON.stringify(result.errors)}`);
+  }
+
+  const boundary = posting("date-boundary", [], {
+    sampleSize: 1,
+    postedDate: asOfDate,
+    retrievalDate: asOfDate,
+    reviewAfter: asOfDate,
+  });
+  assert.deepEqual(
+    validateJobEvidenceCollection([boundary], { asOfDate }),
+    { valid: true, errors: [] },
+    `${label} inclusive freshness boundary`,
+  );
+}
+
 test("Role-map method requires the complete evidence-to-practice contract", async () => {
   const method = await read("references/methods/role-map.md");
   const requiredFields = [
@@ -427,16 +469,16 @@ test("Collection validator rejects forged large secondary samples and inconsiste
   assert.ok(scopeCodes.has("sample-geography-mismatch"));
 });
 
-test("Collection validator requires an explicit valid as-of date for repeated signals", async () => {
+test("Collection validator requires an explicit valid as-of date for every posting", async () => {
   const records = [posting("posting-a", [repeatedSignal()]), posting("posting-b"), posting("posting-c")];
   assert.ok((await validateCollection(records)).errors.some(({ code }) => code === "missing-as-of-date"));
   assert.ok((await validateCollection(records, { asOfDate: "2026-02-30" })).errors.some(({ code }) => code === "schema-format"));
 });
 
-test("Collection validator preserves empty repeated signals and rejects undersized or duplicate signals", async () => {
+test("Collection validator preserves fresh empty repeated signals and rejects undersized or duplicate signals", async () => {
   const empty = await validateCollection([
     posting("posting-a", [], { sampleSize: 2 }), posting("posting-b", [], { sampleSize: 2 }),
-  ]);
+  ], { asOfDate: "2026-08-04" });
   assert.deepEqual(empty, { valid: true, errors: [] });
 
   const undersized = repeatedSignal();
@@ -575,6 +617,11 @@ test("Source public validator shares one operation budget across records and opt
   assertSharedBoundaryBudget(validateJobEvidenceCollection, "source");
 });
 
+test("Source public validator enforces primary-source freshness for every posting", async () => {
+  const { validateJobEvidenceCollection } = await loadCollectionValidator();
+  assertEveryPostingFresh(validateJobEvidenceCollection, "source");
+});
+
 test("Clean-built public validator preserves the schema and data-only boundary", async () => {
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-job-boundary-"));
   try {
@@ -589,6 +636,7 @@ test("Clean-built public validator preserves the schema and data-only boundary",
     assertRoundThreeBoundary(validateJobEvidenceCollection, "built");
     assertBoundedWideAliases(validateJobEvidenceCollection, "built");
     assertSharedBoundaryBudget(validateJobEvidenceCollection, "built");
+    assertEveryPostingFresh(validateJobEvidenceCollection, "built");
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }

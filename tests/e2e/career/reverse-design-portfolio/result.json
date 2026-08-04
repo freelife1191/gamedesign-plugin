@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "scenarioId": "reverse-design-portfolio",
   "stage": "new-hire",
+  "asOfDate": "2026-08-06",
   "routeIds": ["new-hire-reverse-design", "new-hire-reverse-design-export"],
   "artifactTemplateIds": ["reverse-design-document"],
   "userManualRejected": true,

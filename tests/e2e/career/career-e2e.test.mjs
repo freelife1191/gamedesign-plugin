@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -99,6 +99,50 @@ test("transition: primary job evidence grounds project impact, four question typ
   assert.equal(result.acceptance.quarterlyGoalCount, 2);
   assert.equal(result.acceptance.unverifiedCurrentClaimCount, 0);
   assert.equal(result.outputs.pdf, "blocked");
+});
+
+test("transition rejects stale year-2000 job evidence at the trusted scenario snapshot", async () => {
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-stale-job-"));
+  const fixture = path.join(stagingRoot, "junior-transition");
+  try {
+    await cp(path.join(fixtureRoot, "junior-transition"), fixture, { recursive: true });
+    const records = JSON.parse(await readFile(path.join(fixture, "job-evidence.json"), "utf8"));
+    records[0].postedDate = "2000-01-01";
+    records[0].retrievalDate = "2000-01-02";
+    records[0].reviewAfter = "2000-02-01";
+    await writeFile(path.join(fixture, "job-evidence.json"), `${JSON.stringify(records, null, 2)}\n`, "utf8");
+    const { validateCareerScenario } = await loadRunner();
+    const result = await validateCareerScenario(fixture);
+    assert.equal(result.ok, false, messages(result));
+    assert.ok(result.errors.some(({ code, message }) => (
+      code === "transition.job-evidence-schema" && /expired|stale|reviewAfter/iu.test(message)
+    )), messages(result));
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("scenario as-of dates are registry-bound and reject self-attested or cross-scenario snapshots", async () => {
+  const result = await fixtureJson("junior-transition");
+  result.asOfDate = "2026-08-04";
+  const validation = await validate("junior-transition", result);
+  assert.equal(validation.ok, false, messages(validation));
+  assert.ok(validation.errors.some(({ code }) => code === "route.as-of-date"), messages(validation));
+
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-cross-as-of-"));
+  const fixture = path.join(stagingRoot, "junior-transition");
+  try {
+    await cp(path.join(fixtureRoot, "junior-transition"), fixture, { recursive: true });
+    const request = JSON.parse(await readFile(path.join(fixture, "request.json"), "utf8"));
+    request.asOfDate = "2026-08-06";
+    await writeFile(path.join(fixture, "request.json"), `${JSON.stringify(request, null, 2)}\n`, "utf8");
+    const { validateCareerScenario } = await loadRunner();
+    const requestValidation = await validateCareerScenario(fixture);
+    assert.equal(requestValidation.ok, false, messages(requestValidation));
+    assert.ok(requestValidation.errors.some(({ code }) => code === "route.as-of-date"), messages(requestValidation));
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
 });
 
 test("semantic mutations cannot pass the three workflow acceptances", async () => {
@@ -240,6 +284,10 @@ test("transition evidence and quarterly requirements cannot reference undeclared
 test("job evidence applies the complete production schema and nested repeated-signal contract", async () => {
   const { validateJobEvidenceRecords } = await loadRunner();
   const baseline = await fixtureJson("junior-transition", "job-evidence.json");
+  assert.equal((await validateJobEvidenceRecords(baseline, "2026-08-08")).valid, true);
+  const missingTrustedSnapshot = await validateJobEvidenceRecords(baseline);
+  assert.equal(missingTrustedSnapshot.valid, false);
+  assert.ok(missingTrustedSnapshot.errors.some(({ code }) => code === "job.collection.missing-as-of-date"));
   const mutations = [
     ["sample geography string", (records) => { records[0].sampleGeography = "KR"; }],
     ["extra key", (records) => { records[0].verified = true; }],
@@ -251,7 +299,7 @@ test("job evidence applies the complete production schema and nested repeated-si
   for (const [label, mutate] of mutations) {
     const records = structuredClone(baseline);
     mutate(records);
-    const validation = await validateJobEvidenceRecords(records);
+    const validation = await validateJobEvidenceRecords(records, "2026-08-08");
     assert.equal(validation.valid, false, label);
     assert.ok(validation.errors.some(({ code }) => code === "job.schema"), `${label}: ${JSON.stringify(validation.errors)}`);
   }

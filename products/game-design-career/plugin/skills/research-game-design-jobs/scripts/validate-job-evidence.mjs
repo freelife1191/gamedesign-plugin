@@ -374,15 +374,60 @@ export function validateJobEvidenceCollection(inputRecords, inputOptions) {
   const postingById = new Map(records.filter((record) => typeof record?.sourceId === "string")
     .map((record) => [record.sourceId.trim(), record]));
   const actualGeography = [...new Set(records.map((record) => record?.region).filter((region) => typeof region === "string" && region.length > 0))].sort();
-  const hasRepeatedSignals = records.some((record) => Array.isArray(record?.repeatedSignals) && record.repeatedSignals.length > 0);
   const asOfIsValid = isIsoDate(asOfDate);
-  if (hasRepeatedSignals && asOfDate === undefined) {
-    addError(errors, finding("missing-as-of-date", "Repeated signals require an explicit asOfDate.", "$"));
-  } else if (hasRepeatedSignals && !asOfIsValid) {
+  if (records.length > 0 && asOfDate === undefined) {
+    addError(errors, finding("missing-as-of-date", "Current job postings require an explicit asOfDate.", "$options.asOfDate"));
+  } else if (records.length > 0 && !asOfIsValid) {
     addError(errors, finding("invalid-as-of-date", "asOfDate must be a real ISO calendar date.", "$"));
   }
 
   records.forEach((record, recordIndex) => {
+    const recordPath = `$[${recordIndex}]`;
+    if (record?.sourceType !== "official-company-career-page") {
+      addError(errors, finding(
+        "posting-source-not-primary",
+        "Every current job posting must be an official company career page.",
+        `${recordPath}.sourceType`,
+      ));
+    }
+    let sourceUrl;
+    try {
+      sourceUrl = new URL(record?.sourceUrl);
+    } catch {
+      sourceUrl = null;
+    }
+    if (!sourceUrl || sourceUrl.protocol !== "https:") {
+      addError(errors, finding(
+        "posting-source-url",
+        "Every current job posting requires an HTTPS official career URL.",
+        `${recordPath}.sourceUrl`,
+      ));
+    }
+    const datesValid = isIsoDate(record?.postedDate)
+      && isIsoDate(record?.retrievalDate)
+      && isIsoDate(record?.reviewAfter);
+    if (!datesValid) {
+      addError(errors, finding(
+        "posting-source-date",
+        "Every current job posting requires real ISO postedDate, retrievalDate, and reviewAfter values.",
+        recordPath,
+      ));
+    } else if (asOfIsValid) {
+      if (record.postedDate > record.retrievalDate || record.retrievalDate > asOfDate) {
+        addError(errors, finding(
+          "posting-source-date-order",
+          "Posting dates must satisfy postedDate <= retrievalDate <= asOfDate.",
+          recordPath,
+        ));
+      }
+      if (asOfDate > record.reviewAfter) {
+        addError(errors, finding(
+          "posting-source-stale",
+          `Posting evidence expired after ${record.reviewAfter}; re-retrieve it for ${asOfDate}.`,
+          `${recordPath}.reviewAfter`,
+        ));
+      }
+    }
     if (record?.sampleSize !== denominator) {
       addError(errors, finding("sample-size-mismatch", `sampleSize must equal ${denominator} deduplicated postings.`, `$[${recordIndex}].sampleSize`));
     }

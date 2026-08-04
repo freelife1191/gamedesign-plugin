@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "scenarioId": "junior-transition",
   "stage": "transition",
+  "asOfDate": "2026-08-08",
   "targetRole": "systems game designer",
   "region": "KR",
   "requestedFormats": ["MD", "PDF"]

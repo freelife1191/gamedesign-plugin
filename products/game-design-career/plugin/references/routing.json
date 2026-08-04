@@ -37,12 +37,14 @@
     {
       "id": "entry-12-week-roadmap",
       "stage": "entry",
+      "asOfDate": "2026-08-04",
       "skillChain": ["map-career-role-and-skill-gaps", "visualize-career-roadmap", "export-career-artifact"],
       "artifactFormats": ["SVG", "PDF"]
     },
     {
       "id": "new-graduate-system-design",
       "stage": "new-hire",
+      "asOfDate": "2026-08-05",
       "skillChain": [
         "research-current-game-design-jobs",
         "map-career-role-and-skill-gaps",
@@ -54,18 +56,21 @@
     {
       "id": "reverse-design-portfolio",
       "stage": "new-hire",
+      "asOfDate": "2026-08-06",
       "skillChain": ["reverse-design-a-game", "export-career-artifact"],
       "artifactFormats": ["MD", "DOCX", "PPTX"]
     },
     {
       "id": "junior-project-impact",
       "stage": "junior-growth",
+      "asOfDate": "2026-08-07",
       "skillChain": ["plan-junior-growth", "visualize-career-roadmap", "export-career-artifact"],
       "artifactFormats": ["MD", "SVG", "PDF"]
     },
     {
       "id": "junior-transition",
       "stage": "transition",
+      "asOfDate": "2026-08-08",
       "skillChain": [
         "research-current-game-design-jobs",
         "practice-game-design-interview",
@@ -78,6 +83,7 @@
     {
       "id": "unclear-stage-role-map",
       "stage": "unclear",
+      "asOfDate": "2026-08-09",
       "skillChain": ["orchestrate-game-design-career", "map-career-role-and-skill-gaps"],
       "artifactFormats": ["MD"]
     }

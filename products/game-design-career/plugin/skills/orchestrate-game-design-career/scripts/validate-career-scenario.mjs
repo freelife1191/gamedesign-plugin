@@ -21,18 +21,29 @@ const REVERSE_SURFACES = [
 ];
 const RESULT_KEYS = {
   "entry-12-week-roadmap": [
-    "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "evidenceRegistry",
+    "schemaVersion", "scenarioId", "stage", "asOfDate", "routeIds", "artifactTemplateIds", "evidenceRegistry",
     "roleCandidates", "evidenceGaps", "weeks", "firstPortfolioBrief", "visualization", "export",
     "unverifiedCurrentClaims",
   ],
   "reverse-design-portfolio": [
-    "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "userManualRejected",
+    "schemaVersion", "scenarioId", "stage", "asOfDate", "routeIds", "artifactTemplateIds", "userManualRejected",
     "analysisScope", "claims", "surfaces", "export", "unverifiedCurrentClaims",
   ],
   "junior-transition": [
-    "schemaVersion", "scenarioId", "stage", "routeIds", "artifactTemplateIds", "jobEvidencePath",
+    "schemaVersion", "scenarioId", "stage", "asOfDate", "routeIds", "artifactTemplateIds", "jobEvidencePath",
     "portfolioEvidenceRegistry", "targetRequirements", "projectImpact", "evidenceGaps", "questions",
     "answerFeedback", "quarterlyPlan", "export", "unverifiedCurrentClaims",
+  ],
+};
+const REQUEST_KEYS = {
+  "entry-12-week-roadmap": [
+    "schemaVersion", "scenarioId", "stage", "asOfDate", "availableHoursPerWeek", "constraints", "requestedFormats",
+  ],
+  "reverse-design-portfolio": [
+    "schemaVersion", "scenarioId", "stage", "asOfDate", "gameEvidenceScope", "requestedFormats",
+  ],
+  "junior-transition": [
+    "schemaVersion", "scenarioId", "stage", "asOfDate", "targetRole", "region", "requestedFormats",
   ],
 };
 let canonicalValidatorPromise;
@@ -222,14 +233,16 @@ function validateSchemaValue(value, schema, location, errors, code = "job.schema
   }
 }
 
-export async function validateJobEvidenceRecords(records) {
+export async function validateJobEvidenceRecords(records, asOfDate) {
   const errors = [];
   if (!Array.isArray(records) || Object.getPrototypeOf(records) !== Array.prototype) {
     return { valid: false, errors: [finding("job.schema", "Job evidence must be a plain array.")] };
   }
   const schema = await readJson(jobEvidenceSchemaPath);
   records.forEach((record, index) => validateSchemaValue(record, schema, `$[${index}]`, errors));
-  const collection = validateJobEvidenceCollection(records);
+  const collection = asOfDate === undefined
+    ? validateJobEvidenceCollection(records)
+    : validateJobEvidenceCollection(records, { asOfDate });
   errors.push(...collection.errors.map((error) => finding(`job.collection.${error.code}`, error.message)));
   return { valid: errors.length === 0, errors };
 }
@@ -240,7 +253,15 @@ async function validateRoutesAndTemplates(request, result, errors) {
   const scenario = routing.scenarioChains.find(({ id }) => id === request.scenarioId);
   if (!scenario) {
     errors.push(finding("route.scenario", `Unknown scenario: ${request.scenarioId}.`));
-    return { routeIds: [], validatedTemplateIds: [] };
+    return { routeIds: [], validatedTemplateIds: [], asOfDate: undefined };
+  }
+  if (!validCalendarDate(scenario.asOfDate)
+    || request.asOfDate !== scenario.asOfDate
+    || result.asOfDate !== scenario.asOfDate) {
+    errors.push(finding(
+      "route.as-of-date",
+      "Request and result asOfDate must exactly match the trusted scenario snapshot.",
+    ));
   }
   if (scenario.stage !== request.stage || result.stage !== request.stage) {
     errors.push(finding("route.stage", "Request, result, and scenario route stages must match."));
@@ -256,7 +277,7 @@ async function validateRoutesAndTemplates(request, result, errors) {
   const routes = routeIds.map((id) => routing.routes.find((route) => route.id === id));
   if (routes.some((route) => !route)) {
     errors.push(finding("route.missing", "Every scenario route ID must resolve to an actual route."));
-    return { routeIds, validatedTemplateIds: [] };
+    return { routeIds, validatedTemplateIds: [], asOfDate: scenario.asOfDate };
   }
   const routedSkills = routes.map(({ skill }) => skill);
   const chainedSkills = scenario.skillChain.map((intent) => routing.routeSkills[intent]);
@@ -286,7 +307,7 @@ async function validateRoutesAndTemplates(request, result, errors) {
       validatedTemplateIds.push(templateId);
     }
   }
-  return { routeIds, validatedTemplateIds };
+  return { routeIds, validatedTemplateIds, asOfDate: scenario.asOfDate };
 }
 
 async function validateExport(root, request, result, errors) {
@@ -615,12 +636,12 @@ async function validateReverse(result, errors) {
   return { reverseSurfaces: REVERSE_SURFACES, userManualRejected: result.userManualRejected === true };
 }
 
-async function validateTransition(root, result, errors) {
+async function validateTransition(root, result, errors, asOfDate) {
   let jobEvidence = [];
   try {
     const evidencePath = await safeFixtureFile(root, result.jobEvidencePath, "jobEvidencePath");
     jobEvidence = await readJson(evidencePath);
-    const validation = await validateJobEvidenceRecords(jobEvidence);
+    const validation = await validateJobEvidenceRecords(jobEvidence, asOfDate);
     if (!validation.valid) {
       errors.push(finding("transition.job-evidence-schema", validation.errors.map(({ message }) => message).join("; ")));
     }
@@ -832,6 +853,10 @@ export async function validateCareerScenario(fixtureDirectory, { resultOverride 
     errors.push(finding("scenario.schema", "Request and result must use schemaVersion 1 records."));
   }
   const allowedResultKeys = RESULT_KEYS[request?.scenarioId];
+  const allowedRequestKeys = REQUEST_KEYS[request?.scenarioId];
+  if (allowedRequestKeys && isRecord(request)) {
+    requireExactKeys(request, allowedRequestKeys, "scenario.request-keys", errors, `${request.scenarioId} request`);
+  }
   if (allowedResultKeys && isRecord(result)) {
     requireExactKeys(result, allowedResultKeys, "scenario.result-keys", errors, `${request.scenarioId} result`);
   }
@@ -845,7 +870,7 @@ export async function validateCareerScenario(fixtureDirectory, { resultOverride 
     routes = await validateRoutesAndTemplates(request, result, errors);
     if (request.scenarioId === "entry-12-week-roadmap") acceptance = validateEntry(result, errors);
     else if (request.scenarioId === "reverse-design-portfolio") acceptance = await validateReverse(result, errors);
-    else if (request.scenarioId === "junior-transition") acceptance = await validateTransition(root, result, errors);
+    else if (request.scenarioId === "junior-transition") acceptance = await validateTransition(root, result, errors, routes.asOfDate);
     else errors.push(finding("scenario.acceptance", `No E2E acceptance contract for ${request.scenarioId}.`));
   } catch (error) {
     errors.push(finding("scenario.validation", error.message));
@@ -858,6 +883,7 @@ export async function validateCareerScenario(fixtureDirectory, { resultOverride 
   return {
     ok: errors.length === 0,
     scenarioId: request.scenarioId,
+    asOfDate: routes.asOfDate,
     routeIds: routes.routeIds,
     validatedTemplateIds: routes.validatedTemplateIds,
     acceptance,

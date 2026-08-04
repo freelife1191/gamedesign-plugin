@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "scenarioId": "junior-transition",
   "stage": "transition",
+  "asOfDate": "2026-08-08",
   "routeIds": ["transition-job-research", "transition-interview-practice", "transition-growth-plan", "transition-readiness-visualization", "transition-export"],
   "artifactTemplateIds": ["job-posting-evidence", "interview-question-answer-log", "transition-readiness"],
   "jobEvidencePath": "job-evidence.json",
