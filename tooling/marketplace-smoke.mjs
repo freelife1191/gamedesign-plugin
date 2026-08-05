@@ -13,9 +13,19 @@ import { sha256 } from "./lib/hash.mjs";
 
 const MARKETPLACE = "game-design-suite";
 const PRODUCTS = Object.freeze([
-  { name: "game-design-career", skill: "$game-design-career:orchestrate-game-design-career" },
-  { name: "game-design-studio", skill: "$game-design-studio:orchestrate-game-design-project" },
+  { name: "game-design-career", skillName: "orchestrate-game-design-career", skill: "$game-design-career:orchestrate-game-design-career" },
+  { name: "game-design-studio", skillName: "orchestrate-game-design-project", skill: "$game-design-studio:orchestrate-game-design-project" },
 ]);
+const SKILL_PROVER = `import { createHash } from "node:crypto";
+import { lstat, readFile, realpath } from "node:fs/promises";
+if (process.argv.length !== 3) throw new Error("Usage: prove-installed-skill.mjs <SKILL.md>");
+const target = process.argv[2];
+const stats = await lstat(target);
+if (!stats.isFile() || stats.isSymbolicLink()) throw new Error("SKILL.md must be a regular file");
+await realpath(target);
+const sha256 = createHash("sha256").update(await readFile(target)).digest("hex");
+process.stdout.write(JSON.stringify({ ok: true, sha256 }) + "\\n");
+`;
 
 function safeJson(source, label) {
   try {
@@ -25,19 +35,171 @@ function safeJson(source, label) {
   }
 }
 
-export function parseExecJsonl(source, { skillInvocation, artifactPath }) {
+function isExactCommandPath(command, target) {
+  const escaped = target.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  return new RegExp(`(?:^|[\\s'\"])${escaped}(?=$|[\\s'\"])`, "u").test(command);
+}
+
+async function isCanonicalRegularFile(target, root) {
+  const [stats, canonicalTarget, canonicalRoot] = await Promise.all([
+    lstat(target).catch(() => null),
+    realpath(target).catch(() => null),
+    realpath(root).catch(() => null),
+  ]);
+  if (!stats?.isFile() || stats.isSymbolicLink() || !canonicalTarget || !canonicalRoot) return false;
+  const relative = path.relative(canonicalRoot, canonicalTarget);
+  return relative !== "" && !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative);
+}
+
+async function isCanonicalDirectory(target) {
+  const [stats, canonical] = await Promise.all([lstat(target).catch(() => null), realpath(target).catch(() => null)]);
+  return Boolean(stats?.isDirectory() && !stats.isSymbolicLink() && canonical);
+}
+
+function jsonObjectStream(source) {
+  const outputs = [];
+  const text = String(source ?? "");
+  let cursor = 0;
+  while (cursor < text.length) {
+    while (/\s/u.test(text[cursor] ?? "")) cursor += 1;
+    if (cursor >= text.length) break;
+    if (text[cursor] !== "{") return null;
+    const start = cursor;
+    let depth = 0;
+    let quoted = false;
+    let escaped = false;
+    for (; cursor < text.length; cursor += 1) {
+      const character = text[cursor];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (character === "\\") escaped = true;
+        else if (character === '"') quoted = false;
+      } else if (character === '"') quoted = true;
+      else if (character === "{") depth += 1;
+      else if (character === "}" && --depth === 0) {
+        try {
+          const parsed = safeJson(text.slice(start, cursor + 1), "command trace");
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+          outputs.push(parsed);
+        } catch { return null; }
+        cursor += 1;
+        break;
+      }
+    }
+    if (depth !== 0 || quoted) return null;
+  }
+  return outputs;
+}
+
+function isSkillProofOutput(output, expectedSha256) {
+  return JSON.stringify(Object.keys(output).sort()) === '["ok","sha256"]'
+    && output.ok === true && output.sha256 === expectedSha256;
+}
+
+function isValidatorOutput(output) {
+  return JSON.stringify(Object.keys(output).sort()) === '["errors","files","ok","requestedFormats","warnings"]'
+    && output.ok === true && Array.isArray(output.errors) && output.errors.length === 0
+    && Array.isArray(output.warnings) && Array.isArray(output.files)
+    && JSON.stringify(output.requestedFormats) === '["md"]';
+}
+
+export async function parseExecJsonl(source, { cacheRoot, proofPath, skillPath, skillSha256, validatorPath: expectedValidator, artifactPath }) {
   const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
   if (events.some((event) => event.type === "turn.failed" || event.type === "error"
       || /(?:401|unauthorized)/iu.test(JSON.stringify(event)))) {
     throw new Error("codex exec incomplete: failure event");
   }
   if (!events.some((event) => event.type === "turn.completed")) throw new Error("codex exec incomplete: no completed turn");
-  const messages = events.filter((event) => event.type === "item.completed" && event.item?.type === "agent_message")
-    .map((event) => event.item.text).filter((text) => typeof text === "string").join("\n");
-  const provenance = messages.includes(`SKILL_PROVENANCE=${skillInvocation}`);
-  const artifactPathReported = messages.includes(`ARTIFACT_PATH=${artifactPath}`);
-  if (!provenance || !artifactPathReported) throw new Error("codex exec incomplete: missing skill provenance or artifact path");
-  return { completed: true, provenance, artifactPathReported };
+  if (!await isCanonicalRegularFile(proofPath, path.dirname(artifactPath))
+      || !await isCanonicalRegularFile(skillPath, cacheRoot)
+      || !await isCanonicalRegularFile(expectedValidator, cacheRoot)
+      || !await isCanonicalDirectory(artifactPath)) {
+    throw new Error("codex exec unverifiable: installed skill or canonical paths");
+  }
+  const digestCandidates = events.filter((event) => event.type === "item.completed" && event.item?.type === "command_execution")
+    .map(({ item }) => {
+      const outputs = jsonObjectStream(item.aggregated_output);
+      return {
+        success: item.status === "completed" && item.exit_code === 0,
+        path: typeof item.command === "string" && isExactCommandPath(item.command, skillPath),
+        operation: typeof item.command === "string" && isExactCommandPath(item.command, proofPath),
+        output: outputs?.some((parsed) => isSkillProofOutput(parsed, skillSha256)) === true,
+        outputs,
+      };
+    });
+  const proofMatches = digestCandidates.filter((candidate) => candidate.success && candidate.path && candidate.operation)
+    .flatMap((candidate) => candidate.outputs ?? []).filter((output) => isSkillProofOutput(output, skillSha256));
+  const installedSkillDigest = proofMatches.length === 1;
+  const validatorCandidates = events.filter((event) => event.type === "item.completed" && event.item?.type === "command_execution")
+    .map(({ item }) => {
+      const outputs = jsonObjectStream(item.aggregated_output);
+      return {
+        success: item.status === "completed" && item.exit_code === 0,
+        path: typeof item.command === "string" && isExactCommandPath(item.command, expectedValidator),
+        artifact: typeof item.command === "string" && isExactCommandPath(item.command, artifactPath),
+        output: outputs?.some(isValidatorOutput) === true,
+        outputs,
+      };
+    });
+  const validatorMatches = validatorCandidates.filter((candidate) => candidate.success && candidate.path && candidate.artifact)
+    .flatMap((candidate) => candidate.outputs ?? []).filter(isValidatorOutput);
+  const artifactValidatorTrace = validatorMatches.length === 1;
+  if (!installedSkillDigest || !artifactValidatorTrace) {
+    const seen = (key) => digestCandidates.some((candidate) => candidate[key]);
+    const validatorSeen = (key) => validatorCandidates.some((candidate) => candidate[key]);
+    throw new Error(`codex exec unverifiable: digest=${installedSkillDigest ? 1 : 0}(s=${seen("success") ? 1 : 0},p=${seen("path") ? 1 : 0},o=${seen("operation") ? 1 : 0},h=${seen("output") ? 1 : 0}),validator=${artifactValidatorTrace ? 1 : 0}(s=${validatorSeen("success") ? 1 : 0},p=${validatorSeen("path") ? 1 : 0},a=${validatorSeen("artifact") ? 1 : 0},o=${validatorSeen("output") ? 1 : 0})`);
+  }
+  return { completed: true, installedSkillDigest: true, artifactValidatorTrace: true };
+}
+
+function assertExactKeys(value, keys, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)
+      || JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...keys].sort())) {
+    throw new Error(`${label} contract mismatch`);
+  }
+}
+
+function mismatch(kind) {
+  throw new Error(`${kind} contract mismatch`);
+}
+
+export function validateCliJson(kind, payload, { repoRoot, productName, cacheRoot }) {
+  const pluginId = `${productName}@${MARKETPLACE}`;
+  try {
+    if (kind === "marketplaceAdd") {
+      assertExactKeys(payload, ["marketplaceName", "installedRoot", "alreadyAdded"], kind);
+      if (payload.marketplaceName !== MARKETPLACE || payload.installedRoot !== repoRoot || payload.alreadyAdded !== false) mismatch(kind);
+    } else if (kind === "pluginAdd") {
+      assertExactKeys(payload, ["pluginId", "name", "marketplaceName", "version", "installedPath", "authPolicy"], kind);
+      if (payload.pluginId !== pluginId || payload.name !== productName || payload.marketplaceName !== MARKETPLACE
+          || payload.version !== "0.1.0" || payload.installedPath !== cacheRoot || payload.authPolicy !== "ON_USE") mismatch(kind);
+    } else if (kind === "pluginList") {
+      assertExactKeys(payload, ["installed", "available"], kind);
+      if (!Array.isArray(payload.installed) || payload.installed.length !== 1 || !Array.isArray(payload.available) || payload.available.length !== 0) mismatch(kind);
+      const plugin = payload.installed[0];
+      assertExactKeys(plugin, ["pluginId", "name", "marketplaceName", "version", "installed", "enabled", "source", "marketplaceSource", "installPolicy", "authPolicy"], kind);
+      assertExactKeys(plugin.source, ["source", "path"], kind);
+      assertExactKeys(plugin.marketplaceSource, ["sourceType", "source"], kind);
+      if (plugin.pluginId !== pluginId || plugin.name !== productName || plugin.marketplaceName !== MARKETPLACE
+          || plugin.version !== "0.1.0" || plugin.installed !== true || plugin.enabled !== true
+          || plugin.source.source !== "local" || plugin.source.path !== path.join(repoRoot, "plugins", productName)
+          || plugin.marketplaceSource.sourceType !== "local" || plugin.marketplaceSource.source !== repoRoot
+          || plugin.installPolicy !== "AVAILABLE" || plugin.authPolicy !== "ON_USE") mismatch(kind);
+    } else if (kind === "pluginRemove") {
+      assertExactKeys(payload, ["pluginId", "name", "marketplaceName"], kind);
+      if (payload.pluginId !== pluginId || payload.name !== productName || payload.marketplaceName !== MARKETPLACE) mismatch(kind);
+    } else if (kind === "marketplaceRemove") {
+      assertExactKeys(payload, ["marketplaceName", "installedRoot"], kind);
+      if (payload.marketplaceName !== MARKETPLACE || payload.installedRoot !== null) mismatch(kind);
+    } else if (kind === "marketplaceList") {
+      assertExactKeys(payload, ["marketplaces"], kind);
+      if (!Array.isArray(payload.marketplaces) || payload.marketplaces.length !== 0) mismatch(kind);
+    } else mismatch(kind);
+  } catch (error) {
+    if (error instanceof Error && /contract mismatch/u.test(error.message)) throw error;
+    mismatch(kind);
+  }
+  return payload;
 }
 
 export function redactFailure(message, environment = process.env) {
@@ -117,18 +279,6 @@ function run(command, args, { cwd, env, input, timeout = 30000, json = false }) 
   return json ? safeJson(result.stdout, args.join(" ")) : result.stdout;
 }
 
-function assertInstalledList(payload, productName) {
-  if (!payload || !Array.isArray(payload.installed) || payload.installed.length !== 1 || payload.available?.length !== 0) {
-    throw new Error(`${productName} list contract mismatch`);
-  }
-  const plugin = payload.installed[0];
-  if (plugin.pluginId !== `${productName}@${MARKETPLACE}` || plugin.name !== productName
-      || plugin.marketplaceName !== MARKETPLACE || plugin.version !== "0.1.0"
-      || plugin.installed !== true || plugin.enabled !== true) {
-    throw new Error(`${productName} installed JSON mismatch`);
-  }
-}
-
 async function countSkills(cacheRoot) {
   const entries = await readdir(path.join(cacheRoot, "skills"), { withFileTypes: true });
   let count = 0;
@@ -176,50 +326,59 @@ export async function runMarketplaceSmoke({
     const codex = await findExecutable("codex");
     const python = await findExecutable("python3");
     await writeFile(isolatedValidator, await readFile(await validatorPath()));
-    const marketplace = run(codex, ["plugin", "marketplace", "add", path.resolve(repoRoot), "--json"], { cwd: repoRoot, env, json: true });
-    if (marketplace.marketplaceName !== MARKETPLACE || marketplace.alreadyAdded !== false) throw new Error("marketplace add JSON mismatch");
+    const canonicalRepoRoot = path.resolve(repoRoot);
+    const marketplace = run(codex, ["plugin", "marketplace", "add", canonicalRepoRoot, "--json"], { cwd: repoRoot, env, json: true });
+    validateCliJson("marketplaceAdd", marketplace, { repoRoot: canonicalRepoRoot });
 
     for (const product of PRODUCTS) {
       const added = run(codex, ["plugin", "add", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true });
-      if (added.pluginId !== `${product.name}@${MARKETPLACE}` || added.version !== "0.1.0") throw new Error(`${product.name} add JSON mismatch`);
       const cacheRoot = path.join(env.CODEX_HOME, "plugins/cache", MARKETPLACE, product.name, "0.1.0");
-      if (added.installedPath !== cacheRoot) throw new Error(`${product.name} installed path mismatch`);
+      const cliContext = { repoRoot: canonicalRepoRoot, productName: product.name, cacheRoot };
+      validateCliJson("pluginAdd", added, cliContext);
       if (await realpath(cacheRoot) !== cacheRoot || await countSkills(cacheRoot) !== 11) throw new Error(`${product.name} cache mismatch`);
       run(python, [isolatedValidator, cacheRoot], { cwd: registration.root, env });
-      assertInstalledList(run(codex, ["plugin", "list", "--json"], { cwd: repoRoot, env, json: true }), product.name);
+      validateCliJson("pluginList", run(codex, ["plugin", "list", "--json"], { cwd: repoRoot, env, json: true }), cliContext);
 
       const workspace = path.join(registration.root, `workspace-${product.name}`);
       await mkdir(workspace);
       const artifactPath = path.join(workspace, `${product.name}-artifact`);
+      const proofPath = path.join(workspace, "prove-installed-skill.mjs");
+      await writeFile(proofPath, SKILL_PROVER, { mode: 0o700 });
+      const skillPath = path.join(cacheRoot, "skills", product.skillName, "SKILL.md");
+      const packageValidator = path.join(cacheRoot, "scripts/validate-artifact.mjs");
+      const skillSha256 = sha256(await readFile(skillPath));
+      const skillDigestCommand = `node ${JSON.stringify(proofPath)} ${JSON.stringify(skillPath)}`;
+      const artifactValidatorCommand = `node ${JSON.stringify(packageValidator)} ${JSON.stringify(artifactPath)} md`;
       const prompt = [
         `명시적으로 설치된 스킬 ${product.skill} 을 호출하세요.`,
         `한 번의 짧은 작업으로 canonical game-design MD artifact를 ${artifactPath} 에 생성하세요.`,
-        "필수 파일과 디렉터리를 만들고 md 형식으로 package-local validator를 통과시키세요.",
-        `최종 응답 마지막에는 정확히 SKILL_PROVENANCE=${product.skill} 와 ARTIFACT_PATH=${artifactPath} 두 줄을 포함하세요.`,
+        "필수 파일과 디렉터리를 만든 뒤 아래 두 명령을 쉘에서 정확히 한 번씩 실행하세요.",
+        `1. ${skillDigestCommand}`,
+        `2. ${artifactValidatorCommand}`,
+        "두 명령 모두 성공한 뒤 짧게 완료만 보고하세요.",
       ].join("\n");
       const jsonl = run(codex, ["exec", "--ephemeral", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", workspace, prompt], {
         cwd: workspace,
         env,
         timeout: 180000,
       });
-      parseExecJsonl(jsonl, { skillInvocation: product.skill, artifactPath });
+      await parseExecJsonl(jsonl, { cacheRoot, proofPath, skillPath, skillSha256, validatorPath: packageValidator, artifactPath });
       const artifactStats = await lstat(artifactPath).catch(() => null);
       if (!artifactStats?.isDirectory() || artifactStats.isSymbolicLink()) throw new Error(`${product.name} artifact missing`);
-      const validation = safeJson(run(process.execPath, [path.join(cacheRoot, "scripts/validate-artifact.mjs"), artifactPath, "md"], {
+      const validation = safeJson(run(process.execPath, [packageValidator, artifactPath, "md"], {
         cwd: workspace,
         env,
       }), `${product.name} artifact validator`);
       if (validation.ok !== true || JSON.stringify(validation.requestedFormats) !== '["md"]') throw new Error(`${product.name} artifact validation failed`);
       results.push({ product: product.name, pluginId: added.pluginId, skill: product.skill, skills: 11, artifact: "validated-md", exec: "completed" });
       const removedPlugin = run(codex, ["plugin", "remove", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true });
-      if (removedPlugin.pluginId !== `${product.name}@${MARKETPLACE}` || await lstat(cacheRoot).catch(() => null)) {
-        throw new Error(`${product.name} removal mismatch`);
-      }
+      validateCliJson("pluginRemove", removedPlugin, cliContext);
+      if (await lstat(cacheRoot).catch(() => null)) throw new Error(`${product.name} removal mismatch`);
     }
     const removed = run(codex, ["plugin", "marketplace", "remove", MARKETPLACE, "--json"], { cwd: repoRoot, env, json: true });
-    if (removed.marketplaceName !== MARKETPLACE) throw new Error("marketplace remove JSON mismatch");
+    validateCliJson("marketplaceRemove", removed, { repoRoot: canonicalRepoRoot });
     const finalList = run(codex, ["plugin", "marketplace", "list", "--json"], { cwd: repoRoot, env, json: true });
-    if (!Array.isArray(finalList.marketplaces) || finalList.marketplaces.length !== 0) throw new Error("marketplace final list mismatch");
+    validateCliJson("marketplaceList", finalList, { repoRoot: canonicalRepoRoot });
     status = "PASS";
   } catch (error) {
     failure = redactFailure(error instanceof Error ? error.message : String(error), env);

@@ -22,15 +22,17 @@ The runner uses a fresh temporary `HOME` and `CODEX_HOME`. When local session au
 
 For each plugin independently, the runner:
 
-1. Adds marketplace `game-design-suite` and asserts exact JSON.
-2. Installs only one plugin and asserts `pluginId`, version, installed/enabled state, and cache path.
+1. Adds marketplace `game-design-suite` and asserts the complete current JSON contract, including exact keys and values.
+2. Installs only one plugin and asserts the complete add/list JSON contracts recursively: no missing or unknown fields, exact source metadata, policies, version, installed/enabled state, and cache path.
 3. Confirms exactly 11 packaged skills and runs a temporary copy of the official plugin validator.
 4. Starts one bounded `codex exec --ephemeral --json --sandbox workspace-write` turn in an isolated workspace.
-5. Explicitly invokes the installed orchestrator skill and requires completed JSONL, skill provenance, artifact path, real artifact bytes, and package-local `{ "ok": true, "requestedFormats": ["md"] }` validation.
-6. Removes the plugin before installing the other product, then removes the marketplace and asserts an empty final list.
-7. Compares production config/plugin-state byte hashes before and after and performs guarded cleanup.
+5. Explicitly invokes the installed orchestrator skill. A runner-owned, temporary proof script reads the installed cache's exact `SKILL.md` bytes and emits their SHA-256 as JSON. The runner accepts only a successful system `command_execution` event containing the exact non-symlink proof-script and installed-skill paths and the precomputed digest.
+6. Requires a successful system `command_execution` for the exact package-local validator and artifact paths. Its pretty-printed JSON output must have the exact success shape and `requestedFormats: ["md"]`; the runner then validates the real artifact again outside the model turn.
+7. Supports Codex batching both required commands into one shell event by parsing a whitespace-separated stream of balanced JSON objects. Prose, arrays, malformed trailing data, duplicate proof/validator results, prefix paths, failed commands, and self-reported provenance are rejected.
+8. Removes the plugin before installing the other product, then verifies the exact plugin-remove, marketplace-remove, and empty final marketplace-list JSON contracts.
+9. Compares production config/plugin-state byte hashes before and after and performs guarded cleanup.
 
-Any nonzero process, timeout, signal, `turn.failed`, 401, missing provenance, missing artifact, failed validator, state drift, or cleanup identity mismatch produces `status: INCOMPLETE` and a nonzero exit.
+Any nonzero process, timeout, signal, `turn.failed`, 401, unverifiable command trace, JSON contract drift, missing artifact, failed validator, state drift, or cleanup identity mismatch produces `status: INCOMPLETE` and a nonzero exit.
 
 ## Observed structured result
 
