@@ -17,13 +17,19 @@ test("each generated plugin passes a standalone byte- and process-verified smoke
   const report = await runIsolationSmoke({ repoRoot });
   assert.deepEqual(report.map(({ name }) => name), products);
   for (const result of report) {
-    assert.equal(result.skillCount, 12);
+    assert.equal(result.skillCount, 15);
     assert.equal(result.vendorFileCount, 48);
     assert.deepEqual(result.hooks, ["SessionStart", "Stop"]);
     assert.deepEqual(result.validation, { ok: true, requestedFormats: ["md"] });
     assert.equal(result.stopStatus, "passed");
     assert.equal(result.officialValidatorOrigin, "isolated-copy");
     assert.equal(result.symlinks, 0);
+    assert.deepEqual(result.imagePlan, {
+      networkCalls: 0,
+      generationCalls: 0,
+      placeholders: 1,
+      promptFiles: ["assets/prompts/image-prompts.json", "assets/prompts/image-prompts.md"],
+    });
     assert.deepEqual(result.qualityProfile, result.name === "game-design-studio"
       ? { namespace: "studio", profileId: "game-design-brief", selectionReason: "compatible-template-map-match", validationOk: true }
       : { namespace: "career", profileId: "portfolio-case-study", selectionReason: "compatible-template-map-match", validationOk: true });

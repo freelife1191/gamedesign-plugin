@@ -9,6 +9,7 @@ import {
   bridgeLocalAuth,
   buildProofCommand,
   captureFileIdentity,
+  PACKAGED_SKILL_COUNT,
   parseExecJsonl,
   PROOF_HARNESS_PATH,
   redactFailure,
@@ -18,6 +19,10 @@ import { artifactTreeIdentity, runMarketplaceProof } from "../../tooling/lib/mar
 
 const product = "game-design-career";
 const pluginId = `${product}@game-design-suite`;
+
+test("marketplace smoke expects all fourteen product skills plus vendored Skillstead", () => {
+  assert.equal(PACKAGED_SKILL_COUNT, 15);
+});
 
 async function traceFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketplace-trace-"));

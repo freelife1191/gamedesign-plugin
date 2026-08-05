@@ -13,6 +13,7 @@ import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
+export const PACKAGED_SKILL_COUNT = 15;
 const PRODUCTS = Object.freeze([
   { name: "game-design-career", skillName: "orchestrate-game-design-career", skill: "$game-design-career:orchestrate-game-design-career" },
   { name: "game-design-studio", skillName: "orchestrate-game-design-project", skill: "$game-design-studio:orchestrate-game-design-project" },
@@ -360,7 +361,7 @@ export async function runMarketplaceSmoke({
       const cacheRoot = path.join(env.CODEX_HOME, "plugins/cache", MARKETPLACE, product.name, "0.1.0");
       const cliContext = { repoRoot: canonicalRepoRoot, productName: product.name, cacheRoot };
       validateCliJson("pluginAdd", added, cliContext);
-      if (await realpath(cacheRoot) !== cacheRoot || await countSkills(cacheRoot) !== 11) throw new Error(`${product.name} cache mismatch`);
+      if (await realpath(cacheRoot) !== cacheRoot || await countSkills(cacheRoot) !== PACKAGED_SKILL_COUNT) throw new Error(`${product.name} cache mismatch`);
       run(python, [isolatedValidator, cacheRoot], { cwd: registration.root, env });
       validateCliJson("pluginList", run(codex, ["plugin", "list", "--json"], { cwd: repoRoot, env, json: true }), cliContext);
 
@@ -414,7 +415,7 @@ export async function runMarketplaceSmoke({
         env,
       }), `${product.name} artifact validator`);
       if (validation.ok !== true || JSON.stringify(validation.requestedFormats) !== '["md"]') throw new Error(`${product.name} artifact validation failed`);
-      results.push({ product: product.name, pluginId: added.pluginId, skill: product.skill, skills: 11, artifact: "validated-md", exec: "completed" });
+      results.push({ product: product.name, pluginId: added.pluginId, skill: product.skill, skills: PACKAGED_SKILL_COUNT, artifact: "validated-md", exec: "completed" });
       const removedPlugin = run(codex, ["plugin", "remove", `${product.name}@${MARKETPLACE}`, "--json"], { cwd: repoRoot, env, json: true });
       validateCliJson("pluginRemove", removedPlugin, cliContext);
       if (await lstat(cacheRoot).catch(() => null)) throw new Error(`${product.name} removal mismatch`);

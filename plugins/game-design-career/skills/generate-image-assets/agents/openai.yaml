@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate Image Assets"
+  short_description: "Route bounded image generation honestly"
+  default_prompt: "Use $generate-image-assets to apply the configured provider policy to explicitly selected stable asset IDs."

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/image-assets/schema/image-review.schema.json",
+  "title": "Named image approval review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["state", "reviewer", "reviewer_kind", "reviewer_role", "review_scope", "reviewed_at", "evidence_paths", "rights_decision"],
+  "properties": {
+    "state": { "enum": ["document-approved", "production-candidate"] },
+    "reviewer": { "type": "string", "minLength": 1 },
+    "reviewer_kind": { "const": "human" },
+    "reviewer_role": { "enum": ["visual-reviewer", "rights-provenance-reviewer"] },
+    "review_scope": { "enum": ["document-visual", "production-rights-provenance"] },
+    "reviewed_at": { "type": "string", "format": "date-time" },
+    "evidence_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$" }
+    },
+    "rights_decision": { "enum": ["approved", "restricted", "rejected", "needs-review"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "document-approved" } }, "required": ["state"] },
+      "then": {
+        "properties": {
+          "reviewer_role": { "const": "visual-reviewer" },
+          "review_scope": { "const": "document-visual" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "production-candidate" } }, "required": ["state"] },
+      "then": {
+        "properties": {
+          "reviewer_role": { "const": "rights-provenance-reviewer" },
+          "review_scope": { "const": "production-rights-provenance" }
+        }
+      }
+    }
+  ]
+}

@@ -24,6 +24,9 @@ const skillIds = [
   "plan-junior-growth",
   "visualize-career-roadmap",
   "export-career-documents",
+  "plan-image-assets",
+  "generate-image-assets",
+  "review-image-assets",
 ];
 
 const roleIds = [
@@ -35,6 +38,8 @@ const roleIds = [
   "interview-coach",
   "evidence-auditor",
 ];
+
+const imageRoleIds = ["art-brief-director", "visual-asset-reviewer"];
 
 const templateIds = [
   "career-stage-goal",
@@ -71,12 +76,18 @@ const qualityProfileIds = [
 ];
 
 const topLevelScriptIds = [
+  "build-image-asset-plan.mjs",
   "capability-probe.mjs",
+  "compile-image-prompts.mjs",
   "data-only-snapshot.mjs",
+  "generate-openai-images.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
+  "validate-image-assets.mjs",
+  "validate-image-config.mjs",
   "validate-quality-profile.mjs",
   "validate-reference-preset.mjs",
 ];
@@ -140,6 +151,7 @@ test("README exposes every shipped skill, role asset, stage, and canonical templ
   const readme = await readFile(readmePath, "utf8");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
+  assert.deepEqual(tableIds(readme, "이미지 전문 역할 레지스트리"), imageRoleIds);
   assert.deepEqual(tableIds(readme, "Canonical Artifact 템플릿"), templateIds);
   for (const stage of ["entry", "new-hire", "junior-growth", "transition"]) {
     assert.ok(readme.includes(`| \`${stage}\` |`), `missing career stage: ${stage}`);
@@ -192,6 +204,9 @@ test("README documents truthful installation, workflow, safety, visualization, e
     "SVG lint",
     "2× PNG",
     "네이티브 자동 발견을 보장하지",
+    "IMAGE_GEN_MODE",
+    "prompt-only",
+    "production-candidate는 release/legal/production approval이 아님",
   ]) {
     assert.ok(readme.includes(phrase), `missing operational boundary: ${phrase}`);
   }
@@ -208,6 +223,24 @@ test("README documents truthful installation, workflow, safety, visualization, e
   ]) {
     assert.match(readme, new RegExp(`^### ${example}$`, "m"));
   }
+});
+
+test("README documents the isolated image workflow contract", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  for (const contract of [
+    "root `.env.example`",
+    "tracked `.env`",
+    "IMAGE_MODEL=gpt-image-2",
+    "IMAGE_QUALITY=low",
+    "OpenAI only",
+    "Codex/host",
+    "immutable receipt",
+    "assets/prompts/image-prompts.md",
+    "assets/prompts/image-prompts.json",
+    "concept-draft → document-approved → production-candidate",
+    "Skillstead SVG",
+    "smoke:image:live",
+  ]) assert.ok(readme.includes(contract), `missing image operating contract: ${contract}`);
 });
 
 test("README documents the closed Career document-quality workflow and installed contracts", async () => {
@@ -290,9 +323,9 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-career/plugin",
     "plugins/game-design-career",
     ".codex-plugin/plugin.json",
-    "skills/ (12개)",
+    "skills/ (15개)",
     "skills/svg-infographic/",
-    "agents/ (7개)",
+    "agents/ (9개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",
@@ -403,7 +436,7 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
     const environment = { ...process.env, CODEX_HOME: codexHome };
     const skillRun = spawnSync("/bin/bash", ["-c", skillCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(skillRun.status, 0, skillRun.stderr);
-    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 11);
+    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 14);
 
     const pluginRun = spawnSync("/bin/bash", ["-c", pluginCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(pluginRun.status, 0, pluginRun.stderr);

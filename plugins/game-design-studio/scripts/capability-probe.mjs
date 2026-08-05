@@ -7,6 +7,8 @@ import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve, win32 as pathWin32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
+
 const MAX_STDIN_BYTES = 64 * 1024;
 const MAX_PATH_ENTRIES = 64;
 const BINARY_NAMES = Object.freeze({
@@ -193,31 +195,67 @@ export async function probeChromium({
   return { available: false };
 }
 
-async function directoryExists(path) {
+function isAbsentPathError(error) {
+  return error?.code === 'ENOENT' || error?.code === 'ENOTDIR';
+}
+
+async function readableRegularFile(path, { lstatFn = lstat, accessFn = access } = {}) {
   try {
-    await access(path, constants.R_OK);
-    return true;
-  } catch {
-    return false;
+    const stats = await lstatFn(path);
+    if (!stats.isFile() || stats.isSymbolicLink()) return { available: false };
+    await accessFn(path, constants.R_OK);
+    return { available: true };
+  } catch (error) {
+    if (isAbsentPathError(error)) return { available: false };
+    return { available: false, unknown: true };
   }
 }
 
-async function findBundledSkill(capability, env = process.env) {
+async function findBundledSkill(capability, env = process.env, { readdirFn = readdir, lstatFn = lstat, accessFn = access } = {}) {
   const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(homedir(), '.codex');
   if (!codexHome) return { available: false };
   const capabilityRoot = join(codexHome, 'plugins', 'cache', 'openai-primary-runtime', capability);
   let versions;
   try {
-    versions = (await readdir(capabilityRoot)).filter((name) => /^[0-9][0-9.]*$/.test(name)).sort();
-  } catch {
+    versions = (await readdirFn(capabilityRoot)).filter((name) => /^[0-9][0-9.]*$/.test(name)).sort();
+  } catch (error) {
+    if (!isAbsentPathError(error)) return { available: false, unknown: true };
     return { available: false };
   }
   for (const version of versions) {
-    if (await directoryExists(join(capabilityRoot, version, 'skills', capability, 'SKILL.md'))) {
+    const versionDirectory = join(capabilityRoot, version);
+    let versionStats;
+    try {
+      versionStats = await lstatFn(versionDirectory);
+      if (!versionStats.isDirectory() || versionStats.isSymbolicLink()) continue;
+      await accessFn(versionDirectory, constants.R_OK);
+    } catch (error) {
+      if (isAbsentPathError(error)) continue;
+      return { available: false, unknown: true };
+    }
+    const skill = await readableRegularFile(join(versionDirectory, 'skills', capability, 'SKILL.md'), { lstatFn, accessFn });
+    if (skill.unknown) return { available: false, unknown: true };
+    if (skill.available) {
       return { available: true, provider: 'codex-bundled' };
     }
   }
   return { available: false };
+}
+
+export async function probeImageGenerationCapability(env = process.env, { lstatFn = lstat, findBundledSkillFn = findBundledSkill } = {}) {
+  const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(homedir(), '.codex');
+  if (!codexHome) return { status: 'unknown' };
+  const systemSkill = join(codexHome, 'skills', '.system', 'imagegen', 'SKILL.md');
+  try {
+    const stats = await lstatFn(systemSkill);
+    if (stats.isFile() && !stats.isSymbolicLink()) return { status: 'available', provider: 'codex-system-skill' };
+  } catch (error) {
+    if (!isAbsentPathError(error)) return { status: 'unknown' };
+  }
+  const bundled = await findBundledSkillFn('imagegen', env, { lstatFn });
+  if (bundled.available) return { status: 'available', provider: 'codex-bundled-skill' };
+  if (bundled.unknown) return { status: 'unknown' };
+  return { status: 'unavailable' };
 }
 
 export async function probeCapabilities({ platform = process.platform, env = process.env } = {}) {
@@ -228,6 +266,7 @@ export async function probeCapabilities({ platform = process.platform, env = pro
     documents: await findBundledSkill('documents', env),
     pdf: await findBundledSkill('pdf', env),
     presentations: await findBundledSkill('presentations', env),
+    image_generation: await probeImageGenerationCapability(env),
   };
   const warnings = [];
   for (const name of ['chromium', 'soffice', 'documents', 'pdf', 'presentations']) {
@@ -241,12 +280,15 @@ export async function probeCapabilities({ platform = process.platform, env = pro
 export async function runCapabilityProbe() {
   const input = await readHookInput();
   const result = await probeCapabilities();
+  const workspaceRoot = safeAbsoluteCandidate(input.value?.cwd) ?? process.cwd();
+  const imageConfig = toPublicImageConfig(await loadImageConfig({ workspaceRoot }));
   if (input.warning) result.warnings.unshift(input.warning);
   return {
     hookSpecificOutput: {
       hookEventName: 'SessionStart',
-      additionalContext: JSON.stringify({ capabilities: result.capabilities }),
+      additionalContext: JSON.stringify({ capabilities: result.capabilities, imageConfig }),
     },
+    imageConfig,
     ...result,
   };
 }

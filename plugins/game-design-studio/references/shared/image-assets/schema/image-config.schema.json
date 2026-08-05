@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/image-assets/schema/image-config.schema.json",
+  "title": "Public image generation configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "model", "quality", "apiKeyPresent", "sources", "warnings"],
+  "properties": {
+    "mode": { "enum": ["required", "all", "select", "prompt-only"] },
+    "model": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "quality": { "enum": ["low", "medium", "high", "auto"] },
+    "apiKeyPresent": { "type": "boolean" },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "model", "quality", "apiKey"],
+      "properties": {
+        "mode": { "enum": ["environment", ".env", "default"] },
+        "model": { "enum": ["environment", ".env", "default"] },
+        "quality": { "enum": ["environment", ".env", "default"] },
+        "apiKey": { "enum": ["environment", ".env", "none"] }
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  }
+}

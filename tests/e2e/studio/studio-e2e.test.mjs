@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cp, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -458,6 +458,40 @@ test("clean-built plugin runs the same professional workflow without repository-
     const brokenMobile = await validateStudioScenario(path.join(fixtureRoot, "mobile-onboarding-liveops"));
     assert.equal(brokenMobile.ok, false);
     assert.ok(brokenMobile.errors.some(({ code }) => code === "visualization.lint"), messages(brokenMobile));
+  } finally {
+    await rm(stagingRoot, { recursive: true, force: true });
+  }
+});
+
+test("clean-built Studio plugin performs prompt-only image planning without a provider or source dependency", async () => {
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-e2e-image-plan-"));
+  const artifactRoot = path.join(stagingRoot, "artifact");
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+    await mkdir(artifactRoot);
+    const workflowPath = path.join(build.outputDir, "scripts/run-image-asset-workflow.mjs");
+    const source = await readFile(workflowPath, "utf8");
+    assert.doesNotMatch(source, /(?:\.\.\/)+(?:shared|products)\//u);
+    const { runImageAssetWorkflow } = await import(`${pathToFileURL(workflowPath).href}?prompt-only=${Date.now()}`);
+    let hostCalls = 0;
+    const result = await runImageAssetWorkflow({
+      artifactRoot,
+      artifact: { artifact_id: "studio-e2e-image", image_needs: [{ slot_id: "hero", type: "character", scene: "A neutral scene.", subject: "An original silhouette.", composition: "Centered.", visual_style: "Original illustration.", readability: "Readable.", width: 1024, height: 1024 }] },
+      qualityProfile: { profile_id: "studio-e2e-image", version: 1, artifact_types: ["design-document"], audiences: ["design"], required_sections: [{ id: "visuals", title: "Visuals" }], required_tables: [{ id: "visual-table", section_id: "visuals", columns: ["Signal"] }], required_diagrams: [{ id: "diagram", section_id: "visuals", purpose: "Explain visual intent.", alt_text: "Visual diagram." }], required_images: [{ id: "hero", section_id: "visuals", purpose: "Explain visual intent.", alt_text: "Visual planning placeholder." }], recommended_images: [], length_guidance: { min_words: 1, max_words: 10 }, ppt_story_contract: {}, acceptance_criteria: ["Readable"], export_rules: { required_formats: ["md"], forbidden_formats: [] }, quality_checks: ["visual"] },
+      config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+      hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+    });
+    const [manifest, markdown, prompts] = await Promise.all([
+      readFile(path.join(artifactRoot, "assets/image-assets.yml"), "utf8").then(JSON.parse),
+      readFile(path.join(artifactRoot, "assets/prompts/image-prompts.md"), "utf8"),
+      readFile(path.join(artifactRoot, "assets/prompts/image-prompts.json"), "utf8").then(JSON.parse),
+    ]);
+    assert.equal(hostCalls, 0);
+    assert.equal(result.decision.provider, "none");
+    assert.equal(manifest.assets[0].generation_state, "prompt-ready");
+    assert.equal(manifest.assets[0].approval_state, "concept-draft");
+    assert.match(markdown, /Expected count: 1/u);
+    assert.equal(prompts.expected_count, 1);
   } finally {
     await rm(stagingRoot, { recursive: true, force: true });
   }

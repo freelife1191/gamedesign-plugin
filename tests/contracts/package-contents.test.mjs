@@ -23,7 +23,6 @@ const neutralPresetIds = [
 const deploymentTransforms = new Map([
   ["skills/export-career-documents/scripts/prepare-career-export.mjs", '    new URL("../../../../../../shared/scripts/validate-artifact.mjs", import.meta.url),\n'],
   ["skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs", '      new URL("../../../../../../shared/scripts/validate-artifact.mjs", import.meta.url),\n'],
-  ["skills/visualize-career-roadmap/scripts/run-skillstead.mjs", '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n'],
 ]);
 
 async function cleanBuild(t, productName) {
@@ -132,9 +131,9 @@ test("generated snapshots contain the exact clean product build plus the suite m
       assert.equal(packagedManifest.name, productName);
       assert.equal(packagedManifest.skills, "./skills/");
 
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 12);
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 11);
-      assert.equal(pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length, 7);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 15);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 14);
+      assert.equal(pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length, 9);
       assert.equal(pathsUnder(packageFiles, "references/source/docs/").filter((file) => file.endsWith(".md")).length, 49);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/core/").length, 7);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/trends/").length, 2);
@@ -145,6 +144,32 @@ test("generated snapshots contain the exact clean product build plus the suite m
         "scripts/capability-probe.mjs",
         "scripts/stop-artifact-review.mjs",
         "scripts/validate-artifact.mjs",
+        "scripts/build-image-asset-plan.mjs",
+        "scripts/compile-image-prompts.mjs",
+        "scripts/generate-openai-images.mjs",
+        "scripts/run-image-asset-workflow.mjs",
+        "scripts/validate-image-assets.mjs",
+        "scripts/validate-image-config.mjs",
+        "scripts/lib/image-provider.mjs",
+        "scripts/lib/image-file-validation.mjs",
+        "scripts/lib/complete-png-validation.mjs",
+        "scripts/lib/skillstead-svg-evidence.mjs",
+        "scripts/lib/safe-artifact-write.mjs",
+        ".env.example",
+        "references/shared/image-assets/.env.example",
+        "references/shared/image-assets/schema/image-config.schema.json",
+        "references/shared/image-assets/schema/image-assets.schema.json",
+        "references/shared/image-assets/schema/image-review.schema.json",
+        "references/shared/image-assets/qa-contracts/provider-routing.md",
+        "references/shared/image-assets/qa-contracts/generated-image.md",
+        "references/shared/image-assets/qa-contracts/production-candidate.md",
+        "references/shared/image-assets/prompt-patterns/base.json",
+        "references/shared/image-assets/prompt-patterns/character.json",
+        "skills/plan-image-assets/SKILL.md",
+        "skills/generate-image-assets/SKILL.md",
+        "skills/review-image-assets/SKILL.md",
+        "agents/art-brief-director.md",
+        "agents/visual-asset-reviewer.md",
         "assets/shared/templates/canonical-artifact/content.md",
         "references/shared/responsible-design/gates.json",
         "references/shared/knowledge/reference-index.json",
@@ -165,6 +190,23 @@ test("generated snapshots contain the exact clean product build plus the suite m
         vendorLockPath,
         "BUILD-MANIFEST.json",
       ]) assert.ok(packageFiles.includes(required), `${productName}: missing ${required}`);
+
+      for (const forbidden of [
+        ".env",
+        "fixtures/secret.env",
+        "references/source/authoring-map.json",
+        "scripts/lib/skillstead-svg-lint.mjs",
+      ]) assert.equal(packageFiles.includes(forbidden), false, `${productName}: forbidden ${forbidden}`);
+      for (const { relativePath, bytes } of entries) {
+        assert.equal(
+          /(?:^|\/)\.env(?:\.[^/]+)?$/u.test(relativePath) && relativePath !== ".env.example" && relativePath !== "references/shared/image-assets/.env.example",
+          false,
+          `${productName}: real env ${relativePath}`,
+        );
+        assert.equal(/(?:^|\/)(?:authoring[-_])?(?:source[-_])?map(?:\.json)?$/iu.test(relativePath), false, `${productName}: authoring source map ${relativePath}`);
+        assert.doesNotMatch(bytes.toString("utf8"), /(?:\/Users\/|\/home\/|[A-Za-z]:\\Users\\)/u, `${productName}: absolute host path ${relativePath}`);
+        assert.doesNotMatch(bytes.toString("utf8"), new RegExp(productName === "game-design-studio" ? "game-design-career" : "game-design-studio", "u"), `${productName}: sibling reference ${relativePath}`);
+      }
 
       if (productName === "game-design-studio") {
         assert.equal(pathsUnder(packageFiles, "references/profiles/").filter((file) => file.endsWith(".json")).length, 4);

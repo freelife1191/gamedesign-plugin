@@ -2,12 +2,17 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "d8851372abb8f19ab82aa1c3d004c0c520680af4420d16f51a9cb84ffbd99ad7",
+  "treeSha256": "e90718b0317c145770becf2fa7a2872735060a06d09d997642fcbe8030e06671",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
       "sha256": "a4ff6546585827f90ef6fd33da6a4fbfdb29b9eb1f4eb09fe2d57afbd30632f7",
       "size": 1023
+    },
+    {
+      "path": ".env.example",
+      "sha256": "ff7fb9efd9f59c433c4024c128d317edcfe2aaf76875fee6deb0e20535905379",
+      "size": 1676
     },
     {
       "path": "LICENSE",
@@ -16,13 +21,18 @@
     },
     {
       "path": "README.md",
-      "sha256": "6acb540b441d0a793e67b9930e6874d1da8ee51bb3e4137196936c330db98681",
-      "size": 36392
+      "sha256": "972ef896c09f804aa8b4dd9a2b5d506b0d1156f49984ea8260e8b46576d4397a",
+      "size": 41729
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
       "sha256": "ab6170fc6b7a9efe05bf79c977af1d5756d4ca116014a772775eba6b7caa0e82",
       "size": 2100
+    },
+    {
+      "path": "agents/art-brief-director.md",
+      "sha256": "a35df9e085b39b053004d6cb276c58bf1655896718d06dcb1737fcc672554029",
+      "size": 1605
     },
     {
       "path": "agents/content-narrative-designer.md",
@@ -60,6 +70,11 @@
       "size": 2827
     },
     {
+      "path": "agents/visual-asset-reviewer.md",
+      "sha256": "ea88925bb1031a08339c0f9d54e2cd10d9864db4da3d9572a5050c17af0745d7",
+      "size": 1460
+    },
+    {
       "path": "assets/product-mark.svg",
       "sha256": "b8d56234c4d3f754fe79be1ce8fff7cb46e0c9f6fd0aca68f8f215576b02d23c",
       "size": 1050
@@ -68,6 +83,36 @@
       "path": "assets/shared/templates/canonical-artifact/assets/.gitkeep",
       "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
       "size": 1
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/README.md",
+      "sha256": "3cc124eedc7f67833689c4ba5cc74e217c87b1836b4377c4f960f290552225be",
+      "size": 1249
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/diagrams/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/generated/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/image-assets.yml",
+      "sha256": "242f966b356324753fb44c7347adc3b0f15bce3e26823dd518fc477f97f1c258",
+      "size": 29
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/prompts/image-prompts.json",
+      "sha256": "ca865af40a8e6c00f1a5f1d3299a80628821d9acb9a0af5d9b85528cd24895e5",
+      "size": 43
+    },
+    {
+      "path": "assets/shared/templates/canonical-artifact/assets/prompts/image-prompts.md",
+      "sha256": "a63b5bdb8196f25f8b3726feea3d759c77e85373adce2ad7958b4de1720f7467",
+      "size": 171
     },
     {
       "path": "assets/shared/templates/canonical-artifact/content.md",
@@ -486,8 +531,8 @@
     },
     {
       "path": "hooks/hooks.json",
-      "sha256": "485ccffbdac1921789b865f2747be75fbadb8be6a84da3ff43ab7eafab10fc1d",
-      "size": 633
+      "sha256": "2a97411af18080db1450dc14d8a71dbb2fbe642500c77034556c5690c5789c02",
+      "size": 643
     },
     {
       "path": "references/document-quality/template-profile-map.json",
@@ -556,8 +601,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "b3599d2a9fc0e5c072ab6c1ddead5dc7737d2a8b0b372f6ae04db12e29316c75",
-      "size": 11906
+      "sha256": "c46b39980c11b8bd15525a5b5b0eb541436d76d6c92c32e1265aecdc0ed9a1ea",
+      "size": 12288
     },
     {
       "path": "references/shared/document-quality/indexes/career.json",
@@ -843,6 +888,76 @@
       "path": "references/shared/export/themes/professional.json",
       "sha256": "6b48a1437aca5c25d1820bbb40d05a9ff0a8341de1c94bd4c796429b8a6c19ab",
       "size": 237
+    },
+    {
+      "path": "references/shared/image-assets/.env.example",
+      "sha256": "ff7fb9efd9f59c433c4024c128d317edcfe2aaf76875fee6deb0e20535905379",
+      "size": 1676
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/base.json",
+      "sha256": "c23d49604edbe7f61bd193f0b0d4a3ddf1637735ef078720aaa0935daf8f5487",
+      "size": 196
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/character.json",
+      "sha256": "7148b3cbd6b9318b45110029c7ff1fd09867cde30a8245b4e69b74d697ed7cca",
+      "size": 228
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/document-illustration.json",
+      "sha256": "825c94c77e6b90959e7182fbe824b31ad79bf6f695f65e989a9911d3a6f2182c",
+      "size": 227
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/environment.json",
+      "sha256": "6e43636f24a37e520656171012f2a4c32c658dc9efc6a4d9871cb5da4c8613c1",
+      "size": 239
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/skill-vfx.json",
+      "sha256": "4044db9f1ded94ddeb08b4321ec72fd7c482ac71c2f878d1c1c8f34a8c63f0f9",
+      "size": 236
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/storyboard.json",
+      "sha256": "86ee8f4cdca63c2d1fa3f40ebd0d9cf3e7cde81f1f870c1e342045ac38427bc3",
+      "size": 223
+    },
+    {
+      "path": "references/shared/image-assets/prompt-patterns/ui-icon.json",
+      "sha256": "c04c6a86d7981d77e63ada25df30cab5686d4c7b65d3f3505f78b4fa7a9a4b2f",
+      "size": 225
+    },
+    {
+      "path": "references/shared/image-assets/qa-contracts/generated-image.md",
+      "sha256": "3bfc36d5c86f5b6eeff0eb237d1446b927a34224c2fa294a670f376f57a11970",
+      "size": 719
+    },
+    {
+      "path": "references/shared/image-assets/qa-contracts/production-candidate.md",
+      "sha256": "9a5179f092d50afeb5e7fabfc6d07a49942371566611959c690ed04dd5f8ec39",
+      "size": 1477
+    },
+    {
+      "path": "references/shared/image-assets/qa-contracts/provider-routing.md",
+      "sha256": "c2d7ef27d1392632cb200f0573c0fa26e37cc98084444facb1212b13c2a8bde1",
+      "size": 2922
+    },
+    {
+      "path": "references/shared/image-assets/schema/image-assets.schema.json",
+      "sha256": "25f9355928815b556290d10196ad0b82f8857d80679846633e422e51edc08b26",
+      "size": 9045
+    },
+    {
+      "path": "references/shared/image-assets/schema/image-config.schema.json",
+      "sha256": "2b9a3e0370f292049d21598756c0e4c763e03bf981f51cc8ee3f510eb7797f08",
+      "size": 1148
+    },
+    {
+      "path": "references/shared/image-assets/schema/image-review.schema.json",
+      "sha256": "ca9a713383369edb945c51ea488de07b5a5f36a72412db5abda50d1fcbf1b1c8",
+      "size": 1703
     },
     {
       "path": "references/shared/knowledge/core/career-and-portfolio.md",
@@ -1180,14 +1295,54 @@
       "size": 6026
     },
     {
+      "path": "scripts/build-image-asset-plan.mjs",
+      "sha256": "89949d6f2eaabfa7ae067721f92250a82ddd974ed480d83aa086322be2dbd647",
+      "size": 12180
+    },
+    {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "44b4c93e406458e96ed794f5ab90c47ec5c9f02b3e5de1c6cbddb4d8f02a340b",
-      "size": 9750
+      "sha256": "a69c0c29e305e09cd273ac67978a2e448ace8af6778a3425b2b956f4b688798b",
+      "size": 12044
+    },
+    {
+      "path": "scripts/compile-image-prompts.mjs",
+      "sha256": "8132bf85e41e58a9b0798ecda4861c08cc122aeb2db829ced166780c454d4d4f",
+      "size": 9383
     },
     {
       "path": "scripts/data-only-snapshot.mjs",
       "sha256": "bfd30a4bbe5cf624ba7d4fb5d28b30d2ef3799d57a537cb0dec1bf0c56647a74",
       "size": 3716
+    },
+    {
+      "path": "scripts/generate-openai-images.mjs",
+      "sha256": "1d2b7488db823201e45a1083792362da0174c8a6540fcdaf45f5daa377527ef4",
+      "size": 10288
+    },
+    {
+      "path": "scripts/lib/complete-png-validation.mjs",
+      "sha256": "eebfda1ab740f6739872c54e078cdf864917722dffc5b420e340307b2d2b0f33",
+      "size": 2826
+    },
+    {
+      "path": "scripts/lib/image-file-validation.mjs",
+      "sha256": "1d873dbd71f4b450bc67baaab61d67f0734ca580cca3d90e5737f92715532e77",
+      "size": 5164
+    },
+    {
+      "path": "scripts/lib/image-provider.mjs",
+      "sha256": "ff5150674f9ef072f319ff52c6e2c0969d9b676696dba02329730e70b63a72b4",
+      "size": 1140
+    },
+    {
+      "path": "scripts/lib/safe-artifact-write.mjs",
+      "sha256": "a9f45996403c2366c9efde31c94d880d043776a92ded0d5e19da2875814a3443",
+      "size": 6057
+    },
+    {
+      "path": "scripts/lib/skillstead-svg-evidence.mjs",
+      "sha256": "2bd63e14655e6741c875ddb058e65f9ae6af444e0951608ccec58c8200c2a36c",
+      "size": 4286
     },
     {
       "path": "scripts/quality-source-anchors.mjs",
@@ -1200,14 +1355,29 @@
       "size": 71907
     },
     {
+      "path": "scripts/run-image-asset-workflow.mjs",
+      "sha256": "a4a033c01300cc1c3981c3a4ec5d5feafd0f125101a78ec92135948561fc719d",
+      "size": 22688
+    },
+    {
       "path": "scripts/stop-artifact-review.mjs",
-      "sha256": "d436ab4d9a399e1faca6f9f38d519bf29ad1d7a7235d4e6d984c4a732f76c637",
-      "size": 8521
+      "sha256": "b015573e99742b883971815715d7678a701021f8f00ff00340d9b8a02d554579",
+      "size": 21596
     },
     {
       "path": "scripts/validate-artifact.mjs",
       "sha256": "27d71aa55d379a3a659d61adafa85b2485a18cc633e5e3ead14399e549743865",
       "size": 25986
+    },
+    {
+      "path": "scripts/validate-image-assets.mjs",
+      "sha256": "c71ff88cabbd6e0a429975fda3b196234996616787e48a1d7cc283ee8cef8d0e",
+      "size": 23568
+    },
+    {
+      "path": "scripts/validate-image-config.mjs",
+      "sha256": "08be91a64ee41d09ec36c6f733b24ff9fa16025bd6709fe423a5cf567fc1ef60",
+      "size": 10004
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
@@ -1305,9 +1475,19 @@
       "size": 15475
     },
     {
+      "path": "skills/generate-image-assets/SKILL.md",
+      "sha256": "fa978cf839508f908e830785a61a6c41dd3ba5dab0322876ac5df8b96865bb56",
+      "size": 3362
+    },
+    {
+      "path": "skills/generate-image-assets/agents/openai.yaml",
+      "sha256": "e76bf8def40f1c0657eb7676e60839b820bf417433b0f7633f1107dd89f93e85",
+      "size": 237
+    },
+    {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "3fc68769670b8104a8432fbbbf2d9b11872907477891aaddb2428e499313aa9d",
-      "size": 2510
+      "sha256": "b8f4fb717d514a9b0d0e9159bc8b9438ef9d39ee7d9d39868c779b6ec5fe1e9f",
+      "size": 2875
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",
@@ -1360,6 +1540,16 @@
       "size": 245
     },
     {
+      "path": "skills/plan-image-assets/SKILL.md",
+      "sha256": "c5f60b3861c012e8e501c3f018449cc1cee4e3a47655d1b5326cd85c0882be6b",
+      "size": 3523
+    },
+    {
+      "path": "skills/plan-image-assets/agents/openai.yaml",
+      "sha256": "80de3b14f2ef444df23ea17a097e9c612cbac74bee3ffb43feada9db0e535ad0",
+      "size": 250
+    },
+    {
       "path": "skills/review-game-design/SKILL.md",
       "sha256": "f23ee6efd3c20b4a3bc5ae5377f1601a10a248aaf8b7070771265be4674d6d90",
       "size": 4014
@@ -1373,6 +1563,16 @@
       "path": "skills/review-game-design/references/review-contract.md",
       "sha256": "4d3078bd7e2887b1f6c89d0fa90777007015a891358a1b3d075f7cf14493bfeb",
       "size": 1556
+    },
+    {
+      "path": "skills/review-image-assets/SKILL.md",
+      "sha256": "7f3746dbe5f4660421507cd45ce66c4761da260aef6934032f493a6a2989cebe",
+      "size": 3116
+    },
+    {
+      "path": "skills/review-image-assets/agents/openai.yaml",
+      "sha256": "a7bae368e1365e60faeb52568d1b5b07993d0945be3419184ec42f05329d2133",
+      "size": 235
     },
     {
       "path": "skills/svg-infographic/CHANGELOG.md",
@@ -1626,12 +1826,12 @@
     },
     {
       "path": "skills/visualize-game-design/scripts/run-skillstead.mjs",
-      "sha256": "ec34d0acb533ccff6f027d03d8828783d3faa6ede4fdaa87178125127235920a",
-      "size": 2699
+      "sha256": "98d897f7c8ee0848592a926a1ccf0865838c2bf71064eda165e2d13f3a157220",
+      "size": 2769
     },
     {
       "path": "skills/visualize-game-design/scripts/validate-visualization-evidence.mjs",
-      "sha256": "3b1fa5373bcc6c7dcdee1c0800d6436b9ebcbd1774928880e2929efb236b47bc",
+      "sha256": "70338083cd3176599dd2475258e0d28aa88c794ca3a089234e02609ec263f9c5",
       "size": 26575
     }
   ]

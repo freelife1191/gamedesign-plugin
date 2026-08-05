@@ -29,6 +29,9 @@ const skillIds = [
   "review-game-design",
   "visualize-game-design",
   "export-game-design-documents",
+  "plan-image-assets",
+  "generate-image-assets",
+  "review-image-assets",
 ];
 
 const roleIds = [
@@ -40,6 +43,8 @@ const roleIds = [
   "liveops-data-designer",
   "production-feasibility-critic",
 ];
+
+const imageRoleIds = ["art-brief-director", "visual-asset-reviewer"];
 
 const templateIds = [
   "game-design-brief",
@@ -80,12 +85,18 @@ const qualityProfileIds = [
 ];
 
 const topLevelScriptIds = [
+  "build-image-asset-plan.mjs",
   "capability-probe.mjs",
+  "compile-image-prompts.mjs",
   "data-only-snapshot.mjs",
+  "generate-openai-images.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
+  "validate-image-assets.mjs",
+  "validate-image-config.mjs",
   "validate-quality-profile.mjs",
   "validate-reference-preset.mjs",
 ];
@@ -183,6 +194,7 @@ test("README exposes every shipped skill, role asset, profile, and canonical tem
   const readme = await readFile(readmePath, "utf8");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
+  assert.deepEqual(tableIds(readme, "이미지 전문 역할 레지스트리"), imageRoleIds);
   assert.deepEqual(tableIds(readme, "Canonical Artifact 템플릿"), templateIds);
 
   const [actualSkills, actualRoles, actualTemplates, actualProfiles] = await Promise.all([
@@ -197,7 +209,7 @@ test("README exposes every shipped skill, role asset, profile, and canonical tem
   );
   assert.deepEqual(
     actualRoles.filter((entry) => entry.isFile() && entry.name.endsWith(".md")).map(({ name }) => name.slice(0, -3)).sort(),
-    [...roleIds].sort(),
+    [...roleIds, ...imageRoleIds].sort(),
   );
   assert.deepEqual(
     actualTemplates.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort(),
@@ -258,6 +270,9 @@ test("README documents truthful installation, workflow, safety, visualization, e
     "SVG lint",
     "정확한 2× PNG",
     "네이티브 자동 발견을 보장하지",
+    "IMAGE_GEN_MODE",
+    "prompt-only",
+    "production-candidate는 release/legal/production approval이 아님",
   ]) {
     assert.ok(readme.includes(phrase), `missing operational boundary: ${phrase}`);
   }
@@ -297,6 +312,20 @@ test("README documents the closed Studio document-quality workflow and installed
   ]) {
     assert.ok(readme.includes(contract), `missing document-quality contract: ${contract}`);
   }
+  for (const imageContract of [
+    "root `.env.example`",
+    "tracked `.env`",
+    "IMAGE_MODEL=gpt-image-2",
+    "IMAGE_QUALITY=low",
+    "OpenAI only",
+    "Codex/host",
+    "immutable receipt",
+    "assets/prompts/image-prompts.md",
+    "assets/prompts/image-prompts.json",
+    "concept-draft → document-approved → production-candidate",
+    "Skillstead SVG",
+    "smoke:image:live",
+  ]) assert.ok(readme.includes(imageContract), `missing image operating contract: ${imageContract}`);
   assert.match(readme, /apply-document-quality-profile.*game-design-brief.*mobile.*function-first/su);
 });
 
@@ -440,9 +469,9 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
     ".codex-plugin/plugin.json",
-    "skills/ (12개)",
+    "skills/ (15개)",
     "skills/svg-infographic/",
-    "agents/ (7개)",
+    "agents/ (9개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",

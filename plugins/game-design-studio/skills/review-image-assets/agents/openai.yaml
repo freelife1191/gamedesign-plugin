@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Image Assets"
+  short_description: "Collect human image review evidence"
+  default_prompt: "Use $review-image-assets to collect named-human evidence and validate an image asset lifecycle transition."

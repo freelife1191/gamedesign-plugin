@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 11개, 이식 가능한 전문 역할 프롬프트 7개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, 17개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 12개입니다.
+플러그인은 제품 스킬 14개, 일반 역할 7개와 이미지 전문 역할 2개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, 17개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 15개입니다.
 
 ## 설치
 
@@ -78,11 +78,11 @@ codex plugin marketplace remove game-design-suite
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
-├── skills/ (12개)
-│   ├── <11개 Studio 제품 스킬>/
+├── skills/ (15개)
+│   ├── <14개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   └── svg-infographic/             # vendored Skillstead 0.8.3
-├── agents/ (7개)                    # 이식 가능한 전문 역할 프롬프트
+├── agents/ (9개)                    # 일반 7개와 이미지 전문 2개의 이식 가능한 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
 ├── scripts/                         # shared runtime
@@ -125,18 +125,24 @@ plugins/game-design-studio/
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
-검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (12개)`는 제품 스킬 11개와 `skills/svg-infographic/`이고 `agents/ (7개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
+검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (15개)`는 제품 스킬 14개와 `skills/svg-infographic/`이고 `agents/ (9개)`는 일반 registry 7개와 image specialist registry 2개로, 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
 
 ## 설치된 top-level scripts
 
 | 파일 | 역할 |
 | --- | --- |
+| `build-image-asset-plan.mjs` | profile과 artifact에서 image asset plan 생성 |
 | `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `compile-image-prompts.mjs` | Markdown/JSON prompt package 생성 |
 | `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `run-image-asset-workflow.mjs` | image workflow composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-image-assets.mjs` | image manifest/lifecycle 검증 |
+| `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
 
@@ -264,6 +270,9 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 | `review-game-design` | 기준 산출물의 evidence, risk, readiness 검토 | traceable findings, minimal fixes, unresolved decision items |
 | `visualize-game-design` | loop, state, economy, timeline, dependency를 공간적으로 설명 | accessible SVG, 정확한 2× PNG와 검증 증거 또는 fallback |
 | `export-game-design-documents` | MD/PDF/DOCX/PPTX 파생본 준비와 QA | format별 capability, generation, renderer, output, QA manifest |
+| `plan-image-assets` | 이미지가 필요한 profile/brief를 계획할 때 | stable asset ID, placeholders, `assets/image-assets.yml`, Markdown/JSON prompts |
+| `generate-image-assets` | 명시적으로 선택/허용된 asset만 생성할 때 | provider policy, immutable selection receipt, truthful provenance 또는 placeholder |
+| `review-image-assets` | 사람의 이미지 검토를 기록할 때 | named human evidence, rights/provenance review와 approval transition |
 
 ## 전문 역할 프롬프트
 
@@ -278,6 +287,15 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 | `production-feasibility-critic` | contribution, effort evidence, dependencies, prototype, milestones, kill criteria | `scope-control` |
 
 역할은 산출물 전체를 다시 쓰거나 자신에게 없는 게이트를 승인하지 않습니다. finding에는 stable source ID, severity, evidence, impact, affected section, assumptions, minimal fix와 역할이 필요합니다.
+
+## 이미지 전문 역할 레지스트리
+
+| 역할 ID | 책임 | 경계 |
+| --- | --- | --- |
+| `art-brief-director` | art brief, prompt constraint, character/NPC/monster-boss/skill-VFX/environment/item/UI/story/key-art/document 요구사항 검토 | 일반 역할 priority/merge registry를 바꾸지 않고 approval authority가 없음 |
+| `visual-asset-reviewer` | 가독성, provenance, Skillstead 증거와 rights/privacy 누락 검토 | immutable receipt 또는 사람의 document/production decision을 대신하지 않음 |
+
+일반 역할 registry와 image specialist registry는 의도적으로 분리됩니다. 기존 7개 일반 역할의 병합 순서와 권한은 그대로이며, image specialist는 image workflow에만 명시적으로 연결됩니다.
 
 ## 근거와 최신성 정책
 
@@ -325,6 +343,34 @@ artifact-name/
 | `decision-change-log` | context, alternatives, evidence, rationale, approver, reopen condition |
 
 각 템플릿은 `content.md`, `evidence.yml`, `export-manifest.yml`, `decisions/README.md`, `assets/README.md`를 포함합니다. [템플릿 원천](assets/templates/)에서 전체 seed를 확인할 수 있습니다.
+
+## 이미지 asset workflow
+
+설치된 plugin root `.env.example`만 안전하게 추적합니다. tracked `.env`나 어떤 문서에도 실제 `OPENAI_API_KEY`를 붙여넣지 마십시오. 로컬 작업공간 root의 비추적 `.env`는 다음 안전한 기본값을 참고합니다.
+
+```dotenv
+IMAGE_GEN_MODE=prompt-only
+IMAGE_MODEL=gpt-image-2
+IMAGE_QUALITY=low
+OPENAI_API_KEY=
+```
+
+`IMAGE_GEN_MODE`는 정확히 `prompt-only`(기본값), `select`, `required`, `all`만 허용합니다. `IMAGE_MODEL=gpt-image-2`, `IMAGE_QUALITY=low`가 기본값이며 quality는 `low`, `medium`, `high`, `auto`만 허용합니다. `OPENAI_API_KEY`가 있으면 OpenAI only이며 API/auth/quota/request/policy/network 실패 후 Codex fallback은 금지됩니다. 키가 없고 host capability가 `available`이면 Codex/host를 사용할 수 있고, `unknown` 또는 `unavailable`이면 provider를 추측하지 않고 prompts/placeholders만 보존합니다.
+
+| mode | 실행 | provider/실패 경계 |
+| --- | --- | --- |
+| `prompt-only` | 외부 호출 0회, 계획·prompt·placeholder 생성 | 안전한 기본값; 모든 실패와 무관하게 package 유지 |
+| `select` | 실제 user stable IDs만 | 이름/순번/agent 추측은 안 되며 ordered IDs의 immutable receipt 전에는 호출 0회 |
+| `required` | manifest의 required asset만 | 유한 declared count만 처리 |
+| `all` | declared required/recommended/variant asset만 | 선언되지 않은 variant를 만들지 않음 |
+
+모든 mode는 `assets/image-assets.yml`, `assets/prompts/image-prompts.md`, `assets/prompts/image-prompts.json`, expected count와 placeholders를 유지합니다. 지원 유형은 character, NPC, monster/boss, skill/VFX, environment/landmark, item/equipment, UI icon, story/storyboard, key art/pitch concept, document illustration/cover, Skillstead diagram입니다.
+
+생성은 승인과 다릅니다. 승인 lifecycle은 `concept-draft → document-approved → production-candidate`이며 새 asset은 `concept-draft`로 시작합니다. 이름 있는 사람의 placement, alt text, evidence, rights/provenance 검토가 있어야 `document-approved`가 됩니다. 기술 적합성·게임 가독성·권리 검토가 더해진 상태가 `production-candidate`이며, **production-candidate는 release/legal/production approval이 아님**입니다. generated/host provenance와 applied model/quality는 host가 실제로 보고한 값만 기록합니다. 사람 검토는 저작권, 개인정보, 제3자 자료, 민감 정보, 접근성과 맥락을 별도로 확인합니다.
+
+Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 alt text를 제공하고 product wrapper lint, renderer, 정확한 @2x PNG, visual QA, evidence를 분리합니다. SVG/PNG가 생성됐다는 사실은 approval이 아닙니다. MD/PDF/DOCX/PPTX의 final derivative는 document-approved 이상 asset만 참조하고, PPTX는 독립 story와 visual QA를 별도로 통과해야 합니다.
+
+`npm run smoke:image:live`는 한 장의 실제 외부 generation을 위한 explicit opt-in입니다. 기본 test, build, marketplace smoke는 no-network이며 이를 실행하지 않습니다. image capability가 없으면 plan만 남기고 capability를 확인합니다. renderer가 없으면 linted SVG와 실패 근거를 보존하고 PNG 성공을 주장하지 않습니다. manifest 또는 prompt가 없으면 `plan-image-assets`를 먼저 실행하고, select가 멈추면 실제 user stable IDs와 immutable receipt를 확인합니다.
 
 ## 사용 예시
 

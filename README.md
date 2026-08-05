@@ -15,8 +15,8 @@ Game Design Plugin Suite는 전문 게임 기획을 두 개의 독립 Codex 플�
 | --- | --- | --- |
 | 주요 사용자 | 현업·인디 게임 기획자, 프로듀서, 개발팀 | 입문자, 취업 준비생, 주니어, 이직 준비자 |
 | 대표 작업 | GDD, 규칙·상태, 콘텐츠, UI/UX, 경제, LiveOps, 범위·리스크 | 역할 맵, 채용 근거, 역기획, 포트폴리오, 면접, 성장 계획 |
-| 제품 스킬 | 11개 | 11개 |
-| 전문 역할 프롬프트 | 7개 | 7개 |
+| 제품 스킬 | 14개 | 14개 |
+| 전문 역할 프롬프트 | 일반 7개 + 이미지 전문 2개 | 일반 7개 + 이미지 전문 2개 |
 | Canonical Artifact 템플릿 | 15개 | 15개 |
 | 제품 프로필 | `universal-core`, `live-service-rpg`, `mobile`, `pc-console` | 경력 단계 `entry`, `new-hire`, `junior-growth`, `transition` |
 | 도식화 | 게임 루프, 상태, 경제, 콘텐츠, LiveOps, 의존성 | 역량 맵, 학습·경력 로드맵, 포트폴리오 구조 |
@@ -151,7 +151,7 @@ flowchart LR
 
 ### Hooks와 scripts
 
-각 독립 패키지에는 같은 두 hook과 8개 shared top-level runtime script가 있습니다.
+각 독립 패키지에는 같은 두 hook과 14개 shared top-level runtime script가 있습니다.
 
 | 경로 | 역할 |
 | --- | --- |
@@ -167,12 +167,18 @@ flowchart LR
 
 | 파일 | 역할 |
 | --- | --- |
+| `build-image-asset-plan.mjs` | 품질 profile과 artifact에서 결정론적 image asset plan 생성 |
 | `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `compile-image-prompts.mjs` | 사람용 Markdown과 기계용 JSON prompt package 생성 |
 | `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `generate-openai-images.mjs` | 명시적 OpenAI Images API adapter와 bounded staging/QA |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `run-image-asset-workflow.mjs` | plan/generate/review image workflow의 안전한 composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-image-assets.mjs` | asset manifest·generation/approval lifecycle 검증 |
+| `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
 
@@ -209,7 +215,7 @@ neutral preset의 authoring-only source 근거는 빌드에서 제외됩니다. 
 
 ## 스킬 카탈로그
 
-각 제품은 제품 스킬 11개와 vendored `svg-infographic` 1개, 총 12개 스킬을 포함합니다.
+각 제품은 제품 스킬 14개와 vendored `svg-infographic` 1개, 총 15개 스킬을 포함합니다.
 
 ### Game Design Studio
 
@@ -226,6 +232,9 @@ neutral preset의 authoring-only source 근거는 빌드에서 제외됩니다. 
 | `review-game-design` | 근거·모순·실행 가능성·책임 게이트 검토 |
 | `visualize-game-design` | 게임 기획 구조를 Skillstead SVG/2× PNG로 도식화 |
 | `export-game-design-documents` | MD/PDF/DOCX/PPTX 파생본과 QA manifest |
+| `plan-image-assets` | stable asset ID, placeholder, manifest와 dual prompt package 계획 |
+| `generate-image-assets` | 선택 receipt와 provider policy에 따른 유한 job 실행 또는 placeholder 보존 |
+| `review-image-assets` | 이름 있는 사람의 evidence/rights review로 image approval lifecycle 전이 |
 
 ### Game Design Career
 
@@ -242,6 +251,9 @@ neutral preset의 authoring-only source 근거는 빌드에서 제외됩니다. 
 | `plan-junior-growth` | 분기 증거 프로젝트, 피드백, 이직 준비도 |
 | `visualize-career-roadmap` | 역량·학습·경력·포트폴리오를 Skillstead로 도식화 |
 | `export-career-documents` | MD/PDF/DOCX/PPTX 파생본과 QA manifest |
+| `plan-image-assets` | stable asset ID, placeholder, manifest와 dual prompt package 계획 |
+| `generate-image-assets` | 선택 receipt와 provider policy에 따른 유한 job 실행 또는 placeholder 보존 |
+| `review-image-assets` | 이름 있는 사람의 evidence/rights review로 image approval lifecycle 전이 |
 
 `svg-infographic`은 [kyungseo/skillstead](https://github.com/kyungseo/skillstead)의 0.8.3 원본을 양쪽 패키지에 고정한 공통 스킬입니다.
 
@@ -258,6 +270,51 @@ neutral preset의 authoring-only source 근거는 빌드에서 제외됩니다. 
 | `production-feasibility-critic` | 의존성, 일정, 프로토타입, kill criteria | `evidence-auditor` | 출처, 최신성, 범위, 일반화 한계 |
 
 역할 프롬프트는 기준 산출물 전체를 임의로 다시 쓰거나 자신의 책임 밖 게이트를 승인하지 않습니다. finding은 source ID, severity, evidence, impact, affected section, assumptions와 최소 수정안을 유지합니다.
+
+### 이미지 전문 역할 레지스트리
+
+| 역할 ID | 책임 | 일반 역할과의 분리 |
+| --- | --- | --- |
+| `art-brief-director` | art brief, prompt 제약, character/NPC/monster-boss/skill-VFX/environment/item/UI/story/key-art/document 유형 검토 | 일반 역할 우선순위·병합 권한을 바꾸지 않으며 approval authority가 없음 |
+| `visual-asset-reviewer` | output readability, provenance, Skillstead evidence와 rights/privacy 누락 검토 | 사람의 immutable receipt나 document/production approval을 대신할 수 없음 |
+
+일반 역할 레지스트리와 image specialist registry를 분리해 기존 일반 검토 체인·우선순위는 7개로 고정합니다. 두 이미지 전문 역할은 필요한 image workflow에만 명시적으로 배치되며 승인자가 아닙니다.
+
+## 이미지 asset workflow
+
+각 독립 플러그인의 root `.env.example`은 설치 안전한 예시입니다. tracked `.env`에 실제 키를 쓰거나 채팅/문서에 키를 붙여넣지 마십시오. 실제 설정은 설치된 플러그인의 작업공간 root `.env`에서만 읽고 Git에는 `.env.example`만 추적합니다.
+
+```dotenv
+IMAGE_GEN_MODE=prompt-only
+IMAGE_MODEL=gpt-image-2
+IMAGE_QUALITY=low
+OPENAI_API_KEY=
+```
+
+`IMAGE_GEN_MODE`의 허용 값은 정확히 `prompt-only`, `select`, `required`, `all` 네 가지이며 기본값은 `prompt-only`입니다. `IMAGE_MODEL=gpt-image-2`, `IMAGE_QUALITY=low`가 기본값이고 품질은 `low`, `medium`, `high`, `auto`만 허용합니다. `OPENAI_API_KEY`는 OpenAI Images API에만 전달되는 비밀값이며 public manifest, prompt, 로그, receipt에는 기록하지 않습니다.
+
+| mode | 실행 범위 | prompt/placeholder | 선택·비용 경계 |
+| --- | --- | --- | --- |
+| `prompt-only` | 외부 provider 호출 0회 | 항상 유지 | 기본값, 계획만 수행 |
+| `select` | 실제 사용자가 고른 stable asset ID만 | 항상 유지 | user stable IDs와 immutable receipt 전에는 호출 0회 |
+| `required` | manifest에 선언된 required asset만 | 항상 유지 | 유한한 required count만 비용/대기 발생 |
+| `all` | 선언된 required/recommended/variant asset만 | 항상 유지 | manifest 밖 variant를 만들지 않음 |
+
+provider/failure matrix는 다음과 같습니다. API key가 있으면 **OpenAI only**입니다. 인증, quota, request, policy, network 실패 뒤에도 Codex fallback을 하지 않습니다. API key가 없고 host capability가 `available`이면 Codex/host만 사용할 수 있습니다. capability가 `unknown` 또는 `unavailable`이면 provider를 추측하지 않고 prompts/placeholders를 유지합니다. local runtime은 private host endpoint를 호출하지 않습니다.
+
+| API key | host capability | provider 결과 | 실패 또는 불확실성 |
+| --- | --- | --- | --- |
+| 있음 | 어떤 값이든 | OpenAI only | 실패도 OpenAI 실패로 기록, fallback 없음 |
+| 없음 | `available` | Codex/host | host가 실제 보고한 applied model/quality만 provenance에 기록 |
+| 없음 | `unknown`/`unavailable` | provider 없음 | prompts/placeholders와 generation-unavailable 상태 유지 |
+
+계획은 모든 mode에서 `assets/image-assets.yml`, `assets/prompts/image-prompts.md`, `assets/prompts/image-prompts.json`을 유지하고 expected count와 placeholder를 기록합니다. 지원 유형은 character, NPC, monster/boss, skill/VFX, environment/landmark, item/equipment, UI icon, story/storyboard, key art/pitch concept, document illustration/cover, Skillstead diagram입니다.
+
+generation 상태와 승인 상태는 별개입니다. 새 asset은 `concept-draft`이며, 이름 있는 사람의 placement·alt text·evidence·rights/provenance 검토로만 `document-approved`, 그 뒤 기술 적합성·게임 가독성·권리 검토가 추가된 `production-candidate`로 이동합니다. `production-candidate는 release/legal/production approval이 아님`: 출시, 법무, 실제 제작 승인을 주장하지 않습니다. generated/host provenance는 사실대로 남기며 host가 applied model/quality를 보고하지 않으면 값을 발명하지 않습니다. 사람 검토는 제3자 권리, 개인정보, 민감 정보, 접근성, 사실성 및 맥락을 별도로 확인해야 합니다.
+
+Skillstead SVG는 도식화의 권위 있는 원본입니다. 정확히 하나의 title/desc와 alt text를 제공하고 product wrapper lint, renderer, 정확한 @2x PNG, visual QA, evidence를 분리합니다. lint 통과나 PNG 존재만으로 approval이 되지 않습니다. MD/PDF/DOCX/PPTX export의 final derivative는 document-approved 이상 image만 참조할 수 있으며, PPTX는 제목 분할이 아닌 독립 story와 visual QA를 추가로 요구합니다.
+
+`npm run smoke:image:live`는 한 장의 외부 generation을 위한 explicit opt-in live smoke입니다. 기본 test/build/smoke는 no-network이고 이를 실행하지 않습니다. image capability가 없으면 plan만 보존하고 host capability를 확인합니다. render가 없으면 SVG와 실패 근거를 보존하며 PNG 성공을 주장하지 않습니다. manifest/prompt가 없으면 먼저 `plan-image-assets`를 실행하고, select가 멈추면 stable ID와 immutable receipt가 실제 user input에서 왔는지 확인합니다.
 
 ## 지식과 근거
 

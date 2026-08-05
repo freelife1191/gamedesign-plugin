@@ -11,7 +11,10 @@
     "review-game-design",
     "visualize-game-design",
     "export-game-design-documents",
-    "apply-document-quality-profile"
+    "apply-document-quality-profile",
+    "plan-image-assets",
+    "generate-image-assets",
+    "review-image-assets"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -22,6 +25,7 @@
     "production-feasibility-critic",
     "document-quality-editor"
   ],
+  "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
   "profileIds": ["live-service-rpg", "mobile", "pc-console"],
   "rolePriority": [
     "lead-game-designer",
@@ -45,7 +49,10 @@
       "skills/review-game-design/SKILL.md",
       "skills/visualize-game-design/SKILL.md",
       "skills/export-game-design-documents/SKILL.md",
-      "skills/apply-document-quality-profile/SKILL.md"
+      "skills/apply-document-quality-profile/SKILL.md",
+      "skills/plan-image-assets/SKILL.md",
+      "skills/generate-image-assets/SKILL.md",
+      "skills/review-image-assets/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -56,6 +63,7 @@
       "agents/production-feasibility-critic.md",
       "agents/document-quality-editor.md"
     ],
+    "imageSpecialists": ["agents/art-brief-director.md", "agents/visual-asset-reviewer.md"],
     "profiles": [
       "references/profiles/universal-core.json",
       "references/profiles/live-service-rpg.json",

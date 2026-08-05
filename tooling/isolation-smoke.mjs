@@ -27,7 +27,7 @@ const EXPECTED_HOOKS = Object.freeze({
   SessionStart: {
     command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
     timeout: 10,
-    statusMessage: "Detecting optional game-design capabilities",
+    statusMessage: "Detecting optional game-design and image capabilities",
   },
   Stop: {
     command: 'node "${PLUGIN_ROOT}/scripts/stop-artifact-review.mjs"',
@@ -167,7 +167,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });
   const skills = skillEntries.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
-  if (skills.length !== 12) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
+  if (skills.length !== 15) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
   for (const skill of skills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
 
   const vendorFileCount = await verifyVendor(pluginRoot);
@@ -234,6 +234,29 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   });
   if (!profileValidation.ok) throw new Error(`${productName} isolated quality-profile validation failed`);
 
+  const imageWorkflow = await import(`${pathToFileURL(path.join(pluginRoot, "scripts/run-image-asset-workflow.mjs")).href}?isolation=${Date.now()}`);
+  const imageProfile = {
+    profile_id: "isolated-image-plan", version: 1, artifact_types: ["design-document"], audiences: ["design"],
+    required_sections: [{ id: "visuals", title: "Visuals" }], required_tables: [{ id: "visual-table", section_id: "visuals", columns: ["Signal"] }],
+    required_diagrams: [{ id: "diagram", section_id: "visuals", purpose: "Explain the documented visual direction.", alt_text: "Readable diagram." }], required_images: [{ id: "hero", section_id: "visuals", purpose: "Explain the documented visual direction.", alt_text: "Readable planning placeholder." }],
+    recommended_images: [], length_guidance: { min_words: 1, max_words: 10 }, ppt_story_contract: {}, acceptance_criteria: ["Readable"],
+    export_rules: { required_formats: ["md"], forbidden_formats: [] }, quality_checks: ["visual"],
+  };
+  const imageArtifact = {
+    artifact_id: `${productName}-isolated-image-plan`,
+    image_needs: [{ slot_id: "hero", type: "character", scene: "A readable neutral scene.", subject: "An original silhouette.", composition: "Centered.", visual_style: "Original illustration.", readability: "Readable at planning scale.", width: 1024, height: 1024 }],
+  };
+  const imagePlan = await imageWorkflow.planImageAssetWorkflow({ artifactRoot: artifact, artifact: imageArtifact, qualityProfile: imageProfile });
+  const [promptMarkdown, promptJson, persistedManifest] = await Promise.all([
+    readFile(path.join(artifact, "assets/prompts/image-prompts.md"), "utf8"),
+    readFile(path.join(artifact, "assets/prompts/image-prompts.json"), "utf8"),
+    readFile(path.join(artifact, "assets/image-assets.yml"), "utf8").then(JSON.parse),
+  ]);
+  if (imagePlan.summary.total !== 1 || imagePlan.manifest.assets.length !== 1 || persistedManifest.assets[0]?.generation_state !== "prompt-ready"
+      || persistedManifest.assets[0]?.approval_state !== "concept-draft" || !promptMarkdown.includes("Expected count: 1") || JSON.parse(promptJson).prompts?.length !== 1) {
+    throw new Error(`${productName} isolated prompt-only image plan mismatch`);
+  }
+
   const sentinel = '<!-- game-design-plugin:artifact {"path":"artifact","formats":["md"]} -->';
   const stop = runProcess(process.execPath, [path.join(pluginRoot, "scripts/stop-artifact-review.mjs")], {
     cwd: workspace,
@@ -260,6 +283,12 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
       profileId: application.selection.primaryProfileId,
       selectionReason: application.selection.selectionReason,
       validationOk: profileValidation.ok,
+    },
+    imagePlan: {
+      networkCalls: 0,
+      generationCalls: 0,
+      placeholders: imagePlan.summary.total,
+      promptFiles: ["assets/prompts/image-prompts.json", "assets/prompts/image-prompts.md"],
     },
   };
 }
