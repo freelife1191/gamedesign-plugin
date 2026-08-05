@@ -26,6 +26,7 @@ const sharedMappings = new Map([
   ["responsible-design", ["shared/responsible-design", "references/shared/responsible-design"]],
   ["export", ["shared/export", "references/shared/export"]],
   ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
+  ["image-assets", ["shared/image-assets", "references/shared/image-assets"]],
 ]);
 
 async function readJson(relativePath) {
@@ -101,7 +102,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -248,7 +249,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "document-quality"],
+    sharedModules: [...fixtureProduct.sharedModules, "document-quality", "image-assets"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;

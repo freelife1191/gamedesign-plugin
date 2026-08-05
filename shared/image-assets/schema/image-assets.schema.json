@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/image-assets/schema/image-assets.schema.json",
+  "title": "Image asset manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "assets"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/asset" }
+    }
+  },
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_id", "type", "requirement", "generation_state", "approval_state", "purpose", "placement",
+        "alt_text", "readability", "art_brief", "prompt", "output", "provider", "rights", "reviews"
+      ],
+      "properties": {
+        "asset_id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "type": { "enum": ["character", "npc", "monster-boss", "skill-vfx", "environment-landmark", "item-equipment", "ui-icon", "story-storyboard", "key-art-pitch-concept", "document-illustration-cover", "skillstead-diagram"] },
+        "requirement": { "enum": ["required", "recommended", "variant"] },
+        "generation_state": { "enum": ["planned", "prompt-ready", "selected", "generation-pending", "generated", "generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"] },
+        "approval_state": { "enum": ["concept-draft", "document-approved", "production-candidate"] },
+        "purpose": { "type": "string", "minLength": 1 },
+        "placement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["document_slot", "source_section"],
+          "properties": {
+            "document_slot": { "enum": ["cover", "hero", "inline", "section", "appendix", "diagram"] },
+            "source_section": { "type": "string", "pattern": "^content\\.md#[a-z][a-z0-9-]*$" }
+          }
+        },
+        "alt_text": { "type": "string", "minLength": 1 },
+        "readability": { "type": "string", "minLength": 1 },
+        "art_brief": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["subject", "visual_style", "composition", "preserve", "exclude"],
+          "properties": {
+            "subject": { "type": "string", "minLength": 1 },
+            "visual_style": { "type": "string", "minLength": 1 },
+            "composition": { "type": "string", "minLength": 1 },
+            "preserve": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+            "exclude": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "prompt": { "type": "string", "minLength": 1 },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "width", "height", "aspect_ratio", "format", "background"],
+          "properties": {
+            "path": { "type": "string", "pattern": "^assets/generated/[A-Za-z0-9._/-]+$" },
+            "width": { "type": "integer", "minimum": 1, "maximum": 8192 },
+            "height": { "type": "integer", "minimum": 1, "maximum": 8192 },
+            "aspect_ratio": { "type": "string", "pattern": "^\\d{1,4}:\\d{1,4}$" },
+            "format": { "enum": ["png", "jpeg", "webp", "svg"] },
+            "background": { "enum": ["transparent", "opaque", "contextual"] }
+          }
+        },
+        "provider": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "model", "quality"],
+          "properties": {
+            "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+            "model": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+            "quality": { "enum": ["low", "medium", "high", "auto"] }
+          }
+        },
+        "rights": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["provenance", "rights_holder", "license"],
+          "properties": {
+            "provenance": { "type": "string", "minLength": 1 },
+            "rights_holder": { "type": "string", "minLength": 1 },
+            "license": { "type": "string", "minLength": 1 }
+          }
+        },
+        "reviews": { "type": "array", "items": { "$ref": "image-review.schema.json" } },
+        "technical_fit": { "type": "string", "minLength": 1 },
+        "gameplay_readability": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "approval_state": { "const": "production-candidate" } }, "required": ["approval_state"] },
+          "then": { "required": ["technical_fit", "gameplay_readability"] }
+        }
+      ]
+    }
+  }
+}
