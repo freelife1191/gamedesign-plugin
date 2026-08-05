@@ -77,6 +77,7 @@ function planAsset(need, slot, requirement) {
     requirement,
     generation_state: "prompt-ready",
     approval_state: "concept-draft",
+    planning: { upstream_slot_id: slot.id, disposition: "active" },
     purpose: `${slot.purpose} Scene direction: ${scene}`,
     placement: { document_slot: requirement === "recommended" ? "cover" : "inline", source_section: `content.md#${slot.section_id}` },
     alt_text: slot.alt_text,
@@ -114,10 +115,33 @@ function validationError(result, label) {
 
 function markForReplanReview(asset) {
   const retained = clone(asset);
-  retained.generation_state = "qa-failed";
-  const marker = " Human replan review required because the upstream slot was removed.";
-  if (!retained.readability.includes(marker.trim())) retained.readability += marker;
+  retained.planning = { ...retained.planning, disposition: "replan-review-required" };
   return retained;
+}
+
+function planningFieldsChanged(existing, planned) {
+  const fields = ["type", "requirement", "purpose", "placement", "alt_text", "readability", "art_brief", "prompt", "output"];
+  return fields.some((field) => JSON.stringify(existing[field]) !== JSON.stringify(planned[field]));
+}
+
+function mergeExistingAsset(existing, planned) {
+  const changed = planningFieldsChanged(existing, planned);
+  const disposition = changed || existing.planning.disposition === "replan-review-required"
+    ? "replan-review-required"
+    : "active";
+  const next = {
+    ...planned,
+    planning: { upstream_slot_id: planned.planning.upstream_slot_id, disposition },
+    generation_state: existing.generation_state,
+    approval_state: existing.approval_state,
+    provider: clone(existing.provider),
+    rights: clone(existing.rights),
+    reviews: clone(existing.reviews),
+  };
+  if (!changed) next.output = clone(existing.output);
+  if (Object.hasOwn(existing, "technical_fit")) next.technical_fit = existing.technical_fit;
+  if (Object.hasOwn(existing, "gameplay_readability")) next.gameplay_readability = existing.gameplay_readability;
+  return next;
 }
 
 export function buildImageAssetPlan({ artifact, qualityProfile, existingManifest = null } = {}) {
@@ -148,7 +172,10 @@ export function buildImageAssetPlan({ artifact, qualityProfile, existingManifest
     if (!existingValidation.ok) throw new Error(validationError(existingValidation, "Invalid existing image manifest"));
     for (const asset of existingManifest.assets) existingById.set(asset.asset_id, clone(asset));
   }
-  const assets = planned.map((asset) => existingById.get(asset.asset_id) ?? asset);
+  const assets = planned.map((asset) => {
+    const existing = existingById.get(asset.asset_id);
+    return existing ? mergeExistingAsset(existing, asset) : asset;
+  });
   const plannedIds = new Set(planned.map(({ asset_id }) => asset_id));
   for (const asset of existingById.values()) if (!plannedIds.has(asset.asset_id)) assets.push(markForReplanReview(asset));
   const manifest = { schema_version: 1, assets };
@@ -169,14 +196,15 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
   if (!validation.ok) throw new Error(validationError(validation, "Invalid image manifest"));
   if (!Array.isArray(selectedAssetIds)) throw new Error("selectedAssetIds must be an array.");
   if (mode === "prompt-only") return [];
-  if (mode === "required") return manifest.assets.filter(({ requirement, generation_state }) => requirement === "required" && generation_state === "prompt-ready").map(clone);
-  if (mode === "all") return manifest.assets.filter(({ generation_state }) => generation_state === "prompt-ready").map(clone);
+  if (mode === "required") return manifest.assets.filter(({ requirement, generation_state, planning }) => requirement === "required" && generation_state === "prompt-ready" && planning.disposition === "active").map(clone);
+  if (mode === "all") return manifest.assets.filter(({ generation_state, planning }) => generation_state === "prompt-ready" && planning.disposition === "active").map(clone);
   const selected = new Set();
   for (const assetId of selectedAssetIds) {
     if (selected.has(assetId)) throw new Error(`Duplicate selected asset ID: ${assetId}`);
     selected.add(assetId);
     const asset = manifest.assets.find(({ asset_id }) => asset_id === assetId);
     if (!asset) throw new Error(`Unknown selected asset ID: ${assetId}`);
+    if (asset.planning.disposition !== "active") throw new Error(`Selected asset requires replan review: ${assetId}`);
     if (asset.generation_state !== "prompt-ready") throw new Error(`Selected asset is not prompt-ready: ${assetId}`);
   }
   return manifest.assets.filter(({ asset_id }) => selected.has(asset_id)).map(clone);

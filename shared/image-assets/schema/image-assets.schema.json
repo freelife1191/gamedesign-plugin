@@ -17,7 +17,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "asset_id", "type", "requirement", "generation_state", "approval_state", "purpose", "placement",
+        "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement",
         "alt_text", "readability", "art_brief", "prompt", "output", "provider", "rights", "reviews"
       ],
       "properties": {
@@ -26,6 +26,15 @@
         "requirement": { "enum": ["required", "recommended", "variant"] },
         "generation_state": { "enum": ["planned", "prompt-ready", "selected", "generation-pending", "generated", "generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"] },
         "approval_state": { "enum": ["concept-draft", "document-approved", "production-candidate"] },
+        "planning": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["upstream_slot_id", "disposition"],
+          "properties": {
+            "upstream_slot_id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+            "disposition": { "enum": ["active", "replan-review-required"] }
+          }
+        },
         "purpose": { "type": "string", "minLength": 1 },
         "placement": {
           "type": "object",

@@ -11,6 +11,7 @@ const generationStates = new Set([
   "generation-unavailable", "generation-failed", "policy-blocked", "qa-failed",
 ]);
 const approvalStates = new Set(["concept-draft", "document-approved", "production-candidate"]);
+const planningDispositions = new Set(["active", "replan-review-required"]);
 const documentSlots = new Set(["cover", "hero", "inline", "section", "appendix", "diagram"]);
 const qualities = new Set(["low", "medium", "high", "auto"]);
 const outputFormats = new Set(["png", "jpeg", "webp", "svg"]);
@@ -128,7 +129,7 @@ function validateAsset(asset, index, artifactRoot) {
   const assetPath = `assets[${index}]`;
   if (!isObject(asset)) return [error("invalid_asset", assetPath, "Assets must be objects.")];
   rejectUnknownProperties(errors, asset, new Set([
-    "asset_id", "type", "requirement", "generation_state", "approval_state", "purpose", "placement", "alt_text", "readability",
+    "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement", "alt_text", "readability",
     "art_brief", "prompt", "output", "provider", "rights", "reviews", "technical_fit", "gameplay_readability",
   ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
@@ -136,6 +137,17 @@ function validateAsset(asset, index, artifactRoot) {
   if (!requirements.has(asset.requirement)) errors.push(error("invalid_requirement", `${assetPath}.requirement`, "Asset requirement is not approved."));
   if (!generationStates.has(asset.generation_state)) errors.push(error("invalid_generation_state", `${assetPath}.generation_state`, "Generation state is not approved."));
   if (!approvalStates.has(asset.approval_state)) errors.push(error("invalid_approval_state", `${assetPath}.approval_state`, "Approval state is not approved."));
+  if (!isObject(asset.planning)) {
+    errors.push(error("invalid_planning", `${assetPath}.planning`, "A planning disposition and upstream slot binding are required."));
+  } else {
+    rejectUnknownProperties(errors, asset.planning, new Set(["upstream_slot_id", "disposition"]), `${assetPath}.planning`);
+    if (!assetIdPattern.test(asset.planning.upstream_slot_id ?? "")) {
+      errors.push(error("invalid_upstream_slot_id", `${assetPath}.planning.upstream_slot_id`, "Planning must bind to a stable upstream slot ID."));
+    }
+    if (!planningDispositions.has(asset.planning.disposition)) {
+      errors.push(error("invalid_planning_disposition", `${assetPath}.planning.disposition`, "Planning disposition is not approved."));
+    }
+  }
 
   pushRequiredString(errors, asset.purpose, `${assetPath}.purpose`);
   if (!isObject(asset.placement)) {

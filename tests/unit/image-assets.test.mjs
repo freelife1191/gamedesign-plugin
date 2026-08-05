@@ -84,6 +84,7 @@ function manifest(overrides = {}) {
     requirement: "required",
     generation_state: "planned",
     approval_state: "concept-draft",
+    planning: { upstream_slot_id: "hero-knight", disposition: "active" },
     purpose: "Establish the playable knight in the player-experience section.",
     placement: { document_slot: "inline", source_section: "content.md#player-experience" },
     alt_text: "An armored knight standing beside a windswept banner.",
@@ -168,6 +169,22 @@ test("accepts each closed generation state independently from approval state", a
   const result = validateImageAssetManifest(manifest({ asset: { generation_state: "not-a-state" } }), { artifactRoot: root });
   assert.equal(result.ok, false);
   assert.ok(result.errors.some(({ code, path: errorPath }) => code === "invalid_generation_state" && errorPath === "assets[0].generation_state"));
+});
+
+test("requires a closed planning disposition and explicit upstream slot binding without changing generation or approval semantics", async (t) => {
+  const root = await artifactRoot(t);
+  const { manifestSchema, externalSchemas } = await imageAssetSchema();
+  const valid = manifest();
+  assert.equal(validateImageAssetManifest(valid, { artifactRoot: root }).ok, true);
+  assert.equal(schemaAccepts(valid, manifestSchema, externalSchemas), true);
+
+  const missing = manifest({ asset: { planning: undefined } });
+  const injected = manifest({ asset: { planning: { upstream_slot_id: "hero-knight", disposition: "active", release_approved: true } } });
+  const invalid = manifest({ asset: { planning: { upstream_slot_id: "not a stable id", disposition: "auto-approved" } } });
+  for (const value of [missing, injected, invalid]) {
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false);
+    assert.equal(schemaAccepts(value, manifestSchema, externalSchemas), false);
+  }
 });
 
 test("accepts approved categories and requirements while rejecting unknown enum values", async (t) => {

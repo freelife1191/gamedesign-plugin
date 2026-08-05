@@ -2,14 +2,64 @@ import { createHash } from "node:crypto";
 
 import { validateImageAssetManifest } from "./validate-image-assets.mjs";
 
-const requiredPatternFields = ["schema_version", "id", "purpose_medium", "view"];
+const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
+const patternFields = ["schema_version", "id", "purpose_medium", "view"];
+const allowedExclusions = new Set(["logo", "watermark", "unrequested text", "third-party intellectual property", "branded source identity"]);
+
+function compilationError(code) {
+  const error = new Error("Image prompt compilation rejected unsafe or invalid input.");
+  error.code = code;
+  return error;
+}
+
+function reject(code) {
+  throw compilationError(code);
+}
+
+function safePatternText(value) {
+  return typeof value === "string" && value.trim() !== "" && value.length <= 512 && !/[\u0000-\u001f\u007f]/u.test(value);
+}
 
 function assertPattern(pattern, name) {
   if (pattern === null || typeof pattern !== "object" || Array.isArray(pattern)
-    || requiredPatternFields.some((field) => typeof pattern[field] !== (field === "schema_version" ? "number" : "string"))) {
-    throw new Error(`Invalid prompt pattern: ${name}`);
-  }
+    || Object.keys(pattern).length !== patternFields.length || Object.keys(pattern).some((field) => !patternFields.includes(field))
+    || pattern.schema_version !== 1 || pattern.id !== name || !safePatternText(pattern.purpose_medium) || !safePatternText(pattern.view)) reject("invalid_pattern_catalog");
   return pattern;
+}
+
+function assertPatternCatalog(catalog) {
+  if (catalog === null || typeof catalog !== "object" || Array.isArray(catalog)
+    || Object.keys(catalog).length !== patternNames.length || Object.keys(catalog).some((name) => !patternNames.includes(name))) {
+    reject("invalid_pattern_catalog");
+  }
+  for (const name of patternNames) assertPattern(catalog[name], name);
+}
+
+function isAllowedExclusion(path, value) {
+  return path.at(-1) === "exclude" && allowedExclusions.has(value);
+}
+
+function unsafeString(value) {
+  return /\b(?:api[_ -]?key|authorization|bearer)\b/iu.test(value)
+    || /\b(?:sk|rk|pk)_[A-Za-z0-9_-]{8,}\b/iu.test(value)
+    || /[A-Za-z0-9+/]{80,}={0,2}/u.test(value)
+    || /\b(?:logo|watermark|unrequested text|third[- ]party (?:ip|intellectual property))\b/iu.test(value)
+    || /\b(?:source|company|project|preset|studio|brand)\b.{0,48}\b(?:identity|name|preset|source)\b/iu.test(value)
+    || /\b(?:in the style of|style of|inspired by)\b/iu.test(value);
+}
+
+function assertSafeStrings(value, path = []) {
+  if (typeof value === "string") {
+    if (!isAllowedExclusion(path, value) && unsafeString(value)) reject("unsafe_prompt_content");
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((child) => assertSafeStrings(child, path));
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, child] of Object.entries(value)) assertSafeStrings(child, [...path, key]);
+  }
 }
 
 function patternName(type) {
@@ -68,9 +118,11 @@ function markdownFor(entries) {
     lines.push(`## ${entry.asset_id}`, "", `- Slot: ${entry.slot}`, `- Type: ${entry.type}`,
       `- Dimensions: ${entry.dimensions.width}x${entry.dimensions.height} (${entry.dimensions.aspect_ratio})`,
       `- Generation state: ${entry.generation_state}`, `- Approval state: ${entry.approval_state}`,
+      `- Planning disposition: ${entry.planning_disposition}`, `- Generation background: ${entry.generation_background}`,
       `- Prompt digest: ${entry.prompt_digest}`, `- Preserve: ${entry.preserve.join("; ")}`,
       `- Exclude: ${entry.exclude.join("; ")}`);
-    if (entry.postprocess_requirements.length > 0) lines.push(`- Postprocess requirements: ${entry.postprocess_requirements.join("; ")}`);
+    lines.push(`- Postprocess requirements: ${entry.postprocess_requirements.join("; ") || "none"}`);
+    lines.push(`- Semantic record: ${JSON.stringify(entry)}`);
     lines.push("", entry.prompt, "");
   }
   return `${lines.join("\n")}\n`;
@@ -79,21 +131,22 @@ function markdownFor(entries) {
 export function compileImagePrompts({ manifest, patternCatalog } = {}) {
   const validation = validateImageAssetManifest(manifest);
   if (!validation.ok) throw new Error(`Invalid image manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
-  if (patternCatalog === null || typeof patternCatalog !== "object" || Array.isArray(patternCatalog)) {
-    throw new Error("patternCatalog must be an object.");
-  }
+  assertPatternCatalog(patternCatalog);
+  assertSafeStrings(manifest);
+  assertSafeStrings(patternCatalog);
   const prompts = manifest.assets.map((asset) => {
     const prompt = promptFor(asset, patternCatalog);
     const postprocessRequirements = alphaRequirements(asset);
     return {
       asset_id: asset.asset_id,
-      slot: asset.asset_id,
+      slot: asset.planning.upstream_slot_id,
       type: asset.type,
       dimensions: { width: asset.output.width, height: asset.output.height, aspect_ratio: asset.output.aspect_ratio },
       preserve: [...asset.art_brief.preserve],
       exclude: [...asset.art_brief.exclude],
       generation_state: asset.generation_state,
       approval_state: asset.approval_state,
+      planning_disposition: asset.planning.disposition,
       generation_background: postprocessRequirements.length === 0 ? asset.output.background : "opaque",
       postprocess_requirements: postprocessRequirements,
       prompt,

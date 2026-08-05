@@ -63,8 +63,17 @@ async function patternCatalog() {
   ])));
 }
 
+function compiledManifest() {
+  return buildImageAssetPlan({ artifact, qualityProfile }).manifest;
+}
+
+function markdownSemanticEntries(markdown) {
+  return [...markdown.matchAll(/^## [^\n]+\n\n(?:[\s\S]*?)- Semantic record: (\{[^\n]+\})\n\n/mgu)]
+    .map(([, record]) => JSON.parse(record));
+}
+
 test("compileImagePrompts emits semantically equivalent Markdown and JSON prompt packages without secrets or source identities", async () => {
-  const { manifest } = buildImageAssetPlan({ artifact, qualityProfile });
+  const manifest = compiledManifest();
   const compiled = compileImagePrompts({ manifest, patternCatalog: await patternCatalog() });
   const payload = JSON.parse(compiled.json);
 
@@ -74,16 +83,16 @@ test("compileImagePrompts emits semantically equivalent Markdown and JSON prompt
   assert.match(compiled.markdown, /Expected count: 2/);
   assert.match(compiled.markdown, /Mode scope: manifest-declared/);
   assert.deepEqual(compiled.promptDigests, payload.prompts.map(({ asset_id, prompt_digest }) => ({ asset_id, prompt_digest })));
-  assert.deepEqual(payload.prompts.map(({ asset_id, slot, type, dimensions, generation_state, approval_state }) => ({
-    asset_id, slot, type, dimensions, generation_state, approval_state,
+  assert.deepEqual(payload.prompts.map(({ asset_id, slot, type, dimensions, generation_state, approval_state, planning_disposition }) => ({
+    asset_id, slot, type, dimensions, generation_state, approval_state, planning_disposition,
   })), [
     {
       asset_id: "hero-sequence", slot: "hero-sequence", type: "character", dimensions: { width: 1024, height: 1024, aspect_ratio: "1:1" },
-      generation_state: "prompt-ready", approval_state: "concept-draft",
+      generation_state: "prompt-ready", approval_state: "concept-draft", planning_disposition: "active",
     },
     {
       asset_id: "ability-icon", slot: "ability-icon", type: "ui-icon", dimensions: { width: 1024, height: 1024, aspect_ratio: "1:1" },
-      generation_state: "prompt-ready", approval_state: "concept-draft",
+      generation_state: "prompt-ready", approval_state: "concept-draft", planning_disposition: "active",
     },
   ]);
   assert.ok(payload.prompts.every(({ preserve, exclude, prompt_digest }) => (
@@ -97,17 +106,20 @@ test("compileImagePrompts emits semantically equivalent Markdown and JSON prompt
     assert.match(compiled.markdown, new RegExp(`- Dimensions: ${entry.dimensions.width}x${entry.dimensions.height} \\(${entry.dimensions.aspect_ratio}\\)`));
     assert.match(compiled.markdown, new RegExp(`- Generation state: ${entry.generation_state}`));
     assert.match(compiled.markdown, new RegExp(`- Approval state: ${entry.approval_state}`));
+    assert.match(compiled.markdown, new RegExp(`- Planning disposition: ${entry.planning_disposition}`));
+    assert.match(compiled.markdown, new RegExp(`- Generation background: ${entry.generation_background}`));
     assert.match(compiled.markdown, new RegExp(`- Preserve: ${entry.preserve.join("; ")}`));
     assert.match(compiled.markdown, new RegExp(`- Exclude: ${entry.exclude.join("; ")}`));
     assert.match(compiled.markdown, new RegExp(entry.prompt_digest));
     assert.ok(compiled.markdown.includes(entry.prompt));
     assert.ok(entry.prompt.includes("Purpose and medium:"));
   }
+  assert.deepEqual(markdownSemanticEntries(compiled.markdown), payload.prompts);
   assert.doesNotMatch(`${compiled.markdown}\n${compiled.json}`, /api[_ -]?key|authorization|base64|openai|preset|company/iu);
 });
 
 test("compiled prompts keep the required prompt order, character anchor, exclusions, and verified UI alpha postprocess", async () => {
-  const { manifest } = buildImageAssetPlan({ artifact, qualityProfile });
+  const manifest = compiledManifest();
   const { json } = compileImagePrompts({ manifest, patternCatalog: await patternCatalog() });
   const prompts = JSON.parse(json).prompts;
   const character = prompts.find(({ asset_id }) => asset_id === "hero-sequence");
@@ -131,4 +143,47 @@ test("compiled prompts keep the required prompt order, character anchor, exclusi
   assert.deepEqual(icon.postprocess_requirements, ["verified alpha postprocess", "edge QA"]);
   assert.match(icon.prompt, /opaque generation/i);
   assert.match(icon.prompt, /verified alpha postprocess/i);
+});
+
+test("compileImagePrompts preserves the upstream slot for variants and carries the planning disposition", async () => {
+  const variantArtifact = structuredClone(artifact);
+  variantArtifact.image_needs.push({
+    ...variantArtifact.image_needs[0],
+    variant: "close-up",
+    sequence: false,
+  });
+  const manifest = buildImageAssetPlan({ artifact: variantArtifact, qualityProfile }).manifest;
+  const compiled = JSON.parse(compileImagePrompts({ manifest, patternCatalog: await patternCatalog() }).json);
+  const variant = compiled.prompts.find(({ asset_id }) => asset_id === "hero-sequence-close-up");
+  assert.equal(variant.slot, "hero-sequence");
+
+  const stale = structuredClone(manifest);
+  stale.assets[0].planning.disposition = "replan-review-required";
+  const catalog = await patternCatalog();
+  const stalePrompt = JSON.parse(compileImagePrompts({ manifest: stale, patternCatalog: catalog }).json).prompts[0];
+  assert.equal(stalePrompt.planning_disposition, "replan-review-required");
+});
+
+test("compileImagePrompts rejects hostile catalog and manifest strings with redacted structured errors", async () => {
+  const catalog = await patternCatalog();
+  const manifest = compiledManifest();
+  const secret = "sk_task3_super_secret_123456789";
+  const hostileManifest = structuredClone(manifest);
+  hostileManifest.assets[0].art_brief.subject = `Bearer ${secret}`;
+  assert.throws(() => compileImagePrompts({ manifest: hostileManifest, patternCatalog: catalog }), (error) => (
+    error.code === "unsafe_prompt_content" && !error.message.includes(secret) && !JSON.stringify(error).includes(secret)
+  ));
+
+  const hostileCatalog = structuredClone(catalog);
+  hostileCatalog.character.purpose_medium = "A source company project preset identity.";
+  assert.throws(() => compileImagePrompts({ manifest, patternCatalog: hostileCatalog }), (error) => error.code === "unsafe_prompt_content");
+
+  for (const invalidCatalog of [
+    { ...catalog, base: { ...catalog.base, schema_version: 2 } },
+    { ...catalog, base: { ...catalog.base, id: "wrong" } },
+    { ...catalog, base: { ...catalog.base, extra: "injected" } },
+    { ...catalog, base: { ...catalog.base, purpose_medium: "" } },
+  ]) {
+    assert.throws(() => compileImagePrompts({ manifest, patternCatalog: invalidCatalog }), (error) => error.code === "invalid_pattern_catalog");
+  }
 });
