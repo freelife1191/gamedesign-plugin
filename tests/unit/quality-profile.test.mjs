@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -10,7 +10,7 @@ import { composeQualityProfile, loadQualityProfile } from "../../shared/scripts/
 function profile(overrides = {}) {
   return {
     profile_id: "studio-default",
-    version: "1.0.0",
+    version: 1,
     artifact_types: ["design-document"],
     audiences: ["production-team"],
     required_sections: [
@@ -35,6 +35,31 @@ function profile(overrides = {}) {
   };
 }
 
+function schemaAccepts(value, rootSchema, schema = rootSchema) {
+  if (schema.$ref) {
+    const target = schema.$ref.slice(2).split("/").reduce((current, segment) => current[segment], rootSchema);
+    return schemaAccepts(value, rootSchema, target);
+  }
+  if (schema.type === "object") {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+    if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
+    if (schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) return false;
+    return Object.entries(value).every(([key, child]) => !schema.properties?.[key] || schemaAccepts(child, rootSchema, schema.properties[key]));
+  }
+  if (schema.type === "array") {
+    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0)) return false;
+    if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
+    return value.every((item) => schemaAccepts(item, rootSchema, schema.items));
+  }
+  if (schema.type === "string") {
+    return typeof value === "string"
+      && value.length >= (schema.minLength ?? 0)
+      && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
+  }
+  if (schema.type === "integer") return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  return true;
+}
+
 function errorCodes(value) {
   return validateQualityProfile(value).errors.map(({ code }) => code);
 }
@@ -45,9 +70,38 @@ test("validates the closed quality-profile contract without mutating input", () 
 
   assert.deepEqual(validateQualityProfile(value), { ok: true, errors: [] });
   assert.deepEqual(value, before);
+  assert.ok(errorCodes({ ...value, version: "1.0.0" }).includes("version.invalid"));
   assert.ok(errorCodes({ ...value, unknown: true }).includes("schema.additional_property"));
   assert.ok(errorCodes({ ...value, required_sections: [...value.required_sections, value.required_sections[0]] }).includes("id.duplicate"));
   assert.ok(errorCodes({ ...value, acceptance_criteria: [] }).includes("array.empty"));
+});
+
+test("runtime validator and JSON Schema agree on nested optional fields and asset strings", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/document-quality/schema/quality-profile.schema.json", import.meta.url), "utf8"));
+  const cases = [
+    ["optional nested fields omitted", true, profile({
+      required_tables: [{ id: "system-summary", section_id: "systems" }],
+      required_diagrams: [{ id: "core-loop", section_id: "systems" }],
+      required_images: [{ id: "hero-image", section_id: "overview" }],
+      recommended_images: [],
+      ppt_story_contract: {},
+      export_rules: {},
+    })],
+    ["optional asset title is empty", false, profile({
+      required_tables: [{ id: "system-summary", section_id: "systems", title: "" }],
+    })],
+    ["optional asset purpose has wrong type", false, profile({
+      required_diagrams: [{ id: "core-loop", section_id: "systems", purpose: 42 }],
+    })],
+    ["optional asset alt text is empty", false, profile({
+      required_images: [{ id: "hero-image", section_id: "overview", alt_text: "" }],
+    })],
+  ];
+
+  for (const [name, expected, value] of cases) {
+    assert.equal(schemaAccepts(value, schema), expected, `${name}: schema`);
+    assert.equal(validateQualityProfile(value).ok, expected, `${name}: runtime`);
+  }
 });
 
 test("rejects dangling section and PPT slot references", () => {
@@ -151,6 +205,19 @@ test("composition rejects removal directives from overlays and presets", () => {
   );
 });
 
+test("composition validates the primary and rejects contradictions introduced by each source", () => {
+  const contradictoryPrimary = profile({ export_rules: { required_formats: ["pdf"], forbidden_formats: ["pdf"] } });
+  assert.throws(() => composeQualityProfile({ primary: contradictoryPrimary }), /invalid primary quality profile.*export\.contradiction/i);
+
+  assert.throws(
+    () => composeQualityProfile({
+      primary: profile({ export_rules: { required_formats: ["pdf"], forbidden_formats: [] } }),
+      overlays: [{ profile_id: "no-pdf", export_rules: { forbidden_formats: ["pdf"] } }],
+    }),
+    /invalid composed quality profile.*no-pdf.*export\.contradiction/i,
+  );
+});
+
 test("loads a validated profile only from a safe non-symlink profile path", async (t) => {
   const root = await mkdtemp(path.join(tmpdir(), "quality-profile-test-"));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -175,5 +242,11 @@ test("loads a validated profile only from a safe non-symlink profile path", asyn
   await assert.rejects(
     () => loadQualityProfile({ pluginRoot: path.join(root, "plugin-alias/plugin-dir"), profileId: "studio-default" }),
     /symlink/i,
+  );
+
+  await writeFile(path.join(profilesRoot, "mismatch.json"), `${JSON.stringify(profile(), null, 2)}\n`);
+  await assert.rejects(
+    () => loadQualityProfile({ pluginRoot: root, profileId: "mismatch" }),
+    /profile id mismatch/i,
   );
 });

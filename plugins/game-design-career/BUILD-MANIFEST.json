@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "927ae3be805bef984bccc9c55206ce727565aca8ea0f7ac0d582609cd180e3ca",
+  "treeSha256": "edf578bf4985e57647dba1db02c55d9c907014c946bd819443ad057d1d1d5d06",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -555,6 +555,16 @@
       "size": 18935
     },
     {
+      "path": "references/shared/document-quality/schema/quality-profile-selection.schema.json",
+      "sha256": "9d1c7d9b1a5aae2cab82e200ecf575fdafa4a3acec2076c177f85f8eea6fcf72",
+      "size": 690
+    },
+    {
+      "path": "references/shared/document-quality/schema/quality-profile.schema.json",
+      "sha256": "33d962d1b8f410a2b3bf8aecb591301a97da9402586b803fa2bad0cb540528f3",
+      "size": 4453
+    },
+    {
       "path": "references/shared/export/qa-contracts/docx.md",
       "sha256": "7fded22baeb562bd3195a8dd31547e91363626d40ebd03ca238c4a81a60b884d",
       "size": 446
@@ -930,6 +940,11 @@
       "size": 9750
     },
     {
+      "path": "scripts/resolve-quality-profile.mjs",
+      "sha256": "2a3ff27543ce645be51dcb15e42920d5427679a0dc55a49b2bc4db4c26f8e237",
+      "size": 6355
+    },
+    {
       "path": "scripts/stop-artifact-review.mjs",
       "sha256": "d436ab4d9a399e1faca6f9f38d519bf29ad1d7a7235d4e6d984c4a732f76c637",
       "size": 8521
@@ -938,6 +953,11 @@
       "path": "scripts/validate-artifact.mjs",
       "sha256": "8c9c1d31ad921c2dde563c0502230b900e6dc596a05303cb7f9f19cfe5c10319",
       "size": 23426
+    },
+    {
+      "path": "scripts/validate-quality-profile.mjs",
+      "sha256": "e9e6d9ca8b848759290da3ccd53d00567ddda5614e9c73c0925510d06d6e57dc",
+      "size": 9727
     },
     {
       "path": "skills/build-game-design-portfolio/SKILL.md",

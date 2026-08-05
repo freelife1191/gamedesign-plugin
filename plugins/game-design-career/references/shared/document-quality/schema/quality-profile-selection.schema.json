@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/document-quality/schema/quality-profile-selection.schema.json",
+  "title": "Document quality profile selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["primary_profile_id"],
+  "properties": {
+    "primary_profile_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "overlay_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+    },
+    "preset_id": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    }
+  }
+}
