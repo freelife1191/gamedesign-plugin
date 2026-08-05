@@ -25,6 +25,7 @@ const sharedMappings = new Map([
   ["templates", ["shared/templates", "assets/shared/templates"]],
   ["responsible-design", ["shared/responsible-design", "references/shared/responsible-design"]],
   ["export", ["shared/export", "references/shared/export"]],
+  ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
 ]);
 
 async function readJson(relativePath) {
@@ -100,7 +101,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -217,6 +218,12 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   ]);
   assert.equal(schema.oneOf.length, 2);
 
+  const qualitySchema = await readJson("shared/document-quality/schema/quality-profile.schema.json");
+  const selectionSchema = await readJson("shared/document-quality/schema/quality-profile-selection.schema.json");
+  assert.equal(qualitySchema.additionalProperties, false);
+  assert.equal(selectionSchema.additionalProperties, false);
+  assert.deepEqual(selectionSchema.required, ["primary_profile_id"]);
+
   const fixtureRoot = await mkdtemp(path.join(tmpdir(), "shared-contract-product-"));
   const stagingRoot = await mkdtemp(path.join(tmpdir(), "shared-contract-build-"));
   t.after(() => Promise.all([
@@ -241,6 +248,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
+    sharedModules: [...fixtureProduct.sharedModules, "document-quality"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;
@@ -269,6 +277,29 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   assert.equal(built.files.filter((file) => file.startsWith("references/source/docs/")).length, 49);
 
   await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLock });
+  const [studioBuild, careerBuild] = await Promise.all([
+    buildProduct({
+      repoRoot,
+      productName: "game-design-studio",
+      stagingRoot: await mkdtemp(path.join(stagingRoot, "studio-quality-")),
+      sourceDateEpoch: 0,
+    }),
+    buildProduct({
+      repoRoot,
+      productName: "game-design-career",
+      stagingRoot: await mkdtemp(path.join(stagingRoot, "career-quality-")),
+      sourceDateEpoch: 0,
+    }),
+  ]);
+  const qualityFiles = studioBuild.files.filter((file) => file.startsWith("references/shared/document-quality/"));
+  assert.deepEqual(qualityFiles, careerBuild.files.filter((file) => file.startsWith("references/shared/document-quality/")));
+  for (const relativePath of qualityFiles) {
+    assert.deepEqual(
+      await readFile(path.join(studioBuild.outputDir, relativePath)),
+      await readFile(path.join(careerBuild.outputDir, relativePath)),
+      `${relativePath}: products receive byte-identical shared quality contracts`,
+    );
+  }
   await assert.rejects(
     () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
     /Unexpected product contract: products\/unexpected-product\/product\.json/,

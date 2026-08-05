@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/document-quality/schema/quality-profile.schema.json",
+  "title": "Document quality profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile_id",
+    "version",
+    "artifact_types",
+    "audiences",
+    "required_sections",
+    "required_tables",
+    "required_diagrams",
+    "required_images",
+    "recommended_images",
+    "length_guidance",
+    "ppt_story_contract",
+    "acceptance_criteria",
+    "export_rules",
+    "quality_checks"
+  ],
+  "$defs": {
+    "stableId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sectionAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "section_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "section_id": { "$ref": "#/$defs/stableId" },
+        "title": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "alt_text": { "type": "string", "minLength": 1 },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "properties": {
+    "profile_id": { "$ref": "#/$defs/stableId" },
+    "version": { "type": "string", "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$" },
+    "artifact_types": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } },
+    "audiences": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } },
+    "required_sections": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/section" } },
+    "required_tables": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sectionAsset" } },
+    "required_diagrams": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sectionAsset" } },
+    "required_images": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/sectionAsset" } },
+    "recommended_images": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/sectionAsset" } },
+    "length_guidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_words": { "type": "integer", "minimum": 0 },
+        "max_words": { "type": "integer", "minimum": 0 },
+        "min_pages": { "type": "integer", "minimum": 0 },
+        "max_pages": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ppt_story_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_slides": { "type": "integer", "minimum": 1 },
+        "max_slides": { "type": "integer", "minimum": 1 },
+        "required_diagram_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } },
+        "required_image_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } },
+        "story_rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "order"],
+            "properties": {
+              "id": { "$ref": "#/$defs/stableId" },
+              "order": { "type": "integer", "minimum": 1 },
+              "section_id": { "$ref": "#/$defs/stableId" },
+              "diagram_id": { "$ref": "#/$defs/stableId" },
+              "image_id": { "$ref": "#/$defs/stableId" }
+            }
+          }
+        }
+      }
+    },
+    "acceptance_criteria": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "export_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_formats": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } },
+        "forbidden_formats": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } }
+      }
+    },
+    "quality_checks": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } }
+  }
+}

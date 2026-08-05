@@ -14,7 +14,7 @@ const allowedKeys = new Set([
   "sourceDocuments",
   "sourceDocumentCategories",
 ]);
-const allowedModules = new Set(["knowledge", "templates", "responsible-design", "export", "vendor"]);
+const allowedModules = new Set(["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality"]);
 const pluginNamePattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
 function requireString(value, label) {

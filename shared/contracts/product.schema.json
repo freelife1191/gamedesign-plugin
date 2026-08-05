@@ -25,7 +25,7 @@
       "type": "array",
       "uniqueItems": true,
       "items": {
-        "enum": ["knowledge", "templates", "responsible-design", "export", "vendor"]
+        "enum": ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality"]
       }
     },
     "sharedRuntime": { "const": true },

@@ -82,6 +82,43 @@ test("shared content is mapped before the product overlay without emitting symli
   assert.equal(await hasSymlink(result.outputDir), false);
 });
 
+test("document-quality is copied deterministically and rejects collisions and symlinks", async (t) => {
+  await t.test("byte-identical deterministic copy", async (t) => {
+    const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("document-quality");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await writeText(repoRoot, "shared/document-quality/schema/profile.json", "{\"stable\":true}\n");
+    });
+    const result = await buildProduct({ ...fixture, productName: "minimal-product" });
+    const destination = "references/shared/document-quality/schema/profile.json";
+    assert.ok(result.files.includes(destination));
+    assert.deepEqual(
+      await readFile(path.join(result.outputDir, destination)),
+      await readFile(path.join(fixture.repoRoot, "shared/document-quality/schema/profile.json")),
+    );
+  });
+
+  await t.test("content collision", async (t) => {
+    const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("document-quality");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await writeText(repoRoot, "shared/document-quality/collision.txt", "shared\n");
+      await writeText(repoRoot, "products/minimal-product/plugin/references/shared/document-quality/collision.txt", "product\n");
+    });
+    await assert.rejects(() => buildProduct({ ...fixture, productName: "minimal-product" }), /content collision/i);
+  });
+
+  await t.test("source symlink", async (t) => {
+    const fixture = await createRepo(t, async ({ contract, repoRoot }) => {
+      contract.sharedModules.push("document-quality");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await mkdir(path.join(repoRoot, "shared/document-quality"), { recursive: true });
+      await symlink("../export/export.md", path.join(repoRoot, "shared/document-quality/export-link.md"));
+    });
+    await assert.rejects(() => buildProduct({ ...fixture, productName: "minimal-product" }), /symlink/i);
+  });
+});
+
 test("different bytes targeting one package path are rejected", async (t) => {
   const fixture = await createRepo(t, async ({ repoRoot }) => {
     await writeText(repoRoot, "products/minimal-product/plugin/hooks/runtime.mjs", "different\n");
