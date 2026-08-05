@@ -14,6 +14,7 @@ const sharedMappings = {
   export: ["shared/export", "references/shared/export"],
   vendor: ["shared/vendor/skillstead/svg-infographic/0.8.3", "skills/svg-infographic"],
   "document-quality": ["shared/document-quality", "references/shared/document-quality"],
+  "image-assets": ["shared/image-assets", "references/shared/image-assets"],
 };
 const snapshotStagingCapabilities = new WeakSet();
 
@@ -230,6 +231,17 @@ function addEntry(targets, entry, destinationPrefix, sourceLabel) {
   targets.set(relativePath, { bytes: entry.bytes, relativePath, sourceLabel });
 }
 
+function isRealEnvironmentFile(relativePath) {
+  const name = path.posix.basename(relativePath);
+  return name === ".env" || (name.startsWith(".env.") && name !== ".env.example");
+}
+
+function assertNoRealEnvironmentFiles(entries, sourceLabel) {
+  if (entries.some(({ relativePath }) => isRealEnvironmentFile(relativePath))) {
+    throw new Error(`Real .env or secret environment variant is not allowed in ${sourceLabel}`);
+  }
+}
+
 function rejectFileDirectoryCollisions(entries) {
   const files = new Set(entries.map(({ relativePath }) => relativePath));
   for (const { relativePath } of entries) {
@@ -284,12 +296,19 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     const [sourceRelative, destinationPrefix] = sharedMappings[moduleName];
     await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
     const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
+    assertNoRealEnvironmentFiles(entries, sourceRelative);
     for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+    if (moduleName === "image-assets") {
+      const example = entries.find(({ relativePath }) => relativePath === ".env.example");
+      if (!example) throw new Error("Missing shared/image-assets/.env.example");
+      addEntry(targets, example, "", "shared:image-assets-root-example");
+    }
   }
 
   for (const [sourceRelative, destinationPrefix] of [["shared/hooks", "hooks"], ["shared/scripts", "scripts"]]) {
     await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared runtime");
     const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
+    assertNoRealEnvironmentFiles(entries, sourceRelative);
     for (const entry of entries) addEntry(targets, entry, destinationPrefix, "shared:runtime");
   }
 
@@ -301,6 +320,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     await assertNoSymlinkPath(absoluteRepoRoot, `products/${productName}/${sourceRoot}`, "source root");
     const sourceDirectory = joinWithin(productRoot, sourceRoot, "product source root");
     const entries = await collectTree(sourceDirectory, { label: `products/${productName}/${sourceRoot}` });
+    assertNoRealEnvironmentFiles(entries, `products/${productName}/${sourceRoot}`);
     for (const entry of entries) addEntry(targets, entry, "", `product:${sourceRoot}`);
   }
 

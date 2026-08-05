@@ -119,6 +119,57 @@ test("document-quality is copied deterministically and rejects collisions and sy
   });
 });
 
+test("image-assets is packaged with an exact root example and rejects unsafe package inputs", async (t) => {
+  async function imageFixture(t, mutate = async () => {}) {
+    return createRepo(t, async ({ contract, repoRoot, stagingRoot }) => {
+      contract.sharedModules.push("image-assets");
+      await writeJson(path.join(repoRoot, "products/minimal-product/product.json"), contract);
+      await writeText(repoRoot, "shared/image-assets/.env.example", "IMAGE_GEN_MODE=prompt-only\nOPENAI_API_KEY=\n");
+      await writeText(repoRoot, "shared/image-assets/schema/image-config.schema.json", "{}\n");
+      await mutate({ contract, repoRoot, stagingRoot });
+    });
+  }
+
+  await t.test("exact deterministic root and reference copies", async (t) => {
+    const fixture = await imageFixture(t);
+    const result = await buildProduct({ ...fixture, productName: "minimal-product" });
+    const source = await readFile(path.join(fixture.repoRoot, "shared/image-assets/.env.example"));
+    assert.deepEqual(await readFile(path.join(result.outputDir, ".env.example")), source);
+    assert.deepEqual(await readFile(path.join(result.outputDir, "references/shared/image-assets/.env.example")), source);
+    assert.ok(result.files.includes("references/shared/image-assets/schema/image-config.schema.json"));
+    assert.equal(result.files.some((file) => path.basename(file) === ".env"), false);
+  });
+
+  await t.test("different product root example is a collision", async (t) => {
+    const fixture = await imageFixture(t, async ({ repoRoot }) => {
+      await writeText(repoRoot, "products/minimal-product/plugin/.env.example", "different\n");
+    });
+    await assert.rejects(() => buildProduct({ ...fixture, productName: "minimal-product" }), /content collision/i);
+  });
+
+  await t.test("real env files are rejected", async (t) => {
+    const fixture = await imageFixture(t, async ({ repoRoot }) => {
+      await writeText(repoRoot, "shared/image-assets/.env", "OPENAI_API_KEY=must-not-package\n");
+    });
+    await assert.rejects(() => buildProduct({ ...fixture, productName: "minimal-product" }), /real \.env|secret environment/i);
+  });
+
+  await t.test("source symlinks are rejected", async (t) => {
+    const fixture = await imageFixture(t, async ({ repoRoot }) => {
+      await symlink(".env.example", path.join(repoRoot, "shared/image-assets/example-link"));
+    });
+    await assert.rejects(() => buildProduct({ ...fixture, productName: "minimal-product" }), /symlink/i);
+  });
+
+  await t.test("undeclared module is not packaged", async (t) => {
+    const fixture = await createRepo(t, async ({ repoRoot }) => {
+      await writeText(repoRoot, "shared/image-assets/.env.example", "IMAGE_GEN_MODE=all\n");
+    });
+    const result = await buildProduct({ ...fixture, productName: "minimal-product" });
+    assert.equal(result.files.some((file) => file.includes("image-assets") || file === ".env.example"), false);
+  });
+});
+
 test("different bytes targeting one package path are rejected", async (t) => {
   const fixture = await createRepo(t, async ({ repoRoot }) => {
     await writeText(repoRoot, "products/minimal-product/plugin/hooks/runtime.mjs", "different\n");

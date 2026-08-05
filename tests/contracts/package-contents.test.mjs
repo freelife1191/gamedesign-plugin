@@ -36,6 +36,20 @@ async function packagedEntries(productName) {
   return collectTree(path.join(repoRoot, "plugins", productName), { label: `plugins/${productName}` });
 }
 
+test("temporary product builds package exact image configuration examples without a real .env", async (t) => {
+  const sourceExample = await readFile(path.join(repoRoot, "shared/image-assets/.env.example"));
+  for (const productName of productNames) {
+    const build = await cleanBuild(t, productName);
+    const rootExample = await readFile(path.join(build.outputDir, ".env.example"));
+    const referenceExample = await readFile(path.join(build.outputDir, "references/shared/image-assets/.env.example"));
+    assert.deepEqual(rootExample, sourceExample, `${productName}: root example bytes`);
+    assert.deepEqual(referenceExample, sourceExample, `${productName}: reference example bytes`);
+    assert.equal(build.files.some((file) => path.basename(file) === ".env"), false, `${productName}: real .env`);
+    assert.ok(build.files.includes("references/shared/image-assets/schema/image-config.schema.json"));
+    assert.ok(build.files.includes("scripts/validate-image-config.mjs"));
+  }
+});
+
 test("temporary product builds package neutral presets without authoring evidence paths or source URL bytes", async (t) => {
   const policy = await readNeutralPresetPolicy(repoRoot);
   for (const productName of productNames) {

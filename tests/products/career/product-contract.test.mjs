@@ -99,7 +99,7 @@ test("Career product selects the complete shared contract and source corpus", as
   const product = await loadProductContract({ repoRoot, productName: "game-design-career" });
 
   assert.equal(product.name, "game-design-career");
-  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality"]);
+  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"]);
   assert.equal(product.sharedRuntime, true);
   assert.deepEqual(product.sourceRoots, ["plugin"]);
   assert.deepEqual(product.sourceDocumentCategories, ["career", "fun-intent", "systems", "content", "feedback"]);
