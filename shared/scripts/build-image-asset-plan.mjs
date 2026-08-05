@@ -7,6 +7,34 @@ const assetTypes = new Set([
 ]);
 const modes = new Set(["required", "all", "select", "prompt-only"]);
 const stableId = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+const selectorAllowedExclusions = new Set(["logo", "watermark", "unrequested text", "third-party intellectual property", "branded source identity"]);
+
+function selectorError(code) {
+  const error = new Error("Image generation selection rejected unsafe or legacy manifest input.");
+  error.code = code;
+  return error;
+}
+
+function selectorUnsafeString(value) {
+  return /(?:api[_ -]?key|authorization|bearer)/iu.test(value)
+    || /\bdata:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+\b/iu.test(value)
+    || /\bbase64\b/iu.test(value)
+    || /\b(?:sk|rk|pk)_[A-Za-z0-9_-]{8,}\b/iu.test(value);
+}
+
+function assertSafeSelectionStrings(value, path = []) {
+  if (typeof value === "string") {
+    if (!(path.at(-1) === "exclude" && selectorAllowedExclusions.has(value)) && selectorUnsafeString(value)) throw selectorError("unsafe_generation_manifest");
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => assertSafeSelectionStrings(item, path));
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const [key, item] of Object.entries(value)) assertSafeSelectionStrings(item, [...path, key]);
+  }
+}
 
 function assertObject(value, name) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${name} must be an object.`);
@@ -207,7 +235,9 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
   const validation = validateImageAssetManifest(manifest);
   if (!validation.ok) throw new Error(validationError(validation, "Invalid image manifest"));
   if (!Array.isArray(selectedAssetIds)) throw new Error("selectedAssetIds must be an array.");
+  assertSafeSelectionStrings(manifest);
   if (mode === "prompt-only") return [];
+  if (manifest.assets.some((asset) => asset.planning === undefined)) throw selectorError("legacy_manifest_requires_replan");
   if (mode === "required") return manifest.assets.filter(({ requirement, generation_state, planning }) => requirement === "required" && generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob);
   if (mode === "all") return manifest.assets.filter(({ generation_state, planning }) => generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob);
   const selected = new Set();

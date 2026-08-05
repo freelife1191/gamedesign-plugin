@@ -248,6 +248,35 @@ test("selectGenerationJobs returns the planning target output without mutating a
   assert.deepEqual(manifest, before);
 });
 
+test("selectGenerationJobs fails closed for valid legacy v1 manifests in generation modes without mutating them", () => {
+  const legacy = plan().manifest;
+  for (const asset of legacy.assets) delete asset.planning;
+  const before = structuredClone(legacy);
+  for (const options of [
+    { mode: "required" },
+    { mode: "all" },
+    { mode: "select", selectedAssetIds: ["boss-telegraph"] },
+  ]) {
+    assert.throws(() => selectGenerationJobs({ manifest: legacy, ...options }), (error) => (
+      error.code === "legacy_manifest_requires_replan" && !error.message.includes(legacy.assets[0].art_brief.subject)
+        && !JSON.stringify(error).includes(legacy.assets[0].art_brief.subject)
+    ));
+  }
+  assert.deepEqual(selectGenerationJobs({ manifest: legacy, mode: "prompt-only" }), []);
+  assert.deepEqual(legacy, before);
+});
+
+test("selectGenerationJobs validates prompt-only manifests and rejects secret-like input before returning zero jobs", () => {
+  const legacy = plan().manifest;
+  for (const asset of legacy.assets) delete asset.planning;
+  const secret = "OPENAI_API_KEY=opaque-secret-value";
+  legacy.assets[0].art_brief.subject = secret;
+
+  assert.throws(() => selectGenerationJobs({ manifest: legacy, mode: "prompt-only" }), (error) => (
+    error.code === "unsafe_generation_manifest" && !error.message.includes(secret) && !JSON.stringify(error).includes(secret)
+  ));
+});
+
 test("selectGenerationJobs rejects unknown, duplicate, and non-prompt-ready selections", () => {
   const manifest = plan().manifest;
   assert.throws(() => selectGenerationJobs({ manifest, mode: "select", selectedAssetIds: ["unknown"] }), /unknown/i);
