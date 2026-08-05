@@ -14,7 +14,7 @@ const approvalStates = new Set(["concept-draft", "document-approved", "productio
 const planningDispositions = new Set(["active", "replan-review-required"]);
 const documentSlots = new Set(["cover", "hero", "inline", "section", "appendix", "diagram"]);
 const qualities = new Set(["low", "medium", "high", "auto"]);
-const outputFormats = new Set(["png", "jpeg", "webp", "svg"]);
+const outputFormats = new Set(["png", "svg"]);
 const backgrounds = new Set(["transparent", "opaque", "contextual"]);
 const rightsDecisions = new Set(["approved", "restricted", "rejected", "needs-review"]);
 const effectiveRightsStatuses = new Set(["unreviewed", "active", "restricted", "revoked"]);
@@ -134,7 +134,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset)) return [error("invalid_asset", assetPath, "Assets must be objects.")];
   rejectUnknownProperties(errors, asset, new Set([
     "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement", "alt_text", "readability",
-    "art_brief", "prompt", "output", "provider", "generation_receipt", "rights", "reviews", "technical_fit", "gameplay_readability",
+    "art_brief", "prompt", "output", "provider", "generation_receipts", "rights", "reviews", "technical_fit", "gameplay_readability",
   ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
   if (!assetTypes.has(asset.type)) errors.push(error("invalid_asset_type", `${assetPath}.type`, "Asset type is not approved."));
@@ -166,17 +166,25 @@ function validateAsset(asset, index, artifactRoot) {
       }
       if (!nonEmptyString(target.aspect_ratio) || !/^\d{1,4}:\d{1,4}$/u.test(target.aspect_ratio)) errors.push(error("invalid_planning_target_aspect_ratio", `${assetPath}.planning.target_output.aspect_ratio`, "Planning target aspect ratio is required."));
       if (!outputFormats.has(target.format)) errors.push(error("invalid_planning_target_format", `${assetPath}.planning.target_output.format`, "Planning target format is not approved."));
+      if (outputFormats.has(target.format) && !target.path.endsWith(`.${target.format}`)) errors.push(error("planning_target_format_path_mismatch", `${assetPath}.planning.target_output.path`, "Planning target path extension must match the approved format."));
       if (!backgrounds.has(target.background)) errors.push(error("invalid_planning_target_background", `${assetPath}.planning.target_output.background`, "Planning target background is not approved."));
     }
   }
 
-  if (asset.generation_receipt !== undefined) {
-    if (!isObject(asset.generation_receipt)
-      || !exactKeys(asset.generation_receipt, ["path", "sha256"])
-      || !safeRelativePath(asset.generation_receipt.path, artifactRoot)
-      || !asset.generation_receipt.path.startsWith("assets/receipts/image-generation-")
-      || !/^[a-f0-9]{64}$/u.test(asset.generation_receipt.sha256 ?? "")) {
-      errors.push(error("invalid_generation_receipt", `${assetPath}.generation_receipt`, "Generation receipt must be a closed artifact-local digest binding."));
+  if (asset.generation_receipts !== undefined) {
+    if (!Array.isArray(asset.generation_receipts) || asset.generation_receipts.length === 0) {
+      errors.push(error("invalid_generation_receipts", `${assetPath}.generation_receipts`, "Generation receipt history must be a non-empty closed array."));
+    } else {
+      const attemptIds = new Set();
+      asset.generation_receipts.forEach((receipt, receiptIndex) => {
+        if (!isObject(receipt) || !exactKeys(receipt, ["attempt_id", "path", "sha256"])
+          || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(receipt.attempt_id ?? "") || attemptIds.has(receipt.attempt_id)
+          || !safeRelativePath(receipt.path, artifactRoot) || receipt.path !== `assets/receipts/image-generation-${asset.asset_id}-${receipt.attempt_id}.json`
+          || !/^[a-f0-9]{64}$/u.test(receipt.sha256 ?? "")) {
+          errors.push(error("invalid_generation_receipt", `${assetPath}.generation_receipts[${receiptIndex}]`, "Generation receipts must be closed immutable attempt bindings."));
+        }
+        attemptIds.add(receipt.attempt_id);
+      });
     }
   }
 
@@ -218,6 +226,7 @@ function validateAsset(asset, index, artifactRoot) {
     }
     if (!nonEmptyString(asset.output.aspect_ratio) || !/^\d{1,4}:\d{1,4}$/u.test(asset.output.aspect_ratio)) errors.push(error("invalid_aspect_ratio", `${assetPath}.output.aspect_ratio`, "Aspect ratio is required."));
     if (!outputFormats.has(asset.output.format)) errors.push(error("invalid_output_format", `${assetPath}.output.format`, "Output format is not approved."));
+    if (outputFormats.has(asset.output.format) && !asset.output.path.endsWith(`.${asset.output.format}`)) errors.push(error("output_format_path_mismatch", `${assetPath}.output.path`, "Output path extension must match the approved format."));
     if (!backgrounds.has(asset.output.background)) errors.push(error("invalid_background", `${assetPath}.output.background`, "Output background is not approved."));
   }
 

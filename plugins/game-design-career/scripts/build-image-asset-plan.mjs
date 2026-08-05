@@ -178,6 +178,7 @@ function mergeExistingAsset(existing, planned) {
     rights: clone(existing.rights),
     reviews: clone(existing.reviews),
   };
+  if (Object.hasOwn(existing, "generation_receipts")) next.generation_receipts = clone(existing.generation_receipts);
   if (existing.generation_state === "generated") next.output = clone(existing.output);
   if (Object.hasOwn(existing, "technical_fit")) next.technical_fit = existing.technical_fit;
   if (Object.hasOwn(existing, "gameplay_readability")) next.gameplay_readability = existing.gameplay_readability;
@@ -247,7 +248,7 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
     const asset = manifest.assets.find(({ asset_id }) => asset_id === assetId);
     if (!asset) throw new Error(`Unknown selected asset ID: ${assetId}`);
     if (asset.planning.disposition !== "active") throw new Error(`Selected asset requires replan review: ${assetId}`);
-    if (asset.generation_state !== "prompt-ready") throw new Error(`Selected asset is not prompt-ready: ${assetId}`);
+    if (!(asset.generation_state === "prompt-ready" || ["generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"].includes(asset.generation_state))) throw new Error(`Selected asset is not prompt-ready or retryable: ${assetId}`);
   }
   return manifest.assets.filter(({ asset_id }) => selected.has(asset_id)).map(generationJob);
 }

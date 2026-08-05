@@ -286,3 +286,26 @@ test("selectGenerationJobs rejects unknown, duplicate, and non-prompt-ready sele
   assert.throws(() => selectGenerationJobs({ manifest: nonReady, mode: "select", selectedAssetIds: ["boss-telegraph"] }), /prompt-ready/i);
   assert.throws(() => selectGenerationJobs({ manifest, mode: "unbounded" }), /mode/i);
 });
+
+test("only an explicit select retries a retryable failed stable asset", () => {
+  const manifest = plan().manifest;
+  manifest.assets[0].generation_state = "generation-failed";
+
+  assert.equal(selectGenerationJobs({ manifest, mode: "required" }).some(({ asset_id }) => asset_id === "boss-telegraph"), false);
+  assert.equal(selectGenerationJobs({ manifest, mode: "all" }).some(({ asset_id }) => asset_id === "boss-telegraph"), false);
+  assert.deepEqual(selectGenerationJobs({ manifest, mode: "select", selectedAssetIds: ["boss-telegraph"] }).map(({ asset_id }) => asset_id), ["boss-telegraph"]);
+});
+
+test("replanning preserves a closed generation receipt history for unchanged and changed assets", () => {
+  const existing = plan().manifest;
+  existing.assets[0].generation_state = "generation-failed";
+  existing.assets[0].generation_receipts = [{ attempt_id: "attempt-001", path: "assets/receipts/image-generation-boss-telegraph-attempt-001.json", sha256: "a".repeat(64) }];
+  const unchanged = buildImageAssetPlan({ artifact, qualityProfile, existingManifest: existing }).manifest.assets[0];
+  assert.deepEqual(unchanged.generation_receipts, existing.assets[0].generation_receipts);
+
+  const changedArtifact = structuredClone(artifact);
+  changedArtifact.image_needs[0].scene = "A changed arena.";
+  const changed = buildImageAssetPlan({ artifact: changedArtifact, qualityProfile, existingManifest: existing }).manifest.assets[0];
+  assert.deepEqual(changed.generation_receipts, existing.assets[0].generation_receipts);
+  assert.equal(changed.planning.disposition, "replan-review-required");
+});

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "89986e9d608032dc9f075b01df9f78d814af974899eebdfff5f3ea2374c88548",
+  "treeSha256": "dc12caa2148bf748ebe865b7ad1a86bf724b6f86f7747c8c45c3cdd423a50fcd",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -946,8 +946,8 @@
     },
     {
       "path": "references/shared/image-assets/schema/image-assets.schema.json",
-      "sha256": "2e747b62b6ec8c0fbac54d244ad2b0f79128f05c0be1f5967d2b43678c2ca3a9",
-      "size": 9437
+      "sha256": "6c606a88eb62857d69d5b99a219aee41961d16567d50070f764c97a2e66a0891",
+      "size": 9651
     },
     {
       "path": "references/shared/image-assets/schema/image-config.schema.json",
@@ -1296,8 +1296,8 @@
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
-      "sha256": "89949d6f2eaabfa7ae067721f92250a82ddd974ed480d83aa086322be2dbd647",
-      "size": 12180
+      "sha256": "4c4ccb5cb8a8220f393e1c5b257c2f73e56609a98662eb0c5a3dfb6f0aa2ca01",
+      "size": 12429
     },
     {
       "path": "scripts/capability-probe.mjs",
@@ -1326,8 +1326,8 @@
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
-      "sha256": "fea094251daae3f9ab6d4a9eb80ffbe05c3d68b79e03f26dcfbb043059f96695",
-      "size": 8755
+      "sha256": "7f813a5c6be979df64454ad9d6cfa990c4d8053cddf3ac6cad30e92b89e4c406",
+      "size": 5581
     },
     {
       "path": "scripts/lib/image-provider.mjs",
@@ -1356,13 +1356,13 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "de3b041e21b37d4dfba7e88d37c63432541faebcafc9db95e06cb8dd693fcb8e",
-      "size": 26055
+      "sha256": "2bae7c378b3d6cccbaa8854a396a839a523491fe1c0cb26bfa9031a4c23f5f09",
+      "size": 26711
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
-      "sha256": "45e319c1353898323c00a13bbf07f2bade15a1a0ba3d66e2df23ea9e15254069",
-      "size": 24613
+      "sha256": "dffa3f361d2df16a1fb8fe6014421d2261a6b59328832833f677c5699d2032fc",
+      "size": 24693
     },
     {
       "path": "scripts/validate-artifact.mjs",
@@ -1371,8 +1371,8 @@
     },
     {
       "path": "scripts/validate-image-assets.mjs",
-      "sha256": "c6c4988ecd8830bf2387143be2f370f3ba2c560f6d3cddc9a97c04d1aede1896",
-      "size": 24300
+      "sha256": "47ee230e65be6aeb9b4e130d8df3695b9a295a3f884a35cc65712993025389f3",
+      "size": 25325
     },
     {
       "path": "scripts/validate-image-config.mjs",

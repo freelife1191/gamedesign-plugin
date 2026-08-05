@@ -167,7 +167,7 @@ function managedMarkdownImageReferences(content) {
     const raw = match[1] ?? match[2];
     if (raw.includes("?") || raw.includes("#") || raw.includes("\\") || raw.includes("\0")) continue;
     const normalized = posix.normalize(raw);
-    if (!normalized.startsWith("assets/generated/") || !/\.(?:png|jpe?g|webp|svg)$/iu.test(normalized)) continue;
+    if (!normalized.startsWith("assets/generated/") || !/\.(?:png|svg)$/iu.test(normalized)) continue;
     references.push({ raw, path: normalized, alias: raw !== normalized || raw !== raw.normalize("NFC") });
   }
   return references;
@@ -198,16 +198,16 @@ function safeDigest(value) {
 }
 
 async function hasBoundGenerationReceipt(artifactPath, asset) {
-  const binding = asset.generation_receipt;
-  if (!binding || !exactKeys(binding, ['path', 'sha256']) || !safeDigest(binding.sha256)
-    || !/^assets\/receipts\/image-generation-[a-z][a-z0-9]*(?:-[a-z0-9]+)*\.json$/u.test(binding.path)
+  const binding = asset.generation_receipts?.at(-1);
+  if (!binding || !exactKeys(binding, ['attempt_id', 'path', 'sha256']) || !safeDigest(binding.sha256)
+    || binding.path !== `assets/receipts/image-generation-${asset.asset_id}-${binding.attempt_id}.json`
     || !(await safeManagedArtifactFile(artifactPath, binding.path))) return false;
   try {
     const bytes = await readFile(resolve(artifactPath, binding.path));
     const receipt = JSON.parse(bytes.toString('utf8'));
     return digest(bytes) === binding.sha256
-      && exactKeys(receipt, ['schema_version', 'kind', 'asset_id', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'])
-      && receipt.schema_version === 1 && receipt.kind === 'image-generation-receipt' && receipt.asset_id === asset.asset_id
+      && exactKeys(receipt, ['schema_version', 'kind', 'asset_id', 'attempt_id', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'])
+      && receipt.schema_version === 1 && receipt.kind === 'image-generation-receipt' && receipt.asset_id === asset.asset_id && receipt.attempt_id === binding.attempt_id
       && typeof receipt.provider === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.provider)
       && (receipt.request_id === null || typeof receipt.request_id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.request_id))
       && typeof receipt.generated_at === 'string' && !Number.isNaN(Date.parse(receipt.generated_at))
@@ -239,7 +239,7 @@ async function hasBoundDocumentApprovalReceipt(artifactPath, asset) {
       && Array.isArray(receipt.evidence_digests) && receipt.evidence_digests.length === receipt.evidence_paths.length)) return false;
     if (asset.output.format !== 'svg' && (!(await hasBoundGenerationReceipt(artifactPath, asset))
       || !receipt.evidence_paths.includes(asset.output.path)
-      || !receipt.evidence_paths.includes(asset.generation_receipt.path))) return false;
+      || !receipt.evidence_paths.includes(asset.generation_receipts.at(-1).path))) return false;
     for (let index = 0; index < receipt.evidence_paths.length; index += 1) {
       const evidencePath = receipt.evidence_paths[index];
       const evidence = receipt.evidence_digests[index];

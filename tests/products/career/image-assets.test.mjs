@@ -166,10 +166,11 @@ test("Career executes a selected host workflow with truthful unreported applied 
   assert.deepEqual(result.manifest.assets[0].provider, {
     name: "codex-host", requested_model: "gpt-image-2", requested_quality: "low", applied_model: null, applied_quality: null,
   });
-  assert.match(result.manifest.assets[0].generation_receipt.path, /^assets\/receipts\/image-generation-hero\.json$/u);
-  const generationReceipt = JSON.parse(await readFile(path.join(root, result.manifest.assets[0].generation_receipt.path), "utf8"));
+  const currentReceipt = result.manifest.assets[0].generation_receipts.at(-1);
+  assert.match(currentReceipt.path, /^assets\/receipts\/image-generation-hero-[A-Za-z0-9._-]+\.json$/u);
+  const generationReceipt = JSON.parse(await readFile(path.join(root, currentReceipt.path), "utf8"));
   assert.deepEqual(Object.keys(generationReceipt).sort(), [
-    "applied_model", "applied_quality", "asset_id", "failure_reason", "generated_at", "kind", "output_digest", "prompt_digest",
+    "applied_model", "applied_quality", "asset_id", "attempt_id", "failure_reason", "generated_at", "kind", "output_digest", "prompt_digest",
     "provider", "request_id", "requested_model", "requested_quality", "schema_version",
   ]);
   assert.equal(generationReceipt.provider, "codex-host");
@@ -480,7 +481,7 @@ test("Career records a redacted failure manifest when a selected host callback t
   });
   assert.equal(result.manifest.assets[0].generation_state, "generation-failed");
   assert.deepEqual(result.manifest.assets[0].provider, { name: "codex-host", requested_model: "gpt-image-2", requested_quality: "low", applied_model: null, applied_quality: null });
-  const failureReceipt = JSON.parse(await readFile(path.join(root, result.manifest.assets[0].generation_receipt.path), "utf8"));
+  const failureReceipt = JSON.parse(await readFile(path.join(root, result.manifest.assets[0].generation_receipts.at(-1).path), "utf8"));
   assert.equal(failureReceipt.failure_reason, "host-callback-failed");
   assert.match(failureReceipt.failure_reason, /^[a-z][a-z0-9-]{0,127}$/u);
   assert.equal(failureReceipt.prompt_digest, createHash("sha256").update(result.manifest.assets[0].prompt).digest("hex"));
@@ -490,6 +491,51 @@ test("Career records a redacted failure manifest when a selected host callback t
   assert.equal(JSON.stringify(failureReceipt).includes(root), false);
   assert.equal(JSON.stringify(result).includes(secret), false);
   assert.equal((await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).includes(secret), false);
+});
+
+test("Career appends immutable retry attempts and leaves OpenAI failure applied settings unreported", async (t) => {
+  const root = await workflowRoot(t, "career-openai-retry-");
+  const config = { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: true, apiKey: "test-only-key" };
+  const openAiFailure = async ({ jobs }) => ({ results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "provider-request-failed" })) });
+  const first = await runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile, config, selectedAssetIds: ["hero"],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-openai-first", asset_ids: ["hero"] },
+    generateOpenAIImagesFn: openAiFailure, attemptIdFactory: () => "attempt-openai-1",
+  });
+  assert.deepEqual(first.manifest.assets[0].provider, { name: "openai", requested_model: "gpt-image-2", requested_quality: "low", applied_model: null, applied_quality: null });
+  const firstReceipt = JSON.parse(await readFile(path.join(root, first.manifest.assets[0].generation_receipts[0].path), "utf8"));
+  assert.equal(firstReceipt.applied_model, null);
+  assert.equal(firstReceipt.applied_quality, null);
+
+  const second = await runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile, existingManifest: first.manifest, config, selectedAssetIds: ["hero"],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-openai-second", asset_ids: ["hero"] },
+    generateOpenAIImagesFn: openAiFailure, attemptIdFactory: () => "attempt-openai-2",
+  });
+  assert.deepEqual(second.manifest.assets[0].generation_receipts.map(({ attempt_id }) => attempt_id), ["attempt-openai-1", "attempt-openai-2"]);
+  await assert.rejects(() => runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile, existingManifest: first.manifest, config, selectedAssetIds: ["hero"],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-openai-replay", asset_ids: ["hero"] },
+    generateOpenAIImagesFn: openAiFailure, attemptIdFactory: () => "attempt-openai-1",
+  }), /already exists/i);
+});
+
+test("Career permits only one concurrent writer for the same immutable attempt ID", async (t) => {
+  const root = await workflowRoot(t, "career-attempt-race-");
+  const planned = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  const options = {
+    artifactRoot: root, manifest: planned.manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, selectedAssetIds: ["hero"],
+    codexCapability: { status: "available" }, attemptIdFactory: () => "attempt-race",
+    hostGenerate: async () => ({ results: [], failures: [{ asset_id: "hero", generation_state: "generation-failed", reason: "provider-request-failed", provenance: { provider: "codex-host" } }] }),
+  };
+  const attempts = await Promise.allSettled([
+    generateImageAssetWorkflow({ ...options, selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-attempt-race-1", asset_ids: ["hero"] } }),
+    generateImageAssetWorkflow({ ...options, selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-attempt-race-2", asset_ids: ["hero"] } }),
+  ]);
+  assert.equal(attempts.filter(({ status }) => status === "fulfilled").length, 1);
+  assert.equal(attempts.filter(({ status }) => status === "rejected").length, 1);
+  assert.match(attempts.find(({ status }) => status === "rejected").reason.message, /already exists|unsafe/i);
 });
 
 test("Career stores the canonical form of a human reviewer", async (t) => {

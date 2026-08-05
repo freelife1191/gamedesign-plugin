@@ -322,14 +322,14 @@ test('blocks a raster replacement after a human approval binds its generation re
   await mkdir(join(artifact, 'assets', 'receipts'));
   await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), raster);
   const generationReceipt = {
-    schema_version: 1, kind: 'image-generation-receipt', asset_id: 'boss-telegraph', provider: 'openai', request_id: 'req-raster',
+    schema_version: 1, kind: 'image-generation-receipt', asset_id: 'boss-telegraph', attempt_id: 'attempt-raster', provider: 'openai', request_id: 'req-raster',
     generated_at: '2026-08-06T00:00:00.000Z', prompt_digest: 'a'.repeat(64), output_digest: sha256(raster),
     requested_model: 'gpt-image-2', requested_quality: 'low', applied_model: 'gpt-image-2', applied_quality: 'low', failure_reason: null,
   };
   const generationBytes = Buffer.from(`${JSON.stringify(generationReceipt, null, 2)}\n`);
-  await writeFile(join(artifact, 'assets', 'receipts', 'image-generation-boss-telegraph.json'), generationBytes);
+  await writeFile(join(artifact, 'assets', 'receipts', 'image-generation-boss-telegraph-attempt-raster.json'), generationBytes);
   const evidence = await readFile(join(artifact, 'evidence.yml'));
-  const evidencePaths = ['evidence.yml', 'assets/generated/boss-telegraph.png', 'assets/receipts/image-generation-boss-telegraph.json'];
+  const evidencePaths = ['evidence.yml', 'assets/generated/boss-telegraph.png', 'assets/receipts/image-generation-boss-telegraph-attempt-raster.json'];
   const receipt = {
     schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-raster-bound' },
     asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Minji Kim',
@@ -337,13 +337,13 @@ test('blocks a raster replacement after a human approval binds its generation re
     evidence_digests: [
       { path: 'evidence.yml', sha256: sha256(evidence) },
       { path: 'assets/generated/boss-telegraph.png', sha256: sha256(raster) },
-      { path: 'assets/receipts/image-generation-boss-telegraph.json', sha256: sha256(generationBytes) },
+      { path: 'assets/receipts/image-generation-boss-telegraph-attempt-raster.json', sha256: sha256(generationBytes) },
     ],
   };
   await writeFile(join(artifact, 'decisions', 'image-review-evt-raster-bound.json'), JSON.stringify(receipt));
   await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
-    .replace('    rights:', '    generation_receipt:\n      path: assets/receipts/image-generation-boss-telegraph.json\n      sha256: ' + sha256(generationBytes) + '\n    rights:')
-    .replace('          - evidence.yml', `          - evidence.yml\n          - assets/generated/boss-telegraph.png\n          - assets/receipts/image-generation-boss-telegraph.json\n          - decisions/image-review-evt-raster-bound.json`));
+    .replace('    rights:', '    generation_receipts:\n      - attempt_id: attempt-raster\n        path: assets/receipts/image-generation-boss-telegraph-attempt-raster.json\n        sha256: ' + sha256(generationBytes) + '\n    rights:')
+    .replace('          - evidence.yml', `          - evidence.yml\n          - assets/generated/boss-telegraph.png\n          - assets/receipts/image-generation-boss-telegraph-attempt-raster.json\n          - decisions/image-review-evt-raster-bound.json`));
   const content = await readFile(join(artifact, 'content.md'), 'utf8');
   await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
 

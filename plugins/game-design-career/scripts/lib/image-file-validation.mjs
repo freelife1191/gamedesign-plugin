@@ -64,78 +64,9 @@ export function validatePngBuffer(buffer, { width, height } = {}) {
   return { bytes: buffer.length, width: actualWidth, height: actualHeight, digest: createHash("sha256").update(buffer).digest("hex") };
 }
 
-function inspectJpeg(buffer) {
-  if (!Buffer.isBuffer(buffer) || buffer.length < 4 || buffer.length > maximumImageBytes || buffer[0] !== 0xff || buffer[1] !== 0xd8) return { ok: false };
-  let offset = 2;
-  let width;
-  let height;
-  let ended = false;
-  while (offset < buffer.length) {
-    if (buffer[offset] !== 0xff) return { ok: false };
-    while (offset < buffer.length && buffer[offset] === 0xff) offset += 1;
-    if (offset >= buffer.length) return { ok: false };
-    const marker = buffer[offset++];
-    if (marker === 0xd9) { ended = true; break; }
-    if (marker === 0x00 || marker === 0xd8 || (marker >= 0xd0 && marker <= 0xd7)) continue;
-    if (offset + 2 > buffer.length) return { ok: false };
-    const length = buffer.readUInt16BE(offset);
-    if (length < 2 || offset + length > buffer.length) return { ok: false };
-    if ((marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker))) {
-      if (length < 8) return { ok: false };
-      height = buffer.readUInt16BE(offset + 3);
-      width = buffer.readUInt16BE(offset + 5);
-      if (!width || !height) return { ok: false };
-    }
-    if (marker === 0xda) {
-      offset += length;
-      while (offset < buffer.length - 1) {
-        if (buffer[offset++] !== 0xff) continue;
-        const next = buffer[offset];
-        if (next === 0x00) { offset += 1; continue; }
-        if (next >= 0xd0 && next <= 0xd7) { offset += 1; continue; }
-        if (next === 0xd9) { ended = true; offset += 1; break; }
-        return { ok: false };
-      }
-      break;
-    }
-    offset += length;
-  }
-  return { ok: ended && Number.isInteger(width) && Number.isInteger(height), width, height };
-}
-
-function inspectWebp(buffer) {
-  if (!Buffer.isBuffer(buffer) || buffer.length < 20 || buffer.length > maximumImageBytes || buffer.toString("ascii", 0, 4) !== "RIFF"
-    || buffer.toString("ascii", 8, 12) !== "WEBP" || buffer.readUInt32LE(4) + 8 !== buffer.length) return { ok: false };
-  let offset = 12;
-  let width;
-  let height;
-  while (offset + 8 <= buffer.length) {
-    const type = buffer.toString("ascii", offset, offset + 4);
-    const length = buffer.readUInt32LE(offset + 4);
-    const start = offset + 8;
-    const end = start + length;
-    if (end > buffer.length) return { ok: false };
-    if (type === "VP8X" && length >= 10) {
-      width = buffer.readUIntLE(start + 4, 3) + 1;
-      height = buffer.readUIntLE(start + 7, 3) + 1;
-    } else if (type === "VP8 " && length >= 10 && buffer.subarray(start + 3, start + 6).equals(Buffer.from([0x9d, 0x01, 0x2a]))) {
-      width = buffer.readUInt16LE(start + 6) & 0x3fff;
-      height = buffer.readUInt16LE(start + 8) & 0x3fff;
-    } else if (type === "VP8L" && length >= 5 && buffer[start] === 0x2f) {
-      const bits = buffer.readUInt32LE(start + 1);
-      width = (bits & 0x3fff) + 1;
-      height = ((bits >>> 14) & 0x3fff) + 1;
-    }
-    offset = end + (length % 2);
-  }
-  return { ok: offset === buffer.length && Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0, width, height };
-}
-
 export function inspectRasterBuffer(buffer, { format, width, height } = {}) {
   let inspection;
   if (format === "png") inspection = inspectCompletePng(buffer);
-  else if (format === "jpeg") inspection = inspectJpeg(buffer);
-  else if (format === "webp") inspection = inspectWebp(buffer);
   else return { ok: false };
   return { ok: inspection.ok === true && inspection.width === width && inspection.height === height, width: inspection.width, height: inspection.height };
 }

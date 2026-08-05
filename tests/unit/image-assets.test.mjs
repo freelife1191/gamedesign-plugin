@@ -211,6 +211,16 @@ test("accepts approved categories and requirements while rejecting unknown enum 
   assert.ok(result.errors.some(({ code }) => code === "invalid_requirement"));
 });
 
+test("accepts only PNG and SVG outputs and requires matching generated path extensions", async (t) => {
+  const root = await artifactRoot(t);
+  for (const format of ["jpeg", "webp"]) {
+    const value = manifest({ asset: { output: { ...manifest().assets[0].output, format, path: `assets/generated/hero-knight-001.${format}` } } });
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false, format);
+  }
+  const mismatch = manifest({ asset: { output: { ...manifest().assets[0].output, format: "png", path: "assets/generated/hero-knight-001.svg" } } });
+  assert.equal(validateImageAssetManifest(mismatch, { artifactRoot: root }).ok, false);
+});
+
 test("rejects duplicate ids, incomplete briefs, unsafe output paths, and missing rights", async (t) => {
   const root = await artifactRoot(t);
   const value = manifest({

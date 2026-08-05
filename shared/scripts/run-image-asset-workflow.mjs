@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -159,7 +159,7 @@ function applyProviderResults(manifest, providerResult, provider, config, genera
           aspect_ratio: aspectRatio ?? asset.output.aspect_ratio, format: format ?? asset.output.format, background: background ?? asset.output.background,
         };
       }
-      if (generationReceipts.has(asset.asset_id)) asset.generation_receipt = generationReceipts.get(asset.asset_id);
+      if (generationReceipts.has(asset.asset_id)) asset.generation_receipts = [...(asset.generation_receipts ?? []), generationReceipts.get(asset.asset_id)];
       if (provider === "openai") {
         asset.provider = { name: "openai", model: result.provenance.model, quality: result.provenance.quality };
       } else {
@@ -173,7 +173,10 @@ function applyProviderResults(manifest, providerResult, provider, config, genera
       }
     } else if (failure) {
       asset.generation_state = failure.generation_state;
-      if (generationReceipts.has(asset.asset_id)) asset.generation_receipt = generationReceipts.get(asset.asset_id);
+      if (generationReceipts.has(asset.asset_id)) asset.generation_receipts = [...(asset.generation_receipts ?? []), generationReceipts.get(asset.asset_id)];
+      if (provider === "openai") {
+        asset.provider = { name: "openai", requested_model: config.model, requested_quality: config.quality, applied_model: null, applied_quality: null };
+      }
       if (provider === "codex" && failure.provenance) {
         asset.provider = {
           name: failure.provenance.provider ?? "codex-host",
@@ -204,12 +207,12 @@ function receiptProvenance(provider, config, result, failure) {
     provider: typeof provenance.provider === "string" && safeModelPattern.test(provenance.provider)
       ? provenance.provider : isOpenAI ? "openai" : provider === "codex" ? "codex-host" : "unavailable",
     request_id: typeof provenance.request_id === "string" && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(provenance.request_id) ? provenance.request_id : null,
-    applied_model: isOpenAI ? config.model : provenance.applied_model ?? null,
-    applied_quality: isOpenAI ? config.quality : provenance.applied_quality ?? null,
+    applied_model: isOpenAI && result ? config.model : provenance.applied_model ?? null,
+    applied_quality: isOpenAI && result ? config.quality : provenance.applied_quality ?? null,
   };
 }
 
-async function writeGenerationReceipts(root, jobs, providerResult, provider, config, now) {
+async function writeGenerationReceipts(root, jobs, providerResult, provider, config, now, attemptIdFactory) {
   await ensureArtifactDirectories({ artifactRoot: root, directories: ["assets", "assets/receipts"] });
   const results = new Map((providerResult?.results ?? []).map((value) => [value.asset_id, value]));
   const failures = new Map((providerResult?.failures ?? []).map((value) => [value.asset_id, value]));
@@ -218,10 +221,13 @@ async function writeGenerationReceipts(root, jobs, providerResult, provider, con
     const result = results.get(job.asset_id);
     const failure = failures.get(job.asset_id);
     const provenance = receiptProvenance(provider, config, result, failure);
+    const attemptId = attemptIdFactory();
+    if (typeof attemptId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(attemptId)) throw new Error("Generation attempt ID is invalid.");
     const receipt = {
       schema_version: 1,
       kind: "image-generation-receipt",
       asset_id: job.asset_id,
+      attempt_id: attemptId,
       provider: provenance.provider,
       request_id: provenance.request_id,
       generated_at: receiptTimestamp(now),
@@ -234,10 +240,10 @@ async function writeGenerationReceipts(root, jobs, providerResult, provider, con
       applied_quality: provenance.applied_quality,
       failure_reason: result ? null : receiptFailureReason(failure?.reason),
     };
-    const relativePath = `assets/receipts/image-generation-${job.asset_id}.json`;
+    const relativePath = `assets/receipts/image-generation-${job.asset_id}-${attemptId}.json`;
     const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, "utf8");
     await safeWriteArtifactFile({ artifactRoot: root, relativePath, data: bytes, policy: "create-once" });
-    receipts.set(job.asset_id, { path: relativePath, sha256: sha256(bytes) });
+    receipts.set(job.asset_id, { attempt_id: attemptId, path: relativePath, sha256: sha256(bytes) });
   }
   return receipts;
 }
@@ -355,6 +361,7 @@ export async function generateImageAssetWorkflow({
   now,
   hostGenerate,
   generateOpenAIImagesFn = generateOpenAIImages,
+  attemptIdFactory = randomUUID,
 } = {}) {
   const root = (await canonicalArtifactRoot(artifactRoot)).path;
   if (!manifest || typeof manifest !== "object") throw new Error("A planned image manifest is required for generation.");
@@ -391,7 +398,7 @@ export async function generateImageAssetWorkflow({
     providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "no-provider-available" })) };
   }
   const generationReceipts = jobs.length > 0
-    ? await writeGenerationReceipts(root, jobs, providerResult, decision.provider, publicConfig, now)
+    ? await writeGenerationReceipts(root, jobs, providerResult, decision.provider, publicConfig, now, attemptIdFactory)
     : new Map();
   const nextManifest = applyProviderResults(manifest, providerResult, decision.provider, publicConfig, generationReceipts);
   const validation = validateImageAssetManifest(nextManifest, { artifactRoot: root });
@@ -420,7 +427,7 @@ export async function reviewImageAssetWorkflow({
   if (!asset) throw new Error("Review requires a known stable asset ID.");
   const requiredEvidencePaths = [...new Set([
     ...(Array.isArray(evidencePaths) ? evidencePaths : []),
-    ...(asset.generation_receipt ? [asset.output.path, asset.generation_receipt.path] : []),
+    ...(asset.generation_receipts?.length ? [asset.output.path, asset.generation_receipts.at(-1).path] : []),
   ])];
   const receipt = await readUserDecisionReceipt(root, decisionReceipt, {
     assetId, fromState: asset.approval_state, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths: requiredEvidencePaths, evidenceDigests,
