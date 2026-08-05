@@ -14,6 +14,12 @@ export function parseNeutralPresetPolicy(markdown, evidenceFilename = path.basen
   const rows = [...markdown.matchAll(/^\| \[([^\]]+)\]\((https?:\/\/[^)]+)\) \| ([^|]+) \|/gmu)]
     .map(([, label, url, aliasCell]) => {
       const rawAliases = [...aliasCell.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+      if (rawAliases.some((alias) => alias.trim().length === 0)) {
+        throw new Error("neutral preset identity aliases must be non-empty");
+      }
+      if (rawAliases.some((alias) => alias !== alias.trim())) {
+        throw new Error("neutral preset identity aliases must be trimmed");
+      }
       if (rawAliases.some((alias) => alias !== alias.normalize("NFC"))) {
         throw new Error("neutral preset identity aliases must be NFC");
       }

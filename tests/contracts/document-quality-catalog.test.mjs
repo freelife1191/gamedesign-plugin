@@ -138,6 +138,9 @@ test("authoring evidence policy rejects missing, duplicate, and non-NFC identity
     row("two", "`example alias`"),
   ].join("\n")), /duplicate identity aliases/);
   assert.throws(() => parseNeutralPresetPolicy(row("one", "`Cafe\u0301`")), /must be NFC/);
+  assert.throws(() => parseNeutralPresetPolicy(row("one", "` Leading`")), /must be trimmed/);
+  assert.throws(() => parseNeutralPresetPolicy(row("one", "`Trailing `")), /must be trimmed/);
+  assert.throws(() => parseNeutralPresetPolicy(row("one", "`   `")), /must be non-empty/);
 });
 
 test("neutral reference presets are closed, additive, schema-valid, and source-neutral", async () => {
@@ -146,6 +149,9 @@ test("neutral reference presets are closed, additive, schema-valid, and source-n
   assert.equal(policy.labels.length, 10);
   assert.equal(policy.urls.length, 10);
   assert.ok(policy.aliases.length >= 20);
+  for (const reviewerExample of ["GDC", "Steam", "Overwatch", "Unreal Editor"]) {
+    assert.ok(policy.aliases.includes(reviewerExample), `missing reviewer alias: ${reviewerExample}`);
+  }
   const directory = path.join(qualityRoot, "presets");
   const filenames = (await readdir(directory)).filter((name) => name.endsWith(".json")).sort();
   assert.deepEqual(filenames, presetIds.map((id) => `${id}.json`).sort());
@@ -175,12 +181,13 @@ test("neutral reference presets are closed, additive, schema-valid, and source-n
     assert.equal(schemaAccepts(identityCandidate, schema), true, `${field}: packaged schema stays identity-agnostic`);
     assert.equal(findPolicyLeak(allStrings(identityCandidate), policy), policy.labels[0], `${field}: authoring identity gate`);
 
-    const alias = policy.aliases[presetFields.indexOf(field) % 3];
-    const aliasCandidate = structuredClone(valid);
-    aliasCandidate[field][0] = alias;
-    assert.equal(schemaAccepts(aliasCandidate, schema), true, `${field}: packaged schema stays alias-agnostic`);
-    const detectedAlias = findPolicyLeak(allStrings(aliasCandidate), policy);
-    assert.ok(detectedAlias && alias.toLowerCase().includes(detectedAlias.toLowerCase()), `${field}: authoring alias gate`);
+    for (const alias of policy.aliases) {
+      const aliasCandidate = structuredClone(valid);
+      aliasCandidate[field][0] = alias;
+      assert.equal(schemaAccepts(aliasCandidate, schema), true, `${field}: packaged schema stays alias-agnostic for ${alias}`);
+      const detectedAlias = findPolicyLeak(allStrings(aliasCandidate), policy);
+      assert.ok(detectedAlias && alias.toLowerCase().includes(detectedAlias.toLowerCase()), `${field}: authoring alias gate for ${alias}`);
+    }
 
     for (const url of [schemeSensitiveUrl, schemeSensitiveUrl.replace(/^https:/u, "HTTPS:")]) {
       const urlCandidate = structuredClone(valid);
