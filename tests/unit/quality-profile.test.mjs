@@ -63,6 +63,7 @@ function schemaAccepts(value, rootSchema, schema = rootSchema) {
       && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
   }
   if (schema.type === "integer") return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  if (schema.type === "boolean") return typeof value === "boolean";
   return true;
 }
 
@@ -144,6 +145,26 @@ test("runtime validator and JSON Schema both require the complete PPTX story pol
   ]) {
     assert.equal(schemaAccepts(value, schema), expected, `${name}: schema`);
     assert.equal(validateQualityProfile(value).ok, expected, `${name}: runtime`);
+  }
+});
+
+test("runtime validator and JSON Schema both reject malformed optional story policy on non-PPTX profiles", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/document-quality/schema/quality-profile.schema.json", import.meta.url), "utf8"));
+  const cases = [
+    ["audience policy has wrong type", { audience_required: "yes" }],
+    ["slide field contract is incomplete", { required_slide_fields: ["id"] }],
+    ["visual binding is not closed", { visual_bindings: [{ visual_slot_id: "core-loop", section_id: "systems", unknown: true }] }],
+    ["visual binding is duplicated", { visual_bindings: [
+      { visual_slot_id: "core-loop", section_id: "systems" },
+      { visual_slot_id: "core-loop", section_id: "systems" },
+    ] }],
+    ["speaker-note policy is unsupported", { speaker_note_policy: "optional" }],
+  ];
+
+  for (const [name, pptStoryContract] of cases) {
+    const value = profile({ ppt_story_contract: pptStoryContract });
+    assert.equal(schemaAccepts(value, schema), false, `${name}: schema`);
+    assert.equal(validateQualityProfile(value).ok, false, `${name}: runtime`);
   }
 });
 

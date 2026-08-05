@@ -124,6 +124,26 @@ test("PPT story policy rejects weakened fields and invalid section or visual bin
   expectIssue((contract) => { contract.visual_bindings[0].section_id = "decision-case"; }, "reference.mismatch", "/ppt_story_contract/visual_bindings/0/section_id");
 });
 
+test("non-PPTX profiles still reject undeclared and mismatched optional story bindings", async () => {
+  const profile = await json("profiles/studio/game-design-brief.json");
+  const expectIssue = (pptStoryContract, code, errorPath) => {
+    const result = validateQualityProfile({ ...profile, ppt_story_contract: pptStoryContract }, { sourceName: "non-PPTX binding mutation" });
+    assert.ok(result.errors.some((error) => error.code === code && error.path === errorPath), `${code} at ${errorPath}: ${JSON.stringify(result.errors)}`);
+  };
+
+  expectIssue({ allowed_section_ids: ["undeclared-section"] }, "reference.unknown", "/ppt_story_contract/allowed_section_ids/0");
+  expectIssue(
+    { visual_bindings: [{ visual_slot_id: "undeclared-visual", section_id: "scope" }] },
+    "reference.unknown",
+    "/ppt_story_contract/visual_bindings/0/visual_slot_id",
+  );
+  expectIssue(
+    { allowed_section_ids: ["scope", "design"], visual_bindings: [{ visual_slot_id: "skillstead-design-flow-diagram", section_id: "scope" }] },
+    "reference.mismatch",
+    "/ppt_story_contract/visual_bindings/0/section_id",
+  );
+});
+
 test("platform and service overlays compose additively and reject removal directives", async () => {
   const primary = await json("profiles/studio/game-design-brief.json");
   for (const id of ["mobile", "pc-console", "live-service"]) {

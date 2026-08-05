@@ -148,57 +148,52 @@ export function validateQualityProfile(value, { sourceName = "quality profile" }
         });
       }
     }
-    const requiresPptPolicy = Array.isArray(value.export_rules?.required_formats)
-      && value.export_rules.required_formats.includes("pptx");
-    if (requiresPptPolicy) {
-      const contract = value.ppt_story_contract;
-      const policyFields = ["audience_required", "decision_purpose_required", "one_message_per_slide", "speaker_note_policy"];
-      for (const field of policyFields) {
-        if (!Object.hasOwn(contract, field)) add(errors, "story.policy_required", `/ppt_story_contract/${field}`, `PPTX profile requires ${field}`);
+    const contract = value.ppt_story_contract;
+    const booleanPolicyFields = ["audience_required", "decision_purpose_required", "one_message_per_slide"];
+    for (const field of booleanPolicyFields) {
+      if (Object.hasOwn(contract, field) && typeof contract[field] !== "boolean") {
+        add(errors, "schema.type", `/ppt_story_contract/${field}`, "must be a boolean");
       }
-      for (const field of ["audience_required", "decision_purpose_required", "one_message_per_slide"]) {
-        if (Object.hasOwn(contract, field) && contract[field] !== true) add(errors, "story.policy", `/ppt_story_contract/${field}`, "must be true for PPTX profiles");
-      }
-      if (Object.hasOwn(contract, "speaker_note_policy") && contract.speaker_note_policy !== "required-for-every-slide") {
-        add(errors, "story.policy", "/ppt_story_contract/speaker_note_policy", "must require speaker notes for every slide");
-      }
+    }
+    if (Object.hasOwn(contract, "speaker_note_policy") && contract.speaker_note_policy !== "required-for-every-slide") {
+      add(errors, "story.policy", "/ppt_story_contract/speaker_note_policy", "must require speaker notes for every slide");
+    }
 
-      const requiredSlideFields = ["id", "title", "message", "purpose", "source_section_ids", "visual_slots", "speaker_notes_required"];
-      if (!Object.hasOwn(contract, "required_slide_fields")) {
-        add(errors, "story.policy_required", "/ppt_story_contract/required_slide_fields", "PPTX profile requires slide fields");
-      } else {
-        validateStringArray(contract.required_slide_fields, "/ppt_story_contract/required_slide_fields", errors, { nonEmpty: true });
-        const actualFields = Array.isArray(contract.required_slide_fields) ? new Set(contract.required_slide_fields) : new Set();
-        if (actualFields.size !== requiredSlideFields.length || requiredSlideFields.some((field) => !actualFields.has(field))) {
-          add(errors, "story.slide_fields", "/ppt_story_contract/required_slide_fields", `must contain exactly: ${requiredSlideFields.join(", ")}`);
+    const requiredSlideFields = ["id", "title", "message", "purpose", "source_section_ids", "visual_slots", "speaker_notes_required"];
+    if (Object.hasOwn(contract, "required_slide_fields")) {
+      validateStringArray(contract.required_slide_fields, "/ppt_story_contract/required_slide_fields", errors, { nonEmpty: true });
+      const actualFields = Array.isArray(contract.required_slide_fields) ? new Set(contract.required_slide_fields) : new Set();
+      if (actualFields.size !== requiredSlideFields.length || requiredSlideFields.some((field) => !actualFields.has(field))) {
+        add(errors, "story.slide_fields", "/ppt_story_contract/required_slide_fields", `must contain exactly: ${requiredSlideFields.join(", ")}`);
+      }
+    }
+
+    if (Object.hasOwn(contract, "allowed_section_ids")) {
+      validateStringArray(contract.allowed_section_ids, "/ppt_story_contract/allowed_section_ids", errors, { nonEmpty: true, ids: true });
+      if (Array.isArray(contract.allowed_section_ids)) contract.allowed_section_ids.forEach((sectionId, index) => {
+        if (typeof sectionId === "string" && !sectionIds.has(sectionId)) {
+          add(errors, "reference.unknown", `/ppt_story_contract/allowed_section_ids/${index}`, `unknown section ID: ${sectionId}`);
         }
-      }
+      });
+    }
 
-      if (!Object.hasOwn(contract, "allowed_section_ids")) {
-        add(errors, "story.policy_required", "/ppt_story_contract/allowed_section_ids", "PPTX profile requires allowed section bindings");
-      } else {
-        validateStringArray(contract.allowed_section_ids, "/ppt_story_contract/allowed_section_ids", errors, { nonEmpty: true, ids: true });
-        if (Array.isArray(contract.allowed_section_ids)) contract.allowed_section_ids.forEach((sectionId, index) => {
-          if (typeof sectionId === "string" && !sectionIds.has(sectionId)) {
-            add(errors, "reference.unknown", `/ppt_story_contract/allowed_section_ids/${index}`, `unknown section ID: ${sectionId}`);
-          }
-        });
-      }
-
-      const visualSections = new Map();
-      for (const visual of [...(Array.isArray(value.required_diagrams) ? value.required_diagrams : []), ...(Array.isArray(value.required_images) ? value.required_images : [])]) {
-        if (isObject(visual) && typeof visual.id === "string" && typeof visual.section_id === "string") visualSections.set(visual.id, visual.section_id);
-      }
-      if (!Object.hasOwn(contract, "visual_bindings")) {
-        add(errors, "story.policy_required", "/ppt_story_contract/visual_bindings", "PPTX profile requires visual bindings");
-      } else if (!Array.isArray(contract.visual_bindings)) {
+    const visualSections = new Map();
+    for (const visual of [...(Array.isArray(value.required_diagrams) ? value.required_diagrams : []), ...(Array.isArray(value.required_images) ? value.required_images : [])]) {
+      if (isObject(visual) && typeof visual.id === "string" && typeof visual.section_id === "string") visualSections.set(visual.id, visual.section_id);
+    }
+    if (Object.hasOwn(contract, "visual_bindings")) {
+      if (!Array.isArray(contract.visual_bindings)) {
         add(errors, "schema.type", "/ppt_story_contract/visual_bindings", "must be an array");
       } else {
         if (contract.visual_bindings.length === 0) add(errors, "array.empty", "/ppt_story_contract/visual_bindings", "must not be empty");
         const boundVisuals = new Set();
+        const seenBindings = new Set();
         contract.visual_bindings.forEach((binding, index) => {
           const bindingPath = `/ppt_story_contract/visual_bindings/${index}`;
           if (!validateClosedObject(binding, new Set(["visual_slot_id", "section_id"]), bindingPath, errors)) return;
+          const bindingKey = JSON.stringify([binding.visual_slot_id, binding.section_id]);
+          if (seenBindings.has(bindingKey)) add(errors, "array.duplicate", bindingPath, `duplicate visual binding: ${bindingKey}`);
+          seenBindings.add(bindingKey);
           for (const field of ["visual_slot_id", "section_id"]) {
             if (typeof binding[field] !== "string" || !stableIdPattern.test(binding[field])) add(errors, "id.invalid", `${bindingPath}/${field}`, "must be a kebab-case stable ID");
           }
@@ -221,6 +216,21 @@ export function validateQualityProfile(value, { sourceName = "quality profile" }
             add(errors, "story.binding_required", "/ppt_story_contract/visual_bindings", `required visual slot lacks a binding: ${visualId}`);
           }
         }
+      }
+    }
+
+    const requiresPptPolicy = Array.isArray(value.export_rules?.required_formats)
+      && value.export_rules.required_formats.includes("pptx");
+    if (requiresPptPolicy) {
+      const requiredPolicyFields = [
+        "min_slides", "max_slides", ...booleanPolicyFields, "required_slide_fields",
+        "allowed_section_ids", "visual_bindings", "speaker_note_policy",
+      ];
+      for (const field of requiredPolicyFields) {
+        if (!Object.hasOwn(contract, field)) add(errors, "story.policy_required", `/ppt_story_contract/${field}`, `PPTX profile requires ${field}`);
+      }
+      for (const field of booleanPolicyFields) {
+        if (Object.hasOwn(contract, field) && contract[field] !== true) add(errors, "story.policy", `/ppt_story_contract/${field}`, "must be true for PPTX profiles");
       }
       if (!Array.isArray(value.artifact_types) || !value.artifact_types.includes("presentation")) {
         add(errors, "story.render_contract", "/artifact_types", "PPTX profile must use the presentation artifact type");
