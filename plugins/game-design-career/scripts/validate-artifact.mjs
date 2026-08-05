@@ -2,7 +2,7 @@
 
 import { lstat, readFile, readdir } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { isAbsolute, parse, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { validateQualityProfile } from './validate-quality-profile.mjs';
@@ -406,17 +406,34 @@ async function validateQualityProfileReference(metadata, { requireQualityProfile
     addError(errors, 'options.profile_catalog_root', null, 'profileCatalogRoot is required when requireQualityProfile is true');
     return;
   }
-  const catalogRoot = resolve(fileURLToPathIfNeeded(profileCatalogRoot));
-  const profilePath = resolve(catalogRoot, `${metadata.quality_profile}.json`);
   try {
-    const stats = await lstat(profilePath);
-    if (stats.isSymbolicLink() || !stats.isFile()) throw new Error('profile entry must be a regular non-symlink file');
+    const profilePath = await assertSafeQualityProfileFile(profileCatalogRoot, metadata.quality_profile);
     const profile = JSON.parse(await readFile(profilePath, 'utf8'));
     const validation = validateQualityProfile(profile, { sourceName: `${metadata.quality_profile}.json` });
     if (!validation.ok || profile.profile_id !== metadata.quality_profile) throw new Error('profile entry is invalid or has a mismatched profile_id');
   } catch {
     addError(errors, 'quality_profile.unknown', file, `unknown quality_profile: ${metadata.quality_profile}`);
   }
+}
+
+async function assertSafeQualityProfileFile(profileCatalogRoot, profileId) {
+  const catalogRoot = resolve(fileURLToPathIfNeeded(profileCatalogRoot));
+  const rootStats = await lstat(catalogRoot);
+  if (rootStats.isSymbolicLink() || !rootStats.isDirectory()) {
+    throw new Error('profile catalog root must be a non-symlink directory');
+  }
+  const parsed = parse(catalogRoot);
+  let ancestor = parsed.root;
+  for (const segment of relative(parsed.root, catalogRoot).split(sep).filter(Boolean)) {
+    ancestor = resolve(ancestor, segment);
+    if ((await lstat(ancestor)).isSymbolicLink()) throw new Error('profile catalog root contains a symlink ancestor');
+  }
+  const profilePath = resolve(catalogRoot, `${profileId}.json`);
+  const profileStats = await lstat(profilePath);
+  if (profileStats.isSymbolicLink() || !profileStats.isFile()) {
+    throw new Error('profile entry must be a regular non-symlink file');
+  }
+  return profilePath;
 }
 
 async function validateMarkdown(source, artifactDir, errors, qualityProfileOptions) {

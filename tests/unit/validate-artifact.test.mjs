@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -28,6 +28,10 @@ async function replaceIn(dir, relativePath, before, after) {
   await writeFile(path, source.replace(before, after));
 }
 
+async function addQualityProfile(dir) {
+  await replaceIn(dir, 'content.md', 'artifact_id: combat-brief\n', 'artifact_id: combat-brief\nquality_profile: game-design-brief\n');
+}
+
 function messages(result) {
   return result.errors.map((error) => error.message).join('\n');
 }
@@ -51,7 +55,7 @@ test('accepts a complete canonical artifact', async () => {
 
 test('requires one known kebab-case quality profile when profile-aware validation is active', async () => {
   const dir = await temporaryArtifact();
-  await replaceIn(dir, 'content.md', 'artifact_id: combat-brief\n', 'artifact_id: combat-brief\nquality_profile: game-design-brief\n');
+  await addQualityProfile(dir);
 
   const result = await validateArtifact(dir, {
     requireQualityProfile: true,
@@ -59,6 +63,62 @@ test('requires one known kebab-case quality profile when profile-aware validatio
   });
 
   assert.equal(result.ok, true, messages(result));
+});
+
+test('rejects a symlinked quality profile catalog root', async () => {
+  const dir = await temporaryArtifact();
+  await addQualityProfile(dir);
+  const catalogFixture = await mkdtemp(join(tmpdir(), 'quality-profile-catalog-root-'));
+  temporaryDirs.push(catalogFixture);
+  const realCatalog = join(catalogFixture, 'real-catalog');
+  await mkdir(realCatalog);
+  await cp(new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url), join(realCatalog, 'game-design-brief.json'));
+  const linkedCatalog = join(catalogFixture, 'linked-catalog');
+  await symlink(realCatalog, linkedCatalog);
+
+  const result = await validateArtifact(dir, { requireQualityProfile: true, profileCatalogRoot: linkedCatalog });
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /unknown quality_profile.*game-design-brief/i);
+});
+
+test('rejects a quality profile catalog with a symlink ancestor', async () => {
+  const dir = await temporaryArtifact();
+  await addQualityProfile(dir);
+  const catalogFixture = await mkdtemp(join(tmpdir(), 'quality-profile-catalog-ancestor-'));
+  temporaryDirs.push(catalogFixture);
+  const realParent = join(catalogFixture, 'real-parent');
+  const realCatalog = join(realParent, 'catalog');
+  await mkdir(realCatalog, { recursive: true });
+  await cp(new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url), join(realCatalog, 'game-design-brief.json'));
+  const linkedParent = join(catalogFixture, 'linked-parent');
+  await symlink(realParent, linkedParent);
+
+  const result = await validateArtifact(dir, {
+    requireQualityProfile: true,
+    profileCatalogRoot: join(linkedParent, 'catalog'),
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /unknown quality_profile.*game-design-brief/i);
+});
+
+test('rejects a direct symlink quality profile entry', async () => {
+  const dir = await temporaryArtifact();
+  await addQualityProfile(dir);
+  const catalogFixture = await mkdtemp(join(tmpdir(), 'quality-profile-catalog-entry-'));
+  temporaryDirs.push(catalogFixture);
+  const catalog = join(catalogFixture, 'catalog');
+  await mkdir(catalog);
+  await symlink(
+    new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url),
+    join(catalog, 'game-design-brief.json'),
+  );
+
+  const result = await validateArtifact(dir, { requireQualityProfile: true, profileCatalogRoot: catalog });
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /unknown quality_profile.*game-design-brief/i);
 });
 
 test('rejects a missing quality profile when profile-aware validation is active', async () => {
