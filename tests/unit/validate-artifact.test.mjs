@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -19,6 +19,25 @@ async function temporaryArtifact() {
   temporaryDirs.push(dir);
   await cp(fixtureDir, dir, { recursive: true });
   return dir;
+}
+
+async function canonicalTemporaryDirectory(prefix) {
+  const dir = await realpath(await mkdtemp(join(tmpdir(), prefix)));
+  temporaryDirs.push(dir);
+  return dir;
+}
+
+async function installRegularProfile(catalog) {
+  await mkdir(catalog, { recursive: true });
+  await cp(
+    new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url),
+    join(catalog, 'game-design-brief.json'),
+  );
+}
+
+async function assertProfileCatalogAccepted(artifactDir, profileCatalogRoot) {
+  const result = await validateArtifact(artifactDir, { requireQualityProfile: true, profileCatalogRoot });
+  assert.equal(result.ok, true, messages(result));
 }
 
 async function replaceIn(dir, relativePath, before, after) {
@@ -68,11 +87,10 @@ test('requires one known kebab-case quality profile when profile-aware validatio
 test('rejects a symlinked quality profile catalog root', async () => {
   const dir = await temporaryArtifact();
   await addQualityProfile(dir);
-  const catalogFixture = await mkdtemp(join(tmpdir(), 'quality-profile-catalog-root-'));
-  temporaryDirs.push(catalogFixture);
+  const catalogFixture = await canonicalTemporaryDirectory('quality-profile-catalog-root-');
   const realCatalog = join(catalogFixture, 'real-catalog');
-  await mkdir(realCatalog);
-  await cp(new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url), join(realCatalog, 'game-design-brief.json'));
+  await installRegularProfile(realCatalog);
+  await assertProfileCatalogAccepted(dir, realCatalog);
   const linkedCatalog = join(catalogFixture, 'linked-catalog');
   await symlink(realCatalog, linkedCatalog);
 
@@ -85,12 +103,11 @@ test('rejects a symlinked quality profile catalog root', async () => {
 test('rejects a quality profile catalog with a symlink ancestor', async () => {
   const dir = await temporaryArtifact();
   await addQualityProfile(dir);
-  const catalogFixture = await mkdtemp(join(tmpdir(), 'quality-profile-catalog-ancestor-'));
-  temporaryDirs.push(catalogFixture);
+  const catalogFixture = await canonicalTemporaryDirectory('quality-profile-catalog-ancestor-');
   const realParent = join(catalogFixture, 'real-parent');
   const realCatalog = join(realParent, 'catalog');
-  await mkdir(realCatalog, { recursive: true });
-  await cp(new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url), join(realCatalog, 'game-design-brief.json'));
+  await installRegularProfile(realCatalog);
+  await assertProfileCatalogAccepted(dir, realCatalog);
   const linkedParent = join(catalogFixture, 'linked-parent');
   await symlink(realParent, linkedParent);
 
@@ -106,10 +123,11 @@ test('rejects a quality profile catalog with a symlink ancestor', async () => {
 test('rejects a direct symlink quality profile entry', async () => {
   const dir = await temporaryArtifact();
   await addQualityProfile(dir);
-  const catalogFixture = await mkdtemp(join(tmpdir(), 'quality-profile-catalog-entry-'));
-  temporaryDirs.push(catalogFixture);
+  const catalogFixture = await canonicalTemporaryDirectory('quality-profile-catalog-entry-');
   const catalog = join(catalogFixture, 'catalog');
-  await mkdir(catalog);
+  await installRegularProfile(catalog);
+  await assertProfileCatalogAccepted(dir, catalog);
+  await unlink(join(catalog, 'game-design-brief.json'));
   await symlink(
     new URL('../../shared/document-quality/profiles/studio/game-design-brief.json', import.meta.url),
     join(catalog, 'game-design-brief.json'),
