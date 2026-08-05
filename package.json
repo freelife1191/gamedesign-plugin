@@ -12,7 +12,8 @@
     "build": "node tooling/build-snapshots.mjs",
     "validate": "node tooling/validate-suite.mjs",
     "validate:release": "node tooling/validate-suite.mjs --release",
-    "smoke:marketplace": "node tooling/marketplace-smoke.mjs"
+    "smoke:marketplace": "node tooling/marketplace-smoke.mjs",
+    "smoke:image:live": "node tooling/smoke-openai-image.mjs"
   },
   "engines": { "node": ">=18" }
 }
