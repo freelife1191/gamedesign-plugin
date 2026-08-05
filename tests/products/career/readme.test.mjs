@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -14,6 +14,7 @@ const readmePath = path.join(pluginRoot, "README.md");
 
 const skillIds = [
   "orchestrate-game-design-career",
+  "apply-document-quality-profile",
   "map-game-design-career",
   "research-game-design-jobs",
   "build-game-design-portfolio",
@@ -27,6 +28,7 @@ const skillIds = [
 
 const roleIds = [
   "career-strategist",
+  "document-quality-editor",
   "game-design-mentor",
   "portfolio-reviewer",
   "reverse-design-critic",
@@ -52,11 +54,66 @@ const templateIds = [
   "game-analysis-report",
 ];
 
+const qualityProfileIds = [
+  "career-stage-role-map",
+  "competency-matrix",
+  "learning-roadmap",
+  "job-posting-evidence",
+  "reverse-design-document",
+  "game-analysis-report",
+  "portfolio-project-brief",
+  "portfolio-case-study",
+  "portfolio-review-backlog",
+  "interview-question-answer-report",
+  "junior-growth-review",
+  "transition-readiness",
+  "recruiter-portfolio-presentation",
+];
+
+const topLevelScriptIds = [
+  "capability-probe.mjs",
+  "data-only-snapshot.mjs",
+  "quality-source-anchors.mjs",
+  "resolve-quality-profile.mjs",
+  "stop-artifact-review.mjs",
+  "validate-artifact.mjs",
+  "validate-quality-profile.mjs",
+  "validate-reference-preset.mjs",
+];
+
+const documentQualityPaths = [
+  "indexes/career.json",
+  "indexes/studio.json",
+  "profiles/career/",
+  "profiles/studio/",
+  "overlays/",
+  "presets/",
+  "render-contracts/long-form-document.json",
+  "render-contracts/presentation.json",
+  "render-contracts/review-report.json",
+  "schema/quality-profile-selection.schema.json",
+  "schema/quality-profile.schema.json",
+  "schema/reference-preset.schema.json",
+];
+
 function tableIds(markdown, heading) {
   const start = markdown.indexOf(`## ${heading}`);
   assert.notEqual(start, -1, `missing section: ${heading}`);
   const section = markdown.slice(start + heading.length + 3).split("\n## ")[0];
   return [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
+}
+
+async function walkFiles(root) {
+  const files = [];
+  async function visit(directory) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name);
+      if (entry.isDirectory()) await visit(file);
+      else if (entry.isFile()) files.push(file);
+    }
+  }
+  await visit(root);
+  return files.sort();
 }
 
 test("release documentation ships the plugin license and third-party notices", async () => {
@@ -153,6 +210,66 @@ test("README documents truthful installation, workflow, safety, visualization, e
   }
 });
 
+test("README documents the closed Career document-quality workflow and installed contracts", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  assert.match(readme, /^## Document Quality Profiles$/m);
+  assert.deepEqual(tableIds(readme, "Document Quality Profiles"), qualityProfileIds);
+  for (const contract of [
+    "정확히 하나의 primary profile",
+    "명시적 override",
+    "nearest profile",
+    "fallback",
+    "mobile`, `pc-console`, `live-service",
+    "competitive-live-service`, `replayable-coop`, `evolving-world`, `function-first`, `player-validated-small-team`, `cinematic-narrative`, `ugc-production-tooling",
+    "caller-authored production map",
+    "stable section/table/Skillstead diagram/image/acceptance checklist ID",
+    "draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved",
+    "receipt",
+    "generated image와 render는 자동 승인",
+    "공식 studio endorsement",
+    "references/document-quality/template-profile-map.json",
+    "references/shared/document-quality/schema/quality-profile.schema.json",
+    "references/shared/document-quality/render-contracts/",
+  ]) {
+    assert.ok(readme.includes(contract), `missing document-quality contract: ${contract}`);
+  }
+  assert.match(readme, /apply-document-quality-profile.*portfolio-case-study.*pc-console.*function-first/su);
+});
+
+test("README inventories the exact packaged runtime scripts and shared quality subtrees", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  assert.deepEqual(tableIds(readme, "설치된 top-level scripts"), topLevelScriptIds);
+  assert.deepEqual(tableIds(readme, "설치된 document-quality 경로"), documentQualityPaths);
+
+  const sourceScripts = (await readdir(path.join(repoRoot, "shared/scripts"), { withFileTypes: true }))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
+    .map(({ name }) => name)
+    .sort();
+  assert.deepEqual(sourceScripts, [...topLevelScriptIds].sort());
+
+  const stage = await mkdtemp(path.join(os.tmpdir(), "career-readme-inventory-"));
+  try {
+    const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot: stage, sourceDateEpoch: 0 });
+    const builtScripts = (await readdir(path.join(build.outputDir, "scripts"), { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
+      .map(({ name }) => name)
+      .sort();
+    assert.deepEqual(builtScripts, [...topLevelScriptIds].sort());
+    for (const relativePath of documentQualityPaths) {
+      await access(path.join(repoRoot, "shared/document-quality", relativePath));
+      await access(path.join(build.outputDir, "references/shared/document-quality", relativePath));
+    }
+    const sourceQualityRoot = path.join(repoRoot, "shared/document-quality");
+    const builtQualityRoot = path.join(build.outputDir, "references/shared/document-quality");
+    assert.deepEqual(
+      (await walkFiles(sourceQualityRoot)).map((file) => path.relative(sourceQualityRoot, file)),
+      (await walkFiles(builtQualityRoot)).map((file) => path.relative(builtQualityRoot, file)),
+    );
+  } finally {
+    await rm(stage, { recursive: true, force: true });
+  }
+});
+
 test("README local links resolve inside the source plugin or repository", async () => {
   const readme = await readFile(readmePath, "utf8");
   const links = [...readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)]
@@ -173,9 +290,9 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-career/plugin",
     "plugins/game-design-career",
     ".codex-plugin/plugin.json",
-    "skills/ (11개)",
+    "skills/ (12개)",
     "skills/svg-infographic/",
-    "agents/ (6개)",
+    "agents/ (7개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",
@@ -286,7 +403,7 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
     const environment = { ...process.env, CODEX_HOME: codexHome };
     const skillRun = spawnSync("/bin/bash", ["-c", skillCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(skillRun.status, 0, skillRun.stderr);
-    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 10);
+    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 11);
 
     const pluginRun = spawnSync("/bin/bash", ["-c", pluginCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(pluginRun.status, 0, pluginRun.stderr);

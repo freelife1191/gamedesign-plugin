@@ -17,14 +17,29 @@ test("each generated plugin passes a standalone byte- and process-verified smoke
   const report = await runIsolationSmoke({ repoRoot });
   assert.deepEqual(report.map(({ name }) => name), products);
   for (const result of report) {
-    assert.equal(result.skillCount, 11);
+    assert.equal(result.skillCount, 12);
     assert.equal(result.vendorFileCount, 48);
     assert.deepEqual(result.hooks, ["SessionStart", "Stop"]);
     assert.deepEqual(result.validation, { ok: true, requestedFormats: ["md"] });
     assert.equal(result.stopStatus, "passed");
     assert.equal(result.officialValidatorOrigin, "isolated-copy");
     assert.equal(result.symlinks, 0);
+    assert.deepEqual(result.qualityProfile, result.name === "game-design-studio"
+      ? { namespace: "studio", profileId: "game-design-brief", selectionReason: "compatible-template-map-match", validationOk: true }
+      : { namespace: "career", profileId: "portfolio-case-study", selectionReason: "compatible-template-map-match", validationOk: true });
   }
+});
+
+test("isolated quality-profile resolution has no repository-source fallback", async () => {
+  await assert.rejects(runIsolationSmoke({
+    repoRoot,
+    mutateCopy: async ({ pluginRoot, productName }) => {
+      const [namespace, profileId] = productName === "game-design-studio"
+        ? ["studio", "game-design-brief"]
+        : ["career", "portfolio-case-study"];
+      await rm(path.join(pluginRoot, `references/shared/document-quality/profiles/${namespace}/${profileId}.json`));
+    },
+  }), /ENOENT|profile|canonical source/ui);
 });
 
 for (const [label, mutate, expected] of [

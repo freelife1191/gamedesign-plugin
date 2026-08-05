@@ -13,6 +13,9 @@ const rolePriority = registry.reviewDispatch.rolePriority;
 const severityOrder = registry.reviewDispatch.severityOrder;
 const roleRank = new Map(rolePriority.map((role, index) => [role, index]));
 const severityRank = new Map(severityOrder.map((severity, index) => [severity, index]));
+const roleSeverityAuthority = new Map([
+  [registry.reviewDispatch.qualityEditorPolicy.role, new Set(registry.reviewDispatch.qualityEditorPolicy.allowedSeverities)],
+]);
 const inputKeys = ["schemaVersion", "findings"];
 const outputKeys = ["schemaVersion", "findings", "decisions"];
 const findingKeys = [
@@ -87,6 +90,9 @@ function validateFinding(value, index, { outputMode }) {
   assertNonEmptyString(value.severity, `${label}.severity`);
   if (!roleRank.has(value.role)) throw new Error(`${label}.role is unknown.`);
   if (!severityRank.has(value.severity)) throw new Error(`${label}.severity is unknown.`);
+  if (roleSeverityAuthority.has(value.role) && !roleSeverityAuthority.get(value.role).has(value.severity)) {
+    throw new Error(`${value.role} has no severity authority for ${value.severity}.`);
+  }
   if (!Array.isArray(value.evidenceIds) || value.evidenceIds.length === 0) {
     throw new Error(`${label}.evidenceIds must be a non-empty array.`);
   }

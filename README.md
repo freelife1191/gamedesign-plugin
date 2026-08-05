@@ -15,8 +15,8 @@ Game Design Plugin Suite는 전문 게임 기획을 두 개의 독립 Codex 플�
 | --- | --- | --- |
 | 주요 사용자 | 현업·인디 게임 기획자, 프로듀서, 개발팀 | 입문자, 취업 준비생, 주니어, 이직 준비자 |
 | 대표 작업 | GDD, 규칙·상태, 콘텐츠, UI/UX, 경제, LiveOps, 범위·리스크 | 역할 맵, 채용 근거, 역기획, 포트폴리오, 면접, 성장 계획 |
-| 제품 스킬 | 10개 | 10개 |
-| 전문 역할 프롬프트 | 6개 | 6개 |
+| 제품 스킬 | 11개 | 11개 |
+| 전문 역할 프롬프트 | 7개 | 7개 |
 | Canonical Artifact 템플릿 | 15개 | 15개 |
 | 제품 프로필 | `universal-core`, `live-service-rpg`, `mobile`, `pc-console` | 경력 단계 `entry`, `new-hire`, `junior-growth`, `transition` |
 | 도식화 | 게임 루프, 상태, 경제, 콘텐츠, LiveOps, 의존성 | 역량 맵, 학습·경력 로드맵, 포트폴리오 구조 |
@@ -151,7 +151,7 @@ flowchart LR
 
 ### Hooks와 scripts
 
-각 독립 패키지에는 같은 두 hook과 세 shared runtime script가 있습니다.
+각 독립 패키지에는 같은 두 hook과 8개 shared top-level runtime script가 있습니다.
 
 | 경로 | 역할 |
 | --- | --- |
@@ -163,15 +163,60 @@ flowchart LR
 
 제품별 helper는 각 `skills/<skill-id>/scripts/`에 있습니다. Studio는 프로필 합성, 역할 병합, 공개 재배포 가드, 시각화와 export 검증을 포함하고, Career는 역할 병합, 채용 근거, 경력 시나리오, 시각화와 export 검증을 포함합니다.
 
+## 설치된 top-level scripts
+
+| 파일 | 역할 |
+| --- | --- |
+| `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
+| `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `stop-artifact-review.mjs` | one-retry Stop artifact review |
+| `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-quality-profile.mjs` | closed Quality Profile 검증 |
+| `validate-reference-preset.mjs` | neutral reference preset 검증 |
+
+## 설치된 document-quality 경로
+
+아래 경로는 각 `plugins/<product>/references/shared/document-quality/` 아래에 byte-identical하게 설치됩니다.
+
+| 상대 경로 | 내용 |
+| --- | --- |
+| `indexes/career.json` | Career closed selection index |
+| `indexes/studio.json` | Studio closed selection index |
+| `profiles/career/` | Career 13-profile catalog |
+| `profiles/studio/` | Studio 17-profile catalog |
+| `overlays/` | additive overlay 3개 |
+| `presets/` | neutral reference preset 7개 |
+| `render-contracts/long-form-document.json` | 장문 문서 render contract |
+| `render-contracts/presentation.json` | presentation render contract |
+| `render-contracts/review-report.json` | review report render contract |
+| `schema/quality-profile-selection.schema.json` | profile selection schema |
+| `schema/quality-profile.schema.json` | Quality Profile schema |
+| `schema/reference-preset.schema.json` | neutral preset schema |
+
+## Document Quality Profiles
+
+두 플러그인은 문서마다 정확히 하나의 primary profile을 선택하는 닫힌 품질 계약을 공유합니다. Studio 17개 profile과 Career 13개 profile이 goal, audience, artifact type, requested format, template ID를 기준으로 선택됩니다. 알려진 명시적 override는 호환성을 검증하고, 알 수 없는 요청은 `nearest profile`과 차이를 기록합니다. 알려진 호환 fallback이 함께 지정되지 않으면 임의 profile로 진행하지 않습니다.
+
+각 제품의 `references/document-quality/template-profile-map.json`은 빌드된 패키지에서만 읽는 canonical map입니다. production API는 caller-authored map을 받지 않습니다. 30개 template은 각각 하나의 알려진 primary profile에 매핑됩니다. additive overlay 3개(`mobile`, `pc-console`, `live-service`)와 neutral reference preset 7개(`competitive-live-service`, `replayable-coop`, `evolving-world`, `function-first`, `player-validated-small-team`, `cinematic-narrative`, `ugc-production-tooling`)는 primary requirement와 안전 게이트를 삭제하거나 약화할 수 없습니다.
+
+선택은 stable section/table/Skillstead diagram/image/acceptance checklist ID와 digest-bound requirement manifest를 만듭니다. 상태는 `draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved`로만 전진하며, 외부 inspection/reviewer/human approval receipt가 필요합니다. Skillstead slot, generated image와 render는 renderer/visual review 전까지 승인 증거가 아닙니다.
+
+neutral preset의 authoring-only source 근거는 빌드에서 제외됩니다. 패키지와 결과는 source 회사·프로젝트명, 상표, URL, 로고, 이미지·레이아웃을 노출하거나 회사가 작성한 공식 형식 또는 공식 endorsement를 주장하지 않습니다. 현재 품질 profile은 구조·story·검토 계약이며 후속 rendering/image 기능의 완성을 의미하지 않습니다.
+
+설치된 고급 계약은 `plugins/game-design-studio/references/shared/document-quality/`와 `plugins/game-design-career/references/shared/document-quality/`에서 독립적으로 검사할 수 있습니다. 각 디렉터리에는 closed schemas, 제품별 profile/index, render contracts, additive overlays와 neutral presets가 들어 있습니다.
+
 ## 스킬 카탈로그
 
-각 제품은 제품 스킬 10개와 vendored `svg-infographic` 1개, 총 11개 스킬을 포함합니다.
+각 제품은 제품 스킬 11개와 vendored `svg-infographic` 1개, 총 12개 스킬을 포함합니다.
 
 ### Game Design Studio
 
 | 스킬 | 핵심 작업 |
 | --- | --- |
 | `orchestrate-game-design-project` | 요청 정규화, 프로필 합성, 최소 워크플로, 완료 게이트 |
+| `apply-document-quality-profile` | primary profile 선택, additive composition, checklist와 상태 gate |
 | `define-game-vision` | 목표 플레이어, 의도 경험, pillars, core/motivation loop |
 | `design-game-systems` | 규칙, 상태, 우선순위, 예외, 데이터 계약 |
 | `design-game-content` | 퀘스트, 레벨, 인카운터, 캐릭터, 적, 내러티브 단위 |
@@ -187,6 +232,7 @@ flowchart LR
 | 스킬 | 핵심 작업 |
 | --- | --- |
 | `orchestrate-game-design-career` | 경력 단계, 목표, 자료, 제약과 완료 조건 정규화 |
+| `apply-document-quality-profile` | primary profile 선택, additive composition, checklist와 상태 gate |
 | `map-game-design-career` | 역할군, 교환조건, 역량 공백과 증거 과제 비교 |
 | `research-game-design-jobs` | 현재 공식 채용 근거와 표본 한계 조사 |
 | `build-game-design-portfolio` | 주장-근거 색인, 기여도, 포트폴리오 사례 구성 |
@@ -204,6 +250,7 @@ flowchart LR
 | Studio 역할 | 검토 책임 | Career 역할 | 검토 책임 |
 | --- | --- | --- | --- |
 | `lead-game-designer` | 의도 경험, core loop, scope coherence | `career-strategist` | 복수 경로와 교환조건 |
+| `document-quality-editor` | 문서 구조·story contract 최소 수정 | `document-quality-editor` | 문서 구조·story contract 최소 수정 |
 | `system-economy-designer` | 규칙·상태·데이터·경제 투명성 | `game-design-mentor` | 연습과 검토 가능한 기획 증거 |
 | `content-narrative-designer` | 콘텐츠 목적·의존·내러티브·권리 | `portfolio-reviewer` | 주장·기여·근거 위치 |
 | `ux-accessibility-reviewer` | critical path, 입력, 상태, 접근성 | `reverse-design-critic` | 관찰·추론·반증 경로 |

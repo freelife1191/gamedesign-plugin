@@ -2,7 +2,7 @@
 
 Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직 준비를 검증 가능한 산출물로 바꾸는 Codex 플러그인입니다. 진로를 단정하거나 합격을 보장하지 않고, 현재 자료와 제약에서 확인할 수 있는 근거·공백·다음 실험을 분리합니다.
 
-플러그인은 10개 워크플로 스킬, 6개 전문 역할 프롬프트, 15개 Canonical Artifact 템플릿, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다.
+플러그인은 11개 워크플로 스킬, 7개 전문 역할 프롬프트, 15개 Canonical Artifact 템플릿, 13개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. vendored Skillstead를 포함한 설치 스킬은 12개입니다.
 
 ## 설치
 
@@ -72,17 +72,22 @@ codex plugin marketplace remove game-design-suite
 ```text
 <staging>/game-design-career/
 ├── .codex-plugin/plugin.json
-├── skills/ (11개)
-│   ├── <10개 Career 제품 스킬>/
+├── skills/ (12개)
+│   ├── <11개 Career 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   └── svg-infographic/             # vendored Skillstead 0.8.3
-├── agents/ (6개)                    # 이식 가능한 전문 역할 프롬프트
+├── agents/ (7개)                    # 이식 가능한 전문 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
 ├── scripts/                         # shared runtime
 │   ├── capability-probe.mjs
+│   ├── data-only-snapshot.mjs
+│   ├── quality-source-anchors.mjs
+│   ├── resolve-quality-profile.mjs
 │   ├── stop-artifact-review.mjs
-│   └── validate-artifact.mjs
+│   ├── validate-artifact.mjs
+│   ├── validate-quality-profile.mjs
+│   └── validate-reference-preset.mjs
 ├── references/
 │   ├── <Career routing, methods, rubric, product schemas>
 │   ├── shared/
@@ -90,6 +95,7 @@ codex plugin marketplace remove game-design-suite
 │   │   │   ├── core/
 │   │   │   └── trends/
 │   │   ├── responsible-design/
+│   │   ├── document-quality/        # indexes, profiles, overlays, presets, schemas, render contracts
 │   │   └── export/
 │   │       ├── schema/
 │   │       ├── qa-contracts/
@@ -106,9 +112,41 @@ codex plugin marketplace remove game-design-suite
 
 저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다. 이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며, suite 통합 빌드가 marketplace package를 만들 때 현재 원천에서 생성합니다.
 
-경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고 Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다. Studio와 달리 Career에는 profile 합성 계층이 없습니다.
+경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고, 문서 품질 계약은 `references/shared/document-quality/`와 `references/document-quality/template-profile-map.json`에 있으며, Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다.
 
-`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (11개)`는 제품 스킬 10개와 `skills/svg-infographic/` 한 개이며, `agents/ (6개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 프롬프트입니다.
+`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (12개)`는 제품 스킬 11개와 `skills/svg-infographic/` 한 개이며, `agents/ (7개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 프롬프트입니다.
+
+## 설치된 top-level scripts
+
+| 파일 | 역할 |
+| --- | --- |
+| `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
+| `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `stop-artifact-review.mjs` | one-retry Stop artifact review |
+| `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-quality-profile.mjs` | closed Quality Profile 검증 |
+| `validate-reference-preset.mjs` | neutral reference preset 검증 |
+
+## 설치된 document-quality 경로
+
+아래 경로는 `references/shared/document-quality/` 아래에 설치됩니다.
+
+| 상대 경로 | 내용 |
+| --- | --- |
+| `indexes/career.json` | Career closed selection index |
+| `indexes/studio.json` | Studio closed selection index |
+| `profiles/career/` | Career 13-profile catalog |
+| `profiles/studio/` | Studio 17-profile catalog |
+| `overlays/` | additive overlay 3개 |
+| `presets/` | neutral reference preset 7개 |
+| `render-contracts/long-form-document.json` | 장문 문서 render contract |
+| `render-contracts/presentation.json` | presentation render contract |
+| `render-contracts/review-report.json` | review report render contract |
+| `schema/quality-profile-selection.schema.json` | profile selection schema |
+| `schema/quality-profile.schema.json` | Quality Profile schema |
+| `schema/reference-preset.schema.json` | neutral preset schema |
 
 `hooks/hooks.json`은 두 shared runtime 진입점을 연결합니다.
 
@@ -138,11 +176,44 @@ codex plugin marketplace remove game-design-suite
 
 단계나 목표 직무가 불명확하면 `unclear`로 처리하고, 여러 임시 경로와 기회비용을 비교합니다. 하나의 정답 진로를 선언하지 않습니다.
 
+## Document Quality Profiles
+
+`apply-document-quality-profile`은 goal, audience, artifact type, requested format, template ID를 정규화해 정확히 하나의 primary profile을 선택합니다. 설치된 `references/document-quality/template-profile-map.json`이 canonical template map이고 production 호출은 caller-authored production map을 받지 않습니다. 알려진 명시적 override는 호환성을 검증합니다. 알 수 없는 요청은 결정론적 `nearest profile`과 차이를 기록하며, 알려진 호환 `fallback`을 명시한 경우에만 그 profile로 진행합니다. 호환 profile이 없거나 override/fallback이 잘못되면 fail-closed로 중단합니다.
+
+| 프로필 ID | 대표 문서 목적 |
+| --- | --- |
+| `career-stage-role-map` | 경력 단계·역할 경로 맵 |
+| `competency-matrix` | 역량·증거 매트릭스 |
+| `learning-roadmap` | 학습·검토·증거 로드맵 |
+| `job-posting-evidence` | 채용 공고 근거 분석 |
+| `reverse-design-document` | 관찰·추론 분리 역기획서 |
+| `game-analysis-report` | 범위·근거가 있는 게임 분석 |
+| `portfolio-project-brief` | 포트폴리오 프로젝트 브리프 |
+| `portfolio-case-study` | 판단·기여·결과 사례 연구 |
+| `portfolio-review-backlog` | 포트폴리오 수정 백로그 |
+| `interview-question-answer-report` | 질문·답변·근거 보고서 |
+| `junior-growth-review` | 주니어 성장 검토 |
+| `transition-readiness` | 이직 준비도 점검 |
+| `recruiter-portfolio-presentation` | 채용 의사결정형 발표 자료 |
+
+primary 요구사항에는 additive overlay `mobile`, `pc-console`, `live-service`를 중복 없이 더할 수 있고, neutral reference preset은 `competitive-live-service`, `replayable-coop`, `evolving-world`, `function-first`, `player-validated-small-team`, `cinematic-narrative`, `ugc-production-tooling` 중 최대 하나만 더할 수 있습니다. overlay와 preset은 primary requirement나 안전 게이트를 삭제·약화할 수 없습니다. 이 reference-only preset은 회사나 프로젝트의 형식 복제가 아니며 결과에 authoring-only source, 회사·프로젝트명, 상표, URL, 로고, 원본 이미지·레이아웃을 노출하지 않고 공식 studio endorsement를 주장하지 않습니다.
+
+선택 결과는 primary/overlay/preset ID, 이유, 점수, tie-break와 fallback 기록을 보존합니다. 요구사항 manifest와 stable section/table/Skillstead diagram/image/acceptance checklist ID는 canonical source bytes와 artifact digest에 결합됩니다. 상태는 `draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved`로만 전진합니다. 외부 artifact inspection, evidence reviewer, renderer/visual·rights·책임 게이트 reviewer, 이름 있는 human approval의 digest-bound receipt가 각각 필요하며 상태를 건너뛸 수 없습니다. Skillstead diagram slot은 renderer/visual review 전까지 unverified이고, generated image와 render는 자동 승인하지 않습니다.
+
+설치 후 고급 사용자는 `references/shared/document-quality/schema/quality-profile.schema.json`, `references/shared/document-quality/schema/quality-profile-selection.schema.json`, `references/shared/document-quality/schema/reference-preset.schema.json`, `references/shared/document-quality/render-contracts/`, `references/shared/document-quality/profiles/career/`, `references/shared/document-quality/indexes/career.json`을 검사할 수 있습니다. 이 경로는 패키지 내부 canonical source이며 저장소의 authoring-only evidence로 fallback하지 않습니다. 렌더 계약은 후속 renderer가 지켜야 할 계약이지 현재 플러그인이 PDF/DOCX/PPTX/image를 자동 완성한다는 뜻이 아닙니다.
+
+정확한 intent 예시는 다음과 같습니다.
+
+```text
+apply-document-quality-profile: portfolio-case-study를 recruiter 대상 MD로 만들고 pc-console overlay와 function-first preset을 적용해. section/table/diagram/image/acceptance checklist와 선택 기록을 먼저 반환해.
+```
+
 ## 스킬 카탈로그
 
 | 스킬 ID | 사용하는 때 | 핵심 결과 |
 | --- | --- | --- |
 | `orchestrate-game-design-career` | 단계 진단과 복합 작업 라우팅 | 단계·목표 브리프, 스킬 체인, 검토 envelope |
+| `apply-document-quality-profile` | 산출물 유형·대상·형식에 맞는 문서 품질 계약 적용 | 선택 기록, 요구사항 manifest, stable checklist와 상태 envelope |
 | `map-game-design-career` | 역할군 비교와 역량 공백 계획 | 복수 임시 경로, 교환조건, 증거 과제 |
 | `research-game-design-jobs` | 현재 채용·회사·프로젝트 사실이 필요할 때 | 날짜·지역·표본 한계가 있는 채용 근거 세트 |
 | `build-game-design-portfolio` | 프로젝트를 검토 가능한 사례로 만들 때 | 주장-근거 색인, 기여도, 복구 큐 |
@@ -158,6 +229,7 @@ codex plugin marketplace remove game-design-suite
 | 역할 ID | 검토 책임 | 경계 |
 | --- | --- | --- |
 | `career-strategist` | 근거 기반 진로 방향과 교환조건 | 작은 표본을 보편 규칙으로 만들지 않음 |
+| `document-quality-editor` | 문서 구조, section/slot, story contract의 최소 수정 검토 | evidence·visual·rights·production·release·human 승인 권한 없음 |
 | `game-design-mentor` | 연습이 검토 가능한 기획 판단과 산출물을 만드는지 확인 | 활동량을 능력 증거로 대체하지 않음 |
 | `portfolio-reviewer` | 각 주장이 증명하는 역량과 근거 위치 확인 | 시각적 완성도에서 역량을 추론하지 않음 |
 | `reverse-design-critic` | 관찰·사실·추론과 반증 경로 검토 | 내부 의도나 구현을 사실로 단정하지 않음 |
@@ -315,7 +387,7 @@ node --test tests/products/career/readme.test.mjs
 node --test tests/products/career/*.test.mjs tests/e2e/career/*.test.mjs
 ```
 
-10개 source skill의 공식 구조를 확인합니다.
+11개 source skill의 공식 구조를 확인합니다.
 
 ```bash
 CODEX_SKILL_CREATOR_ROOT="${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator"

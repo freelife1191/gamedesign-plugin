@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "preGenerationSkill": "apply-document-quality-profile",
   "stages": [
     {
       "id": "unclear",
@@ -94,7 +95,8 @@
       "portfolio-reviewer",
       "reverse-design-critic",
       "interview-coach",
-      "evidence-auditor"
+      "evidence-auditor",
+      "document-quality-editor"
     ],
     "questionsByRole": {
       "career-strategist": ["What is the largest evidence-backed career bottleneck now?"],
@@ -102,7 +104,8 @@
       "portfolio-reviewer": ["Which competency does each artifact prove, and where is that evidence inspectable?"],
       "reverse-design-critic": ["Which claims cross from observation to inference without a validation path?"],
       "interview-coach": ["Do answers connect claims, evidence, choices, alternatives, outcomes, and reflection?"],
-      "evidence-auditor": ["Which claims are stale, missing, generalized, non-primary, or unsupported?"]
+      "evidence-auditor": ["Which claims are stale, missing, generalized, non-primary, or unsupported?"],
+      "document-quality-editor": ["Which required section or slot is missing, misplaced, contradictory, or outside the selected story contract?"]
     },
     "parallel": {
       "rolesSource": "selectedRoles",
@@ -118,8 +121,18 @@
         "portfolio-reviewer",
         "reverse-design-critic",
         "interview-coach",
-        "evidence-auditor"
+        "evidence-auditor",
+        "document-quality-editor"
       ]
+    },
+    "qualityEditorPolicy": {
+      "role": "document-quality-editor",
+      "maxReviewers": 3,
+      "maxDomainReviewers": 2,
+      "allowedSeverities": ["high", "medium", "low"],
+      "requiredRoleSets": {
+        "portfolio-review": ["portfolio-reviewer", "evidence-auditor"]
+      }
     },
     "severityOrder": ["blocker", "high", "medium", "low"],
     "mergeKeys": ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"]

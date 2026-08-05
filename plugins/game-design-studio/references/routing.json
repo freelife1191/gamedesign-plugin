@@ -10,7 +10,8 @@
     "plan-game-production",
     "review-game-design",
     "visualize-game-design",
-    "export-game-design-documents"
+    "export-game-design-documents",
+    "apply-document-quality-profile"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -18,7 +19,8 @@
     "content-narrative-designer",
     "ux-accessibility-reviewer",
     "liveops-data-designer",
-    "production-feasibility-critic"
+    "production-feasibility-critic",
+    "document-quality-editor"
   ],
   "profileIds": ["live-service-rpg", "mobile", "pc-console"],
   "rolePriority": [
@@ -27,7 +29,8 @@
     "content-narrative-designer",
     "ux-accessibility-reviewer",
     "liveops-data-designer",
-    "production-feasibility-critic"
+    "production-feasibility-critic",
+    "document-quality-editor"
   ],
   "unknownIntentFallback": "orchestrate-game-design-project",
   "plannedPaths": {
@@ -41,7 +44,8 @@
       "skills/plan-game-production/SKILL.md",
       "skills/review-game-design/SKILL.md",
       "skills/visualize-game-design/SKILL.md",
-      "skills/export-game-design-documents/SKILL.md"
+      "skills/export-game-design-documents/SKILL.md",
+      "skills/apply-document-quality-profile/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -49,7 +53,8 @@
       "agents/content-narrative-designer.md",
       "agents/ux-accessibility-reviewer.md",
       "agents/liveops-data-designer.md",
-      "agents/production-feasibility-critic.md"
+      "agents/production-feasibility-critic.md",
+      "agents/document-quality-editor.md"
     ],
     "profiles": [
       "references/profiles/universal-core.json",
@@ -70,6 +75,32 @@
       "assets/templates/game-design-review/content.md",
       "references/visualization-presets.json",
       "references/export-recipes.md"
+    ]
+  },
+  "qualityWorkflow": {
+    "skill": "apply-document-quality-profile",
+    "role": "document-quality-editor",
+    "placement": "before-content-generation-and-asset-planning",
+    "templateMap": "references/document-quality/template-profile-map.json",
+    "profileRoot": "references/shared/document-quality/profiles/studio",
+    "profileIds": [
+      "accessibility-platform-matrix",
+      "character-skill-combat-monster-specification",
+      "core-motivation-loop",
+      "data-table-contract",
+      "design-review-decision-log",
+      "economy-balance-specification",
+      "executive-pitch",
+      "game-design-brief",
+      "liveops-event-experiment-plan",
+      "master-gdd",
+      "narrative-quest-npc-specification",
+      "playtest-metrics-report",
+      "production-scope-milestone-risk-plan",
+      "rule-state-exception-matrix",
+      "system-feature-specification",
+      "ui-ux-flow-state-specification",
+      "vision-one-pager"
     ]
   },
   "routes": [

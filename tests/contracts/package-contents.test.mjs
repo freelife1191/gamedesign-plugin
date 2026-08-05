@@ -118,9 +118,9 @@ test("generated snapshots contain the exact clean product build plus the suite m
       assert.equal(packagedManifest.name, productName);
       assert.equal(packagedManifest.skills, "./skills/");
 
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 11);
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 10);
-      assert.equal(pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length, 6);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 12);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 11);
+      assert.equal(pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length, 7);
       assert.equal(pathsUnder(packageFiles, "references/source/docs/").filter((file) => file.endsWith(".md")).length, 49);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/core/").length, 7);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/trends/").length, 2);
@@ -136,6 +136,13 @@ test("generated snapshots contain the exact clean product build plus the suite m
         "references/shared/knowledge/reference-index.json",
         "references/shared/knowledge/source-policy.md",
         "references/shared/export/schema/artifact.schema.json",
+        "references/shared/document-quality/schema/quality-profile.schema.json",
+        "references/shared/document-quality/render-contracts/long-form-document.json",
+        "references/document-quality/template-profile-map.json",
+        "scripts/resolve-quality-profile.mjs",
+        "scripts/validate-quality-profile.mjs",
+        "skills/apply-document-quality-profile/SKILL.md",
+        "agents/document-quality-editor.md",
         "skills/svg-infographic/SKILL.md",
         "skills/svg-infographic/LICENSE.txt",
         "README.md",

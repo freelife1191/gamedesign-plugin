@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 10개, 이식 가능한 전문 역할 프롬프트 6개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 11개입니다.
+플러그인은 제품 스킬 11개, 이식 가능한 전문 역할 프롬프트 7개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, 17개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 12개입니다.
 
 ## 설치
 
@@ -78,17 +78,22 @@ codex plugin marketplace remove game-design-suite
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
-├── skills/ (11개)
-│   ├── <10개 Studio 제품 스킬>/
+├── skills/ (12개)
+│   ├── <11개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   └── svg-infographic/             # vendored Skillstead 0.8.3
-├── agents/ (6개)                    # 이식 가능한 전문 역할 프롬프트
+├── agents/ (7개)                    # 이식 가능한 전문 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
 ├── scripts/                         # shared runtime
 │   ├── capability-probe.mjs
+│   ├── data-only-snapshot.mjs
+│   ├── quality-source-anchors.mjs
+│   ├── resolve-quality-profile.mjs
 │   ├── stop-artifact-review.mjs
-│   └── validate-artifact.mjs
+│   ├── validate-artifact.mjs
+│   ├── validate-quality-profile.mjs
+│   └── validate-reference-preset.mjs
 ├── references/
 │   ├── <Studio routing, methods, profiles, export/visualization contracts>
 │   ├── source-document-rights.json  # 원문 49개의 경로·해시·권리 상태
@@ -98,6 +103,7 @@ plugins/game-design-studio/
 │   │   │   ├── core/
 │   │   │   └── trends/
 │   │   ├── responsible-design/
+│   │   ├── document-quality/        # indexes, profiles, overlays, presets, schemas, render contracts
 │   │   └── export/
 │   │       ├── schema/
 │   │       ├── qa-contracts/
@@ -119,7 +125,39 @@ plugins/game-design-studio/
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
-검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (11개)`는 제품 스킬 10개와 `skills/svg-infographic/`이고 `agents/ (6개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
+검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (12개)`는 제품 스킬 11개와 `skills/svg-infographic/`이고 `agents/ (7개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
+
+## 설치된 top-level scripts
+
+| 파일 | 역할 |
+| --- | --- |
+| `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
+| `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `stop-artifact-review.mjs` | one-retry Stop artifact review |
+| `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-quality-profile.mjs` | closed Quality Profile 검증 |
+| `validate-reference-preset.mjs` | neutral reference preset 검증 |
+
+## 설치된 document-quality 경로
+
+아래 경로는 `references/shared/document-quality/` 아래에 설치됩니다.
+
+| 상대 경로 | 내용 |
+| --- | --- |
+| `indexes/career.json` | Career closed selection index |
+| `indexes/studio.json` | Studio closed selection index |
+| `profiles/career/` | Career 13-profile catalog |
+| `profiles/studio/` | Studio 17-profile catalog |
+| `overlays/` | additive overlay 3개 |
+| `presets/` | neutral reference preset 7개 |
+| `render-contracts/long-form-document.json` | 장문 문서 render contract |
+| `render-contracts/presentation.json` | presentation render contract |
+| `render-contracts/review-report.json` | review report render contract |
+| `schema/quality-profile-selection.schema.json` | profile selection schema |
+| `schema/quality-profile.schema.json` | Quality Profile schema |
+| `schema/reference-preset.schema.json` | neutral preset schema |
 
 ## 원문 권리와 배포 모드
 
@@ -175,11 +213,48 @@ node "$PLUGIN_ROOT/skills/orchestrate-game-design-project/scripts/check-source-d
 
 복수 프로필은 `universal-core → live-service-rpg → mobile → pc-console`의 canonical order로 중복 없이 합성됩니다. `mobile`과 다른 프로필을 함께 선택하면 session length, client/server authority, primary input, monetization/platform policy 충돌이 나타날 수 있습니다. 각 충돌은 자동으로 타협하지 않고 `conflict decision record`를 요구합니다. 기록에는 `decision`, `rationale`, `evidenceIds`, `owner`, `approvalDate`가 모두 있어야 합니다.
 
+## Document Quality Profiles
+
+`apply-document-quality-profile`은 goal, audience, artifact type, requested format, template ID를 정규화해 정확히 하나의 primary profile을 선택합니다. `references/document-quality/template-profile-map.json`은 설치 패키지의 canonical template map이며 production 호출은 caller-authored production map을 받지 않습니다. 알려진 명시적 override는 호환성을 확인한 뒤 사용합니다. 알 수 없는 요청은 결정론적 `nearest profile`과 차이를 기록하고, 사용자가 알려진 호환 `fallback`을 함께 지정한 경우에만 그 profile로 진행합니다. 호환 profile이 없거나 override/fallback이 잘못되면 fail-closed로 중단합니다.
+
+| 프로필 ID | 대표 문서 목적 |
+| --- | --- |
+| `vision-one-pager` | 의사결정용 비전 요약 |
+| `game-design-brief` | 목표·범위·제약 브리프 |
+| `master-gdd` | 장문 기준 GDD |
+| `core-motivation-loop` | 핵심 행동·동기 루프 |
+| `system-feature-specification` | 기능 규칙·상태·예외 명세 |
+| `rule-state-exception-matrix` | 규칙·상태·예외 매트릭스 |
+| `data-table-contract` | 데이터 테이블 계약 |
+| `narrative-quest-npc-specification` | 내러티브·퀘스트·NPC 명세 |
+| `character-skill-combat-monster-specification` | 캐릭터·스킬·전투·몬스터 명세 |
+| `ui-ux-flow-state-specification` | UI/UX 흐름·상태 명세 |
+| `economy-balance-specification` | 경제·밸런스 명세 |
+| `liveops-event-experiment-plan` | LiveOps 이벤트·실험 계획 |
+| `accessibility-platform-matrix` | 접근성·플랫폼 매트릭스 |
+| `production-scope-milestone-risk-plan` | 범위·마일스톤·위험 계획 |
+| `playtest-metrics-report` | 플레이테스트·지표 보고서 |
+| `design-review-decision-log` | 설계 검토·결정 로그 |
+| `executive-pitch` | 의사결정형 발표 자료 |
+
+primary 요구사항에는 additive overlay `mobile`, `pc-console`, `live-service`를 중복 없이 더할 수 있고, neutral reference preset은 `competitive-live-service`, `replayable-coop`, `evolving-world`, `function-first`, `player-validated-small-team`, `cinematic-narrative`, `ugc-production-tooling` 중 최대 하나만 더할 수 있습니다. overlay와 preset은 primary requirement나 안전 게이트를 삭제·약화할 수 없습니다. 이 reference-only preset은 회사나 프로젝트의 형식 복제가 아니며 결과에 authoring-only source, 회사·프로젝트명, 상표, URL, 로고, 원본 이미지·레이아웃을 노출하지 않고 공식 studio endorsement를 주장하지 않습니다.
+
+선택 결과는 primary/overlay/preset ID, 이유, 점수, tie-break와 fallback 기록을 보존합니다. 요구사항 manifest와 stable section/table/Skillstead diagram/image/acceptance checklist ID는 canonical source bytes와 artifact digest에 결합됩니다. 상태는 `draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved`로만 전진합니다. 외부 artifact inspection, evidence reviewer, renderer/visual·rights·책임 게이트 reviewer, 이름 있는 human approval의 digest-bound receipt가 각각 필요하며 상태를 건너뛸 수 없습니다. Skillstead diagram slot은 renderer/visual review 전까지 unverified이고, generated image와 render는 자동 승인하지 않습니다.
+
+설치 후 고급 사용자는 `references/shared/document-quality/schema/quality-profile.schema.json`, `references/shared/document-quality/schema/quality-profile-selection.schema.json`, `references/shared/document-quality/schema/reference-preset.schema.json`, `references/shared/document-quality/render-contracts/`, `references/shared/document-quality/profiles/studio/`, `references/shared/document-quality/indexes/studio.json`을 검사할 수 있습니다. 이 경로는 패키지 내부 canonical source이며 저장소의 authoring-only evidence로 fallback하지 않습니다. 렌더 계약은 후속 renderer가 지켜야 할 계약이지 현재 플러그인이 PDF/DOCX/PPTX/image를 자동 완성한다는 뜻이 아닙니다.
+
+정확한 intent 예시는 다음과 같습니다.
+
+```text
+apply-document-quality-profile: game-design-brief 템플릿으로 production 대상 MD를 만들고 mobile overlay와 function-first preset을 적용해. section/table/diagram/image/acceptance checklist와 선택 기록을 먼저 반환해.
+```
+
 ## 스킬 카탈로그
 
 | 스킬 ID | 사용하는 때 | 핵심 결과 |
 | --- | --- | --- |
 | `orchestrate-game-design-project` | 복합·불명확 요청과 전체 완료 조정 | 브리프, 최소 스킬 체인, 프로필, 검토 envelope, 완료 게이트 |
+| `apply-document-quality-profile` | 산출물 유형·대상·형식에 맞는 문서 품질 계약 적용 | 선택 기록, 요구사항 manifest, stable checklist와 상태 envelope |
 | `define-game-vision` | 목표 플레이어, 의도 경험, core fun과 pillars 정의 | `vision-pillars`, core/motivation loop, 측정 가능한 가설 |
 | `design-game-systems` | 규칙, 상태, 우선순위, 예외, 데이터 계약 설계 | 실행 가능한 `system-specification`과 table/runtime mapping |
 | `design-game-content` | quest, level, encounter, character, enemy, narrative unit 설계 | 시스템·데이터·생산 근거에 연결된 content spec |
@@ -195,6 +270,7 @@ node "$PLUGIN_ROOT/skills/orchestrate-game-design-project/scripts/check-source-d
 | 역할 ID | 검토 책임 | blocker 권한 경계 |
 | --- | --- | --- |
 | `lead-game-designer` | 목표 경험, core loop, pillars, meaningful choice, scope coherence | `scope-control` |
+| `document-quality-editor` | 문서 구조, section/slot, story contract의 최소 수정 검토 | evidence·visual·rights·production·release·human 승인 권한 없음 |
 | `system-economy-designer` | rules, precedence, state, data mapping, sources/sinks, balance, monetization | `economy-transparency` |
 | `content-narrative-designer` | content purpose, system dependency, strategy, telegraph, narrative, rights | `ai-rights-human-approval` |
 | `ux-accessibility-reviewer` | critical actions, states, onboarding, input, performance, access | `accessibility` |
@@ -345,7 +421,7 @@ node --test tests/products/studio/readme.test.mjs
 node --test tests/products/studio/*.test.mjs tests/e2e/studio/*.test.mjs
 ```
 
-10개 source skill의 공식 구조를 확인합니다.
+11개 source skill의 공식 구조를 확인합니다.
 
 ```bash
 CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"

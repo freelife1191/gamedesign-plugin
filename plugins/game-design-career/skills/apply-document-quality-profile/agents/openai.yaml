@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apply Document Quality Profile"
+  short_description: "Apply deterministic document quality profiles"
+  default_prompt: "Use $apply-document-quality-profile to select and apply the quality contract before authoring this game-design artifact."

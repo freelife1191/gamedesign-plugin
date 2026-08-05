@@ -14,6 +14,12 @@ Validate the Canonical Artifact before review-derived approval, visualization, o
 
 Keep assumptions, non-goals, completion criteria, risks, responsible-design states, and human approvals visible. Preserve the canonical artifact whenever visualization or export fails or is unavailable.
 
+## Document quality
+
+Require one validated quality-profile selection record per compatible artifact and apply it before content generation and asset planning. Use the exact trusted upper-apply application with canonical source-body bindings; re-derive its full manifest at every boundary and reject cloned, shrunk, injected, reordered, or recomputed caller manifests. Advance only `draft -> structurally-complete -> evidence-reviewed -> visual-reviewed -> document-approved`; do not skip states. Carry the full manifest digest in the immutable state envelope and receipts, and require an artifact-digest-bound external artifact-inspection receipt covering every canonical required ID before `structurally-complete`; requirements or caller state strings cannot complete it. Reject Proxy, accessor, unsafe-Unicode, custom-prototype, repeated-reference, hidden-property, symbol, and cyclic public data before use.
+
+Generated images and rendered files do not grant approval. Requested diagrams remain unverified until Skillstead output and renderer QA pass. Evidence, image rights, responsible-design, release, and named human approvals remain separate gates; `document-quality-editor` may report structural findings but cannot approve them.
+
 ## Responsible design
 
 Ask each packaged gate's applicability question and use only the lifecycle `not-applicable`, `pending`, `blocked`, `approved`:

@@ -167,7 +167,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });
   const skills = skillEntries.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
-  if (skills.length !== 11) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
+  if (skills.length !== 12) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
   for (const skill of skills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
 
   const vendorFileCount = await verifyVendor(pluginRoot);
@@ -203,6 +203,37 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
     throw new Error("canonical MD validation mismatch");
   }
 
+  const qualityContract = productName === "game-design-studio"
+    ? {
+        namespace: "studio",
+        profileId: "game-design-brief",
+        request: { artifactId: "brief", goal: "game design brief", audience: ["production"], artifactType: "design-document", requestedFormat: "md", templateId: "game-design-brief" },
+      }
+    : {
+        namespace: "career",
+        profileId: "portfolio-case-study",
+        request: { artifactId: "case-study", goal: "portfolio case study", audience: ["recruiter"], artifactType: "career-document", requestedFormat: "md", templateId: "creative-design-portfolio" },
+      };
+  const qualityRoot = path.join(pluginRoot, "references/shared/document-quality");
+  const [qualityRuntime, qualityValidator, selectionIndex] = await Promise.all([
+    import(`${pathToFileURL(path.join(pluginRoot, "scripts/resolve-quality-profile.mjs")).href}?isolation=${Date.now()}`),
+    import(`${pathToFileURL(path.join(pluginRoot, "scripts/validate-quality-profile.mjs")).href}?isolation=${Date.now()}`),
+    readFile(path.join(qualityRoot, `indexes/${qualityContract.namespace}.json`), "utf8").then(JSON.parse),
+  ]);
+  const application = await qualityRuntime.applyDocumentQualityProfile({
+    namespace: qualityContract.namespace,
+    selectionIndex,
+    pluginRoot,
+    request: qualityContract.request,
+  });
+  if (application.selection.primaryProfileId !== qualityContract.profileId) {
+    throw new Error(`${productName} isolated quality-profile selection mismatch`);
+  }
+  const profileValidation = qualityValidator.validateQualityProfile(application.composed.profile, {
+    sourceName: `${productName} isolated composed profile`,
+  });
+  if (!profileValidation.ok) throw new Error(`${productName} isolated quality-profile validation failed`);
+
   const sentinel = '<!-- game-design-plugin:artifact {"path":"artifact","formats":["md"]} -->';
   const stop = runProcess(process.execPath, [path.join(pluginRoot, "scripts/stop-artifact-review.mjs")], {
     cwd: workspace,
@@ -224,6 +255,12 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
     stopStatus: stopOutput.status,
     officialValidatorOrigin: "isolated-copy",
     symlinks: audit.symlinks,
+    qualityProfile: {
+      namespace: qualityContract.namespace,
+      profileId: application.selection.primaryProfileId,
+      selectionReason: application.selection.selectionReason,
+      validationOk: profileValidation.ok,
+    },
   };
 }
 
@@ -249,7 +286,7 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
 async function main() {
   const report = await runIsolationSmoke();
   for (const result of report) {
-    process.stdout.write(`${result.name}: PASS (${result.skillCount} skills, ${result.vendorFileCount} vendor files, canonical MD + hooks)\n`);
+    process.stdout.write(`${result.name}: PASS (${result.skillCount} skills, ${result.vendorFileCount} vendor files, canonical MD + quality profile + hooks)\n`);
   }
 }
 

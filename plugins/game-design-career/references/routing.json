@@ -10,7 +10,8 @@
     "review-game-design-portfolio",
     "plan-junior-growth",
     "visualize-career-roadmap",
-    "export-career-documents"
+    "export-career-documents",
+    "apply-document-quality-profile"
   ],
   "roleIds": [
     "career-strategist",
@@ -18,9 +19,32 @@
     "portfolio-reviewer",
     "reverse-design-critic",
     "interview-coach",
-    "evidence-auditor"
+    "evidence-auditor",
+    "document-quality-editor"
   ],
   "stages": ["entry", "new-hire", "junior-growth", "transition"],
+  "qualityWorkflow": {
+    "skill": "apply-document-quality-profile",
+    "role": "document-quality-editor",
+    "placement": "before-content-generation-and-asset-planning",
+    "templateMap": "references/document-quality/template-profile-map.json",
+    "profileRoot": "references/shared/document-quality/profiles/career",
+    "profileIds": [
+      "career-stage-role-map",
+      "competency-matrix",
+      "game-analysis-report",
+      "interview-question-answer-report",
+      "job-posting-evidence",
+      "junior-growth-review",
+      "learning-roadmap",
+      "portfolio-case-study",
+      "portfolio-project-brief",
+      "portfolio-review-backlog",
+      "recruiter-portfolio-presentation",
+      "reverse-design-document",
+      "transition-readiness"
+    ]
+  },
   "routeSkills": {
     "orchestrate-game-design-career": "orchestrate-game-design-career",
     "map-career-role-and-skill-gaps": "map-game-design-career",

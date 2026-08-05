@@ -82,6 +82,12 @@ function validateRange(value, minKey, maxKey, path, errors) {
 
 export function validateQualityProfile(value, { sourceName = "quality profile" } = {}) {
   const errors = [];
+  try {
+    value = snapshotDataOnly(value, sourceName);
+  } catch (error) {
+    add(errors, "data.snapshot", "", error.message);
+    return { ok: false, errors };
+  }
   if (!isObject(value)) {
     add(errors, "schema.type", "", `${sourceName} must be an object`);
     return { ok: false, errors };
@@ -256,3 +262,4 @@ export function validateQualityProfile(value, { sourceName = "quality profile" }
   errors.sort((left, right) => left.path.localeCompare(right.path) || left.code.localeCompare(right.code) || left.message.localeCompare(right.message));
   return { ok: errors.length === 0, errors };
 }
+import { snapshotDataOnly } from "./data-only-snapshot.mjs";

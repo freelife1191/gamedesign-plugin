@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "06d60e2afc2e038c41e91b162d4dbc5866ec8c4aa8d8ebc089e0f49dee150aaa",
+  "treeSha256": "d8851372abb8f19ab82aa1c3d004c0c520680af4420d16f51a9cb84ffbd99ad7",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -16,8 +16,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "a3b54279a258f2c9bda40b1d32b71d0d21b78011ad03f10a60868bd3121806c4",
-      "size": 29593
+      "sha256": "6acb540b441d0a793e67b9930e6874d1da8ee51bb3e4137196936c330db98681",
+      "size": 36392
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -28,6 +28,11 @@
       "path": "agents/content-narrative-designer.md",
       "sha256": "22eb809ce224f76c385d45ea93e9319d1e388b2924038786a9c249a92b7f9a85",
       "size": 2873
+    },
+    {
+      "path": "agents/document-quality-editor.md",
+      "sha256": "e58c27af4a063e5f658f1e5f627f9a6bf97d3bc21d9af261d188556a89659165",
+      "size": 2625
     },
     {
       "path": "agents/lead-game-designer.md",
@@ -551,8 +556,18 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "99f28d5f5f7c787590eaff93539cda1fea0e16f7d2434cac36d1c37196bee547",
-      "size": 10753
+      "sha256": "b3599d2a9fc0e5c072ab6c1ddead5dc7737d2a8b0b372f6ae04db12e29316c75",
+      "size": 11906
+    },
+    {
+      "path": "references/shared/document-quality/indexes/career.json",
+      "sha256": "d8fbf245b98a4a0cc530b52613d4c0aa7c2cdbdee85336f88e911c51ef2fcb50",
+      "size": 4300
+    },
+    {
+      "path": "references/shared/document-quality/indexes/studio.json",
+      "sha256": "24cf14a02d15c0a2484e7d5c899d090229d0e6d6e2d98af21cd05a683860c177",
+      "size": 6131
     },
     {
       "path": "references/shared/document-quality/overlays/live-service.json",
@@ -1170,9 +1185,19 @@
       "size": 9750
     },
     {
+      "path": "scripts/data-only-snapshot.mjs",
+      "sha256": "bfd30a4bbe5cf624ba7d4fb5d28b30d2ef3799d57a537cb0dec1bf0c56647a74",
+      "size": 3716
+    },
+    {
+      "path": "scripts/quality-source-anchors.mjs",
+      "sha256": "2f4300a2d038c47d54fbc6dd5b167c124fcccd573529aa303fd2d6549028a900",
+      "size": 10472
+    },
+    {
       "path": "scripts/resolve-quality-profile.mjs",
-      "sha256": "2a3ff27543ce645be51dcb15e42920d5427679a0dc55a49b2bc4db4c26f8e237",
-      "size": 6355
+      "sha256": "44f40aabf64cd9886503a0068e66360adc78cba55c0b607ed1ed2f006d7a800f",
+      "size": 71907
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
@@ -1186,8 +1211,23 @@
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
-      "sha256": "8b7587d2b871bc51eed1098196e3b07782d85eb222de78fb4c40ef19a36638ce",
-      "size": 16137
+      "sha256": "bba7a6e5bd4b72a03b3de9a090a1f05f5a4ccf858b77322659b389c7067c5503",
+      "size": 16366
+    },
+    {
+      "path": "scripts/validate-reference-preset.mjs",
+      "sha256": "aaf5d54297a637d97d0642da4de477af9ad1146d383407d00617605b6d042564",
+      "size": 4127
+    },
+    {
+      "path": "skills/apply-document-quality-profile/SKILL.md",
+      "sha256": "c5bdd96bd9d7a76dc194e88ffb507288d07d18101a74f732cb12cb526f1fb777",
+      "size": 8911
+    },
+    {
+      "path": "skills/apply-document-quality-profile/agents/openai.yaml",
+      "sha256": "426be3b20ea134202f49ffae43902badab8282019fe4d43d7f714fee3be06a24",
+      "size": 270
     },
     {
       "path": "skills/define-game-vision/SKILL.md",
@@ -1266,8 +1306,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "763a7c88bfd4e8a801e39466224e26db95d32f6e41a302559b6e54091a1d9e4c",
-      "size": 2310
+      "sha256": "3fc68769670b8104a8432fbbbf2d9b11872907477891aaddb2428e499313aa9d",
+      "size": 2510
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",
@@ -1276,8 +1316,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/references/completion-gates.md",
-      "sha256": "cd752c2a28f67699e5bfe53fb93189bb819a62e0ec03fe9830a7ef7499fa9f6f",
-      "size": 3100
+      "sha256": "ed24d950dbc4a3179a174bffa5b5bb509477a5d0063ea3bfe47a9ce7055b66cc",
+      "size": 4339
     },
     {
       "path": "skills/orchestrate-game-design-project/references/intake.md",
