@@ -49,6 +49,7 @@ test("Studio selection is one-primary deterministic and reports unknown override
   ]);
   assert.equal(contract.selection.primaryCount, 1);
   assert.deepEqual(contract.selection.scoreTuple, ["templateMatch", "artifactTypeMatch", "formatMatch", "audienceOverlap", "goalOverlap"]);
+  assert.equal(contract.selection.indexPath, "../../references/shared/document-quality/indexes/studio.json");
   assert.deepEqual(contract.selection.unknownOverride, {
     selected: false,
     nearestTieBreak: "profile-id-lexical",
@@ -69,7 +70,8 @@ test("Studio composition and progressive loading fail closed", async () => {
   assert.deepEqual(contract.progressiveLoading.postSelection, [
     "selected-primary",
     "requested-overlays",
-    "optional-preset",
+    "optional-profile-preset",
+    "optional-reference-preset",
     "relevant-render-contract",
     "selection-and-profile-schemas",
   ]);
@@ -82,7 +84,7 @@ test("Studio output checklist and state machine preserve every quality and appro
   const { contract } = await readContract();
   assert.deepEqual(contract.output.selectionRecord, [
     "artifactId", "goal", "audience", "artifactType", "requestedFormat", "primaryProfileId",
-    "overlayIds", "presetId", "renderContractId", "templateId", "selectionReason", "fallbackRecord",
+    "overlayIds", "presetId", "renderContractId", "templateId", "selectionReason", "score", "tieBreak", "fallbackRecord",
   ]);
   assert.deepEqual(contract.output.checklist, ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]);
   assert.equal(contract.output.stableIdsRequired, true);

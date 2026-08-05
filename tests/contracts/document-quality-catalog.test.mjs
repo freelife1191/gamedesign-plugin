@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { composeQualityProfile } from "../../shared/scripts/resolve-quality-profile.mjs";
 import { validateQualityProfile } from "../../shared/scripts/validate-quality-profile.mjs";
+import { validateReferencePreset } from "../../shared/scripts/validate-reference-preset.mjs";
 import {
   allStrings,
   findPolicyLeak,
@@ -202,6 +203,7 @@ test("neutral reference presets are closed, additive, schema-valid, and source-n
     assert.deepEqual(Object.keys(preset), presetFields, `${id}: exact additive fields`);
     assert.equal(preset.preset_id, id, `${id}: filename and preset ID`);
     assert.equal(schemaAccepts(preset, schema), true, `${id}: schema runtime`);
+    assert.deepEqual(validateReferencePreset(preset), { ok: true, errors: [] }, `${id}: production runtime`);
     for (const field of presetFields.slice(2)) assert.ok(preset[field].length > 0, `${id}: non-empty ${field}`);
 
     assert.equal(findPolicyLeak(allStrings(preset), policy), undefined, `${id}: authoring identity gate`);
@@ -246,12 +248,18 @@ test("reference preset schema rejects URI forms in every additive string field w
   const valid = await json("presets/function-first.json");
   const standardPattern = new RegExp(schema.$defs.safeText.pattern, "u");
   const uriCases = [
+    "https://example.invalid/preset",
     "ftp://example.invalid/preset",
     "mailto:designer@example.invalid",
     "data:text/plain,neutral-preset",
     "file:///tmp/neutral-preset",
     "//example.invalid/neutral-preset",
     "custom+scheme://example.invalid/neutral-preset",
+    "www.example.invalid/preset",
+    "Copy the original source layout.",
+    "Reuse the source image.",
+    "Source company citation must remain visible.",
+    "Original project trademark and logo are required.",
   ];
 
   for (const field of presetFields.slice(2)) {
@@ -260,6 +268,7 @@ test("reference preset schema rejects URI forms in every additive string field w
       candidate[field][0] = uri;
       assert.equal(standardPattern.test(uri), false, `${field}: standard pattern ${uri}`);
       assert.equal(schemaAccepts(candidate, schema), false, `${field}: evaluator ${uri}`);
+      assert.equal(validateReferencePreset(candidate).ok, false, `${field}: production ${uri}`);
     }
   }
   const ordinaryText = "Project scope includes image readability.";

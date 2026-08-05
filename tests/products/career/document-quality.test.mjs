@@ -45,6 +45,7 @@ test("Career selection uses its own namespace, deterministic precedence, and exp
   ]);
   assert.equal(contract.selection.primaryCount, 1);
   assert.deepEqual(contract.selection.scoreTuple, ["templateMatch", "artifactTypeMatch", "formatMatch", "audienceOverlap", "goalOverlap"]);
+  assert.equal(contract.selection.indexPath, "../../references/shared/document-quality/indexes/career.json");
   assert.equal(contract.selection.incompatibleDeliverables, "separate-selection-records");
   assert.deepEqual(contract.selection.unknownOverride.report, ["requestedProfileId", "nearestProfileId", "differences"]);
   assert.equal(contract.selection.unknownOverride.selected, false);
@@ -58,7 +59,7 @@ test("Career skill composes only additive known sources and loads a bounded pack
   assert.equal(contract.composition.presetMode, "validated-separate-guidance");
   assert.deepEqual(contract.progressiveLoading.preSelection, ["profile-id-index", "product-template-map"]);
   assert.deepEqual(contract.progressiveLoading.unknownComparison, ["nearest-profile-body"]);
-  assert.deepEqual(contract.progressiveLoading.postSelection, ["selected-primary", "requested-overlays", "optional-preset", "relevant-render-contract", "selection-and-profile-schemas"]);
+  assert.deepEqual(contract.progressiveLoading.postSelection, ["selected-primary", "requested-overlays", "optional-profile-preset", "optional-reference-preset", "relevant-render-contract", "selection-and-profile-schemas"]);
   assert.deepEqual(contract.progressiveLoading.forbidden, ["bulk-catalog-load", "authoring-evidence"]);
   assert.match(skill, /references\/shared\/document-quality\//u);
   assert.doesNotMatch(skill, /authoring\/reference-preset-evidence-map\.json/u);
@@ -108,6 +109,12 @@ test("Career editor finding is accepted by the real merger API and CLI", async (
   const cli = spawnSync(process.execPath, [mergerPath], { input: JSON.stringify(input), encoding: "utf8" });
   assert.equal(cli.status, 0, cli.stderr);
   assert.equal(JSON.parse(cli.stdout).findings[0].artifactSectionId, "skillstead-reverse-system-loop-diagram");
+
+  const blocker = { schemaVersion: 1, findings: [{ ...careerQualityFinding("quality-blocker"), severity: "blocker" }] };
+  assert.throws(() => mergeRoleFindings(blocker), /document-quality-editor.*blocker|severity authority/iu);
+  const rejected = spawnSync(process.execPath, [mergerPath], { input: JSON.stringify(blocker), encoding: "utf8" });
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /document-quality-editor.*blocker|severity authority/iu);
 });
 
 test("Career routing inserts quality application before content and preserves review limits and merge order", async () => {
@@ -138,6 +145,7 @@ test("Career routing inserts quality application before content and preserves re
     role: "document-quality-editor",
     maxReviewers: 3,
     maxDomainReviewers: 2,
+    allowedSeverities: ["high", "medium", "low"],
     requiredRoleSets: { "portfolio-review": ["portfolio-reviewer", "evidence-auditor"] },
   });
   assert.ok(routing.routes.every(({ roles }) => roles.length <= 3));

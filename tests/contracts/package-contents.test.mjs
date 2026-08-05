@@ -45,6 +45,9 @@ test("temporary product builds package neutral presets without authoring evidenc
     for (const id of neutralPresetIds) {
       assert.ok(paths.includes(`references/shared/document-quality/presets/${id}.json`), `${productName}: ${id}`);
     }
+    const namespace = productName === "game-design-studio" ? "studio" : "career";
+    assert.ok(paths.includes(`references/shared/document-quality/indexes/${namespace}.json`), `${productName}: selection index`);
+    assert.ok(paths.includes("scripts/validate-reference-preset.mjs"), `${productName}: production reference preset validator`);
 
     for (const { relativePath, bytes } of entries) {
       const fullBuildOptions = { includeAliases: false };

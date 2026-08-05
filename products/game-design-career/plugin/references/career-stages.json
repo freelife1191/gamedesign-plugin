@@ -129,6 +129,7 @@
       "role": "document-quality-editor",
       "maxReviewers": 3,
       "maxDomainReviewers": 2,
+      "allowedSeverities": ["high", "medium", "low"],
       "requiredRoleSets": {
         "portfolio-review": ["portfolio-reviewer", "evidence-auditor"]
       }

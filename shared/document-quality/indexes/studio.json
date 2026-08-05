@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "namespace": "studio",
+  "profiles": [
+    {
+      "profile_id": "accessibility-platform-matrix",
+      "artifact_types": [
+        "review-report"
+      ],
+      "audiences": [
+        "accessibility",
+        "design",
+        "engineering",
+        "qa",
+        "production"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "character-skill-combat-monster-specification",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "combat-design",
+        "engineering",
+        "animation",
+        "vfx",
+        "qa",
+        "accessibility"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "core-motivation-loop",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "design",
+        "production",
+        "research"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "data-table-contract",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "design",
+        "engineering",
+        "qa",
+        "analytics"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "design-review-decision-log",
+      "artifact_types": [
+        "review-report"
+      ],
+      "audiences": [
+        "design",
+        "engineering",
+        "production",
+        "qa"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "economy-balance-specification",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "economy-design",
+        "analytics",
+        "production",
+        "qa",
+        "responsible-design"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "executive-pitch",
+      "artifact_types": [
+        "presentation"
+      ],
+      "audiences": [
+        "executive",
+        "publisher",
+        "investment-committee"
+      ],
+      "required_formats": [
+        "pptx",
+        "pdf"
+      ],
+      "forbidden_formats": []
+    },
+    {
+      "profile_id": "game-design-brief",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "design",
+        "engineering",
+        "production"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "liveops-event-experiment-plan",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "liveops",
+        "analytics",
+        "production",
+        "qa",
+        "support"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "master-gdd",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "design",
+        "engineering",
+        "art",
+        "qa",
+        "production"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "narrative-quest-npc-specification",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "narrative",
+        "design",
+        "art",
+        "engineering",
+        "qa"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "playtest-metrics-report",
+      "artifact_types": [
+        "review-report"
+      ],
+      "audiences": [
+        "design",
+        "research",
+        "analytics",
+        "production"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "production-scope-milestone-risk-plan",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "production",
+        "leadership",
+        "discipline-leads"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "rule-state-exception-matrix",
+      "artifact_types": [
+        "review-report"
+      ],
+      "audiences": [
+        "design",
+        "engineering",
+        "qa"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "system-feature-specification",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "design",
+        "engineering",
+        "qa"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "ui-ux-flow-state-specification",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "ux",
+        "ui",
+        "engineering",
+        "qa",
+        "accessibility"
+      ],
+      "required_formats": [
+        "md",
+        "pdf",
+        "docx"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    },
+    {
+      "profile_id": "vision-one-pager",
+      "artifact_types": [
+        "design-document"
+      ],
+      "audiences": [
+        "leadership",
+        "production-team"
+      ],
+      "required_formats": [
+        "md",
+        "pdf"
+      ],
+      "forbidden_formats": [
+        "pptx"
+      ]
+    }
+  ]
+}
+
