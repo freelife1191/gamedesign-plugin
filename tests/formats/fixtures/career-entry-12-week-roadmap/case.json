@@ -18,15 +18,36 @@
     "result.json#/weeks",
     "result.json#/firstPortfolioBrief"
   ],
+  "expectedMarkdownSources": [
+    "request.json#/availableHoursPerWeek",
+    "result.json#/roleCandidates",
+    "result.json#/evidenceGaps",
+    "result.json#/weeks",
+    "result.json#/firstPortfolioBrief"
+  ],
   "expectedSectionSources": [
     ["request.json#/availableHoursPerWeek"],
     ["result.json#/roleCandidates", "result.json#/evidenceGaps"],
     ["result.json#/weeks"],
     ["result.json#/firstPortfolioBrief"]
   ],
+  "expectedSlideSources": [
+    ["request.json#/availableHoursPerWeek"],
+    ["result.json#/roleCandidates"],
+    ["result.json#/evidenceGaps"],
+    ["result.json#/weeks"],
+    ["request.json#/availableHoursPerWeek", "result.json#/roleCandidates"],
+    ["result.json#/firstPortfolioBrief"]
+  ],
   "anchors": ["12주", "주 8시간", "시스템 디자인", "콘텐츠 디자인", "증거 대기"],
   "documentAnchors": ["12주", "주 8시간", "시스템 디자인", "콘텐츠 디자인", "증거 대기"],
   "presentationAnchors": ["12주", "8시간", "시스템 디자인", "콘텐츠 디자인", "증거 대기"],
+  "expectedPdfPageTextSha256": [
+    "ea4c96250de1fff51cbcfacb7022720ad3625b25257f8f9fc2ce88a3d89b91ba",
+    "5395d818ed24c4d993f8a1c71ad353663e5c26b98cf85d04764ab89a8ee2583b",
+    "139094522dc58f80e61e78a485b92cf0a0e991839b64ccd447013074c673176b",
+    "de7fc4033ecb57819afabd89be4ba34cc8bf8f573b3763536fbfb92a1ce6f81d"
+  ],
   "expectedPages": { "pdf": 4, "docx": 4 },
   "expectedSlides": 6
 }

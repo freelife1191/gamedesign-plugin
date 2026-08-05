@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { access, readFile, readdir, realpath } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, lstat, readFile, readdir, realpath } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -17,6 +18,26 @@ export function compareNumericVersions(left, right) {
 
 async function exists(filename) {
   try { await access(filename); return true; } catch { return false; }
+}
+
+export async function resolvePathExecutable(name, env = process.env, platform = process.platform) {
+  if (!/^[A-Za-z0-9._-]+$/u.test(name)) throw new Error(`command ${name} is unavailable`);
+  const windows = platform === "win32";
+  const pathApi = windows ? path.win32 : path;
+  const separator = windows ? ";" : path.delimiter;
+  const extensions = windows ? String(env.PATHEXT || ".COM;.EXE;.BAT;.CMD").split(";").filter(Boolean) : [""];
+  const roots = String(env.PATH || env.Path || "").split(separator).filter((entry) => entry && entry.length <= 4096).slice(0, 64);
+  for (const root of roots) {
+    for (const extension of extensions) {
+      const candidate = pathApi.join(root, windows ? `${name}${extension.toLowerCase()}` : name);
+      try {
+        await access(candidate, constants.X_OK);
+        const canonical = await realpath(candidate);
+        if ((await lstat(canonical)).isFile()) return canonical;
+      } catch { /* try the next PATH candidate */ }
+    }
+  }
+  throw new Error(`command ${name} is unavailable`);
 }
 
 async function artifactVersion(root) {
@@ -69,6 +90,10 @@ export async function resolveRuntime({ env = process.env, home = os.homedir(), r
     soffice: path.join(selected.dependenciesRoot, "bin", "override", "soffice"),
     pdftoppm: path.join(selected.dependenciesRoot, "bin", "override", "pdftoppm"),
     pdfinfo: path.join(selected.dependenciesRoot, "bin", "override", "pdfinfo"),
+    pdftotext: await (async () => {
+      const bundled = path.join(selected.dependenciesRoot, "bin", "override", "pdftotext");
+      return await exists(bundled) ? bundled : resolvePathExecutable("pdftotext", env).catch(() => null);
+    })(),
   };
   if (requireCommands) {
     const missing = [];

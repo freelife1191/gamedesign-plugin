@@ -7,6 +7,7 @@
     "test:unit": "node tooling/run-test-group.mjs unit",
     "test:contracts": "node tooling/run-test-group.mjs contracts",
     "test:products": "node tooling/run-test-group.mjs products e2e/career e2e/studio",
+    "test:formats": "node tests/formats/run-format-gate.mjs",
     "test:shared-contract": "node --test tests/contracts/shared-contract.test.mjs",
     "build": "node tooling/build-snapshots.mjs",
     "validate": "node tooling/validate-suite.mjs",

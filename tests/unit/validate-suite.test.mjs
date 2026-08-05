@@ -103,18 +103,27 @@ test("partial Task 11 output is a hard failure", async () => {
   }
 });
 
-test("complete Task 11 delegates readiness to the verifier exit status", async () => {
+test("complete Task 11 delegates readiness to the full format regression gate", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "validate-suite-format-"));
+  let formatStage;
   try {
     for (const relative of FORMAT_RESULT_FILES) {
       const target = path.join(root, relative);
       await mkdir(path.dirname(target), { recursive: true });
       await writeFile(target, "complete\n");
     }
-    const result = await runSuite({ repoRoot: root, runCommand: async () => ({ status: 0, signal: null }) });
+    const result = await runSuite({
+      repoRoot: root,
+      runCommand: async (stage) => {
+        if (stage.name === "format smoke") formatStage = stage;
+        return { status: 0, signal: null };
+      },
+    });
     assert.equal(result.ok, true);
     assert.equal(result.releaseReady, true);
     assert.equal(result.formatStatus, "PASS");
+    assert.deepEqual(formatStage.command.slice(1), ["tests/formats/run-format-gate.mjs"]);
+    assert.equal(formatStage.rerun, "npm run test:formats");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

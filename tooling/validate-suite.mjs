@@ -7,6 +7,7 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const FORMAT_RESULT_FILES = Object.freeze([
+  "tests/formats/run-format-gate.mjs",
   "tests/formats/verify-formats.mjs",
   "tests/formats/FORMAT-RESULTS.md",
 ]);
@@ -22,7 +23,7 @@ const STAGES = Object.freeze([
   { name: "official plugin validators", command: [process.execPath, "tooling/validate-packages.mjs", "plugins"], rerun: "node tooling/validate-packages.mjs plugins" },
   { name: "skill quick validators", command: [process.execPath, "tooling/validate-packages.mjs", "skills"], rerun: "node tooling/validate-packages.mjs skills" },
   { name: "isolation smoke", command: [process.execPath, "tooling/isolation-smoke.mjs"], rerun: "node tooling/isolation-smoke.mjs" },
-  { name: "format smoke", command: [process.execPath, "tests/formats/verify-formats.mjs", "tests/formats/output"], rerun: "node tests/formats/verify-formats.mjs tests/formats/output" },
+  { name: "format smoke", command: [process.execPath, "tests/formats/run-format-gate.mjs"], rerun: "npm run test:formats" },
 ]);
 
 async function formatState(repoRoot) {

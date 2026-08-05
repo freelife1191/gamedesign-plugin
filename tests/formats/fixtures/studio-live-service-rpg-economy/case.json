@@ -11,6 +11,15 @@
     "approval-snapshot.json": "78871fa8b5be9d8c47d99d2cc3921d6fd4087d3087779dba71c28c582b10361a"
   },
   "sourcePointers": [
+    "result.json#/domain",
+    "result.json#/domain/economy",
+    "result.json#/domain/experiment",
+    "result.json#/domain/rollback",
+    "approval-snapshot.json#/responsibleGates",
+    "approval-snapshot.json#/responsibleGates/0",
+    "approval-snapshot.json#/responsibleGates/1"
+  ],
+  "expectedMarkdownSources": [
     "result.json#/domain/economy",
     "result.json#/domain/experiment",
     "result.json#/domain/rollback",
@@ -22,9 +31,23 @@
     ["result.json#/domain/experiment"],
     ["result.json#/domain/rollback", "approval-snapshot.json#/responsibleGates/1"]
   ],
+  "expectedSlideSources": [
+    ["result.json#/domain"],
+    ["result.json#/domain/economy"],
+    ["result.json#/domain/experiment"],
+    ["result.json#/domain/experiment"],
+    ["result.json#/domain/economy"],
+    ["result.json#/domain/rollback", "approval-snapshot.json#/responsibleGates/1"]
+  ],
   "anchors": ["목표 보유량 5,000", "일일 미션", "주간 인플레이션율", "자동 롤백"],
   "documentAnchors": ["목표 보유량은 5,000", "일일 미션", "주간 인플레이션율", "자동으로 마지막 정상 설정"],
   "presentationAnchors": ["5,000", "목표 보유량", "일일 미션", "주간 인플레이션율", "자동 롤백"],
+  "expectedPdfPageTextSha256": [
+    "cf09426617c7a92bacfca932f47e3647a699a120173e4a6553422d392da98234",
+    "acdf3023442480f620da05d14011bf5badf3dc03031445a6c2596321b4d656d3",
+    "a55aa4f76dc94a025c64c8d92e91044aecad5f0e49f2318c05f93fa24d140ee5",
+    "865eefdf9ec04e40fe875b0a28cc8bef7971e825547089ddbed888b074c458ca"
+  ],
   "expectedPages": { "pdf": 4, "docx": 4 },
   "expectedSlides": 6
 }

@@ -19,9 +19,9 @@
 | 형식 | Studio | Career | 검증 |
 | --- | --- | --- | --- |
 | MD | PASS | PASS | 한글 앵커, source pointer 순서, 로컬 이미지 링크 |
-| PDF | PASS · 4페이지 | PASS · 4페이지 | PDF signature, 페이지별 PNG QA, 개별 시각 검사 |
-| DOCX | PASS · 4페이지 | PASS · 4페이지 | OOXML 필수 member, 문서 텍스트, source pointer, 전 페이지 QA |
-| PPTX | PASS · 6슬라이드 | PASS · 6슬라이드 | Artifact Tool 생성, OOXML, speaker notes source, overflow, 전 슬라이드 QA |
+| PDF | PASS · 4페이지 | PASS · 4페이지 | PDF 구조·페이지별 전체 정규화 텍스트 SHA-256·정확한 source set, 저장본 재렌더, 개별 시각 검사 |
+| DOCX | PASS · 4페이지 | PASS · 4페이지 | bounded ZIP과 모든 member CRC, 정확한 MIME, 전체 `.rels` target, 페이지별 source set, 저장본 재렌더 |
+| PPTX | PASS · 6슬라이드 | PASS · 6슬라이드 | Artifact Tool 생성, 모든 member CRC, 실제 slide/notes 순서와 전체 `.rels` target, 정확한 slide source set, overflow, 저장본 전 슬라이드 재렌더 |
 | SVG | PASS · 960×540 viewBox | PASS · 960×540 viewBox | 패키지 내부 Skillstead lint, 한글 앵커 |
 | PNG | PASS · 1920×1080 | PASS · 1920×1080 | 패키지 내부 Skillstead 2× render, PNG 구조·크기 |
 
@@ -30,7 +30,7 @@
 - `tests/formats/output/studio-live-service-rpg-economy/`
 - `tests/formats/output/career-entry-12-week-roadmap/`
 
-각 디렉터리의 `artifact-manifest.json`은 여섯 산출물의 SHA-256, source binding, runtime class, 페이지·슬라이드 수, Skillstead 및 PPTX 검증 상태를 보관한다.
+각 디렉터리의 `artifact-manifest.json`은 여섯 산출물의 SHA-256, source binding, runtime class, 페이지·슬라이드 수, Skillstead 및 PPTX 검증 상태를 보관한다. `renderBinding`은 각 PDF/DOCX/PPTX/시각화 산출물 hash를 검수 이미지 hash와 직접 결속하고, verifier는 저장된 산출물을 새 임시 디렉터리에 다시 렌더해 승인된 QA와 byte 단위로 대조한다. manifest 안의 독립 경로 값뿐 아니라 설명 문자열에 삽입되거나 percent-encoding된 POSIX·Windows·UNC·`file:` host path도 거부한다.
 
 ## 시각 QA
 
@@ -68,20 +68,30 @@ DOCX 자체의 OOXML과 한글은 정상이다. 번들 LibreOffice renderer가 �
 
 이 경로는 DOCX 생성 방식이나 문서 내용을 바꾸지 않는 QA adapter다. `qlmanage` 또는 Chromium이 없으면 생성기는 성공을 추정하지 않고 실패한다.
 
+## PPTX 한글 QA 경로
+
+PPTX OOXML에는 한글과 speaker notes가 정상적으로 보존되지만, 격리된 LibreOffice renderer는 사용자 폰트를 발견하지 못해 검수 이미지에서 한글을 소실시켰다. 이 렌더는 승인하지 않고 다음 저장본 기반 경로로 교체했다.
+
+1. Artifact Tool로 생성된 `brief.pptx` 저장본을 macOS Quick Look이 HTML과 slide attachment로 해석한다.
+2. slide attachment PDF를 Poppler PNG로 변환한다.
+3. Quick Look의 slide geometry를 명시적인 pixel CSS로 정규화한다.
+4. Chromium이 각 슬라이드를 960×540 PNG로 캡처한다.
+5. verifier가 저장본을 같은 경로로 다시 렌더해 승인 이미지와 byte 단위로 비교한다.
+
+Quick Look HTML에 알 수 없는 attachment가 있거나 slide 범위를 벗어나면 변환을 중단한다. `qlmanage`, Poppler 또는 Chromium이 없을 때도 fail-closed한다. LibreOffice는 별도의 overflow 검사 capability로만 남으며 시각 승인 renderer로 사용하지 않는다.
+
 ## 재생성 및 검증
 
 ```bash
 node tests/formats/generate-formats.mjs
-node --test \
-  tests/formats/archive-inspection.test.mjs \
-  tests/formats/docx-qa.test.mjs \
-  tests/formats/runtime-resolver.test.mjs \
-  tests/formats/verify-formats.test.mjs
+npm run test:formats
 node tests/formats/verify-formats.mjs tests/formats/output
 npm run validate:release
 ```
 
-`generate-formats.mjs`는 출력과 QA corpus를 원자적으로 교체하고 새 manifest의 시각 상태를 `pending-individual-inspection`으로 되돌린다. 따라서 재생성 후에는 30개 이미지를 다시 검사하고, 현재 산출물에 대한 승인 증명을 manifest에 기록한 뒤 release 검증을 실행해야 한다.
+`test:formats`는 7개 공격·회귀 테스트 파일을 실행한 뒤 현재 대표 산출물 두 세트를 다시 검증한다. release gate도 같은 runner를 호출하므로 CRC·관계·host path·PDF 의미 계약 회귀를 대표 파일이 우연히 정상이라는 이유로 건너뛰지 않는다.
+
+`generate-formats.mjs`는 출력과 QA corpus를 동일 stage에서 완성한 뒤 하나의 rollback 가능한 트랜잭션으로 교체하고 새 manifest의 시각 상태를 `pending-individual-inspection`으로 되돌린다. 두 번째 설치가 실패하면 두 destination 모두 이전 검증본으로 복구한다. 따라서 재생성 후에는 30개 이미지를 다시 검사하고, 현재 산출물·QA 집합 hash에 대한 승인 증명을 manifest에 기록한 뒤 release 검증을 실행해야 한다.
 
 ## 사용한 runtime class
 

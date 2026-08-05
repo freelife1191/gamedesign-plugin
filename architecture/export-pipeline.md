@@ -68,17 +68,23 @@ PDF는 공유와 승인 검토를 위한 고정 레이아웃입니다.
 - PDF file signature
 - 비어 있지 않은 추출 텍스트와 핵심 문구
 - 예상 페이지 수
+- 페이지별 정확한 source pointer 집합
+- NFC/LF와 줄 끝 공백·빈 줄을 정규화한 페이지별 전체 텍스트 SHA-256
+- 암호화되지 않은 Letter 페이지 구조
 - 한글 폰트와 레이아웃
 - 모든 페이지를 이미지로 렌더해 overflow, clipping, 빈 페이지, 깨진 glyph 검사
+- 저장본을 새 임시 디렉터리에 다시 렌더해 승인 이미지와 byte 단위 대조
 
 ### DOCX
 
 DOCX는 편집 가능한 Office 파생본입니다.
 
-- ZIP/OOXML signature와 필수 part
-- relationship target과 포함 자산
+- 제한된 ZIP 입력·엔트리·압축 해제 크기·압축률과 모든 member CRC32
+- OOXML 필수 part의 정확한 MIME override와 모든 `.rels` 내부 target·중복 ID·경로 이탈
 - 본문 의미가 Canonical content와 일치하는지 검사
+- 페이지별 정확한 source pointer 집합
 - PDF 또는 이미지로 모든 페이지를 렌더해 한글 폰트, 표, 페이지 나눔과 clipping 검사
+- 저장된 DOCX를 Quick Look HTML → Chromium PDF → Poppler PNG로 다시 렌더해 승인 이미지와 대조
 
 Office XML만 정상이라고 시각 품질을 승인하지 않습니다.
 
@@ -87,10 +93,13 @@ Office XML만 정상이라고 시각 품질을 승인하지 않습니다.
 PPTX는 Markdown 페이지 복제가 아니라 청중별 발표 스토리입니다.
 
 - `export-manifest.yml`의 audience, purpose, slide outline 필요
-- OOXML, relationship, media와 notes 구조 검사
-- 핵심 주장에 source note 연결
+- bounded ZIP과 모든 member CRC, main/slide/notes의 정확한 MIME override 검사
+- 모든 `.rels` 내부 target·중복 ID·경로 이탈 검사
+- `presentation.xml`의 실제 `r:id` 순서로 slide를 해석하고 slide → notes → slide 역참조 검사
+- 각 slide의 핵심 주장에 정확한 source note 집합 연결
 - overflow 검사
-- 모든 슬라이드 이미지 렌더와 시각 QA
+- 저장된 PPTX를 Quick Look HTML/attachment → Chromium PNG로 모든 슬라이드 재렌더
+- 승인 이미지와 byte 단위 대조 및 시각 QA
 
 outline이 없으면 파일 생성보다 스토리 구조 설계를 먼저 수행합니다.
 
@@ -127,6 +136,8 @@ Chromium이 없거나 SVG lint가 실패하면 PNG를 성공으로 보고하지 
 
 LibreOffice나 다른 renderer는 capability에 따른 fallback일 수 있지만, 특정 호스트의 절대 설치 경로나 bundle 버전을 플러그인 코드·문서에 고정하지 않습니다.
 
+대표 QA의 DOCX/PPTX 저장본 재렌더 경로는 macOS Quick Look, Chromium과 Poppler가 모두 필요합니다. 지원하지 않는 OS 또는 누락 capability에서는 검증을 건너뛰지 않고 명시적으로 실패합니다. LibreOffice는 PPTX overflow 검사에 사용될 수 있지만, 격리 환경에서 한글 폰트를 소실한 렌더는 시각 승인 증거로 채택하지 않습니다.
+
 ## 대표 검증 시나리오
 
 `tests/formats/`는 두 제품의 실제 Canonical Artifact를 사용합니다.
@@ -152,16 +163,12 @@ LibreOffice나 다른 renderer는 capability에 따른 fallback일 수 있지만
 저장소 루트에서 실행합니다.
 
 ```bash
-node --test \
-  tests/formats/archive-inspection.test.mjs \
-  tests/formats/docx-qa.test.mjs \
-  tests/formats/runtime-resolver.test.mjs \
-  tests/formats/verify-formats.test.mjs
+npm run test:formats
 node tests/formats/verify-formats.mjs tests/formats/output
 npm run validate:release
 ```
 
-첫 명령은 OOXML archive 검사, DOCX QA 변환, runtime path 해석과 verifier 계약을, 두 번째는 대표 출력 두 세트를, release gate는 reference·package·isolation 검증과 format 준비 상태 전체를 확인합니다. `FORMAT-RESULTS.md`가 없거나 대표 형식 파일이 일부만 있으면 release gate는 완료를 보고하지 않습니다.
+첫 명령은 7개 포맷 회귀 파일과 대표 출력 verifier를 함께 실행해 bounded ZIP/모든 CRC/전체 OOXML 관계, DOCX/PPTX QA 변환, 원자적 생성 rollback, PDF 페이지 전체 텍스트 digest, 저장본 재렌더 결속, embedded host path와 runtime path 해석을 확인합니다. 두 번째는 대표 출력 두 세트만 다시 검증하고, release gate는 reference·package·isolation 검증과 이 전체 format gate를 확인합니다. `FORMAT-RESULTS.md`가 없거나 대표 형식 파일이 일부만 있으면 release gate는 완료를 보고하지 않습니다.
 
 ## 관련 문서
 

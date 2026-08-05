@@ -68,7 +68,7 @@ game-design-plugin-suite/
 - Codex CLI의 plugin 명령을 지원하는 버전
 - Node.js 18 이상
 - 로컬 설치에는 이 저장소 checkout과 `.agents/plugins/marketplace.json`
-- PDF·DOCX·PPTX·PNG 생성에는 해당 renderer capability가 필요합니다. capability가 없으면 Canonical MD를 보존하고 누락 형식을 명시합니다.
+- PDF·DOCX·PPTX·PNG 생성에는 해당 renderer capability가 필요합니다. capability가 없으면 Canonical MD를 보존하고 누락 형식을 명시합니다. 저장본 기반 대표 DOCX/PPTX 시각 QA는 macOS Quick Look, Chromium과 Poppler가 모두 필요하며 다른 환경에서는 검증을 건너뛰지 않고 명시적으로 실패합니다.
 
 현재 저장소가 사용하는 명령 문법은 Codex CLI `0.146.0`의 `codex plugin ... --help`와 repository smoke test로 확인했습니다.
 
@@ -263,13 +263,13 @@ artifact-name/
 | 형식 | 생성 의미 | 성공 조건 |
 | --- | --- | --- |
 | MD | Canonical content의 휴대 가능한 파생본 | frontmatter, H1, 링크, 로컬 자산, Unicode 검증 |
-| PDF | 공유·검토용 고정 레이아웃 | 서명, 텍스트 추출, 페이지 수, 폰트와 전 페이지 렌더 QA |
-| DOCX | 편집 가능한 Office 문서 | OOXML·relationship, 의미 비교, 전 페이지 렌더 QA |
-| PPTX | 청중별 발표 스토리 | 독립 outline, notes 출처, overflow, 전 슬라이드 렌더 QA |
+| PDF | 공유·검토용 고정 레이아웃 | 구조·페이지별 정규화 텍스트 SHA-256·source set, 저장본 전 페이지 재렌더 QA |
+| DOCX | 편집 가능한 Office 문서 | bounded ZIP과 모든 member CRC, 전체 OOXML relationship target, 페이지별 source set, 저장본 전 페이지 재렌더 QA |
+| PPTX | 청중별 발표 스토리 | 독립 outline, 모든 member CRC, 실제 slide/notes 순서와 전체 relationship target, 정확한 source set, overflow, 저장본 전 슬라이드 재렌더 QA |
 | SVG | 편집 가능한 도식 기준 | Skillstead lint, 접근성 텍스트, source mapping |
 | PNG | 공유용 raster 도식 | SVG 기준 2× 렌더, 정확한 크기, 픽셀 QA |
 
-MD/PDF/DOCX/PPTX는 문서 export lane, SVG/PNG는 시각화 lane입니다. 요청 목록에는 함께 기록할 수 있지만 PNG를 문서 renderer 결과로 취급하지 않습니다. 자세한 변환과 fail-closed 조건은 [내보내기 파이프라인](architecture/export-pipeline.md)에 있습니다.
+MD/PDF/DOCX/PPTX는 문서 export lane, SVG/PNG는 시각화 lane입니다. 요청 목록에는 함께 기록할 수 있지만 PNG를 문서 renderer 결과로 취급하지 않습니다. 대표 검증의 `artifact-manifest.json`은 산출물 hash와 각 QA 이미지 hash를 결속하며, verifier가 저장된 산출물을 새 임시 디렉터리에 다시 렌더해 승인본과 byte 단위로 대조합니다. runtime metadata의 독립 값뿐 아니라 문자열 안에 삽입되거나 percent-encoding된 host 절대경로도 거부합니다. 자세한 변환과 fail-closed 조건은 [내보내기 파이프라인](architecture/export-pipeline.md)에 있습니다.
 
 ## 사용 예시
 
@@ -316,12 +316,14 @@ MD/PDF/DOCX/PPTX는 문서 export lane, SVG/PNG는 시각화 lane입니다. 요�
 ```bash
 npm test
 npm run validate
+npm run test:formats
 node tests/formats/verify-formats.mjs tests/formats/output
 npm run validate:release
 ```
 
 - `npm test`: unit, contract, product와 대표 E2E를 실행합니다.
 - `npm run validate`: reference drift, evidence, vendor hash, 전체 테스트, clean build drift, 공식 package·skill validator, isolation smoke, 준비된 format smoke를 실행합니다.
+- `npm run test:formats`: 포맷 공격 회귀 테스트 7개 파일과 대표 산출물 verifier를 함께 실행합니다.
 - `node tests/formats/verify-formats.mjs tests/formats/output`: 대표 Studio·Career 산출물의 형식 검증을 실행합니다.
 - `npm run validate:release`: `FORMAT-RESULTS.md`와 대표 출력까지 준비된 상태에서만 release-ready로 종료합니다.
 - `npm run smoke:marketplace`: 임시 격리 환경에서 각 제품의 marketplace 등록, 설치, 실제 설치 스킬 호출 증거, 제거와 정리를 검증합니다. 로컬 Codex 인증과 실행 시간이 필요하므로 일반 빠른 검증과 분리했습니다.

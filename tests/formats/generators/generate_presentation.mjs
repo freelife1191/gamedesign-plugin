@@ -30,19 +30,19 @@ for (let index = 0; index < spec.slides.length; index += 1) {
     label(slide, "cover-kicker", "GAME DESIGN · EVIDENCE BRIEF", 54, 54, 660, 28, 16, { color: ACCENT, bold: true });
     label(slide, "cover-title", item.title, 54, 180, 760, 200, 58, { bold: true });
     label(slide, "cover-subtitle", item.subtitle, 58, 430, 700, 56, 24, { color: MUTED });
-    box(slide, "cover-panel", 870, 54, 330, 560, PALE, "#B8BCC4", "roundRect");
+    box(slide, "cover-panel", 870, 54, 330, 560, PALE, "#B8BCC4");
     label(slide, "cover-mark", item.coverMetric, 900, 218, 270, 150, item.coverMetric.length > 3 ? 72 : 110, { color: ACCENT, bold: true, alignment: "center", verticalAlignment: "middle" });
     label(slide, "cover-caption", item.coverCaption, 900, 382, 270, 52, 21, { alignment: "center", color: MUTED });
   } else if (item.layout === "half") {
     header(slide, item.title, n);
     label(slide, "half-body", item.body, 52, 220, 550, 300, 25);
-    box(slide, "half-visual", 660, 145, 578, 480, "#EAF5FB", "#B8BCC4", "roundRect");
+    box(slide, "half-visual", 660, 145, 578, 480, "#EAF5FB", "#B8BCC4");
     label(slide, "half-signal", item.title.includes("역할") ? "2" : "5,000", 716, 244, 460, 130, 74, { bold: true, color: ACCENT, alignment: "center", verticalAlignment: "middle" });
     label(slide, "half-caption", item.title.includes("역할") ? "역할 후보" : "목표 보유량", 716, 400, 460, 60, 24, { alignment: "center" });
   } else if (item.layout === "diagram") {
     header(slide, item.title, n);
     for (let i = 0; i < 2; i += 1) box(slide, `connector-${i + 1}`, 330 + i * 330, 332, 110, 4, ACCENT);
-    item.nodes.forEach((node, i) => label(slide, `node-${i + 1}`, node, 70 + i * 330, 250, 260, 170, 24, { fill: i === 1 ? PALE : PANEL, line: "#B8BCC4", radius: "roundRect", bold: true, alignment: "center", verticalAlignment: "middle" }));
+    item.nodes.forEach((node, i) => label(slide, `node-${i + 1}`, node, 70 + i * 330, 250, 260, 170, 24, { fill: i === 1 ? PALE : PANEL, line: "#B8BCC4", bold: true, alignment: "center", verticalAlignment: "middle" }));
     label(slide, "diagram-footer", item.footer, 72, 500, 1110, 72, 20, { color: MUTED });
   } else if (item.layout === "table") {
     header(slide, item.title, n);
@@ -60,14 +60,14 @@ for (let index = 0; index < spec.slides.length; index += 1) {
     header(slide, item.title, n);
     item.stats.forEach(([stat, caption], i) => {
       const left = 52 + i * 412;
-      box(slide, `stat-panel-${i}`, left, 250, 374, 310, PANEL, "none", "roundRect");
+      box(slide, `stat-panel-${i}`, left, 250, 374, 310, PANEL);
       label(slide, `stat-${i}`, stat, left + 30, 320, 314, 100, 58, { bold: true });
       label(slide, `stat-caption-${i}`, caption, left + 30, 440, 314, 58, 21);
     });
   } else {
     header(slide, item.title, n);
     item.steps.forEach((step, i) => {
-      label(slide, `step-num-${i}`, String(i + 1), 60, 170 + i * 130, 68, 68, 31, { fill: PALE, radius: "roundRect", bold: true, alignment: "center", verticalAlignment: "middle" });
+      label(slide, `step-num-${i}`, String(i + 1), 60, 170 + i * 130, 68, 68, 31, { fill: PALE, bold: true, alignment: "center", verticalAlignment: "middle" });
       label(slide, `step-${i}`, step, 156, 170 + i * 130, 1000, 72, 24, { bold: true, verticalAlignment: "middle" });
     });
     if (item.footer) label(slide, "result-status", item.footer, 156, 574, 1000, 48, 18, { color: MUTED });

@@ -5,9 +5,12 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  assertPortableManifest,
   assertKorean,
   inspectPng,
+  resolveJsonSourcePointers,
   validateAttestation,
+  validateExactSourceSets,
   validateOrderedMarkers,
   validatePdfSignature,
   validateSourceDigests,
@@ -31,6 +34,79 @@ test("source drift is rejected", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "format-source-"));
   await writeFile(path.join(root, "source.json"), "{}\n");
   await assert.rejects(validateSourceDigests(root, { "source.json": "0".repeat(64) }), /source drift/i);
+});
+
+test("every declared JSON source pointer resolves against the digest-bound source", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "format-pointers-"));
+  await writeFile(path.join(root, "request.json"), '{"availableHoursPerWeek":8,"roles":[{"id":"systems"}]}\n');
+  await assert.doesNotReject(resolveJsonSourcePointers(root, [
+    "request.json#/availableHoursPerWeek",
+    "request.json#/roles/0/id",
+  ], ["request.json"]));
+  await assert.rejects(
+    resolveJsonSourcePointers(root, ["request.json#/", "request.json#/roles/2"], ["request.json"]),
+    /JSON pointer.*does not resolve/i,
+  );
+  await assert.rejects(
+    resolveJsonSourcePointers(root, ["other.json#/value"], ["request.json"]),
+    /undeclared source/i,
+  );
+});
+
+test("portable manifests reject POSIX, Windows, UNC, and file URL host paths recursively", () => {
+  assert.doesNotThrow(() => assertPortableManifest({ runtime: { sourceClass: "official-cache" }, files: ["brief.pdf"] }));
+  for (const exposed of [
+    "/private/tmp/render.pdf",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "C:\\Users\\tester\\render.pdf",
+    "\\\\server\\share\\render.pdf",
+    "file:///tmp/render.pdf",
+  ]) {
+    assert.throws(() => assertPortableManifest({ nested: { exposed } }), /absolute host path/i, exposed);
+  }
+});
+
+test("portable manifests reject embedded and encoded host path tokens without rejecting portable text", () => {
+  for (const portable of [
+    "result.json#/domain/economy",
+    "schema version v1.2.3",
+    "Render artifacts are reproducible across supported environments.",
+    "https://example.com/reference/result.json",
+  ]) {
+    assert.doesNotThrow(() => assertPortableManifest({ portable }), portable);
+  }
+
+  for (const exposed of [
+    "renderer=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome (local)",
+    "owner home: /Users/tester/project/output.pdf.",
+    "temporary output [/private/tmp/render.pdf]",
+    "workspace output: /workspace/game-design/render.pdf",
+    "root=/workspace",
+    "cwd:/workspace/game",
+    "renderer=C:\\Users\\tester\\render.exe (local)",
+    "artifact=\\\\server\\share\\render.pdf#preview",
+    "preview=file:///private/tmp/render.pdf (local)",
+    "preview=file%3A%2F%2F%2Fprivate%2Ftmp%2Frender.pdf",
+    "temporary output=%2Fprivate%2Ftmp%2Frender.pdf",
+    "workspace output=%2Fworkspace%2Fgame-design%2Frender.pdf",
+    "root=%2Fworkspace",
+    "owner home: %252FUsers%252Ftester%252Fproject",
+  ]) {
+    assert.throws(() => assertPortableManifest({ nested: { exposed } }), /absolute host path/i, exposed);
+  }
+});
+
+test("page and slide source bindings reject cross-section and extra pointers", () => {
+  const expected = [["request.json#/availableHoursPerWeek"], ["result.json#/roleCandidates"]];
+  assert.doesNotThrow(() => validateExactSourceSets(expected, expected, "slide sources"));
+  assert.throws(
+    () => validateExactSourceSets([["result.json#/roleCandidates"], ["request.json#/availableHoursPerWeek"]], expected, "slide sources"),
+    /slide sources.*does not match/i,
+  );
+  assert.throws(
+    () => validateExactSourceSets([[...expected[0], "result.json#/weeks"], expected[1]], expected, "slide sources"),
+    /slide sources.*does not match/i,
+  );
 });
 
 test("PDF signature and Korean anchors are hard gates", () => {

@@ -80,7 +80,7 @@ def content_for(case, source_root):
         {
             "title": "12주 실행 리듬",
             "lead": "학습 → 연습 → 피드백을 매주 반복한다.",
-            "table": [["주", "학습", "연습"]] + [[str(item["week"]), item["learning"], item["practice"]] for item in weeks],
+            "table": [["주", "학습", "연습"]] + [[f'{item["week"]}주', item["learning"], item["practice"]] for item in weeks],
             "sourcePointers": ["result.json#/weeks"],
         },
         {
@@ -130,21 +130,29 @@ def table_geometry(table, widths):
         grid.append(col)
     for row in table.rows:
         for cell, width in zip(row.cells, widths):
-            tc_w = cell._tc.get_or_add_tcPr().get_or_add_tcW()
+            tc_pr = cell._tc.get_or_add_tcPr()
+            tc_w = tc_pr.get_or_add_tcW()
             tc_w.set(qn("w:w"), str(width))
             tc_w.set(qn("w:type"), "dxa")
+            tc_mar = OxmlElement("w:tcMar")
+            for edge in ("left", "right"):
+                margin = OxmlElement(f"w:{edge}")
+                margin.set(qn("w:w"), "120")
+                margin.set(qn("w:type"), "dxa")
+                tc_mar.append(margin)
+            tc_pr.append(tc_mar)
 
 
 def add_docx_table(doc, rows):
     table = doc.add_table(rows=len(rows), cols=len(rows[0]))
     table.style = "Table Grid"
-    widths = [2700, 6660] if len(rows[0]) == 2 else [900, 4230, 4230]
+    widths = [2700, 6660] if len(rows[0]) == 2 else [1100, 4130, 4130]
     for ri, values in enumerate(rows):
         for ci, value in enumerate(values):
             cell = table.cell(ri, ci)
             cell.text = ""
             run = cell.paragraphs[0].add_run(str(value))
-            set_run_font(run, size=9 if len(rows) > 8 else 10, bold=ri == 0)
+            set_run_font(run, size=8.5 if len(rows) > 8 else 10, bold=ri == 0)
             if ri == 0:
                 shading = OxmlElement("w:shd")
                 shading.set(qn("w:fill"), "E8EEF5")
