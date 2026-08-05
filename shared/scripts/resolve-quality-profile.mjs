@@ -107,6 +107,10 @@ function captureOptions(value, label, functionKeys = []) {
 }
 
 function canonicalSourceAnchor(kind, namespace, sourceId) {
+  if (kind === "template-map") {
+    const anchor = qualitySourceAnchors.templateMaps[namespace];
+    return anchor?.sourceId === sourceId ? anchor : undefined;
+  }
   if (kind === "primary") return qualitySourceAnchors.profiles[namespace]?.[sourceId];
   if (kind === "overlay") return qualitySourceAnchors.overlays[sourceId];
   if (kind === "preset") return qualitySourceAnchors.presets[sourceId];
@@ -116,14 +120,15 @@ function canonicalSourceAnchor(kind, namespace, sourceId) {
 function assertCanonicalSourceBody({ kind, namespace = null, sourceId, body }) {
   const anchor = canonicalSourceAnchor(kind, namespace, sourceId);
   if (!anchor) throw new Error(`Unknown canonical ${kind} source body: ${sourceId}`);
-  if (body.version !== anchor.version || digestValue(body) !== anchor.digest) {
+  const version = kind === "template-map" ? body.schema_version : body.version;
+  if (version !== anchor.version || digestValue(body) !== anchor.digest) {
     throw new Error(`Canonical ${kind} source body digest or version mismatch; composition conflict prevented: ${sourceId}`);
   }
   return deepFreeze({
     kind,
     namespace,
     sourceId,
-    version: anchor.version,
+    version,
     sourceDigest: anchor.digest,
     sourceByteDigest: qualitySourceByteDigests[sourceId],
   });
@@ -588,6 +593,55 @@ async function loadClosedSource({ sourceLoader, sourceType, sourceId }) {
   return body;
 }
 
+function assertCanonicalTemplateMap(namespace, body) {
+  const anchor = qualitySourceAnchors.templateMaps[namespace];
+  if (!anchor) throw new Error(`Unknown template-map namespace: ${String(namespace)}`);
+  exactKeys(body, ["schema_version", "product", "templates"], "template map");
+  if (body.schema_version !== anchor.version) throw new Error("Template map schema_version mismatch");
+  if (typeof body.product !== "string" || createHash("sha256").update(body.product, "utf8").digest("hex") !== anchor.productDigest) {
+    throw new Error(`Template map product mismatch for ${namespace}`);
+  }
+  assertPlainObject(body.templates, "template map templates");
+  const entries = Object.entries(body.templates);
+  if (entries.length !== anchor.templateCount) throw new Error(`Template map template count mismatch for ${namespace}`);
+  const profileIds = new Set(trustedIndexAnchors[namespace].ids);
+  for (const [templateId, profileId] of entries) {
+    if (normalizeId(templateId) !== templateId) throw new Error(`Template map template ID must already be normalized: ${templateId}`);
+    if (typeof profileId !== "string" || normalizeId(profileId) !== profileId) {
+      throw new Error(`Template map profile ID must already be normalized: ${String(profileId)}`);
+    }
+    if (!profileIds.has(profileId)) throw new Error(`Template map profile is outside the ${namespace} namespace: ${profileId}`);
+  }
+  return assertCanonicalSourceBody({ kind: "template-map", namespace, sourceId: anchor.sourceId, body });
+}
+
+function parseTemplateMapBytes(bytes, namespace, label) {
+  const anchor = qualitySourceAnchors.templateMaps[namespace];
+  if (!anchor) throw new Error(`Unknown template-map namespace: ${String(namespace)}`);
+  assertCanonicalSourceBytes(anchor.sourceId, bytes);
+  let body;
+  try {
+    body = JSON.parse(bytes.toString("utf8"));
+  } catch (error) {
+    throw new Error(`Invalid template map JSON: ${error.message}`, { cause: error });
+  }
+  body = snapshotDataOnly(body, label);
+  return { body, binding: assertCanonicalTemplateMap(namespace, body) };
+}
+
+async function loadCanonicalTemplateMap({ namespace, pluginRoot, templateMapSource, testOnlyLoaders }) {
+  if (templateMapSource !== undefined) {
+    if (testOnlyLoaders !== true) throw new Error("Template map source injection is test-only");
+    const response = templateMapSource;
+    exactKeys(response, ["sourceText"], "template map source");
+    if (typeof response.sourceText !== "string") throw new Error("template map source.sourceText must be a string");
+    return parseTemplateMapBytes(Buffer.from(response.sourceText, "utf8"), namespace, "template map source.sourceText");
+  }
+  if (pluginRoot === undefined) throw new Error("Test-only upper apply requires canonical templateMapSource or packaged pluginRoot");
+  const bytes = await readSafeFile(pluginRoot, "references/document-quality/template-profile-map.json");
+  return parseTemplateMapBytes(bytes, namespace, "packaged template map");
+}
+
 function resolveDocumentQualityRoot({ documentQualityRoot, pluginRoot }) {
   if (documentQualityRoot !== undefined && pluginRoot !== undefined) throw new Error("Use either documentQualityRoot or pluginRoot, not both");
   if (documentQualityRoot !== undefined) return documentQualityRoot;
@@ -597,14 +651,17 @@ function resolveDocumentQualityRoot({ documentQualityRoot, pluginRoot }) {
 
 export async function applyDocumentQualityProfile(rawOptions) {
   const options = captureOptions(rawOptions, "document quality application options", ["profileLoader", "sourceLoader"]);
-  for (const rawKey of ["overlays", "preset", "referencePreset"]) {
+  for (const rawKey of ["overlays", "preset", "referencePreset", "templateMap"]) {
+    if (rawKey === "templateMap" && Object.hasOwn(options, rawKey)) {
+      throw new Error("Caller-authored templateMap is forbidden; use the packaged canonical template map");
+    }
     if (Object.hasOwn(options, rawKey)) throw new Error(`Upper apply rejects raw ${rawKey}; use closed overlayIds and presetId`);
   }
   const {
-    namespace, selectionIndex, templateMap, profileLoader, sourceLoader, documentQualityRoot, pluginRoot, request,
+    namespace, selectionIndex, templateMapSource, profileLoader, sourceLoader, documentQualityRoot, pluginRoot, request,
     overlayIds = [], presetId = null, testOnlyLoaders = false,
   } = options;
-  if ((profileLoader !== undefined || sourceLoader !== undefined || documentQualityRoot !== undefined) && testOnlyLoaders !== true) {
+  if ((profileLoader !== undefined || sourceLoader !== undefined || documentQualityRoot !== undefined || templateMapSource !== undefined) && testOnlyLoaders !== true) {
     throw new Error("Production upper apply requires packaged pluginRoot; injected loaders and documentQualityRoot are test-only");
   }
   if (testOnlyLoaders !== false && testOnlyLoaders !== true) throw new Error("testOnlyLoaders must be boolean");
@@ -613,13 +670,14 @@ export async function applyDocumentQualityProfile(rawOptions) {
   const effectiveLoader = profileLoader ?? createQualityProfileBodyLoader({ documentQualityRoot: qualityRoot });
   if (typeof effectiveLoader !== "function") throw new Error("profileLoader must be a function");
   if (selectionIndex?.namespace !== namespace) throw new Error("Selection index namespace mismatch");
+  const templateMapRecord = await loadCanonicalTemplateMap({ namespace, pluginRoot, templateMapSource, testOnlyLoaders });
   const sources = normalizeClosedSourceIds(overlayIds, presetId);
   const effectiveSourceLoader = sourceLoader ?? (qualityRoot === undefined ? null : createQualitySourceLoader({ documentQualityRoot: qualityRoot }));
   const selectionOptions = {
     selectionIndex,
+    templateMap: templateMapRecord.body,
     requests: [{ ...request, overlayIds: sources.overlayIds, presetId: sources.presetId }],
   };
-  if (templateMap !== undefined) selectionOptions.templateMap = templateMap;
   const [selection] = selectQualityProfiles(selectionOptions);
   if (selection.fallbackRecord?.nearestProfileId) {
     await loadIndexedBody({ selectionIndex, namespace, profileId: selection.fallbackRecord.nearestProfileId, purpose: "nearest-comparison", profileLoader: effectiveLoader });
@@ -639,6 +697,7 @@ export async function applyDocumentQualityProfile(rawOptions) {
   }
   const checklist = buildQualityChecklist(composed);
   const sourceBindings = [
+    templateMapRecord.binding,
     assertCanonicalSourceBody({ kind: "primary", namespace, sourceId: primary.profile_id, body: primary }),
     ...loadedOverlays.map((body) => assertCanonicalSourceBody({ kind: "overlay", sourceId: body.profile_id, body })),
     ...(referencePreset === null ? [] : [assertCanonicalSourceBody({ kind: "preset", sourceId: referencePreset.preset_id, body: referencePreset })]),
@@ -717,9 +776,13 @@ function validateRequirementManifest(manifest) {
   }
   for (const [index, binding] of manifest.sourceBindings.entries()) {
     exactKeys(binding, ["kind", "namespace", "sourceId", "version", "sourceDigest", "sourceByteDigest"], `requirement manifest source binding ${index}`);
-    if (!["primary", "overlay", "preset"].includes(binding.kind)) throw new Error("Requirement manifest source binding kind is unknown");
-    if (binding.kind === "primary" && !["studio", "career"].includes(binding.namespace)) throw new Error("Primary source binding namespace is unknown");
-    if (binding.kind !== "primary" && binding.namespace !== null) throw new Error("Non-primary source binding namespace must be null");
+    if (!["template-map", "primary", "overlay", "preset"].includes(binding.kind)) throw new Error("Requirement manifest source binding kind is unknown");
+    if (["template-map", "primary"].includes(binding.kind) && !["studio", "career"].includes(binding.namespace)) {
+      throw new Error("Namespaced source binding namespace is unknown");
+    }
+    if (!["template-map", "primary"].includes(binding.kind) && binding.namespace !== null) {
+      throw new Error("Non-namespaced source binding namespace must be null");
+    }
     if (normalizeId(binding.sourceId) !== binding.sourceId) throw new Error("Requirement manifest source ID must already be normalized");
     if (!Number.isInteger(binding.version) || binding.version < 1) throw new Error("Requirement manifest source version is invalid");
     assertDigest(binding.sourceDigest, "requirement manifest sourceDigest");
@@ -730,8 +793,9 @@ function validateRequirementManifest(manifest) {
       throw new Error("Requirement manifest source binding is not canonical");
     }
   }
-  if (manifest.sourceBindings[0].kind !== "primary" || manifest.sourceBindings.slice(1).some(({ kind }) => kind === "primary")) {
-    throw new Error("Requirement manifest source bindings must start with exactly one primary");
+  if (manifest.sourceBindings[0].kind !== "template-map" || manifest.sourceBindings[1]?.kind !== "primary"
+    || manifest.sourceBindings.slice(2).some(({ kind }) => kind === "template-map" || kind === "primary")) {
+    throw new Error("Requirement manifest source bindings must start with exactly one template map and one primary");
   }
   assertDigest(manifest.contractDigest, "requirement manifest contractDigest");
   assertDigest(manifest.checklistDigest, "requirement manifest checklistDigest");
@@ -1122,10 +1186,10 @@ async function assertSafeFile(root, relativePath) {
   if (rootStats.isSymbolicLink() || !rootStats.isDirectory()) throw new Error("plugin root must be a non-symlink directory");
   const parsed = path.parse(cursor);
   let ancestor = parsed.root;
-  const rootSegments = path.relative(parsed.root, cursor).split(path.sep);
+  const rootSegments = path.relative(parsed.root, cursor).split(path.sep).filter(Boolean);
   for (let index = 0; index < rootSegments.length; index += 1) {
     ancestor = path.join(ancestor, rootSegments[index]);
-    if (index > 0 && (await lstat(ancestor)).isSymbolicLink()) throw new Error("plugin root contains a symlink ancestor");
+    if ((await lstat(ancestor)).isSymbolicLink()) throw new Error("plugin root contains a symlink ancestor");
   }
   for (const segment of relativePath.split("/")) {
     cursor = path.join(cursor, segment);

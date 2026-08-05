@@ -1,4 +1,20 @@
 export const qualitySourceAnchors = Object.freeze({
+  templateMaps: Object.freeze({
+    studio: Object.freeze({
+      sourceId: "studio-template-map",
+      productDigest: "333f392764cef6b903bf48ec321f5fd13b2575ddf11c42bd5d0bd52a32d2c747",
+      version: 1,
+      templateCount: 15,
+      digest: "83365e0945c6b41e6c4a70b8f1aec22d197b5425a876d56f13acc10ea3244b69",
+    }),
+    career: Object.freeze({
+      sourceId: "career-template-map",
+      productDigest: "19ba75ffbe57d37897b673d00fd44b04daf6a253902e9b4a55b95ac36cd78d46",
+      version: 1,
+      templateCount: 15,
+      digest: "7de9a867dbcca66ae12490aa5c69edd0316ec25b026329f238e2655e3cc8f66d",
+    }),
+  }),
   profiles: Object.freeze({
     studio: Object.freeze({
       "accessibility-platform-matrix": Object.freeze({ version: 1, digest: "ca8df39a73627ded496003d8d116f784359dfd0b969d8ec76def0cf0adf7a992" }),
@@ -52,6 +68,8 @@ export const qualitySourceAnchors = Object.freeze({
 });
 
 export const qualitySourceByteDigests = Object.freeze({
+  "studio-template-map": "a0e513d9e52c45e5cbd7ee5f556bee350f90780e970c1207399dcfe95ddd4657",
+  "career-template-map": "b5ac07a25b8c2c4400786ca3e0c9bf64f05293531bf39c237cf1155b4f11a014",
   "accessibility-platform-matrix": "cfb801f7ff9fa2fff1a9078d0d255fd208d868320036be5a520aede1669a3c61",
   "character-skill-combat-monster-specification": "80ebe56da88e545c9e2c5014f8cba14e5154d9bc0da776c9d81c8924e3826f0b",
   "core-motivation-loop": "1178cc7d25e8f8936eec22b3723dd92605d63826f434aabb178e05ac9a0ca8ce",

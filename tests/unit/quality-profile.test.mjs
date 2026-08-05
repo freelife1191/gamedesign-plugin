@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -437,7 +437,7 @@ test("composition validates the primary and rejects contradictions introduced by
 });
 
 test("loads a validated profile only from a safe non-symlink profile path", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "quality-profile-test-"));
+  const root = await mkdtemp(path.join(await realpath(tmpdir()), "quality-profile-test-"));
   t.after(() => rm(root, { recursive: true, force: true }));
   const profilesRoot = path.join(root, "references/quality-profiles");
   await mkdir(profilesRoot, { recursive: true });

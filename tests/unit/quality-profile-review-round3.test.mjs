@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import * as workflow from "../../shared/scripts/resolve-quality-profile.mjs";
 
 const qualityRoot = new URL("../../shared/document-quality/", import.meta.url);
+const studioTemplateMapUrl = new URL("../../products/game-design-studio/plugin/references/document-quality/template-profile-map.json", import.meta.url);
 const artifactA = "a".repeat(64);
 const artifactB = "b".repeat(64);
 
@@ -42,11 +43,13 @@ function resigned(value) {
 async function appliedBrief(options = {}) {
   const index = await json("indexes/studio.json");
   const primaryText = await text("profiles/studio/game-design-brief.json");
-  return workflow.applyDocumentQualityProfile({
+  const templateMapSource = { sourceText: await readFile(studioTemplateMapUrl, "utf8") };
+  const applicationOptions = {
     namespace: "studio",
     selectionIndex: index,
     testOnlyLoaders: true,
     profileLoader: async () => ({ sourceText: primaryText }),
+    templateMapSource,
     request: {
       artifactId: "brief",
       goal: "game design brief",
@@ -55,7 +58,9 @@ async function appliedBrief(options = {}) {
       requestedFormat: "md",
     },
     ...options,
-  });
+  };
+  if (applicationOptions.templateMapSource === undefined) delete applicationOptions.templateMapSource;
+  return workflow.applyDocumentQualityProfile(applicationOptions);
 }
 
 function inspectionReceipt(requirementManifest, artifactDigest = artifactA) {
@@ -268,25 +273,28 @@ test("upper apply loads only closed overlay and neutral preset IDs and fails on 
     sourceLoader: async () => ({ sourceText: JSON.stringify({ ...overlay, length_guidance: { min_words: 1, max_words: 2 } }) }),
   }), /canonical.*bytes.*digest/i);
 
-  const pluginRoot = await mkdtemp(path.join(tmpdir(), "quality-source-plugin-"));
+  const pluginRoot = await mkdtemp(path.join(await realpath(tmpdir()), "quality-source-plugin-"));
   t.after(() => rm(pluginRoot, { recursive: true, force: true }));
   const packagedRoot = path.join(pluginRoot, "references/shared/document-quality");
   await mkdir(path.join(packagedRoot, "profiles/studio"), { recursive: true });
   await mkdir(path.join(packagedRoot, "overlays"), { recursive: true });
   await mkdir(path.join(packagedRoot, "presets"), { recursive: true });
+  await mkdir(path.join(pluginRoot, "references/document-quality"), { recursive: true });
   const primaryText = await text("profiles/studio/game-design-brief.json");
   await writeFile(path.join(packagedRoot, "profiles/studio/game-design-brief.json"), primaryText);
   await writeFile(path.join(packagedRoot, "overlays/mobile.json"), overlayText);
   await writeFile(path.join(packagedRoot, "presets/function-first.json"), presetText);
+  await writeFile(path.join(pluginRoot, "references/document-quality/template-profile-map.json"), await readFile(studioTemplateMapUrl));
   const packaged = await appliedBrief({
     profileLoader: undefined,
+    templateMapSource: undefined,
     pluginRoot,
     overlayIds: ["mobile"],
     presetId: "function-first",
   });
   assert.deepEqual(packaged.composed.provenance.overlays, ["mobile"]);
 
-  const unsafeRoot = await mkdtemp(path.join(tmpdir(), "quality-source-symlink-"));
+  const unsafeRoot = await mkdtemp(path.join(await realpath(tmpdir()), "quality-source-symlink-"));
   t.after(() => rm(unsafeRoot, { recursive: true, force: true }));
   await mkdir(path.join(unsafeRoot, "overlays"), { recursive: true });
   await symlink(fileURLToPath(new URL("overlays/mobile.json", qualityRoot)), path.join(unsafeRoot, "overlays/mobile.json"));

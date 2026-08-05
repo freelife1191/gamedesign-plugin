@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import * as workflow from "../../shared/scripts/resolve-quality-profile.mjs";
 
 const qualityRoot = new URL("../../shared/document-quality/", import.meta.url);
+const studioTemplateMapUrl = new URL("../../products/game-design-studio/plugin/references/document-quality/template-profile-map.json", import.meta.url);
 
 async function json(relativePath) {
   return JSON.parse(await readFile(new URL(relativePath, qualityRoot), "utf8"));
@@ -96,6 +97,7 @@ test("selection records are complete and fallback is permitted only for an unkno
 
 test("upper apply API proves bounded lazy loading and returns composed guidance plus checklist", async () => {
   const { index, sourceTextById } = await catalog("studio");
+  const templateMapSource = { sourceText: await readFile(studioTemplateMapUrl, "utf8") };
   const calls = [];
   const profileLoader = async (request) => {
     calls.push(request);
@@ -105,7 +107,7 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
   const overlayText = await text("overlays/mobile.json");
   const sourceLoader = async ({ sourceType }) => ({ sourceText: sourceType === "overlay" ? overlayText : referencePresetText });
   const applied = await workflow.applyDocumentQualityProfile({
-    namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, sourceLoader,
+    namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, sourceLoader, templateMapSource,
     request: { artifactId: "brief", goal: "game design brief", audience: ["production"], artifactType: "design-document", requestedFormat: "md" },
     overlayIds: ["mobile"], presetId: "function-first",
   });
@@ -118,11 +120,11 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
   assert.equal(applied.requirementManifest.requiredItemIds.length > 0, true);
 
   calls.length = 0;
-  const unresolved = await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich" }) });
+  const unresolved = await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, templateMapSource, request: baseRequest({ explicitPrimaryId: "executive-pich" }) });
   assert.equal(unresolved.selection.status, "fallback-required");
   assert.deepEqual(calls.map(({ purpose }) => purpose), ["nearest-comparison"]);
   calls.length = 0;
-  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich", fallbackPrimaryId: "executive-pitch" }) });
+  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, templateMapSource, request: baseRequest({ explicitPrimaryId: "executive-pich", fallbackPrimaryId: "executive-pitch" }) });
   assert.deepEqual(calls.map(({ purpose }) => purpose), ["nearest-comparison", "selected-primary"]);
 
   const pathCalls = [];
@@ -130,7 +132,7 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
     documentQualityRoot: fileURLToPath(qualityRoot),
     onLoad: (record) => pathCalls.push(record),
   });
-  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader: packagedLoader, request: baseRequest() });
+  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader: packagedLoader, templateMapSource, request: baseRequest() });
   assert.deepEqual(pathCalls, [{
     namespace: "studio", profileId: "executive-pitch", purpose: "selected-primary",
     relativePath: "profiles/studio/executive-pitch.json",

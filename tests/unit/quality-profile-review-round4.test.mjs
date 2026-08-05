@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,6 +8,7 @@ import test from "node:test";
 import * as workflow from "../../shared/scripts/resolve-quality-profile.mjs";
 
 const qualityRoot = new URL("../../shared/document-quality/", import.meta.url);
+const studioTemplateMapUrl = new URL("../../products/game-design-studio/plugin/references/document-quality/template-profile-map.json", import.meta.url);
 const artifactDigest = "a".repeat(64);
 
 async function json(relativePath) {
@@ -46,11 +47,13 @@ function inspectionReceipt(manifest) {
 async function applyBrief(options = {}) {
   const selectionIndex = await json("indexes/studio.json");
   const primaryText = await text("profiles/studio/game-design-brief.json");
+  const templateMapSource = { sourceText: await readFile(studioTemplateMapUrl, "utf8") };
   return workflow.applyDocumentQualityProfile({
     namespace: "studio",
     selectionIndex,
     testOnlyLoaders: true,
     profileLoader: async () => ({ sourceText: primaryText }),
+    templateMapSource,
     request: {
       artifactId: "brief",
       goal: "game design brief",
@@ -65,8 +68,9 @@ async function applyBrief(options = {}) {
 test("trusted application re-derives the complete manifest and rejects caller shrink plus recomputation", async () => {
   const application = await applyBrief();
   assert.ok(application.requirementManifest.requiredItemIds.length > 1);
-  assert.equal(application.requirementManifest.sourceBindings.length, 1);
-  assert.equal(application.requirementManifest.sourceBindings[0].sourceId, "game-design-brief");
+  assert.equal(application.requirementManifest.sourceBindings.length, 2);
+  assert.equal(application.requirementManifest.sourceBindings[0].sourceId, "studio-template-map");
+  assert.equal(application.requirementManifest.sourceBindings[1].sourceId, "game-design-brief");
 
   const shrunkApplication = structuredClone(application);
   shrunkApplication.requirementManifest.requiredItemIds = [shrunkApplication.requirementManifest.requiredItemIds[0]];
@@ -213,7 +217,7 @@ test("recursive snapshots reject non-data shapes and unsafe Unicode before selec
 });
 
 test("packaged loaders reject semantically equal but byte-mutated canonical sources", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "quality-canonical-bytes-"));
+  const root = await mkdtemp(path.join(await realpath(tmpdir()), "quality-canonical-bytes-"));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(path.join(root, "overlays"), { recursive: true });
   const mobile = await json("overlays/mobile.json");
