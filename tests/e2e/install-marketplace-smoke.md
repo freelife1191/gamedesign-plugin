@@ -26,13 +26,15 @@ For each plugin independently, the runner:
 2. Installs only one plugin and asserts the complete add/list JSON contracts recursively: no missing or unknown fields, exact source metadata, policies, version, installed/enabled state, and cache path.
 3. Confirms exactly 11 packaged skills and runs a temporary copy of the official plugin validator.
 4. Starts one bounded `codex exec --ephemeral --json --sandbox workspace-write` turn in an isolated workspace.
-5. Explicitly invokes the installed orchestrator skill. A runner-owned, temporary proof script reads the installed cache's exact `SKILL.md` bytes and emits their SHA-256 as JSON. The runner accepts only a successful system `command_execution` event containing the exact non-symlink proof-script and installed-skill paths and the precomputed digest.
-6. Requires a successful system `command_execution` for the exact package-local validator and artifact paths. Its pretty-printed JSON output must have the exact success shape and `requestedFormats: ["md"]`; the runner then validates the real artifact again outside the model turn.
-7. Supports Codex batching both required commands into one shell event by parsing a whitespace-separated stream of balanced JSON objects. Prose, arrays, malformed trailing data, duplicate proof/validator results, prefix paths, failed commands, and self-reported provenance are rejected.
+5. Explicitly invokes the installed orchestrator skill, then requires one runner-owned proof harness command with exact semantic argv: the absolute Node executable, the exact harness path, and the exact immutable config path. A plain command or the current `sh`/`bash`/`zsh -lc` wrapper is accepted; extra arguments, separators, redirection, shell expansion, command substitution, prefixes, and forged `printf` output are rejected.
+6. The harness verifies its own and its config's file identity before and after execution, reads and hashes the exact non-symlink installed `SKILL.md`, spawns the exact package-local validator without a shell, validates its complete pretty-printed success contract, and verifies harness/config/skill/validator/artifact identities remain unchanged. The runner accepts only one successful command event with one exact receipt, then validates the real artifact again outside the model turn.
+7. Self-reported provenance, output-token inclusion without the exact harness command, prose, arrays, malformed or duplicate receipts, symlinks, identity changes, prefix paths, and failed commands are rejected.
 8. Removes the plugin before installing the other product, then verifies the exact plugin-remove, marketplace-remove, and empty final marketplace-list JSON contracts.
 9. Compares production config/plugin-state byte hashes before and after and performs guarded cleanup.
 
 Any nonzero process, timeout, signal, `turn.failed`, 401, unverifiable command trace, JSON contract drift, missing artifact, failed validator, state drift, or cleanup identity mismatch produces `status: INCOMPLETE` and a nonzero exit.
+
+Failure reporting removes secret material and authentication paths entirely. Known `HOME` and `CODEX_HOME` roots plus other POSIX, Windows, Unicode, spaced, or percent-encoded absolute paths are replaced with stable placeholders before a result is returned.
 
 ## Observed structured result
 

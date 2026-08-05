@@ -16,15 +16,77 @@ const PRODUCTS = Object.freeze([
   { name: "game-design-career", skillName: "orchestrate-game-design-career", skill: "$game-design-career:orchestrate-game-design-career" },
   { name: "game-design-studio", skillName: "orchestrate-game-design-project", skill: "$game-design-studio:orchestrate-game-design-project" },
 ]);
-const SKILL_PROVER = `import { createHash } from "node:crypto";
+const SKILL_PROVER = `import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
-if (process.argv.length !== 3) throw new Error("Usage: prove-installed-skill.mjs <SKILL.md>");
-const target = process.argv[2];
-const stats = await lstat(target);
-if (!stats.isFile() || stats.isSymbolicLink()) throw new Error("SKILL.md must be a regular file");
-await realpath(target);
-const sha256 = createHash("sha256").update(await readFile(target)).digest("hex");
-process.stdout.write(JSON.stringify({ ok: true, sha256 }) + "\\n");
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+function exactKeys(value, keys) {
+  return value && typeof value === "object" && !Array.isArray(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+}
+
+async function identity(target, kind) {
+  const before = await lstat(target);
+  if (!before[kind]() || before.isSymbolicLink()) throw new Error("proof input type mismatch");
+  const bytes = kind === "isFile" ? await readFile(target) : Buffer.alloc(0);
+  const after = await lstat(target);
+  if (before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode) throw new Error("proof input changed");
+  return { dev: after.dev, ino: after.ino, mode: after.mode, sha256: createHash("sha256").update(bytes).digest("hex") };
+}
+
+function same(left, right) {
+  return left.dev === right.dev && left.ino === right.ino && left.mode === right.mode && left.sha256 === right.sha256;
+}
+
+async function containedFile(target, root) {
+  const [fileReal, rootReal] = await Promise.all([realpath(target), realpath(root)]);
+  const relative = path.relative(rootReal, fileReal);
+  if (!relative || relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)) throw new Error("proof path escaped boundary");
+  return identity(target, "isFile");
+}
+
+if (process.argv.length !== 3) throw new Error("Usage: prove-installed-skill.mjs <config.json>");
+const selfPath = fileURLToPath(import.meta.url);
+const configPath = process.argv[2];
+const [selfBefore, configBefore] = await Promise.all([identity(selfPath, "isFile"), identity(configPath, "isFile")]);
+const config = JSON.parse(await readFile(configPath, "utf8"));
+const configKeys = ["schemaVersion", "cacheRoot", "workspaceRoot", "skillPath", "skillSha256", "validatorPath", "validatorSha256", "artifactPath"];
+if (!exactKeys(config, configKeys) || config.schemaVersion !== 1) throw new Error("proof config contract mismatch");
+const [skillBefore, validatorBefore, artifactBefore] = await Promise.all([
+  containedFile(config.skillPath, config.cacheRoot),
+  containedFile(config.validatorPath, config.cacheRoot),
+  identity(config.artifactPath, "isDirectory"),
+]);
+const [artifactReal, workspaceReal, selfReal, configReal] = await Promise.all([
+  realpath(config.artifactPath), realpath(config.workspaceRoot), realpath(selfPath), realpath(configPath),
+]);
+for (const target of [artifactReal, selfReal, configReal]) {
+  const relative = path.relative(workspaceReal, target);
+  if (!relative || relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)) throw new Error("workspace proof path escaped boundary");
+}
+if (skillBefore.sha256 !== config.skillSha256 || validatorBefore.sha256 !== config.validatorSha256) throw new Error("proof input hash mismatch");
+const validation = spawnSync(process.execPath, [config.validatorPath, config.artifactPath, "md"], {
+  cwd: config.workspaceRoot, encoding: "utf8", timeout: 30000, maxBuffer: 16 * 1024 * 1024,
+});
+if (validation.error || validation.signal || validation.status !== 0) throw new Error("artifact validator execution failed");
+const result = JSON.parse(validation.stdout);
+if (!exactKeys(result, ["ok", "errors", "warnings", "files", "requestedFormats"])
+    || result.ok !== true || !Array.isArray(result.errors) || result.errors.length !== 0
+    || !Array.isArray(result.warnings) || !Array.isArray(result.files)
+    || JSON.stringify(result.requestedFormats) !== '["md"]') throw new Error("artifact validator result mismatch");
+const [selfAfter, configAfter, skillAfter, validatorAfter, artifactAfter] = await Promise.all([
+  identity(selfPath, "isFile"), identity(configPath, "isFile"), containedFile(config.skillPath, config.cacheRoot),
+  containedFile(config.validatorPath, config.cacheRoot), identity(config.artifactPath, "isDirectory"),
+]);
+for (const pair of [[selfBefore, selfAfter], [configBefore, configAfter], [skillBefore, skillAfter], [validatorBefore, validatorAfter], [artifactBefore, artifactAfter]]) {
+  if (!same(pair[0], pair[1])) throw new Error("proof input changed during execution");
+}
+process.stdout.write(JSON.stringify({
+  schemaVersion: 1, ok: true, skillSha256: skillAfter.sha256,
+  validatorSha256: validatorAfter.sha256, requestedFormats: ["md"],
+}) + "\\n");
 `;
 
 function safeJson(source, label) {
@@ -35,9 +97,79 @@ function safeJson(source, label) {
   }
 }
 
-function isExactCommandPath(command, target) {
-  const escaped = target.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-  return new RegExp(`(?:^|[\\s'\"])${escaped}(?=$|[\\s'\"])`, "u").test(command);
+function shellQuote(value) {
+  return `'${value.replaceAll("'", `'"'"'`)}'`;
+}
+
+export function buildProofCommand(nodePath, proofPath, configPath) {
+  return [nodePath, proofPath, configPath].map(shellQuote).join(" ");
+}
+
+function simpleShellWords(source) {
+  if (typeof source !== "string" || /[\u0000\r\n]/u.test(source)) return null;
+  const words = [];
+  let word = "";
+  let started = false;
+  let quote = null;
+  let escaped = false;
+  for (const character of source) {
+    if (escaped) {
+      word += character;
+      started = true;
+      escaped = false;
+    } else if (quote === "'") {
+      if (character === "'") quote = null;
+      else word += character;
+    } else if (quote === '"') {
+      if (character === '"') quote = null;
+      else if (character === "\\") escaped = true;
+      else if (character === "$" || character === "`") return null;
+      else word += character;
+    } else if (character === "'" || character === '"') {
+      quote = character;
+      started = true;
+    } else if (character === "\\") {
+      escaped = true;
+      started = true;
+    } else if (/\s/u.test(character)) {
+      if (started) words.push(word);
+      word = "";
+      started = false;
+    } else if (/[;|&<>$`]/u.test(character)) return null;
+    else {
+      word += character;
+      started = true;
+    }
+  }
+  if (quote || escaped) return null;
+  if (started) words.push(word);
+  return words;
+}
+
+function isExactProofCommand(command, expected) {
+  const expectedWords = simpleShellWords(expected);
+  const outer = simpleShellWords(command);
+  if (!expectedWords || !outer) return false;
+  if (JSON.stringify(outer) === JSON.stringify(expectedWords)) return true;
+  if (outer.length !== 3 || outer[1] !== "-lc" || !["sh", "bash", "zsh"].includes(path.basename(outer[0]))) return false;
+  const inner = simpleShellWords(outer[2]);
+  return inner !== null && JSON.stringify(inner) === JSON.stringify(expectedWords);
+}
+
+export async function captureFileIdentity(target) {
+  const before = await lstat(target);
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error("proof identity requires a regular file");
+  const digest = sha256(await readFile(target));
+  const after = await lstat(target);
+  if (before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode) throw new Error("proof identity changed during capture");
+  return { dev: after.dev, ino: after.ino, mode: after.mode, sha256: digest };
+}
+
+async function identityMatches(target, expected) {
+  try {
+    const actual = await captureFileIdentity(target);
+    return ["dev", "ino", "mode", "sha256"].every((key) => actual[key] === expected?.[key]);
+  } catch { return false; }
 }
 
 async function isCanonicalRegularFile(target, root) {
@@ -51,105 +183,50 @@ async function isCanonicalRegularFile(target, root) {
   return relative !== "" && !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative);
 }
 
-async function isCanonicalDirectory(target) {
-  const [stats, canonical] = await Promise.all([lstat(target).catch(() => null), realpath(target).catch(() => null)]);
-  return Boolean(stats?.isDirectory() && !stats.isSymbolicLink() && canonical);
+async function isCanonicalDirectory(target, root) {
+  const [stats, canonical, canonicalRoot] = await Promise.all([
+    lstat(target).catch(() => null), realpath(target).catch(() => null), realpath(root).catch(() => null),
+  ]);
+  if (!stats?.isDirectory() || stats.isSymbolicLink() || !canonical || !canonicalRoot) return false;
+  const relative = path.relative(canonicalRoot, canonical);
+  return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
-function jsonObjectStream(source) {
-  const outputs = [];
-  const text = String(source ?? "");
-  let cursor = 0;
-  while (cursor < text.length) {
-    while (/\s/u.test(text[cursor] ?? "")) cursor += 1;
-    if (cursor >= text.length) break;
-    if (text[cursor] !== "{") return null;
-    const start = cursor;
-    let depth = 0;
-    let quoted = false;
-    let escaped = false;
-    for (; cursor < text.length; cursor += 1) {
-      const character = text[cursor];
-      if (quoted) {
-        if (escaped) escaped = false;
-        else if (character === "\\") escaped = true;
-        else if (character === '"') quoted = false;
-      } else if (character === '"') quoted = true;
-      else if (character === "{") depth += 1;
-      else if (character === "}" && --depth === 0) {
-        try {
-          const parsed = safeJson(text.slice(start, cursor + 1), "command trace");
-          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-          outputs.push(parsed);
-        } catch { return null; }
-        cursor += 1;
-        break;
-      }
-    }
-    if (depth !== 0 || quoted) return null;
-  }
-  return outputs;
-}
-
-function isSkillProofOutput(output, expectedSha256) {
-  return JSON.stringify(Object.keys(output).sort()) === '["ok","sha256"]'
-    && output.ok === true && output.sha256 === expectedSha256;
-}
-
-function isValidatorOutput(output) {
-  return JSON.stringify(Object.keys(output).sort()) === '["errors","files","ok","requestedFormats","warnings"]'
-    && output.ok === true && Array.isArray(output.errors) && output.errors.length === 0
-    && Array.isArray(output.warnings) && Array.isArray(output.files)
-    && JSON.stringify(output.requestedFormats) === '["md"]';
-}
-
-export async function parseExecJsonl(source, { cacheRoot, proofPath, skillPath, skillSha256, validatorPath: expectedValidator, artifactPath }) {
+export async function parseExecJsonl(source, {
+  cacheRoot, workspaceRoot, proofPath, proofIdentity, configPath, configIdentity, nodePath = process.execPath,
+  skillPath, skillSha256, validatorPath: expectedValidator, validatorSha256, artifactPath,
+}) {
   const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
   if (events.some((event) => event.type === "turn.failed" || event.type === "error"
       || /(?:401|unauthorized)/iu.test(JSON.stringify(event)))) {
     throw new Error("codex exec incomplete: failure event");
   }
   if (!events.some((event) => event.type === "turn.completed")) throw new Error("codex exec incomplete: no completed turn");
-  if (!await isCanonicalRegularFile(proofPath, path.dirname(artifactPath))
+  if (!await isCanonicalRegularFile(proofPath, workspaceRoot)
+      || !await isCanonicalRegularFile(configPath, workspaceRoot)
       || !await isCanonicalRegularFile(skillPath, cacheRoot)
       || !await isCanonicalRegularFile(expectedValidator, cacheRoot)
-      || !await isCanonicalDirectory(artifactPath)) {
+      || !await isCanonicalDirectory(artifactPath, workspaceRoot)
+      || !await identityMatches(proofPath, proofIdentity)
+      || !await identityMatches(configPath, configIdentity)
+      || sha256(await readFile(skillPath)) !== skillSha256
+      || sha256(await readFile(expectedValidator)) !== validatorSha256) {
     throw new Error("codex exec unverifiable: installed skill or canonical paths");
   }
-  const digestCandidates = events.filter((event) => event.type === "item.completed" && event.item?.type === "command_execution")
-    .map(({ item }) => {
-      const outputs = jsonObjectStream(item.aggregated_output);
-      return {
-        success: item.status === "completed" && item.exit_code === 0,
-        path: typeof item.command === "string" && isExactCommandPath(item.command, skillPath),
-        operation: typeof item.command === "string" && isExactCommandPath(item.command, proofPath),
-        output: outputs?.some((parsed) => isSkillProofOutput(parsed, skillSha256)) === true,
-        outputs,
-      };
-    });
-  const proofMatches = digestCandidates.filter((candidate) => candidate.success && candidate.path && candidate.operation)
-    .flatMap((candidate) => candidate.outputs ?? []).filter((output) => isSkillProofOutput(output, skillSha256));
-  const installedSkillDigest = proofMatches.length === 1;
-  const validatorCandidates = events.filter((event) => event.type === "item.completed" && event.item?.type === "command_execution")
-    .map(({ item }) => {
-      const outputs = jsonObjectStream(item.aggregated_output);
-      return {
-        success: item.status === "completed" && item.exit_code === 0,
-        path: typeof item.command === "string" && isExactCommandPath(item.command, expectedValidator),
-        artifact: typeof item.command === "string" && isExactCommandPath(item.command, artifactPath),
-        output: outputs?.some(isValidatorOutput) === true,
-        outputs,
-      };
-    });
-  const validatorMatches = validatorCandidates.filter((candidate) => candidate.success && candidate.path && candidate.artifact)
-    .flatMap((candidate) => candidate.outputs ?? []).filter(isValidatorOutput);
-  const artifactValidatorTrace = validatorMatches.length === 1;
-  if (!installedSkillDigest || !artifactValidatorTrace) {
-    const seen = (key) => digestCandidates.some((candidate) => candidate[key]);
-    const validatorSeen = (key) => validatorCandidates.some((candidate) => candidate[key]);
-    throw new Error(`codex exec unverifiable: digest=${installedSkillDigest ? 1 : 0}(s=${seen("success") ? 1 : 0},p=${seen("path") ? 1 : 0},o=${seen("operation") ? 1 : 0},h=${seen("output") ? 1 : 0}),validator=${artifactValidatorTrace ? 1 : 0}(s=${validatorSeen("success") ? 1 : 0},p=${validatorSeen("path") ? 1 : 0},a=${validatorSeen("artifact") ? 1 : 0},o=${validatorSeen("output") ? 1 : 0})`);
+  const expectedCommand = buildProofCommand(nodePath, proofPath, configPath);
+  const matches = events.filter((event) => event.type === "item.completed" && event.item?.type === "command_execution"
+    && event.item.status === "completed" && event.item.exit_code === 0
+    && isExactProofCommand(event.item.command, expectedCommand));
+  if (matches.length !== 1) throw new Error("codex exec unverifiable: exact proof command missing");
+  let receipt;
+  try { receipt = safeJson(String(matches[0].item.aggregated_output ?? "").trim(), "proof harness"); }
+  catch { throw new Error("codex exec unverifiable: proof receipt malformed"); }
+  assertExactKeys(receipt, ["schemaVersion", "ok", "skillSha256", "validatorSha256", "requestedFormats"], "proof receipt");
+  if (receipt.schemaVersion !== 1 || receipt.ok !== true || receipt.skillSha256 !== skillSha256
+      || receipt.validatorSha256 !== validatorSha256 || JSON.stringify(receipt.requestedFormats) !== '["md"]') {
+    throw new Error("codex exec unverifiable: proof receipt mismatch");
   }
-  return { completed: true, installedSkillDigest: true, artifactValidatorTrace: true };
+  return { completed: true, proofHarness: true };
 }
 
 function assertExactKeys(value, keys, label) {
@@ -206,11 +283,25 @@ export function redactFailure(message, environment = process.env) {
   const source = String(message);
   if (/(?:401|unauthorized)/iu.test(source)) return "authentication failed (401)";
   if (/turn\.failed/iu.test(source)) return "codex turn failed";
+  if (/(?:auth\.json|credentials?\.json|api[_-]?key|bearer|token)/iu.test(source)) {
+    return "command failed (details redacted)";
+  }
   let sanitized = source;
   for (const key of ["OPENAI_API_KEY", "CODEX_API_KEY"]) {
     const value = environment[key];
     if (typeof value === "string" && value.length > 0) sanitized = sanitized.replaceAll(value, "[REDACTED]");
   }
+  const knownRoots = [
+    [environment.CODEX_HOME, "[CODEX_HOME]"],
+    [environment.HOME, "[HOME]"],
+    [homedir(), "[HOME]"],
+  ].filter(([value]) => typeof value === "string" && value.length > 1)
+    .sort(([left], [right]) => right.length - left.length);
+  for (const [root, placeholder] of knownRoots) sanitized = sanitized.replaceAll(root, placeholder);
+  sanitized = sanitized
+    .replace(/(^|[\s=:('"`])file:\/\/[^;\n\r,)]*/giu, "$1[ABSOLUTE_PATH]")
+    .replace(/(^|[\s=:('"`])\/[^;\n\r,)]*/gu, "$1[ABSOLUTE_PATH]")
+    .replace(/(^|[\s=:('"`])[A-Za-z]:\\[^;\n\r,)]*/gu, "$1[ABSOLUTE_PATH]");
   return sanitized.length <= 240 && !/(?:api[_-]?key|bearer|token)/iu.test(sanitized) ? sanitized : "command failed (details redacted)";
 }
 
@@ -344,25 +435,52 @@ export async function runMarketplaceSmoke({
       const artifactPath = path.join(workspace, `${product.name}-artifact`);
       const proofPath = path.join(workspace, "prove-installed-skill.mjs");
       await writeFile(proofPath, SKILL_PROVER, { mode: 0o700 });
+      const configPath = path.join(workspace, "proof-config.json");
       const skillPath = path.join(cacheRoot, "skills", product.skillName, "SKILL.md");
       const packageValidator = path.join(cacheRoot, "scripts/validate-artifact.mjs");
       const skillSha256 = sha256(await readFile(skillPath));
-      const skillDigestCommand = `node ${JSON.stringify(proofPath)} ${JSON.stringify(skillPath)}`;
-      const artifactValidatorCommand = `node ${JSON.stringify(packageValidator)} ${JSON.stringify(artifactPath)} md`;
+      const validatorSha256 = sha256(await readFile(packageValidator));
+      await writeFile(configPath, `${JSON.stringify({
+        schemaVersion: 1,
+        cacheRoot,
+        workspaceRoot: workspace,
+        skillPath,
+        skillSha256,
+        validatorPath: packageValidator,
+        validatorSha256,
+        artifactPath,
+      })}\n`, { mode: 0o600 });
+      const [proofIdentity, configIdentity] = await Promise.all([
+        captureFileIdentity(proofPath), captureFileIdentity(configPath),
+      ]);
+      const proofCommand = buildProofCommand(process.execPath, proofPath, configPath);
       const prompt = [
         `명시적으로 설치된 스킬 ${product.skill} 을 호출하세요.`,
         `한 번의 짧은 작업으로 canonical game-design MD artifact를 ${artifactPath} 에 생성하세요.`,
-        "필수 파일과 디렉터리를 만든 뒤 아래 두 명령을 쉘에서 정확히 한 번씩 실행하세요.",
-        `1. ${skillDigestCommand}`,
-        `2. ${artifactValidatorCommand}`,
-        "두 명령 모두 성공한 뒤 짧게 완료만 보고하세요.",
+        "필수 파일과 디렉터리를 모두 만든 뒤 아래 명령 하나만 정확히 한 번 실행하세요.",
+        proofCommand,
+        "이 명령을 다른 명령과 연결하거나 리다이렉션하거나 인수를 변경하지 마세요.",
+        "명령이 성공한 뒤 짧게 완료만 보고하세요.",
       ].join("\n");
       const jsonl = run(codex, ["exec", "--ephemeral", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", workspace, prompt], {
         cwd: workspace,
         env,
         timeout: 180000,
       });
-      await parseExecJsonl(jsonl, { cacheRoot, proofPath, skillPath, skillSha256, validatorPath: packageValidator, artifactPath });
+      await parseExecJsonl(jsonl, {
+        cacheRoot,
+        workspaceRoot: workspace,
+        proofPath,
+        proofIdentity,
+        configPath,
+        configIdentity,
+        nodePath: process.execPath,
+        skillPath,
+        skillSha256,
+        validatorPath: packageValidator,
+        validatorSha256,
+        artifactPath,
+      });
       const artifactStats = await lstat(artifactPath).catch(() => null);
       if (!artifactStats?.isDirectory() || artifactStats.isSymbolicLink()) throw new Error(`${product.name} artifact missing`);
       const validation = safeJson(run(process.execPath, [packageValidator, artifactPath, "md"], {
