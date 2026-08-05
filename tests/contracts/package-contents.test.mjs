@@ -130,6 +130,12 @@ test("generated snapshots contain the exact clean product build plus the suite m
       assert.equal(manifest.name, productName);
       assert.equal(packagedManifest.name, productName);
       assert.equal(packagedManifest.skills, "./skills/");
+      const sourceWorkflow = await readFile(path.join(repoRoot, "shared/scripts/run-image-asset-workflow.mjs"), "utf8");
+      const packagedWorkflow = packagedByPath.get("scripts/run-image-asset-workflow.mjs").toString("utf8");
+      for (const workflow of [sourceWorkflow, packagedWorkflow]) {
+        assert.match(workflow, /references\/shared\/image-assets\/prompt-patterns/u);
+        assert.doesNotMatch(workflow, /\.\.\/image-assets\//u);
+      }
 
       assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 15);
       assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 14);

@@ -28,21 +28,9 @@ function clone(value) {
 }
 
 async function defaultPatternCatalog() {
-  const roots = [
-    fileURLToPath(new URL("../references/shared/image-assets/prompt-patterns/", import.meta.url)),
-    fileURLToPath(new URL("../image-assets/prompt-patterns/", import.meta.url)),
-  ];
-  let missing;
-  for (const root of roots) {
-    try {
-      const entries = await Promise.all(patternNames.map(async (name) => [name, JSON.parse(await readFile(path.join(root, `${name}.json`), "utf8"))]));
-      return Object.fromEntries(entries);
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
-      missing ??= error;
-    }
-  }
-  throw missing;
+  const root = fileURLToPath(new URL("../references/shared/image-assets/prompt-patterns/", import.meta.url));
+  const entries = await Promise.all(patternNames.map(async (name) => [name, JSON.parse(await readFile(path.join(root, `${name}.json`), "utf8"))]));
+  return Object.fromEntries(entries);
 }
 
 function selectionRecord(mode, selectedAssetIds, selectionReceipt) {
@@ -155,7 +143,7 @@ async function generateViaOpenAI({ jobs, apiKey, model, quality, stagingRoot, fe
   return generateOpenAIImagesFn({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now });
 }
 
-function applyProviderResults(manifest, providerResult, provider, config) {
+function applyProviderResults(manifest, providerResult, provider, config, generationReceipts = new Map()) {
   const next = clone(manifest);
   const results = new Map((providerResult?.results ?? []).map((result) => [result.asset_id, result]));
   const failures = new Map((providerResult?.failures ?? []).map((failure) => [failure.asset_id, failure]));
@@ -171,6 +159,7 @@ function applyProviderResults(manifest, providerResult, provider, config) {
           aspect_ratio: aspectRatio ?? asset.output.aspect_ratio, format: format ?? asset.output.format, background: background ?? asset.output.background,
         };
       }
+      if (generationReceipts.has(asset.asset_id)) asset.generation_receipt = generationReceipts.get(asset.asset_id);
       if (provider === "openai") {
         asset.provider = { name: "openai", model: result.provenance.model, quality: result.provenance.quality };
       } else {
@@ -184,6 +173,7 @@ function applyProviderResults(manifest, providerResult, provider, config) {
       }
     } else if (failure) {
       asset.generation_state = failure.generation_state;
+      if (generationReceipts.has(asset.asset_id)) asset.generation_receipt = generationReceipts.get(asset.asset_id);
       if (provider === "codex" && failure.provenance) {
         asset.provider = {
           name: failure.provenance.provider ?? "codex-host",
@@ -196,6 +186,60 @@ function applyProviderResults(manifest, providerResult, provider, config) {
     }
   }
   return next;
+}
+
+function receiptTimestamp(now) {
+  const value = typeof now === "function" ? now() : new Date().toISOString();
+  return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? new Date(value).toISOString() : new Date().toISOString();
+}
+
+function receiptFailureReason(value) {
+  return typeof value === "string" && /^[a-z][a-z0-9-]{0,127}$/u.test(value) ? value : "generation-failed";
+}
+
+function receiptProvenance(provider, config, result, failure) {
+  const provenance = result?.provenance ?? failure?.provenance ?? {};
+  const isOpenAI = provider === "openai";
+  return {
+    provider: typeof provenance.provider === "string" && safeModelPattern.test(provenance.provider)
+      ? provenance.provider : isOpenAI ? "openai" : provider === "codex" ? "codex-host" : "unavailable",
+    request_id: typeof provenance.request_id === "string" && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(provenance.request_id) ? provenance.request_id : null,
+    applied_model: isOpenAI ? config.model : provenance.applied_model ?? null,
+    applied_quality: isOpenAI ? config.quality : provenance.applied_quality ?? null,
+  };
+}
+
+async function writeGenerationReceipts(root, jobs, providerResult, provider, config, now) {
+  await ensureArtifactDirectories({ artifactRoot: root, directories: ["assets", "assets/receipts"] });
+  const results = new Map((providerResult?.results ?? []).map((value) => [value.asset_id, value]));
+  const failures = new Map((providerResult?.failures ?? []).map((value) => [value.asset_id, value]));
+  const receipts = new Map();
+  for (const job of jobs) {
+    const result = results.get(job.asset_id);
+    const failure = failures.get(job.asset_id);
+    const provenance = receiptProvenance(provider, config, result, failure);
+    const receipt = {
+      schema_version: 1,
+      kind: "image-generation-receipt",
+      asset_id: job.asset_id,
+      provider: provenance.provider,
+      request_id: provenance.request_id,
+      generated_at: receiptTimestamp(now),
+      prompt_digest: digestPattern.test(result?.provenance?.prompt_digest ?? "") ? result.provenance.prompt_digest : sha256(job.prompt),
+      output_digest: digestPattern.test(result?.provenance?.output_digest ?? "") ? result.provenance.output_digest
+        : digestPattern.test(result?.output?.digest ?? "") ? result.output.digest : null,
+      requested_model: config.model,
+      requested_quality: config.quality,
+      applied_model: provenance.applied_model,
+      applied_quality: provenance.applied_quality,
+      failure_reason: result ? null : receiptFailureReason(failure?.reason),
+    };
+    const relativePath = `assets/receipts/image-generation-${job.asset_id}.json`;
+    const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+    await safeWriteArtifactFile({ artifactRoot: root, relativePath, data: bytes, policy: "create-once" });
+    receipts.set(job.asset_id, { path: relativePath, sha256: sha256(bytes) });
+  }
+  return receipts;
 }
 
 function normalizeHostProvenance(value, { success }) {
@@ -346,7 +390,10 @@ export async function generateImageAssetWorkflow({
   } else if (jobs.length > 0 && decision.provider === "unavailable") {
     providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "no-provider-available" })) };
   }
-  const nextManifest = applyProviderResults(manifest, providerResult, decision.provider, publicConfig);
+  const generationReceipts = jobs.length > 0
+    ? await writeGenerationReceipts(root, jobs, providerResult, decision.provider, publicConfig, now)
+    : new Map();
+  const nextManifest = applyProviderResults(manifest, providerResult, decision.provider, publicConfig, generationReceipts);
   const validation = validateImageAssetManifest(nextManifest, { artifactRoot: root });
   if (!validation.ok) throw new Error(`Workflow produced an invalid image manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
 
@@ -371,13 +418,17 @@ export async function reviewImageAssetWorkflow({
   if (!validation.ok) throw new Error("A valid image manifest is required before review.");
   const asset = manifest.assets.find(({ asset_id }) => asset_id === assetId);
   if (!asset) throw new Error("Review requires a known stable asset ID.");
+  const requiredEvidencePaths = [...new Set([
+    ...(Array.isArray(evidencePaths) ? evidencePaths : []),
+    ...(asset.generation_receipt ? [asset.output.path, asset.generation_receipt.path] : []),
+  ])];
   const receipt = await readUserDecisionReceipt(root, decisionReceipt, {
-    assetId, fromState: asset.approval_state, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths, evidenceDigests,
+    assetId, fromState: asset.approval_state, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths: requiredEvidencePaths, evidenceDigests,
   });
   const decisionReceiptPath = `decisions/image-review-${receipt.capture.event_id}.json`;
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: decisionReceiptPath, data: `${JSON.stringify(receipt, null, 2)}\n`, policy: "create-once" });
   const reviewedAsset = applyImageReviewTransition(asset, {
-    targetState, reviewer, reviewedAt, evidencePaths: [...evidencePaths, decisionReceiptPath], rightsDecision,
+    targetState, reviewer, reviewedAt, evidencePaths: [...requiredEvidencePaths, decisionReceiptPath], rightsDecision,
   }, { artifactRoot: root });
   const next = clone(manifest);
   next.assets[next.assets.findIndex(({ asset_id }) => assetId === asset_id)] = reviewedAsset;

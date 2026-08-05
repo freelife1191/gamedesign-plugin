@@ -246,13 +246,21 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
     artifact_id: `${productName}-isolated-image-plan`,
     image_needs: [{ slot_id: "hero", type: "character", scene: "A readable neutral scene.", subject: "An original silhouette.", composition: "Centered.", visual_style: "Original illustration.", readability: "Readable at planning scale.", width: 1024, height: 1024 }],
   };
-  const imagePlan = await imageWorkflow.planImageAssetWorkflow({ artifactRoot: artifact, artifact: imageArtifact, qualityProfile: imageProfile });
+  let networkCalls = 0;
+  let generationCalls = 0;
+  const imagePlan = await imageWorkflow.runImageAssetWorkflow({
+    artifactRoot: artifact, artifact: imageArtifact, qualityProfile: imageProfile,
+    config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: true, apiKey: "isolation-test-key" },
+    codexCapability: { status: "available" },
+    generateOpenAIImagesFn: async () => { networkCalls += 1; return { results: [], failures: [] }; },
+    hostGenerate: async () => { generationCalls += 1; return { results: [], failures: [] }; },
+  });
   const [promptMarkdown, promptJson, persistedManifest] = await Promise.all([
     readFile(path.join(artifact, "assets/prompts/image-prompts.md"), "utf8"),
     readFile(path.join(artifact, "assets/prompts/image-prompts.json"), "utf8"),
     readFile(path.join(artifact, "assets/image-assets.yml"), "utf8").then(JSON.parse),
   ]);
-  if (imagePlan.summary.total !== 1 || imagePlan.manifest.assets.length !== 1 || persistedManifest.assets[0]?.generation_state !== "prompt-ready"
+  if (imagePlan.manifest.assets.length !== 1 || persistedManifest.assets[0]?.generation_state !== "prompt-ready"
       || persistedManifest.assets[0]?.approval_state !== "concept-draft" || !promptMarkdown.includes("Expected count: 1") || JSON.parse(promptJson).prompts?.length !== 1) {
     throw new Error(`${productName} isolated prompt-only image plan mismatch`);
   }
@@ -285,9 +293,9 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
       validationOk: profileValidation.ok,
     },
     imagePlan: {
-      networkCalls: 0,
-      generationCalls: 0,
-      placeholders: imagePlan.summary.total,
+      networkCalls,
+      generationCalls,
+      placeholders: imagePlan.manifest.assets.length,
       promptFiles: ["assets/prompts/image-prompts.json", "assets/prompts/image-prompts.md"],
     },
   };

@@ -474,12 +474,14 @@ test("clean-built Studio plugin performs prompt-only image planning without a pr
     assert.doesNotMatch(source, /(?:\.\.\/)+(?:shared|products)\//u);
     const { runImageAssetWorkflow } = await import(`${pathToFileURL(workflowPath).href}?prompt-only=${Date.now()}`);
     let hostCalls = 0;
+    let openAiCalls = 0;
     const result = await runImageAssetWorkflow({
       artifactRoot,
       artifact: { artifact_id: "studio-e2e-image", image_needs: [{ slot_id: "hero", type: "character", scene: "A neutral scene.", subject: "An original silhouette.", composition: "Centered.", visual_style: "Original illustration.", readability: "Readable.", width: 1024, height: 1024 }] },
       qualityProfile: { profile_id: "studio-e2e-image", version: 1, artifact_types: ["design-document"], audiences: ["design"], required_sections: [{ id: "visuals", title: "Visuals" }], required_tables: [{ id: "visual-table", section_id: "visuals", columns: ["Signal"] }], required_diagrams: [{ id: "diagram", section_id: "visuals", purpose: "Explain visual intent.", alt_text: "Visual diagram." }], required_images: [{ id: "hero", section_id: "visuals", purpose: "Explain visual intent.", alt_text: "Visual planning placeholder." }], recommended_images: [], length_guidance: { min_words: 1, max_words: 10 }, ppt_story_contract: {}, acceptance_criteria: ["Readable"], export_rules: { required_formats: ["md"], forbidden_formats: [] }, quality_checks: ["visual"] },
-      config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+      config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: true, apiKey: "test-key" }, codexCapability: { status: "available" },
       hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+      generateOpenAIImagesFn: async () => { openAiCalls += 1; return { results: [], failures: [] }; },
     });
     const [manifest, markdown, prompts] = await Promise.all([
       readFile(path.join(artifactRoot, "assets/image-assets.yml"), "utf8").then(JSON.parse),
@@ -487,6 +489,7 @@ test("clean-built Studio plugin performs prompt-only image planning without a pr
       readFile(path.join(artifactRoot, "assets/prompts/image-prompts.json"), "utf8").then(JSON.parse),
     ]);
     assert.equal(hostCalls, 0);
+    assert.equal(openAiCalls, 0);
     assert.equal(result.decision.provider, "none");
     assert.equal(manifest.assets[0].generation_state, "prompt-ready");
     assert.equal(manifest.assets[0].approval_state, "concept-draft");

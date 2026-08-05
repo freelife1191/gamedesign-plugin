@@ -34,6 +34,10 @@ function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function exactKeys(value, keys) {
+  return isObject(value) && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
+}
+
 function nonEmptyString(value) {
   return typeof value === "string" && value.trim() !== "";
 }
@@ -130,7 +134,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset)) return [error("invalid_asset", assetPath, "Assets must be objects.")];
   rejectUnknownProperties(errors, asset, new Set([
     "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement", "alt_text", "readability",
-    "art_brief", "prompt", "output", "provider", "rights", "reviews", "technical_fit", "gameplay_readability",
+    "art_brief", "prompt", "output", "provider", "generation_receipt", "rights", "reviews", "technical_fit", "gameplay_readability",
   ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
   if (!assetTypes.has(asset.type)) errors.push(error("invalid_asset_type", `${assetPath}.type`, "Asset type is not approved."));
@@ -163,6 +167,16 @@ function validateAsset(asset, index, artifactRoot) {
       if (!nonEmptyString(target.aspect_ratio) || !/^\d{1,4}:\d{1,4}$/u.test(target.aspect_ratio)) errors.push(error("invalid_planning_target_aspect_ratio", `${assetPath}.planning.target_output.aspect_ratio`, "Planning target aspect ratio is required."));
       if (!outputFormats.has(target.format)) errors.push(error("invalid_planning_target_format", `${assetPath}.planning.target_output.format`, "Planning target format is not approved."));
       if (!backgrounds.has(target.background)) errors.push(error("invalid_planning_target_background", `${assetPath}.planning.target_output.background`, "Planning target background is not approved."));
+    }
+  }
+
+  if (asset.generation_receipt !== undefined) {
+    if (!isObject(asset.generation_receipt)
+      || !exactKeys(asset.generation_receipt, ["path", "sha256"])
+      || !safeRelativePath(asset.generation_receipt.path, artifactRoot)
+      || !asset.generation_receipt.path.startsWith("assets/receipts/image-generation-")
+      || !/^[a-f0-9]{64}$/u.test(asset.generation_receipt.sha256 ?? "")) {
+      errors.push(error("invalid_generation_receipt", `${assetPath}.generation_receipt`, "Generation receipt must be a closed artifact-local digest binding."));
     }
   }
 

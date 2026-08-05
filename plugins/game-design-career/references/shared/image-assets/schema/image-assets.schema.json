@@ -111,6 +111,15 @@
             }
           ]
         },
+        "generation_receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": { "type": "string", "pattern": "^assets/receipts/image-generation-[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.json$" },
+            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
         "rights": {
           "type": "object",
           "additionalProperties": false,

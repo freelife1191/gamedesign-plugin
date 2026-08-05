@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "095bc9274da388e471c3044b00100be4a71e84f869a5d88eea2b47d8b0cdce66",
+  "treeSha256": "d55b49e0ef96a530ab4ab3e29d978741e67ebadf56a7931337cb7a2cc9665022",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -951,8 +951,8 @@
     },
     {
       "path": "references/shared/image-assets/schema/image-assets.schema.json",
-      "sha256": "25f9355928815b556290d10196ad0b82f8857d80679846633e422e51edc08b26",
-      "size": 9045
+      "sha256": "2e747b62b6ec8c0fbac54d244ad2b0f79128f05c0be1f5967d2b43678c2ca3a9",
+      "size": 9437
     },
     {
       "path": "references/shared/image-assets/schema/image-config.schema.json",
@@ -1321,8 +1321,8 @@
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
-      "sha256": "1d873dbd71f4b450bc67baaab61d67f0734ca580cca3d90e5737f92715532e77",
-      "size": 5164
+      "sha256": "fea094251daae3f9ab6d4a9eb80ffbe05c3d68b79e03f26dcfbb043059f96695",
+      "size": 8755
     },
     {
       "path": "scripts/lib/image-provider.mjs",
@@ -1351,13 +1351,13 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "a4a033c01300cc1c3981c3a4ec5d5feafd0f125101a78ec92135948561fc719d",
-      "size": 22688
+      "sha256": "de3b041e21b37d4dfba7e88d37c63432541faebcafc9db95e06cb8dd693fcb8e",
+      "size": 26055
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
-      "sha256": "b015573e99742b883971815715d7678a701021f8f00ff00340d9b8a02d554579",
-      "size": 21596
+      "sha256": "45e319c1353898323c00a13bbf07f2bade15a1a0ba3d66e2df23ea9e15254069",
+      "size": 24613
     },
     {
       "path": "scripts/validate-artifact.mjs",
@@ -1366,8 +1366,8 @@
     },
     {
       "path": "scripts/validate-image-assets.mjs",
-      "sha256": "c71ff88cabbd6e0a429975fda3b196234996616787e48a1d7cc283ee8cef8d0e",
-      "size": 23568
+      "sha256": "c6c4988ecd8830bf2387143be2f370f3ba2c560f6d3cddc9a97c04d1aede1896",
+      "size": 24300
     },
     {
       "path": "scripts/validate-image-config.mjs",

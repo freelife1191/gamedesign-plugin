@@ -6,7 +6,12 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { generateImageAssetWorkflow, planImageAssetWorkflow, reviewImageAssetWorkflow, runImageAssetWorkflow } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import {
+  generateImageAssetWorkflow,
+  planImageAssetWorkflow as planImageAssetWorkflowBase,
+  reviewImageAssetWorkflow,
+  runImageAssetWorkflow as runImageAssetWorkflowBase,
+} from "../../../shared/scripts/run-image-asset-workflow.mjs";
 import { validatePngBuffer } from "../../../shared/scripts/lib/image-file-validation.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
@@ -24,6 +29,13 @@ const artifact = { artifact_id: "career-workflow-test", image_needs: [{
   slot_id: "hero", type: "character", scene: "A clear scene.", subject: "A safe silhouette.", composition: "Centered.",
   visual_style: "Original illustration.", readability: "Readable.", width: 1024, height: 1024,
 }] };
+const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
+const injectedPatternCatalog = Object.fromEntries(await Promise.all(patternNames.map(async (name) => [
+  name,
+  JSON.parse(await readFile(path.join(repoRoot, "shared/image-assets/prompt-patterns", `${name}.json`), "utf8")),
+])));
+const planImageAssetWorkflow = (options) => planImageAssetWorkflowBase({ ...options, patternCatalog: options?.patternCatalog ?? injectedPatternCatalog });
+const runImageAssetWorkflow = (options) => runImageAssetWorkflowBase({ ...options, patternCatalog: options?.patternCatalog ?? injectedPatternCatalog });
 
 function png() {
   const buffer = Buffer.alloc(33);
@@ -61,6 +73,12 @@ test("Career plan-image-assets preserves profile slots, count evidence, and Skil
   assert.match(skill, /title.*desc|<title>.*<desc>/is);
   assert.match(skill, /lint.*render.*QA/is);
   assert.doesNotMatch(skill, /OpenAI|Codex image generation/u);
+});
+
+test("Career source workflow requires an explicitly injected prompt catalog", async (t) => {
+  const root = await workflowRoot(t, "career-packaged-catalog-");
+
+  await assert.rejects(() => planImageAssetWorkflowBase({ artifactRoot: root, artifact, qualityProfile: profile }), /ENOENT|prompt-patterns/u);
 });
 
 test("Career generate-image-assets uses stable user choices and the configured provider truthfully", async () => {
@@ -148,6 +166,16 @@ test("Career executes a selected host workflow with truthful unreported applied 
   assert.deepEqual(result.manifest.assets[0].provider, {
     name: "codex-host", requested_model: "gpt-image-2", requested_quality: "low", applied_model: null, applied_quality: null,
   });
+  assert.match(result.manifest.assets[0].generation_receipt.path, /^assets\/receipts\/image-generation-hero\.json$/u);
+  const generationReceipt = JSON.parse(await readFile(path.join(root, result.manifest.assets[0].generation_receipt.path), "utf8"));
+  assert.deepEqual(Object.keys(generationReceipt).sort(), [
+    "applied_model", "applied_quality", "asset_id", "failure_reason", "generated_at", "kind", "output_digest", "prompt_digest",
+    "provider", "request_id", "requested_model", "requested_quality", "schema_version",
+  ]);
+  assert.equal(generationReceipt.provider, "codex-host");
+  assert.equal(generationReceipt.output_digest, createHash("sha256").update(png()).digest("hex"));
+  assert.equal(generationReceipt.failure_reason, null);
+  assert.equal(JSON.stringify(generationReceipt).includes("A safe silhouette."), false);
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
 });
 
@@ -452,6 +480,14 @@ test("Career records a redacted failure manifest when a selected host callback t
   });
   assert.equal(result.manifest.assets[0].generation_state, "generation-failed");
   assert.deepEqual(result.manifest.assets[0].provider, { name: "codex-host", requested_model: "gpt-image-2", requested_quality: "low", applied_model: null, applied_quality: null });
+  const failureReceipt = JSON.parse(await readFile(path.join(root, result.manifest.assets[0].generation_receipt.path), "utf8"));
+  assert.equal(failureReceipt.failure_reason, "host-callback-failed");
+  assert.match(failureReceipt.failure_reason, /^[a-z][a-z0-9-]{0,127}$/u);
+  assert.equal(failureReceipt.prompt_digest, createHash("sha256").update(result.manifest.assets[0].prompt).digest("hex"));
+  assert.equal(failureReceipt.output_digest, null);
+  assert.equal(JSON.stringify(failureReceipt).includes(secret), false);
+  assert.equal(JSON.stringify(failureReceipt).includes(result.manifest.assets[0].prompt), false);
+  assert.equal(JSON.stringify(failureReceipt).includes(root), false);
   assert.equal(JSON.stringify(result).includes(secret), false);
   assert.equal((await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).includes(secret), false);
 });

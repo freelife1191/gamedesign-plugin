@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseRestrictedYaml, validateArtifact } from './validate-artifact.mjs';
 import { inspectCompletePng } from './lib/complete-png-validation.mjs';
+import { inspectRasterBuffer } from './lib/image-file-validation.mjs';
 import { lintWithApprovedSkillstead } from './lib/skillstead-svg-evidence.mjs';
 import { validateImageAssetManifest } from './validate-image-assets.mjs';
 
@@ -192,6 +193,35 @@ function exactKeys(value, required) {
     && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...required].sort());
 }
 
+function safeDigest(value) {
+  return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value);
+}
+
+async function hasBoundGenerationReceipt(artifactPath, asset) {
+  const binding = asset.generation_receipt;
+  if (!binding || !exactKeys(binding, ['path', 'sha256']) || !safeDigest(binding.sha256)
+    || !/^assets\/receipts\/image-generation-[a-z][a-z0-9]*(?:-[a-z0-9]+)*\.json$/u.test(binding.path)
+    || !(await safeManagedArtifactFile(artifactPath, binding.path))) return false;
+  try {
+    const bytes = await readFile(resolve(artifactPath, binding.path));
+    const receipt = JSON.parse(bytes.toString('utf8'));
+    return digest(bytes) === binding.sha256
+      && exactKeys(receipt, ['schema_version', 'kind', 'asset_id', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'])
+      && receipt.schema_version === 1 && receipt.kind === 'image-generation-receipt' && receipt.asset_id === asset.asset_id
+      && typeof receipt.provider === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.provider)
+      && (receipt.request_id === null || typeof receipt.request_id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.request_id))
+      && typeof receipt.generated_at === 'string' && !Number.isNaN(Date.parse(receipt.generated_at))
+      && safeDigest(receipt.prompt_digest) && safeDigest(receipt.output_digest) && receipt.output_digest === digest(await readFile(resolve(artifactPath, asset.output.path)))
+      && typeof receipt.requested_model === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.requested_model)
+      && ['low', 'medium', 'high', 'auto'].includes(receipt.requested_quality)
+      && (receipt.applied_model === null || typeof receipt.applied_model === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.applied_model))
+      && (receipt.applied_quality === null || ['low', 'medium', 'high', 'auto'].includes(receipt.applied_quality))
+      && receipt.failure_reason === null;
+  } catch {
+    return false;
+  }
+}
+
 async function hasBoundDocumentApprovalReceipt(artifactPath, asset) {
   const review = [...asset.reviews].reverse().find(({ state }) => state === 'document-approved');
   const evidencePaths = review?.evidence_paths;
@@ -207,6 +237,9 @@ async function hasBoundDocumentApprovalReceipt(artifactPath, asset) {
       && receipt.reviewer === review.reviewer && receipt.decided_at === review.reviewed_at && receipt.rights_decision === review.rights_decision
       && JSON.stringify(receipt.evidence_paths) === JSON.stringify(evidencePaths.slice(0, -1))
       && Array.isArray(receipt.evidence_digests) && receipt.evidence_digests.length === receipt.evidence_paths.length)) return false;
+    if (asset.output.format !== 'svg' && (!(await hasBoundGenerationReceipt(artifactPath, asset))
+      || !receipt.evidence_paths.includes(asset.output.path)
+      || !receipt.evidence_paths.includes(asset.generation_receipt.path))) return false;
     for (let index = 0; index < receipt.evidence_paths.length; index += 1) {
       const evidencePath = receipt.evidence_paths[index];
       const evidence = receipt.evidence_digests[index];
@@ -345,6 +378,14 @@ async function validateImageApprovalGate(artifactPath, requestedFormats, evidenc
     }
     if (asset.output.format === 'svg' && references.some(({ path }) => path === asset.output.path) && !(await hasPassedSvgQa(artifactPath, asset, evidenceOptions))) {
       referenceErrors.push(imageGateError('image.svg_qa_required', `Managed SVG requires passed Skillstead lint, render, and QA evidence: ${asset.asset_id}`));
+    }
+    if (asset.output.format !== 'svg' && references.some(({ path }) => path === asset.output.path)) {
+      try {
+        const raster = inspectRasterBuffer(await readFile(resolve(artifactPath, asset.output.path)), asset.output);
+        if (!raster.ok) referenceErrors.push(imageGateError('image.raster_invalid', `Managed raster must be complete and match manifest dimensions: ${asset.asset_id}`));
+      } catch {
+        referenceErrors.push(imageGateError('image.raster_invalid', `Managed raster must be complete and match manifest dimensions: ${asset.asset_id}`));
+      }
     }
   }
   if (!Array.isArray(requestedFormats) || requestedFormats.length === 0) return referenceErrors;

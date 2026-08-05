@@ -152,13 +152,14 @@ function pngChunk(type, data) {
   return Buffer.concat([header, data, checksum]);
 }
 
-function validRgbaPng(width, height) {
+function validRgbaPng(width, height, firstPixel = 0) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
   header.writeUInt8(8, 8);
   header.writeUInt8(6, 9);
   const rows = Buffer.alloc(height * (width * 4 + 1));
+  rows[1] = firstPixel;
   return Buffer.concat([
     Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     pngChunk('IHDR', header),
@@ -288,7 +289,7 @@ test('requires a matching host-user receipt with current evidence digests for a 
   assert.ok(withoutReceipt.validation.errors.some(({ code }) => code === 'image.approval_receipt_required'), JSON.stringify(withoutReceipt));
 });
 
-test('accepts a document-approved raster only while its host receipt and every evidence byte remain bound', async () => {
+test('rejects a fake raster even when the host approval receipt binds its evidence', async () => {
   const { workspace, artifact } = await workspaceWithArtifact();
   await mkdir(join(artifact, 'assets', 'generated'));
   await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), 'raster bytes');
@@ -305,8 +306,49 @@ test('accepts a document-approved raster only while its host receipt and every e
   const content = await readFile(join(artifact, 'content.md'), 'utf8');
   await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
 
-  assert.equal(runStop(officialPayload(workspace)).output.status, 'passed');
+  const fakeRaster = runStop(officialPayload(workspace)).output;
+  assert.equal(fakeRaster.decision, 'block');
+  assert.ok(fakeRaster.validation.errors.some(({ code }) => code === 'image.raster_invalid'), JSON.stringify(fakeRaster));
   await writeFile(join(artifact, 'evidence.yml'), 'changed evidence\n');
+  const stale = runStop(officialPayload(workspace)).output;
+  assert.equal(stale.decision, 'block');
+  assert.ok(stale.validation.errors.some(({ code }) => code === 'image.approval_receipt_required'), JSON.stringify(stale));
+});
+
+test('blocks a raster replacement after a human approval binds its generation receipt', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  const raster = validRgbaPng(1024, 1024);
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await mkdir(join(artifact, 'assets', 'receipts'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), raster);
+  const generationReceipt = {
+    schema_version: 1, kind: 'image-generation-receipt', asset_id: 'boss-telegraph', provider: 'openai', request_id: 'req-raster',
+    generated_at: '2026-08-06T00:00:00.000Z', prompt_digest: 'a'.repeat(64), output_digest: sha256(raster),
+    requested_model: 'gpt-image-2', requested_quality: 'low', applied_model: 'gpt-image-2', applied_quality: 'low', failure_reason: null,
+  };
+  const generationBytes = Buffer.from(`${JSON.stringify(generationReceipt, null, 2)}\n`);
+  await writeFile(join(artifact, 'assets', 'receipts', 'image-generation-boss-telegraph.json'), generationBytes);
+  const evidence = await readFile(join(artifact, 'evidence.yml'));
+  const evidencePaths = ['evidence.yml', 'assets/generated/boss-telegraph.png', 'assets/receipts/image-generation-boss-telegraph.json'];
+  const receipt = {
+    schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-raster-bound' },
+    asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Minji Kim',
+    decided_at: '2026-08-06T00:00:00Z', rights_decision: 'approved', evidence_paths: evidencePaths,
+    evidence_digests: [
+      { path: 'evidence.yml', sha256: sha256(evidence) },
+      { path: 'assets/generated/boss-telegraph.png', sha256: sha256(raster) },
+      { path: 'assets/receipts/image-generation-boss-telegraph.json', sha256: sha256(generationBytes) },
+    ],
+  };
+  await writeFile(join(artifact, 'decisions', 'image-review-evt-raster-bound.json'), JSON.stringify(receipt));
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
+    .replace('    rights:', '    generation_receipt:\n      path: assets/receipts/image-generation-boss-telegraph.json\n      sha256: ' + sha256(generationBytes) + '\n    rights:')
+    .replace('          - evidence.yml', `          - evidence.yml\n          - assets/generated/boss-telegraph.png\n          - assets/receipts/image-generation-boss-telegraph.json\n          - decisions/image-review-evt-raster-bound.json`));
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
+
+  assert.equal(runStop(officialPayload(workspace)).output.status, 'passed');
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), validRgbaPng(1024, 1024, 1));
   const stale = runStop(officialPayload(workspace)).output;
   assert.equal(stale.decision, 'block');
   assert.ok(stale.validation.errors.some(({ code }) => code === 'image.approval_receipt_required'), JSON.stringify(stale));

@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { reviewImageAssetWorkflow, runImageAssetWorkflow } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import { reviewImageAssetWorkflow, runImageAssetWorkflow as runImageAssetWorkflowBase } from "../../../shared/scripts/run-image-asset-workflow.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
@@ -23,6 +23,12 @@ const artifact = { artifact_id: "workflow-test", image_needs: [{
   slot_id: "hero", type: "character", scene: "A clear scene.", subject: "A safe silhouette.", composition: "Centered.",
   visual_style: "Original illustration.", readability: "Readable.", width: 1024, height: 1024,
 }] };
+const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
+const injectedPatternCatalog = Object.fromEntries(await Promise.all(patternNames.map(async (name) => [
+  name,
+  JSON.parse(await readFile(path.join(repoRoot, "shared/image-assets/prompt-patterns", `${name}.json`), "utf8")),
+])));
+const runImageAssetWorkflow = (options) => runImageAssetWorkflowBase({ ...options, patternCatalog: options?.patternCatalog ?? injectedPatternCatalog });
 
 function png() {
   const buffer = Buffer.alloc(33);
