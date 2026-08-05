@@ -88,11 +88,11 @@ test("authoritative routing registry maps all ten direct route variants", async 
   ]);
 });
 
-test("authoritative routing registry preserves all six declared roles in priority order", async () => {
+test("authoritative routing registry preserves the existing reviewer priority order", async () => {
   const routing = await readRouting();
 
-  assert.deepEqual(routing.rolePriority, roleIds);
-  assert.deepEqual(routing.rolePriority, routing.roleIds);
+  assert.deepEqual(routing.rolePriority, [...roleIds, "document-quality-editor"]);
+  assert.deepEqual(routing.roleIds, routing.rolePriority);
 });
 
 test("authoritative routing registry caps every route at three reviewers", async () => {

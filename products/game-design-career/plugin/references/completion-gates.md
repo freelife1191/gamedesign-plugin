@@ -17,6 +17,13 @@ Record each applicable gate as `pending`, `blocked`, `approved`, or `not-applica
 - For third-party game data, text, screenshots, or images, record the source, use purpose, and rights or quotation note before portfolio handoff.
 - Preserve disagreements and uncertainty as decision records. Do not average away a blocking finding or silently accept residual risk.
 
+## Document quality
+
+- Require one validated quality-profile selection record per compatible artifact before content generation and asset planning.
+- Advance only `draft -> structurally-complete -> evidence-reviewed -> visual-reviewed -> document-approved`; never skip a state. Missing required sections, tables, diagram slots, image slots, or acceptance criteria blocks `structurally-complete`.
+- Generated images and rendered files do not grant approval. Requested diagrams remain unverified until Skillstead output and renderer QA pass.
+- Preserve separate evidence, image-rights, responsible-design, release, and named human approval gates. `document-quality-editor` reports structural findings but cannot approve them or replace an evidence auditor.
+
 ## Handoff
 
 - Verify that required artifact sections, evidence gaps, review findings, and minimum repairs are present.

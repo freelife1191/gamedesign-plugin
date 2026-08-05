@@ -13,10 +13,11 @@ Turn mixed or ambiguous game-design intent into a bounded Canonical Artifact. Ro
 
 1. Read [intake.md](references/intake.md). Capture the brief, record safe assumptions, and ask only questions that can materially change the result.
 2. Read [workflow.md](references/workflow.md). Select exact domain routes, artifacts, profiles, and no more than three relevant review roles.
-3. Create or update the Canonical Artifact. Keep `content.md` authoritative and link evidence, decisions, reviews, and assets instead of scattering conclusions across chat.
-4. Dispatch independent review envelopes when subagents exist. Otherwise execute the identical envelope list sequentially in declared role priority.
-5. Merge findings deterministically. Preserve disagreements as decision items; never let completion timing determine order or resolution.
-6. Read [completion-gates.md](references/completion-gates.md). Apply domain, responsible-design, Canonical Artifact, visualization, and requested-format gates before claiming completion.
+3. Apply `apply-document-quality-profile` independently to every canonical artifact before content generation and asset planning. Preserve its selection record and stable checklist.
+4. Create or update the Canonical Artifact. Keep `content.md` authoritative and link evidence, decisions, reviews, and assets instead of scattering conclusions across chat.
+5. Dispatch independent review envelopes when subagents exist. Otherwise execute the identical envelope list sequentially in declared role priority.
+6. Merge findings deterministically. Preserve disagreements as decision items; never let completion timing determine order or resolution.
+7. Read [completion-gates.md](references/completion-gates.md). Apply document-quality, domain, responsible-design, Canonical Artifact, visualization, and requested-format gates before claiming completion.
 
 ## Operating Rules
 

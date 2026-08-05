@@ -12,7 +12,7 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const mergerRelativePath = "skills/orchestrate-game-design-project/scripts/merge-role-findings.mjs";
 const routing = JSON.parse(await readFile(path.join(pluginRoot, "references/routing.json"), "utf8"));
-const roles = routing.roleIds;
+const roles = routing.roleIds.filter((role) => role !== "document-quality-editor");
 const responsibleGates = JSON.parse(await readFile(path.join(repoRoot, "shared/responsible-design/gates.json"), "utf8"));
 const gateIds = responsibleGates.gates.map(({ id }) => id);
 const blockerGateByRole = {
@@ -136,7 +136,7 @@ async function loadMerger() {
 
 test("all six bounded role prompts define exact review and blocker contracts", async () => {
   assert.equal(roles.length, 6);
-  assert.deepEqual(routing.rolePriority, roles);
+  assert.deepEqual(routing.rolePriority.filter((role) => role !== "document-quality-editor"), roles);
   for (const role of roles) {
     const markdown = await readPlugin(`agents/${role}.md`);
     assertRolePromptContract(role, markdown);

@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "preGenerationSkill": "apply-document-quality-profile",
   "stages": [
     {
       "id": "unclear",
