@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { composeQualityProfile } from "../../shared/scripts/resolve-quality-profile.mjs";
 import { validateQualityProfile } from "../../shared/scripts/validate-quality-profile.mjs";
+import { allStrings, findPolicyLeak, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const qualityRoot = path.join(root, "shared/document-quality");
@@ -21,11 +22,6 @@ const presetIds = [
 const presetFields = [
   "preset_id", "version", "emphasis", "review_questions", "recommended_diagrams",
   "story_hints", "additional_acceptance_criteria",
-];
-const sourceIdentityFragments = [
-  "prince of persia", "gdc", "xbox", "microsoft", "steamworks", "valve", "left 4 dead",
-  "riot", "rell", "league of legends", "blizzard", "overwatch", "bungie", "director's cut",
-  "epic", "fortnite", "uefn",
 ];
 const requiredSlideFields = [
   "id", "title", "message", "purpose", "source_section_ids", "visual_slots", "speaker_notes_required",
@@ -53,33 +49,92 @@ async function json(relativePath) {
   return JSON.parse(await readFile(path.join(qualityRoot, relativePath), "utf8"));
 }
 
+const supportedSchemaKeywords = new Set([
+  "$schema", "$id", "title", "description", "$defs", "$ref", "type", "enum", "minimum",
+  "required", "additionalProperties", "properties", "items", "minItems", "uniqueItems",
+  "minLength", "pattern", "allOf", "if", "then", "contains", "minContains",
+]);
+
+function assertSupportedSchema(schema, seen = new Set()) {
+  if (typeof schema === "boolean" || seen.has(schema)) return;
+  if (schema === null || typeof schema !== "object" || Array.isArray(schema)) throw new Error("JSON Schema must be an object or boolean");
+  seen.add(schema);
+  for (const key of Object.keys(schema)) {
+    if (!supportedSchemaKeywords.has(key)) throw new Error(`unsupported JSON Schema keyword: ${key}`);
+  }
+  for (const mapKey of ["$defs", "properties"]) {
+    for (const child of Object.values(schema[mapKey] ?? {})) assertSupportedSchema(child, seen);
+  }
+  for (const childKey of ["additionalProperties", "items", "if", "then", "contains"]) {
+    if (typeof schema[childKey] === "object") assertSupportedSchema(schema[childKey], seen);
+  }
+  for (const child of schema.allOf ?? []) assertSupportedSchema(child, seen);
+}
+
 function schemaAccepts(value, rootSchema, schema = rootSchema) {
+  if (schema === rootSchema) assertSupportedSchema(rootSchema);
+  if (typeof schema === "boolean") return schema;
   if (schema.$ref) {
-    const target = schema.$ref.slice(2).split("/").reduce((current, segment) => current[segment], rootSchema);
+    if (!schema.$ref.startsWith("#/")) throw new Error(`unsupported JSON Schema reference: ${schema.$ref}`);
+    const target = schema.$ref.slice(2).split("/").reduce((current, segment) => current[segment.replaceAll("~1", "/").replaceAll("~0", "~")], rootSchema);
     return schemaAccepts(value, rootSchema, target);
   }
+  if (schema.enum && !schema.enum.some((candidate) => JSON.stringify(candidate) === JSON.stringify(value))) return false;
+  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, rootSchema, part))) return false;
+  if (schema.if && schemaAccepts(value, rootSchema, schema.if) && schema.then && !schemaAccepts(value, rootSchema, schema.then)) return false;
   if (schema.type === "object") {
     if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
     if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
     if (schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) return false;
-    return Object.entries(value).every(([key, child]) => !schema.properties?.[key] || schemaAccepts(child, rootSchema, schema.properties[key]));
+    return Object.entries(value).every(([key, child]) => {
+      if (schema.properties?.[key]) return schemaAccepts(child, rootSchema, schema.properties[key]);
+      if (schema.additionalProperties && typeof schema.additionalProperties === "object") return schemaAccepts(child, rootSchema, schema.additionalProperties);
+      return true;
+    });
   }
   if (schema.type === "array") {
     if (!Array.isArray(value) || value.length < (schema.minItems ?? 0)) return false;
     if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
+    if (schema.contains) {
+      const matches = value.filter((item) => schemaAccepts(item, rootSchema, schema.contains)).length;
+      if (matches < (schema.minContains ?? 1)) return false;
+    }
     return !schema.items || value.every((item) => schemaAccepts(item, rootSchema, schema.items));
   }
   if (schema.type === "string") {
     return typeof value === "string"
       && value.length >= (schema.minLength ?? 0)
-      && (!schema.pattern || new RegExp(schema.pattern, "iu").test(value));
+      && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
   }
   if (schema.type === "integer") return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  if (schema.type === "number") return typeof value === "number" && Number.isFinite(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  if (schema.type === "boolean") return typeof value === "boolean";
+  if (schema.type === "null") return value === null;
+  if (schema.type !== undefined) throw new Error(`unsupported JSON Schema type: ${schema.type}`);
   return true;
 }
 
+test("reference preset schema evaluator honors enum, conditionals, contains, and unsupported-keyword failure", () => {
+  assert.equal(schemaAccepts("a", { type: "string", enum: ["a"] }), true);
+  assert.equal(schemaAccepts("b", { type: "string", enum: ["a"] }), false);
+  assert.equal(schemaAccepts(["a", "b"], { type: "array", contains: { enum: ["a"] }, minContains: 1 }), true);
+  assert.equal(schemaAccepts(["b"], { type: "array", contains: { enum: ["a"] }, minContains: 1 }), false);
+  assert.equal(schemaAccepts({ enabled: true }, {
+    type: "object",
+    if: { type: "object", required: ["enabled"], properties: { enabled: { enum: [true] } } },
+    then: { type: "object", required: ["value"] },
+  }), false);
+  assert.equal(schemaAccepts("https://example.invalid", { type: "string", pattern: "^https://" }), true);
+  assert.equal(schemaAccepts("HTTPS://example.invalid", { type: "string", pattern: "^https://" }), false);
+  assert.throws(() => schemaAccepts("a", { type: "string", unknownKeyword: true }), /unsupported JSON Schema keyword/);
+  assert.throws(() => schemaAccepts("a", { type: "string", $defs: { unused: { unknownKeyword: true } } }), /unsupported JSON Schema keyword/);
+});
+
 test("neutral reference presets are closed, additive, schema-valid, and source-neutral", async () => {
   const schema = await json("schema/reference-preset.schema.json");
+  const policy = await readNeutralPresetPolicy(root);
+  assert.equal(policy.labels.length, 10);
+  assert.equal(policy.urls.length, 10);
   const directory = path.join(qualityRoot, "presets");
   const filenames = (await readdir(directory)).filter((name) => name.endsWith(".json")).sort();
   assert.deepEqual(filenames, presetIds.map((id) => `${id}.json`).sort());
@@ -94,23 +149,33 @@ test("neutral reference presets are closed, additive, schema-valid, and source-n
     assert.equal(schemaAccepts(preset, schema), true, `${id}: schema runtime`);
     for (const field of presetFields.slice(2)) assert.ok(preset[field].length > 0, `${id}: non-empty ${field}`);
 
-    const serialized = JSON.stringify(preset).toLowerCase();
-    for (const fragment of sourceIdentityFragments) assert.equal(serialized.includes(fragment), false, `${id}: leaked ${fragment}`);
+    assert.equal(findPolicyLeak(allStrings(preset), policy), undefined, `${id}: authoring identity gate`);
   }
 
   const valid = await json("presets/function-first.json");
-  for (const [label, mutate] of [
-    ["unknown source field", (value) => { value.source_name = "example"; }],
-    ["source URL value", (value) => { value.emphasis[0] = "https://example.invalid/source"; }],
-    ["logo reference", (value) => { value.story_hints[0] = "Reuse the source logo."; }],
-    ["copied layout reference", (value) => { value.review_questions[0] = "Copy the original layout."; }],
-    ["image reference", (value) => { value.additional_acceptance_criteria[0] = "Embed the reference image."; }],
-    ["nested source identity", (value) => { value.emphasis[0] = { source_name: "example" }; }],
-  ]) {
-    const candidate = structuredClone(valid);
-    mutate(candidate);
-    assert.equal(schemaAccepts(candidate, schema), false, label);
+  const unknownField = { ...valid, source_name: "example" };
+  assert.equal(schemaAccepts(unknownField, schema), false, "unknown source field");
+  assert.equal(schemaAccepts({ ...valid, preset_id: "not-approved" }, schema), false, "preset ID enum");
+  const schemeSensitiveUrl = policy.urls.find((url) => !url.includes("www."));
+  assert.ok(schemeSensitiveUrl, "evidence policy supplies a URL without a www prefix");
+  for (const field of presetFields.slice(2)) {
+    const identityCandidate = structuredClone(valid);
+    identityCandidate[field][0] = policy.labels[0];
+    assert.equal(schemaAccepts(identityCandidate, schema), true, `${field}: packaged schema stays identity-agnostic`);
+    assert.equal(findPolicyLeak(allStrings(identityCandidate), policy), policy.labels[0], `${field}: authoring identity gate`);
+
+    for (const url of [schemeSensitiveUrl, schemeSensitiveUrl.replace(/^https:/u, "HTTPS:")]) {
+      const urlCandidate = structuredClone(valid);
+      urlCandidate[field][0] = url;
+      assert.equal(schemaAccepts(urlCandidate, schema), false, `${field}: schema URL gate for ${url.slice(0, 8)}`);
+    }
   }
+  for (const [label, text] of [
+    ["source logo reuse", "Reuse the source logo."],
+    ["copied source layout", "Copy the original source layout."],
+    ["reference image reuse", "Reuse the source image."],
+  ]) assert.equal(schemaAccepts({ ...valid, story_hints: [text] }, schema), false, label);
+  assert.equal(schemaAccepts({ ...valid, emphasis: [{ source_name: "example" }] }, schema), false, "nested source identity");
 });
 
 test("Studio and Career catalogs contain exactly the approved validated profiles", async () => {

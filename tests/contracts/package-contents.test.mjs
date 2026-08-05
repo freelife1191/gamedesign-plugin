@@ -11,23 +11,11 @@ import { collectTree } from "../../tooling/lib/copy-tree.mjs";
 import { hashFileEntries, sha256 } from "../../tooling/lib/hash.mjs";
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 import { buildSnapshots } from "../../tooling/build-snapshots.mjs";
+import { findPolicyLeak, findPolicyLeakInBytes, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const productNames = ["game-design-career", "game-design-studio"];
 const vendorLockPath = "references/shared/vendor/skillstead/vendor.lock.json";
-const presetEvidenceFilename = "2026-08-05-neutral-game-design-preset-evidence.md";
-const presetSourceUrls = [
-  "https://www.jordanmechner.com/downloads/library/pop2bible.pdf",
-  "https://media.gdcvault.com/gdc07/slides/S4607i1.pdf",
-  "https://media.gdcvault.com/gdc2024/Slides/GDC%2Bslide%2Bpresentations/Shen_Will_LevelandQuest.pdf",
-  "https://learn.microsoft.com/en-us/xbox/accessibility/guidelines",
-  "https://partner.steamgames.com/doc/features/microtransactions/implementation?l=english",
-  "https://steamcdn-a.akamaihd.net/apps/valve/2009/GDC2009_ReplayableCooperativeGameDesign_Left4Dead.pdf",
-  "https://www.leagueoflegends.com/en-us/news/dev/champion-insights-rell/",
-  "https://news.blizzard.com/en-us/article/23787377/overwatch-2-pvp-beta-analysis-how-data-and-community-feedback-inform-game-balance",
-  "https://www.bungie.net/7/en/News/article/48758",
-  "https://dev.epicgames.com/documentation/fortnite/using-notes-in-unreal-editor-for-fortnite",
-];
 const neutralPresetIds = [
   "competitive-live-service", "replayable-coop", "evolving-world", "function-first",
   "player-validated-small-team", "cinematic-narrative", "ugc-production-tooling",
@@ -49,6 +37,7 @@ async function packagedEntries(productName) {
 }
 
 test("temporary product builds package neutral presets without authoring evidence paths or source URL bytes", async (t) => {
+  const policy = await readNeutralPresetPolicy(repoRoot);
   for (const productName of productNames) {
     const build = await cleanBuild(t, productName);
     const entries = await collectTree(build.outputDir, { label: `temporary ${productName}` });
@@ -58,10 +47,13 @@ test("temporary product builds package neutral presets without authoring evidenc
     }
 
     for (const { relativePath, bytes } of entries) {
-      assert.equal(relativePath.includes(presetEvidenceFilename), false, `${productName}: authoring path ${relativePath}`);
-      const text = bytes.toString("utf8");
-      assert.equal(text.includes(presetEvidenceFilename), false, `${productName}: authoring filename bytes in ${relativePath}`);
-      for (const url of presetSourceUrls) assert.equal(text.includes(url), false, `${productName}: source URL bytes in ${relativePath}`);
+      const pathLeak = findPolicyLeak([relativePath], policy);
+      assert.equal(pathLeak, undefined, `${productName}: authoring identity in path ${relativePath}`);
+      assert.equal(relativePath.includes(policy.evidenceFilename), false, `${productName}: authoring path ${relativePath}`);
+      assert.equal(bytes.includes(Buffer.from(policy.evidenceFilename)), false, `${productName}: authoring filename raw bytes in ${relativePath}`);
+      assert.equal(findPolicyLeakInBytes(bytes, policy), undefined, `${productName}: exact authoring identity or URL raw bytes in ${relativePath}`);
+      const byteLeak = findPolicyLeak([bytes.toString("utf8")], policy);
+      assert.equal(byteLeak, undefined, `${productName}: authoring identity or URL bytes in ${relativePath}`);
     }
   }
 });
