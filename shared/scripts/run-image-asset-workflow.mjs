@@ -212,7 +212,31 @@ function receiptProvenance(provider, config, result, failure) {
   };
 }
 
-async function writeGenerationReceipts(root, jobs, providerResult, provider, config, now, attemptIdFactory) {
+function validateAttemptId(attemptId) {
+  if (typeof attemptId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(attemptId)) throw new Error("Generation attempt ID is invalid.");
+  return attemptId;
+}
+
+async function reserveGenerationAttempt(root, jobs, provider, config, now, attemptId) {
+  await ensureArtifactDirectories({ artifactRoot: root, directories: ["assets", "assets/receipts"] });
+  const receipt = {
+    schema_version: 1,
+    kind: "image-generation-attempt",
+    attempt_id: attemptId,
+    asset_ids: jobs.map(({ asset_id }) => asset_id),
+    prompt_digests: jobs.map(({ prompt }) => sha256(prompt)),
+    provider,
+    requested_model: config.model,
+    requested_quality: config.quality,
+    generated_at: receiptTimestamp(now),
+  };
+  const path = `assets/receipts/image-generation-attempt-${attemptId}.json`;
+  const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+  await safeWriteArtifactFile({ artifactRoot: root, relativePath: path, data: bytes, policy: "create-once" });
+  return { path, sha256: sha256(bytes) };
+}
+
+async function writeGenerationReceipts(root, jobs, providerResult, provider, config, now, attemptId, reservation) {
   await ensureArtifactDirectories({ artifactRoot: root, directories: ["assets", "assets/receipts"] });
   const results = new Map((providerResult?.results ?? []).map((value) => [value.asset_id, value]));
   const failures = new Map((providerResult?.failures ?? []).map((value) => [value.asset_id, value]));
@@ -221,13 +245,13 @@ async function writeGenerationReceipts(root, jobs, providerResult, provider, con
     const result = results.get(job.asset_id);
     const failure = failures.get(job.asset_id);
     const provenance = receiptProvenance(provider, config, result, failure);
-    const attemptId = attemptIdFactory();
-    if (typeof attemptId !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(attemptId)) throw new Error("Generation attempt ID is invalid.");
     const receipt = {
       schema_version: 1,
       kind: "image-generation-receipt",
       asset_id: job.asset_id,
       attempt_id: attemptId,
+      reservation_path: reservation.path,
+      reservation_sha256: reservation.sha256,
       provider: provenance.provider,
       request_id: provenance.request_id,
       generated_at: receiptTimestamp(now),
@@ -377,9 +401,15 @@ export async function generateImageAssetWorkflow({
     artifactRoot: root, relativePath: `assets/prompts/image-generation-selection-${receipt.event_id}.json`, data: `${JSON.stringify(selection, null, 2)}\n`, policy: "create-once",
   });
   const decision = resolveImageProvider({ mode: publicConfig.mode, apiKeyPresent: publicConfig.apiKeyPresent, codexCapability });
+  let attemptId;
+  let reservation;
+  if (jobs.length > 0) {
+    if (decision.provider === "openai" && (typeof apiKey !== "string" || apiKey.length === 0)) throw new Error("Internal API key is required for the OpenAI route.");
+    attemptId = validateAttemptId(attemptIdFactory());
+    reservation = await reserveGenerationAttempt(root, jobs, decision.provider, publicConfig, now, attemptId);
+  }
   let providerResult = { results: [], failures: [] };
   if (jobs.length > 0 && decision.provider === "openai") {
-    if (typeof apiKey !== "string" || apiKey.length === 0) throw new Error("Internal API key is required for the OpenAI route.");
     providerResult = await generateViaOpenAI({
       jobs, apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now, generateOpenAIImagesFn,
     });
@@ -398,7 +428,7 @@ export async function generateImageAssetWorkflow({
     providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "no-provider-available" })) };
   }
   const generationReceipts = jobs.length > 0
-    ? await writeGenerationReceipts(root, jobs, providerResult, decision.provider, publicConfig, now, attemptIdFactory)
+    ? await writeGenerationReceipts(root, jobs, providerResult, decision.provider, publicConfig, now, attemptId, reservation)
     : new Map();
   const nextManifest = applyProviderResults(manifest, providerResult, decision.provider, publicConfig, generationReceipts);
   const validation = validateImageAssetManifest(nextManifest, { artifactRoot: root });

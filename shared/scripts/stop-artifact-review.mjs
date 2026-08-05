@@ -206,8 +206,11 @@ async function hasBoundGenerationReceipt(artifactPath, asset) {
     const bytes = await readFile(resolve(artifactPath, binding.path));
     const receipt = JSON.parse(bytes.toString('utf8'));
     return digest(bytes) === binding.sha256
-      && exactKeys(receipt, ['schema_version', 'kind', 'asset_id', 'attempt_id', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'])
+      && exactKeys(receipt, ['schema_version', 'kind', 'asset_id', 'attempt_id', 'reservation_path', 'reservation_sha256', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'])
       && receipt.schema_version === 1 && receipt.kind === 'image-generation-receipt' && receipt.asset_id === asset.asset_id && receipt.attempt_id === binding.attempt_id
+      && receipt.reservation_path === `assets/receipts/image-generation-attempt-${binding.attempt_id}.json` && safeDigest(receipt.reservation_sha256)
+      && (await safeManagedArtifactFile(artifactPath, receipt.reservation_path))
+      && receipt.reservation_sha256 === digest(await readFile(resolve(artifactPath, receipt.reservation_path)))
       && typeof receipt.provider === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.provider)
       && (receipt.request_id === null || typeof receipt.request_id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.request_id))
       && typeof receipt.generated_at === 'string' && !Number.isNaN(Date.parse(receipt.generated_at))

@@ -321,8 +321,14 @@ test('blocks a raster replacement after a human approval binds its generation re
   await mkdir(join(artifact, 'assets', 'generated'));
   await mkdir(join(artifact, 'assets', 'receipts'));
   await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), raster);
+  const reservation = {
+    schema_version: 1, kind: 'image-generation-attempt', attempt_id: 'attempt-raster', asset_ids: ['boss-telegraph'], prompt_digests: ['a'.repeat(64)],
+    provider: 'openai', requested_model: 'gpt-image-2', requested_quality: 'low', generated_at: '2026-08-06T00:00:00.000Z',
+  };
+  const reservationBytes = Buffer.from(`${JSON.stringify(reservation, null, 2)}\n`);
+  await writeFile(join(artifact, 'assets', 'receipts', 'image-generation-attempt-attempt-raster.json'), reservationBytes);
   const generationReceipt = {
-    schema_version: 1, kind: 'image-generation-receipt', asset_id: 'boss-telegraph', attempt_id: 'attempt-raster', provider: 'openai', request_id: 'req-raster',
+    schema_version: 1, kind: 'image-generation-receipt', asset_id: 'boss-telegraph', attempt_id: 'attempt-raster', reservation_path: 'assets/receipts/image-generation-attempt-attempt-raster.json', reservation_sha256: sha256(reservationBytes), provider: 'openai', request_id: 'req-raster',
     generated_at: '2026-08-06T00:00:00.000Z', prompt_digest: 'a'.repeat(64), output_digest: sha256(raster),
     requested_model: 'gpt-image-2', requested_quality: 'low', applied_model: 'gpt-image-2', applied_quality: 'low', failure_reason: null,
   };

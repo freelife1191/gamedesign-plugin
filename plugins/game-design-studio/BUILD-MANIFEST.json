@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "dc12caa2148bf748ebe865b7ad1a86bf724b6f86f7747c8c45c3cdd423a50fcd",
+  "treeSha256": "579ab2edcd8f4c46eb35a7da0da96479b0eb1eba02cb9a2ef9e28c1f3939faa0",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1356,13 +1356,13 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "2bae7c378b3d6cccbaa8854a396a839a523491fe1c0cb26bfa9031a4c23f5f09",
-      "size": 26711
+      "sha256": "1d6cbc283ec274075e7209babea7bd076eb24f3e88de33cc112e5f82cb091011",
+      "size": 27956
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
-      "sha256": "dffa3f361d2df16a1fb8fe6014421d2261a6b59328832833f677c5699d2032fc",
-      "size": 24693
+      "sha256": "58a22a9b1474a5f1f757b61e210b2ce4273555a3c965d9b2beca321ed0d72ac9",
+      "size": 25078
     },
     {
       "path": "scripts/validate-artifact.mjs",

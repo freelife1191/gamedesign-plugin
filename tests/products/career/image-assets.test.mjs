@@ -171,12 +171,17 @@ test("Career executes a selected host workflow with truthful unreported applied 
   const generationReceipt = JSON.parse(await readFile(path.join(root, currentReceipt.path), "utf8"));
   assert.deepEqual(Object.keys(generationReceipt).sort(), [
     "applied_model", "applied_quality", "asset_id", "attempt_id", "failure_reason", "generated_at", "kind", "output_digest", "prompt_digest",
-    "provider", "request_id", "requested_model", "requested_quality", "schema_version",
+    "provider", "request_id", "requested_model", "requested_quality", "reservation_path", "reservation_sha256", "schema_version",
   ]);
   assert.equal(generationReceipt.provider, "codex-host");
   assert.equal(generationReceipt.output_digest, createHash("sha256").update(png()).digest("hex"));
   assert.equal(generationReceipt.failure_reason, null);
   assert.equal(JSON.stringify(generationReceipt).includes("A safe silhouette."), false);
+  const reservation = JSON.parse(await readFile(path.join(root, generationReceipt.reservation_path), "utf8"));
+  assert.deepEqual(reservation.asset_ids, ["hero"]);
+  assert.deepEqual(reservation.prompt_digests, [createHash("sha256").update(result.manifest.assets[0].prompt).digest("hex")]);
+  assert.equal(JSON.stringify(reservation).includes(result.manifest.assets[0].prompt), false);
+  assert.equal(JSON.stringify(reservation).includes(root), false);
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
 });
 
@@ -496,7 +501,8 @@ test("Career records a redacted failure manifest when a selected host callback t
 test("Career appends immutable retry attempts and leaves OpenAI failure applied settings unreported", async (t) => {
   const root = await workflowRoot(t, "career-openai-retry-");
   const config = { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: true, apiKey: "test-only-key" };
-  const openAiFailure = async ({ jobs }) => ({ results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "provider-request-failed" })) });
+  let openAiCalls = 0;
+  const openAiFailure = async ({ jobs }) => { openAiCalls += 1; return { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "provider-request-failed" })) }; };
   const first = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile, config, selectedAssetIds: ["hero"],
     selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-openai-first", asset_ids: ["hero"] },
@@ -518,16 +524,18 @@ test("Career appends immutable retry attempts and leaves OpenAI failure applied 
     selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-openai-replay", asset_ids: ["hero"] },
     generateOpenAIImagesFn: openAiFailure, attemptIdFactory: () => "attempt-openai-1",
   }), /already exists/i);
+  assert.equal(openAiCalls, 2);
 });
 
 test("Career permits only one concurrent writer for the same immutable attempt ID", async (t) => {
   const root = await workflowRoot(t, "career-attempt-race-");
   const planned = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  let providerCalls = 0;
   const options = {
     artifactRoot: root, manifest: planned.manifest,
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, selectedAssetIds: ["hero"],
     codexCapability: { status: "available" }, attemptIdFactory: () => "attempt-race",
-    hostGenerate: async () => ({ results: [], failures: [{ asset_id: "hero", generation_state: "generation-failed", reason: "provider-request-failed", provenance: { provider: "codex-host" } }] }),
+    hostGenerate: async () => { providerCalls += 1; return { results: [], failures: [{ asset_id: "hero", generation_state: "generation-failed", reason: "provider-request-failed", provenance: { provider: "codex-host" } }] }; },
   };
   const attempts = await Promise.allSettled([
     generateImageAssetWorkflow({ ...options, selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-attempt-race-1", asset_ids: ["hero"] } }),
@@ -535,6 +543,7 @@ test("Career permits only one concurrent writer for the same immutable attempt I
   ]);
   assert.equal(attempts.filter(({ status }) => status === "fulfilled").length, 1);
   assert.equal(attempts.filter(({ status }) => status === "rejected").length, 1);
+  assert.equal(providerCalls, 1);
   assert.match(attempts.find(({ status }) => status === "rejected").reason.message, /already exists|unsafe/i);
 });
 
