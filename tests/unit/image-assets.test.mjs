@@ -35,6 +35,7 @@ function schemaAccepts(value, rootSchema, externalSchemas, schema = rootSchema) 
   if (Object.hasOwn(schema, "const") && value !== schema.const) return false;
   if (schema.enum && !schema.enum.includes(value)) return false;
   if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, rootSchema, externalSchemas, part))) return false;
+  if (schema.oneOf && schema.oneOf.filter((part) => schemaAccepts(value, rootSchema, externalSchemas, part)).length !== 1) return false;
   if (schema.if && schemaAccepts(value, rootSchema, externalSchemas, schema.if)
     && schema.then && !schemaAccepts(value, rootSchema, externalSchemas, schema.then)) return false;
   if (schema.type === "object" || schema.properties || schema.required || schema.additionalProperties !== undefined) {
@@ -268,6 +269,21 @@ test("requires human reviewers with closed roles and scopes for each approval st
   } });
   assert.equal(validateImageAssetManifest(automationApproval, { artifactRoot: root }).ok, false);
   assert.equal(schemaAccepts(automationApproval, manifestSchema, externalSchemas), false);
+});
+
+test("records unreported host model and quality as null applied provenance rather than requested defaults", async (t) => {
+  const root = await artifactRoot(t);
+  const value = manifest({ asset: { provider: {
+    name: "codex-host",
+    requested_model: "gpt-image-2",
+    requested_quality: "low",
+    applied_model: null,
+    applied_quality: null,
+  } } });
+  assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, true);
+  const mixed = structuredClone(value);
+  mixed.assets[0].provider.model = "gpt-image-2";
+  assert.ok(validateImageAssetManifest(mixed, { artifactRoot: root }).errors.some(({ code }) => code === "invalid_provider_provenance"));
 });
 
 test("uses the locked named-review transition API without authority extensions", async (t) => {

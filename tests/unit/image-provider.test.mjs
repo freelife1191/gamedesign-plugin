@@ -20,6 +20,23 @@ test("resolveImageProvider applies the closed provider decision table", () => {
   for (const [input, expected] of cases) assert.deepEqual(resolveImageProvider(input), expected);
 });
 
+test("resolveImageProvider normalizes capability-probe tri-state values without treating unknown as available", () => {
+  assert.deepEqual(
+    resolveImageProvider({ mode: "required", apiKeyPresent: false, codexCapability: { status: "available", provider: "codex-system-skill" } }),
+    { provider: "codex", reason: "codex-capability-available" },
+  );
+  for (const status of ["unavailable", "unknown"]) {
+    assert.deepEqual(
+      resolveImageProvider({ mode: "all", apiKeyPresent: false, codexCapability: { status } }),
+      { provider: "unavailable", reason: status === "unknown" ? "codex-capability-unknown" : "no-provider-available" },
+    );
+  }
+  assert.throws(
+    () => resolveImageProvider({ mode: "required", apiKeyPresent: false, codexCapability: { status: "invented" } }),
+    /capability/i,
+  );
+});
+
 test("select pre-selection returns no jobs before any provider or generator is invoked", () => {
   const qualityProfile = {
     profile_id: "provider-test", version: 1, artifact_types: ["design-document"], audiences: ["design"],

@@ -106,6 +106,21 @@ assets:
 `;
 }
 
+function documentApprovedImageManifest() {
+  return draftImageManifest()
+    .replace('approval_state: concept-draft', 'approval_state: document-approved')
+    .replace('    reviews: []', `    reviews:
+      - state: document-approved
+        reviewer: Minji Kim
+        reviewer_kind: human
+        reviewer_role: visual-reviewer
+        review_scope: document-visual
+        reviewed_at: "2026-08-06T00:00:00Z"
+        evidence_paths:
+          - evidence.yml
+        rights_decision: approved`);
+}
+
 test('ignores an official Stop event without the final artifact sentinel', async () => {
   const { workspace } = await workspaceWithArtifact();
   const { output } = runStop(officialPayload(workspace, { last_assistant_message: 'Normal response.' }));
@@ -163,6 +178,54 @@ test('blocks a final derivative that binds a concept-draft image and never start
   assert.equal(output.status, 'corrective-pass-requested');
   assert.ok(output.validation.errors.some(({ code }) => code === 'image.approval_required'), JSON.stringify(output));
   assert.doesNotMatch(JSON.stringify(output), /generate-openai-images|imagegen|authorization/i);
+});
+
+test('fails closed for normalized aliases and missing manifests on managed generated image bindings', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), 'placeholder');
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](./assets//generated/boss-telegraph.png)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.manifest_required'), JSON.stringify(output));
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.reference_alias'), JSON.stringify(output));
+});
+
+test('requires canonical unique tracked regular generated image references while allowing approved assets', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), 'placeholder');
+  await writeFile(join(artifact, 'assets', 'generated', 'untracked.png'), 'placeholder');
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest());
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n![Again](assets/generated/boss-telegraph.png)\n![Untracked](assets/generated/untracked.png)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.reference_duplicate'), JSON.stringify(output));
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.reference_untracked'), JSON.stringify(output));
+  assert.equal(output.validation.errors.some(({ code }) => code === 'image.approval_required'), false, JSON.stringify(output));
+});
+
+test('fails closed when a managed generated image crosses a symbolic link', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  const outside = await mkdtemp(join(tmpdir(), 'game-design-image-outside-'));
+  temporaryDirs.push(outside);
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(outside, 'boss-telegraph.png'), 'placeholder');
+  await symlink(join(outside, 'boss-telegraph.png'), join(artifact, 'assets', 'generated', 'boss-telegraph.png'));
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), draftImageManifest());
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.reference_unsafe'), JSON.stringify(output));
 });
 
 test('official stop_hook_active takes priority and env retry remains a compatibility fallback', async () => {

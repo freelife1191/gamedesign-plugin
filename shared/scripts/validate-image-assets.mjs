@@ -210,10 +210,22 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset.provider)) {
     errors.push(error("invalid_provider", `${assetPath}.provider`, "Provider, model, and quality are required."));
   } else {
-    rejectUnknownProperties(errors, asset.provider, new Set(["name", "model", "quality"]), `${assetPath}.provider`);
+    rejectUnknownProperties(errors, asset.provider, new Set(["name", "model", "quality", "requested_model", "requested_quality", "applied_model", "applied_quality"]), `${assetPath}.provider`);
     if (!safeIdentifierPattern.test(asset.provider.name ?? "")) errors.push(error("invalid_provider_name", `${assetPath}.provider.name`, "Provider name is not safe."));
-    if (!safeIdentifierPattern.test(asset.provider.model ?? "")) errors.push(error("invalid_provider_model", `${assetPath}.provider.model`, "Provider model is not safe."));
-    if (!qualities.has(asset.provider.quality)) errors.push(error("invalid_provider_quality", `${assetPath}.provider.quality`, "Provider quality is not approved."));
+    const keys = Object.keys(asset.provider).sort();
+    const legacy = JSON.stringify(keys) === JSON.stringify(["model", "name", "quality"]);
+    const host = JSON.stringify(keys) === JSON.stringify(["applied_model", "applied_quality", "name", "requested_model", "requested_quality"]);
+    if (!legacy && !host) {
+      errors.push(error("invalid_provider_provenance", `${assetPath}.provider`, "Provider provenance must be either complete legacy or complete requested/applied host form."));
+    } else if (legacy) {
+      if (!safeIdentifierPattern.test(asset.provider.model ?? "")) errors.push(error("invalid_provider_model", `${assetPath}.provider.model`, "Provider model is not safe."));
+      if (!qualities.has(asset.provider.quality)) errors.push(error("invalid_provider_quality", `${assetPath}.provider.quality`, "Provider quality is not approved."));
+    } else {
+      if (!safeIdentifierPattern.test(asset.provider.requested_model ?? "")) errors.push(error("invalid_requested_provider_model", `${assetPath}.provider.requested_model`, "Requested provider model is not safe."));
+      if (!qualities.has(asset.provider.requested_quality)) errors.push(error("invalid_requested_provider_quality", `${assetPath}.provider.requested_quality`, "Requested provider quality is not approved."));
+      if (asset.provider.applied_model !== null && !safeIdentifierPattern.test(asset.provider.applied_model ?? "")) errors.push(error("invalid_applied_provider_model", `${assetPath}.provider.applied_model`, "Applied provider model must be safe or null when unreported."));
+      if (asset.provider.applied_quality !== null && !qualities.has(asset.provider.applied_quality)) errors.push(error("invalid_applied_provider_quality", `${assetPath}.provider.applied_quality`, "Applied provider quality must be approved or null when unreported."));
+    }
   }
 
   if (!isObject(asset.rights)) {

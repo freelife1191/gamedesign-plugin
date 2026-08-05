@@ -22,6 +22,8 @@ Collect a validated artifact-local `assets/image-assets.yml`, its prompt package
 5. When there is no key and no available host image capability, make no generation call. Leave the Markdown/JSON prompts and placeholders available, mark the unavailable route truthfully, and provide a resumable handoff.
 6. Keep provider result, prompt digest, output digest, and failure state separate from human review. Generated output remains `concept-draft`; send it to `review-image-assets` with its stable ID and artifact-local evidence paths.
 
+Use the packaged `scripts/run-image-asset-workflow.mjs` composition: `planImageAssetWorkflow` plans and writes prompts, `generateImageAssetWorkflow` applies the selected stable IDs and provider policy, and no callback receives the full configuration or API key.
+
 ## Output contract
 
 Return the selected stable asset IDs, mode, redacted provider decision, per-asset generation result, preserved prompts/placeholders, and a named-human review handoff. Never log API keys, authorization headers, base64 data, or raw image bytes.

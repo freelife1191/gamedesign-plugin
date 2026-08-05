@@ -21,6 +21,8 @@ Collect the validated `assets/image-assets.yml`, stable asset ID, requested stat
 4. For document approval, require placement, alt text, readability, named visual review, rights/provenance, and artifact-local evidence. For production candidacy, additionally require technical fit, gameplay readability, active rights, and named human rights/provenance evidence.
 5. Block a final derivative or document export that binds an asset below `document-approved`. When evidence is incomplete, retain only the recommendation and unresolved blockers; do not change approval state.
 
+Use `reviewImageAssetWorkflow` from packaged `scripts/run-image-asset-workflow.mjs` only after saving an artifact-local `host-user-image-decision` receipt. This is host-user-input operating evidence, not authentication; it must match the stable asset ID, transition, reviewer, rights decision, and regular non-symlink evidence files.
+
 ## Output contract
 
 Return the stable asset ID, evidence-bounded findings, named human decision record, requested and accepted lifecycle transition, receipt, blockers, and derivative eligibility. Never represent an agent recommendation, renderer output, or asset bytes as approval.

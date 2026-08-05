@@ -88,13 +88,28 @@
         },
         "provider": {
           "type": "object",
-          "additionalProperties": false,
-          "required": ["name", "model", "quality"],
-          "properties": {
-            "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
-            "model": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
-            "quality": { "enum": ["low", "medium", "high", "auto"] }
-          }
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "required": ["name", "model", "quality"],
+              "properties": {
+                "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+                "model": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+                "quality": { "enum": ["low", "medium", "high", "auto"] }
+              }
+            },
+            {
+              "additionalProperties": false,
+              "required": ["name", "requested_model", "requested_quality", "applied_model", "applied_quality"],
+              "properties": {
+                "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+                "requested_model": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+                "requested_quality": { "enum": ["low", "medium", "high", "auto"] },
+                "applied_model": { "type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+                "applied_quality": { "type": ["string", "null"], "enum": ["low", "medium", "high", "auto", null] }
+              }
+            }
+          ]
         },
         "rights": {
           "type": "object",

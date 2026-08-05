@@ -154,10 +154,36 @@ function imageGateError(code, message) {
 }
 
 function markdownBindsAsset(content, assetPath) {
-  return content.includes(`](${assetPath})`);
+  return managedMarkdownImageReferences(content).some(({ path }) => path === assetPath);
+}
+
+function managedMarkdownImageReferences(content) {
+  const references = [];
+  for (const match of content.matchAll(/!\[[^\]\n]*\]\(\s*(?:<([^>\n]+)>|([^\s)]+))(?:\s+["'][^"']*["'])?\s*\)/gu)) {
+    const raw = match[1] ?? match[2];
+    if (raw.includes("?") || raw.includes("#") || raw.includes("\\") || raw.includes("\0")) continue;
+    const normalized = posix.normalize(raw);
+    if (!normalized.startsWith("assets/generated/") || !/\.(?:png|jpe?g|webp)$/iu.test(normalized)) continue;
+    references.push({ raw, path: normalized, alias: raw !== normalized || raw !== raw.normalize("NFC") });
+  }
+  return references;
+}
+
+async function safeManagedArtifactFile(artifactPath, relativePath) {
+  let cursor = artifactPath;
+  try {
+    for (const part of relativePath.split("/")) {
+      cursor = resolve(cursor, part);
+      if ((await lstat(cursor)).isSymbolicLink()) return false;
+    }
+    return (await lstat(cursor)).isFile();
+  } catch {
+    return false;
+  }
 }
 
 function parseImageManifestYaml(source) {
+  if (source.trimStart().startsWith("{")) return JSON.parse(source);
   const emptyArray = '__game_design_empty_array__';
   const normalized = source.replace(/^(\s*)(assets|reviews):\s*\[\]\s*$/gmu, `$1$2: "${emptyArray}"`);
   const manifest = parseRestrictedYaml(normalized, 'assets/image-assets.yml');
@@ -169,41 +195,62 @@ function parseImageManifestYaml(source) {
 }
 
 async function validateImageApprovalGate(artifactPath, requestedFormats) {
-  const manifestPath = resolve(artifactPath, 'assets', 'image-assets.yml');
-  let source;
-  try {
-    if ((await lstat(manifestPath)).isSymbolicLink()) {
-      return [imageGateError('image.manifest_unsafe', 'Image asset manifest must not be a symbolic link.')];
-    }
-    source = await readFile(manifestPath, 'utf8');
-  } catch (error) {
-    if (error?.code === 'ENOENT') return [];
-    return [imageGateError('image.manifest_unreadable', 'Image asset manifest could not be read.')];
-  }
-
-  let manifest;
-  try {
-    manifest = parseImageManifestYaml(source);
-  } catch (error) {
-    return [imageGateError('image.manifest_invalid', `Image asset manifest is not valid restricted YAML: ${error.message}`)];
-  }
-  const validation = validateImageAssetManifest(manifest, { artifactRoot: artifactPath });
-  if (!validation.ok) {
-    return validation.errors.slice(0, 20).map(({ code, message }) => imageGateError(`image.${code}`, message));
-  }
-  if (!Array.isArray(requestedFormats) || requestedFormats.length === 0) return [];
   let content;
   try {
     content = await readFile(resolve(artifactPath, 'content.md'), 'utf8');
   } catch {
     return [imageGateError('image.content_unreadable', 'Canonical content could not be read for image approval validation.')];
   }
-  return manifest.assets
+  const references = managedMarkdownImageReferences(content);
+  const referenceErrors = [];
+  const seen = new Set();
+  for (const reference of references) {
+    if (reference.alias) referenceErrors.push(imageGateError('image.reference_alias', `Managed image reference must be canonical: ${reference.raw}`));
+    if (seen.has(reference.path)) referenceErrors.push(imageGateError('image.reference_duplicate', `Managed image reference is duplicated: ${reference.path}`));
+    seen.add(reference.path);
+    if (!(await safeManagedArtifactFile(artifactPath, reference.path))) {
+      referenceErrors.push(imageGateError('image.reference_unsafe', `Managed image reference is missing, non-regular, or traverses a symbolic link: ${reference.path}`));
+    }
+  }
+  const manifestPath = resolve(artifactPath, 'assets', 'image-assets.yml');
+  let source;
+  try {
+    if ((await lstat(manifestPath)).isSymbolicLink()) {
+      return [...referenceErrors, imageGateError('image.manifest_unsafe', 'Image asset manifest must not be a symbolic link.')];
+    }
+    source = await readFile(manifestPath, 'utf8');
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return references.length === 0 ? referenceErrors : [...referenceErrors, imageGateError('image.manifest_required', 'Managed generated image references require an image asset manifest.')];
+    }
+    return [...referenceErrors, imageGateError('image.manifest_unreadable', 'Image asset manifest could not be read.')];
+  }
+
+  let manifest;
+  try {
+    manifest = parseImageManifestYaml(source);
+  } catch (error) {
+    return [...referenceErrors, imageGateError('image.manifest_invalid', `Image asset manifest is not valid restricted YAML: ${error.message}`)];
+  }
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: artifactPath });
+  if (!validation.ok) {
+    return [...referenceErrors, ...validation.errors.slice(0, 20).map(({ code, message }) => imageGateError(`image.${code}`, message))];
+  }
+  const outputIds = new Map();
+  for (const asset of manifest.assets) {
+    const ids = outputIds.get(asset.output.path) ?? [];
+    ids.push(asset.asset_id);
+    outputIds.set(asset.output.path, ids);
+  }
+  for (const [outputPath, ids] of outputIds) if (ids.length > 1) referenceErrors.push(imageGateError('image.manifest_duplicate_output', `Image manifest output is shared by multiple assets: ${outputPath}`));
+  for (const reference of references) if (!outputIds.has(reference.path)) referenceErrors.push(imageGateError('image.reference_untracked', `Managed image reference is not tracked by the image manifest: ${reference.path}`));
+  if (!Array.isArray(requestedFormats) || requestedFormats.length === 0) return referenceErrors;
+  return [...referenceErrors, ...manifest.assets
     .filter((asset) => markdownBindsAsset(content, asset.output.path) && asset.approval_state === 'concept-draft')
     .map(({ asset_id }) => imageGateError(
       'image.approval_required',
       `Final derivative binding requires document-approved image asset: ${asset_id}`,
-    ));
+    ))];
 }
 
 function correctiveReason(validation) {
