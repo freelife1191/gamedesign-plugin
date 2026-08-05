@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "90b0cb840d38dcfcf10b3d5e5b0555eea59d081a7cc3946f2d324dc06bce0da9",
+  "treeSha256": "d0ad8b5a402f6cfa5dd2e29ad3a55f157f65b6cf1a5ee4482c7148c676946e2e",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1301,8 +1301,8 @@
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
-      "sha256": "1550c8add5504904cde478b7b57939511d493a8c5bdfe0642b9f062e9ddd767c",
-      "size": 9536
+      "sha256": "d077395a4d14f81543e2f7779972e0b872240674389613e2c71e6c0af137e365",
+      "size": 9482
     },
     {
       "path": "scripts/data-only-snapshot.mjs",
@@ -1326,8 +1326,8 @@
     },
     {
       "path": "scripts/lib/image-input-safety.mjs",
-      "sha256": "6c5ff8abc3b9697462e7276203b62fc1e0c4a52e42e841c4b4545cbfa564de1b",
-      "size": 339
+      "sha256": "4d691fb3fd704ce787e5114d22172653d473022c10d2b925c783e98ea50f25ed",
+      "size": 362
     },
     {
       "path": "scripts/lib/image-provider.mjs",
@@ -1336,8 +1336,8 @@
     },
     {
       "path": "scripts/lib/rfc3339.mjs",
-      "sha256": "9f9137db0802e3dd9e20c85815d1c933165e72240c0b492e1c31dfad0ba3c53a",
-      "size": 893
+      "sha256": "cd521aefa8afc6bfd4a1e5acc4e02effbd15615c4e8b5d57ed4f7b13a534d263",
+      "size": 949
     },
     {
       "path": "scripts/lib/safe-artifact-write.mjs",
@@ -1361,8 +1361,8 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "077baddf4386509fac70188489951d186f23d818445414a984a2ac04c10e7c8e",
-      "size": 30526
+      "sha256": "389edb8605c89b4cdea6ce90a6d55c8efd9120b1fcc336ab47e993dfdb607e07",
+      "size": 30798
     },
     {
       "path": "scripts/stop-artifact-review.mjs",

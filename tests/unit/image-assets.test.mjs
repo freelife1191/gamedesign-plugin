@@ -190,6 +190,27 @@ test("rejects invalid RFC3339 review timestamps in validation and transitions", 
   }
 });
 
+test("accepts valid low-year RFC3339 review timestamps and rejects their calendar boundaries", async (t) => {
+  const root = await artifactRoot(t);
+  for (const reviewedAt of ["0001-01-01T00:00:00Z", "0004-02-29T23:59:59+23:59", "0099-12-31T12:00:00-23:59"]) {
+    const value = manifest({ asset: { approval_state: "document-approved", reviews: [{
+      state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer", review_scope: "document-visual",
+      reviewed_at: reviewedAt, evidence_paths: ["evidence.yml"], rights_decision: "approved",
+    }] } });
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, true, reviewedAt);
+    assert.equal(applyImageReviewTransition(manifest().assets[0], {
+      targetState: "document-approved", reviewer: "Minji Kim", reviewedAt, evidencePaths: ["evidence.yml"], rightsDecision: "approved",
+    }, { artifactRoot: root }).approval_state, "document-approved", reviewedAt);
+  }
+  for (const reviewedAt of ["0001-02-29T00:00:00Z", "0099-04-31T00:00:00Z"]) {
+    const value = manifest({ asset: { approval_state: "document-approved", reviews: [{
+      state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer", review_scope: "document-visual",
+      reviewed_at: reviewedAt, evidence_paths: ["evidence.yml"], rights_decision: "approved",
+    }] } });
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false, reviewedAt);
+  }
+});
+
 test("accepts each closed generation state independently from approval state", async (t) => {
   const root = await artifactRoot(t);
   for (const generationState of generationStates) {

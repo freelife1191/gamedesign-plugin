@@ -231,3 +231,26 @@ test("compileImagePrompts rejects API labels, data URIs, and house style identit
   nonCanonical.character.view = "A neutral looking but unapproved visual composition.";
   assert.throws(() => compileImagePrompts({ manifest, patternCatalog: nonCanonical }), (error) => error.code === "noncanonical_pattern_catalog");
 });
+
+test("compileImagePrompts rejects hostile persisted prompt bindings without echoing their contents", async () => {
+  const catalog = await patternCatalog();
+  const manifest = compiledManifest();
+  const hostileValues = [
+    "OPENAI_API_KEY=opaque-secret-value",
+    "Use Acme Games house visual language.",
+    "QmFzZTY0RW5jb2RlZFBheWxvYWRRdWl0ZUxvbmdFbm91Z2hUb1RyaWdnZXJUaGVTYWZldHlDaGVjay4=",
+  ];
+  for (const value of hostileValues) {
+    const hostileManifest = structuredClone(manifest);
+    hostileManifest.assets[0].prompt = value;
+    assert.throws(() => compileImagePrompts({ manifest: hostileManifest, patternCatalog: catalog }), (error) => (
+      error.code === "unsafe_prompt_content" && !error.message.includes(value) && !JSON.stringify(error).includes(value)
+    ));
+  }
+
+  const hostileDigest = structuredClone(manifest);
+  hostileDigest.assets[0].prompt_digest = "OPENAI_API_KEY=opaque-secret-value";
+  assert.throws(() => compileImagePrompts({ manifest: hostileDigest, patternCatalog: catalog }), (error) => (
+    error.code === "unsafe_prompt_content" && !error.message.includes(hostileDigest.assets[0].prompt_digest)
+  ));
+});

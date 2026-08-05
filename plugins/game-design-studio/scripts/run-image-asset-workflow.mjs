@@ -166,6 +166,15 @@ function bindCompiledPrompts(manifest, prompts) {
   return next;
 }
 
+function manifestForPromptCompilation(manifest) {
+  const next = clone(manifest);
+  for (const asset of next.assets) {
+    asset.prompt = `Prompt package required for ${asset.asset_id}.`;
+    delete asset.prompt_digest;
+  }
+  return next;
+}
+
 function assertCompiledPromptBindings(manifest) {
   if (!Array.isArray(manifest?.assets) || manifest.assets.some((asset) => !digestPattern.test(asset.prompt_digest ?? "") || asset.prompt_digest !== sha256(asset.prompt))) {
     throw new Error("Generation requires manifest prompts bound to the compiled prompt package.");
@@ -428,7 +437,7 @@ export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityPr
   const initialPrompts = compileImagePrompts({ manifest: plan.manifest, patternCatalog: catalog });
   const withBindings = bindCompiledPrompts(plan.manifest, initialPrompts.prompts);
   const withDisposition = applyCompiledPromptDisposition(withBindings, existingManifest);
-  const prompts = compileImagePrompts({ manifest: withDisposition, patternCatalog: catalog });
+  const prompts = compileImagePrompts({ manifest: manifestForPromptCompilation(withDisposition), patternCatalog: catalog });
   const manifest = bindCompiledPrompts(withDisposition, prompts.prompts);
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.md", data: prompts.markdown });
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.json", data: prompts.json });

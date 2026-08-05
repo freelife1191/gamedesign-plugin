@@ -71,7 +71,7 @@ function unsafeString(value) {
 
 function assertSafeStrings(value, path = []) {
   if (typeof value === "string") {
-    if (!isAllowedExclusion(path, value) && !["prompt", "prompt_digest"].includes(path.at(-1)) && unsafeString(value)) reject("unsafe_prompt_content");
+    if (!isAllowedExclusion(path, value) && unsafeString(value)) reject("unsafe_prompt_content");
     return;
   }
   if (Array.isArray(value)) {
@@ -167,10 +167,10 @@ function markdownFor(entries) {
 }
 
 export function compileImagePrompts({ manifest, patternCatalog } = {}) {
+  assertSafeStrings(manifest);
   const validation = validateImageAssetManifest(manifest);
   if (!validation.ok) throw new Error(`Invalid image manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
   assertPatternCatalog(patternCatalog);
-  assertSafeStrings(manifest);
   assertSafeStrings(patternCatalog);
   assertCanonicalPatternCatalog(patternCatalog);
   const prompts = manifest.assets.map((asset) => {
