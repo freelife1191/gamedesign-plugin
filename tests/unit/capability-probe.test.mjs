@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmod, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -189,6 +189,23 @@ test('distinguishes readable absence from permission-unknown image capability pa
   assert.deepEqual(await probeImageGenerationCapability({ CODEX_HOME: codexHome }, {
     lstatFn: async () => ({ isFile: () => true, isSymbolicLink: () => false }),
   }), { status: 'available', provider: 'codex-system-skill' });
+});
+
+test('reports unknown when a bundled image SKILL.md cannot be inspected', async () => {
+  const cwd = await temporaryWorkspace();
+  const codexHome = join(cwd, 'portable-codex-home');
+  const skill = join(codexHome, 'plugins', 'cache', 'openai-primary-runtime', 'imagegen', '1.2.3', 'skills', 'imagegen', 'SKILL.md');
+  await mkdir(join(skill, '..'), { recursive: true });
+  await writeFile(skill, '# image generation\n');
+
+  for (const code of ['EACCES', 'EPERM', 'EIO']) {
+    assert.deepEqual(await probeImageGenerationCapability({ CODEX_HOME: codexHome }, {
+      lstatFn: async (candidate) => {
+        if (candidate === skill) throw Object.assign(new Error('cannot inspect bundled skill'), { code });
+        return lstat(candidate);
+      },
+    }), { status: 'unknown' });
+  }
 });
 
 test('rejects malformed stdin without failing the optional hook', async () => {

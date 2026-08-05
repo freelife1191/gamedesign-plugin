@@ -132,7 +132,7 @@ function canonicalHumanReviewer(value) {
 }
 
 function canonicalReviewerKey(value) {
-  return value.normalize("NFKC").toLocaleLowerCase("und").replace(/[\s_-]+/gu, "");
+  return value.normalize("NFKC").toLocaleLowerCase("und").replace(/[^\p{L}\p{N}]/gu, "");
 }
 
 function sha256(value) {

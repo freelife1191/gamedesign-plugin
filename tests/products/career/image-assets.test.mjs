@@ -392,11 +392,15 @@ test("Career canonicalizes reviewer input before rejecting specialist aliases", 
   });
   await mkdir(path.join(root, "evidence"));
   await writeFile(path.join(root, "evidence", "review.md"), "Human evidence.\n");
-  for (const [index, reviewer] of [" visual-asset-reviewer ", "VISUAL-ASSET-REVIEWER", " Art-Brief-Director ", "visual_asset_reviewer", "Visual Asset Reviewer", "VISUALASSETREVIEWER"].entries()) {
+  for (const [index, reviewer] of [
+    " visual-asset-reviewer ", "VISUAL-ASSET-REVIEWER", " Art-Brief-Director ", "visual_asset_reviewer", "Visual Asset Reviewer", "VISUALASSETREVIEWER",
+    "visual‐asset‐reviewer", "visual∕asset∕reviewer", "visual／asset／reviewer", "visual＿asset＿reviewer",
+  ].entries()) {
     const decisionReceipt = {
       schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: `evt-reviewer-${index}` },
       asset_id: "hero", from_state: "concept-draft", target_state: "document-approved", decision: "approved", reviewer,
       decided_at: "2026-08-06T00:00:00Z", rights_decision: "approved", evidence_paths: ["evidence/review.md"],
+      evidence_digests: [{ path: "evidence/review.md", sha256: createHash("sha256").update("Human evidence.\n").digest("hex") }],
     };
     await assert.rejects(() => reviewImageAssetWorkflow({
       artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer,

@@ -178,3 +178,21 @@ node --test tests/products/studio/image-assets.test.mjs tests/products/career/im
 ### Remaining risk
 
 - Provider and host execution remain mocked and local by design; no live OpenAI request, host image call, or Chromium render was made.
+
+## Final review remediation
+
+### RED / GREEN
+
+- RED: `node --test tests/products/career/image-assets.test.mjs tests/unit/capability-probe.test.mjs` failed 2/32. Unicode dash/slash/fullwidth reviewer aliases bypassed reserved-specialist rejection, and an injected `EACCES` at a bundled imagegen `SKILL.md` leaf was reported as `available`.
+- GREEN: the same focused command passed 32/32. The Task 5 exact seven-file suite passed 80/80, and Studio/Career role plus orchestrator contracts passed 64/64.
+
+### Changes
+
+- Reserved reviewer comparison now uses NFKC normalization, lowercase, and Unicode letter/number-only keys; human reviewer display persistence remains unchanged.
+- Bundled image capability discovery now returns `unknown` for permission and unexpected I/O at the cache root, version directory, or exact `SKILL.md`; absent or malformed/non-regular paths remain unavailable.
+
+### Verification
+
+- Product skills: `quick_validate.py` → 6/6 valid.
+- `node --check` changed scripts; `git diff --check` → passed.
+- `npm test` → only the established Task 6 generated snapshot-integrity pair failed (Career and Studio).
