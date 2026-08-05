@@ -9,6 +9,9 @@ import { validateQualityProfile } from "../../shared/scripts/validate-quality-pr
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const qualityRoot = path.join(root, "shared/document-quality");
+const requiredSlideFields = [
+  "id", "title", "message", "purpose", "source_section_ids", "visual_slots", "speaker_notes_required",
+];
 
 const catalogs = {
   studio: [
@@ -53,19 +56,72 @@ test("Studio and Career catalogs contain exactly the approved validated profiles
       assert.equal(new Set(slots.map(({ id: slotId }) => slotId)).size, slots.length, `${id}: unique required slot IDs`);
       for (const slot of slots) assert.ok(sectionIds.has(slot.section_id), `${id}: ${slot.id} section reference`);
 
-      if (profile.export_rules.required_formats?.includes("pptx")) {
-        assert.ok(profile.artifact_types.includes("presentation"), `${id}: presentation render contract binding`);
-        const rules = profile.ppt_story_contract.story_rules ?? [];
-        assert.ok(rules.length > 0, `${id}: non-empty PPT story contract`);
-        const byId = new Map(rules.map((rule) => [rule.id, rule]));
-        for (const ruleId of ["audience", "decision-purpose", "message-per-slide", "source-section-binding", "visual-slot-binding", "speaker-note-policy"]) {
-          assert.ok(byId.has(ruleId), `${id}: ${ruleId}`);
-        }
-        assert.ok(byId.get("source-section-binding").section_id, `${id}: source section is bound`);
-        assert.ok(byId.get("visual-slot-binding").diagram_id || byId.get("visual-slot-binding").image_id, `${id}: visual slot is bound`);
-      }
+      if (profile.export_rules.required_formats?.includes("pptx")) assertPresentationContract(profile);
     }
   }
+});
+
+function assertPresentationContract(profile) {
+  const { profile_id: id, ppt_story_contract: contract } = profile;
+  const sectionIds = new Set(profile.required_sections.map((section) => section.id));
+  const visualSections = new Map(
+    [...profile.required_diagrams, ...profile.required_images].map((visual) => [visual.id, visual.section_id]),
+  );
+  assert.ok(profile.artifact_types.includes("presentation"), `${id}: presentation render contract binding`);
+  assert.equal(contract.audience_required, true, `${id}: audience is required`);
+  assert.equal(contract.decision_purpose_required, true, `${id}: decision purpose is required`);
+  assert.equal(contract.one_message_per_slide, true, `${id}: one message per slide`);
+  assert.deepEqual(contract.required_slide_fields, requiredSlideFields, `${id}: exact required slide fields`);
+  assert.equal(contract.speaker_note_policy, "required-for-every-slide", `${id}: speaker-note policy`);
+  assert.ok(contract.allowed_section_ids.length > 0, `${id}: allowed sections`);
+  assert.ok(contract.visual_bindings.length > 0, `${id}: visual bindings`);
+  for (const sectionId of contract.allowed_section_ids) assert.ok(sectionIds.has(sectionId), `${id}: declared section ${sectionId}`);
+  for (const binding of contract.visual_bindings) {
+    assert.ok(visualSections.has(binding.visual_slot_id), `${id}: declared visual ${binding.visual_slot_id}`);
+    assert.equal(binding.section_id, visualSections.get(binding.visual_slot_id), `${id}: visual section ownership`);
+    assert.ok(contract.allowed_section_ids.includes(binding.section_id), `${id}: visual section is allowed`);
+  }
+}
+
+test("PPT story policy rejects weakened fields and invalid section or visual bindings", async () => {
+  const profile = await json("profiles/studio/executive-pitch.json");
+  profile.ppt_story_contract = {
+    min_slides: 7,
+    max_slides: 12,
+    required_diagram_ids: ["skillstead-pitch-dependency-diagram"],
+    required_image_ids: ["pitch-key-art-image"],
+    audience_required: true,
+    decision_purpose_required: true,
+    one_message_per_slide: true,
+    required_slide_fields: [...requiredSlideFields],
+    allowed_section_ids: ["decision-case", "delivery-case"],
+    visual_bindings: [
+      { visual_slot_id: "skillstead-pitch-dependency-diagram", section_id: "delivery-case" },
+      { visual_slot_id: "pitch-key-art-image", section_id: "decision-case" },
+    ],
+    speaker_note_policy: "required-for-every-slide",
+  };
+  const expectIssue = (mutate, code, errorPath) => {
+    const candidate = structuredClone(profile);
+    mutate(candidate.ppt_story_contract);
+    const result = validateQualityProfile(candidate, { sourceName: "mutated executive pitch" });
+    assert.ok(result.errors.some((error) => error.code === code && error.path === errorPath), `${code} at ${errorPath}: ${JSON.stringify(result.errors)}`);
+  };
+
+  for (const field of ["audience_required", "decision_purpose_required", "one_message_per_slide", "speaker_note_policy"]) {
+    expectIssue((contract) => delete contract[field], "story.policy_required", `/ppt_story_contract/${field}`);
+  }
+  for (const field of ["message", "purpose", "speaker_notes_required"]) {
+    expectIssue(
+      (contract) => { contract.required_slide_fields = contract.required_slide_fields.filter((item) => item !== field); },
+      "story.slide_fields",
+      "/ppt_story_contract/required_slide_fields",
+    );
+  }
+  expectIssue((contract) => { contract.unknown_policy = true; }, "schema.additional_property", "/ppt_story_contract/unknown_policy");
+  expectIssue((contract) => { contract.allowed_section_ids[0] = "undeclared-section"; }, "reference.unknown", "/ppt_story_contract/allowed_section_ids/0");
+  expectIssue((contract) => { contract.visual_bindings[0].visual_slot_id = "undeclared-visual"; }, "reference.unknown", "/ppt_story_contract/visual_bindings/0/visual_slot_id");
+  expectIssue((contract) => { contract.visual_bindings[0].section_id = "decision-case"; }, "reference.mismatch", "/ppt_story_contract/visual_bindings/0/section_id");
 });
 
 test("platform and service overlays compose additively and reject removal directives", async () => {

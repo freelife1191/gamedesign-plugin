@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "422a85850e137b99fe42762db3c392fac041625993744dd0041e3cc2920d8b7f",
+  "treeSha256": "e94d2db474dc8b88ef71da92083c6875c5149771bdb3022d4f685873c3abbac6",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -550,14 +550,194 @@
       "size": 10753
     },
     {
+      "path": "references/shared/document-quality/overlays/live-service.json",
+      "sha256": "133eb8790c3247d58c013545a43cb8b121a2efceef6739b5ffc7361b6924dac7",
+      "size": 1252
+    },
+    {
+      "path": "references/shared/document-quality/overlays/mobile.json",
+      "sha256": "aebd01673b0acea0c22ebf1a5d18792a036ed0e91179340f6aa7723afa121a4f",
+      "size": 1187
+    },
+    {
+      "path": "references/shared/document-quality/overlays/pc-console.json",
+      "sha256": "77ee98beca6ac29c72e4faa6ab5a5f3a6ff6726dc070d790c4f99c698d545f2a",
+      "size": 1285
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/career-stage-role-map.json",
+      "sha256": "9318aa1a7bcd85098db3db7ed3a5952893070480a8238f0977ec7a3ddedfc1fe",
+      "size": 1520
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/competency-matrix.json",
+      "sha256": "43cbc3e824ad3dcd9efa89eeec8a03954f49f097e74a834bc471be47e300a0b7",
+      "size": 1549
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/game-analysis-report.json",
+      "sha256": "ad8ba63453f210a1eaf60dfcb20d58da2b78ad3efdabf1c546053c4e95afb66b",
+      "size": 1563
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/interview-question-answer-report.json",
+      "sha256": "fb52e7af61cb9c17c7731f6995b8d330f91d710a2fc1560b508dc350195014da",
+      "size": 1612
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/job-posting-evidence.json",
+      "sha256": "b874c26b0f2e1f627ec32f46999cb4e8af58a22bb3f6dad1acf33564aebabcd2",
+      "size": 1605
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/junior-growth-review.json",
+      "sha256": "6dd6e05dcc74f2277749b98336ebaab58f13b717bb16b7488f6919f165afe125",
+      "size": 1570
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/learning-roadmap.json",
+      "sha256": "12c8689a9bca8cd982b8bfab7395699e28a4330b23a45a4a0f73d4e2f09620c9",
+      "size": 1565
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/portfolio-case-study.json",
+      "sha256": "d278940f715f1362b564b0d4d85395347d926674c5dac488e84e9055ac1c261e",
+      "size": 1636
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/portfolio-project-brief.json",
+      "sha256": "90b2ace456ffeebe8e35fb1eebbc582fcf6a99825803237bfb9c788447122d0a",
+      "size": 1591
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/portfolio-review-backlog.json",
+      "sha256": "156b25ec433427f977a218eac7812df77127887c94cad1be128f442693c7256c",
+      "size": 1568
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/recruiter-portfolio-presentation.json",
+      "sha256": "00233b7217749601a3dc46ab8e5f14e8ede43e7fde95394ebc8cddc25febf2f5",
+      "size": 2279
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/reverse-design-document.json",
+      "sha256": "37f5b432d2058310413ee296d8e8871f874117f1c454d08dbd2a0fed271210bc",
+      "size": 1633
+    },
+    {
+      "path": "references/shared/document-quality/profiles/career/transition-readiness.json",
+      "sha256": "d25fb3742475d2c014d3725d059603982efdc0c64f235485916fe3485a8378e5",
+      "size": 1602
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/accessibility-platform-matrix.json",
+      "sha256": "cfb801f7ff9fa2fff1a9078d0d255fd208d868320036be5a520aede1669a3c61",
+      "size": 1658
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/character-skill-combat-monster-specification.json",
+      "sha256": "80ebe56da88e545c9e2c5014f8cba14e5154d9bc0da776c9d81c8924e3826f0b",
+      "size": 1580
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/core-motivation-loop.json",
+      "sha256": "1178cc7d25e8f8936eec22b3723dd92605d63826f434aabb178e05ac9a0ca8ce",
+      "size": 1456
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/data-table-contract.json",
+      "sha256": "058eaad582a6e87cd05d80063d0a180014f246b2fb12d3bca8f68ea3199432b1",
+      "size": 1480
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/design-review-decision-log.json",
+      "sha256": "171a73b7cb046b82322925d7dba1c9fa5dd0f4556b71a48b93c427b29d0e2b5d",
+      "size": 1535
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/economy-balance-specification.json",
+      "sha256": "bbcce09307d1326ee2df050b74a40c9cdd385f9827b7cce0a017b55caac580bf",
+      "size": 1571
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/executive-pitch.json",
+      "sha256": "490213a685861a2075fe9c2dcf4672f6918a51f7da95cca2b2e7d16c7f0ca288",
+      "size": 2239
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/game-design-brief.json",
+      "sha256": "3623bdabffd19cf706a89b454224a1e46555a625b503af8870c28b9939e9a775",
+      "size": 1456
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/liveops-event-experiment-plan.json",
+      "sha256": "3945e309987096ecea17e93d9a1eb1445bef3944a1c5c49fd5b27ad62dc5719f",
+      "size": 1610
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/master-gdd.json",
+      "sha256": "46f079bcd7323d75fe3b9f83833920d83ccefea95765c47f5b541ded8c31d73b",
+      "size": 1561
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/narrative-quest-npc-specification.json",
+      "sha256": "a054edc47c596964e427c28b9c8790eb986f35c773f938b00ff0666c14ac8933",
+      "size": 1598
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/playtest-metrics-report.json",
+      "sha256": "4d5f9464de7839e4e4110e1a5665cf78bf71489793c1e26d0452577dc7c1eea5",
+      "size": 1568
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/production-scope-milestone-risk-plan.json",
+      "sha256": "5cf8ae9a930f82f0185ed8ad3e4f6681a9dd1e20637a2f16f0eb53925a8ff99e",
+      "size": 1591
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/rule-state-exception-matrix.json",
+      "sha256": "e05fcefded032740dff715c5877d7c2b8797d9c529659170e2820b5f1a8a2856",
+      "size": 1484
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/system-feature-specification.json",
+      "sha256": "4688a50718013da1e5a4dc4de630417caa430fb27ad1dd142e49315c86535a85",
+      "size": 1473
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/ui-ux-flow-state-specification.json",
+      "sha256": "30d6f924b848baf98ba1eb22f1a1f3f4f7af4305e0c9c2e459431a55d582e18b",
+      "size": 1553
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/vision-one-pager.json",
+      "sha256": "ae3a9f8c3c98f3d819c31a7e53a2114ba8c17d72887de1feae19b1ebae209fdb",
+      "size": 1397
+    },
+    {
+      "path": "references/shared/document-quality/render-contracts/long-form-document.json",
+      "sha256": "f17514d4b1b80a8bf599dbb7fcffabb7e483c0720bd281586bb60712189a1aab",
+      "size": 1804
+    },
+    {
+      "path": "references/shared/document-quality/render-contracts/presentation.json",
+      "sha256": "c9e00b8bcf34857e06fd81ad35fa1e71f98e61a8371a2233a507664ebd7fce53",
+      "size": 1887
+    },
+    {
+      "path": "references/shared/document-quality/render-contracts/review-report.json",
+      "sha256": "3b88d67df09e8a55ba184d44e723b515042b8e178e99672ed2be8aa805494e94",
+      "size": 1858
+    },
+    {
       "path": "references/shared/document-quality/schema/quality-profile-selection.schema.json",
       "sha256": "9d1c7d9b1a5aae2cab82e200ecf575fdafa4a3acec2076c177f85f8eea6fcf72",
       "size": 690
     },
     {
       "path": "references/shared/document-quality/schema/quality-profile.schema.json",
-      "sha256": "33d962d1b8f410a2b3bf8aecb591301a97da9402586b803fa2bad0cb540528f3",
-      "size": 4453
+      "sha256": "9f261674b1bdd89530e22a6f28f3071db926dee2963dc369b8be950a1dda1df0",
+      "size": 6748
     },
     {
       "path": "references/shared/export/qa-contracts/docx.md",
@@ -961,8 +1141,8 @@
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
-      "sha256": "e9e6d9ca8b848759290da3ccd53d00567ddda5614e9c73c0925510d06d6e57dc",
-      "size": 9727
+      "sha256": "093a5f33694fcd130ca4030758ad6800a83605f337695af3c229666d1858c0ab",
+      "size": 15939
     },
     {
       "path": "skills/define-game-vision/SKILL.md",

@@ -40,6 +40,10 @@ function schemaAccepts(value, rootSchema, schema = rootSchema) {
     const target = schema.$ref.slice(2).split("/").reduce((current, segment) => current[segment], rootSchema);
     return schemaAccepts(value, rootSchema, target);
   }
+  if (Object.hasOwn(schema, "const") && value !== schema.const) return false;
+  if (schema.enum && !schema.enum.includes(value)) return false;
+  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, rootSchema, part))) return false;
+  if (schema.if && schemaAccepts(value, rootSchema, schema.if) && schema.then && !schemaAccepts(value, rootSchema, schema.then)) return false;
   if (schema.type === "object") {
     if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
     if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
@@ -47,8 +51,10 @@ function schemaAccepts(value, rootSchema, schema = rootSchema) {
     return Object.entries(value).every(([key, child]) => !schema.properties?.[key] || schemaAccepts(child, rootSchema, schema.properties[key]));
   }
   if (schema.type === "array") {
-    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0)) return false;
+    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0) || value.length > (schema.maxItems ?? Number.POSITIVE_INFINITY)) return false;
     if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
+    if (schema.contains && !value.some((item) => schemaAccepts(item, rootSchema, schema.contains))) return false;
+    if (!schema.items) return true;
     return value.every((item) => schemaAccepts(item, rootSchema, schema.items));
   }
   if (schema.type === "string") {
@@ -99,6 +105,43 @@ test("runtime validator and JSON Schema agree on nested optional fields and asse
   ];
 
   for (const [name, expected, value] of cases) {
+    assert.equal(schemaAccepts(value, schema), expected, `${name}: schema`);
+    assert.equal(validateQualityProfile(value).ok, expected, `${name}: runtime`);
+  }
+});
+
+test("runtime validator and JSON Schema both require the complete PPTX story policy", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/document-quality/schema/quality-profile.schema.json", import.meta.url), "utf8"));
+  const presentation = profile({
+    artifact_types: ["presentation"],
+    ppt_story_contract: {
+      min_slides: 5,
+      max_slides: 10,
+      required_diagram_ids: ["core-loop"],
+      required_image_ids: ["hero-image"],
+      audience_required: true,
+      decision_purpose_required: true,
+      one_message_per_slide: true,
+      required_slide_fields: ["id", "title", "message", "purpose", "source_section_ids", "visual_slots", "speaker_notes_required"],
+      allowed_section_ids: ["overview", "systems"],
+      visual_bindings: [
+        { visual_slot_id: "core-loop", section_id: "systems" },
+        { visual_slot_id: "hero-image", section_id: "overview" },
+      ],
+      speaker_note_policy: "required-for-every-slide",
+    },
+    export_rules: { required_formats: ["pptx", "pdf"], forbidden_formats: [] },
+  });
+  const falsePolicy = structuredClone(presentation);
+  falsePolicy.ppt_story_contract.audience_required = false;
+  const missingPolicy = structuredClone(presentation);
+  delete missingPolicy.ppt_story_contract.speaker_note_policy;
+
+  for (const [name, expected, value] of [
+    ["complete PPTX story policy", true, presentation],
+    ["false audience policy", false, falsePolicy],
+    ["missing speaker-note policy", false, missingPolicy],
+  ]) {
     assert.equal(schemaAccepts(value, schema), expected, `${name}: schema`);
     assert.equal(validateQualityProfile(value).ok, expected, `${name}: runtime`);
   }
