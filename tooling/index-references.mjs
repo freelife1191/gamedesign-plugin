@@ -6,6 +6,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const INDEX_PATH = "shared/knowledge/reference-index.json";
+const AUTHORING_ONLY_SOURCE_PATHS = new Set([
+  "docs/research/2026-08-05-neutral-game-design-preset-evidence.md",
+]);
 
 const CATEGORY_BY_SOURCE_ROOT = new Map([
   ["docs/01. 게임 기획자 취업 튜토리얼", "career"],
@@ -82,6 +85,7 @@ export async function discoverSourceFiles({ repoRoot, readDirectory = readdir })
     const rawPath = path.relative(repoRoot, absolutePath).split(path.sep).join("/");
     const sourcePath = rawPath.normalize("NFC");
     if (sourcePath.startsWith("docs/superpowers/")) continue;
+    if (AUTHORING_ONLY_SOURCE_PATHS.has(sourcePath)) continue;
     rawPaths.push(rawPath);
     files.push({ absolutePath, sourcePath });
   }

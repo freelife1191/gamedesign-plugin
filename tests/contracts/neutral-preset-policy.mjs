@@ -44,18 +44,31 @@ export function allStrings(value) {
   return [];
 }
 
-function policyIdentities(policy, { includeAliases = true } = {}) {
-  return [...policy.labels, ...policy.urls, ...(includeAliases ? policy.aliases : [])];
+function folded(value) {
+  return value.normalize("NFC").toLowerCase();
 }
 
-export function findPolicyLeak(strings, policy, options) {
-  const folded = strings.map((value) => value.normalize("NFC").toLowerCase());
-  return policyIdentities(policy, options).find((identity) => {
-    const needle = identity.normalize("NFC").toLowerCase();
-    return folded.some((value) => value.includes(needle));
+function containsAliasToken(value, alias) {
+  const escapedAlias = folded(alias).replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escapedAlias}(?![\\p{L}\\p{N}])`, "u").test(folded(value));
+}
+
+function findAliasLeak(strings, aliases) {
+  return aliases.find((alias) => strings.some((value) => containsAliasToken(value, alias)));
+}
+
+export function findPolicyLeak(strings, policy, { includeAliases = true } = {}) {
+  const foldedStrings = strings.map(folded);
+  const fullIdentity = [...policy.labels, ...policy.urls].find((identity) => {
+    const needle = folded(identity);
+    return foldedStrings.some((value) => value.includes(needle));
   });
+  if (fullIdentity || !includeAliases) return fullIdentity;
+  return findAliasLeak(strings, policy.aliases);
 }
 
-export function findPolicyLeakInBytes(bytes, policy, options) {
-  return policyIdentities(policy, options).find((identity) => bytes.includes(Buffer.from(identity)));
+export function findPolicyLeakInBytes(bytes, policy, { includeAliases = true } = {}) {
+  const fullIdentity = [...policy.labels, ...policy.urls].find((identity) => bytes.includes(Buffer.from(identity)));
+  if (fullIdentity || !includeAliases) return fullIdentity;
+  return findAliasLeak([bytes.toString("utf8")], policy.aliases);
 }

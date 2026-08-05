@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 
 import { composeQualityProfile } from "../../shared/scripts/resolve-quality-profile.mjs";
 import { validateQualityProfile } from "../../shared/scripts/validate-quality-profile.mjs";
-import { allStrings, findPolicyLeak, parseNeutralPresetPolicy, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
+import {
+  allStrings,
+  findPolicyLeak,
+  findPolicyLeakInBytes,
+  parseNeutralPresetPolicy,
+  readNeutralPresetPolicy,
+} from "./neutral-preset-policy.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const qualityRoot = path.join(root, "shared/document-quality");
@@ -141,6 +147,38 @@ test("authoring evidence policy rejects missing, duplicate, and non-NFC identity
   assert.throws(() => parseNeutralPresetPolicy(row("one", "` Leading`")), /must be trimmed/);
   assert.throws(() => parseNeutralPresetPolicy(row("one", "`Trailing `")), /must be trimmed/);
   assert.throws(() => parseNeutralPresetPolicy(row("one", "`   `")), /must be non-empty/);
+});
+
+test("authoring alias matching does not reject neutral words containing short aliases", async () => {
+  const policy = await readNeutralPresetPolicy(root);
+  for (const sentence of [
+    "Supports player decisions",
+    "The report supports iteration",
+    "Population goals remain neutral",
+  ]) {
+    assert.equal(findPolicyLeak([sentence], policy), undefined, sentence);
+  }
+});
+
+test("authoring alias matching uses Unicode letter and number token boundaries", () => {
+  const policy = {
+    evidenceFilename: "evidence.md",
+    labels: ["Source Label"],
+    urls: ["https://example.invalid/source"],
+    aliases: ["RTS", "PoP", "Café"],
+  };
+
+  for (const text of ["Use RTS here.", "Review (pop), then continue.", "한국어(RTS) 문장", "Try CAFE\u0301!"]) {
+    assert.ok(findPolicyLeak([text], policy), `expected alias boundary match: ${text}`);
+    assert.ok(findPolicyLeakInBytes(Buffer.from(text), policy), `expected byte alias boundary match: ${text}`);
+  }
+  for (const text of ["supports", "report supports", "Population", "RTS2", "2RTS", "한국어RTS", "RTS전략"]) {
+    assert.equal(findPolicyLeak([text], policy), undefined, `unexpected alias match: ${text}`);
+    assert.equal(findPolicyLeakInBytes(Buffer.from(text), policy), undefined, `unexpected byte alias match: ${text}`);
+  }
+
+  assert.equal(findPolicyLeak(["prefix source labelsuffix"], policy), "Source Label", "full labels retain subsequence matching");
+  assert.equal(findPolicyLeak(["see HTTPS://EXAMPLE.INVALID/SOURCE?view=1"], policy), policy.urls[0], "URLs retain folded subsequence matching");
 });
 
 test("neutral reference presets are closed, additive, schema-valid, and source-neutral", async () => {
