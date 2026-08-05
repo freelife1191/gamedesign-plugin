@@ -134,7 +134,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset)) return [error("invalid_asset", assetPath, "Assets must be objects.")];
   rejectUnknownProperties(errors, asset, new Set([
     "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement", "alt_text", "readability",
-    "art_brief", "prompt", "output", "provider", "generation_receipts", "rights", "reviews", "technical_fit", "gameplay_readability",
+    "art_brief", "prompt", "prompt_digest", "output", "provider", "generation_receipts", "rights", "reviews", "technical_fit", "gameplay_readability",
   ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
   if (!assetTypes.has(asset.type)) errors.push(error("invalid_asset_type", `${assetPath}.type`, "Asset type is not approved."));
@@ -211,6 +211,9 @@ function validateAsset(asset, index, artifactRoot) {
     }
   }
   pushRequiredString(errors, asset.prompt, `${assetPath}.prompt`);
+  if (asset.prompt_digest !== undefined && !/^[a-f0-9]{64}$/u.test(asset.prompt_digest)) {
+    errors.push(error("invalid_prompt_digest", `${assetPath}.prompt_digest`, "Prompt digest must be a SHA-256 hexadecimal digest when present."));
+  }
 
   if (!isObject(asset.output)) {
     errors.push(error("invalid_output", `${assetPath}.output`, "Output details are required."));

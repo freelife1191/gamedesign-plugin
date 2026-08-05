@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -10,9 +10,9 @@ import {
   generateImageAssetWorkflow,
   planImageAssetWorkflow as planImageAssetWorkflowBase,
   reviewImageAssetWorkflow,
+  runConfiguredImageAssetWorkflow,
   runImageAssetWorkflow as runImageAssetWorkflowBase,
 } from "../../../shared/scripts/run-image-asset-workflow.mjs";
-import { validatePngBuffer } from "../../../shared/scripts/lib/image-file-validation.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -81,11 +81,31 @@ test("Career source workflow requires an explicitly injected prompt catalog", as
   await assert.rejects(() => planImageAssetWorkflowBase({ artifactRoot: root, artifact, qualityProfile: profile }), /ENOENT|prompt-patterns/u);
 });
 
+test("Career replanning preserves active disposition when canonical compiled prompts are unchanged", async (t) => {
+  const root = await workflowRoot(t, "career-replan-prompts-");
+  const first = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  const second = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile, existingManifest: first.manifest });
+  assert.equal(second.manifest.assets[0].planning.disposition, "active");
+  assert.equal(second.manifest.assets[0].prompt, first.manifest.assets[0].prompt);
+  assert.equal(second.manifest.assets[0].prompt_digest, first.manifest.assets[0].prompt_digest);
+});
+
+test("Career replanning requires review when the prior compiled prompt binding differs", async (t) => {
+  const root = await workflowRoot(t, "career-replan-prompt-change-");
+  const first = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  const changed = structuredClone(first.manifest);
+  changed.assets[0].prompt = "Purpose and medium: changed compiled prompt.";
+  changed.assets[0].prompt_digest = createHash("sha256").update(changed.assets[0].prompt).digest("hex");
+  const next = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile, existingManifest: changed });
+  assert.equal(next.manifest.assets[0].planning.disposition, "replan-review-required");
+});
+
 test("Career generate-image-assets uses stable user choices and the configured provider truthfully", async () => {
   const skill = await readFile(path.join(pluginRoot, "skills/generate-image-assets/SKILL.md"), "utf8");
 
   assert.match(skill, /^---\nname: generate-image-assets\ndescription: Use when /u);
-  assert.match(skill, /validate-image-config\.mjs/u);
+  assert.match(skill, /runConfiguredImageAssetWorkflow/u);
+  assert.match(skill, /toPublicImageConfig/u);
   assert.match(skill, /capability-probe\.mjs/u);
   assert.match(skill, /selectGenerationJobs/u);
   assert.match(skill, /stable asset IDs?/u);
@@ -148,15 +168,16 @@ test("Career executes a selected host workflow with truthful unreported applied 
     artifactRoot: root, artifact, qualityProfile: profile,
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
     selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-career-host", asset_ids: ["hero"] }, codexCapability: { status: "available" },
-    hostGenerate: async ({ jobs }) => {
+    hostGenerate: async (input) => {
+      assert.deepEqual(Object.keys(input), ["jobs"]);
+      const { jobs } = input;
       hostCalls += 1;
       assert.deepEqual(jobs.map(({ asset_id }) => asset_id), ["hero"]);
-      await mkdir(path.join(root, "assets", "generated"));
+      assert.doesNotMatch(jobs[0].prompt, /Prompt package required/u);
       const bytes = png();
-      await writeFile(path.join(root, jobs[0].output.path), bytes);
-      const inspected = validatePngBuffer(bytes, jobs[0].output);
-      return { results: [{ asset_id: "hero", generation_state: "generated", output: { ...jobs[0].output, digest: inspected.digest }, provenance: {
-        provider: "codex-host", prompt_digest: createHash("sha256").update(jobs[0].prompt).digest("hex"), output_digest: inspected.digest,
+      assert.equal(Object.hasOwn(jobs[0].output, "path"), false);
+      return { results: [{ asset_id: "hero", generation_state: "generated", bytes, provenance: {
+        provider: "codex-host", prompt_digest: createHash("sha256").update(jobs[0].prompt).digest("hex"),
       } }], failures: [] };
     },
   });
@@ -182,7 +203,95 @@ test("Career executes a selected host workflow with truthful unreported applied 
   assert.deepEqual(reservation.prompt_digests, [createHash("sha256").update(result.manifest.assets[0].prompt).digest("hex")]);
   assert.equal(JSON.stringify(reservation).includes(result.manifest.assets[0].prompt), false);
   assert.equal(JSON.stringify(reservation).includes(root), false);
+  const promptPackage = JSON.parse(await readFile(path.join(root, "assets/prompts/image-prompts.json"), "utf8"));
+  const promptMarkdown = await readFile(path.join(root, "assets/prompts/image-prompts.md"), "utf8");
+  const persistedManifest = JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8"));
+  assert.equal(promptPackage.prompts[0].prompt, result.manifest.assets[0].prompt);
+  assert.equal(promptPackage.prompts[0].prompt_digest, result.manifest.assets[0].prompt_digest);
+  assert.ok(promptMarkdown.includes(result.manifest.assets[0].prompt));
+  assert.equal(persistedManifest.assets[0].prompt, result.manifest.assets[0].prompt);
+  assert.equal(persistedManifest.assets[0].prompt_digest, result.manifest.assets[0].prompt_digest);
+  assert.equal(generationReceipt.prompt_digest, result.manifest.assets[0].prompt_digest);
+  assert.equal(reservation.prompt_digests[0], result.manifest.assets[0].prompt_digest);
+  assert.equal(Buffer.isBuffer(result.providerResult.results[0]?.bytes), false);
+  assert.equal(Object.hasOwn(result.providerResult.results[0] ?? {}, "bytes"), false);
+  assert.doesNotMatch(result.manifest.assets[0].prompt, /Prompt package required/u);
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
+});
+
+test("Career configured workflow keeps the private OpenAI key internal while routing the compiled prompt", async (t) => {
+  const root = await workflowRoot(t, "career-configured-openai-");
+  const secret = "configured-openai-secret";
+  await writeFile(path.join(root, ".env"), `IMAGE_GEN_MODE=select\nOPENAI_API_KEY=${secret}\n`);
+  let observed;
+  const result = await runConfiguredImageAssetWorkflow({
+    workspaceRoot: await realpath(root), env: {}, artifactRoot: root, artifact, qualityProfile: profile, patternCatalog: injectedPatternCatalog,
+    selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-configured-openai", asset_ids: ["hero"] },
+    sleepFn: async () => {},
+    fetchFn: async (_url, options) => {
+      observed = options;
+      const body = Buffer.from(JSON.stringify({ data: [{ b64_json: png().toString("base64") }] }));
+      return { status: 200, headers: { get: (name) => name === "content-length" ? String(body.length) : "request-configured-openai" }, body: { async *[Symbol.asyncIterator]() { yield body; } } };
+    },
+  });
+  assert.equal(observed.headers.Authorization, `Bearer ${secret}`);
+  assert.equal(JSON.parse(observed.body).prompt, result.manifest.assets[0].prompt);
+  assert.equal(result.config.apiKeyPresent, true);
+  assert.equal(JSON.stringify(result).includes(secret), false);
+  assert.equal((await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).includes(secret), false);
+  assert.equal((await readFile(path.join(root, result.manifest.assets[0].generation_receipts.at(-1).path), "utf8")).includes(secret), false);
+});
+
+test("Career public-only OpenAI configuration fails before any provider call", async (t) => {
+  const root = await workflowRoot(t, "career-public-openai-");
+  let calls = 0;
+  await assert.rejects(() => runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile, config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: true },
+    selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-public-openai", asset_ids: ["hero"] },
+    generateOpenAIImagesFn: async () => { calls += 1; return { results: [], failures: [] }; },
+  }), /API key/i);
+  assert.equal(calls, 0);
+});
+
+test("Career host generation preflights final outputs and exposes no final path", async (t) => {
+  const root = await workflowRoot(t, "career-host-staging-");
+  const planned = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+  const finalPath = path.join(root, planned.manifest.assets[0].output.path);
+  await writeFile(finalPath, "sentinel\n");
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest: planned.manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, selectedAssetIds: ["hero"],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-host-staging", asset_ids: ["hero"] },
+    codexCapability: { status: "available" },
+    hostGenerate: async ({ jobs }) => {
+      hostCalls += 1;
+      assert.equal(Object.hasOwn(jobs[0].output, "path"), false);
+      return { results: [], failures: [] };
+    },
+  }), /output|exists|unsafe/i);
+  assert.equal(hostCalls, 0);
+  assert.equal(await readFile(finalPath, "utf8"), "sentinel\n");
+});
+
+test("Career host generation rejects a symlinked final destination before the callback", async (t) => {
+  const root = await workflowRoot(t, "career-host-symlink-");
+  const outside = await workflowRoot(t, "career-host-symlink-outside-");
+  const planned = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+  const outsideTarget = path.join(outside, "sentinel.png");
+  await writeFile(outsideTarget, "outside-sentinel\n");
+  await symlink(outsideTarget, path.join(root, planned.manifest.assets[0].output.path));
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest: planned.manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, selectedAssetIds: ["hero"],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-host-symlink", asset_ids: ["hero"] },
+    codexCapability: { status: "available" }, hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  }), /output|unsafe|staging/i);
+  assert.equal(hostCalls, 0);
+  assert.equal(await readFile(outsideTarget, "utf8"), "outside-sentinel\n");
 });
 
 test("Career requires closed host-user selection evidence before invoking a selected host provider", async (t) => {
@@ -293,27 +402,25 @@ test("Career never writes workflow files through symlinked artifact roots, ances
   assert.equal(await readFile(path.join(outside, "target.txt"), "utf8"), "outside-target-sentinel\n");
 });
 
-test("Career does not promote a host result without a verified artifact-local output", async (t) => {
+test("Career does not publish a corrupt host PNG", async (t) => {
   const root = await workflowRoot(t, "career-host-output-");
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
     selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-host-output", asset_ids: ["hero"] },
     codexCapability: { status: "available" },
-    hostGenerate: async () => ({ results: [{ asset_id: "hero", generation_state: "generated", output: {
-      path: "assets/generated/hero.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "contextual",
-      digest: "0".repeat(64),
-    }, provenance: { provider: "codex-host", prompt_digest: "0".repeat(64), output_digest: "0".repeat(64) } }], failures: [] }),
+    hostGenerate: async ({ jobs }) => ({ results: [{ asset_id: "hero", generation_state: "generated", bytes: Buffer.from("not-a-png"),
+      provenance: { provider: "codex-host", prompt_digest: createHash("sha256").update(jobs[0].prompt).digest("hex") } }], failures: [] }),
   });
   assert.equal(result.manifest.assets[0].generation_state, "qa-failed");
   assert.equal(result.manifest.assets[0].provider.name, "codex-host");
+  await assert.rejects(readFile(path.join(root, "assets/generated/hero.png")));
 });
 
-test("Career marks corrupt, mismatched-path, and mismatched-digest host outputs as QA failures", async (t) => {
+test("Career marks corrupt or mismatched-prompt host outputs as QA failures", async (t) => {
   for (const [name, resultFor] of [
-    ["corrupt", (job) => ({ outputPath: job.output.path, bytes: Buffer.from("not-a-png"), digest: "0".repeat(64) })],
-    ["wrong path", (job) => ({ outputPath: "assets/generated/other.png", bytes: png(), digest: "0".repeat(64) })],
-    ["wrong digest", (job) => ({ outputPath: job.output.path, bytes: png(), digest: "0".repeat(64) })],
+    ["corrupt", () => ({ bytes: Buffer.from("not-a-png"), prompt_digest: undefined })],
+    ["wrong prompt", () => ({ bytes: png(), prompt_digest: "0".repeat(64) })],
   ]) {
     const root = await workflowRoot(t, `career-host-${name}-`);
     const result = await runImageAssetWorkflow({
@@ -324,10 +431,8 @@ test("Career marks corrupt, mismatched-path, and mismatched-digest host outputs 
       hostGenerate: async ({ jobs }) => {
         const job = jobs[0];
         const fixture = resultFor(job);
-        await mkdir(path.join(root, "assets", "generated"));
-        await writeFile(path.join(root, fixture.outputPath), fixture.bytes);
-        return { results: [{ asset_id: job.asset_id, generation_state: "generated", output: { ...job.output, path: fixture.outputPath, digest: fixture.digest }, provenance: {
-          provider: "codex-host", prompt_digest: createHash("sha256").update(job.prompt).digest("hex"), output_digest: fixture.digest,
+        return { results: [{ asset_id: job.asset_id, generation_state: "generated", bytes: fixture.bytes, provenance: {
+          provider: "codex-host", prompt_digest: fixture.prompt_digest ?? createHash("sha256").update(job.prompt).digest("hex"),
         } }], failures: [] };
       },
     });
@@ -360,6 +465,7 @@ test("Career rejects malformed host generation results before updating the manif
   const invalidResults = [
     { results: [], failures: [], extra: true },
     { results: [{ asset_id: "unknown", generation_state: "generated", provenance: { provider: "codex-host" } }], failures: [] },
+    { results: [{ asset_id: "hero", generation_state: "generated", bytes: png(), provenance: { provider: "codex-host", prompt_digest: "0".repeat(64) }, unexpected: true }], failures: [] },
     { results: [
       { asset_id: "hero", generation_state: "generated", provenance: { provider: "codex-host" } },
       { asset_id: "hero", generation_state: "generated", provenance: { provider: "codex-host" } },
@@ -464,10 +570,9 @@ test("Career host results accept only closed safe provenance and preserve actual
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
     selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-applied-host", asset_ids: ["hero"] }, codexCapability: { status: "available" },
     hostGenerate: async ({ jobs }) => {
-      const job = jobs[0]; const bytes = png(); await mkdir(path.join(root2, "assets", "generated")); await writeFile(path.join(root2, job.output.path), bytes);
-      const inspected = validatePngBuffer(bytes, job.output);
-      return { results: [{ asset_id: job.asset_id, generation_state: "generated", output: { ...job.output, digest: inspected.digest }, provenance: {
-        provider: "codex-host", prompt_digest: createHash("sha256").update(job.prompt).digest("hex"), output_digest: inspected.digest,
+      const job = jobs[0]; const bytes = png();
+      return { results: [{ asset_id: job.asset_id, generation_state: "generated", bytes, provenance: {
+        provider: "codex-host", prompt_digest: createHash("sha256").update(job.prompt).digest("hex"),
         applied_model: "host-image-v3", applied_quality: "high",
       } }], failures: [] };
     },
@@ -535,7 +640,12 @@ test("Career permits only one concurrent writer for the same immutable attempt I
     artifactRoot: root, manifest: planned.manifest,
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, selectedAssetIds: ["hero"],
     codexCapability: { status: "available" }, attemptIdFactory: () => "attempt-race",
-    hostGenerate: async () => { providerCalls += 1; return { results: [], failures: [{ asset_id: "hero", generation_state: "generation-failed", reason: "provider-request-failed", provenance: { provider: "codex-host" } }] }; },
+    hostGenerate: async ({ jobs }) => {
+      providerCalls += 1;
+      return { results: [{ asset_id: "hero", generation_state: "generated", bytes: png(), provenance: {
+        provider: "codex-host", prompt_digest: createHash("sha256").update(jobs[0].prompt).digest("hex"),
+      } }], failures: [] };
+    },
   };
   const attempts = await Promise.allSettled([
     generateImageAssetWorkflow({ ...options, selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-attempt-race-1", asset_ids: ["hero"] } }),
@@ -544,6 +654,7 @@ test("Career permits only one concurrent writer for the same immutable attempt I
   assert.equal(attempts.filter(({ status }) => status === "fulfilled").length, 1);
   assert.equal(attempts.filter(({ status }) => status === "rejected").length, 1);
   assert.equal(providerCalls, 1);
+  assert.equal((await readFile(path.join(root, "assets/generated/hero.png"))).equals(png()), true);
   assert.match(attempts.find(({ status }) => status === "rejected").reason.message, /already exists|unsafe/i);
 });
 

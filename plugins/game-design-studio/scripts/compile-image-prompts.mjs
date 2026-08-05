@@ -201,6 +201,7 @@ export function compileImagePrompts({ manifest, patternCatalog } = {}) {
   return {
     markdown: markdownFor(prompts),
     json: `${JSON.stringify(jsonValue, null, 2)}\n`,
+    prompts: prompts.map((entry) => ({ ...entry, dimensions: { ...entry.dimensions }, target_output: { ...entry.target_output }, preserve: [...entry.preserve], exclude: [...entry.exclude], postprocess_requirements: [...entry.postprocess_requirements] })),
     promptDigests: prompts.map(({ asset_id, prompt_digest }) => ({ asset_id, prompt_digest })),
   };
 }

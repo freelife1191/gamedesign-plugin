@@ -72,7 +72,8 @@ test("Studio generate-image-assets routes by actual configuration without invent
   const skill = await readFile(path.join(pluginRoot, "skills/generate-image-assets/SKILL.md"), "utf8");
 
   assert.match(skill, /^---\nname: generate-image-assets\ndescription: Use when /u);
-  assert.match(skill, /validate-image-config\.mjs/u);
+  assert.match(skill, /runConfiguredImageAssetWorkflow/u);
+  assert.match(skill, /toPublicImageConfig/u);
   assert.match(skill, /capability-probe\.mjs/u);
   assert.match(skill, /selectGenerationJobs/u);
   assert.match(skill, /stable asset IDs?/u);

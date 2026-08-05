@@ -83,6 +83,7 @@ test("compileImagePrompts emits semantically equivalent Markdown and JSON prompt
   assert.match(compiled.markdown, /Expected count: 2/);
   assert.match(compiled.markdown, /Mode scope: manifest-declared/);
   assert.deepEqual(compiled.promptDigests, payload.prompts.map(({ asset_id, prompt_digest }) => ({ asset_id, prompt_digest })));
+  assert.deepEqual(compiled.prompts, payload.prompts);
   assert.deepEqual(payload.prompts.map(({ asset_id, slot, type, dimensions, generation_state, approval_state, planning_disposition }) => ({
     asset_id, slot, type, dimensions, generation_state, approval_state, planning_disposition,
   })), [

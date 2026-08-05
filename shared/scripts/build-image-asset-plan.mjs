@@ -159,7 +159,7 @@ function markForReplanReview(asset) {
 }
 
 function planningFieldsChanged(existing, planned) {
-  const fields = ["type", "requirement", "purpose", "placement", "alt_text", "readability", "art_brief", "prompt"];
+  const fields = ["type", "requirement", "purpose", "placement", "alt_text", "readability", "art_brief"];
   return fields.some((field) => JSON.stringify(existing[field]) !== JSON.stringify(planned[field]))
     || JSON.stringify(existing.planning?.target_output ?? existing.output) !== JSON.stringify(planned.output);
 }

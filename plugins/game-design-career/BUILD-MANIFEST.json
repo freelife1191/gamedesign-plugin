@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "e297713f53b02be6545a3651ea6930da03ffb44d964c4ea22bdd8a7dcec0b4d1",
+  "treeSha256": "dd556dc89e1a685aace21a6daa1a50f5ab1783c12b943359a93b659728d77338",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1291,8 +1291,8 @@
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
-      "sha256": "4c4ccb5cb8a8220f393e1c5b257c2f73e56609a98662eb0c5a3dfb6f0aa2ca01",
-      "size": 12429
+      "sha256": "b1d3be2f8fd69deb36448f03a1e0fb27d1fe3b01480c6f73ec7de00914af3dc8",
+      "size": 12419
     },
     {
       "path": "scripts/capability-probe.mjs",
@@ -1301,8 +1301,8 @@
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
-      "sha256": "8132bf85e41e58a9b0798ecda4861c08cc122aeb2db829ced166780c454d4d4f",
-      "size": 9383
+      "sha256": "b1910d40d450ee73d9dcb9a7469afe3db19ebb038147b590f1da11a1154fc167",
+      "size": 9639
     },
     {
       "path": "scripts/data-only-snapshot.mjs",
@@ -1351,8 +1351,8 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "1d6cbc283ec274075e7209babea7bd076eb24f3e88de33cc112e5f82cb091011",
-      "size": 27956
+      "sha256": "5543bfd8cd78e41b2d7654bc0017b4d862aec7746d1359adc95e1c0ac5fa0906",
+      "size": 30272
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
@@ -1366,8 +1366,8 @@
     },
     {
       "path": "scripts/validate-image-assets.mjs",
-      "sha256": "47ee230e65be6aeb9b4e130d8df3695b9a295a3f884a35cc65712993025389f3",
-      "size": 25325
+      "sha256": "df6291ae6e76cd570a6213c2b47e1f459174a9f77a6d5d89bf72c198e933a35d",
+      "size": 25584
     },
     {
       "path": "scripts/validate-image-config.mjs",
@@ -1421,8 +1421,8 @@
     },
     {
       "path": "skills/generate-image-assets/SKILL.md",
-      "sha256": "ba7a4560bcec6846f1a5b042edd18de1badd11ff5db9a92c74b4bc2aa08de7d1",
-      "size": 3158
+      "sha256": "0154fefbd5cfc783e433faa8d8a2bc19c6f390447b813db6a204dcecc7c348af",
+      "size": 3513
     },
     {
       "path": "skills/generate-image-assets/agents/openai.yaml",

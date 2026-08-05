@@ -6,10 +6,11 @@ import { fileURLToPath } from "node:url";
 import { buildImageAssetPlan, selectGenerationJobs } from "./build-image-asset-plan.mjs";
 import { compileImagePrompts } from "./compile-image-prompts.mjs";
 import { generateOpenAIImages } from "./generate-openai-images.mjs";
-import { validatePngBuffer } from "./lib/image-file-validation.mjs";
+import { prepareImageOutput, promoteValidatedPng } from "./lib/image-file-validation.mjs";
 import { resolveImageProvider } from "./lib/image-provider.mjs";
 import { canonicalArtifactRoot, ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { applyImageReviewTransition, validateImageAssetManifest } from "./validate-image-assets.mjs";
+import { loadImageConfig, toPublicImageConfig } from "./validate-image-config.mjs";
 
 const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
 const specialistReviewerIds = new Set([
@@ -137,6 +138,53 @@ function canonicalReviewerKey(value) {
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function bindCompiledPrompts(manifest, prompts) {
+  if (!Array.isArray(prompts) || !Array.isArray(manifest?.assets) || new Set(manifest.assets.map(({ asset_id }) => asset_id)).size !== manifest.assets.length) {
+    throw new Error("Compiled prompt bindings must match unique planned asset IDs.");
+  }
+  const bindings = new Map();
+  for (const entry of prompts) {
+    if (!entry || typeof entry.asset_id !== "string" || typeof entry.prompt !== "string" || entry.prompt.trim() === ""
+      || !digestPattern.test(entry.prompt_digest ?? "") || entry.prompt_digest !== sha256(entry.prompt) || bindings.has(entry.asset_id)) {
+      throw new Error("Compiled prompt bindings are invalid.");
+    }
+    bindings.set(entry.asset_id, entry);
+  }
+  if (bindings.size !== manifest.assets.length || manifest.assets.some(({ asset_id }) => !bindings.has(asset_id))) {
+    throw new Error("Compiled prompt bindings must cover exactly the planned asset IDs.");
+  }
+  const next = clone(manifest);
+  for (const asset of next.assets) {
+    const entry = bindings.get(asset.asset_id);
+    asset.prompt = entry.prompt;
+    asset.prompt_digest = entry.prompt_digest;
+  }
+  const validation = validateImageAssetManifest(next);
+  if (!validation.ok) throw new Error(`Compiled prompt bindings produced an invalid manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
+  return next;
+}
+
+function assertCompiledPromptBindings(manifest) {
+  if (!Array.isArray(manifest?.assets) || manifest.assets.some((asset) => !digestPattern.test(asset.prompt_digest ?? "") || asset.prompt_digest !== sha256(asset.prompt))) {
+    throw new Error("Generation requires manifest prompts bound to the compiled prompt package.");
+  }
+}
+
+function applyCompiledPromptDisposition(manifest, existingManifest) {
+  if (existingManifest === null) return manifest;
+  const existingById = new Map(existingManifest.assets.map((asset) => [asset.asset_id, asset]));
+  const next = clone(manifest);
+  for (const asset of next.assets) {
+    const existing = existingById.get(asset.asset_id);
+    if (existing && (existing.prompt !== asset.prompt || existing.prompt_digest !== asset.prompt_digest)) {
+      asset.planning.disposition = "replan-review-required";
+    }
+  }
+  const validation = validateImageAssetManifest(next);
+  if (!validation.ok) throw new Error(`Compiled prompt comparison produced an invalid manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
+  return next;
 }
 
 async function generateViaOpenAI({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, generateOpenAIImagesFn }) {
@@ -273,15 +321,15 @@ async function writeGenerationReceipts(root, jobs, providerResult, provider, con
 }
 
 function normalizeHostProvenance(value, { success }) {
-  const allowed = success ? ["provider", "prompt_digest", "output_digest", "applied_model", "applied_quality"] : ["provider", "applied_model", "applied_quality"];
+  const allowed = success ? ["provider", "prompt_digest", "applied_model", "applied_quality"] : ["provider", "applied_model", "applied_quality"];
   if (!value || typeof value !== "object" || Array.isArray(value) || !Object.keys(value).every((key) => allowed.includes(key))
-    || value.provider !== "codex-host" || (success && (!digestPattern.test(value.prompt_digest ?? "") || !digestPattern.test(value.output_digest ?? "")))
+    || value.provider !== "codex-host" || (success && !digestPattern.test(value.prompt_digest ?? ""))
     || (value.applied_model !== undefined && (typeof value.applied_model !== "string" || !safeModelPattern.test(value.applied_model)))
     || (value.applied_quality !== undefined && !hostQualities.has(value.applied_quality))) {
     throw new Error("Host generation returned invalid provenance.");
   }
   const normalized = { provider: "codex-host" };
-  if (success) Object.assign(normalized, { prompt_digest: value.prompt_digest, output_digest: value.output_digest });
+  if (success) Object.assign(normalized, { prompt_digest: value.prompt_digest });
   if (value.applied_model !== undefined) normalized.applied_model = value.applied_model;
   if (value.applied_quality !== undefined) normalized.applied_quality = value.applied_quality;
   return normalized;
@@ -297,17 +345,12 @@ function normalizeHostFailure(value, selected) {
 }
 
 function normalizeHostSuccess(value, selected) {
-  if (!exactKeys(value, ["asset_id", "generation_state", "output", "provenance"])
+  if (!exactKeys(value, ["asset_id", "generation_state", "bytes", "provenance"])
     || typeof value.asset_id !== "string" || !selected.has(value.asset_id) || value.generation_state !== "generated"
-    || !exactKeys(value.output, ["path", "width", "height", "aspect_ratio", "format", "background", "digest"])
-    || typeof value.output.path !== "string" || !Number.isInteger(value.output.width) || !Number.isInteger(value.output.height)
-    || typeof value.output.aspect_ratio !== "string" || typeof value.output.format !== "string" || typeof value.output.background !== "string" || !digestPattern.test(value.output.digest ?? "")) {
+    || !Buffer.isBuffer(value.bytes)) {
     throw new Error("Host generation returned an invalid success record.");
   }
-  return { asset_id: value.asset_id, generation_state: "generated", output: {
-    path: value.output.path, width: value.output.width, height: value.output.height, aspect_ratio: value.output.aspect_ratio,
-    format: value.output.format, background: value.output.background, digest: value.output.digest,
-  }, provenance: normalizeHostProvenance(value.provenance, { success: true }) };
+  return { asset_id: value.asset_id, generation_state: "generated", bytes: value.bytes, provenance: normalizeHostProvenance(value.provenance, { success: true }) };
 }
 
 function validateHostResult(value, jobs) {
@@ -327,23 +370,32 @@ function validateHostResult(value, jobs) {
   return { results, failures };
 }
 
-async function validateHostOutputs(value, jobs, root) {
+function hostJobsForCallback(jobs) {
+  return jobs.map(({ asset_id, prompt, output }) => ({
+    asset_id,
+    prompt,
+    output: {
+      width: output.width, height: output.height, aspect_ratio: output.aspect_ratio, format: output.format, background: output.background,
+    },
+  }));
+}
+
+async function prepareHostOutputs(root, jobs) {
+  const prepared = new Map();
+  for (const job of jobs) prepared.set(job.asset_id, await prepareImageOutput({ stagingRoot: root, output: job.output }));
+  return prepared;
+}
+
+async function publishHostOutputs(value, jobs, prepared) {
   const byAssetId = new Map(jobs.map((job) => [job.asset_id, job]));
   const failures = value.failures.map((failure) => ({ asset_id: failure.asset_id, generation_state: failure.generation_state, reason: failure.reason, provenance: failure.provenance }));
   const results = [];
   for (const result of value.results) {
     const job = byAssetId.get(result.asset_id);
     try {
-      const output = result.output;
-      if (!exactKeys(output, ["path", "width", "height", "aspect_ratio", "format", "background", "digest"])
-        || !Object.keys(result.provenance).every((key) => ["provider", "prompt_digest", "output_digest", "applied_model", "applied_quality"].includes(key))
-        || JSON.stringify({ path: output.path, width: output.width, height: output.height, aspect_ratio: output.aspect_ratio, format: output.format, background: output.background })
-          !== JSON.stringify(job.output)) throw new Error("Host output does not match its selected job.");
-      const inspected = validatePngBuffer(await readRegularArtifactBytes(root, output.path), job.output);
-      if (output.digest !== inspected.digest || result.provenance.prompt_digest !== sha256(job.prompt) || result.provenance.output_digest !== inspected.digest) {
-        throw new Error("Host output digest evidence does not match the generated file.");
-      }
-      results.push({ asset_id: result.asset_id, generation_state: "generated", output: result.output, provenance: result.provenance });
+      if (result.provenance.prompt_digest !== sha256(job.prompt)) throw new Error("Host output prompt evidence does not match the selected job.");
+      const image = await promoteValidatedPng({ prepared: prepared.get(result.asset_id), bytes: result.bytes });
+      results.push({ asset_id: result.asset_id, generation_state: "generated", output: { ...job.output, digest: image.digest }, provenance: { ...result.provenance, output_digest: image.digest } });
     } catch {
       failures.push({ asset_id: result.asset_id, generation_state: "qa-failed", reason: "invalid-host-output", provenance: result.provenance });
     }
@@ -363,14 +415,21 @@ export async function runImageAssetWorkflow(options = {}) {
   return { ...generated, prompts: { promptDigests: planned.promptDigests } };
 }
 
+export async function runConfiguredImageAssetWorkflow({ workspaceRoot, env, ...options } = {}) {
+  const config = await loadImageConfig({ workspaceRoot, env });
+  const result = await runImageAssetWorkflow({ ...options, config });
+  return { ...result, config: toPublicImageConfig(config) };
+}
+
 export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog } = {}) {
   const root = await ensureArtifactDirectories({ artifactRoot, directories: ["assets", "assets/prompts", "decisions"] });
   const plan = buildImageAssetPlan({ artifact, qualityProfile, existingManifest });
   const prompts = compileImagePrompts({ manifest: plan.manifest, patternCatalog: patternCatalog ?? await defaultPatternCatalog() });
+  const manifest = applyCompiledPromptDisposition(bindCompiledPrompts(plan.manifest, prompts.prompts), existingManifest);
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.md", data: prompts.markdown });
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.json", data: prompts.json });
-  await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/image-assets.yml", data: `${JSON.stringify(plan.manifest, null, 2)}\n` });
-  return { manifest: plan.manifest, summary: plan.summary, promptDigests: prompts.promptDigests };
+  await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/image-assets.yml", data: `${JSON.stringify(manifest, null, 2)}\n` });
+  return { manifest, summary: plan.summary, promptDigests: prompts.promptDigests };
 }
 
 export async function generateImageAssetWorkflow({
@@ -394,6 +453,7 @@ export async function generateImageAssetWorkflow({
     throw new Error("A validated internal image config is required.");
   }
   const { apiKey, ...publicConfig } = config;
+  assertCompiledPromptBindings(manifest);
   const receipt = publicConfig.mode === "select" ? validateSelectionReceipt(selectionReceipt, selectedAssetIds) : undefined;
   const jobs = selectGenerationJobs({ manifest, mode: publicConfig.mode, selectedAssetIds });
   const selection = selectionRecord(publicConfig.mode, selectedAssetIds, receipt);
@@ -401,6 +461,7 @@ export async function generateImageAssetWorkflow({
     artifactRoot: root, relativePath: `assets/prompts/image-generation-selection-${receipt.event_id}.json`, data: `${JSON.stringify(selection, null, 2)}\n`, policy: "create-once",
   });
   const decision = resolveImageProvider({ mode: publicConfig.mode, apiKeyPresent: publicConfig.apiKeyPresent, codexCapability });
+  const preparedHostOutputs = jobs.length > 0 && decision.provider === "codex" ? await prepareHostOutputs(root, jobs) : undefined;
   let attemptId;
   let reservation;
   if (jobs.length > 0) {
@@ -418,7 +479,7 @@ export async function generateImageAssetWorkflow({
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
       try {
-        providerResult = await validateHostOutputs(validateHostResult(await hostGenerate({ jobs: clone(jobs) }), jobs), jobs, root);
+        providerResult = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: hostJobsForCallback(jobs) }), jobs), jobs, preparedHostOutputs);
       } catch (error) {
         if (error?.message?.startsWith("Host generation")) throw error;
         providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
