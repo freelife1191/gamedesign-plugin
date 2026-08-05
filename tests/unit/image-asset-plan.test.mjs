@@ -75,9 +75,9 @@ test("buildImageAssetPlan derives a deterministic closed manifest from validated
   assert.deepEqual(first.manifest.assets.map(({ asset_id, requirement, generation_state, approval_state, planning }) => ({
     asset_id, requirement, generation_state, approval_state, planning,
   })), [
-    { asset_id: "boss-telegraph", requirement: "required", generation_state: "prompt-ready", approval_state: "concept-draft", planning: { upstream_slot_id: "boss-telegraph", disposition: "active" } },
-    { asset_id: "combat-cover", requirement: "recommended", generation_state: "prompt-ready", approval_state: "concept-draft", planning: { upstream_slot_id: "combat-cover", disposition: "active" } },
-    { asset_id: "boss-telegraph-close-up", requirement: "variant", generation_state: "prompt-ready", approval_state: "concept-draft", planning: { upstream_slot_id: "boss-telegraph", disposition: "active" } },
+    { asset_id: "boss-telegraph", requirement: "required", generation_state: "prompt-ready", approval_state: "concept-draft", planning: { upstream_slot_id: "boss-telegraph", disposition: "active", target_output: { path: "assets/generated/boss-telegraph.png", width: 1536, height: 1024, aspect_ratio: "3:2", format: "png", background: "contextual" } } },
+    { asset_id: "combat-cover", requirement: "recommended", generation_state: "prompt-ready", approval_state: "concept-draft", planning: { upstream_slot_id: "combat-cover", disposition: "active", target_output: { path: "assets/generated/combat-cover.png", width: 1536, height: 1024, aspect_ratio: "3:2", format: "png", background: "contextual" } } },
+    { asset_id: "boss-telegraph-close-up", requirement: "variant", generation_state: "prompt-ready", approval_state: "concept-draft", planning: { upstream_slot_id: "boss-telegraph", disposition: "active", target_output: { path: "assets/generated/boss-telegraph-close-up.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "contextual" } } },
   ]);
   assert.deepEqual(first.summary, { required: 1, recommended: 1, variants: 1, total: 3 });
 });
@@ -100,7 +100,7 @@ test("buildImageAssetPlan preserves generated approved removed slots and require
   const removed = structuredClone(existing.assets[1]);
   removed.asset_id = "retired-cover";
   removed.generation_state = "generated";
-  removed.planning = { upstream_slot_id: "combat-cover", disposition: "active" };
+  removed.planning = { ...removed.planning, upstream_slot_id: "combat-cover", disposition: "active" };
   removed.approval_state = "production-candidate";
   removed.rights.effective_status = "active";
   removed.technical_fit = "Meets the recorded delivery specification.";
@@ -130,7 +130,7 @@ test("buildImageAssetPlan preserves generated approved removed slots and require
   assert.deepEqual(retained.reviews, preserved.reviews);
   assert.equal(review.generation_state, "generated");
   assert.equal(review.approval_state, "production-candidate");
-  assert.deepEqual(review.planning, { upstream_slot_id: "combat-cover", disposition: "replan-review-required" });
+  assert.deepEqual(review.planning, { ...removed.planning, disposition: "replan-review-required" });
   assert.equal(review.readability, removed.readability);
   assert.deepEqual(review.reviews, removed.reviews);
   assert.deepEqual(review.rights, removed.rights);
@@ -177,15 +177,46 @@ test("buildImageAssetPlan recalculates current planning fields and marks changed
   assert.equal(current.requirement, "required");
   assert.equal(current.art_brief.subject, "A new landmark silhouette instead of the previous boss telegraph.");
   assert.deepEqual(current.output, {
-    path: "assets/generated/boss-telegraph.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "contextual",
+    path: "assets/generated/boss-telegraph.png", width: 1536, height: 1024, aspect_ratio: "3:2", format: "png", background: "contextual",
   });
   assert.equal(current.generation_state, "generated");
   assert.equal(current.approval_state, "document-approved");
   assert.deepEqual(current.provider, generated.provider);
   assert.deepEqual(current.rights, generated.rights);
   assert.deepEqual(current.reviews, generated.reviews);
-  assert.deepEqual(current.planning, { upstream_slot_id: "boss-telegraph", disposition: "replan-review-required" });
+  assert.deepEqual(current.planning, {
+    upstream_slot_id: "boss-telegraph", disposition: "replan-review-required",
+    target_output: { path: "assets/generated/boss-telegraph.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "contextual" },
+  });
   assert.throws(() => selectGenerationJobs({ manifest: replanned.manifest, mode: "select", selectedAssetIds: ["boss-telegraph"] }), /replan/i);
+});
+
+test("buildImageAssetPlan migrates a legacy v1 manifest and keeps the generated output separate from a changed target", () => {
+  const legacy = structuredClone(plan().manifest);
+  const generated = legacy.assets[0];
+  delete generated.planning;
+  generated.generation_state = "generated";
+  generated.output = { path: "assets/generated/boss-telegraph.png", width: 100, height: 100, aspect_ratio: "1:1", format: "png", background: "opaque" };
+  generated.provider = { name: "recorded-provider", model: "recorded-model", quality: "high" };
+  generated.rights = { ...generated.rights, provenance: "Legacy generated provenance." };
+  const changedArtifact = structuredClone(artifact);
+  changedArtifact.image_needs[0] = { ...changedArtifact.image_needs[0], width: 200, height: 200 };
+  const replanned = buildImageAssetPlan({
+    artifact: changedArtifact,
+    qualityProfile,
+    existingManifest: { schema_version: 1, assets: [generated] },
+  });
+  const current = replanned.manifest.assets[0];
+
+  assert.deepEqual(current.output, generated.output);
+  assert.equal(current.generation_state, "generated");
+  assert.deepEqual(current.provider, generated.provider);
+  assert.deepEqual(current.rights, generated.rights);
+  assert.deepEqual(current.planning, {
+    upstream_slot_id: "boss-telegraph", disposition: "replan-review-required",
+    target_output: { path: "assets/generated/boss-telegraph.png", width: 200, height: 200, aspect_ratio: "1:1", format: "png", background: "contextual" },
+  });
+  assert.equal(selectGenerationJobs({ manifest: replanned.manifest, mode: "all" }).some(({ asset_id }) => asset_id === "boss-telegraph"), false);
 });
 
 test("selectGenerationJobs applies only finite manifest-declared scope without mutating its manifest", () => {
@@ -203,6 +234,17 @@ test("selectGenerationJobs applies only finite manifest-declared scope without m
     mode: "select",
     selectedAssetIds: ["boss-telegraph-close-up", "combat-cover"],
   }).map(({ asset_id }) => asset_id), ["combat-cover", "boss-telegraph-close-up"]);
+  assert.deepEqual(manifest, before);
+});
+
+test("selectGenerationJobs returns the planning target output without mutating a retained actual output", () => {
+  const manifest = plan().manifest;
+  manifest.assets[0].output = { path: "assets/generated/boss-telegraph.png", width: 100, height: 100, aspect_ratio: "1:1", format: "png", background: "opaque" };
+  manifest.assets[0].planning.target_output = { path: "assets/generated/boss-telegraph-next.png", width: 200, height: 100, aspect_ratio: "2:1", format: "png", background: "contextual" };
+  const before = structuredClone(manifest);
+
+  const [job] = selectGenerationJobs({ manifest, mode: "required" });
+  assert.deepEqual(job.output, manifest.assets[0].planning.target_output);
   assert.deepEqual(manifest, before);
 });
 

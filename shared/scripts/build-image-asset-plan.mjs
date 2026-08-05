@@ -22,6 +22,12 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function generationJob(asset) {
+  const job = clone(asset);
+  job.output = clone(asset.planning.target_output);
+  return job;
+}
+
 function aspectRatio(width, height) {
   let left = width;
   let right = height;
@@ -71,13 +77,21 @@ function planAsset(need, slot, requirement) {
   }
   const transparent = type === "ui-icon" && need.transparency_required === true;
   if (transparent) preserve.push("opaque generation followed by verified alpha postprocess and edge QA");
+  const output = {
+    path: `assets/generated/${assetId}.png`,
+    width,
+    height,
+    aspect_ratio: aspectRatio(width, height),
+    format: "png",
+    background: transparent ? "transparent" : "contextual",
+  };
   return {
     asset_id: assetId,
     type,
     requirement,
     generation_state: "prompt-ready",
     approval_state: "concept-draft",
-    planning: { upstream_slot_id: slot.id, disposition: "active" },
+    planning: { upstream_slot_id: slot.id, disposition: "active", target_output: clone(output) },
     purpose: `${slot.purpose} Scene direction: ${scene}`,
     placement: { document_slot: requirement === "recommended" ? "cover" : "inline", source_section: `content.md#${slot.section_id}` },
     alt_text: slot.alt_text,
@@ -90,14 +104,7 @@ function planAsset(need, slot, requirement) {
       exclude: ["logo", "watermark", "unrequested text", "third-party intellectual property", "branded source identity"],
     },
     prompt: `Prompt package required for ${assetId}: ${documentedPurpose(`${slot.purpose} Scene direction: ${scene}`)} ${sceneDirection(`${slot.purpose} Scene direction: ${scene}`)}`,
-    output: {
-      path: `assets/generated/${assetId}.png`,
-      width,
-      height,
-      aspect_ratio: aspectRatio(width, height),
-      format: "png",
-      background: transparent ? "transparent" : "contextual",
-    },
+    output,
     provider: { name: "image-provider-unresolved", model: "gpt-image-2", quality: "low" },
     rights: {
       provenance: "AI generation is planned from the recorded prompt package.",
@@ -115,30 +122,35 @@ function validationError(result, label) {
 
 function markForReplanReview(asset) {
   const retained = clone(asset);
-  retained.planning = { ...retained.planning, disposition: "replan-review-required" };
+  retained.planning = {
+    upstream_slot_id: retained.planning?.upstream_slot_id ?? retained.asset_id,
+    disposition: "replan-review-required",
+    target_output: clone(retained.planning?.target_output ?? retained.output),
+  };
   return retained;
 }
 
 function planningFieldsChanged(existing, planned) {
-  const fields = ["type", "requirement", "purpose", "placement", "alt_text", "readability", "art_brief", "prompt", "output"];
-  return fields.some((field) => JSON.stringify(existing[field]) !== JSON.stringify(planned[field]));
+  const fields = ["type", "requirement", "purpose", "placement", "alt_text", "readability", "art_brief", "prompt"];
+  return fields.some((field) => JSON.stringify(existing[field]) !== JSON.stringify(planned[field]))
+    || JSON.stringify(existing.planning?.target_output ?? existing.output) !== JSON.stringify(planned.output);
 }
 
 function mergeExistingAsset(existing, planned) {
   const changed = planningFieldsChanged(existing, planned);
-  const disposition = changed || existing.planning.disposition === "replan-review-required"
+  const disposition = changed || existing.planning?.disposition === "replan-review-required"
     ? "replan-review-required"
     : "active";
   const next = {
     ...planned,
-    planning: { upstream_slot_id: planned.planning.upstream_slot_id, disposition },
+    planning: { upstream_slot_id: planned.planning.upstream_slot_id, disposition, target_output: clone(planned.output) },
     generation_state: existing.generation_state,
     approval_state: existing.approval_state,
     provider: clone(existing.provider),
     rights: clone(existing.rights),
     reviews: clone(existing.reviews),
   };
-  if (!changed) next.output = clone(existing.output);
+  if (existing.generation_state === "generated") next.output = clone(existing.output);
   if (Object.hasOwn(existing, "technical_fit")) next.technical_fit = existing.technical_fit;
   if (Object.hasOwn(existing, "gameplay_readability")) next.gameplay_readability = existing.gameplay_readability;
   return next;
@@ -196,8 +208,8 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
   if (!validation.ok) throw new Error(validationError(validation, "Invalid image manifest"));
   if (!Array.isArray(selectedAssetIds)) throw new Error("selectedAssetIds must be an array.");
   if (mode === "prompt-only") return [];
-  if (mode === "required") return manifest.assets.filter(({ requirement, generation_state, planning }) => requirement === "required" && generation_state === "prompt-ready" && planning.disposition === "active").map(clone);
-  if (mode === "all") return manifest.assets.filter(({ generation_state, planning }) => generation_state === "prompt-ready" && planning.disposition === "active").map(clone);
+  if (mode === "required") return manifest.assets.filter(({ requirement, generation_state, planning }) => requirement === "required" && generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob);
+  if (mode === "all") return manifest.assets.filter(({ generation_state, planning }) => generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob);
   const selected = new Set();
   for (const assetId of selectedAssetIds) {
     if (selected.has(assetId)) throw new Error(`Duplicate selected asset ID: ${assetId}`);
@@ -207,5 +219,5 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
     if (asset.planning.disposition !== "active") throw new Error(`Selected asset requires replan review: ${assetId}`);
     if (asset.generation_state !== "prompt-ready") throw new Error(`Selected asset is not prompt-ready: ${assetId}`);
   }
-  return manifest.assets.filter(({ asset_id }) => selected.has(asset_id)).map(clone);
+  return manifest.assets.filter(({ asset_id }) => selected.has(asset_id)).map(generationJob);
 }

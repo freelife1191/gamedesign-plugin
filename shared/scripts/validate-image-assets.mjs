@@ -138,14 +138,31 @@ function validateAsset(asset, index, artifactRoot) {
   if (!generationStates.has(asset.generation_state)) errors.push(error("invalid_generation_state", `${assetPath}.generation_state`, "Generation state is not approved."));
   if (!approvalStates.has(asset.approval_state)) errors.push(error("invalid_approval_state", `${assetPath}.approval_state`, "Approval state is not approved."));
   if (!isObject(asset.planning)) {
-    errors.push(error("invalid_planning", `${assetPath}.planning`, "A planning disposition and upstream slot binding are required."));
+    if (asset.planning !== undefined) errors.push(error("invalid_planning", `${assetPath}.planning`, "Planning metadata must be an object when present."));
   } else {
-    rejectUnknownProperties(errors, asset.planning, new Set(["upstream_slot_id", "disposition"]), `${assetPath}.planning`);
+    rejectUnknownProperties(errors, asset.planning, new Set(["upstream_slot_id", "disposition", "target_output"]), `${assetPath}.planning`);
     if (!assetIdPattern.test(asset.planning.upstream_slot_id ?? "")) {
       errors.push(error("invalid_upstream_slot_id", `${assetPath}.planning.upstream_slot_id`, "Planning must bind to a stable upstream slot ID."));
     }
     if (!planningDispositions.has(asset.planning.disposition)) {
       errors.push(error("invalid_planning_disposition", `${assetPath}.planning.disposition`, "Planning disposition is not approved."));
+    }
+    const target = asset.planning.target_output;
+    if (!isObject(target)) {
+      errors.push(error("invalid_planning_target_output", `${assetPath}.planning.target_output`, "Planning target output is required."));
+    } else {
+      rejectUnknownProperties(errors, target, new Set(["path", "width", "height", "aspect_ratio", "format", "background"]), `${assetPath}.planning.target_output`);
+      if (!safeRelativePath(target.path, artifactRoot) || !target.path.startsWith("assets/generated/")) {
+        errors.push(error("planning_target_path_outside_artifact", `${assetPath}.planning.target_output.path`, "Planning target output must be a relative path under assets/generated/."));
+      }
+      for (const field of ["width", "height"]) {
+        if (!Number.isInteger(target[field]) || target[field] < 1 || target[field] > 8192) {
+          errors.push(error("invalid_planning_target_dimensions", `${assetPath}.planning.target_output.${field}`, "Planning target dimensions must be bounded positive integers."));
+        }
+      }
+      if (!nonEmptyString(target.aspect_ratio) || !/^\d{1,4}:\d{1,4}$/u.test(target.aspect_ratio)) errors.push(error("invalid_planning_target_aspect_ratio", `${assetPath}.planning.target_output.aspect_ratio`, "Planning target aspect ratio is required."));
+      if (!outputFormats.has(target.format)) errors.push(error("invalid_planning_target_format", `${assetPath}.planning.target_output.format`, "Planning target format is not approved."));
+      if (!backgrounds.has(target.background)) errors.push(error("invalid_planning_target_background", `${assetPath}.planning.target_output.background`, "Planning target background is not approved."));
     }
   }
 

@@ -164,6 +164,22 @@ test("compileImagePrompts preserves the upstream slot for variants and carries t
   assert.equal(stalePrompt.planning_disposition, "replan-review-required");
 });
 
+test("compileImagePrompts uses planning target output rather than an older generated output", async () => {
+  const manifest = compiledManifest();
+  manifest.assets[0].generation_state = "generated";
+  manifest.assets[0].output = { path: "assets/generated/hero-sequence.png", width: 100, height: 100, aspect_ratio: "1:1", format: "png", background: "opaque" };
+  manifest.assets[0].planning = {
+    ...manifest.assets[0].planning,
+    disposition: "replan-review-required",
+    target_output: { path: "assets/generated/hero-sequence-next.png", width: 200, height: 100, aspect_ratio: "2:1", format: "png", background: "transparent" },
+  };
+  const entry = JSON.parse(compileImagePrompts({ manifest, patternCatalog: await patternCatalog() }).json).prompts[0];
+  assert.deepEqual(entry.target_output, manifest.assets[0].planning.target_output);
+  assert.deepEqual(entry.dimensions, { width: 200, height: 100, aspect_ratio: "2:1" });
+  assert.equal(entry.generation_background, "transparent");
+  assert.match(entry.prompt, /200x100 \(2:1\)/);
+});
+
 test("compileImagePrompts rejects hostile catalog and manifest strings with redacted structured errors", async () => {
   const catalog = await patternCatalog();
   const manifest = compiledManifest();
@@ -186,4 +202,31 @@ test("compileImagePrompts rejects hostile catalog and manifest strings with reda
   ]) {
     assert.throws(() => compileImagePrompts({ manifest, patternCatalog: invalidCatalog }), (error) => error.code === "invalid_pattern_catalog");
   }
+});
+
+test("compileImagePrompts rejects API labels, data URIs, and house style identities at both input boundaries without echoing secrets", async () => {
+  const catalog = await patternCatalog();
+  const manifest = compiledManifest();
+  const hostileValues = [
+    "OPENAI_API_KEY=opaque-secret-value",
+    "data:image/png;base64,QUJDRA==",
+    "Use Acme Games house visual language.",
+  ];
+  for (const value of hostileValues) {
+    const hostileManifest = structuredClone(manifest);
+    hostileManifest.assets[0].art_brief.subject = value;
+    assert.throws(() => compileImagePrompts({ manifest: hostileManifest, patternCatalog: catalog }), (error) => (
+      error.code === "unsafe_prompt_content" && !error.message.includes(value) && !JSON.stringify(error).includes(value)
+    ));
+
+    const hostileCatalog = structuredClone(catalog);
+    hostileCatalog.character.view = value;
+    assert.throws(() => compileImagePrompts({ manifest, patternCatalog: hostileCatalog }), (error) => (
+      error.code === "unsafe_prompt_content" && !error.message.includes(value) && !JSON.stringify(error).includes(value)
+    ));
+  }
+
+  const nonCanonical = structuredClone(catalog);
+  nonCanonical.character.view = "A neutral looking but unapproved visual composition.";
+  assert.throws(() => compileImagePrompts({ manifest, patternCatalog: nonCanonical }), (error) => error.code === "noncanonical_pattern_catalog");
 });

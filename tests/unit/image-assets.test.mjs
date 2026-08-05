@@ -84,7 +84,11 @@ function manifest(overrides = {}) {
     requirement: "required",
     generation_state: "planned",
     approval_state: "concept-draft",
-    planning: { upstream_slot_id: "hero-knight", disposition: "active" },
+    planning: {
+      upstream_slot_id: "hero-knight",
+      disposition: "active",
+      target_output: { path: "assets/generated/hero-knight-001.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "transparent" },
+    },
     purpose: "Establish the playable knight in the player-experience section.",
     placement: { document_slot: "inline", source_section: "content.md#player-experience" },
     alt_text: "An armored knight standing beside a windswept banner.",
@@ -178,10 +182,15 @@ test("requires a closed planning disposition and explicit upstream slot binding 
   assert.equal(validateImageAssetManifest(valid, { artifactRoot: root }).ok, true);
   assert.equal(schemaAccepts(valid, manifestSchema, externalSchemas), true);
 
-  const missing = manifest({ asset: { planning: undefined } });
-  const injected = manifest({ asset: { planning: { upstream_slot_id: "hero-knight", disposition: "active", release_approved: true } } });
-  const invalid = manifest({ asset: { planning: { upstream_slot_id: "not a stable id", disposition: "auto-approved" } } });
-  for (const value of [missing, injected, invalid]) {
+  const legacy = manifest();
+  delete legacy.assets[0].planning;
+  assert.equal(validateImageAssetManifest(legacy, { artifactRoot: root }).ok, true);
+  assert.equal(schemaAccepts(legacy, manifestSchema, externalSchemas), true);
+
+  const injected = manifest({ asset: { planning: { ...valid.assets[0].planning, release_approved: true } } });
+  const invalid = manifest({ asset: { planning: { ...valid.assets[0].planning, upstream_slot_id: "not a stable id", disposition: "auto-approved" } } });
+  const targetMismatch = manifest({ asset: { planning: { upstream_slot_id: "hero-knight", disposition: "active", target_output: { ...valid.assets[0].output, width: 0 } } } });
+  for (const value of [injected, invalid, targetMismatch]) {
     assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false);
     assert.equal(schemaAccepts(value, manifestSchema, externalSchemas), false);
   }
