@@ -324,8 +324,10 @@ test("executable selector normalizes inputs and ranks actual catalogs determinis
     artifactType: "DESIGN_DOCUMENT", requestedFormat: "MD", templateId: "game-design-brief",
   }];
   const forward = qualityWorkflow.selectQualityProfiles({ selectionIndex, templateMap, requests });
-  const reverse = qualityWorkflow.selectQualityProfiles({ selectionIndex: { ...selectionIndex, profiles: [...selectionIndex.profiles].reverse() }, templateMap, requests });
-  assert.deepEqual(forward, reverse);
+  assert.throws(
+    () => qualityWorkflow.selectQualityProfiles({ selectionIndex: { ...selectionIndex, profiles: [...selectionIndex.profiles].reverse() }, templateMap, requests }),
+    /invalid selection index.*canonical/i,
+  );
   assert.equal(forward[0].primaryProfileId, "game-design-brief");
   assert.deepEqual(forward[0].score, {
     templateMatch: 1, artifactTypeMatch: 1, formatMatch: 1, audienceOverlap: 1, goalOverlap: 3,
@@ -383,7 +385,7 @@ test("selector validates overrides, reports one nearest candidate, and splits mu
   ]);
 });
 
-test("checklist derives stable acceptance IDs and every required type blocks structural completion", async () => {
+test("checklist derives stable acceptance IDs and leaves every required type pending inspection", async () => {
   assert.equal(typeof qualityWorkflow.buildQualityChecklist, "function");
   const primary = JSON.parse(await readFile(new URL(
     "../../shared/document-quality/profiles/studio/master-gdd.json",
@@ -407,23 +409,18 @@ test("checklist derives stable acceptance IDs and every required type blocks str
     "master-gdd-acceptance-71a953f23b813d8b",
   );
 
-  const completionEvidence = qualityWorkflow.createStructuralCompletionEvidence(composed);
-  assert.equal(qualityWorkflow.evaluateStructuralCompleteness(composed, completionEvidence).ready, true);
   for (const key of ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]) {
-    const mutation = structuredClone(completionEvidence);
-    mutation.completedItemIds = mutation.completedItemIds.filter((id) => id !== checklist[key][0].id);
-    assert.throws(() => qualityWorkflow.evaluateStructuralCompleteness(composed, mutation), /missing|replaced/i, key);
+    assert.equal(checklist[key].some(({ required, status }) => required === true && status === "missing"), true, key);
   }
+  assert.throws(() => qualityWorkflow.createStructuralCompletionEvidence(composed), /manifest|inspection|plain object/i);
 });
 
 test("document quality state evaluator enforces all five transitions and rejects automation as approval", async () => {
   assert.equal(typeof qualityWorkflow.transitionDocumentQualityState, "function");
-  const composed = composeQualityProfile({ primary: profile() });
-  const completionEvidence = qualityWorkflow.createStructuralCompletionEvidence(composed);
-  let state = qualityWorkflow.transitionDocumentQualityState({ currentState: "draft", targetState: "structurally-complete", composed, completionEvidence });
-  assert.equal(state, "structurally-complete");
-  assert.throws(() => qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "visual-reviewed", composed }), /next state/i);
-  assert.throws(() => qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "evidence-reviewed", composed, evidenceReview: { generatedImage: true, selfAttested: true } }), /evidence|field/i);
+  assert.throws(
+    () => qualityWorkflow.transitionDocumentQualityState({ currentState: "draft", targetState: "structurally-complete" }),
+    /currentState.*forbidden|state envelope/i,
+  );
 });
 
 test("composition validates the primary and rejects contradictions introduced by each source", () => {

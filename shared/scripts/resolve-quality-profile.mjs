@@ -12,6 +12,34 @@ const scoreKeys = ["templateMatch", "artifactTypeMatch", "formatMatch", "audienc
 const selectionIndexKeys = ["schema_version", "namespace", "profiles"];
 const selectionEntryKeys = ["profile_id", "artifact_types", "audiences", "required_formats", "forbidden_formats"];
 const digestPattern = /^[a-f0-9]{64}$/u;
+const knownOverlayIds = new Set(["mobile", "live-service", "pc-console"]);
+const knownPresetIds = new Set([
+  "cinematic-narrative", "competitive-live-service", "evolving-world", "function-first",
+  "player-validated-small-team", "replayable-coop", "ugc-production-tooling",
+]);
+const trustedIndexAnchors = {
+  studio: {
+    count: 17,
+    digest: "a72d061c272d86d6eb3daaf6d8541498765d4474d5b01a494522ec7e10f59ca7",
+    ids: [
+      "accessibility-platform-matrix", "character-skill-combat-monster-specification", "core-motivation-loop",
+      "data-table-contract", "design-review-decision-log", "economy-balance-specification", "executive-pitch",
+      "game-design-brief", "liveops-event-experiment-plan", "master-gdd", "narrative-quest-npc-specification",
+      "playtest-metrics-report", "production-scope-milestone-risk-plan", "rule-state-exception-matrix",
+      "system-feature-specification", "ui-ux-flow-state-specification", "vision-one-pager",
+    ],
+  },
+  career: {
+    count: 13,
+    digest: "3e72b4f8d261f987d6577d35155e77076a28ba924fad512266baed299caba408",
+    ids: [
+      "career-stage-role-map", "competency-matrix", "game-analysis-report", "interview-question-answer-report",
+      "job-posting-evidence", "junior-growth-review", "learning-roadmap", "portfolio-case-study",
+      "portfolio-project-brief", "portfolio-review-backlog", "recruiter-portfolio-presentation",
+      "reverse-design-document", "transition-readiness",
+    ],
+  },
+};
 const responsibleGateIds = new Set([
   "ai-rights-human-approval", "accessibility", "economy-transparency", "liveops-experiment",
   "ugc-safety", "ai-npc-safety", "scope-control",
@@ -27,6 +55,22 @@ function deepFreeze(value) {
     for (const child of Object.values(value)) deepFreeze(child);
   }
   return value;
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function digestValue(value) {
+  return createHash("sha256").update(canonicalJson(value), "utf8").digest("hex");
+}
+
+function indexDigest(value) {
+  return createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex");
 }
 
 function hasRemovalDirective(value) {
@@ -307,6 +351,15 @@ export function validateQualitySelectionIndex(value) {
       if (new Set(normalized).size !== normalized.length) add(`/profiles/${index}/${key}`, `${key} contains duplicates.`);
     }
   }
+  const anchor = trustedIndexAnchors[value.namespace];
+  if (anchor && Array.isArray(value.profiles)) {
+    const profileIds = value.profiles.map((entry) => entry && typeof entry === "object" && !Array.isArray(entry) ? entry.profile_id : null);
+    if (value.profiles.length !== anchor.count) add("/profiles", `Canonical ${value.namespace} selection index count mismatch.`);
+    if (JSON.stringify(profileIds) !== JSON.stringify(anchor.ids)) {
+      add("/profiles", `Canonical ${value.namespace} selection index profile order or namespace ID set mismatch.`);
+    }
+    if (indexDigest(value) !== anchor.digest) add("", `Canonical ${value.namespace} selection index digest mismatch.`);
+  }
   return { ok: errors.length === 0, errors };
 }
 
@@ -431,27 +484,78 @@ async function loadIndexedBody({ selectionIndex, namespace, profileId, purpose, 
   return profile;
 }
 
-export async function applyDocumentQualityProfile({
-  namespace, selectionIndex, templateMap, profileLoader, documentQualityRoot, request,
-  overlays = [], preset = null, referencePreset = null,
-}) {
-  const effectiveLoader = profileLoader ?? createQualityProfileBodyLoader({ documentQualityRoot });
+function normalizeClosedSourceIds(overlayIds, presetId) {
+  if (!Array.isArray(overlayIds)) throw new Error("overlayIds must be an array");
+  const normalizedOverlayIds = overlayIds.map((overlayId) => {
+    const normalized = normalizeId(overlayId);
+    if (normalized !== overlayId) throw new Error("Overlay ID must already be normalized");
+    if (!knownOverlayIds.has(normalized)) throw new Error(`Unknown overlay: ${normalized}`);
+    return normalized;
+  });
+  if (new Set(normalizedOverlayIds).size !== normalizedOverlayIds.length) throw new Error("Duplicate overlay ID");
+  if (presetId === null || presetId === undefined) return { overlayIds: normalizedOverlayIds, presetId: null };
+  const normalizedPresetId = normalizeId(presetId);
+  if (normalizedPresetId !== presetId) throw new Error("Preset ID must already be normalized");
+  if (!knownPresetIds.has(normalizedPresetId)) throw new Error(`Unknown preset: ${normalizedPresetId}`);
+  return { overlayIds: normalizedOverlayIds, presetId: normalizedPresetId };
+}
+
+async function loadClosedSource({ sourceLoader, sourceType, sourceId }) {
+  if (typeof sourceLoader !== "function") throw new Error("A safe sourceLoader or pluginRoot is required for requested overlays and presets");
+  const body = await sourceLoader({ sourceType, sourceId, purpose: `selected-${sourceType}` });
+  assertPlainObject(body, `${sourceType} body`);
+  const identityKey = sourceType === "overlay" ? "profile_id" : "preset_id";
+  if (body[identityKey] !== sourceId) throw new Error(`${sourceType} ID mismatch: expected ${sourceId}, received ${String(body[identityKey])}`);
+  if (sourceType === "preset") assertValidReferencePreset(body);
+  return body;
+}
+
+function resolveDocumentQualityRoot({ documentQualityRoot, pluginRoot }) {
+  if (documentQualityRoot !== undefined && pluginRoot !== undefined) throw new Error("Use either documentQualityRoot or pluginRoot, not both");
+  if (documentQualityRoot !== undefined) return documentQualityRoot;
+  if (pluginRoot !== undefined) return path.join(pluginRoot, "references", "shared", "document-quality");
+  return undefined;
+}
+
+export async function applyDocumentQualityProfile(options) {
+  assertPlainObject(options, "document quality application options");
+  for (const rawKey of ["overlays", "preset", "referencePreset"]) {
+    if (Object.hasOwn(options, rawKey)) throw new Error(`Upper apply rejects raw ${rawKey}; use closed overlayIds and presetId`);
+  }
+  const {
+    namespace, selectionIndex, templateMap, profileLoader, sourceLoader, documentQualityRoot, pluginRoot, request,
+    overlayIds = [], presetId = null,
+  } = options;
+  const qualityRoot = resolveDocumentQualityRoot({ documentQualityRoot, pluginRoot });
+  const effectiveLoader = profileLoader ?? createQualityProfileBodyLoader({ documentQualityRoot: qualityRoot });
   if (typeof effectiveLoader !== "function") throw new Error("profileLoader must be a function");
   if (selectionIndex?.namespace !== namespace) throw new Error("Selection index namespace mismatch");
-  const overlayIds = overlays.map((overlay) => normalizeId(overlay.profile_id));
-  const presetId = preset === null ? null : normalizeId(preset.profile_id);
+  const sources = normalizeClosedSourceIds(overlayIds, presetId);
+  const effectiveSourceLoader = sourceLoader ?? (qualityRoot === undefined ? null : createQualitySourceLoader({ documentQualityRoot: qualityRoot }));
   const [selection] = selectQualityProfiles({
     selectionIndex,
     templateMap,
-    requests: [{ ...request, overlayIds, presetId }],
+    requests: [{ ...request, overlayIds: sources.overlayIds, presetId: sources.presetId }],
   });
   if (selection.fallbackRecord?.nearestProfileId) {
     await loadIndexedBody({ selectionIndex, namespace, profileId: selection.fallbackRecord.nearestProfileId, purpose: "nearest-comparison", profileLoader: effectiveLoader });
   }
-  if (selection.status !== "selected") return deepFreeze({ selection, composed: null, checklist: null });
+  if (selection.status !== "selected") return deepFreeze({ selection, composed: null, checklist: null, requirementManifest: null });
   const primary = await loadIndexedBody({ selectionIndex, namespace, profileId: selection.primaryProfileId, purpose: "selected-primary", profileLoader: effectiveLoader });
-  const composed = composeQualityProfile({ primary, overlays, preset, referencePreset });
-  return deepFreeze({ selection, composed, checklist: buildQualityChecklist(composed) });
+  const loadedOverlays = [];
+  for (const overlayId of sources.overlayIds) {
+    loadedOverlays.push(await loadClosedSource({ sourceLoader: effectiveSourceLoader, sourceType: "overlay", sourceId: overlayId }));
+  }
+  const referencePreset = sources.presetId === null
+    ? null
+    : await loadClosedSource({ sourceLoader: effectiveSourceLoader, sourceType: "preset", sourceId: sources.presetId });
+  const composed = composeQualityProfile({ primary, overlays: loadedOverlays, referencePreset });
+  if (composed.conflicts.length > 0) {
+    throw new Error(`Document-quality composition conflict: ${composed.conflicts.map(({ path: conflictPath }) => conflictPath).join(", ")}`);
+  }
+  const checklist = buildQualityChecklist(composed);
+  const requirementManifest = buildRequirementManifest(composed, checklist);
+  return deepFreeze({ selection, composed, checklist, requirementManifest });
 }
 
 function derivedId(sourceId, kind, text) {
@@ -495,40 +599,103 @@ export function buildQualityChecklist(composed) {
   return deepFreeze(checklist);
 }
 
-function structuralContract(composed) {
-  const checklist = buildQualityChecklist(composed);
-  const itemIds = Object.values(checklist).flat()
+function buildRequirementManifest(composed, suppliedChecklist = buildQualityChecklist(composed)) {
+  const itemIds = Object.values(suppliedChecklist).flat()
     .filter(({ required }) => required === true)
     .map(({ id }) => id)
     .sort((left, right) => left.localeCompare(right, "en-US"));
-  const checklistDigest = createHash("sha256").update(JSON.stringify(itemIds), "utf8").digest("hex");
-  return { itemIds, checklistDigest };
+  return deepFreeze({
+    schemaVersion: 1,
+    contractDigest: digestValue(composed),
+    checklistDigest: digestValue(suppliedChecklist),
+    requiredItemIds: itemIds,
+  });
 }
 
-export function createStructuralCompletionEvidence(composed) {
-  const { itemIds, checklistDigest } = structuralContract(composed);
-  return deepFreeze({ schemaVersion: 1, checklistDigest, completedItemIds: itemIds });
-}
-
-export function verifyStructuralCompletionEvidence(composed, evidence) {
-  exactKeys(evidence, ["schemaVersion", "checklistDigest", "completedItemIds"], "structural completion evidence");
-  if (evidence.schemaVersion !== 1) throw new Error("Structural completion evidence schemaVersion must be 1");
-  if (!digestPattern.test(evidence.checklistDigest)) throw new Error("Structural completion checklist digest is invalid");
-  if (!Array.isArray(evidence.completedItemIds)) throw new Error("Structural completion IDs must be an array");
-  for (const id of evidence.completedItemIds) normalizeId(id);
-  if (new Set(evidence.completedItemIds).size !== evidence.completedItemIds.length) {
-    throw new Error("Structural completion IDs contain a duplicate");
+function validateRequirementManifest(manifest) {
+  exactKeys(manifest, ["schemaVersion", "contractDigest", "checklistDigest", "requiredItemIds"], "requirement manifest");
+  if (manifest.schemaVersion !== 1) throw new Error("Requirement manifest schemaVersion must be 1");
+  assertDigest(manifest.contractDigest, "requirement manifest contractDigest");
+  assertDigest(manifest.checklistDigest, "requirement manifest checklistDigest");
+  if (!Array.isArray(manifest.requiredItemIds) || manifest.requiredItemIds.length === 0) {
+    throw new Error("Requirement manifest requiredItemIds must be non-empty");
   }
-  const trusted = structuralContract(composed);
-  if (evidence.checklistDigest !== trusted.checklistDigest) throw new Error("Structural completion checklist digest mismatch");
-  if (JSON.stringify(evidence.completedItemIds) !== JSON.stringify(trusted.itemIds)) {
-    throw new Error("Structural completion evidence has missing, replaced, or reordered IDs");
+  for (const itemId of manifest.requiredItemIds) {
+    if (normalizeId(itemId) !== itemId) throw new Error("Requirement manifest item ID must already be normalized");
+  }
+  if (new Set(manifest.requiredItemIds).size !== manifest.requiredItemIds.length) throw new Error("Requirement manifest item IDs contain a duplicate");
+  const sorted = [...manifest.requiredItemIds].sort((left, right) => left.localeCompare(right, "en-US"));
+  if (JSON.stringify(sorted) !== JSON.stringify(manifest.requiredItemIds)) throw new Error("Requirement manifest item IDs must be canonical ordered");
+}
+
+function unsignedReceipt(record) {
+  const unsigned = clone(record);
+  delete unsigned.receiptDigest;
+  return unsigned;
+}
+
+function validateReceiptDigest(record, label) {
+  assertDigest(record.receiptDigest, `${label} receiptDigest`);
+  if (record.receiptDigest !== digestValue(unsignedReceipt(record))) throw new Error(`${label} receipt digest mismatch`);
+}
+
+function validateInspectionReceipt(requirementManifest, receipt) {
+  exactKeys(receipt, [
+    "schemaVersion", "artifactDigest", "contractDigest", "checklistDigest", "observations", "verifierIdentity", "receiptDigest",
+  ], "artifact inspection receipt");
+  if (receipt.schemaVersion !== 1) throw new Error("Artifact inspection receipt schemaVersion must be 1");
+  for (const key of ["artifactDigest", "contractDigest", "checklistDigest"]) assertDigest(receipt[key], `artifact inspection ${key}`);
+  assertText(receipt.verifierIdentity, "artifact inspection verifierIdentity");
+  if (receipt.contractDigest !== requirementManifest.contractDigest || receipt.checklistDigest !== requirementManifest.checklistDigest) {
+    throw new Error("Artifact inspection receipt manifest digest mismatch");
+  }
+  if (!Array.isArray(receipt.observations)) throw new Error("Artifact inspection observations must be an array");
+  const observedIds = receipt.observations.map((observation, index) => {
+    exactKeys(observation, ["itemId", "observed", "passed"], `artifact inspection observation ${index}`);
+    if (normalizeId(observation.itemId) !== observation.itemId) throw new Error("Artifact inspection observation item ID must already be normalized");
+    if (observation.observed !== true || observation.passed !== true) throw new Error("Every required item must be observed and passed");
+    return observation.itemId;
+  });
+  if (new Set(observedIds).size !== observedIds.length) throw new Error("Artifact inspection observations contain a duplicate");
+  if (JSON.stringify(observedIds) !== JSON.stringify(requirementManifest.requiredItemIds)) {
+    throw new Error("Artifact inspection observations have missing, replaced, or reordered IDs");
+  }
+  validateReceiptDigest(receipt, "artifact inspection receipt");
+}
+
+export function createStructuralCompletionEvidence({ requirementManifest, inspectionReceipt } = {}) {
+  validateRequirementManifest(requirementManifest);
+  validateInspectionReceipt(requirementManifest, inspectionReceipt);
+  return deepFreeze({
+    schemaVersion: 1,
+    artifactDigest: inspectionReceipt.artifactDigest,
+    contractDigest: requirementManifest.contractDigest,
+    checklistDigest: requirementManifest.checklistDigest,
+    inspectionReceipt: clone(inspectionReceipt),
+  });
+}
+
+export function verifyStructuralCompletionEvidence(requirementManifest, evidence) {
+  validateRequirementManifest(requirementManifest);
+  exactKeys(evidence, [
+    "schemaVersion", "artifactDigest", "contractDigest", "checklistDigest", "inspectionReceipt",
+  ], "structural completion receipt");
+  if (evidence.schemaVersion !== 1) throw new Error("Structural completion receipt schemaVersion must be 1");
+  for (const key of ["artifactDigest", "contractDigest", "checklistDigest"]) {
+    assertDigest(evidence[key], `structural completion ${key}`);
+  }
+  if (evidence.contractDigest !== requirementManifest.contractDigest || evidence.checklistDigest !== requirementManifest.checklistDigest) {
+    throw new Error("Structural completion receipt manifest digest mismatch");
+  }
+  validateInspectionReceipt(requirementManifest, evidence.inspectionReceipt);
+  if (evidence.artifactDigest !== evidence.inspectionReceipt.artifactDigest) {
+    throw new Error("Structural completion receipt artifact digest mismatch");
   }
   return deepFreeze({ ready: true, missingIds: [] });
 }
 
-export function evaluateStructuralCompleteness(composed, completionEvidence) {
-  return verifyStructuralCompletionEvidence(composed, completionEvidence);
+export function evaluateStructuralCompleteness(requirementManifest, structuralReceipt) {
+  return verifyStructuralCompletionEvidence(requirementManifest, structuralReceipt);
 }
 
 function assertText(value, label) {
@@ -547,33 +714,53 @@ function assertStringList(value, label) {
   if (new Set(value).size !== value.length) throw new Error(`${label} must be unique`);
 }
 
-function validateEvidenceReview(record) {
-  exactKeys(record, ["schemaVersion", "reviewerRole", "status", "evidenceIds", "artifactDigest"], "evidence review record");
-  if (record.schemaVersion !== 1 || record.reviewerRole !== "evidence-auditor" || record.status !== "verified") {
-    throw new Error("Evidence review record is not verified by evidence-auditor");
+function assertReceiptBinding(record, expected, label) {
+  for (const key of ["artifactDigest", "contractDigest", "checklistDigest"]) {
+    assertDigest(record[key], `${label} ${key}`);
+    if (record[key] !== expected[key]) throw new Error(`${label} must bind to the same artifact and manifest digests`);
   }
-  assertStringList(record.evidenceIds, "evidence review evidenceIds");
-  assertDigest(record.artifactDigest, "evidence review artifactDigest");
 }
 
-function validateVisualReview(composed, record) {
-  exactKeys(record, ["schemaVersion", "reviewerRole", "rendererStatus", "qaStatus", "artifactDigest", "skillsteadSlots"], "visual review record");
-  if (record.schemaVersion !== 1 || record.reviewerRole !== "renderer-qa" || record.rendererStatus !== "passed" || record.qaStatus !== "passed") {
-    throw new Error("Visual review record requires passed renderer QA");
+function validateEvidenceReview(record, expected) {
+  exactKeys(record, [
+    "schemaVersion", "reviewerRole", "verifierIdentity", "status", "evidenceIds",
+    "artifactDigest", "contractDigest", "checklistDigest", "receiptDigest",
+  ], "evidence review receipt");
+  if (record.schemaVersion !== 1 || record.reviewerRole !== "evidence-auditor" || record.status !== "verified") {
+    throw new Error("Evidence review receipt is not verified by evidence-auditor");
   }
-  assertDigest(record.artifactDigest, "visual review artifactDigest");
+  assertText(record.verifierIdentity, "evidence review verifierIdentity");
+  assertStringList(record.evidenceIds, "evidence review evidenceIds");
+  assertReceiptBinding(record, expected, "evidence review receipt");
+  validateReceiptDigest(record, "evidence review receipt");
+}
+
+function validateVisualReview(composed, record, expected) {
+  exactKeys(record, [
+    "schemaVersion", "reviewerRole", "verifierIdentity", "rendererStatus", "qaStatus",
+    "artifactDigest", "contractDigest", "checklistDigest", "skillsteadSlots", "receiptDigest",
+  ], "visual review receipt");
+  if (record.schemaVersion !== 1 || record.reviewerRole !== "renderer-qa" || record.rendererStatus !== "passed" || record.qaStatus !== "passed") {
+    throw new Error("Visual review receipt requires passed renderer QA");
+  }
+  assertText(record.verifierIdentity, "visual review verifierIdentity");
+  assertReceiptBinding(record, expected, "visual review receipt");
   if (!Array.isArray(record.skillsteadSlots)) throw new Error("Visual review Skillstead slots must be an array");
   const slots = record.skillsteadSlots.map((slot, index) => {
-    exactKeys(slot, ["slotId", "verificationDigest"], `visual review Skillstead slot ${index}`);
+    exactKeys(slot, ["slotId", "artifactDigest", "verifierIdentity", "receiptDigest"], `visual review Skillstead slot receipt ${index}`);
     normalizeId(slot.slotId);
-    assertDigest(slot.verificationDigest, `visual review Skillstead slot ${index} digest`);
+    assertText(slot.verifierIdentity, `visual review Skillstead slot ${index} verifierIdentity`);
+    assertDigest(slot.artifactDigest, `visual review Skillstead slot ${index} artifactDigest`);
+    if (slot.artifactDigest !== expected.artifactDigest) throw new Error("Skillstead slot receipt must bind to the same artifact digest");
+    validateReceiptDigest(slot, `visual review Skillstead slot ${index}`);
     return slot.slotId;
   });
   if (new Set(slots).size !== slots.length) throw new Error("Visual review Skillstead slots contain duplicates");
-  const expected = composed.profile.required_diagrams.map(({ id }) => id).sort((left, right) => left.localeCompare(right, "en-US"));
-  if (JSON.stringify([...slots].sort((left, right) => left.localeCompare(right, "en-US"))) !== JSON.stringify(expected)) {
+  const expectedSlotIds = composed.profile.required_diagrams.map(({ id }) => id).sort((left, right) => left.localeCompare(right, "en-US"));
+  if (JSON.stringify([...slots].sort((left, right) => left.localeCompare(right, "en-US"))) !== JSON.stringify(expectedSlotIds)) {
     throw new Error("Visual review must verify every Skillstead slot");
   }
+  validateReceiptDigest(record, "visual review receipt");
 }
 
 function assertDate(value, label) {
@@ -586,44 +773,128 @@ function assertDate(value, label) {
   }
 }
 
-function validateDocumentApproval(record) {
-  exactKeys(record, ["schemaVersion", "rightsApproval", "responsibleGates", "humanApprovalReceipt"], "document approval record");
+function validateDocumentApproval(record, expected) {
+  exactKeys(record, [
+    "schemaVersion", "artifactDigest", "contractDigest", "checklistDigest", "rightsApproval",
+    "responsibleGates", "humanApprovalReceipt", "receiptDigest",
+  ], "document approval receipt");
   if (record.schemaVersion !== 1) throw new Error("Document approval schemaVersion must be 1");
-  exactKeys(record.rightsApproval, ["source_provenance", "rights_or_consent_record", "human_approver", "approval_date"], "rights approval record");
+  assertReceiptBinding(record, expected, "document approval receipt");
+  exactKeys(record.rightsApproval, [
+    "source_provenance", "rights_or_consent_record", "human_approver", "approval_date", "artifactDigest", "receiptDigest",
+  ], "rights approval receipt");
   for (const key of ["source_provenance", "rights_or_consent_record", "human_approver"]) assertText(record.rightsApproval[key], `rights approval ${key}`);
   assertDate(record.rightsApproval.approval_date, "rights approval approval_date");
+  assertDigest(record.rightsApproval.artifactDigest, "rights approval artifactDigest");
+  if (record.rightsApproval.artifactDigest !== expected.artifactDigest) throw new Error("Rights approval must bind to the same artifact digest");
+  validateReceiptDigest(record.rightsApproval, "rights approval receipt");
   if (!Array.isArray(record.responsibleGates) || record.responsibleGates.length === 0) throw new Error("Responsible gates must be non-empty");
   const gateIds = new Set();
   for (const [index, gate] of record.responsibleGates.entries()) {
-    exactKeys(gate, ["gateId", "state", "evidenceIds", "human_approver"], `responsible gate ${index}`);
+    exactKeys(gate, ["gateId", "state", "evidenceIds", "human_approver", "artifactDigest", "receiptDigest"], `responsible gate ${index}`);
     normalizeId(gate.gateId);
     if (!responsibleGateIds.has(gate.gateId)) throw new Error("Responsible gate ID is not in the canonical registry");
     if (!["approved", "not-applicable"].includes(gate.state)) throw new Error("Responsible gate is not approved or not-applicable");
     assertStringList(gate.evidenceIds, `responsible gate ${index} evidenceIds`);
     assertText(gate.human_approver, `responsible gate ${index} human_approver`);
+    assertDigest(gate.artifactDigest, `responsible gate ${index} artifactDigest`);
+    if (gate.artifactDigest !== expected.artifactDigest) throw new Error("Responsible gate must bind to the same artifact digest");
+    validateReceiptDigest(gate, `responsible gate ${index}`);
     if (gateIds.has(gate.gateId)) throw new Error("Responsible gate is duplicated");
     gateIds.add(gate.gateId);
   }
   if (gateIds.size !== responsibleGateIds.size || [...responsibleGateIds].some((gateId) => !gateIds.has(gateId))) {
     throw new Error("Document approval must record every canonical responsible gate");
   }
-  exactKeys(record.humanApprovalReceipt, ["human_approver", "approval_date", "artifact_digest"], "human approval receipt");
+  exactKeys(record.humanApprovalReceipt, ["human_approver", "approval_date", "artifactDigest", "receiptDigest"], "human approval receipt");
   assertText(record.humanApprovalReceipt.human_approver, "human approval receipt human_approver");
   assertDate(record.humanApprovalReceipt.approval_date, "human approval receipt approval_date");
-  assertDigest(record.humanApprovalReceipt.artifact_digest, "human approval receipt artifact_digest");
+  assertDigest(record.humanApprovalReceipt.artifactDigest, "human approval receipt artifactDigest");
+  if (record.humanApprovalReceipt.artifactDigest !== expected.artifactDigest) throw new Error("Human approval must bind to the same artifact digest");
+  validateReceiptDigest(record.humanApprovalReceipt, "human approval receipt");
+  validateReceiptDigest(record, "document approval receipt");
 }
 
-export function transitionDocumentQualityState({
-  currentState, targetState, composed, completionEvidence, evidenceReview, visualReview, documentApproval,
-}) {
-  const currentIndex = documentStates.indexOf(currentState);
+function validateStateEnvelope(stateEnvelope, requirementManifest, composed) {
+  validateRequirementManifest(requirementManifest);
+  exactKeys(stateEnvelope, ["schemaVersion", "state", "artifactDigest", "contractDigest", "checklistDigest", "receipts"], "document quality state envelope");
+  if (stateEnvelope.schemaVersion !== 1) throw new Error("State envelope schemaVersion must be 1");
+  const currentIndex = documentStates.indexOf(stateEnvelope.state);
+  if (currentIndex < 0) throw new Error("State envelope state is unknown");
+  assertReceiptBinding(stateEnvelope, {
+    artifactDigest: stateEnvelope.artifactDigest,
+    contractDigest: requirementManifest.contractDigest,
+    checklistDigest: requirementManifest.checklistDigest,
+  }, "state envelope");
+  if (composed !== undefined && digestValue(composed) !== requirementManifest.contractDigest) {
+    throw new Error("State envelope composed contract digest mismatch");
+  }
+  if (!Array.isArray(stateEnvelope.receipts) || stateEnvelope.receipts.length !== currentIndex) {
+    throw new Error("State envelope receipt chain length does not match state");
+  }
+  const expected = stateEnvelope;
+  const expectedStages = documentStates.slice(1, currentIndex + 1);
+  for (const [index, wrapper] of stateEnvelope.receipts.entries()) {
+    exactKeys(wrapper, ["stage", "record"], `state envelope receipt ${index}`);
+    if (wrapper.stage !== expectedStages[index]) throw new Error("State envelope receipts are not in canonical ordered stages");
+    if (wrapper.stage === "structurally-complete") {
+      verifyStructuralCompletionEvidence(requirementManifest, wrapper.record);
+      if (wrapper.record.artifactDigest !== expected.artifactDigest) throw new Error("Structural receipt must bind to the same artifact digest");
+    } else if (wrapper.stage === "evidence-reviewed") {
+      validateEvidenceReview(wrapper.record, expected);
+    } else if (wrapper.stage === "visual-reviewed") {
+      if (composed === undefined) throw new Error("Composed contract is required to revalidate visual receipts");
+      validateVisualReview(composed, wrapper.record, expected);
+    } else if (wrapper.stage === "document-approved") {
+      validateDocumentApproval(wrapper.record, expected);
+    }
+  }
+  return currentIndex;
+}
+
+export function createDocumentQualityStateEnvelope({ artifactDigest, requirementManifest } = {}) {
+  validateRequirementManifest(requirementManifest);
+  assertDigest(artifactDigest, "state envelope artifactDigest");
+  return deepFreeze({
+    schemaVersion: 1,
+    state: "draft",
+    artifactDigest,
+    contractDigest: requirementManifest.contractDigest,
+    checklistDigest: requirementManifest.checklistDigest,
+    receipts: [],
+  });
+}
+
+export function transitionDocumentQualityState(options) {
+  assertPlainObject(options, "document quality transition options");
+  if (Object.hasOwn(options, "currentState")) throw new Error("currentState strings are forbidden; provide a state envelope");
+  const {
+    stateEnvelope, targetState, requirementManifest, composed, structuralReceipt, evidenceReview, visualReview, documentApproval,
+  } = options;
+  const currentIndex = validateStateEnvelope(stateEnvelope, requirementManifest, composed);
   const targetIndex = documentStates.indexOf(targetState);
   if (currentIndex < 0 || targetIndex !== currentIndex + 1) throw new Error("target must be the exact next state");
-  if (targetState === "structurally-complete") verifyStructuralCompletionEvidence(composed, completionEvidence);
-  if (targetState === "evidence-reviewed") validateEvidenceReview(evidenceReview);
-  if (targetState === "visual-reviewed") validateVisualReview(composed, visualReview);
-  if (targetState === "document-approved") validateDocumentApproval(documentApproval);
-  return targetState;
+  let record;
+  if (targetState === "structurally-complete") {
+    verifyStructuralCompletionEvidence(requirementManifest, structuralReceipt);
+    if (structuralReceipt.artifactDigest !== stateEnvelope.artifactDigest) throw new Error("Structural receipt must bind to the same artifact digest");
+    record = structuralReceipt;
+  } else if (targetState === "evidence-reviewed") {
+    validateEvidenceReview(evidenceReview, stateEnvelope);
+    record = evidenceReview;
+  } else if (targetState === "visual-reviewed") {
+    if (composed === undefined) throw new Error("Composed contract is required for visual review");
+    validateVisualReview(composed, visualReview, stateEnvelope);
+    record = visualReview;
+  } else if (targetState === "document-approved") {
+    validateDocumentApproval(documentApproval, stateEnvelope);
+    record = documentApproval;
+  }
+  return deepFreeze({
+    ...clone(stateEnvelope),
+    state: targetState,
+    receipts: [...clone(stateEnvelope.receipts), { stage: targetState, record: clone(record) }],
+  });
 }
 
 export function selectBoundedReviewRoles({
@@ -696,6 +967,33 @@ export function createQualityProfileBodyLoader({ documentQualityRoot, onLoad } =
     if (!validation.ok) throw new Error(`Invalid quality profile ${profileId}: ${validationDetails(validation)}`);
     if (profile.profile_id !== profileId) throw new Error(`Quality profile ID mismatch: expected ${profileId}, received ${String(profile.profile_id)}`);
     return deepFreeze(clone(profile));
+  };
+}
+
+export function createQualitySourceLoader({ documentQualityRoot, onLoad } = {}) {
+  if (typeof documentQualityRoot !== "string") throw new Error("documentQualityRoot must be a path");
+  if (onLoad !== undefined && typeof onLoad !== "function") throw new Error("onLoad must be a function");
+  return async ({ sourceType, sourceId, purpose }) => {
+    const registry = sourceType === "overlay" ? knownOverlayIds : sourceType === "preset" ? knownPresetIds : null;
+    if (registry === null) throw new Error(`Unknown document-quality source type: ${String(sourceType)}`);
+    const normalizedSourceId = normalizeId(sourceId);
+    if (normalizedSourceId !== sourceId) throw new Error("Document-quality source ID must already be normalized");
+    if (!registry.has(sourceId)) throw new Error(`Unknown ${sourceType}: ${sourceId}`);
+    const relativePath = `${sourceType === "overlay" ? "overlays" : "presets"}/${sourceId}.json`;
+    const filePath = await assertSafeFile(documentQualityRoot, relativePath);
+    onLoad?.({ sourceType, sourceId, purpose, relativePath });
+    let body;
+    try {
+      body = JSON.parse(await readFile(filePath, "utf8"));
+    } catch (error) {
+      throw new Error(`Invalid document-quality source JSON: ${error.message}`, { cause: error });
+    }
+    const identityKey = sourceType === "overlay" ? "profile_id" : "preset_id";
+    if (body?.[identityKey] !== sourceId) {
+      throw new Error(`${sourceType} ID mismatch: expected ${sourceId}, received ${String(body?.[identityKey])}`);
+    }
+    if (sourceType === "preset") assertValidReferencePreset(body);
+    return deepFreeze(clone(body));
   };
 }
 

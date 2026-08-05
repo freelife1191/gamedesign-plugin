@@ -90,17 +90,19 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
   };
   const referencePreset = await json("presets/function-first.json");
   const overlay = await json("overlays/mobile.json");
+  const sourceLoader = async ({ sourceType }) => structuredClone(sourceType === "overlay" ? overlay : referencePreset);
   const applied = await workflow.applyDocumentQualityProfile({
-    namespace: "studio", selectionIndex: index, profileLoader,
+    namespace: "studio", selectionIndex: index, profileLoader, sourceLoader,
     request: { artifactId: "brief", goal: "game design brief", audience: ["production"], artifactType: "design-document", requestedFormat: "md" },
-    overlays: [overlay], preset: { profile_id: "decision-preset", acceptance_criteria: ["Decision is explicit."] }, referencePreset,
+    overlayIds: ["mobile"], presetId: "function-first",
   });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].purpose, "selected-primary");
   assert.deepEqual(applied.selection.overlayIds, ["mobile"]);
-  assert.equal(applied.selection.presetId, "decision-preset");
+  assert.equal(applied.selection.presetId, "function-first");
   assert.equal(applied.composed.referencePresetProvenance.preset, "function-first");
   assert.ok(applied.checklist.sections.length > 0);
+  assert.equal(applied.requirementManifest.requiredItemIds.length > 0, true);
 
   calls.length = 0;
   const unresolved = await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich" }) });
@@ -122,42 +124,13 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
   }]);
 });
 
-test("trusted structural evidence cannot be emptied, weakened, replaced, or duplicated", async () => {
+test("structural completion cannot be synthesized from composed requirements", async () => {
   const composed = workflow.composeQualityProfile({ primary: await json("profiles/studio/game-design-brief.json") });
-  const evidence = workflow.createStructuralCompletionEvidence(composed);
-  assert.equal(workflow.verifyStructuralCompletionEvidence(composed, evidence).ready, true);
-  for (const mutate of [
-    (value) => { value.completedItemIds = []; },
-    (value) => { value.completedItemIds.pop(); },
-    (value) => { value.completedItemIds[0] = "replacement"; },
-    (value) => { value.completedItemIds.push(value.completedItemIds[0]); },
-    (value) => { value.required = false; },
-  ]) {
-    const candidate = structuredClone(evidence); mutate(candidate);
-    assert.throws(() => workflow.verifyStructuralCompletionEvidence(composed, candidate), /completion|structural|field|duplicate|missing/i);
-  }
+  assert.throws(() => workflow.createStructuralCompletionEvidence(composed), /manifest|inspection|plain object/i);
 });
 
-test("five states require closed evidence, renderer/Skillstead, rights/gates, and human records", async () => {
-  const composed = workflow.composeQualityProfile({ primary: await json("profiles/studio/game-design-brief.json") });
-  const completionEvidence = workflow.createStructuralCompletionEvidence(composed);
-  const digest = "a".repeat(64);
-  const evidenceReview = { schemaVersion: 1, reviewerRole: "evidence-auditor", status: "verified", evidenceIds: ["evidence-1"], artifactDigest: digest };
-  const visualReview = { schemaVersion: 1, reviewerRole: "renderer-qa", rendererStatus: "passed", qaStatus: "passed", artifactDigest: digest, skillsteadSlots: composed.profile.required_diagrams.map(({ id }) => ({ slotId: id, verificationDigest: digest })) };
-  const gateIds = ["ai-rights-human-approval", "accessibility", "economy-transparency", "liveops-experiment", "ugc-safety", "ai-npc-safety", "scope-control"];
-  const documentApproval = {
-    schemaVersion: 1,
-    rightsApproval: { source_provenance: "recorded", rights_or_consent_record: "rights-1", human_approver: "rights-owner", approval_date: "2026-08-05" },
-    responsibleGates: gateIds.map((gateId) => ({ gateId, state: "approved", evidenceIds: [`${gateId}-evidence`], human_approver: "producer" })),
-    humanApprovalReceipt: { human_approver: "document-owner", approval_date: "2026-08-05", artifact_digest: digest },
-  };
-  let state = workflow.transitionDocumentQualityState({ currentState: "draft", targetState: "structurally-complete", composed, completionEvidence });
-  for (const forged of ["evidence-auditor", true, { selfAttested: true }, { ...evidenceReview, generated: true }]) assert.throws(() => workflow.transitionDocumentQualityState({ currentState: state, targetState: "evidence-reviewed", composed, completionEvidence, evidenceReview: forged }), /evidence|record|field/i);
-  state = workflow.transitionDocumentQualityState({ currentState: state, targetState: "evidence-reviewed", composed, completionEvidence, evidenceReview });
-  for (const forged of ["renderer-qa", { renderedFile: true }, { ...visualReview, skillsteadSlots: [] }]) assert.throws(() => workflow.transitionDocumentQualityState({ currentState: state, targetState: "visual-reviewed", composed, completionEvidence, visualReview: forged }), /visual|renderer|skillstead|record|field/i);
-  state = workflow.transitionDocumentQualityState({ currentState: state, targetState: "visual-reviewed", composed, completionEvidence, visualReview });
-  for (const forged of ["human", { selfAttested: true }, { ...documentApproval, responsibleGates: documentApproval.responsibleGates.map((gate, index) => index === 0 ? { ...gate, state: "pending" } : gate) }, { ...documentApproval, responsibleGates: documentApproval.responsibleGates.slice(1) }]) assert.throws(() => workflow.transitionDocumentQualityState({ currentState: state, targetState: "document-approved", composed, completionEvidence, documentApproval: forged }), /approval|rights|responsible|human|record|field/i);
-  assert.equal(workflow.transitionDocumentQualityState({ currentState: state, targetState: "document-approved", composed, completionEvidence, documentApproval }), "document-approved");
+test("caller-provided state strings cannot bypass the receipt-chain envelope", () => {
+  assert.throws(() => workflow.transitionDocumentQualityState({ currentState: "visual-reviewed", targetState: "document-approved" }), /currentState.*forbidden|state envelope/i);
 });
 
 test("same-source normalization-equivalent criteria fail before duplicate stable IDs", async () => {

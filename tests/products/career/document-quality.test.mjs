@@ -57,9 +57,15 @@ test("Career skill composes only additive known sources and loads a bounded pack
   assert.deepEqual(contract.composition.reject, ["removal", "identity-leakage", "scalar-contradiction", "unknown-id", "schema-invalid"]);
   assert.equal(contract.composition.maxPresets, 1);
   assert.equal(contract.composition.presetMode, "validated-separate-guidance");
+  assert.deepEqual(contract.composition.upperApply, {
+    overlays: "closed-overlayIds-only",
+    preset: "closed-neutral-presetId-or-null",
+    rawObjects: "rejected",
+    scalarConflicts: "fail-closed",
+  });
   assert.deepEqual(contract.progressiveLoading.preSelection, ["profile-id-index", "product-template-map"]);
   assert.deepEqual(contract.progressiveLoading.unknownComparison, ["nearest-profile-body"]);
-  assert.deepEqual(contract.progressiveLoading.postSelection, ["selected-primary", "requested-overlays", "optional-profile-preset", "optional-reference-preset", "relevant-render-contract", "selection-and-profile-schemas"]);
+  assert.deepEqual(contract.progressiveLoading.postSelection, ["selected-primary", "requested-overlays", "optional-neutral-preset", "relevant-render-contract", "selection-and-profile-schemas"]);
   assert.deepEqual(contract.progressiveLoading.forbidden, ["bulk-catalog-load", "authoring-evidence"]);
   assert.match(skill, /references\/shared\/document-quality\//u);
   assert.doesNotMatch(skill, /authoring\/reference-preset-evidence-map\.json/u);
@@ -71,6 +77,13 @@ test("Career checklist, Skillstead slots, status transitions, and approval bound
   assert.equal(contract.output.stableIdsRequired, true);
   assert.equal(contract.output.acceptanceIdRule, "source-id-plus-normalized-sha256-16");
   assert.equal(contract.output.diagrams, "skillstead-compatible-slots-unverified-until-render-qa");
+  assert.deepEqual(contract.output.requirementManifest, ["schemaVersion", "contractDigest", "checklistDigest", "requiredItemIds"]);
+  assert.deepEqual(contract.stateEnvelope, {
+    binding: ["artifactDigest", "contractDigest", "checklistDigest"],
+    receipts: "exact-ordered-cumulative-revalidated",
+    callerStateStrings: "rejected",
+  });
+  assert.equal(contract.structuralCompletion, "external-artifact-inspection-receipt-only");
   assert.deepEqual(contract.states, ["draft", "structurally-complete", "evidence-reviewed", "visual-reviewed", "document-approved"]);
   assert.deepEqual(contract.structuralBlockers, ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]);
   assert.deepEqual(contract.neverAutoApproveFrom, ["generated-image", "rendered-file", "requested-diagram", "self-attestation"]);
@@ -152,6 +165,7 @@ test("Career routing inserts quality application before content and preserves re
   assert.deepEqual(stages.reviewDispatch.mergeKeys, ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"]);
   assert.match(orchestrator, /apply-document-quality-profile.*before content generation and asset planning/isu);
   assert.match(gates, /draft.*structurally-complete.*evidence-reviewed.*visual-reviewed.*document-approved/isu);
+  assert.match(gates, /state envelope.*artifact-inspection.*receipt/isu);
   assert.match(gates, /generated images?.*rendered files?.*do not.*approval/isu);
 });
 

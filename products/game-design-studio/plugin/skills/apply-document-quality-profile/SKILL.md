@@ -38,21 +38,34 @@ Select and compose one validated Studio document-quality contract per canonical 
     "profilePreset": "optional-profile-shaped-additive",
     "referencePreset": "optional-validated-separate-guidance",
     "presetMode": "validated-separate-guidance",
+    "upperApply": {
+      "overlays": "closed-overlayIds-only",
+      "preset": "closed-neutral-presetId-or-null",
+      "rawObjects": "rejected",
+      "scalarConflicts": "fail-closed"
+    },
     "reject": ["removal", "identity-leakage", "scalar-contradiction", "unknown-id", "schema-invalid"]
   },
   "progressiveLoading": {
     "preSelection": ["profile-id-index", "product-template-map"],
     "unknownComparison": ["nearest-profile-body"],
-    "postSelection": ["selected-primary", "requested-overlays", "optional-profile-preset", "optional-reference-preset", "relevant-render-contract", "selection-and-profile-schemas"],
+    "postSelection": ["selected-primary", "requested-overlays", "optional-neutral-preset", "relevant-render-contract", "selection-and-profile-schemas"],
     "forbidden": ["bulk-catalog-load", "authoring-evidence"]
   },
   "output": {
     "selectionRecord": ["artifactId", "goal", "audience", "artifactType", "requestedFormat", "primaryProfileId", "overlayIds", "presetId", "renderContractId", "templateId", "selectionReason", "score", "tieBreak", "fallbackRecord"],
     "checklist": ["sections", "tables", "diagrams", "images", "acceptanceCriteria"],
+    "requirementManifest": ["schemaVersion", "contractDigest", "checklistDigest", "requiredItemIds"],
     "stableIdsRequired": true,
     "acceptanceIdRule": "source-id-plus-normalized-sha256-16",
     "diagrams": "skillstead-compatible-slots-unverified-until-render-qa"
   },
+  "stateEnvelope": {
+    "binding": ["artifactDigest", "contractDigest", "checklistDigest"],
+    "receipts": "exact-ordered-cumulative-revalidated",
+    "callerStateStrings": "rejected"
+  },
+  "structuralCompletion": "external-artifact-inspection-receipt-only",
   "states": ["draft", "structurally-complete", "evidence-reviewed", "visual-reviewed", "document-approved"],
   "structuralBlockers": ["sections", "tables", "diagrams", "images", "acceptanceCriteria"],
   "neverAutoApproveFrom": ["generated-image", "rendered-file", "requested-diagram", "self-attestation"],
@@ -67,11 +80,11 @@ Select and compose one validated Studio document-quality contract per canonical 
 2. Before selection, read only `../../references/shared/document-quality/indexes/studio.json` and `../../references/document-quality/template-profile-map.json`. Never preload profile bodies. Normalize IDs and inputs to Unicode NFC, lowercase, and kebab tokens.
 3. Accept an explicit override only when its normalized ID is known and compatible with both artifact type and requested format. For an unknown ID, compute Levenshtein distance over normalized IDs, break equal distances lexically, load only the single nearest profile body, and report its artifact-type, audience, and format differences. Do not select it until an explicit fallback record names a known compatible primary.
 4. Otherwise filter by artifact type and requested format. Score the exact tuple `templateMatch, artifactTypeMatch, formatMatch, audienceOverlap, goalOverlap` descending; compute audience overlap from normalized audience tokens and goal overlap from profile ID, artifact-type, and audience tokens. Break a remaining tie by lexical profile ID.
-5. After selection, read only the selected primary JSON, requested known overlays, at most one known neutral preset, the relevant render contract, and the selection/profile schemas under `../../references/shared/document-quality/`. Never bulk-load profile bodies or authoring-only evidence.
-6. Compose primary, overlays, and an optional profile-shaped additive preset through the public profile composer. Validate an optional neutral `referencePreset` through `validateReferencePreset` and keep its `emphasis`, review questions, recommended diagrams, story hints, and additional acceptance guidance separate from the closed profile. Reject removals, unsafe source or URL text, scalar conflicts, unknown IDs, or invalid results.
+5. After selection, pass only known `overlayIds` (`mobile`, `live-service`, `pc-console`) and at most one known neutral `presetId`; load those exact bodies from `../../references/shared/document-quality/` through the safe loader. The upper apply API rejects raw overlay, profile-preset, and reference-preset objects. Never bulk-load profile bodies or authoring-only evidence.
+6. Keep the public low-level profile composer compatible with raw profile-shaped additive overlays/presets and its conflict report. At the upper apply boundary, validate the loaded neutral preset separately, reject ID/body mismatch, symlink or path escape, and fail closed when the low-level composition reports any scalar conflict.
 7. Copy every required section, table, diagram, image, and acceptance criterion into a checklist. Keep source IDs for structured items. Derive each string criterion ID as `<source-id>-acceptance-<first-16-hex-of-SHA-256>` over Unicode-NFC, trimmed, whitespace-collapsed, lowercase criterion text; insertion order must not alter it. Declare diagrams as Skillstead-compatible slots unverified until renderer QA.
-8. Return the selection record, composed requirements, checklist status, conflicts, blockers, and current document state before content generation or asset planning.
+8. Return the selection record, composed requirements, checklist, and immutable requirement manifest with contract, checklist, and required-ID digests before content generation or asset planning. Remain in `draft` until an external artifact-inspection adapter supplies an exact digest-bound receipt for the actual artifact.
 
 ## State Gates
 
-Advance only `draft -> structurally-complete -> evidence-reviewed -> visual-reviewed -> document-approved`. Rebuild the trusted checklist and digest from the composed profile; caller-owned checklist flags cannot complete it. Require a closed evidence-auditor review record, passed renderer QA plus every Skillstead slot verification digest, approved rights and responsible-gate records, and an explicit named-human receipt at their own stages. Reject extra record keys, generated or rendered-file booleans, and self-attestation.
+Advance only `draft -> structurally-complete -> evidence-reviewed -> visual-reviewed -> document-approved` through an immutable state envelope; reject caller state strings. Bind one artifact digest to the manifest contract/checklist digests and preserve exact ordered cumulative receipts. Structural completion requires the external inspection receipt to report every required ID as observed and passed; requirements alone never synthesize completion. Revalidate every prior receipt on every transition. Evidence audit, renderer QA plus every Skillstead slot receipt, rights, all responsible gates, and the named-human receipt must bind to the same artifact and carry valid receipt digests. Reject missing, replaced, reordered, duplicate, or extra fields, generated/rendered claims, self-attestation, and cross-artifact receipt splicing.
