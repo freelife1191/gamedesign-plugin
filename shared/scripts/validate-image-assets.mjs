@@ -1,4 +1,5 @@
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
 const assetTypes = new Set([
@@ -21,6 +22,7 @@ const reviewContracts = Object.freeze({
   "document-approved": Object.freeze({ reviewer_kind: "human", reviewer_role: "visual-reviewer", review_scope: "document-visual" }),
   "production-candidate": Object.freeze({ reviewer_kind: "human", reviewer_role: "rights-provenance-reviewer", review_scope: "production-rights-provenance" }),
 });
+const trustedReviewAuthorities = new WeakSet();
 const assetIdPattern = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const safeIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const sourceSectionPattern = /^content\.md#[a-z][a-z0-9-]*$/u;
@@ -35,6 +37,21 @@ function isObject(value) {
 
 function nonEmptyString(value) {
   return typeof value === "string" && value.trim() !== "";
+}
+
+function digestValue(value) {
+  const canonical = (item) => Array.isArray(item)
+    ? `[${item.map(canonical).join(",")}]`
+    : isObject(item)
+      ? `{${Object.keys(item).sort().map((key) => `${JSON.stringify(key)}:${canonical(item[key])}`).join(",")}}`
+      : JSON.stringify(item);
+  return createHash("sha256").update(canonical(value), "utf8").digest("hex");
+}
+
+function hasExactKeys(value, keys) {
+  const actual = Object.keys(value).sort();
+  const expected = [...keys].sort();
+  return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
 }
 
 function safeRelativePath(value, artifactRoot) {
@@ -74,6 +91,37 @@ function validateEvidencePaths(errors, evidencePaths, pathName, artifactRoot) {
   }
 }
 
+function authorityReceiptMatches(receipt, contract, reviewer, evidencePaths) {
+  const keys = new Set([
+    "schema_version", "reviewer", "reviewer_kind", "reviewer_role", "review_scope", "evidence_paths", "authority_digest",
+  ]);
+  if (!isObject(receipt) || !hasExactKeys(receipt, keys) || receipt.schema_version !== 1
+    || receipt.reviewer !== reviewer || receipt.reviewer_kind !== contract.reviewer_kind
+    || receipt.reviewer_role !== contract.reviewer_role || receipt.review_scope !== contract.review_scope
+    || !Array.isArray(receipt.evidence_paths) || JSON.stringify(receipt.evidence_paths) !== JSON.stringify(evidencePaths)
+    || typeof receipt.authority_digest !== "string" || !/^[a-f0-9]{64}$/u.test(receipt.authority_digest)) return false;
+  const unsigned = { ...receipt };
+  delete unsigned.authority_digest;
+  return receipt.authority_digest === digestValue(unsigned);
+}
+
+function validateAuthorityReceipt(errors, receipt, reviewPath, contract, reviewer, evidencePaths, artifactRoot) {
+  const receiptPath = `${reviewPath}.authority_receipt`;
+  if (!isObject(receipt)) {
+    errors.push(error("missing_review_authority", receiptPath, "A human review authority receipt is required."));
+    return;
+  }
+  const keys = new Set([
+    "schema_version", "reviewer", "reviewer_kind", "reviewer_role", "review_scope", "evidence_paths", "authority_digest",
+  ]);
+  if (!hasExactKeys(receipt, keys)) errors.push(error("invalid_review_authority", receiptPath, "Review authority receipt has an invalid shape."));
+  if (receipt.schema_version !== 1) errors.push(error("invalid_review_authority", `${receiptPath}.schema_version`, "Review authority schema version must be 1."));
+  if (!authorityReceiptMatches(receipt, contract, reviewer, evidencePaths)) {
+    errors.push(error("invalid_review_authority", receiptPath, "Review authority must bind the named human, stage role, scope, evidence, and digest."));
+  }
+  validateEvidencePaths(errors, receipt.evidence_paths, `${receiptPath}.evidence_paths`, artifactRoot);
+}
+
 function validateReviewRecord(errors, review, index, artifactRoot) {
   const reviewPath = `reviews[${index}]`;
   if (!isObject(review)) {
@@ -81,7 +129,7 @@ function validateReviewRecord(errors, review, index, artifactRoot) {
     return;
   }
   rejectUnknownProperties(errors, review, new Set([
-    "state", "reviewer", "reviewer_kind", "reviewer_role", "review_scope", "reviewed_at", "evidence_paths", "rights_decision",
+    "state", "reviewer", "reviewer_kind", "reviewer_role", "review_scope", "reviewed_at", "evidence_paths", "rights_decision", "authority_receipt",
   ]), reviewPath);
   if (!approvalStates.has(review.state) || review.state === "concept-draft") {
     errors.push(error("invalid_review_state", `${reviewPath}.state`, "Review records must name an approval state."));
@@ -99,6 +147,7 @@ function validateReviewRecord(errors, review, index, artifactRoot) {
     errors.push(error("invalid_review_timestamp", `${reviewPath}.reviewed_at`, "Review timestamps must be valid dates."));
   }
   validateEvidencePaths(errors, review.evidence_paths, `${reviewPath}.evidence_paths`, artifactRoot);
+  if (contract) validateAuthorityReceipt(errors, review.authority_receipt, reviewPath, contract, review.reviewer, review.evidence_paths, artifactRoot);
   if (!rightsDecisions.has(review.rights_decision)) {
     errors.push(error("missing_rights_decision", `${reviewPath}.rights_decision`, "A closed rights decision is required."));
   }
@@ -108,7 +157,8 @@ function isMatchingHumanReview(review, state) {
   const contract = reviewContracts[state];
   return isObject(review) && review.state === state && review.reviewer_kind === contract.reviewer_kind
     && review.reviewer_role === contract.reviewer_role && review.review_scope === contract.review_scope
-    && nonEmptyString(review.reviewer) && Array.isArray(review.evidence_paths) && review.evidence_paths.length > 0;
+    && nonEmptyString(review.reviewer) && Array.isArray(review.evidence_paths) && review.evidence_paths.length > 0
+    && authorityReceiptMatches(review.authority_receipt, contract, review.reviewer, review.evidence_paths);
 }
 
 function hasApprovedReview(asset, state) {
@@ -258,13 +308,42 @@ function transitionError(message) {
   throw new Error(`Invalid image review transition: ${message}`);
 }
 
+export function createImageReviewAuthority({
+  reviewer,
+  reviewerKind,
+  reviewerRole,
+  reviewScope,
+  evidencePaths,
+} = {}) {
+  if (!nonEmptyString(reviewer)) throw new Error("Human review authority requires a named reviewer.");
+  if (reviewerKind !== "human") throw new Error("Human review authority requires reviewerKind human.");
+  const contract = Object.values(reviewContracts).find((candidate) => candidate.reviewer_role === reviewerRole
+    && candidate.review_scope === reviewScope);
+  if (!contract) throw new Error("Human review authority role and scope are not approved.");
+  if (!Array.isArray(evidencePaths) || evidencePaths.length === 0 || evidencePaths.some((evidencePath) => !safeRelativePath(evidencePath))) {
+    throw new Error("Human review authority requires relative evidence paths.");
+  }
+  const unsigned = {
+    schema_version: 1,
+    reviewer: reviewer.trim(),
+    reviewer_kind: contract.reviewer_kind,
+    reviewer_role: contract.reviewer_role,
+    review_scope: contract.review_scope,
+    evidence_paths: [...evidencePaths],
+  };
+  const authority = Object.freeze({ ...unsigned, authority_digest: digestValue(unsigned) });
+  trustedReviewAuthorities.add(authority);
+  return authority;
+}
+
 export function applyImageReviewTransition(asset, {
   targetState,
   reviewer,
-  reviewerKind = "human",
+  reviewerKind,
   reviewedAt,
   evidencePaths,
   rightsDecision,
+  reviewAuthority,
 } = {}, { artifactRoot } = {}) {
   if (!isObject(asset)) transitionError("asset must be an object");
   if (!approvalStates.has(targetState) || targetState === "concept-draft") transitionError("target state is not an approval transition");
@@ -280,6 +359,13 @@ export function applyImageReviewTransition(asset, {
   const evidenceErrors = [];
   validateEvidencePaths(evidenceErrors, evidencePaths, "evidencePaths", artifactRoot);
   if (evidenceErrors.length > 0) transitionError("evidence must stay inside the artifact");
+  if (!isObject(reviewAuthority) || !trustedReviewAuthorities.has(reviewAuthority)) {
+    transitionError("trusted human review authority receipt is required");
+  }
+  const contract = reviewContracts[targetState];
+  if (!authorityReceiptMatches(reviewAuthority, contract, reviewer.trim(), evidencePaths)) {
+    transitionError("review authority receipt does not bind this reviewer, stage, or evidence");
+  }
 
   const sourceValidation = validateImageAssetManifest({ schema_version: 1, assets: [asset] }, { artifactRoot });
   if (!sourceValidation.ok) transitionError(sourceValidation.errors.map(({ code }) => code).join(", "));
@@ -289,7 +375,6 @@ export function applyImageReviewTransition(asset, {
     next.rights = { ...next.rights, effective_status: "active" };
     delete next.rights.status_reason;
   }
-  const contract = reviewContracts[targetState];
   next.reviews = [...next.reviews, {
     state: targetState,
     reviewer: reviewer.trim(),
@@ -299,6 +384,7 @@ export function applyImageReviewTransition(asset, {
     reviewed_at: reviewedAt,
     evidence_paths: [...evidencePaths],
     rights_decision: rightsDecision,
+    authority_receipt: { ...reviewAuthority },
   }];
   const validation = validateImageAssetManifest({ schema_version: 1, assets: [next] }, { artifactRoot });
   if (!validation.ok) transitionError(validation.errors.map(({ code }) => code).join(", "));

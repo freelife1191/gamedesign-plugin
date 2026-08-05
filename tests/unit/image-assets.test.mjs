@@ -8,10 +8,9 @@ import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 
-import {
-  applyImageReviewTransition,
-  validateImageAssetManifest,
-} from "../../shared/scripts/validate-image-assets.mjs";
+import * as imageAssets from "../../shared/scripts/validate-image-assets.mjs";
+
+const { applyImageReviewTransition, validateImageAssetManifest } = imageAssets;
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const generationStates = [
@@ -127,20 +126,40 @@ function deepFreeze(value) {
   return value;
 }
 
+function reviewAuthority(state, reviewer, evidencePaths) {
+  const contracts = {
+    "document-approved": { reviewerRole: "visual-reviewer", reviewScope: "document-visual" },
+    "production-candidate": { reviewerRole: "rights-provenance-reviewer", reviewScope: "production-rights-provenance" },
+  };
+  assert.equal(typeof imageAssets.createImageReviewAuthority, "function");
+  return imageAssets.createImageReviewAuthority({
+    reviewer,
+    reviewerKind: "human",
+    ...contracts[state],
+    evidencePaths,
+  });
+}
+
 function productionCandidate(root) {
+  const documentEvidence = ["evidence.yml"];
   const documentApproved = applyImageReviewTransition(manifest().assets[0], {
     targetState: "document-approved",
     reviewer: "Minji Kim",
     reviewedAt: "2026-08-05T10:00:00Z",
-    evidencePaths: ["evidence.yml"],
+    evidencePaths: documentEvidence,
     rightsDecision: "approved",
+    reviewerKind: "human",
+    reviewAuthority: reviewAuthority("document-approved", "Minji Kim", documentEvidence),
   }, { artifactRoot: root });
+  const productionEvidence = ["decisions/0001-image-rights.md"];
   return applyImageReviewTransition(documentApproved, {
     targetState: "production-candidate",
     reviewer: "Jae Park",
     reviewedAt: "2026-08-05T11:00:00Z",
-    evidencePaths: ["decisions/0001-image-rights.md"],
+    evidencePaths: productionEvidence,
     rightsDecision: "approved",
+    reviewerKind: "human",
+    reviewAuthority: reviewAuthority("production-candidate", "Jae Park", productionEvidence),
   }, { artifactRoot: root });
 }
 
@@ -251,6 +270,42 @@ test("requires human reviewers with closed roles and scopes for each approval st
   }, { artifactRoot: root }), /human/i);
 });
 
+test("requires an explicit trusted human authority receipt for every approval transition", async (t) => {
+  const root = await artifactRoot(t);
+  const evidencePaths = ["evidence.yml"];
+  const transition = {
+    targetState: "document-approved",
+    reviewer: "Minji Kim",
+    reviewedAt: "2026-08-05T10:00:00Z",
+    evidencePaths,
+    rightsDecision: "approved",
+  };
+  assert.throws(() => applyImageReviewTransition(manifest().assets[0], {
+    ...transition,
+    reviewAuthority: {},
+  }, { artifactRoot: root }), /reviewer.*kind|human/i);
+  assert.throws(() => applyImageReviewTransition(manifest().assets[0], {
+    ...transition,
+    reviewerKind: "human",
+    reviewAuthority: {
+      schema_version: 1,
+      reviewer: "Minji Kim",
+      reviewer_kind: "human",
+      reviewer_role: "visual-reviewer",
+      review_scope: "document-visual",
+      evidence_paths: evidencePaths,
+      authority_digest: "0".repeat(64),
+    },
+  }, { artifactRoot: root }), /authority|receipt|trusted/i);
+  const authority = reviewAuthority("document-approved", "Minji Kim", evidencePaths);
+  const approved = applyImageReviewTransition(manifest().assets[0], {
+    ...transition,
+    reviewerKind: "human",
+    reviewAuthority: authority,
+  }, { artifactRoot: root });
+  assert.deepEqual(approved.reviews.at(-1).authority_receipt, authority);
+});
+
 test("the latest human rights review invalidates a production candidate when restricted or revoked", async (t) => {
   const root = await artifactRoot(t);
   const candidate = productionCandidate(root);
@@ -267,6 +322,7 @@ test("the latest human rights review invalidates a production candidate when res
       reviewed_at: "2026-08-05T12:00:00Z",
       evidence_paths: ["decisions/0002-rights-restriction.md"],
       rights_decision: rightsDecision,
+      authority_receipt: reviewAuthority("production-candidate", "Jae Park", ["decisions/0002-rights-restriction.md"]),
     });
     const result = validateImageAssetManifest({ schema_version: 1, assets: [revoked] }, { artifactRoot: root });
     assert.equal(result.ok, false, rightsDecision);
@@ -291,6 +347,7 @@ test("closes manifest and every nested object against release, legal, and unknow
         state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer",
         review_scope: "document-visual", reviewed_at: "2026-08-05T10:00:00Z", evidence_paths: ["evidence.yml"],
         rights_decision: "approved", legal_approved: true,
+        authority_receipt: reviewAuthority("document-approved", "Minji Kim", ["evidence.yml"]),
       }];
     }],
   ];
@@ -338,6 +395,8 @@ test("applies approval states in order, keeps input immutable, and records named
     reviewedAt: "2026-08-05T10:00:00Z",
     evidencePaths: ["evidence.yml"],
     rightsDecision: "approved",
+    reviewerKind: "human",
+    reviewAuthority: reviewAuthority("document-approved", "Minji Kim", ["evidence.yml"]),
   }, { artifactRoot: root });
   assert.equal(documentApproved.approval_state, "document-approved");
   assert.equal(documentApproved.reviews.at(-1).reviewer, "Minji Kim");
@@ -353,6 +412,8 @@ test("applies approval states in order, keeps input immutable, and records named
     reviewedAt: "2026-08-05T11:00:00Z",
     evidencePaths: ["decisions/0001-image-rights.md"],
     rightsDecision: "approved",
+    reviewerKind: "human",
+    reviewAuthority: reviewAuthority("production-candidate", "Jae Park", ["decisions/0001-image-rights.md"]),
   }, { artifactRoot: root });
   assert.equal(productionCandidate.approval_state, "production-candidate");
   assert.equal(productionCandidate.reviews.at(-1).state, "production-candidate");
@@ -384,6 +445,8 @@ test("does not treat production-candidate as release or legal approval", async (
     reviewedAt: "2026-08-05T10:00:00Z",
     evidencePaths: ["evidence.yml"],
     rightsDecision: "approved",
+    reviewerKind: "human",
+    reviewAuthority: reviewAuthority("document-approved", "Minji Kim", ["evidence.yml"]),
   }, { artifactRoot: root });
   const candidate = applyImageReviewTransition(documentApproved, {
     targetState: "production-candidate",
@@ -391,6 +454,8 @@ test("does not treat production-candidate as release or legal approval", async (
     reviewedAt: "2026-08-05T11:00:00Z",
     evidencePaths: ["decisions/0001-image-rights.md"],
     rightsDecision: "approved",
+    reviewerKind: "human",
+    reviewAuthority: reviewAuthority("production-candidate", "Jae Park", ["decisions/0001-image-rights.md"]),
   }, { artifactRoot: root });
   assert.equal(Object.hasOwn(candidate, "release_approved"), false);
   assert.equal(Object.hasOwn(candidate, "legal_approved"), false);
