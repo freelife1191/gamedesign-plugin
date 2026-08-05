@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { validateImageAssetManifest } from "./validate-image-assets.mjs";
+import { hasCredentialOrEncodedPayload } from "./lib/image-input-safety.mjs";
 
 const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
 const patternFields = ["schema_version", "id", "purpose_medium", "view"];
@@ -61,11 +62,7 @@ function isAllowedExclusion(path, value) {
 }
 
 function unsafeString(value) {
-  return /(?:api[_ -]?key|authorization|bearer)/iu.test(value)
-    || /\bdata:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+\b/iu.test(value)
-    || /\bbase64\b/iu.test(value)
-    || /\b(?:sk|rk|pk)_[A-Za-z0-9_-]{8,}\b/iu.test(value)
-    || /[A-Za-z0-9+/]{80,}={0,2}/u.test(value)
+  return hasCredentialOrEncodedPayload(value)
     || /\b(?:logo|watermark|unrequested text|third[- ]party (?:ip|intellectual property))\b/iu.test(value)
     || /\b(?:source|company|project|preset|studio|brand)\b.{0,48}\b(?:identity|name|preset|source)\b/iu.test(value)
     || /\b(?:house|branded?)\s+(?:visual|art)\s+(?:language|style)\b/iu.test(value)
@@ -74,7 +71,7 @@ function unsafeString(value) {
 
 function assertSafeStrings(value, path = []) {
   if (typeof value === "string") {
-    if (!isAllowedExclusion(path, value) && unsafeString(value)) reject("unsafe_prompt_content");
+    if (!isAllowedExclusion(path, value) && !["prompt", "prompt_digest"].includes(path.at(-1)) && unsafeString(value)) reject("unsafe_prompt_content");
     return;
   }
   if (Array.isArray(value)) {

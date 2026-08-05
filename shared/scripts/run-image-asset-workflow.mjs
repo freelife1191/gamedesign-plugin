@@ -424,8 +424,12 @@ export async function runConfiguredImageAssetWorkflow({ workspaceRoot, env, ...o
 export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog } = {}) {
   const root = await ensureArtifactDirectories({ artifactRoot, directories: ["assets", "assets/prompts", "decisions"] });
   const plan = buildImageAssetPlan({ artifact, qualityProfile, existingManifest });
-  const prompts = compileImagePrompts({ manifest: plan.manifest, patternCatalog: patternCatalog ?? await defaultPatternCatalog() });
-  const manifest = applyCompiledPromptDisposition(bindCompiledPrompts(plan.manifest, prompts.prompts), existingManifest);
+  const catalog = patternCatalog ?? await defaultPatternCatalog();
+  const initialPrompts = compileImagePrompts({ manifest: plan.manifest, patternCatalog: catalog });
+  const withBindings = bindCompiledPrompts(plan.manifest, initialPrompts.prompts);
+  const withDisposition = applyCompiledPromptDisposition(withBindings, existingManifest);
+  const prompts = compileImagePrompts({ manifest: withDisposition, patternCatalog: catalog });
+  const manifest = bindCompiledPrompts(withDisposition, prompts.prompts);
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.md", data: prompts.markdown });
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.json", data: prompts.json });
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/image-assets.yml", data: `${JSON.stringify(manifest, null, 2)}\n` });

@@ -3,6 +3,7 @@ import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { deflateSync } from "node:zlib";
 
 import { generateOpenAIImages, maximumResponseBytes } from "../../shared/scripts/generate-openai-images.mjs";
 import { prepareImageOutput, promoteValidatedPng } from "../../shared/scripts/lib/image-file-validation.mjs";
@@ -11,12 +12,23 @@ const key = "sk-test-key-never-public";
 const now = () => "2026-08-06T00:00:00.000Z";
 
 function png(width = 1024, height = 1024) {
-  const buffer = Buffer.alloc(33);
-  buffer.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
-  buffer.writeUInt32BE(width, 16);
-  buffer.writeUInt32BE(height, 20);
-  buffer.set([8, 6, 0, 0, 0], 24);
-  return buffer;
+  const crc32 = (bytes) => {
+    let crc = 0xffffffff;
+    for (const byte of bytes) {
+      crc ^= byte;
+      for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const bytes = Buffer.alloc(12 + data.length);
+    bytes.writeUInt32BE(data.length, 0); bytes.write(type, 4, "ascii"); data.copy(bytes, 8);
+    bytes.writeUInt32BE(crc32(bytes.subarray(4, 8 + data.length)), 8 + data.length);
+    return bytes;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0); header.writeUInt32BE(height, 4); header.set([8, 6, 0, 0, 0], 8);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", header), chunk("IDAT", deflateSync(Buffer.alloc(height * (width * 4 + 1)))), chunk("IEND", Buffer.alloc(0))]);
 }
 
 function response({ status = 200, body, requestId = "req-safe-id", retryAfter, contentLength, chunks, onRead, bodyStream } = {}) {
@@ -83,7 +95,7 @@ test("generateOpenAIImages posts one bounded OpenAI request and atomically promo
   assert.deepEqual(result.results[0], {
     asset_id: "hero-image",
     generation_state: "generated",
-    output: { path: "assets/generated/hero-image.png", width: 1024, height: 1024, format: "png", bytes: 33, digest: result.results[0].output.digest },
+    output: { path: "assets/generated/hero-image.png", width: 1024, height: 1024, format: "png", bytes: png().length, digest: result.results[0].output.digest },
     provenance: {
       provider: "openai", model: "gpt-image-2", quality: "low", request_id: "req-safe-id",
       generated_at: "2026-08-06T00:00:00.000Z", prompt_digest: result.results[0].provenance.prompt_digest,
@@ -92,6 +104,26 @@ test("generateOpenAIImages posts one bounded OpenAI request and atomically promo
   });
   assert.match(result.results[0].output.digest, /^[a-f0-9]{64}$/u);
   assert.match(result.results[0].provenance.prompt_digest, /^[a-f0-9]{64}$/u);
+});
+
+test("promoteValidatedPng rejects truncated, corrupt, and incomplete PNG structures before publishing", async (t) => {
+  const root = await staging(t);
+  const valid = png();
+  const idatType = valid.indexOf(Buffer.from("IDAT"));
+  const idatStart = idatType - 4;
+  const idatEnd = idatType + 4 + valid.readUInt32BE(idatStart) + 4;
+  const badCrc = Buffer.from(valid); badCrc[29] ^= 1;
+  const corruptZlib = Buffer.from(valid); corruptZlib[idatType + 4] ^= 1;
+  const malformed = [
+    valid.subarray(0, valid.length - 1), badCrc, Buffer.concat([valid.subarray(0, idatStart), valid.subarray(idatEnd)]),
+    valid.subarray(0, valid.length - 12), corruptZlib,
+  ];
+  for (const bytes of malformed) {
+    const prepared = await prepareImageOutput({ stagingRoot: root, output: job().output });
+    await assert.rejects(() => promoteValidatedPng({ prepared, bytes }), (error) => error.code === "invalid-image-output");
+  }
+  await assert.rejects(readFile(path.join(root, job().output.path)));
+  assert.equal((await readdir(path.join(root, "assets", "generated"))).length, 0);
 });
 
 test("generateOpenAIImages makes zero requests for an empty prompt-only or unapproved-select job list", async (t) => {

@@ -165,6 +165,31 @@ test("validates a complete planned manifest without changing its input", async (
   assert.equal(value.assets[0].output.path, "assets/generated/hero-knight-001.png");
 });
 
+test("keeps optional prompt digests in runtime and JSON Schema parity", async (t) => {
+  const root = await artifactRoot(t);
+  const { manifestSchema, externalSchemas } = await imageAssetSchema();
+  const valid = manifest({ asset: { prompt_digest: "a".repeat(64) } });
+  const invalid = manifest({ asset: { prompt_digest: "A".repeat(64) } });
+  for (const [value, expected] of [[valid, true], [invalid, false]]) {
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, expected);
+    assert.equal(schemaAccepts(value, manifestSchema, externalSchemas), expected);
+  }
+});
+
+test("rejects invalid RFC3339 review timestamps in validation and transitions", async (t) => {
+  const root = await artifactRoot(t);
+  for (const reviewedAt of ["2026-02-30T10:00:00Z", "2026-08-06 10:00:00Z", "2026-08-06T10:00:00+24:00", "2026-08-06T10:00:00Zx"]) {
+    const value = manifest({ asset: { approval_state: "document-approved", reviews: [{
+      state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer", review_scope: "document-visual",
+      reviewed_at: reviewedAt, evidence_paths: ["evidence.yml"], rights_decision: "approved",
+    }] } });
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false, reviewedAt);
+    assert.throws(() => applyImageReviewTransition(manifest().assets[0], {
+      targetState: "document-approved", reviewer: "Minji Kim", reviewedAt, evidencePaths: ["evidence.yml"], rightsDecision: "approved",
+    }, { artifactRoot: root }), /timestamp/i, reviewedAt);
+  }
+});
+
 test("accepts each closed generation state independently from approval state", async (t) => {
   const root = await artifactRoot(t);
   for (const generationState of generationStates) {

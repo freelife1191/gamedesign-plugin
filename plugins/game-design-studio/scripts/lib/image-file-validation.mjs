@@ -57,10 +57,9 @@ async function prepareDirectories(stagingRoot) {
 export function validatePngBuffer(buffer, { width, height } = {}) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 33 || buffer.length > maximumImageBytes) throw failure("invalid-image-output");
   if (!buffer.subarray(0, pngSignature.length).equals(pngSignature)) throw failure("invalid-image-output");
-  if (buffer.readUInt32BE(8) !== 13 || buffer.subarray(12, 16).toString("ascii") !== "IHDR") throw failure("invalid-image-output");
-  const actualWidth = buffer.readUInt32BE(16);
-  const actualHeight = buffer.readUInt32BE(20);
-  if (actualWidth < 1 || actualHeight < 1 || actualWidth !== width || actualHeight !== height) throw failure("invalid-image-output");
+  const inspection = inspectCompletePng(buffer);
+  if (!inspection.ok || inspection.width !== width || inspection.height !== height) throw failure("invalid-image-output");
+  const { width: actualWidth, height: actualHeight } = inspection;
   return { bytes: buffer.length, width: actualWidth, height: actualHeight, digest: createHash("sha256").update(buffer).digest("hex") };
 }
 

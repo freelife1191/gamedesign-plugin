@@ -1,6 +1,8 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { isRfc3339DateTime } from "./lib/rfc3339.mjs";
+
 const assetTypes = new Set([
   "character", "npc", "monster-boss", "skill-vfx", "environment-landmark", "item-equipment",
   "ui-icon", "story-storyboard", "key-art-pitch-concept", "document-illustration-cover", "skillstead-diagram",
@@ -100,7 +102,7 @@ function validateReviewRecord(errors, review, index, artifactRoot) {
     errors.push(error("invalid_review_scope", `${reviewPath}.review_scope`, "Review scope does not match the approval stage."));
   }
   pushRequiredString(errors, review.reviewer, `${reviewPath}.reviewer`, "missing_reviewer");
-  if (!nonEmptyString(review.reviewed_at) || Number.isNaN(Date.parse(review.reviewed_at))) {
+  if (!isRfc3339DateTime(review.reviewed_at)) {
     errors.push(error("invalid_review_timestamp", `${reviewPath}.reviewed_at`, "Review timestamps must be valid dates."));
   }
   validateEvidencePaths(errors, review.evidence_paths, `${reviewPath}.evidence_paths`, artifactRoot);
@@ -339,7 +341,7 @@ export function applyImageReviewTransition(asset, {
     : currentState === "document-approved" ? "production-candidate" : undefined;
   if (targetState !== expectedTarget) transitionError("skipped or invalid approval transition");
   if (!nonEmptyString(reviewer)) transitionError("reviewer is required");
-  if (!nonEmptyString(reviewedAt) || Number.isNaN(Date.parse(reviewedAt))) transitionError("reviewedAt must be a valid timestamp");
+  if (!isRfc3339DateTime(reviewedAt)) transitionError("reviewedAt must be a valid timestamp");
   if (!rightsDecisions.has(rightsDecision)) transitionError("rights decision is required");
   if (rightsDecision !== "approved") transitionError("approval requires an approved rights decision");
   const evidenceErrors = [];

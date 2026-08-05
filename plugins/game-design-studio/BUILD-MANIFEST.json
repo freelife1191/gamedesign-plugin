@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "c8203b2790894ab0f1146a6430627022526c288d8c7f1cffab3f4ef910f27c2c",
+  "treeSha256": "ab673ac2e42c8a9f440d3ab6cbf568c92ec5cb330b0e56d83fdac17bb4e89fd3",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -946,8 +946,8 @@
     },
     {
       "path": "references/shared/image-assets/schema/image-assets.schema.json",
-      "sha256": "6c606a88eb62857d69d5b99a219aee41961d16567d50070f764c97a2e66a0891",
-      "size": 9651
+      "sha256": "0ddaad3da4af6a2e034348e541d2fc57b1c660a9c92074cc27417d45ffc527d3",
+      "size": 9727
     },
     {
       "path": "references/shared/image-assets/schema/image-config.schema.json",
@@ -1296,8 +1296,8 @@
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
-      "sha256": "b1d3be2f8fd69deb36448f03a1e0fb27d1fe3b01480c6f73ec7de00914af3dc8",
-      "size": 12419
+      "sha256": "ee66915932c6060e25d9d50f67e55251485934c0c5c2d1ad2c57a5cdf6a2e916",
+      "size": 12309
     },
     {
       "path": "scripts/capability-probe.mjs",
@@ -1306,8 +1306,8 @@
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
-      "sha256": "b1910d40d450ee73d9dcb9a7469afe3db19ebb038147b590f1da11a1154fc167",
-      "size": 9639
+      "sha256": "1550c8add5504904cde478b7b57939511d493a8c5bdfe0642b9f062e9ddd767c",
+      "size": 9536
     },
     {
       "path": "scripts/data-only-snapshot.mjs",
@@ -1326,13 +1326,23 @@
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
-      "sha256": "7f813a5c6be979df64454ad9d6cfa990c4d8053cddf3ac6cad30e92b89e4c406",
-      "size": 5581
+      "sha256": "5b2bdb619a80aadb9367409103c9853d3c9924248b5e9ca48e26d0fb0b81b426",
+      "size": 5459
+    },
+    {
+      "path": "scripts/lib/image-input-safety.mjs",
+      "sha256": "6c5ff8abc3b9697462e7276203b62fc1e0c4a52e42e841c4b4545cbfa564de1b",
+      "size": 339
     },
     {
       "path": "scripts/lib/image-provider.mjs",
       "sha256": "ff5150674f9ef072f319ff52c6e2c0969d9b676696dba02329730e70b63a72b4",
       "size": 1140
+    },
+    {
+      "path": "scripts/lib/rfc3339.mjs",
+      "sha256": "9f9137db0802e3dd9e20c85815d1c933165e72240c0b492e1c31dfad0ba3c53a",
+      "size": 893
     },
     {
       "path": "scripts/lib/safe-artifact-write.mjs",
@@ -1356,8 +1366,8 @@
     },
     {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "5543bfd8cd78e41b2d7654bc0017b4d862aec7746d1359adc95e1c0ac5fa0906",
-      "size": 30272
+      "sha256": "077baddf4386509fac70188489951d186f23d818445414a984a2ac04c10e7c8e",
+      "size": 30526
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
@@ -1371,8 +1381,8 @@
     },
     {
       "path": "scripts/validate-image-assets.mjs",
-      "sha256": "df6291ae6e76cd570a6213c2b47e1f459174a9f77a6d5d89bf72c198e933a35d",
-      "size": 25584
+      "sha256": "250c41cbe79fbc98a58c9ae450de6ad588008098e9246b958e76c00ad7941e45",
+      "size": 25558
     },
     {
       "path": "scripts/validate-image-config.mjs",

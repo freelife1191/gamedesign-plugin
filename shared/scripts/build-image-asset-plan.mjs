@@ -1,5 +1,6 @@
 import { validateImageAssetManifest } from "./validate-image-assets.mjs";
 import { validateQualityProfile } from "./validate-quality-profile.mjs";
+import { hasCredentialOrEncodedPayload } from "./lib/image-input-safety.mjs";
 
 const assetTypes = new Set([
   "character", "npc", "monster-boss", "skill-vfx", "environment-landmark", "item-equipment",
@@ -16,10 +17,7 @@ function selectorError(code) {
 }
 
 function selectorUnsafeString(value) {
-  return /(?:api[_ -]?key|authorization|bearer)/iu.test(value)
-    || /\bdata:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[a-z0-9+/=]+\b/iu.test(value)
-    || /\bbase64\b/iu.test(value)
-    || /\b(?:sk|rk|pk)_[A-Za-z0-9_-]{8,}\b/iu.test(value);
+  return hasCredentialOrEncodedPayload(value);
 }
 
 function assertSafeSelectionStrings(value, path = []) {

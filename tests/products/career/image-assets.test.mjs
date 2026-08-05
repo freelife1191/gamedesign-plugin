@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { deflateSync } from "node:zlib";
 
 import {
   generateImageAssetWorkflow,
@@ -38,12 +39,20 @@ const planImageAssetWorkflow = (options) => planImageAssetWorkflowBase({ ...opti
 const runImageAssetWorkflow = (options) => runImageAssetWorkflowBase({ ...options, patternCatalog: options?.patternCatalog ?? injectedPatternCatalog });
 
 function png() {
-  const buffer = Buffer.alloc(33);
-  buffer.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
-  buffer.writeUInt32BE(1024, 16);
-  buffer.writeUInt32BE(1024, 20);
-  buffer.set([8, 6, 0, 0, 0], 24);
-  return buffer;
+  const crc32 = (bytes) => {
+    let crc = 0xffffffff;
+    for (const byte of bytes) { crc ^= byte; for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
+    return (crc ^ 0xffffffff) >>> 0;
+  };
+  const chunk = (type, data) => {
+    const bytes = Buffer.alloc(12 + data.length);
+    bytes.writeUInt32BE(data.length, 0); bytes.write(type, 4, "ascii"); data.copy(bytes, 8);
+    bytes.writeUInt32BE(crc32(bytes.subarray(4, 8 + data.length)), 8 + data.length);
+    return bytes;
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(1024, 0); header.writeUInt32BE(1024, 4); header.set([8, 6, 0, 0, 0], 8);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk("IHDR", header), chunk("IDAT", deflateSync(Buffer.alloc(1024 * (1024 * 4 + 1)))), chunk("IEND", Buffer.alloc(0))]);
 }
 
 async function workflowRoot(t, prefix) {
@@ -98,6 +107,19 @@ test("Career replanning requires review when the prior compiled prompt binding d
   changed.assets[0].prompt_digest = createHash("sha256").update(changed.assets[0].prompt).digest("hex");
   const next = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile, existingManifest: changed });
   assert.equal(next.manifest.assets[0].planning.disposition, "replan-review-required");
+  const promptPackage = JSON.parse(await readFile(path.join(root, "assets/prompts/image-prompts.json"), "utf8"));
+  assert.equal(promptPackage.prompts[0].planning_disposition, next.manifest.assets[0].planning.disposition);
+});
+
+test("Career replanning keeps an existing review-required prompt binding sticky in the manifest and package", async (t) => {
+  const root = await workflowRoot(t, "career-replan-sticky-");
+  const first = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+  const existing = structuredClone(first.manifest);
+  existing.assets[0].planning.disposition = "replan-review-required";
+  const next = await planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile, existingManifest: existing });
+  const promptPackage = JSON.parse(await readFile(path.join(root, "assets/prompts/image-prompts.json"), "utf8"));
+  assert.equal(next.manifest.assets[0].planning.disposition, "replan-review-required");
+  assert.equal(promptPackage.prompts[0].planning_disposition, "replan-review-required");
 });
 
 test("Career generate-image-assets uses stable user choices and the configured provider truthfully", async () => {
