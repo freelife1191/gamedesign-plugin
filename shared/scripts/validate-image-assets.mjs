@@ -16,6 +16,11 @@ const qualities = new Set(["low", "medium", "high", "auto"]);
 const outputFormats = new Set(["png", "jpeg", "webp", "svg"]);
 const backgrounds = new Set(["transparent", "opaque", "contextual"]);
 const rightsDecisions = new Set(["approved", "restricted", "rejected", "needs-review"]);
+const effectiveRightsStatuses = new Set(["unreviewed", "active", "restricted", "revoked"]);
+const reviewContracts = Object.freeze({
+  "document-approved": Object.freeze({ reviewer_kind: "human", reviewer_role: "visual-reviewer", review_scope: "document-visual" }),
+  "production-candidate": Object.freeze({ reviewer_kind: "human", reviewer_role: "rights-provenance-reviewer", review_scope: "production-rights-provenance" }),
+});
 const assetIdPattern = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const safeIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const sourceSectionPattern = /^content\.md#[a-z][a-z0-9-]*$/u;
@@ -50,6 +55,13 @@ function pushRequiredString(errors, value, pathName, code = "missing_required") 
   if (!nonEmptyString(value)) errors.push(error(code, pathName, "A non-empty value is required."));
 }
 
+function rejectUnknownProperties(errors, value, allowedProperties, pathName) {
+  if (!isObject(value)) return;
+  for (const key of Object.keys(value)) {
+    if (!allowedProperties.has(key)) errors.push(error("unknown_property", `${pathName}${pathName ? "." : ""}${key}`, "Unknown properties are not allowed."));
+  }
+}
+
 function validateEvidencePaths(errors, evidencePaths, pathName, artifactRoot) {
   if (!Array.isArray(evidencePaths) || evidencePaths.length === 0) {
     errors.push(error("missing_review_evidence", pathName, "At least one in-artifact evidence path is required."));
@@ -68,8 +80,19 @@ function validateReviewRecord(errors, review, index, artifactRoot) {
     errors.push(error("invalid_review_record", reviewPath, "Review records must be objects."));
     return;
   }
+  rejectUnknownProperties(errors, review, new Set([
+    "state", "reviewer", "reviewer_kind", "reviewer_role", "review_scope", "reviewed_at", "evidence_paths", "rights_decision",
+  ]), reviewPath);
   if (!approvalStates.has(review.state) || review.state === "concept-draft") {
     errors.push(error("invalid_review_state", `${reviewPath}.state`, "Review records must name an approval state."));
+  }
+  const contract = reviewContracts[review.state];
+  if (review.reviewer_kind !== "human") errors.push(error("invalid_reviewer_kind", `${reviewPath}.reviewer_kind`, "Approval reviewers must be human."));
+  if (!contract || review.reviewer_role !== contract.reviewer_role) {
+    errors.push(error("invalid_reviewer_role", `${reviewPath}.reviewer_role`, "Reviewer role does not match the approval stage."));
+  }
+  if (!contract || review.review_scope !== contract.review_scope) {
+    errors.push(error("invalid_review_scope", `${reviewPath}.review_scope`, "Review scope does not match the approval stage."));
   }
   pushRequiredString(errors, review.reviewer, `${reviewPath}.reviewer`, "missing_reviewer");
   if (!nonEmptyString(review.reviewed_at) || Number.isNaN(Date.parse(review.reviewed_at))) {
@@ -81,15 +104,33 @@ function validateReviewRecord(errors, review, index, artifactRoot) {
   }
 }
 
+function isMatchingHumanReview(review, state) {
+  const contract = reviewContracts[state];
+  return isObject(review) && review.state === state && review.reviewer_kind === contract.reviewer_kind
+    && review.reviewer_role === contract.reviewer_role && review.review_scope === contract.review_scope
+    && nonEmptyString(review.reviewer) && Array.isArray(review.evidence_paths) && review.evidence_paths.length > 0;
+}
+
 function hasApprovedReview(asset, state) {
-  return Array.isArray(asset.reviews) && asset.reviews.some((review) => review?.state === state && review.rights_decision === "approved"
-    && nonEmptyString(review.reviewer) && Array.isArray(review.evidence_paths) && review.evidence_paths.length > 0);
+  return Array.isArray(asset.reviews) && asset.reviews.some((review) => isMatchingHumanReview(review, state) && review.rights_decision === "approved");
+}
+
+function latestProductionRightsReview(asset) {
+  if (!Array.isArray(asset.reviews)) return undefined;
+  for (let index = asset.reviews.length - 1; index >= 0; index -= 1) {
+    if (isMatchingHumanReview(asset.reviews[index], "production-candidate")) return asset.reviews[index];
+  }
+  return undefined;
 }
 
 function validateAsset(asset, index, artifactRoot) {
   const errors = [];
   const assetPath = `assets[${index}]`;
   if (!isObject(asset)) return [error("invalid_asset", assetPath, "Assets must be objects.")];
+  rejectUnknownProperties(errors, asset, new Set([
+    "asset_id", "type", "requirement", "generation_state", "approval_state", "purpose", "placement", "alt_text", "readability",
+    "art_brief", "prompt", "output", "provider", "rights", "reviews", "technical_fit", "gameplay_readability",
+  ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
   if (!assetTypes.has(asset.type)) errors.push(error("invalid_asset_type", `${assetPath}.type`, "Asset type is not approved."));
   if (!requirements.has(asset.requirement)) errors.push(error("invalid_requirement", `${assetPath}.requirement`, "Asset requirement is not approved."));
@@ -100,6 +141,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset.placement)) {
     errors.push(error("invalid_placement", `${assetPath}.placement`, "A document placement binding is required."));
   } else {
+    rejectUnknownProperties(errors, asset.placement, new Set(["document_slot", "source_section"]), `${assetPath}.placement`);
     if (!documentSlots.has(asset.placement.document_slot)) errors.push(error("invalid_document_slot", `${assetPath}.placement.document_slot`, "Document slot is not approved."));
     if (!sourceSectionPattern.test(asset.placement.source_section ?? "")) errors.push(error("invalid_source_section", `${assetPath}.placement.source_section`, "Source section must bind to a content.md heading."));
   }
@@ -109,6 +151,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset.art_brief)) {
     errors.push(error("invalid_art_brief", `${assetPath}.art_brief`, "A complete art brief is required."));
   } else {
+    rejectUnknownProperties(errors, asset.art_brief, new Set(["subject", "visual_style", "composition", "preserve", "exclude"]), `${assetPath}.art_brief`);
     for (const field of ["subject", "visual_style", "composition"]) pushRequiredString(errors, asset.art_brief[field], `${assetPath}.art_brief.${field}`);
     for (const field of ["preserve", "exclude"]) {
       if (!Array.isArray(asset.art_brief[field]) || asset.art_brief[field].length === 0 || !asset.art_brief[field].every(nonEmptyString)) {
@@ -121,6 +164,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset.output)) {
     errors.push(error("invalid_output", `${assetPath}.output`, "Output details are required."));
   } else {
+    rejectUnknownProperties(errors, asset.output, new Set(["path", "width", "height", "aspect_ratio", "format", "background"]), `${assetPath}.output`);
     if (!safeRelativePath(asset.output.path, artifactRoot) || !asset.output.path.startsWith("assets/generated/")) {
       errors.push(error("path_outside_artifact", `${assetPath}.output.path`, "Generated output must be a relative path under assets/generated/."));
     }
@@ -137,6 +181,7 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset.provider)) {
     errors.push(error("invalid_provider", `${assetPath}.provider`, "Provider, model, and quality are required."));
   } else {
+    rejectUnknownProperties(errors, asset.provider, new Set(["name", "model", "quality"]), `${assetPath}.provider`);
     if (!safeIdentifierPattern.test(asset.provider.name ?? "")) errors.push(error("invalid_provider_name", `${assetPath}.provider.name`, "Provider name is not safe."));
     if (!safeIdentifierPattern.test(asset.provider.model ?? "")) errors.push(error("invalid_provider_model", `${assetPath}.provider.model`, "Provider model is not safe."));
     if (!qualities.has(asset.provider.quality)) errors.push(error("invalid_provider_quality", `${assetPath}.provider.quality`, "Provider quality is not approved."));
@@ -145,8 +190,13 @@ function validateAsset(asset, index, artifactRoot) {
   if (!isObject(asset.rights)) {
     errors.push(error("missing_rights_data", `${assetPath}.rights`, "Rights and provenance data are required."));
   } else {
-    for (const field of ["provenance", "rights_holder", "license"]) {
+    rejectUnknownProperties(errors, asset.rights, new Set(["provenance", "rights_holder", "license", "effective_status", "status_reason"]), `${assetPath}.rights`);
+    for (const field of ["provenance", "rights_holder", "license", "effective_status"]) {
       if (!nonEmptyString(asset.rights[field])) errors.push(error("missing_rights_data", `${assetPath}.rights.${field}`, "Rights and provenance data are required."));
+    }
+    if (!effectiveRightsStatuses.has(asset.rights.effective_status)) errors.push(error("invalid_rights_effective_status", `${assetPath}.rights.effective_status`, "Rights effective status is not approved."));
+    if (["restricted", "revoked"].includes(asset.rights.effective_status) && !nonEmptyString(asset.rights.status_reason)) {
+      errors.push(error("missing_rights_status_reason", `${assetPath}.rights.status_reason`, "Restricted or revoked rights require a reason."));
     }
   }
 
@@ -167,6 +217,10 @@ function validateAsset(asset, index, artifactRoot) {
     if (!hasApprovedReview(asset, "production-candidate")) {
       errors.push(error("missing_production_approval", `${assetPath}.reviews`, "Production candidacy needs named human rights/provenance approval and evidence."));
     }
+    const latestRightsReview = latestProductionRightsReview(asset);
+    if (!latestRightsReview || latestRightsReview.rights_decision !== "approved" || asset.rights?.effective_status !== "active") {
+      errors.push(error("rights_not_effective", `${assetPath}.rights.effective_status`, "The latest human rights review must keep rights active for a production candidate."));
+    }
   }
   return errors;
 }
@@ -177,6 +231,7 @@ export function validateImageAssetManifest(value, { artifactRoot } = {}) {
   if (!isObject(value)) {
     return { ok: false, errors: [error("invalid_manifest", "", "Image asset manifest must be an object.")], warnings, counts: { assets: 0, generation: {}, approval: {} } };
   }
+  rejectUnknownProperties(errors, value, new Set(["schema_version", "assets"]), "");
   if (value.schema_version !== 1) errors.push(error("invalid_schema_version", "schema_version", "Schema version 1 is required."));
   if (!Array.isArray(value.assets)) errors.push(error("invalid_assets", "assets", "Assets must be an array."));
   const assets = Array.isArray(value.assets) ? value.assets : [];
@@ -206,6 +261,7 @@ function transitionError(message) {
 export function applyImageReviewTransition(asset, {
   targetState,
   reviewer,
+  reviewerKind = "human",
   reviewedAt,
   evidencePaths,
   rightsDecision,
@@ -217,6 +273,7 @@ export function applyImageReviewTransition(asset, {
     : currentState === "document-approved" ? "production-candidate" : undefined;
   if (targetState !== expectedTarget) transitionError("skipped or invalid approval transition");
   if (!nonEmptyString(reviewer)) transitionError("reviewer is required");
+  if (reviewerKind !== "human") transitionError("reviewer must be human");
   if (!nonEmptyString(reviewedAt) || Number.isNaN(Date.parse(reviewedAt))) transitionError("reviewedAt must be a valid timestamp");
   if (!rightsDecisions.has(rightsDecision)) transitionError("rights decision is required");
   if (rightsDecision !== "approved") transitionError("approval requires an approved rights decision");
@@ -228,9 +285,17 @@ export function applyImageReviewTransition(asset, {
   if (!sourceValidation.ok) transitionError(sourceValidation.errors.map(({ code }) => code).join(", "));
   const next = cloneAsset(asset);
   next.approval_state = targetState;
+  if (targetState === "production-candidate") {
+    next.rights = { ...next.rights, effective_status: "active" };
+    delete next.rights.status_reason;
+  }
+  const contract = reviewContracts[targetState];
   next.reviews = [...next.reviews, {
     state: targetState,
     reviewer: reviewer.trim(),
+    reviewer_kind: contract.reviewer_kind,
+    reviewer_role: contract.reviewer_role,
+    review_scope: contract.review_scope,
     reviewed_at: reviewedAt,
     evidence_paths: [...evidencePaths],
     rights_decision: rightsDecision,

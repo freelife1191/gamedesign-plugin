@@ -25,6 +25,52 @@ const assetTypes = [
 ];
 const requirements = ["required", "recommended", "variant"];
 
+function schemaAccepts(value, rootSchema, externalSchemas, schema = rootSchema) {
+  if (schema.$ref) {
+    if (schema.$ref.startsWith("#/")) {
+      const target = schema.$ref.slice(2).split("/").reduce((current, segment) => current[segment], rootSchema);
+      return schemaAccepts(value, rootSchema, externalSchemas, target);
+    }
+    return schemaAccepts(value, externalSchemas.get(schema.$ref), externalSchemas);
+  }
+  if (Object.hasOwn(schema, "const") && value !== schema.const) return false;
+  if (schema.enum && !schema.enum.includes(value)) return false;
+  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, rootSchema, externalSchemas, part))) return false;
+  if (schema.if && schemaAccepts(value, rootSchema, externalSchemas, schema.if)
+    && schema.then && !schemaAccepts(value, rootSchema, externalSchemas, schema.then)) return false;
+  if (schema.type === "object" || schema.properties || schema.required || schema.additionalProperties !== undefined) {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+    if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
+    if (schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) return false;
+    return Object.entries(value).every(([key, child]) => !schema.properties?.[key]
+      || schemaAccepts(child, rootSchema, externalSchemas, schema.properties[key]));
+  }
+  if (schema.type === "array" || schema.items || schema.contains || schema.minContains !== undefined) {
+    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0)) return false;
+    if (schema.contains) {
+      const matches = value.filter((item) => schemaAccepts(item, rootSchema, externalSchemas, schema.contains)).length;
+      if (matches < (schema.minContains ?? 1)) return false;
+    }
+    return !schema.items || value.every((item) => schemaAccepts(item, rootSchema, externalSchemas, schema.items));
+  }
+  if (schema.type === "string") return typeof value === "string" && value.length >= (schema.minLength ?? 0)
+    && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
+  if (schema.type === "integer") return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY)
+    && value <= (schema.maximum ?? Number.POSITIVE_INFINITY);
+  return true;
+}
+
+async function imageAssetSchema() {
+  const [manifestSchema, reviewSchema] = await Promise.all([
+    readFile(new URL("../../shared/image-assets/schema/image-assets.schema.json", import.meta.url), "utf8"),
+    readFile(new URL("../../shared/image-assets/schema/image-review.schema.json", import.meta.url), "utf8"),
+  ]);
+  return {
+    manifestSchema: JSON.parse(manifestSchema),
+    externalSchemas: new Map([["image-review.schema.json", JSON.parse(reviewSchema)]]),
+  };
+}
+
 async function artifactRoot(t) {
   const root = await mkdtemp(path.join(tmpdir(), "image-assets-test-"));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -64,6 +110,7 @@ function manifest(overrides = {}) {
       provenance: "AI-generated from the recorded prompt.",
       rights_holder: "Game Design Team",
       license: "internal-production-use",
+      effective_status: "unreviewed",
     },
     reviews: [],
     technical_fit: "Fits the intended 1024px PNG delivery.",
@@ -78,6 +125,23 @@ function deepFreeze(value) {
     Object.freeze(value);
   }
   return value;
+}
+
+function productionCandidate(root) {
+  const documentApproved = applyImageReviewTransition(manifest().assets[0], {
+    targetState: "document-approved",
+    reviewer: "Minji Kim",
+    reviewedAt: "2026-08-05T10:00:00Z",
+    evidencePaths: ["evidence.yml"],
+    rightsDecision: "approved",
+  }, { artifactRoot: root });
+  return applyImageReviewTransition(documentApproved, {
+    targetState: "production-candidate",
+    reviewer: "Jae Park",
+    reviewedAt: "2026-08-05T11:00:00Z",
+    evidencePaths: ["decisions/0001-image-rights.md"],
+    rightsDecision: "approved",
+  }, { artifactRoot: root });
 }
 
 test("validates a complete planned manifest without changing its input", async (t) => {
@@ -159,6 +223,104 @@ test("returns structured validation errors when an approved asset has no review 
   assert.ok(result.errors.some(({ code }) => code === "missing_document_approval"));
 });
 
+test("requires human reviewers with closed roles and scopes for each approval stage", async (t) => {
+  const root = await artifactRoot(t);
+  const { manifestSchema, externalSchemas } = await imageAssetSchema();
+  const automationApproval = manifest({ asset: {
+    approval_state: "document-approved",
+    reviews: [{
+      state: "document-approved",
+      reviewer: "Image Automation",
+      reviewer_kind: "automation",
+      reviewer_role: "visual-reviewer",
+      review_scope: "document-visual",
+      reviewed_at: "2026-08-05T10:00:00Z",
+      evidence_paths: ["evidence.yml"],
+      rights_decision: "approved",
+    }],
+  } });
+  assert.equal(validateImageAssetManifest(automationApproval, { artifactRoot: root }).ok, false);
+  assert.equal(schemaAccepts(automationApproval, manifestSchema, externalSchemas), false);
+  assert.throws(() => applyImageReviewTransition(manifest().assets[0], {
+    targetState: "document-approved",
+    reviewer: "Image Automation",
+    reviewerKind: "automation",
+    reviewedAt: "2026-08-05T10:00:00Z",
+    evidencePaths: ["evidence.yml"],
+    rightsDecision: "approved",
+  }, { artifactRoot: root }), /human/i);
+});
+
+test("the latest human rights review invalidates a production candidate when restricted or revoked", async (t) => {
+  const root = await artifactRoot(t);
+  const candidate = productionCandidate(root);
+  for (const [rightsDecision, effectiveStatus] of [["restricted", "restricted"], ["rejected", "revoked"]]) {
+    const revoked = structuredClone(candidate);
+    revoked.rights.effective_status = effectiveStatus;
+    revoked.rights.status_reason = "Rights owner changed the permitted use.";
+    revoked.reviews.push({
+      state: "production-candidate",
+      reviewer: "Jae Park",
+      reviewer_kind: "human",
+      reviewer_role: "rights-provenance-reviewer",
+      review_scope: "production-rights-provenance",
+      reviewed_at: "2026-08-05T12:00:00Z",
+      evidence_paths: ["decisions/0002-rights-restriction.md"],
+      rights_decision: rightsDecision,
+    });
+    const result = validateImageAssetManifest({ schema_version: 1, assets: [revoked] }, { artifactRoot: root });
+    assert.equal(result.ok, false, rightsDecision);
+    assert.ok(result.errors.some(({ code }) => code === "rights_not_effective"), rightsDecision);
+  }
+});
+
+test("closes manifest and every nested object against release, legal, and unknown assertions", async (t) => {
+  const root = await artifactRoot(t);
+  const { manifestSchema, externalSchemas } = await imageAssetSchema();
+  const cases = [
+    ["manifest", (value) => { value.release_approved = true; }],
+    ["asset", (value) => { value.assets[0].legal_approved = true; }],
+    ["placement", (value) => { value.assets[0].placement.release_approved = true; }],
+    ["art brief", (value) => { value.assets[0].art_brief.legal_approved = true; }],
+    ["output", (value) => { value.assets[0].output.release_approved = true; }],
+    ["provider", (value) => { value.assets[0].provider.legal_approved = true; }],
+    ["rights", (value) => { value.assets[0].rights.release_approved = true; }],
+    ["review", (value) => {
+      value.assets[0].approval_state = "document-approved";
+      value.assets[0].reviews = [{
+        state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer",
+        review_scope: "document-visual", reviewed_at: "2026-08-05T10:00:00Z", evidence_paths: ["evidence.yml"],
+        rights_decision: "approved", legal_approved: true,
+      }];
+    }],
+  ];
+  for (const [name, mutate] of cases) {
+    const value = manifest();
+    mutate(value);
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false, `${name}: runtime`);
+    assert.equal(schemaAccepts(value, manifestSchema, externalSchemas), false, `${name}: schema`);
+  }
+});
+
+test("schema and runtime both require approval reviews and normalized generated paths", async (t) => {
+  const root = await artifactRoot(t);
+  const { manifestSchema, externalSchemas } = await imageAssetSchema();
+  const cases = [
+    ["document approval review", manifest({ asset: { approval_state: "document-approved", reviews: [] } })],
+    ["production approval review", manifest({ asset: { approval_state: "production-candidate", reviews: [], rights: {
+      ...manifest().assets[0].rights, effective_status: "active",
+    } } })],
+    ["normalized generated output", manifest({ asset: { output: {
+      ...manifest().assets[0].output,
+      path: "assets/generated/../../outside.png",
+    } } })],
+  ];
+  for (const [name, value] of cases) {
+    assert.equal(validateImageAssetManifest(value, { artifactRoot: root }).ok, false, `${name}: runtime`);
+    assert.equal(schemaAccepts(value, manifestSchema, externalSchemas), false, `${name}: schema`);
+  }
+});
+
 test("applies approval states in order, keeps input immutable, and records named evidence", async (t) => {
   const root = await artifactRoot(t);
   const original = deepFreeze(manifest());
@@ -179,6 +341,9 @@ test("applies approval states in order, keeps input immutable, and records named
   }, { artifactRoot: root });
   assert.equal(documentApproved.approval_state, "document-approved");
   assert.equal(documentApproved.reviews.at(-1).reviewer, "Minji Kim");
+  assert.deepEqual(documentApproved.reviews.at(-1).reviewer_kind, "human");
+  assert.deepEqual(documentApproved.reviews.at(-1).reviewer_role, "visual-reviewer");
+  assert.deepEqual(documentApproved.reviews.at(-1).review_scope, "document-visual");
   assert.equal(original.assets[0].approval_state, "concept-draft");
   assert.deepEqual(validateImageAssetManifest({ schema_version: 1, assets: [documentApproved] }, { artifactRoot: root }).errors, []);
 
@@ -191,6 +356,8 @@ test("applies approval states in order, keeps input immutable, and records named
   }, { artifactRoot: root });
   assert.equal(productionCandidate.approval_state, "production-candidate");
   assert.equal(productionCandidate.reviews.at(-1).state, "production-candidate");
+  assert.equal(productionCandidate.rights.effective_status, "active");
+  assert.deepEqual(productionCandidate.reviews.at(-1).reviewer_role, "rights-provenance-reviewer");
 });
 
 test("rejects approval records without reviewers, rights decisions, or in-artifact evidence", async (t) => {

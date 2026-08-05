@@ -56,7 +56,7 @@
           "additionalProperties": false,
           "required": ["path", "width", "height", "aspect_ratio", "format", "background"],
           "properties": {
-            "path": { "type": "string", "pattern": "^assets/generated/[A-Za-z0-9._/-]+$" },
+            "path": { "type": "string", "pattern": "^(?!.*(?:^|/)\\.\\.?(?:/|$))assets/generated/[A-Za-z0-9._/-]+$" },
             "width": { "type": "integer", "minimum": 1, "maximum": 8192 },
             "height": { "type": "integer", "minimum": 1, "maximum": 8192 },
             "aspect_ratio": { "type": "string", "pattern": "^\\d{1,4}:\\d{1,4}$" },
@@ -77,12 +77,20 @@
         "rights": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["provenance", "rights_holder", "license"],
+          "required": ["provenance", "rights_holder", "license", "effective_status"],
           "properties": {
             "provenance": { "type": "string", "minLength": 1 },
             "rights_holder": { "type": "string", "minLength": 1 },
-            "license": { "type": "string", "minLength": 1 }
-          }
+            "license": { "type": "string", "minLength": 1 },
+            "effective_status": { "enum": ["unreviewed", "active", "restricted", "revoked"] },
+            "status_reason": { "type": "string", "minLength": 1 }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "effective_status": { "enum": ["restricted", "revoked"] } }, "required": ["effective_status"] },
+              "then": { "required": ["status_reason"] }
+            }
+          ]
         },
         "reviews": { "type": "array", "items": { "$ref": "image-review.schema.json" } },
         "technical_fit": { "type": "string", "minLength": 1 },
@@ -90,8 +98,51 @@
       },
       "allOf": [
         {
+          "if": { "properties": { "approval_state": { "enum": ["document-approved", "production-candidate"] } }, "required": ["approval_state"] },
+          "then": {
+            "properties": {
+              "reviews": {
+                "contains": {
+                  "type": "object",
+                  "required": ["state", "reviewer_kind", "reviewer_role", "review_scope", "rights_decision"],
+                  "properties": {
+                    "state": { "const": "document-approved" },
+                    "reviewer_kind": { "const": "human" },
+                    "reviewer_role": { "const": "visual-reviewer" },
+                    "review_scope": { "const": "document-visual" },
+                    "rights_decision": { "const": "approved" }
+                  }
+                },
+                "minContains": 1
+              }
+            }
+          }
+        },
+        {
           "if": { "properties": { "approval_state": { "const": "production-candidate" } }, "required": ["approval_state"] },
-          "then": { "required": ["technical_fit", "gameplay_readability"] }
+          "then": {
+            "required": ["technical_fit", "gameplay_readability"],
+            "properties": {
+              "rights": {
+                "properties": { "effective_status": { "const": "active" } },
+                "required": ["effective_status"]
+              },
+              "reviews": {
+                "contains": {
+                  "type": "object",
+                  "required": ["state", "reviewer_kind", "reviewer_role", "review_scope", "rights_decision"],
+                  "properties": {
+                    "state": { "const": "production-candidate" },
+                    "reviewer_kind": { "const": "human" },
+                    "reviewer_role": { "const": "rights-provenance-reviewer" },
+                    "review_scope": { "const": "production-rights-provenance" },
+                    "rights_decision": { "const": "approved" }
+                  }
+                },
+                "minContains": 1
+              }
+            }
+          }
         }
       ]
     }
