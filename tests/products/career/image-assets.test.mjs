@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { reviewImageAssetWorkflow, runImageAssetWorkflow } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import { planImageAssetWorkflow, reviewImageAssetWorkflow, runImageAssetWorkflow } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import { validatePngBuffer } from "../../../shared/scripts/lib/image-file-validation.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -22,6 +24,23 @@ const artifact = { artifact_id: "career-workflow-test", image_needs: [{
   slot_id: "hero", type: "character", scene: "A clear scene.", subject: "A safe silhouette.", composition: "Centered.",
   visual_style: "Original illustration.", readability: "Readable.", width: 1024, height: 1024,
 }] };
+
+function png() {
+  const buffer = Buffer.alloc(33);
+  buffer.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+  buffer.writeUInt32BE(1024, 16);
+  buffer.writeUInt32BE(1024, 20);
+  buffer.set([8, 6, 0, 0, 0], 24);
+  return buffer;
+}
+
+async function workflowRoot(t, prefix) {
+  const root = await mkdtemp(path.join(tmpdir(), prefix));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await mkdir(path.join(root, "assets", "prompts"), { recursive: true });
+  await mkdir(path.join(root, "decisions"));
+  return root;
+}
 
 test("Career plan-image-assets preserves profile slots, count evidence, and Skillstead QA handoff", async () => {
   const skill = await readFile(path.join(pluginRoot, "skills/plan-image-assets/SKILL.md"), "utf8");
@@ -105,31 +124,139 @@ test("Career routing and specialist roles expose image workflows without self-ap
 });
 
 test("Career executes a selected host workflow with truthful unreported applied provenance", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "career-image-workflow-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await workflowRoot(t, "career-image-workflow-");
   let hostCalls = 0;
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
-    selectedAssetIds: ["hero"], selectionSource: "user-explicit", codexCapability: { status: "available" },
+    selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-career-host", asset_ids: ["hero"] }, codexCapability: { status: "available" },
     hostGenerate: async ({ jobs }) => {
       hostCalls += 1;
       assert.deepEqual(jobs.map(({ asset_id }) => asset_id), ["hero"]);
-      return { results: [{ asset_id: "hero", generation_state: "generated", provenance: { provider: "codex-host" } }], failures: [] };
+      await mkdir(path.join(root, "assets", "generated"));
+      const bytes = png();
+      await writeFile(path.join(root, jobs[0].output.path), bytes);
+      const inspected = validatePngBuffer(bytes, jobs[0].output);
+      return { results: [{ asset_id: "hero", generation_state: "generated", output: { ...jobs[0].output, digest: inspected.digest }, provenance: {
+        provider: "codex-host", prompt_digest: createHash("sha256").update(jobs[0].prompt).digest("hex"), output_digest: inspected.digest,
+      } }], failures: [] };
     },
   });
 
   assert.equal(hostCalls, 1);
-  assert.deepEqual(result.selection, { mode: "select", asset_ids: ["hero"], source: "user-explicit" });
+  assert.deepEqual(result.selection, { mode: "select", asset_ids: ["hero"], source: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-career-host", asset_ids: ["hero"] } });
   assert.deepEqual(result.manifest.assets[0].provider, {
     name: "codex-host", requested_model: "gpt-image-2", requested_quality: "low", applied_model: null, applied_quality: null,
   });
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
 });
 
+test("Career requires closed host-user selection evidence before invoking a selected host provider", async (t) => {
+  const root = await workflowRoot(t, "career-selection-receipt-");
+  let hostCalls = 0;
+  for (const selectionReceipt of [
+    undefined,
+    { kind: "host-user-image-selection", channel: "agent-generated", event_id: "evt-1", asset_ids: ["hero"] },
+    { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-1", asset_ids: [] },
+    { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-1", asset_ids: ["hero", "hero"] },
+    { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-1", asset_ids: ["other"] },
+  ]) {
+    await assert.rejects(() => runImageAssetWorkflow({
+      artifactRoot: root, artifact, qualityProfile: profile,
+      config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
+      selectedAssetIds: ["hero"], selectionReceipt, codexCapability: { status: "available" },
+      hostGenerate: async () => {
+        hostCalls += 1;
+        return { results: [{ asset_id: "hero", generation_state: "generated", provenance: { provider: "codex-host" } }], failures: [] };
+      },
+    }), /selection/i);
+  }
+  assert.equal(hostCalls, 0);
+});
+
+test("Career never writes workflow files through symlinked artifact roots, ancestors, or targets", async (t) => {
+  const parent = await mkdtemp(path.join(tmpdir(), "career-workflow-write-"));
+  const outside = await mkdtemp(path.join(tmpdir(), "career-workflow-outside-"));
+  t.after(() => Promise.all([rm(parent, { recursive: true, force: true }), rm(outside, { recursive: true, force: true })]));
+  const root = path.join(parent, "artifact");
+  await mkdir(root);
+  const run = () => planImageAssetWorkflow({ artifactRoot: root, artifact, qualityProfile: profile });
+
+  await writeFile(path.join(outside, "image-assets.yml"), "outside-root-sentinel\n");
+  await symlink(outside, path.join(root, "assets"));
+  await assert.rejects(run(), /unsafe|symlink/i);
+  assert.equal(await readFile(path.join(outside, "image-assets.yml"), "utf8"), "outside-root-sentinel\n");
+  await rm(path.join(root, "assets"));
+
+  await mkdir(path.join(root, "assets", "prompts"), { recursive: true });
+  await writeFile(path.join(outside, "target.txt"), "outside-target-sentinel\n");
+  await symlink(path.join(outside, "target.txt"), path.join(root, "assets", "image-assets.yml"));
+  await assert.rejects(run(), /unsafe|symlink/i);
+  assert.equal(await readFile(path.join(outside, "target.txt"), "utf8"), "outside-target-sentinel\n");
+});
+
+test("Career does not promote a host result without a verified artifact-local output", async (t) => {
+  const root = await workflowRoot(t, "career-host-output-");
+  const result = await runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
+    selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-host-output", asset_ids: ["hero"] },
+    codexCapability: { status: "available" },
+    hostGenerate: async () => ({ results: [{ asset_id: "hero", generation_state: "generated", output: {
+      path: "assets/generated/hero.png", width: 1024, height: 1024, aspect_ratio: "1:1", format: "png", background: "contextual",
+    }, provenance: { provider: "codex-host", prompt_digest: "0".repeat(64), output_digest: "0".repeat(64) } }], failures: [] }),
+  });
+  assert.equal(result.manifest.assets[0].generation_state, "qa-failed");
+  assert.equal(result.manifest.assets[0].provider.name, "codex-host");
+});
+
+test("Career marks corrupt, mismatched-path, and mismatched-digest host outputs as QA failures", async (t) => {
+  for (const [name, resultFor] of [
+    ["corrupt", (job) => ({ outputPath: job.output.path, bytes: Buffer.from("not-a-png"), digest: "0".repeat(64) })],
+    ["wrong path", (job) => ({ outputPath: "assets/generated/other.png", bytes: png(), digest: "0".repeat(64) })],
+    ["wrong digest", (job) => ({ outputPath: job.output.path, bytes: png(), digest: "0".repeat(64) })],
+  ]) {
+    const root = await workflowRoot(t, `career-host-${name}-`);
+    const result = await runImageAssetWorkflow({
+      artifactRoot: root, artifact, qualityProfile: profile,
+      config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
+      selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: `evt-${name.replace(" ", "-")}`, asset_ids: ["hero"] },
+      codexCapability: { status: "available" },
+      hostGenerate: async ({ jobs }) => {
+        const job = jobs[0];
+        const fixture = resultFor(job);
+        await mkdir(path.join(root, "assets", "generated"));
+        await writeFile(path.join(root, fixture.outputPath), fixture.bytes);
+        return { results: [{ asset_id: job.asset_id, generation_state: "generated", output: { ...job.output, path: fixture.outputPath, digest: fixture.digest }, provenance: {
+          provider: "codex-host", prompt_digest: createHash("sha256").update(job.prompt).digest("hex"), output_digest: fixture.digest,
+        } }], failures: [] };
+      },
+    });
+    assert.equal(result.manifest.assets[0].generation_state, "qa-failed", name);
+  }
+});
+
+test("Career review accepts only a host-supplied receipt object, not an arbitrary disk receipt", async (t) => {
+  const root = await workflowRoot(t, "career-receipt-boundary-");
+  const { manifest } = await runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile,
+    config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "unavailable" },
+  });
+  await mkdir(path.join(root, "evidence"));
+  await writeFile(path.join(root, "evidence", "review.md"), "Human evidence.\n");
+  await writeFile(path.join(root, "decisions", "image-review-evt-disk.json"), JSON.stringify({
+    schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: "evt-disk" },
+    asset_id: "hero", from_state: "concept-draft", target_state: "document-approved", decision: "approved", reviewer: "Minji Kim",
+    decided_at: "2026-08-06T00:00:00Z", rights_decision: "approved", evidence_paths: ["evidence/review.md"],
+  }));
+  await assert.rejects(() => reviewImageAssetWorkflow({
+    artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "Minji Kim",
+    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/review.md"],
+  }), /receipt/i);
+});
+
 test("Career rejects malformed host generation results before updating the manifest", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "career-host-result-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await workflowRoot(t, "career-host-result-");
   const invalidResults = [
     { results: [], failures: [], extra: true },
     { results: [{ asset_id: "unknown", generation_state: "generated", provenance: { provider: "codex-host" } }], failures: [] },
@@ -143,35 +270,49 @@ test("Career rejects malformed host generation results before updating the manif
     await assert.rejects(() => runImageAssetWorkflow({
       artifactRoot: root, artifact, qualityProfile: profile,
       config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false },
-      selectedAssetIds: ["hero"], selectionSource: "user-explicit", codexCapability: { status: "available" },
+      selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-malformed", asset_ids: ["hero"] }, codexCapability: { status: "available" },
       hostGenerate: async () => hostResult,
     }), /Host generation/i);
   }
 });
 
 test("Career rejects timestamp-only, nonexistent, and specialist-authored review evidence", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "career-image-review-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await workflowRoot(t, "career-image-review-");
   const { manifest } = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
     config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "unavailable" },
   });
-  await mkdir(path.join(root, "decisions"), { recursive: true });
-  const receiptPath = "decisions/user-image-decision.json";
   const receipt = {
     schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: "evt-career-1" },
     asset_id: "hero", from_state: "concept-draft", target_state: "document-approved", decision: "approved", reviewer: "Jae Park",
     decided_at: "2026-08-06T00:00:00Z", rights_decision: "approved", evidence_paths: ["evidence/missing.md"],
   };
-  await writeFile(path.join(root, receiptPath), `${JSON.stringify(receipt)}\n`);
   const input = {
     artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "Jae Park",
-    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/missing.md"], decisionReceiptPath: receiptPath,
+    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/missing.md"], decisionReceipt: receipt,
   };
   await assert.rejects(() => reviewImageAssetWorkflow(input), /receipt/i);
   await mkdir(path.join(root, "evidence"), { recursive: true });
   await writeFile(path.join(root, "evidence", "missing.md"), "Evidence.\n");
   receipt.capture.channel = "specialist-agent";
-  await writeFile(path.join(root, receiptPath), `${JSON.stringify(receipt)}\n`);
   await assert.rejects(() => reviewImageAssetWorkflow(input), /receipt/i);
+});
+
+test("Career rejects product specialist IDs as user decision reviewers", async (t) => {
+  const root = await workflowRoot(t, "career-agent-review-");
+  const { manifest } = await runImageAssetWorkflow({
+    artifactRoot: root, artifact, qualityProfile: profile,
+    config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "unavailable" },
+  });
+  await mkdir(path.join(root, "evidence"), { recursive: true });
+  await writeFile(path.join(root, "evidence", "review.md"), "Human evidence.\n");
+  const decisionReceipt = {
+    schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: "evt-agent-review" },
+    asset_id: "hero", from_state: "concept-draft", target_state: "document-approved", decision: "approved", reviewer: "visual-asset-reviewer",
+    decided_at: "2026-08-06T00:00:00Z", rights_decision: "approved", evidence_paths: ["evidence/review.md"],
+  };
+  await assert.rejects(() => reviewImageAssetWorkflow({
+    artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "visual-asset-reviewer",
+    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/review.md"], decisionReceipt,
+  }), /reviewer|human/i);
 });

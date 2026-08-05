@@ -21,7 +21,9 @@ Collect the validated `assets/image-assets.yml`, stable asset ID, requested stat
 4. For document approval, require placement, alt text, readability, named visual review, rights/provenance, and artifact-local evidence. For production candidacy, additionally require technical fit, gameplay readability, active rights, and named human rights/provenance evidence.
 5. Block a final derivative or document export that binds an asset below `document-approved`. When evidence is incomplete, retain only the recommendation and unresolved blockers; do not change approval state.
 
-Use `reviewImageAssetWorkflow` from packaged `scripts/run-image-asset-workflow.mjs` only after saving an artifact-local `host-user-image-decision` receipt. This is host-user-input operating evidence, not authentication; it must match the stable asset ID, transition, reviewer, rights decision, and regular non-symlink evidence files.
+Use `reviewImageAssetWorkflow` from packaged `scripts/run-image-asset-workflow.mjs` only after the host adapter captures a `host-user-image-decision` receipt. This is host-user-input operating evidence, not authentication; it must match the stable asset ID, transition, reviewer, rights decision, and regular non-symlink evidence files.
+
+Supply that closed receipt object from the host-user adapter; do not promote an arbitrary disk JSON as user input. Product specialist IDs (including `visual-asset-reviewer` and `art-brief-director`) are never named human reviewers. The workflow safely writes its event-addressed receipt after validation.
 
 ## Output contract
 

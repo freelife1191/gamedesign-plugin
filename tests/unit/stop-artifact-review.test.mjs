@@ -121,6 +121,13 @@ function documentApprovedImageManifest() {
         rights_decision: approved`);
 }
 
+function passedSvgQa(assetId = 'boss-telegraph', outputPath = 'assets/generated/boss-telegraph.svg') {
+  return JSON.stringify({
+    schema_version: 1, kind: 'skillstead-svg-qa', asset_id: assetId, output_path: outputPath,
+    lint_status: 'passed', render_status: 'passed', qa_status: 'passed',
+  });
+}
+
 test('ignores an official Stop event without the final artifact sentinel', async () => {
   const { workspace } = await workspaceWithArtifact();
   const { output } = runStop(officialPayload(workspace, { last_assistant_message: 'Normal response.' }));
@@ -226,6 +233,77 @@ test('fails closed when a managed generated image crosses a symbolic link', asyn
 
   assert.equal(output.decision, 'block');
   assert.ok(output.validation.errors.some(({ code }) => code === 'image.reference_unsafe'), JSON.stringify(output));
+});
+
+test('blocks a manifest-declared concept-draft SVG while preserving unmanaged SVG compatibility', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.svg'), '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), draftImageManifest()
+    .replaceAll('boss-telegraph.png', 'boss-telegraph.svg')
+    .replaceAll('format: png', 'format: svg'));
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Managed vector](assets/generated/boss-telegraph.svg)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.approval_required'), JSON.stringify(output));
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.svg_qa_required'), JSON.stringify(output));
+});
+
+test('requires a manifest for a canonical managed SVG reference', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'missing-manifest.svg'), '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Managed vector](assets/generated/missing-manifest.svg)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.manifest_required'), JSON.stringify(output));
+});
+
+test('accepts a canonical document-approved managed SVG only with passed lint, render, and QA evidence', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await mkdir(join(artifact, 'assets', 'qa'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.svg'), '<svg xmlns="http://www.w3.org/2000/svg"></svg>');
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
+    .replaceAll('boss-telegraph.png', 'boss-telegraph.svg')
+    .replaceAll('format: png', 'format: svg'));
+  await writeFile(join(artifact, 'assets', 'qa', 'boss-telegraph.svg-qa.json'), passedSvgQa());
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Managed vector](assets/generated/boss-telegraph.svg)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.status, 'passed');
+  assert.equal(output.validation.ok, true);
+});
+
+test('fails closed for SVG aliases, untracked outputs, and symbolic links', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  const outside = await mkdtemp(join(tmpdir(), 'game-design-svg-outside-'));
+  temporaryDirs.push(outside);
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await mkdir(join(artifact, 'assets', 'qa'));
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
+    .replaceAll('boss-telegraph.png', 'boss-telegraph.svg')
+    .replaceAll('format: png', 'format: svg'));
+  await writeFile(join(artifact, 'assets', 'qa', 'boss-telegraph.svg-qa.json'), passedSvgQa());
+  await writeFile(join(outside, 'untracked.svg'), '<svg></svg>');
+  await symlink(join(outside, 'untracked.svg'), join(artifact, 'assets', 'generated', 'untracked.svg'));
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Alias](./assets//generated/boss-telegraph.svg)\n![Untracked](assets/generated/untracked.svg)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  for (const code of ['image.reference_alias', 'image.reference_untracked', 'image.reference_unsafe']) {
+    assert.ok(output.validation.errors.some((entry) => entry.code === code), `${code}: ${JSON.stringify(output)}`);
+  }
 });
 
 test('official stop_hook_active takes priority and env retry remains a compatibility fallback', async () => {

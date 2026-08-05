@@ -163,7 +163,7 @@ function managedMarkdownImageReferences(content) {
     const raw = match[1] ?? match[2];
     if (raw.includes("?") || raw.includes("#") || raw.includes("\\") || raw.includes("\0")) continue;
     const normalized = posix.normalize(raw);
-    if (!normalized.startsWith("assets/generated/") || !/\.(?:png|jpe?g|webp)$/iu.test(normalized)) continue;
+    if (!normalized.startsWith("assets/generated/") || !/\.(?:png|jpe?g|webp|svg)$/iu.test(normalized)) continue;
     references.push({ raw, path: normalized, alias: raw !== normalized || raw !== raw.normalize("NFC") });
   }
   return references;
@@ -177,6 +177,20 @@ async function safeManagedArtifactFile(artifactPath, relativePath) {
       if ((await lstat(cursor)).isSymbolicLink()) return false;
     }
     return (await lstat(cursor)).isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function hasPassedSvgQa(artifactPath, asset) {
+  const evidencePath = `assets/qa/${asset.asset_id}.svg-qa.json`;
+  if (!(await safeManagedArtifactFile(artifactPath, evidencePath))) return false;
+  try {
+    const value = JSON.parse(await readFile(resolve(artifactPath, evidencePath), 'utf8'));
+    return value && typeof value === 'object' && !Array.isArray(value)
+      && JSON.stringify(Object.keys(value).sort()) === JSON.stringify(['asset_id', 'kind', 'lint_status', 'output_path', 'qa_status', 'render_status', 'schema_version'])
+      && value.schema_version === 1 && value.kind === 'skillstead-svg-qa' && value.asset_id === asset.asset_id && value.output_path === asset.output.path
+      && value.lint_status === 'passed' && value.render_status === 'passed' && value.qa_status === 'passed';
   } catch {
     return false;
   }
@@ -244,6 +258,11 @@ async function validateImageApprovalGate(artifactPath, requestedFormats) {
   }
   for (const [outputPath, ids] of outputIds) if (ids.length > 1) referenceErrors.push(imageGateError('image.manifest_duplicate_output', `Image manifest output is shared by multiple assets: ${outputPath}`));
   for (const reference of references) if (!outputIds.has(reference.path)) referenceErrors.push(imageGateError('image.reference_untracked', `Managed image reference is not tracked by the image manifest: ${reference.path}`));
+  for (const asset of manifest.assets) {
+    if (asset.output.format === 'svg' && references.some(({ path }) => path === asset.output.path) && !(await hasPassedSvgQa(artifactPath, asset))) {
+      referenceErrors.push(imageGateError('image.svg_qa_required', `Managed SVG requires passed Skillstead lint, render, and QA evidence: ${asset.asset_id}`));
+    }
+  }
   if (!Array.isArray(requestedFormats) || requestedFormats.length === 0) return referenceErrors;
   return [...referenceErrors, ...manifest.assets
     .filter((asset) => markdownBindsAsset(content, asset.output.path) && asset.approval_state === 'concept-draft')

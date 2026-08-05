@@ -24,6 +24,8 @@ Require a validated artifact-local `assets/image-assets.yml`, both prompt files,
 
 Use the packaged `scripts/run-image-asset-workflow.mjs` composition: `planImageAssetWorkflow` creates the manifest and prompts, `generateImageAssetWorkflow` applies user-selected stable IDs and provider policy, and host callbacks never receive the full configuration or API key.
 
+For `select`, require the host adapter to supply exactly `{kind:"host-user-image-selection",channel:"host-user-input",event_id,asset_ids}`. IDs must be the nonempty ordered stable-ID selection with no duplicates; do not accept a prose `selectionSource`, an agent/specialist channel, or an arbitrary selection file. The workflow returns and creates an event-addressed selection record without secrets.
+
 ## Output contract
 
 Return the selected stable asset IDs, mode, redacted provider decision, per-asset result, preserved prompts/placeholders, and named-human review handoff. Never emit a key, authorization header, base64 payload, or raw image bytes.

@@ -32,6 +32,14 @@ function png() {
   return buffer;
 }
 
+async function workflowRoot(t, prefix) {
+  const root = await mkdtemp(path.join(tmpdir(), prefix));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await mkdir(path.join(root, "assets", "prompts"), { recursive: true });
+  await mkdir(path.join(root, "decisions"));
+  return root;
+}
+
 test("Studio plan-image-assets makes a profile-preflight plan and hands Skillstead evidence to visual QA", async () => {
   const skill = await readFile(path.join(pluginRoot, "skills/plan-image-assets/SKILL.md"), "utf8");
 
@@ -116,13 +124,12 @@ test("Studio routing and specialist roles expose the image workflow without appr
 });
 
 test("Studio executes selected OpenAI workflow into artifact-local prompts, manifest, and selection provenance", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "studio-image-workflow-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await workflowRoot(t, "studio-image-workflow-");
   let calls = 0;
   const result = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
     config: { mode: "select", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
-    selectedAssetIds: ["hero"], selectionSource: "user-explicit",
+    selectedAssetIds: ["hero"], selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-studio-openai", asset_ids: ["hero"] },
     codexCapability: { status: "available" }, now: () => "2026-08-06T00:00:00.000Z", sleepFn: async () => {},
     fetchFn: async () => {
       calls += 1;
@@ -132,7 +139,7 @@ test("Studio executes selected OpenAI workflow into artifact-local prompts, mani
   });
 
   assert.equal(calls, 1);
-  assert.deepEqual(result.selection, { mode: "select", asset_ids: ["hero"], source: "user-explicit" });
+  assert.deepEqual(result.selection, { mode: "select", asset_ids: ["hero"], source: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-studio-openai", asset_ids: ["hero"] } });
   assert.equal(result.manifest.assets[0].generation_state, "generated");
   assert.equal(result.manifest.assets[0].approval_state, "concept-draft");
   assert.equal(JSON.parse(await readFile(path.join(root, "assets/image-assets.yml"), "utf8")).assets[0].generation_state, "generated");
@@ -141,31 +148,26 @@ test("Studio executes selected OpenAI workflow into artifact-local prompts, mani
 });
 
 test("Studio review requires an artifact-local host-user receipt rather than an agent decision", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "studio-image-review-"));
-  t.after(() => rm(root, { recursive: true, force: true }));
+  const root = await workflowRoot(t, "studio-image-review-");
   const { manifest } = await runImageAssetWorkflow({
     artifactRoot: root, artifact, qualityProfile: profile,
     config: { mode: "prompt-only", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "unavailable" },
   });
   await mkdir(path.join(root, "evidence"), { recursive: true });
-  await mkdir(path.join(root, "decisions"), { recursive: true });
   await writeFile(path.join(root, "evidence", "visual.md"), "Named visual review evidence.\n");
-  const receiptPath = "decisions/user-image-decision.json";
   const receipt = {
     schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: "evt-studio-1" },
     asset_id: "hero", from_state: "concept-draft", target_state: "document-approved", decision: "approved", reviewer: "Minji Kim",
     decided_at: "2026-08-06T00:00:00Z", rights_decision: "approved", evidence_paths: ["evidence/visual.md"],
   };
-  await writeFile(path.join(root, receiptPath), `${JSON.stringify(receipt)}\n`);
   const reviewed = await reviewImageAssetWorkflow({
     artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "Minji Kim",
-    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/visual.md"], decisionReceiptPath: receiptPath,
+    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/visual.md"], decisionReceipt: receipt,
   });
   assert.equal(reviewed.reviewedAsset.approval_state, "document-approved");
   receipt.capture.channel = "agent-generated";
-  await writeFile(path.join(root, receiptPath), `${JSON.stringify(receipt)}\n`);
   await assert.rejects(() => reviewImageAssetWorkflow({
     artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "Minji Kim",
-    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/visual.md"], decisionReceiptPath: receiptPath,
+    reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/visual.md"], decisionReceipt: receipt,
   }), /receipt/i);
 });
