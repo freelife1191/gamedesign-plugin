@@ -232,6 +232,31 @@ test("generateOpenAIImages cancels and releases a reader when a chunk exceeds th
   assert.equal(JSON.stringify(result).includes("reader cancellation detail"), false);
 });
 
+test("generateOpenAIImages redacts hostile reader, iterator, cancellation, and release failures", async (t) => {
+  const root = await staging(t);
+  const cases = [
+    ["reader-sync-read", () => ({ contentLength: "1", bodyStream: { getReader() { return { read() { throw new Error("reader-sync-read-marker"); }, async cancel() {}, releaseLock() {} }; } } })],
+    ["reader-async-read", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { throw new Error("reader-async-read-marker"); }, async cancel() {}, releaseLock() {} }; } } })],
+    ["iterator-sync-next", () => ({ bodyStream: { async cancel() {}, [Symbol.asyncIterator]() { return { next() { throw new Error("iterator-sync-next-marker"); } }; } } })],
+    ["iterator-async-next", () => ({ bodyStream: { async cancel() {}, [Symbol.asyncIterator]() { return { async next() { throw new Error("iterator-async-next-marker"); } }; } } })],
+    ["body-cancel-sync", () => ({ contentLength: String(maximumResponseBytes + 1), bodyStream: { cancel() { throw new Error("body-cancel-sync-marker"); } } })],
+    ["body-cancel-value", () => ({ contentLength: String(maximumResponseBytes + 1), bodyStream: { cancel() { return undefined; } } })],
+    ["body-cancel-reject", () => ({ contentLength: String(maximumResponseBytes + 1), bodyStream: { async cancel() { throw new Error("body-cancel-reject-marker"); } } })],
+    ["reader-cancel-sync", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, cancel() { throw new Error("reader-cancel-sync-marker"); }, releaseLock() {} }; } } })],
+    ["reader-cancel-value", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, cancel() { return undefined; }, releaseLock() {} }; } } })],
+    ["reader-cancel-reject", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, async cancel() { throw new Error("reader-cancel-reject-marker"); }, releaseLock() {} }; } } })],
+    ["release-sync", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, async cancel() {}, releaseLock() { throw new Error("release-sync-marker"); } }; } } })],
+  ];
+  for (const [name, fixture] of cases) {
+    const result = await generateOpenAIImages({
+      jobs: [job({ asset_id: `hostile-${name}`, output: { path: `assets/generated/hostile-${name}.png`, width: 1024, height: 1024, format: "png" } })], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+      fetchFn: async () => response(fixture()), sleepFn: async () => {},
+    });
+    assert.deepEqual(result.failures, [{ asset_id: `hostile-${name}`, generation_state: "qa-failed", reason: "invalid-provider-response", attempts: 1 }]);
+    assert.equal(JSON.stringify(result).includes(`${name}-marker`), false);
+  }
+});
+
 test("generateOpenAIImages retries only transient 429 and 5xx responses for at most three total attempts", async (t) => {
   const root = await staging(t);
   const sleeps = [];
@@ -360,28 +385,28 @@ test("generateOpenAIImages refuses traversal, symlinks, and existing approved ou
   assert.equal(await readFile(path.join(root, "approved.png"), "utf8"), "approved");
 });
 
-test("promoteValidatedPng exposes only a pathless beforePublish race boundary", async (t) => {
+test("promoteValidatedPng publishes one concurrent winner without callbacks or clobbering", async (t) => {
   const root = await staging(t);
-  const prepared = await prepareImageOutput({ stagingRoot: root, output: job().output });
-  await assert.rejects(
-    () => promoteValidatedPng({
-      prepared, bytes: png(),
-      beforePublish: async (...args) => { assert.deepEqual(args, []); await writeFile(prepared.destination, "prior-approved-bytes"); },
-    }),
-    /validation|publish/i,
-  );
-  assert.equal(await readFile(prepared.destination, "utf8"), "prior-approved-bytes");
-  assert.equal((await readdir(path.dirname(prepared.destination))).some((name) => name.includes(".tmp-")), false);
+  const prepared = [
+    await prepareImageOutput({ stagingRoot: root, output: job().output }),
+    await prepareImageOutput({ stagingRoot: root, output: job().output }),
+  ];
+  const first = png();
+  const second = png();
+  second[32] = 1;
+  const outcomes = await Promise.allSettled(prepared.map((entry, index) => promoteValidatedPng({ prepared: entry, bytes: index === 0 ? first : second })));
+  assert.equal(outcomes.filter(({ status }) => status === "fulfilled").length, 1);
+  assert.equal(outcomes.filter(({ status }) => status === "rejected").length, 1);
+  const winner = outcomes[0].status === "fulfilled" ? first : second;
+  assert.deepEqual(await readFile(prepared[0].destination), winner);
+  assert.equal((await readdir(path.dirname(prepared[0].destination))).some((name) => name.includes(".tmp-")), false);
 });
 
-test("promoteValidatedPng does not expose or invoke the retired temporary-path hook", async (t) => {
+test("promoteValidatedPng ignores arbitrary post-QA callback properties", async (t) => {
   const root = await staging(t);
   const prepared = await prepareImageOutput({ stagingRoot: root, output: job().output });
   let invoked = false;
-  await promoteValidatedPng({
-    prepared, bytes: png(),
-    afterTemporaryWritten: async () => { invoked = true; },
-  });
+  await promoteValidatedPng({ prepared, bytes: png(), beforePublish: async () => { invoked = true; }, afterTemporaryWritten: async () => { invoked = true; } });
   assert.equal(invoked, false);
   assert.deepEqual(await readFile(prepared.destination), png());
 });

@@ -67,7 +67,19 @@ function declaredLength(response) {
 }
 
 async function cancelQuietly(target) {
-  await target?.cancel?.().catch(() => {});
+  try {
+    await target?.cancel?.();
+  } catch {
+    // Stream cleanup must not alter the redacted provider result.
+  }
+}
+
+function releaseQuietly(reader) {
+  try {
+    reader?.releaseLock?.();
+  } catch {
+    // A hostile lock implementation must not alter the redacted provider result.
+  }
 }
 
 function parseBufferedJson(chunks, total) {
@@ -92,13 +104,20 @@ async function readAsyncIterableJson(body) {
     const parsed = parseBufferedJson(chunks, total);
     normal = parsed.ok;
     return parsed;
+  } catch {
+    return { ok: false };
   } finally {
     if (!normal) await cancelQuietly(body);
   }
 }
 
 async function readReaderJson(body) {
-  const reader = body.getReader();
+  let reader;
+  try {
+    reader = body.getReader();
+  } catch {
+    return { ok: false };
+  }
   const chunks = [];
   let total = 0;
   let normal = false;
@@ -113,9 +132,11 @@ async function readReaderJson(body) {
     const parsed = parseBufferedJson(chunks, total);
     normal = parsed.ok;
     return parsed;
+  } catch {
+    return { ok: false };
   } finally {
     if (!normal) await cancelQuietly(reader);
-    reader.releaseLock?.();
+    releaseQuietly(reader);
   }
 }
 
