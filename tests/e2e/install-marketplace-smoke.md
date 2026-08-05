@@ -2,70 +2,67 @@
 
 Last verified: 2026-08-05 (Asia/Seoul)
 
-Codex command: `codex plugin` (`add`, not the obsolete `install` spelling)
+## Portable runner
 
-Marketplace: `game-design-suite`
-
-## Safety boundary
-
-The smoke used a newly created canonical directory below the OS temporary root. Both `HOME` and `CODEX_HOME` pointed inside it for every Codex invocation. The real `/Users/freelife/.codex/config.toml` SHA-256 was captured before and after; both values were:
-
-```text
-ac4153126e33984927891b3d86a0d8657f70a4dc019f3f39a3cdd3f1ed54cbc5
-```
-
-After the smoke, a recursive text search found no `game-design-suite`, `game-design-career`, or `game-design-studio` entry in the production config or production plugin state. The temporary root used for the recorded run was `/private/var/folders/99/kpfx0mdj3fvbczqpbncjl0bm0000gn/T/game-design-marketplace-bvaTK6`; it was retained only long enough to inspect the removed state and then deleted by the exact canonical path guard described below.
-
-## Reproduction commands
-
-Run these from the repository root. The guard deliberately requires the canonical temporary prefix before any cleanup.
+Run from the repository root:
 
 ```bash
-canonical_tmp="$(cd "${TMPDIR%/}" && pwd -P)"
-smoke_root="$(mktemp -d "$canonical_tmp/game-design-marketplace-XXXXXX")"
-mkdir -p "$smoke_root/home" "$smoke_root/codex-home" "$smoke_root/workspace"
-smoke_root="$(cd "$smoke_root" && pwd -P)"
-case "$smoke_root" in "$canonical_tmp"/game-design-marketplace-*) ;; *) exit 1;; esac
-
-smoke_env=(env HOME="$smoke_root/home" CODEX_HOME="$smoke_root/codex-home" TMPDIR="$smoke_root" PATH="$PATH")
-"${smoke_env[@]}" codex plugin marketplace add "$PWD" --json
-"${smoke_env[@]}" codex plugin marketplace list --json
-
-for plugin_name in game-design-career game-design-studio; do
-  "${smoke_env[@]}" codex plugin add "$plugin_name@game-design-suite" --json
-  "${smoke_env[@]}" codex plugin list --json
-
-  cache_root="$smoke_root/codex-home/plugins/cache/game-design-suite/$plugin_name/0.1.0"
-  test -d "$cache_root"
-  test "$(find "$cache_root/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -type f | wc -l | tr -d ' ')" = 11
-  python3 /Users/freelife/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py "$cache_root"
-
-  artifact="$smoke_root/workspace/$plugin_name-artifact"
-  cp -R "$cache_root/assets/shared/templates/canonical-artifact" "$artifact"
-  node "$cache_root/scripts/validate-artifact.mjs" "$artifact" md
-
-  "${smoke_env[@]}" codex plugin remove "$plugin_name@game-design-suite" --json
-  test ! -e "$cache_root"
-done
-
-"${smoke_env[@]}" codex plugin marketplace remove game-design-suite --json
-"${smoke_env[@]}" codex plugin marketplace list --json
-test "$(find "$smoke_root/codex-home/plugins/cache/game-design-suite" -mindepth 1 -print -quit)" = ""
-
-registered_root="$smoke_root"
-test "$(cd "$registered_root" && pwd -P)" = "$registered_root"
-case "$registered_root" in "$canonical_tmp"/game-design-marketplace-*) ;; *) exit 1;; esac
-test ! -L "$registered_root"
-rm -r "$registered_root"
+npm run smoke:marketplace
 ```
 
-## Observed evidence
+To exercise encoded paths, create any private temporary parent containing spaces, Korean, and NFC Unicode, then pass it without exposing credentials:
 
-- `marketplace add --json` returned `marketplaceName: game-design-suite`, `alreadyAdded: false`, and the canonical repository root.
-- Career installed alone at `.../plugins/cache/game-design-suite/game-design-career/0.1.0`; `plugin list --json` contained only Career.
-- Studio installed alone at `.../plugins/cache/game-design-suite/game-design-studio/0.1.0`; `plugin list --json` contained only Studio.
-- Each installed cache contained exactly 11 `SKILL.md` files, passed the official local plugin validator, and its package-local canonical starter returned `ok: true` with `requestedFormats: ["md"]` from its installed `scripts/validate-artifact.mjs`.
-- Each cache path disappeared after its corresponding `plugin remove --json` call.
-- Final `marketplace list --json` returned an empty `marketplaces` array.
-- Codex emitted a warning that it would not create helper aliases under the temporary directory. This is expected fail-safe behavior and did not change the plugin install/cache/validation result.
-- Final result: `MARKETPLACE_SMOKE=PASS`.
+```bash
+npm run smoke:marketplace -- --temp-parent "<temporary-parent>/게임 기획 é space"
+```
+
+`tooling/marketplace-smoke.mjs` performs the entire test. It discovers `codex`, `python3`, and the installed official plugin validator through runtime paths rather than hardcoded user directories. It creates a cryptographically named guarded root, registers parent/root filesystem identities, and deletes only an atomically quarantined matching identity.
+
+The runner uses a fresh temporary `HOME` and `CODEX_HOME`. When local session authentication is available, it copies `auth.json` opaquely into the guarded Codex home, sets mode `0600`, verifies source identity and destination type/mode, removes `OPENAI_API_KEY` from the child environment, and reports only `authSource: local-session`. Credential contents, size, hashes, and paths are never printed or persisted in repository output.
+
+For each plugin independently, the runner:
+
+1. Adds marketplace `game-design-suite` and asserts exact JSON.
+2. Installs only one plugin and asserts `pluginId`, version, installed/enabled state, and cache path.
+3. Confirms exactly 11 packaged skills and runs a temporary copy of the official plugin validator.
+4. Starts one bounded `codex exec --ephemeral --json --sandbox workspace-write` turn in an isolated workspace.
+5. Explicitly invokes the installed orchestrator skill and requires completed JSONL, skill provenance, artifact path, real artifact bytes, and package-local `{ "ok": true, "requestedFormats": ["md"] }` validation.
+6. Removes the plugin before installing the other product, then removes the marketplace and asserts an empty final list.
+7. Compares production config/plugin-state byte hashes before and after and performs guarded cleanup.
+
+Any nonzero process, timeout, signal, `turn.failed`, 401, missing provenance, missing artifact, failed validator, state drift, or cleanup identity mismatch produces `status: INCOMPLETE` and a nonzero exit.
+
+## Observed structured result
+
+The encoded Korean/NFC/space-path run completed with this secret-free result:
+
+```json
+{
+  "status": "PASS",
+  "marketplace": "game-design-suite",
+  "products": [
+    {
+      "product": "game-design-career",
+      "pluginId": "game-design-career@game-design-suite",
+      "skill": "$game-design-career:orchestrate-game-design-career",
+      "skills": 11,
+      "artifact": "validated-md",
+      "exec": "completed"
+    },
+    {
+      "product": "game-design-studio",
+      "pluginId": "game-design-studio@game-design-suite",
+      "skill": "$game-design-studio:orchestrate-game-design-project",
+      "skills": 11,
+      "artifact": "validated-md",
+      "exec": "completed"
+    }
+  ],
+  "authSource": "local-session",
+  "productionStateUnchanged": true,
+  "temporaryStateCleanup": true,
+  "failure": null
+}
+```
+
+Post-run process inspection found zero marketplace/Codex-exec children, and the encoded temporary parent was empty before its caller removed it.

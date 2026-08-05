@@ -17,6 +17,7 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { copyTree, collectTree } from "./lib/copy-tree.mjs";
+import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { sha256 } from "./lib/hash.mjs";
 import { auditTree } from "./lib/tree-audit.mjs";
 
@@ -67,12 +68,6 @@ export async function assertSafeTemporaryRoot({ requestedRoot, prefix = TEMP_PRE
     throw new Error(`unsafe temporary root: ${canonical}`);
   }
   return canonical;
-}
-
-async function removeRegisteredTemporaryRoot(root) {
-  const canonical = await assertSafeTemporaryRoot({ requestedRoot: root });
-  if (canonical !== root) throw new Error(`temporary cleanup identity changed: ${root}`);
-  await rm(canonical, { recursive: true });
 }
 
 function minimalEnvironment({ root, home, codexHome }) {
@@ -237,8 +232,8 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
   if (requestedRepoRoot === path.parse(requestedRepoRoot).root) throw new Error(`unsafe repository root: ${requestedRepoRoot}`);
   const canonicalRepoRoot = await canonicalDirectory(requestedRepoRoot, "repository root");
   const actualHome = await realpath(homedir());
-  const created = await mkdtemp(path.join(tmpdir(), TEMP_PREFIX));
-  const isolationRoot = await assertSafeTemporaryRoot({ requestedRoot: created });
+  const registration = await createGuardedTempRoot({ parent: tmpdir(), prefix: TEMP_PREFIX });
+  const isolationRoot = registration.root;
   const reports = [];
   try {
     for (const productName of PRODUCT_NAMES) {
@@ -247,7 +242,7 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
     }
     return reports;
   } finally {
-    await removeRegisteredTemporaryRoot(isolationRoot);
+    await cleanupGuardedTempRoot(registration);
   }
 }
 

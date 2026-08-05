@@ -10,7 +10,8 @@
     "test:shared-contract": "node --test tests/contracts/shared-contract.test.mjs",
     "build": "node tooling/build-snapshots.mjs",
     "validate": "node tooling/validate-suite.mjs",
-    "validate:release": "node tooling/validate-suite.mjs --release"
+    "validate:release": "node tooling/validate-suite.mjs --release",
+    "smoke:marketplace": "node tooling/marketplace-smoke.mjs"
   },
   "engines": { "node": ">=18" }
 }
