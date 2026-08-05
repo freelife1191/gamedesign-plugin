@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -10,9 +10,11 @@ import {
   buildProofCommand,
   captureFileIdentity,
   parseExecJsonl,
+  PROOF_HARNESS_PATH,
   redactFailure,
   validateCliJson,
 } from "../../tooling/marketplace-smoke.mjs";
+import { artifactTreeIdentity, runMarketplaceProof } from "../../tooling/lib/marketplace-proof-harness.mjs";
 
 const product = "game-design-career";
 const pluginId = `${product}@game-design-suite`;
@@ -23,24 +25,30 @@ async function traceFixture() {
   const skillPath = path.join(cacheRoot, "skills/orchestrate-game-design-career/SKILL.md");
   const validatorPath = path.join(cacheRoot, "scripts/validate-artifact.mjs");
   const artifactPath = path.join(root, "workspace/artifact");
-  const proofPath = path.join(root, "workspace/prove-installed-skill.mjs");
-  const configPath = path.join(root, "workspace/proof-config.json");
+  const workspaceProver = path.join(root, "workspace/prove-installed-skill.mjs");
   for (const file of [skillPath, validatorPath]) {
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, "fixture\n");
   }
   await mkdir(artifactPath, { recursive: true });
-  await writeFile(proofPath, "fixture proof\n");
-  await writeFile(configPath, "{}\n");
+  await writeFile(workspaceProver, "fixture proof\n");
   const skillSha256 = createHash("sha256").update("fixture\n").digest("hex");
   const validatorSha256 = skillSha256;
-  const [proofIdentity, configIdentity] = await Promise.all([
-    captureFileIdentity(proofPath), captureFileIdentity(configPath),
+  const [proofIdentity, artifactIdentity, trustedShell] = await Promise.all([
+    captureFileIdentity(PROOF_HARNESS_PATH), artifactTreeIdentity(artifactPath), realpath("/bin/sh"),
   ]);
   return {
     root, cacheRoot, workspaceRoot: path.dirname(artifactPath), skillPath, skillSha256,
-    validatorPath, validatorSha256, artifactPath, proofPath, configPath, proofIdentity, configIdentity,
+    validatorPath, validatorSha256, artifactPath, proofIdentity, artifactSha256: artifactIdentity.sha256,
+    trustedShellPaths: [trustedShell], workspaceProver,
   };
+}
+
+function proofArgs(fixture) {
+  return [
+    fixture.cacheRoot, fixture.workspaceRoot, fixture.skillPath, fixture.skillSha256,
+    fixture.validatorPath, fixture.validatorSha256, fixture.artifactPath,
+  ];
 }
 
 function events(fixture) {
@@ -49,6 +57,7 @@ function events(fixture) {
     ok: true,
     skillSha256: fixture.skillSha256,
     validatorSha256: fixture.validatorSha256,
+    artifactSha256: fixture.artifactSha256,
     requestedFormats: ["md"],
   };
   return [
@@ -56,7 +65,7 @@ function events(fixture) {
     { type: "turn.started" },
     { type: "item.completed", item: {
       type: "command_execution",
-      command: buildProofCommand(process.execPath, fixture.proofPath, fixture.configPath),
+      command: buildProofCommand(process.execPath, PROOF_HARNESS_PATH, ...proofArgs(fixture)),
       exit_code: 0, status: "completed", aggregated_output: `${JSON.stringify(receipt)}\n`,
     } },
     { type: "item.completed", item: { type: "agent_message", text: "self-report is supplemental only" } },
@@ -78,7 +87,7 @@ test("exec JSONL accepts the exact command inside the current shell wrapper", as
   const fixture = await traceFixture();
   try {
     const source = events(fixture);
-    source[2].item.command = `/bin/zsh -lc ${JSON.stringify(source[2].item.command)}`;
+    source[2].item.command = `${fixture.trustedShellPaths[0]} -lc ${JSON.stringify(source[2].item.command)}`;
     const result = await parseExecJsonl(source.map(JSON.stringify).join("\n"), { ...fixture });
     assert.deepEqual(result, { completed: true, proofHarness: true });
   } finally { await rm(fixture.root, { recursive: true, force: true }); }
@@ -88,8 +97,54 @@ test("forged printf output cannot impersonate installed-skill and validator exec
   const fixture = await traceFixture();
   try {
     const source = events(fixture);
-    source[2].item.command = `printf forged ${fixture.proofPath} ${fixture.configPath} ${fixture.skillPath} ${fixture.validatorPath} ${fixture.artifactPath}`;
+    source[2].item.command = `printf forged ${PROOF_HARNESS_PATH} ${fixture.skillPath} ${fixture.validatorPath} ${fixture.artifactPath}`;
     await assert.rejects(parseExecJsonl(source.map(JSON.stringify).join("\n"), { ...fixture }), /unverifiable/u);
+  } finally { await rm(fixture.root, { recursive: true, force: true }); }
+});
+
+test("workspace prover transient overwrite and restore cannot preserve trust", async () => {
+  const fixture = await traceFixture();
+  try {
+    const original = await readFile(fixture.workspaceProver);
+    await writeFile(fixture.workspaceProver, "forged prover\n");
+    await writeFile(fixture.workspaceProver, original);
+    const source = events(fixture);
+    source[2].item.command = source[2].item.command.replace(PROOF_HARNESS_PATH, fixture.workspaceProver);
+    await assert.rejects(parseExecJsonl(source.map(JSON.stringify).join("\n"), { ...fixture }), /unverifiable/u);
+  } finally { await rm(fixture.root, { recursive: true, force: true }); }
+});
+
+test("an arbitrary executable named sh cannot impersonate a trusted shell wrapper", async () => {
+  const fixture = await traceFixture();
+  try {
+    const fakeShell = path.join(fixture.root, "attacker/sh");
+    await mkdir(path.dirname(fakeShell), { recursive: true });
+    await writeFile(fakeShell, "#!/bin/sh\n", { mode: 0o700 });
+    const source = events(fixture);
+    source[2].item.command = `${fakeShell} -lc ${JSON.stringify(source[2].item.command)}`;
+    await assert.rejects(parseExecJsonl(source.map(JSON.stringify).join("\n"), { ...fixture }), /unverifiable/u);
+  } finally { await rm(fixture.root, { recursive: true, force: true }); }
+});
+
+test("proof harness rejects artifact file mutation performed by the validator", async () => {
+  const fixture = await traceFixture();
+  try {
+    const contentPath = path.join(fixture.artifactPath, "content.md");
+    await writeFile(contentPath, "A\n");
+    await writeFile(fixture.validatorPath, [
+      'import { writeFile } from "node:fs/promises";',
+      `await writeFile(${JSON.stringify(contentPath)}, "B\\n");`,
+      'process.stdout.write(JSON.stringify({ ok: true, errors: [], warnings: [], files: ["content.md"], requestedFormats: ["md"] }, null, 2));',
+    ].join("\n"));
+    await assert.rejects(runMarketplaceProof([
+      fixture.cacheRoot,
+      fixture.workspaceRoot,
+      fixture.skillPath,
+      fixture.skillSha256,
+      fixture.validatorPath,
+      createHash("sha256").update(await readFile(fixture.validatorPath)).digest("hex"),
+      fixture.artifactPath,
+    ]), /artifact tree changed/u);
   } finally { await rm(fixture.root, { recursive: true, force: true }); }
 });
 
@@ -123,7 +178,7 @@ test("echo-only completed turn is unverifiable", async () => {
 
 for (const mutation of [
   "missing-proof", "failed-proof", "wrong-skill-hash", "prefix-trick", "extra-arg", "separator",
-  "redirection", "symlink-proof", "symlink-config", "modified-proof", "modified-config",
+  "redirection", "workspace-proof", "wrong-proof-identity",
   "symlink-skill", "symlink-validator", "symlink-artifact", "outside-artifact", "modified-skill", "modified-validator",
 ]) {
   test(`proof trace rejects ${mutation}`, async () => {
@@ -133,24 +188,12 @@ for (const mutation of [
       if (mutation === "missing-proof") source.splice(2, 1);
       if (mutation === "failed-proof") source[2].item.exit_code = 1;
       if (mutation === "wrong-skill-hash") source[2].item.aggregated_output = source[2].item.aggregated_output.replace(fixture.skillSha256, "0".repeat(64));
-      if (mutation === "prefix-trick") source[2].item.command = source[2].item.command.replace(fixture.proofPath, `${fixture.proofPath}-suffix`);
+      if (mutation === "prefix-trick") source[2].item.command = source[2].item.command.replace(PROOF_HARNESS_PATH, `${PROOF_HARNESS_PATH}-suffix`);
       if (mutation === "extra-arg") source[2].item.command += " extra";
       if (mutation === "separator") source[2].item.command += " ; printf forged";
       if (mutation === "redirection") source[2].item.command += " > receipt.json";
-      if (mutation === "symlink-proof") {
-        const real = `${fixture.proofPath}.real`;
-        await writeFile(real, "fixture\n");
-        await rm(fixture.proofPath);
-        await symlink(real, fixture.proofPath);
-      }
-      if (mutation === "symlink-config") {
-        const real = `${fixture.configPath}.real`;
-        await writeFile(real, "fixture\n");
-        await rm(fixture.configPath);
-        await symlink(real, fixture.configPath);
-      }
-      if (mutation === "modified-proof") await writeFile(fixture.proofPath, "modified proof\n");
-      if (mutation === "modified-config") await writeFile(fixture.configPath, "modified config\n");
+      if (mutation === "workspace-proof") source[2].item.command = source[2].item.command.replace(PROOF_HARNESS_PATH, fixture.workspaceProver);
+      if (mutation === "wrong-proof-identity") fixture.proofIdentity = { ...fixture.proofIdentity, sha256: "0".repeat(64) };
       if (mutation === "modified-skill") await writeFile(fixture.skillPath, "modified skill\n");
       if (mutation === "modified-validator") await writeFile(fixture.validatorPath, "modified validator\n");
       if (mutation === "symlink-skill" || mutation === "symlink-validator") {
@@ -250,4 +293,30 @@ test("failure redaction replaces HOME, CODEX_HOME, and arbitrary encoded absolut
   );
   assert.match(redacted, /\[CODEX_HOME\]|\[ABSOLUTE_PATH\]/u);
   assert.doesNotMatch(redacted, /Users|게임 사용자|Codex Home|%EA%B2|work space|C:\\/u);
+});
+
+test("failure redaction removes bracket-leading Korean POSIX paths and encoded user paths", () => {
+  const redacted = redactFailure(
+    "failed [/tmp/게임 경로/file.md] and %2FUsers%2Fexample%2Fprivate%2Fplan.md",
+    {},
+  );
+  assert.doesNotMatch(redacted, /tmp|게임 경로|%2FUsers|example|private/u);
+  assert.match(redacted, /\[ABSOLUTE_PATH\]/u);
+});
+
+test("failure redaction makes credential-shaped failures generic", () => {
+  for (const message of [
+    "Authorization: Basic ZHVtbXk6c2VjcmV0",
+    "Authorization Basic ZHVtbXk6c2VjcmV0",
+    "request failed secret=dummy-private-value",
+    "request failed password=dummy-private-value",
+  ]) {
+    assert.equal(redactFailure(message, {}), "command failed (details redacted)");
+  }
+});
+
+test("failure redaction removes UNC paths", () => {
+  const redacted = redactFailure("failed at \\\\server\\share\\private\\file.md", {});
+  assert.doesNotMatch(redacted, /server|share|private|file\.md/u);
+  assert.match(redacted, /\[ABSOLUTE_PATH\]/u);
 });

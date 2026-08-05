@@ -10,84 +10,15 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { sha256 } from "./lib/hash.mjs";
+import { artifactTreeIdentity } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
 const PRODUCTS = Object.freeze([
   { name: "game-design-career", skillName: "orchestrate-game-design-career", skill: "$game-design-career:orchestrate-game-design-career" },
   { name: "game-design-studio", skillName: "orchestrate-game-design-project", skill: "$game-design-studio:orchestrate-game-design-project" },
 ]);
-const SKILL_PROVER = `import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { lstat, readFile, realpath } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-function exactKeys(value, keys) {
-  return value && typeof value === "object" && !Array.isArray(value)
-    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...keys].sort());
-}
-
-async function identity(target, kind) {
-  const before = await lstat(target);
-  if (!before[kind]() || before.isSymbolicLink()) throw new Error("proof input type mismatch");
-  const bytes = kind === "isFile" ? await readFile(target) : Buffer.alloc(0);
-  const after = await lstat(target);
-  if (before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode) throw new Error("proof input changed");
-  return { dev: after.dev, ino: after.ino, mode: after.mode, sha256: createHash("sha256").update(bytes).digest("hex") };
-}
-
-function same(left, right) {
-  return left.dev === right.dev && left.ino === right.ino && left.mode === right.mode && left.sha256 === right.sha256;
-}
-
-async function containedFile(target, root) {
-  const [fileReal, rootReal] = await Promise.all([realpath(target), realpath(root)]);
-  const relative = path.relative(rootReal, fileReal);
-  if (!relative || relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)) throw new Error("proof path escaped boundary");
-  return identity(target, "isFile");
-}
-
-if (process.argv.length !== 3) throw new Error("Usage: prove-installed-skill.mjs <config.json>");
-const selfPath = fileURLToPath(import.meta.url);
-const configPath = process.argv[2];
-const [selfBefore, configBefore] = await Promise.all([identity(selfPath, "isFile"), identity(configPath, "isFile")]);
-const config = JSON.parse(await readFile(configPath, "utf8"));
-const configKeys = ["schemaVersion", "cacheRoot", "workspaceRoot", "skillPath", "skillSha256", "validatorPath", "validatorSha256", "artifactPath"];
-if (!exactKeys(config, configKeys) || config.schemaVersion !== 1) throw new Error("proof config contract mismatch");
-const [skillBefore, validatorBefore, artifactBefore] = await Promise.all([
-  containedFile(config.skillPath, config.cacheRoot),
-  containedFile(config.validatorPath, config.cacheRoot),
-  identity(config.artifactPath, "isDirectory"),
-]);
-const [artifactReal, workspaceReal, selfReal, configReal] = await Promise.all([
-  realpath(config.artifactPath), realpath(config.workspaceRoot), realpath(selfPath), realpath(configPath),
-]);
-for (const target of [artifactReal, selfReal, configReal]) {
-  const relative = path.relative(workspaceReal, target);
-  if (!relative || relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)) throw new Error("workspace proof path escaped boundary");
-}
-if (skillBefore.sha256 !== config.skillSha256 || validatorBefore.sha256 !== config.validatorSha256) throw new Error("proof input hash mismatch");
-const validation = spawnSync(process.execPath, [config.validatorPath, config.artifactPath, "md"], {
-  cwd: config.workspaceRoot, encoding: "utf8", timeout: 30000, maxBuffer: 16 * 1024 * 1024,
-});
-if (validation.error || validation.signal || validation.status !== 0) throw new Error("artifact validator execution failed");
-const result = JSON.parse(validation.stdout);
-if (!exactKeys(result, ["ok", "errors", "warnings", "files", "requestedFormats"])
-    || result.ok !== true || !Array.isArray(result.errors) || result.errors.length !== 0
-    || !Array.isArray(result.warnings) || !Array.isArray(result.files)
-    || JSON.stringify(result.requestedFormats) !== '["md"]') throw new Error("artifact validator result mismatch");
-const [selfAfter, configAfter, skillAfter, validatorAfter, artifactAfter] = await Promise.all([
-  identity(selfPath, "isFile"), identity(configPath, "isFile"), containedFile(config.skillPath, config.cacheRoot),
-  containedFile(config.validatorPath, config.cacheRoot), identity(config.artifactPath, "isDirectory"),
-]);
-for (const pair of [[selfBefore, selfAfter], [configBefore, configAfter], [skillBefore, skillAfter], [validatorBefore, validatorAfter], [artifactBefore, artifactAfter]]) {
-  if (!same(pair[0], pair[1])) throw new Error("proof input changed during execution");
-}
-process.stdout.write(JSON.stringify({
-  schemaVersion: 1, ok: true, skillSha256: skillAfter.sha256,
-  validatorSha256: validatorAfter.sha256, requestedFormats: ["md"],
-}) + "\\n");
-`;
+export const PROOF_HARNESS_PATH = fileURLToPath(new URL("./lib/marketplace-proof-harness.mjs", import.meta.url));
+const TOOLING_ROOT = fileURLToPath(new URL(".", import.meta.url));
 
 function safeJson(source, label) {
   try {
@@ -101,8 +32,8 @@ function shellQuote(value) {
   return `'${value.replaceAll("'", `'"'"'`)}'`;
 }
 
-export function buildProofCommand(nodePath, proofPath, configPath) {
-  return [nodePath, proofPath, configPath].map(shellQuote).join(" ");
+export function buildProofCommand(nodePath, proofPath, ...args) {
+  return [nodePath, proofPath, ...args].map(shellQuote).join(" ");
 }
 
 function simpleShellWords(source) {
@@ -146,12 +77,14 @@ function simpleShellWords(source) {
   return words;
 }
 
-function isExactProofCommand(command, expected) {
+async function isExactProofCommand(command, expected, trustedShellPaths) {
   const expectedWords = simpleShellWords(expected);
   const outer = simpleShellWords(command);
   if (!expectedWords || !outer) return false;
   if (JSON.stringify(outer) === JSON.stringify(expectedWords)) return true;
-  if (outer.length !== 3 || outer[1] !== "-lc" || !["sh", "bash", "zsh"].includes(path.basename(outer[0]))) return false;
+  if (outer.length !== 3 || outer[1] !== "-lc") return false;
+  const shell = await realpath(outer[0]).catch(() => null);
+  if (!shell || !trustedShellPaths.includes(shell)) return false;
   const inner = simpleShellWords(outer[2]);
   return inner !== null && JSON.stringify(inner) === JSON.stringify(expectedWords);
 }
@@ -193,7 +126,7 @@ async function isCanonicalDirectory(target, root) {
 }
 
 export async function parseExecJsonl(source, {
-  cacheRoot, workspaceRoot, proofPath, proofIdentity, configPath, configIdentity, nodePath = process.execPath,
+  cacheRoot, workspaceRoot, proofIdentity, trustedShellPaths = [], nodePath = process.execPath,
   skillPath, skillSha256, validatorPath: expectedValidator, validatorSha256, artifactPath,
 }) {
   const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
@@ -202,28 +135,32 @@ export async function parseExecJsonl(source, {
     throw new Error("codex exec incomplete: failure event");
   }
   if (!events.some((event) => event.type === "turn.completed")) throw new Error("codex exec incomplete: no completed turn");
-  if (!await isCanonicalRegularFile(proofPath, workspaceRoot)
-      || !await isCanonicalRegularFile(configPath, workspaceRoot)
+  if (!await isCanonicalRegularFile(PROOF_HARNESS_PATH, TOOLING_ROOT)
       || !await isCanonicalRegularFile(skillPath, cacheRoot)
       || !await isCanonicalRegularFile(expectedValidator, cacheRoot)
       || !await isCanonicalDirectory(artifactPath, workspaceRoot)
-      || !await identityMatches(proofPath, proofIdentity)
-      || !await identityMatches(configPath, configIdentity)
+      || !await identityMatches(PROOF_HARNESS_PATH, proofIdentity)
       || sha256(await readFile(skillPath)) !== skillSha256
       || sha256(await readFile(expectedValidator)) !== validatorSha256) {
     throw new Error("codex exec unverifiable: installed skill or canonical paths");
   }
-  const expectedCommand = buildProofCommand(nodePath, proofPath, configPath);
-  const matches = events.filter((event) => event.type === "item.completed" && event.item?.type === "command_execution"
-    && event.item.status === "completed" && event.item.exit_code === 0
-    && isExactProofCommand(event.item.command, expectedCommand));
+  const proofArgs = [cacheRoot, workspaceRoot, skillPath, skillSha256, expectedValidator, validatorSha256, artifactPath];
+  const expectedCommand = buildProofCommand(nodePath, PROOF_HARNESS_PATH, ...proofArgs);
+  const matches = [];
+  for (const event of events) {
+    if (event.type === "item.completed" && event.item?.type === "command_execution"
+        && event.item.status === "completed" && event.item.exit_code === 0
+        && await isExactProofCommand(event.item.command, expectedCommand, trustedShellPaths)) matches.push(event);
+  }
   if (matches.length !== 1) throw new Error("codex exec unverifiable: exact proof command missing");
   let receipt;
   try { receipt = safeJson(String(matches[0].item.aggregated_output ?? "").trim(), "proof harness"); }
   catch { throw new Error("codex exec unverifiable: proof receipt malformed"); }
-  assertExactKeys(receipt, ["schemaVersion", "ok", "skillSha256", "validatorSha256", "requestedFormats"], "proof receipt");
+  assertExactKeys(receipt, ["schemaVersion", "ok", "skillSha256", "validatorSha256", "artifactSha256", "requestedFormats"], "proof receipt");
+  const artifactIdentity = await artifactTreeIdentity(artifactPath).catch(() => null);
   if (receipt.schemaVersion !== 1 || receipt.ok !== true || receipt.skillSha256 !== skillSha256
-      || receipt.validatorSha256 !== validatorSha256 || JSON.stringify(receipt.requestedFormats) !== '["md"]') {
+      || receipt.validatorSha256 !== validatorSha256 || receipt.artifactSha256 !== artifactIdentity?.sha256
+      || JSON.stringify(receipt.requestedFormats) !== '["md"]') {
     throw new Error("codex exec unverifiable: proof receipt mismatch");
   }
   return { completed: true, proofHarness: true };
@@ -283,10 +220,13 @@ export function redactFailure(message, environment = process.env) {
   const source = String(message);
   if (/(?:401|unauthorized)/iu.test(source)) return "authentication failed (401)";
   if (/turn\.failed/iu.test(source)) return "codex turn failed";
-  if (/(?:auth\.json|credentials?\.json|api[_-]?key|bearer|token)/iu.test(source)) {
+  const credentialPattern = /(?:auth\.json|credentials?\.json|api[_-]?key|bearer|token|authorization\s*:?\s*(?:basic|bearer)|(?:client[_-]?)?secret\s*=|password\s*=)/iu;
+  let decoded = source;
+  try { decoded = decodeURIComponent(source); } catch {}
+  if (credentialPattern.test(source) || credentialPattern.test(decoded)) {
     return "command failed (details redacted)";
   }
-  let sanitized = source;
+  let sanitized = decoded;
   for (const key of ["OPENAI_API_KEY", "CODEX_API_KEY"]) {
     const value = environment[key];
     if (typeof value === "string" && value.length > 0) sanitized = sanitized.replaceAll(value, "[REDACTED]");
@@ -299,10 +239,11 @@ export function redactFailure(message, environment = process.env) {
     .sort(([left], [right]) => right.length - left.length);
   for (const [root, placeholder] of knownRoots) sanitized = sanitized.replaceAll(root, placeholder);
   sanitized = sanitized
-    .replace(/(^|[\s=:('"`])file:\/\/[^;\n\r,)]*/giu, "$1[ABSOLUTE_PATH]")
-    .replace(/(^|[\s=:('"`])\/[^;\n\r,)]*/gu, "$1[ABSOLUTE_PATH]")
-    .replace(/(^|[\s=:('"`])[A-Za-z]:\\[^;\n\r,)]*/gu, "$1[ABSOLUTE_PATH]");
-  return sanitized.length <= 240 && !/(?:api[_-]?key|bearer|token)/iu.test(sanitized) ? sanitized : "command failed (details redacted)";
+    .replace(/(^|[\s=:('"`\[])file:\/\/[^;\n\r,)\]}]*/giu, "$1[ABSOLUTE_PATH]")
+    .replace(/(^|[\s=:('"`\[])(?:\\\\|\/\/)[^;\n\r,)\]}]*/gu, "$1[ABSOLUTE_PATH]")
+    .replace(/(^|[\s=:('"`\[])\/[^;\n\r,)\]}]*/gu, "$1[ABSOLUTE_PATH]")
+    .replace(/(^|[\s=:('"`\[])[A-Za-z]:\\[^;\n\r,)\]}]*/gu, "$1[ABSOLUTE_PATH]");
+  return sanitized.length <= 240 && !credentialPattern.test(sanitized) ? sanitized : "command failed (details redacted)";
 }
 
 export async function bridgeLocalAuth({ source, destination }) {
@@ -338,6 +279,20 @@ async function findExecutable(name) {
     }
   }
   throw new Error(`${name} executable unavailable`);
+}
+
+async function findTrustedShells() {
+  const trusted = new Set();
+  for (const candidate of ["/bin/sh", "/bin/bash", "/bin/zsh"]) {
+    const canonical = await realpath(candidate).catch(() => null);
+    const stats = canonical ? await lstat(canonical).catch(() => null) : null;
+    if (!canonical || !stats?.isFile()) continue;
+    try {
+      await access(canonical, constants.X_OK);
+      trusted.add(canonical);
+    } catch {}
+  }
+  return [...trusted];
 }
 
 async function validatorPath() {
@@ -416,6 +371,8 @@ export async function runMarketplaceSmoke({
     }
     const codex = await findExecutable("codex");
     const python = await findExecutable("python3");
+    const trustedShellPaths = await findTrustedShells();
+    const proofIdentity = await captureFileIdentity(PROOF_HARNESS_PATH);
     await writeFile(isolatedValidator, await readFile(await validatorPath()));
     const canonicalRepoRoot = path.resolve(repoRoot);
     const marketplace = run(codex, ["plugin", "marketplace", "add", canonicalRepoRoot, "--json"], { cwd: repoRoot, env, json: true });
@@ -433,27 +390,21 @@ export async function runMarketplaceSmoke({
       const workspace = path.join(registration.root, `workspace-${product.name}`);
       await mkdir(workspace);
       const artifactPath = path.join(workspace, `${product.name}-artifact`);
-      const proofPath = path.join(workspace, "prove-installed-skill.mjs");
-      await writeFile(proofPath, SKILL_PROVER, { mode: 0o700 });
-      const configPath = path.join(workspace, "proof-config.json");
       const skillPath = path.join(cacheRoot, "skills", product.skillName, "SKILL.md");
       const packageValidator = path.join(cacheRoot, "scripts/validate-artifact.mjs");
       const skillSha256 = sha256(await readFile(skillPath));
       const validatorSha256 = sha256(await readFile(packageValidator));
-      await writeFile(configPath, `${JSON.stringify({
-        schemaVersion: 1,
+      const proofCommand = buildProofCommand(
+        process.execPath,
+        PROOF_HARNESS_PATH,
         cacheRoot,
-        workspaceRoot: workspace,
+        workspace,
         skillPath,
         skillSha256,
-        validatorPath: packageValidator,
+        packageValidator,
         validatorSha256,
         artifactPath,
-      })}\n`, { mode: 0o600 });
-      const [proofIdentity, configIdentity] = await Promise.all([
-        captureFileIdentity(proofPath), captureFileIdentity(configPath),
-      ]);
-      const proofCommand = buildProofCommand(process.execPath, proofPath, configPath);
+      );
       const prompt = [
         `명시적으로 설치된 스킬 ${product.skill} 을 호출하세요.`,
         `한 번의 짧은 작업으로 canonical game-design MD artifact를 ${artifactPath} 에 생성하세요.`,
@@ -470,10 +421,8 @@ export async function runMarketplaceSmoke({
       await parseExecJsonl(jsonl, {
         cacheRoot,
         workspaceRoot: workspace,
-        proofPath,
         proofIdentity,
-        configPath,
-        configIdentity,
+        trustedShellPaths,
         nodePath: process.execPath,
         skillPath,
         skillSha256,
