@@ -17,7 +17,7 @@
     "safeText": {
       "type": "string",
       "minLength": 1,
-      "pattern": "^(?![\\s\\S]*(?:[Hh][Tt][Tt][Pp][Ss]?://|[Ww][Ww][Ww]\\.|(?:[Cc][Oo][Pp][Yy]|[Rr][Ee][Uu][Ss][Ee])[^\\r\\n]*(?:[Ss][Oo][Uu][Rr][Cc][Ee]|[Oo][Rr][Ii][Gg][Ii][Nn][Aa][Ll]|[Ll][Oo][Gg][Oo]|[Ll][Aa][Yy][Oo][Uu][Tt]|[Ii][Mm][Aa][Gg][Ee])|(?:[Ss][Oo][Uu][Rr][Cc][Ee]|[Oo][Rr][Ii][Gg][Ii][Nn][Aa][Ll])[^\\r\\n]*(?:[Nn][Aa][Mm][Ee]|[Uu][Rr][Ll]|[Cc][Oo][Mm][Pp][Aa][Nn][Yy]|[Pp][Rr][Oo][Jj][Ee][Cc][Tt]|[Tt][Rr][Aa][Dd][Ee][Mm][Aa][Rr][Kk]|[Ll][Oo][Gg][Oo]|[Ll][Aa][Yy][Oo][Uu][Tt]|[Ii][Mm][Aa][Gg][Ee]|[Cc][Ii][Tt][Aa][Tt][Ii][Oo][Nn])))[\\s\\S]+$"
+      "pattern": "^(?![\\s\\S]*(?:[A-Za-z][A-Za-z0-9+.-]*://|[Mm][Aa][Ii][Ll][Tt][Oo]:|[Dd][Aa][Tt][Aa]:|[Ff][Ii][Ll][Ee]:|//[^\\s/]|[Ww][Ww][Ww]\\.|(?:[Cc][Oo][Pp][Yy]|[Rr][Ee][Uu][Ss][Ee])[^\\r\\n]*(?:[Ss][Oo][Uu][Rr][Cc][Ee]|[Oo][Rr][Ii][Gg][Ii][Nn][Aa][Ll]|[Ll][Oo][Gg][Oo]|[Ll][Aa][Yy][Oo][Uu][Tt]|[Ii][Mm][Aa][Gg][Ee])|(?:[Ss][Oo][Uu][Rr][Cc][Ee]|[Oo][Rr][Ii][Gg][Ii][Nn][Aa][Ll])[^\\r\\n]*(?:[Nn][Aa][Mm][Ee]|[Uu][Rr][Ll]|[Cc][Oo][Mm][Pp][Aa][Nn][Yy]|[Pp][Rr][Oo][Jj][Ee][Cc][Tt]|[Tt][Rr][Aa][Dd][Ee][Mm][Aa][Rr][Kk]|[Ll][Oo][Gg][Oo]|[Ll][Aa][Yy][Oo][Uu][Tt]|[Ii][Mm][Aa][Gg][Ee]|[Cc][Ii][Tt][Aa][Tt][Ii][Oo][Nn])))[\\s\\S]+$"
     },
     "safeTextList": {
       "type": "array",

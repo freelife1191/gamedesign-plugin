@@ -47,13 +47,20 @@ test("temporary product builds package neutral presets without authoring evidenc
     }
 
     for (const { relativePath, bytes } of entries) {
-      const pathLeak = findPolicyLeak([relativePath], policy);
-      assert.equal(pathLeak, undefined, `${productName}: authoring identity in path ${relativePath}`);
+      const fullBuildOptions = { includeAliases: false };
+      assert.equal(findPolicyLeak([relativePath], policy, fullBuildOptions), undefined, `${productName}: authoring label or URL in path ${relativePath}`);
       assert.equal(relativePath.includes(policy.evidenceFilename), false, `${productName}: authoring path ${relativePath}`);
       assert.equal(bytes.includes(Buffer.from(policy.evidenceFilename)), false, `${productName}: authoring filename raw bytes in ${relativePath}`);
-      assert.equal(findPolicyLeakInBytes(bytes, policy), undefined, `${productName}: exact authoring identity or URL raw bytes in ${relativePath}`);
-      const byteLeak = findPolicyLeak([bytes.toString("utf8")], policy);
-      assert.equal(byteLeak, undefined, `${productName}: authoring identity or URL bytes in ${relativePath}`);
+      assert.equal(findPolicyLeakInBytes(bytes, policy, fullBuildOptions), undefined, `${productName}: exact authoring label or URL raw bytes in ${relativePath}`);
+      assert.equal(findPolicyLeak([bytes.toString("utf8")], policy, fullBuildOptions), undefined, `${productName}: authoring label or URL bytes in ${relativePath}`);
+
+      const isPresetContract = relativePath.startsWith("references/shared/document-quality/presets/")
+        || relativePath === "references/shared/document-quality/schema/reference-preset.schema.json";
+      if (isPresetContract) {
+        assert.equal(findPolicyLeak([relativePath], policy), undefined, `${productName}: preset alias in path ${relativePath}`);
+        assert.equal(findPolicyLeakInBytes(bytes, policy), undefined, `${productName}: exact preset alias raw bytes in ${relativePath}`);
+        assert.equal(findPolicyLeak([bytes.toString("utf8")], policy), undefined, `${productName}: preset alias bytes in ${relativePath}`);
+      }
     }
   }
 });

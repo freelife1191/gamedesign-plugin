@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { composeQualityProfile } from "../../shared/scripts/resolve-quality-profile.mjs";
 import { validateQualityProfile } from "../../shared/scripts/validate-quality-profile.mjs";
-import { allStrings, findPolicyLeak, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
+import { allStrings, findPolicyLeak, parseNeutralPresetPolicy, readNeutralPresetPolicy } from "./neutral-preset-policy.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const qualityRoot = path.join(root, "shared/document-quality");
@@ -130,11 +130,22 @@ test("reference preset schema evaluator honors enum, conditionals, contains, and
   assert.throws(() => schemaAccepts("a", { type: "string", $defs: { unused: { unknownKeyword: true } } }), /unsupported JSON Schema keyword/);
 });
 
+test("authoring evidence policy rejects missing, duplicate, and non-NFC identity aliases", () => {
+  const row = (label, alias) => `| [${label}](https://example.invalid/${label}) | ${alias} | principle | boundary | preset |`;
+  assert.throws(() => parseNeutralPresetPolicy(row("one", "no structured alias")), /requires identity aliases/);
+  assert.throws(() => parseNeutralPresetPolicy([
+    row("one", "`Example Alias`"),
+    row("two", "`example alias`"),
+  ].join("\n")), /duplicate identity aliases/);
+  assert.throws(() => parseNeutralPresetPolicy(row("one", "`Cafe\u0301`")), /must be NFC/);
+});
+
 test("neutral reference presets are closed, additive, schema-valid, and source-neutral", async () => {
   const schema = await json("schema/reference-preset.schema.json");
   const policy = await readNeutralPresetPolicy(root);
   assert.equal(policy.labels.length, 10);
   assert.equal(policy.urls.length, 10);
+  assert.ok(policy.aliases.length >= 20);
   const directory = path.join(qualityRoot, "presets");
   const filenames = (await readdir(directory)).filter((name) => name.endsWith(".json")).sort();
   assert.deepEqual(filenames, presetIds.map((id) => `${id}.json`).sort());
@@ -164,6 +175,13 @@ test("neutral reference presets are closed, additive, schema-valid, and source-n
     assert.equal(schemaAccepts(identityCandidate, schema), true, `${field}: packaged schema stays identity-agnostic`);
     assert.equal(findPolicyLeak(allStrings(identityCandidate), policy), policy.labels[0], `${field}: authoring identity gate`);
 
+    const alias = policy.aliases[presetFields.indexOf(field) % 3];
+    const aliasCandidate = structuredClone(valid);
+    aliasCandidate[field][0] = alias;
+    assert.equal(schemaAccepts(aliasCandidate, schema), true, `${field}: packaged schema stays alias-agnostic`);
+    const detectedAlias = findPolicyLeak(allStrings(aliasCandidate), policy);
+    assert.ok(detectedAlias && alias.toLowerCase().includes(detectedAlias.toLowerCase()), `${field}: authoring alias gate`);
+
     for (const url of [schemeSensitiveUrl, schemeSensitiveUrl.replace(/^https:/u, "HTTPS:")]) {
       const urlCandidate = structuredClone(valid);
       urlCandidate[field][0] = url;
@@ -176,6 +194,32 @@ test("neutral reference presets are closed, additive, schema-valid, and source-n
     ["reference image reuse", "Reuse the source image."],
   ]) assert.equal(schemaAccepts({ ...valid, story_hints: [text] }, schema), false, label);
   assert.equal(schemaAccepts({ ...valid, emphasis: [{ source_name: "example" }] }, schema), false, "nested source identity");
+});
+
+test("reference preset schema rejects URI forms in every additive string field with evaluator parity", async () => {
+  const schema = await json("schema/reference-preset.schema.json");
+  const valid = await json("presets/function-first.json");
+  const standardPattern = new RegExp(schema.$defs.safeText.pattern, "u");
+  const uriCases = [
+    "ftp://example.invalid/preset",
+    "mailto:designer@example.invalid",
+    "data:text/plain,neutral-preset",
+    "file:///tmp/neutral-preset",
+    "//example.invalid/neutral-preset",
+    "custom+scheme://example.invalid/neutral-preset",
+  ];
+
+  for (const field of presetFields.slice(2)) {
+    for (const uri of uriCases) {
+      const candidate = structuredClone(valid);
+      candidate[field][0] = uri;
+      assert.equal(standardPattern.test(uri), false, `${field}: standard pattern ${uri}`);
+      assert.equal(schemaAccepts(candidate, schema), false, `${field}: evaluator ${uri}`);
+    }
+  }
+  const ordinaryText = "Project scope includes image readability.";
+  assert.equal(standardPattern.test(ordinaryText), true);
+  assert.equal(schemaAccepts({ ...valid, emphasis: [ordinaryText] }, schema), true);
 });
 
 test("Studio and Career catalogs contain exactly the approved validated profiles", async () => {
