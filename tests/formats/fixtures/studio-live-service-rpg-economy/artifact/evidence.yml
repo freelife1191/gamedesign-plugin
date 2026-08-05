@@ -1,0 +1,12 @@
+version: 1
+claims:
+  - id: claim-economy-contract
+    claim_type: approved-scenario
+    claim: 목표 보유량 5,000의 소프트 재화 경제 루프와 단일 변수 실험 및 자동 롤백 계약이 승인되었다.
+    source:
+      title: Live-service RPG economy source binding
+      locator: decisions/0001-economy-operation.md
+      accessed_at: 2026-08-04
+    confidence: high
+    limitations: |
+      tests/e2e/studio/live-service-rpg-economy 범위에만 적용된다.

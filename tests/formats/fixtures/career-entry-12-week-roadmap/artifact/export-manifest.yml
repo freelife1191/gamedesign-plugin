@@ -1,0 +1,19 @@
+artifact_id: career-entry-12-week-roadmap
+formats:
+  md:
+    status: passed
+  pdf:
+    status: passed
+  docx:
+    status: passed
+  pptx:
+    status: passed
+    audience: 입문 게임 디자인 포트폴리오 검토자
+    purpose: 역할 후보와 증거 중심 12주 실행 계획 설명
+    slide_outline:
+      - title: 12주 로드맵
+      - title: 역할 후보
+      - title: 증거 공백
+      - title: 실행 리듬
+      - title: 범위 제약
+      - title: 첫 포트폴리오 브리프

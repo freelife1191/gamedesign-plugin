@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "caseId": "career-entry-12-week-roadmap",
+  "product": "career",
+  "title": "입문 게임 디자이너 12주 로드맵",
+  "sourceRoot": "tests/e2e/career/entry-12-week-roadmap",
+  "sources": {
+    "request.json": "e3ee739d46ee1dcba76d197e62fe8d31c60dc007670ecc4112c313c3775726f1",
+    "result.json": "251dcd99c1079d86c33c38f189bdd47de4fa55a15def5fcbea55c0ab06577a5c",
+    "export-job.json": "765942db356990af1c5caf81b929a066139b20f2e9d09413f480d540d365cc7f",
+    "visualization-state.json": "b87e96cdd2bf548b166e37bb0d2002a937a8d46fba7cf7ef6b309562dd0ae5db",
+    "competency-map.svg": "ebb34b3a0bdba0d27111692242508bb0b91003debb4ef5055744dddd564ac11e"
+  },
+  "sourcePointers": [
+    "request.json#/availableHoursPerWeek",
+    "result.json#/roleCandidates",
+    "result.json#/evidenceGaps",
+    "result.json#/weeks",
+    "result.json#/firstPortfolioBrief"
+  ],
+  "expectedSectionSources": [
+    ["request.json#/availableHoursPerWeek"],
+    ["result.json#/roleCandidates", "result.json#/evidenceGaps"],
+    ["result.json#/weeks"],
+    ["result.json#/firstPortfolioBrief"]
+  ],
+  "anchors": ["12주", "주 8시간", "시스템 디자인", "콘텐츠 디자인", "증거 대기"],
+  "documentAnchors": ["12주", "주 8시간", "시스템 디자인", "콘텐츠 디자인", "증거 대기"],
+  "presentationAnchors": ["12주", "8시간", "시스템 디자인", "콘텐츠 디자인", "증거 대기"],
+  "expectedPages": { "pdf": 4, "docx": 4 },
+  "expectedSlides": 6
+}

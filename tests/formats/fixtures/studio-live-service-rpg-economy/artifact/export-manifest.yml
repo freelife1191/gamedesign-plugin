@@ -1,0 +1,19 @@
+artifact_id: studio-live-service-rpg-economy
+formats:
+  md:
+    status: passed
+  pdf:
+    status: passed
+  docx:
+    status: passed
+  pptx:
+    status: passed
+    audience: 라이브 운영 및 경제 디자인 검토자
+    purpose: 경제 루프와 실험 및 롤백 계약 설명
+    slide_outline:
+      - title: 경제 운영 브리프
+      - title: 경제 루프
+      - title: 단일 변수 실험
+      - title: 실험 제어표
+      - title: 운영 가드레일
+      - title: 자동 롤백

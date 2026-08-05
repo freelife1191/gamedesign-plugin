@@ -1,0 +1,10 @@
+{
+  "slides": [
+    {"layout":"cover","title":"라이브 서비스 RPG\n경제 운영 브리프","subtitle":"루프 · 실험 · 가드레일 · 롤백","coverMetric":"5,000","coverCaption":"목표 보유량","sources":["result.json#/domain"]},
+    {"layout":"half","title":"경제 루프는 단순하고 검증 가능해야 한다","body":"일일 미션에서 소프트 재화를 획득하고 업그레이드에 소비한다. 운영 기준 보유량은 5,000이다.","sources":["result.json#/domain/economy"]},
+    {"layout":"diagram","title":"한 변수만 바꾸는 실험","nodes":["현재 지급률","일일 미션 지급량","진행 체감"],"footer":"가설: 제한된 공급 조정은 인플레이션 없이 진행을 개선한다.","sources":["result.json#/domain/experiment"]},
+    {"layout":"table","title":"실험 제어표","rows":[["항목","계약"],["대조군","현재 지급률"],["단일 변수","일일 미션 지급량"],["가드레일","주간 인플레이션율"],["중단 조건","가드레일 위반"]],"sources":["result.json#/domain/experiment"]},
+    {"layout":"stats","title":"운영 가드레일","stats":[["5,000","목표 보유량"],["공개","확률"],["숨김 없음","환산"]],"sources":["result.json#/domain/economy"]},
+    {"layout":"rollback","title":"위반 시 자동 롤백","steps":["가드레일 위반 감지","마지막 정상 설정 복구","원장 정합성 확인 및 알림"],"sources":["result.json#/domain/rollback","approval-snapshot.json#/responsibleGates/1"]}
+  ]
+}

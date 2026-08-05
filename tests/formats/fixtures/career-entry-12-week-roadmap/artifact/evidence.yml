@@ -1,0 +1,12 @@
+version: 1
+claims:
+  - id: claim-career-roadmap-contract
+    claim_type: bounded-roadmap
+    claim: 12주 동안 주 8시간을 사용하며 두 역할 후보와 두 증거 공백을 검증한다.
+    source:
+      title: Entry 12-week roadmap source binding
+      locator: decisions/0001-roadmap-scope.md
+      accessed_at: 2026-08-04
+    confidence: high
+    limitations: |
+      관심은 현재 숙련 증거가 아니며, 관찰 세션 전 결과는 증거 대기 상태다.

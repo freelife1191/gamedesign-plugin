@@ -145,19 +145,23 @@ LibreOffice나 다른 renderer는 capability에 따른 fallback일 수 있지만
 - [Career MD](../tests/formats/output/career-entry-12-week-roadmap/brief.md)
 - [Career SVG](../tests/formats/output/career-entry-12-week-roadmap/visualization.svg)
 
-이 파일의 존재만으로 성공을 판정하지 않습니다. 현재 결과의 구조·렌더·시각 검토 상태는 `tests/formats/FORMAT-RESULTS.md`와 verifier 출력이 기준입니다.
+이 파일의 존재만으로 성공을 판정하지 않습니다. 현재 결과의 구조·렌더·시각 검토 상태는 [대표 형식 검증 결과](../tests/formats/FORMAT-RESULTS.md)와 verifier 출력이 기준입니다.
 
 ## 검증 명령
 
 저장소 루트에서 실행합니다.
 
 ```bash
-node --test tests/formats/runtime-resolver.test.mjs tests/formats/verify-formats.test.mjs
+node --test \
+  tests/formats/archive-inspection.test.mjs \
+  tests/formats/docx-qa.test.mjs \
+  tests/formats/runtime-resolver.test.mjs \
+  tests/formats/verify-formats.test.mjs
 node tests/formats/verify-formats.mjs tests/formats/output
 npm run validate:release
 ```
 
-첫 명령은 runtime path 해석과 verifier 계약을, 두 번째는 대표 출력 두 세트를, release gate는 reference·package·isolation 검증과 format 준비 상태 전체를 확인합니다. `FORMAT-RESULTS.md`가 없거나 Task 11 파일이 일부만 있으면 release gate는 완료를 보고하지 않습니다.
+첫 명령은 OOXML archive 검사, DOCX QA 변환, runtime path 해석과 verifier 계약을, 두 번째는 대표 출력 두 세트를, release gate는 reference·package·isolation 검증과 format 준비 상태 전체를 확인합니다. `FORMAT-RESULTS.md`가 없거나 대표 형식 파일이 일부만 있으면 release gate는 완료를 보고하지 않습니다.
 
 ## 관련 문서
 

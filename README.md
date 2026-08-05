@@ -326,6 +326,8 @@ npm run validate:release
 - `npm run validate:release`: `FORMAT-RESULTS.md`와 대표 출력까지 준비된 상태에서만 release-ready로 종료합니다.
 - `npm run smoke:marketplace`: 임시 격리 환경에서 각 제품의 marketplace 등록, 설치, 실제 설치 스킬 호출 증거, 제거와 정리를 검증합니다. 로컬 Codex 인증과 실행 시간이 필요하므로 일반 빠른 검증과 분리했습니다.
 
+페이지·슬라이드별 시각 검토와 source binding 결과는 [대표 형식 검증 결과](tests/formats/FORMAT-RESULTS.md)에 기록되어 있습니다.
+
 ## 문제 해결
 
 ### 플러그인이 목록에 없다

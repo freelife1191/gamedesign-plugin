@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "caseId": "studio-live-service-rpg-economy",
+  "sourceBinding": {
+    "rootClass": "repository-e2e-fixture",
+    "files": {
+      "request.json": "6b13b5a39e1af4df4e4c69b03cde633a36040b827ac919aeaf70453b2ff6fa38",
+      "result.json": "50d43637b2a838957ac5f848da52ae3041ec7f5d9c78dae09cf112e5c936e634",
+      "output-manifest.json": "cb38b99036c9eaac1371f6905c6d6861fa0d21c773c5f2156f1e0b8873a64bb9",
+      "approval-snapshot.json": "78871fa8b5be9d8c47d99d2cc3921d6fd4087d3087779dba71c28c582b10361a"
+    },
+    "pointers": [
+      "result.json#/domain/economy",
+      "result.json#/domain/experiment",
+      "result.json#/domain/rollback",
+      "approval-snapshot.json#/responsibleGates"
+    ]
+  },
+  "canonicalExportManifest": {
+    "formats": [
+      "md",
+      "pdf",
+      "docx",
+      "pptx"
+    ]
+  },
+  "visualizationLane": {
+    "formats": [
+      "svg",
+      "png"
+    ],
+    "svgViewBox": "0 0 960 540",
+    "pngDimensions": {
+      "width": 1920,
+      "height": 1080
+    },
+    "renderer": "packaged-skillstead-chromium-2x",
+    "lint": "passed"
+  },
+  "artifacts": {
+    "brief.md": {
+      "sha256": "f6fe294e2e10cc870ed3cd4e91d85a1c1104d664839c0d45862ef25aa93e483d"
+    },
+    "brief.pdf": {
+      "sha256": "4075bb40e9a89a39eef978a397d8d3723fb3533a097099fe6801463fd59e47c0"
+    },
+    "brief.docx": {
+      "sha256": "fb36d0d6e96672891564fea293149f609ac392c180a9ee465eac784fd9462c50"
+    },
+    "brief.pptx": {
+      "sha256": "8ae4b6a1c6f2cea9b33fa9441b8f776b7c767b4dee6b80ffcf5dcd066136cc37"
+    },
+    "visualization.svg": {
+      "sha256": "b694ceab52b0e58d870b402a1decda23e07671be6337d08e70299b207be78e3b"
+    },
+    "visualization.png": {
+      "sha256": "9b624110bf8fd1cb433c35efb53d1506fca04859841cff03fcb7902808239d9f"
+    }
+  },
+  "runtime": {
+    "runtimeSourceClass": "official-cache",
+    "node": "24.14.0",
+    "python": "Python 3.12.13",
+    "artifactTool": "2.8.31",
+    "libreOffice": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "poppler": "pdftoppm version 26.05.0",
+    "chromium": "Google Chrome 151.0.7922.76",
+    "docxVisualRenderer": "macOS-quick-look-html+chromium-print"
+  },
+  "font": {
+    "family": "D2Coding",
+    "version": "1.3.2",
+    "license": "SIL OFL 1.1",
+    "sourceClass": "locally-installed-official-upstream-match"
+  },
+  "document": {
+    "pdfPages": 4,
+    "docxPages": 4,
+    "pptxSlides": 6
+  },
+  "presentation": {
+    "slideSize": {
+      "width": 1280,
+      "height": 720
+    },
+    "artifactToolOnly": true,
+    "layoutInspiration": [
+      "Codex Grid slide-08",
+      "Codex Grid slide-10",
+      "Codex Grid slide-14",
+      "Codex Grid slide-19",
+      "Codex Grid slide-25"
+    ],
+    "speakerNotesSources": true,
+    "diagramSlide": 3,
+    "overflowTest": "passed"
+  },
+  "visualAttestation": {
+    "status": "approved",
+    "reviewedOn": "2026-08-05",
+    "reviewers": ["independent-vision-agent", "primary-agent"],
+    "pageCount": 4,
+    "slideCount": 6,
+    "png": { "width": 1920, "height": 1080 },
+    "inspectedImages": [
+      "pdf/page-1.png",
+      "pdf/page-2.png",
+      "pdf/page-3.png",
+      "pdf/page-4.png",
+      "docx/page-1.png",
+      "docx/page-2.png",
+      "docx/page-3.png",
+      "docx/page-4.png",
+      "pptx/slide-1.png",
+      "pptx/slide-2.png",
+      "pptx/slide-3.png",
+      "pptx/slide-4.png",
+      "pptx/slide-5.png",
+      "pptx/slide-6.png",
+      "visualization.png"
+    ]
+  }
+}

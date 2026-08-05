@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "caseId": "studio-live-service-rpg-economy",
+  "product": "studio",
+  "title": "라이브 서비스 RPG 경제 운영 브리프",
+  "sourceRoot": "tests/e2e/studio/live-service-rpg-economy",
+  "sources": {
+    "request.json": "6b13b5a39e1af4df4e4c69b03cde633a36040b827ac919aeaf70453b2ff6fa38",
+    "result.json": "50d43637b2a838957ac5f848da52ae3041ec7f5d9c78dae09cf112e5c936e634",
+    "output-manifest.json": "cb38b99036c9eaac1371f6905c6d6861fa0d21c773c5f2156f1e0b8873a64bb9",
+    "approval-snapshot.json": "78871fa8b5be9d8c47d99d2cc3921d6fd4087d3087779dba71c28c582b10361a"
+  },
+  "sourcePointers": [
+    "result.json#/domain/economy",
+    "result.json#/domain/experiment",
+    "result.json#/domain/rollback",
+    "approval-snapshot.json#/responsibleGates"
+  ],
+  "expectedSectionSources": [
+    ["result.json#/domain/economy", "approval-snapshot.json#/responsibleGates/0"],
+    ["result.json#/domain/economy"],
+    ["result.json#/domain/experiment"],
+    ["result.json#/domain/rollback", "approval-snapshot.json#/responsibleGates/1"]
+  ],
+  "anchors": ["목표 보유량 5,000", "일일 미션", "주간 인플레이션율", "자동 롤백"],
+  "documentAnchors": ["목표 보유량은 5,000", "일일 미션", "주간 인플레이션율", "자동으로 마지막 정상 설정"],
+  "presentationAnchors": ["5,000", "목표 보유량", "일일 미션", "주간 인플레이션율", "자동 롤백"],
+  "expectedPages": { "pdf": 4, "docx": 4 },
+  "expectedSlides": 6
+}
