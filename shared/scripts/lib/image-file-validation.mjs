@@ -81,12 +81,12 @@ export async function prepareImageOutput({ stagingRoot, output } = {}) {
   return { destination, output: { path: output.path, width: output.width, height: output.height, format: "png" } };
 }
 
-export async function promoteValidatedPng({ prepared, bytes, afterTemporaryWritten } = {}) {
+export async function promoteValidatedPng({ prepared, bytes, beforePublish } = {}) {
   const image = validatePngBuffer(bytes, prepared?.output);
   const temporary = `${prepared.destination}.tmp-${randomUUID()}`;
   try {
     await writeFile(temporary, bytes, { flag: "wx", mode: 0o600 });
-    await afterTemporaryWritten?.(temporary);
+    await beforePublish?.();
     await link(temporary, prepared.destination);
   } catch {
     await rm(temporary, { force: true }).catch(() => {});

@@ -19,8 +19,8 @@ function png(width = 1024, height = 1024) {
   return buffer;
 }
 
-function response({ status = 200, body, requestId = "req-safe-id", retryAfter, contentLength, chunks, onRead } = {}) {
-  const source = chunks ?? [Buffer.from(JSON.stringify(body))];
+function response({ status = 200, body, requestId = "req-safe-id", retryAfter, contentLength, chunks, onRead, bodyStream } = {}) {
+  const source = chunks ?? [Buffer.from(JSON.stringify(body ?? {}))];
   const length = contentLength === undefined ? String(source.reduce((total, chunk) => total + Buffer.byteLength(chunk), 0)) : contentLength;
   return {
     status,
@@ -30,7 +30,7 @@ function response({ status = 200, body, requestId = "req-safe-id", retryAfter, c
       if (name.toLowerCase() === "content-length") return length ?? null;
       return null;
     } },
-    body: { async *[Symbol.asyncIterator]() { for (const chunk of source) { onRead?.(); yield chunk; } } },
+    body: bodyStream ?? { async *[Symbol.asyncIterator]() { for (const chunk of source) { onRead?.(); yield chunk; } } },
   };
 }
 
@@ -191,6 +191,47 @@ test("generateOpenAIImages bounds streamed response bytes for declared, missing,
   assert.deepEqual(lying.failures, [{ asset_id: "lying", generation_state: "qa-failed", reason: "invalid-provider-response", attempts: 1 }]);
 });
 
+test("generateOpenAIImages cancels an oversized declared response before reading its body", async (t) => {
+  const root = await staging(t);
+  let reads = 0;
+  let cancels = 0;
+  const result = await generateOpenAIImages({
+    jobs: [job({ asset_id: "cancel-declared", output: { path: "assets/generated/cancel-declared.png", width: 1024, height: 1024, format: "png" } })], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async () => response({
+      contentLength: String(maximumResponseBytes + 1),
+      bodyStream: {
+        async cancel() { cancels += 1; throw new Error("cancellation detail must not escape"); },
+        async *[Symbol.asyncIterator]() { reads += 1; yield Buffer.alloc(1); },
+      },
+    }), sleepFn: async () => {},
+  });
+  assert.equal(reads, 0);
+  assert.equal(cancels, 1);
+  assert.deepEqual(result.failures, [{ asset_id: "cancel-declared", generation_state: "qa-failed", reason: "invalid-provider-response", attempts: 1 }]);
+  assert.equal(JSON.stringify(result).includes("cancellation detail"), false);
+});
+
+test("generateOpenAIImages cancels and releases a reader when a chunk exceeds the byte ceiling", async (t) => {
+  const root = await staging(t);
+  let cancels = 0;
+  let releases = 0;
+  let reads = 0;
+  const reader = {
+    async read() { reads += 1; return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; },
+    async cancel() { cancels += 1; throw new Error("reader cancellation detail must not escape"); },
+    releaseLock() { releases += 1; },
+  };
+  const result = await generateOpenAIImages({
+    jobs: [job({ asset_id: "cancel-reader", output: { path: "assets/generated/cancel-reader.png", width: 1024, height: 1024, format: "png" } })], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async () => response({ contentLength: "1", bodyStream: { getReader() { return reader; } } }), sleepFn: async () => {},
+  });
+  assert.equal(reads, 1);
+  assert.equal(cancels, 1);
+  assert.equal(releases, 1);
+  assert.deepEqual(result.failures, [{ asset_id: "cancel-reader", generation_state: "qa-failed", reason: "invalid-provider-response", attempts: 1 }]);
+  assert.equal(JSON.stringify(result).includes("reader cancellation detail"), false);
+});
+
 test("generateOpenAIImages retries only transient 429 and 5xx responses for at most three total attempts", async (t) => {
   const root = await staging(t);
   const sleeps = [];
@@ -319,16 +360,28 @@ test("generateOpenAIImages refuses traversal, symlinks, and existing approved ou
   assert.equal(await readFile(path.join(root, "approved.png"), "utf8"), "approved");
 });
 
-test("promoteValidatedPng preserves a destination created after preflight and cleans its temporary file", async (t) => {
+test("promoteValidatedPng exposes only a pathless beforePublish race boundary", async (t) => {
   const root = await staging(t);
   const prepared = await prepareImageOutput({ stagingRoot: root, output: job().output });
   await assert.rejects(
     () => promoteValidatedPng({
       prepared, bytes: png(),
-      afterTemporaryWritten: async () => writeFile(prepared.destination, "prior-approved-bytes"),
+      beforePublish: async (...args) => { assert.deepEqual(args, []); await writeFile(prepared.destination, "prior-approved-bytes"); },
     }),
     /validation|publish/i,
   );
   assert.equal(await readFile(prepared.destination, "utf8"), "prior-approved-bytes");
   assert.equal((await readdir(path.dirname(prepared.destination))).some((name) => name.includes(".tmp-")), false);
+});
+
+test("promoteValidatedPng does not expose or invoke the retired temporary-path hook", async (t) => {
+  const root = await staging(t);
+  const prepared = await prepareImageOutput({ stagingRoot: root, output: job().output });
+  let invoked = false;
+  await promoteValidatedPng({
+    prepared, bytes: png(),
+    afterTemporaryWritten: async () => { invoked = true; },
+  });
+  assert.equal(invoked, false);
+  assert.deepEqual(await readFile(prepared.destination), png());
 });

@@ -66,42 +66,68 @@ function declaredLength(response) {
   return Number(value);
 }
 
-async function responseChunks(body) {
-  if (body && typeof body[Symbol.asyncIterator] === "function") return body;
-  if (body && typeof body.getReader === "function") {
-    return (async function* readerChunks() {
-      const reader = body.getReader();
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) return;
-          yield value;
-        }
-      } finally {
-        reader.releaseLock?.();
-      }
-    }());
-  }
-  return null;
+async function cancelQuietly(target) {
+  await target?.cancel?.().catch(() => {});
 }
 
-async function readBoundedJson(response) {
-  if (declaredLength(response) === null) return { ok: false };
-  const stream = await responseChunks(response?.body);
-  if (!stream) return { ok: false };
-  const chunks = [];
-  let total = 0;
+function parseBufferedJson(chunks, total) {
   try {
-    for await (const chunk of stream) {
-      if (!(chunk instanceof Uint8Array) || total + chunk.byteLength > maximumResponseBytes) return { ok: false };
-      chunks.push(Buffer.from(chunk));
-      total += chunk.byteLength;
-    }
     const value = JSON.parse(Buffer.concat(chunks, total).toString("utf8"));
     return value && typeof value === "object" && !Array.isArray(value) ? { ok: true, value } : { ok: false };
   } catch {
     return { ok: false };
   }
+}
+
+async function readAsyncIterableJson(body) {
+  const chunks = [];
+  let total = 0;
+  let normal = false;
+  try {
+    for await (const chunk of body) {
+      if (!(chunk instanceof Uint8Array) || total + chunk.byteLength > maximumResponseBytes) return { ok: false };
+      chunks.push(Buffer.from(chunk));
+      total += chunk.byteLength;
+    }
+    const parsed = parseBufferedJson(chunks, total);
+    normal = parsed.ok;
+    return parsed;
+  } finally {
+    if (!normal) await cancelQuietly(body);
+  }
+}
+
+async function readReaderJson(body) {
+  const reader = body.getReader();
+  const chunks = [];
+  let total = 0;
+  let normal = false;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!(value instanceof Uint8Array) || total + value.byteLength > maximumResponseBytes) return { ok: false };
+      chunks.push(Buffer.from(value));
+      total += value.byteLength;
+    }
+    const parsed = parseBufferedJson(chunks, total);
+    normal = parsed.ok;
+    return parsed;
+  } finally {
+    if (!normal) await cancelQuietly(reader);
+    reader.releaseLock?.();
+  }
+}
+
+async function readBoundedJson(response) {
+  const body = response?.body;
+  if (declaredLength(response) === null) {
+    await cancelQuietly(body);
+    return { ok: false };
+  }
+  if (body && typeof body.getReader === "function") return readReaderJson(body);
+  if (body && typeof body[Symbol.asyncIterator] === "function") return readAsyncIterableJson(body);
+  return { ok: false };
 }
 
 function providerErrorClass(body) {
