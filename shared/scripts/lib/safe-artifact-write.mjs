@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { link, lstat, open, realpath, rename, unlink } from "node:fs/promises";
+import { link, lstat, mkdir, open, realpath, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -31,6 +31,34 @@ export async function canonicalArtifactRoot(value) {
   const canonicalStats = await regularDirectory(canonical);
   if (!sameFile(requestedStats, canonicalStats)) unsafePath();
   return { path: canonical, identity: canonicalStats };
+}
+
+async function ensureDirectory(root, relativePath) {
+  if (!safeRelativePath(relativePath)) unsafePath();
+  let current = root.path;
+  const identities = [{ path: current, stats: root.identity }];
+  for (const segment of relativePath.split("/")) {
+    const next = path.resolve(current, segment);
+    let stats = await lstat(next).catch((error) => error?.code === "ENOENT" ? undefined : Promise.reject(error));
+    if (!stats) {
+      await assertIdentities(identities);
+      await mkdir(next).catch((error) => error?.code === "EEXIST" ? undefined : Promise.reject(error));
+      stats = await regularDirectory(next);
+    } else if (stats.isSymbolicLink() || !stats.isDirectory()) {
+      unsafePath();
+    }
+    if (await realpath(next).catch(unsafePath) !== next) unsafePath();
+    identities.push({ path: next, stats });
+    current = next;
+  }
+  await assertIdentities(identities);
+}
+
+export async function ensureArtifactDirectories({ artifactRoot, directories } = {}) {
+  if (!Array.isArray(directories) || directories.length === 0 || new Set(directories).size !== directories.length) unsafePath();
+  const root = await canonicalArtifactRoot(artifactRoot);
+  for (const directory of directories) await ensureDirectory(root, directory);
+  return root.path;
 }
 
 async function parentDirectory(root, relativePath) {

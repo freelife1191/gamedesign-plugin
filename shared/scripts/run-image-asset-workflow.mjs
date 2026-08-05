@@ -8,7 +8,7 @@ import { compileImagePrompts } from "./compile-image-prompts.mjs";
 import { generateOpenAIImages } from "./generate-openai-images.mjs";
 import { validatePngBuffer } from "./lib/image-file-validation.mjs";
 import { resolveImageProvider } from "./lib/image-provider.mjs";
-import { canonicalArtifactRoot, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
+import { canonicalArtifactRoot, ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { applyImageReviewTransition, validateImageAssetManifest } from "./validate-image-assets.mjs";
 
 const patternNames = ["base", "character", "skill-vfx", "environment", "ui-icon", "storyboard", "document-illustration"];
@@ -89,14 +89,15 @@ function validateSelectionReceipt(receipt, selectedAssetIds) {
 
 async function readUserDecisionReceipt(root, receipt, { assetId, fromState, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths }) {
   const required = ["schema_version", "kind", "capture", "asset_id", "from_state", "target_state", "decision", "reviewer", "decided_at", "rights_decision", "evidence_paths"];
-  if (typeof reviewer === "string" && specialistReviewerIds.has(reviewer.normalize("NFC").toLowerCase())) {
+  const canonicalReviewer = canonicalHumanReviewer(reviewer);
+  if (specialistReviewerIds.has(canonicalReviewer.toLowerCase())) {
     throw new Error("Host user decision reviewer must be a named human, not a product specialist.");
   }
   if (!exactKeys(receipt, required) || receipt.schema_version !== 1 || receipt.kind !== "host-user-image-decision"
     || !exactKeys(receipt.capture, ["channel", "event_id"]) || receipt.capture.channel !== "host-user-input"
     || !hostEventId(receipt.capture.event_id)
     || receipt.asset_id !== assetId || receipt.from_state !== fromState || receipt.target_state !== targetState || receipt.decision !== "approved"
-    || receipt.reviewer !== reviewer || receipt.decided_at !== reviewedAt || Number.isNaN(Date.parse(receipt.decided_at))
+    || receipt.reviewer !== canonicalReviewer || receipt.decided_at !== reviewedAt || Number.isNaN(Date.parse(receipt.decided_at))
     || receipt.rights_decision !== rightsDecision || JSON.stringify(receipt.evidence_paths) !== JSON.stringify(evidencePaths)) {
     throw new Error("Host user decision receipt does not match the requested image review transition.");
   }
@@ -105,7 +106,17 @@ async function readUserDecisionReceipt(root, receipt, { assetId, fromState, targ
   } catch {
     throw new Error("Host user decision receipt must reference readable artifact-local evidence.");
   }
-  return receipt;
+  return { ...receipt, reviewer: canonicalReviewer };
+}
+
+function canonicalHumanReviewer(value) {
+  if (typeof value !== "string") throw new Error("Host user decision reviewer must be a named human.");
+  const canonical = value.normalize("NFKC").trim();
+  if (canonical.length === 0 || canonical.length > 128 || /[\u0000-\u001f\u007f-\u009f]/u.test(canonical)
+    || /^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+$/u.test(canonical)) {
+    throw new Error("Host user decision reviewer must be a named human, not a role-like identifier.");
+  }
+  return canonical;
 }
 
 function sha256(value) {
@@ -181,12 +192,20 @@ function validateHostResult(value, jobs) {
       throw new Error("Host generation success requires generated state and provider provenance.");
     }
   }
+  for (const failure of value.failures) {
+    if (!["generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"].includes(failure.generation_state)) {
+      throw new Error("Host generation failure must use an explicit non-generated failure state.");
+    }
+  }
   return clone(value);
 }
 
 async function validateHostOutputs(value, jobs, root) {
   const byAssetId = new Map(jobs.map((job) => [job.asset_id, job]));
-  const failures = [...value.failures];
+  const failures = value.failures.map((failure) => ({
+    ...failure,
+    provenance: failure.provenance ?? { provider: "codex-host" },
+  }));
   const results = [];
   for (const result of value.results) {
     const job = byAssetId.get(result.asset_id);
@@ -205,6 +224,12 @@ async function validateHostOutputs(value, jobs, root) {
       failures.push({ asset_id: result.asset_id, generation_state: "qa-failed", reason: "invalid-host-output", provenance: result.provenance });
     }
   }
+  const handled = new Set([...results, ...failures].map(({ asset_id }) => asset_id));
+  for (const { asset_id } of jobs) {
+    if (!handled.has(asset_id)) {
+      failures.push({ asset_id, generation_state: "generation-failed", reason: "host-result-omitted", provenance: { provider: "codex-host" } });
+    }
+  }
   return { results, failures };
 }
 
@@ -215,7 +240,7 @@ export async function runImageAssetWorkflow(options = {}) {
 }
 
 export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog } = {}) {
-  const root = (await canonicalArtifactRoot(artifactRoot)).path;
+  const root = await ensureArtifactDirectories({ artifactRoot, directories: ["assets", "assets/prompts", "decisions"] });
   const plan = buildImageAssetPlan({ artifact, qualityProfile, existingManifest });
   const prompts = compileImagePrompts({ manifest: plan.manifest, patternCatalog: patternCatalog ?? await defaultPatternCatalog() });
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/image-prompts.md", data: prompts.markdown });
@@ -247,6 +272,9 @@ export async function generateImageAssetWorkflow({
   const receipt = publicConfig.mode === "select" ? validateSelectionReceipt(selectionReceipt, selectedAssetIds) : undefined;
   const jobs = selectGenerationJobs({ manifest, mode: publicConfig.mode, selectedAssetIds });
   const selection = selectionRecord(publicConfig.mode, selectedAssetIds, receipt);
+  if (receipt) await safeWriteArtifactFile({
+    artifactRoot: root, relativePath: `assets/prompts/image-generation-selection-${receipt.event_id}.json`, data: `${JSON.stringify(selection, null, 2)}\n`, policy: "create-once",
+  });
   const decision = resolveImageProvider({ mode: publicConfig.mode, apiKeyPresent: publicConfig.apiKeyPresent, codexCapability });
   let providerResult = { results: [], failures: [] };
   if (jobs.length > 0 && decision.provider === "openai") {
@@ -267,9 +295,6 @@ export async function generateImageAssetWorkflow({
   const validation = validateImageAssetManifest(nextManifest, { artifactRoot: root });
   if (!validation.ok) throw new Error(`Workflow produced an invalid image manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
 
-  if (receipt) await safeWriteArtifactFile({
-    artifactRoot: root, relativePath: `assets/prompts/image-generation-selection-${receipt.event_id}.json`, data: `${JSON.stringify(selection, null, 2)}\n`, policy: "create-once",
-  });
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/image-assets.yml", data: `${JSON.stringify(nextManifest, null, 2)}\n` });
   return { manifest: nextManifest, selection, decision, providerResult };
 }

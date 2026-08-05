@@ -265,7 +265,7 @@ test('requires a manifest for a canonical managed SVG reference', async () => {
   assert.ok(output.validation.errors.some(({ code }) => code === 'image.manifest_required'), JSON.stringify(output));
 });
 
-test('accepts a canonical document-approved managed SVG only with passed lint, render, and QA evidence', async () => {
+test('rejects a self-written passed SVG JSON record without bound render evidence', async () => {
   const { workspace, artifact } = await workspaceWithArtifact();
   await mkdir(join(artifact, 'assets', 'generated'));
   await mkdir(join(artifact, 'assets', 'qa'));
@@ -279,8 +279,8 @@ test('accepts a canonical document-approved managed SVG only with passed lint, r
 
   const { output } = runStop(officialPayload(workspace));
 
-  assert.equal(output.status, 'passed');
-  assert.equal(output.validation.ok, true);
+  assert.equal(output.decision, 'block');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.svg_qa_required'), JSON.stringify(output));
 });
 
 test('fails closed for SVG aliases, untracked outputs, and symbolic links', async () => {

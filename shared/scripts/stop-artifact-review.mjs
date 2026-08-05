@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
+import { createHash } from 'node:crypto';
 import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseRestrictedYaml, validateArtifact } from './validate-artifact.mjs';
+import { inspectCompletePng } from './lib/complete-png-validation.mjs';
+import { lintSvg } from './lib/skillstead-svg-lint.mjs';
 import { validateImageAssetManifest } from './validate-image-assets.mjs';
 
 const MAX_STDIN_BYTES = 64 * 1024;
@@ -170,13 +173,15 @@ function managedMarkdownImageReferences(content) {
 }
 
 async function safeManagedArtifactFile(artifactPath, relativePath) {
+  if (!isSafeRelativeArtifactPath(relativePath)) return false;
   let cursor = artifactPath;
   try {
     for (const part of relativePath.split("/")) {
       cursor = resolve(cursor, part);
       if ((await lstat(cursor)).isSymbolicLink()) return false;
     }
-    return (await lstat(cursor)).isFile();
+    const canonical = await realpath(cursor);
+    return inside(artifactPath, canonical) && (await lstat(canonical)).isFile();
   } catch {
     return false;
   }
@@ -184,16 +189,61 @@ async function safeManagedArtifactFile(artifactPath, relativePath) {
 
 async function hasPassedSvgQa(artifactPath, asset) {
   const evidencePath = `assets/qa/${asset.asset_id}.svg-qa.json`;
-  if (!(await safeManagedArtifactFile(artifactPath, evidencePath))) return false;
+  if (!(await safeManagedArtifactFile(artifactPath, evidencePath)) || !(await safeManagedArtifactFile(artifactPath, asset.output.path))) return false;
   try {
     const value = JSON.parse(await readFile(resolve(artifactPath, evidencePath), 'utf8'));
-    return value && typeof value === 'object' && !Array.isArray(value)
-      && JSON.stringify(Object.keys(value).sort()) === JSON.stringify(['asset_id', 'kind', 'lint_status', 'output_path', 'qa_status', 'render_status', 'schema_version'])
-      && value.schema_version === 1 && value.kind === 'skillstead-svg-qa' && value.asset_id === asset.asset_id && value.output_path === asset.output.path
-      && value.lint_status === 'passed' && value.render_status === 'passed' && value.qa_status === 'passed';
+    if (!exactSvgEvidence(value, asset)) return false;
+    const svg = await readFile(resolve(artifactPath, asset.output.path));
+    const source = svg.toString('utf8');
+    const metadata = svgMetadata(source);
+    const svgDigest = digest(svg);
+    if (!metadata || metadata.desc !== asset.alt_text || value.svg_sha256 !== svgDigest
+      || value.lint.svg_sha256 !== svgDigest || value.render.svg_sha256 !== svgDigest || value.qa.svg_sha256 !== svgDigest
+      || lintSvg(source, asset.output.path).errors.length !== 0) return false;
+    if (!(await safeManagedArtifactFile(artifactPath, value.render.png_path))) return false;
+    const png = await readFile(resolve(artifactPath, value.render.png_path));
+    const inspection = inspectCompletePng(png);
+    const pngDigest = digest(png);
+    return inspection.ok && inspection.width === metadata.width * 2 && inspection.height === metadata.height * 2
+      && value.render.png_sha256 === pngDigest && value.qa.png_sha256 === pngDigest
+      && value.render.width === inspection.width && value.render.height === inspection.height;
   } catch {
     return false;
   }
+}
+
+function digest(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+function exactSvgEvidence(value, asset) {
+  const keys = (record, required) => record && typeof record === 'object' && !Array.isArray(record)
+    && JSON.stringify(Object.keys(record).sort()) === JSON.stringify([...required].sort());
+  return keys(value, ['schema_version', 'kind', 'asset_id', 'output_path', 'svg_sha256', 'lint', 'render', 'qa'])
+    && value.schema_version === 1 && value.kind === 'skillstead-svg-evidence' && value.asset_id === asset.asset_id && value.output_path === asset.output.path
+    && /^[a-f0-9]{64}$/u.test(value.svg_sha256)
+    && keys(value.lint, ['status', 'tool', 'version', 'svg_sha256']) && value.lint.status === 'passed'
+    && value.lint.tool === 'Skillstead svg-infographic' && value.lint.version === '0.8.3' && /^[a-f0-9]{64}$/u.test(value.lint.svg_sha256)
+    && keys(value.render, ['status', 'renderer', 'svg_sha256', 'png_path', 'png_sha256', 'scale', 'width', 'height']) && value.render.status === 'passed'
+    && typeof value.render.renderer === 'string' && /^Chromium(?:[ /]|$)/u.test(value.render.renderer)
+    && typeof value.render.png_path === 'string' && /^[a-f0-9]{64}$/u.test(value.render.svg_sha256) && /^[a-f0-9]{64}$/u.test(value.render.png_sha256)
+    && value.render.scale === 2 && Number.isInteger(value.render.width) && Number.isInteger(value.render.height)
+    && keys(value.qa, ['status', 'svg_sha256', 'png_sha256', 'checks']) && value.qa.status === 'passed'
+    && /^[a-f0-9]{64}$/u.test(value.qa.svg_sha256) && /^[a-f0-9]{64}$/u.test(value.qa.png_sha256)
+    && Array.isArray(value.qa.checks) && JSON.stringify([...value.qa.checks].sort()) === JSON.stringify(['alt-text', 'close-up', 'fit-to-page', 'source-fidelity']);
+}
+
+function svgMetadata(source) {
+  if (/<(?:script|foreignObject)\b|<!DOCTYPE|<!ENTITY/iu.test(source)) return null;
+  const root = /<svg(?:\s[^>]*)?>/iu.exec(source)?.[0];
+  const viewBox = root && /\bviewBox\s*=\s*["']\s*[-+\d.eE]+\s+[-+\d.eE]+\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s*["']/u.exec(root);
+  const titles = [...source.matchAll(/<title(?:\s[^>]*)?>\s*([^<]+?)\s*<\/title>/giu)];
+  const descriptions = [...source.matchAll(/<desc(?:\s[^>]*)?>\s*([^<]+?)\s*<\/desc>/giu)];
+  const title = titles.length === 1 ? titles[0][1].trim() : undefined;
+  const desc = descriptions.length === 1 ? descriptions[0][1].trim() : undefined;
+  const width = Number(viewBox?.[1]);
+  const height = Number(viewBox?.[2]);
+  return title && desc && width > 0 && height > 0 ? { width, height, desc } : null;
 }
 
 function parseImageManifestYaml(source) {

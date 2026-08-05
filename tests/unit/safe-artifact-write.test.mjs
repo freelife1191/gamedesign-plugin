@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { safeWriteArtifactFile } from "../../shared/scripts/lib/safe-artifact-write.mjs";
+import { ensureArtifactDirectories, safeWriteArtifactFile } from "../../shared/scripts/lib/safe-artifact-write.mjs";
 
 async function fixture(t) {
   const root = await mkdtemp(path.join(tmpdir(), "safe-artifact-write-"));
@@ -46,4 +46,18 @@ test("safe artifact writer fails closed when its target or parent is swapped bef
     },
   }), /unsafe/i);
   assert.equal(await readFile(outsideTarget, "utf8"), "outside-target\n");
+});
+
+test("safe artifact directories initialize an empty regular artifact but reject a symlink ancestor", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "safe-artifact-empty-"));
+  const outside = await mkdtemp(path.join(tmpdir(), "safe-artifact-empty-outside-"));
+  t.after(() => Promise.all([rm(root, { recursive: true, force: true }), rm(outside, { recursive: true, force: true })]));
+  await ensureArtifactDirectories({ artifactRoot: root, directories: ["assets/prompts", "decisions"] });
+  await safeWriteArtifactFile({ artifactRoot: root, relativePath: "assets/prompts/created.txt", data: "inside" });
+  assert.equal(await readFile(path.join(root, "assets", "prompts", "created.txt"), "utf8"), "inside");
+  await rm(path.join(root, "assets"), { recursive: true });
+  await writeFile(path.join(outside, "sentinel.txt"), "outside\n");
+  await symlink(outside, path.join(root, "assets"));
+  await assert.rejects(() => ensureArtifactDirectories({ artifactRoot: root, directories: ["assets/prompts"] }), /unsafe/i);
+  assert.equal(await readFile(path.join(outside, "sentinel.txt"), "utf8"), "outside\n");
 });
