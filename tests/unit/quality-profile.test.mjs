@@ -80,7 +80,7 @@ test("validates the closed quality-profile contract without mutating input", () 
   assert.deepEqual(value, before);
   assert.ok(errorCodes({ ...value, version: "1.0.0" }).includes("version.invalid"));
   assert.ok(errorCodes({ ...value, unknown: true }).includes("schema.additional_property"));
-  assert.ok(errorCodes({ ...value, required_sections: [...value.required_sections, value.required_sections[0]] }).includes("id.duplicate"));
+  assert.ok(errorCodes({ ...value, required_sections: [...value.required_sections, structuredClone(value.required_sections[0])] }).includes("id.duplicate"));
   assert.ok(errorCodes({ ...value, acceptance_criteria: [] }).includes("array.empty"));
 });
 

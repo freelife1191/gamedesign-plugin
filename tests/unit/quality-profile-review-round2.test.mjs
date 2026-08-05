@@ -11,10 +11,23 @@ async function json(relativePath) {
   return JSON.parse(await readFile(new URL(relativePath, qualityRoot), "utf8"));
 }
 
+async function text(relativePath) {
+  return readFile(new URL(relativePath, qualityRoot), "utf8");
+}
+
 async function catalog(namespace) {
   const index = await json(`indexes/${namespace}.json`);
-  const profiles = await Promise.all(index.profiles.map(({ profile_id: id }) => json(`profiles/${namespace}/${id}.json`)));
-  return { index, profiles, byId: new Map(profiles.map((profile) => [profile.profile_id, profile])) };
+  const entries = await Promise.all(index.profiles.map(async ({ profile_id: id }) => ({
+    profile: await json(`profiles/${namespace}/${id}.json`),
+    sourceText: await text(`profiles/${namespace}/${id}.json`),
+  })));
+  const profiles = entries.map(({ profile }) => profile);
+  return {
+    index,
+    profiles,
+    byId: new Map(profiles.map((profile) => [profile.profile_id, profile])),
+    sourceTextById: new Map(entries.map(({ profile, sourceText }) => [profile.profile_id, sourceText])),
+  };
 }
 
 function baseRequest(overrides = {}) {
@@ -82,17 +95,17 @@ test("selection records are complete and fallback is permitted only for an unkno
 });
 
 test("upper apply API proves bounded lazy loading and returns composed guidance plus checklist", async () => {
-  const { index, byId } = await catalog("studio");
+  const { index, sourceTextById } = await catalog("studio");
   const calls = [];
   const profileLoader = async (request) => {
     calls.push(request);
-    return structuredClone(byId.get(request.profileId));
+    return { sourceText: sourceTextById.get(request.profileId) };
   };
-  const referencePreset = await json("presets/function-first.json");
-  const overlay = await json("overlays/mobile.json");
-  const sourceLoader = async ({ sourceType }) => structuredClone(sourceType === "overlay" ? overlay : referencePreset);
+  const referencePresetText = await text("presets/function-first.json");
+  const overlayText = await text("overlays/mobile.json");
+  const sourceLoader = async ({ sourceType }) => ({ sourceText: sourceType === "overlay" ? overlayText : referencePresetText });
   const applied = await workflow.applyDocumentQualityProfile({
-    namespace: "studio", selectionIndex: index, profileLoader, sourceLoader,
+    namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, sourceLoader,
     request: { artifactId: "brief", goal: "game design brief", audience: ["production"], artifactType: "design-document", requestedFormat: "md" },
     overlayIds: ["mobile"], presetId: "function-first",
   });
@@ -105,11 +118,11 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
   assert.equal(applied.requirementManifest.requiredItemIds.length > 0, true);
 
   calls.length = 0;
-  const unresolved = await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich" }) });
+  const unresolved = await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich" }) });
   assert.equal(unresolved.selection.status, "fallback-required");
   assert.deepEqual(calls.map(({ purpose }) => purpose), ["nearest-comparison"]);
   calls.length = 0;
-  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich", fallbackPrimaryId: "executive-pitch" }) });
+  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader, request: baseRequest({ explicitPrimaryId: "executive-pich", fallbackPrimaryId: "executive-pitch" }) });
   assert.deepEqual(calls.map(({ purpose }) => purpose), ["nearest-comparison", "selected-primary"]);
 
   const pathCalls = [];
@@ -117,7 +130,7 @@ test("upper apply API proves bounded lazy loading and returns composed guidance 
     documentQualityRoot: fileURLToPath(qualityRoot),
     onLoad: (record) => pathCalls.push(record),
   });
-  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, profileLoader: packagedLoader, request: baseRequest() });
+  await workflow.applyDocumentQualityProfile({ namespace: "studio", selectionIndex: index, testOnlyLoaders: true, profileLoader: packagedLoader, request: baseRequest() });
   assert.deepEqual(pathCalls, [{
     namespace: "studio", profileId: "executive-pitch", purpose: "selected-primary",
     relativePath: "profiles/studio/executive-pitch.json",

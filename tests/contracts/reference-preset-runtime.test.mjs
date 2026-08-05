@@ -3,7 +3,15 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("production reference preset validator enforces the packaged schema safeText policy", async () => {
-  const { validateReferencePreset } = await import("../../shared/scripts/validate-reference-preset.mjs");
+  const { referencePresetContract, validateReferencePreset } = await import("../../shared/scripts/validate-reference-preset.mjs");
+  const schema = JSON.parse(await readFile(new URL("../../shared/document-quality/schema/reference-preset.schema.json", import.meta.url), "utf8"));
+  assert.deepEqual(referencePresetContract, {
+    expectedKeys: schema.required,
+    allowedIds: schema.properties.preset_id.enum,
+    minimumVersion: schema.properties.version.minimum,
+    safeTextPattern: schema.$defs.safeText.pattern,
+    listMinItems: schema.$defs.safeTextList.minItems,
+  });
   const valid = JSON.parse(await readFile(new URL("../../shared/document-quality/presets/function-first.json", import.meta.url), "utf8"));
   assert.deepEqual(validateReferencePreset(valid), { ok: true, errors: [] });
   for (const text of [

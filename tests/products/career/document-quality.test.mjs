@@ -60,6 +60,8 @@ test("Career skill composes only additive known sources and loads a bounded pack
   assert.deepEqual(contract.composition.upperApply, {
     overlays: "closed-overlayIds-only",
     preset: "closed-neutral-presetId-or-null",
+    loader: "packaged-pluginRoot-exact-non-symlink-paths",
+    sourceBodies: "canonical-version-semantic-and-raw-byte-digest-bound",
     rawObjects: "rejected",
     scalarConflicts: "fail-closed",
   });
@@ -77,9 +79,9 @@ test("Career checklist, Skillstead slots, status transitions, and approval bound
   assert.equal(contract.output.stableIdsRequired, true);
   assert.equal(contract.output.acceptanceIdRule, "source-id-plus-normalized-sha256-16");
   assert.equal(contract.output.diagrams, "skillstead-compatible-slots-unverified-until-render-qa");
-  assert.deepEqual(contract.output.requirementManifest, ["schemaVersion", "contractDigest", "checklistDigest", "requiredItemIds"]);
+  assert.deepEqual(contract.output.requirementManifest, ["schemaVersion", "sourceBindings", "contractDigest", "checklistDigest", "requiredItemIds", "manifestDigest"]);
   assert.deepEqual(contract.stateEnvelope, {
-    binding: ["artifactDigest", "contractDigest", "checklistDigest"],
+    binding: ["artifactDigest", "manifestDigest", "contractDigest", "checklistDigest"],
     receipts: "exact-ordered-cumulative-revalidated",
     callerStateStrings: "rejected",
   });

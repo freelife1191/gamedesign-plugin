@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
-import { lstat, readFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, open } from "node:fs/promises";
 import path from "node:path";
+import { types } from "node:util";
 
+import { snapshotDataOnly } from "./data-only-snapshot.mjs";
+import { qualitySourceAnchors, qualitySourceByteDigests } from "./quality-source-anchors.mjs";
 import { validateQualityProfile } from "./validate-quality-profile.mjs";
 import { assertValidReferencePreset } from "./validate-reference-preset.mjs";
 
@@ -11,6 +15,10 @@ const documentStates = ["draft", "structurally-complete", "evidence-reviewed", "
 const scoreKeys = ["templateMatch", "artifactTypeMatch", "formatMatch", "audienceOverlap", "goalOverlap"];
 const selectionIndexKeys = ["schema_version", "namespace", "profiles"];
 const selectionEntryKeys = ["profile_id", "artifact_types", "audiences", "required_formats", "forbidden_formats"];
+const requestKeys = new Set([
+  "artifactId", "goal", "audience", "artifactType", "requestedFormat", "templateId", "overlayIds", "presetId",
+  "explicitPrimaryId", "fallbackPrimaryId",
+]);
 const digestPattern = /^[a-f0-9]{64}$/u;
 const knownOverlayIds = new Set(["mobile", "live-service", "pc-console"]);
 const knownPresetIds = new Set([
@@ -44,6 +52,10 @@ const responsibleGateIds = new Set([
   "ai-rights-human-approval", "accessibility", "economy-transparency", "liveops-experiment",
   "ugc-safety", "ai-npc-safety", "scope-control",
 ]);
+const trustedApplications = new WeakMap();
+const trustedManifests = new WeakMap();
+const packagedProfileLoaders = new WeakSet();
+const packagedSourceLoaders = new WeakSet();
 
 function clone(value) {
   return structuredClone(value);
@@ -67,6 +79,54 @@ function canonicalJson(value) {
 
 function digestValue(value) {
   return createHash("sha256").update(canonicalJson(value), "utf8").digest("hex");
+}
+
+function captureOptions(value, label, functionKeys = []) {
+  if (types.isProxy(value)) throw new Error(`${label} must not be a Proxy`);
+  assertPlainObject(value, label);
+  const keys = Reflect.ownKeys(value);
+  if (keys.some((key) => typeof key === "symbol")) throw new Error(`${label} must not contain symbol keys`);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  const data = {};
+  const functions = {};
+  for (const key of keys) {
+    const descriptor = descriptors[key];
+    if (!descriptor || descriptor.get || descriptor.set || descriptor.enumerable !== true || !("value" in descriptor)) {
+      throw new Error(`${label}.${key} must not be an accessor or non-enumerable property`);
+    }
+    if (functionKeys.includes(key)) {
+      if (descriptor.value !== undefined && (typeof descriptor.value !== "function" || types.isProxy(descriptor.value))) {
+        throw new Error(`${label}.${key} must be a non-Proxy function`);
+      }
+      Object.defineProperty(functions, key, { value: descriptor.value, enumerable: true, configurable: true, writable: true });
+    } else {
+      Object.defineProperty(data, key, { value: descriptor.value, enumerable: true, configurable: true, writable: true });
+    }
+  }
+  return { ...snapshotDataOnly(data, label), ...functions };
+}
+
+function canonicalSourceAnchor(kind, namespace, sourceId) {
+  if (kind === "primary") return qualitySourceAnchors.profiles[namespace]?.[sourceId];
+  if (kind === "overlay") return qualitySourceAnchors.overlays[sourceId];
+  if (kind === "preset") return qualitySourceAnchors.presets[sourceId];
+  return undefined;
+}
+
+function assertCanonicalSourceBody({ kind, namespace = null, sourceId, body }) {
+  const anchor = canonicalSourceAnchor(kind, namespace, sourceId);
+  if (!anchor) throw new Error(`Unknown canonical ${kind} source body: ${sourceId}`);
+  if (body.version !== anchor.version || digestValue(body) !== anchor.digest) {
+    throw new Error(`Canonical ${kind} source body digest or version mismatch; composition conflict prevented: ${sourceId}`);
+  }
+  return deepFreeze({
+    kind,
+    namespace,
+    sourceId,
+    version: anchor.version,
+    sourceDigest: anchor.digest,
+    sourceByteDigest: qualitySourceByteDigests[sourceId],
+  });
 }
 
 function indexDigest(value) {
@@ -137,7 +197,8 @@ function levenshtein(left, right) {
   return previous[right.length];
 }
 
-export function adaptReferencePreset(preset) {
+export function adaptReferencePreset(rawPreset) {
+  const preset = snapshotDataOnly(rawPreset, "reference preset");
   assertValidReferencePreset(preset);
   return deepFreeze({
     presetId: preset.preset_id,
@@ -201,7 +262,8 @@ function assertUniqueAcceptanceCriteria(source, sourceName) {
   }
 }
 
-export function composeQualityProfile({ primary, overlays = [], preset = null, referencePreset = null }) {
+export function composeQualityProfile(rawOptions) {
+  const { primary, overlays = [], preset = null, referencePreset = null } = snapshotDataOnly(rawOptions, "quality profile composition options");
   if (!primary || typeof primary !== "object" || Array.isArray(primary)) throw new Error("primary profile must be an object");
   if (!Array.isArray(overlays)) throw new Error("overlays must be an array");
   const sources = [...overlays, ...(preset === null ? [] : [preset])];
@@ -317,7 +379,8 @@ function differenceRecord(profile, request) {
   };
 }
 
-export function validateQualitySelectionIndex(value) {
+export function validateQualitySelectionIndex(rawValue) {
+  const value = snapshotDataOnly(rawValue, "selection index");
   const errors = [];
   const add = (pathValue, message) => errors.push({ path: pathValue, message });
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) {
@@ -373,7 +436,8 @@ function completeSelectionRecord(request, values) {
   };
 }
 
-export function selectQualityProfiles({ selectionIndex, templateMap, requests, profiles }) {
+export function selectQualityProfiles(rawOptions) {
+  const { selectionIndex, templateMap, requests, profiles } = snapshotDataOnly(rawOptions, "quality profile selection options");
   if (profiles !== undefined || selectionIndex === undefined) throw new Error("Selection requires a closed selection index; profile body preload is forbidden");
   const indexValidation = validateQualitySelectionIndex(selectionIndex);
   if (!indexValidation.ok) throw new Error(`Invalid selection index: ${indexValidation.errors.map(({ path: errorPath, message }) => `${errorPath || "/"} ${message}`).join("; ")}`);
@@ -383,6 +447,12 @@ export function selectQualityProfiles({ selectionIndex, templateMap, requests, p
   for (const profile of indexProfiles) byId.set(profile.profile_id, profile);
   return requests.map((rawRequest) => {
     assertPlainObject(rawRequest, "request");
+    for (const key of Object.keys(rawRequest)) {
+      if (!requestKeys.has(key)) throw new Error(`request contains an unknown field: ${key}`);
+    }
+    for (const key of ["artifactId", "goal", "audience", "artifactType", "requestedFormat"]) {
+      if (!Object.hasOwn(rawRequest, key)) throw new Error(`request is missing required field: ${key}`);
+    }
     const request = {
       artifactId: normalizeId(rawRequest.artifactId),
       goal: normalizeText(rawRequest.goal),
@@ -477,10 +547,14 @@ function indexEntryMatchesProfile(entry, profile) {
 async function loadIndexedBody({ selectionIndex, namespace, profileId, purpose, profileLoader }) {
   const entry = selectionIndex.profiles.find((candidate) => candidate.profile_id === profileId);
   if (!entry) throw new Error(`Unknown indexed profile: ${profileId}`);
-  const profile = await profileLoader({ namespace, profileId, purpose });
+  const loaded = await profileLoader({ namespace, profileId, purpose });
+  const profile = packagedProfileLoaders.has(profileLoader)
+    ? snapshotDataOnly(loaded, `${purpose} profile body`)
+    : parseInjectedCanonicalSource(loaded, profileId, `${purpose} profile loader response`);
   const validation = validateQualityProfile(profile, { sourceName: `${purpose} profile` });
   if (!validation.ok) throw new Error(`Invalid ${purpose} profile: ${validationDetails(validation)}`);
   if (!indexEntryMatchesProfile(entry, profile)) throw new Error(`Selection index drift for ${profileId}`);
+  assertCanonicalSourceBody({ kind: "primary", namespace, sourceId: profileId, body: profile });
   return profile;
 }
 
@@ -502,11 +576,15 @@ function normalizeClosedSourceIds(overlayIds, presetId) {
 
 async function loadClosedSource({ sourceLoader, sourceType, sourceId }) {
   if (typeof sourceLoader !== "function") throw new Error("A safe sourceLoader or pluginRoot is required for requested overlays and presets");
-  const body = await sourceLoader({ sourceType, sourceId, purpose: `selected-${sourceType}` });
+  const loaded = await sourceLoader({ sourceType, sourceId, purpose: `selected-${sourceType}` });
+  const body = packagedSourceLoaders.has(sourceLoader)
+    ? snapshotDataOnly(loaded, `${sourceType} source body`)
+    : parseInjectedCanonicalSource(loaded, sourceId, `${sourceType} source loader response`);
   assertPlainObject(body, `${sourceType} body`);
   const identityKey = sourceType === "overlay" ? "profile_id" : "preset_id";
   if (body[identityKey] !== sourceId) throw new Error(`${sourceType} ID mismatch: expected ${sourceId}, received ${String(body[identityKey])}`);
   if (sourceType === "preset") assertValidReferencePreset(body);
+  assertCanonicalSourceBody({ kind: sourceType, sourceId, body });
   return body;
 }
 
@@ -517,26 +595,32 @@ function resolveDocumentQualityRoot({ documentQualityRoot, pluginRoot }) {
   return undefined;
 }
 
-export async function applyDocumentQualityProfile(options) {
-  assertPlainObject(options, "document quality application options");
+export async function applyDocumentQualityProfile(rawOptions) {
+  const options = captureOptions(rawOptions, "document quality application options", ["profileLoader", "sourceLoader"]);
   for (const rawKey of ["overlays", "preset", "referencePreset"]) {
     if (Object.hasOwn(options, rawKey)) throw new Error(`Upper apply rejects raw ${rawKey}; use closed overlayIds and presetId`);
   }
   const {
     namespace, selectionIndex, templateMap, profileLoader, sourceLoader, documentQualityRoot, pluginRoot, request,
-    overlayIds = [], presetId = null,
+    overlayIds = [], presetId = null, testOnlyLoaders = false,
   } = options;
+  if ((profileLoader !== undefined || sourceLoader !== undefined || documentQualityRoot !== undefined) && testOnlyLoaders !== true) {
+    throw new Error("Production upper apply requires packaged pluginRoot; injected loaders and documentQualityRoot are test-only");
+  }
+  if (testOnlyLoaders !== false && testOnlyLoaders !== true) throw new Error("testOnlyLoaders must be boolean");
+  if (testOnlyLoaders === false && pluginRoot === undefined) throw new Error("Production upper apply requires packaged pluginRoot");
   const qualityRoot = resolveDocumentQualityRoot({ documentQualityRoot, pluginRoot });
   const effectiveLoader = profileLoader ?? createQualityProfileBodyLoader({ documentQualityRoot: qualityRoot });
   if (typeof effectiveLoader !== "function") throw new Error("profileLoader must be a function");
   if (selectionIndex?.namespace !== namespace) throw new Error("Selection index namespace mismatch");
   const sources = normalizeClosedSourceIds(overlayIds, presetId);
   const effectiveSourceLoader = sourceLoader ?? (qualityRoot === undefined ? null : createQualitySourceLoader({ documentQualityRoot: qualityRoot }));
-  const [selection] = selectQualityProfiles({
+  const selectionOptions = {
     selectionIndex,
-    templateMap,
     requests: [{ ...request, overlayIds: sources.overlayIds, presetId: sources.presetId }],
-  });
+  };
+  if (templateMap !== undefined) selectionOptions.templateMap = templateMap;
+  const [selection] = selectQualityProfiles(selectionOptions);
   if (selection.fallbackRecord?.nearestProfileId) {
     await loadIndexedBody({ selectionIndex, namespace, profileId: selection.fallbackRecord.nearestProfileId, purpose: "nearest-comparison", profileLoader: effectiveLoader });
   }
@@ -554,8 +638,16 @@ export async function applyDocumentQualityProfile(options) {
     throw new Error(`Document-quality composition conflict: ${composed.conflicts.map(({ path: conflictPath }) => conflictPath).join(", ")}`);
   }
   const checklist = buildQualityChecklist(composed);
-  const requirementManifest = buildRequirementManifest(composed, checklist);
-  return deepFreeze({ selection, composed, checklist, requirementManifest });
+  const sourceBindings = [
+    assertCanonicalSourceBody({ kind: "primary", namespace, sourceId: primary.profile_id, body: primary }),
+    ...loadedOverlays.map((body) => assertCanonicalSourceBody({ kind: "overlay", sourceId: body.profile_id, body })),
+    ...(referencePreset === null ? [] : [assertCanonicalSourceBody({ kind: "preset", sourceId: referencePreset.preset_id, body: referencePreset })]),
+  ];
+  const requirementManifest = buildRequirementManifest(composed, checklist, sourceBindings);
+  const application = deepFreeze({ selection, composed, checklist, requirementManifest });
+  trustedApplications.set(application, { application, requirementManifest, composed, checklist, sourceBindings });
+  trustedManifests.set(requirementManifest, application);
+  return application;
 }
 
 function derivedId(sourceId, kind, text) {
@@ -568,7 +660,8 @@ function requiredItems(values) {
   return values.map((value) => ({ ...clone(value), required: true, status: "missing" }));
 }
 
-export function buildQualityChecklist(composed) {
+export function buildQualityChecklist(rawComposed) {
+  const composed = snapshotDataOnly(rawComposed, "composed profile result");
   assertPlainObject(composed, "composed profile result");
   const profile = composed.profile;
   const diagrams = requiredItems(profile.required_diagrams);
@@ -599,24 +692,50 @@ export function buildQualityChecklist(composed) {
   return deepFreeze(checklist);
 }
 
-function buildRequirementManifest(composed, suppliedChecklist = buildQualityChecklist(composed)) {
+function buildRequirementManifest(composed, suppliedChecklist = buildQualityChecklist(composed), sourceBindings = []) {
   const itemIds = Object.values(suppliedChecklist).flat()
     .filter(({ required }) => required === true)
     .map(({ id }) => id)
     .sort((left, right) => left.localeCompare(right, "en-US"));
-  return deepFreeze({
+  const unsigned = {
     schemaVersion: 1,
+    sourceBindings: clone(sourceBindings),
     contractDigest: digestValue(composed),
     checklistDigest: digestValue(suppliedChecklist),
     requiredItemIds: itemIds,
-  });
+  };
+  return deepFreeze({ ...unsigned, manifestDigest: digestValue(unsigned) });
 }
 
 function validateRequirementManifest(manifest) {
-  exactKeys(manifest, ["schemaVersion", "contractDigest", "checklistDigest", "requiredItemIds"], "requirement manifest");
+  exactKeys(manifest, [
+    "schemaVersion", "sourceBindings", "contractDigest", "checklistDigest", "requiredItemIds", "manifestDigest",
+  ], "requirement manifest");
   if (manifest.schemaVersion !== 1) throw new Error("Requirement manifest schemaVersion must be 1");
+  if (!Array.isArray(manifest.sourceBindings) || manifest.sourceBindings.length === 0) {
+    throw new Error("Requirement manifest sourceBindings must be non-empty");
+  }
+  for (const [index, binding] of manifest.sourceBindings.entries()) {
+    exactKeys(binding, ["kind", "namespace", "sourceId", "version", "sourceDigest", "sourceByteDigest"], `requirement manifest source binding ${index}`);
+    if (!["primary", "overlay", "preset"].includes(binding.kind)) throw new Error("Requirement manifest source binding kind is unknown");
+    if (binding.kind === "primary" && !["studio", "career"].includes(binding.namespace)) throw new Error("Primary source binding namespace is unknown");
+    if (binding.kind !== "primary" && binding.namespace !== null) throw new Error("Non-primary source binding namespace must be null");
+    if (normalizeId(binding.sourceId) !== binding.sourceId) throw new Error("Requirement manifest source ID must already be normalized");
+    if (!Number.isInteger(binding.version) || binding.version < 1) throw new Error("Requirement manifest source version is invalid");
+    assertDigest(binding.sourceDigest, "requirement manifest sourceDigest");
+    assertDigest(binding.sourceByteDigest, "requirement manifest sourceByteDigest");
+    const anchor = canonicalSourceAnchor(binding.kind, binding.namespace, binding.sourceId);
+    if (!anchor || anchor.version !== binding.version || anchor.digest !== binding.sourceDigest
+      || qualitySourceByteDigests[binding.sourceId] !== binding.sourceByteDigest) {
+      throw new Error("Requirement manifest source binding is not canonical");
+    }
+  }
+  if (manifest.sourceBindings[0].kind !== "primary" || manifest.sourceBindings.slice(1).some(({ kind }) => kind === "primary")) {
+    throw new Error("Requirement manifest source bindings must start with exactly one primary");
+  }
   assertDigest(manifest.contractDigest, "requirement manifest contractDigest");
   assertDigest(manifest.checklistDigest, "requirement manifest checklistDigest");
+  assertDigest(manifest.manifestDigest, "requirement manifest manifestDigest");
   if (!Array.isArray(manifest.requiredItemIds) || manifest.requiredItemIds.length === 0) {
     throw new Error("Requirement manifest requiredItemIds must be non-empty");
   }
@@ -626,6 +745,56 @@ function validateRequirementManifest(manifest) {
   if (new Set(manifest.requiredItemIds).size !== manifest.requiredItemIds.length) throw new Error("Requirement manifest item IDs contain a duplicate");
   const sorted = [...manifest.requiredItemIds].sort((left, right) => left.localeCompare(right, "en-US"));
   if (JSON.stringify(sorted) !== JSON.stringify(manifest.requiredItemIds)) throw new Error("Requirement manifest item IDs must be canonical ordered");
+  const unsigned = clone(manifest);
+  delete unsigned.manifestDigest;
+  if (manifest.manifestDigest !== digestValue(unsigned)) throw new Error("Requirement manifest digest mismatch");
+}
+
+function trustedApplicationRecord(value, label = "trusted application") {
+  if (types.isProxy(value)) throw new Error(`${label} must not be a Proxy`);
+  const application = trustedApplications.has(value) ? value : trustedManifests.get(value);
+  if (!application) throw new Error(`${label} manifest must come directly from upper apply`);
+  const record = trustedApplications.get(application);
+  const rederivedChecklist = buildQualityChecklist(record.composed);
+  const rederivedManifest = buildRequirementManifest(record.composed, rederivedChecklist, record.sourceBindings);
+  if (digestValue(rederivedManifest) !== digestValue(record.requirementManifest)) {
+    throw new Error("Trusted application requirement manifest does not match canonical composition");
+  }
+  validateRequirementManifest(record.requirementManifest);
+  return record;
+}
+
+function trustedRecordFromOpaque(opaque) {
+  const applicationRecord = opaque.application === undefined ? null : trustedApplicationRecord(opaque.application);
+  const manifestRecord = opaque.requirementManifest === undefined ? null : trustedApplicationRecord(opaque.requirementManifest, "trusted application manifest");
+  if (!applicationRecord && !manifestRecord) throw new Error("A trusted application or trusted application manifest is required");
+  if (applicationRecord && manifestRecord && applicationRecord.application !== manifestRecord.application) {
+    throw new Error("Trusted application and manifest do not identify the same canonical application");
+  }
+  return applicationRecord ?? manifestRecord;
+}
+
+function captureBoundaryOptions(rawOptions, label, opaqueKeys) {
+  if (types.isProxy(rawOptions)) throw new Error(`${label} must not be a Proxy`);
+  assertPlainObject(rawOptions, label);
+  const keys = Reflect.ownKeys(rawOptions);
+  if (keys.some((key) => typeof key === "symbol")) throw new Error(`${label} must not contain symbol keys`);
+  const descriptors = Object.getOwnPropertyDescriptors(rawOptions);
+  const opaque = {};
+  const data = {};
+  for (const key of keys) {
+    const descriptor = descriptors[key];
+    if (!descriptor || descriptor.get || descriptor.set || descriptor.enumerable !== true || !("value" in descriptor)) {
+      throw new Error(`${label}.${key} must not be an accessor or non-enumerable property`);
+    }
+    Object.defineProperty(opaqueKeys.includes(key) ? opaque : data, key, {
+      value: descriptor.value,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+  }
+  return { opaque, data: snapshotDataOnly(data, label) };
 }
 
 function unsignedReceipt(record) {
@@ -641,12 +810,14 @@ function validateReceiptDigest(record, label) {
 
 function validateInspectionReceipt(requirementManifest, receipt) {
   exactKeys(receipt, [
-    "schemaVersion", "artifactDigest", "contractDigest", "checklistDigest", "observations", "verifierIdentity", "receiptDigest",
+    "schemaVersion", "artifactDigest", "manifestDigest", "contractDigest", "checklistDigest", "observations", "verifierIdentity", "receiptDigest",
   ], "artifact inspection receipt");
   if (receipt.schemaVersion !== 1) throw new Error("Artifact inspection receipt schemaVersion must be 1");
-  for (const key of ["artifactDigest", "contractDigest", "checklistDigest"]) assertDigest(receipt[key], `artifact inspection ${key}`);
+  for (const key of ["artifactDigest", "manifestDigest", "contractDigest", "checklistDigest"]) assertDigest(receipt[key], `artifact inspection ${key}`);
   assertText(receipt.verifierIdentity, "artifact inspection verifierIdentity");
-  if (receipt.contractDigest !== requirementManifest.contractDigest || receipt.checklistDigest !== requirementManifest.checklistDigest) {
+  if (receipt.manifestDigest !== requirementManifest.manifestDigest
+    || receipt.contractDigest !== requirementManifest.contractDigest
+    || receipt.checklistDigest !== requirementManifest.checklistDigest) {
     throw new Error("Artifact inspection receipt manifest digest mismatch");
   }
   if (!Array.isArray(receipt.observations)) throw new Error("Artifact inspection observations must be an array");
@@ -663,12 +834,16 @@ function validateInspectionReceipt(requirementManifest, receipt) {
   validateReceiptDigest(receipt, "artifact inspection receipt");
 }
 
-export function createStructuralCompletionEvidence({ requirementManifest, inspectionReceipt } = {}) {
-  validateRequirementManifest(requirementManifest);
+export function createStructuralCompletionEvidence(rawOptions = {}) {
+  const { opaque, data } = captureBoundaryOptions(rawOptions, "structural completion options", ["application", "requirementManifest"]);
+  const trusted = trustedRecordFromOpaque(opaque);
+  const requirementManifest = trusted.requirementManifest;
+  const { inspectionReceipt } = data;
   validateInspectionReceipt(requirementManifest, inspectionReceipt);
   return deepFreeze({
     schemaVersion: 1,
     artifactDigest: inspectionReceipt.artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
     inspectionReceipt: clone(inspectionReceipt),
@@ -676,15 +851,19 @@ export function createStructuralCompletionEvidence({ requirementManifest, inspec
 }
 
 export function verifyStructuralCompletionEvidence(requirementManifest, evidence) {
-  validateRequirementManifest(requirementManifest);
+  const trusted = trustedApplicationRecord(requirementManifest);
+  requirementManifest = trusted.requirementManifest;
+  evidence = snapshotDataOnly(evidence, "structural completion receipt");
   exactKeys(evidence, [
-    "schemaVersion", "artifactDigest", "contractDigest", "checklistDigest", "inspectionReceipt",
+    "schemaVersion", "artifactDigest", "manifestDigest", "contractDigest", "checklistDigest", "inspectionReceipt",
   ], "structural completion receipt");
   if (evidence.schemaVersion !== 1) throw new Error("Structural completion receipt schemaVersion must be 1");
-  for (const key of ["artifactDigest", "contractDigest", "checklistDigest"]) {
+  for (const key of ["artifactDigest", "manifestDigest", "contractDigest", "checklistDigest"]) {
     assertDigest(evidence[key], `structural completion ${key}`);
   }
-  if (evidence.contractDigest !== requirementManifest.contractDigest || evidence.checklistDigest !== requirementManifest.checklistDigest) {
+  if (evidence.manifestDigest !== requirementManifest.manifestDigest
+    || evidence.contractDigest !== requirementManifest.contractDigest
+    || evidence.checklistDigest !== requirementManifest.checklistDigest) {
     throw new Error("Structural completion receipt manifest digest mismatch");
   }
   validateInspectionReceipt(requirementManifest, evidence.inspectionReceipt);
@@ -715,7 +894,7 @@ function assertStringList(value, label) {
 }
 
 function assertReceiptBinding(record, expected, label) {
-  for (const key of ["artifactDigest", "contractDigest", "checklistDigest"]) {
+  for (const key of ["artifactDigest", "manifestDigest", "contractDigest", "checklistDigest"]) {
     assertDigest(record[key], `${label} ${key}`);
     if (record[key] !== expected[key]) throw new Error(`${label} must bind to the same artifact and manifest digests`);
   }
@@ -724,7 +903,7 @@ function assertReceiptBinding(record, expected, label) {
 function validateEvidenceReview(record, expected) {
   exactKeys(record, [
     "schemaVersion", "reviewerRole", "verifierIdentity", "status", "evidenceIds",
-    "artifactDigest", "contractDigest", "checklistDigest", "receiptDigest",
+    "artifactDigest", "manifestDigest", "contractDigest", "checklistDigest", "receiptDigest",
   ], "evidence review receipt");
   if (record.schemaVersion !== 1 || record.reviewerRole !== "evidence-auditor" || record.status !== "verified") {
     throw new Error("Evidence review receipt is not verified by evidence-auditor");
@@ -738,7 +917,7 @@ function validateEvidenceReview(record, expected) {
 function validateVisualReview(composed, record, expected) {
   exactKeys(record, [
     "schemaVersion", "reviewerRole", "verifierIdentity", "rendererStatus", "qaStatus",
-    "artifactDigest", "contractDigest", "checklistDigest", "skillsteadSlots", "receiptDigest",
+    "artifactDigest", "manifestDigest", "contractDigest", "checklistDigest", "skillsteadSlots", "receiptDigest",
   ], "visual review receipt");
   if (record.schemaVersion !== 1 || record.reviewerRole !== "renderer-qa" || record.rendererStatus !== "passed" || record.qaStatus !== "passed") {
     throw new Error("Visual review receipt requires passed renderer QA");
@@ -775,7 +954,7 @@ function assertDate(value, label) {
 
 function validateDocumentApproval(record, expected) {
   exactKeys(record, [
-    "schemaVersion", "artifactDigest", "contractDigest", "checklistDigest", "rightsApproval",
+    "schemaVersion", "artifactDigest", "manifestDigest", "contractDigest", "checklistDigest", "rightsApproval",
     "responsibleGates", "humanApprovalReceipt", "receiptDigest",
   ], "document approval receipt");
   if (record.schemaVersion !== 1) throw new Error("Document approval schemaVersion must be 1");
@@ -815,18 +994,19 @@ function validateDocumentApproval(record, expected) {
   validateReceiptDigest(record, "document approval receipt");
 }
 
-function validateStateEnvelope(stateEnvelope, requirementManifest, composed) {
-  validateRequirementManifest(requirementManifest);
-  exactKeys(stateEnvelope, ["schemaVersion", "state", "artifactDigest", "contractDigest", "checklistDigest", "receipts"], "document quality state envelope");
+function validateStateEnvelope(stateEnvelope, trusted) {
+  const { requirementManifest, composed } = trusted;
+  exactKeys(stateEnvelope, ["schemaVersion", "state", "artifactDigest", "manifestDigest", "contractDigest", "checklistDigest", "receipts"], "document quality state envelope");
   if (stateEnvelope.schemaVersion !== 1) throw new Error("State envelope schemaVersion must be 1");
   const currentIndex = documentStates.indexOf(stateEnvelope.state);
   if (currentIndex < 0) throw new Error("State envelope state is unknown");
   assertReceiptBinding(stateEnvelope, {
     artifactDigest: stateEnvelope.artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
   }, "state envelope");
-  if (composed !== undefined && digestValue(composed) !== requirementManifest.contractDigest) {
+  if (digestValue(composed) !== requirementManifest.contractDigest) {
     throw new Error("State envelope composed contract digest mismatch");
   }
   if (!Array.isArray(stateEnvelope.receipts) || stateEnvelope.receipts.length !== currentIndex) {
@@ -843,7 +1023,6 @@ function validateStateEnvelope(stateEnvelope, requirementManifest, composed) {
     } else if (wrapper.stage === "evidence-reviewed") {
       validateEvidenceReview(wrapper.record, expected);
     } else if (wrapper.stage === "visual-reviewed") {
-      if (composed === undefined) throw new Error("Composed contract is required to revalidate visual receipts");
       validateVisualReview(composed, wrapper.record, expected);
     } else if (wrapper.stage === "document-approved") {
       validateDocumentApproval(wrapper.record, expected);
@@ -852,26 +1031,39 @@ function validateStateEnvelope(stateEnvelope, requirementManifest, composed) {
   return currentIndex;
 }
 
-export function createDocumentQualityStateEnvelope({ artifactDigest, requirementManifest } = {}) {
-  validateRequirementManifest(requirementManifest);
+export function createDocumentQualityStateEnvelope(rawOptions = {}) {
+  const { opaque, data } = captureBoundaryOptions(rawOptions, "state envelope options", ["application", "requirementManifest"]);
+  const trusted = trustedRecordFromOpaque(opaque);
+  const { requirementManifest } = trusted;
+  const { artifactDigest } = data;
   assertDigest(artifactDigest, "state envelope artifactDigest");
   return deepFreeze({
     schemaVersion: 1,
     state: "draft",
     artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
     receipts: [],
   });
 }
 
-export function transitionDocumentQualityState(options) {
-  assertPlainObject(options, "document quality transition options");
+export function transitionDocumentQualityState(rawOptions) {
+  const { opaque, data: options } = captureBoundaryOptions(
+    rawOptions,
+    "document quality transition options",
+    ["application", "requirementManifest", "composed"],
+  );
   if (Object.hasOwn(options, "currentState")) throw new Error("currentState strings are forbidden; provide a state envelope");
+  const trusted = trustedRecordFromOpaque(opaque);
+  if (opaque.composed !== undefined && opaque.composed !== trusted.composed) {
+    throw new Error("Composed contract must be the exact trusted upper-apply composition");
+  }
   const {
-    stateEnvelope, targetState, requirementManifest, composed, structuralReceipt, evidenceReview, visualReview, documentApproval,
+    stateEnvelope, targetState, structuralReceipt, evidenceReview, visualReview, documentApproval,
   } = options;
-  const currentIndex = validateStateEnvelope(stateEnvelope, requirementManifest, composed);
+  const { requirementManifest, composed } = trusted;
+  const currentIndex = validateStateEnvelope(stateEnvelope, trusted);
   const targetIndex = documentStates.indexOf(targetState);
   if (currentIndex < 0 || targetIndex !== currentIndex + 1) throw new Error("target must be the exact next state");
   let record;
@@ -947,67 +1139,124 @@ async function assertSafeFile(root, relativePath) {
   return cursor;
 }
 
-export function createQualityProfileBodyLoader({ documentQualityRoot, onLoad } = {}) {
+async function readSafeFile(root, relativePath) {
+  const filePath = await assertSafeFile(root, relativePath);
+  let handle;
+  try {
+    handle = await open(filePath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const [handleStats, pathStats] = await Promise.all([handle.stat(), lstat(filePath)]);
+    if (!handleStats.isFile() || pathStats.isSymbolicLink() || !pathStats.isFile()
+      || handleStats.dev !== pathStats.dev || handleStats.ino !== pathStats.ino) {
+      throw new Error(`Quality source path identity changed during open: ${relativePath}`);
+    }
+    await assertSafeFile(root, relativePath);
+    return await handle.readFile();
+  } catch (error) {
+    if (error?.code === "ELOOP") throw new Error(`Symlink is not allowed in quality source path: ${relativePath}`, { cause: error });
+    throw error;
+  } finally {
+    await handle?.close();
+  }
+}
+
+function assertCanonicalSourceBytes(sourceId, bytes) {
+  const expected = qualitySourceByteDigests[sourceId];
+  const actual = createHash("sha256").update(bytes).digest("hex");
+  if (expected === undefined || actual !== expected) throw new Error(`Canonical source bytes digest mismatch: ${sourceId}`);
+}
+
+function parseInjectedCanonicalSource(rawResponse, sourceId, label) {
+  const response = snapshotDataOnly(rawResponse, label);
+  exactKeys(response, ["sourceText"], label);
+  if (typeof response.sourceText !== "string") throw new Error(`${label}.sourceText must be a string`);
+  const bytes = Buffer.from(response.sourceText, "utf8");
+  assertCanonicalSourceBytes(sourceId, bytes);
+  let value;
+  try {
+    value = JSON.parse(response.sourceText);
+  } catch (error) {
+    throw new Error(`Invalid injected canonical source JSON: ${error.message}`, { cause: error });
+  }
+  return snapshotDataOnly(value, `${label}.sourceText`);
+}
+
+export function createQualityProfileBodyLoader(rawOptions = {}) {
+  const { documentQualityRoot, onLoad } = captureOptions(rawOptions, "quality profile loader options", ["onLoad"]);
   if (typeof documentQualityRoot !== "string") throw new Error("documentQualityRoot must be a path");
   if (onLoad !== undefined && typeof onLoad !== "function") throw new Error("onLoad must be a function");
-  return async ({ namespace, profileId, purpose }) => {
+  const loader = async (rawRequest) => {
+    const { namespace, profileId, purpose } = snapshotDataOnly(rawRequest, "quality profile load request");
     if (!["studio", "career"].includes(namespace)) throw new Error(`Unknown quality profile namespace: ${String(namespace)}`);
     const normalizedProfileId = normalizeId(profileId);
     if (normalizedProfileId !== profileId) throw new Error("Quality profile ID must already be normalized");
     const relativePath = `profiles/${namespace}/${profileId}.json`;
-    const filePath = await assertSafeFile(documentQualityRoot, relativePath);
-    onLoad?.({ namespace, profileId, purpose, relativePath });
+    const bytes = await readSafeFile(documentQualityRoot, relativePath);
+    assertCanonicalSourceBytes(profileId, bytes);
     let profile;
     try {
-      profile = JSON.parse(await readFile(filePath, "utf8"));
+      profile = JSON.parse(bytes.toString("utf8"));
     } catch (error) {
       throw new Error(`Invalid quality profile JSON: ${error.message}`, { cause: error });
     }
+    profile = snapshotDataOnly(profile, relativePath);
     const validation = validateQualityProfile(profile, { sourceName: relativePath });
     if (!validation.ok) throw new Error(`Invalid quality profile ${profileId}: ${validationDetails(validation)}`);
     if (profile.profile_id !== profileId) throw new Error(`Quality profile ID mismatch: expected ${profileId}, received ${String(profile.profile_id)}`);
+    assertCanonicalSourceBody({ kind: "primary", namespace, sourceId: profileId, body: profile });
+    onLoad?.({ namespace, profileId, purpose, relativePath });
     return deepFreeze(clone(profile));
   };
+  packagedProfileLoaders.add(loader);
+  return loader;
 }
 
-export function createQualitySourceLoader({ documentQualityRoot, onLoad } = {}) {
+export function createQualitySourceLoader(rawOptions = {}) {
+  const { documentQualityRoot, onLoad } = captureOptions(rawOptions, "quality source loader options", ["onLoad"]);
   if (typeof documentQualityRoot !== "string") throw new Error("documentQualityRoot must be a path");
   if (onLoad !== undefined && typeof onLoad !== "function") throw new Error("onLoad must be a function");
-  return async ({ sourceType, sourceId, purpose }) => {
+  const loader = async (rawRequest) => {
+    const { sourceType, sourceId, purpose } = snapshotDataOnly(rawRequest, "quality source load request");
     const registry = sourceType === "overlay" ? knownOverlayIds : sourceType === "preset" ? knownPresetIds : null;
     if (registry === null) throw new Error(`Unknown document-quality source type: ${String(sourceType)}`);
     const normalizedSourceId = normalizeId(sourceId);
     if (normalizedSourceId !== sourceId) throw new Error("Document-quality source ID must already be normalized");
     if (!registry.has(sourceId)) throw new Error(`Unknown ${sourceType}: ${sourceId}`);
     const relativePath = `${sourceType === "overlay" ? "overlays" : "presets"}/${sourceId}.json`;
-    const filePath = await assertSafeFile(documentQualityRoot, relativePath);
-    onLoad?.({ sourceType, sourceId, purpose, relativePath });
+    const bytes = await readSafeFile(documentQualityRoot, relativePath);
+    assertCanonicalSourceBytes(sourceId, bytes);
     let body;
     try {
-      body = JSON.parse(await readFile(filePath, "utf8"));
+      body = JSON.parse(bytes.toString("utf8"));
     } catch (error) {
       throw new Error(`Invalid document-quality source JSON: ${error.message}`, { cause: error });
     }
+    body = snapshotDataOnly(body, relativePath);
     const identityKey = sourceType === "overlay" ? "profile_id" : "preset_id";
     if (body?.[identityKey] !== sourceId) {
       throw new Error(`${sourceType} ID mismatch: expected ${sourceId}, received ${String(body?.[identityKey])}`);
     }
     if (sourceType === "preset") assertValidReferencePreset(body);
+    assertCanonicalSourceBody({ kind: sourceType, sourceId, body });
+    onLoad?.({ sourceType, sourceId, purpose, relativePath });
     return deepFreeze(clone(body));
   };
+  packagedSourceLoaders.add(loader);
+  return loader;
 }
 
-export async function loadQualityProfile({ pluginRoot, profileId }) {
+export async function loadQualityProfile(rawOptions) {
+  const { pluginRoot, profileId } = snapshotDataOnly(rawOptions, "quality profile load options");
   if (typeof pluginRoot !== "string") throw new Error("pluginRoot must be a path");
   if (typeof profileId !== "string" || !stableIdPattern.test(profileId)) throw new Error(`Invalid quality profile ID: ${String(profileId)}`);
   const relativePath = `references/quality-profiles/${profileId}.json`;
-  const filePath = await assertSafeFile(pluginRoot, relativePath);
+  const bytes = await readSafeFile(pluginRoot, relativePath);
   let value;
   try {
-    value = JSON.parse(await readFile(filePath, "utf8"));
+    value = JSON.parse(bytes.toString("utf8"));
   } catch (error) {
     throw new Error(`Invalid quality profile JSON: ${error.message}`, { cause: error });
   }
+  value = snapshotDataOnly(value, relativePath);
   const validation = validateQualityProfile(value, { sourceName: relativePath });
   if (!validation.ok) {
     throw new Error(`Invalid quality profile ${profileId}: ${validationDetails(validation)}`);

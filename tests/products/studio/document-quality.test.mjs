@@ -67,6 +67,8 @@ test("Studio composition and progressive loading fail closed", async () => {
   assert.deepEqual(contract.composition.upperApply, {
     overlays: "closed-overlayIds-only",
     preset: "closed-neutral-presetId-or-null",
+    loader: "packaged-pluginRoot-exact-non-symlink-paths",
+    sourceBodies: "canonical-version-semantic-and-raw-byte-digest-bound",
     rawObjects: "rejected",
     scalarConflicts: "fail-closed",
   });
@@ -95,9 +97,9 @@ test("Studio output checklist and state machine preserve every quality and appro
   assert.equal(contract.output.stableIdsRequired, true);
   assert.equal(contract.output.acceptanceIdRule, "source-id-plus-normalized-sha256-16");
   assert.equal(contract.output.diagrams, "skillstead-compatible-slots-unverified-until-render-qa");
-  assert.deepEqual(contract.output.requirementManifest, ["schemaVersion", "contractDigest", "checklistDigest", "requiredItemIds"]);
+  assert.deepEqual(contract.output.requirementManifest, ["schemaVersion", "sourceBindings", "contractDigest", "checklistDigest", "requiredItemIds", "manifestDigest"]);
   assert.deepEqual(contract.stateEnvelope, {
-    binding: ["artifactDigest", "contractDigest", "checklistDigest"],
+    binding: ["artifactDigest", "manifestDigest", "contractDigest", "checklistDigest"],
     receipts: "exact-ordered-cumulative-revalidated",
     callerStateStrings: "rejected",
   });

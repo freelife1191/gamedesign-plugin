@@ -16,6 +16,10 @@ async function json(relativePath) {
   return JSON.parse(await readFile(new URL(relativePath, qualityRoot), "utf8"));
 }
 
+async function text(relativePath) {
+  return readFile(new URL(relativePath, qualityRoot), "utf8");
+}
+
 function digest(value) {
   const canonical = (item) => Array.isArray(item)
     ? `[${item.map(canonical).join(",")}]`
@@ -37,11 +41,12 @@ function resigned(value) {
 
 async function appliedBrief(options = {}) {
   const index = await json("indexes/studio.json");
-  const primary = await json("profiles/studio/game-design-brief.json");
+  const primaryText = await text("profiles/studio/game-design-brief.json");
   return workflow.applyDocumentQualityProfile({
     namespace: "studio",
     selectionIndex: index,
-    profileLoader: async () => structuredClone(primary),
+    testOnlyLoaders: true,
+    profileLoader: async () => ({ sourceText: primaryText }),
     request: {
       artifactId: "brief",
       goal: "game design brief",
@@ -57,6 +62,7 @@ function inspectionReceipt(requirementManifest, artifactDigest = artifactA) {
   const unsigned = {
     schemaVersion: 1,
     artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
     observations: requirementManifest.requiredItemIds.map((itemId) => ({ itemId, observed: true, passed: true })),
@@ -73,6 +79,7 @@ function evidenceReceipt(requirementManifest, artifactDigest = artifactA) {
     status: "verified",
     evidenceIds: ["evidence-1"],
     artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
   });
@@ -91,6 +98,7 @@ function visualReceipt(composed, requirementManifest, artifactDigest = artifactA
     rendererStatus: "passed",
     qaStatus: "passed",
     artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
     skillsteadSlots,
@@ -124,6 +132,7 @@ function approvalReceipt(requirementManifest, artifactDigest = artifactA) {
   return signed({
     schemaVersion: 1,
     artifactDigest,
+    manifestDigest: requirementManifest.manifestDigest,
     contractDigest: requirementManifest.contractDigest,
     checklistDigest: requirementManifest.checklistDigest,
     rightsApproval,
@@ -231,10 +240,12 @@ test("immutable state envelopes revalidate the complete ordered same-artifact re
 test("upper apply loads only closed overlay and neutral preset IDs and fails on conflicts", async (t) => {
   const overlay = await json("overlays/mobile.json");
   const preset = await json("presets/function-first.json");
+  const overlayText = await text("overlays/mobile.json");
+  const presetText = await text("presets/function-first.json");
   const calls = [];
   const sourceLoader = async (request) => {
     calls.push(request);
-    return structuredClone(request.sourceType === "overlay" ? overlay : preset);
+    return { sourceText: request.sourceType === "overlay" ? overlayText : presetText };
   };
   const applied = await appliedBrief({ overlayIds: ["mobile"], presetId: "function-first", sourceLoader });
   assert.deepEqual(calls.map(({ sourceType, sourceId }) => [sourceType, sourceId]), [["overlay", "mobile"], ["preset", "function-first"]]);
@@ -250,12 +261,12 @@ test("upper apply loads only closed overlay and neutral preset IDs and fails on 
   await assert.rejects(() => appliedBrief({ overlayIds: ["evil-overlay"], sourceLoader }), /unknown overlay/i);
   await assert.rejects(() => appliedBrief({ overlayIds: ["mobile", "mobile"], sourceLoader }), /duplicate overlay/i);
   await assert.rejects(() => appliedBrief({ presetId: "unknown-preset", sourceLoader }), /unknown preset/i);
-  await assert.rejects(() => appliedBrief({ overlayIds: ["mobile"], sourceLoader: async () => ({ ...overlay, profile_id: "evil-overlay" }) }), /ID mismatch/i);
-  await assert.rejects(() => appliedBrief({ presetId: "function-first", sourceLoader: async () => ({ ...preset, preset_id: "cinematic-narrative" }) }), /ID mismatch/i);
+  await assert.rejects(() => appliedBrief({ overlayIds: ["mobile"], sourceLoader: async () => ({ sourceText: JSON.stringify({ ...overlay, profile_id: "evil-overlay" }) }) }), /canonical.*bytes.*digest/i);
+  await assert.rejects(() => appliedBrief({ presetId: "function-first", sourceLoader: async () => ({ sourceText: JSON.stringify({ ...preset, preset_id: "cinematic-narrative" }) }) }), /canonical.*bytes.*digest/i);
   await assert.rejects(() => appliedBrief({
     overlayIds: ["mobile"],
-    sourceLoader: async () => ({ ...overlay, length_guidance: { min_words: 1, max_words: 2 } }),
-  }), /composition conflict|length_guidance/i);
+    sourceLoader: async () => ({ sourceText: JSON.stringify({ ...overlay, length_guidance: { min_words: 1, max_words: 2 } }) }),
+  }), /canonical.*bytes.*digest/i);
 
   const pluginRoot = await mkdtemp(path.join(tmpdir(), "quality-source-plugin-"));
   t.after(() => rm(pluginRoot, { recursive: true, force: true }));
@@ -263,10 +274,10 @@ test("upper apply loads only closed overlay and neutral preset IDs and fails on 
   await mkdir(path.join(packagedRoot, "profiles/studio"), { recursive: true });
   await mkdir(path.join(packagedRoot, "overlays"), { recursive: true });
   await mkdir(path.join(packagedRoot, "presets"), { recursive: true });
-  const primary = await json("profiles/studio/game-design-brief.json");
-  await writeFile(path.join(packagedRoot, "profiles/studio/game-design-brief.json"), JSON.stringify(primary));
-  await writeFile(path.join(packagedRoot, "overlays/mobile.json"), JSON.stringify(overlay));
-  await writeFile(path.join(packagedRoot, "presets/function-first.json"), JSON.stringify(preset));
+  const primaryText = await text("profiles/studio/game-design-brief.json");
+  await writeFile(path.join(packagedRoot, "profiles/studio/game-design-brief.json"), primaryText);
+  await writeFile(path.join(packagedRoot, "overlays/mobile.json"), overlayText);
+  await writeFile(path.join(packagedRoot, "presets/function-first.json"), presetText);
   const packaged = await appliedBrief({
     profileLoader: undefined,
     pluginRoot,

@@ -20,7 +20,7 @@ Record each applicable gate as `pending`, `blocked`, `approved`, or `not-applica
 ## Document quality
 
 - Require one validated quality-profile selection record per compatible artifact before content generation and asset planning.
-- Advance only `draft -> structurally-complete -> evidence-reviewed -> visual-reviewed -> document-approved`; never skip a state. Carry the transition in the immutable state envelope, and require a digest-bound external artifact-inspection receipt covering every required ID before `structurally-complete`; requirements or caller state strings cannot complete it.
+- Use the exact trusted upper-apply application with canonical source-body bindings; re-derive its full manifest at every boundary and reject cloned, shrunk, injected, reordered, or recomputed caller manifests. Advance only `draft -> structurally-complete -> evidence-reviewed -> visual-reviewed -> document-approved`; never skip a state. Carry the full manifest digest in the immutable state envelope and receipts, and require an artifact-digest-bound external artifact-inspection receipt covering every canonical required ID before `structurally-complete`; requirements or caller state strings cannot complete it. Reject Proxy, accessor, unsafe-Unicode, custom-prototype, repeated-reference, hidden-property, symbol, and cyclic public data before use.
 - Generated images and rendered files do not grant approval. Requested diagrams remain unverified until Skillstead output and renderer QA pass.
 - Preserve separate evidence, image-rights, responsible-design, release, and named human approval gates. `document-quality-editor` reports structural findings but cannot approve them or replace an evidence auditor.
 
