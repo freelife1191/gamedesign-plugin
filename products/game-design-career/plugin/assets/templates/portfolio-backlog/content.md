@@ -1,6 +1,7 @@
 ---
 title: Portfolio Backlog
 artifact_id: portfolio-backlog
+quality_profile: portfolio-review-backlog
 version: 1
 ---
 # Portfolio Backlog {#portfolio-backlog}

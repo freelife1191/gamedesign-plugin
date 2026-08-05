@@ -1,6 +1,7 @@
 ---
 title: Game Design Review
 artifact_id: game-design-review
+quality_profile: design-review-decision-log
 version: 1
 ---
 # Game Design Review {#game-design-review}

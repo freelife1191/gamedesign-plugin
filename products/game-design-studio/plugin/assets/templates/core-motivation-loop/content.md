@@ -1,6 +1,7 @@
 ---
 title: Core and Motivation Loop
 artifact_id: core-motivation-loop
+quality_profile: core-motivation-loop
 version: 1
 ---
 # Core and Motivation Loop {#core-motivation-loop}

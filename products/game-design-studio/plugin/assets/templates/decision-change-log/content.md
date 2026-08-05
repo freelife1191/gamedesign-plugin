@@ -1,6 +1,7 @@
 ---
 title: Decision and Change Log
 artifact_id: decision-change-log
+quality_profile: design-review-decision-log
 version: 1
 ---
 # Decision and Change Log {#decision-change-log}

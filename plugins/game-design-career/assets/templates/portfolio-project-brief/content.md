@@ -1,6 +1,7 @@
 ---
 title: Portfolio Project Brief
 artifact_id: portfolio-project-brief
+quality_profile: portfolio-project-brief
 version: 1
 ---
 # Portfolio Project Brief {#portfolio-project-brief}

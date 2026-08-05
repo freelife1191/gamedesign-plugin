@@ -1,6 +1,7 @@
 ---
 title: Interview Question and Answer Log
 artifact_id: interview-question-answer-log
+quality_profile: interview-question-answer-report
 version: 1
 ---
 # Interview Question and Answer Log {#interview-question-answer-log}

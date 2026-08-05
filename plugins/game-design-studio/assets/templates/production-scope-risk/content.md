@@ -1,6 +1,7 @@
 ---
 title: Production Scope and Risk
 artifact_id: production-scope-risk
+quality_profile: production-scope-milestone-risk-plan
 version: 1
 ---
 # Production Scope and Risk {#production-scope-risk}

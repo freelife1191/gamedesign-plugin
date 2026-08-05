@@ -1,6 +1,7 @@
 ---
 title: Reverse Design Document
 artifact_id: reverse-design-document
+quality_profile: reverse-design-document
 version: 1
 ---
 # Reverse Design Document {#reverse-design-document}

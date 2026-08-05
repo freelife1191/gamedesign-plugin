@@ -5,6 +5,8 @@ import { realpathSync } from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { validateQualityProfile } from './validate-quality-profile.mjs';
+
 const REQUIRED_FILES = ['content.md', 'evidence.yml', 'export-manifest.yml'];
 const REQUIRED_DIRECTORIES = ['assets', 'decisions'];
 const FORMATS = ['md', 'pdf', 'docx', 'pptx'];
@@ -392,7 +394,32 @@ function validateManifest(manifest, requestedFormats, errors) {
   }
 }
 
-async function validateMarkdown(source, artifactDir, errors) {
+async function validateQualityProfileReference(metadata, { requireQualityProfile, profileCatalogRoot }, errors) {
+  const file = 'content.md';
+  if (!hasOwn(metadata, 'quality_profile')) {
+    if (requireQualityProfile) addError(errors, 'quality_profile.required', file, 'frontmatter.quality_profile is required');
+    return;
+  }
+  requireKebabCase(metadata, 'quality_profile', file, errors, 'frontmatter.');
+  if (!requireQualityProfile || typeof metadata.quality_profile !== 'string' || !KEBAB_CASE.test(metadata.quality_profile)) return;
+  if (profileCatalogRoot === undefined) {
+    addError(errors, 'options.profile_catalog_root', null, 'profileCatalogRoot is required when requireQualityProfile is true');
+    return;
+  }
+  const catalogRoot = resolve(fileURLToPathIfNeeded(profileCatalogRoot));
+  const profilePath = resolve(catalogRoot, `${metadata.quality_profile}.json`);
+  try {
+    const stats = await lstat(profilePath);
+    if (stats.isSymbolicLink() || !stats.isFile()) throw new Error('profile entry must be a regular non-symlink file');
+    const profile = JSON.parse(await readFile(profilePath, 'utf8'));
+    const validation = validateQualityProfile(profile, { sourceName: `${metadata.quality_profile}.json` });
+    if (!validation.ok || profile.profile_id !== metadata.quality_profile) throw new Error('profile entry is invalid or has a mismatched profile_id');
+  } catch {
+    addError(errors, 'quality_profile.unknown', file, `unknown quality_profile: ${metadata.quality_profile}`);
+  }
+}
+
+async function validateMarkdown(source, artifactDir, errors, qualityProfileOptions) {
   const file = 'content.md';
   if (source !== source.normalize('NFC')) addError(errors, 'markdown.nfc', file, 'Markdown must use NFC Unicode normalization');
   const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(source);
@@ -401,12 +428,13 @@ async function validateMarkdown(source, artifactDir, errors) {
   } else {
     try {
       const metadata = parseRestrictedYaml(frontmatter[1], 'frontmatter');
-      rejectUnknownKeys(metadata, ['title', 'artifact_id', 'version'], file, errors, 'frontmatter.');
+      rejectUnknownKeys(metadata, ['title', 'artifact_id', 'version', 'quality_profile'], file, errors, 'frontmatter.');
       requireString(metadata, 'title', file, errors, 'frontmatter.');
       requireKebabCase(metadata, 'artifact_id', file, errors, 'frontmatter.');
       if (!Number.isInteger(metadata.version) || metadata.version < 1) {
         addError(errors, 'markdown.frontmatter', file, 'frontmatter.version must be a positive integer');
       }
+      await validateQualityProfileReference(metadata, qualityProfileOptions, errors);
     } catch (error) {
       addError(errors, 'markdown.frontmatter', file, `invalid frontmatter: ${error.message}`);
     }
@@ -472,7 +500,11 @@ async function validateMarkdown(source, artifactDir, errors) {
   }
 }
 
-export async function validateArtifact(artifactDir, { requestedFormats = [] } = {}) {
+export async function validateArtifact(artifactDir, {
+  requestedFormats = [],
+  requireQualityProfile = false,
+  profileCatalogRoot,
+} = {}) {
   const root = resolve(fileURLToPathIfNeeded(artifactDir));
   const errors = [];
   const warnings = [];
@@ -500,7 +532,7 @@ export async function validateArtifact(artifactDir, { requestedFormats = [] } = 
   }
   if (files.includes('content.md')) {
     const content = await readFile(resolve(root, 'content.md'), 'utf8');
-    await validateMarkdown(content, root, errors);
+    await validateMarkdown(content, root, errors, { requireQualityProfile, profileCatalogRoot });
   }
   if (files.includes('evidence.yml')) {
     try {

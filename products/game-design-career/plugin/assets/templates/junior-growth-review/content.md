@@ -1,6 +1,7 @@
 ---
 title: Junior Growth Review
 artifact_id: junior-growth-review
+quality_profile: junior-growth-review
 version: 1
 ---
 # Junior Growth Review {#junior-growth-review}

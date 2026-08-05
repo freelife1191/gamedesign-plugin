@@ -1,6 +1,7 @@
 ---
 title: System Specification
 artifact_id: system-specification
+quality_profile: system-feature-specification
 version: 1
 ---
 # System Specification {#system-specification}

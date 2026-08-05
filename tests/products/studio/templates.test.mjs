@@ -7,10 +7,12 @@ import test, { afterEach } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { parseRestrictedYaml, validateArtifact } from "../../../shared/scripts/validate-artifact.mjs";
+import { validateQualityProfile } from "../../../shared/scripts/validate-quality-profile.mjs";
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const templateRoot = path.join(repoRoot, "products/game-design-studio/plugin/assets/templates");
+const templateProfileMapPath = path.join(repoRoot, "products/game-design-studio/plugin/references/document-quality/template-profile-map.json");
 const temporaryDirs = [];
 
 const templateIds = [
@@ -31,6 +33,24 @@ const templateIds = [
   "decision-change-log",
 ];
 
+const expectedTemplateProfiles = {
+  "accessibility-platform-matrix": "accessibility-platform-matrix",
+  "character-skill-combat-monster": "character-skill-combat-monster-specification",
+  "core-motivation-loop": "core-motivation-loop",
+  "data-schema-table-contract": "data-table-contract",
+  "decision-change-log": "design-review-decision-log",
+  "economy-balance": "economy-balance-specification",
+  "game-design-brief": "game-design-brief",
+  "game-design-review": "design-review-decision-log",
+  "liveops-experiment-event": "liveops-event-experiment-plan",
+  "narrative-quest-npc": "narrative-quest-npc-specification",
+  "production-scope-risk": "production-scope-milestone-risk-plan",
+  "rule-exception-matrix": "rule-state-exception-matrix",
+  "system-specification": "system-feature-specification",
+  "ui-ux-flow-state": "ui-ux-flow-state-specification",
+  "vision-pillars": "vision-one-pager",
+};
+
 const requiredFiles = [
   "assets/README.md",
   "content.md",
@@ -41,77 +61,77 @@ const requiredFiles = [
 
 const approvedSeedHashes = {
   "accessibility-platform-matrix/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "accessibility-platform-matrix/content.md": "3adbf68658f7abf56074aea607708723863ced3e529373bc800d0e8dc2cb89ee",
+  "accessibility-platform-matrix/content.md": "15f4797992d9deee0b65696b1fadde5388a1991e498a55244e08a05a3c20157f",
   "accessibility-platform-matrix/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "accessibility-platform-matrix/evidence.yml": "5cc40446bea64211ff0c242e49af505826735d253abb51162c005e0f2496ff97",
   "accessibility-platform-matrix/export-manifest.yml": "a0df5b01d7ab4662892bb06b8da1de586a9baa7c313fbeac28be3c491546b56b",
   "character-skill-combat-monster/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "character-skill-combat-monster/content.md": "009e06742aa8ef1b4ddb245a4c31f5853c742a2d8df6c4a5fa1d819d3f7b48f1",
+  "character-skill-combat-monster/content.md": "30dc99ded4878662e12de22c5ed5f23942daf66c89c99c36e6ae4939ef09c54b",
   "character-skill-combat-monster/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "character-skill-combat-monster/evidence.yml": "24432843d612e0e87c12bf7e4a352f621d7871dad6ffd7d38d5edfa68ae6b20b",
   "character-skill-combat-monster/export-manifest.yml": "b5a21c28d758fffacebab5eac10187767c8c9f687654130006ba36d8923e69f5",
   "core-motivation-loop/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "core-motivation-loop/content.md": "ec7c7b35bbe1bdfea429808403be9e24868c8d307d7cb6d8517a11349fbe04d2",
+  "core-motivation-loop/content.md": "b15d54981ee757aca0b7e8f0db5f93c0ddb0cd96f702ad7567ef52e87cf49d6f",
   "core-motivation-loop/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "core-motivation-loop/evidence.yml": "4ce9d79abe00b9531640ffa28da47f1af8dd727e4a910223080a4e68fc8e30cb",
   "core-motivation-loop/export-manifest.yml": "d35deb851062f21cb36610bb1eef164d5dd21e7ae6a4dce052478074f2e69f02",
   "data-schema-table-contract/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "data-schema-table-contract/content.md": "2727983332f51f181bbe0deed56d96a4e06a88599ff962821f8eb20196d5e0ef",
+  "data-schema-table-contract/content.md": "d17c4f05ebf3d0d03bcdcbda7bb051f9a5f3b2007e0ab44fa41c701bf0d9909b",
   "data-schema-table-contract/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "data-schema-table-contract/evidence.yml": "6a672a07b5b4ff865fdc507f3e6f8af0faf5e6db934f0c7a582c6f1c96452c70",
   "data-schema-table-contract/export-manifest.yml": "ca42b32d884f7f4d22a5aa9dc4197f8bedc053faddf1ab1bb70fd96389971e2d",
   "decision-change-log/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "decision-change-log/content.md": "d7ac34c536d5dd67bcc259c9446b5a88b85fdccceab218b80e088dd0031e1ef4",
+  "decision-change-log/content.md": "9d9ef4dfba4b9d17bb8211083780e7d45196b0ab43e862e684ac311cdab3b575",
   "decision-change-log/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "decision-change-log/evidence.yml": "fedc034c5c7c3ffe37c7286c612f0ce77919f8caea74c39b8b17605fbfe200ab",
   "decision-change-log/export-manifest.yml": "132eabb61d4b264c2d908c19788071c75a9a04284dbd589dfc5fec2f20d87ed9",
   "economy-balance/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "economy-balance/content.md": "d24d92a7c999fafa15d5a4eb7c48a85bcfd2934b7c443562478030324570a0ab",
+  "economy-balance/content.md": "18d2dd9ca5d5c7b010798f64dc12fa86f2a8078f2ad9b6657b50e2bf315d4c2a",
   "economy-balance/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "economy-balance/evidence.yml": "f5660aefba9fc8f67a97a86502a816fa2be16ff446f40c38b311ae8e129a0da7",
   "economy-balance/export-manifest.yml": "aaec2e67c761dd661f8d86175b723e43b9ae897907d574e13b092e1b21fb0ca4",
   "game-design-brief/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "game-design-brief/content.md": "f418f40100f7d8dc6b118f14e2efb6b14f8018896ea9486a5ef843082fe77a18",
+  "game-design-brief/content.md": "042608c612cd0e536fe5495aa64dc7f2069d53decde55ca6669a8d9c32ee7d15",
   "game-design-brief/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "game-design-brief/evidence.yml": "f19bb04d8077ba405dc1b22edb2b2e574d27b00499ea960cbe41e25290ddd5fb",
   "game-design-brief/export-manifest.yml": "3b066e718628dcf059d803dc8be26ca646ae7c7d618b806334b0674f7a5883f3",
   "game-design-review/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "game-design-review/content.md": "9f18f04fd32556c19b70a4a1235cd59062f89a8d31a41b0198b9c07b374adae8",
+  "game-design-review/content.md": "3674d400eb322a1bee77fa3dc704d73c3ee8da89b6e0fabfa4c498cffd8e1a78",
   "game-design-review/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "game-design-review/evidence.yml": "65bb1f4de923bf3b71ecc9f419cc659c55af18fc4751cda50e4ea33747096c38",
   "game-design-review/export-manifest.yml": "eca03c395d31e0fa49994446a0f7a8f2393cfeb21ccfdc837171611c9fd57aa0",
   "liveops-experiment-event/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "liveops-experiment-event/content.md": "bad175ae9d3188b8dd8fd40d23c27127c319b10351e15a79519db23303215c10",
+  "liveops-experiment-event/content.md": "a6ae8cee4a750b8a81ac72c4eea2df235ab57865db478ec1aa4294829dfe6cdb",
   "liveops-experiment-event/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "liveops-experiment-event/evidence.yml": "a89d56b34a05e46354278b564c236d76fca03bff2332567415fef29c2f80c148",
   "liveops-experiment-event/export-manifest.yml": "b6934f5d78951b0840436297658717f0404ef9dd3eda905a446698855c666a22",
   "narrative-quest-npc/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "narrative-quest-npc/content.md": "8f4518c8c2ae5e4efb70821c621778d2b324d93b688d83ccf769aa671308159f",
+  "narrative-quest-npc/content.md": "728f44035c4b4303348703e47cda76a3f867b5cb3c1bf3f517cdbd21817765d5",
   "narrative-quest-npc/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "narrative-quest-npc/evidence.yml": "5204b30729fa4ada897664e433791500acef62f490719427c1be269e941fc56e",
   "narrative-quest-npc/export-manifest.yml": "3ac51fc84152a138b78f5df7c62cb6778589869886e12e7fd834716fe16a2c48",
   "production-scope-risk/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "production-scope-risk/content.md": "1e4c681a922d6231a08d3eebb4119aa94b387d2c9aef330be3550380d570c7e4",
+  "production-scope-risk/content.md": "fb8a2b7e201cb6a5d5b45af53c98765b73234bf2a1c7799bc64fb6607d6e3921",
   "production-scope-risk/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "production-scope-risk/evidence.yml": "cb6f05e00e3fab3b9c58e1550ca54893d179d68098393eeb52c3698c25d196c2",
   "production-scope-risk/export-manifest.yml": "83e311c5d931b49bd329a615ec81bfdd217605fd328cc355c92bbb879bf7ad36",
   "rule-exception-matrix/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "rule-exception-matrix/content.md": "e857bb7fdcf646c0a256ff01a3839d39dd6e754532971c279b82d17a3f37b0e8",
+  "rule-exception-matrix/content.md": "df5b84f89d15886750741e2cb3560bb112d2a1f82ee3247361ea4d0ecf047af0",
   "rule-exception-matrix/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "rule-exception-matrix/evidence.yml": "72838c93aadc5f48751dce8ff2e484d53dbcde4438b67a11b38513d26d8880c9",
   "rule-exception-matrix/export-manifest.yml": "c286f34b582856310e947cbe99cc8094d9964552fbd08c61cdadf4a2aa18fc3f",
   "system-specification/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "system-specification/content.md": "598481b6d56be23e30549b02672045674c096f87595ac236df8213947f8bb450",
+  "system-specification/content.md": "9fa0adae044c0e5a5bd6cac1505f639c62c60cea6c5f13dc8212da94eaf0779a",
   "system-specification/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "system-specification/evidence.yml": "a22c6454fb2b8a1f2a5a3e7c5b6c3ffef5a69535454a04115cfeae15b3b40263",
   "system-specification/export-manifest.yml": "b78dd77c281917c2e7e1099912d9144d8510b9e10621881d78008055d0e1bdf0",
   "ui-ux-flow-state/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "ui-ux-flow-state/content.md": "16c9ea67d0d742eb4283fa0b248d9fc942de2ddbc12c45295f6fc6a1c611024f",
+  "ui-ux-flow-state/content.md": "87c1012582d4c49662f609d9f61f1c72b52a207956fabcfaaf117a26c9ab1fb5",
   "ui-ux-flow-state/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "ui-ux-flow-state/evidence.yml": "9b571c210e2417bebb5a9eb614d87269d75996f1b39399c0d7c410514581e040",
   "ui-ux-flow-state/export-manifest.yml": "365df35e89ce4faa3b109aca775e7a0ffafc3f18dbe91ff2f14b49b5112c093d",
   "vision-pillars/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "vision-pillars/content.md": "2deee04d2b0cae6306ed87f7767b57497b8f898203b33cf58010480b8d92b25a",
+  "vision-pillars/content.md": "42aeaf6740677304f2bf6417032c295042f2effd43f414e6f8a28816968ec427",
   "vision-pillars/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
   "vision-pillars/evidence.yml": "5a32187a996c28f8d3042aa333865254037664eb7218b72e258c4db255af9bdc",
   "vision-pillars/export-manifest.yml": "f48e93574eb4b19076afaaf9740c41472d1bae6fe2fcc0c2568b06739180b3b2",
@@ -408,6 +428,40 @@ test("exactly 15 approved Studio templates ship as complete five-file seeds", as
       assert.equal((await lstat(path.join(root, relativePath))).isFile(), true);
       assert.ok((await readFile(path.join(root, relativePath), "utf8")).trim());
     }
+  }
+});
+
+test("all 15 Studio templates resolve to exactly one declared primary quality profile", async () => {
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-template-profile-build-"));
+  temporaryDirs.push(stagingRoot);
+  const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const packagedTemplateRoot = path.join(build.outputDir, "assets/templates");
+  const packagedCatalogRoot = path.join(build.outputDir, "references/shared/document-quality/profiles/studio");
+  const mappingSource = await readFile(templateProfileMapPath, "utf8").catch(() => null);
+  assert.notEqual(mappingSource, null, "Studio template profile mapping must exist");
+  const packagedMappingSource = await readFile(path.join(build.outputDir, "references/document-quality/template-profile-map.json"), "utf8");
+  assert.equal(packagedMappingSource, mappingSource, "clean build must preserve the mapping bytes");
+  const mapping = JSON.parse(packagedMappingSource);
+  assert.deepEqual(Object.keys(mapping).sort(), ["product", "schema_version", "templates"]);
+  assert.equal(mapping.schema_version, 1);
+  assert.equal(mapping.product, "game-design-studio");
+  assert.deepEqual(mapping.templates, expectedTemplateProfiles);
+  assert.deepEqual(Object.keys(mapping.templates).sort(), (await readdir(packagedTemplateRoot)).sort());
+
+  for (const [templateId, profileId] of Object.entries(mapping.templates)) {
+    assert.equal(typeof profileId, "string", `${templateId}: primary profile must be one string`);
+    const profile = JSON.parse(await readFile(path.join(packagedCatalogRoot, `${profileId}.json`), "utf8"));
+    const profileValidation = validateQualityProfile(profile, { sourceName: `${profileId}.json` });
+    assert.equal(profileValidation.ok, true, `${profileId}: ${JSON.stringify(profileValidation.errors)}`);
+    assert.equal(profile.profile_id, profileId, `${templateId}: catalog resolution`);
+
+    const content = await readFile(path.join(packagedTemplateRoot, templateId, "content.md"), "utf8");
+    assert.equal(parseFrontmatter(content).quality_profile, profileId, `${templateId}: frontmatter mapping`);
+    const result = await validateArtifact(path.join(packagedTemplateRoot, templateId), {
+      requireQualityProfile: true,
+      profileCatalogRoot: packagedCatalogRoot,
+    });
+    assert.equal(result.ok, true, `${templateId}: ${errors(result)}`);
   }
 });
 

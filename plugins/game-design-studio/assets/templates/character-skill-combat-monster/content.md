@@ -1,6 +1,7 @@
 ---
 title: Character Skill Combat and Monster
 artifact_id: character-skill-combat-monster
+quality_profile: character-skill-combat-monster-specification
 version: 1
 ---
 # Character Skill Combat and Monster {#character-skill-combat-monster}

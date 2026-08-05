@@ -1,6 +1,7 @@
 ---
 title: Creative Design Portfolio
 artifact_id: creative-design-portfolio
+quality_profile: portfolio-case-study
 version: 1
 ---
 # Creative Design Portfolio {#creative-design-portfolio}

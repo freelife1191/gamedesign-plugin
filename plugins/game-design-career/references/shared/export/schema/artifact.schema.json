@@ -8,6 +8,7 @@
   "properties": {
     "title": { "type": "string", "minLength": 1 },
     "artifact_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "quality_profile": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "version": { "type": "integer", "minimum": 1 }
   },
   "x-canonical-package": {

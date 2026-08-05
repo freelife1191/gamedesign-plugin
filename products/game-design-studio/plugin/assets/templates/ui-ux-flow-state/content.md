@@ -1,6 +1,7 @@
 ---
 title: UI UX Flow and State
 artifact_id: ui-ux-flow-state
+quality_profile: ui-ux-flow-state-specification
 version: 1
 ---
 # UI UX Flow and State {#ui-ux-flow-state}

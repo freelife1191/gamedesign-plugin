@@ -1,6 +1,7 @@
 ---
 title: Game Design Competency Matrix
 artifact_id: competency-matrix
+quality_profile: competency-matrix
 version: 1
 ---
 # Game Design Competency Matrix {#competency-matrix}

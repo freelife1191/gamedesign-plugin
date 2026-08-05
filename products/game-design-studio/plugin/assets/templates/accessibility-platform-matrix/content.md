@@ -1,6 +1,7 @@
 ---
 title: Accessibility and Platform Matrix
 artifact_id: accessibility-platform-matrix
+quality_profile: accessibility-platform-matrix
 version: 1
 ---
 # Accessibility and Platform Matrix {#accessibility-platform-matrix}

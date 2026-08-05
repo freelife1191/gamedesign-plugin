@@ -1,6 +1,7 @@
 ---
 title: Game Design Learning Roadmap
 artifact_id: learning-roadmap
+quality_profile: learning-roadmap
 version: 1
 ---
 # Game Design Learning Roadmap {#learning-roadmap}

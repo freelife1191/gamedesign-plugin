@@ -1,6 +1,7 @@
 ---
 title: Economy and Balance
 artifact_id: economy-balance
+quality_profile: economy-balance-specification
 version: 1
 ---
 # Economy and Balance {#economy-balance}

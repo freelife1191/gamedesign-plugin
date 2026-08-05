@@ -1,6 +1,7 @@
 ---
 title: Narrative Quest and NPC
 artifact_id: narrative-quest-npc
+quality_profile: narrative-quest-npc-specification
 version: 1
 ---
 # Narrative Quest and NPC {#narrative-quest-npc}

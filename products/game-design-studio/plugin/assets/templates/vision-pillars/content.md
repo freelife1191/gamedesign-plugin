@@ -1,6 +1,7 @@
 ---
 title: Vision and Pillars
 artifact_id: vision-pillars
+quality_profile: vision-one-pager
 version: 1
 ---
 # Vision and Pillars {#vision-pillars}

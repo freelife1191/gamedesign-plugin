@@ -7,10 +7,12 @@ import test, { afterEach } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { parseRestrictedYaml, validateArtifact } from "../../../shared/scripts/validate-artifact.mjs";
+import { validateQualityProfile } from "../../../shared/scripts/validate-quality-profile.mjs";
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const templateRoot = path.join(repoRoot, "products/game-design-career/plugin/assets/templates");
+const templateProfileMapPath = path.join(repoRoot, "products/game-design-career/plugin/references/document-quality/template-profile-map.json");
 const rubricPath = path.join(repoRoot, "products/game-design-career/plugin/references/five-axis-rubric.json");
 const temporaryDirs = [];
 
@@ -31,6 +33,24 @@ const templateIds = [
   "junior-growth-review",
   "transition-readiness",
 ];
+
+const expectedTemplateProfiles = {
+  "career-stage-goal": "career-stage-role-map",
+  "competency-matrix": "competency-matrix",
+  "creative-design-portfolio": "portfolio-case-study",
+  "five-axis-review": "portfolio-review-backlog",
+  "game-analysis-report": "game-analysis-report",
+  "game-design-role-map": "career-stage-role-map",
+  "interview-question-answer-log": "interview-question-answer-report",
+  "introduction-motivation": "recruiter-portfolio-presentation",
+  "job-posting-evidence": "job-posting-evidence",
+  "junior-growth-review": "junior-growth-review",
+  "learning-roadmap": "learning-roadmap",
+  "portfolio-backlog": "portfolio-review-backlog",
+  "portfolio-project-brief": "portfolio-project-brief",
+  "reverse-design-document": "reverse-design-document",
+  "transition-readiness": "transition-readiness",
+};
 
 const requiredFiles = [
   "assets/README.md",
@@ -77,21 +97,21 @@ const recordFields = {
 };
 
 const approvedContentHashes = {
-  "career-stage-goal": "1db4f34eb67fdc698b3d1cf588632bde23766983758c8494a4a558394870fa07",
-  "competency-matrix": "f8b38ba574acb8cb98592eee04ce441cba8678a624b1294aa3d51d5b38f3d58a",
-  "creative-design-portfolio": "65c35090f97e4e205db374eca0bfd172af6de6f26e1b3c3afa84ce827d90603a",
-  "five-axis-review": "1ef17913ce31dddd95d14762baf8b987a659a9857d9116590479e9ebd9e91ee5",
-  "game-analysis-report": "78630c3b9875430aa86ad9686bf4cc7a3a2788342672ed97bf2d6e8d8484f52c",
-  "game-design-role-map": "f1ece52171ad5b1e071942c3782fba1d5b17b2c25d64b0e5d7414a689db7f73d",
-  "interview-question-answer-log": "b9b574b5580811ccead24105dc661ec32f9089b0c0a84f4316c130b3b35b6aff",
-  "introduction-motivation": "33b5ab15d98f79ad960f14d36c3196e756ce5223f478a0b8f2bbb9783c6b7f87",
-  "job-posting-evidence": "352d51b22926e84a6241bc6513383514cb2750907fc977f0cc5b1fd6f006f1b1",
-  "junior-growth-review": "5df1c0998c02f65a2fb442424661bc0ffef9f10ff9a8489f00b9e8a88a93414c",
-  "learning-roadmap": "28d166e843cccbb4bc6afed0806e73718969f1b5494f5d0e89d4d30372ba076a",
-  "portfolio-backlog": "d287626038bd2db428b802f421857ec2744e9639720d5895c5845f4aea35ef2f",
-  "portfolio-project-brief": "e795a5694286492757f05d5367915fe2e3af9fdfa551f95019122f7153f59ff7",
-  "reverse-design-document": "dd0064538adcbee41caa1f9928f1a7ee845ae2fae5a21b5dc62abbce48e397a6",
-  "transition-readiness": "68c66b4e731d5aaf46aebf683902d1cedf7bad076936473dbda44490bcd7d306",
+  "career-stage-goal": "8988c7f4668fb38f11a63f11106fb6e7a52274187413a43321b539bb3170fb07",
+  "competency-matrix": "336df258170a0ae9e2398492439c995570fb23c6ddf73eb7a6067d819e1bf04a",
+  "creative-design-portfolio": "609f12bad50bad55f1686e3a7b8827c8646124c07fe8c2c8d49b9eaf0ffd63b2",
+  "five-axis-review": "873a22fadf561ecf807ccf5ee4b996ae8413d7191baf6afb4984e0d8c7c22c40",
+  "game-analysis-report": "0f68cd1d83bc122886020faa89e8965613ae6e8e43c321f6fea77288855cc562",
+  "game-design-role-map": "b51bb263324055b57cc8ce1c78bda815bcd4a5452ce50053d008c827168a989a",
+  "interview-question-answer-log": "c709da4339c52c03ecff50335127e94884b94b2bb8db1d0c97b6ef8ca87075bc",
+  "introduction-motivation": "dc714fc34cb47351ea4c7a70d4def91bea99b8b939a7138e82d0c075477bddcd",
+  "job-posting-evidence": "d1549a9ed9254132c7676feea3bfe067917b1043da7a3bd6f03fc9510893a846",
+  "junior-growth-review": "1cc111b43306ab86338964d6266a0da26b9084014e31c19e78cf3da03323ebe5",
+  "learning-roadmap": "3244065e066a815ac7ae2ba73539b4dc7af460e9bb0976a5dcec7b46fb85f733",
+  "portfolio-backlog": "82109b8d827a08847028e6e61ac5b522e850fd5ee6799629b53cb7417f32767d",
+  "portfolio-project-brief": "7969531595b351c1557cb0bbd52fceffd48338b5dd153cf17ca74b6a3810b8e6",
+  "reverse-design-document": "f491b1a9d1a8a0e24b4b6f2de4d8323f9cdd36e3684f0ccc825c7d36f0e1610c",
+  "transition-readiness": "d3760dede563fbbdc330872ea0e8f3bb2bd887782c3c563c85aa77791757e4c5",
 };
 
 const semanticContracts = {
@@ -286,6 +306,40 @@ test("exactly the 15 approved Career templates ship with complete canonical seed
     for (const field of ["relative local assets", "source", "creator", "attribution", "use purpose", "rights or consent", "privacy", "approver", "approval date", "alt text"]) {
       assert.match(assets, new RegExp(field, "iu"), `${templateId}: asset register missing ${field}`);
     }
+  }
+});
+
+test("all 15 Career templates resolve to exactly one declared primary quality profile", async () => {
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "career-template-profile-build-"));
+  temporaryDirs.push(stagingRoot);
+  const build = await buildProduct({ repoRoot, productName: "game-design-career", stagingRoot, sourceDateEpoch: 0 });
+  const packagedTemplateRoot = path.join(build.outputDir, "assets/templates");
+  const packagedCatalogRoot = path.join(build.outputDir, "references/shared/document-quality/profiles/career");
+  const mappingSource = await readFile(templateProfileMapPath, "utf8").catch(() => null);
+  assert.notEqual(mappingSource, null, "Career template profile mapping must exist");
+  const packagedMappingSource = await readFile(path.join(build.outputDir, "references/document-quality/template-profile-map.json"), "utf8");
+  assert.equal(packagedMappingSource, mappingSource, "clean build must preserve the mapping bytes");
+  const mapping = JSON.parse(packagedMappingSource);
+  assert.deepEqual(Object.keys(mapping).sort(), ["product", "schema_version", "templates"]);
+  assert.equal(mapping.schema_version, 1);
+  assert.equal(mapping.product, "game-design-career");
+  assert.deepEqual(mapping.templates, expectedTemplateProfiles);
+  assert.deepEqual(Object.keys(mapping.templates).sort(), (await readdir(packagedTemplateRoot)).sort());
+
+  for (const [templateId, profileId] of Object.entries(mapping.templates)) {
+    assert.equal(typeof profileId, "string", `${templateId}: primary profile must be one string`);
+    const profile = JSON.parse(await readFile(path.join(packagedCatalogRoot, `${profileId}.json`), "utf8"));
+    const profileValidation = validateQualityProfile(profile, { sourceName: `${profileId}.json` });
+    assert.equal(profileValidation.ok, true, `${profileId}: ${JSON.stringify(profileValidation.errors)}`);
+    assert.equal(profile.profile_id, profileId, `${templateId}: catalog resolution`);
+
+    const content = await readFile(path.join(packagedTemplateRoot, templateId, "content.md"), "utf8");
+    assert.equal(parseContentFrontmatter(content).quality_profile, profileId, `${templateId}: frontmatter mapping`);
+    const result = await validateArtifact(path.join(packagedTemplateRoot, templateId), {
+      requireQualityProfile: true,
+      profileCatalogRoot: packagedCatalogRoot,
+    });
+    assert.equal(result.ok, true, `${templateId}: ${errorMessages(result)}`);
   }
 });
 

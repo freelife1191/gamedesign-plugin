@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "product": "game-design-career",
+  "templates": {
+    "career-stage-goal": "career-stage-role-map",
+    "competency-matrix": "competency-matrix",
+    "creative-design-portfolio": "portfolio-case-study",
+    "five-axis-review": "portfolio-review-backlog",
+    "game-analysis-report": "game-analysis-report",
+    "game-design-role-map": "career-stage-role-map",
+    "interview-question-answer-log": "interview-question-answer-report",
+    "introduction-motivation": "recruiter-portfolio-presentation",
+    "job-posting-evidence": "job-posting-evidence",
+    "junior-growth-review": "junior-growth-review",
+    "learning-roadmap": "learning-roadmap",
+    "portfolio-backlog": "portfolio-review-backlog",
+    "portfolio-project-brief": "portfolio-project-brief",
+    "reverse-design-document": "reverse-design-document",
+    "transition-readiness": "transition-readiness"
+  }
+}

@@ -1,6 +1,7 @@
 ---
 title: Data Schema and Table Contract
 artifact_id: data-schema-table-contract
+quality_profile: data-table-contract
 version: 1
 ---
 # Data Schema and Table Contract {#data-schema-table-contract}

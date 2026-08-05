@@ -1,6 +1,7 @@
 ---
 title: Game Analysis Report
 artifact_id: game-analysis-report
+quality_profile: game-analysis-report
 version: 1
 ---
 # Game Analysis Report {#game-analysis-report}

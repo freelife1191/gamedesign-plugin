@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "product": "game-design-studio",
+  "templates": {
+    "accessibility-platform-matrix": "accessibility-platform-matrix",
+    "character-skill-combat-monster": "character-skill-combat-monster-specification",
+    "core-motivation-loop": "core-motivation-loop",
+    "data-schema-table-contract": "data-table-contract",
+    "decision-change-log": "design-review-decision-log",
+    "economy-balance": "economy-balance-specification",
+    "game-design-brief": "game-design-brief",
+    "game-design-review": "design-review-decision-log",
+    "liveops-experiment-event": "liveops-event-experiment-plan",
+    "narrative-quest-npc": "narrative-quest-npc-specification",
+    "production-scope-risk": "production-scope-milestone-risk-plan",
+    "rule-exception-matrix": "rule-state-exception-matrix",
+    "system-specification": "system-feature-specification",
+    "ui-ux-flow-state": "ui-ux-flow-state-specification",
+    "vision-pillars": "vision-one-pager"
+  }
+}

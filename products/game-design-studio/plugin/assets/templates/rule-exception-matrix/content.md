@@ -1,6 +1,7 @@
 ---
 title: Rule and Exception Matrix
 artifact_id: rule-exception-matrix
+quality_profile: rule-state-exception-matrix
 version: 1
 ---
 # Rule and Exception Matrix {#rule-exception-matrix}

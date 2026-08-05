@@ -1,6 +1,7 @@
 ---
 title: LiveOps Experiment and Event
 artifact_id: liveops-experiment-event
+quality_profile: liveops-event-experiment-plan
 version: 1
 ---
 # LiveOps Experiment and Event {#liveops-experiment-event}

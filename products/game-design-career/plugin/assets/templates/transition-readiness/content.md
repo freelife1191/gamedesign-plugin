@@ -1,6 +1,7 @@
 ---
 title: Transition Readiness
 artifact_id: transition-readiness
+quality_profile: transition-readiness
 version: 1
 ---
 # Transition Readiness {#transition-readiness}

@@ -1,6 +1,7 @@
 ---
 title: Game Design Role Map
 artifact_id: game-design-role-map
+quality_profile: career-stage-role-map
 version: 1
 ---
 # Game Design Role Map {#game-design-role-map}

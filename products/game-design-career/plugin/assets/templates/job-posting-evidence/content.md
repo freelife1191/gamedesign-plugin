@@ -1,6 +1,7 @@
 ---
 title: Job Posting Evidence
 artifact_id: job-posting-evidence
+quality_profile: job-posting-evidence
 version: 1
 ---
 # Job Posting Evidence {#job-posting-evidence}

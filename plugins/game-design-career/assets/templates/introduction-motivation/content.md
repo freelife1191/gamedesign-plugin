@@ -1,6 +1,7 @@
 ---
 title: Introduction and Motivation
 artifact_id: introduction-motivation
+quality_profile: recruiter-portfolio-presentation
 version: 1
 ---
 # Introduction and Motivation {#introduction-motivation}

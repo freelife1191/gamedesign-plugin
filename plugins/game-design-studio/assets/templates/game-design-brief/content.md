@@ -1,6 +1,7 @@
 ---
 title: Game Design Brief
 artifact_id: game-design-brief
+quality_profile: game-design-brief
 version: 1
 ---
 # Game Design Brief {#game-design-brief}

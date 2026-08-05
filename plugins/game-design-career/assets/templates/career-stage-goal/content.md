@@ -1,6 +1,7 @@
 ---
 title: Career Stage Goal
 artifact_id: career-stage-goal
+quality_profile: career-stage-role-map
 version: 1
 ---
 # Career Stage Goal {#career-stage-goal}

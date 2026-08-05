@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { parseRestrictedYaml, validateArtifact } from '../../shared/scripts/validate-artifact.mjs';
 
 const fixtureDir = new URL('../fixtures/artifacts/valid/', import.meta.url);
+const studioProfileCatalogRoot = new URL('../../shared/document-quality/profiles/studio/', import.meta.url);
 const temporaryDirs = [];
 
 afterEach(async () => {
@@ -46,6 +47,66 @@ test('accepts a complete canonical artifact', async () => {
     'export-manifest.yml',
   ]);
   assert.deepEqual(result.errors, []);
+});
+
+test('requires one known kebab-case quality profile when profile-aware validation is active', async () => {
+  const dir = await temporaryArtifact();
+  await replaceIn(dir, 'content.md', 'artifact_id: combat-brief\n', 'artifact_id: combat-brief\nquality_profile: game-design-brief\n');
+
+  const result = await validateArtifact(dir, {
+    requireQualityProfile: true,
+    profileCatalogRoot: studioProfileCatalogRoot,
+  });
+
+  assert.equal(result.ok, true, messages(result));
+});
+
+test('rejects a missing quality profile when profile-aware validation is active', async () => {
+  const dir = await temporaryArtifact();
+  const result = await validateArtifact(dir, {
+    requireQualityProfile: true,
+    profileCatalogRoot: studioProfileCatalogRoot,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /quality_profile.*required/i);
+});
+
+test('rejects an unknown quality profile when profile-aware validation is active', async () => {
+  const dir = await temporaryArtifact();
+  await replaceIn(dir, 'content.md', 'artifact_id: combat-brief\n', 'artifact_id: combat-brief\nquality_profile: unknown-profile\n');
+  const result = await validateArtifact(dir, {
+    requireQualityProfile: true,
+    profileCatalogRoot: studioProfileCatalogRoot,
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(messages(result), /unknown quality_profile.*unknown-profile/i);
+});
+
+test('rejects an array or duplicate primary quality profile', async () => {
+  const arrayDir = await temporaryArtifact();
+  await replaceIn(arrayDir, 'content.md', 'artifact_id: combat-brief\n', 'artifact_id: combat-brief\nquality_profile:\n  - game-design-brief\n');
+  const arrayResult = await validateArtifact(arrayDir, {
+    requireQualityProfile: true,
+    profileCatalogRoot: studioProfileCatalogRoot,
+  });
+  assert.equal(arrayResult.ok, false);
+  assert.match(messages(arrayResult), /quality_profile.*nonempty string/i);
+
+  const duplicateDir = await temporaryArtifact();
+  await replaceIn(
+    duplicateDir,
+    'content.md',
+    'artifact_id: combat-brief\n',
+    'artifact_id: combat-brief\nquality_profile: game-design-brief\nquality_profile: core-motivation-loop\n',
+  );
+  const duplicateResult = await validateArtifact(duplicateDir, {
+    requireQualityProfile: true,
+    profileCatalogRoot: studioProfileCatalogRoot,
+  });
+  assert.equal(duplicateResult.ok, false);
+  assert.match(messages(duplicateResult), /duplicate key quality_profile/i);
 });
 
 test('rejects content without frontmatter', async () => {

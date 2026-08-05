@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "46ebbfd4fb42d3ef560fdc27d809d635c74c73f4ac4b4df60c6cf848aec751a7",
+  "treeSha256": "8c85ab08b75db5095e55eaac30457b53e5d3d737bac8ff2562eff089ce8b29d2",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -101,8 +101,8 @@
     },
     {
       "path": "assets/templates/accessibility-platform-matrix/content.md",
-      "sha256": "3adbf68658f7abf56074aea607708723863ced3e529373bc800d0e8dc2cb89ee",
-      "size": 4670
+      "sha256": "15f4797992d9deee0b65696b1fadde5388a1991e498a55244e08a05a3c20157f",
+      "size": 4717
     },
     {
       "path": "assets/templates/accessibility-platform-matrix/decisions/README.md",
@@ -126,8 +126,8 @@
     },
     {
       "path": "assets/templates/character-skill-combat-monster/content.md",
-      "sha256": "009e06742aa8ef1b4ddb245a4c31f5853c742a2d8df6c4a5fa1d819d3f7b48f1",
-      "size": 4584
+      "sha256": "30dc99ded4878662e12de22c5ed5f23942daf66c89c99c36e6ae4939ef09c54b",
+      "size": 4646
     },
     {
       "path": "assets/templates/character-skill-combat-monster/decisions/README.md",
@@ -151,8 +151,8 @@
     },
     {
       "path": "assets/templates/core-motivation-loop/content.md",
-      "sha256": "ec7c7b35bbe1bdfea429808403be9e24868c8d307d7cb6d8517a11349fbe04d2",
-      "size": 4374
+      "sha256": "b15d54981ee757aca0b7e8f0db5f93c0ddb0cd96f702ad7567ef52e87cf49d6f",
+      "size": 4412
     },
     {
       "path": "assets/templates/core-motivation-loop/decisions/README.md",
@@ -176,8 +176,8 @@
     },
     {
       "path": "assets/templates/data-schema-table-contract/content.md",
-      "sha256": "2727983332f51f181bbe0deed56d96a4e06a88599ff962821f8eb20196d5e0ef",
-      "size": 4586
+      "sha256": "d17c4f05ebf3d0d03bcdcbda7bb051f9a5f3b2007e0ab44fa41c701bf0d9909b",
+      "size": 4623
     },
     {
       "path": "assets/templates/data-schema-table-contract/decisions/README.md",
@@ -201,8 +201,8 @@
     },
     {
       "path": "assets/templates/decision-change-log/content.md",
-      "sha256": "d7ac34c536d5dd67bcc259c9446b5a88b85fdccceab218b80e088dd0031e1ef4",
-      "size": 4452
+      "sha256": "9d9ef4dfba4b9d17bb8211083780e7d45196b0ab43e862e684ac311cdab3b575",
+      "size": 4496
     },
     {
       "path": "assets/templates/decision-change-log/decisions/README.md",
@@ -226,8 +226,8 @@
     },
     {
       "path": "assets/templates/economy-balance/content.md",
-      "sha256": "d24d92a7c999fafa15d5a4eb7c48a85bcfd2934b7c443562478030324570a0ab",
-      "size": 4587
+      "sha256": "18d2dd9ca5d5c7b010798f64dc12fa86f2a8078f2ad9b6657b50e2bf315d4c2a",
+      "size": 4634
     },
     {
       "path": "assets/templates/economy-balance/decisions/README.md",
@@ -251,8 +251,8 @@
     },
     {
       "path": "assets/templates/game-design-brief/content.md",
-      "sha256": "f418f40100f7d8dc6b118f14e2efb6b14f8018896ea9486a5ef843082fe77a18",
-      "size": 4460
+      "sha256": "042608c612cd0e536fe5495aa64dc7f2069d53decde55ca6669a8d9c32ee7d15",
+      "size": 4495
     },
     {
       "path": "assets/templates/game-design-brief/decisions/README.md",
@@ -276,8 +276,8 @@
     },
     {
       "path": "assets/templates/game-design-review/content.md",
-      "sha256": "9f18f04fd32556c19b70a4a1235cd59062f89a8d31a41b0198b9c07b374adae8",
-      "size": 4352
+      "sha256": "3674d400eb322a1bee77fa3dc704d73c3ee8da89b6e0fabfa4c498cffd8e1a78",
+      "size": 4396
     },
     {
       "path": "assets/templates/game-design-review/decisions/README.md",
@@ -301,8 +301,8 @@
     },
     {
       "path": "assets/templates/liveops-experiment-event/content.md",
-      "sha256": "bad175ae9d3188b8dd8fd40d23c27127c319b10351e15a79519db23303215c10",
-      "size": 4576
+      "sha256": "a6ae8cee4a750b8a81ac72c4eea2df235ab57865db478ec1aa4294829dfe6cdb",
+      "size": 4623
     },
     {
       "path": "assets/templates/liveops-experiment-event/decisions/README.md",
@@ -326,8 +326,8 @@
     },
     {
       "path": "assets/templates/narrative-quest-npc/content.md",
-      "sha256": "8f4518c8c2ae5e4efb70821c621778d2b324d93b688d83ccf769aa671308159f",
-      "size": 4615
+      "sha256": "728f44035c4b4303348703e47cda76a3f867b5cb3c1bf3f517cdbd21817765d5",
+      "size": 4666
     },
     {
       "path": "assets/templates/narrative-quest-npc/decisions/README.md",
@@ -351,8 +351,8 @@
     },
     {
       "path": "assets/templates/production-scope-risk/content.md",
-      "sha256": "1e4c681a922d6231a08d3eebb4119aa94b387d2c9aef330be3550380d570c7e4",
-      "size": 4602
+      "sha256": "fb8a2b7e201cb6a5d5b45af53c98765b73234bf2a1c7799bc64fb6607d6e3921",
+      "size": 4656
     },
     {
       "path": "assets/templates/production-scope-risk/decisions/README.md",
@@ -376,8 +376,8 @@
     },
     {
       "path": "assets/templates/rule-exception-matrix/content.md",
-      "sha256": "e857bb7fdcf646c0a256ff01a3839d39dd6e754532971c279b82d17a3f37b0e8",
-      "size": 4360
+      "sha256": "df5b84f89d15886750741e2cb3560bb112d2a1f82ee3247361ea4d0ecf047af0",
+      "size": 4405
     },
     {
       "path": "assets/templates/rule-exception-matrix/decisions/README.md",
@@ -401,8 +401,8 @@
     },
     {
       "path": "assets/templates/system-specification/content.md",
-      "sha256": "598481b6d56be23e30549b02672045674c096f87595ac236df8213947f8bb450",
-      "size": 4526
+      "sha256": "9fa0adae044c0e5a5bd6cac1505f639c62c60cea6c5f13dc8212da94eaf0779a",
+      "size": 4572
     },
     {
       "path": "assets/templates/system-specification/decisions/README.md",
@@ -426,8 +426,8 @@
     },
     {
       "path": "assets/templates/ui-ux-flow-state/content.md",
-      "sha256": "16c9ea67d0d742eb4283fa0b248d9fc942de2ddbc12c45295f6fc6a1c611024f",
-      "size": 4450
+      "sha256": "87c1012582d4c49662f609d9f61f1c72b52a207956fabcfaaf117a26c9ab1fb5",
+      "size": 4498
     },
     {
       "path": "assets/templates/ui-ux-flow-state/decisions/README.md",
@@ -451,8 +451,8 @@
     },
     {
       "path": "assets/templates/vision-pillars/content.md",
-      "sha256": "2deee04d2b0cae6306ed87f7767b57497b8f898203b33cf58010480b8d92b25a",
-      "size": 4074
+      "sha256": "42aeaf6740677304f2bf6417032c295042f2effd43f414e6f8a28816968ec427",
+      "size": 4108
     },
     {
       "path": "assets/templates/vision-pillars/decisions/README.md",
@@ -483,6 +483,11 @@
       "path": "hooks/hooks.json",
       "sha256": "485ccffbdac1921789b865f2747be75fbadb8be6a84da3ff43ab7eafab10fc1d",
       "size": 633
+    },
+    {
+      "path": "references/document-quality/template-profile-map.json",
+      "sha256": "a0e513d9e52c45e5cbd7ee5f556bee350f90780e970c1207399dcfe95ddd4657",
+      "size": 980
     },
     {
       "path": "references/export-recipes.md",
@@ -761,8 +766,8 @@
     },
     {
       "path": "references/shared/export/schema/artifact.schema.json",
-      "sha256": "31d5ca265e6f992abfcfe7dad148b1587871fabd7b56d355df1ab616d76643b9",
-      "size": 652
+      "sha256": "a45651ec4b4be7c252e1f5ccdbd709af2534141054b471dc2023c85c82f4ec59",
+      "size": 738
     },
     {
       "path": "references/shared/export/schema/evidence.schema.json",
@@ -1136,8 +1141,8 @@
     },
     {
       "path": "scripts/validate-artifact.mjs",
-      "sha256": "8c9c1d31ad921c2dde563c0502230b900e6dc596a05303cb7f9f19cfe5c10319",
-      "size": 23426
+      "sha256": "fbee5878b4b32ba9545baabbb88f6da07b8285deb03369de1c662a0528ef682f",
+      "size": 25246
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
