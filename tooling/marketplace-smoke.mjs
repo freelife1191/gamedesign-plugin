@@ -130,8 +130,7 @@ export async function parseExecJsonl(source, {
   skillPath, skillSha256, validatorPath: expectedValidator, validatorSha256, artifactPath,
 }) {
   const events = source.split(/\r?\n/u).filter(Boolean).map((line) => safeJson(line, "codex exec"));
-  if (events.some((event) => event.type === "turn.failed" || event.type === "error"
-      || /(?:401|unauthorized)/iu.test(JSON.stringify(event)))) {
+  if (events.some((event) => event.type === "turn.failed" || event.type === "error")) {
     throw new Error("codex exec incomplete: failure event");
   }
   if (!events.some((event) => event.type === "turn.completed")) throw new Error("codex exec incomplete: no completed turn");
@@ -220,30 +219,8 @@ export function redactFailure(message, environment = process.env) {
   const source = String(message);
   if (/(?:401|unauthorized)/iu.test(source)) return "authentication failed (401)";
   if (/turn\.failed/iu.test(source)) return "codex turn failed";
-  const credentialPattern = /(?:auth\.json|credentials?\.json|api[_-]?key|bearer|token|authorization\s*:?\s*(?:basic|bearer)|(?:client[_-]?)?secret\s*=|password\s*=)/iu;
-  let decoded = source;
-  try { decoded = decodeURIComponent(source); } catch {}
-  if (credentialPattern.test(source) || credentialPattern.test(decoded)) {
-    return "command failed (details redacted)";
-  }
-  let sanitized = decoded;
-  for (const key of ["OPENAI_API_KEY", "CODEX_API_KEY"]) {
-    const value = environment[key];
-    if (typeof value === "string" && value.length > 0) sanitized = sanitized.replaceAll(value, "[REDACTED]");
-  }
-  const knownRoots = [
-    [environment.CODEX_HOME, "[CODEX_HOME]"],
-    [environment.HOME, "[HOME]"],
-    [homedir(), "[HOME]"],
-  ].filter(([value]) => typeof value === "string" && value.length > 1)
-    .sort(([left], [right]) => right.length - left.length);
-  for (const [root, placeholder] of knownRoots) sanitized = sanitized.replaceAll(root, placeholder);
-  sanitized = sanitized
-    .replace(/(^|[\s=:('"`\[])file:\/\/[^;\n\r,)\]}]*/giu, "$1[ABSOLUTE_PATH]")
-    .replace(/(^|[\s=:('"`\[])(?:\\\\|\/\/)[^;\n\r,)\]}]*/gu, "$1[ABSOLUTE_PATH]")
-    .replace(/(^|[\s=:('"`\[])\/[^;\n\r,)\]}]*/gu, "$1[ABSOLUTE_PATH]")
-    .replace(/(^|[\s=:('"`\[])[A-Za-z]:\\[^;\n\r,)\]}]*/gu, "$1[ABSOLUTE_PATH]");
-  return sanitized.length <= 240 && !credentialPattern.test(sanitized) ? sanitized : "command failed (details redacted)";
+  void environment;
+  return "command failed (details redacted)";
 }
 
 export async function bridgeLocalAuth({ source, destination }) {

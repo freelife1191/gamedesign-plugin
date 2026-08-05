@@ -148,6 +148,58 @@ test("proof harness rejects artifact file mutation performed by the validator", 
   } finally { await rm(fixture.root, { recursive: true, force: true }); }
 });
 
+test("proof harness rejects a structural hash-stream collision", async () => {
+  const fixture = await traceFixture();
+  try {
+    const firstPath = path.join(fixture.artifactPath, "a");
+    const secondPath = path.join(fixture.artifactPath, "b");
+    await writeFile(firstPath, "A");
+    await writeFile(secondPath, "B");
+    const secondMode = (await lstat(secondPath)).mode;
+    const forgedSuffix = `${JSON.stringify(["b", secondMode, "file"])}B`;
+    await writeFile(fixture.validatorPath, [
+      'import { rm, writeFile } from "node:fs/promises";',
+      `await writeFile(${JSON.stringify(firstPath)}, ${JSON.stringify(`A${forgedSuffix}`)});`,
+      `await rm(${JSON.stringify(secondPath)});`,
+      'process.stdout.write(JSON.stringify({ ok: true, errors: [], warnings: [], files: ["a"], requestedFormats: ["md"] }));',
+    ].join("\n"));
+    await assert.rejects(runMarketplaceProof([
+      fixture.cacheRoot,
+      fixture.workspaceRoot,
+      fixture.skillPath,
+      fixture.skillSha256,
+      fixture.validatorPath,
+      createHash("sha256").update(await readFile(fixture.validatorPath)).digest("hex"),
+      fixture.artifactPath,
+    ]), /artifact tree changed/u);
+  } finally { await rm(fixture.root, { recursive: true, force: true }); }
+});
+
+test("proof harness rejects delete and recreate with identical bytes and mode", async () => {
+  const fixture = await traceFixture();
+  try {
+    const contentPath = path.join(fixture.artifactPath, "content.md");
+    await writeFile(contentPath, "same bytes\n");
+    const permissions = (await lstat(contentPath)).mode & 0o777;
+    await writeFile(fixture.validatorPath, [
+      'import { readFile, rm, writeFile } from "node:fs/promises";',
+      `const bytes = await readFile(${JSON.stringify(contentPath)});`,
+      `await rm(${JSON.stringify(contentPath)});`,
+      `await writeFile(${JSON.stringify(contentPath)}, bytes, { mode: ${permissions} });`,
+      'process.stdout.write(JSON.stringify({ ok: true, errors: [], warnings: [], files: ["content.md"], requestedFormats: ["md"] }));',
+    ].join("\n"));
+    await assert.rejects(runMarketplaceProof([
+      fixture.cacheRoot,
+      fixture.workspaceRoot,
+      fixture.skillPath,
+      fixture.skillSha256,
+      fixture.validatorPath,
+      createHash("sha256").update(await readFile(fixture.validatorPath)).digest("hex"),
+      fixture.artifactPath,
+    ]), /artifact tree changed/u);
+  } finally { await rm(fixture.root, { recursive: true, force: true }); }
+});
+
 for (const invalid of ["prose", "array", "trailing-malformed", "duplicate-receipt"]) {
   test(`proof harness rejects ${invalid} output`, async () => {
     const fixture = await traceFixture();
@@ -287,21 +339,17 @@ test("failure redaction replaces HOME, CODEX_HOME, and arbitrary encoded absolut
     HOME: "/Users/게임 사용자",
     CODEX_HOME: "/Users/게임 사용자/Codex Home",
   };
-  const redacted = redactFailure(
+  assert.equal(redactFailure(
     "failed at /Users/게임 사용자/Codex Home/plugins/cache; temp=/tmp/%EA%B2%8C%EC%9E%84%20%EA%B8%B0%ED%9A%8D/file.md; win=C:\\work space\\file.md",
     environment,
-  );
-  assert.match(redacted, /\[CODEX_HOME\]|\[ABSOLUTE_PATH\]/u);
-  assert.doesNotMatch(redacted, /Users|게임 사용자|Codex Home|%EA%B2|work space|C:\\/u);
+  ), "command failed (details redacted)");
 });
 
 test("failure redaction removes bracket-leading Korean POSIX paths and encoded user paths", () => {
-  const redacted = redactFailure(
+  assert.equal(redactFailure(
     "failed [/tmp/게임 경로/file.md] and %2FUsers%2Fexample%2Fprivate%2Fplan.md",
     {},
-  );
-  assert.doesNotMatch(redacted, /tmp|게임 경로|%2FUsers|example|private/u);
-  assert.match(redacted, /\[ABSOLUTE_PATH\]/u);
+  ), "command failed (details redacted)");
 });
 
 test("failure redaction makes credential-shaped failures generic", () => {
@@ -316,7 +364,23 @@ test("failure redaction makes credential-shaped failures generic", () => {
 });
 
 test("failure redaction removes UNC paths", () => {
-  const redacted = redactFailure("failed at \\\\server\\share\\private\\file.md", {});
-  assert.doesNotMatch(redacted, /server|share|private|file\.md/u);
-  assert.match(redacted, /\[ABSOLUTE_PATH\]/u);
+  assert.equal(redactFailure("failed at \\\\server\\share\\private\\file.md", {}), "command failed (details redacted)");
+});
+
+test("failure redaction is fail-closed for all non-allowlisted details", () => {
+  for (const message of [
+    "Cookie: session=dummy-private-value",
+    "Auth: Basic dummy-private-value",
+    "credential=dummy-private-value",
+    "secret=dummy-private-value",
+    "password=dummy-private-value",
+    "/tmp/private/file.md",
+    "C:\\private\\file.md",
+    "file:///Users/example/private.md",
+    "%252FUsers%252Fexample%252Fprivate.md",
+    "ordinary command failure with internal details",
+  ]) {
+    assert.equal(redactFailure(message, {}), "command failed (details redacted)");
+  }
+  assert.equal(redactFailure("turn.failed: private detail", {}), "codex turn failed");
 });

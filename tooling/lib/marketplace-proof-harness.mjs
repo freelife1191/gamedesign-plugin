@@ -17,19 +17,33 @@ async function fileIdentity(target) {
   if (!before.isFile() || before.isSymbolicLink()) throw new Error("proof file type mismatch");
   const bytes = await readFile(target);
   const after = await lstat(target);
-  if (before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode) {
+  if (before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode || before.size !== after.size) {
     throw new Error("proof file changed during capture");
   }
   return {
     dev: after.dev,
     ino: after.ino,
     mode: after.mode,
+    size: after.size,
     sha256: createHash("sha256").update(bytes).digest("hex"),
   };
 }
 
 function sameIdentity(left, right) {
-  return ["dev", "ino", "mode", "sha256"].every((key) => left[key] === right[key]);
+  return ["dev", "ino", "mode", "size", "sha256"].every((key) => left[key] === right[key]);
+}
+
+function sameStats(left, right) {
+  return ["dev", "ino", "mode", "size"].every((key) => left[key] === right[key]);
+}
+
+function updateLengthPrefixed(hash, kind, value) {
+  const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value, "utf8");
+  const length = Buffer.alloc(8);
+  length.writeBigUInt64BE(BigInt(bytes.length));
+  hash.update(Buffer.from([kind]));
+  hash.update(length);
+  hash.update(bytes);
 }
 
 async function canonicalWithin(target, root, expectedType) {
@@ -47,32 +61,56 @@ export async function artifactTreeIdentity(root) {
   const rootStats = await lstat(root);
   if (!rootStats.isDirectory() || rootStats.isSymbolicLink()) throw new Error("artifact root type mismatch");
   const hash = createHash("sha256");
+  updateLengthPrefixed(hash, 1, JSON.stringify([
+    "", "directory", rootStats.dev, rootStats.ino, rootStats.mode, rootStats.size,
+  ]));
   const visit = async (directory, relativeDirectory = "") => {
     const entries = await readdir(directory, { withFileTypes: true });
     entries.sort((left, right) => left.name.localeCompare(right.name, "en"));
     for (const entry of entries) {
       const relative = path.join(relativeDirectory, entry.name);
       const absolute = path.join(directory, entry.name);
-      const stats = await lstat(absolute);
-      if (stats.isSymbolicLink()) throw new Error("artifact tree contains a symlink");
+      const before = await lstat(absolute);
+      if (before.isSymbolicLink()) throw new Error("artifact tree contains a symlink");
       const canonical = await realpath(absolute);
       const boundary = path.relative(rootReal, canonical);
       if (!boundary || boundary === ".." || boundary.startsWith(`..${path.sep}`) || path.isAbsolute(boundary)) {
         throw new Error("artifact tree escaped boundary");
       }
       const portable = relative.split(path.sep).join("/");
-      hash.update(JSON.stringify([portable, stats.mode, stats.isDirectory() ? "directory" : "file"]));
-      if (stats.isDirectory()) await visit(absolute, relative);
-      else if (stats.isFile()) hash.update(await readFile(absolute));
-      else throw new Error("artifact tree contains an unsupported entry");
+      const type = before.isDirectory() ? "directory" : before.isFile() ? "file" : null;
+      if (!type) throw new Error("artifact tree contains an unsupported entry");
+      updateLengthPrefixed(hash, 1, JSON.stringify([
+        portable, type, before.dev, before.ino, before.mode, before.size,
+      ]));
+      if (type === "directory") {
+        await visit(absolute, relative);
+        const after = await lstat(absolute);
+        if (!after.isDirectory() || after.isSymbolicLink() || !sameStats(before, after)) {
+          throw new Error("artifact directory changed during capture");
+        }
+      } else {
+        const bytes = await readFile(absolute);
+        const after = await lstat(absolute);
+        if (!after.isFile() || after.isSymbolicLink() || !sameStats(before, after) || bytes.length !== after.size) {
+          throw new Error("artifact file changed during capture");
+        }
+        updateLengthPrefixed(hash, 2, bytes);
+      }
     }
   };
   await visit(rootReal);
   const rootAfter = await lstat(root);
-  if (rootStats.dev !== rootAfter.dev || rootStats.ino !== rootAfter.ino || rootStats.mode !== rootAfter.mode) {
+  if (!rootAfter.isDirectory() || rootAfter.isSymbolicLink() || !sameStats(rootStats, rootAfter)) {
     throw new Error("artifact root changed during capture");
   }
-  return { dev: rootAfter.dev, ino: rootAfter.ino, mode: rootAfter.mode, sha256: hash.digest("hex") };
+  return {
+    dev: rootAfter.dev,
+    ino: rootAfter.ino,
+    mode: rootAfter.mode,
+    size: rootAfter.size,
+    sha256: hash.digest("hex"),
+  };
 }
 
 export async function runMarketplaceProof(args, { nodePath = process.execPath } = {}) {
