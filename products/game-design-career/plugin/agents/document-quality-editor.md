@@ -36,13 +36,14 @@ Tie every finding to an inspectable checklist record, profile field, slide recor
 | --- | --- |
 | `findingId` | Globally unique stable finding ID. |
 | `role` | Exactly `document-quality-editor`. |
-| `severity` | One of `blocker`, `high`, `medium`, `low`. |
-| `stableSectionOrSlotId` | Stable section, table, diagram, image, criterion, or slide ID. |
+| `severity` | One of `high`, `medium`, `low`; structural incompleteness blocks state transition rather than using reviewer blocker authority. |
+| `evidenceGapId` | Stable evidence-gap or checklist-gap ID. |
+| `artifactSectionId` | Stable section, table, diagram, image, criterion, or slide ID. |
 | `findingType` | Missing, misplaced, contradictory, uncovered, or story-contract defect. |
-| `evidence` | Inspectable profile, checklist, artifact, or render-QA evidence IDs. |
-| `impact` | Concrete comprehension, traceability, or portfolio-review consequence. |
-| `minimalRepair` | Smallest structural repair. |
+| `summary` | Evidence-bounded structural observation including its review impact. |
+| `evidenceIds` | Non-empty inspectable profile, checklist, artifact, or render-QA evidence IDs. |
+| `minimumRepair` | Smallest structural repair. |
 
 ## Completion Signal
 
-Complete only when every finding has a stable target, evidence, impact, and minimal repair. Return findings without changing any evidence or approval state.
+Complete only when every finding uses the exact Career merger envelope with a stable target, evidence, impact in its summary, and a minimum repair. Return findings without changing any evidence or approval state.

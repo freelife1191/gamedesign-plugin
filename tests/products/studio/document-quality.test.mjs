@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
@@ -47,6 +48,7 @@ test("Studio selection is one-primary deterministic and reports unknown override
     "profile-id-lexical",
   ]);
   assert.equal(contract.selection.primaryCount, 1);
+  assert.deepEqual(contract.selection.scoreTuple, ["templateMatch", "artifactTypeMatch", "formatMatch", "audienceOverlap", "goalOverlap"]);
   assert.deepEqual(contract.selection.unknownOverride, {
     selected: false,
     nearestTieBreak: "profile-id-lexical",
@@ -59,14 +61,17 @@ test("Studio selection is one-primary deterministic and reports unknown override
 test("Studio composition and progressive loading fail closed", async () => {
   const { contract, skill } = await readContract();
   assert.equal(contract.composition.maxPresets, 1);
+  assert.equal(contract.composition.presetMode, "validated-separate-guidance");
   assert.equal(contract.composition.overlays, "known-additive-only");
   assert.deepEqual(contract.composition.reject, ["removal", "identity-leakage", "scalar-contradiction", "unknown-id", "schema-invalid"]);
-  assert.deepEqual(contract.progressiveLoading.afterSelection, [
+  assert.deepEqual(contract.progressiveLoading.preSelection, ["profile-id-index", "product-template-map"]);
+  assert.deepEqual(contract.progressiveLoading.unknownComparison, ["nearest-profile-body"]);
+  assert.deepEqual(contract.progressiveLoading.postSelection, [
     "selected-primary",
     "requested-overlays",
     "optional-preset",
     "relevant-render-contract",
-    "product-template-map",
+    "selection-and-profile-schemas",
   ]);
   assert.deepEqual(contract.progressiveLoading.forbidden, ["bulk-catalog-load", "authoring-evidence"]);
   assert.match(skill, /references\/shared\/document-quality\//u);
@@ -81,6 +86,7 @@ test("Studio output checklist and state machine preserve every quality and appro
   ]);
   assert.deepEqual(contract.output.checklist, ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]);
   assert.equal(contract.output.stableIdsRequired, true);
+  assert.equal(contract.output.acceptanceIdRule, "source-id-plus-normalized-sha256-16");
   assert.equal(contract.output.diagrams, "skillstead-compatible-slots-unverified-until-render-qa");
   assert.deepEqual(contract.states, ["draft", "structurally-complete", "evidence-reviewed", "visual-reviewed", "document-approved"]);
   assert.deepEqual(contract.structuralBlockers, ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]);
@@ -93,12 +99,36 @@ test("Studio quality editor emits bounded structural findings and cannot approve
   for (const heading of ["Responsibility", "Required Evidence and Input", "Review Questions", "Scope", "Out of Scope", "Finding Schema", "Completion Signal"]) {
     assert.match(role, new RegExp(`^## ${heading}$`, "mu"), heading);
   }
-  for (const field of ["findingId", "stableSectionOrSlotId", "evidence", "impact", "minimalRepair"]) {
+  for (const field of ["findingId", "role", "severity", "affectedSectionId", "findingType", "summary", "evidenceIds", "impact", "assumptions", "applicableGate", "minimalFix"]) {
     assert.match(role, new RegExp(`\\| \\x60${field}\\x60 \\|`, "u"), field);
   }
   assert.match(role, /document structure.*checklist coverage.*PPT\/story contract/isu);
   assert.match(role, /must not grant.*evidence.*visual.*rights.*production.*release.*document approval/isu);
   assert.match(role, /does not replace.*domain reviewer/iu);
+});
+
+test("Studio editor finding is accepted by the real merger API and CLI without blocker authority", async () => {
+  const mergerPath = path.join(pluginRoot, "skills/orchestrate-game-design-project/scripts/merge-role-findings.mjs");
+  const { mergeRoleFindings } = await import(`${pathToFileURL(mergerPath).href}?quality=${Date.now()}`);
+  const finding = {
+    findingId: "quality-structure-1",
+    role: "document-quality-editor",
+    severity: "high",
+    affectedSectionId: "skillstead-gdd-dependency-diagram",
+    findingType: "missing-diagram-slot",
+    summary: "The required diagram slot is absent.",
+    evidenceIds: ["quality-checklist-1"],
+    impact: "The dependency decision cannot be reviewed.",
+    assumptions: ["The selected profile is current."],
+    applicableGate: "none",
+    minimalFix: "Add the declared diagram slot without claiming render approval.",
+  };
+  const input = { schemaVersion: 1, findings: [finding] };
+  assert.equal(mergeRoleFindings(input).findings[0].role, "document-quality-editor");
+  assert.throws(() => mergeRoleFindings({ schemaVersion: 1, findings: [{ ...finding, severity: "blocker" }] }), /blocker authority/i);
+  const cli = spawnSync(process.execPath, [mergerPath], { input: JSON.stringify(input), encoding: "utf8" });
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.equal(JSON.parse(cli.stdout).findings[0].affectedSectionId, finding.affectedSectionId);
 });
 
 test("Studio routing applies quality before generation without changing reviewer bounds", async () => {

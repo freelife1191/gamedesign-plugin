@@ -19,6 +19,7 @@ Select and compose one validated Career document-quality contract per canonical 
   "selection": {
     "inputs": ["goal", "audience", "artifactType", "requestedFormat"],
     "precedence": ["known-explicit-override", "compatible-template-map-match", "artifact-type-match", "requested-format-match", "audience-overlap", "goal-overlap", "profile-id-lexical"],
+    "scoreTuple": ["templateMatch", "artifactTypeMatch", "formatMatch", "audienceOverlap", "goalOverlap"],
     "primaryCount": 1,
     "unknownOverride": {
       "selected": false,
@@ -31,16 +32,20 @@ Select and compose one validated Career document-quality contract per canonical 
   "composition": {
     "overlays": "known-additive-only",
     "maxPresets": 1,
+    "presetMode": "validated-separate-guidance",
     "reject": ["removal", "identity-leakage", "scalar-contradiction", "unknown-id", "schema-invalid"]
   },
   "progressiveLoading": {
-    "afterSelection": ["selected-primary", "requested-overlays", "optional-preset", "relevant-render-contract", "product-template-map"],
+    "preSelection": ["profile-id-index", "product-template-map"],
+    "unknownComparison": ["nearest-profile-body"],
+    "postSelection": ["selected-primary", "requested-overlays", "optional-preset", "relevant-render-contract", "selection-and-profile-schemas"],
     "forbidden": ["bulk-catalog-load", "authoring-evidence"]
   },
   "output": {
     "selectionRecord": ["artifactId", "goal", "audience", "artifactType", "requestedFormat", "primaryProfileId", "overlayIds", "presetId", "renderContractId", "templateId", "selectionReason", "fallbackRecord"],
     "checklist": ["sections", "tables", "diagrams", "images", "acceptanceCriteria"],
     "stableIdsRequired": true,
+    "acceptanceIdRule": "source-id-plus-normalized-sha256-16",
     "diagrams": "skillstead-compatible-slots-unverified-until-render-qa"
   },
   "states": ["draft", "structurally-complete", "evidence-reviewed", "visual-reviewed", "document-approved"],
@@ -54,12 +59,12 @@ Select and compose one validated Career document-quality contract per canonical 
 ## Workflow
 
 1. Split incompatible deliverables or formats into separate artifact records; never combine two primary profiles.
-2. Normalize `goal`, `audience`, `artifactType`, and `requestedFormat`. Read `../../references/document-quality/template-profile-map.json` only to resolve a known template candidate.
-3. Accept an explicit override only when the ID exists under `../../references/shared/document-quality/profiles/career/` and its export rules allow the requested format. For an unknown ID, compare Unicode-NFC lowercase kebab IDs by Levenshtein distance, break equal distances lexically, and report the nearest ID plus concrete artifact-type, audience, and format differences. Do not select it until an explicit fallback record names a known primary.
-4. Otherwise rank compatible candidates by the declared precedence. Select exactly one primary and record every tie-break. Keep an artifact blocked when no candidate is compatible.
-5. After selection, read only the selected primary JSON, requested known overlays under `../../references/shared/document-quality/overlays/`, at most one known neutral preset under `../../references/shared/document-quality/presets/`, the relevant contract under `../../references/shared/document-quality/render-contracts/`, and the product template map. Never bulk-load either profile namespace or authoring-only evidence.
-6. Compose additively. Reject removals, identity-bearing source material, scalar conflicts, unknown IDs, or any result that fails the packaged selection and profile schemas.
-7. Copy every required section, table, diagram, image, and acceptance criterion into a checklist using its stable ID. Declare every diagram as a Skillstead-compatible slot; requested or generated visuals remain unverified until renderer QA.
+2. Before selection, read only `routing.json`'s profile ID index and `../../references/document-quality/template-profile-map.json`. Normalize IDs and inputs to Unicode NFC, lowercase, and kebab tokens.
+3. Accept an explicit override only when its normalized ID is known and compatible with both artifact type and requested format. For an unknown ID, compute Levenshtein distance over normalized IDs, break equal distances lexically, load only the single nearest profile body, and report its artifact-type, audience, and format differences. Do not select it until an explicit fallback record names a known compatible primary.
+4. Otherwise filter by artifact type and requested format. Score the exact tuple `templateMatch, artifactTypeMatch, formatMatch, audienceOverlap, goalOverlap` descending; compute audience overlap from normalized audience tokens and goal overlap from profile ID, artifact-type, and audience tokens. Break a remaining tie by lexical profile ID.
+5. After selection, read only the selected primary JSON, requested known overlays, at most one known neutral preset, the relevant render contract, and the selection/profile schemas under `../../references/shared/document-quality/`. Never bulk-load profile bodies or authoring-only evidence.
+6. Compose primary and overlays into the closed validated profile. Adapt the preset into separate additive `emphasis`, review questions, recommended diagrams, story hints, and additional acceptance guidance; never raw-merge preset keys into the profile. Reject removals, identity-bearing source material, scalar conflicts, unknown IDs, or invalid results.
+7. Copy every required section, table, diagram, image, and acceptance criterion into a checklist. Keep source IDs for structured items. Derive each string criterion ID as `<source-id>-acceptance-<first-16-hex-of-SHA-256>` over Unicode-NFC, trimmed, whitespace-collapsed, lowercase criterion text; insertion order must not alter it. Declare diagrams as Skillstead-compatible slots unverified until renderer QA.
 8. Return the selection record, composed requirements, checklist status, conflicts, blockers, and current document state before content generation or asset planning.
 
 ## State Gates

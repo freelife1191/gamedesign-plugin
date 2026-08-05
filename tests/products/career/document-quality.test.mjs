@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import * as qualityWorkflow from "../../../shared/scripts/resolve-quality-profile.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -42,6 +44,7 @@ test("Career selection uses its own namespace, deterministic precedence, and exp
     "audience-overlap", "goal-overlap", "profile-id-lexical",
   ]);
   assert.equal(contract.selection.primaryCount, 1);
+  assert.deepEqual(contract.selection.scoreTuple, ["templateMatch", "artifactTypeMatch", "formatMatch", "audienceOverlap", "goalOverlap"]);
   assert.equal(contract.selection.incompatibleDeliverables, "separate-selection-records");
   assert.deepEqual(contract.selection.unknownOverride.report, ["requestedProfileId", "nearestProfileId", "differences"]);
   assert.equal(contract.selection.unknownOverride.selected, false);
@@ -52,7 +55,10 @@ test("Career skill composes only additive known sources and loads a bounded pack
   const { contract, skill } = await readContract();
   assert.deepEqual(contract.composition.reject, ["removal", "identity-leakage", "scalar-contradiction", "unknown-id", "schema-invalid"]);
   assert.equal(contract.composition.maxPresets, 1);
-  assert.deepEqual(contract.progressiveLoading.afterSelection, ["selected-primary", "requested-overlays", "optional-preset", "relevant-render-contract", "product-template-map"]);
+  assert.equal(contract.composition.presetMode, "validated-separate-guidance");
+  assert.deepEqual(contract.progressiveLoading.preSelection, ["profile-id-index", "product-template-map"]);
+  assert.deepEqual(contract.progressiveLoading.unknownComparison, ["nearest-profile-body"]);
+  assert.deepEqual(contract.progressiveLoading.postSelection, ["selected-primary", "requested-overlays", "optional-preset", "relevant-render-contract", "selection-and-profile-schemas"]);
   assert.deepEqual(contract.progressiveLoading.forbidden, ["bulk-catalog-load", "authoring-evidence"]);
   assert.match(skill, /references\/shared\/document-quality\//u);
   assert.doesNotMatch(skill, /authoring\/reference-preset-evidence-map\.json/u);
@@ -62,6 +68,7 @@ test("Career checklist, Skillstead slots, status transitions, and approval bound
   const { contract } = await readContract();
   assert.deepEqual(contract.output.checklist, ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]);
   assert.equal(contract.output.stableIdsRequired, true);
+  assert.equal(contract.output.acceptanceIdRule, "source-id-plus-normalized-sha256-16");
   assert.equal(contract.output.diagrams, "skillstead-compatible-slots-unverified-until-render-qa");
   assert.deepEqual(contract.states, ["draft", "structurally-complete", "evidence-reviewed", "visual-reviewed", "document-approved"]);
   assert.deepEqual(contract.structuralBlockers, ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]);
@@ -71,12 +78,36 @@ test("Career checklist, Skillstead slots, status transitions, and approval bound
 
 test("Career quality editor has stable findings and no approval authority", async () => {
   const role = await read("agents/document-quality-editor.md");
-  for (const field of ["findingId", "stableSectionOrSlotId", "evidence", "impact", "minimalRepair"]) {
+  for (const field of ["findingId", "role", "severity", "evidenceGapId", "artifactSectionId", "findingType", "summary", "evidenceIds", "minimumRepair"]) {
     assert.match(role, new RegExp(`\\| \\x60${field}\\x60 \\|`, "u"), field);
   }
   assert.match(role, /document structure.*checklist coverage.*PPT\/story contract/isu);
   assert.match(role, /must not grant.*evidence.*visual.*rights.*production.*release.*document approval/isu);
   assert.match(role, /does not replace.*domain reviewer/iu);
+});
+
+function careerQualityFinding(findingId = "quality-career-1") {
+  return {
+    findingId,
+    role: "document-quality-editor",
+    severity: "high",
+    evidenceGapId: "quality-gap-1",
+    artifactSectionId: "skillstead-reverse-system-loop-diagram",
+    findingType: "missing-diagram-slot",
+    summary: "The required diagram slot is absent.",
+    evidenceIds: ["quality-checklist-1"],
+    minimumRepair: "Add the declared diagram slot without claiming render approval.",
+  };
+}
+
+test("Career editor finding is accepted by the real merger API and CLI", async () => {
+  const mergerPath = path.join(pluginRoot, "skills/orchestrate-game-design-career/scripts/merge-role-findings.mjs");
+  const { mergeRoleFindings } = await import(`${pathToFileURL(mergerPath).href}?quality=${Date.now()}`);
+  const input = { schemaVersion: 1, findings: [careerQualityFinding()] };
+  assert.equal(mergeRoleFindings(input).findings[0].role, "document-quality-editor");
+  const cli = spawnSync(process.execPath, [mergerPath], { input: JSON.stringify(input), encoding: "utf8" });
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.equal(JSON.parse(cli.stdout).findings[0].artifactSectionId, "skillstead-reverse-system-loop-diagram");
 });
 
 test("Career routing inserts quality application before content and preserves review limits and merge order", async () => {
@@ -100,9 +131,52 @@ test("Career routing inserts quality application before content and preserves re
     ],
   });
   assert.equal(stages.preGenerationSkill, "apply-document-quality-profile");
+  assert.deepEqual(stages.reviewDispatch.rolePriority.at(-1), "document-quality-editor");
+  assert.deepEqual(stages.reviewDispatch.sequential.order, stages.reviewDispatch.rolePriority);
+  assert.ok(stages.reviewDispatch.questionsByRole["document-quality-editor"].length > 0);
+  assert.deepEqual(stages.reviewDispatch.qualityEditorPolicy, {
+    role: "document-quality-editor",
+    maxReviewers: 3,
+    maxDomainReviewers: 2,
+    requiredRoleSets: { "portfolio-review": ["portfolio-reviewer", "evidence-auditor"] },
+  });
   assert.ok(routing.routes.every(({ roles }) => roles.length <= 3));
   assert.deepEqual(stages.reviewDispatch.mergeKeys, ["severity", "evidence-gap-id", "artifact-section-id", "role-priority"]);
   assert.match(orchestrator, /apply-document-quality-profile.*before content generation and asset planning/isu);
   assert.match(gates, /draft.*structurally-complete.*evidence-reviewed.*visual-reviewed.*document-approved/isu);
   assert.match(gates, /generated images?.*rendered files?.*do not.*approval/isu);
+});
+
+test("Career reviewer selection counts the editor in three and preserves portfolio required roles across modes", async () => {
+  assert.equal(typeof qualityWorkflow.selectBoundedReviewRoles, "function");
+  const stages = JSON.parse(await read("references/career-stages.json"));
+  const policy = stages.reviewDispatch.qualityEditorPolicy;
+  const selectedRoles = qualityWorkflow.selectBoundedReviewRoles({
+    candidateRoles: ["career-strategist", "portfolio-reviewer", "evidence-auditor"],
+    requiredRoles: policy.requiredRoleSets["portfolio-review"],
+    rolePriority: stages.reviewDispatch.rolePriority,
+    qualityEditorRole: policy.role,
+    maxReviewers: policy.maxReviewers,
+  });
+  assert.deepEqual(selectedRoles, ["portfolio-reviewer", "evidence-auditor", "document-quality-editor"]);
+  assert.equal(selectedRoles.length, 3);
+  assert.deepEqual(qualityWorkflow.selectBoundedReviewRoles({
+    candidateRoles: [...policy.requiredRoleSets["portfolio-review"]].reverse(),
+    requiredRoles: [...policy.requiredRoleSets["portfolio-review"]].reverse(),
+    rolePriority: stages.reviewDispatch.rolePriority,
+    qualityEditorRole: policy.role,
+    maxReviewers: policy.maxReviewers,
+  }), selectedRoles);
+
+  const mergerPath = path.join(pluginRoot, "skills/orchestrate-game-design-career/scripts/merge-role-findings.mjs");
+  const { mergeRoleFindings } = await import(`${pathToFileURL(mergerPath).href}?dispatch=${Date.now()}`);
+  const findingByRole = {
+    "portfolio-reviewer": { ...careerQualityFinding("portfolio-1"), role: "portfolio-reviewer" },
+    "evidence-auditor": { ...careerQualityFinding("evidence-1"), role: "evidence-auditor" },
+    "document-quality-editor": careerQualityFinding("quality-1"),
+  };
+  const parallel = mergeRoleFindings({ schemaVersion: 1, findings: selectedRoles.map((role) => findingByRole[role]) });
+  const sequential = mergeRoleFindings({ schemaVersion: 1, findings: [...selectedRoles].reverse().map((role) => findingByRole[role]) });
+  assert.deepEqual(parallel, sequential);
+  assert.deepEqual(new Set(parallel.findings.flatMap(({ provenance }) => provenance.map(({ role }) => role))), new Set(selectedRoles));
 });

@@ -6,6 +6,7 @@ import test from "node:test";
 
 import { validateQualityProfile } from "../../shared/scripts/validate-quality-profile.mjs";
 import { composeQualityProfile, loadQualityProfile } from "../../shared/scripts/resolve-quality-profile.mjs";
+import * as qualityWorkflow from "../../shared/scripts/resolve-quality-profile.mjs";
 
 function profile(overrides = {}) {
   return {
@@ -215,7 +216,7 @@ test("rejects every empty required-content list", () => {
   }
 });
 
-test("composition preserves primary requirements, adds stable unique entries, and reports scalar conflicts", () => {
+test("composition preserves primary and overlay requirements while adapting neutral preset guidance separately", async () => {
   const primary = profile();
   const overlay = {
     profile_id: "mobile-overlay",
@@ -226,27 +227,29 @@ test("composition preserves primary requirements, adds stable unique entries, an
     acceptance_criteria: ["Every required section is complete.", "Touch targets are usable."],
     length_guidance: { max_words: 1200 },
   };
-  const preset = {
-    profile_id: "executive-preset",
-    required_sections: [{ id: "summary", title: "Executive summary" }],
-    acceptance_criteria: ["Touch targets are usable.", "The recommendation is explicit."],
-  };
+  const preset = JSON.parse(await readFile(new URL(
+    "../../shared/document-quality/presets/function-first.json",
+    import.meta.url,
+  ), "utf8"));
   const before = structuredClone({ primary, overlay, preset });
 
   const result = composeQualityProfile({ primary, overlays: [overlay], preset });
 
-  assert.deepEqual(result.profile.required_sections.map(({ id }) => id), ["overview", "systems", "mobile", "summary"]);
+  assert.deepEqual(result.profile.required_sections.map(({ id }) => id), ["overview", "systems", "mobile"]);
   assert.deepEqual(result.profile.acceptance_criteria, [
     "Every required section is complete.",
     "Touch targets are usable.",
-    "The recommendation is explicit.",
   ]);
   assert.deepEqual(result.profile.length_guidance, primary.length_guidance);
   assert.deepEqual(result.provenance, {
     primary: "studio-default",
     overlays: ["mobile-overlay"],
-    preset: "executive-preset",
+    preset: "function-first",
   });
+  assert.equal(result.guidance.presetId, "function-first");
+  assert.deepEqual(result.guidance.emphasis, preset.emphasis);
+  assert.deepEqual(result.guidance.additionalAcceptanceCriteria, preset.additional_acceptance_criteria);
+  assert.equal(Object.hasOwn(result.profile, "emphasis"), false);
   assert.deepEqual(result.conflicts, [{
     path: "/length_guidance/max_words",
     primary: 1600,
@@ -267,6 +270,170 @@ test("composition rejects removal directives from overlays and presets", () => {
     () => composeQualityProfile({ primary: profile(), preset: { profile_id: "bad-preset", remove_sections: ["systems"] } }),
     /removal directive/i,
   );
+});
+
+test("all seven real neutral presets adapt and reject removal, duplicate, contradiction, and unknown-ID mutations", async () => {
+  const presetRoot = new URL("../../shared/document-quality/presets/", import.meta.url);
+  const presetIds = [
+    "cinematic-narrative", "competitive-live-service", "evolving-world", "function-first",
+    "player-validated-small-team", "replayable-coop", "ugc-production-tooling",
+  ];
+  for (const presetId of presetIds) {
+    const preset = JSON.parse(await readFile(new URL(`${presetId}.json`, presetRoot), "utf8"));
+    const result = composeQualityProfile({ primary: profile(), preset });
+    assert.equal(validateQualityProfile(result.profile).ok, true, presetId);
+    assert.equal(result.guidance.presetId, presetId);
+    assert.deepEqual(result.guidance.reviewQuestions, preset.review_questions);
+    for (const mutation of [
+      { ...preset, remove_sections: ["overview"] },
+      { ...preset, emphasis: [...preset.emphasis, preset.emphasis[0]] },
+      { ...preset, export_rules: { forbidden_formats: ["pdf"] } },
+      { ...preset, preset_id: `unknown-${presetId}` },
+    ]) {
+      assert.throws(
+        () => composeQualityProfile({ primary: profile(), preset: mutation }),
+        /preset|removal|unknown|duplicate/i,
+        presetId,
+      );
+    }
+  }
+});
+
+async function loadCatalog(namespace) {
+  const routing = JSON.parse(await readFile(new URL(
+    `../../products/game-design-${namespace === "studio" ? "studio" : "career"}/plugin/references/routing.json`,
+    import.meta.url,
+  ), "utf8"));
+  const profiles = await Promise.all(routing.qualityWorkflow.profileIds.map(async (profileId) => JSON.parse(await readFile(
+    new URL(`../../shared/document-quality/profiles/${namespace}/${profileId}.json`, import.meta.url),
+    "utf8",
+  ))));
+  const templateMap = JSON.parse(await readFile(new URL(
+    `../../products/game-design-${namespace === "studio" ? "studio" : "career"}/plugin/references/document-quality/template-profile-map.json`,
+    import.meta.url,
+  ), "utf8"));
+  return { profiles, templateMap };
+}
+
+test("executable selector normalizes inputs and ranks actual catalogs deterministically", async () => {
+  assert.equal(typeof qualityWorkflow.selectQualityProfiles, "function");
+  const { profiles, templateMap } = await loadCatalog("studio");
+  const requests = [{
+    artifactId: "brief", goal: "Game Design Brief", audience: ["Production"],
+    artifactType: "DESIGN_DOCUMENT", requestedFormat: "MD", templateId: "game-design-brief",
+  }];
+  const forward = qualityWorkflow.selectQualityProfiles({ profiles, templateMap, requests });
+  const reverse = qualityWorkflow.selectQualityProfiles({ profiles: [...profiles].reverse(), templateMap, requests });
+  assert.deepEqual(forward, reverse);
+  assert.equal(forward[0].primaryProfileId, "game-design-brief");
+  assert.deepEqual(forward[0].score, {
+    templateMatch: 1, artifactTypeMatch: 1, formatMatch: 1, audienceOverlap: 1, goalOverlap: 3,
+  });
+
+  const audienceMutation = qualityWorkflow.selectQualityProfiles({ profiles, templateMap, requests: [{
+    artifactId: "review", goal: "metrics report", audience: ["analytics"],
+    artifactType: "review-report", requestedFormat: "pdf",
+  }] });
+  assert.equal(audienceMutation[0].primaryProfileId, "playtest-metrics-report");
+});
+
+test("selector validates overrides, reports one nearest candidate, and splits multi-artifact requests", async () => {
+  const studio = await loadCatalog("studio");
+  const selected = qualityWorkflow.selectQualityProfiles({ ...studio, requests: [{
+    artifactId: "pitch", goal: "executive pitch", audience: ["EXECUTIVE"], artifactType: "presentation",
+    requestedFormat: "PPTX", explicitPrimaryId: "EXECUTIVE_PITCH",
+  }] });
+  assert.equal(selected[0].primaryProfileId, "executive-pitch");
+  assert.throws(() => qualityWorkflow.selectQualityProfiles({ ...studio, requests: [{
+    artifactId: "bad", goal: "pitch", audience: ["executive"], artifactType: "presentation",
+    requestedFormat: "pptx", explicitPrimaryId: "master-gdd",
+  }] }), /incompatible/i);
+
+  const unknown = qualityWorkflow.selectQualityProfiles({ ...studio, requests: [{
+    artifactId: "unknown", goal: "executive pitch", audience: ["executive"], artifactType: "presentation",
+    requestedFormat: "pptx", explicitPrimaryId: "executive-pich",
+  }] });
+  assert.equal(unknown[0].status, "fallback-required");
+  assert.equal(unknown[0].primaryProfileId, null);
+  assert.equal(unknown[0].fallbackRecord.nearestProfileId, "executive-pitch");
+
+  const resolvedFallback = qualityWorkflow.selectQualityProfiles({ ...studio, requests: [{
+    artifactId: "unknown", goal: "executive pitch", audience: ["executive"], artifactType: "presentation",
+    requestedFormat: "pptx", explicitPrimaryId: "executive-pich", fallbackPrimaryId: "executive-pitch",
+  }] });
+  assert.equal(resolvedFallback[0].status, "selected");
+  assert.equal(resolvedFallback[0].primaryProfileId, "executive-pitch");
+  assert.deepEqual(resolvedFallback[0].fallbackRecord, {
+    requestedProfileId: "executive-pich",
+    selectedFallbackProfileId: "executive-pitch",
+  });
+
+  const career = await loadCatalog("career");
+  const split = qualityWorkflow.selectQualityProfiles({ ...career, requests: [
+    { artifactId: "reverse-doc", goal: "reverse design", audience: ["designer"], artifactType: "career-document", requestedFormat: "docx", templateId: "reverse-design-document" },
+    { artifactId: "interview-deck", goal: "recruiter portfolio", audience: ["recruiter"], artifactType: "presentation", requestedFormat: "pptx", templateId: "introduction-motivation" },
+  ] });
+  assert.equal(split.length, 2);
+  assert.deepEqual(split.map(({ artifactId, primaryProfileId }) => [artifactId, primaryProfileId]), [
+    ["reverse-doc", "reverse-design-document"],
+    ["interview-deck", "recruiter-portfolio-presentation"],
+  ]);
+});
+
+test("checklist derives stable acceptance IDs and every required type blocks structural completion", async () => {
+  assert.equal(typeof qualityWorkflow.buildQualityChecklist, "function");
+  const primary = JSON.parse(await readFile(new URL(
+    "../../shared/document-quality/profiles/studio/master-gdd.json",
+    import.meta.url,
+  ), "utf8"));
+  const overlay = JSON.parse(await readFile(new URL(
+    "../../shared/document-quality/overlays/mobile.json",
+    import.meta.url,
+  ), "utf8"));
+  const preset = JSON.parse(await readFile(new URL(
+    "../../shared/document-quality/presets/function-first.json",
+    import.meta.url,
+  ), "utf8"));
+  const composed = composeQualityProfile({ primary, overlays: [overlay], preset });
+  const checklist = qualityWorkflow.buildQualityChecklist(composed);
+  assert.equal(checklist.acceptanceCriteria[0].id, "master-gdd-acceptance-71a953f23b813d8b");
+  const inserted = structuredClone(composed);
+  inserted.acceptanceCriterionSources.splice(0, 0, { sourceId: "test-source", text: "Inserted criterion." });
+  assert.equal(
+    qualityWorkflow.buildQualityChecklist(inserted).acceptanceCriteria[1].id,
+    "master-gdd-acceptance-71a953f23b813d8b",
+  );
+
+  const complete = Object.fromEntries(Object.entries(checklist).map(([key, items]) => [
+    key, items.map((item) => ({ ...item, status: "complete" })),
+  ]));
+  assert.equal(qualityWorkflow.evaluateStructuralCompleteness(complete).ready, true);
+  for (const key of ["sections", "tables", "diagrams", "images", "acceptanceCriteria"]) {
+    const mutation = structuredClone(complete);
+    mutation[key][0].status = "missing";
+    const result = qualityWorkflow.evaluateStructuralCompleteness(mutation);
+    assert.equal(result.ready, false, key);
+    assert.deepEqual(result.missingIds, [mutation[key][0].id], key);
+  }
+});
+
+test("document quality state evaluator enforces all five transitions and rejects automation as approval", async () => {
+  assert.equal(typeof qualityWorkflow.transitionDocumentQualityState, "function");
+  const primary = profile();
+  const checklist = qualityWorkflow.buildQualityChecklist(composeQualityProfile({ primary }));
+  const complete = Object.fromEntries(Object.entries(checklist).map(([key, items]) => [
+    key, items.map((item) => ({ ...item, status: "complete" })),
+  ]));
+  let state = qualityWorkflow.transitionDocumentQualityState({ currentState: "draft", targetState: "structurally-complete", checklist: complete });
+  assert.equal(state, "structurally-complete");
+  assert.throws(() => qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "visual-reviewed", checklist: complete }), /next state/i);
+  assert.throws(() => qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "evidence-reviewed", checklist: complete, approvals: { generatedImage: true, selfAttested: true } }), /evidence-auditor/i);
+  state = qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "evidence-reviewed", checklist: complete, approvals: { evidenceReviewedBy: "evidence-auditor" } });
+  assert.throws(() => qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "visual-reviewed", checklist: complete, approvals: { renderedFile: true } }), /renderer-qa/i);
+  state = qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "visual-reviewed", checklist: complete, approvals: { visualReviewedBy: "renderer-qa" } });
+  assert.throws(() => qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "document-approved", checklist: complete, approvals: { selfAttested: true } }), /human/i);
+  state = qualityWorkflow.transitionDocumentQualityState({ currentState: state, targetState: "document-approved", checklist: complete, approvals: { documentApprovedBy: "human" } });
+  assert.equal(state, "document-approved");
 });
 
 test("composition validates the primary and rejects contradictions introduced by each source", () => {

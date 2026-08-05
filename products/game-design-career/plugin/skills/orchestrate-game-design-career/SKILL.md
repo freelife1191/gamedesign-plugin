@@ -22,7 +22,7 @@ Diagnose the career decision before selecting specialist work. Route evidence-ce
 2. Ask one concise question only when the missing answer materially branches the work. Otherwise expose the assumption in the career-stage brief.
 3. Diagnose `entry`, `new-hire`, `junior-growth`, or `transition`. If stage or target role remains unclear, select `unclear`, produce a role map with multiple provisional paths and tradeoffs, and define verification tasks. Do not declare one correct career.
 4. Select the smallest ordered skill chain that satisfies the requested output. Apply `apply-document-quality-profile` independently to every canonical artifact before content generation and asset planning. Preserve each selection record and stable checklist. Select `research-game-design-jobs` before using current employer, project, posting, hiring, tool, or market facts. Load the selected scenario's `asOfDate` from `routing.json`, require the request and result snapshot to match it exactly, and pass only that registry-bound date to job-evidence validation.
-5. Select at most three domain review roles. For portfolio review, always select `portfolio-reviewer` and `evidence-auditor`; run `document-quality-editor` only as the separate structural quality check.
+5. Select at most three total review roles, including `document-quality-editor` whenever an authored artifact needs its structural quality check. Select no more than two domain roles in that case. For portfolio review, preserve both required roles `portfolio-reviewer` and `evidence-auditor`, then add `document-quality-editor` as the third role. Use the same selected role set and registered questions in parallel and sequential modes.
 6. Create one envelope per role using exactly this shape:
 
 ```json

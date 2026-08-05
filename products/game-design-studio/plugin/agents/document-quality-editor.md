@@ -36,13 +36,16 @@ Tie every finding to an inspectable checklist record, profile field, slide recor
 | --- | --- |
 | `findingId` | Globally unique stable finding ID. |
 | `role` | Exactly `document-quality-editor`. |
-| `severity` | One of `blocker`, `high`, `medium`, `low`. |
-| `stableSectionOrSlotId` | Stable section, table, diagram, image, criterion, or slide ID. |
+| `severity` | One of `high`, `medium`, `low`; this role has no `blocker` authority. |
+| `affectedSectionId` | Stable section, table, diagram, image, criterion, or slide ID. |
 | `findingType` | Missing, misplaced, contradictory, uncovered, or story-contract defect. |
-| `evidence` | Inspectable profile, checklist, artifact, or render-QA evidence IDs. |
+| `summary` | Evidence-bounded structural observation. |
+| `evidenceIds` | Non-empty inspectable profile, checklist, artifact, or render-QA evidence IDs. |
 | `impact` | Concrete document comprehension, traceability, or review consequence. |
-| `minimalRepair` | Smallest structural repair. |
+| `assumptions` | Explicit non-empty assumptions used by the repair. |
+| `applicableGate` | Exactly `none`; structural status is not a responsible-design blocker gate. |
+| `minimalFix` | Smallest structural repair. |
 
 ## Completion Signal
 
-Complete only when every finding has a stable target, evidence, impact, and minimal repair. Return findings to the orchestrator without changing any approval state.
+Complete only when every finding has a stable target, evidence, impact, assumptions, and a minimal fix. Return findings to the orchestrator without changing any approval state. Never emit `blocker`; an incomplete checklist blocks the document state transition instead.
