@@ -7,6 +7,12 @@ const maximumAttempts = 3;
 const maximumJobs = 64;
 const retryDelayCeilingMs = 2_000;
 const safeRequestId = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
+const safeModel = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,127})$/u;
+const qualities = new Set(["low", "medium", "high", "auto"]);
+
+// A 20 MiB JSON response admits a 12 MiB PNG encoded as base64 plus normal
+// Images API metadata, while bounding both declared and streamed responses.
+export const maximumResponseBytes = 20 * 1024 * 1024;
 
 function digest(value) {
   return createHash("sha256").update(value, "utf8").digest("hex");
@@ -16,9 +22,24 @@ function failure(assetId, generationState, reason, attempts) {
   return { asset_id: assetId, generation_state: generationState, reason, attempts };
 }
 
+function requestError() {
+  const error = new Error("Invalid bounded OpenAI image generation request.");
+  error.code = "invalid_generation_request";
+  return error;
+}
+
 function validJob(job) {
   return job && typeof job === "object" && typeof job.asset_id === "string" && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(job.asset_id)
     && typeof job.prompt === "string" && job.prompt.trim() !== "" && job.output && typeof job.output === "object";
+}
+
+function gptImageSizeIsValid(output) {
+  const { width, height } = output ?? {};
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width % 16 !== 0 || height % 16 !== 0
+    || width > 3840 || height > 3840) return false;
+  const pixels = width * height;
+  const ratio = width / height;
+  return pixels >= 655_360 && pixels <= 8_294_400 && ratio >= 1 / 3 && ratio <= 3;
 }
 
 function retryDelay(response, attempt, now) {
@@ -33,9 +54,63 @@ function retryDelay(response, attempt, now) {
   return Math.min(retryDelayCeilingMs, Number.isFinite(milliseconds) ? milliseconds : attempt * 250);
 }
 
-function policyBlocked(responseBody) {
-  const code = responseBody?.error?.code;
-  return typeof code === "string" && /(?:moderation|policy)[_-]?blocked/iu.test(code);
+function headerValue(response, name) {
+  const value = response?.headers?.get?.(name);
+  return typeof value === "string" ? value : null;
+}
+
+function declaredLength(response) {
+  const value = headerValue(response, "content-length");
+  if (value === null) return undefined;
+  if (!/^\d+$/u.test(value) || Number(value) > maximumResponseBytes) return null;
+  return Number(value);
+}
+
+async function responseChunks(body) {
+  if (body && typeof body[Symbol.asyncIterator] === "function") return body;
+  if (body && typeof body.getReader === "function") {
+    return (async function* readerChunks() {
+      const reader = body.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) return;
+          yield value;
+        }
+      } finally {
+        reader.releaseLock?.();
+      }
+    }());
+  }
+  return null;
+}
+
+async function readBoundedJson(response) {
+  if (declaredLength(response) === null) return { ok: false };
+  const stream = await responseChunks(response?.body);
+  if (!stream) return { ok: false };
+  const chunks = [];
+  let total = 0;
+  try {
+    for await (const chunk of stream) {
+      if (!(chunk instanceof Uint8Array) || total + chunk.byteLength > maximumResponseBytes) return { ok: false };
+      chunks.push(Buffer.from(chunk));
+      total += chunk.byteLength;
+    }
+    const value = JSON.parse(Buffer.concat(chunks, total).toString("utf8"));
+    return value && typeof value === "object" && !Array.isArray(value) ? { ok: true, value } : { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
+function providerErrorClass(body) {
+  const code = typeof body?.error?.code === "string" ? body.error.code.toLowerCase() : "";
+  const type = typeof body?.error?.type === "string" ? body.error.type.toLowerCase() : "";
+  const policy = /(?:moderation|policy)[_-]?blocked/iu.test(code) || /(?:moderation|policy)[_-]?blocked/iu.test(type);
+  const noRetry = type === "image_generation_user_error" || /(?:quota|billing|credit|spend|usage|invalid)/iu.test(code)
+    || /(?:quota|billing|credit|spend|usage|invalid)/iu.test(type);
+  return { policy, noRetry };
 }
 
 async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now }) {
@@ -47,25 +122,32 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       response = await fetchFn(endpoint, {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, quality, prompt: job.prompt, size: `${job.output.width}x${job.output.height}` }),
+        body: JSON.stringify({ model, quality, prompt: job.prompt, size: `${job.output.width}x${job.output.height}`, n: 1 }),
       });
     } catch {
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
-    let body;
-    try {
-      body = await response.json();
-    } catch {
-      body = undefined;
+    const parsed = await readBoundedJson(response);
+    if (!parsed.ok) {
+      if (response?.status >= 500 && attempts < maximumAttempts) {
+        await sleepFn(retryDelay(response, attempts, now));
+        continue;
+      }
+      return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
     }
     if (response?.status >= 200 && response.status < 300) {
-      const image = body?.data?.[0]?.b64_json;
-      if (typeof image !== "string") return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-image-output" };
-      const requestId = response.headers?.get?.("x-request-id");
-      return { ok: true, attempts, b64: image, requestId: typeof requestId === "string" && safeRequestId.test(requestId) ? requestId : undefined };
+      if (!Array.isArray(parsed.value.data) || parsed.value.data.length !== 1 || typeof parsed.value.data[0]?.b64_json !== "string") {
+        return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-provider-response" };
+      }
+      const requestId = headerValue(response, "x-request-id");
+      return { ok: true, attempts, b64: parsed.value.data[0].b64_json, requestId: requestId && safeRequestId.test(requestId) ? requestId : undefined };
     }
-    if (policyBlocked(body)) return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
-    if ((response?.status === 429 || response?.status >= 500) && attempts < maximumAttempts) {
+    const classified = providerErrorClass(parsed.value);
+    if (classified.policy) return { ok: false, attempts, generationState: "policy-blocked", reason: "policy-blocked" };
+    if (classified.noRetry || ![429].includes(response?.status) && !(response?.status >= 500)) {
+      return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
+    }
+    if (attempts < maximumAttempts) {
       await sleepFn(retryDelay(response, attempts, now));
       continue;
     }
@@ -90,15 +172,17 @@ export async function generateOpenAIImages({
   stagingRoot,
 } = {}) {
   if (!Array.isArray(jobs) || jobs.length > maximumJobs || typeof apiKey !== "string" || apiKey.length === 0
-    || model !== "gpt-image-2" || quality !== "low" || typeof fetchFn !== "function" || typeof sleepFn !== "function") {
-    throw new Error("Invalid bounded OpenAI image generation request.");
-  }
+    || !safeModel.test(model) || !qualities.has(quality) || typeof fetchFn !== "function" || typeof sleepFn !== "function") throw requestError();
   const results = [];
   const failures = [];
   for (const job of jobs) {
     const assetId = typeof job?.asset_id === "string" ? job.asset_id : "invalid-asset";
     if (!validJob(job)) {
       failures.push(failure(assetId, "qa-failed", "invalid-generation-job", 0));
+      continue;
+    }
+    if (model === "gpt-image-2" && !gptImageSizeIsValid(job.output)) {
+      failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-size", 0));
       continue;
     }
     let prepared;

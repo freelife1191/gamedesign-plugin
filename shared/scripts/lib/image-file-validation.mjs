@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, mkdir, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, realpath, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -81,15 +81,17 @@ export async function prepareImageOutput({ stagingRoot, output } = {}) {
   return { destination, output: { path: output.path, width: output.width, height: output.height, format: "png" } };
 }
 
-export async function promoteValidatedPng({ prepared, bytes } = {}) {
+export async function promoteValidatedPng({ prepared, bytes, afterTemporaryWritten } = {}) {
   const image = validatePngBuffer(bytes, prepared?.output);
   const temporary = `${prepared.destination}.tmp-${randomUUID()}`;
   try {
     await writeFile(temporary, bytes, { flag: "wx", mode: 0o600 });
-    await rename(temporary, prepared.destination);
-  } catch (error) {
+    await afterTemporaryWritten?.(temporary);
+    await link(temporary, prepared.destination);
+  } catch {
     await rm(temporary, { force: true }).catch(() => {});
-    throw error;
+    throw failure("atomic-publish-failed");
   }
+  await unlink(temporary).catch(() => {});
   return image;
 }
