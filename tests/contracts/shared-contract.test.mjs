@@ -138,12 +138,12 @@ function assertCapability(capability, availableKeys) {
 }
 
 function assertSessionStartOutput(output) {
-  assert.deepEqual(Object.keys(output).sort(), ["capabilities", "hookSpecificOutput", "warnings"]);
+  assert.deepEqual(Object.keys(output).sort(), ["capabilities", "hookSpecificOutput", "imageConfig", "warnings"]);
   assert.deepEqual(Object.keys(output.hookSpecificOutput).sort(), ["additionalContext", "hookEventName"]);
   assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
   assert.equal(typeof output.hookSpecificOutput.additionalContext, "string");
   assert.deepEqual(Object.keys(output.capabilities), [
-    "node", "chromium", "soffice", "documents", "pdf", "presentations",
+    "node", "chromium", "soffice", "documents", "pdf", "presentations", "image_generation",
   ]);
   assertCapability(output.capabilities.node, ["available", "version"]);
   assert.equal(output.capabilities.node.available, true);
@@ -163,6 +163,11 @@ function assertSessionStartOutput(output) {
     assertCapability(output.capabilities[name], ["available", "provider"]);
     if (output.capabilities[name].available) assert.equal(output.capabilities[name].provider, "codex-bundled");
   }
+  assert.ok(["available", "unavailable", "unknown"].includes(output.capabilities.image_generation.status));
+  if (output.capabilities.image_generation.status === "available") assert.equal(typeof output.capabilities.image_generation.provider, "string");
+  assert.deepEqual(Object.keys(output.imageConfig).sort(), ["apiKeyPresent", "mode", "model", "quality", "sources", "warnings"]);
+  assert.equal(typeof output.imageConfig.apiKeyPresent, "boolean");
+  assert.doesNotMatch(JSON.stringify(output.imageConfig), /sk-[A-Za-z0-9]/u);
   assert.ok(Array.isArray(output.warnings));
   const optionalCapabilities = ["chromium", "soffice", "documents", "pdf", "presentations"];
   assert.deepEqual(
@@ -178,7 +183,7 @@ function assertSessionStartOutput(output) {
   }
   assert.deepEqual(
     JSON.parse(output.hookSpecificOutput.additionalContext),
-    { capabilities: output.capabilities },
+    { capabilities: output.capabilities, imageConfig: output.imageConfig },
   );
 }
 
@@ -359,7 +364,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
           type: "command",
           command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
           timeout: 10,
-          statusMessage: "Detecting optional game-design capabilities",
+          statusMessage: "Detecting optional game-design and image capabilities",
         }],
       }],
       Stop: [{

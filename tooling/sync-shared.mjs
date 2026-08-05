@@ -23,10 +23,6 @@ const DEPLOYMENT_TRANSFORMS = Object.freeze({
       path: "skills/orchestrate-game-design-career/scripts/validate-career-scenario.mjs",
       remove: '      new URL("../../../../../../shared/scripts/validate-artifact.mjs", import.meta.url),\n',
     }),
-    Object.freeze({
-      path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
-      remove: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
-    }),
   ]),
   "game-design-studio": Object.freeze([]),
 });

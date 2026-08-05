@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { parseRestrictedYaml, validateArtifact } from './validate-artifact.mjs';
 import { inspectCompletePng } from './lib/complete-png-validation.mjs';
-import { lintSvg } from './lib/skillstead-svg-lint.mjs';
+import { lintWithApprovedSkillstead } from './lib/skillstead-svg-evidence.mjs';
 import { validateImageAssetManifest } from './validate-image-assets.mjs';
 
 const MAX_STDIN_BYTES = 64 * 1024;
@@ -187,19 +187,43 @@ async function safeManagedArtifactFile(artifactPath, relativePath) {
   }
 }
 
-async function hasPassedSvgQa(artifactPath, asset) {
+function exactKeys(value, required) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...required].sort());
+}
+
+async function hasBoundDocumentApprovalReceipt(artifactPath, asset) {
+  const review = [...asset.reviews].reverse().find(({ state }) => state === 'document-approved');
+  const evidencePaths = review?.evidence_paths;
+  const receiptPath = Array.isArray(evidencePaths) ? evidencePaths.at(-1) : undefined;
+  const match = typeof receiptPath === 'string' && /^decisions\/image-review-([A-Za-z0-9][A-Za-z0-9._-]{0,127})\.json$/u.exec(receiptPath);
+  if (!match || !(await safeManagedArtifactFile(artifactPath, receiptPath))) return false;
+  try {
+    const receipt = JSON.parse(await readFile(resolve(artifactPath, receiptPath), 'utf8'));
+    return exactKeys(receipt, ['schema_version', 'kind', 'capture', 'asset_id', 'from_state', 'target_state', 'decision', 'reviewer', 'decided_at', 'rights_decision', 'evidence_paths'])
+      && receipt.schema_version === 1 && receipt.kind === 'host-user-image-decision'
+      && exactKeys(receipt.capture, ['channel', 'event_id']) && receipt.capture.channel === 'host-user-input' && receipt.capture.event_id === match[1]
+      && receipt.asset_id === asset.asset_id && receipt.from_state === 'concept-draft' && receipt.target_state === 'document-approved' && receipt.decision === 'approved'
+      && receipt.reviewer === review.reviewer && receipt.decided_at === review.reviewed_at && receipt.rights_decision === review.rights_decision
+      && JSON.stringify(receipt.evidence_paths) === JSON.stringify(evidencePaths.slice(0, -1));
+  } catch {
+    return false;
+  }
+}
+
+async function hasPassedSvgQa(artifactPath, asset, { runtimeModulePath, wrapperPath, spawnFn } = {}) {
   const evidencePath = `assets/qa/${asset.asset_id}.svg-qa.json`;
   if (!(await safeManagedArtifactFile(artifactPath, evidencePath)) || !(await safeManagedArtifactFile(artifactPath, asset.output.path))) return false;
   try {
     const value = JSON.parse(await readFile(resolve(artifactPath, evidencePath), 'utf8'));
-    if (!exactSvgEvidence(value, asset)) return false;
+    if (!exactSvgEvidence(value, asset) || !(await hasBoundDocumentApprovalReceipt(artifactPath, asset))) return false;
     const svg = await readFile(resolve(artifactPath, asset.output.path));
     const source = svg.toString('utf8');
     const metadata = svgMetadata(source);
     const svgDigest = digest(svg);
     if (!metadata || metadata.desc !== asset.alt_text || value.svg_sha256 !== svgDigest
       || value.lint.svg_sha256 !== svgDigest || value.render.svg_sha256 !== svgDigest || value.qa.svg_sha256 !== svgDigest
-      || lintSvg(source, asset.output.path).errors.length !== 0) return false;
+      || !(await lintWithApprovedSkillstead(resolve(artifactPath, asset.output.path), { runtimeModulePath, wrapperPath, spawnFn })).ok) return false;
     if (!(await safeManagedArtifactFile(artifactPath, value.render.png_path))) return false;
     const png = await readFile(resolve(artifactPath, value.render.png_path));
     const inspection = inspectCompletePng(png);
@@ -217,18 +241,16 @@ function digest(bytes) {
 }
 
 function exactSvgEvidence(value, asset) {
-  const keys = (record, required) => record && typeof record === 'object' && !Array.isArray(record)
-    && JSON.stringify(Object.keys(record).sort()) === JSON.stringify([...required].sort());
-  return keys(value, ['schema_version', 'kind', 'asset_id', 'output_path', 'svg_sha256', 'lint', 'render', 'qa'])
+  return exactKeys(value, ['schema_version', 'kind', 'asset_id', 'output_path', 'svg_sha256', 'lint', 'render', 'qa'])
     && value.schema_version === 1 && value.kind === 'skillstead-svg-evidence' && value.asset_id === asset.asset_id && value.output_path === asset.output.path
     && /^[a-f0-9]{64}$/u.test(value.svg_sha256)
-    && keys(value.lint, ['status', 'tool', 'version', 'svg_sha256']) && value.lint.status === 'passed'
+    && exactKeys(value.lint, ['status', 'tool', 'version', 'svg_sha256']) && value.lint.status === 'passed'
     && value.lint.tool === 'Skillstead svg-infographic' && value.lint.version === '0.8.3' && /^[a-f0-9]{64}$/u.test(value.lint.svg_sha256)
-    && keys(value.render, ['status', 'renderer', 'svg_sha256', 'png_path', 'png_sha256', 'scale', 'width', 'height']) && value.render.status === 'passed'
+    && exactKeys(value.render, ['status', 'renderer', 'svg_sha256', 'png_path', 'png_sha256', 'scale', 'width', 'height']) && value.render.status === 'passed'
     && typeof value.render.renderer === 'string' && /^Chromium(?:[ /]|$)/u.test(value.render.renderer)
     && typeof value.render.png_path === 'string' && /^[a-f0-9]{64}$/u.test(value.render.svg_sha256) && /^[a-f0-9]{64}$/u.test(value.render.png_sha256)
     && value.render.scale === 2 && Number.isInteger(value.render.width) && Number.isInteger(value.render.height)
-    && keys(value.qa, ['status', 'svg_sha256', 'png_sha256', 'checks']) && value.qa.status === 'passed'
+    && exactKeys(value.qa, ['status', 'svg_sha256', 'png_sha256', 'checks']) && value.qa.status === 'passed'
     && /^[a-f0-9]{64}$/u.test(value.qa.svg_sha256) && /^[a-f0-9]{64}$/u.test(value.qa.png_sha256)
     && Array.isArray(value.qa.checks) && JSON.stringify([...value.qa.checks].sort()) === JSON.stringify(['alt-text', 'close-up', 'fit-to-page', 'source-fidelity']);
 }
@@ -258,7 +280,7 @@ function parseImageManifestYaml(source) {
   return manifest;
 }
 
-async function validateImageApprovalGate(artifactPath, requestedFormats) {
+async function validateImageApprovalGate(artifactPath, requestedFormats, evidenceOptions) {
   let content;
   try {
     content = await readFile(resolve(artifactPath, 'content.md'), 'utf8');
@@ -309,7 +331,7 @@ async function validateImageApprovalGate(artifactPath, requestedFormats) {
   for (const [outputPath, ids] of outputIds) if (ids.length > 1) referenceErrors.push(imageGateError('image.manifest_duplicate_output', `Image manifest output is shared by multiple assets: ${outputPath}`));
   for (const reference of references) if (!outputIds.has(reference.path)) referenceErrors.push(imageGateError('image.reference_untracked', `Managed image reference is not tracked by the image manifest: ${reference.path}`));
   for (const asset of manifest.assets) {
-    if (asset.output.format === 'svg' && references.some(({ path }) => path === asset.output.path) && !(await hasPassedSvgQa(artifactPath, asset))) {
+    if (asset.output.format === 'svg' && references.some(({ path }) => path === asset.output.path) && !(await hasPassedSvgQa(artifactPath, asset, evidenceOptions))) {
       referenceErrors.push(imageGateError('image.svg_qa_required', `Managed SVG requires passed Skillstead lint, render, and QA evidence: ${asset.asset_id}`));
     }
   }
@@ -332,7 +354,12 @@ function correctiveReason(validation) {
   ].filter(Boolean).join('\n');
 }
 
-export async function reviewStopEvent(input, { reviewAttempt = process.env.GAME_DESIGN_REVIEW_ATTEMPT } = {}) {
+export async function reviewStopEvent(input, {
+  reviewAttempt = process.env.GAME_DESIGN_REVIEW_ATTEMPT,
+  wrapperPath,
+  spawnFn,
+  runtimeModulePath = fileURLToPath(import.meta.url),
+} = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return warningResponse(warning('input.invalid', 'Stop hook input must be an object.'));
   }
@@ -345,7 +372,7 @@ export async function reviewStopEvent(input, { reviewAttempt = process.env.GAME_
   }
 
   const validation = await validateArtifact(artifactPath, { requestedFormats: parsed.marker.formats });
-  validation.errors.push(...await validateImageApprovalGate(artifactPath, parsed.marker.formats));
+  validation.errors.push(...await validateImageApprovalGate(artifactPath, parsed.marker.formats, { runtimeModulePath, wrapperPath, spawnFn }));
   validation.ok = validation.errors.length === 0;
   const publicValidation = sanitizeValidation(validation);
   if (validation.ok) return { continue: true, status: 'passed', warnings: validation.warnings, validation: publicValidation };

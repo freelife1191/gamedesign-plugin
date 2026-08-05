@@ -16,6 +16,16 @@ const sharedMappings = {
   "document-quality": ["shared/document-quality", "references/shared/document-quality"],
   "image-assets": ["shared/image-assets", "references/shared/image-assets"],
 };
+const sourceOnlySkillsteadFallbacks = Object.freeze({
+  "game-design-career": Object.freeze({
+    path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
+    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
+  }),
+  "game-design-studio": Object.freeze({
+    path: "skills/visualize-game-design/scripts/run-skillstead.mjs",
+    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
+  }),
+});
 const snapshotStagingCapabilities = new WeakSet();
 
 function isInside(root, candidate) {
@@ -231,6 +241,15 @@ function addEntry(targets, entry, destinationPrefix, sourceLabel) {
   targets.set(relativePath, { bytes: entry.bytes, relativePath, sourceLabel });
 }
 
+function removeSourceOnlySkillsteadFallback(entry, productName) {
+  const fallback = sourceOnlySkillsteadFallbacks[productName];
+  if (!fallback || entry.relativePath !== fallback.path) return entry;
+  const source = entry.bytes.toString("utf8");
+  const count = source.split(fallback.source).length - 1;
+  if (count !== 1) throw new Error(`Expected one source-only Skillstead fallback in ${fallback.path}; found ${count}`);
+  return { ...entry, bytes: Buffer.from(source.replace(fallback.source, "")) };
+}
+
 function isRealEnvironmentFile(relativePath) {
   const name = path.posix.basename(relativePath);
   return name === ".env" || (name.startsWith(".env.") && name !== ".env.example");
@@ -321,7 +340,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     const sourceDirectory = joinWithin(productRoot, sourceRoot, "product source root");
     const entries = await collectTree(sourceDirectory, { label: `products/${productName}/${sourceRoot}` });
     assertNoRealEnvironmentFiles(entries, `products/${productName}/${sourceRoot}`);
-    for (const entry of entries) addEntry(targets, entry, "", `product:${sourceRoot}`);
+    for (const entry of entries) addEntry(targets, removeSourceOnlySkillsteadFallback(entry, productName), "", `product:${sourceRoot}`);
   }
 
   const entries = [...targets.values()].sort((left, right) => comparePaths(left.relativePath, right.relativePath));

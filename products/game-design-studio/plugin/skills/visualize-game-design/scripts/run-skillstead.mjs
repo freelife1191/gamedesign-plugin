@@ -13,23 +13,28 @@ function inside(root, target) {
   return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
-async function ownPluginRoot() {
+async function packageRoots() {
   const ownPath = await realpath(fileURLToPath(import.meta.url));
-  return path.resolve(path.dirname(ownPath), "../../..");
+  const pluginRoot = path.resolve(path.dirname(ownPath), "../../..");
+  return [
+    path.join(pluginRoot, "skills/svg-infographic"),
+    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),
+  ];
 }
 
 export async function resolveSkillsteadCli(command) {
   const filename = COMMANDS[command];
   if (!filename) throw new Error(`Unsupported Skillstead command: ${command}`);
-  const pluginRoot = await ownPluginRoot();
-  try {
-    const packageRoot = await realpath(path.join(pluginRoot, "skills/svg-infographic"));
-    const cliPath = await realpath(path.join(packageRoot, "scripts", filename));
-    const stat = await lstat(cliPath);
-    if (!stat.isFile() || !inside(packageRoot, cliPath)) throw new Error("unsafe Skillstead CLI path");
-    return cliPath;
-  } catch (error) {
-    if (!["ENOENT", "ENOTDIR"].includes(error?.code)) throw error;
+  for (const candidate of await packageRoots()) {
+    try {
+      const packageRoot = await realpath(candidate);
+      const cliPath = await realpath(path.join(packageRoot, "scripts", filename));
+      const stat = await lstat(cliPath);
+      if (!stat.isFile() || !inside(packageRoot, cliPath)) throw new Error("unsafe Skillstead CLI path");
+      return cliPath;
+    } catch (error) {
+      if (!["ENOENT", "ENOTDIR"].includes(error?.code)) throw error;
+    }
   }
   throw new Error(`Packaged Skillstead ${command} CLI is unavailable`);
 }

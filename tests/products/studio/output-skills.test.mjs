@@ -477,8 +477,8 @@ test("packaged Skillstead wrapper survives tmp realpath symlink and relative ali
 
   const sourceWrapperPath = path.join(pluginRoot, visualizationWrapper);
   const sourceInvocation = spawnSync(process.execPath, [sourceWrapperPath, "lint", goodSvg], { encoding: "utf8" });
-  assert.notEqual(sourceInvocation.status, 0, "source overlay cannot fall back to repository sibling vendor bytes");
-  assert.match(`${sourceInvocation.stdout}${sourceInvocation.stderr}`, /packaged Skillstead.*unavailable/iu);
+  assert.equal(sourceInvocation.status, 0, `${sourceInvocation.stdout}${sourceInvocation.stderr}`);
+  assert.match(`${sourceInvocation.stdout}${sourceInvocation.stderr}`, /check-svg: 0 error/u);
 
   await rm(path.join(built.outputDir, "skills/svg-infographic/scripts/check-svg.mjs"));
   const missingPackagedLinter = spawnSync(process.execPath, [wrapperPath, "lint", goodSvg], { encoding: "utf8" });
@@ -488,6 +488,8 @@ test("packaged Skillstead wrapper survives tmp realpath symlink and relative ali
 
 test("visualization validator accepts a verified SVG fallback when PNG rendering fails", async () => {
   const artifactRoot = await temporaryDirectory("studio-visualization-fallback-");
+  const stagingRoot = await temporaryDirectory("studio-visualization-fallback-built-");
+  const built = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
   const assets = path.join(artifactRoot, "assets");
   await mkdir(assets);
   const svgPath = path.join(assets, "loop.svg");
@@ -535,7 +537,7 @@ test("visualization validator accepts a verified SVG fallback when PNG rendering
   const result = await validateVisualizationEvidence(record, {
     artifactRoot,
     testRuntime: {
-      wrapperPath: path.join(pluginRoot, visualizationWrapper),
+      wrapperPath: path.join(built.outputDir, visualizationWrapper),
       linterPath: path.join(skillsteadScriptRoot, "check-svg.mjs"),
       rendererPath: path.join(skillsteadScriptRoot, "render.mjs"),
     },

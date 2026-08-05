@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { deflateSync } from 'node:zlib';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
@@ -125,6 +127,61 @@ function passedSvgQa(assetId = 'boss-telegraph', outputPath = 'assets/generated/
   return JSON.stringify({
     schema_version: 1, kind: 'skillstead-svg-qa', asset_id: assetId, output_path: outputPath,
     lint_status: 'passed', render_status: 'passed', qa_status: 'passed',
+  });
+}
+
+function sha256(bytes) {
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const header = Buffer.alloc(8);
+  header.writeUInt32BE(data.length, 0);
+  header.write(type, 4, 4, 'ascii');
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(crc32(Buffer.concat([header.subarray(4), data])), 0);
+  return Buffer.concat([header, data, checksum]);
+}
+
+function validRgbaPng(width, height) {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header.writeUInt8(8, 8);
+  header.writeUInt8(6, 9);
+  const rows = Buffer.alloc(height * (width * 4 + 1));
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk('IHDR', header),
+    pngChunk('IDAT', deflateSync(rows)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+function completeSvgEvidence({ assetId, outputPath, svg, png }) {
+  const svgDigest = sha256(svg);
+  const pngDigest = sha256(png);
+  return JSON.stringify({
+    schema_version: 1,
+    kind: 'skillstead-svg-evidence',
+    asset_id: assetId,
+    output_path: outputPath,
+    svg_sha256: svgDigest,
+    lint: { status: 'passed', tool: 'Skillstead svg-infographic', version: '0.8.3', svg_sha256: svgDigest },
+    render: {
+      status: 'passed', renderer: 'Chromium 140.0.0.0', svg_sha256: svgDigest,
+      png_path: `assets/qa/${assetId}.png`, png_sha256: pngDigest, scale: 2, width: 4, height: 2,
+    },
+    qa: { status: 'passed', svg_sha256: svgDigest, png_sha256: pngDigest, checks: ['alt-text', 'close-up', 'fit-to-page', 'source-fidelity'] },
   });
 }
 
@@ -263,6 +320,43 @@ test('requires a manifest for a canonical managed SVG reference', async () => {
 
   assert.equal(output.decision, 'block');
   assert.ok(output.validation.errors.some(({ code }) => code === 'image.manifest_required'), JSON.stringify(output));
+});
+
+test('passes a document-approved managed SVG only with actual product-wrapper lint and bound 2x evidence', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 1"><title>Boss telegraph</title><desc>A boss attack warning.</desc><rect width="2" height="1" fill="#3366ff"/></svg>\n');
+  const png = validRgbaPng(4, 2);
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await mkdir(join(artifact, 'assets', 'qa'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.svg'), svg);
+  await writeFile(join(artifact, 'assets', 'qa', 'boss-telegraph.png'), png);
+  await writeFile(join(artifact, 'assets', 'qa', 'boss-telegraph.svg-qa.json'), completeSvgEvidence({
+    assetId: 'boss-telegraph', outputPath: 'assets/generated/boss-telegraph.svg', svg, png,
+  }));
+  await writeFile(join(artifact, 'decisions', 'image-review-evt-svg.json'), JSON.stringify({
+    schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-svg' },
+    asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Minji Kim',
+    decided_at: '2026-08-06T00:00:00Z', rights_decision: 'approved', evidence_paths: ['evidence.yml'],
+  }));
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
+    .replaceAll('boss-telegraph.png', 'boss-telegraph.svg')
+    .replaceAll('format: png', 'format: svg')
+    .replace('          - evidence.yml', '          - evidence.yml\n          - decisions/image-review-evt-svg.json'));
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.svg)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.status, 'passed', JSON.stringify(output));
+  assert.equal(output.validation.ok, true, JSON.stringify(output));
+  await writeFile(join(artifact, 'decisions', 'image-review-evt-svg.json'), JSON.stringify({
+    schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-svg' },
+    asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Other Person',
+    decided_at: '2026-08-06T00:00:00Z', rights_decision: 'approved', evidence_paths: ['evidence.yml'],
+  }));
+  const staleReceipt = runStop(officialPayload(workspace)).output;
+  assert.equal(staleReceipt.decision, 'block', JSON.stringify(staleReceipt));
+  assert.ok(staleReceipt.validation.errors.some(({ code }) => code === 'image.svg_qa_required'), JSON.stringify(staleReceipt));
 });
 
 test('rejects a self-written passed SVG JSON record without bound render evidence', async () => {
