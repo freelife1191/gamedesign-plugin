@@ -74,9 +74,9 @@ async function cancelQuietly(target) {
   }
 }
 
-function releaseQuietly(reader) {
+async function releaseQuietly(reader) {
   try {
-    reader?.releaseLock?.();
+    await reader?.releaseLock?.();
   } catch {
     // A hostile lock implementation must not alter the redacted provider result.
   }
@@ -136,7 +136,7 @@ async function readReaderJson(body) {
     return { ok: false };
   } finally {
     if (!normal) await cancelQuietly(reader);
-    releaseQuietly(reader);
+    await releaseQuietly(reader);
   }
 }
 

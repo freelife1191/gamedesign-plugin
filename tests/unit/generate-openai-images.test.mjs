@@ -246,6 +246,7 @@ test("generateOpenAIImages redacts hostile reader, iterator, cancellation, and r
     ["reader-cancel-value", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, cancel() { return undefined; }, releaseLock() {} }; } } })],
     ["reader-cancel-reject", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, async cancel() { throw new Error("reader-cancel-reject-marker"); }, releaseLock() {} }; } } })],
     ["release-sync", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, async cancel() {}, releaseLock() { throw new Error("release-sync-marker"); } }; } } })],
+    ["release-value", () => ({ contentLength: "1", bodyStream: { getReader() { return { async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; }, async cancel() {}, releaseLock() { return undefined; } }; } } })],
   ];
   for (const [name, fixture] of cases) {
     const result = await generateOpenAIImages({
@@ -255,6 +256,28 @@ test("generateOpenAIImages redacts hostile reader, iterator, cancellation, and r
     assert.deepEqual(result.failures, [{ asset_id: `hostile-${name}`, generation_state: "qa-failed", reason: "invalid-provider-response", attempts: 1 }]);
     assert.equal(JSON.stringify(result).includes(`${name}-marker`), false);
   }
+});
+
+test("generateOpenAIImages absorbs a rejected reader release without an unhandled rejection", async (t) => {
+  const root = await staging(t);
+  const unhandledRejections = [];
+  const observeUnhandledRejection = (reason) => unhandledRejections.push(reason);
+  process.on("unhandledRejection", observeUnhandledRejection);
+  t.after(() => process.off("unhandledRejection", observeUnhandledRejection));
+
+  const result = await generateOpenAIImages({
+    jobs: [job({ asset_id: "release-reject", output: { path: "assets/generated/release-reject.png", width: 1024, height: 1024, format: "png" } })], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async () => response({ contentLength: "1", bodyStream: { getReader() { return {
+      async read() { return { done: false, value: Buffer.alloc(maximumResponseBytes + 1) }; },
+      async cancel() {},
+      releaseLock() { return Promise.reject(new Error("release-reject-marker")); },
+    }; } } }), sleepFn: async () => {},
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.deepEqual(result.failures, [{ asset_id: "release-reject", generation_state: "qa-failed", reason: "invalid-provider-response", attempts: 1 }]);
+  assert.deepEqual(unhandledRejections, []);
+  assert.equal(JSON.stringify(result).includes("release-reject-marker"), false);
 });
 
 test("generateOpenAIImages retries only transient 429 and 5xx responses for at most three total attempts", async (t) => {
