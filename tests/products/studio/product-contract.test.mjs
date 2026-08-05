@@ -38,15 +38,15 @@ const roleIds = [
   "liveops-data-designer",
   "production-feasibility-critic",
   "document-quality-editor",
-  "art-brief-director",
-  "visual-asset-reviewer",
 ];
+const imageSpecialistIds = ["art-brief-director", "visual-asset-reviewer"];
 
 const profileIds = ["live-service-rpg", "mobile", "pc-console"];
 
 const plannedPaths = {
   skills: skillIds.map((skillId) => `skills/${skillId}/SKILL.md`),
   roles: roleIds.map((roleId) => `agents/${roleId}.md`),
+  imageSpecialists: imageSpecialistIds.map((roleId) => `agents/${roleId}.md`),
   profiles: [
     "references/profiles/universal-core.json",
     "references/profiles/live-service-rpg.json",
@@ -178,7 +178,8 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.skillIds, skillIds);
   assert.equal(new Set(routing.skillIds).size, 14);
   assert.deepEqual(routing.roleIds, roleIds);
-  assert.equal(new Set(routing.roleIds).size, 9);
+  assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
+  assert.equal(new Set(routing.roleIds).size, 7);
   assert.deepEqual(routing.profileIds, profileIds);
   assert.deepEqual(routing.rolePriority, roleIds);
   assert.equal(routing.unknownIntentFallback, "orchestrate-game-design-project");

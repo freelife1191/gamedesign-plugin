@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { browserCandidates, probeChromium } from '../../shared/scripts/capability-probe.mjs';
+import { browserCandidates, probeChromium, probeImageGenerationCapability } from '../../shared/scripts/capability-probe.mjs';
 
 const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs', import.meta.url));
 const temporaryDirs = [];
@@ -177,6 +177,18 @@ test('reports only a redacted image configuration and discoverable host image ca
   });
   assert.equal(JSON.stringify(output).includes('never-expose-this-key'), false);
   assert.equal(JSON.stringify(output).includes('http'), false);
+});
+
+test('distinguishes readable absence from permission-unknown image capability paths', async () => {
+  const cwd = await temporaryWorkspace();
+  const codexHome = join(cwd, 'portable-codex-home');
+  assert.deepEqual(await probeImageGenerationCapability({ CODEX_HOME: codexHome }), { status: 'unavailable' });
+  assert.deepEqual(await probeImageGenerationCapability({ CODEX_HOME: codexHome }, {
+    lstatFn: async () => { throw Object.assign(new Error('permission denied'), { code: 'EACCES' }); },
+  }), { status: 'unknown' });
+  assert.deepEqual(await probeImageGenerationCapability({ CODEX_HOME: codexHome }, {
+    lstatFn: async () => ({ isFile: () => true, isSymbolicLink: () => false }),
+  }), { status: 'available', provider: 'codex-system-skill' });
 });
 
 test('rejects malformed stdin without failing the optional hook', async () => {

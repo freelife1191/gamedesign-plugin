@@ -23,10 +23,9 @@
     "ux-accessibility-reviewer",
     "liveops-data-designer",
     "production-feasibility-critic",
-    "document-quality-editor",
-    "art-brief-director",
-    "visual-asset-reviewer"
+    "document-quality-editor"
   ],
+  "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
   "profileIds": ["live-service-rpg", "mobile", "pc-console"],
   "rolePriority": [
     "lead-game-designer",
@@ -35,9 +34,7 @@
     "ux-accessibility-reviewer",
     "liveops-data-designer",
     "production-feasibility-critic",
-    "document-quality-editor",
-    "art-brief-director",
-    "visual-asset-reviewer"
+    "document-quality-editor"
   ],
   "unknownIntentFallback": "orchestrate-game-design-project",
   "plannedPaths": {
@@ -64,10 +61,9 @@
       "agents/ux-accessibility-reviewer.md",
       "agents/liveops-data-designer.md",
       "agents/production-feasibility-critic.md",
-      "agents/document-quality-editor.md",
-      "agents/art-brief-director.md",
-      "agents/visual-asset-reviewer.md"
+      "agents/document-quality-editor.md"
     ],
+    "imageSpecialists": ["agents/art-brief-director.md", "agents/visual-asset-reviewer.md"],
     "profiles": [
       "references/profiles/universal-core.json",
       "references/profiles/live-service-rpg.json",

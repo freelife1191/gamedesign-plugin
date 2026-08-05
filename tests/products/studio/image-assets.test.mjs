@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -110,10 +111,10 @@ test("Studio routing and specialist roles expose the image workflow without appr
   assert.ok(routing.skillIds.includes("plan-image-assets"));
   assert.ok(routing.skillIds.includes("generate-image-assets"));
   assert.ok(routing.skillIds.includes("review-image-assets"));
-  assert.ok(routing.roleIds.includes("art-brief-director"));
-  assert.ok(routing.roleIds.includes("visual-asset-reviewer"));
+  assert.ok(routing.imageSpecialistIds.includes("art-brief-director"));
+  assert.ok(routing.imageSpecialistIds.includes("visual-asset-reviewer"));
   assert.ok(routing.plannedPaths.skills.includes("skills/plan-image-assets/SKILL.md"));
-  assert.ok(routing.plannedPaths.roles.includes("agents/visual-asset-reviewer.md"));
+  assert.ok(routing.plannedPaths.imageSpecialists.includes("agents/visual-asset-reviewer.md"));
   assert.match(orchestrator, /apply-document-quality-profile.*plan-image-assets/is);
   assert.match(orchestrator, /generate-image-assets.*review-image-assets/is);
   assert.match(artDirector, /purpose.*readability.*prompt.*variant/is);
@@ -159,6 +160,7 @@ test("Studio review requires an artifact-local host-user receipt rather than an 
     schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: "evt-studio-1" },
     asset_id: "hero", from_state: "concept-draft", target_state: "document-approved", decision: "approved", reviewer: "Minji Kim",
     decided_at: "2026-08-06T00:00:00Z", rights_decision: "approved", evidence_paths: ["evidence/visual.md"],
+    evidence_digests: [{ path: "evidence/visual.md", sha256: createHash("sha256").update("Named visual review evidence.\n").digest("hex") }],
   };
   const reviewed = await reviewImageAssetWorkflow({
     artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "Minji Kim",

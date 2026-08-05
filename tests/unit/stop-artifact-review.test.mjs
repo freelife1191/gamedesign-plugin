@@ -275,6 +275,43 @@ test('requires canonical unique tracked regular generated image references while
   assert.equal(output.validation.errors.some(({ code }) => code === 'image.approval_required'), false, JSON.stringify(output));
 });
 
+test('requires a matching host-user receipt with current evidence digests for a final raster binding', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), 'raster bytes');
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest());
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
+
+  const withoutReceipt = runStop(officialPayload(workspace)).output;
+  assert.equal(withoutReceipt.decision, 'block');
+  assert.ok(withoutReceipt.validation.errors.some(({ code }) => code === 'image.approval_receipt_required'), JSON.stringify(withoutReceipt));
+});
+
+test('accepts a document-approved raster only while its host receipt and every evidence byte remain bound', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), 'raster bytes');
+  const evidence = await readFile(join(artifact, 'evidence.yml'));
+  const receipt = {
+    schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-raster' },
+    asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Minji Kim',
+    decided_at: '2026-08-06T00:00:00Z', rights_decision: 'approved', evidence_paths: ['evidence.yml'],
+    evidence_digests: [{ path: 'evidence.yml', sha256: sha256(evidence) }],
+  };
+  await writeFile(join(artifact, 'decisions', 'image-review-evt-raster.json'), JSON.stringify(receipt));
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
+    .replace('          - evidence.yml', '          - evidence.yml\n          - decisions/image-review-evt-raster.json'));
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
+
+  assert.equal(runStop(officialPayload(workspace)).output.status, 'passed');
+  await writeFile(join(artifact, 'evidence.yml'), 'changed evidence\n');
+  const stale = runStop(officialPayload(workspace)).output;
+  assert.equal(stale.decision, 'block');
+  assert.ok(stale.validation.errors.some(({ code }) => code === 'image.approval_receipt_required'), JSON.stringify(stale));
+});
+
 test('fails closed when a managed generated image crosses a symbolic link', async () => {
   const { workspace, artifact } = await workspaceWithArtifact();
   const outside = await mkdtemp(join(tmpdir(), 'game-design-image-outside-'));
@@ -337,6 +374,7 @@ test('passes a document-approved managed SVG only with actual product-wrapper li
     schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-svg' },
     asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Minji Kim',
     decided_at: '2026-08-06T00:00:00Z', rights_decision: 'approved', evidence_paths: ['evidence.yml'],
+    evidence_digests: [{ path: 'evidence.yml', sha256: sha256(await readFile(join(artifact, 'evidence.yml'))) }],
   }));
   await writeFile(join(artifact, 'assets', 'image-assets.yml'), documentApprovedImageManifest()
     .replaceAll('boss-telegraph.png', 'boss-telegraph.svg')
@@ -353,6 +391,7 @@ test('passes a document-approved managed SVG only with actual product-wrapper li
     schema_version: 1, kind: 'host-user-image-decision', capture: { channel: 'host-user-input', event_id: 'evt-svg' },
     asset_id: 'boss-telegraph', from_state: 'concept-draft', target_state: 'document-approved', decision: 'approved', reviewer: 'Other Person',
     decided_at: '2026-08-06T00:00:00Z', rights_decision: 'approved', evidence_paths: ['evidence.yml'],
+    evidence_digests: [{ path: 'evidence.yml', sha256: sha256(await readFile(join(artifact, 'evidence.yml'))) }],
   }));
   const staleReceipt = runStop(officialPayload(workspace)).output;
   assert.equal(staleReceipt.decision, 'block', JSON.stringify(staleReceipt));

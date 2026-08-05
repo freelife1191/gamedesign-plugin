@@ -211,7 +211,8 @@ async function findBundledSkill(capability, env = process.env) {
   let versions;
   try {
     versions = (await readdir(capabilityRoot)).filter((name) => /^[0-9][0-9.]*$/.test(name)).sort();
-  } catch {
+  } catch (error) {
+    if (error?.code === 'EACCES' || error?.code === 'EPERM') return { available: false, unknown: true };
     return { available: false };
   }
   for (const version of versions) {
@@ -222,18 +223,19 @@ async function findBundledSkill(capability, env = process.env) {
   return { available: false };
 }
 
-async function probeImageGenerationCapability(env = process.env) {
+export async function probeImageGenerationCapability(env = process.env, { lstatFn = lstat } = {}) {
   const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(homedir(), '.codex');
   if (!codexHome) return { status: 'unknown' };
   const systemSkill = join(codexHome, 'skills', '.system', 'imagegen', 'SKILL.md');
   try {
-    const stats = await lstat(systemSkill);
+    const stats = await lstatFn(systemSkill);
     if (stats.isFile() && !stats.isSymbolicLink()) return { status: 'available', provider: 'codex-system-skill' };
   } catch (error) {
     if (error?.code === 'EACCES' || error?.code === 'EPERM') return { status: 'unknown' };
   }
   const bundled = await findBundledSkill('imagegen', env);
   if (bundled.available) return { status: 'available', provider: 'codex-bundled-skill' };
+  if (bundled.unknown) return { status: 'unknown' };
   return { status: 'unavailable' };
 }
 

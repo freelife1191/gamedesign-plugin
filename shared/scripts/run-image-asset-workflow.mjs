@@ -17,6 +17,11 @@ const specialistReviewerIds = new Set([
   "game-design-mentor", "interview-coach", "lead-game-designer", "liveops-data-designer", "portfolio-reviewer",
   "production-feasibility-critic", "reverse-design-critic", "system-economy-designer", "ux-accessibility-reviewer", "visual-asset-reviewer",
 ]);
+const specialistReviewerKeys = new Set([...specialistReviewerIds].map((value) => canonicalReviewerKey(value)));
+const hostFailureStates = new Set(["generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"]);
+const hostQualities = new Set(["low", "medium", "high", "auto"]);
+const safeModelPattern = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,127})$/u;
+const digestPattern = /^[a-f0-9]{64}$/u;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -46,19 +51,6 @@ function safeArtifactRelativePath(value) {
     && value === value.normalize("NFC") && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value !== ".";
 }
 
-async function readRegularArtifactFile(root, relativePath) {
-  if (!safeArtifactRelativePath(relativePath)) throw new Error("Receipt path must be a normalized artifact-relative path.");
-  let cursor = root;
-  for (const segment of relativePath.split("/")) {
-    cursor = path.resolve(cursor, segment);
-    const stats = await lstat(cursor);
-    if (stats.isSymbolicLink()) throw new Error("Receipt and evidence files must not traverse symbolic links.");
-  }
-  const stats = await lstat(cursor);
-  if (!stats.isFile()) throw new Error("Receipt and evidence paths must identify regular files.");
-  return readFile(cursor, "utf8");
-}
-
 async function readRegularArtifactBytes(root, relativePath) {
   if (!safeArtifactRelativePath(relativePath)) throw new Error("Host output path must be a normalized artifact-relative path.");
   let cursor = root;
@@ -70,6 +62,15 @@ async function readRegularArtifactBytes(root, relativePath) {
   const stats = await lstat(cursor);
   if (!stats.isFile()) throw new Error("Host output path must identify a regular file.");
   return readFile(cursor);
+}
+
+async function evidenceDigests(root, evidencePaths) {
+  const digests = [];
+  for (const evidencePath of evidencePaths) {
+    const bytes = await readRegularArtifactBytes(root, evidencePath);
+    digests.push({ path: evidencePath, sha256: sha256(bytes) });
+  }
+  return digests;
 }
 
 function hostEventId(value) {
@@ -87,10 +88,10 @@ function validateSelectionReceipt(receipt, selectedAssetIds) {
   return clone(receipt);
 }
 
-async function readUserDecisionReceipt(root, receipt, { assetId, fromState, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths }) {
-  const required = ["schema_version", "kind", "capture", "asset_id", "from_state", "target_state", "decision", "reviewer", "decided_at", "rights_decision", "evidence_paths"];
+async function readUserDecisionReceipt(root, receipt, { assetId, fromState, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths, evidenceDigests: requestedEvidenceDigests }) {
+  const required = ["schema_version", "kind", "capture", "asset_id", "from_state", "target_state", "decision", "reviewer", "decided_at", "rights_decision", "evidence_paths", "evidence_digests"];
   const canonicalReviewer = canonicalHumanReviewer(reviewer);
-  if (specialistReviewerIds.has(canonicalReviewer.toLowerCase())) {
+  if (specialistReviewerKeys.has(canonicalReviewerKey(canonicalReviewer))) {
     throw new Error("Host user decision reviewer must be a named human, not a product specialist.");
   }
   if (!exactKeys(receipt, required) || receipt.schema_version !== 1 || receipt.kind !== "host-user-image-decision"
@@ -98,15 +99,26 @@ async function readUserDecisionReceipt(root, receipt, { assetId, fromState, targ
     || !hostEventId(receipt.capture.event_id)
     || receipt.asset_id !== assetId || receipt.from_state !== fromState || receipt.target_state !== targetState || receipt.decision !== "approved"
     || receipt.reviewer !== canonicalReviewer || receipt.decided_at !== reviewedAt || Number.isNaN(Date.parse(receipt.decided_at))
-    || receipt.rights_decision !== rightsDecision || JSON.stringify(receipt.evidence_paths) !== JSON.stringify(evidencePaths)) {
+    || receipt.rights_decision !== rightsDecision || JSON.stringify(receipt.evidence_paths) !== JSON.stringify(evidencePaths)
+    || !Array.isArray(receipt.evidence_digests) || receipt.evidence_digests.length !== evidencePaths.length
+    || !receipt.evidence_digests.every((entry, index) => exactKeys(entry, ["path", "sha256"])
+      && entry.path === evidencePaths[index] && typeof entry.sha256 === "string" && digestPattern.test(entry.sha256))) {
     throw new Error("Host user decision receipt does not match the requested image review transition.");
   }
   try {
-    for (const evidencePath of evidencePaths) await readRegularArtifactFile(root, evidencePath);
+    const currentEvidenceDigests = await evidenceDigests(root, evidencePaths);
+    if (JSON.stringify(receipt.evidence_digests) !== JSON.stringify(currentEvidenceDigests)
+      || (requestedEvidenceDigests !== undefined && JSON.stringify(requestedEvidenceDigests) !== JSON.stringify(currentEvidenceDigests))) {
+      throw new Error("stale evidence");
+    }
   } catch {
     throw new Error("Host user decision receipt must reference readable artifact-local evidence.");
   }
-  return { ...receipt, reviewer: canonicalReviewer };
+  return {
+    schema_version: 1, kind: "host-user-image-decision", capture: { channel: "host-user-input", event_id: receipt.capture.event_id },
+    asset_id: assetId, from_state: fromState, target_state: targetState, decision: "approved", reviewer: canonicalReviewer,
+    decided_at: reviewedAt, rights_decision: rightsDecision, evidence_paths: [...evidencePaths], evidence_digests: clone(receipt.evidence_digests),
+  };
 }
 
 function canonicalHumanReviewer(value) {
@@ -117,6 +129,10 @@ function canonicalHumanReviewer(value) {
     throw new Error("Host user decision reviewer must be a named human, not a role-like identifier.");
   }
   return canonical;
+}
+
+function canonicalReviewerKey(value) {
+  return value.normalize("NFKC").toLocaleLowerCase("und").replace(/[\s_-]+/gu, "");
 }
 
 function sha256(value) {
@@ -139,13 +155,8 @@ function applyProviderResults(manifest, providerResult, provider, config) {
       if (result.output) {
         const { path: outputPath, width, height, aspect_ratio: aspectRatio, format, background } = result.output;
         asset.output = {
-          ...asset.output,
-          ...(outputPath === undefined ? {} : { path: outputPath }),
-          ...(width === undefined ? {} : { width }),
-          ...(height === undefined ? {} : { height }),
-          ...(aspectRatio === undefined ? {} : { aspect_ratio: aspectRatio }),
-          ...(format === undefined ? {} : { format }),
-          ...(background === undefined ? {} : { background }),
+          path: outputPath ?? asset.output.path, width: width ?? asset.output.width, height: height ?? asset.output.height,
+          aspect_ratio: aspectRatio ?? asset.output.aspect_ratio, format: format ?? asset.output.format, background: background ?? asset.output.background,
         };
       }
       if (provider === "openai") {
@@ -175,51 +186,78 @@ function applyProviderResults(manifest, providerResult, provider, config) {
   return next;
 }
 
+function normalizeHostProvenance(value, { success }) {
+  const allowed = success ? ["provider", "prompt_digest", "output_digest", "applied_model", "applied_quality"] : ["provider", "applied_model", "applied_quality"];
+  if (!value || typeof value !== "object" || Array.isArray(value) || !Object.keys(value).every((key) => allowed.includes(key))
+    || value.provider !== "codex-host" || (success && (!digestPattern.test(value.prompt_digest ?? "") || !digestPattern.test(value.output_digest ?? "")))
+    || (value.applied_model !== undefined && (typeof value.applied_model !== "string" || !safeModelPattern.test(value.applied_model)))
+    || (value.applied_quality !== undefined && !hostQualities.has(value.applied_quality))) {
+    throw new Error("Host generation returned invalid provenance.");
+  }
+  const normalized = { provider: "codex-host" };
+  if (success) Object.assign(normalized, { prompt_digest: value.prompt_digest, output_digest: value.output_digest });
+  if (value.applied_model !== undefined) normalized.applied_model = value.applied_model;
+  if (value.applied_quality !== undefined) normalized.applied_quality = value.applied_quality;
+  return normalized;
+}
+
+function normalizeHostFailure(value, selected) {
+  if (!exactKeys(value, ["asset_id", "generation_state", "reason", "provenance"])
+    || typeof value.asset_id !== "string" || !selected.has(value.asset_id) || !hostFailureStates.has(value.generation_state)
+    || typeof value.reason !== "string" || value.reason.length > 128 || !/^[a-z][a-z0-9-]*$/u.test(value.reason)) {
+    throw new Error("Host generation returned an invalid failure record.");
+  }
+  return { asset_id: value.asset_id, generation_state: value.generation_state, reason: "host-reported-failure", provenance: normalizeHostProvenance(value.provenance, { success: false }) };
+}
+
+function normalizeHostSuccess(value, selected) {
+  if (!exactKeys(value, ["asset_id", "generation_state", "output", "provenance"])
+    || typeof value.asset_id !== "string" || !selected.has(value.asset_id) || value.generation_state !== "generated"
+    || !exactKeys(value.output, ["path", "width", "height", "aspect_ratio", "format", "background", "digest"])
+    || typeof value.output.path !== "string" || !Number.isInteger(value.output.width) || !Number.isInteger(value.output.height)
+    || typeof value.output.aspect_ratio !== "string" || typeof value.output.format !== "string" || typeof value.output.background !== "string" || !digestPattern.test(value.output.digest ?? "")) {
+    throw new Error("Host generation returned an invalid success record.");
+  }
+  return { asset_id: value.asset_id, generation_state: "generated", output: {
+    path: value.output.path, width: value.output.width, height: value.output.height, aspect_ratio: value.output.aspect_ratio,
+    format: value.output.format, background: value.output.background, digest: value.output.digest,
+  }, provenance: normalizeHostProvenance(value.provenance, { success: true }) };
+}
+
 function validateHostResult(value, jobs) {
   if (!exactKeys(value, ["results", "failures"]) || !Array.isArray(value.results) || !Array.isArray(value.failures)) {
     throw new Error("Host generation must return results and failures arrays.");
   }
   const selected = new Set(jobs.map(({ asset_id }) => asset_id));
   const seen = new Set();
-  for (const item of [...value.results, ...value.failures]) {
-    if (!item || typeof item !== "object" || typeof item.asset_id !== "string" || !selected.has(item.asset_id) || seen.has(item.asset_id)) {
+  const results = value.results.map((item) => normalizeHostSuccess(item, selected));
+  const failures = value.failures.map((item) => normalizeHostFailure(item, selected));
+  for (const item of [...results, ...failures]) {
+    if (seen.has(item.asset_id)) {
       throw new Error("Host generation result must contain each selected stable asset ID at most once.");
     }
     seen.add(item.asset_id);
   }
-  for (const result of value.results) {
-    if (result.generation_state !== "generated" || !result.provenance || typeof result.provenance !== "object") {
-      throw new Error("Host generation success requires generated state and provider provenance.");
-    }
-  }
-  for (const failure of value.failures) {
-    if (!["generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"].includes(failure.generation_state)) {
-      throw new Error("Host generation failure must use an explicit non-generated failure state.");
-    }
-  }
-  return clone(value);
+  return { results, failures };
 }
 
 async function validateHostOutputs(value, jobs, root) {
   const byAssetId = new Map(jobs.map((job) => [job.asset_id, job]));
-  const failures = value.failures.map((failure) => ({
-    ...failure,
-    provenance: failure.provenance ?? { provider: "codex-host" },
-  }));
+  const failures = value.failures.map((failure) => ({ asset_id: failure.asset_id, generation_state: failure.generation_state, reason: failure.reason, provenance: failure.provenance }));
   const results = [];
   for (const result of value.results) {
     const job = byAssetId.get(result.asset_id);
     try {
       const output = result.output;
       if (!exactKeys(output, ["path", "width", "height", "aspect_ratio", "format", "background", "digest"])
-        || !exactKeys(result.provenance, ["provider", "prompt_digest", "output_digest"])
+        || !Object.keys(result.provenance).every((key) => ["provider", "prompt_digest", "output_digest", "applied_model", "applied_quality"].includes(key))
         || JSON.stringify({ path: output.path, width: output.width, height: output.height, aspect_ratio: output.aspect_ratio, format: output.format, background: output.background })
           !== JSON.stringify(job.output)) throw new Error("Host output does not match its selected job.");
       const inspected = validatePngBuffer(await readRegularArtifactBytes(root, output.path), job.output);
       if (output.digest !== inspected.digest || result.provenance.prompt_digest !== sha256(job.prompt) || result.provenance.output_digest !== inspected.digest) {
         throw new Error("Host output digest evidence does not match the generated file.");
       }
-      results.push(result);
+      results.push({ asset_id: result.asset_id, generation_state: "generated", output: result.output, provenance: result.provenance });
     } catch {
       failures.push({ asset_id: result.asset_id, generation_state: "qa-failed", reason: "invalid-host-output", provenance: result.provenance });
     }
@@ -286,7 +324,12 @@ export async function generateImageAssetWorkflow({
     if (typeof hostGenerate !== "function") {
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
-      providerResult = await validateHostOutputs(validateHostResult(await hostGenerate({ jobs: clone(jobs) }), jobs), jobs, root);
+      try {
+        providerResult = await validateHostOutputs(validateHostResult(await hostGenerate({ jobs: clone(jobs) }), jobs), jobs, root);
+      } catch (error) {
+        if (error?.message?.startsWith("Host generation")) throw error;
+        providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
+      }
     }
   } else if (jobs.length > 0 && decision.provider === "unavailable") {
     providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "no-provider-available" })) };
@@ -308,6 +351,7 @@ export async function reviewImageAssetWorkflow({
   reviewedAt,
   rightsDecision,
   evidencePaths,
+  evidenceDigests,
   decisionReceipt,
 } = {}) {
   const root = (await canonicalArtifactRoot(artifactRoot)).path;
@@ -316,7 +360,7 @@ export async function reviewImageAssetWorkflow({
   const asset = manifest.assets.find(({ asset_id }) => asset_id === assetId);
   if (!asset) throw new Error("Review requires a known stable asset ID.");
   const receipt = await readUserDecisionReceipt(root, decisionReceipt, {
-    assetId, fromState: asset.approval_state, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths,
+    assetId, fromState: asset.approval_state, targetState, reviewer, reviewedAt, rightsDecision, evidencePaths, evidenceDigests,
   });
   const decisionReceiptPath = `decisions/image-review-${receipt.capture.event_id}.json`;
   await safeWriteArtifactFile({ artifactRoot: root, relativePath: decisionReceiptPath, data: `${JSON.stringify(receipt, null, 2)}\n`, policy: "create-once" });

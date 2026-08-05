@@ -200,12 +200,21 @@ async function hasBoundDocumentApprovalReceipt(artifactPath, asset) {
   if (!match || !(await safeManagedArtifactFile(artifactPath, receiptPath))) return false;
   try {
     const receipt = JSON.parse(await readFile(resolve(artifactPath, receiptPath), 'utf8'));
-    return exactKeys(receipt, ['schema_version', 'kind', 'capture', 'asset_id', 'from_state', 'target_state', 'decision', 'reviewer', 'decided_at', 'rights_decision', 'evidence_paths'])
+    if (!(exactKeys(receipt, ['schema_version', 'kind', 'capture', 'asset_id', 'from_state', 'target_state', 'decision', 'reviewer', 'decided_at', 'rights_decision', 'evidence_paths', 'evidence_digests'])
       && receipt.schema_version === 1 && receipt.kind === 'host-user-image-decision'
       && exactKeys(receipt.capture, ['channel', 'event_id']) && receipt.capture.channel === 'host-user-input' && receipt.capture.event_id === match[1]
       && receipt.asset_id === asset.asset_id && receipt.from_state === 'concept-draft' && receipt.target_state === 'document-approved' && receipt.decision === 'approved'
       && receipt.reviewer === review.reviewer && receipt.decided_at === review.reviewed_at && receipt.rights_decision === review.rights_decision
-      && JSON.stringify(receipt.evidence_paths) === JSON.stringify(evidencePaths.slice(0, -1));
+      && JSON.stringify(receipt.evidence_paths) === JSON.stringify(evidencePaths.slice(0, -1))
+      && Array.isArray(receipt.evidence_digests) && receipt.evidence_digests.length === receipt.evidence_paths.length)) return false;
+    for (let index = 0; index < receipt.evidence_paths.length; index += 1) {
+      const evidencePath = receipt.evidence_paths[index];
+      const evidence = receipt.evidence_digests[index];
+      if (!exactKeys(evidence, ['path', 'sha256']) || evidence.path !== evidencePath || typeof evidence.sha256 !== 'string' || !/^[a-f0-9]{64}$/u.test(evidence.sha256)
+        || !(await safeManagedArtifactFile(artifactPath, evidencePath))) return false;
+      if (digest(await readFile(resolve(artifactPath, evidencePath))) !== evidence.sha256) return false;
+    }
+    return true;
   } catch {
     return false;
   }
@@ -331,6 +340,9 @@ async function validateImageApprovalGate(artifactPath, requestedFormats, evidenc
   for (const [outputPath, ids] of outputIds) if (ids.length > 1) referenceErrors.push(imageGateError('image.manifest_duplicate_output', `Image manifest output is shared by multiple assets: ${outputPath}`));
   for (const reference of references) if (!outputIds.has(reference.path)) referenceErrors.push(imageGateError('image.reference_untracked', `Managed image reference is not tracked by the image manifest: ${reference.path}`));
   for (const asset of manifest.assets) {
+    if (references.some(({ path }) => path === asset.output.path) && !(await hasBoundDocumentApprovalReceipt(artifactPath, asset))) {
+      referenceErrors.push(imageGateError('image.approval_receipt_required', `Managed image requires a matching host-user document approval receipt: ${asset.asset_id}`));
+    }
     if (asset.output.format === 'svg' && references.some(({ path }) => path === asset.output.path) && !(await hasPassedSvgQa(artifactPath, asset, evidenceOptions))) {
       referenceErrors.push(imageGateError('image.svg_qa_required', `Managed SVG requires passed Skillstead lint, render, and QA evidence: ${asset.asset_id}`));
     }

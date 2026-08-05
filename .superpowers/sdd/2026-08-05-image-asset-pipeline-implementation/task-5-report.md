@@ -149,3 +149,32 @@ node --test tests/products/studio/image-assets.test.mjs tests/products/career/im
 ### Remaining risk
 
 - Normal verification deliberately does not render through a local Chromium or call a host/OpenAI provider. The Stop positive fixture validates the approved lint subprocess and independent complete-PNG/evidence boundary with deterministic local bytes.
+
+## Review fix round 5
+
+### RED / GREEN
+
+- RED: five new hostile probes failed as expected: a document-approved raster final binding had no host-user receipt, separator/case aliases of `visual-asset-reviewer` could approve, host result records preserved untrusted fields and host exceptions escaped, and permission-denied capability paths collapsed to `unavailable`. The pre-existing Studio generic-role suite also failed 4 assertions because image specialists had been added to generic merger role lists.
+- GREEN: the focused Task 5/Studio/Career/Stop/capability suite passed 120/120. It includes a valid raster receipt positive followed by stale-evidence rejection, closed host record/no-secret assertions, applied-model/quality reporting, callback exception persistence, alias permutations, capability available/unavailable/unknown, and restored generic role/orchestrator contracts.
+
+### Changes
+
+- Stop now requires every final managed raster or SVG binding to have a closed, matching `host-user-image-decision` receipt. Receipt and document-approved review values must agree; receipt, all evidence paths, and current SHA-256 evidence bytes must be artifact-local regular non-symlink files.
+- Reviewer comparison uses NFKC, Unicode case fold, and separator removal for reserved specialist rejection while persisting the normalized named-human form.
+- Codex-host generation accepts only exact closed success/failure/provenance records and reconstructs output/provenance fields. Applied model/quality are optional safe values, are retained when reported, and remain `null` when unreported. Unknown/raw fields cannot enter returned state or manifests.
+- A thrown or rejected selected host callback is recorded as a redacted `generation-failed` result for every selected job, with requested host settings and null applied settings; the already-reserved selection remains non-replayable.
+- Image capability probing preserves `unknown` for EACCES/EPERM both at system-skill and bundled-cache discovery boundaries.
+- Image specialists moved to an explicit `imageSpecialistIds`/`plannedPaths.imageSpecialists` registry. Generic Studio reviewer priority, merger authority, and six-role contracts retain only bounded generic review roles.
+
+### Verification
+
+- Six product skills: `quick_validate.py` → 6/6 valid.
+- Task 5/Studio/Career/Stop/capability/orchestrator/role command → 120 passed, 0 failed.
+- Task 1–4 image, safe writer, shared-contract, hooks, wrapper, and product-contract command → initially 127 passed, 2 stale role-registry expectations; after the explicit generic/image registry contract update, Studio/Career product and orchestrator/roles command → 81 passed, 0 failed.
+- `npm test` → only Task 6 generated snapshot-integrity failures for Career and Studio.
+- `npm run build -- --check` → only Task 6 generated snapshot drift (both image workflow package snapshots are intentionally not regenerated here).
+- `node --check`, JSON parsing, and `git diff --check` → passed.
+
+### Remaining risk
+
+- Provider and host execution remain mocked and local by design; no live OpenAI request, host image call, or Chromium render was made.
