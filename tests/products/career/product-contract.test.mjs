@@ -21,6 +21,9 @@ const skillIds = [
   "visualize-career-roadmap",
   "export-career-documents",
   "apply-document-quality-profile",
+  "plan-image-assets",
+  "generate-image-assets",
+  "review-image-assets",
 ];
 
 const roleIds = [
@@ -31,6 +34,8 @@ const roleIds = [
   "interview-coach",
   "evidence-auditor",
   "document-quality-editor",
+  "art-brief-director",
+  "visual-asset-reviewer",
 ];
 
 const stages = ["entry", "new-hire", "junior-growth", "transition"];
@@ -111,8 +116,8 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.skillIds, skillIds);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.stages, stages);
-  assert.equal(new Set(routing.skillIds).size, 11);
-  assert.equal(new Set(routing.roleIds).size, 7);
+  assert.equal(new Set(routing.skillIds).size, 14);
+  assert.equal(new Set(routing.roleIds).size, 9);
 });
 
 test("Every route declares deterministic evidence and completion decisions", async () => {

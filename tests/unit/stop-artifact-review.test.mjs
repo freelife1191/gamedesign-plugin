@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, mkdir, rm, symlink } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -53,6 +53,59 @@ function runStop(input, env = {}) {
   return { output: JSON.parse(result.stdout), stdout: result.stdout };
 }
 
+function draftImageManifest() {
+  return `schema_version: 1
+assets:
+  - asset_id: boss-telegraph
+    type: skill-vfx
+    requirement: required
+    generation_state: generated
+    approval_state: concept-draft
+    planning:
+      upstream_slot_id: boss-telegraph
+      disposition: active
+      target_output:
+        path: assets/generated/boss-telegraph.png
+        width: 1024
+        height: 1024
+        aspect_ratio: "1:1"
+        format: png
+        background: opaque
+    purpose: Explain a boss attack warning.
+    placement:
+      document_slot: inline
+      source_section: content.md#player-experience
+    alt_text: A boss attack warning.
+    readability: Readable at document size.
+    art_brief:
+      subject: Boss attack warning.
+      visual_style: Clear concept art.
+      composition: Top-down view.
+      preserve:
+        - silhouette
+      exclude:
+        - logos
+    prompt: Clear boss attack warning, no logos.
+    output:
+      path: assets/generated/boss-telegraph.png
+      width: 1024
+      height: 1024
+      aspect_ratio: "1:1"
+      format: png
+      background: opaque
+    provider:
+      name: openai-images
+      model: gpt-image-2
+      quality: low
+    rights:
+      provenance: Recorded prompt.
+      rights_holder: Design team.
+      license: internal-use
+      effective_status: unreviewed
+    reviews: []
+`;
+}
+
 test('ignores an official Stop event without the final artifact sentinel', async () => {
   const { workspace } = await workspaceWithArtifact();
   const { output } = runStop(officialPayload(workspace, { last_assistant_message: 'Normal response.' }));
@@ -94,6 +147,22 @@ test('uses stop_hook_active to request exactly one corrective pass', async () =>
   assert.equal(retry.continue, true);
   assert.equal(retry.status, 'invalid-after-corrective-pass');
   assert.equal('decision' in retry, false);
+});
+
+test('blocks a final derivative that binds a concept-draft image and never starts generation', async () => {
+  const { workspace, artifact } = await workspaceWithArtifact();
+  await mkdir(join(artifact, 'assets', 'generated'));
+  await writeFile(join(artifact, 'assets', 'generated', 'boss-telegraph.png'), 'placeholder');
+  await writeFile(join(artifact, 'assets', 'image-assets.yml'), draftImageManifest());
+  const content = await readFile(join(artifact, 'content.md'), 'utf8');
+  await writeFile(join(artifact, 'content.md'), `${content}\n![Boss warning](assets/generated/boss-telegraph.png)\n`);
+
+  const { output } = runStop(officialPayload(workspace));
+
+  assert.equal(output.decision, 'block');
+  assert.equal(output.status, 'corrective-pass-requested');
+  assert.ok(output.validation.errors.some(({ code }) => code === 'image.approval_required'), JSON.stringify(output));
+  assert.doesNotMatch(JSON.stringify(output), /generate-openai-images|imagegen|authorization/i);
 });
 
 test('official stop_hook_active takes priority and env retry remains a compatibility fallback', async () => {

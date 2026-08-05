@@ -11,7 +11,10 @@
     "plan-junior-growth",
     "visualize-career-roadmap",
     "export-career-documents",
-    "apply-document-quality-profile"
+    "apply-document-quality-profile",
+    "plan-image-assets",
+    "generate-image-assets",
+    "review-image-assets"
   ],
   "roleIds": [
     "career-strategist",
@@ -20,7 +23,9 @@
     "reverse-design-critic",
     "interview-coach",
     "evidence-auditor",
-    "document-quality-editor"
+    "document-quality-editor",
+    "art-brief-director",
+    "visual-asset-reviewer"
   ],
   "stages": ["entry", "new-hire", "junior-growth", "transition"],
   "qualityWorkflow": {

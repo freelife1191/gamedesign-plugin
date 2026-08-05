@@ -153,6 +153,32 @@ test('detects Codex bundled document, PDF, and presentation capability hints wit
   }
 });
 
+test('reports only a redacted image configuration and discoverable host image capability state', async () => {
+  const cwd = await temporaryWorkspace();
+  const codexHome = join(cwd, 'portable-codex-home');
+  const imageSkill = join(codexHome, 'skills', '.system', 'imagegen');
+  await mkdir(imageSkill, { recursive: true });
+  await writeFile(join(imageSkill, 'SKILL.md'), '# image generation\n');
+
+  const output = runProbe({
+    cwd,
+    env: { CODEX_HOME: codexHome, IMAGE_GEN_MODE: 'select', OPENAI_API_KEY: 'never-expose-this-key' },
+  });
+  const context = JSON.parse(output.hookSpecificOutput.additionalContext);
+
+  assert.deepEqual(output.capabilities.image_generation, { status: 'available', provider: 'codex-system-skill' });
+  assert.deepEqual(context.imageConfig, {
+    mode: 'select',
+    model: 'gpt-image-2',
+    quality: 'low',
+    apiKeyPresent: true,
+    sources: { mode: 'environment', model: 'default', quality: 'default', apiKey: 'environment' },
+    warnings: [],
+  });
+  assert.equal(JSON.stringify(output).includes('never-expose-this-key'), false);
+  assert.equal(JSON.stringify(output).includes('http'), false);
+});
+
 test('rejects malformed stdin without failing the optional hook', async () => {
   const cwd = await temporaryWorkspace();
   const result = spawnSync(process.execPath, [script], {

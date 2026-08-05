@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Image Assets"
+  short_description: "Plan profile-bound image assets and prompts"
+  default_prompt: "Use $plan-image-assets to create a profile-bound image asset manifest and prompt package without generating images."

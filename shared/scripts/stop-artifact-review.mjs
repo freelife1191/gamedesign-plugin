@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
-import { lstat, realpath } from 'node:fs/promises';
+import { lstat, readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { validateArtifact } from './validate-artifact.mjs';
+import { parseRestrictedYaml, validateArtifact } from './validate-artifact.mjs';
+import { validateImageAssetManifest } from './validate-image-assets.mjs';
 
 const MAX_STDIN_BYTES = 64 * 1024;
 const MAX_MESSAGE_BYTES = 32 * 1024;
@@ -148,6 +149,63 @@ function sanitizeValidation(validation) {
   };
 }
 
+function imageGateError(code, message) {
+  return { code, file: 'assets/image-assets.yml', message };
+}
+
+function markdownBindsAsset(content, assetPath) {
+  return content.includes(`](${assetPath})`);
+}
+
+function parseImageManifestYaml(source) {
+  const emptyArray = '__game_design_empty_array__';
+  const normalized = source.replace(/^(\s*)(assets|reviews):\s*\[\]\s*$/gmu, `$1$2: "${emptyArray}"`);
+  const manifest = parseRestrictedYaml(normalized, 'assets/image-assets.yml');
+  if (manifest.assets === emptyArray) manifest.assets = [];
+  if (Array.isArray(manifest.assets)) {
+    for (const asset of manifest.assets) if (asset?.reviews === emptyArray) asset.reviews = [];
+  }
+  return manifest;
+}
+
+async function validateImageApprovalGate(artifactPath, requestedFormats) {
+  const manifestPath = resolve(artifactPath, 'assets', 'image-assets.yml');
+  let source;
+  try {
+    if ((await lstat(manifestPath)).isSymbolicLink()) {
+      return [imageGateError('image.manifest_unsafe', 'Image asset manifest must not be a symbolic link.')];
+    }
+    source = await readFile(manifestPath, 'utf8');
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    return [imageGateError('image.manifest_unreadable', 'Image asset manifest could not be read.')];
+  }
+
+  let manifest;
+  try {
+    manifest = parseImageManifestYaml(source);
+  } catch (error) {
+    return [imageGateError('image.manifest_invalid', `Image asset manifest is not valid restricted YAML: ${error.message}`)];
+  }
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: artifactPath });
+  if (!validation.ok) {
+    return validation.errors.slice(0, 20).map(({ code, message }) => imageGateError(`image.${code}`, message));
+  }
+  if (!Array.isArray(requestedFormats) || requestedFormats.length === 0) return [];
+  let content;
+  try {
+    content = await readFile(resolve(artifactPath, 'content.md'), 'utf8');
+  } catch {
+    return [imageGateError('image.content_unreadable', 'Canonical content could not be read for image approval validation.')];
+  }
+  return manifest.assets
+    .filter((asset) => markdownBindsAsset(content, asset.output.path) && asset.approval_state === 'concept-draft')
+    .map(({ asset_id }) => imageGateError(
+      'image.approval_required',
+      `Final derivative binding requires document-approved image asset: ${asset_id}`,
+    ));
+}
+
 function correctiveReason(validation) {
   const findings = validation.errors.slice(0, 20)
     .map(({ code, file, message }) => `${code}${file ? ` (${file})` : ''}: ${message}`)
@@ -171,6 +229,8 @@ export async function reviewStopEvent(input, { reviewAttempt = process.env.GAME_
   }
 
   const validation = await validateArtifact(artifactPath, { requestedFormats: parsed.marker.formats });
+  validation.errors.push(...await validateImageApprovalGate(artifactPath, parsed.marker.formats));
+  validation.ok = validation.errors.length === 0;
   const publicValidation = sanitizeValidation(validation);
   if (validation.ok) return { continue: true, status: 'passed', warnings: validation.warnings, validation: publicValidation };
   if (input.stop_hook_active === true || reviewAttempt === '1') {

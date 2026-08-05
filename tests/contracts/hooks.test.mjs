@@ -25,6 +25,15 @@ test('hooks component declares only SessionStart and Stop command hooks', async 
   }
 });
 
+test('SessionStart announces read-only image capability configuration probing', async () => {
+  const config = JSON.parse(await readFile(new URL('shared/hooks/hooks.json', root), 'utf8'));
+  const sessionStart = config.hooks.SessionStart[0].hooks[0];
+
+  assert.match(sessionStart.statusMessage, /image capabilities/i);
+  assert.match(sessionStart.command, /capability-probe\.mjs/u);
+  assert.doesNotMatch(sessionStart.command, /generate|openai|imagegen/u);
+});
+
 test('production build emits runnable SessionStart and Stop hook commands', async (t) => {
   const repoRoot = await mkdtemp(join(tmpdir(), 'game-design-hook-build-repo-'));
   const stagingRoot = await mkdtemp(join(tmpdir(), 'game-design-hook-build-output-'));

@@ -7,6 +7,8 @@ import { homedir } from 'node:os';
 import { delimiter, isAbsolute, join, resolve, win32 as pathWin32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
+
 const MAX_STDIN_BYTES = 64 * 1024;
 const MAX_PATH_ENTRIES = 64;
 const BINARY_NAMES = Object.freeze({
@@ -220,6 +222,21 @@ async function findBundledSkill(capability, env = process.env) {
   return { available: false };
 }
 
+async function probeImageGenerationCapability(env = process.env) {
+  const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(homedir(), '.codex');
+  if (!codexHome) return { status: 'unknown' };
+  const systemSkill = join(codexHome, 'skills', '.system', 'imagegen', 'SKILL.md');
+  try {
+    const stats = await lstat(systemSkill);
+    if (stats.isFile() && !stats.isSymbolicLink()) return { status: 'available', provider: 'codex-system-skill' };
+  } catch (error) {
+    if (error?.code === 'EACCES' || error?.code === 'EPERM') return { status: 'unknown' };
+  }
+  const bundled = await findBundledSkill('imagegen', env);
+  if (bundled.available) return { status: 'available', provider: 'codex-bundled-skill' };
+  return { status: 'unavailable' };
+}
+
 export async function probeCapabilities({ platform = process.platform, env = process.env } = {}) {
   const capabilities = {
     node: { available: true, version: process.versions.node },
@@ -228,6 +245,7 @@ export async function probeCapabilities({ platform = process.platform, env = pro
     documents: await findBundledSkill('documents', env),
     pdf: await findBundledSkill('pdf', env),
     presentations: await findBundledSkill('presentations', env),
+    image_generation: await probeImageGenerationCapability(env),
   };
   const warnings = [];
   for (const name of ['chromium', 'soffice', 'documents', 'pdf', 'presentations']) {
@@ -241,12 +259,15 @@ export async function probeCapabilities({ platform = process.platform, env = pro
 export async function runCapabilityProbe() {
   const input = await readHookInput();
   const result = await probeCapabilities();
+  const workspaceRoot = safeAbsoluteCandidate(input.value?.cwd) ?? process.cwd();
+  const imageConfig = toPublicImageConfig(await loadImageConfig({ workspaceRoot }));
   if (input.warning) result.warnings.unshift(input.warning);
   return {
     hookSpecificOutput: {
       hookEventName: 'SessionStart',
-      additionalContext: JSON.stringify({ capabilities: result.capabilities }),
+      additionalContext: JSON.stringify({ capabilities: result.capabilities, imageConfig }),
     },
+    imageConfig,
     ...result,
   };
 }

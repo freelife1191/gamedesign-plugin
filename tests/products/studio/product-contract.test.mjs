@@ -25,6 +25,9 @@ const skillIds = [
   "visualize-game-design",
   "export-game-design-documents",
   "apply-document-quality-profile",
+  "plan-image-assets",
+  "generate-image-assets",
+  "review-image-assets",
 ];
 
 const roleIds = [
@@ -35,6 +38,8 @@ const roleIds = [
   "liveops-data-designer",
   "production-feasibility-critic",
   "document-quality-editor",
+  "art-brief-director",
+  "visual-asset-reviewer",
 ];
 
 const profileIds = ["live-service-rpg", "mobile", "pc-console"];
@@ -171,9 +176,9 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 11);
+  assert.equal(new Set(routing.skillIds).size, 14);
   assert.deepEqual(routing.roleIds, roleIds);
-  assert.equal(new Set(routing.roleIds).size, 7);
+  assert.equal(new Set(routing.roleIds).size, 9);
   assert.deepEqual(routing.profileIds, profileIds);
   assert.deepEqual(routing.rolePriority, roleIds);
   assert.equal(routing.unknownIntentFallback, "orchestrate-game-design-project");
