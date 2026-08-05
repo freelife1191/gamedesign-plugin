@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.game-design-plugin/shared/document-quality/schema/reference-preset.schema.json",
+  "title": "Neutral document quality reference preset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preset_id",
+    "version",
+    "emphasis",
+    "review_questions",
+    "recommended_diagrams",
+    "story_hints",
+    "additional_acceptance_criteria"
+  ],
+  "$defs": {
+    "safeText": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![\\s\\S]*(?:https?://|www\\.|(?:^|[^a-z])(?:source|company|project|trademark|logo|layout|image|citation|brand|branded|branding)(?:[^a-z]|$)))[\\s\\S]+$"
+    },
+    "safeTextList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/safeText" }
+    }
+  },
+  "properties": {
+    "preset_id": {
+      "type": "string",
+      "enum": [
+        "competitive-live-service",
+        "replayable-coop",
+        "evolving-world",
+        "function-first",
+        "player-validated-small-team",
+        "cinematic-narrative",
+        "ugc-production-tooling"
+      ]
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "emphasis": { "$ref": "#/$defs/safeTextList" },
+    "review_questions": { "$ref": "#/$defs/safeTextList" },
+    "recommended_diagrams": { "$ref": "#/$defs/safeTextList" },
+    "story_hints": { "$ref": "#/$defs/safeTextList" },
+    "additional_acceptance_criteria": { "$ref": "#/$defs/safeTextList" }
+  }
+}

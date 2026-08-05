@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "04f84777c6355e6e4437995a6807afa06d47c2c4f3371edc847c4f24414cb246",
+  "treeSha256": "a443b8db4aef0746b2fa6214bdeae45160bf8c3d9c9733c50bdaa9d1a3ef5412",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -570,6 +570,41 @@
       "size": 1285
     },
     {
+      "path": "references/shared/document-quality/presets/cinematic-narrative.json",
+      "sha256": "921601102f935ebf4ec9d3efc4a6734fb989d7439dfb6268891a9aaf50f8d537",
+      "size": 984
+    },
+    {
+      "path": "references/shared/document-quality/presets/competitive-live-service.json",
+      "sha256": "4c8085128c252612fa739d38d99c36a03daffd5e3937bc49c480e81bc06fd342",
+      "size": 969
+    },
+    {
+      "path": "references/shared/document-quality/presets/evolving-world.json",
+      "sha256": "60e3c241bda2616fc393aeff700b3c011272da0d59201e7c21e362628e22250a",
+      "size": 1037
+    },
+    {
+      "path": "references/shared/document-quality/presets/function-first.json",
+      "sha256": "0017f2fd71dda09f832f89c508d4bfa376c1ce10ba8f8766b7fb77a9cb188ea5",
+      "size": 954
+    },
+    {
+      "path": "references/shared/document-quality/presets/player-validated-small-team.json",
+      "sha256": "8e04f12ca2ed8ef0056829b62908ddeeee0b3bdcb75aa17c345f7a584fc4c57a",
+      "size": 976
+    },
+    {
+      "path": "references/shared/document-quality/presets/replayable-coop.json",
+      "sha256": "805c4ab9126d6484511d31f725809960d4064e95d621232e9dd135f6db9630f0",
+      "size": 972
+    },
+    {
+      "path": "references/shared/document-quality/presets/ugc-production-tooling.json",
+      "sha256": "010b6af3711becee1671cf62a0cf71d6bc7bd02a381ab815486a11369e61ccab",
+      "size": 999
+    },
+    {
       "path": "references/shared/document-quality/profiles/career/career-stage-role-map.json",
       "sha256": "9318aa1a7bcd85098db3db7ed3a5952893070480a8238f0977ec7a3ddedfc1fe",
       "size": 1520
@@ -743,6 +778,11 @@
       "path": "references/shared/document-quality/schema/quality-profile.schema.json",
       "sha256": "9f261674b1bdd89530e22a6f28f3071db926dee2963dc369b8be950a1dda1df0",
       "size": 6748
+    },
+    {
+      "path": "references/shared/document-quality/schema/reference-preset.schema.json",
+      "sha256": "6d8726776090faaa059a3209fb4ee4ca3d2c0613f790b6e534bad193f644bfa4",
+      "size": 1535
     },
     {
       "path": "references/shared/export/qa-contracts/docx.md",

@@ -34,3 +34,13 @@ test("the canonical reference index covers every one of the 49 source documents"
     assert.equal(Array.isArray(document.derivedCore), true);
   }
 });
+
+test("neutral preset evidence remains authoring-only and outside the canonical reference index", async () => {
+  const evidencePath = "docs/research/2026-08-05-neutral-game-design-preset-evidence.md";
+  const sourcePaths = (await discoverSourceFiles({ repoRoot })).map(({ sourcePath }) => sourcePath);
+  const index = JSON.parse(await readFile(path.join(repoRoot, "shared/knowledge/reference-index.json"), "utf8"));
+
+  assert.equal(await readFile(path.join(repoRoot, evidencePath), "utf8").then((text) => text.length > 0), true);
+  assert.equal(sourcePaths.includes(evidencePath), false);
+  assert.equal(index.documents.some((document) => document.sourcePath === evidencePath), false);
+});

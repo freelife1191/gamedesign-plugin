@@ -9,6 +9,24 @@ import { validateQualityProfile } from "../../shared/scripts/validate-quality-pr
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const qualityRoot = path.join(root, "shared/document-quality");
+const presetIds = [
+  "competitive-live-service",
+  "replayable-coop",
+  "evolving-world",
+  "function-first",
+  "player-validated-small-team",
+  "cinematic-narrative",
+  "ugc-production-tooling",
+];
+const presetFields = [
+  "preset_id", "version", "emphasis", "review_questions", "recommended_diagrams",
+  "story_hints", "additional_acceptance_criteria",
+];
+const sourceIdentityFragments = [
+  "prince of persia", "gdc", "xbox", "microsoft", "steamworks", "valve", "left 4 dead",
+  "riot", "rell", "league of legends", "blizzard", "overwatch", "bungie", "director's cut",
+  "epic", "fortnite", "uefn",
+];
 const requiredSlideFields = [
   "id", "title", "message", "purpose", "source_section_ids", "visual_slots", "speaker_notes_required",
 ];
@@ -34,6 +52,66 @@ const catalogs = {
 async function json(relativePath) {
   return JSON.parse(await readFile(path.join(qualityRoot, relativePath), "utf8"));
 }
+
+function schemaAccepts(value, rootSchema, schema = rootSchema) {
+  if (schema.$ref) {
+    const target = schema.$ref.slice(2).split("/").reduce((current, segment) => current[segment], rootSchema);
+    return schemaAccepts(value, rootSchema, target);
+  }
+  if (schema.type === "object") {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+    if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
+    if (schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) return false;
+    return Object.entries(value).every(([key, child]) => !schema.properties?.[key] || schemaAccepts(child, rootSchema, schema.properties[key]));
+  }
+  if (schema.type === "array") {
+    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0)) return false;
+    if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
+    return !schema.items || value.every((item) => schemaAccepts(item, rootSchema, schema.items));
+  }
+  if (schema.type === "string") {
+    return typeof value === "string"
+      && value.length >= (schema.minLength ?? 0)
+      && (!schema.pattern || new RegExp(schema.pattern, "iu").test(value));
+  }
+  if (schema.type === "integer") return Number.isInteger(value) && value >= (schema.minimum ?? Number.NEGATIVE_INFINITY);
+  return true;
+}
+
+test("neutral reference presets are closed, additive, schema-valid, and source-neutral", async () => {
+  const schema = await json("schema/reference-preset.schema.json");
+  const directory = path.join(qualityRoot, "presets");
+  const filenames = (await readdir(directory)).filter((name) => name.endsWith(".json")).sort();
+  assert.deepEqual(filenames, presetIds.map((id) => `${id}.json`).sort());
+  assert.deepEqual(Object.keys(schema.properties), presetFields);
+  assert.deepEqual(schema.required, presetFields);
+  assert.equal(schema.additionalProperties, false);
+
+  for (const id of presetIds) {
+    const preset = await json(`presets/${id}.json`);
+    assert.deepEqual(Object.keys(preset), presetFields, `${id}: exact additive fields`);
+    assert.equal(preset.preset_id, id, `${id}: filename and preset ID`);
+    assert.equal(schemaAccepts(preset, schema), true, `${id}: schema runtime`);
+    for (const field of presetFields.slice(2)) assert.ok(preset[field].length > 0, `${id}: non-empty ${field}`);
+
+    const serialized = JSON.stringify(preset).toLowerCase();
+    for (const fragment of sourceIdentityFragments) assert.equal(serialized.includes(fragment), false, `${id}: leaked ${fragment}`);
+  }
+
+  const valid = await json("presets/function-first.json");
+  for (const [label, mutate] of [
+    ["unknown source field", (value) => { value.source_name = "example"; }],
+    ["source URL value", (value) => { value.emphasis[0] = "https://example.invalid/source"; }],
+    ["logo reference", (value) => { value.story_hints[0] = "Reuse the source logo."; }],
+    ["copied layout reference", (value) => { value.review_questions[0] = "Copy the original layout."; }],
+    ["image reference", (value) => { value.additional_acceptance_criteria[0] = "Embed the reference image."; }],
+    ["nested source identity", (value) => { value.emphasis[0] = { source_name: "example" }; }],
+  ]) {
+    const candidate = structuredClone(valid);
+    mutate(candidate);
+    assert.equal(schemaAccepts(candidate, schema), false, label);
+  }
+});
 
 test("Studio and Career catalogs contain exactly the approved validated profiles", async () => {
   for (const [catalog, expectedIds] of Object.entries(catalogs)) {
