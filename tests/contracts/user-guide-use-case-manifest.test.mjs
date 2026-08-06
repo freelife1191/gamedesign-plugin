@@ -38,6 +38,72 @@ const OUTPUT_TABLE_HEADINGS = [
   "사람 검토",
   "포트폴리오·팀 활용",
 ];
+const STUDIO_CASE_CONTRACT = Object.freeze([
+  ["ST-C01", "competency", "st-c01-플레이어-경험과-게임-비전", ["AUD-01", "AUD-04", "AUD-05", "AUD-06"], ["foundation", "applied"], ["apply-document-quality-profile", "define-game-vision", "orchestrate-game-design-project", "review-game-design"], ["vision-pillars", "game-design-brief"], ["vision-pillars", "game-design-brief", "game-design-review"], "플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름"],
+  ["ST-C02", "competency", "st-c02-행동핵심-루프의미-있는-선택", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied"], ["define-game-vision", "design-game-systems", "design-player-experience", "review-game-design"], ["core-motivation-loop", "system-specification"], ["core-motivation-loop", "system-specification", "game-design-review"], "플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름"],
+  ["ST-C03", "competency", "st-c03-규칙상태예외데이터", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["apply-document-quality-profile", "design-game-systems", "design-player-experience", "review-game-design"], ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], "규칙과 상태 전이 및 예외와 데이터 계약의 흐름"],
+  ["ST-C04", "competency", "st-c04-uiux온보딩접근성", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["apply-document-quality-profile", "design-player-experience", "review-game-design", "visualize-game-design"], ["ui-ux-flow-state", "accessibility-platform-matrix"], ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"], "UI UX 온보딩과 접근성 검토의 흐름"],
+  ["ST-C05", "competency", "st-c05-콘텐츠내러티브퀘스트npc", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["apply-document-quality-profile", "design-game-content", "design-game-systems", "plan-game-production", "review-game-design"], ["narrative-quest-npc", "character-skill-combat-monster"], ["narrative-quest-npc", "character-skill-combat-monster", "game-design-review"], "콘텐츠와 내러티브 및 퀘스트와 NPC 제작 계약의 흐름"],
+  ["ST-C06", "competency", "st-c06-캐릭터스킬전투몬스터", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["apply-document-quality-profile", "design-game-content", "design-game-systems", "review-game-design"], ["character-skill-combat-monster", "system-specification"], ["character-skill-combat-monster", "system-specification", "game-design-review"], "캐릭터와 스킬 및 전투와 몬스터 설계의 흐름"],
+  ["ST-C07", "competency", "st-c07-성장경제밸런스liveops", ["AUD-04", "AUD-05", "AUD-06"], ["applied", "advanced"], ["apply-document-quality-profile", "design-game-economy-and-liveops", "design-game-systems", "review-game-design"], ["economy-balance", "liveops-experiment-event"], ["economy-balance", "liveops-experiment-event", "game-design-review"], "성장과 경제 및 밸런스와 LiveOps 실험의 흐름"],
+  ["ST-C08", "competency", "st-c08-제작검토이미지출력", ["AUD-04", "AUD-05", "AUD-06"], ["applied", "advanced"], ["plan-game-production", "review-game-design", "plan-image-assets", "visualize-game-design", "export-game-design-documents"], ["production-scope-risk", "game-design-review", "decision-change-log"], ["production-scope-risk", "game-design-review", "export-preparation-manifest"], "제작과 검토 및 이미지와 출력 준비의 흐름"],
+  ["ST-G01", "concept", "st-g01-모바일-수집형-rpg라이브서비스", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["define-game-vision", "design-game-economy-and-liveops", "design-game-content", "review-game-design"], ["game-design-brief", "economy-balance", "liveops-experiment-event"], ["game-design-brief", "economy-balance", "liveops-experiment-event"], "모바일 수집형 RPG LiveService 콘셉트의 설계 흐름"],
+  ["ST-G02", "concept", "st-g02-캐주얼-퍼즐방치형", ["AUD-01", "AUD-04"], ["foundation", "applied"], ["define-game-vision", "design-game-systems", "design-player-experience", "review-game-design"], ["core-motivation-loop", "ui-ux-flow-state"], ["core-motivation-loop", "ui-ux-flow-state", "game-design-review"], "캐주얼 퍼즐 방치형 콘셉트의 세션 루프와 복귀 흐름"],
+  ["ST-G03", "concept", "st-g03-협동-생존-액션", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["define-game-vision", "design-game-systems", "design-game-content", "plan-game-production", "review-game-design"], ["system-specification", "character-skill-combat-monster", "production-scope-risk"], ["system-specification", "character-skill-combat-monster", "production-scope-risk"], "협동 생존 액션 콘셉트의 역할과 자원 및 복구 흐름"],
+  ["ST-G04", "concept", "st-g04-경쟁-pvp-아레나", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["design-game-systems", "design-game-content", "design-player-experience", "review-game-design"], ["character-skill-combat-monster", "system-specification", "ui-ux-flow-state"], ["character-skill-combat-monster", "system-specification", "ui-ux-flow-state"], "경쟁 PvP 아레나 콘셉트의 counterplay와 가독성 흐름"],
+  ["ST-G05", "concept", "st-g05-pc콘솔-액션-로그라이트", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["define-game-vision", "design-game-content", "design-game-systems", "plan-game-production", "review-game-design"], ["core-motivation-loop", "character-skill-combat-monster", "production-scope-risk"], ["core-motivation-loop", "character-skill-combat-monster", "production-scope-risk"], "PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름"],
+  ["ST-G06", "concept", "st-g06-선택형-내러티브-어드벤처", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["design-game-content", "design-game-systems", "review-game-design", "visualize-game-design"], ["narrative-quest-npc", "system-specification", "rule-exception-matrix"], ["narrative-quest-npc", "system-specification", "rule-exception-matrix"], "선택형 내러티브 어드벤처 콘셉트의 상태와 분기 흐름"],
+  ["ST-G07", "concept", "st-g07-코지-생활-시뮬레이션", ["AUD-01", "AUD-04"], ["foundation", "applied"], ["define-game-vision", "design-player-experience", "design-game-content", "review-game-design"], ["ui-ux-flow-state", "narrative-quest-npc", "accessibility-platform-matrix"], ["ui-ux-flow-state", "narrative-quest-npc", "accessibility-platform-matrix"], "코지 생활 시뮬레이션 콘셉트의 자율성과 접근성 흐름"],
+  ["ST-G08", "concept", "st-g08-경영타이쿤-시뮬레이션", ["AUD-01", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "review-game-design"], ["economy-balance", "system-specification", "ui-ux-flow-state"], ["economy-balance", "system-specification", "ui-ux-flow-state"], "경영 타이쿤 시뮬레이션 콘셉트의 경제와 피드백 흐름"],
+  ["ST-G09", "concept", "st-g09-샌드박스ugc", ["AUD-01", "AUD-04", "AUD-05", "AUD-06"], ["foundation", "applied", "advanced"], ["design-game-content", "design-game-systems", "design-player-experience", "review-game-design"], ["narrative-quest-npc", "system-specification", "game-design-review"], ["narrative-quest-npc", "system-specification", "game-design-review"], "샌드박스 UGC 콘셉트의 창작과 발견 및 moderation 흐름"],
+  ["ST-G10", "concept", "st-g10-교육사회문제접근성-중심-게임", ["AUD-01", "AUD-04", "AUD-06"], ["foundation", "applied", "advanced"], ["define-game-vision", "design-player-experience", "design-game-content", "review-game-design"], ["game-design-brief", "ui-ux-flow-state", "accessibility-platform-matrix"], ["game-design-brief", "ui-ux-flow-state", "accessibility-platform-matrix"], "교육과 사회문제 및 접근성 중심 게임 콘셉트의 검증 흐름"],
+].map(([id, view, anchor, audiences, level, skills, templates, outputs, alt]) => ({
+  id,
+  product: "game-design-studio",
+  view,
+  document: `guides/game-design-studio/use-cases/${view === "competency" ? "competency-paths" : "concept-scenarios"}.md`,
+  anchor,
+  audiences,
+  level,
+  skills,
+  templates,
+  outputs,
+  diagram: {
+    svg: `guides/assets/game-design-studio/use-cases/${id.toLowerCase()}.svg`,
+    png: `guides/assets/game-design-studio/use-cases/${id.toLowerCase()}.png`,
+    alt,
+  },
+})));
+const STUDIO_SKILL_CASE_CONTRACT = Object.freeze([
+  ["ST-S01", "apply-document-quality-profile", ["selection-record", "quality-checklist", "requirement-manifest"], ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], "문서 품질 프로필 직접 호출 흐름"],
+  ["ST-S02", "define-game-vision", ["vision-pillars", "core-motivation-loop"], ["design-game-systems"], "게임 비전 직접 호출 흐름"],
+  ["ST-S03", "design-game-content", ["narrative-quest-npc", "character-skill-combat-monster"], ["review-game-design"], "게임 콘텐츠 직접 호출 흐름"],
+  ["ST-S04", "design-game-economy-and-liveops", ["economy-balance", "liveops-experiment-event"], ["review-game-design"], "게임 경제와 LiveOps 직접 호출 흐름"],
+  ["ST-S05", "design-game-systems", ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], ["review-game-design"], "게임 시스템 직접 호출 흐름"],
+  ["ST-S06", "design-player-experience", ["ui-ux-flow-state", "accessibility-platform-matrix"], ["review-game-design"], "플레이어 경험 직접 호출 흐름"],
+  ["ST-S07", "export-game-design-documents", ["export-preparation-manifest", "format-jobs"], [], "게임 기획 문서 출력 직접 호출 흐름"],
+  ["ST-S08", "generate-image-assets", ["image-generation-result", "image-generation-provenance"], ["review-image-assets"], "이미지 자산 생성 직접 호출 흐름"],
+  ["ST-S09", "orchestrate-game-design-project", ["game-design-brief", "canonical-artifact"], ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], "게임 기획 프로젝트 오케스트레이션 직접 호출 흐름"],
+  ["ST-S10", "plan-game-production", ["production-scope-risk", "decision-change-log"], ["review-game-design"], "게임 제작 계획 직접 호출 흐름"],
+  ["ST-S11", "plan-image-assets", ["image-assets-manifest", "image-prompts"], ["generate-image-assets", "visualize-game-design"], "이미지 자산 계획 직접 호출 흐름"],
+  ["ST-S12", "review-game-design", ["game-design-review", "decision-change-log"], ["review-game-design", "visualize-game-design", "export-game-design-documents"], "게임 기획 검토 직접 호출 흐름"],
+  ["ST-S13", "review-image-assets", ["image-asset-review", "lifecycle-receipt"], ["export-game-design-documents"], "이미지 자산 검토 직접 호출 흐름"],
+  ["ST-S14", "svg-infographic", ["editable-svg", "png-2x", "render-evidence"], ["visualize-game-design"], "SVG 인포그래픽 직접 호출 흐름"],
+  ["ST-S15", "visualize-game-design", ["editable-svg", "png-2x", "visualization-evidence"], ["review-game-design", "export-game-design-documents"], "게임 기획 시각화 직접 호출 흐름"],
+].map(([id, skill, outputs, next_skills, alt]) => ({
+  id,
+  product: "game-design-studio",
+  skill,
+  document: `guides/game-design-studio/skills/${skill}.md`,
+  anchor: `직접-호출-활용-${skill}`,
+  outputs,
+  next_skills,
+  diagram: {
+    svg: `guides/assets/game-design-studio/skills/${skill}.svg`,
+    png: `guides/assets/game-design-studio/skills/${skill}.png`,
+    alt,
+  },
+})));
 const AUDIENCE_BOUNDARY_EXPECTATIONS = Object.freeze({
   "AUD-01": {
     approver: "교사 또는 멘토",
@@ -183,31 +249,17 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
     "ST-G06", "ST-G07", "ST-G08", "ST-G09", "ST-G10",
   ]);
   assert.equal(studioSkillCases.length, 15);
-
-  for (const entry of competencyCases) {
-    assert.equal(entry.document, "guides/game-design-studio/use-cases/competency-paths.md", `${entry.id} competency document`);
-    assert.equal(entry.diagram.svg, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.svg`, `${entry.id} SVG path`);
-    assert.equal(entry.diagram.png, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.png`, `${entry.id} PNG path`);
-    assert.ok(inventory.skillIds.includes(entry.skills[0]), `${entry.id} first skill is installed for Studio`);
-    assert.ok(entry.skills.every((skill) => inventory.skillIds.includes(skill)), `${entry.id} skills stay in the Studio inventory`);
-    assert.ok(entry.templates.every((template) => inventory.templateIds.includes(template)), `${entry.id} templates stay in the Studio inventory`);
-  }
-  for (const entry of conceptCases) {
-    assert.equal(entry.document, "guides/game-design-studio/use-cases/concept-scenarios.md", `${entry.id} concept document`);
-    assert.equal(entry.diagram.svg, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.svg`, `${entry.id} SVG path`);
-    assert.equal(entry.diagram.png, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.png`, `${entry.id} PNG path`);
-    assert.ok(entry.skills.every((skill) => inventory.skillIds.includes(skill)), `${entry.id} skills stay in the Studio inventory`);
-    assert.ok(entry.templates.every((template) => inventory.templateIds.includes(template)), `${entry.id} templates stay in the Studio inventory`);
-  }
-
+  const projectCase = ({ id, product, view, document, anchor, audiences, level, skills, templates, outputs, diagram }) => ({
+    id, product, view, document, anchor, audiences, level, skills, templates, outputs,
+    diagram: { svg: diagram.svg, png: diagram.png, alt: diagram.alt },
+  });
+  const projectSkillCase = ({ id, product, skill, document, anchor, outputs, next_skills, diagram }) => ({
+    id, product, skill, document, anchor, outputs, next_skills,
+    diagram: { svg: diagram.svg, png: diagram.png, alt: diagram.alt },
+  });
+  assert.deepEqual(studioCases.map(projectCase), STUDIO_CASE_CONTRACT, "all Studio case metadata matches the declared coverage contract");
+  assert.deepEqual(studioSkillCases.map(projectSkillCase), STUDIO_SKILL_CASE_CONTRACT, "all Studio direct-use metadata matches the declared coverage contract");
   assert.deepEqual(studioSkillCases.map((entry) => entry.skill), inventory.skillIds, "one direct-use case for every installed Studio skill");
-  for (const entry of studioSkillCases) {
-    assert.equal(entry.document, `guides/game-design-studio/skills/${entry.skill}.md`, `${entry.skill} guide document`);
-    assert.equal(entry.anchor, `직접-호출-활용-${entry.skill}`, `${entry.skill} direct-use H3 anchor`);
-    assert.equal(entry.diagram.svg, `guides/assets/game-design-studio/skills/${entry.skill}.svg`, `${entry.skill} SVG path`);
-    assert.equal(entry.diagram.png, `guides/assets/game-design-studio/skills/${entry.skill}.png`, `${entry.skill} PNG path`);
-    assert.ok(entry.next_skills.every((skill) => inventory.skillIds.includes(skill)), `${entry.skill} next skills stay in the Studio inventory`);
-  }
 
   const result = await validateUseCaseGuides({
     repoRoot,

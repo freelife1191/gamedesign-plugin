@@ -514,7 +514,7 @@
       "document": "guides/game-design-studio/skills/orchestrate-game-design-project.md",
       "anchor": "직접-호출-활용-orchestrate-game-design-project",
       "outputs": ["game-design-brief", "canonical-artifact"],
-      "next_skills": [],
+      "next_skills": ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"],
       "diagram": {
         "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
         "png": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.png",
