@@ -190,6 +190,33 @@ async function assertRegularContainedFile(repoRoot, filename) {
   if (!entry.isFile() || entry.isSymbolicLink()) throw new Error(`expected regular file: ${filename}`);
 }
 
+function declaredTargetPaths(manifest) {
+  return entries(manifest).flatMap(({ entry, label }) => {
+    if (!isObject(entry)) return [];
+    const targets = [{ field: "document", value: entry.document }];
+    if (isObject(entry.diagram)) {
+      targets.push(
+        { field: "diagram.svg", value: entry.diagram.svg },
+        { field: "diagram.png", value: entry.diagram.png },
+      );
+    }
+    return targets
+      .filter(({ value }) => isSafeRelativePath(value))
+      .map(({ field, value }) => ({ label: `${label}.${field}`, value }));
+  });
+}
+
+async function validateDeclaredTargets(repoRoot, manifest, errors) {
+  for (const target of declaredTargetPaths(manifest)) {
+    const filename = path.resolve(repoRoot, target.value);
+    try {
+      await assertRegularContainedFile(repoRoot, filename);
+    } catch (error) {
+      errors.push(`${target.label} must be an existing regular non-symlink file: ${target.value} (${error.message})`);
+    }
+  }
+}
+
 export async function loadUseCaseManifest({ repoRoot }) {
   const resolvedRoot = await realpath(repoRoot);
   const manifestPath = path.join(resolvedRoot, "guides/use-cases/use-case-manifest.json");
@@ -203,13 +230,21 @@ export async function loadUseCaseManifest({ repoRoot }) {
   return manifest;
 }
 
-export async function validateUseCaseGuides({ repoRoot, requireComplete = false, inventories }) {
+export async function validateUseCaseGuides({ repoRoot, requireComplete = false, validateTargets = requireComplete, inventories }) {
   const errors = [];
   const manifest = await loadUseCaseManifest({ repoRoot });
   const counts = countEntries(manifest);
-  validateUniqueIds(manifest, errors);
   validateEntryShapes(manifest, errors);
+  const shapesAreValid = errors.length === 0;
+  validateUniqueIds(manifest, errors);
+  if (validateTargets && shapesAreValid) await validateDeclaredTargets(await realpath(repoRoot), manifest, errors);
   if (inventories) validateCatalogBindings(manifest, inventories, errors);
   if (requireComplete) validateCompleteCounts(counts, errors);
-  return { ok: errors.length === 0, errors, counts };
+  return {
+    ok: errors.length === 0,
+    errors,
+    counts,
+    targetValidation: validateTargets ? "required" : "deferred",
+    deferredTargetPaths: validateTargets ? [] : declaredTargetPaths(manifest).map(({ value }) => value),
+  };
 }

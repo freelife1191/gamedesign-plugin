@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -9,7 +9,7 @@ import {
   parseViewBox,
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
-import { loadUseCaseManifest } from "../../tooling/lib/use-case-guides.mjs";
+import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
 import { collectHeadingAnchors } from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -31,7 +31,8 @@ const AUDIENCE_SECTION_HEADINGS = [
 const OUTPUT_TABLE_HEADINGS = [
   "사용자 요청",
   "템플릿",
-  "최소 파일",
+  "최소 파일 경로",
+  "내용 범위",
   "선택 이미지·도식 자산",
   "파생 형식",
   "사람 검토",
@@ -129,6 +130,14 @@ function tableHeadings(markdown, sectionHeading) {
   assert.match(separator, /^\|(?:\s*:?-+:?\s*\|)+$/);
   assert.ok(rows.length > 0, `${sectionHeading} must contain data rows`);
   return header.split("|").slice(1, -1).map((value) => value.trim());
+}
+
+function tableRows(markdown, sectionHeading) {
+  const body = sectionByHeading(markdown, 2, sectionHeading);
+  const [header, separator, ...rows] = body.split("\n").filter((line) => line.startsWith("|"));
+  const headings = header.split("|").slice(1, -1).map((value) => value.trim());
+  assert.match(separator, /^\|(?:\s*:?-+:?\s*\|)+$/);
+  return rows.map((row) => Object.fromEntries(headings.map((heading, index) => [heading, row.split("|").slice(1, -1)[index].trim()])));
 }
 
 async function readCommonGuides() {
@@ -311,6 +320,17 @@ test("output catalog keeps exact H2 result levels and request-table routing", as
   assert.deepEqual(tableHeadings(outputCatalog, "Career 요청과 결과"), OUTPUT_TABLE_HEADINGS);
 });
 
+test("output catalog separates artifact-relative minimum files from their domain content", async () => {
+  const { outputCatalog } = await readCommonGuides();
+  for (const section of ["Studio 요청과 결과", "Career 요청과 결과"]) {
+    for (const row of tableRows(outputCatalog, section)) {
+      assert.match(row["최소 파일 경로"], /`content\.md`/, `${section} content root`);
+      assert.doesNotMatch(row["최소 파일 경로"], /문제|규칙|가정|관찰|개인 기여|review findings/u, `${section} path-only minimum files`);
+      assert.match(row["내용 범위"], /`content\.md` 내/u, `${section} content description`);
+    }
+  }
+});
+
 test("output catalog preserves canonical reading order and renderer quality boundary", async () => {
   const { outputCatalog } = await readCommonGuides();
   const readingOrder = sectionByHeading(outputCatalog, 2, "Canonical Artifact 읽는 순서");
@@ -416,4 +436,52 @@ test("use-case manifest reports malformed case skills with injected inventories"
 
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((error) => error.includes("cases[0].skills must be an array")));
+});
+
+test("complete validation rejects missing, directory, and symlink manifest targets while partial declaration defers them", async (t) => {
+  for (const targetKind of ["missing", "directory", "symlink"]) {
+    const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "use-case-targets-"));
+    t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+    const guidesRoot = path.join(fixtureRoot, "guides");
+    const document = "guides/use-cases/audience-paths.md";
+    const svg = "guides/assets/aud-01.svg";
+    const png = "guides/assets/aud-01.png";
+    await mkdir(path.join(guidesRoot, "use-cases"), { recursive: true });
+    await mkdir(path.join(guidesRoot, "assets"), { recursive: true });
+    await writeFile(path.join(fixtureRoot, "guides", "use-cases", "use-case-manifest.json"), JSON.stringify({
+      version: 1,
+      audience_paths: [{
+        id: "AUD-01",
+        slug: "test",
+        document,
+        anchor: "aud-01",
+        level: "foundation",
+        recommended_views: [],
+        outputs: [],
+        diagram: { svg, png, alt: "Audience path" },
+      }],
+      cases: [],
+      skill_cases: [],
+    }));
+    await writeFile(path.join(fixtureRoot, svg), "<svg/>");
+    await writeFile(path.join(fixtureRoot, png), "png");
+    const documentPath = path.join(fixtureRoot, document);
+    if (targetKind === "directory") await mkdir(documentPath);
+    if (targetKind === "symlink") {
+      const external = path.join(await mkdtemp(path.join(os.tmpdir(), "use-case-target-external-")), "audience-paths.md");
+      t.after(() => rm(path.dirname(external), { recursive: true, force: true }));
+      await writeFile(external, "# external\n");
+      await symlink(external, documentPath);
+    }
+
+    const partial = await validateUseCaseGuides({ repoRoot: fixtureRoot });
+    assert.equal(partial.ok, true, `${targetKind} partial declaration`);
+    assert.equal(partial.targetValidation, "deferred", `${targetKind} target phase`);
+    assert.deepEqual(partial.deferredTargetPaths, [document, svg, png], `${targetKind} deferred targets`);
+
+    const complete = await validateUseCaseGuides({ repoRoot: fixtureRoot, requireComplete: true });
+    assert.equal(complete.ok, false, `${targetKind} complete validation`);
+    const expectedFailure = targetKind === "missing" ? "ENOENT" : targetKind === "directory" ? "expected regular file" : "symlink";
+    assert.ok(complete.errors.some((error) => error.includes("audience_paths[0].document") && error.includes(expectedFailure)), `${targetKind} target error`);
+  }
 });

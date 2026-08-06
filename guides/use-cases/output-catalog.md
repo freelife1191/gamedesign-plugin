@@ -16,21 +16,21 @@
 
 ## Studio 요청과 결과
 
-| 사용자 요청 | 템플릿 | 최소 파일 | 선택 이미지·도식 자산 | 파생 형식 | 사람 검토 | 포트폴리오·팀 활용 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 핵심 경험과 비전 정리 | `game-design-brief`, `vision-pillars` | `content.md`, `evidence.yml`, `decisions/` | concept-draft 이미지 prompt, 비전 흐름 SVG·PNG | MD, PDF·DOCX·PPTX 준비 | 대상·제약·검증 기준 | 팀 킥오프와 공개 가능한 문제 정의 |
-| 규칙·상태·예외 명세 | `system-specification`, `rule-exception-matrix`, `data-schema-table-contract` | `content.md`, 규칙·상태 표, `decisions/` | 상태 흐름 SVG·PNG | MD, PDF·DOCX 준비 | 규칙 모순, 구현·검증 가능성 | 팀 handoff와 개인 판단 evidence |
-| UX·콘텐츠·경제 검토 | `ui-ux-flow-state`, `narrative-quest-npc`, `economy-balance` | `content.md`, 가정·검토 큐, `evidence.yml` | concept-draft 이미지, 흐름·의존성 SVG·PNG | MD, PDF·PPTX 준비 | 접근성, 밸런스 가정, 미해결 위험 | 검토 기록과 반복 개선 근거 |
-| 제작 범위·위험·출력 준비 | `production-scope-risk`, `decision-change-log`, `game-design-review` | `content.md`, 위험·결정 로그, `export-manifest.yml` | 승인 전 도식 source, 이미지 prompt | MD, PDF·DOCX·PPTX 준비 | owner, 승인, 형식 QA | 팀 전달; 공개 가능 evidence만 Career로 handoff |
+| 사용자 요청 | 템플릿 | 최소 파일 경로 | 내용 범위 | 선택 이미지·도식 자산 | 파생 형식 | 사람 검토 | 포트폴리오·팀 활용 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 핵심 경험과 비전 정리 | `game-design-brief`, `vision-pillars` | `content.md`, `evidence.yml`, `decisions/` | `content.md` 내 문제, 가정, 근거와 결정 | concept-draft 이미지 prompt, 비전 흐름 SVG·PNG | MD, PDF·DOCX·PPTX 준비 | 대상·제약·검증 기준 | 팀 킥오프와 공개 가능한 문제 정의 |
+| 규칙·상태·예외 명세 | `system-specification`, `rule-exception-matrix`, `data-schema-table-contract` | `content.md`, `decisions/` | `content.md` 내 규칙, 상태, 예외와 검증 표 | 상태 흐름 SVG·PNG | MD, PDF·DOCX 준비 | 규칙 모순, 구현·검증 가능성 | 팀 handoff와 개인 판단 evidence |
+| UX·콘텐츠·경제 검토 | `ui-ux-flow-state`, `narrative-quest-npc`, `economy-balance` | `content.md`, `evidence.yml`, `decisions/` | `content.md` 내 가정, 검토 큐와 미해결 위험 | concept-draft 이미지, 흐름·의존성 SVG·PNG | MD, PDF·PPTX 준비 | 접근성, 밸런스 가정, 미해결 위험 | 검토 기록과 반복 개선 근거 |
+| 제작 범위·위험·출력 준비 | `production-scope-risk`, `decision-change-log`, `game-design-review` | `content.md`, `decisions/`, `export-manifest.yml` | `content.md` 내 위험과 결정, `export-manifest.yml` 내 형식 준비 상태 | 승인 전 도식 source, 이미지 prompt | MD, PDF·DOCX·PPTX 준비 | owner, 승인, 형식 QA | 팀 전달; 공개 가능 evidence만 Career로 handoff |
 
 ## Career 요청과 결과
 
-| 사용자 요청 | 템플릿 | 최소 파일 | 선택 이미지·도식 자산 | 파생 형식 | 사람 검토 | 포트폴리오·팀 활용 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 역할·공고·학습 경로 정리 | `game-design-role-map`, `job-posting-evidence`, `learning-roadmap` | `content.md`, `evidence.yml`, `decisions/` | 역할·경로 SVG·PNG | MD, PDF·PPTX 준비 | 확인일, 지역, 표본 경계 | 학습 계획과 직무 대화 준비 |
-| 관찰 기반 게임 분석 | `game-analysis-report`, `reverse-design-document` | `content.md`, 관찰·추론 구분, `evidence.yml` | 분석 도식 SVG·PNG, proof image prompt | MD, PDF·DOCX 준비 | 사실·추론·반례, 권리 | 공개 가능한 분석 사례 |
-| 포트폴리오 프로젝트 구성 | `portfolio-project-brief`, `creative-design-portfolio`, `portfolio-backlog` | `content.md`, 개인 기여·검증 근거, `decisions/` | concept-draft proof image, 사례 흐름 SVG·PNG | MD, PDF·PPTX 준비 | 공개 가능성, 개인 기여, 발표 메시지 | 포트폴리오와 면접 evidence |
-| 검토·면접·성장 기록 | `five-axis-review`, `interview-question-answer-log`, `junior-growth-review` | `content.md`, review findings, `evidence.yml` | 수정 우선순위 도식, 발표 이미지 prompt | MD, PDF·PPTX 준비 | 주장·근거 연결, 다음 검증 | 검토 큐, 면접 연습, 성장 기록 |
+| 사용자 요청 | 템플릿 | 최소 파일 경로 | 내용 범위 | 선택 이미지·도식 자산 | 파생 형식 | 사람 검토 | 포트폴리오·팀 활용 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 역할·공고·학습 경로 정리 | `game-design-role-map`, `job-posting-evidence`, `learning-roadmap` | `content.md`, `evidence.yml`, `decisions/` | `content.md` 내 역할, 공고 표본과 학습 경로 | 역할·경로 SVG·PNG | MD, PDF·PPTX 준비 | 확인일, 지역, 표본 경계 | 학습 계획과 직무 대화 준비 |
+| 관찰 기반 게임 분석 | `game-analysis-report`, `reverse-design-document` | `content.md`, `evidence.yml`, `decisions/` | `content.md` 내 관찰, 추론과 반례 | 분석 도식 SVG·PNG, proof image prompt | MD, PDF·DOCX 준비 | 사실·추론·반례, 권리 | 공개 가능한 분석 사례 |
+| 포트폴리오 프로젝트 구성 | `portfolio-project-brief`, `creative-design-portfolio`, `portfolio-backlog` | `content.md`, `evidence.yml`, `decisions/` | `content.md` 내 개인 기여와 검증 근거 | concept-draft proof image, 사례 흐름 SVG·PNG | MD, PDF·PPTX 준비 | 공개 가능성, 개인 기여, 발표 메시지 | 포트폴리오와 면접 evidence |
+| 검토·면접·성장 기록 | `five-axis-review`, `interview-question-answer-log`, `junior-growth-review` | `content.md`, `evidence.yml`, `decisions/` | `content.md` 내 review findings와 다음 검증 | 수정 우선순위 도식, 발표 이미지 prompt | MD, PDF·PPTX 준비 | 주장·근거 연결, 다음 검증 | 검토 큐, 면접 연습, 성장 기록 |
 
 ## Canonical Artifact 읽는 순서
 

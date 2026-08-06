@@ -97,10 +97,16 @@ async function loadSources(repoRoot) {
 }
 
 function outputForSource(source, manifest, repoRoot) {
-  const audience = manifest.audience_paths.find((entry) => entry.id.toLowerCase() === source.id);
-  if (!audience) throw new Error(`no explicit audience manifest output for ${source.id}`);
-  const svg = path.resolve(repoRoot, audience.diagram.svg);
-  const png = path.resolve(repoRoot, audience.diagram.png);
+  const matches = [
+    ...manifest.audience_paths,
+    ...manifest.cases,
+    ...manifest.skill_cases,
+  ].filter((entry) => entry?.id?.toLowerCase() === source.id);
+  if (matches.length !== 1) {
+    throw new Error(`expected exactly one explicit manifest output for ${source.id}, found ${matches.length}`);
+  }
+  const svg = path.resolve(repoRoot, matches[0].diagram.svg);
+  const png = path.resolve(repoRoot, matches[0].diagram.png);
   if (!isContained(repoRoot, svg) || !isContained(repoRoot, png)) throw new Error(`unsafe output path for ${source.id}`);
   return { svg, png };
 }

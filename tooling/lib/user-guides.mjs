@@ -219,7 +219,7 @@ function pathValues(value) {
   return [];
 }
 
-async function validateDiagramManifest(repoRoot, errors, counts) {
+async function validateDiagramManifest(repoRoot, errors, counts, useCases) {
   const manifestPath = path.join(repoRoot, "guides/assets/diagram-manifest.json");
   let manifest;
   try {
@@ -234,15 +234,16 @@ async function validateDiagramManifest(repoRoot, errors, counts) {
     errors.push("diagram manifest must contain a diagrams array");
     return;
   }
-  const useCases = await validateUseCaseGuides({ repoRoot, requireComplete: false });
-  const registered = useCases.counts.audiencePaths
-    + useCases.counts.studioCases
-    + useCases.counts.careerCases
-    + useCases.counts.studioSkillCases
-    + useCases.counts.careerSkillCases;
-  const expectedDiagramTotal = 18 + registered;
-  if (diagrams.length !== expectedDiagramTotal) {
-    errors.push(`diagram manifest must contain exactly ${expectedDiagramTotal} entries, found ${diagrams.length}`);
+  if (useCases?.ok) {
+    const registered = useCases.counts.audiencePaths
+      + useCases.counts.studioCases
+      + useCases.counts.careerCases
+      + useCases.counts.studioSkillCases
+      + useCases.counts.careerSkillCases;
+    const expectedDiagramTotal = 18 + registered;
+    if (diagrams.length !== expectedDiagramTotal) {
+      errors.push(`diagram manifest must contain exactly ${expectedDiagramTotal} entries, found ${diagrams.length}`);
+    }
   }
   const ids = new Set();
   for (const [index, diagram] of diagrams.entries()) {
@@ -324,6 +325,16 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
     productId,
     await collectProductInventory(root, productId),
   ])));
+  let useCases;
+  if (requireComplete) {
+    try {
+      useCases = await validateUseCaseGuides({ repoRoot: root, requireComplete: false, validateTargets: true, inventories });
+      for (const error of useCases.errors) errors.push(`use-case manifest: ${error}`);
+    } catch (error) {
+      errors.push(`use-case manifest: unable to validate: ${error.message}`);
+      useCases = { ok: false };
+    }
+  }
   const documentedSkillIds = new Map(PRODUCT_IDS.map((productId) => [productId, new Set()]));
   const rootReadmePath = path.join(root, "README.md");
   try {
@@ -371,7 +382,7 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
         errors.push(`${productId} skill guide inventory mismatch: expected ${expected.size} IDs, found ${actual.size}`);
       }
     }
-    await validateDiagramManifest(root, errors, counts);
+    await validateDiagramManifest(root, errors, counts, useCases);
   }
   return { ok: errors.length === 0, errors, counts };
 }

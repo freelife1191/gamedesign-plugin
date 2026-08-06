@@ -96,14 +96,56 @@ function decodePng(data) {
   return { width: ihdr.readUInt32BE(0), height: ihdr.readUInt32BE(4), raw: inflateSync(Buffer.concat(idat)) };
 }
 
-async function writeFixture(t, { wrapper, existingOutputs = false } = {}) {
+function audienceEntry(id, diagram) {
+  return {
+    id: id.toUpperCase(),
+    slug: "test",
+    document: "guides/use-cases/audience-paths.md",
+    anchor: id,
+    level: "foundation",
+    recommended_views: [],
+    outputs: [],
+    diagram: { ...diagram, alt: source.alt },
+  };
+}
+
+function caseEntry(id, diagram) {
+  return {
+    id: id.toUpperCase(),
+    product: "game-design-studio",
+    view: "competency",
+    audiences: ["AUD-01"],
+    level: ["foundation"],
+    skills: [],
+    templates: [],
+    outputs: [],
+    document: "guides/game-design-studio/use-cases/case.md",
+    anchor: id,
+    diagram: { ...diagram, alt: source.alt },
+  };
+}
+
+function skillCaseEntry(id, diagram) {
+  return {
+    id: id.toUpperCase(),
+    product: "game-design-studio",
+    skill: "skill",
+    next_skills: [],
+    outputs: [],
+    document: "guides/game-design-studio/use-cases/skill.md",
+    anchor: id,
+    diagram: { ...diagram, alt: source.alt },
+  };
+}
+
+async function writeFixture(t, { wrapper, existingOutputs = false, fixtureSource = source, manifest } = {}) {
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "use-case-diagrams-test-"));
   t.after(() => rm(repoRoot, { recursive: true, force: true }));
   await mkdir(path.join(repoRoot, "guides/assets"), { recursive: true });
   await mkdir(path.join(repoRoot, "guides/use-cases"), { recursive: true });
   await mkdir(path.join(repoRoot, "products/game-design-studio/plugin/skills/visualize-game-design/scripts"), { recursive: true });
-  await writeFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), JSON.stringify([source]));
-  await writeFile(path.join(repoRoot, "guides/use-cases/use-case-manifest.json"), JSON.stringify({
+  await writeFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), JSON.stringify([fixtureSource]));
+  await writeFile(path.join(repoRoot, "guides/use-cases/use-case-manifest.json"), JSON.stringify(manifest ?? {
     version: 1,
     audience_paths: [{
       id: "AUD-01",
@@ -123,7 +165,7 @@ async function writeFixture(t, { wrapper, existingOutputs = false } = {}) {
     wrapper ?? wrapperSource(),
   );
   if (existingOutputs) {
-    const svg = renderDiagramSvg(source);
+    const svg = renderDiagramSvg(fixtureSource);
     const outputDir = path.dirname(path.join(repoRoot, svgPath));
     await mkdir(outputDir, { recursive: true });
     await writeFile(path.join(repoRoot, svgPath), svg);
@@ -176,6 +218,59 @@ test("builder accepts a decodeable 2800 by 1800 PNG from the same wrapper genera
   assert.deepEqual(await buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }), { svg: 1, png: 1 });
   const decoded = decodePng(await readFile(path.join(repoRoot, pngPath)));
   assert.deepEqual({ width: decoded.width, height: decoded.height, rawLength: decoded.raw.length }, { width: 2800, height: 1800, rawLength: (2800 * 4 + 1) * 1800 });
+});
+
+test("builder resolves exactly one explicit output from every manifest lane", async (t) => {
+  const lanes = [
+    ["audience_paths", "aud-11", audienceEntry],
+    ["cases", "st-c11", caseEntry],
+    ["skill_cases", "st-s11", skillCaseEntry],
+  ];
+
+  for (const [lane, id, entryFactory] of lanes) {
+    const diagram = {
+      svg: `guides/assets/test/${lane}/${id}.svg`,
+      png: `guides/assets/test/${lane}/${id}.png`,
+    };
+    const fixtureSource = { ...source, id };
+    const repoRoot = await writeFixture(t, {
+      fixtureSource,
+      manifest: {
+        version: 1,
+        audience_paths: lane === "audience_paths" ? [entryFactory(id, diagram)] : [],
+        cases: lane === "cases" ? [entryFactory(id, diagram)] : [],
+        skill_cases: lane === "skill_cases" ? [entryFactory(id, diagram)] : [],
+      },
+    });
+
+    assert.deepEqual(await buildUseCaseDiagrams({ repoRoot, ids: [id] }), { svg: 1, png: 1 }, lane);
+    assert.equal(await readFile(path.join(repoRoot, diagram.svg), "utf8"), renderDiagramSvg(fixtureSource), `${lane} SVG output`);
+    assert.ok((await lstat(path.join(repoRoot, diagram.png))).isFile(), `${lane} PNG output`);
+  }
+});
+
+test("builder fails closed when source output has zero or duplicate manifest matches", async (t) => {
+  const diagram = { svg: svgPath, png: pngPath };
+  const duplicateRoot = await writeFixture(t, {
+    manifest: {
+      version: 1,
+      audience_paths: [audienceEntry("aud-01", diagram)],
+      cases: [caseEntry("aud-01", diagram)],
+      skill_cases: [],
+    },
+  });
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot: duplicateRoot, ids: ["aud-01"] }),
+    /expected exactly one explicit manifest output.*found 2/u,
+  );
+
+  const zeroRoot = await writeFixture(t, {
+    manifest: { version: 1, audience_paths: [], cases: [], skill_cases: [] },
+  });
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot: zeroRoot, ids: ["aud-01"] }),
+    /expected exactly one explicit manifest output.*found 0/u,
+  );
 });
 
 test("builder rejects a PNG output replaced with a symlink after rendering", async (t) => {

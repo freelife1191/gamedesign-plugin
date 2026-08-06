@@ -67,3 +67,68 @@ test("renderDiagramSvg preserves every multi-code-unit character at the card len
   assert.equal(text.slice(1, 3).join(""), label);
   assert.equal(text.slice(3, 5).join(""), detail);
 });
+
+function fixtureFor(type, stepCount) {
+  return {
+    ...validFixture,
+    type,
+    steps: Array.from({ length: stepCount }, (_, index) => ({
+      label: `단계 ${index + 1}`,
+      detail: `검토 ${index + 1}`,
+    })),
+  };
+}
+
+function cardRects(svg) {
+  return [...svg.matchAll(/<g aria-label="[^"]+">\s*<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"[^>]*\/>\s*<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"/gu)]
+    .map((match) => ({ x: Number(match[1]), y: Number(match[2]), width: Number(match[3]), height: Number(match[4]), pillX: Number(match[5]), pillY: Number(match[6]), pillWidth: Number(match[7]), pillHeight: Number(match[8]) }));
+}
+
+test("renderDiagramSvg keeps every supported layout's 3 and 5 card samples padded, connected, and free of forbidden elements", () => {
+  for (const type of ["learning-path", "design-pipeline", "decision-flow", "skill-flow"]) {
+    for (const stepCount of [3, 5]) {
+      const svg = renderDiagramSvg(fixtureFor(type, stepCount));
+      const cards = cardRects(svg);
+      const connectors = [...svg.matchAll(/<path d="M (\d+) (\d+) L (\d+) (\d+)"[^>]*marker-end="url\(#open-arrow\)"/gu)]
+        .map((match) => ({ startX: Number(match[1]), startY: Number(match[2]), endX: Number(match[3]), endY: Number(match[4]) }));
+
+      assert.equal(cards.length, stepCount, `${type}/${stepCount} cards`);
+      assert.equal(connectors.length, stepCount - 1, `${type}/${stepCount} connectors`);
+      for (const card of cards) {
+        assert.ok(card.x - 52 >= 24 && 1348 - (card.x + card.width) >= 24, `${type}/${stepCount} horizontal container padding`);
+        assert.ok(card.y - 274 >= 24 && 630 - (card.y + card.height) >= 24, `${type}/${stepCount} vertical container padding`);
+        assert.ok(card.pillX - card.x >= 24 && card.pillY - card.y >= 24, `${type}/${stepCount} internal pill padding`);
+        assert.ok(card.width - (card.pillX - card.x) - card.pillWidth >= 24, `${type}/${stepCount} internal right padding`);
+        assert.ok(card.height - (card.pillY - card.y) - card.pillHeight >= 24, `${type}/${stepCount} internal bottom padding`);
+      }
+      for (const [index, connector] of connectors.entries()) {
+        assert.equal(connector.startX, cards[index].x + cards[index].width + 12, `${type}/${stepCount} source connector gap`);
+        assert.equal(connector.endX, cards[index + 1].x - 12, `${type}/${stepCount} target connector gap`);
+        assert.equal(connector.startY, cards[index].y + cards[index].height / 2, `${type}/${stepCount} source connector alignment`);
+        assert.equal(connector.endY, cards[index + 1].y + cards[index + 1].height / 2, `${type}/${stepCount} target connector alignment`);
+      }
+      assert.doesNotMatch(svg, /<(?:foreignObject|image|script|style)\b|@font-face|font-family=|data:image/iu, `${type}/${stepCount} forbidden SVG content`);
+    }
+  }
+});
+
+test("renderDiagramSvg XML-escapes every rendered accessibility and visible text field", () => {
+  const source = {
+    ...validFixture,
+    title: "제목 < & > \" '",
+    description: "설명 < & > \" '",
+    alt: "대체 < & > \" '",
+    eyebrow: "눈썹 < & > \" '",
+    conclusion: "결론 < & > \" '",
+    steps: validFixture.steps.map((step, index) => ({
+      label: `라벨${index}<>&`,
+      detail: `상세${index}<>&`,
+    })),
+  };
+  const svg = renderDiagramSvg(source);
+
+  for (const field of [source.title, source.description, source.alt, source.eyebrow, source.conclusion, ...source.steps.flatMap((step) => [step.label, step.detail])]) {
+    assert.doesNotMatch(svg, new RegExp(field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"), `raw XML text: ${field}`);
+  }
+  for (const escaped of ["&lt;", "&amp;", "&gt;", "&quot;", "&apos;"]) assert.match(svg, new RegExp(escaped, "u"));
+});

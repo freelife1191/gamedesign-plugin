@@ -44,6 +44,51 @@ async function withGuideFixture({ omitCareerSkill = false }, check) {
   }
 }
 
+function validAudience(id = "AUD-01") {
+  return {
+    id,
+    slug: "audience",
+    document: "guides/use-cases/audience-paths.md",
+    anchor: id.toLowerCase(),
+    level: "foundation",
+    recommended_views: [],
+    outputs: [],
+    diagram: { svg: "guides/assets/audience.svg", png: "guides/assets/audience.png", alt: "Audience path" },
+  };
+}
+
+function validCase(overrides = {}) {
+  return {
+    id: "ST-C01",
+    product: "game-design-studio",
+    view: "competency",
+    audiences: ["AUD-01"],
+    level: ["foundation"],
+    skills: ["skill-1"],
+    templates: [],
+    outputs: [],
+    document: "guides/use-cases/case.md",
+    anchor: "st-c01",
+    diagram: { svg: "guides/assets/case.svg", png: "guides/assets/case.png", alt: "Case path" },
+    ...overrides,
+  };
+}
+
+async function writeUseCaseValidationFixture(root, manifest) {
+  await mkdir(path.join(root, "guides", "use-cases"), { recursive: true });
+  await mkdir(path.join(root, "guides", "assets"), { recursive: true });
+  await Promise.all([
+    writeFile(path.join(root, "guides", "use-cases", "audience-paths.md"), "# Audience\n"),
+    writeFile(path.join(root, "guides", "use-cases", "case.md"), "# Case\n"),
+    writeFile(path.join(root, "guides", "assets", "audience.svg"), "<svg/>"),
+    writeFile(path.join(root, "guides", "assets", "audience.png"), "png"),
+    writeFile(path.join(root, "guides", "assets", "case.svg"), "<svg/>"),
+    writeFile(path.join(root, "guides", "assets", "case.png"), "png"),
+    writeFile(path.join(root, "guides", "assets", "diagram-manifest.json"), JSON.stringify({ diagrams: [] })),
+    writeFile(path.join(root, "guides", "use-cases", "use-case-manifest.json"), JSON.stringify(manifest)),
+  ]);
+}
+
 test("product inventory includes 14 product skills plus vendored Skillstead", async () => {
   const studio = await collectProductInventory(repoRoot, "game-design-studio");
   const career = await collectProductInventory(repoRoot, "game-design-career");
@@ -91,6 +136,25 @@ test("guide secret scanner includes root README while allowing empty-key example
     result = await validateUserGuides({ repoRoot: root, requireComplete: false });
     assert.ok(result.errors.some((error) => error.includes("README.md: nonempty OPENAI_API_KEY assignment")));
   });
+});
+
+test("aggregate validation prefixes duplicate, shape, and catalog use-case failures without trusting their diagram count", async () => {
+  const invalidManifests = [
+    ["duplicate", { version: 1, audience_paths: [validAudience(), validAudience()], cases: [], skill_cases: [] }, /duplicate id: AUD-01/u],
+    ["shape", { version: 1, audience_paths: [], cases: [validCase({ skills: undefined })], skill_cases: [] }, /cases\[0\]\.skills must be an array/u],
+    ["catalog", { version: 1, audience_paths: [], cases: [validCase({ skills: ["unknown-skill"] })], skill_cases: [] }, /unknown game-design-studio skill: unknown-skill/u],
+  ];
+
+  for (const [label, manifest, expected] of invalidManifests) {
+    await withGuideFixture({}, async (root) => {
+      await writeUseCaseValidationFixture(root, manifest);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
+
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.startsWith("use-case manifest: ") && expected.test(error)), label);
+      assert.equal(result.errors.some((error) => error.includes("diagram manifest must contain exactly")), false, `${label} does not trust malformed dynamic count`);
+    });
+  }
 });
 
 test("Markdown anchors avoid suffix collisions in either heading order", () => {
