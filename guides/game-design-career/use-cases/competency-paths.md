@@ -64,7 +64,10 @@ $game-design-career:map-game-design-career artifact=game-design-career/role-map 
 
 ### 실패·재개
 
-role evidence가 없으면 unknown을 보존합니다. **보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜. 사용자와 멘토가 role evidence 또는 과제 기록을 확인한 뒤에만 관찰 또는 짧은 과제로 재개합니다.
+- **실패:** role evidence가 없으면 unknown을 보존합니다.
+- **보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜.
+- **사람 확인:** 사용자와 멘토가 role evidence 또는 과제 기록을 확인합니다.
+- **재개:** 확인된 관찰 또는 짧은 과제로 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -132,7 +135,10 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 
 ### 실패·재개
 
-location 또는 권리가 불명확하면 해당 claim을 보류합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문. 작성자와 멘토가 공개 location 또는 권리를 확인한 뒤에만 보존한 관찰에서 재개합니다.
+- **실패:** location 또는 권리가 불명확하면 해당 claim을 보류합니다.
+- **보존:** 관찰 기록, evidence ID, 반례와 확인 질문.
+- **사람 확인:** 작성자와 멘토가 공개 location 또는 권리를 확인합니다.
+- **재개:** 보존한 관찰에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -165,7 +171,7 @@ location 또는 권리가 불명확하면 해당 claim을 보류합니다. **보
 1. 공고별 observation record에 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 함께 기록합니다.
 2. 예시 source는 기존 [공고 조사 스킬](../skills/research-game-design-jobs.md)의 `official company career page` 기준을 따르며, 실제 공식 HTTPS URL은 실행 시 기록합니다.
 3. 반복 신호는 제한된 표본의 추론으로 두고, 개인 evidence 부족은 portfolio proof task 제안으로 남깁니다.
-4. stale record는 `reviewAfter` 이후 재검색 전까지 current claim에 사용하지 않으며, 새 source ID로 이어서 기록합니다.
+4. **freshness boundary:** stale record는 `reviewAfter` 이후 재검색 전까지 current claim에 사용하지 않습니다. 재검색 결과는 새 source ID로 이어서 기록합니다.
 
 ### 포트폴리오·실무 확장
 
@@ -201,7 +207,10 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 ### 실패·재개
 
-공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record. Research Owner와 Portfolio Reviewer가 보존 기록과 재검색 범위를 확인한 뒤에만 공식 source를 재검색합니다. 새 source ID 또는 evidence ID와 freshness를 확인한 뒤 current conclusion을 재개합니다.
+- **실패:** 공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류합니다.
+- **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record.
+- **사람 확인:** Research Owner와 Portfolio Reviewer가 보존 기록과 재검색 범위를 확인합니다.
+- **재개:** 공식 source를 재검색합니다. 새 source ID 또는 evidence ID와 freshness를 확인합니다. 확인된 current conclusion을 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -269,7 +278,10 @@ $game-design-career:map-game-design-career artifact=game-design-career/learning-
 
 ### 실패·재개
 
-evidence가 비어 있으면 gap을 유지합니다. **보존:** evidence ID, matrix 행, 보류한 path와 review date. 작성자와 멘토가 작은 관찰 과제를 확인한 뒤에만 작은 관찰 과제로 되돌아갑니다.
+- **실패:** evidence가 비어 있으면 gap을 유지합니다.
+- **보존:** evidence ID, matrix 행, 보류한 path와 review date.
+- **사람 확인:** 작성자와 멘토가 작은 관찰 과제를 확인합니다.
+- **재개:** 작은 관찰 과제로 되돌아갑니다.
 
 ### 자기점검과 다음 학습
 
@@ -337,7 +349,10 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 
 ### 실패·재개
 
-source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding. public-rights reviewer가 source location, 권리와 개인 기여를 확인한 뒤에만 public-rights review 뒤 확인된 범위에서 재개합니다.
+- **실패:** source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존합니다.
+- **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding.
+- **사람 확인:** public-rights reviewer가 source location, 권리와 개인 기여를 확인합니다.
+- **재개:** 확인된 범위에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -405,7 +420,10 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 
 ### 실패·재개
 
-개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록. portfolio reviewer와 public-rights reviewer가 개인 기여와 권리를 확인한 뒤에만 public-rights review가 끝난 범위에서 재개합니다.
+- **실패:** 개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류합니다.
+- **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록.
+- **사람 확인:** portfolio reviewer와 public-rights reviewer가 개인 기여와 권리를 확인합니다.
+- **재개:** public-rights review가 끝난 범위에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -473,7 +491,10 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/por
 
 ### 실패·재개
 
-evidence가 claim을 지지하지 않으면 claim을 줄입니다. **보존:** `EVID-PR-01`, 관찰·추론·제안, 개인 기여 경계와 review history. portfolio reviewer와 멘토가 claim과 evidence를 확인한 뒤에만 backlog로 되돌립니다.
+- **실패:** evidence가 claim을 지지하지 않으면 claim을 줄입니다.
+- **보존:** `EVID-PR-01`, 관찰·추론·제안, 개인 기여 경계와 review history.
+- **사람 확인:** portfolio reviewer와 멘토가 claim과 evidence를 확인합니다.
+- **재개:** backlog로 되돌립니다.
 
 ### 자기점검과 다음 학습
 
@@ -541,7 +562,10 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/g
 
 ### 실패·재개
 
-fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문. 멘토·manager·career reviewer와 public-rights reviewer가 보존 기록과 재검색·재검토 범위를 확인한 뒤에만 requirement를 재검색하고 evidence를 갱신합니다. fresh requirement와 새 evidence ID, 개인 기여와 권리를 확인한 뒤 다음 proof task를 재개합니다.
+- **실패:** fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류합니다.
+- **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문.
+- **사람 확인:** 멘토·manager·career reviewer와 public-rights reviewer가 보존 기록과 재검색·재검토 범위를 확인합니다.
+- **재개:** requirement를 재검색하고 evidence를 갱신합니다. fresh requirement와 새 evidence ID, 개인 기여와 권리를 확인합니다. 확인된 다음 proof task를 재개합니다.
 
 ### 자기점검과 다음 학습
 
