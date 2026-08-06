@@ -28,6 +28,31 @@ const AUDIENCE_SECTION_HEADINGS = [
   "실행 요청",
   "결과와 검토·재개 경계",
 ];
+const STUDIO_COMPETENCY_CASE_MARKERS = [
+  "현재 상황과 목표",
+  "적합한 경우와 적합하지 않은 경우",
+  "준비 입력",
+  "10분 미니 실습",
+  "표준 실습",
+  "포트폴리오·실무 확장",
+  "Codex App 요청문",
+  "Codex CLI 요청문",
+  "스킬·템플릿 흐름",
+  "결과물",
+  "검토와 승인",
+  "실패·재개",
+  "자기점검과 다음 학습",
+];
+const STUDIO_COMPETENCY_HEADINGS = Object.freeze({
+  "ST-C01": "ST-C01 플레이어 경험과 게임 비전",
+  "ST-C02": "ST-C02 행동·핵심 루프·의미 있는 선택",
+  "ST-C03": "ST-C03 규칙·상태·예외·데이터",
+  "ST-C04": "ST-C04 UI·UX·온보딩·접근성",
+  "ST-C05": "ST-C05 콘텐츠·내러티브·퀘스트·NPC",
+  "ST-C06": "ST-C06 캐릭터·스킬·전투·몬스터",
+  "ST-C07": "ST-C07 성장·경제·밸런스·LiveOps",
+  "ST-C08": "ST-C08 제작·검토·이미지·출력",
+});
 const OUTPUT_TABLE_HEADINGS = [
   "사용자 요청",
   "템플릿",
@@ -225,6 +250,23 @@ async function readCommonGuides() {
   return { hub, audiencePaths, outputCatalog };
 }
 
+async function readStudioUseCaseGuides() {
+  const useCaseRoot = path.join(repoRoot, "guides", "game-design-studio", "use-cases");
+  const filenames = {
+    index: path.join(useCaseRoot, "README.md"),
+    competencyPaths: path.join(useCaseRoot, "competency-paths.md"),
+  };
+  for (const filename of Object.values(filenames)) {
+    const stat = await lstat(filename);
+    assert.ok(stat.isFile() && !stat.isSymbolicLink(), `expected regular file: ${filename}`);
+  }
+  const [index, competencyPaths] = await Promise.all([
+    readFile(filenames.index, "utf8"),
+    readFile(filenames.competencyPaths, "utf8"),
+  ]);
+  return { index, competencyPaths };
+}
+
 test("use-case manifest exposes the versioned three-lane contract", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   assert.equal(manifest.version, 1);
@@ -278,6 +320,98 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/use-cases/st-g10.png"));
   assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/skills/svg-infographic.md"));
   assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/skills/svg-infographic.png"));
+});
+
+test("Studio use-case index routes all eighteen cases without linking unfinished guide files", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { index } = await readStudioUseCaseGuides();
+  const studioCases = manifest.cases.filter((entry) => entry.product === "game-design-studio");
+  const links = [...index.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].map((match) => ({ label: match[1], target: match[2] }));
+
+  for (const entry of studioCases) {
+    const caseLinks = links.filter(({ label }) => label.includes(entry.id));
+    assert.equal(caseLinks.length, 1, `${entry.id} index link`);
+    if (entry.view === "competency") {
+      assert.equal(caseLinks[0].target, `competency-paths.md#${entry.anchor}`, `${entry.id} published route`);
+    } else {
+      assert.match(caseLinks[0].target, /^#st-g\d{2}-.+/, `${entry.id} scheduled local route`);
+      assert.match(caseLinks[0].label, /예정/, `${entry.id} scheduled label`);
+    }
+  }
+  assert.ok(!links.some(({ target }) => target.startsWith("concept-scenarios.md")), "unfinished concept guide is not linked");
+  assert.ok(links.some(({ target }) => target === "#스킬-워크벤치-예정"), "skill workbench scheduled route");
+  assert.ok(links.some(({ target }) => target === "#studio-faq-예정"), "Studio FAQ scheduled route");
+  assert.ok(links.some(({ target }) => target === "../../use-cases/output-catalog.md"), "output catalog route");
+  const indexAnchors = collectHeadingAnchors(index);
+  for (const { target } of links) {
+    const [relativePath, anchor] = target.split("#");
+    const targetMarkdown = relativePath
+      ? await readFile(path.resolve(repoRoot, "guides/game-design-studio/use-cases", relativePath), "utf8")
+      : index;
+    if (anchor) assert.ok(collectHeadingAnchors(targetMarkdown).has(anchor), `resolved index anchor: ${target}`);
+    if (!relativePath && anchor) assert.ok(indexAnchors.has(anchor), `local index anchor: ${target}`);
+  }
+
+  const decisionRows = tableRows(index, "역량·콘셉트·스킬 선택");
+  assert.deepEqual(decisionRows.map((row) => row["진입점"]), ["역량", "콘셉트", "스킬"]);
+  const learningPaths = sectionByHeading(index, 2, "학습 경로");
+  for (const pathName of ["입문", "응용", "포트폴리오", "전체 프로젝트"]) {
+    assert.match(learningPaths, new RegExp(`^### ${pathName}$`, "m"), `${pathName} path`);
+  }
+});
+
+test("each Studio competency case preserves its anchored case-card and executable review contract", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { competencyPaths } = await readStudioUseCaseGuides();
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "competency");
+  const h2Sections = markdownSections(competencyPaths, 2);
+  const anchors = collectHeadingAnchors(competencyPaths);
+
+  assert.equal(entries.length, 8);
+  assert.deepEqual(h2Sections.map(({ heading }) => heading), entries.map(({ id }) => STUDIO_COMPETENCY_HEADINGS[id]));
+  for (const entry of entries) {
+    assert.ok(anchors.has(entry.anchor), `${entry.id} manifest anchor`);
+    const caseSection = h2Sections.find(({ heading }) => heading === STUDIO_COMPETENCY_HEADINGS[entry.id]);
+    assert.ok(caseSection, `${entry.id} H2 section`);
+    const caseParts = markdownSections(caseSection.body, 3);
+    assert.deepEqual(caseParts.map(({ heading }) => heading), STUDIO_COMPETENCY_CASE_MARKERS, `${entry.id} case-card shape`);
+    for (const part of caseParts) assert.ok(part.body.length > 0, `${entry.id} ${part.heading} content`);
+    const byHeading = new Map(caseParts.map((section) => [section.heading, section.body]));
+
+    const appRequest = byHeading.get("Codex App 요청문");
+    assert.match(appRequest, /^```text\n@Game Design Studio .+\n```$/ms, `${entry.id} App request block`);
+    const cliRequest = byHeading.get("Codex CLI 요청문");
+    assert.match(cliRequest, /^```text\n\$game-design-studio:[\w-]+ .+\n```$/ms, `${entry.id} CLI request block`);
+
+    const flow = byHeading.get("스킬·템플릿 흐름");
+    for (const skill of entry.skills) assert.match(flow, new RegExp("`" + skill + "`"), `${entry.id} skill ${skill}`);
+    for (const template of entry.templates) assert.match(flow, new RegExp("`" + template + "`"), `${entry.id} template ${template}`);
+    assert.match(flow, /역할 경계/);
+
+    const results = byHeading.get("결과물");
+    for (const level of ["최소 결과", "선택 결과", "확장 결과", "파일 트리", "대표 내용"] ) {
+      assert.match(results, new RegExp("\\*\\*" + level + ":\\*\\*"), `${entry.id} ${level}`);
+    }
+    for (const output of entry.outputs) assert.match(results, new RegExp("`" + output + "`"), `${entry.id} output ${output}`);
+
+    const review = byHeading.get("검토와 승인");
+    assert.match(review, /\*\*사람 결정:\*\*/);
+    assert.match(review, /자동.*승인(?:하지 않|되지는 않)|승인을 대신하지 않/);
+    assert.match(review, /읽는 순서/);
+
+    const resume = byHeading.get("실패·재개");
+    assert.match(resume, /\*\*보존:\*\*/);
+    assert.match(resume, /\*\*재개 요청문:\*\*\n\n```text\n(?:@Game Design Studio|\$game-design-studio:)[^\n]+\n```/m, `${entry.id} executable resume`);
+  }
+
+  assert.doesNotMatch(competencyPaths, /!\[[^\]]*\]\([^)]+\)/, "Task 6 owns competency diagram embeds");
+  const productionCase = sectionByHeading(competencyPaths, 2, STUDIO_COMPETENCY_HEADINGS["ST-C08"]);
+  const productionPractice = sectionByHeading(productionCase, 3, "표준 실습");
+  for (const mode of ["prompt-only", "select", "required", "all"]) {
+    assert.match(productionPractice, new RegExp("`" + mode + "`"), `ST-C08 IMAGE_GEN_MODE ${mode}`);
+  }
+  assert.match(productionPractice, /OpenAI only/);
+  assert.match(productionPractice, /fallback을 하지 않습니다/);
 });
 
 test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async () => {
