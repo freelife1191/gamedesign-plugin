@@ -44,7 +44,7 @@ Narrative Owner **최유진**이 player choice와 ending boundary를, Production
 
 ## 실패와 재개
 
-system ID가 바뀌거나 rights evidence가 빠지면 해당 stage를 `blocked`로 두고 나머지 canonical text를 덮어쓰지 않습니다. artifact path와 blocked decision ID로 재개합니다.
+system ID가 바뀌거나 rights evidence가 빠지면 해당 stage를 `blocked`로 두고 나머지 canonical text를 덮어쓰지 않습니다. artifact path와 blocked decision ID로 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.
 
 ## 관련 기능
 

@@ -44,7 +44,7 @@ Accessibility Owner **이민아**가 각 critical action의 equivalent path와 v
 
 ## 실패와 재개
 
-플랫폼 evidence가 오래되었거나 input path가 누락되면 current-compliance 선언을 하지 않습니다. Artifact와 unverified state ID를 지정해 검증 단계부터 재개합니다.
+플랫폼 evidence가 오래되었거나 input path가 누락되면 current-compliance 선언을 하지 않습니다. Artifact와 unverified state ID를 지정해 검증 단계부터 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.
 
 ## 관련 기능
 

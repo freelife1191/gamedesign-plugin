@@ -44,7 +44,7 @@ Lead Designer **김서윤**이 target player, 세 가지 pillar, anti-pillar와 
 
 ## 실패와 재개
 
-근거가 부족하면 숫자나 시장 주장을 발명하지 않고 assumption과 validation task로 남깁니다. `content.md`와 `decisions/README.md`를 지정해 같은 Artifact에서 재개합니다.
+근거가 부족하면 숫자나 시장 주장을 발명하지 않고 assumption과 validation task로 남깁니다. `content.md`와 `decisions/README.md`를 지정해 같은 Artifact에서 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.
 
 ## 관련 기능
 

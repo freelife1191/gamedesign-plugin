@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
+import process from "node:process";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -9,11 +11,14 @@ import {
   parseViewBox,
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
-import { runSkillstead } from "../../products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const manifestPath = path.join(root, "guides/assets/diagram-manifest.json");
 const manifestDir = path.dirname(manifestPath);
+const skillsteadWrapperPath = fileURLToPath(new URL(
+  "../../products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs",
+  import.meta.url,
+));
 const recipeHeadings = [
   "완료 목표",
   "준비할 입력",
@@ -29,49 +34,49 @@ const recipes = [
     id: "new-game-gdd",
     diagramId: "vision-to-gdd-approval",
     skills: ["orchestrate-game-design-project", "apply-document-quality-profile", "define-game-vision", "review-game-design"],
-    artifact: "game-design/<project-id>/vision-pillars/",
-    template: "vision-pillars",
-    approver: "김서윤",
+    artifacts: ["game-design/<project-id>/vision-pillars/"],
+    templates: ["vision-pillars", "game-design-brief"],
+    approvers: ["김서윤"],
   },
   {
     id: "system-feature-spec",
     diagramId: "system-rule-state-exception-flow",
     skills: ["design-game-systems", "design-player-experience", "review-game-design"],
-    artifact: "game-design/<project-id>/system-specification/",
-    template: "system-specification",
-    approver: "박도현",
+    artifacts: ["game-design/<project-id>/system-specification/"],
+    templates: ["system-specification", "rule-exception-matrix"],
+    approvers: ["박도현", "이민아"],
   },
   {
     id: "content-quest-design",
     diagramId: "content-narrative-quest-map",
     skills: ["design-game-content", "design-game-systems", "plan-game-production"],
-    artifact: "game-design/<project-id>/narrative-quest-npc/",
-    template: "narrative-quest-npc",
-    approver: "최유진",
+    artifacts: ["game-design/<project-id>/narrative-quest-npc/"],
+    templates: ["narrative-quest-npc", "character-skill-combat-monster"],
+    approvers: ["최유진", "한지훈"],
   },
   {
     id: "ux-accessibility",
     diagramId: "studio-orchestration-map",
     skills: ["design-player-experience", "apply-document-quality-profile", "review-game-design"],
-    artifact: "game-design/<project-id>/ui-ux-flow-state/",
-    template: "ui-ux-flow-state",
-    approver: "이민아",
+    artifacts: ["game-design/<project-id>/ui-ux-flow-state/"],
+    templates: ["ui-ux-flow-state", "accessibility-platform-matrix"],
+    approvers: ["이민아", "김서윤"],
   },
   {
     id: "economy-liveops",
     diagramId: "economy-balance-liveops-loop",
     skills: ["design-game-economy-and-liveops", "design-game-systems", "plan-game-production"],
-    artifact: "game-design/<project-id>/economy-balance/",
-    template: "economy-balance",
-    approver: "정하늘",
+    artifacts: ["game-design/<project-id>/economy-balance/", "game-design/<project-id>/liveops-experiment-event/"],
+    templates: ["economy-balance", "liveops-experiment-event"],
+    approvers: ["정하늘", "윤태호"],
   },
   {
     id: "production-review-export",
     diagramId: "production-risk-review-flow",
-    skills: ["plan-game-production", "review-game-design", "export-game-design-documents"],
-    artifact: "game-design/<project-id>/production-scope-risk/",
-    template: "production-scope-risk",
-    approver: "한지훈",
+    skills: ["plan-game-production", "review-game-design", "plan-image-assets", "visualize-game-design", "export-game-design-documents"],
+    artifacts: ["game-design/<project-id>/production-scope-risk/", "game-design/<project-id>/game-design-review/"],
+    templates: ["production-scope-risk", "game-design-review", "decision-change-log"],
+    approvers: ["한지훈", "김서윤", "오지은"],
   },
 ];
 
@@ -81,6 +86,18 @@ function section(markdown, heading) {
   assert.ok(match, "missing section: " + heading);
   return match[1];
 }
+
+function assertCleanLintOutput(output, label) {
+  assert.match(output, /^check-svg: 0 error\(s\), 0 warning\(s\) across 1 file\(s\)$/m, label + " lint summary");
+}
+
+test("Skillstead lint summary rejects warning output", () => {
+  assertCleanLintOutput("check-svg: 0 error(s), 0 warning(s) across 1 file(s)\n", "clean fixture");
+  assert.throws(
+    () => assertCleanLintOutput("diagram.svg:1 warn W-TEXT warning\ncheck-svg: 0 error(s), 1 warning(s) across 1 file(s)\n", "warning fixture"),
+    /lint summary/,
+  );
+});
 
 function resolveManifestPath(value, field) {
   assert.equal(typeof value, "string", field + " must be a string");
@@ -115,8 +132,12 @@ test("Studio recipes have one primary diagram and the complete handoff contract"
     assert.ok(diagram.usedBy.includes("../game-design-studio/recipes/" + recipe.id + ".md"), recipe.id + " must be a manifest consumer");
 
     const input = section(markdown, "준비할 입력");
-    assert.ok(input.includes(recipe.artifact), recipe.id + " Canonical Artifact path family");
-    assert.match(input, new RegExp("`" + recipe.template + "`"), recipe.id + " template binding");
+    for (const artifact of recipe.artifacts) {
+      assert.ok(input.includes(artifact), recipe.id + " Canonical Artifact path family: " + artifact);
+    }
+    for (const template of recipe.templates) {
+      assert.match(input, new RegExp("`" + template + "`"), recipe.id + " template binding: " + template);
+    }
 
     const request = section(markdown, "복사 가능한 요청문");
     assert.match(request, /@Game Design Studio/, recipe.id + " App natural-language request");
@@ -130,9 +151,15 @@ test("Studio recipes have one primary diagram and the complete handoff contract"
     }
 
     const approval = section(markdown, "사람이 결정할 지점");
-    assert.ok(approval.includes(recipe.approver), recipe.id + " named human approval");
-    const result = section(markdown, "예상 결과");
-    assert.match(result, /renderer|Chromium|SVG/i, recipe.id + " renderer fallback");
+    for (const approver of recipe.approvers) {
+      assert.ok(approval.includes(approver), recipe.id + " named human approval: " + approver);
+    }
+    const resume = section(markdown, "실패와 재개");
+    assert.match(resume, /Chromium|renderer|capability/i, recipe.id + " renderer capability condition");
+    assert.match(resume, /없으면|unavailable/i, recipe.id + " renderer fallback condition");
+    assert.match(resume, /Canonical Artifact|canonical text/i, recipe.id + " canonical preservation");
+    assert.match(resume, /기존.*output|existing output/i, recipe.id + " existing output preservation");
+    assert.match(resume, /PNG.*unavailable/i, recipe.id + " PNG non-success fallback");
   }
 });
 
@@ -154,6 +181,8 @@ test("Studio manifest declares exactly six complete Studio diagram pairs", async
     assert.deepEqual(parseViewBox(svg), { w: 1400, h: 900 }, diagram.id + " viewBox");
     assert.ok(isCompletePng(pngPath), diagram.id + " PNG must end at IEND");
     assert.deepEqual(pngDims(pngPath), { w: 2800, h: 1800 }, diagram.id + " PNG must be exact 2×");
-    assert.equal(await runSkillstead("lint", [svgPath], { stdio: "pipe" }), 0, diagram.id + " wrapper lint");
+    const lint = spawnSync(process.execPath, [skillsteadWrapperPath, "lint", svgPath], { encoding: "utf8" });
+    assert.equal(lint.status, 0, diagram.id + " wrapper lint exit code: " + lint.stderr);
+    assertCleanLintOutput(lint.stdout + lint.stderr, diagram.id);
   }
 });

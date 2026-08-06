@@ -63,3 +63,16 @@ exit 0
 - `content-narrative-quest-map`: production gate에서 owner card 내부 `(1000,608)`으로 재라우팅해 target top `y=620`의 12px gap을 유지한다.
 - `economy-balance-liveops-loop`: rollback feedback target `(520,512)`이 economy card bottom `y=500`에서 12px gap을 유지한다.
 - 영향받은 세 PNG를 canonical Chrome 151 wrapper로 다시 렌더해 모두 `2800×1800`임을 확인하고 `view_image` high/original로 connector shaft, target gap, CJK glyph와 containment를 재검사했다.
+
+## Fix round 2 — 2026-08-06
+
+### RED → GREEN
+
+- production handoff fixture는 `$game-design-studio:plan-image-assets`와 `$game-design-studio:visualize-game-design` namespace가 누락되어 RED가 됐고, 강화 suite는 recipe fallback이 `실패와 재개` section에 없던 회귀도 포착했다.
+- production CLI 요청문에 두 namespace를 추가하고, 여섯 recipe의 `실패와 재개`에 Chromium/renderer/capability unavailable 조건, Canonical Artifact와 기존 owner output 보존, PNG `unavailable` 상태를 함께 기록해 GREEN으로 전환했다.
+- recipe expected table은 모든 recipe의 main skills, Artifact path family 배열, template 배열, named approver 배열을 검사한다. economy와 production의 두 Artifact family, production의 세 approver 및 image/visualize/export handoff를 포함한다.
+
+### Lint 출력 계약
+
+- wrapper lint 검사는 exit code뿐 아니라 `spawnSync`으로 stdout/stderr를 캡처해 각 pair의 `check-svg: 0 error(s), 0 warning(s) across 1 file(s)` summary를 요구한다.
+- 작은 fixture test는 warning 1건이 있는 summary가 이 parser를 통과하지 못함을 확인한다.

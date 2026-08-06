@@ -23,7 +23,7 @@ Codex App 자연어 요청:
 Codex CLI 명시 호출:
 
 ```text
-$game-design-studio:plan-game-production game-design/<project-id>/production-scope-risk/를 작성하고 $game-design-studio:review-game-design 뒤 $game-design-studio:export-game-design-documents로 renderer-neutral export manifest를 준비해.
+$game-design-studio:plan-game-production game-design/<project-id>/production-scope-risk/를 작성하고 $game-design-studio:review-game-design, $game-design-studio:plan-image-assets, $game-design-studio:visualize-game-design 뒤 $game-design-studio:export-game-design-documents로 renderer-neutral export manifest를 준비해.
 ```
 
 ## 단계별 진행
@@ -44,7 +44,7 @@ Production Owner **한지훈**이 scope와 kill criteria를, Review Decision Own
 
 ## 실패와 재개
 
-unsafe output, preflight failure 또는 unavailable renderer는 canonical text와 기존 owner output을 변경하지 않습니다. Artifact path, finding ID, requested format을 지정해 실패한 gate부터 재개합니다.
+unsafe output, preflight failure 또는 unavailable renderer는 canonical text와 기존 owner output을 변경하지 않습니다. Artifact path, finding ID, requested format을 지정해 실패한 gate부터 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.
 
 ## 관련 기능
 
