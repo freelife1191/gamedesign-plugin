@@ -88,3 +88,39 @@ git diff --check
 - `user-guides-studio`: 14 passed / 0 failed.
 - `user-guide-use-case-manifest`: 22 passed / 0 failed.
 - 두 `node --check` 명령과 `git diff --check`: exit 0.
+
+## Fix round 2
+
+### Findings addressed
+
+- export 직접 호출은 정상적으로 검증된 `pending` preparation job을 downstream renderer-and-QA workflow로 handoff하고, `unavailable`은 capability가 `available`로 바뀌었을 때만 preparation을 resume하도록 분리했습니다. 워크벤치도 `pending→downstream; unavailable→resume`으로 표시합니다.
+- `svg-infographic`와 `visualize-game-design`의 직접 호출 읽기 순서는 Node 18+ packaged-wrapper evidence, Node-free Chromium의 manual checklist·직접 Chromium evidence, Chromium 부재 때만 SVG-only/PNG verification 미실행을 각각 구분합니다.
+- `select`는 사용자가 제공한 ordered exact stable IDs로 선택하고 host adapter가 immutable selection receipt를 공급하도록 문장을 분리했습니다.
+- tests는 pending/unavailable 반전, Node-free branch의 wrapper 재라벨, H4 evidence branch와 workbench lifecycle 경계를 직접 검사합니다.
+
+### Findings open
+
+- 없음.
+
+### RED evidence
+
+```text
+node --check tests/contracts/user-guides-studio.test.mjs
+node --test tests/contracts/user-guides-studio.test.mjs
+```
+
+- 강화 계약 직후 `user-guides-studio`는 13 passed / 1 failed였습니다. 실패는 기존 export H4가 `renderer 또는 downstream workflow unavailable`만 downstream으로 보내어 정상 `pending` handoff trigger를 제공하지 않은 것이었습니다.
+
+### GREEN evidence
+
+```text
+node --test tests/contracts/user-guides-studio.test.mjs
+node --test tests/contracts/user-guide-use-case-manifest.test.mjs
+node --check tests/contracts/user-guides-studio.test.mjs
+node --check tests/contracts/user-guide-use-case-manifest.test.mjs
+git diff --check
+```
+
+- `user-guides-studio`: 14 passed / 0 failed.
+- `user-guide-use-case-manifest`: 22 passed / 0 failed.
+- 두 `node --check` 명령과 `git diff --check`: exit 0.

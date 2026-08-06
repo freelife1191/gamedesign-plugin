@@ -39,7 +39,7 @@ $game-design-studio:export-game-design-documents artifact=game-design/island/bri
 
 #### 다음 스킬 조건
 
-renderer 또는 downstream workflow가 unavailable일 때만 downstream renderer-and-QA workflow로 재개하며, 실제 generation·terminal validation·format QA·terminal outcome은 그 downstream workflow가 소유합니다. MD는 built-in canonical-markdown preparation을 별도 capability probe로 막지 않습니다.
+정상적으로 검증된 preparation manifest의 요청 job이 `pending`일 때만 downstream renderer-and-QA workflow로 handoff하며, 실제 generation·terminal validation·format QA·terminal outcome은 그 downstream workflow가 소유합니다. `unavailable` job의 capability가 `available`로 바뀌었을 때만 `$game-design-studio:export-game-design-documents`로 preparation을 resume하고, 새 `pending` job은 앞의 정상 handoff 조건을 따릅니다. MD는 built-in canonical-markdown preparation을 별도 capability probe로 막지 않습니다.
 
 ## 사용하지 않을 때
 

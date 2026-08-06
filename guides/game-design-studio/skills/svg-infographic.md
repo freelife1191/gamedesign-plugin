@@ -35,7 +35,7 @@ $game-design-studio:svg-infographic artifact=game-design/workbench/system Node 1
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `assets/ 아래 source-mapped editable SVG`를 확인합니다. Chromium render가 실제로 성공했을 때만 같은 assets 아래 2× PNG와 wrapper가 보존한 lint·render·visual QA evidence를 확인합니다. `editable-svg`, `png-2x`, `render-evidence`는 별도 파일명이 아닌 논리 결과입니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `assets/ 아래 source-mapped editable SVG`를 확인합니다. Node 18+ packaged wrapper branch에서는 machine lint와 packaged wrapper Chromium render를 통과했을 때만 같은 assets 아래 2× PNG와 wrapper evidence를 읽습니다. Node-free Chromium branch에서는 manual source checklist를 완료하고 machine lint와 packaged wrapper를 실행하지 않습니다. 직접 Chromium으로 2× PNG를 렌더한 뒤 manual evidence와 visual QA를 읽습니다. Chromium도 없을 때만 SVG-only draft로 제한하며 PNG visual verification은 미실행으로 기록합니다. `editable-svg`, `png-2x`, `render-evidence`는 별도 파일명이 아닌 논리 결과입니다.
 
 #### 다음 스킬 조건
 

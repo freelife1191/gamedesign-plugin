@@ -55,7 +55,7 @@ const DIRECT_USE_HANDOFFS = Object.freeze({
   "design-game-economy-and-liveops": [["보호 기준", "review-game-design"]],
   "design-game-systems": [["rule precedence", "review-game-design"]],
   "design-player-experience": [["critical action", "review-game-design"]],
-  "export-game-design-documents": [["renderer 또는 downstream workflow", "downstream"]],
+  "export-game-design-documents": [["정상적으로 검증된 preparation manifest의 요청 job이 `pending`", "downstream"], ["`unavailable` job의 capability가 `available`로 바뀌었", "export-game-design-documents"]],
   "generate-image-assets": [["named human approval", "review-image-assets"]],
   "orchestrate-game-design-project": [["선택된 route", "<selected-skill>"]],
   "plan-game-production": [["scope·risk", "review-game-design"]],
@@ -274,19 +274,57 @@ test("Studio direct-use boundaries preserve export preparation, image lifecycle,
     /terminal validation|format QA/i,
     "preparation must not claim downstream generation or QA",
   );
-  assert.match(exportFields["다음 스킬 조건"], /downstream renderer-and-QA workflow[\s\S]*terminal validation[\s\S]*format QA/i);
+  const exportHandoff = exportFields["다음 스킬 조건"];
+  assertConditionalDirectHandoff(exportHandoff, {
+    condition: "정상적으로 검증된 preparation manifest의 요청 job이 `pending`",
+    target: "downstream",
+    skillId: "export-game-design-documents",
+  });
+  assertConditionalDirectHandoff(exportHandoff, {
+    condition: "`unavailable` job의 capability가 `available`로 바뀌었",
+    target: "export-game-design-documents",
+    skillId: "export-game-design-documents",
+  });
+  assert.throws(
+    () => assertConditionalDirectHandoff(exportHandoff.replace("`pending`", "`unavailable`"), {
+      condition: "정상적으로 검증된 preparation manifest의 요청 job이 `pending`",
+      target: "downstream",
+      skillId: "mutated export pending handoff",
+    }),
+    "inverted pending handoff must fail",
+  );
 
   const workbench = await readFile(path.join(root, "guides/game-design-studio/use-cases/skill-workbench.md"), "utf8");
   assert.match(workbench, /`prompt-only`.*생성 없음/);
-  assert.match(workbench, /`select`.*stable-ID selection receipt/);
+  assert.match(workbench, /`select`.*사용자가 제공한 ordered exact stable IDs/);
+  assert.match(workbench, /host adapter.*immutable selection receipt/);
+  assert.doesNotMatch(workbench, /사용자가 제공한[^.\n]*selection receipt/);
   assert.match(workbench, /`required`.*`all`.*finite generation/);
   assert.match(workbench, /named human[\s\S]*concept-draft\s*→\s*document-approved\s*→\s*production-candidate/u);
+  const exportRow = workbench.split("\n").find((line) => line.includes("`export-game-design-documents`"));
+  assert.match(exportRow, /pending.*downstream.*unavailable.*resume/i, "workbench separates normal export handoff from unavailable resume");
 
   const svgGuide = await readFile(path.join(root, "guides/game-design-studio/skills/svg-infographic.md"), "utf8");
-  const svgAdvanced = directUseFields(extractDirectUseSection(svgGuide, "svg-infographic"), "svg-infographic")["고급 요청문"];
+  const svgFields = directUseFields(extractDirectUseSection(svgGuide, "svg-infographic"), "svg-infographic");
+  const svgAdvanced = svgFields["고급 요청문"];
   assert.match(svgAdvanced, /Node 18\+.*부재[\s\S]*manual source checklist[\s\S]*Node-free Chromium[\s\S]*2× PNG/u);
   assert.match(svgAdvanced, /Chromium.*없[\s\S]*SVG-only/u);
+  assertVisualizationReadBranches(svgFields["예상 파일과 읽는 순서"], "svg-infographic");
+
+  const visualizationGuide = await readFile(path.join(root, "guides/game-design-studio/skills/visualize-game-design.md"), "utf8");
+  const visualizationFields = directUseFields(extractDirectUseSection(visualizationGuide, "visualize-game-design"), "visualize-game-design");
+  assertVisualizationReadBranches(visualizationFields["예상 파일과 읽는 순서"], "visualize-game-design");
+  assert.throws(
+    () => assertVisualizationReadBranches(svgFields["예상 파일과 읽는 순서"].replace("Node-free Chromium branch", "packaged wrapper branch"), "mutated svg branch"),
+    "Node-free branch relabeled as wrapper must fail",
+  );
 });
+
+function assertVisualizationReadBranches(readOrder, skillId) {
+  assert.match(readOrder, /Node 18\+ packaged wrapper branch[\s\S]*machine lint[\s\S]*wrapper evidence/u, `${skillId}: wrapper evidence branch`);
+  assert.match(readOrder, /Node-free Chromium branch[\s\S]*manual source checklist[\s\S]*machine lint.*않[\s\S]*직접 Chromium[\s\S]*2× PNG/u, `${skillId}: Node-free evidence branch`);
+  assert.match(readOrder, /Chromium.*없[\s\S]*SVG-only[\s\S]*PNG visual verification.*미실행/u, `${skillId}: SVG-only branch`);
+}
 
 test("Studio skill contract rejects missing or reordered new sections", async () => {
   const markdown = await readFile(
