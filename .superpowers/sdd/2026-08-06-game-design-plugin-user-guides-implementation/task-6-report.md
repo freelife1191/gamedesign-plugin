@@ -46,3 +46,20 @@ exit 0
 
 - 구조 도식에는 imagegen을 사용하지 않았다.
 - Career diagrams 또는 기존 shared QA 행은 수정하지 않았다.
+
+## Fix round 1 — 2026-08-06
+
+### RED → GREEN
+
+- 강화한 `user-guide-studio-diagrams` 계약은 기존 `new-game-gdd`의 누락된 `$game-design-studio:apply-document-quality-profile` CLI namespace를 RED로 포착했다.
+- CLI 요청문을 명시 namespace 4개로 수정한 뒤 recipe contract 및 image-pair contract가 GREEN이 됐다.
+- 계약 테스트는 이제 recipe별 expected skill table, Artifact path family, template, App 요청, four IMAGE_GEN_MODE branch, named approver, renderer fallback, 정확한 8개 heading 순서를 section-scoped로 검사한다.
+- 같은 테스트가 shared Skillstead `parseViewBox`, `isCompletePng`, `pngDims`를 사용해 Studio SVG viewBox `1400×900`, PNG IEND 완전성, `2800×1800` exact 2×와 product wrapper lint를 6 pair 모두 자동 검사한다.
+
+### README와 시각 교정
+
+- Studio README에 manifest consumer인 `studio-orchestration-map`과 `vision-to-gdd-approval` PNG 링크를 추가했다.
+- `system-rule-state-exception-flow`: dashed feedback은 `(1120,512) → y=570 → (700,608)`으로 `system-specification` card top `y=620`의 12px 앞에 도착한다.
+- `content-narrative-quest-map`: production gate에서 owner card 내부 `(1000,608)`으로 재라우팅해 target top `y=620`의 12px gap을 유지한다.
+- `economy-balance-liveops-loop`: rollback feedback target `(520,512)`이 economy card bottom `y=500`에서 12px gap을 유지한다.
+- 영향받은 세 PNG를 canonical Chrome 151 wrapper로 다시 렌더해 모두 `2800×1800`임을 확인하고 `view_image` high/original로 connector shaft, target gap, CJK glyph와 containment를 재검사했다.

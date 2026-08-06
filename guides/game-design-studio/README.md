@@ -18,6 +18,11 @@ Game Design Studio는 게임 비전에서 시스템·콘텐츠·플레이어 경
 - [경제·LiveOps](recipes/economy-liveops.md)
 - [제작 검토·내보내기](recipes/production-review-export.md)
 
+대표 도식:
+
+- [Studio 오케스트레이션 맵](../assets/game-design-studio/studio-orchestration-map.png)
+- [비전에서 GDD 승인까지](../assets/game-design-studio/vision-to-gdd-approval.png)
+
 ## 가이드 목차
 
 현재 사용할 수 있는 진입 문서:

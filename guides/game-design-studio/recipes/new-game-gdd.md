@@ -23,7 +23,7 @@ Codex App 자연어 요청:
 Codex CLI 명시 호출:
 
 ```text
-$game-design-studio:orchestrate-game-design-project game-design/<project-id>/vision-pillars/의 content.md를 기준으로 define-game-vision, apply-document-quality-profile, review-game-design을 순서대로 실행해.
+$game-design-studio:orchestrate-game-design-project game-design/<project-id>/vision-pillars/의 content.md를 기준으로 $game-design-studio:apply-document-quality-profile, $game-design-studio:define-game-vision, $game-design-studio:review-game-design을 순서대로 실행해.
 ```
 
 ## 단계별 진행
