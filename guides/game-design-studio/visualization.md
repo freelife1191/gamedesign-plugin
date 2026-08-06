@@ -2,6 +2,8 @@
 
 도식은 prose보다 관계를 더 분명하게 할 때만 만듭니다. `visualize-game-design`이 preset과 source mapping을 먼저 선택하고, vendored Skillstead `svg-infographic`은 그 구조를 authoring·lint·render합니다.
 
+[![Studio 오케스트레이션 예시](../assets/game-design-studio/studio-orchestration-map.png)](../assets/game-design-studio/studio-orchestration-map.svg)
+
 ## Diagram decision
 
 loop, state transition, progression, economy source/sink, roadmap, dependency와 role 구조는 적합할 수 있습니다. 단순 목록은 본문이나 표로 유지합니다. 통계 정확성이 필요한 bar/line/scatter/heatmap은 chart capability를 사용합니다. character art, background scene illustration, mascot, logo와 marketing illustration에는 Skillstead를 사용하지 않습니다.

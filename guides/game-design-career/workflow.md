@@ -11,6 +11,8 @@ Career는 현재 단계를 진단한 뒤 필요한 근거만 조사하고, 작�
 → MD/PDF/DOCX/PPTX 내보내기
 ```
 
+[![Canonical Artifact 승인 흐름](../assets/shared/canonical-artifact-lifecycle.png)](../assets/shared/canonical-artifact-lifecycle.svg)
+
 ## 1. 단계 진단
 
 목표 역할, 경력 상태, 보유 자료, 시간과 지역·플랫폼 제약을 정규화해 `entry`, `new-hire`, `junior-growth`, `transition` 중 하나를 고릅니다. 역할이나 단계가 불명확하면 `unclear`로 두고 여러 임시 경로와 기회비용을 비교합니다.

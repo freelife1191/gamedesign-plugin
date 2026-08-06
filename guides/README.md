@@ -17,6 +17,15 @@
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
 
+## 전체 가이드 탐색
+
+각 제품 인덱스는 15개 스킬, 15개 템플릿, 6개 목적별 레시피와 설치·빠른 시작·workflow·품질·이미지·시각화·내보내기·문제 해결을 모두 연결합니다.
+
+| 제품 | 시작 | 전체 카탈로그 | 목적별 작업 |
+| --- | --- | --- | --- |
+| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 15개](game-design-studio/skills/README.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
+| Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 15개](game-design-career/skills/README.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
+
 ## 지원 환경
 
 이 저장소가 안내하는 플러그인 표면은 ChatGPT 데스크톱 앱의 Work 또는 Codex와 Codex CLI입니다. IDE 확장, 모바일, 일반 Chat에서는 플러그인을 사용할 수 있다고 가정하지 않습니다.

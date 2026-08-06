@@ -23,6 +23,8 @@ IMAGE_QUALITY=low
 
 label, position, inferred intent, agent selection과 arbitrary JSON은 `select` 증거가 아닙니다.
 
+[![IMAGE_GEN_MODE 선택 흐름](../assets/shared/image-generation-mode-routing.png)](../assets/shared/image-generation-mode-routing.svg)
+
 ## Provider routing
 
 - `OPENAI_API_KEY`가 있으면 OpenAI only입니다. OpenAI Images API/auth/quota/billing/invalid-request/policy/network 실패 뒤 Codex fallback을 쓰지 않습니다.
@@ -37,6 +39,8 @@ portfolio proof, recruiter presentation, 역기획 evidence와 roadmap에 이미
 Skillstead는 source-backed role/competency/learning dependency의 editable SVG와 정확한 2× PNG를 위한 별도 slot입니다. portfolio illustration, screenshot, cover와 서로 다른 provenance·alt text·approval evidence를 유지합니다.
 
 ## 승인 경계
+
+[![이미지 자산 승인 흐름](../assets/shared/image-asset-lifecycle.png)](../assets/shared/image-asset-lifecycle.svg)
 
 ```text
 concept-draft → document-approved → production-candidate

@@ -21,7 +21,9 @@ const requiredHeadings = [
 ];
 
 function extractFirstColumnIds(markdown) {
-  return [...markdown.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]).sort();
+  return [...markdown.matchAll(/^\| (?:`([^`]+)`|\[`([^`]+)`\]\([^)]+\)) \|/gm)]
+    .map((match) => match[1] ?? match[2])
+    .sort();
 }
 
 test("Studio documents every installed skill with the common contract", async () => {

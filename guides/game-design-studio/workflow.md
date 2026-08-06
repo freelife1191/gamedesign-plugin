@@ -10,6 +10,8 @@ Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니�
 → MD/PDF/DOCX/PPTX 내보내기
 ```
 
+[![Canonical Artifact 승인 흐름](../assets/shared/canonical-artifact-lifecycle.png)](../assets/shared/canonical-artifact-lifecycle.svg)
+
 ## 1. 비전
 
 대상 플레이어, 핵심 재미, 기획 의도, 세 가지 안팎의 설계 원칙, non-goals와 검증 기준을 정합니다. 입력이 부족하면 가정과 미확정 결정을 분리한 brief를 먼저 만듭니다.

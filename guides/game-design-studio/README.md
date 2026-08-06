@@ -20,8 +20,8 @@ Game Design Studio는 게임 비전에서 시스템·콘텐츠·플레이어 경
 
 대표 도식:
 
-- [Studio 오케스트레이션 맵](../assets/game-design-studio/studio-orchestration-map.png)
-- [비전에서 GDD 승인까지](../assets/game-design-studio/vision-to-gdd-approval.png)
+- [![Studio 오케스트레이션 맵](../assets/game-design-studio/studio-orchestration-map.png)](../assets/game-design-studio/studio-orchestration-map.svg)
+- [![비전에서 GDD 승인까지](../assets/game-design-studio/vision-to-gdd-approval.png)](../assets/game-design-studio/vision-to-gdd-approval.svg)
 
 ## 가이드 목차
 
@@ -40,6 +40,8 @@ Game Design Studio는 게임 비전에서 시스템·콘텐츠·플레이어 경
 - [이미지 자산](image-assets.md)
 - [시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
+
+각 스킬 ID는 [스킬 15개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
 
 ## 작업 원칙
 

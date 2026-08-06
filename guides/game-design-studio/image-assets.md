@@ -21,6 +21,8 @@ IMAGE_QUALITY=low
 | `required` | manifest에서 required로 선언된 유한 asset만 | 선언된 count 밖의 asset을 만들지 않습니다. |
 | `all` | declared required, recommended, variant asset 전부 | 선언되지 않은 variant를 발명하지 않습니다. |
 
+[![IMAGE_GEN_MODE 선택 흐름](../assets/shared/image-generation-mode-routing.png)](../assets/shared/image-generation-mode-routing.svg)
+
 ## Provider routing
 
 - `OPENAI_API_KEY`가 있으면 OpenAI only입니다. OpenAI Images API/auth/quota/billing/request/policy/network 실패 후 Codex fallback은 금지됩니다.
@@ -33,6 +35,8 @@ IMAGE_QUALITY=low
 `plan-image-assets`는 profile slot, explicit count, stable source ID, placement, alt text, dimensions와 preserve/exclude를 manifest에 기록합니다. `generate-image-assets`는 mode와 immutable receipt가 허용한 finite jobs만 실행하고 generation/provenance와 approval state를 분리합니다. 부분 성공이나 policy block도 asset별 상태로 남깁니다.
 
 ## 승인 경계
+
+[![이미지 자산 승인 흐름](../assets/shared/image-asset-lifecycle.png)](../assets/shared/image-asset-lifecycle.svg)
 
 승인은 다음 순서로만 이동합니다.
 

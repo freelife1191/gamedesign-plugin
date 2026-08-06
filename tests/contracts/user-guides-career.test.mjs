@@ -38,7 +38,9 @@ const expectedTemplateIds = [
 ];
 
 function extractFirstColumnIds(markdown) {
-  return [...markdown.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]).sort();
+  return [...markdown.matchAll(/^\| (?:`([^`]+)`|\[`([^`]+)`\]\([^)]+\)) \|/gm)]
+    .map((match) => match[1] ?? match[2])
+    .sort();
 }
 
 function extractSection(markdown, heading) {

@@ -2,6 +2,8 @@
 
 Studio export skill은 Canonical Artifact를 검증하고 renderer-neutral 작업을 준비합니다. 실제 생성, renderer와 terminal QA는 별도 trusted workflow가 소유합니다.
 
+[![문서 내보내기 준비 상태 흐름](../assets/shared/document-export-flow.png)](../assets/shared/document-export-flow.svg)
+
 ## 공통 preflight
 
 artifact directory/version, recipe, requested formats, safe output directory, capability snapshot, audience, purpose와 overwrite policy를 수집합니다. canonical validation이 실패하면 형식 작업을 중단하고 source path, command, exit code와 결과를 보존합니다.

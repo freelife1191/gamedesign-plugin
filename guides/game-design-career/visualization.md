@@ -2,6 +2,8 @@
 
 Career 도식은 role, competency, learning, portfolio와 growth 관계가 prose나 표보다 분명할 때만 사용합니다. `visualize-career-roadmap`이 preset과 source mapping을 고르고 vendored Skillstead가 SVG를 authoring·lint·render합니다.
 
+[![Career 역할·학습 로드맵 예시](../assets/game-design-career/role-gap-learning-roadmap.png)](../assets/game-design-career/role-gap-learning-roadmap.svg)
+
 ## Preset 선택
 
 | Preset | 관계 | 제외 조건 |

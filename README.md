@@ -1,493 +1,146 @@
 # Game Design Plugin Suite
 
-Game Design Plugin Suite는 전문 게임 기획을 두 개의 독립 Codex 플러그인으로 제공합니다.
+Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와 게임 기획 경력을 준비하기 위한 **Game Design Career**를 독립 플러그인으로 제공합니다. 각 플러그인은 `content.md`를 내용 기준으로 하는 Canonical Artifact에 근거, 결정, 자산과 형식별 상태를 함께 보존합니다.
 
-- **Game Design Studio**는 게임 비전, 시스템, 콘텐츠, UX, 경제·LiveOps, 제작 계획, 검토를 다룹니다.
-- **Game Design Career**는 진로 탐색, 채용 조사, 역기획, 포트폴리오, 면접, 주니어 성장을 다룹니다.
-
-두 플러그인은 `docs/`의 한국어 게임 기획 문서 49개, 검토된 Core 지식, 2026년 8월 4일 기준 Current 근거, 책임 있는 설계 게이트, Canonical Artifact, Skillstead 도식화, 문서 내보내기 계약을 공유합니다. 빌드 결과는 공통 파일을 각 패키지에 복제하므로 한 제품만 설치해도 다른 플러그인이나 저장소 원천에 의존하지 않습니다.
-
-> 이 도구는 기획 판단과 근거 관리를 돕습니다. 흥행, 매출, 채용 합격, 법률 준수 또는 플랫폼 승인을 보장하지 않습니다.
+> 이 도구는 기획 판단과 근거 관리를 돕습니다. 재미·흥행·매출·채용 합격·법률 준수·플랫폼 승인 또는 사람의 승인을 보장하지 않습니다.
 
 ## 어떤 플러그인을 설치할까
 
-| 구분 | Game Design Studio | Game Design Career |
+| 지금 하려는 일 | 설치할 플러그인 | 첫 결과 |
 | --- | --- | --- |
-| 주요 사용자 | 현업·인디 게임 기획자, 프로듀서, 개발팀 | 입문자, 취업 준비생, 주니어, 이직 준비자 |
-| 대표 작업 | GDD, 규칙·상태, 콘텐츠, UI/UX, 경제, LiveOps, 범위·리스크 | 역할 맵, 채용 근거, 역기획, 포트폴리오, 면접, 성장 계획 |
-| 제품 스킬 | 14개 | 14개 |
-| 전문 역할 프롬프트 | 일반 7개 + 이미지 전문 2개 | 일반 7개 + 이미지 전문 2개 |
-| Canonical Artifact 템플릿 | 15개 | 15개 |
-| 제품 프로필 | `universal-core`, `live-service-rpg`, `mobile`, `pc-console` | 경력 단계 `entry`, `new-hire`, `junior-growth`, `transition` |
-| 도식화 | 게임 루프, 상태, 경제, 콘텐츠, LiveOps, 의존성 | 역량 맵, 학습·경력 로드맵, 포트폴리오 구조 |
-| 권장 선택 | 실제 게임을 설계·검토·운영할 때 | 게임 기획 역량과 경력 증거를 만들 때 |
+| 게임 비전, 시스템, 콘텐츠, UX, 경제·LiveOps, 제작 계획을 실제 작업 문서로 연결 | Game Design Studio | 검토 가능한 게임 기획 Canonical Artifact |
+| 역할 탐색, 채용 근거, 역기획, 포트폴리오, 면접, 성장 계획을 연결 | Game Design Career | 근거가 연결된 Career Canonical Artifact |
+| 두 일을 각각 진행 | 둘 다 | 서로 섞이지 않는 두 작업 기준 |
 
-두 목적이 모두 필요하면 둘 다 설치할 수 있습니다. 설치 상태와 실행 문맥은 서로 독립적입니다.
+각 제품에는 **제품 스킬 14개**와 번들 **Skillstead** 시각화 스킬 1개가 있어, 제품마다 총 **15개** 스킬이 설치됩니다. Skillstead는 별도 제품 기능이 아니라 편집 가능한 SVG 도식과 검증된 2× PNG를 만드는 공통 번들 스킬입니다.
 
-자세한 제품별 카탈로그는 [Studio 문서](plugins/game-design-studio/README.md)와 [Career 문서](plugins/game-design-career/README.md)를 참고하십시오.
+[![Studio와 Career 선택·설치 흐름](guides/assets/shared/plugin-selection-flow.png)](guides/assets/shared/plugin-selection-flow.svg)
 
-## 전체 구조
+- [Game Design Studio 사용자 가이드](guides/game-design-studio/README.md)
+- [Game Design Career 사용자 가이드](guides/game-design-career/README.md)
+- [두 제품을 비교하는 전체 가이드](guides/README.md)
 
-```mermaid
-flowchart LR
-    D[docs/ 원문 49개] --> K[shared/ 지식·계약·Skillstead]
-    K --> B[결정론적 clean build]
-    S[products/game-design-studio] --> B
-    C[products/game-design-career] --> B
-    B --> PS[plugins/game-design-studio]
-    B --> PC[plugins/game-design-career]
-    PS --> IS[Studio 단독 설치]
-    PC --> IC[Career 단독 설치]
-```
+## 지원 환경
 
-```text
-game-design-plugin-suite/
-├── .agents/plugins/marketplace.json   # game-design-suite 로컬 marketplace
-├── docs/                              # 원문 49개, 설계·아키텍처 문서
-├── shared/                            # 두 제품이 공유하는 편집 원천
-│   ├── knowledge/                     # Core, Current, 원문 인덱스와 정책
-│   ├── responsible-design/            # 7개 책임 게이트
-│   ├── export/                        # 스키마, 테마, 형식별 QA 계약
-│   ├── hooks/ 및 scripts/             # capability probe, one-retry review
-│   ├── templates/                     # 공통 Canonical Artifact 원형
-│   └── vendor/skillstead/             # svg-infographic 0.8.3 잠금 원본
-├── products/
-│   ├── game-design-studio/plugin/     # Studio 전용 편집 원천
-│   └── game-design-career/plugin/     # Career 전용 편집 원천
-├── tooling/                           # 인덱스, 감사, 빌드, 검증, smoke
-├── tests/                             # unit, contract, product, E2E, format, isolation
-└── plugins/
-    ├── game-design-studio/            # 독립 설치 가능한 생성 스냅샷
-    └── game-design-career/            # 독립 설치 가능한 생성 스냅샷
-```
+이 안내는 ChatGPT 데스크톱 앱의 **Work 또는 Codex**와 **Codex CLI**를 대상으로 합니다. IDE 확장, 모바일, 일반 Chat에서 플러그인을 사용할 수 있다고 가정하지 않습니다.
 
-`shared/`와 `products/`가 편집 원천입니다. `plugins/`는 `npm run build`가 재생성하는 배포 스냅샷이므로 직접 수정하지 마십시오. 자세한 경계와 구성 요소는 [플러그인 스위트 아키텍처](architecture/plugin-suite.md)에 있습니다.
+- App: 저장소를 로컬 프로젝트 또는 작업 폴더로 열고 Plugins에서 설치합니다.
+- CLI: Node.js 18 이상과 `codex plugin` 명령을 지원하는 Codex CLI가 필요합니다.
+- PDF·DOCX·PPTX·PNG는 해당 renderer capability와 형식별 QA가 있어야 합니다. capability가 없으면 기준 Markdown과 실패·차단 상태를 보존합니다.
 
-## 요구 사항
+App과 CLI의 설치·활성화 UI는 다릅니다. App에서 CLI의 `/plugins` 활성화 키를 사용하지 않으며, CLI 설치 뒤에는 App의 Plugins UI를 대신 사용하지 않습니다.
 
-- Codex CLI의 plugin 명령을 지원하는 버전
-- Node.js 18 이상
-- 로컬 설치에는 이 저장소 checkout과 `.agents/plugins/marketplace.json`
-- PDF·DOCX·PPTX·PNG 생성에는 해당 renderer capability가 필요합니다. capability가 없으면 Canonical MD를 보존하고 누락 형식을 명시합니다. 저장본 기반 대표 DOCX/PPTX 시각 QA는 macOS Quick Look, Chromium과 Poppler가 모두 필요하며 다른 환경에서는 검증을 건너뛰지 않고 명시적으로 실패합니다.
+## Codex App 설치
 
-현재 저장소가 사용하는 명령 문법은 Codex CLI `0.146.0`의 `codex plugin ... --help`와 repository smoke test로 확인했습니다.
+1. 저장소 루트를 로컬 프로젝트 또는 작업 폴더로 엽니다.
+2. `.agents/plugins/marketplace.json`의 top-level `name`이 `game-design-suite`인지 확인합니다.
+3. ChatGPT 데스크톱 앱을 다시 시작한 뒤 **Codex**를 선택하거나 **ChatGPT → Work**를 켭니다.
+4. **Plugins**에서 marketplace `game-design-suite`를 열고 필요한 제품을 설치합니다.
+5. 설치 직후 **새 채팅**을 열고 `@Game Design Studio` 또는 `@Game Design Career`를 선택합니다.
 
-## 설치
+제품별 화면 절차와 제거 방법은 [Studio App 설치](guides/game-design-studio/installation.md#codex-app-설치) 및 [Career App 설치](guides/game-design-career/installation.md#codex-app-설치)에 있습니다.
 
-저장소 루트에서 로컬 marketplace를 등록합니다.
+## Codex CLI 설치
+
+`<path-to-repository-root>`는 `.agents/plugins/marketplace.json`이 있는 실제 저장소 경로로 바꿉니다.
 
 ```bash
-codex plugin marketplace add .
-```
-
-marketplace 이름 `game-design-suite`와 설치 가능한 제품을 확인합니다.
-
-```bash
+codex plugin marketplace add <path-to-repository-root>
 codex plugin marketplace list
 codex plugin list
+codex plugin add game-design-studio@game-design-suite
 ```
 
-필요한 플러그인만 설치합니다.
+Career도 필요하면 다음 선택자를 추가합니다.
 
 ```bash
-codex plugin add game-design-studio@game-design-suite
 codex plugin add game-design-career@game-design-suite
 ```
 
-한 제품만 필요하면 나머지 `plugin add` 명령은 실행하지 마십시오. 설치 후 새 Codex 작업을 시작하면 새 스킬과 hook을 확실하게 로드할 수 있습니다.
+`PLUGIN@MARKETPLACE` 선택자를 유지해야 합니다. 또는 CLI 세션에서 `/plugins`를 열고 `game-design-suite` 탭에서 설치할 수 있으며, 이 화면의 `Space`는 **CLI 전용 활성화 전환**입니다. 설치 확인은 `codex plugin list`에서 plugin ID, marketplace, 설치·활성 상태를 확인한 뒤 **새 세션**에서 스킬을 호출하는 것입니다.
 
-`products/.../plugin`이나 `plugins/...` 경로를 `codex plugin add`에 직접 전달하지 마십시오. `plugin add`는 등록된 marketplace의 플러그인 선택자를 받습니다.
+Git marketplace의 `codex plugin marketplace upgrade game-design-suite`는 marketplace snapshot을 refresh할 뿐 설치된 플러그인을 교체하지 않습니다. 로컬 marketplace는 그 refresh 대상이 아니므로 checkout을 갱신·검증한 뒤 해당 제품을 제거하고 다시 설치합니다. 자세한 절차는 [Studio CLI 설치·업데이트](guides/game-design-studio/installation.md#codex-cli-설치)와 [Career CLI 설치·업데이트](guides/game-design-career/installation.md#codex-cli-설치)를 따르세요.
 
-## 업데이트
+## 5분 빠른 시작
 
-로컬 marketplace는 Git snapshot을 자동으로 fetch하지 않습니다. 저장소를 갱신하고 배포 스냅샷을 검증한 뒤 설치한 제품을 재설치합니다.
+아래 요청문 하나를 새 App 채팅 또는 새 CLI 세션에 복사하세요. 모르는 정보는 꾸며내지 말고 `미정`으로 남깁니다.
 
-```bash
-npm run build
-npm run validate
-codex plugin remove game-design-studio@game-design-suite
-codex plugin add game-design-studio@game-design-suite
-```
-
-Career도 같은 방식으로 `game-design-career@game-design-suite`를 제거한 뒤 다시 추가합니다. Git marketplace로 등록한 환경에서는 먼저 다음 명령으로 marketplace snapshot을 갱신할 수 있습니다.
-
-```bash
-codex plugin marketplace upgrade game-design-suite
-```
-
-## 제거
-
-플러그인은 서로 독립적으로 제거합니다.
-
-```bash
-codex plugin remove game-design-studio@game-design-suite
-codex plugin remove game-design-career@game-design-suite
-```
-
-두 제품을 모두 제거했고 이 marketplace를 더 이상 사용하지 않을 때만 marketplace 등록도 제거합니다.
-
-```bash
-codex plugin marketplace remove game-design-suite
-```
-
-## 실행 모델
-
-```mermaid
-flowchart LR
-    U[목표·자료·제약] --> O[제품 오케스트레이터]
-    O --> R[최소 스킬·reference 선택]
-    R --> A[Canonical 초안]
-    A --> V[전문 역할 검토]
-    V --> G{완료 게이트}
-    G -- 수정 필요 --> A
-    G -- 통과 --> C[Canonical Artifact]
-    C --> D[Skillstead SVG·PNG]
-    C --> E[MD·PDF·DOCX·PPTX]
-```
-
-오케스트레이터는 요청 전체를 모든 스킬에 보내지 않습니다. 필요한 최소 체인을 선택하고, 복합 검토에만 최대 3개 역할을 사용합니다. 호스트가 병렬 서브에이전트를 지원하면 서로 독립적인 검토를 병렬 실행하고, 지원하지 않으면 같은 역할·질문·정렬 규칙으로 순차 실행합니다.
-
-`agents/*.md`는 스킬이 역할 검토에 전달하는 **이식 가능한 역할 프롬프트 자산**입니다. 플러그인 설치만으로 네이티브 에이전트 자동 발견이나 별도 프로세스 실행을 보장하지 않습니다. 병렬 실행은 성능 최적화이며, 순차 fallback도 같은 검토 계약과 결과 병합 규칙을 사용합니다.
-
-### Hooks와 scripts
-
-각 독립 패키지에는 같은 두 hook과 14개 shared top-level runtime script가 있습니다.
-
-| 경로 | 역할 |
-| --- | --- |
-| `hooks/hooks.json`의 `SessionStart` | Node, Chromium, LibreOffice와 문서 renderer capability를 읽기 전용 점검 |
-| `hooks/hooks.json`의 `Stop` | active Canonical Artifact에 한해 최대 한 번 추가 검토를 요청 |
-| `scripts/capability-probe.mjs` | 사용할 수 있는 선택 capability 보고 |
-| `scripts/stop-artifact-review.mjs` | 재진입을 차단하는 one-retry review |
-| `scripts/validate-artifact.mjs` | Canonical Artifact 구조·근거·내보내기 계약 검증 |
-
-제품별 helper는 각 `skills/<skill-id>/scripts/`에 있습니다. Studio는 프로필 합성, 역할 병합, 공개 재배포 가드, 시각화와 export 검증을 포함하고, Career는 역할 병합, 채용 근거, 경력 시나리오, 시각화와 export 검증을 포함합니다.
-
-## 설치된 top-level scripts
-
-| 파일 | 역할 |
-| --- | --- |
-| `build-image-asset-plan.mjs` | 품질 profile과 artifact에서 결정론적 image asset plan 생성 |
-| `capability-probe.mjs` | 선택 renderer capability 점검 |
-| `compile-image-prompts.mjs` | 사람용 Markdown과 기계용 JSON prompt package 생성 |
-| `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
-| `generate-openai-images.mjs` | 명시적 OpenAI Images API adapter와 bounded staging/QA |
-| `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
-| `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
-| `run-image-asset-workflow.mjs` | plan/generate/review image workflow의 안전한 composition |
-| `stop-artifact-review.mjs` | one-retry Stop artifact review |
-| `validate-artifact.mjs` | Canonical Artifact 검증 |
-| `validate-image-assets.mjs` | asset manifest·generation/approval lifecycle 검증 |
-| `validate-image-config.mjs` | redacted image configuration 검증 |
-| `validate-quality-profile.mjs` | closed Quality Profile 검증 |
-| `validate-reference-preset.mjs` | neutral reference preset 검증 |
-
-## 설치된 document-quality 경로
-
-아래 경로는 각 `plugins/<product>/references/shared/document-quality/` 아래에 byte-identical하게 설치됩니다.
-
-| 상대 경로 | 내용 |
-| --- | --- |
-| `indexes/career.json` | Career closed selection index |
-| `indexes/studio.json` | Studio closed selection index |
-| `profiles/career/` | Career 13-profile catalog |
-| `profiles/studio/` | Studio 17-profile catalog |
-| `overlays/` | additive overlay 3개 |
-| `presets/` | neutral reference preset 7개 |
-| `render-contracts/long-form-document.json` | 장문 문서 render contract |
-| `render-contracts/presentation.json` | presentation render contract |
-| `render-contracts/review-report.json` | review report render contract |
-| `schema/quality-profile-selection.schema.json` | profile selection schema |
-| `schema/quality-profile.schema.json` | Quality Profile schema |
-| `schema/reference-preset.schema.json` | neutral preset schema |
-
-## Document Quality Profiles
-
-두 플러그인은 문서마다 정확히 하나의 primary profile을 선택하는 닫힌 품질 계약을 공유합니다. Studio 17개 profile과 Career 13개 profile이 goal, audience, artifact type, requested format, template ID를 기준으로 선택됩니다. 알려진 명시적 override는 호환성을 검증하고, 알 수 없는 요청은 `nearest profile`과 차이를 기록합니다. 알려진 호환 fallback이 함께 지정되지 않으면 임의 profile로 진행하지 않습니다.
-
-각 제품의 `references/document-quality/template-profile-map.json`은 빌드된 패키지에서만 읽는 canonical map입니다. production API는 caller-authored map을 받지 않습니다. 30개 template은 각각 하나의 알려진 primary profile에 매핑됩니다. additive overlay 3개(`mobile`, `pc-console`, `live-service`)와 neutral reference preset 7개(`competitive-live-service`, `replayable-coop`, `evolving-world`, `function-first`, `player-validated-small-team`, `cinematic-narrative`, `ugc-production-tooling`)는 primary requirement와 안전 게이트를 삭제하거나 약화할 수 없습니다.
-
-선택은 stable section/table/Skillstead diagram/image/acceptance checklist ID와 digest-bound requirement manifest를 만듭니다. 상태는 `draft → structurally-complete → evidence-reviewed → visual-reviewed → document-approved`로만 전진하며, 외부 inspection/reviewer/human approval receipt가 필요합니다. Skillstead slot, generated image와 render는 renderer/visual review 전까지 승인 증거가 아닙니다.
-
-neutral preset의 authoring-only source 근거는 빌드에서 제외됩니다. 패키지와 결과는 source 회사·프로젝트명, 상표, URL, 로고, 이미지·레이아웃을 노출하거나 회사가 작성한 공식 형식 또는 공식 endorsement를 주장하지 않습니다. 현재 품질 profile은 구조·story·검토 계약이며 후속 rendering/image 기능의 완성을 의미하지 않습니다.
-
-설치된 고급 계약은 `plugins/game-design-studio/references/shared/document-quality/`와 `plugins/game-design-career/references/shared/document-quality/`에서 독립적으로 검사할 수 있습니다. 각 디렉터리에는 closed schemas, 제품별 profile/index, render contracts, additive overlays와 neutral presets가 들어 있습니다.
-
-## 스킬 카탈로그
-
-각 제품은 제품 스킬 14개와 vendored `svg-infographic` 1개, 총 15개 스킬을 포함합니다.
-
-### Game Design Studio
-
-| 스킬 | 핵심 작업 |
-| --- | --- |
-| `orchestrate-game-design-project` | 요청 정규화, 프로필 합성, 최소 워크플로, 완료 게이트 |
-| `apply-document-quality-profile` | primary profile 선택, additive composition, checklist와 상태 gate |
-| `define-game-vision` | 목표 플레이어, 의도 경험, pillars, core/motivation loop |
-| `design-game-systems` | 규칙, 상태, 우선순위, 예외, 데이터 계약 |
-| `design-game-content` | 퀘스트, 레벨, 인카운터, 캐릭터, 적, 내러티브 단위 |
-| `design-player-experience` | UI/UX 흐름, 온보딩, 입력, 접근성 |
-| `design-game-economy-and-liveops` | source/sink, 확률·가격 투명성, 이벤트, 실험, 롤백 |
-| `plan-game-production` | 프로토타입, 범위, 마일스톤, 위험, 중단 기준 |
-| `review-game-design` | 근거·모순·실행 가능성·책임 게이트 검토 |
-| `visualize-game-design` | 게임 기획 구조를 Skillstead SVG/2× PNG로 도식화 |
-| `export-game-design-documents` | MD/PDF/DOCX/PPTX 파생본과 QA manifest |
-| `plan-image-assets` | stable asset ID, placeholder, manifest와 dual prompt package 계획 |
-| `generate-image-assets` | 선택 receipt와 provider policy에 따른 유한 job 실행 또는 placeholder 보존 |
-| `review-image-assets` | 이름 있는 사람의 evidence/rights review로 image approval lifecycle 전이 |
-
-### Game Design Career
-
-| 스킬 | 핵심 작업 |
-| --- | --- |
-| `orchestrate-game-design-career` | 경력 단계, 목표, 자료, 제약과 완료 조건 정규화 |
-| `apply-document-quality-profile` | primary profile 선택, additive composition, checklist와 상태 gate |
-| `map-game-design-career` | 역할군, 교환조건, 역량 공백과 증거 과제 비교 |
-| `research-game-design-jobs` | 현재 공식 채용 근거와 표본 한계 조사 |
-| `build-game-design-portfolio` | 주장-근거 색인, 기여도, 포트폴리오 사례 구성 |
-| `reverse-engineer-game-design` | 관찰·사실·추론·대안·반증을 분리한 역기획 |
-| `practice-game-design-interview` | 공고·포트폴리오 근거에 연결된 면접 연습 |
-| `review-game-design-portfolio` | 5축 관찰 상태와 최소 수정 큐 |
-| `plan-junior-growth` | 분기 증거 프로젝트, 피드백, 이직 준비도 |
-| `visualize-career-roadmap` | 역량·학습·경력·포트폴리오를 Skillstead로 도식화 |
-| `export-career-documents` | MD/PDF/DOCX/PPTX 파생본과 QA manifest |
-| `plan-image-assets` | stable asset ID, placeholder, manifest와 dual prompt package 계획 |
-| `generate-image-assets` | 선택 receipt와 provider policy에 따른 유한 job 실행 또는 placeholder 보존 |
-| `review-image-assets` | 이름 있는 사람의 evidence/rights review로 image approval lifecycle 전이 |
-
-`svg-infographic`은 [kyungseo/skillstead](https://github.com/kyungseo/skillstead)의 0.8.3 원본을 양쪽 패키지에 고정한 공통 스킬입니다.
-
-## 전문 역할
-
-| Studio 역할 | 검토 책임 | Career 역할 | 검토 책임 |
-| --- | --- | --- | --- |
-| `lead-game-designer` | 의도 경험, core loop, scope coherence | `career-strategist` | 복수 경로와 교환조건 |
-| `document-quality-editor` | 문서 구조·story contract 최소 수정 | `document-quality-editor` | 문서 구조·story contract 최소 수정 |
-| `system-economy-designer` | 규칙·상태·데이터·경제 투명성 | `game-design-mentor` | 연습과 검토 가능한 기획 증거 |
-| `content-narrative-designer` | 콘텐츠 목적·의존·내러티브·권리 | `portfolio-reviewer` | 주장·기여·근거 위치 |
-| `ux-accessibility-reviewer` | critical path, 입력, 상태, 접근성 | `reverse-design-critic` | 관찰·추론·반증 경로 |
-| `liveops-data-designer` | 가설, 대조군, 지표, 가드레일, 롤백 | `interview-coach` | 사실 기반 답변과 성찰 |
-| `production-feasibility-critic` | 의존성, 일정, 프로토타입, kill criteria | `evidence-auditor` | 출처, 최신성, 범위, 일반화 한계 |
-
-역할 프롬프트는 기준 산출물 전체를 임의로 다시 쓰거나 자신의 책임 밖 게이트를 승인하지 않습니다. finding은 source ID, severity, evidence, impact, affected section, assumptions와 최소 수정안을 유지합니다.
-
-### 이미지 전문 역할 레지스트리
-
-| 역할 ID | 책임 | 일반 역할과의 분리 |
-| --- | --- | --- |
-| `art-brief-director` | art brief, prompt 제약, character/NPC/monster-boss/skill-VFX/environment/item/UI/story/key-art/document 유형 검토 | 일반 역할 우선순위·병합 권한을 바꾸지 않으며 approval authority가 없음 |
-| `visual-asset-reviewer` | output readability, provenance, Skillstead evidence와 rights/privacy 누락 검토 | 사람의 immutable receipt나 document/production approval을 대신할 수 없음 |
-
-일반 역할 레지스트리와 image specialist registry를 분리해 기존 일반 검토 체인·우선순위는 7개로 고정합니다. 두 이미지 전문 역할은 필요한 image workflow에만 명시적으로 배치되며 승인자가 아닙니다.
-
-## 이미지 asset workflow
-
-각 독립 플러그인의 root `.env.example`은 설치 안전한 예시입니다. tracked `.env`에 실제 키를 쓰거나 채팅/문서에 키를 붙여넣지 마십시오. 실제 설정은 설치된 플러그인의 작업공간 root `.env`에서만 읽고 Git에는 `.env.example`만 추적합니다.
-
-```dotenv
-IMAGE_GEN_MODE=prompt-only
-IMAGE_MODEL=gpt-image-2
-IMAGE_QUALITY=low
-OPENAI_API_KEY=
-```
-
-`IMAGE_GEN_MODE`의 허용 값은 정확히 `prompt-only`, `select`, `required`, `all` 네 가지이며 기본값은 `prompt-only`입니다. `IMAGE_MODEL=gpt-image-2`, `IMAGE_QUALITY=low`가 기본값이고 품질은 `low`, `medium`, `high`, `auto`만 허용합니다. `OPENAI_API_KEY`는 OpenAI Images API에만 전달되는 비밀값이며 public manifest, prompt, 로그, receipt에는 기록하지 않습니다.
-
-| mode | 실행 범위 | prompt/placeholder | 선택·비용 경계 |
-| --- | --- | --- | --- |
-| `prompt-only` | 외부 provider 호출 0회 | 항상 유지 | 기본값, 계획만 수행 |
-| `select` | 실제 사용자가 고른 stable asset ID만 | 항상 유지 | user stable IDs와 immutable receipt 전에는 호출 0회 |
-| `required` | manifest에 선언된 required asset만 | 항상 유지 | 유한한 required count만 비용/대기 발생 |
-| `all` | 선언된 required/recommended/variant asset만 | 항상 유지 | manifest 밖 variant를 만들지 않음 |
-
-provider/failure matrix는 다음과 같습니다. API key가 있으면 **OpenAI only**입니다. 인증, quota, request, policy, network 실패 뒤에도 Codex fallback을 하지 않습니다. API key가 없고 host capability가 `available`이면 Codex/host만 사용할 수 있습니다. capability가 `unknown` 또는 `unavailable`이면 provider를 추측하지 않고 prompts/placeholders를 유지합니다. local runtime은 private host endpoint를 호출하지 않습니다.
-
-| API key | host capability | provider 결과 | 실패 또는 불확실성 |
-| --- | --- | --- | --- |
-| 있음 | 어떤 값이든 | OpenAI only | 실패도 OpenAI 실패로 기록, fallback 없음 |
-| 없음 | `available` | Codex/host | host가 실제 보고한 applied model/quality만 provenance에 기록 |
-| 없음 | `unknown`/`unavailable` | provider 없음 | prompts/placeholders와 generation-unavailable 상태 유지 |
-
-계획은 모든 mode에서 `assets/image-assets.yml`, `assets/prompts/image-prompts.md`, `assets/prompts/image-prompts.json`을 유지하고 expected count와 placeholder를 기록합니다. 지원 유형은 character, NPC, monster/boss, skill/VFX, environment/landmark, item/equipment, UI icon, story/storyboard, key art/pitch concept, document illustration/cover, Skillstead diagram입니다.
-
-generation 상태와 승인 상태는 별개입니다. 새 asset은 `concept-draft`이며, 이름 있는 사람의 placement·alt text·evidence·rights/provenance 검토로만 `document-approved`, 그 뒤 기술 적합성·게임 가독성·권리 검토가 추가된 `production-candidate`로 이동합니다. `production-candidate는 release/legal/production approval이 아님`: 출시, 법무, 실제 제작 승인을 주장하지 않습니다. generated/host provenance는 사실대로 남기며 host가 applied model/quality를 보고하지 않으면 값을 발명하지 않습니다. 사람 검토는 제3자 권리, 개인정보, 민감 정보, 접근성, 사실성 및 맥락을 별도로 확인해야 합니다.
-
-Skillstead SVG는 도식화의 권위 있는 원본입니다. 정확히 하나의 title/desc와 alt text를 제공하고 product wrapper lint, renderer, 정확한 @2x PNG, visual QA, evidence를 분리합니다. lint 통과나 PNG 존재만으로 approval이 되지 않습니다. MD/PDF/DOCX/PPTX export의 final derivative는 document-approved 이상 image만 참조할 수 있으며, PPTX는 제목 분할이 아닌 독립 story와 visual QA를 추가로 요구합니다.
-
-`npm run smoke:image:live`는 한 장의 외부 generation을 위한 explicit opt-in live smoke입니다. 기본 test/build/smoke는 no-network이고 이를 실행하지 않습니다. image capability가 없으면 plan만 보존하고 host capability를 확인합니다. render가 없으면 SVG와 실패 근거를 보존하며 PNG 성공을 주장하지 않습니다. manifest/prompt가 없으면 먼저 `plan-image-assets`를 실행하고, select가 멈추면 stable ID와 immutable receipt가 실제 user input에서 왔는지 확인합니다.
-
-## 지식과 근거
-
-두 패키지는 같은 49개 원문을 `references/source/docs/`에 포함합니다.
-
-| 범주 | 문서 수 |
-| --- | ---: |
-| 경력·취업 | 13 |
-| 재미·기획 의도 | 10 |
-| 시스템 기획 | 13 |
-| 콘텐츠 기획 | 10 |
-| 기획서 피드백 | 3 |
-
-지식은 세 층으로 분리합니다.
-
-1. **Core**: 원문 중 중복을 제거하고 적용 한계를 표시한 안정적 원칙
-2. **Source**: 사례와 맥락을 확인하는 사용자 제공 원문 49개
-3. **Current**: 정책, 플랫폼, 접근성, AI 권리, 경제·LiveOps, UGC, 시장처럼 시점 의존적인 공식 근거
-
-Current register는 2026년 8월 4일에 검토한 1차 출처 14개를 기록합니다. 이 날짜는 최신성의 상한이지 영구 보증이 아닙니다. 각 주장에는 검색일, 적용 지역, 한계, 재검토 시점과 충돌 상태를 남기며, 새 1차 근거가 로컬 문서와 충돌하면 충돌을 숨기지 않고 최신 근거를 우선합니다.
-
-원문 49개는 플러그인 MIT License로 재허가되지 않았고 공개 재배포 권리도 확립되지 않았습니다. 로컬·사설 사용 범위를 벗어난 배포 전에는 문서별 권리 근거를 확인해야 합니다. Studio 패키지는 [권리 매니페스트](plugins/game-design-studio/references/source-document-rights.json)와 공개 재배포 fail-closed 가드를 포함합니다. 자세한 정책은 [지식·근거 아키텍처](architecture/knowledge-and-evidence.md)를 참고하십시오.
-
-## Canonical Artifact
-
-모든 주요 결과는 하나의 기준 원본 패키지로 관리합니다.
+**Studio**
 
 ```text
-artifact-name/
-├── content.md             # 유일한 내용 기준
-├── evidence.yml           # 주장, 출처, 한계, 최신성
-├── decisions/             # 선택, 대안, 부작용, 승인
-├── assets/                # 도식·이미지, alt text, 권리
-└── export-manifest.yml    # 청중, 목적, 형식, QA 상태
+@Game Design Studio 모바일 협동 RPG의 대상 플레이어, 핵심 재미, 세 가지 설계 원칙과 검증 기준을 게임 기획 브리프로 만들어줘.
 ```
 
-도식화나 특정 renderer가 실패해도 Canonical Artifact와 이미 검증된 출력을 덮어쓰지 않습니다.
+**Career**
 
-## 도식화
+```text
+@Game Design Career 시스템 기획과 콘텐츠 기획 중 목표가 아직 정해지지 않았어. 주 8시간, 솔로 프로토타입만 가능해. 두 경로의 교환조건과 공백을 비교하고 12주 증거 로드맵을 만들어줘.
+```
 
-제품 wrapper는 포함된 Skillstead `svg-infographic` 0.8.3을 사용해 게임 기획용 preset을 선택합니다. SVG는 편집 가능한 기준 자산이고, PNG는 Chromium 2× 렌더 후 정확한 크기와 픽셀 상태를 검증한 파생본입니다.
+명시적 스킬 호출, 예상 Artifact와 다음 요청은 [Studio 5분 빠른 시작](guides/game-design-studio/quick-start.md)과 [Career 5분 빠른 시작](guides/game-design-career/quick-start.md)을 사용합니다.
 
-- Studio: core/motivation loop, 상태·규칙 흐름, 퀘스트·콘텐츠 진행, 경제 source/sink, LiveOps 로드맵, 제작 의존성
-- Career: 역량 맵, 12주 학습 로드맵, 포트폴리오 정보 구조, 경력 의사결정과 피드백 루프
+## 기획 문서 템플릿
 
-브라우저 renderer가 없거나 SVG lint가 실패하면 편집 가능한 SVG와 미검증 상태만 제공하며 PNG 성공을 보고하지 않습니다. 대표 검증 fixture는 [Studio 시각화](tests/formats/output/studio-live-service-rpg-economy/visualization.svg)와 [Career 시각화](tests/formats/output/career-entry-12-week-roadmap/visualization.svg)입니다.
+모든 주요 결과는 `content.md`, `evidence.yml`, `decisions/`, `assets/`, `export-manifest.yml`을 가진 Canonical Artifact로 시작합니다. `content.md`만이 내용 기준이며, 대화·렌더 결과·생성 이미지가 이를 대체하지 않습니다.
+
+| 제품 | 15개 Canonical Artifact 템플릿의 용도 | 전체 카탈로그 |
+| --- | --- | --- |
+| Studio | 비전, 시스템 명세, 콘텐츠·퀘스트, UX·접근성, 경제·LiveOps, 제작 범위와 검토 | [Studio 템플릿 15개](guides/game-design-studio/templates.md) |
+| Career | 경력 단계·목표, 역량 gap, 공고 근거, 역기획, 포트폴리오, 면접과 성장 | [Career 템플릿 15개](guides/game-design-career/templates.md) |
+
+작성 전에는 [Studio Quality Profile](guides/game-design-studio/document-quality.md) 또는 [Career Quality Profile](guides/game-design-career/document-quality.md)로 목적·청중·형식에 맞는 필수 섹션과 사람 승인 게이트를 선택합니다.
+
+## 이미지와 도식화
+
+이미지 계획·생성·검토와 구조 도식은 별도 단계입니다.
+
+- `IMAGE_GEN_MODE`는 `prompt-only`, `select`, `required`, `all` 네 값만 허용합니다. 기본 `prompt-only`는 외부 호출 없이 prompt와 placeholder만 보존합니다.
+- 비어 있지 않은 `OPENAI_API_KEY`가 있으면 OpenAI Images API만 사용합니다. 키가 없고 host image capability가 `available`일 때만 Codex/host 경로를 사용하며, `unknown` 또는 `unavailable`이면 prompt-only fallback을 유지합니다.
+- 생성 파일은 자동 승인되지 않습니다. 이름 있는 사람이 placement, alt text, evidence, rights/privacy를 검토해 `document-approved` 이상으로 올려야 문서 파생본에 사용할 수 있습니다.
+- 관계를 설명해야 할 때는 Skillstead가 editable SVG를 기준 자산으로 만들고, renderer와 QA가 가능할 때만 정확한 2× PNG를 파생합니다.
+
+상세 정책은 [Studio 이미지 자산](guides/game-design-studio/image-assets.md), [Career 이미지 자산](guides/game-design-career/image-assets.md), [Studio 시각화](guides/game-design-studio/visualization.md), [Career 시각화](guides/game-design-career/visualization.md)에 있습니다.
 
 ## 문서 내보내기
 
-| 형식 | 생성 의미 | 성공 조건 |
+MD·PDF·DOCX·PPTX는 문서 내보내기 lane이고 SVG·PNG는 시각화 lane입니다. 내보내기 준비 상태는 다음 의미를 갖습니다.
+
+| 상태 | 의미 |
+| --- | --- |
+| `not-requested` | 요청하지 않은 형식 |
+| `blocked` | Canonical validation 또는 필수 증거가 부족함 |
+| `pending` | capability probe 전이거나 사용 가능한 capability 확인 뒤 준비 대기 |
+| `unavailable` | probe가 해당 renderer capability 부재를 확인함 |
+
+파일이 생기거나 renderer가 실행된 사실만으로 성공·QA 통과·승인이 되지 않습니다. renderer가 없거나 QA가 실패하면 Canonical Artifact, 기존 검증 결과와 가능한 MD를 보존하고 실패한 형식만 재개합니다. [Studio 내보내기](guides/game-design-studio/exports.md)와 [Career 내보내기](guides/game-design-career/exports.md)에서 형식별 renderer fallback을 확인하세요.
+
+## 상세 사용 가이드
+
+| 가이드 | Studio | Career |
 | --- | --- | --- |
-| MD | Canonical content의 휴대 가능한 파생본 | frontmatter, H1, 링크, 로컬 자산, Unicode 검증 |
-| PDF | 공유·검토용 고정 레이아웃 | 구조·페이지별 정규화 텍스트 SHA-256·source set, 저장본 전 페이지 재렌더 QA |
-| DOCX | 편집 가능한 Office 문서 | bounded ZIP과 모든 member CRC, 전체 OOXML relationship target, 페이지별 source set, 저장본 전 페이지 재렌더 QA |
-| PPTX | 청중별 발표 스토리 | 독립 outline, 모든 member CRC, 실제 slide/notes 순서와 전체 relationship target, 정확한 source set, overflow, 저장본 전 슬라이드 재렌더 QA |
-| SVG | 편집 가능한 도식 기준 | Skillstead lint, 접근성 텍스트, source mapping |
-| PNG | 공유용 raster 도식 | SVG 기준 2× 렌더, 정확한 크기, 픽셀 QA |
-
-MD/PDF/DOCX/PPTX는 문서 export lane, SVG/PNG는 시각화 lane입니다. 요청 목록에는 함께 기록할 수 있지만 PNG를 문서 renderer 결과로 취급하지 않습니다. 대표 검증의 `artifact-manifest.json`은 산출물 hash와 각 QA 이미지 hash를 결속하며, verifier가 저장된 산출물을 새 임시 디렉터리에 다시 렌더해 승인본과 byte 단위로 대조합니다. runtime metadata의 독립 값뿐 아니라 문자열 안에 삽입되거나 percent-encoding된 host 절대경로도 거부합니다. 자세한 변환과 fail-closed 조건은 [내보내기 파이프라인](architecture/export-pipeline.md)에 있습니다.
-
-## 사용 예시
-
-설치 후 자연어로 요청하거나, 명확한 라우팅이 필요하면 플러그인 접두사가 붙은 오케스트레이터 스킬을 지정합니다.
-
-### Studio: 라이브 서비스 RPG 경제
-
-> 일일 미션에서 소프트 재화를 얻고 업그레이드에 쓰는 경제를 설계해 줘. 목표 보유량은 5,000이야. source/sink, 공개 확률, 인플레이션 가드레일, 실험 가설, 자동 롤백을 Canonical Artifact와 경제 흐름 SVG로 만들고 MD/PDF/DOCX/PPTX로 내보내 줘.
-
-명시적 진입점은 `$game-design-studio:orchestrate-game-design-project`입니다.
-
-### Studio: 시스템 명세 검토
-
-> 이 전투 규칙 문서를 상태 전이, 우선순위, 동시성, 예외, 서버 권위, 데이터 테이블과 테스트 케이스 관점에서 검토해. 추정한 값은 승인된 사실과 분리해 줘.
-
-### Career: 12주 입문 로드맵
-
-> 시스템 기획과 콘텐츠 기획 중 목표가 아직 정해지지 않았어. 주 8시간, 솔로 프로토타입만 가능해. 두 경로의 교환조건과 공백을 비교하고 12주 증거 로드맵, 역량 SVG, MD/PDF/DOCX/PPTX를 만들어 줘.
-
-명시적 진입점은 `$game-design-career:orchestrate-game-design-career`입니다.
-
-### Career: 현재 채용 근거
-
-> 한국 주니어 시스템 기획 공고를 회사 공식 채용 페이지에서 조사해. 공고별 사실과 반복 신호를 분리하고 게시일, 검색일, 표본 크기, 지역, blind spot과 일반화 한계를 기록해 줘.
-
-## 책임 있는 설계 게이트
-
-적용 가능한 항목은 `not-applicable`, `pending`, `blocked`, `approved` 중 하나로 기록합니다.
-
-- AI 권리·동의와 인간 승인
-- 접근성
-- 경제·확률·가상 화폐 투명성
-- LiveOps 실험과 롤백
-- UGC 안전, 신고와 이의제기
-- AI NPC 행동·기억·fallback 안전
-- 범위·비용·책임자 통제
-
-플러그인은 근거 없는 수치, 지원자 경력, 기여, 구현 상태, 승인 또는 테스트 결과를 채우지 않습니다.
-
-## 검증
-
-저장소 루트에서 실행합니다. 외부 npm 의존성이 없으므로 별도 `npm install` 단계가 없습니다.
-
-```bash
-npm test
-npm run validate
-npm run test:formats
-node tests/formats/verify-formats.mjs tests/formats/output
-npm run validate:release
-```
-
-- `npm test`: unit, contract, product와 대표 E2E를 실행합니다.
-- `npm run validate`: reference drift, evidence, vendor hash, 전체 테스트, clean build drift, 공식 package·skill validator, isolation smoke, 준비된 format smoke를 실행합니다.
-- `npm run test:formats`: 포맷 공격 회귀 테스트 7개 파일과 대표 산출물 verifier를 함께 실행합니다.
-- `node tests/formats/verify-formats.mjs tests/formats/output`: 대표 Studio·Career 산출물의 형식 검증을 실행합니다.
-- `npm run validate:release`: `FORMAT-RESULTS.md`와 대표 출력까지 준비된 상태에서만 release-ready로 종료합니다.
-- `npm run smoke:marketplace`: 임시 격리 환경에서 각 제품의 marketplace 등록, 설치, 실제 설치 스킬 호출 증거, 제거와 정리를 검증합니다. 로컬 Codex 인증과 실행 시간이 필요하므로 일반 빠른 검증과 분리했습니다.
-
-페이지·슬라이드별 시각 검토와 source binding 결과는 [대표 형식 검증 결과](tests/formats/FORMAT-RESULTS.md)에 기록되어 있습니다.
+| 설치·새 채팅/세션 | [설치](guides/game-design-studio/installation.md) | [설치](guides/game-design-career/installation.md) |
+| 첫 Artifact | [5분 빠른 시작](guides/game-design-studio/quick-start.md) | [5분 빠른 시작](guides/game-design-career/quick-start.md) |
+| 작업 순서·재개 | [전체 워크플로](guides/game-design-studio/workflow.md) | [전체 워크플로](guides/game-design-career/workflow.md) |
+| 15개 스킬·15개 템플릿 | [스킬](guides/game-design-studio/skills/README.md) · [템플릿](guides/game-design-studio/templates.md) | [스킬](guides/game-design-career/skills/README.md) · [템플릿](guides/game-design-career/templates.md) |
+| 목적별 레시피 6개 | [Studio 레시피](guides/game-design-studio/README.md#목적별-레시피) | [Career 레시피](guides/game-design-career/README.md#목적별-레시피) |
 
 ## 문제 해결
 
-### 플러그인이 목록에 없다
+- 플러그인이 보이지 않으면 App은 Work/Codex의 Plugins인지, CLI는 `codex plugin marketplace list`와 `codex plugin list`인지 확인합니다.
+- 설치했지만 호출되지 않으면 기존 대화를 계속 쓰지 말고 App은 **새 채팅**, CLI는 **새 세션**에서 확인합니다.
+- 이미지·PNG·PDF·DOCX·PPTX가 없으면 capability와 manifest의 `blocked`/`unavailable` 원인을 확인하고, 기준 Markdown·SVG·기존 검증 결과는 덮어쓰지 않습니다.
+- 개인정보, 비공개 회사 자료, 제3자 권리 또는 최신 근거가 부족하면 해당 claim·자산을 승인하지 않고 gap과 다음 검토 작업을 남깁니다.
 
-저장소 루트에서 marketplace를 등록했는지와 manifest를 확인합니다.
+증상별 안전 복구와 복사 가능한 재개 요청문은 [Studio 문제 해결](guides/game-design-studio/troubleshooting.md)과 [Career 문제 해결](guides/game-design-career/troubleshooting.md)을 참고하세요.
 
-```bash
-codex plugin marketplace list
-codex plugin list
-```
+## 기술 문서·기여·라이선스
 
-`game-design-suite`가 없으면 `codex plugin marketplace add .`를 다시 실행합니다. 설치 후에는 새 Codex 작업을 시작합니다.
-
-### 생성 스냅샷 drift가 발생한다
-
-`plugins/`를 직접 고치지 말고 원천을 수정한 뒤 다시 빌드합니다.
-
-```bash
-npm run build
-npm run validate
-```
-
-### PDF, DOCX, PPTX 또는 PNG가 생성되지 않는다
-
-이 동작은 renderer 부재나 QA 실패 시 의도적으로 fail-closed 합니다. Canonical Artifact의 `export-manifest.yml`에서 capability와 실패 원인을 확인하고, renderer를 복구한 뒤 해당 형식을 다시 요청하십시오. 미검증 파일을 성공 결과로 간주하지 마십시오.
-
-### 최신 주장에 출처가 없다
-
-정책, 채용, 시장, 플랫폼, 법률·규제, 가격·확률, 도구 버전은 로컬 원문만으로 확정하지 않습니다. `references/shared/knowledge/trends/source-register.json`에 적용 가능한 최신 1차 출처와 검색일·지역·한계를 기록한 뒤 다시 검토합니다.
-
-## 기여 워크플로
-
-1. 공통 변경은 `shared/`, 제품 변경은 해당 `products/<product>/plugin/`에서 편집합니다.
-2. 원문을 추가하거나 바꾸면 reference index와 권리·provenance 상태를 갱신합니다.
-3. Skillstead를 갱신하면 upstream 버전, 라이선스, 파일별 hash lock과 wrapper 호환성을 함께 검증합니다.
-4. `npm test`와 `npm run validate`를 통과시킵니다.
-5. `npm run build`로 두 스냅샷을 clean build하고 drift를 다시 검사합니다.
-6. 문서 또는 renderer 동작을 바꿨다면 두 제품의 MD/PDF/DOCX/PPTX/SVG/PNG 대표 fixture와 시각 QA를 갱신합니다.
-
-## 라이선스와 제한
-
-- 프로젝트가 작성한 코드, 템플릿, 설정과 문서는 각 패키지의 MIT License를 따릅니다.
-- vendored Skillstead `svg-infographic` 0.8.3은 Apache-2.0이며 upstream 라이선스와 제3자 고지를 유지합니다.
-- 사용자 제공 원문 49개와 포함된 제3자 자료는 MIT License 대상이 아니며 각 권리자에게 권리가 남습니다.
-- 별도 MCP 서버, 영속 데이터베이스, 웹 협업 서비스 또는 외부 SaaS는 v1 범위가 아닙니다.
-- Current 근거는 검토 스냅샷입니다. 사용 시점에 정책·시장·규제·도구 변경 여부를 다시 확인해야 합니다.
-- 전문 역할, 도식화, 형식 변환은 인간 책임자와 실제 플레이테스트·접근성 테스트·법무·플랫폼 검토를 대체하지 않습니다.
-
-각 제품의 고지는 [Studio THIRD_PARTY_NOTICES](plugins/game-design-studio/THIRD_PARTY_NOTICES.md)와 [Career THIRD_PARTY_NOTICES](plugins/game-design-career/THIRD_PARTY_NOTICES.md)를 확인하십시오.
-
-## 상세 문서
+초보자 경로에 넣지 않은 source tree, build·release·검증 명령과 독립 패키지 구조는 다음 기술 문서에 보존합니다.
 
 - [플러그인 스위트 아키텍처](architecture/plugin-suite.md)
-- [내보내기 파이프라인](architecture/export-pipeline.md)
 - [지식·근거 아키텍처](architecture/knowledge-and-evidence.md)
-- [Game Design Studio](plugins/game-design-studio/README.md)
-- [Game Design Career](plugins/game-design-career/README.md)
+- [내보내기 파이프라인](architecture/export-pipeline.md)
+- [Studio 기술 README](plugins/game-design-studio/README.md)
+- [Career 기술 README](plugins/game-design-career/README.md)
+
+기여 시에는 공통 변경을 `shared/`, 제품 변경을 `products/<product>/plugin/`에서 편집하고 `npm test`, `npm run validate`, `npm run build`로 독립 배포 스냅샷을 확인합니다. 프로젝트 코드·템플릿·문서는 MIT License이며, vendored Skillstead는 Apache-2.0입니다. 사용자 제공 원문과 제3자 자료의 권리는 각 권리자에게 남으므로 공개 재배포 전에 문서별 권리 근거를 확인해야 합니다.

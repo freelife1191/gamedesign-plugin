@@ -2,6 +2,8 @@
 
 Career export skill은 canonical artifact를 검증하고 renderer-neutral 작업을 준비합니다. 실제 generation, renderer와 terminal QA는 trusted downstream document/PDF/presentation workflow가 소유합니다.
 
+[![문서 내보내기 준비 상태 흐름](../assets/shared/document-export-flow.png)](../assets/shared/document-export-flow.svg)
+
 ## 공통 preflight
 
 document type, audience, purpose, artifact root/ID, requested formats와 capability snapshot을 수집합니다. canonical validation이 failed, pending 또는 unevidenced이면 모든 derivative preparation을 중단하고 source와 evidence를 보존합니다.

@@ -20,8 +20,8 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 
 대표 도식:
 
-- [경력 단계 라우팅](../assets/game-design-career/career-stage-routing.png)
-- [역할 gap과 학습 로드맵](../assets/game-design-career/role-gap-learning-roadmap.png)
+- [![경력 단계 라우팅](../assets/game-design-career/career-stage-routing.png)](../assets/game-design-career/career-stage-routing.svg)
+- [![역할 gap과 학습 로드맵](../assets/game-design-career/role-gap-learning-roadmap.png)](../assets/game-design-career/role-gap-learning-roadmap.svg)
 
 ## 가이드 목차
 
@@ -42,6 +42,8 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
 목적별 레시피의 안정 경로는 `recipes/`입니다. 각 레시피는 current evidence의 출처·검색일·지역·표본 경계·재검색 시점을 보존하며, 생성·렌더 결과와 사람 승인을 분리합니다.
+
+각 스킬 ID는 [스킬 레퍼런스](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [Canonical Artifact 템플릿](templates.md)에 있습니다.
 
 ## 작업 원칙
 
