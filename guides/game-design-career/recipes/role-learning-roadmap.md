@@ -33,7 +33,7 @@ $game-design-career:orchestrate-game-design-career game-design-career/<career-id
 1. 공개 가능한 evidence를 `관찰 사실`로 기록하고, 필요한 current evidence에는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 함께 남깁니다.
 2. `map-game-design-career`로 evidence가 지지하는 경로만 `추론`으로 표시하고, 빈 부분은 `제안`인 proof task로 둡니다.
 3. `learning-roadmap`의 prerequisite, owner, proof artifact, cadence를 정합니다. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다.
-4. role/learning 관계는 Skillstead 도식이 우선이며 illustration slot은 기본적으로 `prompt-only`입니다. 실제 career-work-context image가 필요하면 사람 `select` receipt와 finite manifest 범위에서만 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
+4. role/learning 관계는 Skillstead 도식이 우선이며 illustration slot은 `prompt-only`에서 prompt와 placeholder만 만들고 생성하지 않습니다. `select`는 사람이 제출한 receipt의 stable ID만 생성하고, `required`는 finite required asset만 생성하며, `all`은 declared asset만 생성합니다. 실제 career-work-context image가 필요할 때도 이 finite manifest 범위에서만 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

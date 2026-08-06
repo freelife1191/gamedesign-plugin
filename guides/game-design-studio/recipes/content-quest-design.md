@@ -34,7 +34,7 @@ $game-design-studio:design-game-content game-design/<project-id>/narrative-quest
 2. `design-game-content`로 stage, gate, branch, outcome, repeat path와 failure-recovery를 작성합니다.
 3. `design-game-systems`으로 state·reward·condition 연결을 검증하고 `plan-game-production`으로 capacity와 kill criteria를 기록합니다.
 4. `review-game-design` finding에 narrative consistency, fairness, rights/consent, production risk를 분리해 남깁니다.
-5. 퀘스트 관계는 `visualize-game-design` SVG로만 도식화합니다. 권리·동의가 아직 없으므로 이 사례의 권장 mode는 `prompt-only`이며 prompt/placeholder만 남깁니다. 실제 illustration을 선택할 때만 사람 `select` receipt의 stable asset ID 범위로 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
+5. 퀘스트 관계는 `visualize-game-design` SVG로만 도식화합니다. 권리·동의가 아직 없으므로 이 사례의 권장 mode는 `prompt-only`이며 prompt/placeholder만 남깁니다. 실제 illustration을 선택할 때만 사람 `select` receipt의 stable asset ID 범위로 재개합니다. `required`는 finite required asset만, `all`은 declared asset만 생성합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

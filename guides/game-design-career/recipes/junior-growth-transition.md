@@ -33,7 +33,7 @@ $game-design-career:plan-junior-growth game-design-career/<career-id>/junior-gro
 1. actual event와 proof artifact는 `관찰 사실`이며 current role evidence에는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 기록합니다.
 2. readiness 평가는 `추론`, 다음 project·feedback cadence는 `제안`으로 두고 target level은 확정 사실처럼 쓰지 않습니다.
 3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. `reviewAfter` 이후 fresh source를 연결하고 historical record는 보존합니다.
-4. 성장 증거의 `growth-work-sample-image` slot은 공개 범위가 확정되기 전 `prompt-only`로 둡니다. 실제 선택 생성은 named human의 `select` receipt와 finite manifest 범위가 있을 때만 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
+4. 성장 증거의 `growth-work-sample-image` slot은 `prompt-only`에서 prompt와 placeholder만 만들고 생성하지 않습니다. `select`는 사람이 제출한 receipt의 stable ID만 생성하고, `required`는 finite required asset만 생성하며, `all`은 declared asset만 생성합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

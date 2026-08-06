@@ -34,7 +34,7 @@ $game-design-studio:plan-game-production game-design/<project-id>/production-sco
 2. `review-game-design`으로 traceable finding, severity, direct evidence, minimal fix와 decision owner를 만듭니다.
 3. named human이 blocker의 수용·수정·예외 승인·보류를 결정하기 전에는 export를 성공으로 선언하지 않습니다.
 4. `export-game-design-documents`가 `content.md` preflight, capability snapshot, safe output directory와 MD/PDF/DOCX/PPTX job manifest를 준비합니다. renderer와 terminal QA가 없으면 형식 상태는 `pending`, `blocked` 또는 `unavailable`로 남습니다.
-5. production handoff 관계는 `visualize-game-design` SVG로, diagram 아닌 illustration은 `plan-image-assets`로 분리합니다. 이 delivery 사례는 `document-approved` asset만 필요하므로 새 생성은 `prompt-only`로 보류하고, 필요해지면 receipt와 finite manifest로 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
+5. production handoff 관계는 `visualize-game-design` SVG로, diagram 아닌 illustration은 `plan-image-assets`로 분리합니다. 이 delivery 사례는 `document-approved` asset만 필요하므로 새 생성은 `prompt-only`로 보류하고, 필요해지면 receipt와 finite manifest로 `select`를 재개합니다. `required`는 finite required asset만, `all`은 declared asset만 생성합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

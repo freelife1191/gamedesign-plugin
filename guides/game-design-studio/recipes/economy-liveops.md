@@ -34,7 +34,7 @@ $game-design-studio:design-game-economy-and-liveops game-design/<project-id>/eco
 2. `design-game-economy-and-liveops`로 source/sink, target inventory, probability/pity, inflation risk와 recovery를 명세합니다.
 3. 실험마다 hypothesis, control, changed variable, guardrail, stop, rollback과 owner를 분리합니다.
 4. `design-game-systems`으로 authority와 data mapping을, `plan-game-production`으로 rollback readiness를 확인합니다.
-5. value-flow와 feedback loop는 `visualize-game-design` SVG로 도식화하고 imagegen으로 대체하지 않습니다. 이 사례의 event communication slot은 승인 전 `prompt-only`로 두며, 선택 생성은 `select` receipt와 finite manifest 범위가 있을 때만 허용합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
+5. value-flow와 feedback loop는 `visualize-game-design` SVG로 도식화하고 imagegen으로 대체하지 않습니다. 이 사례의 event communication slot은 승인 전 `prompt-only`로 두며, 선택 생성은 `select` receipt와 finite manifest 범위가 있을 때만 허용합니다. `required`는 finite required asset만, `all`은 declared asset만 생성합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 
