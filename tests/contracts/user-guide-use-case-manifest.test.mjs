@@ -433,7 +433,7 @@ const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
     ["P-01", "`game-design-review`"],
     ["실제 design owner", "자동 승인"],
     ["validation task", "P-01"],
-    ["`ST-C02`", "Task 6"],
+    ["`ST-C02`", "`ST-C03`"],
   ],
   "ST-C02": [
     ["player verb", "meaningful choice"],
