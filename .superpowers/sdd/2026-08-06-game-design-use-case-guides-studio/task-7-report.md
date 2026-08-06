@@ -1,0 +1,33 @@
+# Task 7 Report — Studio indexes and product README
+
+## Status
+
+완료. Studio 가이드 인덱스는 사용자 유형, 역량·콘셉트·스킬 진입점, 직접 호출과 오케스트레이션 선택, 여섯 대표 사례의 구체적 결과를 짧은 표로 연결합니다. 제품 source README는 세 탐색 경로, 복사 가능한 대표 요청·결과와 Canonical Artifact 읽기 순서를 추가하며, 설치·workflow 기존 읽기 경로와 패키지 내부 링크를 유지합니다.
+
+## BASE / HEAD
+
+- BASE: `16a68ccacb494345aa570c5fe5099ee8bc316252`
+- HEAD: Task 7 commit containing this report; commit 뒤 `git rev-parse HEAD`로 확인합니다.
+
+## RED / GREEN
+
+- RED: `node --test tests/contracts/user-guides-studio.test.mjs`는 `활용 사례와 진입점` 누락으로 실패했고, `node --test tests/products/studio/readme.test.mjs`는 `활용 경로와 결과` 누락으로 실패했습니다.
+- GREEN: 두 focused suite는 각각 15/15, 14/14 통과합니다. target user, direct-skill/orchestrator 조건, 여섯 request/result, 네 Studio use-case 문서·FAQ·output catalog 링크, Canonical Artifact 읽는 순서를 검증합니다.
+- Mutation coverage: case/output swap, direct/orchestrator 조건 반전, wrong-but-valid guide URL, repository-only 상대 링크를 모두 거부합니다.
+
+## Links and package safety
+
+- repository guide는 명시적인 GitHub URL과 `Studio 활용 사례 인덱스`, `Studio 역량 사례`, `Studio 콘셉트 사례`, `Studio 스킬 워크벤치`, `Studio FAQ`, `공통 결과물 카탈로그` label로 구분합니다.
+- package README는 `skills/design-game-systems/SKILL.md`와 `assets/templates/system-specification/`만 package-local 상대 링크로 사용합니다. `../guides/...`처럼 source repository에서만 유효한 경로는 계약 테스트가 거부합니다.
+
+## Tests
+
+- `node --test tests/contracts/user-guides-studio.test.mjs` → 15 passed, 0 failed.
+- `node --test tests/products/studio/readme.test.mjs` → 14 passed, 0 failed.
+- `node --check tests/contracts/user-guides-studio.test.mjs` → passed.
+- `node --check tests/products/studio/readme.test.mjs` → passed.
+- `git diff --check` → passed.
+
+## Concerns
+
+Open concerns: none. 생성 결과와 파생 형식은 사람 검토·승인 전 초안이며, package README는 저장소 가이드를 package-local 경로로 가장하지 않습니다.

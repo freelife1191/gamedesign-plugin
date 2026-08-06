@@ -2,6 +2,42 @@
 
 Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존하는 Canonical Artifact(기준 작업 폴더)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
+## 활용 사례와 진입점
+
+### 대상 사용자
+
+| 사용자 | 먼저 고를 경로 | 처음 확인할 결과 |
+| --- | --- | --- |
+| 기획 입문 학생 | [역량 사례](use-cases/competency-paths.md) | 작게 검증할 player promise, loop 또는 rule 초안 |
+| 솔로·인디 개발자 | [콘셉트 사례](use-cases/concept-scenarios.md) | 제약·scope·prototype 질문이 있는 설계 경로 |
+| 현업 기획자 | [스킬 워크벤치](use-cases/skill-workbench.md) | 특정 작업의 입력, 결과와 다음 handoff |
+| 팀 리드·교육자·멘토 | [역량 사례](use-cases/competency-paths.md)와 [Studio FAQ](faq.md) | 검토 기준, 사람 결정과 재개 질문 |
+
+### 직접 호출 또는 오케스트레이션
+
+한 작업의 입력과 원하는 결과가 분명하면 [스킬 워크벤치](use-cases/skill-workbench.md)에서 해당 스킬을 직접 호출합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작해 최소 route와 사람 gate를 정합니다.
+
+### 대표 사례와 예상 결과
+
+사례 본문과 복사 가능한 요청문은 연결 문서가 소유합니다. 이 표는 선택을 돕는 짧은 입구이며, 본문을 다시 복제하지 않습니다.
+
+| 사례 | 적합한 시작 | 구체적인 예상 결과 |
+| --- | --- | --- |
+| ST-C01 | [플레이어 경험과 게임 비전](use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전) | `vision-pillars`와 `game-design-brief`의 player promise·non-goal 초안 |
+| ST-C03 | [규칙·상태·예외·데이터](use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | `system-specification`의 rule, state, exception, authority 표 |
+| ST-C04 | [UI·UX·온보딩·접근성](use-cases/competency-paths.md#st-c04-uiux온보딩접근성) | `ui-ux-flow-state`의 critical action·recovery와 접근성 검토 큐 |
+| ST-C05 | [콘텐츠·내러티브·퀘스트·NPC](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) | `narrative-quest-npc`의 quest state·choice·consequence 초안 |
+| ST-C07 | [성장·경제·밸런스·LiveOps](use-cases/competency-paths.md#st-c07-성장경제밸런스liveops) | `economy-balance`의 source/sink 가정과 guardrail·rollback 질문 |
+| ST-C08 | [제작·검토·이미지·출력](use-cases/competency-paths.md#st-c08-제작검토이미지출력) | `export-manifest.yml`의 pending·unavailable·blocked 준비 상태 |
+
+### 상세 문서
+
+- [Studio 활용 사례 인덱스](use-cases/README.md): 역량·콘셉트·직접 스킬 중 무엇부터 볼지 선택합니다.
+- [역량 사례 8개](use-cases/competency-paths.md)와 [콘셉트 사례 10개](use-cases/concept-scenarios.md): 사례의 전체 흐름과 검토·재개를 읽습니다.
+- [스킬 워크벤치](use-cases/skill-workbench.md): 설치된 15개 스킬의 직접 호출 신호와 피할 때를 비교합니다.
+- [Studio FAQ](faq.md): 현재 막힌 질문의 실행 요청과 관련 사례를 찾습니다.
+- [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 Canonical Artifact 읽는 순서를 확인합니다.
+
 ## 처음 시작하기
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.

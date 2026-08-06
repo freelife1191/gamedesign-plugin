@@ -207,6 +207,55 @@ function extractFirstColumnIds(markdown) {
     .sort();
 }
 
+function extractHeadingBody(markdown, heading) {
+  const match = new RegExp(`^## ${heading}$`, "m").exec(markdown);
+  assert.ok(match, `missing Studio guide index heading: ${heading}`);
+  const bodyStart = match.index + match[0].length;
+  const next = markdown.slice(bodyStart).search(/^## /m);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function assertStudioGuideRouting(index, skillIndex) {
+  const routing = extractHeadingBody(index, "활용 사례와 진입점");
+  for (const user of ["기획 입문 학생", "솔로·인디 개발자", "현업 기획자", "팀 리드·교육자·멘토"]) {
+    assert.ok(routing.includes(user), `Studio guide target user missing: ${user}`);
+  }
+  assert.match(routing, /한 작업.*분명하면[\s\S]{0,180}직접 호출/u, "single-scope work must choose a direct skill");
+  assert.match(routing, /복수.*영역|범위.*불명확/u, "mixed or unclear work must be named");
+  assert.match(routing, /복수.*영역[\s\S]{0,180}orchestrate-game-design-project|범위.*불명확[\s\S]{0,180}orchestrate-game-design-project/u, "mixed or unclear work must choose the orchestrator");
+
+  const cases = [
+    ["ST-C01", "vision-pillars"],
+    ["ST-C03", "system-specification"],
+    ["ST-C04", "ui-ux-flow-state"],
+    ["ST-C05", "narrative-quest-npc"],
+    ["ST-C07", "economy-balance"],
+    ["ST-C08", "export-manifest.yml"],
+  ];
+  for (const [id, output] of cases) {
+    assert.match(routing, new RegExp(`${id}[\\s\\S]{0,500}${output}`), `${id}: representative case must name its concrete expected output`);
+  }
+  assert.equal((routing.match(/^\| ST-C\d\d \|/gm) ?? []).length, 6, "guide index needs six concise representative case rows");
+
+  for (const link of [
+    "use-cases/README.md",
+    "use-cases/competency-paths.md",
+    "use-cases/concept-scenarios.md",
+    "use-cases/skill-workbench.md",
+    "faq.md",
+    "../use-cases/output-catalog.md",
+  ]) assert.ok(routing.includes(`](${link})`), `Studio guide routing link missing: ${link}`);
+
+  for (const link of ["installation.md", "quick-start.md", "workflow.md"]) {
+    assert.ok(index.includes(`](${link})`), `existing Studio reading path missing: ${link}`);
+  }
+
+  const skillRouting = extractHeadingBody(skillIndex, "활용 경로");
+  assert.match(skillRouting, /한 작업.*분명하면[\s\S]{0,180}직접 호출/u, "skill index direct-use condition missing");
+  assert.match(skillRouting, /복수.*영역[\s\S]{0,180}orchestrate-game-design-project|범위.*불명확[\s\S]{0,180}orchestrate-game-design-project/u, "skill index orchestrator condition missing");
+  assert.ok(skillRouting.includes("](../use-cases/skill-workbench.md)"), "skill index must link the workbench");
+}
+
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
   assert.equal(inventory.skillIds.length, 15);
@@ -486,6 +535,27 @@ test("Studio indexes every installed skill and template exactly once", async () 
   assert.deepEqual(extractFirstColumnIds(skillIndex), inventory.skillIds);
   assert.deepEqual(extractFirstColumnIds(templates), inventory.templateIds);
   assert.equal(inventory.templateIds.length, 15);
+});
+
+test("Studio guide indexes route target users through direct skills or orchestration without duplicating cases", async () => {
+  const [index, skillIndex] = await Promise.all([
+    readFile(path.join(root, "guides/game-design-studio/README.md"), "utf8"),
+    readFile(path.join(root, "guides/game-design-studio/skills/README.md"), "utf8"),
+  ]);
+  assertStudioGuideRouting(index, skillIndex);
+
+  assert.throws(
+    () => assertStudioGuideRouting(index.replace("`system-specification`", "`economy-balance`"), skillIndex),
+    "case/output swaps must fail",
+  );
+  assert.throws(
+    () => assertStudioGuideRouting(index.replace("복수 영역이 얽히거나 범위가 불명확하면", "한 작업 범위가 분명하면"), skillIndex),
+    "direct/orchestrator decision inversion must fail",
+  );
+  assert.throws(
+    () => assertStudioGuideRouting(index.replaceAll("use-cases/concept-scenarios.md", "use-cases/competency-paths.md"), skillIndex),
+    "wrong but valid Studio guide links must fail",
+  );
 });
 
 test("Studio template guide separates installed paths, authoring sources, and generated snapshots", async () => {

@@ -170,6 +170,61 @@ async function assertAllMarkdownLinksContained(root) {
   }
 }
 
+const studioRepositoryGuideLinks = Object.freeze([
+  ["Studio 활용 사례 인덱스", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/README.md"],
+  ["Studio 역량 사례", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/competency-paths.md"],
+  ["Studio 콘셉트 사례", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/concept-scenarios.md"],
+  ["Studio 스킬 워크벤치", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/skill-workbench.md"],
+  ["Studio FAQ", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/faq.md"],
+  ["공통 결과물 카탈로그", "https://github.com/freelife/game-design-plugin/tree/main/guides/use-cases/output-catalog.md"],
+]);
+
+function readmeSection(markdown, heading) {
+  const match = new RegExp(`^## ${heading}$`, "m").exec(markdown);
+  assert.ok(match, `README missing section: ${heading}`);
+  const bodyStart = match.index + match[0].length;
+  const next = markdown.slice(bodyStart).search(/^## /m);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function assertStudioUseCaseReadme(readme) {
+  const section = readmeSection(readme, "활용 경로와 결과");
+  for (const user of ["기획 입문 학생", "솔로·인디 개발자", "현업 기획자", "팀 리드·교육자·멘토"]) {
+    assert.ok(section.includes(user), `target user missing: ${user}`);
+  }
+  for (const path of ["역량 중심", "콘셉트 중심", "스킬 중심"]) {
+    assert.match(section, new RegExp(`^### ${path}$`, "m"), `exploration path missing: ${path}`);
+  }
+  assert.match(section, /한 작업.*분명하면[\s\S]{0,220}\$game-design-studio:design-game-systems/u, "direct skill rule must bind a single-system request to its skill");
+  assert.match(section, /복수.*영역|범위.*불명확/u, "orchestrator condition missing");
+  assert.match(section, /복수.*영역[\s\S]{0,220}\$game-design-studio:orchestrate-game-design-project|범위.*불명확[\s\S]{0,220}\$game-design-studio:orchestrate-game-design-project/u, "orchestrator condition must bind to the orchestrator");
+
+  const cases = [
+    ["새 게임 GDD", "$game-design-studio:orchestrate-game-design-project", "game-design-brief"],
+    ["시스템 명세", "$game-design-studio:design-game-systems", "system-specification"],
+    ["UX·접근성", "$game-design-studio:design-player-experience", "ui-ux-flow-state"],
+    ["콘텐츠·퀘스트", "$game-design-studio:design-game-content", "narrative-quest-npc"],
+    ["경제·LiveOps", "$game-design-studio:design-game-economy-and-liveops", "economy-balance"],
+    ["제작 검토·출력", "$game-design-studio:plan-game-production", "export-manifest.yml"],
+  ];
+  for (const [label, command, output] of cases) {
+    assert.match(section, new RegExp(`${escapeRegExp(label)}[\\s\\S]{0,700}${escapeRegExp(command)}[\\s\\S]{0,700}${escapeRegExp(output)}`), `${label}: copyable request/result contract`);
+  }
+  assert.equal((section.match(/^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/gm) ?? []).length, 6, "six representative request/result rows");
+  assert.match(section, /content\.md\s*→\s*evidence\.yml\s*→\s*decisions\/\s*→\s*assets\/\s*→\s*export-manifest\.yml/u, "canonical artifact reading order");
+
+  for (const [label, url] of studioRepositoryGuideLinks) {
+    assert.ok(section.includes(`[${label}](${url})`), `repository guide link missing or mislabeled: ${label}`);
+  }
+  assert.match(section, /\[설치된 스킬\]\(skills\/design-game-systems\/SKILL\.md\)/u, "package-local skill link must remain distinct");
+  assert.match(section, /\[설치된 템플릿\]\(assets\/templates\/system-specification\/\)/u, "package-local template link must remain distinct");
+  assert.doesNotMatch(section, /\]\((?:\.\.\/)+guides\//u, "packaged README must not use repository-only relative guide links");
+}
+
 test("release documentation ships the plugin license and third-party notices", async () => {
   await Promise.all([
     access(readmePath),
@@ -287,6 +342,28 @@ test("README documents truthful installation, workflow, safety, visualization, e
   ]) {
     assert.match(readme, new RegExp(`^### ${example}$`, "m"));
   }
+});
+
+test("README provides package-safe Studio exploration paths, requests, outputs, and reading order", async () => {
+  const readme = await readFile(readmePath, "utf8");
+  assertStudioUseCaseReadme(readme);
+
+  assert.throws(
+    () => assertStudioUseCaseReadme(readme.replace("`system-specification`의 규칙·상태·예외·검증 표", "`economy-balance`의 규칙·상태·예외·검증 표")),
+    "representative case/output swaps must fail",
+  );
+  assert.throws(
+    () => assertStudioUseCaseReadme(readme.replace("복수 영역이 얽히거나 범위가 불명확하면", "한 작업 범위가 분명하면")),
+    "direct/orchestrator inversions must fail",
+  );
+  assert.throws(
+    () => assertStudioUseCaseReadme(readme.replace(studioRepositoryGuideLinks[0][1], "../guides/game-design-studio/use-cases/README.md")),
+    "repository-only relative links must fail even when they are valid in the repository",
+  );
+  assert.throws(
+    () => assertStudioUseCaseReadme(readme.replace(studioRepositoryGuideLinks[2][1], studioRepositoryGuideLinks[1][1])),
+    "wrong but valid repository guide links must fail",
+  );
 });
 
 test("README documents the closed Studio document-quality workflow and installed contracts", async () => {

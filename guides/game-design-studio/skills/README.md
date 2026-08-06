@@ -2,6 +2,16 @@
 
 설치된 14개 Studio 스킬과 vendored Skillstead 스킬 1개를 정리합니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
 
+## 활용 경로
+
+한 작업의 입력과 원하는 결과가 분명하면 아래 표의 해당 스킬을 직접 호출합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작하고, route가 정해진 뒤 전문 스킬을 호출합니다.
+
+| 상황 | 시작점 | 다음 읽기 |
+| --- | --- | --- |
+| 현업 기획자의 단일 system·UX·content·economy 작업 | 아래 스킬 표의 직접 호출 | [스킬 워크벤치](../use-cases/skill-workbench.md)의 입력·결과·handoff |
+| 기획 입문 학생·솔로·인디 개발자의 학습 또는 scope 비교 | [Studio 활용 사례 인덱스](../use-cases/README.md) | 역량·콘셉트 사례와 [Studio FAQ](../faq.md) |
+| 팀 리드·교육자·멘토의 여러 영역 검토 | `orchestrate-game-design-project` | [공통 결과물 카탈로그](../../use-cases/output-catalog.md)의 읽는 순서와 사람 gate |
+
 | 스킬 ID | 목적 | 직접 호출 | 주 템플릿 | 일반 입력 | 일반 결과 |
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | 산출물에 결정적 품질 계약 적용 | `$game-design-studio:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | 목표, 청중, artifact 유형, 형식 | 선택 기록, checklist, requirement manifest |
