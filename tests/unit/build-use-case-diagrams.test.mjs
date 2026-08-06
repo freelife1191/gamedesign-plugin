@@ -220,6 +220,49 @@ for (const [name, mutate, expected] of [
   });
 }
 
+test("production builder rejects the exact missing 33 Studio sources when only non-Studio sources remain", async (t) => {
+  const { repoRoot } = await writeStudioProductionFixture(t, ({ sources }) => {
+    const nonStudioSources = sources.filter(({ scope }) => scope !== "game-design-studio-use-case" && scope !== "game-design-studio-skill");
+    sources.splice(0, sources.length, ...nonStudioSources);
+  });
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }),
+    {
+      name: "TypeError",
+      message: "Studio production source IDs mismatch: missing [st-c01, st-c02, st-c03, st-c04, st-c05, st-c06, st-c07, st-c08, st-g01, st-g02, st-g03, st-g04, st-g05, st-g06, st-g07, st-g08, st-g09, st-g10, st-s01, st-s02, st-s03, st-s04, st-s05, st-s06, st-s07, st-s08, st-s09, st-s10, st-s11, st-s12, st-s13, st-s14, st-s15], extra []",
+    },
+  );
+});
+
+test("production builder rejects an S routeId whose canonical target differs from the loaded source skill", async (t) => {
+  const { repoRoot } = await writeStudioProductionFixture(t, ({ sources }) => {
+    studioSource(sources, "st-s02").semantic.skill = "design-game-systems";
+  });
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: ["st-s02"] }),
+    {
+      name: "TypeError",
+      message: "st-s02 routeIds mismatch: vision targets define-game-vision, not design-game-systems",
+    },
+  );
+});
+
+test("production builder rejects a loaded boundary nextRoutes target absent from installed skillIds", async (t) => {
+  const { repoRoot } = await writeStudioProductionFixture(t, ({ sources }) => {
+    studioSource(sources, "st-s14").semantic.next_routes = ["svg-infographic"];
+  });
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: ["st-s14"] }),
+    {
+      name: "TypeError",
+      message: "st-s14 nextRoutes target svg-infographic is absent from installed skillIds",
+    },
+  );
+});
+
 test("production batch rejects an S routeId whose canonical target differs from the source skill", async () => {
   const { sources, routing } = await readStudioProductionInputs();
   studioSource(sources, "st-s02").semantic.skill = "design-game-systems";

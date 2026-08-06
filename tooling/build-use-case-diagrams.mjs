@@ -95,8 +95,9 @@ async function loadSources(repoRoot) {
     if (seen.has(source.id)) throw new Error(`duplicate use-case diagram source ID: ${source.id}`);
     seen.add(source.id);
   }
-  if (parsed.some(({ scope }) => scope === "game-design-studio-use-case" || scope === "game-design-studio-skill")) {
-    const routing = JSON.parse(await readFile(path.join(repoRoot, studioRoutingFile), "utf8"));
+  const routingFilename = path.join(repoRoot, studioRoutingFile);
+  if (await lstatIfPresent(routingFilename)) {
+    const routing = JSON.parse(await readFile(routingFilename, "utf8"));
     validateStudioDiagramProductionBatch(parsed, routing);
   }
   return parsed;

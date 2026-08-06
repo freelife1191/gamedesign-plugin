@@ -2,7 +2,7 @@
 
 ## Status
 
-Fix round 4 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 유지됩니다. Builder의 production load 경로는 source JSON과 canonical `routing.json`을 함께 읽고, 독립 literal batch contract로 exact 33 source와 11 route를 검증합니다.
+Fix round 5 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 유지됩니다. Builder의 production load 경로는 canonical `routing.json`의 존재를 명시적 Studio capability boundary로 사용하여, 현재 Studio source 존재 여부와 관계없이 exact 33 source와 11 route의 독립 literal batch contract를 검증합니다.
 
 ## BASE / HEAD
 
@@ -85,3 +85,23 @@ ST-C03, ST-G01, ST-G06, 가장 긴 skill flow ST-S09를 high/original detail로 
 
 - `npm run check:guide-diagrams`: 39 SVG 및 39 PNG의 visible expected, deterministic PNG byte equality, output path/symlink/temp safety를 포함해 통과했습니다.
 - 기존 산출물은 재생성하거나 수정하지 않았습니다. 변경 범위는 production contract, builder load, 관련 unit/contract regression, 이 보고서뿐입니다.
+
+## Fix round 5 — capability boundary and builder integration
+
+- Builder는 source 내용의 `parsed.some(Studio scope)`가 아니라 canonical `products/game-design-studio/plugin/references/routing.json` 존재 여부를 Studio production capability boundary로 사용합니다. 따라서 routing contract가 있는 저장소에서는 Studio source가 0개여도 batch validator가 항상 실행되고, routing contract가 없는 임시 일반 repo fixture는 기존 동작을 유지합니다.
+- Canonical routing을 보존한 채 Studio source 33개를 모두 삭제하고 non-Studio source만 남긴 디스크 fixture는 exact missing 33 ID `TypeError`로 거부됩니다.
+- 기존 helper-level S `routeIds`→canonical target/owned skill mismatch와 uninstalled boundary `nextRoutes` 검증에 각각 실제 source/routing JSON을 mutation하는 production builder fixture를 추가했습니다. Builder load는 고유 오류 `st-s02 routeIds mismatch: vision targets define-game-vision, not design-game-systems`와 `st-s14 nextRoutes target svg-infographic is absent from installed skillIds`를 그대로 전파합니다.
+
+## Fix round 5 RED / GREEN
+
+- RED: all-Studio-missing builder fixture 1개는 expected exact missing 33 ID 대신 이후 manifest load의 `ENOENT`를 받아 1 fail/2 pass로 재현됐습니다. 이는 source-derived gate가 batch 호출을 생략한 직접 증거입니다. 두 cross-contract builder fixture는 기존 load 경로가 이미 고유 batch 오류를 전파함을 확인했습니다.
+- GREEN: capability gate 한 곳을 routing contract 존재 검사로 바꾼 뒤 targeted builder fixture 3/3, 전체 builder unit 29/29, focused Studio contract 34/34가 통과했습니다.
+
+## Fix round 5 scope
+
+- Renderer, source JSON, SVG/PNG asset은 변경하지 않았습니다. Production builder와 builder unit regression, 이 보고서만 변경했습니다.
+
+## Fix round 5 verification
+
+- `npm run check:guide-diagrams` → 39 SVG / 39 PNG checked.
+- Changed JavaScript `node --check`와 `git diff --check`가 exit 0이며, 변경 파일은 production builder, builder unit test, 이 보고서의 3개뿐입니다.
