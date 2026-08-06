@@ -17,6 +17,7 @@ target posting과 portfolio evidence ID에 근거한 4종 질문, 답변 기록,
 ## 필수 입력과 선택 입력
 
 - 필수: stable posting evidence IDs, portfolio evidence IDs, target role/level, answer claim
+- current 채용 근거 필수: stable `sourceId`, official HTTPS `sourceUrl`(source location), `postedDate`, `retrievalDate`, `reviewAfter`와 trusted 기준일
 - 선택: previous feedback, objection focus, interviewer context
 - current posting에는 검색일, 지역, 표본을 보존하고 사실·추론·제안을 분리합니다.
 
@@ -36,11 +37,11 @@ $game-design-career:practice-game-design-interview posting=JP-12, portfolioEvide
 
 ## 진행 흐름
 
-posting과 portfolio record를 inventory하고 stable IDs를 유지합니다. 각 question에 `postingEvidenceIds`, `portfolioEvidenceIds`와 `grounded|role-general|blocked` status를 붙입니다. 답변은 claim, evidence, choice, alternative, verified result 또는 `not-verified`, reflection으로 기록합니다.
+posting과 portfolio record를 inventory하고 stable IDs를 유지합니다. trusted 기준일이 `reviewAfter`를 넘으면 stale evidence는 current claim에 사용하지 않습니다. 이 경우 `research-game-design-jobs`로 공고를 재수집하고 validator 재검증을 통과한 새 evidence IDs만 질문과 claim에 결합합니다. 모든 question record는 stable unique `questionId`, `questionType`, 서로 독립적인 `postingEvidenceIds`와 `portfolioEvidenceIds`, `prompt`, `verificationStatus`를 가집니다. answer record와 feedback record는 같은 `questionId`를 재사용합니다. 답변은 claim, evidence, choice, alternative, verified result 또는 `not-verified`, reflection으로 기록합니다.
 
 ## 결과와 파일
 
-evidence inventory, ordered question records, answer-feedback records, blocked claims, verification tasks와 honest-answer patterns를 `interview-question-answer-log`에 남깁니다. 예상 결과 요약: 공고와 portfolio 근거를 다시 찾을 수 있는 면접 연습 기록이 생깁니다.
+evidence inventory, stable `questionId`로 결합된 question record와 answer-feedback record, blocked claims, verification tasks와 honest-answer patterns를 `interview-question-answer-log`에 남깁니다. 예상 결과 요약: 공고와 portfolio 근거를 다시 찾을 수 있는 면접 연습 기록이 생깁니다.
 
 ## 검토와 승인
 
@@ -48,7 +49,7 @@ evidence inventory, ordered question records, answer-feedback records, blocked c
 
 ## 실패와 재개
 
-posting이 없으면 posting-specific claim을 `blocked`로 유지하고 role-general question과 posting 확보 task만 만듭니다. missing result에는 “확인할 수 없는 X 대신 내 결정 Y와 evidence E-12를 설명한다” 같은 honest boundary를 씁니다.
+posting이 없으면 posting-specific claim을 `blocked`로 유지하고 role-general question과 posting 확보 task만 만듭니다. stale evidence의 기존 기록, stale 상태와 한계를 삭제하지 않고 보존합니다. `research-game-design-jobs`의 재수집·validator 재검증 뒤 새 evidence IDs가 downstream question의 `postingEvidenceIds`, 같은 `questionId`의 answer-feedback record와 claim에 다시 결합된 후에만 재개합니다. missing result에는 “확인할 수 없는 X 대신 내 결정 Y와 evidence E-12를 설명한다” 같은 honest boundary를 씁니다.
 
 ```text
 $game-design-career:practice-game-design-interview 기존 questionId를 유지하고 새 posting evidence JP-12를 연결해 blocked 질문부터 재개해.

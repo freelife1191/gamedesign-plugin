@@ -41,6 +41,15 @@ function extractFirstColumnIds(markdown) {
   return [...markdown.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]).sort();
 }
 
+function extractSection(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `missing section: ${heading}`);
+  const bodyStart = start + marker.length;
+  const next = markdown.indexOf("\n## ", bodyStart);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : next).trim();
+}
+
 test("Career documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-career");
   assert.equal(inventory.skillIds.length, 15);
@@ -113,6 +122,67 @@ test("Career evidence workflows name the source record identifiers", async () =>
     for (const field of fields) {
       assert.ok(markdown.includes(field), `${skillId}: missing named evidence field: ${field}`);
     }
+  }
+});
+
+test("Career growth and interview guides refresh stale posting evidence before current claims", async () => {
+  const contracts = {
+    "plan-junior-growth": "requirementId",
+    "practice-game-design-interview": "questionId",
+  };
+
+  for (const [skillId, downstreamId] of Object.entries(contracts)) {
+    const markdown = await readFile(
+      path.join(root, "guides/game-design-career/skills", skillId + ".md"),
+      "utf8",
+    );
+    const scopedContract = [
+      "필수 입력과 선택 입력",
+      "진행 흐름",
+      "실패와 재개",
+    ].map((heading) => extractSection(markdown, heading)).join("\n");
+
+    for (const phrase of [
+      "sourceId",
+      "sourceUrl",
+      "official HTTPS",
+      "postedDate",
+      "retrievalDate",
+      "reviewAfter",
+      "research-game-design-jobs",
+      "stale evidence는 current claim에 사용하지 않습니다",
+      "기존 기록",
+      "보존",
+      "validator 재검증",
+      "새 evidence IDs",
+      downstreamId,
+    ]) {
+      assert.ok(scopedContract.includes(phrase), `${skillId}: missing scoped stale-evidence contract: ${phrase}`);
+    }
+  }
+});
+
+test("Career interview workflow binds question and answer records by stable questionId", async () => {
+  const markdown = await readFile(
+    path.join(root, "guides/game-design-career/skills/practice-game-design-interview.md"),
+    "utf8",
+  );
+  const workflow = extractSection(markdown, "진행 흐름");
+  const result = extractSection(markdown, "결과와 파일");
+
+  for (const field of [
+    "questionId",
+    "questionType",
+    "postingEvidenceIds",
+    "portfolioEvidenceIds",
+    "prompt",
+    "verificationStatus",
+  ]) {
+    assert.ok(workflow.includes(field), `interview workflow missing question field: ${field}`);
+  }
+  assert.match(workflow, /answer[^.\n]*feedback[^.\n]*같은 `questionId`를 재사용/);
+  for (const phrase of ["question record", "answer-feedback record", "stable `questionId`", "결합"] ) {
+    assert.ok(result.includes(phrase), `interview result missing question linkage: ${phrase}`);
   }
 });
 

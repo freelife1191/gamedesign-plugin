@@ -17,6 +17,7 @@ target-role requirement와 실제 project event를 분기 목표, 증거 프로�
 ## 필수 입력과 선택 입력
 
 - 필수: requirement IDs/status, posting evidence IDs, project-event evidence, owner, feedback source와 review date
+- current 채용 근거 필수: stable `sourceId`, official HTTPS `sourceUrl`(source location), `postedDate`, `retrievalDate`, `reviewAfter`와 trusted 기준일
 - 선택: target depth/breadth, proof artifact, past feedback와 transition target
 - current requirement에는 검색일, 지역, 표본을 기록하고 사실·추론·제안을 분리합니다.
 
@@ -36,7 +37,7 @@ $game-design-career:plan-junior-growth targetRole=systems-designer, period=quart
 
 ## 진행 흐름
 
-현재 primary posting source가 있는 `requirementId`는 `approved`, 없으면 `provisional`로 둡니다. project event마다 stable `eventId`, attribution, source와 verification status를 기록합니다. goal은 `requirementId`에 연결하고 observable project, owner, cadence, `proofArtifact`와 `continue|revise|replace|approve-ready|retire` 결정을 포함합니다.
+현재 primary posting source가 있는 `requirementId`는 `approved`, 없으면 `provisional`로 둡니다. trusted 기준일이 `reviewAfter`를 넘으면 stale evidence는 current claim에 사용하지 않습니다. 이 경우 `research-game-design-jobs`로 공고를 재수집하고 validator 재검증을 통과한 새 evidence IDs를 해당 `requirementId`에 다시 결합합니다. project event마다 stable `eventId`, attribution, source와 verification status를 기록합니다. goal은 `requirementId`에 연결하고 observable project, owner, cadence, `proofArtifact`와 `continue|revise|replace|approve-ready|retire` 결정을 포함합니다.
 
 ## 결과와 파일
 
@@ -48,7 +49,7 @@ target requirement register, project-event evidence ledger, quarterly goal recor
 
 ## 실패와 재개
 
-requirement source 또는 proof가 없으면 provisional ID와 verification task를 유지합니다. contradictory feedback과 missing proof를 삭제하지 않습니다.
+requirement source 또는 proof가 없으면 provisional ID와 verification task를 유지합니다. stale evidence의 기존 기록, stale 상태와 한계를 삭제하지 않고 보존합니다. `research-game-design-jobs`의 재수집·validator 재검증 뒤 새 evidence IDs가 downstream growth `requirementId`와 goal에 다시 결합된 후에만 재개합니다. contradictory feedback과 missing proof도 삭제하지 않습니다.
 
 ```text
 $game-design-career:plan-junior-growth 기존 goalId와 eventId를 유지하고 새 mentor feedback만 연결해 re-evaluation부터 재개해.
