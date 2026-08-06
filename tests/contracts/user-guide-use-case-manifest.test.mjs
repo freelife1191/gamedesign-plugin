@@ -348,6 +348,17 @@ const STUDIO_NUMERIC_CLAIM_CASES = Object.freeze([
   ["reject", "70% retention은 이미 달성된 사실입니다."],
   ["reject", "KPI는 근거 없이 70%로 확정됩니다."],
   ["reject", "시장 규모는 검증 없이 1조 원으로 확정되었습니다."],
+  ["reject", "KPI 70%는 prototype 없이 제시합니다."],
+  ["reject", "재미 90점은 telemetry 없이는 제시됩니다."],
+  ["reject", "밸런스 95점은 simulation 없이 제시합니다."],
+  ["reject", "학습 효과 60%는 사람 검토 없이는 제시됩니다."],
+  ["reject", "시장성 80%는 사람 결정 없이 제시합니다."],
+  ["reject", "KPI 70%는 사람 평가 없이는 제시됩니다."],
+  ["reject", "재미 90점은 가정 없이 제시합니다."],
+  ["reject", "밸런스 95점은 관찰 없이는 제시됩니다."],
+  ["reject", "학습 효과 60%는 평가 없이 제시합니다."],
+  ["reject", "KPI 70%는 정답이 아니라 확정된 결과입니다."],
+  ["reject", "KPI 70%의 무단 공개는 금지하지만 달성은 확정됩니다."],
   ["allow", "retention은 40%라는 가정이며 prototype과 telemetry로 검증합니다."],
   ["allow", "시장성은 80%라는 가정이며 사람 검토로 검증합니다."],
   ["allow", "시장 규모는 1조 원이라는 가정이며 simulation 근거로 검증합니다."],
@@ -356,6 +367,8 @@ const STUDIO_NUMERIC_CLAIM_CASES = Object.freeze([
   ["allow", "재미 90점은 telemetry로 검증할 가정입니다."],
   ["allow", "밸런스 95점은 simulation으로 검증할 가정입니다."],
   ["allow", "학습 효과 60%는 사람 평가로 검증할 가정입니다."],
+  ["allow", "retention 40%는 확정이 아니라 prototype으로 검증할 가정입니다."],
+  ["allow", "KPI 70% 달성 보장은 금지하며, telemetry로 검증할 가정입니다."],
 ]);
 const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
   "ST-C01": [
@@ -793,14 +806,22 @@ function isUnsafeNumericOutcomeSentence(sentence) {
   const hasNumericValue = /\d+(?:[.,]\d+)?\s*(?:%|점|배|조\s*원|억\s*원|만\s*원|원|명|일|회)?/u.test(normalized);
   if (!hasClaim || !hasNumericValue) return false;
 
-  const assertionRoot = /보장|확정|정답|달성(?:된|한)?\s*사실/u;
-  const explicitlyNegatedAssertion = /(?:보장|확정|정답|달성(?:된|한)?\s*사실)[^.!?]{0,24}(?:아닙니다|아니다|아니며|아니라)|금지/u;
-  if (explicitlyNegatedAssertion.test(normalized)) return false;
-  if (assertionRoot.test(normalized)) return true;
+  const assertions = [...normalized.matchAll(/보장|확정|정답|달성(?:된|한)?\s*사실/gu)];
+  if (assertions.some((assertion) => !isLocallyNegatedAssertion(normalized, assertion))) return true;
+  if (assertions.length > 0) return false;
 
-  const withoutNegatedQualifiers = normalized.replace(/(?:근거|검증|관찰|평가|가정)\s*(?:가\s*)?없이/gu, "");
+  const withoutNegatedQualifiers = normalized.replace(
+    /(?:prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정|평가)|가정|검증|관찰|평가|근거)\s*(?:이|가|은|는|도|조차|마저)?\s*없(?:이|이는)/giu,
+    "",
+  );
   const hasPositiveValidation = /prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정|평가)|가정|검증|provisional|관찰|평가|근거/iu.test(withoutNegatedQualifiers);
   return !hasPositiveValidation;
+}
+
+function isLocallyNegatedAssertion(sentence, assertion) {
+  const tail = sentence.slice(assertion.index + assertion[0].length);
+  const localClause = tail.split(/[,;]|하지만|그러나|반면|이고|이며/u, 1)[0].slice(0, 32);
+  return /^\s*(?:은|는|이|가|을|를)?\s*(?:아닙니다|아니다|아니며|아니라|금지)/u.test(localClause);
 }
 
 function assertStudioConceptComparison({ conceptScenarios, competencyPaths, entries }) {
