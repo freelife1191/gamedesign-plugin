@@ -44,12 +44,16 @@ artifact `assets/`에 editable SVG, adjacent alt text, 검증 시 PNG와 executi
 
 ## 검토와 승인
 
-모든 node·connector·label·수치는 source locator가 필요합니다. SVG `<title>`/`<desc>`, lint, renderer identity, exact dimensions와 two-pass visual QA 없이는 verified가 아닙니다. 렌더와 reviewer 권고는 문서 승인도 아닙니다.
+모든 node·connector·label·수치는 source locator가 필요합니다. 먼저 `node --version`으로 Node 18+인지 확인합니다. Node는 SVG authoring에는 필요하지 않지만 bundled source lint와 machine-linted handoff에는 필요합니다. Node가 없으면 OS와 신뢰 가능한 package manager를 확인하고 candidate가 Node 18+를 제공하는지 검증한 뒤 정확한 설치 명령을 제시합니다. 사용자에게 명시적 승인을 받기 전에는 설치하지 않고 `curl | sh`를 사용하지 않으며, elevated privilege가 필요하면 별도 승인을 요청합니다. 설치 뒤 version을 다시 확인하고 실패하거나 구버전이면 다른 source로 재시도하기 전에 다시 승인을 받습니다.
+
+SVG `<title>`/`<desc>`, lint, renderer identity, exact dimensions와 two-pass visual QA 없이는 verified가 아닙니다. 렌더와 reviewer 권고는 문서 승인도 아닙니다.
 
 ## 실패와 재개
 
-lint·browser·render·pixel review 실패 시 canonical artifact와 통과한 SVG evidence를 보존하고 PNG 성공을 주장하지 않습니다.
+사용자가 Node 설치를 거절하거나 안전한 route가 없으면 manual source checklist를 완료하고 `render.sh`를 호출하지 않습니다. Node-free Chromium 경로로 정확한 2× PNG와 visual QA를 수행하되 machine-linted라고 표시하지 않습니다. automated source lint 미실행, manual source checklist, PNG render/visual QA의 실제 상태를 각각 명시합니다.
+
+Chromium도 없으면 SVG-only draft로 전달하고 automated source lint와 PNG visual verification이 모두 실행되지 않았다고 표시합니다. 그 밖의 lint·browser·render·pixel review 실패에서도 canonical artifact와 통과한 SVG evidence를 보존하고 PNG 성공을 주장하지 않습니다.
 
 ```text
-$game-design-studio:visualize-game-design 통과한 SVG와 source mapping을 보존하고, 이전 render 오류부터 같은 preset과 acceptance criteria로 재개해.
+$game-design-studio:visualize-game-design 기존 SVG와 source mapping을 보존하고 Node 18+ 설치 승인 여부와 Chromium availability를 확인해. 선택된 fallback branch의 마지막 검증 단계부터 재개해.
 ```

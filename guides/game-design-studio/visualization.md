@@ -34,6 +34,16 @@ node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <
 
 lint는 command, exit code, log, linter identity/digest, SVG path/digest를 보존합니다. render는 canonical Chromium executable/version, renderer digest, command, exit code, SVG/PNG digest, viewBox와 actual dimensions를 보존하고 정확한 2× PNG인지 확인합니다.
 
+## Node.js 18+ 부재 시 fallback
+
+먼저 `node --version`으로 Node 18+인지 확인합니다. Node는 SVG authoring에는 필요하지 않지만 bundled source lint와 machine-linted handoff에는 필요합니다.
+
+Node가 없으면 OS와 신뢰 가능한 package manager를 확인하고 candidate가 Node 18+를 제공하는지 검증합니다. 그 뒤 정확한 설치 명령을 제시하고 사용자에게 명시적 승인을 받기 전에는 설치하지 않습니다. `curl | sh`는 금지하며 elevated privilege가 필요하면 별도 승인을 요청합니다. 설치 뒤 version을 다시 확인합니다. 설치가 실패하거나 구버전이면 다른 source로 재시도하기 전에 다시 승인을 받아야 합니다.
+
+사용자가 거절하거나 안전한 route가 없으면 manual source checklist를 완료하고 `render.sh`를 호출하지 않습니다. 문서화된 Node-free Chromium 경로로 정확한 2× PNG를 렌더하고 visual QA를 수행합니다. 이 결과를 machine-linted라고 표시하지 않으며 automated source lint 미실행, manual source checklist, PNG render/visual QA의 실제 상태를 명시합니다.
+
+Chromium도 없으면 SVG-only draft를 전달하고 automated source lint와 PNG visual verification이 모두 실행되지 않았다고 표시합니다.
+
 ## Two-pass QA
 
 1. fit-to-page에서 reading order와 주요 connector가 즉시 보이는지 확인합니다.

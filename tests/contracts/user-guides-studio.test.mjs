@@ -84,3 +84,37 @@ test("Studio topical guides preserve image, visualization, and export policies",
     assert.ok(joinedGuides.includes(phrase), "missing Studio guide contract: " + phrase);
   }
 });
+
+test("Studio visualization guides preserve the no-Node Skillstead fallback", async () => {
+  const guidePaths = [
+    "guides/game-design-studio/skills/svg-infographic.md",
+    "guides/game-design-studio/skills/visualize-game-design.md",
+    "guides/game-design-studio/visualization.md",
+  ];
+
+  for (const guidePath of guidePaths) {
+    const markdown = await readFile(path.join(root, guidePath), "utf8");
+    for (const phrase of [
+      "node --version",
+      "Node 18+",
+      "SVG authoring",
+      "machine-linted",
+      "신뢰 가능한 package manager",
+      "정확한 설치 명령",
+      "명시적 승인",
+      "curl | sh",
+      "elevated privilege",
+      "다른 source",
+      "manual source checklist",
+      "render.sh",
+      "Node-free Chromium",
+      "정확한 2× PNG",
+      "visual QA",
+      "SVG-only",
+      "automated source lint",
+      "PNG visual verification",
+    ]) {
+      assert.ok(markdown.includes(phrase), `${guidePath}: missing no-Node contract: ${phrase}`);
+    }
+  }
+});

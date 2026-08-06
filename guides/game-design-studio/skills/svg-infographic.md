@@ -44,12 +44,16 @@ editable SVG가 authority이고 PNG는 derivative입니다. renderer executable/
 
 ## 검토와 승인
 
-Node 18+와 Chromium availability를 확인합니다. lint warning은 의도적으로 처리하며 PNG만 patch하지 않습니다. 생성된 SVG/PNG는 artifact, 이미지 권리 또는 사람 승인 증거가 아닙니다.
+먼저 `node --version`으로 Node 18+인지 확인합니다. Node는 SVG authoring에는 필요하지 않지만 bundled source lint와 machine-linted handoff에는 필요합니다. Node가 없으면 OS와 신뢰 가능한 package manager를 확인하고 candidate가 Node 18+를 제공하는지 검증한 뒤 정확한 설치 명령을 제시합니다. 사용자에게 명시적 승인을 받기 전에는 설치하지 않으며 `curl | sh`는 사용하지 않습니다. elevated privilege가 필요하면 그 승인도 별도로 드러냅니다. 설치 뒤 version을 다시 확인하고, 실패하거나 구버전이면 다른 source로 재시도하기 전에 다시 승인을 받습니다.
+
+Chromium availability도 확인합니다. lint warning은 의도적으로 처리하며 PNG만 patch하지 않습니다. 생성된 SVG/PNG는 artifact, 이미지 권리 또는 사람 승인 증거가 아닙니다.
 
 ## 실패와 재개
 
-browser가 없으면 SVG-only limitation을, sandbox launch가 막히면 동일 render command를 보존합니다. 다른 renderer를 Chromium 결과로 표시하지 않습니다.
+사용자가 Node 설치를 거절하거나 안전한 route가 없으면 manual source checklist를 완료하고 `render.sh`를 호출하지 않습니다. 문서화된 Node-free Chromium 경로로 정확한 2× PNG를 렌더하고 visual QA를 수행하되 machine-linted라고 표시하지 않습니다. 결과에는 automated source lint가 실행되지 않았고 manual source checklist와 PNG render/visual QA가 통과했는지 정확히 명시합니다.
+
+Chromium도 없으면 SVG-only draft로 전달하고 automated source lint와 PNG visual verification이 모두 실행되지 않았다고 표시합니다. sandbox launch가 막히면 동일 render command를 보존하며 다른 renderer를 Chromium 결과로 표시하지 않습니다.
 
 ```text
-$game-design-studio:svg-infographic 기존 editable SVG와 lint 결과를 보존하고, 기록된 canonical render command부터 다시 실행해 exact 2× PNG와 two-pass QA를 재개해.
+$game-design-studio:svg-infographic 기존 editable SVG를 보존하고 Node 18+ 설치 승인 여부와 Chromium availability를 다시 확인해. 승인된 branch의 마지막 검증 단계부터 exact 2× PNG와 two-pass QA를 재개해.
 ```
