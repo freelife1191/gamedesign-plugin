@@ -53,7 +53,15 @@ function fieldLabels(markdown) {
 }
 
 function inlineFieldLabels(markdown) {
-  return [...markdown.matchAll(/\*\*([^*\n]+):\*\*/g)].map((match) => match[1]);
+  return inlineFields(markdown).map(({ label }) => label);
+}
+
+function inlineFields(markdown) {
+  const matches = [...markdown.matchAll(/\*\*([^*\n]+):\*\*/g)];
+  return matches.map((match, index) => ({
+    label: match[1],
+    value: markdown.slice(match.index + match[0].length, matches[index + 1]?.index).trim(),
+  }));
 }
 
 function tableHeadings(markdown, sectionHeading) {
@@ -158,7 +166,20 @@ test("each audience route preserves its executable case, output, review, and res
     assert.match(requestBody, /^\*\*CLI 요청:\*\* `\$game-design-(?:studio|career):[\w-]+ .+`$/m, `${entry.id} CLI request`);
 
     const resultBody = byHeading.get("결과와 검토·재개 경계");
-    assert.deepEqual(inlineFieldLabels(resultBody), ["최소 결과", "선택 결과", "확장 결과"], `${entry.id} result levels`);
+    assert.deepEqual(inlineFieldLabels(resultBody), [
+      "최소 결과",
+      "선택 결과",
+      "확장 결과",
+      "사람 검토·승인 경계",
+      "재개 조건·요청",
+    ], `${entry.id} result levels and review/resume fields`);
+    const resultFields = new Map(inlineFields(resultBody).map((field) => [field.label, field.value]));
+    const reviewBoundary = resultFields.get("사람 검토·승인 경계");
+    assert.match(reviewBoundary, /(사람|담당자|교사|멘토).*(검토|승인)/, `${entry.id} human review boundary`);
+    assert.match(reviewBoundary, /(전에는|전까지)/, `${entry.id} approval gate`);
+    const resume = resultFields.get("재개 조건·요청");
+    assert.match(resume, /`[^`]+`/, `${entry.id} resume request`);
+    assert.match(resume.slice(0, resume.indexOf("`")), /(하면|이면|으면|전에는)/, `${entry.id} resume condition`);
   }
 });
 
