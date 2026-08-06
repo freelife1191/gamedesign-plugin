@@ -53,6 +53,109 @@ const STUDIO_COMPETENCY_HEADINGS = Object.freeze({
   "ST-C07": "ST-C07 성장·경제·밸런스·LiveOps",
   "ST-C08": "ST-C08 제작·검토·이미지·출력",
 });
+const STUDIO_CONCEPT_HEADINGS = Object.freeze({
+  "ST-G01": "ST-G01 모바일 수집형 RPG·라이브서비스",
+  "ST-G02": "ST-G02 캐주얼 퍼즐·방치형",
+  "ST-G03": "ST-G03 협동 생존 액션",
+  "ST-G04": "ST-G04 경쟁 PvP 아레나",
+  "ST-G05": "ST-G05 PC·콘솔 액션 로그라이트",
+  "ST-G06": "ST-G06 선택형 내러티브 어드벤처",
+  "ST-G07": "ST-G07 코지 생활 시뮬레이션",
+  "ST-G08": "ST-G08 경영·타이쿤 시뮬레이션",
+  "ST-G09": "ST-G09 샌드박스·UGC",
+  "ST-G10": "ST-G10 교육·사회문제·접근성 중심 게임",
+});
+const STUDIO_CONCEPT_FIELDS = Object.freeze([
+  "플레이어 맥락",
+  "설계 제약",
+  "전이 가능한 역량",
+  "지원되지 않는 가정",
+  "검증 계획",
+]);
+const STUDIO_CONCEPT_CLI_SKILLS = Object.freeze({
+  "ST-G01": "design-game-economy-and-liveops",
+  "ST-G02": "design-game-systems",
+  "ST-G03": "design-game-systems",
+  "ST-G04": "design-game-systems",
+  "ST-G05": "design-game-content",
+  "ST-G06": "design-game-content",
+  "ST-G07": "design-player-experience",
+  "ST-G08": "design-game-economy-and-liveops",
+  "ST-G09": "design-game-content",
+  "ST-G10": "design-player-experience",
+});
+const STUDIO_CONCEPT_SEMANTIC_CONTRACT = Object.freeze({
+  "ST-G01": {
+    "플레이어 맥락": ["모바일", "짧거나 중단되는 세션"],
+    "설계 제약": ["수집", "LiveOps", "경제"],
+    "전이 가능한 역량": ["ST-C02", "ST-C07"],
+    "지원되지 않는 가정": ["retention", "KPI", "가정"],
+    "검증 계획": ["prototype", "telemetry"],
+  },
+  "ST-G02": {
+    "플레이어 맥락": ["퍼즐", "복귀"],
+    "설계 제약": ["방치", "오프라인", "정보 부하"],
+    "전이 가능한 역량": ["ST-C02", "ST-C04"],
+    "지원되지 않는 가정": ["재미", "가정"],
+    "검증 계획": ["prototype", "telemetry"],
+  },
+  "ST-G03": {
+    "플레이어 맥락": ["협동", "역할"],
+    "설계 제약": ["자원", "실패", "복구"],
+    "전이 가능한 역량": ["ST-C03", "ST-C06"],
+    "지원되지 않는 가정": ["완주율", "가정"],
+    "검증 계획": ["그룹 플레이테스트", "관찰"],
+  },
+  "ST-G04": {
+    "플레이어 맥락": ["PvP", "숙련도"],
+    "설계 제약": ["counterplay", "가독성", "사회적 위험"],
+    "전이 가능한 역량": ["ST-C04", "ST-C06"],
+    "지원되지 않는 가정": ["승률", "공정", "가정"],
+    "검증 계획": ["prototype", "match telemetry"],
+  },
+  "ST-G05": {
+    "플레이어 맥락": ["PC·콘솔", "run"],
+    "설계 제약": ["로그라이트", "메타 성장", "입력 장치"],
+    "전이 가능한 역량": ["ST-C02", "ST-C06", "ST-C08"],
+    "지원되지 않는 가정": ["난이도", "가정"],
+    "검증 계획": ["prototype", "실패 지점"],
+  },
+  "ST-G06": {
+    "플레이어 맥락": ["선택", "분기"],
+    "설계 제약": ["상태", "consequence", "콘텐츠 범위"],
+    "전이 가능한 역량": ["ST-C03", "ST-C05"],
+    "지원되지 않는 가정": ["몰입", "가정"],
+    "검증 계획": ["분기 추적", "플레이테스트"],
+  },
+  "ST-G07": {
+    "플레이어 맥락": ["코지", "자율"],
+    "설계 제약": ["생활", "압박", "접근성"],
+    "전이 가능한 역량": ["ST-C04", "ST-C05"],
+    "지원되지 않는 가정": ["편안", "가정"],
+    "검증 계획": ["usability", "sensory alternative"],
+  },
+  "ST-G08": {
+    "플레이어 맥락": ["경영", "의사결정"],
+    "설계 제약": ["경제", "피드백", "연쇄"],
+    "전이 가능한 역량": ["ST-C03", "ST-C07"],
+    "지원되지 않는 가정": ["최적", "수익", "가정"],
+    "검증 계획": ["simulation", "telemetry"],
+  },
+  "ST-G09": {
+    "플레이어 맥락": ["창작자", "발견"],
+    "설계 제약": ["UGC", "moderation", "rights", "accessibility", "ethical review"],
+    "전이 가능한 역량": ["ST-C03", "ST-C04", "ST-C05"],
+    "지원되지 않는 가정": ["안전", "가정"],
+    "검증 계획": ["moderation", "권리", "접근성", "윤리"],
+  },
+  "ST-G10": {
+    "플레이어 맥락": ["학습자", "사회문제", "접근 요구"],
+    "설계 제약": ["moderation", "rights", "accessibility", "ethical review"],
+    "전이 가능한 역량": ["ST-C01", "ST-C04", "ST-C05"],
+    "지원되지 않는 가정": ["학습 효과", "사회적 효과", "가정"],
+    "검증 계획": ["동의", "접근성", "윤리", "사람 검토"],
+  },
+});
 const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
   "ST-C01": [
     ["player promise", "anti-pillar"],
@@ -379,6 +482,75 @@ function assertStudioCompetencySemantics({ competencyPaths, entries, inventory }
   }
 }
 
+function assertStudioConceptSemantics({ conceptScenarios, entries, inventory }) {
+  assert.deepEqual(
+    Object.keys(STUDIO_CONCEPT_SEMANTIC_CONTRACT),
+    entries.map(({ id }) => id),
+    "concept semantic expectation coverage",
+  );
+  assert.deepEqual(
+    Object.keys(STUDIO_CONCEPT_CLI_SKILLS),
+    entries.map(({ id }) => id),
+    "concept CLI expectation coverage",
+  );
+
+  const h2Sections = markdownSections(conceptScenarios, 2);
+  assert.deepEqual(h2Sections.slice(0, entries.length).map(({ heading }) => heading), entries.map(({ id }) => STUDIO_CONCEPT_HEADINGS[id]));
+  for (const entry of entries) {
+    const caseBody = sectionByHeading(conceptScenarios, 2, STUDIO_CONCEPT_HEADINGS[entry.id]);
+    const caseParts = markdownSections(caseBody, 3);
+    assert.deepEqual(caseParts.map(({ heading }) => heading), STUDIO_COMPETENCY_CASE_MARKERS, `${entry.id} common case-card shape`);
+    const byHeading = new Map(caseParts.map((section) => [section.heading, section.body]));
+
+    const current = byHeading.get("현재 상황과 목표");
+    assert.deepEqual(inlineFieldLabels(current), STUDIO_CONCEPT_FIELDS, `${entry.id} section-local concept fields`);
+    const fields = new Map(inlineFields(current).map(({ label, value }) => [label, value]));
+    for (const [label, terms] of Object.entries(STUDIO_CONCEPT_SEMANTIC_CONTRACT[entry.id])) {
+      const value = fields.get(label);
+      assert.ok(value.length >= 35, `${entry.id} ${label} substantive field`);
+      assert.doesNotMatch(value, /^(?:TODO|TBD)(?:\b|$)/iu, `${entry.id} ${label} placeholder`);
+      for (const term of terms) assert.ok(value.includes(term), `${entry.id} ${label} semantic term: ${term}`);
+    }
+
+    const appBlocks = fencedCodeBlocks(byHeading.get("Codex App 요청문"), "text");
+    assert.equal(appBlocks.length, 1, `${entry.id} one App code block`);
+    assert.match(appBlocks[0], /^@Game Design Studio .+$/m, `${entry.id} executable App request`);
+
+    const cliBlocks = fencedCodeBlocks(byHeading.get("Codex CLI 요청문"), "text");
+    assert.equal(cliBlocks.length, 1, `${entry.id} one CLI code block`);
+    const match = /^\$game-design-studio:([a-z0-9-]+)(?:\s|$)/.exec(cliBlocks[0]);
+    assert.ok(match, `${entry.id} parseable Studio CLI command`);
+    assert.equal(match[1], STUDIO_CONCEPT_CLI_SKILLS[entry.id], `${entry.id} exact CLI skill binding`);
+    assert.ok(inventory.skillIds.includes(match[1]), `${entry.id} installed Studio skill: ${match[1]}`);
+    assert.ok(entry.skills.includes(match[1]), `${entry.id} manifest-bound CLI skill: ${match[1]}`);
+
+    const flow = byHeading.get("스킬·템플릿 흐름");
+    for (const skill of entry.skills) assert.ok(flow.includes(`\`${skill}\``), `${entry.id} skill ${skill}`);
+    for (const template of entry.templates) assert.ok(flow.includes(`\`${template}\``), `${entry.id} template ${template}`);
+
+    const results = byHeading.get("결과물");
+    for (const label of ["최소 결과", "선택 결과", "확장 결과", "파일 트리", "대표 내용"]) {
+      assert.ok(results.includes(`**${label}:**`), `${entry.id} ${label}`);
+    }
+    for (const output of entry.outputs) assert.ok(results.includes(`\`${output}\``), `${entry.id} output ${output}`);
+
+    const review = byHeading.get("검토와 승인");
+    assert.match(review, /\*\*사람 결정:\*\*/);
+    assert.match(review, /자동.*승인(?:하지 않|되지는 않)|승인을 대신하지 않/);
+    assert.match(review, /읽는 순서/);
+
+    const resume = byHeading.get("실패·재개");
+    assert.match(resume, /\*\*보존:\*\*/);
+    assert.match(resume, /\*\*재개 요청문:\*\*\n\n```text\n(?:@Game Design Studio|\$game-design-studio:)[^\n]+\n```/m, `${entry.id} executable resume`);
+  }
+
+  assert.doesNotMatch(
+    conceptScenarios,
+    /(?:D(?:1|7|30)\s*(?:retention|리텐션)|KPI|시장 점유율|재미)\s*(?:은|는|=|:)?.{0,24}\d+(?:\.\d+)?%?.{0,24}(?:보장|달성한다|정답이다)/iu,
+    "numeric KPI, retention, market, or fun claim presented as fact",
+  );
+}
+
 function sectionByHeading(markdown, level, heading) {
   const section = markdownSections(markdown, level).find((entry) => entry.heading === heading);
   assert.ok(section, `missing H${level} section: ${heading}`);
@@ -451,16 +623,18 @@ async function readStudioUseCaseGuides() {
   const filenames = {
     index: path.join(useCaseRoot, "README.md"),
     competencyPaths: path.join(useCaseRoot, "competency-paths.md"),
+    conceptScenarios: path.join(useCaseRoot, "concept-scenarios.md"),
   };
   for (const filename of Object.values(filenames)) {
     const stat = await lstat(filename);
     assert.ok(stat.isFile() && !stat.isSymbolicLink(), `expected regular file: ${filename}`);
   }
-  const [index, competencyPaths] = await Promise.all([
+  const [index, competencyPaths, conceptScenarios] = await Promise.all([
     readFile(filenames.index, "utf8"),
     readFile(filenames.competencyPaths, "utf8"),
+    readFile(filenames.conceptScenarios, "utf8"),
   ]);
-  return { index, competencyPaths };
+  return { index, competencyPaths, conceptScenarios };
 }
 
 test("use-case manifest exposes the versioned three-lane contract", async () => {
@@ -518,7 +692,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/skills/svg-infographic.png"));
 });
 
-test("Studio use-case index routes all eighteen cases without linking unfinished guide files", async () => {
+test("Studio use-case index routes all eighteen published competency and concept cases", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index } = await readStudioUseCaseGuides();
   const studioCases = manifest.cases.filter((entry) => entry.product === "game-design-studio");
@@ -530,11 +704,11 @@ test("Studio use-case index routes all eighteen cases without linking unfinished
     if (entry.view === "competency") {
       assert.equal(caseLinks[0].target, `competency-paths.md#${entry.anchor}`, `${entry.id} published route`);
     } else {
-      assert.match(caseLinks[0].target, /^#st-g\d{2}-.+/, `${entry.id} scheduled local route`);
-      assert.match(caseLinks[0].label, /예정/, `${entry.id} scheduled label`);
+      assert.equal(caseLinks[0].target, `concept-scenarios.md#${entry.anchor}`, `${entry.id} published route`);
+      assert.doesNotMatch(caseLinks[0].label, /예정/, `${entry.id} published label`);
     }
   }
-  assert.ok(!links.some(({ target }) => target.startsWith("concept-scenarios.md")), "unfinished concept guide is not linked");
+  assert.equal(links.filter(({ target }) => target.startsWith("concept-scenarios.md#st-g")).length, 10, "all concept guides are linked");
   assert.ok(links.some(({ target }) => target === "#스킬-워크벤치-예정"), "skill workbench scheduled route");
   assert.ok(links.some(({ target }) => target === "#studio-faq-예정"), "Studio FAQ scheduled route");
   assert.ok(links.some(({ target }) => target === "../../use-cases/output-catalog.md"), "output catalog route");
@@ -555,6 +729,85 @@ test("Studio use-case index routes all eighteen cases without linking unfinished
     assert.match(learningPaths, new RegExp(`^### ${pathName}$`, "m"), `${pathName} path`);
   }
   assertStudioIndexOmitsCaseCards(index);
+});
+
+test("each Studio concept preserves the common case-card, local constraints, and executable artifact contract", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { conceptScenarios } = await readStudioUseCaseGuides();
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
+  const anchors = collectHeadingAnchors(conceptScenarios);
+
+  assert.equal(entries.length, 10);
+  for (const entry of entries) assert.ok(anchors.has(entry.anchor), `${entry.id} manifest anchor`);
+  assertStudioConceptSemantics({ conceptScenarios, entries, inventory });
+  assert.doesNotMatch(conceptScenarios, /!\[[^\]]*\]\([^)]+\)/, "Task 6 owns concept diagram embeds");
+
+  const rows = tableRows(conceptScenarios, "콘셉트 간 비교");
+  assert.deepEqual(rows.map((row) => row["ID"]), entries.map(({ id }) => id));
+  assert.deepEqual(Object.keys(rows[0]), [
+    "ID", "핵심 루프", "실패·복구", "정보 부하", "사회적 위험", "콘텐츠 주기", "필요한 근거", "연결 역량",
+  ]);
+  for (const row of rows) {
+    for (const heading of ["핵심 루프", "실패·복구", "정보 부하", "사회적 위험", "콘텐츠 주기", "필요한 근거"]) {
+      assert.ok(row[heading].length >= 8, `${row.ID} ${heading} comparison`);
+    }
+    assert.match(row["연결 역량"], /\[ST-C0[1-8]\]\(competency-paths\.md#st-c0[1-8]-[^)]+\)/, `${row.ID} linked competency`);
+  }
+});
+
+test("Studio concept contracts reject wrong-valid swaps, TODOs, unsupported claims, and wrong CLI bindings", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { conceptScenarios } = await readStudioUseCaseGuides();
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
+  const g01Heading = STUDIO_CONCEPT_HEADINGS["ST-G01"];
+  const g02Heading = STUDIO_CONCEPT_HEADINGS["ST-G02"];
+
+  const g01Current = sectionByHeading(sectionByHeading(conceptScenarios, 2, g01Heading), 3, "현재 상황과 목표");
+  const g02Current = sectionByHeading(sectionByHeading(conceptScenarios, 2, g02Heading), 3, "현재 상황과 목표");
+  const validSwap = replaceCasePart(
+    replaceCasePart(conceptScenarios, g01Heading, "현재 상황과 목표", g02Current),
+    g02Heading,
+    "현재 상황과 목표",
+    g01Current,
+  );
+  assert.throws(
+    () => assertStudioConceptSemantics({ conceptScenarios: validSwap, entries, inventory }),
+    /ST-G01 플레이어 맥락 semantic term: 모바일/,
+  );
+
+  const todoCurrent = g01Current.replace(
+    /\*\*설계 제약:\*\*[\s\S]*?(?=\*\*전이 가능한 역량:\*\*)/,
+    "**설계 제약:** TODO\n\n",
+  );
+  const todoMutation = replaceCasePart(conceptScenarios, g01Heading, "현재 상황과 목표", todoCurrent);
+  assert.throws(
+    () => assertStudioConceptSemantics({ conceptScenarios: todoMutation, entries, inventory }),
+    /ST-G01 설계 제약 substantive field/,
+  );
+
+  const g01Cli = sectionByHeading(sectionByHeading(conceptScenarios, 2, g01Heading), 3, "Codex CLI 요청문");
+  const wrongValidCli = replaceCasePart(
+    conceptScenarios,
+    g01Heading,
+    "Codex CLI 요청문",
+    g01Cli.replace("$game-design-studio:design-game-economy-and-liveops", "$game-design-studio:define-game-vision"),
+  );
+  assert.throws(
+    () => assertStudioConceptSemantics({ conceptScenarios: wrongValidCli, entries, inventory }),
+    /ST-G01 exact CLI skill binding/,
+  );
+
+  const unsupportedClaim = conceptScenarios.replace(
+    "D30 retention 수치는 prototype과 telemetry로 검증할 가정입니다.",
+    "D30 retention은 40% 달성을 보장한다고 둔 가정입니다.",
+  );
+  assert.notEqual(unsupportedClaim, conceptScenarios, "unsupported-claim mutation must change source");
+  assert.throws(
+    () => assertStudioConceptSemantics({ conceptScenarios: unsupportedClaim, entries, inventory }),
+    /numeric KPI, retention, market, or fun claim presented as fact/,
+  );
 });
 
 test("each Studio competency case preserves its anchored case-card and executable review contract", async () => {
