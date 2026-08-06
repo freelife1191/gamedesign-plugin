@@ -1,0 +1,111 @@
+[
+  {
+    "id": "aud-01",
+    "scope": "audiences",
+    "title": "게임 기획 입문 학생 학습 경로",
+    "description": "관찰을 작은 규칙 실습과 검토 가능한 학습 증거로 연결합니다.",
+    "alt": "게임 기획 입문 학생이 관찰 기록, 기초 브리프, UX 검토, 학습 증거 순서로 진행하는 경로.",
+    "type": "learning-path",
+    "eyebrow": "AUD-01 · FOUNDATION",
+    "conclusion": "교사 또는 멘토 검토 뒤 다음 실습을 정하고, 승인 전에는 포트폴리오 증거를 확정하지 않습니다.",
+    "steps": [
+      { "label": "관찰 기록", "detail": "사실과 추론을 나눕니다." },
+      { "label": "기초 브리프", "detail": "짧은 규칙을 문서화합니다." },
+      { "label": "UX 검토", "detail": "이해 가능한 흐름을 점검합니다." },
+      { "label": "학습 증거", "detail": "피드백과 수정 기록을 남깁니다." }
+    ],
+    "source_paths": ["guides/use-cases/audience-paths.md"],
+    "used_by": ["guides/use-cases/audience-paths.md"]
+  },
+  {
+    "id": "aud-02",
+    "scope": "audiences",
+    "title": "게임 기획 취업 준비생 학습 경로",
+    "description": "목표 역할과 공개 가능한 관찰 기반 증거를 차례로 연결합니다.",
+    "alt": "게임 기획 취업 준비생이 역할 비교, 공고 표본, 역기획, 공백 과제, 증거 검토를 진행하는 경로.",
+    "type": "learning-path",
+    "eyebrow": "AUD-02 · APPLIED",
+    "conclusion": "포트폴리오 검토자가 검토하고, 승인 전에는 portfolio brief를 지원 결과로 표시하지 않습니다.",
+    "steps": [
+      { "label": "역할 비교", "detail": "목표 역할을 좁힙니다." },
+      { "label": "공고 표본", "detail": "확인일과 표본 경계를 기록합니다." },
+      { "label": "역기획", "detail": "관찰과 추론을 분리합니다." },
+      { "label": "공백 과제", "detail": "학습 공백을 과제로 만듭니다." },
+      { "label": "증거 검토", "detail": "공개 가능한 사례를 점검합니다." }
+    ],
+    "source_paths": ["guides/use-cases/audience-paths.md"],
+    "used_by": ["guides/use-cases/audience-paths.md"]
+  },
+  {
+    "id": "aud-03",
+    "scope": "audiences",
+    "title": "게임 기획 직무 전환자 학습 경로",
+    "description": "이전 경험을 전이 가능한 역량과 새 증거 과제로 구분합니다.",
+    "alt": "게임 기획 직무 전환자가 경험 인벤토리, 전이 역량, 작은 설계 과제, 개인 기여 증거를 진행하는 경로.",
+    "type": "learning-path",
+    "eyebrow": "AUD-03 · FOUNDATION",
+    "conclusion": "Career 검토자가 검토하고, 승인 전에는 개인 기여 증거를 확정하지 않습니다.",
+    "steps": [
+      { "label": "경험 인벤토리", "detail": "이전 경험의 사실을 정리합니다." },
+      { "label": "전이 역량", "detail": "적용 가능한 역량을 분리합니다." },
+      { "label": "작은 설계 과제", "detail": "새 판단을 실습으로 만듭니다." },
+      { "label": "개인 기여 증거", "detail": "공개 가능한 검증 기록을 남깁니다." }
+    ],
+    "source_paths": ["guides/use-cases/audience-paths.md"],
+    "used_by": ["guides/use-cases/audience-paths.md"]
+  },
+  {
+    "id": "aud-04",
+    "scope": "audiences",
+    "title": "솔로 인디 게임 기획자 작업 경로",
+    "description": "제한된 범위의 핵심 루프를 제작 검토와 QA 증거로 연결합니다.",
+    "alt": "솔로 인디 게임 기획자가 범위 정의, 핵심 루프, 제작 검토, QA 증거를 진행하는 경로.",
+    "type": "learning-path",
+    "eyebrow": "AUD-04 · APPLIED",
+    "conclusion": "프로젝트 담당자가 검토하고, 승인 전에는 도식과 파생 형식을 전달 완료로 표시하지 않습니다.",
+    "steps": [
+      { "label": "범위 정의", "detail": "제외 목록과 위험을 남깁니다." },
+      { "label": "핵심 루프", "detail": "가장 작은 플레이 흐름을 만듭니다." },
+      { "label": "제작 검토", "detail": "결정과 보류 항목을 점검합니다." },
+      { "label": "QA 증거", "detail": "재현 가능한 검토 기록을 보존합니다." }
+    ],
+    "source_paths": ["guides/use-cases/audience-paths.md"],
+    "used_by": ["guides/use-cases/audience-paths.md"]
+  },
+  {
+    "id": "aud-05",
+    "scope": "audiences",
+    "title": "현업 게임 기획자 개선 경로",
+    "description": "문제 정의와 규칙 결정을 검토 가능한 handoff로 정리합니다.",
+    "alt": "현업 게임 기획자가 문제 정의, 규칙 결정, 리뷰 큐, handoff를 진행하는 경로.",
+    "type": "learning-path",
+    "eyebrow": "AUD-05 · ADVANCED",
+    "conclusion": "문서 책임자가 검토하고, 승인 전에는 handoff 패키지를 완료로 표시하지 않습니다.",
+    "steps": [
+      { "label": "문제 정의", "detail": "검증할 문제를 분명히 합니다." },
+      { "label": "규칙·결정", "detail": "근거와 선택을 기록합니다." },
+      { "label": "리뷰 큐", "detail": "수정 우선순위를 정합니다." },
+      { "label": "Handoff", "detail": "공개 가능한 사실만 전달합니다." }
+    ],
+    "source_paths": ["guides/use-cases/audience-paths.md"],
+    "used_by": ["guides/use-cases/audience-paths.md"]
+  },
+  {
+    "id": "aud-06",
+    "scope": "audiences",
+    "title": "팀 리드와 교육자 멘토 피드백 경로",
+    "description": "설명 가능한 판단과 다음 과제를 사람 피드백으로 연결합니다.",
+    "alt": "팀 리드와 교육자 멘토가 평가 질문, 학습 증거 기준, 검토 큐, 피드백 계획을 진행하는 경로.",
+    "type": "learning-path",
+    "eyebrow": "AUD-06 · ADVANCED",
+    "conclusion": "교사 또는 멘토가 검토하고, 승인 전에는 검토 패키지를 평가 완료로 표시하지 않습니다.",
+    "steps": [
+      { "label": "평가 질문", "detail": "학습자가 설명할 판단을 정합니다." },
+      { "label": "학습 증거 기준", "detail": "관찰 근거와 가정을 나눕니다." },
+      { "label": "검토 큐", "detail": "다음 과제를 우선순위화합니다." },
+      { "label": "피드백 계획", "detail": "사람 피드백 지점을 남깁니다." }
+    ],
+    "source_paths": ["guides/use-cases/audience-paths.md"],
+    "used_by": ["guides/use-cases/audience-paths.md"]
+  }
+]
