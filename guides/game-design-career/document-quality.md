@@ -8,7 +8,7 @@ Game Design Career는 canonical artifact마다 primary profile 하나를 선택�
 
 - primary profile은 artifact당 정확히 하나입니다.
 - 비호환 deliverable은 separate selection record를 씁니다.
-- canonical index는 `shared/document-quality/indexes/career.json`, template map은 제품의 `references/document-quality/template-profile-map.json`입니다.
+- 설치된 플러그인 안의 canonical index는 `references/shared/document-quality/indexes/career.json`이고, template map은 `references/document-quality/template-profile-map.json`입니다. 저장소의 `shared/document-quality/indexes/career.json`은 authoring source이므로 설치 사용자 경로로 부르지 않습니다.
 - additive overlay는 `mobile`, `live-service`, `pc-console`, neutral preset은 최대 하나이며 기존 evidence·rights·human gate를 삭제할 수 없습니다.
 
 ## 13개 Career profile

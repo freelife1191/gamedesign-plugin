@@ -2,6 +2,8 @@
 
 Studio export skill은 Canonical Artifact를 검증하고 renderer-neutral 작업을 준비합니다. 실제 생성, renderer와 terminal QA는 별도 trusted workflow가 소유합니다.
 
+플러그인이 보장하는 끝점은 renderer-neutral preflight manifest까지입니다. `npm run test:formats`와 테스트는 개발자가 이 계약을 검증하는 절차이지, 설치 사용자가 실행할 downstream renderer가 아닙니다. 플러그인이 PDF·DOCX·PPTX 완성 파일을 단독 생성한다고 해석하지 말고 **내보내기 준비** 상태로 사용합니다.
+
 [![문서 내보내기 준비 상태 흐름](../assets/shared/document-export-flow.png)](../assets/shared/document-export-flow.svg)
 
 ## 공통 preflight
@@ -47,3 +49,13 @@ path traversal, symlink, unsafe output과 implicit overwrite를 거부합니다.
 ```text
 @Game Design Studio 이 승인된 Canonical Artifact의 MD, PDF, DOCX와 의사결정자용 PPTX 작업을 준비해. PPTX는 독립 story로 만들고 renderer-neutral manifest에는 passed/failed를 쓰지 마.
 ```
+
+## 실제 파일·형식 QA를 요청할 때
+
+같은 채팅/세션에서 host capability probe가 `pdf`, `documents`, `presentations` 중 필요한 capability를 `available`로 보고한 뒤에만 별도 요청합니다.
+
+```text
+이 세션에서 probe가 available로 보고한 pdf/documents/presentations capability만 사용해, 이미 준비된 export manifest의 PDF·DOCX·PPTX를 실제 파일로 생성하고 형식별 semantic·page/slide visual QA evidence와 output path를 반환해. capability가 없거나 QA가 실패한 형식은 unavailable/failed evidence와 재개 조건만 남기고 다른 형식은 주장하지 마.
+```
+
+예상 output은 실제 생성 파일, renderer identity, 형식별 QA evidence와 실패 형식의 resumable action입니다. capability가 unavailable이면 canonical Markdown과 preflight manifest를 보존하고, capability를 제공하는 host의 새 동일 작업 세션에서 이 요청문과 artifact ID를 다시 사용합니다.

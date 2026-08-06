@@ -1,5 +1,7 @@
 # portfolio를 만들고 5축으로 검토하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![portfolio claim evidence와 five-axis finding이 minimum repair, 권리 검토와 다음 review loop로 이어지는 흐름.](../../assets/game-design-career/portfolio-review-loop.png)
 
 ## 완료 목표

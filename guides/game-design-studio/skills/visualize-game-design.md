@@ -1,6 +1,6 @@
 # visualize-game-design
 
-## 목적과 산출물
+## 목적과 최종 산출물
 
 경제 flow와 system state처럼 공간 표현이 유용한 source-backed 관계를 accessible SVG와 정확한 2× PNG 증거로 만듭니다.
 
@@ -20,7 +20,7 @@
 - 선택: brief-first/source-first/research-first mode, 기존 SVG, requested assets와 review question
 - source에 없는 node, edge, date나 statistic은 canonical evidence로 만들지 않습니다.
 
-## Codex App 예시
+## Codex App 요청 예시
 
 **복사 가능한 요청문**
 
@@ -28,27 +28,35 @@
 @Game Design Studio 검증된 economy section의 두 통화 source·sink와 system state만 source mapping해 도식화해. preset 선택 이유, editable SVG, 정확한 2× PNG와 two-pass QA 증거를 남겨 줘.
 ```
 
-## Codex CLI 예시
+## Codex CLI 요청 예시
 
 ```text
 $game-design-studio:visualize-game-design artifact=artifacts/economy, sources=economy-flow,state-rules, relationship=source-sink-and-state, assets=svg,png
 ```
 
-## 진행 흐름
+## 내부 진행 흐름
 
 diagram이 필요한지 먼저 판단하고 packaged preset 하나와 source mapping을 고릅니다. product wrapper를 통해 vendored Skillstead를 lint/render하고 fit-to-page·close-up QA 뒤 evidence validator를 실행합니다. 주 profile은 현재 artifact 선택값, 관련 역할은 `lead-game-designer`와 필요한 reviewer 최대 2개, 다음 스킬은 `review-game-design` 또는 `export-game-design-documents`입니다.
 
-## 결과와 파일
+## 생성 파일과 결과 구조
 
 artifact `assets/`에 editable SVG, adjacent alt text, 검증 시 PNG와 execution evidence를 남깁니다. `requested`, `generated`, `linted`, `rendered`, `verified`는 별도 상태입니다. 예상 결과 요약: source 관계를 왜곡하지 않는 검증 가능한 도식이 생깁니다.
 
-## 검토와 승인
+## 관련 템플릿·품질 프로필·전문 역할
+
+기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+
+## 이미지·도식화 조건
+
+관계·흐름·상태·의존성이 prose보다 명확할 때 Skillstead 구조 도식을 만듭니다. 삽화·캐릭터·배경은 생성하지 않으며 필요 시 [이미지 자산 흐름](../image-assets.md)으로 분리합니다.
+
+## 검토·승인 기준
 
 모든 node·connector·label·수치는 source locator가 필요합니다. 먼저 `node --version`으로 Node 18+인지 확인합니다. Node는 SVG authoring에는 필요하지 않지만 bundled source lint와 machine-linted handoff에는 필요합니다. Node가 없으면 OS와 신뢰 가능한 package manager를 확인하고 candidate가 Node 18+를 제공하는지 검증한 뒤 정확한 설치 명령을 제시합니다. 사용자에게 명시적 승인을 받기 전에는 설치하지 않고 `curl | sh`를 사용하지 않으며, elevated privilege가 필요하면 별도 승인을 요청합니다. 설치 뒤 version을 다시 확인하고 실패하거나 구버전이면 다른 source로 재시도하기 전에 다시 승인을 받습니다.
 
 SVG `<title>`/`<desc>`, lint, renderer identity, exact dimensions와 two-pass visual QA 없이는 verified가 아닙니다. 렌더와 reviewer 권고는 문서 승인도 아닙니다.
 
-## 실패와 재개
+## 실패·fallback·재개 방법
 
 사용자가 Node 설치를 거절하거나 안전한 route가 없으면 manual source checklist를 완료하고 `render.sh`를 호출하지 않습니다. Node-free Chromium 경로로 정확한 2× PNG와 visual QA를 수행하되 machine-linted라고 표시하지 않습니다. automated source lint 미실행, manual source checklist, PNG render/visual QA의 실제 상태를 각각 명시합니다.
 
@@ -57,3 +65,15 @@ Chromium도 없으면 SVG-only draft로 전달하고 automated source lint와 PN
 ```text
 $game-design-studio:visualize-game-design 기존 SVG와 source mapping을 보존하고 Node 18+ 설치 승인 여부와 Chromium availability를 확인해. 선택된 fallback branch의 마지막 검증 단계부터 재개해.
 ```
+
+## 다음 작업 요청문
+
+**복사 가능한 CLI 후속 요청문**
+
+```text
+$game-design-studio:visualize-game-design 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+```
+
+## 관련 문서
+
+[스킬 선택표](README.md), [도식화 안내](../visualization.md), [이미지 자산 흐름](../image-assets.md), [문제 해결](../troubleshooting.md)

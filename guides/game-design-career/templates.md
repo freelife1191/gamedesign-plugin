@@ -1,6 +1,6 @@
 # Career 템플릿 레퍼런스
 
-설치 package의 15개 Canonical Artifact seed를 비교합니다. 각 디렉터리는 `content.md`, `evidence.yml`, `export-manifest.yml`, `decisions/README.md`, `assets/README.md`를 포함합니다.
+설치된 플러그인에는 아래 Canonical Artifact seed가 들어 있습니다. `products/`는 편집 원본이고 `plugins/`는 build가 만든 snapshot이므로 설치 사용자 경로와 혼동하지 않습니다. 각 디렉터리는 `content.md`, `evidence.yml`, `export-manifest.yml`, `decisions/README.md`, `assets/README.md`를 포함합니다.
 
 | 템플릿 ID | Profile | 주 용도 |
 | --- | --- | --- |
@@ -35,7 +35,9 @@
 - 필수 section/record: `Stage and Target Role`, `Goal Contract`; `stage`, `target-role`, `goal`, `success-evidence`, `owner`, `approval-status`, `review-date`.
 - Evidence/approval: current artifact, available time, constraints와 desired output을 기록하고 불명확하면 provisional paths를 유지합니다.
 - Profile/slot: `career-stage-role-map`; image `career-work-context-image`, diagram `skillstead-career-role-roadmap-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/career-stage-goal/`.
+- 설치 상대 경로: `assets/templates/career-stage-goal/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/career-stage-goal/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/career-stage-goal/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career career-stage-goal로 시스템 기획 입문자의 stage, target level, 보유 증거, 12주 goal과 사람 승인 지점을 정리해.`
 - 예상 결과: route와 next evidence task가 분명한 Career Stage & Goal Brief.
 
@@ -45,7 +47,9 @@
 - 필수 section/record: `Requirement Matrix`, `Repair and Re-evaluation`; `requirement-id`, `evidence-id`, `observation-state`, `target-level`, `gap`, `minimum-repair`, `owner`, `re-evaluation-date`.
 - Evidence/approval: requirement source date·지역·표본과 current evidence address를 독립적으로 기록합니다.
 - Profile/slot: `competency-matrix`; image `competency-proof-image`, diagram `skillstead-competency-dependency-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/competency-matrix/`.
+- 설치 상대 경로: `assets/templates/competency-matrix/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/competency-matrix/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/competency-matrix/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career competency-matrix로 시스템 기획 신입 requirement와 내 evidence를 비교해 gap, minimum repair와 재검토 날짜를 기록해.`
 - 예상 결과: 추측 등급 대신 evidence-addressable competency gap matrix.
 
@@ -55,7 +59,9 @@
 - 필수 section/record: `Portfolio Story`, `Third-party and Publication Rights`; `claim-id`, `evidence-id`, `target-competency`, `third-party-source`, `attribution`, `rights`, `use-purpose`, `privacy`, `inspectability`.
 - Evidence/approval: claim strength/status, 개인·팀 attribution, recovery action과 publication owner가 필요합니다.
 - Profile/slot: `portfolio-case-study`; image `case-study-proof-image`, diagram `skillstead-case-study-process-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/creative-design-portfolio/`.
+- 설치 상대 경로: `assets/templates/creative-design-portfolio/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/creative-design-portfolio/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/creative-design-portfolio/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career creative-design-portfolio로 제작 시스템의 문제, 내 결정, 대안, 테스트와 결과를 evidence ID로 연결해.`
 - 예상 결과: recruiter가 저자 설명 없이 핵심 역량을 검사할 수 있는 case study.
 
@@ -65,7 +71,9 @@
 - 필수 section/record: `Review Records`, `Observation and Penalty Rules`; `finding-id`, `axis-id`, `section-id`, `evidence-id`, `observation-state`, `score`, `penalty`, `minimum-repair`.
 - Evidence/approval: `not-observed|no-defect|defect-observed`를 분리하고 score는 inspectable section/evidence IDs에만 연결합니다.
 - Profile/slot: `portfolio-review-backlog`; image `portfolio-review-image`, diagram `skillstead-portfolio-dependency-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/five-axis-review/`.
+- 설치 상대 경로: `assets/templates/five-axis-review/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/five-axis-review/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/five-axis-review/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career five-axis-review로 이 portfolio의 5축 finding과 가장 작은 repair를 evidence ID에 연결해.`
 - 예상 결과: 능력과 evidence completeness를 혼동하지 않는 prioritized review.
 
@@ -75,7 +83,9 @@
 - 필수 section/record: `Analysis Claims`, `Decision Use`; `claim-id`, `observation`, `source-address`, `source-type`, `scope`, `inference`, `confidence`, `counterexample`, `alternative`, `validation-method`.
 - Evidence/approval: 관찰이 없으면 inference null/confidence unassessed이며 source build·region·time scope를 보존합니다.
 - Profile/slot: `game-analysis-report`; image `analysis-evidence-image`, diagram `skillstead-analysis-flow-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/game-analysis-report/`.
+- 설치 상대 경로: `assets/templates/game-analysis-report/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/game-analysis-report/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/game-analysis-report/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career game-analysis-report로 제작 UI의 관찰, 설계 추론, 반례, 대안과 검증 방법을 분리해.`
 - 예상 결과: 의사결정에 사용할 수 있는 falsifiable analysis findings.
 
@@ -85,7 +95,9 @@
 - 필수 section/record: `Role Families and Tradeoffs`, `Provisional Paths`; `role-family`, `current-evidence`, `target-level`, `gap`, `learning-task`, `feedback-cadence`, `proof-artifact`, `tradeoff`.
 - Evidence/approval: 목표가 불명확하면 최소 두 path를 유지하고 current job claim은 fresh research에 연결합니다.
 - Profile/slot: `career-stage-role-map`; image `career-work-context-image`, diagram `skillstead-career-role-roadmap-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/game-design-role-map/`.
+- 설치 상대 경로: `assets/templates/game-design-role-map/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/game-design-role-map/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/game-design-role-map/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career game-design-role-map으로 시스템·콘텐츠 기획 경로의 target level, gap, proof project와 tradeoff를 비교해.`
 - 예상 결과: 작은 과제로 강화하거나 반증할 수 있는 provisional role paths.
 
@@ -95,7 +107,9 @@
 - 필수 section/record: `Question Set`, `Honest Answer Boundary`; `question-id`, `question-type`, `posting-evidence-id`, `portfolio-evidence-id`, `answer-status`, `honest-answer`, `verification-task`.
 - Evidence/approval: base/follow-up/objection/situational 4종, grounded/role-general/blocked status와 verified result boundary가 필요합니다.
 - Profile/slot: `interview-question-answer-report`; image `interview-proof-image`, diagram `skillstead-answer-structure-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/interview-question-answer-log/`.
+- 설치 상대 경로: `assets/templates/interview-question-answer-log/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/interview-question-answer-log/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/interview-question-answer-log/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career interview-question-answer-log로 공고 JP-12와 portfolio E-07 기반 4종 질문과 honest answer를 기록해.`
 - 예상 결과: evidence gap을 숨기지 않는 면접 practice log.
 
@@ -105,7 +119,9 @@
 - 필수 section/record: `Claim Map`, `Honest and Private Boundary`; `claim-id`, `evidence-id`, `target-role`, `motivation`, `honest-boundary`, `privacy`, `approval-status`.
 - Evidence/approval: audience-specific independent story와 claim evidence, 공개 가능한 privacy 범위를 named owner가 승인합니다.
 - Profile/slot: `recruiter-portfolio-presentation`; image `portfolio-hero-proof-image`, diagram `skillstead-portfolio-story-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/introduction-motivation/`.
+- 설치 상대 경로: `assets/templates/introduction-motivation/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/introduction-motivation/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/introduction-motivation/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career introduction-motivation으로 시스템 기획 target role, 동기와 검증 가능한 portfolio evidence만 recruiter story로 구성해.`
 - 예상 결과: PDF/PPTX에 맞는 정직한 candidate-fit presentation seed.
 
@@ -115,7 +131,9 @@
 - 필수 section/record: `Posting Records`, `Freshness and Sample Limits`; `source-id`, `company`, `project`, `region`, `employment-type`, `posted-date`, `source-url`, `retrieval-date`, `source-type`, `sample-geography`, `freshness`.
 - Evidence/approval: official HTTPS company source, `postedDate ≤ retrievalDate ≤ asOfDate ≤ reviewAfter`, sample size/geography와 blind spots가 필요합니다.
 - Profile/slot: `job-posting-evidence`; image `posting-evidence-image`, diagram `skillstead-job-evidence-dependency-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/job-posting-evidence/`.
+- 설치 상대 경로: `assets/templates/job-posting-evidence/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/job-posting-evidence/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/job-posting-evidence/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career job-posting-evidence로 한국 신입 시스템 기획 공식 공고의 검색일, 표본, required/preferred와 일반화 한계를 기록해.`
 - 예상 결과: validator로 재현 가능한 dated posting evidence collection.
 
@@ -125,7 +143,9 @@
 - 필수 section/record: `Quarterly Evidence`, `Growth Commitments`; `requirement-id`, `project-event-evidence`, `goal`, `owner`, `cadence`, `reviewer`, `next-review-date`, `proof-artifact`.
 - Evidence/approval: approved/provisional requirement status, personal/team attribution와 re-evaluation decision이 필요합니다.
 - Profile/slot: `junior-growth-review`; image `growth-work-sample-image`, diagram `skillstead-growth-roadmap-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/junior-growth-review/`.
+- 설치 상대 경로: `assets/templates/junior-growth-review/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/junior-growth-review/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/junior-growth-review/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career junior-growth-review로 실제 project event와 feedback을 분기 goal, proof artifact와 격주 review에 연결해.`
 - 예상 결과: 승진 보장이 아닌 observable growth evidence cycle.
 
@@ -135,7 +155,9 @@
 - 필수 section/record: `Roadmap Commitments`, `Sequence and Dependencies`; `requirement-id`, `learning-task`, `owner`, `cadence`, `proof-artifact`, `reviewer`, `re-evaluation-date`.
 - Evidence/approval: 각 task는 approved/provisional requirement와 review source에 연결하고 schedule assumption을 표시합니다.
 - Profile/slot: `learning-roadmap`; image `learning-output-image`, diagram `skillstead-learning-roadmap-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/learning-roadmap/`.
+- 설치 상대 경로: `assets/templates/learning-roadmap/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/learning-roadmap/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/learning-roadmap/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career learning-roadmap으로 12주 시스템 기획 gap을 evidence project, mentor cadence와 proof artifact 순서로 바꿔.`
 - 예상 결과: 읽기 목록이 아니라 검토 가능한 evidence-building roadmap.
 
@@ -145,7 +167,9 @@
 - 필수 section/record: `Backlog Records`, `Minimum Repairs`; `backlog-id`, `claim-id`, `evidence-id`, `target-competency`, `attribution`, `rights`, `privacy`, `inspectability`, `minimum-repair`, `owner`.
 - Evidence/approval: missing claim은 recovery action과 review gate를 가지며 publication owner가 close를 승인합니다.
 - Profile/slot: `portfolio-review-backlog`; image `portfolio-review-image`, diagram `skillstead-portfolio-dependency-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/portfolio-backlog/`.
+- 설치 상대 경로: `assets/templates/portfolio-backlog/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/portfolio-backlog/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/portfolio-backlog/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career portfolio-backlog로 source가 약한 claim의 evidence, attribution, rights와 minimum repair를 우선순위화해.`
 - 예상 결과: 다음 review를 가능하게 하는 inspectability backlog.
 
@@ -155,7 +179,9 @@
 - 필수 section/record: `Decision Chain`, `Publication Boundary`; `target-competency`, `problem-user`, `evidence`, `hypothesis-intent`, `rules-ui-data-content`, `constraints-alternatives`, `implementation-test`, `result-decision`, `retrospective`, `rights`.
 - Evidence/approval: personal/team attribution, implementation status, source/use purpose, rights/privacy와 review gate가 필요합니다.
 - Profile/slot: `portfolio-project-brief`; image `portfolio-direction-image`, diagram `skillstead-portfolio-roadmap-dependency-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/portfolio-project-brief/`.
+- 설치 상대 경로: `assets/templates/portfolio-project-brief/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/portfolio-project-brief/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/portfolio-project-brief/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career portfolio-project-brief로 시스템 기획 역량을 보여 줄 작은 제작 system project의 decision/test/evidence chain을 설계해.`
 - 예상 결과: completion과 publication boundary가 있는 evidence project brief.
 
@@ -165,7 +191,9 @@
 - 필수 section/record: `Claim Records`, `Fact and Inference Boundary`; `claim-id`, `observation`, `source-address`, `scope`, `inference`, `confidence`, `counterexample`, `alternative`, `validation-method`.
 - Evidence/approval: build/platform/account/region/time scope와 screenshot·third-party rights가 필요합니다.
 - Profile/slot: `reverse-design-document`; image `reverse-design-evidence-image`, diagram `skillstead-reverse-system-loop-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/reverse-design-document/`.
+- 설치 상대 경로: `assets/templates/reverse-design-document/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/reverse-design-document/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/reverse-design-document/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career reverse-design-document로 제작 system 관찰과 가설을 나누고 반례·대안·검증 방법을 기록해.`
 - 예상 결과: MD/PDF/DOCX로 검토할 수 있는 falsifiable 역기획서.
 
@@ -175,6 +203,8 @@
 - 필수 section/record: `Readiness Matrix`, `Decision Options`; `target-requirement`, `current-evidence`, `posting-evidence-id`, `retrieval-date`, `region`, `gap`, `alternative`, `verification-task`.
 - Evidence/approval: target level, employer/region scope, source type/freshness, minimum evidence, owner와 review date를 기록합니다.
 - Profile/slot: `transition-readiness`; image `transition-proof-image`, diagram `skillstead-transition-roadmap-dependency-diagram`.
-- Package path: `products/game-design-career/plugin/assets/templates/transition-readiness/`.
+- 설치 상대 경로: `assets/templates/transition-readiness/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-career/plugin/assets/templates/transition-readiness/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-career/assets/templates/transition-readiness/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Career transition-readiness로 target systems role requirement와 내 current evidence를 비교해 gap, alternative와 verification task를 정리해.`
 - 예상 결과: 합격 약속 없이 next evidence와 재평가 조건을 보여 주는 transition report.

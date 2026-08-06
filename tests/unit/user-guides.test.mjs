@@ -21,6 +21,7 @@ async function withGuideFixture({ omitCareerSkill = false }, check) {
     const vendorRoot = path.join(root, "shared/vendor/skillstead/svg-infographic/0.8.3");
     await mkdir(vendorRoot, { recursive: true });
     await writeFile(path.join(vendorRoot, "SKILL.md"), "# Skillstead\n");
+    await writeFile(path.join(root, "README.md"), "# Root\n\nOPENAI_API_KEY=\n");
     for (const productId of ["game-design-career", "game-design-studio"]) {
       const productRoot = path.join(root, "products", productId, "plugin");
       await mkdir(path.join(productRoot, "assets/templates"), { recursive: true });
@@ -74,6 +75,21 @@ test("complete guide validation rejects a product whose guide IDs differ from in
   await withGuideFixture({ omitCareerSkill: true }, async (root) => {
     const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
     assert.ok(result.errors.some((error) => error.includes("game-design-career skill guide inventory mismatch")));
+  });
+});
+
+test("guide secret scanner includes root README while allowing empty-key examples", async () => {
+  await withGuideFixture({}, async (root) => {
+    const readme = path.join(root, "README.md");
+    assert.equal((await validateUserGuides({ repoRoot: root, requireComplete: false })).ok, true);
+
+    await writeFile(readme, "# Root\n\nExample: sk-proj-01234567890123456789\n");
+    let result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+    assert.ok(result.errors.some((error) => error.includes("README.md: possible OpenAI secret key")));
+
+    await writeFile(readme, "# Root\n\nOPENAI_API_KEY=not-a-placeholder\n");
+    result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+    assert.ok(result.errors.some((error) => error.includes("README.md: nonempty OPENAI_API_KEY assignment")));
   });
 });
 

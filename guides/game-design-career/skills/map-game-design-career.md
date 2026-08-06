@@ -1,6 +1,6 @@
 # map-game-design-career
 
-## 목적과 산출물
+## 목적과 최종 산출물
 
 현재 증거와 제약을 여러 역할군·목표 수준에 비교해 provisional role paths, 역량 gap과 가장 작은 증거 과제를 만듭니다.
 
@@ -20,7 +20,7 @@
 - 선택: target role/level, current posting IDs, reviewer와 feedback source
 - 현재 claim은 검색일, 지역, 표본과 source location을 기록하고 사실·추론·제안을 구분합니다.
 
-## Codex App 예시
+## Codex App 요청 예시
 
 **복사 가능한 요청문**
 
@@ -28,28 +28,48 @@
 @Game Design Career 시스템·콘텐츠 기획 경로를 비교해. 내 역기획서와 팀 프로젝트 기록만 현재 증거로 쓰고 target level, gap, 4주 증거 과제와 주별 feedback cadence를 제안해.
 ```
 
-## Codex CLI 예시
+## Codex CLI 요청 예시
 
 ```text
 $game-design-career:map-game-design-career roles=systems,content, targetLevel=entrant-portfolio, evidence=artifacts/current-work
 ```
 
-## 진행 흐름
+## 내부 진행 흐름
 
 목표가 고정되지 않았으면 최소 두 role family를 만듭니다. 각 path에 `roleFamily`, `currentEvidence`, `targetLevel`, `gaps`, `learningTasks`, `proofArtifacts`, tradeoffs와 uncertainties를 기록합니다. 현재 employer·posting·tool claim은 `research-game-design-jobs`로 보내고, 각 gap을 observable exercise와 task별 `feedbackCadence`로 전환합니다.
 
-## 결과와 파일
+## 생성 파일과 결과 구조
 
 `game-design-role-map` 또는 `competency-matrix`에 role paths, gap-to-evidence chain, verification tasks와 next smallest exercise를 남깁니다. 예상 결과 요약: 한 진로를 선언하는 대신 강화하거나 반증할 수 있는 역할 가설이 생깁니다.
 
-## 검토와 승인
+## 관련 템플릿·품질 프로필·전문 역할
+
+기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+
+## 이미지·도식화 조건
+
+템플릿의 image slot이 실제로 필요할 때만 [이미지 자산 흐름](../image-assets.md)으로 계획·생성을 분리합니다. 관계·흐름·상태를 보여 줄 때는 일반 삽화 대신 [Skillstead 도식화](../visualization.md)를 사용하며, 둘 다 필요 없으면 만들지 않습니다.
+
+## 검토·승인 기준
 
 source의 검색일·지역·표본이 convenience sample이면 그 한계를 표시합니다. candidate statement는 사실과 다르며 agent의 추론과 학습 제안도 별도 label을 가집니다. 어떤 path도 합격을 보장하지 않습니다.
 
-## 실패와 재개
+## 실패·fallback·재개 방법
 
 target role이나 current evidence가 부족하면 `unclear`와 multiple provisional paths를 유지하고 owner·source/exercise·decision date가 있는 verification task를 남깁니다.
 
 ```text
 $game-design-career:map-game-design-career 기존 두 role path를 유지하고 새 공고 evidence ID만 연결해 tradeoff 비교부터 재개해.
 ```
+
+## 다음 작업 요청문
+
+**복사 가능한 CLI 후속 요청문**
+
+```text
+$game-design-career:map-game-design-career 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+```
+
+## 관련 문서
+
+[스킬 선택표](README.md), [템플릿 카탈로그](../templates.md), [문서 품질](../document-quality.md), [제품 workflow](../workflow.md)

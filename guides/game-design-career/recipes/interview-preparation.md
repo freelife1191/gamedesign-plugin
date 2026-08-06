@@ -1,5 +1,7 @@
 # 근거 연결형 면접 연습하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![fresh posting·portfolio evidence가 stable question record와 honest feedback, coach 검토를 거쳐 성장 proof task로 이어지는 흐름.](../../assets/game-design-career/interview-growth-transition-flow.png)
 
 ## 완료 목표

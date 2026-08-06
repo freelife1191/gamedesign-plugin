@@ -1,5 +1,7 @@
 # 역할과 학습 로드맵을 증거 과제로 연결하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![현재 증거에서 역할 gap과 proof task를 거쳐 named human 재평가를 받은 learning roadmap artifact로 가는 흐름.](../../assets/game-design-career/role-gap-learning-roadmap.png)
 
 ## 완료 목표

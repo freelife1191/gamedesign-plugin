@@ -1,6 +1,6 @@
 # research-game-design-jobs
 
-## 목적과 산출물
+## 목적과 최종 산출물
 
 현재 게임 기획 공고를 dated primary evidence collection으로 만들고 required·preferred requirement, repeated signal, applicant evidence와 gap을 분리합니다.
 
@@ -20,7 +20,7 @@
 - 선택: candidate artifacts와 employer/project scope
 - 모든 결과는 사실·추론·제안을 분리하고 표본 크기·표본 지역·source location·blind spot을 기록합니다.
 
-## Codex App 예시
+## Codex App 요청 예시
 
 **복사 가능한 요청문**
 
@@ -28,28 +28,48 @@
 @Game Design Career 한국의 신입 시스템 기획 공고를 공식 회사 채용 페이지에서 조사해. required와 preferred를 분리하고 검색일, 지역, 표본, 반복 신호와 일반화 한계를 기록해.
 ```
 
-## Codex CLI 예시
+## Codex CLI 요청 예시
 
 ```text
 $game-design-career:research-game-design-jobs role=systems-designer, level=entry, region=KR, retrievalDate=2026-08-06, asOfDate=2026-08-06
 ```
 
-## 진행 흐름
+## 내부 진행 흐름
 
 official company career page를 우선하고 posting마다 unique `sourceId`, HTTPS URL, `postedDate ≤ retrievalDate ≤ asOfDate ≤ reviewAfter`를 기록합니다. 같은 normalized requirement가 서로 다른 공식 공고 2개 이상에 있을 때만 repeated signal로 표시하고 exact statement·field·index·requirement ID를 보존합니다. nonempty collection은 skill directory에서 `node scripts/validate-job-evidence.mjs collection.json --as-of 2026-08-06`으로 검증합니다.
 
-## 결과와 파일
+## 생성 파일과 결과 구조
 
 schema-valid posting records, posting-specific required/preferred, repeated signals, applicant evidence, gaps, non-generalizable constraints, sample size/geography와 inference limits를 `job-posting-evidence`에 남깁니다. 예상 결과 요약: 현재 claim을 source와 날짜까지 재현할 수 있는 evidence set이 생깁니다.
 
-## 검토와 승인
+## 관련 템플릿·품질 프로필·전문 역할
+
+기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+
+## 이미지·도식화 조건
+
+템플릿의 image slot이 실제로 필요할 때만 [이미지 자산 흐름](../image-assets.md)으로 계획·생성을 분리합니다. 관계·흐름·상태를 보여 줄 때는 일반 삽화 대신 [Skillstead 도식화](../visualization.md)를 사용하며, 둘 다 필요 없으면 만들지 않습니다.
+
+## 검토·승인 기준
 
 byte-exact source statement가 사실이고, repeated pattern·candidate fit은 별도 추론이며 exercise·proof artifact는 제안입니다. 표본 밖 prevalence나 합격을 보장하지 않습니다. 개인정보·공개 범위와 refresh owner는 사람이 승인합니다.
 
-## 실패와 재개
+## 실패·fallback·재개 방법
 
 stale, undated, secondary, insecure, future-retrieved source나 count/denominator/geography mismatch는 completion blocker입니다. `reviewAfter` 이후에는 다시 검색하고 검증합니다.
 
 ```text
 $game-design-career:research-game-design-jobs 기존 sourceId를 유지하고 reviewAfter가 지난 공고만 재검색한 뒤 validator부터 재개해.
 ```
+
+## 다음 작업 요청문
+
+**복사 가능한 CLI 후속 요청문**
+
+```text
+$game-design-career:research-game-design-jobs 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+```
+
+## 관련 문서
+
+[스킬 선택표](README.md), [템플릿 카탈로그](../templates.md), [문서 품질](../document-quality.md), [제품 workflow](../workflow.md)

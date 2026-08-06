@@ -1,5 +1,7 @@
 # 현재 공고 근거로 역할 gap 조사하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![공식 공고와 표본 경계가 역량 gap, minimum repair, 사람 검토를 거쳐 current evidence artifact로 이어지는 흐름.](../../assets/game-design-career/job-research-evidence-flow.png)
 
 ## 완료 목표

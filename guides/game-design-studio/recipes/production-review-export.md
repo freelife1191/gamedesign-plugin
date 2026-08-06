@@ -1,5 +1,7 @@
 # 제작 위험을 검토하고 안전하게 내보내기 준비하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![제작 위험·검토·내보내기 흐름](../../assets/game-design-studio/production-risk-review-flow.png)
 
 ## 완료 목표

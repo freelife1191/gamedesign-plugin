@@ -1,6 +1,6 @@
 # Studio 템플릿 레퍼런스
 
-설치 package의 15개 Canonical Artifact seed를 비교합니다. 각 디렉터리는 `content.md`, `evidence.yml`, `export-manifest.yml`, `decisions/README.md`, `assets/README.md`를 포함합니다.
+설치된 플러그인에는 아래 Canonical Artifact seed가 들어 있습니다. `products/`는 편집 원본이고 `plugins/`는 build가 만든 snapshot이므로 설치 사용자 경로와 혼동하지 않습니다. 각 디렉터리는 `content.md`, `evidence.yml`, `export-manifest.yml`, `decisions/README.md`, `assets/README.md`를 포함합니다.
 
 ## 정확한 inventory
 
@@ -35,7 +35,9 @@
 - Evidence/approval: current platform·accessibility 1차 근거와 accessibility owner 승인이 필요하며 unverified critical path는 blocker입니다.
 - Profile: `accessibility-platform-matrix`.
 - Slot: image `accessibility-state-image`; Skillstead diagram `skillstead-accessibility-dependency-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/accessibility-platform-matrix/`.
+- 설치 상대 경로: `assets/templates/accessibility-platform-matrix/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/accessibility-platform-matrix/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/accessibility-platform-matrix/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio accessibility-platform-matrix로 모바일·PC의 critical action별 input, focus, sensory alternative와 verification을 비교해.`
 - 예상 결과: 플랫폼별 누락 접근 경로와 승인 owner가 드러난 review artifact.
 
@@ -46,7 +48,9 @@
 - Evidence/approval: canonical system/data ID, production/balance evidence와 combat·accessibility reviewer가 필요합니다.
 - Profile: `character-skill-combat-monster-specification`.
 - Slot: image `combat-telegraph-image`; Skillstead diagram `skillstead-combat-state-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/character-skill-combat-monster/`.
+- 설치 상대 경로: `assets/templates/character-skill-combat-monster/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/character-skill-combat-monster/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/character-skill-combat-monster/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio character-skill-combat-monster로 협동 보스의 telegraph, counterplay, state rule과 balance test를 명세해.`
 - 예상 결과: 플레이어가 읽고 대응할 수 있으며 data key에 연결된 전투 콘텐츠 계약.
 
@@ -57,7 +61,9 @@
 - Evidence/approval: player research 또는 명시적 가정, measurable outcome과 player-protection reviewer가 필요합니다.
 - Profile: `core-motivation-loop`.
 - Slot: image `loop-moment-image`; Skillstead diagram `skillstead-core-motivation-loop-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/core-motivation-loop/`.
+- 설치 상대 경로: `assets/templates/core-motivation-loop/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/core-motivation-loop/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/core-motivation-loop/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio core-motivation-loop로 협동 탐험의 action·feedback·reward·meaningful choice와 stop condition을 연결해.`
 - 예상 결과: 관찰 가능한 loop 가설과 compulsion safety 경계.
 
@@ -68,7 +74,9 @@
 - Evidence/approval: authoritative schema, compatibility/migration test와 design·engineering owner가 필요합니다.
 - Profile: `data-table-contract`.
 - Slot: image `data-inspection-image`; Skillstead diagram `skillstead-data-dependency-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/data-schema-table-contract/`.
+- 설치 상대 경로: `assets/templates/data-schema-table-contract/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/data-schema-table-contract/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/data-schema-table-contract/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio data-schema-table-contract로 제작 recipe field의 PK/FK, authority, runtime consumer, migration과 rollback을 정의해.`
 - 예상 결과: design 의미와 실제 runtime contract가 연결된 schema artifact.
 
@@ -79,7 +87,9 @@
 - Evidence/approval: alternatives와 evidence IDs, named approver, rollback과 reopen condition이 필요합니다.
 - Profile: `design-review-decision-log`.
 - Slot: image `review-annotation-image`; Skillstead diagram `skillstead-decision-dependency-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/decision-change-log/`.
+- 설치 상대 경로: `assets/templates/decision-change-log/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/decision-change-log/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/decision-change-log/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio decision-change-log로 스태미나 cap 결정의 대안, evidence, consequences, rollback과 reopen condition을 기록해.`
 - 예상 결과: 변경 이유와 다음 재검토 조건을 추적할 수 있는 결정 ledger.
 
@@ -90,7 +100,9 @@
 - Evidence/approval: current price/probability policy, telemetry와 economy/monetization owner 승인이 필요합니다.
 - Profile: `economy-balance-specification`.
 - Slot: image `economy-player-view-image`; Skillstead diagram `skillstead-economy-source-sink-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/economy-balance/`.
+- 설치 상대 경로: `assets/templates/economy-balance/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/economy-balance/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/economy-balance/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio economy-balance로 골드·토큰의 source/sink, inventory target, price, odds, pity와 rollback을 검토해.`
 - 예상 결과: player consequence와 hard No-Go가 드러난 경제 명세.
 
@@ -101,7 +113,9 @@
 - Evidence/approval: target-experience evidence, prototype plan, success criterion과 product owner가 필요합니다.
 - Profile: `game-design-brief`.
 - Slot: image `design-context-image`; Skillstead diagram `skillstead-design-flow-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/game-design-brief/`.
+- 설치 상대 경로: `assets/templates/game-design-brief/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/game-design-brief/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/game-design-brief/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio game-design-brief로 모바일 협동 RPG의 target experience, core loop, scope, non-goals와 success metric을 정리해.`
 - 예상 결과: domain 작업과 production gate의 기준이 되는 project brief.
 
@@ -112,7 +126,9 @@
 - Evidence/approval: direct locator, owner와 reviewer role이 필요하며 disagreement는 decision owner가 해결합니다.
 - Profile: `design-review-decision-log`.
 - Slot: image `review-annotation-image`; Skillstead diagram `skillstead-decision-dependency-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/game-design-review/`.
+- 설치 상대 경로: `assets/templates/game-design-review/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/game-design-review/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/game-design-review/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio game-design-review로 이 system spec의 launch blocker, impact와 최소 수정만 기록해.`
 - 예상 결과: 원본을 보존하는 prioritized findings와 unresolved decisions.
 
@@ -123,7 +139,9 @@
 - Evidence/approval: policy/consent basis, sample basis, tested rollback과 live operations owner가 필요합니다.
 - Profile: `liveops-event-experiment-plan`.
 - Slot: image `event-communication-image`; Skillstead diagram `skillstead-live-service-lifecycle-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/liveops-experiment-event/`.
+- 설치 상대 경로: `assets/templates/liveops-experiment-event/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/liveops-experiment-event/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/liveops-experiment-event/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio liveops-experiment-event로 주말 이벤트의 hypothesis, control, 한 변수, guardrail, stop과 tested rollback을 작성해.`
 - 예상 결과: 보호 지표와 rollback이 있는 decision-ready experiment plan.
 
@@ -134,7 +152,9 @@
 - Evidence/approval: system/data dependency, production evidence, provenance·rights·consent와 named approver가 필요합니다.
 - Profile: `narrative-quest-npc-specification`.
 - Slot: image `npc-story-beat-image`; Skillstead diagram `skillstead-quest-flow-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/narrative-quest-npc/`.
+- 설치 상대 경로: `assets/templates/narrative-quest-npc/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/narrative-quest-npc/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/narrative-quest-npc/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio narrative-quest-npc로 폐허 도시 quest와 NPC의 선택·상태·reward·repeatability·rights를 연결해.`
 - 예상 결과: system과 production 현실에 연결된 narrative content spec.
 
@@ -145,7 +165,9 @@
 - Evidence/approval: measured throughput, capacity, prototype result, named owner와 product approval이 필요합니다.
 - Profile: `production-scope-milestone-risk-plan`.
 - Slot: image `scope-reference-image`; Skillstead diagram `skillstead-production-roadmap-dependency-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/production-scope-risk/`.
+- 설치 상대 경로: `assets/templates/production-scope-risk/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/production-scope-risk/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/production-scope-risk/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio production-scope-risk로 vertical slice 범위, dependency, owner, DoD, gate와 kill criteria를 정해.`
 - 예상 결과: commit/defer/kill 판단이 가능한 evidence-backed scope plan.
 
@@ -156,7 +178,9 @@
 - Evidence/approval: authoritative rule owner, conflict decision과 executable test가 필요합니다.
 - Profile: `rule-state-exception-matrix`.
 - Slot: image `exception-feedback-image`; Skillstead diagram `skillstead-rule-state-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/rule-exception-matrix/`.
+- 설치 상대 경로: `assets/templates/rule-exception-matrix/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/rule-exception-matrix/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/rule-exception-matrix/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio rule-exception-matrix로 스태미나 소비와 무료 보너스의 precedence, exception, concurrency와 test case를 정리해.`
 - 예상 결과: implementation을 막는 unresolved precedence가 명시된 rule matrix.
 
@@ -167,7 +191,9 @@
 - Evidence/approval: balance evidence 또는 provisional validation, engineering mapping과 design owner가 필요합니다.
 - Profile: `system-feature-specification`.
 - Slot: image `feature-readability-image`; Skillstead diagram `skillstead-feature-state-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/system-specification/`.
+- 설치 상대 경로: `assets/templates/system-specification/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/system-specification/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/system-specification/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio system-specification으로 제작 시스템의 rule, state, exception, failure/recovery와 table/runtime mapping을 작성해.`
 - 예상 결과: 설계·개발·QA가 공유하는 구현 가능한 mechanic contract.
 
@@ -178,7 +204,9 @@
 - Evidence/approval: platform/accessibility current evidence, test result와 accessibility owner가 필요합니다.
 - Profile: `ui-ux-flow-state-specification`.
 - Slot: image `ui-key-screen-image`; Skillstead diagram `skillstead-ui-flow-state-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/ui-ux-flow-state/`.
+- 설치 상대 경로: `assets/templates/ui-ux-flow-state/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/ui-ux-flow-state/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/ui-ux-flow-state/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio ui-ux-flow-state로 첫 세션의 모든 UI state, input, feedback, recovery와 accessible alternative를 작성해.`
 - 예상 결과: 플랫폼별로 테스트 가능한 interaction state 계약.
 
@@ -189,6 +217,8 @@
 - Evidence/approval: player evidence 또는 explicit assumption, observable validation과 lead design owner가 필요합니다.
 - Profile: `vision-one-pager`.
 - Slot: image `vision-reference-image`; Skillstead diagram `skillstead-vision-dependency-diagram`.
-- Package path: `products/game-design-studio/plugin/assets/templates/vision-pillars/`.
+- 설치 상대 경로: `assets/templates/vision-pillars/` — 설치된 플러그인 안에서 찾는 경로입니다.
+- 저장소 authoring source: `products/game-design-studio/plugin/assets/templates/vision-pillars/` — 저장소 기여자가 편집하는 원본입니다.
+- generated snapshot: `plugins/game-design-studio/assets/templates/vision-pillars/` — build가 생성·검증하는 결과이며 직접 편집하지 않습니다.
 - 복사 가능한 요청문: `@Game Design Studio vision-pillars로 협동 RPG의 player promise, desired emotion, pillar, anti-pillar와 관찰 가능한 success signal을 정의해.`
 - 예상 결과: 기능·콘텐츠·scope 결정을 평가할 수 있는 vision contract.

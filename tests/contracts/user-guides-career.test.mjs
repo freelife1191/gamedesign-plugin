@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -8,16 +8,20 @@ import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const requiredHeadings = [
-  "목적과 산출물",
+  "목적과 최종 산출물",
   "사용할 때",
   "사용하지 않을 때",
   "필수 입력과 선택 입력",
-  "Codex App 예시",
-  "Codex CLI 예시",
-  "진행 흐름",
-  "결과와 파일",
-  "검토와 승인",
-  "실패와 재개",
+  "Codex App 요청 예시",
+  "Codex CLI 요청 예시",
+  "내부 진행 흐름",
+  "생성 파일과 결과 구조",
+  "관련 템플릿·품질 프로필·전문 역할",
+  "이미지·도식화 조건",
+  "검토·승인 기준",
+  "실패·fallback·재개 방법",
+  "다음 작업 요청문",
+  "관련 문서",
 ];
 const expectedTemplateIds = [
   "career-stage-goal",
@@ -52,6 +56,23 @@ function extractSection(markdown, heading) {
   return markdown.slice(bodyStart, next === -1 ? markdown.length : next).trim();
 }
 
+function h2Headings(markdown) {
+  return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
+}
+
+function assertSkillContract(markdown, skillId) {
+  assert.deepEqual(h2Headings(markdown), requiredHeadings, `${skillId}: H2 contract/order`);
+  for (const heading of [
+    "관련 템플릿·품질 프로필·전문 역할",
+    "이미지·도식화 조건",
+    "관련 문서",
+  ]) {
+    const body = extractSection(markdown, heading);
+    assert.ok(body, `${skillId}: ${heading} must not be empty`);
+    assert.match(body, /\[[^\]]+\]\([^)]+\)/, `${skillId}: ${heading} needs a Markdown link`);
+  }
+}
+
 test("Career documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-career");
   assert.equal(inventory.skillIds.length, 15);
@@ -61,12 +82,30 @@ test("Career documents every installed skill with the common contract", async ()
       path.join(root, "guides/game-design-career/skills", skillId + ".md"),
       "utf8",
     );
-    for (const heading of requiredHeadings) {
-      assert.match(markdown, new RegExp("^## " + heading + "$", "m"), skillId + ": " + heading);
-    }
+    assertSkillContract(markdown, skillId);
     assert.match(markdown, /복사 가능한 요청문/);
     assert.match(markdown, /예상 결과/);
   }
+});
+
+test("Career skill contract rejects missing or reordered new sections", async () => {
+  const markdown = await readFile(
+    path.join(root, "guides/game-design-career/skills/map-game-design-career.md"),
+    "utf8",
+  );
+  const missing = markdown.replace(/^## 관련 문서[\s\S]*$/m, "");
+  const reordered = markdown.replace(
+    "## 이미지·도식화 조건",
+    "## __temporary__",
+  ).replace(
+    "## 검토·승인 기준",
+    "## 이미지·도식화 조건",
+  ).replace(
+    "## __temporary__",
+    "## 검토·승인 기준",
+  );
+  assert.throws(() => assertSkillContract(missing, "missing"));
+  assert.throws(() => assertSkillContract(reordered, "reordered"));
 });
 
 test("Career indexes every installed skill and canonical template exactly once", async () => {
@@ -83,6 +122,29 @@ test("Career indexes every installed skill and canonical template exactly once",
   assert.deepEqual(extractFirstColumnIds(skillIndex), inventory.skillIds);
   assert.deepEqual(inventory.templateIds, expectedTemplateIds);
   assert.deepEqual(extractFirstColumnIds(templates), expectedTemplateIds);
+});
+
+test("Career template guide separates installed paths, authoring sources, and generated snapshots", async () => {
+  const inventory = await collectProductInventory(root, "game-design-career");
+  const templates = await readFile(path.join(root, "guides/game-design-career/templates.md"), "utf8");
+  assert.doesNotMatch(templates, /Package path:/);
+  assert.match(templates, /설치 상대 경로/);
+  assert.match(templates, /저장소 authoring source/);
+  assert.match(templates, /generated snapshot/);
+  for (const id of inventory.templateIds) {
+    const paths = [
+      `assets/templates/${id}/`,
+      `products/game-design-career/plugin/assets/templates/${id}/`,
+      `plugins/game-design-career/assets/templates/${id}/`,
+    ];
+    for (const relative of paths) {
+      assert.ok(templates.includes(`\`${relative}\``), `missing documented template path: ${relative}`);
+      const filename = relative.startsWith("assets/")
+        ? path.join(root, "products/game-design-career/plugin", relative)
+        : path.join(root, relative);
+      assert.ok((await lstat(filename)).isDirectory(), `template path does not exist: ${relative}`);
+    }
+  }
 });
 
 test("Career current-claim workflows preserve named evidence and inference limits", async () => {
@@ -140,8 +202,8 @@ test("Career growth and interview guides refresh stale posting evidence before c
     );
     const scopedContract = [
       "필수 입력과 선택 입력",
-      "진행 흐름",
-      "실패와 재개",
+      "내부 진행 흐름",
+      "실패·fallback·재개 방법",
     ].map((heading) => extractSection(markdown, heading)).join("\n");
 
     for (const phrase of [
@@ -169,8 +231,8 @@ test("Career interview workflow binds question and answer records by stable ques
     path.join(root, "guides/game-design-career/skills/practice-game-design-interview.md"),
     "utf8",
   );
-  const workflow = extractSection(markdown, "진행 흐름");
-  const result = extractSection(markdown, "결과와 파일");
+  const workflow = extractSection(markdown, "내부 진행 흐름");
+  const result = extractSection(markdown, "생성 파일과 결과 구조");
 
   for (const field of [
     "questionId",

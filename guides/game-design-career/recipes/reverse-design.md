@@ -1,5 +1,7 @@
 # 관찰 기반 역기획을 portfolio 증거로 만들기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![공개 build 관찰, 반증 가능한 추론, validation queue와 권리 검토가 역기획 artifact와 portfolio 후보로 이어지는 흐름.](../../assets/game-design-career/reverse-design-portfolio-flow.png)
 
 ## 완료 목표

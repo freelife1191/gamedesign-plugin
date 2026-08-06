@@ -1,5 +1,7 @@
 # 콘텐츠·퀘스트를 플레이 가능한 제작 계약으로 만들기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![콘텐츠·내러티브·퀘스트 연결](../../assets/game-design-studio/content-narrative-quest-map.png)
 
 ## 완료 목표

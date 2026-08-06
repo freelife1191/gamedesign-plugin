@@ -1,6 +1,6 @@
 # practice-game-design-interview
 
-## 목적과 산출물
+## 목적과 최종 산출물
 
 target posting과 portfolio evidence ID에 근거한 4종 질문, 답변 기록, evidence-qualified feedback와 honest-answer pattern을 만듭니다.
 
@@ -21,7 +21,7 @@ target posting과 portfolio evidence ID에 근거한 4종 질문, 답변 기록,
 - 선택: previous feedback, objection focus, interviewer context
 - current posting에는 검색일, 지역, 표본을 보존하고 사실·추론·제안을 분리합니다.
 
-## Codex App 예시
+## Codex App 요청 예시
 
 **복사 가능한 요청문**
 
@@ -29,28 +29,48 @@ target posting과 portfolio evidence ID에 근거한 4종 질문, 답변 기록,
 @Game Design Career 이 시스템 기획 공고와 portfolio evidence ID로 base, follow-up, objection, situational 질문을 만들어. 답변의 claim·evidence·choice·alternative·result·reflection을 검토해.
 ```
 
-## Codex CLI 예시
+## Codex CLI 요청 예시
 
 ```text
 $game-design-career:practice-game-design-interview posting=JP-12, portfolioEvidence=E-07,E-12, questionTypes=base,follow-up,objection,situational
 ```
 
-## 진행 흐름
+## 내부 진행 흐름
 
 posting과 portfolio record를 inventory하고 stable IDs를 유지합니다. trusted 기준일이 `reviewAfter`를 넘으면 stale evidence는 current claim에 사용하지 않습니다. 이 경우 `research-game-design-jobs`로 공고를 재수집하고 validator 재검증을 통과한 새 evidence IDs만 질문과 claim에 결합합니다. 모든 question record는 stable unique `questionId`, `questionType`, 서로 독립적인 `postingEvidenceIds`와 `portfolioEvidenceIds`, `prompt`, `verificationStatus`를 가집니다. answer record와 feedback record는 같은 `questionId`를 재사용합니다. 답변은 claim, evidence, choice, alternative, verified result 또는 `not-verified`, reflection으로 기록합니다.
 
-## 결과와 파일
+## 생성 파일과 결과 구조
 
 evidence inventory, stable `questionId`로 결합된 question record와 answer-feedback record, blocked claims, verification tasks와 honest-answer patterns를 `interview-question-answer-log`에 남깁니다. 예상 결과 요약: 공고와 portfolio 근거를 다시 찾을 수 있는 면접 연습 기록이 생깁니다.
 
-## 검토와 승인
+## 관련 템플릿·품질 프로필·전문 역할
+
+기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+
+## 이미지·도식화 조건
+
+템플릿의 image slot이 실제로 필요할 때만 [이미지 자산 흐름](../image-assets.md)으로 계획·생성을 분리합니다. 관계·흐름·상태를 보여 줄 때는 일반 삽화 대신 [Skillstead 도식화](../visualization.md)를 사용하며, 둘 다 필요 없으면 만들지 않습니다.
+
+## 검토·승인 기준
 
 검색일·지역·표본이 한정된 posting evidence임을 표시합니다. 관찰된 사실, candidate 해석, reviewer 추론과 답변 개선 제안을 구분합니다. 답변 연습은 합격을 보장하지 않습니다.
 
-## 실패와 재개
+## 실패·fallback·재개 방법
 
 posting이 없으면 posting-specific claim을 `blocked`로 유지하고 role-general question과 posting 확보 task만 만듭니다. stale evidence의 기존 기록, stale 상태와 한계를 삭제하지 않고 보존합니다. `research-game-design-jobs`의 재수집·validator 재검증 뒤 새 evidence IDs가 downstream question의 `postingEvidenceIds`, 같은 `questionId`의 answer-feedback record와 claim에 다시 결합된 후에만 재개합니다. missing result에는 “확인할 수 없는 X 대신 내 결정 Y와 evidence E-12를 설명한다” 같은 honest boundary를 씁니다.
 
 ```text
 $game-design-career:practice-game-design-interview 기존 questionId를 유지하고 새 posting evidence JP-12를 연결해 blocked 질문부터 재개해.
 ```
+
+## 다음 작업 요청문
+
+**복사 가능한 CLI 후속 요청문**
+
+```text
+$game-design-career:practice-game-design-interview 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+```
+
+## 관련 문서
+
+[스킬 선택표](README.md), [템플릿 카탈로그](../templates.md), [문서 품질](../document-quality.md), [제품 workflow](../workflow.md)

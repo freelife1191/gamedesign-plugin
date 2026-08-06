@@ -315,6 +315,13 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
     await collectProductInventory(root, productId),
   ])));
   const documentedSkillIds = new Map(PRODUCT_IDS.map((productId) => [productId, new Set()]));
+  const rootReadmePath = path.join(root, "README.md");
+  try {
+    await assertContainedRegularFile(root, rootReadmePath);
+    findSecrets(await readFile(rootReadmePath, "utf8"), rootReadmePath, errors);
+  } catch (error) {
+    errors.push(`unable to validate root README ${rootReadmePath}: ${error.message}`);
+  }
   const guideFiles = await collectMarkdownFiles(guidesRoot, errors);
   const guideContents = [];
   for (const markdownPath of guideFiles) {

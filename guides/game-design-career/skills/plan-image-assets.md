@@ -1,6 +1,6 @@
 # plan-image-assets
 
-## 목적과 산출물
+## 목적과 최종 산출물
 
 Career canonical artifact의 profile slot에 맞는 image manifest, reusable prompt package, placeholder와 Skillstead diagram QA handoff를 계획합니다.
 
@@ -20,7 +20,7 @@ Career canonical artifact의 profile slot에 맞는 image manifest, reusable pro
 - 선택: requested variants, prior manifest, preserve/exclude constraints
 - employer·project·character·brand identity와 누락된 count를 추론하지 않습니다.
 
-## Codex App 예시
+## Codex App 요청 예시
 
 **복사 가능한 요청문**
 
@@ -28,28 +28,48 @@ Career canonical artifact의 profile slot에 맞는 image manifest, reusable pro
 @Game Design Career 이 portfolio case study의 required proof image 1개와 Skillstead process diagram 1개를 prompt-only로 계획해. stable ID, source section, placement, alt text와 권리 검토 owner를 남겨 줘.
 ```
 
-## Codex CLI 예시
+## Codex CLI 요청 예시
 
 ```text
 $game-design-career:plan-image-assets artifact=artifacts/system-case-study, mode=prompt-only, requiredCount=1, skillsteadCount=1
 ```
 
-## 진행 흐름
+## 내부 진행 흐름
 
 `apply-document-quality-profile`의 required/recommended image slot과 explicit need를 맞춥니다. packaged planner와 prompt compiler로 stable asset IDs와 declared counts를 보존합니다. Skillstead diagram은 별도 evidence authority로 계획하며 실제 SVG/PNG는 만들지 않습니다.
 
-## 결과와 파일
+## 생성 파일과 결과 구조
 
 artifact 안의 `assets/image-assets.yml`, `assets/prompts/image-prompts.md`, `assets/prompts/image-prompts.json`을 만들거나 갱신합니다. 예상 결과 요약: 생성 없이 prompt·placeholder와 다음 review handoff가 준비됩니다.
 
-## 검토와 승인
+## 관련 템플릿·품질 프로필·전문 역할
+
+기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+
+## 이미지·도식화 조건
+
+이미지 슬롯이 있을 때만 이미지 계획을 만듭니다. 이 스킬은 생성하지 않으며 [이미지 자산 흐름](../image-assets.md)의 `prompt-only|select|required|all` 경계와 stable asset ID를 따릅니다. 구조 관계는 이미지가 아니라 [Skillstead 도식화](../visualization.md)로 분리합니다.
+
+## 검토·승인 기준
 
 planning state는 `concept-draft`입니다. 계획은 portfolio claim, 문서 삽입, 생성 비용 또는 production candidacy를 승인하지 않습니다. prompt와 manifest에는 외부 조직·source project identity를 노출하지 않습니다.
 
-## 실패와 재개
+## 실패·fallback·재개 방법
 
 profile-slot mismatch나 count 누락이면 plan을 완성하지 않고 blocker와 placeholder를 남깁니다. 기존 stable IDs, human decisions, generated output과 provenance는 replanning 중에도 보존합니다.
 
 ```text
 $game-design-career:plan-image-assets 기존 manifest와 stable IDs를 유지하고 누락된 requiredCount=1만 반영해 재개해.
 ```
+
+## 다음 작업 요청문
+
+**복사 가능한 CLI 후속 요청문**
+
+```text
+$game-design-career:plan-image-assets 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+```
+
+## 관련 문서
+
+[스킬 선택표](README.md), [이미지 자산 흐름](../image-assets.md), [템플릿 카탈로그](../templates.md), [문제 해결](../troubleshooting.md)

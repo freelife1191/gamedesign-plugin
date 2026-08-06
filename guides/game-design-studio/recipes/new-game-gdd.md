@@ -1,5 +1,7 @@
 # 새 게임 GDD를 승인 가능한 기준 문서로 만들기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![비전에서 GDD 승인까지의 흐름](../../assets/game-design-studio/vision-to-gdd-approval.png)
 
 ## 완료 목표

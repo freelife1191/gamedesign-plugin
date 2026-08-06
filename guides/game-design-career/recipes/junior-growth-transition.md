@@ -1,5 +1,7 @@
 # 주니어 성장과 전환 준비를 검토하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![현재 단계와 실제 project event, 전환 readiness, 사람 결정이 성장·전환 artifact와 내보내기 준비로 이어지는 경로.](../../assets/game-design-career/career-stage-routing.png)
 
 ## 완료 목표

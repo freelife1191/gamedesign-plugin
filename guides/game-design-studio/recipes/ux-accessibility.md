@@ -1,5 +1,7 @@
 # UX·접근성 경로를 첫 입력부터 복구까지 설계하기
 
+> 본문에 쓰인 고정 한국 이름은 모두 **가상 예시 담당자**입니다. 실제 실행에서는 host user-decision receipt에 기록된 named human을 사용합니다.
+
 ![Studio 오케스트레이션 맵](../../assets/game-design-studio/studio-orchestration-map.png)
 
 ## 완료 목표
