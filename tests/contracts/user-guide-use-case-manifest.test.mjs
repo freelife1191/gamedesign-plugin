@@ -337,6 +337,26 @@ const STUDIO_CONCEPT_COMPARISON_CONTRACT = Object.freeze({
     competencies: ["ST-C01", "ST-C04"],
   },
 });
+const STUDIO_NUMERIC_CLAIM_CASES = Object.freeze([
+  ["reject", "retention은 40%입니다."],
+  ["reject", "시장성은 80%입니다."],
+  ["reject", "시장 규모는 1조 원입니다."],
+  ["reject", "KPI는 70%입니다."],
+  ["reject", "재미는 90점입니다."],
+  ["reject", "밸런스는 95점입니다."],
+  ["reject", "학습 효과는 60%입니다."],
+  ["reject", "70% retention은 이미 달성된 사실입니다."],
+  ["reject", "KPI는 근거 없이 70%로 확정됩니다."],
+  ["reject", "시장 규모는 검증 없이 1조 원으로 확정되었습니다."],
+  ["allow", "retention은 40%라는 가정이며 prototype과 telemetry로 검증합니다."],
+  ["allow", "시장성은 80%라는 가정이며 사람 검토로 검증합니다."],
+  ["allow", "시장 규모는 1조 원이라는 가정이며 simulation 근거로 검증합니다."],
+  ["allow", "retention 40%라는 가정은 검증 전 정답이 아닙니다."],
+  ["allow", "KPI 70%는 prototype으로 검증할 가정입니다."],
+  ["allow", "재미 90점은 telemetry로 검증할 가정입니다."],
+  ["allow", "밸런스 95점은 simulation으로 검증할 가정입니다."],
+  ["allow", "학습 효과 60%는 사람 평가로 검증할 가정입니다."],
+]);
 const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
   "ST-C01": [
     ["player promise", "anti-pillar"],
@@ -761,22 +781,26 @@ function assertStudioConceptSemantics({ conceptScenarios, entries, inventory }) 
 }
 
 function assertNoUnqualifiedNumericClaims(markdown) {
-  const claimPattern = /retention|리텐션|시장성|시장\s*규모|시장\s*점유율|KPI|재미|밸런스|balance|효과/iu;
-  const numericPattern = /\d+(?:[.,]\d+)?\s*(?:%|점|배|조\s*원|억\s*원|만\s*원|원|명|일|회)?/u;
-  const validationPattern = /prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정)|가정|검증|provisional|관찰|평가|근거/iu;
-  const contradictionPattern = /보장|정답|확정(?:한다|이다)|달성(?:한다|을 보장)/u;
   const sentences = markdown.split(/(?<=[.!?])\s+|\n+/u).map((sentence) => sentence.trim()).filter(Boolean);
   for (const sentence of sentences) {
-    const normalized = sentence.replace(/ST-[CG]\d+/gu, "");
-    const claim = claimPattern.exec(normalized);
-    if (!claim) continue;
-    const before = normalized.slice(Math.max(0, claim.index - 12), claim.index);
-    const after = normalized.slice(claim.index, claim.index + 80);
-    const hasNumericOutcome = numericPattern.test(after) || /D\d+\s*$/u.test(before);
-    if (!hasNumericOutcome) continue;
-    assert.match(sentence, validationPattern, `unqualified numeric outcome claim: ${sentence}`);
-    assert.doesNotMatch(sentence, contradictionPattern, `contradictory numeric outcome claim: ${sentence}`);
+    assert.equal(isUnsafeNumericOutcomeSentence(sentence), false, `unsafe numeric outcome claim: ${sentence}`);
   }
+}
+
+function isUnsafeNumericOutcomeSentence(sentence) {
+  const normalized = sentence.replace(/ST-[CG]\d+/gu, "");
+  const hasClaim = /retention|리텐션|시장성|시장\s*규모|시장\s*점유율|KPI|재미|밸런스|balance|효과/iu.test(normalized);
+  const hasNumericValue = /\d+(?:[.,]\d+)?\s*(?:%|점|배|조\s*원|억\s*원|만\s*원|원|명|일|회)?/u.test(normalized);
+  if (!hasClaim || !hasNumericValue) return false;
+
+  const assertionRoot = /보장|확정|정답|달성(?:된|한)?\s*사실/u;
+  const explicitlyNegatedAssertion = /(?:보장|확정|정답|달성(?:된|한)?\s*사실)[^.!?]{0,24}(?:아닙니다|아니다|아니며|아니라)|금지/u;
+  if (explicitlyNegatedAssertion.test(normalized)) return false;
+  if (assertionRoot.test(normalized)) return true;
+
+  const withoutNegatedQualifiers = normalized.replace(/(?:근거|검증|관찰|평가|가정)\s*(?:가\s*)?없이/gu, "");
+  const hasPositiveValidation = /prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정|평가)|가정|검증|provisional|관찰|평가|근거/iu.test(withoutNegatedQualifiers);
+  return !hasPositiveValidation;
 }
 
 function assertStudioConceptComparison({ conceptScenarios, competencyPaths, entries }) {
@@ -1053,7 +1077,7 @@ test("Studio concept contracts reject wrong-valid swaps, TODOs, unsupported clai
   assert.notEqual(unsupportedClaim, conceptScenarios, "unsupported-claim mutation must change source");
   assert.throws(
     () => assertStudioConceptSemantics({ conceptScenarios: unsupportedClaim, entries, inventory }),
-    /contradictory numeric outcome claim/,
+    /unsafe numeric outcome claim/,
   );
 });
 
@@ -1097,35 +1121,22 @@ test("Studio concept contract rejects unqualified numeric outcome claims", async
   const { conceptScenarios } = await readStudioUseCaseGuides();
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
-  const claims = [
-    "retention은 40%입니다.",
-    "시장성은 80%입니다.",
-    "시장 규모는 1조 원입니다.",
-    "KPI는 70%입니다.",
-    "재미는 90점입니다.",
-    "밸런스는 95점입니다.",
-    "학습 효과는 60%입니다.",
-  ];
-  for (const claim of claims) {
-    const mutation = conceptScenarios.replace("이 문서는", `${claim}\n\n이 문서는`);
-    assert.notEqual(mutation, conceptScenarios, `numeric claim mutation: ${claim}`);
-    assert.throws(
-      () => assertStudioConceptSemantics({ conceptScenarios: mutation, entries, inventory }),
-      /unqualified numeric outcome claim/,
-      claim,
-    );
-  }
-
-  for (const qualifiedClaim of [
-    "retention은 40%라는 가정이며 prototype과 telemetry로 검증합니다.",
-    "시장성은 80%라는 가정이며 사람 검토로 검증합니다.",
-    "시장 규모는 1조 원이라는 가정이며 simulation 근거로 검증합니다.",
-  ]) {
-    const qualified = conceptScenarios.replace("이 문서는", `${qualifiedClaim}\n\n이 문서는`);
-    assert.doesNotThrow(
-      () => assertStudioConceptSemantics({ conceptScenarios: qualified, entries, inventory }),
-      qualifiedClaim,
-    );
+  for (const [decision, sentence] of STUDIO_NUMERIC_CLAIM_CASES) {
+    assert.equal(isUnsafeNumericOutcomeSentence(sentence), decision === "reject", `numeric classifier: ${sentence}`);
+    const mutation = conceptScenarios.replace("이 문서는", `${sentence}\n\n이 문서는`);
+    assert.notEqual(mutation, conceptScenarios, `numeric claim mutation: ${sentence}`);
+    if (decision === "reject") {
+      assert.throws(
+        () => assertStudioConceptSemantics({ conceptScenarios: mutation, entries, inventory }),
+        /numeric outcome claim/,
+        sentence,
+      );
+    } else {
+      assert.doesNotThrow(
+        () => assertStudioConceptSemantics({ conceptScenarios: mutation, entries, inventory }),
+        sentence,
+      );
+    }
   }
 });
 
