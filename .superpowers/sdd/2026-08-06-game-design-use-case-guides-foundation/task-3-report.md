@@ -70,3 +70,29 @@
 ### 우려 사항
 
 - Node의 path API만으로 write 직전의 파일시스템 swap race를 완전히 제거할 수는 없습니다. 이 변경은 canonical root, 모든 existing parent/file의 `lstat` non-symlink 검사, `realpath` containment 재검증으로 일반적인 symlink escape를 fail-closed 처리합니다.
+
+## Fix round 2 — Unicode and PNG dimension hardening
+
+### 수정
+
+- card wrapping은 UTF-16 `line.length` 대신 code-point 배열을 사용합니다. validator의 20자 label/22자 detail 한계와 같은 단위로 두 줄을 만들고, renderer의 `slice(0, 2)` truncation을 제거했습니다.
+- builder unit wrapper가 1400×900 IHDR와 valid IEND를 가진 완결 PNG를 반환하는 경우를 추가해, PNG dimension contract가 corrupt-PNG 검사와 독립적으로 fail-closed함을 검증합니다.
+- optional `lstat` helper는 `ENOENT`만 absent로 변환하고 permission/I/O 등 다른 오류는 원래대로 rethrow합니다. 권한 없는 output parent fixture는 `EACCES`/`EPERM`가 `missing output parent`로 바뀌지 않고 전달되는지 검증합니다.
+
+### TDD RED → GREEN
+
+1. 20개의 multi-code-unit 🧩 label과 22개의 🧠 detail을 source limit 경계로 넣고, 첫 card의 실제 SVG text node들을 이어 원래 code-point sequence와 비교하는 regression test를 먼저 작성했습니다. wrong-dimension complete PNG 실행 test도 같은 builder fixture에 추가했습니다.
+2. RED: combined targeted suite에서 Unicode test가 12개 중 1개 실패했습니다. 실제 card label은 20개 대신 10개 🧩만 남았습니다.
+3. code-point chunking과 non-ENOENT `lstat` rethrow를 구현했습니다. 기존 source의 line-boundary whitespace도 보존되도록 6쌍을 모두 재생성했습니다.
+4. 권한 없는 output parent fixture도 추가해 non-ENOENT error code가 builder 경계에서 보존되는지 확인했습니다. cleanup은 `finally`에서 권한을 복구합니다.
+5. GREEN: targeted suite 13/13 PASS. 1400×900 complete PNG는 `PNG must be 2800x1800` 오류로 거부됩니다.
+
+### 검증
+
+- `node --test tests/unit/use-case-diagrams.test.mjs tests/unit/build-use-case-diagrams.test.mjs` → 13/13 PASS
+- `npm run build:guide-diagrams` → 6 SVG, 6 PNG built
+- `npm run check:guide-diagrams` → 6 SVG, 6 PNG checked
+- `npm run test:unit` → 356/356 PASS
+- `node --test tests/contracts/user-guide-use-case-manifest.test.mjs` → 9/9 PASS
+- Studio wrapper 6-file lint → `0 error(s), 0 warning(s) across 6 file(s)`
+- 재생성한 5-card `aud-02.png` 육안 검토 → line-boundary whitespace 보존 뒤에도 card text, connector, conclusion strip의 clipping/overlap 없음

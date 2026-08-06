@@ -21,7 +21,7 @@
     <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
       <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">문제 정의</text>
       <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">검증할 문제를 분명히</text>
-      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">합니다.</text>
+      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400"> 합니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 규칙·결정">
     <rect x="450" y="342" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>

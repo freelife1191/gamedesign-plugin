@@ -30,7 +30,7 @@
     <text x="389" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
       <text x="363" y="438" fill="#3C3489" font-size="22" font-weight="700">공고 표본</text>
       <text x="363" y="500" fill="#354152" font-size="18" font-weight="400">확인일과 표본 경계를</text>
-      <text x="363" y="526" fill="#354152" font-size="18" font-weight="400">기록합니다.</text>
+      <text x="363" y="526" fill="#354152" font-size="18" font-weight="400"> 기록합니다.</text>
   </g>
   <g aria-label="읽기 순서 3: 역기획">
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>

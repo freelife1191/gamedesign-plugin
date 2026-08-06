@@ -49,9 +49,18 @@ async function assertSafeOutputFile(root, filename, { createParents }) {
   }
 }
 
+async function lstatIfPresent(filename) {
+  try {
+    return await lstat(filename);
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 async function assertSafeExistingFile(root, filename) {
   await assertSafeOutputFile(root, filename, { createParents: false });
-  const entry = await lstat(filename).catch(() => null);
+  const entry = await lstatIfPresent(filename);
   if (!entry) throw new Error(`missing generated output: ${filename}`);
 }
 

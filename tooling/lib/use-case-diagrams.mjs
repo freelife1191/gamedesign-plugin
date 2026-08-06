@@ -38,18 +38,10 @@ function escapeXml(value) {
 
 function splitLines(value, maxLength = 10) {
   const characters = [...value.trim()];
-  const lines = [];
-  let line = "";
-  for (const character of characters) {
-    if (line.length >= maxLength) {
-      lines.push(line);
-      line = character.trimStart();
-    } else {
-      line += character;
-    }
-  }
-  if (line) lines.push(line);
-  return lines.slice(0, 2);
+  return Array.from(
+    { length: Math.ceil(characters.length / maxLength) },
+    (_, index) => characters.slice(index * maxLength, (index + 1) * maxLength).join(""),
+  );
 }
 
 function layoutFor(type, count) {

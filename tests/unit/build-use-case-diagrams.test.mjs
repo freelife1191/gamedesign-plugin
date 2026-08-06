@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -28,25 +28,27 @@ const source = Object.freeze({
 const pngPath = "guides/assets/use-cases/audiences/aud-01.png";
 const svgPath = "guides/assets/use-cases/audiences/aud-01.svg";
 
-function completePng() {
+function completePng(width = 2800, height = 1800) {
   const png = Buffer.alloc(45);
   png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   png.writeUInt32BE(13, 8);
   png.write("IHDR", 12);
-  png.writeUInt32BE(2800, 16);
-  png.writeUInt32BE(1800, 20);
+  png.writeUInt32BE(width, 16);
+  png.writeUInt32BE(height, 20);
   png.set([8, 2, 0, 0, 0], 24);
   png.write("IEND", 37);
   return png;
 }
 
-function completePngSource() {
-  return `const png = Buffer.alloc(45);\npng.set([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);\npng.writeUInt32BE(13, 8); png.write("IHDR", 12); png.writeUInt32BE(2800, 16); png.writeUInt32BE(1800, 20); png.set([8,2,0,0,0], 24); png.write("IEND", 37);\n`;
+function completePngSource(width = 2800, height = 1800) {
+  return `const png = Buffer.alloc(45);\npng.set([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);\npng.writeUInt32BE(13, 8); png.write("IHDR", 12); png.writeUInt32BE(${width}, 16); png.writeUInt32BE(${height}, 20); png.set([8,2,0,0,0], 24); png.write("IEND", 37);\n`;
 }
 
 function wrapperSource({ lint = "check-svg: 0 error(s), 0 warning(s) across 1 file(s)", lintStatus = 0, png = "complete", recordFile, externalPng } = {}) {
   const render = png === "complete"
     ? `${completePngSource()}await mkdir(path.dirname(output), { recursive: true }); await writeFile(output, png);`
+    : png === "wrong-dimensions"
+      ? `${completePngSource(1400, 900)}await mkdir(path.dirname(output), { recursive: true }); await writeFile(output, png);`
     : png === "symlink"
       ? `await mkdir(path.dirname(output), { recursive: true }); await symlink(${JSON.stringify(externalPng)}, output);`
     : "await mkdir(path.dirname(output), { recursive: true }); await writeFile(output, Buffer.from([0x89, 0x50]));";
@@ -117,6 +119,15 @@ test("builder fails closed when the wrapper emits a corrupt PNG", async (t) => {
   );
 });
 
+test("builder fails closed when the wrapper emits a complete PNG with wrong dimensions", async (t) => {
+  const repoRoot = await writeFixture(t, { wrapper: wrapperSource({ png: "wrong-dimensions" }) });
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }),
+    /PNG must be 2800x1800/u,
+  );
+});
+
 test("builder rejects a PNG output replaced with a symlink after rendering", async (t) => {
   const externalRoot = await mkdtemp(path.join(os.tmpdir(), "use-case-diagrams-rendered-external-"));
   t.after(() => rm(externalRoot, { recursive: true, force: true }));
@@ -159,4 +170,19 @@ test("builder rejects a repository output parent symlinked to an OS temporary di
     /symlink|unsafe|outside/u,
   );
   assert.equal(await readFile(path.join(externalRoot, "aud-01.svg"), "utf8"), "outside bytes");
+});
+
+test("builder preserves non-ENOENT output-path errors instead of treating them as missing", async (t) => {
+  const repoRoot = await writeFixture(t);
+  const protectedParent = path.join(repoRoot, "guides/assets/use-cases");
+  await mkdir(protectedParent, { recursive: true });
+  await chmod(protectedParent, 0o000);
+  try {
+    await assert.rejects(
+      () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }),
+      (error) => error?.code === "EACCES" || error?.code === "EPERM",
+    );
+  } finally {
+    await chmod(protectedParent, 0o700);
+  }
 });

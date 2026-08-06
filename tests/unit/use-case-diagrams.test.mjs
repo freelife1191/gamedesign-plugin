@@ -53,3 +53,17 @@ test("diagram source rejects card text that cannot fit without truncation", () =
     steps: [{ ...validFixture.steps[0], detail }, ...validFixture.steps.slice(1)],
   }), /detail.*length|detail.*fit/u);
 });
+
+test("renderDiagramSvg preserves every multi-code-unit character at the card length limits", () => {
+  const label = "🧩".repeat(20);
+  const detail = "🧠".repeat(22);
+  const svg = renderDiagramSvg({
+    ...validFixture,
+    steps: [{ label, detail }, ...validFixture.steps.slice(1)],
+  });
+  const firstCard = /<g aria-label="읽기 순서 1:[\s\S]*?<\/g>/u.exec(svg)?.[0];
+  const text = [...firstCard.matchAll(/<text\b[^>]*>([^<]*)<\/text>/gu)].map((match) => match[1]);
+
+  assert.equal(text.slice(1, 3).join(""), label);
+  assert.equal(text.slice(3, 5).join(""), detail);
+});

@@ -45,7 +45,7 @@
     <text x="1064" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
       <text x="1038" y="438" fill="#814600" font-size="22" font-weight="700">학습 증거</text>
       <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">피드백과 수정 기록을</text>
-      <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">남깁니다.</text>
+      <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400"> 남깁니다.</text>
   </g>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
