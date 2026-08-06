@@ -10,7 +10,7 @@ import {
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
-import { collectHeadingAnchors, collectProductInventory } from "../../tooling/lib/user-guides.mjs";
+import { collectHeadingAnchors, collectProductInventory, extractMarkdownLinks } from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
 import {
@@ -106,6 +106,32 @@ const CAREER_COMPETENCY_HEADINGS = Object.freeze({
   "CA-C06": "CA-C06 창작 기획 포트폴리오",
   "CA-C07": "CA-C07 포트폴리오 검토·수정·발표",
   "CA-C08": "CA-C08 면접·주니어 성장·직무 전환",
+});
+const CAREER_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
+  "CA-C01": [
+    ["역할", "provisional path"], ["합격 가능성"], ["역할 후보", "학습 제약"], ["현재 evidence", "proof task"], ["career-stage-goal", "learning-roadmap"], ["Studio 원본", "병합하지 않"], ["후보자 순위", "proof task"], ["artifact=game-design-career/role-map"], ["career strategist", "멘토"], ["game-design-role-map", "learning-roadmap"], ["사용자와 멘토"], ["**보존:**", "role map"], ["CA-C02", "CA-C03"],
+  ],
+  "CA-C02": [
+    ["직접 본 장면", "해석"], ["내부 구현", "복제"], ["공개 build", "권리"], ["의도일 수 있다", "추론"], ["game-analysis-report", "five-axis-review"], ["기각한 해석", "재관찰"], ["내부 의도", "추정하지 마"], ["artifact=game-design-career/analysis"], ["reviewer", "사람이 결정"], ["game-analysis-report", "reverse-design-document"], ["작성자와 멘토"], ["**보존:**", "location"], ["CA-C03", "CA-C04"],
+  ],
+  "CA-C03": [
+    ["current requirement", "시장 전체"], ["convenience sample", "채용량"], ["retrievalDate", "region"], ["표본 하나", "required와 preferred"], ["반복 신호", "새 source ID"], ["fit·채용 결과", "판정하지 않"], ["sourceUrl", "일반화하지 마"], ["role=systems-designer", "retrievalDate=<date>"], ["evidence auditor", "Research Owner"], ["job-posting-evidence", "source ID별"], ["Research Owner", "Portfolio Reviewer"], ["**보존:**", "historical record"], ["CA-C04", "학습 과제"],
+  ],
+  "CA-C04": [
+    ["학습 가설", "evidence task"], ["경험을 지어 내", "약속"], ["evidence ID", "표본 경계"], ["작은 proof", "검토 날짜"], ["competency-matrix", "learning-roadmap"], ["기각한 대안", "개인과 팀"], ["경력 단계", "재검토 조건"], ["artifact=game-design-career/learning-roadmap"], ["visualize-career-roadmap", "export-career-documents"], ["competency-matrix", "learning-roadmap"], ["작성자와 멘토"], ["**보존:**", "matrix 행"], ["CA-C05", "CA-C06"],
+  ],
+  "CA-C05": [
+    ["evidence ID", "추론"], ["내부 코드", "권리 불명"], ["evidence ID", "개인 기여"], ["EVID-RD-01", "proposal"], ["반례", "public-rights review"], ["Studio 작업", "병합하지 않"], ["EVID-RD-01", "public-rights review"], ["artifact=game-design-career/reverse-design"], ["reverse-engineer-game-design", "public-rights reviewer"], ["reverse-design-document", "EVID-RD-01"], ["public-rights reviewer", "보장하지 않"], ["**보존:**", "review finding"], ["CA-C06", "창작 설계"],
+  ],
+  "CA-C06": [
+    ["evidence ID", "개인 기여"], ["팀 결과", "권한 없는 asset"], ["evidence ID", "public-rights review owner"], ["EVID-CP-01", "prototype"], ["creative-design-portfolio", "five-axis-review"], ["evidence summary", "병합하지 않"], ["EVID-CP-01", "성과·채용"], ["artifact=game-design-career/creative-case"], ["portfolio reviewer", "public-rights reviewer"], ["creative-design-portfolio", "EVID-CP-01"], ["public-rights reviewer", "보장하지 않"], ["**보존:**", "공개 제외 목록"], ["CA-C07", "수정 우선순위"],
+  ],
+  "CA-C07": [
+    ["evidence ID", "발표 답변"], ["자동 승인", "성과·합격"], ["evidence ID", "개인 기여"], ["EVID-PR-01", "가장 작은 수정"], ["five-axis-review", "portfolio-backlog"], ["Studio 원본", "팀 성과"], ["EVID-PR-01", "채용 결과"], ["artifact=game-design-career/portfolio-review"], ["practice-game-design-interview", "export-career-documents"], ["introduction-motivation", "EVID-PR-01"], ["portfolio reviewer", "보장하지 않"], ["**보존:**", "review history"], ["CA-C08", "honest gap"],
+  ],
+  "CA-C08": [
+    ["준비도", "확정 사실"], ["승진", "이직 성공"], ["evidence ID", "feedback owner"], ["EVID-GR-01", "honest gap"], ["interview-question-answer-log", "transition-readiness"], ["evidence summary", "Career Artifact"], ["EVID-GR-01", "채용·승진·전환"], ["artifact=game-design-career/growth-transition"], ["plan-junior-growth", "public-rights reviewer"], ["junior-growth-review", "EVID-GR-01"], ["멘토·manager·career reviewer", "보장하지 않"], ["**보존:**", "재검색·재검토"], ["CA-C03", "CA-C04"],
+  ],
 });
 const STUDIO_CONCEPT_HEADINGS = Object.freeze({
   "ST-G01": "ST-G01 모바일 수집형 RPG·라이브서비스",
@@ -1123,6 +1149,102 @@ async function readCareerCompetencyGuides() {
   return { index, competencyPaths };
 }
 
+function assertCareerCompetencyStructure({ competencyPaths, entries, inventory }) {
+  const h2Sections = markdownSections(competencyPaths, 2);
+  const anchors = collectHeadingAnchors(competencyPaths);
+
+  assert.equal(entries.length, 8);
+  assert.deepEqual(h2Sections.map(({ heading }) => heading), entries.map(({ id }) => CAREER_COMPETENCY_HEADINGS[id]));
+  for (const entry of entries) {
+    assert.ok(anchors.has(entry.anchor), `${entry.id} manifest anchor`);
+    const caseSection = h2Sections.find(({ heading }) => heading === CAREER_COMPETENCY_HEADINGS[entry.id]);
+    assert.ok(caseSection, `${entry.id} H2 section`);
+    const caseParts = markdownSections(caseSection.body, 3);
+    assert.deepEqual(caseParts.map(({ heading }) => heading), STUDIO_COMPETENCY_CASE_MARKERS, `${entry.id} common case-card shape`);
+    for (const part of caseParts) assert.ok(part.body.length > 0, `${entry.id} ${part.heading} content`);
+    const byHeading = new Map(caseParts.map((section) => [section.heading, section.body]));
+    const flow = byHeading.get("스킬·템플릿 흐름");
+    for (const skill of entry.skills) assert.match(flow, new RegExp("`" + skill + "`"), `${entry.id} skill ${skill}`);
+    for (const template of entry.templates) assert.match(flow, new RegExp("`" + template + "`"), `${entry.id} template ${template}`);
+    const results = byHeading.get("결과물");
+    for (const output of entry.outputs) assert.match(results, new RegExp("`" + output + "`"), `${entry.id} output ${output}`);
+    assert.match(byHeading.get("검토와 승인"), /\*\*사람 결정:\*\*/);
+    assert.match(byHeading.get("검토와 승인"), /자동.*승인(?:을 )?(?:하지 않|이? (?:아니|아닙)|되지는 않)|승인을 대신하지 않/);
+  }
+  assertCareerCompetencySemantics({ competencyPaths, entries, inventory });
+}
+
+function assertCareerCompetencySemantics({ competencyPaths, entries, inventory }) {
+  assert.deepEqual(Object.keys(CAREER_COMPETENCY_SEMANTIC_CONTRACT), entries.map(({ id }) => id), "Career semantic expectation coverage");
+  for (const entry of entries) {
+    const caseBody = sectionByHeading(competencyPaths, 2, CAREER_COMPETENCY_HEADINGS[entry.id]);
+    const byHeading = new Map(markdownSections(caseBody, 3).map((section) => [section.heading, section.body]));
+    const semanticContract = CAREER_COMPETENCY_SEMANTIC_CONTRACT[entry.id];
+    assert.equal(semanticContract.length, STUDIO_COMPETENCY_CASE_MARKERS.length, `${entry.id} semantic section coverage`);
+    for (const [index, terms] of semanticContract.entries()) {
+      const heading = STUDIO_COMPETENCY_CASE_MARKERS[index];
+      const body = byHeading.get(heading);
+      assert.ok(body.length >= 40, `${entry.id} ${heading} substantive content`);
+      assert.doesNotMatch(body, /^(?:TODO|TBD|예정)(?:\b|$)/iu, `${entry.id} ${heading} placeholder`);
+      for (const term of terms) assert.ok(body.includes(term), `${entry.id} ${heading} semantic term: ${term}`);
+    }
+
+    const appBlocks = fencedCodeBlocks(byHeading.get("Codex App 요청문"), "text");
+    assert.equal(appBlocks.length, 1, `${entry.id} one App request block`);
+    assert.match(appBlocks[0], /^@Game Design Career .+$/s, `${entry.id} App request`);
+    const cliBlocks = fencedCodeBlocks(byHeading.get("Codex CLI 요청문"), "text");
+    assert.equal(cliBlocks.length, 1, `${entry.id} one CLI request block`);
+    const referencedSkills = [...cliBlocks[0].matchAll(/\$game-design-career:([a-z0-9-]+)/g)].map((match) => match[1]);
+    assert.ok(referencedSkills.length > 0, `${entry.id} referenced CLI skill`);
+    for (const skillId of referencedSkills) {
+      assert.ok(inventory.skillIds.includes(skillId), `${entry.id} installed Career skill: ${skillId}`);
+      assert.ok(entry.skills.includes(skillId), `${entry.id} manifest-bound CLI skill: ${skillId}`);
+    }
+
+    const results = byHeading.get("결과물");
+    assert.deepEqual(fieldLabels(results), ["최소 결과", "선택 결과", "확장 결과"], `${entry.id} output ownership levels`);
+    for (const output of entry.outputs) assert.match(results, new RegExp("`" + output + "`"), `${entry.id} exact manifest output: ${output}`);
+    const review = byHeading.get("검토와 승인");
+    assert.match(review, /\*\*사람 결정:\*\*/, `${entry.id} review owner`);
+    const failure = byHeading.get("실패·재개");
+    assert.match(failure, /\*\*보존:\*\*/, `${entry.id} preserves resumable evidence`);
+    assert.match(failure, /재개|되돌(?:아갑니다|립니다)|재검색/, `${entry.id} resumable failure boundary`);
+  }
+
+  const c03 = sectionByHeading(competencyPaths, 2, CAREER_COMPETENCY_HEADINGS["CA-C03"]);
+  const c03Parts = new Map(markdownSections(c03, 3).map((section) => [section.heading, section.body]));
+  const practice = c03Parts.get("표준 실습");
+  const resume = c03Parts.get("실패·재개");
+  for (const field of ["sourceUrl", "location", "retrievalDate", "region", "sample boundary", "reviewAfter"]) {
+    assert.match(practice, new RegExp("`" + field + "`"), `CA-C03 standard-practice current evidence ${field}`);
+  }
+  assert.doesNotMatch(practice, /https?:\/\//, "CA-C03 does not invent example URL");
+  assert.match(practice, /`reviewAfter` 이후 재검색 전까지 current claim에 사용하지 않/, "CA-C03 stale current-claim polarity");
+  assert.match(practice, /새 source ID/, "CA-C03 refresh creates a new source ID");
+  assert.match(resume, /`reviewAfter`가 지나면 current conclusion을 보류하고 재검색/, "CA-C03 stale conclusion is withheld before re-search");
+  assert.match(resume, /새 source ID 또는 evidence ID/, "CA-C03 resume refreshes source or evidence ID");
+}
+
+function assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths }) {
+  const links = extractMarkdownLinks(index).map(({ target }) => target);
+  const competencyAnchors = collectHeadingAnchors(competencyPaths);
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  for (const entry of allCareerCases.filter((entry) => entry.view === "competency")) {
+    const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
+    assert.ok(links.includes(target), `${entry.id} current Markdown link`);
+    assert.match(index, new RegExp("\\[" + escapeRegExp(entry.id) + "[^\\]]*\\]\\(" + escapeRegExp(target) + "\\)"), `${entry.id} current Markdown link text`);
+    assert.ok(competencyAnchors.has(entry.anchor), `${entry.id} current target anchor exists`);
+  }
+  for (const entry of allCareerCases.filter((entry) => entry.view === "target")) {
+    const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
+    assert.ok(!links.includes(target), `${entry.id} deferred route is not Markdown`);
+    assert.match(index, new RegExp("\\*\\*" + escapeRegExp(entry.id) + "[^\\n]*\\*\\* — 예정 경로: `" + escapeRegExp(target) + "`"), `${entry.id} deferred plain route`);
+  }
+  for (const target of ["../../use-cases/README.md#공통-faq", "../../use-cases/output-catalog.md"]) {
+    assert.ok(links.includes(target), `Career index actual shared link: ${target}`);
+  }
+}
+
 function assertStudioFaq(markdown) {
   const headings = [...markdown.matchAll(/^(#{1,3}) (.+)$/gm)].map((match) => ({
     level: match[1].length,
@@ -1245,11 +1367,75 @@ test("Career manifest declares the ordered case and installed-skill coverage wit
   assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-career/skills/svg-infographic.png"));
 });
 
+test("Career competency and index mutation controls reject semantically wrong but structurally valid content", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { index, competencyPaths } = await readCareerCompetencyGuides();
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
+  const allCareerCases = manifest.cases.filter((entry) => entry.product === "game-design-career");
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
+  const c01 = CAREER_COMPETENCY_HEADINGS["CA-C01"];
+  const c02 = CAREER_COMPETENCY_HEADINGS["CA-C02"];
+  const c01Current = sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "현재 상황과 목표");
+  const c02Current = sectionByHeading(sectionByHeading(competencyPaths, 2, c02), 3, "현재 상황과 목표");
+  const c01Next = sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "자기점검과 다음 학습");
+  const c02Next = sectionByHeading(sectionByHeading(competencyPaths, 2, c02), 3, "자기점검과 다음 학습");
+  const mutations = [
+    ["CA-C01/02 current-body swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "현재 상황과 목표", c02Current), c02, "현재 상황과 목표", c01Current), /CA-C01 현재 상황과 목표 semantic term: 역할/],
+    ["wrong-valid CLI skill", replaceCasePart(competencyPaths, c01, "Codex CLI 요청문", sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "Codex CLI 요청문").replace("$game-design-career:map-game-design-career", "$game-design-career:reverse-engineer-game-design")), /CA-C01 manifest-bound CLI skill: reverse-engineer-game-design/],
+    ["TODO standard practice", replaceCasePart(competencyPaths, c01, "표준 실습", "TODO"), /CA-C01 표준 실습 substantive content/],
+    ["CA-C01/02 next-route swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "자기점검과 다음 학습", c02Next), c02, "자기점검과 다음 학습", c01Next), /CA-C01 자기점검과 다음 학습 semantic term: CA-C02/],
+  ];
+  for (const [label, mutation, expectedFailure] of mutations) {
+    assert.throws(
+      () => assertCareerCompetencyStructure({ competencyPaths: mutation, entries, inventory }),
+      expectedFailure,
+      label,
+    );
+  }
+
+  const c03 = CAREER_COMPETENCY_HEADINGS["CA-C03"];
+  const c03Practice = sectionByHeading(sectionByHeading(competencyPaths, 2, c03), 3, "표준 실습");
+  const c03Preparation = sectionByHeading(sectionByHeading(competencyPaths, 2, c03), 3, "준비 입력");
+  const c03Fields = "`sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`";
+  const c03Mutations = [
+    ["stale polarity reversed", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice.replace("재검색 전까지 current claim에 사용하지 않으며", "재검색 없이 current claim에 사용하며")), /CA-C03 stale current-claim polarity/],
+    ["invented example URL", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\n예시 URL: https://invented.example/jobs"), /CA-C03 does not invent example URL/],
+    ["current-evidence fields moved", replaceCasePart(replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice.replace(c03Fields, "current evidence fields")), c03, "준비 입력", c03Preparation + "\n\n" + c03Fields), /CA-C03 standard-practice current evidence sourceUrl/],
+  ];
+  for (const [label, mutation, expectedFailure] of c03Mutations) {
+    assert.throws(
+      () => assertCareerCompetencyStructure({ competencyPaths: mutation, entries, inventory }),
+      expectedFailure,
+      label,
+    );
+  }
+
+  const currentPlaintext = index.replace(
+    "[CA-C01 기획 직무와 전문 분야 탐색](competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색)",
+    "CA-C01 기획 직무와 전문 분야 탐색 (competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색)",
+  );
+  assert.throws(
+    () => assertCareerIndexRouteStrings({ index: currentPlaintext, allCareerCases, competencyPaths }),
+    /CA-C01 current Markdown link/,
+    "current route must remain a Markdown link",
+  );
+  const futureMarkdown = index.replace(
+    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생`",
+    "[concept-scenarios.md#ca-t01-시스템-기획-입문-학생](concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
+  );
+  assert.throws(
+    () => assertCareerIndexRouteStrings({ index: futureMarkdown, allCareerCases, competencyPaths }),
+    /CA-T01 deferred route is not Markdown/,
+    "future route must stay deferred plain text",
+  );
+});
+
 test("each Career competency case preserves its anchored case-card, evidence boundary, and deferred index routes", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index, competencyPaths } = await readCareerCompetencyGuides();
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
   const allCareerCases = manifest.cases.filter((entry) => entry.product === "game-design-career");
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
   const h2Sections = markdownSections(competencyPaths, 2);
   const anchors = collectHeadingAnchors(competencyPaths);
 
@@ -1299,6 +1485,8 @@ test("each Career competency case preserves its anchored case-card, evidence bou
   }
   assert.match(index, /\.\.\/\.\.\/use-cases\/README\.md#공통-faq/, "Career index shared FAQ route");
   assert.match(index, /\.\.\/\.\.\/use-cases\/output-catalog\.md/, "Career index shared output catalog route");
+  assertCareerCompetencyStructure({ competencyPaths, entries, inventory });
+  assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths });
 });
 
 test("Studio manifest declares the ordered case and installed-skill coverage with deferred guide targets", async () => {

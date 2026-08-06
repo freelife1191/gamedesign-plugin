@@ -132,7 +132,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 
 ### 실패·재개
 
-location 또는 권리가 불명확하면 해당 claim을 보류합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문.
+location 또는 권리가 불명확하면 해당 claim을 보류하고, 공개 location 또는 권리 확인 뒤 보존한 관찰에서 재개합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문.
 
 ### 자기점검과 다음 학습
 
@@ -201,7 +201,7 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 ### 실패·재개
 
-공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류하고 재검색합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record.
+공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류하고 재검색한 뒤 새 source ID 또는 evidence ID로 갱신해 재개합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record.
 
 ### 자기점검과 다음 학습
 
@@ -337,7 +337,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 
 ### 실패·재개
 
-source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding.
+source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존하며, public-rights review 뒤 확인된 범위에서 재개합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding.
 
 ### 자기점검과 다음 학습
 
@@ -405,7 +405,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 
 ### 실패·재개
 
-개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록.
+개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류하고 public-rights review가 끝난 범위에서 재개합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록.
 
 ### 자기점검과 다음 학습
 
