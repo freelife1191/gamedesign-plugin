@@ -39,7 +39,7 @@
 
 ### 포트폴리오·실무 확장
 
-[ST-C03 규칙·상태·예외·데이터](../../game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터)의 공개 가능한 evidence summary를 참고해 proof project의 질문만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C03 규칙·상태·예외·데이터](../../game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -67,11 +67,14 @@ $game-design-career:map-game-design-career artifact=game-design-career/system-st
 
 ### 검토와 승인
 
-**읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문입니다. **사람 결정:** 시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다. 스킬 실행은 자동 승인을 하지 않으며 실제 역할 적합성을 확정하지 않습니다.
+**읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문입니다. **검토 체크포인트:** `game-design-role-map` → `competency-matrix` → `learning-roadmap` 순서로 읽고 상태와 예외의 근거를 확인합니다. **사람 결정:** 시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다. 스킬 실행은 자동 승인을 하지 않으며 실제 역할 적합성을 확정하지 않습니다.
 
 ### 실패·재개
 
-관찰하지 못한 전이나 예외는 채우지 않고 unknown과 질문을 보존합니다. 공개 범위와 개인 기여를 확인한 뒤 더 작은 규칙 하나에서 재개합니다.
+- **실패:** 상태 전이 또는 예외 표가 관찰되지 않으면 claim을 보류합니다.
+- **보존:** 상태 전이, 예외 표, 규칙표와 반례.
+- **사람 확인:** 시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다.
+- **재개:** 확인된 잠금 해제 기능의 규칙표에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -114,7 +117,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/system-st
 
 ### 포트폴리오·실무 확장
 
-[ST-C05 콘텐츠·내러티브·퀘스트·NPC](../../game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc)의 공개 가능한 evidence summary로 의뢰의 조건을 검토합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C05 콘텐츠·내러티브·퀘스트·NPC](../../game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -142,11 +145,14 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/ques
 
 ### 검토와 승인
 
-**읽는 순서:** 목표 → 분기 → 실패 복구 → 대안입니다. **사람 결정:** 콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다. 생성 내용은 자동 승인을 하지 않으며 실제 제작 성과를 대신하지 않습니다.
+**읽는 순서:** 목표 → 분기 → 실패 복구 → 대안입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 분기와 제작 범위를 확인합니다. **사람 결정:** 콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다. 생성 내용은 자동 승인을 하지 않으며 실제 제작 성과를 대신하지 않습니다.
 
 ### 실패·재개
 
-분기 조건이 모호하면 문장을 늘리지 않고 질문과 조건 표를 보존합니다. 확인된 한 분기에서 다시 시작합니다.
+- **실패:** 퀘스트 상태 또는 분기 조건이 불명확하면 claim을 보류합니다.
+- **보존:** 퀘스트 상태, 분기 조건, 의뢰 흐름과 대안.
+- **사람 확인:** 콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다.
+- **재개:** 확인된 짧은 의뢰의 분기에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -189,7 +195,7 @@ NPC 대사를 시스템처럼 단정했는가? 협업 계약은 CA-T06, 공간 �
 
 ### 포트폴리오·실무 확장
 
-[ST-C06 캐릭터·스킬·전투·몬스터](../../game-design-studio/use-cases/competency-paths.md#st-c06-캐릭터스킬전투몬스터)의 공개 가능한 evidence summary를 proof project 질문으로만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C06 캐릭터·스킬·전투·몬스터](../../game-design-studio/use-cases/competency-paths.md#st-c06-캐릭터스킬전투몬스터). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -217,11 +223,14 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/com
 
 ### 검토와 승인
 
-**읽는 순서:** 관찰 → 스킬 명세 → 반례 → 수정입니다. **사람 결정:** 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. 자동 승인을 하지 않으며 재미나 직무 적합성을 보장하지 않습니다.
+**읽는 순서:** 관찰 → 스킬 명세 → 반례 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 관찰과 반례를 확인합니다. **사람 결정:** 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. 자동 승인을 하지 않으며 재미나 직무 적합성을 보장하지 않습니다.
 
 ### 실패·재개
 
-피해 판정이 보이지 않으면 숫자를 채우지 않고 관찰과 질문을 보존합니다. 한 스킬의 피드백에서 재개합니다.
+- **실패:** cooldown 또는 피해 판정이 관찰되지 않으면 claim을 보류합니다.
+- **보존:** cooldown, 피해 판정, 스킬 명세와 반례.
+- **사람 확인:** 전투 기획 멘토가 선택의 이유와 반례를 검토합니다.
+- **재개:** 확인된 스킬 하나의 피드백에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -264,7 +273,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/com
 
 ### 포트폴리오·실무 확장
 
-[ST-C07 성장·경제·밸런스·LiveOps](../../game-design-studio/use-cases/competency-paths.md#st-c07-성장경제밸런스liveops)의 공개 가능한 evidence summary로 guardrail 질문을 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C07 성장·경제·밸런스·LiveOps](../../game-design-studio/use-cases/competency-paths.md#st-c07-성장경제밸런스liveops). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -292,11 +301,14 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/eco
 
 ### 검토와 승인
 
-**읽는 순서:** source·sink → 가설 → guardrail → rollback입니다. **사람 결정:** 경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다. 자동 승인을 하지 않으며 시장 성공을 확정하지 않습니다.
+**읽는 순서:** source·sink → 가설 → guardrail → rollback입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 가설과 guardrail을 확인합니다. **사람 결정:** 경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다. 자동 승인을 하지 않으며 시장 성공을 확정하지 않습니다.
 
 ### 실패·재개
 
-근거 없는 수치는 지우지 않고 가설과 출처 공백을 보존합니다. 한 재화 흐름과 rollback 질문에서 재개합니다.
+- **실패:** source 또는 sink 근거가 없으면 claim을 보류합니다.
+- **보존:** source, sink, guardrail과 rollback 가설.
+- **사람 확인:** 경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다.
+- **재개:** 확인된 재화 흐름의 guardrail에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -339,7 +351,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/eco
 
 ### 포트폴리오·실무 확장
 
-[ST-C04 UI·UX·온보딩·접근성](../../game-design-studio/use-cases/competency-paths.md#st-c04-uiux온보딩접근성)의 공개 가능한 evidence summary로 대체 입력 질문을 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C04 UI·UX·온보딩·접근성](../../game-design-studio/use-cases/competency-paths.md#st-c04-uiux온보딩접근성). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -367,11 +379,14 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux
 
 ### 검토와 승인
 
-**읽는 순서:** 행동 → 오류 → focus → 대체 입력입니다. **사람 결정:** UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다. 자동 승인을 하지 않으며 접근성 적합성을 보장하지 않습니다.
+**읽는 순서:** 행동 → 오류 → focus → 대체 입력입니다. **검토 체크포인트:** `competency-matrix` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 오류와 대체 입력을 확인합니다. **사람 결정:** UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다. 자동 승인을 하지 않으며 접근성 적합성을 보장하지 않습니다.
 
 ### 실패·재개
 
-관찰하지 못한 사용자는 대표하지 않고 가정으로 보존합니다. 한 오류 상태와 대체 입력에서 재개합니다.
+- **실패:** 오류 상태 또는 대체 입력이 관찰되지 않으면 claim을 보류합니다.
+- **보존:** 오류 상태, focus 기록, 온보딩 흐름과 수정 전후.
+- **사람 확인:** UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다.
+- **재개:** 확인된 온보딩 화면의 오류 상태에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -414,7 +429,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux
 
 ### 포트폴리오·실무 확장
 
-[ST-C05 콘텐츠·내러티브·퀘스트·NPC](../../game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc)의 공개 가능한 evidence summary로 장면 목적을 점검합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C05 콘텐츠·내러티브·퀘스트·NPC](../../game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -442,11 +457,14 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/narr
 
 ### 검토와 승인
 
-**읽는 순서:** 장면 목적 → 선택 → handoff → 공개 경계입니다. **사람 결정:** 내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다. 자동 승인을 하지 않으며 실제 협업 경험을 대신하지 않습니다.
+**읽는 순서:** 장면 목적 → 선택 → handoff → 공개 경계입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 장면 목적과 공개 경계를 확인합니다. **사람 결정:** 내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다. 자동 승인을 하지 않으며 실제 협업 경험을 대신하지 않습니다.
 
 ### 실패·재개
 
-권리나 기여가 불명확하면 공개하지 않고 장면 목적과 질문을 보존합니다. 가상 장면 하나에서 재개합니다.
+- **실패:** 장면 분기 또는 공개 경계가 불명확하면 claim을 보류합니다.
+- **보존:** 등장인물 목표, 분기표, handoff와 공개 제외 목록.
+- **사람 확인:** 내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다.
+- **재개:** 확인된 대화 장면의 선택 분기에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -489,7 +507,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/narr
 
 ### 포트폴리오·실무 확장
 
-[ST-C02 행동·핵심 루프·의미 있는 선택](../../game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택)의 공개 가능한 evidence summary로 공간 선택 질문을 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C02 행동·핵심 루프·의미 있는 선택](../../game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -517,11 +535,14 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/lev
 
 ### 검토와 승인
 
-**읽는 순서:** 동선 → 시야 → 막힘 → 수정입니다. **사람 결정:** 레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다. 자동 승인을 하지 않으며 실무 경험을 보장하지 않습니다.
+**읽는 순서:** 동선 → 시야 → 막힘 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 동선과 playtest 질문을 확인합니다. **사람 결정:** 레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다. 자동 승인을 하지 않으며 실무 경험을 보장하지 않습니다.
 
 ### 실패·재개
 
-playtest가 없으면 결과를 만들지 않고 질문과 관찰을 보존합니다. 한 구역의 막힘에서 재개합니다.
+- **실패:** 동선 또는 시야가 관찰되지 않으면 claim을 보류합니다.
+- **보존:** 동선, 시야, playtest 질문과 수정 로그.
+- **사람 확인:** 레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다.
+- **재개:** 확인된 한 구역의 막힘에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -564,7 +585,7 @@ playtest가 없으면 결과를 만들지 않고 질문과 관찰을 보존합�
 
 ### 포트폴리오·실무 확장
 
-[ST-C08 제작·검토·이미지·출력](../../game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력)의 공개 가능한 evidence summary로 검토 순서만 참고합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C08 제작·검토·이미지·출력](../../game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -592,11 +613,14 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/new-
 
 ### 검토와 승인
 
-**읽는 순서:** 문제 → 근거 → 수정 전후 → honest gap입니다. **사람 결정:** 포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다. 자동 승인을 하지 않으며 신입 채용을 보장하지 않습니다.
+**읽는 순서:** 문제 → 근거 → 수정 전후 → honest gap입니다. **검토 체크포인트:** `career-stage-goal` → `portfolio-project-brief` → `portfolio-backlog` 순서로 읽고 개인 기여와 수정 근거를 확인합니다. **사람 결정:** 포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다. 자동 승인을 하지 않으며 신입 채용을 보장하지 않습니다.
 
 ### 실패·재개
 
-개인 기여가 분명하지 않으면 claim을 줄이고 작업 범위와 질문을 보존합니다. 한 페이지 proof에서 재개합니다.
+- **실패:** 개인 기여 또는 수정 근거가 불명확하면 claim을 보류합니다.
+- **보존:** 판단 근거, 수정 전후, 작은 사례와 honest gap.
+- **사람 확인:** 포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다.
+- **재개:** 확인된 한 페이지 proof의 수정에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -639,7 +663,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/new-
 
 ### 포트폴리오·실무 확장
 
-[ST-C01 플레이어 경험과 게임 비전](../../game-design-studio/use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전)의 공개 가능한 evidence summary로 문제 정의 질문만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C01 플레이어 경험과 게임 비전](../../game-design-studio/use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -667,11 +691,14 @@ $game-design-career:map-game-design-career artifact=game-design-career/transitio
 
 ### 검토와 승인
 
-**읽는 순서:** 이전 사실 → 전이 역량 → 새 evidence → 공개 경계입니다. **사람 결정:** Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다. 자동 승인을 하지 않으며 이직을 보장하지 않습니다.
+**읽는 순서:** 이전 사실 → 전이 역량 → 새 evidence → 공개 경계입니다. **검토 체크포인트:** `transition-readiness` → `game-design-role-map` → `portfolio-project-brief` 순서로 읽고 사실과 새 evidence를 확인합니다. **사람 결정:** Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다. 자동 승인을 하지 않으며 이직을 보장하지 않습니다.
 
 ### 실패·재개
 
-이전 경험의 공개 권한이 없으면 세부를 제거하고 전이 가능한 역량과 새 과제를 보존합니다. 작은 새 evidence에서 재개합니다.
+- **실패:** 이전 경험의 공개 경계 또는 새 evidence가 불명확하면 claim을 보류합니다.
+- **보존:** 이전 경험, 새 evidence, 전환 지도와 공개 제외 목록.
+- **사람 확인:** Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다.
+- **재개:** 확인된 새 evidence 과제에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -714,7 +741,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/transitio
 
 ### 포트폴리오·실무 확장
 
-[ST-C08 제작·검토·이미지·출력](../../game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력)의 공개 가능한 evidence summary로 수정 기록의 순서만 참고합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
+[ST-C08 제작·검토·이미지·출력](../../game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력). 공개 가능한 evidence summary/proof project handoff만 연결합니다. Studio 원본 Artifact를 병합하거나 복제하지 않습니다.
 
 ### Codex App 요청문
 
@@ -742,11 +769,14 @@ $game-design-career:plan-junior-growth artifact=game-design-career/growth-transi
 
 ### 검토와 승인
 
-**읽는 순서:** 수정 사례 → current requirement → honest gap → 답변입니다. **사람 결정:** manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다. 자동 승인을 하지 않으며 승진·이직을 보장하지 않습니다.
+**읽는 순서:** 수정 사례 → current requirement → honest gap → 답변입니다. **검토 체크포인트:** `junior-growth-review` → `transition-readiness` → `interview-question-answer-log` 순서로 읽고 날짜와 다음 review를 확인합니다. **사람 결정:** manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다. 자동 승인을 하지 않으며 승진·이직을 보장하지 않습니다.
 
 ### 실패·재개
 
-오래된 requirement나 권리 불명 자료는 current claim에 쓰지 않고 날짜와 gap을 보존합니다. 확인 가능한 수정 사례와 다음 review에서 재개합니다.
+- **실패:** growth review 또는 current requirement가 오래되었으면 claim을 보류합니다.
+- **보존:** growth review, 현재 공고, 수정 사례와 honest gap.
+- **사람 확인:** manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다.
+- **재개:** 확인된 수정 사례와 다음 review에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
