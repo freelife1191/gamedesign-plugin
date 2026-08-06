@@ -2,7 +2,7 @@
 
 ## Status
 
-Fix round 3 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 재생성되었습니다. 카드와 하단 semantic rail은 source의 exact installed skill/output/review/validation/route ID를 표시하며, build production validator는 독립 expected contract와 모든 persisted source를 대조합니다.
+Fix round 4 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 유지됩니다. Builder의 production load 경로는 source JSON과 canonical `routing.json`을 함께 읽고, 독립 literal batch contract로 exact 33 source와 11 route를 검증합니다.
 
 ## BASE / HEAD
 
@@ -68,3 +68,20 @@ ST-C03, ST-G01, ST-G06, 가장 긴 skill flow ST-S09를 high/original detail로 
 
 - renderer, source JSON, SVG/PNG asset은 변경하지 않았습니다. 따라서 재생성·시각 QA는 round 2의 검증 결과를 보존하고, 이번 round는 production validation과 contract tests만 확장했습니다.
 - Open concerns: 없음. `npm run check:guide-diagrams`는 39 SVG/PNG pair를 통과했고, 전체 Studio contract suite는 34/34를 통과했습니다. 최종 handoff에는 changed-JS `node --check`, `git diff --check`, `git show --check` 증거를 포함합니다.
+
+## Fix round 4 — production batch and canonical routes
+
+- Builder는 Studio scope가 있으면 `guides/assets/use-case-diagram-sources.json`과 `products/game-design-studio/plugin/references/routing.json`을 같은 production load에서 읽습니다. Batch validator는 C01…C08, G01…G10, S01…S15의 exact 33 ID set과 canonical route 11개를 누락·추가·중복 없이 검증합니다.
+- 독립 route literal은 각 route의 `id`, 전체 `triggerIntents`, `skill`, `requiredInputs`, `artifactType`을 고정합니다. 배열 정책은 순서와 구성원이 모두 같은 `ordered-exact`이며 route collection 자체는 ID exact set으로 검증합니다.
+- 기존 S contract의 `routeIds`를 실제 사용하여 canonical route target이 해당 persisted S source의 owned skill과 같은지 교차검증합니다. 모든 S `semantic.next_routes`와 canonical route target은 실제 registry `skillIds` membership을 통과해야 합니다.
+- Source별 independent literal 검증과 177개 wrong-valid/generic mutation은 batch 마지막 단계에서 그대로 실행됩니다. Renderer, source JSON, persisted SVG/PNG는 변경하지 않았습니다.
+
+## Fix round 4 RED / GREEN
+
+- RED: production builder mutation 11개와 production batch cross-contract 2개를 추가했습니다. 기존 global duplicate-source 방어 1개를 제외한 신규 12개가 정확히 실패했으며, 누락 source는 unknown ID로만 실패하고 canonical route mutation은 routing을 읽지 않은 채 이후 manifest load로 진행하는 기존 결함을 재현했습니다.
+- GREEN: source 누락·추가·중복, route 누락·추가·중복, trigger replacement·누락, target skill, requiredInputs, artifactType, S routeId target mismatch, 미설치 boundary nextRoutes를 모두 production build/load 또는 production batch 호출에서 fail-closed로 검증합니다. Targeted regression은 13/13, 전체 builder unit은 26/26, focused Studio contract는 34/34를 통과했습니다.
+
+## Fix round 4 verification / scope
+
+- `npm run check:guide-diagrams`: 39 SVG 및 39 PNG의 visible expected, deterministic PNG byte equality, output path/symlink/temp safety를 포함해 통과했습니다.
+- 기존 산출물은 재생성하거나 수정하지 않았습니다. 변경 범위는 production contract, builder load, 관련 unit/contract regression, 이 보고서뿐입니다.

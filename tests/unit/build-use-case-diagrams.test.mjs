@@ -3,10 +3,14 @@ import { chmod, lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { deflateSync, inflateSync } from "node:zlib";
 
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
+import * as studioProductionContract from "../../tooling/lib/studio-diagram-production-contract.mjs";
 import { renderDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
+
+const productionRepoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 const source = Object.freeze({
   id: "aud-01",
@@ -173,6 +177,66 @@ async function writeFixture(t, { wrapper, existingOutputs = false, fixtureSource
   }
   return repoRoot;
 }
+
+async function readStudioProductionInputs() {
+  const [sources, routing] = await Promise.all([
+    readFile(path.join(productionRepoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"),
+    readFile(path.join(productionRepoRoot, "products/game-design-studio/plugin/references/routing.json"), "utf8"),
+  ]);
+  return { sources: JSON.parse(sources), routing: JSON.parse(routing) };
+}
+
+async function writeStudioProductionFixture(t, mutate) {
+  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "studio-diagram-production-test-"));
+  t.after(() => rm(repoRoot, { recursive: true, force: true }));
+  const inputs = await readStudioProductionInputs();
+  mutate(inputs);
+  await mkdir(path.join(repoRoot, "guides/assets"), { recursive: true });
+  await mkdir(path.join(repoRoot, "products/game-design-studio/plugin/references"), { recursive: true });
+  await writeFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), JSON.stringify(inputs.sources));
+  await writeFile(path.join(repoRoot, "products/game-design-studio/plugin/references/routing.json"), JSON.stringify(inputs.routing));
+  return { repoRoot, ...inputs };
+}
+
+const studioSource = (sources, id) => sources.find((candidate) => candidate.id === id);
+const studioRoute = (routing, id) => routing.routes.find((candidate) => candidate.id === id);
+
+for (const [name, mutate, expected] of [
+  ["a missing one of the exact 33 Studio sources", ({ sources }) => sources.splice(sources.findIndex(({ id }) => id === "st-c01"), 1), /Studio production source IDs.*missing.*st-c01/u],
+  ["an extra Studio source", ({ sources }) => sources.push({ ...structuredClone(studioSource(sources, "st-c01")), id: "st-c99" }), /Studio production source IDs.*extra.*st-c99/u],
+  ["a duplicate Studio source ID", ({ sources }) => sources.push(structuredClone(studioSource(sources, "st-c01"))), /duplicate.*st-c01/u],
+  ["a missing canonical route", ({ routing }) => routing.routes.splice(routing.routes.findIndex(({ id }) => id === "vision"), 1), /canonical route IDs.*missing.*vision/u],
+  ["an extra canonical route", ({ routing }) => routing.routes.push({ ...structuredClone(studioRoute(routing, "vision")), id: "other-vision" }), /canonical route IDs.*extra.*other-vision/u],
+  ["a duplicate canonical route ID", ({ routing }) => routing.routes.push(structuredClone(studioRoute(routing, "vision"))), /duplicate.*canonical route.*vision/u],
+  ["a wrong-valid trigger intent replacement", ({ routing }) => { studioRoute(routing, "vision").triggerIntents[0] = "design review"; }, /vision canonical route mismatch: triggerIntents/u],
+  ["a missing trigger intent", ({ routing }) => { studioRoute(routing, "vision").triggerIntents.pop(); }, /vision canonical route mismatch: triggerIntents/u],
+  ["a replaced canonical target skill", ({ routing }) => { studioRoute(routing, "vision").skill = "design-game-systems"; }, /vision canonical route mismatch: skill|st-s02.*routeIds/u],
+  ["changed canonical required inputs", ({ routing }) => { studioRoute(routing, "vision").requiredInputs.pop(); }, /vision canonical route mismatch: requiredInputs/u],
+  ["a changed canonical artifact type", ({ routing }) => { studioRoute(routing, "vision").artifactType = "game-design-review"; }, /vision canonical route mismatch: artifactType/u],
+]) {
+  test(`production builder rejects ${name}`, async (t) => {
+    const { repoRoot } = await writeStudioProductionFixture(t, mutate);
+    await assert.rejects(() => buildUseCaseDiagrams({ repoRoot, ids: ["st-c01"] }), expected);
+  });
+}
+
+test("production batch rejects an S routeId whose canonical target differs from the source skill", async () => {
+  const { sources, routing } = await readStudioProductionInputs();
+  studioSource(sources, "st-s02").semantic.skill = "design-game-systems";
+  assert.throws(
+    () => studioProductionContract.validateStudioDiagramProductionBatch(sources, routing),
+    /st-s02.*routeIds.*vision.*define-game-vision/u,
+  );
+});
+
+test("production batch rejects a boundary nextRoutes target absent from installed skillIds", async () => {
+  const { sources, routing } = await readStudioProductionInputs();
+  studioSource(sources, "st-s14").semantic.next_routes = ["svg-infographic"];
+  assert.throws(
+    () => studioProductionContract.validateStudioDiagramProductionBatch(sources, routing),
+    /st-s14.*nextRoutes.*svg-infographic.*installed skillIds/u,
+  );
+});
 
 test("builder propagates zero-exit Skillstead warnings from its fixed wrapper", async (t) => {
   const repoRoot = await writeFixture(t, { wrapper: wrapperSource({ lint: "check-svg: 0 error(s), 1 warning(s) across 1 file(s)" }) });

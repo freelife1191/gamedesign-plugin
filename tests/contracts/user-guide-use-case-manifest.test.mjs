@@ -13,7 +13,13 @@ import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/us
 import { collectHeadingAnchors, collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
-import { STUDIO_DIAGRAM_PRODUCTION_CONTRACT, validateStudioDiagramProductionContract } from "../../tooling/lib/studio-diagram-production-contract.mjs";
+import {
+  STUDIO_CANONICAL_ROUTE_ARRAY_POLICY,
+  STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT,
+  STUDIO_DIAGRAM_PRODUCTION_CONTRACT,
+  validateStudioDiagramProductionBatch,
+  validateStudioDiagramProductionContract,
+} from "../../tooling/lib/studio-diagram-production-contract.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -1794,17 +1800,17 @@ const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
 });
 
 const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
-  "project-orchestration": { skill: "orchestrate-game-design-project", requiredInputs: ["target player", "target experience", "platform", "genre", "development stage", "constraints", "completion criteria"], artifactType: "game-design-brief" },
-  vision: { skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
-  systems: { skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
-  content: { skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
-  "player-experience": { skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
-  economy: { skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
-  liveops: { skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },
-  production: { skill: "plan-game-production", requiredInputs: ["target experience", "team", "schedule", "technology", "dependencies"], artifactType: "production-scope-risk" },
-  review: { skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
-  visualization: { skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
-  export: { skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
+  "project-orchestration": { triggerIntents: ["multi-discipline project", "game design brief", "scope planning", "project roadmap", "milestone planning", "ambiguous design request"], skill: "orchestrate-game-design-project", requiredInputs: ["target player", "target experience", "platform", "genre", "development stage", "constraints", "completion criteria"], artifactType: "game-design-brief" },
+  vision: { triggerIntents: ["game vision", "design pillars", "core fun", "motivation loop"], skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
+  systems: { triggerIntents: ["game system", "rules", "state transitions", "data schema"], skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
+  content: { triggerIntents: ["quest", "level content", "narrative", "character", "enemy"], skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
+  "player-experience": { triggerIntents: ["player experience", "UX flow", "tutorial", "accessibility", "input"], skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
+  economy: { triggerIntents: ["game economy", "monetization", "currency balance", "shop balance"], skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
+  liveops: { triggerIntents: ["LiveOps", "event plan", "experiment", "segment rollout"], skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },
+  production: { triggerIntents: ["production plan", "scope", "milestone", "prototype", "risk"], skill: "plan-game-production", requiredInputs: ["target experience", "team", "schedule", "technology", "dependencies"], artifactType: "production-scope-risk" },
+  review: { triggerIntents: ["design review", "critique", "launch readiness", "risk review"], skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
+  visualization: { triggerIntents: ["diagram", "visualize", "flow chart", "economy map", "roadmap diagram"], skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
+  export: { triggerIntents: ["export", "PDF", "DOCX", "presentation", "PPTX"], skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
 });
 
 function cloneStudioDiagramSource(source) {
@@ -1818,11 +1824,14 @@ test("Studio production diagram contract fixes every persisted source against in
   const routeById = new Map(routing.routes.map((route) => [route.id, route]));
 
   assert.deepEqual(STUDIO_DIAGRAM_PRODUCTION_CONTRACT, STUDIO_DIAGRAM_PRODUCTION_EXPECTED, "production validator uses the independent expected source contract");
+  assert.deepEqual(STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT, STUDIO_CANONICAL_ROUTE_EXPECTED, "production validator uses the independent expected canonical route contract");
+  assert.equal(STUDIO_CANONICAL_ROUTE_ARRAY_POLICY, "ordered-exact", "triggerIntents and requiredInputs preserve exact order and membership");
+  assert.doesNotThrow(() => validateStudioDiagramProductionBatch(sources, routing));
   assert.deepEqual([...sourceById.keys()].filter((id) => id.startsWith("st-")).sort(), Object.keys(STUDIO_DIAGRAM_PRODUCTION_EXPECTED).sort());
   assert.deepEqual([...routeById.keys()].sort(), Object.keys(STUDIO_CANONICAL_ROUTE_EXPECTED).sort());
   for (const [routeId, expected] of Object.entries(STUDIO_CANONICAL_ROUTE_EXPECTED)) {
     const route = routeById.get(routeId);
-    assert.deepEqual({ skill: route.skill, requiredInputs: route.requiredInputs, artifactType: route.artifactType }, expected, `${routeId} canonical route condition and target`);
+    assert.deepEqual({ triggerIntents: route.triggerIntents, skill: route.skill, requiredInputs: route.requiredInputs, artifactType: route.artifactType }, expected, `${routeId} canonical route condition and target`);
   }
 
   for (const [id, expected] of Object.entries(STUDIO_DIAGRAM_PRODUCTION_EXPECTED)) {

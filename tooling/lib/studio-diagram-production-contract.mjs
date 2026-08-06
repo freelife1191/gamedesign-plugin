@@ -8,6 +8,12 @@ function assertProductionValue(source, field, actual, expected) {
   }
 }
 
+function assertCanonicalRouteValue(routeId, field, actual, expected) {
+  if (stableJson(actual) !== stableJson(expected)) {
+    throw new TypeError(`${routeId} canonical route mismatch: ${field}`);
+  }
+}
+
 export const STUDIO_DIAGRAM_PRODUCTION_CONTRACT = Object.freeze({
   "st-c01": { kind: "competency", specialist: "define-game-vision", outputs: ["vision-pillars", "game-design-brief", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
   "st-c02": { kind: "competency", specialist: "design-game-systems", outputs: ["core-motivation-loop", "system-specification", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
@@ -43,6 +49,81 @@ export const STUDIO_DIAGRAM_PRODUCTION_CONTRACT = Object.freeze({
   "st-s14": { kind: "skill", skill: "svg-infographic", trigger: ["SVG trigger", "구조 관계를 받습니다."], requiredInput: "relationship structure + evidence", outputs: ["editable-svg", "png-2x", "render-evidence"], nextRoutes: ["visualize-game-design"], nextCondition: null, routeIds: [] },
   "st-s15": { kind: "skill", skill: "visualize-game-design", trigger: ["시각화 trigger", "관계 질문을 받습니다."], requiredInput: "relationship question + source data", outputs: ["editable-svg", "png-2x", "visualization-evidence"], nextRoutes: ["review-game-design", "export-game-design-documents"], nextCondition: null, routeIds: ["visualization"] },
 });
+
+export const STUDIO_CANONICAL_ROUTE_ARRAY_POLICY = "ordered-exact";
+
+export const STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT = Object.freeze({
+  "project-orchestration": { triggerIntents: ["multi-discipline project", "game design brief", "scope planning", "project roadmap", "milestone planning", "ambiguous design request"], skill: "orchestrate-game-design-project", requiredInputs: ["target player", "target experience", "platform", "genre", "development stage", "constraints", "completion criteria"], artifactType: "game-design-brief" },
+  vision: { triggerIntents: ["game vision", "design pillars", "core fun", "motivation loop"], skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
+  systems: { triggerIntents: ["game system", "rules", "state transitions", "data schema"], skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
+  content: { triggerIntents: ["quest", "level content", "narrative", "character", "enemy"], skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
+  "player-experience": { triggerIntents: ["player experience", "UX flow", "tutorial", "accessibility", "input"], skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
+  economy: { triggerIntents: ["game economy", "monetization", "currency balance", "shop balance"], skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
+  liveops: { triggerIntents: ["LiveOps", "event plan", "experiment", "segment rollout"], skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },
+  production: { triggerIntents: ["production plan", "scope", "milestone", "prototype", "risk"], skill: "plan-game-production", requiredInputs: ["target experience", "team", "schedule", "technology", "dependencies"], artifactType: "production-scope-risk" },
+  review: { triggerIntents: ["design review", "critique", "launch readiness", "risk review"], skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
+  visualization: { triggerIntents: ["diagram", "visualize", "flow chart", "economy map", "roadmap diagram"], skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
+  export: { triggerIntents: ["export", "PDF", "DOCX", "presentation", "PPTX"], skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
+});
+
+function indexUniqueById(values, label) {
+  if (!Array.isArray(values)) throw new TypeError(`${label} must be an array`);
+  const byId = new Map();
+  for (const value of values) {
+    if (byId.has(value?.id)) throw new TypeError(`duplicate ${label} ID: ${value?.id}`);
+    byId.set(value?.id, value);
+  }
+  return byId;
+}
+
+function assertExactIds(actualIds, expectedIds, label) {
+  const missing = expectedIds.filter((id) => !actualIds.has(id));
+  const extra = [...actualIds.keys()].filter((id) => !expectedIds.includes(id));
+  if (missing.length > 0 || extra.length > 0) {
+    throw new TypeError(`${label} mismatch: missing [${missing.join(", ")}], extra [${extra.join(", ")}]`);
+  }
+}
+
+export function validateStudioDiagramProductionBatch(sources, routing) {
+  if (!Array.isArray(sources)) throw new TypeError("use-case diagram sources must be an array");
+  const studioSources = sources.filter(({ scope }) => scope === "game-design-studio-use-case" || scope === "game-design-studio-skill");
+  const sourceById = indexUniqueById(studioSources, "Studio production source");
+  const expectedSourceIds = Object.keys(STUDIO_DIAGRAM_PRODUCTION_CONTRACT);
+  assertExactIds(sourceById, expectedSourceIds, "Studio production source IDs");
+
+  const routeById = indexUniqueById(routing?.routes, "canonical route");
+  const expectedRouteIds = Object.keys(STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT);
+  assertExactIds(routeById, expectedRouteIds, "canonical route IDs");
+  if (!Array.isArray(routing?.skillIds)) throw new TypeError("Studio routing skillIds must be an array");
+  const installedSkillIds = new Set(routing.skillIds);
+
+  for (const [sourceId, expected] of Object.entries(STUDIO_DIAGRAM_PRODUCTION_CONTRACT)) {
+    if (expected.kind !== "skill") continue;
+    const source = sourceById.get(sourceId);
+    for (const routeId of expected.routeIds) {
+      const target = routeById.get(routeId).skill;
+      if (target !== source.semantic.skill) {
+        throw new TypeError(`${sourceId} routeIds mismatch: ${routeId} targets ${target}, not ${source.semantic.skill}`);
+      }
+    }
+    for (const target of source.semantic.next_routes) {
+      if (!installedSkillIds.has(target)) {
+        throw new TypeError(`${sourceId} nextRoutes target ${target} is absent from installed skillIds`);
+      }
+    }
+  }
+
+  for (const [routeId, expected] of Object.entries(STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT)) {
+    const route = routeById.get(routeId);
+    assertCanonicalRouteValue(routeId, "triggerIntents", route.triggerIntents, expected.triggerIntents);
+    assertCanonicalRouteValue(routeId, "skill", route.skill, expected.skill);
+    assertCanonicalRouteValue(routeId, "requiredInputs", route.requiredInputs, expected.requiredInputs);
+    assertCanonicalRouteValue(routeId, "artifactType", route.artifactType, expected.artifactType);
+    if (!installedSkillIds.has(route.skill)) throw new TypeError(`${routeId} canonical route target ${route.skill} is absent from installed skillIds`);
+  }
+
+  for (const source of studioSources) validateStudioDiagramProductionContract(source);
+}
 
 
 export function validateStudioDiagramProductionContract(source) {
