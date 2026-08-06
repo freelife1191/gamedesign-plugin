@@ -43,6 +43,7 @@ $game-design-studio:plan-game-production vertical slice 범위와 prototype hypo
 scope, dependency, maintenance, license/outsource risk, prototype, milestone, DoD, kill criterion과 decision owner를 Canonical Artifact에 기록합니다. 예상 결과 요약: 큰 약속 전에 검증할 가장 싼 vertical slice와 중단 조건이 명확해집니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `production-scope-risk` — [production-scope-risk 템플릿](../templates.md#production-scope-risk).
 - Quality Profile ID: `production-scope-milestone-risk-plan`.
 - Reviewer/role ID: `production-feasibility-critic · lead-game-designer`.
@@ -50,7 +51,8 @@ scope, dependency, maintenance, license/outsource risk, prototype, milestone, Do
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
-제작 계획은 이미지 생성 작업이 아닙니다. dependency·milestone·risk 관계가 복잡할 때 `skillstead-production-risk-diagram`을 만들고, 별도 asset slot은 계획 manifest에 있을 때만 illustration lifecycle로 넘깁니다.
+
+`scope-reference-image`은 production-scope-milestone-risk-plan profile에서 agreed slice를 확인할 때만 계획합니다. dependency·milestone·risk 관계가 복잡할 때 `skillstead-production-roadmap-dependency-diagram`을 만들고, 별도 asset slot은 계획 manifest에 있을 때만 illustration lifecycle로 넘깁니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
 
@@ -67,6 +69,7 @@ $game-design-studio:plan-game-production 기존 production-scope-risk를 유지�
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Studio review-game-design로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/
 ```
 
 ## 관련 문서
+
 [production-scope-risk 템플릿](../templates.md#production-scope-risk), [review-game-design 스킬](./review-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

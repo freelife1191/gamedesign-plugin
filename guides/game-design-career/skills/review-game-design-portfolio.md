@@ -43,6 +43,7 @@ $game-design-career:review-game-design-portfolio artifact=artifacts/system-portf
 evidence inventory, five-axis records, typed findings, evidence-qualified scores, highest-impact repair queue와 verification tasks를 `five-axis-review` 또는 `portfolio-backlog`에 남깁니다. 예상 결과 요약: 다음 review를 가능하게 하는 작은 수정 순서가 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `five-axis-review` — [five-axis-review 템플릿](../templates.md#five-axis-review).
 - Quality Profile ID: `portfolio-review-backlog`.
 - Reviewer/role ID: `portfolio-reviewer · evidence-auditor`.
@@ -50,6 +51,7 @@ evidence inventory, five-axis records, typed findings, evidence-qualified scores
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 리뷰는 새로운 illustration을 만들지 않습니다. evidence dependency가 복잡하면 `skillstead-portfolio-dependency-diagram`을 Skillstead로 만들 수 있고, 부족한 image slot은 별도 plan으로 handoff합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-career:review-game-design-portfolio 기존 findingId를 유지하�
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career build-game-design-portfolio로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-career:build-game-design-portfolio artifact=<artifact-path> 기존 
 ```
 
 ## 관련 문서
+
 [five-axis-review 템플릿](../templates.md#five-axis-review), [build-game-design-portfolio 스킬](./build-game-design-portfolio.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

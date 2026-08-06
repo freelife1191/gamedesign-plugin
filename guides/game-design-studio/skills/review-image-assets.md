@@ -43,6 +43,7 @@ manifest를 검증하고 `visual-asset-reviewer`와 `art-brief-director`의 find
 asset ID, findings, named human decision, accepted/rejected transition, lifecycle receipt, blocker와 derivative eligibility를 반환합니다. 예상 결과 요약: 이미지의 사용 가능 범위가 evidence와 사람 결정에 묶입니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
 - Quality Profile ID: `current artifact profile을 상속하며 review가 profile을 바꾸지 않음`.
 - Reviewer/role ID: `visual-asset-reviewer · art-brief-director`.
@@ -50,6 +51,7 @@ asset ID, findings, named human decision, accepted/rejected transition, lifecycl
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 기존 illustration asset의 placement·alt text·rights만 검토합니다. 새 구조 도식이나 이미지를 만들지 않으며 `document-approved`가 된 asset만 export binding 후보가 됩니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,13 +69,17 @@ $game-design-studio:review-image-assets 기존 finding과 asset state를 유지�
 ```
 
 ## 다음 작업 요청문
-**복사 가능한 다음 handoff**
 
-@Game Design Studio export-game-design-documents로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+@Game Design Studio requested transition이 document-approved가 되어 export binding 조건을 만족할 때만 export-game-design-documents로 진행해. 그렇지 않으면 review finding을 보존해.
 
 ```text
 $game-design-studio:export-game-design-documents artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
 ```
 
+`document-approved` export binding 조건을 만족한 경우의 허용 대상은 `export-game-design-documents`뿐입니다. 그 외 상태에서는 이 review artifact와 finding만 유지합니다.
+
 ## 관련 문서
+
 [템플릿 카탈로그](../templates.md), [export-game-design-documents 스킬](./export-game-design-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

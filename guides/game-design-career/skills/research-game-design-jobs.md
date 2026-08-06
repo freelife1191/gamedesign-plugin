@@ -43,6 +43,7 @@ official company career page를 우선하고 posting마다 unique `sourceId`, HT
 schema-valid posting records, posting-specific required/preferred, repeated signals, applicant evidence, gaps, non-generalizable constraints, sample size/geography와 inference limits를 `job-posting-evidence`에 남깁니다. 예상 결과 요약: 현재 claim을 source와 날짜까지 재현할 수 있는 evidence set이 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `job-posting-evidence` — [job-posting-evidence 템플릿](../templates.md#job-posting-evidence).
 - Quality Profile ID: `job-posting-evidence`.
 - Reviewer/role ID: `evidence-auditor · career-strategist`.
@@ -50,6 +51,7 @@ schema-valid posting records, posting-specific required/preferred, repeated sign
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 공고 조사 자체는 이미지를 생성하지 않습니다. source/sample/requirement 관계가 표보다 복잡할 때만 `skillstead-job-evidence-dependency-diagram`을 Skillstead로 만들고, screenshot은 권리·출처 슬롯이 있을 때만 계획합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-career:research-game-design-jobs 기존 sourceId를 유지하고 re
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career map-game-design-career로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-career:map-game-design-career artifact=<artifact-path> 기존 evide
 ```
 
 ## 관련 문서
+
 [job-posting-evidence 템플릿](../templates.md#job-posting-evidence), [map-game-design-career 스킬](./map-game-design-career.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, readFile } from "node:fs/promises";
+import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -41,21 +41,21 @@ const expectedTemplateIds = [
   "transition-readiness",
 ];
 const skillHandoffs = {
-  "apply-document-quality-profile": ["caller-selected template", "document-quality-editor", "map-game-design-career"],
-  "build-game-design-portfolio": ["portfolio-project-brief", "portfolio-project-brief", "game-design-mentor", "review-game-design-portfolio"],
-  "export-career-documents": ["current artifact profile", "evidence-auditor", "pdf/documents/presentations"],
-  "generate-image-assets": ["current artifact profile", "art-brief-director", "review-image-assets"],
-  "map-game-design-career": ["game-design-role-map", "career-stage-role-map", "career-strategist", "build-game-design-portfolio"],
-  "orchestrate-game-design-career": ["career-stage-goal", "career-stage-role-map", "career-strategist", "map-game-design-career"],
-  "plan-image-assets": ["current artifact profile", "art-brief-director", "generate-image-assets"],
-  "plan-junior-growth": ["junior-growth-review", "junior-growth-review", "game-design-mentor", "visualize-career-roadmap"],
-  "practice-game-design-interview": ["interview-question-answer-log", "interview-question-answer-report", "interview-coach", "plan-junior-growth"],
-  "research-game-design-jobs": ["job-posting-evidence", "job-posting-evidence", "evidence-auditor", "map-game-design-career"],
-  "reverse-engineer-game-design": ["reverse-design-document", "reverse-design-document", "reverse-design-critic", "export-career-documents"],
-  "review-game-design-portfolio": ["five-axis-review", "portfolio-review-backlog", "portfolio-reviewer", "build-game-design-portfolio"],
-  "review-image-assets": ["current artifact profile", "visual-asset-reviewer", "export-career-documents"],
-  "svg-infographic": ["no Canonical Artifact template", "Skillstead", "visualize-career-roadmap"],
-  "visualize-career-roadmap": ["current artifact profile", "game-design-mentor", "export-career-documents"],
+  "apply-document-quality-profile": { terms: ["caller-selected template"], templateIds: [], profileIds: [], roleIds: ["document-quality-editor"], nextTargets: ["map-game-design-career"], mediaIds: [] },
+  "build-game-design-portfolio": { templateIds: ["creative-design-portfolio", "portfolio-project-brief"], profileIds: ["portfolio-case-study", "portfolio-project-brief"], roleIds: ["game-design-mentor", "portfolio-reviewer", "evidence-auditor"], nextTargets: ["review-game-design-portfolio"], mediaIds: ["portfolio-direction-image", "skillstead-portfolio-roadmap-dependency-diagram"] },
+  "export-career-documents": { terms: ["current artifact profile", "pdf/documents/presentations"], templateIds: [], profileIds: [], roleIds: ["evidence-auditor"], nextTargets: ["downstream"], mediaIds: [] },
+  "generate-image-assets": { terms: ["current artifact profile"], templateIds: [], profileIds: [], roleIds: ["art-brief-director"], nextTargets: ["review-image-assets"], mediaIds: [] },
+  "map-game-design-career": { templateIds: ["game-design-role-map"], profileIds: ["career-stage-role-map"], roleIds: ["career-strategist", "game-design-mentor"], nextTargets: ["build-game-design-portfolio"], mediaIds: ["career-work-context-image", "skillstead-career-role-roadmap-diagram"] },
+  "orchestrate-game-design-career": { templateIds: ["career-stage-goal"], profileIds: ["career-stage-role-map"], roleIds: ["career-strategist"], nextTargets: ["map-game-design-career"], mediaIds: ["career-work-context-image", "skillstead-career-role-roadmap-diagram"] },
+  "plan-image-assets": { terms: ["current artifact profile", "prompt-only", "select/required/all"], templateIds: [], profileIds: [], roleIds: ["art-brief-director"], nextTargets: ["generate-image-assets"], mediaIds: [] },
+  "plan-junior-growth": { templateIds: ["junior-growth-review"], profileIds: ["junior-growth-review"], roleIds: ["game-design-mentor", "career-strategist"], nextTargets: ["visualize-career-roadmap"], mediaIds: ["growth-work-sample-image", "skillstead-growth-roadmap-diagram"] },
+  "practice-game-design-interview": { templateIds: ["interview-question-answer-log"], profileIds: ["interview-question-answer-report"], roleIds: ["interview-coach", "evidence-auditor"], nextTargets: ["plan-junior-growth"], mediaIds: ["skillstead-answer-structure-diagram"] },
+  "research-game-design-jobs": { templateIds: ["job-posting-evidence"], profileIds: ["job-posting-evidence"], roleIds: ["evidence-auditor", "career-strategist"], nextTargets: ["map-game-design-career"], mediaIds: ["skillstead-job-evidence-dependency-diagram"] },
+  "reverse-engineer-game-design": { templateIds: ["reverse-design-document"], profileIds: ["reverse-design-document"], roleIds: ["reverse-design-critic", "evidence-auditor"], nextTargets: ["export-career-documents"], mediaIds: ["reverse-design-evidence-image", "skillstead-reverse-system-loop-diagram"] },
+  "review-game-design-portfolio": { templateIds: ["five-axis-review"], profileIds: ["portfolio-review-backlog"], roleIds: ["portfolio-reviewer", "evidence-auditor"], nextTargets: ["build-game-design-portfolio"], mediaIds: ["skillstead-portfolio-dependency-diagram"] },
+  "review-image-assets": { terms: ["document-approved"], templateIds: [], profileIds: [], roleIds: ["visual-asset-reviewer", "art-brief-director"], nextTargets: ["export-career-documents"], mediaIds: [] },
+  "svg-infographic": { terms: ["no Canonical Artifact template"], templateIds: [], profileIds: [], roleIds: ["game-design-mentor"], nextTargets: ["visualize-career-roadmap"], mediaIds: [] },
+  "visualize-career-roadmap": { terms: ["current artifact profile"], templateIds: [], profileIds: [], roleIds: ["game-design-mentor"], nextTargets: ["export-career-documents"], mediaIds: [] },
 };
 
 function extractFirstColumnIds(markdown) {
@@ -79,6 +79,9 @@ function h2Headings(markdown) {
 
 function assertSkillContract(markdown, skillId) {
   assert.deepEqual(h2Headings(markdown), requiredHeadings, `${skillId}: H2 contract/order`);
+  for (const heading of requiredHeadings) {
+    assert.ok(markdown.includes(`## ${heading}\n\n`), `${skillId}: H2 must be followed by a blank line: ${heading}`);
+  }
   for (const heading of [
     "관련 템플릿·품질 프로필·전문 역할",
     "이미지·도식화 조건",
@@ -125,17 +128,67 @@ test("Career skill contract rejects missing or reordered new sections", async ()
   assert.throws(() => assertSkillContract(reordered, "reordered"));
 });
 
-test("Career skill handoff sections expose route-specific IDs rather than generic placeholders", async () => {
-  for (const [skillId, expected] of Object.entries(skillHandoffs)) {
+async function sourceInventory(product) {
+  const profiles = [];
+  const profileRoot = path.join(root, "shared/document-quality/profiles", product === "game-design-studio" ? "studio" : "career");
+  for (const entry of await readdir(profileRoot)) profiles.push(JSON.parse(await readFile(path.join(profileRoot, entry), "utf8")));
+  return {
+    profiles,
+    profileIds: new Set(profiles.map((profile) => profile.profile_id)),
+    roleIds: new Set((await readdir(path.join(root, "products", product, "plugin/agents"))).map((entry) => path.basename(entry, ".md"))),
+  };
+}
+
+test("Career skill handoffs are source-backed and match documented flow targets", async () => {
+  const inventory = await collectProductInventory(root, "game-design-career");
+  const sources = await sourceInventory("game-design-career");
+  const templateIds = new Set(inventory.templateIds);
+  const allowedNextTargets = new Set([...inventory.skillIds, "downstream"]);
+  const sourceMediaIds = new Set(sources.profiles.flatMap((profile) => [
+    ...profile.required_images,
+    ...profile.required_diagrams,
+  ].map((item) => item.id)));
+
+  for (const [skillId, handoff] of Object.entries(skillHandoffs)) {
     const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skillId}.md`), "utf8");
+    const related = extractSection(markdown, "관련 템플릿·품질 프로필·전문 역할");
+    const media = extractSection(markdown, "이미지·도식화 조건");
+    const next = extractSection(markdown, "다음 작업 요청문");
     const joined = [
-      extractSection(markdown, "관련 템플릿·품질 프로필·전문 역할"),
-      extractSection(markdown, "이미지·도식화 조건"),
-      extractSection(markdown, "다음 작업 요청문"),
+      related,
+      media,
+      next,
       extractSection(markdown, "관련 문서"),
     ].join("\n");
     assert.doesNotMatch(joined, /기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용/);
-    for (const term of expected) assert.ok(joined.includes(term), `${skillId}: missing handoff term ${term}`);
+    for (const id of handoff.templateIds) {
+      assert.ok(templateIds.has(id), `${skillId}: unknown template ID ${id}`);
+      assert.ok(related.includes(id), `${skillId}: missing template ID ${id}`);
+    }
+    for (const id of handoff.profileIds) {
+      assert.ok(sources.profileIds.has(id), `${skillId}: unknown profile ID ${id}`);
+      assert.ok(related.includes(id), `${skillId}: missing profile ID ${id}`);
+    }
+    for (const id of handoff.roleIds) {
+      assert.ok(sources.roleIds.has(id), `${skillId}: unknown role ID ${id}`);
+      assert.ok(related.includes(id), `${skillId}: missing role ID ${id}`);
+    }
+    for (const id of handoff.nextTargets) {
+      assert.ok(allowedNextTargets.has(id), `${skillId}: unknown next target ${id}`);
+      assert.ok(next.includes(id), `${skillId}: next request does not expose ${id}`);
+    }
+    const selectedProfileMediaIds = new Set(sources.profiles
+      .filter((profile) => handoff.profileIds.includes(profile.profile_id))
+      .flatMap((profile) => [...profile.required_images, ...profile.required_diagrams].map((item) => item.id)));
+    for (const id of handoff.mediaIds) {
+      assert.ok(sourceMediaIds.has(id), `${skillId}: undocumented profile media ID ${id}`);
+      assert.ok(selectedProfileMediaIds.has(id), `${skillId}: media ID is not required by the selected profile`);
+      assert.ok(media.includes(id), `${skillId}: missing media ID ${id}`);
+    }
+    for (const term of handoff.terms ?? []) assert.ok(joined.includes(term), `${skillId}: missing handoff term ${term}`);
+    for (const id of media.match(/\b(?:skillstead-[a-z0-9-]+|[a-z0-9-]+-image)\b/g) ?? []) {
+      assert.ok(sourceMediaIds.has(id), `${skillId}: media section invented ${id}`);
+    }
   }
 });
 
@@ -313,6 +366,7 @@ test("Career image and export guides document runtime precedence and downstream 
   for (const phrase of ["MD terminal validation", "<artifact-path>", "<export-manifest-path>", "새 세션", "downstream workflow"]) {
     assert.ok(exportsGuide.includes(phrase), `Career exports guide missing ${phrase}`);
   }
+  assert.doesNotMatch(exportsGuide, /(?:probe|available)[^.\n]*(?:MD capability|MD\/PDF|MD·PDF)/i, "MD must not be probe-gated");
   assert.ok(extractSection(exportSkill, "다음 작업 요청문").includes("downstream workflow"));
   for (const term of ["host", "probe", "preflight", "downstream workflow"]) assert.ok(glossary.includes(term), `missing glossary term: ${term}`);
 });

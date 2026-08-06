@@ -43,6 +43,7 @@ diagram이 필요한지 먼저 판단하고 packaged preset 하나와 source map
 artifact `assets/`에 editable SVG, adjacent alt text, 검증 시 PNG와 execution evidence를 남깁니다. `requested`, `generated`, `linted`, `rendered`, `verified`는 별도 상태입니다. 예상 결과 요약: source 관계를 왜곡하지 않는 검증 가능한 도식이 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
 - Quality Profile ID: `current artifact profile을 상속하며 visualization이 profile을 바꾸지 않음`.
 - Reviewer/role ID: `lead-game-designer`.
@@ -50,6 +51,7 @@ artifact `assets/`에 editable SVG, adjacent alt text, 검증 시 PNG와 executi
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 선택한 preset의 Skillstead diagram slot만 authoring하고, SVG/2× PNG를 검증합니다. character·scene illustration이 필요한 경우에만 별도 image-assets lifecycle로 넘기며 구조 도식과 혼합하지 않습니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -71,13 +73,19 @@ $game-design-studio:visualize-game-design 기존 SVG와 source mapping을 보존
 ```
 
 ## 다음 작업 요청문
-**복사 가능한 다음 handoff**
 
-@Game Design Studio export-game-design-documents로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+diagram source/evidence 또는 visual QA가 부족하면 먼저 `review-game-design`으로 finding을 남깁니다. SVG·2× PNG evidence가 검증되고 파생 형식이 필요할 때만 `export-game-design-documents`를 호출합니다.
 
 ```text
-$game-design-studio:export-game-design-documents artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-studio:review-game-design artifact=<artifact-path> diagram source mapping과 visual QA blocker를 검토해.
+```
+
+```text
+$game-design-studio:export-game-design-documents artifact=<artifact-path> verified diagram evidence가 있을 때만 export preflight를 준비해.
 ```
 
 ## 관련 문서
+
 [템플릿 카탈로그](../templates.md), [export-game-design-documents 스킬](./export-game-design-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

@@ -43,13 +43,15 @@ archetype·authoring reference를 읽고 canvas, regions, grid, text budget와 c
 editable SVG authority, derivative PNG, renderer executable/version, lint/render command, exact dimensions와 warning/QA disposition을 handoff합니다. 예상 결과 요약: Career structure의 수정 가능한 원본과 재현 가능한 렌더 증거가 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `no Canonical Artifact template` — [템플릿 카탈로그](../templates.md).
 - Quality Profile ID: `no Quality Profile: vendored Skillstead tool`.
-- Reviewer/role ID: `Skillstead`.
+- Reviewer/role ID: `game-design-mentor` (Career `visualize-career-roadmap` wrapper가 관계와 학습 맥락을 검토합니다).
 
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 이 도구는 structural SVG와 2× PNG에만 사용합니다. illustration lifecycle·portrait·scene을 생성하지 않으며 관계가 prose/표보다 분명할 때만 사용합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-career:svg-infographic 기존 editable SVG를 보존하고 승인�
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career visualize-career-roadmap로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-career:visualize-career-roadmap artifact=<artifact-path> 기존 evi
 ```
 
 ## 관련 문서
+
 [템플릿 카탈로그](../templates.md), [visualize-career-roadmap 스킬](./visualize-career-roadmap.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

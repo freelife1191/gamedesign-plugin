@@ -43,6 +43,7 @@ intake를 정리하고 exact route와 artifact를 고른 뒤 각 artifact에 qua
 Canonical Artifact의 `content.md`, `evidence.yml`, `decisions/`, `assets/`, `export-manifest.yml`과 route·role·gate·next owner를 기록합니다. 예상 결과 요약: 복합 요청이 검증 가능한 순서와 책임 경계로 나뉩니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `game-design-brief` — [game-design-brief 템플릿](../templates.md#game-design-brief).
 - Quality Profile ID: `game-design-brief`.
 - Reviewer/role ID: `lead-game-designer · production-feasibility-critic`.
@@ -50,6 +51,7 @@ Canonical Artifact의 `content.md`, `evidence.yml`, `decisions/`, `assets/`, `ex
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 초기 brief의 `design-context-image` slot이 명시된 경우에만 image plan으로 넘깁니다. 전체 workflow 관계는 `skillstead-design-flow-diagram`이 decision 흐름을 더 명확히 할 때만 Skillstead로 만듭니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,13 +69,19 @@ $game-design-studio:orchestrate-game-design-project 기존 Canonical Artifact와
 ```
 
 ## 다음 작업 요청문
-**복사 가능한 다음 handoff**
 
-@Game Design Studio define-game-vision로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+@Game Design Studio 목표·핵심 재미가 아직 미확정이면 define-game-vision으로, 이미 시스템 범위가 확정됐으면 design-game-systems로 현재 Artifact를 이어 진행해.
 
 ```text
-$game-design-studio:define-game-vision artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-studio:define-game-vision artifact=<artifact-path> vision uncertainty가 있을 때만 진행해.
+```
+
+```text
+$game-design-studio:design-game-systems artifact=<artifact-path> 시스템 범위가 이미 확정됐을 때만 진행해.
 ```
 
 ## 관련 문서
+
 [game-design-brief 템플릿](../templates.md#game-design-brief), [define-game-vision 스킬](./define-game-vision.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

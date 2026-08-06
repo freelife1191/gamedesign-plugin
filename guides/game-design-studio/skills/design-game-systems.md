@@ -43,6 +43,7 @@ boundary와 authoritative state를 정한 뒤 ordered rules, concurrency, transi
 Canonical Artifact에 rule·state·exception·data ID와 validation task를 기록합니다. 복잡한 precedence는 `rule-exception-matrix`, schema 집중 작업은 `data-schema-table-contract`를 함께 사용할 수 있습니다. 예상 결과 요약: 설계와 엔지니어링이 동일한 실행 계약을 검토할 수 있습니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `system-specification` — [system-specification 템플릿](../templates.md#system-specification).
 - Quality Profile ID: `system-feature-specification`.
 - Reviewer/role ID: `system-economy-designer · ux-accessibility-reviewer`.
@@ -50,7 +51,8 @@ Canonical Artifact에 rule·state·exception·data ID와 validation task를 기�
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
-이미지는 시스템 계약에 필수가 아닙니다. rule/state/exception 관계가 표보다 복잡할 때만 `skillstead-system-state-diagram`을 Skillstead로 만들고, 별도 illustration slot은 template manifest가 요구할 때만 계획합니다.
+
+`feature-readability-image`은 system-feature-specification profile에서 플레이어 신호를 검토할 때만 계획합니다. rule/state/exception 관계가 표보다 복잡할 때만 `skillstead-feature-state-diagram`을 Skillstead로 만들고, 별도 illustration slot은 template manifest가 요구할 때만 계획합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
 
@@ -67,13 +69,15 @@ $game-design-studio:design-game-systems 기존 system-specification에서 미해
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
-@Game Design Studio design-game-content로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+@Game Design Studio review-game-design로 현재 Artifact의 검증된 기록을 이어 rule precedence와 recovery blocker를 검토해.
 
 ```text
-$game-design-studio:design-game-content artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
 ```
 
 ## 관련 문서
-[system-specification 템플릿](../templates.md#system-specification), [design-game-content 스킬](./design-game-content.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+[system-specification 템플릿](../templates.md#system-specification), [review-game-design 스킬](./review-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

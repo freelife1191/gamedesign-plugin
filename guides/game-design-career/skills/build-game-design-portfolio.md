@@ -43,13 +43,15 @@ $game-design-career:build-game-design-portfolio targetCompetency=system-design, 
 `creative-design-portfolio` 또는 `portfolio-project-brief`의 `content.md`, claim-evidence index, attribution/rights notes, recovery queue와 reviewer checklist를 만듭니다. 예상 결과 요약: 설명 없이도 핵심 역량과 증거를 찾을 수 있는 case study가 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
-- Template ID: `portfolio-project-brief` — [portfolio-project-brief 템플릿](../templates.md#portfolio-project-brief).
-- Quality Profile ID: `portfolio-project-brief`.
+
+- Template ID: `creative-design-portfolio` 또는 `portfolio-project-brief` — [creative-design-portfolio 템플릿](../templates.md#creative-design-portfolio), [portfolio-project-brief 템플릿](../templates.md#portfolio-project-brief).
+- Quality Profile ID: `portfolio-case-study` 또는 `portfolio-project-brief`.
 - Reviewer/role ID: `game-design-mentor · portfolio-reviewer · evidence-auditor`.
 
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 `portfolio-direction-image`은 evidence와 rights가 있을 때만 illustration lifecycle로 계획합니다. decision chain은 `skillstead-portfolio-roadmap-dependency-diagram`이 검토를 돕는 경우에만 Skillstead로 도식화합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-career:build-game-design-portfolio 기존 claimId를 유지하고 m
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career review-game-design-portfolio로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-career:review-game-design-portfolio artifact=<artifact-path> 기존
 ```
 
 ## 관련 문서
+
 [portfolio-project-brief 템플릿](../templates.md#portfolio-project-brief), [review-game-design-portfolio 스킬](./review-game-design-portfolio.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

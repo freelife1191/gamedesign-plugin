@@ -43,6 +43,7 @@ intake를 정규화하고 route를 바꾸는 질문만 하나 묻습니다. stag
 normalized intake, stage rationale, assumptions, provisional paths, ordered skill chain, 최대 3 roles, review envelopes, evidence gaps, gates와 next action을 담은 Career Stage & Goal Brief를 반환합니다. 예상 결과 요약: 다음 workflow가 증거를 발명하지 않고 시작할 수 있습니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `career-stage-goal` — [career-stage-goal 템플릿](../templates.md#career-stage-goal).
 - Quality Profile ID: `career-stage-role-map`.
 - Reviewer/role ID: `career-strategist`.
@@ -50,6 +51,7 @@ normalized intake, stage rationale, assumptions, provisional paths, ordered skil
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 초기 stage artifact의 `career-work-context-image` slot이 선언된 경우에만 image plan으로 넘깁니다. stage routing 관계는 `skillstead-career-role-roadmap-diagram`이 더 명확할 때만 Skillstead로 만듭니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-career:orchestrate-game-design-career 기존 stage brief와 evidenc
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career map-game-design-career로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-career:map-game-design-career artifact=<artifact-path> 기존 evide
 ```
 
 ## 관련 문서
+
 [career-stage-goal 템플릿](../templates.md#career-stage-goal), [map-game-design-career 스킬](./map-game-design-career.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

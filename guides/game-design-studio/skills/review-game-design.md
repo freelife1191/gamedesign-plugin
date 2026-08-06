@@ -43,6 +43,7 @@ source validation 후 최대 세 역할에 stable section 기반 질문을 보�
 review package와 decision log만 변경하고 원본은 별도 승인 없이는 바꾸지 않습니다. 예상 결과 요약: 출시를 막는 근거 기반 문제와 가장 작은 수리 경로가 남습니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `game-design-review` — [game-design-review 템플릿](../templates.md#game-design-review).
 - Quality Profile ID: `design-review-decision-log`.
 - Reviewer/role ID: `lead-game-designer · production-feasibility-critic · ux-accessibility-reviewer`.
@@ -50,6 +51,7 @@ review package와 decision log만 변경하고 원본은 별도 승인 없이는
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 검토 자체는 이미지를 만들지 않습니다. finding이 image slot 또는 diagram slot의 부족을 지적하면 각각 illustration lifecycle 또는 Skillstead visualization handoff로만 넘깁니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,13 +69,19 @@ $game-design-studio:review-game-design 이전 blocked review를 유지하고, �
 ```
 
 ## 다음 작업 요청문
-**복사 가능한 다음 handoff**
 
-@Game Design Studio plan-image-assets로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+minimum fix가 남아 있으면 같은 review artifact를 보존한 채 `review-game-design`을 다시 실행합니다. 모든 blocker가 승인 가능하고 파생 형식이 필요할 때만 `export-game-design-documents`로 넘깁니다.
 
 ```text
-$game-design-studio:plan-image-assets artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-studio:review-game-design artifact=<artifact-path> finding의 minimum fix 반영 여부만 재검토해.
+```
+
+```text
+$game-design-studio:export-game-design-documents artifact=<artifact-path> 승인 가능한 review evidence가 있을 때만 renderer-neutral preflight를 준비해.
 ```
 
 ## 관련 문서
-[game-design-review 템플릿](../templates.md#game-design-review), [plan-image-assets 스킬](./plan-image-assets.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+[game-design-review 템플릿](../templates.md#game-design-review), [내보내기](./export-game-design-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

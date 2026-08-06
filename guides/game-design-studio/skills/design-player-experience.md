@@ -43,6 +43,7 @@ $game-design-studio:design-player-experience 첫 세션 onboarding과 UI state�
 interaction/UI states, onboarding, input, performance, cross-platform, accessibility, assumptions와 gates를 Canonical Artifact에 기록합니다. 예상 결과 요약: QA 가능한 첫 세션과 접근성 경로가 명확해집니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `ui-ux-flow-state` — [ui-ux-flow-state 템플릿](../templates.md#ui-ux-flow-state).
 - Quality Profile ID: `ui-ux-flow-state-specification`.
 - Reviewer/role ID: `ux-accessibility-reviewer · lead-game-designer`.
@@ -50,6 +51,7 @@ interaction/UI states, onboarding, input, performance, cross-platform, accessibi
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 `ui-key-screen-image`은 화면 맥락을 검토할 필요가 있을 때만 illustration lifecycle로 계획합니다. critical action의 state/focus 관계는 `skillstead-ui-flow-state-diagram`으로 설명 가치가 있을 때만 Skillstead를 사용합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,13 +69,15 @@ $game-design-studio:design-player-experience 기존 ui-ux-flow-state를 유지�
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
-@Game Design Studio visualize-game-design로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+@Game Design Studio review-game-design로 현재 Artifact의 검증된 기록을 이어 critical action과 accessibility blocker를 검토해.
 
 ```text
-$game-design-studio:visualize-game-design artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
 ```
 
 ## 관련 문서
-[ui-ux-flow-state 템플릿](../templates.md#ui-ux-flow-state), [visualize-game-design 스킬](./visualize-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+[ui-ux-flow-state 템플릿](../templates.md#ui-ux-flow-state), [review-game-design 스킬](./review-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

@@ -44,6 +44,7 @@ posting과 portfolio record를 inventory하고 stable IDs를 유지합니다. tr
 evidence inventory, stable `questionId`로 결합된 question record와 answer-feedback record, blocked claims, verification tasks와 honest-answer patterns를 `interview-question-answer-log`에 남깁니다. 예상 결과 요약: 공고와 portfolio 근거를 다시 찾을 수 있는 면접 연습 기록이 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `interview-question-answer-log` — [interview-question-answer-log 템플릿](../templates.md#interview-question-answer-log).
 - Quality Profile ID: `interview-question-answer-report`.
 - Reviewer/role ID: `interview-coach · evidence-auditor`.
@@ -51,6 +52,7 @@ evidence inventory, stable `questionId`로 결합된 question record와 answer-f
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 면접 연습은 illustration 생성이 필요하지 않습니다. question/evidence 구조가 복잡할 때만 `skillstead-answer-structure-diagram`을 Skillstead로 만들며, 사진·포트폴리오 이미지는 별도 권리 검토를 거칩니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -68,6 +70,7 @@ $game-design-career:practice-game-design-interview 기존 questionId를 유지�
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career plan-junior-growth로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -77,4 +80,5 @@ $game-design-career:plan-junior-growth artifact=<artifact-path> 기존 evidence/
 ```
 
 ## 관련 문서
+
 [interview-question-answer-log 템플릿](../templates.md#interview-question-answer-log), [plan-junior-growth 스킬](./plan-junior-growth.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

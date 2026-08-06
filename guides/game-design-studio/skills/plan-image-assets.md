@@ -43,6 +43,7 @@ $game-design-studio:plan-image-assets artifact=artifacts/coop-rpg-brief, profile
 `assets/image-assets.yml`, `assets/prompts/image-prompts.md`, `assets/prompts/image-prompts.json`을 생성·갱신합니다. 기존 stable ID, 결정, output과 provenance는 보존합니다. 예상 결과 요약: provider 호출 전 비용과 검토 범위가 유한하게 고정됩니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
 - Quality Profile ID: `current artifact profile을 상속하며 plan이 profile을 바꾸지 않음`.
 - Reviewer/role ID: `art-brief-director`.
@@ -50,6 +51,7 @@ $game-design-studio:plan-image-assets artifact=artifacts/coop-rpg-brief, profile
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 template의 declared image slot과 finite stable asset ID만 illustration lifecycle에 넣습니다. Skillstead diagram slot은 이미지 plan에서 생성하지 않고 visualization lane으로 유지합니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,13 +69,17 @@ $game-design-studio:plan-image-assets 기존 image-assets.yml과 stable IDs를 �
 ```
 
 ## 다음 작업 요청문
-**복사 가능한 다음 handoff**
 
-@Game Design Studio generate-image-assets로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+@Game Design Studio mode가 prompt-only면 plan만 보존하고, select/required/all의 finite manifest job이 허용될 때만 generate-image-assets로 진행해.
 
 ```text
 $game-design-studio:generate-image-assets artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
 ```
 
+`prompt-only`일 때의 허용 대상은 이 planning artifact뿐이며, `select`/`required`/`all`의 유한 manifest job만 `generate-image-assets`를 허용합니다.
+
 ## 관련 문서
+
 [템플릿 카탈로그](../templates.md), [generate-image-assets 스킬](./generate-image-assets.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

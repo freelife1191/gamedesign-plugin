@@ -43,6 +43,7 @@ packaged preflight로 private config를 내부에 유지한 채 manifest와 fini
 선택된 IDs, mode, redacted provider decision, asset별 result, prompt/placeholder와 named-human review handoff를 반환합니다. 사용자는 stable asset ID와 실제 선택 결정을 입력하고, host adapter가 immutable structured selection receipt를 공급합니다. 임의 JSON·문자열 receipt는 거부됩니다. 생성 파일은 `concept-draft`입니다. 예상 결과 요약: 승인과 분리된 provider provenance와 재개 가능한 상태가 남습니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
 - Quality Profile ID: `current artifact profile을 상속하며 generation이 profile을 바꾸지 않음`.
 - Reviewer/role ID: `art-brief-director`.
@@ -50,6 +51,7 @@ packaged preflight로 private config를 내부에 유지한 채 manifest와 fini
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 검증 manifest의 finite stable asset ID만 illustration lifecycle로 생성하며 결과는 `concept-draft`입니다. 구조 도식은 생성 이미지가 아니라 Skillstead lane입니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-career:generate-image-assets 성공한 asset은 유지하고 failed
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Career review-image-assets로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-career:review-image-assets artifact=<artifact-path> 기존 evidence
 ```
 
 ## 관련 문서
+
 [템플릿 카탈로그](../templates.md), [review-image-assets 스킬](./review-image-assets.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

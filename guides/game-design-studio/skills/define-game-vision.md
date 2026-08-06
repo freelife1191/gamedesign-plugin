@@ -43,6 +43,7 @@ $game-design-studio:define-game-vision 4인 모바일 협동 RPG의 target playe
 Canonical Artifact의 `content.md`, `evidence.yml`, decisions와 검토 항목에 target player, pillars, loops, meaningful choice, metrics, assumptions와 owner를 남깁니다. 예상 결과 요약: 팀이 기능 선택에 사용할 검증 가능한 비전 기준이 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+
 - Template ID: `vision-pillars` — [vision-pillars 템플릿](../templates.md#vision-pillars).
 - Quality Profile ID: `vision-one-pager`.
 - Reviewer/role ID: `lead-game-designer · content-narrative-designer`.
@@ -50,6 +51,7 @@ Canonical Artifact의 `content.md`, `evidence.yml`, decisions와 검토 항목�
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+
 `vision-reference-image`는 player promise를 검토할 때만 illustration lifecycle로 계획합니다. pillar·loop 의존성은 `skillstead-vision-dependency-diagram`으로 구조적으로 설명할 때만 만듭니다.
 
 [이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
@@ -67,6 +69,7 @@ $game-design-studio:define-game-vision 기존 vision-pillars를 유지하고, �
 ```
 
 ## 다음 작업 요청문
+
 **복사 가능한 다음 handoff**
 
 @Game Design Studio design-game-systems로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
@@ -76,4 +79,5 @@ $game-design-studio:design-game-systems artifact=<artifact-path> 기존 evidence
 ```
 
 ## 관련 문서
+
 [vision-pillars 템플릿](../templates.md#vision-pillars), [design-game-systems 스킬](./design-game-systems.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
