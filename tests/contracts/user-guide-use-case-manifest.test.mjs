@@ -13,6 +13,7 @@ import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/us
 import { collectHeadingAnchors, collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { STUDIO_DIAGRAM_PRODUCTION_CONTRACT, validateStudioDiagramProductionContract } from "../../tooling/lib/studio-diagram-production-contract.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -1756,42 +1757,167 @@ test("Studio diagram semantic bindings reject wrong-valid skills, outputs, next 
   assert.throws(() => validateDiagramSource({ ...g01, branches: [g01.branches[0]] }), /two branches/u);
 });
 
-test("persisted Studio diagrams expose exact source semantics instead of generic placeholders", async () => {
+const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
+  "st-c01": { kind: "competency", specialist: "define-game-vision", outputs: ["vision-pillars", "game-design-brief", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c02": { kind: "competency", specialist: "design-game-systems", outputs: ["core-motivation-loop", "system-specification", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c03": { kind: "competency", specialist: "design-game-systems", outputs: ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c04": { kind: "competency", specialist: "design-player-experience", outputs: ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c05": { kind: "competency", specialist: "design-game-content", outputs: ["narrative-quest-npc", "character-skill-combat-monster", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c06": { kind: "competency", specialist: "design-game-content", outputs: ["character-skill-combat-monster", "system-specification", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c07": { kind: "competency", specialist: "design-game-economy-and-liveops", outputs: ["economy-balance", "liveops-experiment-event", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c08": { kind: "competency", specialist: "plan-game-production", outputs: ["production-scope-risk", "game-design-review", "export-preparation-manifest"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-g01": { kind: "concept", specialist: "design-game-economy-and-liveops", outputs: ["game-design-brief", "economy-balance", "liveops-experiment-event"], constraint: ["수집 동기", "짧은 세션을 확인합니다."], criterion: ["guardrail 결정", "보호 기준을 비교합니다."], decision: ["이벤트 검증", "rollback을 봅니다."], branches: [["수집 압력 축소", "보호 지표 우선"], ["이벤트 교환 유지", "rollback 기준 확인"]], validation: "telemetry: retention·economy guardrail·rollback" },
+  "st-g02": { kind: "concept", specialist: "design-game-systems", outputs: ["core-motivation-loop", "ui-ux-flow-state", "game-design-review"], constraint: ["퍼즐 세션", "첫 선택을 좁힙니다."], criterion: ["오프라인 결과", "authority를 비교합니다."], decision: ["복귀 cue", "telemetry로 검증합니다."], branches: [["복귀 보상 수령", "중단 부담 완화"], ["오프라인 결과 거부", "authority 확인"]], validation: "offline authority prototype와 return telemetry" },
+  "st-g03": { kind: "concept", specialist: "design-game-systems", outputs: ["system-specification", "character-skill-combat-monster", "production-scope-risk"], constraint: ["역할과 자원", "협동 긴장을 정의합니다."], criterion: ["이탈 예외", "재합류 조건을 비교합니다."], decision: ["그룹 관찰", "동기화 가설을 검증합니다."], branches: [["동료 구조", "자원 비용 비교"], ["안전 탈출", "재합류 조건 확인"]], validation: "co-op rejoin prototype와 이탈 telemetry" },
+  "st-g04": { kind: "concept", specialist: "design-game-systems", outputs: ["character-skill-combat-monster", "system-specification", "ui-ux-flow-state"], constraint: ["교전 목표", "경쟁 목적을 정합니다."], criterion: ["telegraph", "가독성 기준을 둡니다."], decision: ["match 검증", "안전과 fairness를 봅니다."], branches: [["공격 확정", "counterplay 확인"], ["회피·차단", "telegraph 확인"]], validation: "combat readability prototype와 fairness telemetry" },
+  "st-g05": { kind: "concept", specialist: "design-game-content", outputs: ["core-motivation-loop", "character-skill-combat-monster", "production-scope-risk"], constraint: ["run 목표", "반복 목표를 정합니다."], criterion: ["실패 원인", "telegraph miss를 기록합니다."], decision: ["메타 성장", "scope 근거를 검토합니다."], branches: [["위험 경로", "보상 가설 검증"], ["안전 보상", "run 범위 보호"]], validation: "run failure prototype와 scope evidence" },
+  "st-g06": { kind: "concept", specialist: "design-game-content", outputs: ["narrative-quest-npc", "system-specification", "rule-exception-matrix"], constraint: ["선택 장면", "의도를 명시합니다."], criterion: ["모순 확인", "분기 충돌을 비교합니다."], decision: ["제작 결정", "rights와 범위를 검토합니다."], branches: [["관계 유지", "state delta 기록"], ["관계 단절", "분기 비용 검토"]], validation: "branch conflict review와 rights evidence" },
+  "st-g07": { kind: "concept", specialist: "design-player-experience", outputs: ["ui-ux-flow-state", "narrative-quest-npc", "accessibility-platform-matrix"], constraint: ["생활 행동", "자율 목표를 정합니다."], criterion: ["감각 대안", "접근 경로를 둡니다."], decision: ["usability 검증", "관찰로 수정합니다."], branches: [["시간 제한", "압박을 관찰"], ["자율 일정", "감각 대안 확인"]], validation: "usability observation과 accessibility feedback" },
+  "st-g08": { kind: "concept", specialist: "design-game-economy-and-liveops", outputs: ["economy-balance", "system-specification", "ui-ux-flow-state"], constraint: ["자원 권위", "source를 정합니다."], criterion: ["guardrail 판단", "cascade를 제한합니다."], decision: ["simulation", "rollback을 검토합니다."], branches: [["증설 투자", "연쇄 효과 검증"], ["자원 보존", "rollback 조건 확인"]], validation: "resource simulation과 cascade rollback" },
+  "st-g09": { kind: "concept", specialist: "design-game-content", outputs: ["narrative-quest-npc", "system-specification", "game-design-review"], constraint: ["창작 상태", "UGC source를 정합니다."], criterion: ["권리와 신고", "appeal을 연결합니다."], decision: ["안전 검토", "ethics owner가 봅니다."], branches: [["공개 게시", "권리 source 확인"], ["검토 대기", "moderation 확인"]], validation: "rights appeal review와 safety evidence" },
+  "st-g10": { kind: "concept", specialist: "design-player-experience", outputs: ["game-design-brief", "ui-ux-flow-state", "accessibility-platform-matrix"], constraint: ["학습 맥락", "대상 요구를 확인합니다."], criterion: ["대체 활동", "접근 대안을 둡니다."], decision: ["당사자 검토", "효과 근거를 확인합니다."], branches: [["참여 지속", "동의 상태 확인"], ["대체 활동", "접근 대안 제공"]], validation: "participant feedback과 accessibility evidence" },
+  "st-s01": { kind: "skill", skill: "apply-document-quality-profile", trigger: ["품질 trigger", "profile 요청을 받습니다."], requiredInput: "canonical-artifact + quality profile", outputs: ["selection-record", "quality-checklist", "requirement-manifest"], nextRoutes: ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], nextCondition: null, routeIds: [] },
+  "st-s02": { kind: "skill", skill: "define-game-vision", trigger: ["비전 trigger", "경험 목표를 받습니다."], requiredInput: "player promise + design constraints", outputs: ["vision-pillars", "core-motivation-loop"], nextRoutes: ["design-game-systems"], nextCondition: null, routeIds: ["vision"] },
+  "st-s03": { kind: "skill", skill: "design-game-content", trigger: ["콘텐츠 trigger", "퀘스트 의도를 받습니다."], requiredInput: "quest intent + rights boundary", outputs: ["narrative-quest-npc", "character-skill-combat-monster"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["content"] },
+  "st-s04": { kind: "skill", skill: "design-game-economy-and-liveops", trigger: ["경제 trigger", "성장 질문을 받습니다."], requiredInput: "economy question + telemetry guardrail", outputs: ["economy-balance", "liveops-experiment-event"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["economy", "liveops"] },
+  "st-s05": { kind: "skill", skill: "design-game-systems", trigger: ["시스템 trigger", "기능 질문을 받습니다."], requiredInput: "rule question + authoritative state", outputs: ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["systems"] },
+  "st-s06": { kind: "skill", skill: "design-player-experience", trigger: ["UX trigger", "사용 흐름을 받습니다."], requiredInput: "user flow + accessibility constraint", outputs: ["ui-ux-flow-state", "accessibility-platform-matrix"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["player-experience"] },
+  "st-s07": { kind: "skill", skill: "export-game-design-documents", trigger: ["출력 trigger", "format 요청을 받습니다."], requiredInput: "canonical-artifact + requested formats", outputs: ["export-preparation-manifest", "format-jobs"], nextRoutes: [], nextCondition: "pending format job → downstream renderer QA", routeIds: ["export"] },
+  "st-s08": { kind: "skill", skill: "generate-image-assets", trigger: ["생성 trigger", "receipt를 확인합니다."], requiredInput: "selection receipt + approved prompt", outputs: ["image-generation-result", "image-generation-provenance"], nextRoutes: ["review-image-assets"], nextCondition: null, routeIds: [] },
+  "st-s09": { kind: "skill", skill: "orchestrate-game-design-project", trigger: ["복합 trigger", "여러 domain을 받습니다."], requiredInput: "canonical-artifact + domain route requests", outputs: ["game-design-brief", "canonical-artifact"], nextRoutes: ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], nextCondition: null, routeIds: ["project-orchestration"] },
+  "st-s10": { kind: "skill", skill: "plan-game-production", trigger: ["제작 trigger", "slice 요청을 받습니다."], requiredInput: "vertical slice + scope constraints", outputs: ["production-scope-risk", "decision-change-log"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["production"] },
+  "st-s11": { kind: "skill", skill: "plan-image-assets", trigger: ["계획 trigger", "asset 필요를 받습니다."], requiredInput: "asset need + rights constraint", outputs: ["image-assets-manifest", "image-prompts"], nextRoutes: ["generate-image-assets", "visualize-game-design"], nextCondition: null, routeIds: [] },
+  "st-s12": { kind: "skill", skill: "review-game-design", trigger: ["검토 trigger", "review 질문을 받습니다."], requiredInput: "canonical-artifact + review question", outputs: ["game-design-review", "decision-change-log"], nextRoutes: ["review-game-design", "visualize-game-design", "export-game-design-documents"], nextCondition: null, routeIds: ["review"] },
+  "st-s13": { kind: "skill", skill: "review-image-assets", trigger: ["검토 trigger", "draft receipt를 받습니다."], requiredInput: "draft receipt + lifecycle state", outputs: ["image-asset-review", "lifecycle-receipt"], nextRoutes: ["export-game-design-documents"], nextCondition: null, routeIds: [] },
+  "st-s14": { kind: "skill", skill: "svg-infographic", trigger: ["SVG trigger", "구조 관계를 받습니다."], requiredInput: "relationship structure + evidence", outputs: ["editable-svg", "png-2x", "render-evidence"], nextRoutes: ["visualize-game-design"], nextCondition: null, routeIds: [] },
+  "st-s15": { kind: "skill", skill: "visualize-game-design", trigger: ["시각화 trigger", "관계 질문을 받습니다."], requiredInput: "relationship question + source data", outputs: ["editable-svg", "png-2x", "visualization-evidence"], nextRoutes: ["review-game-design", "export-game-design-documents"], nextCondition: null, routeIds: ["visualization"] },
+});
+
+const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
+  "project-orchestration": { skill: "orchestrate-game-design-project", requiredInputs: ["target player", "target experience", "platform", "genre", "development stage", "constraints", "completion criteria"], artifactType: "game-design-brief" },
+  vision: { skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
+  systems: { skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
+  content: { skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
+  "player-experience": { skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
+  economy: { skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
+  liveops: { skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },
+  production: { skill: "plan-game-production", requiredInputs: ["target experience", "team", "schedule", "technology", "dependencies"], artifactType: "production-scope-risk" },
+  review: { skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
+  visualization: { skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
+  export: { skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
+});
+
+function cloneStudioDiagramSource(source) {
+  return JSON.parse(JSON.stringify(source));
+}
+
+test("Studio production diagram contract fixes every persisted source against independent expected values", async () => {
   const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
-  const competencyContract = {
-    "st-c01": ["define-game-vision", ["vision-pillars", "game-design-brief", "game-design-review"]],
-    "st-c02": ["design-game-systems", ["core-motivation-loop", "system-specification", "game-design-review"]],
-    "st-c03": ["design-game-systems", ["system-specification", "rule-exception-matrix", "data-schema-table-contract"]],
-    "st-c04": ["design-player-experience", ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"]],
-    "st-c05": ["design-game-content", ["narrative-quest-npc", "character-skill-combat-monster", "game-design-review"]],
-    "st-c06": ["design-game-content", ["character-skill-combat-monster", "system-specification", "game-design-review"]],
-    "st-c07": ["design-game-economy-and-liveops", ["economy-balance", "liveops-experiment-event", "game-design-review"]],
-    "st-c08": ["plan-game-production", ["production-scope-risk", "game-design-review", "export-preparation-manifest"]],
+  const routing = JSON.parse(await readFile(path.join(repoRoot, "products/game-design-studio/plugin/references/routing.json"), "utf8"));
+  const sourceById = new Map(sources.map((source) => [source.id, source]));
+  const routeById = new Map(routing.routes.map((route) => [route.id, route]));
+
+  assert.deepEqual(STUDIO_DIAGRAM_PRODUCTION_CONTRACT, STUDIO_DIAGRAM_PRODUCTION_EXPECTED, "production validator uses the independent expected source contract");
+  assert.deepEqual([...sourceById.keys()].filter((id) => id.startsWith("st-")).sort(), Object.keys(STUDIO_DIAGRAM_PRODUCTION_EXPECTED).sort());
+  assert.deepEqual([...routeById.keys()].sort(), Object.keys(STUDIO_CANONICAL_ROUTE_EXPECTED).sort());
+  for (const [routeId, expected] of Object.entries(STUDIO_CANONICAL_ROUTE_EXPECTED)) {
+    const route = routeById.get(routeId);
+    assert.deepEqual({ skill: route.skill, requiredInputs: route.requiredInputs, artifactType: route.artifactType }, expected, `${routeId} canonical route condition and target`);
+  }
+
+  for (const [id, expected] of Object.entries(STUDIO_DIAGRAM_PRODUCTION_EXPECTED)) {
+    const source = sourceById.get(id);
+    assert.ok(source, `${id} persisted source`);
+    if (expected.kind === "competency") {
+      assert.deepEqual({ specialist: source.semantic.specialist, outputs: source.semantic.outputs, review: source.semantic.review }, { specialist: expected.specialist, outputs: expected.outputs, review: expected.review }, `${id} exact competency mapping`);
+    } else if (expected.kind === "concept") {
+      assert.deepEqual({ specialist: source.semantic.specialist, outputs: source.semantic.outputs, constraint: [source.steps[0].label, source.steps[0].detail], criterion: [source.steps[2].label, source.steps[2].detail], decision: [source.steps[3].label, source.steps[3].detail], branches: source.branches.map(({ label, detail }) => [label, detail]), validation: source.semantic.validation }, { specialist: expected.specialist, outputs: expected.outputs, constraint: expected.constraint, criterion: expected.criterion, decision: expected.decision, branches: expected.branches, validation: expected.validation }, `${id} exact concept mapping`);
+    } else {
+      assert.deepEqual({ skill: source.semantic.skill, trigger: [source.steps[0].label, source.steps[0].detail], requiredInput: source.semantic.required_input, outputs: source.semantic.outputs, nextRoutes: source.semantic.next_routes, nextCondition: source.semantic.next_condition ?? null }, { skill: expected.skill, trigger: expected.trigger, requiredInput: expected.requiredInput, outputs: expected.outputs, nextRoutes: expected.nextRoutes, nextCondition: expected.nextCondition }, `${id} exact skill mapping`);
+      for (const routeId of expected.routeIds) assert.equal(routeById.get(routeId).skill, expected.skill, `${id} canonical route target ${routeId}`);
+      for (const target of expected.nextRoutes) assert.ok(routing.skillIds.includes(target), `${id} canonical route target skill ${target}`);
+    }
+  }
+});
+
+test("Studio production validator rejects the table-driven wrong-valid mutation matrix", async () => {
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const sourceById = new Map(sources.map((source) => [source.id, source]));
+  const entries = Object.entries(STUDIO_DIAGRAM_PRODUCTION_EXPECTED);
+  const alternate = (id, kind, differs) => entries.find(([candidateId, candidate]) => candidateId !== id && candidate.kind === kind && differs(candidate))[1];
+  const assertProductionReject = (source, id, label, { schemaValid = true } = {}) => {
+    if (schemaValid) validateDiagramSource(source);
+    assert.throws(() => validateStudioDiagramProductionContract(source), new RegExp(id, "u"), label);
   };
 
+  for (const [id, expected] of entries) {
+    const source = sourceById.get(id);
+    if (expected.kind === "competency") {
+      const other = alternate(id, expected.kind, (candidate) => candidate.specialist !== expected.specialist && JSON.stringify(candidate.outputs) !== JSON.stringify(expected.outputs));
+      for (const semantic of [
+        { ...source.semantic, specialist: other.specialist },
+        { ...source.semantic, outputs: other.outputs },
+        { ...source.semantic, review: { ...source.semantic.review, skill: "design-game-systems" } },
+        { ...source.semantic, specialist: "전문 판단을 적용" },
+      ]) assertProductionReject({ ...cloneStudioDiagramSource(source), semantic }, id, `${id} rejects wrong-valid competency mapping`);
+    } else if (expected.kind === "concept") {
+      const otherSpecialist = alternate(id, expected.kind, (candidate) => candidate.specialist !== expected.specialist);
+      const otherOutputs = alternate(id, expected.kind, (candidate) => JSON.stringify(candidate.outputs) !== JSON.stringify(expected.outputs));
+      const otherBranches = alternate(id, expected.kind, (candidate) => JSON.stringify(candidate.branches) !== JSON.stringify(expected.branches));
+      const otherValidation = alternate(id, expected.kind, (candidate) => candidate.validation !== expected.validation);
+      for (const mutation of [
+        { ...cloneStudioDiagramSource(source), semantic: { ...source.semantic, specialist: otherSpecialist.specialist } },
+        { ...cloneStudioDiagramSource(source), semantic: { ...source.semantic, outputs: otherOutputs.outputs } },
+        { ...cloneStudioDiagramSource(source), branches: otherBranches.branches.map(([label, detail]) => ({ label, detail })) },
+        { ...cloneStudioDiagramSource(source), semantic: { ...source.semantic, validation: otherValidation.validation } },
+        { ...cloneStudioDiagramSource(source), steps: source.steps.map((step, index) => index === 0 ? { ...step, label: "대안 두 가지" } : step) },
+        { ...cloneStudioDiagramSource(source), branches: source.branches.map((branch, index) => index === 0 ? { ...branch, label: "대안 두 가지" } : branch) },
+      ]) assertProductionReject(mutation, id, `${id} rejects wrong-valid concept mapping`);
+      assertProductionReject({ ...cloneStudioDiagramSource(source), branches: [source.branches[0]] }, id, `${id} rejects removed concept branch`, { schemaValid: false });
+    } else {
+      const otherSkill = alternate(id, expected.kind, (candidate) => candidate.skill !== expected.skill);
+      const otherInput = alternate(id, expected.kind, (candidate) => candidate.requiredInput !== expected.requiredInput);
+      const otherOutputs = alternate(id, expected.kind, (candidate) => JSON.stringify(candidate.outputs) !== JSON.stringify(expected.outputs));
+      const otherRoutes = alternate(id, expected.kind, (candidate) => JSON.stringify(candidate.nextRoutes) !== JSON.stringify(expected.nextRoutes) || candidate.nextCondition !== expected.nextCondition);
+      for (const semantic of [
+        { ...source.semantic, skill: otherSkill.skill },
+        { ...source.semantic, required_input: otherInput.requiredInput },
+        { ...source.semantic, outputs: otherOutputs.outputs },
+        { ...source.semantic, next_routes: otherRoutes.nextRoutes, next_condition: otherRoutes.nextCondition ?? undefined },
+        { ...source.semantic, required_input: "artifact와 경계" },
+      ]) assertProductionReject({ ...cloneStudioDiagramSource(source), semantic }, id, `${id} rejects wrong-valid skill mapping`);
+    }
+  }
+});
+
+test("persisted Studio diagrams expose exact source semantics instead of generic placeholders", async () => {
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const compactVisibleText = (value) => value.replace(/<[^>]+>/gu, "").replace(/\s+/gu, "");
+
   for (const source of sources.filter(({ scope }) => scope === "game-design-studio-use-case" || scope === "game-design-studio-skill")) {
-    const svg = await readFile(path.join(repoRoot, "guides/assets", source.id.startsWith("st-s") ? "game-design-studio/skills" : "game-design-studio/use-cases", `${source.id.startsWith("st-s") ? source.semantic.skill : source.id}.svg`), "utf8");
-    if (source.id.startsWith("st-c")) {
-      const [specialist, outputs] = competencyContract[source.id];
-      assert.equal(source.semantic.specialist, specialist, `${source.id} exact specialist`);
-      assert.deepEqual(source.semantic.outputs, outputs, `${source.id} exact outputs`);
-      assert.equal(source.semantic.review.skill, "review-game-design", `${source.id} exact review skill`);
-      for (const value of [specialist, ...outputs, "review-game-design"]) assert.match(svg, new RegExp(value, "u"), `${source.id} visible ${value}`);
+    const expected = STUDIO_DIAGRAM_PRODUCTION_EXPECTED[source.id];
+    const svg = await readFile(path.join(repoRoot, "guides/assets", expected.kind === "skill" ? "game-design-studio/skills" : "game-design-studio/use-cases", `${expected.kind === "skill" ? expected.skill : source.id}.svg`), "utf8");
+    const visibleText = compactVisibleText(svg);
+    if (expected.kind === "competency") {
+      for (const value of [expected.specialist, ...expected.outputs, expected.review.skill]) assert.match(visibleText, new RegExp(escapeRegExp(compactVisibleText(value)), "u"), `${source.id} visible ${value}`);
       assert.doesNotMatch(svg, /전문 판단을 적용/u, `${source.id} no generic specialist placeholder`);
-    } else if (source.id.startsWith("st-g")) {
+    } else if (expected.kind === "concept") {
       for (const value of [
-        ...[source.steps[0], source.steps[2], source.steps[3]].map(({ label }) => label),
-        ...source.branches.flatMap(({ label, detail }) => [label, detail]),
-        source.semantic.specialist,
-        ...source.semantic.outputs,
-        source.semantic.validation,
+        ...expected.constraint,
+        ...expected.criterion,
+        ...expected.decision,
+        ...expected.branches.flat(),
+        expected.specialist,
+        ...expected.outputs,
+        expected.validation,
       ]) {
-        assert.match(svg, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"), `${source.id} visible ${value}`);
+        assert.match(visibleText, new RegExp(escapeRegExp(compactVisibleText(value)), "u"), `${source.id} visible ${value}`);
       }
       assert.doesNotMatch(svg, /대안 두 가지/u, `${source.id} no generic choice placeholder`);
     } else {
-      for (const value of [source.steps[0].label, source.semantic.required_input, source.semantic.skill, ...source.semantic.outputs, ...source.semantic.next_routes, source.semantic.next_condition].filter(Boolean)) {
-        assert.match(svg, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"), `${source.id} visible ${value}`);
+      for (const value of [...expected.trigger, expected.requiredInput, expected.skill, ...expected.outputs, ...expected.nextRoutes, expected.nextCondition].filter(Boolean)) {
+        assert.match(visibleText, new RegExp(escapeRegExp(compactVisibleText(value)), "u"), `${source.id} visible ${value}`);
       }
       assert.doesNotMatch(svg, /artifact와 경계/u, `${source.id} no generic input placeholder`);
     }

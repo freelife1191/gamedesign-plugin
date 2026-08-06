@@ -2,7 +2,7 @@
 
 ## Status
 
-Fix round 2 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 재생성되었습니다. 카드와 하단 semantic rail은 source의 exact installed skill/output/review/validation/route ID를 표시합니다.
+Fix round 3 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 재생성되었습니다. 카드와 하단 semantic rail은 source의 exact installed skill/output/review/validation/route ID를 표시하며, build production validator는 독립 expected contract와 모든 persisted source를 대조합니다.
 
 ## BASE / HEAD
 
@@ -51,3 +51,20 @@ ST-C03, ST-G01, ST-G06, 가장 긴 skill flow ST-S09를 high/original detail로 
 ## Fix round 2 Visual QA
 
 `st-c03`, `st-g01`, `st-g06`, `st-s09` PNG를 high/original detail로 재확인했습니다. exact IDs, 고유 branch/validation, 수직 G01 connector, ST-S09의 9개 route rail이 판독 가능하며 clipping·overlap·tofu·card containment 실패가 없습니다. 상세 기록은 `guides/assets/VISUAL-QA.md`를 따릅니다.
+
+## Fix round 3 — independent production contract
+
+- `tooling/lib/studio-diagram-production-contract.mjs`에 source object에서 계산하지 않은 C01…C08, G01…G10, S01…S15의 literal expected table을 두고 builder의 source-load 경로에서 검증합니다.
+- C는 exact specialist/output/review skill·condition, G는 specialist/output·constraint·두 branch label/detail·criterion·decision·validation, S는 owned skill·trigger·required input·output·next route/condition을 모두 exact 비교합니다.
+- 별도 literal `routing.json` contract는 11 canonical route의 ID, target skill, requiredInputs, artifactType을 대조합니다. S의 route ID는 그 canonical target과 교차검증하고, boundary skill은 registry `skillIds` target만 허용합니다.
+- persisted SVG 검증도 source 값 재검색 대신 위 expected table의 visible trigger/constraint/branch/criterion/decision/input/skill/output/route 값을 비교하고 세 generic phrase를 거부합니다.
+
+## Fix round 3 RED / GREEN
+
+- RED: `st-c01` specialist를 다른 valid installed skill로 바꿔도 이전 schema validator가 통과했습니다 (`Missing expected exception`).
+- GREEN: builder production validator를 추가했습니다. 33개 persisted source의 exact table 대조와 177개 wrong-valid/generic mutation(8 C × 4, 10 G × 7, 15 S × 5)을 table-driven으로 실행합니다. C/G/S의 specialist/output/review, branch/validation, input/output/route replacement와 G branch 제거 및 source-visible placeholder 주입을 모두 거부합니다.
+
+## Fix round 3 scope / open
+
+- renderer, source JSON, SVG/PNG asset은 변경하지 않았습니다. 따라서 재생성·시각 QA는 round 2의 검증 결과를 보존하고, 이번 round는 production validation과 contract tests만 확장했습니다.
+- Open concerns: 없음. `npm run check:guide-diagrams`는 39 SVG/PNG pair를 통과했고, 전체 Studio contract suite는 34/34를 통과했습니다. 최종 handoff에는 changed-JS `node --check`, `git diff --check`, `git show --check` 증거를 포함합니다.

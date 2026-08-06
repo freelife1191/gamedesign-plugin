@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { loadUseCaseManifest } from "./lib/use-case-guides.mjs";
 import { renderDiagramSvg, validateDiagramSource } from "./lib/use-case-diagrams.mjs";
+import { validateStudioDiagramProductionContract } from "./lib/studio-diagram-production-contract.mjs";
 
 const sourceFile = "guides/assets/use-case-diagram-sources.json";
 const wrapperFile = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs";
@@ -90,6 +91,9 @@ async function loadSources(repoRoot) {
   const seen = new Set();
   for (const source of parsed) {
     validateDiagramSource(source);
+    if (source.scope === "game-design-studio-use-case" || source.scope === "game-design-studio-skill") {
+      validateStudioDiagramProductionContract(source);
+    }
     if (seen.has(source.id)) throw new Error(`duplicate use-case diagram source ID: ${source.id}`);
     seen.add(source.id);
   }
