@@ -9,6 +9,38 @@
 - quest, level, encounter, character, enemy나 반복 활동을 설계할 때
 - telegraph, strategy, reward, repeatability와 production resource를 함께 검토할 때
 
+### 직접 호출 활용 — design-game-content
+
+#### 직접 호출 조건
+
+`ST-C05` 또는 `ST-C06`처럼 quest·NPC·character·combat content의 목적과 제작 계약이 분명할 때 직접 호출합니다. state authority가 없으면 systems와 함께 범위를 확인합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:design-game-content artifact=game-design/island/quest 퀘스트의 목적, player choice, 상태, 실패 복구와 NPC 반응을 narrative-quest-npc로 정리해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:design-game-content artifact=game-design/island/combat ST-C06의 character role, skill rule, counterplay, monster telegraph와 production resource를 연결해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:design-game-content artifact=game-design/island/quest 기존 evidence와 scope decision을 보존하고 repeatability와 제작 cost가 충돌하는 content 후보를 비교해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → narrative-quest-npc.yml → character-skill-combat-monster.yml` 순서로 읽고 두 content 계약의 stable ID를 확인합니다.
+
+#### 다음 스킬 조건
+
+콘텐츠가 시스템·UX·제작 제약과 충돌하거나 review 질문이 생길 때만 `$game-design-studio:review-game-design`으로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 전체 비전은 `define-game-vision`, 미확정 규칙은 `design-game-systems`를 먼저 사용합니다.

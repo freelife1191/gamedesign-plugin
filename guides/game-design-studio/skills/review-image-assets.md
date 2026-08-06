@@ -9,6 +9,38 @@ stable image asset의 시각·접근성·배치·권리 근거와 실제 사용�
 - `concept-draft`를 문서용으로 승인할지 검토할 때
 - `document-approved`를 production 검토 후보로 올릴 근거를 확인할 때
 
+### 직접 호출 활용 — review-image-assets
+
+#### 직접 호출 조건
+
+`concept-draft` 또는 `document-approved` image receipt를 named human이 검토할 준비가 되었을 때 직접 호출합니다. source, rights, placement 또는 reviewer가 없으면 상태를 승인으로 바꾸지 않습니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:review-image-assets artifact=game-design/island/brief asset=design-context-image-01 concept-draft의 source, alt text, placement와 named human reviewer 질문을 확인해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:review-image-assets artifact=game-design/island/brief asset=design-context-image-01 document-approved 후보의 rights source, lifecycle receipt와 문서 적합성을 검토해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:review-image-assets artifact=game-design/island/brief assets=all named human approval, production candidacy, rejection·rework와 provenance를 asset별로 분리해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → assets/image-assets.yml → assets/lifecycle-receipt.yml` 순서로 읽고 `image-asset-review`, `lifecycle-receipt`에서 named human의 상태를 확인합니다.
+
+#### 다음 스킬 조건
+
+모든 문서 삽입 approval과 format preflight가 끝났을 때만 `$game-design-studio:export-game-design-documents`로 넘기며 review finding은 자동 document-approved가 아닙니다.
+
 ## 사용하지 않을 때
 
 - agent 권고, timestamp, 파일 존재만으로 승인할 때

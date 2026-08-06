@@ -9,6 +9,38 @@
 - `select` receipt로 고른 asset ID를 생성할 때
 - `required` 또는 `all`의 유한 declared jobs를 실행하거나 unavailable handoff를 기록할 때
 
+### 직접 호출 활용 — generate-image-assets
+
+#### 직접 호출 조건
+
+`select` receipt 또는 `required`·`all`의 finite declared illustration job을 실행할 때만 직접 호출합니다. `prompt-only`와 Skillstead diagram slot은 생성 대상이 아닙니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:generate-image-assets artifact=game-design/island/brief asset=design-context-image-01 mode=select 선택된 prompt와 source ID를 보존해 concept-draft 결과와 provenance를 기록해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:generate-image-assets artifact=game-design/island/brief assets=design-context-image-01,design-context-image-02 mode=required finite jobs만 생성하고 unavailable capability는 receipt에 남겨.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:generate-image-assets artifact=game-design/island/brief mode=all declared image jobs만 실행하고 preserve/exclude, rights source, named human review 대기 상태를 provenance에 기록해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → assets/image-assets.yml → assets/provenance/` 순서로 읽고 `image-generation-result`, `image-generation-provenance`와 concept-draft 상태를 확인합니다.
+
+#### 다음 스킬 조건
+
+생성 결과를 문서에 쓰거나 production 후보로 올릴 named human approval 검토가 필요할 때만 `$game-design-studio:review-image-assets`로 넘기며, 생성 성공은 승인되지 않습니다.
+
 ## 사용하지 않을 때
 
 - asset 계획이 없으면 `plan-image-assets`를 먼저 사용합니다.

@@ -9,6 +9,38 @@ Canonical Artifact를 evidence와 launch blocker 중심으로 검토해 traceabl
 - 설계의 readiness, evidence, risk 또는 blocker를 점검할 때
 - 전체 재작성 대신 영향이 분명한 최소 수정을 원할 때
 
+### 직접 호출 활용 — review-game-design
+
+#### 직접 호출 조건
+
+명확한 review question과 decision owner가 있는 Canonical Artifact를 최소 수정 단위로 점검할 때 직접 호출합니다. artifact가 없거나 범위가 미정이면 먼저 해당 domain 또는 오케스트레이터를 사용합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:review-game-design artifact=game-design/island/vision player promise, pillar와 non-goal의 근거·가정·결정 owner를 finding으로 점검해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:review-game-design artifact=game-design/workbench/system ST-C03의 rule precedence, failure recovery와 data mapping을 최소 수정과 영향으로 검토해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:review-game-design artifact=game-design/island/review 모든 blocker를 evidence·impact·owner에 연결하고 최소 fix, diagram gap, export readiness를 분리해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → game-design-review.yml → decision-change-log.yml` 순서로 읽고 `game-design-review`, `decision-change-log`에서 unresolved blocker를 확인합니다.
+
+#### 다음 스킬 조건
+
+minimum fix가 남으면 `$game-design-studio:review-game-design`, diagram gap이면 `visualize-game-design`, all blocker가 해소되고 요청 형식이 남을 때만 `export-game-design-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - source artifact를 새로 만들거나 크게 재설계할 때

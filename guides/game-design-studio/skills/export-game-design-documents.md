@@ -9,6 +9,38 @@
 - GDD, system/content spec, LiveOps plan, review report의 형식별 handoff가 필요할 때
 - 의사결정자용 PPTX의 독립 story와 capability 상태를 준비할 때
 
+### 직접 호출 활용 — export-game-design-documents
+
+#### 직접 호출 조건
+
+사람이 검토할 Canonical Artifact와 요청 format이 이미 정해졌을 때 직접 호출합니다. source Artifact의 blocker나 권리·승인 상태가 미확정이면 먼저 review에서 보류합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:export-game-design-documents artifact=game-design/island/vision formats=MD audience=design-owner canonical Markdown과 terminal validation 결과를 export manifest에 기록해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:export-game-design-documents artifact=game-design/island/review formats=PDF,DOCX audience=reviewer 형식별 preflight와 capability 결과를 기록하고 실패한 job은 downstream workflow로 넘겨.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:export-game-design-documents artifact=game-design/island/brief formats=PPTX audience=decision-owner 독립 story, format QA, provenance와 미승인 이미지 경계를 유지해 export preparation을 작성해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml → qa-manifest.yml` 순서로 읽고 `export-preparation-manifest`, `format-jobs`의 capability와 QA 상태를 확인합니다.
+
+#### 다음 스킬 조건
+
+형식 renderer 또는 downstream workflow가 unavailable일 때만 해당 downstream workflow로 재개하며, MD는 built-in canonical-markdown과 terminal validation을 거쳐 별도 capability probe로 막지 않습니다.
+
 ## 사용하지 않을 때
 
 - source 내용이 불완전하면 해당 design skill을 먼저 사용합니다.

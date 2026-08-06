@@ -9,6 +9,38 @@
 - `visualize-game-design`이 preset과 source mapping을 먼저 선택한 뒤 세부 구조를 직접 authoring할 때
 - topology, flow, layer, roadmap, qualitative matrix와 technical one-pager가 필요할 때
 
+### 직접 호출 활용 — svg-infographic
+
+#### 직접 호출 조건
+
+`visualize-game-design` wrapper가 preset과 source mapping을 선택한 뒤 고급 structural SVG를 직접 authoring할 때만 호출합니다. illustration이나 의미가 확정되지 않은 diagram에는 wrapper를 우선합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:svg-infographic artifact=game-design/workbench/system source=rule-exception-matrix state-rule-flow를 1400×900 editable SVG로 작성하고 source mapping을 유지해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:svg-infographic artifact=game-design/island/roadmap source=production-scope-risk roadmap 관계를 SVG title·desc와 함께 authoring하고 canonical renderer 2× PNG QA를 기록해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:svg-infographic artifact=game-design/workbench/system Node 18+와 Chromium availability를 확인해 lint·render evidence를 남기고 unavailable이면 SVG-only fallback을 정확히 표시해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → assets/diagram.svg → assets/render-evidence.yml` 순서로 읽고 `editable-svg`, `png-2x`, `render-evidence`의 source·lint·QA 상태를 확인합니다.
+
+#### 다음 스킬 조건
+
+wrapper의 semantic validation과 diagram index가 필요할 때만 `$game-design-studio:visualize-game-design`으로 넘기며 Node-free Chromium fallback은 machine-linted 결과로 표시하지 않습니다.
+
 ## 사용하지 않을 때
 
 - 일반적인 Studio 작업에서는 product wrapper를 우선합니다.

@@ -1022,6 +1022,31 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/skills/svg-infographic.png"));
 });
 
+test("Studio skill cases resolve to direct-use anchors and canonical routing lanes", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const routing = JSON.parse(await readFile(
+    path.join(repoRoot, "products/game-design-studio/plugin/references/routing.json"),
+    "utf8",
+  ));
+  const cases = manifest.skill_cases.filter((entry) => entry.product === "game-design-studio");
+  const routedSkills = new Set([
+    ...routing.skillIds,
+    ...routing.routes.map((route) => route.skill),
+    routing.qualityWorkflow.skill,
+  ]);
+  const wrapperOnlySkills = new Set(["svg-infographic"]);
+
+  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds, "skill cases follow the installed inventory");
+  for (const entry of cases) {
+    assert.ok(routedSkills.has(entry.skill) || wrapperOnlySkills.has(entry.skill), `${entry.skill}: canonical route or wrapper boundary`);
+    const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
+    const expectedHeading = `### 직접 호출 활용 — ${entry.skill}`;
+    assert.ok(markdown.includes(expectedHeading), `${entry.id}: direct-use heading exists`);
+    assert.ok(collectHeadingAnchors(markdown).has(entry.anchor), `${entry.id}: manifest anchor resolves`);
+  }
+});
+
 test("Studio use-case index routes all eighteen published competency and concept cases", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index } = await readStudioUseCaseGuides();
@@ -1039,7 +1064,7 @@ test("Studio use-case index routes all eighteen published competency and concept
     }
   }
   assert.equal(links.filter(({ target }) => target.startsWith("concept-scenarios.md#st-g")).length, 10, "all concept guides are linked");
-  assert.ok(links.some(({ target }) => target === "#스킬-워크벤치-예정"), "skill workbench scheduled route");
+  assert.ok(links.some(({ target }) => target === "skill-workbench.md"), "published skill workbench route");
   assert.ok(links.some(({ target }) => target === "#studio-faq-예정"), "Studio FAQ scheduled route");
   assert.ok(links.some(({ target }) => target === "../../use-cases/output-catalog.md"), "output catalog route");
   const indexAnchors = collectHeadingAnchors(index);

@@ -9,6 +9,38 @@ vertical slice의 범위, owner, gate와 kill criteria를 근거에 묶은 `prod
 - prototype, milestone, effort range, dependency와 scope 우선순위를 정할 때
 - commit, defer, reduce, outsource, license 또는 kill 결정을 준비할 때
 
+### 직접 호출 활용 — plan-game-production
+
+#### 직접 호출 조건
+
+`ST-C08`처럼 이미 정의된 경험을 milestone·risk·kill criteria로 좁힐 때 직접 호출합니다. 아직 core loop가 없으면 먼저 vision 또는 systems를 정합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:plan-game-production artifact=game-design/island/production 핵심 경험, 팀 제약, prototype 범위와 decision owner로 최소 제작 계획을 작성해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:plan-game-production artifact=game-design/island/production ST-C08의 scope, dependency, milestone, risk와 rollback 질문을 production-scope-risk에 연결해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:plan-game-production artifact=game-design/island/production 기존 결정 로그를 보존하고 변경 요청의 core-loop 기여, owner, done, kill criteria를 비교해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → production-scope-risk.yml → decision-change-log.yml` 순서로 읽고 `production-scope-risk`, `decision-change-log`를 검토합니다.
+
+#### 다음 스킬 조건
+
+scope·risk 또는 done 정의에 finding이 남을 때만 `$game-design-studio:review-game-design`으로 넘기며, 일정 성공을 자동으로 단정하지 않습니다.
+
 ## 사용하지 않을 때
 
 - target experience가 없으면 `define-game-vision`을 먼저 사용합니다.

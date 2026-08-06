@@ -9,6 +9,38 @@ Studio artifact마다 primary profile 하나를 결정하고 additive overlay와
 - live-service RPG 시스템 명세의 profile을 고를 때
 - GDD, review report, presentation, MD·PDF·DOCX·PPTX 준비 전에 구조 계약이 필요할 때
 
+### 직접 호출 활용 — apply-document-quality-profile
+
+#### 직접 호출 조건
+
+한 Artifact의 템플릿·품질 profile 선택만 확정할 때 직접 호출합니다. 여러 도메인의 순서가 아직 섞였으면 `orchestrate-game-design-project`로 범위를 먼저 나눕니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:apply-document-quality-profile artifact=game-design/island/brief template=game-design-brief 대상과 플랫폼 가정을 기록하고 적용 가능한 품질 profile과 누락 입력만 선택해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:apply-document-quality-profile artifact=game-design/island/system template=system-specification 기존 selection record를 보존하고 규칙·상태 검토에 필요한 checklist와 requirement manifest를 갱신해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:apply-document-quality-profile artifact=game-design/island/review template=game-design-review profile=design-review-decision-log 근거 상태와 named decision owner를 유지해 profile 충돌과 blocked requirement를 분리해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → quality/selection-record.yml → quality/requirement-manifest.yml` 순서로 읽습니다. 결과는 `selection-record`, `quality-checklist`, `requirement-manifest`이며 profile 선택은 승인 자체가 아닙니다.
+
+#### 다음 스킬 조건
+
+비전 입력이 확정되면 `$game-design-studio:define-game-vision`으로, 규칙 범위면 `design-game-systems`로, 여러 route가 함께 남았을 때만 `orchestrate-game-design-project`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 본문, 이미지, 도식이나 파생 파일 자체를 만들 때

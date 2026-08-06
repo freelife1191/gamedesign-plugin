@@ -9,6 +9,38 @@
 - 스태미나·제작 규칙과 state transition을 구현 가능하게 정의할 때
 - 동시 결과의 precedence, PK/FK, authority와 schema mapping이 필요할 때
 
+### 직접 호출 활용 — design-game-systems
+
+#### 직접 호출 조건
+
+`ST-C03`처럼 input, authority, rule precedence와 recovery를 명세할 때 직접 호출합니다. player promise 자체가 아직 모호하면 vision부터 정합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:design-game-systems artifact=game-design/workbench/system 제작 요청의 input, state transition, output과 failure recovery를 system-specification으로 작성해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:design-game-systems artifact=game-design/workbench/system ST-C03의 concurrency exception, rule precedence, authoritative state와 test case를 rule-exception-matrix에 연결해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:design-game-systems artifact=game-design/workbench/system 확인된 runtime mapping만 data-schema-table-contract에 넣고 unknown schema는 provisional로 보존해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → system-specification.yml → rule-exception-matrix.yml` 순서로 읽고 `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`를 검토합니다.
+
+#### 다음 스킬 조건
+
+rule precedence 또는 recovery의 근거·영향이 불명확할 때만 `$game-design-studio:review-game-design`으로 넘기며, review finding은 runtime 구현 승인이 아닙니다.
+
 ## 사용하지 않을 때
 
 - 전체 player promise는 `define-game-vision`, 콘텐츠 단위는 `design-game-content`를 사용합니다.

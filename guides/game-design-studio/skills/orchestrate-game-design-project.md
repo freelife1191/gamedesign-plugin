@@ -9,6 +9,38 @@
 - 비전, 시스템, 콘텐츠, UX, 경제와 생산 범위가 함께 필요할 때
 - intent가 불명확하거나 launch readiness 조정이 필요할 때
 
+### 직접 호출 활용 — orchestrate-game-design-project
+
+#### 직접 호출 조건
+
+여러 도메인과 completion gate를 하나의 bounded brief로 묶어야 할 때 직접 호출합니다. 한 가지 output과 입력이 분명하면 해당 specialist를 직접 호출합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:orchestrate-game-design-project artifact=game-design/island/brief 아이디어, 대상, 플랫폼, 제약과 decision owner를 받아 최소 route와 completion gate를 정해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:orchestrate-game-design-project artifact=game-design/island/brief ST-C08의 제작·검토·이미지·출력 범위를 나누고 선택된 route와 최대 3개 reviewer finding을 기록해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:orchestrate-game-design-project artifact=game-design/island/brief 기존 Canonical Artifact를 보존하고 blocked gate만 재개하며 routing.json의 한 route씩만 실행해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml` 순서로 읽습니다. `game-design-brief`와 `canonical-artifact`의 route·role·gate 기록은 사람의 승인과 별개입니다.
+
+#### 다음 스킬 조건
+
+선택된 route가 vision·systems·content·player-experience·economy/liveops·production·review·visualization·export 중 하나일 때만 같은 route의 `$game-design-studio:<selected-skill>`을 호출합니다.
+
 ## 사용하지 않을 때
 
 - 목적이 한 영역으로 확정되었으면 해당 specialist skill을 직접 사용합니다.

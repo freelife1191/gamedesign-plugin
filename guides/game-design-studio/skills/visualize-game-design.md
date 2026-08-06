@@ -9,6 +9,38 @@
 - loop, state transition, progression, source/sink, timeline, dependency와 role 구조를 설명할 때
 - 문서·발표에 editable SVG와 검증된 PNG가 필요할 때
 
+### 직접 호출 활용 — visualize-game-design
+
+#### 직접 호출 조건
+
+관계가 prose·표보다 명확해지는 valid Canonical Artifact의 loop, state, roadmap 또는 dependency를 설명할 때 직접 호출합니다. 장식용 이미지나 source mapping 없는 차트에는 사용하지 않습니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:visualize-game-design artifact=game-design/island/vision relationship=player-promise-to-pillar 대상 독자가 이해할 필요가 있는 관계만 source-mapped SVG로 보여 줘.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:visualize-game-design artifact=game-design/workbench/system relationship=state-transition ST-C03의 authoritative state와 failure recovery를 editable SVG와 exact 2× PNG로 검증해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:visualize-game-design artifact=game-design/island/roadmap relationship=scope-risk Node 18+ 또는 Node-free Chromium fallback의 실제 lint·renderer·visual QA 상태를 evidence에 정확히 기록해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → assets/diagram-index.yml → assets/` 순서로 읽고 `editable-svg`, `png-2x`, `visualization-evidence`의 source mapping과 QA를 확인합니다.
+
+#### 다음 스킬 조건
+
+diagram이 review finding을 해결해야 할 때만 `$game-design-studio:review-game-design`, 모든 blocker가 해소되고 형식 전달이 남을 때만 `export-game-design-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 간단한 prose나 표가 더 명확할 때

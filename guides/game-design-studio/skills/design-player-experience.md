@@ -9,6 +9,38 @@
 - 첫 5분과 first success, tutorial skip/revisit를 설계할 때
 - critical action별 UI state와 접근 가능한 대체 경로를 검토할 때
 
+### 직접 호출 활용 — design-player-experience
+
+#### 직접 호출 조건
+
+`ST-C04`처럼 first session, UI state, tutorial recovery 또는 accessibility alternative를 한 흐름으로 다룰 때 직접 호출합니다. authoritative rule이 비어 있으면 systems에서 먼저 확인합니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:design-player-experience artifact=game-design/island/first-session 첫 critical action, feedback, 오류와 recovery를 ui-ux-flow-state로 정리해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:design-player-experience artifact=game-design/island/first-session ST-C04의 tutorial skip/revisit, input alternative와 sensory cue를 accessibility-platform-matrix에 연결해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:design-player-experience artifact=game-design/island/first-session 기존 관찰 evidence를 보존하고 UI feedback이 authoritative game state를 발명하는 지점을 finding으로 분리해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → ui-ux-flow-state.yml → accessibility-platform-matrix.yml` 순서로 읽고 `ui-ux-flow-state`, `accessibility-platform-matrix`를 검토합니다.
+
+#### 다음 스킬 조건
+
+critical action, error recovery 또는 접근성 대안의 근거가 부족할 때만 `$game-design-studio:review-game-design`으로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - authoritative rule은 `design-game-systems`, 경제·가격·확률은 `design-game-economy-and-liveops`를 사용합니다.

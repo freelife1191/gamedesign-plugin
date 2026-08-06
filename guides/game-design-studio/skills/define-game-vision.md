@@ -9,6 +9,38 @@
 - 새 게임의 player promise와 core/motivation loop를 정할 때
 - 기능이 비전을 지지하는지 판단할 측정 기준이 필요할 때
 
+### 직접 호출 활용 — define-game-vision
+
+#### 직접 호출 조건
+
+`ST-C01`처럼 player promise와 pillar를 한 Artifact에서 정할 때 직접 호출합니다. 범위·도메인·출력 형식이 동시에 미확정이면 오케스트레이터가 먼저 route를 고릅니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:define-game-vision artifact=game-design/island/vision 한 문장 아이디어를 대상 플레이어, desired emotion, player promise와 검증 질문으로 나눠 줘.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:define-game-vision artifact=game-design/island/vision ST-C01의 pillar, anti-pillar, non-goal과 prototype 관찰 질문을 vision-pillars에 연결해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:define-game-vision artifact=game-design/island/vision 기존 evidence와 decision owner를 보존하고 상충하는 feature 제안을 pillar·non-goal 기준으로 비교해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽고 `vision-pillars`, `core-motivation-loop`과 provisional validation 질문을 확인합니다.
+
+#### 다음 스킬 조건
+
+player verb를 rule·state로 내려야 할 때만 `$game-design-studio:design-game-systems`로 넘기며, pillar 승인 전에는 세부 규칙을 확정하지 않습니다.
+
 ## 사용하지 않을 때
 
 - 실행 규칙과 state transition은 `design-game-systems`를 사용합니다.

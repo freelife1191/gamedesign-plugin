@@ -9,6 +9,38 @@
 - currency, inventory target, progression, real price, probability와 pity를 설계할 때
 - hypothesis, control, 단일 변수, guardrail, stop과 rollback이 필요한 이벤트 실험을 준비할 때
 
+### 직접 호출 활용 — design-game-economy-and-liveops
+
+#### 직접 호출 조건
+
+`ST-C07`처럼 source·sink·progression 또는 한 변수 LiveOps 실험의 보호 기준을 설계할 때 직접 호출합니다. 근거 없는 가격·확률·KPI 확정에는 사용하지 않습니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:design-game-economy-and-liveops artifact=game-design/island/economy resource ID, source, sink, cap와 검증할 progression 가정을 economy-balance로 작성해.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:design-game-economy-and-liveops artifact=game-design/island/liveops ST-C07의 한 변수 experiment, control, protection metric, stop과 rollback을 연결해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:design-game-economy-and-liveops artifact=game-design/island/economy 기존 telemetry 정의와 owner를 보존하고 price·probability·pity의 근거 공백을 blocked로 남겨.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → economy-balance.yml → liveops-experiment-event.yml` 순서로 읽고 `economy-balance`, `liveops-experiment-event`와 rollback 기록을 검토합니다.
+
+#### 다음 스킬 조건
+
+보호 기준, stop 또는 rollback의 영향이 검토 대상일 때만 `$game-design-studio:review-game-design`으로 넘기며 숫자 결과를 자동 승인하지 않습니다.
+
 ## 사용하지 않을 때
 
 - 단일 mechanic의 state/precedence는 `design-game-systems`를 사용합니다.

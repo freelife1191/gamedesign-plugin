@@ -9,6 +9,38 @@
 - profile이나 explicit brief가 이미지 자산을 요구할 때
 - 생성 전에 수량, placement, alt text와 preserve/exclude 제약을 고정할 때
 
+### 직접 호출 활용 — plan-image-assets
+
+#### 직접 호출 조건
+
+선택된 profile에 finite image 또는 Skillstead slot이 있고 생성 전에 ID·수량·alt text를 고정할 때 직접 호출합니다. 계획은 bytes 생성이나 승인 상태 변경을 하지 않습니다.
+
+#### 입문 요청문
+
+```text
+$game-design-studio:plan-image-assets artifact=game-design/island/brief profile=game-design-brief needs=design-context-image:1 mode=prompt-only stable asset ID와 prompt·placeholder만 계획하고 생성하지 마.
+```
+
+#### 응용 요청문
+
+```text
+$game-design-studio:plan-image-assets artifact=game-design/island/brief profile=game-design-brief needs=design-context-image:2 mode=select finite illustration job의 수량, alt text, preserve/exclude와 named decision owner를 기록해.
+```
+
+#### 고급 요청문
+
+```text
+$game-design-studio:plan-image-assets artifact=game-design/island/brief profile=game-design-brief needs=skillstead-design-flow-diagram:1 mode=required Skillstead diagram slot의 source mapping과 SVG/2× PNG QA handoff만 계획해.
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽고 `image-assets-manifest`, `image-prompts`의 stable ID와 mode를 확인합니다.
+
+#### 다음 스킬 조건
+
+`prompt-only`면 생성 handoff 없이 보존하고, `select`·`required`·`all`의 finite illustration job일 때만 `$game-design-studio:generate-image-assets`, Skillstead diagram slot일 때만 `visualize-game-design`으로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 이미지 bytes 생성, provider 호출 또는 승인 상태 변경에는 사용하지 않습니다.

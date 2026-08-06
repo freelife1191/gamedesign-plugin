@@ -89,6 +89,40 @@ function assertSkillContract(markdown, skillId) {
   assert.match(extractSection(markdown, "다음 작업 요청문"), /자리표시자[\s\S]*공통 규칙/, `${skillId}: next request must explain placeholders`);
 }
 
+function extractDirectUseSection(markdown, skillId) {
+  const heading = `### 직접 호출 활용 — ${skillId}`;
+  const start = markdown.indexOf(`${heading}\n`);
+  assert.notEqual(start, -1, `${skillId}: missing direct-use H3`);
+  const bodyStart = start + heading.length;
+  const next = markdown.slice(bodyStart).search(/^### |^## /m);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function fencedRequests(section) {
+  return [...section.matchAll(/```text\n([\s\S]*?)\n```/g)].map((match) => match[1]);
+}
+
+function assertDirectUseContract(markdown, skillId) {
+  const section = extractDirectUseSection(markdown, skillId);
+  const labels = [
+    "직접 호출 조건",
+    "입문 요청문",
+    "응용 요청문",
+    "고급 요청문",
+    "예상 파일과 읽는 순서",
+    "다음 스킬 조건",
+  ];
+  for (const label of labels) assert.match(section, new RegExp(`^#### ${label}$`, "m"), `${skillId}: ${label} subheading`);
+
+  const requests = fencedRequests(section);
+  assert.equal(requests.length, 3, `${skillId}: exactly three levelled copyable requests`);
+  for (const request of requests) {
+    assert.match(request, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct request target`);
+  }
+  assert.match(section, /content\.md\s*→\s*evidence\.yml/, `${skillId}: canonical read order`);
+  assert.match(section, /if |때만|경우에만/i, `${skillId}: next-skill condition is conditional`);
+}
+
 function extractFirstColumnIds(markdown) {
   return [...markdown.matchAll(/^\| (?:`([^`]+)`|\[`([^`]+)`\]\([^)]+\)) \|/gm)]
     .map((match) => match[1] ?? match[2])
@@ -105,8 +139,30 @@ test("Studio documents every installed skill with the common contract", async ()
       "utf8",
     );
     assertSkillContract(markdown, skillId);
+    assertDirectUseContract(markdown, skillId);
     assert.match(markdown, /복사 가능한 요청문/);
     assert.match(markdown, /예상 결과/);
+  }
+});
+
+test("Studio skill workbench routes every direct-use case through its own lane", async () => {
+  const inventory = await collectProductInventory(root, "game-design-studio");
+  const workbench = await readFile(
+    path.join(root, "guides/game-design-studio/use-cases/skill-workbench.md"),
+    "utf8",
+  );
+  const lanes = ["오케스트레이션", "도메인 설계", "품질·검토", "이미지", "시각화", "출력"];
+  for (const lane of lanes) assert.match(workbench, new RegExp(`^## ${lane}$`, "m"), `workbench lane: ${lane}`);
+
+  const rows = workbench.split("\n").filter((line) => /^\| `[-a-z]+` \|/.test(line));
+  assert.equal(rows.length, inventory.skillIds.length, "one workbench row per installed skill");
+  assert.deepEqual(rows.map((row) => row.match(/^\| `([-a-z]+)` \|/)[1]).sort(), inventory.skillIds);
+  for (const skillId of inventory.skillIds) {
+    const row = rows.find((candidate) => candidate.includes(`\`${skillId}\``));
+    assert.ok(row, `workbench row: ${skillId}`);
+    assert.equal(row.split("|").length, 9, `${skillId}: seven-column decision row`);
+    assert.match(row, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct CLI signal`);
+    assert.match(row, new RegExp(`\\.\\./skills/${skillId}\\.md#직접-호출-활용-${skillId}`), `${skillId}: direct-use guide anchor`);
   }
 });
 
