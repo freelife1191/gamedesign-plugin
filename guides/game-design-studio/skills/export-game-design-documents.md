@@ -18,7 +18,7 @@
 #### 입문 요청문
 
 ```text
-$game-design-studio:export-game-design-documents artifact=game-design/island/vision formats=MD audience=design-owner canonical Markdown과 terminal validation 결과를 export manifest에 기록해.
+$game-design-studio:export-game-design-documents artifact=game-design/island/vision formats=MD audience=design-owner canonical preflight, renderer-neutral preparation과 pending format job을 export manifest에 기록해.
 ```
 
 #### 응용 요청문
@@ -30,16 +30,16 @@ $game-design-studio:export-game-design-documents artifact=game-design/island/rev
 #### 고급 요청문
 
 ```text
-$game-design-studio:export-game-design-documents artifact=game-design/island/brief formats=PPTX audience=decision-owner 독립 story, format QA, provenance와 미승인 이미지 경계를 유지해 export preparation을 작성해.
+$game-design-studio:export-game-design-documents artifact=game-design/island/brief formats=PPTX audience=decision-owner 독립 story, capability snapshot, provenance와 미승인 이미지 경계를 유지해 export preparation을 작성해.
 ```
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → export-manifest.yml → qa-manifest.yml` 순서로 읽고 `export-preparation-manifest`, `format-jobs`의 capability와 QA 상태를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽습니다. preparation의 format job은 `pending`·`unavailable`·`blocked`만 기록하고 generation·renderer·QA는 모두 `not-run`, output/digest/count는 null, format evidence는 비어 있음으로 유지합니다. `export-preparation-manifest`, `format-jobs`는 별도 파일명이 아니라 이 preparation의 논리 결과입니다.
 
 #### 다음 스킬 조건
 
-형식 renderer 또는 downstream workflow가 unavailable일 때만 해당 downstream workflow로 재개하며, MD는 built-in canonical-markdown과 terminal validation을 거쳐 별도 capability probe로 막지 않습니다.
+renderer 또는 downstream workflow가 unavailable일 때만 downstream renderer-and-QA workflow로 재개하며, 실제 generation·terminal validation·format QA·terminal outcome은 그 downstream workflow가 소유합니다. MD는 built-in canonical-markdown preparation을 별도 capability probe로 막지 않습니다.
 
 ## 사용하지 않을 때
 

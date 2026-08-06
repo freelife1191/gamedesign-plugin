@@ -30,12 +30,12 @@ $game-design-studio:svg-infographic artifact=game-design/island/roadmap source=p
 #### 고급 요청문
 
 ```text
-$game-design-studio:svg-infographic artifact=game-design/workbench/system Node 18+와 Chromium availability를 확인해 lint·render evidence를 남기고 unavailable이면 SVG-only fallback을 정확히 표시해.
+$game-design-studio:svg-infographic artifact=game-design/workbench/system Node 18+가 부재하면 manual source checklist를 완료하고 Node-free Chromium으로 exact 2× PNG를 검증해. Chromium도 없을 때만 SVG-only draft와 lint·PNG visual verification 미실행을 정확히 표시해.
 ```
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → assets/diagram.svg → assets/render-evidence.yml` 순서로 읽고 `editable-svg`, `png-2x`, `render-evidence`의 source·lint·QA 상태를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `assets/ 아래 source-mapped editable SVG`를 확인합니다. Chromium render가 실제로 성공했을 때만 같은 assets 아래 2× PNG와 wrapper가 보존한 lint·render·visual QA evidence를 확인합니다. `editable-svg`, `png-2x`, `render-evidence`는 별도 파일명이 아닌 논리 결과입니다.
 
 #### 다음 스킬 조건
 

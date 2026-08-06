@@ -35,11 +35,11 @@ $game-design-studio:review-game-design artifact=game-design/island/review 모든
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → game-design-review.yml → decision-change-log.yml` 순서로 읽고 `game-design-review`, `decision-change-log`에서 unresolved blocker를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `game-design-review`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션에서 unresolved blocker를 확인합니다. 사람의 변경 결정이 실제로 있을 때만 `decisions/`을 그 뒤에 읽습니다.
 
 #### 다음 스킬 조건
 
-minimum fix가 남으면 `$game-design-studio:review-game-design`, diagram gap이면 `visualize-game-design`, all blocker가 해소되고 요청 형식이 남을 때만 `export-game-design-documents`로 넘깁니다.
+minimum fix가 남았을 때만 `$game-design-studio:review-game-design`, diagram gap일 때만 `$game-design-studio:visualize-game-design`, all blocker가 해소되고 요청 형식이 남을 때만 `$game-design-studio:export-game-design-documents`로 넘깁니다.
 
 ## 사용하지 않을 때
 

@@ -35,7 +35,7 @@ $game-design-studio:define-game-vision artifact=game-design/island/vision 기존
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽고 `vision-pillars`, `core-motivation-loop`과 provisional validation 질문을 확인합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `vision-pillars`, `core-motivation-loop`은 `content.md`의 안정 섹션으로 확인합니다. `decisions/`은 사람이 남긴 보조 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
 #### 다음 스킬 조건
 

@@ -35,11 +35,11 @@ $game-design-studio:visualize-game-design artifact=game-design/island/roadmap re
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → assets/diagram-index.yml → assets/` 순서로 읽고 `editable-svg`, `png-2x`, `visualization-evidence`의 source mapping과 QA를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `assets/ 아래 source-mapped editable SVG`를 확인합니다. packaged wrapper가 실제 Chromium render와 two-pass QA를 통과했을 때만 같은 assets 아래 2× PNG와 실행 evidence를 확인합니다. `editable-svg`, `png-2x`, `visualization-evidence`는 별도 파일명이 아닌 논리 결과입니다.
 
 #### 다음 스킬 조건
 
-diagram이 review finding을 해결해야 할 때만 `$game-design-studio:review-game-design`, 모든 blocker가 해소되고 형식 전달이 남을 때만 `export-game-design-documents`로 넘깁니다.
+diagram이 review finding을 해결해야 할 때만 `$game-design-studio:review-game-design`, 모든 blocker가 해소되고 형식 전달이 남을 때만 `$game-design-studio:export-game-design-documents`로 넘깁니다.
 
 ## 사용하지 않을 때
 

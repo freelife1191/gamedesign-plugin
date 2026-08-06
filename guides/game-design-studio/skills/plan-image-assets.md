@@ -35,11 +35,11 @@ $game-design-studio:plan-image-assets artifact=game-design/island/brief profile=
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽고 `image-assets-manifest`, `image-prompts`의 stable ID와 mode를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml → assets/prompts/image-prompts.md → assets/prompts/image-prompts.json` 순서로 읽고 stable ID와 mode를 확인합니다. `image-assets-manifest`, `image-prompts`는 별도 파일명이 아니라 이 세 artifact-local 파일이 담는 논리 결과입니다.
 
 #### 다음 스킬 조건
 
-`prompt-only`면 생성 handoff 없이 보존하고, `select`·`required`·`all`의 finite illustration job일 때만 `$game-design-studio:generate-image-assets`, Skillstead diagram slot일 때만 `visualize-game-design`으로 넘깁니다.
+`prompt-only`면 생성 handoff 없이 보존하고, `select`·`required`·`all`의 finite illustration job일 때만 `$game-design-studio:generate-image-assets`, Skillstead diagram slot일 때만 `$game-design-studio:visualize-game-design`으로 넘깁니다.
 
 ## 사용하지 않을 때
 

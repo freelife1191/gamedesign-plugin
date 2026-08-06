@@ -1022,6 +1022,28 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/skills/svg-infographic.png"));
 });
 
+function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
+  const routedSkills = new Set(routing.routes.map((route) => route.skill));
+  const nonRouteBoundarySkills = new Set([
+    routing.qualityWorkflow.skill,
+    "plan-image-assets",
+    "generate-image-assets",
+    "review-image-assets",
+    "svg-infographic",
+  ]);
+  assert.ok(routing.routes.length > 0, "canonical routing.routes must not be empty");
+  assert.deepEqual(
+    [...routedSkills].sort(),
+    inventory.skillIds.filter((skill) => !nonRouteBoundarySkills.has(skill)).sort(),
+    "every non-boundary installed skill has an actual canonical route",
+  );
+
+  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds, "skill cases follow the installed inventory");
+  for (const entry of cases) {
+    assert.ok(routedSkills.has(entry.skill) || nonRouteBoundarySkills.has(entry.skill), `${entry.skill}: canonical route or explicit boundary`);
+  }
+}
+
 test("Studio skill cases resolve to direct-use anchors and canonical routing lanes", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
@@ -1030,21 +1052,19 @@ test("Studio skill cases resolve to direct-use anchors and canonical routing lan
     "utf8",
   ));
   const cases = manifest.skill_cases.filter((entry) => entry.product === "game-design-studio");
-  const routedSkills = new Set([
-    ...routing.skillIds,
-    ...routing.routes.map((route) => route.skill),
-    routing.qualityWorkflow.skill,
-  ]);
-  const wrapperOnlySkills = new Set(["svg-infographic"]);
 
-  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds, "skill cases follow the installed inventory");
+  assertStudioSkillCaseRouting({ cases, inventory, routing });
   for (const entry of cases) {
-    assert.ok(routedSkills.has(entry.skill) || wrapperOnlySkills.has(entry.skill), `${entry.skill}: canonical route or wrapper boundary`);
     const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
     const expectedHeading = `### 직접 호출 활용 — ${entry.skill}`;
     assert.ok(markdown.includes(expectedHeading), `${entry.id}: direct-use heading exists`);
     assert.ok(collectHeadingAnchors(markdown).has(entry.anchor), `${entry.id}: manifest anchor resolves`);
   }
+
+  assert.throws(
+    () => assertStudioSkillCaseRouting({ cases, inventory, routing: { ...routing, routes: [] } }),
+    "empty canonical routing.routes must fail",
+  );
 });
 
 test("Studio use-case index routes all eighteen published competency and concept cases", async () => {

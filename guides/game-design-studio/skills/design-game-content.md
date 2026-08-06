@@ -35,7 +35,7 @@ $game-design-studio:design-game-content artifact=game-design/island/quest 기존
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → narrative-quest-npc.yml → character-skill-combat-monster.yml` 순서로 읽고 두 content 계약의 stable ID를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `narrative-quest-npc`, `character-skill-combat-monster`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션과 stable ID로 확인합니다. `decisions/`은 실제 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
 #### 다음 스킬 조건
 

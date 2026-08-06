@@ -35,7 +35,7 @@ $game-design-studio:design-game-systems artifact=game-design/workbench/system �
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → system-specification.yml → rule-exception-matrix.yml` 순서로 읽고 `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`를 검토합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션과 stable ID로 검토합니다. `decisions/`은 실제 결정 기록이 있을 때만 그 뒤에 읽습니다.
 
 #### 다음 스킬 조건
 

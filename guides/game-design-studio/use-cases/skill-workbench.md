@@ -16,7 +16,7 @@
 | `design-game-systems` | `$game-design-studio:design-game-systems` — rule·state | 비전이 비어 있을 때 | input·authority·exception | system specification | precedence finding이면 review | [직접 호출](../skills/design-game-systems.md#직접-호출-활용-design-game-systems) |
 | `design-game-content` | `$game-design-studio:design-game-content` — quest·combat | runtime authority가 없을 때 | content purpose·budget | content specification | 충돌이면 review | [직접 호출](../skills/design-game-content.md#직접-호출-활용-design-game-content) |
 | `design-player-experience` | `$game-design-studio:design-player-experience` — first session·accessibility | authoritative state가 없을 때 | critical action·input | UX flow·accessibility matrix | evidence gap이면 review | [직접 호출](../skills/design-player-experience.md#직접-호출-활용-design-player-experience) |
-| `design-game-economy-and-liveops` | `$game-design-studio:design-game-economy-and-liveops` — source/sink·experiment | KPI를 확정할 때 | resource·hypothesis·guardrail | economy·event plan | stop/rollback이면 review | [직접 호출](../skills/design-game-economy-and-liveops.md#직접-호출-활용-design-game-economy-and-liveops) |
+| `design-game-economy-and-liveops` | `$game-design-studio:design-game-economy-and-liveops` — source/sink·experiment | 근거 없이 KPI를 확정하려 할 때 | resource·hypothesis·guardrail | economy·event plan | stop/rollback이면 review | [직접 호출](../skills/design-game-economy-and-liveops.md#직접-호출-활용-design-game-economy-and-liveops) |
 | `plan-game-production` | `$game-design-studio:plan-game-production` — scope·risk | core loop가 없을 때 | team·dependency·kill criteria | production risk plan | risk finding이면 review | [직접 호출](../skills/plan-game-production.md#직접-호출-활용-plan-game-production) |
 
 ## 품질·검토
@@ -47,4 +47,4 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `export-game-design-documents` | `$game-design-studio:export-game-design-documents` — approved format handoff | blocker·rights가 남을 때 | canonical artifact·formats·audience | export manifest·format jobs | unavailable downstream workflow | [직접 호출](../skills/export-game-design-documents.md#직접-호출-활용-export-game-design-documents) |
 
-이미지 mode는 `prompt-only`, `select`, `required`, `all`의 기존 artifact-local 선택을 그대로 따릅니다. `prompt-only`는 prompt·placeholder만 보존하고, 생성·문서 삽입·production candidacy는 이름 있는 사람이 승인하기 전까지 확정하지 않습니다. SVG는 Skillstead wrapper의 source mapping·lint·renderer fallback 경계를 우회하지 않습니다.
+이미지 mode는 `prompt-only`, `select`, `required`, `all`의 기존 artifact-local 선택을 그대로 따릅니다. `prompt-only`는 prompt·placeholder만 보존하고 생성 없음입니다. `select`는 사용자가 제공한 정확한 stable-ID selection receipt가 있어야 finite generation을 시작하며, `required`와 `all`은 declared finite generation만 허용합니다. 이 generation selection은 승인 결정이 아닙니다. named human decision은 `concept-draft → document-approved → production-candidate` lifecycle promotion에만 필요하며, 각 승격의 reviewer·scope·evidence를 대체하지 않습니다. SVG는 Skillstead wrapper의 source mapping·lint·renderer fallback 경계를 우회하지 않습니다.

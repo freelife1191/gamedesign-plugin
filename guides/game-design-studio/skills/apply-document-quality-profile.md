@@ -35,11 +35,11 @@ $game-design-studio:apply-document-quality-profile artifact=game-design/island/r
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → quality/selection-record.yml → quality/requirement-manifest.yml` 순서로 읽습니다. 결과는 `selection-record`, `quality-checklist`, `requirement-manifest`이며 profile 선택은 승인 자체가 아닙니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 canonical Artifact를 읽습니다. `selection-record`, `quality-checklist`, `requirement-manifest`은 trusted application이 반환하는 논리 결과이며 임의 artifact-local 파일명으로 가정하지 않습니다. profile 선택은 승인 자체가 아닙니다.
 
 #### 다음 스킬 조건
 
-비전 입력이 확정되면 `$game-design-studio:define-game-vision`으로, 규칙 범위면 `design-game-systems`로, 여러 route가 함께 남았을 때만 `orchestrate-game-design-project`로 넘깁니다.
+비전 입력이 확정되었을 때만 `$game-design-studio:define-game-vision`으로, 규칙 범위일 때만 `$game-design-studio:design-game-systems`로, 여러 route가 함께 남았을 때만 `$game-design-studio:orchestrate-game-design-project`로 넘깁니다.
 
 ## 사용하지 않을 때
 

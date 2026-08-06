@@ -35,7 +35,7 @@ $game-design-studio:orchestrate-game-design-project artifact=game-design/island/
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml` 순서로 읽습니다. `game-design-brief`와 `canonical-artifact`의 route·role·gate 기록은 사람의 승인과 별개입니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽습니다. route·role·gate의 실제 보조 기록은 존재할 때만 `decisions/`, `assets/`에서 확인하며, `game-design-brief`와 `canonical-artifact`는 파일명이 아니라 Artifact의 논리 결과입니다. 사람의 승인과는 별개입니다.
 
 #### 다음 스킬 조건
 

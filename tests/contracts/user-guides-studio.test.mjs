@@ -30,6 +30,58 @@ const sourceExceptions = {
   "svg-infographic": { reason: "vendored-wrapper", sourcePath: "products/game-design-studio/plugin/skills/visualize-game-design/SKILL.md", sourceSection: "Workflow", sourceTerms: ["skills/svg-infographic", "visual QA"], guideTerms: ["lead-game-designer", "visualize-game-design"] },
 };
 const sourceExceptionReasons = new Set(["provider-helper", "image-planning-helper", "human-approval-helper", "vendored-wrapper"]);
+const DIRECT_USE_OUTPUTS = Object.freeze({
+  "apply-document-quality-profile": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "define-game-vision": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "design-game-content": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "design-game-economy-and-liveops": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "design-game-systems": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "design-player-experience": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "export-game-design-documents": ["content.md", "evidence.yml", "export-manifest.yml", "not-run", "evidence는 비어 있음"],
+  "generate-image-assets": ["content.md", "evidence.yml", "export-manifest.yml", "assets/image-assets.yml", "assets/receipts/image-generation-<asset-id>-<attempt-id>.json"],
+  "orchestrate-game-design-project": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "plan-game-production": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "plan-image-assets": ["content.md", "evidence.yml", "export-manifest.yml", "assets/image-assets.yml", "assets/prompts/image-prompts.md", "assets/prompts/image-prompts.json"],
+  "review-game-design": ["content.md", "evidence.yml", "export-manifest.yml"],
+  "review-image-assets": ["content.md", "evidence.yml", "export-manifest.yml", "assets/image-assets.yml", "assets/receipts/image-generation-<asset-id>-<attempt-id>.json", "decisions/image-review-<event-id>.json"],
+  "svg-infographic": ["content.md", "evidence.yml", "export-manifest.yml", "assets/ 아래 source-mapped editable SVG"],
+  "visualize-game-design": ["content.md", "evidence.yml", "export-manifest.yml", "assets/ 아래 source-mapped editable SVG"],
+});
+const NONEXISTENT_DIRECT_USE_PATHS = /(?:quality\/(?:selection-record|requirement-manifest)\.yml|narrative-quest-npc\.yml|character-skill-combat-monster\.yml|economy-balance\.yml|liveops-experiment-event\.yml|system-specification\.yml|rule-exception-matrix\.yml|ui-ux-flow-state\.yml|accessibility-platform-matrix\.yml|game-design-review\.yml|decision-change-log\.yml|production-scope-risk\.yml|qa-manifest\.yml|assets\/provenance\/|assets\/lifecycle-receipt\.yml|assets\/diagram(?:-index)?\.yml|assets\/render-evidence\.yml)/;
+const DIRECT_USE_HANDOFFS = Object.freeze({
+  "apply-document-quality-profile": [["비전 입력", "define-game-vision"], ["규칙 범위", "design-game-systems"], ["여러 route", "orchestrate-game-design-project"]],
+  "define-game-vision": [["player verb", "design-game-systems"]],
+  "design-game-content": [["콘텐츠가 시스템", "review-game-design"]],
+  "design-game-economy-and-liveops": [["보호 기준", "review-game-design"]],
+  "design-game-systems": [["rule precedence", "review-game-design"]],
+  "design-player-experience": [["critical action", "review-game-design"]],
+  "export-game-design-documents": [["renderer 또는 downstream workflow", "downstream"]],
+  "generate-image-assets": [["named human approval", "review-image-assets"]],
+  "orchestrate-game-design-project": [["선택된 route", "<selected-skill>"]],
+  "plan-game-production": [["scope·risk", "review-game-design"]],
+  "plan-image-assets": [["finite illustration job", "generate-image-assets"], ["Skillstead diagram slot", "visualize-game-design"]],
+  "review-game-design": [["minimum fix", "review-game-design"], ["diagram gap", "visualize-game-design"], ["all blocker", "export-game-design-documents"]],
+  "review-image-assets": [["format preflight", "export-game-design-documents"]],
+  "svg-infographic": [["semantic validation", "visualize-game-design"]],
+  "visualize-game-design": [["review finding", "review-game-design"], ["모든 blocker", "export-game-design-documents"]],
+});
+const WORKBENCH_LANES = Object.freeze({
+  "orchestrate-game-design-project": "오케스트레이션",
+  "define-game-vision": "도메인 설계",
+  "design-game-systems": "도메인 설계",
+  "design-game-content": "도메인 설계",
+  "design-player-experience": "도메인 설계",
+  "design-game-economy-and-liveops": "도메인 설계",
+  "plan-game-production": "도메인 설계",
+  "apply-document-quality-profile": "품질·검토",
+  "review-game-design": "품질·검토",
+  "plan-image-assets": "이미지",
+  "generate-image-assets": "이미지",
+  "review-image-assets": "이미지",
+  "visualize-game-design": "시각화",
+  "svg-infographic": "시각화",
+  "export-game-design-documents": "출력",
+});
 
 function h2Headings(markdown) {
   return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
@@ -98,29 +150,55 @@ function extractDirectUseSection(markdown, skillId) {
   return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
 }
 
+function directUseFields(section, skillId) {
+  const matches = [...section.matchAll(/^#### (.+)$/gm)];
+  const expected = ["직접 호출 조건", "입문 요청문", "응용 요청문", "고급 요청문", "예상 파일과 읽는 순서", "다음 스킬 조건"];
+  assert.deepEqual(matches.map((match) => match[1]), expected, `${skillId}: direct-use H4 order`);
+  return Object.fromEntries(matches.map((match, index) => [
+    match[1],
+    section.slice(match.index + match[0].length, matches[index + 1]?.index ?? section.length).trim(),
+  ]));
+}
+
 function fencedRequests(section) {
   return [...section.matchAll(/```text\n([\s\S]*?)\n```/g)].map((match) => match[1]);
 }
 
+function assertConditionalDirectHandoff(section, { condition, target, skillId }) {
+  const command = target === "downstream" ? "downstream renderer-and-QA workflow" : `$game-design-studio:${target}`;
+  const escaped = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(section, new RegExp(`${condition}[\\s\\S]{0,300}(?:때만|경우에만|if )[\\s\\S]{0,120}${escaped}`, "i"), `${skillId}: ${condition} must conditionally bind to ${target}`);
+}
+
 function assertDirectUseContract(markdown, skillId) {
   const section = extractDirectUseSection(markdown, skillId);
-  const labels = [
-    "직접 호출 조건",
-    "입문 요청문",
-    "응용 요청문",
-    "고급 요청문",
-    "예상 파일과 읽는 순서",
-    "다음 스킬 조건",
-  ];
-  for (const label of labels) assert.match(section, new RegExp(`^#### ${label}$`, "m"), `${skillId}: ${label} subheading`);
+  const fields = directUseFields(section, skillId);
 
-  const requests = fencedRequests(section);
+  const requests = fencedRequests([fields["입문 요청문"], fields["응용 요청문"], fields["고급 요청문"]].join("\n"));
   assert.equal(requests.length, 3, `${skillId}: exactly three levelled copyable requests`);
   for (const request of requests) {
     assert.match(request, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct request target`);
   }
-  assert.match(section, /content\.md\s*→\s*evidence\.yml/, `${skillId}: canonical read order`);
-  assert.match(section, /if |때만|경우에만/i, `${skillId}: next-skill condition is conditional`);
+  const readOrder = fields["예상 파일과 읽는 순서"];
+  assert.match(readOrder, /content\.md\s*→\s*evidence\.yml\s*→\s*export-manifest\.yml/, `${skillId}: canonical read order`);
+  for (const path of DIRECT_USE_OUTPUTS[skillId]) assert.ok(readOrder.includes(path), `${skillId}: real output path or state ${path}`);
+  assert.doesNotMatch(readOrder, NONEXISTENT_DIRECT_USE_PATHS, `${skillId}: must not invent a logical output as a file`);
+  for (const [condition, target] of DIRECT_USE_HANDOFFS[skillId]) {
+    assertConditionalDirectHandoff(fields["다음 스킬 조건"], { condition, target, skillId });
+  }
+  return fields;
+}
+
+function workbenchLaneMap(markdown) {
+  const map = {};
+  let lane = null;
+  for (const line of markdown.split("\n")) {
+    const heading = /^## (.+)$/.exec(line);
+    if (heading) lane = heading[1];
+    const row = /^\| `([-a-z]+)` \|/.exec(line);
+    if (row) map[row[1]] = lane;
+  }
+  return map;
 }
 
 function extractFirstColumnIds(markdown) {
@@ -151,7 +229,7 @@ test("Studio skill workbench routes every direct-use case through its own lane",
     path.join(root, "guides/game-design-studio/use-cases/skill-workbench.md"),
     "utf8",
   );
-  const lanes = ["오케스트레이션", "도메인 설계", "품질·검토", "이미지", "시각화", "출력"];
+  const lanes = [...new Set(Object.values(WORKBENCH_LANES))];
   for (const lane of lanes) assert.match(workbench, new RegExp(`^## ${lane}$`, "m"), `workbench lane: ${lane}`);
 
   const rows = workbench.split("\n").filter((line) => /^\| `[-a-z]+` \|/.test(line));
@@ -164,6 +242,50 @@ test("Studio skill workbench routes every direct-use case through its own lane",
     assert.match(row, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct CLI signal`);
     assert.match(row, new RegExp(`\\.\\./skills/${skillId}\\.md#직접-호출-활용-${skillId}`), `${skillId}: direct-use guide anchor`);
   }
+  assert.deepEqual(workbenchLaneMap(workbench), WORKBENCH_LANES, "closed skill-to-lane map");
+
+  const planProductionRow = rows.find((row) => row.includes("`plan-game-production`"));
+  const wrongLane = workbench.replace(planProductionRow, "").replace(
+    "## 품질·검토\n",
+    `## 품질·검토\n\n${planProductionRow}\n`,
+  );
+  assert.throws(() => assert.deepEqual(workbenchLaneMap(wrongLane), WORKBENCH_LANES), "plan-game-production wrong lane must fail");
+});
+
+test("Studio direct-use contract rejects unconditional handoff and invented file paths", async () => {
+  const vision = await readFile(path.join(root, "guides/game-design-studio/skills/define-game-vision.md"), "utf8");
+  const unconditional = vision.replace("때만 `$game-design-studio:design-game-systems`", "즉시 `$game-design-studio:design-game-systems`");
+  assert.throws(() => assertDirectUseContract(unconditional, "define-game-vision"), "unconditional next skill must fail");
+
+  const systems = await readFile(path.join(root, "guides/game-design-studio/skills/design-game-systems.md"), "utf8");
+  const inventedPath = systems.replace("export-manifest.yml", "system-specification.yml");
+  assert.throws(() => assertDirectUseContract(inventedPath, "design-game-systems"), "invented expected file must fail");
+});
+
+test("Studio direct-use boundaries preserve export preparation, image lifecycle, and Node-free SVG fallback", async () => {
+  const exportGuide = await readFile(path.join(root, "guides/game-design-studio/skills/export-game-design-documents.md"), "utf8");
+  const exportFields = directUseFields(extractDirectUseSection(exportGuide, "export-game-design-documents"), "export-game-design-documents");
+  const exportDirectUse = Object.values(exportFields).join("\n");
+  assert.match(exportDirectUse, /pending|unavailable|blocked/);
+  assert.match(exportFields["예상 파일과 읽는 순서"], /generation.*not-run|not-run.*generation/i);
+  assert.match(exportFields["예상 파일과 읽는 순서"], /evidence는 비어 있음/);
+  assert.doesNotMatch(
+    [exportFields["직접 호출 조건"], exportFields["입문 요청문"], exportFields["응용 요청문"], exportFields["고급 요청문"], exportFields["예상 파일과 읽는 순서"]].join("\n"),
+    /terminal validation|format QA/i,
+    "preparation must not claim downstream generation or QA",
+  );
+  assert.match(exportFields["다음 스킬 조건"], /downstream renderer-and-QA workflow[\s\S]*terminal validation[\s\S]*format QA/i);
+
+  const workbench = await readFile(path.join(root, "guides/game-design-studio/use-cases/skill-workbench.md"), "utf8");
+  assert.match(workbench, /`prompt-only`.*생성 없음/);
+  assert.match(workbench, /`select`.*stable-ID selection receipt/);
+  assert.match(workbench, /`required`.*`all`.*finite generation/);
+  assert.match(workbench, /named human[\s\S]*concept-draft\s*→\s*document-approved\s*→\s*production-candidate/u);
+
+  const svgGuide = await readFile(path.join(root, "guides/game-design-studio/skills/svg-infographic.md"), "utf8");
+  const svgAdvanced = directUseFields(extractDirectUseSection(svgGuide, "svg-infographic"), "svg-infographic")["고급 요청문"];
+  assert.match(svgAdvanced, /Node 18\+.*부재[\s\S]*manual source checklist[\s\S]*Node-free Chromium[\s\S]*2× PNG/u);
+  assert.match(svgAdvanced, /Chromium.*없[\s\S]*SVG-only/u);
 });
 
 test("Studio skill contract rejects missing or reordered new sections", async () => {
@@ -308,7 +430,7 @@ test("Studio apply and orchestrator bind every canonical route condition to its 
     assertRouteCommandRows(markdown, routes, "game-design-studio", skillId);
   }
   const apply = await readFile(path.join(root, "guides/game-design-studio/skills/apply-document-quality-profile.md"), "utf8");
-  assert.throws(() => assertRouteCommandRows(apply.replace("$game-design-studio:design-game-systems", "$game-design-studio:define-game-vision"), routes, "game-design-studio", "mutated apply target"));
+  assert.throws(() => assertRouteCommandRows(apply.replace("| `systems` | `$game-design-studio:design-game-systems` |", "| `systems` | `$game-design-studio:define-game-vision` |"), routes, "game-design-studio", "mutated apply target"));
   assert.throws(() => assertRouteCommandRows(apply.replace("`systems`", "systems"), routes, "game-design-studio", "mutated apply condition"));
 });
 

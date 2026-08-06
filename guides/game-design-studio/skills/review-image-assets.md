@@ -35,7 +35,7 @@ $game-design-studio:review-image-assets artifact=game-design/island/brief assets
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → assets/image-assets.yml → assets/lifecycle-receipt.yml` 순서로 읽고 `image-asset-review`, `lifecycle-receipt`에서 named human의 상태를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml` 순서로 읽습니다. 실제 generation receipt가 있으면 `assets/receipts/image-generation-<asset-id>-<attempt-id>.json`, named human decision이 있으면 `decisions/image-review-<event-id>.json`을 그 뒤에 읽습니다. `image-asset-review`, `lifecycle-receipt`는 별도 파일명이 아니라 lifecycle의 논리 결과입니다.
 
 #### 다음 스킬 조건
 

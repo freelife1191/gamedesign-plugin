@@ -46,3 +46,45 @@ node --test tests/contracts/user-guide-use-case-manifest.test.mjs
 
 - 직접 호출 예시는 문서 계약이며 runtime 동작이나 이미지 provider 설정을 변경하지 않습니다.
 - 이미지 mode(`prompt-only`/`select`/`required`/`all`), named human approval, Skillstead wrapper 및 renderer fallback 경계는 유지했습니다.
+
+## Fix round 1
+
+### Findings addressed
+
+- 직접 호출 H4의 읽기 순서를 실제 canonical Artifact 경로(`content.md → evidence.yml → export-manifest.yml`)와 실제 image workflow 경로로 교정했습니다. 논리 output ID와 존재하지 않는 `*.yml`/디렉터리 경로는 파일처럼 제시하지 않습니다.
+- image generation 증거는 실제 `assets/receipts/image-generation-<asset-id>-<attempt-id>.json`, named-human lifecycle decision은 실제 `decisions/image-review-<event-id>.json`으로 제한했습니다.
+- export preparation은 `pending`/`unavailable`/`blocked`, 모든 실행 단계 `not-run`, null derivative와 빈 format evidence만 기록하도록 직접 요청과 읽기 순서를 고쳤습니다. generation·terminal validation·format QA는 downstream renderer-and-QA workflow로 분리했습니다.
+- 워크벤치는 `prompt-only` 생성 없음, `select`의 stable-ID selection receipt, `required`/`all`의 finite generation과 named-human lifecycle promotion을 분리했습니다.
+- `svg-infographic`의 Node 부재 fallback을 manual checklist → Node-free Chromium 2× PNG → Chromium 부재 시에만 SVG-only 순서로 명시했습니다.
+- tests는 H4 본문 분리, 실제 output path, 조건+대상 handoff, closed lane map, 빈 `routing.routes`, wrong lane·unconditional handoff·invented path mutation을 검사합니다. `routing.skillIds` 기반 routed-set 검사는 제거했습니다.
+- economy workbench의 피할 조건을 `근거 없이 KPI를 확정하려 할 때`로 좁혔습니다.
+
+### Findings open
+
+- 없음.
+
+### RED evidence
+
+```text
+node --check tests/contracts/user-guides-studio.test.mjs
+node --check tests/contracts/user-guide-use-case-manifest.test.mjs
+node --test tests/contracts/user-guides-studio.test.mjs
+node --test tests/contracts/user-guide-use-case-manifest.test.mjs
+```
+
+- 새 강화 계약 직후 `user-guides-studio`는 12 passed / 2 failed였습니다. 실패는 `apply-document-quality-profile: canonical read order`(가짜 quality YAML 경로)와 export preparation의 `generation not-run` 누락이었습니다.
+- manifest suite는 22 passed였고 새 empty `routing.routes` negative mutation은 의도대로 throw했습니다.
+
+### GREEN evidence
+
+```text
+node --test tests/contracts/user-guides-studio.test.mjs
+node --test tests/contracts/user-guide-use-case-manifest.test.mjs
+node --check tests/contracts/user-guides-studio.test.mjs
+node --check tests/contracts/user-guide-use-case-manifest.test.mjs
+git diff --check
+```
+
+- `user-guides-studio`: 14 passed / 0 failed.
+- `user-guide-use-case-manifest`: 22 passed / 0 failed.
+- 두 `node --check` 명령과 `git diff --check`: exit 0.

@@ -35,7 +35,7 @@ $game-design-studio:design-game-economy-and-liveops artifact=game-design/island/
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → economy-balance.yml → liveops-experiment-event.yml` 순서로 읽고 `economy-balance`, `liveops-experiment-event`와 rollback 기록을 검토합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `economy-balance`, `liveops-experiment-event`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션으로 검토합니다. rollback 결정은 실제 `decisions/` 기록이 있을 때만 그 뒤에 읽습니다.
 
 #### 다음 스킬 조건
 

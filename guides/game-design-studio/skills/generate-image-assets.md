@@ -35,7 +35,7 @@ $game-design-studio:generate-image-assets artifact=game-design/island/brief mode
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → assets/image-assets.yml → assets/provenance/` 순서로 읽고 `image-generation-result`, `image-generation-provenance`와 concept-draft 상태를 확인합니다.
+`content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml` 순서로 읽습니다. 실제 generation이 있었을 때만 `assets/receipts/image-generation-<asset-id>-<attempt-id>.json`을 읽어 stable ID별 receipt와 `concept-draft` 상태를 확인합니다. `image-generation-result`, `image-generation-provenance`는 별도 파일명이 아니라 논리 결과입니다.
 
 #### 다음 스킬 조건
 

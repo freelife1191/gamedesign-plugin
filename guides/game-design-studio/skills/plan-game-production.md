@@ -35,7 +35,7 @@ $game-design-studio:plan-game-production artifact=game-design/island/production 
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → production-scope-risk.yml → decision-change-log.yml` 순서로 읽고 `production-scope-risk`, `decision-change-log`를 검토합니다.
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽고 `production-scope-risk`는 별도 YAML 파일이 아니라 `content.md`의 안정 섹션으로 검토합니다. 사람의 `decisions/` 기록이 존재할 때만 그 뒤에 읽습니다.
 
 #### 다음 스킬 조건
 
