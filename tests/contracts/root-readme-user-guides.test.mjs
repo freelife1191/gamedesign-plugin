@@ -82,14 +82,17 @@ async function assertRootLinks(markdown) {
 
 function assertSharedPngLinks(markdown) {
   const pngEmbeds = [...markdown.matchAll(/!\[[^\]]*\]\((guides\/assets\/shared\/[^)]+\.png)\)/g)]
-    .map((match) => match[1]);
+    .map((match) => ({
+      png: match[1],
+      start: match.index,
+      end: match.index + match[0].length,
+    }));
   assert.ok(pngEmbeds.length >= 1 && pngEmbeds.length <= 3, "root README must embed one to three shared PNG diagrams");
-  assert.ok(pngEmbeds.includes("guides/assets/shared/plugin-selection-flow.png"), "root README must embed plugin-selection-flow.png");
-  for (const png of pngEmbeds) {
+  assert.ok(pngEmbeds.some(({ png }) => png === "guides/assets/shared/plugin-selection-flow.png"), "root README must embed plugin-selection-flow.png");
+  for (const { png, start, end } of pngEmbeds) {
     const svg = png.replace(/\.png$/, ".svg");
-    const escapedPng = png.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const escapedSvg = svg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    assert.match(markdown, new RegExp(`\\[!\\[[^\\]]*\\]\\(${escapedPng}\\)\\]\\(${escapedSvg}\\)`), `shared PNG must link to paired editable SVG: ${png}`);
+    assert.equal(markdown[start - 1], "[", `shared PNG must begin a link wrapper: ${png}`);
+    assert.ok(markdown.startsWith(`](${svg})`, end), `shared PNG occurrence must link to paired editable SVG: ${png}`);
   }
 }
 
@@ -204,6 +207,7 @@ test("root README contract rejects unsafe mutations in memory", async () => {
     ["marketplace refresh is collapsed into plugin update", (value) => value.replace("refresh할 뿐 설치된 플러그인을 교체하지 않습니다", "설치된 플러그인을 자동 업데이트합니다")],
     ["two products are installed in one mandatory block", (value) => value.replace("codex plugin add game-design-studio@game-design-suite", "codex plugin add game-design-studio@game-design-suite\ncodex plugin add game-design-career@game-design-suite")],
     ["three unpaired shared PNG embeds are added", (value) => value + "\n![A](guides/assets/shared/a.png)\n![B](guides/assets/shared/b.png)\n![C](guides/assets/shared/c.png)\n"],
+    ["paired shared PNG gains a bare duplicate", (value) => value + "\n![bare duplicate](guides/assets/shared/plugin-selection-flow.png)\n"],
   ];
   for (const [label, mutate] of mutations) {
     assert.throws(() => assertRootContentContract(mutate(readme)), undefined, label);
