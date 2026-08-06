@@ -9,6 +9,20 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 3. [전체 워크플로](workflow.md)에서 현재 경력 단계와 다음 증거 작업을 확인합니다.
 4. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
 
+## 목적별 레시피
+
+- [역할·학습 로드맵](recipes/role-learning-roadmap.md)
+- [공고 조사·gap](recipes/job-research-gap.md)
+- [관찰 기반 역기획](recipes/reverse-design.md)
+- [portfolio 구축·검토](recipes/portfolio-build-review.md)
+- [근거 연결 면접 연습](recipes/interview-preparation.md)
+- [주니어 성장·전환](recipes/junior-growth-transition.md)
+
+대표 도식:
+
+- [경력 단계 라우팅](../assets/game-design-career/career-stage-routing.png)
+- [역할 gap과 학습 로드맵](../assets/game-design-career/role-gap-learning-roadmap.png)
+
 ## 가이드 목차
 
 현재 사용할 수 있는 진입 문서:
@@ -27,7 +41,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 - [Career 시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
-목적별 레시피의 안정 경로는 `recipes/`이며, 레시피 파일이 추가되기 전에는 링크하지 않습니다.
+목적별 레시피의 안정 경로는 `recipes/`입니다. 각 레시피는 current evidence의 출처·검색일·지역·표본 경계·재검색 시점을 보존하며, 생성·렌더 결과와 사람 승인을 분리합니다.
 
 ## 작업 원칙
 

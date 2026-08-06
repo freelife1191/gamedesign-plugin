@@ -109,6 +109,60 @@
       "alt": "제작 scope와 hard No-Go가 검토 finding, named human decision, renderer-neutral MD·PDF·DOCX·PPTX export preparation으로 이어지는 흐름.",
       "sources": ["../game-design-studio/workflow.md", "../game-design-studio/exports.md"],
       "usedBy": ["../game-design-studio/recipes/production-review-export.md"]
+    },
+    {
+      "id": "career-stage-routing",
+      "scope": "game-design-career",
+      "svg": "game-design-career/career-stage-routing.svg",
+      "png": "game-design-career/career-stage-routing.png",
+      "alt": "현재 단계와 실제 project event, 전환 readiness, 사람 결정이 성장·전환 artifact와 내보내기 준비로 이어지는 경로.",
+      "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/plan-junior-growth.md"],
+      "usedBy": ["../game-design-career/recipes/junior-growth-transition.md", "../game-design-career/README.md"]
+    },
+    {
+      "id": "role-gap-learning-roadmap",
+      "scope": "game-design-career",
+      "svg": "game-design-career/role-gap-learning-roadmap.svg",
+      "png": "game-design-career/role-gap-learning-roadmap.png",
+      "alt": "현재 증거에서 역할 gap과 proof task를 거쳐 named human 재평가를 받은 learning roadmap artifact로 가는 흐름.",
+      "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/map-game-design-career.md"],
+      "usedBy": ["../game-design-career/recipes/role-learning-roadmap.md"]
+    },
+    {
+      "id": "job-research-evidence-flow",
+      "scope": "game-design-career",
+      "svg": "game-design-career/job-research-evidence-flow.svg",
+      "png": "game-design-career/job-research-evidence-flow.png",
+      "alt": "공식 공고와 표본 경계가 역량 gap, minimum repair, 사람 검토를 거쳐 current evidence artifact로 이어지는 흐름.",
+      "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/research-game-design-jobs.md"],
+      "usedBy": ["../game-design-career/recipes/job-research-gap.md"]
+    },
+    {
+      "id": "reverse-design-portfolio-flow",
+      "scope": "game-design-career",
+      "svg": "game-design-career/reverse-design-portfolio-flow.svg",
+      "png": "game-design-career/reverse-design-portfolio-flow.png",
+      "alt": "공개 build 관찰, 반증 가능한 추론, validation queue와 권리 검토가 역기획 artifact와 portfolio 후보로 이어지는 흐름.",
+      "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/reverse-engineer-game-design.md"],
+      "usedBy": ["../game-design-career/recipes/reverse-design.md"]
+    },
+    {
+      "id": "portfolio-review-loop",
+      "scope": "game-design-career",
+      "svg": "game-design-career/portfolio-review-loop.svg",
+      "png": "game-design-career/portfolio-review-loop.png",
+      "alt": "portfolio claim evidence와 five-axis finding이 minimum repair, 권리 검토와 다음 review loop로 이어지는 흐름.",
+      "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/review-game-design-portfolio.md"],
+      "usedBy": ["../game-design-career/recipes/portfolio-build-review.md"]
+    },
+    {
+      "id": "interview-growth-transition-flow",
+      "scope": "game-design-career",
+      "svg": "game-design-career/interview-growth-transition-flow.svg",
+      "png": "game-design-career/interview-growth-transition-flow.png",
+      "alt": "fresh posting·portfolio evidence가 stable question record와 honest feedback, coach 검토를 거쳐 성장 proof task로 이어지는 흐름.",
+      "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/practice-game-design-interview.md"],
+      "usedBy": ["../game-design-career/recipes/interview-preparation.md"]
     }
   ]
 }

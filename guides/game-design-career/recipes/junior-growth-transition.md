@@ -1,0 +1,51 @@
+# 주니어 성장과 전환 준비를 검토하기
+
+![경력 단계 라우팅](../../assets/game-design-career/career-stage-routing.png)
+
+## 완료 목표
+
+실제 project event와 fresh role evidence를 분기 성장 목표·전환 gap·내보내기 준비로 연결하고, 다음 재평가 조건을 기록합니다. 채용 결과를 보장하지 않습니다.
+
+## 준비할 입력
+
+- 현재 단계, project event evidence, target role·region, feedback cadence와 공개 가능한 proof artifact
+- Canonical Artifact family: `game-design-career/<career-id>/junior-growth-review/`, `game-design-career/<career-id>/transition-readiness/`
+- 템플릿: `junior-growth-review`, `transition-readiness`, `career-stage-goal`
+
+## 복사 가능한 요청문
+
+Codex App 자연어 요청:
+
+```text
+@Game Design Career 개인정보와 현재 회사 비공개 자료를 제외하고, 실제 project event와 공개 가능한 proof artifact만 사용해 주니어 성장과 전환 준비를 정리해. 관찰 사실·추론·제안, freshness와 재검토 조건을 분리해.
+```
+
+Codex CLI 명시 호출:
+
+```text
+$game-design-career:plan-junior-growth game-design-career/<career-id>/junior-growth-review/를 만들고 $game-design-career:map-game-design-career, $game-design-career:review-game-design-portfolio, $game-design-career:export-career-documents로 transition-readiness와 export manifest를 연결해.
+```
+
+## 단계별 진행
+
+1. actual event와 proof artifact는 `관찰 사실`이며 current role evidence에는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 기록합니다.
+2. readiness 평가는 `추론`, 다음 project·feedback cadence는 `제안`으로 두고 target level은 확정 사실처럼 쓰지 않습니다.
+3. `reviewAfter` 이후 stale evidence는 재검색한 fresh source로 교체 연결하고 historical record는 보존합니다.
+4. `prompt-only`는 prompt/placeholder만, `select`는 human receipt만, `required`는 finite required asset만, `all`은 declared asset만 사용합니다.
+
+## 사람이 결정할 지점
+
+Growth Manager **김서윤**, Portfolio Reviewer **한지훈**, Export Owner **오지은**이 goal, evidence 공개, 전환 대안과 내보내기 범위를 각각 승인합니다.
+
+## 예상 결과
+
+`junior-growth-review/content.md`, `transition-readiness/content.md`와 renderer-neutral export manifest에 review 조건과 다음 검증 작업이 남습니다.
+
+## 실패와 재개
+
+Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable으로 남기고 Canonical Artifact와 기존 output을 보존합니다. fresh evidence가 없으면 current claim을 만들지 않고 stale record와 next retrieval에서 재개합니다.
+
+## 관련 기능
+
+- [주니어 성장](../skills/plan-junior-growth.md), [역할 매핑](../skills/map-game-design-career.md), [내보내기](../skills/export-career-documents.md)
+- [문서 내보내기 흐름](../../assets/shared/document-export-flow.png)

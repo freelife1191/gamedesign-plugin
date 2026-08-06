@@ -1,0 +1,51 @@
+# 현재 공고 근거로 역할 gap 조사하기
+
+![공고 조사와 근거 흐름](../../assets/game-design-career/job-research-evidence-flow.png)
+
+## 완료 목표
+
+공식 공고 표본의 required·preferred를 날짜와 범위가 있는 evidence record로 남기고, 일반화하지 않은 gap과 다음 증거 작업을 정리합니다. 채용 결과를 보장하지 않습니다.
+
+## 준비할 입력
+
+- 역할, seniority, 지역, 조사일, official HTTPS source 후보와 공개 가능한 portfolio evidence
+- Canonical Artifact family: `game-design-career/<career-id>/job-posting-evidence/`, `game-design-career/<career-id>/competency-matrix/`
+- 템플릿: `job-posting-evidence`, `competency-matrix`, `portfolio-backlog`
+
+## 복사 가능한 요청문
+
+Codex App 자연어 요청:
+
+```text
+@Game Design Career 개인정보, 연락처, 비공개 지원 자료를 넣지 말고 한국의 공개 공식 공고만 조사해. 관찰 사실·추론·제안, 출처와 표본 한계를 분리해 역할 gap과 portfolio backlog를 만들어.
+```
+
+Codex CLI 명시 호출:
+
+```text
+$game-design-career:research-game-design-jobs game-design-career/<career-id>/job-posting-evidence/를 만들고 $game-design-career:map-game-design-career, $game-design-career:build-game-design-portfolio로 competency-matrix와 backlog를 연결해.
+```
+
+## 단계별 진행
+
+1. 공고별 `관찰 사실`은 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`와 source ID를 가진 record로만 기록합니다.
+2. 반복 신호는 제한된 표본의 `추론`으로 표시하고, 개인 evidence 부족은 `제안`인 minimum repair로 전환합니다.
+3. `reviewAfter`가 지나 stale인 record는 current evidence로 쓰지 않고 같은 source location을 재검색해 새 ID로 대체합니다.
+4. 이미지 계획은 `prompt-only`에서 placeholder만, `select`에서 human receipt 선택만, `required`에서 finite required asset만, `all`에서 declared asset만 처리합니다.
+
+## 사람이 결정할 지점
+
+Research Owner **이민아**가 조사 지역·표본 경계를, Portfolio Reviewer **최유진**이 공개 가능한 evidence와 backlog 우선순위를 승인합니다.
+
+## 예상 결과
+
+`job-posting-evidence/content.md`와 `competency-matrix/content.md`에 출처별 requirement, sample limit, gap과 proof task가 남습니다.
+
+## 실패와 재개
+
+Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable으로 기록하고 Canonical Artifact와 기존 output을 보존합니다. stale record는 재검색 후 새 source ID를 추가하고 삭제하지 않은 기존 기록에서 재개합니다.
+
+## 관련 기능
+
+- [공고 조사](../skills/research-game-design-jobs.md), [역할 매핑](../skills/map-game-design-career.md), [템플릿](../templates.md)
+- [공통 Artifact 수명주기](../../assets/shared/canonical-artifact-lifecycle.png)

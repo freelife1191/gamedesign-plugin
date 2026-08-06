@@ -1,0 +1,51 @@
+# 근거 연결형 면접 연습하기
+
+![면접 연습과 성장 전환 흐름](../../assets/game-design-career/interview-growth-transition-flow.png)
+
+## 완료 목표
+
+공고와 portfolio evidence ID에 질문·답변을 연결하고, 확인하지 못한 내용은 honest gap으로 남긴 면접 연습 log를 만듭니다. 채용 결과를 보장하지 않습니다.
+
+## 준비할 입력
+
+- posting evidence IDs, portfolio evidence IDs, target role, 공개 가능한 경험 경계와 feedback goal
+- Canonical Artifact family: `game-design-career/<career-id>/interview-question-answer-log/`
+- 템플릿: `interview-question-answer-log`, `job-posting-evidence`, `five-axis-review`
+
+## 복사 가능한 요청문
+
+Codex App 자연어 요청:
+
+```text
+@Game Design Career 주민번호, 연락처, 면접 회사 비공개 정보는 넣지 말고 posting·portfolio evidence ID만 사용해 질문 연습을 만들어. 관찰 사실·추론·제안과 honest gap을 같은 questionId에 남겨.
+```
+
+Codex CLI 명시 호출:
+
+```text
+$game-design-career:practice-game-design-interview game-design-career/<career-id>/interview-question-answer-log/에서 $game-design-career:research-game-design-jobs, $game-design-career:review-game-design-portfolio evidence를 연결해.
+```
+
+## 단계별 진행
+
+1. posting requirement와 portfolio record를 `관찰 사실`으로 두고 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 연결합니다.
+2. 적합성 해석은 `추론`, 다음 답변 연습·proof task는 `제안`으로 기록하며 answer와 feedback은 같은 `questionId`를 재사용합니다.
+3. stale posting evidence는 current claim에 사용하지 않고 재검색 후 새 evidence IDs를 연결합니다.
+4. 이미지 필요 시 `prompt-only`는 placeholder, `select`는 receipt 선택, `required`는 finite required asset, `all`은 declared asset만 처리합니다.
+
+## 사람이 결정할 지점
+
+Interview Coach **최유진**이 honest answer boundary를, Evidence Reviewer **박도현**이 posting freshness와 portfolio claim 연결을 승인합니다.
+
+## 예상 결과
+
+`interview-question-answer-log/content.md`에 stable questionId, answer-feedback record, evidence gap과 다음 연습이 남습니다.
+
+## 실패와 재개
+
+Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable으로 기록하고 Canonical Artifact와 기존 output을 보존합니다. stale record 재검색과 questionId 보존을 먼저 수행해 재개합니다.
+
+## 관련 기능
+
+- [면접 연습](../skills/practice-game-design-interview.md), [공고 조사](../skills/research-game-design-jobs.md), [portfolio 검토](../skills/review-game-design-portfolio.md)
+- [Career workflow](../workflow.md)
