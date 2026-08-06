@@ -96,3 +96,26 @@
 - `node --test tests/contracts/user-guide-use-case-manifest.test.mjs` → 9/9 PASS
 - Studio wrapper 6-file lint → `0 error(s), 0 warning(s) across 6 file(s)`
 - 재생성한 5-card `aud-02.png` 육안 검토 → line-boundary whitespace 보존 뒤에도 card text, connector, conclusion strip의 clipping/overlap 없음
+
+## Fix round 3 — real PNG fixture and optional-lstat seam
+
+### 수정
+
+- test wrapper PNG generator는 Node built-in `zlib.deflateSync`와 CRC32를 사용해 signature, IHDR, IDAT, IEND 및 모든 chunk CRC가 유효한 8-bit RGBA PNG를 만듭니다.
+- fixture decoder는 chunk CRC와 IDAT inflate를 실제로 검증합니다. 같은 generator의 1400×900 PNG는 builder가 정확한 dimension 오류로 거부하고, 2800×1800 PNG는 builder subprocess path를 통과합니다.
+- `buildUseCaseDiagrams`의 기존 호출 계약은 유지하면서, private `__testLstat` hook을 optional-lstat call에만 전달합니다. 이를 통해 non-ENOENT sentinel Error의 identity를 직접 검증합니다.
+
+### TDD RED → GREEN
+
+1. wrong-dimension output을 IDAT inflate·CRC까지 decode하는 test, 같은 generator의 2800×1800 positive-control builder test, injected optional-lstat sentinel의 `strictEqual` rethrow test를 먼저 추가했습니다.
+2. RED: builder test 10개 중 sentinel test가 `Missing expected rejection`으로 실패했습니다. 기존 builder는 hook을 받지 않아 실제 `lstat`만 호출했습니다.
+3. `lstatIfPresent(filename, lstatFn)`와 최소 `__testLstat` seam을 연결했습니다.
+4. GREEN: renderer+builder targeted suite 15/15 PASS. 1400×900 fixture는 실제 decode 가능하지만 `PNG must be 2800x1800`로 실패하고, 2800×1800 fixture는 `{ svg: 1, png: 1 }`로 성공합니다.
+
+### 검증
+
+- `node --test tests/unit/use-case-diagrams.test.mjs tests/unit/build-use-case-diagrams.test.mjs` → 15/15 PASS
+- `npm run test:unit` → 358/358 PASS
+- `node --test tests/contracts/user-guide-use-case-manifest.test.mjs` → 9/9 PASS
+- `npm run build:guide-diagrams` / `npm run check:guide-diagrams` → 6 SVG, 6 PNG built and checked
+- Studio wrapper 6-file lint → `0 error(s), 0 warning(s) across 6 file(s)`

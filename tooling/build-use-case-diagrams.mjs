@@ -49,18 +49,18 @@ async function assertSafeOutputFile(root, filename, { createParents }) {
   }
 }
 
-async function lstatIfPresent(filename) {
+async function lstatIfPresent(filename, lstatFn = lstat) {
   try {
-    return await lstat(filename);
+    return await lstatFn(filename);
   } catch (error) {
     if (error?.code === "ENOENT") return null;
     throw error;
   }
 }
 
-async function assertSafeExistingFile(root, filename) {
+async function assertSafeExistingFile(root, filename, { optionalLstat = lstat } = {}) {
   await assertSafeOutputFile(root, filename, { createParents: false });
-  const entry = await lstatIfPresent(filename);
+  const entry = await lstatIfPresent(filename, optionalLstat);
   if (!entry) throw new Error(`missing generated output: ${filename}`);
 }
 
@@ -142,15 +142,15 @@ async function writeSvg(filename, svg, outputRoot) {
   await writeFile(filename, svg, "utf8");
 }
 
-async function buildOne({ source, manifest, repoRoot, outputRoot, check }) {
+async function buildOne({ source, manifest, repoRoot, outputRoot, check, optionalLstat }) {
   const output = outputForSource(source, manifest, repoRoot);
   const relativeSvg = path.relative(repoRoot, output.svg);
   const relativePng = path.relative(repoRoot, output.png);
   const svgPath = check ? path.join(outputRoot, relativeSvg) : output.svg;
   const pngPath = check ? path.join(outputRoot, relativePng) : output.png;
   if (check) {
-    await assertSafeExistingFile(repoRoot, output.svg);
-    await assertSafeExistingFile(repoRoot, output.png);
+    await assertSafeExistingFile(repoRoot, output.svg, { optionalLstat });
+    await assertSafeExistingFile(repoRoot, output.png, { optionalLstat });
     await assertSafeOutputFile(outputRoot, pngPath, { createParents: true });
   } else {
     await assertSafeOutputFile(repoRoot, output.svg, { createParents: true });
@@ -158,12 +158,12 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check }) {
   }
   const svg = renderDiagramSvg(source);
   await writeSvg(svgPath, svg, outputRoot);
-  await assertSafeExistingFile(outputRoot, svgPath);
+  await assertSafeExistingFile(outputRoot, svgPath, { optionalLstat });
   const wrapper = path.join(repoRoot, wrapperFile);
-  await assertSafeExistingFile(repoRoot, wrapper);
+  await assertSafeExistingFile(repoRoot, wrapper, { optionalLstat });
   invokeWrapper(wrapper, "lint", [svgPath]);
   invokeWrapper(wrapper, "render", [svgPath, pngPath]);
-  await assertSafeExistingFile(outputRoot, pngPath);
+  await assertSafeExistingFile(outputRoot, pngPath, { optionalLstat });
   await assertCompletePng(pngPath);
   if (check) {
     const [existingSvg, existingPng] = await Promise.all([readFile(output.svg, "utf8"), stat(output.png)]);
@@ -174,7 +174,7 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check }) {
   return { svg: 1, png: 1 };
 }
 
-export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false }) {
+export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false, __testLstat = lstat }) {
   const requestedRepoRoot = path.resolve(repoRoot);
   const canonicalRepoRoot = await assertSafeDirectory(requestedRepoRoot, "repository root");
   const sources = await loadSources(canonicalRepoRoot);
@@ -192,7 +192,7 @@ export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false }
   try {
     let counts = { svg: 0, png: 0 };
     for (const source of selected) {
-      const result = await buildOne({ source, manifest, repoRoot: canonicalRepoRoot, outputRoot, check });
+      const result = await buildOne({ source, manifest, repoRoot: canonicalRepoRoot, outputRoot, check, optionalLstat: __testLstat });
       counts = { svg: counts.svg + result.svg, png: counts.png + result.png };
     }
     return counts;

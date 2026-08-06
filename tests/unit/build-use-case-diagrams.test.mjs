@@ -3,6 +3,7 @@ import { chmod, lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { deflateSync, inflateSync } from "node:zlib";
 
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import { renderDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
@@ -29,19 +30,38 @@ const pngPath = "guides/assets/use-cases/audiences/aud-01.png";
 const svgPath = "guides/assets/use-cases/audiences/aud-01.svg";
 
 function completePng(width = 2800, height = 1800) {
-  const png = Buffer.alloc(45);
-  png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  png.writeUInt32BE(13, 8);
-  png.write("IHDR", 12);
-  png.writeUInt32BE(width, 16);
-  png.writeUInt32BE(height, 20);
-  png.set([8, 2, 0, 0, 0], 24);
-  png.write("IEND", 37);
-  return png;
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr.set([8, 6, 0, 0, 0], 8);
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(Buffer.alloc((width * 4 + 1) * height))),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+function crc32(data) {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc ^= byte;
+    for (let index = 0; index < 8; index += 1) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const typeBytes = Buffer.from(type, "ascii");
+  const length = Buffer.alloc(4);
+  const checksum = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  checksum.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])));
+  return Buffer.concat([length, typeBytes, data, checksum]);
 }
 
 function completePngSource(width = 2800, height = 1800) {
-  return `const png = Buffer.alloc(45);\npng.set([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);\npng.writeUInt32BE(13, 8); png.write("IHDR", 12); png.writeUInt32BE(${width}, 16); png.writeUInt32BE(${height}, 20); png.set([8,2,0,0,0], 24); png.write("IEND", 37);\n`;
+  return `const crc32 = (data) => { let crc = 0xffffffff; for (const byte of data) { crc ^= byte; for (let index = 0; index < 8; index += 1) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0); } return (crc ^ 0xffffffff) >>> 0; };\nconst chunk = (type, data) => { const typeBytes = Buffer.from(type, "ascii"); const length = Buffer.alloc(4); const checksum = Buffer.alloc(4); length.writeUInt32BE(data.length); checksum.writeUInt32BE(crc32(Buffer.concat([typeBytes, data]))); return Buffer.concat([length, typeBytes, data, checksum]); };\nconst ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(${width}, 0); ihdr.writeUInt32BE(${height}, 4); ihdr.set([8,6,0,0,0], 8); const png = Buffer.concat([Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]), chunk("IHDR", ihdr), chunk("IDAT", deflateSync(Buffer.alloc((${width} * 4 + 1) * ${height}))), chunk("IEND", Buffer.alloc(0))]);\n`;
 }
 
 function wrapperSource({ lint = "check-svg: 0 error(s), 0 warning(s) across 1 file(s)", lintStatus = 0, png = "complete", recordFile, externalPng } = {}) {
@@ -53,7 +73,27 @@ function wrapperSource({ lint = "check-svg: 0 error(s), 0 warning(s) across 1 fi
       ? `await mkdir(path.dirname(output), { recursive: true }); await symlink(${JSON.stringify(externalPng)}, output);`
     : "await mkdir(path.dirname(output), { recursive: true }); await writeFile(output, Buffer.from([0x89, 0x50]));";
   const record = recordFile ? `await writeFile(${JSON.stringify(recordFile)}, path.dirname(input));` : "";
-  return `import { mkdir, symlink, writeFile } from "node:fs/promises";\nimport path from "node:path";\nconst [command, input, output] = process.argv.slice(2);\nif (command === "lint") { console.log(${JSON.stringify(lint)}); process.exit(${lintStatus}); }\nif (command === "render") { ${record} ${render} }\n`;
+  return `import { mkdir, symlink, writeFile } from "node:fs/promises";\nimport path from "node:path";\nimport { deflateSync } from "node:zlib";\nconst [command, input, output] = process.argv.slice(2);\nif (command === "lint") { console.log(${JSON.stringify(lint)}); process.exit(${lintStatus}); }\nif (command === "render") { ${record} ${render} }\n`;
+}
+
+function decodePng(data) {
+  assert.deepEqual(data.subarray(0, 8), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  let offset = 8;
+  let ihdr;
+  let ended = false;
+  const idat = [];
+  while (offset + 12 <= data.length) {
+    const length = data.readUInt32BE(offset);
+    const type = data.subarray(offset + 4, offset + 8).toString("ascii");
+    const payload = data.subarray(offset + 8, offset + 8 + length);
+    assert.equal(data.readUInt32BE(offset + 8 + length), crc32(Buffer.concat([Buffer.from(type), payload])));
+    offset += 12 + length;
+    if (type === "IHDR") ihdr = payload;
+    if (type === "IDAT") idat.push(payload);
+    if (type === "IEND") ended = offset === data.length;
+  }
+  assert.ok(ended);
+  return { width: ihdr.readUInt32BE(0), height: ihdr.readUInt32BE(4), raw: inflateSync(Buffer.concat(idat)) };
 }
 
 async function writeFixture(t, { wrapper, existingOutputs = false } = {}) {
@@ -126,6 +166,16 @@ test("builder fails closed when the wrapper emits a complete PNG with wrong dime
     () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }),
     /PNG must be 2800x1800/u,
   );
+  const decoded = decodePng(await readFile(path.join(repoRoot, pngPath)));
+  assert.deepEqual({ width: decoded.width, height: decoded.height, rawLength: decoded.raw.length }, { width: 1400, height: 900, rawLength: (1400 * 4 + 1) * 900 });
+});
+
+test("builder accepts a decodeable 2800 by 1800 PNG from the same wrapper generator", async (t) => {
+  const repoRoot = await writeFixture(t);
+
+  assert.deepEqual(await buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"] }), { svg: 1, png: 1 });
+  const decoded = decodePng(await readFile(path.join(repoRoot, pngPath)));
+  assert.deepEqual({ width: decoded.width, height: decoded.height, rawLength: decoded.raw.length }, { width: 2800, height: 1800, rawLength: (2800 * 4 + 1) * 1800 });
 });
 
 test("builder rejects a PNG output replaced with a symlink after rendering", async (t) => {
@@ -185,4 +235,14 @@ test("builder preserves non-ENOENT output-path errors instead of treating them a
   } finally {
     await chmod(protectedParent, 0o700);
   }
+});
+
+test("builder rethrows the exact injected optional-lstat error", async (t) => {
+  const repoRoot = await writeFixture(t);
+  const sentinel = new Error("optional lstat sentinel");
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"], __testLstat: async () => { throw sentinel; } }),
+    (error) => error === sentinel,
+  );
 });
