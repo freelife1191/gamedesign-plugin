@@ -5,8 +5,8 @@
     {
       "id": "plugin-selection-flow",
       "scope": "shared",
-      "svg": "guides/assets/shared/plugin-selection-flow.svg",
-      "png": "guides/assets/shared/plugin-selection-flow.png",
+      "svg": "shared/plugin-selection-flow.svg",
+      "png": "shared/plugin-selection-flow.png",
       "alt": "Game Design Studio와 Game Design Career를 목적에 따라 선택하고 공통 marketplace에서 설치하는 흐름.",
       "sources": ["../game-design-studio/installation.md", "../game-design-career/installation.md"],
       "usedBy": ["../game-design-studio/installation.md", "../game-design-career/installation.md"]
@@ -14,8 +14,8 @@
     {
       "id": "app-cli-install-flow",
       "scope": "shared",
-      "svg": "guides/assets/shared/app-cli-install-flow.svg",
-      "png": "guides/assets/shared/app-cli-install-flow.png",
+      "svg": "shared/app-cli-install-flow.svg",
+      "png": "shared/app-cli-install-flow.png",
       "alt": "Codex App과 Codex CLI의 서로 다른 설치 표면을 선택하고 새 채팅 또는 새 세션으로 검증하는 흐름.",
       "sources": ["../game-design-studio/installation.md", "../game-design-career/installation.md"],
       "usedBy": ["../game-design-studio/installation.md", "../game-design-career/installation.md"]
@@ -23,8 +23,8 @@
     {
       "id": "canonical-artifact-lifecycle",
       "scope": "shared",
-      "svg": "guides/assets/shared/canonical-artifact-lifecycle.svg",
-      "png": "guides/assets/shared/canonical-artifact-lifecycle.png",
+      "svg": "shared/canonical-artifact-lifecycle.svg",
+      "png": "shared/canonical-artifact-lifecycle.png",
       "alt": "Canonical Artifact를 작성하고 검토·사람 결정을 거쳐 자산과 내보내기 준비로 연결하는 승인 흐름.",
       "sources": ["../game-design-studio/workflow.md", "../game-design-career/workflow.md"],
       "usedBy": ["../game-design-studio/workflow.md", "../game-design-career/workflow.md"]
@@ -32,8 +32,8 @@
     {
       "id": "image-generation-mode-routing",
       "scope": "shared",
-      "svg": "guides/assets/shared/image-generation-mode-routing.svg",
-      "png": "guides/assets/shared/image-generation-mode-routing.png",
+      "svg": "shared/image-generation-mode-routing.svg",
+      "png": "shared/image-generation-mode-routing.png",
       "alt": "IMAGE_GEN_MODE의 prompt-only, select, required, all 모드가 생성 범위와 사용자 선택 경계를 결정하는 흐름.",
       "sources": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"],
       "usedBy": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"]
@@ -41,8 +41,8 @@
     {
       "id": "image-asset-lifecycle",
       "scope": "shared",
-      "svg": "guides/assets/shared/image-asset-lifecycle.svg",
-      "png": "guides/assets/shared/image-asset-lifecycle.png",
+      "svg": "shared/image-asset-lifecycle.svg",
+      "png": "shared/image-asset-lifecycle.png",
       "alt": "이미지 자산이 concept-draft에서 named human review를 거쳐 document-approved와 production-candidate로 이동하는 단계 흐름.",
       "sources": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"],
       "usedBy": ["../game-design-studio/image-assets.md", "../game-design-career/image-assets.md"]
@@ -50,8 +50,8 @@
     {
       "id": "document-export-flow",
       "scope": "shared",
-      "svg": "guides/assets/shared/document-export-flow.svg",
-      "png": "guides/assets/shared/document-export-flow.png",
+      "svg": "shared/document-export-flow.svg",
+      "png": "shared/document-export-flow.png",
       "alt": "Canonical Artifact 내보내기 preflight 뒤 모든 형식에 공통인 not-requested·blocked·pending·unavailable 상태와 MD·PDF·DOCX·PPTX의 형식별 검증을 보여 주는 흐름.",
       "sources": ["../game-design-studio/exports.md", "../game-design-career/exports.md"],
       "usedBy": ["../game-design-studio/exports.md", "../game-design-career/exports.md"]
