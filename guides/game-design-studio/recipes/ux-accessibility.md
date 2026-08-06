@@ -34,7 +34,7 @@ $game-design-studio:design-player-experience game-design/<project-id>/ui-ux-flow
 2. `design-player-experience`로 entry, focus, action, feedback, loading/empty/error/offline, exit와 recovery를 씁니다.
 3. `review-game-design`에서 unverified critical path를 blocker로 분류하고 최소 수정과 owner를 할당합니다.
 4. 협업 route가 복잡하면 `orchestrate-game-design-project`로 systems·quality·review handoff를 한 Artifact 기준으로 합칩니다.
-5. 구조 도식은 `visualize-game-design` SVG를 사용합니다. imagegen은 구조 도식에 쓰지 않으며, 이미지가 필요한 경우 `IMAGE_GEN_MODE=prompt-only`로 계획하고 `select`는 사람 stable-ID receipt, `required`/`all`은 manifest 범위만 따릅니다.
+5. 구조 도식은 `visualize-game-design` SVG를 사용하며 imagegen으로 대체하지 않습니다. UI key-screen slot이 필요한 경우에는 `prompt-only`로 먼저 계획하고, accessibility review가 통과한 stable ID만 `select` receipt로 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

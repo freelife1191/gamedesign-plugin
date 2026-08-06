@@ -33,7 +33,7 @@ $game-design-career:research-game-design-jobs game-design-career/<career-id>/job
 1. 공고별 `관찰 사실`은 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`와 source ID를 가진 record로만 기록합니다.
 2. 반복 신호는 제한된 표본의 `추론`으로 표시하고, 개인 evidence 부족은 `제안`인 portfolio-project-brief proof task로 전환합니다.
 3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. 같은 source location을 재검색해 새 ID로 연결합니다.
-4. 이미지 계획은 `prompt-only`는 prompt와 placeholder만 처리합니다. `select`는 사람이 제출한 receipt의 stable ID만 처리합니다. `required`는 finite required asset만 처리하고, `all`은 declared asset만 처리합니다.
+4. 공고 evidence는 원문·URL 중심이므로 권장 mode는 `prompt-only`이며 별도 screenshot slot을 즉시 생성하지 않습니다. 공개 가능한 evidence image가 필요할 때만 rights 확인 뒤 `select` receipt와 finite manifest로 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

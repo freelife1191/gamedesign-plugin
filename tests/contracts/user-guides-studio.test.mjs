@@ -23,6 +23,23 @@ const requiredHeadings = [
   "다음 작업 요청문",
   "관련 문서",
 ];
+const skillHandoffs = {
+  "apply-document-quality-profile": ["caller-selected template", "document-quality-editor", "define-game-vision"],
+  "define-game-vision": ["vision-pillars", "vision-one-pager", "lead-game-designer", "design-game-systems"],
+  "design-game-content": ["narrative-quest-npc", "narrative-quest-npc-specification", "content-narrative-designer", "review-game-design"],
+  "design-game-economy-and-liveops": ["economy-balance", "liveops-experiment-event", "system-economy-designer", "plan-game-production"],
+  "design-game-systems": ["system-specification", "system-feature-specification", "system-economy-designer", "design-game-content"],
+  "design-player-experience": ["ui-ux-flow-state", "ui-ux-flow-state-specification", "ux-accessibility-reviewer", "visualize-game-design"],
+  "export-game-design-documents": ["current artifact profile", "production-feasibility-critic", "pdf/documents/presentations"],
+  "generate-image-assets": ["current artifact profile", "art-brief-director", "review-image-assets"],
+  "orchestrate-game-design-project": ["game-design-brief", "game-design-brief", "lead-game-designer", "define-game-vision"],
+  "plan-game-production": ["production-scope-risk", "production-scope-milestone-risk-plan", "production-feasibility-critic", "review-game-design"],
+  "plan-image-assets": ["current artifact profile", "art-brief-director", "generate-image-assets"],
+  "review-game-design": ["game-design-review", "design-review-decision-log", "lead-game-designer", "plan-image-assets"],
+  "review-image-assets": ["current artifact profile", "visual-asset-reviewer", "export-game-design-documents"],
+  "svg-infographic": ["no Canonical Artifact template", "Skillstead", "visualize-game-design"],
+  "visualize-game-design": ["current artifact profile", "lead-game-designer", "export-game-design-documents"],
+};
 
 function h2Headings(markdown) {
   return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
@@ -91,6 +108,20 @@ test("Studio skill contract rejects missing or reordered new sections", async ()
   assert.throws(() => assertSkillContract(reordered, "reordered"));
 });
 
+test("Studio skill handoff sections expose route-specific IDs rather than generic placeholders", async () => {
+  for (const [skillId, expected] of Object.entries(skillHandoffs)) {
+    const markdown = await readFile(path.join(root, "guides/game-design-studio/skills", `${skillId}.md`), "utf8");
+    const joined = [
+      extractSection(markdown, "관련 템플릿·품질 프로필·전문 역할"),
+      extractSection(markdown, "이미지·도식화 조건"),
+      extractSection(markdown, "다음 작업 요청문"),
+      extractSection(markdown, "관련 문서"),
+    ].join("\n");
+    assert.doesNotMatch(joined, /기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용/);
+    for (const term of expected) assert.ok(joined.includes(term), `${skillId}: missing handoff term ${term}`);
+  }
+});
+
 test("Studio indexes every installed skill and template exactly once", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
   const skillIndex = await readFile(
@@ -155,6 +186,29 @@ test("Studio topical guides preserve image, visualization, and export policies",
     "PPTX",
   ]) {
     assert.ok(joinedGuides.includes(phrase), "missing Studio guide contract: " + phrase);
+  }
+});
+
+test("Studio image and export guides document runtime precedence and downstream resume", async () => {
+  const base = path.join(root, "guides/game-design-studio");
+  const images = await readFile(path.join(base, "image-assets.md"), "utf8");
+  const exportsGuide = await readFile(path.join(base, "exports.md"), "utf8");
+  const exportSkill = await readFile(path.join(base, "skills/export-game-design-documents.md"), "utf8");
+  for (const phrase of ["workflow 호출 때마다", "현재 process environment", ".env보다 우선", "새 채팅", "새 세션"]) {
+    assert.ok(images.includes(phrase), `Studio image guide missing ${phrase}`);
+  }
+  for (const phrase of ["MD terminal validation", "<artifact-path>", "<export-manifest-path>", "새 세션", "downstream workflow"]) {
+    assert.ok(exportsGuide.includes(phrase), `Studio exports guide missing ${phrase}`);
+  }
+  assert.ok(extractSection(exportSkill, "다음 작업 요청문").includes("downstream workflow"));
+});
+
+test("Studio recipes keep only their local image-mode boundary and link the common guide", async () => {
+  const recipes = ["content-quest-design", "economy-liveops", "new-game-gdd", "production-review-export", "system-feature-spec", "ux-accessibility"];
+  for (const id of recipes) {
+    const markdown = await readFile(path.join(root, "guides/game-design-studio/recipes", `${id}.md`), "utf8");
+    assert.match(markdown, /\[이미지 자산 흐름\]\(\.\.\/image-assets\.md\)/, `${id}: missing common image guide`);
+    assert.ok((markdown.match(/prompt-only/g) ?? []).length <= 1, `${id}: repeats all image modes`);
   }
 });
 

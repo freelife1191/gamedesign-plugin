@@ -16,6 +16,7 @@ IMAGE_QUALITY=low
 
 - API key를 쓰는 경우 workspace root의 `.env`는 **regular file이고 symlink가 아니며 Git 비추적**이어야 합니다. `OPENAI_API_KEY=`처럼 비어 있는 예시와 placeholder는 허용되지만 실제 값을 문서·명령·commit에 넣지 않습니다.
 - `.env`를 만들거나 바꾼 뒤에는 Codex App에서는 **새 채팅**, Codex CLI에서는 **새 세션**을 열어 설정을 다시 읽습니다. 이미 열린 대화·세션에 값이 자동 주입되었다고 가정하지 않습니다.
+- workflow 호출 때마다 workspace root의 `.env`를 읽습니다. 다만 현재 process environment가 .env보다 우선하므로, 이미 설정된 process 값은 `.env`의 같은 이름 값을 덮어씁니다. 새 채팅·새 세션 권고는 설치 또는 환경 변경을 안전하게 반영하기 위한 지침이지 유일한 로딩 조건은 아닙니다.
 - host image capability를 쓰고 API key가 없으면 API key는 필요하지 않습니다. host가 `available`을 보고한 경우에만 그 경로를 사용합니다.
 - 설정 파일은 64 KiB를 넘기면 거부될 수 있습니다. parser 오류·권한 경고·symlink 경고가 나오면 값을 복사해 붙이지 말고, workspace root의 regular non-symlink 파일·소유자 읽기 권한·추적 제외 상태를 확인한 뒤 새 세션에서 재개합니다.
 

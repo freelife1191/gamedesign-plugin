@@ -40,6 +40,23 @@ const expectedTemplateIds = [
   "reverse-design-document",
   "transition-readiness",
 ];
+const skillHandoffs = {
+  "apply-document-quality-profile": ["caller-selected template", "document-quality-editor", "map-game-design-career"],
+  "build-game-design-portfolio": ["portfolio-project-brief", "portfolio-project-brief", "game-design-mentor", "review-game-design-portfolio"],
+  "export-career-documents": ["current artifact profile", "evidence-auditor", "pdf/documents/presentations"],
+  "generate-image-assets": ["current artifact profile", "art-brief-director", "review-image-assets"],
+  "map-game-design-career": ["game-design-role-map", "career-stage-role-map", "career-strategist", "build-game-design-portfolio"],
+  "orchestrate-game-design-career": ["career-stage-goal", "career-stage-role-map", "career-strategist", "map-game-design-career"],
+  "plan-image-assets": ["current artifact profile", "art-brief-director", "generate-image-assets"],
+  "plan-junior-growth": ["junior-growth-review", "junior-growth-review", "game-design-mentor", "visualize-career-roadmap"],
+  "practice-game-design-interview": ["interview-question-answer-log", "interview-question-answer-report", "interview-coach", "plan-junior-growth"],
+  "research-game-design-jobs": ["job-posting-evidence", "job-posting-evidence", "evidence-auditor", "map-game-design-career"],
+  "reverse-engineer-game-design": ["reverse-design-document", "reverse-design-document", "reverse-design-critic", "export-career-documents"],
+  "review-game-design-portfolio": ["five-axis-review", "portfolio-review-backlog", "portfolio-reviewer", "build-game-design-portfolio"],
+  "review-image-assets": ["current artifact profile", "visual-asset-reviewer", "export-career-documents"],
+  "svg-infographic": ["no Canonical Artifact template", "Skillstead", "visualize-career-roadmap"],
+  "visualize-career-roadmap": ["current artifact profile", "game-design-mentor", "export-career-documents"],
+};
 
 function extractFirstColumnIds(markdown) {
   return [...markdown.matchAll(/^\| (?:`([^`]+)`|\[`([^`]+)`\]\([^)]+\)) \|/gm)]
@@ -106,6 +123,20 @@ test("Career skill contract rejects missing or reordered new sections", async ()
   );
   assert.throws(() => assertSkillContract(missing, "missing"));
   assert.throws(() => assertSkillContract(reordered, "reordered"));
+});
+
+test("Career skill handoff sections expose route-specific IDs rather than generic placeholders", async () => {
+  for (const [skillId, expected] of Object.entries(skillHandoffs)) {
+    const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skillId}.md`), "utf8");
+    const joined = [
+      extractSection(markdown, "관련 템플릿·품질 프로필·전문 역할"),
+      extractSection(markdown, "이미지·도식화 조건"),
+      extractSection(markdown, "다음 작업 요청문"),
+      extractSection(markdown, "관련 문서"),
+    ].join("\n");
+    assert.doesNotMatch(joined, /기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용/);
+    for (const term of expected) assert.ok(joined.includes(term), `${skillId}: missing handoff term ${term}`);
+  }
 });
 
 test("Career indexes every installed skill and canonical template exactly once", async () => {
@@ -267,6 +298,31 @@ test("Career guides preserve evidence, image, visualization, and export contract
     "SVG", "2× PNG", "MD", "PDF", "DOCX", "PPTX",
   ]) {
     assert.ok(joinedGuides.includes(phrase), "missing Career guide contract: " + phrase);
+  }
+});
+
+test("Career image and export guides document runtime precedence and downstream resume", async () => {
+  const base = path.join(root, "guides/game-design-career");
+  const images = await readFile(path.join(base, "image-assets.md"), "utf8");
+  const exportsGuide = await readFile(path.join(base, "exports.md"), "utf8");
+  const exportSkill = await readFile(path.join(base, "skills/export-career-documents.md"), "utf8");
+  const glossary = await readFile(path.join(root, "guides/README.md"), "utf8");
+  for (const phrase of ["workflow 호출 때마다", "현재 process environment", ".env보다 우선", "새 채팅", "새 세션"]) {
+    assert.ok(images.includes(phrase), `Career image guide missing ${phrase}`);
+  }
+  for (const phrase of ["MD terminal validation", "<artifact-path>", "<export-manifest-path>", "새 세션", "downstream workflow"]) {
+    assert.ok(exportsGuide.includes(phrase), `Career exports guide missing ${phrase}`);
+  }
+  assert.ok(extractSection(exportSkill, "다음 작업 요청문").includes("downstream workflow"));
+  for (const term of ["host", "probe", "preflight", "downstream workflow"]) assert.ok(glossary.includes(term), `missing glossary term: ${term}`);
+});
+
+test("Career recipes keep only their local image-mode boundary and link the common guide", async () => {
+  const recipes = ["interview-preparation", "job-research-gap", "junior-growth-transition", "portfolio-build-review", "reverse-design", "role-learning-roadmap"];
+  for (const id of recipes) {
+    const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", `${id}.md`), "utf8");
+    assert.match(markdown, /\[이미지 자산 흐름\]\(\.\.\/image-assets\.md\)/, `${id}: missing common image guide`);
+    assert.ok((markdown.match(/prompt-only/g) ?? []).length <= 1, `${id}: repeats all image modes`);
   }
 });
 

@@ -33,7 +33,7 @@ $game-design-career:reverse-engineer-game-design game-design-career/<career-id>/
 1. 직접 본 행동을 `관찰 사실`로 기록하고 `sourceUrl` 또는 build `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 명시합니다.
 2. 의도·내부 구현은 확정하지 않고 `추론`과 confidence, counterexample을 붙이며, 다음 playtest는 `제안`으로 둡니다.
 3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. 재검색 또는 재관찰해 version·location을 갱신하고 이전 record는 보존합니다.
-4. 이미지 asset은 `prompt-only`는 prompt와 placeholder만 처리합니다. `select`는 사람이 제출한 receipt의 stable ID만 처리합니다. `required`는 finite required asset만 처리하고, `all`은 declared asset만 처리합니다.
+4. 관찰 screenshot의 `reverse-design-evidence-image` slot은 권리와 source address가 없으면 `prompt-only`로 보류합니다. 검토 가능한 source가 생긴 경우에만 `select` receipt와 finite manifest 범위에서 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

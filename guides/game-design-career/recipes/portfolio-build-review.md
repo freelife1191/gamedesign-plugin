@@ -33,7 +33,7 @@ $game-design-career:build-game-design-portfolio game-design-career/<career-id>/c
 1. claim과 evidence address를 `관찰 사실`로 두고, 외부 current evidence는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 기록합니다.
 2. reviewer finding은 `추론`, 다음 repair는 `제안`으로 구분하고 `review-game-design-portfolio`의 minimum repair를 `portfolio-backlog/`에 기록합니다. inspectability가 없는 impact는 gap으로 남깁니다.
 3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. 새 locator를 추가하고 원래 claim과 review history는 보존합니다.
-4. `prompt-only`는 prompt와 placeholder만 처리합니다. `select`는 사람이 제출한 receipt의 stable ID만 처리합니다. `required`는 finite required asset만 처리하고, `all`은 declared asset만 처리합니다.
+4. portfolio case study의 proof image는 권리·attribution 검토 전 `prompt-only`로 계획합니다. reviewer가 사용 가능한 stable ID를 결정한 뒤에만 `select` receipt와 finite manifest로 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

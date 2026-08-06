@@ -43,12 +43,16 @@ official company career page를 우선하고 posting마다 unique `sourceId`, HT
 schema-valid posting records, posting-specific required/preferred, repeated signals, applicant evidence, gaps, non-generalizable constraints, sample size/geography와 inference limits를 `job-posting-evidence`에 남깁니다. 예상 결과 요약: 현재 claim을 source와 날짜까지 재현할 수 있는 evidence set이 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+- Template ID: `job-posting-evidence` — [job-posting-evidence 템플릿](../templates.md#job-posting-evidence).
+- Quality Profile ID: `job-posting-evidence`.
+- Reviewer/role ID: `evidence-auditor · career-strategist`.
 
-기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+공고 조사 자체는 이미지를 생성하지 않습니다. source/sample/requirement 관계가 표보다 복잡할 때만 `skillstead-job-evidence-dependency-diagram`을 Skillstead로 만들고, screenshot은 권리·출처 슬롯이 있을 때만 계획합니다.
 
-템플릿의 image slot이 실제로 필요할 때만 [이미지 자산 흐름](../image-assets.md)으로 계획·생성을 분리합니다. 관계·흐름·상태를 보여 줄 때는 일반 삽화 대신 [Skillstead 도식화](../visualization.md)를 사용하며, 둘 다 필요 없으면 만들지 않습니다.
+[이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
 
 ## 검토·승인 기준
 
@@ -63,13 +67,13 @@ $game-design-career:research-game-design-jobs 기존 sourceId를 유지하고 re
 ```
 
 ## 다음 작업 요청문
+**복사 가능한 다음 handoff**
 
-**복사 가능한 CLI 후속 요청문**
+@Game Design Career map-game-design-career로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
 
 ```text
-$game-design-career:research-game-design-jobs 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+$game-design-career:map-game-design-career artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
 ```
 
 ## 관련 문서
-
-[스킬 선택표](README.md), [템플릿 카탈로그](../templates.md), [문서 품질](../document-quality.md), [제품 workflow](../workflow.md)
+[job-posting-evidence 템플릿](../templates.md#job-posting-evidence), [map-game-design-career 스킬](./map-game-design-career.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

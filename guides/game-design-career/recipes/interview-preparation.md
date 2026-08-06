@@ -33,7 +33,7 @@ $game-design-career:practice-game-design-interview game-design-career/<career-id
 1. posting requirement와 portfolio record를 `관찰 사실`으로 두고 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 연결합니다.
 2. 적합성 해석은 `추론`, 다음 답변 연습·proof task는 `제안`으로 기록하며 answer와 feedback은 같은 `questionId`를 재사용합니다.
 3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. 재검색 후 새 evidence IDs를 연결합니다.
-4. 이미지 필요 시 `prompt-only`는 prompt와 placeholder만 처리합니다. `select`는 사람이 제출한 receipt의 stable ID만 처리합니다. `required`는 finite required asset만 처리하고, `all`은 declared asset만 처리합니다.
+4. 면접 연습은 이미지가 기본 산출물이 아니므로 권장 mode는 `prompt-only`이고 prompt/placeholder만 남깁니다. portfolio proof illustration을 고를 때만 사람 `select` receipt의 stable ID와 finite manifest 범위로 재개합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

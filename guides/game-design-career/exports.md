@@ -57,3 +57,9 @@ canonical artifact를 덮어쓰지 않습니다. unknown capability를 unavailab
 ```
 
 예상 output은 실제 생성 파일, renderer identity, 형식별 QA evidence와 실패 형식의 resumable action입니다. capability가 unavailable이면 canonical Markdown과 preflight manifest를 보존하고, capability를 제공하는 host의 새 동일 작업 세션에서 이 요청문과 artifact ID를 다시 사용합니다.
+
+새 세션에서 재개할 때는 이전 세션 상태를 가정하지 말고 artifact와 manifest 경로를 다시 제공합니다.
+
+```text
+새 세션에서 <artifact-path>와 <export-manifest-path>를 읽고, probe가 available로 보고한 MD/PDF/DOCX/PPTX capability만 사용해 MD terminal validation과 요청한 형식의 실제 생성·format QA를 수행해. downstream workflow가 아닌 플러그인 자체 renderer를 가정하지 말고, unavailable/failed 형식은 evidence와 재개 조건만 반환해.
+```

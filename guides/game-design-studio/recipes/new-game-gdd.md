@@ -34,7 +34,7 @@ $game-design-studio:orchestrate-game-design-project game-design/<project-id>/vis
 2. `define-game-vision`으로 provided, sourced, assumption, provisional을 구분한 `content.md`를 작성합니다.
 3. `orchestrate-game-design-project`로 필요한 시스템·콘텐츠·UX·제작 route만 정하고, 미결정은 `decisions/`에 보존합니다.
 4. `review-game-design`으로 player promise, non-goal, 성공 신호의 최소 수정 finding을 기록합니다.
-5. 이미지가 필요하면 `plan-image-assets`만 먼저 실행합니다. `IMAGE_GEN_MODE=prompt-only`는 prompt와 placeholder만 만들며, `select`는 사람이 제출한 stable asset ID receipt 뒤에만 생성합니다. `required`와 `all`도 manifest의 유한 ID만 사용합니다.
+5. 이 초기 GDD의 `design-context-image` slot은 가설 검토용이므로 권장 mode는 `prompt-only`입니다. 생성은 사람이 `select` receipt로 stable asset ID를 고른 뒤에만 재개하며 manifest 밖 자산은 만들지 않습니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

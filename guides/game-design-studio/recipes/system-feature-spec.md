@@ -35,7 +35,7 @@ $game-design-studio:design-game-systems game-design/<project-id>/system-specific
 3. `design-player-experience`로 UI feedback, error, offline/interruption과 accessible alternative를 연결합니다.
 4. `review-game-design`으로 implementation blocker와 최소 수정을 finding으로 남깁니다.
 5. 구조 관계는 `visualize-game-design`으로 SVG로 작성하고 wrapper lint 뒤 Chromium으로 정확한 2× PNG를 만듭니다. 이 구조 도식에는 imagegen을 사용하지 않습니다.
-6. 이미지 slot이 별도로 필요하면 `IMAGE_GEN_MODE=prompt-only`에서 계획만 하고, `select`/`required`/`all`은 이미지 manifest와 사람 선택·범위 조건을 각각 지킵니다.
+6. 이 시스템 명세에 화면 설명 slot이 필요하면 권장 mode는 `prompt-only`이며, prompt와 placeholder만 기록합니다. 실제 select 생성은 stable ID receipt와 finite manifest가 있어야 하고 rule/state 구조는 Skillstead 도식으로 유지합니다. [이미지 자산 흐름](../image-assets.md)을 따릅니다.
 
 ## 사람이 결정할 지점
 

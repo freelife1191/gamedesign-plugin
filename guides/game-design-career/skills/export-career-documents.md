@@ -43,12 +43,16 @@ canonical artifact를 먼저 검증하고 형식별 renderer capability를 `unkn
 prepared job manifest, 형식별 availability/status, probe evidence와 resumable next action을 반환합니다. 이 단계는 derivative path나 terminal 성공을 반환하지 않습니다. 예상 결과 요약: 원본을 보존한 채 각 형식의 실행 전 상태가 정직하게 준비됩니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
+- Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
+- Quality Profile ID: `current artifact profile을 상속하며 export가 새 profile을 선택하지 않음`.
+- Reviewer/role ID: `evidence-auditor`.
 
-기존 Artifact의 템플릿과 선택된 Quality Profile을 그대로 사용하고, 필요 시 관련 전문 역할의 finding을 evidence와 decision record에 연결합니다. 시작점은 [템플릿 카탈로그](../templates.md)와 [문서 품질 프로필](../document-quality.md)입니다.
+이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 
 ## 이미지·도식화 조건
+새 illustration이나 구조 도식을 만들지 않습니다. `document-approved` image asset과 검증된 Skillstead SVG/2× PNG만 downstream 형식 작업에 binding할 수 있습니다.
 
-이 스킬은 승인된 이미지와 검증된 Skillstead SVG/2× PNG를 참조할 수 있지만 새 이미지를 만들지 않습니다. 구조 도식은 [Skillstead 도식화](../visualization.md), 삽화는 [이미지 자산 흐름](../image-assets.md)에서 별도 준비합니다.
+[이미지 자산 흐름](../image-assets.md)과 [도식화 안내](../visualization.md)의 승인·검증 경계를 따릅니다.
 
 ## 검토·승인 기준
 
@@ -63,13 +67,15 @@ $game-design-career:export-career-documents 기존 prepared manifest와 canonica
 ```
 
 ## 다음 작업 요청문
+**복사 가능한 다음 handoff**
 
-**복사 가능한 CLI 후속 요청문**
+@Game Design Career host probe가 available로 보고한 MD/PDF/DOCX/PPTX capability만 사용해 이 export manifest의 실제 파일을 생성하고 format QA evidence를 반환해.
 
 ```text
-$game-design-career:export-career-documents 기존 Canonical Artifact와 decision/evidence 기록을 유지하고, 현재 blocker 또는 미확정 항목만 확인해 다음 검토 가능한 작업을 진행해.
+같은 세션에서 available pdf/documents/presentations capability로 MD terminal validation과 요청한 PDF/DOCX/PPTX 생성·format QA를 실행해.
 ```
 
-## 관련 문서
+이 요청은 플러그인 재호출이 아니라 host의 **downstream workflow** handoff이며, bundled renderer를 뜻하지 않습니다.
 
-[스킬 선택표](README.md), [내보내기 안내](../exports.md), [템플릿 카탈로그](../templates.md), [문제 해결](../troubleshooting.md)
+## 관련 문서
+[템플릿 카탈로그](../templates.md), [내보내기 안내](../exports.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
