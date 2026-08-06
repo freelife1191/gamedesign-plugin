@@ -18,15 +18,16 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 - [전체 워크플로](workflow.md)
 - [문제 해결](troubleshooting.md)
 
-다음 안정 경로에는 스킬, 템플릿, 문서 품질, 이미지, 시각화, 내보내기와 목적별 레시피 가이드가 추가됩니다. 파일이 만들어지기 전에는 깨진 링크를 만들지 않기 위해 경로만 표시합니다.
+전체 제품 레퍼런스:
 
-- `skills/README.md`
-- `templates.md`
-- `document-quality.md`
-- `image-assets.md`
-- `visualization.md`
-- `exports.md`
-- `recipes/`
+- [스킬 레퍼런스](skills/README.md)
+- [Canonical Artifact 템플릿](templates.md)
+- [문서 품질 profile](document-quality.md)
+- [이미지 자산](image-assets.md)
+- [Career 시각화](visualization.md)
+- [MD·PDF·DOCX·PPTX 내보내기](exports.md)
+
+목적별 레시피의 안정 경로는 `recipes/`이며, 레시피 파일이 추가되기 전에는 링크하지 않습니다.
 
 ## 작업 원칙
 
