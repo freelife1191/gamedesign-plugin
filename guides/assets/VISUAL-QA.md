@@ -45,3 +45,13 @@
 | `reverse-design-portfolio-flow` | 공개 관찰→가설·반례→검증 queue→권리 gate 순서가 빈 circle 없이 명확함 | high/original에서 build/platform, counterexample, rights boundary의 CJK/Latin glyph와 footer containment 정상 | 네 main connector는 10px target gap과 읽을 수 있는 shaft를 유지하고 gate→artifact는 12px gap | reverse-engineer guide의 observation/inference/validation과 source rights boundary를 반영 |
 | `portfolio-review-loop` | claim 근거→5축 검토→portfolio backlog→공개 gate가 빈 circle 없이 즉시 구분됨 | high/original에서 findingId·observationState, attribution·inspectability text의 clipping·tofu 없음 | 좌→우 rail과 하향 재검토 artifact connector의 open-V/shaft/10px·12px gap 정상 | portfolio build/review guide의 claim evidence, attribution, rights/privacy와 portfolio-backlog handoff를 반영 |
 | `interview-growth-transition-flow` | current evidence→질문 record→답변 feedback→Coach gate가 빈 circle 없이 즉시 읽힘 | high/original에서 retrievalDate·region·sample boundary locator, questionId/evidence IDs/footer의 containment 정상 | main rail의 10px target gap, gate에서 footer의 12px gap 및 충분한 shaft를 확인 | interview·job research·portfolio review guide의 stable questionId, fresh evidence와 feedback cycle을 반영 |
+
+## Audience learning-path 도식 검사 — 2026-08-06
+
+- wrapper: `products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs`
+- browser: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` — `Google Chrome 151.0.7922.76`
+- 자동 검사: wrapper로 `aud-01.svg`부터 `aud-06.svg`까지 lint하여 `0 error(s), 0 warning(s) across 6 file(s)`를 확인했고, `npm run check:guide-diagrams`는 여섯 SVG/PNG 쌍의 source overflow, PNG 완결 IEND, 정확한 2× 렌더를 통과시켰습니다.
+- PNG 치수: `sips`로 `aud-01.png` … `aud-06.png` 모두 `2800×1800`을 재확인했습니다.
+- 수동 검사: `view_image` high detail로 `aud-01.png`을 확인했습니다. 제목·설명·4개 card·화살표·하단 사람 검토 경계가 즉시 읽히고 tofu, clipping, overflow, card containment 실패가 없습니다.
+- 수동 검사: `view_image` original detail로 `aud-06.png`을 확인했습니다. 4개 card의 Korean/Latin glyph, 2px connector와 open-V arrowhead, 하단 경계 strip의 텍스트와 테두리에 잘림·겹침·overflow가 없습니다.
+- 결론: 여섯 audience 도식은 모두 자동 overflow·PNG completion·2× 검사와 위의 지정 수동 검사를 통과했습니다. PNG는 wrapper가 생성한 파생물이며 수동 편집하지 않았습니다.

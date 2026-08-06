@@ -163,9 +163,11 @@ test("Studio recipes have one primary diagram and the complete handoff contract"
   }
 });
 
-test("Studio manifest declares exactly six complete Studio diagram pairs", async () => {
+test("Studio manifest keeps unique global IDs and exactly six complete Studio diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, manifest.diagrams.length, "global diagram IDs must be unique");
   const studio = manifest.diagrams.filter(({ scope }) => scope === "game-design-studio");
+  assert.equal(studio.length, 6, "Studio diagram count");
   assert.deepEqual(studio.map(({ id }) => id).sort(), recipes.map(({ diagramId }) => diagramId).sort());
   for (const diagram of studio) {
     assert.equal(diagram.svg, "game-design-studio/" + diagram.id + ".svg");

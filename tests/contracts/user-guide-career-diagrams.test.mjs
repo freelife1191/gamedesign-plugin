@@ -216,11 +216,11 @@ test("Career recipes have one primary diagram and the complete handoff contract"
   }
 });
 
-test("Career manifest completes the unique 18-diagram inventory with complete pairs", async () => {
+test("Career manifest keeps unique global IDs and exactly six complete Career diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-  assert.equal(manifest.diagrams.length, 18, "diagram inventory count");
-  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 18, "diagram IDs must be unique");
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, manifest.diagrams.length, "global diagram IDs must be unique");
   const career = manifest.diagrams.filter(({ scope }) => scope === "game-design-career");
+  assert.equal(career.length, 6, "Career diagram count");
   assert.deepEqual(career.map(({ id }) => id).sort(), recipes.map(({ diagramId }) => diagramId).sort());
   for (const diagram of career) {
     assert.equal(diagram.svg, "game-design-career/" + diagram.id + ".svg");

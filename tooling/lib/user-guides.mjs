@@ -6,6 +6,7 @@ import {
   parseViewBox,
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+import { validateUseCaseGuides } from "./use-case-guides.mjs";
 
 export const PRODUCT_IDS = Object.freeze([
   "game-design-career",
@@ -233,7 +234,16 @@ async function validateDiagramManifest(repoRoot, errors, counts) {
     errors.push("diagram manifest must contain a diagrams array");
     return;
   }
-  if (diagrams.length !== 18) errors.push(`diagram manifest must contain exactly 18 entries, found ${diagrams.length}`);
+  const useCases = await validateUseCaseGuides({ repoRoot, requireComplete: false });
+  const registered = useCases.counts.audiencePaths
+    + useCases.counts.studioCases
+    + useCases.counts.careerCases
+    + useCases.counts.studioSkillCases
+    + useCases.counts.careerSkillCases;
+  const expectedDiagramTotal = 18 + registered;
+  if (diagrams.length !== expectedDiagramTotal) {
+    errors.push(`diagram manifest must contain exactly ${expectedDiagramTotal} entries, found ${diagrams.length}`);
+  }
   const ids = new Set();
   for (const [index, diagram] of diagrams.entries()) {
     const label = `diagram ${index + 1}`;

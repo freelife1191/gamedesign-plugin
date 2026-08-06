@@ -163,6 +163,60 @@
       "alt": "fresh posting·portfolio evidence가 stable question record와 honest feedback, coach 검토를 거쳐 성장 proof task로 이어지는 흐름.",
       "sources": ["../game-design-career/workflow.md", "../game-design-career/skills/practice-game-design-interview.md"],
       "usedBy": ["../game-design-career/recipes/interview-preparation.md"]
+    },
+    {
+      "id": "aud-01",
+      "scope": "use-case-audience",
+      "svg": "use-cases/audiences/aud-01.svg",
+      "png": "use-cases/audiences/aud-01.png",
+      "alt": "게임 기획 입문 학생의 학습 경로",
+      "sources": ["../use-cases/audience-paths.md"],
+      "usedBy": ["../use-cases/audience-paths.md"]
+    },
+    {
+      "id": "aud-02",
+      "scope": "use-case-audience",
+      "svg": "use-cases/audiences/aud-02.svg",
+      "png": "use-cases/audiences/aud-02.png",
+      "alt": "게임 기획 취업 준비생의 학습 경로",
+      "sources": ["../use-cases/audience-paths.md"],
+      "usedBy": ["../use-cases/audience-paths.md"]
+    },
+    {
+      "id": "aud-03",
+      "scope": "use-case-audience",
+      "svg": "use-cases/audiences/aud-03.svg",
+      "png": "use-cases/audiences/aud-03.png",
+      "alt": "게임 기획 직무 전환자의 학습 경로",
+      "sources": ["../use-cases/audience-paths.md"],
+      "usedBy": ["../use-cases/audience-paths.md"]
+    },
+    {
+      "id": "aud-04",
+      "scope": "use-case-audience",
+      "svg": "use-cases/audiences/aud-04.svg",
+      "png": "use-cases/audiences/aud-04.png",
+      "alt": "솔로 인디 게임 기획자의 작업 경로",
+      "sources": ["../use-cases/audience-paths.md"],
+      "usedBy": ["../use-cases/audience-paths.md"]
+    },
+    {
+      "id": "aud-05",
+      "scope": "use-case-audience",
+      "svg": "use-cases/audiences/aud-05.svg",
+      "png": "use-cases/audiences/aud-05.png",
+      "alt": "현업 게임 기획자의 개선 경로",
+      "sources": ["../use-cases/audience-paths.md"],
+      "usedBy": ["../use-cases/audience-paths.md"]
+    },
+    {
+      "id": "aud-06",
+      "scope": "use-case-audience",
+      "svg": "use-cases/audiences/aud-06.svg",
+      "png": "use-cases/audiences/aud-06.png",
+      "alt": "팀 리드와 교육자 멘토의 피드백 경로",
+      "sources": ["../use-cases/audience-paths.md"],
+      "usedBy": ["../use-cases/audience-paths.md"]
     }
   ]
 }

@@ -4,6 +4,11 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import {
+  isCompletePng,
+  parseViewBox,
+  pngDims,
+} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
 import { loadUseCaseManifest } from "../../tooling/lib/use-case-guides.mjs";
 import { collectHeadingAnchors } from "../../tooling/lib/user-guides.mjs";
 
@@ -247,6 +252,51 @@ test("each audience route preserves its executable case, output, review, and res
     assert.ok(resume.startsWith(boundary.condition), `${entry.id} resume condition`);
     assert.equal(codeValue(resume, `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
     assert.ok(resultFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
+  }
+});
+
+test("audience diagrams register six complete source-linked learning paths", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const diagramManifestPath = path.join(repoRoot, "guides", "assets", "diagram-manifest.json");
+  const diagramManifest = JSON.parse(await readFile(diagramManifestPath, "utf8"));
+  const { audiencePaths } = await readCommonGuides();
+  const audienceDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "use-case-audience");
+
+  assert.equal(audienceDiagrams.length, 6, "audience diagram count");
+  assert.deepEqual(audienceDiagrams.map(({ id }) => id).sort(), [
+    "aud-01",
+    "aud-02",
+    "aud-03",
+    "aud-04",
+    "aud-05",
+    "aud-06",
+  ]);
+
+  for (const audience of manifest.audience_paths) {
+    const diagramId = audience.id.toLowerCase();
+    const diagram = audienceDiagrams.find(({ id }) => id === diagramId);
+    assert.ok(diagram, `${audience.id} diagram registration`);
+    assert.equal(diagram.svg, audience.diagram.svg.replace(/^guides\/assets\//, ""), `${audience.id} SVG path`);
+    assert.equal(diagram.png, audience.diagram.png.replace(/^guides\/assets\//, ""), `${audience.id} PNG path`);
+    assert.deepEqual(diagram.sources, ["../use-cases/audience-paths.md"], `${audience.id} source`);
+    assert.deepEqual(diagram.usedBy, ["../use-cases/audience-paths.md"], `${audience.id} consumer`);
+    assert.equal(diagram.alt, audience.diagram.alt, `${audience.id} use-case alt`);
+
+    const route = markdownSections(audiencePaths, 2).find(({ heading }) => heading.startsWith(audience.id));
+    assert.ok(route, `${audience.id} Markdown route`);
+    const embed = new RegExp(
+      `\\[!\\[${diagram.alt.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\]\\(\\.\\./assets/use-cases/audiences/${diagramId}\\.png\\)\\]\\(\\.\\./assets/use-cases/audiences/${diagramId}\\.svg\\)`,
+      "u",
+    );
+    assert.match(route.body, embed, `${audience.id} editable SVG-wrapped PNG embed`);
+
+    const svgPath = path.join(repoRoot, audience.diagram.svg);
+    const pngPath = path.join(repoRoot, audience.diagram.png);
+    const svg = await readFile(svgPath, "utf8");
+    assert.match(svg, /^<svg\b[^>]*>\s*<title>[^<\s][\s\S]*?<\/title>\s*<desc>[^<\s][\s\S]*?<\/desc>/u, `${audience.id} SVG title and desc`);
+    assert.deepEqual(parseViewBox(svg), { w: 1400, h: 900 }, `${audience.id} SVG dimensions`);
+    assert.ok(isCompletePng(pngPath), `${audience.id} PNG completion`);
+    assert.deepEqual(pngDims(pngPath), { w: 2800, h: 1800 }, `${audience.id} PNG dimensions`);
   }
 });
 
