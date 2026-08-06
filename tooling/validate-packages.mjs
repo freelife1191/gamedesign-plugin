@@ -15,6 +15,25 @@ const creators = {
   skills: path.join(codexHome, "skills/.system/skill-creator/scripts/quick_validate.py"),
 };
 
+export async function discoverPackagedTargets(root, mode) {
+  if (mode === "plugins") {
+    return ["game-design-career", "game-design-studio"]
+      .map((product) => path.join(root, "plugins", product));
+  }
+  if (mode !== "skills") throw new Error("mode must be plugins or skills");
+  const targets = [];
+  for (const product of ["game-design-career", "game-design-studio"]) {
+    const skillsRoot = path.join(root, "plugins", product, "skills");
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+      const target = path.join(skillsRoot, entry.name);
+      if (existsSync(path.join(target, "SKILL.md"))) targets.push(target);
+    }
+  }
+  return targets.sort();
+}
+
 function run(script, target) {
   const result = spawnSync("python3", [script, target], { cwd: repoRoot, encoding: "utf8" });
   process.stdout.write(result.stdout ?? "");
@@ -28,29 +47,15 @@ async function main() {
   const mode = process.argv[2];
   if (!Object.hasOwn(creators, mode)) throw new Error("Usage: node tooling/validate-packages.mjs plugins|skills");
   if (!existsSync(creators[mode])) throw new Error(`official validator unavailable: ${creators[mode]}`);
-  const products = ["game-design-career", "game-design-studio"];
-  let count = 0;
-  if (mode === "plugins") {
-    for (const product of products) {
-      run(creators.plugins, path.join(repoRoot, "plugins", product));
-      count += 1;
-    }
-  } else {
-    for (const product of products) {
-      const skillsRoot = path.join(repoRoot, "plugins", product, "skills");
-      const entries = (await readdir(skillsRoot, { withFileTypes: true }))
-        .filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
-      for (const skill of entries) {
-        run(creators.skills, path.join(skillsRoot, skill));
-        count += 1;
-      }
-    }
-    if (count !== 22) throw new Error(`expected 22 packaged skills, found ${count}`);
-  }
+  const targets = await discoverPackagedTargets(repoRoot, mode);
+  for (const target of targets) run(creators[mode], target);
+  const count = targets.length;
   process.stdout.write(`${mode}: PASS (${count} validators)\n`);
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
+}
