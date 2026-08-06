@@ -27,9 +27,11 @@ editable SVG가 authority이며 root direct child인 nonempty `<title>`과 `<des
 
 vendored path를 직접 호출하지 않고 product wrapper를 사용합니다.
 
+다음 명령은 **저장소 루트**에서 실행합니다.
+
 ```bash
-node skills/visualize-career-roadmap/scripts/run-skillstead.mjs lint path/to/diagram.svg
-node skills/visualize-career-roadmap/scripts/run-skillstead.mjs render path/to/diagram.svg path/to/diagram.png
+node products/game-design-career/plugin/skills/visualize-career-roadmap/scripts/run-skillstead.mjs lint path/to/diagram.svg
+node products/game-design-career/plugin/skills/visualize-career-roadmap/scripts/run-skillstead.mjs render path/to/diagram.svg path/to/diagram.png
 ```
 
 command, exit result, file/digest, linter/renderer identity, Chromium executable/version, viewBox와 exact dimensions를 보존합니다. PNG는 정확한 2× PNG여야 하며 fit-to-page와 close-up visual QA를 모두 통과해야 합니다.

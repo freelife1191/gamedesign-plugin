@@ -1,6 +1,6 @@
 # Game Design Plugin Suite
 
-Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와 게임 기획 경력을 준비하기 위한 **Game Design Career**를 독립 플러그인으로 제공합니다. 각 플러그인은 `content.md`를 내용 기준으로 하는 Canonical Artifact에 근거, 결정, 자산과 형식별 상태를 함께 보존합니다.
+Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와 게임 기획 경력을 준비하기 위한 **Game Design Career**를 독립 플러그인으로 제공합니다. 각 플러그인은 `content.md`를 내용 기준으로 하는 Canonical Artifact(기준 작업 폴더)에 근거, 결정, 자산과 형식별 상태를 함께 보존합니다. 처음 쓰는 용어는 [사용자 가이드 용어](guides/README.md#용어)에서 확인할 수 있습니다.
 
 > 이 도구는 기획 판단과 근거 관리를 돕습니다. 재미·흥행·매출·채용 합격·법률 준수·플랫폼 승인 또는 사람의 승인을 보장하지 않습니다.
 
@@ -15,6 +15,8 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 각 제품에는 **제품 스킬 14개**와 번들 **Skillstead** 시각화 스킬 1개가 있어, 제품마다 총 **15개** 스킬이 설치됩니다. Skillstead는 별도 제품 기능이 아니라 편집 가능한 SVG 도식과 검증된 2× PNG를 만드는 공통 번들 스킬입니다.
 
 [![Studio와 Career 선택·설치 흐름](guides/assets/shared/plugin-selection-flow.png)](guides/assets/shared/plugin-selection-flow.svg)
+
+[편집 가능한 SVG 열기](guides/assets/shared/plugin-selection-flow.svg)
 
 - [Game Design Studio 사용자 가이드](guides/game-design-studio/README.md)
 - [Game Design Career 사용자 가이드](guides/game-design-career/README.md)
@@ -42,19 +44,14 @@ App과 CLI의 설치·활성화 UI는 다릅니다. App에서 CLI의 `/plugins` 
 
 ## Codex CLI 설치
 
-`<path-to-repository-root>`는 `.agents/plugins/marketplace.json`이 있는 실제 저장소 경로로 바꿉니다.
+저장소 루트에서 다음 명령을 순서대로 실행합니다.
 
 ```bash
-codex plugin marketplace add <path-to-repository-root>
+codex plugin marketplace add .
 codex plugin marketplace list
-codex plugin list
 codex plugin add game-design-studio@game-design-suite
-```
-
-Career도 필요하면 다음 선택자를 추가합니다.
-
-```bash
 codex plugin add game-design-career@game-design-suite
+codex plugin list
 ```
 
 `PLUGIN@MARKETPLACE` 선택자를 유지해야 합니다. 또는 CLI 세션에서 `/plugins`를 열고 `game-design-suite` 탭에서 설치할 수 있으며, 이 화면의 `Space`는 **CLI 전용 활성화 전환**입니다. 설치 확인은 `codex plugin list`에서 plugin ID, marketplace, 설치·활성 상태를 확인한 뒤 **새 세션**에서 스킬을 호출하는 것입니다.
@@ -63,7 +60,11 @@ Git marketplace의 `codex plugin marketplace upgrade game-design-suite`는 marke
 
 ## 5분 빠른 시작
 
-아래 요청문 하나를 새 App 채팅 또는 새 CLI 세션에 복사하세요. 모르는 정보는 꾸며내지 말고 `미정`으로 남깁니다.
+모르는 정보는 꾸며내지 말고 `미정`으로 남깁니다.
+
+### Codex App
+
+새 App 채팅에서 필요한 플러그인을 선택한 뒤 자연어 요청문을 복사합니다.
 
 **Studio**
 
@@ -75,6 +76,22 @@ Git marketplace의 `codex plugin marketplace upgrade game-design-suite`는 marke
 
 ```text
 @Game Design Career 시스템 기획과 콘텐츠 기획 중 목표가 아직 정해지지 않았어. 주 8시간, 솔로 프로토타입만 가능해. 두 경로의 교환조건과 공백을 비교하고 12주 증거 로드맵을 만들어줘.
+```
+
+### Codex CLI
+
+설치 확인 뒤 새 CLI 세션에서 명시적 스킬 요청문을 복사합니다.
+
+**Studio**
+
+```text
+$game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이디어를 game-design-brief부터 검토 가능한 Canonical Artifact까지 진행해줘.
+```
+
+**Career**
+
+```text
+$game-design-career:orchestrate-game-design-career 시스템 기획자 취업을 위한 역할 선택, 역량 격차와 12주 증거 계획을 만들어줘.
 ```
 
 명시적 스킬 호출, 예상 Artifact와 다음 요청은 [Studio 5분 빠른 시작](guides/game-design-studio/quick-start.md)과 [Career 5분 빠른 시작](guides/game-design-career/quick-start.md)을 사용합니다.
@@ -112,7 +129,7 @@ MD·PDF·DOCX·PPTX는 문서 내보내기 lane이고 SVG·PNG는 시각화 lane
 | `pending` | capability probe 전이거나 사용 가능한 capability 확인 뒤 준비 대기 |
 | `unavailable` | probe가 해당 renderer capability 부재를 확인함 |
 
-파일이 생기거나 renderer가 실행된 사실만으로 성공·QA 통과·승인이 되지 않습니다. renderer가 없거나 QA가 실패하면 Canonical Artifact, 기존 검증 결과와 가능한 MD를 보존하고 실패한 형식만 재개합니다. [Studio 내보내기](guides/game-design-studio/exports.md)와 [Career 내보내기](guides/game-design-career/exports.md)에서 형식별 renderer fallback을 확인하세요.
+MD는 renderer capability와 무관하게 항상 사용할 수 있으며, `pending`에서 downstream validation `passed`로 전진합니다. PDF·DOCX·PPTX는 파일이 생기거나 renderer가 실행된 사실만으로 성공·QA 통과·승인이 되지 않습니다. renderer가 없거나 QA가 실패하면 fail-closed로 Canonical Artifact, 기존 검증 결과와 MD를 보존하고 실패한 형식만 재개합니다. [Studio 내보내기](guides/game-design-studio/exports.md)와 [Career 내보내기](guides/game-design-career/exports.md)에서 형식별 renderer fallback을 확인하세요.
 
 ## 상세 사용 가이드
 
@@ -123,6 +140,14 @@ MD·PDF·DOCX·PPTX는 문서 내보내기 lane이고 SVG·PNG는 시각화 lane
 | 작업 순서·재개 | [전체 워크플로](guides/game-design-studio/workflow.md) | [전체 워크플로](guides/game-design-career/workflow.md) |
 | 15개 스킬·15개 템플릿 | [스킬](guides/game-design-studio/skills/README.md) · [템플릿](guides/game-design-studio/templates.md) | [스킬](guides/game-design-career/skills/README.md) · [템플릿](guides/game-design-career/templates.md) |
 | 목적별 레시피 6개 | [Studio 레시피](guides/game-design-studio/README.md#목적별-레시피) | [Career 레시피](guides/game-design-career/README.md#목적별-레시피) |
+
+## 제한·개인정보·권리·사람 승인
+
+- API key나 다른 secret은 prompt·문서·로그에 입력하지 않습니다.
+- 개인정보, 실명, 연락처, 비공개 회사 자료는 원문으로 넣지 말고 익명화한 최소 정보만 사용합니다.
+- 제3자 권리와 consent evidence, 출처·이용 목적·공개 범위를 기록합니다.
+- 생성 자산과 renderer 결과는 자동 승인되지 않습니다. 권리·품질·배치·alt text를 검토한 이름 있는 사람의 승인이 필요합니다.
+- 이 도구는 재미, 흥행, 매출, 채용·합격, 법률 준수 또는 플랫폼 승인을 보장하지 않습니다.
 
 ## 문제 해결
 

@@ -1,6 +1,6 @@
 # Game Design Plugin 사용자 가이드
 
-이 가이드는 처음 사용하는 사람이 Game Design Studio와 Game Design Career 중 하나를 고르고, 지원되는 환경에 설치해 첫 Canonical Artifact를 만드는 데 필요한 출발점입니다.
+이 가이드는 처음 사용하는 사람이 Game Design Studio와 Game Design Career 중 하나를 고르고, 지원되는 환경에 설치해 첫 Canonical Artifact(기준 작업 폴더)를 만드는 데 필요한 출발점입니다.
 
 ## 어떤 플러그인을 선택할까요?
 
@@ -16,6 +16,20 @@
 - [Game Design Career 가이드](game-design-career/README.md)
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
+
+## 처음 시작하기
+
+Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
+
+1. [설치](game-design-studio/installation.md) 또는 [Career 설치](game-design-career/installation.md)에서 App·CLI 중 한 환경만 설정합니다.
+2. [Studio 5분 빠른 시작](game-design-studio/quick-start.md) 또는 [Career 5분 빠른 시작](game-design-career/quick-start.md)으로 첫 요청을 만듭니다.
+3. [Studio 템플릿](game-design-studio/templates.md)·[스킬](game-design-studio/skills/README.md) 또는 [Career 템플릿](game-design-career/templates.md)·[스킬](game-design-career/skills/README.md)에서 필요한 한 쌍을 고릅니다.
+4. 제품 README의 [Studio 목적별 레시피](game-design-studio/README.md#목적별-레시피) 또는 [Career 목적별 레시피](game-design-career/README.md#목적별-레시피)를 선택합니다.
+5. [Studio workflow](game-design-studio/workflow.md) 또는 [Career workflow](game-design-career/workflow.md)에서 다음 사람 결정을 확인합니다.
+6. [Studio 이미지 자산](game-design-studio/image-assets.md) 또는 [Career 이미지 자산](game-design-career/image-assets.md)으로 image slot을 계획합니다.
+7. [Studio 시각화](game-design-studio/visualization.md) 또는 [Career 시각화](game-design-career/visualization.md)에서 Skillstead SVG를 만듭니다.
+8. [Studio 내보내기](game-design-studio/exports.md) 또는 [Career 내보내기](game-design-career/exports.md)로 필요한 형식만 준비합니다.
+9. [Studio 문제 해결](game-design-studio/troubleshooting.md) 또는 [Career 문제 해결](game-design-career/troubleshooting.md)로 안전하게 재개합니다.
 
 ## 전체 가이드 탐색
 

@@ -17,13 +17,13 @@ App에서는 프롬프트 입력창에서 `@Game Design Studio`를 선택해 호
 
 ## Codex CLI 설치
 
-`<path-to-repository-root>`는 `.agents/plugins/marketplace.json`이 들어 있는 디렉터리의 실제 경로로 바꿉니다.
+저장소 루트에서 다음 명령을 순서대로 실행합니다.
 
 ```bash
-codex plugin marketplace add <path-to-repository-root>
+codex plugin marketplace add .
 codex plugin marketplace list
-codex plugin list
 codex plugin add game-design-studio@game-design-suite
+codex plugin list
 ```
 
 `PLUGIN@MARKETPLACE` 선택자인 `game-design-studio@game-design-suite`를 그대로 사용합니다. 또는 Codex CLI 세션에서 `/plugins`를 열고 `game-design-suite` 탭의 Studio 항목을 설치할 수 있습니다. `/plugins`의 `Space` 키는 설치된 항목의 활성화 상태를 전환하는 CLI 전용 조작입니다. 설치 뒤에는 **새 세션**을 시작합니다.

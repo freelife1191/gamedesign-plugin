@@ -29,9 +29,11 @@ exactly one preset을 고르고 관계, source stable section, rejected alternat
 
 product wrapper의 명령을 사용하고 vendored path를 직접 호출하지 않습니다.
 
+다음 명령은 **저장소 루트**에서 실행합니다.
+
 ```bash
-node skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>
-node skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>
+node products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs lint <svg-path>
+node products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs render <svg-path> <png-path>
 ```
 
 lint는 command, exit code, log, linter identity/digest, SVG path/digest를 보존합니다. render는 canonical Chromium executable/version, renderer digest, command, exit code, SVG/PNG digest, viewBox와 actual dimensions를 보존하고 정확한 2× PNG인지 확인합니다.

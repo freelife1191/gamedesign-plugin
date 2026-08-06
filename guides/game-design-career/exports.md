@@ -14,7 +14,7 @@ document type, audience, purpose, artifact root/ID, requested formats와 capabil
 
 | 형식 | 준비 상태 | Downstream 검증 | Career 경계 |
 | --- | --- | --- | --- |
-| MD | capability별 `pending`/`unavailable` | frontmatter, 한 H1, stable IDs, NFC, relative assets와 alt text | canonical evidence/decision record 유지 |
+| MD | renderer capability와 무관하게 `pending`에서 downstream validation `passed` | frontmatter, 한 H1, stable IDs, NFC, relative assets와 alt text | 항상 사용 가능하며 canonical evidence/decision record 유지 |
 | PDF | capability별 `pending`/`unavailable` | extracted semantics와 모든 page render/visual QA | source와 page 의미 비교 |
 | DOCX | capability별 `pending`/`unavailable` | OOXML relationships, semantics, 모든 page visual QA | 역기획 등 허용 profile만 요청 |
 | PPTX | capability별 `pending`/`unavailable` | 독립 story, overflow, 모든 slide visual QA | recruiter presentation profile 또는 별도 호환 artifact 필요 |
@@ -34,7 +34,7 @@ final derivative는 `document-approved` 이상 image asset만 참조합니다. S
 - `pending`: probe 전 `unknown`, 또는 passed probe의 `available`
 - `unavailable`: failed probe 하나와 generation/QA 없음
 
-준비 단계는 `passed`와 `failed`, generated path, generation evidence, QA evidence를 거부합니다. 실제 파일이 보이더라도 terminal state로 올리지 않습니다.
+MD는 renderer capability와 무관하게 항상 사용 가능하며 `unavailable`이나 `failed`를 사용하지 않습니다. canonical export는 `pending`으로 시작하고 downstream validation을 통과하면 `passed`가 됩니다. `unavailable`은 renderer probe가 실패한 PDF·DOCX·PPTX에만 씁니다. 실제 파일이 보이더라도 해당 형식의 validation·QA evidence 없이 성공 상태로 올리지 않습니다.
 
 ## 보존과 재개
 
