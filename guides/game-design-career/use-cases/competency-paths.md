@@ -60,11 +60,11 @@ $game-design-career:map-game-design-career artifact=game-design-career/role-map 
 
 ### 검토와 승인
 
-**읽는 순서:** 목표 → evidence → gap → proof task → 결정 기록입니다. **사람 결정:** 사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다. 도구 실행은 자동 승인이 아닙니다.
+**읽는 순서:** 목표 → evidence → gap → proof task → 결정 기록입니다. **검토 체크포인트:** `game-design-role-map` → `learning-roadmap` 순서로 읽고 역할 후보와 proof task의 연결을 확인합니다. **사람 결정:** 사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다. 도구 실행은 자동 승인이 아닙니다.
 
 ### 실패·재개
 
-role evidence가 없으면 unknown을 보존하고 관찰 또는 짧은 과제로 재개합니다. **보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜.
+role evidence가 없으면 unknown을 보존하고 관찰 또는 짧은 과제로 재개합니다. 사용자와 멘토가 role evidence 또는 과제 기록을 확인한 뒤에만 재개합니다. **보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜.
 
 ### 자기점검과 다음 학습
 
@@ -128,11 +128,11 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 
 ### 검토와 승인
 
-**읽는 순서:** 관찰 → 추론 → 반례 → 제안 → 권리 경계입니다. **사람 결정:** 작성자와 멘토가 관찰의 정확성, 공개 범위와 다음 검증을 결정합니다. 자동 분석은 사실이나 승인을 대신하지 않습니다.
+**읽는 순서:** 관찰 → 추론 → 반례 → 제안 → 권리 경계입니다. **검토 체크포인트:** `game-analysis-report` → `reverse-design-document` 순서로 읽고 관찰과 해석의 경계를 확인합니다. **사람 결정:** 작성자와 멘토가 관찰의 정확성, 공개 범위와 다음 검증을 결정합니다. 자동 분석은 사실이나 승인을 대신하지 않습니다.
 
 ### 실패·재개
 
-location 또는 권리가 불명확하면 해당 claim을 보류하고, 공개 location 또는 권리 확인 뒤 보존한 관찰에서 재개합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문.
+location 또는 권리가 불명확하면 해당 claim을 보류하고, 공개 location 또는 권리 확인 뒤 보존한 관찰에서 재개합니다. 작성자와 멘토가 공개 location 또는 권리를 확인한 뒤에만 재개합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문.
 
 ### 자기점검과 다음 학습
 
@@ -197,11 +197,11 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 ### 검토와 승인
 
-**읽는 순서:** source record → sample boundary → observation → inference → proposal입니다. **사람 결정:** Research Owner와 Portfolio Reviewer가 region, reviewAfter, 공개 가능한 evidence와 backlog를 결정합니다. source 수집은 자동 승인을 하지 않으며 채용을 보장하지 않습니다.
+**읽는 순서:** source record → sample boundary → observation → inference → proposal입니다. **검토 체크포인트:** `job-posting-evidence` → `game-design-role-map` 순서로 읽고 source record와 role inference를 확인합니다. **사람 결정:** Research Owner와 Portfolio Reviewer가 region, reviewAfter, 공개 가능한 evidence와 backlog를 결정합니다. source 수집은 자동 승인을 하지 않으며 채용을 보장하지 않습니다.
 
 ### 실패·재개
 
-공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류하고 재검색한 뒤 새 source ID 또는 evidence ID로 갱신해 재개합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record.
+공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류하고 재검색한 뒤 새 source ID 또는 evidence ID로 갱신해 재개합니다. Research Owner와 Portfolio Reviewer가 공식 source와 freshness를 확인한 뒤에만 재개합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record.
 
 ### 자기점검과 다음 학습
 
@@ -265,11 +265,11 @@ $game-design-career:map-game-design-career artifact=game-design-career/learning-
 
 ### 검토와 승인
 
-**읽는 순서:** current evidence → gap → proof task → cadence → 결정입니다. **사람 결정:** 작성자와 멘토가 우선순위, 가능한 범위와 공개 여부를 결정합니다. 계획 생성은 자동 승인을 하지 않으며 성장을 보장하지 않습니다.
+**읽는 순서:** current evidence → gap → proof task → cadence → 결정입니다. **검토 체크포인트:** `competency-matrix` → `learning-roadmap` 순서로 읽고 gap과 proof task의 우선순위를 확인합니다. **사람 결정:** 작성자와 멘토가 우선순위, 가능한 범위와 공개 여부를 결정합니다. 계획 생성은 자동 승인을 하지 않으며 성장을 보장하지 않습니다.
 
 ### 실패·재개
 
-evidence가 비어 있으면 gap을 유지하고 작은 관찰 과제로 되돌아갑니다. **보존:** evidence ID, matrix 행, 보류한 path와 review date.
+evidence가 비어 있으면 gap을 유지하고 작은 관찰 과제로 되돌아갑니다. 작성자와 멘토가 작은 관찰 과제를 확인한 뒤에만 재개합니다. **보존:** evidence ID, matrix 행, 보류한 path와 review date.
 
 ### 자기점검과 다음 학습
 
@@ -333,11 +333,11 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 
 ### 검토와 승인
 
-**읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review입니다. **사람 결정:** 작성자와 public-rights reviewer가 공개 범위, 인용·capture 권리와 개인 기여 서술을 승인·수정·보류합니다. 분석은 자동 승인을 하지 않으며 품질, 채용 또는 공개를 보장하지 않습니다.
+**읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `reverse-design-document` → `game-analysis-report` 순서로 읽고 관찰 evidence와 분석 claim을 확인합니다. **사람 결정:** 작성자와 public-rights reviewer가 공개 범위, 인용·capture 권리와 개인 기여 서술을 승인·수정·보류합니다. 분석은 자동 승인을 하지 않으며 품질, 채용 또는 공개를 보장하지 않습니다.
 
 ### 실패·재개
 
-source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존하며, public-rights review 뒤 확인된 범위에서 재개합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding.
+source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존하며, public-rights review 뒤 확인된 범위에서 재개합니다. public-rights reviewer가 source location, 권리와 개인 기여를 확인한 뒤에만 재개합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding.
 
 ### 자기점검과 다음 학습
 
@@ -401,11 +401,11 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 
 ### 검토와 승인
 
-**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review입니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer가 공개 가능한 claim과 asset을 결정합니다. 생성 결과는 자동 승인을 하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 개인 기여와 공개 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer가 공개 가능한 claim과 asset을 결정합니다. 생성 결과는 자동 승인을 하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.
 
 ### 실패·재개
 
-개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류하고 public-rights review가 끝난 범위에서 재개합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록.
+개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류하고 public-rights review가 끝난 범위에서 재개합니다. portfolio reviewer와 public-rights reviewer가 개인 기여와 권리를 확인한 뒤에만 재개합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록.
 
 ### 자기점검과 다음 학습
 
@@ -469,11 +469,11 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/por
 
 ### 검토와 승인
 
-**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → backlog입니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer와 멘토가 수정·발표·공개 범위를 결정합니다. review는 자동 승인을 하지 않으며 합격, 시장 반응 또는 팀 성과를 보장하지 않습니다.
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → backlog입니다. **검토 체크포인트:** `five-axis-review` → `portfolio-backlog` → `introduction-motivation` 순서로 읽고 finding, repair, 발표 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer와 멘토가 수정·발표·공개 범위를 결정합니다. review는 자동 승인을 하지 않으며 합격, 시장 반응 또는 팀 성과를 보장하지 않습니다.
 
 ### 실패·재개
 
-evidence가 claim을 지지하지 않으면 claim을 줄이고 backlog로 되돌립니다. **보존:** `EVID-PR-01`, 관찰·추론·제안, 개인 기여 경계와 review history.
+evidence가 claim을 지지하지 않으면 claim을 줄이고 backlog로 되돌립니다. portfolio reviewer와 멘토가 claim과 evidence를 확인한 뒤에만 재개합니다. **보존:** `EVID-PR-01`, 관찰·추론·제안, 개인 기여 경계와 review history.
 
 ### 자기점검과 다음 학습
 
@@ -537,11 +537,11 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/g
 
 ### 검토와 승인
 
-**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback입니다. **사람 결정:** 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다. 이 기록은 자동 승인을 하지 않으며 채용, 승진, 이직, 팀 기여 또는 시장 가치를 보장하지 않습니다.
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback입니다. **검토 체크포인트:** `interview-question-answer-log` → `junior-growth-review` → `transition-readiness` 순서로 읽고 honest gap, feedback, 다음 proof task를 확인합니다. **사람 결정:** 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다. 이 기록은 자동 승인을 하지 않으며 채용, 승진, 이직, 팀 기여 또는 시장 가치를 보장하지 않습니다.
 
 ### 실패·재개
 
-fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류하고 재검색·재검토합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문.
+fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류하고 재검색·재검토합니다. 멘토·manager·career reviewer와 public-rights reviewer가 fresh requirement, 개인 기여와 권리를 확인한 뒤에만 재개합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문.
 
 ### 자기점검과 다음 학습
 

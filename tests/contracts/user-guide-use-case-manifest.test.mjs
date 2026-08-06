@@ -133,6 +133,16 @@ const CAREER_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
     ["준비도", "확정 사실"], ["승진", "이직 성공"], ["evidence ID", "feedback owner"], ["EVID-GR-01", "honest gap"], ["interview-question-answer-log", "transition-readiness"], ["evidence summary", "Career Artifact"], ["EVID-GR-01", "채용·승진·전환"], ["artifact=game-design-career/growth-transition"], ["plan-junior-growth", "public-rights reviewer"], ["junior-growth-review", "EVID-GR-01"], ["멘토·manager·career reviewer", "보장하지 않"], ["**보존:**", "재검색·재검토"], ["CA-C03", "CA-C04"],
   ],
 });
+const CAREER_RESUME_CONTRACT = Object.freeze({
+  "CA-C01": ["role evidence가 없으면", "기존 role map", "사용자와 멘토가 role evidence 또는 과제 기록을 확인", "관찰 또는 짧은 과제로 재개"],
+  "CA-C02": ["location 또는 권리가 불명확하면", "관찰 기록, evidence ID", "작성자와 멘토가 공개 location 또는 권리를 확인", "보존한 관찰에서 재개"],
+  "CA-C03": ["공식 source가 없거나", "기존 source ID", "Research Owner와 Portfolio Reviewer가 공식 source와 freshness를 확인", "새 source ID 또는 evidence ID로 갱신해 재개"],
+  "CA-C04": ["evidence가 비어 있으면", "evidence ID, matrix 행", "작성자와 멘토가 작은 관찰 과제를 확인", "작은 관찰 과제로 되돌아갑니다"],
+  "CA-C05": ["source location·권리·개인 기여 중 하나라도 불명확하면", "EVID-RD-01", "public-rights reviewer가 source location, 권리와 개인 기여를 확인", "확인된 범위에서 재개"],
+  "CA-C06": ["개인 기여 또는 권리가 확인되지 않으면", "EVID-CP-01", "portfolio reviewer와 public-rights reviewer가 개인 기여와 권리를 확인", "public-rights review가 끝난 범위에서 재개"],
+  "CA-C07": ["evidence가 claim을 지지하지 않으면", "EVID-PR-01", "portfolio reviewer와 멘토가 claim과 evidence를 확인", "backlog로 되돌립니다"],
+  "CA-C08": ["fresh requirement, 개인 기여 또는 권리 확인이 없으면", "EVID-GR-01", "멘토·manager·career reviewer와 public-rights reviewer가 fresh requirement, 개인 기여와 권리를 확인", "재검색·재검토합니다"],
+});
 const STUDIO_CONCEPT_HEADINGS = Object.freeze({
   "ST-G01": "ST-G01 모바일 수집형 RPG·라이브서비스",
   "ST-G02": "ST-G02 캐주얼 퍼즐·방치형",
@@ -1194,21 +1204,30 @@ function assertCareerCompetencySemantics({ competencyPaths, entries, inventory }
     assert.match(appBlocks[0], /^@Game Design Career .+$/s, `${entry.id} App request`);
     const cliBlocks = fencedCodeBlocks(byHeading.get("Codex CLI 요청문"), "text");
     assert.equal(cliBlocks.length, 1, `${entry.id} one CLI request block`);
-    const referencedSkills = [...cliBlocks[0].matchAll(/\$game-design-career:([a-z0-9-]+)/g)].map((match) => match[1]);
-    assert.ok(referencedSkills.length > 0, `${entry.id} referenced CLI skill`);
-    for (const skillId of referencedSkills) {
-      assert.ok(inventory.skillIds.includes(skillId), `${entry.id} installed Career skill: ${skillId}`);
-      assert.ok(entry.skills.includes(skillId), `${entry.id} manifest-bound CLI skill: ${skillId}`);
-    }
+    const commandLines = cliBlocks[0].split("\n").filter((line) => line.trim().length > 0);
+    assert.equal(commandLines.length, 1, `${entry.id} one executable CLI command line`);
+    const commandMatch = /^\$game-design-career:([a-z0-9-]+)(?:\s|$)/.exec(commandLines[0]);
+    assert.ok(commandMatch, `${entry.id} executable CLI command`);
+    const skillId = commandMatch[1];
+    assert.ok(inventory.skillIds.includes(skillId), `${entry.id} installed Career skill: ${skillId}`);
+    assert.ok(entry.skills.includes(skillId), `${entry.id} manifest-bound CLI skill: ${skillId}`);
 
     const results = byHeading.get("결과물");
     assert.deepEqual(fieldLabels(results), ["최소 결과", "선택 결과", "확장 결과"], `${entry.id} output ownership levels`);
-    for (const output of entry.outputs) assert.match(results, new RegExp("`" + output + "`"), `${entry.id} exact manifest output: ${output}`);
+    let previousOutputIndex = -1;
+    for (const output of entry.outputs) {
+      const outputIndex = results.indexOf("`" + output + "`");
+      assert.ok(outputIndex > previousOutputIndex, `${entry.id} manifest output read order: ${output}`);
+      previousOutputIndex = outputIndex;
+    }
     const review = byHeading.get("검토와 승인");
     assert.match(review, /\*\*사람 결정:\*\*/, `${entry.id} review owner`);
+    const outputCheckpoint = `**검토 체크포인트:** ${entry.outputs.map((output) => "`" + output + "`").join(" → ")} 순서로 읽고`;
+    assert.ok(review.includes(outputCheckpoint), `${entry.id} section-local output review checkpoint`);
     const failure = byHeading.get("실패·재개");
     assert.match(failure, /\*\*보존:\*\*/, `${entry.id} preserves resumable evidence`);
-    assert.match(failure, /재개|되돌(?:아갑니다|립니다)|재검색/, `${entry.id} resumable failure boundary`);
+    for (const clause of CAREER_RESUME_CONTRACT[entry.id]) assert.ok(failure.includes(clause), `${entry.id} failure-resume contract: ${clause}`);
+    assert.doesNotMatch(failure, /불명확해도 자동 승인|근거 없이 승인/, `${entry.id} resume gate rejects approval without evidence`);
   }
 
   const c03 = sectionByHeading(competencyPaths, 2, CAREER_COMPETENCY_HEADINGS["CA-C03"]);
@@ -1220,6 +1239,7 @@ function assertCareerCompetencySemantics({ competencyPaths, entries, inventory }
   }
   assert.doesNotMatch(practice, /https?:\/\//, "CA-C03 does not invent example URL");
   assert.match(practice, /`reviewAfter` 이후 재검색 전까지 current claim에 사용하지 않/, "CA-C03 stale current-claim polarity");
+  assert.doesNotMatch(practice, /재검색 없이 current claim에 사용|stale evidence[^\n]*재검색 전[^\n]*current claim에 사용/iu, "CA-C03 rejects stale-current coexistence");
   assert.match(practice, /새 source ID/, "CA-C03 refresh creates a new source ID");
   assert.match(resume, /`reviewAfter`가 지나면 current conclusion을 보류하고 재검색/, "CA-C03 stale conclusion is withheld before re-search");
   assert.match(resume, /새 source ID 또는 evidence ID/, "CA-C03 resume refreshes source or evidence ID");
@@ -1228,6 +1248,8 @@ function assertCareerCompetencySemantics({ competencyPaths, entries, inventory }
 function assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths }) {
   const links = extractMarkdownLinks(index).map(({ target }) => target);
   const competencyAnchors = collectHeadingAnchors(competencyPaths);
+  const deferredSection = sectionByHeading(index, 2, "대상별 사례 — Task 3 deferred");
+  assert.deepEqual(extractMarkdownLinks(deferredSection), [], "Career deferred routes contain no Markdown links");
   const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   for (const entry of allCareerCases.filter((entry) => entry.view === "competency")) {
     const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
@@ -1425,8 +1447,46 @@ test("Career competency and index mutation controls reject semantically wrong bu
   );
   assert.throws(
     () => assertCareerIndexRouteStrings({ index: futureMarkdown, allCareerCases, competencyPaths }),
-    /CA-T01 deferred route is not Markdown/,
+    /Career deferred routes contain no Markdown links/,
     "future route must stay deferred plain text",
+  );
+});
+
+test("Career residual executable, freshness, and deferred-route mutations are rejected", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { index, competencyPaths } = await readCareerCompetencyGuides();
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
+  const allCareerCases = manifest.cases.filter((entry) => entry.product === "game-design-career");
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
+  const c01 = CAREER_COMPETENCY_HEADINGS["CA-C01"];
+  const c03 = CAREER_COMPETENCY_HEADINGS["CA-C03"];
+  const c01Cli = sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "Codex CLI 요청문");
+  const c01Results = sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "결과물");
+  const c01Failure = sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "실패·재개");
+  const c03Practice = sectionByHeading(sectionByHeading(competencyPaths, 2, c03), 3, "표준 실습");
+  const competencyMutations = [
+    ["CLI token only in explanatory text", replaceCasePart(competencyPaths, c01, "Codex CLI 요청문", c01Cli.replace("$game-design-career:map-game-design-career", "설명문 속 skill token $game-design-career:map-game-design-career")), /CA-C01 executable CLI command/],
+    ["manifest output read order reversed", replaceCasePart(competencyPaths, c01, "결과물", c01Results.replace("`game-design-role-map`, `learning-roadmap`", "`learning-roadmap`, `game-design-role-map`")), /CA-C01 manifest output read order/],
+    ["approval without evidence resume", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure + "\n\nrole evidence가 불명확해도 자동 승인하고 재개합니다."), /CA-C01 resume gate rejects approval without evidence/],
+    ["resume gate swap", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure.replace("사용자와 멘토가 role evidence 또는 과제 기록을 확인", "작성자와 멘토가 공개 location 또는 권리를 확인")), /CA-C01 failure-resume contract: 사용자와 멘토가 role evidence 또는 과제 기록을 확인/],
+    ["stale polarity coexistence", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\nstale evidence는 재검색 전 current claim에 사용해도 됩니다."), /CA-C03 rejects stale-current coexistence/],
+  ];
+  for (const [label, mutation, expectedFailure] of competencyMutations) {
+    assert.throws(
+      () => assertCareerCompetencyStructure({ competencyPaths: mutation, entries, inventory }),
+      expectedFailure,
+      label,
+    );
+  }
+
+  const arbitraryDeferredLink = index.replace(
+    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생`",
+    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생` [other deferred file](wrong.md#wrong-anchor)",
+  );
+  assert.throws(
+    () => assertCareerIndexRouteStrings({ index: arbitraryDeferredLink, allCareerCases, competencyPaths }),
+    /Career deferred routes contain no Markdown links/,
+    "deferred rows reject arbitrary broken Markdown links",
   );
 });
 
