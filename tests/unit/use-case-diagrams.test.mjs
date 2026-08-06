@@ -34,6 +34,52 @@ test("diagram source rejects an unsupported type and fewer than three steps", ()
   assert.throws(() => validateDiagramSource({ ...validFixture, steps: validFixture.steps.slice(0, 2) }), /steps/u);
 });
 
+test("Studio diagram sources fail closed without their typed five-stage semantic contract", () => {
+  const studioSource = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: Array.from({ length: 5 }, (_, index) => ({
+      stage: ["제약", "선택지", "판단 기준", "결정", "검증"][index],
+      label: `판단 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: {
+      specialist: "design-game-economy-and-liveops",
+      outputs: ["economy-balance"],
+      validation: "telemetry",
+    },
+    branches: [
+      { label: "보호", detail: "guardrail" },
+      { label: "확장", detail: "rollback" },
+    ],
+  };
+
+  assert.doesNotThrow(() => validateDiagramSource(studioSource));
+  assert.throws(() => validateDiagramSource({ ...studioSource, steps: studioSource.steps.slice(0, 4) }), /five stages/u);
+  assert.throws(() => validateDiagramSource({ ...studioSource, branches: [studioSource.branches[0]] }), /two branches/u);
+  assert.throws(() => validateDiagramSource({ ...studioSource, semantic: { ...studioSource.semantic, outputs: [] } }), /semantic.*outputs/u);
+});
+
+test("decision-flow renders two labelled branches that reconverge before its criterion stage", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-economy-and-liveops", outputs: ["economy-balance"], validation: "telemetry" },
+    branches: [{ label: "보호 경로", detail: "guardrail" }, { label: "확장 경로", detail: "rollback" }],
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.match(svg, /aria-label="선택지 1: 보호 경로"/u);
+  assert.match(svg, /aria-label="선택지 2: 확장 경로"/u);
+  assert.match(svg, /class="decision-branch"/u);
+  assert.match(svg, /재결합: 판단 기준/u);
+});
+
 test("renderDiagramSvg XML-escapes source strings and preserves step reading order", () => {
   const svg = renderDiagramSvg({
     ...validFixture,

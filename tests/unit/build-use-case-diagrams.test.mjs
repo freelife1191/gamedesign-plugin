@@ -301,6 +301,22 @@ test("check mode preserves repository assets and removes its OS temporary render
   await assert.rejects(() => lstat(temporaryDirectory), /ENOENT/u);
 });
 
+test("check mode rejects a complete same-size PNG whose bytes differ from the deterministic renderer", async (t) => {
+  const repoRoot = await writeFixture(t, { existingOutputs: true });
+  const filename = path.join(repoRoot, pngPath);
+  const original = await readFile(filename);
+  const changed = Buffer.from(original);
+  const idat = changed.indexOf(Buffer.from("IDAT", "ascii"));
+  assert.ok(idat > 0, "fixture PNG has IDAT data");
+  changed[idat + 4] ^= 0x01;
+  await writeFile(filename, changed);
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: ["aud-01"], check: true }),
+    /generated PNG differs/u,
+  );
+});
+
 test("builder rejects a repository output parent symlinked to an OS temporary directory", async (t) => {
   const repoRoot = await writeFixture(t);
   const externalRoot = await mkdtemp(path.join(os.tmpdir(), "use-case-diagrams-external-"));

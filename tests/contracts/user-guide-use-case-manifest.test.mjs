@@ -1671,6 +1671,24 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
     assert.ok(diagram, `${entry.id} diagram manifest entry`);
     validateDiagramSource(source);
     assert.equal(source.type, type, `${entry.id} diagram type`);
+    assert.equal(source.steps.length, 5, `${entry.id} five physical semantic stages`);
+    assert.ok(source.semantic && typeof source.semantic === "object", `${entry.id} semantic metadata`);
+    assert.deepEqual(source.semantic.outputs, entry.outputs, `${entry.id} exact output IDs`);
+    if (entry.view === "competency") {
+      assert.deepEqual(source.steps.map(({ stage }) => stage), ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"], `${entry.id} competency stage grammar`);
+      assert.ok(entry.skills.includes(source.semantic.specialist), `${entry.id} actual specialist skill`);
+      assert.ok(entry.skills.includes(source.semantic.review.skill), `${entry.id} actual review skill`);
+      assert.ok(source.semantic.review.condition.length > 0, `${entry.id} review condition`);
+    } else if (entry.view === "concept") {
+      assert.deepEqual(source.steps.map(({ stage }) => stage), ["제약", "선택지", "판단 기준", "결정", "검증"], `${entry.id} concept stage grammar`);
+      assert.ok(entry.skills.includes(source.semantic.specialist), `${entry.id} actual concept specialist`);
+      assert.ok(source.semantic.validation.length > 0, `${entry.id} validation condition`);
+      assert.ok(Array.isArray(source.branches) && source.branches.length >= 2, `${entry.id} branch choices`);
+    } else {
+      assert.deepEqual(source.steps.map(({ stage }) => stage), ["trigger", "필수 입력", "skill-owned work", "output", "next route"], `${entry.id} skill-flow stage grammar`);
+      assert.equal(source.semantic.skill, entry.skill, `${entry.id} exact installed skill`);
+      assert.deepEqual(source.semantic.next_routes, entry.next_skills, `${entry.id} exact next routes`);
+    }
     assert.deepEqual(source.source_paths, [entry.document], `${entry.id} source document`);
     assert.deepEqual(source.used_by, [entry.document], `${entry.id} used-by document`);
     assert.equal(diagram.svg, entry.diagram.svg.replace(/^guides\/assets\//, ""), `${entry.id} SVG path`);
@@ -1699,6 +1717,37 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
 
   const result = await buildUseCaseDiagrams({ repoRoot, ids: expectedEntries.map(({ entry }) => entry.id.toLowerCase()), check: true });
   assert.deepEqual(result, { svg: 33, png: 33 }, "Studio diagrams pass Skillstead lint and generated-file check");
+});
+
+test("Studio diagram semantic bindings reject wrong-valid skills, outputs, next routes, and removed branches", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const sourceById = new Map(sources.map((source) => [source.id, source]));
+  const caseById = new Map(manifest.cases.filter(({ product }) => product === "game-design-studio").map((entry) => [entry.id.toLowerCase(), entry]));
+  const skillById = new Map(manifest.skill_cases.filter(({ product }) => product === "game-design-studio").map((entry) => [entry.id.toLowerCase(), entry]));
+  const specialists = {
+    "st-c01": "define-game-vision", "st-c02": "design-game-systems", "st-c03": "design-game-systems", "st-c04": "design-player-experience",
+    "st-c05": "design-game-content", "st-c06": "design-game-content", "st-c07": "design-game-economy-and-liveops", "st-c08": "plan-game-production",
+    "st-g01": "design-game-economy-and-liveops", "st-g02": "design-game-systems", "st-g03": "design-game-systems", "st-g04": "design-game-systems", "st-g05": "design-game-content",
+    "st-g06": "design-game-content", "st-g07": "design-player-experience", "st-g08": "design-game-economy-and-liveops", "st-g09": "design-game-content", "st-g10": "design-player-experience",
+  };
+  const assertCaseBinding = (source) => {
+    const entry = caseById.get(source.id);
+    assert.equal(source.semantic.specialist, specialists[source.id], `${source.id} specialist`);
+    assert.deepEqual(source.semantic.outputs, entry.outputs, `${source.id} outputs`);
+  };
+  const assertSkillBinding = (source) => {
+    const entry = skillById.get(source.id);
+    assert.equal(source.semantic.skill, entry.skill, `${source.id} installed skill`);
+    assert.deepEqual(source.semantic.next_routes, entry.next_skills, `${source.id} next route`);
+  };
+  const c01 = sourceById.get("st-c01");
+  assert.throws(() => assertCaseBinding({ ...c01, semantic: { ...c01.semantic, specialist: "orchestrate-game-design-project" } }), /specialist/u);
+  assert.throws(() => assertCaseBinding({ ...c01, semantic: { ...c01.semantic, outputs: c01.semantic.outputs.slice(1) } }), /outputs/u);
+  const s09 = sourceById.get("st-s09");
+  assert.throws(() => assertSkillBinding({ ...s09, semantic: { ...s09.semantic, next_routes: ["review-game-design"] } }), /next route/u);
+  const g01 = sourceById.get("st-g01");
+  assert.throws(() => validateDiagramSource({ ...g01, branches: [g01.branches[0]] }), /two branches/u);
 });
 
 test("output catalog keeps exact H2 result levels and request-table routing", async () => {

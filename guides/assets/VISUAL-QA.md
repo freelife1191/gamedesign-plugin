@@ -60,5 +60,12 @@
 
 - 범위: `game-design-studio-use-case` 18쌍(ST-C01…ST-C08, ST-G01…ST-G10)과 `game-design-studio-skill` 15쌍(ST-S01…ST-S15), 총 33 SVG/PNG 쌍입니다. 기존 `game-design-studio` recipe scope 6항목은 변경하지 않았습니다.
 - 자동 검사: `npm run check:guide-diagrams`와 Studio 다이어그램 계약은 각 source의 Skillstead lint(오류 0·경고 0), 생성 SVG 동등성, PNG IEND 완결성과 정확한 `2800×1800` 치수를 확인합니다. 모든 SVG는 `0 0 1400 900` viewBox와 title/desc를 가집니다.
-- 수동 검사: 로컬 `view_image`로 `st-c03.png`, `st-g01.png`, `st-g06.png`, 가장 긴 direct-skill flow인 `orchestrate-game-design-project.png`를 high와 original detail에서 각각 확인했습니다. 제목·설명·4개 순서 card·open-V connector·하단 다음 경계가 판독 가능하며, CJK/Latin glyph tofu, card/text overflow, 잘림, 겹침 또는 모호한 연결선이 없습니다.
+- 수동 검사: 로컬 `view_image`로 `st-c03.png`, `st-g01.png`, `st-g06.png`, 가장 긴 direct-skill flow인 `orchestrate-game-design-project.png`를 high와 original detail에서 각각 확인했습니다. 제목·설명·5개 순서 card·open-V connector·하단 다음 경계가 판독 가능하며, CJK/Latin glyph tofu, card/text overflow, 잘림, 겹침 또는 모호한 연결선이 없습니다.
 - 출처 충실도: ST-C03은 authority→규칙 전이→예외 우선순위→데이터 계약, ST-G01은 수집 동기→경제 가설→guardrail→이벤트 검증, ST-G06은 선택→state delta→모순 확인→제작 결정, ST-S09는 복합 요청→필수 입력→route 선택→브리프 결과로 각 가이드의 실제 경계와 다음 route를 반영합니다.
+
+## Studio Task 6 Fix round 1 재검사 — 2026-08-06
+
+- `st-c03.png`: high/original에서 입력→전문 스킬→Canonical Artifact→검토→출력의 5개 card와 순서 connector를 확인했습니다. text/card containment와 하단 boundary가 정상입니다.
+- `st-g01.png`, `st-g06.png`: high/original에서 제약→선택지의 두 branch→`재결합: 판단 기준`→결정→검증을 확인했습니다. 두 선택지 box와 색상 구분 connector가 판독 가능하며 clipping·tofu·모호한 endpoint가 없습니다.
+- `orchestrate-game-design-project.png` (ST-S09): high/original에서 trigger→필수 입력→skill-owned work→output→next route 5 stage를 확인했습니다. Canonical Artifact output과 selected canonical route의 조건부 handoff가 분리되어 읽힙니다.
+- 자동 증거: `npm run check:guide-diagrams`는 39 SVG/PNG 쌍의 deterministic SVG 및 PNG byte equality, Skillstead lint, 2× size, IEND completion을 통과했습니다.

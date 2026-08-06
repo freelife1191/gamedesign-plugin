@@ -12,40 +12,56 @@
   <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">이미지 계획 직접 호출</text>
   <text x="88" y="192" fill="#5B6675" font-size="24">stable asset ID·alt·mode를 생성 전 계약으로 고정합니다.</text>
   <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>
-  <path d="M 402 450 L 438 492" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 682 492 L 718 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 962 450 L 998 492" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 312 450 L 323 492" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 567 492 L 578 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 822 450 L 833 492" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 1077 492 L 1088 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <g aria-label="읽기 순서 1: 계획 trigger">
-    <rect x="170" y="342" width="220" height="216" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
-    <rect x="198" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
-    <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
-      <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">계획 trigger</text>
-      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">asset 필요를 받</text>
-      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">습니다.</text>
+    <rect x="80" y="342" width="220" height="216" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
+    <rect x="108" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
+    <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
+    <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
+      <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">계획 trigger</text>
+      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">asset 필요를 받</text>
+      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">습니다.</text>
   </g>
-  <g aria-label="읽기 순서 2: 필수 입력">
-    <rect x="450" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
-    <rect x="478" y="412" width="52" height="32" rx="16" fill="#534AB7"/>
-    <text x="504" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
-      <text x="478" y="480" fill="#3C3489" font-size="22" font-weight="700">필수 입력</text>
-      <text x="478" y="542" fill="#354152" font-size="18" font-weight="400">profile과 mo</text>
-      <text x="478" y="568" fill="#354152" font-size="18" font-weight="400">de를 둡니다.</text>
+  <g aria-label="읽기 순서 2: artifact와 경계">
+    <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
+    <rect x="363" y="412" width="52" height="32" rx="16" fill="#534AB7"/>
+    <text x="389" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
+    <text x="423" y="434" fill="#3C3489" font-size="14" font-weight="700">필수 입력</text>
+      <text x="363" y="480" fill="#3C3489" font-size="22" font-weight="700">artifact와 </text>
+      <text x="363" y="510" fill="#3C3489" font-size="22" font-weight="700">경계</text>
+      <text x="363" y="542" fill="#354152" font-size="18" font-weight="400">필수 값을 둡니다.</text>
   </g>
   <g aria-label="읽기 순서 3: asset 계획">
-    <rect x="730" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
-    <rect x="758" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
-    <text x="784" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
-      <text x="758" y="438" fill="#085041" font-size="22" font-weight="700">asset 계획</text>
-      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">alt와 ID를 고정</text>
-      <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">합니다.</text>
+    <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
+    <rect x="618" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
+    <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
+    <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">skill-owned work</text>
+      <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">asset 계획</text>
+      <text x="618" y="500" fill="#354152" font-size="18" font-weight="400">작업 경계를 수행합니</text>
+      <text x="618" y="526" fill="#354152" font-size="18" font-weight="400">다.</text>
   </g>
-  <g aria-label="읽기 순서 4: 계획 결과">
-    <rect x="1010" y="384" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
-    <rect x="1038" y="412" width="52" height="32" rx="16" fill="#A75B00"/>
-    <text x="1064" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
-      <text x="1038" y="480" fill="#814600" font-size="22" font-weight="700">계획 결과</text>
-      <text x="1038" y="542" fill="#354152" font-size="18" font-weight="400">생성 route로 넘</text>
-      <text x="1038" y="568" fill="#354152" font-size="18" font-weight="400">깁니다.</text>
+  <g aria-label="읽기 순서 4: asset manifest">
+    <rect x="845" y="384" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
+    <rect x="873" y="412" width="52" height="32" rx="16" fill="#A75B00"/>
+    <text x="899" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
+    <text x="933" y="434" fill="#814600" font-size="14" font-weight="700">output</text>
+      <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">asset mani</text>
+      <text x="873" y="510" fill="#814600" font-size="22" font-weight="700">fest</text>
+      <text x="873" y="542" fill="#354152" font-size="18" font-weight="400">정확한 ID를 남깁니</text>
+      <text x="873" y="568" fill="#354152" font-size="18" font-weight="400">다.</text>
+  </g>
+  <g aria-label="읽기 순서 5: 허용 asset 생성">
+    <rect x="1100" y="342" width="220" height="216" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
+    <rect x="1128" y="370" width="52" height="32" rx="16" fill="#A52B5D"/>
+    <text x="1154" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">5</text>
+    <text x="1188" y="392" fill="#7A1942" font-size="14" font-weight="700">next route</text>
+      <text x="1128" y="438" fill="#7A1942" font-size="22" font-weight="700">허용 asset 생</text>
+      <text x="1128" y="468" fill="#7A1942" font-size="22" font-weight="700">성</text>
+      <text x="1128" y="500" fill="#354152" font-size="18" font-weight="400">조건부 handoff</text>
+      <text x="1128" y="526" fill="#354152" font-size="18" font-weight="400">입니다.</text>
   </g>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>

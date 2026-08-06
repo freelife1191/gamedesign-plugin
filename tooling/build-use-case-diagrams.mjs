@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { lstat, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -172,9 +172,9 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check, optiona
   await assertSafeExistingFile(outputRoot, pngPath, { optionalLstat });
   await assertCompletePng(pngPath);
   if (check) {
-    const [existingSvg, existingPng] = await Promise.all([readFile(output.svg, "utf8"), stat(output.png)]);
+    const [existingSvg, existingPng] = await Promise.all([readFile(output.svg, "utf8"), readFile(output.png)]);
     if (existingSvg !== svg) throw new Error(`generated SVG differs: ${relativeSvg}`);
-    if (!existingPng.isFile()) throw new Error(`missing generated PNG: ${relativePng}`);
+    if (!existingPng.equals(await readFile(pngPath))) throw new Error(`generated PNG differs: ${relativePng}`);
     await assertCompletePng(output.png);
   }
   return { svg: 1, png: 1 };
