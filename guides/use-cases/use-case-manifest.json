@@ -915,7 +915,7 @@
       "skill": "plan-junior-growth",
       "document": "guides/game-design-career/skills/plan-junior-growth.md",
       "anchor": "직접-호출-활용-plan-junior-growth",
-      "outputs": ["junior-growth-review", "learning-roadmap"],
+      "outputs": ["junior-growth-review", "transition-readiness"],
       "next_skills": ["visualize-career-roadmap", "export-career-documents"],
       "diagram": {"svg": "guides/assets/game-design-career/skills/plan-junior-growth.svg", "png": "guides/assets/game-design-career/skills/plan-junior-growth.png", "alt": "주니어 성장 계획 직접 호출 흐름"}
     },

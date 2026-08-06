@@ -623,6 +623,91 @@ const STUDIO_SKILL_CASE_CONTRACT = Object.freeze([
     alt,
   },
 })));
+const CAREER_CASE_CONTRACT = Object.freeze([
+  ["CA-C01", "competency", "ca-c01-기획-직무와-전문-분야-탐색", ["AUD-01", "AUD-02", "AUD-03", "AUD-06"], ["foundation", "applied"], ["apply-document-quality-profile", "map-game-design-career", "research-game-design-jobs"], ["career-stage-goal", "game-design-role-map", "learning-roadmap"], ["game-design-role-map", "learning-roadmap"], "기획 직무와 전문 분야를 비교하는 흐름"],
+  ["CA-C02", "competency", "ca-c02-게임-분석-언어와-관찰추론-분리", ["AUD-01", "AUD-02", "AUD-03", "AUD-04", "AUD-06"], ["foundation", "applied"], ["apply-document-quality-profile", "reverse-engineer-game-design", "review-game-design-portfolio"], ["game-analysis-report", "reverse-design-document", "five-axis-review"], ["game-analysis-report", "reverse-design-document"], "게임 분석의 관찰과 추론을 분리하는 흐름"],
+  ["CA-C03", "competency", "ca-c03-현재-채용공고-조사", ["AUD-02", "AUD-03", "AUD-05", "AUD-06"], ["applied", "advanced"], ["research-game-design-jobs", "map-game-design-career", "apply-document-quality-profile"], ["job-posting-evidence", "game-design-role-map", "competency-matrix"], ["job-posting-evidence", "game-design-role-map"], "현재 채용공고의 근거와 표본 경계를 기록하는 흐름"],
+  ["CA-C04", "competency", "ca-c04-역량-격차와-학습증거-계획", ["AUD-01", "AUD-02", "AUD-03", "AUD-05", "AUD-06"], ["foundation", "applied", "advanced"], ["apply-document-quality-profile", "map-game-design-career", "visualize-career-roadmap", "export-career-documents"], ["competency-matrix", "learning-roadmap", "career-stage-goal"], ["competency-matrix", "learning-roadmap"], "역량 격차를 학습과 증거 과제로 전환하는 흐름"],
+  ["CA-C05", "competency", "ca-c05-관찰-기반-역기획", ["AUD-01", "AUD-02", "AUD-03", "AUD-04", "AUD-05"], ["foundation", "applied", "advanced"], ["apply-document-quality-profile", "reverse-engineer-game-design", "export-career-documents"], ["reverse-design-document", "game-analysis-report"], ["reverse-design-document", "game-analysis-report"], "관찰과 추론 및 반례를 기록하는 역기획 흐름"],
+  ["CA-C06", "competency", "ca-c06-창작-기획-포트폴리오", ["AUD-02", "AUD-03", "AUD-04", "AUD-05", "AUD-06"], ["applied", "advanced"], ["apply-document-quality-profile", "build-game-design-portfolio", "review-game-design-portfolio"], ["portfolio-project-brief", "creative-design-portfolio", "five-axis-review"], ["portfolio-project-brief", "creative-design-portfolio"], "창작 기획의 판단과 근거를 포트폴리오로 연결하는 흐름"],
+  ["CA-C07", "competency", "ca-c07-포트폴리오-검토수정발표", ["AUD-02", "AUD-03", "AUD-05", "AUD-06"], ["applied", "advanced"], ["review-game-design-portfolio", "build-game-design-portfolio", "practice-game-design-interview", "export-career-documents"], ["five-axis-review", "portfolio-backlog", "introduction-motivation"], ["five-axis-review", "portfolio-backlog", "introduction-motivation"], "포트폴리오 검토와 수정 및 발표 준비 흐름"],
+  ["CA-C08", "competency", "ca-c08-면접주니어-성장직무-전환", ["AUD-03", "AUD-05", "AUD-06"], ["applied", "advanced"], ["practice-game-design-interview", "plan-junior-growth", "visualize-career-roadmap", "export-career-documents"], ["interview-question-answer-log", "junior-growth-review", "transition-readiness"], ["interview-question-answer-log", "junior-growth-review", "transition-readiness"], "면접과 주니어 성장 및 직무 전환의 증거 흐름"],
+  ["CA-T01", "target", "ca-t01-시스템-기획-입문-학생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["map-game-design-career", "build-game-design-portfolio", "plan-junior-growth"], ["game-design-role-map", "competency-matrix", "learning-roadmap"], ["game-design-role-map", "competency-matrix", "learning-roadmap"], "시스템 기획 입문 학생의 증거 과제와 학습 경로"],
+  ["CA-T02", "target", "ca-t02-콘텐츠퀘스트-기획-준비생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["map-game-design-career", "build-game-design-portfolio", "review-game-design-portfolio"], ["game-design-role-map", "portfolio-project-brief", "creative-design-portfolio"], ["game-design-role-map", "portfolio-project-brief", "creative-design-portfolio"], "콘텐츠와 퀘스트 기획 준비생의 제작 가능성 증거 흐름"],
+  ["CA-T03", "target", "ca-t03-전투캐릭터-기획-준비생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"], ["game-analysis-report", "portfolio-project-brief", "creative-design-portfolio"], ["game-analysis-report", "portfolio-project-brief", "creative-design-portfolio"], "전투와 캐릭터 기획 준비생의 분석과 검증 흐름"],
+  ["CA-T04", "target", "ca-t04-경제밸런스liveops-준비생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"], ["game-analysis-report", "portfolio-project-brief", "five-axis-review"], ["game-analysis-report", "portfolio-project-brief", "five-axis-review"], "경제와 밸런스 및 LiveOps 준비생의 가정 검증 흐름"],
+  ["CA-T05", "target", "ca-t05-uiux-기획-준비생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["map-game-design-career", "build-game-design-portfolio", "review-game-design-portfolio"], ["competency-matrix", "portfolio-project-brief", "five-axis-review"], ["competency-matrix", "portfolio-project-brief", "five-axis-review"], "UI UX 기획 준비생의 접근성과 usability 증거 흐름"],
+  ["CA-T06", "target", "ca-t06-내러티브-기획-준비생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["map-game-design-career", "build-game-design-portfolio", "review-game-design-portfolio"], ["game-design-role-map", "portfolio-project-brief", "creative-design-portfolio"], ["game-design-role-map", "portfolio-project-brief", "creative-design-portfolio"], "내러티브 기획 준비생의 협업 계약과 증거 흐름"],
+  ["CA-T07", "target", "ca-t07-레벨-디자인-준비생", ["AUD-01", "AUD-02"], ["foundation", "applied"], ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"], ["game-analysis-report", "portfolio-project-brief", "five-axis-review"], ["game-analysis-report", "portfolio-project-brief", "five-axis-review"], "레벨 디자인 준비생의 공간과 playtest 증거 흐름"],
+  ["CA-T08", "target", "ca-t08-실무-경험이-없는-신입", ["AUD-01", "AUD-02", "AUD-03"], ["foundation", "applied"], ["map-game-design-career", "build-game-design-portfolio", "review-game-design-portfolio"], ["career-stage-goal", "portfolio-project-brief", "portfolio-backlog"], ["career-stage-goal", "portfolio-project-brief", "portfolio-backlog"], "실무 경험이 없는 신입의 판단과 반복 개선 증거 흐름"],
+  ["CA-T09", "target", "ca-t09-비전공자다른-직군-전환자", ["AUD-03"], ["foundation", "applied"], ["map-game-design-career", "research-game-design-jobs", "build-game-design-portfolio", "plan-junior-growth"], ["transition-readiness", "game-design-role-map", "portfolio-project-brief"], ["transition-readiness", "game-design-role-map", "portfolio-project-brief"], "직군 전환자의 전이 가능한 역량과 새 증거 과제 흐름"],
+  ["CA-T10", "target", "ca-t10-주니어의-성장이직", ["AUD-05", "AUD-06"], ["applied", "advanced"], ["plan-junior-growth", "research-game-design-jobs", "practice-game-design-interview", "visualize-career-roadmap", "export-career-documents"], ["junior-growth-review", "transition-readiness", "interview-question-answer-log"], ["junior-growth-review", "transition-readiness", "interview-question-answer-log"], "주니어의 성장과 이직 준비도 증거 흐름"],
+].map(([id, view, anchor, audiences, level, skills, templates, outputs, alt]) => ({
+  id,
+  product: "game-design-career",
+  view,
+  document: `guides/game-design-career/use-cases/${view === "competency" ? "competency-paths" : "concept-scenarios"}.md`,
+  anchor,
+  audiences,
+  level,
+  skills,
+  templates,
+  outputs,
+  diagram: {
+    svg: `guides/assets/game-design-career/use-cases/${id.toLowerCase()}.svg`,
+    png: `guides/assets/game-design-career/use-cases/${id.toLowerCase()}.png`,
+    alt,
+  },
+})));
+const CAREER_SKILL_CASE_CONTRACT = Object.freeze([
+  ["CA-S01", "apply-document-quality-profile", "career-직접-호출-활용-apply-document-quality-profile", ["selection-record", "quality-checklist", "requirement-manifest"], ["map-game-design-career", "research-game-design-jobs", "build-game-design-portfolio", "reverse-engineer-game-design", "practice-game-design-interview", "review-game-design-portfolio", "plan-junior-growth", "visualize-career-roadmap", "export-career-documents", "plan-image-assets"], "Career 문서 품질 프로필 직접 호출 흐름"],
+  ["CA-S02", "build-game-design-portfolio", "직접-호출-활용-build-game-design-portfolio", ["portfolio-project-brief", "creative-design-portfolio"], ["review-game-design-portfolio", "practice-game-design-interview", "export-career-documents"], "게임 기획 포트폴리오 직접 호출 흐름"],
+  ["CA-S03", "export-career-documents", "직접-호출-활용-export-career-documents", ["export-preparation-manifest", "format-jobs"], [], "Career 문서 출력 직접 호출 흐름"],
+  ["CA-S04", "generate-image-assets", "career-직접-호출-활용-generate-image-assets", ["image-generation-result", "image-generation-provenance"], ["review-image-assets"], "Career 이미지 자산 생성 직접 호출 흐름"],
+  ["CA-S05", "map-game-design-career", "직접-호출-활용-map-game-design-career", ["game-design-role-map", "competency-matrix"], ["research-game-design-jobs", "build-game-design-portfolio", "visualize-career-roadmap"], "게임 기획 경로 매핑 직접 호출 흐름"],
+  ["CA-S06", "orchestrate-game-design-career", "직접-호출-활용-orchestrate-game-design-career", ["career-stage-goal", "career-stage-brief"], ["map-game-design-career", "research-game-design-jobs", "build-game-design-portfolio", "reverse-engineer-game-design", "practice-game-design-interview", "review-game-design-portfolio", "plan-junior-growth", "visualize-career-roadmap", "export-career-documents"], "게임 기획 커리어 오케스트레이션 직접 호출 흐름"],
+  ["CA-S07", "plan-image-assets", "career-직접-호출-활용-plan-image-assets", ["image-assets-manifest", "image-prompts"], ["generate-image-assets", "visualize-career-roadmap"], "Career 이미지 자산 계획 직접 호출 흐름"],
+  ["CA-S08", "plan-junior-growth", "직접-호출-활용-plan-junior-growth", ["junior-growth-review", "transition-readiness"], ["visualize-career-roadmap", "export-career-documents"], "주니어 성장 계획 직접 호출 흐름"],
+  ["CA-S09", "practice-game-design-interview", "직접-호출-활용-practice-game-design-interview", ["interview-question-answer-log", "honest-answer-patterns"], ["plan-junior-growth", "review-game-design-portfolio"], "게임 기획 면접 연습 직접 호출 흐름"],
+  ["CA-S10", "research-game-design-jobs", "직접-호출-활용-research-game-design-jobs", ["job-posting-evidence", "evidence-gap-plan"], ["map-game-design-career", "build-game-design-portfolio", "practice-game-design-interview"], "게임 기획 채용 근거 조사 직접 호출 흐름"],
+  ["CA-S11", "reverse-engineer-game-design", "직접-호출-활용-reverse-engineer-game-design", ["reverse-design-document", "game-analysis-report"], ["build-game-design-portfolio", "export-career-documents"], "게임 역기획 직접 호출 흐름"],
+  ["CA-S12", "review-game-design-portfolio", "직접-호출-활용-review-game-design-portfolio", ["five-axis-review", "portfolio-backlog"], ["build-game-design-portfolio", "practice-game-design-interview", "export-career-documents"], "게임 기획 포트폴리오 검토 직접 호출 흐름"],
+  ["CA-S13", "review-image-assets", "career-직접-호출-활용-review-image-assets", ["image-asset-review", "lifecycle-receipt"], ["export-career-documents"], "Career 이미지 자산 검토 직접 호출 흐름"],
+  ["CA-S14", "svg-infographic", "career-직접-호출-활용-svg-infographic", ["editable-svg", "png-2x", "render-evidence"], ["visualize-career-roadmap"], "Career SVG 인포그래픽 직접 호출 흐름"],
+  ["CA-S15", "visualize-career-roadmap", "직접-호출-활용-visualize-career-roadmap", ["editable-svg", "png-2x", "visualization-evidence"], ["export-career-documents"], "게임 기획 커리어 로드맵 시각화 직접 호출 흐름"],
+].map(([id, skill, anchor, outputs, next_skills, alt]) => ({
+  id,
+  product: "game-design-career",
+  skill,
+  document: `guides/game-design-career/skills/${skill}.md`,
+  anchor,
+  outputs,
+  next_skills,
+  diagram: {
+    svg: `guides/assets/game-design-career/skills/${skill}.svg`,
+    png: `guides/assets/game-design-career/skills/${skill}.png`,
+    alt,
+  },
+})));
+
+function projectCareerCase({ id, product, view, document, anchor, audiences, level, skills, templates, outputs, diagram }) {
+  return {
+    id, product, view, document, anchor, audiences, level, skills, templates, outputs,
+    diagram: { svg: diagram.svg, png: diagram.png, alt: diagram.alt },
+  };
+}
+
+function projectCareerSkillCase({ id, product, skill, document, anchor, outputs, next_skills, diagram }) {
+  return {
+    id, product, skill, document, anchor, outputs, next_skills,
+    diagram: { svg: diagram.svg, png: diagram.png, alt: diagram.alt },
+  };
+}
+
+function assertCareerManifestMetadata({ cases, skillCases }) {
+  assert.deepEqual(cases.map(projectCareerCase), CAREER_CASE_CONTRACT, "all Career case metadata matches the declared coverage contract");
+  assert.deepEqual(skillCases.map(projectCareerSkillCase), CAREER_SKILL_CASE_CONTRACT, "all Career direct-use metadata matches the declared coverage contract");
+}
 const AUDIENCE_BOUNDARY_EXPECTATIONS = Object.freeze({
   "AUD-01": {
     approver: "교사 또는 멘토",
@@ -1076,7 +1161,40 @@ test("Career manifest declares the ordered case and installed-skill coverage wit
     "CA-T06", "CA-T07", "CA-T08", "CA-T09", "CA-T10",
   ]);
   assert.equal(careerSkillCases.length, 15);
+  assert.deepEqual(careerSkillCases.map((entry) => entry.id), [
+    "CA-S01", "CA-S02", "CA-S03", "CA-S04", "CA-S05",
+    "CA-S06", "CA-S07", "CA-S08", "CA-S09", "CA-S10",
+    "CA-S11", "CA-S12", "CA-S13", "CA-S14", "CA-S15",
+  ]);
   assert.deepEqual(careerSkillCases.map((entry) => entry.skill), careerInventory.skillIds);
+  assertCareerManifestMetadata({ cases: careerCases, skillCases: careerSkillCases });
+
+  const copy = (entries) => structuredClone(entries);
+  const swapField = (entries, left, right, field) => {
+    const swapped = copy(entries);
+    [swapped[left][field], swapped[right][field]] = [swapped[right][field], swapped[left][field]];
+    return swapped;
+  };
+  const mutationMatrix = [
+    ["case document swap", () => ({ cases: swapField(careerCases, 0, 8, "document"), skillCases: careerSkillCases })],
+    ["case anchor swap", () => ({ cases: swapField(careerCases, 0, 1, "anchor"), skillCases: careerSkillCases })],
+    ["case diagram swap", () => ({ cases: swapField(careerCases, 0, 1, "diagram"), skillCases: careerSkillCases })],
+    ["case outputs swap", () => ({ cases: swapField(careerCases, 0, 1, "outputs"), skillCases: careerSkillCases })],
+    ["skill-case skill swap", () => ({ cases: careerCases, skillCases: swapField(careerSkillCases, 1, 4, "skill") })],
+    ["skill-case anchor swap", () => ({ cases: careerCases, skillCases: swapField(careerSkillCases, 0, 3, "anchor") })],
+    ["skill-case diagram swap", () => ({ cases: careerCases, skillCases: swapField(careerSkillCases, 8, 9, "diagram") })],
+    ["skill-case outputs swap", () => ({ cases: careerCases, skillCases: swapField(careerSkillCases, 8, 9, "outputs") })],
+    ["skill-case next-skills swap", () => ({ cases: careerCases, skillCases: swapField(careerSkillCases, 8, 11, "next_skills") })],
+    ["CA-S ID drift", () => {
+      const skillCases = copy(careerSkillCases);
+      skillCases[7].id = "CA-S99";
+      return { cases: careerCases, skillCases };
+    }],
+  ];
+  for (const [label, mutate] of mutationMatrix) {
+    const mutated = mutate();
+    assert.throws(() => assertCareerManifestMetadata(mutated), assert.AssertionError, `${label} must fail the exact Career contract`);
+  }
 
   const result = await validateUseCaseGuides({
     repoRoot,
