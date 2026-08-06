@@ -23,7 +23,7 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 
 1. [설치](game-design-studio/installation.md) 또는 [Career 설치](game-design-career/installation.md)에서 App·CLI 중 한 환경만 설정합니다.
 2. [Studio 5분 빠른 시작](game-design-studio/quick-start.md) 또는 [Career 5분 빠른 시작](game-design-career/quick-start.md)으로 첫 요청을 만듭니다.
-3. [Studio 템플릿](game-design-studio/templates.md)·[스킬](game-design-studio/skills/README.md) 또는 [Career 템플릿](game-design-career/templates.md)·[스킬](game-design-career/skills/README.md)에서 필요한 한 쌍을 고릅니다.
+3. [Studio 템플릿](game-design-studio/templates.md)·[스킬](game-design-studio/skills/README.md) 또는 [Career 템플릿](game-design-career/templates.md)·[스킬](game-design-career/skills/README.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 연결된 스킬을 직접 호출합니다.
 4. 제품 README의 [Studio 목적별 레시피](game-design-studio/README.md#목적별-레시피) 또는 [Career 목적별 레시피](game-design-career/README.md#목적별-레시피)를 선택합니다.
 5. [Studio workflow](game-design-studio/workflow.md) 또는 [Career workflow](game-design-career/workflow.md)에서 다음 사람 결정을 확인합니다.
 6. [Studio 이미지 자산](game-design-studio/image-assets.md) 또는 [Career 이미지 자산](game-design-career/image-assets.md)으로 image slot을 계획합니다.
@@ -54,11 +54,11 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 
 | 상황 | 읽기 순서 |
 | --- | --- |
-| App에서 처음 설치 | 제품 가이드 → 설치의 `Codex App 설치` → 빠른 시작의 자연어 요청문 |
-| CLI에서 처음 설치 | 제품 가이드 → 설치의 `Codex CLI 설치` → 설치 확인 → 빠른 시작의 명시적 스킬 요청문 |
-| Studio로 제작 문서 작성 | Studio 빠른 시작 → 전체 워크플로 → 검토·자산·내보내기 단계 |
-| Career로 취업 준비 | Career 빠른 시작 → 전체 워크플로 → 근거 프로젝트·포트폴리오 단계 |
-| 중단된 작업 재개 | 제품 문제 해결 → 보존된 `content.md`와 차단 상태를 지정한 재개 요청문 |
+| App에서 처음 설치 | [처음 시작하기](#처음-시작하기) 1–9단계를 따르되 2단계에서 App 자연어 요청문을 사용 |
+| CLI에서 처음 설치 | [처음 시작하기](#처음-시작하기) 1–9단계를 따르되 2단계에서 CLI 명시적 스킬 요청문을 사용 |
+| Studio로 제작 문서 작성 | [처음 시작하기](#처음-시작하기) 3–8단계에서 Studio 템플릿·스킬·레시피·workflow를 순서대로 선택 |
+| Career로 취업 준비 | [처음 시작하기](#처음-시작하기) 3–8단계에서 Career 템플릿·스킬·레시피·workflow를 순서대로 선택 |
+| 중단된 작업 재개 | [처음 시작하기](#처음-시작하기) 9단계와 제품 문제 해결에서 보존된 `content.md`와 차단 상태를 지정 |
 
 ## 용어
 

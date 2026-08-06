@@ -81,12 +81,20 @@ async function assertRootLinks(markdown) {
 }
 
 function assertSharedPngLinks(markdown) {
-  const images = [...markdown.matchAll(/\[!\[[^\]]*\]\((guides\/assets\/shared\/[^)]+\.png)\)\]\(([^)]+)\)/g)];
-  assert.ok(images.length <= 3, "root README may embed at most three shared PNG diagrams");
-  assert.ok(images.some((match) => match[1] === "guides/assets/shared/plugin-selection-flow.png"), "root README must embed plugin-selection-flow.png");
-  for (const [, png, svg] of images) {
-    assert.equal(svg, png.replace(/\.png$/, ".svg"), `shared PNG must link to paired editable SVG: ${png}`);
+  const pngEmbeds = [...markdown.matchAll(/!\[[^\]]*\]\((guides\/assets\/shared\/[^)]+\.png)\)/g)]
+    .map((match) => match[1]);
+  assert.ok(pngEmbeds.length >= 1 && pngEmbeds.length <= 3, "root README must embed one to three shared PNG diagrams");
+  assert.ok(pngEmbeds.includes("guides/assets/shared/plugin-selection-flow.png"), "root README must embed plugin-selection-flow.png");
+  for (const png of pngEmbeds) {
+    const svg = png.replace(/\.png$/, ".svg");
+    const escapedPng = png.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedSvg = svg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.match(markdown, new RegExp(`\\[!\\[[^\\]]*\\]\\(${escapedPng}\\)\\]\\(${escapedSvg}\\)`), `shared PNG must link to paired editable SVG: ${png}`);
   }
+}
+
+function bashBlocks(markdown) {
+  return [...markdown.matchAll(/```bash\n([\s\S]*?)```/g)].map((match) => match[1]);
 }
 
 function assertRootContentContract(markdown) {
@@ -104,9 +112,17 @@ function assertRootContentContract(markdown) {
   assert.match(cli, /codex plugin marketplace list/);
   assert.match(cli, /codex plugin add game-design-studio@game-design-suite/);
   assert.match(cli, /codex plugin add game-design-career@game-design-suite/);
+  assert.match(cli, /필요한 제품 하나만/);
+  assert.match(cli, /둘 다 필요.*두 코드 블록 모두/);
   assert.ok(cli.indexOf("codex plugin marketplace add .") < cli.indexOf("codex plugin marketplace list"));
-  assert.ok(cli.indexOf("codex plugin marketplace list") < cli.indexOf("codex plugin add game-design-studio@game-design-suite"));
-  assert.ok(cli.lastIndexOf("codex plugin list") > cli.indexOf("codex plugin add game-design-career@game-design-suite"));
+  const installBlocks = bashBlocks(cli).filter((block) => block.includes("codex plugin add"));
+  assert.equal(installBlocks.length, 2, "Studio and Career installation choices must use separate code blocks");
+  for (const block of installBlocks) {
+    const selectors = ["game-design-studio@game-design-suite", "game-design-career@game-design-suite"]
+      .filter((selector) => block.includes(selector));
+    assert.equal(selectors.length, 1, "each install block must select exactly one product");
+  }
+  assert.ok(cli.lastIndexOf("codex plugin list") > Math.max(...installBlocks.map((block) => cli.indexOf(block))));
   assert.match(cli, /marketplace.*refresh[\s\S]*설치된 플러그인.*교체하지 않/);
   assert.match(cli, /다시 설치/);
 
@@ -186,6 +202,8 @@ test("root README contract rejects unsafe mutations in memory", async () => {
     ["safety section deleted", (value) => value.replace(/## 제한·개인정보·권리·사람 승인[\s\S]*?(?=\n## 문제 해결)/, "")],
     ["shared PNG no longer links to SVG", (value) => value.replace("guides/assets/shared/plugin-selection-flow.svg", "guides/README.md")],
     ["marketplace refresh is collapsed into plugin update", (value) => value.replace("refresh할 뿐 설치된 플러그인을 교체하지 않습니다", "설치된 플러그인을 자동 업데이트합니다")],
+    ["two products are installed in one mandatory block", (value) => value.replace("codex plugin add game-design-studio@game-design-suite", "codex plugin add game-design-studio@game-design-suite\ncodex plugin add game-design-career@game-design-suite")],
+    ["three unpaired shared PNG embeds are added", (value) => value + "\n![A](guides/assets/shared/a.png)\n![B](guides/assets/shared/b.png)\n![C](guides/assets/shared/c.png)\n"],
   ];
   for (const [label, mutate] of mutations) {
     assert.throws(() => assertRootContentContract(mutate(readme)), undefined, label);
@@ -240,6 +258,8 @@ test("beginner guides use repository-root CLI commands and the real visualizatio
   for (const [product, wrapper] of wrappers) {
     const visualization = await readFile(path.join(guideRoot, product, "visualization.md"), "utf8");
     assert.match(visualization, new RegExp(wrapper.replaceAll("/", "\\/")));
+    assert.doesNotMatch(visualization, /<svg-path>|<png-path>/);
+    assert.match(visualization, /교체 placeholder/);
     await assertRegularNonSymlinkFile(path.join(root, wrapper));
   }
 });
@@ -258,6 +278,9 @@ test("guide indexes give beginners the same complete reading path", async () => 
   ];
   const global = await readFile(path.join(guideRoot, "README.md"), "utf8");
   const globalStart = section(global, "처음 시작하기");
+  const readingTable = section(global, "초보자 읽기 경로");
+  assert.match(readingTable, /처음 시작하기/);
+  assert.doesNotMatch(readingTable, /빠른 시작 → 전체 워크플로/);
   for (const product of products) {
     const local = await readFile(path.join(guideRoot, product, "README.md"), "utf8");
     const productStart = section(local, "처음 시작하기");
@@ -268,6 +291,10 @@ test("guide indexes give beginners the same complete reading path", async () => 
         assert.ok(index > previous, `${label} beginner path is missing or misorders ${target}`);
         previous = index;
       }
+    }
+    for (const [label, markdown] of [["global", globalStart], [product, productStart]]) {
+      assert.match(markdown, /목적에 맞는 템플릿을 고르고.*필요하면.*스킬을 직접 호출/s, `${label} must not imply one-to-one template-to-skill mapping`);
+      assert.doesNotMatch(markdown, /템플릿.*스킬.*한 쌍/, `${label} must not describe templates and skills as one-to-one pairs`);
     }
   }
 });

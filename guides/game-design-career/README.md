@@ -6,7 +6,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
 2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
-3. [Canonical Artifact 템플릿](templates.md)과 [스킬 레퍼런스](skills/README.md)에서 필요한 한 쌍을 고릅니다.
+3. [Canonical Artifact 템플릿](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 레퍼런스](skills/README.md)의 연결된 스킬을 직접 호출합니다.
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 경력 단계와 다음 증거 작업을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 proof image slot과 사람 승인 경계를 계획합니다.
@@ -26,9 +26,9 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 대표 도식:
 
 - [![경력 단계 라우팅](../assets/game-design-career/career-stage-routing.png)](../assets/game-design-career/career-stage-routing.svg)
-- [편집 가능한 SVG 열기](../assets/game-design-career/career-stage-routing.svg)
+- [경력 단계 라우팅 SVG 열기](../assets/game-design-career/career-stage-routing.svg)
 - [![역할 gap과 학습 로드맵](../assets/game-design-career/role-gap-learning-roadmap.png)](../assets/game-design-career/role-gap-learning-roadmap.svg)
-- [편집 가능한 SVG 열기](../assets/game-design-career/role-gap-learning-roadmap.svg)
+- [역할 gap과 학습 로드맵 SVG 열기](../assets/game-design-career/role-gap-learning-roadmap.svg)
 
 ## 가이드 목차
 

@@ -44,13 +44,30 @@ App과 CLI의 설치·활성화 UI는 다릅니다. App에서 CLI의 `/plugins` 
 
 ## Codex CLI 설치
 
-저장소 루트에서 다음 명령을 순서대로 실행합니다.
+저장소 루트에서 marketplace를 등록하고 목록을 확인합니다.
 
 ```bash
 codex plugin marketplace add .
 codex plugin marketplace list
+```
+
+필요한 제품 하나만 선택해 설치합니다.
+
+**Studio만 설치**
+
+```bash
 codex plugin add game-design-studio@game-design-suite
+```
+
+**Career만 설치**
+
+```bash
 codex plugin add game-design-career@game-design-suite
+```
+
+둘 다 필요하면 위의 두 코드 블록 모두 실행합니다. 선택한 설치가 끝나면 상태를 확인합니다.
+
+```bash
 codex plugin list
 ```
 
