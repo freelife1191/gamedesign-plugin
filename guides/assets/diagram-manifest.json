@@ -52,7 +52,7 @@
       "scope": "shared",
       "svg": "shared/document-export-flow.svg",
       "png": "shared/document-export-flow.png",
-      "alt": "검증된 Canonical Artifact의 내보내기 preflight가 MD, PDF, DOCX, PPTX의 pending·blocked·unavailable 준비 상태로 분기되는 흐름.",
+      "alt": "Canonical Artifact 내보내기 preflight 뒤 모든 형식에 공통인 not-requested·blocked·pending·unavailable 상태와 MD·PDF·DOCX·PPTX의 형식별 검증을 보여 주는 흐름.",
       "sources": ["../game-design-studio/exports.md", "../game-design-career/exports.md"],
       "usedBy": ["../game-design-studio/exports.md", "../game-design-career/exports.md"]
     }
