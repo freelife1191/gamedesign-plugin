@@ -55,3 +55,35 @@ test("use-case manifest rejects duplicate IDs and traversal diagram paths", asyn
   assert.ok(result.errors.some((error) => error.includes("duplicate id: AUD-01")));
   assert.ok(result.errors.some((error) => error.includes("unsafe path: ../../escape.svg")));
 });
+
+test("use-case manifest reports malformed case skills with injected inventories", async (t) => {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "use-case-manifest-"));
+  t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+  await mkdir(path.join(fixtureRoot, "guides", "use-cases"), { recursive: true });
+  await writeFile(path.join(fixtureRoot, "guides", "use-cases", "use-case-manifest.json"), JSON.stringify({
+    version: 1,
+    audience_paths: [],
+    cases: [{
+      id: "ST-C01",
+      product: "game-design-studio",
+      view: "competency",
+      audiences: ["AUD-01"],
+      level: ["foundation"],
+      document: "guides/game-design-studio/use-cases/competency-paths.md",
+      anchor: "st-c01",
+      templates: [],
+      outputs: [],
+      diagram: { svg: "guides/assets/st-c01.svg", png: "guides/assets/st-c01.png", alt: "Studio case" },
+    }],
+    skill_cases: [],
+  }, null, 2));
+
+  const { validateUseCaseGuides } = await import("../../tooling/lib/use-case-guides.mjs");
+  const result = await validateUseCaseGuides({
+    repoRoot: fixtureRoot,
+    inventories: new Map([["game-design-studio", { skillIds: [], templateIds: [] }]]),
+  });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((error) => error.includes("cases[0].skills must be an array")));
+});

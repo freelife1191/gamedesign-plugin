@@ -135,7 +135,7 @@ function validateCatalogBindings(manifest, inventories, errors) {
       continue;
     }
     const skillIds = kind === "case"
-      ? entry.skills
+      ? (Array.isArray(entry.skills) ? entry.skills : [])
       : kind === "skill"
         ? [entry.skill, ...(Array.isArray(entry.next_skills) ? entry.next_skills : [])]
         : [];
