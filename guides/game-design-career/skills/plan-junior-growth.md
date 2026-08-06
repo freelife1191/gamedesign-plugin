@@ -45,8 +45,8 @@ target requirement register, project-event evidence ledger, quarterly goal recor
 
 ## 관련 템플릿·품질 프로필·전문 역할
 
-- Template ID: `junior-growth-review` — [junior-growth-review 템플릿](../templates.md#junior-growth-review).
-- Quality Profile ID: `junior-growth-review`.
+- Template ID: `junior-growth-review` 또는 `transition-readiness` — [junior-growth-review 템플릿](../templates.md#junior-growth-review), [transition-readiness 템플릿](../templates.md#transition-readiness).
+- Quality Profile ID: `junior-growth-review` 또는 `transition-readiness`.
 - Reviewer/role ID: `game-design-mentor · career-strategist`.
 
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
@@ -70,6 +70,8 @@ $game-design-career:plan-junior-growth 기존 goalId와 eventId를 유지하고 
 ```
 
 ## 다음 작업 요청문
+
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
 
 **복사 가능한 다음 handoff**
 

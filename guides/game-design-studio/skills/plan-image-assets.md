@@ -70,16 +70,22 @@ $game-design-studio:plan-image-assets 기존 image-assets.yml과 stable IDs를 �
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 조건부 다음 handoff**
 
-@Game Design Studio mode가 prompt-only면 plan만 보존하고, select/required/all의 finite manifest job이 허용될 때만 generate-image-assets로 진행해.
+@Game Design Studio mode가 prompt-only면 prompt·placeholder만 보존해. illustration job이 select/required/all의 finite manifest 범위면 generate-image-assets로, Skillstead diagram slot이면 visualize-game-design으로 진행해.
 
 ```text
 $game-design-studio:generate-image-assets artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
 ```
 
-`prompt-only`일 때의 허용 대상은 이 planning artifact뿐이며, `select`/`required`/`all`의 유한 manifest job만 `generate-image-assets`를 허용합니다.
+```text
+$game-design-studio:visualize-game-design artifact=artifacts/coop-rpg-brief Skillstead diagram slot의 source mapping·SVG/2× PNG QA만 진행해.
+```
+
+`prompt-only`일 때는 생성 handoff 없이 이 planning artifact의 prompt·placeholder만 유지합니다. `select`/`required`/`all`의 유한 illustration job만 `generate-image-assets`를 허용하고, Skillstead diagram slot은 `visualize-game-design`만 허용합니다.
 
 ## 관련 문서
 
-[템플릿 카탈로그](../templates.md), [generate-image-assets 스킬](./generate-image-assets.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[템플릿 카탈로그](../templates.md), [generate-image-assets 스킬](./generate-image-assets.md), [visualize-game-design 스킬](./visualize-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

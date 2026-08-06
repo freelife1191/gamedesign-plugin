@@ -74,6 +74,8 @@ $game-design-studio:visualize-game-design 기존 SVG와 source mapping을 보존
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 조건부 다음 handoff**
 
 diagram source/evidence 또는 visual QA가 부족하면 먼저 `review-game-design`으로 finding을 남깁니다. SVG·2× PNG evidence가 검증되고 파생 형식이 필요할 때만 `export-game-design-documents`를 호출합니다.

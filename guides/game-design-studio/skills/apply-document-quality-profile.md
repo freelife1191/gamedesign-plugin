@@ -36,7 +36,19 @@ $game-design-studio:apply-document-quality-profile goal=live-service RPG 스태�
 
 ## 내부 진행 흐름
 
-설치된 index와 template-profile map만 읽고 후보를 점수화합니다. primary 하나를 고른 뒤 알려진 additive source만 합성하고 stable ID checklist와 manifest를 만듭니다. 관련 역할은 `document-quality-editor`, 다음 스킬은 `design-game-systems`이며 주 profile은 `system-feature-specification`입니다.
+설치된 index와 template-profile map만 읽고 후보를 점수화합니다. primary 하나를 고른 뒤 알려진 additive source만 합성하고 stable ID checklist와 manifest를 만듭니다. 관련 역할은 `document-quality-editor`이며, 완료 뒤에는 `routing.json.routes`에서 caller가 고른 실제 domain skill로 돌아갑니다. 이 단계가 시스템 설계로 route를 바꾸지 않습니다.
+
+| 선택한 route | 다음 skill |
+| --- | --- |
+| vision | `define-game-vision` |
+| systems | `design-game-systems` |
+| content | `design-game-content` |
+| player experience | `design-player-experience` |
+| economy 또는 liveops | `design-game-economy-and-liveops` |
+| production | `plan-game-production` |
+| review | `review-game-design` |
+| visualization | `visualize-game-design` |
+| export | `export-game-design-documents` |
 
 ## 생성 파일과 결과 구조
 
@@ -70,14 +82,26 @@ $game-design-studio:apply-document-quality-profile 이전 selection record와 �
 
 ## 다음 작업 요청문
 
-**복사 가능한 다음 handoff**
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
 
-@Game Design Studio design-game-systems로 현재 Artifact의 검증된 기록을 이어 시스템 계약을 작성해.
+**복사 가능한 조건부 다음 handoff**
+
+`<selected-skill>`은 routing record의 실제 skill ID로 바꿉니다. profile 적용 뒤에는 선택된 route 하나만 호출하며, 아래 시스템·콘텐츠 예시는 전체 route 목록을 대신하지 않습니다.
+
+@Game Design Studio systems route면 design-game-systems로, content route면 design-game-content로 현재 Artifact의 검증된 기록을 이어 진행해.
 
 ```text
-$game-design-studio:design-game-systems artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-studio:design-game-systems artifact=artifacts/stamina-system systems route일 때만 기존 evidence/decision을 보존하고 진행해.
+```
+
+```text
+$game-design-studio:design-game-content artifact=artifacts/quest-brief content route일 때만 기존 evidence/decision을 보존하고 진행해.
+```
+
+```text
+$game-design-studio:<selected-skill> artifact=artifacts/<artifact-id> routing.json.routes에서 선택한 skill ID로 바꿔 한 route만 실행해.
 ```
 
 ## 관련 문서
 
-[템플릿 카탈로그](../templates.md), [design-game-systems 스킬](./design-game-systems.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[템플릿 카탈로그](../templates.md), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)

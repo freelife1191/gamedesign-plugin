@@ -82,5 +82,6 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 | probe | host가 PDF·문서·발표 파일 같은 기능을 실제로 쓸 수 있는지 먼저 확인하는 점검입니다. |
 | preflight | 파일을 만들기 전에 artifact, 입력, 안전한 출력 경로와 capability 상태를 검사해 준비 manifest를 만드는 단계입니다. |
 | downstream workflow | preflight 뒤 host capability를 가진 별도 작업이 실제 파일 생성과 형식 QA를 수행하는 단계입니다. |
+| `<artifact-path>` / `<export-manifest-path>` / `<selected-skill>` | 복사 전 사용자가 실제 artifact 경로, export manifest 경로, routing에서 선택한 skill ID로 바꿔야 하는 자리표시자입니다. shell redirection이나 실제 파일명으로 해석하지 않습니다. |
 
 플러그인은 합격, 흥행, 재미, 제작 가능성 또는 사람의 승인을 보장하지 않습니다. 사실, 추론, 가정, 미확정 결정과 차단 상태를 분리해 결과를 검토할 수 있게 합니다.

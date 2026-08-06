@@ -70,6 +70,8 @@ $game-design-studio:design-game-systems 기존 system-specification에서 미해
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 다음 handoff**
 
 @Game Design Studio review-game-design로 현재 Artifact의 검증된 기록을 이어 rule precedence와 recovery blocker를 검토해.

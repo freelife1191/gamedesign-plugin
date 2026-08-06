@@ -70,9 +70,11 @@ $game-design-studio:export-game-design-documents 기존 artifact와 준비 manif
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 다음 handoff**
 
-@Game Design Studio host probe가 available로 보고한 MD/PDF/DOCX/PPTX capability만 사용해 이 export manifest의 실제 파일을 생성하고 format QA evidence를 반환해.
+@Game Design Studio built-in canonical-markdown으로 MD를 capability와 무관하게 생성·terminal validation해. 이어 host probe가 available로 보고한 pdf/documents/presentations capability만 사용해 PDF/DOCX/PPTX 실제 파일과 format QA evidence를 반환해.
 
 ```text
 같은 세션에서 built-in canonical-markdown으로 MD terminal validation을 실행해. 이어 available pdf/documents/presentations capability로 요청한 PDF/DOCX/PPTX 생성·format QA를 실행해.

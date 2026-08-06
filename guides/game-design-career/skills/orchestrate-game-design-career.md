@@ -36,7 +36,9 @@ $game-design-career:orchestrate-game-design-career stage=entry, targetRole=syste
 
 ## 내부 진행 흐름
 
-intake를 정규화하고 route를 바꾸는 질문만 하나 묻습니다. stage가 불명확하면 `unclear`와 multiple paths를 만듭니다. artifact별로 quality profile을 먼저 적용하고 current employer·project·posting·tool claim은 registry-bound `asOfDate`로 조사합니다. portfolio review는 `portfolio-reviewer`, `evidence-auditor`, `document-quality-editor` 세 역할을 같은 질문으로 실행하며 findings를 severity, evidence-gap ID, section ID, role priority 순으로 합칩니다.
+intake를 정규화하고 route를 바꾸는 질문만 하나 묻습니다. stage가 불명확하면 `unclear`와 multiple paths를 만듭니다. `scenarioChains`와 `routeSkills`에서 선택한 가장 작은 skill chain만 확장하며, 한 실행에서는 선택된 chain 밖 skill을 호출하지 않습니다. artifact별로 quality profile을 먼저 적용하고 current employer·project·posting·tool claim은 registry-bound `asOfDate`로 조사합니다. portfolio review는 `portfolio-reviewer`, `evidence-auditor`, `document-quality-editor` 세 역할을 같은 질문으로 실행하며 findings를 severity, evidence-gap ID, section ID, role priority 순으로 합칩니다.
+
+선택 가능한 계열은 map, current job research, reverse design, interview, junior growth, visualization, export, portfolio build/review입니다. 실제 skill ID는 `map-game-design-career`, `research-game-design-jobs`, `build-game-design-portfolio`, `reverse-engineer-game-design`, `practice-game-design-interview`, `review-game-design-portfolio`, `plan-junior-growth`, `visualize-career-roadmap`, `export-career-documents`입니다. 예를 들어 entry roadmap은 map→visualize→export, reverse portfolio는 reverse→export, transition은 research→interview→growth→visualize→export chain을 선택합니다.
 
 ## 생성 파일과 결과 구조
 
@@ -70,14 +72,26 @@ $game-design-career:orchestrate-game-design-career 기존 stage brief와 evidenc
 
 ## 다음 작업 요청문
 
-**복사 가능한 다음 handoff**
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
 
-@Game Design Career map-game-design-career로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+`<selected-skill>`은 선택된 scenario chain의 실제 skill ID로 바꿉니다. stage/증거 조건에 맞는 다음 skill 하나만 호출하며, role map은 여러 가능한 첫 route 중 하나입니다.
+
+@Game Design Career entry role gap이면 map-game-design-career로, current job evidence면 research-game-design-jobs로, 이미 검증된 roadmap 관계면 visualize-career-roadmap로 이어 진행해.
 
 ```text
-$game-design-career:map-game-design-career artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-career:map-game-design-career artifact=artifacts/entry-role-map entry role-gap route일 때만 진행해.
+```
+
+```text
+$game-design-career:research-game-design-jobs artifact=artifacts/job-evidence current-job research route일 때만 진행해.
+```
+
+```text
+$game-design-career:<selected-skill> artifact=artifacts/<artifact-id> scenario chain에서 선택한 skill ID로 바꿔 한 route만 실행해.
 ```
 
 ## 관련 문서
 
-[career-stage-goal 템플릿](../templates.md#career-stage-goal), [map-game-design-career 스킬](./map-game-design-career.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[career-stage-goal 템플릿](../templates.md#career-stage-goal), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)

@@ -36,7 +36,9 @@ $game-design-studio:orchestrate-game-design-project 신규 모바일 협동 RPG�
 
 ## 내부 진행 흐름
 
-intake를 정리하고 exact route와 artifact를 고른 뒤 각 artifact에 quality profile을 적용합니다. 필요하면 이미지 계획을 생성보다 먼저 실행하고 최대 3개 역할 finding을 결정적으로 병합합니다. 주 템플릿/profile은 `game-design-brief`/`game-design-brief`, 관련 역할은 `lead-game-designer`를 포함한 범위별 최대 3개, 다음 스킬은 선택된 첫 domain skill입니다.
+intake를 정리하고 `routing.json.routes`의 exact route와 artifact를 고른 뒤 각 artifact에 quality profile을 적용합니다. 한 실행에서는 선택된 route만 호출하며, 필요하면 이미지 계획을 생성보다 먼저 실행하고 최대 3개 역할 finding을 결정적으로 병합합니다. 주 템플릿/profile은 `game-design-brief`/`game-design-brief`, 관련 역할은 `lead-game-designer`를 포함한 범위별 최대 3개입니다.
+
+지원되는 다음 route는 vision `define-game-vision`, systems `design-game-systems`, content `design-game-content`, player experience `design-player-experience`, economy/liveops `design-game-economy-and-liveops`, production `plan-game-production`, review `review-game-design`, visualization `visualize-game-design`, export `export-game-design-documents`입니다.
 
 ## 생성 파일과 결과 구조
 
@@ -70,9 +72,11 @@ $game-design-studio:orchestrate-game-design-project 기존 Canonical Artifact와
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 조건부 다음 handoff**
 
-@Game Design Studio 목표·핵심 재미가 아직 미확정이면 define-game-vision으로, 이미 시스템 범위가 확정됐으면 design-game-systems로 현재 Artifact를 이어 진행해.
+`<selected-skill>`은 routing record의 실제 skill ID로 바꿉니다. 목표·핵심 재미가 미확정이면 vision, 시스템 범위면 systems, 형식 전달만 남았으면 export처럼 조건에 맞는 **하나의** route만 이어 진행합니다.
 
 ```text
 $game-design-studio:define-game-vision artifact=<artifact-path> vision uncertainty가 있을 때만 진행해.
@@ -82,6 +86,14 @@ $game-design-studio:define-game-vision artifact=<artifact-path> vision uncertain
 $game-design-studio:design-game-systems artifact=<artifact-path> 시스템 범위가 이미 확정됐을 때만 진행해.
 ```
 
+```text
+$game-design-studio:export-game-design-documents artifact=artifacts/approved-gdd 승인 가능한 artifact에 요청 형식이 남았을 때만 진행해.
+```
+
+```text
+$game-design-studio:<selected-skill> artifact=artifacts/<artifact-id> routing.json.routes에서 선택한 skill ID로 바꿔 한 route만 실행해.
+```
+
 ## 관련 문서
 
-[game-design-brief 템플릿](../templates.md#game-design-brief), [define-game-vision 스킬](./define-game-vision.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[game-design-brief 템플릿](../templates.md#game-design-brief), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)

@@ -36,7 +36,9 @@ $game-design-career:apply-document-quality-profile goal=시스템 역기획 case
 
 ## 내부 진행 흐름
 
-packaged Career index와 template-profile map만 읽고 compatible template, artifact type, format, audience, goal 순으로 점수화합니다. primary 하나를 선택한 뒤 알려진 additive source만 합성하고 stable IDs와 digest를 묶습니다. unknown override는 nearest profile과 차이를 보고하고 explicit fallback 전에는 선택하지 않습니다.
+packaged Career index와 template-profile map만 읽고 compatible template, artifact type, format, audience, goal 순으로 점수화합니다. primary 하나를 선택한 뒤 알려진 additive source만 합성하고 stable IDs와 digest를 묶습니다. unknown override는 nearest profile과 차이를 보고하고 explicit fallback 전에는 선택하지 않습니다. 완료 뒤에는 `routing.json.routes`, `scenarioChains`, `routeSkills`에서 caller/scenario가 고른 실제 skill로 돌아가며, 이 단계가 항상 role map으로 route를 바꾸지 않습니다.
+
+지원되는 다음 skill은 `map-game-design-career`, `research-game-design-jobs`, `build-game-design-portfolio`, `reverse-engineer-game-design`, `practice-game-design-interview`, `review-game-design-portfolio`, `plan-junior-growth`, `visualize-career-roadmap`, `export-career-documents`입니다.
 
 ## 생성 파일과 결과 구조
 
@@ -70,14 +72,26 @@ $game-design-career:apply-document-quality-profile 이전 selection record와 �
 
 ## 다음 작업 요청문
 
-**복사 가능한 다음 handoff**
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
 
-@Game Design Career map-game-design-career로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+**복사 가능한 조건부 다음 handoff**
+
+`<selected-skill>`은 caller/scenario가 `routing.json`에서 고른 실제 skill ID로 바꿉니다. 아래 role-map·job-research 예시는 전체 route를 대신하지 않으며 한 번에는 선택된 skill 하나만 호출합니다.
+
+@Game Design Career role gap이면 map-game-design-career로, current posting 증거가 필요하면 research-game-design-jobs로 현재 Artifact를 이어 진행해.
 
 ```text
-$game-design-career:map-game-design-career artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-career:map-game-design-career artifact=artifacts/entry-role-map role gap route일 때만 기존 evidence/decision을 보존하고 진행해.
+```
+
+```text
+$game-design-career:research-game-design-jobs artifact=artifacts/job-evidence current posting route일 때만 fresh evidence를 이어 수집해.
+```
+
+```text
+$game-design-career:<selected-skill> artifact=artifacts/<artifact-id> routing.json에서 선택한 skill ID로 바꿔 한 route만 실행해.
 ```
 
 ## 관련 문서
 
-[템플릿 카탈로그](../templates.md), [map-game-design-career 스킬](./map-game-design-career.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[템플릿 카탈로그](../templates.md), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)

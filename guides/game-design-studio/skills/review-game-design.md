@@ -70,12 +70,18 @@ $game-design-studio:review-game-design 이전 blocked review를 유지하고, �
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 조건부 다음 handoff**
 
-minimum fix가 남아 있으면 같은 review artifact를 보존한 채 `review-game-design`을 다시 실행합니다. 모든 blocker가 승인 가능하고 파생 형식이 필요할 때만 `export-game-design-documents`로 넘깁니다.
+minimum fix가 남아 있으면 같은 review artifact를 보존한 채 `review-game-design`을 다시 실행합니다. diagram source·slot·visual QA gap finding이면 `visualize-game-design`으로 넘기며, 모든 blocker가 승인 가능하고 파생 형식이 필요할 때만 `export-game-design-documents`로 넘깁니다.
 
 ```text
 $game-design-studio:review-game-design artifact=<artifact-path> finding의 minimum fix 반영 여부만 재검토해.
+```
+
+```text
+$game-design-studio:visualize-game-design artifact=artifacts/reviewed-gdd diagram gap finding의 source mapping과 visual QA만 보완해.
 ```
 
 ```text
@@ -84,4 +90,4 @@ $game-design-studio:export-game-design-documents artifact=<artifact-path> 승인
 
 ## 관련 문서
 
-[game-design-review 템플릿](../templates.md#game-design-review), [내보내기](./export-game-design-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+[game-design-review 템플릿](../templates.md#game-design-review), [도식화](./visualize-game-design.md), [내보내기](./export-game-design-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)

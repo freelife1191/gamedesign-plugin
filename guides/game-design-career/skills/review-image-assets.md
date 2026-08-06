@@ -70,6 +70,8 @@ $game-design-career:review-image-assets 기존 findings와 state를 유지하고
 
 ## 다음 작업 요청문
 
+> `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
+
 **복사 가능한 조건부 다음 handoff**
 
 @Game Design Career requested transition이 document-approved가 되어 export binding 조건을 만족할 때만 export-career-documents로 진행해. 그렇지 않으면 review finding을 보존해.
