@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import * as marketplaceSmoke from "../../tooling/marketplace-smoke.mjs";
 import {
   bridgeLocalAuth,
   buildProofCommand,
@@ -19,6 +20,27 @@ import { artifactTreeIdentity, runMarketplaceProof } from "../../tooling/lib/mar
 
 const product = "game-design-career";
 const pluginId = `${product}@game-design-suite`;
+
+test("codex exec uses the slow marketplace timeout through its runner seam", () => {
+  const calls = [];
+  const result = marketplaceSmoke.runCodexExec(
+    "codex",
+    ["exec", "--json"],
+    { cwd: "/workspace", env: { CODEX_HOME: "/isolated" } },
+    (...args) => {
+      calls.push(args);
+      return "jsonl";
+    },
+  );
+
+  assert.equal(marketplaceSmoke.CODEX_EXEC_TIMEOUT_MS, 300_000);
+  assert.equal(result, "jsonl");
+  assert.deepEqual(calls, [[
+    "codex",
+    ["exec", "--json"],
+    { cwd: "/workspace", env: { CODEX_HOME: "/isolated" }, timeout: 300_000 },
+  ]]);
+});
 
 test("marketplace smoke expects all fourteen product skills plus vendored Skillstead", () => {
   assert.equal(PACKAGED_SKILL_COUNT, 15);

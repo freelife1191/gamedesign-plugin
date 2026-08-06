@@ -14,6 +14,7 @@ import { artifactTreeIdentity } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
 export const PACKAGED_SKILL_COUNT = 15;
+export const CODEX_EXEC_TIMEOUT_MS = 300_000;
 const PRODUCTS = Object.freeze([
   { name: "game-design-career", skillName: "orchestrate-game-design-career", skill: "$game-design-career:orchestrate-game-design-career" },
   { name: "game-design-studio", skillName: "orchestrate-game-design-project", skill: "$game-design-studio:orchestrate-game-design-project" },
@@ -303,6 +304,10 @@ function run(command, args, { cwd, env, input, timeout = 30000, json = false }) 
   return json ? safeJson(result.stdout, args.join(" ")) : result.stdout;
 }
 
+export function runCodexExec(command, args, options, execute = run) {
+  return execute(command, args, { ...options, timeout: CODEX_EXEC_TIMEOUT_MS });
+}
+
 async function countSkills(cacheRoot) {
   const entries = await readdir(path.join(cacheRoot, "skills"), { withFileTypes: true });
   let count = 0;
@@ -391,10 +396,9 @@ export async function runMarketplaceSmoke({
         "이 명령을 다른 명령과 연결하거나 리다이렉션하거나 인수를 변경하지 마세요.",
         "명령이 성공한 뒤 짧게 완료만 보고하세요.",
       ].join("\n");
-      const jsonl = run(codex, ["exec", "--ephemeral", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", workspace, prompt], {
+      const jsonl = runCodexExec(codex, ["exec", "--ephemeral", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "-C", workspace, prompt], {
         cwd: workspace,
         env,
-        timeout: 180000,
       });
       await parseExecJsonl(jsonl, {
         cacheRoot,
