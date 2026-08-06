@@ -48,10 +48,18 @@ Economy Owner **정하늘**이 price/probability evidence와 player consequence�
 
 ```text
 game-design/<project-id>/
-├── economy-balance/content.md
-├── economy-balance/evidence.yml
-├── liveops-experiment-event/content.md
-└── decisions/README.md
+├── economy-balance/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+└── liveops-experiment-event/
+    ├── content.md
+    ├── evidence.yml
+    ├── decisions/README.md
+    ├── assets/README.md
+    └── export-manifest.yml
 ```
 
 `game-design/<project-id>/economy-balance/`와 `game-design/<project-id>/liveops-experiment-event/`의 `content.md`는 하나의 policy date와 rollback decision을 참조합니다.

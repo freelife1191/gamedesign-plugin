@@ -49,10 +49,14 @@ Systems Owner **박도현**이 rule precedence와 exception policy를 승인하�
 
 ```text
 game-design/<project-id>/
-├── system-specification/content.md
-├── system-specification/evidence.yml
-├── rule-exception-matrix/content.md
-└── decisions/README.md
+├── system-specification/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+└── rule-exception-matrix/
+    └── content.md
 ```
 
 `game-design/<project-id>/system-specification/` 아래의 rule ID와 `content.md`가 구현·QA가 함께 읽는 기준입니다.

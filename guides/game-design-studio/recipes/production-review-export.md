@@ -42,19 +42,29 @@ Production Owner **한지훈**이 scope와 kill criteria를, Review Decision Own
 
 ## 예상 결과
 
-`production-scope-risk/content.md`, `game-design-review/content.md`, 그리고 renderer-neutral export manifest가 남습니다. SVG lint를 통과해도 Chromium renderer가 없으면 SVG source, fallback reason, PNG `unavailable`을 보존합니다.
+`production-scope-risk/content.md`, `game-design-review/content.md`, 그리고 승인된 두 Artifact의 `export-manifest.yml`에서 계산한 renderer-neutral export preparation 결과가 남습니다. SVG lint를 통과해도 Chromium renderer가 없으면 SVG source, fallback reason, PNG `unavailable`을 보존합니다.
 
 ### 예상 파일 트리
 
 ```text
 game-design/<project-id>/
-├── production-scope-risk/content.md
-├── game-design-review/content.md
-├── decision-change-log/content.md
-└── export-manifest.yml
+├── production-scope-risk/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+├── game-design-review/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+└── decision-change-log/
+    └── content.md
 ```
 
-`game-design/<project-id>/production-scope-risk/`와 `game-design/<project-id>/game-design-review/`의 `content.md`를 승인 전 delivery 파일로 바꾸지 않습니다.
+`game-design/<project-id>/production-scope-risk/`와 `game-design/<project-id>/game-design-review/`의 `content.md`를 승인 전 delivery 파일로 바꾸지 않습니다. export preparation manifest는 별도 Canonical Artifact 파일명이 아니라, 승인된 두 Artifact의 `export-manifest.yml`을 읽어 만든 논리 결과입니다.
 
 ### 대표 내용 예시
 

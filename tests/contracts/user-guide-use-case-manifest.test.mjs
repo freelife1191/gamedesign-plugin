@@ -1003,7 +1003,18 @@ async function readStudioUseCaseGuides() {
 }
 
 function assertStudioFaq(markdown) {
-  const answers = markdownSections(markdown, 3);
+  const headings = [...markdown.matchAll(/^(#{1,3}) (.+)$/gm)].map((match) => ({
+    level: match[1].length,
+    heading: match[2],
+    index: match.index,
+    length: match[0].length,
+  }));
+  const answers = headings
+    .map((heading, index) => ({
+      ...heading,
+      body: markdown.slice(heading.index + heading.length, headings[index + 1]?.index).trim(),
+    }))
+    .filter(({ level }) => level === 3);
   assert.deepEqual(answers.map(({ heading }) => heading), STUDIO_FAQ_CONTRACT.map(({ heading }) => heading), "Studio FAQ approved question headings");
   for (const [index, answer] of answers.entries()) {
     const contract = STUDIO_FAQ_CONTRACT[index];
@@ -1518,6 +1529,12 @@ test("Studio FAQ contract rejects missing requests, swapped answers, and wrong q
   assert.throws(
     () => assertStudioFaq(wrongQuestion),
     /Studio FAQ approved question headings/,
+  );
+
+  const injectedH2 = markdown.replace("**예상 결과:**", "## 다른 섹션\n\n**예상 결과:**");
+  assert.throws(
+    () => assertStudioFaq(injectedH2),
+    /Q01\. .* answer shape/,
   );
 });
 

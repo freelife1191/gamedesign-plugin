@@ -48,10 +48,14 @@ Accessibility Owner **이민아**가 각 critical action의 equivalent path와 v
 
 ```text
 game-design/<project-id>/
-├── ui-ux-flow-state/content.md
-├── ui-ux-flow-state/evidence.yml
-├── accessibility-platform-matrix/content.md
-└── decisions/README.md
+├── ui-ux-flow-state/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+└── accessibility-platform-matrix/
+    └── content.md
 ```
 
 `game-design/<project-id>/ui-ux-flow-state/`에는 critical action별 state ID를, 비교 근거는 별도 `content.md`에 둡니다.

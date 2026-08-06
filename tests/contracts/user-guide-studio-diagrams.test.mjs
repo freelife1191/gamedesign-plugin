@@ -41,48 +41,66 @@ const recipes = [
     diagramId: "vision-to-gdd-approval",
     skills: ["orchestrate-game-design-project", "apply-document-quality-profile", "define-game-vision", "review-game-design"],
     artifacts: ["game-design/<project-id>/vision-pillars/"],
+    primaryArtifacts: ["vision-pillars"],
+    secondaryArtifacts: ["game-design-brief"],
     templates: ["vision-pillars", "game-design-brief"],
     approvers: ["김서윤"],
+    exampleTerms: ["Player promise", "Unsupported fun boundary", "prototype"],
   },
   {
     id: "system-feature-spec",
     diagramId: "system-rule-state-exception-flow",
     skills: ["design-game-systems", "design-player-experience", "review-game-design"],
     artifacts: ["game-design/<project-id>/system-specification/"],
+    primaryArtifacts: ["system-specification"],
+    secondaryArtifacts: ["rule-exception-matrix"],
     templates: ["system-specification", "rule-exception-matrix"],
     approvers: ["박도현", "이민아"],
+    exampleTerms: ["R-CRAFT-03", "idle →", "TC-09"],
   },
   {
     id: "content-quest-design",
     diagramId: "content-narrative-quest-map",
     skills: ["design-game-content", "design-game-systems", "plan-game-production"],
     artifacts: ["game-design/<project-id>/narrative-quest-npc/"],
+    primaryArtifacts: ["narrative-quest-npc"],
+    secondaryArtifacts: ["character-skill-combat-monster"],
     templates: ["narrative-quest-npc", "character-skill-combat-monster"],
     approvers: ["최유진", "한지훈"],
+    exampleTerms: ["Q-ARCH-01", "rights-consent", "ATK-GUARD-02"],
   },
   {
     id: "ux-accessibility",
     diagramId: "studio-orchestration-map",
     skills: ["design-player-experience", "apply-document-quality-profile", "review-game-design"],
     artifacts: ["game-design/<project-id>/ui-ux-flow-state/"],
+    primaryArtifacts: ["ui-ux-flow-state"],
+    secondaryArtifacts: ["accessibility-platform-matrix"],
     templates: ["ui-ux-flow-state", "accessibility-platform-matrix"],
     approvers: ["이민아", "김서윤"],
+    exampleTerms: ["UX-ACT-01", "focus", "offline"],
   },
   {
     id: "economy-liveops",
     diagramId: "economy-balance-liveops-loop",
     skills: ["design-game-economy-and-liveops", "design-game-systems", "plan-game-production"],
     artifacts: ["game-design/<project-id>/economy-balance/", "game-design/<project-id>/liveops-experiment-event/"],
+    primaryArtifacts: ["economy-balance", "liveops-experiment-event"],
+    secondaryArtifacts: [],
     templates: ["economy-balance", "liveops-experiment-event"],
     approvers: ["정하늘", "윤태호"],
+    exampleTerms: ["EXP-FEST-01", "guardrail", "rollback"],
   },
   {
     id: "production-review-export",
     diagramId: "production-risk-review-flow",
     skills: ["plan-game-production", "review-game-design", "plan-image-assets", "visualize-game-design", "export-game-design-documents"],
     artifacts: ["game-design/<project-id>/production-scope-risk/", "game-design/<project-id>/game-design-review/"],
+    primaryArtifacts: ["production-scope-risk", "game-design-review"],
+    secondaryArtifacts: ["decision-change-log"],
     templates: ["production-scope-risk", "game-design-review", "decision-change-log"],
     approvers: ["한지훈", "김서윤", "오지은"],
+    exampleTerms: ["SCOPE-04", "F-12", "DEC-08"],
   },
 ];
 
@@ -93,6 +111,20 @@ function markdownSections(markdown, level) {
     heading: heading[1],
     body: markdown.slice(heading.index + heading[0].length, headings[index + 1]?.index).trim(),
   }));
+}
+
+function fencedCodeBlocks(markdown, language) {
+  return [...markdown.matchAll(/^```([^\n]*)\n([\s\S]*?)\n```$/gm)]
+    .filter((match) => match[1] === language)
+    .map((match) => match[2]);
+}
+
+function artifactTreeBody(tree, artifact) {
+  const directories = [...tree.matchAll(/^(?:├|└)── (.+)\/$/gm)];
+  const index = directories.findIndex((match) => match[1] === artifact);
+  const match = directories[index];
+  assert.ok(match, "missing artifact directory in file tree: " + artifact);
+  return tree.slice(match.index + match[0].length, directories[index + 1]?.index).trim();
 }
 
 function assertRecipeExpectedResult({ markdown, recipe }) {
@@ -107,16 +139,32 @@ function assertRecipeExpectedResult({ markdown, recipe }) {
   }
 
   const tree = byHeading.get("예상 파일 트리");
-  assert.match(tree, /```text\n[\s\S]*?content\.md[\s\S]*?\n```/, recipe.id + " concrete file tree");
+  const trees = fencedCodeBlocks(tree, "text");
+  assert.equal(trees.length, 1, recipe.id + " one concrete file tree");
+  assert.match(trees[0], /game-design\/<project-id>\//, recipe.id + " file tree project root");
   assert.ok(tree.includes("game-design/<project-id>/"), recipe.id + " file tree project root");
   for (const artifact of recipe.artifacts) {
     const artifactRelative = artifact.replace("game-design/<project-id>/", "");
     assert.ok(tree.includes(artifactRelative), recipe.id + " file tree artifact: " + artifact);
   }
+  for (const artifact of recipe.primaryArtifacts) {
+    const artifactBody = artifactTreeBody(trees[0], artifact);
+    for (const filename of ["content.md", "evidence.yml", "decisions/README.md", "assets/README.md", "export-manifest.yml"]) {
+      assert.ok(artifactBody.includes(filename), recipe.id + " primary artifact-local file: " + artifact + "/" + filename);
+    }
+  }
+  for (const artifact of recipe.secondaryArtifacts) {
+    assert.match(trees[0], new RegExp(artifact + "/"), recipe.id + " separate secondary artifact: " + artifact);
+  }
+  assert.doesNotMatch(trees[0], /^(?:├|└)── (?:(?:decisions|assets)\/README\.md|export-manifest\.yml)$/m, recipe.id + " no project-root shared canonical files");
 
   const excerpt = byHeading.get("대표 내용 예시");
   for (const template of recipe.templates) assert.match(excerpt, new RegExp("`" + template + "`"), recipe.id + " excerpt template: " + template);
-  assert.match(excerpt, /```(?:md|text)\n[\s\S]*?\n```/, recipe.id + " representative excerpt block");
+  const examples = fencedCodeBlocks(excerpt, "md");
+  assert.equal(examples.length, 1, recipe.id + " one representative excerpt block");
+  assert.doesNotMatch(examples[0], /\b(?:TODO|TBD|placeholder)\b/iu, recipe.id + " representative excerpt placeholder");
+  assert.ok(examples[0].length >= 100, recipe.id + " substantive representative excerpt");
+  for (const term of recipe.exampleTerms) assert.ok(examples[0].includes(term), recipe.id + " representative excerpt term: " + term);
 
   const completion = byHeading.get("완료 기준");
   for (const approver of recipe.approvers) assert.ok(completion.includes(approver), recipe.id + " completion approver: " + approver);
@@ -218,7 +266,7 @@ test("Studio recipe expected-result sections contain section-local concrete outp
   }
 });
 
-test("Studio recipe expected-result contract rejects empty or cross-recipe sections", async () => {
+test("Studio recipe expected-result contract rejects empty, placeholder, or cross-recipe sections", async () => {
   const recipe = recipes[0];
   const recipePath = path.join(root, "guides/game-design-studio/recipes", recipe.id + ".md");
   const markdown = await readFile(recipePath, "utf8");
@@ -229,16 +277,23 @@ test("Studio recipe expected-result contract rejects empty or cross-recipe secti
     /new-game-gdd 예상 파일 트리 substantive content/,
   );
 
+  const example = fencedCodeBlocks(markdownSections(result, 3).find(({ heading }) => heading === "대표 내용 예시").body, "md")[0];
+  const placeholderExample = markdown.replace(example, "TODO");
+  assert.throws(
+    () => assertRecipeExpectedResult({ markdown: placeholderExample, recipe }),
+    /new-game-gdd representative excerpt placeholder/,
+  );
+
   const otherRecipe = recipes[1];
   const otherMarkdown = await readFile(path.join(root, "guides/game-design-studio/recipes", otherRecipe.id + ".md"), "utf8");
-  const otherExcerpt = markdownSections(section(otherMarkdown, "예상 결과"), 3).find(({ heading }) => heading === "대표 내용 예시").body;
+  const otherExcerpt = fencedCodeBlocks(markdownSections(section(otherMarkdown, "예상 결과"), 3).find(({ heading }) => heading === "대표 내용 예시").body, "md")[0];
   const wrongExcerpt = markdown.replace(
-    result,
-    result.replace(markdownSections(result, 3).find(({ heading }) => heading === "대표 내용 예시").body, otherExcerpt),
+    example,
+    otherExcerpt,
   );
   assert.throws(
     () => assertRecipeExpectedResult({ markdown: wrongExcerpt, recipe }),
-    /new-game-gdd excerpt template: vision-pillars/,
+    /new-game-gdd representative excerpt term: Player promise/,
   );
 });
 

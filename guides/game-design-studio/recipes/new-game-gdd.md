@@ -48,10 +48,14 @@ Lead Designer **김서윤**이 target player, 세 가지 pillar, anti-pillar와 
 
 ```text
 game-design/<project-id>/
-├── vision-pillars/content.md
-├── vision-pillars/evidence.yml
-├── game-design-brief/content.md
-└── decisions/README.md
+├── vision-pillars/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+└── game-design-brief/
+    └── content.md
 ```
 
 `vision-pillars/`의 판단 기준과 `game-design-brief/`의 범위는 같은 Canonical Artifact 읽기 순서에서 확인합니다.

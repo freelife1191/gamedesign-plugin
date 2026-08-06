@@ -48,10 +48,14 @@ Narrative Owner **최유진**이 player choice와 ending boundary를, Production
 
 ```text
 game-design/<project-id>/
-├── narrative-quest-npc/content.md
-├── narrative-quest-npc/evidence.yml
-├── character-skill-combat-monster/content.md
-└── decisions/README.md
+├── narrative-quest-npc/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/README.md
+│   ├── assets/README.md
+│   └── export-manifest.yml
+└── character-skill-combat-monster/
+    └── content.md
 ```
 
 `game-design/<project-id>/narrative-quest-npc/`에 quest 상태와 권리 gate를, 연결 전투가 있으면 별도 `content.md`에 전투 계약을 둡니다.
@@ -62,7 +66,7 @@ game-design/<project-id>/
 
 ```md
 Q-ARCH-01: entry=SYS-WATER-02, choice=records-returned, reward=archive-key.
-권리·동의 evidence가 없으면 NPC 대사 asset은 blocked이며 placeholder만 사용한다.
+rights-consent evidence가 없으면 NPC 대사 asset record는 blocked로 유지한다.
 전투 연결은 ATK-GUARD-02의 telegraph와 counterplay를 참조한다.
 ```
 
