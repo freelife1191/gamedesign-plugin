@@ -1,0 +1,36 @@
+# Game Design Studio 사용자 가이드
+
+Game Design Studio는 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획을 거쳐 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존합니다.
+
+## 처음 시작하기
+
+1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
+2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
+3. [전체 워크플로](workflow.md)에서 현재 단계와 다음 사람 결정을 확인합니다.
+4. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
+
+## 가이드 목차
+
+현재 사용할 수 있는 진입 문서:
+
+- [설치](installation.md)
+- [5분 빠른 시작](quick-start.md)
+- [전체 워크플로](workflow.md)
+- [문제 해결](troubleshooting.md)
+
+다음 안정 경로에는 스킬, 템플릿, 문서 품질, 이미지, 시각화, 내보내기와 목적별 레시피 가이드가 추가됩니다. 파일이 만들어지기 전에는 깨진 링크를 만들지 않기 위해 경로만 표시합니다.
+
+- `skills/README.md`
+- `templates.md`
+- `document-quality.md`
+- `image-assets.md`
+- `visualization.md`
+- `exports.md`
+- `recipes/`
+
+## 작업 원칙
+
+- 게임 아이디어 한두 문장으로 시작할 수 있지만, 가정은 사실과 분리합니다.
+- Canonical Artifact의 `content.md`가 내용 기준입니다. 렌더 결과나 대화만을 새 기준으로 삼지 않습니다.
+- 이미지 생성, 도식 렌더, 문서 내보내기가 실패해도 검증된 Markdown과 기존 자산을 보존합니다.
+- 생성 이미지와 렌더 결과는 자동 승인되지 않습니다. 권리와 품질을 확인한 이름 있는 사람의 결정이 필요합니다.
