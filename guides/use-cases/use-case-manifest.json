@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "audience_paths": [
+    {
+      "id": "AUD-01",
+      "slug": "game-design-student",
+      "document": "guides/use-cases/audience-paths.md",
+      "anchor": "aud-01-게임-기획-입문-학생",
+      "level": "foundation",
+      "recommended_views": ["competency"],
+      "outputs": ["learning-plan"],
+      "diagram": {
+        "svg": "guides/assets/use-cases/audiences/aud-01.svg",
+        "png": "guides/assets/use-cases/audiences/aud-01.png",
+        "alt": "게임 기획 입문 학생의 학습 경로"
+      }
+    },
+    {
+      "id": "AUD-02",
+      "slug": "job-seeking-student",
+      "document": "guides/use-cases/audience-paths.md",
+      "anchor": "aud-02-게임-기획-취업-준비생",
+      "level": "applied",
+      "recommended_views": ["competency", "target"],
+      "outputs": ["portfolio-evidence"],
+      "diagram": {
+        "svg": "guides/assets/use-cases/audiences/aud-02.svg",
+        "png": "guides/assets/use-cases/audiences/aud-02.png",
+        "alt": "게임 기획 취업 준비생의 학습 경로"
+      }
+    },
+    {
+      "id": "AUD-03",
+      "slug": "career-transitioner",
+      "document": "guides/use-cases/audience-paths.md",
+      "anchor": "aud-03-게임-기획-직무-전환자",
+      "level": "foundation",
+      "recommended_views": ["competency", "target"],
+      "outputs": ["transferable-evidence"],
+      "diagram": {
+        "svg": "guides/assets/use-cases/audiences/aud-03.svg",
+        "png": "guides/assets/use-cases/audiences/aud-03.png",
+        "alt": "게임 기획 직무 전환자의 학습 경로"
+      }
+    },
+    {
+      "id": "AUD-04",
+      "slug": "solo-indie-designer",
+      "document": "guides/use-cases/audience-paths.md",
+      "anchor": "aud-04-솔로인디-게임-기획자",
+      "level": "applied",
+      "recommended_views": ["concept", "competency"],
+      "outputs": ["production-ready-brief"],
+      "diagram": {
+        "svg": "guides/assets/use-cases/audiences/aud-04.svg",
+        "png": "guides/assets/use-cases/audiences/aud-04.png",
+        "alt": "솔로 인디 게임 기획자의 작업 경로"
+      }
+    },
+    {
+      "id": "AUD-05",
+      "slug": "working-game-designer",
+      "document": "guides/use-cases/audience-paths.md",
+      "anchor": "aud-05-현업-게임-기획자",
+      "level": "advanced",
+      "recommended_views": ["competency", "skill"],
+      "outputs": ["review-ready-handoff"],
+      "diagram": {
+        "svg": "guides/assets/use-cases/audiences/aud-05.svg",
+        "png": "guides/assets/use-cases/audiences/aud-05.png",
+        "alt": "현업 게임 기획자의 개선 경로"
+      }
+    },
+    {
+      "id": "AUD-06",
+      "slug": "lead-educator-mentor",
+      "document": "guides/use-cases/audience-paths.md",
+      "anchor": "aud-06-팀-리드교육자멘토",
+      "level": "advanced",
+      "recommended_views": ["competency", "skill"],
+      "outputs": ["feedback-plan"],
+      "diagram": {
+        "svg": "guides/assets/use-cases/audiences/aud-06.svg",
+        "png": "guides/assets/use-cases/audiences/aud-06.png",
+        "alt": "팀 리드와 교육자 멘토의 피드백 경로"
+      }
+    }
+  ],
+  "cases": [],
+  "skill_cases": []
+}
