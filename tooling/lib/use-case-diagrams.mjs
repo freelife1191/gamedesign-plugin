@@ -12,6 +12,8 @@ const REQUIRED_FIELDS = [
   "source_paths",
   "used_by",
 ];
+const MAX_CARD_LABEL_LENGTH = 20;
+const MAX_CARD_DETAIL_LENGTH = 22;
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -19,6 +21,10 @@ function isObject(value) {
 
 function isNonemptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function characterLength(value) {
+  return [...value.trim()].length;
 }
 
 function escapeXml(value) {
@@ -95,6 +101,12 @@ export function validateDiagramSource(source) {
   for (const [index, step] of source.steps.entries()) {
     if (!isObject(step) || !isNonemptyString(step.label) || !isNonemptyString(step.detail)) {
       throw new TypeError(`diagram source steps[${index}] must have nonempty label and detail`);
+    }
+    if (characterLength(step.label) > MAX_CARD_LABEL_LENGTH) {
+      throw new TypeError(`diagram source steps[${index}].label length exceeds the card fit limit`);
+    }
+    if (characterLength(step.detail) > MAX_CARD_DETAIL_LENGTH) {
+      throw new TypeError(`diagram source steps[${index}].detail length exceeds the card fit limit`);
     }
   }
   for (const field of ["source_paths", "used_by"]) {

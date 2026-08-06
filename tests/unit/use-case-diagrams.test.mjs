@@ -44,3 +44,12 @@ test("renderDiagramSvg XML-escapes source strings and preserves step reading ord
   assert.match(svg, /<title>관찰 &lt; 규칙 &amp; 피드백<\/title>/u);
   assert.match(svg, /aria-label="읽기 순서 3: 3 &gt; 다음"/u);
 });
+
+test("diagram source rejects card text that cannot fit without truncation", () => {
+  const detail = "첫째 둘째 셋째 넷째 다섯째 여섯째 일곱째";
+
+  assert.throws(() => validateDiagramSource({
+    ...validFixture,
+    steps: [{ ...validFixture.steps[0], detail }, ...validFixture.steps.slice(1)],
+  }), /detail.*length|detail.*fit/u);
+});

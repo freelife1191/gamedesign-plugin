@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -17,6 +17,42 @@ const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
 function isContained(root, target) {
   const relative = path.relative(root, target);
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
+
+async function assertSafeDirectory(root, label) {
+  const stats = await lstat(root);
+  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`${label} is not a non-symlink directory`);
+  return realpath(root);
+}
+
+async function assertSafeOutputFile(root, filename, { createParents }) {
+  if (!isContained(root, filename)) throw new Error(`unsafe output path: ${filename}`);
+  let current = root;
+  const parts = path.relative(root, filename).split(path.sep).filter(Boolean);
+  for (const part of parts.slice(0, -1)) {
+    current = path.join(current, part);
+    let entry = await lstat(current).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (!entry && createParents) {
+      await mkdir(current);
+      entry = await lstat(current);
+    }
+    if (!entry) throw new Error(`missing output parent: ${current}`);
+    if (!entry.isDirectory() || entry.isSymbolicLink()) throw new Error(`output parent is a symlink or not a directory: ${current}`);
+    const canonical = await realpath(current);
+    if (!isContained(root, canonical)) throw new Error(`output parent resolves outside repository: ${current}`);
+  }
+  const existing = await lstat(filename).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (existing) {
+    if (!existing.isFile() || existing.isSymbolicLink()) throw new Error(`output file is a symlink or not a regular file: ${filename}`);
+    const canonical = await realpath(filename);
+    if (!isContained(root, canonical)) throw new Error(`output file resolves outside repository: ${filename}`);
+  }
+}
+
+async function assertSafeExistingFile(root, filename) {
+  await assertSafeOutputFile(root, filename, { createParents: false });
+  const entry = await lstat(filename).catch(() => null);
+  if (!entry) throw new Error(`missing generated output: ${filename}`);
 }
 
 function parseArguments(argv) {
@@ -92,8 +128,8 @@ async function assertCompletePng(filename) {
   if (!hasIend) throw new Error(`incomplete PNG: ${filename}`);
 }
 
-async function writeSvg(filename, svg) {
-  await mkdir(path.dirname(filename), { recursive: true });
+async function writeSvg(filename, svg, outputRoot) {
+  await assertSafeOutputFile(outputRoot, filename, { createParents: true });
   await writeFile(filename, svg, "utf8");
 }
 
@@ -103,11 +139,22 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check }) {
   const relativePng = path.relative(repoRoot, output.png);
   const svgPath = check ? path.join(outputRoot, relativeSvg) : output.svg;
   const pngPath = check ? path.join(outputRoot, relativePng) : output.png;
+  if (check) {
+    await assertSafeExistingFile(repoRoot, output.svg);
+    await assertSafeExistingFile(repoRoot, output.png);
+    await assertSafeOutputFile(outputRoot, pngPath, { createParents: true });
+  } else {
+    await assertSafeOutputFile(repoRoot, output.svg, { createParents: true });
+    await assertSafeOutputFile(repoRoot, output.png, { createParents: true });
+  }
   const svg = renderDiagramSvg(source);
-  await writeSvg(svgPath, svg);
+  await writeSvg(svgPath, svg, outputRoot);
+  await assertSafeExistingFile(outputRoot, svgPath);
   const wrapper = path.join(repoRoot, wrapperFile);
+  await assertSafeExistingFile(repoRoot, wrapper);
   invokeWrapper(wrapper, "lint", [svgPath]);
   invokeWrapper(wrapper, "render", [svgPath, pngPath]);
+  await assertSafeExistingFile(outputRoot, pngPath);
   await assertCompletePng(pngPath);
   if (check) {
     const [existingSvg, existingPng] = await Promise.all([readFile(output.svg, "utf8"), stat(output.png)]);
@@ -119,7 +166,9 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check }) {
 }
 
 export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false }) {
-  const sources = await loadSources(repoRoot);
+  const requestedRepoRoot = path.resolve(repoRoot);
+  const canonicalRepoRoot = await assertSafeDirectory(requestedRepoRoot, "repository root");
+  const sources = await loadSources(canonicalRepoRoot);
   const selected = ids.length === 0
     ? sources
     : ids.map((id) => {
@@ -127,12 +176,14 @@ export async function buildUseCaseDiagrams({ repoRoot, ids = [], check = false }
       if (!source) throw new Error(`unknown use-case diagram ID: ${id}`);
       return source;
     });
-  const manifest = await loadUseCaseManifest({ repoRoot });
-  const outputRoot = check ? await mkdtemp(path.join(os.tmpdir(), "use-case-diagrams-")) : repoRoot;
+  const manifest = await loadUseCaseManifest({ repoRoot: canonicalRepoRoot });
+  const outputRoot = check
+    ? await assertSafeDirectory(await realpath(await mkdtemp(path.join(os.tmpdir(), "use-case-diagrams-"))), "temporary output root")
+    : canonicalRepoRoot;
   try {
     let counts = { svg: 0, png: 0 };
     for (const source of selected) {
-      const result = await buildOne({ source, manifest, repoRoot, outputRoot, check });
+      const result = await buildOne({ source, manifest, repoRoot: canonicalRepoRoot, outputRoot, check });
       counts = { svg: counts.svg + result.svg, png: counts.png + result.png };
     }
     return counts;
