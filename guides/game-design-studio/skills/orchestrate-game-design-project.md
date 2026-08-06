@@ -38,7 +38,19 @@ $game-design-studio:orchestrate-game-design-project 신규 모바일 협동 RPG�
 
 intake를 정리하고 `routing.json.routes`의 exact route와 artifact를 고른 뒤 각 artifact에 quality profile을 적용합니다. 한 실행에서는 선택된 route만 호출하며, 필요하면 이미지 계획을 생성보다 먼저 실행하고 최대 3개 역할 finding을 결정적으로 병합합니다. 주 템플릿/profile은 `game-design-brief`/`game-design-brief`, 관련 역할은 `lead-game-designer`를 포함한 범위별 최대 3개입니다.
 
-지원되는 다음 route는 vision `define-game-vision`, systems `design-game-systems`, content `design-game-content`, player experience `design-player-experience`, economy/liveops `design-game-economy-and-liveops`, production `plan-game-production`, review `review-game-design`, visualization `visualize-game-design`, export `export-game-design-documents`입니다.
+각 selected route는 아래 같은 행의 CLI handoff 하나에만 결합됩니다.
+
+| routing.json route 조건 | 다음 CLI handoff |
+| --- | --- |
+| `vision` | `$game-design-studio:define-game-vision` |
+| `systems` | `$game-design-studio:design-game-systems` |
+| `content` | `$game-design-studio:design-game-content` |
+| `player-experience` | `$game-design-studio:design-player-experience` |
+| `economy` 또는 `liveops` | `$game-design-studio:design-game-economy-and-liveops` |
+| `production` | `$game-design-studio:plan-game-production` |
+| `review` | `$game-design-studio:review-game-design` |
+| `visualization` | `$game-design-studio:visualize-game-design` |
+| `export` | `$game-design-studio:export-game-design-documents` |
 
 ## 생성 파일과 결과 구조
 

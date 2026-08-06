@@ -74,15 +74,21 @@ $game-design-studio:review-game-design 이전 blocked review를 유지하고, �
 
 **복사 가능한 조건부 다음 handoff**
 
-minimum fix가 남아 있으면 같은 review artifact를 보존한 채 `review-game-design`을 다시 실행합니다. diagram source·slot·visual QA gap finding이면 `visualize-game-design`으로 넘기며, 모든 blocker가 승인 가능하고 파생 형식이 필요할 때만 `export-game-design-documents`로 넘깁니다.
+각 조건은 바로 아래 command 하나에만 결합됩니다.
+
+- 조건: minimum fix가 남아 같은 review artifact의 수정 반영 여부를 재검토할 때.
 
 ```text
 $game-design-studio:review-game-design artifact=<artifact-path> finding의 minimum fix 반영 여부만 재검토해.
 ```
 
+- 조건: diagram gap finding이 source·slot·visual QA 보완을 요구할 때.
+
 ```text
 $game-design-studio:visualize-game-design artifact=artifacts/reviewed-gdd diagram gap finding의 source mapping과 visual QA만 보완해.
 ```
+
+- 조건: all blockers가 승인 가능하고 파생 형식이 필요할 때.
 
 ```text
 $game-design-studio:export-game-design-documents artifact=<artifact-path> 승인 가능한 review evidence가 있을 때만 renderer-neutral preflight를 준비해.

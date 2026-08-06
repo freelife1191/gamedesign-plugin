@@ -38,7 +38,19 @@ $game-design-career:orchestrate-game-design-career stage=entry, targetRole=syste
 
 intake를 정규화하고 route를 바꾸는 질문만 하나 묻습니다. stage가 불명확하면 `unclear`와 multiple paths를 만듭니다. `scenarioChains`와 `routeSkills`에서 선택한 가장 작은 skill chain만 확장하며, 한 실행에서는 선택된 chain 밖 skill을 호출하지 않습니다. artifact별로 quality profile을 먼저 적용하고 current employer·project·posting·tool claim은 registry-bound `asOfDate`로 조사합니다. portfolio review는 `portfolio-reviewer`, `evidence-auditor`, `document-quality-editor` 세 역할을 같은 질문으로 실행하며 findings를 severity, evidence-gap ID, section ID, role priority 순으로 합칩니다.
 
-선택 가능한 계열은 map, current job research, reverse design, interview, junior growth, visualization, export, portfolio build/review입니다. 실제 skill ID는 `map-game-design-career`, `research-game-design-jobs`, `build-game-design-portfolio`, `reverse-engineer-game-design`, `practice-game-design-interview`, `review-game-design-portfolio`, `plan-junior-growth`, `visualize-career-roadmap`, `export-career-documents`입니다. 예를 들어 entry roadmap은 map→visualize→export, reverse portfolio는 reverse→export, transition은 research→interview→growth→visualize→export chain을 선택합니다.
+선택 가능한 계열은 map, current job research, reverse design, interview, junior growth, visualization, export, portfolio build/review입니다. 각 selected route는 아래 같은 행의 CLI handoff 하나에만 결합됩니다.
+
+| routing.json route 조건 | 다음 CLI handoff |
+| --- | --- |
+| `entry-role-map` 또는 `new-hire-role-map` | `$game-design-career:map-game-design-career` |
+| `new-hire-job-research` 또는 `transition-job-research` | `$game-design-career:research-game-design-jobs` |
+| `new-hire-portfolio-build` | `$game-design-career:build-game-design-portfolio` |
+| `new-hire-reverse-design` | `$game-design-career:reverse-engineer-game-design` |
+| `new-hire-interview-practice` 또는 `transition-interview-practice` | `$game-design-career:practice-game-design-interview` |
+| `new-hire-portfolio-review` 또는 `transition-portfolio-review` | `$game-design-career:review-game-design-portfolio` |
+| `junior-growth-plan` 또는 `transition-growth-plan` | `$game-design-career:plan-junior-growth` |
+| `entry-competency-visualization` 또는 `junior-growth-visualization` 또는 `transition-readiness-visualization` | `$game-design-career:visualize-career-roadmap` |
+| `entry-roadmap-export` 또는 `new-hire-reverse-design-export` 또는 `junior-growth-export` 또는 `transition-export` | `$game-design-career:export-career-documents` |
 
 ## 생성 파일과 결과 구조
 

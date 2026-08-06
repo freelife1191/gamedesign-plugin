@@ -72,12 +72,18 @@ $game-design-career:research-game-design-jobs 기존 sourceId를 유지하고 re
 
 > `<artifact-path>`, `<export-manifest-path>`, `<selected-skill>`은 실제 경로·ID로 바꿔야 하는 자리표시자입니다. [공통 규칙](../../README.md#용어)을 따릅니다.
 
-**복사 가능한 다음 handoff**
+**복사 가능한 조건부 다음 handoff**
 
-@Game Design Career map-game-design-career로 현재 Artifact의 검증된 기록을 이어 다음 작업을 진행해.
+- 조건: `new-graduate-system-design` scenario에서 fresh posting evidence를 role gap에 연결할 때.
 
 ```text
-$game-design-career:map-game-design-career artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-career:map-game-design-career artifact=<artifact-path> 기존 evidence/decision을 보존하고 new-graduate-system-design의 role map으로 진행해.
+```
+
+- 조건: `junior-transition` scenario에서 fresh posting evidence로 interview practice를 시작할 때.
+
+```text
+$game-design-career:practice-game-design-interview artifact=<artifact-path> 기존 evidence/decision을 보존하고 junior-transition의 interview handoff를 실행해.
 ```
 
 ## 관련 문서

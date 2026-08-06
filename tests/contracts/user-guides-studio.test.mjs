@@ -24,13 +24,12 @@ const requiredHeadings = [
   "관련 문서",
 ];
 const sourceExceptions = {
-  "export-game-design-documents": { reason: "renderer-neutral downstream helper", sourcePaths: ["products/game-design-studio/plugin/skills/export-game-design-documents/SKILL.md"], sourceTerms: ["canonical-markdown"], guideTerms: ["current artifact profile", "pdf/documents/presentations", "downstream workflow"] },
-  "generate-image-assets": { reason: "configured provider helper", sourcePaths: ["products/game-design-studio/plugin/skills/generate-image-assets/SKILL.md"], sourceTerms: ["provider"], guideTerms: ["current artifact profile", "review-image-assets"] },
-  "plan-image-assets": { reason: "image and Skillstead planning helper", sourcePaths: ["products/game-design-studio/plugin/skills/plan-image-assets/SKILL.md"], sourceTerms: ["Skillstead"], guideTerms: ["prompt-only", "generate-image-assets", "visualize-game-design"] },
-  "review-image-assets": { reason: "named-human image lifecycle helper", sourcePaths: ["products/game-design-studio/plugin/skills/review-image-assets/SKILL.md"], sourceTerms: ["named human"], guideTerms: ["document-approved", "export-game-design-documents"] },
-  "svg-infographic": { reason: "vendored visualization wrapper", sourcePaths: ["products/game-design-studio/plugin/skills/visualize-game-design/SKILL.md"], sourceTerms: ["Skillstead"], guideTerms: ["lead-game-designer", "visualize-game-design"] },
-  "visualize-game-design": { reason: "Skillstead visualization helper", sourcePaths: ["products/game-design-studio/plugin/skills/visualize-game-design/SKILL.md"], sourceTerms: ["Skillstead"], guideTerms: ["current artifact profile", "visual QA", "review-game-design", "export-game-design-documents"] },
+  "generate-image-assets": { reason: "provider-helper", sourcePath: "products/game-design-studio/plugin/skills/generate-image-assets/SKILL.md", sourceSection: "Workflow", sourceTerms: ["prompt-only", "review-image-assets"], guideTerms: ["current artifact profile", "review-image-assets"] },
+  "plan-image-assets": { reason: "image-planning-helper", sourcePath: "products/game-design-studio/plugin/skills/plan-image-assets/SKILL.md", sourceSection: "Workflow", sourceTerms: ["planning does not generate SVG or PNG bytes", "generate-image-assets"], guideTerms: ["prompt-only", "generate-image-assets", "visualize-game-design"] },
+  "review-image-assets": { reason: "human-approval-helper", sourcePath: "products/game-design-studio/plugin/skills/review-image-assets/SKILL.md", sourceSection: "Workflow", sourceTerms: ["named human", "document-approved"], guideTerms: ["document-approved", "export-game-design-documents"] },
+  "svg-infographic": { reason: "vendored-wrapper", sourcePath: "products/game-design-studio/plugin/skills/visualize-game-design/SKILL.md", sourceSection: "Workflow", sourceTerms: ["skills/svg-infographic", "visual QA"], guideTerms: ["lead-game-designer", "visualize-game-design"] },
 };
+const sourceExceptionReasons = new Set(["provider-helper", "image-planning-helper", "human-approval-helper", "vendored-wrapper"]);
 
 function h2Headings(markdown) {
   return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
@@ -43,6 +42,34 @@ function extractSection(markdown, heading) {
   const bodyStart = start + marker.length;
   const next = markdown.indexOf("\n## ", bodyStart);
   return markdown.slice(bodyStart, next === -1 ? markdown.length : next).trim();
+}
+
+function extractSourceSection(markdown, heading) {
+  const pattern = new RegExp(`^## ${heading}\\n`, "m");
+  const match = pattern.exec(markdown);
+  assert.ok(match, `missing source section: ${heading}`);
+  const bodyStart = match.index + match[0].length;
+  const next = markdown.slice(bodyStart).search(/^## /m);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function assertConditionalCommand(section, { condition, command, product, label }) {
+  const escaped = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(
+    section,
+    new RegExp(`${condition}[\\s\\S]{0,450}\\$${product}:${escaped}`, "i"),
+    `${label}: condition must bind to ${command}`,
+  );
+}
+
+function assertRouteCommandRows(markdown, routes, product, label) {
+  const rows = extractSection(markdown, "내부 진행 흐름").split("\n").filter((line) => line.startsWith("|"));
+  for (const { id, skill } of routes) {
+    assert.ok(
+      rows.some((row) => row.includes(`\`${id}\``) && row.includes(`$${product}:${skill}`)),
+      `${label}: ${id} condition and ${skill} CLI target must share a table row`,
+    );
+  }
 }
 
 function assertSkillContract(markdown, skillId) {
@@ -146,11 +173,10 @@ test("Studio skill handoffs are derived from canonical routes and source-backed 
   for (const [skillId, exception] of Object.entries(sourceExceptions)) {
     const markdown = await readFile(path.join(root, "guides/game-design-studio/skills", `${skillId}.md`), "utf8");
     const guide = [extractSection(markdown, "관련 템플릿·품질 프로필·전문 역할"), extractSection(markdown, "다음 작업 요청문")].join("\n");
-    assert.ok(exception.reason, `${skillId}: source exception needs a reason`);
-    for (const sourcePath of exception.sourcePaths) {
-      const source = await readFile(path.join(root, sourcePath), "utf8");
-      for (const term of exception.sourceTerms) assert.ok(source.includes(term), `${skillId}: source exception missing ${term}`);
-    }
+    assert.ok(sourceExceptionReasons.has(exception.reason), `${skillId}: unsupported source exception reason`);
+    const source = await readFile(path.join(root, exception.sourcePath), "utf8");
+    const sourceSection = extractSourceSection(source, exception.sourceSection);
+    for (const term of exception.sourceTerms) assert.ok(sourceSection.includes(term), `${skillId}: source exception section missing ${term}`);
     for (const term of exception.guideTerms) assert.ok(guide.includes(term), `${skillId}: guide exception missing ${term}`);
   }
 
@@ -176,6 +202,58 @@ test("Studio skill handoffs are derived from canonical routes and source-backed 
   const reviewSource = await readFile(path.join(root, "products/game-design-studio/plugin/skills/review-game-design/SKILL.md"), "utf8");
   assert.ok(reviewSource.includes("visualize-game-design"));
   for (const target of ["review-game-design", "visualize-game-design", "export-game-design-documents"]) assert.ok(extractSection(reviewGuide, "다음 작업 요청문").includes(target));
+});
+
+test("Studio direct handoffs and review/image branches bind their source-derived conditions to commands", async () => {
+  const systemsGuide = await readFile(path.join(root, "guides/game-design-studio/skills/design-game-systems.md"), "utf8");
+  const systemsSource = await readFile(path.join(root, "products/game-design-studio/plugin/skills/design-game-systems/SKILL.md"), "utf8");
+  const studioRouting = JSON.parse(await readFile(path.join(root, "products/game-design-studio/plugin/references/routing.json"), "utf8"));
+  const systemsNext = extractSection(systemsGuide, "다음 작업 요청문");
+  const reviewRoute = studioRouting.routes.find(({ id }) => id === "review");
+  assert.ok(extractSourceSection(systemsSource, "Output contract").includes("review findings"));
+  assertConditionalCommand(systemsNext, { condition: "rule precedence", command: reviewRoute.skill, product: "game-design-studio", label: "design-game-systems" });
+  assert.throws(() => assertConditionalCommand(
+    systemsNext.replace("$game-design-studio:review-game-design", "$game-design-studio:define-game-vision"),
+    { condition: "rule precedence", command: reviewRoute.skill, product: "game-design-studio", label: "mutated design-game-systems" },
+  ));
+
+  const reviewGuide = await readFile(path.join(root, "guides/game-design-studio/skills/review-game-design.md"), "utf8");
+  const reviewSource = await readFile(path.join(root, "products/game-design-studio/plugin/skills/review-game-design/SKILL.md"), "utf8");
+  const reviewNext = extractSection(reviewGuide, "다음 작업 요청문");
+  const reviewContract = [
+    ["minimum fix", "review-game-design", "minimal repairs"],
+    ["diagram gap", "visualize-game-design", "visualize-game-design"],
+    ["all blocker", "export-game-design-documents", "export-game-design-documents"],
+  ];
+  for (const [condition, command, sourceTerm] of reviewContract) {
+    assert.ok(reviewSource.includes(sourceTerm), `review source missing ${sourceTerm}`);
+    assertConditionalCommand(reviewNext, { condition, command, product: "game-design-studio", label: "review-game-design" });
+  }
+  for (const [from, to] of [["review-game-design", "visualize-game-design"], ["visualize-game-design", "export-game-design-documents"]]) {
+    assert.throws(() => assertConditionalCommand(reviewNext.replace(`$game-design-studio:${from}`, `$game-design-studio:${to}`), { condition: from === "review-game-design" ? "minimum fix" : "diagram gap", command: from, product: "game-design-studio", label: "mutated review branch" }));
+  }
+  assert.throws(() => assertConditionalCommand(reviewNext.replace(/all blocker[^.]+\./i, ""), { condition: "all blocker", command: "export-game-design-documents", product: "game-design-studio", label: "deleted review branch condition" }));
+
+  const imagePlan = await readFile(path.join(root, "guides/game-design-studio/skills/plan-image-assets.md"), "utf8");
+  const planSource = await readFile(path.join(root, "products/game-design-studio/plugin/skills/plan-image-assets/SKILL.md"), "utf8");
+  const imageNext = extractSection(imagePlan, "다음 작업 요청문");
+  for (const term of ["prompt-only", "generate-image-assets", "visualization workflow"]) assert.ok(extractSourceSection(planSource, "Workflow").includes(term));
+  assert.match(imageNext, /prompt-only[\s\S]*생성 handoff 없이/);
+  assertConditionalCommand(imageNext, { condition: "finite illustration job", command: "generate-image-assets", product: "game-design-studio", label: "plan-image-assets generate" });
+  assertConditionalCommand(imageNext, { condition: "Skillstead diagram slot", command: "visualize-game-design", product: "game-design-studio", label: "plan-image-assets visualize" });
+  assert.throws(() => assertConditionalCommand(imageNext.replace("$game-design-studio:generate-image-assets", "$game-design-studio:visualize-game-design"), { condition: "finite illustration job", command: "generate-image-assets", product: "game-design-studio", label: "mutated image generate branch" }));
+});
+
+test("Studio apply and orchestrator bind every canonical route condition to its CLI target", async () => {
+  const routing = JSON.parse(await readFile(path.join(root, "products/game-design-studio/plugin/references/routing.json"), "utf8"));
+  const routes = routing.routes.filter(({ skill }) => skill !== "orchestrate-game-design-project");
+  for (const skillId of ["apply-document-quality-profile", "orchestrate-game-design-project"]) {
+    const markdown = await readFile(path.join(root, "guides/game-design-studio/skills", `${skillId}.md`), "utf8");
+    assertRouteCommandRows(markdown, routes, "game-design-studio", skillId);
+  }
+  const apply = await readFile(path.join(root, "guides/game-design-studio/skills/apply-document-quality-profile.md"), "utf8");
+  assert.throws(() => assertRouteCommandRows(apply.replace("$game-design-studio:design-game-systems", "$game-design-studio:define-game-vision"), routes, "game-design-studio", "mutated apply target"));
+  assert.throws(() => assertRouteCommandRows(apply.replace("`systems`", "systems"), routes, "game-design-studio", "mutated apply condition"));
 });
 
 test("Studio indexes every installed skill and template exactly once", async () => {

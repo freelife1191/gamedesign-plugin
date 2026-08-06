@@ -44,9 +44,9 @@ selection/exclusion record, quantitative claim evidence, SVG/PNG state, paths, c
 
 ## 관련 템플릿·품질 프로필·전문 역할
 
-- Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
-- Quality Profile ID: `current artifact profile을 상속하며 visualization이 profile을 바꾸지 않음`.
-- Reviewer/role ID: `game-design-mentor`.
+- Template ID: `competency-matrix · learning-roadmap · transition-readiness` — [템플릿 카탈로그](../templates.md).
+- Quality Profile ID: `competency-matrix · learning-roadmap · transition-readiness` 중 routing.json route의 artifactType에 매핑된 profile.
+- Reviewer/role ID: `game-design-mentor · career-strategist`.
 
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 

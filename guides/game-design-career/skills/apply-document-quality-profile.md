@@ -38,7 +38,19 @@ $game-design-career:apply-document-quality-profile goal=시스템 역기획 case
 
 packaged Career index와 template-profile map만 읽고 compatible template, artifact type, format, audience, goal 순으로 점수화합니다. primary 하나를 선택한 뒤 알려진 additive source만 합성하고 stable IDs와 digest를 묶습니다. unknown override는 nearest profile과 차이를 보고하고 explicit fallback 전에는 선택하지 않습니다. 완료 뒤에는 `routing.json.routes`, `scenarioChains`, `routeSkills`에서 caller/scenario가 고른 실제 skill로 돌아가며, 이 단계가 항상 role map으로 route를 바꾸지 않습니다.
 
-지원되는 다음 skill은 `map-game-design-career`, `research-game-design-jobs`, `build-game-design-portfolio`, `reverse-engineer-game-design`, `practice-game-design-interview`, `review-game-design-portfolio`, `plan-junior-growth`, `visualize-career-roadmap`, `export-career-documents`입니다.
+각 selected route는 아래 같은 행의 CLI handoff 하나에만 결합됩니다.
+
+| routing.json route 조건 | 다음 CLI handoff |
+| --- | --- |
+| `entry-role-map` 또는 `new-hire-role-map` | `$game-design-career:map-game-design-career` |
+| `new-hire-job-research` 또는 `transition-job-research` | `$game-design-career:research-game-design-jobs` |
+| `new-hire-portfolio-build` | `$game-design-career:build-game-design-portfolio` |
+| `new-hire-reverse-design` | `$game-design-career:reverse-engineer-game-design` |
+| `new-hire-interview-practice` 또는 `transition-interview-practice` | `$game-design-career:practice-game-design-interview` |
+| `new-hire-portfolio-review` 또는 `transition-portfolio-review` | `$game-design-career:review-game-design-portfolio` |
+| `junior-growth-plan` 또는 `transition-growth-plan` | `$game-design-career:plan-junior-growth` |
+| `entry-competency-visualization` 또는 `junior-growth-visualization` 또는 `transition-readiness-visualization` | `$game-design-career:visualize-career-roadmap` |
+| `entry-roadmap-export` 또는 `new-hire-reverse-design-export` 또는 `junior-growth-export` 또는 `transition-export` | `$game-design-career:export-career-documents` |
 
 ## 생성 파일과 결과 구조
 

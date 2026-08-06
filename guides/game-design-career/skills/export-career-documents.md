@@ -44,9 +44,9 @@ prepared job manifest, 형식별 availability/status, probe evidence와 resumabl
 
 ## 관련 템플릿·품질 프로필·전문 역할
 
-- Template ID: `current artifact profile` — [템플릿 카탈로그](../templates.md).
-- Quality Profile ID: `current artifact profile을 상속하며 export가 새 profile을 선택하지 않음`.
-- Reviewer/role ID: `evidence-auditor`.
+- Template ID: `learning-roadmap · reverse-design-document · junior-growth-review · transition-readiness` — [템플릿 카탈로그](../templates.md).
+- Quality Profile ID: `learning-roadmap · reverse-design-document · junior-growth-review · transition-readiness` 중 routing.json route의 artifactType에 매핑된 profile.
+- Reviewer/role ID: `evidence-auditor · reverse-design-critic`.
 
 이 조합은 [문서 품질 프로필](../document-quality.md)의 선택 기록과 함께 유지하며, profile을 새로 고르지 않는 경우는 위처럼 현재 artifact 상속 사유를 명시합니다.
 

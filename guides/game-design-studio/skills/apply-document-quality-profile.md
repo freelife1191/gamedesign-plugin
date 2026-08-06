@@ -38,17 +38,17 @@ $game-design-studio:apply-document-quality-profile goal=live-service RPG 스태�
 
 설치된 index와 template-profile map만 읽고 후보를 점수화합니다. primary 하나를 고른 뒤 알려진 additive source만 합성하고 stable ID checklist와 manifest를 만듭니다. 관련 역할은 `document-quality-editor`이며, 완료 뒤에는 `routing.json.routes`에서 caller가 고른 실제 domain skill로 돌아갑니다. 이 단계가 시스템 설계로 route를 바꾸지 않습니다.
 
-| 선택한 route | 다음 skill |
+| routing.json route 조건 | 다음 CLI handoff |
 | --- | --- |
-| vision | `define-game-vision` |
-| systems | `design-game-systems` |
-| content | `design-game-content` |
-| player experience | `design-player-experience` |
-| economy 또는 liveops | `design-game-economy-and-liveops` |
-| production | `plan-game-production` |
-| review | `review-game-design` |
-| visualization | `visualize-game-design` |
-| export | `export-game-design-documents` |
+| `vision` | `$game-design-studio:define-game-vision` |
+| `systems` | `$game-design-studio:design-game-systems` |
+| `content` | `$game-design-studio:design-game-content` |
+| `player-experience` | `$game-design-studio:design-player-experience` |
+| `economy` 또는 `liveops` | `$game-design-studio:design-game-economy-and-liveops` |
+| `production` | `$game-design-studio:plan-game-production` |
+| `review` | `$game-design-studio:review-game-design` |
+| `visualization` | `$game-design-studio:visualize-game-design` |
+| `export` | `$game-design-studio:export-game-design-documents` |
 
 ## 생성 파일과 결과 구조
 

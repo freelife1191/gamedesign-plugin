@@ -41,13 +41,12 @@ const expectedTemplateIds = [
   "transition-readiness",
 ];
 const sourceExceptions = {
-  "export-career-documents": { reason: "renderer-neutral downstream helper", sourcePaths: ["products/game-design-career/plugin/skills/export-career-documents/SKILL.md"], sourceTerms: ["downstream"], guideTerms: ["current artifact profile", "pdf/documents/presentations", "downstream workflow"] },
-  "generate-image-assets": { reason: "configured provider helper", sourcePaths: ["products/game-design-career/plugin/skills/generate-image-assets/SKILL.md"], sourceTerms: ["provider"], guideTerms: ["current artifact profile", "review-image-assets"] },
-  "plan-image-assets": { reason: "image and Skillstead planning helper", sourcePaths: ["products/game-design-career/plugin/skills/plan-image-assets/SKILL.md"], sourceTerms: ["Skillstead"], guideTerms: ["prompt-only", "generate-image-assets", "visualize-career-roadmap"] },
-  "review-image-assets": { reason: "named-human image lifecycle helper", sourcePaths: ["products/game-design-career/plugin/skills/review-image-assets/SKILL.md"], sourceTerms: ["named human"], guideTerms: ["document-approved", "export-career-documents"] },
-  "svg-infographic": { reason: "vendored visualization wrapper", sourcePaths: ["products/game-design-career/plugin/skills/visualize-career-roadmap/SKILL.md"], sourceTerms: ["skills/svg-infographic"], guideTerms: ["game-design-mentor", "visualize-career-roadmap"] },
-  "visualize-career-roadmap": { reason: "Skillstead visualization helper", sourcePaths: ["products/game-design-career/plugin/skills/visualize-career-roadmap/SKILL.md"], sourceTerms: ["skills/svg-infographic"], guideTerms: ["current artifact profile", "export-career-documents"] },
+  "generate-image-assets": { reason: "provider-helper", sourcePath: "products/game-design-career/plugin/skills/generate-image-assets/SKILL.md", sourceSection: "Workflow", sourceTerms: ["prompt-only", "review-image-assets"], guideTerms: ["current artifact profile", "review-image-assets"] },
+  "plan-image-assets": { reason: "image-planning-helper", sourcePath: "products/game-design-career/plugin/skills/plan-image-assets/SKILL.md", sourceSection: "Workflow", sourceTerms: ["planning creates no SVG or PNG bytes", "generate-image-assets"], guideTerms: ["prompt-only", "generate-image-assets", "visualize-career-roadmap"] },
+  "review-image-assets": { reason: "human-approval-helper", sourcePath: "products/game-design-career/plugin/skills/review-image-assets/SKILL.md", sourceSection: "Workflow", sourceTerms: ["named human", "document-approved"], guideTerms: ["document-approved", "export-career-documents"] },
+  "svg-infographic": { reason: "vendored-wrapper", sourcePath: "products/game-design-career/plugin/skills/visualize-career-roadmap/SKILL.md", sourceSection: "Load Contracts", sourceTerms: ["skills/svg-infographic", "run-skillstead.mjs"], guideTerms: ["game-design-mentor", "visualize-career-roadmap"] },
 };
+const sourceExceptionReasons = new Set(["provider-helper", "image-planning-helper", "human-approval-helper", "vendored-wrapper"]);
 
 function extractFirstColumnIds(markdown) {
   return [...markdown.matchAll(/^\| (?:`([^`]+)`|\[`([^`]+)`\]\([^)]+\)) \|/gm)]
@@ -62,6 +61,44 @@ function extractSection(markdown, heading) {
   const bodyStart = start + marker.length;
   const next = markdown.indexOf("\n## ", bodyStart);
   return markdown.slice(bodyStart, next === -1 ? markdown.length : next).trim();
+}
+
+function extractSourceSection(markdown, heading) {
+  const pattern = new RegExp(`^## ${heading}\\n`, "m");
+  const match = pattern.exec(markdown);
+  assert.ok(match, `missing source section: ${heading}`);
+  const bodyStart = match.index + match[0].length;
+  const next = markdown.slice(bodyStart).search(/^## /m);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function assertConditionalCommand(section, { condition, command, label }) {
+  const escaped = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  assert.match(section, new RegExp(`${condition}[\\s\\S]{0,450}\\$game-design-career:${escaped}`, "i"), `${label}: condition must bind to ${command}`);
+}
+
+function scenarioAdjacency(routing) {
+  const adjacency = new Map();
+  for (const { id, skillChain } of routing.scenarioChains) {
+    for (let index = 0; index < skillChain.length - 1; index += 1) {
+      const source = routing.routeSkills[skillChain[index]];
+      const target = routing.routeSkills[skillChain[index + 1]];
+      const links = adjacency.get(source) ?? [];
+      links.push({ scenarioId: id, target });
+      adjacency.set(source, links);
+    }
+  }
+  return adjacency;
+}
+
+function assertRouteCommandRows(markdown, routes, label) {
+  const rows = extractSection(markdown, "내부 진행 흐름").split("\n").filter((line) => line.startsWith("|"));
+  for (const { id, skill } of routes) {
+    assert.ok(
+      rows.some((row) => row.includes(`\`${id}\``) && row.includes(`$game-design-career:${skill}`)),
+      `${label}: ${id} condition and ${skill} CLI target must share a table row`,
+    );
+  }
 }
 
 function h2Headings(markdown) {
@@ -163,11 +200,10 @@ test("Career skill handoffs are derived from canonical routes and source-backed 
   for (const [skillId, exception] of Object.entries(sourceExceptions)) {
     const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skillId}.md`), "utf8");
     const guide = [extractSection(markdown, "관련 템플릿·품질 프로필·전문 역할"), extractSection(markdown, "다음 작업 요청문")].join("\n");
-    assert.ok(exception.reason, `${skillId}: source exception needs a reason`);
-    for (const sourcePath of exception.sourcePaths) {
-      const source = await readFile(path.join(root, sourcePath), "utf8");
-      for (const term of exception.sourceTerms) assert.ok(source.includes(term), `${skillId}: source exception missing ${term}`);
-    }
+    assert.ok(sourceExceptionReasons.has(exception.reason), `${skillId}: unsupported source exception reason`);
+    const source = await readFile(path.join(root, exception.sourcePath), "utf8");
+    const sourceSection = extractSourceSection(source, exception.sourceSection);
+    for (const term of exception.sourceTerms) assert.ok(sourceSection.includes(term), `${skillId}: source exception section missing ${term}`);
     for (const term of exception.guideTerms) assert.ok(guide.includes(term), `${skillId}: guide exception missing ${term}`);
   }
 
@@ -188,6 +224,47 @@ test("Career skill handoffs are derived from canonical routes and source-backed 
       .flatMap((profile) => [...profile.required_images, ...profile.required_diagrams].map((item) => item.id)));
     for (const id of documentedIds) assert.ok(selectedMediaIds.has(id), `${skillId}: media ID is not selected-profile source-backed: ${id}`);
   }
+});
+
+test("Career scenario handoffs bind canonical scenario adjacency to each command", async () => {
+  const routing = JSON.parse(await readFile(path.join(root, "products/game-design-career/plugin/references/routing.json"), "utf8"));
+  const adjacency = scenarioAdjacency(routing);
+  for (const skillId of ["map-game-design-career", "research-game-design-jobs"]) {
+    const next = extractSection(await readFile(path.join(root, "guides/game-design-career/skills", `${skillId}.md`), "utf8"), "다음 작업 요청문");
+    for (const { scenarioId, target } of adjacency.get(skillId)) {
+      assertConditionalCommand(next, { condition: scenarioId, command: target, label: skillId });
+    }
+  }
+
+  const mapNext = extractSection(await readFile(path.join(root, "guides/game-design-career/skills/map-game-design-career.md"), "utf8"), "다음 작업 요청문");
+  assert.throws(() => assertConditionalCommand(
+    mapNext.replace("$game-design-career:build-game-design-portfolio", "$game-design-career:research-game-design-jobs"),
+    { condition: "new-graduate-system-design", command: "build-game-design-portfolio", label: "mutated map scenario" },
+  ));
+});
+
+test("Career image-plan branches bind prompt-only, generation, and visualization semantics", async () => {
+  const guide = await readFile(path.join(root, "guides/game-design-career/skills/plan-image-assets.md"), "utf8");
+  const source = await readFile(path.join(root, "products/game-design-career/plugin/skills/plan-image-assets/SKILL.md"), "utf8");
+  const next = extractSection(guide, "다음 작업 요청문");
+  const workflow = extractSourceSection(source, "Workflow");
+  for (const term of ["prompt-only", "generate-image-assets", "visualization workflow"]) assert.ok(workflow.includes(term));
+  assert.match(next, /prompt-only[\s\S]*생성 handoff 없이/);
+  assertConditionalCommand(next, { condition: "finite illustration job", command: "generate-image-assets", label: "plan-image-assets generate" });
+  assertConditionalCommand(next, { condition: "Skillstead diagram slot", command: "visualize-career-roadmap", label: "plan-image-assets visualize" });
+  assert.throws(() => assertConditionalCommand(next.replace("$game-design-career:visualize-career-roadmap", "$game-design-career:generate-image-assets"), { condition: "Skillstead diagram slot", command: "visualize-career-roadmap", label: "mutated image visualization branch" }));
+});
+
+test("Career apply and orchestrator bind every canonical route condition to its CLI target", async () => {
+  const routing = JSON.parse(await readFile(path.join(root, "products/game-design-career/plugin/references/routing.json"), "utf8"));
+  const routes = routing.routes.filter(({ skill }) => skill !== "orchestrate-game-design-career");
+  for (const skillId of ["apply-document-quality-profile", "orchestrate-game-design-career"]) {
+    const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skillId}.md`), "utf8");
+    assertRouteCommandRows(markdown, routes, skillId);
+  }
+  const apply = await readFile(path.join(root, "guides/game-design-career/skills/apply-document-quality-profile.md"), "utf8");
+  assert.throws(() => assertRouteCommandRows(apply.replace("$game-design-career:build-game-design-portfolio", "$game-design-career:research-game-design-jobs"), routes, "mutated apply target"));
+  assert.throws(() => assertRouteCommandRows(apply.replace("`new-hire-portfolio-build`", "new-hire-portfolio-build"), routes, "mutated apply condition"));
 });
 
 test("Career indexes every installed skill and canonical template exactly once", async () => {

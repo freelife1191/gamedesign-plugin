@@ -74,17 +74,23 @@ $game-design-career:plan-image-assets 기존 manifest와 stable IDs를 유지하
 
 **복사 가능한 조건부 다음 handoff**
 
-@Game Design Career mode가 prompt-only면 prompt·placeholder만 보존해. illustration job이 select/required/all의 finite manifest 범위면 generate-image-assets로, Skillstead diagram slot이면 visualize-career-roadmap으로 진행해.
+각 조건은 바로 아래 command 하나에만 결합됩니다.
+
+- 조건: `prompt-only`면 생성 handoff 없이 이 planning artifact의 prompt·placeholder만 보존할 때.
+
+- 조건: `select`/`required`/`all`의 finite illustration job일 때.
 
 ```text
-$game-design-career:generate-image-assets artifact=<artifact-path> 기존 evidence/decision을 보존하고 다음 handoff를 실행해.
+$game-design-career:generate-image-assets artifact=<artifact-path> 기존 evidence/decision을 보존하고 finite illustration job만 생성해.
 ```
+
+- 조건: Skillstead diagram slot일 때.
 
 ```text
 $game-design-career:visualize-career-roadmap artifact=artifacts/system-case-study Skillstead diagram slot의 source mapping·SVG/2× PNG QA만 진행해.
 ```
 
-`prompt-only`일 때는 생성 handoff 없이 이 planning artifact의 prompt·placeholder만 유지합니다. `select`/`required`/`all`의 유한 illustration job만 `generate-image-assets`를 허용하고, Skillstead diagram slot은 `visualize-career-roadmap`만 허용합니다.
+`prompt-only`일 때는 생성 handoff 없이 이 planning artifact의 prompt·placeholder만 유지합니다.
 
 ## 관련 문서
 
