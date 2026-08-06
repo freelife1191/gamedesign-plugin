@@ -1,6 +1,6 @@
 # 관찰 기반 역기획을 portfolio 증거로 만들기
 
-![역기획에서 portfolio로 가는 흐름](../../assets/game-design-career/reverse-design-portfolio-flow.png)
+![공개 build 관찰, 반증 가능한 추론, validation queue와 권리 검토가 역기획 artifact와 portfolio 후보로 이어지는 흐름.](../../assets/game-design-career/reverse-design-portfolio-flow.png)
 
 ## 완료 목표
 
@@ -17,7 +17,7 @@
 Codex App 자연어 요청:
 
 ```text
-@Game Design Career 계정, 사용자명, 비공개 테스트 자료를 제외한 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해.
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해.
 ```
 
 Codex CLI 명시 호출:
@@ -30,8 +30,8 @@ $game-design-career:reverse-engineer-game-design game-design-career/<career-id>/
 
 1. 직접 본 행동을 `관찰 사실`로 기록하고 `sourceUrl` 또는 build `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 명시합니다.
 2. 의도·내부 구현은 확정하지 않고 `추론`과 confidence, counterexample을 붙이며, 다음 playtest는 `제안`으로 둡니다.
-3. stale build evidence는 재검색 또는 재관찰해 version·location을 갱신하고, 이전 record는 보존합니다.
-4. 이미지 asset은 `prompt-only` placeholder, `select` human receipt, `required` finite manifest, `all` declared asset의 네 경계를 지킵니다.
+3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. 재검색 또는 재관찰해 version·location을 갱신하고 이전 record는 보존합니다.
+4. 이미지 asset은 `prompt-only`는 prompt와 placeholder만 처리합니다. `select`는 사람이 제출한 receipt의 stable ID만 처리합니다. `required`는 finite required asset만 처리하고, `all`은 declared asset만 처리합니다.
 
 ## 사람이 결정할 지점
 
@@ -43,7 +43,7 @@ Design Reviewer **한지훈**이 inference 공개 범위를, Rights Reviewer **�
 
 ## 실패와 재개
 
-Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable으로 남기고 Canonical Artifact와 기존 output을 보존합니다. missing observation은 만들지 말고 validation queue와 기존 record에서 재개합니다.
+Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable 상태로 남기고 Canonical Artifact와 기존 output을 보존합니다. missing observation은 만들지 말고 validation queue와 기존 record에서 재개합니다.
 
 ## 관련 기능
 

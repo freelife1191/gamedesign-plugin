@@ -1,6 +1,6 @@
 # 주니어 성장과 전환 준비를 검토하기
 
-![경력 단계 라우팅](../../assets/game-design-career/career-stage-routing.png)
+![현재 단계와 실제 project event, 전환 readiness, 사람 결정이 성장·전환 artifact와 내보내기 준비로 이어지는 경로.](../../assets/game-design-career/career-stage-routing.png)
 
 ## 완료 목표
 
@@ -17,7 +17,7 @@
 Codex App 자연어 요청:
 
 ```text
-@Game Design Career 개인정보와 현재 회사 비공개 자료를 제외하고, 실제 project event와 공개 가능한 proof artifact만 사용해 주니어 성장과 전환 준비를 정리해. 관찰 사실·추론·제안, freshness와 재검토 조건을 분리해.
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 proof artifact만 사용해 주니어 성장과 전환 준비를 정리해. 관찰 사실·추론·제안, freshness와 재검토 조건을 분리해.
 ```
 
 Codex CLI 명시 호출:
@@ -30,8 +30,8 @@ $game-design-career:plan-junior-growth game-design-career/<career-id>/junior-gro
 
 1. actual event와 proof artifact는 `관찰 사실`이며 current role evidence에는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 기록합니다.
 2. readiness 평가는 `추론`, 다음 project·feedback cadence는 `제안`으로 두고 target level은 확정 사실처럼 쓰지 않습니다.
-3. `reviewAfter` 이후 stale evidence는 재검색한 fresh source로 교체 연결하고 historical record는 보존합니다.
-4. `prompt-only`는 prompt/placeholder만, `select`는 human receipt만, `required`는 finite required asset만, `all`은 declared asset만 사용합니다.
+3. stale evidence는 재검색 전에는 current claim에 사용하지 않습니다. `reviewAfter` 이후 fresh source를 연결하고 historical record는 보존합니다.
+4. `prompt-only`는 prompt와 placeholder만 처리합니다. `select`는 사람이 제출한 receipt의 stable ID만 처리합니다. `required`는 finite required asset만 처리하고, `all`은 declared asset만 처리합니다.
 
 ## 사람이 결정할 지점
 
@@ -43,7 +43,7 @@ Growth Manager **김서윤**, Portfolio Reviewer **한지훈**, Export Owner **�
 
 ## 실패와 재개
 
-Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable으로 남기고 Canonical Artifact와 기존 output을 보존합니다. fresh evidence가 없으면 current claim을 만들지 않고 stale record와 next retrieval에서 재개합니다.
+Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailable 상태로 남기고 Canonical Artifact와 기존 output을 보존합니다. fresh evidence가 없으면 current claim을 만들지 않고 stale record와 next retrieval에서 재개합니다.
 
 ## 관련 기능
 
