@@ -44,6 +44,36 @@ Narrative Owner **최유진**이 player choice와 ending boundary를, Production
 
 `game-design/<project-id>/narrative-quest-npc/content.md`에 quest contract, asset placeholder, dependency와 blocked gate가 남습니다. Chromium renderer가 없으면 SVG source와 alt text만 보존하고 PNG는 fallback 상태로 기록합니다.
 
+### 예상 파일 트리
+
+```text
+game-design/<project-id>/
+├── narrative-quest-npc/content.md
+├── narrative-quest-npc/evidence.yml
+├── character-skill-combat-monster/content.md
+└── decisions/README.md
+```
+
+`game-design/<project-id>/narrative-quest-npc/`에 quest 상태와 권리 gate를, 연결 전투가 있으면 별도 `content.md`에 전투 계약을 둡니다.
+
+### 대표 내용 예시
+
+`narrative-quest-npc`와 `character-skill-combat-monster`는 이야기 선택을 시스템 조건과 제작 경계에 연결합니다.
+
+```md
+Q-ARCH-01: entry=SYS-WATER-02, choice=records-returned, reward=archive-key.
+권리·동의 evidence가 없으면 NPC 대사 asset은 blocked이며 placeholder만 사용한다.
+전투 연결은 ATK-GUARD-02의 telegraph와 counterplay를 참조한다.
+```
+
+### 완료 기준
+
+최유진이 player choice와 ending boundary를, 한지훈이 제작 범위와 kill criteria를 승인하거나 보류합니다. system/data ID, rights·consent evidence, dependency owner가 `content.md`에 연결되기 전에는 실제 asset이나 공개를 완료로 선언하지 않습니다.
+
+### 포트폴리오 또는 팀 전달 포인트
+
+Canonical Artifact의 `content.md`, 선택 결과, dependency와 blocker 결정을 전달해 팀이 재개 조건과 남은 위험을 찾을 수 있게 합니다. 포트폴리오에는 공개 권한이 있는 quest 구조와 개인 기여만 요약하고, 원작·UGC·NDA 자료는 제외합니다.
+
 ## 실패와 재개
 
 system ID가 바뀌거나 rights evidence가 빠지면 해당 stage를 `blocked`로 두고 나머지 canonical text를 덮어쓰지 않습니다. artifact path와 blocked decision ID로 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.

@@ -44,6 +44,36 @@ Production Owner **한지훈**이 scope와 kill criteria를, Review Decision Own
 
 `production-scope-risk/content.md`, `game-design-review/content.md`, 그리고 renderer-neutral export manifest가 남습니다. SVG lint를 통과해도 Chromium renderer가 없으면 SVG source, fallback reason, PNG `unavailable`을 보존합니다.
 
+### 예상 파일 트리
+
+```text
+game-design/<project-id>/
+├── production-scope-risk/content.md
+├── game-design-review/content.md
+├── decision-change-log/content.md
+└── export-manifest.yml
+```
+
+`game-design/<project-id>/production-scope-risk/`와 `game-design/<project-id>/game-design-review/`의 `content.md`를 승인 전 delivery 파일로 바꾸지 않습니다.
+
+### 대표 내용 예시
+
+`production-scope-risk`, `game-design-review`, `decision-change-log`는 scope 결정을 finding과 재개 조건에 연결합니다.
+
+```md
+SCOPE-04: 협동 탐험은 prototype, 꾸미기 상점은 defer, UGC는 exclude로 둔다.
+F-12: evidence=PLAY-07, impact=출시 blocker, minimal-fix=offline recovery 검증.
+DEC-08: renderer QA가 unavailable이면 MD와 SVG source만 delivery 후보로 보존한다.
+```
+
+### 완료 기준
+
+한지훈이 scope와 kill criteria를, 김서윤이 blocker disposition을, 오지은이 실제 renderer QA evidence를 승인하거나 보류합니다. `content.md`, finding ID, decision log와 export manifest가 연결되고, format job의 존재·lint 성공만으로 사람 승인이나 delivery 완료를 대체하지 않습니다.
+
+### 포트폴리오 또는 팀 전달 포인트
+
+Canonical Artifact의 `content.md`, review finding, 결정과 미해결 위험을 읽는 순서로 전달합니다. 포트폴리오에는 공개 가능한 scope 판단과 검증 과정을 요약하고, NDA·권리 불명 asset·미승인 PDF/PPTX를 성과물처럼 포함하지 않습니다.
+
 ## 실패와 재개
 
 unsafe output, preflight failure 또는 unavailable renderer는 canonical text와 기존 owner output을 변경하지 않습니다. Artifact path, finding ID, requested format을 지정해 실패한 gate부터 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.

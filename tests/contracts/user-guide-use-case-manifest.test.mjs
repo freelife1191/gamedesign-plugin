@@ -22,6 +22,41 @@ const FAQ_ANSWER_FIELDS = [
   "관련 가이드",
   "권리·근거·승인",
 ];
+const STUDIO_FAQ_ANSWER_FIELDS = [
+  "결론",
+  "이유와 경계",
+  "실행 요청",
+  "예상 결과",
+  "관련 사례·스킬·템플릿",
+  "안전·근거·승인",
+];
+const STUDIO_FAQ_CONTRACT = Object.freeze([
+  ["규칙, mechanic, system과 core loop는 어떻게 다른가?", ["규칙", "mechanic", "system", "core loop"], ["입력", "상태", "루프"], ["rule", "state"], ["ST-C02", "ST-C03", "`core-motivation-loop`"], ["사람", "검토"]],
+  ["처음부터 긴 GDD를 만들어야 하는가?", ["긴 GDD", "처음", "없으며"], ["비전", "가정", "경계"], ["vision", "content.md"], ["ST-C01", "`game-design-brief`", "`vision-pillars`"], ["승인", "가정"]],
+  ["장르 관습과 핵심 재미를 어떻게 구분하는가?", ["장르 관습", "핵심 재미"], ["플레이어", "반례", "검증"], ["player promise", "validation"], ["ST-C01", "ST-C02", "`vision-pillars`"], ["근거", "자동 승인"]],
+  ["상태·예외·변수와 데이터 표는 언제 필요한가?", ["상태", "예외", "데이터 표"], ["precedence", "authority", "runtime mapping"], ["state", "data"], ["ST-C03", "`system-specification`", "`data-schema-table-contract`"], ["engineering", "승인"]],
+  ["캐릭터, 스킬, 전투와 monster spec을 어떻게 연결하는가?", ["캐릭터", "스킬", "전투", "monster"], ["entity ID", "cooldown", "prototype"], ["combat", "content.md"], ["ST-C06", "`character-skill-combat-monster`", "`system-specification`"], ["prototype", "사람"]],
+  ["UX flow, feedback와 접근성을 어떻게 함께 검토하는가?", ["UX flow", "feedback", "접근성"], ["focus", "오류", "대체 입력"], ["flow", "accessibility"], ["ST-C04", "`ui-ux-flow-state`", "`accessibility-platform-matrix`"], ["accessibility owner", "승인"]],
+  ["경제·밸런스 수치를 어떤 근거 없이 만들지 않으려면 어떻게 하는가?", ["경제", "밸런스", "수치"], ["source/sink", "실제 가격", "synthetic data"], ["economy", "evidence"], ["ST-C07", "`economy-balance`", "`liveops-experiment-event`"], ["실제 가격", "승인"]],
+  ["LiveOps experiment에서 guardrail과 rollback은 왜 필요한가?", ["guardrail", "rollback"], ["성공 지표", "control", "한 변수"], ["experiment", "rollback"], ["ST-C07", "`liveops-experiment-event`", "`economy-balance`"], ["정책", "승인"]],
+  ["AI가 재미를 검증할 수 있는가?", ["AI", "재미", "검증"], ["관찰", "playtest", "가설"], ["playtest", "evidence"], ["ST-C02", "ST-C08", "`core-motivation-loop`"], ["사람", "자동 승인"]],
+  ["prototype과 playtest 결과를 문서에 어떻게 반영하는가?", ["prototype", "playtest", "문서"], ["관찰 원문", "가정", "decision ID"], ["evidence.yml", "decision"], ["ST-C01", "ST-C06", "`decision-change-log`"], ["출처", "승인"]],
+  ["범위가 너무 큰 기획을 어떻게 줄이는가?", ["범위", "줄"], ["의존성", "capacity", "kill criteria"], ["scope", "prototype"], ["ST-C08", "`production-scope-risk`", "`game-design-brief`"], ["owner", "승인"]],
+  ["이미지와 도식을 실제 게임 resource로 사용해도 되는가?", ["이미지", "도식", "resource"], ["Skillstead", "illustration", "prompt-only"], ["asset", "receipt"], ["ST-C08", "`plan-image-assets`", "`image-assets-manifest`"], ["권리", "승인"]],
+  ["GDD와 PPTX는 같은 내용을 그대로 나누면 되는가?", ["GDD", "PPTX", "그대로"], ["GDD", "traceable", "PPTX"], ["MD", "PPTX"], ["ST-C08", "`export-game-design-documents`", "`export-preparation-manifest`"], ["renderer", "승인"]],
+  ["기존 기획서를 review skill만으로 검토할 수 있는가?", ["기존 기획서", "review skill"], ["stable source", "section", "minimal fix"], ["review", "finding"], ["ST-C03", "ST-C08", "`game-design-review`"], ["근거", "결정"]],
+  ["팀에 전달할 때 어떤 결정과 미해결 위험을 남기는가?", ["팀", "결정", "미해결 위험"], ["handoff", "content.md", "공개 가능한"], ["decisions", "risk"], ["ST-C08", "`decision-change-log`", "`game-design-review`"], ["NDA", "승인"]],
+  ["renderer가 없을 때 어떤 결과를 전달할 수 있는가?", ["renderer", "Canonical Artifact", "unavailable"], ["capability", "lint", "SVG source"], ["content.md", "SVG"], ["ST-C08", "`visualize-game-design`", "`export-game-design-documents`"], ["PNG", "승인"]],
+  ["학생 과제에서 결과를 그대로 제출해도 되는가?", ["학생 과제", "그대로", "제출"], ["답안 대행", "AI 정책", "출처 표기"], ["contribution", "evidence"], ["ST-C01", "ST-C08", "`game-design-review`"], ["학교 정책", "승인"]],
+  ["서로 다른 장르 사례를 내 아이디어에 어떻게 적용하는가?", ["서로 다른 장르", "아이디어", "적용"], ["player context", "입력 장치", "사회적 위험"], ["assumption", "validation"], ["ST-G01", "ST-G10", "`game-design-brief`"], ["일반화", "사람"]],
+].map(([question, conclusion, reason, result, related, safety], index) => ({
+  heading: `Q${String(index + 1).padStart(2, "0")}. ${question}`,
+  conclusion,
+  reason,
+  result,
+  related,
+  safety,
+})));
 const AUDIENCE_SECTION_HEADINGS = [
   "현재 상황과 성공 신호",
   "권장 경로와 사례",
@@ -967,6 +1002,36 @@ async function readStudioUseCaseGuides() {
   return { index, competencyPaths, conceptScenarios };
 }
 
+function assertStudioFaq(markdown) {
+  const answers = markdownSections(markdown, 3);
+  assert.deepEqual(answers.map(({ heading }) => heading), STUDIO_FAQ_CONTRACT.map(({ heading }) => heading), "Studio FAQ approved question headings");
+  for (const [index, answer] of answers.entries()) {
+    const contract = STUDIO_FAQ_CONTRACT[index];
+    const fields = inlineFields(answer.body);
+    assert.deepEqual(inlineFieldLabels(answer.body), STUDIO_FAQ_ANSWER_FIELDS, `${answer.heading} answer shape`);
+    const byLabel = new Map(fields.map((field) => [field.label, field.value]));
+    for (const field of fields) {
+      const minimum = field.label === "결론" ? 24 : 60;
+      assert.ok(field.value.length >= minimum, `${answer.heading} ${field.label} substantive content`);
+      assert.doesNotMatch(field.value, /^(?:TODO|TBD)(?:\b|$)/iu, `${answer.heading} ${field.label} placeholder`);
+    }
+    for (const term of contract.conclusion) assert.ok(byLabel.get("결론").includes(term), `${answer.heading} conclusion term: ${term}`);
+    for (const term of contract.reason) assert.ok(byLabel.get("이유와 경계").includes(term), `${answer.heading} reason term: ${term}`);
+    for (const term of contract.result) assert.ok(byLabel.get("예상 결과").includes(term), `${answer.heading} result term: ${term}`);
+    for (const term of contract.related) assert.ok(byLabel.get("관련 사례·스킬·템플릿").includes(term), `${answer.heading} related term: ${term}`);
+    for (const term of contract.safety) assert.ok(byLabel.get("안전·근거·승인").includes(term), `${answer.heading} safety term: ${term}`);
+
+    const request = byLabel.get("실행 요청");
+    const requestBlocks = fencedCodeBlocks(request, "text");
+    assert.equal(requestBlocks.length, 1, `${answer.heading} one executable request block`);
+    assert.match(requestBlocks[0], /^(?:@Game Design Studio|\$game-design-studio:)[^\n]+$/m, `${answer.heading} executable Studio request`);
+
+    const related = byLabel.get("관련 사례·스킬·템플릿");
+    assert.match(related, /\[ST-(?:C|G)\d{2}\]\(use-cases\/(?:competency-paths|concept-scenarios)\.md#[^)]+\)/, `${answer.heading} case link`);
+    assert.match(related, /\]\(skills\/[a-z0-9-]+\.md\)/, `${answer.heading} skill link`);
+  }
+}
+
 test("use-case manifest exposes the versioned three-lane contract", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   assert.equal(manifest.version, 1);
@@ -1417,6 +1482,43 @@ test("each common FAQ answer provides the six executable and evidence fields", a
     assert.match(answer.heading, /^Q(?:0[1-9]|1[0-2])\. /, `invalid FAQ ID: ${answer.heading}`);
     assert.deepEqual(fieldLabels(answer.body), FAQ_ANSWER_FIELDS, `${answer.heading} answer shape`);
   }
+});
+
+test("Studio FAQ contains all eighteen approved questions with executable, bounded answers", async () => {
+  const faqPath = path.join(repoRoot, "guides", "game-design-studio", "faq.md");
+  const stat = await lstat(faqPath);
+  assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Studio FAQ must be a regular file");
+  const markdown = await readFile(faqPath, "utf8");
+  assertStudioFaq(markdown);
+});
+
+test("Studio FAQ contract rejects missing requests, swapped answers, and wrong questions", async () => {
+  const faqPath = path.join(repoRoot, "guides", "game-design-studio", "faq.md");
+  const markdown = await readFile(faqPath, "utf8");
+  const answers = markdownSections(markdown, 3);
+  const first = answers[0];
+  const second = answers[1];
+  const firstRequest = inlineFields(first.body).find(({ label }) => label === "실행 요청").value;
+  const withoutRequest = markdown.replace(firstRequest, "TODO");
+  assert.throws(
+    () => assertStudioFaq(withoutRequest),
+    /Q01\. .* 실행 요청 substantive content/,
+  );
+
+  const swapped = markdown
+    .replace(first.body, "__FIRST_ANSWER__")
+    .replace(second.body, first.body)
+    .replace("__FIRST_ANSWER__", second.body);
+  assert.throws(
+    () => assertStudioFaq(swapped),
+    /Q01\. .* conclusion term: 규칙/,
+  );
+
+  const wrongQuestion = markdown.replace(first.heading, "Q01. 승인되지 않은 다른 질문");
+  assert.throws(
+    () => assertStudioFaq(wrongQuestion),
+    /Studio FAQ approved question headings/,
+  );
 });
 
 test("each audience route preserves its executable case, output, review, and resume contract", async () => {

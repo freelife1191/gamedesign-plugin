@@ -44,6 +44,38 @@ Lead Designer **김서윤**이 target player, 세 가지 pillar, anti-pillar와 
 
 `game-design/<project-id>/vision-pillars/content.md`에 비전, evidence, decision owner, pending gate와 다음 도메인 route가 남습니다. SVG/PNG가 필요하지만 Chromium renderer가 없으면 editable SVG와 `renderer-unavailable` 기록만 보존하고 GDD Markdown은 계속 사용합니다.
 
+### 예상 파일 트리
+
+```text
+game-design/<project-id>/
+├── vision-pillars/content.md
+├── vision-pillars/evidence.yml
+├── game-design-brief/content.md
+└── decisions/README.md
+```
+
+`vision-pillars/`의 판단 기준과 `game-design-brief/`의 범위는 같은 Canonical Artifact 읽기 순서에서 확인합니다.
+
+### 대표 내용 예시
+
+`vision-pillars`와 `game-design-brief`는 다음처럼 확정 사실과 검증할 가정을 분리합니다.
+
+```md
+Player promise
+혼자서도 복구에 기여하고, 협동하면 변화가 보이는 탐험을 제공한다.
+
+Unsupported fun boundary
+재미·시장성은 사실로 확정하지 않고 prototype 관찰로 검증한다.
+```
+
+### 완료 기준
+
+김서윤이 player promise, 세 pillar, anti-pillar, non-goal과 다음 prototype 질문을 승인하거나 보류합니다. `content.md`에 evidence ID와 decision owner가 연결되고, 보류된 가정은 검증 전 완료로 표시하지 않습니다.
+
+### 포트폴리오 또는 팀 전달 포인트
+
+Canonical Artifact의 `content.md`, evidence와 결정 기록을 함께 전달해 어떤 기능을 포기했는지와 남은 위험을 읽을 수 있게 합니다. 포트폴리오에는 공개 가능한 문제·가정·검증 과정만 요약하고, 미해결 결정은 성과처럼 쓰지 않습니다.
+
 ## 실패와 재개
 
 근거가 부족하면 숫자나 시장 주장을 발명하지 않고 assumption과 validation task로 남깁니다. `content.md`와 `decisions/README.md`를 지정해 같은 Artifact에서 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.

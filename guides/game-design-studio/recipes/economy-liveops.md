@@ -44,6 +44,36 @@ Economy Owner **정하늘**이 price/probability evidence와 player consequence�
 
 두 Canonical Artifact의 `content.md`에 가설·근거·보호 지표·rollback decision이 남고, 현재 renderer가 없으면 SVG와 source mapping은 유지하되 PNG를 verified로 표시하지 않습니다.
 
+### 예상 파일 트리
+
+```text
+game-design/<project-id>/
+├── economy-balance/content.md
+├── economy-balance/evidence.yml
+├── liveops-experiment-event/content.md
+└── decisions/README.md
+```
+
+`game-design/<project-id>/economy-balance/`와 `game-design/<project-id>/liveops-experiment-event/`의 `content.md`는 하나의 policy date와 rollback decision을 참조합니다.
+
+### 대표 내용 예시
+
+`economy-balance`와 `liveops-experiment-event`는 수치를 확정된 성과가 아니라 검증할 가설로 남깁니다.
+
+```md
+EXP-FEST-01: control 대비 한 변수만 바꾸고 guardrail은 구매 후회 신고다.
+stop: 보호 지표가 악화하거나 정책 근거가 빠지면 experiment를 중단한다.
+rollback: tested rollback receipt가 없으면 publish하지 않고 economy 가정으로 유지한다.
+```
+
+### 완료 기준
+
+정하늘이 price·probability evidence와 player consequence를, 윤태호가 guardrail·stop·rollback 준비를 승인하거나 blocker로 보류합니다. 두 `content.md`에 source/sink, 가설, policy date, 보호 지표와 재개 조건이 있어야 하며 근거 없는 monetization 승인은 완료가 아닙니다.
+
+### 포트폴리오 또는 팀 전달 포인트
+
+Canonical Artifact의 `content.md`, evidence와 rollback 결정을 함께 전달해 팀이 어떤 가정과 위험을 재검토할지 알게 합니다. 포트폴리오에는 synthetic example과 검증 계획만 사용하고, 실제 가격·확률·개인 데이터를 공개하거나 성과로 단정하지 않습니다.
+
 ## 실패와 재개
 
 telemetry, 가격 정책 또는 rollback capability가 없으면 affected experiment를 `blocked`로 기록합니다. Artifact path와 stop-condition ID를 요청해 그 지점에서 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.

@@ -44,6 +44,36 @@ Accessibility Owner **이민아**가 각 critical action의 equivalent path와 v
 
 `game-design/<project-id>/ui-ux-flow-state/content.md`에 testable interaction state와 pending/blocked accessibility gate가 남습니다. renderer fallback은 SVG source·lint 기록을 보존하고 PNG `unavailable`을 명시합니다.
 
+### 예상 파일 트리
+
+```text
+game-design/<project-id>/
+├── ui-ux-flow-state/content.md
+├── ui-ux-flow-state/evidence.yml
+├── accessibility-platform-matrix/content.md
+└── decisions/README.md
+```
+
+`game-design/<project-id>/ui-ux-flow-state/`에는 critical action별 state ID를, 비교 근거는 별도 `content.md`에 둡니다.
+
+### 대표 내용 예시
+
+`ui-ux-flow-state`와 `accessibility-platform-matrix`는 같은 행동의 기본·대체 입력과 실패 복구를 함께 기록합니다.
+
+```md
+UX-ACT-01: 지도 열기 → focus 이동 → 목적지 선택 → feedback.
+대체 경로: pointer 없이 keyboard·pad focus와 text cue로 같은 action을 수행한다.
+offline이면 저장된 목표를 보이고, 재연결 후 state를 다시 검증한다.
+```
+
+### 완료 기준
+
+이민아가 각 critical action의 equivalent path와 검증 evidence를, 김서윤이 unresolved blocker의 보류 또는 범위 축소를 승인합니다. `content.md`의 state, input, sensory alternative와 재개 조건이 연결되기 전에는 접근성 준수나 출시 준비를 선언하지 않습니다.
+
+### 포트폴리오 또는 팀 전달 포인트
+
+Canonical Artifact의 `content.md`, 플랫폼 matrix, 사용자 관찰과 미해결 위험을 함께 전달합니다. 포트폴리오에는 공개 가능한 흐름과 대체 경로의 설계 이유만 정리하고, 실제 사용자 정보나 검증되지 않은 준수 주장은 제외합니다.
+
 ## 실패와 재개
 
 플랫폼 evidence가 오래되었거나 input path가 누락되면 current-compliance 선언을 하지 않습니다. Artifact와 unverified state ID를 지정해 검증 단계부터 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.

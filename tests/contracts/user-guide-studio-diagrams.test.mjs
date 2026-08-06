@@ -29,6 +29,12 @@ const recipeHeadings = [
   "실패와 재개",
   "관련 기능",
 ];
+const recipeResultHeadings = [
+  "예상 파일 트리",
+  "대표 내용 예시",
+  "완료 기준",
+  "포트폴리오 또는 팀 전달 포인트",
+];
 const recipes = [
   {
     id: "new-game-gdd",
@@ -79,6 +85,47 @@ const recipes = [
     approvers: ["한지훈", "김서윤", "오지은"],
   },
 ];
+
+function markdownSections(markdown, level) {
+  const marker = "#".repeat(level);
+  const headings = [...markdown.matchAll(new RegExp(`^${marker} (.+)$`, "gm"))];
+  return headings.map((heading, index) => ({
+    heading: heading[1],
+    body: markdown.slice(heading.index + heading[0].length, headings[index + 1]?.index).trim(),
+  }));
+}
+
+function assertRecipeExpectedResult({ markdown, recipe }) {
+  const result = section(markdown, "예상 결과");
+  const parts = markdownSections(result, 3);
+  assert.deepEqual(parts.map(({ heading }) => heading), recipeResultHeadings, recipe.id + " expected-result H3 shape");
+  const byHeading = new Map(parts.map((part) => [part.heading, part.body]));
+
+  for (const part of parts) {
+    assert.ok(part.body.length >= 80, recipe.id + " " + part.heading + " substantive content");
+    assert.doesNotMatch(part.body, /^(?:TODO|TBD)(?:\b|$)/iu, recipe.id + " " + part.heading + " placeholder");
+  }
+
+  const tree = byHeading.get("예상 파일 트리");
+  assert.match(tree, /```text\n[\s\S]*?content\.md[\s\S]*?\n```/, recipe.id + " concrete file tree");
+  assert.ok(tree.includes("game-design/<project-id>/"), recipe.id + " file tree project root");
+  for (const artifact of recipe.artifacts) {
+    const artifactRelative = artifact.replace("game-design/<project-id>/", "");
+    assert.ok(tree.includes(artifactRelative), recipe.id + " file tree artifact: " + artifact);
+  }
+
+  const excerpt = byHeading.get("대표 내용 예시");
+  for (const template of recipe.templates) assert.match(excerpt, new RegExp("`" + template + "`"), recipe.id + " excerpt template: " + template);
+  assert.match(excerpt, /```(?:md|text)\n[\s\S]*?\n```/, recipe.id + " representative excerpt block");
+
+  const completion = byHeading.get("완료 기준");
+  for (const approver of recipe.approvers) assert.ok(completion.includes(approver), recipe.id + " completion approver: " + approver);
+  assert.match(completion, /승인|보류|blocked/u, recipe.id + " human completion boundary");
+
+  const handoff = byHeading.get("포트폴리오 또는 팀 전달 포인트");
+  assert.match(handoff, /Canonical Artifact|content\.md/u, recipe.id + " handoff canonical source");
+  assert.match(handoff, /결정|근거|미해결|risk|위험/u, recipe.id + " handoff decision boundary");
+}
 
 function section(markdown, heading) {
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -161,6 +208,38 @@ test("Studio recipes have one primary diagram and the complete handoff contract"
     assert.match(resume, /기존.*output|existing output/i, recipe.id + " existing output preservation");
     assert.match(resume, /PNG.*unavailable/i, recipe.id + " PNG non-success fallback");
   }
+});
+
+test("Studio recipe expected-result sections contain section-local concrete outputs", async () => {
+  for (const recipe of recipes) {
+    const recipePath = path.join(root, "guides/game-design-studio/recipes", recipe.id + ".md");
+    const markdown = await readFile(recipePath, "utf8");
+    assertRecipeExpectedResult({ markdown, recipe });
+  }
+});
+
+test("Studio recipe expected-result contract rejects empty or cross-recipe sections", async () => {
+  const recipe = recipes[0];
+  const recipePath = path.join(root, "guides/game-design-studio/recipes", recipe.id + ".md");
+  const markdown = await readFile(recipePath, "utf8");
+  const result = section(markdown, "예상 결과");
+  const emptyTree = markdown.replace(result, result.replace(/(?<=^### 예상 파일 트리\n)[\s\S]*?(?=^### 대표 내용 예시)/m, "TODO\n\n"));
+  assert.throws(
+    () => assertRecipeExpectedResult({ markdown: emptyTree, recipe }),
+    /new-game-gdd 예상 파일 트리 substantive content/,
+  );
+
+  const otherRecipe = recipes[1];
+  const otherMarkdown = await readFile(path.join(root, "guides/game-design-studio/recipes", otherRecipe.id + ".md"), "utf8");
+  const otherExcerpt = markdownSections(section(otherMarkdown, "예상 결과"), 3).find(({ heading }) => heading === "대표 내용 예시").body;
+  const wrongExcerpt = markdown.replace(
+    result,
+    result.replace(markdownSections(result, 3).find(({ heading }) => heading === "대표 내용 예시").body, otherExcerpt),
+  );
+  assert.throws(
+    () => assertRecipeExpectedResult({ markdown: wrongExcerpt, recipe }),
+    /new-game-gdd excerpt template: vision-pillars/,
+  );
 });
 
 test("Studio manifest keeps unique global IDs and exactly six complete Studio diagram pairs", async () => {

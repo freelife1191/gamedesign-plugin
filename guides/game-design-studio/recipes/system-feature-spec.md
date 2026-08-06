@@ -45,6 +45,36 @@ Systems Owner **박도현**이 rule precedence와 exception policy를 승인하�
 
 `game-design/<project-id>/system-specification/content.md`와 testable state/exception record가 생깁니다. renderer가 없으면 source-mapped SVG, lint 결과와 `png: unavailable`을 남기고 PNG 승인으로 가장하지 않습니다.
 
+### 예상 파일 트리
+
+```text
+game-design/<project-id>/
+├── system-specification/content.md
+├── system-specification/evidence.yml
+├── rule-exception-matrix/content.md
+└── decisions/README.md
+```
+
+`game-design/<project-id>/system-specification/` 아래의 rule ID와 `content.md`가 구현·QA가 함께 읽는 기준입니다.
+
+### 대표 내용 예시
+
+`system-specification`과 `rule-exception-matrix`는 normal path만이 아니라 precedence를 테스트 가능한 문장으로 남깁니다.
+
+```md
+R-CRAFT-03: validating 중 cancel은 craft 완료보다 먼저 적용한다.
+상태: idle → validating → crafting → completed|failed|cancelled
+TC-09: authoritative data가 없으면 상태를 변경하지 않고 blocker를 반환한다.
+```
+
+### 완료 기준
+
+박도현이 rule precedence와 exception policy를, 이민아가 critical action의 대체 경로를 승인하거나 blocker로 보류합니다. `content.md`의 rule·state·test case가 data authority와 연결되고, 미확정 예외는 구현 완료로 전달하지 않습니다.
+
+### 포트폴리오 또는 팀 전달 포인트
+
+Canonical Artifact의 `content.md`, 예외 결정과 test case를 함께 전달해 팀이 근거와 미해결 위험을 재현할 수 있게 합니다. 포트폴리오에는 공개 가능한 상태 전이와 검증 질문만 남기며 실제 schema나 내부 데이터는 포함하지 않습니다.
+
 ## 실패와 재개
 
 권위 데이터나 precedence가 없으면 `blocked`로 기록하고 구현 규칙을 추측하지 않습니다. 같은 Artifact의 `decisions/README.md`와 blocker ID를 요청문에 넣어 재개합니다. Chromium 또는 필요한 renderer/capability가 unavailable이면 PNG는 `unavailable` 상태로 남기고 Canonical Artifact와 기존 owner output을 보존합니다.
