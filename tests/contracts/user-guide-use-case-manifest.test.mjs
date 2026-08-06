@@ -10,7 +10,7 @@ import {
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
-import { collectHeadingAnchors } from "../../tooling/lib/user-guides.mjs";
+import { collectHeadingAnchors, collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -165,6 +165,67 @@ test("use-case manifest exposes the versioned three-lane contract", async () => 
   assert.ok(Array.isArray(manifest.audience_paths));
   assert.ok(Array.isArray(manifest.cases));
   assert.ok(Array.isArray(manifest.skill_cases));
+});
+
+test("Studio manifest declares the ordered case and installed-skill coverage with deferred guide targets", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const studioCases = manifest.cases.filter((entry) => entry.product === "game-design-studio");
+  const competencyCases = studioCases.filter((entry) => entry.view === "competency");
+  const conceptCases = studioCases.filter((entry) => entry.view === "concept");
+  const studioSkillCases = manifest.skill_cases.filter((entry) => entry.product === "game-design-studio");
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+
+  assert.deepEqual(competencyCases.map((entry) => entry.id), [
+    "ST-C01", "ST-C02", "ST-C03", "ST-C04", "ST-C05", "ST-C06", "ST-C07", "ST-C08",
+  ]);
+  assert.deepEqual(conceptCases.map((entry) => entry.id), [
+    "ST-G01", "ST-G02", "ST-G03", "ST-G04", "ST-G05",
+    "ST-G06", "ST-G07", "ST-G08", "ST-G09", "ST-G10",
+  ]);
+  assert.equal(studioSkillCases.length, 15);
+
+  for (const entry of competencyCases) {
+    assert.equal(entry.document, "guides/game-design-studio/use-cases/competency-paths.md", `${entry.id} competency document`);
+    assert.equal(entry.diagram.svg, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.svg`, `${entry.id} SVG path`);
+    assert.equal(entry.diagram.png, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.png`, `${entry.id} PNG path`);
+    assert.ok(inventory.skillIds.includes(entry.skills[0]), `${entry.id} first skill is installed for Studio`);
+    assert.ok(entry.skills.every((skill) => inventory.skillIds.includes(skill)), `${entry.id} skills stay in the Studio inventory`);
+    assert.ok(entry.templates.every((template) => inventory.templateIds.includes(template)), `${entry.id} templates stay in the Studio inventory`);
+  }
+  for (const entry of conceptCases) {
+    assert.equal(entry.document, "guides/game-design-studio/use-cases/concept-scenarios.md", `${entry.id} concept document`);
+    assert.equal(entry.diagram.svg, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.svg`, `${entry.id} SVG path`);
+    assert.equal(entry.diagram.png, `guides/assets/game-design-studio/use-cases/${entry.id.toLowerCase()}.png`, `${entry.id} PNG path`);
+    assert.ok(entry.skills.every((skill) => inventory.skillIds.includes(skill)), `${entry.id} skills stay in the Studio inventory`);
+    assert.ok(entry.templates.every((template) => inventory.templateIds.includes(template)), `${entry.id} templates stay in the Studio inventory`);
+  }
+
+  assert.deepEqual(studioSkillCases.map((entry) => entry.skill), inventory.skillIds, "one direct-use case for every installed Studio skill");
+  for (const entry of studioSkillCases) {
+    assert.equal(entry.document, `guides/game-design-studio/skills/${entry.skill}.md`, `${entry.skill} guide document`);
+    assert.equal(entry.anchor, `직접-호출-활용-${entry.skill}`, `${entry.skill} direct-use H3 anchor`);
+    assert.equal(entry.diagram.svg, `guides/assets/game-design-studio/skills/${entry.skill}.svg`, `${entry.skill} SVG path`);
+    assert.equal(entry.diagram.png, `guides/assets/game-design-studio/skills/${entry.skill}.png`, `${entry.skill} PNG path`);
+    assert.ok(entry.next_skills.every((skill) => inventory.skillIds.includes(skill)), `${entry.skill} next skills stay in the Studio inventory`);
+  }
+
+  const result = await validateUseCaseGuides({
+    repoRoot,
+    inventories: new Map([["game-design-studio", inventory]]),
+    validateTargets: false,
+  });
+  assert.equal(result.ok, true, "Studio declarations validate before their guide and diagram targets exist");
+  assert.equal(result.targetValidation, "deferred");
+  assert.equal(
+    result.deferredTargetPaths.filter((target) => target.startsWith("guides/game-design-studio/") || target.startsWith("guides/assets/game-design-studio/")).length,
+    99,
+  );
+  assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/use-cases/competency-paths.md"));
+  assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/use-cases/concept-scenarios.md"));
+  assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/use-cases/st-c01.svg"));
+  assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/use-cases/st-g10.png"));
+  assert.ok(result.deferredTargetPaths.includes("guides/game-design-studio/skills/svg-infographic.md"));
+  assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-studio/skills/svg-infographic.png"));
 });
 
 test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async () => {

@@ -86,6 +86,524 @@
       }
     }
   ],
-  "cases": [],
-  "skill_cases": []
+  "cases": [
+    {
+      "id": "ST-C01",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05", "AUD-06"],
+      "level": ["foundation", "applied"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c01-플레이어-경험과-게임-비전",
+      "skills": ["apply-document-quality-profile", "define-game-vision", "orchestrate-game-design-project", "review-game-design"],
+      "templates": ["vision-pillars", "game-design-brief"],
+      "outputs": ["vision-pillars", "game-design-brief", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c01.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c01.png",
+        "alt": "플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름"
+      }
+    },
+    {
+      "id": "ST-C02",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c02-행동핵심-루프의미-있는-선택",
+      "skills": ["define-game-vision", "design-game-systems", "design-player-experience", "review-game-design"],
+      "templates": ["core-motivation-loop", "system-specification"],
+      "outputs": ["core-motivation-loop", "system-specification", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c02.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c02.png",
+        "alt": "플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름"
+      }
+    },
+    {
+      "id": "ST-C03",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c03-규칙상태예외데이터",
+      "skills": ["apply-document-quality-profile", "design-game-systems", "design-player-experience", "review-game-design"],
+      "templates": ["system-specification", "rule-exception-matrix", "data-schema-table-contract"],
+      "outputs": ["system-specification", "rule-exception-matrix", "data-schema-table-contract"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c03.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c03.png",
+        "alt": "규칙과 상태 전이 및 예외와 데이터 계약의 흐름"
+      }
+    },
+    {
+      "id": "ST-C04",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c04-uiux온보딩접근성",
+      "skills": ["apply-document-quality-profile", "design-player-experience", "review-game-design", "visualize-game-design"],
+      "templates": ["ui-ux-flow-state", "accessibility-platform-matrix"],
+      "outputs": ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c04.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c04.png",
+        "alt": "UI UX 온보딩과 접근성 검토의 흐름"
+      }
+    },
+    {
+      "id": "ST-C05",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c05-콘텐츠내러티브퀘스트npc",
+      "skills": ["apply-document-quality-profile", "design-game-content", "design-game-systems", "plan-game-production", "review-game-design"],
+      "templates": ["narrative-quest-npc", "character-skill-combat-monster"],
+      "outputs": ["narrative-quest-npc", "character-skill-combat-monster", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c05.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c05.png",
+        "alt": "콘텐츠와 내러티브 및 퀘스트와 NPC 제작 계약의 흐름"
+      }
+    },
+    {
+      "id": "ST-C06",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c06-캐릭터스킬전투몬스터",
+      "skills": ["apply-document-quality-profile", "design-game-content", "design-game-systems", "review-game-design"],
+      "templates": ["character-skill-combat-monster", "system-specification"],
+      "outputs": ["character-skill-combat-monster", "system-specification", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c06.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c06.png",
+        "alt": "캐릭터와 스킬 및 전투와 몬스터 설계의 흐름"
+      }
+    },
+    {
+      "id": "ST-C07",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-04", "AUD-05", "AUD-06"],
+      "level": ["applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c07-성장경제밸런스liveops",
+      "skills": ["apply-document-quality-profile", "design-game-economy-and-liveops", "design-game-systems", "review-game-design"],
+      "templates": ["economy-balance", "liveops-experiment-event"],
+      "outputs": ["economy-balance", "liveops-experiment-event", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c07.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c07.png",
+        "alt": "성장과 경제 및 밸런스와 LiveOps 실험의 흐름"
+      }
+    },
+    {
+      "id": "ST-C08",
+      "product": "game-design-studio",
+      "view": "competency",
+      "audiences": ["AUD-04", "AUD-05", "AUD-06"],
+      "level": ["applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/competency-paths.md",
+      "anchor": "st-c08-제작검토이미지출력",
+      "skills": ["plan-game-production", "review-game-design", "plan-image-assets", "visualize-game-design", "export-game-design-documents"],
+      "templates": ["production-scope-risk", "game-design-review", "decision-change-log"],
+      "outputs": ["production-scope-risk", "game-design-review", "export-preparation-manifest"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-c08.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-c08.png",
+        "alt": "제작과 검토 및 이미지와 출력 준비의 흐름"
+      }
+    },
+    {
+      "id": "ST-G01",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g01-모바일-수집형-rpg라이브서비스",
+      "skills": ["define-game-vision", "design-game-economy-and-liveops", "design-game-content", "review-game-design"],
+      "templates": ["game-design-brief", "economy-balance", "liveops-experiment-event"],
+      "outputs": ["game-design-brief", "economy-balance", "liveops-experiment-event"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g01.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g01.png",
+        "alt": "모바일 수집형 RPG LiveService 콘셉트의 설계 흐름"
+      }
+    },
+    {
+      "id": "ST-G02",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04"],
+      "level": ["foundation", "applied"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g02-캐주얼-퍼즐방치형",
+      "skills": ["define-game-vision", "design-game-systems", "design-player-experience", "review-game-design"],
+      "templates": ["core-motivation-loop", "ui-ux-flow-state"],
+      "outputs": ["core-motivation-loop", "ui-ux-flow-state", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g02.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g02.png",
+        "alt": "캐주얼 퍼즐 방치형 콘셉트의 세션 루프와 복귀 흐름"
+      }
+    },
+    {
+      "id": "ST-G03",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g03-협동-생존-액션",
+      "skills": ["define-game-vision", "design-game-systems", "design-game-content", "plan-game-production", "review-game-design"],
+      "templates": ["system-specification", "character-skill-combat-monster", "production-scope-risk"],
+      "outputs": ["system-specification", "character-skill-combat-monster", "production-scope-risk"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g03.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g03.png",
+        "alt": "협동 생존 액션 콘셉트의 역할과 자원 및 복구 흐름"
+      }
+    },
+    {
+      "id": "ST-G04",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g04-경쟁-pvp-아레나",
+      "skills": ["design-game-systems", "design-game-content", "design-player-experience", "review-game-design"],
+      "templates": ["character-skill-combat-monster", "system-specification", "ui-ux-flow-state"],
+      "outputs": ["character-skill-combat-monster", "system-specification", "ui-ux-flow-state"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g04.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g04.png",
+        "alt": "경쟁 PvP 아레나 콘셉트의 counterplay와 가독성 흐름"
+      }
+    },
+    {
+      "id": "ST-G05",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g05-pc콘솔-액션-로그라이트",
+      "skills": ["define-game-vision", "design-game-content", "design-game-systems", "plan-game-production", "review-game-design"],
+      "templates": ["core-motivation-loop", "character-skill-combat-monster", "production-scope-risk"],
+      "outputs": ["core-motivation-loop", "character-skill-combat-monster", "production-scope-risk"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g05.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g05.png",
+        "alt": "PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름"
+      }
+    },
+    {
+      "id": "ST-G06",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g06-선택형-내러티브-어드벤처",
+      "skills": ["design-game-content", "design-game-systems", "review-game-design", "visualize-game-design"],
+      "templates": ["narrative-quest-npc", "system-specification", "rule-exception-matrix"],
+      "outputs": ["narrative-quest-npc", "system-specification", "rule-exception-matrix"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g06.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g06.png",
+        "alt": "선택형 내러티브 어드벤처 콘셉트의 상태와 분기 흐름"
+      }
+    },
+    {
+      "id": "ST-G07",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04"],
+      "level": ["foundation", "applied"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g07-코지-생활-시뮬레이션",
+      "skills": ["define-game-vision", "design-player-experience", "design-game-content", "review-game-design"],
+      "templates": ["ui-ux-flow-state", "narrative-quest-npc", "accessibility-platform-matrix"],
+      "outputs": ["ui-ux-flow-state", "narrative-quest-npc", "accessibility-platform-matrix"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g07.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g07.png",
+        "alt": "코지 생활 시뮬레이션 콘셉트의 자율성과 접근성 흐름"
+      }
+    },
+    {
+      "id": "ST-G08",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g08-경영타이쿤-시뮬레이션",
+      "skills": ["design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "review-game-design"],
+      "templates": ["economy-balance", "system-specification", "ui-ux-flow-state"],
+      "outputs": ["economy-balance", "system-specification", "ui-ux-flow-state"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g08.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g08.png",
+        "alt": "경영 타이쿤 시뮬레이션 콘셉트의 경제와 피드백 흐름"
+      }
+    },
+    {
+      "id": "ST-G09",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-05", "AUD-06"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g09-샌드박스ugc",
+      "skills": ["design-game-content", "design-game-systems", "design-player-experience", "review-game-design"],
+      "templates": ["narrative-quest-npc", "system-specification", "game-design-review"],
+      "outputs": ["narrative-quest-npc", "system-specification", "game-design-review"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g09.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g09.png",
+        "alt": "샌드박스 UGC 콘셉트의 창작과 발견 및 moderation 흐름"
+      }
+    },
+    {
+      "id": "ST-G10",
+      "product": "game-design-studio",
+      "view": "concept",
+      "audiences": ["AUD-01", "AUD-04", "AUD-06"],
+      "level": ["foundation", "applied", "advanced"],
+      "document": "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "anchor": "st-g10-교육사회문제접근성-중심-게임",
+      "skills": ["define-game-vision", "design-player-experience", "design-game-content", "review-game-design"],
+      "templates": ["game-design-brief", "ui-ux-flow-state", "accessibility-platform-matrix"],
+      "outputs": ["game-design-brief", "ui-ux-flow-state", "accessibility-platform-matrix"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/use-cases/st-g10.svg",
+        "png": "guides/assets/game-design-studio/use-cases/st-g10.png",
+        "alt": "교육과 사회문제 및 접근성 중심 게임 콘셉트의 검증 흐름"
+      }
+    }
+  ],
+  "skill_cases": [
+    {
+      "id": "ST-S01",
+      "product": "game-design-studio",
+      "skill": "apply-document-quality-profile",
+      "document": "guides/game-design-studio/skills/apply-document-quality-profile.md",
+      "anchor": "직접-호출-활용-apply-document-quality-profile",
+      "outputs": ["selection-record", "quality-checklist", "requirement-manifest"],
+      "next_skills": ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+        "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+        "alt": "문서 품질 프로필 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S02",
+      "product": "game-design-studio",
+      "skill": "define-game-vision",
+      "document": "guides/game-design-studio/skills/define-game-vision.md",
+      "anchor": "직접-호출-활용-define-game-vision",
+      "outputs": ["vision-pillars", "core-motivation-loop"],
+      "next_skills": ["design-game-systems"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/define-game-vision.svg",
+        "png": "guides/assets/game-design-studio/skills/define-game-vision.png",
+        "alt": "게임 비전 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S03",
+      "product": "game-design-studio",
+      "skill": "design-game-content",
+      "document": "guides/game-design-studio/skills/design-game-content.md",
+      "anchor": "직접-호출-활용-design-game-content",
+      "outputs": ["narrative-quest-npc", "character-skill-combat-monster"],
+      "next_skills": ["review-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/design-game-content.svg",
+        "png": "guides/assets/game-design-studio/skills/design-game-content.png",
+        "alt": "게임 콘텐츠 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S04",
+      "product": "game-design-studio",
+      "skill": "design-game-economy-and-liveops",
+      "document": "guides/game-design-studio/skills/design-game-economy-and-liveops.md",
+      "anchor": "직접-호출-활용-design-game-economy-and-liveops",
+      "outputs": ["economy-balance", "liveops-experiment-event"],
+      "next_skills": ["review-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/design-game-economy-and-liveops.svg",
+        "png": "guides/assets/game-design-studio/skills/design-game-economy-and-liveops.png",
+        "alt": "게임 경제와 LiveOps 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S05",
+      "product": "game-design-studio",
+      "skill": "design-game-systems",
+      "document": "guides/game-design-studio/skills/design-game-systems.md",
+      "anchor": "직접-호출-활용-design-game-systems",
+      "outputs": ["system-specification", "rule-exception-matrix", "data-schema-table-contract"],
+      "next_skills": ["review-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/design-game-systems.svg",
+        "png": "guides/assets/game-design-studio/skills/design-game-systems.png",
+        "alt": "게임 시스템 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S06",
+      "product": "game-design-studio",
+      "skill": "design-player-experience",
+      "document": "guides/game-design-studio/skills/design-player-experience.md",
+      "anchor": "직접-호출-활용-design-player-experience",
+      "outputs": ["ui-ux-flow-state", "accessibility-platform-matrix"],
+      "next_skills": ["review-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/design-player-experience.svg",
+        "png": "guides/assets/game-design-studio/skills/design-player-experience.png",
+        "alt": "플레이어 경험 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S07",
+      "product": "game-design-studio",
+      "skill": "export-game-design-documents",
+      "document": "guides/game-design-studio/skills/export-game-design-documents.md",
+      "anchor": "직접-호출-활용-export-game-design-documents",
+      "outputs": ["export-preparation-manifest", "format-jobs"],
+      "next_skills": [],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/export-game-design-documents.svg",
+        "png": "guides/assets/game-design-studio/skills/export-game-design-documents.png",
+        "alt": "게임 기획 문서 출력 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S08",
+      "product": "game-design-studio",
+      "skill": "generate-image-assets",
+      "document": "guides/game-design-studio/skills/generate-image-assets.md",
+      "anchor": "직접-호출-활용-generate-image-assets",
+      "outputs": ["image-generation-result", "image-generation-provenance"],
+      "next_skills": ["review-image-assets"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg",
+        "png": "guides/assets/game-design-studio/skills/generate-image-assets.png",
+        "alt": "이미지 자산 생성 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S09",
+      "product": "game-design-studio",
+      "skill": "orchestrate-game-design-project",
+      "document": "guides/game-design-studio/skills/orchestrate-game-design-project.md",
+      "anchor": "직접-호출-활용-orchestrate-game-design-project",
+      "outputs": ["game-design-brief", "canonical-artifact"],
+      "next_skills": [],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.svg",
+        "png": "guides/assets/game-design-studio/skills/orchestrate-game-design-project.png",
+        "alt": "게임 기획 프로젝트 오케스트레이션 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S10",
+      "product": "game-design-studio",
+      "skill": "plan-game-production",
+      "document": "guides/game-design-studio/skills/plan-game-production.md",
+      "anchor": "직접-호출-활용-plan-game-production",
+      "outputs": ["production-scope-risk", "decision-change-log"],
+      "next_skills": ["review-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/plan-game-production.svg",
+        "png": "guides/assets/game-design-studio/skills/plan-game-production.png",
+        "alt": "게임 제작 계획 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S11",
+      "product": "game-design-studio",
+      "skill": "plan-image-assets",
+      "document": "guides/game-design-studio/skills/plan-image-assets.md",
+      "anchor": "직접-호출-활용-plan-image-assets",
+      "outputs": ["image-assets-manifest", "image-prompts"],
+      "next_skills": ["generate-image-assets", "visualize-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg",
+        "png": "guides/assets/game-design-studio/skills/plan-image-assets.png",
+        "alt": "이미지 자산 계획 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S12",
+      "product": "game-design-studio",
+      "skill": "review-game-design",
+      "document": "guides/game-design-studio/skills/review-game-design.md",
+      "anchor": "직접-호출-활용-review-game-design",
+      "outputs": ["game-design-review", "decision-change-log"],
+      "next_skills": ["review-game-design", "visualize-game-design", "export-game-design-documents"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/review-game-design.svg",
+        "png": "guides/assets/game-design-studio/skills/review-game-design.png",
+        "alt": "게임 기획 검토 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S13",
+      "product": "game-design-studio",
+      "skill": "review-image-assets",
+      "document": "guides/game-design-studio/skills/review-image-assets.md",
+      "anchor": "직접-호출-활용-review-image-assets",
+      "outputs": ["image-asset-review", "lifecycle-receipt"],
+      "next_skills": ["export-game-design-documents"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg",
+        "png": "guides/assets/game-design-studio/skills/review-image-assets.png",
+        "alt": "이미지 자산 검토 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S14",
+      "product": "game-design-studio",
+      "skill": "svg-infographic",
+      "document": "guides/game-design-studio/skills/svg-infographic.md",
+      "anchor": "직접-호출-활용-svg-infographic",
+      "outputs": ["editable-svg", "png-2x", "render-evidence"],
+      "next_skills": ["visualize-game-design"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg",
+        "png": "guides/assets/game-design-studio/skills/svg-infographic.png",
+        "alt": "SVG 인포그래픽 직접 호출 흐름"
+      }
+    },
+    {
+      "id": "ST-S15",
+      "product": "game-design-studio",
+      "skill": "visualize-game-design",
+      "document": "guides/game-design-studio/skills/visualize-game-design.md",
+      "anchor": "직접-호출-활용-visualize-game-design",
+      "outputs": ["editable-svg", "png-2x", "visualization-evidence"],
+      "next_skills": ["review-game-design", "export-game-design-documents"],
+      "diagram": {
+        "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg",
+        "png": "guides/assets/game-design-studio/skills/visualize-game-design.png",
+        "alt": "게임 기획 시각화 직접 호출 흐름"
+      }
+    }
+  ]
 }
