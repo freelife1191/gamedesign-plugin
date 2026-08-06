@@ -288,7 +288,8 @@ test("audience diagrams register six complete source-linked learning paths", asy
       `\\[!\\[${diagram.alt.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}\\]\\(\\.\\./assets/use-cases/audiences/${diagramId}\\.png\\)\\]\\(\\.\\./assets/use-cases/audiences/${diagramId}\\.svg\\)`,
       "u",
     );
-    assert.match(route.body, embed, `${audience.id} editable SVG-wrapped PNG embed`);
+    const embeds = route.body.match(new RegExp(embed.source, "gu")) ?? [];
+    assert.equal(embeds.length, 1, `${audience.id} exactly one editable SVG-wrapped PNG embed`);
 
     const svgPath = path.join(repoRoot, audience.diagram.svg);
     const pngPath = path.join(repoRoot, audience.diagram.png);
