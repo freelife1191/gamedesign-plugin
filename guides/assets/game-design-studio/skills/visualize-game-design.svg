@@ -26,14 +26,13 @@
       <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">관계 질문을 받습니다</text>
       <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">.</text>
   </g>
-  <g aria-label="읽기 순서 2: artifact와 경계">
+  <g aria-label="읽기 순서 2: 입력 계약">
     <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="363" y="412" width="52" height="32" rx="16" fill="#534AB7"/>
     <text x="389" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
     <text x="423" y="434" fill="#3C3489" font-size="14" font-weight="700">필수 입력</text>
-      <text x="363" y="480" fill="#3C3489" font-size="22" font-weight="700">artifact와 </text>
-      <text x="363" y="510" fill="#3C3489" font-size="22" font-weight="700">경계</text>
-      <text x="363" y="542" fill="#354152" font-size="18" font-weight="400">필수 값을 둡니다.</text>
+      <text x="363" y="480" fill="#3C3489" font-size="22" font-weight="700">입력 계약</text>
+      <text x="363" y="542" fill="#354152" font-size="8" textLength="164" lengthAdjust="spacingAndGlyphs">relationship question + source data</text>
   </g>
   <g aria-label="읽기 순서 3: 관계 도식화">
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
@@ -41,8 +40,7 @@
     <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
     <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">skill-owned work</text>
       <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">관계 도식화</text>
-      <text x="618" y="500" fill="#354152" font-size="18" font-weight="400">작업 경계를 수행합니</text>
-      <text x="618" y="526" fill="#354152" font-size="18" font-weight="400">다.</text>
+      <text x="618" y="500" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">visualize-game-design</text>
   </g>
   <g aria-label="읽기 순서 4: editable SVG">
     <rect x="845" y="384" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
@@ -51,18 +49,22 @@
     <text x="933" y="434" fill="#814600" font-size="14" font-weight="700">output</text>
       <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">editable S</text>
       <text x="873" y="510" fill="#814600" font-size="22" font-weight="700">VG</text>
-      <text x="873" y="542" fill="#354152" font-size="18" font-weight="400">정확한 ID를 남깁니</text>
-      <text x="873" y="568" fill="#354152" font-size="18" font-weight="400">다.</text>
+      <text x="873" y="542" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">editable-svg</text>
+      <text x="873" y="558" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">png-2x</text>
+      <text x="873" y="574" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">visualization-evidence</text>
   </g>
-  <g aria-label="읽기 순서 5: finding 검토">
+  <g aria-label="읽기 순서 5: 다음 route">
     <rect x="1100" y="342" width="220" height="216" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
     <rect x="1128" y="370" width="52" height="32" rx="16" fill="#A52B5D"/>
     <text x="1154" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">5</text>
     <text x="1188" y="392" fill="#7A1942" font-size="14" font-weight="700">next route</text>
-      <text x="1128" y="438" fill="#7A1942" font-size="22" font-weight="700">finding 검토</text>
-      <text x="1128" y="500" fill="#354152" font-size="18" font-weight="400">조건부 handoff</text>
-      <text x="1128" y="526" fill="#354152" font-size="18" font-weight="400">입니다.</text>
+      <text x="1128" y="438" fill="#7A1942" font-size="22" font-weight="700">다음 route</text>
+      <text x="1128" y="500" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">review-game-design</text>
   </g>
+  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
+  <text x="72" y="650" fill="#354152" font-size="9">skill: visualize-game-design</text>
+  <text x="72" y="662" fill="#354152" font-size="9">outputs: editable-svg · png-2x · visualization-evidence</text>
+  <text x="72" y="674" fill="#354152" font-size="9">next: review-game-design · export-game-design-documents</text>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
   <text x="84" y="798" fill="#1F2733" font-size="24">visualization-evidence는 finding 해소 또는 export preparation route로 이어집니다.</text>

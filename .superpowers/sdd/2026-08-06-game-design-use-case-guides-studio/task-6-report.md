@@ -2,7 +2,7 @@
 
 ## Status
 
-Fix round 1 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 재생성되었습니다.
+Fix round 2 완료. Studio use-case 18쌍과 direct-skill 15쌍은 각 5단계 semantic contract와 결정 분기를 갖는 editable SVG 및 2× PNG로 재생성되었습니다. 카드와 하단 semantic rail은 source의 exact installed skill/output/review/validation/route ID를 표시합니다.
 
 ## BASE / HEAD
 
@@ -35,3 +35,19 @@ ST-C03, ST-G01, ST-G06, 가장 긴 skill flow ST-S09를 high/original detail로 
 ## Concerns / open
 
 - 없음. 최종 handoff 전 `npm run check:guide-diagrams`, 관련 unit/contract test, 변경 JavaScript의 `node --check`, `git diff --check`를 다시 통과했습니다.
+
+## Fix round 2 findings addressed
+
+- ST-C의 specialist card, Artifact/output card, review card는 source의 exact installed skill ID·output IDs·`review-game-design`을 표시합니다. source contract는 허용 skill 목록의 `includes`가 아니라 C01…C08의 exact persisted mapping을 비교합니다.
+- ST-G는 source의 고유 제약, 두 branch label/detail, 판단 기준, 결정, validation과 persisted exact specialist/output mapping을 표시합니다. `대안 두 가지` generic placeholder를 회귀 금지했습니다.
+- 모든 ST-S는 trigger, required input, skill-owned work, output IDs, 조건부 next routes를 표시합니다. ST-S09는 `canonical-artifact`와 아홉 canonical route를 card/rail에 모두 보존합니다. `artifact와 경계` placeholder를 회귀 금지했습니다.
+- G01 4→5 connector는 upper card bottom에서 lower card top 12px 전까지 수직 shaft를 유지하며, unit geometry assertion으로 고정했습니다.
+
+## Fix round 2 RED / GREEN
+
+- RED: specialist/output/route exact ID가 card에 렌더되지 않는 경우, G01의 4→5 baseline connector, ST-S09 semantic rail의 footer 충돌을 unit/contract assertions로 재현했습니다.
+- GREEN: exact-text card rendering과 60px semantic rail을 적용하고 source의 required input·validation을 보강했습니다. wrong-valid specialist/output/route/branch mutation regression은 유지했고, placeholder ban과 visible-source semantics 검증을 추가했습니다.
+
+## Fix round 2 Visual QA
+
+`st-c03`, `st-g01`, `st-g06`, `st-s09` PNG를 high/original detail로 재확인했습니다. exact IDs, 고유 branch/validation, 수직 G01 connector, ST-S09의 9개 route rail이 판독 가능하며 clipping·overlap·tofu·card containment 실패가 없습니다. 상세 기록은 `guides/assets/VISUAL-QA.md`를 따릅니다.

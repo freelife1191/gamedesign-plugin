@@ -1653,6 +1653,12 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
   const skillSources = sources.filter(({ scope }) => scope === "game-design-studio-skill");
   const caseDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "game-design-studio-use-case");
   const skillDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "game-design-studio-skill");
+  const exactSpecialists = {
+    "st-c01": "define-game-vision", "st-c02": "design-game-systems", "st-c03": "design-game-systems", "st-c04": "design-player-experience",
+    "st-c05": "design-game-content", "st-c06": "design-game-content", "st-c07": "design-game-economy-and-liveops", "st-c08": "plan-game-production",
+    "st-g01": "design-game-economy-and-liveops", "st-g02": "design-game-systems", "st-g03": "design-game-systems", "st-g04": "design-game-systems", "st-g05": "design-game-content",
+    "st-g06": "design-game-content", "st-g07": "design-player-experience", "st-g08": "design-game-economy-and-liveops", "st-g09": "design-game-content", "st-g10": "design-player-experience",
+  };
 
   assert.equal(caseSources.length, 18, "Studio case diagram source count");
   assert.equal(skillSources.length, 15, "Studio direct-skill diagram source count");
@@ -1676,12 +1682,12 @@ test("Studio case and direct-skill diagrams are source-linked, rendered, and emb
     assert.deepEqual(source.semantic.outputs, entry.outputs, `${entry.id} exact output IDs`);
     if (entry.view === "competency") {
       assert.deepEqual(source.steps.map(({ stage }) => stage), ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"], `${entry.id} competency stage grammar`);
-      assert.ok(entry.skills.includes(source.semantic.specialist), `${entry.id} actual specialist skill`);
-      assert.ok(entry.skills.includes(source.semantic.review.skill), `${entry.id} actual review skill`);
+      assert.equal(source.semantic.specialist, exactSpecialists[id], `${entry.id} exact specialist skill`);
+      assert.equal(source.semantic.review.skill, "review-game-design", `${entry.id} exact review skill`);
       assert.ok(source.semantic.review.condition.length > 0, `${entry.id} review condition`);
     } else if (entry.view === "concept") {
       assert.deepEqual(source.steps.map(({ stage }) => stage), ["제약", "선택지", "판단 기준", "결정", "검증"], `${entry.id} concept stage grammar`);
-      assert.ok(entry.skills.includes(source.semantic.specialist), `${entry.id} actual concept specialist`);
+      assert.equal(source.semantic.specialist, exactSpecialists[id], `${entry.id} exact concept specialist`);
       assert.ok(source.semantic.validation.length > 0, `${entry.id} validation condition`);
       assert.ok(Array.isArray(source.branches) && source.branches.length >= 2, `${entry.id} branch choices`);
     } else {
@@ -1748,6 +1754,48 @@ test("Studio diagram semantic bindings reject wrong-valid skills, outputs, next 
   assert.throws(() => assertSkillBinding({ ...s09, semantic: { ...s09.semantic, next_routes: ["review-game-design"] } }), /next route/u);
   const g01 = sourceById.get("st-g01");
   assert.throws(() => validateDiagramSource({ ...g01, branches: [g01.branches[0]] }), /two branches/u);
+});
+
+test("persisted Studio diagrams expose exact source semantics instead of generic placeholders", async () => {
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const competencyContract = {
+    "st-c01": ["define-game-vision", ["vision-pillars", "game-design-brief", "game-design-review"]],
+    "st-c02": ["design-game-systems", ["core-motivation-loop", "system-specification", "game-design-review"]],
+    "st-c03": ["design-game-systems", ["system-specification", "rule-exception-matrix", "data-schema-table-contract"]],
+    "st-c04": ["design-player-experience", ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"]],
+    "st-c05": ["design-game-content", ["narrative-quest-npc", "character-skill-combat-monster", "game-design-review"]],
+    "st-c06": ["design-game-content", ["character-skill-combat-monster", "system-specification", "game-design-review"]],
+    "st-c07": ["design-game-economy-and-liveops", ["economy-balance", "liveops-experiment-event", "game-design-review"]],
+    "st-c08": ["plan-game-production", ["production-scope-risk", "game-design-review", "export-preparation-manifest"]],
+  };
+
+  for (const source of sources.filter(({ scope }) => scope === "game-design-studio-use-case" || scope === "game-design-studio-skill")) {
+    const svg = await readFile(path.join(repoRoot, "guides/assets", source.id.startsWith("st-s") ? "game-design-studio/skills" : "game-design-studio/use-cases", `${source.id.startsWith("st-s") ? source.semantic.skill : source.id}.svg`), "utf8");
+    if (source.id.startsWith("st-c")) {
+      const [specialist, outputs] = competencyContract[source.id];
+      assert.equal(source.semantic.specialist, specialist, `${source.id} exact specialist`);
+      assert.deepEqual(source.semantic.outputs, outputs, `${source.id} exact outputs`);
+      assert.equal(source.semantic.review.skill, "review-game-design", `${source.id} exact review skill`);
+      for (const value of [specialist, ...outputs, "review-game-design"]) assert.match(svg, new RegExp(value, "u"), `${source.id} visible ${value}`);
+      assert.doesNotMatch(svg, /전문 판단을 적용/u, `${source.id} no generic specialist placeholder`);
+    } else if (source.id.startsWith("st-g")) {
+      for (const value of [
+        ...[source.steps[0], source.steps[2], source.steps[3]].map(({ label }) => label),
+        ...source.branches.flatMap(({ label, detail }) => [label, detail]),
+        source.semantic.specialist,
+        ...source.semantic.outputs,
+        source.semantic.validation,
+      ]) {
+        assert.match(svg, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"), `${source.id} visible ${value}`);
+      }
+      assert.doesNotMatch(svg, /대안 두 가지/u, `${source.id} no generic choice placeholder`);
+    } else {
+      for (const value of [source.steps[0].label, source.semantic.required_input, source.semantic.skill, ...source.semantic.outputs, ...source.semantic.next_routes, source.semantic.next_condition].filter(Boolean)) {
+        assert.match(svg, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"), `${source.id} visible ${value}`);
+      }
+      assert.doesNotMatch(svg, /artifact와 경계/u, `${source.id} no generic input placeholder`);
+    }
+  }
 });
 
 test("output catalog keeps exact H2 result levels and request-table routing", async () => {

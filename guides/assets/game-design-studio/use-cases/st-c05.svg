@@ -31,8 +31,7 @@
     <text x="389" y="416" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
     <text x="423" y="416" fill="#3C3489" font-size="14" font-weight="700">전문 스킬</text>
       <text x="363" y="462" fill="#3C3489" font-size="22" font-weight="700">퀘스트 설계</text>
-      <text x="363" y="524" fill="#354152" font-size="18" font-weight="400">전문 판단을 적용합니</text>
-      <text x="363" y="550" fill="#354152" font-size="18" font-weight="400">다.</text>
+      <text x="363" y="524" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">design-game-content</text>
   </g>
   <g aria-label="읽기 순서 3: 퀘스트 계약">
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
@@ -40,8 +39,9 @@
     <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
     <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">Canonical Artifact</text>
       <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">퀘스트 계약</text>
-      <text x="618" y="500" fill="#354152" font-size="18" font-weight="400">근거와 가정을 남깁니</text>
-      <text x="618" y="526" fill="#354152" font-size="18" font-weight="400">다.</text>
+      <text x="618" y="500" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">narrative-quest-npc</text>
+      <text x="618" y="516" fill="#354152" font-size="8" textLength="164" lengthAdjust="spacingAndGlyphs">character-skill-combat-monster</text>
+      <text x="618" y="532" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">game-design-review</text>
   </g>
   <g aria-label="읽기 순서 4: 설계 검토">
     <rect x="845" y="366" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
@@ -49,8 +49,7 @@
     <text x="899" y="416" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
     <text x="933" y="416" fill="#814600" font-size="14" font-weight="700">검토</text>
       <text x="873" y="462" fill="#814600" font-size="22" font-weight="700">설계 검토</text>
-      <text x="873" y="524" fill="#354152" font-size="18" font-weight="400">owner와 경계를 </text>
-      <text x="873" y="550" fill="#354152" font-size="18" font-weight="400">확인합니다.</text>
+      <text x="873" y="524" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">review-game-design</text>
   </g>
   <g aria-label="읽기 순서 5: 검토 finding">
     <rect x="1100" y="342" width="220" height="216" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
@@ -61,6 +60,10 @@
       <text x="1128" y="500" fill="#354152" font-size="18" font-weight="400">다음 artifact</text>
       <text x="1128" y="526" fill="#354152" font-size="18" font-weight="400">로 넘깁니다.</text>
   </g>
+  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
+  <text x="72" y="650" fill="#354152" font-size="9">specialist: design-game-content</text>
+  <text x="72" y="662" fill="#354152" font-size="9">outputs: narrative-quest-npc · character-skill-combat-monster · game-design-review</text>
+  <text x="72" y="674" fill="#354152" font-size="9">review: review-game-design</text>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
   <text x="84" y="798" fill="#1F2733" font-size="24">권리와 capacity 경계는 narrative·production owner가 승인합니다.</text>

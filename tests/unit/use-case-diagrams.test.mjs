@@ -80,6 +80,97 @@ test("decision-flow renders two labelled branches that reconverge before its cri
   assert.match(svg, /재결합: 판단 기준/u);
 });
 
+test("Studio competency cards expose their exact specialist and output IDs", () => {
+  const source = {
+    ...validFixture,
+    id: "st-c07",
+    scope: "game-design-studio-use-case",
+    type: "design-pipeline",
+    steps: ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      specialist: "design-game-economy-and-liveops",
+      outputs: ["economy-balance", "liveops-experiment-event"],
+      review: { skill: "review-game-design", condition: "named owner 검토" },
+    },
+  };
+  const svg = renderDiagramSvg(source);
+  const card = (index) => new RegExp(`<g aria-label="읽기 순서 ${index}: [\\s\\S]*?</g>`, "u").exec(svg)?.[0] ?? "";
+
+  assert.match(card(2), /design-game-economy-and-liveops/u);
+  assert.match(card(3), /economy-balance/u);
+  assert.match(card(3), /liveops-experiment-event/u);
+});
+
+test("Studio skill flow exposes exact outputs and every conditional next route", () => {
+  const routes = [
+    "define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops",
+    "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents",
+  ];
+  const source = {
+    ...validFixture,
+    id: "st-s09",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { skill: "orchestrate-game-design-project", required_input: "canonical-artifact + domain route requests", outputs: ["game-design-brief", "canonical-artifact"], next_routes: routes },
+  };
+  const svg = renderDiagramSvg(source);
+
+  for (const value of [source.semantic.skill, ...source.semantic.outputs, ...routes]) assert.match(svg, new RegExp(value, "u"));
+  assert.ok([...svg.matchAll(/<text x="72" y="(\d+)"/gu)].every((match) => Number(match[1]) < 704), "semantic rail stays above the conclusion strip");
+});
+
+test("long conditional routes stay inside their exact-output card budget", () => {
+  const source = {
+    ...validFixture,
+    id: "st-s07",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      skill: "export-game-design-documents",
+      required_input: "canonical-artifact + requested formats",
+      outputs: ["export-preparation-manifest", "format-jobs"],
+      next_routes: [],
+      next_condition: "pending format job → downstream renderer QA",
+    },
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.match(svg, /font-size="7" textLength="164"[^>]*>pending format job → downstream renderer QA</u);
+});
+
+test("mixed-language validation strings use the compact exact-text budget", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g03",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-systems", outputs: ["system-specification"], validation: "co-op rejoin prototype와 이탈 telemetry" },
+    branches: [{ label: "동료 구조", detail: "rejoin" }, { label: "안전 탈출", detail: "telemetry" }],
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.match(svg, /font-size="8" textLength="164"[^>]*>co-op rejoin prototype와 이탈 telemetry</u);
+});
+
+test("branched decision-flow uses a vertical 4-to-5 connector with a twelve-pixel target gap", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-economy-and-liveops", outputs: ["economy-balance"], validation: "telemetry" },
+    branches: [{ label: "보호 경로", detail: "guardrail" }, { label: "확장 경로", detail: "rollback" }],
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.match(svg, /<path d="M 1140 442 L 1140 453"[^>]*marker-end="url\(#open-arrow\)"/u);
+  assert.doesNotMatch(svg, /<path d="M 1252 362 L 1028 545"/u);
+});
+
 test("renderDiagramSvg XML-escapes source strings and preserves step reading order", () => {
   const svg = renderDiagramSvg({
     ...validFixture,

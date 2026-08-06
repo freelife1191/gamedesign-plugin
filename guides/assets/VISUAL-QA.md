@@ -69,3 +69,10 @@
 - `st-g01.png`, `st-g06.png`: high/original에서 제약→선택지의 두 branch→`재결합: 판단 기준`→결정→검증을 확인했습니다. 두 선택지 box와 색상 구분 connector가 판독 가능하며 clipping·tofu·모호한 endpoint가 없습니다.
 - `orchestrate-game-design-project.png` (ST-S09): high/original에서 trigger→필수 입력→skill-owned work→output→next route 5 stage를 확인했습니다. Canonical Artifact output과 selected canonical route의 조건부 handoff가 분리되어 읽힙니다.
 - 자동 증거: `npm run check:guide-diagrams`는 39 SVG/PNG 쌍의 deterministic SVG 및 PNG byte equality, Skillstead lint, 2× size, IEND completion을 통과했습니다.
+
+## Studio Task 6 Fix round 2 재검사 — 2026-08-06
+
+- `st-c03.png`: high/original에서 두 번째 card의 `design-game-systems`, Artifact card의 `system-specification`·`rule-exception-matrix`·`data-schema-table-contract`, 검토 card의 `review-game-design`을 각각 확인했습니다. 같은 exact ID가 하단 semantic rail에도 남아 있어 축소 화면에서도 specialist·output·review mapping이 판독됩니다.
+- `st-g01.png`, `st-g06.png`: high/original에서 각 source의 고유 제약, 두 선택지와 detail, 판단 기준, 결정, 검증 문구를 확인했습니다. G01의 4→5 connector는 상단 card bottom에서 시작해 하단 card top 12px 전에 끝나는 수직 shaft/open-V이며, 이전의 baseline 횡단선이나 card overlap이 없습니다.
+- `orchestrate-game-design-project.png` (ST-S09): `canonical-artifact`, installed skill ID, output ID와 아홉 canonical next route가 card/semantic rail에 모두 표시됩니다. 두 줄 route rail의 마지막 baseline은 footer 시작선 위에 있어 clipping·overlap이 없습니다.
+- 자동 증거: 최종 `npm run check:guide-diagrams`는 Studio 33쌍과 전체 39쌍의 deterministic SVG/PNG, Skillstead lint, 2× size, IEND completion을 통과했습니다. 계약 테스트는 specialist/output/review·branch/validation·trigger/input/owned-work/output/next-route의 exact source 값을 비교하고 `전문 판단을 적용`, `대안 두 가지`, `artifact와 경계` placeholder를 거부합니다.

@@ -99,6 +99,7 @@ function validateStudioSemanticContract(source) {
   }
   if (source.scope === "game-design-studio-skill") {
     if (!isNonemptyString(source.semantic.skill)) throw new TypeError("Studio skill semantic.skill must be a nonempty string");
+    if (!isNonemptyString(source.semantic.required_input)) throw new TypeError("Studio skill semantic.required_input must be a nonempty string");
     if (!Array.isArray(source.semantic.next_routes) || source.semantic.next_routes.some((route) => !isNonemptyString(route))) {
       throw new TypeError("Studio skill semantic.next_routes must be an array of strings");
     }
@@ -137,6 +138,56 @@ function textLines(lines, { x, y, fill, fontSize, weight = 400 }) {
   return lines.map((line, index) => `      <text x="${x}" y="${y + index * (fontSize + 8)}" fill="${fill}" font-size="${fontSize}" font-weight="${weight}">${escapeXml(line)}</text>`).join("\n");
 }
 
+function exactTextLines(values, { x, y, fill }) {
+  return values.map((value, index) => {
+    const length = characterLength(value);
+    const fontSize = length > 36 ? 7 : length > 28 ? 8 : 10;
+    return `      <text x="${x}" y="${y + index * 16}" fill="${fill}" font-size="${fontSize}" textLength="164" lengthAdjust="spacingAndGlyphs">${escapeXml(value)}</text>`;
+  }).join("\n");
+}
+
+function visibleStep(source, step, index) {
+  if (!isStudioSource(source)) return step;
+  if (source.type === "design-pipeline") {
+    if (index === 1) return { ...step, exact: [source.semantic.specialist] };
+    if (index === 2) return { ...step, exact: source.semantic.outputs };
+    if (index === 3) return { ...step, exact: [source.semantic.review.skill] };
+    return step;
+  }
+  if (source.type === "decision-flow") {
+    if (index === 1) return { ...step, label: source.branches[0].label, detail: source.branches[1].label };
+    if (index === 4) return { ...step, label: "검증", exact: [source.semantic.validation] };
+    return step;
+  }
+  if (index === 1) return { ...step, label: "입력 계약", exact: [source.semantic.required_input] };
+  if (index === 2) return { ...step, exact: [source.semantic.skill] };
+  if (index === 3) return { ...step, exact: source.semantic.outputs };
+  if (index === 4) return { ...step, label: "다음 route", exact: source.semantic.next_routes.length ? [source.semantic.next_routes[0]] : [source.semantic.next_condition] };
+  return step;
+}
+
+function semanticRailLines(source) {
+  if (!isStudioSource(source)) return [];
+  if (source.type === "design-pipeline") {
+    return [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `review: ${source.semantic.review.skill}`];
+  }
+  if (source.type === "decision-flow") {
+    return [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `validation: ${source.semantic.validation}`];
+  }
+  const routes = source.semantic.next_routes.length ? source.semantic.next_routes : [source.semantic.next_condition];
+  const lines = [`skill: ${source.semantic.skill}`, `outputs: ${source.semantic.outputs.join(" · ")}`];
+  let current = "next: ";
+  for (const route of routes) {
+    if (current.length > 6 && current.length + route.length + 3 > 150) {
+      lines.push(current);
+      current = "next: ";
+    }
+    current += current === "next: " ? route : ` · ${route}`;
+  }
+  lines.push(current);
+  return lines;
+}
+
 export function validateDiagramSource(source) {
   if (!isObject(source)) throw new TypeError("diagram source must be an object");
   for (const field of REQUIRED_FIELDS) {
@@ -172,7 +223,8 @@ export function renderDiagramSvg(source) {
   validateDiagramSource(source);
   const cards = layoutFor(source.type, source.steps.length, source);
   const isBranchedDecision = source.type === "decision-flow" && Array.isArray(source.branches) && source.branches.length >= 2;
-  const cardMarkup = source.steps.map((step, index) => {
+  const cardMarkup = source.steps.map((rawStep, index) => {
+    const step = visibleStep(source, rawStep, index);
     const card = cards[index];
     const colors = cardColor(index);
     const titleLines = splitLines(step.label);
@@ -192,7 +244,9 @@ export function renderDiagramSvg(source) {
       `    <text x="${card.x + 54}" y="${card.y + 50}" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">${index + 1}</text>`,
       stageMarkup,
       textLines(titleLines, { x: card.x + 28, y: titleY, fill: colors.accent, fontSize: titleFontSize, weight: 700 }),
-      textLines(detailLines, { x: card.x + 28, y: detailY, fill: "#354152", fontSize: detailFontSize }),
+      step.exact
+        ? exactTextLines(step.exact, { x: card.x + 28, y: detailY, fill: "#354152" })
+        : textLines(detailLines, { x: card.x + 28, y: detailY, fill: "#354152", fontSize: detailFontSize }),
       "  </g>",
     ].filter(Boolean).join("\n");
   }).join("\n");
@@ -200,10 +254,11 @@ export function renderDiagramSvg(source) {
   const connectors = connectorPairs.map(([index, nextIndex]) => {
     const card = cards[index];
     const next = cards[nextIndex];
-    const startX = card.x + card.width + 12;
-    const endX = next.x - 12;
-    const startY = card.y + card.height / 2;
-    const endY = next.y + next.height / 2;
+    const vertical = isBranchedDecision && card.x === next.x && card.y + card.height <= next.y;
+    const startX = vertical ? card.x + card.width / 2 : card.x + card.width + 12;
+    const endX = vertical ? next.x + next.width / 2 : next.x - 12;
+    const startY = vertical ? card.y + card.height : card.y + card.height / 2;
+    const endY = vertical ? next.y - 12 : next.y + next.height / 2;
     return `  <path d="M ${startX} ${startY} L ${endX} ${endY}" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>`;
   }).join("\n");
   const decisionBranches = isBranchedDecision ? source.branches.slice(0, 2).map((branch, index) => {
@@ -221,6 +276,11 @@ export function renderDiagramSvg(source) {
       `  <path class="decision-branch" d="M 752 ${branchCenterY} L ${targetCard.x - 12} ${targetCard.y + targetCard.height / 2}" fill="none" stroke="#0F7A5F" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>`,
     ].join("\n");
   }).join("\n") + `\n  <text x="800" y="354" fill="#0F7A5F" font-size="14" font-weight="700">재결합: 판단 기준</text>` : "";
+  const railLines = semanticRailLines(source);
+  const semanticRail = railLines.length ? [
+    '  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>',
+    ...railLines.map((line, index) => `  <text x="72" y="${650 + index * 12}" fill="#354152" font-size="9">${escapeXml(line)}</text>`),
+  ].join("\n") : "";
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="${escapeXml(source.alt)}">`,
@@ -240,6 +300,7 @@ export function renderDiagramSvg(source) {
     connectors,
     decisionBranches,
     cardMarkup,
+    semanticRail,
     '  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>',
     '  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>',
     `  <text x="84" y="798" fill="#1F2733" font-size="24">${escapeXml(source.conclusion)}</text>`,

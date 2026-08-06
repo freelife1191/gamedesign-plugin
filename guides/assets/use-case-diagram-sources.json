@@ -696,7 +696,7 @@
         "economy-balance",
         "liveops-experiment-event"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "telemetry: retention·economy guardrail·rollback",
       "branches": [
         "수집 압력 축소",
         "이벤트 교환 유지"
@@ -762,7 +762,7 @@
         "ui-ux-flow-state",
         "game-design-review"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "offline authority prototype와 return telemetry",
       "branches": [
         "복귀 보상 수령",
         "오프라인 결과 거부"
@@ -828,7 +828,7 @@
         "character-skill-combat-monster",
         "production-scope-risk"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "co-op rejoin prototype와 이탈 telemetry",
       "branches": [
         "동료 구조",
         "안전 탈출"
@@ -894,7 +894,7 @@
         "system-specification",
         "ui-ux-flow-state"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "combat readability prototype와 fairness telemetry",
       "branches": [
         "공격 확정",
         "회피·차단"
@@ -960,7 +960,7 @@
         "character-skill-combat-monster",
         "production-scope-risk"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "run failure prototype와 scope evidence",
       "branches": [
         "위험 경로",
         "안전 보상"
@@ -1026,7 +1026,7 @@
         "system-specification",
         "rule-exception-matrix"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "branch conflict review와 rights evidence",
       "branches": [
         "관계 유지",
         "관계 단절"
@@ -1092,7 +1092,7 @@
         "narrative-quest-npc",
         "accessibility-platform-matrix"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "usability observation과 accessibility feedback",
       "branches": [
         "시간 제한",
         "자율 일정"
@@ -1158,7 +1158,7 @@
         "system-specification",
         "ui-ux-flow-state"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "resource simulation과 cascade rollback",
       "branches": [
         "증설 투자",
         "자원 보존"
@@ -1224,7 +1224,7 @@
         "system-specification",
         "game-design-review"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "rights appeal review와 safety evidence",
       "branches": [
         "공개 게시",
         "검토 대기"
@@ -1290,7 +1290,7 @@
         "ui-ux-flow-state",
         "accessibility-platform-matrix"
       ],
-      "validation": "prototype·telemetry 또는 사람 검토로 가정을 검증",
+      "validation": "participant feedback과 accessibility evidence",
       "branches": [
         "참여 지속",
         "대체 활동"
@@ -1366,7 +1366,8 @@
         "review-game-design",
         "visualize-game-design",
         "export-game-design-documents"
-      ]
+      ],
+      "required_input": "canonical-artifact + quality profile"
     }
   },
   {
@@ -1419,7 +1420,8 @@
       ],
       "next_routes": [
         "design-game-systems"
-      ]
+      ],
+      "required_input": "player promise + design constraints"
     }
   },
   {
@@ -1472,7 +1474,8 @@
       ],
       "next_routes": [
         "review-game-design"
-      ]
+      ],
+      "required_input": "quest intent + rights boundary"
     }
   },
   {
@@ -1525,7 +1528,8 @@
       ],
       "next_routes": [
         "review-game-design"
-      ]
+      ],
+      "required_input": "economy question + telemetry guardrail"
     }
   },
   {
@@ -1579,7 +1583,8 @@
       ],
       "next_routes": [
         "review-game-design"
-      ]
+      ],
+      "required_input": "rule question + authoritative state"
     }
   },
   {
@@ -1632,7 +1637,8 @@
       ],
       "next_routes": [
         "review-game-design"
-      ]
+      ],
+      "required_input": "user flow + accessibility constraint"
     }
   },
   {
@@ -1684,7 +1690,8 @@
         "format-jobs"
       ],
       "next_routes": [],
-      "next_condition": "pending format job → downstream renderer QA"
+      "next_condition": "pending format job → downstream renderer QA",
+      "required_input": "canonical-artifact + requested formats"
     }
   },
   {
@@ -1737,7 +1744,8 @@
       ],
       "next_routes": [
         "review-image-assets"
-      ]
+      ],
+      "required_input": "selection receipt + approved prompt"
     }
   },
   {
@@ -1798,7 +1806,8 @@
         "review-game-design",
         "visualize-game-design",
         "export-game-design-documents"
-      ]
+      ],
+      "required_input": "canonical-artifact + domain route requests"
     }
   },
   {
@@ -1851,7 +1860,8 @@
       ],
       "next_routes": [
         "review-game-design"
-      ]
+      ],
+      "required_input": "vertical slice + scope constraints"
     }
   },
   {
@@ -1905,7 +1915,8 @@
       "next_routes": [
         "generate-image-assets",
         "visualize-game-design"
-      ]
+      ],
+      "required_input": "asset need + rights constraint"
     }
   },
   {
@@ -1960,7 +1971,8 @@
         "review-game-design",
         "visualize-game-design",
         "export-game-design-documents"
-      ]
+      ],
+      "required_input": "canonical-artifact + review question"
     }
   },
   {
@@ -2013,7 +2025,8 @@
       ],
       "next_routes": [
         "export-game-design-documents"
-      ]
+      ],
+      "required_input": "draft receipt + lifecycle state"
     }
   },
   {
@@ -2067,7 +2080,8 @@
       ],
       "next_routes": [
         "visualize-game-design"
-      ]
+      ],
+      "required_input": "relationship structure + evidence"
     }
   },
   {
@@ -2122,7 +2136,8 @@
       "next_routes": [
         "review-game-design",
         "export-game-design-documents"
-      ]
+      ],
+      "required_input": "relationship question + source data"
     }
   }
 ]
