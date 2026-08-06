@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — export-game-design-documents
 
+[![게임 기획 문서 출력 직접 호출 흐름](../../assets/game-design-studio/skills/export-game-design-documents.png)](../../assets/game-design-studio/skills/export-game-design-documents.svg)
+
 #### 직접 호출 조건
 
 사람이 검토할 Canonical Artifact와 요청 format이 이미 정해졌을 때 직접 호출합니다. source Artifact의 blocker나 권리·승인 상태가 미확정이면 먼저 review에서 보류합니다.

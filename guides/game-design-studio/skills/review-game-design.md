@@ -11,6 +11,8 @@ Canonical Artifact를 evidence와 launch blocker 중심으로 검토해 traceabl
 
 ### 직접 호출 활용 — review-game-design
 
+[![게임 기획 검토 직접 호출 흐름](../../assets/game-design-studio/skills/review-game-design.png)](../../assets/game-design-studio/skills/review-game-design.svg)
+
 #### 직접 호출 조건
 
 명확한 review question과 decision owner가 있는 Canonical Artifact를 최소 수정 단위로 점검할 때 직접 호출합니다. artifact가 없거나 범위가 미정이면 먼저 해당 domain 또는 오케스트레이터를 사용합니다.

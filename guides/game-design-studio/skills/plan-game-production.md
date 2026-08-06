@@ -11,6 +11,8 @@ vertical slice의 범위, owner, gate와 kill criteria를 근거에 묶은 `prod
 
 ### 직접 호출 활용 — plan-game-production
 
+[![게임 제작 계획 직접 호출 흐름](../../assets/game-design-studio/skills/plan-game-production.png)](../../assets/game-design-studio/skills/plan-game-production.svg)
+
 #### 직접 호출 조건
 
 `ST-C08`처럼 이미 정의된 경험을 milestone·risk·kill criteria로 좁힐 때 직접 호출합니다. 아직 core loop가 없으면 먼저 vision 또는 systems를 정합니다.

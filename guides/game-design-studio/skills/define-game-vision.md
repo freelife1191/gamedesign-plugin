@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — define-game-vision
 
+[![게임 비전 직접 호출 흐름](../../assets/game-design-studio/skills/define-game-vision.png)](../../assets/game-design-studio/skills/define-game-vision.svg)
+
 #### 직접 호출 조건
 
 `ST-C01`처럼 player promise와 pillar를 한 Artifact에서 정할 때 직접 호출합니다. 범위·도메인·출력 형식이 동시에 미확정이면 오케스트레이터가 먼저 route를 고릅니다.

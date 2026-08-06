@@ -55,3 +55,10 @@
 - 수동 검사: `view_image` high detail로 `aud-01.png`을 확인했습니다. 제목·설명·4개 card·화살표·하단 사람 검토 경계가 즉시 읽히고 tofu, clipping, overflow, card containment 실패가 없습니다.
 - 수동 검사: `view_image` original detail로 `aud-06.png`을 확인했습니다. 4개 card의 Korean/Latin glyph, 2px connector와 open-V arrowhead, 하단 경계 strip의 텍스트와 테두리에 잘림·겹침·overflow가 없습니다.
 - 결론: 여섯 audience 도식은 모두 자동 overflow·PNG completion·2× 검사와 위의 지정 수동 검사를 통과했습니다. PNG는 wrapper가 생성한 파생물이며 수동 편집하지 않았습니다.
+
+## Studio use-case 및 direct-skill 도식 검사 — 2026-08-06
+
+- 범위: `game-design-studio-use-case` 18쌍(ST-C01…ST-C08, ST-G01…ST-G10)과 `game-design-studio-skill` 15쌍(ST-S01…ST-S15), 총 33 SVG/PNG 쌍입니다. 기존 `game-design-studio` recipe scope 6항목은 변경하지 않았습니다.
+- 자동 검사: `npm run check:guide-diagrams`와 Studio 다이어그램 계약은 각 source의 Skillstead lint(오류 0·경고 0), 생성 SVG 동등성, PNG IEND 완결성과 정확한 `2800×1800` 치수를 확인합니다. 모든 SVG는 `0 0 1400 900` viewBox와 title/desc를 가집니다.
+- 수동 검사: 로컬 `view_image`로 `st-c03.png`, `st-g01.png`, `st-g06.png`, 가장 긴 direct-skill flow인 `orchestrate-game-design-project.png`를 high와 original detail에서 각각 확인했습니다. 제목·설명·4개 순서 card·open-V connector·하단 다음 경계가 판독 가능하며, CJK/Latin glyph tofu, card/text overflow, 잘림, 겹침 또는 모호한 연결선이 없습니다.
+- 출처 충실도: ST-C03은 authority→규칙 전이→예외 우선순위→데이터 계약, ST-G01은 수집 동기→경제 가설→guardrail→이벤트 검증, ST-G06은 선택→state delta→모순 확인→제작 결정, ST-S09는 복합 요청→필수 입력→route 선택→브리프 결과로 각 가이드의 실제 경계와 다음 route를 반영합니다.

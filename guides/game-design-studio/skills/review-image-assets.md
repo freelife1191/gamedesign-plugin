@@ -11,6 +11,8 @@ stable image asset의 시각·접근성·배치·권리 근거와 실제 사용�
 
 ### 직접 호출 활용 — review-image-assets
 
+[![이미지 자산 검토 직접 호출 흐름](../../assets/game-design-studio/skills/review-image-assets.png)](../../assets/game-design-studio/skills/review-image-assets.svg)
+
 #### 직접 호출 조건
 
 `concept-draft` 또는 `document-approved` image receipt를 named human이 검토할 준비가 되었을 때 직접 호출합니다. source, rights, placement 또는 reviewer가 없으면 상태를 승인으로 바꾸지 않습니다.

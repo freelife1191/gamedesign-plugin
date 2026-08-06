@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — generate-image-assets
 
+[![이미지 자산 생성 직접 호출 흐름](../../assets/game-design-studio/skills/generate-image-assets.png)](../../assets/game-design-studio/skills/generate-image-assets.svg)
+
 #### 직접 호출 조건
 
 `select` receipt 또는 `required`·`all`의 finite declared illustration job을 실행할 때만 직접 호출합니다. `prompt-only`와 Skillstead diagram slot은 생성 대상이 아닙니다.

@@ -4,6 +4,8 @@
 
 ## ST-C01 플레이어 경험과 게임 비전
 
+[![플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름](../../assets/game-design-studio/use-cases/st-c01.png)](../../assets/game-design-studio/use-cases/st-c01.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 한 문장짜리 “낯선 섬을 함께 복구하는 탐험 게임” 아이디어가 있지만 대상 플레이어와 판단 기준이 없습니다.
@@ -99,6 +101,8 @@ $game-design-studio:define-game-vision 기존 game-design/island-restoration/vis
 
 ## ST-C02 행동·핵심 루프·의미 있는 선택
 
+[![플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름](../../assets/game-design-studio/use-cases/st-c02.png)](../../assets/game-design-studio/use-cases/st-c02.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** “재료를 찾아 고장 난 시설을 복구한다”는 목표는 있지만 반복 행동과 선택의 차이가 불분명합니다.
@@ -191,6 +195,8 @@ verb가 추상적이거나 모든 분기가 같은 결과면 해당 단계는 `b
 - 관련 문서: [비전 스킬](../skills/define-game-vision.md), [시스템 스킬](../skills/design-game-systems.md), [플레이어 경험 스킬](../skills/design-player-experience.md). 전용 도식은 Task 6 전까지 embed하지 않습니다.
 
 ## ST-C03 규칙·상태·예외·데이터
+
+[![규칙과 상태 전이 및 예외와 데이터 계약의 흐름](../../assets/game-design-studio/use-cases/st-c03.png)](../../assets/game-design-studio/use-cases/st-c03.svg)
 
 ### 현재 상황과 목표
 
@@ -285,6 +291,8 @@ $game-design-studio:design-game-systems game-design/shared-workbench/system-spec
 
 ## ST-C04 UI·UX·온보딩·접근성
 
+[![UI UX 온보딩과 접근성 검토의 흐름](../../assets/game-design-studio/use-cases/st-c04.png)](../../assets/game-design-studio/use-cases/st-c04.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 첫 세션에 이동, 상호작용과 저장을 소개하려 하지만 loading, empty, error, interruption과 대체 입력이 빠져 있습니다.
@@ -377,6 +385,8 @@ current platform 근거나 테스트 환경이 없으면 compliance를 주장하
 - 관련 문서: [UX·접근성 레시피](../recipes/ux-accessibility.md), [플레이어 경험 스킬](../skills/design-player-experience.md), [시각화](../visualization.md). 전용 도식은 Task 6 전에는 추가하지 않습니다.
 
 ## ST-C05 콘텐츠·내러티브·퀘스트·NPC
+
+[![콘텐츠와 내러티브 및 퀘스트와 NPC 제작 계약의 흐름](../../assets/game-design-studio/use-cases/st-c05.png)](../../assets/game-design-studio/use-cases/st-c05.svg)
 
 ### 현재 상황과 목표
 
@@ -471,6 +481,8 @@ $game-design-studio:design-game-content 기존 Q-ARCH-01과 승인된 state를 �
 
 ## ST-C06 캐릭터·스킬·전투·몬스터
 
+[![캐릭터와 스킬 및 전투와 몬스터 설계의 흐름](../../assets/game-design-studio/use-cases/st-c06.png)](../../assets/game-design-studio/use-cases/st-c06.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 훈련용 수호체 encounter에 방어 역할 캐릭터와 돌진 스킬을 넣고 싶지만 telegraph, counterplay, state rule과 readability가 없습니다.
@@ -564,6 +576,8 @@ canonical rule 또는 prototype evidence가 없으면 숫자를 채우지 않고
 
 ## ST-C07 성장·경제·밸런스·LiveOps
 
+[![성장과 경제 및 밸런스와 LiveOps 실험의 흐름](../../assets/game-design-studio/use-cases/st-c07.png)](../../assets/game-design-studio/use-cases/st-c07.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 공동체 축제에서 활동 토큰을 얻고 장식에 쓰는 흐름과 작은 이벤트를 계획하지만 source/sink, 보호 지표와 rollback이 없습니다.
@@ -656,6 +670,8 @@ $game-design-studio:design-game-economy-and-liveops EXP-FEST-01의 가정과 con
 - 관련 문서: [경제·LiveOps 레시피](../recipes/economy-liveops.md), [경제 스킬](../skills/design-game-economy-and-liveops.md), [이미지 자산](../image-assets.md). 전용 도식은 Task 6 예정입니다.
 
 ## ST-C08 제작·검토·이미지·출력
+
+[![제작과 검토 및 이미지와 출력 준비의 흐름](../../assets/game-design-studio/use-cases/st-c08.png)](../../assets/game-design-studio/use-cases/st-c08.svg)
 
 ### 현재 상황과 목표
 

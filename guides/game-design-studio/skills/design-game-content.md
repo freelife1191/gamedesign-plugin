@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — design-game-content
 
+[![게임 콘텐츠 직접 호출 흐름](../../assets/game-design-studio/skills/design-game-content.png)](../../assets/game-design-studio/skills/design-game-content.svg)
+
 #### 직접 호출 조건
 
 `ST-C05` 또는 `ST-C06`처럼 quest·NPC·character·combat content의 목적과 제작 계약이 분명할 때 직접 호출합니다. state authority가 없으면 systems와 함께 범위를 확인합니다.

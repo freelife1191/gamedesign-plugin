@@ -11,6 +11,8 @@ import {
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
 import { collectHeadingAnchors, collectProductInventory } from "../../tooling/lib/user-guides.mjs";
+import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
+import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -1192,8 +1194,6 @@ test("each Studio concept preserves the common case-card, local constraints, and
   assert.equal(entries.length, 10);
   for (const entry of entries) assert.ok(anchors.has(entry.anchor), `${entry.id} manifest anchor`);
   assertStudioConceptSemantics({ conceptScenarios, entries, inventory });
-  assert.doesNotMatch(conceptScenarios, /!\[[^\]]*\]\([^)]+\)/, "Task 6 owns concept diagram embeds");
-
   assertStudioConceptComparison({ conceptScenarios, competencyPaths, entries });
 });
 
@@ -1379,7 +1379,6 @@ test("each Studio competency case preserves its anchored case-card and executabl
     assert.match(resume, /\*\*재개 요청문:\*\*\n\n```text\n(?:@Game Design Studio|\$game-design-studio:)[^\n]+\n```/m, `${entry.id} executable resume`);
   }
 
-  assert.doesNotMatch(competencyPaths, /!\[[^\]]*\]\([^)]+\)/, "Task 6 owns competency diagram embeds");
   const productionCase = sectionByHeading(competencyPaths, 2, STUDIO_COMPETENCY_HEADINGS["ST-C08"]);
   const productionPractice = sectionByHeading(productionCase, 3, "표준 실습");
   for (const mode of ["prompt-only", "select", "required", "all"]) {
@@ -1642,6 +1641,64 @@ test("audience diagrams register six complete source-linked learning paths", asy
     assert.ok(isCompletePng(pngPath), `${audience.id} PNG completion`);
     assert.deepEqual(pngDims(pngPath), { w: 2800, h: 1800 }, `${audience.id} PNG dimensions`);
   }
+});
+
+test("Studio case and direct-skill diagrams are source-linked, rendered, and embedded exactly once", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const diagramManifest = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/diagram-manifest.json"), "utf8"));
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const studioCases = manifest.cases.filter(({ product }) => product === "game-design-studio");
+  const studioSkills = manifest.skill_cases.filter(({ product }) => product === "game-design-studio");
+  const caseSources = sources.filter(({ scope }) => scope === "game-design-studio-use-case");
+  const skillSources = sources.filter(({ scope }) => scope === "game-design-studio-skill");
+  const caseDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "game-design-studio-use-case");
+  const skillDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "game-design-studio-skill");
+
+  assert.equal(caseSources.length, 18, "Studio case diagram source count");
+  assert.equal(skillSources.length, 15, "Studio direct-skill diagram source count");
+  assert.equal(caseDiagrams.length, 18, "Studio case diagram manifest count");
+  assert.equal(skillDiagrams.length, 15, "Studio direct-skill diagram manifest count");
+
+  const expectedEntries = [
+    ...studioCases.map((entry) => ({ entry, type: entry.view === "competency" ? "design-pipeline" : "decision-flow", kind: "use-cases" })),
+    ...studioSkills.map((entry) => ({ entry, type: "skill-flow", kind: "skills" })),
+  ];
+  for (const { entry, type, kind } of expectedEntries) {
+    const id = entry.id.toLowerCase();
+    const source = sources.find((candidate) => candidate.id === id);
+    const diagram = diagramManifest.diagrams.find((candidate) => candidate.id === id);
+    assert.ok(source, `${entry.id} diagram source`);
+    assert.ok(diagram, `${entry.id} diagram manifest entry`);
+    validateDiagramSource(source);
+    assert.equal(source.type, type, `${entry.id} diagram type`);
+    assert.deepEqual(source.source_paths, [entry.document], `${entry.id} source document`);
+    assert.deepEqual(source.used_by, [entry.document], `${entry.id} used-by document`);
+    assert.equal(diagram.svg, entry.diagram.svg.replace(/^guides\/assets\//, ""), `${entry.id} SVG path`);
+    assert.equal(diagram.png, entry.diagram.png.replace(/^guides\/assets\//, ""), `${entry.id} PNG path`);
+    assert.equal(diagram.alt, entry.diagram.alt, `${entry.id} manifest alt`);
+    assert.deepEqual(diagram.sources, [`../${entry.document.replace(/^guides\//, "")}`], `${entry.id} manifest source`);
+    assert.deepEqual(diagram.usedBy, [`../${entry.document.replace(/^guides\//, "")}`], `${entry.id} manifest usedBy`);
+
+    const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
+    const scope = entry.skill
+      ? sectionByHeading(markdown, 3, `직접 호출 활용 — ${entry.skill}`)
+      : sectionByHeading(markdown, 2, entry.view === "competency" ? STUDIO_COMPETENCY_HEADINGS[entry.id] : STUDIO_CONCEPT_HEADINGS[entry.id]);
+    const relativeAsset = entry.diagram.png
+      .replace(/^guides\/assets\//, "../../assets/")
+      .replace(/\.png$/, "");
+    const escapedAlt = entry.diagram.alt.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const embed = new RegExp(`\\[!\\[${escapedAlt}\\]\\(${relativeAsset}\\.png\\)\\]\\(${relativeAsset}\\.svg\\)`, "gu");
+    assert.equal(scope.match(embed)?.length ?? 0, 1, `${entry.id} exactly one editable SVG-wrapped PNG embed`);
+
+    const svg = await readFile(path.join(repoRoot, entry.diagram.svg), "utf8");
+    assert.match(svg, /^<svg\b[^>]*>\s*<title>[^<\s][\s\S]*?<\/title>\s*<desc>[^<\s][\s\S]*?<\/desc>/u, `${entry.id} SVG title and desc`);
+    assert.deepEqual(parseViewBox(svg), { w: 1400, h: 900 }, `${entry.id} SVG viewBox`);
+    assert.ok(isCompletePng(path.join(repoRoot, entry.diagram.png)), `${entry.id} complete PNG`);
+    assert.deepEqual(pngDims(path.join(repoRoot, entry.diagram.png)), { w: 2800, h: 1800 }, `${entry.id} PNG dimensions`);
+  }
+
+  const result = await buildUseCaseDiagrams({ repoRoot, ids: expectedEntries.map(({ entry }) => entry.id.toLowerCase()), check: true });
+  assert.deepEqual(result, { svg: 33, png: 33 }, "Studio diagrams pass Skillstead lint and generated-file check");
 });
 
 test("output catalog keeps exact H2 result levels and request-table routing", async () => {

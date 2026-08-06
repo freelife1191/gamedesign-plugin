@@ -107,5 +107,137 @@
     ],
     "source_paths": ["guides/use-cases/audience-paths.md"],
     "used_by": ["guides/use-cases/audience-paths.md"]
+  },
+  {
+    "id": "st-c01", "scope": "game-design-studio-use-case", "title": "플레이어 경험과 게임 비전", "description": "플레이어 약속을 검토 가능한 비전 기준으로 고정합니다.", "alt": "플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름", "type": "design-pipeline", "eyebrow": "ST-C01 · COMPETENCY", "conclusion": "플레이어 약속과 비전 기둥은 사람 검토 뒤에만 다음 설계 기준으로 확정합니다.",
+    "steps": [{"label":"플레이어 약속","detail":"대상 경험을 고정합니다."},{"label":"비전 기둥","detail":"non-goal을 함께 둡니다."},{"label":"브리프 경계","detail":"가정과 결정을 분리합니다."},{"label":"비전 검토","detail":"근거와 owner를 확인합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c02", "scope": "game-design-studio-use-case", "title": "행동과 핵심 루프", "description": "행동·선택·반복을 핵심 루프 계약으로 연결합니다.", "alt": "플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름", "type": "design-pipeline", "eyebrow": "ST-C02 · COMPETENCY", "conclusion": "선택의 의미는 prototype 관찰과 review finding으로 다시 검증합니다.",
+    "steps": [{"label":"행동 동사","detail":"플레이어 동사를 고릅니다."},{"label":"핵심 루프","detail":"반복 보상을 연결합니다."},{"label":"의미 있는 선택","detail":"trade-off를 명시합니다."},{"label":"루프 검토","detail":"관찰 가설을 남깁니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c03", "scope": "game-design-studio-use-case", "title": "규칙과 상태 데이터", "description": "권위 상태와 예외 우선순위를 데이터 계약으로 전환합니다.", "alt": "규칙과 상태 전이 및 예외와 데이터 계약의 흐름", "type": "design-pipeline", "eyebrow": "ST-C03 · COMPETENCY", "conclusion": "authority와 precedence는 engineering 검토 전까지 가정으로 보류합니다.",
+    "steps": [{"label":"권위 상태","detail":"state source를 정합니다."},{"label":"규칙 전이","detail":"입력과 조건을 기록합니다."},{"label":"예외 우선순위","detail":"충돌 순서를 정합니다."},{"label":"데이터 계약","detail":"mapping을 검토합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c04", "scope": "game-design-studio-use-case", "title": "UX 온보딩 접근성", "description": "처음 흐름·피드백·대체 입력을 함께 검토합니다.", "alt": "UI UX 온보딩과 접근성 검토의 흐름", "type": "design-pipeline", "eyebrow": "ST-C04 · COMPETENCY", "conclusion": "UX와 accessibility owner가 오류·대체 경로를 검토한 뒤 수정합니다.",
+    "steps": [{"label":"첫 행동","detail":"온보딩 목표를 좁힙니다."},{"label":"피드백 흐름","detail":"오류 cue를 설계합니다."},{"label":"대체 입력","detail":"접근 경로를 보장합니다."},{"label":"UX 검토","detail":"recovery를 확인합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c05", "scope": "game-design-studio-use-case", "title": "콘텐츠와 퀘스트 계약", "description": "내러티브 의도·NPC 상태·제작 범위를 연결합니다.", "alt": "콘텐츠와 내러티브 및 퀘스트와 NPC 제작 계약의 흐름", "type": "design-pipeline", "eyebrow": "ST-C05 · COMPETENCY", "conclusion": "권리와 capacity 경계는 narrative·production owner가 승인합니다.",
+    "steps": [{"label":"퀘스트 의도","detail":"플레이어 목표를 정합니다."},{"label":"NPC 상태","detail":"분기 조건을 연결합니다."},{"label":"콘텐츠 계약","detail":"stable ID를 기록합니다."},{"label":"제작 범위","detail":"권리와 capacity를 검토합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c06", "scope": "game-design-studio-use-case", "title": "전투와 몬스터 설계", "description": "캐릭터·스킬·몬스터를 반응 가능한 전투 계약으로 만듭니다.", "alt": "캐릭터와 스킬 및 전투와 몬스터 설계의 흐름", "type": "design-pipeline", "eyebrow": "ST-C06 · COMPETENCY", "conclusion": "combat 가설은 prototype 관찰과 사람 검토가 있어야 확정됩니다.",
+    "steps": [{"label":"캐릭터 역할","detail":"전투 목적을 정합니다."},{"label":"스킬 조건","detail":"cooldown과 효과를 둡니다."},{"label":"몬스터 반응","detail":"telegraph와 대응을 둡니다."},{"label":"전투 검토","detail":"prototype 가설을 확인합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c07", "scope": "game-design-studio-use-case", "title": "경제와 LiveOps 실험", "description": "source·sink 가설을 guardrail과 rollback에 묶습니다.", "alt": "성장과 경제 및 밸런스와 LiveOps 실험의 흐름", "type": "design-pipeline", "eyebrow": "ST-C07 · COMPETENCY", "conclusion": "실험 지표와 rollback은 policy owner의 승인 전까지 실행하지 않습니다.",
+    "steps": [{"label":"성장 가설","detail":"progression을 정의합니다."},{"label":"source와 sink","detail":"경제 흐름을 기록합니다."},{"label":"guardrail","detail":"보호 기준을 둡니다."},{"label":"rollback 검토","detail":"실험 중단 조건을 승인합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id": "st-c08", "scope": "game-design-studio-use-case", "title": "제작 검토와 출력", "description": "scope·검토·도식·출력 준비를 순서대로 연결합니다.", "alt": "제작과 검토 및 이미지와 출력 준비의 흐름", "type": "design-pipeline", "eyebrow": "ST-C08 · COMPETENCY", "conclusion": "renderer 결과와 production 결정은 named owner 승인 뒤에만 완료로 표시합니다.",
+    "steps": [{"label":"scope와 위험","detail":"kill criteria를 정합니다."},{"label":"검토 finding","detail":"최소 수정을 정합니다."},{"label":"도식 준비","detail":"SVG와 PNG QA를 둡니다."},{"label":"출력 준비","detail":"format job을 보류합니다."}], "source_paths":["guides/game-design-studio/use-cases/competency-paths.md"], "used_by":["guides/game-design-studio/use-cases/competency-paths.md"]
+  },
+  {
+    "id":"st-g01", "scope":"game-design-studio-use-case", "title":"수집 RPG LiveOps 판단", "description":"수집 동기와 경제 실험의 승인 조건을 분기합니다.", "alt":"모바일 수집형 RPG LiveService 콘셉트의 설계 흐름", "type":"decision-flow", "eyebrow":"ST-G01 · CONCEPT", "conclusion":"telemetry와 rollback 기준이 없는 수집 이벤트는 launch 판단으로 올리지 않습니다.",
+    "steps":[{"label":"수집 동기","detail":"짧은 세션을 확인합니다."},{"label":"경제 가설","detail":"source sink를 둡니다."},{"label":"guardrail 결정","detail":"보호 기준을 비교합니다."},{"label":"이벤트 검증","detail":"rollback을 봅니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g02", "scope":"game-design-studio-use-case", "title":"퍼즐 복귀 흐름 판단", "description":"중단·오프라인·복귀 cue를 상태 결정으로 연결합니다.", "alt":"캐주얼 퍼즐 방치형 콘셉트의 세션 루프와 복귀 흐름", "type":"decision-flow", "eyebrow":"ST-G02 · CONCEPT", "conclusion":"오프라인 결과의 authority는 관찰과 UX 검토 전까지 확정하지 않습니다.",
+    "steps":[{"label":"퍼즐 세션","detail":"첫 선택을 좁힙니다."},{"label":"중단 상태","detail":"저장 경계를 정합니다."},{"label":"오프라인 결과","detail":"authority를 비교합니다."},{"label":"복귀 cue","detail":"telemetry로 검증합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g03", "scope":"game-design-studio-use-case", "title":"협동 생존 복구 판단", "description":"자원 충돌·쓰러짐·재합류의 책임을 분기합니다.", "alt":"협동 생존 액션 콘셉트의 역할과 자원 및 복구 흐름", "type":"decision-flow", "eyebrow":"ST-G03 · CONCEPT", "conclusion":"동기화 authority와 이탈 복구는 그룹 관찰 후 engineering과 결정합니다.",
+    "steps":[{"label":"역할과 자원","detail":"협동 긴장을 정의합니다."},{"label":"쓰러짐 규칙","detail":"복구 비용을 둡니다."},{"label":"이탈 예외","detail":"재합류 조건을 비교합니다."},{"label":"그룹 관찰","detail":"동기화 가설을 검증합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g04", "scope":"game-design-studio-use-case", "title":"PvP 대응성 판단", "description":"counterplay·가독성·안전 보호를 match 검증으로 연결합니다.", "alt":"경쟁 PvP 아레나 콘셉트의 counterplay와 가독성 흐름", "type":"decision-flow", "eyebrow":"ST-G04 · CONCEPT", "conclusion":"공정성 해석과 player safety는 숙련도별 관찰을 통해 검토합니다.",
+    "steps":[{"label":"교전 목표","detail":"경쟁 목적을 정합니다."},{"label":"counterplay","detail":"대응 선택을 둡니다."},{"label":"telegraph","detail":"가독성 기준을 둡니다."},{"label":"match 검증","detail":"안전과 fairness를 봅니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g05", "scope":"game-design-studio-use-case", "title":"로그라이트 run 판단", "description":"run 선택·실패 원인·메타 성장의 범위를 결정합니다.", "alt":"PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름", "type":"decision-flow", "eyebrow":"ST-G05 · CONCEPT", "conclusion":"난이도와 콘텐츠 범위는 입력 장치 관찰 및 production 검토로 제한합니다.",
+    "steps":[{"label":"run 목표","detail":"반복 목표를 정합니다."},{"label":"경로 선택","detail":"위험 보상을 비교합니다."},{"label":"실패 원인","detail":"telegraph miss를 기록합니다."},{"label":"메타 성장","detail":"scope 근거를 검토합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g06", "scope":"game-design-studio-use-case", "title":"분기 서사 상태 판단", "description":"선택 consequence와 상태 모순을 제작 결정으로 분기합니다.", "alt":"선택형 내러티브 어드벤처 콘셉트의 상태와 분기 흐름", "type":"decision-flow", "eyebrow":"ST-G06 · CONCEPT", "conclusion":"state source와 rights·민감성 경계는 narrative owner 검토가 필요합니다.",
+    "steps":[{"label":"선택 장면","detail":"의도를 명시합니다."},{"label":"상태 delta","detail":"consequence를 기록합니다."},{"label":"모순 확인","detail":"분기 충돌을 비교합니다."},{"label":"제작 결정","detail":"rights와 범위를 검토합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g07", "scope":"game-design-studio-use-case", "title":"코지 자율성 판단", "description":"생활 행동의 압박·감각 대안·관계 표현을 검토합니다.", "alt":"코지 생활 시뮬레이션 콘셉트의 자율성과 접근성 흐름", "type":"decision-flow", "eyebrow":"ST-G07 · CONCEPT", "conclusion":"편안함 가설은 usability와 sensory alternative 검토가 있어야 채택합니다.",
+    "steps":[{"label":"생활 행동","detail":"자율 목표를 정합니다."},{"label":"시간 압력","detail":"압박을 비교합니다."},{"label":"감각 대안","detail":"접근 경로를 둡니다."},{"label":"usability 검증","detail":"관찰로 수정합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g08", "scope":"game-design-studio-use-case", "title":"타이쿤 연쇄 판단", "description":"자원 권위·피드백·rollback을 simulation으로 검증합니다.", "alt":"경영 타이쿤 시뮬레이션 콘셉트의 경제와 피드백 흐름", "type":"decision-flow", "eyebrow":"ST-G08 · CONCEPT", "conclusion":"연쇄 효과와 수익 가설은 simulation 및 owner review 전에는 확정하지 않습니다.",
+    "steps":[{"label":"자원 권위","detail":"source를 정합니다."},{"label":"경제 연쇄","detail":"feedback을 연결합니다."},{"label":"guardrail 판단","detail":"cascade를 제한합니다."},{"label":"simulation","detail":"rollback을 검토합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g09", "scope":"game-design-studio-use-case", "title":"UGC 안전 판단", "description":"창작 상태와 발견·권리·moderation을 분기합니다.", "alt":"샌드박스 UGC 콘셉트의 창작과 발견 및 moderation 흐름", "type":"decision-flow", "eyebrow":"ST-G09 · CONCEPT", "conclusion":"rights·appeal·accessibility는 moderation과 ethics owner가 검토해야 합니다.",
+    "steps":[{"label":"창작 상태","detail":"UGC source를 정합니다."},{"label":"발견 경로","detail":"노출 기준을 둡니다."},{"label":"권리와 신고","detail":"appeal을 연결합니다."},{"label":"안전 검토","detail":"ethics owner가 봅니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-g10", "scope":"game-design-studio-use-case", "title":"교육 접근성 판단", "description":"당사자 피드백·동의·대체 활동을 검증 계획에 둡니다.", "alt":"교육과 사회문제 및 접근성 중심 게임 콘셉트의 검증 흐름", "type":"decision-flow", "eyebrow":"ST-G10 · CONCEPT", "conclusion":"효과 주장은 당사자 동의와 접근성·윤리 검토 없이는 확정하지 않습니다.",
+    "steps":[{"label":"학습 맥락","detail":"대상 요구를 확인합니다."},{"label":"동의와 철회","detail":"exit 경로를 둡니다."},{"label":"대체 활동","detail":"접근 대안을 둡니다."},{"label":"당사자 검토","detail":"효과 근거를 확인합니다."}], "source_paths":["guides/game-design-studio/use-cases/concept-scenarios.md"], "used_by":["guides/game-design-studio/use-cases/concept-scenarios.md"]
+  },
+  {
+    "id":"st-s01", "scope":"game-design-studio-skill", "title":"문서 품질 프로필 호출", "description":"요청의 profile 기준을 Canonical Artifact 경계로 적용합니다.", "alt":"문서 품질 프로필 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S01 · SKILL", "conclusion":"profile 선택은 approval이 아니며 다음 domain route의 입력만 확정합니다.",
+    "steps":[{"label":"품질 trigger","detail":"profile 요청을 받습니다."},{"label":"필수 입력","detail":"artifact와 요구를 둡니다."},{"label":"프로필 적용","detail":"checklist를 구성합니다."},{"label":"선택 기록","detail":"domain route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/apply-document-quality-profile.md"], "used_by":["guides/game-design-studio/skills/apply-document-quality-profile.md"]
+  },
+  {
+    "id":"st-s02", "scope":"game-design-studio-skill", "title":"게임 비전 직접 호출", "description":"플레이어 약속을 비전 기둥과 core loop로 고정합니다.", "alt":"게임 비전 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S02 · SKILL", "conclusion":"vision-pillars와 core-motivation-loop은 systems 또는 experience route의 입력입니다.",
+    "steps":[{"label":"비전 trigger","detail":"경험 목표를 받습니다."},{"label":"필수 입력","detail":"대상과 non-goal을 둡니다."},{"label":"비전 설계","detail":"pillars를 작성합니다."},{"label":"비전 결과","detail":"systems route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/define-game-vision.md"], "used_by":["guides/game-design-studio/skills/define-game-vision.md"]
+  },
+  {
+    "id":"st-s03", "scope":"game-design-studio-skill", "title":"게임 콘텐츠 직접 호출", "description":"퀘스트·NPC·전투 콘텐츠 계약을 생성합니다.", "alt":"게임 콘텐츠 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S03 · SKILL", "conclusion":"narrative-quest-npc 결과는 systems 또는 production route로 이어집니다.",
+    "steps":[{"label":"콘텐츠 trigger","detail":"퀘스트 의도를 받습니다."},{"label":"필수 입력","detail":"상태와 권리를 둡니다."},{"label":"콘텐츠 설계","detail":"NPC 계약을 작성합니다."},{"label":"콘텐츠 결과","detail":"systems route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/design-game-content.md"], "used_by":["guides/game-design-studio/skills/design-game-content.md"]
+  },
+  {
+    "id":"st-s04", "scope":"game-design-studio-skill", "title":"경제 LiveOps 직접 호출", "description":"경제 가설을 이벤트 guardrail과 rollback으로 만듭니다.", "alt":"게임 경제와 LiveOps 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S04 · SKILL", "conclusion":"economy-balance와 experiment 결과는 systems 또는 review route로 넘깁니다.",
+    "steps":[{"label":"경제 trigger","detail":"성장 질문을 받습니다."},{"label":"필수 입력","detail":"source sink를 둡니다."},{"label":"경제 설계","detail":"guardrail을 정합니다."},{"label":"실험 결과","detail":"review route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/design-game-economy-and-liveops.md"], "used_by":["guides/game-design-studio/skills/design-game-economy-and-liveops.md"]
+  },
+  {
+    "id":"st-s05", "scope":"game-design-studio-skill", "title":"게임 시스템 직접 호출", "description":"규칙·상태·예외를 runtime mapping 가능한 계약으로 만듭니다.", "alt":"게임 시스템 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S05 · SKILL", "conclusion":"system-specification은 experience·content 또는 review route의 기준입니다.",
+    "steps":[{"label":"시스템 trigger","detail":"기능 질문을 받습니다."},{"label":"필수 입력","detail":"authority를 둡니다."},{"label":"규칙 설계","detail":"예외를 정렬합니다."},{"label":"명세 결과","detail":"review route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/design-game-systems.md"], "used_by":["guides/game-design-studio/skills/design-game-systems.md"]
+  },
+  {
+    "id":"st-s06", "scope":"game-design-studio-skill", "title":"플레이어 경험 직접 호출", "description":"UX flow와 접근성 대안을 검토 가능한 결과로 만듭니다.", "alt":"플레이어 경험 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S06 · SKILL", "conclusion":"ui-ux-flow-state는 review 또는 visualization route에서 검토합니다.",
+    "steps":[{"label":"UX trigger","detail":"사용 흐름을 받습니다."},{"label":"필수 입력","detail":"대상과 장벽을 둡니다."},{"label":"경험 설계","detail":"대체 입력을 둡니다."},{"label":"UX 결과","detail":"review route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/design-player-experience.md"], "used_by":["guides/game-design-studio/skills/design-player-experience.md"]
+  },
+  {
+    "id":"st-s07", "scope":"game-design-studio-skill", "title":"문서 출력 직접 호출", "description":"승인된 요청의 format job을 renderer-neutral로 준비합니다.", "alt":"게임 기획 문서 출력 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S07 · SKILL", "conclusion":"export-preparation-manifest의 pending job만 downstream renderer QA로 handoff합니다.",
+    "steps":[{"label":"출력 trigger","detail":"format 요청을 받습니다."},{"label":"필수 입력","detail":"artifact와 독자를 둡니다."},{"label":"출력 준비","detail":"preflight를 기록합니다."},{"label":"format job","detail":"renderer QA로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/export-game-design-documents.md"], "used_by":["guides/game-design-studio/skills/export-game-design-documents.md"]
+  },
+  {
+    "id":"st-s08", "scope":"game-design-studio-skill", "title":"이미지 생성 직접 호출", "description":"선택 receipt가 허용한 finite illustration job만 생성합니다.", "alt":"이미지 자산 생성 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S08 · SKILL", "conclusion":"image-generation-result는 named human review 전에는 승인된 asset이 아닙니다.",
+    "steps":[{"label":"생성 trigger","detail":"receipt를 확인합니다."},{"label":"필수 입력","detail":"asset ID와 mode를 둡니다."},{"label":"이미지 생성","detail":"finite job을 실행합니다."},{"label":"생성 결과","detail":"asset review로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/generate-image-assets.md"], "used_by":["guides/game-design-studio/skills/generate-image-assets.md"]
+  },
+  {
+    "id":"st-s09", "scope":"game-design-studio-skill", "title":"프로젝트 오케스트레이션", "description":"여러 domain 요청을 bounded route와 completion gate로 나눕니다.", "alt":"게임 기획 프로젝트 오케스트레이션 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S09 · SKILL", "conclusion":"game-design-brief의 선택 route만 해당 specialist로 순차 handoff합니다.",
+    "steps":[{"label":"복합 trigger","detail":"여러 domain을 받습니다."},{"label":"필수 입력","detail":"제약과 owner를 둡니다."},{"label":"route 선택","detail":"completion gate를 정합니다."},{"label":"브리프 결과","detail":"선택 skill로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/orchestrate-game-design-project.md"], "used_by":["guides/game-design-studio/skills/orchestrate-game-design-project.md"]
+  },
+  {
+    "id":"st-s10", "scope":"game-design-studio-skill", "title":"제작 계획 직접 호출", "description":"vertical slice의 scope·risk·kill criteria를 결정합니다.", "alt":"게임 제작 계획 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S10 · SKILL", "conclusion":"production-scope-risk finding은 review route에서 최소 수정으로 검토합니다.",
+    "steps":[{"label":"제작 trigger","detail":"slice 요청을 받습니다."},{"label":"필수 입력","detail":"팀 제약을 둡니다."},{"label":"scope 계획","detail":"milestone을 정합니다."},{"label":"위험 결과","detail":"review route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/plan-game-production.md"], "used_by":["guides/game-design-studio/skills/plan-game-production.md"]
+  },
+  {
+    "id":"st-s11", "scope":"game-design-studio-skill", "title":"이미지 계획 직접 호출", "description":"stable asset ID·alt·mode를 생성 전 계약으로 고정합니다.", "alt":"이미지 자산 계획 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S11 · SKILL", "conclusion":"image-assets-manifest는 mode별로 generation 또는 visualization route로 보냅니다.",
+    "steps":[{"label":"계획 trigger","detail":"asset 필요를 받습니다."},{"label":"필수 입력","detail":"profile과 mode를 둡니다."},{"label":"asset 계획","detail":"alt와 ID를 고정합니다."},{"label":"계획 결과","detail":"생성 route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/plan-image-assets.md"], "used_by":["guides/game-design-studio/skills/plan-image-assets.md"]
+  },
+  {
+    "id":"st-s12", "scope":"game-design-studio-skill", "title":"게임 기획 검토 호출", "description":"근거·blocker·최소 수정의 traceable finding을 만듭니다.", "alt":"게임 기획 검토 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S12 · SKILL", "conclusion":"game-design-review finding은 repair·diagram 또는 export route로 분기합니다.",
+    "steps":[{"label":"검토 trigger","detail":"review 질문을 받습니다."},{"label":"필수 입력","detail":"artifact와 owner를 둡니다."},{"label":"finding 검토","detail":"impact를 분리합니다."},{"label":"검토 결과","detail":"repair route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/review-game-design.md"], "used_by":["guides/game-design-studio/skills/review-game-design.md"]
+  },
+  {
+    "id":"st-s13", "scope":"game-design-studio-skill", "title":"이미지 검토 직접 호출", "description":"receipt·rights·placement를 lifecycle decision으로 검토합니다.", "alt":"이미지 자산 검토 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S13 · SKILL", "conclusion":"image-asset-review는 사람 approval 후에만 export preparation으로 갑니다.",
+    "steps":[{"label":"검토 trigger","detail":"draft receipt를 받습니다."},{"label":"필수 입력","detail":"rights와 reviewer를 둡니다."},{"label":"asset 검토","detail":"placement를 확인합니다."},{"label":"lifecycle 결과","detail":"export route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/review-image-assets.md"], "used_by":["guides/game-design-studio/skills/review-image-assets.md"]
+  },
+  {
+    "id":"st-s14", "scope":"game-design-studio-skill", "title":"SVG 인포그래픽 호출", "description":"source-mapped editable SVG와 2× PNG evidence를 만듭니다.", "alt":"SVG 인포그래픽 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S14 · SKILL", "conclusion":"editable-svg와 png-2x는 wrapper 검증 뒤 visualization route에서 사용합니다.",
+    "steps":[{"label":"SVG trigger","detail":"구조 관계를 받습니다."},{"label":"필수 입력","detail":"source mapping을 둡니다."},{"label":"SVG authoring","detail":"title desc를 작성합니다."},{"label":"렌더 결과","detail":"visualization으로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/svg-infographic.md"], "used_by":["guides/game-design-studio/skills/svg-infographic.md"]
+  },
+  {
+    "id":"st-s15", "scope":"game-design-studio-skill", "title":"게임 시각화 직접 호출", "description":"Artifact 관계를 접근 가능한 SVG와 PNG evidence로 표시합니다.", "alt":"게임 기획 시각화 직접 호출 흐름", "type":"skill-flow", "eyebrow":"ST-S15 · SKILL", "conclusion":"visualization-evidence는 finding 해소 또는 export preparation route로 이어집니다.",
+    "steps":[{"label":"시각화 trigger","detail":"관계 질문을 받습니다."},{"label":"필수 입력","detail":"valid artifact를 둡니다."},{"label":"관계 도식화","detail":"source SVG를 만듭니다."},{"label":"시각화 결과","detail":"review route로 넘깁니다."}], "source_paths":["guides/game-design-studio/skills/visualize-game-design.md"], "used_by":["guides/game-design-studio/skills/visualize-game-design.md"]
   }
 ]

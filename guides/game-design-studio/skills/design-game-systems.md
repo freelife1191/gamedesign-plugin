@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — design-game-systems
 
+[![게임 시스템 직접 호출 흐름](../../assets/game-design-studio/skills/design-game-systems.png)](../../assets/game-design-studio/skills/design-game-systems.svg)
+
 #### 직접 호출 조건
 
 `ST-C03`처럼 input, authority, rule precedence와 recovery를 명세할 때 직접 호출합니다. player promise 자체가 아직 모호하면 vision부터 정합니다.

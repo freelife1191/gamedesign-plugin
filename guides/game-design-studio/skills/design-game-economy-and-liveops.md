@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — design-game-economy-and-liveops
 
+[![게임 경제와 LiveOps 직접 호출 흐름](../../assets/game-design-studio/skills/design-game-economy-and-liveops.png)](../../assets/game-design-studio/skills/design-game-economy-and-liveops.svg)
+
 #### 직접 호출 조건
 
 `ST-C07`처럼 source·sink·progression 또는 한 변수 LiveOps 실험의 보호 기준을 설계할 때 직접 호출합니다. 근거 없는 가격·확률·KPI 확정에는 사용하지 않습니다.

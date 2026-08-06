@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름">
+  <title>행동과 핵심 루프</title>
+  <desc>플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름</desc>
+  <defs>
+    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 2 2 L 10 6 L 2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="900" fill="#F7FAFD"/>
+  <rect x="52" y="52" width="8" height="138" rx="4" fill="#1F6FB2"/>
+  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">ST-C02 · COMPETENCY</text>
+  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">행동과 핵심 루프</text>
+  <text x="88" y="192" fill="#5B6675" font-size="24">행동·선택·반복을 핵심 루프 계약으로 연결합니다.</text>
+  <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>
+  <path d="M 402 450 L 438 474" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 682 474 L 718 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 962 450 L 998 474" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <g aria-label="읽기 순서 1: 행동 동사">
+    <rect x="170" y="342" width="220" height="216" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
+    <rect x="198" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
+    <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
+      <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">행동 동사</text>
+      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">플레이어 동사를 고릅</text>
+      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">니다.</text>
+  </g>
+  <g aria-label="읽기 순서 2: 핵심 루프">
+    <rect x="450" y="366" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
+    <rect x="478" y="394" width="52" height="32" rx="16" fill="#534AB7"/>
+    <text x="504" y="416" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
+      <text x="478" y="462" fill="#3C3489" font-size="22" font-weight="700">핵심 루프</text>
+      <text x="478" y="524" fill="#354152" font-size="18" font-weight="400">반복 보상을 연결합니</text>
+      <text x="478" y="550" fill="#354152" font-size="18" font-weight="400">다.</text>
+  </g>
+  <g aria-label="읽기 순서 3: 의미 있는 선택">
+    <rect x="730" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
+    <rect x="758" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
+    <text x="784" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
+      <text x="758" y="438" fill="#085041" font-size="22" font-weight="700">의미 있는 선택</text>
+      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">trade-off를 </text>
+      <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">명시합니다.</text>
+  </g>
+  <g aria-label="읽기 순서 4: 루프 검토">
+    <rect x="1010" y="366" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
+    <rect x="1038" y="394" width="52" height="32" rx="16" fill="#A75B00"/>
+    <text x="1064" y="416" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
+      <text x="1038" y="462" fill="#814600" font-size="22" font-weight="700">루프 검토</text>
+      <text x="1038" y="524" fill="#354152" font-size="18" font-weight="400">관찰 가설을 남깁니다</text>
+      <text x="1038" y="550" fill="#354152" font-size="18" font-weight="400">.</text>
+  </g>
+  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
+  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
+  <text x="84" y="798" fill="#1F2733" font-size="24">선택의 의미는 prototype 관찰과 review finding으로 다시 검증합니다.</text>
+</svg>

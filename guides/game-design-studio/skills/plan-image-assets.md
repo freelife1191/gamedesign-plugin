@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — plan-image-assets
 
+[![이미지 자산 계획 직접 호출 흐름](../../assets/game-design-studio/skills/plan-image-assets.png)](../../assets/game-design-studio/skills/plan-image-assets.svg)
+
 #### 직접 호출 조건
 
 선택된 profile에 finite image 또는 Skillstead slot이 있고 생성 전에 ID·수량·alt text를 고정할 때 직접 호출합니다. 계획은 bytes 생성이나 승인 상태 변경을 하지 않습니다.

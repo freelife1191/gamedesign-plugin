@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — design-player-experience
 
+[![플레이어 경험 직접 호출 흐름](../../assets/game-design-studio/skills/design-player-experience.png)](../../assets/game-design-studio/skills/design-player-experience.svg)
+
 #### 직접 호출 조건
 
 `ST-C04`처럼 first session, UI state, tutorial recovery 또는 accessibility alternative를 한 흐름으로 다룰 때 직접 호출합니다. authoritative rule이 비어 있으면 systems에서 먼저 확인합니다.

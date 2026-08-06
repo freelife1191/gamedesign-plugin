@@ -11,6 +11,8 @@ Studio artifact마다 primary profile 하나를 결정하고 additive overlay와
 
 ### 직접 호출 활용 — apply-document-quality-profile
 
+[![문서 품질 프로필 직접 호출 흐름](../../assets/game-design-studio/skills/apply-document-quality-profile.png)](../../assets/game-design-studio/skills/apply-document-quality-profile.svg)
+
 #### 직접 호출 조건
 
 한 Artifact의 템플릿·품질 profile 선택만 확정할 때 직접 호출합니다. 여러 도메인의 순서가 아직 섞였으면 `orchestrate-game-design-project`로 범위를 먼저 나눕니다.

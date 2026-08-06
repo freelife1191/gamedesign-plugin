@@ -4,6 +4,8 @@
 
 ## ST-G01 모바일 수집형 RPG·라이브서비스
 
+[![모바일 수집형 RPG LiveService 콘셉트의 설계 흐름](../../assets/game-design-studio/use-cases/st-g01.png)](../../assets/game-design-studio/use-cases/st-g01.svg)
+
 ### 현재 상황과 목표
 
 **플레이어 맥락:** 이동 중 모바일 기기로 짧거나 중단되는 세션을 보내며, 캐릭터를 수집하고 조합을 바꾸는 플레이어를 가정합니다.
@@ -99,6 +101,8 @@ $game-design-studio:design-game-economy-and-liveops 기존 game-design/mobile-co
 - 실패 복구와 rollback이 플레이어 보호 기준에 연결되는가? 다음에는 `ST-C07`의 한 변수 실험을 더 깊게 검토합니다.
 
 ## ST-G02 캐주얼 퍼즐·방치형
+
+[![캐주얼 퍼즐 방치형 콘셉트의 세션 루프와 복귀 흐름](../../assets/game-design-studio/use-cases/st-g02.png)](../../assets/game-design-studio/use-cases/st-g02.svg)
 
 ### 현재 상황과 목표
 
@@ -196,6 +200,8 @@ $game-design-studio:design-game-systems 기존 game-design/casual-puzzle-idle/se
 
 ## ST-G03 협동 생존 액션
 
+[![협동 생존 액션 콘셉트의 역할과 자원 및 복구 흐름](../../assets/game-design-studio/use-cases/st-g03.png)](../../assets/game-design-studio/use-cases/st-g03.svg)
+
 ### 현재 상황과 목표
 
 **플레이어 맥락:** 서로 다른 숙련도와 선호 역할을 가진 소규모 그룹이 협동하여 위험을 탐색하고 생존하는 상황을 가정합니다.
@@ -291,6 +297,8 @@ $game-design-studio:design-game-systems 기존 game-design/co-op-survival/shared
 - 동시성·이탈 예외가 test case에 있는가? 다음에는 `ST-C03`과 `ST-C06`의 경계를 검토합니다.
 
 ## ST-G04 경쟁 PvP 아레나
+
+[![경쟁 PvP 아레나 콘셉트의 counterplay와 가독성 흐름](../../assets/game-design-studio/use-cases/st-g04.png)](../../assets/game-design-studio/use-cases/st-g04.svg)
 
 ### 현재 상황과 목표
 
@@ -388,6 +396,8 @@ $game-design-studio:design-game-systems 기존 game-design/pvp-arena/combat-rule
 
 ## ST-G05 PC·콘솔 액션 로그라이트
 
+[![PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름](../../assets/game-design-studio/use-cases/st-g05.png)](../../assets/game-design-studio/use-cases/st-g05.svg)
+
 ### 현재 상황과 목표
 
 **플레이어 맥락:** PC·콘솔 입력 장치로 반복 run에 도전하며 실패 이유를 학습하고 다음 빌드 선택을 바꾸려는 플레이어를 가정합니다.
@@ -483,6 +493,8 @@ $game-design-studio:design-game-content 기존 game-design/action-roguelite/run-
 - 입력 장치별 가독성과 제작 근거가 있는가? 다음에는 `ST-C08`에서 scope를 검토합니다.
 
 ## ST-G06 선택형 내러티브 어드벤처
+
+[![선택형 내러티브 어드벤처 콘셉트의 상태와 분기 흐름](../../assets/game-design-studio/use-cases/st-g06.png)](../../assets/game-design-studio/use-cases/st-g06.svg)
 
 ### 현재 상황과 목표
 
@@ -580,6 +592,8 @@ $game-design-studio:design-game-content 기존 game-design/branching-adventure/r
 
 ## ST-G07 코지 생활 시뮬레이션
 
+[![코지 생활 시뮬레이션 콘셉트의 자율성과 접근성 흐름](../../assets/game-design-studio/use-cases/st-g07.png)](../../assets/game-design-studio/use-cases/st-g07.svg)
+
 ### 현재 상황과 목표
 
 **플레이어 맥락:** 코지 분위기 속에서 자신의 속도로 생활 활동과 관계를 선택하고, 중단 뒤에도 자율성을 유지하려는 플레이어입니다.
@@ -675,6 +689,8 @@ $game-design-studio:design-player-experience 기존 game-design/cozy-life/daily-
 - critical action마다 입력·감각 대안이 있는가? 다음에는 `ST-C04`의 접근성 검토를 반복합니다.
 
 ## ST-G08 경영·타이쿤 시뮬레이션
+
+[![경영 타이쿤 시뮬레이션 콘셉트의 경제와 피드백 흐름](../../assets/game-design-studio/use-cases/st-g08.png)](../../assets/game-design-studio/use-cases/st-g08.svg)
 
 ### 현재 상황과 목표
 
@@ -772,6 +788,8 @@ $game-design-studio:design-game-economy-and-liveops 기존 game-design/managemen
 
 ## ST-G09 샌드박스·UGC
 
+[![샌드박스 UGC 콘셉트의 창작과 발견 및 moderation 흐름](../../assets/game-design-studio/use-cases/st-g09.png)](../../assets/game-design-studio/use-cases/st-g09.svg)
+
 ### 현재 상황과 목표
 
 **플레이어 맥락:** 도구로 콘텐츠를 만드는 창작자와, 공유 공간에서 콘텐츠를 발견·이용·신고하는 참여자가 함께 있는 상황입니다.
@@ -867,6 +885,8 @@ $game-design-studio:design-game-content 기존 game-design/sandbox-ugc/publishin
 - 실제 콘텐츠·PII를 불필요하게 복제하지 않았는가? 다음에는 `ST-C03`부터 `ST-C05`까지 교차 검토합니다.
 
 ## ST-G10 교육·사회문제·접근성 중심 게임
+
+[![교육과 사회문제 및 접근성 중심 게임 콘셉트의 검증 흐름](../../assets/game-design-studio/use-cases/st-g10.png)](../../assets/game-design-studio/use-cases/st-g10.svg)
 
 ### 현재 상황과 목표
 

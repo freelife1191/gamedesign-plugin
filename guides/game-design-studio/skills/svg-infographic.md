@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — svg-infographic
 
+[![SVG 인포그래픽 직접 호출 흐름](../../assets/game-design-studio/skills/svg-infographic.png)](../../assets/game-design-studio/skills/svg-infographic.svg)
+
 #### 직접 호출 조건
 
 `visualize-game-design` wrapper가 preset과 source mapping을 선택한 뒤 고급 structural SVG를 직접 authoring할 때만 호출합니다. illustration이나 의미가 확정되지 않은 diagram에는 wrapper를 우선합니다.

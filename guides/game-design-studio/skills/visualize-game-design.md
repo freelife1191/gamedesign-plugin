@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — visualize-game-design
 
+[![게임 기획 시각화 직접 호출 흐름](../../assets/game-design-studio/skills/visualize-game-design.png)](../../assets/game-design-studio/skills/visualize-game-design.svg)
+
 #### 직접 호출 조건
 
 관계가 prose·표보다 명확해지는 valid Canonical Artifact의 loop, state, roadmap 또는 dependency를 설명할 때 직접 호출합니다. 장식용 이미지나 source mapping 없는 차트에는 사용하지 않습니다.
