@@ -9,6 +9,15 @@ Game Design Studio는 게임 비전에서 시스템·콘텐츠·플레이어 경
 3. [전체 워크플로](workflow.md)에서 현재 단계와 다음 사람 결정을 확인합니다.
 4. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
 
+## 목적별 레시피
+
+- [새 게임 GDD](recipes/new-game-gdd.md)
+- [시스템 기능 명세](recipes/system-feature-spec.md)
+- [콘텐츠·퀘스트 설계](recipes/content-quest-design.md)
+- [UX·접근성](recipes/ux-accessibility.md)
+- [경제·LiveOps](recipes/economy-liveops.md)
+- [제작 검토·내보내기](recipes/production-review-export.md)
+
 ## 가이드 목차
 
 현재 사용할 수 있는 진입 문서:

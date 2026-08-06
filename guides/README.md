@@ -12,6 +12,7 @@
 | 역기획·포트폴리오·면접·주니어 성장을 관리 | Game Design Career | 근거가 연결된 Career Canonical Artifact |
 
 - [Game Design Studio 가이드](game-design-studio/README.md)
+- [Studio 목적별 레시피 6개](game-design-studio/README.md#목적별-레시피)
 - [Game Design Career 가이드](game-design-career/README.md)
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.

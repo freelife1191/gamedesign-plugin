@@ -55,6 +55,60 @@
       "alt": "Canonical Artifact 내보내기 preflight 뒤 모든 형식에 공통인 not-requested·blocked·pending·unavailable 상태와 MD·PDF·DOCX·PPTX의 형식별 검증을 보여 주는 흐름.",
       "sources": ["../game-design-studio/exports.md", "../game-design-career/exports.md"],
       "usedBy": ["../game-design-studio/exports.md", "../game-design-career/exports.md"]
+    },
+    {
+      "id": "studio-orchestration-map",
+      "scope": "game-design-studio",
+      "svg": "game-design-studio/studio-orchestration-map.svg",
+      "png": "game-design-studio/studio-orchestration-map.png",
+      "alt": "Studio 오케스트레이터가 Canonical Artifact를 중심으로 UX·접근성, 시스템·품질, 검토와 사람 승인 gate를 연결하는 구조도.",
+      "sources": ["../game-design-studio/workflow.md", "../game-design-studio/skills/orchestrate-game-design-project.md"],
+      "usedBy": ["../game-design-studio/recipes/ux-accessibility.md", "../game-design-studio/README.md"]
+    },
+    {
+      "id": "vision-to-gdd-approval",
+      "scope": "game-design-studio",
+      "svg": "game-design-studio/vision-to-gdd-approval.svg",
+      "png": "game-design-studio/vision-to-gdd-approval.png",
+      "alt": "게임 비전 입력과 quality profile이 vision-pillars Canonical Artifact, named human approval, 이후 GDD route로 이어지는 승인 흐름.",
+      "sources": ["../game-design-studio/workflow.md", "../game-design-studio/skills/define-game-vision.md"],
+      "usedBy": ["../game-design-studio/recipes/new-game-gdd.md", "../game-design-studio/README.md"]
+    },
+    {
+      "id": "system-rule-state-exception-flow",
+      "scope": "game-design-studio",
+      "svg": "game-design-studio/system-rule-state-exception-flow.svg",
+      "png": "game-design-studio/system-rule-state-exception-flow.png",
+      "alt": "시스템 기능의 입력과 guard가 규칙·상태, 예외 우선순위, 복구·검토를 거쳐 system-specification artifact로 연결되는 흐름.",
+      "sources": ["../game-design-studio/workflow.md", "../game-design-studio/skills/design-game-systems.md"],
+      "usedBy": ["../game-design-studio/recipes/system-feature-spec.md"]
+    },
+    {
+      "id": "content-narrative-quest-map",
+      "scope": "game-design-studio",
+      "svg": "game-design-studio/content-narrative-quest-map.svg",
+      "png": "game-design-studio/content-narrative-quest-map.png",
+      "alt": "퀘스트 의도가 콘텐츠 계약과 시스템 상태를 거쳐 제작·권리 gate와 Narrative·Production Owner 결정으로 이어지는 흐름.",
+      "sources": ["../game-design-studio/workflow.md", "../game-design-studio/skills/design-game-content.md"],
+      "usedBy": ["../game-design-studio/recipes/content-quest-design.md"]
+    },
+    {
+      "id": "economy-balance-liveops-loop",
+      "scope": "game-design-studio",
+      "svg": "game-design-studio/economy-balance-liveops-loop.svg",
+      "png": "game-design-studio/economy-balance-liveops-loop.png",
+      "alt": "경제 source/sink와 balance 가설이 보호 지표를 갖춘 LiveOps 실험, rollback readiness와 사람 승인으로 이어지고 재보정으로 피드백되는 흐름.",
+      "sources": ["../game-design-studio/workflow.md", "../game-design-studio/skills/design-game-economy-and-liveops.md"],
+      "usedBy": ["../game-design-studio/recipes/economy-liveops.md"]
+    },
+    {
+      "id": "production-risk-review-flow",
+      "scope": "game-design-studio",
+      "svg": "game-design-studio/production-risk-review-flow.svg",
+      "png": "game-design-studio/production-risk-review-flow.png",
+      "alt": "제작 scope와 hard No-Go가 검토 finding, named human decision, renderer-neutral MD·PDF·DOCX·PPTX export preparation으로 이어지는 흐름.",
+      "sources": ["../game-design-studio/workflow.md", "../game-design-studio/exports.md"],
+      "usedBy": ["../game-design-studio/recipes/production-review-export.md"]
     }
   ]
 }

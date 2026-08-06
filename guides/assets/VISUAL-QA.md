@@ -23,3 +23,14 @@
 | `document-export-flow` | preflight, 공통 상태 rail, MD/PDF/DOCX/PPTX 형식별 검증이 즉시 구분됨 | status pill·형식 label 모두 clipping/overflow 없음 | 공통 상태 arrow tip `y=488`→panel top `y=500`는 12px gap; panel bus `y=540`에서 네 card top `y=590`까지 endpoint `y=578`의 38px branch와 12px target gap으로 연속 분배 | 두 exports guide의 모든 공통 상태 `not-requested`/`blocked`/`pending`/`unavailable`과 MD canonical text, PDF page QA, DOCX OOXML QA, PPTX story/slide QA를 반영 |
 
 초기 lint 경고 하나(`plugin-selection-flow`의 `공통 marketplace 설치` text overflow 추정)는 label을 `marketplace 설치`로 줄인 뒤 재-lint하여 경고 0건으로 해소했습니다. Fix round 1에서는 전체 SVG를 다시 lint/render하고 모든 PNG를 두 단계로 재검사했습니다. Fix round 2에서는 영향을 받은 두 PNG를 canonical Chrome으로 재렌더하고 high/original 두 단계에서 bus·branch·target gap과 canvas containment를 재확인했습니다.
+
+## Studio recipe 도식 검사 — 2026-08-06
+
+| 도식 | 전체 보기 검사 | 원본 해상도 검사 | 연결선·읽기 순서 | 출처 충실도 |
+| --- | --- | --- | --- | --- |
+| `studio-orchestration-map` | 중심 Artifact와 좌·우 도메인, 상·하 gate가 한 화면에서 즉시 읽힘 | CJK/Latin glyph, card containment, accent 대비 정상 | orchestrator→Artifact→도메인·검토의 명확한 화살표와 10px target gap | workflow와 orchestrate skill의 Canonical Artifact, pending gate, UX·systems·review route를 반영 |
+| `vision-to-gdd-approval` | 비전→profile→artifact→승인→GDD 순서가 좌→우·하향으로 읽힘 | pill text와 GDD footer의 clipping·tofu·overflow 없음 | 2px shaft와 6px open-V, 승인에서 footer로 12px target gap | vision skill의 assumption 경계와 named Lead Designer gate를 반영 |
+| `system-rule-state-exception-flow` | 네 단계와 하단 feedback·명세 artifact가 즉시 구분됨 | status, Korean glyph, footer containment 정상 | normal path는 좌→우, dashed failure/recovery는 하단 feedback으로 분리 | systems skill의 input, state, precedence, recovery, review contract를 반영 |
+| `content-narrative-quest-map` | quest→content→state→production gate와 owner 결정이 한 화면에서 읽힘 | 긴 owner label과 rights/consent text의 clipping·overflow 없음 | 네 stage arrow와 production→owner 하향 연결이 card border에서 분리됨 | content·systems·production skill의 quest, state, capacity, rights/consent 경계를 반영 |
+| `economy-balance-liveops-loop` | source/sink→balance→experiment→rollback과 feedback loop가 명확함 | 상태·owner·hard No-Go 문구와 dashed loop의 판독성 정상 | normal arrow와 dashed rollback/recalibrate feedback을 분리 | economy/LiveOps skill의 evidence, guardrail, stop, rollback, human approval을 반영 |
+| `production-risk-review-flow` | scope→review→decision→export 준비와 fallback이 한 화면에서 읽힘 | title, gate pill, format status, fallback 문구의 clipping·tofu 없음 | ordered main path와 renderer fallback strip이 독립적으로 읽힘 | production·review·export guide의 hard No-Go, named decision, renderer-neutral 상태를 반영 |
