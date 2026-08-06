@@ -32,6 +32,50 @@ const OUTPUT_TABLE_HEADINGS = [
   "사람 검토",
   "포트폴리오·팀 활용",
 ];
+const AUDIENCE_BOUNDARY_EXPECTATIONS = Object.freeze({
+  "AUD-01": {
+    approver: "교사 또는 멘토",
+    held: "포트폴리오 증거",
+    condition: "규칙이 모호하면",
+    action: "관찰과 가정을 다시 읽고, 확인 질문과 다음 실습을 정리해 줘.",
+    safety: "학교 정책·출처·개인 기여 확인",
+  },
+  "AUD-02": {
+    approver: "포트폴리오 검토자",
+    held: "portfolio brief",
+    condition: "공고 정보가 오래됐거나 불완전하면",
+    action: "확인일·지역·표본을 다시 조사하고, 증거 계획을 갱신해 줘.",
+    safety: "합격·채용 가능성을 주장하지 않습니다",
+  },
+  "AUD-03": {
+    approver: "Career 검토자",
+    held: "개인 기여 증거",
+    condition: "개인 기여를 입증할 수 없으면",
+    action: "이전 경험의 사실, 전이 가능한 역량, 새 증거 과제를 다시 분리해 줘.",
+    safety: "NDA·팀 PII·권리 불명 자산은 제거",
+  },
+  "AUD-04": {
+    approver: "프로젝트 담당자",
+    held: "도식·파생 형식",
+    condition: "renderer 또는 이미지 provider가 없으면",
+    action: "MD와 source를 보존하고, 필요한 capability와 재개 조건을 정리해 줘.",
+    safety: "미검증 수치나 시장 성과를 추가하지 않습니다",
+  },
+  "AUD-05": {
+    approver: "문서 책임자",
+    held: "handoff 패키지",
+    condition: "내부 자료·팀 PII·권리 불명 자산이 있으면",
+    action: "공개 가능한 사실, 가정, 결정과 재검토 항목만 남겨 handoff 초안을 다시 만들어 줘.",
+    safety: "내부 자료·팀 PII·권리 불명 자산은 입력과 공개 evidence에서 제외",
+  },
+  "AUD-06": {
+    approver: "교사 또는 멘토",
+    held: "검토 패키지",
+    condition: "기관 AI 정책이나 공개 권한이 확인되지 않으면",
+    action: "정책과 공개 권한을 확인할 질문, 다음 과제, 사람 피드백 지점을 다시 정리해 줘.",
+    safety: "답안 대행·자동 승인 대신",
+  },
+});
 
 function markdownSections(markdown, level) {
   const marker = "#".repeat(level);
@@ -62,6 +106,16 @@ function inlineFields(markdown) {
     label: match[1],
     value: markdown.slice(match.index + match[0].length, matches[index + 1]?.index).trim(),
   }));
+}
+
+function codeValue(markdown, label) {
+  const match = /`([^`]+)`/.exec(markdown);
+  assert.ok(match, `${label} executable request`);
+  return match[1];
+}
+
+function terminalPunctuationTrimmed(value) {
+  return value.replace(/[.。]$/, "");
 }
 
 function tableHeadings(markdown, sectionHeading) {
@@ -142,6 +196,11 @@ test("each audience route preserves its executable case, output, review, and res
   const routes = markdownSections(audiencePaths, 2).filter(({ heading }) => heading.startsWith("AUD-"));
 
   assert.equal(routes.length, manifest.audience_paths.length);
+  assert.deepEqual(
+    Object.keys(AUDIENCE_BOUNDARY_EXPECTATIONS).sort(),
+    manifest.audience_paths.map(({ id }) => id).sort(),
+    "AUD boundary expectation coverage",
+  );
   const routeIds = new Set();
   for (const route of routes) {
     const id = /^((?:AUD)-\d{2})\b/.exec(route.heading)?.[1];
@@ -150,6 +209,7 @@ test("each audience route preserves its executable case, output, review, and res
     routeIds.add(id);
     const entry = manifest.audience_paths.find((candidate) => candidate.id === id);
     assert.ok(entry, `manifest audience entry: ${id}`);
+    const boundary = AUDIENCE_BOUNDARY_EXPECTATIONS[id];
     const sections = markdownSections(route.body, 3);
     assert.deepEqual(sections.map(({ heading }) => heading), AUDIENCE_SECTION_HEADINGS, `${entry.id} section shape`);
 
@@ -170,16 +230,23 @@ test("each audience route preserves its executable case, output, review, and res
       "최소 결과",
       "선택 결과",
       "확장 결과",
+      "승인 주체",
+      "보류 대상",
       "사람 검토·승인 경계",
       "재개 조건·요청",
+      "안전·증거 경계",
     ], `${entry.id} result levels and review/resume fields`);
     const resultFields = new Map(inlineFields(resultBody).map((field) => [field.label, field.value]));
     const reviewBoundary = resultFields.get("사람 검토·승인 경계");
-    assert.match(reviewBoundary, /(사람|담당자|교사|멘토).*(검토|승인)/, `${entry.id} human review boundary`);
-    assert.match(reviewBoundary, /(전에는|전까지)/, `${entry.id} approval gate`);
+    assert.equal(terminalPunctuationTrimmed(resultFields.get("승인 주체")), boundary.approver, `${entry.id} approval authority`);
+    assert.equal(terminalPunctuationTrimmed(resultFields.get("보류 대상")), boundary.held, `${entry.id} held result`);
+    assert.ok(reviewBoundary.includes(boundary.approver), `${entry.id} boundary authority`);
+    assert.ok(reviewBoundary.includes(boundary.held), `${entry.id} boundary held result`);
+    assert.match(reviewBoundary, /승인 전에는/, `${entry.id} approval gate`);
     const resume = resultFields.get("재개 조건·요청");
-    assert.match(resume, /`[^`]+`/, `${entry.id} resume request`);
-    assert.match(resume.slice(0, resume.indexOf("`")), /(하면|이면|으면|전에는)/, `${entry.id} resume condition`);
+    assert.ok(resume.startsWith(boundary.condition), `${entry.id} resume condition`);
+    assert.equal(codeValue(resume, `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
+    assert.ok(resultFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
   }
 });
 
