@@ -156,6 +156,187 @@ const STUDIO_CONCEPT_SEMANTIC_CONTRACT = Object.freeze({
     "검증 계획": ["동의", "접근성", "윤리", "사람 검토"],
   },
 });
+const STUDIO_CONCEPT_LATE_HEADINGS = Object.freeze([
+  "포트폴리오·실무 확장",
+  "결과물",
+  "검토와 승인",
+  "실패·재개",
+  "자기점검과 다음 학습",
+]);
+const STUDIO_CONCEPT_LATE_SEMANTIC_CONTRACT = Object.freeze({
+  "ST-G01": {
+    "포트폴리오·실무 확장": ["수집 동기", "telemetry 정의", "사람의 결정"],
+    "결과물": ["EXP-COLLECT-01", "이벤트 교환 규칙", "보호 기준 위반"],
+    "검토와 승인": ["design·economy·policy owner", "telemetry 동의", "rollback"],
+    "실패·재개": ["지표 정의", "`blocked`", "승인된 telemetry 정의"],
+    "자기점검과 다음 학습": ["수집·성장·이벤트", "rollback", "`ST-C07`"],
+  },
+  "ST-G02": {
+    "포트폴리오·실무 확장": ["중단·복귀 상태", "정보 부하", "수정 결정"],
+    "결과물": ["STATE-RETURN-02", "offline result", "recovery"],
+    "검토와 승인": ["design·UX·accessibility owner", "오프라인 규칙", "복귀 cue"],
+    "실패·재개": ["오프라인 시간의 authority", "state ID", "오프라인 authority 결정"],
+    "자기점검과 다음 학습": ["예측 가능한 복구", "보상 수령", "`ST-C04`"],
+  },
+  "ST-G03": {
+    "포트폴리오·실무 확장": ["자원 충돌", "이탈 예외", "그룹 관찰"],
+    "결과물": ["RULE-REVIVE-03", "downed", "disconnect recovery"],
+    "검토와 승인": ["design·engineering·player-safety owner", "authority", "기록 동의"],
+    "실패·재개": ["동기화 authority", "`blocked`", "재합류 authority 결정"],
+    "자기점검과 다음 학습": ["의미 있는 선택", "동시성·이탈 예외", "`ST-C06`"],
+  },
+  "ST-G04": {
+    "포트폴리오·실무 확장": ["counterplay", "telegraph", "공정성 해석"],
+    "결과물": ["ATK-ARENA-04", "counterplay", "prototype pending"],
+    "검토와 승인": ["combat·UX·accessibility·player-safety owner", "데이터 해석", "보호 정책"],
+    "실패·재개": ["대응 없는 공격", "release 판단", "ATK-ARENA-04"],
+    "자기점검과 다음 학습": ["승률", "신고·차단·이탈", "`ST-C04`"],
+  },
+  "ST-G05": {
+    "포트폴리오·실무 확장": ["선택 지도", "실패 원인 관찰", "scope 결정"],
+    "결과물": ["RUN-05", "telegraph miss assumption", "test: pending"],
+    "검토와 승인": ["design·combat·production·accessibility owner", "입력 대응", "콘텐츠 범위"],
+    "실패·재개": ["실패 원인", "제작 근거", "RUN-05 관찰"],
+    "자기점검과 다음 학습": ["무작위성", "입력 장치별 가독성", "`ST-C08`"],
+  },
+  "ST-G06": {
+    "포트폴리오·실무 확장": ["플레이어 해석", "상태 모순", "제작 결정"],
+    "결과물": ["CHOICE-RIVER-06", "state delta", "evidence: pending"],
+    "검토와 승인": ["narrative·system·production·rights owner", "민감성·권리", "제작 범위"],
+    "실패·재개": ["state source", "`blocked`", "CHOICE-RIVER-06"],
+    "자기점검과 다음 학습": ["state", "재합류", "`ST-C05`"],
+  },
+  "ST-G07": {
+    "포트폴리오·실무 확장": ["usability evidence", "접근성 장벽", "수정 결정"],
+    "결과물": ["ACT-GARDEN-07", "missed event", "sensory alternative"],
+    "검토와 승인": ["design·content·accessibility owner", "시간 압력", "관계 표현"],
+    "실패·재개": ["critical action", "`pending`", "ACT-GARDEN-07"],
+    "자기점검과 다음 학습": ["자율성", "입력·감각 대안", "`ST-C04`"],
+  },
+  "ST-G08": {
+    "포트폴리오·실무 확장": ["잘못된 가설", "simulation", "rollback 결정"],
+    "결과물": ["RES-POWER-08", "cascade guardrail", "simulation: pending"],
+    "검토와 승인": ["economy·system·UX owner", "정보 계층", "rollback"],
+    "실패·재개": ["resource authority", "telemetry", "RES-POWER-08"],
+    "자기점검과 다음 학습": ["결과 원인", "연쇄 실패", "`ST-C07`"],
+  },
+  "ST-G09": {
+    "포트폴리오·실무 확장": ["상태·권리 계약", "위해 시나리오", "접근성 개선"],
+    "결과물": ["UGC-STATE-09", "rights source", "owner: pending"],
+    "검토와 승인": ["moderation·rights·accessibility·ethics owner", "appeal", "자동 승인하지 않습니다"],
+    "실패·재개": ["권리 source", "`blocked`", "UGC-STATE-09"],
+    "자기점검과 다음 학습": ["moderation·rights·accessibility·ethical review", "PII", "`ST-C05`"],
+  },
+  "ST-G10": {
+    "포트폴리오·실무 확장": ["당사자·전문가 피드백", "철회·대체 경로", "접근성 개선"],
+    "결과물": ["ACT-CONSENT-10", "exit: always available", "effect claim: pending evidence"],
+    "검토와 승인": ["대상 당사자", "rights·accessibility·ethics owner", "평가와 공개 범위"],
+    "실패·재개": ["동의·철회", "`blocked`", "ACT-CONSENT-10"],
+    "자기점검과 다음 학습": ["검증되지 않은 효과", "대체 활동", "`ST-C01`"],
+  },
+});
+const STUDIO_COMPETENCY_LINK_TARGETS = Object.freeze({
+  "ST-C01": "competency-paths.md#st-c01-플레이어-경험과-게임-비전",
+  "ST-C02": "competency-paths.md#st-c02-행동핵심-루프의미-있는-선택",
+  "ST-C03": "competency-paths.md#st-c03-규칙상태예외데이터",
+  "ST-C04": "competency-paths.md#st-c04-uiux온보딩접근성",
+  "ST-C05": "competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc",
+  "ST-C06": "competency-paths.md#st-c06-캐릭터스킬전투몬스터",
+  "ST-C07": "competency-paths.md#st-c07-성장경제밸런스liveops",
+  "ST-C08": "competency-paths.md#st-c08-제작검토이미지출력",
+});
+const STUDIO_CONCEPT_COMPARISON_CONTRACT = Object.freeze({
+  "ST-G01": {
+    "핵심 루프": ["수집", "편성", "전투", "성장"],
+    "실패·복구": ["재편성", "자원 보호", "rollback"],
+    "정보 부하": ["편성", "경제", "이벤트"],
+    "사회적 위험": ["결제 압력", "비교 경쟁"],
+    "콘텐츠 주기": ["한 변수", "stop 조건"],
+    "필요한 근거": ["조합 관찰", "source·sink telemetry"],
+    competencies: ["ST-C02", "ST-C07"],
+  },
+  "ST-G02": {
+    "핵심 루프": ["퍼즐", "방치", "복귀"],
+    "실패·복구": ["중단 저장", "오프라인 결과 거부"],
+    "정보 부하": ["첫 세션", "복귀 cue"],
+    "사회적 위험": ["강제 알림", "놓침 압력"],
+    "콘텐츠 주기": ["퍼즐 변형", "복귀 상태"],
+    "필요한 근거": ["퍼즐 prototype", "중단·복귀 telemetry"],
+    competencies: ["ST-C02", "ST-C04"],
+  },
+  "ST-G03": {
+    "핵심 루프": ["탐색", "채집", "방어", "탈출"],
+    "실패·복구": ["쓰러짐", "이탈", "재합류"],
+    "정보 부하": ["역할", "자원", "위험 cue"],
+    "사회적 위험": ["독점", "배제", "괴롭힘"],
+    "콘텐츠 주기": ["encounter", "역할 변형"],
+    "필요한 근거": ["그룹 관찰", "동기화 test case"],
+    competencies: ["ST-C03", "ST-C06"],
+  },
+  "ST-G04": {
+    "핵심 루프": ["목표 경쟁", "교전", "판정"],
+    "실패·복구": ["패배 설명", "이탈 보호"],
+    "정보 부하": ["telegraph", "전장 우선순위"],
+    "사회적 위험": ["독성 행동", "신고", "차단"],
+    "콘텐츠 주기": ["roster", "버전 관리"],
+    "필요한 근거": ["숙련도별 관찰", "match telemetry"],
+    competencies: ["ST-C04", "ST-C06"],
+  },
+  "ST-G05": {
+    "핵심 루프": ["run 진입", "빌드", "위험", "재시도"],
+    "실패·복구": ["사망 원인", "다음 선택"],
+    "정보 부하": ["전투 cue", "reward 선택"],
+    "사회적 위험": ["실패 낙인", "접근 장벽"],
+    "콘텐츠 주기": ["encounter", "reward pool 범위"],
+    "필요한 근거": ["vertical slice", "입력별 실패 관찰"],
+    competencies: ["ST-C02", "ST-C08"],
+  },
+  "ST-G06": {
+    "핵심 루프": ["장면", "선택", "상태", "결과"],
+    "실패·복구": ["저장", "재합류", "모순 복구"],
+    "정보 부하": ["선택 문구", "consequence"],
+    "사회적 위험": ["민감 표현", "권리 침해"],
+    "콘텐츠 주기": ["분기 unit", "재사용 범위"],
+    "필요한 근거": ["state simulation", "해석 플레이테스트"],
+    competencies: ["ST-C03", "ST-C05"],
+  },
+  "ST-G07": {
+    "핵심 루프": ["돌보기", "만들기", "교류", "변화"],
+    "실패·복구": ["놓침", "중단", "일정 복구"],
+    "정보 부하": ["생활 cue", "감각 대안"],
+    "사회적 위험": ["guilt", "강제 접속", "고정관념"],
+    "콘텐츠 주기": ["반복 루틴", "선택 이벤트"],
+    "필요한 근거": ["접근 요구별 usability evidence"],
+    competencies: ["ST-C04", "ST-C05"],
+  },
+  "ST-G08": {
+    "핵심 루프": ["관찰", "투자", "운영", "피드백"],
+    "실패·복구": ["debt", "연쇄 실패", "rollback"],
+    "정보 부하": ["원인", "예상", "결과"],
+    "사회적 위험": ["조작적 경제 표현"],
+    "콘텐츠 주기": ["tick·event 규칙", "scenario"],
+    "필요한 근거": ["economy simulation", "선택 telemetry"],
+    competencies: ["ST-C03", "ST-C07"],
+  },
+  "ST-G09": {
+    "핵심 루프": ["제작", "검사", "게시", "발견"],
+    "실패·복구": ["차단", "삭제", "appeal"],
+    "정보 부하": ["도구", "검토", "신고 상태"],
+    "사회적 위험": ["위해", "권리", "moderation"],
+    "콘텐츠 주기": ["creator unit", "review queue"],
+    "필요한 근거": ["권리 source", "접근성·윤리 검토"],
+    competencies: ["ST-C03", "ST-C05"],
+  },
+  "ST-G10": {
+    "핵심 루프": ["동의", "참여", "reflection", "대체"],
+    "실패·복구": ["철회", "도움", "안전한 중단"],
+    "정보 부하": ["목적", "활동", "지원 정보"],
+    "사회적 위험": ["대리 표현", "위해", "데이터 권리"],
+    "콘텐츠 주기": ["학습 unit", "사람 검토 주기"],
+    "필요한 근거": ["당사자·전문가·접근성·윤리 evidence"],
+    competencies: ["ST-C01", "ST-C04"],
+  },
+});
 const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
   "ST-C01": [
     ["player promise", "anti-pillar"],
@@ -427,6 +608,23 @@ function replaceCasePart(markdown, caseHeading, partHeading, replacement) {
   return markdown.replace(caseBody, caseBody.replace(partBody, replacement));
 }
 
+function replaceTableCell(markdown, sectionHeading, rowId, column, replacement) {
+  const section = sectionByHeading(markdown, 2, sectionHeading);
+  const lines = section.split("\n");
+  const headerIndex = lines.findIndex((line) => line.startsWith("|"));
+  assert.notEqual(headerIndex, -1, `${sectionHeading} table header`);
+  const headings = lines[headerIndex].split("|").slice(1, -1).map((value) => value.trim());
+  const columnIndex = headings.indexOf(column);
+  assert.notEqual(columnIndex, -1, `${sectionHeading} ${column} column`);
+  const rowIndex = lines.findIndex((line, index) => index > headerIndex + 1 && line.startsWith(`| ${rowId} |`));
+  assert.notEqual(rowIndex, -1, `${sectionHeading} ${rowId} row`);
+  const values = lines[rowIndex].split("|").slice(1, -1).map((value) => value.trim());
+  assert.notEqual(values[columnIndex], replacement, `mutation must change ${rowId} ${column}`);
+  values[columnIndex] = replacement;
+  lines[rowIndex] = `| ${values.join(" | ")} |`;
+  return markdown.replace(section, lines.join("\n"));
+}
+
 function assertStudioIndexOmitsCaseCards(index) {
   const duplicatedMarkers = markdownSections(index, 3)
     .map(({ heading }) => heading)
@@ -493,6 +691,11 @@ function assertStudioConceptSemantics({ conceptScenarios, entries, inventory }) 
     entries.map(({ id }) => id),
     "concept CLI expectation coverage",
   );
+  assert.deepEqual(
+    Object.keys(STUDIO_CONCEPT_LATE_SEMANTIC_CONTRACT),
+    entries.map(({ id }) => id),
+    "concept late-section expectation coverage",
+  );
 
   const h2Sections = markdownSections(conceptScenarios, 2);
   assert.deepEqual(h2Sections.slice(0, entries.length).map(({ heading }) => heading), entries.map(({ id }) => STUDIO_CONCEPT_HEADINGS[id]));
@@ -500,6 +703,10 @@ function assertStudioConceptSemantics({ conceptScenarios, entries, inventory }) 
     const caseBody = sectionByHeading(conceptScenarios, 2, STUDIO_CONCEPT_HEADINGS[entry.id]);
     const caseParts = markdownSections(caseBody, 3);
     assert.deepEqual(caseParts.map(({ heading }) => heading), STUDIO_COMPETENCY_CASE_MARKERS, `${entry.id} common case-card shape`);
+    for (const part of caseParts) {
+      assert.ok(part.body.length >= 40, `${entry.id} ${part.heading} substantive content`);
+      assert.doesNotMatch(part.body, /^(?:TODO|TBD)(?:\b|$)/iu, `${entry.id} ${part.heading} placeholder`);
+    }
     const byHeading = new Map(caseParts.map((section) => [section.heading, section.body]));
 
     const current = byHeading.get("현재 상황과 목표");
@@ -510,6 +717,12 @@ function assertStudioConceptSemantics({ conceptScenarios, entries, inventory }) 
       assert.ok(value.length >= 35, `${entry.id} ${label} substantive field`);
       assert.doesNotMatch(value, /^(?:TODO|TBD)(?:\b|$)/iu, `${entry.id} ${label} placeholder`);
       for (const term of terms) assert.ok(value.includes(term), `${entry.id} ${label} semantic term: ${term}`);
+    }
+    const lateContract = STUDIO_CONCEPT_LATE_SEMANTIC_CONTRACT[entry.id];
+    assert.deepEqual(Object.keys(lateContract), STUDIO_CONCEPT_LATE_HEADINGS, `${entry.id} late-section semantic coverage`);
+    for (const [heading, terms] of Object.entries(lateContract)) {
+      const body = byHeading.get(heading);
+      for (const term of terms) assert.ok(body.includes(term), `${entry.id} ${heading} semantic term: ${term}`);
     }
 
     const appBlocks = fencedCodeBlocks(byHeading.get("Codex App 요청문"), "text");
@@ -544,11 +757,55 @@ function assertStudioConceptSemantics({ conceptScenarios, entries, inventory }) 
     assert.match(resume, /\*\*재개 요청문:\*\*\n\n```text\n(?:@Game Design Studio|\$game-design-studio:)[^\n]+\n```/m, `${entry.id} executable resume`);
   }
 
-  assert.doesNotMatch(
-    conceptScenarios,
-    /(?:D(?:1|7|30)\s*(?:retention|리텐션)|KPI|시장 점유율|재미)\s*(?:은|는|=|:)?.{0,24}\d+(?:\.\d+)?%?.{0,24}(?:보장|달성한다|정답이다)/iu,
-    "numeric KPI, retention, market, or fun claim presented as fact",
+  assertNoUnqualifiedNumericClaims(conceptScenarios);
+}
+
+function assertNoUnqualifiedNumericClaims(markdown) {
+  const claimPattern = /retention|리텐션|시장성|시장\s*규모|시장\s*점유율|KPI|재미|밸런스|balance|효과/iu;
+  const numericPattern = /\d+(?:[.,]\d+)?\s*(?:%|점|배|조\s*원|억\s*원|만\s*원|원|명|일|회)?/u;
+  const validationPattern = /prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정)|가정|검증|provisional|관찰|평가|근거/iu;
+  const contradictionPattern = /보장|정답|확정(?:한다|이다)|달성(?:한다|을 보장)/u;
+  const sentences = markdown.split(/(?<=[.!?])\s+|\n+/u).map((sentence) => sentence.trim()).filter(Boolean);
+  for (const sentence of sentences) {
+    const normalized = sentence.replace(/ST-[CG]\d+/gu, "");
+    const claim = claimPattern.exec(normalized);
+    if (!claim) continue;
+    const before = normalized.slice(Math.max(0, claim.index - 12), claim.index);
+    const after = normalized.slice(claim.index, claim.index + 80);
+    const hasNumericOutcome = numericPattern.test(after) || /D\d+\s*$/u.test(before);
+    if (!hasNumericOutcome) continue;
+    assert.match(sentence, validationPattern, `unqualified numeric outcome claim: ${sentence}`);
+    assert.doesNotMatch(sentence, contradictionPattern, `contradictory numeric outcome claim: ${sentence}`);
+  }
+}
+
+function assertStudioConceptComparison({ conceptScenarios, competencyPaths, entries }) {
+  assert.deepEqual(
+    Object.keys(STUDIO_CONCEPT_COMPARISON_CONTRACT),
+    entries.map(({ id }) => id),
+    "comparison expectation coverage",
   );
+  const rows = tableRows(conceptScenarios, "콘셉트 간 비교");
+  assert.deepEqual(rows.map((row) => row["ID"]), entries.map(({ id }) => id));
+  assert.deepEqual(Object.keys(rows[0]), [
+    "ID", "핵심 루프", "실패·복구", "정보 부하", "사회적 위험", "콘텐츠 주기", "필요한 근거", "연결 역량",
+  ]);
+  const competencyAnchors = collectHeadingAnchors(competencyPaths);
+  for (const row of rows) {
+    const contract = STUDIO_CONCEPT_COMPARISON_CONTRACT[row.ID];
+    for (const heading of ["핵심 루프", "실패·복구", "정보 부하", "사회적 위험", "콘텐츠 주기", "필요한 근거"]) {
+      assert.ok(row[heading].length >= 8, `${row.ID} ${heading} comparison`);
+      for (const term of contract[heading]) assert.ok(row[heading].includes(term), `${row.ID} ${heading} semantic term: ${term}`);
+    }
+    const links = [...row["연결 역량"].matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].map((match) => ({ id: match[1], target: match[2] }));
+    assert.deepEqual(links.map(({ id }) => id), contract.competencies, `${row.ID} exact competency IDs`);
+    for (const { id, target } of links) {
+      assert.equal(target, STUDIO_COMPETENCY_LINK_TARGETS[id], `${row.ID} ${id} exact competency target`);
+      const [relativePath, anchor] = target.split("#");
+      assert.equal(relativePath, "competency-paths.md", `${row.ID} ${id} competency document`);
+      assert.ok(competencyAnchors.has(anchor), `${row.ID} ${id} resolved competency anchor: ${anchor}`);
+    }
+  }
 }
 
 function sectionByHeading(markdown, level, heading) {
@@ -733,7 +990,7 @@ test("Studio use-case index routes all eighteen published competency and concept
 
 test("each Studio concept preserves the common case-card, local constraints, and executable artifact contract", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
-  const { conceptScenarios } = await readStudioUseCaseGuides();
+  const { conceptScenarios, competencyPaths } = await readStudioUseCaseGuides();
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
   const anchors = collectHeadingAnchors(conceptScenarios);
@@ -743,17 +1000,7 @@ test("each Studio concept preserves the common case-card, local constraints, and
   assertStudioConceptSemantics({ conceptScenarios, entries, inventory });
   assert.doesNotMatch(conceptScenarios, /!\[[^\]]*\]\([^)]+\)/, "Task 6 owns concept diagram embeds");
 
-  const rows = tableRows(conceptScenarios, "콘셉트 간 비교");
-  assert.deepEqual(rows.map((row) => row["ID"]), entries.map(({ id }) => id));
-  assert.deepEqual(Object.keys(rows[0]), [
-    "ID", "핵심 루프", "실패·복구", "정보 부하", "사회적 위험", "콘텐츠 주기", "필요한 근거", "연결 역량",
-  ]);
-  for (const row of rows) {
-    for (const heading of ["핵심 루프", "실패·복구", "정보 부하", "사회적 위험", "콘텐츠 주기", "필요한 근거"]) {
-      assert.ok(row[heading].length >= 8, `${row.ID} ${heading} comparison`);
-    }
-    assert.match(row["연결 역량"], /\[ST-C0[1-8]\]\(competency-paths\.md#st-c0[1-8]-[^)]+\)/, `${row.ID} linked competency`);
-  }
+  assertStudioConceptComparison({ conceptScenarios, competencyPaths, entries });
 });
 
 test("Studio concept contracts reject wrong-valid swaps, TODOs, unsupported claims, and wrong CLI bindings", async () => {
@@ -806,8 +1053,101 @@ test("Studio concept contracts reject wrong-valid swaps, TODOs, unsupported clai
   assert.notEqual(unsupportedClaim, conceptScenarios, "unsupported-claim mutation must change source");
   assert.throws(
     () => assertStudioConceptSemantics({ conceptScenarios: unsupportedClaim, entries, inventory }),
-    /numeric KPI, retention, market, or fun claim presented as fact/,
+    /contradictory numeric outcome claim/,
   );
+});
+
+test("Studio concept contract rejects swapped or empty late case-card sections", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { conceptScenarios } = await readStudioUseCaseGuides();
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
+  const g01Heading = STUDIO_CONCEPT_HEADINGS["ST-G01"];
+  const g02Heading = STUDIO_CONCEPT_HEADINGS["ST-G02"];
+  const mutations = [
+    ["검토와 승인", /ST-G01 검토와 승인 semantic term: design·economy·policy owner/],
+    ["실패·재개", /ST-G01 실패·재개 semantic term: 지표 정의/],
+    ["자기점검과 다음 학습", /ST-G01 자기점검과 다음 학습 semantic term: 수집·성장·이벤트/],
+  ].map(([partHeading, expectedFailure]) => {
+    const g01 = sectionByHeading(sectionByHeading(conceptScenarios, 2, g01Heading), 3, partHeading);
+    const g02 = sectionByHeading(sectionByHeading(conceptScenarios, 2, g02Heading), 3, partHeading);
+    return [
+      `swap ${partHeading}`,
+      replaceCasePart(replaceCasePart(conceptScenarios, g01Heading, partHeading, g02), g02Heading, partHeading, g01),
+      expectedFailure,
+    ];
+  });
+  mutations.push([
+    "empty self-check",
+    replaceCasePart(conceptScenarios, g01Heading, "자기점검과 다음 학습", ""),
+    /ST-G01 자기점검과 다음 학습 substantive content/,
+  ]);
+
+  for (const [name, mutation, expectedFailure] of mutations) {
+    assert.throws(
+      () => assertStudioConceptSemantics({ conceptScenarios: mutation, entries, inventory }),
+      expectedFailure,
+      name,
+    );
+  }
+});
+
+test("Studio concept contract rejects unqualified numeric outcome claims", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { conceptScenarios } = await readStudioUseCaseGuides();
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
+  const claims = [
+    "retention은 40%입니다.",
+    "시장성은 80%입니다.",
+    "시장 규모는 1조 원입니다.",
+    "KPI는 70%입니다.",
+    "재미는 90점입니다.",
+    "밸런스는 95점입니다.",
+    "학습 효과는 60%입니다.",
+  ];
+  for (const claim of claims) {
+    const mutation = conceptScenarios.replace("이 문서는", `${claim}\n\n이 문서는`);
+    assert.notEqual(mutation, conceptScenarios, `numeric claim mutation: ${claim}`);
+    assert.throws(
+      () => assertStudioConceptSemantics({ conceptScenarios: mutation, entries, inventory }),
+      /unqualified numeric outcome claim/,
+      claim,
+    );
+  }
+
+  for (const qualifiedClaim of [
+    "retention은 40%라는 가정이며 prototype과 telemetry로 검증합니다.",
+    "시장성은 80%라는 가정이며 사람 검토로 검증합니다.",
+    "시장 규모는 1조 원이라는 가정이며 simulation 근거로 검증합니다.",
+  ]) {
+    const qualified = conceptScenarios.replace("이 문서는", `${qualifiedClaim}\n\n이 문서는`);
+    assert.doesNotThrow(
+      () => assertStudioConceptSemantics({ conceptScenarios: qualified, entries, inventory }),
+      qualifiedClaim,
+    );
+  }
+});
+
+test("Studio comparison contract rejects axis, competency, and anchor mutations", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { conceptScenarios, competencyPaths } = await readStudioUseCaseGuides();
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
+  const rows = tableRows(conceptScenarios, "콘셉트 간 비교");
+  const g01 = rows.find((row) => row.ID === "ST-G01");
+  const g02 = rows.find((row) => row.ID === "ST-G02");
+  const mutations = [
+    ["axis swap", replaceTableCell(replaceTableCell(conceptScenarios, "콘셉트 간 비교", "ST-G01", "핵심 루프", g02["핵심 루프"]), "콘셉트 간 비교", "ST-G02", "핵심 루프", g01["핵심 루프"]), /ST-G01 핵심 루프 semantic term: 수집/],
+    ["wrong-valid competency", replaceTableCell(conceptScenarios, "콘셉트 간 비교", "ST-G01", "연결 역량", "[ST-C03](competency-paths.md#st-c03-규칙상태예외데이터), [ST-C07](competency-paths.md#st-c07-성장경제밸런스liveops)"), /ST-G01 exact competency IDs/],
+    ["nonexistent anchor", replaceTableCell(conceptScenarios, "콘셉트 간 비교", "ST-G01", "연결 역량", "[ST-C02](competency-paths.md#st-c02-존재하지-않는-anchor), [ST-C07](competency-paths.md#st-c07-성장경제밸런스liveops)"), /ST-G01 ST-C02 exact competency target/],
+  ];
+  for (const [name, mutation, expectedFailure] of mutations) {
+    assert.throws(
+      () => assertStudioConceptComparison({ conceptScenarios: mutation, competencyPaths, entries }),
+      expectedFailure,
+      name,
+    );
+  }
 });
 
 test("each Studio competency case preserves its anchored case-card and executable review contract", async () => {
