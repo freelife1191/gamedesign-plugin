@@ -359,6 +359,11 @@ const STUDIO_NUMERIC_CLAIM_CASES = Object.freeze([
   ["reject", "학습 효과 60%는 평가 없이 제시합니다."],
   ["reject", "KPI 70%는 정답이 아니라 확정된 결과입니다."],
   ["reject", "KPI 70%의 무단 공개는 금지하지만 달성은 확정됩니다."],
+  ["reject", "KPI 70% 달성 보장은 금지하며, telemetry 없이 제시합니다."],
+  ["reject", "retention 40%는 확정이 아니라 제시합니다."],
+  ["reject", "KPI 70%는 prototype과 telemetry 없이 제시합니다."],
+  ["reject", "KPI 70%는 사람 검토와 결정 없이 제시합니다."],
+  ["reject", "KPI 70%는 근거 없이 제시하고, 재미 90점은 telemetry로 검증합니다."],
   ["allow", "retention은 40%라는 가정이며 prototype과 telemetry로 검증합니다."],
   ["allow", "시장성은 80%라는 가정이며 사람 검토로 검증합니다."],
   ["allow", "시장 규모는 1조 원이라는 가정이며 simulation 근거로 검증합니다."],
@@ -801,17 +806,40 @@ function assertNoUnqualifiedNumericClaims(markdown) {
 }
 
 function isUnsafeNumericOutcomeSentence(sentence) {
-  const normalized = sentence.replace(/ST-[CG]\d+/gu, "");
-  const hasClaim = /retention|리텐션|시장성|시장\s*규모|시장\s*점유율|KPI|재미|밸런스|balance|효과/iu.test(normalized);
-  const hasNumericValue = /\d+(?:[.,]\d+)?\s*(?:%|점|배|조\s*원|억\s*원|만\s*원|원|명|일|회)?/u.test(normalized);
-  if (!hasClaim || !hasNumericValue) return false;
+  const normalized = sentence.replace(/ST-[CG]\d+/giu, "");
+  return numericOutcomeClaimClauses(normalized).some((clause) => isUnsafeNumericOutcomeClause(clause));
+}
 
-  const assertions = [...normalized.matchAll(/보장|확정|정답|달성(?:된|한)?\s*사실/gu)];
-  if (assertions.some((assertion) => !isLocallyNegatedAssertion(normalized, assertion))) return true;
-  if (assertions.length > 0) return false;
+function numericOutcomeClaimClauses(sentence) {
+  const fragments = sentence
+    .split(/[,;]|하지만|그러나|반면|이고|이며|하고|하며|\b(?:but|however|and)\b/giu)
+    .map((fragment) => fragment.trim())
+    .filter(Boolean);
+  const clauses = [];
+  for (const fragment of fragments) {
+    if (hasNumericOutcomePair(fragment)) clauses.push(fragment);
+    else if (clauses.length > 0) clauses[clauses.length - 1] += ` ${fragment}`;
+  }
+  return clauses;
+}
 
-  const withoutNegatedQualifiers = normalized.replace(
-    /(?:prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정|평가)|가정|검증|관찰|평가|근거)\s*(?:이|가|은|는|도|조차|마저)?\s*없(?:이|이는)/giu,
+function hasNumericOutcomePair(clause) {
+  const hasClaim = /retention|리텐션|시장성|시장\s*규모|시장\s*점유율|KPI|재미|밸런스|balance|효과/iu.test(clause);
+  const hasNumericValue = /\d+(?:[.,]\d+)?\s*(?:%|점|배|조\s*원|억\s*원|만\s*원|원|명|일|회)?/u.test(clause);
+  return hasClaim && hasNumericValue;
+}
+
+function isUnsafeNumericOutcomeClause(clause) {
+  const assertions = [...clause.matchAll(/보장|확정|정답|달성(?:된|한)?\s*사실/gu)];
+  if (assertions.some((assertion) => !isLocallyNegatedAssertion(clause, assertion))) return true;
+
+  const qualifier = String.raw`(?:prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정|평가)|검토|결정|가정|검증|관찰|평가|근거)`;
+  const negatedQualifierGroup = new RegExp(
+    `${qualifier}(?:\\s*(?:과|와|및|또는|\/|·)\\s*${qualifier})*\\s*(?:이|가|은|는|도|조차|마저)?\\s*없(?:이|이는)`,
+    "giu",
+  );
+  const withoutNegatedQualifiers = clause.replace(
+    negatedQualifierGroup,
     "",
   );
   const hasPositiveValidation = /prototype|telemetry|simulation|사람(?:의)?\s*(?:검토|결정|평가)|가정|검증|provisional|관찰|평가|근거/iu.test(withoutNegatedQualifiers);
@@ -1142,8 +1170,11 @@ test("Studio concept contract rejects unqualified numeric outcome claims", async
   const { conceptScenarios } = await readStudioUseCaseGuides();
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "concept");
+  const classifierMismatches = STUDIO_NUMERIC_CLAIM_CASES
+    .filter(([decision, sentence]) => isUnsafeNumericOutcomeSentence(sentence) !== (decision === "reject"))
+    .map(([, sentence]) => sentence);
+  assert.deepEqual(classifierMismatches, [], "numeric classifier decision table");
   for (const [decision, sentence] of STUDIO_NUMERIC_CLAIM_CASES) {
-    assert.equal(isUnsafeNumericOutcomeSentence(sentence), decision === "reject", `numeric classifier: ${sentence}`);
     const mutation = conceptScenarios.replace("이 문서는", `${sentence}\n\n이 문서는`);
     assert.notEqual(mutation, conceptScenarios, `numeric claim mutation: ${sentence}`);
     if (decision === "reject") {
