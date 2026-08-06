@@ -1226,8 +1226,11 @@ function assertCareerCompetencySemantics({ competencyPaths, entries, inventory }
     assert.ok(review.includes(outputCheckpoint), `${entry.id} section-local output review checkpoint`);
     const failure = byHeading.get("실패·재개");
     assert.match(failure, /\*\*보존:\*\*/, `${entry.id} preserves resumable evidence`);
-    for (const clause of CAREER_RESUME_CONTRACT[entry.id]) assert.ok(failure.includes(clause), `${entry.id} failure-resume contract: ${clause}`);
-    assert.doesNotMatch(failure, /불명확해도 자동 승인|근거 없이 승인/, `${entry.id} resume gate rejects approval without evidence`);
+    const resumeMarkers = CAREER_RESUME_CONTRACT[entry.id];
+    const markerIndexes = resumeMarkers.map((marker) => failure.indexOf(marker));
+    for (const [index, marker] of resumeMarkers.entries()) assert.notEqual(markerIndexes[index], -1, `${entry.id} failure-resume contract: ${marker}`);
+    assert.ok(markerIndexes.every((position, index) => index === 0 || markerIndexes[index - 1] < position), `${entry.id} ordered failure-preserve-gate-resume`);
+    assert.doesNotMatch(failure, /(?:불명확해도|근거 없이|확인 전|검토 없이)[^.\n]*승인[^.\n]*(?:계속|진행|재개)/, `${entry.id} rejects approval before verification`);
   }
 
   const c03 = sectionByHeading(competencyPaths, 2, CAREER_COMPETENCY_HEADINGS["CA-C03"]);
@@ -1239,9 +1242,19 @@ function assertCareerCompetencySemantics({ competencyPaths, entries, inventory }
   }
   assert.doesNotMatch(practice, /https?:\/\//, "CA-C03 does not invent example URL");
   assert.match(practice, /`reviewAfter` 이후 재검색 전까지 current claim에 사용하지 않/, "CA-C03 stale current-claim polarity");
-  assert.doesNotMatch(practice, /재검색 없이 current claim에 사용|stale evidence[^\n]*재검색 전[^\n]*current claim에 사용/iu, "CA-C03 rejects stale-current coexistence");
+  const staleCurrentClauses = practice.split(/(?:[.!?]\s+|\n+)/).filter((clause) => {
+    const staleContext = /stale|reviewAfter|오래된 evidence/iu.test(clause);
+    const currentContext = /current claim|current conclusion/iu.test(clause);
+    const useContext = /사용|반영/u.test(clause);
+    return staleContext && currentContext && useContext;
+  });
+  assert.ok(staleCurrentClauses.length > 0, "CA-C03 stale/current clauses exist");
+  for (const clause of staleCurrentClauses) {
+    assert.match(clause, /않|금지|보류|중단/u, "CA-C03 stale/current clause requires negative boundary");
+    assert.doesNotMatch(clause, /사용해도|사용합니다|반영해도|반영합니다|허용|가능/u, "CA-C03 stale/current clause rejects positive permission");
+  }
   assert.match(practice, /새 source ID/, "CA-C03 refresh creates a new source ID");
-  assert.match(resume, /`reviewAfter`가 지나면 current conclusion을 보류하고 재검색/, "CA-C03 stale conclusion is withheld before re-search");
+  assert.match(resume, /`reviewAfter`가 지나면 current conclusion을 보류[\s\S]*재검색/, "CA-C03 stale conclusion is withheld before re-search");
   assert.match(resume, /새 source ID 또는 evidence ID/, "CA-C03 resume refreshes source or evidence ID");
 }
 
@@ -1467,9 +1480,9 @@ test("Career residual executable, freshness, and deferred-route mutations are re
   const competencyMutations = [
     ["CLI token only in explanatory text", replaceCasePart(competencyPaths, c01, "Codex CLI 요청문", c01Cli.replace("$game-design-career:map-game-design-career", "설명문 속 skill token $game-design-career:map-game-design-career")), /CA-C01 executable CLI command/],
     ["manifest output read order reversed", replaceCasePart(competencyPaths, c01, "결과물", c01Results.replace("`game-design-role-map`, `learning-roadmap`", "`learning-roadmap`, `game-design-role-map`")), /CA-C01 manifest output read order/],
-    ["approval without evidence resume", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure + "\n\nrole evidence가 불명확해도 자동 승인하고 재개합니다."), /CA-C01 resume gate rejects approval without evidence/],
+    ["approval without evidence resume", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure + "\n\nrole evidence가 불명확해도 자동 승인하고 재개합니다."), /CA-C01 rejects approval before verification/],
     ["resume gate swap", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure.replace("사용자와 멘토가 role evidence 또는 과제 기록을 확인", "작성자와 멘토가 공개 location 또는 권리를 확인")), /CA-C01 failure-resume contract: 사용자와 멘토가 role evidence 또는 과제 기록을 확인/],
-    ["stale polarity coexistence", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\nstale evidence는 재검색 전 current claim에 사용해도 됩니다."), /CA-C03 rejects stale-current coexistence/],
+    ["stale polarity coexistence", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\nstale evidence는 재검색 전 current claim에 사용해도 됩니다."), /CA-C03 stale\/current clause requires negative boundary/],
   ];
   for (const [label, mutation, expectedFailure] of competencyMutations) {
     assert.throws(
@@ -1488,6 +1501,34 @@ test("Career residual executable, freshness, and deferred-route mutations are re
     /Career deferred routes contain no Markdown links/,
     "deferred rows reject arbitrary broken Markdown links",
   );
+});
+
+test("Career ordered-resume and stale-permission mutations are rejected", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { competencyPaths } = await readCareerCompetencyGuides();
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
+  const c01 = CAREER_COMPETENCY_HEADINGS["CA-C01"];
+  const c03 = CAREER_COMPETENCY_HEADINGS["CA-C03"];
+  const c01Failure = sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "실패·재개");
+  const c03Practice = sectionByHeading(sectionByHeading(competencyPaths, 2, c03), 3, "표준 실습");
+  const c01Preserve = "**보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜.";
+  const mutations = [
+    ["early resume", replaceCasePart(competencyPaths, c01, "실패·재개", "관찰 또는 짧은 과제로 재개합니다. " + c01Failure), /CA-C01 ordered failure-preserve-gate-resume/],
+    ["preserve before failure", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure.replace(c01Preserve, "").replace("role evidence가 없으면", c01Preserve + " role evidence가 없으면")), /CA-C01 ordered failure-preserve-gate-resume/],
+    ["approval synonym: continue", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure + "\n\n확인 전 승인 후 계속합니다."), /CA-C01 rejects approval before verification/],
+    ["approval synonym: proceed", replaceCasePart(competencyPaths, c01, "실패·재개", c01Failure + "\n\n검토 없이 승인하고 진행합니다."), /CA-C01 rejects approval before verification/],
+    ["stale permission: allowed", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\n`reviewAfter`가 지나도 재검색 전까지 current claim에 사용해도 됩니다."), /CA-C03 stale\/current clause requires negative boundary/],
+    ["old-evidence permission", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\n오래된 evidence는 재검색 전 current claim에 사용합니다."), /CA-C03 stale\/current clause requires negative boundary/],
+    ["normal and opposite coexist", replaceCasePart(competencyPaths, c03, "표준 실습", c03Practice + "\n\nstale evidence는 재검색 전 current claim에 사용해도 됩니다."), /CA-C03 stale\/current clause requires negative boundary/],
+  ];
+  for (const [label, mutation, expectedFailure] of mutations) {
+    assert.throws(
+      () => assertCareerCompetencyStructure({ competencyPaths: mutation, entries, inventory }),
+      expectedFailure,
+      label,
+    );
+  }
 });
 
 test("each Career competency case preserves its anchored case-card, evidence boundary, and deferred index routes", async () => {

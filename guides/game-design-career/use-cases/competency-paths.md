@@ -64,7 +64,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/role-map 
 
 ### 실패·재개
 
-role evidence가 없으면 unknown을 보존하고 관찰 또는 짧은 과제로 재개합니다. 사용자와 멘토가 role evidence 또는 과제 기록을 확인한 뒤에만 재개합니다. **보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜.
+role evidence가 없으면 unknown을 보존합니다. **보존:** 기존 role map, evidence ID, 보류한 대안과 검토 날짜. 사용자와 멘토가 role evidence 또는 과제 기록을 확인한 뒤에만 관찰 또는 짧은 과제로 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -132,7 +132,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 
 ### 실패·재개
 
-location 또는 권리가 불명확하면 해당 claim을 보류하고, 공개 location 또는 권리 확인 뒤 보존한 관찰에서 재개합니다. 작성자와 멘토가 공개 location 또는 권리를 확인한 뒤에만 재개합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문.
+location 또는 권리가 불명확하면 해당 claim을 보류합니다. **보존:** 관찰 기록, evidence ID, 반례와 확인 질문. 작성자와 멘토가 공개 location 또는 권리를 확인한 뒤에만 보존한 관찰에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -201,7 +201,7 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 ### 실패·재개
 
-공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류하고 재검색한 뒤 새 source ID 또는 evidence ID로 갱신해 재개합니다. Research Owner와 Portfolio Reviewer가 공식 source와 freshness를 확인한 뒤에만 재개합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record.
+공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record. Research Owner와 Portfolio Reviewer가 공식 source와 freshness를 확인한 뒤에만 재검색한 뒤 새 source ID 또는 evidence ID로 갱신해 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -269,7 +269,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/learning-
 
 ### 실패·재개
 
-evidence가 비어 있으면 gap을 유지하고 작은 관찰 과제로 되돌아갑니다. 작성자와 멘토가 작은 관찰 과제를 확인한 뒤에만 재개합니다. **보존:** evidence ID, matrix 행, 보류한 path와 review date.
+evidence가 비어 있으면 gap을 유지합니다. **보존:** evidence ID, matrix 행, 보류한 path와 review date. 작성자와 멘토가 작은 관찰 과제를 확인한 뒤에만 작은 관찰 과제로 되돌아갑니다.
 
 ### 자기점검과 다음 학습
 
@@ -337,7 +337,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 
 ### 실패·재개
 
-source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존하며, public-rights review 뒤 확인된 범위에서 재개합니다. public-rights reviewer가 source location, 권리와 개인 기여를 확인한 뒤에만 재개합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding.
+source location·권리·개인 기여 중 하나라도 불명확하면 공개하지 않고 evidence를 보존합니다. **보존:** `EVID-RD-01`, observation, inference, proposal과 review finding. public-rights reviewer가 source location, 권리와 개인 기여를 확인한 뒤에만 public-rights review 뒤 확인된 범위에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -405,7 +405,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 
 ### 실패·재개
 
-개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류하고 public-rights review가 끝난 범위에서 재개합니다. portfolio reviewer와 public-rights reviewer가 개인 기여와 권리를 확인한 뒤에만 재개합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록.
+개인 기여 또는 권리가 확인되지 않으면 해당 section을 보류합니다. **보존:** `EVID-CP-01`, 관찰·추론·제안, review finding과 공개 제외 목록. portfolio reviewer와 public-rights reviewer가 개인 기여와 권리를 확인한 뒤에만 public-rights review가 끝난 범위에서 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -473,7 +473,7 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/por
 
 ### 실패·재개
 
-evidence가 claim을 지지하지 않으면 claim을 줄이고 backlog로 되돌립니다. portfolio reviewer와 멘토가 claim과 evidence를 확인한 뒤에만 재개합니다. **보존:** `EVID-PR-01`, 관찰·추론·제안, 개인 기여 경계와 review history.
+evidence가 claim을 지지하지 않으면 claim을 줄입니다. **보존:** `EVID-PR-01`, 관찰·추론·제안, 개인 기여 경계와 review history. portfolio reviewer와 멘토가 claim과 evidence를 확인한 뒤에만 backlog로 되돌립니다.
 
 ### 자기점검과 다음 학습
 
@@ -541,7 +541,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/g
 
 ### 실패·재개
 
-fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류하고 재검색·재검토합니다. 멘토·manager·career reviewer와 public-rights reviewer가 fresh requirement, 개인 기여와 권리를 확인한 뒤에만 재개합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문.
+fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문. 멘토·manager·career reviewer와 public-rights reviewer가 fresh requirement, 개인 기여와 권리를 확인한 뒤에만 재검색·재검토합니다.
 
 ### 자기점검과 다음 학습
 
