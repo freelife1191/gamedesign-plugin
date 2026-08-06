@@ -20,7 +20,7 @@
     <text x="215" y="522" class="body" font-size="18" text-anchor="middle">외부 호출 0회</text><text x="215" y="554" class="body" font-size="17" text-anchor="middle">plan · prompt · placeholder</text>
   </g>
   <g aria-label="읽기 순서 3: yes 생성 mode 선택">
-    <text x="535" y="252" class="body" font-size="18">yes</text><path d="M490 270H1120V375" class="line"/>
+    <text x="535" y="252" class="body" font-size="18">yes</text><path d="M490 270H880V375H640M880 375H1120" class="line"/>
     <text x="880" y="394" class="body" font-size="18" text-anchor="middle">하나의 mode를 선택</text>
     <path d="M640 375V408" class="line" marker-end="url(#arrow)"/><path d="M880 375V408" class="line" marker-end="url(#arrow)"/><path d="M1120 375V408" class="line" marker-end="url(#arrow)"/>
     <rect x="540" y="420" width="200" height="190" rx="12" fill="#fff7e8" stroke="#a86700" stroke-width="2"/><text x="640" y="480" class="card-title" fill="#774800" font-size="25" text-anchor="middle" dominant-baseline="central">select</text><text x="640" y="522" class="body" font-size="16" text-anchor="middle">ordered stable IDs</text><text x="640" y="554" class="body" font-size="16" text-anchor="middle">immutable receipt</text>

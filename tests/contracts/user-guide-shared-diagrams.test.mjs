@@ -19,7 +19,9 @@ function assertContainedRelativePath(value, field) {
   assert.equal(typeof value, "string", field + " must be a string");
   assert.ok(value.length > 0, field + " must be nonempty");
   assert.ok(!path.isAbsolute(value) && !path.win32.isAbsolute(value), field + " must not be absolute");
-  const resolved = path.resolve(path.dirname(manifestPath), value);
+  const resolved = value.startsWith("guides/")
+    ? path.resolve(root, value)
+    : path.resolve(path.dirname(manifestPath), value);
   const relative = path.relative(root, resolved);
   assert.ok(relative && !relative.startsWith("..") && !path.isAbsolute(relative), field + " must stay inside the repository");
   return resolved;
@@ -27,17 +29,19 @@ function assertContainedRelativePath(value, field) {
 
 async function assertRegularFile(value, field) {
   const resolved = assertContainedRelativePath(value, field);
-  assert.ok((await lstat(resolved)).isFile(), field + " must resolve to a regular file");
+  const stats = await lstat(resolved);
+  assert.ok(!stats.isSymbolicLink(), field + " must not be a symlink");
+  assert.ok(stats.isFile(), field + " must resolve to a regular file");
   return resolved;
 }
 
-test("shared diagram manifest declares six verified diagrams", async () => {
+test("shared diagram manifest declares exactly the six canonical shared diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-  assert.equal(typeof manifest.version, "number");
+  assert.equal(manifest.version, 1);
   assert.equal(manifest.skillsteadVersion, "0.8.3");
   assert.ok(Array.isArray(manifest.diagrams));
-  const shared = manifest.diagrams.filter(({ scope }) => scope === "shared");
-  for (const id of expectedSharedIds) assert.equal(shared.filter((diagram) => diagram.id === id).length, 1, id);
+  const shared = manifest.diagrams.filter(({ svg }) => svg.startsWith("guides/assets/shared/"));
+  assert.deepEqual(shared.map(({ id }) => id).sort(), expectedSharedIds);
   for (const diagram of shared) {
     for (const field of ["id", "scope", "svg", "png", "alt"]) {
       assert.equal(typeof diagram[field], "string", diagram.id + "." + field);
@@ -45,8 +49,12 @@ test("shared diagram manifest declares six verified diagrams", async () => {
     }
     for (const field of ["sources", "usedBy"]) {
       assert.ok(Array.isArray(diagram[field]) && diagram[field].length > 0, diagram.id + "." + field);
-      for (const value of diagram[field]) assertContainedRelativePath(value, diagram.id + "." + field);
+      for (const value of diagram[field]) await assertRegularFile(value, diagram.id + "." + field);
     }
+    assert.equal(diagram.svg, "guides/assets/shared/" + diagram.id + ".svg");
+    assert.equal(diagram.png, "guides/assets/shared/" + diagram.id + ".png");
+    assert.equal(path.extname(diagram.svg), ".svg", diagram.id + ".svg extension");
+    assert.equal(path.extname(diagram.png), ".png", diagram.id + ".png extension");
     const svgPath = await assertRegularFile(diagram.svg, diagram.id + ".svg");
     await assertRegularFile(diagram.png, diagram.id + ".png");
     const svg = await readFile(svgPath, "utf8");
