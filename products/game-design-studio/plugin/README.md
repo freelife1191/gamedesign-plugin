@@ -352,15 +352,15 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 ### 역량 중심
 
-장르와 무관한 player promise, core loop, rule/state, UX, 콘텐츠, 경제와 검토 역량을 작은 실습부터 익힐 때 선택합니다. 저장소의 [Studio 역량 사례](https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/competency-paths.md)와 [Studio 활용 사례 인덱스](https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/README.md)에서 사례 본문과 요청문을 확인합니다.
+장르와 무관한 player promise, core loop, rule/state, UX, 콘텐츠, 경제와 검토 역량을 작은 실습부터 익힐 때 선택합니다. 사례 본문과 요청문은 아래 repository checkout only 경로에서 확인합니다.
 
 ### 콘셉트 중심
 
-모바일 RPG, 협동 액션, 내러티브, 코지 게임처럼 장르·플랫폼·운영 제약이 같은 역량의 판단을 어떻게 바꾸는지 비교할 때 선택합니다. 저장소의 [Studio 콘셉트 사례](https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/concept-scenarios.md)는 관습을 정답으로 복제하지 않고 검증할 차이를 남깁니다.
+모바일 RPG, 협동 액션, 내러티브, 코지 게임처럼 장르·플랫폼·운영 제약이 같은 역량의 판단을 어떻게 바꾸는지 비교할 때 선택합니다. 콘셉트 사례는 관습을 정답으로 복제하지 않고 검증할 차이를 남깁니다.
 
 ### 스킬 중심
 
-한 작업의 입력과 원하는 결과가 분명하면 전문 스킬을 직접 호출합니다. 예를 들어 rule/state/exception 하나만 필요하면 `$game-design-studio:design-game-systems`를 사용합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작해 최소 스킬 체인과 사람 gate를 정합니다. 저장소의 [Studio 스킬 워크벤치](https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/skill-workbench.md)는 직접 호출 신호·피할 때·다음 handoff를 비교하며, 패키지 안의 [설치된 스킬](skills/design-game-systems/SKILL.md)과 [설치된 템플릿](assets/templates/system-specification/)은 실행 계약과 seed를 제공합니다.
+한 작업의 입력과 원하는 결과가 분명하면 전문 스킬을 직접 호출합니다. 예를 들어 rule/state/exception 하나만 필요하면 `$game-design-studio:design-game-systems`를 사용합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작해 최소 스킬 체인과 사람 gate를 정합니다. 스킬 워크벤치는 직접 호출 신호·피할 때·다음 handoff를 비교합니다.
 
 ### 대표 요청과 예상 결과
 
@@ -372,8 +372,8 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 | 시스템 명세 | `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence, exception과 data authority를 명세해.` | `system-specification`의 규칙·상태·예외·검증 표 |
 | UX·접근성 | `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력, 오류 recovery와 접근성 검토를 연결해.` | `ui-ux-flow-state`와 접근성 검토 큐 |
 | 콘텐츠·퀘스트 | `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.` | `narrative-quest-npc`의 quest state와 제작 handoff |
-| 경제·LiveOps | `$game-design-studio:design-game-economy-and-liveops 토큰 source/sink, guardrail, stop 조건과 rollback 증거를 가정으로 정리해.` | `economy-balance`와 LiveOps experiment 초안 |
-| 제작 검토·출력 | `$game-design-studio:plan-game-production prototype scope, dependency, kill criteria와 review owner를 정리해.` | `production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태 |
+| 경제·LiveOps | `$game-design-studio:design-game-economy-and-liveops 토큰 source/sink, guardrail, stop 조건과 rollback 증거를 가정으로 정리해.` | `economy-balance`의 source/sink 가정과 guardrail·rollback 질문 |
+| 제작 검토·출력 | `$game-design-studio:plan-game-production prototype scope, dependency, kill criteria와 review owner를 정리해.` | `production-scope-risk`의 scope·dependency·kill criteria 초안 |
 
 ### 결과를 읽고 검토하는 순서
 
@@ -387,7 +387,27 @@ content.md
 → export-manifest.yml
 ```
 
-저장소의 [Studio FAQ](https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/faq.md)는 막힌 질문의 즉시 실행 요청을, [공통 결과물 카탈로그](https://github.com/freelife/game-design-plugin/tree/main/guides/use-cases/output-catalog.md)는 최소·선택·확장 결과와 Studio → Career handoff 경계를 안내합니다. 이 링크들은 패키지에 포함되지 않는 저장소 가이드이며, 위의 `skills/`와 `assets/templates/` 링크는 패키지 내부 경로입니다.
+### Repository checkout only guides
+
+아래 문서는 이 패키지에 포함되지 않습니다. canonical git remote와 default branch가 정의되기 전에는 클릭 가능한 외부 URL이나 상대 Markdown 링크를 약속하지 않습니다. repository checkout only에서 다음 plain code path를 사용합니다.
+
+| 문서 | repository checkout only path |
+| --- | --- |
+| Studio 활용 사례 인덱스 | `guides/game-design-studio/use-cases/README.md` |
+| Studio 역량 사례 | `guides/game-design-studio/use-cases/competency-paths.md` |
+| Studio 콘셉트 사례 | `guides/game-design-studio/use-cases/concept-scenarios.md` |
+| Studio 스킬 워크벤치 | `guides/game-design-studio/use-cases/skill-workbench.md` |
+| Studio FAQ | `guides/game-design-studio/faq.md` |
+| 공통 결과물 카탈로그 | `guides/use-cases/output-catalog.md` |
+
+### 패키지 내부 실행 계약
+
+package-local 파일은 설치한 플러그인에서 바로 열 수 있습니다.
+
+| 문서 | package-local 링크 |
+| --- | --- |
+| 시스템 스킬 계약 | [설치된 스킬](skills/design-game-systems/SKILL.md) |
+| 시스템 템플릿 seed | [설치된 템플릿](assets/templates/system-specification/) |
 
 ## 이미지 asset workflow
 

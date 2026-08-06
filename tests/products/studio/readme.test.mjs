@@ -170,13 +170,22 @@ async function assertAllMarkdownLinksContained(root) {
   }
 }
 
-const studioRepositoryGuideLinks = Object.freeze([
-  ["Studio 활용 사례 인덱스", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/README.md"],
-  ["Studio 역량 사례", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/competency-paths.md"],
-  ["Studio 콘셉트 사례", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/concept-scenarios.md"],
-  ["Studio 스킬 워크벤치", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/skill-workbench.md"],
-  ["Studio FAQ", "https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/faq.md"],
-  ["공통 결과물 카탈로그", "https://github.com/freelife/game-design-plugin/tree/main/guides/use-cases/output-catalog.md"],
+const studioRepositoryCheckoutGuides = Object.freeze([
+  ["Studio 활용 사례 인덱스", "guides/game-design-studio/use-cases/README.md"],
+  ["Studio 역량 사례", "guides/game-design-studio/use-cases/competency-paths.md"],
+  ["Studio 콘셉트 사례", "guides/game-design-studio/use-cases/concept-scenarios.md"],
+  ["Studio 스킬 워크벤치", "guides/game-design-studio/use-cases/skill-workbench.md"],
+  ["Studio FAQ", "guides/game-design-studio/faq.md"],
+  ["공통 결과물 카탈로그", "guides/use-cases/output-catalog.md"],
+]);
+
+const representativeRequestResultRows = Object.freeze([
+  "| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, player promise, core loop, non-goal과 prototype 질문을 정리해.` | `game-design-brief`와 `vision-pillars`를 담은 Canonical Artifact 초안 |",
+  "| 시스템 명세 | `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence, exception과 data authority를 명세해.` | `system-specification`의 규칙·상태·예외·검증 표 |",
+  "| UX·접근성 | `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력, 오류 recovery와 접근성 검토를 연결해.` | `ui-ux-flow-state`와 접근성 검토 큐 |",
+  "| 콘텐츠·퀘스트 | `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.` | `narrative-quest-npc`의 quest state와 제작 handoff |",
+  "| 경제·LiveOps | `$game-design-studio:design-game-economy-and-liveops 토큰 source/sink, guardrail, stop 조건과 rollback 증거를 가정으로 정리해.` | `economy-balance`의 source/sink 가정과 guardrail·rollback 질문 |",
+  "| 제작 검토·출력 | `$game-design-studio:plan-game-production prototype scope, dependency, kill criteria와 review owner를 정리해.` | `production-scope-risk`의 scope·dependency·kill criteria 초안 |",
 ]);
 
 function readmeSection(markdown, heading) {
@@ -191,6 +200,31 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+async function assertRepositoryCheckoutGuides(section) {
+  assert.match(section, /repository checkout only/u, "repository-only guides must not promise a remote URL");
+  assert.doesNotMatch(section, /github\.com\/freelife\/game-design-plugin|https?:\/\/[^\s)]+\/tree\//u, "fabricated GitHub repository or tree URL");
+  assert.doesNotMatch(section, /\]\((?:\.\.\/)+guides\//u, "packaged README must not use repository-only relative guide links");
+  for (const [label, relativePath] of studioRepositoryCheckoutGuides) {
+    const plainCodePath = `\`${relativePath}\``;
+    assert.match(section, new RegExp(`\\| ${escapeRegExp(label)} \\| ${escapeRegExp(plainCodePath)} \\|`), `${label}: checkout-only path must be plain code`);
+    assert.equal(section.split(`\`${relativePath}\``).length - 1, 1, `${label}: checkout-only path appears exactly once`);
+    assert.doesNotMatch(section, new RegExp(`\\[[^\\]]+\\]\\([^)]*${escapeRegExp(relativePath)}`), `${label}: checkout-only path must not be a Markdown link`);
+    const guide = await readFile(path.join(repoRoot, relativePath), "utf8");
+    assert.match(guide, /^# .+/m, `${label}: source path must resolve to a guide heading`);
+  }
+}
+
+async function assertRepresentativeOutputOwnership() {
+  const contracts = [
+    ["design-game-economy-and-liveops", "Produce either `economy-balance` or `liveops-experiment-event`"],
+    ["plan-game-production", "Produce `production-scope-risk`"],
+  ];
+  for (const [skillId, outputContract] of contracts) {
+    const skill = await readFile(path.join(pluginRoot, "skills", skillId, "SKILL.md"), "utf8");
+    assert.ok(skill.includes(outputContract), `${skillId}: source output contract changed`);
+  }
+}
+
 function assertStudioUseCaseReadme(readme) {
   const section = readmeSection(readme, "활용 경로와 결과");
   for (const user of ["기획 입문 학생", "솔로·인디 개발자", "현업 기획자", "팀 리드·교육자·멘토"]) {
@@ -203,26 +237,12 @@ function assertStudioUseCaseReadme(readme) {
   assert.match(section, /복수.*영역|범위.*불명확/u, "orchestrator condition missing");
   assert.match(section, /복수.*영역[\s\S]{0,220}\$game-design-studio:orchestrate-game-design-project|범위.*불명확[\s\S]{0,220}\$game-design-studio:orchestrate-game-design-project/u, "orchestrator condition must bind to the orchestrator");
 
-  const cases = [
-    ["새 게임 GDD", "$game-design-studio:orchestrate-game-design-project", "game-design-brief"],
-    ["시스템 명세", "$game-design-studio:design-game-systems", "system-specification"],
-    ["UX·접근성", "$game-design-studio:design-player-experience", "ui-ux-flow-state"],
-    ["콘텐츠·퀘스트", "$game-design-studio:design-game-content", "narrative-quest-npc"],
-    ["경제·LiveOps", "$game-design-studio:design-game-economy-and-liveops", "economy-balance"],
-    ["제작 검토·출력", "$game-design-studio:plan-game-production", "export-manifest.yml"],
-  ];
-  for (const [label, command, output] of cases) {
-    assert.match(section, new RegExp(`${escapeRegExp(label)}[\\s\\S]{0,700}${escapeRegExp(command)}[\\s\\S]{0,700}${escapeRegExp(output)}`), `${label}: copyable request/result contract`);
-  }
-  assert.equal((section.match(/^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/gm) ?? []).length, 6, "six representative request/result rows");
+  const actualRows = section.split("\n").filter((line) => /^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/.test(line));
+  assert.deepEqual(actualRows, representativeRequestResultRows, "representative requests and results must keep exact command/output ownership");
   assert.match(section, /content\.md\s*→\s*evidence\.yml\s*→\s*decisions\/\s*→\s*assets\/\s*→\s*export-manifest\.yml/u, "canonical artifact reading order");
 
-  for (const [label, url] of studioRepositoryGuideLinks) {
-    assert.ok(section.includes(`[${label}](${url})`), `repository guide link missing or mislabeled: ${label}`);
-  }
   assert.match(section, /\[설치된 스킬\]\(skills\/design-game-systems\/SKILL\.md\)/u, "package-local skill link must remain distinct");
   assert.match(section, /\[설치된 템플릿\]\(assets\/templates\/system-specification\/\)/u, "package-local template link must remain distinct");
-  assert.doesNotMatch(section, /\]\((?:\.\.\/)+guides\//u, "packaged README must not use repository-only relative guide links");
 }
 
 test("release documentation ships the plugin license and third-party notices", async () => {
@@ -347,23 +367,29 @@ test("README documents truthful installation, workflow, safety, visualization, e
 test("README provides package-safe Studio exploration paths, requests, outputs, and reading order", async () => {
   const readme = await readFile(readmePath, "utf8");
   assertStudioUseCaseReadme(readme);
+  const section = readmeSection(readme, "활용 경로와 결과");
+  await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
 
   assert.throws(
-    () => assertStudioUseCaseReadme(readme.replace("`system-specification`의 규칙·상태·예외·검증 표", "`economy-balance`의 규칙·상태·예외·검증 표")),
-    "representative case/output swaps must fail",
+    () => assertStudioUseCaseReadme(readme.replace("$game-design-studio:design-game-systems", "$game-design-studio:design-game-economy-and-liveops")),
+    "command/result swaps must fail",
   );
   assert.throws(
     () => assertStudioUseCaseReadme(readme.replace("복수 영역이 얽히거나 범위가 불명확하면", "한 작업 범위가 분명하면")),
     "direct/orchestrator inversions must fail",
   );
-  assert.throws(
-    () => assertStudioUseCaseReadme(readme.replace(studioRepositoryGuideLinks[0][1], "../guides/game-design-studio/use-cases/README.md")),
+  await assert.rejects(
+    assertRepositoryCheckoutGuides(section.replace("`guides/game-design-studio/use-cases/README.md`", "[Studio 활용 사례 인덱스](../guides/game-design-studio/use-cases/README.md)")),
+    /repository-only relative guide links/,
     "repository-only relative links must fail even when they are valid in the repository",
   );
-  assert.throws(
-    () => assertStudioUseCaseReadme(readme.replace(studioRepositoryGuideLinks[2][1], studioRepositoryGuideLinks[1][1])),
-    "wrong but valid repository guide links must fail",
+  await assert.rejects(
+    assertRepositoryCheckoutGuides(section.replace("`guides/game-design-studio/use-cases/concept-scenarios.md`", "[Studio 콘셉트 사례](https://github.com/freelife/game-design-plugin/tree/main/guides/game-design-studio/use-cases/concept-scenarios.md)")),
+    /fabricated GitHub repository or tree URL/,
+    "fabricated remote guide links must fail",
   );
+  assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
+  assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
 });
 
 test("README documents the closed Studio document-quality workflow and installed contracts", async () => {
