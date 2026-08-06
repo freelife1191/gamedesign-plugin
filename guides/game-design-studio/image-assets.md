@@ -1,0 +1,61 @@
+# 이미지 자산
+
+이미지 workflow는 planning, generation, review를 분리합니다. 모든 mode에서 `assets/image-assets.yml`, Markdown/JSON prompt, expected count와 placeholder를 보존하며 새 asset은 `concept-draft`로 시작합니다.
+
+## 안전한 기본 설정
+
+```dotenv
+IMAGE_GEN_MODE=prompt-only
+IMAGE_MODEL=gpt-image-2
+IMAGE_QUALITY=low
+```
+
+기본 상태에서는 `OPENAI_API_KEY`를 설정하지 않습니다. 실제 key는 문서나 tracked `.env`에 넣지 않습니다. 기본 model은 `gpt-image-2`, quality는 `low`이며 허용 quality는 `low`, `medium`, `high`, `auto`입니다.
+
+## IMAGE_GEN_MODE
+
+| Mode | 생성 범위 | 승인·비용 경계 |
+| --- | --- | --- |
+| `prompt-only` | 외부 호출 0회. plan, prompt, placeholder만 작성 | 기본값이며 생성 비용이 없습니다. |
+| `select` | 실제 사용자가 선택한 ordered stable asset IDs만 | immutable host-user selection receipt 전에는 외부 호출 0회입니다. label·순번·agent 추측은 거부합니다. |
+| `required` | manifest에서 required로 선언된 유한 asset만 | 선언된 count 밖의 asset을 만들지 않습니다. |
+| `all` | declared required, recommended, variant asset 전부 | 선언되지 않은 variant를 발명하지 않습니다. |
+
+## Provider routing
+
+- `OPENAI_API_KEY`가 있으면 OpenAI only입니다. OpenAI Images API/auth/quota/billing/request/policy/network 실패 후 Codex fallback은 금지됩니다.
+- key가 없고 host Codex image capability가 `available`이면 선택된 jobs만 host에 전달합니다. host가 실제로 반환하지 않은 applied model/quality는 기록하지 않습니다.
+- key가 없고 capability가 `unknown` 또는 `unavailable`이면 호출하지 않고 prompt와 placeholder를 보존합니다.
+- API key, authorization, base64와 raw image bytes는 public 결과나 log에 남기지 않습니다.
+
+## 계획과 생성
+
+`plan-image-assets`는 profile slot, explicit count, stable source ID, placement, alt text, dimensions와 preserve/exclude를 manifest에 기록합니다. `generate-image-assets`는 mode와 immutable receipt가 허용한 finite jobs만 실행하고 generation/provenance와 approval state를 분리합니다. 부분 성공이나 policy block도 asset별 상태로 남깁니다.
+
+## 승인 경계
+
+승인은 다음 순서로만 이동합니다.
+
+```text
+concept-draft → document-approved → production-candidate
+```
+
+- `document-approved`: named visual reviewer가 purpose, placement, alt text, readability, rights/provenance와 artifact-local evidence를 승인해야 합니다.
+- `production-candidate`: 그 뒤 named human rights/provenance reviewer가 technical fit, gameplay readability와 active rights를 검토해야 합니다.
+- `production-candidate`는 release, legal, deployment 또는 production approval이 아닙니다.
+
+Agent 역할, generation 성공, file existence와 timestamp만으로는 transition할 수 없습니다. final MD/PDF/DOCX/PPTX derivative는 `document-approved` 이상 asset만 참조합니다.
+
+## Rights와 revocation
+
+제3자·AI·performer·UGC 자산은 source, creator/contributor, attribution, use purpose, rights/consent, privacy, approver와 revocation을 기록합니다. 마지막 유효 human rights review의 `active`, `restricted`, `revoked`, `unreviewed` 상태가 현재 결정을 지배하며 restricted/revoked asset은 후보 자격을 잃습니다.
+
+## Skillstead와 illustration의 구분
+
+Skillstead는 source-backed 구조 도식의 editable SVG와 정확한 2× PNG를 위한 도구입니다. character art, background scene illustration, key art나 story scene을 대체하지 않습니다. diagram과 illustration은 서로 다른 slot, prompt, provenance와 approval evidence를 유지합니다.
+
+## 복사 가능한 요청문
+
+```text
+@Game Design Studio prompt-only로 이 GDD의 required image slot을 계획해. stable asset ID, 명시적 수량, Markdown/JSON prompt와 placeholder를 만들고 생성이나 승인은 하지 마.
+```

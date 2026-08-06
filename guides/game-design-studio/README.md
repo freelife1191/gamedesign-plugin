@@ -18,15 +18,14 @@ Game Design Studio는 게임 비전에서 시스템·콘텐츠·플레이어 경
 - [전체 워크플로](workflow.md)
 - [문제 해결](troubleshooting.md)
 
-다음 안정 경로에는 스킬, 템플릿, 문서 품질, 이미지, 시각화, 내보내기와 목적별 레시피 가이드가 추가됩니다. 파일이 만들어지기 전에는 깨진 링크를 만들지 않기 위해 경로만 표시합니다.
+전체 레퍼런스:
 
-- `skills/README.md`
-- `templates.md`
-- `document-quality.md`
-- `image-assets.md`
-- `visualization.md`
-- `exports.md`
-- `recipes/`
+- [스킬 15개](skills/README.md)
+- [템플릿 15개](templates.md)
+- [문서 품질 profile](document-quality.md)
+- [이미지 자산](image-assets.md)
+- [시각화](visualization.md)
+- [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
 ## 작업 원칙
 

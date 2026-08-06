@@ -1,0 +1,55 @@
+# generate-image-assets
+
+## 목적과 산출물
+
+검증된 image manifest에서 mode와 실제 선택 receipt가 허용한 stable asset ID만 생성 provider로 라우팅합니다.
+
+## 사용할 때
+
+- `select` receipt로 고른 asset ID를 생성할 때
+- `required` 또는 `all`의 유한 declared jobs를 실행하거나 unavailable handoff를 기록할 때
+
+## 사용하지 않을 때
+
+- asset 계획이 없으면 `plan-image-assets`를 먼저 사용합니다.
+- 생성 결과를 `document-approved`나 `production-candidate`로 올리는 데 사용하지 않습니다.
+
+## 필수 입력과 선택 입력
+
+- 필수: validated `assets/image-assets.yml`, prompt package, `IMAGE_GEN_MODE`, redacted config, capability snapshot
+- `select` 필수: 실제 사용자가 제공한 ordered stable asset IDs와 immutable host receipt
+- label, 순번, agent 추측이나 임의 JSON은 선택 증거가 아닙니다.
+
+## Codex App 예시
+
+**복사 가능한 요청문**
+
+```text
+@Game Design Studio select receipt의 stable asset ID hero-keyart-01만 생성해. provider 결정, prompt/output digest와 실패 상태를 분리하고 결과는 concept-draft로 유지해.
+```
+
+## Codex CLI 예시
+
+```text
+$game-design-studio:generate-image-assets artifact=artifacts/coop-rpg-brief, mode=select, assetIds=hero-keyart-01, selectionReceipt=host-event-42
+```
+
+## 진행 흐름
+
+manifest와 finite jobs를 검증합니다. key가 있으면 OpenAI only, key가 없고 host capability가 available이면 Codex 경로, 둘 다 없으면 unavailable로 끝냅니다. 관련 역할은 다음 단계의 `visual-asset-reviewer`; 주 템플릿/profile은 현재 artifact 선택값; 다음 스킬은 `review-image-assets`입니다.
+
+## 결과와 파일
+
+선택 ID, mode, redacted provider decision, per-asset generation 결과와 보존된 prompt/placeholder를 반환합니다. 성공한 PNG가 있더라도 `concept-draft`입니다. 예상 결과 요약: 승인과 분리된 진실한 생성 provenance가 남습니다.
+
+## 검토와 승인
+
+API key, authorization, base64와 raw bytes를 출력하지 않습니다. OpenAI API/auth/quota/policy/network 실패는 Codex fallback을 일으키지 않습니다. host가 보고하지 않은 model/quality도 만들지 않습니다.
+
+## 실패와 재개
+
+부분 성공, policy block, unavailable route를 asset별로 기록하고 통과한 file과 prompt를 보존합니다.
+
+```text
+$game-design-studio:generate-image-assets 기존 성공 결과와 immutable selection receipt를 유지하고, failed asset ID hero-keyart-01만 동일 provider 정책으로 재개해.
+```
