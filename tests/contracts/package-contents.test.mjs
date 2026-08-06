@@ -35,6 +35,12 @@ async function packagedEntries(productName) {
   return collectTree(path.join(repoRoot, "plugins", productName), { label: `plugins/${productName}` });
 }
 
+test("repository root publishes the canonical image configuration example", async () => {
+  const canonicalExample = await readFile(path.join(repoRoot, "shared/image-assets/.env.example"));
+  const rootExample = await readFile(path.join(repoRoot, ".env.example"));
+  assert.deepEqual(rootExample, canonicalExample);
+});
+
 test("temporary product builds package exact image configuration examples without a real .env", async (t) => {
   const sourceExample = await readFile(path.join(repoRoot, "shared/image-assets/.env.example"));
   for (const productName of productNames) {

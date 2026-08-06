@@ -128,6 +128,14 @@ $game-design-career:orchestrate-game-design-career 시스템 기획자 취업을
 
 이미지 계획·생성·검토와 구조 도식은 별도 단계입니다.
 
+두 플러그인은 저장소 루트의 동일한 이미지 설정을 사용합니다. 최초 한 번 예제 파일을 복사한 뒤, 생성된 `.env`만 로컬에서 수정합니다.
+
+```bash
+cp .env.example .env
+```
+
+실제 API key가 들어 있는 `.env`는 Git에 추가하지 않습니다.
+
 - `IMAGE_GEN_MODE`는 `prompt-only`, `select`, `required`, `all` 네 값만 허용합니다. 기본 `prompt-only`는 외부 호출 없이 prompt와 placeholder만 보존합니다.
 - 비어 있지 않은 `OPENAI_API_KEY`가 있으면 OpenAI Images API만 사용합니다. 키가 없고 host image capability가 `available`일 때만 Codex/host 경로를 사용하며, `unknown` 또는 `unavailable`이면 prompt-only fallback을 유지합니다.
 - 생성 파일은 자동 승인되지 않습니다. 이름 있는 사람이 placement, alt text, evidence, rights/privacy를 검토해 `document-approved` 이상으로 올려야 문서 파생본에 사용할 수 있습니다.
