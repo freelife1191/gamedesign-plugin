@@ -35,6 +35,7 @@
 system-designer-12-week-roadmap/
 ├── content.md
 ├── evidence.yml
+├── export-manifest.yml
 ├── decisions/
 └── assets/
 ```
@@ -43,6 +44,7 @@ system-designer-12-week-roadmap/
 - `evidence.yml`: 채용공고와 역할 사실의 출처·날짜·한계
 - `decisions/`: 선택한 역할, 포기한 대안, 시간 배분과 검토 owner
 - `assets/`: 로드맵 도식 슬롯, prompt와 승인 상태
+- 내보내기 manifest: 요청 형식별 준비·renderer·QA 상태를 기록하며 파일 생성이나 QA 통과를 미리 약속하지 않음
 
 ## 명시적 스킬 호출
 
@@ -67,6 +69,7 @@ $game-design-career:orchestrate-game-design-career 시스템 기획자 취업을
 
 - `system-designer-12-week-roadmap/content.md`: 기준 로드맵
 - `system-designer-12-week-roadmap/evidence.yml`: 역할·채용 근거와 공백
+- `system-designer-12-week-roadmap/export-manifest.yml`: 요청 형식별 작업·renderer·QA 상태. 생성과 QA 성공은 실제 검증 뒤에만 기록
 - `system-designer-12-week-roadmap/decisions/*.md`: 역할·범위·시간 결정
 - `system-designer-12-week-roadmap/assets/`: 검증 전 로드맵 도식과 이미지 계획
 - 차단 claim, 검증 작업, 다음 주 행동을 포함한 마지막 작업 보고

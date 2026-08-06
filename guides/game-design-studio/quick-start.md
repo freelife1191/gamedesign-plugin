@@ -35,6 +35,7 @@
 mobile-coop-rpg-brief/
 ├── content.md
 ├── evidence.yml
+├── export-manifest.yml
 ├── decisions/
 └── assets/
 ```
@@ -43,6 +44,7 @@ mobile-coop-rpg-brief/
 - `evidence.yml`: 외부 사실을 사용한 경우 출처·최신성·신뢰도
 - `decisions/`: 사용자가 채택하거나 보류한 원칙과 이유
 - `assets/`: 아직 생성하지 않은 이미지·도식 슬롯과 상태
+- 내보내기 manifest: 요청 형식별 준비·renderer·QA 상태를 기록하며 파일 생성이나 QA 통과를 미리 약속하지 않음
 
 ## 명시적 스킬 호출
 
@@ -67,6 +69,7 @@ $game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이�
 
 - `game-design-brief/content.md`: 기준 기획 내용
 - `game-design-brief/evidence.yml`: 근거와 공백
+- `game-design-brief/export-manifest.yml`: 요청 형식별 작업·renderer·QA 상태. 생성과 QA 성공은 실제 검증 뒤에만 기록
 - `game-design-brief/decisions/*.md`: 결정, 대안, 부작용과 owner
 - `game-design-brief/assets/`: 계획된 자산, prompt와 승인 상태
 - 요청 형식 상태와 차단 사유를 포함한 마지막 작업 보고

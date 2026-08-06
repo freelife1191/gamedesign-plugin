@@ -18,7 +18,14 @@ for (const product of ["game-design-studio", "game-design-career"]) {
     assert.match(installation, /새 세션/);
     assert.match(installation, /Git marketplace/);
     assert.doesNotMatch(installation, /plugin 자동 업데이트/);
+    assert.match(installation, /\.agents\/plugins\/marketplace\.json/);
+    assert.match(installation, /로컬 프로젝트 또는 작업 폴더/);
+    assert.match(installation, /top-level `name`/);
+    assert.doesNotMatch(installation, /ChatGPT 데스크톱 앱에 로컬 marketplace를 등록/);
+    assert.match(installation, /https:\/\/developers\.openai\.com\/plugins\/build\/plugins#install-a-local-plugin-manually/);
+    assert.match(installation, /codex plugin list --marketplace game-design-suite --available --json/);
     assert.match(quickStart, /복사 가능한 요청문/);
     assert.match(quickStart, /예상 결과/);
+    assert.equal(quickStart.match(/export-manifest\.yml/g)?.length, 2);
   });
 }

@@ -4,11 +4,14 @@ App와 CLI는 설치·확인·활성화·제거 표면이 다릅니다. 사용�
 
 ## Codex App 설치
 
-1. ChatGPT 데스크톱 앱에 로컬 marketplace를 등록합니다. marketplace 원본은 `.agents/plugins/marketplace.json`을 포함한 저장소 루트입니다.
-2. 로컬 원본을 바꾼 뒤에는 데스크톱 앱을 다시 시작해 marketplace snapshot을 다시 읽게 합니다.
-3. 앱에서 **Codex**를 선택하거나 **ChatGPT → Work**를 켠 뒤 **Plugins**를 엽니다.
-4. marketplace `game-design-suite`에서 **Game Design Studio**를 골라 설치합니다.
-5. 설치가 끝나면 **새 채팅**을 열어 번들 스킬을 로드합니다.
+1. 저장소 루트를 로컬 프로젝트 또는 작업 폴더로 열어 해당 repo context를 사용합니다.
+2. 저장소 루트의 `.agents/plugins/marketplace.json`이 있고 top-level `name`이 `game-design-suite`인지 확인합니다.
+3. ChatGPT 데스크톱 앱을 다시 시작해 로컬 marketplace를 다시 읽게 합니다. 로컬 원본을 바꾼 뒤에도 앱을 다시 시작합니다.
+4. 앱에서 **Codex**를 선택하거나 **ChatGPT → Work**를 켠 뒤 **Plugins**를 엽니다.
+5. Plugins Directory에서 marketplace `game-design-suite`가 보이는지 확인하고 **Game Design Studio**를 설치합니다.
+6. 설치가 끝나면 **새 채팅**을 열어 번들 스킬을 로드합니다.
+
+App에 임의의 marketplace 경로를 입력하지 않습니다. repo marketplace 배치는 [공식 로컬 플러그인 수동 설치 안내](https://developers.openai.com/plugins/build/plugins#install-a-local-plugin-manually)를 따릅니다.
 
 App에서는 프롬프트 입력창에서 `@Game Design Studio`를 선택해 호출합니다. CLI `/plugins`에서 사용하는 `Space` 활성화 키를 App UI에 적용하지 마세요.
 
@@ -46,10 +49,10 @@ Git marketplace를 등록했다면 설치 가능한 snapshot을 확인하기 전
 
 ```bash
 codex plugin marketplace upgrade game-design-suite
-codex plugin list
+codex plugin list --marketplace game-design-suite --available --json
 ```
 
-`codex plugin marketplace upgrade`는 구성된 **Git marketplace**를 refresh하는 명령입니다. 설치된 Studio 자체를 새 snapshot으로 교체하지 않으므로, 필요한 버전을 확인한 뒤 명시적으로 다시 설치합니다.
+`codex plugin marketplace upgrade`는 구성된 **Git marketplace**를 refresh하는 명령입니다. 다음 명령은 그 marketplace의 설치 가능 항목을 확인합니다. 같은 확인은 `/plugins`의 `game-design-suite` 탭에서도 할 수 있습니다. 기본 `codex plugin list`는 설치 상태 확인용이며 설치 가능 snapshot 조회를 대신하지 않습니다. refresh는 설치된 Studio 자체를 새 snapshot으로 교체하지 않으므로, 필요한 버전을 확인한 뒤 명시적으로 다시 설치합니다.
 
 ## 제거
 
