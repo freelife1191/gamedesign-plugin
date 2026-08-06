@@ -1154,7 +1154,7 @@ test("Studio skill cases resolve to direct-use anchors and canonical routing lan
 
 test("Studio use-case index routes all eighteen published competency and concept cases", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
-  const { index } = await readStudioUseCaseGuides();
+  const { index, competencyPaths, conceptScenarios } = await readStudioUseCaseGuides();
   const studioCases = manifest.cases.filter((entry) => entry.product === "game-design-studio");
   const links = [...index.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].map((match) => ({ label: match[1], target: match[2] }));
 
@@ -1170,8 +1170,11 @@ test("Studio use-case index routes all eighteen published competency and concept
   }
   assert.equal(links.filter(({ target }) => target.startsWith("concept-scenarios.md#st-g")).length, 10, "all concept guides are linked");
   assert.ok(links.some(({ target }) => target === "skill-workbench.md"), "published skill workbench route");
-  assert.ok(links.some(({ target }) => target === "#studio-faq-예정"), "Studio FAQ scheduled route");
+  assert.ok(links.some(({ label, target }) => label === "Studio FAQ" && target === "../faq.md"), "published Studio FAQ route");
   assert.ok(links.some(({ target }) => target === "../../use-cases/output-catalog.md"), "output catalog route");
+  for (const [name, markdown] of Object.entries({ index, competencyPaths, conceptScenarios })) {
+    assert.doesNotMatch(markdown, /Task 6|FAQ 예정/, `${name} rejects stale staged copy`);
+  }
   const indexAnchors = collectHeadingAnchors(index);
   for (const { target } of links) {
     const [relativePath, anchor] = target.split("#");

@@ -97,7 +97,7 @@ $game-design-studio:define-game-vision 기존 game-design/island-restoration/vis
 - 대상 플레이어 근거와 가정을 구분했는가? 선택한 pillar가 실제 기능 결정 하나를 거절할 수 있는가?
 - 회고: 채택한 대안, 포기한 조건, 필요한 다음 관찰을 자신의 말로 설명합니다.
 - 다음 학습: 행동을 루프로 구체화하려면 `ST-C02`, 규칙으로 내리려면 `ST-C03`으로 이동합니다.
-- 관련 문서: [새 게임 GDD 레시피](../recipes/new-game-gdd.md), [비전 스킬](../skills/define-game-vision.md), [템플릿](../templates.md). 전용 도식은 Task 6에서 추가하므로 현재 문서에는 embed하지 않습니다.
+- 관련 문서: [새 게임 GDD 레시피](../recipes/new-game-gdd.md), [비전 스킬](../skills/define-game-vision.md), [템플릿](../templates.md).
 
 ## ST-C02 행동·핵심 루프·의미 있는 선택
 
@@ -192,7 +192,7 @@ verb가 추상적이거나 모든 분기가 같은 결과면 해당 단계는 `b
 - 모든 verb가 관찰 가능한가? 보상 없이도 선택의 결과를 설명할 수 있는가? 반례가 규칙 수정으로 이어졌는가?
 - 회고에서 선택한 loop, 버린 대안과 다음 실험을 설명합니다.
 - 다음 학습은 `ST-C03`의 규칙 계약 또는 `ST-C04`의 첫 세션 feedback입니다.
-- 관련 문서: [비전 스킬](../skills/define-game-vision.md), [시스템 스킬](../skills/design-game-systems.md), [플레이어 경험 스킬](../skills/design-player-experience.md). 전용 도식은 Task 6 전까지 embed하지 않습니다.
+- 관련 문서: [비전 스킬](../skills/define-game-vision.md), [시스템 스킬](../skills/design-game-systems.md), [플레이어 경험 스킬](../skills/design-player-experience.md).
 
 ## ST-C03 규칙·상태·예외·데이터
 
@@ -287,7 +287,7 @@ $game-design-studio:design-game-systems game-design/shared-workbench/system-spec
 - happy path 외에 동시성·취소·실패·복구가 있는가? UI state와 authoritative state를 혼동하지 않았는가?
 - 회고에서 선택한 precedence와 기각한 대안, 재검토 조건을 설명합니다.
 - 다음 학습은 `ST-C04`에서 상태를 플레이어 경험으로 검토하거나 `ST-C06`에서 전투 규칙에 적용합니다.
-- 관련 문서: [시스템 기능 명세 레시피](../recipes/system-feature-spec.md), [시스템 스킬](../skills/design-game-systems.md), [템플릿](../templates.md). 전용 도식은 Task 6 예정입니다.
+- 관련 문서: [시스템 기능 명세 레시피](../recipes/system-feature-spec.md), [시스템 스킬](../skills/design-game-systems.md), [템플릿](../templates.md).
 
 ## ST-C04 UI·UX·온보딩·접근성
 
@@ -382,7 +382,7 @@ current platform 근거나 테스트 환경이 없으면 compliance를 주장하
 - critical action마다 상태, cue, 입력, sensory alternative와 recovery가 있는가? 관찰과 규정 추정을 분리했는가?
 - 회고에서 선택한 onboarding 순서와 제외한 cue, 다음 usability 질문을 설명합니다.
 - 다음 학습은 콘텐츠 흐름의 상태가 필요하면 `ST-C05`, 전체 review와 출력은 `ST-C08`입니다.
-- 관련 문서: [UX·접근성 레시피](../recipes/ux-accessibility.md), [플레이어 경험 스킬](../skills/design-player-experience.md), [시각화](../visualization.md). 전용 도식은 Task 6 전에는 추가하지 않습니다.
+- 관련 문서: [UX·접근성 레시피](../recipes/ux-accessibility.md), [플레이어 경험 스킬](../skills/design-player-experience.md), [시각화](../visualization.md).
 
 ## ST-C05 콘텐츠·내러티브·퀘스트·NPC
 
@@ -477,7 +477,7 @@ $game-design-studio:design-game-content 기존 Q-ARCH-01과 승인된 state를 �
 - 모든 선택이 state와 consequence에 연결되는가? 콘텐츠가 참조하는 system/data ID가 실제로 확인됐는가?
 - 회고에서 버린 분기, 제작 trade-off와 다음 검증을 설명합니다.
 - 다음 학습은 전투 단위를 깊게 다루는 `ST-C06` 또는 제작 범위를 검토하는 `ST-C08`입니다.
-- 관련 문서: [콘텐츠·퀘스트 레시피](../recipes/content-quest-design.md), [콘텐츠 스킬](../skills/design-game-content.md), [템플릿](../templates.md). 전용 도식은 Task 6 예정입니다.
+- 관련 문서: [콘텐츠·퀘스트 레시피](../recipes/content-quest-design.md), [콘텐츠 스킬](../skills/design-game-content.md), [템플릿](../templates.md).
 
 ## ST-C06 캐릭터·스킬·전투·몬스터
 
@@ -572,7 +572,7 @@ canonical rule 또는 prototype evidence가 없으면 숫자를 채우지 않고
 - 공격마다 읽을 수 있는 cue와 실행 가능한 counterplay가 있는가? 수치를 사실처럼 단정하지 않았는가?
 - 회고에서 선택한 role, 버린 skill 대안, failure readability와 다음 test를 설명합니다.
 - 다음 학습은 경제·성장 연결이 필요하면 `ST-C07`, 제작·검토는 `ST-C08`입니다.
-- 관련 문서: [콘텐츠 스킬](../skills/design-game-content.md), [시스템 스킬](../skills/design-game-systems.md), [템플릿](../templates.md). 전용 도식은 Task 6까지 추가하지 않습니다.
+- 관련 문서: [콘텐츠 스킬](../skills/design-game-content.md), [시스템 스킬](../skills/design-game-systems.md), [템플릿](../templates.md).
 
 ## ST-C07 성장·경제·밸런스·LiveOps
 
@@ -667,7 +667,7 @@ $game-design-studio:design-game-economy-and-liveops EXP-FEST-01의 가정과 con
 - 모든 source와 sink에 player consequence와 recovery가 있는가? 실험은 한 변수와 명시적 stop을 갖는가?
 - 회고에서 선택한 가정, 기각한 rollout, 보호 기준과 다음 telemetry 검증을 설명합니다.
 - 다음 학습은 `ST-C08`에서 production risk, review와 승인 가능한 출력으로 연결합니다.
-- 관련 문서: [경제·LiveOps 레시피](../recipes/economy-liveops.md), [경제 스킬](../skills/design-game-economy-and-liveops.md), [이미지 자산](../image-assets.md). 전용 도식은 Task 6 예정입니다.
+- 관련 문서: [경제·LiveOps 레시피](../recipes/economy-liveops.md), [경제 스킬](../skills/design-game-economy-and-liveops.md), [이미지 자산](../image-assets.md).
 
 ## ST-C08 제작·검토·이미지·출력
 
@@ -700,7 +700,7 @@ $game-design-studio:design-game-economy-and-liveops EXP-FEST-01의 가정과 con
 2. `game-design-review`로 direct locator가 있는 finding과 minimal fix를 만들고 disagreement를 `decision-change-log`에 보존합니다.
 3. `plan-image-assets`에서 purpose·slot·stable ID·prompt·rights gap을 계획합니다. `IMAGE_GEN_MODE`의 `prompt-only`는 외부 호출 없이 prompt/placeholder만, `select`는 실제 사용자의 immutable receipt에 든 ordered stable IDs만, `required`는 manifest의 finite required assets만, `all`은 manifest에 선언된 required·recommended·variant만 대상으로 합니다.
 4. provider routing은 바꾸지 않습니다. non-empty `OPENAI_API_KEY`가 있으면 OpenAI only이며 실패 후 Codex fallback을 하지 않습니다. key가 없고 host capability가 `available`일 때만 해당 경로를 쓰며, 그 외에는 prompt와 placeholder를 보존합니다.
-5. 구조 관계가 prose보다 명확할 때만 `visualize-game-design`을 계획하고, `export-game-design-documents`로 MD와 요청 형식의 renderer-neutral job을 준비합니다. Task 6 전에는 이 사례 전용 도식을 embed하지 않습니다.
+5. 구조 관계가 prose보다 명확할 때만 `visualize-game-design`을 계획하고, `export-game-design-documents`로 MD와 요청 형식의 renderer-neutral job을 준비합니다.
 
 ### 포트폴리오·실무 확장
 
@@ -764,4 +764,4 @@ $game-design-studio:export-game-design-documents game-design/exploration-prototy
 - scope마다 evidence, owner, DoD와 중단 조건이 있는가? 이미지 네 mode와 provider routing을 바꾸지 않았는가? 실제 파일과 QA 없이 성공을 주장하지 않았는가?
 - 회고에서 commit하지 않은 범위, review disagreement, 이미지·형식별 blocker와 다음 사람 결정을 설명합니다.
 - 다음 학습은 [결과물 카탈로그](../../use-cases/output-catalog.md)로 파일 읽기 순서를 확인하고 필요한 domain 사례로 돌아가는 것입니다.
-- 관련 문서: [제작·검토·내보내기 레시피](../recipes/production-review-export.md), [이미지 자산](../image-assets.md), [내보내기](../exports.md). 전용 도식은 Task 6에서 추가하므로 현재 embed하지 않습니다.
+- 관련 문서: [제작·검토·내보내기 레시피](../recipes/production-review-export.md), [이미지 자산](../image-assets.md), [내보내기](../exports.md).
