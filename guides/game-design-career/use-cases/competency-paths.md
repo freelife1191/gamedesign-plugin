@@ -201,7 +201,7 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 ### 실패·재개
 
-공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record. Research Owner와 Portfolio Reviewer가 공식 source와 freshness를 확인한 뒤에만 재검색한 뒤 새 source ID 또는 evidence ID로 갱신해 재개합니다.
+공식 source가 없거나 `reviewAfter`가 지나면 current conclusion을 보류합니다. **보존:** 기존 source ID, location, retrievalDate, sample boundary와 historical record. Research Owner와 Portfolio Reviewer가 보존 기록과 재검색 범위를 확인한 뒤에만 공식 source를 재검색합니다. 새 source ID 또는 evidence ID와 freshness를 확인한 뒤 current conclusion을 재개합니다.
 
 ### 자기점검과 다음 학습
 
@@ -541,7 +541,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/g
 
 ### 실패·재개
 
-fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문. 멘토·manager·career reviewer와 public-rights reviewer가 fresh requirement, 개인 기여와 권리를 확인한 뒤에만 재검색·재검토합니다.
+fresh requirement, 개인 기여 또는 권리 확인이 없으면 readiness claim을 보류합니다. **보존:** `EVID-GR-01`, observation, inference, proposal, honest gap과 review owner의 질문. 멘토·manager·career reviewer와 public-rights reviewer가 보존 기록과 재검색·재검토 범위를 확인한 뒤에만 requirement를 재검색하고 evidence를 갱신합니다. fresh requirement와 새 evidence ID, 개인 기여와 권리를 확인한 뒤 다음 proof task를 재개합니다.
 
 ### 자기점검과 다음 학습
 
