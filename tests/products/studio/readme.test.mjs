@@ -171,12 +171,29 @@ async function assertAllMarkdownLinksContained(root) {
 }
 
 const studioRepositoryCheckoutGuides = Object.freeze([
-  ["Studio 활용 사례 인덱스", "guides/game-design-studio/use-cases/README.md"],
-  ["Studio 역량 사례", "guides/game-design-studio/use-cases/competency-paths.md"],
-  ["Studio 콘셉트 사례", "guides/game-design-studio/use-cases/concept-scenarios.md"],
-  ["Studio 스킬 워크벤치", "guides/game-design-studio/use-cases/skill-workbench.md"],
-  ["Studio FAQ", "guides/game-design-studio/faq.md"],
-  ["공통 결과물 카탈로그", "guides/use-cases/output-catalog.md"],
+  ["Studio 활용 사례 인덱스", "guides/game-design-studio/use-cases/README.md", "Game Design Studio 활용 사례"],
+  ["Studio 역량 사례", "guides/game-design-studio/use-cases/competency-paths.md", "Studio 역량 학습 경로"],
+  ["Studio 콘셉트 사례", "guides/game-design-studio/use-cases/concept-scenarios.md", "Studio 콘셉트 시나리오"],
+  ["Studio 스킬 워크벤치", "guides/game-design-studio/use-cases/skill-workbench.md", "Studio 스킬 워크벤치"],
+  ["Studio FAQ", "guides/game-design-studio/faq.md", "Studio FAQ"],
+  ["공통 결과물 카탈로그", "guides/use-cases/output-catalog.md", "결과물 카탈로그"],
+]);
+
+const directOutputOwnership = Object.freeze([
+  {
+    label: "경제·LiveOps",
+    skillId: "design-game-economy-and-liveops",
+    sourceSentence: "Produce either `economy-balance` or `liveops-experiment-event` with stable sections for sources, sinks, target inventory, progression time, inflation, real price, probability, pity, hypothesis, control, single variable, sample, duration, success metrics, guardrail metrics, stop criteria, rollback plan, rights and consent, assumptions, evidence, gates, review findings, and owners.",
+    allowedOutputs: ["economy-balance", "liveops-experiment-event"],
+    rowOutput: "economy-balance",
+  },
+  {
+    label: "제작 검토·출력",
+    skillId: "plan-game-production",
+    sourceSentence: "Produce `production-scope-risk` with stable sections for core-loop contribution, effort, dependencies, maintenance burden, licensing risk, outsource risk, prototype hypothesis, milestone, owner, definition of done, kill criterion, MoSCoW scope, assumptions, evidence, validation gates, review findings, decisions, and blockers.",
+    allowedOutputs: ["production-scope-risk"],
+    rowOutput: "production-scope-risk",
+  },
 ]);
 
 const representativeRequestResultRows = Object.freeze([
@@ -200,29 +217,91 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-async function assertRepositoryCheckoutGuides(section) {
+function extractMarkdownSection(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `missing section: ${heading}`);
+  const bodyStart = start + marker.length;
+  const next = markdown.indexOf("\n## ", bodyStart);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : next).trim();
+}
+
+function splitMarkdownTableRow(row) {
+  assert.match(row, /^\|.*\|$/, `table row must start and end with pipes: ${row}`);
+  const cells = [];
+  let cell = "";
+  let inCodeSpan = false;
+  let escaped = false;
+  for (const character of row.slice(1, -1)) {
+    if (escaped) {
+      cell += character;
+      escaped = false;
+    } else if (character === "\\") {
+      cell += character;
+      escaped = true;
+    } else if (character === "`") {
+      cell += character;
+      inCodeSpan = !inCodeSpan;
+    } else if (character === "|" && !inCodeSpan) {
+      cells.push(cell.trim());
+      cell = "";
+    } else {
+      cell += character;
+    }
+  }
+  assert.equal(inCodeSpan, false, `unclosed code span in table row: ${row}`);
+  cells.push(cell.trim());
+  return cells;
+}
+
+function representativeTableRows(section) {
+  return section.split("\n")
+    .filter((line) => /^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/.test(line))
+    .map((line) => ({ line, cells: splitMarkdownTableRow(line) }));
+}
+
+function swapRepresentativeTableCells(readme, label) {
+  const section = readmeSection(readme, "활용 경로와 결과");
+  const row = representativeTableRows(section).find(({ cells }) => cells[0] === label);
+  assert.ok(row, `representative table row missing: ${label}`);
+  assert.equal(row.cells.length, 3, `${label}: representative row must have three cells`);
+  const swapped = `| ${row.cells[0]} | ${row.cells[2]} | ${row.cells[1]} |`;
+  return readme.replace(row.line, swapped);
+}
+
+function assertCanonicalOutputContract({ skillId, sourceSentence, allowedOutputs }, skillMarkdown) {
+  const outputContract = extractMarkdownSection(skillMarkdown, "Output contract");
+  const sentence = outputContract.split("\n").find(Boolean);
+  assert.equal(sentence, sourceSentence, `${skillId}: exact Output contract sentence`);
+  const outputClause = /^Produce (?:either )?(.+?) with stable sections for /.exec(sentence)?.[1];
+  assert.ok(outputClause, `${skillId}: output clause must be section-local and complete`);
+  const outputs = outputClause.split(" or ").map((output) => output.replaceAll("`", ""));
+  assert.deepEqual(outputs, allowedOutputs, `${skillId}: exact allowed output set`);
+  return outputs;
+}
+
+async function assertRepositoryCheckoutGuides(section, guides = studioRepositoryCheckoutGuides) {
   assert.match(section, /repository checkout only/u, "repository-only guides must not promise a remote URL");
   assert.doesNotMatch(section, /github\.com\/freelife\/game-design-plugin|https?:\/\/[^\s)]+\/tree\//u, "fabricated GitHub repository or tree URL");
   assert.doesNotMatch(section, /\]\((?:\.\.\/)+guides\//u, "packaged README must not use repository-only relative guide links");
-  for (const [label, relativePath] of studioRepositoryCheckoutGuides) {
+  for (const [label, relativePath, expectedFirstH1] of guides) {
     const plainCodePath = `\`${relativePath}\``;
     assert.match(section, new RegExp(`\\| ${escapeRegExp(label)} \\| ${escapeRegExp(plainCodePath)} \\|`), `${label}: checkout-only path must be plain code`);
     assert.equal(section.split(`\`${relativePath}\``).length - 1, 1, `${label}: checkout-only path appears exactly once`);
     assert.doesNotMatch(section, new RegExp(`\\[[^\\]]+\\]\\([^)]*${escapeRegExp(relativePath)}`), `${label}: checkout-only path must not be a Markdown link`);
     const guide = await readFile(path.join(repoRoot, relativePath), "utf8");
-    assert.match(guide, /^# .+/m, `${label}: source path must resolve to a guide heading`);
+    const firstH1 = guide.match(/^# (.+)$/m)?.[1];
+    assert.equal(firstH1, expectedFirstH1, `${label}: checkout path must resolve to its exact first H1`);
   }
 }
 
 async function assertRepresentativeOutputOwnership() {
-  const contracts = [
-    ["design-game-economy-and-liveops", "Produce either `economy-balance` or `liveops-experiment-event`"],
-    ["plan-game-production", "Produce `production-scope-risk`"],
-  ];
-  for (const [skillId, outputContract] of contracts) {
-    const skill = await readFile(path.join(pluginRoot, "skills", skillId, "SKILL.md"), "utf8");
-    assert.ok(skill.includes(outputContract), `${skillId}: source output contract changed`);
+  const allowedOutputs = new Map();
+  for (const outputContract of directOutputOwnership) {
+    const skill = await readFile(path.join(pluginRoot, "skills", outputContract.skillId, "SKILL.md"), "utf8");
+    allowedOutputs.set(outputContract.label, assertCanonicalOutputContract(outputContract, skill));
   }
+  return allowedOutputs;
 }
 
 function assertStudioUseCaseReadme(readme) {
@@ -237,7 +316,9 @@ function assertStudioUseCaseReadme(readme) {
   assert.match(section, /복수.*영역|범위.*불명확/u, "orchestrator condition missing");
   assert.match(section, /복수.*영역[\s\S]{0,220}\$game-design-studio:orchestrate-game-design-project|범위.*불명확[\s\S]{0,220}\$game-design-studio:orchestrate-game-design-project/u, "orchestrator condition must bind to the orchestrator");
 
-  const actualRows = section.split("\n").filter((line) => /^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/.test(line));
+  const tableRows = representativeTableRows(section);
+  for (const { cells } of tableRows) assert.equal(cells.length, 3, `${cells[0]}: representative row must parse as three cells`);
+  const actualRows = tableRows.map(({ line }) => line);
   assert.deepEqual(actualRows, representativeRequestResultRows, "representative requests and results must keep exact command/output ownership");
   assert.match(section, /content\.md\s*→\s*evidence\.yml\s*→\s*decisions\/\s*→\s*assets\/\s*→\s*export-manifest\.yml/u, "canonical artifact reading order");
 
@@ -368,11 +449,22 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   const readme = await readFile(readmePath, "utf8");
   assertStudioUseCaseReadme(readme);
   const section = readmeSection(readme, "활용 경로와 결과");
-  await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
+  const [, allowedOutputs] = await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
+  for (const { label, rowOutput } of directOutputOwnership) {
+    const row = representativeTableRows(section).find(({ cells }) => cells[0] === label);
+    assert.ok(row, `owned-output table row missing: ${label}`);
+    assert.deepEqual(row.cells[2].match(/`([^`]+)`/g)?.map((output) => output.slice(1, -1)), [rowOutput], `${label}: README promises exactly one owned output`);
+    assert.equal(allowedOutputs.get(label).find((output) => output === rowOutput), rowOutput, `${label}: README output must be allowed by source skill`);
+  }
+  assert.deepEqual(splitMarkdownTableRow("| parser smoke | `literal | pipe` | result |"), ["parser smoke", "`literal | pipe`", "result"], "table parser must keep code-span pipes in one cell");
 
   assert.throws(
-    () => assertStudioUseCaseReadme(readme.replace("$game-design-studio:design-game-systems", "$game-design-studio:design-game-economy-and-liveops")),
-    "command/result swaps must fail",
+    () => assertStudioUseCaseReadme(swapRepresentativeTableCells(readme, "경제·LiveOps")),
+    "economy table command/result swaps must fail",
+  );
+  assert.throws(
+    () => assertStudioUseCaseReadme(swapRepresentativeTableCells(readme, "제작 검토·출력")),
+    "production table command/result swaps must fail",
   );
   assert.throws(
     () => assertStudioUseCaseReadme(readme.replace("복수 영역이 얽히거나 범위가 불명확하면", "한 작업 범위가 분명하면")),
@@ -388,8 +480,18 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
     /fabricated GitHub repository or tree URL/,
     "fabricated remote guide links must fail",
   );
+  const swappedH1s = studioRepositoryCheckoutGuides.map((entry) => [...entry]);
+  [swappedH1s[0][2], swappedH1s[1][2]] = [swappedH1s[1][2], swappedH1s[0][2]];
+  await assert.rejects(assertRepositoryCheckoutGuides(section, swappedH1s), /exact first H1/, "wrong-but-valid path/H1 identities must fail");
+  const swappedPaths = section
+    .replace("`guides/game-design-studio/use-cases/README.md`", "`__temporary__`")
+    .replace("`guides/game-design-studio/use-cases/competency-paths.md`", "`guides/game-design-studio/use-cases/README.md`")
+    .replace("`__temporary__`", "`guides/game-design-studio/use-cases/competency-paths.md`");
+  await assert.rejects(assertRepositoryCheckoutGuides(swappedPaths), /checkout-only path must be plain code/, "wrong-but-valid checkout paths must fail");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
+  const economySkill = await readFile(path.join(pluginRoot, "skills/design-game-economy-and-liveops/SKILL.md"), "utf8");
+  assert.throws(() => assertCanonicalOutputContract(directOutputOwnership[0], economySkill.replace("Produce either", "Deprecated: Produce either")), "output-contract prefixes must fail exact section-local matching");
 });
 
 test("README documents the closed Studio document-quality workflow and installed contracts", async () => {

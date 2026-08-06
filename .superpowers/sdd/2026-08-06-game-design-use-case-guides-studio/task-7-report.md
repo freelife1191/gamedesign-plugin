@@ -43,3 +43,15 @@ Open concerns: none. 생성 결과와 파생 형식은 사람 검토·승인 전
 
 - `node --test tests/products/studio/readme.test.mjs` → 14 passed, 0 failed.
 - Fix round 1 handoff 전 `tests/contracts/user-guides-studio.test.mjs`, changed JavaScript `node --check`, `git diff --check`, `git show --check`를 다시 실행합니다.
+
+## Fix round 2 — exact source identities and table ownership
+
+- RED: checkout tuple에 expected H1을 요구한 뒤 current assertion은 첫 guide의 실제 `Game Design Studio 활용 사례`를 `undefined`와 비교해 실패했습니다. 기존 file-exists/임의 H1 검사는 valid-but-wrong guide identity를 구분하지 못했습니다.
+- GREEN: six checkout tuple은 label, exact path, exact first H1을 함께 고정하고 실제 파일의 첫 H1과 strict 비교합니다. 두 H1 identity swap과 두 valid checkout path swap은 모두 production assertion에서 실패합니다.
+- Source output contract: canonical SKILL.md의 `## Output contract` section에서 첫 문장을 exact 비교하고, `Produce … with stable sections for …` 문장의 허용 output set을 exact parse합니다. prefix `includes` 검사가 아니며 economy direct row는 allowed set 중 `economy-balance` 한 개, production direct row는 `production-scope-risk` 한 개만 backticked output으로 약속합니다.
+- Table parsing: representative table row를 code-span 안의 `|`를 보존하는 3-cell parser로 읽습니다. economy와 production의 해당 row에서 command/result cell을 직접 교환하는 mutation은 full production row assertion에서 실패합니다. 결과 suffix output, review/export preclaim도 계속 거부합니다.
+
+## Fix round 2 tests
+
+- `node --test tests/products/studio/readme.test.mjs` → 14 passed, 0 failed.
+- Fix round 2 handoff 전 `node --test tests/contracts/user-guides-studio.test.mjs`, changed JavaScript `node --check`, `git diff --check`, `git show --check`를 다시 실행합니다.
