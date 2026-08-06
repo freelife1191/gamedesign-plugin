@@ -53,6 +53,134 @@ const STUDIO_COMPETENCY_HEADINGS = Object.freeze({
   "ST-C07": "ST-C07 성장·경제·밸런스·LiveOps",
   "ST-C08": "ST-C08 제작·검토·이미지·출력",
 });
+const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
+  "ST-C01": [
+    ["player promise", "anti-pillar"],
+    ["시장 규모", "ST-C03"],
+    ["decision owner", "플레이테스트"],
+    ["시스템 반응", "prototype"],
+    ["`vision-pillars`", "반례 과제"],
+    ["포기한 기능", "회사 고유 문서"],
+    ["prototype 검증 질문", "assumption"],
+    ["artifact=game-design/island-restoration/vision-pillars", "실제 design owner"],
+    ["`document-quality-editor`", "`production-feasibility-critic`"],
+    ["P-01", "`game-design-review`"],
+    ["실제 design owner", "자동 승인"],
+    ["validation task", "P-01"],
+    ["`ST-C02`", "Task 6"],
+  ],
+  "ST-C02": [
+    ["player verb", "meaningful choice"],
+    ["coercive loop", "ST-C07"],
+    ["player promise", "player-protection"],
+    ["탐색 → 선택 → 운반 → 복구 → 변화 확인", "meaningful choice"],
+    ["`core-motivation-loop`", "선택 분포"],
+    ["verb 후보", "시스템 rule ID"],
+    ["강제 반복", "retention"],
+    ["artifact=game-design/island-restoration/core-loop", "failure recovery"],
+    ["`system-economy-designer`", "실제 design owner"],
+    ["L-02", "`game-design-review`"],
+    ["player-protection owner", "retention"],
+    ["모든 분기가 같은 결과", "L-02"],
+    ["`ST-C03`", "`ST-C04`"],
+  ],
+  "ST-C03": [
+    ["authoritative state", "data schema"],
+    ["구현·QA handoff", "database 구조"],
+    ["system boundary", "실제 schema"],
+    ["idle → validating → crafting → completed|failed|cancelled", "authority"],
+    ["`rule-exception-matrix`", "migration·rollback"],
+    ["executable test case", "schema"],
+    ["공동 제작 작업대", "runtime schema"],
+    ["artifact=game-design/shared-workbench/system-specification", "stable rule ID"],
+    ["`system-economy-designer`", "engineering owner"],
+    ["R-CRAFT-03", "TC-09"],
+    ["system boundary", "engineering owner"],
+    ["schema source", "R-CRAFT-03"],
+    ["authoritative state", "`ST-C06`"],
+  ],
+  "ST-C04": [
+    ["critical action", "accessibility"],
+    ["첫 입력", "규정 준수"],
+    ["critical actions", "usability 관찰"],
+    ["non-pointer input", "정보 없이"],
+    ["`accessibility-platform-matrix`", "sensory alternative"],
+    ["critical action", "비식별화"],
+    ["accessible alternative", "interruption"],
+    ["artifact=game-design/first-session/ui-ux-flow-state", "accessibility-platform-matrix"],
+    ["`ux-accessibility-reviewer`", "accessibility·design owner"],
+    ["UX-ACT-01", "`game-design-review`"],
+    ["platform matrix", "accessibility owner"],
+    ["`pending`", "UX-ACT-01"],
+    ["sensory alternative", "`ST-C05`"],
+  ],
+  "ST-C05": [
+    ["침수된 기록 보관소", "production evidence"],
+    ["AI·UGC", "회사 문체"],
+    ["entry condition", "localization·accessibility"],
+    ["choice-pending", "제작 불가능"],
+    ["`narrative-quest-npc`", "rights·consent"],
+    ["대사량", "NDA"],
+    ["rights-consent", "침수 기록 보관소"],
+    ["artifact=game-design/archive-quest/narrative-quest-npc", "stable content ID"],
+    ["`content-narrative-designer`", "실제 content·rights·production owner"],
+    ["Q-ARCH-01", "rights-consent"],
+    ["연결되지 않은 system/data ID", "권리 담당자"],
+    ["`blocked`", "SYS-WATER"],
+    ["콘텐츠가 참조하는 system/data ID", "`ST-C06`"],
+  ],
+  "ST-C06": [
+    ["훈련용 수호체", "counterplay"],
+    ["전투 수치표", "prototype·telemetry"],
+    ["entity IDs", "readability evidence"],
+    ["wind-up", "cooldown 상태"],
+    ["`character-skill-combat-monster`", "stop condition"],
+    ["strategy 목표", "combat/data/accessibility owner"],
+    ["돌진 skill rule", "provisional balance test"],
+    ["artifact=game-design/training-guardian/character-skill-combat-monster", "readability blocker"],
+    ["`system-economy-designer`", "실제 combat/design owner"],
+    ["ATK-GUARD-02", "balance test"],
+    ["대응 없는 공격", "combat owner"],
+    ["canonical rule", "ATK-GUARD-02"],
+    ["수치를 사실처럼", "`ST-C07`"],
+  ],
+  "ST-C07": [
+    ["공동체 축제", "LiveOps"],
+    ["실제 가격", "여러 변수를"],
+    ["resource IDs", "tested rollback"],
+    ["무한 축적", "한 변수"],
+    ["`economy-balance`", "tested rollback"],
+    ["보호 기준", "synthetic example"],
+    ["공동체 축제 토큰", "telemetry"],
+    ["artifact=game-design/community-festival/economy-balance", "rollback gate"],
+    ["`liveops-data-designer`", "실제 economy·LiveOps·policy owner"],
+    ["EXP-FEST-01", "guardrail"],
+    ["다중 변수", "policy"],
+    ["telemetry definition", "EXP-FEST-01"],
+    ["명시적 stop", "`ST-C08`"],
+  ],
+  "ST-C08": [
+    ["작은 탐험 prototype", "renderer-neutral export"],
+    ["capacity 근거 없는 일정", "production-ready"],
+    ["capacity evidence", "named-human decision receipt"],
+    ["prototype / defer / exclude", "stable asset ID"],
+    ["`prompt-only`", "OpenAI only"],
+    ["NDA", "권리 불명 자산"],
+    ["IMAGE_GEN_MODE=prompt-only", "renderer-neutral"],
+    ["artifact=game-design/exploration-prototype/production-scope-risk", "export-game-design-documents"],
+    ["`art-brief-director`", "release"],
+    ["SCOPE-04", "derived formats unavailable"],
+    ["rights/asset owner", "자동 승인"],
+    ["stable asset ID", "unavailable인 PDF job"],
+    ["provider routing", "결과물 카탈로그"],
+  ],
+});
+const STUDIO_IMAGE_MODE_SCOPE_CONTRACT = Object.freeze({
+  "prompt-only": "`prompt-only`는 외부 호출 없이 prompt/placeholder만",
+  select: "`select`는 실제 사용자의 immutable receipt에 든 ordered stable IDs만",
+  required: "`required`는 manifest의 finite required assets만",
+  all: "`all`은 manifest에 선언된 required·recommended·variant만",
+});
 const OUTPUT_TABLE_HEADINGS = [
   "사용자 요청",
   "템플릿",
@@ -181,6 +309,74 @@ function markdownSections(markdown, level) {
     heading: heading[1],
     body: markdown.slice(heading.index + heading[0].length, headings[index + 1]?.index).trim(),
   }));
+}
+
+function fencedCodeBlocks(markdown, language) {
+  return [...markdown.matchAll(/^```([^\n]*)\n([\s\S]*?)\n```$/gm)]
+    .filter((match) => match[1] === language)
+    .map((match) => match[2]);
+}
+
+function replaceCasePart(markdown, caseHeading, partHeading, replacement) {
+  const caseBody = sectionByHeading(markdown, 2, caseHeading);
+  const partBody = sectionByHeading(caseBody, 3, partHeading);
+  assert.notEqual(partBody, replacement, `mutation must change ${caseHeading} ${partHeading}`);
+  return markdown.replace(caseBody, caseBody.replace(partBody, replacement));
+}
+
+function assertStudioIndexOmitsCaseCards(index) {
+  const duplicatedMarkers = markdownSections(index, 3)
+    .map(({ heading }) => heading)
+    .filter((heading) => STUDIO_COMPETENCY_CASE_MARKERS.includes(heading));
+  assert.deepEqual(duplicatedMarkers, [], "Studio index duplicates case-card H3 sections");
+}
+
+function assertStudioCompetencySemantics({ competencyPaths, entries, inventory }) {
+  assert.deepEqual(
+    Object.keys(STUDIO_COMPETENCY_SEMANTIC_CONTRACT),
+    entries.map(({ id }) => id),
+    "semantic expectation coverage",
+  );
+  for (const entry of entries) {
+    const caseBody = sectionByHeading(competencyPaths, 2, STUDIO_COMPETENCY_HEADINGS[entry.id]);
+    const byHeading = new Map(markdownSections(caseBody, 3).map((section) => [section.heading, section.body]));
+    const semanticContract = STUDIO_COMPETENCY_SEMANTIC_CONTRACT[entry.id];
+    assert.equal(semanticContract.length, STUDIO_COMPETENCY_CASE_MARKERS.length, `${entry.id} semantic section coverage`);
+    for (const [index, terms] of semanticContract.entries()) {
+      const heading = STUDIO_COMPETENCY_CASE_MARKERS[index];
+      const body = byHeading.get(heading);
+      assert.ok(body.length >= 40, `${entry.id} ${heading} substantive content`);
+      assert.doesNotMatch(body, /^(?:TODO|TBD)(?:\b|$)/iu, `${entry.id} ${heading} placeholder`);
+      for (const term of terms) assert.ok(body.includes(term), `${entry.id} ${heading} semantic term: ${term}`);
+    }
+
+    const cliBlocks = fencedCodeBlocks(byHeading.get("Codex CLI 요청문"), "text");
+    assert.equal(cliBlocks.length, 1, `${entry.id} one CLI code block`);
+    const commandLines = cliBlocks[0].split("\n").filter((line) => line.trim().length > 0);
+    assert.ok(commandLines.length > 0, `${entry.id} CLI command`);
+    for (const command of commandLines) {
+      const match = /^\$game-design-studio:([a-z0-9-]+)(?:\s|$)/.exec(command);
+      assert.ok(match, `${entry.id} parseable lowercase Studio CLI command: ${command}`);
+    }
+    const referencedSkills = [...cliBlocks[0].matchAll(/\$game-design-studio:([a-z0-9-]+)/g)].map((match) => match[1]);
+    assert.ok(referencedSkills.length > 0, `${entry.id} referenced CLI skills`);
+    for (const skillId of referencedSkills) {
+      assert.ok(inventory.skillIds.includes(skillId), `${entry.id} installed Studio skill: ${skillId}`);
+      assert.ok(entry.skills.includes(skillId), `${entry.id} manifest-bound CLI skill: ${skillId}`);
+    }
+  }
+
+  const productionCase = sectionByHeading(competencyPaths, 2, STUDIO_COMPETENCY_HEADINGS["ST-C08"]);
+  const productionPractice = sectionByHeading(productionCase, 3, "표준 실습");
+  for (const [mode, clause] of Object.entries(STUDIO_IMAGE_MODE_SCOPE_CONTRACT)) {
+    assert.ok(productionPractice.includes(clause), `ST-C08 ${mode} exact generation scope`);
+  }
+  assert.match(productionPractice, /non-empty `OPENAI_API_KEY`가 있으면 OpenAI only/);
+  assert.match(productionPractice, /실패 후 Codex fallback을 하지 않습니다/);
+  const productionReview = sectionByHeading(productionCase, 3, "검토와 승인");
+  for (const term of ["production owner", "rights/asset owner", "실제 format QA", "자동 승인하지 않습니다"]) {
+    assert.ok(productionReview.includes(term), `ST-C08 review boundary: ${term}`);
+  }
 }
 
 function sectionByHeading(markdown, level, heading) {
@@ -358,11 +554,13 @@ test("Studio use-case index routes all eighteen cases without linking unfinished
   for (const pathName of ["입문", "응용", "포트폴리오", "전체 프로젝트"]) {
     assert.match(learningPaths, new RegExp(`^### ${pathName}$`, "m"), `${pathName} path`);
   }
+  assertStudioIndexOmitsCaseCards(index);
 });
 
 test("each Studio competency case preserves its anchored case-card and executable review contract", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { competencyPaths } = await readStudioUseCaseGuides();
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "competency");
   const h2Sections = markdownSections(competencyPaths, 2);
   const anchors = collectHeadingAnchors(competencyPaths);
@@ -412,6 +610,75 @@ test("each Studio competency case preserves its anchored case-card and executabl
   }
   assert.match(productionPractice, /OpenAI only/);
   assert.match(productionPractice, /fallback을 하지 않습니다/);
+  assertStudioCompetencySemantics({ competencyPaths, entries, inventory });
+});
+
+test("Studio competency contracts reject wrong-valid CLI, semantic, image-mode, and index mutations", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const { index, competencyPaths } = await readStudioUseCaseGuides();
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const entries = manifest.cases.filter((entry) => entry.product === "game-design-studio" && entry.view === "competency");
+  const c03Heading = STUDIO_COMPETENCY_HEADINGS["ST-C03"];
+  const c04Heading = STUDIO_COMPETENCY_HEADINGS["ST-C04"];
+
+  const c03Cli = sectionByHeading(sectionByHeading(competencyPaths, 2, c03Heading), 3, "Codex CLI 요청문");
+  const unknownCli = replaceCasePart(
+    competencyPaths,
+    c03Heading,
+    "Codex CLI 요청문",
+    c03Cli.replace("$game-design-studio:design-game-systems", "$game-design-studio:not-installed"),
+  );
+  assert.throws(
+    () => assertStudioCompetencySemantics({ competencyPaths: unknownCli, entries, inventory }),
+    /ST-C03 installed Studio skill: not-installed/,
+  );
+
+  const wrongCaseCli = replaceCasePart(
+    competencyPaths,
+    c03Heading,
+    "Codex CLI 요청문",
+    c03Cli.replace("$game-design-studio:design-game-systems", "$game-design-studio:define-game-vision"),
+  );
+  assert.throws(
+    () => assertStudioCompetencySemantics({ competencyPaths: wrongCaseCli, entries, inventory }),
+    /ST-C03 manifest-bound CLI skill: define-game-vision/,
+  );
+
+  const c03Todo = replaceCasePart(competencyPaths, c03Heading, "표준 실습", "TODO");
+  assert.throws(
+    () => assertStudioCompetencySemantics({ competencyPaths: c03Todo, entries, inventory }),
+    /ST-C03 표준 실습 substantive content/,
+  );
+
+  const c03Current = sectionByHeading(sectionByHeading(competencyPaths, 2, c03Heading), 3, "현재 상황과 목표");
+  const c04Current = sectionByHeading(sectionByHeading(competencyPaths, 2, c04Heading), 3, "현재 상황과 목표");
+  const c03C04Swap = replaceCasePart(
+    replaceCasePart(competencyPaths, c03Heading, "현재 상황과 목표", c04Current),
+    c04Heading,
+    "현재 상황과 목표",
+    c03Current,
+  );
+  assert.throws(
+    () => assertStudioCompetencySemantics({ competencyPaths: c03C04Swap, entries, inventory }),
+    /ST-C03 현재 상황과 목표 semantic term: authoritative state/,
+  );
+
+  const productionHeading = STUDIO_COMPETENCY_HEADINGS["ST-C08"];
+  const productionPractice = sectionByHeading(sectionByHeading(competencyPaths, 2, productionHeading), 3, "표준 실습");
+  const promptClause = STUDIO_IMAGE_MODE_SCOPE_CONTRACT["prompt-only"];
+  const selectClause = STUDIO_IMAGE_MODE_SCOPE_CONTRACT.select;
+  const swappedModePractice = productionPractice
+    .replace(promptClause, "__PROMPT_SCOPE__")
+    .replace(selectClause, "`prompt-only`는 실제 사용자의 immutable receipt에 든 ordered stable IDs만")
+    .replace("__PROMPT_SCOPE__", "`select`는 외부 호출 없이 prompt/placeholder만");
+  const modeSwap = replaceCasePart(competencyPaths, productionHeading, "표준 실습", swappedModePractice);
+  assert.throws(
+    () => assertStudioCompetencySemantics({ competencyPaths: modeSwap, entries, inventory }),
+    /ST-C08 prompt-only exact generation scope/,
+  );
+
+  const duplicatedIndex = index + "\n### 현재 상황과 목표\n\n복제된 case-card 본문입니다.\n";
+  assert.throws(() => assertStudioIndexOmitsCaseCards(duplicatedIndex), /duplicates case-card H3 sections/);
 });
 
 test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async () => {
