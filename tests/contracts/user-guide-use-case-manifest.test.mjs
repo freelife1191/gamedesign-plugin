@@ -1060,6 +1060,46 @@ test("use-case manifest exposes the versioned three-lane contract", async () => 
   assert.ok(Array.isArray(manifest.skill_cases));
 });
 
+test("Career manifest declares the ordered case and installed-skill coverage with deferred guide targets", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const careerCases = manifest.cases.filter((entry) => entry.product === "game-design-career");
+  const careerSkillCases = manifest.skill_cases.filter((entry) => entry.product === "game-design-career");
+  const careerInventory = await collectProductInventory(repoRoot, "game-design-career");
+  const studioInventory = await collectProductInventory(repoRoot, "game-design-studio");
+
+  assert.deepEqual(careerCases.filter((entry) => entry.view === "competency").map((entry) => entry.id), [
+    "CA-C01", "CA-C02", "CA-C03", "CA-C04",
+    "CA-C05", "CA-C06", "CA-C07", "CA-C08",
+  ]);
+  assert.deepEqual(careerCases.filter((entry) => entry.view === "target").map((entry) => entry.id), [
+    "CA-T01", "CA-T02", "CA-T03", "CA-T04", "CA-T05",
+    "CA-T06", "CA-T07", "CA-T08", "CA-T09", "CA-T10",
+  ]);
+  assert.equal(careerSkillCases.length, 15);
+  assert.deepEqual(careerSkillCases.map((entry) => entry.skill), careerInventory.skillIds);
+
+  const result = await validateUseCaseGuides({
+    repoRoot,
+    inventories: new Map([
+      ["game-design-career", careerInventory],
+      ["game-design-studio", studioInventory],
+    ]),
+    validateTargets: false,
+  });
+  assert.equal(result.ok, true, "Career declarations validate before their guide and diagram targets exist");
+  assert.equal(result.targetValidation, "deferred");
+  assert.equal(
+    result.deferredTargetPaths.filter((target) => target.startsWith("guides/game-design-career/") || target.startsWith("guides/assets/game-design-career/")).length,
+    99,
+  );
+  assert.ok(result.deferredTargetPaths.includes("guides/game-design-career/use-cases/competency-paths.md"));
+  assert.ok(result.deferredTargetPaths.includes("guides/game-design-career/use-cases/concept-scenarios.md"));
+  assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-career/use-cases/ca-c01.svg"));
+  assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-career/use-cases/ca-t10.png"));
+  assert.ok(result.deferredTargetPaths.includes("guides/game-design-career/skills/svg-infographic.md"));
+  assert.ok(result.deferredTargetPaths.includes("guides/assets/game-design-career/skills/svg-infographic.png"));
+});
+
 test("Studio manifest declares the ordered case and installed-skill coverage with deferred guide targets", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const studioCases = manifest.cases.filter((entry) => entry.product === "game-design-studio");
@@ -1067,6 +1107,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   const conceptCases = studioCases.filter((entry) => entry.view === "concept");
   const studioSkillCases = manifest.skill_cases.filter((entry) => entry.product === "game-design-studio");
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+  const careerInventory = await collectProductInventory(repoRoot, "game-design-career");
 
   assert.deepEqual(competencyCases.map((entry) => entry.id), [
     "ST-C01", "ST-C02", "ST-C03", "ST-C04", "ST-C05", "ST-C06", "ST-C07", "ST-C08",
@@ -1090,7 +1131,10 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
 
   const result = await validateUseCaseGuides({
     repoRoot,
-    inventories: new Map([["game-design-studio", inventory]]),
+    inventories: new Map([
+      ["game-design-studio", inventory],
+      ["game-design-career", careerInventory],
+    ]),
     validateTargets: false,
   });
   assert.equal(result.ok, true, "Studio declarations validate before their guide and diagram targets exist");
