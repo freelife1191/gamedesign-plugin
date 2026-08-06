@@ -27,6 +27,7 @@ const requiredRootHeadings = [
   "문제 해결",
   "기술 문서·기여·라이선스",
 ];
+const technicalAppendixMarker = "<details>\n<summary>패키지 기술 inventory</summary>\n";
 
 function section(markdown, heading) {
   const marker = `## ${heading}\n`;
@@ -101,7 +102,14 @@ function bashBlocks(markdown) {
 }
 
 function assertRootContentContract(markdown) {
-  assert.deepEqual(h2Headings(markdown), requiredRootHeadings, "root H2 order must be exact");
+  const technicalAppendixStart = markdown.indexOf(technicalAppendixMarker);
+  assert.notEqual(technicalAppendixStart, -1, "root README must include the technical appendix marker");
+  assert.equal(markdown.indexOf(technicalAppendixMarker, technicalAppendixStart + 1), -1, "root README must have one technical appendix");
+  const technicalHeadingStart = markdown.indexOf("## 기술 문서·기여·라이선스\n");
+  assert.notEqual(technicalHeadingStart, -1, "root README must include the technical section");
+  assert.ok(technicalHeadingStart < technicalAppendixStart, "technical appendix must follow the technical section");
+  const beginnerPortion = markdown.slice(0, technicalAppendixStart);
+  assert.deepEqual(h2Headings(beginnerPortion), requiredRootHeadings, "beginner H2 order before the technical appendix must be exact");
   const app = section(markdown, "Codex App 설치");
   const cli = section(markdown, "Codex CLI 설치");
   const quickStart = section(markdown, "5분 빠른 시작");

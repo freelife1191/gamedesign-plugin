@@ -185,4 +185,49 @@ MD는 renderer capability와 무관하게 항상 사용할 수 있으며, `pendi
 - [Studio 기술 README](plugins/game-design-studio/README.md)
 - [Career 기술 README](plugins/game-design-career/README.md)
 
+<details>
+<summary>패키지 기술 inventory</summary>
+
+## 설치된 top-level scripts
+
+| 파일 | 역할 |
+| --- | --- |
+| `build-image-asset-plan.mjs` | profile과 artifact에서 image asset plan 생성 |
+| `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `compile-image-prompts.mjs` | Markdown/JSON prompt package 생성 |
+| `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
+| `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
+| `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `run-image-asset-workflow.mjs` | image workflow composition |
+| `stop-artifact-review.mjs` | one-retry Stop artifact review |
+| `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-image-assets.mjs` | image manifest/lifecycle 검증 |
+| `validate-image-config.mjs` | redacted image configuration 검증 |
+| `validate-quality-profile.mjs` | closed Quality Profile 검증 |
+| `validate-reference-preset.mjs` | neutral reference preset 검증 |
+
+## 설치된 document-quality 경로
+
+아래 경로는 설치된 패키지에서 inspectable copies로 확인할 수 있습니다. Studio 17개와 Career 13개 profile catalog, additive overlay 3개, neutral reference preset 7개를 포함합니다.
+
+| 상대 경로 | 내용 |
+| --- | --- |
+| `indexes/career.json` | Career closed selection index |
+| `indexes/studio.json` | Studio closed selection index |
+| `profiles/career/` | Career 13-profile catalog |
+| `profiles/studio/` | Studio 17-profile catalog |
+| `overlays/` | additive overlay 3개 |
+| `presets/` | neutral reference preset 7개 |
+| `render-contracts/long-form-document.json` | 장문 문서 render contract |
+| `render-contracts/presentation.json` | presentation render contract |
+| `render-contracts/review-report.json` | review report render contract |
+| `schema/quality-profile-selection.schema.json` | profile selection schema |
+| `schema/quality-profile.schema.json` | Quality Profile schema |
+| `schema/reference-preset.schema.json` | neutral preset schema |
+
+neutral preset은 authoring-only source 귀속이나 공식 endorsement를 뜻하지 않습니다. 설치된 경로는 각 패키지의 inspectable copies이며 `plugins/game-design-studio/references/shared/document-quality/` 및 `plugins/game-design-career/references/shared/document-quality/`에서 확인할 수 있습니다.
+
+</details>
+
 기여 시에는 공통 변경을 `shared/`, 제품 변경을 `products/<product>/plugin/`에서 편집하고 `npm test`, `npm run validate`, `npm run build`로 독립 배포 스냅샷을 확인합니다. 프로젝트 코드·템플릿·문서는 MIT License이며, vendored Skillstead는 Apache-2.0입니다. 사용자 제공 원문과 제3자 자료의 권리는 각 권리자에게 남으므로 공개 재배포 전에 문서별 권리 근거를 확인해야 합니다.
