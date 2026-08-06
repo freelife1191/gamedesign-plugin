@@ -1,13 +1,47 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   collectHeadingAnchors,
   collectProductInventory,
   extractMarkdownLinks,
+  validateUserGuides,
 } from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+const productSkillIds = Array.from({ length: 14 }, (_, index) => `skill-${index + 1}`);
+const documentedSkillIds = [...productSkillIds, "svg-infographic"];
+
+async function withGuideFixture({ omitCareerSkill = false }, check) {
+  const root = await mkdtemp(path.join(tmpdir(), "user-guides-"));
+  try {
+    const vendorRoot = path.join(root, "shared/vendor/skillstead/svg-infographic/0.8.3");
+    await mkdir(vendorRoot, { recursive: true });
+    await writeFile(path.join(vendorRoot, "SKILL.md"), "# Skillstead\n");
+    for (const productId of ["game-design-career", "game-design-studio"]) {
+      const productRoot = path.join(root, "products", productId, "plugin");
+      await mkdir(path.join(productRoot, "assets/templates"), { recursive: true });
+      for (const skillId of productSkillIds) {
+        const skillRoot = path.join(productRoot, "skills", skillId);
+        await mkdir(skillRoot, { recursive: true });
+        await writeFile(path.join(skillRoot, "SKILL.md"), "# Skill\n");
+      }
+      const guidesRoot = path.join(root, "guides", productId, "skills");
+      await mkdir(guidesRoot, { recursive: true });
+      await writeFile(path.join(guidesRoot, "README.md"), "prompt-only select required all gpt-image-2 low\n");
+      for (const skillId of documentedSkillIds) {
+        if (omitCareerSkill && productId === "game-design-career" && skillId === "svg-infographic") continue;
+        await writeFile(path.join(guidesRoot, `${skillId}.md`), `# ${skillId}\n`);
+      }
+    }
+    await check(root);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
 
 test("product inventory includes 14 product skills plus vendored Skillstead", async () => {
   const studio = await collectProductInventory(repoRoot, "game-design-studio");
@@ -26,4 +60,30 @@ test("Markdown helpers preserve Korean anchors and reject no links", () => {
     { target: "quick-start.md#첫-요청", line: 3 },
   ]);
   assert.ok(collectHeadingAnchors("# 설치 안내\n\n## 첫 요청\n").has("첫-요청"));
+});
+
+test("complete guide validation excludes skills indexes and counts all 30 installed guides", async () => {
+  await withGuideFixture({}, async (root) => {
+    const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
+    assert.equal(result.counts.skillGuides, 30);
+    assert.equal(result.errors.some((error) => error.includes("skill guide inventory mismatch")), false);
+  });
+});
+
+test("complete guide validation rejects a product whose guide IDs differ from inventory", async () => {
+  await withGuideFixture({ omitCareerSkill: true }, async (root) => {
+    const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
+    assert.ok(result.errors.some((error) => error.includes("game-design-career skill guide inventory mismatch")));
+  });
+});
+
+test("Markdown anchors avoid suffix collisions in either heading order", () => {
+  assert.deepEqual(
+    [...collectHeadingAnchors("# 항목\n# 항목\n# 항목-1\n")],
+    ["항목", "항목-1", "항목-1-1"],
+  );
+  assert.deepEqual(
+    [...collectHeadingAnchors("# 항목-1\n# 항목\n# 항목\n")],
+    ["항목-1", "항목", "항목-2"],
+  );
 });

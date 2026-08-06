@@ -89,15 +89,15 @@ function githubAnchor(heading) {
 
 export function collectHeadingAnchors(markdown) {
   const anchors = new Set();
-  const occurrences = new Map();
   for (const line of markdown.split("\n")) {
     const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
     if (!match) continue;
     const base = githubAnchor(match[2]);
     if (!base) continue;
-    const occurrence = occurrences.get(base) ?? 0;
-    occurrences.set(base, occurrence + 1);
-    anchors.add(occurrence === 0 ? base : `${base}-${occurrence}`);
+    let candidate = base;
+    let suffix = 1;
+    while (anchors.has(candidate)) candidate = `${base}-${suffix++}`;
+    anchors.add(candidate);
   }
   return anchors;
 }
@@ -310,6 +310,11 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
   const counts = { guides: 0, skillGuides: 0, templates: 0, svg: 0, png: 0 };
   const root = await realpath(repoRoot);
   const guidesRoot = path.join(root, "guides");
+  const inventories = new Map(await Promise.all(PRODUCT_IDS.map(async (productId) => [
+    productId,
+    await collectProductInventory(root, productId),
+  ])));
+  const documentedSkillIds = new Map(PRODUCT_IDS.map((productId) => [productId, new Set()]));
   const guideFiles = await collectMarkdownFiles(guidesRoot, errors);
   const guideContents = [];
   for (const markdownPath of guideFiles) {
@@ -318,10 +323,16 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
       guideContents.push(markdown);
       counts.guides += 1;
       const relative = path.relative(guidesRoot, markdownPath).split(path.sep);
-      if (relative.length === 3 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "skills") counts.skillGuides += 1;
+      if (relative.length === 3 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "skills") {
+        const productId = relative[0];
+        const skillId = path.basename(relative[2], ".md");
+        if (skillId !== "README") {
+          documentedSkillIds.get(productId).add(skillId);
+          if (inventories.get(productId).skillIds.includes(skillId)) counts.skillGuides += 1;
+        }
+      }
       if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "templates.md") {
-        const inventory = await collectProductInventory(root, relative[0]);
-        counts.templates += inventory.templateIds.length;
+        counts.templates += inventories.get(relative[0]).templateIds.length;
       }
       await validateLinks(root, markdownPath, markdown, errors);
       findSecrets(markdown, markdownPath, errors);
@@ -334,6 +345,16 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
       errors.push(`missing required guide configuration value: ${value}`);
     }
   }
-  if (requireComplete) await validateDiagramManifest(root, errors, counts);
+  if (requireComplete) {
+    for (const productId of PRODUCT_IDS) {
+      const expected = new Set(inventories.get(productId).skillIds);
+      const actual = documentedSkillIds.get(productId);
+      const matches = actual.size === expected.size && [...expected].every((skillId) => actual.has(skillId));
+      if (!matches) {
+        errors.push(`${productId} skill guide inventory mismatch: expected ${expected.size} IDs, found ${actual.size}`);
+      }
+    }
+    await validateDiagramManifest(root, errors, counts);
+  }
   return { ok: errors.length === 0, errors, counts };
 }
