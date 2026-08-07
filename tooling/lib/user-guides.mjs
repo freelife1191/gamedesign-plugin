@@ -113,80 +113,160 @@ function indentedCode(line) {
   return /^(?: {4}| {0,3}\t)/u.test(line);
 }
 
-export function scanVisibleMarkdown(markdown) {
+function insideLineCodeSpan(line, index) {
+  for (let cursor = 0; cursor < index;) {
+    if (line[cursor] !== "`" || escaped(line, cursor)) {
+      cursor += 1;
+      continue;
+    }
+    const runLength = /^`+/u.exec(line.slice(cursor))[0].length;
+    const span = inlineCodeSpan(line, cursor);
+    if (!span) {
+      cursor += runLength;
+      continue;
+    }
+    if (index < span.end) return true;
+    cursor = span.end;
+  }
+  return false;
+}
+
+function commentStart(line, from) {
+  let start = line.indexOf("<!--", from);
+  while (start !== -1 && (escaped(line, start) || insideLineCodeSpan(line, start))) {
+    start = line.indexOf("<!--", start + 4);
+  }
+  return start;
+}
+
+function maskHtmlComments(line, state) {
+  const visible = line.split("");
+  const segments = [];
+  let cursor = 0;
+  let segmentStart = state.inComment ? undefined : 0;
+  let hadComment = state.inComment;
+  while (cursor < line.length) {
+    if (state.inComment) {
+      const end = line.indexOf("-->", cursor);
+      if (end === -1) {
+        visible.fill(" ", cursor);
+        return { text: visible.join(""), segments, hadComment: true };
+      }
+      visible.fill(" ", cursor, end + 3);
+      state.inComment = false;
+      hadComment = true;
+      cursor = end + 3;
+      segmentStart = cursor;
+      continue;
+    }
+    const start = commentStart(line, cursor);
+    if (start === -1) {
+      if (segmentStart !== undefined && segmentStart < line.length) segments.push({ start: segmentStart, end: line.length });
+      break;
+    }
+    if (segmentStart !== undefined && segmentStart < start) segments.push({ start: segmentStart, end: start });
+    visible.fill(" ", start, start + 4);
+    state.inComment = true;
+    hadComment = true;
+    cursor = start + 4;
+    segmentStart = undefined;
+  }
+  return { text: visible.join(""), segments, hadComment };
+}
+
+function scanMarkdownBlocks(markdown) {
   const lines = [];
-  let inComment = false;
+  const commentState = { inComment: false };
   let fence;
-  let inlineEnd = -1;
-  let offset = 0;
   for (const [index, rawLineWithCarriageReturn] of markdown.split("\n").entries()) {
     const rawLine = rawLineWithCarriageReturn.endsWith("\r")
       ? rawLineWithCarriageReturn.slice(0, -1)
       : rawLineWithCarriageReturn;
-    const visible = rawLine.split("");
-    const hide = (start, end) => visible.fill(" ", start, end);
     if (fence) {
       if (closesFence(rawLine, fence)) fence = undefined;
-      lines.push({ line: index + 1, text: " ".repeat(rawLine.length), source: rawLine });
-      offset += rawLineWithCarriageReturn.length + 1;
+      lines.push({ line: index + 1, blockText: " ".repeat(rawLine.length), source: rawLine, segments: [], boundary: true });
       continue;
     }
-    if (inlineEnd <= offset && !inComment && indentedCode(rawLine)) {
-      lines.push({ line: index + 1, text: " ".repeat(rawLine.length), source: rawLine });
-      offset += rawLineWithCarriageReturn.length + 1;
+    if (!commentState.inComment && indentedCode(rawLine)) {
+      lines.push({ line: index + 1, blockText: " ".repeat(rawLine.length), source: rawLine, segments: [], boundary: true });
       continue;
     }
-    if (inlineEnd <= offset && !inComment && fenceOpener(rawLine)) {
+    if (!commentState.inComment && fenceOpener(rawLine)) {
       const openingFence = fenceOpener(rawLine);
       fence = openingFence;
-      lines.push({ line: index + 1, text: " ".repeat(rawLine.length), source: rawLine });
-      offset += rawLineWithCarriageReturn.length + 1;
+      lines.push({ line: index + 1, blockText: " ".repeat(rawLine.length), source: rawLine, segments: [], boundary: true });
       continue;
     }
-    for (let cursor = 0; cursor < rawLine.length;) {
-      const absolute = offset + cursor;
-      if (absolute < inlineEnd) {
-        visible[cursor] = " ";
-        cursor += 1;
-        continue;
-      }
-      if (inlineEnd !== -1 && absolute >= inlineEnd) inlineEnd = -1;
-      if (inComment) {
-        const end = rawLine.indexOf("-->", cursor);
-        if (end === -1) {
-          hide(cursor, rawLine.length);
-          break;
-        }
-        hide(cursor, end + 3);
-        inComment = false;
-        cursor = end + 3;
-        continue;
-      }
-      if (rawLine.startsWith("<!--", cursor)) {
-        inComment = true;
-        hide(cursor, cursor + 4);
-        cursor += 4;
-        continue;
-      }
-      if (rawLine[cursor] === "`" && rawLine[cursor - 1] !== "`" && !escaped(rawLine, cursor)) {
-        const span = inlineCodeSpan(markdown, absolute);
-        if (span) {
-          inlineEnd = span.end;
-          visible[cursor] = " ";
-          cursor += 1;
-          continue;
-        }
-        let runLength = 1;
-        while (rawLine[cursor + runLength] === "`") runLength += 1;
-        cursor += runLength;
-        continue;
-      }
-      cursor += 1;
-    }
-    lines.push({ line: index + 1, text: visible.join(""), source: rawLine });
-    offset += rawLineWithCarriageReturn.length + 1;
+    const comments = maskHtmlComments(rawLine, commentState);
+    lines.push({
+      line: index + 1,
+      blockText: comments.text,
+      source: rawLine,
+      segments: comments.segments,
+      boundary: comments.hadComment,
+    });
   }
   return lines;
+}
+
+function maskInlineParagraph(lines, pieces) {
+  if (pieces.length === 0) return;
+  let paragraph = "";
+  const positions = [];
+  for (const [pieceIndex, piece] of pieces.entries()) {
+    if (pieceIndex > 0) {
+      paragraph += "\n";
+      positions.push(undefined);
+    }
+    const block = lines[piece.lineIndex];
+    for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
+      paragraph += block.blockText[cursor];
+      positions.push({ lineIndex: piece.lineIndex, cursor });
+    }
+  }
+  for (let cursor = 0; cursor < paragraph.length;) {
+    if (paragraph[cursor] !== "`" || escaped(paragraph, cursor)) {
+      cursor += 1;
+      continue;
+    }
+    const runLength = /^`+/u.exec(paragraph.slice(cursor))[0].length;
+    const span = inlineCodeSpan(paragraph, cursor);
+    if (!span) {
+      cursor += runLength;
+      continue;
+    }
+    for (let hidden = cursor; hidden < span.end; hidden += 1) {
+      const position = positions[hidden];
+      if (position) lines[position.lineIndex].text[position.cursor] = " ";
+    }
+    cursor = span.end;
+  }
+}
+
+export function scanVisibleMarkdown(markdown) {
+  const lines = scanMarkdownBlocks(markdown).map((line) => ({ ...line, text: line.blockText.split("") }));
+  let paragraph = [];
+  const flush = () => {
+    maskInlineParagraph(lines, paragraph);
+    paragraph = [];
+  };
+  for (const [lineIndex, line] of lines.entries()) {
+    if (line.segments.length === 0 || line.blockText.trim() === "") {
+      flush();
+      continue;
+    }
+    const heading = /^(?: {0,3})#{1,6}\s+/u.test(line.blockText);
+    if (heading || line.boundary) flush();
+    if (line.boundary) {
+      for (const segment of line.segments) maskInlineParagraph(lines, [{ lineIndex, ...segment }]);
+      flush();
+      continue;
+    }
+    paragraph.push(...line.segments.map((segment) => ({ lineIndex, ...segment })));
+    if (heading) flush();
+  }
+  flush();
+  return lines.map(({ line, text, source, blockText }) => ({ line, text: text.join(""), source, blockText }));
 }
 
 function unescapeMarkdown(value) {
@@ -340,27 +420,67 @@ export function extractMarkdownLinks(markdown) {
   return links;
 }
 
+function normaliseCodeSpanContent(value) {
+  let content = value.replace(/\r\n?|\n/gu, " ");
+  if (content.startsWith(" ") && content.endsWith(" ") && /[^ ]/u.test(content)) content = content.slice(1, -1);
+  return content;
+}
+
+function renderHeadingInline(value) {
+  let label = "";
+  for (let cursor = 0; cursor < value.length;) {
+    if (value[cursor] === "`" && !escaped(value, cursor)) {
+      const span = inlineCodeSpan(value, cursor);
+      if (span) {
+        const runLength = /^`+/u.exec(value.slice(cursor))[0].length;
+        label += normaliseCodeSpanContent(value.slice(cursor + runLength, span.end - runLength));
+        cursor = span.end;
+        continue;
+      }
+    }
+    if (value[cursor] === "[") {
+      const link = parseLinkAt(value, value, cursor);
+      if (link) {
+        label += renderHeadingInline(link.label);
+        cursor = link.end;
+        continue;
+      }
+    }
+    if (!escaped(value, cursor) && (value[cursor] === "*" || value[cursor] === "_")) {
+      cursor += 1;
+      continue;
+    }
+    if (!escaped(value, cursor) && value.startsWith("~~", cursor)) {
+      cursor += 2;
+      continue;
+    }
+    label += value[cursor];
+    cursor += 1;
+  }
+  return unescapeMarkdown(label).trim();
+}
+
 function isInlineCodeOnly(value) {
   const trimmed = value.trim();
   if (trimmed[0] !== "`") return false;
-  const span = inlineCodeSpan(trimmed, 0);
-  return span?.end === trimmed.length;
+  return inlineCodeSpan(trimmed, 0)?.end === trimmed.length;
 }
 
 export function collectMarkdownHeadings(markdown) {
   const headings = [];
   const anchors = new Set();
-  for (const { line, text: lineText } of scanVisibleMarkdown(markdown)) {
+  for (const { line, blockText: lineText } of scanVisibleMarkdown(markdown)) {
     const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(lineText);
     if (!match) continue;
     if (isInlineCodeOnly(match[2])) continue;
-    const base = githubAnchor(match[2]);
+    const label = renderHeadingInline(match[2]);
+    const base = githubAnchor(label);
     if (!base) continue;
     let candidate = base;
     let suffix = 1;
     while (anchors.has(candidate)) candidate = `${base}-${suffix++}`;
     anchors.add(candidate);
-    headings.push({ label: match[2].trim(), anchor: candidate, level: match[1].length, line });
+    headings.push({ label, anchor: candidate, level: match[1].length, line });
   }
   return headings;
 }

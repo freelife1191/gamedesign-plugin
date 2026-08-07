@@ -6,6 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   collectHeadingAnchors,
+  collectMarkdownHeadings,
   collectProductInventory,
   extractMarkdownLinks,
   validateUserGuides,
@@ -169,6 +170,98 @@ test("Markdown helpers preserve token precedence, balanced destinations, and ren
     { label: "angle title", target: "angle(초급).md#함수()", fragment: "함수()", line: 11 },
     { label: "bare title", target: "bare.md#bare", fragment: "bare", line: 12 },
   ]);
+});
+
+test("Markdown helpers stop inline code at paragraph, fence, and HTML block boundaries", () => {
+  const markdown = [
+    "`paragraph opener",
+    "",
+    "[after-blank](after-blank.md#visible)",
+    "`",
+    "",
+    "`fence opener",
+    "  ````md",
+    "[hidden-fence](missing.md#hidden)",
+    "~~~ not a closer",
+    "  `````",
+    "[after-fence](after-fence.md#visible)",
+    "`",
+    "",
+    "same paragraph `multiline code",
+    "[hidden-inline](missing.md#hidden)",
+    "code` [after-inline](after-inline.md#visible)",
+    "",
+    "<!--",
+    "```md",
+    "[hidden-comment](missing.md#hidden)",
+    "```",
+    "    --> [after-comment](after-comment.md#visible)",
+  ].join("\n");
+
+  assert.deepEqual(extractMarkdownLinks(markdown), [
+    { label: "after-blank", target: "after-blank.md#visible", fragment: "visible", line: 3 },
+    { label: "after-fence", target: "after-fence.md#visible", fragment: "visible", line: 11 },
+    { label: "after-inline", target: "after-inline.md#visible", fragment: "visible", line: 16 },
+    { label: "after-comment", target: "after-comment.md#visible", fragment: "visible", line: 22 },
+  ]);
+});
+
+test("Markdown helpers honor escaped comments and render heading inline content", () => {
+  const markdown = [
+    "\\<!--[escaped-comment](escaped.md#visible)",
+    "\\\\<!--[even-comment](missing.md#hidden) --> [after-even](after-even.md#visible)",
+    "## 함수 `한국어` 안내",
+    "## [링크 **강조**](target.md)와 ` 코드   값 `",
+  ].join("\r\n");
+
+  assert.deepEqual(extractMarkdownLinks(markdown), [
+    { label: "escaped-comment", target: "escaped.md#visible", fragment: "visible", line: 1 },
+    { label: "after-even", target: "after-even.md#visible", fragment: "visible", line: 2 },
+    { label: "링크 **강조**", target: "target.md", fragment: "", line: 4 },
+  ]);
+  assert.deepEqual(collectMarkdownHeadings(markdown), [
+    { label: "함수 한국어 안내", anchor: "함수-한국어-안내", level: 2, line: 3 },
+    { label: "링크 강조와 코드   값", anchor: "링크-강조와-코드-값", level: 2, line: 4 },
+  ]);
+});
+
+test("Markdown block recovery keeps hidden blocks closed and unmatched runs literal", () => {
+  const cases = [
+    ["unclosed fence", "```md\n[hidden](missing.md)\n[still-hidden](missing.md)", []],
+    ["unclosed comment", "<!--\n[hidden](missing.md)\n[still-hidden](missing.md)", []],
+    ["multiple paragraphs", "`literal\n\n[first](first.md)\n\n``literal\n\n[second](second.md)", ["first.md", "second.md"]],
+    ["CRLF paragraph", "`literal\r\n\r\n[visible](visible.md)\r\n`", ["visible.md"]],
+    ["matching double run", "``code ` [hidden](missing.md) code`` [visible](visible.md)", ["visible.md"]],
+    ["fence-like inline text", "text ``` not a fence [visible](visible.md)", ["visible.md"]],
+  ];
+
+  for (const [label, markdown, expected] of cases) {
+    assert.deepEqual(extractMarkdownLinks(markdown).map(({ target }) => target), expected, label);
+  }
+});
+
+test("guide graph respects block boundaries, escaped comments, and rendered heading anchors", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guideRoot = path.join(root, "guides", "game-design-studio", "skills");
+    const guide = path.join(guideRoot, "README.md");
+    const target = path.join(guideRoot, "mixed-heading.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    await writeFile(target, "## 함수 `한국어` 안내\n");
+    await writeFile(guide, `${prefix}[mixed](mixed-heading.md#함수-한국어-안내)\n`);
+    assert.equal((await validateUserGuides({ repoRoot: root, requireComplete: false })).ok, true, "rendered heading anchor");
+
+    const wrongVisibleSources = [
+      ["paragraph closer", "`open\n\n[broken](missing-paragraph.md)\n`"],
+      ["fence recovery", "`open\n```md\n[hidden](missing-hidden.md)\n```\n[broken](missing-after-fence.md)\n`"],
+      ["escaped comment", "\\<!--[broken](missing-escaped-comment.md)"],
+    ];
+    for (const [label, source] of wrongVisibleSources) {
+      await writeFile(guide, `${prefix}${source}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes("missing or unsafe local link target")), `${label}: ${result.errors.join("\n")}`);
+    }
+  });
 });
 
 test("guide validation ignores hidden unsafe Markdown but rejects a visible edge", async () => {
