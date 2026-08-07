@@ -56,7 +56,7 @@ async function run() {
   const tests = await discoverRepoTests(parseArguments(process.argv.slice(2)));
   const childEnvironment = { ...process.env };
   delete childEnvironment.NODE_TEST_CONTEXT;
-  const result = spawnSync(process.execPath, ["--test", ...tests], {
+  const result = spawnSync(process.execPath, ["--test", "--test-concurrency=1", ...tests], {
     env: childEnvironment,
     stdio: "inherit",
   });
