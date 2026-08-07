@@ -47,19 +47,25 @@ Career Lead **김서윤**이 목표 역할과 공개 범위를, Mentor **박도�
 
 ```text
 game-design-career/<career-id>/
-├── career-stage-goal/content.md
-├── learning-roadmap/content.md
-├── evidence.yml
-└── decisions/
+├── career-stage-goal/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/
+│   └── export-manifest.yml
+└── learning-roadmap/
+    ├── content.md
+    ├── evidence.yml
+    ├── decisions/
+    └── export-manifest.yml
 ```
 
 ### 대표 내용 예시
 
-`career-stage-goal/content.md`의 `role hypothesis: 시스템 기획`, `current-evidence-id`, `gap: 상태 전이 proof 부족`과 `learning-roadmap/content.md`의 `proof artifact`, `owner`, `next-review-date`를 함께 기록합니다. 역할은 가설이며 채용 결과를 뜻하지 않습니다.
+`career-stage-goal/content.md`의 `target-role`, `success-evidence`와 `learning-roadmap/content.md`의 `proof-artifact`, `re-evaluation-date`를 함께 기록합니다. 역할은 가설이며 채용 결과를 뜻하지 않습니다.
 
 ### 완료 기준
 
-각 gap에 하나의 `proof artifact`, 공개 가능한 evidence locator, 담당 owner와 다음 review가 연결되고, current claim에는 `sourceUrl`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`가 있으면 완료입니다.
+각 gap에 하나의 `proof-artifact`, 공개 가능한 evidence locator, 담당 owner와 `re-evaluation-date`가 연결되고, current claim에는 source URL·retrieval date·region·sample boundary·review-after가 있으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 
@@ -67,7 +73,7 @@ portfolio에서는 역할을 선언한 문구 대신 gap을 어떻게 작은 증
 
 ### 읽는 순서
 
-`career-stage-goal/content.md → learning-roadmap/content.md → evidence.yml → decisions/` 순서로 읽어 목표 가설, 과제, 근거와 사람 결정을 분리합니다.
+`game-design-career/<career-id>/career-stage-goal/content.md → game-design-career/<career-id>/career-stage-goal/evidence.yml → game-design-career/<career-id>/career-stage-goal/decisions/ → game-design-career/<career-id>/career-stage-goal/export-manifest.yml`, 이어서 `game-design-career/<career-id>/learning-roadmap/content.md → game-design-career/<career-id>/learning-roadmap/evidence.yml → game-design-career/<career-id>/learning-roadmap/decisions/ → game-design-career/<career-id>/learning-roadmap/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

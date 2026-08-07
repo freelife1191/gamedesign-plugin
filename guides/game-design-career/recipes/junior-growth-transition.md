@@ -47,19 +47,25 @@ Growth Manager **김서윤**, Portfolio Reviewer **한지훈**, Export Owner **�
 
 ```text
 game-design-career/<career-id>/
-├── junior-growth-review/content.md
-├── transition-readiness/content.md
-├── evidence.yml
-└── export-manifest.yml
+├── junior-growth-review/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/
+│   └── export-manifest.yml
+└── transition-readiness/
+    ├── content.md
+    ├── evidence.yml
+    ├── decisions/
+    └── export-manifest.yml
 ```
 
 ### 대표 내용 예시
 
-`junior-growth-review/content.md`에는 `project-event-evidence`, `goal`, `feedback`, `next-review-date`를, `transition-readiness/content.md`에는 `target-requirement`, `posting-evidence-id`, `gap`, `verification-task`를 기록합니다.
+`junior-growth-review/content.md`에는 `project-event-evidence`, `goal`, `next-review-date`, `proof-artifact`를, `transition-readiness/content.md`에는 `target-requirement`, `retrieval-date`, `gap`, `verification-task`를 기록합니다.
 
 ### 완료 기준
 
-각 목표가 실제 project event와 feedback에 연결되고 다음 `next-review-date`가 있으며, time-sensitive requirement에는 retrieval date·region·reviewAfter가 있고, 빈 evidence를 readiness 주장으로 바꾸지 않으면 완료입니다.
+각 목표가 실제 `project-event-evidence`와 `proof-artifact`에 연결되고 다음 `next-review-date`가 있으며, time-sensitive requirement에는 `retrieval-date`·`region`이 있고, 빈 evidence를 readiness 주장으로 바꾸지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 
@@ -67,7 +73,7 @@ portfolio에서는 수정과 feedback으로 바뀐 판단을 보여 주고, inte
 
 ### 읽는 순서
 
-`junior-growth-review/content.md → transition-readiness/content.md → evidence.yml → export-manifest.yml` 순서로 현재 event, 전환 gap, freshness와 출력 준비를 읽습니다.
+`game-design-career/<career-id>/junior-growth-review/content.md → game-design-career/<career-id>/junior-growth-review/evidence.yml → game-design-career/<career-id>/junior-growth-review/decisions/ → game-design-career/<career-id>/junior-growth-review/export-manifest.yml`, `game-design-career/<career-id>/transition-readiness/content.md → game-design-career/<career-id>/transition-readiness/evidence.yml → game-design-career/<career-id>/transition-readiness/decisions/ → game-design-career/<career-id>/transition-readiness/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

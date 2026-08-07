@@ -82,14 +82,23 @@ const recipes = [
   },
 ];
 const recipeResultContract = Object.freeze({
-  "role-learning-roadmap": ["career-stage-goal/content.md", "learning-roadmap/content.md", "role hypothesis", "proof artifact", "portfolio", "interview", "career-stage-goal/content.md → learning-roadmap/content.md"],
-  "job-research-gap": ["job-posting-evidence/content.md", "competency-matrix/content.md", "sourceUrl", "sample boundary", "portfolio", "interview", "job-posting-evidence/content.md → competency-matrix/content.md"],
-  "reverse-design": ["reverse-design-document/content.md", "evidence.yml", "observation", "validation queue", "portfolio", "interview", "reverse-design-document/content.md → evidence.yml"],
+  "role-learning-roadmap": ["career-stage-goal/content.md", "learning-roadmap/content.md", "target-role", "proof-artifact", "portfolio", "interview", "career-stage-goal/content.md → learning-roadmap/content.md"],
+  "job-research-gap": ["job-posting-evidence/content.md", "competency-matrix/content.md", "source-url", "minimum-repair", "portfolio", "interview", "job-posting-evidence/content.md → competency-matrix/content.md"],
+  "reverse-design": ["reverse-design-document/content.md", "evidence.yml", "observation", "validation-method", "portfolio", "interview", "reverse-design-document/content.md → evidence.yml"],
   "portfolio-build-review": ["creative-design-portfolio/content.md", "five-axis-review/content.md", "claim-id", "minimum-repair", "portfolio", "interview", "creative-design-portfolio/content.md → evidence.yml"],
-  "interview-preparation": ["interview-question-answer-log/content.md", "evidence.yml", "questionId", "honest-answer", "portfolio", "interview", "interview-question-answer-log/content.md → evidence.yml"],
+  "interview-preparation": ["interview-question-answer-log/content.md", "evidence.yml", "question-id", "honest-answer", "portfolio", "interview", "interview-question-answer-log/content.md → evidence.yml"],
   "junior-growth-transition": ["junior-growth-review/content.md", "transition-readiness/content.md", "project-event-evidence", "next-review-date", "portfolio", "interview", "junior-growth-review/content.md → transition-readiness/content.md"],
 });
 const recipeResultHeadings = ["예상 파일 트리", "대표 내용 예시", "완료 기준", "포트폴리오·면접 활용", "읽는 순서"];
+const templateSourceRoot = path.join(root, "products/game-design-career/plugin/assets/templates");
+const recipeTemplateContract = Object.freeze({
+  "role-learning-roadmap": [["career-stage-goal", ["target-role", "success-evidence"]], ["learning-roadmap", ["proof-artifact", "re-evaluation-date"]]],
+  "job-research-gap": [["job-posting-evidence", ["source-url", "retrieval-date", "sample-geography"]], ["competency-matrix", ["minimum-repair", "re-evaluation-date"]], ["portfolio-project-brief", ["target-competency", "implementation-test"]]],
+  "reverse-design": [["reverse-design-document", ["observation", "inference", "validation-method"]]],
+  "portfolio-build-review": [["creative-design-portfolio", ["claim-id", "evidence-id", "attribution"]], ["five-axis-review", ["finding-id", "minimum-repair"]], ["portfolio-backlog", ["backlog-id", "minimum-repair"]]],
+  "interview-preparation": [["interview-question-answer-log", ["question-id", "answer-status", "verification-task"]]],
+  "junior-growth-transition": [["junior-growth-review", ["project-event-evidence", "next-review-date", "proof-artifact"]], ["transition-readiness", ["target-requirement", "retrieval-date", "verification-task"]]],
+});
 
 function section(markdown, heading) {
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -111,7 +120,7 @@ function assertRecipeResult(recipe, markdown) {
   const entries = h3Sections(result);
   assert.deepEqual(entries.map(({ heading }) => heading), recipeResultHeadings, recipe.id + " expected-result heading order");
   const byHeading = new Map(entries.map(({ heading, body }) => [heading, body]));
-  const [firstFile, secondFile, exampleOne, doneTerm, portfolioTerm, interviewTerm, readOrder] = recipeResultContract[recipe.id];
+  const [firstFile, secondFile, exampleOne, doneTerm, portfolioTerm, interviewTerm] = recipeResultContract[recipe.id];
   const tree = byHeading.get("예상 파일 트리");
   for (const [label, artifactPath] of [["first", firstFile], ["second", secondFile]]) {
     if (!artifactPath) continue;
@@ -121,7 +130,21 @@ function assertRecipeResult(recipe, markdown) {
   assert.ok(byHeading.get("완료 기준").includes(doneTerm), recipe.id + " verifiable completion criterion");
   assert.ok(byHeading.get("포트폴리오·면접 활용").includes(portfolioTerm), recipe.id + " portfolio use");
   assert.ok(byHeading.get("포트폴리오·면접 활용").includes(interviewTerm), recipe.id + " interview use");
-  assert.ok(byHeading.get("읽는 순서").includes(readOrder), recipe.id + " explicit read order");
+}
+
+async function assertRecipeTemplateResult(recipe, markdown) {
+  const result = section(markdown, "예상 결과");
+  const byHeading = new Map(h3Sections(result).map(({ heading, body }) => [heading, body]));
+  const expected = recipeTemplateContract[recipe.id];
+  for (const [artifactId, fields] of expected) {
+    const template = await readFile(path.join(templateSourceRoot, artifactId, "content.md"), "utf8");
+    for (const field of fields) assert.match(template, new RegExp("`" + field + "`"), recipe.id + " canonical template field: " + artifactId + "." + field);
+    const treePattern = new RegExp(artifactId + "/[\\s\\S]{0,180}?content\\.md[\\s\\S]{0,180}?evidence\\.yml[\\s\\S]{0,180}?decisions/[\\s\\S]{0,180}?export-manifest\\.yml");
+    assert.match(byHeading.get("예상 파일 트리"), treePattern, recipe.id + " artifact subtree: " + artifactId);
+    for (const field of fields) assert.ok(byHeading.get("대표 내용 예시").includes("`" + field + "`"), recipe.id + " representative canonical field: " + field);
+    const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
+    assert.ok(byHeading.get("읽는 순서").includes(order), recipe.id + " canonical artifact read order: " + artifactId);
+  }
 }
 
 function assertCleanLintOutput(output, label) {
@@ -256,7 +279,7 @@ test("Career recipe expected results reject heading and semantic swaps", async (
   const recipe = recipes[0];
   const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
   const result = section(markdown, "예상 결과");
-  const completeResult = `### 예상 파일 트리\n\n\`game-design-career/<career-id>/career-stage-goal/content.md\`\n\`game-design-career/<career-id>/learning-roadmap/content.md\`\n\n### 대표 내용 예시\n\n\`role hypothesis\`\n\n### 완료 기준\n\n\`proof artifact\`\n\n### 포트폴리오·면접 활용\n\nportfolio와 interview에 사용합니다.\n\n### 읽는 순서\n\ncareer-stage-goal/content.md → learning-roadmap/content.md`;
+  const completeResult = `### 예상 파일 트리\n\n\`game-design-career/<career-id>/career-stage-goal/content.md\`\n\`game-design-career/<career-id>/learning-roadmap/content.md\`\n\n### 대표 내용 예시\n\n\`target-role\`\n\n### 완료 기준\n\n\`proof-artifact\`\n\n### 포트폴리오·면접 활용\n\nportfolio와 interview에 사용합니다.\n\n### 읽는 순서\n\ncanonical artifact 순서`;
   const completeMarkdown = markdown.replace(result, completeResult);
   assert.doesNotThrow(() => assertRecipeResult(recipe, completeMarkdown));
   const entries = h3Sections(completeResult);
@@ -273,6 +296,28 @@ test("Career recipe expected results reject heading and semantic swaps", async (
     .replace(completion.body, example.body)
     .replace("__EXAMPLE__", completion.body);
   assert.throws(() => assertRecipeResult(recipe, completeMarkdown.replace(completeResult, semanticSwap)), /representative field example/);
+});
+
+test("Career recipe results derive every artifact, field, and read order from template sources", async () => {
+  for (const recipe of recipes) {
+    const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
+    await assertRecipeTemplateResult(recipe, markdown);
+  }
+});
+
+test("Career recipe source contracts reject every wrong-valid field, artifact, and read-order mutation", async () => {
+  for (const recipe of recipes) {
+    const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
+    const result = section(markdown, "예상 결과");
+    const entries = new Map(h3Sections(result).map(({ heading, body }) => [heading, body]));
+    for (const [artifactId, fields] of recipeTemplateContract[recipe.id]) {
+      const wrongArtifact = artifactId === "career-stage-goal" ? "competency-matrix" : "career-stage-goal";
+      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replace(artifactId, wrongArtifact))), /artifact subtree/, `${recipe.id} ${artifactId} wrong-valid artifact mutation`);
+      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("대표 내용 예시"), entries.get("대표 내용 예시").replace("`" + fields[0] + "`", "`approval-status`"))), /representative canonical field/, `${recipe.id} ${artifactId} wrong-valid field mutation`);
+      const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
+      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(order, order.split(" → ").reverse().join(" → "))), /canonical artifact read order/, `${recipe.id} ${artifactId} read-order mutation`);
+    }
+  }
 });
 
 test("Career manifest keeps unique global IDs and exactly six complete Career diagram pairs", async () => {

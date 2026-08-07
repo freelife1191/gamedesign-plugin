@@ -49,16 +49,17 @@ Interview Coach **최유진**이 honest answer boundary를, Evidence Reviewer **
 game-design-career/<career-id>/interview-question-answer-log/
 ├── content.md
 ├── evidence.yml
-└── decisions/
+├── decisions/
+└── export-manifest.yml
 ```
 
 ### 대표 내용 예시
 
-`content.md`에 stable `questionId`, `posting-evidence-id`, `portfolio-evidence-id`, `answer-feedback`, `honest-answer`, `verification-task`를 한 record로 연결합니다.
+`content.md`에 stable `question-id`, `posting-evidence-id`, `portfolio-evidence-id`, `answer-status`, `honest-answer`, `verification-task`를 한 record로 연결합니다.
 
 ### 완료 기준
 
-각 답변이 같은 `questionId`의 evidence locator 또는 `honest-answer`와 연결되고, feedback 뒤에 하나의 verification task와 사람 검토자가 있으며, 경험·수치·팀 기여를 발명하지 않으면 완료입니다.
+각 답변이 같은 `question-id`의 evidence locator 또는 `honest-answer`와 연결되고, `answer-status`와 하나의 `verification-task`, 사람 검토자가 있으며, 경험·수치·팀 기여를 발명하지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 
@@ -66,7 +67,7 @@ portfolio의 claim ID를 면접 질문으로 다시 찾아볼 수 있게 하고,
 
 ### 읽는 순서
 
-`interview-question-answer-log/content.md → evidence.yml → decisions/` 순서로 questionId, answer-feedback, 근거와 검토 결정을 확인합니다.
+`game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/ → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `answer-status`, 근거와 검토 결정을 확인합니다.
 
 ## 실패와 재개
 

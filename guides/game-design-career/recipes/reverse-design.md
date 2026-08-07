@@ -55,11 +55,11 @@ game-design-career/<career-id>/reverse-design-document/
 
 ### 대표 내용 예시
 
-`content.md`에 `observation: 제작 재료가 부족할 때 craft 버튼이 비활성`, `inference: 재료 gate가 진행 속도를 조절할 수 있음`, `counterexample`, `validation queue`를 별도 필드로 기록합니다.
+`content.md`에 `observation`: 제작 재료가 부족할 때 craft 버튼이 비활성, `inference`: 재료 gate가 진행 속도를 조절할 수 있음, `counterexample`, `validation-method`를 별도 필드로 기록합니다.
 
 ### 완료 기준
 
-모든 inference가 최소 하나의 observation locator와 counterexample 또는 unknown을 갖고, `validation queue`에 다음 관찰·사람 검토자가 있으며, 권리 결정을 확인하기 전에는 공개 대상으로 표시하지 않으면 완료입니다.
+모든 inference가 최소 하나의 `observation` locator와 counterexample 또는 unknown을 갖고, `validation-method`와 사람 검토자가 있으며, 권리 결정을 확인하기 전에는 공개 대상으로 표시하지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 
@@ -67,7 +67,7 @@ portfolio에서는 관찰과 추론의 경계를 읽을 수 있게 하고, inter
 
 ### 읽는 순서
 
-`reverse-design-document/content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 observation, inference, 권리·검토 결정과 출력 준비를 읽습니다.
+`game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/ → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

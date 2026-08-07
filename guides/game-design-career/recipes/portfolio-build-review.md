@@ -47,19 +47,30 @@ Portfolio Owner **정하늘**이 claim·attribution을, Rights Reviewer **윤태
 
 ```text
 game-design-career/<career-id>/
-├── creative-design-portfolio/content.md
-├── five-axis-review/content.md
-├── portfolio-backlog/content.md
-└── evidence.yml
+├── creative-design-portfolio/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/
+│   └── export-manifest.yml
+├── five-axis-review/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/
+│   └── export-manifest.yml
+└── portfolio-backlog/
+    ├── content.md
+    ├── evidence.yml
+    ├── decisions/
+    └── export-manifest.yml
 ```
 
 ### 대표 내용 예시
 
-`creative-design-portfolio/content.md`에는 `claim-id`, `evidence-id`, 개인/팀 `attribution`을, `five-axis-review/content.md`에는 `finding-id`, `minimum-repair`를, backlog에는 recovery owner와 proof artifact를 기록합니다.
+`creative-design-portfolio/content.md`에는 `claim-id`, `evidence-id`, `attribution`을, `five-axis-review/content.md`에는 `finding-id`, `minimum-repair`를, `portfolio-backlog/content.md`에는 `backlog-id`, `minimum-repair`, `owner`를 기록합니다.
 
 ### 완료 기준
 
-모든 공개 claim이 evidence address와 attribution·rights 상태에 연결되고, 각 finding에 하나의 `minimum-repair`, owner, 재검토 조건이 있으며, unsupported claim을 점수나 문구로 숨기지 않으면 완료입니다.
+모든 공개 `claim-id`가 `evidence-id`, `attribution`, `rights`에 연결되고, 각 finding에 하나의 `minimum-repair`, `owner`, 재검토 조건이 있으며, unsupported claim을 점수나 문구로 숨기지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 
@@ -67,7 +78,7 @@ portfolio에서는 읽는 사람이 claim과 evidence를 직접 찾게 하고, i
 
 ### 읽는 순서
 
-`creative-design-portfolio/content.md → evidence.yml → five-axis-review/content.md → portfolio-backlog/content.md` 순서로 claim, 근거, review와 다음 repair를 읽습니다.
+`game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/ → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml`, `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/ → game-design-career/<career-id>/five-axis-review/export-manifest.yml`, `game-design-career/<career-id>/portfolio-backlog/content.md → game-design-career/<career-id>/portfolio-backlog/evidence.yml → game-design-career/<career-id>/portfolio-backlog/decisions/ → game-design-career/<career-id>/portfolio-backlog/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

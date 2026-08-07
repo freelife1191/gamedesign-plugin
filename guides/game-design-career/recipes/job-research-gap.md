@@ -47,19 +47,30 @@ Research Owner **이민아**가 조사 지역·표본 경계를, Portfolio Revie
 
 ```text
 game-design-career/<career-id>/
-├── job-posting-evidence/content.md
-├── competency-matrix/content.md
-├── portfolio-project-brief/content.md
-└── evidence.yml
+├── job-posting-evidence/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/
+│   └── export-manifest.yml
+├── competency-matrix/
+│   ├── content.md
+│   ├── evidence.yml
+│   ├── decisions/
+│   └── export-manifest.yml
+└── portfolio-project-brief/
+    ├── content.md
+    ├── evidence.yml
+    ├── decisions/
+    └── export-manifest.yml
 ```
 
 ### 대표 내용 예시
 
-`job-posting-evidence/content.md`에는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`와 반복 requirement를, `competency-matrix/content.md`에는 `gap`, `evidence-id`, `proof task`를 기록합니다.
+`job-posting-evidence/content.md`에는 `source-url`, `retrieval-date`, `sample-geography`와 반복 requirement를, `competency-matrix/content.md`에는 `gap`, `minimum-repair`, `re-evaluation-date`를, `portfolio-project-brief/content.md`에는 `target-competency`, `implementation-test`를 기록합니다.
 
 ### 완료 기준
 
-각 반복 신호가 실제 표본 record로 되돌아가고 `sample boundary` 밖의 일반화가 없으며, gap마다 하나의 공개 가능한 proof task와 재검토 날짜가 있으면 완료입니다.
+각 반복 신호가 실제 표본 record로 되돌아가고 `sample-geography` 밖의 일반화가 없으며, gap마다 `minimum-repair`와 `re-evaluation-date`가 있으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 
@@ -67,7 +78,7 @@ portfolio에서는 공고 문구를 복제하지 않고 proof task와 근거 주
 
 ### 읽는 순서
 
-`job-posting-evidence/content.md → competency-matrix/content.md → portfolio-project-brief/content.md → evidence.yml` 순서로 표본, gap, 증거 과제와 freshness를 확인합니다.
+`game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/ → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml`, `game-design-career/<career-id>/competency-matrix/content.md → game-design-career/<career-id>/competency-matrix/evidence.yml → game-design-career/<career-id>/competency-matrix/decisions/ → game-design-career/<career-id>/competency-matrix/export-manifest.yml`, `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/ → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 
