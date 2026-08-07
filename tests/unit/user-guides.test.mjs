@@ -100,12 +100,56 @@ test("product inventory includes 14 product skills plus vendored Skillstead", as
   assert.ok(career.skillIds.includes("svg-infographic"));
 });
 
-test("Markdown helpers preserve Korean anchors and reject no links", () => {
-  const markdown = "# 설치 안내\n\n[빠른 시작](quick-start.md#첫-요청)\n";
+test("Markdown helpers expose only visible links and headings", () => {
+  const markdown = [
+    "<!-- [comment](missing.md#hidden) -->",
+    "```md",
+    "[fenced](missing.md#hidden)",
+    "## fenced heading",
+    "```",
+    "~~~yaml",
+    "[tilde-fenced](missing.md#hidden)",
+    "~~~",
+    "    [indented](missing.md#hidden)",
+    "\t## indented heading",
+    "`matched [inline](missing.md)` [visible](quick-start.md#첫-요청)",
+    "`unmatched [broken-visible](broken.md#broken)",
+    "![image](image.png) [!visible](bang.md#bang)",
+    "[**강조**](emphasis.md#strong) \\[escaped](missing.md#escaped)",
+    "[![diagram](image.png)](diagram.svg)",
+    "```info ` not-a-fence",
+    "[invalid-backtick-info](info.md#info)",
+    "## 첫 요청",
+  ].join("\n");
   assert.deepEqual(extractMarkdownLinks(markdown), [
-    { target: "quick-start.md#첫-요청", line: 3 },
+    { label: "visible", target: "quick-start.md#첫-요청", fragment: "첫-요청", line: 11 },
+    { label: "broken-visible", target: "broken.md#broken", fragment: "broken", line: 12 },
+    { label: "!visible", target: "bang.md#bang", fragment: "bang", line: 13 },
+    { label: "**강조**", target: "emphasis.md#strong", fragment: "strong", line: 14 },
+    { label: "![diagram](image.png)", target: "diagram.svg", fragment: "", line: 15 },
+    { label: "invalid-backtick-info", target: "info.md#info", fragment: "info", line: 17 },
   ]);
-  assert.ok(collectHeadingAnchors("# 설치 안내\n\n## 첫 요청\n").has("첫-요청"));
+  assert.deepEqual([...collectHeadingAnchors(markdown)], ["첫-요청"]);
+});
+
+test("guide validation ignores hidden unsafe Markdown but rejects a visible edge", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");
+    await writeFile(guide, [
+      "prompt-only select required all gpt-image-2 low",
+      "<!-- [comment](missing.md) -->",
+      "```md",
+      "[fenced](missing.md)",
+      "```",
+      "    [indented](missing.md)",
+    ].join("\n"));
+    assert.equal((await validateUserGuides({ repoRoot: root, requireComplete: false })).ok, true);
+
+    await writeFile(guide, "prompt-only select required all gpt-image-2 low\n\n[visible](missing.md)\n");
+    const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+    assert.equal(result.ok, false);
+    assert.ok(result.errors.some((error) => error.includes("missing or unsafe local link target missing.md")));
+  });
 });
 
 test("complete guide validation excludes skills indexes and counts all 30 installed guides", async () => {

@@ -6,7 +6,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  collectMarkdownHeadings as visibleMarkdownHeadings,
   collectProductInventory,
+  extractMarkdownLinks as visibleMarkdownLinks,
 } from "../../tooling/lib/user-guides.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
@@ -54,112 +56,6 @@ function section(markdown, heading) {
   const bodyStart = start + marker.length;
   const next = markdown.indexOf("\n## ", bodyStart);
   return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function visibleMarkdownSource(markdown) {
-  const visibleLines = [];
-  let fence;
-  let inComment = false;
-  for (const line of markdown.split(/\r?\n/u)) {
-    if (fence) {
-      const closingFence = new RegExp(`^ {0,3}${escapeRegExp(fence.character)}{${fence.length},}[ \\t]*$`, "u");
-      if (closingFence.test(line)) fence = undefined;
-      visibleLines.push("");
-      continue;
-    }
-    const openingFence = /^( {0,3})(`{3,}|~{3,})(.*)$/u.exec(line);
-    if (openingFence) {
-      fence = { character: openingFence[2][0], length: openingFence[2].length };
-      visibleLines.push("");
-      continue;
-    }
-    let cursor = 0;
-    let visible = "";
-    while (cursor < line.length) {
-      if (inComment) {
-        const end = line.indexOf("-->", cursor);
-        if (end === -1) {
-          cursor = line.length;
-          continue;
-        }
-        inComment = false;
-        cursor = end + 3;
-        continue;
-      }
-      const start = line.indexOf("<!--", cursor);
-      if (start === -1) {
-        visible += line.slice(cursor);
-        break;
-      }
-      visible += line.slice(cursor, start);
-      inComment = true;
-      cursor = start + 4;
-    }
-    visibleLines.push(visible);
-  }
-  assert.equal(fence, undefined, "unclosed fenced code block is not visible Markdown");
-  assert.equal(inComment, false, "unclosed HTML comment is not visible Markdown");
-  return visibleLines.join("\n");
-}
-
-function withoutInlineCode(source) {
-  let visible = "";
-  for (let index = 0; index < source.length;) {
-    if (source[index] !== "`") {
-      visible += source[index];
-      index += 1;
-      continue;
-    }
-    let length = 1;
-    while (source[index + length] === "`") length += 1;
-    const closing = source.indexOf("`".repeat(length), index + length);
-    if (closing === -1) break;
-    index = closing + length;
-  }
-  return visible;
-}
-
-function markdownAnchor(heading, seen) {
-  const base = heading
-    .toLocaleLowerCase("en-US")
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
-    .trim()
-    .replace(/\s+/gu, "-");
-  const count = seen.get(base) ?? 0;
-  seen.set(base, count + 1);
-  return count === 0 ? base : `${base}-${count}`;
-}
-
-function visibleMarkdownHeadings(markdown) {
-  const seen = new Map();
-  return visibleMarkdownSource(markdown).split("\n").flatMap((line) => {
-    const match = /^(?: {0,3})(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/u.exec(line);
-    if (!match) return [];
-    const label = withoutInlineCode(match[2]).trim();
-    return label ? [{ level: match[1].length, label, anchor: markdownAnchor(label, seen) }] : [];
-  });
-}
-
-function visibleMarkdownLinks(markdown) {
-  const links = [];
-  for (const line of visibleMarkdownSource(markdown).split("\n")) {
-    const source = withoutInlineCode(line);
-    for (const match of source.matchAll(/(!?)\[([^\]\n]*)\]\(([^)\n]+)\)/gu)) {
-      if (match[1] === "!" || match[2].startsWith("!")) continue;
-      const target = match[3].trim();
-      const hash = target.indexOf("#");
-      links.push({
-        label: match[2].trim(),
-        target,
-        fragment: hash === -1 ? "" : target.slice(hash + 1),
-      });
-    }
-  }
-  return links;
 }
 
 function h2Headings(markdown) {
@@ -363,7 +259,8 @@ async function assertRootUseCaseNavigation(markdown, manifest) {
   const expectedLinks = await canonicalRootUseCaseLinks(manifest);
   const expectedTargets = new Set(expectedLinks.map(({ target }) => target));
   const actualLinks = visibleMarkdownLinks(markdown)
-    .filter(({ target }) => expectedTargets.has(target));
+    .filter(({ target }) => expectedTargets.has(target))
+    .map(({ label, target, fragment }) => ({ label, target, fragment }));
   assert.deepEqual(
     actualLinks,
     expectedLinks.map(({ label, target, fragment }) => ({ label, target, fragment })),
@@ -434,7 +331,7 @@ test("visible Markdown navigation excludes comments, code fences, and inline-cod
   ].join("\n");
   assert.deepEqual(
     visibleMarkdownLinks(markdown),
-    [{ label: "visible", target: "visible.md#visible-heading", fragment: "visible-heading" }],
+    [{ label: "visible", target: "visible.md#visible-heading", fragment: "visible-heading", line: 11 }],
   );
   assert.deepEqual(
     visibleMarkdownHeadings(markdown).map(({ label }) => label),
@@ -446,7 +343,7 @@ test("visible Markdown navigation excludes comments, code fences, and inline-cod
     [],
     "a shorter closing fence or a different fence length cannot expose hidden links",
   );
-  assert.throws(() => visibleMarkdownLinks("<!--\n[hidden](missing.md)"), /unclosed HTML comment/);
+  assert.deepEqual(visibleMarkdownLinks("<!--\n[hidden](missing.md)"), [], "an unclosed comment fails closed");
 });
 
 test("visible Markdown guide graph validates every local edge and permits safe cycles", async () => {
@@ -473,7 +370,7 @@ test("visible Markdown guide graph validates every local edge and permits safe c
 
     const reachable = await reachableMarkdownPaths(entry, fixtureRoot);
     assert.deepEqual(new Set([entry, target]), reachable, "hidden links do not become graph edges and a validated cycle is safe");
-    assert.throws(() => visibleMarkdownLinks("```md\n[hidden](missing.md)"), /unclosed fenced code block/);
+    assert.deepEqual(visibleMarkdownLinks("```md\n[hidden](missing.md)"), [], "an unclosed fence fails closed");
 
     const rejectsTarget = async (label, linkTarget) => {
       await writeFile(entry, `# Start\n\n[unsafe](${linkTarget})\n`);

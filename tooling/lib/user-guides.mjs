@@ -66,19 +66,6 @@ export async function collectProductInventory(repoRoot, productId) {
   };
 }
 
-export function extractMarkdownLinks(markdown) {
-  const links = [];
-  const pattern = /!?\[[^\]]*\]\(\s*(<[^>]+>|[^\s)]+)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)/g;
-  let match;
-  while ((match = pattern.exec(markdown))) {
-    const rawTarget = match[1];
-    const target = rawTarget.startsWith("<") ? rawTarget.slice(1, -1) : rawTarget;
-    const line = markdown.slice(0, match.index).split("\n").length;
-    links.push({ target, line });
-  }
-  return links;
-}
-
 function githubAnchor(heading) {
   return heading
     .trim()
@@ -88,19 +75,206 @@ function githubAnchor(heading) {
     .replace(/\s+/g, "-");
 }
 
-export function collectHeadingAnchors(markdown) {
+function escaped(source, index) {
+  let slashes = 0;
+  for (let cursor = index - 1; cursor >= 0 && source[cursor] === "\\"; cursor -= 1) slashes += 1;
+  return slashes % 2 === 1;
+}
+
+function inlineCodeSpan(source, start) {
+  let length = 1;
+  while (source[start + length] === "`") length += 1;
+  for (let cursor = start + length; cursor < source.length;) {
+    if (source[cursor] !== "`") {
+      cursor += 1;
+      continue;
+    }
+    let closingLength = 1;
+    while (source[cursor + closingLength] === "`") closingLength += 1;
+    if (closingLength === length) return { end: cursor + closingLength };
+    cursor += closingLength;
+  }
+  return undefined;
+}
+
+function maskInlineCode(source) {
+  let visible = "";
+  for (let cursor = 0; cursor < source.length;) {
+    if (source[cursor] !== "`" || escaped(source, cursor)) {
+      visible += source[cursor];
+      cursor += 1;
+      continue;
+    }
+    const span = inlineCodeSpan(source, cursor);
+    if (!span) {
+      visible += source[cursor];
+      cursor += 1;
+      continue;
+    }
+    visible += " ".repeat(span.end - cursor);
+    cursor = span.end;
+  }
+  return visible;
+}
+
+function stripHtmlComments(line, state) {
+  let cursor = 0;
+  let visible = "";
+  while (cursor < line.length) {
+    if (state.inComment) {
+      const end = line.indexOf("-->", cursor);
+      if (end === -1) return visible;
+      state.inComment = false;
+      cursor = end + 3;
+      continue;
+    }
+    const start = line.indexOf("<!--", cursor);
+    if (start === -1) return visible + line.slice(cursor);
+    visible += line.slice(cursor, start);
+    state.inComment = true;
+    cursor = start + 4;
+  }
+  return visible;
+}
+
+function fenceOpener(line) {
+  const match = /^( {0,3})(`{3,}|~{3,})(.*)$/u.exec(line);
+  if (!match) return undefined;
+  const run = match[2];
+  if (run[0] === "`" && match[3].includes("`")) return undefined;
+  return { character: run[0], length: run.length };
+}
+
+function closesFence(line, fence) {
+  return new RegExp(`^ {0,3}${fence.character}{${fence.length},}[ \\t]*$`, "u").test(line);
+}
+
+function indentedCode(line) {
+  return /^(?: {4}| {0,3}\t)/u.test(line);
+}
+
+export function scanVisibleMarkdown(markdown) {
+  const lines = [];
+  const commentState = { inComment: false };
+  let fence;
+  for (const [index, rawLine] of markdown.split(/\r?\n/u).entries()) {
+    if (fence) {
+      if (closesFence(rawLine, fence)) fence = undefined;
+      lines.push({ line: index + 1, text: "" });
+      continue;
+    }
+    if (indentedCode(rawLine)) {
+      lines.push({ line: index + 1, text: "" });
+      continue;
+    }
+    const line = stripHtmlComments(rawLine, commentState);
+    const openingFence = fenceOpener(line);
+    if (openingFence) {
+      fence = openingFence;
+      lines.push({ line: index + 1, text: "" });
+      continue;
+    }
+    lines.push({ line: index + 1, text: line });
+  }
+  return lines;
+}
+
+function parseLinkAt(source, start) {
+  if (source[start] !== "[" || escaped(source, start)) return undefined;
+  const image = start > 0 && source[start - 1] === "!" && !escaped(source, start - 1);
+  let labelEnd = start + 1;
+  let bracketDepth = 1;
+  while (labelEnd < source.length) {
+    if (!escaped(source, labelEnd) && source[labelEnd] === "[") bracketDepth += 1;
+    if (!escaped(source, labelEnd) && source[labelEnd] === "]") {
+      bracketDepth -= 1;
+      if (bracketDepth === 0) break;
+    }
+    labelEnd += 1;
+  }
+  if (labelEnd === source.length || source[labelEnd + 1] !== "(" || escaped(source, labelEnd + 1)) return undefined;
+  let cursor = labelEnd + 2;
+  while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
+  let target = "";
+  if (source[cursor] === "<") {
+    const end = source.indexOf(">", cursor + 1);
+    if (end === -1) return undefined;
+    target = source.slice(cursor + 1, end);
+    cursor = end + 1;
+  } else {
+    const targetStart = cursor;
+    while (cursor < source.length && !/[\s)]/u.test(source[cursor])) {
+      if (source[cursor] === "\\" && cursor + 1 < source.length) cursor += 2;
+      else cursor += 1;
+    }
+    target = source.slice(targetStart, cursor);
+  }
+  if (!target) return undefined;
+  while (cursor < source.length && source[cursor] !== ")") {
+    if (source[cursor] === "\\" && cursor + 1 < source.length) cursor += 2;
+    else cursor += 1;
+  }
+  if (source[cursor] !== ")" || escaped(source, cursor)) return undefined;
+  return {
+    end: cursor + 1,
+    image,
+    label: source.slice(start + 1, labelEnd),
+    target,
+  };
+}
+
+export function extractMarkdownLinks(markdown) {
+  const links = [];
+  for (const { line, text } of scanVisibleMarkdown(markdown)) {
+    const source = maskInlineCode(text);
+    for (let cursor = 0; cursor < source.length;) {
+      const link = parseLinkAt(source, cursor);
+      if (!link) {
+        cursor += 1;
+        continue;
+      }
+      if (!link.image) {
+        const hash = link.target.indexOf("#");
+        links.push({
+          label: link.label.trim(),
+          target: link.target,
+          fragment: hash === -1 ? "" : link.target.slice(hash + 1),
+          line,
+        });
+      }
+      cursor = link.end;
+    }
+  }
+  return links;
+}
+
+function isInlineCodeOnly(value) {
+  const trimmed = value.trim();
+  if (trimmed[0] !== "`") return false;
+  const span = inlineCodeSpan(trimmed, 0);
+  return span?.end === trimmed.length;
+}
+
+export function collectMarkdownHeadings(markdown) {
+  const headings = [];
   const anchors = new Set();
-  for (const line of markdown.split("\n")) {
-    const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
+  for (const { line, text: lineText } of scanVisibleMarkdown(markdown)) {
+    const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(lineText);
     if (!match) continue;
+    if (isInlineCodeOnly(match[2])) continue;
     const base = githubAnchor(match[2]);
     if (!base) continue;
     let candidate = base;
     let suffix = 1;
     while (anchors.has(candidate)) candidate = `${base}-${suffix++}`;
     anchors.add(candidate);
+    headings.push({ label: match[2].trim(), anchor: candidate, level: match[1].length, line });
   }
-  return anchors;
+  return headings;
+}
+
+export function collectHeadingAnchors(markdown) {
+  return new Set(collectMarkdownHeadings(markdown).map(({ anchor }) => anchor));
 }
 
 function isContained(root, candidate) {
