@@ -2,7 +2,7 @@
 
 ## 1. 결정 요약
 
-Game Design Plugin Suite의 루트 README를 종합 활용 허브로 강화하고, Studio와 Career 제품 README에는 제품별 대표 사례와 예상 결과물을 선별해 보강한다. 상세 사례, 스킬 계약과 FAQ의 권위 있는 본문은 기존 `guides/` 문서에 유지한다.
+Game Design Plugin Suite의 루트 README를 종합 활용 허브로 강화하고, Studio와 Career 제품 README에는 제품별 대표 사례와 예상 결과물을 선별해 보강한다. 공통·제품별 사용자 가이드 README도 같은 탐색 구조로 정돈하고, 이미 완료된 사례를 `deferred`로 표시하는 오래된 상태 문구를 제거한다. 상세 사례, 스킬 계약과 FAQ의 권위 있는 본문은 기존 `guides/` 문서에 유지한다.
 
 사용자는 README에서 다음 순서로 이동할 수 있어야 한다.
 
@@ -34,6 +34,7 @@ README가 상세 가이드의 내용을 모두 복제하면 문서가 지나치�
 - 대표 요청마다 적합한 플러그인, 핵심 결과와 상세 가이드 진입점을 확인한다.
 - 작업 규모별로 최소 결과, 선택 결과와 확장 결과의 차이를 이해한다.
 - Studio와 Career 제품 README에서 해당 제품의 대표 활용 범위와 결과물을 빠르게 파악한다.
+- 공통·제품별 가이드 README가 완료된 사례집, 스킬 워크벤치와 FAQ를 정확히 안내한다.
 - source README와 generated plugin README의 동기화 계약을 유지한다.
 - 기존 설치, 이미지, 내보내기, 권리와 사람 승인 경계를 약화하지 않는다.
 
@@ -44,6 +45,7 @@ README가 상세 가이드의 내용을 모두 복제하면 문서가 지나치�
 - 새로운 도식 자산이나 외부 의존성을 추가하지 않는다.
 - 재미, 흥행, 매출, 채용 합격, 일정, 법률 준수 또는 사람 승인을 보장하지 않는다.
 - 제품 배포 패키지에 저장소의 `guides/`를 새로 포함하지 않는다.
+- 템플릿의 `assets/README.md`와 `decisions/README.md`, shared 계약 README 또는 vendored 예제 README를 사용자 활용 안내로 바꾸지 않는다.
 
 ## 4. 대안과 선택
 
@@ -136,6 +138,35 @@ README가 상세 가이드의 내용을 모두 복제하면 문서가 지나치�
 - generated README를 직접 편집하지 않는다.
 - 루트 `README.md`는 저장소 종합 허브로 직접 편집한다.
 
+### 5.5 공통·제품별 가이드 README
+
+다음 사용자-facing README도 갱신 범위에 포함한다.
+
+| 문서 | 책임 | 변경 방향 |
+| --- | --- | --- |
+| `guides/README.md` | 두 제품과 전체 가이드 탐색 | 목표·결과·상세 사례의 종합 진입점을 루트 README와 일치시킨다. |
+| `guides/use-cases/README.md` | 공통 활용 허브와 FAQ | 기존 사용자 경로·결과물 카탈로그 링크를 유지하고 새 README routing과 용어를 맞춘다. |
+| `guides/game-design-studio/README.md` | Studio 사용자 가이드 인덱스 | 대표 사례·결과와 상세 문서 관계를 루트·제품 README와 일치시킨다. |
+| `guides/game-design-career/README.md` | Career 사용자 가이드 인덱스 | 학습·역기획·포트폴리오·면접·성장 결과와 상세 문서 관계를 정돈한다. |
+| `guides/game-design-studio/use-cases/README.md` | Studio 활용 사례 인덱스 | 이미 완성된 역량·콘셉트·워크벤치 링크와 결과물 경로가 다른 README와 일치하는지 확인한다. |
+| `guides/game-design-career/use-cases/README.md` | Career 활용 사례 인덱스 | 완료된 `concept-scenarios.md`와 `skill-workbench.md`를 실제 링크로 연결하고 `Task 3/4/5 deferred` 문구를 제거한다. |
+| `guides/game-design-studio/skills/README.md` | Studio 직접 스킬 선택 | 기존 입력·호출·결과 표를 유지하고 활용 사례·결과물·FAQ로 가는 진입점만 점검한다. |
+| `guides/game-design-career/skills/README.md` | Career 직접 스킬 선택 | 기존 입력·호출·결과 표를 유지하고 활용 사례·결과물·FAQ로 가는 진입점을 보강한다. |
+
+`guides/*/skills/README.md`는 이미 15개 스킬의 목적, 입력, 직접 호출과 일반 결과를 소유하므로 사례 본문을 복제하지 않는다. 링크가 충분하면 변경하지 않고 검증만 수행한다.
+
+### 5.6 제외하는 README
+
+다음 README는 사용자 탐색 문서가 아니라 Canonical Artifact 또는 배포 내부 계약이므로 이번 범위에서 수정하지 않는다.
+
+- `products/*/plugin/assets/templates/**/assets/README.md`
+- `products/*/plugin/assets/templates/**/decisions/README.md`
+- 대응하는 `plugins/*` generated template README
+- `shared/templates/canonical-artifact/assets/README.md`
+- `shared/contracts/README.md`
+- `shared/responsible-design/README.md`
+- Skillstead package-local 예제와 vendored README
+
 ## 6. 결과물 표현 계약
 
 README의 결과 예시는 다음 세 층을 구분한다.
@@ -162,12 +193,13 @@ README의 결과 예시는 다음 세 층을 구분한다.
 README 변경 뒤 다음을 순서대로 확인한다.
 
 1. 새 상대 링크 대상과 heading anchor를 검사한다.
-2. `npm run validate:guides`로 가이드 수, 사례, FAQ와 링크 계약을 검증한다.
-3. `npm run build`로 제품 source README를 generated snapshot에 동기화한다.
-4. source/generated README의 byte 관계와 snapshot drift 검사를 확인한다.
-5. README 계약 관련 테스트를 실행한다.
-6. `npm test`로 전체 회귀 검증을 실행한다.
-7. `git diff --check`와 `git status --short`로 형식 오류와 예상하지 않은 변경을 확인한다.
+2. 사용자-facing README에 `Task 3`, `Task 4`, `Task 5`, `deferred`, `추가할 예정`처럼 완료 상태와 모순되는 문구가 남지 않았는지 검사한다.
+3. `npm run validate:guides`로 가이드 수, 사례, FAQ와 링크 계약을 검증한다.
+4. `npm run build`로 제품 source README를 generated snapshot에 동기화한다.
+5. source/generated README의 byte 관계와 snapshot drift 검사를 확인한다.
+6. README 계약 관련 테스트를 실행한다.
+7. `npm test`로 전체 회귀 검증을 실행한다.
+8. `git diff --check`와 `git status --short`로 형식 오류와 예상하지 않은 변경을 확인한다.
 
 기존 미추적 `package-lock.json`은 이 작업 범위 밖이며 수정하거나 커밋하지 않는다.
 
@@ -177,6 +209,8 @@ README 변경 뒤 다음을 순서대로 확인한다.
 - 루트 README에 목표별 대표 사용 사례와 작업 규모별 예시가 있다.
 - 대표 요청마다 적합한 플러그인과 예상 결과가 명시된다.
 - Studio와 Career 제품 README가 각 제품의 대표 활용 사례, 결과와 상세 가이드 경로를 안내한다.
+- 공통·제품별 사용자 가이드 README가 같은 목표·결과·상세 문서 관계를 사용한다.
+- Career 활용 사례 인덱스가 완성된 대상 사례 10개와 직접 스킬 워크벤치를 실제 링크로 안내하며 과거 `deferred` 상태를 표시하지 않는다.
 - 상세 사례 본문을 README에 중복하지 않는다.
 - generated 제품 README가 source README와 빌드 계약대로 동기화된다.
 - 가이드 검증, 빌드와 테스트가 통과한다.
