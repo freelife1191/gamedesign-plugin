@@ -97,46 +97,6 @@ function inlineCodeSpan(source, start) {
   return undefined;
 }
 
-function maskInlineCode(source) {
-  let visible = "";
-  for (let cursor = 0; cursor < source.length;) {
-    if (source[cursor] !== "`" || escaped(source, cursor)) {
-      visible += source[cursor];
-      cursor += 1;
-      continue;
-    }
-    const span = inlineCodeSpan(source, cursor);
-    if (!span) {
-      visible += source[cursor];
-      cursor += 1;
-      continue;
-    }
-    visible += " ".repeat(span.end - cursor);
-    cursor = span.end;
-  }
-  return visible;
-}
-
-function stripHtmlComments(line, state) {
-  let cursor = 0;
-  let visible = "";
-  while (cursor < line.length) {
-    if (state.inComment) {
-      const end = line.indexOf("-->", cursor);
-      if (end === -1) return visible;
-      state.inComment = false;
-      cursor = end + 3;
-      continue;
-    }
-    const start = line.indexOf("<!--", cursor);
-    if (start === -1) return visible + line.slice(cursor);
-    visible += line.slice(cursor, start);
-    state.inComment = true;
-    cursor = start + 4;
-  }
-  return visible;
-}
-
 function fenceOpener(line) {
   const match = /^( {0,3})(`{3,}|~{3,})(.*)$/u.exec(line);
   if (!match) return undefined;
@@ -155,31 +115,183 @@ function indentedCode(line) {
 
 export function scanVisibleMarkdown(markdown) {
   const lines = [];
-  const commentState = { inComment: false };
+  let inComment = false;
   let fence;
-  for (const [index, rawLine] of markdown.split(/\r?\n/u).entries()) {
+  let inlineEnd = -1;
+  let offset = 0;
+  for (const [index, rawLineWithCarriageReturn] of markdown.split("\n").entries()) {
+    const rawLine = rawLineWithCarriageReturn.endsWith("\r")
+      ? rawLineWithCarriageReturn.slice(0, -1)
+      : rawLineWithCarriageReturn;
+    const visible = rawLine.split("");
+    const hide = (start, end) => visible.fill(" ", start, end);
     if (fence) {
       if (closesFence(rawLine, fence)) fence = undefined;
-      lines.push({ line: index + 1, text: "" });
+      lines.push({ line: index + 1, text: " ".repeat(rawLine.length), source: rawLine });
+      offset += rawLineWithCarriageReturn.length + 1;
       continue;
     }
-    if (indentedCode(rawLine)) {
-      lines.push({ line: index + 1, text: "" });
+    if (inlineEnd <= offset && !inComment && indentedCode(rawLine)) {
+      lines.push({ line: index + 1, text: " ".repeat(rawLine.length), source: rawLine });
+      offset += rawLineWithCarriageReturn.length + 1;
       continue;
     }
-    const line = stripHtmlComments(rawLine, commentState);
-    const openingFence = fenceOpener(line);
-    if (openingFence) {
+    if (inlineEnd <= offset && !inComment && fenceOpener(rawLine)) {
+      const openingFence = fenceOpener(rawLine);
       fence = openingFence;
-      lines.push({ line: index + 1, text: "" });
+      lines.push({ line: index + 1, text: " ".repeat(rawLine.length), source: rawLine });
+      offset += rawLineWithCarriageReturn.length + 1;
       continue;
     }
-    lines.push({ line: index + 1, text: line });
+    for (let cursor = 0; cursor < rawLine.length;) {
+      const absolute = offset + cursor;
+      if (absolute < inlineEnd) {
+        visible[cursor] = " ";
+        cursor += 1;
+        continue;
+      }
+      if (inlineEnd !== -1 && absolute >= inlineEnd) inlineEnd = -1;
+      if (inComment) {
+        const end = rawLine.indexOf("-->", cursor);
+        if (end === -1) {
+          hide(cursor, rawLine.length);
+          break;
+        }
+        hide(cursor, end + 3);
+        inComment = false;
+        cursor = end + 3;
+        continue;
+      }
+      if (rawLine.startsWith("<!--", cursor)) {
+        inComment = true;
+        hide(cursor, cursor + 4);
+        cursor += 4;
+        continue;
+      }
+      if (rawLine[cursor] === "`" && rawLine[cursor - 1] !== "`" && !escaped(rawLine, cursor)) {
+        const span = inlineCodeSpan(markdown, absolute);
+        if (span) {
+          inlineEnd = span.end;
+          visible[cursor] = " ";
+          cursor += 1;
+          continue;
+        }
+        let runLength = 1;
+        while (rawLine[cursor + runLength] === "`") runLength += 1;
+        cursor += runLength;
+        continue;
+      }
+      cursor += 1;
+    }
+    lines.push({ line: index + 1, text: visible.join(""), source: rawLine });
+    offset += rawLineWithCarriageReturn.length + 1;
   }
   return lines;
 }
 
-function parseLinkAt(source, start) {
+function unescapeMarkdown(value) {
+  let result = "";
+  for (let cursor = 0; cursor < value.length; cursor += 1) {
+    if (value[cursor] === "\\" && cursor + 1 < value.length) cursor += 1;
+    result += value[cursor];
+  }
+  return result;
+}
+
+function renderedLabel(value) {
+  let label = "";
+  for (let cursor = 0; cursor < value.length;) {
+    if (value[cursor] !== "`" || escaped(value, cursor)) {
+      label += value[cursor];
+      cursor += 1;
+      continue;
+    }
+    const span = inlineCodeSpan(value, cursor);
+    if (!span) {
+      label += value[cursor];
+      cursor += 1;
+      continue;
+    }
+    const length = value.slice(cursor).match(/^`+/u)[0].length;
+    label += value.slice(cursor + length, span.end - length);
+    cursor = span.end;
+  }
+  return unescapeMarkdown(label).trim();
+}
+
+function normaliseTarget(rawTarget) {
+  let hash = -1;
+  for (let cursor = 0; cursor < rawTarget.length; cursor += 1) {
+    if (rawTarget[cursor] === "#" && !escaped(rawTarget, cursor)) {
+      hash = cursor;
+      break;
+    }
+  }
+  const filename = unescapeMarkdown(hash === -1 ? rawTarget : rawTarget.slice(0, hash));
+  const fragment = hash === -1 ? "" : unescapeMarkdown(rawTarget.slice(hash + 1));
+  return { target: hash === -1 ? filename : `${filename}#${fragment}`, fragment };
+}
+
+function parseDestination(source, start) {
+  let cursor = start;
+  while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
+  let rawTarget = "";
+  if (source[cursor] === "<") {
+    const targetStart = ++cursor;
+    while (cursor < source.length && (source[cursor] !== ">" || escaped(source, cursor))) cursor += 1;
+    if (source[cursor] !== ">") return undefined;
+    rawTarget = source.slice(targetStart, cursor);
+    cursor += 1;
+  } else {
+    const targetStart = cursor;
+    let parentheses = 0;
+    while (cursor < source.length) {
+      const character = source[cursor];
+      if (character === "\\" && cursor + 1 < source.length) {
+        cursor += 2;
+        continue;
+      }
+      if (/\s/u.test(character) && parentheses === 0) break;
+      if (character === "(") parentheses += 1;
+      if (character === ")") {
+        if (parentheses === 0) break;
+        parentheses -= 1;
+      }
+      cursor += 1;
+    }
+    if (parentheses !== 0) return undefined;
+    rawTarget = source.slice(targetStart, cursor);
+  }
+  if (!rawTarget) return undefined;
+  while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
+  if (source[cursor] !== ")") {
+    const opener = source[cursor];
+    const closer = opener === "\"" ? "\"" : opener === "'" ? "'" : opener === "(" ? ")" : undefined;
+    if (!closer) return undefined;
+    cursor += 1;
+    let depth = opener === "(" ? 1 : 0;
+    while (cursor < source.length) {
+      if (source[cursor] === "\\" && cursor + 1 < source.length) {
+        cursor += 2;
+        continue;
+      }
+      if (opener !== "(" && source[cursor] === closer) break;
+      if (opener === "(" && source[cursor] === "(") depth += 1;
+      if (source[cursor] === closer) {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+      cursor += 1;
+    }
+    if (source[cursor] !== closer) return undefined;
+    cursor += 1;
+    while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
+  }
+  if (source[cursor] !== ")" || escaped(source, cursor)) return undefined;
+  return { end: cursor + 1, rawTarget };
+}
+
+function parseLinkAt(source, original, start) {
   if (source[start] !== "[" || escaped(source, start)) return undefined;
   const image = start > 0 && source[start - 1] === "!" && !escaped(source, start - 1);
   let labelEnd = start + 1;
@@ -193,52 +305,32 @@ function parseLinkAt(source, start) {
     labelEnd += 1;
   }
   if (labelEnd === source.length || source[labelEnd + 1] !== "(" || escaped(source, labelEnd + 1)) return undefined;
-  let cursor = labelEnd + 2;
-  while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
-  let target = "";
-  if (source[cursor] === "<") {
-    const end = source.indexOf(">", cursor + 1);
-    if (end === -1) return undefined;
-    target = source.slice(cursor + 1, end);
-    cursor = end + 1;
-  } else {
-    const targetStart = cursor;
-    while (cursor < source.length && !/[\s)]/u.test(source[cursor])) {
-      if (source[cursor] === "\\" && cursor + 1 < source.length) cursor += 2;
-      else cursor += 1;
-    }
-    target = source.slice(targetStart, cursor);
-  }
-  if (!target) return undefined;
-  while (cursor < source.length && source[cursor] !== ")") {
-    if (source[cursor] === "\\" && cursor + 1 < source.length) cursor += 2;
-    else cursor += 1;
-  }
-  if (source[cursor] !== ")" || escaped(source, cursor)) return undefined;
+  const destination = parseDestination(source, labelEnd + 2);
+  if (!destination) return undefined;
+  const { target, fragment } = normaliseTarget(destination.rawTarget);
   return {
-    end: cursor + 1,
+    end: destination.end,
     image,
-    label: source.slice(start + 1, labelEnd),
+    label: renderedLabel(original.slice(start + 1, labelEnd)),
     target,
+    fragment,
   };
 }
 
 export function extractMarkdownLinks(markdown) {
   const links = [];
-  for (const { line, text } of scanVisibleMarkdown(markdown)) {
-    const source = maskInlineCode(text);
-    for (let cursor = 0; cursor < source.length;) {
-      const link = parseLinkAt(source, cursor);
+  for (const { line, text, source: original } of scanVisibleMarkdown(markdown)) {
+    for (let cursor = 0; cursor < text.length;) {
+      const link = parseLinkAt(text, original, cursor);
       if (!link) {
         cursor += 1;
         continue;
       }
       if (!link.image) {
-        const hash = link.target.indexOf("#");
         links.push({
-          label: link.label.trim(),
+          label: link.label,
           target: link.target,
-          fragment: hash === -1 ? "" : link.target.slice(hash + 1),
+          fragment: link.fragment,
           line,
         });
       }
@@ -282,11 +374,11 @@ function isContained(root, candidate) {
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
 }
 
-function safeDecode(value) {
+function decodeLinkPart(value) {
   try {
     return decodeURIComponent(value);
   } catch {
-    return value;
+    return undefined;
   }
 }
 
@@ -346,8 +438,13 @@ async function validateLinks(repoRoot, markdownPath, markdown, errors) {
       continue;
     }
     const { filename: rawFilename, anchor: rawAnchor } = linkParts(target);
-    const filename = safeDecode(rawFilename).split("?")[0];
-    const anchor = safeDecode(rawAnchor);
+    const decodedFilename = decodeLinkPart(rawFilename);
+    const anchor = decodeLinkPart(rawAnchor);
+    if (decodedFilename === undefined || anchor === undefined) {
+      errors.push(`${markdownPath}:${line}: invalid encoded local link: ${target}`);
+      continue;
+    }
+    const filename = decodedFilename.split("?")[0];
     if (path.isAbsolute(filename) || path.win32.isAbsolute(filename)) {
       errors.push(`${markdownPath}:${line}: absolute local link is not allowed: ${target}`);
       continue;
@@ -369,7 +466,7 @@ async function validateLinks(repoRoot, markdownPath, markdown, errors) {
         continue;
       }
       const targetMarkdown = targetPath === markdownPath ? markdown : await readFile(targetPath, "utf8");
-      if (!collectHeadingAnchors(targetMarkdown).has(githubAnchor(anchor))) {
+      if (!collectHeadingAnchors(targetMarkdown).has(anchor)) {
         errors.push(`${markdownPath}:${line}: missing anchor in local link: ${target}`);
       }
     }

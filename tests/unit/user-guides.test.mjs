@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -42,6 +42,16 @@ async function withGuideFixture({ omitCareerSkill = false }, check) {
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+}
+
+async function markdownFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const filename = path.join(directory, entry.name);
+    if (entry.isDirectory()) return markdownFiles(filename);
+    return entry.isFile() && entry.name.endsWith(".md") ? [filename] : [];
+  }));
+  return nested.flat();
 }
 
 function validAudience(id = "AUD-01") {
@@ -113,7 +123,7 @@ test("Markdown helpers expose only visible links and headings", () => {
     "    [indented](missing.md#hidden)",
     "\t## indented heading",
     "`matched [inline](missing.md)` [visible](quick-start.md#첫-요청)",
-    "`unmatched [broken-visible](broken.md#broken)",
+    "``unmatched [broken-visible](broken.md#broken)",
     "![image](image.png) [!visible](bang.md#bang)",
     "[**강조**](emphasis.md#strong) \\[escaped](missing.md#escaped)",
     "[![diagram](image.png)](diagram.svg)",
@@ -130,6 +140,35 @@ test("Markdown helpers expose only visible links and headings", () => {
     { label: "invalid-backtick-info", target: "info.md#info", fragment: "info", line: 17 },
   ]);
   assert.deepEqual([...collectHeadingAnchors(markdown)], ["첫-요청"]);
+});
+
+test("Markdown helpers preserve token precedence, balanced destinations, and rendered labels", () => {
+  const markdown = [
+    "`<!--` [visible](visible.md#visible)",
+    "<!-- `comment backtick` --> [after-comment](after.md#after)",
+    "<!--",
+    "    ignored indentation before closer --> [after-indented-comment](indented.md#after)",
+    "`multiline inline code",
+    "[hidden](hidden.md#hidden)",
+    "` [after-inline](after-inline.md#after)",
+    "[한국어](guide(초급).md#함수())",
+    "[escaped](guide\\(초급\\).md#함수\\(\\))",
+    "[`한국어`](inline-label.md#inline)",
+    "[angle title](<angle(초급).md#함수()> \"문서 제목\")",
+    "[bare title](bare.md#bare '문서 제목')",
+    "[reference][unsafe-local]",
+  ].join("\n");
+  assert.deepEqual(extractMarkdownLinks(markdown), [
+    { label: "visible", target: "visible.md#visible", fragment: "visible", line: 1 },
+    { label: "after-comment", target: "after.md#after", fragment: "after", line: 2 },
+    { label: "after-indented-comment", target: "indented.md#after", fragment: "after", line: 4 },
+    { label: "after-inline", target: "after-inline.md#after", fragment: "after", line: 7 },
+    { label: "한국어", target: "guide(초급).md#함수()", fragment: "함수()", line: 8 },
+    { label: "escaped", target: "guide(초급).md#함수()", fragment: "함수()", line: 9 },
+    { label: "한국어", target: "inline-label.md#inline", fragment: "inline", line: 10 },
+    { label: "angle title", target: "angle(초급).md#함수()", fragment: "함수()", line: 11 },
+    { label: "bare title", target: "bare.md#bare", fragment: "bare", line: 12 },
+  ]);
 });
 
 test("guide validation ignores hidden unsafe Markdown but rejects a visible edge", async () => {
@@ -150,6 +189,37 @@ test("guide validation ignores hidden unsafe Markdown but rejects a visible edge
     assert.equal(result.ok, false);
     assert.ok(result.errors.some((error) => error.includes("missing or unsafe local link target missing.md")));
   });
+});
+
+test("guide validation decodes anchors exactly without case or punctuation normalization", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guideRoot = path.join(root, "guides", "game-design-studio", "skills");
+    const guide = path.join(guideRoot, "README.md");
+    await writeFile(path.join(guideRoot, "guide(초급).md"), "## 첫 요청\n\n## 함수\n\n## case\n");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    await writeFile(guide, `${prefix}[valid](guide\\(초급\\).md#%EC%B2%AB-%EC%9A%94%EC%B2%AD)\n`);
+    assert.equal((await validateUserGuides({ repoRoot: root, requireComplete: false })).ok, true);
+
+    for (const [label, target] of [
+      ["wrong case", "guide\\(초급\\).md#Case"],
+      ["wrong punctuation", "guide\\(초급\\).md#함수()"],
+      ["invalid encoding", "guide\\(초급\\).md#%E0%A4%A"],
+    ]) {
+      await writeFile(guide, `${prefix}[${label}](${target})\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes("anchor") || error.includes("invalid encoded")), label);
+    }
+  });
+});
+
+test("production guides expose 866 labeled visible Markdown links", async () => {
+  const files = await markdownFiles(path.join(repoRoot, "guides"));
+  const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
+  assert.equal(files.length, 79);
+  assert.equal(links.length, 866);
+  assert.equal(links.filter(({ label }) => label === "").length, 0);
+  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 854);
 });
 
 test("complete guide validation excludes skills indexes and counts all 30 installed guides", async () => {
