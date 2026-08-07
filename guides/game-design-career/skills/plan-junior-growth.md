@@ -11,6 +11,8 @@ target-role requirement와 실제 project event를 분기 목표, 증거 프로�
 
 ### 직접 호출 활용 — plan-junior-growth
 
+[![주니어 성장 계획 직접 호출 흐름](../../assets/game-design-career/skills/plan-junior-growth.png)](../../assets/game-design-career/skills/plan-junior-growth.svg)
+
 #### 직접 호출 조건
 
 한 target requirement의 gap과 proof task만 계획할 때 직접 호출합니다. 여러 단계·역할의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 사실·추론·제안을 분리합니다.

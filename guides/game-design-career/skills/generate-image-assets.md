@@ -11,6 +11,8 @@
 
 ### Career 직접 호출 활용 — generate-image-assets
 
+[![Career 이미지 자산 생성 직접 호출 흐름](../../assets/game-design-career/skills/generate-image-assets.png)](../../assets/game-design-career/skills/generate-image-assets.svg)
+
 #### 직접 호출 조건
 
 선택 receipt가 있는 finite image job만 직접 호출합니다. 여러 artifact의 image·review 범위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. AI 생성 결과는 자동 최종 승인되지 않습니다.

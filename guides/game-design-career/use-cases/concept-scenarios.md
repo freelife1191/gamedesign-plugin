@@ -4,6 +4,8 @@
 
 ## CA-T01 시스템 기획 입문 학생
 
+[![시스템 기획 입문 학생의 증거 과제와 학습 경로](../../assets/game-design-career/use-cases/ca-t01.png)](../../assets/game-design-career/use-cases/ca-t01.svg)
+
 ### 현재 상황과 목표
 
 **목표 직무:** 시스템 기획의 규칙·상태·예외를 작은 관찰과 학습 과제로 설명하는 입문 학생 경로입니다.
@@ -81,6 +83,8 @@ $game-design-career:map-game-design-career artifact=game-design-career/system-st
 규칙을 내부 구현처럼 단정했는가? 콘텐츠 흐름은 CA-T02, 전투 선택은 CA-T03으로 이동합니다.
 
 ## CA-T02 콘텐츠·퀘스트 기획 준비생
+
+[![콘텐츠와 퀘스트 기획 준비생의 제작 가능성 증거 흐름](../../assets/game-design-career/use-cases/ca-t02.png)](../../assets/game-design-career/use-cases/ca-t02.svg)
 
 ### 현재 상황과 목표
 
@@ -160,6 +164,8 @@ NPC 대사를 시스템처럼 단정했는가? 협업 계약은 CA-T06, 공간 �
 
 ## CA-T03 전투·캐릭터 기획 준비생
 
+[![전투와 캐릭터 기획 준비생의 분석과 검증 흐름](../../assets/game-design-career/use-cases/ca-t03.png)](../../assets/game-design-career/use-cases/ca-t03.svg)
+
 ### 현재 상황과 목표
 
 **목표 직무:** 전투·캐릭터 기획의 선택과 피드백을 관찰·가설로 분리하는 준비생 경로입니다.
@@ -237,6 +243,8 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/com
 관찰을 내부 공식으로 바꾸었는가? 경제 가설은 CA-T04, 공간 playtest는 CA-T07으로 이동합니다.
 
 ## CA-T04 경제·밸런스·LiveOps 준비생
+
+[![경제와 밸런스 및 LiveOps 준비생의 가정 검증 흐름](../../assets/game-design-career/use-cases/ca-t04.png)](../../assets/game-design-career/use-cases/ca-t04.svg)
 
 ### 현재 상황과 목표
 
@@ -316,6 +324,8 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/eco
 
 ## CA-T05 UI·UX 기획 준비생
 
+[![UI UX 기획 준비생의 접근성과 usability 증거 흐름](../../assets/game-design-career/use-cases/ca-t05.png)](../../assets/game-design-career/use-cases/ca-t05.svg)
+
 ### 현재 상황과 목표
 
 **목표 직무:** UI·UX 기획에서 접근성과 사용성의 실패 경로를 관찰하는 준비생 경로입니다.
@@ -393,6 +403,8 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux
 사용성 가정을 조사 결과처럼 썼는가? 콘텐츠 흐름은 CA-T02, 첫 사례의 반복은 CA-T08로 이동합니다.
 
 ## CA-T06 내러티브 기획 준비생
+
+[![내러티브 기획 준비생의 협업 계약과 증거 흐름](../../assets/game-design-career/use-cases/ca-t06.png)](../../assets/game-design-career/use-cases/ca-t06.svg)
 
 ### 현재 상황과 목표
 
@@ -472,6 +484,8 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/narr
 
 ## CA-T07 레벨 디자인 준비생
 
+[![레벨 디자인 준비생의 공간과 playtest 증거 흐름](../../assets/game-design-career/use-cases/ca-t07.png)](../../assets/game-design-career/use-cases/ca-t07.svg)
+
 ### 현재 상황과 목표
 
 **목표 직무:** 레벨 디자인의 공간, 동선, 시야와 반복 playtest를 작은 구역에서 연습하는 준비생 경로입니다.
@@ -549,6 +563,8 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/lev
 관찰을 실제 사용자 결과처럼 썼는가? 전투 선택은 CA-T03, 첫 사례 반복은 CA-T08로 이동합니다.
 
 ## CA-T08 실무 경험이 없는 신입
+
+[![실무 경험이 없는 신입의 판단과 반복 개선 증거 흐름](../../assets/game-design-career/use-cases/ca-t08.png)](../../assets/game-design-career/use-cases/ca-t08.svg)
 
 ### 현재 상황과 목표
 
@@ -628,6 +644,8 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/new-
 
 ## CA-T09 비전공자·다른 직군 전환자
 
+[![직군 전환자의 전이 가능한 역량과 새 증거 과제 흐름](../../assets/game-design-career/use-cases/ca-t09.png)](../../assets/game-design-career/use-cases/ca-t09.svg)
+
 ### 현재 상황과 목표
 
 **목표 직무:** 비전공자·다른 직군 전환에서 전이 가능한 역량과 새 증거 과제를 구분하는 경로입니다.
@@ -705,6 +723,8 @@ $game-design-career:map-game-design-career artifact=game-design-career/transitio
 이전 팀 성과를 개인 기여로 썼는가? 전투·분석 proof는 CA-T03, 성장·이직 검토는 CA-T10으로 이동합니다.
 
 ## CA-T10 주니어의 성장·이직
+
+[![주니어의 성장과 이직 준비도 증거 흐름](../../assets/game-design-career/use-cases/ca-t10.png)](../../assets/game-design-career/use-cases/ca-t10.svg)
 
 ### 현재 상황과 목표
 

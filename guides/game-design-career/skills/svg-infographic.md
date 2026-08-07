@@ -11,6 +11,8 @@ Career 구조를 위한 vendored Skillstead 0.8.3의 editable SVG authoring과 c
 
 ### Career 직접 호출 활용 — svg-infographic
 
+[![Career SVG 인포그래픽 직접 호출 흐름](../../assets/game-design-career/skills/svg-infographic.png)](../../assets/game-design-career/skills/svg-infographic.svg)
+
 #### 직접 호출 조건
 
 하나의 source-mapped 구조 SVG와 검증 상태만 만들 때 직접 호출합니다. 여러 Career route와 source priority가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. Node-free Chromium fallback을 보존합니다.

@@ -11,6 +11,8 @@ portfolio 또는 case study를 recruiter 관점의 5축으로 검토해 evidence
 
 ### 직접 호출 활용 — review-game-design-portfolio
 
+[![게임 기획 포트폴리오 검토 직접 호출 흐름](../../assets/game-design-career/skills/review-game-design-portfolio.png)](../../assets/game-design-career/skills/review-game-design-portfolio.svg)
+
 #### 직접 호출 조건
 
 하나의 portfolio artifact의 five-axis finding만 검토할 때 직접 호출합니다. 여러 portfolio·interview 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 합격을 보장하지 않습니다.

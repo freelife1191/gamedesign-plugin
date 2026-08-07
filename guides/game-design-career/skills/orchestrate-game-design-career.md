@@ -11,6 +11,8 @@ Career 요청을 `entry`, `new-hire`, `junior-growth`, `transition` 또는 `uncl
 
 ### 직접 호출 활용 — orchestrate-game-design-career
 
+[![게임 기획 커리어 오케스트레이션 직접 호출 흐름](../../assets/game-design-career/skills/orchestrate-game-design-career.png)](../../assets/game-design-career/skills/orchestrate-game-design-career.svg)
+
 #### 직접 호출 조건
 
 여러 Career 단계와 completion gate를 하나의 brief로 묶어야 할 때 직접 호출합니다. 한 output과 입력이 분명할 때는 해당 specialist를 직접 호출합니다. 사실·추론·제안을 분리합니다.

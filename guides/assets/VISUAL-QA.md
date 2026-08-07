@@ -76,3 +76,10 @@
 - `st-g01.png`, `st-g06.png`: high/original에서 각 source의 고유 제약, 두 선택지와 detail, 판단 기준, 결정, 검증 문구를 확인했습니다. G01의 4→5 connector는 상단 card bottom에서 시작해 하단 card top 12px 전에 끝나는 수직 shaft/open-V이며, 이전의 baseline 횡단선이나 card overlap이 없습니다.
 - `orchestrate-game-design-project.png` (ST-S09): `canonical-artifact`, installed skill ID, output ID와 아홉 canonical next route가 card/semantic rail에 모두 표시됩니다. 두 줄 route rail의 마지막 baseline은 footer 시작선 위에 있어 clipping·overlap이 없습니다.
 - 자동 증거: 최종 `npm run check:guide-diagrams`는 Studio 33쌍과 전체 39쌍의 deterministic SVG/PNG, Skillstead lint, 2× size, IEND completion을 통과했습니다. 계약 테스트는 specialist/output/review·branch/validation·trigger/input/owned-work/output/next-route의 exact source 값을 비교하고 `전문 판단을 적용`, `대안 두 가지`, `artifact와 경계` placeholder를 거부합니다.
+
+## Career use-case 및 direct-skill 도식 검사 — 2026-08-07
+
+- 범위: `game-design-career-use-case` 18쌍(CA-C01…CA-C08, CA-T01…CA-T10)과 `game-design-career-skill` 15쌍(CA-S01…CA-S15), 총 33 SVG/PNG 쌍입니다. 기존 `game-design-career` recipe scope 6개는 변경하지 않았습니다.
+- 자동 근거: `npm run build:guide-diagrams`가 72 SVG/PNG를 생성했고, Career 계약 테스트는 source/manifest/anchor/embed·Skillstead lint·IEND·정확한 `1400×900`/`2800×1800` 치수를 확인합니다. `npm run check:guide-diagrams`는 생성 SVG/PNG byte 동등성과 lint·render를 재검증합니다.
+- 대표 수동 검사: `ca-c05.png`, `ca-t01.png`, `ca-t09.png`, 그리고 실제 source 텍스트 최대 길이(83자)의 `review-image-assets.png`(CA-S13)를 각각 `view_image`의 high와 original detail에서 확인했습니다. 네 도식 모두 제목·5 stage·open-V connector·semantic rail·footer의 순서와 source 의미가 일치하며, CJK/Latin tofu, 잘림, 겹침, 낮은 대비, 카드 containment 또는 connector endpoint 결함이 없습니다.
+- 경계 확인: CA-C05는 공개 build/evidence→public-rights review→권리 제외→CA-C06/07, CA-T01은 상태 전이/예외→시스템 멘토→합격 비보장, CA-T09는 전이 가능 경험→Career 검토→이직 비보장, CA-S13은 stable asset ID/decisionReceipt→lifecycle review→export 조건을 표시합니다. 이는 승인 또는 채용·이직 결과의 보장이 아닙니다.

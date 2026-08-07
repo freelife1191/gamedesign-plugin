@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — research-game-design-jobs
 
+[![게임 기획 채용 근거 조사 직접 호출 흐름](../../assets/game-design-career/skills/research-game-design-jobs.png)](../../assets/game-design-career/skills/research-game-design-jobs.svg)
+
 #### 직접 호출 조건
 
 한 role·level·region의 current posting sample만 조사할 때 직접 호출합니다. 여러 role·stage의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. stale evidence는 current claim에 사용하지 않습니다.

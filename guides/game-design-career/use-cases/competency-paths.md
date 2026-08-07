@@ -4,6 +4,8 @@
 
 ## CA-C01 기획 직무와 전문 분야 탐색
 
+[![기획 직무와 전문 분야를 비교하는 흐름](../../assets/game-design-career/use-cases/ca-c01.png)](../../assets/game-design-career/use-cases/ca-c01.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 시스템, 콘텐츠, UX, 경제 중 관심은 있으나 현재 증거가 어느 역할 경로를 지지하는지 불분명합니다.
@@ -75,6 +77,8 @@ $game-design-career:map-game-design-career artifact=game-design-career/role-map 
 
 ## CA-C02 게임 분석 언어와 관찰·추론 분리
 
+[![게임 분석의 관찰과 추론을 분리하는 흐름](../../assets/game-design-career/use-cases/ca-c02.png)](../../assets/game-design-career/use-cases/ca-c02.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 플레이한 게임을 설명하지만 직접 본 장면과 설계 의도에 대한 해석이 섞여 있습니다.
@@ -145,6 +149,8 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 각 문장이 직접 본 사실인지, 해석인지, 다음 제안인지 설명할 수 있는가? 역할·공고 요구와 연결하려면 `CA-C03` 또는 `CA-C04`로 이동합니다.
 
 ## CA-C03 현재 채용공고 조사
+
+[![현재 채용공고의 근거와 표본 경계를 기록하는 흐름](../../assets/game-design-career/use-cases/ca-c03.png)](../../assets/game-design-career/use-cases/ca-c03.svg)
 
 ### 현재 상황과 목표
 
@@ -218,6 +224,8 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 ## CA-C04 역량 격차와 학습·증거 계획
 
+[![역량 격차를 학습과 증거 과제로 전환하는 흐름](../../assets/game-design-career/use-cases/ca-c04.png)](../../assets/game-design-career/use-cases/ca-c04.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 역할 요구와 현재 작업물 사이의 차이를 보았지만 무엇을 배우고 어떤 proof를 남길지 정하지 못했습니다.
@@ -288,6 +296,8 @@ $game-design-career:map-game-design-career artifact=game-design-career/learning-
 gap이 능력의 낙인 대신 검증 가능한 다음 작업으로 적혔는가? 관찰 기반 사례는 `CA-C05`, 창작 사례는 `CA-C06`으로 이동합니다.
 
 ## CA-C05 관찰 기반 역기획
+
+[![관찰과 추론 및 반례를 기록하는 역기획 흐름](../../assets/game-design-career/use-cases/ca-c05.png)](../../assets/game-design-career/use-cases/ca-c05.svg)
 
 ### 현재 상황과 목표
 
@@ -360,6 +370,8 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 
 ## CA-C06 창작 기획 포트폴리오
 
+[![창작 기획의 판단과 근거를 포트폴리오로 연결하는 흐름](../../assets/game-design-career/use-cases/ca-c06.png)](../../assets/game-design-career/use-cases/ca-c06.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 새 기획 아이디어를 포트폴리오로 만들고 싶지만 문제, 판단, 검증 계획과 실제 개인 기여가 흐려질 수 있습니다.
@@ -431,6 +443,8 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 
 ## CA-C07 포트폴리오 검토·수정·발표
 
+[![포트폴리오 검토와 수정 및 발표 준비 흐름](../../assets/game-design-career/use-cases/ca-c07.png)](../../assets/game-design-career/use-cases/ca-c07.svg)
+
 ### 현재 상황과 목표
 
 **사용자와 상황:** 포트폴리오 초안은 있으나 claim과 evidence, 수정 우선순위, 발표 답변의 연결이 불분명합니다.
@@ -501,6 +515,8 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/por
 각 발표 claim이 evidence ID와 개인 기여 범위로 돌아가는가? honest gap 답변과 성장 계획은 `CA-C08`으로 이동합니다.
 
 ## CA-C08 면접·주니어 성장·직무 전환
+
+[![면접과 주니어 성장 및 직무 전환의 증거 흐름](../../assets/game-design-career/use-cases/ca-c08.png)](../../assets/game-design-career/use-cases/ca-c08.svg)
 
 ### 현재 상황과 목표
 

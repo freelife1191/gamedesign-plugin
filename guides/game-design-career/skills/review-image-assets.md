@@ -11,6 +11,8 @@ Career image의 권리·provenance·가독성·accessibility·placement를 검�
 
 ### Career 직접 호출 활용 — review-image-assets
 
+[![Career 이미지 자산 검토 직접 호출 흐름](../../assets/game-design-career/skills/review-image-assets.png)](../../assets/game-design-career/skills/review-image-assets.svg)
+
 #### 직접 호출 조건
 
 검증된 `assets/image-assets.yml`의 한 stable asset ID와 requested lifecycle transition만 검토할 때 직접 호출합니다. 여러 artifact의 image·export 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. agent 권고와 asset bytes는 actual user decision이나 승인 증거가 아닙니다.

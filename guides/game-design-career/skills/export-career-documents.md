@@ -11,6 +11,8 @@ Career canonical artifact를 MD·PDF·DOCX·PPTX로 전달하기 위한 renderer
 
 ### 직접 호출 활용 — export-career-documents
 
+[![Career 문서 출력 직접 호출 흐름](../../assets/game-design-career/skills/export-career-documents.png)](../../assets/game-design-career/skills/export-career-documents.svg)
+
 #### 직접 호출 조건
 
 하나의 승인 대기 Artifact의 export 준비만 할 때 직접 호출합니다. 여러 artifact·형식 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 실제 renderer 실행이나 파일 생성을 약속하지 않습니다.

@@ -11,6 +11,8 @@ Career canonical artifact의 profile slot에 맞는 image manifest, reusable pro
 
 ### Career 직접 호출 활용 — plan-image-assets
 
+[![Career 이미지 자산 계획 직접 호출 흐름](../../assets/game-design-career/skills/plan-image-assets.png)](../../assets/game-design-career/skills/plan-image-assets.svg)
+
 #### 직접 호출 조건
 
 선택된 profile의 finite image 또는 Skillstead slot만 계획할 때 직접 호출합니다. 여러 artifact의 image 범위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 계획은 bytes 생성이나 승인 상태 변경을 하지 않습니다.

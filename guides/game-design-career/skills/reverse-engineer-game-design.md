@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — reverse-engineer-game-design
 
+[![게임 역기획 직접 호출 흐름](../../assets/game-design-career/skills/reverse-engineer-game-design.png)](../../assets/game-design-career/skills/reverse-engineer-game-design.svg)
+
 #### 직접 호출 조건
 
 하나의 공개 build 관찰과 validation queue만 정리할 때 직접 호출합니다. 여러 분석·portfolio 범위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 관찰·추론·제안을 분리합니다.

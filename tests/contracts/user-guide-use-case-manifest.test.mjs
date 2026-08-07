@@ -3141,6 +3141,136 @@ test("Studio diagram semantic bindings reject wrong-valid skills, outputs, next 
   assert.throws(() => validateDiagramSource({ ...g01, branches: [g01.branches[0]] }), /two branches/u);
 });
 
+const CAREER_DIAGRAM_SEMANTIC_EXPECTED = Object.freeze({
+  "ca-c01": { evidence: "현재 경험과 역할 후보", work: "역할·전문 분야 비교", review: "career strategist", boundary: "채용 결과를 보장하지 않음", next: "CA-C02 또는 CA-C03" },
+  "ca-c02": { evidence: "공개 build 관찰 기록", work: "관찰·추론 분리", review: "game analysis reviewer", boundary: "내부 구현을 추정하지 않음", next: "CA-C03 또는 CA-C04" },
+  "ca-c03": { evidence: "공식 공고와 retrievalDate", work: "표본·요건 정규화", review: "career reviewer", boundary: "stale evidence는 재검색", next: "CA-C04 또는 CA-C08" },
+  "ca-c04": { evidence: "gap과 evidence ID", work: "학습·proof 과제 계획", review: "mentor", boundary: "경험을 지어 내지 않음", next: "CA-C05 또는 CA-C06" },
+  "ca-c05": { evidence: "공개 build와 evidence ID", work: "반증 가능한 역기획", review: "public-rights reviewer", boundary: "권리 없는 내부 자료 제외", next: "CA-C06 또는 CA-C07" },
+  "ca-c06": { evidence: "개인 기여와 evidence ID", work: "창작 case 구성", review: "portfolio reviewer", boundary: "성과·채용을 보장하지 않음", next: "CA-C07 또는 CA-C08" },
+  "ca-c07": { evidence: "claim과 evidence ID", work: "five-axis 최소 수정", review: "portfolio reviewer", boundary: "자동 승인은 아님", next: "CA-C08 또는 export-career-documents" },
+  "ca-c08": { evidence: "질문·growth evidence ID", work: "면접·성장·전환 계획", review: "mentor·manager·career reviewer", boundary: "채용·승진·전환을 보장하지 않음", next: "CA-C03 또는 CA-C04" },
+  "ca-t01": { evidence: "상태 전이와 예외 표", work: "규칙표 proof 작성", review: "시스템 기획 멘토", boundary: "합격을 보장하지 않음", next: "CA-T02 또는 CA-T03" },
+  "ca-t02": { evidence: "퀘스트 상태와 분기 조건", work: "짧은 의뢰 flow", review: "콘텐츠 기획 멘토", boundary: "채용을 보장하지 않음", next: "CA-T06 또는 CA-T07" },
+  "ca-t03": { evidence: "cooldown과 피해 판정", work: "스킬 반례 작성", review: "전투 기획 멘토", boundary: "합격을 보장하지 않음", next: "CA-T04 또는 CA-T07" },
+  "ca-t04": { evidence: "source와 sink", work: "guardrail·rollback 가설", review: "경제·밸런스 검토자", boundary: "시장 성공을 보장하지 않음", next: "CA-T01 또는 CA-T10" },
+  "ca-t05": { evidence: "오류 상태와 대체 입력", work: "온보딩 usability 흐름", review: "UX·접근성 검토자", boundary: "채용을 보장하지 않음", next: "CA-T02 또는 CA-T08" },
+  "ca-t06": { evidence: "등장인물 목표와 분기", work: "대화 handoff 작성", review: "내러티브 기획 멘토", boundary: "합격을 보장하지 않음", next: "CA-T02 또는 CA-T07" },
+  "ca-t07": { evidence: "동선과 시야", work: "한 구역 playtest", review: "레벨 디자인 멘토", boundary: "실무 경험을 보장하지 않음", next: "CA-T03 또는 CA-T08" },
+  "ca-t08": { evidence: "개인 기여와 수정 전후", work: "작은 proof 반복", review: "포트폴리오 검토자", boundary: "채용을 보장하지 않음", next: "CA-T01 또는 CA-T09" },
+  "ca-t09": { evidence: "이전 경험과 새 evidence", work: "전환 지도와 새 과제", review: "Career 검토자", boundary: "이직을 보장하지 않음", next: "CA-T03 또는 CA-T10" },
+  "ca-t10": { evidence: "growth review와 현재 공고", work: "수정 사례·면접 답변", review: "manager 또는 career reviewer", boundary: "승진·이직을 보장하지 않음", next: "CA-T04 또는 CA-T09" },
+  "ca-s01": { skill: "apply-document-quality-profile", input: "Career Artifact와 template", work: "profile 선택", next: "map-game-design-career" },
+  "ca-s02": { skill: "build-game-design-portfolio", input: "claim과 evidence", work: "portfolio case 구성", next: "review-game-design-portfolio" },
+  "ca-s03": { skill: "export-career-documents", input: "승인 대기 Artifact와 format", work: "export 준비", next: "pending format job" },
+  "ca-s04": { skill: "generate-image-assets", input: "selection receipt와 asset ID", work: "finite image job 처리", next: "review-image-assets" },
+  "ca-s05": { skill: "map-game-design-career", input: "current evidence와 role", work: "role map·gap 작성", next: "research-game-design-jobs" },
+  "ca-s06": { skill: "orchestrate-game-design-career", input: "goal·stage·current evidence", work: "skill chain·stage brief", next: "map-game-design-career" },
+  "ca-s07": { skill: "plan-image-assets", input: "profile과 image slot", work: "stable asset 계획", next: "generate-image-assets" },
+  "ca-s08": { skill: "plan-junior-growth", input: "requirement와 project event", work: "growth proof 계획", next: "visualize-career-roadmap" },
+  "ca-s09": { skill: "practice-game-design-interview", input: "questionId와 posting evidence", work: "answer feedback 기록", next: "plan-junior-growth" },
+  "ca-s10": { skill: "research-game-design-jobs", input: "role·level·region", work: "current posting 조사", next: "map-game-design-career" },
+  "ca-s11": { skill: "reverse-engineer-game-design", input: "public build와 source ID", work: "관찰·추론·반례", next: "build-game-design-portfolio" },
+  "ca-s12": { skill: "review-game-design-portfolio", input: "portfolio section과 evidence ID", work: "five-axis finding", next: "build-game-design-portfolio" },
+  "ca-s13": { skill: "review-image-assets", input: "stable asset ID와 decisionReceipt", work: "lifecycle transition 검토", next: "export-career-documents" },
+  "ca-s14": { skill: "svg-infographic", input: "source ID와 relationship", work: "editable SVG 작성", next: "visualize-career-roadmap" },
+  "ca-s15": { skill: "visualize-career-roadmap", input: "relationship과 diagram slot", work: "source-mapped 시각화", next: "export-career-documents" },
+});
+
+test("Career case and direct-skill diagrams are source-linked, rendered, embedded, and semantically bound", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const diagramManifest = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/diagram-manifest.json"), "utf8"));
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const cases = manifest.cases.filter(({ product }) => product === "game-design-career");
+  const skills = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
+  const caseSources = sources.filter(({ scope }) => scope === "game-design-career-use-case");
+  const skillSources = sources.filter(({ scope }) => scope === "game-design-career-skill");
+  const caseDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "game-design-career-use-case");
+  const skillDiagrams = diagramManifest.diagrams.filter(({ scope }) => scope === "game-design-career-skill");
+
+  assert.deepEqual(cases.map(({ id }) => id), ["CA-C01", "CA-C02", "CA-C03", "CA-C04", "CA-C05", "CA-C06", "CA-C07", "CA-C08", "CA-T01", "CA-T02", "CA-T03", "CA-T04", "CA-T05", "CA-T06", "CA-T07", "CA-T08", "CA-T09", "CA-T10"]);
+  assert.deepEqual(skills.map(({ id }) => id), ["CA-S01", "CA-S02", "CA-S03", "CA-S04", "CA-S05", "CA-S06", "CA-S07", "CA-S08", "CA-S09", "CA-S10", "CA-S11", "CA-S12", "CA-S13", "CA-S14", "CA-S15"]);
+  assert.equal(caseSources.length, 18, "Career use-case diagram source count");
+  assert.equal(skillSources.length, 15, "Career direct-skill diagram source count");
+  assert.equal(caseDiagrams.length, 18, "Career use-case manifest count");
+  assert.equal(skillDiagrams.length, 15, "Career direct-skill manifest count");
+
+  const expectedEntries = [
+    ...cases.map((entry) => ({ entry, type: entry.view === "competency" ? "design-pipeline" : "decision-flow", kind: "use-cases" })),
+    ...skills.map((entry) => ({ entry, type: "skill-flow", kind: "skills" })),
+  ];
+  for (const { entry, type, kind } of expectedEntries) {
+    const id = entry.id.toLowerCase();
+    const source = sources.find((candidate) => candidate.id === id);
+    const diagram = diagramManifest.diagrams.find((candidate) => candidate.id === id);
+    const expected = CAREER_DIAGRAM_SEMANTIC_EXPECTED[id];
+    assert.ok(source, `${entry.id} diagram source`);
+    assert.ok(diagram, `${entry.id} diagram manifest entry`);
+    validateDiagramSource(source);
+    assert.equal(source.type, type, `${entry.id} diagram type`);
+    assert.equal(source.steps.length, 5, `${entry.id} five semantic stages`);
+    assert.deepEqual(source.source_paths, [`${entry.document}#${entry.anchor}`], `${entry.id} exact source document and anchor`);
+    assert.deepEqual(source.used_by, [`${entry.document}#${entry.anchor}`], `${entry.id} exact used-by document and anchor`);
+    assert.deepEqual(source.semantic.outputs, entry.outputs, `${entry.id} exact output IDs`);
+    if (entry.skill) {
+      assert.equal(source.semantic.skill, expected.skill, `${entry.id} exact direct-use skill`);
+      assert.equal(source.semantic.required_input, expected.input, `${entry.id} exact evidence input`);
+      assert.equal(source.semantic.owned_work, expected.work, `${entry.id} exact owned work`);
+      assert.equal(source.semantic.next_route, expected.next, `${entry.id} exact conditional next route`);
+    } else {
+      assert.equal(source.semantic.evidence, expected.evidence, `${entry.id} exact evidence input`);
+      assert.equal(source.semantic.owned_work, expected.work, `${entry.id} exact owned work`);
+      assert.equal(source.semantic.human_review, expected.review, `${entry.id} named human review`);
+      assert.equal(source.semantic.boundary, expected.boundary, `${entry.id} no-guarantee or freshness boundary`);
+      assert.equal(source.semantic.next_route, expected.next, `${entry.id} exact next route`);
+    }
+    assert.equal(diagram.svg, entry.diagram.svg.replace(/^guides\/assets\//, ""), `${entry.id} SVG path`);
+    assert.equal(diagram.png, entry.diagram.png.replace(/^guides\/assets\//, ""), `${entry.id} PNG path`);
+    assert.equal(diagram.alt, entry.diagram.alt, `${entry.id} manifest alt`);
+    assert.deepEqual(diagram.sources, [`../${entry.document.replace(/^guides\//, "")}`], `${entry.id} manifest source`);
+    assert.deepEqual(diagram.usedBy, [`../${entry.document.replace(/^guides\//, "")}`], `${entry.id} manifest usedBy`);
+    const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
+    const scope = entry.skill
+      ? sectionByHeading(markdown, 3, `${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`)
+      : sectionByHeading(markdown, 2, entry.view === "competency" ? CAREER_COMPETENCY_HEADINGS[entry.id] : CAREER_TARGET_HEADINGS[entry.id]);
+    const relativeAsset = entry.diagram.png.replace(/^guides\/assets\//, "../../assets/").replace(/\.png$/, "");
+    const embed = new RegExp(`\\[!\\[${entry.diagram.alt.replace(/[.*+?^${}()|[\]\\\\]/g, "\\\\$&")}\\]\\(${relativeAsset}\\.png\\)\\]\\(${relativeAsset}\\.svg\\)`, "gu");
+    assert.equal(scope.match(embed)?.length ?? 0, 1, `${entry.id} exactly one editable SVG-wrapped PNG embed`);
+    const svg = await readFile(path.join(repoRoot, entry.diagram.svg), "utf8");
+    assert.match(svg, /^<svg\b[^>]*>\s*<title>[^<\s][\s\S]*?<\/title>\s*<desc>[^<\s][\s\S]*?<\/desc>/u, `${entry.id} SVG title and desc`);
+    assert.deepEqual(parseViewBox(svg), { w: 1400, h: 900 }, `${entry.id} SVG viewBox`);
+    assert.ok(isCompletePng(path.join(repoRoot, entry.diagram.png)), `${entry.id} complete PNG`);
+    assert.deepEqual(pngDims(path.join(repoRoot, entry.diagram.png)), { w: 2800, h: 1800 }, `${entry.id} PNG dimensions`);
+  }
+  assert.deepEqual(await buildUseCaseDiagrams({ repoRoot, ids: expectedEntries.map(({ entry }) => entry.id.toLowerCase()), check: true }), { svg: 33, png: 33 });
+});
+
+test("Career source semantics reject wrong-valid swaps and removed evidence, human review, boundary, and next route", async () => {
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const sourceById = new Map(sources.map((source) => [source.id, source]));
+  const assertCase = (source) => {
+    const expected = CAREER_DIAGRAM_SEMANTIC_EXPECTED[source.id];
+    assert.equal(source.semantic.evidence, expected.evidence, "evidence binding");
+    assert.equal(source.semantic.human_review, expected.review, "human-review binding");
+    assert.equal(source.semantic.boundary, expected.boundary, "boundary binding");
+    assert.equal(source.semantic.next_route, expected.next, "next-route binding");
+  };
+  const assertSkill = (source) => {
+    const expected = CAREER_DIAGRAM_SEMANTIC_EXPECTED[source.id];
+    assert.equal(source.semantic.required_input, expected.input, "evidence-input binding");
+    assert.equal(source.semantic.owned_work, expected.work, "owned-work binding");
+    assert.equal(source.semantic.next_route, expected.next, "next-route binding");
+  };
+  const c03 = sourceById.get("ca-c03");
+  for (const [field, value] of [["evidence", "현재 경험과 역할 후보"], ["human_review", "portfolio reviewer"], ["boundary", "채용 결과를 보장하지 않음"], ["next_route", "CA-C02 또는 CA-C03"]]) {
+    assert.throws(() => assertCase({ ...c03, semantic: { ...c03.semantic, [field]: value } }), /binding/u, `CA-C03 ${field} mutation`);
+  }
+  const s10 = sourceById.get("ca-s10");
+  for (const [field, value] of [["required_input", "claim과 evidence"], ["owned_work", "role map·gap 작성"], ["next_route", "build-game-design-portfolio"]]) {
+    assert.throws(() => assertSkill({ ...s10, semantic: { ...s10.semantic, [field]: value } }), /binding/u, `CA-S10 ${field} mutation`);
+  }
+});
+
 const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
   "st-c01": { kind: "competency", specialist: "define-game-vision", outputs: ["vision-pillars", "game-design-brief", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
   "st-c02": { kind: "competency", specialist: "design-game-systems", outputs: ["core-motivation-loop", "system-specification", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },

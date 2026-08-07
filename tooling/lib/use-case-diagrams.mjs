@@ -77,6 +77,10 @@ function isStudioSource(source) {
   return source.scope === "game-design-studio-use-case" || source.scope === "game-design-studio-skill";
 }
 
+function isCareerSource(source) {
+  return source.scope === "game-design-career-use-case" || source.scope === "game-design-career-skill";
+}
+
 function assertStringArray(value, label) {
   if (!Array.isArray(value) || value.length === 0 || value.some((item) => !isNonemptyString(item))) {
     throw new TypeError(`${label} must contain nonempty strings`);
@@ -124,6 +128,37 @@ function validateStudioSemanticContract(source) {
   }
 }
 
+function validateCareerSemanticContract(source) {
+  if (!isCareerSource(source)) return;
+  if (source.steps.length !== 5) throw new TypeError("Career diagram source must contain exactly five stages");
+  if (!isObject(source.semantic)) throw new TypeError("Career diagram source semantic must be an object");
+  assertStringArray(source.semantic.outputs, "Career diagram source semantic.outputs");
+  const expectedStages = source.scope === "game-design-career-skill"
+    ? ["trigger", "evidence input", "skill-owned work", "output", "next route"]
+    : ["evidence input", "owned work", "human review", "boundary", "output / next route"];
+  const stages = source.steps.map(({ stage }) => stage);
+  if (stages.some((stage) => !isNonemptyString(stage)) || stages.join("\u0000") !== expectedStages.join("\u0000")) {
+    throw new TypeError(`Career diagram source stages must be: ${expectedStages.join(" → ")}`);
+  }
+  if (source.scope === "game-design-career-skill") {
+    for (const field of ["skill", "trigger", "required_input", "owned_work", "next_route"]) {
+      if (!isNonemptyString(source.semantic[field])) throw new TypeError(`Career skill semantic.${field} must be a nonempty string`);
+    }
+    return;
+  }
+  for (const field of ["evidence", "owned_work", "human_review", "boundary", "next_route"]) {
+    if (!isNonemptyString(source.semantic[field])) throw new TypeError(`Career case semantic.${field} must be a nonempty string`);
+  }
+  if (source.type === "decision-flow") {
+    if (!Array.isArray(source.branches) || source.branches.length < 2) throw new TypeError("Career decision-flow must contain at least two branches");
+    for (const [index, branch] of source.branches.entries()) {
+      if (!isObject(branch) || !isNonemptyString(branch.label) || !isNonemptyString(branch.detail)) {
+        throw new TypeError(`Career decision branch ${index} must have label and detail`);
+      }
+    }
+  }
+}
+
 function cardColor(index) {
   return [
     { fill: "#E8F1FB", stroke: "#1F6FB2", accent: "#124267" },
@@ -147,6 +182,14 @@ function exactTextLines(values, { x, y, fill }) {
 }
 
 function visibleStep(source, step, index) {
+  if (isCareerSource(source)) {
+    if (source.scope === "game-design-career-use-case") {
+      const exact = [source.semantic.evidence, source.semantic.owned_work, source.semantic.human_review, source.semantic.boundary];
+      return { ...step, exact: index === 4 ? source.semantic.outputs : [exact[index]] };
+    }
+    const exact = [source.semantic.trigger, source.semantic.required_input, source.semantic.owned_work, null, source.semantic.next_route];
+    return { ...step, exact: index === 3 ? source.semantic.outputs : [exact[index]] };
+  }
   if (!isStudioSource(source)) return step;
   if (source.type === "design-pipeline") {
     if (index === 1) return { ...step, exact: [source.semantic.specialist] };
@@ -167,6 +210,10 @@ function visibleStep(source, step, index) {
 }
 
 function semanticRailLines(source) {
+  if (isCareerSource(source)) {
+    const prefix = source.scope === "game-design-career-skill" ? `skill: ${source.semantic.skill}` : `review: ${source.semantic.human_review}`;
+    return [prefix, `outputs: ${source.semantic.outputs.join(" · ")}`, `next: ${source.semantic.next_route}`];
+  }
   if (!isStudioSource(source)) return [];
   if (source.type === "design-pipeline") {
     return [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `review: ${source.semantic.review.skill}`];
@@ -217,6 +264,7 @@ export function validateDiagramSource(source) {
     }
   }
   validateStudioSemanticContract(source);
+  validateCareerSemanticContract(source);
 }
 
 export function renderDiagramSvg(source) {

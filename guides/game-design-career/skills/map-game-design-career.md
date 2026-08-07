@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — map-game-design-career
 
+[![게임 기획 경로 매핑 직접 호출 흐름](../../assets/game-design-career/skills/map-game-design-career.png)](../../assets/game-design-career/skills/map-game-design-career.svg)
+
 #### 직접 호출 조건
 
 한 목표 역할의 current evidence와 competency gap만 정리할 때 직접 호출합니다. 여러 역할·단계의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 사실·추론·제안을 분리합니다.

@@ -251,5 +251,435 @@
     {"id":"st-s13","scope":"game-design-studio-skill","svg":"game-design-studio/skills/review-image-assets.svg","png":"game-design-studio/skills/review-image-assets.png","alt":"이미지 자산 검토 직접 호출 흐름","sources":["../game-design-studio/skills/review-image-assets.md"],"usedBy":["../game-design-studio/skills/review-image-assets.md"]},
     {"id":"st-s14","scope":"game-design-studio-skill","svg":"game-design-studio/skills/svg-infographic.svg","png":"game-design-studio/skills/svg-infographic.png","alt":"SVG 인포그래픽 직접 호출 흐름","sources":["../game-design-studio/skills/svg-infographic.md"],"usedBy":["../game-design-studio/skills/svg-infographic.md"]},
     {"id":"st-s15","scope":"game-design-studio-skill","svg":"game-design-studio/skills/visualize-game-design.svg","png":"game-design-studio/skills/visualize-game-design.png","alt":"게임 기획 시각화 직접 호출 흐름","sources":["../game-design-studio/skills/visualize-game-design.md"],"usedBy":["../game-design-studio/skills/visualize-game-design.md"]}
+  ,
+  {
+    "id": "ca-c01",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c01.svg",
+    "png": "game-design-career/use-cases/ca-c01.png",
+    "alt": "기획 직무와 전문 분야를 비교하는 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c02",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c02.svg",
+    "png": "game-design-career/use-cases/ca-c02.png",
+    "alt": "게임 분석의 관찰과 추론을 분리하는 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c03",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c03.svg",
+    "png": "game-design-career/use-cases/ca-c03.png",
+    "alt": "현재 채용공고의 근거와 표본 경계를 기록하는 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c04",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c04.svg",
+    "png": "game-design-career/use-cases/ca-c04.png",
+    "alt": "역량 격차를 학습과 증거 과제로 전환하는 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c05",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c05.svg",
+    "png": "game-design-career/use-cases/ca-c05.png",
+    "alt": "관찰과 추론 및 반례를 기록하는 역기획 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c06",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c06.svg",
+    "png": "game-design-career/use-cases/ca-c06.png",
+    "alt": "창작 기획의 판단과 근거를 포트폴리오로 연결하는 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c07",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c07.svg",
+    "png": "game-design-career/use-cases/ca-c07.png",
+    "alt": "포트폴리오 검토와 수정 및 발표 준비 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-c08",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-c08.svg",
+    "png": "game-design-career/use-cases/ca-c08.png",
+    "alt": "면접과 주니어 성장 및 직무 전환의 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/competency-paths.md"
+    ]
+  },
+  {
+    "id": "ca-t01",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t01.svg",
+    "png": "game-design-career/use-cases/ca-t01.png",
+    "alt": "시스템 기획 입문 학생의 증거 과제와 학습 경로",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t02",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t02.svg",
+    "png": "game-design-career/use-cases/ca-t02.png",
+    "alt": "콘텐츠와 퀘스트 기획 준비생의 제작 가능성 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t03",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t03.svg",
+    "png": "game-design-career/use-cases/ca-t03.png",
+    "alt": "전투와 캐릭터 기획 준비생의 분석과 검증 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t04",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t04.svg",
+    "png": "game-design-career/use-cases/ca-t04.png",
+    "alt": "경제와 밸런스 및 LiveOps 준비생의 가정 검증 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t05",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t05.svg",
+    "png": "game-design-career/use-cases/ca-t05.png",
+    "alt": "UI UX 기획 준비생의 접근성과 usability 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t06",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t06.svg",
+    "png": "game-design-career/use-cases/ca-t06.png",
+    "alt": "내러티브 기획 준비생의 협업 계약과 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t07",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t07.svg",
+    "png": "game-design-career/use-cases/ca-t07.png",
+    "alt": "레벨 디자인 준비생의 공간과 playtest 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t08",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t08.svg",
+    "png": "game-design-career/use-cases/ca-t08.png",
+    "alt": "실무 경험이 없는 신입의 판단과 반복 개선 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t09",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t09.svg",
+    "png": "game-design-career/use-cases/ca-t09.png",
+    "alt": "직군 전환자의 전이 가능한 역량과 새 증거 과제 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-t10",
+    "scope": "game-design-career-use-case",
+    "svg": "game-design-career/use-cases/ca-t10.svg",
+    "png": "game-design-career/use-cases/ca-t10.png",
+    "alt": "주니어의 성장과 이직 준비도 증거 흐름",
+    "sources": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "usedBy": [
+      "../game-design-career/use-cases/concept-scenarios.md"
+    ]
+  },
+  {
+    "id": "ca-s01",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/apply-document-quality-profile.svg",
+    "png": "game-design-career/skills/apply-document-quality-profile.png",
+    "alt": "Career 문서 품질 프로필 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/apply-document-quality-profile.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/apply-document-quality-profile.md"
+    ]
+  },
+  {
+    "id": "ca-s02",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/build-game-design-portfolio.svg",
+    "png": "game-design-career/skills/build-game-design-portfolio.png",
+    "alt": "게임 기획 포트폴리오 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/build-game-design-portfolio.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/build-game-design-portfolio.md"
+    ]
+  },
+  {
+    "id": "ca-s03",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/export-career-documents.svg",
+    "png": "game-design-career/skills/export-career-documents.png",
+    "alt": "Career 문서 출력 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/export-career-documents.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/export-career-documents.md"
+    ]
+  },
+  {
+    "id": "ca-s04",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/generate-image-assets.svg",
+    "png": "game-design-career/skills/generate-image-assets.png",
+    "alt": "Career 이미지 자산 생성 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/generate-image-assets.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/generate-image-assets.md"
+    ]
+  },
+  {
+    "id": "ca-s05",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/map-game-design-career.svg",
+    "png": "game-design-career/skills/map-game-design-career.png",
+    "alt": "게임 기획 경로 매핑 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/map-game-design-career.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/map-game-design-career.md"
+    ]
+  },
+  {
+    "id": "ca-s06",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/orchestrate-game-design-career.svg",
+    "png": "game-design-career/skills/orchestrate-game-design-career.png",
+    "alt": "게임 기획 커리어 오케스트레이션 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/orchestrate-game-design-career.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/orchestrate-game-design-career.md"
+    ]
+  },
+  {
+    "id": "ca-s07",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/plan-image-assets.svg",
+    "png": "game-design-career/skills/plan-image-assets.png",
+    "alt": "Career 이미지 자산 계획 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/plan-image-assets.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/plan-image-assets.md"
+    ]
+  },
+  {
+    "id": "ca-s08",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/plan-junior-growth.svg",
+    "png": "game-design-career/skills/plan-junior-growth.png",
+    "alt": "주니어 성장 계획 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/plan-junior-growth.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/plan-junior-growth.md"
+    ]
+  },
+  {
+    "id": "ca-s09",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/practice-game-design-interview.svg",
+    "png": "game-design-career/skills/practice-game-design-interview.png",
+    "alt": "게임 기획 면접 연습 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/practice-game-design-interview.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/practice-game-design-interview.md"
+    ]
+  },
+  {
+    "id": "ca-s10",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/research-game-design-jobs.svg",
+    "png": "game-design-career/skills/research-game-design-jobs.png",
+    "alt": "게임 기획 채용 근거 조사 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/research-game-design-jobs.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/research-game-design-jobs.md"
+    ]
+  },
+  {
+    "id": "ca-s11",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/reverse-engineer-game-design.svg",
+    "png": "game-design-career/skills/reverse-engineer-game-design.png",
+    "alt": "게임 역기획 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/reverse-engineer-game-design.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/reverse-engineer-game-design.md"
+    ]
+  },
+  {
+    "id": "ca-s12",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/review-game-design-portfolio.svg",
+    "png": "game-design-career/skills/review-game-design-portfolio.png",
+    "alt": "게임 기획 포트폴리오 검토 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/review-game-design-portfolio.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/review-game-design-portfolio.md"
+    ]
+  },
+  {
+    "id": "ca-s13",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/review-image-assets.svg",
+    "png": "game-design-career/skills/review-image-assets.png",
+    "alt": "Career 이미지 자산 검토 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/review-image-assets.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/review-image-assets.md"
+    ]
+  },
+  {
+    "id": "ca-s14",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/svg-infographic.svg",
+    "png": "game-design-career/skills/svg-infographic.png",
+    "alt": "Career SVG 인포그래픽 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/svg-infographic.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/svg-infographic.md"
+    ]
+  },
+  {
+    "id": "ca-s15",
+    "scope": "game-design-career-skill",
+    "svg": "game-design-career/skills/visualize-career-roadmap.svg",
+    "png": "game-design-career/skills/visualize-career-roadmap.png",
+    "alt": "게임 기획 커리어 로드맵 시각화 직접 호출 흐름",
+    "sources": [
+      "../game-design-career/skills/visualize-career-roadmap.md"
+    ],
+    "usedBy": [
+      "../game-design-career/skills/visualize-career-roadmap.md"
+    ]
+  }
   ]
 }

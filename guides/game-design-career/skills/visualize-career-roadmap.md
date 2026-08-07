@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — visualize-career-roadmap
 
+[![게임 기획 커리어 로드맵 시각화 직접 호출 흐름](../../assets/game-design-career/skills/visualize-career-roadmap.png)](../../assets/game-design-career/skills/visualize-career-roadmap.svg)
+
 #### 직접 호출 조건
 
 하나의 source-mapped relationship과 diagram slot만 만들 때 직접 호출합니다. 여러 Career route와 source priority가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. Node-free Chromium fallback을 보존합니다.

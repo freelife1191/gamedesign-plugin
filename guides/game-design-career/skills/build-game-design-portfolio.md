@@ -11,6 +11,8 @@
 
 ### 직접 호출 활용 — build-game-design-portfolio
 
+[![게임 기획 포트폴리오 직접 호출 흐름](../../assets/game-design-career/skills/build-game-design-portfolio.png)](../../assets/game-design-career/skills/build-game-design-portfolio.svg)
+
 #### 직접 호출 조건
 
 한 portfolio project의 claim·evidence 구조만 만들 때 직접 호출합니다. 여러 artifact의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 합격을 보장하지 않습니다.
