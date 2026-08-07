@@ -40,6 +40,25 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 | Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 15개](game-design-studio/skills/README.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
 | Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 15개](game-design-career/skills/README.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
 
+## 활용 사례와 결과물
+
+[공통 활용 허브](use-cases/README.md)는 사용자 상황과 요청문을, [사용자 경로](use-cases/audience-paths.md)는 여섯 사용자군의 단계별 경로를, [결과물 카탈로그](use-cases/output-catalog.md)는 최소·선택·확장 결과와 Studio → Career handoff 경계를 설명합니다. 도식의 확인 기준은 [Visual QA](assets/VISUAL-QA.md)에서 봅니다.
+
+| 탐색 방식 | Studio | Career |
+| --- | --- | --- |
+| 역량 사례 | [역량 사례](game-design-studio/use-cases/competency-paths.md) | [역량 사례](game-design-career/use-cases/competency-paths.md) |
+| 콘셉트·대상 사례 | [콘셉트 사례](game-design-studio/use-cases/concept-scenarios.md) | [대상 사례](game-design-career/use-cases/concept-scenarios.md) |
+| 직접 스킬 | [스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) | [스킬 워크벤치](game-design-career/use-cases/skill-workbench.md) |
+| 대표 사례 | [ST-C03 규칙·상태·예외·데이터](game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | [CA-C06 창작 기획 포트폴리오](game-design-career/use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오) |
+| 제품 질문 | [Studio FAQ](game-design-studio/faq.md) | [Career FAQ](game-design-career/faq.md) |
+
+## 입문에서 포트폴리오까지 읽기
+
+1. **입문:** [AUD-01 사용자 경로](use-cases/audience-paths.md#aud-01-게임-기획-입문-학생)에서 작은 관찰과 규칙 실습을 고릅니다.
+2. **기초·응용:** Studio 또는 Career의 역량·콘셉트·직접 스킬 중 현재 입력에 맞는 하나를 선택합니다.
+3. **포트폴리오:** [결과물 카탈로그](use-cases/output-catalog.md#studio-career-handoff)의 공개·권리·개인 기여 경계를 읽고, Studio 원본을 합치지 않은 별도 Career Artifact를 만듭니다.
+4. **전체 프로젝트:** 범위와 검토 게이트가 여러 개면 제품 오케스트레이터와 workflow로 돌아가 사람 결정을 남깁니다.
+
 ## 지원 환경
 
 이 저장소가 안내하는 플러그인 표면은 ChatGPT 데스크톱 앱의 Work 또는 Codex와 Codex CLI입니다. IDE 확장, 모바일, 일반 Chat에서는 플러그인을 사용할 수 있다고 가정하지 않습니다.

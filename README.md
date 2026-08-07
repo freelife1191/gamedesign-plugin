@@ -4,6 +4,44 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 
 > 이 도구는 기획 판단과 근거 관리를 돕습니다. 재미·흥행·매출·채용 합격·법률 준수·플랫폼 승인 또는 사람의 승인을 보장하지 않습니다.
 
+## 이 플러그인으로 할 수 있는 일
+
+게임 기획 학생은 작은 규칙, 행동 루프, 시스템, UX를 관찰·설계·검토하는 데서 시작하고, 필요하면 제작 범위가 있는 전체 프로젝트로 넓힐 수 있습니다. 취업 준비에서는 공개 가능한 역기획, 포트폴리오 판단과 면접 근거를 별도 Career Artifact로 정리합니다. 먼저 [공통 활용 허브](guides/use-cases/README.md)에서 현재 목적을 고르고, [결과물 카탈로그](guides/use-cases/output-catalog.md)에서 최소·선택·확장 결과와 사람 검토 경계를 확인하세요.
+
+모든 경로는 `content.md`와 `evidence.yml`을 보존합니다. SVG·PNG는 검토 가능한 도식 자산이고, MD는 renderer가 없어도 남습니다. PDF·DOCX·PPTX는 별도 renderer와 형식·visual QA가 확인된 뒤에만 파생 결과로 다룹니다.
+
+## 사용자 유형별 추천 시작점
+
+현재 상황에 맞는 [사용자 경로](guides/use-cases/audience-paths.md)를 선택합니다.
+
+| 사용자 | 권장 시작 |
+| --- | --- |
+| [AUD-01 게임 기획 입문 학생](guides/use-cases/audience-paths.md#aud-01-게임-기획-입문-학생) | 규칙과 관찰 하나를 작은 기획 브리프로 만듭니다. |
+| [AUD-02 게임 기획 취업 준비생](guides/use-cases/audience-paths.md#aud-02-게임-기획-취업-준비생) | 역할·역기획·포트폴리오 증거를 구분합니다. |
+| [AUD-03 게임 기획 직무 전환자](guides/use-cases/audience-paths.md#aud-03-게임-기획-직무-전환자) | 전이 가능한 경험과 새 증거 과제를 분리합니다. |
+| [AUD-04 솔로·인디 게임 기획자](guides/use-cases/audience-paths.md#aud-04-솔로인디-게임-기획자) | 범위·위험이 제한된 설계로 시작합니다. |
+| [AUD-05 현업 게임 기획자](guides/use-cases/audience-paths.md#aud-05-현업-게임-기획자) | 시스템·콘텐츠·UX·경제 문제 하나를 검토합니다. |
+| [AUD-06 팀 리드·교육자·멘토](guides/use-cases/audience-paths.md#aud-06-팀-리드교육자멘토) | 과제, 검토 기준과 피드백 흐름을 설계합니다. |
+
+## 활용 방법 선택
+
+공통 원리를 익히려면 역량 사례, 장르·목표 제약을 비교하려면 콘셉트 사례, 입력과 결과가 분명하면 직접 스킬을 선택합니다. 아래 대표 링크는 사례 전체 본문을 복제하지 않고 다음 학습 지점만 가리킵니다.
+
+| 탐색 방식 | 기획 학생 중심 Studio 사례 | Career 사례 |
+| --- | --- | --- |
+| 규칙·루프·시스템 | [ST-C02 행동·핵심 루프](guides/game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택) · [ST-C03 규칙·상태·예외·데이터](guides/game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | [CA-T01 시스템 기획 입문 학생](guides/game-design-career/use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생) |
+| UX와 콘텐츠 | [ST-C04 UI·UX·온보딩·접근성](guides/game-design-studio/use-cases/competency-paths.md#st-c04-uiux온보딩접근성) · [ST-C05 콘텐츠·퀘스트](guides/game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) | [CA-C01 기획 직무와 전문 분야 탐색](guides/game-design-career/use-cases/competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색) |
+| 포트폴리오·역기획·면접 | [ST-C07 경제·밸런스·LiveOps](guides/game-design-studio/use-cases/competency-paths.md#st-c07-성장경제밸런스liveops) | [CA-C05 관찰 기반 역기획](guides/game-design-career/use-cases/competency-paths.md#ca-c05-관찰-기반-역기획) · [CA-C06 창작 기획 포트폴리오](guides/game-design-career/use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오) · [CA-C07 포트폴리오 검토·발표](guides/game-design-career/use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표) · [CA-C08 면접·주니어 성장·직무 전환](guides/game-design-career/use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환) |
+| 전체 프로젝트 | [ST-C08 제작·검토·이미지·출력](guides/game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력) | Career Artifact로 넘길 공개 가능한 문제·결정·검증 evidence를 분리합니다. |
+
+**입문 요청문:** `관찰한 장면 하나를 사실·가정·질문으로 나누고, 규칙 하나를 설명하는 짧은 기획 브리프로 만들어 줘.`
+
+**응용 요청문:** `이 시스템의 상태, 예외, UX 피드백과 검토할 반례를 표로 정리해 줘.`
+
+**포트폴리오 요청문:** `공개 가능한 관찰을 역기획의 사실·추론·제안으로 분리하고, 개인 기여와 권리 검토가 필요한 항목을 남겨 줘.`
+
+**전체 프로젝트 요청문:** `핵심 루프, 시스템, UX, 제작 범위와 검토 게이트를 하나의 제한된 게임 기획 프로젝트로 연결해 줘.`
+
 ## 어떤 플러그인을 설치할까
 
 | 지금 하려는 일 | 설치할 플러그인 | 첫 결과 |
