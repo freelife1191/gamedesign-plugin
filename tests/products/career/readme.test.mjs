@@ -115,6 +115,94 @@ function tableIds(markdown, heading) {
   return [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
 }
 
+const representativeCareerCaseIds = ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"];
+
+function normalizeTableCell(value) {
+  return value.trim().replace(/\s+/gu, " ");
+}
+
+function readmeSection(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `missing README section: ${heading}`);
+  const bodyStart = start + marker.length;
+  const next = markdown.indexOf("\n## ", bodyStart);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : next).trim();
+}
+
+function extractMarkdownTable(markdown, heading) {
+  const lines = readmeSection(markdown, heading).split("\n");
+  const headerIndex = lines.findIndex((line) => line.startsWith("|"));
+  assert.notEqual(headerIndex, -1, `${heading}: missing table`);
+  const parseRow = (line) => line.split("|").slice(1, -1).map(normalizeTableCell);
+  return {
+    headers: parseRow(lines[headerIndex]),
+    rows: lines.slice(headerIndex + 2).filter((line) => line.startsWith("|")).map(parseRow),
+  };
+}
+
+function extractCaseCard(markdown, caseId) {
+  const match = new RegExp(`^## ${caseId} .+$`, "mu").exec(markdown);
+  assert.ok(match, `${caseId}: canonical case card`);
+  const bodyStart = match.index + match[0].length;
+  const next = markdown.slice(bodyStart).search(/^## /mu);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function extractCaseSubsection(card, heading) {
+  const marker = `### ${heading}\n`;
+  const start = card.indexOf(marker);
+  assert.notEqual(start, -1, `${heading}: canonical case subsection`);
+  const bodyStart = start + marker.length;
+  const next = card.indexOf("\n### ", bodyStart);
+  return card.slice(bodyStart, next === -1 ? card.length : next).trim();
+}
+
+function codeBlock(section, label) {
+  const match = /^```text\n([\s\S]*?)\n```$/mu.exec(section);
+  assert.ok(match, `${label}: text code block`);
+  return normalizeTableCell(match[1]);
+}
+
+function canonicalRepresentativeRoute(entry, source) {
+  const card = extractCaseCard(source, entry.id);
+  const review = extractCaseSubsection(card, "검토와 승인");
+  const readOrder = /\*\*읽는 순서:\*\* ([^.]+)입니다\./u.exec(review);
+  assert.ok(readOrder, `${entry.id}: canonical read order`);
+  return {
+    caseId: entry.id,
+    input: extractCaseSubsection(card, "준비 입력").split("\n").map((line) => line.trim()).join("<br>"),
+    skills: entry.skills.map((skill) => `$game-design-career:${skill}`).join(" → "),
+    directRequest: codeBlock(extractCaseSubsection(card, "Codex CLI 요청문"), `${entry.id}: direct request`),
+    results: entry.outputs.map((output) => `\`${output}\` → \`game-design-career/<career-id>/${output}/\``).join("<br>"),
+    readOrder: readOrder[1],
+  };
+}
+
+function assertRepresentativeRouteTable(markdown, expected, label) {
+  const { headers, rows } = extractMarkdownTable(markdown, "활용 시작점");
+  assert.deepEqual(
+    headers,
+    ["사례", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · root", "사례 읽는 순서"],
+    `${label}: representative table headers`,
+  );
+  const byCase = new Map(rows.map((row) => [row[0].match(/`(CA-[TC]\d+)`/u)?.[1], row]));
+  assert.equal(byCase.size, expected.length, `${label}: representative case count`);
+  for (const route of expected) {
+    const row = byCase.get(route.caseId);
+    assert.ok(row, `${label}: ${route.caseId} row`);
+    assert.equal(row.length, headers.length, `${label}: ${route.caseId} cell count`);
+    assert.deepEqual(row, [
+      `\`${route.caseId}\``, route.input, route.skills, route.directRequest, route.results, route.readOrder,
+    ], `${label}: ${route.caseId} exact route cells`);
+    assert.doesNotMatch(row[4], /(?:^|\/)\.\.(?:\/|$)/u, `${label}: ${route.caseId} result root cannot escape`);
+  }
+}
+
+function assertNoHiringGuarantee(markdown, label) {
+  assert.doesNotMatch(markdown, /합격(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)|채용(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)/u, `${label}: no hiring guarantee`);
+}
+
 async function walkFiles(root) {
   const files = [];
   async function visit(directory) {
@@ -447,7 +535,7 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
   }
 });
 
-test("README routes Career entry users to canonical skills and inspectable results without package-escaping links", async () => {
+test("README binds Career entry users to canonical representative case routes without package-escaping links", async () => {
   const [readme, routingSource, manifestSource, inventory] = await Promise.all([
     readFile(readmePath, "utf8"),
     readFile(path.join(pluginRoot, "references/routing.json"), "utf8"),
@@ -470,19 +558,36 @@ test("README routes Career entry users to canonical skills and inspectable resul
     `${careerCases.length + skillCases.length}개 도식`,
   ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);
 
-  for (const caseId of ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"]) {
+  const expected = [];
+  for (const caseId of representativeCareerCaseIds) {
     const entry = careerCases.find(({ id }) => id === caseId);
     assert.ok(entry, `representative Career case: ${caseId}`);
-    const row = readme.split("\n").find((line) => line.includes(`\`${entry.id}\``));
-    assert.ok(row, `README case row: ${entry.id}`);
-    assert.ok(row.includes(`$game-design-career:${entry.skills[0]}`), `${entry.id}: canonical skill`);
-    assert.ok(row.includes(`\`${entry.outputs[0]}\``), `${entry.id}: canonical result`);
-    assert.ok(row.includes(`game-design-career/<career-id>/${entry.outputs[0]}/`), `${entry.id}: canonical result path`);
-    const commands = [...row.matchAll(/\$game-design-career:([a-z0-9-]+)/gu)].map((match) => match[1]);
-    assert.ok(commands.every((skillId) => entry.skills.includes(skillId)), `${entry.id}: no unknown direct skill`);
+    const source = await readFile(path.join(repoRoot, entry.document), "utf8");
+    expected.push(canonicalRepresentativeRoute(entry, source));
   }
-  assert.match(readme, /content\.md\s*→\s*evidence\.yml\s*→\s*decisions\//u, "result read order");
-  assert.doesNotMatch(readme, /합격(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)|채용(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)/u, "no hiring guarantee");
+  assertRepresentativeRouteTable(readme, expected, "Career product README");
+  assertNoHiringGuarantee(readme, "Career product README");
+
+  const t01 = expected.find(({ caseId }) => caseId === "CA-T01");
+  const t04 = expected.find(({ caseId }) => caseId === "CA-T04");
+  const c05 = expected.find(({ caseId }) => caseId === "CA-C05");
+  const wrongValidSkill = readme.replace(t01.skills, t01.skills.replace("map-game-design-career", "research-game-design-jobs"));
+  const reorderedSkills = readme.replace(t01.skills, t01.skills.split(" → ").reverse().join(" → "));
+  const deletedSkill = readme.replace(t01.skills, `$game-design-career:${careerCases.find(({ id }) => id === "CA-T01").skills[0]}`);
+  const unknownSkill = readme.replace(t04.skills, t04.skills.replace("reverse-engineer-game-design", "unknown-career-skill"));
+  const escapedResultRoot = readme.replace(c05.results, c05.results.replace("game-design-career/<career-id>/", "game-design-career/<career-id>/../../"));
+  const swappedResults = readme.replace(t01.results, t04.results);
+  for (const [label, mutation] of [
+    ["deleted skill", deletedSkill],
+    ["reordered skills", reorderedSkills],
+    ["wrong but installed skill", wrongValidSkill],
+    ["unknown skill", unknownSkill],
+    ["escaped result root", escapedResultRoot],
+    ["swapped results", swappedResults],
+  ]) {
+    assert.throws(() => assertRepresentativeRouteTable(mutation, expected, `mutated Career product README: ${label}`), label);
+  }
+  assert.throws(() => assertNoHiringGuarantee(`${readme}\n채용을 보장합니다.`, "mutated Career product README"), "hiring guarantee");
 
   const localLinks = [...readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)]
     .map((match) => match[1])

@@ -4,7 +4,7 @@
 
 ## 오케스트레이터와 직접 호출
 
-여러 Career 단계와 산출물, 우선순위 또는 completion gate가 함께 남으면 `$game-design-career:orchestrate-game-design-career`로 stage brief와 가장 작은 skill chain을 먼저 만듭니다. 반대로 입력·한 가지 결과·읽는 순서가 분명하면 아래의 직접 스킬을 호출합니다. 직접 호출은 다른 증거·권리·사람 검토를 생략하지 않으며, route가 다시 섞일 때만 오케스트레이터로 돌아갑니다.
+여러 Career 단계와 산출물, 우선순위 또는 completion gate가 함께 남으면 `$game-design-career:orchestrate-game-design-career`로 stage brief와 가장 작은 skill chain을 먼저 만듭니다. 반대로 입력·한 가지 결과·읽는 순서가 분명하면 아래의 직접 스킬을 호출합니다. 사례의 전체 스킬 경로는 모든 순서형 단계를 뜻하고, 명시적 직접 요청은 그 경로의 시작 명령 하나이므로 둘을 혼동하지 않습니다. 직접 호출은 다른 증거·권리·사람 검토를 생략하지 않으며, route가 다시 섞일 때만 오케스트레이터로 돌아갑니다.
 
 | 선택 | 사용할 때 | 결과를 먼저 읽는 순서 |
 | --- | --- | --- |
