@@ -8,6 +8,22 @@ export const USE_CASE_EXPECTED_COUNTS = Object.freeze({
   studioSkillCases: 15,
   careerSkillCases: 15,
 });
+const MINIMUM_FAQ_COUNT = 48;
+const FAQ_PATHS = Object.freeze([
+  "guides/use-cases/README.md",
+  "guides/game-design-studio/faq.md",
+  "guides/game-design-career/faq.md",
+]);
+const DIAGRAM_EXPECTED_SCOPE_COUNTS = Object.freeze({
+  shared: 6,
+  "game-design-studio": 6,
+  "game-design-career": 6,
+  "use-case-audience": 6,
+  "game-design-studio-use-case": 18,
+  "game-design-studio-skill": 15,
+  "game-design-career-use-case": 18,
+  "game-design-career-skill": 15,
+});
 
 const PRODUCT_IDS = new Set(["game-design-studio", "game-design-career"]);
 
@@ -23,6 +39,36 @@ function isSafeRelativePath(value) {
   if (!isNonemptyString(value)) return false;
   if (path.isAbsolute(value) || path.posix.isAbsolute(value) || path.win32.isAbsolute(value)) return false;
   return !value.split(/[\\/]+/).includes("..");
+}
+
+function githubAnchor(heading) {
+  return heading
+    .trim()
+    .toLowerCase()
+    .replace(/<[^>]*>/g, "")
+    .replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "")
+    .replace(/\s+/g, "-");
+}
+
+function markdownAnchorSections(markdown) {
+  const lines = markdown.split("\n");
+  const headings = [];
+  const anchors = new Set();
+  for (const [lineIndex, line] of lines.entries()) {
+    const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
+    if (!match) continue;
+    const base = githubAnchor(match[2]);
+    if (!base) continue;
+    let anchor = base;
+    let suffix = 1;
+    while (anchors.has(anchor)) anchor = `${base}-${suffix++}`;
+    anchors.add(anchor);
+    headings.push({ anchor, level: match[1].length, lineIndex });
+  }
+  return new Map(headings.map((heading, index) => {
+    const next = headings.slice(index + 1).find((candidate) => candidate.level <= heading.level);
+    return [heading.anchor, lines.slice(heading.lineIndex, next?.lineIndex ?? lines.length).join("\n")];
+  }));
 }
 
 function entries(manifest) {
@@ -171,6 +217,9 @@ function validateCompleteCounts(counts, errors) {
       errors.push(`complete manifest requires ${field}=${expected}, found ${counts[field]}`);
     }
   }
+  if (counts.faq < MINIMUM_FAQ_COUNT) {
+    errors.push(`complete guides require faq>=${MINIMUM_FAQ_COUNT}, found ${counts.faq}`);
+  }
 }
 
 function isContained(root, candidate) {
@@ -217,6 +266,124 @@ async function validateDeclaredTargets(repoRoot, manifest, errors) {
   }
 }
 
+async function validateDocumentContracts(repoRoot, manifest, errors) {
+  const cache = new Map();
+  const requestMarkers = {
+    audience: { app: /^\*\*App 요청:\*\*/mu, cli: /^\*\*CLI 요청:\*\*/mu },
+    case: { app: /^### Codex App 요청문$/mu, cli: /^### Codex CLI 요청문$/mu },
+    skill: { app: /^## Codex App 요청 예시$/mu, cli: /^## Codex CLI 요청 예시$/mu },
+  };
+  for (const { entry, label, kind } of entries(manifest)) {
+    if (!isObject(entry) || !isSafeRelativePath(entry.document) || !isNonemptyString(entry.anchor)) continue;
+    const filename = path.resolve(repoRoot, entry.document);
+    try {
+      if (!cache.has(filename)) {
+        const markdown = await readFile(filename, "utf8");
+        cache.set(filename, { markdown, sections: markdownAnchorSections(markdown) });
+      }
+      const { markdown, sections } = cache.get(filename);
+      const section = sections.get(entry.anchor);
+      if (!section) {
+        errors.push(`${label}.anchor is missing from ${entry.document}: ${entry.anchor}`);
+        continue;
+      }
+      const requestSource = kind === "skill" ? markdown : section;
+      if (!requestMarkers[kind].app.test(requestSource)) {
+        errors.push(`${label} document is missing its App request marker: ${entry.document}#${entry.anchor}`);
+      }
+      if (!requestMarkers[kind].cli.test(requestSource)) {
+        errors.push(`${label} document is missing its CLI request marker: ${entry.document}#${entry.anchor}`);
+      }
+    } catch (error) {
+      errors.push(`${label}.document could not be read for anchor and request validation: ${entry.document} (${error.message})`);
+    }
+  }
+}
+
+async function countFaqHeadings(repoRoot, errors) {
+  let count = 0;
+  for (const relativePath of FAQ_PATHS) {
+    const filename = path.resolve(repoRoot, relativePath);
+    try {
+      await assertRegularContainedFile(repoRoot, filename);
+      const markdown = await readFile(filename, "utf8");
+      count += (markdown.match(/^### Q\d{2}\.\s+\S.+$/gmu) ?? []).length;
+    } catch (error) {
+      errors.push(`FAQ source must be an existing regular non-symlink file: ${relativePath} (${error.message})`);
+    }
+  }
+  return count;
+}
+
+async function validateDiagramManifestBindings(repoRoot, manifest, errors) {
+  const relativePath = "guides/assets/diagram-manifest.json";
+  const filename = path.resolve(repoRoot, relativePath);
+  let diagramManifest;
+  try {
+    await assertRegularContainedFile(repoRoot, filename);
+    diagramManifest = JSON.parse(await readFile(filename, "utf8"));
+  } catch (error) {
+    errors.push(`diagram manifest must be an existing regular non-symlink JSON file: ${relativePath} (${error.message})`);
+    return;
+  }
+  if (!isObject(diagramManifest) || !Array.isArray(diagramManifest.diagrams)) {
+    errors.push("diagram manifest diagrams must be an array");
+    return;
+  }
+
+  const diagramsById = new Map();
+  const scopeCounts = new Map();
+  for (const [index, diagram] of diagramManifest.diagrams.entries()) {
+    const label = `diagram-manifest.diagrams[${index}]`;
+    if (!isObject(diagram) || !isNonemptyString(diagram.id)) {
+      errors.push(`${label}.id must be a nonempty string`);
+      continue;
+    }
+    if (diagramsById.has(diagram.id)) errors.push(`${label} has duplicate id: ${diagram.id}`);
+    else diagramsById.set(diagram.id, diagram);
+    if (isNonemptyString(diagram.scope)) {
+      scopeCounts.set(diagram.scope, (scopeCounts.get(diagram.scope) ?? 0) + 1);
+    }
+  }
+  const expectedTotal = Object.values(DIAGRAM_EXPECTED_SCOPE_COUNTS).reduce((total, count) => total + count, 0);
+  if (diagramManifest.diagrams.length !== expectedTotal) {
+    errors.push(`complete diagram manifest requires diagrams=${expectedTotal}, found ${diagramManifest.diagrams.length}`);
+  }
+  for (const [scope, expected] of Object.entries(DIAGRAM_EXPECTED_SCOPE_COUNTS)) {
+    const actual = scopeCounts.get(scope) ?? 0;
+    if (actual !== expected) errors.push(`complete diagram manifest requires scope ${scope}=${expected}, found ${actual}`);
+  }
+  for (const [scope, actual] of scopeCounts) {
+    if (!(scope in DIAGRAM_EXPECTED_SCOPE_COUNTS)) {
+      errors.push(`complete diagram manifest has unknown scope ${scope}=${actual}`);
+    }
+  }
+
+  for (const { entry, label, kind } of entries(manifest)) {
+    if (!isObject(entry) || !isNonemptyString(entry.id) || !isObject(entry.diagram)) continue;
+    const diagram = diagramsById.get(entry.id.toLowerCase());
+    if (!diagram) {
+      errors.push(`${label}.diagram has no diagram manifest entry for id: ${entry.id.toLowerCase()}`);
+      continue;
+    }
+    const expectedScope = kind === "audience"
+      ? "use-case-audience"
+      : `${entry.product}-${kind === "case" ? "use-case" : "skill"}`;
+    if (diagram.scope !== expectedScope) {
+      errors.push(`${label}.diagram scope does not match: expected ${expectedScope}, found ${diagram.scope}`);
+    }
+    for (const field of ["svg", "png"]) {
+      const declaredPath = entry.diagram[field]?.replace(/^guides\/assets\//u, "");
+      if (declaredPath !== diagram[field]) {
+        errors.push(`${label}.diagram.${field} does not match diagram manifest: expected ${diagram[field]}, found ${declaredPath}`);
+      }
+    }
+    if (entry.diagram.alt !== diagram.alt) {
+      errors.push(`${label}.diagram.alt does not match diagram manifest`);
+    }
+  }
+}
+
 export async function loadUseCaseManifest({ repoRoot }) {
   const resolvedRoot = await realpath(repoRoot);
   const manifestPath = path.join(resolvedRoot, "guides/use-cases/use-case-manifest.json");
@@ -238,8 +405,18 @@ export async function validateUseCaseGuides({ repoRoot, requireComplete = false,
   const shapesAreValid = errors.length === 0;
   validateUniqueIds(manifest, errors);
   if (validateTargets && shapesAreValid) await validateDeclaredTargets(await realpath(repoRoot), manifest, errors);
-  if (inventories) validateCatalogBindings(manifest, inventories, errors);
-  if (requireComplete) validateCompleteCounts(counts, errors);
+  const hasInventories = inventories instanceof Map;
+  if (requireComplete && !hasInventories) errors.push("complete validation requires inventories Map");
+  if (hasInventories) validateCatalogBindings(manifest, inventories, errors);
+  if (requireComplete) {
+    const resolvedRoot = await realpath(repoRoot);
+    if (shapesAreValid) {
+      await validateDocumentContracts(resolvedRoot, manifest, errors);
+      await validateDiagramManifestBindings(resolvedRoot, manifest, errors);
+    }
+    counts.faq = await countFaqHeadings(resolvedRoot, errors);
+    validateCompleteCounts(counts, errors);
+  }
   return {
     ok: errors.length === 0,
     errors,

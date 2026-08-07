@@ -299,6 +299,7 @@ test("Studio recipe expected-result contract rejects empty, placeholder, or cros
 
 test("Studio manifest keeps unique global IDs and exactly six complete Studio diagram pairs", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  assert.equal(manifest.diagrams.length, 90, "global diagram count");
   assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, manifest.diagrams.length, "global diagram IDs must be unique");
   const studio = manifest.diagrams.filter(({ scope }) => scope === "game-design-studio");
   assert.equal(studio.length, 6, "Studio diagram count");

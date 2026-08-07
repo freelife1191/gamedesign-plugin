@@ -10,7 +10,7 @@ import {
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
-import { collectHeadingAnchors, collectProductInventory, extractMarkdownLinks } from "../../tooling/lib/user-guides.mjs";
+import { collectHeadingAnchors, collectProductInventory, extractMarkdownLinks, validateUserGuides } from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
 import {
@@ -27,6 +27,44 @@ const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-ca
 const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
+
+async function createCompleteUseCaseFixture(t) {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "complete-use-case-guides-"));
+  t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+  const copiedGuidePaths = [
+    "use-cases",
+    "game-design-studio/use-cases",
+    "game-design-career/use-cases",
+    "game-design-studio/skills",
+    "game-design-career/skills",
+  ];
+  for (const relativePath of copiedGuidePaths) {
+    const destination = path.join(fixtureRoot, "guides", relativePath);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await cp(path.join(repoRoot, "guides", relativePath), destination, { recursive: true });
+  }
+  for (const relativePath of ["game-design-studio/faq.md", "game-design-career/faq.md"]) {
+    const destination = path.join(fixtureRoot, "guides", relativePath);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await cp(path.join(repoRoot, "guides", relativePath), destination);
+  }
+  const manifestPath = path.join(fixtureRoot, "guides/use-cases/use-case-manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  for (const entry of [...manifest.audience_paths, ...manifest.cases, ...manifest.skill_cases]) {
+    for (const filename of [entry.diagram.svg, entry.diagram.png]) {
+      const target = path.join(fixtureRoot, filename);
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, path.extname(target) === ".svg" ? "<svg/>\n" : "png");
+    }
+  }
+  const diagramManifestPath = path.join(fixtureRoot, "guides/assets/diagram-manifest.json");
+  await cp(path.join(repoRoot, "guides/assets/diagram-manifest.json"), diagramManifestPath);
+  const inventories = new Map(await Promise.all([
+    "game-design-studio",
+    "game-design-career",
+  ].map(async (productId) => [productId, await collectProductInventory(repoRoot, productId)])));
+  return { fixtureRoot, manifestPath, diagramManifestPath, inventories };
+}
 
 const FAQ_ANSWER_FIELDS = [
   "결론",
@@ -1817,6 +1855,183 @@ test("use-case manifest exposes the versioned three-lane contract", async () => 
   assert.ok(Array.isArray(manifest.audience_paths));
   assert.ok(Array.isArray(manifest.cases));
   assert.ok(Array.isArray(manifest.skill_cases));
+});
+
+test("complete use-case validation reports the exact production coverage including all FAQ headings", async () => {
+  const inventories = new Map(await Promise.all([
+    "game-design-studio",
+    "game-design-career",
+  ].map(async (productId) => [productId, await collectProductInventory(repoRoot, productId)])));
+
+  const result = await validateUseCaseGuides({ repoRoot, requireComplete: true, inventories });
+
+  assert.equal(result.ok, true, result.errors.join("\n"));
+  assert.deepEqual(result.counts, {
+    audiencePaths: 6,
+    studioCases: 18,
+    careerCases: 18,
+    studioSkillCases: 15,
+    careerSkillCases: 15,
+    faq: 48,
+  });
+});
+
+test("complete aggregate guide validation composes the production use-case coverage counts", async () => {
+  const result = await validateUserGuides({ repoRoot, requireComplete: true });
+
+  assert.equal(result.ok, true, result.errors.join("\n"));
+  assert.deepEqual(result.counts, {
+    guides: 79,
+    skillGuides: 30,
+    templates: 30,
+    svg: 90,
+    png: 90,
+    audiencePaths: 6,
+    useCases: 36,
+    skillCases: 30,
+    faq: 48,
+  });
+});
+
+test("production diagram manifest keeps the exact complete scope inventory", async () => {
+  const manifest = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/diagram-manifest.json"), "utf8"));
+  const scopeCounts = Object.fromEntries([
+    "shared",
+    "game-design-studio",
+    "game-design-career",
+    "use-case-audience",
+    "game-design-studio-use-case",
+    "game-design-studio-skill",
+    "game-design-career-use-case",
+    "game-design-career-skill",
+  ].map((scope) => [scope, manifest.diagrams.filter((diagram) => diagram.scope === scope).length]));
+
+  assert.equal(manifest.diagrams.length, 90);
+  assert.equal(new Set(manifest.diagrams.map(({ id }) => id)).size, 90);
+  assert.deepEqual(scopeCounts, {
+    shared: 6,
+    "game-design-studio": 6,
+    "game-design-career": 6,
+    "use-case-audience": 6,
+    "game-design-studio-use-case": 18,
+    "game-design-studio-skill": 15,
+    "game-design-career-use-case": 18,
+    "game-design-career-skill": 15,
+  });
+});
+
+test("complete validation reads production document anchors and App/CLI request markers", async (t) => {
+  const fixture = await createCompleteUseCaseFixture(t);
+  const canonicalManifest = await readFile(fixture.manifestPath, "utf8");
+  const manifest = JSON.parse(canonicalManifest);
+  const audienceDocument = path.join(fixture.fixtureRoot, manifest.audience_paths[0].document);
+  const caseDocument = path.join(fixture.fixtureRoot, manifest.cases[0].document);
+  const skillDocument = path.join(fixture.fixtureRoot, manifest.skill_cases[0].document);
+  const faqDocument = path.join(fixture.fixtureRoot, "guides/use-cases/README.md");
+  const canonicalDocuments = new Map(await Promise.all([audienceDocument, caseDocument, skillDocument, faqDocument].map(async (filename) => [filename, await readFile(filename, "utf8")])));
+
+  const baseline = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true, inventories: fixture.inventories });
+  assert.equal(baseline.ok, true, baseline.errors.join("\n"));
+
+  const mutations = [
+    ["missing anchor", async () => {
+      const mutated = structuredClone(manifest);
+      mutated.audience_paths[0].anchor = "aud-01-wrong-valid-anchor";
+      await writeFile(fixture.manifestPath, JSON.stringify(mutated));
+    }, /anchor/u],
+    ["missing audience App marker", async () => {
+      await writeFile(audienceDocument, canonicalDocuments.get(audienceDocument).replace("**App 요청:**", "**App 실행:**"));
+    }, /App request marker/u],
+    ["missing case CLI marker", async () => {
+      await writeFile(caseDocument, canonicalDocuments.get(caseDocument).replace("### Codex CLI 요청문", "### Codex CLI 실행문"));
+    }, /CLI request marker/u],
+    ["missing skill App marker", async () => {
+      await writeFile(skillDocument, canonicalDocuments.get(skillDocument).replace("## Codex App 요청 예시", "## Codex App 실행 예시"));
+    }, /App request marker/u],
+    ["missing FAQ heading", async () => {
+      await writeFile(faqDocument, canonicalDocuments.get(faqDocument).replace("### Q01.", "### FAQ01."));
+    }, /faq>=48/u],
+  ];
+
+  for (const [label, mutate, expected] of mutations) {
+    await mutate();
+    const result = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true, inventories: fixture.inventories });
+    assert.equal(result.ok, false, `${label} must fail complete validation`);
+    assert.ok(result.errors.some((error) => expected.test(error)), `${label}: ${result.errors.join("\n")}`);
+    await writeFile(fixture.manifestPath, canonicalManifest);
+    for (const [filename, markdown] of canonicalDocuments) await writeFile(filename, markdown);
+  }
+});
+
+test("complete validation binds production counts, catalogs, and diagram metadata fail-closed", async (t) => {
+  const fixture = await createCompleteUseCaseFixture(t);
+  const canonicalManifest = await readFile(fixture.manifestPath, "utf8");
+  const canonicalDiagramManifest = await readFile(fixture.diagramManifestPath, "utf8");
+  const manifest = JSON.parse(canonicalManifest);
+  const diagramManifest = JSON.parse(canonicalDiagramManifest);
+  const studioInventory = fixture.inventories.get("game-design-studio");
+  const careerInventory = fixture.inventories.get("game-design-career");
+  const careerOnlySkill = careerInventory.skillIds.find((id) => !studioInventory.skillIds.includes(id));
+  const careerOnlyTemplate = careerInventory.templateIds.find((id) => !studioInventory.templateIds.includes(id));
+  assert.ok(careerOnlySkill, "production inventories expose a Career-only skill mutation donor");
+  assert.ok(careerOnlyTemplate, "production inventories expose a Career-only template mutation donor");
+
+  const baseline = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true, inventories: fixture.inventories });
+  assert.equal(baseline.ok, true, baseline.errors.join("\n"));
+
+  const mutations = [
+    ["wrong-valid diagram scope", async () => {
+      const mutated = structuredClone(diagramManifest);
+      mutated.diagrams.find(({ id }) => id === manifest.audience_paths[0].id.toLowerCase()).scope = "game-design-studio-use-case";
+      await writeFile(fixture.diagramManifestPath, JSON.stringify(mutated));
+    }, /scope/u],
+    ["wrong-valid diagram path swap", async () => {
+      const mutated = structuredClone(manifest);
+      mutated.audience_paths[0].diagram.svg = manifest.audience_paths[1].diagram.svg;
+      mutated.audience_paths[0].diagram.png = manifest.audience_paths[1].diagram.png;
+      await writeFile(fixture.manifestPath, JSON.stringify(mutated));
+    }, /diagram\.(?:svg|png).*does not match/u],
+    ["wrong-valid diagram alt", async () => {
+      const mutated = structuredClone(manifest);
+      mutated.cases[0].diagram.alt = `${manifest.cases[0].diagram.alt} 외`;
+      await writeFile(fixture.manifestPath, JSON.stringify(mutated));
+    }, /diagram\.alt.*does not match/u],
+    ["wrong-valid complete count", async () => {
+      const mutated = structuredClone(manifest);
+      mutated.skill_cases.pop();
+      await writeFile(fixture.manifestPath, JSON.stringify(mutated));
+    }, /complete manifest requires careerSkillCases=15/u],
+    ["cross-product skill", async () => {
+      const mutated = structuredClone(manifest);
+      const studioCase = mutated.cases.find(({ product }) => product === "game-design-studio");
+      studioCase.skills[0] = careerOnlySkill;
+      await writeFile(fixture.manifestPath, JSON.stringify(mutated));
+    }, /unknown game-design-studio skill/u],
+    ["cross-product template", async () => {
+      const mutated = structuredClone(manifest);
+      const studioCase = mutated.cases.find(({ product }) => product === "game-design-studio");
+      studioCase.templates[0] = careerOnlyTemplate;
+      await writeFile(fixture.manifestPath, JSON.stringify(mutated));
+    }, /unknown game-design-studio template/u],
+  ];
+
+  for (const [label, mutate, expected] of mutations) {
+    await mutate();
+    const result = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true, inventories: fixture.inventories });
+    assert.equal(result.ok, false, `${label} must fail complete validation`);
+    assert.ok(result.errors.some((error) => expected.test(error)), `${label}: ${result.errors.join("\n")}`);
+    await writeFile(fixture.manifestPath, canonicalManifest);
+    await writeFile(fixture.diagramManifestPath, canonicalDiagramManifest);
+  }
+});
+
+test("complete validation requires production inventories to enforce product boundaries", async (t) => {
+  const fixture = await createCompleteUseCaseFixture(t);
+
+  const result = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((error) => /inventories Map/u.test(error)), result.errors.join("\n"));
 });
 
 test("Career manifest declares the ordered case and installed-skill coverage with deferred guide targets", async () => {

@@ -318,7 +318,17 @@ async function validateDiagramFile(repoRoot, manifestPath, value, extension, lab
 
 export async function validateUserGuides({ repoRoot, requireComplete }) {
   const errors = [];
-  const counts = { guides: 0, skillGuides: 0, templates: 0, svg: 0, png: 0 };
+  const counts = {
+    guides: 0,
+    skillGuides: 0,
+    templates: 0,
+    svg: 0,
+    png: 0,
+    audiencePaths: 0,
+    useCases: 0,
+    skillCases: 0,
+    faq: 0,
+  };
   const root = await realpath(repoRoot);
   const guidesRoot = path.join(root, "guides");
   const inventories = new Map(await Promise.all(PRODUCT_IDS.map(async (productId) => [
@@ -328,7 +338,11 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
   let useCases;
   if (requireComplete) {
     try {
-      useCases = await validateUseCaseGuides({ repoRoot: root, requireComplete: false, validateTargets: true, inventories });
+      useCases = await validateUseCaseGuides({ repoRoot: root, requireComplete: true, inventories });
+      counts.audiencePaths = useCases.counts.audiencePaths;
+      counts.useCases = useCases.counts.studioCases + useCases.counts.careerCases;
+      counts.skillCases = useCases.counts.studioSkillCases + useCases.counts.careerSkillCases;
+      counts.faq = useCases.counts.faq;
       for (const error of useCases.errors) errors.push(`use-case manifest: ${error}`);
     } catch (error) {
       errors.push(`use-case manifest: unable to validate: ${error.message}`);
