@@ -41,7 +41,33 @@ Research Owner **이민아**가 조사 지역·표본 경계를, Portfolio Revie
 
 ## 예상 결과
 
-`job-posting-evidence/content.md`, `competency-matrix/content.md`, `portfolio-project-brief/content.md`에 출처별 requirement, sample limit, gap과 proof task가 남습니다.
+완성된 지원용 프로젝트를 복제하지 않고, 공고 표본과 개인 evidence의 연결만 남깁니다.
+
+### 예상 파일 트리
+
+```text
+game-design-career/<career-id>/
+├── job-posting-evidence/content.md
+├── competency-matrix/content.md
+├── portfolio-project-brief/content.md
+└── evidence.yml
+```
+
+### 대표 내용 예시
+
+`job-posting-evidence/content.md`에는 `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`와 반복 requirement를, `competency-matrix/content.md`에는 `gap`, `evidence-id`, `proof task`를 기록합니다.
+
+### 완료 기준
+
+각 반복 신호가 실제 표본 record로 되돌아가고 `sample boundary` 밖의 일반화가 없으며, gap마다 하나의 공개 가능한 proof task와 재검토 날짜가 있으면 완료입니다.
+
+### 포트폴리오·면접 활용
+
+portfolio에서는 공고 문구를 복제하지 않고 proof task와 근거 주소를 제시하며, interview에서는 표본의 지역·시점·한계와 다음 검증 계획을 설명합니다.
+
+### 읽는 순서
+
+`job-posting-evidence/content.md → competency-matrix/content.md → portfolio-project-brief/content.md → evidence.yml` 순서로 표본, gap, 증거 과제와 freshness를 확인합니다.
 
 ## 실패와 재개
 

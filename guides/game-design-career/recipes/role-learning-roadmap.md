@@ -41,7 +41,33 @@ Career Lead **김서윤**이 목표 역할과 공개 범위를, Mentor **박도�
 
 ## 예상 결과
 
-`career-stage-goal/content.md`와 `learning-roadmap/content.md`에 evidence locator, gap, task, owner, 다음 review가 남습니다.
+완성된 샘플 프로젝트를 복제하지 않고, 현재 Artifact에 다음의 검토 가능한 최소 기록만 남깁니다.
+
+### 예상 파일 트리
+
+```text
+game-design-career/<career-id>/
+├── career-stage-goal/content.md
+├── learning-roadmap/content.md
+├── evidence.yml
+└── decisions/
+```
+
+### 대표 내용 예시
+
+`career-stage-goal/content.md`의 `role hypothesis: 시스템 기획`, `current-evidence-id`, `gap: 상태 전이 proof 부족`과 `learning-roadmap/content.md`의 `proof artifact`, `owner`, `next-review-date`를 함께 기록합니다. 역할은 가설이며 채용 결과를 뜻하지 않습니다.
+
+### 완료 기준
+
+각 gap에 하나의 `proof artifact`, 공개 가능한 evidence locator, 담당 owner와 다음 review가 연결되고, current claim에는 `sourceUrl`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`가 있으면 완료입니다.
+
+### 포트폴리오·면접 활용
+
+portfolio에서는 역할을 선언한 문구 대신 gap을 어떻게 작은 증거로 바꿨는지 보여 주고, interview에서는 해당 proof artifact의 선택 이유·한계·다음 검토를 정직하게 설명합니다.
+
+### 읽는 순서
+
+`career-stage-goal/content.md → learning-roadmap/content.md → evidence.yml → decisions/` 순서로 읽어 목표 가설, 과제, 근거와 사람 결정을 분리합니다.
 
 ## 실패와 재개
 

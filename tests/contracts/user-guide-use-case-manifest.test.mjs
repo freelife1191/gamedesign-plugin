@@ -39,6 +39,39 @@ const STUDIO_FAQ_ANSWER_FIELDS = [
   "관련 사례·스킬·템플릿",
   "안전·근거·승인",
 ];
+const CAREER_FAQ_ANSWER_FIELDS = [
+  "결론",
+  "언제·왜",
+  "실행 요청",
+  "예상 결과·읽는 순서",
+  "사람 검토·근거·권리·비보장",
+  "실패·재개·관련 경로",
+];
+const CAREER_FAQ_CONTRACT = Object.freeze([
+  ["시스템, 콘텐츠, 전투, 경제, UX, 내러티브와 레벨 기획은 어떻게 비교하는가?", ["직무", "증거"], "map-game-design-career", "CA-T01"],
+  ["비전공·무경력자는 무엇부터 증명해야 하는가?", ["작은", "증거"], "build-game-design-portfolio", "CA-T08"],
+  ["학교 프로젝트도 포트폴리오 증거가 되는가?", ["학교 프로젝트", "기여"], "build-game-design-portfolio", "CA-T08"],
+  ["현재 공고가 서로 다를 때 반복 요구를 어떻게 찾는가?", ["반복", "표본"], "research-game-design-jobs", "CA-C03"],
+  ["적은 공고 표본을 시장 전체처럼 일반화하지 않으려면 어떻게 하는가?", ["표본", "일반화"], "research-game-design-jobs", "CA-C03"],
+  ["역기획에서 관찰, 추론과 추측을 어떻게 분리하는가?", ["관찰", "추론"], "reverse-engineer-game-design", "CA-C05"],
+  ["플레이 화면을 사용하지 않고도 역기획서를 만들 수 있는가?", ["공개", "관찰"], "reverse-engineer-game-design", "CA-C05"],
+  ["포트폴리오 문서는 몇 개가 적절한가?", ["개수", "선별"], "build-game-design-portfolio", "CA-C06"],
+  ["최종 결과보다 판단 과정과 반복 개선을 어떻게 보여 주는가?", ["판단", "반복"], "review-game-design-portfolio", "CA-C07"],
+  ["팀 프로젝트에서 개인 기여를 어떻게 증명하는가?", ["개인", "기여"], "build-game-design-portfolio", "CA-T08"],
+  ["NDA 프로젝트는 어떻게 다루는가?", ["NDA", "공개"], "build-game-design-portfolio", "CA-T09"],
+  ["생성 이미지를 포트폴리오에 어떻게 표시하는가?", ["생성 이미지", "권리"], "review-image-assets", "CA-C06"],
+  ["5축 검토 결과가 낮으면 능력이 없다는 뜻인가?", ["5축", "능력"], "review-game-design-portfolio", "CA-C07"],
+  ["공고에 맞춰 포트폴리오를 어떻게 선별하는가?", ["공고", "선별"], "research-game-design-jobs", "CA-C03"],
+  ["포트폴리오 근거를 면접 답변에 어떻게 연결하는가?", ["포트폴리오", "면접"], "practice-game-design-interview", "CA-C08"],
+  ["경험이 없는 질문에 어떻게 정직하게 답하는가?", ["정직", "경험"], "practice-game-design-interview", "CA-C08"],
+  ["주니어 성장 계획에 어떤 evidence와 feedback을 남기는가?", ["evidence", "feedback"], "plan-junior-growth", "CA-T10"],
+  ["플러그인이 합격 가능성을 판단할 수 있는가?", ["합격", "판단"], "orchestrate-game-design-career", "CA-C08"],
+].map(([question, conclusion, skill, caseId], index) => ({
+  heading: `Q${String(index + 1).padStart(2, "0")}. ${question}`,
+  conclusion,
+  skill,
+  caseId,
+})));
 const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["규칙, mechanic, system과 core loop는 어떻게 다른가?", ["규칙", "mechanic", "system", "core loop"], ["입력", "상태", "루프"], ["rule", "state"], ["ST-C02", "ST-C03", "`core-motivation-loop`"], ["사람", "검토"]],
   ["처음부터 긴 GDD를 만들어야 하는가?", ["긴 GDD", "처음", "없으며"], ["비전", "가정", "경계"], ["vision", "content.md"], ["ST-C01", "`game-design-brief`", "`vision-pillars`"], ["승인", "가정"]],
@@ -1609,6 +1642,40 @@ function assertStudioFaq(markdown) {
   }
 }
 
+function assertCareerFaq(markdown) {
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const answers = markdownSections(markdown, 3);
+  assert.deepEqual(answers.map(({ heading }) => heading), CAREER_FAQ_CONTRACT.map(({ heading }) => heading), "Career FAQ approved question headings");
+  for (const [index, answer] of answers.entries()) {
+    const contract = CAREER_FAQ_CONTRACT[index];
+    const fields = inlineFields(answer.body);
+    assert.deepEqual(inlineFieldLabels(answer.body), CAREER_FAQ_ANSWER_FIELDS, `${answer.heading} answer shape`);
+    const byLabel = new Map(fields.map((field) => [field.label, field.value]));
+    for (const field of fields) {
+      assert.ok(field.value.length >= 54, `${answer.heading} ${field.label} substantive content`);
+      assert.doesNotMatch(field.value, /^(?:TODO|TBD)(?:\b|$)/iu, `${answer.heading} ${field.label} placeholder`);
+    }
+    for (const term of contract.conclusion) assert.ok(byLabel.get("결론").includes(term), `${answer.heading} conclusion term: ${term}`);
+
+    const request = byLabel.get("실행 요청");
+    const requestBlocks = fencedCodeBlocks(request, "text");
+    assert.equal(requestBlocks.length, 2, `${answer.heading} App and CLI request blocks`);
+    assert.match(requestBlocks[0], /^@Game Design Career[^\n]+$/m, `${answer.heading} executable App request`);
+    assert.match(requestBlocks[1], new RegExp("^\\$game-design-career:" + escapeRegExp(contract.skill) + "\\b[^\\n]+$", "m"), `${answer.heading} installed CLI request`);
+
+    const outcome = byLabel.get("예상 결과·읽는 순서");
+    assert.match(outcome, /content\.md/, `${answer.heading} expected artifact`);
+    assert.match(outcome, /→/, `${answer.heading} read order`);
+    const safety = byLabel.get("사람 검토·근거·권리·비보장");
+    for (const term of ["사람", "근거", "권리", "보장하지 않"]) assert.ok(safety.includes(term), `${answer.heading} safety term: ${term}`);
+    const recovery = byLabel.get("실패·재개·관련 경로");
+    assert.match(recovery, /보존[\s\S]*사람 확인[\s\S]*재개/, `${answer.heading} preserve-review-resume sequence`);
+    assert.match(recovery, new RegExp("\\[" + escapeRegExp(contract.caseId) + "\\]\\(use-cases/(?:competency-paths|concept-scenarios)\\.md#[^)]+\\)"), `${answer.heading} related case link`);
+    assert.match(recovery, new RegExp(String.raw`\]\(skills/${escapeRegExp(contract.skill)}\.md\)`), `${answer.heading} related skill link`);
+    assert.match(recovery, /\]\(recipes\/[a-z0-9-]+\.md\)/, `${answer.heading} related recipe link`);
+  }
+}
+
 test("use-case manifest exposes the versioned three-lane contract", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   assert.equal(manifest.version, 1);
@@ -2502,6 +2569,31 @@ test("Studio FAQ contract rejects missing requests, swapped answers, and wrong q
     () => assertStudioFaq(injectedH2),
     /Q01\. .* answer shape/,
   );
+});
+
+test("Career FAQ contains the eighteen approved questions with executable, bounded answers", async () => {
+  const faqPath = path.join(repoRoot, "guides", "game-design-career", "faq.md");
+  const stat = await lstat(faqPath);
+  assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Career FAQ must be a regular file");
+  assertCareerFaq(await readFile(faqPath, "utf8"));
+});
+
+test("Career FAQ contract rejects swapped answers, wrong CLI skills, and missing recovery", async () => {
+  const faqPath = path.join(repoRoot, "guides", "game-design-career", "faq.md");
+  const markdown = await readFile(faqPath, "utf8");
+  const [first, second] = markdownSections(markdown, 3);
+  const swapped = markdown
+    .replace(first.body, "__FIRST_ANSWER__")
+    .replace(second.body, first.body)
+    .replace("__FIRST_ANSWER__", second.body);
+  assert.throws(() => assertCareerFaq(swapped), /Q01\. .* conclusion term/);
+
+  const firstCli = fencedCodeBlocks(inlineFields(first.body).find(({ label }) => label === "실행 요청").value, "text")[1];
+  const wrongCli = markdown.replace(firstCli, firstCli.replace("$game-design-career:map-game-design-career", "$game-design-career:not-installed"));
+  assert.throws(() => assertCareerFaq(wrongCli), /Q01\. .* installed CLI request/);
+
+  const firstRecovery = inlineFields(first.body).find(({ label }) => label === "실패·재개·관련 경로").value;
+  assert.throws(() => assertCareerFaq(markdown.replace(firstRecovery, firstRecovery.replace("사람 확인", "자동 승인"))), /Q01\. .* preserve-review-resume sequence/);
 });
 
 test("each audience route preserves its executable case, output, review, and resume contract", async () => {

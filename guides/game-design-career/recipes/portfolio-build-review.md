@@ -41,7 +41,33 @@ Portfolio Owner **정하늘**이 claim·attribution을, Rights Reviewer **윤태
 
 ## 예상 결과
 
-`creative-design-portfolio/content.md`, `five-axis-review/content.md`, `portfolio-backlog/content.md`에 evidence index와 minimum repair가 남습니다.
+완성 포트폴리오 웹사이트를 생성하지 않고, claim과 검토 가능한 repair 기록만 남깁니다.
+
+### 예상 파일 트리
+
+```text
+game-design-career/<career-id>/
+├── creative-design-portfolio/content.md
+├── five-axis-review/content.md
+├── portfolio-backlog/content.md
+└── evidence.yml
+```
+
+### 대표 내용 예시
+
+`creative-design-portfolio/content.md`에는 `claim-id`, `evidence-id`, 개인/팀 `attribution`을, `five-axis-review/content.md`에는 `finding-id`, `minimum-repair`를, backlog에는 recovery owner와 proof artifact를 기록합니다.
+
+### 완료 기준
+
+모든 공개 claim이 evidence address와 attribution·rights 상태에 연결되고, 각 finding에 하나의 `minimum-repair`, owner, 재검토 조건이 있으며, unsupported claim을 점수나 문구로 숨기지 않으면 완료입니다.
+
+### 포트폴리오·면접 활용
+
+portfolio에서는 읽는 사람이 claim과 evidence를 직접 찾게 하고, interview에서는 받은 finding, 선택한 repair, 아직 해결되지 않은 gap을 과장 없이 설명합니다.
+
+### 읽는 순서
+
+`creative-design-portfolio/content.md → evidence.yml → five-axis-review/content.md → portfolio-backlog/content.md` 순서로 claim, 근거, review와 다음 repair를 읽습니다.
 
 ## 실패와 재개
 

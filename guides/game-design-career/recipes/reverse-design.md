@@ -41,7 +41,33 @@ Design Reviewer **한지훈**이 inference 공개 범위를, Rights Reviewer **�
 
 ## 예상 결과
 
-`reverse-design-document/content.md`와 export manifest에 observation, inference, validation queue, 권리 결정이 남습니다.
+완성된 게임 기획서를 흉내 내지 않고, 공개 관찰과 반증 가능한 해석만 남깁니다.
+
+### 예상 파일 트리
+
+```text
+game-design-career/<career-id>/reverse-design-document/
+├── content.md
+├── evidence.yml
+├── decisions/
+└── export-manifest.yml
+```
+
+### 대표 내용 예시
+
+`content.md`에 `observation: 제작 재료가 부족할 때 craft 버튼이 비활성`, `inference: 재료 gate가 진행 속도를 조절할 수 있음`, `counterexample`, `validation queue`를 별도 필드로 기록합니다.
+
+### 완료 기준
+
+모든 inference가 최소 하나의 observation locator와 counterexample 또는 unknown을 갖고, `validation queue`에 다음 관찰·사람 검토자가 있으며, 권리 결정을 확인하기 전에는 공개 대상으로 표시하지 않으면 완료입니다.
+
+### 포트폴리오·면접 활용
+
+portfolio에서는 관찰과 추론의 경계를 읽을 수 있게 하고, interview에서는 무엇을 직접 보았는지·무엇이 가설인지·어떤 반례가 남았는지 설명합니다.
+
+### 읽는 순서
+
+`reverse-design-document/content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 observation, inference, 권리·검토 결정과 출력 준비를 읽습니다.
 
 ## 실패와 재개
 

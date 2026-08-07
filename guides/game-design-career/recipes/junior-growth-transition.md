@@ -41,7 +41,33 @@ Growth Manager **김서윤**, Portfolio Reviewer **한지훈**, Export Owner **�
 
 ## 예상 결과
 
-`junior-growth-review/content.md`, `transition-readiness/content.md`와 renderer-neutral export manifest에 review 조건과 다음 검증 작업이 남습니다.
+승진·이직 결과를 예측하지 않고, 현재 evidence와 다음 성장 검토의 연결만 남깁니다.
+
+### 예상 파일 트리
+
+```text
+game-design-career/<career-id>/
+├── junior-growth-review/content.md
+├── transition-readiness/content.md
+├── evidence.yml
+└── export-manifest.yml
+```
+
+### 대표 내용 예시
+
+`junior-growth-review/content.md`에는 `project-event-evidence`, `goal`, `feedback`, `next-review-date`를, `transition-readiness/content.md`에는 `target-requirement`, `posting-evidence-id`, `gap`, `verification-task`를 기록합니다.
+
+### 완료 기준
+
+각 목표가 실제 project event와 feedback에 연결되고 다음 `next-review-date`가 있으며, time-sensitive requirement에는 retrieval date·region·reviewAfter가 있고, 빈 evidence를 readiness 주장으로 바꾸지 않으면 완료입니다.
+
+### 포트폴리오·면접 활용
+
+portfolio에서는 수정과 feedback으로 바뀐 판단을 보여 주고, interview에서는 project-event-evidence, 남은 gap, 다음 review를 근거로 성장 방향을 설명합니다.
+
+### 읽는 순서
+
+`junior-growth-review/content.md → transition-readiness/content.md → evidence.yml → export-manifest.yml` 순서로 현재 event, 전환 gap, freshness와 출력 준비를 읽습니다.
 
 ## 실패와 재개
 

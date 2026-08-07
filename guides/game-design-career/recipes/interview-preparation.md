@@ -41,7 +41,32 @@ Interview Coach **최유진**이 honest answer boundary를, Evidence Reviewer **
 
 ## 예상 결과
 
-`interview-question-answer-log/content.md`에 stable questionId, answer-feedback record, evidence gap과 다음 연습이 남습니다.
+모범 답안을 대량 생성하지 않고, 근거와 연결된 연습 기록만 남깁니다.
+
+### 예상 파일 트리
+
+```text
+game-design-career/<career-id>/interview-question-answer-log/
+├── content.md
+├── evidence.yml
+└── decisions/
+```
+
+### 대표 내용 예시
+
+`content.md`에 stable `questionId`, `posting-evidence-id`, `portfolio-evidence-id`, `answer-feedback`, `honest-answer`, `verification-task`를 한 record로 연결합니다.
+
+### 완료 기준
+
+각 답변이 같은 `questionId`의 evidence locator 또는 `honest-answer`와 연결되고, feedback 뒤에 하나의 verification task와 사람 검토자가 있으며, 경험·수치·팀 기여를 발명하지 않으면 완료입니다.
+
+### 포트폴리오·면접 활용
+
+portfolio의 claim ID를 면접 질문으로 다시 찾아볼 수 있게 하고, interview에서는 답변의 근거·한계·다음 확인 작업을 짧고 정직하게 말할 수 있습니다.
+
+### 읽는 순서
+
+`interview-question-answer-log/content.md → evidence.yml → decisions/` 순서로 questionId, answer-feedback, 근거와 검토 결정을 확인합니다.
 
 ## 실패와 재개
 
