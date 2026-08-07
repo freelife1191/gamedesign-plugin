@@ -83,3 +83,10 @@
 - 자동 근거: `npm run build:guide-diagrams`가 72 SVG/PNG를 생성했고, Career 계약 테스트는 source/manifest/anchor/embed·Skillstead lint·IEND·정확한 `1400×900`/`2800×1800` 치수를 확인합니다. `npm run check:guide-diagrams`는 생성 SVG/PNG byte 동등성과 lint·render를 재검증합니다.
 - 대표 수동 검사: `ca-c05.png`, `ca-t01.png`, `ca-t09.png`, 그리고 실제 source 텍스트 최대 길이(83자)의 `review-image-assets.png`(CA-S13)를 각각 `view_image`의 high와 original detail에서 확인했습니다. 네 도식 모두 제목·5 stage·open-V connector·semantic rail·footer의 순서와 source 의미가 일치하며, CJK/Latin tofu, 잘림, 겹침, 낮은 대비, 카드 containment 또는 connector endpoint 결함이 없습니다.
 - 경계 확인: CA-C05는 공개 build/evidence→public-rights review→권리 제외→CA-C06/07, CA-T01은 상태 전이/예외→시스템 멘토→합격 비보장, CA-T09는 전이 가능 경험→Career 검토→이직 비보장, CA-S13은 stable asset ID/decisionReceipt→lifecycle review→export 조건을 표시합니다. 이는 승인 또는 채용·이직 결과의 보장이 아닙니다.
+
+## Career Task 6 Fix round 1 재검사 — 2026-08-07
+
+- `apply-document-quality-profile.png`(CA-S01): high/original에서 trigger·input·owned work·ordered outputs와 `map`·`research`·`selected` 조건부 route를 확인했습니다. rail/footer에는 reviewer·boundary·failure·preserve·human confirmation·resume·next condition 원문이 잘림 없이 남습니다.
+- `ca-t01.png`, `ca-t02.png`: high/original 첫 검사에서 5번 card의 output/route 중복 표시가 card 아래로 내려가는 결함을 발견했습니다. output은 rail에 보존하고 card는 두 ordered route target만 한 줄로 표시하도록 교정한 뒤 다시 high/original로 확인했습니다. 두 branch, review owner, non-guarantee boundary, failure→preserve→confirm→resume footer가 겹침 없이 판독됩니다.
+- `practice-game-design-interview.png`(CA-S09): 변경 후 semantic source 문자열이 가장 긴 Career skill입니다. high/original에서 fresh posting·stable questionId 확인, 기존 stale 기록 보존, answer-feedback 재개, growth/portfolio review route와 채용 비보장 경계를 확인했습니다.
+- 자동 증거: Career 33개 임시 SVG lint는 오류 0·경고 0, 전체 `npm run check:guide-diagrams`는 72 SVG/PNG 동등성·2× 치수·IEND를 통과했습니다. 시각 QA 후 교정된 CA-T01…CA-T10은 공식 builder `--id` 단일 프로세스로 재생성했습니다.

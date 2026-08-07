@@ -2139,12 +2139,12 @@
       ],
       "required_input": "relationship question + source data"
     }
-  }
-,
+  },
   {
     "id": "ca-c01",
+    "anchor": "ca-c01-기획-직무와-전문-분야-탐색",
     "scope": "game-design-career-use-case",
-    "title": "CA-C01 Career 증거 경로",
+    "title": "CA-C01 기획 직무와 전문 분야 탐색",
     "description": "현재 경험과 역할 후보를 역할·전문 분야 비교로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "기획 직무와 전문 분야를 비교하는 흐름",
     "type": "design-pipeline",
@@ -2197,8 +2197,9 @@
   },
   {
     "id": "ca-c02",
+    "anchor": "ca-c02-게임-분석-언어와-관찰추론-분리",
     "scope": "game-design-career-use-case",
-    "title": "CA-C02 Career 증거 경로",
+    "title": "CA-C02 게임 분석 언어와 관찰·추론 분리",
     "description": "공개 build 관찰 기록를 관찰·추론 분리로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "게임 분석의 관찰과 추론을 분리하는 흐름",
     "type": "design-pipeline",
@@ -2251,8 +2252,9 @@
   },
   {
     "id": "ca-c03",
+    "anchor": "ca-c03-현재-채용공고-조사",
     "scope": "game-design-career-use-case",
-    "title": "CA-C03 Career 증거 경로",
+    "title": "CA-C03 현재 채용공고 조사",
     "description": "공식 공고와 retrievalDate를 표본·요건 정규화로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "현재 채용공고의 근거와 표본 경계를 기록하는 흐름",
     "type": "design-pipeline",
@@ -2305,8 +2307,9 @@
   },
   {
     "id": "ca-c04",
+    "anchor": "ca-c04-역량-격차와-학습증거-계획",
     "scope": "game-design-career-use-case",
-    "title": "CA-C04 Career 증거 경로",
+    "title": "CA-C04 역량 격차와 학습·증거 계획",
     "description": "gap과 evidence ID를 학습·proof 과제 계획로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "역량 격차를 학습과 증거 과제로 전환하는 흐름",
     "type": "design-pipeline",
@@ -2359,8 +2362,9 @@
   },
   {
     "id": "ca-c05",
+    "anchor": "ca-c05-관찰-기반-역기획",
     "scope": "game-design-career-use-case",
-    "title": "CA-C05 Career 증거 경로",
+    "title": "CA-C05 관찰 기반 역기획",
     "description": "공개 build와 evidence ID를 반증 가능한 역기획로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "관찰과 추론 및 반례를 기록하는 역기획 흐름",
     "type": "design-pipeline",
@@ -2413,8 +2417,9 @@
   },
   {
     "id": "ca-c06",
+    "anchor": "ca-c06-창작-기획-포트폴리오",
     "scope": "game-design-career-use-case",
-    "title": "CA-C06 Career 증거 경로",
+    "title": "CA-C06 창작 기획 포트폴리오",
     "description": "개인 기여와 evidence ID를 창작 case 구성로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "창작 기획의 판단과 근거를 포트폴리오로 연결하는 흐름",
     "type": "design-pipeline",
@@ -2467,8 +2472,9 @@
   },
   {
     "id": "ca-c07",
+    "anchor": "ca-c07-포트폴리오-검토수정발표",
     "scope": "game-design-career-use-case",
-    "title": "CA-C07 Career 증거 경로",
+    "title": "CA-C07 포트폴리오 검토·수정·발표",
     "description": "claim과 evidence ID를 five-axis 최소 수정로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "포트폴리오 검토와 수정 및 발표 준비 흐름",
     "type": "design-pipeline",
@@ -2522,8 +2528,9 @@
   },
   {
     "id": "ca-c08",
+    "anchor": "ca-c08-면접주니어-성장직무-전환",
     "scope": "game-design-career-use-case",
-    "title": "CA-C08 Career 증거 경로",
+    "title": "CA-C08 면접·주니어 성장·직무 전환",
     "description": "질문·growth evidence ID를 면접·성장·전환 계획로 정리해 검토 가능한 경로를 만듭니다.",
     "alt": "면접과 주니어 성장 및 직무 전환의 증거 흐름",
     "type": "design-pipeline",
@@ -2577,38 +2584,39 @@
   },
   {
     "id": "ca-t01",
+    "anchor": "ca-t01-시스템-기획-입문-학생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T01 Career 증거 경로",
-    "description": "상태 전이와 예외 표를 규칙표 proof 작성로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T01 시스템 기획 입문 학생",
+    "description": "입문 학생가 상태 전이와 예외 표를 잠금 해제 규칙표에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "시스템 기획 입문 학생의 증거 과제와 학습 경로",
     "type": "decision-flow",
-    "eyebrow": "CA-T01 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T02 또는 CA-T03 조건을 확인합니다.",
+    "eyebrow": "CA-T01 · CAREER TARGET",
+    "conclusion": "시스템 기획의 잠금 해제 규칙표를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T01 근거 확인"
+        "label": "시스템 기획 입문 학생",
+        "detail": "상태 전이와 예외 표"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T01 작업 수행"
+        "label": "잠금 해제 규칙표",
+        "detail": "규칙표 proof 작성"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T01 검토 요청"
+        "label": "CA-T01 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T01 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "합격을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T01 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T02 또는 CA-T03"
       }
     ],
     "source_paths": [
@@ -2618,11 +2626,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생"
     ],
     "semantic": {
+      "role": "시스템 기획",
+      "stage": "입문 학생",
       "evidence": "상태 전이와 예외 표",
+      "use": "잠금 해제 규칙표",
       "owned_work": "규칙표 proof 작성",
       "human_review": "시스템 기획 멘토",
       "boundary": "합격을 보장하지 않음",
+      "failure": "상태 전이 또는 예외 표가 관찰되지 않으면 claim을 보류합니다.",
+      "preserve": "상태 전이, 예외 표, 규칙표와 반례.",
+      "human_confirmation": "시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다.",
+      "resume": "확인된 잠금 해제 기능의 규칙표에서 재개합니다.",
+      "next_condition": "시스템 기획 멘토 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T02 또는 CA-T03",
+      "next_routes": [
+        {
+          "condition": "잠금 해제 규칙표 proof가 확인됨",
+          "target": "CA-T02"
+        },
+        {
+          "condition": "상태 전이와 예외 표 보강이 필요함",
+          "target": "CA-T03"
+        }
+      ],
       "outputs": [
         "game-design-role-map",
         "competency-matrix",
@@ -2631,49 +2657,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T01 proof 확인",
+        "detail": "첫 route CA-T02"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T01 근거 보강",
+        "detail": "둘째 route CA-T03"
       }
     ]
   },
   {
     "id": "ca-t02",
+    "anchor": "ca-t02-콘텐츠퀘스트-기획-준비생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T02 Career 증거 경로",
-    "description": "퀘스트 상태와 분기 조건를 짧은 의뢰 flow로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T02 콘텐츠·퀘스트 기획 준비생",
+    "description": "준비생가 퀘스트 상태와 분기 조건를 짧은 의뢰·NPC에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "콘텐츠와 퀘스트 기획 준비생의 제작 가능성 증거 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T02 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T06 또는 CA-T07 조건을 확인합니다.",
+    "eyebrow": "CA-T02 · CAREER TARGET",
+    "conclusion": "콘텐츠·퀘스트 기획의 짧은 의뢰·NPC를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T02 근거 확인"
+        "label": "콘텐츠·퀘스트 기획 준비생",
+        "detail": "퀘스트 상태와 분기 조건"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T02 작업 수행"
+        "label": "짧은 의뢰·NPC",
+        "detail": "짧은 의뢰 flow"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T02 검토 요청"
+        "label": "CA-T02 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T02 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "채용을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T02 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T06 또는 CA-T07"
       }
     ],
     "source_paths": [
@@ -2683,11 +2710,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t02-콘텐츠퀘스트-기획-준비생"
     ],
     "semantic": {
+      "role": "콘텐츠·퀘스트 기획",
+      "stage": "준비생",
       "evidence": "퀘스트 상태와 분기 조건",
+      "use": "짧은 의뢰·NPC",
       "owned_work": "짧은 의뢰 flow",
       "human_review": "콘텐츠 기획 멘토",
       "boundary": "채용을 보장하지 않음",
+      "failure": "퀘스트 상태 또는 분기 조건이 불명확하면 claim을 보류합니다.",
+      "preserve": "퀘스트 상태, 분기 조건, 의뢰 흐름과 대안.",
+      "human_confirmation": "콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다.",
+      "resume": "확인된 짧은 의뢰의 분기에서 재개합니다.",
+      "next_condition": "콘텐츠 기획 멘토 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T06 또는 CA-T07",
+      "next_routes": [
+        {
+          "condition": "짧은 의뢰·NPC proof가 확인됨",
+          "target": "CA-T06"
+        },
+        {
+          "condition": "퀘스트 상태와 분기 조건 보강이 필요함",
+          "target": "CA-T07"
+        }
+      ],
       "outputs": [
         "game-design-role-map",
         "portfolio-project-brief",
@@ -2696,49 +2741,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T02 proof 확인",
+        "detail": "첫 route CA-T06"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T02 근거 보강",
+        "detail": "둘째 route CA-T07"
       }
     ]
   },
   {
     "id": "ca-t03",
+    "anchor": "ca-t03-전투캐릭터-기획-준비생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T03 Career 증거 경로",
-    "description": "cooldown과 피해 판정를 스킬 반례 작성로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T03 전투·캐릭터 기획 준비생",
+    "description": "준비생가 cooldown과 피해 판정를 스킬 하나·반례에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "전투와 캐릭터 기획 준비생의 분석과 검증 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T03 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T04 또는 CA-T07 조건을 확인합니다.",
+    "eyebrow": "CA-T03 · CAREER TARGET",
+    "conclusion": "전투·캐릭터 기획의 스킬 하나·반례를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T03 근거 확인"
+        "label": "전투·캐릭터 기획 준비생",
+        "detail": "cooldown과 피해 판정"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T03 작업 수행"
+        "label": "스킬 하나·반례",
+        "detail": "스킬 반례 작성"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T03 검토 요청"
+        "label": "CA-T03 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T03 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "합격을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T03 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T04 또는 CA-T07"
       }
     ],
     "source_paths": [
@@ -2748,11 +2794,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t03-전투캐릭터-기획-준비생"
     ],
     "semantic": {
+      "role": "전투·캐릭터 기획",
+      "stage": "준비생",
       "evidence": "cooldown과 피해 판정",
+      "use": "스킬 하나·반례",
       "owned_work": "스킬 반례 작성",
       "human_review": "전투 기획 멘토",
       "boundary": "합격을 보장하지 않음",
+      "failure": "cooldown 또는 피해 판정이 관찰되지 않으면 claim을 보류합니다.",
+      "preserve": "cooldown, 피해 판정, 스킬 명세와 반례.",
+      "human_confirmation": "전투 기획 멘토가 선택의 이유와 반례를 검토합니다.",
+      "resume": "확인된 스킬 하나의 피드백에서 재개합니다.",
+      "next_condition": "전투 기획 멘토 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T04 또는 CA-T07",
+      "next_routes": [
+        {
+          "condition": "스킬 하나·반례 proof가 확인됨",
+          "target": "CA-T04"
+        },
+        {
+          "condition": "cooldown과 피해 판정 보강이 필요함",
+          "target": "CA-T07"
+        }
+      ],
       "outputs": [
         "game-analysis-report",
         "portfolio-project-brief",
@@ -2761,49 +2825,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T03 proof 확인",
+        "detail": "첫 route CA-T04"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T03 근거 보강",
+        "detail": "둘째 route CA-T07"
       }
     ]
   },
   {
     "id": "ca-t04",
+    "anchor": "ca-t04-경제밸런스liveops-준비생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T04 Career 증거 경로",
-    "description": "source와 sink를 guardrail·rollback 가설로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T04 경제·밸런스·LiveOps 준비생",
+    "description": "준비생가 source와 sink를 재화 흐름·rollback에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "경제와 밸런스 및 LiveOps 준비생의 가정 검증 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T04 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T01 또는 CA-T10 조건을 확인합니다.",
+    "eyebrow": "CA-T04 · CAREER TARGET",
+    "conclusion": "경제·밸런스·LiveOps의 재화 흐름·rollback를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T04 근거 확인"
+        "label": "경제·밸런스·LiveOps 준비생",
+        "detail": "source와 sink"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T04 작업 수행"
+        "label": "재화 흐름·rollback",
+        "detail": "guardrail·rollback 가설"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T04 검토 요청"
+        "label": "CA-T04 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T04 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "시장 성공을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T04 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T01 또는 CA-T10"
       }
     ],
     "source_paths": [
@@ -2813,11 +2878,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t04-경제밸런스liveops-준비생"
     ],
     "semantic": {
+      "role": "경제·밸런스·LiveOps",
+      "stage": "준비생",
       "evidence": "source와 sink",
+      "use": "재화 흐름·rollback",
       "owned_work": "guardrail·rollback 가설",
       "human_review": "경제·밸런스 검토자",
       "boundary": "시장 성공을 보장하지 않음",
+      "failure": "source 또는 sink 근거가 없으면 claim을 보류합니다.",
+      "preserve": "source, sink, guardrail과 rollback 가설.",
+      "human_confirmation": "경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다.",
+      "resume": "확인된 재화 흐름의 guardrail에서 재개합니다.",
+      "next_condition": "경제·밸런스 검토자 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T01 또는 CA-T10",
+      "next_routes": [
+        {
+          "condition": "재화 흐름·rollback proof가 확인됨",
+          "target": "CA-T01"
+        },
+        {
+          "condition": "source와 sink 보강이 필요함",
+          "target": "CA-T10"
+        }
+      ],
       "outputs": [
         "game-analysis-report",
         "portfolio-project-brief",
@@ -2826,49 +2909,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T04 proof 확인",
+        "detail": "첫 route CA-T01"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T04 근거 보강",
+        "detail": "둘째 route CA-T10"
       }
     ]
   },
   {
     "id": "ca-t05",
+    "anchor": "ca-t05-uiux-기획-준비생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T05 Career 증거 경로",
-    "description": "오류 상태와 대체 입력를 온보딩 usability 흐름로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T05 UI·UX 기획 준비생",
+    "description": "준비생가 오류 상태와 대체 입력를 온보딩·대체 입력에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "UI UX 기획 준비생의 접근성과 usability 증거 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T05 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T02 또는 CA-T08 조건을 확인합니다.",
+    "eyebrow": "CA-T05 · CAREER TARGET",
+    "conclusion": "UI·UX 기획의 온보딩·대체 입력를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T05 근거 확인"
+        "label": "UI·UX 기획 준비생",
+        "detail": "오류 상태와 대체 입력"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T05 작업 수행"
+        "label": "온보딩·대체 입력",
+        "detail": "온보딩 usability 흐름"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T05 검토 요청"
+        "label": "CA-T05 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T05 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "채용을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T05 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T02 또는 CA-T08"
       }
     ],
     "source_paths": [
@@ -2878,11 +2962,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t05-uiux-기획-준비생"
     ],
     "semantic": {
+      "role": "UI·UX 기획",
+      "stage": "준비생",
       "evidence": "오류 상태와 대체 입력",
+      "use": "온보딩·대체 입력",
       "owned_work": "온보딩 usability 흐름",
       "human_review": "UX·접근성 검토자",
       "boundary": "채용을 보장하지 않음",
+      "failure": "오류 상태 또는 대체 입력이 관찰되지 않으면 claim을 보류합니다.",
+      "preserve": "오류 상태, focus 기록, 온보딩 흐름과 수정 전후.",
+      "human_confirmation": "UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다.",
+      "resume": "확인된 온보딩 화면의 오류 상태에서 재개합니다.",
+      "next_condition": "UX·접근성 검토자 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T02 또는 CA-T08",
+      "next_routes": [
+        {
+          "condition": "온보딩·대체 입력 proof가 확인됨",
+          "target": "CA-T02"
+        },
+        {
+          "condition": "오류 상태와 대체 입력 보강이 필요함",
+          "target": "CA-T08"
+        }
+      ],
       "outputs": [
         "competency-matrix",
         "portfolio-project-brief",
@@ -2891,49 +2993,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T05 proof 확인",
+        "detail": "첫 route CA-T02"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T05 근거 보강",
+        "detail": "둘째 route CA-T08"
       }
     ]
   },
   {
     "id": "ca-t06",
+    "anchor": "ca-t06-내러티브-기획-준비생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T06 Career 증거 경로",
-    "description": "등장인물 목표와 분기를 대화 handoff 작성로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T06 내러티브 기획 준비생",
+    "description": "준비생가 등장인물 목표와 분기를 대화 장면·handoff에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "내러티브 기획 준비생의 협업 계약과 증거 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T06 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T02 또는 CA-T07 조건을 확인합니다.",
+    "eyebrow": "CA-T06 · CAREER TARGET",
+    "conclusion": "내러티브 기획의 대화 장면·handoff를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T06 근거 확인"
+        "label": "내러티브 기획 준비생",
+        "detail": "등장인물 목표와 분기"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T06 작업 수행"
+        "label": "대화 장면·handoff",
+        "detail": "대화 handoff 작성"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T06 검토 요청"
+        "label": "CA-T06 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T06 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "합격을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T06 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T02 또는 CA-T07"
       }
     ],
     "source_paths": [
@@ -2943,11 +3046,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t06-내러티브-기획-준비생"
     ],
     "semantic": {
+      "role": "내러티브 기획",
+      "stage": "준비생",
       "evidence": "등장인물 목표와 분기",
+      "use": "대화 장면·handoff",
       "owned_work": "대화 handoff 작성",
       "human_review": "내러티브 기획 멘토",
       "boundary": "합격을 보장하지 않음",
+      "failure": "장면 분기 또는 공개 경계가 불명확하면 claim을 보류합니다.",
+      "preserve": "등장인물 목표, 분기표, handoff와 공개 제외 목록.",
+      "human_confirmation": "내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다.",
+      "resume": "확인된 대화 장면의 선택 분기에서 재개합니다.",
+      "next_condition": "내러티브 기획 멘토 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T02 또는 CA-T07",
+      "next_routes": [
+        {
+          "condition": "대화 장면·handoff proof가 확인됨",
+          "target": "CA-T02"
+        },
+        {
+          "condition": "등장인물 목표와 분기 보강이 필요함",
+          "target": "CA-T07"
+        }
+      ],
       "outputs": [
         "game-design-role-map",
         "portfolio-project-brief",
@@ -2956,49 +3077,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T06 proof 확인",
+        "detail": "첫 route CA-T02"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T06 근거 보강",
+        "detail": "둘째 route CA-T07"
       }
     ]
   },
   {
     "id": "ca-t07",
+    "anchor": "ca-t07-레벨-디자인-준비생",
     "scope": "game-design-career-use-case",
-    "title": "CA-T07 Career 증거 경로",
-    "description": "동선과 시야를 한 구역 playtest로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T07 레벨 디자인 준비생",
+    "description": "준비생가 동선과 시야를 한 구역·playtest에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "레벨 디자인 준비생의 공간과 playtest 증거 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T07 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T03 또는 CA-T08 조건을 확인합니다.",
+    "eyebrow": "CA-T07 · CAREER TARGET",
+    "conclusion": "레벨 디자인의 한 구역·playtest를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T07 근거 확인"
+        "label": "레벨 디자인 준비생",
+        "detail": "동선과 시야"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T07 작업 수행"
+        "label": "한 구역·playtest",
+        "detail": "한 구역 playtest"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T07 검토 요청"
+        "label": "CA-T07 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T07 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "실무 경험을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T07 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T03 또는 CA-T08"
       }
     ],
     "source_paths": [
@@ -3008,11 +3130,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t07-레벨-디자인-준비생"
     ],
     "semantic": {
+      "role": "레벨 디자인",
+      "stage": "준비생",
       "evidence": "동선과 시야",
+      "use": "한 구역·playtest",
       "owned_work": "한 구역 playtest",
       "human_review": "레벨 디자인 멘토",
       "boundary": "실무 경험을 보장하지 않음",
+      "failure": "동선 또는 시야가 관찰되지 않으면 claim을 보류합니다.",
+      "preserve": "동선, 시야, playtest 질문과 수정 로그.",
+      "human_confirmation": "레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다.",
+      "resume": "확인된 한 구역의 막힘에서 재개합니다.",
+      "next_condition": "레벨 디자인 멘토 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T03 또는 CA-T08",
+      "next_routes": [
+        {
+          "condition": "한 구역·playtest proof가 확인됨",
+          "target": "CA-T03"
+        },
+        {
+          "condition": "동선과 시야 보강이 필요함",
+          "target": "CA-T08"
+        }
+      ],
       "outputs": [
         "game-analysis-report",
         "portfolio-project-brief",
@@ -3021,49 +3161,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T07 proof 확인",
+        "detail": "첫 route CA-T03"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T07 근거 보강",
+        "detail": "둘째 route CA-T08"
       }
     ]
   },
   {
     "id": "ca-t08",
+    "anchor": "ca-t08-실무-경험이-없는-신입",
     "scope": "game-design-career-use-case",
-    "title": "CA-T08 Career 증거 경로",
-    "description": "개인 기여와 수정 전후를 작은 proof 반복로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T08 실무 경험이 없는 신입",
+    "description": "무경력 신입가 개인 기여와 수정 전후를 한 페이지·수정에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "실무 경험이 없는 신입의 판단과 반복 개선 증거 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T08 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T01 또는 CA-T09 조건을 확인합니다.",
+    "eyebrow": "CA-T08 · CAREER TARGET",
+    "conclusion": "신입 기획 준비의 한 페이지·수정를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T08 근거 확인"
+        "label": "신입 기획 준비 무경력 신입",
+        "detail": "개인 기여와 수정 전후"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T08 작업 수행"
+        "label": "한 페이지·수정",
+        "detail": "작은 proof 반복"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T08 검토 요청"
+        "label": "CA-T08 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T08 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "채용을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T08 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T01 또는 CA-T09"
       }
     ],
     "source_paths": [
@@ -3073,11 +3214,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입"
     ],
     "semantic": {
+      "role": "신입 기획 준비",
+      "stage": "무경력 신입",
       "evidence": "개인 기여와 수정 전후",
+      "use": "한 페이지·수정",
       "owned_work": "작은 proof 반복",
       "human_review": "포트폴리오 검토자",
       "boundary": "채용을 보장하지 않음",
+      "failure": "개인 기여 또는 수정 근거가 불명확하면 claim을 보류합니다.",
+      "preserve": "판단 근거, 수정 전후, 작은 사례와 honest gap.",
+      "human_confirmation": "포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다.",
+      "resume": "확인된 한 페이지 proof의 수정에서 재개합니다.",
+      "next_condition": "포트폴리오 검토자 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T01 또는 CA-T09",
+      "next_routes": [
+        {
+          "condition": "한 페이지·수정 proof가 확인됨",
+          "target": "CA-T01"
+        },
+        {
+          "condition": "개인 기여와 수정 전후 보강이 필요함",
+          "target": "CA-T09"
+        }
+      ],
       "outputs": [
         "career-stage-goal",
         "portfolio-project-brief",
@@ -3086,49 +3245,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T08 proof 확인",
+        "detail": "첫 route CA-T01"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T08 근거 보강",
+        "detail": "둘째 route CA-T09"
       }
     ]
   },
   {
     "id": "ca-t09",
+    "anchor": "ca-t09-비전공자다른-직군-전환자",
     "scope": "game-design-career-use-case",
-    "title": "CA-T09 Career 증거 경로",
-    "description": "이전 경험과 새 evidence를 전환 지도와 새 과제로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T09 비전공자·다른 직군 전환자",
+    "description": "비전공·전환가 이전 경험과 새 evidence를 전환 지도·새 과제에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "직군 전환자의 전이 가능한 역량과 새 증거 과제 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T09 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T03 또는 CA-T10 조건을 확인합니다.",
+    "eyebrow": "CA-T09 · CAREER TARGET",
+    "conclusion": "직군 전환의 전환 지도·새 과제를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T09 근거 확인"
+        "label": "직군 전환 비전공·전환",
+        "detail": "이전 경험과 새 evidence"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T09 작업 수행"
+        "label": "전환 지도·새 과제",
+        "detail": "전환 지도와 새 과제"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T09 검토 요청"
+        "label": "CA-T09 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T09 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "이직을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T09 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T03 또는 CA-T10"
       }
     ],
     "source_paths": [
@@ -3138,11 +3298,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t09-비전공자다른-직군-전환자"
     ],
     "semantic": {
+      "role": "직군 전환",
+      "stage": "비전공·전환",
       "evidence": "이전 경험과 새 evidence",
+      "use": "전환 지도·새 과제",
       "owned_work": "전환 지도와 새 과제",
       "human_review": "Career 검토자",
       "boundary": "이직을 보장하지 않음",
+      "failure": "이전 경험의 공개 경계 또는 새 evidence가 불명확하면 claim을 보류합니다.",
+      "preserve": "이전 경험, 새 evidence, 전환 지도와 공개 제외 목록.",
+      "human_confirmation": "Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다.",
+      "resume": "확인된 새 evidence 과제에서 재개합니다.",
+      "next_condition": "Career 검토자 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T03 또는 CA-T10",
+      "next_routes": [
+        {
+          "condition": "전환 지도·새 과제 proof가 확인됨",
+          "target": "CA-T03"
+        },
+        {
+          "condition": "이전 경험과 새 evidence 보강이 필요함",
+          "target": "CA-T10"
+        }
+      ],
       "outputs": [
         "transition-readiness",
         "game-design-role-map",
@@ -3151,49 +3329,50 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T09 proof 확인",
+        "detail": "첫 route CA-T03"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T09 근거 보강",
+        "detail": "둘째 route CA-T10"
       }
     ]
   },
   {
     "id": "ca-t10",
+    "anchor": "ca-t10-주니어의-성장이직",
     "scope": "game-design-career-use-case",
-    "title": "CA-T10 Career 증거 경로",
-    "description": "growth review와 현재 공고를 수정 사례·면접 답변로 정리해 검토 가능한 경로를 만듭니다.",
+    "title": "CA-T10 주니어의 성장·이직",
+    "description": "주니어가 growth review와 현재 공고를 수정 사례·면접 답변에 쓰고 사람 검토 뒤 재개하는 경로입니다.",
     "alt": "주니어의 성장과 이직 준비도 증거 흐름",
     "type": "decision-flow",
-    "eyebrow": "CA-T10 · CAREER CASE",
-    "conclusion": "검토 가능한 결과를 남기고 CA-T04 또는 CA-T09 조건을 확인합니다.",
+    "eyebrow": "CA-T10 · CAREER TARGET",
+    "conclusion": "주니어 성장·이직의 수정 사례·면접 답변를 검토하고 조건에 맞는 다음 사례로 이동합니다.",
     "steps": [
       {
         "stage": "evidence input",
-        "label": "증거 입력",
-        "detail": "CA-T10 근거 확인"
+        "label": "주니어 성장·이직 주니어",
+        "detail": "growth review와 현재 공고"
       },
       {
         "stage": "owned work",
-        "label": "소유 작업",
-        "detail": "CA-T10 작업 수행"
+        "label": "수정 사례·면접 답변",
+        "detail": "수정 사례·면접 답변"
       },
       {
         "stage": "human review",
-        "label": "사람 검토",
-        "detail": "CA-T10 검토 요청"
+        "label": "CA-T10 검토 owner",
+        "detail": "질문 뒤 범위 확인"
       },
       {
         "stage": "boundary",
-        "label": "경계 확인",
-        "detail": "CA-T10 경계 보존"
+        "label": "실패·보존 경계",
+        "detail": "승진·이직을 보장하지 않음"
       },
       {
         "stage": "output / next route",
-        "label": "출력·다음 경로",
-        "detail": "CA-T10 결과 연결"
+        "label": "확인 후 재개",
+        "detail": "CA-T04 또는 CA-T09"
       }
     ],
     "source_paths": [
@@ -3203,11 +3382,29 @@
       "guides/game-design-career/use-cases/concept-scenarios.md#ca-t10-주니어의-성장이직"
     ],
     "semantic": {
+      "role": "주니어 성장·이직",
+      "stage": "주니어",
       "evidence": "growth review와 현재 공고",
+      "use": "수정 사례·면접 답변",
       "owned_work": "수정 사례·면접 답변",
       "human_review": "manager 또는 career reviewer",
       "boundary": "승진·이직을 보장하지 않음",
+      "failure": "growth review 또는 current requirement가 오래되었으면 claim을 보류합니다.",
+      "preserve": "growth review, 현재 공고, 수정 사례와 honest gap.",
+      "human_confirmation": "manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다.",
+      "resume": "확인된 수정 사례와 다음 review에서 재개합니다.",
+      "next_condition": "manager 또는 career reviewer 확인 뒤 조건에 맞는 route로 이동",
       "next_route": "CA-T04 또는 CA-T09",
+      "next_routes": [
+        {
+          "condition": "수정 사례·면접 답변 proof가 확인됨",
+          "target": "CA-T04"
+        },
+        {
+          "condition": "growth review와 현재 공고 보강이 필요함",
+          "target": "CA-T09"
+        }
+      ],
       "outputs": [
         "junior-growth-review",
         "transition-readiness",
@@ -3216,24 +3413,25 @@
     },
     "branches": [
       {
-        "label": "증거 충분",
-        "detail": "proof를 유지"
+        "label": "CA-T10 proof 확인",
+        "detail": "첫 route CA-T04"
       },
       {
-        "label": "근거 부족",
-        "detail": "claim을 보류"
+        "label": "CA-T10 근거 보강",
+        "detail": "둘째 route CA-T09"
       }
     ]
   },
   {
     "id": "ca-s01",
+    "anchor": "career-직접-호출-활용-apply-document-quality-profile",
     "scope": "game-design-career-skill",
     "title": "CA-S01 품질 프로필 호출",
     "description": "Career Artifact와 template을 받아 profile 선택를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "Career 문서 품질 프로필 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S01 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 map-game-design-career 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 같은 선택 기록에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3277,18 +3475,40 @@
         "quality-checklist",
         "requirement-manifest"
       ],
-      "next_route": "map-game-design-career"
+      "reviewer": "document-quality-editor",
+      "boundary": "선택은 문서 승인이나 콘텐츠 생성을 대신하지 않음",
+      "failure": "unknown ID 또는 profile conflict",
+      "preserve": "기존 기록",
+      "human_confirmation": "document-quality-editor가 설치된 template과 artifact ID를 확인",
+      "resume": "같은 선택 기록에서 재개",
+      "next_condition": "허용된 map·research·selected route일 때",
+      "next_route": "map-game-design-career",
+      "next_routes": [
+        {
+          "condition": "map route",
+          "target": "map-game-design-career"
+        },
+        {
+          "condition": "research route",
+          "target": "research-game-design-jobs"
+        },
+        {
+          "condition": "selected route",
+          "target": "<selected-skill>"
+        }
+      ]
     }
   },
   {
     "id": "ca-s02",
+    "anchor": "직접-호출-활용-build-game-design-portfolio",
     "scope": "game-design-career-skill",
     "title": "CA-S02 포트폴리오 호출",
     "description": "claim과 evidence을 받아 portfolio case 구성를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 포트폴리오 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S02 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 review-game-design-portfolio 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 같은 claimId에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3331,18 +3551,40 @@
         "portfolio-project-brief",
         "creative-design-portfolio"
       ],
-      "next_route": "review-game-design-portfolio"
+      "reviewer": "portfolio-reviewer",
+      "boundary": "성과·채용을 보장하지 않음",
+      "failure": "claim 또는 evidence ID 누락",
+      "preserve": "unknown과 gap",
+      "human_confirmation": "portfolio-reviewer가 개인 기여와 public rights를 확인",
+      "resume": "같은 claimId에서 재개",
+      "next_condition": "검토·면접·export 조건일 때",
+      "next_route": "review-game-design-portfolio",
+      "next_routes": [
+        {
+          "condition": "검토 조건",
+          "target": "review-game-design-portfolio"
+        },
+        {
+          "condition": "면접 조건",
+          "target": "practice-game-design-interview"
+        },
+        {
+          "condition": "export 조건",
+          "target": "export-career-documents"
+        }
+      ]
     }
   },
   {
     "id": "ca-s03",
+    "anchor": "직접-호출-활용-export-career-documents",
     "scope": "game-design-career-skill",
     "title": "CA-S03 export 호출",
     "description": "승인 대기 Artifact와 format을 받아 export 준비를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "Career 문서 출력 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S03 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 pending format job 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 실제 renderer 결과와 format QA 지점에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3385,18 +3627,27 @@
         "export-preparation-manifest",
         "format-jobs"
       ],
-      "next_route": "pending format job"
+      "reviewer": "evidence-auditor",
+      "boundary": "downstream renderer·format QA·사람 승인을 대체하지 않음",
+      "failure": "renderer 또는 capability 부재",
+      "preserve": "원본과 blocked job",
+      "human_confirmation": "evidence-auditor가 source와 evidence completion gate를 확인",
+      "resume": "실제 renderer 결과와 format QA 지점에서 재개",
+      "next_condition": "terminal lane이므로 다음 스킬을 자동 호출하지 않음",
+      "next_route": "pending format job",
+      "next_routes": []
     }
   },
   {
     "id": "ca-s04",
+    "anchor": "career-직접-호출-활용-generate-image-assets",
     "scope": "game-design-career-skill",
     "title": "CA-S04 이미지 생성 호출",
     "description": "selection receipt와 asset ID을 받아 finite image job 처리를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "Career 이미지 자산 생성 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S04 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 review-image-assets 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, stable asset ID에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3439,18 +3690,32 @@
         "image-generation-result",
         "image-generation-provenance"
       ],
-      "next_route": "review-image-assets"
+      "reviewer": "visual-asset-reviewer",
+      "boundary": "named human approval 전에는 final binding하지 않음",
+      "failure": "provider 또는 selection receipt 부재",
+      "preserve": "prompt·placeholder와 lifecycle",
+      "human_confirmation": "visual-asset-reviewer가 provider routing과 실제 사용자 decision을 확인",
+      "resume": "stable asset ID에서 재개",
+      "next_condition": "review가 필요할 때만",
+      "next_route": "review-image-assets",
+      "next_routes": [
+        {
+          "condition": "review 필요",
+          "target": "review-image-assets"
+        }
+      ]
     }
   },
   {
     "id": "ca-s05",
+    "anchor": "직접-호출-활용-map-game-design-career",
     "scope": "game-design-career-skill",
     "title": "CA-S05 커리어 map 호출",
     "description": "current evidence와 role을 받아 role map·gap 작성를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 경로 매핑 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S05 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 research-game-design-jobs 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 확인된 route에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3493,18 +3758,40 @@
         "game-design-role-map",
         "competency-matrix"
       ],
-      "next_route": "research-game-design-jobs"
+      "reviewer": "career-strategist",
+      "boundary": "사실·추론·제안을 분리하고 채용을 보장하지 않음",
+      "failure": "current evidence가 stale",
+      "preserve": "원래 source",
+      "human_confirmation": "career-strategist가 fresh evidence와 retrievalDate를 확인",
+      "resume": "확인된 route에서 재개",
+      "next_condition": "research·portfolio·visualization 조건일 때",
+      "next_route": "research-game-design-jobs",
+      "next_routes": [
+        {
+          "condition": "research 조건",
+          "target": "research-game-design-jobs"
+        },
+        {
+          "condition": "portfolio 조건",
+          "target": "build-game-design-portfolio"
+        },
+        {
+          "condition": "visualization 조건",
+          "target": "visualize-career-roadmap"
+        }
+      ]
     }
   },
   {
     "id": "ca-s06",
+    "anchor": "직접-호출-활용-orchestrate-game-design-career",
     "scope": "game-design-career-skill",
     "title": "CA-S06 커리어 orchestration",
     "description": "goal·stage·current evidence을 받아 skill chain·stage brief를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 커리어 오케스트레이션 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S06 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 map-game-design-career 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 확인된 route에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3547,18 +3834,40 @@
         "career-stage-goal",
         "career-stage-brief"
       ],
-      "next_route": "map-game-design-career"
+      "reviewer": "career-strategist",
+      "boundary": "단일 specialist를 추측하지 않고 사실·추론·제안을 분리",
+      "failure": "route 또는 stage 불명확",
+      "preserve": "unknown",
+      "human_confirmation": "decision owner가 stage를 확인",
+      "resume": "확인된 route에서 재개",
+      "next_condition": "선택 route일 때",
+      "next_route": "map-game-design-career",
+      "next_routes": [
+        {
+          "condition": "map route",
+          "target": "map-game-design-career"
+        },
+        {
+          "condition": "research route",
+          "target": "research-game-design-jobs"
+        },
+        {
+          "condition": "selected route",
+          "target": "<selected-skill>"
+        }
+      ]
     }
   },
   {
     "id": "ca-s07",
+    "anchor": "career-직접-호출-활용-plan-image-assets",
     "scope": "game-design-career-skill",
     "title": "CA-S07 이미지 계획 호출",
     "description": "profile과 image slot을 받아 stable asset 계획를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "Career 이미지 자산 계획 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S07 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 generate-image-assets 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 확정한 slot에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3601,18 +3910,36 @@
         "image-assets-manifest",
         "image-prompts"
       ],
-      "next_route": "generate-image-assets"
+      "reviewer": "art-brief-director",
+      "boundary": "계획은 실제 SVG·PNG 생성이나 승인이 아님",
+      "failure": "slot mismatch 또는 필수 입력 누락",
+      "preserve": "stable ID와 placeholder",
+      "human_confirmation": "art-brief-director가 slot·수량·source section을 확인",
+      "resume": "확정한 slot에서 재개",
+      "next_condition": "finite illustration 또는 Skillstead slot일 때",
+      "next_route": "generate-image-assets",
+      "next_routes": [
+        {
+          "condition": "finite illustration job",
+          "target": "generate-image-assets"
+        },
+        {
+          "condition": "Skillstead diagram slot",
+          "target": "visualize-career-roadmap"
+        }
+      ]
     }
   },
   {
     "id": "ca-s08",
+    "anchor": "직접-호출-활용-plan-junior-growth",
     "scope": "game-design-career-skill",
     "title": "CA-S08 주니어 성장 호출",
     "description": "requirement와 project event을 받아 growth proof 계획를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "주니어 성장 계획 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S08 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 visualize-career-roadmap 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, proof task에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3655,18 +3982,36 @@
         "junior-growth-review",
         "transition-readiness"
       ],
-      "next_route": "visualize-career-roadmap"
+      "reviewer": "game-design-mentor",
+      "boundary": "사실·추론·제안을 분리하고 성장 결과를 보장하지 않음",
+      "failure": "stale evidence 또는 requirement",
+      "preserve": "기존 stale 기록·상태·한계",
+      "human_confirmation": "game-design-mentor가 fresh sourceId와 requirementId를 확인",
+      "resume": "proof task에서 재개",
+      "next_condition": "visualization·export 조건일 때",
+      "next_route": "visualize-career-roadmap",
+      "next_routes": [
+        {
+          "condition": "visualization 조건",
+          "target": "visualize-career-roadmap"
+        },
+        {
+          "condition": "export 조건",
+          "target": "export-career-documents"
+        }
+      ]
     }
   },
   {
     "id": "ca-s09",
+    "anchor": "직접-호출-활용-practice-game-design-interview",
     "scope": "game-design-career-skill",
     "title": "CA-S09 면접 연습 호출",
     "description": "questionId와 posting evidence을 받아 answer feedback 기록를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 면접 연습 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S09 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 plan-junior-growth 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, answer-feedback record에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3709,18 +4054,36 @@
         "interview-question-answer-log",
         "honest-answer-patterns"
       ],
-      "next_route": "plan-junior-growth"
+      "reviewer": "interview-coach·evidence-auditor",
+      "boundary": "채용 결과를 보장하지 않고 posting evidence를 추적",
+      "failure": "stale posting evidence 또는 questionId 누락",
+      "preserve": "기존 기록·stale 상태·한계",
+      "human_confirmation": "interview-coach와 evidence-auditor가 fresh posting과 stable questionId를 확인",
+      "resume": "answer-feedback record에서 재개",
+      "next_condition": "growth·portfolio review 조건일 때",
+      "next_route": "plan-junior-growth",
+      "next_routes": [
+        {
+          "condition": "growth 조건",
+          "target": "plan-junior-growth"
+        },
+        {
+          "condition": "portfolio review 조건",
+          "target": "review-game-design-portfolio"
+        }
+      ]
     }
   },
   {
     "id": "ca-s10",
+    "anchor": "직접-호출-활용-research-game-design-jobs",
     "scope": "game-design-career-skill",
     "title": "CA-S10 채용 조사 호출",
     "description": "role·level·region을 받아 current posting 조사를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 채용 근거 조사 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S10 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 map-game-design-career 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 확인한 evidence ID에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3763,18 +4126,40 @@
         "job-posting-evidence",
         "evidence-gap-plan"
       ],
-      "next_route": "map-game-design-career"
+      "reviewer": "evidence-auditor",
+      "boundary": "stale evidence를 current 결론으로 사용하지 않음",
+      "failure": "sourceUrl 또는 retrievalDate 누락",
+      "preserve": "현재 source ID와 evidence gap",
+      "human_confirmation": "evidence-auditor가 fresh source의 여섯 필드를 확인",
+      "resume": "확인한 evidence ID에서 재개",
+      "next_condition": "map·portfolio·interview 조건일 때",
+      "next_route": "map-game-design-career",
+      "next_routes": [
+        {
+          "condition": "map 조건",
+          "target": "map-game-design-career"
+        },
+        {
+          "condition": "portfolio 조건",
+          "target": "build-game-design-portfolio"
+        },
+        {
+          "condition": "interview 조건",
+          "target": "practice-game-design-interview"
+        }
+      ]
     }
   },
   {
     "id": "ca-s11",
+    "anchor": "직접-호출-활용-reverse-engineer-game-design",
     "scope": "game-design-career-skill",
     "title": "CA-S11 역기획 호출",
     "description": "public build와 source ID을 받아 관찰·추론·반례를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 역기획 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S11 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 build-game-design-portfolio 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, validation queue에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3817,18 +4202,36 @@
         "reverse-design-document",
         "game-analysis-report"
       ],
-      "next_route": "build-game-design-portfolio"
+      "reviewer": "reverse-design-critic·evidence-auditor",
+      "boundary": "관찰·추론·제안을 분리하고 내부 구현을 추정하지 않음",
+      "failure": "observation 또는 source 부재",
+      "preserve": "unknown implementation detail",
+      "human_confirmation": "review owner가 공개 관찰과 source citation을 확인",
+      "resume": "validation queue에서 재개",
+      "next_condition": "portfolio·export 조건일 때",
+      "next_route": "build-game-design-portfolio",
+      "next_routes": [
+        {
+          "condition": "portfolio 조건",
+          "target": "build-game-design-portfolio"
+        },
+        {
+          "condition": "export 조건",
+          "target": "export-career-documents"
+        }
+      ]
     }
   },
   {
     "id": "ca-s12",
+    "anchor": "직접-호출-활용-review-game-design-portfolio",
     "scope": "game-design-career-skill",
     "title": "CA-S12 포트폴리오 검토",
     "description": "portfolio section과 evidence ID을 받아 five-axis finding를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 포트폴리오 검토 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S12 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 build-game-design-portfolio 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 같은 findingId review에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3871,18 +4274,40 @@
         "five-axis-review",
         "portfolio-backlog"
       ],
-      "next_route": "build-game-design-portfolio"
+      "reviewer": "portfolio-reviewer",
+      "boundary": "검토는 자동 승인이나 채용 보장이 아님",
+      "failure": "inspectable source 부재",
+      "preserve": "not-observed와 blocked finding",
+      "human_confirmation": "portfolio-reviewer가 evidence ID를 확인",
+      "resume": "같은 findingId review에서 재개",
+      "next_condition": "portfolio·interview·export 조건일 때",
+      "next_route": "build-game-design-portfolio",
+      "next_routes": [
+        {
+          "condition": "portfolio 조건",
+          "target": "build-game-design-portfolio"
+        },
+        {
+          "condition": "interview 조건",
+          "target": "practice-game-design-interview"
+        },
+        {
+          "condition": "export 조건",
+          "target": "export-career-documents"
+        }
+      ]
     }
   },
   {
     "id": "ca-s13",
+    "anchor": "career-직접-호출-활용-review-image-assets",
     "scope": "game-design-career-skill",
     "title": "CA-S13 이미지 검토 호출",
     "description": "stable asset ID와 decisionReceipt을 받아 lifecycle transition 검토를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "Career 이미지 자산 검토 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S13 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 export-career-documents 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 같은 stable ID transition에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3925,18 +4350,32 @@
         "image-asset-review",
         "lifecycle-receipt"
       ],
-      "next_route": "export-career-documents"
+      "reviewer": "named-human-reviewer",
+      "boundary": "agent finding은 승인이나 state transition이 아님",
+      "failure": "actual decision·reviewer·reviewedAt·evidence·rightsDecision 누락",
+      "preserve": "기존 state와 finding",
+      "human_confirmation": "named-human-reviewer가 누락 evidence와 targetState를 확인",
+      "resume": "같은 stable ID transition에서 재개",
+      "next_condition": "document-approved일 때만",
+      "next_route": "export-career-documents",
+      "next_routes": [
+        {
+          "condition": "document-approved",
+          "target": "export-career-documents"
+        }
+      ]
     }
   },
   {
     "id": "ca-s14",
+    "anchor": "career-직접-호출-활용-svg-infographic",
     "scope": "game-design-career-skill",
     "title": "CA-S14 SVG 호출",
     "description": "source ID와 relationship을 받아 editable SVG 작성를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "Career SVG 인포그래픽 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S14 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 visualize-career-roadmap 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 마지막 lint·render·visual QA에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -3980,18 +4419,32 @@
         "png-2x",
         "render-evidence"
       ],
-      "next_route": "visualize-career-roadmap"
+      "reviewer": "game-design-mentor",
+      "boundary": "Node-free fallback을 보존하고 시각 QA는 문서 승인이 아님",
+      "failure": "Node 또는 Chromium fallback 차단",
+      "preserve": "SVG source와 manual source checklist",
+      "human_confirmation": "game-design-mentor가 fallback과 source mapping을 확인",
+      "resume": "마지막 lint·render·visual QA에서 재개",
+      "next_condition": "relationship가 준비됐을 때만",
+      "next_route": "visualize-career-roadmap",
+      "next_routes": [
+        {
+          "condition": "relationship ready",
+          "target": "visualize-career-roadmap"
+        }
+      ]
     }
   },
   {
     "id": "ca-s15",
+    "anchor": "직접-호출-활용-visualize-career-roadmap",
     "scope": "game-design-career-skill",
     "title": "CA-S15 로드맵 시각화",
     "description": "relationship과 diagram slot을 받아 source-mapped 시각화를 수행하고 조건부 다음 경로를 남깁니다.",
     "alt": "게임 기획 커리어 로드맵 시각화 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "CA-S15 · CAREER SKILL",
-    "conclusion": "정확한 output ID와 export-career-documents 재개 조건을 기록합니다.",
+    "conclusion": "정확한 output ID와 조건부 route, 마지막 lint·render·visual QA에서 재개 조건을 기록합니다.",
     "steps": [
       {
         "stage": "trigger",
@@ -4035,7 +4488,20 @@
         "png-2x",
         "visualization-evidence"
       ],
-      "next_route": "export-career-documents"
+      "reviewer": "game-design-mentor",
+      "boundary": "Node-free fallback을 보존하고 시각 QA는 문서 승인이 아님",
+      "failure": "source mapping 또는 renderer fallback 부재",
+      "preserve": "SVG-only 상태와 warning",
+      "human_confirmation": "game-design-mentor가 fallback과 source mapping을 확인",
+      "resume": "마지막 lint·render·visual QA에서 재개",
+      "next_condition": "export-ready condition일 때만",
+      "next_route": "export-career-documents",
+      "next_routes": [
+        {
+          "condition": "export-ready",
+          "target": "export-career-documents"
+        }
+      ]
     }
   }
 ]

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="전투와 캐릭터 기획 준비생의 분석과 검증 흐름">
-  <title>CA-T03 Career 증거 경로</title>
+  <title>CA-T03 전투·캐릭터 기획 준비생</title>
   <desc>전투와 캐릭터 기획 준비생의 분석과 검증 흐름</desc>
   <defs>
     <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
@@ -8,70 +8,76 @@
   </defs>
   <rect width="1400" height="900" fill="#F7FAFD"/>
   <rect x="52" y="52" width="8" height="138" rx="4" fill="#1F6FB2"/>
-  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">CA-T03 · CAREER CASE</text>
-  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">CA-T03 Career 증거 경로</text>
-  <text x="88" y="192" fill="#5B6675" font-size="24">cooldown과 피해 판정를 스킬 반례 작성로 정리해 검토 가능한 경로를 만듭니다.</text>
+  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">CA-T03 · CAREER TARGET</text>
+  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">CA-T03 전투·캐릭터 기획 준비생</text>
+  <text x="88" y="192" fill="#5B6675" font-size="24" textLength="1220" lengthAdjust="spacingAndGlyphs">준비생가 cooldown과 피해 판정를 스킬 하나·반례에 쓰고 사람 검토 뒤 재개하는 경로입니다.</text>
   <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>
   <path d="M 292 445 L 308 445" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <path d="M 1012 445 L 1028 362" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <path d="M 1140 442 L 1140 453" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <path class="decision-branch" d="M 532 445 L 548 328" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <g class="decision-branch" aria-label="선택지 1: 증거 충분">
+  <g class="decision-branch" aria-label="선택지 1: CA-T03 proof 확인">
     <rect x="560" y="298" width="180" height="60" rx="14" fill="#F8F6FF" stroke="#534AB7" stroke-width="2"/>
-    <text x="574" y="323" fill="#3C3489" font-size="15" font-weight="700">증거 충분</text>
-    <text x="574" y="344" fill="#354152" font-size="13">proof를 유지</text>
+    <text x="574" y="323" fill="#3C3489" font-size="15" font-weight="700">CA-T03 proof 확인</text>
+    <text x="574" y="344" fill="#354152" font-size="13">첫 route CA-T04</text>
   </g>
   <path class="decision-branch" d="M 752 328 L 788 445" fill="none" stroke="#0F7A5F" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <path class="decision-branch" d="M 532 445 L 548 535" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <g class="decision-branch" aria-label="선택지 2: 근거 부족">
+  <g class="decision-branch" aria-label="선택지 2: CA-T03 근거 보강">
     <rect x="560" y="505" width="180" height="60" rx="14" fill="#F8F6FF" stroke="#534AB7" stroke-width="2"/>
-    <text x="574" y="530" fill="#3C3489" font-size="15" font-weight="700">근거 부족</text>
-    <text x="574" y="551" fill="#354152" font-size="13">claim을 보류</text>
+    <text x="574" y="530" fill="#3C3489" font-size="15" font-weight="700">CA-T03 근거 보강</text>
+    <text x="574" y="551" fill="#354152" font-size="13">둘째 route CA-T07</text>
   </g>
   <path class="decision-branch" d="M 752 535 L 788 445" fill="none" stroke="#0F7A5F" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <text x="800" y="354" fill="#0F7A5F" font-size="14" font-weight="700">재결합: 판단 기준</text>
-  <g aria-label="읽기 순서 1: 증거 입력">
+  <g aria-label="읽기 순서 1: 전투·캐릭터 기획 준비생">
     <rect x="80" y="370" width="200" height="150" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
     <rect x="108" y="398" width="52" height="32" rx="16" fill="#1F6FB2"/>
     <text x="134" y="420" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
-      <text x="108" y="450" fill="#124267" font-size="17" font-weight="700">증거 입력</text>
+      <text x="108" y="450" fill="#124267" font-size="17" font-weight="700">전투·캐릭터 기획 </text>
+      <text x="108" y="475" fill="#124267" font-size="17" font-weight="700">준비생</text>
       <text x="108" y="488" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">cooldown과 피해 판정</text>
   </g>
-  <g aria-label="읽기 순서 2: 소유 작업">
+  <g aria-label="읽기 순서 2: 스킬 하나·반례">
     <rect x="320" y="370" width="200" height="150" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="348" y="398" width="52" height="32" rx="16" fill="#534AB7"/>
     <text x="374" y="420" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
-      <text x="348" y="450" fill="#3C3489" font-size="17" font-weight="700">소유 작업</text>
-      <text x="348" y="488" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">스킬 반례 작성</text>
+      <text x="348" y="450" fill="#3C3489" font-size="17" font-weight="700">스킬 하나·반례</text>
+      <text x="348" y="488" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">스킬 하나·반례</text>
   </g>
-  <g aria-label="읽기 순서 3: 사람 검토">
+  <g aria-label="읽기 순서 3: CA-T03 검토 owner">
     <rect x="800" y="370" width="200" height="150" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="828" y="398" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="854" y="420" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
-      <text x="828" y="450" fill="#085041" font-size="17" font-weight="700">사람 검토</text>
+      <text x="828" y="450" fill="#085041" font-size="17" font-weight="700">CA-T03 검토 </text>
+      <text x="828" y="475" fill="#085041" font-size="17" font-weight="700">owner</text>
       <text x="828" y="488" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">전투 기획 멘토</text>
   </g>
-  <g aria-label="읽기 순서 4: 경계 확인">
+  <g aria-label="읽기 순서 4: 실패·보존 경계">
     <rect x="1040" y="282" width="200" height="160" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="1068" y="310" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="1094" y="332" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
-      <text x="1068" y="362" fill="#814600" font-size="17" font-weight="700">경계 확인</text>
+      <text x="1068" y="362" fill="#814600" font-size="17" font-weight="700">실패·보존 경계</text>
       <text x="1068" y="400" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">합격을 보장하지 않음</text>
   </g>
-  <g aria-label="읽기 순서 5: 출력·다음 경로">
+  <g aria-label="읽기 순서 5: 확인 후 재개">
     <rect x="1040" y="465" width="200" height="160" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
     <rect x="1068" y="493" width="52" height="32" rx="16" fill="#A52B5D"/>
     <text x="1094" y="515" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">5</text>
-      <text x="1068" y="545" fill="#7A1942" font-size="17" font-weight="700">출력·다음 경로</text>
-      <text x="1068" y="583" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">game-analysis-report</text>
-      <text x="1068" y="599" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">portfolio-project-brief</text>
-      <text x="1068" y="615" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">creative-design-portfolio</text>
+      <text x="1068" y="545" fill="#7A1942" font-size="17" font-weight="700">확인 후 재개</text>
+      <text x="1068" y="583" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">CA-T04 · CA-T07</text>
   </g>
   <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
-  <text x="72" y="650" fill="#354152" font-size="9">review: 전투 기획 멘토</text>
-  <text x="72" y="662" fill="#354152" font-size="9">outputs: game-analysis-report · portfolio-project-brief · creative-design-portfolio</text>
-  <text x="72" y="674" fill="#354152" font-size="9">next: CA-T04 또는 CA-T07</text>
+  <text x="72" y="649" fill="#354152" font-size="8">role / stage: 전투·캐릭터 기획 / 준비생</text>
+  <text x="72" y="662" fill="#354152" font-size="8">evidence: cooldown과 피해 판정</text>
+  <text x="72" y="675" fill="#354152" font-size="8">use / reviewer: 스킬 하나·반례 / 전투 기획 멘토</text>
+  <text x="72" y="688" fill="#354152" font-size="7" textLength="610" lengthAdjust="spacingAndGlyphs">outputs: game-analysis-report · portfolio-project-brief · creative-design-portfolio</text>
+  <text x="710" y="649" fill="#354152" font-size="8" textLength="618" lengthAdjust="spacingAndGlyphs">routes: 스킬 하나·반례 proof가 확인됨→CA-T04 · cooldown과 피해 판정 보강이 필요함→CA-T07</text>
+  <text x="710" y="662" fill="#354152" font-size="7" textLength="618" lengthAdjust="spacingAndGlyphs">failure / preserve: cooldown 또는 피해 판정이 관찰되지 않으면 claim을 보류합니다. / cooldown, 피해 판정, 스킬 명세와 반례.</text>
+  <text x="710" y="675" fill="#354152" font-size="8" textLength="618" lengthAdjust="spacingAndGlyphs">confirm / resume: 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. / 확인된 스킬 하나의 피드백에서 재개합니다.</text>
+  <text x="710" y="688" fill="#354152" font-size="8">boundary: 합격을 보장하지 않음</text>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
-  <text x="84" y="798" fill="#1F2733" font-size="24">검토 가능한 결과를 남기고 CA-T04 또는 CA-T07 조건을 확인합니다.</text>
+  <text x="84" y="792" fill="#1F2733" font-size="22">전투·캐릭터 기획의 스킬 하나·반례를 검토하고 조건에 맞는 다음 사례로 이동합니다.</text>
+  <text x="84" y="821" fill="#354152" font-weight="500" font-size="6" textLength="1232" lengthAdjust="spacingAndGlyphs">failure → preserve → confirm → resume: cooldown 또는 피해 판정이 관찰되지 않으면 claim을 보류합니다. → cooldown, 피해 판정, 스킬 명세와 반례. → 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. → 확인된 스킬 하나의 피드백에서 재개합니다.</text>
 </svg>

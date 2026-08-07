@@ -8,10 +8,12 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { loadUseCaseManifest } from "./lib/use-case-guides.mjs";
+import { validateCareerDiagramProductionBatch } from "./lib/career-diagram-production-contract.mjs";
 import { renderDiagramSvg, validateDiagramSource } from "./lib/use-case-diagrams.mjs";
 import { validateStudioDiagramProductionBatch } from "./lib/studio-diagram-production-contract.mjs";
 
 const sourceFile = "guides/assets/use-case-diagram-sources.json";
+const careerRoutingFile = "products/game-design-career/plugin/references/routing.json";
 const studioRoutingFile = "products/game-design-studio/plugin/references/routing.json";
 const wrapperFile = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs";
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -99,6 +101,11 @@ async function loadSources(repoRoot) {
   if (await lstatIfPresent(routingFilename)) {
     const routing = JSON.parse(await readFile(routingFilename, "utf8"));
     validateStudioDiagramProductionBatch(parsed, routing);
+  }
+  const careerRoutingFilename = path.join(repoRoot, careerRoutingFile);
+  if (await lstatIfPresent(careerRoutingFilename)) {
+    const routing = JSON.parse(await readFile(careerRoutingFilename, "utf8"));
+    validateCareerDiagramProductionBatch(parsed, routing);
   }
   return parsed;
 }

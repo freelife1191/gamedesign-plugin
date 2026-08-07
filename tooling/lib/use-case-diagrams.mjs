@@ -141,22 +141,42 @@ function validateCareerSemanticContract(source) {
     throw new TypeError(`Career diagram source stages must be: ${expectedStages.join(" → ")}`);
   }
   if (source.scope === "game-design-career-skill") {
-    for (const field of ["skill", "trigger", "required_input", "owned_work", "next_route"]) {
+    for (const field of ["skill", "trigger", "required_input", "owned_work", "reviewer", "boundary", "failure", "preserve", "human_confirmation", "resume", "next_condition"]) {
       if (!isNonemptyString(source.semantic[field])) throw new TypeError(`Career skill semantic.${field} must be a nonempty string`);
+    }
+    if (!Array.isArray(source.semantic.next_routes)) throw new TypeError("Career skill semantic.next_routes must be an array");
+    for (const [index, route] of source.semantic.next_routes.entries()) {
+      if (!isObject(route) || !isNonemptyString(route.condition) || !isNonemptyString(route.target)) {
+        throw new TypeError(`Career skill semantic.next_routes[${index}] must contain condition and target`);
+      }
     }
     return;
   }
-  for (const field of ["evidence", "owned_work", "human_review", "boundary", "next_route"]) {
+  const commonFields = ["evidence", "owned_work", "human_review", "boundary"];
+  for (const field of commonFields) {
     if (!isNonemptyString(source.semantic[field])) throw new TypeError(`Career case semantic.${field} must be a nonempty string`);
   }
   if (source.type === "decision-flow") {
-    if (!Array.isArray(source.branches) || source.branches.length < 2) throw new TypeError("Career decision-flow must contain at least two branches");
+    for (const field of ["role", "stage", "use", "failure", "preserve", "human_confirmation", "resume", "next_condition"]) {
+      if (!isNonemptyString(source.semantic[field])) throw new TypeError(`Career target semantic.${field} must be a nonempty string`);
+    }
+    if (!Array.isArray(source.semantic.next_routes) || source.semantic.next_routes.length !== 2) {
+      throw new TypeError("Career target semantic.next_routes must contain exactly two ordered routes");
+    }
+    for (const [index, route] of source.semantic.next_routes.entries()) {
+      if (!isObject(route) || !isNonemptyString(route.condition) || !isNonemptyString(route.target)) {
+        throw new TypeError(`Career target semantic.next_routes[${index}] must contain condition and target`);
+      }
+    }
+    if (!Array.isArray(source.branches) || source.branches.length !== 2) throw new TypeError("Career decision-flow must contain exactly two branches");
     for (const [index, branch] of source.branches.entries()) {
       if (!isObject(branch) || !isNonemptyString(branch.label) || !isNonemptyString(branch.detail)) {
         throw new TypeError(`Career decision branch ${index} must have label and detail`);
       }
     }
+    return;
   }
+  if (!isNonemptyString(source.semantic.next_route)) throw new TypeError("Career competency semantic.next_route must be a nonempty string");
 }
 
 function cardColor(index) {
@@ -184,11 +204,16 @@ function exactTextLines(values, { x, y, fill }) {
 function visibleStep(source, step, index) {
   if (isCareerSource(source)) {
     if (source.scope === "game-design-career-use-case") {
-      const exact = [source.semantic.evidence, source.semantic.owned_work, source.semantic.human_review, source.semantic.boundary];
-      return { ...step, exact: index === 4 ? source.semantic.outputs : [exact[index]] };
+      const exact = source.type === "decision-flow"
+        ? [source.semantic.evidence, source.semantic.use, source.semantic.human_review, source.semantic.boundary]
+        : [source.semantic.evidence, source.semantic.owned_work, source.semantic.human_review, source.semantic.boundary];
+      const routes = source.semantic.next_routes?.map(({ target }) => target);
+      const finalExact = source.type === "decision-flow" ? [routes.join(" · ")] : source.semantic.outputs;
+      return { ...step, exact: index === 4 ? finalExact : [exact[index]] };
     }
-    const exact = [source.semantic.trigger, source.semantic.required_input, source.semantic.owned_work, null, source.semantic.next_route];
-    return { ...step, exact: index === 3 ? source.semantic.outputs : [exact[index]] };
+    const routes = source.semantic.next_routes.map(({ target }) => target);
+    const exact = [source.semantic.trigger, source.semantic.required_input, source.semantic.owned_work, null, routes.length ? routes : ["terminal · 자동 route 없음"]];
+    return { ...step, exact: index === 3 ? source.semantic.outputs : Array.isArray(exact[index]) ? exact[index] : [exact[index]] };
   }
   if (!isStudioSource(source)) return step;
   if (source.type === "design-pipeline") {
@@ -209,17 +234,51 @@ function visibleStep(source, step, index) {
   return step;
 }
 
-function semanticRailLines(source) {
+function semanticRailGroups(source) {
   if (isCareerSource(source)) {
-    const prefix = source.scope === "game-design-career-skill" ? `skill: ${source.semantic.skill}` : `review: ${source.semantic.human_review}`;
-    return [prefix, `outputs: ${source.semantic.outputs.join(" · ")}`, `next: ${source.semantic.next_route}`];
+    if (source.scope === "game-design-career-skill") {
+      return {
+        left: [
+          `skill / reviewer: ${source.semantic.skill} / ${source.semantic.reviewer}`,
+          `trigger / input: ${source.semantic.trigger} / ${source.semantic.required_input}`,
+          `work / outputs: ${source.semantic.owned_work} / ${source.semantic.outputs.join(" · ")}`,
+          `boundary: ${source.semantic.boundary}`,
+        ],
+        right: [
+          `routes: ${source.semantic.next_routes.map(({ condition, target }) => `${condition}→${target}`).join(" · ") || "terminal"}`,
+          `failure / preserve: ${source.semantic.failure} / ${source.semantic.preserve}`,
+          `confirm / resume: ${source.semantic.human_confirmation} / ${source.semantic.resume}`,
+          `next condition: ${source.semantic.next_condition}`,
+        ],
+      };
+    }
+    if (source.type === "decision-flow") {
+      return {
+        left: [
+          `role / stage: ${source.semantic.role} / ${source.semantic.stage}`,
+          `evidence: ${source.semantic.evidence}`,
+          `use / reviewer: ${source.semantic.use} / ${source.semantic.human_review}`,
+          `outputs: ${source.semantic.outputs.join(" · ")}`,
+        ],
+        right: [
+          `routes: ${source.semantic.next_routes.map(({ condition, target }) => `${condition}→${target}`).join(" · ")}`,
+          `failure / preserve: ${source.semantic.failure} / ${source.semantic.preserve}`,
+          `confirm / resume: ${source.semantic.human_confirmation} / ${source.semantic.resume}`,
+          `boundary: ${source.semantic.boundary}`,
+        ],
+      };
+    }
+    return {
+      left: [`review: ${source.semantic.human_review}`, `evidence: ${source.semantic.evidence}`],
+      right: [`outputs: ${source.semantic.outputs.join(" · ")}`, `next: ${source.semantic.next_route}`, `boundary: ${source.semantic.boundary}`],
+    };
   }
-  if (!isStudioSource(source)) return [];
+  if (!isStudioSource(source)) return { left: [], right: [] };
   if (source.type === "design-pipeline") {
-    return [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `review: ${source.semantic.review.skill}`];
+    return { left: [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `review: ${source.semantic.review.skill}`], right: [] };
   }
   if (source.type === "decision-flow") {
-    return [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `validation: ${source.semantic.validation}`];
+    return { left: [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `validation: ${source.semantic.validation}`], right: [] };
   }
   const routes = source.semantic.next_routes.length ? source.semantic.next_routes : [source.semantic.next_condition];
   const lines = [`skill: ${source.semantic.skill}`, `outputs: ${source.semantic.outputs.join(" · ")}`];
@@ -232,7 +291,21 @@ function semanticRailLines(source) {
     current += current === "next: " ? route : ` · ${route}`;
   }
   lines.push(current);
-  return lines;
+  return { left: lines, right: [] };
+}
+
+function semanticRailText(value, { x, y, width }) {
+  const length = characterLength(value);
+  const fontSize = length > 105 ? 6 : length > 78 ? 7 : 8;
+  const fit = length > 48 || length * fontSize > width ? ` textLength="${width}" lengthAdjust="spacingAndGlyphs"` : "";
+  return `  <text x="${x}" y="${y}" fill="#354152" font-size="${fontSize}"${fit}>${escapeXml(value)}</text>`;
+}
+
+function footerDetail(source) {
+  if (!isCareerSource(source)) return "";
+  if (source.scope === "game-design-career-skill") return `next condition: ${source.semantic.next_condition}`;
+  if (source.type === "decision-flow") return `failure → preserve → confirm → resume: ${source.semantic.failure} → ${source.semantic.preserve} → ${source.semantic.human_confirmation} → ${source.semantic.resume}`;
+  return `review → boundary → next: ${source.semantic.human_review} → ${source.semantic.boundary} → ${source.semantic.next_route}`;
 }
 
 export function validateDiagramSource(source) {
@@ -269,6 +342,8 @@ export function validateDiagramSource(source) {
 
 export function renderDiagramSvg(source) {
   validateDiagramSource(source);
+  const titleFit = isCareerSource(source) && characterLength(source.title) > 24 ? ' textLength="1220" lengthAdjust="spacingAndGlyphs"' : "";
+  const descriptionFit = isCareerSource(source) && characterLength(source.description) > 45 ? ' textLength="1220" lengthAdjust="spacingAndGlyphs"' : "";
   const cards = layoutFor(source.type, source.steps.length, source);
   const isBranchedDecision = source.type === "decision-flow" && Array.isArray(source.branches) && source.branches.length >= 2;
   const cardMarkup = source.steps.map((rawStep, index) => {
@@ -309,7 +384,7 @@ export function renderDiagramSvg(source) {
     const endY = vertical ? next.y - 12 : next.y + next.height / 2;
     return `  <path d="M ${startX} ${startY} L ${endX} ${endY}" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>`;
   }).join("\n");
-  const decisionBranches = isBranchedDecision ? source.branches.slice(0, 2).map((branch, index) => {
+  const decisionBranches = isBranchedDecision ? source.branches.map((branch, index) => {
     const y = index === 0 ? 298 : 505;
     const branchCenterY = y + 30;
     const sourceCard = cards[1];
@@ -324,11 +399,24 @@ export function renderDiagramSvg(source) {
       `  <path class="decision-branch" d="M 752 ${branchCenterY} L ${targetCard.x - 12} ${targetCard.y + targetCard.height / 2}" fill="none" stroke="#0F7A5F" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>`,
     ].join("\n");
   }).join("\n") + `\n  <text x="800" y="354" fill="#0F7A5F" font-size="14" font-weight="700">재결합: 판단 기준</text>` : "";
-  const railLines = semanticRailLines(source);
-  const semanticRail = railLines.length ? [
-    '  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>',
-    ...railLines.map((line, index) => `  <text x="72" y="${650 + index * 12}" fill="#354152" font-size="9">${escapeXml(line)}</text>`),
-  ].join("\n") : "";
+  const railGroups = semanticRailGroups(source);
+  const hasRail = railGroups.left.length > 0 || railGroups.right.length > 0;
+  const semanticRail = hasRail
+    ? isCareerSource(source)
+      ? [
+        '  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>',
+        ...railGroups.left.map((line, index) => semanticRailText(line, { x: 72, y: 649 + index * 13, width: 610 })),
+        ...railGroups.right.map((line, index) => semanticRailText(line, { x: 710, y: 649 + index * 13, width: 618 })),
+      ].join("\n")
+      : [
+        '  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>',
+        ...railGroups.left.map((line, index) => `  <text x="72" y="${650 + index * 12}" fill="#354152" font-size="9">${escapeXml(line)}</text>`),
+      ].join("\n")
+    : "";
+  const detail = footerDetail(source);
+  const footerDetailMarkup = detail
+    ? semanticRailText(detail, { x: 84, y: 821, width: 1232 }).replace('font-size="', 'font-weight="500" font-size="')
+    : "";
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="${escapeXml(source.alt)}">`,
@@ -342,8 +430,8 @@ export function renderDiagramSvg(source) {
     '  <rect width="1400" height="900" fill="#F7FAFD"/>',
     '  <rect x="52" y="52" width="8" height="138" rx="4" fill="#1F6FB2"/>',
     `  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">${escapeXml(source.eyebrow)}</text>`,
-    `  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">${escapeXml(source.title)}</text>`,
-    `  <text x="88" y="192" fill="#5B6675" font-size="24">${escapeXml(source.description)}</text>`,
+    `  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700"${titleFit}>${escapeXml(source.title)}</text>`,
+    `  <text x="88" y="192" fill="#5B6675" font-size="24"${descriptionFit}>${escapeXml(source.description)}</text>`,
     '  <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>',
     connectors,
     decisionBranches,
@@ -351,7 +439,10 @@ export function renderDiagramSvg(source) {
     semanticRail,
     '  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>',
     '  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>',
-    `  <text x="84" y="798" fill="#1F2733" font-size="24">${escapeXml(source.conclusion)}</text>`,
+    isCareerSource(source)
+      ? `  <text x="84" y="792" fill="#1F2733" font-size="22">${escapeXml(source.conclusion)}</text>`
+      : `  <text x="84" y="798" fill="#1F2733" font-size="24">${escapeXml(source.conclusion)}</text>`,
+    footerDetailMarkup,
     '</svg>',
     '',
   ].filter(Boolean).join("\n") + "\n";
