@@ -1963,6 +1963,89 @@ test("complete validation reads production document anchors and App/CLI request 
   }
 });
 
+test("complete validation ignores fenced, commented, and unowned use-case markers", async (t) => {
+  const fixture = await createCompleteUseCaseFixture(t);
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, "utf8"));
+  const skillDocument = path.join(fixture.fixtureRoot, manifest.skill_cases[0].document);
+  const faqDocument = path.join(fixture.fixtureRoot, "guides/use-cases/README.md");
+  const audienceDocument = path.join(fixture.fixtureRoot, manifest.audience_paths[0].document);
+  const caseDocument = path.join(fixture.fixtureRoot, manifest.cases[0].document);
+  const canonicalDocuments = new Map(await Promise.all(
+    [skillDocument, faqDocument, audienceDocument, caseDocument].map(async (filename) => [filename, await readFile(filename, "utf8")]),
+  ));
+  const skillHeading = "### 직접 호출 활용 — apply-document-quality-profile";
+  const faqHeading = canonicalDocuments.get(faqDocument).match(/^### Q01\..+$/mu)?.[0];
+  const audienceHeading = "## AUD-01 — 게임 기획 입문 학생";
+  const audienceApp = canonicalDocuments.get(audienceDocument).match(/^\*\*App 요청:\*\*.+$/mu)?.[0];
+  const audienceCli = canonicalDocuments.get(audienceDocument).match(/^\*\*CLI 요청:\*\*.+$/mu)?.[0];
+  assert.ok(faqHeading && audienceApp && audienceCli, "production mutation donors");
+
+  const baseline = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true, inventories: fixture.inventories });
+  assert.equal(baseline.ok, true, baseline.errors.join("\n"));
+
+  const mutations = [
+    ["backtick-fenced direct-skill anchor", skillDocument, (markdown) => markdown.replace(
+      skillHeading,
+      `### 직접 호출 안내 — apply-document-quality-profile\n\n  \`\`\`\`text\n${skillHeading}\n~~~\n${skillHeading}\n  \`\`\`\`\``,
+    )],
+    ["tilde-fenced direct-skill anchor", skillDocument, (markdown) => markdown.replace(
+      skillHeading,
+      `### 직접 호출 안내 — apply-document-quality-profile\n\n   ~~~~markdown\n${skillHeading}\n\`\`\`\n${skillHeading}\n   ~~~~~`,
+    )],
+    ["inline-code direct-skill anchor", skillDocument, (markdown) => markdown.replace(
+      skillHeading,
+      `### 직접 호출 안내 — apply-document-quality-profile\n\n### \`${skillHeading.slice(4)}\``,
+    )],
+    ["unowned direct-skill section", skillDocument, (markdown) => `${markdown
+      .replace(skillHeading, "### 직접 호출 안내 — apply-document-quality-profile")
+      .replace("## Codex App 요청 예시", "## Codex App 실행 예시")
+      .replace("## Codex CLI 요청 예시", "## Codex CLI 실행 예시")}\n\n# 다른 스킬 부록\n\n${skillHeading}\n\n## Codex App 요청 예시\n\n## Codex CLI 요청 예시\n`],
+    ["fenced direct-skill requests", skillDocument, (markdown) => markdown
+      .replace("## Codex App 요청 예시", "## Codex App 실행 예시")
+      .replace("## Codex CLI 요청 예시", "## Codex CLI 실행 예시")
+      .replace(skillHeading, `${skillHeading}\n\n\`\`\`text\n## Codex App 요청 예시\n## Codex CLI 요청 예시\n\`\`\``)],
+    ["unowned direct-skill requests", skillDocument, (markdown) => `${markdown
+      .replace("## Codex App 요청 예시", "## Codex App 실행 예시")
+      .replace("## Codex CLI 요청 예시", "## Codex CLI 실행 예시")}\n\n# 다른 스킬 부록\n\n## Codex App 요청 예시\n\n## Codex CLI 요청 예시\n`],
+    ["fenced FAQ heading", faqDocument, (markdown) => `${markdown.replace(faqHeading, faqHeading.replace("### Q01.", "### FAQ01."))}\n\n  ~~~~markdown\n${faqHeading}\n  ~~~~~\n`],
+    ["commented FAQ heading", faqDocument, (markdown) => `${markdown.replace(faqHeading, faqHeading.replace("### Q01.", "### FAQ01."))}\n\n<!-- hidden FAQ\n${faqHeading}\n-->\n`],
+    ["fenced audience owner and requests", audienceDocument, (markdown) => markdown
+      .replace(audienceApp, audienceApp.replace("**App 요청:**", "**App 실행:**"))
+      .replace(audienceCli, audienceCli.replace("**CLI 요청:**", "**CLI 실행:**"))
+      .replace(audienceHeading, `## 삭제된 AUD-01\n\n  \`\`\`\`text\n${audienceHeading}\n${audienceApp}\n${audienceCli}\n  \`\`\`\`\``)],
+    ["commented audience owner and requests", audienceDocument, (markdown) => markdown
+      .replace(audienceApp, audienceApp.replace("**App 요청:**", "**App 실행:**"))
+      .replace(audienceCli, audienceCli.replace("**CLI 요청:**", "**CLI 실행:**"))
+      .replace(audienceHeading, `## 삭제된 AUD-01\n\n<!-- hidden audience\n${audienceHeading}\n${audienceApp}\n${audienceCli}\n-->`)],
+    ["commented audience requests", audienceDocument, (markdown) => markdown
+      .replace(audienceApp, audienceApp.replace("**App 요청:**", "**App 실행:**"))
+      .replace(audienceCli, audienceCli.replace("**CLI 요청:**", "**CLI 실행:**"))
+      .replace(audienceHeading, `${audienceHeading}\n\n<!-- hidden requests\n${audienceApp}\n${audienceCli}\n-->`)],
+    ["AUD-02-owned audience requests", audienceDocument, (markdown) => markdown
+      .replace(audienceHeading, "## 삭제된 AUD-01")
+      .replace(audienceApp, audienceApp.replace("**App 요청:**", "**App 실행:**"))
+      .replace(audienceCli, audienceCli.replace("**CLI 요청:**", "**CLI 실행:**"))
+      .replace("## AUD-03 — 게임 기획 직무 전환자", `<!--\n${audienceHeading}\n-->\n${audienceApp}\n${audienceCli}\n\n## AUD-03 — 게임 기획 직무 전환자`)],
+    ["fenced case requests", caseDocument, (markdown) => markdown
+      .replace("### Codex App 요청문", "### Codex App 실행문")
+      .replace("### Codex CLI 요청문", "### Codex CLI 실행문")
+      .replace("## ST-C01 플레이어 경험과 게임 비전", "## ST-C01 플레이어 경험과 게임 비전\n\n~~~text\n### Codex App 요청문\n### Codex CLI 요청문\n~~~")],
+  ];
+  const outcomes = [];
+  for (const [label, filename, mutate] of mutations) {
+    for (const [documentPath, markdown] of canonicalDocuments) await writeFile(documentPath, markdown);
+    await writeFile(filename, mutate(canonicalDocuments.get(filename)));
+    const result = await validateUseCaseGuides({ repoRoot: fixture.fixtureRoot, requireComplete: true, inventories: fixture.inventories });
+    outcomes.push({ label, ok: result.ok, errors: result.errors });
+  }
+
+  assert.deepEqual(
+    outcomes.map(({ label, ok }) => ({ label, ok })),
+    mutations.map(([label]) => ({ label, ok: false })),
+    JSON.stringify(outcomes, null, 2),
+  );
+});
+
 test("complete validation binds production counts, catalogs, and diagram metadata fail-closed", async (t) => {
   const fixture = await createCompleteUseCaseFixture(t);
   const canonicalManifest = await readFile(fixture.manifestPath, "utf8");

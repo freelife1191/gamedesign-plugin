@@ -50,25 +50,103 @@ function githubAnchor(heading) {
     .replace(/\s+/g, "-");
 }
 
-function markdownAnchorSections(markdown) {
-  const lines = markdown.split("\n");
+function stripHtmlComments(line, state) {
+  let cursor = 0;
+  let visible = "";
+  while (cursor < line.length) {
+    if (state.inHtmlComment) {
+      const end = line.indexOf("-->", cursor);
+      if (end === -1) return visible;
+      state.inHtmlComment = false;
+      cursor = end + 3;
+      continue;
+    }
+    const start = line.indexOf("<!--", cursor);
+    if (start === -1) return visible + line.slice(cursor);
+    visible += line.slice(cursor, start);
+    state.inHtmlComment = true;
+    cursor = start + 4;
+  }
+  return visible;
+}
+
+function fenceRun(line) {
+  return /^ {0,3}(`+|~+)/u.exec(line)?.[1];
+}
+
+function visibleMarkdownLines(markdown) {
+  const visibleLines = [];
+  const commentState = { inHtmlComment: false };
+  let fence;
+  for (const rawLine of markdown.split("\n")) {
+    if (fence) {
+      const run = fenceRun(rawLine);
+      const suffix = run ? rawLine.slice(rawLine.indexOf(run) + run.length) : "";
+      if (run?.[0] === fence.character && run.length >= fence.length && /^[ \t]*$/u.test(suffix)) fence = undefined;
+      visibleLines.push("");
+      continue;
+    }
+    const line = stripHtmlComments(rawLine, commentState);
+    const run = fenceRun(line);
+    if (run && run.length >= 3) {
+      const info = line.slice(line.indexOf(run) + run.length);
+      if (run[0] === "~" || !info.includes("`")) {
+        fence = { character: run[0], length: run.length };
+        visibleLines.push("");
+        continue;
+      }
+    }
+    visibleLines.push(line);
+  }
+  return visibleLines;
+}
+
+function isInlineCodeOnly(value) {
+  const trimmed = value.trim();
+  const opening = /^`+/u.exec(trimmed)?.[0];
+  const closing = /`+$/u.exec(trimmed)?.[0];
+  if (!opening || opening.length !== closing?.length || trimmed.length <= opening.length * 2) return false;
+  return !trimmed.slice(opening.length, -closing.length).includes(opening);
+}
+
+function parseVisibleMarkdown(markdown) {
+  const lines = visibleMarkdownLines(markdown);
   const headings = [];
   const anchors = new Set();
   for (const [lineIndex, line] of lines.entries()) {
     const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
     if (!match) continue;
-    const base = githubAnchor(match[2]);
+    const text = match[2];
+    if (isInlineCodeOnly(text)) continue;
+    const base = githubAnchor(text);
     if (!base) continue;
     let anchor = base;
     let suffix = 1;
     while (anchors.has(anchor)) anchor = `${base}-${suffix++}`;
     anchors.add(anchor);
-    headings.push({ anchor, level: match[1].length, lineIndex });
+    headings.push({ anchor, level: match[1].length, lineIndex, text });
   }
-  return new Map(headings.map((heading, index) => {
+  const sections = new Map(headings.map((heading, index) => {
     const next = headings.slice(index + 1).find((candidate) => candidate.level <= heading.level);
     return [heading.anchor, lines.slice(heading.lineIndex, next?.lineIndex ?? lines.length).join("\n")];
   }));
+  return {
+    headings,
+    headingsByAnchor: new Map(headings.map((heading) => [heading.anchor, heading])),
+    sections,
+  };
+}
+
+function ownerSection(parsed, anchor, kind) {
+  if (kind !== "skill") return parsed.sections.get(anchor);
+  const anchorHeading = parsed.headingsByAnchor.get(anchor);
+  if (!anchorHeading) return undefined;
+  const anchorIndex = parsed.headings.indexOf(anchorHeading);
+  const rootIndex = parsed.headings.findIndex((heading) => heading.level === 1);
+  if (rootIndex === -1 || anchorIndex <= rootIndex) return undefined;
+  const nextRoot = parsed.headings.slice(rootIndex + 1).find((heading) => heading.level === 1);
+  if (nextRoot && anchorHeading.lineIndex >= nextRoot.lineIndex) return undefined;
+  return parsed.sections.get(parsed.headings[rootIndex].anchor);
 }
 
 function entries(manifest) {
@@ -279,19 +357,17 @@ async function validateDocumentContracts(repoRoot, manifest, errors) {
     try {
       if (!cache.has(filename)) {
         const markdown = await readFile(filename, "utf8");
-        cache.set(filename, { markdown, sections: markdownAnchorSections(markdown) });
+        cache.set(filename, parseVisibleMarkdown(markdown));
       }
-      const { markdown, sections } = cache.get(filename);
-      const section = sections.get(entry.anchor);
+      const section = ownerSection(cache.get(filename), entry.anchor, kind);
       if (!section) {
         errors.push(`${label}.anchor is missing from ${entry.document}: ${entry.anchor}`);
         continue;
       }
-      const requestSource = kind === "skill" ? markdown : section;
-      if (!requestMarkers[kind].app.test(requestSource)) {
+      if (!requestMarkers[kind].app.test(section)) {
         errors.push(`${label} document is missing its App request marker: ${entry.document}#${entry.anchor}`);
       }
-      if (!requestMarkers[kind].cli.test(requestSource)) {
+      if (!requestMarkers[kind].cli.test(section)) {
         errors.push(`${label} document is missing its CLI request marker: ${entry.document}#${entry.anchor}`);
       }
     } catch (error) {
@@ -307,7 +383,9 @@ async function countFaqHeadings(repoRoot, errors) {
     try {
       await assertRegularContainedFile(repoRoot, filename);
       const markdown = await readFile(filename, "utf8");
-      count += (markdown.match(/^### Q\d{2}\.\s+\S.+$/gmu) ?? []).length;
+      count += parseVisibleMarkdown(markdown).headings.filter(
+        ({ level, text }) => level === 3 && /^Q\d{2}\.\s+\S.+$/u.test(text),
+      ).length;
     } catch (error) {
       errors.push(`FAQ source must be an existing regular non-symlink file: ${relativePath} (${error.message})`);
     }
