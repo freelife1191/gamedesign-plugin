@@ -302,7 +302,7 @@ test("Markdown container matrix prevents inline runs from crossing block boundar
   }))));
 });
 
-test("Markdown inline ranges stay local to plain, list, quote, and nested containers", () => {
+test("Markdown inline ranges stay local to plain, quote, and individual list containers", () => {
   const markdown = [
     "plain `code",
     "[plain-hidden](missing.md)",
@@ -339,8 +339,10 @@ test("Markdown inline ranges stay local to plain, list, quote, and nested contai
 
   assert.deepEqual(extractMarkdownLinks(markdown).map(({ target }) => target), [
     "plain.md",
+    "missing.md",
     "list.md",
     "quote.md",
+    "missing.md",
     "nested.md",
     "comment-code.md",
     "comment-first.md",
@@ -406,6 +408,75 @@ test("guide graph matrix rejects visible container edges and preserves exact und
       assert.equal(result.ok, false, boundary);
       assert.ok(result.errors.some((error) => error.includes(visibleTarget)), `${boundary}: ${result.errors.join("\n")}`);
     }
+  });
+});
+
+test("validateUserGuides keeps sibling list items, quoted paragraphs, and table rows visible", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    const cases = [
+      ["list siblings", ["- `first item", "- [visible](missing-list.md)", "- last item`"], "missing-list.md"],
+      ["quoted paragraphs", ["> `first paragraph", ">", "> [visible](missing-quote.md)", "> last paragraph`"], "missing-quote.md"],
+      ["list continuations", ["- `first item", "  [hidden](missing-hidden-continuation.md)", "  last item`", "- [visible](missing-continuation.md)"], "missing-continuation.md", "missing-hidden-continuation.md"],
+      ["table rows", ["| `first row | value |", "| --- | --- |", "| [visible](missing-table.md) | value |", "| last row` | value |"], "missing-table.md"],
+      ["nested quote list fence", ["> - ```md", ">   [hidden](missing-hidden-nested.md)", ">   ```", ">", "> [visible](missing-nested.md)"], "missing-nested.md", "missing-hidden-nested.md"],
+    ];
+
+    for (const [label, lines, target, hiddenTarget] of cases) {
+      await writeFile(guide, `${prefix}${lines.join("\n")}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes(target)), `${label}: ${result.errors.join("\n")}`);
+      if (hiddenTarget) assert.equal(result.errors.some((error) => error.includes(hiddenTarget)), false, `${label}: ${result.errors.join("\n")}`);
+    }
+  });
+});
+
+test("validateUserGuides masks multiline raw HTML blocks and restores later Markdown visibility", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    const hiddenBlocks = [
+      ["script", ["<script>", "[hidden-script](missing-script.md)", "</script>", "[visible-script](missing-visible-script.md)"]],
+      ["pre", ["<pre>", "[hidden-pre](missing-pre.md)", "</pre>", "[visible-pre](missing-visible-pre.md)"]],
+      ["style", ["<style>", "[hidden-style](missing-style.md)", "</style>", "[visible-style](missing-visible-style.md)"]],
+      ["textarea", ["<textarea>", "[hidden-textarea](missing-textarea.md)", "</textarea>", "[visible-textarea](missing-visible-textarea.md)"]],
+      ["comment", ["<!--", "[hidden-comment](missing-comment.md)", "-->", "[visible-comment](missing-visible-comment.md)"]],
+      ["div", ["<div>", "[hidden-div](missing-div.md)", "", "[visible-div](missing-visible-div.md)"]],
+      ["details", ["<details>", "[hidden-details](missing-details.md)", "", "[visible-details](missing-visible-details.md)"]],
+    ];
+
+    for (const [label, lines] of hiddenBlocks) {
+      await writeFile(guide, `${prefix}${lines.join("\n")}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      const visibleTarget = `missing-visible-${label}.md`;
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes(visibleTarget)), `${label}: ${result.errors.join("\n")}`);
+      assert.equal(result.errors.some((error) => error.includes(`missing-${label}.md`)), false, label);
+    }
+  });
+});
+
+test("validateUserGuides resolves CommonMark delimiter-run heading anchors without changing intraword underscores", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guideRoot = path.join(root, "guides", "game-design-studio", "skills");
+    const guide = path.join(guideRoot, "README.md");
+    await writeFile(path.join(guideRoot, "delimiter-runs.md"), [
+      "## ___foo__ bar_",
+      "## **bold *italic***",
+      "## foo_bar",
+    ].join("\n"));
+    await writeFile(guide, [
+      "prompt-only select required all gpt-image-2 low",
+      "",
+      "[split underscore](delimiter-runs.md#foo-bar)",
+      "[nested stars](delimiter-runs.md#bold-italic)",
+      "[intraword underscore](delimiter-runs.md#foo_bar)",
+    ].join("\n"));
+
+    const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+    assert.equal(result.ok, true, result.errors.join("\n"));
   });
 });
 

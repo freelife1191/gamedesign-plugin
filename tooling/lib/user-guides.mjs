@@ -136,6 +136,33 @@ function htmlBlock(line) {
   return /^ {0,3}(?:<\/?[A-Za-z][A-Za-z\d-]*(?:[ \t][^>]*)?>|<![A-Z]|<\?|<!\[CDATA\[)/iu.test(line);
 }
 
+function markdownContainer(source) {
+  let cursor = 0;
+  let quoteDepth = 0;
+  while (true) {
+    const match = /^ {0,3}>[ \t]?/u.exec(source.slice(cursor));
+    if (!match) break;
+    cursor += match[0].length;
+    quoteDepth += 1;
+  }
+  const list = /^(?: {0,3})(?:[-+*]|\d{1,9}[.)])[ \t]+/u.exec(source.slice(cursor));
+  if (list) cursor += list[0].length;
+  return { contentStart: cursor, quoteDepth, list: Boolean(list) };
+}
+
+function rawHtmlBlockStart(line) {
+  const source = line.source.slice(line.container.contentStart);
+  const terminated = /^<(script|pre|style|textarea)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
+  if (terminated) return { tag: terminated, endsOnBlank: false };
+  const blankTerminated = /^<(div|details)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
+  if (blankTerminated) return { tag: blankTerminated, endsOnBlank: true };
+  return undefined;
+}
+
+function closesRawHtmlBlock(source, block) {
+  return new RegExp(`</${block.tag}[ \t]*>`, "iu").test(source);
+}
+
 function initialLineKind(line) {
   if (line.trim() === "") return "blank";
   if (indentedCode(line)) return "indented-code";
@@ -155,7 +182,7 @@ function structuralLines(markdown) {
     const source = rawLineWithCarriageReturn.endsWith("\r")
       ? rawLineWithCarriageReturn.slice(0, -1)
       : rawLineWithCarriageReturn;
-    return { line: index + 1, source, kind: initialLineKind(source) };
+    return { line: index + 1, source, kind: initialLineKind(source), container: markdownContainer(source) };
   });
 
   for (let index = 1; index < lines.length; index += 1) {
@@ -175,27 +202,44 @@ function structuralLines(markdown) {
   }
 
   let segment = -1;
-  let previousFamily;
+  let previousKey;
+  let activeList;
   for (const line of lines) {
-    const family = line.kind === "unordered-list" || line.kind === "ordered-list"
-      ? "list"
-      : line.kind === "blockquote"
-        ? "blockquote"
-        : line.kind === "table"
-          ? "table"
-          : line.kind === "plain"
-            ? "plain"
-            : undefined;
-    if (!family) {
-      previousFamily = undefined;
+    const content = line.source.slice(line.container.contentStart);
+    const directList = line.kind === "unordered-list" || line.kind === "ordered-list" || line.container.list;
+    const listContinuation = !directList
+      && activeList?.quoteDepth === line.container.quoteDepth
+      && line.kind === "plain"
+      && /^(?: {1,3}|\t)\S/u.test(content);
+    const quoteBlank = line.container.quoteDepth > 0 && content.trim() === "";
+    let key;
+    if (directList) {
+      key = `list:${line.line}`;
+      activeList = { key, quoteDepth: line.container.quoteDepth };
+    } else if (listContinuation) {
+      key = activeList.key;
+    } else if (line.kind === "table") {
+      key = `table:${line.line}`;
+      activeList = undefined;
+    } else if (line.kind === "blockquote" && !quoteBlank) {
+      key = `blockquote:${line.container.quoteDepth}`;
+      activeList = undefined;
+    } else if (line.kind === "plain") {
+      key = "plain";
+      activeList = undefined;
+    } else {
+      activeList = undefined;
+    }
+    if (!key) {
+      previousKey = undefined;
       line.segment = line.kind === "blank" || line.kind === "fence" || line.kind === "indented-code"
         ? undefined
         : ++segment;
       continue;
     }
-    if (family !== previousFamily) segment += 1;
+    if (key !== previousKey) segment += 1;
     line.segment = segment;
-    previousFamily = family;
+    previousKey = key;
   }
   return lines;
 }
@@ -288,6 +332,7 @@ export function scanVisibleMarkdown(markdown) {
   }
 
   let fence;
+  let rawHtml;
   let inComment = false;
   let activeCodeRange;
   let activeSegment;
@@ -298,7 +343,14 @@ export function scanVisibleMarkdown(markdown) {
     if (fence) {
       activeCodeRange = undefined;
       hide(0, line.source.length);
-      if (closesFence(line.source, fence)) fence = undefined;
+      if (closesFence(line.source.slice(line.container.contentStart), fence)) fence = undefined;
+      continue;
+    }
+    if (rawHtml) {
+      activeCodeRange = undefined;
+      hide(0, line.source.length);
+      const source = line.source.slice(line.container.contentStart);
+      if (closesRawHtmlBlock(source, rawHtml) || (rawHtml.endsOnBlank && source.trim() === "")) rawHtml = undefined;
       continue;
     }
     if (!inComment && line.kind === "indented-code") {
@@ -306,11 +358,20 @@ export function scanVisibleMarkdown(markdown) {
       hide(0, line.source.length);
       continue;
     }
-    if (!inComment && fenceOpener(line.source)) {
+    if (!inComment && fenceOpener(line.source.slice(line.container.contentStart))) {
       activeCodeRange = undefined;
-      fence = fenceOpener(line.source);
+      fence = fenceOpener(line.source.slice(line.container.contentStart));
       hide(0, line.source.length);
       continue;
+    }
+    if (!inComment) {
+      const html = rawHtmlBlockStart(line);
+      if (html) {
+        activeCodeRange = undefined;
+        hide(0, line.source.length);
+        if (!closesRawHtmlBlock(line.source.slice(line.container.contentStart), html)) rawHtml = html;
+        continue;
+      }
     }
 
     for (let cursor = 0; cursor < line.source.length;) {
@@ -602,20 +663,18 @@ function pairedHeadingDelimiters(value) {
       cursor += runLength;
       continue;
     }
-    const token = value.slice(cursor, cursor + length);
     const { canOpen, canClose } = delimiterFlanking(value, cursor, length, character);
-    const stack = stacks.get(token) ?? [];
-    let closed = false;
-    if (canClose && stack.length > 0) {
-      const opener = stack.pop();
-      for (let offset = 0; offset < length; offset += 1) {
-        paired.add(opener + offset);
-        paired.add(cursor + offset);
-      }
-      closed = true;
+    const stack = stacks.get(character) ?? [];
+    let consumed = 0;
+    while (canClose && consumed < length && stack.length > 0) {
+      paired.add(stack.pop());
+      paired.add(cursor + consumed);
+      consumed += 1;
     }
-    if (canOpen && !closed) stack.push(cursor);
-    stacks.set(token, stack);
+    if (canOpen) {
+      for (let offset = consumed; offset < length; offset += 1) stack.push(cursor + offset);
+    }
+    stacks.set(character, stack);
     cursor += length;
   }
   return paired;
