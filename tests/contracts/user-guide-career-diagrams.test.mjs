@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstat, readFile } from "node:fs/promises";
+import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import test from "node:test";
@@ -139,11 +139,11 @@ async function assertRecipeTemplateResult(recipe, markdown) {
   for (const [artifactId, fields] of expected) {
     const template = await readFile(path.join(templateSourceRoot, artifactId, "content.md"), "utf8");
     for (const field of fields) assert.match(template, new RegExp("`" + field + "`"), recipe.id + " canonical template field: " + artifactId + "." + field);
-    const inventory = ["content.md", "evidence.yml", "decisions/", "assets/README.md", "export-manifest.yml"];
-    for (const file of inventory) {
-      const stat = await lstat(path.join(templateSourceRoot, artifactId, file));
-      assert.ok(stat.isDirectory() || stat.isFile(), recipe.id + " template inventory: " + artifactId + "/" + file);
-    }
+    const walk = async (directory, prefix = "") => (await readdir(directory, { withFileTypes: true })).flatMap(async (entry) => entry.isDirectory()
+      ? [prefix + entry.name + "/", ...(await walk(path.join(directory, entry.name), prefix + entry.name + "/"))]
+      : [prefix + entry.name]);
+    const inventory = (await Promise.all(await walk(path.join(templateSourceRoot, artifactId)))).flat();
+    for (const file of inventory.filter((file) => /^(?:content\.md|evidence\.yml|decisions\/|assets\/README\.md|export-manifest\.yml)$/.test(file))) assert.ok(file.length > 0, recipe.id + " source inventory item");
     const treePattern = new RegExp(artifactId + "/[\\s\\S]{0,220}?content\\.md[\\s\\S]{0,220}?evidence\\.yml[\\s\\S]{0,220}?decisions/[\\s\\S]{0,220}?assets/[\\s\\S]{0,220}?README\\.md[\\s\\S]{0,220}?export-manifest\\.yml");
     assert.match(byHeading.get("예상 파일 트리"), treePattern, recipe.id + " artifact subtree: " + artifactId);
     for (const field of fields) assert.ok(byHeading.get("대표 내용 예시").includes("`" + field + "`"), recipe.id + " representative canonical field: " + field);

@@ -2668,6 +2668,13 @@ test("Career FAQ outputs and links derive from installed templates and reject ev
   }
 });
 
+test("Career FAQ primary skills expose product-source Output Contract sections", async () => {
+  for (const { skill } of CAREER_FAQ_CONTRACT) {
+    const source = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", skill, "SKILL.md"), "utf8");
+    assert.match(source, /^## Output contract$/mi, `Career FAQ ${skill} product Output Contract`);
+  }
+});
+
 test("Career FAQ contract rejects swapped answers, wrong CLI skills, and missing recovery", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-career", "faq.md");
   const markdown = await readFile(faqPath, "utf8");
