@@ -79,7 +79,7 @@ game-design-career/<career-id>/
 
 ### 완료 기준
 
-모든 공개 `claim-id`가 `evidence-id`, `attribution`, `rights`에 연결되고, 각 finding에 하나의 `minimum-repair`, `owner`, 재검토 조건이 있으며, unsupported claim을 점수나 문구로 숨기지 않으면 완료입니다.
+모든 공개 `claim-id`가 `evidence-id`, `attribution`, `rights`와 `inspectabilityGate`에 연결되고, 각 finding에 하나의 `minimum-repair`(`minimum repair`), `owner`, 재검토 조건이 있으며, unsupported claim을 점수나 문구로 숨기지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 

@@ -18,6 +18,10 @@ import { validateVisualizationState } from "../../products/game-design-career/pl
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const manifestPath = path.join(root, "guides/assets/diagram-manifest.json");
 const manifestDir = path.dirname(manifestPath);
+const routingPath = path.join(root, "products/game-design-career/plugin/references/routing.json");
+const routing = JSON.parse(await readFile(routingPath, "utf8"));
+const recipeContracts = Object.freeze(routing.recipeContracts ?? []);
+const skillSourceRoot = path.join(root, "products/game-design-career/plugin/skills");
 const skillsteadWrapperPath = fileURLToPath(new URL(
   "../../products/game-design-career/plugin/skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
   import.meta.url,
@@ -32,82 +36,14 @@ const recipeHeadings = [
   "실패와 재개",
   "관련 기능",
 ];
-const recipes = [
-  {
-    id: "role-learning-roadmap",
-    diagramId: "role-gap-learning-roadmap",
-    skills: ["orchestrate-game-design-career", "map-game-design-career", "apply-document-quality-profile"],
-    artifacts: ["game-design-career/<career-id>/career-stage-goal/", "game-design-career/<career-id>/learning-roadmap/"],
-    templates: ["career-stage-goal", "game-design-role-map", "learning-roadmap"],
-    approvers: ["김서윤", "박도현"],
-  },
-  {
-    id: "job-research-gap",
-    diagramId: "job-research-evidence-flow",
-    skills: ["research-game-design-jobs", "map-game-design-career", "build-game-design-portfolio"],
-    artifacts: ["game-design-career/<career-id>/job-posting-evidence/", "game-design-career/<career-id>/competency-matrix/", "game-design-career/<career-id>/portfolio-project-brief/"],
-    templates: ["job-posting-evidence", "competency-matrix", "portfolio-project-brief"],
-    approvers: ["이민아", "최유진"],
-  },
-  {
-    id: "reverse-design",
-    diagramId: "reverse-design-portfolio-flow",
-    skills: ["reverse-engineer-game-design", "visualize-career-roadmap", "export-career-documents"],
-    artifacts: ["game-design-career/<career-id>/reverse-design-document/"],
-    templates: ["reverse-design-document", "game-analysis-report"],
-    approvers: ["한지훈", "오지은"],
-  },
-  {
-    id: "portfolio-build-review",
-    diagramId: "portfolio-review-loop",
-    skills: ["build-game-design-portfolio", "review-game-design-portfolio", "plan-image-assets"],
-    artifacts: ["game-design-career/<career-id>/creative-design-portfolio/", "game-design-career/<career-id>/five-axis-review/", "game-design-career/<career-id>/portfolio-backlog/"],
-    templates: ["creative-design-portfolio", "five-axis-review", "portfolio-backlog"],
-    approvers: ["정하늘", "윤태호"],
-  },
-  {
-    id: "interview-preparation",
-    diagramId: "interview-growth-transition-flow",
-    skills: ["practice-game-design-interview", "research-game-design-jobs", "review-game-design-portfolio"],
-    artifacts: ["game-design-career/<career-id>/interview-question-answer-log/"],
-    templates: ["interview-question-answer-log", "job-posting-evidence", "five-axis-review"],
-    approvers: ["최유진", "박도현"],
-  },
-  {
-    id: "junior-growth-transition",
-    diagramId: "career-stage-routing",
-    skills: ["plan-junior-growth", "map-game-design-career", "review-game-design-portfolio", "export-career-documents"],
-    artifacts: ["game-design-career/<career-id>/junior-growth-review/", "game-design-career/<career-id>/transition-readiness/"],
-    templates: ["junior-growth-review", "transition-readiness", "career-stage-goal"],
-    approvers: ["김서윤", "한지훈", "오지은"],
-  },
-];
-const recipeResultContract = Object.freeze({
-  "role-learning-roadmap": ["career-stage-goal/content.md", "learning-roadmap/content.md", "target-role", "proof-artifact", "portfolio", "interview", "career-stage-goal/content.md → learning-roadmap/content.md"],
-  "job-research-gap": ["job-posting-evidence/content.md", "competency-matrix/content.md", "source-url", "minimum-repair", "portfolio", "interview", "job-posting-evidence/content.md → competency-matrix/content.md"],
-  "reverse-design": ["reverse-design-document/content.md", "evidence.yml", "observation", "validation-method", "portfolio", "interview", "reverse-design-document/content.md → evidence.yml"],
-  "portfolio-build-review": ["creative-design-portfolio/content.md", "five-axis-review/content.md", "claim-id", "minimum-repair", "portfolio", "interview", "creative-design-portfolio/content.md → evidence.yml"],
-  "interview-preparation": ["interview-question-answer-log/content.md", "evidence.yml", "question-id", "honest-answer", "portfolio", "interview", "interview-question-answer-log/content.md → evidence.yml"],
-  "junior-growth-transition": ["junior-growth-review/content.md", "transition-readiness/content.md", "project-event-evidence", "next-review-date", "portfolio", "interview", "junior-growth-review/content.md → transition-readiness/content.md"],
-});
+const recipes = recipeContracts.map((contract) => ({
+  ...contract,
+  skills: [contract.primarySkill, ...contract.relatedSkills],
+  artifacts: contract.artifactContracts.map(({ path: artifactPath }) => `${artifactPath}/`),
+  templates: contract.inputTemplateIds,
+}));
 const recipeResultHeadings = ["예상 파일 트리", "대표 내용 예시", "완료 기준", "포트폴리오·면접 활용", "읽는 순서"];
 const templateSourceRoot = path.join(root, "products/game-design-career/plugin/assets/templates");
-const recipeTemplateContract = Object.freeze({
-  "role-learning-roadmap": [["career-stage-goal", ["target-role", "success-evidence"]], ["learning-roadmap", ["proof-artifact", "re-evaluation-date"]]],
-  "job-research-gap": [["job-posting-evidence", ["source-url", "retrieval-date", "sample-geography"]], ["competency-matrix", ["minimum-repair", "re-evaluation-date"]], ["portfolio-project-brief", ["target-competency", "implementation-test"]]],
-  "reverse-design": [["reverse-design-document", ["observation", "inference", "validation-method"]]],
-  "portfolio-build-review": [["creative-design-portfolio", ["claim-id", "evidence-id", "attribution"]], ["five-axis-review", ["finding-id", "minimum-repair"]], ["portfolio-backlog", ["backlog-id", "minimum-repair"]]],
-  "interview-preparation": [["interview-question-answer-log", ["question-id", "answer-status", "verification-task"]]],
-  "junior-growth-transition": [["junior-growth-review", ["project-event-evidence", "next-review-date", "proof-artifact"]], ["transition-readiness", ["target-requirement", "retrieval-date", "verification-task"]]],
-});
-const recipeCompletionContract = Object.freeze({
-  "role-learning-roadmap": ["proof-artifact", "re-evaluation-date"],
-  "job-research-gap": ["sample-geography", "minimum-repair", "re-evaluation-date"],
-  "reverse-design": ["observation", "validation-method"],
-  "portfolio-build-review": ["claim-id", "evidence-id", "attribution", "rights", "minimum-repair", "owner"],
-  "interview-preparation": ["question-id", "answer-status", "verification-task"],
-  "junior-growth-transition": ["project-event-evidence", "proof-artifact", "next-review-date", "retrieval-date", "region"],
-});
 
 function section(markdown, heading) {
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -129,16 +65,17 @@ function assertRecipeResult(recipe, markdown) {
   const entries = h3Sections(result);
   assert.deepEqual(entries.map(({ heading }) => heading), recipeResultHeadings, recipe.id + " expected-result heading order");
   const byHeading = new Map(entries.map(({ heading, body }) => [heading, body]));
-  const [firstFile, secondFile, exampleOne, doneTerm, portfolioTerm, interviewTerm] = recipeResultContract[recipe.id];
   const tree = byHeading.get("예상 파일 트리");
-  for (const [label, artifactPath] of [["first", firstFile], ["second", secondFile]]) {
-    if (!artifactPath) continue;
-    for (const segment of artifactPath.split("/").filter(Boolean)) assert.ok(tree.includes(segment), recipe.id + " artifact-relative file tree " + label + " file segment: " + segment);
+  for (const artifact of recipe.artifactContracts) {
+    assert.ok(tree.includes(`${artifact.artifactId}/`), `${recipe.id} artifact-relative file tree: ${artifact.artifactId}`);
+    const example = artifactExampleSegment(byHeading.get("대표 내용 예시"), artifact.artifactId);
+    for (const field of artifact.fields) assert.ok(example.includes(`\`${field}\``), `${recipe.id} representative field: ${artifact.artifactId}.${field}`);
   }
-  assert.ok(byHeading.get("대표 내용 예시").includes(exampleOne), recipe.id + " representative field example");
-  assert.ok(byHeading.get("완료 기준").includes(doneTerm), recipe.id + " verifiable completion criterion");
-  assert.ok(byHeading.get("포트폴리오·면접 활용").includes(portfolioTerm), recipe.id + " portfolio use");
-  assert.ok(byHeading.get("포트폴리오·면접 활용").includes(interviewTerm), recipe.id + " interview use");
+  for (const { skill, tokens } of recipe.completionContracts) {
+    for (const token of tokens) assert.ok(byHeading.get("완료 기준").includes(token), `${recipe.id} completion token: ${skill}.${token}`);
+  }
+  assert.ok(byHeading.get("포트폴리오·면접 활용").includes("portfolio"), recipe.id + " portfolio use");
+  assert.ok(byHeading.get("포트폴리오·면접 활용").includes("interview"), recipe.id + " interview use");
 }
 
 async function recursiveTemplateInventory(directory, prefix = "") {
@@ -171,21 +108,104 @@ function artifactExampleSegment(example, artifactId) {
   return next < 0 ? example.slice(start) : example.slice(start, start + marker.length + next);
 }
 
+function markdownSectionBody(markdown, heading) {
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = markdown.match(new RegExp(`^## ${escaped}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
+  assert.ok(match, `missing markdown section: ${heading}`);
+  return match[1];
+}
+
+function skillSection(markdown, headingPattern) {
+  const match = markdown.match(new RegExp(`^## ${headingPattern}\\s*$\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "im"));
+  assert.ok(match, `missing skill section: ${headingPattern}`);
+  return match[1].trim();
+}
+
+async function assertRecipeMetadata(sourceRouting, {
+  sourceRoot = templateSourceRoot,
+  skillRoot = skillSourceRoot,
+} = {}) {
+  const contracts = sourceRouting.recipeContracts;
+  assert.ok(Array.isArray(contracts), "routing.json recipeContracts array");
+  assert.equal(contracts.length, 6, "routing.json recipe contract count");
+  assert.deepEqual(contracts.map(({ id }) => id), [
+    "role-learning-roadmap",
+    "job-research-gap",
+    "reverse-design",
+    "portfolio-build-review",
+    "interview-preparation",
+    "junior-growth-transition",
+  ], "ordered recipe contract IDs");
+  assert.equal(new Set(contracts.map(({ id }) => id)).size, contracts.length, "unique recipe contract IDs");
+  const installedSkills = new Set(sourceRouting.skillIds);
+  for (const contract of contracts) {
+    assert.equal(contract.path, `recipes/${contract.id}.md`, `${contract.id} canonical recipe path`);
+    const recipePath = path.join(root, "guides/game-design-career", contract.path);
+    const recipeStat = await lstat(recipePath);
+    assert.ok(recipeStat.isFile() && !recipeStat.isSymbolicLink(), `${contract.id} canonical recipe source`);
+    assert.ok(typeof contract.diagramId === "string" && contract.diagramId.length > 0, `${contract.id} diagram ID`);
+    assert.ok(Array.isArray(contract.approvers) && contract.approvers.length > 0, `${contract.id} approvers`);
+    assert.equal(new Set(contract.approvers).size, contract.approvers.length, `${contract.id} unique approvers`);
+    assert.ok(installedSkills.has(contract.primarySkill), `${contract.id} installed primary skill`);
+    assert.ok(Array.isArray(contract.relatedSkills), `${contract.id} related skills`);
+    assert.equal(new Set(contract.relatedSkills).size, contract.relatedSkills.length, `${contract.id} unique related skills`);
+    assert.ok(!contract.relatedSkills.includes(contract.primarySkill), `${contract.id} primary skill excluded from related skills`);
+    for (const skill of contract.relatedSkills) assert.ok(installedSkills.has(skill), `${contract.id} installed related skill: ${skill}`);
+    assert.ok(Array.isArray(contract.inputTemplateIds) && contract.inputTemplateIds.length > 0, `${contract.id} input templates`);
+    assert.equal(new Set(contract.inputTemplateIds).size, contract.inputTemplateIds.length, `${contract.id} unique input templates`);
+    for (const templateId of contract.inputTemplateIds) {
+      const templateStat = await lstat(path.join(sourceRoot, templateId, "content.md"));
+      assert.ok(templateStat.isFile() && !templateStat.isSymbolicLink(), `${contract.id} installed input template: ${templateId}`);
+    }
+    assert.ok(Array.isArray(contract.artifactContracts) && contract.artifactContracts.length > 0, `${contract.id} artifact contracts`);
+    assert.equal(new Set(contract.artifactContracts.map(({ artifactId }) => artifactId)).size, contract.artifactContracts.length, `${contract.id} unique artifact IDs`);
+    const recipeSkills = new Set([contract.primarySkill, ...contract.relatedSkills]);
+    for (const artifact of contract.artifactContracts) {
+      assert.equal(artifact.expectedOutputId, artifact.artifactId, `${contract.id} artifact/output identity: ${artifact.artifactId}`);
+      assert.equal(artifact.path, `game-design-career/<career-id>/${artifact.artifactId}`, `${contract.id} canonical artifact path: ${artifact.artifactId}`);
+      assert.ok(recipeSkills.has(artifact.ownerSkill), `${contract.id} output owner is a recipe skill: ${artifact.ownerSkill}`);
+      assert.ok(Array.isArray(artifact.fields) && artifact.fields.length > 0, `${contract.id} artifact fields: ${artifact.artifactId}`);
+      assert.equal(new Set(artifact.fields).size, artifact.fields.length, `${contract.id} unique artifact fields: ${artifact.artifactId}`);
+      const template = await readFile(path.join(sourceRoot, artifact.artifactId, "content.md"), "utf8");
+      const workingRecord = markdownSectionBody(template, "Working Record {#working-record}");
+      for (const field of artifact.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${artifact.artifactId}.${field}`);
+      const skillSource = await readFile(path.join(skillRoot, artifact.ownerSkill, "SKILL.md"), "utf8");
+      const outputContract = skillSection(skillSource, "Output contract");
+      assert.match(outputContract, new RegExp("`" + artifact.expectedOutputId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned expected output: ${artifact.expectedOutputId}`);
+    }
+    assert.ok(Array.isArray(contract.completionContracts) && contract.completionContracts.length > 0, `${contract.id} completion contracts`);
+    assert.equal(new Set(contract.completionContracts.map(({ skill }) => skill)).size, contract.completionContracts.length, `${contract.id} unique completion skills`);
+    for (const completion of contract.completionContracts) {
+      assert.ok(recipeSkills.has(completion.skill), `${contract.id} completion skill is a recipe skill: ${completion.skill}`);
+      assert.ok(Array.isArray(completion.tokens) && completion.tokens.length > 0, `${contract.id} completion tokens: ${completion.skill}`);
+      assert.equal(new Set(completion.tokens).size, completion.tokens.length, `${contract.id} unique completion tokens: ${completion.skill}`);
+      const source = await readFile(path.join(skillRoot, completion.skill, "SKILL.md"), "utf8");
+      const sourceCompletion = skillSection(source, "Completion(?: Criteria)?");
+      for (const token of completion.tokens) {
+        assert.ok(typeof token === "string" && token.trim().length > 0, `${contract.id} nonempty completion token: ${completion.skill}`);
+        assert.ok(sourceCompletion.includes(token), `${contract.id} source-owned Completion token: ${completion.skill}.${token}`);
+      }
+    }
+    for (const ownerSkill of new Set(contract.artifactContracts.map(({ ownerSkill }) => ownerSkill))) {
+      assert.ok(contract.completionContracts.some(({ skill }) => skill === ownerSkill), `${contract.id} output owner Completion source: ${ownerSkill}`);
+    }
+  }
+}
+
 async function assertRecipeTemplateResult(recipe, markdown, sourceRoot = templateSourceRoot) {
   const result = section(markdown, "예상 결과");
   const byHeading = new Map(h3Sections(result).map(({ heading, body }) => [heading, body]));
-  const expected = recipeTemplateContract[recipe.id];
-  const templateFieldInventory = new Set();
-  for (const [artifactId, fields] of expected) {
+  const expected = recipe.artifactContracts;
+  for (const { artifactId, expectedOutputId, fields } of expected) {
     const templateDirectory = path.join(sourceRoot, artifactId);
     const template = await readFile(path.join(templateDirectory, "content.md"), "utf8");
-    for (const match of template.matchAll(/^\| `([^`]+)` \|/gm)) templateFieldInventory.add(match[1]);
     for (const field of fields) assert.match(template, new RegExp("`" + field + "`"), recipe.id + " canonical template field: " + artifactId + "." + field);
     const inventory = await recursiveTemplateInventory(templateDirectory);
     const tree = byHeading.get("예상 파일 트리");
     const artifactTreeStart = tree.indexOf(`${artifactId}/`);
     assert.ok(artifactTreeStart >= 0, recipe.id + " artifact subtree: " + artifactId);
-    const nextArtifactStart = expected.map(([candidate]) => tree.indexOf(`${candidate}/`, artifactTreeStart + artifactId.length + 1)).filter((index) => index > artifactTreeStart).sort((left, right) => left - right)[0] ?? tree.length;
+    assert.ok(tree.includes(`${expectedOutputId}/`), `${recipe.id} expected output token: ${expectedOutputId}`);
+    const nextArtifactStart = expected.map(({ artifactId: candidate }) => tree.indexOf(`${candidate}/`, artifactTreeStart + artifactId.length + 1)).filter((index) => index > artifactTreeStart).sort((left, right) => left - right)[0] ?? tree.length;
     const artifactTree = tree.slice(artifactTreeStart, nextArtifactStart);
     for (const item of inventory) {
       const token = item.endsWith("/") ? item.slice(0, -1) + "/" : path.basename(item);
@@ -198,9 +218,8 @@ async function assertRecipeTemplateResult(recipe, markdown, sourceRoot = templat
     assert.ok(byHeading.get("읽는 순서").includes(order), recipe.id + " canonical artifact read order: " + artifactId);
   }
   const completion = byHeading.get("완료 기준");
-  for (const token of recipeCompletionContract[recipe.id]) {
-    assert.ok(templateFieldInventory.has(token), recipe.id + " completion token has a template source: " + token);
-    assert.ok(completion.includes("`" + token + "`"), recipe.id + " template-backed completion criterion: " + token);
+  for (const { skill, tokens } of recipe.completionContracts) {
+    for (const token of tokens) assert.ok(completion.includes(token), `${recipe.id} source-backed completion criterion: ${skill}.${token}`);
   }
 }
 
@@ -298,6 +317,10 @@ test("Skillstead lint summary rejects warning output", () => {
   );
 });
 
+test("Career routing owns all six ordered recipe source contracts", async () => {
+  await assertRecipeMetadata(routing);
+});
+
 test("Career recipes have one primary diagram and the complete handoff contract", async () => {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   for (const recipe of recipes) {
@@ -336,23 +359,21 @@ test("Career recipe expected results reject heading and semantic swaps", async (
   const recipe = recipes[0];
   const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
   const result = section(markdown, "예상 결과");
-  const completeResult = `### 예상 파일 트리\n\n\`game-design-career/<career-id>/career-stage-goal/content.md\`\n\`game-design-career/<career-id>/learning-roadmap/content.md\`\n\n### 대표 내용 예시\n\n\`target-role\`\n\n### 완료 기준\n\n\`proof-artifact\`\n\n### 포트폴리오·면접 활용\n\nportfolio와 interview에 사용합니다.\n\n### 읽는 순서\n\ncanonical artifact 순서`;
-  const completeMarkdown = markdown.replace(result, completeResult);
-  assert.doesNotThrow(() => assertRecipeResult(recipe, completeMarkdown));
-  const entries = h3Sections(completeResult);
-  const swappedHeadings = completeResult
+  assert.doesNotThrow(() => assertRecipeResult(recipe, markdown));
+  const entries = h3Sections(result);
+  const swappedHeadings = result
     .replace("### 예상 파일 트리", "### __TREE__")
     .replace("### 대표 내용 예시", "### 예상 파일 트리")
     .replace("### __TREE__", "### 대표 내용 예시");
-  assert.throws(() => assertRecipeResult(recipe, completeMarkdown.replace(completeResult, swappedHeadings)), /heading order/);
+  assert.throws(() => assertRecipeResult(recipe, markdown.replace(result, swappedHeadings)), /heading order/);
 
   const example = entries.find(({ heading }) => heading === "대표 내용 예시");
   const completion = entries.find(({ heading }) => heading === "완료 기준");
-  const semanticSwap = completeResult
+  const semanticSwap = result
     .replace(example.body, "__EXAMPLE__")
     .replace(completion.body, example.body)
     .replace("__EXAMPLE__", completion.body);
-  assert.throws(() => assertRecipeResult(recipe, completeMarkdown.replace(completeResult, semanticSwap)), /representative field example/);
+  assert.throws(() => assertRecipeResult(recipe, markdown.replace(result, semanticSwap)), /representative field|completion token/);
 });
 
 test("Career recipe results derive every artifact, field, and read order from template sources", async () => {
@@ -363,19 +384,23 @@ test("Career recipe results derive every artifact, field, and read order from te
 });
 
 test("Career recipe source contracts reject every wrong-valid field, artifact, and read-order mutation", async () => {
+  const allArtifactIds = [...new Set(recipes.flatMap(({ artifactContracts }) => artifactContracts.map(({ artifactId }) => artifactId)))];
+  const allFields = [...new Set(recipes.flatMap(({ artifactContracts }) => artifactContracts.flatMap(({ fields }) => fields)))];
+  const allCompletionTokens = [...new Set(recipes.flatMap(({ completionContracts }) => completionContracts.flatMap(({ tokens }) => tokens)))];
   for (const recipe of recipes) {
     const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
     const result = section(markdown, "예상 결과");
     const entries = new Map(h3Sections(result).map(({ heading, body }) => [heading, body]));
-    for (const [artifactId, fields] of recipeTemplateContract[recipe.id]) {
-      const wrongArtifact = artifactId === "career-stage-goal" ? "competency-matrix" : "career-stage-goal";
+    for (const { artifactId, fields } of recipe.artifactContracts) {
+      const wrongArtifact = allArtifactIds.find((candidate) => !recipe.artifactContracts.some(({ artifactId: expected }) => expected === candidate));
       await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replaceAll(artifactId, ""))), /artifact subtree|canonical artifact read order/, `${recipe.id} ${artifactId} output omission`);
       await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replaceAll(artifactId, wrongArtifact))), /artifact subtree|canonical artifact read order/, `${recipe.id} ${artifactId} wrong-valid output mutation`);
       for (const field of fields) {
         const example = entries.get("대표 내용 예시");
         const segment = artifactExampleSegment(example, artifactId);
+        const wrongField = allFields.find((candidate) => !fields.includes(candidate));
         await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(example, example.replace(segment, segment.replace("`" + field + "`", "")))), /representative canonical field/, `${recipe.id} ${artifactId}.${field} omission`);
-        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(example, example.replace(segment, segment.replace("`" + field + "`", "`approval-status`")))), /representative canonical field/, `${recipe.id} ${artifactId}.${field} wrong-valid mutation`);
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(example, example.replace(segment, segment.replace("`" + field + "`", "`" + wrongField + "`")))), /representative canonical field/, `${recipe.id} ${artifactId}.${field} wrong-valid mutation`);
       }
       const inventory = await recursiveTemplateInventory(path.join(templateSourceRoot, artifactId));
       const readOrder = templateLeafReadOrder(inventory).map((item) => `game-design-career/<career-id>/${artifactId}/${item}`);
@@ -390,34 +415,118 @@ test("Career recipe source contracts reject every wrong-valid field, artifact, a
         await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(readOrder.join(" → "), swapped.join(" → "))), /canonical artifact read order/, `${recipe.id} ${artifactId} adjacent read-order mutation ${index}`);
       }
     }
-    for (const token of recipeCompletionContract[recipe.id]) {
-      await assert.rejects(
-        () => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("완료 기준"), entries.get("완료 기준").replace("`" + token + "`", ""))),
-        /template-backed completion criterion/,
-        `${recipe.id} completion criterion omission: ${token}`,
-      );
+    for (const { skill, tokens } of recipe.completionContracts) {
+      for (const token of tokens) {
+        const wrongToken = allCompletionTokens.find((candidate) => !tokens.includes(candidate));
+        await assert.rejects(
+          () => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("완료 기준"), entries.get("완료 기준").replace(token, ""))),
+          /source-backed completion criterion/,
+          `${recipe.id} completion criterion omission: ${skill}.${token}`,
+        );
+        await assert.rejects(
+          () => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("완료 기준"), entries.get("완료 기준").replace(token, wrongToken))),
+          /source-backed completion criterion/,
+          `${recipe.id} completion criterion wrong-valid swap: ${skill}.${token}`,
+        );
+      }
     }
   }
 });
 
-test("Career recipe recursive inventory rejects unregistered template source files and directories", async () => {
+test("Career recipe metadata rejects malformed artifact, skill, and completion relations", async () => {
+  const mutate = (change) => {
+    const sourceRouting = structuredClone(routing);
+    change(sourceRouting);
+    return sourceRouting;
+  };
+  for (const [label, change, error] of [
+    ["missing recipe", (sourceRouting) => sourceRouting.recipeContracts.pop(), /recipe contract count/],
+    ["duplicate recipe", (sourceRouting) => { sourceRouting.recipeContracts[1].id = sourceRouting.recipeContracts[0].id; }, /ordered recipe contract IDs|unique recipe contract IDs/],
+    ["unknown primary skill", (sourceRouting) => { sourceRouting.recipeContracts[0].primarySkill = "not-installed"; }, /installed primary skill/],
+    ["unknown related skill", (sourceRouting) => { sourceRouting.recipeContracts[0].relatedSkills[0] = "not-installed"; }, /installed related skill/],
+    ["artifact output mismatch", (sourceRouting) => { sourceRouting.recipeContracts[0].artifactContracts[0].expectedOutputId = "learning-roadmap"; }, /artifact\/output identity/],
+    ["duplicate artifact field", (sourceRouting) => { const fields = sourceRouting.recipeContracts[0].artifactContracts[0].fields; fields.push(fields[0]); }, /unique artifact fields/],
+    ["empty completion token", (sourceRouting) => { sourceRouting.recipeContracts[0].completionContracts[0].tokens = [""]; }, /nonempty completion token/],
+    ["duplicate completion token", (sourceRouting) => { const tokens = sourceRouting.recipeContracts[0].completionContracts[0].tokens; tokens.push(tokens[0]); }, /unique completion tokens/],
+    ["unknown completion token", (sourceRouting) => { sourceRouting.recipeContracts[0].completionContracts[0].tokens = ["falsifiable"]; }, /source-owned Completion token/],
+  ]) await assert.rejects(() => assertRecipeMetadata(mutate(change)), error, label);
+});
+
+test("Career recipe rejects every template inventory and Working Record source mutation", async () => {
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-recipe-templates-"));
   const sourceRoot = path.join(temporaryRoot, "templates");
+  const allFields = [...new Set(recipes.flatMap(({ artifactContracts }) => artifactContracts.flatMap(({ fields }) => fields)))];
   try {
     await cp(templateSourceRoot, sourceRoot, { recursive: true });
-    await writeFile(path.join(sourceRoot, "competency-matrix", "new-required-record.md"), "# Required record\n", "utf8");
-    const recipe = recipes.find(({ id }) => id === "job-research-gap");
-    const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
-    await assert.rejects(
-      () => assertRecipeTemplateResult(recipe, markdown, sourceRoot),
-      /recursive template inventory item/,
-    );
-    await rm(path.join(sourceRoot, "competency-matrix", "new-required-record.md"));
-    await mkdir(path.join(sourceRoot, "competency-matrix", "new-required-directory"));
-    await assert.rejects(
-      () => assertRecipeTemplateResult(recipe, markdown, sourceRoot),
-      /recursive template inventory item/,
-    );
+    for (const recipe of recipes) {
+      const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
+      for (const artifact of recipe.artifactContracts) {
+        const artifactRoot = path.join(sourceRoot, artifact.artifactId);
+        const addedFile = path.join(artifactRoot, "new-required-record.md");
+        await writeFile(addedFile, "# Required record\n", "utf8");
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown, sourceRoot), /recursive template inventory item|canonical artifact read order/, `${recipe.id} ${artifact.artifactId} new source file`);
+        await rm(addedFile);
+
+        const addedDirectory = path.join(artifactRoot, "new-required-directory");
+        await mkdir(addedDirectory);
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown, sourceRoot), /recursive template inventory item/, `${recipe.id} ${artifact.artifactId} empty source directory`);
+        await rm(addedDirectory, { recursive: true });
+
+        const contentPath = path.join(artifactRoot, "content.md");
+        const canonical = await readFile(contentPath, "utf8");
+        for (const field of artifact.fields) {
+          const wrongField = allFields.find((candidate) => !artifact.fields.includes(candidate));
+          const mutated = canonical.replace(`\`${field}\``, `\`${wrongField}\``);
+          assert.notEqual(mutated, canonical, `${recipe.id} Working Record mutation precondition: ${artifact.artifactId}.${field}`);
+          await writeFile(contentPath, mutated, "utf8");
+          await assert.rejects(() => assertRecipeMetadata(routing, { sourceRoot }), /source-owned Working Record field/, `${recipe.id} ${artifact.artifactId}.${field} Working Record mutation`);
+          await writeFile(contentPath, canonical, "utf8");
+        }
+      }
+    }
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test("Career recipe rejects every product SKILL Output and Completion source mutation", async () => {
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-recipe-skills-"));
+  const skillRoot = path.join(temporaryRoot, "skills");
+  const allOutputIds = [...new Set(recipes.flatMap(({ artifactContracts }) => artifactContracts.map(({ expectedOutputId }) => expectedOutputId)))];
+  const allCompletionTokens = [...new Set(recipes.flatMap(({ completionContracts }) => completionContracts.flatMap(({ tokens }) => tokens)))];
+  try {
+    await cp(skillSourceRoot, skillRoot, { recursive: true });
+    for (const artifact of new Map(recipes.flatMap(({ artifactContracts }) => artifactContracts).map((entry) => [`${entry.ownerSkill}:${entry.expectedOutputId}`, entry])).values()) {
+      const sourcePath = path.join(skillRoot, artifact.ownerSkill, "SKILL.md");
+      const canonical = await readFile(sourcePath, "utf8");
+      const outputSection = skillSection(canonical, "Output contract");
+      const wrongOutput = allOutputIds.find((candidate) => candidate !== artifact.expectedOutputId && !outputSection.includes(`\`${candidate}\``));
+      for (const [label, replacement] of [["omission", ""], ["wrong-valid swap", `\`${wrongOutput}\``]]) {
+        const mutatedSection = outputSection.replace(`\`${artifact.expectedOutputId}\``, replacement);
+        assert.notEqual(mutatedSection, outputSection, `Output mutation precondition: ${artifact.ownerSkill}.${artifact.expectedOutputId}`);
+        await writeFile(sourcePath, canonical.replace(outputSection, mutatedSection), "utf8");
+        await assert.rejects(() => assertRecipeMetadata(routing, { skillRoot }), /source-owned expected output/, `${artifact.ownerSkill}.${artifact.expectedOutputId} Output ${label}`);
+        await writeFile(sourcePath, canonical, "utf8");
+      }
+    }
+
+    const uniqueCompletionContracts = new Map();
+    for (const recipe of recipes) for (const completion of recipe.completionContracts) {
+      for (const token of completion.tokens) uniqueCompletionContracts.set(`${completion.skill}:${token}`, { skill: completion.skill, token });
+    }
+    for (const { skill, token } of uniqueCompletionContracts.values()) {
+      const sourcePath = path.join(skillRoot, skill, "SKILL.md");
+      const canonical = await readFile(sourcePath, "utf8");
+      const completionSection = skillSection(canonical, "Completion(?: Criteria)?");
+      const wrongToken = allCompletionTokens.find((candidate) => candidate !== token && !completionSection.includes(candidate));
+      for (const [label, replacement] of [["omission", ""], ["wrong-valid swap", wrongToken]]) {
+        const mutatedSection = completionSection.replace(token, replacement);
+        assert.notEqual(mutatedSection, completionSection, `Completion mutation precondition: ${skill}.${token}`);
+        await writeFile(sourcePath, canonical.replace(completionSection, mutatedSection), "utf8");
+        await assert.rejects(() => assertRecipeMetadata(routing, { skillRoot }), /source-owned Completion token/, `${skill}.${token} Completion ${label}`);
+        await writeFile(sourcePath, canonical, "utf8");
+      }
+    }
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }

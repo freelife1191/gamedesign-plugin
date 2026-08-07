@@ -62,7 +62,7 @@ game-design-career/<career-id>/reverse-design-document/
 
 ### 완료 기준
 
-모든 inference가 최소 하나의 `observation` locator와 counterexample 또는 unknown을 갖고, `validation-method`와 사람 검토자가 있으며, 권리 결정을 확인하기 전에는 공개 대상으로 표시하지 않으면 완료입니다.
+모든 inference가 최소 하나의 `observation` locator와 counterexample 또는 unknown을 갖고 `falsifiable`하며, `validation-method`와 사람 검토자가 있고, 권리 결정을 확인하기 전에는 공개 대상으로 표시하지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 

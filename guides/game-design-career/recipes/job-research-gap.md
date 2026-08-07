@@ -79,7 +79,7 @@ game-design-career/<career-id>/
 
 ### 완료 기준
 
-각 반복 신호가 실제 표본 record로 되돌아가고 `sample-geography` 밖의 일반화가 없으며, gap마다 `minimum-repair`와 `re-evaluation-date`가 있으면 완료입니다.
+각 반복 신호가 실제 표본 record로 되돌아가고 `sample-geography` 밖의 일반화가 없으며, `explicit gaps`마다 `minimum-repair`, `re-evaluation-date`, 다음 `proof artifact`와 `inspectabilityGate`가 있으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 

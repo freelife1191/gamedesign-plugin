@@ -20,7 +20,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/<career-i
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/competency-matrix/content.md → game-design-career/<career-id>/competency-matrix/evidence.yml → game-design-career/<career-id>/competency-matrix/decisions/README.md → game-design-career/<career-id>/competency-matrix/assets/README.md → game-design-career/<career-id>/competency-matrix/export-manifest.yml` 순서로 `target-level`, `gap`, `minimum-repair`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 멘토가 직무 비교의 범위와 proof task를 검토하고, 근거가 없는 역할 수준은 가설로 둡니다. 공개 권리와 attribution을 확인하며 직무 선택·합격 가능성은 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 멘토가 직무 비교의 범위와 `proof artifact`를 검토하고, 근거가 없는 역할 수준은 가설로 둡니다. 공개 권리와 attribution을 확인하며 직무 선택·합격 가능성은 보장하지 않습니다.
 
 **실패·재개·관련 경로:** evidence가 부족하면 빈칸과 대안을 **보존 → 사람 확인 → 재개**합니다. [CA-T01](use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생), [역할 매핑](skills/map-game-design-career.md), [역할·학습 레시피](recipes/role-learning-roadmap.md)를 함께 읽습니다.
 
@@ -42,7 +42,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/README.md → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 `target-competency`, `implementation-test`, `rights`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 포트폴리오 검토자가 개인 기여와 근거의 구분을 확인하고, 권리 불명 자료는 공개하지 않습니다. 작은 proof는 역량 기록일 뿐 합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 포트폴리오 검토자가 개인 기여와 근거의 구분 및 `inspectabilityGate`를 확인하고, 권리 불명 자료는 공개하지 않습니다. 작은 proof는 역량 기록일 뿐 합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 기여를 입증할 evidence가 없으면 unknown과 다음 과제를 **보존 → 사람 확인 → 재개**합니다. [CA-T08](use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입), [portfolio 구축](skills/build-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 연결합니다.
 
@@ -64,7 +64,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `evidence-id`, `attribution`을 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 팀원·교사가 attribution과 공개 권리를 검토하고, 근거는 학교·지역·표본이 아닌 해당 프로젝트의 범위로 제한합니다. 이 기록은 채용 결과를 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 팀원·교사가 attribution, 공개 권리와 `inspectabilityGate`를 검토하고, 근거는 학교·지역·표본이 아닌 해당 프로젝트의 범위로 제한합니다. 이 기록은 채용 결과를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 팀 동의나 개인 evidence가 없으면 공개 claim을 **보존 → 사람 확인 → 재개**합니다. [CA-T08](use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입), [portfolio 구축](skills/build-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 참고합니다.
 
@@ -86,7 +86,7 @@ $game-design-career:research-game-design-jobs artifact=game-design-career/<caree
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/README.md → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `source-url`, `retrieval-date`, `sample-geography`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Research Owner가 공식 근거·지역·표본을 검토하고, 권리 또는 접근 제한이 있는 원문은 복제하지 않습니다. 반복 신호는 채용 가능성이나 전체 시장 경향을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Research Owner가 공식 근거·지역·표본과 `explicit gaps`를 검토하고, 권리 또는 접근 제한이 있는 원문은 복제하지 않습니다. 반복 신호는 채용 가능성이나 전체 시장 경향을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** source가 stale이거나 누락되면 기존 record와 이유를 **보존 → 사람 확인 → 재개**합니다. [CA-C03](use-cases/competency-paths.md#ca-c03-현재-채용공고-조사), [공고 조사](skills/research-game-design-jobs.md), [공고 gap 레시피](recipes/job-research-gap.md)를 따릅니다.
 
@@ -108,7 +108,7 @@ $game-design-career:research-game-design-jobs artifact=game-design-career/<caree
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/README.md → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `sample-geography`, `freshness`, `source-url`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Research Owner가 근거의 표본과 재검증 시점을 검토하고, 권리 제한 원문은 location만 보존합니다. 적은 표본은 시장 전체·합격 가능성·회사 평가를 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Research Owner가 근거의 표본, `explicit gaps`와 재검증 시점을 검토하고, 권리 제한 원문은 location만 보존합니다. 적은 표본은 시장 전체·합격 가능성·회사 평가를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 표본 경계가 빠지면 결론을 historical record로 **보존 → 사람 확인 → 재개**합니다. [CA-C03](use-cases/competency-paths.md#ca-c03-현재-채용공고-조사), [공고 조사](skills/research-game-design-jobs.md), [공고 gap 레시피](recipes/job-research-gap.md)를 읽습니다.
 
@@ -130,7 +130,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/<ca
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/README.md → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 `observation`, `inference`, `validation-method`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Design Reviewer가 근거와 추론 경계를 검토하고, 권리 없는 화면·비공개 정보는 사용하지 않습니다. 문서의 해석은 실제 내부 설계·채용 역량을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Design Reviewer가 근거와 추론의 `falsifiable` 경계를 검토하고, 권리 없는 화면·비공개 정보는 사용하지 않습니다. 문서의 해석은 실제 내부 설계·채용 역량을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** observation이 없으면 추측을 사실로 채우지 않고 unknown을 **보존 → 사람 확인 → 재개**합니다. [CA-C05](use-cases/competency-paths.md#ca-c05-관찰-기반-역기획), [역기획](skills/reverse-engineer-game-design.md), [역기획 레시피](recipes/reverse-design.md)를 봅니다.
 
@@ -152,7 +152,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/<ca
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/README.md → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 `source-address`, `scope`, `validation-method`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Rights Reviewer가 근거의 공개 권리와 인용 범위를 검토하며, 권리 없는 화면은 추가하지 않습니다. 제한된 관찰은 완전한 역기획이나 채용 결과를 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Rights Reviewer가 근거의 공개 권리, 인용 범위와 `falsifiable` 경계를 검토하며, 권리 없는 화면은 추가하지 않습니다. 제한된 관찰은 완전한 역기획이나 채용 결과를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 공개 source가 부족하면 허용 범위와 unknown을 **보존 → 사람 확인 → 재개**합니다. [CA-C05](use-cases/competency-paths.md#ca-c05-관찰-기반-역기획), [역기획](skills/reverse-engineer-game-design.md), [역기획 레시피](recipes/reverse-design.md)를 연결합니다.
 
@@ -174,7 +174,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `target-competency`, `inspectability`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Portfolio Reviewer가 선별 근거와 공개 권리를 검토하고, 근거 없는 양적 기준은 사용하지 않습니다. 문서 수는 평가·합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Portfolio Reviewer가 선별 근거, 공개 권리와 `inspectabilityGate`를 검토하고, 근거 없는 양적 기준은 사용하지 않습니다. 문서 수는 평가·합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** selection rationale이 없으면 목록과 중복 표시를 **보존 → 사람 확인 → 재개**합니다. [CA-C06](use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오), [portfolio 구축](skills/build-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 확인합니다.
 
@@ -196,7 +196,7 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/<ca
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/README.md → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml` 순서로 `finding-id`, `evidence-id`, `minimum-repair`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·수정의 사실성을 검토하고, 권리나 팀 attribution이 불명확한 자료는 공개하지 않습니다. 반복 기록은 능력 점수·합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·수정의 사실성과 `observation state`를 검토하고, 권리나 팀 attribution이 불명확한 자료는 공개하지 않습니다. 반복 기록은 능력 점수·합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 전후 evidence가 없으면 finding과 질문을 **보존 → 사람 확인 → 재개**합니다. [CA-C07](use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표), [portfolio 검토](skills/review-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 사용합니다.
 
@@ -218,7 +218,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `attribution`, `rights`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 팀원과 Portfolio Reviewer가 근거·attribution·공개 권리를 검토합니다. 개인 기여 기록은 팀 성과 평가나 채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 팀원과 Portfolio Reviewer가 근거·attribution·공개 권리 및 `inspectabilityGate`를 검토합니다. 개인 기여 기록은 팀 성과 평가나 채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** attribution 동의가 없으면 claim과 공개 제외 목록을 **보존 → 사람 확인 → 재개**합니다. [CA-T08](use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입), [portfolio 구축](skills/build-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 읽습니다.
 
@@ -240,7 +240,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/README.md → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 `target-competency`, `rights`, `retrospective`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Rights Reviewer와 실제 권한 보유자가 근거·NDA·공개 권리를 검토합니다. 허용 범위의 outline은 법률 판단이나 채용 결과를 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Rights Reviewer와 실제 권한 보유자가 근거·NDA·공개 권리 및 `inspectabilityGate`를 검토합니다. 허용 범위의 outline은 법률 판단이나 채용 결과를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 공개 권한이 불명확하면 자료를 입력하지 않고 boundary를 **보존 → 사람 확인 → 재개**합니다. [CA-T09](use-cases/concept-scenarios.md#ca-t09-비전공자다른-직군-전환자), [portfolio 구축](skills/build-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 참조합니다.
 
@@ -262,7 +262,7 @@ $game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=d
 
 **예상 결과·읽는 순서:** `review-image-assets`의 주 산출물은 `image-asset-review`, `lifecycle-receipt`이며, 현재 Artifact의 `assets/image-assets.yml → evidence.yml → decisions/` 순서로 stable asset ID·alt text·decisionReceipt·rights 상태를 읽습니다. 이 review는 `creative-design-portfolio` template을 새로 만들거나 profile을 바꾸지 않습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Rights Reviewer가 근거·provenance·권리와 공개 placement를 검토합니다. 생성 이미지는 포트폴리오 claim, 실무 기여, 합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 실제 named-human 사람 Rights Reviewer가 근거·provenance·권리와 공개 placement를 검토하고, 근거 없는 `approval-state change`를 금지합니다. 생성 이미지는 포트폴리오 claim, 실무 기여, 합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** receipt나 권리가 없으면 current state와 blocker를 **보존 → 사람 확인 → 재개**합니다. [CA-C06](use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오), [이미지 검토](skills/review-image-assets.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 연결합니다.
 
@@ -284,7 +284,7 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/<ca
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/README.md → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml` 순서로 `finding-id`, `observation-state`, `minimum-repair`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·finding 범위·권리 공개 상태를 검토합니다. review 결과는 능력 등급, 회사 평가, 합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·finding 범위·권리 공개 상태와 `observation state`를 검토합니다. review 결과는 능력 등급, 회사 평가, 합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** inspectability가 없으면 not-observed와 repair 질문을 **보존 → 사람 확인 → 재개**합니다. [CA-C07](use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표), [portfolio 검토](skills/review-game-design-portfolio.md), [portfolio 레시피](recipes/portfolio-build-review.md)를 봅니다.
 
@@ -306,7 +306,7 @@ $game-design-career:research-game-design-jobs artifact=game-design-career/<caree
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/README.md → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `source-url`, `retrieval-date`, `freshness`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·관련성·권리와 공고 freshness를 검토합니다. 선별은 특정 회사의 평가·지원 성공·합격을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·관련성·권리, `explicit gaps`와 공고 freshness를 검토합니다. 선별은 특정 회사의 평가·지원 성공·합격을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 공고가 오래되었거나 claim이 약하면 기존 비교와 gap을 **보존 → 사람 확인 → 재개**합니다. [CA-C03](use-cases/competency-paths.md#ca-c03-현재-채용공고-조사), [공고 조사](skills/research-game-design-jobs.md), [공고 gap 레시피](recipes/job-research-gap.md)를 따릅니다.
 
@@ -328,7 +328,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/<
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/README.md → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `portfolio-evidence-id`, `answer-status`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Interview Coach가 근거·정직성·공개 권리를 검토합니다. 연습 기록은 답변 성과나 합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Interview Coach가 근거·정직성·공개 권리와 `explicit gap`을 검토합니다. 연습 기록은 답변 성과나 합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 연결할 evidence가 없으면 questionId와 verification task를 **보존 → 사람 확인 → 재개**합니다. [CA-C08](use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환), [면접 연습](skills/practice-game-design-interview.md), [면접 레시피](recipes/interview-preparation.md)를 읽습니다.
 
@@ -350,7 +350,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/<
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/README.md → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `honest-answer`, `verification-task`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Interview Coach가 근거·표현의 정직성·공개 권리를 검토합니다. honest-answer는 경험 부족을 숨기지 않으며 면접 평가·합격·채용을 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Interview Coach가 근거·표현의 정직성·공개 권리와 `explicit gap`을 검토합니다. honest-answer는 경험 부족을 숨기지 않으며 면접 평가·합격·채용을 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 근거가 전혀 없으면 빈칸과 학습 과제를 **보존 → 사람 확인 → 재개**합니다. [CA-C08](use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환), [면접 연습](skills/practice-game-design-interview.md), [면접 레시피](recipes/interview-preparation.md)를 활용합니다.
 
@@ -372,7 +372,7 @@ $game-design-career:plan-junior-growth artifact=game-design-career/<career-id>/j
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/junior-growth-review/content.md → game-design-career/<career-id>/junior-growth-review/evidence.yml → game-design-career/<career-id>/junior-growth-review/decisions/README.md → game-design-career/<career-id>/junior-growth-review/assets/README.md → game-design-career/<career-id>/junior-growth-review/export-manifest.yml` 순서로 `project-event-evidence`, `next-review-date`, `proof-artifact`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 manager 또는 mentor가 근거·feedback·공개 권리와 다음 review를 검토합니다. 성장 기록은 승진·이직·채용 또는 회사 평가를 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 manager 또는 mentor가 근거·feedback·공개 권리와 다음 `proof artifact`를 검토합니다. 성장 기록은 승진·이직·채용 또는 회사 평가를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** feedback이나 freshness가 없으면 current claim 없이 기록을 **보존 → 사람 확인 → 재개**합니다. [CA-T10](use-cases/concept-scenarios.md#ca-t10-주니어의-성장이직), [주니어 성장](skills/plan-junior-growth.md), [성장·전환 레시피](recipes/junior-growth-transition.md)를 봅니다.
 
@@ -394,6 +394,6 @@ $game-design-career:orchestrate-game-design-career artifact=game-design-career/<
 
 **예상 결과·읽는 순서:** `game-design-career/<career-id>/career-stage-goal/content.md → game-design-career/<career-id>/career-stage-goal/evidence.yml → game-design-career/<career-id>/career-stage-goal/decisions/README.md → game-design-career/<career-id>/career-stage-goal/assets/README.md → game-design-career/<career-id>/career-stage-goal/export-manifest.yml` 순서로 `target-role`, `success-evidence`, `review-date`를 읽습니다.
 
-**사람 검토·근거·권리·비보장:** 사람 Career Lead가 근거·권리·공개 경계와 다음 행동을 검토합니다. 플러그인의 초안·점수·정리는 합격, 채용, 승진 또는 회사 평가를 보장하지 않습니다.
+**사람 검토·근거·권리·비보장:** 사람 Career Lead가 근거·권리·공개 경계, `evidence gaps`와 다음 행동을 검토합니다. 플러그인의 초안·점수·정리는 합격, 채용, 승진 또는 회사 평가를 보장하지 않습니다.
 
 **실패·재개·관련 경로:** 근거가 stale이거나 불완전하면 unknown과 재검색 조건을 **보존 → 사람 확인 → 재개**합니다. [CA-C08](use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환), [Career 오케스트레이터](skills/orchestrate-game-design-career.md), [성장·전환 레시피](recipes/junior-growth-transition.md)를 연결합니다.

@@ -62,7 +62,7 @@ game-design-career/<career-id>/interview-question-answer-log/
 
 ### 완료 기준
 
-각 답변이 같은 `question-id`의 evidence locator 또는 `honest-answer`와 연결되고, `answer-status`와 하나의 `verification-task`, 사람 검토자가 있으며, 경험·수치·팀 기여를 발명하지 않으면 완료입니다.
+각 답변이 같은 `question-id`의 evidence locator 또는 `honest-answer`와 연결되고, `explicit gap`, `answer-status`와 하나의 `verification-task`, 사람 검토자가 있으며, 경험·수치·팀 기여를 발명하지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 

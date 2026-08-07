@@ -24,7 +24,7 @@ Read `../../references/methods/role-map.md` before creating or revising a role m
 
 ## Output Contract
 
-Return a role map using every field in the reference. Materialize the FAQ-facing matrix as the `competency-matrix` output. Keep facts, candidate statements, and inferences distinguishable. For each path, explain tradeoffs and identify the next smallest exercise that can strengthen or falsify the path.
+Return a role map using every field in the reference. Materialize the FAQ-facing matrix as the `competency-matrix` output and the ordered evidence-building plan as the `learning-roadmap` output. Keep facts, candidate statements, and inferences distinguishable. For each path, explain tradeoffs and identify the next smallest exercise that can strengthen or falsify the path.
 
 ## Completion
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "c8f5c00c8fa0741a9abebf8ce54fa820bedbc0d47b82ced8543aa9d00fc638ee",
+  "treeSha256": "40b92fcaf517f75976f102dbf77bf7afe0d79bb29e1aec5b7b4732cffe9e8561",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -606,8 +606,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "34276fd7a1d11447ea9cdc0e34fe9c689eff653f60909886b057fd83fb5bf7d8",
-      "size": 38148
+      "sha256": "383640b88d84e5614775b63a64863bb60d9f322d99d49c2138111f40992f434b",
+      "size": 47157
     },
     {
       "path": "references/shared/document-quality/indexes/career.json",
@@ -1441,8 +1441,8 @@
     },
     {
       "path": "skills/map-game-design-career/SKILL.md",
-      "sha256": "fcab5061a884ffc4bd836522ccc7d9edfdc32e691a904eeba8698a1abcd16996",
-      "size": 2470
+      "sha256": "4bc2e2b48a1e5c9b0a1710bcde5a7048978cdd429917c52cfce12eb1d43e67db",
+      "size": 2542
     },
     {
       "path": "skills/map-game-design-career/agents/openai.yaml",
@@ -1481,8 +1481,8 @@
     },
     {
       "path": "skills/plan-junior-growth/SKILL.md",
-      "sha256": "fa19c572a5ca3ba389b39f968b7786ee5ccdc2f796665a0da3a776ae82c25620",
-      "size": 2329
+      "sha256": "c53ae6481e984f25ce8f20cf340309f61b6c7da2f5b80a7637719710690ae590",
+      "size": 2431
     },
     {
       "path": "skills/plan-junior-growth/agents/openai.yaml",
@@ -1526,8 +1526,8 @@
     },
     {
       "path": "skills/review-game-design-portfolio/SKILL.md",
-      "sha256": "b7115a3d244e3e15b8463dffde63c33a24e7c2f95c476c994fb28d03836f3b51",
-      "size": 2156
+      "sha256": "2165bd8f2249755843f0699f0c180add41f84655556c9b4f82217b1412dfd423",
+      "size": 2259
     },
     {
       "path": "skills/review-game-design-portfolio/agents/openai.yaml",

@@ -71,7 +71,7 @@ game-design-career/<career-id>/
 
 ### 완료 기준
 
-각 gap에 하나의 `proof-artifact`, 공개 가능한 evidence locator, 담당 owner와 `re-evaluation-date`가 연결되고, current claim에는 source URL·retrieval date·region·sample boundary·review-after가 있으면 완료입니다.
+각 gap과 `evidence gaps`에 하나의 `proof-artifact`(`proof artifact`), 공개 가능한 evidence locator, 담당 owner와 `re-evaluation-date`가 연결되고, current claim에는 source URL·retrieval date·region·sample boundary·review-after가 있으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 

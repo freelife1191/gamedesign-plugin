@@ -24,6 +24,7 @@ import {
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const CAREER_ROUTING_PATH = path.join(repoRoot, "products/game-design-career/plugin/references/routing.json");
 const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/assets/templates");
+const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
 
@@ -1673,6 +1674,7 @@ function faqReadOrder(contract, routing) {
 }
 
 async function assertCareerFaqMetadata(routing, {
+  skillRoot = CAREER_SKILL_SOURCE_ROOT,
   templateRoot = CAREER_TEMPLATE_SOURCE_ROOT,
   specQuestions,
 } = {}) {
@@ -1687,24 +1689,34 @@ async function assertCareerFaqMetadata(routing, {
   const installedSkills = new Set(routing.skillIds);
   const routeById = new Map(routing.routes.map((route) => [route.id, route]));
   const directUseSkills = new Set(routing.directUseReviewOwners.map(({ skill }) => skill));
+  assert.ok(Array.isArray(routing.directUseSources), "routing.json directUseSources array");
+  const directUseById = new Map(routing.directUseSources.map((source) => [source.id, source]));
+  assert.equal(directUseById.size, routing.directUseSources.length, "unique direct-use source IDs");
   for (const contract of routing.faqContracts) {
     assert.ok(installedSkills.has(contract.primarySkill), `${contract.id} installed primary skill`);
     assert.equal(contract.skillPath, `skills/${contract.primarySkill}.md`, `${contract.id} canonical skill path`);
+    assert.ok(Array.isArray(contract.expectedOutputs) && contract.expectedOutputs.length > 0, `${contract.id} expected outputs`);
+    assert.equal(new Set(contract.expectedOutputs.map(({ id }) => id)).size, contract.expectedOutputs.length, `${contract.id} unique output IDs`);
     if (contract.routingSource.kind === "route") {
       const route = routeById.get(contract.routingSource.id);
       assert.ok(route, `${contract.id} known route`);
       assert.equal(route.skill, contract.primarySkill, `${contract.id} route primary skill`);
+      assert.ok(typeof route.artifactType === "string" && route.artifactType.length > 0, `${contract.id} route artifactType`);
+      assert.deepEqual(contract.expectedOutputs.map(({ id }) => id), [route.artifactType], `${contract.id} exact route-owned output`);
     } else {
       assert.equal(contract.routingSource.kind, "direct-use", `${contract.id} known routing source kind`);
-      assert.equal(contract.routingSource.id, contract.primarySkill, `${contract.id} direct-use primary skill`);
-      assert.ok(directUseSkills.has(contract.routingSource.id), `${contract.id} known direct-use route`);
+      const directUse = directUseById.get(contract.routingSource.id);
+      assert.ok(directUse, `${contract.id} known direct-use source`);
+      assert.equal(directUse.skill, contract.primarySkill, `${contract.id} direct-use primary skill`);
+      assert.ok(directUseSkills.has(directUse.skill), `${contract.id} known direct-use route`);
+      assert.ok(Array.isArray(directUse.outputTypes) && directUse.outputTypes.length > 0, `${contract.id} direct-use output types`);
+      assert.equal(new Set(directUse.outputTypes).size, directUse.outputTypes.length, `${contract.id} unique direct-use output types`);
+      assert.deepEqual(contract.expectedOutputs.map(({ id }) => id), directUse.outputTypes, `${contract.id} exact direct-use-owned outputs`);
     }
 
-    assert.ok(Array.isArray(contract.expectedOutputs) && contract.expectedOutputs.length > 0, `${contract.id} expected outputs`);
-    assert.equal(new Set(contract.expectedOutputs.map(({ id }) => id)).size, contract.expectedOutputs.length, `${contract.id} unique output IDs`);
-    const skillSource = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", contract.primarySkill, "SKILL.md"), "utf8");
+    const skillSource = await readFile(path.join(skillRoot, contract.primarySkill, "SKILL.md"), "utf8");
     const outputContract = skillSection(skillSource, "Output contract");
-    skillSection(skillSource, "Completion(?: Criteria)?");
+    const completionContract = skillSection(skillSource, "Completion(?: Criteria)?");
     for (const output of contract.expectedOutputs) {
       assert.match(outputContract, new RegExp("`" + output.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned output ID: ${output.id}`);
       if (output.kind === "template") {
@@ -1728,6 +1740,12 @@ async function assertCareerFaqMetadata(routing, {
     if (contract.expectedOutputs.some(({ kind }) => kind === "skill-owned")) {
       for (const field of contract.fields) assert.ok(skillSource.includes(field), `${contract.id} source-owned skill output field: ${field}`);
     }
+    assert.ok(Array.isArray(contract.completionTokens) && contract.completionTokens.length > 0, `${contract.id} completion tokens`);
+    assert.equal(new Set(contract.completionTokens).size, contract.completionTokens.length, `${contract.id} unique completion tokens`);
+    for (const token of contract.completionTokens) {
+      assert.ok(typeof token === "string" && token.trim().length > 0, `${contract.id} nonempty completion token`);
+      assert.ok(completionContract.includes(token), `${contract.id} source-owned Completion token: ${token}`);
+    }
 
     const caseTarget = `${contract.case.path}#${contract.case.anchor}`;
     assert.ok(contract.case.anchor.startsWith(contract.case.id.toLowerCase() + "-"), `${contract.id} case ID and anchor agree`);
@@ -1740,6 +1758,11 @@ async function assertCareerFaqMetadata(routing, {
     }
     assert.ok(contract.recovery.owner.length > 0, `${contract.id} recovery owner`);
     assert.deepEqual(contract.recovery.sequence, ["보존", "사람 확인", "재개"], `${contract.id} recovery shape`);
+    if (contract.id === "Q12") {
+      assert.equal(contract.routingSource.kind, "direct-use", "Q12 named-human direct-use source");
+      assert.ok(routing.directUseReviewOwners.find(({ skill }) => skill === contract.primarySkill)?.owners.includes("named-human-reviewer"), "Q12 named-human reviewer owner");
+      assert.doesNotMatch(completionContract, /self[- ]approval|self[- ]approve/i, "Q12 Completion forbids self approval");
+    }
     faqReadOrder(contract, routing);
   }
 }
@@ -1770,6 +1793,8 @@ function assertCareerFaq(markdown, routing = CAREER_ROUTING) {
     const safety = byLabel.get("사람 검토·근거·권리·비보장");
     for (const term of ["사람", "근거", "권리", "보장하지 않"]) assert.ok(safety.includes(term), `${answer.heading} safety term: ${term}`);
     const recovery = byLabel.get("실패·재개·관련 경로");
+    const completionBoundary = `${safety}\n${recovery}`;
+    for (const token of contract.completionTokens) assert.ok(completionBoundary.includes(token), `${answer.heading} canonical completion boundary token: ${token}`);
     let recoveryOffset = -1;
     for (const token of contract.recovery.sequence) {
       recoveryOffset = recovery.indexOf(token, recoveryOffset + 1);
@@ -1779,6 +1804,10 @@ function assertCareerFaq(markdown, routing = CAREER_ROUTING) {
     assert.ok(recovery.includes(`[${contract.case.id}](${contract.case.path}#${contract.case.anchor})`), `${answer.heading} canonical case link`);
     assert.ok(recovery.includes(`](${contract.skillPath})`), `${answer.heading} canonical skill link`);
     assert.ok(recovery.includes(`](${contract.recipePath})`), `${answer.heading} canonical recipe link`);
+    if (contract.id === "Q12") {
+      assert.match(completionBoundary, /named[- ]human/i, "Q12 named-human boundary");
+      assert.doesNotMatch(completionBoundary, /self[- ]approval|self[- ]approve|자동 승인합니다/u, "Q12 self approval forbidden");
+    }
   }
 }
 
@@ -2699,16 +2728,90 @@ test("Career routing FAQ metadata rejects missing, duplicate, and unknown canoni
     ["missing FAQ", (routing) => routing.faqContracts.pop(), /contract count/],
     ["duplicate FAQ ID", (routing) => { routing.faqContracts[1].id = routing.faqContracts[0].id; }, /ordered IDs|unique IDs/],
     ["unknown skill", (routing) => { routing.faqContracts[0].primarySkill = "not-installed"; }, /installed primary skill/],
-    ["unknown output", (routing) => { routing.faqContracts[0].expectedOutputs[0].id = "not-an-output"; }, /source-owned output ID/],
+    ["unknown output", (routing) => { routing.faqContracts[0].expectedOutputs[0].id = "not-an-output"; }, /exact direct-use-owned outputs|source-owned output ID/],
     ["duplicate output", (routing) => { routing.faqContracts[11].expectedOutputs[1].id = routing.faqContracts[11].expectedOutputs[0].id; }, /unique output IDs/],
     ["unknown case", (routing) => { routing.faqContracts[0].case.id = "CA-Z99"; }, /case ID and anchor agree/],
-    ["unknown route", (routing) => { routing.faqContracts[0].routingSource.id = "missing-route"; }, /known route/],
+    ["unknown route", (routing) => { routing.faqContracts[1].routingSource.id = "missing-route"; }, /known route/],
+    ["unknown direct-use source", (routing) => { routing.faqContracts[0].routingSource.id = "missing-direct-use"; }, /known direct-use source/],
     ["unknown read order", (routing) => { routing.faqContracts[0].readOrderId = "missing-order"; }, /recursive template read-order inventory|known readOrderId/],
     ["unknown skill path", (routing) => { routing.faqContracts[0].skillPath = "skills/not-installed.md"; }, /canonical skill path/],
     ["unknown recipe path", (routing) => { routing.faqContracts[0].recipePath = "recipes/not-installed.md"; }, /ENOENT|canonical target path/],
+    ["empty completion token", (routing) => { routing.faqContracts[0].completionTokens = [""]; }, /nonempty completion token/],
+    ["duplicate completion token", (routing) => { routing.faqContracts[0].completionTokens.push(routing.faqContracts[0].completionTokens[0]); }, /unique completion tokens/],
+    ["unknown completion token", (routing) => { routing.faqContracts[0].completionTokens = ["falsifiable"]; }, /source-owned Completion token/],
   ];
   for (const [label, change, error] of mutations) {
     await assert.rejects(() => assertCareerFaqMetadata(mutate(change)), error, label);
+  }
+});
+
+test("Career FAQ routing sources reject every wrong-valid route and direct-use relation", async () => {
+  for (const [index, contract] of CAREER_FAQ_CONTRACT.entries()) {
+    if (contract.routingSource.kind === "route") {
+      const wrongRoute = CAREER_ROUTING.routes.find(({ id }) => id !== contract.routingSource.id);
+      const swapped = structuredClone(CAREER_ROUTING);
+      swapped.faqContracts[index].routingSource.id = wrongRoute.id;
+      await assert.rejects(() => assertCareerFaqMetadata(swapped), /route primary skill|exact route-owned output/, `${contract.id} wrong-valid route swap`);
+
+      const omittedArtifact = structuredClone(CAREER_ROUTING);
+      delete omittedArtifact.routes.find(({ id }) => id === contract.routingSource.id).artifactType;
+      await assert.rejects(() => assertCareerFaqMetadata(omittedArtifact), /route artifactType/, `${contract.id} route artifactType omission`);
+
+      const swappedArtifact = structuredClone(CAREER_ROUTING);
+      swappedArtifact.routes.find(({ id }) => id === contract.routingSource.id).artifactType = wrongRoute.artifactType;
+      await assert.rejects(() => assertCareerFaqMetadata(swappedArtifact), /exact route-owned output/, `${contract.id} route artifactType swap`);
+    } else {
+      const wrongDirectUse = CAREER_ROUTING.directUseSources.find(({ id }) => id !== contract.routingSource.id);
+      const swapped = structuredClone(CAREER_ROUTING);
+      swapped.faqContracts[index].routingSource.id = wrongDirectUse.id;
+      await assert.rejects(() => assertCareerFaqMetadata(swapped), /direct-use primary skill|exact direct-use-owned outputs/, `${contract.id} direct-use skill mismatch`);
+
+      const omittedOutputs = structuredClone(CAREER_ROUTING);
+      omittedOutputs.directUseSources.find(({ id }) => id === contract.routingSource.id).outputTypes = [];
+      await assert.rejects(() => assertCareerFaqMetadata(omittedOutputs), /direct-use output types/, `${contract.id} direct-use output omission`);
+
+      const swappedOutputs = structuredClone(CAREER_ROUTING);
+      swappedOutputs.directUseSources.find(({ id }) => id === contract.routingSource.id).outputTypes = wrongDirectUse.outputTypes;
+      await assert.rejects(() => assertCareerFaqMetadata(swappedOutputs), /exact direct-use-owned outputs/, `${contract.id} direct-use output swap`);
+    }
+  }
+});
+
+test("Career FAQ rejects product SKILL Output and Completion source mutations", async () => {
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-faq-skills-"));
+  const skillRoot = path.join(temporaryRoot, "skills");
+  const allOutputIds = [...new Set(CAREER_FAQ_CONTRACT.flatMap(({ expectedOutputs }) => expectedOutputs.map(({ id }) => id)))];
+  const allCompletionTokens = [...new Set(CAREER_FAQ_CONTRACT.flatMap(({ completionTokens }) => completionTokens))];
+  try {
+    await cp(CAREER_SKILL_SOURCE_ROOT, skillRoot, { recursive: true });
+    for (const contract of CAREER_FAQ_CONTRACT) {
+      const skillPath = path.join(skillRoot, contract.primarySkill, "SKILL.md");
+      const canonical = await readFile(skillPath, "utf8");
+      for (const { id } of contract.expectedOutputs) {
+        const outputSection = skillSection(canonical, "Output contract");
+        const wrongOutput = allOutputIds.find((candidate) => !contract.expectedOutputs.some(({ id: expected }) => expected === candidate));
+        for (const [label, replacement] of [["omission", ""], ["wrong-valid swap", `\`${wrongOutput}\``]]) {
+          const mutatedSection = outputSection.replace(`\`${id}\``, replacement);
+          assert.notEqual(mutatedSection, outputSection, `${contract.id} Output source mutation precondition: ${id}`);
+          await writeFile(skillPath, canonical.replace(outputSection, mutatedSection), "utf8");
+          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot }), /source-owned output ID/, `${contract.id} ${id} Output ${label}`);
+          await writeFile(skillPath, canonical, "utf8");
+        }
+      }
+      for (const token of contract.completionTokens) {
+        const completionSection = skillSection(canonical, "Completion(?: Criteria)?");
+        const wrongToken = allCompletionTokens.find((candidate) => !contract.completionTokens.includes(candidate));
+        for (const [label, replacement] of [["omission", ""], ["wrong-valid swap", wrongToken]]) {
+          const mutatedSection = completionSection.replace(token, replacement);
+          assert.notEqual(mutatedSection, completionSection, `${contract.id} Completion source mutation precondition: ${token}`);
+          await writeFile(skillPath, canonical.replace(completionSection, mutatedSection), "utf8");
+          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot }), /source-owned Completion token/, `${contract.id} ${token} Completion ${label}`);
+          await writeFile(skillPath, canonical, "utf8");
+        }
+      }
+    }
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
   }
 });
 
@@ -2734,6 +2837,7 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
   const answers = markdownSections(markdown, 3);
   const allOutputIds = [...new Set(CAREER_ROUTING.faqContracts.flatMap(({ expectedOutputs }) => expectedOutputs.map(({ id }) => id)))];
   const allFields = [...new Set(CAREER_ROUTING.faqContracts.flatMap(({ fields }) => fields))];
+  const allCompletionTokens = [...new Set(CAREER_ROUTING.faqContracts.flatMap(({ completionTokens }) => completionTokens))];
   for (const [index, answer] of answers.entries()) {
     const contract = CAREER_ROUTING.faqContracts[index];
     const values = new Map(inlineFields(answer.body).map((field) => [field.label, field.value]));
@@ -2781,6 +2885,15 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
     }
     const safety = values.get("사람 검토·근거·권리·비보장");
     assert.throws(() => assertCareerFaq(markdown.replace(safety, safety.replace("보장하지 않", "보장합"))), /safety term/, `${answer.heading} completion/non-guarantee mutation`);
+    for (const token of contract.completionTokens) {
+      const boundary = safety.includes(token) ? safety : recovery;
+      const wrongToken = allCompletionTokens.find((candidate) => !contract.completionTokens.includes(candidate));
+      assert.throws(() => assertCareerFaq(markdown.replace(boundary, boundary.replace(token, ""))), /canonical completion boundary token/, `${answer.heading} completion token omission: ${token}`);
+      assert.throws(() => assertCareerFaq(markdown.replace(boundary, boundary.replace(token, wrongToken))), /canonical completion boundary token/, `${answer.heading} completion token wrong-valid swap: ${token}`);
+    }
+    if (contract.id === "Q12") {
+      assert.throws(() => assertCareerFaq(markdown.replace(safety, safety.replace("named-human", "self-approval"))), /named-human boundary|self approval forbidden/, "Q12 self-approval mutation");
+    }
   }
 });
 

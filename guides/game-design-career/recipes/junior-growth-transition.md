@@ -71,7 +71,7 @@ game-design-career/<career-id>/
 
 ### 완료 기준
 
-각 목표가 실제 `project-event-evidence`와 `proof-artifact`에 연결되고 다음 `next-review-date`가 있으며, time-sensitive requirement에는 `retrieval-date`·`region`이 있고, 빈 evidence를 readiness 주장으로 바꾸지 않으면 완료입니다.
+각 목표가 실제 `project-event-evidence`와 `proof-artifact`(`proof artifact`)에 연결되고 다음 `next-review-date`가 있으며, time-sensitive requirement에는 `retrieval-date`·`region`이 있고, 빈 evidence를 readiness 주장으로 바꾸지 않으면 완료입니다.
 
 ### 포트폴리오·면접 활용
 

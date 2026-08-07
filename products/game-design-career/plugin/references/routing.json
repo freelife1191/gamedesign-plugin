@@ -108,6 +108,23 @@
       "conditionalOwners": []
     }
   ],
+  "directUseSources": [
+    {
+      "id": "map-game-design-career",
+      "skill": "map-game-design-career",
+      "outputTypes": ["competency-matrix"]
+    },
+    {
+      "id": "build-game-design-portfolio",
+      "skill": "build-game-design-portfolio",
+      "outputTypes": ["creative-design-portfolio"]
+    },
+    {
+      "id": "review-image-assets",
+      "skill": "review-image-assets",
+      "outputTypes": ["image-asset-review", "lifecycle-receipt"]
+    }
+  ],
   "stages": ["entry", "new-hire", "junior-growth", "transition"],
   "qualityWorkflow": {
     "skill": "apply-document-quality-profile",
@@ -446,6 +463,180 @@
       "completionGates": ["source-artifact-valid", "audience-and-purpose-recorded", "export-verified"]
     }
   ],
+  "recipeContracts": [
+    {
+      "id": "role-learning-roadmap",
+      "path": "recipes/role-learning-roadmap.md",
+      "diagramId": "role-gap-learning-roadmap",
+      "primarySkill": "orchestrate-game-design-career",
+      "relatedSkills": ["map-game-design-career", "apply-document-quality-profile"],
+      "inputTemplateIds": ["career-stage-goal", "game-design-role-map", "learning-roadmap"],
+      "approvers": ["김서윤", "박도현"],
+      "artifactContracts": [
+        {
+          "artifactId": "career-stage-goal",
+          "expectedOutputId": "career-stage-goal",
+          "ownerSkill": "orchestrate-game-design-career",
+          "path": "game-design-career/<career-id>/career-stage-goal",
+          "fields": ["target-role", "success-evidence"]
+        },
+        {
+          "artifactId": "learning-roadmap",
+          "expectedOutputId": "learning-roadmap",
+          "ownerSkill": "map-game-design-career",
+          "path": "game-design-career/<career-id>/learning-roadmap",
+          "fields": ["proof-artifact", "re-evaluation-date"]
+        }
+      ],
+      "completionContracts": [
+        { "skill": "orchestrate-game-design-career", "tokens": ["evidence gaps"] },
+        { "skill": "map-game-design-career", "tokens": ["proof artifact"] }
+      ]
+    },
+    {
+      "id": "job-research-gap",
+      "path": "recipes/job-research-gap.md",
+      "diagramId": "job-research-evidence-flow",
+      "primarySkill": "research-game-design-jobs",
+      "relatedSkills": ["map-game-design-career", "build-game-design-portfolio"],
+      "inputTemplateIds": ["job-posting-evidence", "competency-matrix", "portfolio-project-brief"],
+      "approvers": ["이민아", "최유진"],
+      "artifactContracts": [
+        {
+          "artifactId": "job-posting-evidence",
+          "expectedOutputId": "job-posting-evidence",
+          "ownerSkill": "research-game-design-jobs",
+          "path": "game-design-career/<career-id>/job-posting-evidence",
+          "fields": ["source-url", "retrieval-date", "sample-geography"]
+        },
+        {
+          "artifactId": "competency-matrix",
+          "expectedOutputId": "competency-matrix",
+          "ownerSkill": "map-game-design-career",
+          "path": "game-design-career/<career-id>/competency-matrix",
+          "fields": ["minimum-repair", "re-evaluation-date"]
+        },
+        {
+          "artifactId": "portfolio-project-brief",
+          "expectedOutputId": "portfolio-project-brief",
+          "ownerSkill": "build-game-design-portfolio",
+          "path": "game-design-career/<career-id>/portfolio-project-brief",
+          "fields": ["target-competency", "implementation-test"]
+        }
+      ],
+      "completionContracts": [
+        { "skill": "research-game-design-jobs", "tokens": ["explicit gaps"] },
+        { "skill": "map-game-design-career", "tokens": ["proof artifact"] },
+        { "skill": "build-game-design-portfolio", "tokens": ["inspectabilityGate"] }
+      ]
+    },
+    {
+      "id": "reverse-design",
+      "path": "recipes/reverse-design.md",
+      "diagramId": "reverse-design-portfolio-flow",
+      "primarySkill": "reverse-engineer-game-design",
+      "relatedSkills": ["visualize-career-roadmap", "export-career-documents"],
+      "inputTemplateIds": ["reverse-design-document", "game-analysis-report"],
+      "approvers": ["한지훈", "오지은"],
+      "artifactContracts": [
+        {
+          "artifactId": "reverse-design-document",
+          "expectedOutputId": "reverse-design-document",
+          "ownerSkill": "reverse-engineer-game-design",
+          "path": "game-design-career/<career-id>/reverse-design-document",
+          "fields": ["observation", "inference", "validation-method"]
+        }
+      ],
+      "completionContracts": [
+        { "skill": "reverse-engineer-game-design", "tokens": ["falsifiable"] }
+      ]
+    },
+    {
+      "id": "portfolio-build-review",
+      "path": "recipes/portfolio-build-review.md",
+      "diagramId": "portfolio-review-loop",
+      "primarySkill": "build-game-design-portfolio",
+      "relatedSkills": ["review-game-design-portfolio", "plan-image-assets"],
+      "inputTemplateIds": ["creative-design-portfolio", "five-axis-review", "portfolio-backlog"],
+      "approvers": ["정하늘", "윤태호"],
+      "artifactContracts": [
+        {
+          "artifactId": "creative-design-portfolio",
+          "expectedOutputId": "creative-design-portfolio",
+          "ownerSkill": "build-game-design-portfolio",
+          "path": "game-design-career/<career-id>/creative-design-portfolio",
+          "fields": ["claim-id", "evidence-id", "attribution"]
+        },
+        {
+          "artifactId": "five-axis-review",
+          "expectedOutputId": "five-axis-review",
+          "ownerSkill": "review-game-design-portfolio",
+          "path": "game-design-career/<career-id>/five-axis-review",
+          "fields": ["finding-id", "minimum-repair"]
+        },
+        {
+          "artifactId": "portfolio-backlog",
+          "expectedOutputId": "portfolio-backlog",
+          "ownerSkill": "review-game-design-portfolio",
+          "path": "game-design-career/<career-id>/portfolio-backlog",
+          "fields": ["backlog-id", "minimum-repair"]
+        }
+      ],
+      "completionContracts": [
+        { "skill": "build-game-design-portfolio", "tokens": ["inspectabilityGate"] },
+        { "skill": "review-game-design-portfolio", "tokens": ["minimum repair"] }
+      ]
+    },
+    {
+      "id": "interview-preparation",
+      "path": "recipes/interview-preparation.md",
+      "diagramId": "interview-growth-transition-flow",
+      "primarySkill": "practice-game-design-interview",
+      "relatedSkills": ["research-game-design-jobs", "review-game-design-portfolio"],
+      "inputTemplateIds": ["interview-question-answer-log", "job-posting-evidence", "five-axis-review"],
+      "approvers": ["최유진", "박도현"],
+      "artifactContracts": [
+        {
+          "artifactId": "interview-question-answer-log",
+          "expectedOutputId": "interview-question-answer-log",
+          "ownerSkill": "practice-game-design-interview",
+          "path": "game-design-career/<career-id>/interview-question-answer-log",
+          "fields": ["question-id", "answer-status", "verification-task"]
+        }
+      ],
+      "completionContracts": [
+        { "skill": "practice-game-design-interview", "tokens": ["explicit gap"] }
+      ]
+    },
+    {
+      "id": "junior-growth-transition",
+      "path": "recipes/junior-growth-transition.md",
+      "diagramId": "career-stage-routing",
+      "primarySkill": "plan-junior-growth",
+      "relatedSkills": ["map-game-design-career", "review-game-design-portfolio", "export-career-documents"],
+      "inputTemplateIds": ["junior-growth-review", "transition-readiness", "career-stage-goal"],
+      "approvers": ["김서윤", "한지훈", "오지은"],
+      "artifactContracts": [
+        {
+          "artifactId": "junior-growth-review",
+          "expectedOutputId": "junior-growth-review",
+          "ownerSkill": "plan-junior-growth",
+          "path": "game-design-career/<career-id>/junior-growth-review",
+          "fields": ["project-event-evidence", "next-review-date", "proof-artifact"]
+        },
+        {
+          "artifactId": "transition-readiness",
+          "expectedOutputId": "transition-readiness",
+          "ownerSkill": "plan-junior-growth",
+          "path": "game-design-career/<career-id>/transition-readiness",
+          "fields": ["target-requirement", "retrieval-date", "verification-task"]
+        }
+      ],
+      "completionContracts": [
+        { "skill": "plan-junior-growth", "tokens": ["proof artifact"] }
+      ]
+    }
+  ],
   "faqReadOrders": {
     "canonical-template": ["content.md", "evidence.yml", "decisions/README.md", "assets/README.md", "export-manifest.yml"],
     "image-review": ["assets/image-assets.yml", "evidence.yml", "decisions/"]
@@ -455,8 +646,9 @@
       "id": "Q01",
       "question": "시스템, 콘텐츠, 전투, 경제, UX, 내러티브와 레벨 기획은 어떻게 비교하는가?",
       "primarySkill": "map-game-design-career",
-      "routingSource": { "kind": "route", "id": "entry-role-map" },
+      "routingSource": { "kind": "direct-use", "id": "map-game-design-career" },
       "expectedOutputs": [{ "id": "competency-matrix", "kind": "template", "templateId": "competency-matrix", "path": "game-design-career/<career-id>/competency-matrix" }],
+      "completionTokens": ["proof artifact"],
       "fields": ["target-level", "gap", "minimum-repair"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-T01", "path": "use-cases/concept-scenarios.md", "anchor": "ca-t01-시스템-기획-입문-학생" },
@@ -470,6 +662,7 @@
       "primarySkill": "build-game-design-portfolio",
       "routingSource": { "kind": "route", "id": "new-hire-portfolio-build" },
       "expectedOutputs": [{ "id": "portfolio-project-brief", "kind": "template", "templateId": "portfolio-project-brief", "path": "game-design-career/<career-id>/portfolio-project-brief" }],
+      "completionTokens": ["inspectabilityGate"],
       "fields": ["target-competency", "implementation-test", "rights"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-T08", "path": "use-cases/concept-scenarios.md", "anchor": "ca-t08-실무-경험이-없는-신입" },
@@ -481,8 +674,9 @@
       "id": "Q03",
       "question": "학교 프로젝트도 포트폴리오 증거가 되는가?",
       "primarySkill": "build-game-design-portfolio",
-      "routingSource": { "kind": "route", "id": "new-hire-portfolio-build" },
+      "routingSource": { "kind": "direct-use", "id": "build-game-design-portfolio" },
       "expectedOutputs": [{ "id": "creative-design-portfolio", "kind": "template", "templateId": "creative-design-portfolio", "path": "game-design-career/<career-id>/creative-design-portfolio" }],
+      "completionTokens": ["inspectabilityGate"],
       "fields": ["claim-id", "evidence-id", "attribution"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-T08", "path": "use-cases/concept-scenarios.md", "anchor": "ca-t08-실무-경험이-없는-신입" },
@@ -496,6 +690,7 @@
       "primarySkill": "research-game-design-jobs",
       "routingSource": { "kind": "route", "id": "new-hire-job-research" },
       "expectedOutputs": [{ "id": "job-posting-evidence", "kind": "template", "templateId": "job-posting-evidence", "path": "game-design-career/<career-id>/job-posting-evidence" }],
+      "completionTokens": ["explicit gaps"],
       "fields": ["source-url", "retrieval-date", "sample-geography"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C03", "path": "use-cases/competency-paths.md", "anchor": "ca-c03-현재-채용공고-조사" },
@@ -509,6 +704,7 @@
       "primarySkill": "research-game-design-jobs",
       "routingSource": { "kind": "route", "id": "new-hire-job-research" },
       "expectedOutputs": [{ "id": "job-posting-evidence", "kind": "template", "templateId": "job-posting-evidence", "path": "game-design-career/<career-id>/job-posting-evidence" }],
+      "completionTokens": ["explicit gaps"],
       "fields": ["sample-geography", "freshness", "source-url"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C03", "path": "use-cases/competency-paths.md", "anchor": "ca-c03-현재-채용공고-조사" },
@@ -522,6 +718,7 @@
       "primarySkill": "reverse-engineer-game-design",
       "routingSource": { "kind": "route", "id": "new-hire-reverse-design" },
       "expectedOutputs": [{ "id": "reverse-design-document", "kind": "template", "templateId": "reverse-design-document", "path": "game-design-career/<career-id>/reverse-design-document" }],
+      "completionTokens": ["falsifiable"],
       "fields": ["observation", "inference", "validation-method"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C05", "path": "use-cases/competency-paths.md", "anchor": "ca-c05-관찰-기반-역기획" },
@@ -535,6 +732,7 @@
       "primarySkill": "reverse-engineer-game-design",
       "routingSource": { "kind": "route", "id": "new-hire-reverse-design" },
       "expectedOutputs": [{ "id": "reverse-design-document", "kind": "template", "templateId": "reverse-design-document", "path": "game-design-career/<career-id>/reverse-design-document" }],
+      "completionTokens": ["falsifiable"],
       "fields": ["source-address", "scope", "validation-method"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C05", "path": "use-cases/competency-paths.md", "anchor": "ca-c05-관찰-기반-역기획" },
@@ -546,8 +744,9 @@
       "id": "Q08",
       "question": "포트폴리오 문서는 몇 개가 적절한가?",
       "primarySkill": "build-game-design-portfolio",
-      "routingSource": { "kind": "route", "id": "new-hire-portfolio-build" },
+      "routingSource": { "kind": "direct-use", "id": "build-game-design-portfolio" },
       "expectedOutputs": [{ "id": "creative-design-portfolio", "kind": "template", "templateId": "creative-design-portfolio", "path": "game-design-career/<career-id>/creative-design-portfolio" }],
+      "completionTokens": ["inspectabilityGate"],
       "fields": ["claim-id", "target-competency", "inspectability"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C06", "path": "use-cases/competency-paths.md", "anchor": "ca-c06-창작-기획-포트폴리오" },
@@ -561,6 +760,7 @@
       "primarySkill": "review-game-design-portfolio",
       "routingSource": { "kind": "route", "id": "new-hire-portfolio-review" },
       "expectedOutputs": [{ "id": "five-axis-review", "kind": "template", "templateId": "five-axis-review", "path": "game-design-career/<career-id>/five-axis-review" }],
+      "completionTokens": ["observation state"],
       "fields": ["finding-id", "evidence-id", "minimum-repair"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C07", "path": "use-cases/competency-paths.md", "anchor": "ca-c07-포트폴리오-검토수정발표" },
@@ -572,8 +772,9 @@
       "id": "Q10",
       "question": "팀 프로젝트에서 개인 기여를 어떻게 증명하는가?",
       "primarySkill": "build-game-design-portfolio",
-      "routingSource": { "kind": "route", "id": "new-hire-portfolio-build" },
+      "routingSource": { "kind": "direct-use", "id": "build-game-design-portfolio" },
       "expectedOutputs": [{ "id": "creative-design-portfolio", "kind": "template", "templateId": "creative-design-portfolio", "path": "game-design-career/<career-id>/creative-design-portfolio" }],
+      "completionTokens": ["inspectabilityGate"],
       "fields": ["claim-id", "attribution", "rights"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-T08", "path": "use-cases/concept-scenarios.md", "anchor": "ca-t08-실무-경험이-없는-신입" },
@@ -587,6 +788,7 @@
       "primarySkill": "build-game-design-portfolio",
       "routingSource": { "kind": "route", "id": "new-hire-portfolio-build" },
       "expectedOutputs": [{ "id": "portfolio-project-brief", "kind": "template", "templateId": "portfolio-project-brief", "path": "game-design-career/<career-id>/portfolio-project-brief" }],
+      "completionTokens": ["inspectabilityGate"],
       "fields": ["target-competency", "rights", "retrospective"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-T09", "path": "use-cases/concept-scenarios.md", "anchor": "ca-t09-비전공자다른-직군-전환자" },
@@ -603,6 +805,7 @@
         { "id": "image-asset-review", "kind": "skill-owned", "path": "assets/image-assets.yml" },
         { "id": "lifecycle-receipt", "kind": "skill-owned", "path": "evidence.yml" }
       ],
+      "completionTokens": ["approval-state change"],
       "fields": ["stable asset ID", "alt text", "decisionReceipt", "rights"],
       "readOrderId": "image-review",
       "case": { "id": "CA-C06", "path": "use-cases/competency-paths.md", "anchor": "ca-c06-창작-기획-포트폴리오" },
@@ -616,6 +819,7 @@
       "primarySkill": "review-game-design-portfolio",
       "routingSource": { "kind": "route", "id": "new-hire-portfolio-review" },
       "expectedOutputs": [{ "id": "five-axis-review", "kind": "template", "templateId": "five-axis-review", "path": "game-design-career/<career-id>/five-axis-review" }],
+      "completionTokens": ["observation state"],
       "fields": ["finding-id", "observation-state", "minimum-repair"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C07", "path": "use-cases/competency-paths.md", "anchor": "ca-c07-포트폴리오-검토수정발표" },
@@ -629,6 +833,7 @@
       "primarySkill": "research-game-design-jobs",
       "routingSource": { "kind": "route", "id": "new-hire-job-research" },
       "expectedOutputs": [{ "id": "job-posting-evidence", "kind": "template", "templateId": "job-posting-evidence", "path": "game-design-career/<career-id>/job-posting-evidence" }],
+      "completionTokens": ["explicit gaps"],
       "fields": ["source-url", "retrieval-date", "freshness"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C03", "path": "use-cases/competency-paths.md", "anchor": "ca-c03-현재-채용공고-조사" },
@@ -642,6 +847,7 @@
       "primarySkill": "practice-game-design-interview",
       "routingSource": { "kind": "route", "id": "new-hire-interview-practice" },
       "expectedOutputs": [{ "id": "interview-question-answer-log", "kind": "template", "templateId": "interview-question-answer-log", "path": "game-design-career/<career-id>/interview-question-answer-log" }],
+      "completionTokens": ["explicit gap"],
       "fields": ["question-id", "portfolio-evidence-id", "answer-status"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C08", "path": "use-cases/competency-paths.md", "anchor": "ca-c08-면접주니어-성장직무-전환" },
@@ -655,6 +861,7 @@
       "primarySkill": "practice-game-design-interview",
       "routingSource": { "kind": "route", "id": "new-hire-interview-practice" },
       "expectedOutputs": [{ "id": "interview-question-answer-log", "kind": "template", "templateId": "interview-question-answer-log", "path": "game-design-career/<career-id>/interview-question-answer-log" }],
+      "completionTokens": ["explicit gap"],
       "fields": ["question-id", "honest-answer", "verification-task"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C08", "path": "use-cases/competency-paths.md", "anchor": "ca-c08-면접주니어-성장직무-전환" },
@@ -668,6 +875,7 @@
       "primarySkill": "plan-junior-growth",
       "routingSource": { "kind": "route", "id": "junior-growth-plan" },
       "expectedOutputs": [{ "id": "junior-growth-review", "kind": "template", "templateId": "junior-growth-review", "path": "game-design-career/<career-id>/junior-growth-review" }],
+      "completionTokens": ["proof artifact"],
       "fields": ["project-event-evidence", "next-review-date", "proof-artifact"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-T10", "path": "use-cases/concept-scenarios.md", "anchor": "ca-t10-주니어의-성장이직" },
@@ -681,6 +889,7 @@
       "primarySkill": "orchestrate-game-design-career",
       "routingSource": { "kind": "route", "id": "entry-intake" },
       "expectedOutputs": [{ "id": "career-stage-goal", "kind": "template", "templateId": "career-stage-goal", "path": "game-design-career/<career-id>/career-stage-goal" }],
+      "completionTokens": ["evidence gaps"],
       "fields": ["target-role", "success-evidence", "review-date"],
       "readOrderId": "canonical-template",
       "case": { "id": "CA-C08", "path": "use-cases/competency-paths.md", "anchor": "ca-c08-면접주니어-성장직무-전환" },
