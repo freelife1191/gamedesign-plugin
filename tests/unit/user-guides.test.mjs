@@ -264,6 +264,151 @@ test("guide graph respects block boundaries, escaped comments, and rendered head
   });
 });
 
+const containerBoundaries = [
+  ["unordered-list", ["- list item"]],
+  ["ordered-list", ["1. list item"]],
+  ["blockquote", ["> quoted item"]],
+  ["atx-heading", ["## ATX heading"]],
+  ["setext-heading", ["Setext heading", "---"]],
+  ["thematic-break", ["***"]],
+  ["gfm-table", ["| heading |", "| --- |", "| cell |"]],
+  ["gfm-table-no-outer", ["heading | value", "--- | ---", "cell | data"]],
+  ["link-reference", ["[guide-ref]: target.md"]],
+  ["html-block", ["<div>html block</div>"]],
+];
+
+test("Markdown container matrix prevents inline runs from crossing block boundaries", () => {
+  const outcomes = [];
+  for (const [boundary, boundaryLines] of containerBoundaries) {
+    for (const run of ["`", "``"]) {
+      const visibleTarget = `${boundary}-${run.length}.md`;
+      const markdown = [
+        `${run}local code`,
+        `[hidden](hidden-${boundary}-${run.length}.md)`,
+        run,
+        `${run}cross-boundary`,
+        ...boundaryLines,
+        `[visible](${visibleTarget})`,
+        run,
+      ].join("\n");
+      outcomes.push({ boundary, run: run.length, targets: extractMarkdownLinks(markdown).map(({ target }) => target) });
+    }
+  }
+
+  assert.deepEqual(outcomes, containerBoundaries.flatMap(([boundary]) => [1, 2].map((run) => ({
+    boundary,
+    run,
+    targets: [`${boundary}-${run}.md`],
+  }))));
+});
+
+test("Markdown inline ranges stay local to plain, list, quote, and nested containers", () => {
+  const markdown = [
+    "plain `code",
+    "[plain-hidden](missing.md)",
+    "code` [plain-visible](plain.md)",
+    "",
+    "- list `code",
+    "- [list-hidden](missing.md)",
+    "- code` [list-visible](list.md)",
+    "",
+    "> quote `code",
+    "> [quote-hidden](missing.md)",
+    "> code` [quote-visible](quote.md)",
+    "",
+    "> - nested `code",
+    "> - [nested-hidden](missing.md)",
+    "> - code` [nested-visible](nested.md)",
+    "",
+    "`comment code",
+    "<!-- [comment-code-hidden](missing.md)",
+    "code` [comment-code-visible](comment-code.md)",
+    "",
+    "<!-- ` comment-first",
+    "[comment-first-hidden](missing.md)",
+    "--> [comment-first-visible](comment-first.md)",
+    "",
+    "<!-- ` ignored --> `comment restart",
+    "<!-- [comment-restart-hidden](missing.md)",
+    "code` [comment-restart-visible](comment-restart.md)",
+    "",
+    "``escaped closer",
+    "\\`` [escaped-closer-hidden](missing.md)",
+    "`` [escaped-closer-visible](escaped-closer.md)",
+  ].join("\r\n");
+
+  assert.deepEqual(extractMarkdownLinks(markdown).map(({ target }) => target), [
+    "plain.md",
+    "list.md",
+    "quote.md",
+    "nested.md",
+    "comment-code.md",
+    "comment-first.md",
+    "comment-restart.md",
+    "escaped-closer.md",
+  ]);
+});
+
+test("Markdown headings preserve intraword underscores and only render paired emphasis", () => {
+  const markdown = [
+    "## foo_bar foo_bar_baz lone_* \\_escaped\\_",
+    "## *강조* __굵게__ ~~취소~~ unmatched* _unclosed",
+    "Setext `한국어` foo_bar",
+    "===",
+  ].join("\n");
+
+  assert.deepEqual(collectMarkdownHeadings(markdown), [
+    { label: "foo_bar foo_bar_baz lone_* _escaped_", anchor: "foo_bar-foo_bar_baz-lone_-_escaped_", level: 2, line: 1 },
+    { label: "강조 굵게 취소 unmatched* _unclosed", anchor: "강조-굵게-취소-unmatched-_unclosed", level: 2, line: 2 },
+    { label: "Setext 한국어 foo_bar", anchor: "setext-한국어-foo_bar", level: 1, line: 3 },
+  ]);
+});
+
+test("guide graph matrix rejects visible container edges and preserves exact underscore anchors", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guideRoot = path.join(root, "guides", "game-design-studio", "skills");
+    const guide = path.join(guideRoot, "README.md");
+    const target = path.join(guideRoot, "container-target.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    await writeFile(target, [
+      "Setext `한국어`",
+      "---",
+      "",
+      "## foo_bar",
+      "## *강조*",
+      "## unmatched* _unclosed",
+    ].join("\n"));
+    const positiveAnchors = [
+      ["setext", "setext-한국어"],
+      ["underscore", "foo_bar"],
+      ["paired", "강조"],
+      ["unmatched", "unmatched-_unclosed"],
+    ];
+    await writeFile(guide, `${prefix}${positiveAnchors.map(([label, anchor]) => `[${label}](container-target.md#${anchor})`).join(" ")}\n`);
+    assert.equal((await validateUserGuides({ repoRoot: root, requireComplete: false })).ok, true, "exact rendered anchors");
+
+    const negativeAnchors = [
+      ["underscore anchor inversion", "foobar"],
+      ["paired delimiters are not anchor text", "강조*"],
+      ["unmatched delimiters remain anchor text", "unmatched-unclosed"],
+    ];
+    for (const [label, anchor] of negativeAnchors) {
+      await writeFile(guide, `${prefix}[wrong](container-target.md#${anchor})\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes("missing anchor")), `${label}: ${result.errors.join("\n")}`);
+    }
+
+    for (const [boundary, boundaryLines] of containerBoundaries) {
+      const visibleTarget = `missing-${boundary}.md`;
+      await writeFile(guide, `${prefix}${["`cross-boundary", ...boundaryLines, `[visible](${visibleTarget})`, "`"].join("\n")}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, boundary);
+      assert.ok(result.errors.some((error) => error.includes(visibleTarget)), `${boundary}: ${result.errors.join("\n")}`);
+    }
+  });
+});
+
 test("guide validation ignores hidden unsafe Markdown but rejects a visible edge", async () => {
   await withGuideFixture({}, async (root) => {
     const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");

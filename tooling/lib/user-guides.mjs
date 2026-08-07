@@ -85,7 +85,7 @@ function inlineCodeSpan(source, start) {
   let length = 1;
   while (source[start + length] === "`") length += 1;
   for (let cursor = start + length; cursor < source.length;) {
-    if (source[cursor] !== "`") {
+    if (source[cursor] !== "`" || escaped(source, cursor)) {
       cursor += 1;
       continue;
     }
@@ -113,100 +113,132 @@ function indentedCode(line) {
   return /^(?: {4}| {0,3}\t)/u.test(line);
 }
 
-function insideLineCodeSpan(line, index) {
-  for (let cursor = 0; cursor < index;) {
-    if (line[cursor] !== "`" || escaped(line, cursor)) {
-      cursor += 1;
-      continue;
-    }
-    const runLength = /^`+/u.exec(line.slice(cursor))[0].length;
-    const span = inlineCodeSpan(line, cursor);
-    if (!span) {
-      cursor += runLength;
-      continue;
-    }
-    if (index < span.end) return true;
-    cursor = span.end;
-  }
-  return false;
+function setextUnderline(line) {
+  return /^(?: {0,3})(=+|-+)[ \t]*$/u.exec(line);
 }
 
-function commentStart(line, from) {
-  let start = line.indexOf("<!--", from);
-  while (start !== -1 && (escaped(line, start) || insideLineCodeSpan(line, start))) {
-    start = line.indexOf("<!--", start + 4);
-  }
-  return start;
+function thematicBreak(line) {
+  return /^(?: {0,3})(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|(?:-[ \t]*){3,})$/u.test(line);
 }
 
-function maskHtmlComments(line, state) {
-  const visible = line.split("");
-  const segments = [];
-  let cursor = 0;
-  let segmentStart = state.inComment ? undefined : 0;
-  let hadComment = state.inComment;
-  while (cursor < line.length) {
-    if (state.inComment) {
-      const end = line.indexOf("-->", cursor);
-      if (end === -1) {
-        visible.fill(" ", cursor);
-        return { text: visible.join(""), segments, hadComment: true };
-      }
-      visible.fill(" ", cursor, end + 3);
-      state.inComment = false;
-      hadComment = true;
-      cursor = end + 3;
-      segmentStart = cursor;
-      continue;
-    }
-    const start = commentStart(line, cursor);
-    if (start === -1) {
-      if (segmentStart !== undefined && segmentStart < line.length) segments.push({ start: segmentStart, end: line.length });
-      break;
-    }
-    if (segmentStart !== undefined && segmentStart < start) segments.push({ start: segmentStart, end: start });
-    visible.fill(" ", start, start + 4);
-    state.inComment = true;
-    hadComment = true;
-    cursor = start + 4;
-    segmentStart = undefined;
-  }
-  return { text: visible.join(""), segments, hadComment };
+function tableDelimiter(line) {
+  const trimmed = line.trim();
+  if (!trimmed.includes("|")) return false;
+  const cells = trimmed.replace(/^\|/u, "").replace(/\|$/u, "").split("|");
+  return cells.length > 0 && cells.every((cell) => /^\s*:?-{3,}:?\s*$/u.test(cell));
 }
 
-function scanMarkdownBlocks(markdown) {
-  const lines = [];
-  const commentState = { inComment: false };
-  let fence;
-  for (const [index, rawLineWithCarriageReturn] of markdown.split("\n").entries()) {
-    const rawLine = rawLineWithCarriageReturn.endsWith("\r")
+function tableRow(line) {
+  return line.includes("|");
+}
+
+function htmlBlock(line) {
+  return /^ {0,3}(?:<\/?[A-Za-z][A-Za-z\d-]*(?:[ \t][^>]*)?>|<![A-Z]|<\?|<!\[CDATA\[)/iu.test(line);
+}
+
+function initialLineKind(line) {
+  if (line.trim() === "") return "blank";
+  if (indentedCode(line)) return "indented-code";
+  if (fenceOpener(line)) return "fence";
+  if (/^(?: {0,3})#{1,6}\s+/u.test(line)) return "atx-heading";
+  if (/^ {0,3}>/u.test(line)) return "blockquote";
+  if (/^ {0,3}[-+*][ \t]+/u.test(line)) return "unordered-list";
+  if (/^ {0,3}\d{1,9}[.)][ \t]+/u.test(line)) return "ordered-list";
+  if (/^ {0,3}\[[^\]]+\]:[ \t]*/u.test(line)) return "link-reference";
+  if (htmlBlock(line)) return "html-block";
+  if (thematicBreak(line)) return "thematic-break";
+  return "plain";
+}
+
+function structuralLines(markdown) {
+  const lines = markdown.split("\n").map((rawLineWithCarriageReturn, index) => {
+    const source = rawLineWithCarriageReturn.endsWith("\r")
       ? rawLineWithCarriageReturn.slice(0, -1)
       : rawLineWithCarriageReturn;
-    if (fence) {
-      if (closesFence(rawLine, fence)) fence = undefined;
-      lines.push({ line: index + 1, blockText: " ".repeat(rawLine.length), source: rawLine, segments: [], boundary: true });
+    return { line: index + 1, source, kind: initialLineKind(source) };
+  });
+
+  for (let index = 1; index < lines.length; index += 1) {
+    const underline = setextUnderline(lines[index].source);
+    if (underline && lines[index - 1].kind === "plain") {
+      lines[index - 1].kind = "setext-heading";
+      lines[index].kind = "setext-underline";
+    }
+  }
+  for (let index = 1; index < lines.length; index += 1) {
+    if (!tableDelimiter(lines[index].source) || !tableRow(lines[index - 1].source)) continue;
+    lines[index - 1].kind = "table";
+    lines[index].kind = "table";
+    for (let cursor = index + 1; cursor < lines.length && tableRow(lines[cursor].source); cursor += 1) {
+      lines[cursor].kind = "table";
+    }
+  }
+
+  let segment = -1;
+  let previousFamily;
+  for (const line of lines) {
+    const family = line.kind === "unordered-list" || line.kind === "ordered-list"
+      ? "list"
+      : line.kind === "blockquote"
+        ? "blockquote"
+        : line.kind === "table"
+          ? "table"
+          : line.kind === "plain"
+            ? "plain"
+            : undefined;
+    if (!family) {
+      previousFamily = undefined;
+      line.segment = line.kind === "blank" || line.kind === "fence" || line.kind === "indented-code"
+        ? undefined
+        : ++segment;
       continue;
     }
-    if (!commentState.inComment && indentedCode(rawLine)) {
-      lines.push({ line: index + 1, blockText: " ".repeat(rawLine.length), source: rawLine, segments: [], boundary: true });
-      continue;
-    }
-    if (!commentState.inComment && fenceOpener(rawLine)) {
-      const openingFence = fenceOpener(rawLine);
-      fence = openingFence;
-      lines.push({ line: index + 1, blockText: " ".repeat(rawLine.length), source: rawLine, segments: [], boundary: true });
-      continue;
-    }
-    const comments = maskHtmlComments(rawLine, commentState);
-    lines.push({
-      line: index + 1,
-      blockText: comments.text,
-      source: rawLine,
-      segments: comments.segments,
-      boundary: comments.hadComment,
-    });
+    if (family !== previousFamily) segment += 1;
+    line.segment = segment;
+    previousFamily = family;
   }
   return lines;
+}
+
+function inlineCodeRanges(lines) {
+  const bySegment = new Map();
+  for (const [lineIndex, line] of lines.entries()) {
+    if (line.segment === undefined) continue;
+    const pieces = bySegment.get(line.segment) ?? [];
+    pieces.push({ lineIndex, start: 0, end: line.source.length });
+    bySegment.set(line.segment, pieces);
+  }
+  const ranges = [];
+  for (const pieces of bySegment.values()) {
+    let source = "";
+    const positions = [];
+    for (const [pieceIndex, piece] of pieces.entries()) {
+      if (pieceIndex > 0) {
+        source += "\n";
+        positions.push(undefined);
+      }
+      for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
+        source += lines[piece.lineIndex].source[cursor];
+        positions.push({ lineIndex: piece.lineIndex, cursor });
+      }
+    }
+    for (let cursor = 0; cursor < source.length;) {
+      if (source[cursor] !== "`" || escaped(source, cursor)) {
+        cursor += 1;
+        continue;
+      }
+      const runLength = /^`+/u.exec(source.slice(cursor))[0].length;
+      const span = inlineCodeSpan(source, cursor);
+      if (!span) {
+        cursor += runLength;
+        continue;
+      }
+      const range = { positions: positions.slice(cursor, span.end).filter(Boolean) };
+      if (range.positions.length > 0) ranges.push(range);
+      cursor += runLength;
+    }
+  }
+  return ranges;
 }
 
 function maskInlineParagraph(lines, pieces) {
@@ -220,7 +252,7 @@ function maskInlineParagraph(lines, pieces) {
     }
     const block = lines[piece.lineIndex];
     for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
-      paragraph += block.blockText[cursor];
+      paragraph += block.source[cursor];
       positions.push({ lineIndex: piece.lineIndex, cursor });
     }
   }
@@ -244,29 +276,113 @@ function maskInlineParagraph(lines, pieces) {
 }
 
 export function scanVisibleMarkdown(markdown) {
-  const lines = scanMarkdownBlocks(markdown).map((line) => ({ ...line, text: line.blockText.split("") }));
-  let paragraph = [];
-  const flush = () => {
-    maskInlineParagraph(lines, paragraph);
-    paragraph = [];
-  };
-  for (const [lineIndex, line] of lines.entries()) {
-    if (line.segments.length === 0 || line.blockText.trim() === "") {
-      flush();
-      continue;
-    }
-    const heading = /^(?: {0,3})#{1,6}\s+/u.test(line.blockText);
-    if (heading || line.boundary) flush();
-    if (line.boundary) {
-      for (const segment of line.segments) maskInlineParagraph(lines, [{ lineIndex, ...segment }]);
-      flush();
-      continue;
-    }
-    paragraph.push(...line.segments.map((segment) => ({ lineIndex, ...segment })));
-    if (heading) flush();
+  const lines = structuralLines(markdown).map((line) => ({
+    ...line,
+    hidden: Array(line.source.length).fill(false),
+  }));
+  const rawRanges = inlineCodeRanges(lines);
+  const rangeStartAt = lines.map((line) => Array(line.source.length));
+  for (const range of rawRanges) {
+    const start = range.positions[0];
+    rangeStartAt[start.lineIndex][start.cursor] = range;
   }
-  flush();
-  return lines.map(({ line, text, source, blockText }) => ({ line, text: text.join(""), source, blockText }));
+
+  let fence;
+  let inComment = false;
+  let activeCodeRange;
+  let activeSegment;
+  for (const [lineIndex, line] of lines.entries()) {
+    const hide = (start, end) => line.hidden.fill(true, start, end);
+    if (line.segment !== activeSegment) activeCodeRange = undefined;
+    activeSegment = line.segment;
+    if (fence) {
+      activeCodeRange = undefined;
+      hide(0, line.source.length);
+      if (closesFence(line.source, fence)) fence = undefined;
+      continue;
+    }
+    if (!inComment && line.kind === "indented-code") {
+      activeCodeRange = undefined;
+      hide(0, line.source.length);
+      continue;
+    }
+    if (!inComment && fenceOpener(line.source)) {
+      activeCodeRange = undefined;
+      fence = fenceOpener(line.source);
+      hide(0, line.source.length);
+      continue;
+    }
+
+    for (let cursor = 0; cursor < line.source.length;) {
+      if (inComment) {
+        const end = line.source.indexOf("-->", cursor);
+        if (end === -1) {
+          hide(cursor, line.source.length);
+          break;
+        }
+        hide(cursor, end + 3);
+        inComment = false;
+        cursor = end + 3;
+        continue;
+      }
+      if (!activeCodeRange) activeCodeRange = rangeStartAt[lineIndex][cursor];
+      if (activeCodeRange) {
+        const end = activeCodeRange.positions.at(-1);
+        if (end.lineIndex === lineIndex && end.cursor === cursor) activeCodeRange = undefined;
+        cursor += 1;
+        continue;
+      }
+      if (line.source.startsWith("<!--", cursor) && !escaped(line.source, cursor)) {
+        hide(cursor, cursor + 4);
+        inComment = true;
+        cursor += 4;
+        continue;
+      }
+      cursor += 1;
+    }
+  }
+
+  for (const line of lines) {
+    line.blockText = line.source.split("").map((character, cursor) => line.hidden[cursor] ? " " : character).join("");
+    line.text = line.blockText.split("");
+  }
+
+  const visibleSegments = new Map();
+  for (const [lineIndex, line] of lines.entries()) {
+    if (line.segment === undefined) continue;
+    let start = 0;
+    while (start < line.source.length) {
+      while (start < line.source.length && line.hidden[start]) start += 1;
+      if (start === line.source.length) break;
+      let end = start + 1;
+      while (end < line.source.length && !line.hidden[end]) end += 1;
+      const pieces = visibleSegments.get(line.segment) ?? [];
+      const previous = pieces.at(-1);
+      const region = previous && previous.lineIndex === lineIndex && previous.end === start
+        ? previous.region
+        : previous && previous.lineIndex === lineIndex - 1 && start === 0 && previous.end === lines[previous.lineIndex].source.length
+          ? previous.region
+          : (previous?.region ?? -1) + 1;
+      pieces.push({ lineIndex, start, end, region });
+      visibleSegments.set(line.segment, pieces);
+      start = end + 1;
+    }
+  }
+  for (const pieces of visibleSegments.values()) {
+    let region = [];
+    let regionId;
+    for (const piece of pieces) {
+      if (regionId !== undefined && piece.region !== regionId) {
+        maskInlineParagraph(lines, region);
+        region = [];
+      }
+      region.push(piece);
+      regionId = piece.region;
+    }
+    maskInlineParagraph(lines, region);
+  }
+
+  return lines.map(({ line, text, source, blockText, kind }) => ({ line, text: text.join(""), source, blockText, kind }));
 }
 
 function unescapeMarkdown(value) {
@@ -392,6 +508,7 @@ function parseLinkAt(source, original, start) {
     end: destination.end,
     image,
     label: renderedLabel(original.slice(start + 1, labelEnd)),
+    rawLabel: original.slice(start + 1, labelEnd),
     target,
     fragment,
   };
@@ -426,8 +543,87 @@ function normaliseCodeSpanContent(value) {
   return content;
 }
 
+function delimiterFlanking(value, start, length, marker) {
+  const before = value[start - 1] ?? "\n";
+  const after = value[start + length] ?? "\n";
+  const beforeWhitespace = /\s/u.test(before);
+  const afterWhitespace = /\s/u.test(after);
+  const beforePunctuation = /[\p{P}\p{S}]/u.test(before);
+  const afterPunctuation = /[\p{P}\p{S}]/u.test(after);
+  const left = !afterWhitespace && (!afterPunctuation || beforeWhitespace || beforePunctuation);
+  const right = !beforeWhitespace && (!beforePunctuation || afterWhitespace || afterPunctuation);
+  if (marker === "_") {
+    return {
+      canOpen: left && (!right || beforePunctuation),
+      canClose: right && (!left || afterPunctuation),
+    };
+  }
+  return { canOpen: left, canClose: right };
+}
+
+function pairedHeadingDelimiters(value) {
+  const protectedCharacters = Array(value.length).fill(false);
+  for (let cursor = 0; cursor < value.length;) {
+    if (value[cursor] === "`" && !escaped(value, cursor)) {
+      const span = inlineCodeSpan(value, cursor);
+      if (span) {
+        protectedCharacters.fill(true, cursor, span.end);
+        cursor = span.end;
+        continue;
+      }
+    }
+    if (value[cursor] === "[") {
+      const link = parseLinkAt(value, value, cursor);
+      if (link) {
+        protectedCharacters.fill(true, cursor, link.end);
+        cursor = link.end;
+        continue;
+      }
+    }
+    cursor += 1;
+  }
+
+  const stacks = new Map();
+  const paired = new Set();
+  for (let cursor = 0; cursor < value.length;) {
+    if (protectedCharacters[cursor] || escaped(value, cursor)) {
+      cursor += 1;
+      continue;
+    }
+    const character = value[cursor];
+    if (character !== "*" && character !== "_" && character !== "~") {
+      cursor += 1;
+      continue;
+    }
+    let runLength = 1;
+    while (value[cursor + runLength] === character && !protectedCharacters[cursor + runLength]) runLength += 1;
+    const length = character === "~" ? (runLength === 2 ? 2 : 0) : runLength;
+    if (length === 0) {
+      cursor += runLength;
+      continue;
+    }
+    const token = value.slice(cursor, cursor + length);
+    const { canOpen, canClose } = delimiterFlanking(value, cursor, length, character);
+    const stack = stacks.get(token) ?? [];
+    let closed = false;
+    if (canClose && stack.length > 0) {
+      const opener = stack.pop();
+      for (let offset = 0; offset < length; offset += 1) {
+        paired.add(opener + offset);
+        paired.add(cursor + offset);
+      }
+      closed = true;
+    }
+    if (canOpen && !closed) stack.push(cursor);
+    stacks.set(token, stack);
+    cursor += length;
+  }
+  return paired;
+}
+
 function renderHeadingInline(value) {
   let label = "";
+  const pairedDelimiters = pairedHeadingDelimiters(value);
   for (let cursor = 0; cursor < value.length;) {
     if (value[cursor] === "`" && !escaped(value, cursor)) {
       const span = inlineCodeSpan(value, cursor);
@@ -441,17 +637,13 @@ function renderHeadingInline(value) {
     if (value[cursor] === "[") {
       const link = parseLinkAt(value, value, cursor);
       if (link) {
-        label += renderHeadingInline(link.label);
+        label += renderHeadingInline(link.rawLabel);
         cursor = link.end;
         continue;
       }
     }
-    if (!escaped(value, cursor) && (value[cursor] === "*" || value[cursor] === "_")) {
+    if (pairedDelimiters.has(cursor)) {
       cursor += 1;
-      continue;
-    }
-    if (!escaped(value, cursor) && value.startsWith("~~", cursor)) {
-      cursor += 2;
       continue;
     }
     label += value[cursor];
@@ -469,18 +661,22 @@ function isInlineCodeOnly(value) {
 export function collectMarkdownHeadings(markdown) {
   const headings = [];
   const anchors = new Set();
-  for (const { line, blockText: lineText } of scanVisibleMarkdown(markdown)) {
+  const lines = scanVisibleMarkdown(markdown);
+  for (const [index, { line, blockText: lineText, kind }] of lines.entries()) {
     const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(lineText);
-    if (!match) continue;
-    if (isInlineCodeOnly(match[2])) continue;
-    const label = renderHeadingInline(match[2]);
+    const setext = kind === "setext-heading" && lines[index + 1]?.kind === "setext-underline"
+      ? setextUnderline(lines[index + 1].blockText)
+      : undefined;
+    const inline = match?.[2] ?? (setext ? lineText.trim() : undefined);
+    if (!inline || isInlineCodeOnly(inline)) continue;
+    const label = renderHeadingInline(inline);
     const base = githubAnchor(label);
     if (!base) continue;
     let candidate = base;
     let suffix = 1;
     while (anchors.has(candidate)) candidate = `${base}-${suffix++}`;
     anchors.add(candidate);
-    headings.push({ label, anchor: candidate, level: match[1].length, line });
+    headings.push({ label, anchor: candidate, level: match ? match[1].length : setext[1][0] === "=" ? 1 : 2, line });
   }
   return headings;
 }
