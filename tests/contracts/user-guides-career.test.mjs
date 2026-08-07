@@ -170,7 +170,13 @@ function assertCareerDirectUseCard(markdown, entry, contract) {
   for (const nextSkill of entry.next_skills) {
     assert.ok(section.includes(`$game-design-career:${nextSkill}`), `${entry.skill}: manifest next route ${nextSkill}`);
   }
-  assert.doesNotMatch(section, /\[!\[/, `${entry.skill}: Task 6 diagram embed is absent`);
+  const documentPath = entry.document.replace(/^guides\//u, "");
+  const pngPath = path.posix.relative(path.posix.dirname(documentPath), entry.diagram.png.replace(/^guides\//u, ""));
+  const svgPath = path.posix.relative(path.posix.dirname(documentPath), entry.diagram.svg.replace(/^guides\//u, ""));
+  assert.ok(
+    section.includes(`[![${entry.diagram.alt}](${pngPath})](${svgPath})`),
+    `${entry.skill}: canonical direct-use diagram embed`,
+  );
 }
 
 function canonicalReviewerSet(routing, skill) {
@@ -872,5 +878,50 @@ test("Career visualization guides preserve the no-Node Skillstead fallback", asy
     ]) {
       assert.ok(markdown.includes(phrase), `${guidePath}: missing no-Node contract: ${phrase}`);
     }
+  }
+});
+
+test("Career entry indexes derive audiences, guide links, and representative results from canonical Career sources", async () => {
+  const inventory = await collectProductInventory(root, "game-design-career");
+  const [guide, skillIndex, manifestSource, routingSource, faq, outputCatalog] = await Promise.all([
+    readFile(path.join(root, "guides/game-design-career/README.md"), "utf8"),
+    readFile(path.join(root, "guides/game-design-career/skills/README.md"), "utf8"),
+    readFile(path.join(root, "guides/use-cases/use-case-manifest.json"), "utf8"),
+    readFile(path.join(root, "products/game-design-career/plugin/references/routing.json"), "utf8"),
+    readFile(path.join(root, "guides/game-design-career/faq.md"), "utf8"),
+    readFile(path.join(root, "guides/use-cases/output-catalog.md"), "utf8"),
+  ]);
+  const manifest = JSON.parse(manifestSource);
+  const routing = JSON.parse(routingSource);
+  const careerCases = manifest.cases.filter(({ product }) => product === "game-design-career");
+  const skillCases = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
+  const diagramPairs = careerCases.length + skillCases.length;
+
+  assert.equal(routing.faqContracts.length, [...faq.matchAll(/^### Q\d+\./gmu)].length, "Career FAQ source count");
+  assert.match(outputCatalog, /^## Career 요청과 결과$/mu, "Career output catalog source");
+  for (const audience of ["취업 준비", "주니어", "전환", "멘토"]) assert.ok(guide.includes(audience), `Career audience: ${audience}`);
+  for (const link of ["use-cases/competency-paths.md", "use-cases/concept-scenarios.md", "use-cases/skill-workbench.md", "faq.md", "../use-cases/output-catalog.md"]) {
+    assert.ok(guide.includes(`](${link})`), `Career guide link: ${link}`);
+  }
+  for (const summary of [
+    `${careerCases.length}개 사례`,
+    `${inventory.skillIds.length}개 직접 스킬`,
+    `${routing.faqContracts.length}개 FAQ`,
+    `${diagramPairs}개 도식`,
+  ]) assert.ok(guide.includes(summary), `Career catalog relationship: ${summary}`);
+
+  assert.match(skillIndex, /여러 Career 단계와 산출물.*orchestrate-game-design-career/su, "orchestrator boundary");
+  for (const skillId of inventory.skillIds) assert.ok(skillIndex.includes(`$game-design-career:${skillId}`), `direct skill: ${skillId}`);
+
+  for (const caseId of ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"]) {
+    const entry = careerCases.find(({ id }) => id === caseId);
+    assert.ok(entry, `representative Career case: ${caseId}`);
+    const section = extractH3Section(guide, entry.id);
+    assert.ok(section.includes(`$game-design-career:${entry.skills[0]}`), `${caseId}: canonical first skill`);
+    assert.ok(section.includes(`\`${entry.outputs[0]}\``), `${caseId}: canonical first result`);
+    assert.ok(section.includes(`game-design-career/<career-id>/${entry.outputs[0]}/`), `${caseId}: canonical result path`);
+    const commands = [...section.matchAll(/\$game-design-career:([a-z0-9-]+)/gu)].map((match) => match[1]);
+    assert.ok(commands.every((skillId) => entry.skills.includes(skillId)), `${caseId}: no unknown direct skill`);
+    assert.match(section, /입력|읽는 순서/u, `${caseId}: input and read order`);
   }
 });

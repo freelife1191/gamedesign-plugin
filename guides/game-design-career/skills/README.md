@@ -2,6 +2,15 @@
 
 설치된 Career 제품 스킬 14개와 vendored Skillstead `svg-infographic` 1개를 정리합니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
 
+## 오케스트레이터와 직접 호출
+
+여러 Career 단계와 산출물, 우선순위 또는 completion gate가 함께 남으면 `$game-design-career:orchestrate-game-design-career`로 stage brief와 가장 작은 skill chain을 먼저 만듭니다. 반대로 입력·한 가지 결과·읽는 순서가 분명하면 아래의 직접 스킬을 호출합니다. 직접 호출은 다른 증거·권리·사람 검토를 생략하지 않으며, route가 다시 섞일 때만 오케스트레이터로 돌아갑니다.
+
+| 선택 | 사용할 때 | 결과를 먼저 읽는 순서 |
+| --- | --- | --- |
+| 오케스트레이터 | 여러 단계, 역할 또는 여러 산출물의 우선순위를 정해야 할 때 | `career-stage-goal`의 `content.md → evidence.yml → decisions/ → export-manifest.yml` |
+| 직접 스킬 | 하나의 명확한 입력으로 한 결과를 만들거나 검토할 때 | 해당 Canonical Artifact의 `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+
 | 스킬 ID | 목적 | 직접 호출 | 주 템플릿 | 일반 입력 | 일반 결과 |
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | artifact별 품질 profile과 checklist 결정 | `$game-design-career:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | goal, audience, artifact type, format | selection record, checklist, manifest |

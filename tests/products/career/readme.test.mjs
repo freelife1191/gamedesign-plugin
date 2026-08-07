@@ -7,6 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
+import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -443,5 +444,53 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
     assert.match(pluginRun.stdout, /^override-plugin:products\/game-design-career\/plugin$/m);
   } finally {
     await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("README routes Career entry users to canonical skills and inspectable results without package-escaping links", async () => {
+  const [readme, routingSource, manifestSource, inventory] = await Promise.all([
+    readFile(readmePath, "utf8"),
+    readFile(path.join(pluginRoot, "references/routing.json"), "utf8"),
+    readFile(path.join(repoRoot, "guides/use-cases/use-case-manifest.json"), "utf8"),
+    collectProductInventory(repoRoot, "game-design-career"),
+  ]);
+  const routing = JSON.parse(routingSource);
+  const manifest = JSON.parse(manifestSource);
+  const careerCases = manifest.cases.filter(({ product }) => product === "game-design-career");
+  const skillCases = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
+
+  assert.match(readme, /^## 활용 시작점$/mu);
+  for (const audience of ["취업 준비", "주니어", "전환", "멘토"]) assert.ok(readme.includes(audience), `target audience: ${audience}`);
+  assert.match(readme, /여러 Career 단계와 산출물이 함께.*orchestrate-game-design-career/su, "orchestrator scope");
+  assert.match(readme, /한 산출물.*직접.*스킬/su, "direct-skill scope");
+  for (const summary of [
+    `${careerCases.length}개 사례`,
+    `${inventory.skillIds.length}개 직접 스킬`,
+    `${routing.faqContracts.length}개 FAQ`,
+    `${careerCases.length + skillCases.length}개 도식`,
+  ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);
+
+  for (const caseId of ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"]) {
+    const entry = careerCases.find(({ id }) => id === caseId);
+    assert.ok(entry, `representative Career case: ${caseId}`);
+    const row = readme.split("\n").find((line) => line.includes(`\`${entry.id}\``));
+    assert.ok(row, `README case row: ${entry.id}`);
+    assert.ok(row.includes(`$game-design-career:${entry.skills[0]}`), `${entry.id}: canonical skill`);
+    assert.ok(row.includes(`\`${entry.outputs[0]}\``), `${entry.id}: canonical result`);
+    assert.ok(row.includes(`game-design-career/<career-id>/${entry.outputs[0]}/`), `${entry.id}: canonical result path`);
+    const commands = [...row.matchAll(/\$game-design-career:([a-z0-9-]+)/gu)].map((match) => match[1]);
+    assert.ok(commands.every((skillId) => entry.skills.includes(skillId)), `${entry.id}: no unknown direct skill`);
+  }
+  assert.match(readme, /content\.md\s*→\s*evidence\.yml\s*→\s*decisions\//u, "result read order");
+  assert.doesNotMatch(readme, /합격(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)|채용(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)/u, "no hiring guarantee");
+
+  const localLinks = [...readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)]
+    .map((match) => match[1])
+    .filter((target) => !target.startsWith("http") && !target.startsWith("#"));
+  for (const target of localLinks) {
+    assert.equal(path.isAbsolute(target), false, `README link must be package-relative: ${target}`);
+    const resolved = path.resolve(pluginRoot, target);
+    assert.ok(resolved === pluginRoot || resolved.startsWith(`${pluginRoot}${path.sep}`), `README link escapes package: ${target}`);
+    await access(resolved);
   }
 });

@@ -4,6 +4,21 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 
 플러그인은 14개 워크플로 스킬, 일반 역할 7개와 이미지 전문 역할 2개, 15개 Canonical Artifact 템플릿, 13개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. vendored Skillstead를 포함한 설치 스킬은 15개입니다.
 
+## 활용 시작점
+
+취업 준비 학생, 주니어, 직무 전환자와 멘토는 현재 근거와 원하는 한 가지 결과를 먼저 적습니다. 여러 Career 단계와 산출물이 함께 남거나 우선순위를 정해야 하면 [`orchestrate-game-design-career`](skills/orchestrate-game-design-career/SKILL.md)로 시작합니다. 한 산출물과 입력이 분명하면 아래처럼 직접 스킬을 사용합니다. 18개 사례, 15개 직접 스킬, 18개 FAQ와 33개 도식 쌍은 설치된 skill·template·evidence 경계를 설명하며 합격이나 채용 결과를 보장하지 않습니다.
+
+| 대표 사례 | 입력 | 사용할 경로·스킬 | 얻는 결과 | 결과 읽는 순서 |
+| --- | --- | --- | --- | --- |
+| `CA-T01` 시스템 기획 입문 | 규칙·상태·예외 근거와 작은 과제 | `$game-design-career:map-game-design-career` | `game-design-role-map` at `game-design-career/<career-id>/game-design-role-map/` | `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+| `CA-T04` 경제·밸런스·LiveOps | 공개 관찰, 가정, 반례 | `$game-design-career:reverse-engineer-game-design` | `game-analysis-report` at `game-design-career/<career-id>/game-analysis-report/` | `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+| `CA-T05` UI/UX 기획 | 사용자 흐름, 복구·접근성 제약 | `$game-design-career:map-game-design-career` | `competency-matrix` at `game-design-career/<career-id>/competency-matrix/` | `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+| `CA-C05` 관찰 기반 역기획 | 공개 build 관찰, 출처, 반례 | `$game-design-career:apply-document-quality-profile` → `$game-design-career:reverse-engineer-game-design` | `reverse-design-document` at `game-design-career/<career-id>/reverse-design-document/` | `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+| `CA-C06` 창작 기획 포트폴리오 | 개인 기여, claim, evidence | `$game-design-career:apply-document-quality-profile` → `$game-design-career:build-game-design-portfolio` | `portfolio-project-brief` at `game-design-career/<career-id>/portfolio-project-brief/` | `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+| `CA-C08` 면접·성장·전환 | posting·portfolio evidence ID 또는 feedback | `$game-design-career:practice-game-design-interview` | `interview-question-answer-log` at `game-design-career/<career-id>/interview-question-answer-log/` | `content.md → evidence.yml → decisions/ → assets/README.md → export-manifest.yml` |
+
+각 결과는 원본과 evidence를 먼저 읽고, 이미지·도식·MD/PDF/DOCX/PPTX 같은 파생 결과는 capability와 사람 검토가 갖춰진 뒤에만 확인합니다. `IMAGE_GEN_MODE`는 계획·provider 경로를 고를 뿐 이미지 권리·품질 승인이나 공개 권한을 대신하지 않습니다.
+
 ## 설치
 
 요구 사항은 Codex CLI와 Node.js 18 이상입니다. 배포 대상은 저장소의 `plugins/game-design-career` 스냅샷이며, `products/game-design-career/plugin`은 개발 원천입니다.
