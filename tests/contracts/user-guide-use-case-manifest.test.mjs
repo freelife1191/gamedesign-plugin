@@ -156,7 +156,7 @@ const CAREER_TARGET_STUDIO_LINK_CONTRACT = Object.freeze({
 });
 const CAREER_TARGET_STUDIO_HANDOFF_LINE = "공개 가능한 evidence summary/proof project handoff만 연결합니다.";
 const CAREER_TARGET_STUDIO_BOUNDARY_LINE = "Studio 원본 Artifact를 병합하거나 복제하지 않습니다.";
-const CAREER_TARGET_STUDIO_TRANSFER_PREDICATE = /병합|복사|복제|가져오기|import|merge|copy/iu;
+const CAREER_TARGET_STUDIO_TRANSFER_PREDICATE = /병합|복사|복제|가져(?:오|옵|와)|import|merge|copy/iu;
 const CAREER_TARGET_FAILURE_LABELS = Object.freeze(["실패", "보존", "사람 확인", "재개"]);
 const CAREER_TARGET_FAILURE_CONTRACT = Object.freeze({
   "CA-T01": ["상태 전이 또는 예외 표가 관찰되지 않으면 claim을 보류합니다.", "상태 전이, 예외 표, 규칙표와 반례.", "시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다.", "확인된 잠금 해제 기능의 규칙표에서 재개합니다."],
@@ -1972,6 +1972,9 @@ test("Career target contracts reject wrong-valid target fields, unsafe claims, S
     ["Studio merge permission", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 merge합니다."), /CA-T01 Studio transfer line contract/],
     ["Studio copy permission in English", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 copy합니다."), /CA-T01 Studio transfer line contract/],
     ["canonical boundary plus affirmative transfer", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio 원본 Artifact를 병합하거나 복제하지 않습니다. Studio Artifact 원본의 복사를 허용합니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio 가져옵니다", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 가져옵니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio 가져와도 됩니다", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 가져와도 됩니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio double-negative 가져오기", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 가져오지 않는 것은 아닙니다."), /CA-T01 Studio transfer line contract/],
   ];
   for (const [label, mutation, expectedFailure] of studioMutations) {
     assert.throws(() => assertCareerTargetStudioLinks({ conceptScenarios: mutation, entries, studioCompetencyPaths }), expectedFailure, label);
