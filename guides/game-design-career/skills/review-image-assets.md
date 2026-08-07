@@ -81,16 +81,16 @@ actual user decision, named reviewer, reviewedAt, artifact-local evidence paths 
 ## Codex CLI 요청 예시
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01, requestedState=document-approved, reviewer="[실제 담당자 이름]", decision=approve
+$game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=document-approved reviewer="[실제 담당자 이름]" reviewedAt=2026-08-07T10:00:00+09:00 rightsDecision=approved evidencePaths=assets/evidence/review-01.yml decisionReceipt=<host-user-image-decision>
 ```
 
 ## 내부 진행 흐름
 
-manifest와 artifact-local evidence를 검증합니다. `visual-asset-reviewer`와 `art-brief-director`는 findings와 recommendation만 냅니다. 사용자는 stable asset ID와 실제 승인/거부 결정을 입력하고, host adapter가 immutable structured `host-user-image-decision` receipt를 수집한 뒤 reviewer, time, evidence와 rights decision을 묶어 순차 transition을 적용합니다. 임의 JSON·문자열 receipt는 거부됩니다.
+manifest와 artifact-local evidence를 검증합니다. `visual-asset-reviewer`와 `art-brief-director`는 findings와 recommendation만 냅니다. 사용자는 stable asset ID와 실제 승인/거부 결정을 입력하고, host adapter가 immutable structured `host-user-image-decision` receipt를 수집한 뒤 reviewer, reviewedAt, evidencePaths와 rightsDecision을 묶어 순차 transition을 적용합니다. 임의 JSON·문자열 receipt는 거부됩니다.
 
 ## 생성 파일과 결과 구조
 
-stable asset ID, evidence-bounded findings, named-human decision record, requested/accepted transition, receipt, blockers와 derivative eligibility를 반환합니다. 예상 결과 요약: 권고와 사람 승인이 분리된 lifecycle 기록이 생깁니다.
+stable asset ID, evidence-bounded findings, named-human decision record, targetState transition, decisionReceipt, blockers와 derivative eligibility를 반환합니다. 예상 결과 요약: 권고와 사람 승인이 분리된 lifecycle receipt 기록이 생깁니다.
 
 ## 관련 템플릿·품질 프로필·전문 역할
 
