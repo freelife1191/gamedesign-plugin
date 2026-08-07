@@ -18,46 +18,46 @@ Career image의 권리·provenance·가독성·accessibility·placement를 검�
 #### 입문 App 요청문
 
 ```text
-@Game Design Career 검증된 `assets/image-assets.yml`의 asset 하나에 actual user decision, named reviewer, review time, artifact-local evidence paths와 rights decision이 있는지 확인해.
+@Game Design Career 검증된 `assets/image-assets.yml`의 asset 하나에 actual user decision, named reviewer, reviewedAt, artifact-local evidence paths와 rightsDecision=approved가 있는지 확인해.
 ```
 
 #### 입문 CLI 요청문
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01 requestedState=document-approved reviewer="[이름 있는 검토자]" reviewedAt=2026-08-07T10:00:00+09:00
+$game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=document-approved reviewer="[이름 있는 검토자]" reviewedAt=2026-08-07T10:00:00+09:00 rightsDecision=approved evidencePaths=assets/evidence/review-01.yml decisionReceipt=<host-user-image-decision>
 ```
 
 #### 응용 App 요청문
 
 ```text
-@Game Design Career actual user decision과 artifact-local evidence paths를 stable asset ID, placement, alt text, readability, rights decision에 연결해 lifecycle receipt를 검토해.
+@Game Design Career actual user decision과 artifact-local evidence paths를 stable asset ID, placement, alt text, readability, rightsDecision=approved에 연결해 lifecycle receipt를 검토해.
 ```
 
 #### 응용 CLI 요청문
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01 decision=approve evidencePaths=assets/evidence/review-01.yml rightsDecision=confirmed
+$game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=document-approved reviewer="[이름 있는 검토자]" reviewedAt=2026-08-07T10:00:00+09:00 decisionReceipt=<host-user-image-decision> evidencePaths=assets/evidence/review-01.yml rightsDecision=approved
 ```
 
 #### 고급 App 요청문
 
 ```text
-@Game Design Career `concept-draft` → `document-approved` → `production-candidate` 순서를 건너뛰지 않고, 거부된 actual user decision과 blocker를 보존해 재개해.
+@Game Design Career `concept-draft` → `document-approved` → `production-candidate` 순서를 건너뛰지 않고, host-user-image-decision receipt의 from_state, target_state, decision=approved, reviewer, decided_at, evidence paths와 rights decision을 확인해 재개해.
 ```
 
 #### 고급 CLI 요청문
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01 requestedState=production-candidate reviewer="[이름 있는 검토자]" reviewTime=2026-08-07T10:00:00+09:00 rightsDecision=active
+$game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=production-candidate reviewer="[이름 있는 검토자]" reviewedAt=2026-08-07T10:00:00+09:00 rightsDecision=approved evidencePaths=decisions/image-rights-review.yml decisionReceipt=<host-user-image-decision>
 ```
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → assets/image-assets.yml` 순서로 읽습니다. `image-asset-review`, `lifecycle-receipt`을 반환합니다. 검토 owner: named reviewer이며 `visual-asset-reviewer`와 `art-brief-director`는 finding·recommendation만 제공합니다.
+`content.md → evidence.yml → assets/image-assets.yml` 순서로 읽습니다. `image-asset-review`, `lifecycle-receipt`을 반환합니다. 검토 owner: `named-human-reviewer`. `visual-asset-reviewer`와 `art-brief-director`는 finding·recommendation만 제공합니다. `production-candidate`가 되려면 rightsDecision은 `approved`이고 결과 asset의 `rights.effective_status=active`여야 하며, `active`는 rights decision 값이 아닙니다.
 
 #### 실패·재개와 다음 스킬 조건
 
-actual user decision, named reviewer, review time, artifact-local evidence paths 또는 rights decision이 없으면 state를 바꾸지 않습니다. 재개: 누락된 evidence를 같은 stable asset ID의 lifecycle receipt에 연결하고 requested transition부터 재개합니다. document-approved일 때만 `$game-design-career:export-career-documents`로 넘깁니다.
+actual user decision, named reviewer, reviewedAt, artifact-local evidence paths 또는 rightsDecision이 없으면 state를 바꾸지 않습니다. 재개: 누락된 evidence를 같은 stable asset ID의 lifecycle receipt에 연결하고 targetState transition부터 재개합니다. document-approved일 때만 `$game-design-career:export-career-documents`로 넘깁니다.
 
 ## 사용하지 않을 때
 

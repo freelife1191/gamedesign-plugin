@@ -53,7 +53,7 @@ $game-design-career:export-career-documents artifact=artifacts/portfolio capabil
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `export-preparation-manifest`, `format-jobs`은 준비 논리 결과입니다. 검토 owner: `evidence-auditor`; `new-hire-reverse-design-export` route면 `reverse-design-critic`도 fact·inference review를 확인합니다. `evidence-auditor`는 source/evidence completion gate를 검토하지만 downstream renderer, format QA 또는 사람 승인 completion gate를 대체하지 않습니다.
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `export-preparation-manifest`, `format-jobs`은 준비 논리 결과입니다. 검토 owner: `evidence-auditor`. `new-hire-reverse-design-export` route면 `reverse-design-critic`도 fact·inference review를 확인합니다. `evidence-auditor`는 source/evidence completion gate를 검토하지만 downstream renderer, format QA 또는 사람 승인 completion gate를 대체하지 않습니다.
 
 #### 실패·재개와 다음 스킬 조건
 

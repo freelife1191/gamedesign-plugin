@@ -119,17 +119,17 @@ function extractH3Section(markdown, heading) {
 const CAREER_DIRECT_USE_CONTRACT = Object.freeze([
   ["apply-document-quality-profile", "한 Career Artifact의 template·quality profile 선택만", "content.md → evidence.yml → export-manifest.yml", "document-quality-editor", "unknown ID", "여러 route가 함께 남았을 때만", "선택 기록은 승인 자체가 아닙니다"],
   ["build-game-design-portfolio", "한 portfolio project의 claim·evidence 구조만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "portfolio-reviewer", "claim 또는 evidence ID가 없으면", "여러 artifact의 우선순위가 섞였을 때만", "합격을 보장하지 않습니다"],
-  ["export-career-documents", "하나의 승인 대기 Artifact의 export 준비만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "document-quality-editor", "renderer 또는 capability가 없으면", "여러 artifact·형식 우선순위가 섞였을 때만", "실제 renderer 실행이나 파일 생성을 약속하지 않습니다"],
+  ["export-career-documents", "하나의 승인 대기 Artifact의 export 준비만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "evidence-auditor", "renderer 또는 capability가 없으면", "여러 artifact·형식 우선순위가 섞였을 때만", "실제 renderer 실행이나 파일 생성을 약속하지 않습니다"],
   ["generate-image-assets", "선택 receipt가 있는 finite image job만", "content.md → evidence.yml → assets/image-assets.yml → assets/prompts/image-prompts.md", "visual-asset-reviewer", "provider 또는 selection receipt가 없으면", "여러 artifact의 image·review 범위가 섞였을 때만", "AI 생성 결과는 자동 최종 승인되지 않습니다"],
   ["map-game-design-career", "한 목표 역할의 current evidence와 competency gap만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "career-strategist", "current evidence가 stale이면", "여러 역할·단계의 우선순위가 섞였을 때만", "사실·추론·제안을 분리합니다"],
   ["orchestrate-game-design-career", "여러 Career 단계와 completion gate를 하나의 brief로", "content.md → evidence.yml → decisions/ → export-manifest.yml", "career-strategist", "route 또는 stage가 불명확하면", "한 output과 입력이 분명할 때는 해당 specialist를 직접", "사실·추론·제안을 분리합니다"],
   ["plan-image-assets", "선택된 profile의 finite image 또는 Skillstead slot만", "content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml → assets/prompts/image-prompts.md", "art-brief-director", "slot mismatch 또는 필수 입력 누락이면", "여러 artifact의 image 범위가 섞였을 때만", "계획은 bytes 생성이나 승인 상태 변경을 하지 않습니다"],
   ["plan-junior-growth", "한 target requirement의 gap과 proof task만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "stale evidence 또는 requirement가 있으면", "여러 단계·역할의 우선순위가 섞였을 때만", "사실·추론·제안을 분리합니다"],
-  ["practice-game-design-interview", "한 posting·portfolio evidence set의 question record만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "career-strategist", "stale posting evidence 또는 questionId가 없으면", "여러 준비 단계와 proof task가 섞였을 때만", "합격을 보장하지 않습니다"],
+  ["practice-game-design-interview", "한 posting·portfolio evidence set의 question record만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "interview-coach · evidence-auditor", "stale posting evidence 또는 questionId가 없으면", "여러 준비 단계와 proof task가 섞였을 때만", "합격을 보장하지 않습니다"],
   ["research-game-design-jobs", "한 role·level·region의 current posting sample만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "evidence-auditor", "sourceUrl 또는 retrievalDate가 없으면", "여러 role·stage의 우선순위가 섞였을 때만", "stale evidence는 current claim에 사용하지 않습니다"],
-  ["reverse-engineer-game-design", "하나의 공개 build 관찰과 validation queue만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "observation 또는 source가 없으면", "여러 분석·portfolio 범위가 섞였을 때만", "관찰·추론·제안을 분리합니다"],
+  ["reverse-engineer-game-design", "하나의 공개 build 관찰과 validation queue만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "reverse-design-critic · evidence-auditor", "observation 또는 source가 없으면", "여러 분석·portfolio 범위가 섞였을 때만", "관찰·추론·제안을 분리합니다"],
   ["review-game-design-portfolio", "하나의 portfolio artifact의 five-axis finding만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "portfolio-reviewer", "inspectable source가 없으면", "여러 portfolio·interview 우선순위가 섞였을 때만", "합격을 보장하지 않습니다"],
-  ["review-image-assets", "검증된 `assets/image-assets.yml`의 한 stable asset ID", "content.md → evidence.yml → assets/image-assets.yml", "visual-asset-reviewer", "actual user decision, named reviewer, review time, artifact-local evidence paths 또는 rights decision이 없으면", "여러 artifact의 image·export 우선순위가 섞였을 때만", "agent 권고와 asset bytes는 actual user decision이나 승인 증거가 아닙니다"],
+  ["review-image-assets", "검증된 `assets/image-assets.yml`의 한 stable asset ID", "content.md → evidence.yml → assets/image-assets.yml", "named-human-reviewer", "actual user decision, named reviewer, reviewedAt, artifact-local evidence paths 또는 rightsDecision이 없으면", "여러 artifact의 image·export 우선순위가 섞였을 때만", "agent 권고와 asset bytes는 actual user decision이나 승인 증거가 아닙니다"],
   ["svg-infographic", "하나의 source-mapped 구조 SVG와 검증 상태만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "Node 또는 Chromium fallback이 막히면", "여러 Career route와 source priority가 섞였을 때만", "Node-free Chromium fallback을 보존합니다"],
   ["visualize-career-roadmap", "하나의 source-mapped relationship과 diagram slot만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "source mapping 또는 renderer fallback이 없으면", "여러 Career route와 source priority가 섞였을 때만", "Node-free Chromium fallback을 보존합니다"],
 ].map(([skill, condition, readOrder, reviewOwner, failure, orchestrator, boundary]) => ({
@@ -138,6 +138,12 @@ const CAREER_DIRECT_USE_CONTRACT = Object.freeze([
 
 function directUseHeading(entry) {
   return `${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`;
+}
+
+function directReviewOwners(section) {
+  const match = /^`[^\n]+` 순서로 읽습니다\.[^\n]*검토 owner: ([^.\n]+)\./mu.exec(section);
+  assert.ok(match, "direct review owner field");
+  return [...match[1].matchAll(/`([^`]+)`/gu)].map((entry) => entry[1]).sort();
 }
 
 function assertCareerDirectUseCard(markdown, entry, contract) {
@@ -155,6 +161,7 @@ function assertCareerDirectUseCard(markdown, entry, contract) {
   }
   assert.match(section, new RegExp(`\\$game-design-career:${entry.skill}`, "u"), `${entry.skill}: installed command`);
   assert.ok(section.includes(contract.readOrder), `${entry.skill}: exact read order`);
+  assert.deepEqual(directReviewOwners(section), contract.reviewOwner.split(" · ").sort(), `${entry.skill}: exact review owner set`);
   assert.ok(section.includes(contract.failure), `${entry.skill}: failure-resume condition`);
   assert.ok(section.includes("재개:"), `${entry.skill}: explicit resume`);
 
@@ -170,12 +177,12 @@ function canonicalReviewerSet(routing, skill) {
   return [...new Set(routing.routes.filter((route) => route.skill === skill).flatMap((route) => route.roles))].sort();
 }
 
-function assertReviewImageDirectContract(section, source) {
+function assertReviewImageDirectContract(section, source, validatorSource, workflowSource) {
   for (const [sourcePhrase, guidePhrase] of [
     ["validated `assets/image-assets.yml`", "검증된 `assets/image-assets.yml`"],
     ["actual user decision", "actual user decision"],
     ["named human reviewer", "named reviewer"],
-    ["review time", "review time"],
+    ["review time", "reviewedAt"],
     ["artifact-local evidence paths", "artifact-local evidence paths"],
     ["rights decision", "rights decision"],
     ["receipt", "lifecycle receipt"],
@@ -184,7 +191,11 @@ function assertReviewImageDirectContract(section, source) {
     assert.ok(source.replaceAll("`", "").includes(sourcePhrase.replaceAll("`", "")), `review-image source contract: ${sourcePhrase}`);
     assert.ok(section.includes(guidePhrase), `review-image direct contract: ${guidePhrase}`);
   }
+  for (const phrase of ["targetState", "reviewedAt", "rightsDecision=approved", "rights.effective_status=active", "host-user-image-decision", "from_state", "target_state", "decision=approved", "decided_at", "evidencePaths"]) assert.ok(section.includes(phrase), `review-image transition field: ${phrase}`);
+  for (const phrase of ["rightsDecisions", "effectiveRightsStatuses", "applyImageReviewTransition"]) assert.ok(validatorSource.includes(phrase), `review-image validator source: ${phrase}`);
+  for (const phrase of ["targetState", "reviewedAt", "rightsDecision", "decisionReceipt", "host-user-image-decision"]) assert.ok(workflowSource.includes(phrase), `review-image workflow source: ${phrase}`);
   assert.doesNotMatch(section, /provider routing|IMAGE_GEN_MODE|prompt package|finite image job/u, "review-image excludes generation-only tokens");
+  assert.doesNotMatch(section, /requestedState|reviewTime|rightsDecision=(?:confirmed|active)/u, "review-image excludes legacy fields and invalid rights enums");
 }
 
 function assertSkillContract(markdown, skillId) {
@@ -331,7 +342,8 @@ test("Career direct-use review owners are derived from canonical routing and rol
     }
     const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skill}.md`), "utf8");
     const section = extractH3Section(markdown, `직접 호출 활용 — ${skill}`);
-    for (const reviewer of reviewers) assert.ok(section.includes(`\`${reviewer}\``), `${skill}: canonical reviewer ${reviewer}`);
+    const expectedDirect = skill === "export-career-documents" ? ["evidence-auditor"] : reviewers;
+    assert.deepEqual(directReviewOwners(section), expectedDirect, `${skill}: exact canonical direct reviewer set`);
   }
 
   const exportCard = extractH3Section(await readFile(path.join(root, "guides/game-design-career/skills/export-career-documents.md"), "utf8"), "직접 호출 활용 — export-career-documents");
@@ -342,6 +354,8 @@ test("Career direct-use review owners are derived from canonical routing and rol
   assert.throws(() => assert.ok(interview.replace("`evidence-auditor`", "`career-strategist`").includes("`evidence-auditor`"), "interview owner mutation"), /interview owner mutation/, "wrong-valid interview owner swap");
   const reverse = extractH3Section(await readFile(path.join(root, "guides/game-design-career/skills/reverse-engineer-game-design.md"), "utf8"), "직접 호출 활용 — reverse-engineer-game-design");
   assert.throws(() => assert.ok(reverse.replace("`reverse-design-critic`", "`game-design-mentor`").includes("`reverse-design-critic`"), "reverse owner mutation"), /reverse owner mutation/, "wrong-valid reverse owner swap");
+  const map = extractH3Section(await readFile(path.join(root, "guides/game-design-career/skills/map-game-design-career.md"), "utf8"), "직접 호출 활용 — map-game-design-career");
+  assert.throws(() => assert.deepEqual(directReviewOwners(map.replace("`career-strategist`", "`career-strategist` · `evidence-auditor`")), ["career-strategist"], "extra owner mutation"), /extra owner mutation/, "wrong extra owner");
 });
 
 test("Career image generation and review cards keep their source-owned contracts separate", async () => {
@@ -350,11 +364,16 @@ test("Career image generation and review cards keep their source-owned contracts
   const generate = extractH3Section(await readFile(path.join(guideRoot, "generate-image-assets.md"), "utf8"), "Career 직접 호출 활용 — generate-image-assets");
   const review = extractH3Section(await readFile(path.join(guideRoot, "review-image-assets.md"), "utf8"), "Career 직접 호출 활용 — review-image-assets");
   const reviewSource = await readFile(path.join(skillRoot, "review-image-assets/SKILL.md"), "utf8");
+  const validatorSource = await readFile(path.join(root, "shared/scripts/validate-image-assets.mjs"), "utf8");
+  const workflowSource = await readFile(path.join(root, "shared/scripts/run-image-asset-workflow.mjs"), "utf8");
 
   for (const phrase of ["provider routing", "IMAGE_GEN_MODE", "prompt·placeholder"]) assert.ok(generate.includes(phrase), `generate-image contract: ${phrase}`);
-  assertReviewImageDirectContract(review, reviewSource);
-  assert.throws(() => assertReviewImageDirectContract(review + "\nprovider routing", reviewSource), /generation-only tokens/, "review rejects provider token spray");
-  assert.throws(() => assertReviewImageDirectContract(review.replaceAll("named reviewer", "reviewer"), reviewSource), /named reviewer/, "review rejects removed named-human receipt field");
+  assertReviewImageDirectContract(review, reviewSource, validatorSource, workflowSource);
+  assert.throws(() => assertReviewImageDirectContract(review + "\nprovider routing", reviewSource, validatorSource, workflowSource), /generation-only tokens/, "review rejects provider token spray");
+  assert.throws(() => assertReviewImageDirectContract(review.replaceAll("named reviewer", "reviewer"), reviewSource, validatorSource, workflowSource), /named reviewer/, "review rejects removed named-human receipt field");
+  for (const mutation of ["requestedState=document-approved", "reviewTime=2026-08-07T10:00:00+09:00", "rightsDecision=confirmed", "rightsDecision=active"]) {
+    assert.throws(() => assertReviewImageDirectContract(review + `\n${mutation}`, reviewSource, validatorSource, workflowSource), /legacy fields and invalid rights enums/, `review rejects ${mutation}`);
+  }
 });
 
 test("Career skill workbench inventories every installed skill once by lane", async () => {
