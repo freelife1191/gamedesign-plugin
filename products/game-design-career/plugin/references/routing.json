@@ -26,6 +26,88 @@
     "document-quality-editor"
   ],
   "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
+  "directUseReviewOwners": [
+    {
+      "skill": "apply-document-quality-profile",
+      "owners": ["document-quality-editor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "build-game-design-portfolio",
+      "owners": ["portfolio-reviewer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "export-career-documents",
+      "owners": ["evidence-auditor"],
+      "conditionalOwners": [
+        {
+          "routeId": "new-hire-reverse-design-export",
+          "owners": ["reverse-design-critic"]
+        }
+      ]
+    },
+    {
+      "skill": "generate-image-assets",
+      "owners": ["visual-asset-reviewer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "map-game-design-career",
+      "owners": ["career-strategist"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "orchestrate-game-design-career",
+      "owners": ["career-strategist"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "plan-image-assets",
+      "owners": ["art-brief-director"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "plan-junior-growth",
+      "owners": ["game-design-mentor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "practice-game-design-interview",
+      "owners": ["interview-coach", "evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "research-game-design-jobs",
+      "owners": ["evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "reverse-engineer-game-design",
+      "owners": ["reverse-design-critic", "evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "review-game-design-portfolio",
+      "owners": ["portfolio-reviewer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "review-image-assets",
+      "owners": ["named-human-reviewer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "svg-infographic",
+      "owners": ["game-design-mentor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "visualize-career-roadmap",
+      "owners": ["game-design-mentor"],
+      "conditionalOwners": []
+    }
+  ],
   "stages": ["entry", "new-hire", "junior-growth", "transition"],
   "qualityWorkflow": {
     "skill": "apply-document-quality-profile",

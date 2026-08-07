@@ -177,40 +177,38 @@ function canonicalReviewerSet(routing, skill) {
   return [...new Set(routing.routes.filter((route) => route.skill === skill).flatMap((route) => route.roles))].sort();
 }
 
-const directReviewOwnerSources = Object.freeze({
-  "apply-document-quality-profile": { type: "quality-workflow" },
-  "build-game-design-portfolio": { type: "route-role", role: "portfolio-reviewer" },
-  "export-career-documents": { type: "route-role", role: "evidence-auditor" },
-  "generate-image-assets": { type: "image-specialist", role: "visual-asset-reviewer" },
-  "map-game-design-career": { type: "route-role", role: "career-strategist" },
-  "orchestrate-game-design-career": { type: "route-role", role: "career-strategist" },
-  "plan-image-assets": { type: "image-specialist", role: "art-brief-director" },
-  "plan-junior-growth": { type: "route-role", role: "game-design-mentor" },
-  "practice-game-design-interview": { type: "route-set" },
-  "research-game-design-jobs": { type: "route-role", role: "evidence-auditor" },
-  "reverse-engineer-game-design": { type: "route-set" },
-  "review-game-design-portfolio": { type: "route-role", role: "portfolio-reviewer" },
-  "review-image-assets": { type: "named-human-exception" },
-  "svg-infographic": { type: "svg-wrapper-exception", role: "game-design-mentor" },
-  "visualize-career-roadmap": { type: "route-role", role: "game-design-mentor" },
-});
+function canonicalDirectReviewMetadata(routing, installedSkillIds) {
+  const entries = routing.directUseReviewOwners;
+  assert.ok(Array.isArray(entries), "canonical direct-use review owner metadata");
+  assert.equal(entries.length, installedSkillIds.length, "one canonical direct-use review owner entry per installed skill");
 
-function canonicalDirectReviewerSet(routing, skill) {
-  const source = directReviewOwnerSources[skill];
-  assert.ok(source, `${skill}: direct reviewer source`);
-  if (source.type === "quality-workflow") return [routing.qualityWorkflow.role];
-  if (source.type === "route-set") return canonicalReviewerSet(routing, skill);
-  if (source.type === "named-human-exception") return ["named-human-reviewer"];
-  if (source.type === "image-specialist") {
-    assert.ok(routing.imageSpecialistIds.includes(source.role), `${skill}: canonical image specialist`);
-    return [source.role];
+  const skillIds = entries.map(({ skill }) => skill);
+  assert.equal(new Set(skillIds).size, skillIds.length, "canonical direct-use review owner skill IDs are unique");
+  assert.deepEqual([...skillIds].sort(), installedSkillIds, "canonical direct-use review owner skill IDs reject unknown or missing skills");
+
+  const reviewerIds = new Set([...routing.roleIds, ...routing.imageSpecialistIds, "named-human-reviewer"]);
+  const bySkill = new Map();
+  for (const entry of entries) {
+    assert.deepEqual(Object.keys(entry).sort(), ["conditionalOwners", "owners", "skill"], `${entry.skill}: canonical direct-use review owner fields`);
+    assert.ok(Array.isArray(entry.owners) && entry.owners.length > 0, `${entry.skill}: non-empty direct review owner set`);
+    assert.equal(new Set(entry.owners).size, entry.owners.length, `${entry.skill}: unique direct review owners`);
+    for (const owner of entry.owners) assert.ok(reviewerIds.has(owner), `${entry.skill}: known direct review owner ${owner}`);
+    assert.ok(Array.isArray(entry.conditionalOwners), `${entry.skill}: conditional review owners array`);
+    for (const condition of entry.conditionalOwners) {
+      assert.deepEqual(Object.keys(condition).sort(), ["owners", "routeId"], `${entry.skill}: conditional review owner fields`);
+      const route = routing.routes.find(({ id }) => id === condition.routeId);
+      assert.equal(route?.skill, entry.skill, `${entry.skill}: conditional review route ${condition.routeId}`);
+      assert.ok(Array.isArray(condition.owners) && condition.owners.length > 0, `${entry.skill}: non-empty conditional review owner set`);
+      assert.equal(new Set(condition.owners).size, condition.owners.length, `${entry.skill}: unique conditional review owners`);
+      for (const owner of condition.owners) {
+        assert.ok(reviewerIds.has(owner), `${entry.skill}: known conditional review owner ${owner}`);
+        assert.ok(route.roles.includes(owner), `${entry.skill}: route-owned conditional reviewer ${owner}`);
+        assert.ok(!entry.owners.includes(owner), `${entry.skill}: conditional reviewer remains separate from direct owners`);
+      }
+    }
+    bySkill.set(entry.skill, entry);
   }
-  if (source.type === "svg-wrapper-exception") {
-    assert.ok(canonicalReviewerSet(routing, "visualize-career-roadmap").includes(source.role), `${skill}: canonical SVG wrapper reviewer`);
-    return [source.role];
-  }
-  assert.ok(canonicalReviewerSet(routing, skill).includes(source.role), `${skill}: canonical route reviewer`);
-  return [source.role];
+  return { bySkill, reviewerIds };
 }
 
 function reviewProbeAsset() {
@@ -383,17 +381,33 @@ test("Career direct-use cards retain evidence, image, fallback, and export bound
   assert.throws(() => assert.match(exported + "\nPDF 생성 성공을 보장합니다.", /^(?![\s\S]*PDF 생성 성공을 보장합니다.)[\s\S]*$/u), /did not match/i, "export preclaim");
 });
 
-test("Career direct-use review owners are derived from canonical routing and role sources", async () => {
+test("Career direct-use review owners match the canonical exact-set metadata", async () => {
   const routing = JSON.parse(await readFile(path.join(root, "products/game-design-career/plugin/references/routing.json"), "utf8"));
   const inventory = await collectProductInventory(root, "game-design-career");
   const manifest = JSON.parse(await readFile(path.join(root, "guides/use-cases/use-case-manifest.json"), "utf8"));
   const entries = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
-  const roleIds = new Set([...routing.roleIds, ...routing.imageSpecialistIds]);
-  assert.deepEqual(Object.keys(directReviewOwnerSources).sort(), inventory.skillIds, "all direct cards have canonical reviewer sources");
+  const { bySkill, reviewerIds } = canonicalDirectReviewMetadata(routing, inventory.skillIds);
+
+  const mutateMetadata = (directUseReviewOwners) => ({ ...routing, directUseReviewOwners });
+  assert.throws(
+    () => canonicalDirectReviewMetadata(mutateMetadata(routing.directUseReviewOwners.slice(1)), inventory.skillIds),
+    /one canonical direct-use review owner entry per installed skill/,
+    "missing canonical skill metadata is rejected",
+  );
+  assert.throws(
+    () => canonicalDirectReviewMetadata(mutateMetadata([...routing.directUseReviewOwners.slice(0, -1), routing.directUseReviewOwners[0]]), inventory.skillIds),
+    /skill IDs are unique/,
+    "duplicate canonical skill metadata is rejected",
+  );
+  assert.throws(
+    () => canonicalDirectReviewMetadata(mutateMetadata(routing.directUseReviewOwners.map((entry, index) => index === 0 ? { ...entry, skill: "unknown-career-skill" } : entry)), inventory.skillIds),
+    /reject unknown or missing skills/,
+    "unknown canonical skill metadata is rejected",
+  );
 
   for (const entry of entries) {
     const { skill } = entry;
-    const reviewers = canonicalDirectReviewerSet(routing, skill).sort();
+    const reviewers = [...bySkill.get(skill).owners].sort();
     const skillSourcePath = skill === "svg-infographic"
       ? sourceExceptions[skill].sourcePath
       : path.join("products/game-design-career/plugin/skills", skill, "SKILL.md");
@@ -401,20 +415,24 @@ test("Career direct-use review owners are derived from canonical routing and rol
     assert.match(skillSource, /^# .+/m, `${skill}: canonical skill source`);
     for (const reviewer of reviewers) {
       if (reviewer === "named-human-reviewer") continue;
-      assert.ok(roleIds.has(reviewer), `${skill}: canonical reviewer ID`);
       const roleSource = await readFile(path.join(root, "products/game-design-career/plugin/agents", `${reviewer}.md`), "utf8");
       assert.match(roleSource, /^# .+\n\n## Responsibility/m, `${reviewer}: canonical role source`);
     }
     const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skill}.md`), "utf8");
     const section = extractH3Section(markdown, directUseHeading(entry));
     assert.deepEqual(directReviewOwners(section), reviewers, `${skill}: exact canonical direct reviewer set`);
-    const wrongOwner = [...roleIds].find((role) => !reviewers.includes(role));
+    const wrongOwner = [...reviewerIds].find((role) => !reviewers.includes(role));
     assert.throws(() => assert.deepEqual(directReviewOwners(section.replace(/검토 owner: ([^.\n]+)\./u, `검토 owner: \`${wrongOwner}\`.`)), reviewers, `${skill}: replacement owner mutation`), /replacement owner mutation/, `${skill}: wrong valid replacement owner is rejected`);
     assert.throws(() => assert.deepEqual(directReviewOwners(section.replace(/검토 owner: ([^.\n]+)\./u, `검토 owner: $1 · \`${wrongOwner}\`.`)), reviewers, `${skill}: extra owner mutation`), /extra owner mutation/, `${skill}: extra owner is rejected`);
   }
 
   const exportCard = extractH3Section(await readFile(path.join(root, "guides/game-design-career/skills/export-career-documents.md"), "utf8"), "직접 호출 활용 — export-career-documents");
-  assert.match(exportCard, /new-hire-reverse-design-export[\s\S]*reverse-design-critic/u, "export: reverse route conditional reviewer");
+  const exportMetadata = bySkill.get("export-career-documents");
+  assert.deepEqual(exportMetadata.owners, ["evidence-auditor"], "export: canonical direct reviewer remains evidence-auditor");
+  assert.deepEqual(exportMetadata.conditionalOwners, [{ routeId: "new-hire-reverse-design-export", owners: ["reverse-design-critic"] }], "export: canonical reverse-design reviewer remains conditional");
+  for (const condition of exportMetadata.conditionalOwners) {
+    for (const owner of condition.owners) assert.match(exportCard, new RegExp(`${condition.routeId}[\\s\\S]*${owner}`, "u"), `export: ${condition.routeId} conditional reviewer ${owner}`);
+  }
   assert.match(exportCard, /evidence-auditor[\s\S]*completion gate[\s\S]*대체하지 않습니다/u, "export: auditor non-substitution boundary");
 
   assert.deepEqual(canonicalReviewerSet(routing, "export-career-documents"), ["evidence-auditor", "reverse-design-critic"], "export routing reviewer set");
@@ -442,8 +460,20 @@ test("Career image generation and review cards keep their source-owned contracts
   }
   const canonicalInput = { targetState: "document-approved", reviewer: "Minji Kim", reviewedAt: "2026-08-07T10:00:00Z", evidencePaths: ["evidence/review.yml"], rightsDecision: "approved" };
   assert.equal(applyImageReviewTransition(reviewProbeAsset(), canonicalInput, { artifactRoot: root }).approval_state, "document-approved", "review-image canonical runtime input passes");
-  for (const [field, value] of [["targetState", "requestedState"], ["reviewedAt", "reviewTime"], ["rightsDecision", "confirmed"], ["rightsDecision", "active"]]) {
-    assert.throws(() => applyImageReviewTransition(reviewProbeAsset(), { ...canonicalInput, [field]: value }, { artifactRoot: root }), /target state|reviewedAt|rights decision|approval/i, `review-image runtime rejects ${field}=${value}`);
+  const { targetState: requestedState, reviewedAt: reviewTime, ...inputWithoutCanonicalTransitionKeys } = canonicalInput;
+  const legacyInput = { ...inputWithoutCanonicalTransitionKeys, requestedState, reviewTime };
+  assert.throws(
+    () => applyImageReviewTransition(reviewProbeAsset(), legacyInput, { artifactRoot: root }),
+    /target state|reviewedAt|approval/i,
+    "review-image runtime rejects actual requestedState/reviewTime input without canonical keys",
+  );
+  assert.throws(
+    () => applyImageReviewTransition(reviewProbeAsset(), { ...canonicalInput, targetState: "production-candidate" }, { artifactRoot: root }),
+    /skipped or invalid approval transition/i,
+    "review-image runtime rejects concept-draft to production-candidate jump",
+  );
+  for (const rightsDecision of ["confirmed", "active"]) {
+    assert.throws(() => applyImageReviewTransition(reviewProbeAsset(), { ...canonicalInput, rightsDecision }, { artifactRoot: root }), /rights decision|approval/i, `review-image runtime rejects rightsDecision=${rightsDecision}`);
   }
 });
 
