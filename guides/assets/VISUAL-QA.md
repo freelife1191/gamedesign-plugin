@@ -97,3 +97,23 @@
 - 시각 교정: 첫 high 검사에서 CA-S01의 마지막 단일 route 줄이 `textLength`로 과도하게 늘어나는 문제를 발견해 footer route 전용 자연 폭 텍스트로 교정했습니다. original 검사에서 10/9개 route, next condition, reviewer·boundary·failure·preserve·confirmation·resume 의미가 containment 안에서 판독됨을 다시 확인했습니다.
 - 계약/회귀: CA-S01/S06 source와 production contract는 authority guide의 정확한 route 조건·대상을 비교하며 각 조건/대상 mutation을 거부합니다. 일반 non-Career `decision-flow`는 정확히 두 branch만 허용하고 기존 두 branch 좌표 `[298, 505]`를 보존해 세 번째 branch가 `y=505`에 겹치는 경로를 fail-closed로 차단합니다.
 - 자동 증거: 최종 Career 33개 build/check와 `npm run check:guide-diagrams`가 종료 코드 0으로 통과했고 전체 72 SVG/PNG의 deterministic byte equality, Skillstead lint, `2800×1800`, IEND 완결성을 확인했습니다. 기준 `fb0402ee5eebf008d567f4cec5bcb7784941ff5e` 대비 CA-S01/S06 4개 asset 외 예상 밖 drift는 0입니다.
+
+## Integration Final QA — 2026-08-07
+
+- 도구 신원: local `view_image`만 사용했고 browser는 열지 않았습니다. renderer는 `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` (`Google Chrome 151.0.7922.108`)이며, `products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs`는 `shared/vendor/skillstead/svg-infographic/0.8.3`을 해석합니다. `vendor.lock.json`의 패키지 버전도 `0.8.3`입니다.
+- 자동 검사: `npm run check:guide-diagrams`와 `npm run validate:guides`는 종료 코드 0입니다. 독립 인벤토리는 생성 source 72개, `diagram-manifest.json` 90개를 확인했습니다. wrapper로 72 SVG를 한 번에 lint하여 `check-svg: 0 error(s), 0 warning(s) across 72 file(s)`를 확인했습니다. 90 SVG 모두 `viewBox`/size `1400×900`, `role="img"`/`aria-label`, active content 없음이며 생성 72개는 추가로 `<title>/<desc>`를 가집니다. 90 PNG 모두 `2800×1800`, PNG signature, 단일·정확한 IEND 종료를 만족합니다.
+- longest 선정 방법: 각 skill source를 `renderDiagramSvg`로 렌더한 뒤 실제 `<text>` 노드의 XML-decoded Unicode code point를 합산하고, 내림차순 후 ID 오름차순으로 동률을 해소했습니다. Studio 15개 중 `ST-S01`은 710자, Career 15개 중 `CA-S01`은 1,384자로 가장 길었습니다. 이 방식은 실제 card·semantic rail·footer의 line pressure를 포함합니다.
+
+| ID | high 검사 | original 검사 | 관찰 |
+| --- | --- | --- | --- |
+| `AUD-01` | 통과 | 통과 | 4개 학습 card와 footer가 좌→우 계층으로 읽히며 glyph/tofu·overflow 없음 |
+| `AUD-06` | 통과 | 통과 | 평가→기준→큐→피드백 순서, 대비와 open-V connector가 명확함 |
+| `ST-C03` | 통과 | 통과 | 5개 competency card, exact artifact IDs와 semantic rail이 card/rail 안에 보존됨 |
+| `ST-G01` | 통과 | 통과 | 두 선택지 branch가 재결합 기준으로 향하고 수직 4→5 connector도 12px target gap을 유지함 |
+| `ST-S01` | 통과 | 통과 | Studio longest: trigger→입력→work→output→next route 및 9개 route rail이 잘림 없이 읽힘 |
+| `CA-C05` | 통과 | 통과 | evidence→owned work→human review→boundary→output 흐름, 좌·우 semantic rail과 footer의 source 의미가 모두 containment 안에 있음 |
+| `CA-T09` | 통과 | 통과 | 두 branch, Career reviewer, non-guarantee boundary와 failure/preserve/confirm/resume footer가 겹치지 않음 |
+| `CA-S01` | 통과 | 통과 | Career longest: 10 ordered authority route와 reviewer·boundary·failure·resume rail/route footer가 완전하며, 압축된 작은 rail text도 누락·잘림 없음 |
+
+- 공통 시각 판정: 8개 모두 high/original에서 CJK·Latin tofu, clipping, card overlap, connector endpoint 결함을 발견하지 못했습니다. connector는 충분한 shaft와 open-V head, card border 전 12px gap을 유지하며 제목/eyebrow/전체 route와 footer/semantic rail의 source fidelity 및 대비가 정상입니다.
+- 수정: 없음. source와 manifest는 변경하지 않았고 QA evidence만 추가했습니다.
