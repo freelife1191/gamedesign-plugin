@@ -85,6 +85,7 @@ function inlineCodeSpan(source, start) {
   let length = 1;
   while (source[start + length] === "`") length += 1;
   for (let cursor = start + length; cursor < source.length;) {
+    if (source[cursor] === "\0") return undefined;
     if (source[cursor] !== "`" || escaped(source, cursor)) {
       cursor += 1;
       continue;
@@ -145,17 +146,15 @@ function markdownContainer(source) {
     cursor += match[0].length;
     quoteDepth += 1;
   }
-  const list = /^(?: {0,3})(?:[-+*]|\d{1,9}[.)])[ \t]+/u.exec(source.slice(cursor));
-  if (list) cursor += list[0].length;
-  return { contentStart: cursor, quoteDepth, list: Boolean(list) };
+  return { contentStart: cursor, quoteDepth, listId: undefined, scope: quoteDepth > 0 ? `quote:${quoteDepth}` : "root" };
 }
 
 function rawHtmlBlockStart(line) {
-  const source = line.source.slice(line.container.contentStart);
-  const terminated = /^<(script|pre|style|textarea)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
-  if (terminated) return { tag: terminated, endsOnBlank: false };
-  const blankTerminated = /^<(div|details)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
-  if (blankTerminated) return { tag: blankTerminated, endsOnBlank: true };
+  const source = line.content;
+  const terminated = /^ {0,3}<(script|pre|style|textarea)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
+  if (terminated) return { tag: terminated, termination: "tag" };
+  const blankTerminated = /^ {0,3}<(div|details)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
+  if (blankTerminated) return { tag: blankTerminated, termination: "blank" };
   return undefined;
 }
 
@@ -182,53 +181,71 @@ function structuralLines(markdown) {
     const source = rawLineWithCarriageReturn.endsWith("\r")
       ? rawLineWithCarriageReturn.slice(0, -1)
       : rawLineWithCarriageReturn;
-    return { line: index + 1, source, kind: initialLineKind(source), container: markdownContainer(source) };
+    return { line: index + 1, source, container: markdownContainer(source) };
   });
 
+  let activeLists = [];
+  for (const line of lines) {
+    const source = line.source.slice(line.container.contentStart);
+    const list = /^( {0,3})(?:[-+*]|\d{1,9}[.)])[ \t]+/u.exec(source);
+    if (list) {
+      const indentation = list[1].length;
+      activeLists = activeLists.filter((entry) => entry.quoteDepth !== line.container.quoteDepth || entry.indentation < indentation);
+      const entry = {
+        id: `list:${line.line}`,
+        quoteDepth: line.container.quoteDepth,
+        indentation,
+        contentIndentation: list[0].length,
+      };
+      activeLists.push(entry);
+      line.container.listId = entry.id;
+      line.container.contentStart += list[0].length;
+    } else {
+      const indentation = /^ */u.exec(source)[0].length;
+      const entry = [...activeLists].reverse().find((candidate) => (
+        candidate.quoteDepth === line.container.quoteDepth
+        && (source.trim() === "" || indentation >= candidate.contentIndentation)
+      ));
+      if (entry) {
+        line.container.listId = entry.id;
+        line.container.contentStart += entry.contentIndentation;
+      } else if (source.trim() !== "") {
+        activeLists = activeLists.filter((candidate) => candidate.quoteDepth < line.container.quoteDepth);
+      }
+    }
+    line.container.scope = line.container.listId ?? (line.container.quoteDepth > 0 ? `quote:${line.container.quoteDepth}` : "root");
+    line.content = line.source.slice(line.container.contentStart);
+    line.kind = initialLineKind(line.content);
+  }
+
   for (let index = 1; index < lines.length; index += 1) {
-    const underline = setextUnderline(lines[index].source);
+    const underline = setextUnderline(lines[index].content);
     if (underline && lines[index - 1].kind === "plain") {
       lines[index - 1].kind = "setext-heading";
       lines[index].kind = "setext-underline";
     }
   }
   for (let index = 1; index < lines.length; index += 1) {
-    if (!tableDelimiter(lines[index].source) || !tableRow(lines[index - 1].source)) continue;
+    if (!tableDelimiter(lines[index].content) || !tableRow(lines[index - 1].content)) continue;
     lines[index - 1].kind = "table";
     lines[index].kind = "table";
-    for (let cursor = index + 1; cursor < lines.length && tableRow(lines[cursor].source); cursor += 1) {
+    for (let cursor = index + 1; cursor < lines.length && tableRow(lines[cursor].content); cursor += 1) {
       lines[cursor].kind = "table";
     }
   }
 
   let segment = -1;
   let previousKey;
-  let activeList;
   for (const line of lines) {
-    const content = line.source.slice(line.container.contentStart);
-    const directList = line.kind === "unordered-list" || line.kind === "ordered-list" || line.container.list;
-    const listContinuation = !directList
-      && activeList?.quoteDepth === line.container.quoteDepth
-      && line.kind === "plain"
-      && /^(?: {1,3}|\t)\S/u.test(content);
-    const quoteBlank = line.container.quoteDepth > 0 && content.trim() === "";
     let key;
-    if (directList) {
-      key = `list:${line.line}`;
-      activeList = { key, quoteDepth: line.container.quoteDepth };
-    } else if (listContinuation) {
-      key = activeList.key;
+    if (line.container.listId) {
+      key = line.container.listId;
     } else if (line.kind === "table") {
       key = `table:${line.line}`;
-      activeList = undefined;
-    } else if (line.kind === "blockquote" && !quoteBlank) {
+    } else if (line.container.quoteDepth > 0 && line.kind !== "blank") {
       key = `blockquote:${line.container.quoteDepth}`;
-      activeList = undefined;
     } else if (line.kind === "plain") {
       key = "plain";
-      activeList = undefined;
-    } else {
-      activeList = undefined;
     }
     if (!key) {
       previousKey = undefined;
@@ -264,6 +281,10 @@ function inlineCodeRanges(lines) {
       for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
         source += lines[piece.lineIndex].source[cursor];
         positions.push({ lineIndex: piece.lineIndex, cursor });
+        if (lines[piece.lineIndex].kind === "table" && lines[piece.lineIndex].source[cursor] === "|") {
+          source += "\0";
+          positions.push(undefined);
+        }
       }
     }
     for (let cursor = 0; cursor < source.length;) {
@@ -298,6 +319,10 @@ function maskInlineParagraph(lines, pieces) {
     for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
       paragraph += block.source[cursor];
       positions.push({ lineIndex: piece.lineIndex, cursor });
+      if (block.kind === "table" && block.source[cursor] === "|") {
+        paragraph += "\0";
+        positions.push(undefined);
+      }
     }
   }
   for (let cursor = 0; cursor < paragraph.length;) {
@@ -333,56 +358,60 @@ export function scanVisibleMarkdown(markdown) {
 
   let fence;
   let rawHtml;
-  let inComment = false;
+  let comment;
   let activeCodeRange;
   let activeSegment;
   for (const [lineIndex, line] of lines.entries()) {
     const hide = (start, end) => line.hidden.fill(true, start, end);
+    const source = line.content;
     if (line.segment !== activeSegment) activeCodeRange = undefined;
     activeSegment = line.segment;
+    if (fence?.scope !== line.container.scope) fence = undefined;
+    if (rawHtml?.scope !== line.container.scope) rawHtml = undefined;
+    if (comment?.scope !== line.container.scope) comment = undefined;
     if (fence) {
       activeCodeRange = undefined;
       hide(0, line.source.length);
-      if (closesFence(line.source.slice(line.container.contentStart), fence)) fence = undefined;
+      if (closesFence(source, fence)) fence = undefined;
       continue;
     }
     if (rawHtml) {
       activeCodeRange = undefined;
       hide(0, line.source.length);
-      const source = line.source.slice(line.container.contentStart);
-      if (closesRawHtmlBlock(source, rawHtml) || (rawHtml.endsOnBlank && source.trim() === "")) rawHtml = undefined;
+      if ((rawHtml.termination === "tag" && closesRawHtmlBlock(source, rawHtml))
+        || (rawHtml.termination === "blank" && source.trim() === "")) rawHtml = undefined;
       continue;
     }
-    if (!inComment && line.kind === "indented-code") {
+    if (!comment && line.kind === "indented-code") {
       activeCodeRange = undefined;
       hide(0, line.source.length);
       continue;
     }
-    if (!inComment && fenceOpener(line.source.slice(line.container.contentStart))) {
+    if (!comment && fenceOpener(source)) {
       activeCodeRange = undefined;
-      fence = fenceOpener(line.source.slice(line.container.contentStart));
+      fence = { ...fenceOpener(source), scope: line.container.scope };
       hide(0, line.source.length);
       continue;
     }
-    if (!inComment) {
+    if (!comment) {
       const html = rawHtmlBlockStart(line);
       if (html) {
         activeCodeRange = undefined;
         hide(0, line.source.length);
-        if (!closesRawHtmlBlock(line.source.slice(line.container.contentStart), html)) rawHtml = html;
+        if (html.termination === "blank" || !closesRawHtmlBlock(source, html)) rawHtml = { ...html, scope: line.container.scope };
         continue;
       }
     }
 
     for (let cursor = 0; cursor < line.source.length;) {
-      if (inComment) {
+      if (comment) {
         const end = line.source.indexOf("-->", cursor);
         if (end === -1) {
           hide(cursor, line.source.length);
           break;
         }
         hide(cursor, end + 3);
-        inComment = false;
+        comment = undefined;
         cursor = end + 3;
         continue;
       }
@@ -395,7 +424,7 @@ export function scanVisibleMarkdown(markdown) {
       }
       if (line.source.startsWith("<!--", cursor) && !escaped(line.source, cursor)) {
         hide(cursor, cursor + 4);
-        inComment = true;
+        comment = { scope: line.container.scope };
         cursor += 4;
         continue;
       }

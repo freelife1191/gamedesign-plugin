@@ -274,7 +274,7 @@ const containerBoundaries = [
   ["gfm-table", ["| heading |", "| --- |", "| cell |"]],
   ["gfm-table-no-outer", ["heading | value", "--- | ---", "cell | data"]],
   ["link-reference", ["[guide-ref]: target.md"]],
-  ["html-block", ["<div>html block</div>"]],
+  ["html-block", ["<div>html block</div>", ""]],
 ];
 
 test("Markdown container matrix prevents inline runs from crossing block boundaries", () => {
@@ -466,6 +466,7 @@ test("validateUserGuides resolves CommonMark delimiter-run heading anchors witho
       "## ___foo__ bar_",
       "## **bold *italic***",
       "## foo_bar",
+      "## foo_bar",
     ].join("\n"));
     await writeFile(guide, [
       "prompt-only select required all gpt-image-2 low",
@@ -473,10 +474,61 @@ test("validateUserGuides resolves CommonMark delimiter-run heading anchors witho
       "[split underscore](delimiter-runs.md#foo-bar)",
       "[nested stars](delimiter-runs.md#bold-italic)",
       "[intraword underscore](delimiter-runs.md#foo_bar)",
+      "[duplicate intraword underscore](delimiter-runs.md#foo_bar-1)",
     ].join("\n"));
 
     const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
     assert.equal(result.ok, true, result.errors.join("\n"));
+  });
+});
+
+test("validateUserGuides keeps effective list, table-cell, quote, and fence containers distinct", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    const cases = [
+      ["four-space list continuation", ["- first paragraph", "    [visible](missing-four-space.md)"], "missing-four-space.md"],
+      ["table cells", ["| `first cell | [visible](missing-table-cell.md) last cell` |", "| --- | --- |"], "missing-table-cell.md"],
+      ["quote unclosed fence", ["> ```md", "> [hidden](missing-hidden-quote-fence.md)", "[visible](missing-quote-fence.md)"], "missing-quote-fence.md", "missing-hidden-quote-fence.md"],
+      ["list unclosed fence", ["- ```md", "  [hidden](missing-hidden-list-fence.md)", "[visible](missing-list-fence.md)"], "missing-list-fence.md", "missing-hidden-list-fence.md"],
+      ["quoted indented code", [">     [hidden](missing-quoted-indent.md)"], undefined, "missing-quoted-indent.md"],
+    ];
+
+    for (const [label, lines, visibleTarget, hiddenTarget] of cases) {
+      await writeFile(guide, `${prefix}${lines.join("\n")}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      if (visibleTarget) {
+        assert.equal(result.ok, false, label);
+        assert.ok(result.errors.some((error) => error.includes(visibleTarget)), `${label}: ${result.errors.join("\n")}`);
+      } else {
+        assert.equal(result.ok, true, `${label}: ${result.errors.join("\n")}`);
+      }
+      assert.equal(result.errors.some((error) => error.includes(hiddenTarget)), false, `${label}: ${result.errors.join("\n")}`);
+    }
+  });
+});
+
+test("validateUserGuides scopes raw HTML and comments to their opening containers", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    const cases = [
+      ["div closes on blank", ["<div>", "[hidden](missing-hidden-div.md)", "</div>", "[still-hidden](missing-still-hidden-div.md)", "", "[visible](missing-visible-div.md)"], "missing-visible-div.md", ["missing-hidden-div.md", "missing-still-hidden-div.md"]],
+      ["details closes on blank", ["<details>", "[hidden](missing-hidden-details.md)", "</details>", "[still-hidden](missing-still-hidden-details.md)", "", "[visible](missing-visible-details.md)"], "missing-visible-details.md", ["missing-hidden-details.md", "missing-still-hidden-details.md"]],
+      ["quote unclosed script", ["> <script>", "> [hidden](missing-hidden-quote-script.md)", "[visible](missing-quote-script.md)"], "missing-quote-script.md", ["missing-hidden-quote-script.md"]],
+      ["list unclosed comment", ["- <!--", "  [hidden](missing-hidden-list-comment.md)", "[visible](missing-list-comment.md)"], "missing-list-comment.md", ["missing-hidden-list-comment.md"]],
+      ["effective list indentation HTML", ["- first paragraph", "    <script>", "    [hidden](missing-hidden-indented-script.md)", "    </script>", "    [visible](missing-indented-script.md)"], "missing-indented-script.md", ["missing-hidden-indented-script.md"]],
+    ];
+
+    for (const [label, lines, visibleTarget, hiddenTargets] of cases) {
+      await writeFile(guide, `${prefix}${lines.join("\n")}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes(visibleTarget)), `${label}: ${result.errors.join("\n")}`);
+      for (const hiddenTarget of hiddenTargets) {
+        assert.equal(result.errors.some((error) => error.includes(hiddenTarget)), false, `${label}: ${result.errors.join("\n")}`);
+      }
+    }
   });
 });
 
