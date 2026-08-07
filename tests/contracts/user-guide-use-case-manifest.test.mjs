@@ -154,6 +154,9 @@ const CAREER_TARGET_STUDIO_LINK_CONTRACT = Object.freeze({
   "CA-T09": "../../game-design-studio/use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전",
   "CA-T10": "../../game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력",
 });
+const CAREER_TARGET_STUDIO_HANDOFF_LINE = "공개 가능한 evidence summary/proof project handoff만 연결합니다.";
+const CAREER_TARGET_STUDIO_BOUNDARY_LINE = "Studio 원본 Artifact를 병합하거나 복제하지 않습니다.";
+const CAREER_TARGET_STUDIO_TRANSFER_PREDICATE = /병합|복사|복제|가져오기|import|merge|copy/iu;
 const CAREER_TARGET_FAILURE_LABELS = Object.freeze(["실패", "보존", "사람 확인", "재개"]);
 const CAREER_TARGET_FAILURE_CONTRACT = Object.freeze({
   "CA-T01": ["상태 전이 또는 예외 표가 관찰되지 않으면 claim을 보류합니다.", "상태 전이, 예외 표, 규칙표와 반례.", "시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다.", "확인된 잠금 해제 기능의 규칙표에서 재개합니다."],
@@ -1437,6 +1440,14 @@ function assertCareerTargetOutputOrder({ results, review, entry }) {
   assert.ok(review.includes(checkpoint), `${entry.id} review checkpoint matches manifest output order`);
 }
 
+function assertCareerTargetStudioBoundary({ extension, id }) {
+  assert.equal(literalCount(extension, CAREER_TARGET_STUDIO_HANDOFF_LINE), 1, `${id} canonical Studio handoff line`);
+  const logicalLines = extension.split(/(?<=\.)\s+|\n+/u).map((line) => line.trim()).filter(Boolean);
+  const transferLines = logicalLines.filter((line) => /Studio\s+(?:원본\s+)?Artifact|원본/iu.test(line)
+    && CAREER_TARGET_STUDIO_TRANSFER_PREDICATE.test(line));
+  assert.deepEqual(transferLines, [CAREER_TARGET_STUDIO_BOUNDARY_LINE], `${id} Studio transfer line contract`);
+}
+
 function assertCareerTargetSemantics({ conceptScenarios, entries, inventory }) {
   assert.deepEqual(Object.keys(CAREER_TARGET_HEADINGS), entries.map(({ id }) => id), "Career target heading coverage");
   assert.deepEqual(Object.keys(CAREER_TARGET_SEMANTIC_CONTRACT), entries.map(({ id }) => id), "Career target semantic coverage");
@@ -1491,8 +1502,7 @@ function assertCareerTargetSemantics({ conceptScenarios, entries, inventory }) {
     assert.match(review, /\*\*사람 결정:\*\*/);
     assert.match(review, /자동.*승인(?:을 )?(?:하지 않|이? (?:아니|아닙)|되지는 않)|승인을 대신하지 않/);
     const extension = byHeading.get("포트폴리오·실무 확장");
-    assert.match(extension, /공개 가능한 evidence summary\/proof project handoff만 연결합니다\./);
-    assert.match(extension, /Studio 원본 Artifact를 병합하거나 복제하지 않습니다\./);
+    assertCareerTargetStudioBoundary({ extension, id: entry.id });
     const next = byHeading.get("자기점검과 다음 학습");
     for (const route of contract.nextRoute) assert.ok(next.includes(route), `${entry.id} next route: ${route}`);
     assertCareerTargetFailureGrammar({ failure: byHeading.get("실패·재개"), id: entry.id, reviewOwner: fields.get("review owner") });
@@ -1513,7 +1523,7 @@ function assertCareerTargetStudioLinks({ conceptScenarios, entries, studioCompet
     const [relativePath, anchor] = target.split("#");
     assert.equal(path.resolve(repoRoot, "guides", "game-design-career", "use-cases", relativePath), studioFile, `${entry.id} Studio link resolves to competency guide`);
     assert.ok(studioAnchors.has(anchor), `${entry.id} Studio link resolves to anchor: ${anchor}`);
-    assert.doesNotMatch(extension, /Studio(?:\s+원본)?\s*Artifact(?:\s+원본)?(?:를|을|은|는)?[\s\S]{0,80}?(?:병합|복제|복사|import)(?:할 수 있|해도 됩|을 허용|합니다|한다)/iu, `${entry.id} rejects affirmative Studio artifact transfer`);
+    assertCareerTargetStudioBoundary({ extension, id: entry.id });
   }
 }
 
@@ -1926,7 +1936,6 @@ test("Career target contracts reject wrong-valid target fields, unsafe claims, S
   const t02Current = sectionByHeading(sectionByHeading(conceptScenarios, 2, t02), 3, "현재 상황과 목표");
   const t01Cli = sectionByHeading(sectionByHeading(conceptScenarios, 2, t01), 3, "Codex CLI 요청문");
   const t01Results = sectionByHeading(sectionByHeading(conceptScenarios, 2, t01), 3, "결과물");
-  const t01Failure = sectionByHeading(sectionByHeading(conceptScenarios, 2, t01), 3, "실패·재개");
   const t01Extension = sectionByHeading(sectionByHeading(conceptScenarios, 2, t01), 3, "포트폴리오·실무 확장");
   const t01StructuredFailure = CAREER_TARGET_FAILURE_LABELS
     .map((label, index) => `- **${label}:** ${CAREER_TARGET_FAILURE_CONTRACT["CA-T01"][index]}`)
@@ -1957,23 +1966,23 @@ test("Career target contracts reject wrong-valid target fields, unsafe claims, S
   const studioMutations = [
     ["wrong-valid Studio competency", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension.replace(CAREER_TARGET_STUDIO_LINK_CONTRACT["CA-T01"], CAREER_TARGET_STUDIO_LINK_CONTRACT["CA-T02"])), /CA-T01 exact Studio target/],
     ["nonexistent Studio anchor", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension.replace("#st-c03-규칙상태예외데이터", "#st-c03-존재하지-않는-anchor")), /CA-T01 exact Studio target/],
-    ["affirmative Studio merge", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 복사하거나 import합니다."), /CA-T01 rejects affirmative Studio artifact transfer/],
+    ["Studio copy permission", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본의 복사를 허용합니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio clone permission", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본의 복제를 허용합니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio import permission", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본의 import를 허용합니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio merge permission", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 merge합니다."), /CA-T01 Studio transfer line contract/],
+    ["Studio copy permission in English", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio Artifact 원본을 Career 문서에 copy합니다."), /CA-T01 Studio transfer line contract/],
+    ["canonical boundary plus affirmative transfer", replaceCasePart(conceptScenarios, t01, "포트폴리오·실무 확장", t01Extension + "\n\nStudio 원본 Artifact를 병합하거나 복제하지 않습니다. Studio Artifact 원본의 복사를 허용합니다."), /CA-T01 Studio transfer line contract/],
   ];
   for (const [label, mutation, expectedFailure] of studioMutations) {
     assert.throws(() => assertCareerTargetStudioLinks({ conceptScenarios: mutation, entries, studioCompetencyPaths }), expectedFailure, label);
   }
 
-  const roleRows = tableRows(conceptScenarios, "직무별 비교");
-  const t01Role = roleRows.find((row) => row.ID === "CA-T01");
-  const t02Role = roleRows.find((row) => row.ID === "CA-T02");
-  const comparisonMutations = [
-    ["comparison role swap", replaceTableCell(replaceTableCell(conceptScenarios, "직무별 비교", "CA-T01", "목표 직무", t02Role["목표 직무"]), "직무별 비교", "CA-T02", "목표 직무", t01Role["목표 직무"]), /CA-T01 comparison 목표 직무/],
-  ];
+  const comparisonMutations = [];
   for (const [heading, leftId, rightId] of [["직무별 비교", "CA-T01", "CA-T02"], ["경험·전환·성장 단계 비교", "CA-T08", "CA-T09"]]) {
     const rows = tableRows(conceptScenarios, heading);
     const left = rows.find((row) => row.ID === leftId);
     const right = rows.find((row) => row.ID === rightId);
-    for (const column of ["problem types", "evidence artifacts", "common review questions", "boundaries", "관련 사례"]) {
+    for (const column of ["목표 직무", "problem types", "evidence artifacts", "common review questions", "boundaries", "관련 사례"]) {
       comparisonMutations.push([
         `${heading} ${column} swap`,
         replaceTableCell(replaceTableCell(conceptScenarios, heading, leftId, column, right[column]), heading, rightId, column, left[column]),
