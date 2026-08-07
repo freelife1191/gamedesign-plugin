@@ -2007,7 +2007,7 @@ test("complete validation ignores fenced, commented, and unowned use-case marker
     ["unowned direct-skill requests", skillDocument, (markdown) => `${markdown
       .replace("## Codex App 요청 예시", "## Codex App 실행 예시")
       .replace("## Codex CLI 요청 예시", "## Codex CLI 실행 예시")}\n\n# 다른 스킬 부록\n\n## Codex App 요청 예시\n\n## Codex CLI 요청 예시\n`],
-    ["fenced FAQ heading", faqDocument, (markdown) => `${markdown.replace(faqHeading, faqHeading.replace("### Q01.", "### FAQ01."))}\n\n  ~~~~markdown\n${faqHeading}\n  ~~~~~\n`],
+    ["fenced FAQ heading", faqDocument, (markdown) => `${markdown.replace(faqHeading, faqHeading.replace("### Q01.", "### FAQ01."))}\n\n~~~markdown\n${faqHeading}\n~~~\n`],
     ["commented FAQ heading", faqDocument, (markdown) => `${markdown.replace(faqHeading, faqHeading.replace("### Q01.", "### FAQ01."))}\n\n<!-- hidden FAQ\n${faqHeading}\n-->\n`],
     ["fenced audience owner and requests", audienceDocument, (markdown) => markdown
       .replace(audienceApp, audienceApp.replace("**App 요청:**", "**App 실행:**"))
@@ -2030,6 +2030,15 @@ test("complete validation ignores fenced, commented, and unowned use-case marker
       .replace("### Codex App 요청문", "### Codex App 실행문")
       .replace("### Codex CLI 요청문", "### Codex CLI 실행문")
       .replace("## ST-C01 플레이어 경험과 게임 비전", "## ST-C01 플레이어 경험과 게임 비전\n\n~~~text\n### Codex App 요청문\n### Codex CLI 요청문\n~~~")],
+    ["raw HTML case requests", caseDocument, (markdown) => markdown
+      .replace("### Codex App 요청문", "### Codex App 실행문")
+      .replace("### Codex CLI 요청문", "### Codex CLI 실행문")
+      .replace("## ST-C01 플레이어 경험과 게임 비전", "## ST-C01 플레이어 경험과 게임 비전\n\n<script>\n### Codex App 요청문\n### Codex CLI 요청문\n</script>")],
+    ["multiline inline-code audience requests", audienceDocument, (markdown) => markdown
+      .replace(audienceApp, audienceApp.replace("**App 요청:**", "**App 실행:**"))
+      .replace(audienceCli, audienceCli.replace("**CLI 요청:**", "**CLI 실행:**"))
+      .replace(audienceHeading, `${audienceHeading}\n\n\`hidden request markers\n${audienceApp}\n${audienceCli}\nhidden request markers\``)],
+    ["indented-code FAQ heading", faqDocument, (markdown) => `${markdown.replace(faqHeading, faqHeading.replace("### Q01.", "### FAQ01."))}\n\n    ${faqHeading}\n`],
   ];
   const outcomes = [];
   for (const [label, filename, mutate] of mutations) {

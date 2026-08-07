@@ -1,5 +1,9 @@
 import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import {
+  collectMarkdownHeadings,
+  scanVisibleMarkdown,
+} from "./markdown-visibility.mjs";
 
 export const USE_CASE_EXPECTED_COUNTS = Object.freeze({
   audiencePaths: 6,
@@ -41,94 +45,17 @@ function isSafeRelativePath(value) {
   return !value.split(/[\\/]+/).includes("..");
 }
 
-function githubAnchor(heading) {
-  return heading
-    .trim()
-    .toLowerCase()
-    .replace(/<[^>]*>/g, "")
-    .replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "")
-    .replace(/\s+/g, "-");
-}
-
-function stripHtmlComments(line, state) {
-  let cursor = 0;
-  let visible = "";
-  while (cursor < line.length) {
-    if (state.inHtmlComment) {
-      const end = line.indexOf("-->", cursor);
-      if (end === -1) return visible;
-      state.inHtmlComment = false;
-      cursor = end + 3;
-      continue;
-    }
-    const start = line.indexOf("<!--", cursor);
-    if (start === -1) return visible + line.slice(cursor);
-    visible += line.slice(cursor, start);
-    state.inHtmlComment = true;
-    cursor = start + 4;
-  }
-  return visible;
-}
-
-function fenceRun(line) {
-  return /^ {0,3}(`+|~+)/u.exec(line)?.[1];
-}
-
-function visibleMarkdownLines(markdown) {
-  const visibleLines = [];
-  const commentState = { inHtmlComment: false };
-  let fence;
-  for (const rawLine of markdown.split("\n")) {
-    if (fence) {
-      const run = fenceRun(rawLine);
-      const suffix = run ? rawLine.slice(rawLine.indexOf(run) + run.length) : "";
-      if (run?.[0] === fence.character && run.length >= fence.length && /^[ \t]*$/u.test(suffix)) fence = undefined;
-      visibleLines.push("");
-      continue;
-    }
-    const line = stripHtmlComments(rawLine, commentState);
-    const run = fenceRun(line);
-    if (run && run.length >= 3) {
-      const info = line.slice(line.indexOf(run) + run.length);
-      if (run[0] === "~" || !info.includes("`")) {
-        fence = { character: run[0], length: run.length };
-        visibleLines.push("");
-        continue;
-      }
-    }
-    visibleLines.push(line);
-  }
-  return visibleLines;
-}
-
-function isInlineCodeOnly(value) {
-  const trimmed = value.trim();
-  const opening = /^`+/u.exec(trimmed)?.[0];
-  const closing = /`+$/u.exec(trimmed)?.[0];
-  if (!opening || opening.length !== closing?.length || trimmed.length <= opening.length * 2) return false;
-  return !trimmed.slice(opening.length, -closing.length).includes(opening);
-}
-
 function parseVisibleMarkdown(markdown) {
-  const lines = visibleMarkdownLines(markdown);
-  const headings = [];
-  const anchors = new Set();
-  for (const [lineIndex, line] of lines.entries()) {
-    const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/.exec(line);
-    if (!match) continue;
-    const text = match[2];
-    if (isInlineCodeOnly(text)) continue;
-    const base = githubAnchor(text);
-    if (!base) continue;
-    let anchor = base;
-    let suffix = 1;
-    while (anchors.has(anchor)) anchor = `${base}-${suffix++}`;
-    anchors.add(anchor);
-    headings.push({ anchor, level: match[1].length, lineIndex, text });
-  }
+  const lines = scanVisibleMarkdown(markdown);
+  const headings = collectMarkdownHeadings(markdown).map(({ anchor, level, line, label }) => ({
+    anchor,
+    level,
+    lineIndex: lines.findIndex((candidate) => candidate.line === line),
+    text: label,
+  }));
   const sections = new Map(headings.map((heading, index) => {
     const next = headings.slice(index + 1).find((candidate) => candidate.level <= heading.level);
-    return [heading.anchor, lines.slice(heading.lineIndex, next?.lineIndex ?? lines.length).join("\n")];
+    return [heading.anchor, lines.slice(heading.lineIndex, next?.lineIndex ?? lines.length).map(({ text }) => text).join("\n")];
   }));
   return {
     headings,
@@ -383,8 +310,8 @@ async function countFaqHeadings(repoRoot, errors) {
     try {
       await assertRegularContainedFile(repoRoot, filename);
       const markdown = await readFile(filename, "utf8");
-      count += parseVisibleMarkdown(markdown).headings.filter(
-        ({ level, text }) => level === 3 && /^Q\d{2}\.\s+\S.+$/u.test(text),
+      count += scanVisibleMarkdown(markdown).filter(
+        ({ text }) => /^ {0,3}###\s+Q\d{2}\.\s+\S.+$/u.test(text),
       ).length;
     } catch (error) {
       errors.push(`FAQ source must be an existing regular non-symlink file: ${relativePath} (${error.message})`);

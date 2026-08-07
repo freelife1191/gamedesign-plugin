@@ -6,7 +6,6 @@ import {
   parseViewBox,
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
-import { validateUseCaseGuides } from "./use-case-guides.mjs";
 
 export const PRODUCT_IDS = Object.freeze([
   "game-design-career",
@@ -1044,6 +1043,7 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
   let useCases;
   if (requireComplete) {
     try {
+      const { validateUseCaseGuides } = await import("./use-case-guides.mjs");
       useCases = await validateUseCaseGuides({ repoRoot: root, requireComplete: true, inventories });
       counts.audiencePaths = useCases.counts.audiencePaths;
       counts.useCases = useCases.counts.studioCases + useCases.counts.careerCases;
