@@ -164,17 +164,63 @@ function codeBlock(section, label) {
   return normalizeTableCell(match[1]);
 }
 
-function canonicalRepresentativeRoute(entry, source) {
+function outputContractIds(skillSource) {
+  if (!/^## Output Contract$/mu.test(skillSource)) return new Set();
+  const marker = "## Output Contract\n";
+  const start = skillSource.indexOf(marker);
+  const bodyStart = start + marker.length;
+  const next = skillSource.indexOf("\n## ", bodyStart);
+  const outputContract = skillSource.slice(bodyStart, next === -1 ? skillSource.length : next);
+  return new Set([...outputContract.matchAll(/`([a-z0-9-]+)`/gu)].map((match) => match[1]));
+}
+
+function routingResultContracts(routing) {
+  return [
+    ...routing.recipeContracts.flatMap((recipe) => recipe.artifactContracts.map((contract) => ({
+      id: contract.expectedOutputId,
+      owner: contract.ownerSkill,
+      path: contract.path,
+    }))),
+    ...routing.faqContracts.flatMap((faq) => faq.expectedOutputs
+      .filter((output) => output.kind === "template")
+      .map((output) => ({ id: output.id, owner: faq.primarySkill, path: output.path }))),
+  ];
+}
+
+async function authorizedRepresentativeResults(entry, routing, skillOutputIds) {
+  const resultContracts = routingResultContracts(routing);
+  const results = [];
+  for (const output of entry.outputs) {
+    const owners = entry.skills.filter((skill) => skillOutputIds.get(skill)?.has(output));
+    if (owners.length === 0) continue;
+    assert.equal(owners.length, 1, `${entry.id}: ${output} has one ordered-path SKILL owner`);
+    const owner = owners[0];
+    const contracts = resultContracts.filter((contract) => contract.id === output && contract.owner === owner);
+    assert.ok(contracts.length > 0, `${entry.id}: ${output} has routing root owned by ${owner}`);
+    const roots = [...new Set(contracts.map((contract) => contract.path))];
+    assert.equal(roots.length, 1, `${entry.id}: ${output} has one exact routing root`);
+    const template = await readFile(path.join(pluginRoot, "assets/templates", output, "content.md"), "utf8");
+    assert.match(template, new RegExp(`^artifact_id: ${output}$`, "mu"), `${entry.id}: ${output} registered template`);
+    results.push({ id: output, owner, path: roots[0] });
+  }
+  return results;
+}
+
+async function canonicalRepresentativeRoute(entry, source, routing, skillOutputIds) {
   const card = extractCaseCard(source, entry.id);
   const review = extractCaseSubsection(card, "검토와 승인");
   const readOrder = /\*\*읽는 순서:\*\* ([^.]+)입니다\./u.exec(review);
   assert.ok(readOrder, `${entry.id}: canonical read order`);
+  const title = new RegExp(`^## ${entry.id} (.+)$`, "mu").exec(source);
+  assert.ok(title, `${entry.id}: canonical title`);
+  const results = await authorizedRepresentativeResults(entry, routing, skillOutputIds);
   return {
     caseId: entry.id,
+    case: `\`${entry.id}\` — ${title[1]} — ${entry.audiences.join(" · ")}`,
     input: extractCaseSubsection(card, "준비 입력").split("\n").map((line) => line.trim()).join("<br>"),
     skills: entry.skills.map((skill) => `$game-design-career:${skill}`).join(" → "),
     directRequest: codeBlock(extractCaseSubsection(card, "Codex CLI 요청문"), `${entry.id}: direct request`),
-    results: entry.outputs.map((output) => `\`${output}\` → \`game-design-career/<career-id>/${output}/\``).join("<br>"),
+    results: results.map(({ id, owner, path: resultPath }) => `\`${id}\` ($game-design-career:${owner}) → \`${resultPath}\``).join("<br>"),
     readOrder: readOrder[1],
   };
 }
@@ -183,24 +229,73 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
   const { headers, rows } = extractMarkdownTable(markdown, "활용 시작점");
   assert.deepEqual(
     headers,
-    ["사례", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · root", "사례 읽는 순서"],
+    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · owner · root", "사례 읽는 순서"],
     `${label}: representative table headers`,
   );
-  const byCase = new Map(rows.map((row) => [row[0].match(/`(CA-[TC]\d+)`/u)?.[1], row]));
-  assert.equal(byCase.size, expected.length, `${label}: representative case count`);
-  for (const route of expected) {
-    const row = byCase.get(route.caseId);
-    assert.ok(row, `${label}: ${route.caseId} row`);
-    assert.equal(row.length, headers.length, `${label}: ${route.caseId} cell count`);
-    assert.deepEqual(row, [
-      `\`${route.caseId}\``, route.input, route.skills, route.directRequest, route.results, route.readOrder,
-    ], `${label}: ${route.caseId} exact route cells`);
-    assert.doesNotMatch(row[4], /(?:^|\/)\.\.(?:\/|$)/u, `${label}: ${route.caseId} result root cannot escape`);
+  assert.equal(rows.length, expected.length, `${label}: representative case count`);
+  const expectedRows = expected.map((route) => [route.case, route.input, route.skills, route.directRequest, route.results, route.readOrder]);
+  assert.deepEqual(rows, expectedRows, `${label}: representative rows and order`);
+  for (const row of rows) {
+    assert.doesNotMatch(row[4], /(?:^|\/)\.\.(?:\/|$)/u, `${label}: result root cannot escape`);
   }
 }
 
 function assertNoHiringGuarantee(markdown, label) {
-  assert.doesNotMatch(markdown, /합격(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)|채용(?:을)?\s*(?:보장|확정)(?:합니다|됩니다|될 수)/u, `${label}: no hiring guarantee`);
+  assert.doesNotMatch(markdown, /(?:합격|취업|채용)[^.\n]{0,24}(?:100%\s*)?(?:보장|약속|확정)(?!(?:하지|할\s*수\s*없|못|되지\s*않))/u, `${label}: no affirmative hiring guarantee`);
+}
+
+function mutateMarkdownTable(markdown, heading, mutate) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `${heading}: mutation table section`);
+  const sectionStart = start + marker.length;
+  const nextSection = markdown.indexOf("\n## ", sectionStart);
+  const sectionEnd = nextSection === -1 ? markdown.length : nextSection;
+  const lines = markdown.slice(sectionStart, sectionEnd).split("\n");
+  const headerIndex = lines.findIndex((line) => line.startsWith("|"));
+  const dataStart = headerIndex + 2;
+  const dataEnd = dataStart + lines.slice(dataStart).findIndex((line) => !line.startsWith("|"));
+  const end = dataEnd === dataStart - 1 ? lines.length : dataEnd;
+  const rows = lines.slice(dataStart, end).map((line) => line.split("|").slice(1, -1).map(normalizeTableCell));
+  mutate(rows);
+  lines.splice(dataStart, end - dataStart, ...rows.map((row) => `| ${row.join(" | ")} |`));
+  return `${markdown.slice(0, sectionStart)}${lines.join("\n")}${markdown.slice(sectionEnd)}`;
+}
+
+function assertRepresentativeMutationMatrix(markdown, expected, label) {
+  const { rows } = extractMarkdownTable(markdown, "활용 시작점");
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    for (let cellIndex = 0; cellIndex < rows[rowIndex].length; cellIndex += 1) {
+      const deleted = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][cellIndex] = ""; });
+      assert.throws(() => assertRepresentativeRouteTable(deleted, expected, `${label}: deleted ${rowIndex}/${cellIndex}`), `${label}: deletion ${rowIndex}/${cellIndex}`);
+      const partner = rows.findIndex((candidate, index) => index !== rowIndex && candidate[cellIndex] !== rows[rowIndex][cellIndex]);
+      assert.notEqual(partner, -1, `${label}: distinct cross-row value ${rowIndex}/${cellIndex}`);
+      const swapped = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
+        [mutated[rowIndex][cellIndex], mutated[partner][cellIndex]] = [mutated[partner][cellIndex], mutated[rowIndex][cellIndex]];
+      });
+      assert.throws(() => assertRepresentativeRouteTable(swapped, expected, `${label}: cross-row swap ${rowIndex}/${cellIndex}`), `${label}: cross-row swap ${rowIndex}/${cellIndex}`);
+    }
+    const duplicated = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex] = [...mutated[(rowIndex + 1) % mutated.length]]; });
+    assert.throws(() => assertRepresentativeRouteTable(duplicated, expected, `${label}: duplicate ${rowIndex}`), `${label}: duplicate ${rowIndex}`);
+    const unknownSkill = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
+      mutated[rowIndex][2] = mutated[rowIndex][2].replace(/\$game-design-career:[a-z0-9-]+/u, "$game-design-career:unknown-career-skill");
+    });
+    assert.throws(() => assertRepresentativeRouteTable(unknownSkill, expected, `${label}: unknown skill ${rowIndex}`), `${label}: unknown skill ${rowIndex}`);
+    const escapedRoot = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
+      mutated[rowIndex][4] = mutated[rowIndex][4].replace("game-design-career/<career-id>/", "../game-design-career/<career-id>/");
+    });
+    assert.throws(() => assertRepresentativeRouteTable(escapedRoot, expected, `${label}: escaped root ${rowIndex}`), `${label}: escaped root ${rowIndex}`);
+    const reorderedSkills = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][2] = mutated[rowIndex][2].split(" → ").reverse().join(" → "); });
+    assert.throws(() => assertRepresentativeRouteTable(reorderedSkills, expected, `${label}: reordered skills ${rowIndex}`), `${label}: reordered skills ${rowIndex}`);
+    const reorderedReadOrder = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][5] = mutated[rowIndex][5].split(" → ").reverse().join(" → "); });
+    assert.throws(() => assertRepresentativeRouteTable(reorderedReadOrder, expected, `${label}: reordered read order ${rowIndex}`), `${label}: reordered read order ${rowIndex}`);
+    if (rows[rowIndex][4].includes("<br>")) {
+      const reorderedResults = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][4] = mutated[rowIndex][4].split("<br>").reverse().join("<br>"); });
+      assert.throws(() => assertRepresentativeRouteTable(reorderedResults, expected, `${label}: reordered results ${rowIndex}`), `${label}: reordered results ${rowIndex}`);
+    }
+  }
+  const reorderedRows = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated.reverse(); });
+  assert.throws(() => assertRepresentativeRouteTable(reorderedRows, expected, `${label}: reordered rows`), `${label}: reordered rows`);
 }
 
 async function walkFiles(root) {
@@ -559,35 +654,32 @@ test("README binds Career entry users to canonical representative case routes wi
   ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);
 
   const expected = [];
+  const skillOutputIds = new Map(await Promise.all(
+    [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).skills))]
+      .map(async (skill) => [skill, outputContractIds(await readFile(path.join(pluginRoot, "skills", skill, "SKILL.md"), "utf8"))]),
+  ));
   for (const caseId of representativeCareerCaseIds) {
     const entry = careerCases.find(({ id }) => id === caseId);
     assert.ok(entry, `representative Career case: ${caseId}`);
     const source = await readFile(path.join(repoRoot, entry.document), "utf8");
-    expected.push(canonicalRepresentativeRoute(entry, source));
+    expected.push(await canonicalRepresentativeRoute(entry, source, routing, skillOutputIds));
   }
   assertRepresentativeRouteTable(readme, expected, "Career product README");
   assertNoHiringGuarantee(readme, "Career product README");
-
-  const t01 = expected.find(({ caseId }) => caseId === "CA-T01");
-  const t04 = expected.find(({ caseId }) => caseId === "CA-T04");
-  const c05 = expected.find(({ caseId }) => caseId === "CA-C05");
-  const wrongValidSkill = readme.replace(t01.skills, t01.skills.replace("map-game-design-career", "research-game-design-jobs"));
-  const reorderedSkills = readme.replace(t01.skills, t01.skills.split(" → ").reverse().join(" → "));
-  const deletedSkill = readme.replace(t01.skills, `$game-design-career:${careerCases.find(({ id }) => id === "CA-T01").skills[0]}`);
-  const unknownSkill = readme.replace(t04.skills, t04.skills.replace("reverse-engineer-game-design", "unknown-career-skill"));
-  const escapedResultRoot = readme.replace(c05.results, c05.results.replace("game-design-career/<career-id>/", "game-design-career/<career-id>/../../"));
-  const swappedResults = readme.replace(t01.results, t04.results);
-  for (const [label, mutation] of [
-    ["deleted skill", deletedSkill],
-    ["reordered skills", reorderedSkills],
-    ["wrong but installed skill", wrongValidSkill],
-    ["unknown skill", unknownSkill],
-    ["escaped result root", escapedResultRoot],
-    ["swapped results", swappedResults],
+  assertRepresentativeMutationMatrix(readme, expected, "Career product README");
+  for (const positivePromise of [
+    "합격을 약속합니다.",
+    "합격을 보장할 수 있습니다.",
+    "취업을 보장합니다.",
+    "채용을 약속합니다.",
+    "채용을 100% 확정합니다.",
+    "취업 100% 보장",
   ]) {
-    assert.throws(() => assertRepresentativeRouteTable(mutation, expected, `mutated Career product README: ${label}`), label);
+    assert.throws(() => assertNoHiringGuarantee(`${readme}\n${positivePromise}`, "mutated Career product README"), positivePromise);
   }
-  assert.throws(() => assertNoHiringGuarantee(`${readme}\n채용을 보장합니다.`, "mutated Career product README"), "hiring guarantee");
+  for (const boundary of ["합격을 보장하지 않습니다.", "채용을 약속하지 않습니다.", "취업 결과를 확정하지 않습니다."]) {
+    assert.doesNotThrow(() => assertNoHiringGuarantee(`${readme}\n${boundary}`, "Career product README boundary"), boundary);
+  }
 
   const localLinks = [...readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/gu)]
     .map((match) => match[1])
