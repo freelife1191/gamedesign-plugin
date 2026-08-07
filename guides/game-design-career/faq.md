@@ -18,7 +18,7 @@ Career 사례는 직무·경험·공고·포트폴리오를 증거와 사람 검
 $game-design-career:map-game-design-career artifact=game-design-career/<career-id>/competency-matrix/ evidence=public-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/competency-matrix/content.md → game-design-career/<career-id>/competency-matrix/evidence.yml → game-design-career/<career-id>/competency-matrix/decisions/ → game-design-career/<career-id>/competency-matrix/assets/README.md → game-design-career/<career-id>/competency-matrix/export-manifest.yml` 순서로 `target-level`, `gap`, `minimum-repair`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/competency-matrix/content.md → game-design-career/<career-id>/competency-matrix/evidence.yml → game-design-career/<career-id>/competency-matrix/decisions/README.md → game-design-career/<career-id>/competency-matrix/assets/README.md → game-design-career/<career-id>/competency-matrix/export-manifest.yml` 순서로 `target-level`, `gap`, `minimum-repair`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 멘토가 직무 비교의 범위와 proof task를 검토하고, 근거가 없는 역할 수준은 가설로 둡니다. 공개 권리와 attribution을 확인하며 직무 선택·합격 가능성은 보장하지 않습니다.
 
@@ -40,7 +40,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/<career-i
 $game-design-career:build-game-design-portfolio artifact=game-design-career/<career-id>/portfolio-project-brief/ evidence=public-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/ → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 `target-competency`, `implementation-test`, `rights`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/README.md → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 `target-competency`, `implementation-test`, `rights`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 포트폴리오 검토자가 개인 기여와 근거의 구분을 확인하고, 권리 불명 자료는 공개하지 않습니다. 작은 proof는 역량 기록일 뿐 합격·채용을 보장하지 않습니다.
 
@@ -62,7 +62,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 $game-design-career:build-game-design-portfolio artifact=game-design-career/<career-id>/creative-design-portfolio/ evidence=school-project-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/ → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `evidence-id`, `attribution`을 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `evidence-id`, `attribution`을 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 팀원·교사가 attribution과 공개 권리를 검토하고, 근거는 학교·지역·표본이 아닌 해당 프로젝트의 범위로 제한합니다. 이 기록은 채용 결과를 보장하지 않습니다.
 
@@ -84,7 +84,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 $game-design-career:research-game-design-jobs artifact=game-design-career/<career-id>/job-posting-evidence/ region=<region>
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/ → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `source-url`, `retrieval-date`, `sample-geography`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/README.md → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `source-url`, `retrieval-date`, `sample-geography`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Research Owner가 공식 근거·지역·표본을 검토하고, 권리 또는 접근 제한이 있는 원문은 복제하지 않습니다. 반복 신호는 채용 가능성이나 전체 시장 경향을 보장하지 않습니다.
 
@@ -106,7 +106,7 @@ $game-design-career:research-game-design-jobs artifact=game-design-career/<caree
 $game-design-career:research-game-design-jobs artifact=game-design-career/<career-id>/job-posting-evidence/ sampleBoundary=<declared-boundary>
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/ → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `sample-geography`, `freshness`, `source-url`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/README.md → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `sample-geography`, `freshness`, `source-url`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Research Owner가 근거의 표본과 재검증 시점을 검토하고, 권리 제한 원문은 location만 보존합니다. 적은 표본은 시장 전체·합격 가능성·회사 평가를 보장하지 않습니다.
 
@@ -128,7 +128,7 @@ $game-design-career:research-game-design-jobs artifact=game-design-career/<caree
 $game-design-career:reverse-engineer-game-design artifact=game-design-career/<career-id>/reverse-design-document/ source=public-observation-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/ → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 `observation`, `inference`, `validation-method`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/README.md → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 `observation`, `inference`, `validation-method`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Design Reviewer가 근거와 추론 경계를 검토하고, 권리 없는 화면·비공개 정보는 사용하지 않습니다. 문서의 해석은 실제 내부 설계·채용 역량을 보장하지 않습니다.
 
@@ -150,7 +150,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/<ca
 $game-design-career:reverse-engineer-game-design artifact=game-design-career/<career-id>/reverse-design-document/ source=public-text-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/ → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 `source-address`, `scope`, `validation-method`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/README.md → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 `source-address`, `scope`, `validation-method`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Rights Reviewer가 근거의 공개 권리와 인용 범위를 검토하며, 권리 없는 화면은 추가하지 않습니다. 제한된 관찰은 완전한 역기획이나 채용 결과를 보장하지 않습니다.
 
@@ -172,7 +172,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/<ca
 $game-design-career:build-game-design-portfolio artifact=game-design-career/<career-id>/creative-design-portfolio/ evidence=portfolio-index
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/ → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `target-competency`, `inspectability`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `target-competency`, `inspectability`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Portfolio Reviewer가 선별 근거와 공개 권리를 검토하고, 근거 없는 양적 기준은 사용하지 않습니다. 문서 수는 평가·합격·채용을 보장하지 않습니다.
 
@@ -194,7 +194,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 $game-design-career:review-game-design-portfolio artifact=game-design-career/<career-id>/five-axis-review/ evidence=portfolio-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/ → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml` 순서로 `finding-id`, `evidence-id`, `minimum-repair`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/README.md → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml` 순서로 `finding-id`, `evidence-id`, `minimum-repair`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·수정의 사실성을 검토하고, 권리나 팀 attribution이 불명확한 자료는 공개하지 않습니다. 반복 기록은 능력 점수·합격·채용을 보장하지 않습니다.
 
@@ -216,7 +216,7 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/<ca
 $game-design-career:build-game-design-portfolio artifact=game-design-career/<career-id>/creative-design-portfolio/ evidence=team-project-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/ → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `attribution`, `rights`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml` 순서로 `claim-id`, `attribution`, `rights`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 팀원과 Portfolio Reviewer가 근거·attribution·공개 권리를 검토합니다. 개인 기여 기록은 팀 성과 평가나 채용을 보장하지 않습니다.
 
@@ -238,7 +238,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/<car
 $game-design-career:build-game-design-portfolio artifact=game-design-career/<career-id>/portfolio-project-brief/ evidence=public-proof-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/ → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 `target-competency`, `rights`, `retrospective`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/README.md → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 `target-competency`, `rights`, `retrospective`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Rights Reviewer와 실제 권한 보유자가 근거·NDA·공개 권리를 검토합니다. 허용 범위의 outline은 법률 판단이나 채용 결과를 보장하지 않습니다.
 
@@ -282,7 +282,7 @@ $game-design-career:review-image-assets assetId=portfolio-proof-01 targetState=d
 $game-design-career:review-game-design-portfolio artifact=game-design-career/<career-id>/five-axis-review/ evidence=portfolio-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/ → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml` 순서로 `finding-id`, `observation-state`, `minimum-repair`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/README.md → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml` 순서로 `finding-id`, `observation-state`, `minimum-repair`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·finding 범위·권리 공개 상태를 검토합니다. review 결과는 능력 등급, 회사 평가, 합격·채용을 보장하지 않습니다.
 
@@ -304,7 +304,7 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/<ca
 $game-design-career:research-game-design-jobs artifact=game-design-career/<career-id>/job-posting-evidence/ region=<region>
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/ → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `source-url`, `retrieval-date`, `freshness`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/README.md → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml` 순서로 `source-url`, `retrieval-date`, `freshness`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 reviewer가 근거·관련성·권리와 공고 freshness를 검토합니다. 선별은 특정 회사의 평가·지원 성공·합격을 보장하지 않습니다.
 
@@ -326,7 +326,7 @@ $game-design-career:research-game-design-jobs artifact=game-design-career/<caree
 $game-design-career:practice-game-design-interview artifact=game-design-career/<career-id>/interview-question-answer-log/ evidence=portfolio-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/ → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `portfolio-evidence-id`, `answer-status`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/README.md → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `portfolio-evidence-id`, `answer-status`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Interview Coach가 근거·정직성·공개 권리를 검토합니다. 연습 기록은 답변 성과나 합격·채용을 보장하지 않습니다.
 
@@ -348,7 +348,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/<
 $game-design-career:practice-game-design-interview artifact=game-design-career/<career-id>/interview-question-answer-log/ evidence=honest-gap-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/ → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `honest-answer`, `verification-task`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/README.md → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `honest-answer`, `verification-task`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Interview Coach가 근거·표현의 정직성·공개 권리를 검토합니다. honest-answer는 경험 부족을 숨기지 않으며 면접 평가·합격·채용을 보장하지 않습니다.
 
@@ -370,7 +370,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/<
 $game-design-career:plan-junior-growth artifact=game-design-career/<career-id>/junior-growth-review/ evidence=project-event-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/junior-growth-review/content.md → game-design-career/<career-id>/junior-growth-review/evidence.yml → game-design-career/<career-id>/junior-growth-review/decisions/ → game-design-career/<career-id>/junior-growth-review/assets/README.md → game-design-career/<career-id>/junior-growth-review/export-manifest.yml` 순서로 `project-event-evidence`, `next-review-date`, `proof-artifact`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/junior-growth-review/content.md → game-design-career/<career-id>/junior-growth-review/evidence.yml → game-design-career/<career-id>/junior-growth-review/decisions/README.md → game-design-career/<career-id>/junior-growth-review/assets/README.md → game-design-career/<career-id>/junior-growth-review/export-manifest.yml` 순서로 `project-event-evidence`, `next-review-date`, `proof-artifact`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 manager 또는 mentor가 근거·feedback·공개 권리와 다음 review를 검토합니다. 성장 기록은 승진·이직·채용 또는 회사 평가를 보장하지 않습니다.
 
@@ -392,7 +392,7 @@ $game-design-career:plan-junior-growth artifact=game-design-career/<career-id>/j
 $game-design-career:orchestrate-game-design-career artifact=game-design-career/<career-id>/career-stage-goal/ evidence=public-evidence-id
 ```
 
-**예상 결과·읽는 순서:** `game-design-career/<career-id>/career-stage-goal/content.md → game-design-career/<career-id>/career-stage-goal/evidence.yml → game-design-career/<career-id>/career-stage-goal/decisions/ → game-design-career/<career-id>/career-stage-goal/assets/README.md → game-design-career/<career-id>/career-stage-goal/export-manifest.yml` 순서로 `target-role`, `success-evidence`, `review-date`를 읽습니다.
+**예상 결과·읽는 순서:** `game-design-career/<career-id>/career-stage-goal/content.md → game-design-career/<career-id>/career-stage-goal/evidence.yml → game-design-career/<career-id>/career-stage-goal/decisions/README.md → game-design-career/<career-id>/career-stage-goal/assets/README.md → game-design-career/<career-id>/career-stage-goal/export-manifest.yml` 순서로 `target-role`, `success-evidence`, `review-date`를 읽습니다.
 
 **사람 검토·근거·권리·비보장:** 사람 Career Lead가 근거·권리·공개 경계와 다음 행동을 검토합니다. 플러그인의 초안·점수·정리는 합격, 채용, 승진 또는 회사 평가를 보장하지 않습니다.
 

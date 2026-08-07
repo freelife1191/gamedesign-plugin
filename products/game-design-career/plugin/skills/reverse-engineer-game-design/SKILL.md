@@ -26,7 +26,7 @@ Build a falsifiable model of the game, not a user manual. Keep every material cl
 
 ## Output Contract
 
-Return scope, claim records, state/rule/data/operation relationships, competing explanations, contradiction log, validation queue, and explicit unknowns. Keep product behavior separate from implementation or intent claims.
+Return the `reverse-design-document` output with scope, claim records, state/rule/data/operation relationships, competing explanations, contradiction log, validation queue, and explicit unknowns. Keep product behavior separate from implementation or intent claims.
 
 ## Completion
 

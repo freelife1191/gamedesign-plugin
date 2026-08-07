@@ -25,7 +25,7 @@ Read `../../references/methods/portfolio-evidence.md` before drafting or revisin
 
 ## Output Contract
 
-Return the ordered case study, a claim-to-evidence index, attribution and rights notes, recovery queue, and reviewer inspection checklist. Evidence addresses must point to an artifact section, source URL, file/version, test record, annotated image, or explicitly unavailable source.
+Return the ordered case study as either the scoped `portfolio-project-brief` or the inspectable `creative-design-portfolio` output, plus a claim-to-evidence index, attribution and rights notes, recovery queue, and reviewer inspection checklist. Evidence addresses must point to an artifact section, source URL, file/version, test record, annotated image, or explicitly unavailable source.
 
 ## Completion
 

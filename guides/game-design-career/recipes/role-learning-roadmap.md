@@ -51,6 +51,7 @@ game-design-career/<career-id>/
 │   ├── content.md
 │   ├── evidence.yml
 │   ├── decisions/
+│   │   └── README.md
 │   ├── assets/
 │   │   └── README.md
 │   └── export-manifest.yml
@@ -58,6 +59,7 @@ game-design-career/<career-id>/
     ├── content.md
     ├── evidence.yml
     ├── decisions/
+    │   └── README.md
     ├── assets/
     │   └── README.md
     └── export-manifest.yml
@@ -77,7 +79,7 @@ portfolio에서는 역할을 선언한 문구 대신 gap을 어떻게 작은 증
 
 ### 읽는 순서
 
-`game-design-career/<career-id>/career-stage-goal/content.md → game-design-career/<career-id>/career-stage-goal/evidence.yml → game-design-career/<career-id>/career-stage-goal/decisions/ → game-design-career/<career-id>/career-stage-goal/assets/README.md → game-design-career/<career-id>/career-stage-goal/export-manifest.yml`, 이어서 `game-design-career/<career-id>/learning-roadmap/content.md → game-design-career/<career-id>/learning-roadmap/evidence.yml → game-design-career/<career-id>/learning-roadmap/decisions/ → game-design-career/<career-id>/learning-roadmap/assets/README.md → game-design-career/<career-id>/learning-roadmap/export-manifest.yml` 순서로 읽습니다.
+`game-design-career/<career-id>/career-stage-goal/content.md → game-design-career/<career-id>/career-stage-goal/evidence.yml → game-design-career/<career-id>/career-stage-goal/decisions/README.md → game-design-career/<career-id>/career-stage-goal/assets/README.md → game-design-career/<career-id>/career-stage-goal/export-manifest.yml`, 이어서 `game-design-career/<career-id>/learning-roadmap/content.md → game-design-career/<career-id>/learning-roadmap/evidence.yml → game-design-career/<career-id>/learning-roadmap/decisions/README.md → game-design-career/<career-id>/learning-roadmap/assets/README.md → game-design-career/<career-id>/learning-roadmap/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

@@ -28,7 +28,7 @@ Do not invent team size, revenue, retention, personal ownership, implementation 
 
 ## Output Contract
 
-Return the evidence inventory, five-axis records, typed findings, evidence-qualified scores, highest-impact repair queue, and unresolved verification tasks. Keep every score and finding linked to stable section and evidence IDs.
+Return the `five-axis-review` output with the evidence inventory, five-axis records, typed findings, evidence-qualified scores, highest-impact repair queue, and unresolved verification tasks. Keep every score and finding linked to stable section and evidence IDs.
 
 ## Completion
 

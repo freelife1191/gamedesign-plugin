@@ -31,6 +31,7 @@ Build a dated evidence set before making current-job claims. Keep each posting's
 
 Return:
 
+- the `job-posting-evidence` output;
 - research scope and retrieval date;
 - schema-valid posting records;
 - posting-specific requirements;

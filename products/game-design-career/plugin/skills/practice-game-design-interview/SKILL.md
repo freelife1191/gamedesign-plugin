@@ -28,7 +28,7 @@ Do not invent team size, revenue, retention, personal ownership, implementation 
 
 ## Output Contract
 
-Return the evidence inventory, ordered question records, answer-feedback records, blocked claims, verification tasks, and honest-answer patterns. Keep stable evidence IDs visible in every posting-specific finding.
+Return the `interview-question-answer-log` output with the evidence inventory, ordered question records, answer-feedback records, blocked claims, verification tasks, and honest-answer patterns. Keep stable evidence IDs visible in every posting-specific finding.
 
 ## Completion
 

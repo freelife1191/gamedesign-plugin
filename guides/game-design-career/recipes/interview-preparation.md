@@ -50,6 +50,7 @@ game-design-career/<career-id>/interview-question-answer-log/
 ├── content.md
 ├── evidence.yml
 ├── decisions/
+│   └── README.md
 ├── assets/
 │   └── README.md
 └── export-manifest.yml
@@ -69,7 +70,7 @@ portfolio의 claim ID를 면접 질문으로 다시 찾아볼 수 있게 하고,
 
 ### 읽는 순서
 
-`game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/ → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `answer-status`, 근거와 검토 결정을 확인합니다.
+`game-design-career/<career-id>/interview-question-answer-log/content.md → game-design-career/<career-id>/interview-question-answer-log/evidence.yml → game-design-career/<career-id>/interview-question-answer-log/decisions/README.md → game-design-career/<career-id>/interview-question-answer-log/assets/README.md → game-design-career/<career-id>/interview-question-answer-log/export-manifest.yml` 순서로 `question-id`, `answer-status`, 근거와 검토 결정을 확인합니다.
 
 ## 실패와 재개
 

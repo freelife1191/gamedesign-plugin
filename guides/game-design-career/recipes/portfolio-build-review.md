@@ -51,6 +51,7 @@ game-design-career/<career-id>/
 │   ├── content.md
 │   ├── evidence.yml
 │   ├── decisions/
+│   │   └── README.md
 │   ├── assets/
 │   │   └── README.md
 │   └── export-manifest.yml
@@ -58,6 +59,7 @@ game-design-career/<career-id>/
 │   ├── content.md
 │   ├── evidence.yml
 │   ├── decisions/
+│   │   └── README.md
 │   ├── assets/
 │   │   └── README.md
 │   └── export-manifest.yml
@@ -65,6 +67,7 @@ game-design-career/<career-id>/
     ├── content.md
     ├── evidence.yml
     ├── decisions/
+    │   └── README.md
     ├── assets/
     │   └── README.md
     └── export-manifest.yml
@@ -84,7 +87,7 @@ portfolio에서는 읽는 사람이 claim과 evidence를 직접 찾게 하고, i
 
 ### 읽는 순서
 
-`game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/ → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml`, `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/ → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml`, `game-design-career/<career-id>/portfolio-backlog/content.md → game-design-career/<career-id>/portfolio-backlog/evidence.yml → game-design-career/<career-id>/portfolio-backlog/decisions/ → game-design-career/<career-id>/portfolio-backlog/assets/README.md → game-design-career/<career-id>/portfolio-backlog/export-manifest.yml` 순서로 읽습니다.
+`game-design-career/<career-id>/creative-design-portfolio/content.md → game-design-career/<career-id>/creative-design-portfolio/evidence.yml → game-design-career/<career-id>/creative-design-portfolio/decisions/README.md → game-design-career/<career-id>/creative-design-portfolio/assets/README.md → game-design-career/<career-id>/creative-design-portfolio/export-manifest.yml`, `game-design-career/<career-id>/five-axis-review/content.md → game-design-career/<career-id>/five-axis-review/evidence.yml → game-design-career/<career-id>/five-axis-review/decisions/README.md → game-design-career/<career-id>/five-axis-review/assets/README.md → game-design-career/<career-id>/five-axis-review/export-manifest.yml`, `game-design-career/<career-id>/portfolio-backlog/content.md → game-design-career/<career-id>/portfolio-backlog/evidence.yml → game-design-career/<career-id>/portfolio-backlog/decisions/README.md → game-design-career/<career-id>/portfolio-backlog/assets/README.md → game-design-career/<career-id>/portfolio-backlog/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

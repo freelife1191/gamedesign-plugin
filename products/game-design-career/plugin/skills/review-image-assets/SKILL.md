@@ -27,4 +27,8 @@ Supply that closed receipt object from the host-user adapter; do not promote an 
 
 ## Output contract
 
-Return the stable asset ID, evidence-bounded findings, named human decision record, requested and accepted lifecycle transition, receipt, blockers, and derivative eligibility. Never represent an agent recommendation, renderer output, or asset bytes as approval.
+Return `image-asset-review` at `assets/image-assets.yml` and `lifecycle-receipt` at `evidence.yml`. Include the stable asset ID, alt text, `decisionReceipt`, rights state, evidence-bounded findings, named human decision record, requested and accepted lifecycle transition, receipt, blockers, and derivative eligibility. Never represent an agent recommendation, renderer output, or asset bytes as approval.
+
+## Completion
+
+Finish only when every finding is bound to a stable asset ID, the named-human decision and `decisionReceipt` agree, rights and alt text are explicit, accepted transitions have artifact-local evidence, and unresolved blockers remain visible without an approval-state change.

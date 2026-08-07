@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -22,6 +22,10 @@ import {
 } from "../../tooling/lib/studio-diagram-production-contract.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+const CAREER_ROUTING_PATH = path.join(repoRoot, "products/game-design-career/plugin/references/routing.json");
+const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/assets/templates");
+const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
+const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
 
 const FAQ_ANSWER_FIELDS = [
   "결론",
@@ -47,52 +51,7 @@ const CAREER_FAQ_ANSWER_FIELDS = [
   "사람 검토·근거·권리·비보장",
   "실패·재개·관련 경로",
 ];
-const CAREER_FAQ_CONTRACT = Object.freeze([
-  ["시스템, 콘텐츠, 전투, 경제, UX, 내러티브와 레벨 기획은 어떻게 비교하는가?", ["직무", "증거"], "map-game-design-career", "CA-T01"],
-  ["비전공·무경력자는 무엇부터 증명해야 하는가?", ["작은", "증거"], "build-game-design-portfolio", "CA-T08"],
-  ["학교 프로젝트도 포트폴리오 증거가 되는가?", ["학교 프로젝트", "기여"], "build-game-design-portfolio", "CA-T08"],
-  ["현재 공고가 서로 다를 때 반복 요구를 어떻게 찾는가?", ["반복", "표본"], "research-game-design-jobs", "CA-C03"],
-  ["적은 공고 표본을 시장 전체처럼 일반화하지 않으려면 어떻게 하는가?", ["표본", "일반화"], "research-game-design-jobs", "CA-C03"],
-  ["역기획에서 관찰, 추론과 추측을 어떻게 분리하는가?", ["관찰", "추론"], "reverse-engineer-game-design", "CA-C05"],
-  ["플레이 화면을 사용하지 않고도 역기획서를 만들 수 있는가?", ["공개", "관찰"], "reverse-engineer-game-design", "CA-C05"],
-  ["포트폴리오 문서는 몇 개가 적절한가?", ["개수", "선별"], "build-game-design-portfolio", "CA-C06"],
-  ["최종 결과보다 판단 과정과 반복 개선을 어떻게 보여 주는가?", ["판단", "반복"], "review-game-design-portfolio", "CA-C07"],
-  ["팀 프로젝트에서 개인 기여를 어떻게 증명하는가?", ["개인", "기여"], "build-game-design-portfolio", "CA-T08"],
-  ["NDA 프로젝트는 어떻게 다루는가?", ["NDA", "공개"], "build-game-design-portfolio", "CA-T09"],
-  ["생성 이미지를 포트폴리오에 어떻게 표시하는가?", ["생성 이미지", "권리"], "review-image-assets", "CA-C06"],
-  ["5축 검토 결과가 낮으면 능력이 없다는 뜻인가?", ["5축", "능력"], "review-game-design-portfolio", "CA-C07"],
-  ["공고에 맞춰 포트폴리오를 어떻게 선별하는가?", ["공고", "선별"], "research-game-design-jobs", "CA-C03"],
-  ["포트폴리오 근거를 면접 답변에 어떻게 연결하는가?", ["포트폴리오", "면접"], "practice-game-design-interview", "CA-C08"],
-  ["경험이 없는 질문에 어떻게 정직하게 답하는가?", ["정직", "경험"], "practice-game-design-interview", "CA-C08"],
-  ["주니어 성장 계획에 어떤 evidence와 feedback을 남기는가?", ["evidence", "feedback"], "plan-junior-growth", "CA-T10"],
-  ["플러그인이 합격 가능성을 판단할 수 있는가?", ["합격", "판단"], "orchestrate-game-design-career", "CA-C08"],
-].map(([question, conclusion, skill, caseId], index) => ({
-  heading: `Q${String(index + 1).padStart(2, "0")}. ${question}`,
-  conclusion,
-  skill,
-  caseId,
-})));
-const CAREER_FAQ_OUTPUT_CONTRACT = Object.freeze([
-  ["competency-matrix", ["target-level", "gap", "minimum-repair"], "use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생", "recipes/role-learning-roadmap.md"],
-  ["portfolio-project-brief", ["target-competency", "implementation-test", "rights"], "use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입", "recipes/portfolio-build-review.md"],
-  ["creative-design-portfolio", ["claim-id", "evidence-id", "attribution"], "use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입", "recipes/portfolio-build-review.md"],
-  ["job-posting-evidence", ["source-url", "retrieval-date", "sample-geography"], "use-cases/competency-paths.md#ca-c03-현재-채용공고-조사", "recipes/job-research-gap.md"],
-  ["job-posting-evidence", ["sample-geography", "freshness", "source-url"], "use-cases/competency-paths.md#ca-c03-현재-채용공고-조사", "recipes/job-research-gap.md"],
-  ["reverse-design-document", ["observation", "inference", "validation-method"], "use-cases/competency-paths.md#ca-c05-관찰-기반-역기획", "recipes/reverse-design.md"],
-  ["reverse-design-document", ["source-address", "scope", "validation-method"], "use-cases/competency-paths.md#ca-c05-관찰-기반-역기획", "recipes/reverse-design.md"],
-  ["creative-design-portfolio", ["claim-id", "target-competency", "inspectability"], "use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오", "recipes/portfolio-build-review.md"],
-  ["five-axis-review", ["finding-id", "evidence-id", "minimum-repair"], "use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표", "recipes/portfolio-build-review.md"],
-  ["creative-design-portfolio", ["claim-id", "attribution", "rights"], "use-cases/concept-scenarios.md#ca-t08-실무-경험이-없는-신입", "recipes/portfolio-build-review.md"],
-  ["portfolio-project-brief", ["target-competency", "rights", "retrospective"], "use-cases/concept-scenarios.md#ca-t09-비전공자다른-직군-전환자", "recipes/portfolio-build-review.md"],
-  ["review-image-assets", ["image-asset-review", "lifecycle-receipt"], "use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오", "recipes/portfolio-build-review.md"],
-  ["five-axis-review", ["finding-id", "observation-state", "minimum-repair"], "use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표", "recipes/portfolio-build-review.md"],
-  ["job-posting-evidence", ["source-url", "retrieval-date", "freshness"], "use-cases/competency-paths.md#ca-c03-현재-채용공고-조사", "recipes/job-research-gap.md"],
-  ["interview-question-answer-log", ["question-id", "portfolio-evidence-id", "answer-status"], "use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환", "recipes/interview-preparation.md"],
-  ["interview-question-answer-log", ["question-id", "honest-answer", "verification-task"], "use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환", "recipes/interview-preparation.md"],
-  ["junior-growth-review", ["project-event-evidence", "next-review-date", "proof-artifact"], "use-cases/concept-scenarios.md#ca-t10-주니어의-성장이직", "recipes/junior-growth-transition.md"],
-  ["career-stage-goal", ["target-role", "success-evidence", "review-date"], "use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환", "recipes/junior-growth-transition.md"],
-]);
-const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/assets/templates");
+const CAREER_FAQ_CONTRACT = Object.freeze(CAREER_ROUTING.faqContracts ?? []);
 const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["규칙, mechanic, system과 core loop는 어떻게 다른가?", ["규칙", "mechanic", "system", "core loop"], ["입력", "상태", "루프"], ["rule", "state"], ["ST-C02", "ST-C03", "`core-motivation-loop`"], ["사람", "검토"]],
   ["처음부터 긴 GDD를 만들어야 하는가?", ["긴 GDD", "처음", "없으며"], ["비전", "가정", "경계"], ["vision", "content.md"], ["ST-C01", "`game-design-brief`", "`vision-pillars`"], ["승인", "가정"]],
@@ -1663,12 +1622,134 @@ function assertStudioFaq(markdown) {
   }
 }
 
-function assertCareerFaq(markdown) {
+function markdownSectionBody(markdown, heading) {
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = markdown.match(new RegExp(`^## ${escaped}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
+  assert.ok(match, `missing markdown section: ${heading}`);
+  return match[1];
+}
+
+function careerSpecQuestions(markdown) {
+  const sectionEnd = markdown.indexOf("\n## 12.");
+  const sectionStart = markdown.lastIndexOf("**Career**", sectionEnd);
+  assert.ok(sectionStart >= 0 && sectionEnd > sectionStart, "spec Career FAQ question section");
+  return [...markdown.slice(sectionStart, sectionEnd).matchAll(/^- (.+\?)$/gm)].map((match) => match[1]);
+}
+
+function skillSection(markdown, headingPattern) {
+  const match = markdown.match(new RegExp(`^## ${headingPattern}\\s*$\\n([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "im"));
+  assert.ok(match, `missing skill section: ${headingPattern}`);
+  return match[1].trim();
+}
+
+async function recursiveArtifactInventory(directory, prefix = "") {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    const relative = `${prefix}${entry.name}`;
+    if (entry.isDirectory()) {
+      files.push(`${relative}/`);
+      files.push(...await recursiveArtifactInventory(path.join(directory, entry.name), `${relative}/`));
+    }
+    else files.push(relative);
+  }
+  const rank = (file) => file === "content.md" ? 0
+    : file === "evidence.yml" ? 1
+      : file.startsWith("decisions/") ? 2
+        : file.startsWith("assets/") ? 3
+          : file === "export-manifest.yml" ? 5
+            : 4;
+  return files.sort((left, right) => rank(left) - rank(right) || left.localeCompare(right));
+}
+
+function faqReadOrder(contract, routing) {
+  const order = routing.faqReadOrders[contract.readOrderId];
+  assert.ok(Array.isArray(order) && order.length > 0, `${contract.id} known readOrderId`);
+  if (contract.readOrderId === "canonical-template") {
+    assert.equal(contract.expectedOutputs.length, 1, `${contract.id} one template output`);
+    return order.map((relative) => `${contract.expectedOutputs[0].path}/${relative}`);
+  }
+  return [...order];
+}
+
+async function assertCareerFaqMetadata(routing, {
+  templateRoot = CAREER_TEMPLATE_SOURCE_ROOT,
+  specQuestions,
+} = {}) {
+  assert.ok(Array.isArray(routing.faqContracts), "routing.json faqContracts array");
+  assert.equal(routing.faqContracts.length, 18, "routing.json Career FAQ contract count");
+  const expectedIds = Array.from({ length: 18 }, (_, index) => `Q${String(index + 1).padStart(2, "0")}`);
+  assert.deepEqual(routing.faqContracts.map(({ id }) => id), expectedIds, "Career FAQ exact ordered IDs");
+  assert.equal(new Set(routing.faqContracts.map(({ id }) => id)).size, 18, "Career FAQ unique IDs");
+  assert.equal(new Set(routing.faqContracts.map(({ question }) => question)).size, 18, "Career FAQ unique questions");
+  if (specQuestions) assert.deepEqual(routing.faqContracts.map(({ question }) => question), specQuestions, "Career FAQ spec questions");
+
+  const installedSkills = new Set(routing.skillIds);
+  const routeById = new Map(routing.routes.map((route) => [route.id, route]));
+  const directUseSkills = new Set(routing.directUseReviewOwners.map(({ skill }) => skill));
+  for (const contract of routing.faqContracts) {
+    assert.ok(installedSkills.has(contract.primarySkill), `${contract.id} installed primary skill`);
+    assert.equal(contract.skillPath, `skills/${contract.primarySkill}.md`, `${contract.id} canonical skill path`);
+    if (contract.routingSource.kind === "route") {
+      const route = routeById.get(contract.routingSource.id);
+      assert.ok(route, `${contract.id} known route`);
+      assert.equal(route.skill, contract.primarySkill, `${contract.id} route primary skill`);
+    } else {
+      assert.equal(contract.routingSource.kind, "direct-use", `${contract.id} known routing source kind`);
+      assert.equal(contract.routingSource.id, contract.primarySkill, `${contract.id} direct-use primary skill`);
+      assert.ok(directUseSkills.has(contract.routingSource.id), `${contract.id} known direct-use route`);
+    }
+
+    assert.ok(Array.isArray(contract.expectedOutputs) && contract.expectedOutputs.length > 0, `${contract.id} expected outputs`);
+    assert.equal(new Set(contract.expectedOutputs.map(({ id }) => id)).size, contract.expectedOutputs.length, `${contract.id} unique output IDs`);
+    const skillSource = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", contract.primarySkill, "SKILL.md"), "utf8");
+    const outputContract = skillSection(skillSource, "Output contract");
+    skillSection(skillSource, "Completion(?: Criteria)?");
+    for (const output of contract.expectedOutputs) {
+      assert.match(outputContract, new RegExp("`" + output.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned output ID: ${output.id}`);
+      if (output.kind === "template") {
+        assert.equal(output.id, output.templateId, `${contract.id} template output identity`);
+        assert.equal(output.path, `game-design-career/<career-id>/${output.templateId}`, `${contract.id} canonical template output path`);
+        const templateDirectory = path.join(templateRoot, output.templateId);
+        const inventory = await recursiveArtifactInventory(templateDirectory);
+        const leafInventory = inventory.filter((item) => !item.endsWith("/"));
+        assert.deepEqual(routing.faqReadOrders[contract.readOrderId], leafInventory, `${contract.id} recursive template read-order inventory`);
+        for (const directory of inventory.filter((item) => item.endsWith("/"))) {
+          assert.ok(leafInventory.some((item) => item.startsWith(directory)), `${contract.id} recursive template directory inventory: ${directory}`);
+        }
+        const content = await readFile(path.join(templateDirectory, "content.md"), "utf8");
+        const workingRecord = markdownSectionBody(content, "Working Record {#working-record}");
+        for (const field of contract.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${field}`);
+      } else {
+        assert.equal(output.kind, "skill-owned", `${contract.id} known output kind`);
+        assert.ok(routing.faqReadOrders[contract.readOrderId].includes(output.path), `${contract.id} skill-owned output path`);
+      }
+    }
+    if (contract.expectedOutputs.some(({ kind }) => kind === "skill-owned")) {
+      for (const field of contract.fields) assert.ok(skillSource.includes(field), `${contract.id} source-owned skill output field: ${field}`);
+    }
+
+    const caseTarget = `${contract.case.path}#${contract.case.anchor}`;
+    assert.ok(contract.case.anchor.startsWith(contract.case.id.toLowerCase() + "-"), `${contract.id} case ID and anchor agree`);
+    for (const target of [caseTarget, contract.skillPath, contract.recipePath]) {
+      const [relative, anchor] = target.split("#");
+      const targetPath = path.join(repoRoot, "guides/game-design-career", relative);
+      const targetStat = await lstat(targetPath);
+      assert.ok(targetStat.isFile() && !targetStat.isSymbolicLink(), `${contract.id} canonical target path: ${target}`);
+      if (anchor) assert.ok(collectHeadingAnchors(await readFile(targetPath, "utf8")).has(anchor), `${contract.id} canonical case anchor: ${target}`);
+    }
+    assert.ok(contract.recovery.owner.length > 0, `${contract.id} recovery owner`);
+    assert.deepEqual(contract.recovery.sequence, ["보존", "사람 확인", "재개"], `${contract.id} recovery shape`);
+    faqReadOrder(contract, routing);
+  }
+}
+
+function assertCareerFaq(markdown, routing = CAREER_ROUTING) {
   const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const answers = markdownSections(markdown, 3);
-  assert.deepEqual(answers.map(({ heading }) => heading), CAREER_FAQ_CONTRACT.map(({ heading }) => heading), "Career FAQ approved question headings");
+  assert.deepEqual(answers.map(({ heading }) => heading), routing.faqContracts.map(({ id, question }) => `${id}. ${question}`), "Career FAQ canonical question headings");
   for (const [index, answer] of answers.entries()) {
-    const contract = CAREER_FAQ_CONTRACT[index];
+    const contract = routing.faqContracts[index];
     const fields = inlineFields(answer.body);
     assert.deepEqual(inlineFieldLabels(answer.body), CAREER_FAQ_ANSWER_FIELDS, `${answer.heading} answer shape`);
     const byLabel = new Map(fields.map((field) => [field.label, field.value]));
@@ -1676,70 +1757,28 @@ function assertCareerFaq(markdown) {
       assert.ok(field.value.length >= 54, `${answer.heading} ${field.label} substantive content`);
       assert.doesNotMatch(field.value, /^(?:TODO|TBD)(?:\b|$)/iu, `${answer.heading} ${field.label} placeholder`);
     }
-    for (const term of contract.conclusion) assert.ok(byLabel.get("결론").includes(term), `${answer.heading} conclusion term: ${term}`);
-
     const request = byLabel.get("실행 요청");
     const requestBlocks = fencedCodeBlocks(request, "text");
     assert.equal(requestBlocks.length, 2, `${answer.heading} App and CLI request blocks`);
     assert.match(requestBlocks[0], /^@Game Design Career[^\n]+$/m, `${answer.heading} executable App request`);
-    assert.match(requestBlocks[1], new RegExp("^\\$game-design-career:" + escapeRegExp(contract.skill) + "\\b[^\\n]+$", "m"), `${answer.heading} installed CLI request`);
+    assert.match(requestBlocks[1], new RegExp("^\\$game-design-career:" + escapeRegExp(contract.primarySkill) + "\\b[^\\n]+$", "m"), `${answer.heading} canonical installed CLI request`);
 
     const outcome = byLabel.get("예상 결과·읽는 순서");
-    if (contract.skill === "review-image-assets") assert.match(outcome, /image-asset-review[\s\S]*lifecycle-receipt/, `${answer.heading} expected image review outputs`);
-    else assert.match(outcome, /content\.md/, `${answer.heading} expected artifact`);
-    assert.match(outcome, /→/, `${answer.heading} read order`);
+    for (const output of contract.expectedOutputs) assert.ok(outcome.includes(output.id), `${answer.heading} canonical output ID: ${output.id}`);
+    for (const field of contract.fields) assert.ok(outcome.includes(field), `${answer.heading} canonical output field: ${field}`);
+    assert.ok(outcome.includes(faqReadOrder(contract, routing).join(" → ")), `${answer.heading} canonical full read order`);
     const safety = byLabel.get("사람 검토·근거·권리·비보장");
     for (const term of ["사람", "근거", "권리", "보장하지 않"]) assert.ok(safety.includes(term), `${answer.heading} safety term: ${term}`);
     const recovery = byLabel.get("실패·재개·관련 경로");
-    assert.match(recovery, /보존[\s\S]*사람 확인[\s\S]*재개/, `${answer.heading} preserve-review-resume sequence`);
-    assert.match(recovery, new RegExp("\\[" + escapeRegExp(contract.caseId) + "\\]\\(use-cases/(?:competency-paths|concept-scenarios)\\.md#[^)]+\\)"), `${answer.heading} related case link`);
-    assert.match(recovery, new RegExp(String.raw`\]\(skills/${escapeRegExp(contract.skill)}\.md\)`), `${answer.heading} related skill link`);
-    assert.match(recovery, /\]\(recipes\/[a-z0-9-]+\.md\)/, `${answer.heading} related recipe link`);
-  }
-}
-
-function careerArtifactReadOrder(artifactId) {
-  if (artifactId === "review-image-assets") return "assets/image-assets.yml → evidence.yml → decisions/";
-  const base = `game-design-career/<career-id>/${artifactId}`;
-  return `${base}/content.md → ${base}/evidence.yml → ${base}/decisions/ → ${base}/assets/README.md → ${base}/export-manifest.yml`;
-}
-
-function assertCareerFaqOutputs(markdown) {
-  const answers = markdownSections(markdown, 3);
-  assert.equal(answers.length, CAREER_FAQ_OUTPUT_CONTRACT.length, "Career FAQ output contract coverage");
-  for (const [index, answer] of answers.entries()) {
-    const [artifactId, fields, caseTarget, recipeTarget] = CAREER_FAQ_OUTPUT_CONTRACT[index];
-    const values = new Map(inlineFields(answer.body).map((field) => [field.label, field.value]));
-    const outcome = values.get("예상 결과·읽는 순서");
-    assert.ok(outcome.includes(careerArtifactReadOrder(artifactId)), `${answer.heading} exact artifact-relative read order`);
-    for (const field of fields) assert.ok(outcome.includes("`" + field + "`"), `${answer.heading} exact canonical output field: ${field}`);
-    const recovery = values.get("실패·재개·관련 경로");
-    assert.ok(recovery.includes(`](${caseTarget})`), `${answer.heading} exact case target`);
-    assert.ok(recovery.includes(`](${recipeTarget})`), `${answer.heading} exact recipe target`);
-  }
-}
-
-async function assertCareerFaqOutputSources(markdown) {
-  const answers = markdownSections(markdown, 3);
-  for (const [index, answer] of answers.entries()) {
-    const [artifactId, fields, caseTarget, recipeTarget] = CAREER_FAQ_OUTPUT_CONTRACT[index];
-    if (artifactId === "review-image-assets") {
-      const skill = await readFile(path.join(repoRoot, "guides/game-design-career/skills/review-image-assets.md"), "utf8");
-      assert.match(skill, /stable asset ID[\s\S]*decisionReceipt[\s\S]*derivative eligibility/, `${answer.heading} review-image-assets output contract`);
-    } else {
-      const template = await readFile(path.join(CAREER_TEMPLATE_SOURCE_ROOT, artifactId, "content.md"), "utf8");
-      for (const field of fields) assert.match(template, new RegExp("`" + field + "`"), `${answer.heading} source-derived template field: ${artifactId}.${field}`);
+    let recoveryOffset = -1;
+    for (const token of contract.recovery.sequence) {
+      recoveryOffset = recovery.indexOf(token, recoveryOffset + 1);
+      assert.ok(recoveryOffset >= 0, `${answer.heading} canonical recovery sequence: ${token}`);
     }
-    const recovery = new Map(inlineFields(answer.body).map((field) => [field.label, field.value])).get("실패·재개·관련 경로");
-    const skillTarget = `skills/${CAREER_FAQ_CONTRACT[index].skill}.md`;
-    for (const target of [caseTarget, skillTarget, recipeTarget]) {
-      const [relative, anchor] = target.split("#");
-      const targetPath = path.join(repoRoot, "guides/game-design-career", relative);
-      const stat = await lstat(targetPath);
-      assert.ok(stat.isFile() && !stat.isSymbolicLink(), `${answer.heading} link target file: ${target}`);
-      if (anchor) assert.ok(collectHeadingAnchors(await readFile(targetPath, "utf8")).has(anchor), `${answer.heading} link target anchor: ${target}`);
-      assert.ok(recovery.includes(`](${target})`), `${answer.heading} resolved link: ${target}`);
-    }
+    assert.ok(recovery.includes(contract.recovery.owner), `${answer.heading} canonical recovery owner`);
+    assert.ok(recovery.includes(`[${contract.case.id}](${contract.case.path}#${contract.case.anchor})`), `${answer.heading} canonical case link`);
+    assert.ok(recovery.includes(`](${contract.skillPath})`), `${answer.heading} canonical skill link`);
+    assert.ok(recovery.includes(`](${contract.recipePath})`), `${answer.heading} canonical recipe link`);
   }
 }
 
@@ -2645,33 +2684,110 @@ test("Career FAQ contains the eighteen approved questions with executable, bound
   assertCareerFaq(await readFile(faqPath, "utf8"));
 });
 
-test("Career FAQ outputs and links derive from installed templates and reject every wrong-valid mutation", async () => {
+test("Career routing owns the complete machine-readable FAQ contract", async () => {
+  const specQuestions = careerSpecQuestions(await readFile(CAREER_FAQ_SPEC_PATH, "utf8"));
+  await assertCareerFaqMetadata(CAREER_ROUTING, { specQuestions });
+});
+
+test("Career routing FAQ metadata rejects missing, duplicate, and unknown canonical IDs and paths", async () => {
+  const mutate = (change) => {
+    const routing = structuredClone(CAREER_ROUTING);
+    change(routing);
+    return routing;
+  };
+  const mutations = [
+    ["missing FAQ", (routing) => routing.faqContracts.pop(), /contract count/],
+    ["duplicate FAQ ID", (routing) => { routing.faqContracts[1].id = routing.faqContracts[0].id; }, /ordered IDs|unique IDs/],
+    ["unknown skill", (routing) => { routing.faqContracts[0].primarySkill = "not-installed"; }, /installed primary skill/],
+    ["unknown output", (routing) => { routing.faqContracts[0].expectedOutputs[0].id = "not-an-output"; }, /source-owned output ID/],
+    ["duplicate output", (routing) => { routing.faqContracts[11].expectedOutputs[1].id = routing.faqContracts[11].expectedOutputs[0].id; }, /unique output IDs/],
+    ["unknown case", (routing) => { routing.faqContracts[0].case.id = "CA-Z99"; }, /case ID and anchor agree/],
+    ["unknown route", (routing) => { routing.faqContracts[0].routingSource.id = "missing-route"; }, /known route/],
+    ["unknown read order", (routing) => { routing.faqContracts[0].readOrderId = "missing-order"; }, /recursive template read-order inventory|known readOrderId/],
+    ["unknown skill path", (routing) => { routing.faqContracts[0].skillPath = "skills/not-installed.md"; }, /canonical skill path/],
+    ["unknown recipe path", (routing) => { routing.faqContracts[0].recipePath = "recipes/not-installed.md"; }, /ENOENT|canonical target path/],
+  ];
+  for (const [label, change, error] of mutations) {
+    await assert.rejects(() => assertCareerFaqMetadata(mutate(change)), error, label);
+  }
+});
+
+test("Career FAQ recursive template inventory rejects an unregistered source file", async () => {
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-faq-templates-"));
+  const templateRoot = path.join(temporaryRoot, "templates");
+  try {
+    await cp(CAREER_TEMPLATE_SOURCE_ROOT, templateRoot, { recursive: true });
+    await writeFile(path.join(templateRoot, "competency-matrix", "new-required-record.md"), "# Required record\n", "utf8");
+    await assert.rejects(
+      () => assertCareerFaqMetadata(CAREER_ROUTING, { templateRoot }),
+      /recursive template read-order inventory|recursive template directory inventory/,
+    );
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test("Career FAQ exactly follows routing metadata and rejects exhaustive contract mutations", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-career", "faq.md");
   const markdown = await readFile(faqPath, "utf8");
-  assertCareerFaqOutputs(markdown);
-  await assertCareerFaqOutputSources(markdown);
+  assertCareerFaq(markdown);
   const answers = markdownSections(markdown, 3);
+  const allOutputIds = [...new Set(CAREER_ROUTING.faqContracts.flatMap(({ expectedOutputs }) => expectedOutputs.map(({ id }) => id)))];
+  const allFields = [...new Set(CAREER_ROUTING.faqContracts.flatMap(({ fields }) => fields))];
   for (const [index, answer] of answers.entries()) {
-    const [artifactId, fields, caseTarget, recipeTarget] = CAREER_FAQ_OUTPUT_CONTRACT[index];
+    const contract = CAREER_ROUTING.faqContracts[index];
     const values = new Map(inlineFields(answer.body).map((field) => [field.label, field.value]));
     const outcome = values.get("예상 결과·읽는 순서");
+    const request = values.get("실행 요청");
     const recovery = values.get("실패·재개·관련 경로");
-    const wrongArtifact = artifactId === "career-stage-goal" ? "competency-matrix" : "career-stage-goal";
-    if (artifactId === "review-image-assets") assert.throws(() => assertCareerFaqOutputs(markdown.replace(outcome, outcome.replace("image-asset-review", "portfolio-review"))), /exact canonical output field/, `${answer.heading} wrong-valid output mutation`);
-    else assert.throws(() => assertCareerFaqOutputs(markdown.replace(outcome, outcome.replace(artifactId, wrongArtifact))), /exact artifact-relative read order/, `${answer.heading} wrong-valid output mutation`);
-    assert.throws(() => assertCareerFaqOutputs(markdown.replace(outcome, outcome.replace("`" + fields[0] + "`", "`approval-status`"))), /exact canonical output field/, `${answer.heading} wrong-valid field mutation`);
-    assert.throws(() => assertCareerFaqOutputs(markdown.replace(outcome, outcome.replace(careerArtifactReadOrder(artifactId), careerArtifactReadOrder(artifactId).split(" → ").reverse().join(" → ")))), /exact artifact-relative read order/, `${answer.heading} read-order mutation`);
-    assert.throws(() => assertCareerFaqOutputs(markdown.replace(recovery, recovery.replace(caseTarget, caseTarget.replace(/#[^#]+$/, "#missing-anchor")))), /exact case target/, `${answer.heading} case-anchor mutation`);
-    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace("skills/" + CAREER_FAQ_CONTRACT[index].skill + ".md", "skills/not-installed.md"))), /related skill link/, `${answer.heading} skill-link mutation`);
-    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace("사람 확인", "자동 승인"))), /preserve-review-resume sequence/, `${answer.heading} recovery mutation`);
-    assert.ok(recipeTarget, `${answer.heading} recipe target declared`);
+    const wrongSkill = CAREER_ROUTING.skillIds.find((skill) => skill !== contract.primarySkill);
+    assert.throws(
+      () => assertCareerFaq(markdown.replace(request, request.replace(`$game-design-career:${contract.primarySkill}`, `$game-design-career:${wrongSkill}`))),
+      /canonical installed CLI request/,
+      `${answer.heading} wrong-valid CLI mutation`,
+    );
+    for (const output of contract.expectedOutputs) {
+      const wrongOutput = allOutputIds.find((id) => !contract.expectedOutputs.some((candidate) => candidate.id === id));
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replaceAll(output.id, ""))), /canonical output ID|canonical full read order/, `${answer.heading} ${output.id} omission`);
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replaceAll(output.id, wrongOutput))), /canonical output ID|canonical full read order/, `${answer.heading} ${output.id} wrong-valid swap`);
+    }
+    for (const field of contract.fields) {
+      const wrongField = allFields.find((candidate) => !contract.fields.includes(candidate));
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replaceAll(field, ""))), /canonical output field/, `${answer.heading} ${field} omission`);
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replaceAll(field, wrongField))), /canonical output field/, `${answer.heading} ${field} wrong-valid swap`);
+    }
+    const readOrder = faqReadOrder(contract, CAREER_ROUTING);
+    for (const inventoryItem of readOrder) {
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(inventoryItem, ""))), /canonical full read order/, `${answer.heading} ${inventoryItem} inventory omission`);
+    }
+    for (let orderIndex = 0; orderIndex < readOrder.length - 1; orderIndex += 1) {
+      const swapped = [...readOrder];
+      [swapped[orderIndex], swapped[orderIndex + 1]] = [swapped[orderIndex + 1], swapped[orderIndex]];
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(readOrder.join(" → "), swapped.join(" → ")))), /canonical full read order/, `${answer.heading} adjacent order swap ${orderIndex}`);
+    }
+    for (const output of contract.expectedOutputs.filter(({ kind }) => kind === "template")) {
+      const inventory = await recursiveArtifactInventory(path.join(CAREER_TEMPLATE_SOURCE_ROOT, output.templateId));
+      for (const item of inventory) {
+        const inventoryPath = `${output.path}/${item}`;
+        assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(inventoryPath, ""))), /canonical full read order/, `${answer.heading} ${item} recursive inventory mutation`);
+      }
+    }
+    const caseTarget = `${contract.case.path}#${contract.case.anchor}`;
+    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(caseTarget, `${contract.case.path}#missing-anchor`))), /canonical case link/, `${answer.heading} case-anchor mutation`);
+    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(contract.skillPath, "skills/not-installed.md"))), /canonical skill link/, `${answer.heading} skill-link mutation`);
+    assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(contract.recipePath, "recipes/not-installed.md"))), /canonical recipe link/, `${answer.heading} recipe-link mutation`);
+    for (const token of contract.recovery.sequence) {
+      assert.throws(() => assertCareerFaq(markdown.replace(recovery, recovery.replace(token, ""))), /canonical recovery sequence|canonical recovery owner/, `${answer.heading} recovery token mutation: ${token}`);
+    }
+    const safety = values.get("사람 검토·근거·권리·비보장");
+    assert.throws(() => assertCareerFaq(markdown.replace(safety, safety.replace("보장하지 않", "보장합"))), /safety term/, `${answer.heading} completion/non-guarantee mutation`);
   }
 });
 
 test("Career FAQ primary skills expose product-source Output Contract sections", async () => {
-  for (const { skill } of CAREER_FAQ_CONTRACT) {
-    const source = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", skill, "SKILL.md"), "utf8");
-    assert.match(source, /^## Output contract$/mi, `Career FAQ ${skill} product Output Contract`);
+  for (const { primarySkill } of CAREER_FAQ_CONTRACT) {
+    const source = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", primarySkill, "SKILL.md"), "utf8");
+    assert.match(source, /^## Output contract$/mi, `Career FAQ ${primarySkill} product Output Contract`);
   }
 });
 
@@ -2683,14 +2799,14 @@ test("Career FAQ contract rejects swapped answers, wrong CLI skills, and missing
     .replace(first.body, "__FIRST_ANSWER__")
     .replace(second.body, first.body)
     .replace("__FIRST_ANSWER__", second.body);
-  assert.throws(() => assertCareerFaq(swapped), /Q01\. .* conclusion term/);
+  assert.throws(() => assertCareerFaq(swapped), /Q01\. .* canonical installed CLI request/);
 
   const firstCli = fencedCodeBlocks(inlineFields(first.body).find(({ label }) => label === "실행 요청").value, "text")[1];
   const wrongCli = markdown.replace(firstCli, firstCli.replace("$game-design-career:map-game-design-career", "$game-design-career:not-installed"));
   assert.throws(() => assertCareerFaq(wrongCli), /Q01\. .* installed CLI request/);
 
   const firstRecovery = inlineFields(first.body).find(({ label }) => label === "실패·재개·관련 경로").value;
-  assert.throws(() => assertCareerFaq(markdown.replace(firstRecovery, firstRecovery.replace("사람 확인", "자동 승인"))), /Q01\. .* preserve-review-resume sequence/);
+  assert.throws(() => assertCareerFaq(markdown.replace(firstRecovery, firstRecovery.replace("사람 확인", "자동 승인"))), /Q01\. .* canonical recovery sequence/);
 });
 
 test("each audience route preserves its executable case, output, review, and resume contract", async () => {

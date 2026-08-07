@@ -40,7 +40,7 @@ Diagnose the career decision before selecting specialist work. Route evidence-ce
 
 ## Output Contract
 
-Return a Career Stage & Goal Brief containing:
+Return a Career Stage & Goal Brief as the `career-stage-goal` output containing:
 
 - normalized intake and explicit assumptions;
 - diagnosed stage and rationale;

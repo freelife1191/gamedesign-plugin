@@ -28,7 +28,7 @@ Do not invent team size, revenue, retention, personal ownership, implementation 
 
 ## Output Contract
 
-Return the target requirement register, project-event evidence ledger, quarterly goal records, feedback calendar, proof-artifact index, verification tasks, and re-evaluation decisions.
+Return the `junior-growth-review` output with the target requirement register, project-event evidence ledger, quarterly goal records, feedback calendar, proof-artifact index, verification tasks, and re-evaluation decisions.
 
 ## Completion
 

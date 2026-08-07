@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstat, readFile, readdir } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import test from "node:test";
@@ -99,6 +100,14 @@ const recipeTemplateContract = Object.freeze({
   "interview-preparation": [["interview-question-answer-log", ["question-id", "answer-status", "verification-task"]]],
   "junior-growth-transition": [["junior-growth-review", ["project-event-evidence", "next-review-date", "proof-artifact"]], ["transition-readiness", ["target-requirement", "retrieval-date", "verification-task"]]],
 });
+const recipeCompletionContract = Object.freeze({
+  "role-learning-roadmap": ["proof-artifact", "re-evaluation-date"],
+  "job-research-gap": ["sample-geography", "minimum-repair", "re-evaluation-date"],
+  "reverse-design": ["observation", "validation-method"],
+  "portfolio-build-review": ["claim-id", "evidence-id", "attribution", "rights", "minimum-repair", "owner"],
+  "interview-preparation": ["question-id", "answer-status", "verification-task"],
+  "junior-growth-transition": ["project-event-evidence", "proof-artifact", "next-review-date", "retrieval-date", "region"],
+});
 
 function section(markdown, heading) {
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -132,23 +141,66 @@ function assertRecipeResult(recipe, markdown) {
   assert.ok(byHeading.get("포트폴리오·면접 활용").includes(interviewTerm), recipe.id + " interview use");
 }
 
-async function assertRecipeTemplateResult(recipe, markdown) {
+async function recursiveTemplateInventory(directory, prefix = "") {
+  const inventory = [];
+  for (const entry of (await readdir(directory, { withFileTypes: true })).sort((left, right) => left.name.localeCompare(right.name))) {
+    const relative = `${prefix}${entry.name}`;
+    if (entry.isDirectory()) {
+      inventory.push(`${relative}/`);
+      inventory.push(...await recursiveTemplateInventory(path.join(directory, entry.name), `${relative}/`));
+    } else inventory.push(relative);
+  }
+  const rank = (item) => item === "content.md" ? 0
+    : item === "evidence.yml" ? 1
+      : item.startsWith("decisions/") ? 2
+        : item.startsWith("assets/") ? 3
+          : item === "export-manifest.yml" ? 5
+            : 4;
+  return inventory.sort((left, right) => rank(left) - rank(right) || left.length - right.length || left.localeCompare(right));
+}
+
+function templateLeafReadOrder(inventory) {
+  return inventory.filter((item) => !item.endsWith("/"));
+}
+
+function artifactExampleSegment(example, artifactId) {
+  const marker = `${artifactId}/content.md`;
+  const start = example.indexOf(marker);
+  if (start < 0) return example;
+  const next = example.slice(start + marker.length).search(/`[a-z0-9-]+\/content\.md`/);
+  return next < 0 ? example.slice(start) : example.slice(start, start + marker.length + next);
+}
+
+async function assertRecipeTemplateResult(recipe, markdown, sourceRoot = templateSourceRoot) {
   const result = section(markdown, "예상 결과");
   const byHeading = new Map(h3Sections(result).map(({ heading, body }) => [heading, body]));
   const expected = recipeTemplateContract[recipe.id];
+  const templateFieldInventory = new Set();
   for (const [artifactId, fields] of expected) {
-    const template = await readFile(path.join(templateSourceRoot, artifactId, "content.md"), "utf8");
+    const templateDirectory = path.join(sourceRoot, artifactId);
+    const template = await readFile(path.join(templateDirectory, "content.md"), "utf8");
+    for (const match of template.matchAll(/^\| `([^`]+)` \|/gm)) templateFieldInventory.add(match[1]);
     for (const field of fields) assert.match(template, new RegExp("`" + field + "`"), recipe.id + " canonical template field: " + artifactId + "." + field);
-    const walk = async (directory, prefix = "") => (await readdir(directory, { withFileTypes: true })).flatMap(async (entry) => entry.isDirectory()
-      ? [prefix + entry.name + "/", ...(await walk(path.join(directory, entry.name), prefix + entry.name + "/"))]
-      : [prefix + entry.name]);
-    const inventory = (await Promise.all(await walk(path.join(templateSourceRoot, artifactId)))).flat();
-    for (const file of inventory.filter((file) => /^(?:content\.md|evidence\.yml|decisions\/|assets\/README\.md|export-manifest\.yml)$/.test(file))) assert.ok(file.length > 0, recipe.id + " source inventory item");
-    const treePattern = new RegExp(artifactId + "/[\\s\\S]{0,220}?content\\.md[\\s\\S]{0,220}?evidence\\.yml[\\s\\S]{0,220}?decisions/[\\s\\S]{0,220}?assets/[\\s\\S]{0,220}?README\\.md[\\s\\S]{0,220}?export-manifest\\.yml");
-    assert.match(byHeading.get("예상 파일 트리"), treePattern, recipe.id + " artifact subtree: " + artifactId);
-    for (const field of fields) assert.ok(byHeading.get("대표 내용 예시").includes("`" + field + "`"), recipe.id + " representative canonical field: " + field);
-    const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/assets/README.md → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
+    const inventory = await recursiveTemplateInventory(templateDirectory);
+    const tree = byHeading.get("예상 파일 트리");
+    const artifactTreeStart = tree.indexOf(`${artifactId}/`);
+    assert.ok(artifactTreeStart >= 0, recipe.id + " artifact subtree: " + artifactId);
+    const nextArtifactStart = expected.map(([candidate]) => tree.indexOf(`${candidate}/`, artifactTreeStart + artifactId.length + 1)).filter((index) => index > artifactTreeStart).sort((left, right) => left - right)[0] ?? tree.length;
+    const artifactTree = tree.slice(artifactTreeStart, nextArtifactStart);
+    for (const item of inventory) {
+      const token = item.endsWith("/") ? item.slice(0, -1) + "/" : path.basename(item);
+      const requiredCount = inventory.filter((candidate) => (candidate.endsWith("/") ? candidate.slice(0, -1) + "/" : path.basename(candidate)) === token).length;
+      assert.ok(artifactTree.split(token).length - 1 >= requiredCount, recipe.id + " recursive template inventory item: " + artifactId + "/" + item);
+    }
+    const exampleSegment = artifactExampleSegment(byHeading.get("대표 내용 예시"), artifactId);
+    for (const field of fields) assert.ok(exampleSegment.includes("`" + field + "`"), recipe.id + " representative canonical field: " + artifactId + "." + field);
+    const order = templateLeafReadOrder(inventory).map((item) => `game-design-career/<career-id>/${artifactId}/${item}`).join(" → ");
     assert.ok(byHeading.get("읽는 순서").includes(order), recipe.id + " canonical artifact read order: " + artifactId);
+  }
+  const completion = byHeading.get("완료 기준");
+  for (const token of recipeCompletionContract[recipe.id]) {
+    assert.ok(templateFieldInventory.has(token), recipe.id + " completion token has a template source: " + token);
+    assert.ok(completion.includes("`" + token + "`"), recipe.id + " template-backed completion criterion: " + token);
   }
 }
 
@@ -317,11 +369,57 @@ test("Career recipe source contracts reject every wrong-valid field, artifact, a
     const entries = new Map(h3Sections(result).map(({ heading, body }) => [heading, body]));
     for (const [artifactId, fields] of recipeTemplateContract[recipe.id]) {
       const wrongArtifact = artifactId === "career-stage-goal" ? "competency-matrix" : "career-stage-goal";
-      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replace(artifactId, wrongArtifact))), /artifact subtree/, `${recipe.id} ${artifactId} wrong-valid artifact mutation`);
-      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("대표 내용 예시"), entries.get("대표 내용 예시").replace("`" + fields[0] + "`", "`approval-status`"))), /representative canonical field/, `${recipe.id} ${artifactId} wrong-valid field mutation`);
-      const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/assets/README.md → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
-      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(order, order.split(" → ").reverse().join(" → "))), /canonical artifact read order/, `${recipe.id} ${artifactId} read-order mutation`);
+      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replaceAll(artifactId, ""))), /artifact subtree|canonical artifact read order/, `${recipe.id} ${artifactId} output omission`);
+      await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replaceAll(artifactId, wrongArtifact))), /artifact subtree|canonical artifact read order/, `${recipe.id} ${artifactId} wrong-valid output mutation`);
+      for (const field of fields) {
+        const example = entries.get("대표 내용 예시");
+        const segment = artifactExampleSegment(example, artifactId);
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(example, example.replace(segment, segment.replace("`" + field + "`", "")))), /representative canonical field/, `${recipe.id} ${artifactId}.${field} omission`);
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(example, example.replace(segment, segment.replace("`" + field + "`", "`approval-status`")))), /representative canonical field/, `${recipe.id} ${artifactId}.${field} wrong-valid mutation`);
+      }
+      const inventory = await recursiveTemplateInventory(path.join(templateSourceRoot, artifactId));
+      const readOrder = templateLeafReadOrder(inventory).map((item) => `game-design-career/<career-id>/${artifactId}/${item}`);
+      for (const item of inventory) {
+        const exactPath = `game-design-career/<career-id>/${artifactId}/${item}`;
+        const token = item.endsWith("/") ? item : exactPath;
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replace(token, ""))), /recursive template inventory item|canonical artifact read order/, `${recipe.id} ${artifactId}/${item} inventory omission`);
+      }
+      for (let index = 0; index < readOrder.length - 1; index += 1) {
+        const swapped = [...readOrder];
+        [swapped[index], swapped[index + 1]] = [swapped[index + 1], swapped[index]];
+        await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(readOrder.join(" → "), swapped.join(" → "))), /canonical artifact read order/, `${recipe.id} ${artifactId} adjacent read-order mutation ${index}`);
+      }
     }
+    for (const token of recipeCompletionContract[recipe.id]) {
+      await assert.rejects(
+        () => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("완료 기준"), entries.get("완료 기준").replace("`" + token + "`", ""))),
+        /template-backed completion criterion/,
+        `${recipe.id} completion criterion omission: ${token}`,
+      );
+    }
+  }
+});
+
+test("Career recipe recursive inventory rejects unregistered template source files and directories", async () => {
+  const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-recipe-templates-"));
+  const sourceRoot = path.join(temporaryRoot, "templates");
+  try {
+    await cp(templateSourceRoot, sourceRoot, { recursive: true });
+    await writeFile(path.join(sourceRoot, "competency-matrix", "new-required-record.md"), "# Required record\n", "utf8");
+    const recipe = recipes.find(({ id }) => id === "job-research-gap");
+    const markdown = await readFile(path.join(root, "guides/game-design-career/recipes", recipe.id + ".md"), "utf8");
+    await assert.rejects(
+      () => assertRecipeTemplateResult(recipe, markdown, sourceRoot),
+      /recursive template inventory item/,
+    );
+    await rm(path.join(sourceRoot, "competency-matrix", "new-required-record.md"));
+    await mkdir(path.join(sourceRoot, "competency-matrix", "new-required-directory"));
+    await assert.rejects(
+      () => assertRecipeTemplateResult(recipe, markdown, sourceRoot),
+      /recursive template inventory item/,
+    );
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
   }
 });
 
