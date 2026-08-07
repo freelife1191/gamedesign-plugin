@@ -102,8 +102,13 @@ async function loadSources(repoRoot) {
     const routing = JSON.parse(await readFile(routingFilename, "utf8"));
     validateStudioDiagramProductionBatch(parsed, routing);
   }
-  const careerRoutingFilename = path.join(repoRoot, careerRoutingFile);
-  if (await lstatIfPresent(careerRoutingFilename)) {
+  const hasCareerSources = parsed.some(({ scope }) => scope === "game-design-career-use-case" || scope === "game-design-career-skill");
+  if (hasCareerSources) {
+    const careerRoutingFilename = path.join(repoRoot, careerRoutingFile);
+    const routingEntry = await lstatIfPresent(careerRoutingFilename);
+    if (!routingEntry?.isFile() || routingEntry.isSymbolicLink()) {
+      throw new Error(`Career production routing file is required when Career sources are present: ${careerRoutingFile}`);
+    }
     const routing = JSON.parse(await readFile(careerRoutingFilename, "utf8"));
     validateCareerDiagramProductionBatch(parsed, routing);
   }

@@ -90,3 +90,10 @@
 - `ca-t01.png`, `ca-t02.png`: high/original 첫 검사에서 5번 card의 output/route 중복 표시가 card 아래로 내려가는 결함을 발견했습니다. output은 rail에 보존하고 card는 두 ordered route target만 한 줄로 표시하도록 교정한 뒤 다시 high/original로 확인했습니다. 두 branch, review owner, non-guarantee boundary, failure→preserve→confirm→resume footer가 겹침 없이 판독됩니다.
 - `practice-game-design-interview.png`(CA-S09): 변경 후 semantic source 문자열이 가장 긴 Career skill입니다. high/original에서 fresh posting·stable questionId 확인, 기존 stale 기록 보존, answer-feedback 재개, growth/portfolio review route와 채용 비보장 경계를 확인했습니다.
 - 자동 증거: Career 33개 임시 SVG lint는 오류 0·경고 0, 전체 `npm run check:guide-diagrams`는 72 SVG/PNG 동등성·2× 치수·IEND를 통과했습니다. 시각 QA 후 교정된 CA-T01…CA-T10은 공식 builder `--id` 단일 프로세스로 재생성했습니다.
+
+## Career Task 6 Fix round 2 재검사 — 2026-08-07
+
+- `apply-document-quality-profile.png`(CA-S01), `orchestrate-game-design-career.png`(CA-S06): high/original에서 각각 authority guide의 ordered route 10개와 9개를 확인했습니다. 5번 card는 전체 개수와 footer 위치만 안내하고, footer의 4줄/3줄에는 모든 `condition→installed skill ID`가 순서대로 남아 있습니다. `<selected-skill>` placeholder, 강제 가로 확대, card/footer overflow, clipping·겹침이 없습니다.
+- 시각 교정: 첫 high 검사에서 CA-S01의 마지막 단일 route 줄이 `textLength`로 과도하게 늘어나는 문제를 발견해 footer route 전용 자연 폭 텍스트로 교정했습니다. original 검사에서 10/9개 route, next condition, reviewer·boundary·failure·preserve·confirmation·resume 의미가 containment 안에서 판독됨을 다시 확인했습니다.
+- 계약/회귀: CA-S01/S06 source와 production contract는 authority guide의 정확한 route 조건·대상을 비교하며 각 조건/대상 mutation을 거부합니다. 일반 non-Career `decision-flow`는 정확히 두 branch만 허용하고 기존 두 branch 좌표 `[298, 505]`를 보존해 세 번째 branch가 `y=505`에 겹치는 경로를 fail-closed로 차단합니다.
+- 자동 증거: 최종 Career 33개 build/check와 `npm run check:guide-diagrams`가 종료 코드 0으로 통과했고 전체 72 SVG/PNG의 deterministic byte equality, Skillstead lint, `2800×1800`, IEND 완결성을 확인했습니다. 기준 `fb0402ee5eebf008d567f4cec5bcb7784941ff5e` 대비 CA-S01/S06 4개 asset 외 예상 밖 drift는 0입니다.

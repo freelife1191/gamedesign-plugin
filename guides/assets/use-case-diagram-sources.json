@@ -3481,20 +3481,48 @@
       "preserve": "기존 기록",
       "human_confirmation": "document-quality-editor가 설치된 template과 artifact ID를 확인",
       "resume": "같은 선택 기록에서 재개",
-      "next_condition": "허용된 map·research·selected route일 때",
+      "next_condition": "map·research·portfolio·reverse·interview·review·growth·visualization·export·image plan route일 때만",
       "next_route": "map-game-design-career",
       "next_routes": [
         {
-          "condition": "map route",
+          "condition": "map route일 때",
           "target": "map-game-design-career"
         },
         {
-          "condition": "research route",
+          "condition": "research route일 때",
           "target": "research-game-design-jobs"
         },
         {
-          "condition": "selected route",
-          "target": "<selected-skill>"
+          "condition": "portfolio route일 때",
+          "target": "build-game-design-portfolio"
+        },
+        {
+          "condition": "reverse route일 때",
+          "target": "reverse-engineer-game-design"
+        },
+        {
+          "condition": "interview route일 때",
+          "target": "practice-game-design-interview"
+        },
+        {
+          "condition": "review route일 때",
+          "target": "review-game-design-portfolio"
+        },
+        {
+          "condition": "growth route일 때",
+          "target": "plan-junior-growth"
+        },
+        {
+          "condition": "visualization route일 때",
+          "target": "visualize-career-roadmap"
+        },
+        {
+          "condition": "export route일 때",
+          "target": "export-career-documents"
+        },
+        {
+          "condition": "image plan route일 때",
+          "target": "plan-image-assets"
         }
       ]
     }
@@ -3840,20 +3868,44 @@
       "preserve": "unknown",
       "human_confirmation": "decision owner가 stage를 확인",
       "resume": "확인된 route에서 재개",
-      "next_condition": "선택 route일 때",
+      "next_condition": "선택 route가 map·research·portfolio·reverse·interview·review·growth·visualization·export 중 하나일 때만",
       "next_route": "map-game-design-career",
       "next_routes": [
         {
-          "condition": "map route",
+          "condition": "선택 route가 map일 때",
           "target": "map-game-design-career"
         },
         {
-          "condition": "research route",
+          "condition": "선택 route가 research일 때",
           "target": "research-game-design-jobs"
         },
         {
-          "condition": "selected route",
-          "target": "<selected-skill>"
+          "condition": "선택 route가 portfolio일 때",
+          "target": "build-game-design-portfolio"
+        },
+        {
+          "condition": "선택 route가 reverse일 때",
+          "target": "reverse-engineer-game-design"
+        },
+        {
+          "condition": "선택 route가 interview일 때",
+          "target": "practice-game-design-interview"
+        },
+        {
+          "condition": "선택 route가 review일 때",
+          "target": "review-game-design-portfolio"
+        },
+        {
+          "condition": "선택 route가 growth일 때",
+          "target": "plan-junior-growth"
+        },
+        {
+          "condition": "선택 route가 visualization일 때",
+          "target": "visualize-career-roadmap"
+        },
+        {
+          "condition": "선택 route가 export일 때",
+          "target": "export-career-documents"
         }
       ]
     }

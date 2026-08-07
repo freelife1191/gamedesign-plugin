@@ -212,7 +212,10 @@ function visibleStep(source, step, index) {
       return { ...step, exact: index === 4 ? finalExact : [exact[index]] };
     }
     const routes = source.semantic.next_routes.map(({ target }) => target);
-    const exact = [source.semantic.trigger, source.semantic.required_input, source.semantic.owned_work, null, routes.length ? routes : ["terminal · 자동 route 없음"]];
+    const nextRouteExact = routes.length > 3
+      ? [`${routes.length} ordered routes · 아래 전체 표시`]
+      : routes.length > 0 ? routes : ["terminal · 자동 route 없음"];
+    const exact = [source.semantic.trigger, source.semantic.required_input, source.semantic.owned_work, null, nextRouteExact];
     return { ...step, exact: index === 3 ? source.semantic.outputs : Array.isArray(exact[index]) ? exact[index] : [exact[index]] };
   }
   if (!isStudioSource(source)) return step;
@@ -237,6 +240,7 @@ function visibleStep(source, step, index) {
 function semanticRailGroups(source) {
   if (isCareerSource(source)) {
     if (source.scope === "game-design-career-skill") {
+      const routeFooterLines = careerRouteFooterLines(source);
       return {
         left: [
           `skill / reviewer: ${source.semantic.skill} / ${source.semantic.reviewer}`,
@@ -245,7 +249,9 @@ function semanticRailGroups(source) {
           `boundary: ${source.semantic.boundary}`,
         ],
         right: [
-          `routes: ${source.semantic.next_routes.map(({ condition, target }) => `${condition}→${target}`).join(" · ") || "terminal"}`,
+          routeFooterLines.length > 0
+            ? `routes: ${source.semantic.next_routes.length} ordered authority routes (아래 전체 표시)`
+            : `routes: ${source.semantic.next_routes.map(({ condition, target }) => `${condition}→${target}`).join(" · ") || "terminal"}`,
           `failure / preserve: ${source.semantic.failure} / ${source.semantic.preserve}`,
           `confirm / resume: ${source.semantic.human_confirmation} / ${source.semantic.resume}`,
           `next condition: ${source.semantic.next_condition}`,
@@ -308,6 +314,20 @@ function footerDetail(source) {
   return `review → boundary → next: ${source.semantic.human_review} → ${source.semantic.boundary} → ${source.semantic.next_route}`;
 }
 
+function careerRouteFooterLines(source) {
+  if (!isCareerSource(source) || source.scope !== "game-design-career-skill" || source.semantic.next_routes.length <= 3) return [];
+  const groups = [];
+  for (const [index, route] of source.semantic.next_routes.entries()) {
+    if (index % 3 === 0) groups.push([]);
+    groups.at(-1).push(`${route.condition}→${route.target}`);
+  }
+  return groups.map((routes, index) => {
+    const first = index * 3 + 1;
+    const last = first + routes.length - 1;
+    return `routes ${first}-${last}: ${routes.join(" · ")}`;
+  });
+}
+
 export function validateDiagramSource(source) {
   if (!isObject(source)) throw new TypeError("diagram source must be an object");
   for (const field of REQUIRED_FIELDS) {
@@ -334,6 +354,16 @@ export function validateDiagramSource(source) {
   for (const field of ["source_paths", "used_by"]) {
     if (!Array.isArray(source[field]) || source[field].length === 0 || source[field].some((value) => !isNonemptyString(value))) {
       throw new TypeError(`diagram source ${field} must contain nonempty paths`);
+    }
+  }
+  if (source.type === "decision-flow" && (!Array.isArray(source.branches) || source.branches.length !== 2)) {
+    throw new TypeError("diagram source decision-flow must contain exactly two branches");
+  }
+  if (source.type === "decision-flow") {
+    for (const [index, branch] of source.branches.entries()) {
+      if (!isObject(branch) || !isNonemptyString(branch.label) || !isNonemptyString(branch.detail)) {
+        throw new TypeError(`diagram source decision branch ${index} must have label and detail`);
+      }
     }
   }
   validateStudioSemanticContract(source);
@@ -414,9 +444,13 @@ export function renderDiagramSvg(source) {
       ].join("\n")
     : "";
   const detail = footerDetail(source);
-  const footerDetailMarkup = detail
+  const careerRouteLines = careerRouteFooterLines(source);
+  const footerDetailMarkup = detail && careerRouteLines.length === 0
     ? semanticRailText(detail, { x: 84, y: 821, width: 1232 }).replace('font-size="', 'font-weight="500" font-size="')
     : "";
+  const careerRouteMarkup = careerRouteLines.map((line, index) => (
+    `  <text data-career-route-line="true" x="84" y="${778 + index * 14}" fill="#354152" font-size="7" font-weight="500">${escapeXml(line)}</text>`
+  )).join("\n");
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="${escapeXml(source.alt)}">`,
@@ -438,11 +472,12 @@ export function renderDiagramSvg(source) {
     cardMarkup,
     semanticRail,
     '  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>',
-    '  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>',
+    `  <text x="84" y="${careerRouteLines.length > 0 ? 730 : 758}" fill="#124267" font-size="18" font-weight="700">다음 경계</text>`,
     isCareerSource(source)
-      ? `  <text x="84" y="792" fill="#1F2733" font-size="22">${escapeXml(source.conclusion)}</text>`
+      ? `  <text x="84" y="${careerRouteLines.length > 0 ? 756 : 792}" fill="#1F2733" font-size="${careerRouteLines.length > 0 ? 18 : 22}">${escapeXml(source.conclusion)}</text>`
       : `  <text x="84" y="798" fill="#1F2733" font-size="24">${escapeXml(source.conclusion)}</text>`,
     footerDetailMarkup,
+    careerRouteMarkup,
     '</svg>',
     '',
   ].filter(Boolean).join("\n") + "\n";

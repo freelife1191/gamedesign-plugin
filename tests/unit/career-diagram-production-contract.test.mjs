@@ -12,7 +12,7 @@ import {
   validateCareerDiagramProductionBatch,
   validateCareerDiagramProductionContract,
 } from "../../tooling/lib/career-diagram-production-contract.mjs";
-import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const expectedIds = [
@@ -20,6 +20,31 @@ const expectedIds = [
   ...Array.from({ length: 10 }, (_, index) => `ca-t${String(index + 1).padStart(2, "0")}`),
   ...Array.from({ length: 15 }, (_, index) => `ca-s${String(index + 1).padStart(2, "0")}`),
 ];
+const expectedAuthorityRoutes = Object.freeze({
+  "ca-s01": [
+    { condition: "map route일 때", target: "map-game-design-career" },
+    { condition: "research route일 때", target: "research-game-design-jobs" },
+    { condition: "portfolio route일 때", target: "build-game-design-portfolio" },
+    { condition: "reverse route일 때", target: "reverse-engineer-game-design" },
+    { condition: "interview route일 때", target: "practice-game-design-interview" },
+    { condition: "review route일 때", target: "review-game-design-portfolio" },
+    { condition: "growth route일 때", target: "plan-junior-growth" },
+    { condition: "visualization route일 때", target: "visualize-career-roadmap" },
+    { condition: "export route일 때", target: "export-career-documents" },
+    { condition: "image plan route일 때", target: "plan-image-assets" },
+  ],
+  "ca-s06": [
+    { condition: "선택 route가 map일 때", target: "map-game-design-career" },
+    { condition: "선택 route가 research일 때", target: "research-game-design-jobs" },
+    { condition: "선택 route가 portfolio일 때", target: "build-game-design-portfolio" },
+    { condition: "선택 route가 reverse일 때", target: "reverse-engineer-game-design" },
+    { condition: "선택 route가 interview일 때", target: "practice-game-design-interview" },
+    { condition: "선택 route가 review일 때", target: "review-game-design-portfolio" },
+    { condition: "선택 route가 growth일 때", target: "plan-junior-growth" },
+    { condition: "선택 route가 visualization일 때", target: "visualize-career-roadmap" },
+    { condition: "선택 route가 export일 때", target: "export-career-documents" },
+  ],
+});
 
 const clone = (value) => structuredClone(value);
 
@@ -71,6 +96,48 @@ test("Career production contract owns the exact 33 source IDs and validates the 
   assert.deepEqual(Object.keys(CAREER_DIAGRAM_PRODUCTION_CONTRACT), expectedIds);
   const { sources, routing } = await readProductionInputs();
   assert.doesNotThrow(() => validateCareerDiagramProductionBatch(sources, routing));
+});
+
+test("CA-S01 and CA-S06 preserve every authority-guide route condition and target in order", async () => {
+  const { sources } = await readProductionInputs();
+  for (const [id, expected] of Object.entries(expectedAuthorityRoutes)) {
+    const source = sources.find((candidate) => candidate.id === id);
+    assert.deepEqual(source.semantic.next_routes, expected, `${id} stored authority routes`);
+    assert.deepEqual(CAREER_DIAGRAM_PRODUCTION_CONTRACT[id].semantic.next_routes, expected, `${id} production authority routes`);
+    assert.equal(source.semantic.next_routes.some(({ target }) => target === "<selected-skill>"), false, `${id} has no placeholder target`);
+  }
+});
+
+test("Career production validator rejects every wrong-valid CA-S01 and CA-S06 authority route mutation", () => {
+  for (const [id, expected] of Object.entries(expectedAuthorityRoutes)) {
+    for (const [index, route] of expected.entries()) {
+      const wrongCondition = clone(CAREER_DIAGRAM_PRODUCTION_CONTRACT[id]);
+      wrongCondition.semantic.next_routes[index].condition = `${route.condition} 외`;
+      assert.throws(() => validateCareerDiagramProductionContract(wrongCondition), /Career production contract mismatch/u, `${id} route ${index} condition`);
+
+      const wrongTarget = clone(CAREER_DIAGRAM_PRODUCTION_CONTRACT[id]);
+      wrongTarget.semantic.next_routes[index].target = expected[(index + 1) % expected.length].target;
+      assert.throws(() => validateCareerDiagramProductionContract(wrongTarget), /Career production contract mismatch/u, `${id} route ${index} target`);
+    }
+  }
+});
+
+test("CA-S01 and CA-S06 render every authority route across bounded footer lines", async () => {
+  const { sources } = await readProductionInputs();
+  for (const [id, expected] of Object.entries(expectedAuthorityRoutes)) {
+    const svg = renderDiagramSvg(sources.find((candidate) => candidate.id === id));
+    const routeElements = [...svg.matchAll(/<text[^>]*data-career-route-line="true"[^>]*>([^<]*)<\/text>/gu)];
+    const routeLines = routeElements.map((match) => match[1]);
+
+    assert.equal(routeLines.length, Math.ceil(expected.length / 3), `${id} bounded route line count`);
+    assert.ok(routeElements.every((match) => !/textLength=/u.test(match[0])), `${id} route lines use their natural width`);
+    assert.ok(routeLines.every((line) => [...line.matchAll(/→/gu)].length <= 3), `${id} routes are grouped at no more than three per line`);
+    const nextRouteCard = /<g aria-label="읽기 순서 5:[\s\S]*?<\/g>/u.exec(svg)?.[0] ?? "";
+    assert.match(nextRouteCard, new RegExp(`${expected.length} ordered routes · 아래 전체 표시`, "u"), `${id} next-route card delegates the full list to the footer`);
+    for (const { condition, target } of expected) {
+      assert.ok(routeLines.some((line) => line.includes(`${condition}→${target}`)), `${id} renders ${condition}→${target}`);
+    }
+  }
 });
 
 test("Career production contract rejects exhaustive deletion, wrong-valid cross-ID, reorder, duplicate, and extra mutations", () => {
@@ -173,5 +240,21 @@ test("production builder source loading invokes the Career batch validator", asy
   await assert.rejects(
     () => buildUseCaseDiagrams({ repoRoot: fixtureRoot, ids: ["ca-s10"] }),
     /ca-s10.*semantic/u,
+  );
+});
+
+test("production builder fails closed before manifest loading when Career routing is missing", async (t) => {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "career-diagram-routing-required-test-"));
+  t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+  const { sources } = await readProductionInputs();
+  await mkdir(path.join(fixtureRoot, "guides/assets"), { recursive: true });
+  await writeFile(path.join(fixtureRoot, "guides/assets/use-case-diagram-sources.json"), JSON.stringify(sources));
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot: fixtureRoot, ids: ["ca-s01"] }),
+    {
+      name: "Error",
+      message: "Career production routing file is required when Career sources are present: products/game-design-career/plugin/references/routing.json",
+    },
   );
 });

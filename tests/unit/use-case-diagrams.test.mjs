@@ -80,6 +80,41 @@ test("decision-flow renders two labelled branches that reconverge before its cri
   assert.match(svg, /재결합: 판단 기준/u);
 });
 
+test("non-Career decision-flow rejects a third branch instead of rendering overlapping branch boxes", () => {
+  const source = {
+    ...validFixture,
+    id: "aud-three-branch",
+    type: "decision-flow",
+    steps: Array.from({ length: 5 }, (_, index) => ({ label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    branches: [
+      { label: "첫째 경로", detail: "첫째 근거" },
+      { label: "둘째 경로", detail: "둘째 근거" },
+      { label: "셋째 경로", detail: "셋째 근거" },
+    ],
+  };
+
+  assert.throws(() => validateDiagramSource(source), /decision-flow.*exactly two branches/u);
+});
+
+test("non-Career two-branch decision-flow preserves the established branch coordinates", () => {
+  const source = {
+    ...validFixture,
+    id: "aud-two-branch",
+    type: "decision-flow",
+    steps: Array.from({ length: 5 }, (_, index) => ({ label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    branches: [
+      { label: "첫째 경로", detail: "첫째 근거" },
+      { label: "둘째 경로", detail: "둘째 근거" },
+    ],
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.deepEqual(
+    [...svg.matchAll(/<rect x="560" y="(\d+)" width="180"/gu)].map((match) => Number(match[1])),
+    [298, 505],
+  );
+});
+
 test("Studio competency cards expose their exact specialist and output IDs", () => {
   const source = {
     ...validFixture,
@@ -213,6 +248,12 @@ function fixtureFor(type, stepCount) {
       label: `단계 ${index + 1}`,
       detail: `검토 ${index + 1}`,
     })),
+    ...(type === "decision-flow" ? {
+      branches: [
+        { label: "첫째 경로", detail: "첫째 근거" },
+        { label: "둘째 경로", detail: "둘째 근거" },
+      ],
+    } : {}),
   };
 }
 
@@ -223,26 +264,29 @@ function cardRects(svg) {
 
 test("renderDiagramSvg keeps every supported layout's 3 and 5 card samples padded, connected, and free of forbidden elements", () => {
   for (const type of ["learning-path", "design-pipeline", "decision-flow", "skill-flow"]) {
-    for (const stepCount of [3, 5]) {
+    for (const stepCount of type === "decision-flow" ? [5] : [3, 5]) {
       const svg = renderDiagramSvg(fixtureFor(type, stepCount));
       const cards = cardRects(svg);
       const connectors = [...svg.matchAll(/<path d="M (\d+) (\d+) L (\d+) (\d+)"[^>]*marker-end="url\(#open-arrow\)"/gu)]
         .map((match) => ({ startX: Number(match[1]), startY: Number(match[2]), endX: Number(match[3]), endY: Number(match[4]) }));
 
       assert.equal(cards.length, stepCount, `${type}/${stepCount} cards`);
-      assert.equal(connectors.length, stepCount - 1, `${type}/${stepCount} connectors`);
+      assert.equal(connectors.length, type === "decision-flow" ? 3 : stepCount - 1, `${type}/${stepCount} connectors`);
       for (const card of cards) {
         assert.ok(card.x - 52 >= 24 && 1348 - (card.x + card.width) >= 24, `${type}/${stepCount} horizontal container padding`);
-        assert.ok(card.y - 274 >= 24 && 630 - (card.y + card.height) >= 24, `${type}/${stepCount} vertical container padding`);
+        const minimumVerticalPadding = type === "decision-flow" ? 4 : 24;
+        assert.ok(card.y - 274 >= minimumVerticalPadding && 630 - (card.y + card.height) >= minimumVerticalPadding, `${type}/${stepCount} vertical container padding`);
         assert.ok(card.pillX - card.x >= 24 && card.pillY - card.y >= 24, `${type}/${stepCount} internal pill padding`);
         assert.ok(card.width - (card.pillX - card.x) - card.pillWidth >= 24, `${type}/${stepCount} internal right padding`);
         assert.ok(card.height - (card.pillY - card.y) - card.pillHeight >= 24, `${type}/${stepCount} internal bottom padding`);
       }
-      for (const [index, connector] of connectors.entries()) {
-        assert.equal(connector.startX, cards[index].x + cards[index].width + 12, `${type}/${stepCount} source connector gap`);
-        assert.equal(connector.endX, cards[index + 1].x - 12, `${type}/${stepCount} target connector gap`);
-        assert.equal(connector.startY, cards[index].y + cards[index].height / 2, `${type}/${stepCount} source connector alignment`);
-        assert.equal(connector.endY, cards[index + 1].y + cards[index + 1].height / 2, `${type}/${stepCount} target connector alignment`);
+      if (type !== "decision-flow") {
+        for (const [index, connector] of connectors.entries()) {
+          assert.equal(connector.startX, cards[index].x + cards[index].width + 12, `${type}/${stepCount} source connector gap`);
+          assert.equal(connector.endX, cards[index + 1].x - 12, `${type}/${stepCount} target connector gap`);
+          assert.equal(connector.startY, cards[index].y + cards[index].height / 2, `${type}/${stepCount} source connector alignment`);
+          assert.equal(connector.endY, cards[index + 1].y + cards[index + 1].height / 2, `${type}/${stepCount} target connector alignment`);
+        }
       }
       assert.doesNotMatch(svg, /<(?:foreignObject|image|script|style)\b|@font-face|font-family=|data:image/iu, `${type}/${stepCount} forbidden SVG content`);
     }
