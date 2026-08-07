@@ -1,13 +1,12 @@
 import assert from "node:assert/strict";
-import { lstat, readFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
-  collectHeadingAnchors,
   collectProductInventory,
-  extractMarkdownLinks,
 } from "../../tooling/lib/user-guides.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
@@ -57,21 +56,129 @@ function section(markdown, heading) {
   return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
 }
 
-function h2Headings(markdown) {
-  return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function assertContainedPath(filename, target) {
+function visibleMarkdownSource(markdown) {
+  const visibleLines = [];
+  let fence;
+  let inComment = false;
+  for (const line of markdown.split(/\r?\n/u)) {
+    if (fence) {
+      const closingFence = new RegExp(`^ {0,3}${escapeRegExp(fence.character)}{${fence.length},}[ \\t]*$`, "u");
+      if (closingFence.test(line)) fence = undefined;
+      visibleLines.push("");
+      continue;
+    }
+    const openingFence = /^( {0,3})(`{3,}|~{3,})(.*)$/u.exec(line);
+    if (openingFence) {
+      fence = { character: openingFence[2][0], length: openingFence[2].length };
+      visibleLines.push("");
+      continue;
+    }
+    let cursor = 0;
+    let visible = "";
+    while (cursor < line.length) {
+      if (inComment) {
+        const end = line.indexOf("-->", cursor);
+        if (end === -1) {
+          cursor = line.length;
+          continue;
+        }
+        inComment = false;
+        cursor = end + 3;
+        continue;
+      }
+      const start = line.indexOf("<!--", cursor);
+      if (start === -1) {
+        visible += line.slice(cursor);
+        break;
+      }
+      visible += line.slice(cursor, start);
+      inComment = true;
+      cursor = start + 4;
+    }
+    visibleLines.push(visible);
+  }
+  assert.equal(fence, undefined, "unclosed fenced code block is not visible Markdown");
+  assert.equal(inComment, false, "unclosed HTML comment is not visible Markdown");
+  return visibleLines.join("\n");
+}
+
+function withoutInlineCode(source) {
+  let visible = "";
+  for (let index = 0; index < source.length;) {
+    if (source[index] !== "`") {
+      visible += source[index];
+      index += 1;
+      continue;
+    }
+    let length = 1;
+    while (source[index + length] === "`") length += 1;
+    const closing = source.indexOf("`".repeat(length), index + length);
+    if (closing === -1) break;
+    index = closing + length;
+  }
+  return visible;
+}
+
+function markdownAnchor(heading, seen) {
+  const base = heading
+    .toLocaleLowerCase("en-US")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .trim()
+    .replace(/\s+/gu, "-");
+  const count = seen.get(base) ?? 0;
+  seen.set(base, count + 1);
+  return count === 0 ? base : `${base}-${count}`;
+}
+
+function visibleMarkdownHeadings(markdown) {
+  const seen = new Map();
+  return visibleMarkdownSource(markdown).split("\n").flatMap((line) => {
+    const match = /^(?: {0,3})(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/u.exec(line);
+    if (!match) return [];
+    const label = withoutInlineCode(match[2]).trim();
+    return label ? [{ level: match[1].length, label, anchor: markdownAnchor(label, seen) }] : [];
+  });
+}
+
+function visibleMarkdownLinks(markdown) {
+  const links = [];
+  for (const line of visibleMarkdownSource(markdown).split("\n")) {
+    const source = withoutInlineCode(line);
+    for (const match of source.matchAll(/(!?)\[([^\]\n]*)\]\(([^)\n]+)\)/gu)) {
+      if (match[1] === "!" || match[2].startsWith("!")) continue;
+      const target = match[3].trim();
+      const hash = target.indexOf("#");
+      links.push({
+        label: match[2].trim(),
+        target,
+        fragment: hash === -1 ? "" : target.slice(hash + 1),
+      });
+    }
+  }
+  return links;
+}
+
+function h2Headings(markdown) {
+  return visibleMarkdownHeadings(markdown)
+    .filter(({ level }) => level === 2)
+    .map(({ label }) => label);
+}
+
+function assertContainedPath(filename, target, boundary = root) {
   assert.ok(!path.isAbsolute(target) && !path.win32.isAbsolute(target), `absolute local target: ${target}`);
   const resolved = path.resolve(path.dirname(filename), target);
-  const relative = path.relative(root, resolved);
-  assert.ok(relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative)), `local target escapes repository: ${target}`);
+  const relative = path.relative(boundary, resolved);
+  assert.ok(relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative)), `local target escapes boundary: ${target}`);
   return resolved;
 }
 
-async function assertRegularNonSymlinkFile(filename) {
-  const parts = path.relative(root, filename).split(path.sep).filter(Boolean);
-  let current = root;
+async function assertRegularNonSymlinkFile(filename, boundary = root) {
+  const parts = path.relative(boundary, filename).split(path.sep).filter(Boolean);
+  let current = boundary;
   for (const part of parts) {
     current = path.join(current, part);
     const stat = await lstat(current);
@@ -81,23 +188,38 @@ async function assertRegularNonSymlinkFile(filename) {
   assert.ok(stat.isFile(), `local target is not a regular file: ${filename}`);
 }
 
+function decodeLinkPart(value, target) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    assert.fail(`invalid encoded local target: ${target}`);
+  }
+}
+
+async function validateVisibleLocalLink(sourcePath, link, boundary) {
+  const { target } = link;
+  if (/^(?:https?|mailto):/iu.test(target)) return undefined;
+  assert.ok(!/^[a-z][a-z\d+.-]*:/iu.test(target), `unsupported local link scheme: ${target}`);
+  const hash = target.indexOf("#");
+  const rawFile = hash === -1 ? target : target.slice(0, hash);
+  const rawAnchor = hash === -1 ? "" : target.slice(hash + 1);
+  const filename = decodeLinkPart(rawFile, target).split("?", 1)[0];
+  const anchor = decodeLinkPart(rawAnchor, target);
+  const targetPath = filename ? assertContainedPath(sourcePath, filename, boundary) : sourcePath;
+  const extension = path.extname(targetPath).toLowerCase();
+  assert.ok([".md", ".png", ".svg"].includes(extension), `unsupported local link extension: ${target}`);
+  await assertRegularNonSymlinkFile(targetPath, boundary);
+  if (anchor) {
+    assert.equal(extension, ".md", `anchors require Markdown targets: ${target}`);
+    const targetMarkdown = await readFile(targetPath, "utf8");
+    assert.ok(visibleMarkdownHeadings(targetMarkdown).some((heading) => heading.anchor === anchor), `missing visible Markdown anchor: ${target}`);
+  }
+  return targetPath;
+}
+
 async function assertRootLinks(markdown) {
   const readmePath = path.join(root, "README.md");
-  for (const { target } of extractMarkdownLinks(markdown)) {
-    if (/^https?:/i.test(target)) continue;
-    assert.ok(!/^[a-z][a-z\d+.-]*:/i.test(target), `unsupported local link scheme: ${target}`);
-    const hash = target.indexOf("#");
-    const rawFile = hash === -1 ? target : target.slice(0, hash);
-    const rawAnchor = hash === -1 ? "" : target.slice(hash + 1);
-    const filename = decodeURIComponent(rawFile).split("?", 1)[0];
-    const anchor = decodeURIComponent(rawAnchor);
-    const targetPath = filename ? assertContainedPath(readmePath, filename) : readmePath;
-    await assertRegularNonSymlinkFile(targetPath);
-    if (anchor) {
-      const targetMarkdown = await readFile(targetPath, "utf8");
-      assert.ok(collectHeadingAnchors(targetMarkdown).has(anchor), `missing root local anchor: ${target}`);
-    }
-  }
+  for (const link of visibleMarkdownLinks(markdown)) await validateVisibleLocalLink(readmePath, link, root);
 }
 
 function assertSharedPngLinks(markdown) {
@@ -194,21 +316,32 @@ function assertRootContentContract(markdown) {
   assertSharedPngLinks(markdown);
 }
 
-function canonicalCaseTargets(manifest, product) {
-  return new Set(manifest.cases
-    .filter((entry) => entry.product === product)
-    .map((entry) => `${entry.document}#${entry.anchor}`));
-}
-
-function representativeCaseTargets(manifest) {
+function representativeCaseEntries(manifest) {
   return representativeCaseIds.map((id) => {
     const entry = manifest.cases.find((candidate) => candidate.id === id);
     assert.ok(entry, `representative case exists in manifest: ${id}`);
-    return `${entry.document}#${entry.anchor}`;
+    return entry;
   });
 }
 
-function assertRootUseCaseNavigation(markdown, manifest) {
+async function canonicalLinkFromManifestEntry(entry) {
+  const document = await readFile(path.join(root, entry.document), "utf8");
+  const heading = visibleMarkdownHeadings(document).find(({ anchor }) => anchor === entry.anchor);
+  assert.ok(heading, `manifest anchor has a visible heading: ${entry.id}`);
+  return {
+    product: entry.product,
+    label: heading.label,
+    target: `${entry.document}#${entry.anchor}`,
+    fragment: entry.anchor,
+  };
+}
+
+async function canonicalRootUseCaseLinks(manifest) {
+  const entries = [...manifest.audience_paths, ...representativeCaseEntries(manifest)];
+  return Promise.all(entries.map((entry) => canonicalLinkFromManifestEntry(entry)));
+}
+
+async function assertRootUseCaseNavigation(markdown, manifest) {
   const headings = h2Headings(markdown);
   assert.deepEqual(headings.slice(0, 4), requiredRootHeadings.slice(0, 4), "root use-case headings precede installation choice");
   const capability = section(markdown, "이 플러그인으로 할 수 있는 일");
@@ -227,22 +360,25 @@ function assertRootUseCaseNavigation(markdown, manifest) {
   for (const phrase of ["규칙", "루프", "시스템", "UX", "역기획", "면접", "전체 프로젝트"]) {
     assert.ok(markdown.includes(phrase), `root learner balance: ${phrase}`);
   }
-  const representativeTargets = representativeCaseTargets(manifest);
-  const caseLinks = extractMarkdownLinks(markdown)
-    .map(({ target }) => target)
-    .filter((target) => products.some((product) => canonicalCaseTargets(manifest, product).has(target)));
-  assert.deepEqual(caseLinks, representativeTargets, "root representative case links preserve canonical order and product binding");
+  const expectedLinks = await canonicalRootUseCaseLinks(manifest);
+  const expectedTargets = new Set(expectedLinks.map(({ target }) => target));
+  const actualLinks = visibleMarkdownLinks(markdown)
+    .filter(({ target }) => expectedTargets.has(target));
+  assert.deepEqual(
+    actualLinks,
+    expectedLinks.map(({ label, target, fragment }) => ({ label, target, fragment })),
+    "root audience and representative links preserve canonical visible labels, targets, anchors, and order",
+  );
   for (const product of products) {
-    const targets = canonicalCaseTargets(manifest, product);
-    const links = caseLinks.filter((target) => targets.has(target));
+    const links = actualLinks.filter(({ target }) => expectedLinks.some((expected) => expected.product === product && expected.target === target));
     assert.ok(links.length >= 6, `${product}: six canonical representative case links`);
-    assert.equal(new Set(links).size, links.length, `${product}: representative case links are unique`);
+    assert.equal(new Set(links.map(({ target }) => target)).size, links.length, `${product}: representative case links are unique`);
   }
-  for (const { target } of extractMarkdownLinks(markdown)) {
+  for (const { target } of visibleMarkdownLinks(markdown)) {
     if (!target.includes("/use-cases/")) continue;
     const owner = products.find((product) => target.startsWith(`guides/${product}/use-cases/`));
     if (!owner || !target.includes("#")) continue;
-    assert.ok(canonicalCaseTargets(manifest, owner).has(target), `root case link is canonical and product-bound: ${target}`);
+    assert.ok(expectedLinks.some((expected) => expected.product === owner && expected.target === target), `root case link is canonical and product-bound: ${target}`);
   }
 }
 
@@ -266,14 +402,7 @@ function assertGlobalUseCaseNavigation(markdown) {
   assert.ok(route.indexOf("입문") < route.indexOf("포트폴리오"), "global beginner-to-portfolio route order");
 }
 
-function localMarkdownTargets(markdownPath, markdown) {
-  return extractMarkdownLinks(markdown)
-    .map(({ target }) => target.split("#", 1)[0].split("?", 1)[0])
-    .filter((target) => target && !/^[a-z][a-z\d+.-]*:/i.test(target))
-    .map((target) => path.resolve(path.dirname(markdownPath), target));
-}
-
-async function reachableMarkdownPaths(entryPath) {
+async function reachableMarkdownPaths(entryPath, boundary = guideRoot) {
   const seen = new Set();
   const queue = [entryPath];
   while (queue.length > 0) {
@@ -281,25 +410,90 @@ async function reachableMarkdownPaths(entryPath) {
     if (seen.has(current)) continue;
     seen.add(current);
     const markdown = await readFile(current, "utf8");
-    for (const { target } of extractMarkdownLinks(markdown)) {
-      if (/^[a-z][a-z\d+.-]*:/i.test(target)) continue;
-      const [rawTarget, rawAnchor = ""] = target.split("#", 2);
-      const resolved = rawTarget ? path.resolve(path.dirname(current), rawTarget.split("?", 1)[0]) : current;
-      if (!resolved.startsWith(guideRoot + path.sep)) continue;
-      await assertRegularNonSymlinkFile(resolved);
-      if (rawAnchor) {
-        const targetMarkdown = await readFile(resolved, "utf8");
-        assert.ok(collectHeadingAnchors(targetMarkdown).has(rawAnchor), `guide link anchor resolves: ${target}`);
-      }
-      const targetPath = resolved;
-      if (path.extname(targetPath) === ".md" && targetPath.startsWith(guideRoot + path.sep)) queue.push(targetPath);
-    }
-    for (const target of localMarkdownTargets(current, markdown)) {
-      if (path.extname(target) === ".md" && target.startsWith(guideRoot + path.sep)) queue.push(target);
+    for (const link of visibleMarkdownLinks(markdown)) {
+      const targetPath = await validateVisibleLocalLink(current, link, boundary);
+      if (targetPath && path.extname(targetPath) === ".md") queue.push(targetPath);
     }
   }
   return seen;
 }
+
+test("visible Markdown navigation excludes comments, code fences, and inline-code-only headings", () => {
+  const markdown = [
+    "<!-- [comment](hidden.md#hidden) -->",
+    "```md",
+    "[fenced](hidden.md#hidden)",
+    "## hidden {#hidden}",
+    "```",
+    "~~~text",
+    "[also fenced](hidden.md#hidden)",
+    "~~~",
+    "## `hidden heading`",
+    "## Visible heading",
+    "[visible](visible.md#visible-heading)",
+  ].join("\n");
+  assert.deepEqual(
+    visibleMarkdownLinks(markdown),
+    [{ label: "visible", target: "visible.md#visible-heading", fragment: "visible-heading" }],
+  );
+  assert.deepEqual(
+    visibleMarkdownHeadings(markdown).map(({ label }) => label),
+    ["Visible heading"],
+    "inline-code-only headings are not anchor targets",
+  );
+  assert.deepEqual(
+    visibleMarkdownLinks(["````md", "[hidden](missing.md)", "```", "[still-hidden](missing.md)", "````"].join("\n")),
+    [],
+    "a shorter closing fence or a different fence length cannot expose hidden links",
+  );
+  assert.throws(() => visibleMarkdownLinks("<!--\n[hidden](missing.md)"), /unclosed HTML comment/);
+});
+
+test("visible Markdown guide graph validates every local edge and permits safe cycles", async () => {
+  const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "visible-markdown-guide-"));
+  const entry = path.join(fixtureRoot, "entry.md");
+  const target = path.join(fixtureRoot, "target.md");
+  try {
+    await writeFile(entry, [
+      "# Start",
+      "<!--",
+      "[commented](hidden.md#hidden)",
+      "-->",
+      "```md",
+      "[fenced](hidden.md#hidden)",
+      "## Hidden",
+      "```",
+      "~~~yaml",
+      "[also-fenced](hidden.md#hidden)",
+      "~~~",
+      "[external](https://example.com) [email](mailto:guides@example.com)",
+      "[target](target.md#target)",
+    ].join("\n"));
+    await writeFile(target, "## Target\n\n[cycle](entry.md#start)\n");
+
+    const reachable = await reachableMarkdownPaths(entry, fixtureRoot);
+    assert.deepEqual(new Set([entry, target]), reachable, "hidden links do not become graph edges and a validated cycle is safe");
+    assert.throws(() => visibleMarkdownLinks("```md\n[hidden](missing.md)"), /unclosed fenced code block/);
+
+    const rejectsTarget = async (label, linkTarget) => {
+      await writeFile(entry, `# Start\n\n[unsafe](${linkTarget})\n`);
+      await assert.rejects(() => reachableMarkdownPaths(entry, fixtureRoot), undefined, label);
+    };
+    await rejectsTarget("path traversal outside the guide root", "../outside.md");
+    await rejectsTarget("absolute local path", path.join(fixtureRoot, "outside.md"));
+    await rejectsTarget("file scheme", "file:///tmp/outside.md");
+    await rejectsTarget("unsupported extension", "notes.txt");
+    await rejectsTarget("missing target", "missing.md");
+    await rejectsTarget("broken visible anchor", "target.md#missing");
+
+    await mkdir(path.join(fixtureRoot, "directory"));
+    await rejectsTarget("directory target", "directory");
+    await symlink(target, path.join(fixtureRoot, "linked.md"));
+    await rejectsTarget("symlink target", "linked.md");
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
+});
 
 test("root README is a safe beginner landing page for both App and CLI", async () => {
   const [readme, manifestSource, globalGuide] = await Promise.all([
@@ -308,7 +502,7 @@ test("root README is a safe beginner landing page for both App and CLI", async (
     readFile(path.join(guideRoot, "README.md"), "utf8"),
   ]);
   assertRootContentContract(readme);
-  assertRootUseCaseNavigation(readme, JSON.parse(manifestSource));
+  await assertRootUseCaseNavigation(readme, JSON.parse(manifestSource));
   assertGlobalUseCaseNavigation(globalGuide);
   await assertRootLinks(readme);
 });
@@ -338,7 +532,11 @@ test("root README contract rejects unsafe mutations in memory", async () => {
   const brokenLink = readme.replace("guides/game-design-studio/README.md", "guides/missing.md");
   await assert.rejects(() => assertRootLinks(brokenLink));
 
-  const [studioTarget, , careerTarget] = representativeCaseTargets(manifest);
+  const canonicalLinks = await canonicalRootUseCaseLinks(manifest);
+  const [studioCase, , careerCase] = canonicalLinks.slice(manifest.audience_paths.length);
+  const [firstAudience, secondAudience] = canonicalLinks;
+  const { target: studioTarget } = studioCase;
+  const { target: careerTarget } = careerCase;
   const unknownCase = readme.replace(studioTarget, `${studioTarget.split("#", 1)[0]}#unknown-case`);
   const brokenCase = readme.replace(studioTarget, "guides/game-design-studio/use-cases/missing.md#unknown-case");
   const traversalCase = readme.replace(studioTarget, "guides/../README.md#unknown-case");
@@ -346,14 +544,24 @@ test("root README contract rejects unsafe mutations in memory", async () => {
   const swappedCases = readme.replace(studioTarget, "__CASE_SWAP__")
     .replace(careerTarget, studioTarget)
     .replace("__CASE_SWAP__", careerTarget);
+  const wrongTitle = readme.replace(studioCase.label, `${studioCase.label} (잘못된 제목)`);
+  const swappedAudienceLabels = readme.replace(firstAudience.label, "__AUDIENCE_SWAP__")
+    .replace(secondAudience.label, firstAudience.label)
+    .replace("__AUDIENCE_SWAP__", secondAudience.label);
+  const swappedAudienceTargets = readme.replace(firstAudience.target, "__AUDIENCE_SWAP__")
+    .replace(secondAudience.target, firstAudience.target)
+    .replace("__AUDIENCE_SWAP__", secondAudience.target);
   for (const [label, mutation] of [
     ["unknown case anchor", unknownCase],
     ["broken case target", brokenCase],
     ["path traversal case link", traversalCase],
     ["cross-product case link", crossProductCase],
     ["representative case links swapped", swappedCases],
+    ["representative case label differs from the visible heading", wrongTitle],
+    ["audience labels swapped", swappedAudienceLabels],
+    ["audience targets swapped", swappedAudienceTargets],
   ]) {
-    assert.throws(() => assertRootUseCaseNavigation(mutation, manifest), label);
+    await assert.rejects(() => assertRootUseCaseNavigation(mutation, manifest), label);
   }
   await assert.rejects(() => assertRootLinks(brokenCase), "broken case target must not resolve");
   await assert.rejects(() => assertRootLinks(traversalCase), "traversal target must not resolve");

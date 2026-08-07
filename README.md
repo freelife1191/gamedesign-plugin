@@ -16,12 +16,12 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 
 | 사용자 | 권장 시작 |
 | --- | --- |
-| [AUD-01 게임 기획 입문 학생](guides/use-cases/audience-paths.md#aud-01-게임-기획-입문-학생) | 규칙과 관찰 하나를 작은 기획 브리프로 만듭니다. |
-| [AUD-02 게임 기획 취업 준비생](guides/use-cases/audience-paths.md#aud-02-게임-기획-취업-준비생) | 역할·역기획·포트폴리오 증거를 구분합니다. |
-| [AUD-03 게임 기획 직무 전환자](guides/use-cases/audience-paths.md#aud-03-게임-기획-직무-전환자) | 전이 가능한 경험과 새 증거 과제를 분리합니다. |
-| [AUD-04 솔로·인디 게임 기획자](guides/use-cases/audience-paths.md#aud-04-솔로인디-게임-기획자) | 범위·위험이 제한된 설계로 시작합니다. |
-| [AUD-05 현업 게임 기획자](guides/use-cases/audience-paths.md#aud-05-현업-게임-기획자) | 시스템·콘텐츠·UX·경제 문제 하나를 검토합니다. |
-| [AUD-06 팀 리드·교육자·멘토](guides/use-cases/audience-paths.md#aud-06-팀-리드교육자멘토) | 과제, 검토 기준과 피드백 흐름을 설계합니다. |
+| [AUD-01 — 게임 기획 입문 학생](guides/use-cases/audience-paths.md#aud-01-게임-기획-입문-학생) | 규칙과 관찰 하나를 작은 기획 브리프로 만듭니다. |
+| [AUD-02 — 게임 기획 취업 준비생](guides/use-cases/audience-paths.md#aud-02-게임-기획-취업-준비생) | 역할·역기획·포트폴리오 증거를 구분합니다. |
+| [AUD-03 — 게임 기획 직무 전환자](guides/use-cases/audience-paths.md#aud-03-게임-기획-직무-전환자) | 전이 가능한 경험과 새 증거 과제를 분리합니다. |
+| [AUD-04 — 솔로·인디 게임 기획자](guides/use-cases/audience-paths.md#aud-04-솔로인디-게임-기획자) | 범위·위험이 제한된 설계로 시작합니다. |
+| [AUD-05 — 현업 게임 기획자](guides/use-cases/audience-paths.md#aud-05-현업-게임-기획자) | 시스템·콘텐츠·UX·경제 문제 하나를 검토합니다. |
+| [AUD-06 — 팀 리드·교육자·멘토](guides/use-cases/audience-paths.md#aud-06-팀-리드교육자멘토) | 과제, 검토 기준과 피드백 흐름을 설계합니다. |
 
 ## 활용 방법 선택
 
@@ -29,9 +29,9 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 
 | 탐색 방식 | 기획 학생 중심 Studio 사례 | Career 사례 |
 | --- | --- | --- |
-| 규칙·루프·시스템 | [ST-C02 행동·핵심 루프](guides/game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택) · [ST-C03 규칙·상태·예외·데이터](guides/game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | [CA-T01 시스템 기획 입문 학생](guides/game-design-career/use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생) |
-| UX와 콘텐츠 | [ST-C04 UI·UX·온보딩·접근성](guides/game-design-studio/use-cases/competency-paths.md#st-c04-uiux온보딩접근성) · [ST-C05 콘텐츠·퀘스트](guides/game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) | [CA-C01 기획 직무와 전문 분야 탐색](guides/game-design-career/use-cases/competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색) |
-| 포트폴리오·역기획·면접 | [ST-C07 경제·밸런스·LiveOps](guides/game-design-studio/use-cases/competency-paths.md#st-c07-성장경제밸런스liveops) | [CA-C05 관찰 기반 역기획](guides/game-design-career/use-cases/competency-paths.md#ca-c05-관찰-기반-역기획) · [CA-C06 창작 기획 포트폴리오](guides/game-design-career/use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오) · [CA-C07 포트폴리오 검토·발표](guides/game-design-career/use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표) · [CA-C08 면접·주니어 성장·직무 전환](guides/game-design-career/use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환) |
+| 규칙·루프·시스템 | [ST-C02 행동·핵심 루프·의미 있는 선택](guides/game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택) · [ST-C03 규칙·상태·예외·데이터](guides/game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | [CA-T01 시스템 기획 입문 학생](guides/game-design-career/use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생) |
+| UX와 콘텐츠 | [ST-C04 UI·UX·온보딩·접근성](guides/game-design-studio/use-cases/competency-paths.md#st-c04-uiux온보딩접근성) · [ST-C05 콘텐츠·내러티브·퀘스트·NPC](guides/game-design-studio/use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) | [CA-C01 기획 직무와 전문 분야 탐색](guides/game-design-career/use-cases/competency-paths.md#ca-c01-기획-직무와-전문-분야-탐색) |
+| 포트폴리오·역기획·면접 | [ST-C07 성장·경제·밸런스·LiveOps](guides/game-design-studio/use-cases/competency-paths.md#st-c07-성장경제밸런스liveops) | [CA-C05 관찰 기반 역기획](guides/game-design-career/use-cases/competency-paths.md#ca-c05-관찰-기반-역기획) · [CA-C06 창작 기획 포트폴리오](guides/game-design-career/use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오) · [CA-C07 포트폴리오 검토·수정·발표](guides/game-design-career/use-cases/competency-paths.md#ca-c07-포트폴리오-검토수정발표) · [CA-C08 면접·주니어 성장·직무 전환](guides/game-design-career/use-cases/competency-paths.md#ca-c08-면접주니어-성장직무-전환) |
 | 전체 프로젝트 | [ST-C08 제작·검토·이미지·출력](guides/game-design-studio/use-cases/competency-paths.md#st-c08-제작검토이미지출력) | Career Artifact로 넘길 공개 가능한 문제·결정·검증 evidence를 분리합니다. |
 
 **입문 요청문:** `관찰한 장면 하나를 사실·가정·질문으로 나누고, 규칙 하나를 설명하는 짧은 기획 브리프로 만들어 줘.`
