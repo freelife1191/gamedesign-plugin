@@ -51,16 +51,22 @@ game-design-career/<career-id>/
 │   ├── content.md
 │   ├── evidence.yml
 │   ├── decisions/
+│   ├── assets/
+│   │   └── README.md
 │   └── export-manifest.yml
 ├── competency-matrix/
 │   ├── content.md
 │   ├── evidence.yml
 │   ├── decisions/
+│   ├── assets/
+│   │   └── README.md
 │   └── export-manifest.yml
 └── portfolio-project-brief/
     ├── content.md
     ├── evidence.yml
     ├── decisions/
+    ├── assets/
+    │   └── README.md
     └── export-manifest.yml
 ```
 
@@ -78,7 +84,7 @@ portfolio에서는 공고 문구를 복제하지 않고 proof task와 근거 주
 
 ### 읽는 순서
 
-`game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/ → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml`, `game-design-career/<career-id>/competency-matrix/content.md → game-design-career/<career-id>/competency-matrix/evidence.yml → game-design-career/<career-id>/competency-matrix/decisions/ → game-design-career/<career-id>/competency-matrix/export-manifest.yml`, `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/ → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 읽습니다.
+`game-design-career/<career-id>/job-posting-evidence/content.md → game-design-career/<career-id>/job-posting-evidence/evidence.yml → game-design-career/<career-id>/job-posting-evidence/decisions/ → game-design-career/<career-id>/job-posting-evidence/assets/README.md → game-design-career/<career-id>/job-posting-evidence/export-manifest.yml`, `game-design-career/<career-id>/competency-matrix/content.md → game-design-career/<career-id>/competency-matrix/evidence.yml → game-design-career/<career-id>/competency-matrix/decisions/ → game-design-career/<career-id>/competency-matrix/assets/README.md → game-design-career/<career-id>/competency-matrix/export-manifest.yml`, `game-design-career/<career-id>/portfolio-project-brief/content.md → game-design-career/<career-id>/portfolio-project-brief/evidence.yml → game-design-career/<career-id>/portfolio-project-brief/decisions/ → game-design-career/<career-id>/portfolio-project-brief/assets/README.md → game-design-career/<career-id>/portfolio-project-brief/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

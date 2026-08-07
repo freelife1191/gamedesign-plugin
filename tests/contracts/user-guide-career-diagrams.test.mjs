@@ -139,10 +139,15 @@ async function assertRecipeTemplateResult(recipe, markdown) {
   for (const [artifactId, fields] of expected) {
     const template = await readFile(path.join(templateSourceRoot, artifactId, "content.md"), "utf8");
     for (const field of fields) assert.match(template, new RegExp("`" + field + "`"), recipe.id + " canonical template field: " + artifactId + "." + field);
-    const treePattern = new RegExp(artifactId + "/[\\s\\S]{0,180}?content\\.md[\\s\\S]{0,180}?evidence\\.yml[\\s\\S]{0,180}?decisions/[\\s\\S]{0,180}?export-manifest\\.yml");
+    const inventory = ["content.md", "evidence.yml", "decisions/", "assets/README.md", "export-manifest.yml"];
+    for (const file of inventory) {
+      const stat = await lstat(path.join(templateSourceRoot, artifactId, file));
+      assert.ok(stat.isDirectory() || stat.isFile(), recipe.id + " template inventory: " + artifactId + "/" + file);
+    }
+    const treePattern = new RegExp(artifactId + "/[\\s\\S]{0,220}?content\\.md[\\s\\S]{0,220}?evidence\\.yml[\\s\\S]{0,220}?decisions/[\\s\\S]{0,220}?assets/[\\s\\S]{0,220}?README\\.md[\\s\\S]{0,220}?export-manifest\\.yml");
     assert.match(byHeading.get("예상 파일 트리"), treePattern, recipe.id + " artifact subtree: " + artifactId);
     for (const field of fields) assert.ok(byHeading.get("대표 내용 예시").includes("`" + field + "`"), recipe.id + " representative canonical field: " + field);
-    const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
+    const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/assets/README.md → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
     assert.ok(byHeading.get("읽는 순서").includes(order), recipe.id + " canonical artifact read order: " + artifactId);
   }
 }
@@ -314,7 +319,7 @@ test("Career recipe source contracts reject every wrong-valid field, artifact, a
       const wrongArtifact = artifactId === "career-stage-goal" ? "competency-matrix" : "career-stage-goal";
       await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(result, result.replace(artifactId, wrongArtifact))), /artifact subtree/, `${recipe.id} ${artifactId} wrong-valid artifact mutation`);
       await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(entries.get("대표 내용 예시"), entries.get("대표 내용 예시").replace("`" + fields[0] + "`", "`approval-status`"))), /representative canonical field/, `${recipe.id} ${artifactId} wrong-valid field mutation`);
-      const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
+      const order = `game-design-career/<career-id>/${artifactId}/content.md → game-design-career/<career-id>/${artifactId}/evidence.yml → game-design-career/<career-id>/${artifactId}/decisions/ → game-design-career/<career-id>/${artifactId}/assets/README.md → game-design-career/<career-id>/${artifactId}/export-manifest.yml`;
       await assert.rejects(() => assertRecipeTemplateResult(recipe, markdown.replace(order, order.split(" → ").reverse().join(" → "))), /canonical artifact read order/, `${recipe.id} ${artifactId} read-order mutation`);
     }
   }

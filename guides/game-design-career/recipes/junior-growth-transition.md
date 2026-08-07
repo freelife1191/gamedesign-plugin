@@ -51,11 +51,15 @@ game-design-career/<career-id>/
 │   ├── content.md
 │   ├── evidence.yml
 │   ├── decisions/
+│   ├── assets/
+│   │   └── README.md
 │   └── export-manifest.yml
 └── transition-readiness/
     ├── content.md
     ├── evidence.yml
     ├── decisions/
+    ├── assets/
+    │   └── README.md
     └── export-manifest.yml
 ```
 
@@ -73,7 +77,7 @@ portfolio에서는 수정과 feedback으로 바뀐 판단을 보여 주고, inte
 
 ### 읽는 순서
 
-`game-design-career/<career-id>/junior-growth-review/content.md → game-design-career/<career-id>/junior-growth-review/evidence.yml → game-design-career/<career-id>/junior-growth-review/decisions/ → game-design-career/<career-id>/junior-growth-review/export-manifest.yml`, `game-design-career/<career-id>/transition-readiness/content.md → game-design-career/<career-id>/transition-readiness/evidence.yml → game-design-career/<career-id>/transition-readiness/decisions/ → game-design-career/<career-id>/transition-readiness/export-manifest.yml` 순서로 읽습니다.
+`game-design-career/<career-id>/junior-growth-review/content.md → game-design-career/<career-id>/junior-growth-review/evidence.yml → game-design-career/<career-id>/junior-growth-review/decisions/ → game-design-career/<career-id>/junior-growth-review/assets/README.md → game-design-career/<career-id>/junior-growth-review/export-manifest.yml`, `game-design-career/<career-id>/transition-readiness/content.md → game-design-career/<career-id>/transition-readiness/evidence.yml → game-design-career/<career-id>/transition-readiness/decisions/ → game-design-career/<career-id>/transition-readiness/assets/README.md → game-design-career/<career-id>/transition-readiness/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 

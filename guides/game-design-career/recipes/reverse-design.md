@@ -50,6 +50,8 @@ game-design-career/<career-id>/reverse-design-document/
 ├── content.md
 ├── evidence.yml
 ├── decisions/
+├── assets/
+│   └── README.md
 └── export-manifest.yml
 ```
 
@@ -67,7 +69,7 @@ portfolio에서는 관찰과 추론의 경계를 읽을 수 있게 하고, inter
 
 ### 읽는 순서
 
-`game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/ → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 읽습니다.
+`game-design-career/<career-id>/reverse-design-document/content.md → game-design-career/<career-id>/reverse-design-document/evidence.yml → game-design-career/<career-id>/reverse-design-document/decisions/ → game-design-career/<career-id>/reverse-design-document/assets/README.md → game-design-career/<career-id>/reverse-design-document/export-manifest.yml` 순서로 읽습니다.
 
 ## 실패와 재개
 
