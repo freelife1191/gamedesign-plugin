@@ -532,6 +532,30 @@ test("validateUserGuides scopes raw HTML and comments to their opening container
   });
 });
 
+test("validateUserGuides preserves escaped table pipes and bidirectional list-quote block scopes", async () => {
+  await withGuideFixture({}, async (root) => {
+    const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");
+    const prefix = "prompt-only select required all gpt-image-2 low\n\n";
+    const cases = [
+      ["escaped table pipe", ["| `hidden \\| [hidden](missing-hidden-escaped-pipe.md) code` | [visible](missing-visible-table-cell.md) |", "| --- | --- |"], "missing-visible-table-cell.md", ["missing-hidden-escaped-pipe.md"]],
+      ["list quote fence", ["- > ```md", "  > [hidden](missing-hidden-list-quote-fence.md)", "  > ```", "- [visible](missing-visible-list-quote-fence.md)"], "missing-visible-list-quote-fence.md", ["missing-hidden-list-quote-fence.md"]],
+      ["list quote HTML", ["- > <script>", "  > [hidden](missing-hidden-list-quote-html.md)", "  > </script>", "- [visible](missing-visible-list-quote-html.md)"], "missing-visible-list-quote-html.md", ["missing-hidden-list-quote-html.md"]],
+      ["quote list fence", ["> - ```md", ">   [hidden](missing-hidden-quote-list-fence.md)", ">   ```", "> - [visible](missing-visible-quote-list-fence.md)"], "missing-visible-quote-list-fence.md", ["missing-hidden-quote-list-fence.md"]],
+      ["quote list HTML", ["> - <script>", ">   [hidden](missing-hidden-quote-list-html.md)", ">   </script>", "> - [visible](missing-visible-quote-list-html.md)"], "missing-visible-quote-list-html.md", ["missing-hidden-quote-list-html.md"]],
+    ];
+
+    for (const [label, lines, visibleTarget, hiddenTargets] of cases) {
+      await writeFile(guide, `${prefix}${lines.join("\n")}\n`);
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: false });
+      assert.equal(result.ok, false, label);
+      assert.ok(result.errors.some((error) => error.includes(visibleTarget)), `${label}: ${result.errors.join("\n")}`);
+      for (const hiddenTarget of hiddenTargets) {
+        assert.equal(result.errors.some((error) => error.includes(hiddenTarget)), false, `${label}: ${result.errors.join("\n")}`);
+      }
+    }
+  });
+});
+
 test("guide validation ignores hidden unsafe Markdown but rejects a visible edge", async () => {
   await withGuideFixture({}, async (root) => {
     const guide = path.join(root, "guides", "game-design-studio", "skills", "README.md");

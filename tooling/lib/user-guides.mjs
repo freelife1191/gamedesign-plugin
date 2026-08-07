@@ -137,7 +137,7 @@ function htmlBlock(line) {
   return /^ {0,3}(?:<\/?[A-Za-z][A-Za-z\d-]*(?:[ \t][^>]*)?>|<![A-Z]|<\?|<!\[CDATA\[)/iu.test(line);
 }
 
-function markdownContainer(source) {
+function quotePrefix(source) {
   let cursor = 0;
   let quoteDepth = 0;
   while (true) {
@@ -146,7 +146,17 @@ function markdownContainer(source) {
     cursor += match[0].length;
     quoteDepth += 1;
   }
-  return { contentStart: cursor, quoteDepth, listId: undefined, scope: quoteDepth > 0 ? `quote:${quoteDepth}` : "root" };
+  return { length: cursor, depth: quoteDepth };
+}
+
+function markdownContainer(source) {
+  const quote = quotePrefix(source);
+  return {
+    contentStart: quote.length,
+    quoteDepth: quote.depth,
+    listId: undefined,
+    scope: quote.depth > 0 ? `quote:${quote.depth}` : "root",
+  };
 }
 
 function rawHtmlBlockStart(line) {
@@ -189,31 +199,52 @@ function structuralLines(markdown) {
     const source = line.source.slice(line.container.contentStart);
     const list = /^( {0,3})(?:[-+*]|\d{1,9}[.)])[ \t]+/u.exec(source);
     if (list) {
+      const outerQuoteDepth = line.container.quoteDepth;
       const indentation = list[1].length;
-      activeLists = activeLists.filter((entry) => entry.quoteDepth !== line.container.quoteDepth || entry.indentation < indentation);
+      activeLists = activeLists.filter((entry) => entry.quoteDepth !== outerQuoteDepth || entry.indentation < indentation);
+      line.container.contentStart += list[0].length;
+      const nestedQuote = quotePrefix(line.source.slice(line.container.contentStart));
+      line.container.contentStart += nestedQuote.length;
+      line.container.quoteDepth += nestedQuote.depth;
       const entry = {
         id: `list:${line.line}`,
-        quoteDepth: line.container.quoteDepth,
+        quoteDepth: outerQuoteDepth,
+        nestedQuoteDepth: nestedQuote.depth,
         indentation,
         contentIndentation: list[0].length,
       };
+      entry.scope = [
+        outerQuoteDepth > 0 ? `quote:${outerQuoteDepth}` : undefined,
+        entry.id,
+        nestedQuote.depth > 0 ? `quote:${outerQuoteDepth + nestedQuote.depth}` : undefined,
+      ].filter(Boolean).join("/");
       activeLists.push(entry);
       line.container.listId = entry.id;
-      line.container.contentStart += list[0].length;
+      line.container.scope = entry.scope;
     } else {
       const indentation = /^ */u.exec(source)[0].length;
-      const entry = [...activeLists].reverse().find((candidate) => (
-        candidate.quoteDepth === line.container.quoteDepth
-        && (source.trim() === "" || indentation >= candidate.contentIndentation)
-      ));
+      const rawIndentation = /^ */u.exec(line.source)[0].length;
+      const entry = [...activeLists].reverse().find((candidate) => {
+        const regular = candidate.quoteDepth === line.container.quoteDepth
+          && (source.trim() === "" || indentation >= candidate.contentIndentation);
+        const nestedQuote = candidate.quoteDepth + candidate.nestedQuoteDepth === line.container.quoteDepth
+          && rawIndentation >= candidate.contentIndentation;
+        return regular || nestedQuote;
+      });
       if (entry) {
         line.container.listId = entry.id;
-        line.container.contentStart += entry.contentIndentation;
+        const followsNestedQuote = entry.nestedQuoteDepth > 0
+          && entry.quoteDepth + entry.nestedQuoteDepth === line.container.quoteDepth
+          && rawIndentation >= entry.contentIndentation;
+        if (!followsNestedQuote) line.container.contentStart += entry.contentIndentation;
+        line.container.scope = entry.scope;
       } else if (source.trim() !== "") {
         activeLists = activeLists.filter((candidate) => candidate.quoteDepth < line.container.quoteDepth);
       }
     }
-    line.container.scope = line.container.listId ?? (line.container.quoteDepth > 0 ? `quote:${line.container.quoteDepth}` : "root");
+    if (!line.container.listId) {
+      line.container.scope = line.container.quoteDepth > 0 ? `quote:${line.container.quoteDepth}` : "root";
+    }
     line.content = line.source.slice(line.container.contentStart);
     line.kind = initialLineKind(line.content);
   }
@@ -281,7 +312,7 @@ function inlineCodeRanges(lines) {
       for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
         source += lines[piece.lineIndex].source[cursor];
         positions.push({ lineIndex: piece.lineIndex, cursor });
-        if (lines[piece.lineIndex].kind === "table" && lines[piece.lineIndex].source[cursor] === "|") {
+        if (lines[piece.lineIndex].kind === "table" && lines[piece.lineIndex].source[cursor] === "|" && !escaped(lines[piece.lineIndex].source, cursor)) {
           source += "\0";
           positions.push(undefined);
         }
@@ -319,7 +350,7 @@ function maskInlineParagraph(lines, pieces) {
     for (let cursor = piece.start; cursor < piece.end; cursor += 1) {
       paragraph += block.source[cursor];
       positions.push({ lineIndex: piece.lineIndex, cursor });
-      if (block.kind === "table" && block.source[cursor] === "|") {
+      if (block.kind === "table" && block.source[cursor] === "|" && !escaped(block.source, cursor)) {
         paragraph += "\0";
         positions.push(undefined);
       }
