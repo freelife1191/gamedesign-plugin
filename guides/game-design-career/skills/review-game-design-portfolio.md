@@ -9,6 +9,56 @@ portfolio 또는 case study를 recruiter 관점의 5축으로 검토해 evidence
 - portfolio의 문제 정의, 설계 추론, 구현 구체성, evidence quality, communication inspectability를 검토할 때
 - 지원·mentoring 전 가장 영향 큰 수정 순서를 정할 때
 
+### 직접 호출 활용 — review-game-design-portfolio
+
+#### 직접 호출 조건
+
+하나의 portfolio artifact의 five-axis finding만 검토할 때 직접 호출합니다. 여러 portfolio·interview 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 합격을 보장하지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career section과 evidence ID가 있는 portfolio를 five-axis로 검토해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:review-game-design-portfolio artifact=artifacts/portfolio audience=recruiter
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career findingId와 observationState를 남기고 최소 repair backlog를 정리해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:review-game-design-portfolio artifact=artifacts/portfolio axes=all
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career 개인 기여·public rights·attribution을 다시 확인하고 review를 재개해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:review-game-design-portfolio artifact=artifacts/portfolio evidenceIds=E-19
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `five-axis-review`, `portfolio-backlog`를 반환합니다. 검토 owner: `portfolio-reviewer`.
+
+#### 실패·재개와 다음 스킬 조건
+
+inspectable source가 없으면 `not-observed`와 blocked finding을 보존합니다. 재개: evidence ID를 확인해 같은 findingId의 review에서 재개합니다. portfolio·interview·export 조건일 때만 `$game-design-career:build-game-design-portfolio`, `$game-design-career:practice-game-design-interview`, `$game-design-career:export-career-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 접근할 수 없는 항목을 결함 없음으로 처리할 때

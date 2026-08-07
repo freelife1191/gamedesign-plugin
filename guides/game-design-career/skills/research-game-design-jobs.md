@@ -9,6 +9,56 @@
 - 특정 role·level·지역의 현재 공고와 tool preference를 조사할 때
 - transition이나 portfolio gap을 fresh posting source에 연결할 때
 
+### 직접 호출 활용 — research-game-design-jobs
+
+#### 직접 호출 조건
+
+한 role·level·region의 current posting sample만 조사할 때 직접 호출합니다. 여러 role·stage의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. stale evidence는 current claim에 사용하지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 한 역할의 공식 공고 표본을 sourceUrl과 retrievalDate로 기록해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:research-game-design-jobs role=systems level=entry region=KR
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career location, region, sample boundary와 reviewAfter를 포함해 evidence gap을 정리해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:research-game-design-jobs role=systems region=KR retrievalDate=2026-08-07
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career stale source를 재검색하고 새 evidence ID만 current claim에 연결해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:research-game-design-jobs role=systems reviewAfter=2026-09-07
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `job-posting-evidence`, `evidence-gap-plan`을 반환합니다. 검토 owner: `evidence-auditor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+sourceUrl 또는 retrievalDate가 없으면 current conclusion을 만들지 않습니다. 재개: official source를 재검색하고 fresh `sourceUrl`, `location`, `retrievalDate`, `region`, `sample boundary`, `reviewAfter`를 확인한 evidence ID에서 재개합니다. map·portfolio·interview 조건일 때만 `$game-design-career:map-game-design-career`, `$game-design-career:build-game-design-portfolio`, `$game-design-career:practice-game-design-interview`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 단일 공고나 convenience sample로 전체 시장·채용량·성장·보상·적합성을 일반화할 때

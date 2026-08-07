@@ -9,6 +9,56 @@ Career canonical artifact의 profile slot에 맞는 image manifest, reusable pro
 - portfolio proof image, roadmap diagram 또는 document cover slot을 계획할 때
 - provider 호출 전에 stable ID·수량·placement·alt text·권리 경계를 고정할 때
 
+### Career 직접 호출 활용 — plan-image-assets
+
+#### 직접 호출 조건
+
+선택된 profile의 finite image 또는 Skillstead slot만 계획할 때 직접 호출합니다. 여러 artifact의 image 범위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 계획은 bytes 생성이나 승인 상태 변경을 하지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career prompt-only image slot의 stable ID, alt text와 placeholder만 계획해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:plan-image-assets artifact=artifacts/portfolio mode=prompt-only
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career finite illustration job의 수량, preserve/exclude와 owner를 기록해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:plan-image-assets artifact=artifacts/portfolio mode=select needs=portfolio-direction-image:1
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career Skillstead diagram slot의 source mapping과 SVG/2× PNG QA handoff만 계획해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:plan-image-assets artifact=artifacts/roadmap mode=required needs=skillstead-portfolio-roadmap-dependency-diagram:1
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽습니다. `image-assets-manifest`, `image-prompts`를 반환합니다. 검토 owner: `art-brief-director`.
+
+#### 실패·재개와 다음 스킬 조건
+
+slot mismatch 또는 필수 입력 누락이면 기존 stable ID와 placeholder를 보존합니다. 재개: 확정한 slot·수량·source section에서 재개합니다. finite illustration job일 때만 `$game-design-career:generate-image-assets`, Skillstead diagram slot일 때만 `$game-design-career:visualize-career-roadmap`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 이미지를 실제 생성하거나 lifecycle state를 승인할 때

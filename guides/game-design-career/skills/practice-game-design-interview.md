@@ -9,6 +9,56 @@ target posting과 portfolio evidence ID에 근거한 4종 질문, 답변 기록,
 - 특정 공고의 required·preferred 항목을 기준으로 면접을 연습할 때
 - 답변에서 개인 기여, 팀 결과, 선택·대안·결과를 분리할 때
 
+### 직접 호출 활용 — practice-game-design-interview
+
+#### 직접 호출 조건
+
+한 posting·portfolio evidence set의 question record만 연습할 때 직접 호출합니다. 여러 준비 단계와 proof task가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 합격을 보장하지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career evidence ID가 있는 질문 하나와 honest answer feedback을 기록해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:practice-game-design-interview questionId=Q-01 postingEvidenceIds=E-01
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career 개인 기여와 팀 성과를 분리한 question-answer record를 연습해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:practice-game-design-interview questionId=Q-02 portfolioEvidenceIds=P-01
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career stale posting을 갱신한 뒤 동일 questionId의 answer-feedback을 검토해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:practice-game-design-interview questionId=Q-03 review=career-strategist
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `interview-question-answer-log`, `honest-answer-patterns`를 반환합니다. 검토 owner: `career-strategist`.
+
+#### 실패·재개와 다음 스킬 조건
+
+stale posting evidence 또는 questionId가 없으면 기존 기록을 보존합니다. 재개: fresh posting evidence와 stable questionId를 확인해 answer-feedback record에서 재개합니다. growth·portfolio review 조건일 때만 `$game-design-career:plan-junior-growth`, `$game-design-career:review-game-design-portfolio`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - posting이 없는데 회사별 질문이나 요구를 사실로 만들 때

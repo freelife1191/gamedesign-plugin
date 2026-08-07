@@ -9,6 +9,56 @@ Career 구조를 위한 vendored Skillstead 0.8.3의 editable SVG authoring과 c
 - `visualize-career-roadmap`이 source mapping과 preset을 정한 뒤 구조 SVG를 직접 작성할 때
 - flow, roadmap, dependency, qualitative matrix 또는 technical one-pager가 필요할 때
 
+### Career 직접 호출 활용 — svg-infographic
+
+#### 직접 호출 조건
+
+하나의 source-mapped 구조 SVG와 검증 상태만 만들 때 직접 호출합니다. 여러 Career route와 source priority가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. Node-free Chromium fallback을 보존합니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career source ID가 있는 간단한 role dependency를 editable SVG로 작성해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:svg-infographic source=role-map output=artifacts/roadmap.svg
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career Skillstead source lint와 exact 2× PNG 검증 상태를 분리해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:svg-infographic source=competency-matrix output=artifacts/roadmap.svg
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career Node-free Chromium fallback의 manual source checklist와 visual QA를 기록해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:svg-infographic source=learning-roadmap fallback=chromium
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `editable-svg`, `png-2x`, `render-evidence`를 반환합니다. 검토 owner: `game-design-mentor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+Node 또는 Chromium fallback이 막히면 SVG source와 manual source checklist를 보존합니다. 재개: 마지막 Skillstead lint·render·visual QA 상태에서 재개합니다. relationship가 준비됐을 때만 `$game-design-career:visualize-career-roadmap`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 일반 Career 요청에서는 product wrapper를 우선합니다.

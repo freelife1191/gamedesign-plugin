@@ -9,6 +9,56 @@
 - role path, competency dependency, learning sequence와 portfolio evidence 관계가 prose보다 명확할 때
 - roadmap의 source·alt text·lint·render·visual QA 상태를 추적해야 할 때
 
+### 직접 호출 활용 — visualize-career-roadmap
+
+#### 직접 호출 조건
+
+하나의 source-mapped relationship과 diagram slot만 만들 때 직접 호출합니다. 여러 Career route와 source priority가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. Node-free Chromium fallback을 보존합니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career source ID가 있는 learning dependency를 preset과 함께 선택해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:visualize-career-roadmap artifact=artifacts/roadmap relationship=learning-dependency
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career Skillstead SVG, exact 2× PNG와 two-pass QA evidence를 연결해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:visualize-career-roadmap artifact=artifacts/roadmap assets=svg,png
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career Node-free Chromium fallback과 manual source checklist를 기록해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:visualize-career-roadmap artifact=artifacts/roadmap fallback=chromium
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `editable-svg`, `png-2x`, `visualization-evidence`를 반환합니다. 검토 owner: `game-design-mentor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+source mapping 또는 renderer fallback이 없으면 SVG-only 상태와 warning을 보존합니다. 재개: 마지막 Skillstead lint·render·visual QA 상태에서 재개합니다. export-ready condition일 때만 `$game-design-career:export-career-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - prose나 표가 더 명확하거나 bar/line/scatter/heatmap 등 data-accurate chart가 필요할 때

@@ -9,6 +9,56 @@ Career 요청을 `entry`, `new-hire`, `junior-growth`, `transition` 또는 `uncl
 - 시스템 기획 입문자의 역할 조사·학습·portfolio·면접 준비를 함께 연결할 때
 - stage나 target role이 불명확해 여러 provisional path가 필요할 때
 
+### 직접 호출 활용 — orchestrate-game-design-career
+
+#### 직접 호출 조건
+
+여러 Career 단계와 completion gate를 하나의 brief로 묶어야 할 때 직접 호출합니다. 한 output과 입력이 분명할 때는 해당 specialist를 직접 호출합니다. 사실·추론·제안을 분리합니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 목표 역할, 현재 증거, 제약을 받아 최소 skill chain과 stage brief를 정해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:orchestrate-game-design-career goal=systems-designer stage=foundation
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career research·portfolio·interview gate를 분리하고 선택 route만 정해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:orchestrate-game-design-career goal=transition evidenceIds=E-01
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career blocked gate만 재개하고 existing evidence와 decision을 보존해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:orchestrate-game-design-career artifact=artifacts/career-stage resume=blocked
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `career-stage-goal`, `career-stage-brief`을 반환합니다. 검토 owner: `career-strategist`.
+
+#### 실패·재개와 다음 스킬 조건
+
+route 또는 stage가 불명확하면 unknown을 보존하고 단일 specialist를 추측하지 않습니다. 재개: decision owner가 stage를 확인한 route에서 재개합니다. 선택 route일 때만 `$game-design-career:map-game-design-career`, `$game-design-career:research-game-design-jobs`, `$game-design-career:build-game-design-portfolio`, `$game-design-career:reverse-engineer-game-design`, `$game-design-career:practice-game-design-interview`, `$game-design-career:review-game-design-portfolio`, `$game-design-career:plan-junior-growth`, `$game-design-career:visualize-career-roadmap`, `$game-design-career:export-career-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 단일 artifact나 검토 목표가 이미 분명하면 해당 specialist skill을 직접 사용합니다.

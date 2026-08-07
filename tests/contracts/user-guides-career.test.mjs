@@ -105,6 +105,68 @@ function h2Headings(markdown) {
   return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
 }
 
+function extractH3Section(markdown, heading) {
+  const marker = `### ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `missing H3 section: ${heading}`);
+  const bodyStart = start + marker.length;
+  const nextH3 = markdown.indexOf("\n### ", bodyStart);
+  const nextH2 = markdown.indexOf("\n## ", bodyStart);
+  const next = [nextH3, nextH2].filter((index) => index !== -1).sort((left, right) => left - right)[0];
+  return markdown.slice(bodyStart, next ?? markdown.length).trim();
+}
+
+const CAREER_DIRECT_USE_CONTRACT = Object.freeze([
+  ["apply-document-quality-profile", "한 Career Artifact의 template·quality profile 선택만", "content.md → evidence.yml → export-manifest.yml", "document-quality-editor", "unknown ID", "여러 route가 함께 남았을 때만", "선택 기록은 승인 자체가 아닙니다"],
+  ["build-game-design-portfolio", "한 portfolio project의 claim·evidence 구조만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "portfolio-reviewer", "claim 또는 evidence ID가 없으면", "여러 artifact의 우선순위가 섞였을 때만", "합격을 보장하지 않습니다"],
+  ["export-career-documents", "하나의 승인 대기 Artifact의 export 준비만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "document-quality-editor", "renderer 또는 capability가 없으면", "여러 artifact·형식 우선순위가 섞였을 때만", "실제 renderer 실행이나 파일 생성을 약속하지 않습니다"],
+  ["generate-image-assets", "선택 receipt가 있는 finite image job만", "content.md → evidence.yml → assets/image-assets.yml → assets/prompts/image-prompts.md", "visual-asset-reviewer", "provider 또는 selection receipt가 없으면", "여러 artifact의 image·review 범위가 섞였을 때만", "AI 생성 결과는 자동 최종 승인되지 않습니다"],
+  ["map-game-design-career", "한 목표 역할의 current evidence와 competency gap만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "career-strategist", "current evidence가 stale이면", "여러 역할·단계의 우선순위가 섞였을 때만", "사실·추론·제안을 분리합니다"],
+  ["orchestrate-game-design-career", "여러 Career 단계와 completion gate를 하나의 brief로", "content.md → evidence.yml → decisions/ → export-manifest.yml", "career-strategist", "route 또는 stage가 불명확하면", "한 output과 입력이 분명할 때는 해당 specialist를 직접", "사실·추론·제안을 분리합니다"],
+  ["plan-image-assets", "선택된 profile의 finite image 또는 Skillstead slot만", "content.md → evidence.yml → export-manifest.yml → assets/image-assets.yml → assets/prompts/image-prompts.md", "art-brief-director", "slot mismatch 또는 필수 입력 누락이면", "여러 artifact의 image 범위가 섞였을 때만", "계획은 bytes 생성이나 승인 상태 변경을 하지 않습니다"],
+  ["plan-junior-growth", "한 target requirement의 gap과 proof task만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "stale evidence 또는 requirement가 있으면", "여러 단계·역할의 우선순위가 섞였을 때만", "사실·추론·제안을 분리합니다"],
+  ["practice-game-design-interview", "한 posting·portfolio evidence set의 question record만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "career-strategist", "stale posting evidence 또는 questionId가 없으면", "여러 준비 단계와 proof task가 섞였을 때만", "합격을 보장하지 않습니다"],
+  ["research-game-design-jobs", "한 role·level·region의 current posting sample만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "evidence-auditor", "sourceUrl 또는 retrievalDate가 없으면", "여러 role·stage의 우선순위가 섞였을 때만", "stale evidence는 current claim에 사용하지 않습니다"],
+  ["reverse-engineer-game-design", "하나의 공개 build 관찰과 validation queue만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "observation 또는 source가 없으면", "여러 분석·portfolio 범위가 섞였을 때만", "관찰·추론·제안을 분리합니다"],
+  ["review-game-design-portfolio", "하나의 portfolio artifact의 five-axis finding만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "portfolio-reviewer", "inspectable source가 없으면", "여러 portfolio·interview 우선순위가 섞였을 때만", "합격을 보장하지 않습니다"],
+  ["review-image-assets", "한 stable asset ID의 lifecycle transition만", "content.md → evidence.yml → assets/image-assets.yml → assets/prompts/image-prompts.md", "visual-asset-reviewer", "named human receipt가 없으면", "여러 artifact의 image·export 우선순위가 섞였을 때만", "AI 생성 결과는 자동 최종 승인되지 않습니다"],
+  ["svg-infographic", "하나의 source-mapped 구조 SVG와 검증 상태만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "Node 또는 Chromium fallback이 막히면", "여러 Career route와 source priority가 섞였을 때만", "Node-free Chromium fallback을 보존합니다"],
+  ["visualize-career-roadmap", "하나의 source-mapped relationship과 diagram slot만", "content.md → evidence.yml → decisions/ → export-manifest.yml", "game-design-mentor", "source mapping 또는 renderer fallback이 없으면", "여러 Career route와 source priority가 섞였을 때만", "Node-free Chromium fallback을 보존합니다"],
+].map(([skill, condition, readOrder, reviewOwner, failure, orchestrator, boundary]) => ({
+  skill, condition, readOrder, reviewOwner, failure, orchestrator, boundary,
+})));
+
+function directUseHeading(entry) {
+  return `${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`;
+}
+
+function assertCareerDirectUseCard(markdown, entry, contract) {
+  const heading = directUseHeading(entry);
+  const section = extractH3Section(markdown, heading);
+  assert.match(section, /#### 직접 호출 조건/, `${entry.skill}: direct-use condition heading`);
+  assert.ok(section.includes(contract.condition), `${entry.skill}: exact direct-use condition`);
+  assert.ok(section.includes(contract.orchestrator), `${entry.skill}: conditional orchestrator boundary`);
+  assert.ok(section.includes(contract.boundary), `${entry.skill}: scope boundary`);
+  assert.doesNotMatch(section, /TODO|항상\s*\$game-design-career:orchestrate-game-design-career/, `${entry.skill}: no TODO or unconditional orchestrator handoff`);
+
+  for (const level of ["입문", "응용", "고급"]) {
+    assert.match(section, new RegExp(`#### ${level} App 요청문[\\s\\S]{0,600}@Game Design Career`, "u"), `${entry.skill}: ${level} App request`);
+    assert.match(section, new RegExp(`#### ${level} CLI 요청문[\\s\\S]{0,600}\\$game-design-career:${entry.skill}`, "u"), `${entry.skill}: ${level} exact CLI request`);
+  }
+  assert.match(section, new RegExp(`\\$game-design-career:${entry.skill}`, "u"), `${entry.skill}: installed command`);
+  assert.ok(section.includes(contract.readOrder), `${entry.skill}: exact read order`);
+  assert.ok(section.includes(`검토 owner: \`${contract.reviewOwner}\``), `${entry.skill}: review owner`);
+  assert.ok(section.includes(contract.failure), `${entry.skill}: failure-resume condition`);
+  assert.ok(section.includes("재개:"), `${entry.skill}: explicit resume`);
+
+  const outputLine = entry.outputs.map((output) => `\`${output}\``).join(", ");
+  assert.ok(section.includes(outputLine), `${entry.skill}: manifest output order`);
+  for (const nextSkill of entry.next_skills) {
+    assert.ok(section.includes(`$game-design-career:${nextSkill}`), `${entry.skill}: manifest next route ${nextSkill}`);
+  }
+  assert.doesNotMatch(section, /\[!\[/, `${entry.skill}: Task 6 diagram embed is absent`);
+}
+
 function assertSkillContract(markdown, skillId) {
   assert.deepEqual(h2Headings(markdown), requiredHeadings, `${skillId}: H2 contract/order`);
   for (const heading of requiredHeadings) {
@@ -135,6 +197,141 @@ test("Career documents every installed skill with the common contract", async ()
     assert.match(markdown, /복사 가능한 요청문/);
     assert.match(markdown, /예상 결과/);
   }
+});
+
+test("Career direct-use cards bind manifest outputs, requests, and conditional routes", async () => {
+  const manifest = JSON.parse(await readFile(path.join(root, "guides/use-cases/use-case-manifest.json"), "utf8"));
+  const entries = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
+  assert.equal(entries.length, 15, "Career direct-use manifest count");
+  assert.deepEqual(entries.map(({ skill }) => skill), CAREER_DIRECT_USE_CONTRACT.map(({ skill }) => skill), "Career direct-use contract inventory");
+
+  const cards = new Map();
+  for (const entry of entries) {
+    const markdown = await readFile(path.join(root, entry.document), "utf8");
+    const contract = CAREER_DIRECT_USE_CONTRACT.find(({ skill }) => skill === entry.skill);
+    assert.ok(contract, `${entry.skill}: independent literal contract`);
+    assertCareerDirectUseCard(markdown, entry, contract);
+    cards.set(entry.skill, extractH3Section(markdown, directUseHeading(entry)));
+  }
+
+  const apply = cards.get("apply-document-quality-profile");
+  const map = cards.get("map-game-design-career");
+  const applyCard = `### Career 직접 호출 활용 — apply-document-quality-profile\n\n${apply}`;
+  const mapCard = `### 직접 호출 활용 — map-game-design-career\n\n${map}`;
+  assert.throws(
+    () => assertCareerDirectUseCard(
+      applyCard.replace("### Career 직접 호출 활용 — apply-document-quality-profile", "### 공유 호출 활용 — apply-document-quality-profile"),
+      entries.find(({ skill }) => skill === "apply-document-quality-profile"),
+      CAREER_DIRECT_USE_CONTRACT[0],
+    ),
+    /missing H3 section|direct-use condition heading/,
+    "shared-anchor drift",
+  );
+  assert.throws(
+    () => assertCareerDirectUseCard(
+      mapCard.replace("### 직접 호출 활용 — map-game-design-career", "### Career 직접 호출 활용 — apply-document-quality-profile"),
+      entries.find(({ skill }) => skill === "apply-document-quality-profile"),
+      CAREER_DIRECT_USE_CONTRACT[0],
+    ),
+    /direct-use condition|exact CLI request|read order|review owner/,
+    "guide body swap",
+  );
+  assert.throws(
+    () => assertCareerDirectUseCard(
+      applyCard.replaceAll("$game-design-career:apply-document-quality-profile", "$game-design-career:map-game-design-career"),
+      entries.find(({ skill }) => skill === "apply-document-quality-profile"),
+      CAREER_DIRECT_USE_CONTRACT[0],
+    ),
+    /exact CLI request|installed command/,
+    "valid wrong CLI",
+  );
+  assert.throws(
+    () => assertCareerDirectUseCard(
+      applyCard.replace("`selection-record`, `quality-checklist`, `requirement-manifest`", "`quality-checklist`, `selection-record`, `requirement-manifest`"),
+      entries.find(({ skill }) => skill === "apply-document-quality-profile"),
+      CAREER_DIRECT_USE_CONTRACT[0],
+    ),
+    /manifest output order/,
+    "output read-order swap",
+  );
+  assert.throws(
+    () => assertCareerDirectUseCard(
+      applyCard.replace(CAREER_DIRECT_USE_CONTRACT[0].orchestrator, "항상 $game-design-career:orchestrate-game-design-career"),
+      entries.find(({ skill }) => skill === "apply-document-quality-profile"),
+      CAREER_DIRECT_USE_CONTRACT[0],
+    ),
+    /conditional orchestrator boundary|unconditional orchestrator handoff/,
+    "unconditional orchestrator handoff",
+  );
+  assert.throws(
+    () => assertCareerDirectUseCard(
+      applyCard + "\nTODO: direct route",
+      entries.find(({ skill }) => skill === "apply-document-quality-profile"),
+      CAREER_DIRECT_USE_CONTRACT[0],
+    ),
+    /no TODO/,
+    "TODO",
+  );
+});
+
+test("Career direct-use cards retain evidence, image, fallback, and export boundaries", async () => {
+  const base = path.join(root, "guides/game-design-career/skills");
+  const research = extractH3Section(await readFile(path.join(base, "research-game-design-jobs.md"), "utf8"), "직접 호출 활용 — research-game-design-jobs");
+  const images = ["generate-image-assets", "review-image-assets"].map(async (skill) => extractH3Section(await readFile(path.join(base, `${skill}.md`), "utf8"), `Career 직접 호출 활용 — ${skill}`));
+  const visual = ["svg-infographic", "visualize-career-roadmap"].map(async (skill) => extractH3Section(await readFile(path.join(base, `${skill}.md`), "utf8"), `${skill === "svg-infographic" ? "Career " : ""}직접 호출 활용 — ${skill}`));
+  const exported = extractH3Section(await readFile(path.join(base, "export-career-documents.md"), "utf8"), "직접 호출 활용 — export-career-documents");
+
+  assert.match(research, /sourceUrl[\s\S]*location[\s\S]*retrievalDate[\s\S]*region[\s\S]*sample boundary[\s\S]*reviewAfter/u);
+  assert.match(research, /stale evidence는 current claim에 사용하지 않습니다/u);
+  assert.throws(() => assert.match(research + "\nstale evidence는 current claim에 사용해도 됩니다.", /^(?![\s\S]*stale evidence는 current claim에 사용해도 됩니다.)[\s\S]*$/u), /did not match/i, "evidence freshness polarity");
+  for (const section of await Promise.all(images)) {
+    for (const phrase of ["provider routing", "named human approval", "IMAGE_GEN_MODE", "AI 생성 결과는 자동 최종 승인되지 않습니다"]) assert.ok(section.includes(phrase), `image boundary: ${phrase}`);
+    assert.throws(() => assert.match(section.replaceAll("named human approval", "AI automatic approval"), /named human approval/u), /did not match/i, "image approval/provider drift");
+  }
+  for (const section of await Promise.all(visual)) {
+    assert.match(section, /Skillstead[\s\S]*Node-free Chromium fallback[\s\S]*manual source checklist/u);
+    assert.throws(() => assert.match(section.replaceAll("Node-free Chromium fallback", "renderer fallback"), /Node-free Chromium fallback/u), /did not match/i, "no-Node fallback removal");
+  }
+  for (const phrase of ["export 준비", "renderer", "재개", "실제 renderer 실행이나 파일 생성을 약속하지 않습니다"]) assert.ok(exported.includes(phrase), `export boundary: ${phrase}`);
+  assert.throws(() => assert.match(exported + "\nPDF 생성 성공을 보장합니다.", /^(?![\s\S]*PDF 생성 성공을 보장합니다.)[\s\S]*$/u), /did not match/i, "export preclaim");
+});
+
+test("Career skill workbench inventories every installed skill once by lane", async () => {
+  const inventory = await collectProductInventory(root, "game-design-career");
+  const workbench = await readFile(path.join(root, "guides/game-design-career/use-cases/skill-workbench.md"), "utf8");
+  const expectedGroups = {
+    "역할·근거 lane": ["apply-document-quality-profile", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs"],
+    "역기획·포트폴리오 lane": ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"],
+    "면접·성장 lane": ["practice-game-design-interview", "plan-junior-growth"],
+    "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "visualize-career-roadmap"],
+    "export lane": ["export-career-documents"],
+  };
+  const observed = [];
+  for (const [heading, skills] of Object.entries(expectedGroups)) {
+    const section = extractSection(workbench, heading);
+    for (const skill of skills) {
+      const link = "[`" + skill + "`](../skills/" + skill + ".md)";
+      assert.ok(section.includes(link), `${heading}: ${skill}`);
+      observed.push(skill);
+    }
+  }
+  assert.deepEqual(observed.sort(), inventory.skillIds, "workbench exact skill inventory once");
+  for (const skill of inventory.skillIds) {
+    const link = "[`" + skill + "`](../skills/" + skill + ".md)";
+    assert.equal(workbench.split(link).length - 1, 1, `${skill}: no missing or duplicate workbench entry`);
+  }
+  const assertWorkbenchInventory = (candidate) => {
+    for (const skill of inventory.skillIds) {
+      const link = "[`" + skill + "`](../skills/" + skill + ".md)";
+      assert.equal(candidate.split(link).length - 1, 1, `${skill}: workbench inventory mutation`);
+    }
+  };
+  const applyLink = "[`apply-document-quality-profile`](../skills/apply-document-quality-profile.md)";
+  const mapLink = "[`map-game-design-career`](../skills/map-game-design-career.md)";
+  assert.throws(() => assertWorkbenchInventory(workbench.replace(applyLink, "")), /workbench inventory mutation/, "workbench missing skill mutation");
+  assert.throws(() => assertWorkbenchInventory(workbench.replace(applyLink, mapLink)), /workbench inventory mutation/, "workbench skill swap/duplicate mutation");
+  assert.match(workbench, /직접 스킬.*입력과 output이 하나로 확정/);
+  assert.match(workbench, /여러 단계.*우선순위.*오케스트레이터|오케스트레이터.*여러 단계.*우선순위/);
 });
 
 test("Career skill contract rejects missing or reordered new sections", async () => {
@@ -263,8 +460,9 @@ test("Career apply and orchestrator bind every canonical route condition to its 
     assertRouteCommandRows(markdown, routes, skillId);
   }
   const apply = await readFile(path.join(root, "guides/game-design-career/skills/apply-document-quality-profile.md"), "utf8");
-  assert.throws(() => assertRouteCommandRows(apply.replace("$game-design-career:build-game-design-portfolio", "$game-design-career:research-game-design-jobs"), routes, "mutated apply target"));
-  assert.throws(() => assertRouteCommandRows(apply.replace("`new-hire-portfolio-build`", "new-hire-portfolio-build"), routes, "mutated apply condition"));
+  const applyFlow = extractSection(apply, "내부 진행 흐름");
+  assert.throws(() => assertRouteCommandRows(apply.replace(applyFlow, applyFlow.replace("$game-design-career:build-game-design-portfolio", "$game-design-career:research-game-design-jobs")), routes, "mutated apply target"));
+  assert.throws(() => assertRouteCommandRows(apply.replace(applyFlow, applyFlow.replace("`new-hire-portfolio-build`", "new-hire-portfolio-build")), routes, "mutated apply condition"));
 });
 
 test("Career indexes every installed skill and canonical template exactly once", async () => {

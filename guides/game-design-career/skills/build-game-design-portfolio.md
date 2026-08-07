@@ -9,6 +9,56 @@
 - 흩어진 기획 문서와 피드백을 목표 역량 중심 case study로 묶을 때
 - 팀 결과와 개인 기여, 검증된 결과와 회고를 분리해야 할 때
 
+### 직접 호출 활용 — build-game-design-portfolio
+
+#### 직접 호출 조건
+
+한 portfolio project의 claim·evidence 구조만 만들 때 직접 호출합니다. 여러 artifact의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 합격을 보장하지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 개인 기여와 공개 권리를 분리한 portfolio project brief를 작성해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:build-game-design-portfolio artifact=artifacts/portfolio claimId=C-01
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career evidence ID와 observation·inference·proposal을 case study에 연결해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:build-game-design-portfolio artifact=artifacts/portfolio evidenceIds=E-01,E-02
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career 공개 가능성, attribution, review gate를 유지한 portfolio를 갱신해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:build-game-design-portfolio artifact=artifacts/portfolio review=portfolio-reviewer
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `portfolio-project-brief`, `creative-design-portfolio`은 논리 결과입니다. 검토 owner: `portfolio-reviewer`.
+
+#### 실패·재개와 다음 스킬 조건
+
+claim 또는 evidence ID가 없으면 unknown과 gap을 보존합니다. 재개: 확인 가능한 개인 기여와 public rights를 추가한 뒤 같은 claimId에서 재개합니다. 검토·면접·export 조건일 때만 `$game-design-career:review-game-design-portfolio`, `$game-design-career:practice-game-design-interview`, `$game-design-career:export-career-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 근거 없는 성과를 매끄러운 서사로 보충할 때

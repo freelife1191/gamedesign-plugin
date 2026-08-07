@@ -2083,7 +2083,7 @@ test("Studio skill cases resolve to direct-use anchors and canonical routing lan
   assertStudioSkillCaseRouting({ cases, inventory, routing });
   for (const entry of cases) {
     const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
-    const expectedHeading = `### 직접 호출 활용 — ${entry.skill}`;
+    const expectedHeading = `### ${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`;
     assert.ok(markdown.includes(expectedHeading), `${entry.id}: direct-use heading exists`);
     assert.ok(collectHeadingAnchors(markdown).has(entry.anchor), `${entry.id}: manifest anchor resolves`);
   }
@@ -2092,6 +2092,21 @@ test("Studio skill cases resolve to direct-use anchors and canonical routing lan
     () => assertStudioSkillCaseRouting({ cases, inventory, routing: { ...routing, routes: [] } }),
     "empty canonical routing.routes must fail",
   );
+});
+
+test("Career skill cases resolve to their exact manifest direct-use anchors", async () => {
+  const manifest = await loadUseCaseManifest({ repoRoot });
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
+  const cases = manifest.skill_cases.filter((entry) => entry.product === "game-design-career");
+
+  assert.equal(cases.length, 15, "Career direct-use case count");
+  assert.deepEqual(cases.map(({ skill }) => skill), inventory.skillIds, "Career direct-use cases follow installed inventory");
+  for (const entry of cases) {
+    const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
+    const expectedHeading = `### ${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`;
+    assert.ok(markdown.includes(expectedHeading), `${entry.id}: direct-use heading exists`);
+    assert.ok(collectHeadingAnchors(markdown).has(entry.anchor), `${entry.id}: manifest anchor resolves`);
+  }
 });
 
 test("Studio use-case index routes all eighteen published competency and concept cases", async () => {

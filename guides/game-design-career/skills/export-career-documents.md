@@ -9,6 +9,56 @@ Career canonical artifact를 MD·PDF·DOCX·PPTX로 전달하기 위한 renderer
 - portfolio, roadmap, 역기획서, 면접 report 또는 transition report의 형식별 handoff가 필요할 때
 - recruiter용 PPTX에 Markdown과 독립된 story outline을 만들 때
 
+### 직접 호출 활용 — export-career-documents
+
+#### 직접 호출 조건
+
+하나의 승인 대기 Artifact의 export 준비만 할 때 직접 호출합니다. 여러 artifact·형식 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 실제 renderer 실행이나 파일 생성을 약속하지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 이 Artifact의 MD export 준비 상태와 필요한 사람 검토를 정리해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:export-career-documents artifact=artifacts/portfolio formats=md
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career PDF·DOCX·PPTX format job과 downstream renderer 재개 조건을 분리해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:export-career-documents artifact=artifacts/portfolio formats=pdf,docx,pptx
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career renderer evidence와 format QA가 없는 작업을 blocked로 유지해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:export-career-documents artifact=artifacts/portfolio capability=unknown
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `export-preparation-manifest`, `format-jobs`은 준비 논리 결과입니다. 검토 owner: `document-quality-editor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+renderer 또는 capability가 없으면 원본과 blocked job을 보존합니다. 재개: downstream workflow에서 실제 renderer 결과와 format QA를 확인한 지점부터 재개합니다. export는 terminal lane이며 다음 스킬을 자동 호출하지 않습니다.
+
 ## 사용하지 않을 때
 
 - canonical validation이 failed·pending·unevidenced일 때

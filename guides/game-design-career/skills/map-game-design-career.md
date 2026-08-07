@@ -9,6 +9,56 @@
 - 시스템·콘텐츠·경제·UX 등 목표 역할을 비교할 때
 - 입문, new-hire, junior 또는 transition 단계의 `targetLevel`과 evidence gap을 정할 때
 
+### 직접 호출 활용 — map-game-design-career
+
+#### 직접 호출 조건
+
+한 목표 역할의 current evidence와 competency gap만 정리할 때 직접 호출합니다. 여러 역할·단계의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 사실·추론·제안을 분리합니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 현재 경험을 사실·추론·제안으로 나누고 시스템 기획 role map을 만들어.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:map-game-design-career role=systems targetLevel=foundation
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career current evidence ID와 gap을 competency matrix로 연결해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:map-game-design-career role=systems evidenceIds=E-01,E-02
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career stale source를 current claim과 분리하고 다음 research 조건을 기록해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:map-game-design-career role=systems targetLevel=junior
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `game-design-role-map`, `competency-matrix`를 반환합니다. 검토 owner: `career-strategist`.
+
+#### 실패·재개와 다음 스킬 조건
+
+current evidence가 stale이면 current claim을 멈추고 원래 source를 보존합니다. 재개: fresh evidence와 retrievalDate를 확인한 route에서 재개합니다. research·portfolio·visualization 조건일 때만 `$game-design-career:research-game-design-jobs`, `$game-design-career:build-game-design-portfolio`, `$game-design-career:visualize-career-roadmap`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 현재 공고 수요를 조사 없이 단정할 때

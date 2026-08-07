@@ -9,6 +9,56 @@
 - portfolio illustration 또는 document image의 prompt-ready job을 생성할 때
 - provider가 없거나 실패한 asset의 prompt·placeholder와 재개 경로를 보존할 때
 
+### Career 직접 호출 활용 — generate-image-assets
+
+#### 직접 호출 조건
+
+선택 receipt가 있는 finite image job만 직접 호출합니다. 여러 artifact의 image·review 범위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. AI 생성 결과는 자동 최종 승인되지 않습니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 선택한 asset ID 하나의 provider routing과 prompt-only 결과를 기록해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:generate-image-assets artifact=artifacts/portfolio assetId=portfolio-proof-01 IMAGE_GEN_MODE=select
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career finite selected job만 생성하고 provenance와 named human approval blocker를 남겨.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:generate-image-assets artifact=artifacts/portfolio mode=required IMAGE_GEN_MODE=required
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career provider failure를 placeholder와 재개 receipt로 보존해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:generate-image-assets artifact=artifacts/portfolio IMAGE_GEN_MODE=all
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽습니다. `image-generation-result`, `image-generation-provenance`을 반환합니다. 검토 owner: `visual-asset-reviewer`.
+
+#### 실패·재개와 다음 스킬 조건
+
+provider 또는 selection receipt가 없으면 prompt·placeholder와 lifecycle을 보존합니다. 재개: provider routing과 실제 사용자 decision을 추가한 stable asset ID에서 재개합니다. named human approval 전에는 final binding하지 않고, review가 필요할 때만 `$game-design-career:review-image-assets`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - manifest와 prompt package가 없으면 `plan-image-assets`를 먼저 사용합니다.

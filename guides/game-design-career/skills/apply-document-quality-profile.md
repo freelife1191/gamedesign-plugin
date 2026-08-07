@@ -9,6 +9,56 @@ Career canonical artifact마다 primary profile 하나를 결정하고 additive 
 - 역기획서, portfolio case study, 면접 report, 성장 review의 구조를 쓰기 전에 고정할 때
 - 서로 다른 대상의 MD·PDF·DOCX·PPTX가 각각 어떤 profile을 써야 하는지 결정할 때
 
+### Career 직접 호출 활용 — apply-document-quality-profile
+
+#### 직접 호출 조건
+
+한 Career Artifact의 template·quality profile 선택만 확정할 때 직접 호출합니다. 여러 route가 함께 남았을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 선택 기록은 승인 자체가 아닙니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 역할 map Artifact의 template과 quality profile, 누락 입력만 선택해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:apply-document-quality-profile artifact=artifacts/role-map template=game-design-role-map
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career 기존 selection record를 보존하고 portfolio brief의 checklist를 갱신해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:apply-document-quality-profile artifact=artifacts/portfolio template=portfolio-project-brief
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career conflict와 blocked requirement를 분리한 profile manifest를 만들어.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:apply-document-quality-profile artifact=artifacts/career-review template=five-axis-review
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → export-manifest.yml` 순서로 읽습니다. `selection-record`, `quality-checklist`, `requirement-manifest`은 논리 결과이며 임의 파일 생성을 가정하지 않습니다. 검토 owner: `document-quality-editor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+unknown ID 또는 profile conflict면 기존 기록을 보존합니다. 재개: 설치된 template과 artifact ID를 확인해 같은 선택 기록에서 재개합니다. map·research·portfolio·reverse·interview·review·growth·visualization·export·image plan route일 때만 각각 `$game-design-career:map-game-design-career`, `$game-design-career:research-game-design-jobs`, `$game-design-career:build-game-design-portfolio`, `$game-design-career:reverse-engineer-game-design`, `$game-design-career:practice-game-design-interview`, `$game-design-career:review-game-design-portfolio`, `$game-design-career:plan-junior-growth`, `$game-design-career:visualize-career-roadmap`, `$game-design-career:export-career-documents`, `$game-design-career:plan-image-assets`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 본문, 이미지, SVG나 파생 문서를 직접 만들 때

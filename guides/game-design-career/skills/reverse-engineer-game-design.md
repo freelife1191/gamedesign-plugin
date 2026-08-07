@@ -9,6 +9,56 @@
 - 게임 build의 UI state와 visible value 변화로 rule을 역추적할 때
 - internal design record 없이 economy·operation 가설과 validation method를 정리할 때
 
+### 직접 호출 활용 — reverse-engineer-game-design
+
+#### 직접 호출 조건
+
+하나의 공개 build 관찰과 validation queue만 정리할 때 직접 호출합니다. 여러 분석·portfolio 범위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 관찰·추론·제안을 분리합니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 공개 build 관찰을 evidence ID와 함께 기록하고 추론을 분리해.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:reverse-engineer-game-design build=public sourceId=S-01
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career observation, inference, alternative와 validation method를 역기획 문서에 연결해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:reverse-engineer-game-design build=public observationId=O-01
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career 공개 권리와 attribution을 보존한 contradiction log를 검토해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:reverse-engineer-game-design build=public validationMethod=playtest
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `reverse-design-document`, `game-analysis-report`를 반환합니다. 검토 owner: `game-design-mentor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+observation 또는 source가 없으면 unknown implementation detail을 보존합니다. 재개: 공개 관찰과 source citation을 추가한 validation queue에서 재개합니다. portfolio·export 조건일 때만 `$game-design-career:build-game-design-portfolio`, `$game-design-career:export-career-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 플레이 방법만 설명하는 user manual을 만들 때

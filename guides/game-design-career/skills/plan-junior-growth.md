@@ -9,6 +9,56 @@ target-role requirement와 실제 project event를 분기 목표, 증거 프로�
 - new-hire·junior의 다음 분기 성장 목표를 만들 때
 - transition 준비에서 현재 evidence와 target requirement의 차이를 검토할 때
 
+### 직접 호출 활용 — plan-junior-growth
+
+#### 직접 호출 조건
+
+한 target requirement의 gap과 proof task만 계획할 때 직접 호출합니다. 여러 단계·역할의 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. 사실·추론·제안을 분리합니다.
+
+#### 입문 App 요청문
+
+```text
+@Game Design Career 확인 가능한 현재 경험과 한 분기 proof task를 분리해 성장 계획을 만들어.
+```
+
+#### 입문 CLI 요청문
+
+```text
+$game-design-career:plan-junior-growth requirementId=R-01 targetLevel=junior
+```
+
+#### 응용 App 요청문
+
+```text
+@Game Design Career fresh posting requirement와 eventId를 학습 증거 일정에 연결해.
+```
+
+#### 응용 CLI 요청문
+
+```text
+$game-design-career:plan-junior-growth requirementId=R-01 eventId=EV-01
+```
+
+#### 고급 App 요청문
+
+```text
+@Game Design Career stale evidence를 갱신하고 개인 기여·권리 gate를 유지한 transition readiness를 작성해.
+```
+
+#### 고급 CLI 요청문
+
+```text
+$game-design-career:plan-junior-growth requirementId=R-01 proofArtifact=portfolio-01
+```
+
+#### 예상 파일과 읽는 순서
+
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `junior-growth-review`, `transition-readiness`를 반환합니다. 검토 owner: `game-design-mentor`.
+
+#### 실패·재개와 다음 스킬 조건
+
+stale evidence 또는 requirement가 있으면 current claim을 보류합니다. 재개: `research-game-design-jobs`의 fresh sourceId와 requirementId를 확인한 뒤 proof task에서 재개합니다. visualization·export 조건일 때만 `$game-design-career:visualize-career-roadmap`, `$game-design-career:export-career-documents`로 넘깁니다.
+
 ## 사용하지 않을 때
 
 - 활동 수를 readiness나 승진 증거로 바꿀 때
