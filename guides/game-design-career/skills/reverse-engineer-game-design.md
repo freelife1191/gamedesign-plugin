@@ -53,7 +53,7 @@ $game-design-career:reverse-engineer-game-design build=public validationMethod=p
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `reverse-design-document`, `game-analysis-report`를 반환합니다. 검토 owner: `game-design-mentor`.
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `reverse-design-document`, `game-analysis-report`를 반환합니다. 검토 owner: `reverse-design-critic` · `evidence-auditor`; critic은 fact·inference·alternative·validation을, auditor는 source·provenance·rights evidence를 검토합니다.
 
 #### 실패·재개와 다음 스킬 조건
 

@@ -13,51 +13,51 @@ Career image의 권리·provenance·가독성·accessibility·placement를 검�
 
 #### 직접 호출 조건
 
-한 stable asset ID의 lifecycle transition만 검토할 때 직접 호출합니다. 여러 artifact의 image·export 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. AI 생성 결과는 자동 최종 승인되지 않습니다.
+검증된 `assets/image-assets.yml`의 한 stable asset ID와 requested lifecycle transition만 검토할 때 직접 호출합니다. 여러 artifact의 image·export 우선순위가 섞였을 때만 `$game-design-career:orchestrate-game-design-career`로 범위를 나눕니다. agent 권고와 asset bytes는 actual user decision이나 승인 증거가 아닙니다.
 
 #### 입문 App 요청문
 
 ```text
-@Game Design Career asset 하나의 provider routing, provenance와 named human approval blocker를 검토해.
+@Game Design Career 검증된 `assets/image-assets.yml`의 asset 하나에 actual user decision, named reviewer, review time, artifact-local evidence paths와 rights decision이 있는지 확인해.
 ```
 
 #### 입문 CLI 요청문
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01 requestedState=document-approved
+$game-design-career:review-image-assets assetId=portfolio-proof-01 requestedState=document-approved reviewer="[이름 있는 검토자]" reviewedAt=2026-08-07T10:00:00+09:00
 ```
 
 #### 응용 App 요청문
 
 ```text
-@Game Design Career IMAGE_GEN_MODE 결과의 rights, alt text, placement와 actual user receipt를 분리해.
+@Game Design Career actual user decision과 artifact-local evidence paths를 stable asset ID, placement, alt text, readability, rights decision에 연결해 lifecycle receipt를 검토해.
 ```
 
 #### 응용 CLI 요청문
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01 reviewer="actual human"
+$game-design-career:review-image-assets assetId=portfolio-proof-01 decision=approve evidencePaths=assets/evidence/review-01.yml rightsDecision=confirmed
 ```
 
 #### 고급 App 요청문
 
 ```text
-@Game Design Career 거부된 transition을 보존하고 named human approval 후에만 lifecycle을 재개해.
+@Game Design Career `concept-draft` → `document-approved` → `production-candidate` 순서를 건너뛰지 않고, 거부된 actual user decision과 blocker를 보존해 재개해.
 ```
 
 #### 고급 CLI 요청문
 
 ```text
-$game-design-career:review-image-assets assetId=portfolio-proof-01 decision=approve
+$game-design-career:review-image-assets assetId=portfolio-proof-01 requestedState=production-candidate reviewer="[이름 있는 검토자]" reviewTime=2026-08-07T10:00:00+09:00 rightsDecision=active
 ```
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → assets/image-assets.yml → assets/prompts/image-prompts.md` 순서로 읽습니다. `image-asset-review`, `lifecycle-receipt`을 반환합니다. 검토 owner: `visual-asset-reviewer`.
+`content.md → evidence.yml → assets/image-assets.yml` 순서로 읽습니다. `image-asset-review`, `lifecycle-receipt`을 반환합니다. 검토 owner: named reviewer이며 `visual-asset-reviewer`와 `art-brief-director`는 finding·recommendation만 제공합니다.
 
 #### 실패·재개와 다음 스킬 조건
 
-named human receipt가 없으면 state를 바꾸지 않습니다. 재개: provider routing, rights와 actual user decision을 추가한 stable asset ID에서 재개합니다. document-approved일 때만 `$game-design-career:export-career-documents`로 넘깁니다.
+actual user decision, named reviewer, review time, artifact-local evidence paths 또는 rights decision이 없으면 state를 바꾸지 않습니다. 재개: 누락된 evidence를 같은 stable asset ID의 lifecycle receipt에 연결하고 requested transition부터 재개합니다. document-approved일 때만 `$game-design-career:export-career-documents`로 넘깁니다.
 
 ## 사용하지 않을 때
 

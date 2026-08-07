@@ -48,12 +48,12 @@ $game-design-career:practice-game-design-interview questionId=Q-02 portfolioEvid
 #### 고급 CLI 요청문
 
 ```text
-$game-design-career:practice-game-design-interview questionId=Q-03 review=career-strategist
+$game-design-career:practice-game-design-interview questionId=Q-03 review=interview-coach,evidence-auditor
 ```
 
 #### 예상 파일과 읽는 순서
 
-`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `interview-question-answer-log`, `honest-answer-patterns`를 반환합니다. 검토 owner: `career-strategist`.
+`content.md → evidence.yml → decisions/ → export-manifest.yml` 순서로 읽습니다. `interview-question-answer-log`, `honest-answer-patterns`를 반환합니다. 검토 owner: `interview-coach` · `evidence-auditor`; 코치는 질문·feedback을, auditor는 posting·portfolio evidence trace를 각각 검토합니다.
 
 #### 실패·재개와 다음 스킬 조건
 
