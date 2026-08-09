@@ -218,6 +218,115 @@ test("Studio foundation catalog reads canonical Artifact files before optional d
   }
 });
 
+test("Studio production catalog has the exact IDs, levels, and Studio namespaces", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+  const skills = [
+    "design-game-economy-and-liveops",
+    "plan-game-production",
+    "orchestrate-game-design-project",
+    "review-game-design",
+    "export-game-design-documents",
+  ];
+  const levels = ["beginner", "standard", "advanced"];
+  const expectedIds = skills.flatMap((skill) => levels.map((level) => `studio:${skill}:${level}`)).sort();
+
+  assert.equal(entries.length, 15);
+  assert.deepEqual(entries.map(({ id }) => id).sort(), expectedIds);
+  assert.deepEqual(
+    entries.map(({ skill, level }) => `${skill}:${level}`).sort(),
+    expectedIds.map((id) => id.replace(/^studio:/u, "")).sort(),
+  );
+  for (const entry of entries) {
+    assert.equal(entry.kind, "skill-template");
+    assert.equal(entry.product, "studio");
+    assert.match(entry.app_prompt.example, /@Game Design Studio/u);
+    assert.match(entry.app_prompt.template, /@Game Design Studio/u);
+    assert.match(entry.cli_prompt.example, new RegExp(`\\$game-design-studio:${entry.skill}(?:\\s|$)`, "u"));
+    assert.match(entry.cli_prompt.template, new RegExp(`\\$game-design-studio:${entry.skill}(?:\\s|$)`, "u"));
+  }
+});
+
+test("Studio production catalog placeholders exactly match both reusable prompt templates", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+  const tokens = (prompt) => [...prompt.matchAll(/\[([^\]]+)\]/gu)].map(([, token]) => `[${token}]`).sort();
+
+  for (const entry of entries) {
+    const templateTokens = [...new Set([
+      ...tokens(entry.app_prompt.template),
+      ...tokens(entry.cli_prompt.template),
+    ])].sort();
+    assert.deepEqual(entry.placeholders.slice().sort(), templateTokens, entry.id);
+  }
+});
+
+test("Studio production catalog preserves output ownership and renderer capability boundaries", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+  const prohibitedGuarantees = /(?:성공률|수익|출시|채용)을 보장(?:한다|합니다|함)/iu;
+
+  for (const entry of entries) {
+    const contract = [
+      entry.purpose,
+      entry.minimum_outputs.join(" "),
+      entry.optional_outputs.join(" "),
+      entry.extended_outputs.join(" "),
+      entry.human_review_boundary,
+      entry.hold_conditions.join(" "),
+      entry.resume_prompt,
+      entry.safety_boundary,
+    ].join(" ");
+    assert.match(entry.human_review_boundary, /owner|승인|보류/iu, entry.id);
+    assert.match(entry.resume_prompt, /보존.*재개|재개.*보존/iu, entry.id);
+    assert.match(entry.safety_boundary, /미정/u, entry.id);
+    assert.doesNotMatch(contract, prohibitedGuarantees, entry.id);
+  }
+
+  const economyEntries = entries.filter(({ skill }) => skill === "design-game-economy-and-liveops");
+  for (const entry of economyEntries) {
+    assert.match(
+      [entry.purpose, ...entry.minimum_outputs, ...entry.optional_outputs, ...entry.extended_outputs, entry.safety_boundary].join(" "),
+      /provisional|미정/iu,
+      entry.id,
+    );
+  }
+
+  const exportEntries = entries.filter(({ skill }) => skill === "export-game-design-documents");
+  for (const entry of exportEntries) {
+    const contract = [
+      ...entry.minimum_outputs,
+      ...entry.optional_outputs,
+      ...entry.extended_outputs,
+      entry.human_review_boundary,
+      entry.hold_conditions.join(" "),
+    ].join(" ");
+    assert.match(contract, /capability.*preflight.*QA|preflight.*capability.*QA|renderer/iu, entry.id);
+    assert.match(entry.human_review_boundary, /downstream|renderer|QA/iu, entry.id);
+  }
+});
+
+test("Studio production catalog reads canonical Artifact files before optional decisions", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+
+  for (const entry of entries) {
+    const base = entry.expected_file_tree[0].replace(/\/content\.md$/u, "");
+    assert.deepEqual(entry.read_order.slice(0, 3), [
+      `${base}/content.md`,
+      `${base}/evidence.yml`,
+      `${base}/export-manifest.yml`,
+    ], entry.id);
+    if (entry.read_order.includes(`${base}/decisions/README.md`)) {
+      assert.equal(entry.read_order.at(-1), `${base}/decisions/README.md`, entry.id);
+    }
+  }
+});
+
 test("loader rejects duplicate IDs and symlink shards", async (t) => {
   const duplicate = validEntry(1);
   const duplicateRoot = await fixtureRoot(t, { entries: [duplicate, { ...duplicate }] });
