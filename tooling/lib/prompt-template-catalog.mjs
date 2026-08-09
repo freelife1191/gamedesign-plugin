@@ -96,11 +96,13 @@ function clauseProhibitsCategory(clause, category) {
     : undefined;
   const koreanPureList = koreanList !== undefined
     && /^[\s,·]*(?:§)(?:[\s,·]*(?:또는|및|and|or)?[\s,·]*§)*[\s,·]*$/iu.test(koreanList);
+  const koreanDirectCategoryProhibition = koreanCategoryHasExplicitProhibition(koreanCategoryTail(clause, category));
   return (
     (prohibition !== null && isPureSensitiveCategoryList(directTarget))
     || prohibitedAfter.test(clause)
     || withoutCategory.test(clause)
     || koreanPureList
+    || koreanDirectCategoryProhibition
   );
 }
 
@@ -116,6 +118,23 @@ function clauseIsPureSensitiveInputProhibition(clause) {
   ).test(clause));
 }
 
+function koreanCategoryTail(clause, category) {
+  const match = new RegExp(category.pattern.source, "iu").exec(clause);
+  return match ? clause.slice(match.index + match[0].length) : undefined;
+}
+
+function koreanCategoryHasExplicitProhibition(tail) {
+  if (typeof tail !== "string") return false;
+  const negative = /(?:요청(?:·공개)?|제공|입력|공유|업로드|전달|제출|알려|기입)(?:하지\s*(?:(?:마|말)(?:라|세요|고)?|않는다)|\s*금지|하면\s*안\s*된다)/u.exec(tail);
+  if (!negative) return false;
+  return !/(?:제공|입력|공유|업로드|요청|전달|제출|알려|기입)/u.test(tail.slice(negative.index + negative[0].length));
+}
+
+function koreanCategoryHasPositiveRequest(tail) {
+  if (typeof tail !== "string" || koreanCategoryHasExplicitProhibition(tail)) return false;
+  return /(?:을|를|은|는|이|가)?(?:\s+[\p{L}\p{N}-]+){0,4}\s*(?:제공|입력|공유|업로드|요청|전달|제출|알려|기입)/u.test(tail);
+}
+
 function requestsSensitiveInput(value) {
   if (!isNonemptyString(value)) return false;
   return textClauses(value).some((clause) => {
@@ -124,8 +143,7 @@ function requestsSensitiveInput(value) {
       "iu",
     ).test(clause));
     const koreanPositiveRequest = SENSITIVE_CATEGORIES.some((category) => (
-      category.pattern.test(clause)
-      && /(?:제공해라|입력해라|요청한다|공유해라|업로드해라)/u.test(clause)
+      koreanCategoryHasPositiveRequest(koreanCategoryTail(clause, category))
       && !clauseProhibitsCategory(clause, category)
     ));
     return (requestsInput && !clauseIsPureSensitiveInputProhibition(clause)) || koreanPositiveRequest;

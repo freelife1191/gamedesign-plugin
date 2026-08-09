@@ -1955,6 +1955,37 @@ test("safety boundaries reject a separate Korean positive request after a direct
   }
 });
 
+test("safety boundaries reject Korean sensitive requests across natural conjugations", () => {
+  const prohibited = [
+    "credentials를 제공하세요", "API keys를 입력하십시오", "개인정보를 공유해 줘",
+    "비공개 자료를 업로드해 주세요", "credentials를 제출하자", "credentials를 전달 바랍니다",
+  ];
+  const direct = "개인정보(PII), 비공개 자료, private material, API keys 또는 credentials를 요청·공개하지 않는다";
+  for (const request of prohibited) {
+    for (const boundary of [`모르는 정보는 미정으로 남긴다. ${request}.`, `모르는 정보는 미정으로 남긴다. ${direct}. ${request}.`]) {
+      const entry = validEntry(25);
+      entry.safety_boundary = boundary;
+      const result = validatePromptTemplateCatalog({ entries: [entry] });
+      assert.equal(result.ok, false, request);
+      assert.match(result.errors.join("\n"), /safety_boundary.*credentials|personal data|private materials/u, request);
+    }
+  }
+});
+
+test("safety boundaries accept explicit Korean non-request forms for every category", () => {
+  for (const boundary of [
+    "모르는 정보는 미정으로 남긴다. credentials를 요청하지 않는다. 개인정보를 요청하지 않는다. 비공개 자료를 요청하지 않는다.",
+    "모르는 정보는 미정으로 남긴다. credentials를 제공하지 마. 개인정보를 제공하지 마. 비공개 자료를 제공하지 마.",
+    "모르는 정보는 미정으로 남긴다. API keys 입력 금지. 개인정보 입력 금지. 비공개 자료 입력 금지.",
+    "모르는 정보는 미정으로 남긴다. credentials를 공유하면 안 된다. 개인정보를 공유하면 안 된다. 비공개 자료를 공유하면 안 된다.",
+  ]) {
+    const entry = validEntry(26);
+    entry.safety_boundary = boundary;
+    const result = validatePromptTemplateCatalog({ entries: [entry] });
+    assert.equal(result.ok, true, result.errors.join("\n"));
+  }
+});
+
 test("resume prompts allow direct prohibitions on providing API keys", () => {
   const entry = validEntry(16);
   entry.resume_prompt = "Do not provide API keys.";
