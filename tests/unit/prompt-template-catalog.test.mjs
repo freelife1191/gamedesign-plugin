@@ -356,19 +356,37 @@ test("Studio economy levels retain required and forbidden topics in independent 
     ["beginner", {
       required: [/source/iu, /sink/iu],
       forbidden: [/progression/iu, /experiment/iu, /telemetry/iu, /player protection/iu],
+      requiredInputs: ["resource ID", "known source", "known sink", "보유 한도", "economy owner"],
+      requiredInputTopics: [
+        { leaf: "known source", topic: /source/iu },
+        { leaf: "known sink", topic: /sink/iu },
+      ],
     }],
     ["standard", {
       required: [/progression/iu, /guardrail/iu, /rollback/iu],
       forbidden: [/experiment/iu],
+      requiredInputs: ["progression target", "guardrail", "stop 조건", "tested rollback", "economy owner"],
+      requiredInputTopics: [
+        { leaf: "progression target", topic: /progression/iu },
+        { leaf: "guardrail", topic: /guardrail/iu },
+        { leaf: "tested rollback", topic: /rollback/iu },
+      ],
     }],
     ["advanced", {
       required: [/experiment/iu, /telemetry/iu, /player protection/iu],
       forbidden: [/source/iu, /sink/iu, /progression/iu, /guardrail/iu, /rollback/iu],
+      requiredInputs: ["economy Artifact version", "experiment hypothesis", "telemetry 정의", "price/probability/pity 근거 상태", "player protection owner", "decision owner"],
+      requiredInputTopics: [
+        { leaf: "experiment hypothesis", topic: /experiment/iu },
+        { leaf: "telemetry 정의", topic: /telemetry/iu },
+        { leaf: "player protection owner", topic: /player protection/iu },
+      ],
     }],
   ]);
 
   const assertTopicContract = (entry) => {
     const rules = topicRules.get(entry.level);
+    assert.deepEqual(entry.required_inputs, rules.requiredInputs, `${entry.id} required input contract`);
     const requiredTextLeaves = new Map([
       ["title", entry.title],
       ["purpose", entry.purpose],
@@ -403,6 +421,18 @@ test("Studio economy levels retain required and forbidden topics in independent 
         mutation[promptKind][field] = "@Game Design Studio required topic omitted";
         assert.throws(() => assertTopicContract(mutation), assert.AssertionError, `${entry.id} ${promptKind}.${field} topic omission`);
       }
+    }
+    for (const { leaf, topic } of topicRules.get(entry.level).requiredInputTopics) {
+      const mutation = structuredClone(entry);
+      const topicLeafIndex = mutation.required_inputs.indexOf(leaf);
+      const duplicateLeafIndex = mutation.required_inputs.findIndex((input, index) => index !== topicLeafIndex && !topic.test(input));
+      mutation.required_inputs[topicLeafIndex] = "topic omitted";
+      mutation.required_inputs[duplicateLeafIndex] = `${mutation.required_inputs[duplicateLeafIndex]}; ${leaf}`;
+      assert.throws(
+        () => assertTopicContract(mutation),
+        assert.AssertionError,
+        `${entry.id} required input ${leaf} cannot be replaced by a duplicate topic in another leaf`,
+      );
     }
   }
 });
