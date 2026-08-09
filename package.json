@@ -18,9 +18,7 @@
     "build:guide-diagrams": "node tooling/build-use-case-diagrams.mjs",
     "check:guide-diagrams": "node tooling/build-use-case-diagrams.mjs --check",
     "build:prompt-guides": "node tooling/build-prompt-guides.mjs",
-    "check:prompt-guides": "node tooling/build-prompt-guides.mjs --check",
-    "build:archify-guides": "node tooling/build-archify-guides.mjs",
-    "check:archify-guides": "node tooling/build-archify-guides.mjs --check"
+    "check:prompt-guides": "node tooling/build-prompt-guides.mjs --check"
   },
   "engines": { "node": ">=18" }
 }
