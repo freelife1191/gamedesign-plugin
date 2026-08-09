@@ -346,24 +346,41 @@ test("Studio production diagram bindings resolve the matching manifest skill and
   }
 });
 
-test("Studio economy levels retain their distinct required topics across prompts and result layers", async () => {
+test("Studio economy levels retain required and forbidden topics in every major prompt, contract, result, and diagram field", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const entries = JSON.parse(await readFile(
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json"),
     "utf8",
   ));
-  const expectedTopics = new Map([
-    ["beginner", [/source/iu, /sink/iu]],
-    ["standard", [/progression/iu, /guardrail/iu, /rollback/iu]],
-    ["advanced", [/experiment/iu, /telemetry/iu, /player protection/iu]],
+  const topicRules = new Map([
+    ["beginner", {
+      required: [/source/iu, /sink/iu],
+      forbidden: [/progression/iu, /experiment/iu, /telemetry/iu, /player protection/iu],
+    }],
+    ["standard", {
+      required: [/progression/iu, /guardrail/iu, /rollback/iu],
+      forbidden: [/experiment/iu],
+    }],
+    ["advanced", {
+      required: [/experiment/iu, /telemetry/iu, /player protection/iu],
+      forbidden: [/source/iu, /sink/iu, /progression/iu, /guardrail/iu, /rollback/iu],
+    }],
   ]);
 
   for (const entry of entries.filter(({ skill }) => skill === "design-game-economy-and-liveops")) {
-    const promptText = [entry.title, entry.purpose, entry.app_prompt.example, entry.app_prompt.template, entry.cli_prompt.example, entry.cli_prompt.template, ...entry.required_inputs].join(" ");
-    const resultText = [...entry.minimum_outputs, ...entry.optional_outputs, ...entry.extended_outputs].join(" ");
-    for (const topic of expectedTopics.get(entry.level)) {
-      assert.match(promptText, topic, `${entry.id} prompt contract`);
-      assert.match(resultText, topic, `${entry.id} result contract`);
+    const fields = new Map([
+      ["title", entry.title],
+      ["purpose", entry.purpose],
+      ["App prompt", `${entry.app_prompt.example} ${entry.app_prompt.template}`],
+      ["CLI prompt", `${entry.cli_prompt.example} ${entry.cli_prompt.template}`],
+      ["required inputs", entry.required_inputs.join(" ")],
+      ["result layers", [...entry.minimum_outputs, ...entry.optional_outputs, ...entry.extended_outputs].join(" ")],
+      ["diagram alt", entry.diagram_binding.alt],
+    ]);
+    const rules = topicRules.get(entry.level);
+    for (const [field, text] of fields) {
+      for (const topic of rules.required) assert.match(text, topic, `${entry.id} ${field}`);
+      for (const topic of rules.forbidden) assert.doesNotMatch(text, topic, `${entry.id} ${field}`);
     }
   }
 });
@@ -380,7 +397,13 @@ test("Studio production catalog rejects positive guarantees and requires separat
     if (value && typeof value === "object") return Object.values(value).flatMap(leafStrings);
     return [];
   };
-  const positiveGuarantee = /(?:(?:성공률?|수익|출시|채용)(?:을|를)\s*보장|(?:success(?: rate)?|revenue|launch)\s+guarantee)(?!하지|되지|할 수 없)(?:한다|합니다|됨|될|할)?/iu;
+  const positiveGuarantee = /(?:(?:성공률?|수익|출시|채용)(?:을|를)\s*(?:(?:확실히|반드시)\s*)?보장(?!하지|되지|할 수 없)|\b(?:this|we|it)\s+guarantees?\s+(?:success(?: rate)?|revenue|launch)\b|\b(?:success(?: rate)?|revenue|launch)\s+is\s+guaranteed\b)/iu;
+  const positiveGuarantees = [
+    "성공을 확실히 보장한다",
+    "This guarantees success",
+    "Revenue is guaranteed",
+    "출시를 보장한다",
+  ];
 
   for (const entry of entries) {
     assert.doesNotMatch(leafStrings(entry).join(" "), positiveGuarantee, entry.id);
@@ -388,9 +411,20 @@ test("Studio production catalog rejects positive guarantees and requires separat
     assert.match(entry.human_review_boundary, /(?:lead-game-designer|system-economy-designer|liveops-data-designer|production-feasibility-critic|ux-accessibility-reviewer|document-quality-editor)/u, `${entry.id} human role`);
     assert.match(entry.human_review_boundary, /승인/u, `${entry.id} human approval`);
     assert.match(entry.human_review_boundary, /보류/iu, `${entry.id} hold`);
-    const positiveMutation = structuredClone(entry);
-    positiveMutation.app_prompt.example = `${positiveMutation.app_prompt.example} 출시를 보장한다.`;
-    assert.match(leafStrings(positiveMutation).join(" "), positiveGuarantee, `${entry.id} positive guarantee mutation`);
+    const userPromptFields = Object.entries(entry.app_prompt).concat(Object.entries(entry.cli_prompt));
+    const contractFields = leafStrings(entry).map((text, index) => [`contract[${index}]`, text]);
+    for (const guarantee of positiveGuarantees) {
+      for (const [field, text] of userPromptFields.concat(contractFields)) {
+        assert.throws(
+          () => assert.doesNotMatch(`${text} ${guarantee}`, positiveGuarantee),
+          assert.AssertionError,
+          `${entry.id} ${field} rejects ${guarantee}`,
+        );
+      }
+    }
+  }
+  for (const nonGuarantee of ["성공을 보장하지 않는다", "This is not guaranteed", "We cannot guarantee revenue"]) {
+    assert.doesNotMatch(nonGuarantee, positiveGuarantee, nonGuarantee);
   }
 });
 
