@@ -323,3 +323,25 @@ test("resume prompts reject a credential request after a different category proh
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
 });
+
+test("safety boundaries reject credential requests appended to a direct prohibition", () => {
+  const entry = validEntry(15);
+  entry.safety_boundary = "미정. Do not request credentials but ask for credentials. Do not request personal data. Do not request private materials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /safety_boundary.*credentials/u);
+});
+
+test("resume prompts allow direct prohibitions on providing API keys", () => {
+  const entry = validEntry(16);
+  entry.resume_prompt = "Do not provide API keys.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, true, result.errors.join("\n"));
+});
+
+test("resume prompts allow direct prohibitions on sharing credentials", () => {
+  const entry = validEntry(17);
+  entry.resume_prompt = "Never share credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, true, result.errors.join("\n"));
+});

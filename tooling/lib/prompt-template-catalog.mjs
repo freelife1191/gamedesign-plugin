@@ -44,7 +44,7 @@ const SENSITIVE_CATEGORIES = Object.freeze([
 ]);
 const DIRECT_PROHIBITION_START = /^(?:(?:do not|don't|never|must not)\s+(?:request|ask(?:\s+for)?|require|provide|enter|share|submit|upload|paste|use|collect|input|store|process|disclose|reveal|give)|not request|not required|not needed|금지|요청하지|입력하지|제공하지|불필요|요구하지 않음|입력하지 않음)\s+/iu;
 const DIRECT_PROHIBITION_SUFFIX = /(?:not required|not needed|prohibited|금지|요청하지 않음|입력하지 않음|제공하지 않음|불필요)/iu;
-const POSITIVE_INPUT_REQUEST = /(?:provide|share|enter|submit|upload|paste|input|give|disclose|reveal|제공|공유|입력|업로드)\s+(?:your\s+)?/iu;
+const POSITIVE_INPUT_REQUEST = /(?:request|ask(?:\s+for)?|require|provide|share|enter|submit|upload|paste|input|give|disclose|reveal|제공|공유|입력|업로드)\s+(?:(?:your|the)\s+)?/iu;
 const CLI_MENTION = /\$(game-design-studio|game-design-career):([^\s]*)/gu;
 
 function isObject(value) {
@@ -77,18 +77,16 @@ function isPureSensitiveCategoryList(value) {
 
 function clauseProhibitsCategory(clause, category) {
   if (!category.pattern.test(clause)) return false;
-  const positiveRequest = new RegExp(`${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`, "iu");
-  if (positiveRequest.test(clause)) return false;
   const prohibition = DIRECT_PROHIBITION_START.exec(clause);
   const target = prohibition ? clause.slice(prohibition[0].length).trim() : "";
-  const directTarget = new RegExp(`^(?:your\\s+|the\\s+)?${category.pattern.source}(?:$|[\\s,])`, "iu");
+  const directTarget = target.replace(/^(?:your|the)\s+/iu, "");
   const prohibitedAfter = new RegExp(
     `${category.pattern.source}(?:\\s+(?:is|are|was|were|은|는|이|가))?\\s+${DIRECT_PROHIBITION_SUFFIX.source}(?:$|[\\s,])`,
     "iu",
   );
   const withoutCategory = new RegExp(`\\bwithout\\s+(?:any\\s+)?${category.pattern.source}`, "iu");
   return (
-    (prohibition !== null && (directTarget.test(target) || isPureSensitiveCategoryList(target)))
+    (prohibition !== null && isPureSensitiveCategoryList(directTarget))
     || prohibitedAfter.test(clause)
     || withoutCategory.test(clause)
   );
@@ -96,9 +94,10 @@ function clauseProhibitsCategory(clause, category) {
 
 function requestsSensitiveInput(value) {
   if (!isNonemptyString(value)) return false;
-  return textClauses(value).some((clause) => SENSITIVE_CATEGORIES.some((category) => (
-    category.pattern.test(clause) && !clauseProhibitsCategory(clause, category)
-  )));
+  return textClauses(value).some((clause) => SENSITIVE_CATEGORIES.some((category) => {
+    if (clauseProhibitsCategory(clause, category)) return false;
+    return new RegExp(`${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`, "iu").test(clause);
+  }));
 }
 
 function missingSafetyProhibitions(value) {
