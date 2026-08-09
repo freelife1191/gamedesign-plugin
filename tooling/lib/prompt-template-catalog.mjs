@@ -29,6 +29,7 @@ const PRODUCT_REPOSITORY_IDS = Object.freeze({
 });
 const ENTRY_KEYS = new Set([
   "id", "kind", "product", "title", "purpose", "audiences", "intents", "level",
+  "source_case_id",
   "when_to_use", "when_not_to_use", "required_inputs", "optional_inputs", "placeholders",
   "app_prompt", "cli_prompt", "skill", "skill_chain", "specialist_roles",
   "intermediate_artifacts", "minimum_outputs", "optional_outputs", "extended_outputs",
@@ -45,7 +46,7 @@ const SENSITIVE_CATEGORIES = Object.freeze([
 const DIRECT_PROHIBITION_START = /^(?:(?:do not|don't|never|must not)\s+(?:request|ask(?:\s+for)?|require|provide|enter|share|submit|upload|paste|use|collect|input|store|process|disclose|reveal|give)|not request|not required|not needed|금지|요청하지|입력하지|제공하지|불필요|요구하지 않음|입력하지 않음)\s+/iu;
 const DIRECT_PROHIBITION_SUFFIX = /(?:not required|not needed|prohibited|금지|요청하지 않음|입력하지 않음|제공하지 않음|불필요)/iu;
 const POSITIVE_INPUT_REQUEST = /(?:request|ask(?:\s+for)?|require|provide|share|enter|submit|upload|paste|input|give|disclose|reveal|제공|공유|입력|업로드)\s+(?:(?:your|the)\s+)?/iu;
-const CLI_MENTION = /\$(game-design-studio|game-design-career):([^\s]*)/gu;
+const CLI_MENTION = /\$(game-design-studio|game-design-career):([a-z-]+)/gu;
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -85,10 +86,21 @@ function clauseProhibitsCategory(clause, category) {
     "iu",
   );
   const withoutCategory = new RegExp(`\\bwithout\\s+(?:any\\s+)?${category.pattern.source}`, "iu");
+  const KoreanExplicitListProhibition = /^(?<list>.+?)(?:을|를)?\s*(?:요청(?:·공개)?하지 않는다|입력하지 않는다)$/u;
+  const koreanMatch = KoreanExplicitListProhibition.exec(clause);
+  const koreanList = typeof koreanMatch?.groups?.list === "string"
+    ? SENSITIVE_CATEGORIES.reduce(
+      (value, item) => value.replace(new RegExp(item.pattern.source, "giu"), "§"),
+      koreanMatch.groups.list.replace(/\(PII\)/giu, "").replace(/회사\s*자산/gu, "§"),
+    )
+    : undefined;
+  const koreanPureList = koreanList !== undefined
+    && /^[\s,·]*(?:§)(?:[\s,·]*(?:또는|및|and|or)?[\s,·]*§)*[\s,·]*$/iu.test(koreanList);
   return (
     (prohibition !== null && isPureSensitiveCategoryList(directTarget))
     || prohibitedAfter.test(clause)
     || withoutCategory.test(clause)
+    || koreanPureList
   );
 }
 
@@ -205,6 +217,11 @@ function validateEntry(entry, index, errors, ids, texts) {
     ids.add(id);
   }
   if (!PROMPT_KINDS.includes(entry.kind)) errors.push(`${label}.kind is unknown: ${String(entry.kind)}`);
+  if (entry.kind === "use-case") {
+    requireString(entry.source_case_id, `${label}.source_case_id`, errors);
+  } else if (Object.hasOwn(entry, "source_case_id")) {
+    errors.push(`${label}.source_case_id is allowed only for use-case entries`);
+  }
   if (!PRODUCT_IDS.includes(entry.product)) errors.push(`${label}.product is unknown: ${String(entry.product)}`);
   if (entry.kind === "skill-template" && entry.product === "suite") {
     errors.push(`${label}.suite product cannot define a skill-template`);
@@ -348,10 +365,23 @@ function validateReferences(entries, inventories, useCaseManifest, rolesByProduc
       ...(Array.isArray(useCaseManifest.skill_cases) ? useCaseManifest.skill_cases : []),
     ].map((entry) => entry?.id).filter(isNonemptyString))
     : undefined;
+  const manifestCases = useCaseManifest && isObject(useCaseManifest)
+    ? new Map((Array.isArray(useCaseManifest.cases) ? useCaseManifest.cases : [])
+      .filter((entry) => isObject(entry) && isNonemptyString(entry.id))
+      .map((entry) => [entry.id, entry]))
+    : undefined;
   for (const [index, entry] of entries.entries()) {
     if (!isObject(entry) || !PRODUCT_IDS.includes(entry.product)) continue;
     const label = entryLabel(index);
     validatePromptPaths(entry, label, inventories, errors);
+    if (entry.kind === "use-case" && manifestCases) {
+      const sourceCase = manifestCases.get(entry.source_case_id);
+      if (!sourceCase) {
+        errors.push(`${label}.source_case_id references an unknown source case: ${String(entry.source_case_id)}`);
+      } else if (sourceCase.product !== PRODUCT_REPOSITORY_IDS[entry.product]) {
+        errors.push(`${label}.source_case_id product must match the entry product`);
+      }
+    }
     if (entry.product === "suite") {
       validateSuiteReferences(entry, label, inventories, rolesByProduct, errors);
       continue;

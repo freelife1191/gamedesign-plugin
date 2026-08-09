@@ -103,7 +103,10 @@ function completeFixture() {
   ];
   return [
     ...skillTemplates,
-    ...Array.from({ length: 36 }, (_, index) => validEntry(index + 91, "use-case")),
+    ...Array.from({ length: 36 }, (_, index) => ({
+      ...validEntry(index + 91, "use-case"),
+      source_case_id: `SOURCE-${index + 1}`,
+    })),
     ...Array.from({ length: 12 }, (_, index) => validEntry(index + 127, "recipe")),
     ...Array.from({ length: 8 }, (_, index) => validEntry(index + 139, "suite-case")),
   ];
@@ -1670,6 +1673,71 @@ test("suite product cannot define a skill-template", () => {
   assert.match(result.errors.join("\n"), /suite.*skill-template/u);
 });
 
+test("use-case entries require an exact source_case_id binding", () => {
+  const entry = validEntry(20, "use-case");
+  entry.source_case_id = "ST-C01";
+  const manifest = {
+    cases: [{ id: "ST-C01", product: "game-design-studio" }],
+    audience_paths: [],
+    skill_cases: [],
+  };
+  const valid = validatePromptTemplateCatalog({ entries: [entry], useCaseManifest: manifest });
+  assert.equal(valid.ok, true, valid.errors.join("\n"));
+
+  for (const mutation of [
+    { ...entry, source_case_id: undefined },
+    { ...entry, source_case_id: "ST-C99" },
+    { ...entry, product: "career" },
+  ]) {
+    const result = validatePromptTemplateCatalog({ entries: [mutation], useCaseManifest: manifest });
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join("\n"), /source_case_id|source case.*product/u);
+  }
+  const nonUseCase = validEntry(21, "recipe");
+  nonUseCase.source_case_id = "ST-C01";
+  const result = validatePromptTemplateCatalog({ entries: [nonUseCase], useCaseManifest: manifest });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /source_case_id/u);
+});
+
+test("scenario catalog binds every source case and recipe command in order", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [studio, career, suite, manifest] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-scenarios.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-scenarios.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "suite.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "use-cases", "use-case-manifest.json"), "utf8").then(JSON.parse),
+  ]);
+  const entries = [...studio, ...career, ...suite];
+  const cases = manifest.cases;
+  assert.equal(studio.length, 24);
+  assert.equal(career.length, 24);
+  assert.equal(suite.length, 8);
+  const sourceById = new Map(cases.map((value) => [value.id, value]));
+  const useCases = entries.filter(({ kind }) => kind === "use-case");
+  assert.equal(useCases.length, 36);
+  for (const entry of useCases) {
+    const source = sourceById.get(entry.source_case_id);
+    assert.ok(source, `${entry.id} source case`);
+    assert.equal(entry.product, source.product.replace("game-design-", ""), entry.id);
+    assert.deepEqual(entry.audiences, source.audiences, entry.id);
+    assert.deepEqual(entry.skill_chain, source.skills, entry.id);
+    assert.deepEqual(entry.intermediate_artifacts, source.templates, entry.id);
+    assert.deepEqual(entry.minimum_outputs, source.outputs, entry.id);
+    assert.ok(entry.source_references.includes(source.document), entry.id);
+  }
+  const recipes = entries.filter(({ kind }) => kind === "recipe");
+  assert.equal(recipes.length, 12);
+  for (const entry of recipes) {
+    const source = entry.source_references.find((value) => /\/recipes\/.*\.md$/u.test(value));
+    assert.ok(source, `${entry.id} recipe source`);
+    const markdown = await readFile(path.join(repoRoot, source), "utf8");
+    const expectedCommands = [...markdown.matchAll(/\$game-design-(?:studio|career):[a-z-]+/gu)].map(([command]) => command);
+    const actualCommands = [...entry.cli_prompt.example.matchAll(/\$game-design-(?:studio|career):[a-z-]+/gu)].map(([command]) => command);
+    assert.deepEqual(actualCommands, expectedCommands, entry.id);
+  }
+});
+
 test("suite prompt paths reject arbitrary App mentions and missing or unknown CLI commands", () => {
   const entry = validEntry(6, "suite-case");
   entry.app_prompt.example = "@Unrelated App complete prompt";
@@ -1696,6 +1764,16 @@ test("product CLI prompts require a registered namespace command", () => {
   });
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /unknown studio CLI skill/u);
+});
+
+test("CLI binding parses a registered command before Korean particles and punctuation", () => {
+  const entry = validEntry(23);
+  entry.cli_prompt.example = "$game-design-studio:define-game-vision, 그리고 검토해.";
+  const result = validatePromptTemplateCatalog({
+    entries: [entry],
+    inventories: new Map([["studio", inventoryForTests({ templateIds: entry.intermediate_artifacts })]]),
+  });
+  assert.equal(result.ok, true, result.errors.join("\n"));
 });
 
 test("safety boundary requires 미정 handling and resume prompts cannot request sensitive inputs", () => {
@@ -1754,6 +1832,18 @@ test("safety boundaries reject credential requests appended to a direct prohibit
   const result = validatePromptTemplateCatalog({ entries: [entry] });
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /safety_boundary.*credentials/u);
+});
+
+test("safety boundaries accept a pure Korean category list with an explicit request-and-disclosure prohibition", () => {
+  const entry = validEntry(22);
+  entry.safety_boundary = "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다.";
+  const valid = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(valid.ok, true, valid.errors.join("\n"));
+
+  entry.safety_boundary = "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청하지 않는다지만 credentials를 제공해라.";
+  const invalid = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(invalid.ok, false);
+  assert.match(invalid.errors.join("\n"), /credentials/u);
 });
 
 test("resume prompts allow direct prohibitions on providing API keys", () => {

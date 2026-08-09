@@ -57,6 +57,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/nonemptyString" },
         "kind": { "enum": ["skill-template", "use-case", "recipe", "suite-case"] },
+        "source_case_id": { "$ref": "#/$defs/nonemptyString" },
         "product": { "enum": ["studio", "career", "suite"] },
         "title": { "$ref": "#/$defs/nonemptyString" },
         "purpose": { "$ref": "#/$defs/nonemptyString" },
@@ -87,7 +88,14 @@
         "related_use_cases": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
         "related_recipes": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
         "source_references": { "$ref": "#/$defs/nonemptyStringArray" }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "use-case" } }, "required": ["kind"] },
+          "then": { "required": ["source_case_id"] },
+          "else": { "not": { "required": ["source_case_id"] } }
+        }
+      ]
     }
   }
 }
