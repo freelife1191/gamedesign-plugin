@@ -26,6 +26,12 @@ For every number or statistical claim, record `source`, `baseline`, `owner`, and
 
 Do not infer role prevalence, hiring probability, competency level, progress percentage, schedule, or outcome from layout, area, color, or position. Qualitative ordering must say what evidence supports it.
 
+## Optional Archify structural-diagram route
+
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before authoring. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+
+Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If Archify is unavailable or unknown, record `archify-unavailable`; if its host run fails, record `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+
 ## Produce and Verify
 
 Track these states independently:

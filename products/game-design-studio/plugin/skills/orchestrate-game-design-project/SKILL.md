@@ -20,6 +20,12 @@ Turn mixed or ambiguous game-design intent into a bounded Canonical Artifact. Ro
 7. Merge findings deterministically. Preserve disagreements as decision items; never let completion timing determine order or resolution.
 8. Read [completion-gates.md](references/completion-gates.md). Apply document-quality, domain, responsible-design, Canonical Artifact, visualization, image approval, and requested-format gates before claiming completion.
 
+## Optional Archify structural-diagram route
+
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before dispatching visualization. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+
+Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If Archify is unavailable or unknown, record `archify-unavailable`; if its host run fails, record `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+
 ## Operating Rules
 
 - Route a direct single-domain request to its declared specialist skill.

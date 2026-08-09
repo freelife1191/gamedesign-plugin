@@ -205,6 +205,24 @@ test("visualization presets cover six game-design structures with packaged Skill
   assert.match(section(skill, "Completion checks"), /command.*file evidence/isu);
 });
 
+test("structural diagram routes prefer optional Archify while retaining packaged fallback evidence", async () => {
+  const skills = await Promise.all([
+    readSkill("visualize-game-design"),
+    readSkill("orchestrate-game-design-project"),
+  ]);
+
+  for (const skill of skills) {
+    assert.match(skill, /architecture, workflow, sequence, dataflow, or lifecycle/iu);
+    assert.match(skill, /capabilities\.archify.*status.*available/isu);
+    assert.match(skill, /host Archify/iu);
+    assert.match(skill, /JSON spec.*checked HTML.*receipt/isu);
+    assert.match(skill, /packaged Skillstead SVG.*2.?× PNG.*Markdown/isu);
+    assert.match(skill, /archify-unavailable.*archify-failed/isu);
+    assert.match(skill, /never label.*fallback.*Archify/isu);
+    assert.match(skill, /never auto-approve.*asset/isu);
+  }
+});
+
 test("plugin-owned visualization validator proves ordered same-file lint render and 2x verification", async () => {
   const artifactRoot = await temporaryDirectory("studio-visualization-evidence-");
   const assets = path.join(artifactRoot, "assets");

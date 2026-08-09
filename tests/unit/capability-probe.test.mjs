@@ -6,7 +6,12 @@ import { spawnSync } from 'node:child_process';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { browserCandidates, probeChromium, probeImageGenerationCapability } from '../../shared/scripts/capability-probe.mjs';
+import {
+  browserCandidates,
+  probeArchifyCapability,
+  probeChromium,
+  probeImageGenerationCapability,
+} from '../../shared/scripts/capability-probe.mjs';
 
 const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs', import.meta.url));
 const temporaryDirs = [];
@@ -49,6 +54,85 @@ test('reports deterministic capability presence and structured optional warnings
     !first.capabilities.chromium.available,
   );
   assert.ok(first.warnings.some(({ code }) => code === 'capability.soffice.absent'));
+});
+
+async function writeArchifySkill(root, version = '2.13.0') {
+  await mkdir(join(root, 'bin'), { recursive: true });
+  await writeFile(join(root, 'SKILL.md'), '---\nname: archify\n---\n');
+  await writeFile(join(root, 'package.json'), JSON.stringify({ version }));
+  await writeFile(join(root, 'bin', 'archify.mjs'), '#!/usr/bin/env node\n');
+}
+
+test('detects a regular host Archify skill without exposing its path', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+
+  assert.deepEqual(await probeArchifyCapability({}, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+  });
+});
+
+test('reports unavailable when neither Archify candidate is present', async () => {
+  const home = await temporaryWorkspace();
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unavailable' });
+});
+
+test('rejects symlinked Archify metadata as unknown', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  await writeFile(join(home, 'other-skill.md'), '---\nname: archify\n---\n');
+  await rm(join(root, 'SKILL.md'));
+  await symlink(join(home, 'other-skill.md'), join(root, 'SKILL.md'));
+
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unknown' });
+});
+
+test('reports malformed, unsupported, and inaccessible Archify metadata as unknown or unavailable', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root, 'not-semver');
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unknown' });
+
+  await writeFile(join(root, 'package.json'), JSON.stringify({ version: '2.12.9' }));
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unavailable' });
+
+  assert.deepEqual(await probeArchifyCapability({}, {
+    home,
+    lstatFn: async () => { throw Object.assign(new Error('permission denied'), { code: 'EACCES' }); },
+  }), { status: 'unknown' });
+});
+
+test('prefers CODEX_HOME Archify over the legacy host candidate', async () => {
+  const home = await temporaryWorkspace();
+  const codexHome = join(home, 'portable-codex-home');
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'), '2.14.0');
+  await writeArchifySkill(join(home, '.agents', 'skills', 'archify'), '2.13.0');
+
+  assert.deepEqual(await probeArchifyCapability({ CODEX_HOME: codexHome }, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.14.0',
+  });
+});
+
+test('SessionStart includes Archify capability without an absolute host path', async () => {
+  const cwd = await temporaryWorkspace();
+  const codexHome = join(cwd, 'portable-codex-home');
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'));
+
+  const output = runProbe({ cwd, env: { CODEX_HOME: codexHome, HOME: cwd } });
+  const context = JSON.parse(output.hookSpecificOutput.additionalContext);
+
+  assert.deepEqual(context.capabilities.archify, {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+  });
+  assert.equal(JSON.stringify(context).includes(codexHome), false);
 });
 
 test('uses the exact portable Skillstead browser candidate order', () => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, lstat, readdir, realpath } from 'node:fs/promises';
+import { access, lstat, readFile, readdir, realpath } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
@@ -258,7 +258,86 @@ export async function probeImageGenerationCapability(env = process.env, { lstatF
   return { status: 'unavailable' };
 }
 
-export async function probeCapabilities({ platform = process.platform, env = process.env } = {}) {
+function parseArchifyVersion(source) {
+  let metadata;
+  try {
+    metadata = JSON.parse(source);
+  } catch {
+    return null;
+  }
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata) || typeof metadata.version !== 'string') return null;
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u.exec(metadata.version);
+  if (!match) return null;
+  return {
+    version: metadata.version,
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    prerelease: metadata.version.includes('-'),
+  };
+}
+
+function supportedArchifyVersion(version) {
+  if (version.major !== 2) return false;
+  if (version.minor > 13) return true;
+  if (version.minor < 13) return false;
+  if (version.patch > 0) return true;
+  return !version.prerelease;
+}
+
+async function inspectArchifyPath(path, expectedType, { lstatFn, accessFn }) {
+  try {
+    const stats = await lstatFn(path);
+    if (stats.isSymbolicLink() || (expectedType === 'file' ? !stats.isFile() : !stats.isDirectory())) return { status: 'unknown' };
+    await accessFn(path, expectedType === 'directory' ? constants.R_OK | constants.X_OK : constants.R_OK);
+    return { status: 'available' };
+  } catch (error) {
+    return { status: isAbsentPathError(error) ? 'unavailable' : 'unknown' };
+  }
+}
+
+async function inspectArchifyCandidate(root, { lstatFn, accessFn, readFileFn }) {
+  for (const [relativePath, expectedType] of [
+    ['', 'directory'],
+    ['SKILL.md', 'file'],
+    ['package.json', 'file'],
+    ['bin', 'directory'],
+    ['bin/archify.mjs', 'file'],
+  ]) {
+    const inspected = await inspectArchifyPath(join(root, relativePath), expectedType, { lstatFn, accessFn });
+    if (inspected.status !== 'available') return inspected;
+  }
+  let packageJson;
+  try {
+    packageJson = await readFileFn(join(root, 'package.json'), 'utf8');
+  } catch {
+    return { status: 'unknown' };
+  }
+  const version = parseArchifyVersion(packageJson);
+  if (!version) return { status: 'unknown' };
+  if (!supportedArchifyVersion(version)) return { status: 'unavailable' };
+  return { status: 'available', provider: 'host-archify-skill', version: version.version };
+}
+
+export async function probeArchifyCapability(env = process.env, {
+  home = homedir(),
+  lstatFn = lstat,
+  accessFn = access,
+  readFileFn = readFile,
+} = {}) {
+  const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(home, '.codex');
+  const candidates = [
+    join(codexHome, 'skills', 'archify'),
+    join(home, '.agents', 'skills', 'archify'),
+  ];
+  for (const candidate of candidates) {
+    const result = await inspectArchifyCandidate(candidate, { lstatFn, accessFn, readFileFn });
+    if (result.status === 'available' || result.status === 'unknown') return result;
+  }
+  return { status: 'unavailable' };
+}
+
+export async function probeCapabilities({ platform = process.platform, env = process.env, home = homedir() } = {}) {
   const capabilities = {
     node: { available: true, version: process.versions.node },
     chromium: await probeChromium({ platform, env }),
@@ -267,6 +346,7 @@ export async function probeCapabilities({ platform = process.platform, env = pro
     pdf: await findBundledSkill('pdf', env),
     presentations: await findBundledSkill('presentations', env),
     image_generation: await probeImageGenerationCapability(env),
+    archify: await probeArchifyCapability(env, { home }),
   };
   const warnings = [];
   for (const name of ['chromium', 'soffice', 'documents', 'pdf', 'presentations']) {
