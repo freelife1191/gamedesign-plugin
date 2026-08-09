@@ -295,6 +295,10 @@ async function assertRootUseCaseNavigation(markdown, manifest) {
   for (const id of representativePromptTemplateIds) {
     assert.ok(exploration.includes(id), `root prompt-template route: ${id}`);
   }
+  const promptCards = subsection(exploration, "난이도별 요청문 카드");
+  const visiblePromptIds = promptCards.match(/(?:studio|career|suite):[a-z0-9-]+:(?:beginner|standard|advanced|case)/gu) ?? [];
+  assert.equal(visiblePromptIds.length, 8, "root representative prompt card count");
+  assert.deepEqual(visiblePromptIds, representativePromptTemplateIds, "root representative prompt cards are exact and ordered");
   const goalStart = subsection(exploration, "목표별 바로 시작");
   const workScale = subsection(exploration, "작업 규모별 사용 예시");
   const outputLayer = subsection(exploration, "요청하면 얻는 결과");
@@ -511,6 +515,8 @@ test("root README contract rejects unsafe mutations in memory", async () => {
     ["representative case label differs from the visible heading", wrongTitle],
     ["audience labels swapped", swappedAudienceLabels],
     ["audience targets swapped", swappedAudienceTargets],
+    ["representative prompt route duplicated", readme.replace("studio:define-game-vision:beginner", "studio:define-game-vision:beginner\nstudio:define-game-vision:beginner")],
+    ["additional representative prompt route added", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project-interview:case\nstudio:define-game-vision:advanced")],
   ]) {
     await assert.rejects(() => assertRootUseCaseNavigation(mutation, manifest), label);
   }

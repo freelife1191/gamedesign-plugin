@@ -247,26 +247,36 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
   const { headers, rows } = extractMarkdownTable(markdown, "활용 시작점");
   assert.deepEqual(headers, ["대표 사례", "시작점"], `${label}: concise route-table headers`);
   const expectedRows = [
-    ["`CA-T01` 시스템 기획 입문", "역할·역량 경로 카드"],
-    ["`CA-T04` 경제·밸런스·LiveOps", "역기획·포트폴리오 카드"],
-    ["`CA-T05` UI·UX 기획", "역할·역량 경로 카드"],
-    ["`CA-C05` 관찰 기반 역기획", "역기획·포트폴리오 카드"],
-    ["`CA-C06` 창작 기획 포트폴리오", "역기획·포트폴리오 카드"],
-    ["`CA-C08` 면접·주니어 성장·직무 전환", "면접·성장·전환 카드"],
+    ["`CA-T01` 시스템 기획 입문", "아래 개별 사례 카드"],
+    ["`CA-T04` 경제·밸런스·LiveOps", "아래 개별 사례 카드"],
+    ["`CA-T05` UI·UX 기획", "아래 개별 사례 카드"],
+    ["`CA-C05` 관찰 기반 역기획", "아래 개별 사례 카드"],
+    ["`CA-C06` 창작 기획 포트폴리오", "아래 개별 사례 카드"],
+    ["`CA-C08` 면접·주니어 성장·직무 전환", "아래 개별 사례 카드"],
   ];
   assert.deepEqual(rows, expectedRows, `${label}: concise representative route order`);
   assert.deepEqual(rows.map(([entry]) => entry.match(/CA-[A-Z]\d+/u)?.[0]), expected.map(({ caseId }) => caseId), `${label}: canonical representative case IDs`);
-  for (const [title, minimum, reviewer] of [
-    ["직무 탐색·학습", "game-design-role-map", "멘토"],
-    ["역기획·포트폴리오·면접", "reverse-design-document", "public-rights reviewer"],
-  ]) {
-    const body = new RegExp(`^### ${title}\\n([\\s\\S]*)`, "mu").exec(markdown)?.[1];
-    assert.ok(body, `${label}: readable route card ${title}`);
-    for (const heading of ["준비 입력", "연결 흐름", "예상 결과", "사람 검토"]) {
-      assert.match(body, new RegExp(`^#### ${heading}$`, "mu"), `${label}: ${title} ${heading} card`);
-    }
-    assert.match(body, new RegExp(`^- 최소: .*${minimum}`, "mu"), `${label}: ${title} minimum result`);
-    assert.match(body, new RegExp(reviewer, "iu"), `${label}: ${title} named human reviewer`);
+  const normalizeCardField = (value) => value
+    .replace(/<br>/gu, " ")
+    .replace(/`/gu, "")
+    .replace(/^- /gmu, "")
+    .replace(/;/gu, " ")
+    .replace(/[.;]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+  for (const route of expected) {
+    const heading = new RegExp(`^### ${route.caseId} — (.+)$`, "mu").exec(markdown);
+    assert.ok(heading, `${label}: individual card heading ${route.caseId}`);
+    assert.ok(route.case.includes(`— ${heading[1]}`), `${label}: ${route.caseId} canonical title and audiences`);
+    const bodyStart = heading.index + heading[0].length;
+    const next = markdown.slice(bodyStart).search(/^### /mu);
+    const card = markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next);
+    const field = (name) => new RegExp(`^- \\*\\*${name}:\\*\\* (.+)$`, "mu").exec(card)?.[1];
+    assert.equal(normalizeCardField(field("준비 입력") ?? ""), normalizeCardField(route.input), `${route.caseId}: exact canonical input`);
+    assert.equal(normalizeCardField(field("전체 스킬 경로") ?? ""), normalizeCardField(route.skills), `${route.caseId}: exact canonical skill order`);
+    assert.equal(normalizeCardField(field("직접 요청문") ?? ""), normalizeCardField(route.directRequest), `${route.caseId}: exact canonical direct request`);
+    assert.equal(normalizeCardField(field("결과 ID · owner · root") ?? ""), normalizeCardField(route.results), `${route.caseId}: exact canonical result owner/root`);
+    assert.equal(normalizeCardField(field("읽는 순서") ?? ""), normalizeCardField(route.readOrder), `${route.caseId}: exact canonical reading order`);
   }
 }
 
@@ -373,7 +383,7 @@ function assertRepresentativeMutationMatrix(markdown, expected, label) {
       const deleted = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][cellIndex] = ""; });
       assert.throws(() => assertRepresentativeRouteTable(deleted, expected, `${label}: deleted ${rowIndex}/${cellIndex}`), `${label}: deletion ${rowIndex}/${cellIndex}`);
       const partner = rows.findIndex((candidate, index) => index !== rowIndex && candidate[cellIndex] !== rows[rowIndex][cellIndex]);
-      assert.notEqual(partner, -1, `${label}: distinct cross-row value ${rowIndex}/${cellIndex}`);
+      if (partner === -1) continue;
       const swapped = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
         [mutated[rowIndex][cellIndex], mutated[partner][cellIndex]] = [mutated[partner][cellIndex], mutated[rowIndex][cellIndex]];
       });

@@ -395,45 +395,105 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 - 실제 design owner가 pillar와 non-goal을 승인·수정·보류
 
-### 시스템·UX·콘텐츠
+### 시스템
 
 #### 준비 입력
 
-- rule ID·state transition·precedence·exception 또는 critical action·NPC state
+- 장비 강화의 rule ID, state transition, precedence와 exception
 
 #### 연결 흐름
 
-- `design-game-systems` 또는 `design-player-experience` → 관련 content 작업 → 검토
+- `design-game-systems` → 시스템 owner 검토
 
 #### 예상 결과
 
-- 최소: `system-specification`, `ui-ux-flow-state` 또는 `narrative-quest-npc`
-- 선택: source mapping 도식 계획 또는 검토용 image prompt
-- 확장: owner 결정과 test·usability evidence가 연결된 개발·QA handoff
+- 최소: `system-specification`
+- 선택: 상태 관계가 prose보다 명확할 때만 source mapping이 있는 도식 계획
+- 확장: owner 결정과 test evidence가 연결된 개발·QA handoff
 
 #### 사람 검토
 
-- design·engineering·accessibility·content·rights owner가 precedence, 지원 범위와 콘텐츠 결정을 승인·수정·보류
+- design·engineering owner가 precedence와 runtime mapping을 결정
 
-### 경제·LiveOps·전체 프로젝트
+### UX·접근성
 
 #### 준비 입력
 
-- source/sink, guardrail, stop 조건, rollback evidence 또는 prototype scope·dependency·kill criteria
+- 첫 세션의 critical action, 대체 입력과 오류 recovery
 
 #### 연결 흐름
 
-- `design-game-economy-and-liveops` 또는 `orchestrate-game-design-project` → 검토 → 필요 시 형식 준비
+- `design-player-experience` → accessibility·design owner 검토
 
 #### 예상 결과
 
-- 최소: `economy-balance`, `production-scope-risk`, `export-manifest.yml`
-- 선택: source-backed 관계 계획, 허용된 prompt·이미지·SVG·PNG와 형식 준비 job
-- 확장: current evidence, tested rollback, asset·format·visual QA evidence가 있는 전달 패키지
+- 최소: `ui-ux-flow-state`
+- 선택: source-backed interaction 도식 계획이나 검토용 화면 reference prompt
+- 확장: usability evidence와 사람 승인을 반영한 UX·QA handoff
 
 #### 사람 검토
 
-- economy·LiveOps·policy·production·review·rights·asset·export owner가 가격, 실험, rollback과 승인 경계를 결정
+- 실제 accessibility·design owner가 지원 범위와 blocker disposition을 결정
+
+### 콘텐츠·퀘스트
+
+#### 준비 입력
+
+- 협동 복구 퀘스트의 목표, NPC state, choice와 consequence
+
+#### 연결 흐름
+
+- `design-game-content` → content·rights·production owner 검토
+
+#### 예상 결과
+
+- 최소: `narrative-quest-npc`
+- 선택: 승인 전 narrative image prompt 또는 source-backed quest flow 계획
+- 확장: system/data/production owner 검토를 통과한 콘텐츠 handoff
+
+#### 사람 검토·근거
+
+- 실제 content·rights·production owner가 결정을 내림
+
+### 경제·LiveOps
+
+#### 준비 입력
+
+- 토큰 source/sink, guardrail, stop 조건과 rollback 증거
+
+#### 연결 흐름
+
+- `design-game-economy-and-liveops` → economy·LiveOps·policy owner 검토
+
+#### 예상 결과
+
+- 최소: `economy-balance`
+- 선택: source-backed economy/experiment 관계 계획 또는 communication image prompt
+- 확장: current evidence, tested rollback과 사람 결정을 가진 운영 검토 패키지
+
+#### 사람 검토·근거
+
+- 실제 economy·LiveOps·policy owner가 가격·확률·실험과 rollback을 결정
+
+### 전체 프로젝트
+
+#### 준비 입력
+
+- prototype scope, dependency, kill criteria와 review owner
+
+#### 연결 흐름
+
+- `orchestrate-game-design-project` → production·review·rights·asset·export owner 검토 → 필요 시 형식 준비
+
+#### 예상 결과
+
+- 최소: `production-scope-risk`, `export-manifest.yml`
+- 선택: mode와 receipt가 허용한 prompt·이미지·source-backed SVG·PNG와 형식 준비 job
+- 확장: 이름 있는 사람의 승인과 asset·format·visual QA evidence가 있는 전달 패키지
+
+#### 사람 검토·근거
+
+- production, review, rights·asset, export owner가 각 승인 경계를 결정
 
 ### 대표 요청과 예상 결과
 

@@ -58,6 +58,29 @@ test("result-boundary readability rejects dense visible prose and accepts result
   assert.doesNotThrow(() => assertReadableResultBoundaries(resultCards));
 });
 
+test("result-boundary readability counts rendered inline labels but excludes hidden Markdown", () => {
+  const renderedDense = [
+    "최소 **결과**: 초안. 선택 *결과*: 도식.",
+    "`expanded` 결과: 검토 패키지. [승인 주체](https://example.invalid/owner): 멘토. 확장 <em>결과</em>: 전달물.",
+  ].join("  \n");
+  const hiddenOnly = [
+    "<!-- 최소 결과: 숨김. 선택 결과: 숨김. 확장 결과: 숨김. -->",
+    "```text",
+    "minimum: hidden; optional: hidden; expanded: hidden",
+    "```",
+  ].join("\n");
+  const cards = [
+    "- 최소 **결과**: 초안",
+    "- 선택 *결과*: 도식",
+    "- `expanded` 결과: 검토 패키지",
+    "- [승인 주체](https://example.invalid/owner): 멘토",
+  ].join("\n");
+
+  assert.throws(() => assertReadableResultBoundaries(renderedDense), /minimum, optional, expanded/u);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenOnly));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(cards));
+});
+
 async function createCompleteUseCaseFixture(t) {
   const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "complete-use-case-guides-"));
   t.after(() => rm(fixtureRoot, { recursive: true, force: true }));

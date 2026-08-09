@@ -515,6 +515,17 @@ const RESULT_BOUNDARY_LABELS = [
   ["safety", /(?:\bsafety\b|안전·증거 경계)/iu],
 ];
 
+function renderedBoundaryText(source) {
+  return source
+    .replace(/!?(?:\[([^\]]*)\])\([^)]*\)/gu, "$1")
+    .replace(/<[^>]*>/gu, "")
+    .replace(/`+/gu, "")
+    .replace(/(?<!\\)[*_~]+/gu, "")
+    .replace(/(?: {2,}|\\)$/u, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
 export function assertReadableResultBoundaries(markdown) {
   let paragraph = [];
   const assertParagraph = () => {
@@ -528,9 +539,10 @@ export function assertReadableResultBoundaries(markdown) {
     paragraph = [];
   };
   for (const line of scanVisibleMarkdown(markdown)) {
-    if (line.kind === "plain" && line.text.trim()) {
+    const rendered = renderedBoundaryText(line.blockText);
+    if (line.kind === "plain" && rendered) {
       if (/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/u.test(line.source)) assertParagraph();
-      paragraph.push(line.text);
+      paragraph.push(rendered);
     } else {
       assertParagraph();
     }
