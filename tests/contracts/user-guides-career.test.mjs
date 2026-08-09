@@ -130,9 +130,11 @@ function extractMarkdownTable(markdown, heading) {
   assert.notEqual(headerIndex, -1, `${heading}: missing table`);
   const parseRow = (line) => line.split("|").slice(1, -1).map(normalizeTableCell);
   const headers = parseRow(lines[headerIndex]);
-  const rows = lines.slice(headerIndex + 2)
-    .filter((line) => line.startsWith("|"))
-    .map(parseRow);
+  const rows = [];
+  for (const line of lines.slice(headerIndex + 2)) {
+    if (!line.startsWith("|")) break;
+    rows.push(parseRow(line));
+  }
   return { headers, rows };
 }
 
@@ -1139,10 +1141,11 @@ test("Career entry indexes bind exploration links and representative case tables
   const details = extractMarkdownTable(guide, "상세 참조");
   assert.deepEqual(details.headers, ["문서", "용도"], "Career detail table headers");
   assert.deepEqual(details.rows, [
+    ["[Career 활용 사례 인덱스](use-cases/README.md)", "직무·대상·직접 스킬 중 현재 목표의 출발점을 고름"],
     ["[Career FAQ](faq.md)", "요청문·읽는 순서·재개 경로"],
     ["[공통 결과물 카탈로그](../use-cases/output-catalog.md)", "원본·선택 자산·파생 형식과 사람 검토"],
   ], "Career FAQ and output catalog remain separate detail rows");
-  for (const target of ["faq.md", "../use-cases/output-catalog.md"]) {
+  for (const target of ["use-cases/README.md", "faq.md", "../use-cases/output-catalog.md"]) {
     const resolved = path.resolve(root, "guides/game-design-career", target);
     await lstat(resolved);
   }

@@ -2943,6 +2943,7 @@ test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async
       "무엇을 할 수 있나요",
       "누구를 위한 가이드인가요",
       "역량·콘셉트·스킬 중 선택하기",
+      "탐색 순서",
       "작업 규모 선택하기",
       "결과물 먼저 보기",
       "공통 FAQ",
