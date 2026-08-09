@@ -16,7 +16,9 @@
     "smoke:marketplace": "node tooling/marketplace-smoke.mjs",
     "smoke:image:live": "node tooling/smoke-openai-image.mjs",
     "build:guide-diagrams": "node tooling/build-use-case-diagrams.mjs",
-    "check:guide-diagrams": "node tooling/build-use-case-diagrams.mjs --check"
+    "check:guide-diagrams": "node tooling/build-use-case-diagrams.mjs --check",
+    "build:prompt-guides": "node tooling/build-prompt-guides.mjs",
+    "check:prompt-guides": "node tooling/build-prompt-guides.mjs --check"
   },
   "engines": { "node": ">=18" }
 }
