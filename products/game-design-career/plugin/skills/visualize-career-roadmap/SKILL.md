@@ -30,7 +30,7 @@ Do not infer role prevalence, hiring probability, competency level, progress per
 
 For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before authoring. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
 
-Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If Archify is unavailable or unknown, record `archify-unavailable`; if its host run fails, record `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
 
 ## Produce and Verify
 

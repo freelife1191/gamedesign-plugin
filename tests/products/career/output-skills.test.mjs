@@ -280,6 +280,9 @@ test("structural diagram routes prefer optional Archify while retaining packaged
     assert.match(skill, /JSON spec.*checked HTML.*receipt/isu);
     assert.match(skill, /packaged Skillstead SVG.*2.?× PNG.*Markdown/isu);
     assert.match(skill, /archify-unavailable.*archify-failed/isu);
+    assert.match(skill, /status is `unavailable`.*archify-unavailable/isu);
+    assert.match(skill, /status is `unknown`.*archify-unknown/isu);
+    assert.match(skill, /nonzero.*receipt.*archify-failed/isu);
     assert.match(skill, /never label.*fallback.*Archify/isu);
     assert.match(skill, /never auto-approve.*asset/isu);
   }

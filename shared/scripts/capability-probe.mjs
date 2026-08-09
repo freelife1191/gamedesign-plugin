@@ -4,7 +4,7 @@ import { access, lstat, readFile, readdir, realpath } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
-import { delimiter, isAbsolute, join, resolve, win32 as pathWin32 } from 'node:path';
+import { delimiter, isAbsolute, join, relative, resolve, sep, win32 as pathWin32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
@@ -266,50 +266,69 @@ function parseArchifyVersion(source) {
     return null;
   }
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata) || typeof metadata.version !== 'string') return null;
-  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u.exec(metadata.version);
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u.exec(metadata.version);
   if (!match) return null;
+  const prerelease = match[4]?.split('.') ?? [];
+  if (prerelease.some((identifier) => /^\d+$/u.test(identifier) && identifier.length > 1 && identifier.startsWith('0'))) return null;
   return {
     version: metadata.version,
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-    prerelease: metadata.version.includes('-'),
+    major: BigInt(match[1]),
+    minor: BigInt(match[2]),
+    patch: BigInt(match[3]),
+    prerelease,
   };
 }
 
 function supportedArchifyVersion(version) {
-  if (version.major !== 2) return false;
-  if (version.minor > 13) return true;
-  if (version.minor < 13) return false;
-  if (version.patch > 0) return true;
-  return !version.prerelease;
+  if (version.major !== 2n) return false;
+  if (version.minor > 13n) return true;
+  if (version.minor < 13n) return false;
+  if (version.patch > 0n) return true;
+  return version.prerelease.length === 0;
 }
 
-async function inspectArchifyPath(path, expectedType, { lstatFn, accessFn }) {
+function containedIn(base, candidate) {
+  const pathFromBase = relative(base, candidate);
+  return pathFromBase === '' || (!pathFromBase.startsWith(`..${sep}`) && pathFromBase !== '..' && !isAbsolute(pathFromBase));
+}
+
+async function inspectArchifyPath(path, expectedType, { lstatFn, accessFn, realpathFn, base }) {
   try {
     const stats = await lstatFn(path);
     if (stats.isSymbolicLink() || (expectedType === 'file' ? !stats.isFile() : !stats.isDirectory())) return { status: 'unknown' };
     await accessFn(path, expectedType === 'directory' ? constants.R_OK | constants.X_OK : constants.R_OK);
-    return { status: 'available' };
+    const canonical = await realpathFn(path);
+    if (base && !containedIn(base, canonical)) return { status: 'unknown' };
+    return { status: 'available', canonical };
   } catch (error) {
     return { status: isAbsentPathError(error) ? 'unavailable' : 'unknown' };
   }
 }
 
-async function inspectArchifyCandidate(root, { lstatFn, accessFn, readFileFn }) {
-  for (const [relativePath, expectedType] of [
-    ['', 'directory'],
-    ['SKILL.md', 'file'],
-    ['package.json', 'file'],
-    ['bin', 'directory'],
-    ['bin/archify.mjs', 'file'],
-  ]) {
-    const inspected = await inspectArchifyPath(join(root, relativePath), expectedType, { lstatFn, accessFn });
-    if (inspected.status !== 'available') return inspected;
+async function inspectArchifyCandidate(base, components, { lstatFn, accessFn, readFileFn, realpathFn }) {
+  const inspectedBase = await inspectArchifyPath(base, 'directory', {
+    lstatFn, accessFn, realpathFn, base: null,
+  });
+  if (inspectedBase.status !== 'available') {
+    return inspectedBase.status === 'unavailable' ? { status: 'unavailable', candidateAbsent: true } : inspectedBase;
+  }
+
+  let currentPath = inspectedBase.canonical;
+  let packagePath;
+  for (const [name, expectedType, allowsCandidateAbsence] of components) {
+    const inspected = await inspectArchifyPath(join(currentPath, name), expectedType, {
+      lstatFn, accessFn, realpathFn, base: inspectedBase.canonical,
+    });
+    if (inspected.status !== 'available') {
+      if (inspected.status === 'unavailable' && allowsCandidateAbsence) return { status: 'unavailable', candidateAbsent: true };
+      return { status: 'unknown' };
+    }
+    if (name === 'package.json') packagePath = inspected.canonical;
+    if (expectedType === 'directory') currentPath = inspected.canonical;
   }
   let packageJson;
   try {
-    packageJson = await readFileFn(join(root, 'package.json'), 'utf8');
+    packageJson = await readFileFn(packagePath, 'utf8');
   } catch {
     return { status: 'unknown' };
   }
@@ -324,15 +343,33 @@ export async function probeArchifyCapability(env = process.env, {
   lstatFn = lstat,
   accessFn = access,
   readFileFn = readFile,
+  realpathFn = realpath,
 } = {}) {
   const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(home, '.codex');
   const candidates = [
-    join(codexHome, 'skills', 'archify'),
-    join(home, '.agents', 'skills', 'archify'),
+    [codexHome, [
+      ['skills', 'directory', true],
+      ['archify', 'directory', true],
+      ['SKILL.md', 'file', false],
+      ['package.json', 'file', false],
+      ['bin', 'directory', false],
+      ['archify.mjs', 'file', false],
+    ]],
+    [home, [
+      ['.agents', 'directory', true],
+      ['skills', 'directory', true],
+      ['archify', 'directory', true],
+      ['SKILL.md', 'file', false],
+      ['package.json', 'file', false],
+      ['bin', 'directory', false],
+      ['archify.mjs', 'file', false],
+    ]],
   ];
-  for (const candidate of candidates) {
-    const result = await inspectArchifyCandidate(candidate, { lstatFn, accessFn, readFileFn });
-    if (result.status === 'available' || result.status === 'unknown') return result;
+  for (const [base, components] of candidates) {
+    const result = await inspectArchifyCandidate(base, components, { lstatFn, accessFn, readFileFn, realpathFn });
+    if (result.status === 'unavailable' && result.candidateAbsent) continue;
+    if (result.status === 'available') return result;
+    return { status: result.status };
   }
   return { status: 'unavailable' };
 }
