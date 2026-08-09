@@ -565,12 +565,13 @@ function renderedBoundaryText(source) {
       }
       const end = inlineHtmlEnd(source, cursor);
       if (end) {
-        const raw = source.slice(cursor + 1, end - 1).trim();
+        const raw = source.slice(cursor + 1, end - 1);
         if (autolinkDestination(raw)) {
           cursor = end;
           continue;
         }
-        if (/^\/?[A-Za-z][A-Za-z\d-]*(?:\s|\/|$)/u.test(raw)) {
+        const htmlCandidate = raw.trim();
+        if (raw === htmlCandidate && /^\/?[A-Za-z][A-Za-z\d-]*(?:\s|\/|$)/u.test(htmlCandidate)) {
           cursor = end;
           continue;
         }
