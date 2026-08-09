@@ -988,32 +988,60 @@ test("Career review standard and advanced prompt leaves require immutable named-
   }
 });
 
-test("Career review standard and advanced resumes repair every held evidence item with exact parity", async () => {
+test("Career review standard and advanced hold and resume stable evidence keys have exact bidirectional parity", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const entries = JSON.parse(await readFile(
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
   )).filter(({ skill, level }) => skill === "review-image-assets" && ["standard", "advanced"].includes(level));
-  const termsByLevel = {
-    standard: ["targetState", "actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt", "placement", "alt text", "readability evidence", "named human reviewer", "rightsDecision"],
-    advanced: ["targetState", "actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt", "rightsDecision", "active-rights evidence", "technical fit evidence", "readability evidence", "named human reviewer"],
+  const keysByLevel = {
+    standard: ["targetState", "actualUserDecision", "reviewedAt", "hostUserImageDecisionReceipt"],
+    advanced: ["targetState", "actualUserDecision", "reviewedAt", "hostUserImageDecisionReceipt", "rightsDecision", "activeRights", "technicalFit", "readability"],
+  };
+  const extractHoldKeys = (entry) => entry.hold_conditions.map((condition) => {
+    const keys = [...condition.matchAll(/\bevidenceKey=([A-Za-z][A-Za-z0-9]*)\b/gu)].map(([, key]) => key);
+    assert.equal(keys.length, 1, `${entry.id} hold condition must declare exactly one evidence key`);
+    return keys[0];
+  });
+  const extractResumeKeys = (entry) => {
+    const matches = [...entry.resume_prompt.matchAll(/repair\/verify evidenceKeys=\[([A-Za-z0-9,]+)\]/gu)];
+    assert.equal(matches.length, 1, `${entry.id} resume repair/verify key list`);
+    return matches[0][1].split(",");
   };
   const assertParity = (entry) => {
-    const terms = termsByLevel[entry.level];
-    const held = entry.hold_conditions.join(" ");
+    const expected = keysByLevel[entry.level].slice().sort();
+    const held = extractHoldKeys(entry);
+    const resumed = extractResumeKeys(entry);
     assert.match(entry.resume_prompt, /검증된 evidence만 보존/iu, entry.id);
-    for (const term of terms) {
-      assert.match(held, new RegExp(term, "iu"), `${entry.id} hold ${term}`);
-      assert.match(entry.resume_prompt, new RegExp(term, "iu"), `${entry.id} resume ${term}`);
-    }
+    assert.equal(new Set(held).size, held.length, `${entry.id} duplicate hold key`);
+    assert.equal(new Set(resumed).size, resumed.length, `${entry.id} duplicate resume key`);
+    assert.deepEqual(held.slice().sort(), expected, `${entry.id} hold key set`);
+    assert.deepEqual(resumed.slice().sort(), expected, `${entry.id} resume key set`);
   };
 
   assert.equal(entries.length, 2);
   for (const entry of entries) {
     assertParity(entry);
-    for (const term of termsByLevel[entry.level]) {
+    const [firstKey] = keysByLevel[entry.level];
+    const mutations = [
+      ["hold-only new key", (mutation) => mutation.hold_conditions.push("evidenceKey=holdOnlyExtra — 테스트 누락·불일치")],
+      ["resume-only new key", (mutation) => {
+        mutation.resume_prompt = mutation.resume_prompt.replace("]", ",resumeOnlyExtra]");
+      }],
+      ["hold key deletion", (mutation) => {
+        mutation.hold_conditions = mutation.hold_conditions.filter((condition) => !condition.includes(`evidenceKey=${firstKey}`));
+      }],
+      ["resume key deletion", (mutation) => {
+        mutation.resume_prompt = mutation.resume_prompt.replace(`${firstKey},`, "");
+      }],
+      ["duplicate hold key", (mutation) => mutation.hold_conditions.push(`evidenceKey=${firstKey} — 중복`)],
+      ["unknown resume key", (mutation) => {
+        mutation.resume_prompt = mutation.resume_prompt.replace("]", ",unknownEvidence]");
+      }],
+    ];
+    for (const [label, mutate] of mutations) {
       const mutation = structuredClone(entry);
-      mutation.resume_prompt = entry.resume_prompt.replaceAll(term, "omitted-resume-repair");
-      assert.throws(() => assertParity(mutation), assert.AssertionError, `${entry.id} resume ${term}`);
+      mutate(mutation);
+      assert.throws(() => assertParity(mutation), assert.AssertionError, `${entry.id} ${label}`);
     }
   }
 });
