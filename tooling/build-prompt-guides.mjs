@@ -282,7 +282,9 @@ async function recordPublishedTarget(root, plan) {
   const stats = await lstat(plan.target);
   if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`published prompt guide is not a regular file: ${plan.normalized}`);
   if (!isContained(root, await realpath(plan.target))) throw new Error(`published prompt guide escapes repository: ${plan.normalized}`);
-  plan.publishedIdentity = identity(stats);
+  if (!sameIdentity(plan.publishedIdentity, identity(stats))) {
+    throw new Error(`published prompt guide identity changed: ${plan.normalized}`);
+  }
 }
 
 async function rollbackPromotion(root, plans, createdDirectories, stageRoot, hooks) {
@@ -349,10 +351,12 @@ async function promoteOutputBatch(root, outputs, hooks) {
       await invokeRenameHook(hooks, { phase: "publish", index, target: plan.target });
       await assertTargetState(root, plan, "absent");
       await assertStageStable(plan);
+      plan.publishedIdentity = plan.stageIdentity;
       await rename(plan.stage, plan.target);
-      await recordPublishedTarget(root, plan);
       plan.published = true;
       if (hooks?.afterRename) await hooks.afterRename({ phase: "publish", index, target: plan.target });
+      await recordPublishedTarget(root, plan);
+      if (hooks?.afterPublishValidation) await hooks.afterPublishValidation({ phase: "publish", index, target: plan.target });
     }
   } catch (error) {
     const recoveryErrors = await rollbackPromotion(root, plans, createdDirectories, stageRoot, hooks);

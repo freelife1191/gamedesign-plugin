@@ -293,7 +293,39 @@ test("buildPromptGuides revalidates after every promotion hook before a rename c
   }
 });
 
-test("buildPromptGuides preserves a concurrently replaced published target and its backup", async (t) => {
+test("buildPromptGuides fails closed when a target is replaced before publish identity validation", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+  const outside = await mkdtemp(path.join(os.tmpdir(), "prompt-guides-external-replacement-"));
+  const replacement = path.join(outside, "replacement.md");
+  await writeFile(libraryPath, "old library\n");
+  await writeFile(replacement, "external replacement\n");
+  t.after(() => rm(outside, { recursive: true, force: true }));
+
+  await assert.rejects(
+    () => buildPromptGuides({
+      repoRoot,
+      __testCatalog: catalog,
+      __testHooks: {
+        afterRename: async (operation) => {
+          if (operation.phase !== "publish" || operation.index !== 0) return;
+          await rename(libraryPath, path.join(repoRoot, "displaced-library"));
+          await rename(replacement, libraryPath);
+        },
+      },
+    }),
+    (error) => error instanceof AggregateError
+      && error.errors.some((item) => /published prompt guide identity changed/u.test(item.message))
+      && error.errors.some((item) => /published target identity changed/u.test(item.message)),
+  );
+
+  assert.equal(await readFile(libraryPath, "utf8"), "external replacement\n");
+  const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
+  assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
+});
+
+test("buildPromptGuides preserves a concurrently replaced validated target and its backup", async (t) => {
   const repoRoot = await temporaryRepo(t);
   const catalog = { entries: [validSkillEntry()] };
   const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
@@ -304,7 +336,7 @@ test("buildPromptGuides preserves a concurrently replaced published target and i
       repoRoot,
       __testCatalog: catalog,
       __testHooks: {
-        afterRename: async (operation) => {
+        afterPublishValidation: async (operation) => {
           if (operation.phase !== "publish" || operation.index !== 0) return;
           await rename(libraryPath, path.join(repoRoot, "displaced-library"));
           await writeFile(libraryPath, "concurrent replacement\n");
@@ -405,6 +437,11 @@ test("buildPromptGuides does not roll back committed targets when final stage cl
   );
 
   assert.match(await readFile(libraryPath, "utf8"), /PT-001/u);
+  assert.match(await readFile(path.join(repoRoot, "guides", "prompt-templates", "studio", "define-game-vision.md"), "utf8"), /PT-001/u);
+  const studioProjection = JSON.parse(await readFile(path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json"), "utf8"));
+  const careerProjection = JSON.parse(await readFile(path.join(repoRoot, "products", "game-design-career", "plugin", "references", "prompt-templates.json"), "utf8"));
+  assert.deepEqual(studioProjection.entries.map(({ id }) => id), ["PT-001"]);
+  assert.deepEqual(careerProjection.entries, []);
   const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
   assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
 });
