@@ -36,12 +36,12 @@
       "[명시적 count]"
     ],
     "app_prompt": {
-      "example": "@Game Design Career career/sample-artifact, sample-input, [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
-      "template": "@Game Design Career [Canonical Artifact], [profile slot], [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "@Game Design Career [Canonical Artifact], [profile slot], [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
     },
     "cli_prompt": {
-      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source section ID], [명시적 count]\" 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
-      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[profile slot], [source section ID], [명시적 count]\" 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source section ID], [명시적 count]\" 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[profile slot], [source section ID], [명시적 count]\" 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
     },
     "skill": "plan-image-assets",
     "skill_chain": [
@@ -139,12 +139,12 @@
       "[rights owner]"
     ],
     "app_prompt": {
-      "example": "@Game Design Career career/sample-artifact, sample-input, [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=select.",
-      "template": "@Game Design Career [Canonical Artifact], [profile slots], [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=select."
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "@Game Design Career [Canonical Artifact], [profile slots], [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
     },
     "cli_prompt": {
-      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source IDs], [rights owner]\" proof 이미지·alt·권리 manifest 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=select.",
-      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[profile slots], [source IDs], [rights owner]\" proof 이미지·alt·권리 manifest 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=select."
+      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source IDs], [rights owner]\" proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[profile slots], [source IDs], [rights owner]\" proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
     },
     "skill": "plan-image-assets",
     "skill_chain": [
@@ -242,12 +242,12 @@
       "[reviewer evidence path]"
     ],
     "app_prompt": {
-      "example": "@Game Design Career career/sample-artifact, sample-input, [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=required.",
-      "template": "@Game Design Career [Canonical Artifact], [presentation slot], [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=required."
+      "example": "@Game Design Career career/sample-artifact, sample-input, [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "@Game Design Career [Canonical Artifact], [presentation slot], [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
     },
     "cli_prompt": {
-      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [decision owner], [reviewer evidence path]\" profile 슬롯과 presentation handoff 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=required.",
-      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[presentation slot], [decision owner], [reviewer evidence path]\" profile 슬롯과 presentation handoff 계획를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=required."
+      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [decision owner], [reviewer evidence path]\" profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[presentation slot], [decision owner], [reviewer evidence path]\" profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
     },
     "skill": "plan-image-assets",
     "skill_chain": [
@@ -656,12 +656,12 @@
       "[named human reviewer]"
     ],
     "app_prompt": {
-      "example": "@Game Design Career career/sample-artifact, sample-input, [placement], [named human reviewer]를 사용해 문서 concept 이미지 검토 요청를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
-      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [placement], [named human reviewer]를 사용해 문서 concept 이미지 검토 요청를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+      "example": "@Game Design Career career/sample-artifact, sample-input, [placement], [named human reviewer]를 사용해 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
+      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [placement], [named human reviewer]를 사용해 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
     },
     "cli_prompt": {
-      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [placement], [named human reviewer]\" 문서 concept 이미지 검토 요청를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
-      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [placement], [named human reviewer]\" 문서 concept 이미지 검토 요청를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [placement], [named human reviewer]\" 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
+      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [placement], [named human reviewer]\" 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
     },
     "skill": "review-image-assets",
     "skill_chain": [
@@ -741,10 +741,16 @@
     "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
     "required_inputs": [
       "Canonical Artifact",
-      "[stable asset ID]",
-      "[rights decision]",
-      "[reviewer evidence path]",
-      "source·attribution 또는 미정 기록",
+      "stable asset ID",
+      "targetState=document-approved",
+      "actual user decision",
+      "reviewedAt",
+      "immutable structured host-user-image-decision receipt",
+      "named human reviewer",
+      "rightsDecision",
+      "placement",
+      "alt text",
+      "readability evidence",
       "owner"
     ],
     "optional_inputs": [
@@ -755,16 +761,23 @@
     "placeholders": [
       "[Canonical Artifact]",
       "[stable asset ID]",
-      "[rights decision]",
-      "[reviewer evidence path]"
+      "[targetState]",
+      "[actual user decision]",
+      "[reviewedAt]",
+      "[immutable host-user-image-decision receipt]",
+      "[named human reviewer]",
+      "[rightsDecision]",
+      "[placement]",
+      "[alt text]",
+      "[readability evidence]"
     ],
     "app_prompt": {
-      "example": "@Game Design Career career/sample-artifact, sample-input, [rights decision], [reviewer evidence path]를 사용해 공개 권리·가독성 document approval를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
-      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [rights decision], [reviewer evidence path]를 사용해 공개 권리·가독성 document approval를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+      "example": "@Game Design Career career/sample-artifact, sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]를 사용해 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]를 사용해 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
     },
     "cli_prompt": {
-      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [rights decision], [reviewer evidence path]\" 공개 권리·가독성 document approval를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
-      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [rights decision], [reviewer evidence path]\" 공개 권리·가독성 document approval를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]\" 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]\" 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
     },
     "skill": "review-image-assets",
     "skill_chain": [
@@ -806,11 +819,11 @@
     ],
     "human_review_boundary": "named human reviewer와 rights/visual reviewer owner가 stable asset ID, evidence, rights, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
     "hold_conditions": [
-      "named human reviewer evidence가 없음",
-      "rights/provenance 또는 attribution/source가 미정",
-      "alt text 또는 readability evidence가 없음"
+      "targetState, actual user decision, reviewedAt 또는 immutable structured host-user-image-decision receipt가 누락·불일치",
+      "placement, alt text 또는 readability evidence가 미정",
+      "named human reviewer와 rightsDecision evidence가 없음"
     ],
-    "resume_prompt": "review-image-assets/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "resume_prompt": "review-image-assets/standard의 current state, immutable receipt와 통과한 evidence를 보존하고 누락·불일치한 targetState·actual user decision·reviewedAt만 보완해 hold 지점부터 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
     "diagram_binding": {
       "id": "ca-s13",
@@ -844,10 +857,16 @@
     "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
     "required_inputs": [
       "Canonical Artifact",
-      "[stable asset ID]",
-      "[production reviewer]",
-      "[review cycle evidence]",
-      "source·attribution 또는 미정 기록",
+      "stable asset ID",
+      "targetState=production-candidate",
+      "actual user decision",
+      "reviewedAt",
+      "immutable structured host-user-image-decision receipt",
+      "named human reviewer",
+      "rightsDecision",
+      "active-rights evidence",
+      "technical fit evidence",
+      "readability evidence",
       "owner"
     ],
     "optional_inputs": [
@@ -858,16 +877,23 @@
     "placeholders": [
       "[Canonical Artifact]",
       "[stable asset ID]",
-      "[production reviewer]",
-      "[review cycle evidence]"
+      "[targetState]",
+      "[actual user decision]",
+      "[reviewedAt]",
+      "[immutable host-user-image-decision receipt]",
+      "[named human reviewer]",
+      "[rightsDecision]",
+      "[active-rights evidence]",
+      "[technical fit evidence]",
+      "[readability evidence]"
     ],
     "app_prompt": {
-      "example": "@Game Design Career career/sample-artifact, sample-input, [production reviewer], [review cycle evidence]를 사용해 production candidate·review cycle 증빙를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
-      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [production reviewer], [review cycle evidence]를 사용해 production candidate·review cycle 증빙를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+      "example": "@Game Design Career career/sample-artifact, sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [readability evidence]를 사용해 production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [readability evidence]를 사용해 production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
     },
     "cli_prompt": {
-      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [production reviewer], [review cycle evidence]\" production candidate·review cycle 증빙를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
-      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [production reviewer], [review cycle evidence]\" production candidate·review cycle 증빙를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [readability evidence]\" production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [readability evidence]\" production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
     },
     "skill": "review-image-assets",
     "skill_chain": [
@@ -909,11 +935,11 @@
     ],
     "human_review_boundary": "named human reviewer와 production reviewer owner가 stable asset ID, evidence, rights, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
     "hold_conditions": [
-      "named human reviewer evidence가 없음",
-      "rights/provenance 또는 attribution/source가 미정",
-      "alt text 또는 readability evidence가 없음"
+      "targetState, actual user decision, reviewedAt 또는 immutable structured host-user-image-decision receipt가 누락·불일치",
+      "rightsDecision 또는 active-rights evidence가 없음",
+      "technical fit evidence 또는 readability evidence가 없음"
     ],
-    "resume_prompt": "review-image-assets/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "resume_prompt": "review-image-assets/advanced의 current state, immutable receipt와 active-rights evidence를 보존하고 누락·불일치한 targetState·rightsDecision·technical fit evidence만 보완해 hold 지점부터 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
     "diagram_binding": {
       "id": "ca-s13",

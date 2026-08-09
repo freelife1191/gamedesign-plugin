@@ -808,8 +808,8 @@ test("Studio visual catalog preserves image mode routing, no-key capability boun
     .map(([, mode]) => mode)
     .sort();
   const allowedModes = ["all", "prompt-only", "required", "select"];
-  const imageEntries = entries.filter(({ skill }) => ["plan-image-assets", "generate-image-assets"].includes(skill));
-  const contract = leaves(imageEntries).join(" ");
+  const generationEntries = entries.filter(({ skill }) => skill === "generate-image-assets");
+  const contract = leaves(generationEntries).join(" ");
 
   assert.deepEqual(policyModes, allowedModes, "source image policy closed mode set");
   assert.deepEqual(imageModes(entries), allowedModes, "Studio visual IMAGE_GEN_MODE values");
@@ -861,6 +861,103 @@ test("Studio visual catalog placeholders exactly match both reusable prompt temp
       assert.AssertionError,
       `${entry.id} rejects an extra placeholder`,
     );
+  }
+});
+
+test("Career visual plan and review prompt leaves prohibit provider calls independently", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  ));
+  const assertPlanLeaf = (leaf) => {
+    assert.match(leaf, /prompt.*placeholder.*manifest|manifest.*prompt.*placeholder/iu);
+    assert.match(leaf, /generation handoff/iu);
+    assert.match(leaf, /provider\/image generation 호출 0회/iu);
+    assert.doesNotMatch(leaf, /OPENAI_API_KEY|OpenAI only|host available|selected jobs/iu);
+  };
+  const assertReviewLeaf = (leaf) => {
+    assert.match(leaf, /existing asset.*receipt|receipt.*existing asset/iu);
+    assert.match(leaf, /provider\/image generation 호출 금지/iu);
+    assert.doesNotMatch(leaf, /OPENAI_API_KEY|OpenAI only|host available|selected jobs/iu);
+  };
+
+  for (const entry of entries.filter(({ skill }) => skill === "plan-image-assets")) {
+    for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+      const leaf = entry[promptType][field];
+      assertPlanLeaf(leaf);
+      const mutation = structuredClone(entry);
+      mutation[promptType][field] = leaf.replace("provider/image generation 호출 0회", "omitted-call-boundary");
+      assert.throws(() => assertPlanLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field}`);
+    }
+  }
+  for (const entry of entries.filter(({ skill }) => skill === "review-image-assets")) {
+    for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+      const leaf = entry[promptType][field];
+      assertReviewLeaf(leaf);
+      const mutation = structuredClone(entry);
+      mutation[promptType][field] = leaf.replace("provider/image generation 호출 금지", "omitted-call-boundary");
+      assert.throws(() => assertReviewLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field}`);
+    }
+  }
+});
+
+test("Career visual generation prompt leaves carry provider routing independently", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  )).filter(({ skill }) => skill === "generate-image-assets");
+  const assertGenerationLeaf = (leaf) => {
+    assert.match(leaf, /IMAGE_MODEL=gpt-image-2.*IMAGE_QUALITY=low/iu);
+    assert.match(leaf, /OPENAI_API_KEY.*OpenAI only.*fallback.*금지/iu);
+    assert.match(leaf, /key가 없.*host available.*selected jobs.*unknown.*unavailable.*호출하지 않.*prompt.*placeholder.*보존/iu);
+  };
+
+  for (const entry of entries) {
+    for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+      const leaf = entry[promptType][field];
+      assertGenerationLeaf(leaf);
+      const mutation = structuredClone(entry);
+      mutation[promptType][field] = leaf.replace("OpenAI only", "omitted-provider-policy");
+      assert.throws(() => assertGenerationLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field}`);
+    }
+  }
+});
+
+test("Career review standard and advanced prompt leaves require immutable named-human transition evidence", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  )).filter(({ skill, level }) => skill === "review-image-assets" && ["standard", "advanced"].includes(level));
+  const assertTransitionLeaf = (leaf) => {
+    for (const term of ["actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt"]) {
+      assert.match(leaf, new RegExp(term, "iu"));
+    }
+    assert.match(leaf, /누락|불일치/u);
+    assert.match(leaf, /current state.*유지|현재 state.*유지/iu);
+  };
+  const assertStandardLeaf = (leaf) => {
+    assertTransitionLeaf(leaf);
+    assert.match(leaf, /targetState=document-approved/iu);
+  };
+  const assertAdvancedLeaf = (leaf) => {
+    assertTransitionLeaf(leaf);
+    for (const term of ["targetState=production-candidate", "rightsDecision", "active-rights evidence", "technical fit evidence", "readability evidence"]) {
+      assert.match(leaf, new RegExp(term, "iu"));
+    }
+  };
+
+  assert.equal(entries.length, 2);
+  for (const entry of entries) {
+    const assertion = entry.level === "advanced" ? assertAdvancedLeaf : assertStandardLeaf;
+    for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+      const leaf = entry[promptType][field];
+      assertion(leaf);
+      for (const term of entry.level === "advanced" ? ["immutable structured host-user-image-decision receipt", "rightsDecision", "active-rights evidence"] : ["immutable structured host-user-image-decision receipt", "actual user decision", "reviewedAt"]) {
+        const mutation = structuredClone(entry);
+        mutation[promptType][field] = leaf.replaceAll(term, "omitted-transition-evidence");
+        assert.throws(() => assertion(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field} ${term}`);
+      }
+    }
   }
 });
 
