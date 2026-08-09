@@ -366,7 +366,69 @@ test("Career job-research prompt leaves independently declare every current-fact
       assert.doesNotMatch(prompt, /careers\.example\.com/iu, `${entry.id} ${promptType} invented official URL`);
     }
     for (const promptType of ["app_prompt", "cli_prompt"]) {
-      assert.match(entry[promptType].template, /\[공식 공고 URL\]/u, `${entry.id} ${promptType} symbolic URL placeholder`);
+      assert.match(
+        entry[promptType].template,
+        entry.level === "beginner" ? /\[공식 공고 URL\]/u : /\[공식 공고 URL 목록\]/u,
+        `${entry.id} ${promptType} symbolic URL placeholder`,
+      );
+    }
+  }
+});
+
+test("Career job-research preserves single-posting beginner and collection interfaces for standard and advanced", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"),
+    "utf8",
+  )).filter(({ skill }) => skill === "research-game-design-jobs");
+  const assertPostingCardinality = (entry) => {
+    const appLeaves = [entry.app_prompt.example, entry.app_prompt.template];
+    const cliLeaves = [entry.cli_prompt.example, entry.cli_prompt.template];
+    if (entry.level === "beginner") {
+      assert.ok(entry.required_inputs.includes("official source URL"), `${entry.id} single required input`);
+      assert.ok(!entry.required_inputs.includes("official source URLs"), `${entry.id} no collection required input`);
+      for (const leaf of appLeaves) {
+        assert.match(leaf, /단일 공식 공고 URL|\[공식 공고 URL\]/u, `${entry.id} single App leaf`);
+        assert.doesNotMatch(leaf, /공식 공고 URL 목록/u, `${entry.id} no App collection`);
+      }
+      for (const leaf of cliLeaves) {
+        assert.match(leaf, /\bofficialPostingUrl=/u, `${entry.id} single CLI field`);
+        assert.doesNotMatch(leaf, /\bofficialPostingUrls=/u, `${entry.id} no CLI collection`);
+      }
+      return;
+    }
+    assert.ok(entry.required_inputs.includes("official source URLs"), `${entry.id} collection required input`);
+    assert.ok(!entry.required_inputs.includes("official source URL"), `${entry.id} no single required input`);
+    for (const leaf of appLeaves) {
+      assert.match(leaf, /복수 공식 공고 URL 목록|\[공식 공고 URL 목록\]/u, `${entry.id} collection App leaf`);
+      assert.doesNotMatch(leaf, /단일 공식 공고 URL/u, `${entry.id} no single App leaf`);
+    }
+    for (const leaf of cliLeaves) {
+      assert.match(leaf, /\bofficialPostingUrls=/u, `${entry.id} collection CLI field`);
+      assert.doesNotMatch(leaf, /\bofficialPostingUrl=(?!s)/u, `${entry.id} no single CLI field`);
+      assert.match(leaf, /공식 공고 URL 목록/u, `${entry.id} collection CLI value`);
+    }
+  };
+
+  assert.equal(entries.length, 3);
+  for (const entry of entries) {
+    assertPostingCardinality(entry);
+    for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+      const mutation = structuredClone(entry);
+      if (entry.level === "beginner") {
+        mutation[promptType][field] = mutation[promptType][field]
+          .replace(/officialPostingUrl=/u, "officialPostingUrls=")
+          .replace(/공식 공고 URL(?! 목록)/u, "공식 공고 URL 목록");
+      } else {
+        mutation[promptType][field] = mutation[promptType][field]
+          .replace(/officialPostingUrls=/u, "officialPostingUrl=")
+          .replace(/공식 공고 URL 목록/u, "단일 공식 공고 URL");
+      }
+      assert.throws(
+        () => assertPostingCardinality(mutation),
+        assert.AssertionError,
+        `${entry.id} ${promptType}.${field} rejects wrong posting cardinality`,
+      );
     }
   }
 });
