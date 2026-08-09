@@ -661,6 +661,106 @@ test("Career evidence templates preserve traceable claims, honest interview boun
   }
 });
 
+test("Career export prompt leaves preserve ordered all-gates, downstream ownership, and separated authority", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-evidence.json"),
+    "utf8",
+  )).filter(({ skill }) => skill === "export-career-documents");
+  const assertExportLeaf = (leaf) => {
+    assert.match(leaf, /canonical preflight.*capability.*renderer.*format QA.*human review.*모두 통과하기 전/u);
+    assert.match(leaf, /actual output.*표시 금지/u);
+    assert.match(leaf, /delivery completion.*표시 금지/u);
+    assert.match(leaf, /downstream workflow.*actual output.*소유/u);
+    assert.match(leaf, /이 prompt.*preparation\/hold만 소유/u);
+    assert.match(leaf, /document-quality-editor는 구조\/format finding만/u);
+    assert.match(leaf, /evidence-auditor는 evidence completion gate/u);
+    assert.match(leaf, /named human decision owner.*승인\/보류/u);
+  };
+  const allGateTerms = ["canonical preflight", "capability", "renderer", "format QA", "human review"];
+
+  assert.equal(entries.length, 3);
+  for (const entry of entries) {
+    assert.ok(entry.specialist_roles.includes("document-quality-editor"), `${entry.id} document editor`);
+    assert.ok(entry.specialist_roles.includes("evidence-auditor"), `${entry.id} evidence auditor`);
+    assert.match(entry.human_review_boundary, /document-quality-editor.*구조\/format finding만/u, `${entry.id} editor scope`);
+    assert.doesNotMatch(entry.human_review_boundary, /document-quality-editor[^.]*승인|document-quality-editor[^.]*보류/u, `${entry.id} editor no decision`);
+    assert.match(entry.human_review_boundary, /evidence-auditor.*evidence completion gate/u, `${entry.id} evidence gate`);
+    assert.match(entry.human_review_boundary, /named human decision owner.*승인\/보류/u, `${entry.id} decision owner`);
+    for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+      const leaf = entry[promptType][field];
+      assertExportLeaf(leaf);
+      for (const term of [...allGateTerms, "actual output", "delivery completion", "downstream workflow", "preparation/hold"]) {
+        const mutation = structuredClone(entry);
+        mutation[promptType][field] = leaf.replaceAll(term, "omitted-contract-token");
+        assert.throws(() => assertExportLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field} rejects ${term} mutation`);
+      }
+    }
+    for (const term of ["evidence-auditor", "named human decision owner"]) {
+      const mutation = structuredClone(entry);
+      mutation.human_review_boundary = mutation.human_review_boundary.replace(term, "omitted-authority");
+      assert.throws(() => {
+        assert.match(mutation.human_review_boundary, /evidence-auditor.*evidence completion gate/u);
+        assert.match(mutation.human_review_boundary, /named human decision owner.*승인\/보류/u);
+      }, assert.AssertionError, `${entry.id} authority swap mutation ${term}`);
+    }
+  }
+});
+
+test("Advanced portfolio review leaves separate readiness from named-human approval and keep the agent non-decisive", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entry = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-evidence.json"),
+    "utf8",
+  )).find(({ id }) => id === "career:review-game-design-portfolio:advanced");
+  const assertAdvancedReviewLeaf = (leaf) => {
+    assert.match(leaf, /presentation readiness.*human approval.*분리/u);
+    assert.match(leaf, /named-human reviewer ID/u);
+    assert.match(leaf, /approval state/u);
+    assert.match(leaf, /자동 합격\/채용 판정 금지/u);
+    assert.match(leaf, /portfolio-reviewer agent.*finding만.*승인자 아님/u);
+  };
+
+  assert.ok(entry);
+  for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+    const leaf = entry[promptType][field];
+    assertAdvancedReviewLeaf(leaf);
+    for (const term of ["presentation readiness", "human approval", "named-human reviewer ID", "approval state", "자동 합격/채용 판정 금지", "portfolio-reviewer agent"]) {
+      const mutation = structuredClone(entry);
+      mutation[promptType][field] = leaf.replaceAll(term, "omitted-review-contract");
+      assert.throws(() => assertAdvancedReviewLeaf(mutation[promptType][field]), assert.AssertionError, `${promptType}.${field} rejects ${term} mutation`);
+    }
+  }
+});
+
+test("Portfolio standard and advanced CLI leaves independently preserve result layers, attribution, and unknown-private boundaries", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-evidence.json"),
+    "utf8",
+  )).filter(({ skill, level }) => skill === "build-game-design-portfolio" && ["standard", "advanced"].includes(level));
+  const assertPortfolioCliLeaf = (leaf) => {
+    assert.match(leaf, /result layers=fact,inference,recommendation/u);
+    assert.match(leaf, /personal attribution/u);
+    assert.match(leaf, /team attribution/u);
+    assert.match(leaf, /unknown=미정/u);
+    assert.match(leaf, /private=비공개/u);
+  };
+
+  assert.equal(entries.length, 2);
+  for (const entry of entries) {
+    for (const field of ["example", "template"]) {
+      const leaf = entry.cli_prompt[field];
+      assertPortfolioCliLeaf(leaf);
+      for (const term of ["result layers=fact,inference,recommendation", "personal attribution", "team attribution", "unknown=미정", "private=비공개"]) {
+        const mutation = structuredClone(entry);
+        mutation.cli_prompt[field] = leaf.replaceAll(term, "omitted-cli-contract");
+        assert.throws(() => assertPortfolioCliLeaf(mutation.cli_prompt[field]), assert.AssertionError, `${entry.id} CLI ${field} rejects ${term} mutation`);
+      }
+    }
+  }
+});
+
 test("Studio visual catalog has exact skill-level bindings and matching Studio prompt namespaces", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const entries = JSON.parse(await readFile(
