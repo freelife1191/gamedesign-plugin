@@ -9,6 +9,7 @@ import {
   loadPromptTemplateCatalog,
   validatePromptTemplateCatalog,
 } from "../../tooling/lib/prompt-template-catalog.mjs";
+import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
 const STUDIO_SKILLS = [
   "apply-document-quality-profile", "define-game-vision", "design-game-content",
@@ -216,6 +217,125 @@ test("Studio foundation catalog reads canonical Artifact files before optional d
       assert.equal(entry.read_order.at(-1), `${base}/decisions/README.md`, entry.id);
     }
   }
+});
+
+test("Career foundation catalog has the exact IDs, levels, namespaces, and installed bindings", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [entries, manifest, careerInventory] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "assets", "diagram-manifest.json"), "utf8").then(JSON.parse),
+    collectProductInventory(repoRoot, "game-design-career"),
+  ]);
+  const skills = [
+    "apply-document-quality-profile",
+    "map-game-design-career",
+    "research-game-design-jobs",
+    "reverse-engineer-game-design",
+    "orchestrate-game-design-career",
+  ];
+  const levels = ["beginner", "standard", "advanced"];
+  const expectedIds = skills.flatMap((skill) => levels.map((level) => `career:${skill}:${level}`)).sort();
+  const diagramIdBySkill = new Map([
+    ["apply-document-quality-profile", "ca-s01"],
+    ["map-game-design-career", "ca-s05"],
+    ["research-game-design-jobs", "ca-s10"],
+    ["reverse-engineer-game-design", "ca-s11"],
+    ["orchestrate-game-design-career", "ca-s06"],
+  ]);
+  const roleIds = new Set((await Promise.all([
+    "document-quality-editor", "career-strategist", "game-design-mentor", "evidence-auditor", "reverse-design-critic", "portfolio-reviewer",
+  ].map(async (role) => {
+    await readFile(path.join(repoRoot, "products", "game-design-career", "plugin", "agents", `${role}.md`), "utf8");
+    return role;
+  }))));
+
+  assert.equal(entries.length, 15);
+  assert.deepEqual(entries.map(({ id }) => id).sort(), expectedIds);
+  assert.deepEqual(entries.map(({ skill, level }) => `${skill}:${level}`).sort(), expectedIds.map((id) => id.replace(/^career:/u, "")));
+  for (const entry of entries) {
+    assert.equal(entry.kind, "skill-template", entry.id);
+    assert.equal(entry.product, "career", entry.id);
+    assert.match(entry.app_prompt.example, /@Game Design Career/u, entry.id);
+    assert.match(entry.app_prompt.template, /@Game Design Career/u, entry.id);
+    const command = new RegExp(`\\$game-design-career:${entry.skill}(?:\\s|$)`, "u");
+    assert.match(entry.cli_prompt.example, command, entry.id);
+    assert.match(entry.cli_prompt.template, command, entry.id);
+    assert.ok(careerInventory.skillIds.includes(entry.skill), `${entry.id} installed skill`);
+    for (const artifact of entry.intermediate_artifacts) {
+      assert.ok(careerInventory.templateIds.includes(artifact), `${entry.id} installed template ${artifact}`);
+    }
+    for (const role of entry.specialist_roles) assert.ok(roleIds.has(role), `${entry.id} installed role ${role}`);
+    const diagram = manifest.diagrams.find(({ id }) => id === diagramIdBySkill.get(entry.skill));
+    assert.ok(diagram, `${entry.id} diagram manifest`);
+    assert.equal(entry.diagram_binding.id, diagram.id, entry.id);
+    assert.equal(entry.diagram_binding.svg, `guides/assets/${diagram.svg}`, entry.id);
+    assert.equal(entry.diagram_binding.png, `guides/assets/${diagram.png}`, entry.id);
+  }
+});
+
+test("Career foundation catalog keeps reusable placeholders, Artifact read order, and handoff ownership complete", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"),
+    "utf8",
+  ));
+  const tokens = (prompt) => [...prompt.matchAll(/\[([^\]]+)\]/gu)].map(([, token]) => `[${token}]`).sort();
+
+  for (const entry of entries) {
+    assert.deepEqual(entry.placeholders.slice().sort(), [...new Set([
+      ...tokens(entry.app_prompt.template),
+      ...tokens(entry.cli_prompt.template),
+    ])].sort(), entry.id);
+    const base = entry.expected_file_tree[0].replace(/\/content\.md$/u, "");
+    assert.deepEqual(entry.read_order.slice(0, 3), [
+      `${base}/content.md`,
+      `${base}/evidence.yml`,
+      `${base}/export-manifest.yml`,
+    ], entry.id);
+    assert.match(entry.human_review_boundary, /owner|담당자/u, `${entry.id} owner`);
+    assert.match(entry.human_review_boundary, /승인/u, `${entry.id} approval`);
+    assert.match(entry.human_review_boundary, /보류|hold/iu, `${entry.id} hold`);
+    assert.match(entry.resume_prompt, /보존.*재개|재개.*보존/iu, entry.id);
+    assert.match(entry.safety_boundary, /미정/u, entry.id);
+  }
+});
+
+test("Career foundation catalog requires fresh fact boundaries, separates fact and inference, and never promises hiring", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"),
+    "utf8",
+  ));
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const positiveHiringGuarantee = /(?:(?:채용|합격|적합성|채용 확률)(?:을|를)?\s*(?:(?:반드시|확실히)\s*)?보장(?:한다(?!고)|합니다|함|됩니다|될 것이다)|\b(?:hiring|employment|job offer|fit)\s+is\s+guaranteed\b|\bguarantee(?:s|d)?\s+(?:hiring|employment|a job offer|fit)\b)/iu;
+
+  for (const entry of entries) {
+    const contract = leaves(entry).join(" ");
+    assert.match(contract, /fact|사실/u, `${entry.id} fact label`);
+    assert.match(contract, /inference|추론/u, `${entry.id} inference label`);
+    assert.match(contract, /recommendation|제안/u, `${entry.id} recommendation label`);
+    assert.match(contract, /현재.*(?:job|company|고용주|공고).*사용.*때만.*source URL.*retrieval.*as[- ]?of.*region.*sample|source URL.*retrieval.*as[- ]?of.*region.*sample.*현재.*(?:job|company|고용주|공고)/iu, `${entry.id} conditional current-fact boundary`);
+    assert.doesNotMatch(contract, positiveHiringGuarantee, entry.id);
+  }
+
+  for (const entry of entries.filter(({ skill }) => skill === "research-game-design-jobs")) {
+    const contract = leaves(entry).join(" ");
+    for (const term of ["source URL", "retrieval", "as-of", "region", "sample", "blind spot"]) {
+      assert.match(contract, new RegExp(term, "iu"), `${entry.id} ${term}`);
+    }
+  }
+  for (const entry of entries.filter(({ skill }) => skill === "reverse-engineer-game-design")) {
+    const contract = leaves(entry).join(" ");
+    for (const term of ["observation", "rule", "UI", "economy", "counterexample", "rights", "alternative"]) {
+      assert.match(contract, new RegExp(term, "iu"), `${entry.id} ${term}`);
+    }
+  }
+  const careerMap = entries.find(({ id }) => id === "career:map-game-design-career:advanced");
+  assert.ok(careerMap);
+  assert.match(leaves(careerMap).join(" "), /multiple|복수.*path|path.*복수/u);
+  assert.match(leaves(careerMap).join(" "), /tradeoff|교환/u);
+  assert.match(leaves(careerMap).join(" "), /re-evaluat|재평가/u);
 });
 
 test("Studio visual catalog has exact skill-level bindings and matching Studio prompt namespaces", async () => {
