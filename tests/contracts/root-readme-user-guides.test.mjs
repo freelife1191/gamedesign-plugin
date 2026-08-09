@@ -48,6 +48,16 @@ const representativeCaseIds = [
   "ST-C02", "ST-C03", "CA-T01", "ST-C04", "ST-C05", "CA-C01",
   "ST-C07", "CA-C05", "CA-C06", "CA-C07", "CA-C08", "ST-C08",
 ];
+const representativePromptTemplateIds = [
+  "studio:define-game-vision:beginner",
+  "studio:design-game-systems:standard",
+  "studio:design-player-experience:standard",
+  "studio:orchestrate-game-design-project:advanced",
+  "career:map-game-design-career:beginner",
+  "career:reverse-engineer-game-design:standard",
+  "career:build-game-design-portfolio:advanced",
+  "suite:career-proof-project-interview:case",
+];
 
 function section(markdown, heading) {
   const marker = `## ${heading}\n`;
@@ -282,6 +292,9 @@ async function assertRootUseCaseNavigation(markdown, manifest) {
   for (const request of ["입문 요청문", "응용 요청문", "포트폴리오 요청문", "전체 프로젝트 요청문"]) {
     assert.ok(exploration.includes(request), `root request example: ${request}`);
   }
+  for (const id of representativePromptTemplateIds) {
+    assert.ok(exploration.includes(id), `root prompt-template route: ${id}`);
+  }
   const goalStart = subsection(exploration, "목표별 바로 시작");
   const workScale = subsection(exploration, "작업 규모별 사용 예시");
   const outputLayer = subsection(exploration, "요청하면 얻는 결과");
@@ -507,7 +520,7 @@ test("root README contract rejects unsafe mutations in memory", async () => {
 
 test("global and product indexes reach 30 skills, 30 templates, and 12 recipes", async () => {
   const reachable = await reachableMarkdownPaths(path.join(guideRoot, "README.md"));
-  assert.equal(reachable.size, 79, "guide link graph reaches exactly 79 Markdown documents");
+  assert.equal(reachable.size, 118, "guide link graph reaches the prompt-template library and all guide documents");
   for (const relative of requiredUseCaseGuidePaths) {
     assert.ok(reachable.has(path.join(guideRoot, relative)), `new use-case guide is unreachable: ${relative}`);
   }

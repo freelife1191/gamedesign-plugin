@@ -38,12 +38,32 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 
 ### 작업 규모별 사용 예시
 
-| 작업 규모 | 준비 입력 | 권장 시작 | 핵심 결과 |
-| --- | --- | --- | --- |
-| 10분 실습 | 관찰 장면 하나와 모르는 점 | 사용자 경로의 작은 학습 과제 | 사실·가정·질문이 분리된 짧은 브리프 |
-| 단일 과제 | 규칙, 상태, UX 또는 역할 문제 하나 | 제품 사례 또는 스킬 워크벤치 | 검토할 가정·표·다음 질문이 있는 작업 초안 |
-| 포트폴리오 프로젝트 | 공개 가능한 evidence, 개인 기여와 권리 경계 | Career 사례와 결과물 카탈로그 | 별도 Career Artifact의 문제·판단·검증 근거 |
-| 전체 프로젝트 | 비전, 범위, 제약, 검토자와 미해결 결정 | 제품 오케스트레이터와 전체 GDD 경로 | Canonical Artifact, 검토 게이트와 재개 조건 |
+| 작업 규모 | 시작점 |
+| --- | --- |
+| 10분 실습 | [사용자 경로](guides/use-cases/audience-paths.md) |
+| 단일 과제 | [Studio](guides/game-design-studio/use-cases/skill-workbench.md) 또는 [Career 스킬 워크벤치](guides/game-design-career/use-cases/skill-workbench.md) |
+| 포트폴리오 프로젝트 | [Career 사례](guides/game-design-career/use-cases/README.md) |
+| 전체 프로젝트 | [Studio 전체 GDD](guides/game-design-studio/recipes/new-game-gdd.md) |
+
+#### 10분 실습
+
+- 준비 입력: 관찰 장면 하나와 모르는 점
+- 예상 결과: 사실·가정·질문이 분리된 짧은 브리프
+
+#### 단일 과제
+
+- 준비 입력: 규칙, 상태, UX 또는 역할 문제 하나
+- 예상 결과: 검토할 가정·표·다음 질문이 있는 작업 초안
+
+#### 포트폴리오 프로젝트
+
+- 준비 입력: 공개 가능한 evidence, 개인 기여와 권리 경계
+- 예상 결과: 별도 Career Artifact의 문제·판단·검증 근거
+
+#### 전체 프로젝트
+
+- 준비 입력: 비전, 범위, 제약, 검토자와 미해결 결정
+- 예상 결과: Canonical Artifact, 검토 게이트와 재개 조건
 
 ### 요청하면 얻는 결과
 
@@ -66,6 +86,21 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 **포트폴리오 요청문:** `공개 가능한 관찰을 역기획의 사실·추론·제안으로 분리하고, 개인 기여와 권리 검토가 필요한 항목을 남겨 줘.`
 
 **전체 프로젝트 요청문:** `핵심 루프, 시스템, UX, 제작 범위와 검토 게이트를 하나의 제한된 게임 기획 프로젝트로 연결해 줘.`
+
+### 난이도별 요청문 카드
+
+각 카드는 복사 가능한 요청, 사용 흐름, 예상 결과와 사람 검토 경계를 상세 페이지에서 함께 제공합니다.
+
+- [비전 가설을 시작하는 입문 카드 — studio:define-game-vision:beginner](guides/prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner)
+- [규칙·상태·예외를 정리하는 표준 카드 — studio:design-game-systems:standard](guides/prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard)
+- [UX·접근성 검토를 시작하는 표준 카드 — studio:design-player-experience:standard](guides/prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard)
+- [차단된 프로젝트를 재개하는 고급 카드 — studio:orchestrate-game-design-project:advanced](guides/prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
+- [직무 가설을 세우는 입문 카드 — career:map-game-design-career:beginner](guides/prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner)
+- [관찰 기반 역기획 표준 카드 — career:reverse-engineer-game-design:standard](guides/prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard)
+- [개인 기여를 보존하는 포트폴리오 고급 카드 — career:build-game-design-portfolio:advanced](guides/prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
+- [프로젝트 증거와 면접을 잇는 사례 카드 — suite:career-proof-project-interview:case](guides/prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
+
+전체 목록은 [요청문 템플릿 허브](guides/prompt-templates/README.md)에서 사용자 유형과 난이도별로 비교할 수 있습니다.
 
 ## 어떤 플러그인을 설치할까
 

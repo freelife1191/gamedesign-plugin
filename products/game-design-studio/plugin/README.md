@@ -362,16 +362,78 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 한 작업의 입력과 원하는 결과가 분명하면 전문 스킬을 직접 호출합니다. 예를 들어 rule/state/exception 하나만 필요하면 `$game-design-studio:design-game-systems`를 사용합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작해 최소 스킬 체인과 사람 gate를 정합니다. 스킬 워크벤치는 직접 호출 신호·피할 때·다음 handoff를 비교합니다.
 
-### 목표별 대표 요청과 결과
+### 대표 작업 경로
 
-아래는 목표를 고르는 빠른 시작점입니다. 최소 결과는 renderer나 image provider와 무관하게 Canonical Artifact에 남고, 선택·확장 결과와 사람 검토 경계는 이를 대체하지 않습니다.
+아래 요약으로 목적을 고른 뒤 카드에서 입력, 흐름, 결과와 사람 검토 경계를 확인합니다. 기준 결과는 renderer나 image provider와 무관하게 Canonical Artifact에 남습니다.
 
-- **규칙·핵심 루프** — 대표 요청: `$game-design-studio:orchestrate-game-design-project player promise, core loop, non-goal과 prototype 질문을 정리해.`; 최소 결과: `game-design-brief`, `vision-pillars`; 선택 결과: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획; 확장 결과: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거; 사람 검토 경계: 실제 design owner가 pillar와 non-goal을 승인·수정·보류합니다.
-- **시스템** — 대표 요청: `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence와 exception을 명세해.`; 최소 결과: `system-specification`; 선택 결과: 상태 관계가 prose보다 명확할 때만 source mapping이 있는 도식 계획; 확장 결과: owner 결정과 test evidence가 연결된 개발·QA handoff; 사람 검토 경계: design·engineering owner가 precedence와 runtime mapping을 결정합니다.
-- **UX·접근성** — 대표 요청: `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력과 오류 recovery를 연결해.`; 최소 결과: `ui-ux-flow-state`; 선택 결과: source-backed interaction 도식 계획이나 검토용 화면 reference prompt; 확장 결과: usability evidence와 사람 승인을 반영한 UX·QA handoff; 사람 검토 경계: 실제 accessibility·design owner가 지원 범위와 blocker disposition을 결정합니다.
-- **콘텐츠·퀘스트** — 대표 요청: `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.`; 최소 결과: `narrative-quest-npc`; 선택 결과: 승인 전 narrative image prompt 또는 source-backed quest flow 계획; 확장 결과: system/data/production owner 검토를 통과한 콘텐츠 handoff; 사람 검토 경계: 실제 content·rights·production owner가 결정을 내립니다.
-- **경제·LiveOps** — 대표 요청: `$game-design-studio:design-game-economy-and-liveops 토큰 source/sink, guardrail, stop 조건과 rollback 증거를 가정으로 정리해.`; 최소 결과: `economy-balance`; 선택 결과: source-backed economy/experiment 관계 계획 또는 communication image prompt; 확장 결과: current evidence, tested rollback과 사람 결정을 가진 운영 검토 패키지; 사람 검토 경계: 실제 economy·LiveOps·policy owner가 가격·확률·실험과 rollback을 결정합니다.
-- **전체 프로젝트** — 대표 요청: `$game-design-studio:orchestrate-game-design-project prototype scope, dependency, kill criteria와 review owner를 정리해.`; 최소 결과: `production-scope-risk`, `export-manifest.yml`; 선택 결과: mode와 receipt가 허용한 prompt·이미지·source-backed SVG·PNG와 형식 준비 job; 확장 결과: 이름 있는 사람의 승인과 asset·format·visual QA evidence가 있는 전달 패키지; 사람 검토 경계: production, review, rights·asset, export owner가 각 승인 경계를 결정합니다.
+| 목표 | 시작 스킬 |
+| --- | --- |
+| 규칙·핵심 루프 | `orchestrate-game-design-project` |
+| 시스템 | `design-game-systems` |
+| UX·접근성 | `design-player-experience` |
+| 콘텐츠·퀘스트 | `design-game-content` |
+| 경제·LiveOps | `design-game-economy-and-liveops` |
+| 전체 프로젝트 | `orchestrate-game-design-project` |
+
+### 규칙·핵심 루프
+
+#### 준비 입력
+
+- player promise, core loop, non-goal, prototype 질문
+
+#### 연결 흐름
+
+- `orchestrate-game-design-project` → 비전과 검토 route
+
+#### 예상 결과
+
+- 최소: `game-design-brief`, `vision-pillars`
+- 선택: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획
+- 확장: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거
+
+#### 사람 검토
+
+- 실제 design owner가 pillar와 non-goal을 승인·수정·보류
+
+### 시스템·UX·콘텐츠
+
+#### 준비 입력
+
+- rule ID·state transition·precedence·exception 또는 critical action·NPC state
+
+#### 연결 흐름
+
+- `design-game-systems` 또는 `design-player-experience` → 관련 content 작업 → 검토
+
+#### 예상 결과
+
+- 최소: `system-specification`, `ui-ux-flow-state` 또는 `narrative-quest-npc`
+- 선택: source mapping 도식 계획 또는 검토용 image prompt
+- 확장: owner 결정과 test·usability evidence가 연결된 개발·QA handoff
+
+#### 사람 검토
+
+- design·engineering·accessibility·content·rights owner가 precedence, 지원 범위와 콘텐츠 결정을 승인·수정·보류
+
+### 경제·LiveOps·전체 프로젝트
+
+#### 준비 입력
+
+- source/sink, guardrail, stop 조건, rollback evidence 또는 prototype scope·dependency·kill criteria
+
+#### 연결 흐름
+
+- `design-game-economy-and-liveops` 또는 `orchestrate-game-design-project` → 검토 → 필요 시 형식 준비
+
+#### 예상 결과
+
+- 최소: `economy-balance`, `production-scope-risk`, `export-manifest.yml`
+- 선택: source-backed 관계 계획, 허용된 prompt·이미지·SVG·PNG와 형식 준비 job
+- 확장: current evidence, tested rollback, asset·format·visual QA evidence가 있는 전달 패키지
+
+#### 사람 검토
+
+- economy·LiveOps·policy·production·review·rights·asset·export owner가 가격, 실험, rollback과 승인 경계를 결정
 
 ### 대표 요청과 예상 결과
 

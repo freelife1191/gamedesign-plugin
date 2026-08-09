@@ -31,6 +31,15 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 | [Career FAQ](faq.md) | 요청문·읽는 순서·재개 경로 |
 | [공통 결과물 카탈로그](../use-cases/output-catalog.md) | 원본·선택 자산·파생 형식과 사람 검토 |
 
+### 사용자 유형·난이도별 요청문
+
+[요청문 템플릿 허브](../prompt-templates/README.md)에서 대상과 난이도에 맞는 복사 가능한 요청, 실행 흐름, 예상 결과와 사람 검토 경계를 찾습니다.
+
+- 입문: [직무 가설](../prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner)
+- 표준: [관찰 기반 역기획](../prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard)
+- 고급: [개인 기여 포트폴리오](../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
+- 사례: [프로젝트 증거와 면접](../prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
+
 Career에는 18개 사례, 15개 직접 스킬, 18개 FAQ와 33개 도식 쌍이 있습니다. 도식은 사례나 직접 호출의 입력·검토·결과 흐름을 설명할 뿐, 결과의 품질·합격·채용을 보장하지 않습니다.
 
 ## 대표 사례

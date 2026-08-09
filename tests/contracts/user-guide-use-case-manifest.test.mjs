@@ -10,7 +10,13 @@ import {
   pngDims,
 } from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
-import { collectHeadingAnchors, collectProductInventory, extractMarkdownLinks, validateUserGuides } from "../../tooling/lib/user-guides.mjs";
+import {
+  assertReadableResultBoundaries,
+  collectHeadingAnchors,
+  collectProductInventory,
+  extractMarkdownLinks,
+  validateUserGuides,
+} from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
 import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
 import {
@@ -27,6 +33,30 @@ const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-ca
 const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
+
+test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
+  const denseBoundary = "**최소 결과:** 초안. **선택 결과:** 도식. **확장 결과:** 검토 패키지. **승인 주체:** 멘토. **보류 대상:** 패키지. **재개 조건:** 권한 확인. **안전·증거 경계:** 자동 승인은 하지 않음.";
+  const resultCards = [
+    "#### 결과물",
+    "",
+    "- 최소 결과: 초안",
+    "- 선택 결과: 도식",
+    "- 확장 결과: 검토 패키지",
+    "",
+    "#### 사람 검토",
+    "",
+    "- 승인 주체: 멘토",
+    "- 보류 대상: 패키지",
+    "",
+    "#### 실패와 재개",
+    "",
+    "- 재개 조건: 권한 확인",
+    "- 안전·증거 경계: 자동 승인은 하지 않음",
+  ].join("\n");
+
+  assert.throws(() => assertReadableResultBoundaries(denseBoundary), /result-boundary/i);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(resultCards));
+});
 
 async function createCompleteUseCaseFixture(t) {
   const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "complete-use-case-guides-"));
@@ -1881,7 +1911,7 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 79,
+    guides: 118,
     skillGuides: 30,
     templates: 30,
     svg: 90,
@@ -2215,7 +2245,7 @@ test("Career competency and index mutation controls reject semantically wrong bu
     ["CA-C01/02 current-body swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "현재 상황과 목표", c02Current), c02, "현재 상황과 목표", c01Current), /CA-C01 현재 상황과 목표 semantic term: 역할/],
     ["wrong-valid CLI skill", replaceCasePart(competencyPaths, c01, "Codex CLI 요청문", sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "Codex CLI 요청문").replace("$game-design-career:map-game-design-career", "$game-design-career:reverse-engineer-game-design")), /CA-C01 manifest-bound CLI skill: reverse-engineer-game-design/],
     ["TODO standard practice", replaceCasePart(competencyPaths, c01, "표준 실습", "TODO"), /CA-C01 표준 실습 substantive content/],
-    ["CA-C01/02 next-route swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "자기점검과 다음 학습", c02Next), c02, "자기점검과 다음 학습", c01Next), /CA-C01 자기점검과 다음 학습 semantic term: CA-C02/],
+    ["CA-C01/02 next-route swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "자기점검과 다음 학습", c02Next), c02, "자기점검과 다음 학습", c01Next), /CA-C0[12] 자기점검과 다음 학습 semantic term: CA-C04/],
   ];
   for (const [label, mutation, expectedFailure] of mutations) {
     assert.throws(
@@ -2946,6 +2976,7 @@ test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async
       "탐색 순서",
       "작업 규모 선택하기",
       "결과물 먼저 보기",
+      "사용자 유형·난이도별 요청문",
       "공통 FAQ",
       "제품별 상세 가이드",
     ],
@@ -3266,27 +3297,21 @@ test("each audience route preserves its executable case, output, review, and res
     assert.match(requestBody, /^\*\*CLI 요청:\*\* `\$game-design-(?:studio|career):[\w-]+ .+`$/m, `${entry.id} CLI request`);
 
     const resultBody = byHeading.get("결과와 검토·재개 경계");
-    assert.deepEqual(inlineFieldLabels(resultBody), [
-      "최소 결과",
-      "선택 결과",
-      "확장 결과",
-      "승인 주체",
-      "보류 대상",
-      "사람 검토·승인 경계",
-      "재개 조건·요청",
-      "안전·증거 경계",
-    ], `${entry.id} result levels and review/resume fields`);
-    const resultFields = new Map(inlineFields(resultBody).map((field) => [field.label, field.value]));
-    const reviewBoundary = resultFields.get("사람 검토·승인 경계");
-    assert.equal(terminalPunctuationTrimmed(resultFields.get("승인 주체")), boundary.approver, `${entry.id} approval authority`);
-    assert.equal(terminalPunctuationTrimmed(resultFields.get("보류 대상")), boundary.held, `${entry.id} held result`);
+    const cards = markdownSections(resultBody, 4);
+    assert.deepEqual(cards.map(({ heading }) => heading), ["결과물", "사람 검토", "실패와 재개"], `${entry.id} result cards`);
+    const cardFields = new Map(cards.flatMap(({ body }) => [...body.matchAll(/^- ([^:]+): (.+)$/gm)]).map(([, label, value]) => [label, value]));
+    for (const label of ["최소 결과", "선택 결과", "확장 결과", "승인 주체", "보류 대상", "승인 경계", "재개 조건", "재개 요청", "안전·증거 경계"]) {
+      assert.ok(cardFields.has(label), `${entry.id} ${label}`);
+    }
+    const reviewBoundary = cardFields.get("승인 경계");
+    assert.equal(terminalPunctuationTrimmed(cardFields.get("승인 주체")), boundary.approver, `${entry.id} approval authority`);
+    assert.equal(terminalPunctuationTrimmed(cardFields.get("보류 대상")), boundary.held, `${entry.id} held result`);
     assert.ok(reviewBoundary.includes(boundary.approver), `${entry.id} boundary authority`);
     assert.ok(reviewBoundary.includes(boundary.held), `${entry.id} boundary held result`);
     assert.match(reviewBoundary, /승인 전에는/, `${entry.id} approval gate`);
-    const resume = resultFields.get("재개 조건·요청");
-    assert.ok(resume.startsWith(boundary.condition), `${entry.id} resume condition`);
-    assert.equal(codeValue(resume, `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
-    assert.ok(resultFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
+    assert.ok(cardFields.get("재개 조건").startsWith(boundary.condition), `${entry.id} resume condition`);
+    assert.equal(codeValue(cardFields.get("재개 요청"), `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
+    assert.ok(cardFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
   }
 });
 

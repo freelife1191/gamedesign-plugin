@@ -35,6 +35,14 @@
 
 모든 요청은 renderer와 이미지 provider가 없어도 남는 **최소 결과**부터 확인합니다. 이미지·도식·파생 형식은 **선택 결과**이며, 검토와 형식별 QA를 통과해 전달 또는 공개에 쓸 수 있는 자료는 **확장 결과**입니다. 파일 읽기 순서와 각 경계는 [결과물 카탈로그](output-catalog.md)에 있습니다.
 
+## 사용자 유형·난이도별 요청문
+
+[요청문 템플릿 허브](../prompt-templates/README.md)에서 현재 사용자 유형, 난이도와 목표를 조합해 카드를 고릅니다. 카드에는 복사할 요청문, 실행 흐름, 예상 결과, 사람 검토와 실패·재개 경계가 함께 있습니다.
+
+- 입문: [Studio 비전](../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner), [Career 직무 가설](../prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner)
+- 표준: [Studio 시스템](../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX·접근성](../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard), [Career 역기획](../prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard)
+- 고급·사례: [프로젝트 재개](../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced), [포트폴리오](../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced), [프로젝트 증거와 면접](../prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
+
 ## 공통 FAQ
 
 ### Q01. 어떤 플러그인부터 설치해야 하나요?

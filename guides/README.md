@@ -40,6 +40,16 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 8. [Studio 내보내기](game-design-studio/exports.md) 또는 [Career 내보내기](game-design-career/exports.md)로 필요한 형식만 준비합니다.
 9. [Studio 문제 해결](game-design-studio/troubleshooting.md) 또는 [Career 문제 해결](game-design-career/troubleshooting.md)로 안전하게 재개합니다.
 
+### 사용자 유형·난이도별 요청문
+
+[요청문 템플릿 허브](prompt-templates/README.md)는 입문·표준·고급·사례 카드를 사용자 유형과 목표별로 묶습니다. 각 카드에서 복사할 요청문, 실행 흐름, 예상 결과, 사람 검토와 실패·재개 경계를 함께 확인합니다.
+
+- Studio 입문: [비전 가설](prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner)
+- Studio 표준: [시스템](prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX·접근성](prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard)
+- Studio 고급: [차단된 프로젝트 재개](prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
+- Career 입문·표준·고급: [직무 가설](prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner), [역기획](prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard), [포트폴리오](prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
+- 사례: [프로젝트 증거와 면접](prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
+
 ## 전체 가이드 탐색
 
 각 제품 인덱스는 15개 스킬, 15개 템플릿, 6개 목적별 레시피와 설치·빠른 시작·workflow·품질·이미지·시각화·내보내기·문제 해결을 모두 연결합니다.

@@ -47,6 +47,8 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [스킬 워크벤치](use-cases/skill-workbench.md): 설치된 15개 스킬의 직접 호출 신호와 피할 때를 비교합니다.
 - [Studio FAQ](faq.md): 현재 막힌 질문의 실행 요청과 관련 사례를 찾습니다.
 - [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 Canonical Artifact 읽는 순서를 확인합니다.
+- [요청문 템플릿 허브](../prompt-templates/README.md): 사용자 유형·난이도별 요청과 예상 결과를 비교합니다.
+- 대표 카드: [비전 입문](../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner), [시스템 표준](../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX 표준](../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard), [프로젝트 재개 고급](../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
 
 ## 처음 시작하기
 

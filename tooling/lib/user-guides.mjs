@@ -505,6 +505,39 @@ export function scanVisibleMarkdown(markdown) {
   return lines.map(({ line, text, source, blockText, kind }) => ({ line, text: text.join(""), source, blockText, kind }));
 }
 
+const RESULT_BOUNDARY_LABELS = [
+  ["minimum", /(?:\bminimum\b|최소 결과)/iu],
+  ["optional", /(?:\boptional\b|선택 결과)/iu],
+  ["expanded", /(?:\bexpanded\b|확장 결과)/iu],
+  ["owner", /(?:\bowner\b|승인 주체)/iu],
+  ["hold", /(?:\bhold\b|보류 대상)/iu],
+  ["resume", /(?:\bresume\b|재개 조건(?:·요청)?)/iu],
+  ["safety", /(?:\bsafety\b|안전·증거 경계)/iu],
+];
+
+export function assertReadableResultBoundaries(markdown) {
+  let paragraph = [];
+  const assertParagraph = () => {
+    if (paragraph.length === 0) return;
+    const labels = RESULT_BOUNDARY_LABELS
+      .filter(([, pattern]) => pattern.test(paragraph.join(" ")))
+      .map(([label]) => label);
+    if (labels.length >= 3) {
+      throw new Error(`result-boundary paragraph is too dense: ${labels.join(", ")}`);
+    }
+    paragraph = [];
+  };
+  for (const line of scanVisibleMarkdown(markdown)) {
+    if (line.kind === "plain" && line.text.trim()) {
+      if (/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/u.test(line.source)) assertParagraph();
+      paragraph.push(line.text);
+    } else {
+      assertParagraph();
+    }
+  }
+  assertParagraph();
+}
+
 function unescapeMarkdown(value) {
   let result = "";
   for (let cursor = 0; cursor < value.length; cursor += 1) {
@@ -1083,6 +1116,13 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
         counts.templates += inventories.get(relative[0]).templateIds.length;
       }
       await validateLinks(root, markdownPath, markdown, errors);
+      if (relative.join("/") === "use-cases/audience-paths.md") {
+        try {
+          assertReadableResultBoundaries(markdown);
+        } catch (error) {
+          errors.push(`${markdownPath}: ${error.message}`);
+        }
+      }
       findSecrets(markdown, markdownPath, errors);
     } catch (error) {
       errors.push(`unable to validate guide ${markdownPath}: ${error.message}`);

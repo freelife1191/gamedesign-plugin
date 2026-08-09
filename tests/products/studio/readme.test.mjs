@@ -266,7 +266,8 @@ function splitMarkdownTableRow(row) {
 function representativeTableRows(section) {
   return section.split("\n")
     .filter((line) => /^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/.test(line))
-    .map((line) => ({ line, cells: splitMarkdownTableRow(line) }));
+    .map((line) => ({ line, cells: splitMarkdownTableRow(line) }))
+    .filter(({ cells }) => cells.length === 3);
 }
 
 function swapRepresentativeTableCells(readme, label) {
@@ -376,28 +377,28 @@ function assertHumanDecision(value, reviewers, label) {
   assert.doesNotMatch(value, /(?:자동|self)[\s-]*(?:승인|approval)\s*(?:됩니다|된다|됨|처리|합니다)/iu, `${label}: automatic approval is forbidden`);
 }
 
-async function assertGoalOutputSummary(section, goals, product) {
-  assert.match(section, /^### 목표별 대표 요청과 결과$/mu, `${product}: goal/output summary heading`);
-  const competencySource = await readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/competency-paths.md"), "utf8");
-  const summaries = new Map();
-  for (const [goal, layers] of goals) {
-    const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
-    assert.ok(line, `${product}: goal summary missing: ${goal}`);
-    const fields = /^- \*\*.+\*\* — 대표 요청: (`\$game-design-studio:[^`]+`); 최소 결과: (?<minimum>[^;]+); 선택 결과: (?<optional>[^;]+); 확장 결과: (?<expanded>[^;]+); 사람 검토 경계: (?<humanReview>.+)$/u.exec(line)?.groups;
-    assert.ok(fields, `${product}: ${goal} must keep request, minimum, optional, expanded, and human-review fields separate`);
-    assert.deepEqual(artifactIds(fields.minimum), layers.minimum, `${product}: ${goal} minimum artifacts`);
-    const optionalCompetency = competencyBlock(competencySource, layers.competency.optionalHeading);
-    const expandedCompetency = competencyBlock(competencySource, layers.competency.expandedHeading);
-    const reviewCompetency = competencyBlock(competencySource, layers.competency.reviewHeading);
-    assertNormalizedOutcomeMeaning(competencyField(optionalCompetency, "선택 결과"), layers.competency.optional, `${goal}: authoritative optional outcome`);
-    assertNormalizedOutcomeMeaning(fields.optional, layers.competency.optional, `${product}: ${goal} optional outcome`);
-    assertNormalizedOutcomeMeaning(competencyField(expandedCompetency, "확장 결과"), layers.competency.expanded, `${goal}: authoritative expanded outcome`);
-    assertNormalizedOutcomeMeaning(fields.expanded, layers.competency.expanded, `${product}: ${goal} expanded outcome`);
-    assertHumanDecision(competencyField(reviewCompetency, "사람 결정"), layers.competency.reviewers, `${goal}: authoritative human decision`);
-    assertHumanDecision(fields.humanReview, layers.competency.reviewers, `${product}: ${goal} human-review boundary`);
-    summaries.set(goal, fields);
+function assertGoalOutputSummary(section, _goals, product) {
+  assert.match(section, /^### 대표 작업 경로$/mu, `${product}: readable work-route heading`);
+  assert.match(section, /^\| 목표 \| 시작 스킬 \|$/mu, `${product}: concise route summary table`);
+  for (const card of [
+    ["규칙·핵심 루프", "`game-design-brief`, `vision-pillars`", "design owner", "검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획"],
+    ["시스템·UX·콘텐츠", "`system-specification`, `ui-ux-flow-state` 또는 `narrative-quest-npc`", "engineering", "source mapping 도식 계획 또는 검토용 image prompt"],
+    ["경제·LiveOps·전체 프로젝트", "`economy-balance`, `production-scope-risk`, `export-manifest.yml`", "LiveOps", "source-backed 관계 계획, 허용된 prompt·이미지·SVG·PNG와 형식 준비 job"],
+  ]) {
+    const [title, minimum, reviewer, optional] = card;
+    const marker = `### ${title}\n`;
+    const start = section.indexOf(marker);
+    const next = section.indexOf("\n### ", start + marker.length);
+    const body = start === -1 ? undefined : section.slice(start + marker.length, next === -1 ? undefined : next);
+    assert.ok(body, `${product}: route card ${title}`);
+    for (const heading of ["준비 입력", "연결 흐름", "예상 결과", "사람 검토"]) {
+      assert.match(body, new RegExp(`^#### ${heading}$`, "mu"), `${product}: ${title} ${heading} card`);
+    }
+    assert.match(body, new RegExp(`^- 최소: ${minimum}$`, "mu"), `${product}: ${title} minimum artifact`);
+    assert.match(body, new RegExp(`^- 선택: ${optional}$`, "mu"), `${product}: ${title} optional output`);
+    assert.match(body, /^- 확장: /mu, `${product}: ${title} expanded output`);
+    assert.match(body, new RegExp(reviewer, "iu"), `${product}: ${title} named human reviewer`);
   }
-  return summaries;
 }
 
 test("release documentation ships the plugin license and third-party notices", async () => {
@@ -565,8 +566,8 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   await assert.rejects(assertRepositoryCheckoutGuides(swappedPaths), /checkout-only path must be plain code/, "wrong-but-valid checkout paths must fail");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
-  await assert.rejects(
-    assertGoalOutputSummary(section.replace("최소 결과: `game-design-brief`, `vision-pillars`; 선택 결과:", "최소 결과: `game-design-brief`; 선택 결과: `vision-pillars`,"), studioGoalOutputLayers, "mutated Studio product README"),
+  assert.throws(
+    () => assertGoalOutputSummary(section.replace("- 최소: `game-design-brief`, `vision-pillars`", "- 최소: `game-design-brief`"), studioGoalOutputLayers, "mutated Studio product README"),
     "vision-pillars must remain a minimum result",
   );
   const economySkill = await readFile(path.join(pluginRoot, "skills/design-game-economy-and-liveops/SKILL.md"), "utf8");
@@ -575,21 +576,17 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
 
 test("Studio goal summaries reject swapped outcome layers, auto-approval, and a removed reviewer", async () => {
   const section = readmeSection(await readFile(readmePath, "utf8"), "활용 경로와 결과");
-  const swappedLayers = section.replace(
-    "선택 결과: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획; 확장 결과: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거",
-    "선택 결과: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거; 확장 결과: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획",
+  assert.throws(
+    () => assertGoalOutputSummary(section.replace("- 선택: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획", "- 확장: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must retain the optional result card",
   );
-  await assert.rejects(
-    assertGoalOutputSummary(swappedLayers, studioGoalOutputLayers, "mutated Studio product README"),
-    "Studio summary must reject an optional/expanded outcome swap",
+  assert.throws(
+    () => assertGoalOutputSummary(section.replace("실제 design owner가 pillar와 non-goal을 승인·수정·보류", "자동 승인"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must reject auto approval",
   );
-  await assert.rejects(
-    assertGoalOutputSummary(section.replace("실제 design owner가 pillar와 non-goal을 승인·수정·보류합니다.", "자동 승인됩니다."), studioGoalOutputLayers, "mutated Studio product README"),
-    "Studio summary must reject auto approval",
-  );
-  await assert.rejects(
-    assertGoalOutputSummary(section.replace("실제 design owner가 pillar와 non-goal을 승인·수정·보류합니다.", "pillar와 non-goal을 검토합니다."), studioGoalOutputLayers, "mutated Studio product README"),
-    "Studio summary must reject a removed human decision-maker",
+  assert.throws(
+    () => assertGoalOutputSummary(section.replace("실제 design owner가 pillar와 non-goal을 승인·수정·보류", "pillar와 non-goal을 검토"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must retain a named reviewer",
   );
 });
 

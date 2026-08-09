@@ -245,16 +245,28 @@ async function canonicalRepresentativeRoute(entry, source, routing, skillOutputI
 
 function assertRepresentativeRouteTable(markdown, expected, label) {
   const { headers, rows } = extractMarkdownTable(markdown, "활용 시작점");
-  assert.deepEqual(
-    headers,
-    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · owner · root", "사례 읽는 순서"],
-    `${label}: representative table headers`,
-  );
-  assert.equal(rows.length, expected.length, `${label}: representative case count`);
-  const expectedRows = expected.map((route) => [route.case, route.input, route.skills, route.directRequest, route.results, route.readOrder]);
-  assert.deepEqual(rows, expectedRows, `${label}: representative rows and order`);
-  for (const row of rows) {
-    assert.doesNotMatch(row[4], /(?:^|\/)\.\.(?:\/|$)/u, `${label}: result root cannot escape`);
+  assert.deepEqual(headers, ["대표 사례", "시작점"], `${label}: concise route-table headers`);
+  const expectedRows = [
+    ["`CA-T01` 시스템 기획 입문", "역할·역량 경로 카드"],
+    ["`CA-T04` 경제·밸런스·LiveOps", "역기획·포트폴리오 카드"],
+    ["`CA-T05` UI·UX 기획", "역할·역량 경로 카드"],
+    ["`CA-C05` 관찰 기반 역기획", "역기획·포트폴리오 카드"],
+    ["`CA-C06` 창작 기획 포트폴리오", "역기획·포트폴리오 카드"],
+    ["`CA-C08` 면접·주니어 성장·직무 전환", "면접·성장·전환 카드"],
+  ];
+  assert.deepEqual(rows, expectedRows, `${label}: concise representative route order`);
+  assert.deepEqual(rows.map(([entry]) => entry.match(/CA-[A-Z]\d+/u)?.[0]), expected.map(({ caseId }) => caseId), `${label}: canonical representative case IDs`);
+  for (const [title, minimum, reviewer] of [
+    ["직무 탐색·학습", "game-design-role-map", "멘토"],
+    ["역기획·포트폴리오·면접", "reverse-design-document", "public-rights reviewer"],
+  ]) {
+    const body = new RegExp(`^### ${title}\\n([\\s\\S]*)`, "mu").exec(markdown)?.[1];
+    assert.ok(body, `${label}: readable route card ${title}`);
+    for (const heading of ["준비 입력", "연결 흐름", "예상 결과", "사람 검토"]) {
+      assert.match(body, new RegExp(`^#### ${heading}$`, "mu"), `${label}: ${title} ${heading} card`);
+    }
+    assert.match(body, new RegExp(`^- 최소: .*${minimum}`, "mu"), `${label}: ${title} minimum result`);
+    assert.match(body, new RegExp(reviewer, "iu"), `${label}: ${title} named human reviewer`);
   }
 }
 
@@ -369,22 +381,6 @@ function assertRepresentativeMutationMatrix(markdown, expected, label) {
     }
     const duplicated = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex] = [...mutated[(rowIndex + 1) % mutated.length]]; });
     assert.throws(() => assertRepresentativeRouteTable(duplicated, expected, `${label}: duplicate ${rowIndex}`), `${label}: duplicate ${rowIndex}`);
-    const unknownSkill = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
-      mutated[rowIndex][2] = mutated[rowIndex][2].replace(/\$game-design-career:[a-z0-9-]+/u, "$game-design-career:unknown-career-skill");
-    });
-    assert.throws(() => assertRepresentativeRouteTable(unknownSkill, expected, `${label}: unknown skill ${rowIndex}`), `${label}: unknown skill ${rowIndex}`);
-    const escapedRoot = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
-      mutated[rowIndex][4] = mutated[rowIndex][4].replace("game-design-career/<career-id>/", "../game-design-career/<career-id>/");
-    });
-    assert.throws(() => assertRepresentativeRouteTable(escapedRoot, expected, `${label}: escaped root ${rowIndex}`), `${label}: escaped root ${rowIndex}`);
-    const reorderedSkills = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][2] = mutated[rowIndex][2].split(" → ").reverse().join(" → "); });
-    assert.throws(() => assertRepresentativeRouteTable(reorderedSkills, expected, `${label}: reordered skills ${rowIndex}`), `${label}: reordered skills ${rowIndex}`);
-    const reorderedReadOrder = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][5] = mutated[rowIndex][5].split(" → ").reverse().join(" → "); });
-    assert.throws(() => assertRepresentativeRouteTable(reorderedReadOrder, expected, `${label}: reordered read order ${rowIndex}`), `${label}: reordered read order ${rowIndex}`);
-    if (rows[rowIndex][4].includes("<br>")) {
-      const reorderedResults = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][4] = mutated[rowIndex][4].split("<br>").reverse().join("<br>"); });
-      assert.throws(() => assertRepresentativeRouteTable(reorderedResults, expected, `${label}: reordered results ${rowIndex}`), `${label}: reordered results ${rowIndex}`);
-    }
   }
   const reorderedRows = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated.reverse(); });
   assert.throws(() => assertRepresentativeRouteTable(reorderedRows, expected, `${label}: reordered rows`), `${label}: reordered rows`);
