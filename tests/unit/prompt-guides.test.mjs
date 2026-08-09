@@ -419,8 +419,17 @@ test("buildPromptGuides removes a newly published target when a later promotion 
 
 test("buildPromptGuides does not roll back committed targets when final stage cleanup fails", async (t) => {
   const repoRoot = await temporaryRepo(t);
+  const expectedRepoRoot = await temporaryRepo(t);
   const catalog = { entries: [validSkillEntry()] };
   const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+  const generatedTargets = [
+    "guides/prompt-templates/README.md",
+    "guides/prompt-templates/studio/define-game-vision.md",
+    "products/game-design-studio/plugin/references/prompt-templates.json",
+    "products/game-design-career/plugin/references/prompt-templates.json",
+  ];
+  await buildPromptGuides({ repoRoot: expectedRepoRoot, __testCatalog: catalog });
+  const expectedBytes = await Promise.all(generatedTargets.map((relative) => readFile(path.join(expectedRepoRoot, relative))));
   await writeFile(libraryPath, "old library\n");
 
   await assert.rejects(
@@ -436,12 +445,9 @@ test("buildPromptGuides does not roll back committed targets when final stage cl
     /published but stage cleanup failed/u,
   );
 
-  assert.match(await readFile(libraryPath, "utf8"), /PT-001/u);
-  assert.match(await readFile(path.join(repoRoot, "guides", "prompt-templates", "studio", "define-game-vision.md"), "utf8"), /PT-001/u);
-  const studioProjection = JSON.parse(await readFile(path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json"), "utf8"));
-  const careerProjection = JSON.parse(await readFile(path.join(repoRoot, "products", "game-design-career", "plugin", "references", "prompt-templates.json"), "utf8"));
-  assert.deepEqual(studioProjection.entries.map(({ id }) => id), ["PT-001"]);
-  assert.deepEqual(careerProjection.entries, []);
+  for (const [index, relative] of generatedTargets.entries()) {
+    assert.deepEqual(await readFile(path.join(repoRoot, relative)), expectedBytes[index], relative);
+  }
   const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
   assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
 });
