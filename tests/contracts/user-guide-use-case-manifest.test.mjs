@@ -96,6 +96,14 @@ test("result-boundary readability counts rendered inline labels but excludes hid
     "<https://example.invalid/minimum\\/optional\\/expanded>",
     "<span title=\"quoted > minimum optional expanded\">ok</span>",
   ].join(" ");
+  const validCustomSchemes = "<ftp://example.invalid/minimum/optional/expanded> <custom+v1:minimum/optional/expanded>";
+  const invalidAutolinks = [
+    "<https://example.invalid/minimum optional expanded>",
+    "< https://example.invalid/minimum optional expanded>",
+    "<https://example.invalid/minimum optional expanded >",
+    "<x:minimum optional expanded>",
+    "<abcdefghijklmnopqrstuvwxyzabcdefg:minimum optional expanded>",
+  ].join(" ");
 
   assert.throws(() => assertReadableResultBoundaries(renderedDense), /minimum, optional, expanded/u);
   assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenOnly));
@@ -105,6 +113,8 @@ test("result-boundary readability counts rendered inline labels but excludes hid
   assert.doesNotThrow(() => assertReadableResultBoundaries(multilineHiddenAttribute));
   assert.throws(() => assertReadableResultBoundaries(multilineVisibleChildren), /minimum, optional, expanded/u);
   assert.doesNotThrow(() => assertReadableResultBoundaries(autolinkDestinations));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(validCustomSchemes));
+  assert.throws(() => assertReadableResultBoundaries(invalidAutolinks), /minimum, optional, expanded/u);
 });
 
 async function createCompleteUseCaseFixture(t) {

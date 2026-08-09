@@ -533,7 +533,7 @@ function inlineHtmlEnd(source, start) {
 }
 
 function autolinkDestination(raw) {
-  return /^(?:https?:|mailto:)/iu.test(raw)
+  return /^[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s\u0000-\u001F\u007F<>]+$/u.test(raw)
     || /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/u.test(raw);
 }
 
@@ -559,7 +559,7 @@ function renderedBoundaryText(source) {
     }
     if (source[cursor] === "<") {
       const autolinkEnd = source.indexOf(">", cursor + 1);
-      if (autolinkEnd !== -1 && autolinkDestination(source.slice(cursor + 1, autolinkEnd).trim())) {
+      if (autolinkEnd !== -1 && autolinkDestination(source.slice(cursor + 1, autolinkEnd))) {
         cursor = autolinkEnd + 1;
         continue;
       }
