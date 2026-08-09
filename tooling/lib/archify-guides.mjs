@@ -181,8 +181,8 @@ function receiptValidation(receipt, expectedCommand = undefined) {
     if (receipt.composition?.profile !== "showcase" || receipt.composition?.status !== "pass") throw new Error("Archify validate receipt must use showcase composition");
   } else {
     if (validation.checksPassed !== 9 || validation.checkCount !== 9) throw new Error("Archify deliver receipt must contain exactly 9 artifact checks");
-    if (Object.hasOwn(validation, "compositionProfile") && validation.compositionProfile !== "showcase") throw new Error("Archify deliver receipt must use showcase composition");
-    if (Object.hasOwn(validation, "compositionStatus") && validation.compositionStatus !== "pass") throw new Error("Archify deliver receipt must pass composition");
+    if (validation.compositionProfile !== "showcase") throw new Error("Archify deliver receipt must use showcase composition");
+    if (validation.compositionStatus !== "pass") throw new Error("Archify deliver receipt must pass composition");
   }
 }
 
@@ -352,8 +352,8 @@ function persistedReceipt(receipt, relativeDirectory) {
       errors: validation.errors,
       warnings: validation.warnings,
     },
-    specification: receipt.specification,
-    artifact: receipt.artifact,
+    specification: { sha256: receipt.specification?.sha256, bytes: receipt.specification?.bytes },
+    artifact: { sha256: receipt.artifact?.sha256, bytes: receipt.artifact?.bytes },
   };
   const rejectUnsafe = (value) => {
     if (typeof value === "string" && (path.isAbsolute(value) || value.includes(".archify-guides-") || value.includes("/tmp/"))) throw new Error("Archify persisted receipt contains an unsafe path");
