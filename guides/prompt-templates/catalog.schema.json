@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://game-design-plugin.local/schemas/prompt-template-catalog.json",
+  "title": "Prompt template catalog index and shard entry",
+  "oneOf": [
+    { "$ref": "#/$defs/index" },
+    { "$ref": "#/$defs/entry" }
+  ],
+  "$defs": {
+    "nonemptyString": { "type": "string", "minLength": 1 },
+    "nonemptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/nonemptyString" }
+    },
+    "promptPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["example", "template"],
+      "properties": {
+        "example": { "$ref": "#/$defs/nonemptyString" },
+        "template": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "diagramBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "svg", "png", "alt"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonemptyString" },
+        "svg": { "$ref": "#/$defs/nonemptyString" },
+        "png": { "$ref": "#/$defs/nonemptyString" },
+        "alt": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sources"],
+      "properties": {
+        "version": { "const": 1 },
+        "sources": { "$ref": "#/$defs/nonemptyStringArray" }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "kind", "product", "title", "purpose", "audiences", "intents", "level",
+        "when_to_use", "when_not_to_use", "required_inputs", "optional_inputs", "placeholders",
+        "app_prompt", "cli_prompt", "skill", "skill_chain", "specialist_roles",
+        "intermediate_artifacts", "minimum_outputs", "optional_outputs", "extended_outputs",
+        "expected_file_tree", "read_order", "human_review_boundary", "hold_conditions",
+        "resume_prompt", "safety_boundary", "diagram_binding", "related_use_cases",
+        "related_recipes", "source_references"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonemptyString" },
+        "kind": { "enum": ["skill-template", "use-case", "recipe", "suite-case"] },
+        "product": { "enum": ["studio", "career", "suite"] },
+        "title": { "$ref": "#/$defs/nonemptyString" },
+        "purpose": { "$ref": "#/$defs/nonemptyString" },
+        "audiences": { "$ref": "#/$defs/nonemptyStringArray" },
+        "intents": { "$ref": "#/$defs/nonemptyStringArray" },
+        "level": { "enum": ["beginner", "standard", "advanced"] },
+        "when_to_use": { "$ref": "#/$defs/nonemptyString" },
+        "when_not_to_use": { "$ref": "#/$defs/nonemptyString" },
+        "required_inputs": { "$ref": "#/$defs/nonemptyStringArray" },
+        "optional_inputs": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+        "placeholders": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+        "app_prompt": { "$ref": "#/$defs/promptPair" },
+        "cli_prompt": { "$ref": "#/$defs/promptPair" },
+        "skill": { "$ref": "#/$defs/nonemptyString" },
+        "skill_chain": { "$ref": "#/$defs/nonemptyStringArray" },
+        "specialist_roles": { "$ref": "#/$defs/nonemptyStringArray" },
+        "intermediate_artifacts": { "$ref": "#/$defs/nonemptyStringArray" },
+        "minimum_outputs": { "$ref": "#/$defs/nonemptyStringArray" },
+        "optional_outputs": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+        "extended_outputs": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+        "expected_file_tree": { "$ref": "#/$defs/nonemptyStringArray" },
+        "read_order": { "$ref": "#/$defs/nonemptyStringArray" },
+        "human_review_boundary": { "$ref": "#/$defs/nonemptyString" },
+        "hold_conditions": { "$ref": "#/$defs/nonemptyStringArray" },
+        "resume_prompt": { "$ref": "#/$defs/nonemptyString" },
+        "safety_boundary": { "$ref": "#/$defs/nonemptyString" },
+        "diagram_binding": { "$ref": "#/$defs/diagramBinding" },
+        "related_use_cases": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+        "related_recipes": { "type": "array", "items": { "$ref": "#/$defs/nonemptyString" } },
+        "source_references": { "$ref": "#/$defs/nonemptyStringArray" }
+      }
+    }
+  }
+}
