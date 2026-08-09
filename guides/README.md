@@ -17,6 +17,15 @@
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
 
+## 목표에서 다음 문서까지
+
+| 목표 | 대표 문서 | 예상 결과 | 다음 상세 문서 |
+| --- | --- | --- | --- |
+| 작은 규칙·루프·시스템·UX를 학습 | [Studio 활용 사례 인덱스](game-design-studio/use-cases/README.md) | 작게 검토할 가정, 규칙 또는 UX 초안 | [Studio 스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) · [Studio FAQ](game-design-studio/faq.md) |
+| 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
+| 직무 탐색·역기획·포트폴리오·면접 준비 | [Career 활용 사례 인덱스](game-design-career/use-cases/README.md) | 근거·개인 기여·다음 증거 작업 | [Career 스킬 워크벤치](game-design-career/use-cases/skill-workbench.md) · [Career FAQ](game-design-career/faq.md) |
+| 현재 상황과 결과 경계를 먼저 확인 | [사용자 경로](use-cases/audience-paths.md) | 권장 시작점, 최소 결과와 사람 검토 경계 | [공통 활용 허브](use-cases/README.md) · [결과물 카탈로그](use-cases/output-catalog.md) |
+
 ## 처음 시작하기
 
 Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.

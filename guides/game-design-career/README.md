@@ -13,10 +13,21 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 | 역할 맥락을 고르는 사용자 | 대상 사례 | [대상 사례](use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생) |
 | 입력과 결과가 확정된 사용자 | 직접 스킬 작업대 | [직접 스킬 작업대](use-cases/skill-workbench.md#역할근거-lane) |
 
+### 목표별 결과와 다음 문서
+
+| 목표 | 예상 결과 | 상세 문서 |
+| --- | --- | --- |
+| 직무 탐색 | 목표 역할, 현재 근거와 역량 gap | [역량 사례](use-cases/competency-paths.md) |
+| 역기획 | 공개 관찰과 추론을 분리한 분석 근거 | [대상 사례](use-cases/concept-scenarios.md) |
+| 포트폴리오 | 개인 기여·권리 경계가 남은 evidence 프로젝트 | [직접 스킬 작업대](use-cases/skill-workbench.md) |
+| 면접 | 근거 연결 질문·답변과 다음 proof task | [Career FAQ](faq.md) |
+| 성장 | 학습 로드맵과 재검토할 증거 작업 | [공통 결과물 카탈로그](../use-cases/output-catalog.md) |
+
 ## 상세 참조
 
 | 문서 | 용도 |
 | --- | --- |
+| [Career 활용 사례 인덱스](use-cases/README.md) | 직무·대상·직접 스킬 중 현재 목표의 출발점을 고름 |
 | [Career FAQ](faq.md) | 요청문·읽는 순서·재개 경로 |
 | [공통 결과물 카탈로그](../use-cases/output-catalog.md) | 원본·선택 자산·파생 형식과 사람 검토 |
 

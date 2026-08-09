@@ -27,6 +27,31 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 
 공통 원리를 익히려면 역량 사례, 장르·목표 제약을 비교하려면 콘셉트 사례, 입력과 결과가 분명하면 직접 스킬을 선택합니다. 아래 대표 링크는 사례 전체 본문을 복제하지 않고 다음 학습 지점만 가리킵니다.
 
+### 목표별 바로 시작
+
+- **학습:** [사용자 경로](guides/use-cases/audience-paths.md)에서 현재 단계와 작은 첫 과제를 고릅니다.
+- **규칙·루프·시스템·UX:** [Studio 활용 사례 인덱스](guides/game-design-studio/use-cases/README.md)에서 역량·콘셉트·직접 스킬 중 하나를 선택합니다.
+- **전체 GDD:** [새 게임 GDD 레시피](guides/game-design-studio/recipes/new-game-gdd.md)로 범위와 검토 게이트를 정합니다.
+- **역기획:** [관찰 기반 역기획 레시피](guides/game-design-career/recipes/reverse-design.md)에서 공개 가능한 관찰과 추론을 분리합니다.
+- **포트폴리오·면접:** [Career 활용 사례 인덱스](guides/game-design-career/use-cases/README.md)에서 근거·개인 기여·다음 증거 작업을 고릅니다.
+- **현업 검토:** [제작 검토·내보내기 레시피](guides/game-design-studio/recipes/production-review-export.md)로 검토와 사람 결정을 남깁니다.
+
+### 작업 규모별 사용 예시
+
+| 작업 규모 | 준비 입력 | 권장 시작 | 핵심 결과 |
+| --- | --- | --- | --- |
+| 10분 실습 | 관찰 장면 하나와 모르는 점 | 사용자 경로의 작은 학습 과제 | 사실·가정·질문이 분리된 짧은 브리프 |
+| 단일 과제 | 규칙, 상태, UX 또는 역할 문제 하나 | 제품 사례 또는 스킬 워크벤치 | 검토할 가정·표·다음 질문이 있는 작업 초안 |
+| 포트폴리오 프로젝트 | 공개 가능한 evidence, 개인 기여와 권리 경계 | Career 사례와 결과물 카탈로그 | 별도 Career Artifact의 문제·판단·검증 근거 |
+| 전체 프로젝트 | 비전, 범위, 제약, 검토자와 미해결 결정 | 제품 오케스트레이터와 전체 GDD 경로 | Canonical Artifact, 검토 게이트와 재개 조건 |
+
+### 요청하면 얻는 결과
+
+- **최소 결과:** renderer나 이미지 provider가 없어도 남는 `content.md`, 근거와 미해결 결정입니다.
+- **선택 결과:** 필요한 경우에만 추가하는 이미지·도식·파생 형식 준비 자료입니다.
+- **확장 결과:** 형식별 QA를 거쳐 전달 또는 공개에 검토할 수 있는 결과입니다.
+- **사람 검토:** 범위, 사실, 권리, 공개와 승인은 자동으로 결정되지 않으며 이름 있는 사람이 검토합니다.
+
 | 탐색 방식 | 기획 학생 중심 Studio 사례 | Career 사례 |
 | --- | --- | --- |
 | 규칙·루프·시스템 | [ST-C02 행동·핵심 루프·의미 있는 선택](guides/game-design-studio/use-cases/competency-paths.md#st-c02-행동핵심-루프의미-있는-선택) · [ST-C03 규칙·상태·예외·데이터](guides/game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | [CA-T01 시스템 기획 입문 학생](guides/game-design-career/use-cases/concept-scenarios.md#ca-t01-시스템-기획-입문-학생) |
@@ -198,6 +223,8 @@ MD는 renderer capability와 무관하게 항상 사용할 수 있으며, `pendi
 
 | 가이드 | Studio | Career |
 | --- | --- | --- |
+| 사용자 경로·결과 경계 | [사용자 경로](guides/use-cases/audience-paths.md) · [결과물 카탈로그](guides/use-cases/output-catalog.md) | [사용자 경로](guides/use-cases/audience-paths.md) · [결과물 카탈로그](guides/use-cases/output-catalog.md) |
+| 사례 선택·직접 실행 | [역량](guides/game-design-studio/use-cases/competency-paths.md) · [콘셉트](guides/game-design-studio/use-cases/concept-scenarios.md) · [스킬 워크벤치](guides/game-design-studio/use-cases/skill-workbench.md) · [FAQ](guides/game-design-studio/faq.md) | [역량](guides/game-design-career/use-cases/competency-paths.md) · [대상](guides/game-design-career/use-cases/concept-scenarios.md) · [스킬 워크벤치](guides/game-design-career/use-cases/skill-workbench.md) · [FAQ](guides/game-design-career/faq.md) |
 | 설치·새 채팅/세션 | [설치](guides/game-design-studio/installation.md) | [설치](guides/game-design-career/installation.md) |
 | 첫 Artifact | [5분 빠른 시작](guides/game-design-studio/quick-start.md) | [5분 빠른 시작](guides/game-design-career/quick-start.md) |
 | 작업 순서·재개 | [전체 워크플로](guides/game-design-studio/workflow.md) | [전체 워크플로](guides/game-design-career/workflow.md) |

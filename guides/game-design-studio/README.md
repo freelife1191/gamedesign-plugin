@@ -2,6 +2,16 @@
 
 Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존하는 Canonical Artifact(기준 작업 폴더)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
+## 작업 규모와 결과
+
+| 목표 규모 | 권장 시작 | 예상 결과 | 다음 문서 |
+| --- | --- | --- | --- |
+| 작은 실습 | [Studio 활용 사례 인덱스](use-cases/README.md) | 10분 안에 설명할 player promise, loop 또는 rule 가정 | [역량 사례](use-cases/competency-paths.md) |
+| 단일 명세 | [스킬 워크벤치](use-cases/skill-workbench.md) | 상태·예외·UX·콘텐츠 중 하나의 검토 가능한 작업 초안 | [Studio FAQ](faq.md) |
+| 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 gate와 재개 조건이 있는 Studio Artifact | [결과물 카탈로그](../use-cases/output-catalog.md) |
+
+작은 실습과 단일 명세도 `content.md`와 근거를 남기며, 전체 프로젝트는 이를 대체하지 않고 범위와 사람 결정을 추가합니다. 최소·선택·확장 결과와 Studio → Career handoff는 [결과물 카탈로그](../use-cases/output-catalog.md)에서 확인합니다.
+
 ## 활용 사례와 진입점
 
 ### 대상 사용자

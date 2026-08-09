@@ -253,6 +253,15 @@ async function assertRootUseCaseNavigation(markdown, manifest) {
   for (const request of ["입문 요청문", "응용 요청문", "포트폴리오 요청문", "전체 프로젝트 요청문"]) {
     assert.ok(exploration.includes(request), `root request example: ${request}`);
   }
+  for (const heading of ["목표별 바로 시작", "작업 규모별 사용 예시", "요청하면 얻는 결과"]) {
+    assert.ok(markdown.includes(`### ${heading}`), `root navigation subsection: ${heading}`);
+  }
+  for (const phrase of ["10분 실습", "단일 과제", "포트폴리오 프로젝트", "전체 프로젝트"]) {
+    assert.ok(markdown.includes(phrase), `root work scale: ${phrase}`);
+  }
+  for (const phrase of ["최소 결과", "선택 결과", "확장 결과", "사람 검토"]) {
+    assert.ok(markdown.includes(phrase), `root output layer: ${phrase}`);
+  }
   for (const phrase of ["규칙", "루프", "시스템", "UX", "역기획", "면접", "전체 프로젝트"]) {
     assert.ok(markdown.includes(phrase), `root learner balance: ${phrase}`);
   }
@@ -535,11 +544,22 @@ test("guide indexes give beginners the same complete reading path", async () => 
   const global = await readFile(path.join(guideRoot, "README.md"), "utf8");
   const globalStart = section(global, "처음 시작하기");
   const readingTable = section(global, "초보자 읽기 경로");
+  for (const target of [
+    "use-cases/README.md",
+    "use-cases/output-catalog.md",
+    "game-design-studio/use-cases/skill-workbench.md",
+    "game-design-studio/faq.md",
+    "game-design-career/use-cases/skill-workbench.md",
+    "game-design-career/faq.md",
+  ]) assert.ok(global.includes(`](${target})`), `global route: ${target}`);
   assert.match(readingTable, /처음 시작하기/);
   assert.doesNotMatch(readingTable, /빠른 시작 → 전체 워크플로/);
   for (const product of products) {
     const local = await readFile(path.join(guideRoot, product, "README.md"), "utf8");
     const productStart = section(local, "처음 시작하기");
+    for (const target of ["use-cases/README.md", "../use-cases/output-catalog.md", "use-cases/skill-workbench.md", "faq.md"]) {
+      assert.ok(local.includes(`](${target})`), `${product} route: ${target}`);
+    }
     for (const [label, markdown] of [["global", globalStart], [product, productStart]]) {
       let previous = -1;
       for (const target of [...expectedLinks.slice(0, 4), label === "global" ? "README.md#목적별-레시피" : "#목적별-레시피", ...expectedLinks.slice(4)]) {
