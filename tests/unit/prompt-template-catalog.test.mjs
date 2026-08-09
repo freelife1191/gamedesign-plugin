@@ -185,6 +185,39 @@ test("Studio foundation catalog has the exact IDs, levels, and Studio namespaces
   }
 });
 
+test("Studio foundation catalog placeholders exactly match both reusable prompt templates", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-foundations.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+  const tokens = (prompt) => [...prompt.matchAll(/\[([^\]]+)\]/gu)].map(([, token]) => `[${token}]`).sort();
+
+  for (const entry of entries) {
+    const templateTokens = [...new Set([
+      ...tokens(entry.app_prompt.template),
+      ...tokens(entry.cli_prompt.template),
+    ])].sort();
+    assert.deepEqual(entry.placeholders.slice().sort(), templateTokens, entry.id);
+  }
+});
+
+test("Studio foundation catalog reads canonical Artifact files before optional decisions", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-foundations.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+
+  for (const entry of entries) {
+    const base = entry.expected_file_tree[0].replace(/\/content\.md$/u, "");
+    assert.deepEqual(entry.read_order.slice(0, 3), [
+      `${base}/content.md`,
+      `${base}/evidence.yml`,
+      `${base}/export-manifest.yml`,
+    ], entry.id);
+    if (entry.read_order.includes(`${base}/decisions/README.md`)) {
+      assert.equal(entry.read_order.at(-1), `${base}/decisions/README.md`, entry.id);
+    }
+  }
+});
+
 test("loader rejects duplicate IDs and symlink shards", async (t) => {
   const duplicate = validEntry(1);
   const duplicateRoot = await fixtureRoot(t, { entries: [duplicate, { ...duplicate }] });

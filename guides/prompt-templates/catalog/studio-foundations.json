@@ -12,7 +12,7 @@
     "when_not_to_use": "본문·이미지·도식을 만들거나 여러 도메인의 실행 순서를 결정할 때는 사용하지 않는다.",
     "required_inputs": ["문서 goal", "audience", "artifact type", "requested format", "template ID", "artifact ID"],
     "optional_inputs": ["platform 가정", "기존 checklist"],
-    "placeholders": ["[문서 목적]", "[대상 독자]", "[형식]"],
+    "placeholders": ["[artifact ID]", "[template ID]", "[문서 목적]", "[대상 독자]", "[형식]"],
     "app_prompt": {
       "example": "@Game Design Studio 협동 섬 복구 게임의 신규 플레이어용 기획 브리프에 맞는 목적, 대상, Markdown 형식을 정리하고 적용할 품질 profile과 빠진 입력을 골라 줘. 모르는 정보는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [문서 목적]의 [대상 독자]용 [형식] Artifact에 맞는 품질 profile과 누락 입력을 선택해 줘. 모르는 정보는 미정으로 남겨 줘."
@@ -69,7 +69,7 @@
     "optional_outputs": ["neutral preset", "profile 차이 설명"],
     "extended_outputs": ["section/table/diagram/image checklist", "routing handoff record"],
     "expected_file_tree": ["game-design/studio-foundations/profile-standard/content.md", "game-design/studio-foundations/profile-standard/evidence.yml", "game-design/studio-foundations/profile-standard/decisions/README.md", "game-design/studio-foundations/profile-standard/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/profile-standard/content.md", "game-design/studio-foundations/profile-standard/evidence.yml", "game-design/studio-foundations/profile-standard/decisions/README.md", "game-design/studio-foundations/profile-standard/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/profile-standard/content.md", "game-design/studio-foundations/profile-standard/evidence.yml", "game-design/studio-foundations/profile-standard/export-manifest.yml", "game-design/studio-foundations/profile-standard/decisions/README.md"],
     "human_review_boundary": "document-quality-editor가 additive source의 호환성을 확인하고 system owner가 선택된 route의 설계 범위를 결정한다.",
     "hold_conditions": ["overlay가 primary profile과 호환되지 않음", "요청된 preset이 설치되지 않음"],
     "resume_prompt": "profile-standard의 기존 manifest와 digest-bound selection record를 보존하고 확인된 live-service overlay만 다시 합성해 재개해.",
@@ -109,7 +109,7 @@
     "optional_outputs": ["profile conflict matrix", "owner별 검토 질문"],
     "extended_outputs": ["승인 가능한 routing record", "document state transition 근거"],
     "expected_file_tree": ["game-design/studio-foundations/profile-advanced/content.md", "game-design/studio-foundations/profile-advanced/evidence.yml", "game-design/studio-foundations/profile-advanced/decisions/README.md", "game-design/studio-foundations/profile-advanced/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/profile-advanced/content.md", "game-design/studio-foundations/profile-advanced/evidence.yml", "game-design/studio-foundations/profile-advanced/decisions/README.md", "game-design/studio-foundations/profile-advanced/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/profile-advanced/content.md", "game-design/studio-foundations/profile-advanced/evidence.yml", "game-design/studio-foundations/profile-advanced/export-manifest.yml", "game-design/studio-foundations/profile-advanced/decisions/README.md"],
     "human_review_boundary": "named decision owner가 fallback과 document-approved 전이를 승인·수정·보류하며 자동화된 state receipt는 승인 receipt가 아니다.",
     "hold_conditions": ["named decision owner가 없음", "fallback이 설치된 profile과 호환되지 않음", "승인 receipt가 없음"],
     "resume_prompt": "profile-advanced의 immutable state receipt와 blocked requirement를 그대로 두고 사람 결정으로 해소된 충돌 하나만 반영해 재개해.",
@@ -132,7 +132,7 @@
     "when_not_to_use": "실행 규칙·상태 전이나 퀘스트 단위의 상세 설계가 이미 목표일 때는 사용하지 않는다.",
     "required_inputs": ["게임 아이디어", "target player 근거", "desired emotion", "제약", "decision owner"],
     "optional_inputs": ["player research", "platform 제약", "기존 vision 문서"],
-    "placeholders": ["[게임 아이디어]", "[검토자 역할]", "[대상 플레이어 근거]"],
+    "placeholders": ["[게임 아이디어]", "[검토자 역할]"],
     "app_prompt": {
       "example": "@Game Design Studio 낯선 섬 협동 복구 게임의 대상 플레이어, player promise, pillar 하나와 검증 질문을 짧은 기획 브리프로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [게임 아이디어]의 대상 플레이어, player promise, pillar 하나와 검증 질문을 짧은 기획 브리프로 만들어 줘. 모르는 정보는 미정으로 남겨 줘."
@@ -189,7 +189,7 @@
     "optional_outputs": ["player verb", "success signal"],
     "extended_outputs": ["core loop 가설", "system handoff criteria"],
     "expected_file_tree": ["game-design/studio-foundations/vision-standard/content.md", "game-design/studio-foundations/vision-standard/evidence.yml", "game-design/studio-foundations/vision-standard/decisions/README.md", "game-design/studio-foundations/vision-standard/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/vision-standard/content.md", "game-design/studio-foundations/vision-standard/evidence.yml", "game-design/studio-foundations/vision-standard/decisions/README.md", "game-design/studio-foundations/vision-standard/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/vision-standard/content.md", "game-design/studio-foundations/vision-standard/evidence.yml", "game-design/studio-foundations/vision-standard/export-manifest.yml", "game-design/studio-foundations/vision-standard/decisions/README.md"],
     "human_review_boundary": "lead-game-designer가 non-goal과 prototype 기준을 결정하고 content-narrative-designer는 표현의 일관성을 검토한다.",
     "hold_conditions": ["pillar와 anti-pillar가 구분되지 않음", "prototype 관찰 방법이 없음"],
     "resume_prompt": "vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 결과만 evidence.yml에 붙여 검증 질문부터 재개해.",
@@ -212,7 +212,7 @@
     "when_not_to_use": "근거가 없는 수치로 feature를 우선순위화하거나 owner 없이 비전 결정을 확정할 때는 사용하지 않는다.",
     "required_inputs": ["vision-pillars", "feature 후보", "evidence", "decision owner", "제약"],
     "optional_inputs": ["playtest result", "production risk", "기존 decision log"],
-    "placeholders": ["[feature 후보 A]", "[feature 후보 B]", "[decision owner]"],
+    "placeholders": ["[feature 후보 A]", "[feature 후보 B]", "[decision owner]", "[vision ID]"],
     "app_prompt": {
       "example": "@Game Design Studio 협동 복구 게임의 경쟁 PvP 기능과 비동기 도움 기능을 pillar·non-goal·플레이테스트 근거로 비교하고, 결정 owner가 승인할 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [feature 후보 A]와 [feature 후보 B]를 pillar·non-goal·근거 상태로 비교하고 [decision owner]의 결정 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘."
@@ -229,7 +229,7 @@
     "optional_outputs": ["scope risk", "prototype follow-up"],
     "extended_outputs": ["승인 receipt 대기 record", "system handoff 조건"],
     "expected_file_tree": ["game-design/studio-foundations/vision-advanced/content.md", "game-design/studio-foundations/vision-advanced/evidence.yml", "game-design/studio-foundations/vision-advanced/decisions/README.md", "game-design/studio-foundations/vision-advanced/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/vision-advanced/content.md", "game-design/studio-foundations/vision-advanced/evidence.yml", "game-design/studio-foundations/vision-advanced/decisions/README.md", "game-design/studio-foundations/vision-advanced/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/vision-advanced/content.md", "game-design/studio-foundations/vision-advanced/evidence.yml", "game-design/studio-foundations/vision-advanced/export-manifest.yml", "game-design/studio-foundations/vision-advanced/decisions/README.md"],
     "human_review_boundary": "design owner가 상충 기능의 채택·수정·보류를 결정하며 evidence가 provisional인 항목은 자동 승인하지 않는다.",
     "hold_conditions": ["feature 후보의 근거가 분리되지 않음", "decision owner의 receipt가 없음"],
     "resume_prompt": "vision-advanced의 비교표와 owner 질문을 보존하고 새로 확인된 플레이테스트 evidence만 연결해 provisional 선택지부터 재개해.",
@@ -252,7 +252,7 @@
     "when_not_to_use": "authoritative rule이 비어 있거나 경제 수치와 확률을 결정해야 할 때는 사용하지 않는다.",
     "required_inputs": ["target experience", "critical action", "players", "platform", "input", "UI surface", "owner"],
     "optional_inputs": ["기존 flow", "performance observation", "review question"],
-    "placeholders": ["[critical action]", "[플랫폼]", "[오류 상황]"],
+    "placeholders": ["[UX Artifact]", "[critical action]", "[플랫폼]", "[오류 상황]"],
     "app_prompt": {
       "example": "@Game Design Studio 협동 섬 복구 게임 첫 세션의 다리 수리 행동을 UI state, feedback, 오류 메시지와 recovery까지 정리해 줘. 검증되지 않은 정보는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [critical action]의 [플랫폼] UI state, feedback, [오류 상황]과 recovery를 정리해 줘. 검증되지 않은 정보는 미정으로 남겨 줘."
@@ -292,7 +292,7 @@
     "when_not_to_use": "새 gameplay rule을 UI가 만들어 내거나 접근성 근거 없이 release를 승인하려 할 때는 사용하지 않는다.",
     "required_inputs": ["onboarding goal", "critical actions", "platforms", "devices", "input alternatives", "owner"],
     "optional_inputs": ["accessibility evidence", "controller test", "test participant"],
-    "placeholders": ["[onboarding goal]", "[input alternative]", "[sensory cue]"],
+    "placeholders": ["[UX Artifact]", "[onboarding goal]", "[input alternative]", "[sensory cue]"],
     "app_prompt": {
       "example": "@Game Design Studio 모바일 협동 복구 게임의 onboarding에 tutorial skip/revisit, 터치·controller 대안, sensory cue, 오류 복구와 접근성 검토 질문을 연결해 줘. 최신 근거가 없으면 미정으로 남겨 줘.",
       "template": "@Game Design Studio [onboarding goal]에 [input alternative], [sensory cue], tutorial skip/revisit와 오류 복구를 연결해 줘. 최신 근거가 없으면 미정으로 남겨 줘."
@@ -309,7 +309,7 @@
     "optional_outputs": ["performance observation", "controller test result"],
     "extended_outputs": ["inaccessible-critical-action finding", "review handoff"],
     "expected_file_tree": ["game-design/studio-foundations/ux-standard/content.md", "game-design/studio-foundations/ux-standard/evidence.yml", "game-design/studio-foundations/ux-standard/decisions/README.md", "game-design/studio-foundations/ux-standard/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/ux-standard/content.md", "game-design/studio-foundations/ux-standard/evidence.yml", "game-design/studio-foundations/ux-standard/decisions/README.md", "game-design/studio-foundations/ux-standard/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/ux-standard/content.md", "game-design/studio-foundations/ux-standard/evidence.yml", "game-design/studio-foundations/ux-standard/export-manifest.yml", "game-design/studio-foundations/ux-standard/decisions/README.md"],
     "human_review_boundary": "ux-accessibility-reviewer가 accessible alternative와 test gap을 판정하고 lead-game-designer가 experience 범위를 결정한다.",
     "hold_conditions": ["입력 대안이 critical action을 완료하지 못함", "최신 accessibility evidence가 없음"],
     "resume_prompt": "ux-standard의 onboarding state를 유지하고 새 controller test 결과와 접근성 근거만 연결해 inaccessible-critical-action부터 재개해.",
@@ -332,7 +332,7 @@
     "when_not_to_use": "UI feedback만으로 authoritative state를 확정하거나 근거 없는 threshold로 접근성 승인을 할 때는 사용하지 않는다.",
     "required_inputs": ["authoritative rule reference", "multimodal cue", "critical action", "accessibility evidence", "responsible owner"],
     "optional_inputs": ["offline scenario", "performance measurement", "review finding"],
-    "placeholders": ["[authoritative rule]", "[멀티모달 cue]", "[responsible owner]"],
+    "placeholders": ["[UX Artifact]", "[authoritative rule]", "[멀티모달 cue]", "[responsible owner]"],
     "app_prompt": {
       "example": "@Game Design Studio 협동 보스 전투의 화면·진동·사운드 cue가 authoritative state를 발명하지 않는지 검토하고, critical action 접근성 gate와 책임 owner의 승인 대기를 정리해 줘. 증거가 없으면 미정으로 남겨 줘.",
       "template": "@Game Design Studio [authoritative rule]의 [멀티모달 cue]를 검토하고 critical action 접근성 gate와 [responsible owner] 승인 대기를 정리해 줘. 증거가 없으면 미정으로 남겨 줘."
@@ -349,7 +349,7 @@
     "optional_outputs": ["offline recovery scenario", "performance risk"],
     "extended_outputs": ["owner approval receipt 대기", "release blocker"],
     "expected_file_tree": ["game-design/studio-foundations/ux-advanced/content.md", "game-design/studio-foundations/ux-advanced/evidence.yml", "game-design/studio-foundations/ux-advanced/decisions/README.md", "game-design/studio-foundations/ux-advanced/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/ux-advanced/content.md", "game-design/studio-foundations/ux-advanced/evidence.yml", "game-design/studio-foundations/ux-advanced/decisions/README.md", "game-design/studio-foundations/ux-advanced/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/ux-advanced/content.md", "game-design/studio-foundations/ux-advanced/evidence.yml", "game-design/studio-foundations/ux-advanced/export-manifest.yml", "game-design/studio-foundations/ux-advanced/decisions/README.md"],
     "human_review_boundary": "responsible UX·system owner가 authority finding과 release gate를 승인·수정·보류하며 자동 UX 검토는 release 승인으로 전환되지 않는다.",
     "hold_conditions": ["cue의 source state가 불명확함", "책임 owner가 없음", "접근성 blocker가 해소되지 않음"],
     "resume_prompt": "ux-advanced의 authority finding과 멀티모달 mapping을 보존하고 owner가 확인한 source state만 반영해 blocked critical action부터 재개해.",
@@ -372,7 +372,7 @@
     "when_not_to_use": "player promise가 아직 모호하거나 전체 콘텐츠 제작 범위를 정해야 할 때는 사용하지 않는다.",
     "required_inputs": ["목적", "actor", "input", "constraints", "current rules", "authoritative data", "owner"],
     "optional_inputs": ["UI surface", "기존 spec", "failure expectation"],
-    "placeholders": ["[mechanic]", "[actor]", "[failure case]"],
+    "placeholders": ["[system Artifact]", "[mechanic]", "[actor]", "[failure case]"],
     "app_prompt": {
       "example": "@Game Design Studio 협동 섬 복구 게임의 나무 수집 규칙을 actor, input, state transition, output, 실패와 recovery로 명세해 줘. 승인 근거가 없는 수치는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [mechanic]의 [actor] 규칙을 input, state transition, output, [failure case]와 recovery로 명세해 줘. 승인 근거가 없는 수치는 미정으로 남겨 줘."
@@ -412,7 +412,7 @@
     "when_not_to_use": "balance 근거 없는 확률을 확정하거나 cross-system economy를 단일 mechanic처럼 다룰 때는 사용하지 않는다.",
     "required_inputs": ["rule set", "state model", "concurrency case", "authoritative data", "owner"],
     "optional_inputs": ["network model", "UI feedback", "balance evidence"],
-    "placeholders": ["[rule set]", "[concurrency case]", "[data ID]"],
+    "placeholders": ["[system Artifact]", "[rule set]", "[concurrency case]", "[data ID]"],
     "app_prompt": {
       "example": "@Game Design Studio 두 플레이어가 같은 수리 재료를 동시에 쓰는 상황의 rule precedence, authoritative state, exception, recovery와 test case를 데이터 ID에 연결해 줘. 검증되지 않은 값은 미정으로 남겨 줘.",
       "template": "@Game Design Studio [rule set]의 [concurrency case]를 rule precedence, authoritative state, exception, recovery와 [data ID]에 연결해 줘. 검증되지 않은 값은 미정으로 남겨 줘."
@@ -429,7 +429,7 @@
     "optional_outputs": ["UI feedback mapping", "network assumption"],
     "extended_outputs": ["PK/FK contract", "review question"],
     "expected_file_tree": ["game-design/studio-foundations/systems-standard/content.md", "game-design/studio-foundations/systems-standard/evidence.yml", "game-design/studio-foundations/systems-standard/decisions/README.md", "game-design/studio-foundations/systems-standard/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/systems-standard/content.md", "game-design/studio-foundations/systems-standard/evidence.yml", "game-design/studio-foundations/systems-standard/decisions/README.md", "game-design/studio-foundations/systems-standard/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/systems-standard/content.md", "game-design/studio-foundations/systems-standard/evidence.yml", "game-design/studio-foundations/systems-standard/export-manifest.yml", "game-design/studio-foundations/systems-standard/decisions/README.md"],
     "human_review_boundary": "system owner가 exception precedence와 authoritative data를 승인·수정·보류하고 UX reviewer는 feedback 영향을 검토한다.",
     "hold_conditions": ["precedence가 결정되지 않음", "authoritative state와 UI state가 다름"],
     "resume_prompt": "systems-standard의 exception matrix를 보존하고 새로 확인된 concurrency evidence만 연결해 미해결 precedence부터 재개해.",
@@ -452,7 +452,7 @@
     "when_not_to_use": "unknown schema를 완성된 runtime mapping으로 선언하거나 engineering 구현 승인을 자동으로 내릴 때는 사용하지 않는다.",
     "required_inputs": ["interacting systems", "counterexample", "authoritative data", "runtime constraint", "engineering owner"],
     "optional_inputs": ["abuse case", "existing schema", "review finding"],
-    "placeholders": ["[system A]", "[system B]", "[engineering owner]"],
+    "placeholders": ["[system Artifact]", "[system A]", "[system B]", "[engineering owner]"],
     "app_prompt": {
       "example": "@Game Design Studio 공동 창고와 제작 대기열이 동시에 재료를 소비하는 반례를 분석해 rule·state·exception·data mapping과 engineering 검토 질문으로 정리해 줘. unknown schema는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [system A]와 [system B]의 반례를 rule·state·exception·data mapping과 [engineering owner] 검토 질문으로 정리해 줘. unknown schema는 미정으로 남겨 줘."
@@ -469,7 +469,7 @@
     "optional_outputs": ["abuse case", "runtime constraint"],
     "extended_outputs": ["implementation handoff boundary", "review blocker"],
     "expected_file_tree": ["game-design/studio-foundations/systems-advanced/content.md", "game-design/studio-foundations/systems-advanced/evidence.yml", "game-design/studio-foundations/systems-advanced/decisions/README.md", "game-design/studio-foundations/systems-advanced/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/systems-advanced/content.md", "game-design/studio-foundations/systems-advanced/evidence.yml", "game-design/studio-foundations/systems-advanced/decisions/README.md", "game-design/studio-foundations/systems-advanced/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/systems-advanced/content.md", "game-design/studio-foundations/systems-advanced/evidence.yml", "game-design/studio-foundations/systems-advanced/export-manifest.yml", "game-design/studio-foundations/systems-advanced/decisions/README.md"],
     "human_review_boundary": "engineering owner가 runtime feasibility와 implementation을 결정하며 시스템 카탈로그 항목은 engineering 승인이나 schema 생성 권한을 갖지 않는다.",
     "hold_conditions": ["counterexample의 authority가 없음", "unknown schema가 구현 계약으로 오인됨", "engineering owner가 없음"],
     "resume_prompt": "systems-advanced의 counterexample과 provisional schema를 보존하고 engineering owner가 확인한 runtime mapping만 추가해 handoff 질문부터 재개해.",
@@ -492,7 +492,7 @@
     "when_not_to_use": "전체 비전 또는 아직 확정되지 않은 rule authority를 대신 결정할 때는 사용하지 않는다.",
     "required_inputs": ["content purpose", "target player state", "supporting system ID", "player choice", "reward", "owner"],
     "optional_inputs": ["기존 narrative", "accessibility need", "review question"],
-    "placeholders": ["[퀘스트 또는 NPC]", "[system ID]", "[reward]"],
+    "placeholders": ["[content Artifact]", "[퀘스트 또는 NPC]", "[system ID]", "[reward]"],
     "app_prompt": {
       "example": "@Game Design Studio 폭풍 전 등대를 복구하는 퀘스트와 안내 NPC 하나를 목적, player choice, 상태 변화, 결과, 보상과 실패 복구로 정리하고 system ID에 연결해 줘. 모르는 제작 정보는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [퀘스트 또는 NPC]를 목적, player choice, 상태 변화, 결과, [reward]와 실패 복구로 정리하고 [system ID]에 연결해 줘. 모르는 제작 정보는 미정으로 남겨 줘."
@@ -532,7 +532,7 @@
     "when_not_to_use": "규칙 authority가 없는 행동·보상을 invent하거나 production capacity를 근거 없이 확정할 때는 사용하지 않는다.",
     "required_inputs": ["content graph goal", "character or encounter", "supporting system/data ID", "reward", "production evidence", "owner"],
     "optional_inputs": ["counterplay", "monster telegraph", "accessibility need"],
-    "placeholders": ["[content graph goal]", "[encounter]", "[production evidence]"],
+    "placeholders": ["[content Artifact]", "[content graph goal]", "[encounter]", "[production evidence]"],
     "app_prompt": {
       "example": "@Game Design Studio 협동 섬 복구의 세 퀘스트와 보스 encounter를 content graph로 연결하고, 각 상태·보상·counterplay·monster telegraph·production resource를 system/data ID에 붙여 줘. 불확실한 제작량은 미정으로 남겨 줘.",
       "template": "@Game Design Studio [content graph goal]의 [encounter]를 상태·보상·counterplay·telegraph와 [production evidence]에 연결해 줘. 불확실한 제작량은 미정으로 남겨 줘."
@@ -549,7 +549,7 @@
     "optional_outputs": ["counterplay", "monster telegraph"],
     "extended_outputs": ["repeatability criterion", "review finding"],
     "expected_file_tree": ["game-design/studio-foundations/content-standard/content.md", "game-design/studio-foundations/content-standard/evidence.yml", "game-design/studio-foundations/content-standard/decisions/README.md", "game-design/studio-foundations/content-standard/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/content-standard/content.md", "game-design/studio-foundations/content-standard/evidence.yml", "game-design/studio-foundations/content-standard/decisions/README.md", "game-design/studio-foundations/content-standard/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/content-standard/content.md", "game-design/studio-foundations/content-standard/evidence.yml", "game-design/studio-foundations/content-standard/export-manifest.yml", "game-design/studio-foundations/content-standard/decisions/README.md"],
     "human_review_boundary": "content-narrative-designer가 content graph를 검토하고 production-feasibility-critic이 resource와 repeatability 위험을 검토한다.",
     "hold_conditions": ["행동 또는 reward의 system/data ID가 없음", "production evidence가 없음"],
     "resume_prompt": "content-standard의 graph와 reward 연결을 유지하고 새로 측정된 encounter 제작 근거만 더해 production blocker부터 재개해.",
@@ -572,7 +572,7 @@
     "when_not_to_use": "provenance·rights·consent 없이 AI·UGC 자료를 승인하거나 사람 approver 없이 콘텐츠 범위를 확정할 때는 사용하지 않는다.",
     "required_inputs": ["narrative choice", "system/data dependency", "production evidence", "rights/provenance status", "human approver"],
     "optional_inputs": ["UGC moderation policy", "repeatability evidence", "scope decision"],
-    "placeholders": ["[narrative choice]", "[rights status]", "[human approver]"],
+    "placeholders": ["[content Artifact]", "[narrative choice]", "[rights status]", "[human approver]"],
     "app_prompt": {
       "example": "@Game Design Studio 분기 퀘스트의 선택 의미와 재합류를 system state에 연결하고, 반복성·제작 비용·AI 보조 대사의 provenance·rights·consent와 사람 승인 gate를 분리해 줘. 근거 없는 상태는 미정으로 남겨 줘.",
       "template": "@Game Design Studio [narrative choice]를 system state에 연결하고 [rights status], 제작 범위와 [human approver] 승인 gate를 분리해 줘. 근거 없는 상태는 미정으로 남겨 줘."
@@ -589,7 +589,7 @@
     "optional_outputs": ["UGC moderation question", "repeatability comparison"],
     "extended_outputs": ["human approval receipt 대기", "scope decision log"],
     "expected_file_tree": ["game-design/studio-foundations/content-advanced/content.md", "game-design/studio-foundations/content-advanced/evidence.yml", "game-design/studio-foundations/content-advanced/decisions/README.md", "game-design/studio-foundations/content-advanced/export-manifest.yml"],
-    "read_order": ["game-design/studio-foundations/content-advanced/content.md", "game-design/studio-foundations/content-advanced/evidence.yml", "game-design/studio-foundations/content-advanced/decisions/README.md", "game-design/studio-foundations/content-advanced/export-manifest.yml"],
+    "read_order": ["game-design/studio-foundations/content-advanced/content.md", "game-design/studio-foundations/content-advanced/evidence.yml", "game-design/studio-foundations/content-advanced/export-manifest.yml", "game-design/studio-foundations/content-advanced/decisions/README.md"],
     "human_review_boundary": "narrative·production·rights owner가 선택 의미, 제작 범위와 rights gate를 승인·수정·보류하며 자동 생성 결과는 승인이 아니다.",
     "hold_conditions": ["system/data dependency가 없음", "rights 또는 consent 상태가 없음", "human approver가 없음"],
     "resume_prompt": "content-advanced의 narrative dependency와 rights gate를 보존하고 human approver가 확인한 provenance 또는 production evidence만 반영해 blocker부터 재개해.",
