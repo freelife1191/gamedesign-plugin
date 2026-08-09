@@ -117,6 +117,24 @@ function tableIds(markdown, heading) {
 
 const representativeCareerCaseIds = ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"];
 
+const careerGoalOutputs = new Map([
+  ["직무 탐색·학습", ["game-design-role-map", "learning-roadmap"]],
+  ["역기획", ["reverse-design-document"]],
+  ["창작 포트폴리오", ["creative-design-portfolio"]],
+  ["포트폴리오 검토", ["five-axis-review"]],
+  ["면접", ["interview-question-answer-log"]],
+  ["성장·전환", ["junior-growth-review", "transition-readiness"]],
+]);
+
+const careerRepositoryCheckoutGuides = Object.freeze([
+  "guides/game-design-career/use-cases/README.md",
+  "guides/game-design-career/use-cases/competency-paths.md",
+  "guides/game-design-career/use-cases/concept-scenarios.md",
+  "guides/game-design-career/use-cases/skill-workbench.md",
+  "guides/game-design-career/faq.md",
+  "guides/use-cases/output-catalog.md",
+]);
+
 function normalizeTableCell(value) {
   return value.trim().replace(/\s+/gu, " ");
 }
@@ -242,6 +260,27 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
 
 function assertNoHiringGuarantee(markdown, label) {
   assert.doesNotMatch(markdown, /(?:합격|취업|채용)[^.\n]{0,24}(?:100%\s*)?(?:보장|약속|확정)(?!(?:하지|할\s*수\s*없|못|되지\s*않))/u, `${label}: no affirmative hiring guarantee`);
+}
+
+function assertCareerGoalOutputSummary(section) {
+  assert.match(section, /^### 목표별 대표 결과$/mu, "Career product README: goal/output summary heading");
+  for (const [goal, outputs] of careerGoalOutputs) {
+    const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
+    assert.ok(line, `Career product README: goal summary missing: ${goal}`);
+    assert.match(line, /대표 요청: `\$game-design-career:[^`]+`/u, `Career product README: ${goal} representative request`);
+    assert.match(line, /최소 Artifact:/u, `Career product README: ${goal} minimum artifact`);
+    assert.match(line, /선택·확장 결과:/u, `Career product README: ${goal} optional or expanded output`);
+    for (const output of outputs) assert.ok(line.includes(`\`${output}\``), `Career product README: ${goal} output: ${output}`);
+  }
+}
+
+function assertCareerRepositoryCheckoutGuides(section) {
+  assert.match(section, /repository checkout only/u, "Career checkout-only guides must be labeled");
+  assert.doesNotMatch(section, /\]\((?:\.\.\/)+guides\//u, "Career checkout-only guides must not use package-escaping links");
+  for (const guidePath of careerRepositoryCheckoutGuides) {
+    assert.equal(section.split(`\`${guidePath}\``).length - 1, 1, `Career checkout-only guide appears exactly once: ${guidePath}`);
+    assert.doesNotMatch(section, new RegExp(`\\[[^\\]]+\\]\\([^)]*${guidePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`), `Career checkout-only guide is plain code: ${guidePath}`);
+  }
 }
 
 function mutateMarkdownTable(markdown, heading, mutate) {
@@ -652,6 +691,7 @@ test("README binds Career entry users to canonical representative case routes wi
     `${routing.faqContracts.length}개 FAQ`,
     `${careerCases.length + skillCases.length}개 도식`,
   ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);
+  assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점"));
 
   const expected = [];
   const skillOutputIds = new Map(await Promise.all(
@@ -690,4 +730,7 @@ test("README binds Career entry users to canonical representative case routes wi
     assert.ok(resolved === pluginRoot || resolved.startsWith(`${pluginRoot}${path.sep}`), `README link escapes package: ${target}`);
     await access(resolved);
   }
+
+  assertCareerRepositoryCheckoutGuides(readmeSection(readme, "Repository checkout only guides"));
+  await Promise.all(careerRepositoryCheckoutGuides.map((guidePath) => access(path.join(repoRoot, guidePath))));
 });

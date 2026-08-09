@@ -179,6 +179,15 @@ const studioRepositoryCheckoutGuides = Object.freeze([
   ["공통 결과물 카탈로그", "guides/use-cases/output-catalog.md", "결과물 카탈로그"],
 ]);
 
+const studioGoalOutputs = new Map([
+  ["규칙·핵심 루프", ["game-design-brief", "vision-pillars"]],
+  ["시스템", ["system-specification"]],
+  ["UX·접근성", ["ui-ux-flow-state"]],
+  ["콘텐츠·퀘스트", ["narrative-quest-npc"]],
+  ["경제·LiveOps", ["economy-balance"]],
+  ["전체 프로젝트", ["production-scope-risk", "export-manifest.yml"]],
+]);
+
 const directOutputOwnership = Object.freeze([
   {
     label: "경제·LiveOps",
@@ -326,6 +335,18 @@ function assertStudioUseCaseReadme(readme) {
   assert.match(section, /\[설치된 템플릿\]\(assets\/templates\/system-specification\/\)/u, "package-local template link must remain distinct");
 }
 
+function assertGoalOutputSummary(section, goals, product) {
+  assert.match(section, /^### 목표별 대표 요청과 결과$/mu, `${product}: goal/output summary heading`);
+  for (const [goal, outputs] of goals) {
+    const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
+    assert.ok(line, `${product}: goal summary missing: ${goal}`);
+    assert.match(line, /대표 요청: `\$game-design-studio:[^`]+`/u, `${product}: ${goal} representative request`);
+    assert.match(line, /최소 Artifact:/u, `${product}: ${goal} minimum artifact`);
+    assert.match(line, /선택·확장 결과:/u, `${product}: ${goal} optional or expanded output`);
+    for (const output of outputs) assert.ok(line.includes(`\`${output}\``), `${product}: ${goal} output: ${output}`);
+  }
+}
+
 test("release documentation ships the plugin license and third-party notices", async () => {
   await Promise.all([
     access(readmePath),
@@ -450,6 +471,7 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   assertStudioUseCaseReadme(readme);
   const section = readmeSection(readme, "활용 경로와 결과");
   const [, allowedOutputs] = await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
+  assertGoalOutputSummary(section, studioGoalOutputs, "Studio product README");
   for (const { label, rowOutput } of directOutputOwnership) {
     const row = representativeTableRows(section).find(({ cells }) => cells[0] === label);
     assert.ok(row, `owned-output table row missing: ${label}`);

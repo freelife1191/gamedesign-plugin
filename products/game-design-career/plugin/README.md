@@ -8,6 +8,17 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 
 취업 준비 학생, 주니어, 직무 전환자와 멘토는 현재 근거와 원하는 한 가지 결과를 먼저 적습니다. 여러 Career 단계와 산출물이 함께 남거나 우선순위를 정해야 하면 [`orchestrate-game-design-career`](skills/orchestrate-game-design-career/SKILL.md)로 시작합니다. 한 산출물과 입력이 분명하면 아래의 명시적 직접 요청으로 시작합니다. 전체 스킬 경로는 canonical 사례의 순서를 모두 보존하며, 명시적 직접 요청과 혼동하지 않습니다. 18개 사례, 15개 직접 스킬, 18개 FAQ와 33개 도식 쌍은 설치된 skill·template·evidence 경계를 설명하며 합격이나 채용 결과를 보장하지 않습니다.
 
+### 목표별 대표 결과
+
+아래는 원하는 결과를 빠르게 고르는 시작점입니다. 최소 Artifact는 먼저 확인할 결과이고, 선택·확장 결과는 근거와 검토가 갖춰졌을 때 연결합니다.
+
+- **직무 탐색·학습** — 대표 요청: `$game-design-career:map-game-design-career 현재 제약과 목표 역할을 비교해 학습 우선순위를 정리해.`; 최소 Artifact: `game-design-role-map`; 선택·확장 결과: `learning-roadmap`으로 작은 연습과 재검토 시점을 연결합니다.
+- **역기획** — 대표 요청: `$game-design-career:reverse-engineer-game-design 공개 관찰을 사실과 추론으로 분리해 역기획해.`; 최소 Artifact: `reverse-design-document`; 선택·확장 결과: 반례·대안·검증 방법과 공개·권리 검토를 남깁니다.
+- **창작 포트폴리오** — 대표 요청: `$game-design-career:build-game-design-portfolio 문제, 설계 제약과 개인 기여를 보존해 창작 사례를 작성해.`; 최소 Artifact: `creative-design-portfolio`; 선택·확장 결과: feedback, prototype 관찰과 공개 목표를 사례 검토에 연결합니다.
+- **포트폴리오 검토** — 대표 요청: `$game-design-career:review-game-design-portfolio 문제 정의, 기획 판단, 구현 연결, 근거와 회고를 검토해.`; 최소 Artifact: `five-axis-review`; 선택·확장 결과: 가장 작은 수정과 다음 검토 질문을 우선순위로 남깁니다.
+- **면접** — 대표 요청: `$game-design-career:practice-game-design-interview 공고와 포트폴리오 evidence ID로 기본·후속·반론 질문을 만들어.`; 최소 Artifact: `interview-question-answer-log`; 선택·확장 결과: 확인할 수 없는 성과는 정직한 답변 패턴과 다음 proof task로 바꿉니다.
+- **성장·전환** — 대표 요청: `$game-design-career:plan-junior-growth 최근 프로젝트 사건과 피드백을 목표 역할 요구사항에 연결해.`; 최소 Artifact: `junior-growth-review`; 선택·확장 결과: `transition-readiness`와 담당자·재평가 결정을 함께 기록합니다.
+
 | 사례 ID · 제목 · 대상 | 정확한 준비 입력 | 전체 스킬 경로 | 명시적 직접 요청 | 결과 ID · owner · root | 사례 읽는 순서 |
 | --- | --- | --- | --- | --- | --- |
 | `CA-T01` — 시스템 기획 입문 학생 — AUD-01 · AUD-02 | 공개적으로 관찰 가능한 기능 하나, 입력과 결과, 모르는 규칙, 개인 작업 범위와 시스템 기획 멘토를 준비합니다. | $game-design-career:map-game-design-career → $game-design-career:build-game-design-portfolio → $game-design-career:plan-junior-growth | $game-design-career:map-game-design-career artifact=game-design-career/system-student 규칙·상태·예외를 competency-matrix와 learning-roadmap으로 연결해. | `competency-matrix` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/competency-matrix`<br>`learning-roadmap` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/learning-roadmap` | 상태표 → 규칙표 → 반례 → 다음 질문 |
@@ -386,6 +397,19 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 ### 문서 내보내기
 
 > 이 Canonical Artifact를 MD와 PDF로, 리뷰어 발표용 PPTX로 내보내 줘. 먼저 preflight manifest를 만들고, trusted bundled renderer와 형식 QA가 원본·파생본 artifact digest를 결합해 검증한 뒤에만 terminal 결과를 기록해 줘.
+
+## Repository checkout only guides
+
+아래 문서는 설치 패키지에 포함되지 않습니다. repository checkout only에서 다음 plain code path를 사용하며, 패키지 밖 상대 Markdown 링크나 외부 URL을 약속하지 않습니다.
+
+| 문서 | repository checkout only path |
+| --- | --- |
+| Career 활용 사례 인덱스 | `guides/game-design-career/use-cases/README.md` |
+| Career 역량 사례 | `guides/game-design-career/use-cases/competency-paths.md` |
+| Career 콘셉트 사례 | `guides/game-design-career/use-cases/concept-scenarios.md` |
+| Career 스킬 워크벤치 | `guides/game-design-career/use-cases/skill-workbench.md` |
+| Career FAQ | `guides/game-design-career/faq.md` |
+| 공통 결과물 카탈로그 | `guides/use-cases/output-catalog.md` |
 
 ## Skillstead 도식화
 
