@@ -1601,8 +1601,8 @@ function assertCareerTargetComparison(conceptScenarios) {
 function assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths }) {
   const links = extractMarkdownLinks(index).map(({ target }) => target);
   const competencyAnchors = collectHeadingAnchors(competencyPaths);
-  const deferredSection = sectionByHeading(index, 2, "대상별 사례 — Task 3 deferred");
-  assert.deepEqual(extractMarkdownLinks(deferredSection), [], "Career deferred routes contain no Markdown links");
+  const targetSection = sectionByHeading(index, 2, "대상별 사례");
+  const targetLinks = extractMarkdownLinks(targetSection).map(({ target }) => target);
   const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   for (const entry of allCareerCases.filter((entry) => entry.view === "competency")) {
     const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
@@ -1612,12 +1612,12 @@ function assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths 
   }
   for (const entry of allCareerCases.filter((entry) => entry.view === "target")) {
     const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
-    assert.ok(!links.includes(target), `${entry.id} deferred route is not Markdown`);
-    assert.match(index, new RegExp("\\*\\*" + escapeRegExp(entry.id) + "[^\\n]*\\*\\* — 예정 경로: `" + escapeRegExp(target) + "`"), `${entry.id} deferred plain route`);
+    assert.ok(targetLinks.includes(target), `${entry.id} current Markdown link`);
   }
-  for (const target of ["../../use-cases/README.md#공통-faq", "../../use-cases/output-catalog.md"]) {
+  for (const target of ["skill-workbench.md", "../../use-cases/README.md#공통-faq", "../../use-cases/output-catalog.md"]) {
     assert.ok(links.includes(target), `Career index actual shared link: ${target}`);
   }
+  assert.doesNotMatch(index, /Task [345]|deferred|본문을 추가할 예정|아직 작성되지 않았/u);
 }
 
 function assertStudioFaq(markdown) {
@@ -2251,18 +2251,18 @@ test("Career competency and index mutation controls reject semantically wrong bu
     /CA-C01 current Markdown link/,
     "current route must remain a Markdown link",
   );
-  const futureMarkdown = index.replace(
-    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생`",
-    "[concept-scenarios.md#ca-t01-시스템-기획-입문-학생](concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
+  const targetPlaintext = index.replace(
+    "[CA-T01 시스템 기획 입문 학생](concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
+    "CA-T01 시스템 기획 입문 학생 (concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
   );
   assert.throws(
-    () => assertCareerIndexRouteStrings({ index: futureMarkdown, allCareerCases, competencyPaths }),
-    /Career deferred routes contain no Markdown links/,
-    "future route must stay deferred plain text",
+    () => assertCareerIndexRouteStrings({ index: targetPlaintext, allCareerCases, competencyPaths }),
+    /CA-T01 current Markdown link/,
+    "target route must remain a Markdown link",
   );
 });
 
-test("Career residual executable, freshness, and deferred-route mutations are rejected", async () => {
+test("Career residual executable, freshness, and actual-route mutations are rejected", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index, competencyPaths } = await readCareerCompetencyGuides();
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
@@ -2289,14 +2289,14 @@ test("Career residual executable, freshness, and deferred-route mutations are re
     );
   }
 
-  const arbitraryDeferredLink = index.replace(
-    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생`",
-    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생` [other deferred file](wrong.md#wrong-anchor)",
+  const missingWorkbench = index.replaceAll(
+    "[스킬 워크벤치](skill-workbench.md)",
+    "[스킬 워크벤치](wrong.md#wrong-anchor)",
   );
   assert.throws(
-    () => assertCareerIndexRouteStrings({ index: arbitraryDeferredLink, allCareerCases, competencyPaths }),
-    /Career deferred routes contain no Markdown links/,
-    "deferred rows reject arbitrary broken Markdown links",
+    () => assertCareerIndexRouteStrings({ index: missingWorkbench, allCareerCases, competencyPaths }),
+    /Career index actual shared link: skill-workbench\.md/,
+    "direct skill route must resolve to the workbench",
   );
 });
 
