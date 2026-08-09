@@ -23,10 +23,6 @@ const PRODUCT_NAMES = Object.freeze({
   studio: "Game Design Studio",
   career: "Game Design Career",
 });
-const PRODUCT_CLI_NAMESPACES = Object.freeze({
-  studio: "$game-design-studio:",
-  career: "$game-design-career:",
-});
 const PRODUCT_REPOSITORY_IDS = Object.freeze({
   studio: "game-design-studio",
   career: "game-design-career",
@@ -41,7 +37,9 @@ const ENTRY_KEYS = new Set([
   "related_recipes", "source_references",
 ]);
 const INDEX_KEYS = new Set(["version", "sources"]);
-const SENSITIVE_INPUT = /(?:api[ _-]?key|secret(?:s)?|password|access[ _-]?token|personal(?:[ _-]?data|[ _-]?information)|개인\s*정보|비공개\s*(?:자료|회사\s*자료))/iu;
+const SENSITIVE_INPUT = /(?:api[ _-]?key|secret(?:s)?|credential(?:s)?|password|access[ _-]?token|personal(?:[ _-]?data|[ _-]?information)|private(?:[ _-]?(?:material|data|information))?|개인\s*정보|비공개\s*(?:자료|회사\s*자료))/iu;
+const SENSITIVE_PROHIBITION = /(?:do not|don't|never|must not|not request|without|금지|요청하지|입력하지|제공하지)/iu;
+const CLI_MENTION = /\$(game-design-studio|game-design-career):([^\s]*)/gu;
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -57,6 +55,17 @@ function entryLabel(index) {
 
 function requireString(value, label, errors) {
   if (!isNonemptyString(value)) errors.push(`${label} must be a non-empty string`);
+}
+
+function requestsSensitiveInput(value) {
+  if (!isNonemptyString(value) || !SENSITIVE_INPUT.test(value)) return false;
+  const prohibitedBefore = new RegExp(`(?:${SENSITIVE_PROHIBITION.source})[\\s\\S]{0,120}${SENSITIVE_INPUT.source}`, "iu");
+  const prohibitedAfter = new RegExp(`${SENSITIVE_INPUT.source}[\\s\\S]{0,80}(?:not required|not needed|불필요|요구하지 않음|입력하지 않음)`, "iu");
+  return !prohibitedBefore.test(value) && !prohibitedAfter.test(value);
+}
+
+function hasSensitiveInputProhibition(value) {
+  return isNonemptyString(value) && SENSITIVE_INPUT.test(value) && SENSITIVE_PROHIBITION.test(value);
 }
 
 function validateStringArray(value, label, errors, { nonempty = true, safePaths = false } = {}) {
@@ -99,7 +108,7 @@ function validatePromptPair(value, label, errors, texts) {
     const normalized = prompt.normalize("NFC");
     if (texts.has(normalized)) errors.push(`duplicate prompt text: ${label}.${field}`);
     texts.add(normalized);
-    if (SENSITIVE_INPUT.test(prompt)) errors.push(`${label}.${field} must not request credentials or personal/private data`);
+    if (requestsSensitiveInput(prompt)) errors.push(`${label}.${field} must not request credentials or personal/private data`);
   }
 }
 
@@ -142,6 +151,9 @@ function validateEntry(entry, index, errors, ids, texts) {
   }
   if (!PROMPT_KINDS.includes(entry.kind)) errors.push(`${label}.kind is unknown: ${String(entry.kind)}`);
   if (!PRODUCT_IDS.includes(entry.product)) errors.push(`${label}.product is unknown: ${String(entry.product)}`);
+  if (entry.kind === "skill-template" && entry.product === "suite") {
+    errors.push(`${label}.suite product cannot define a skill-template`);
+  }
   requireString(entry.title, `${label}.title`, errors);
   requireString(entry.purpose, `${label}.purpose`, errors);
   for (const field of ["audiences", "intents", "required_inputs", "intermediate_artifacts", "minimum_outputs", "expected_file_tree", "read_order", "hold_conditions", "source_references"]) {
@@ -165,13 +177,22 @@ function validateEntry(entry, index, errors, ids, texts) {
     const normalized = entry.resume_prompt.normalize("NFC");
     if (texts.has(normalized)) errors.push(`duplicate prompt text: ${label}.resume_prompt`);
     texts.add(normalized);
+    if (requestsSensitiveInput(entry.resume_prompt)) {
+      errors.push(`${label}.resume_prompt must not request credentials or personal/private data`);
+    }
+  }
+  if (!isNonemptyString(entry.safety_boundary) || !entry.safety_boundary.includes("미정")) {
+    errors.push(`${label}.safety_boundary must preserve unknown information as 미정`);
+  }
+  if (!hasSensitiveInputProhibition(entry.safety_boundary)) {
+    errors.push(`${label}.safety_boundary must prohibit credential or personal/private data requests`);
   }
   for (const [field, values] of Object.entries({
     required_inputs: entry.required_inputs,
     optional_inputs: entry.optional_inputs,
     placeholders: entry.placeholders,
   })) {
-    if (Array.isArray(values) && values.some((value) => isNonemptyString(value) && SENSITIVE_INPUT.test(value))) {
+    if (Array.isArray(values) && values.some(requestsSensitiveInput)) {
       errors.push(`${label}.${field} must not request credentials or personal/private data`);
     }
   }
@@ -202,6 +223,68 @@ function rolesFor(rolesByProduct, product) {
   return rolesByProduct.get(product) ?? rolesByProduct.get(PRODUCT_REPOSITORY_IDS[product]);
 }
 
+function productForCliNamespace(namespace) {
+  return namespace === "game-design-studio" ? "studio" : "career";
+}
+
+function validateAppPromptPath(value, label, product, errors) {
+  const allowedApps = product === "suite" ? Object.values(PRODUCT_NAMES) : [PRODUCT_NAMES[product]];
+  if (!allowedApps.some((app) => value.includes(`@${app}`))) {
+    errors.push(`${product} App prompt ${label} must mention an allowed product App`);
+  }
+}
+
+function validateCliPromptPath(value, label, product, inventories, errors) {
+  const mentions = [...value.matchAll(CLI_MENTION)];
+  if (mentions.length === 0) {
+    errors.push(`${product} CLI prompt ${label} must contain a product namespace command`);
+    return;
+  }
+  for (const [, namespace, skill] of mentions) {
+    const targetProduct = productForCliNamespace(namespace);
+    if (product !== "suite" && targetProduct !== product) {
+      errors.push(`${product} CLI prompt ${label} must use the ${product} namespace`);
+      continue;
+    }
+    if (!skill) {
+      errors.push(`${product} CLI prompt ${label} must name a registered skill`);
+      continue;
+    }
+    const inventory = inventoryFor(inventories, targetProduct);
+    if (inventory && !inventory.skillIds.includes(skill)) {
+      errors.push(`unknown ${targetProduct} CLI skill in ${label}: ${skill}`);
+    }
+  }
+}
+
+function validatePromptPaths(entry, label, inventories, errors) {
+  for (const field of ["example", "template"]) {
+    if (isNonemptyString(entry.app_prompt?.[field])) {
+      validateAppPromptPath(entry.app_prompt[field], `${label}.app_prompt.${field}`, entry.product, errors);
+    }
+    if (isNonemptyString(entry.cli_prompt?.[field])) {
+      validateCliPromptPath(entry.cli_prompt[field], `${label}.cli_prompt.${field}`, entry.product, inventories, errors);
+    }
+  }
+}
+
+function validateSuiteReferences(entry, label, inventories, rolesByProduct, errors) {
+  if (!(inventories instanceof Map)) return;
+  const installedSkills = new Set(
+    ["studio", "career"].flatMap((product) => inventoryFor(inventories, product)?.skillIds ?? []),
+  );
+  for (const skill of [entry.skill, ...(Array.isArray(entry.skill_chain) ? entry.skill_chain : [])]) {
+    if (isNonemptyString(skill) && !installedSkills.has(skill)) errors.push(`${label} references unknown suite skill: ${skill}`);
+  }
+  if (!(rolesByProduct instanceof Map)) return;
+  const installedRoles = new Set(
+    ["studio", "career"].flatMap((product) => [...(rolesFor(rolesByProduct, product) ?? [])]),
+  );
+  for (const role of Array.isArray(entry.specialist_roles) ? entry.specialist_roles : []) {
+    if (isNonemptyString(role) && !installedRoles.has(role)) errors.push(`${label} references unknown suite role: ${role}`);
+  }
+}
+
 function validateReferences(entries, inventories, useCaseManifest, rolesByProduct, errors) {
   const manifestIds = useCaseManifest && isObject(useCaseManifest)
     ? new Set([
@@ -213,6 +296,11 @@ function validateReferences(entries, inventories, useCaseManifest, rolesByProduc
   for (const [index, entry] of entries.entries()) {
     if (!isObject(entry) || !PRODUCT_IDS.includes(entry.product)) continue;
     const label = entryLabel(index);
+    validatePromptPaths(entry, label, inventories, errors);
+    if (entry.product === "suite") {
+      validateSuiteReferences(entry, label, inventories, rolesByProduct, errors);
+      continue;
+    }
     const inventory = inventoryFor(inventories, entry.product);
     if (inventory) {
       const skillIds = new Set(inventory.skillIds);
@@ -237,18 +325,6 @@ function validateReferences(entries, inventories, useCaseManifest, rolesByProduc
         if (isNonemptyString(id) && !manifestIds.has(id)) errors.push(`${label} references unknown use case: ${id}`);
       }
     }
-    if (entry.product !== "suite" && isObject(entry.app_prompt) && isObject(entry.cli_prompt)) {
-      const expectedApp = `@${PRODUCT_NAMES[entry.product]}`;
-      const expectedCli = PRODUCT_CLI_NAMESPACES[entry.product];
-      for (const field of ["example", "template"]) {
-        if (isNonemptyString(entry.app_prompt[field]) && !entry.app_prompt[field].includes(expectedApp)) {
-          errors.push(`${label}.app_prompt.${field} must use ${expectedApp}`);
-        }
-        if (isNonemptyString(entry.cli_prompt[field]) && !entry.cli_prompt[field].includes(expectedCli)) {
-          errors.push(`${label}.cli_prompt.${field} must use ${expectedCli}`);
-        }
-      }
-    }
   }
 }
 
@@ -264,6 +340,33 @@ function validateCompleteCounts(counts, errors) {
   }
 }
 
+function validateSkillTemplateCardinality(entries, inventories, errors) {
+  if (!(inventories instanceof Map)) {
+    errors.push("complete prompt catalog requires product inventories");
+    return;
+  }
+  for (const product of ["studio", "career"]) {
+    const inventory = inventoryFor(inventories, product);
+    if (!inventory || !Array.isArray(inventory.skillIds)) {
+      errors.push(`complete prompt catalog requires ${product} skill inventory`);
+      continue;
+    }
+    for (const skill of inventory.skillIds) {
+      for (const level of PROMPT_LEVELS) {
+        const count = entries.filter((entry) => (
+          entry?.kind === "skill-template"
+          && entry.product === product
+          && entry.skill === skill
+          && entry.level === level
+        )).length;
+        if (count !== 1) {
+          errors.push(`skill-template cardinality ${product}/${skill}/${level} must be exactly one, found ${count}`);
+        }
+      }
+    }
+  }
+}
+
 export function validatePromptTemplateCatalog({ entries, inventories, useCaseManifest, rolesByProduct, requireComplete = false } = {}) {
   const errors = [];
   if (!Array.isArray(entries)) {
@@ -274,7 +377,10 @@ export function validatePromptTemplateCatalog({ entries, inventories, useCaseMan
   entries.forEach((entry, index) => validateEntry(entry, index, errors, ids, texts));
   validateReferences(entries, inventories, useCaseManifest, rolesByProduct, errors);
   const counts = countEntries(entries);
-  if (requireComplete) validateCompleteCounts(counts, errors);
+  if (requireComplete) {
+    validateCompleteCounts(counts, errors);
+    validateSkillTemplateCardinality(entries, inventories, errors);
+  }
   return { ok: errors.length === 0, errors, counts };
 }
 

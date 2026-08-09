@@ -9,6 +9,21 @@ import {
   validatePromptTemplateCatalog,
 } from "../../tooling/lib/prompt-template-catalog.mjs";
 
+const STUDIO_SKILLS = [
+  "apply-document-quality-profile", "define-game-vision", "design-game-content",
+  "design-game-economy-and-liveops", "design-game-systems", "design-player-experience",
+  "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project",
+  "plan-game-production", "plan-image-assets", "review-game-design", "review-image-assets",
+  "svg-infographic", "visualize-game-design",
+];
+const CAREER_SKILLS = [
+  "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents",
+  "generate-image-assets", "map-game-design-career", "orchestrate-game-design-career",
+  "plan-image-assets", "plan-junior-growth", "practice-game-design-interview",
+  "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio",
+  "review-image-assets", "svg-infographic", "visualize-career-roadmap",
+];
+
 function validEntry(index, kind = "skill-template") {
   const id = `PT-${String(index).padStart(3, "0")}`;
   return {
@@ -59,12 +74,41 @@ function validEntry(index, kind = "skill-template") {
 }
 
 function completeFixture() {
+  const skillTemplates = [
+    ...STUDIO_SKILLS.flatMap((skill, skillIndex) => ["beginner", "standard", "advanced"].map((level, levelIndex) => {
+      const entry = validEntry(skillIndex * 3 + levelIndex + 1, "skill-template");
+      return { ...entry, level, skill, skill_chain: [skill] };
+    })),
+    ...CAREER_SKILLS.flatMap((skill, skillIndex) => ["beginner", "standard", "advanced"].map((level, levelIndex) => {
+      const index = 46 + skillIndex * 3 + levelIndex;
+      const entry = validEntry(index, "skill-template");
+      return {
+        ...entry,
+        product: "career",
+        level,
+        skill,
+        skill_chain: [skill],
+        app_prompt: {
+          example: `@Game Design Career complete prompt ${index}`,
+          template: `@Game Design Career reusable prompt ${index}`,
+        },
+        cli_prompt: {
+          example: `$game-design-career:${skill} complete prompt ${index}`,
+          template: `$game-design-career:${skill} reusable prompt ${index}`,
+        },
+      };
+    })),
+  ];
   return [
-    ...Array.from({ length: 90 }, (_, index) => validEntry(index + 1, "skill-template")),
+    ...skillTemplates,
     ...Array.from({ length: 36 }, (_, index) => validEntry(index + 91, "use-case")),
     ...Array.from({ length: 12 }, (_, index) => validEntry(index + 127, "recipe")),
     ...Array.from({ length: 8 }, (_, index) => validEntry(index + 139, "suite-case")),
   ];
+}
+
+function inventoryForTests({ skillIds = ["define-game-vision"], templateIds = [] } = {}) {
+  return { skillIds, templateIds };
 }
 
 async function fixtureRoot(t, { entries, symlinkShard = false }) {
@@ -88,7 +132,16 @@ async function fixtureRoot(t, { entries, symlinkShard = false }) {
 }
 
 test("complete catalog has exact kind and prompt counts", () => {
-  const result = validatePromptTemplateCatalog({ entries: completeFixture() });
+  const entries = completeFixture();
+  const templateIds = entries.map((entry) => entry.intermediate_artifacts[0]);
+  const result = validatePromptTemplateCatalog({
+    entries,
+    inventories: new Map([
+      ["studio", inventoryForTests({ skillIds: STUDIO_SKILLS, templateIds })],
+      ["career", inventoryForTests({ skillIds: CAREER_SKILLS, templateIds })],
+    ]),
+    requireComplete: true,
+  });
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
     skillTemplates: 90,
@@ -154,4 +207,79 @@ test("validator rejects duplicate resume prompt text", () => {
   const result = validatePromptTemplateCatalog({ entries: [first, second] });
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /duplicate prompt text/u);
+});
+
+test("complete catalogs require every installed product skill at each level exactly once", () => {
+  const entries = completeFixture().map((entry) => entry.kind === "skill-template" ? {
+    ...entry,
+    product: "studio",
+    skill: "define-game-vision",
+    skill_chain: ["define-game-vision"],
+    app_prompt: {
+      example: `@Game Design Studio complete prompt ${entry.id}`,
+      template: `@Game Design Studio reusable prompt ${entry.id}`,
+    },
+    cli_prompt: {
+      example: `$game-design-studio:define-game-vision complete prompt ${entry.id}`,
+      template: `$game-design-studio:define-game-vision reusable prompt ${entry.id}`,
+    },
+  } : entry);
+  const templateIds = entries.map((entry) => entry.intermediate_artifacts[0]);
+  const result = validatePromptTemplateCatalog({
+    entries,
+    inventories: new Map([
+      ["studio", inventoryForTests({ skillIds: ["define-game-vision", "design-game-systems"], templateIds })],
+      ["career", inventoryForTests({ skillIds: ["map-game-design-career"], templateIds })],
+    ]),
+    requireComplete: true,
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 30/u);
+  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 0/u);
+});
+
+test("suite product cannot define a skill-template", () => {
+  const entry = validEntry(9, "skill-template");
+  entry.product = "suite";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /suite.*skill-template/u);
+});
+
+test("suite prompt paths reject arbitrary App mentions and missing or unknown CLI commands", () => {
+  const entry = validEntry(6, "suite-case");
+  entry.app_prompt.example = "@Unrelated App complete prompt";
+  entry.app_prompt.template = "@Unrelated App reusable prompt";
+  entry.cli_prompt.example = "$game-design-studio: unknown command";
+  entry.cli_prompt.template = "$game-design-career:not-installed reusable prompt";
+  const result = validatePromptTemplateCatalog({
+    entries: [entry],
+    inventories: new Map([
+      ["studio", inventoryForTests()],
+      ["career", inventoryForTests({ skillIds: ["map-game-design-career"] })],
+    ]),
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /suite.*App|suite.*CLI/u);
+});
+
+test("product CLI prompts require a registered namespace command", () => {
+  const entry = validEntry(7);
+  entry.cli_prompt.example = "$game-design-studio:not-installed complete prompt";
+  const result = validatePromptTemplateCatalog({
+    entries: [entry],
+    inventories: new Map([["studio", inventoryForTests({ templateIds: entry.intermediate_artifacts })]]),
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /unknown studio CLI skill/u);
+});
+
+test("safety boundary requires 미정 handling and resume prompts cannot request sensitive inputs", () => {
+  const entry = validEntry(8);
+  entry.safety_boundary = "Keep the work safe.";
+  entry.resume_prompt = "Resume after you provide your credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /미정/u);
+  assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
 });
