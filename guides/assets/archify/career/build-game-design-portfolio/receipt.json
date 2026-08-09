@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/build-game-design-portfolio/flow.json",
+  "output": "guides/assets/archify/career/build-game-design-portfolio/flow.html",
+  "specification": {
+    "sha256": "0e91a814ca0de140e68c0a3fbcabc9fb03332280da94088afa9d373d4f3e05ea",
+    "bytes": 3479
+  },
+  "artifact": {
+    "sha256": "246ccb4bec19c5e291f36d876198eba42a89f8b1c37834c107ff66284cd3c25f",
+    "bytes": 604264
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

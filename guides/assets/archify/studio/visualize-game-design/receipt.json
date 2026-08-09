@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/studio/visualize-game-design/flow.json",
+  "output": "guides/assets/archify/studio/visualize-game-design/flow.html",
+  "specification": {
+    "sha256": "45e379ae987ae54c867a74064357a058a34cac843dd91e0ea5595540584dbb8f",
+    "bytes": 3506
+  },
+  "artifact": {
+    "sha256": "9d931a9da8a000ef2b59c31dff3f6360b2cf8c3a0756e20357e4db59f28cba28",
+    "bytes": 604345
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

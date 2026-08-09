@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/orchestrate-game-design-career/flow.json",
+  "output": "guides/assets/archify/career/orchestrate-game-design-career/flow.html",
+  "specification": {
+    "sha256": "05c31efd87300924c0ab99df6aa2c69336308d9d7fd2343a5e38540472df1f9a",
+    "bytes": 3512
+  },
+  "artifact": {
+    "sha256": "4f7da9fb5f14db565daf558a6eafa6d262144a52387197a98249b371f31ba027",
+    "bytes": 604363
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

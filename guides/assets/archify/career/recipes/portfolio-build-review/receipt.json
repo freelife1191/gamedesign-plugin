@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/recipes/portfolio-build-review/flow.json",
+  "output": "guides/assets/archify/career/recipes/portfolio-build-review/flow.html",
+  "specification": {
+    "sha256": "0e6fbdce0e1e9da98c21563cf482b378b86af8d133e65c387320ac69c39c40b8",
+    "bytes": 2962
+  },
+  "artifact": {
+    "sha256": "9046ea67ee865221b5d86650abee37cff5037f60fdff1f82c66d18375266f5fd",
+    "bytes": 603918
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

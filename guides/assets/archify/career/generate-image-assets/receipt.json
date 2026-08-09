@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/generate-image-assets/flow.json",
+  "output": "guides/assets/archify/career/generate-image-assets/flow.html",
+  "specification": {
+    "sha256": "691ef3501d985cefa8e3e7353159a85220cd00f955ae008c905a88e5fac17ce5",
+    "bytes": 3488
+  },
+  "artifact": {
+    "sha256": "47ae91c8ae95cdf5ad3c2fa23f965679c8b429f399a09624e54dd9a04c6dcce5",
+    "bytes": 604291
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

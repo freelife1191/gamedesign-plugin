@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/recipes/job-research-gap/flow.json",
+  "output": "guides/assets/archify/career/recipes/job-research-gap/flow.html",
+  "specification": {
+    "sha256": "15fbce80a7ac254341728f923907420b8457b00c86ad382f8727d1d9310e65b9",
+    "bytes": 2956
+  },
+  "artifact": {
+    "sha256": "5645f14929cae6afe9b8c22450a1c733ea1d562d4628b4aed7bda423ba345428",
+    "bytes": 603900
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/svg-infographic/flow.json",
+  "output": "guides/assets/archify/career/svg-infographic/flow.html",
+  "specification": {
+    "sha256": "3581882bfbc09a8030ff98eb40f1ca8c34b162cf7841a560a5e4de4ca14040fb",
+    "bytes": 3487
+  },
+  "artifact": {
+    "sha256": "52843edb23989bbb128dd533a2d22fd8693e818d9d5540d846eab0be3c2dbe2b",
+    "bytes": 604288
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

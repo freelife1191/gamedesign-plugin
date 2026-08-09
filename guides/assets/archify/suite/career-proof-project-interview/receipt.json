@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/suite/career-proof-project-interview/flow.json",
+  "output": "guides/assets/archify/suite/career-proof-project-interview/flow.html",
+  "specification": {
+    "sha256": "f101dcd3e67efa6d5425b61e39a4d01e7379853f41ce19498d617a8f402bca05",
+    "bytes": 2974
+  },
+  "artifact": {
+    "sha256": "0a3db0777f52ab8fae296e6b00da13b0b5f4ee0df919cf3045fa6578d93c4102",
+    "bytes": 603954
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

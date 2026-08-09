@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/research-game-design-jobs/flow.json",
+  "output": "guides/assets/archify/career/research-game-design-jobs/flow.html",
+  "specification": {
+    "sha256": "b2d677e89d38bd3a12b89820472b972de8142c7420c7fce425715960024a5de7",
+    "bytes": 3514
+  },
+  "artifact": {
+    "sha256": "c01b64414893ab2d69230014e537d6d327c958898a34ce1ce1759bbd967505fa",
+    "bytes": 604369
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

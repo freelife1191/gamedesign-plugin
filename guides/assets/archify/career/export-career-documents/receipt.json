@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/export-career-documents/flow.json",
+  "output": "guides/assets/archify/career/export-career-documents/flow.html",
+  "specification": {
+    "sha256": "492fa276ac1b00ca7aaa4acafb4d7b6259a3fff073e02033d2d401b07b564371",
+    "bytes": 3478
+  },
+  "artifact": {
+    "sha256": "c7de9cc4413d9e438f5136ca98fea9c132a5d1e42ab29442813e0c892945ebfc",
+    "bytes": 604261
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/studio/recipes/content-quest-design/flow.json",
+  "output": "guides/assets/archify/studio/recipes/content-quest-design/flow.html",
+  "specification": {
+    "sha256": "fff31a541cc13e49f973a5288ac04a8e2c94ce0f60b9e733f7372f9c14b775ae",
+    "bytes": 2960
+  },
+  "artifact": {
+    "sha256": "9cda6952f66d418b2171f99f0017ca5993ccdf9a0b682bd7198220be102a222a",
+    "bytes": 603912
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

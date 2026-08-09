@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/studio/plan-image-assets/flow.json",
+  "output": "guides/assets/archify/studio/plan-image-assets/flow.html",
+  "specification": {
+    "sha256": "43c62f2e34ad3dfe236eb7315af8c1651bfe7516f4e0218d64a2305b1cdc6466",
+    "bytes": 3506
+  },
+  "artifact": {
+    "sha256": "dfe34bcd26ee360caf1a9579db6b5703c7a810b921fcf2e0789d8a792daf5bb3",
+    "bytes": 604345
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

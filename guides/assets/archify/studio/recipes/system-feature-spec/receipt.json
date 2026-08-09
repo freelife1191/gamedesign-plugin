@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/studio/recipes/system-feature-spec/flow.json",
+  "output": "guides/assets/archify/studio/recipes/system-feature-spec/flow.html",
+  "specification": {
+    "sha256": "1c0f884d88f6a374bafaa1d97dbb1228f6a7c8bdbe0f6f81de8c553afd07948f",
+    "bytes": 2959
+  },
+  "artifact": {
+    "sha256": "aac1f7b476967d35303952a05373e7bc4fcf93dabf7fca4e2e3d2700d6bbb8e7",
+    "bytes": 603909
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

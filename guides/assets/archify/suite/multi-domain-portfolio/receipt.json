@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/suite/multi-domain-portfolio/flow.json",
+  "output": "guides/assets/archify/suite/multi-domain-portfolio/flow.html",
+  "specification": {
+    "sha256": "060f464ac52e7b4dfc0ed2e69f05d09908cfc1936ea485926d0cec5208e92162",
+    "bytes": 2966
+  },
+  "artifact": {
+    "sha256": "fb3b7d5c9e6d3a19b9f18ef8b18951c395bb95066111f1122b7757513f32c800",
+    "bytes": 603930
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

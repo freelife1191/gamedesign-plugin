@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/suite/resume-failed-derivatives/flow.json",
+  "output": "guides/assets/archify/suite/resume-failed-derivatives/flow.html",
+  "specification": {
+    "sha256": "455d8ef7c3e7d2d2b88692bbda2ec52db24a82b4ef553bbfc5ee6232eaf42ded",
+    "bytes": 2969
+  },
+  "artifact": {
+    "sha256": "651c0d06c1cf2a0126a747fee6cdf322bf9c6e0cbf14ff28b2bca60d6d49e1c2",
+    "bytes": 603939
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

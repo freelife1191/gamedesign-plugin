@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/suite/reverse-to-system-proposal/flow.json",
+  "output": "guides/assets/archify/suite/reverse-to-system-proposal/flow.html",
+  "specification": {
+    "sha256": "4b0ed55f6c897d64e5af2ef3cb0aa2b5c801891892af42ee6cdc55829ab2f26c",
+    "bytes": 2970
+  },
+  "artifact": {
+    "sha256": "0bbf203e6c5a41922e7567679e5098a67492f4881c01948f0dcc9f6261d7ad4d",
+    "bytes": 603942
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

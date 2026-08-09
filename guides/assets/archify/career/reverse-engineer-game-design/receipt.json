@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/reverse-engineer-game-design/flow.json",
+  "output": "guides/assets/archify/career/reverse-engineer-game-design/flow.html",
+  "specification": {
+    "sha256": "59484db9b10bda52bb4909d3fe15c16432532d72bdedcf3896d283209e7f8582",
+    "bytes": 3494
+  },
+  "artifact": {
+    "sha256": "06fdd8f38434094832d9d8df3b51c5eb121b8654b8be7e9ea829b4d3d59000f0",
+    "bytes": 604309
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

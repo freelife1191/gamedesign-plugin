@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/practice-game-design-interview/flow.json",
+  "output": "guides/assets/archify/career/practice-game-design-interview/flow.html",
+  "specification": {
+    "sha256": "7aa0053dffd421669c2dc5bf3c1e9b43b767939a3ba252c6723a157719bdbf6a",
+    "bytes": 3489
+  },
+  "artifact": {
+    "sha256": "791f8619adf20a026cf280ab940bb3133e4af9c9864793a4387b5eb2533baaa9",
+    "bytes": 604294
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

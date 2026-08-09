@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/recipes/junior-growth-transition/flow.json",
+  "output": "guides/assets/archify/career/recipes/junior-growth-transition/flow.html",
+  "specification": {
+    "sha256": "cb23ae76e5fb39d3f8c2a495fb90fed727f1cbff9a45d931204a4f17f8e45ad4",
+    "bytes": 2964
+  },
+  "artifact": {
+    "sha256": "a2544b68b614b02f4fdd05735f2d3ed84512d62e165bc52780a9737ab854006e",
+    "bytes": 603924
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

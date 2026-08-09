@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/studio/design-game-economy-and-liveops/flow.json",
+  "output": "guides/assets/archify/studio/design-game-economy-and-liveops/flow.html",
+  "specification": {
+    "sha256": "28bd92784a42544a14dcc585079ecfdff66714ce47f892a14fa94786e13eebb5",
+    "bytes": 3515
+  },
+  "artifact": {
+    "sha256": "0cf9693126f78dd75ba56c16aa3d6f95425f3b26db18cb3f5094c6f4e01fa36e",
+    "bytes": 604372
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

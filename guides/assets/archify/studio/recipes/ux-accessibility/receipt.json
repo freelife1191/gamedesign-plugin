@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/studio/recipes/ux-accessibility/flow.json",
+  "output": "guides/assets/archify/studio/recipes/ux-accessibility/flow.html",
+  "specification": {
+    "sha256": "04da2bc9b406df5c41ffa76fb78d16a7bb0d3d11cb6e12fb962332ba66078f48",
+    "bytes": 2956
+  },
+  "artifact": {
+    "sha256": "be4c54504f3a6b56534c29d70f9ead80ae12d9caf4fa5aad1d9ff089a91f5d1a",
+    "bytes": 603900
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

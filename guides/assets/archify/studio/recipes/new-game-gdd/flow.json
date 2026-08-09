@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "new-game-gdd recipe",
+    "subtitle": "입력에서 스킬·사람 검토·결과물로 이어지는 실행 흐름",
+    "animation": "none",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "workflow",
+        "label": "실행 흐름",
+        "focus": [
+          "input",
+          "skill",
+          "artifact",
+          "review",
+          "result",
+          "resume"
+        ],
+        "note": "입력, 역할, 검토와 재개 경계를 확인합니다."
+      }
+    ],
+    "viewBox": [
+      960,
+      900
+    ]
+  },
+  "lanes": [
+    {
+      "id": "input-lane",
+      "label": "입력·Artifact"
+    },
+    {
+      "id": "execution-lane",
+      "label": "스킬·전문 역할"
+    },
+    {
+      "id": "review-lane",
+      "label": "검토·승인"
+    },
+    {
+      "id": "result-lane",
+      "label": "결과·재개",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "input",
+    "skill",
+    "artifact",
+    "review",
+    "result"
+  ],
+  "nodes": [
+    {
+      "id": "input",
+      "lane": "input-lane",
+      "col": 0,
+      "type": "external",
+      "label": "준비 입력",
+      "sublabel": "공개 가능한 입력"
+    },
+    {
+      "id": "skill",
+      "lane": "execution-lane",
+      "col": 1,
+      "type": "backend",
+      "label": "스킬 체인",
+      "sublabel": "4개 스킬"
+    },
+    {
+      "id": "artifact",
+      "lane": "execution-lane",
+      "col": 3,
+      "type": "database",
+      "label": "중간 Artifact",
+      "sublabel": "작업 기록"
+    },
+    {
+      "id": "review",
+      "lane": "review-lane",
+      "col": 4,
+      "type": "security",
+      "label": "사람 검토",
+      "sublabel": "1개 전문 역할"
+    },
+    {
+      "id": "result",
+      "lane": "result-lane",
+      "col": 5,
+      "type": "cloud",
+      "label": "최소 결과",
+      "sublabel": "결과 계약"
+    },
+    {
+      "id": "resume",
+      "lane": "result-lane",
+      "col": 2,
+      "type": "messagebus",
+      "label": "보류·재개",
+      "sublabel": "재개 요청"
+    }
+  ],
+  "edges": [
+    {
+      "id": "input-skill",
+      "from": "input",
+      "to": "skill",
+      "role": "main",
+      "variant": "default"
+    },
+    {
+      "id": "skill-artifact",
+      "from": "skill",
+      "to": "artifact",
+      "role": "main",
+      "variant": "emphasis"
+    },
+    {
+      "id": "artifact-review",
+      "from": "artifact",
+      "to": "review",
+      "role": "main",
+      "variant": "default"
+    },
+    {
+      "id": "review-result",
+      "from": "review",
+      "to": "result",
+      "role": "main",
+      "variant": "emphasis"
+    },
+    {
+      "id": "review-resume",
+      "from": "review",
+      "to": "resume",
+      "role": "branch",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "drop"
+    }
+  ]
+}

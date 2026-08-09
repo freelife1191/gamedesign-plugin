@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/review-image-assets/flow.json",
+  "output": "guides/assets/archify/career/review-image-assets/flow.html",
+  "specification": {
+    "sha256": "2c8773d4c5c938cd4dacb48154c3fd24a367ce819451770260785abd235f83a3",
+    "bytes": 3486
+  },
+  "artifact": {
+    "sha256": "179cb0a62085a3004485d09030269381f243e19280ada5bf53516a7fadf348b6",
+    "bytes": 604285
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

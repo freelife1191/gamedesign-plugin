@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/suite/gdd-image-presentation/flow.json",
+  "output": "guides/assets/archify/suite/gdd-image-presentation/flow.html",
+  "specification": {
+    "sha256": "d4da63cfb98b8f8702fc80e588a8448ba4097cc7c831cd8df4bfd15417903cf1",
+    "bytes": 2966
+  },
+  "artifact": {
+    "sha256": "8723040e4399032789bee4acdad294a9d2fbe2484a1a92dea8010d682ed37219",
+    "bytes": 603930
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

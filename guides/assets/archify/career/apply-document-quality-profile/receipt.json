@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/career/apply-document-quality-profile/flow.json",
+  "output": "guides/assets/archify/career/apply-document-quality-profile/flow.html",
+  "specification": {
+    "sha256": "2fcb24a91d1d9b6a4a29fbf93b108cd353beadcfb5055cb3a5ceded01cb7c497",
+    "bytes": 3508
+  },
+  "artifact": {
+    "sha256": "462c3e15de2d4b641cabc6a2e5809d509e12754d1f6e2b5c8d9f610360d9c3a4",
+    "bytes": 604351
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

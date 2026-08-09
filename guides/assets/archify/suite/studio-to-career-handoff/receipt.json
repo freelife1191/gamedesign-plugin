@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "guides/assets/archify/suite/studio-to-career-handoff/flow.json",
+  "output": "guides/assets/archify/suite/studio-to-career-handoff/flow.html",
+  "specification": {
+    "sha256": "ccd7909fe0d85fdd6eaf575404924aae0edd513ec05b6f1c63d7de94fb1f4d9f",
+    "bytes": 2968
+  },
+  "artifact": {
+    "sha256": "89617b1e6e5d25d966e0b48377b508620caa54173363b14e671ed35159c6574a",
+    "bytes": 603936
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}
