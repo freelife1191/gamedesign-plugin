@@ -338,6 +338,122 @@ test("Career foundation catalog requires fresh fact boundaries, separates fact a
   assert.match(leaves(careerMap).join(" "), /re-evaluat|재평가/u);
 });
 
+test("Career job-research prompt leaves independently declare every current-fact boundary", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"),
+    "utf8",
+  ));
+  const boundaries = [
+    /(?:source URL|공식 공고 URL)/iu,
+    /retrieval date/iu,
+    /as-of date/iu,
+    /region/iu,
+    /sample scope/iu,
+    /blind spots?/iu,
+  ];
+  const researchEntries = entries.filter(({ skill }) => skill === "research-game-design-jobs");
+
+  assert.equal(researchEntries.length, 3);
+  for (const entry of researchEntries) {
+    for (const [promptType, prompt] of Object.entries({
+      "App example": entry.app_prompt.example,
+      "App template": entry.app_prompt.template,
+      "CLI example": entry.cli_prompt.example,
+      "CLI template": entry.cli_prompt.template,
+    })) {
+      for (const boundary of boundaries) assert.match(prompt, boundary, `${entry.id} ${promptType} ${boundary}`);
+      assert.doesNotMatch(prompt, /careers\.example\.com/iu, `${entry.id} ${promptType} invented official URL`);
+    }
+    for (const promptType of ["app_prompt", "cli_prompt"]) {
+      assert.match(entry[promptType].template, /\[공식 공고 URL\]/u, `${entry.id} ${promptType} symbolic URL placeholder`);
+    }
+  }
+});
+
+test("Career reverse-engineering standard and advanced reusable prompt and output leaves independently label claims", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"),
+    "utf8",
+  ));
+  const labels = [/observation/iu, /fact/iu, /inference/iu, /recommendation/iu];
+  const assertClaimLabels = (entry) => {
+    for (const [field, text] of Object.entries({
+      "App template": entry.app_prompt.template,
+      "CLI template": entry.cli_prompt.template,
+    })) {
+      for (const label of labels) assert.match(text, label, `${entry.id} ${field} ${label}`);
+    }
+    for (const [index, output] of entry.minimum_outputs.entries()) {
+      for (const label of labels) assert.match(output, label, `${entry.id} minimum_outputs[${index}] ${label}`);
+    }
+  };
+
+  for (const entry of entries.filter(({ skill, level }) => (
+    skill === "reverse-engineer-game-design" && ["standard", "advanced"].includes(level)
+  ))) {
+    assertClaimLabels(entry);
+    for (const [promptType, field] of [["app_prompt", "template"], ["cli_prompt", "template"]]) {
+      const mutation = structuredClone(entry);
+      mutation[promptType][field] = mutation[promptType][field].replace(/recommendation/iu, "claim-label-omitted");
+      assert.throws(() => assertClaimLabels(mutation), assert.AssertionError, `${entry.id} ${promptType}.${field} label mutation`);
+    }
+    for (const index of entry.minimum_outputs.keys()) {
+      const mutation = structuredClone(entry);
+      mutation.minimum_outputs[index] = mutation.minimum_outputs[index].replace(/recommendation/iu, "claim-label-omitted");
+      assert.throws(() => assertClaimLabels(mutation), assert.AssertionError, `${entry.id} minimum_outputs[${index}] label mutation`);
+    }
+  }
+});
+
+test("Career foundation user-facing prompt and minimum-output fields reject invented career claims independently", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-foundations.json"),
+    "utf8",
+  ));
+  const unsafeClaims = [
+    /채용\s*확률은\s*95%/u,
+    /내가\s*실제로\s*리드해서\s*성과를\s*냈다/u,
+    /이\s*직무가\s*개인에게\s*가장\s*적합하다/u,
+    /(?:합격|채용)을?\s*보장(?:한다|합니다|함|됩니다)/u,
+  ];
+  const safeBoundaryLanguage = "합격을 보장하지 않는다. 모르는 정보는 미정으로 남기고 evidence가 필요하다.";
+  const assertUserFacingSafety = (entry) => {
+    const fields = [
+      ["App example", entry.app_prompt.example],
+      ["App template", entry.app_prompt.template],
+      ["CLI example", entry.cli_prompt.example],
+      ["CLI template", entry.cli_prompt.template],
+      ...entry.minimum_outputs.map((output, index) => [`minimum_outputs[${index}]`, output]),
+    ];
+    for (const [field, text] of fields) {
+      for (const unsafe of unsafeClaims) assert.doesNotMatch(text, unsafe, `${entry.id} ${field}`);
+    }
+  };
+
+  for (const entry of entries) {
+    assertUserFacingSafety(entry);
+    assertUserFacingSafety({
+      ...entry,
+      app_prompt: { ...entry.app_prompt, example: `${entry.app_prompt.example} ${safeBoundaryLanguage}` },
+    });
+    for (const unsafeText of ["채용 확률은 95%다", "내가 실제로 리드해서 성과를 냈다", "이 직무가 개인에게 가장 적합하다", "합격을 보장한다"]) {
+      for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
+        const mutation = structuredClone(entry);
+        mutation[promptType][field] = `${mutation[promptType][field]} ${unsafeText}`;
+        assert.throws(() => assertUserFacingSafety(mutation), assert.AssertionError, `${entry.id} ${promptType}.${field} rejects ${unsafeText}`);
+      }
+      for (const index of entry.minimum_outputs.keys()) {
+        const mutation = structuredClone(entry);
+        mutation.minimum_outputs[index] = `${mutation.minimum_outputs[index]} ${unsafeText}`;
+        assert.throws(() => assertUserFacingSafety(mutation), assert.AssertionError, `${entry.id} minimum_outputs[${index}] rejects ${unsafeText}`);
+      }
+    }
+  }
+});
+
 test("Studio visual catalog has exact skill-level bindings and matching Studio prompt namespaces", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const entries = JSON.parse(await readFile(
