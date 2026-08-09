@@ -67,6 +67,26 @@ function subsection(markdown, heading) {
   return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
 }
 
+function markdownTableRows(markdown) {
+  return markdown.split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("|") && line.endsWith("|"))
+    .map((line) => line.slice(1, -1).split("|").map((cell) => cell.trim()))
+    .filter((cells) => !cells.every((cell) => /^:?-{3,}:?$/.test(cell)));
+}
+
+function assertNavigationTable(markdown, headers, routes, label) {
+  const rows = markdownTableRows(markdown);
+  assert.deepEqual(rows[0], headers, `${label} table headers`);
+  for (const [goal, targets] of routes) {
+    const row = rows.find(([firstCell]) => firstCell.includes(goal));
+    assert.ok(row, `${label} table row: ${goal}`);
+    for (const target of targets) {
+      assert.ok(row.some((cell) => cell.includes(`](${target})`)), `${label} table row ${goal}: ${target}`);
+    }
+  }
+}
+
 function h2Headings(markdown) {
   return visibleMarkdownHeadings(markdown)
     .filter(({ level }) => level === 2)
@@ -557,17 +577,25 @@ test("guide indexes give beginners the same complete reading path", async () => 
   const globalStart = section(global, "처음 시작하기");
   const readingTable = section(global, "초보자 읽기 경로");
   const goalRouteTable = section(global, "목표에서 다음 문서까지");
-  for (const phrase of ["목표", "대표 문서", "예상 결과", "다음 상세 문서"]) {
-    assert.ok(goalRouteTable.includes(phrase), `global goal route column: ${phrase}`);
-  }
-  for (const target of [
-    "use-cases/README.md",
-    "use-cases/output-catalog.md",
-    "game-design-studio/use-cases/skill-workbench.md",
-    "game-design-studio/faq.md",
-    "game-design-career/use-cases/skill-workbench.md",
-    "game-design-career/faq.md",
-  ]) assert.ok(goalRouteTable.includes(`](${target})`), `global goal route: ${target}`);
+  assertNavigationTable(
+    goalRouteTable,
+    ["목표", "대표 문서", "예상 결과", "다음 상세 문서"],
+    [
+      ["작은 규칙·루프·시스템·UX를 학습", [
+        "game-design-studio/use-cases/README.md",
+        "game-design-studio/use-cases/skill-workbench.md",
+        "game-design-studio/faq.md",
+      ]],
+      ["전체 GDD와 제작 검토를 연결", ["game-design-studio/README.md", "use-cases/output-catalog.md"]],
+      ["직무 탐색·역기획·포트폴리오·면접 준비", [
+        "game-design-career/use-cases/README.md",
+        "game-design-career/use-cases/skill-workbench.md",
+        "game-design-career/faq.md",
+      ]],
+      ["현재 상황과 결과 경계를 먼저 확인", ["use-cases/audience-paths.md", "use-cases/README.md", "use-cases/output-catalog.md"]],
+    ],
+    "global goal route",
+  );
   assert.match(readingTable, /처음 시작하기/);
   assert.doesNotMatch(readingTable, /빠른 시작 → 전체 워크플로/);
   for (const product of products) {
@@ -576,23 +604,26 @@ test("guide indexes give beginners the same complete reading path", async () => 
     const navigation = product === "game-design-studio"
       ? section(local, "작업 규모와 결과")
       : subsection(section(local, "사례 탐색 경로"), "목표별 결과와 다음 문서");
-    const expectedRoutes = product === "game-design-studio"
-      ? [
-        ["작은 실습", "use-cases/README.md"],
-        ["단일 명세", "use-cases/skill-workbench.md"],
-        ["전체 프로젝트", "../use-cases/output-catalog.md"],
-      ]
-      : [
-        ["직무 탐색", "recipes/role-learning-roadmap.md"],
-        ["역기획", "recipes/reverse-design.md"],
-        ["포트폴리오", "recipes/portfolio-build-review.md"],
-        ["면접", "recipes/interview-preparation.md"],
-        ["성장", "recipes/junior-growth-transition.md"],
-      ];
-    for (const [goal, target] of expectedRoutes) {
-      assert.ok(navigation.includes(goal), `${product} navigation goal: ${goal}`);
-      assert.ok(navigation.includes(`](${target})`), `${product} navigation route: ${target}`);
-    }
+    assertNavigationTable(
+      navigation,
+      product === "game-design-studio"
+        ? ["목표 규모", "권장 시작", "예상 결과", "다음 문서"]
+        : ["목표", "예상 결과", "상세 문서"],
+      product === "game-design-studio"
+        ? [
+          ["작은 실습", ["use-cases/README.md", "use-cases/competency-paths.md"]],
+          ["단일 명세", ["use-cases/skill-workbench.md", "faq.md"]],
+          ["전체 프로젝트", ["recipes/new-game-gdd.md", "../use-cases/output-catalog.md"]],
+        ]
+        : [
+          ["직무 탐색", ["recipes/role-learning-roadmap.md"]],
+          ["역기획", ["recipes/reverse-design.md"]],
+          ["포트폴리오", ["recipes/portfolio-build-review.md"]],
+          ["면접", ["recipes/interview-preparation.md"]],
+          ["성장", ["recipes/junior-growth-transition.md"]],
+        ],
+      `${product} navigation`,
+    );
     for (const [label, markdown] of [["global", globalStart], [product, productStart]]) {
       let previous = -1;
       for (const target of [...expectedLinks.slice(0, 4), label === "global" ? "README.md#목적별-레시피" : "#목적별-레시피", ...expectedLinks.slice(4)]) {
