@@ -346,7 +346,7 @@ test("Studio production diagram bindings resolve the matching manifest skill and
   }
 });
 
-test("Studio economy levels retain required and forbidden topics in every major prompt, contract, result, and diagram field", async () => {
+test("Studio economy levels retain required and forbidden topics in independent required leaves", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const entries = JSON.parse(await readFile(
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json"),
@@ -367,20 +367,42 @@ test("Studio economy levels retain required and forbidden topics in every major 
     }],
   ]);
 
-  for (const entry of entries.filter(({ skill }) => skill === "design-game-economy-and-liveops")) {
-    const fields = new Map([
+  const assertTopicContract = (entry) => {
+    const rules = topicRules.get(entry.level);
+    const requiredTextLeaves = new Map([
       ["title", entry.title],
       ["purpose", entry.purpose],
-      ["App prompt", `${entry.app_prompt.example} ${entry.app_prompt.template}`],
-      ["CLI prompt", `${entry.cli_prompt.example} ${entry.cli_prompt.template}`],
-      ["required inputs", entry.required_inputs.join(" ")],
-      ["result layers", [...entry.minimum_outputs, ...entry.optional_outputs, ...entry.extended_outputs].join(" ")],
+      ["App example", entry.app_prompt.example],
+      ["App template", entry.app_prompt.template],
+      ["CLI example", entry.cli_prompt.example],
+      ["CLI template", entry.cli_prompt.template],
       ["diagram alt", entry.diagram_binding.alt],
     ]);
-    const rules = topicRules.get(entry.level);
-    for (const [field, text] of fields) {
+    for (const [field, text] of requiredTextLeaves) {
       for (const topic of rules.required) assert.match(text, topic, `${entry.id} ${field}`);
       for (const topic of rules.forbidden) assert.doesNotMatch(text, topic, `${entry.id} ${field}`);
+    }
+    for (const [index, input] of entry.required_inputs.entries()) {
+      for (const topic of rules.forbidden) assert.doesNotMatch(input, topic, `${entry.id} required_inputs[${index}]`);
+    }
+    for (const topic of rules.required) {
+      assert.ok(entry.required_inputs.some((input) => topic.test(input)), `${entry.id} required input topic ${topic}`);
+    }
+    for (const [index, output] of entry.minimum_outputs.entries()) {
+      for (const topic of rules.required) assert.match(output, topic, `${entry.id} minimum_outputs[${index}]`);
+      for (const topic of rules.forbidden) assert.doesNotMatch(output, topic, `${entry.id} minimum_outputs[${index}]`);
+    }
+    // optional_outputs와 extended_outputs는 level 확장 표현용이며 brief 필수 주제 계약에 포함하지 않는다.
+  };
+
+  for (const entry of entries.filter(({ skill }) => skill === "design-game-economy-and-liveops")) {
+    assertTopicContract(entry);
+    for (const promptKind of ["app_prompt", "cli_prompt"]) {
+      for (const field of ["example", "template"]) {
+        const mutation = structuredClone(entry);
+        mutation[promptKind][field] = "@Game Design Studio required topic omitted";
+        assert.throws(() => assertTopicContract(mutation), assert.AssertionError, `${entry.id} ${promptKind}.${field} topic omission`);
+      }
     }
   }
 });
@@ -397,7 +419,7 @@ test("Studio production catalog rejects positive guarantees and requires separat
     if (value && typeof value === "object") return Object.values(value).flatMap(leafStrings);
     return [];
   };
-  const positiveGuarantee = /(?:(?:성공률?|수익|출시|채용)(?:을|를)\s*(?:(?:확실히|반드시)\s*)?보장(?!하지|되지|할 수 없)|\b(?:this|we|it)\s+guarantees?\s+(?:success(?: rate)?|revenue|launch)\b|\b(?:success(?: rate)?|revenue|launch)\s+is\s+guaranteed\b)/iu;
+  const positiveGuarantee = /(?:(?:성공률?|수익|출시|채용)(?:을|를)\s*(?:(?:확실히|반드시)\s*)?보장(?!하지|되지|할 수 없)|\b(?:this|we|it)\s+guarantees?\s+(?:success(?: rate)?|revenue|launch)\b|(?<!no )\b(?:success(?: rate)?|revenue|launch)\s+is\s+guaranteed\b)/iu;
   const positiveGuarantees = [
     "성공을 확실히 보장한다",
     "This guarantees success",
@@ -423,7 +445,7 @@ test("Studio production catalog rejects positive guarantees and requires separat
       }
     }
   }
-  for (const nonGuarantee of ["성공을 보장하지 않는다", "This is not guaranteed", "We cannot guarantee revenue"]) {
+  for (const nonGuarantee of ["성공을 보장하지 않는다", "This is not guaranteed", "We cannot guarantee revenue", "No success is guaranteed"]) {
     assert.doesNotMatch(nonGuarantee, positiveGuarantee, nonGuarantee);
   }
 });
