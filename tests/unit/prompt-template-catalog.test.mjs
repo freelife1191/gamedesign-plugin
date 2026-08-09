@@ -327,6 +327,99 @@ test("Studio production catalog reads canonical Artifact files before optional d
   }
 });
 
+test("Studio production diagram bindings resolve the matching manifest skill and SVG/PNG records", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [entries, diagramSources, useCaseManifest] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "assets", "use-case-diagram-sources.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "use-cases", "use-case-manifest.json"), "utf8").then(JSON.parse),
+  ]);
+
+  for (const entry of entries) {
+    const source = diagramSources.find(({ semantic }) => semantic?.skill === entry.skill);
+    const skillCase = useCaseManifest.skill_cases.find(({ skill }) => skill === entry.skill);
+    assert.ok(source, entry.id);
+    assert.ok(skillCase, entry.id);
+    assert.equal(entry.diagram_binding.id, source.id, entry.id);
+    assert.equal(entry.diagram_binding.svg, skillCase.diagram.svg, entry.id);
+    assert.equal(entry.diagram_binding.png, skillCase.diagram.png, entry.id);
+  }
+});
+
+test("Studio economy levels retain their distinct required topics across prompts and result layers", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json"),
+    "utf8",
+  ));
+  const expectedTopics = new Map([
+    ["beginner", [/source/iu, /sink/iu]],
+    ["standard", [/progression/iu, /guardrail/iu, /rollback/iu]],
+    ["advanced", [/experiment/iu, /telemetry/iu, /player protection/iu]],
+  ]);
+
+  for (const entry of entries.filter(({ skill }) => skill === "design-game-economy-and-liveops")) {
+    const promptText = [entry.title, entry.purpose, entry.app_prompt.example, entry.app_prompt.template, entry.cli_prompt.example, entry.cli_prompt.template, ...entry.required_inputs].join(" ");
+    const resultText = [...entry.minimum_outputs, ...entry.optional_outputs, ...entry.extended_outputs].join(" ");
+    for (const topic of expectedTopics.get(entry.level)) {
+      assert.match(promptText, topic, `${entry.id} prompt contract`);
+      assert.match(resultText, topic, `${entry.id} result contract`);
+    }
+  }
+});
+
+test("Studio production catalog rejects positive guarantees and requires separate human ownership, approval, and hold contracts", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json"),
+    "utf8",
+  ));
+  const leafStrings = (value) => {
+    if (typeof value === "string") return [value];
+    if (Array.isArray(value)) return value.flatMap(leafStrings);
+    if (value && typeof value === "object") return Object.values(value).flatMap(leafStrings);
+    return [];
+  };
+  const positiveGuarantee = /(?:(?:성공률?|수익|출시|채용)(?:을|를)\s*보장|(?:success(?: rate)?|revenue|launch)\s+guarantee)(?!하지|되지|할 수 없)(?:한다|합니다|됨|될|할)?/iu;
+
+  for (const entry of entries) {
+    assert.doesNotMatch(leafStrings(entry).join(" "), positiveGuarantee, entry.id);
+    assert.match(entry.human_review_boundary, /owner/iu, `${entry.id} owner`);
+    assert.match(entry.human_review_boundary, /(?:lead-game-designer|system-economy-designer|liveops-data-designer|production-feasibility-critic|ux-accessibility-reviewer|document-quality-editor)/u, `${entry.id} human role`);
+    assert.match(entry.human_review_boundary, /승인/u, `${entry.id} human approval`);
+    assert.match(entry.human_review_boundary, /보류/iu, `${entry.id} hold`);
+    const positiveMutation = structuredClone(entry);
+    positiveMutation.app_prompt.example = `${positiveMutation.app_prompt.example} 출시를 보장한다.`;
+    assert.match(leafStrings(positiveMutation).join(" "), positiveGuarantee, `${entry.id} positive guarantee mutation`);
+  }
+});
+
+test("Studio export standard and advanced defer actual output until every renderer gate passes", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json"),
+    "utf8",
+  ));
+
+  for (const entry of entries.filter(({ skill, level }) => (
+    skill === "export-game-design-documents" && ["standard", "advanced"].includes(level)
+  ))) {
+    const contract = leafStrings(entry).join(" ");
+    assert.match(
+      contract,
+      /capability.*canonical preflight.*renderer.*format QA.*모두 통과.*downstream.*actual output.*표시/iu,
+      entry.id,
+    );
+  }
+
+  function leafStrings(value) {
+    if (typeof value === "string") return [value];
+    if (Array.isArray(value)) return value.flatMap(leafStrings);
+    if (value && typeof value === "object") return Object.values(value).flatMap(leafStrings);
+    return [];
+  }
+});
+
 test("loader rejects duplicate IDs and symlink shards", async (t) => {
   const duplicate = validEntry(1);
   const duplicateRoot = await fixtureRoot(t, { entries: [duplicate, { ...duplicate }] });
