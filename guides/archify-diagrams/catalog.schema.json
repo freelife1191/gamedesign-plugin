@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://game-design-plugin.local/schemas/archify-catalog.json",
+  "title": "Curated Archify catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "scan_roots", "scan_excludes", "entries"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "scan_roots": { "$ref": "#/$defs/pathList" },
+    "scan_excludes": { "$ref": "#/$defs/pathList" },
+    "entries": {
+      "type": "array",
+      "items": { "oneOf": [{ "$ref": "#/$defs/selectedEntry" }, { "$ref": "#/$defs/excludedEntry" }] }
+    }
+  },
+  "$defs": {
+    "pathList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "subject", "evidence", "attempted_fix", "round", "remaining_error"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "subject": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "string", "minLength": 1 },
+        "attempted_fix": { "type": "string", "minLength": 1 },
+        "round": { "type": "integer", "minimum": 1 },
+        "remaining_error": { "type": "string", "minLength": 1 }
+      }
+    },
+    "selectedEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "product", "source_document", "source_section", "source_digest", "question", "decision", "decision_reason", "diagram_type", "diagram_type_reason", "priority", "secondary_reason", "visual_system", "composition_rationale", "shared_process_with", "shared_process_reason", "diagnostics", "spec", "html", "receipt", "delivery_status", "visual_review", "reviewer"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "product": { "enum": ["studio", "career"] },
+        "source_document": { "type": "string", "minLength": 1 },
+        "source_section": { "type": "string", "minLength": 1 },
+        "source_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "question": { "type": "string", "minLength": 1 },
+        "decision": { "const": "selected" },
+        "decision_reason": { "type": "string", "minLength": 1 },
+        "diagram_type": { "type": "string", "minLength": 1 },
+        "diagram_type_reason": { "type": "string", "minLength": 1 },
+        "priority": { "enum": ["primary", "secondary"] },
+        "secondary_reason": { "type": ["string", "null"] },
+        "visual_system": { "enum": ["studio", "career"] },
+        "composition_rationale": { "type": "string", "minLength": 1 },
+        "shared_process_with": { "type": ["string", "null"] },
+        "shared_process_reason": { "type": ["string", "null"] },
+        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/diagnostic" } },
+        "spec": { "type": "string", "minLength": 1 },
+        "html": { "type": "string", "minLength": 1 },
+        "receipt": { "type": "string", "minLength": 1 },
+        "delivery_status": { "enum": ["planned", "spec-authored", "auto-validated", "blocked-schema", "blocked-validation", "blocked-visual", "stale-source", "passed", "published"] },
+        "visual_review": { "enum": ["pending", "blocked", "passed"] },
+        "reviewer": { "type": ["string", "null"] }
+      }
+    },
+    "excludedEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "product", "source_document", "source_section", "source_digest", "decision", "exclusion_code", "exclusion_reason", "diagnostics", "spec", "html", "receipt", "delivery_status", "visual_review"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "product": { "enum": ["studio", "career"] },
+        "source_document": { "type": "string", "minLength": 1 },
+        "source_section": { "type": "string", "minLength": 1 },
+        "source_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "decision": { "const": "excluded" },
+        "exclusion_code": { "type": "string", "minLength": 1 },
+        "exclusion_reason": { "type": "string", "minLength": 1 },
+        "diagnostics": { "type": "array", "maxItems": 0 },
+        "spec": { "type": "null" },
+        "html": { "type": "null" },
+        "receipt": { "type": "null" },
+        "delivery_status": { "const": "not-applicable" },
+        "visual_review": { "const": "not-applicable" }
+      }
+    }
+  }
+}
