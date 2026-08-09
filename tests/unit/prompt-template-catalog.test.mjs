@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   loadPromptTemplateCatalog,
@@ -152,6 +153,36 @@ test("complete catalog has exact kind and prompt counts", () => {
     appPrompts: 146,
     cliPrompts: 146,
   });
+});
+
+test("Studio foundation catalog has the exact IDs, levels, and Studio namespaces", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-foundations.json");
+  const entries = JSON.parse(await readFile(catalogPath, "utf8"));
+  const skills = [
+    "apply-document-quality-profile",
+    "define-game-vision",
+    "design-player-experience",
+    "design-game-systems",
+    "design-game-content",
+  ];
+  const levels = ["beginner", "standard", "advanced"];
+  const expectedIds = skills.flatMap((skill) => levels.map((level) => `studio:${skill}:${level}`)).sort();
+
+  assert.equal(entries.length, 15);
+  assert.deepEqual(entries.map(({ id }) => id).sort(), expectedIds);
+  assert.deepEqual(
+    entries.map(({ skill, level }) => `${skill}:${level}`).sort(),
+    expectedIds.map((id) => id.replace(/^studio:/u, "")).sort(),
+  );
+  for (const entry of entries) {
+    assert.equal(entry.kind, "skill-template");
+    assert.equal(entry.product, "studio");
+    assert.match(entry.app_prompt.example, /@Game Design Studio/u);
+    assert.match(entry.app_prompt.template, /@Game Design Studio/u);
+    assert.match(entry.cli_prompt.example, /\$game-design-studio:[a-z-]+/u);
+    assert.match(entry.cli_prompt.template, /\$game-design-studio:[a-z-]+/u);
+  }
 });
 
 test("loader rejects duplicate IDs and symlink shards", async (t) => {
