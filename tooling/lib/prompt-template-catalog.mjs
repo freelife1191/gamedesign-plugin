@@ -92,12 +92,27 @@ function clauseProhibitsCategory(clause, category) {
   );
 }
 
+function clauseIsPureSensitiveInputProhibition(clause) {
+  const prohibition = DIRECT_PROHIBITION_START.exec(clause);
+  if (prohibition !== null) {
+    const target = clause.slice(prohibition[0].length).trim().replace(/^(?:your|the)\s+/iu, "");
+    return isPureSensitiveCategoryList(target);
+  }
+  return SENSITIVE_CATEGORIES.some((category) => new RegExp(
+    `^${category.pattern.source}(?:\\s+(?:is|are|was|were|은|는|이|가))?\\s+${DIRECT_PROHIBITION_SUFFIX.source}$`,
+    "iu",
+  ).test(clause));
+}
+
 function requestsSensitiveInput(value) {
   if (!isNonemptyString(value)) return false;
-  return textClauses(value).some((clause) => SENSITIVE_CATEGORIES.some((category) => {
-    if (clauseProhibitsCategory(clause, category)) return false;
-    return new RegExp(`${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`, "iu").test(clause);
-  }));
+  return textClauses(value).some((clause) => {
+    const requestsInput = SENSITIVE_CATEGORIES.some((category) => new RegExp(
+      `${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`,
+      "iu",
+    ).test(clause));
+    return requestsInput && !clauseIsPureSensitiveInputProhibition(clause);
+  });
 }
 
 function missingSafetyProhibitions(value) {

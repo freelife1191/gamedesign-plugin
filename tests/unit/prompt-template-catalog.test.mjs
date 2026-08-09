@@ -345,3 +345,19 @@ test("resume prompts allow direct prohibitions on sharing credentials", () => {
   const result = validatePromptTemplateCatalog({ entries: [entry] });
   assert.equal(result.ok, true, result.errors.join("\n"));
 });
+
+test("resume prompts reject credential requests after a credential not-required statement", () => {
+  const entry = validEntry(18);
+  entry.resume_prompt = "Credentials are not required but provide your credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
+});
+
+test("resume prompts reject credential requests after a without-credentials statement", () => {
+  const entry = validEntry(19);
+  entry.resume_prompt = "Resume without credentials after you provide your credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
+});
