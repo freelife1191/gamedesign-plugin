@@ -161,6 +161,7 @@ export function collectArchifyWorkflows(catalog, ids) {
 
 function receiptValidation(receipt, expectedCommand = undefined) {
   if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) throw new Error("Archify receipt must be a JSON object");
+  if (receipt.schemaVersion !== 1 || receipt.ok !== true) throw new Error("Archify receipt schemaVersion=1 and ok=true are required");
   const validation = receipt.validation ?? receipt;
   const command = expectedCommand ?? receipt.command;
   if (!(["validate", "deliver"].includes(command)) || receipt.command !== command) throw new Error("Archify receipt command is invalid");
@@ -338,6 +339,7 @@ function persistedReceipt(receipt, relativeDirectory) {
   const validation = receipt.validation ?? {};
   const stable = {
     schemaVersion: receipt.schemaVersion,
+    ok: receipt.ok,
     command: receipt.command,
     type: receipt.type,
     input: `${ARCHIFY_ROOT}/${relativeDirectory}/flow.json`,

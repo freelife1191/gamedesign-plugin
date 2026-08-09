@@ -59,7 +59,7 @@ async function treeBytes(root) {
 
 function receipt(specification, artifact, { warnings = 0, checks = 9 } = {}) {
   return JSON.stringify({
-    command: "deliver", type: "workflow",
+    schemaVersion: 1, ok: true, command: "deliver", type: "workflow",
     validation: { checksPassed: checks, checkCount: checks, errors: 0, warnings, compositionProfile: "showcase", compositionStatus: "pass" },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) },
     artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
@@ -68,7 +68,7 @@ function receipt(specification, artifact, { warnings = 0, checks = 9 } = {}) {
 
 function validationReceipt({ warnings = 0, checks = 9 } = {}) {
   return JSON.stringify({
-    command: "validate", type: "workflow",
+    schemaVersion: 1, ok: true, command: "validate", type: "workflow",
     checks: Array.from({ length: checks }, (_, index) => ({ name: `check-${index}`, ok: true })),
     composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings } },
   });
@@ -197,14 +197,14 @@ test("receipt validation accepts canonical Archify showcase JSON", () => {
   const specification = "spec";
   const artifact = "html";
   assert.doesNotThrow(() => validateArchifyReceipt({
-    command: "validate", type: "workflow",
+    schemaVersion: 1, ok: true, command: "validate", type: "workflow",
     checks: Array.from({ length: 9 }, (_, index) => ({ name: `check-${index}`, ok: true })),
     composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) },
     artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
   }, { specification, artifact }));
   assert.doesNotThrow(() => validateArchifyReceipt({
-    command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "showcase", compositionStatus: "pass" },
+    schemaVersion: 1, ok: true, command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "showcase", compositionStatus: "pass" },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) },
     artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
   }, { specification, artifact }));
@@ -214,7 +214,7 @@ test("validate and deliver receipts fail closed on false, duplicate, or wrong-qu
   const specification = "spec";
   const artifact = "html";
   const validation = {
-    command: "validate", type: "workflow", composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } },
+    schemaVersion: 1, ok: true, command: "validate", type: "workflow", composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } },
     checks: Array.from({ length: 9 }, (_, index) => ({ name: `check-${index}`, ok: true })),
   };
   assert.doesNotThrow(() => validateArchifyReceipt(validation));
@@ -225,7 +225,7 @@ test("validate and deliver receipts fail closed on false, duplicate, or wrong-qu
     { ...validation, composition: { ...validation.composition, profile: "standard" } },
   ]) assert.throws(() => validateArchifyReceipt(mutation), /check|command|showcase/u);
   assert.throws(() => validateArchifyReceipt({
-    command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "standard" },
+    schemaVersion: 1, ok: true, command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "standard" },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) }, artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
   }, { specification, artifact }), /showcase/u);
 });

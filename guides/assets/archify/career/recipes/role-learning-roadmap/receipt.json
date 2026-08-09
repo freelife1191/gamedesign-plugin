@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/career/recipes/role-learning-roadmap/flow.json",
