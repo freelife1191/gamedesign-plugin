@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "1개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "2개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,105 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "canonical artifact ID",
+        "recruiter PPTX purpose",
+        "canonical preflight",
+        "renderer capability",
+        "MD audience",
+        "PDF DOCX formats",
+        "capability probes"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: export-career-documents",
+        "beginner: export-career-documents",
+        "standard: export-career-documents"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "document-quality-editor",
+        "evidence-auditor",
+        "transition-readiness",
+        "portfolio-project-brief",
+        "interview-question-answer-log"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "document-quality-editor는 구조/format finding만 검토한다. evidence-auditor는 evidence completion gate를 검토한다. named human decision owner가 승인/보류한다. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다.",
+        "recruiter PPTX canonical preflight, capability, renderer, format QA",
+        "human review와 hold/resume non-terminal job",
+        "fact/inference/recommendation; actual output 전 전달 완료 금지",
+        "canonical preflight와 MD capability/renderer/format QA 상태",
+        "human review 전 non-terminal job, fact/inference/recommendation",
+        "PDF·DOCX canonical preflight, capability, renderer, format QA",
+        "human review 전 non-terminal status와 fact/inference/recommendation",
+        "PPTX story outline",
+        "resumable action",
+        "per-format resume action",
+        "trusted downstream renderer handoff",
+        "downstream handoff",
+        "trusted downstream handoff"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "canonical preflight가 passed가 아님",
+        "renderer capability 또는 format QA owner가 미정",
+        "renderer capability가 unknown",
+        "canonical preflight가 incomplete",
+        "요청 format의 capability probe가 없음",
+        "export-advanced의 canonical preflight와 PPTX hold를 보존하고 renderer capability와 human review 확인 후 재개해.",
+        "export-beginner의 canonical preflight와 MD job을 보존하고 capability probe 후 재개해.",
+        "export-standard의 PDF·DOCX preflight를 보존하고 capability probe 결과 후 재개해."
+      ]
     }
   ]
 }

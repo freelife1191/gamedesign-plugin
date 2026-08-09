@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/career/plan-junior-growth/flow.json",
   "output": "guides/assets/archify/career/plan-junior-growth/flow.html",
-  "specification": {
-    "sha256": "b97d027fbbf747fd33a0b2fade8932a3aa79b818d394e54a6ffa30ed91eea669",
-    "bytes": 3482
-  },
-  "artifact": {
-    "sha256": "fe4c066f3666ddd2f3c8b747f53ace774d200744d551cf72a4cf0b9d03684057",
-    "bytes": 604273
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "b47287829cf241087d764ec20d154d1163c2d0750c2b36d4a1b72844c69989d9",
+    "bytes": 6563
+  },
+  "artifact": {
+    "sha256": "09cc569080f731340db5c4180f0c4c84780cc3573bdc9a2d532e66c6f27462fe",
+    "bytes": 609007
   }
 }

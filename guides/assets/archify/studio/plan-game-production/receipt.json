@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/plan-game-production/flow.json",
   "output": "guides/assets/archify/studio/plan-game-production/flow.html",
-  "specification": {
-    "sha256": "e759a5a420ba79a0058d1a8a09bc3ae755b7d7d3834ed62a1b7e57a426a10e79",
-    "bytes": 3514
-  },
-  "artifact": {
-    "sha256": "55c24357fe81753311fffb41d3a300dc27499ecc337d983052bbed3169580522",
-    "bytes": 604369
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "6b3b15b9993b453927dcf1383393b06588a7892be4ba6695e652810e115cf44b",
+    "bytes": 7243
+  },
+  "artifact": {
+    "sha256": "7cb8a9327462a834434428645de5747331701136cc4520200ecaa23b09ea9d4f",
+    "bytes": 610036
   }
 }

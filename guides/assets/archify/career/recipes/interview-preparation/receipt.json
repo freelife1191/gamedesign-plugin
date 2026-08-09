@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/career/recipes/interview-preparation/flow.json",
   "output": "guides/assets/archify/career/recipes/interview-preparation/flow.html",
-  "specification": {
-    "sha256": "c565f9c85df877783c943aaa16eecfae7f4b0ea3e221435f1a0247a1988beb34",
-    "bytes": 2961
-  },
-  "artifact": {
-    "sha256": "47187cc7c72b39da3a62a5df1452eade1ffd4d5660c53772d8a3f25964860b13",
-    "bytes": 603915
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "ed05d53639598b5f259c3a1d8d72c214b5e934e05cff871c13fd8e4aad1d9600",
+    "bytes": 4610
+  },
+  "artifact": {
+    "sha256": "4eedfec2aaa8d405a976166445a7da3cf6b98e86b38740538d8c9d30475aaa38",
+    "bytes": 606782
   }
 }

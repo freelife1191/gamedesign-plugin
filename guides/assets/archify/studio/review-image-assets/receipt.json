@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/review-image-assets/flow.json",
   "output": "guides/assets/archify/studio/review-image-assets/flow.html",
-  "specification": {
-    "sha256": "a93b17892e945a792503c9e7c6a77024e79f748d25ddfe05c6f119cd6d6dc220",
-    "bytes": 3496
-  },
-  "artifact": {
-    "sha256": "e8b4c48eb5fe54f98d05f291aac64f846d5b65a8090b0d2e154c4f2abaf7a953",
-    "bytes": 604315
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "e51699280b33398b827e2e6e41098d102d75a7cc829f4f13a3791b1cf298c50c",
+    "bytes": 7653
+  },
+  "artifact": {
+    "sha256": "6f13d2067a86e0e0a91cf1c4036e479da3655499cfa7a40f14174cb87a751526",
+    "bytes": 610410
   }
 }

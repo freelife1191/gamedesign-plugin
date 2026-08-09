@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/career/recipes/reverse-design/flow.json",
   "output": "guides/assets/archify/career/recipes/reverse-design/flow.html",
-  "specification": {
-    "sha256": "c4a9d1a57e3a056ccb56ea55028b4e67c06e54e5d6a4768fb640094ff13c4ae9",
-    "bytes": 2954
-  },
-  "artifact": {
-    "sha256": "54123df212e29b11bea7f6c13f9137d9a97071a192e35fe020a5362d613f64a4",
-    "bytes": 603894
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "ce3e4b7fa1351677e71ecfa5cd79bc59f79a7191380e2e64946858075f2304fb",
+    "bytes": 4569
+  },
+  "artifact": {
+    "sha256": "bd565b7f4a4a9bba1ee539b9f79ce0d944b832f77c32d696b58967fcd26d508e",
+    "bytes": 606727
   }
 }

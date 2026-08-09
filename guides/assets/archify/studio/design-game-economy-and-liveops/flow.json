@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "2개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "3개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,129 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "economy Artifact version",
+        "experiment hypothesis",
+        "telemetry 정의",
+        "price/probability/pity 근거 상태",
+        "player protection owner",
+        "decision owner",
+        "resource ID",
+        "known source",
+        "known sink",
+        "보유 한도",
+        "economy owner",
+        "progression target",
+        "guardrail",
+        "stop 조건",
+        "tested rollback"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: design-game-economy-and-liveops → review-game-design",
+        "beginner: design-game-economy-and-liveops",
+        "standard: design-game-economy-and-liveops → review-game-design"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "system-economy-designer",
+        "liveops-data-designer",
+        "ux-accessibility-reviewer",
+        "economy-balance",
+        "liveops-experiment-event",
+        "decision-change-log"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "system-economy-designer player protection owner와 named decision owner가 blocker 해소를 승인·수정·보류하며 telemetry receipt는 수익·성공률·출시를 보장하지 않는다.",
+        "system-economy-designer owner가 자원 정의를 승인·수정·보류하며 초안은 가격 또는 수익 승인이나 성공 보장이 아니다.",
+        "system-economy-designer owner와 liveops-data-designer가 progression·guardrail·stop·rollback을 승인·수정·보류하며 자동화는 economy 결과, 수익 또는 출시를 보장하지 않는다.",
+        "experiment·telemetry·player protection evidence gap",
+        "experiment·telemetry·player protection blocked decision",
+        "experiment·telemetry·player protection No-Go receipt",
+        "experiment·telemetry·player protection owner",
+        "source·sink 표",
+        "source·sink 보유 한도 기록",
+        "source·sink 미정 근거 목록",
+        "progression·guardrail·rollback target",
+        "progression·guardrail·rollback stop 조건",
+        "progression·guardrail·rollback tested 상태",
+        "provisional metric 범위",
+        "region별 policy 질문",
+        "보유 한도 질문",
+        "player consequence 메모",
+        "provisional progression 범위",
+        "region constraint",
+        "No-Go receipt",
+        "review-ready decision queue",
+        "review handoff 조건",
+        "economy owner 확인 기록",
+        "progression review 질문",
+        "rollback No-Go blocker"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "telemetry 정의가 없음",
+        "price·probability·pity 근거가 없음",
+        "player protection owner가 없음",
+        "economy owner가 없음",
+        "source 또는 sink 근거가 없음",
+        "실가격을 확정하려 함",
+        "progression target이 없음",
+        "tested rollback 증거가 없음",
+        "guardrail owner가 없음",
+        "economy-advanced의 blocked decision queue와 telemetry evidence gap을 보존하고 공개된 근거 하나만 연결해 해당 blocker 확인부터 재개해.",
+        "economy-beginner의 source·sink 표와 미정 근거를 보존한 뒤 새 관찰 근거만 연결해 provisional 가설 확인부터 재개해.",
+        "economy-standard의 progression·guardrail·rollback 기록과 현재 stop 상태를 보존하고 새 rollback rehearsal 증거만 반영해 guardrail 검토부터 재개해."
+      ]
     }
   ]
 }

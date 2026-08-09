@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "3개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "3개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,126 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "vision-pillars",
+        "feature 후보",
+        "evidence",
+        "decision owner",
+        "제약",
+        "게임 아이디어",
+        "target player 근거",
+        "desired emotion",
+        "기존 vision",
+        "candidate pillar",
+        "anti-pillar",
+        "prototype 제약",
+        "design owner"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: define-game-vision → review-game-design",
+        "beginner: define-game-vision",
+        "standard: define-game-vision → design-game-systems"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "lead-game-designer",
+        "production-feasibility-critic",
+        "content-narrative-designer",
+        "vision-pillars",
+        "decision-change-log",
+        "game-design-brief",
+        "core-motivation-loop"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "design owner가 상충 기능의 채택·수정·보류를 결정하며 evidence가 provisional인 항목은 자동 승인하지 않는다.",
+        "lead-game-designer가 player promise와 pillar를 승인·수정·보류하며 초안은 기능 범위 승인이 아니다.",
+        "lead-game-designer가 non-goal과 prototype 기준을 결정하고 content-narrative-designer는 표현의 일관성을 검토한다.",
+        "feature 비교",
+        "근거 상태",
+        "owner 질문",
+        "target player",
+        "player promise",
+        "pillar 하나",
+        "검증 질문",
+        "pillar",
+        "anti-pillar",
+        "non-goal",
+        "prototype 관찰 질문",
+        "scope risk",
+        "prototype follow-up",
+        "desired emotion",
+        "core fun 가설",
+        "player verb",
+        "success signal",
+        "승인 receipt 대기 record",
+        "system handoff 조건",
+        "core-motivation-loop",
+        "provisional validation task",
+        "core loop 가설",
+        "system handoff criteria"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "feature 후보의 근거가 분리되지 않음",
+        "decision owner의 receipt가 없음",
+        "target player 근거가 없음",
+        "decision owner가 없음",
+        "pillar와 anti-pillar가 구분되지 않음",
+        "prototype 관찰 방법이 없음",
+        "vision-advanced의 비교표와 owner 질문을 보존하고 새로 확인된 플레이테스트 evidence만 연결해 provisional 선택지부터 재개해.",
+        "vision-beginner의 player promise와 질문을 보존하고 새 플레이어 관찰 근거를 evidence.yml에 연결한 뒤 provisional 기준부터 재개해.",
+        "vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 결과만 evidence.yml에 붙여 검증 질문부터 재개해."
+      ]
     }
   ]
 }

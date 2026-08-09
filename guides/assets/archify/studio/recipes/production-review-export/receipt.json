@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/recipes/production-review-export/flow.json",
   "output": "guides/assets/archify/studio/recipes/production-review-export/flow.html",
-  "specification": {
-    "sha256": "240613a352d3273621630321d2afbc0d3101a89212962ca912727acc8bec8daa",
-    "bytes": 2964
-  },
-  "artifact": {
-    "sha256": "e06d341547d3ffd310dfdbe8f409e5dc2cb6a1b063aacc30d1d07055358d793d",
-    "bytes": 603924
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "b5ce0b11d2cef357c0a26cc2c966fd299326eb682286adcf6cdd57424994c4ff",
+    "bytes": 4727
+  },
+  "artifact": {
+    "sha256": "7207dfdea2bdc2871c1553c4d16de3ac370db98992c570993a7d07af40735f48",
+    "bytes": 606935
   }
 }

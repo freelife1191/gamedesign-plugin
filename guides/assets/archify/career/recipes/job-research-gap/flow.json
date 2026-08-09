@@ -59,48 +59,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "3개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "1개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -133,14 +134,81 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "공개 가능한 canonical artifact"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "standard: research-game-design-jobs → map-game-design-career → build-game-design-portfolio"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "career-strategist",
+        "job-posting-evidence",
+        "competency-matrix",
+        "portfolio-project-brief"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "named human decision owner가 job-research-gap의 approval 또는 보류를 결정한다.",
+        "job-posting-evidence canonical artifact",
+        "blocker와 resume receipt",
+        "공개 가능한 evidence summary",
+        "downstream handoff"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "canonical evidence, rights, 또는 owner receipt가 없으면 보류",
+        "job-research-gap의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해."
+      ]
     }
   ]
 }

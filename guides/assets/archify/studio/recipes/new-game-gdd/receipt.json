@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/recipes/new-game-gdd/flow.json",
   "output": "guides/assets/archify/studio/recipes/new-game-gdd/flow.html",
-  "specification": {
-    "sha256": "1464336b723da91abf9c5927c08cbfdbec237eb33527ee764411b4e72ee33daf",
-    "bytes": 2952
-  },
-  "artifact": {
-    "sha256": "0f7e2a1389d8a0cd4ae45e09198fad32aa2ab1303880ca48db3ab6ccf79d9c67",
-    "bytes": 603888
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "25bef146bbc605a41c400bbb14f4e0a598531a7dbd9d4e4583c04d1a1fac57ba",
+    "bytes": 4633
+  },
+  "artifact": {
+    "sha256": "516316ec4d04e2400be38a3eac3df6883295c3b44b20ccb35e6c073480cc70d1",
+    "bytes": 606802
   }
 }

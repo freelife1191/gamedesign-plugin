@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/career/recipes/role-learning-roadmap/flow.json",
   "output": "guides/assets/archify/career/recipes/role-learning-roadmap/flow.html",
-  "specification": {
-    "sha256": "49a374ea638c9fee90ca9fcaee1a81b428a7f770baecad71802570f1c5421d4f",
-    "bytes": 2961
-  },
-  "artifact": {
-    "sha256": "6ca5ebf8c88f637788829260f39c824708695a5cc205c16207b6581789d897b1",
-    "bytes": 603915
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "f6d15a5796567b48a7c0420b206941e8d9075e7c81eb92165d2c9491aba267b8",
+    "bytes": 4613
+  },
+  "artifact": {
+    "sha256": "fbdf68c9b618c7eba3c11c4c566cf336fcc922d48b7234596d05a7828680b796",
+    "bytes": 606800
   }
 }

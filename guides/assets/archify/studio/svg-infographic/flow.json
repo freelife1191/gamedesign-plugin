@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "3개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "3개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,126 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "Canonical Artifact",
+        "selected preset",
+        "stable source IDs",
+        "numeric layout plan",
+        "accessibility metadata",
+        "human approval owner",
+        "output directory",
+        "relationship structure",
+        "audience",
+        "acceptance criteria"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: visualize-game-design → svg-infographic → review-game-design",
+        "beginner: visualize-game-design → svg-infographic",
+        "standard: visualize-game-design → svg-infographic"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "lead-game-designer",
+        "ux-accessibility-reviewer",
+        "production-feasibility-critic",
+        "rule-exception-matrix",
+        "production-scope-risk"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "lead-game-designer owner와 ux-accessibility-reviewer가 lint 0 warning/error, accessibility metadata와 visual QA를 승인·수정·보류하고 named human approval 없이는 verified handoff를 승인하지 않는다.",
+        "lead-game-designer owner가 structure와 accessibility metadata를 승인·수정·보류하며 editable SVG는 linted, rendered, verified 또는 human-approved가 아니다.",
+        "lead-game-designer owner와 ux-accessibility-reviewer가 source mapping·renderer evidence를 승인·수정·보류하며 2× PNG render는 document approval이 아니다.",
+        "lint 0 warning/error result",
+        "exact 2× PNG render",
+        "title·desc·adjacent alt accessibility metadata",
+        "fit-to-page·close-up visual QA",
+        "named human approval record",
+        "editable SVG",
+        "nonempty title",
+        "nonempty desc",
+        "adjacent alt text",
+        "stable source mapping",
+        "editable SVG authority",
+        "source mapping",
+        "wrapper lint result",
+        "canonical renderer result",
+        "exact 2× PNG",
+        "Archify priority receipt",
+        "Skillstead fallback state",
+        "numeric layout plan",
+        "SVG-only draft state",
+        "browser identity",
+        "manual fallback status",
+        "verified or blocked evidence state",
+        "review finding handoff",
+        "visualize-game-design handoff",
+        "fit-to-page·close-up QA handoff"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "lint warning 또는 error가 0이 아님",
+        "2× render·visual QA evidence가 없음",
+        "accessibility metadata 또는 named human approval이 없음",
+        "selected preset이 없음",
+        "stable source IDs가 없음",
+        "title·desc 또는 alt text가 없음",
+        "source mapping이 없음",
+        "lint warning 또는 error가 미처리",
+        "renderer 또는 dimensions evidence가 없음",
+        "svg-advanced의 editable SVG와 통과한 evidence를 보존하고 해결된 lint·render·accessibility·human approval gate 하나만 반영해 해당 QA 단계부터 재개해.",
+        "svg-beginner의 editable SVG와 source mapping을 보존하고 누락된 title·desc·alt text만 반영해 source checklist부터 재개해.",
+        "svg-standard의 editable SVG와 renderer evidence를 보존하고 실패한 lint 또는 render 단계만 반영해 2× PNG handoff부터 재개해."
+      ]
     }
   ]
 }

@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/generate-image-assets/flow.json",
   "output": "guides/assets/archify/studio/generate-image-assets/flow.html",
-  "specification": {
-    "sha256": "294d2cf0c3c6d702c9267b4ee6d5286280ec05e7f314dff01a80d9b1d27b3b48",
-    "bytes": 3494
-  },
-  "artifact": {
-    "sha256": "65f42c0d577dace926a7a837bd33ca34651acbb6469b04637138537556986227",
-    "bytes": 604309
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "ceee85191b08ec348dbe95e4cb8730bbe0b2030f97e133d0bd6c8b37ca86da3e",
+    "bytes": 7337
+  },
+  "artifact": {
+    "sha256": "b9d6d5bab1a0fc4cf122364ae81c55e8ffac233ddea618c77512e788a0f16620",
+    "bytes": 610030
   }
 }

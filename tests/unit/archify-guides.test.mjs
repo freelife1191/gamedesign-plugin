@@ -8,8 +8,10 @@ import test from "node:test";
 import {
   buildArchifyGuides,
   buildArchifyWorkflowSpec,
+  collectArchifyWorkflows,
   validateArchifyReceipt,
 } from "../../tooling/lib/archify-guides.mjs";
+import { loadPromptTemplateCatalog } from "../../tooling/lib/prompt-template-catalog.mjs";
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 
@@ -22,6 +24,8 @@ function entry({ id = "studio:define-game-vision:beginner", kind = "skill-templa
     specialist_roles: ["lead-game-designer"],
     intermediate_artifacts: ["vision-pillars"],
     minimum_outputs: ["game-design-brief"],
+    optional_outputs: ["decision receipt"],
+    extended_outputs: ["evidence summary"],
     human_review_boundary: "design owner가 결과를 승인 또는 보류한다.",
     hold_conditions: ["근거가 없으면 보류"],
     resume_prompt: "보존한 근거로 재개한다.",
@@ -41,9 +45,18 @@ async function repo(t) {
 
 function receipt(specification, artifact, { warnings = 0, checks = 9 } = {}) {
   return JSON.stringify({
-    validation: { artifactChecks: Array.from({ length: checks }, (_, index) => ({ id: `check-${index}` })), errors: [], warnings: Array.from({ length: warnings }, () => ({ code: "warning" })) },
+    command: "deliver", type: "workflow",
+    validation: { checksPassed: checks, checkCount: checks, errors: 0, warnings, compositionProfile: "showcase", compositionStatus: "pass" },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) },
     artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
+  });
+}
+
+function validationReceipt({ warnings = 0, checks = 9 } = {}) {
+  return JSON.stringify({
+    command: "validate", type: "workflow",
+    checks: Array.from({ length: checks }, (_, index) => ({ name: `check-${index}`, ok: true })),
+    composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings } },
   });
 }
 
@@ -54,7 +67,7 @@ function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterminist
     if (exitCode !== 0) return { code: exitCode, stdout: "", stderr: "failed" };
     const command = args[0];
     const specification = await readFile(args[2], "utf8");
-    if (command === "validate") return { code: 0, stdout: receipt(specification, "validate", { warnings, checks }), stderr: "" };
+    if (command === "validate") return { code: 0, stdout: validationReceipt({ warnings, checks }), stderr: "" };
     const html = `<!doctype html><title>flow-${nondeterministic ? sequence++ : "stable"}</title>`;
     await writeFile(args[3], html);
     const delivered = JSON.parse(receipt(specification, html, { warnings, checks }));
@@ -75,13 +88,14 @@ test("workflow projection is bounded and keeps the required showcase contract", 
   assert.equal(workflow.nodes.length <= 12, true);
   assert.equal(workflow.mainPath.length >= 2, true);
   for (const view of workflow.meta.views) for (const focus of view.focus) assert.ok(workflow.nodes.some((node) => node.id === focus));
-  assert.equal(workflow.nodes.find((node) => node.id === "skill").sublabel, "2개 스킬");
-  assert.equal(workflow.nodes.find((node) => node.id === "review").sublabel, "1개 전문 역할");
+  assert.equal(workflow.nodes.find((node) => node.id === "skill").label, "순서 스킬 체인");
+  assert.equal(workflow.edges.find((edge) => edge.id === "resume-skill").label, undefined);
+  assert.match(workflow.cards.find((card) => card.title === "순서 스킬 체인").items.join("\n"), /define-game-vision → review-game-design/u);
   assert.deepEqual(
     Object.fromEntries(workflow.nodes.map((node) => [node.id, [node.lane, node.col]])),
     {
       input: ["input-lane", 0], skill: ["execution-lane", 1], artifact: ["execution-lane", 3],
-      review: ["review-lane", 4], result: ["result-lane", 5], resume: ["result-lane", 2],
+      review: ["review-lane", 4], result: ["result-lane", 5], hold: ["review-lane", 2], resume: ["result-lane", 0],
     },
   );
   for (const left of workflow.nodes) for (const right of workflow.nodes) {
@@ -89,20 +103,72 @@ test("workflow projection is bounded and keeps the required showcase contract", 
   }
 });
 
+const normalized = (value) => String(value).replace(/\s+/gu, "");
+const visibleWorkflowText = (workflow) => normalized([
+  ...workflow.nodes.flatMap((node) => [node.label, node.sublabel]),
+  ...workflow.edges.map((edge) => edge.label),
+  ...(workflow.cards ?? []).flatMap((card) => [card.title, ...card.items]),
+].filter(Boolean).join("\n"));
+
+test("production 50 workflow projections visibly preserve every catalog semantic and resume to active work", async () => {
+  const repoRoot = path.resolve(import.meta.dirname, "../..");
+  const catalog = await loadPromptTemplateCatalog({ repoRoot });
+  const workflows = collectArchifyWorkflows(catalog);
+  assert.equal(workflows.length, 50);
+  for (const entries of workflows) {
+    const workflow = buildArchifyWorkflowSpec(entries);
+    assert.ok(Array.isArray(workflow.cards) && workflow.cards.length >= 4, `${entries[0].id} needs visible semantic cards`);
+    const visible = visibleWorkflowText(workflow);
+    for (const entry of entries) {
+      for (const value of [
+        ...entry.required_inputs, ...entry.skill_chain, ...entry.specialist_roles,
+        ...entry.intermediate_artifacts, ...entry.minimum_outputs, ...entry.optional_outputs,
+        ...entry.extended_outputs, entry.human_review_boundary, ...entry.hold_conditions, entry.resume_prompt,
+      ]) assert.ok(visible.includes(normalized(value)), `${entry.id} semantic text missing: ${value}`);
+    }
+    const hold = workflow.nodes.find((node) => node.id === "hold");
+    const resume = workflow.nodes.find((node) => node.id === "resume");
+    assert.ok(hold && resume);
+    assert.ok(workflow.edges.some((edge) => edge.from === hold.id && edge.to === resume.id));
+    assert.ok(workflow.edges.some((edge) => edge.from === resume.id && workflow.mainPath.includes(edge.to)));
+  }
+});
+
 test("receipt validation accepts canonical Archify showcase JSON", () => {
   const specification = "spec";
   const artifact = "html";
   assert.doesNotThrow(() => validateArchifyReceipt({
+    command: "validate", type: "workflow",
     checks: Array.from({ length: 9 }, (_, index) => ({ name: `check-${index}`, ok: true })),
-    composition: { summary: { errors: 0, warnings: 0 } },
+    composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) },
     artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
   }, { specification, artifact }));
   assert.doesNotThrow(() => validateArchifyReceipt({
-    validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0 },
+    command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "showcase", compositionStatus: "pass" },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) },
     artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
   }, { specification, artifact }));
+});
+
+test("validate and deliver receipts fail closed on false, duplicate, or wrong-quality records", () => {
+  const specification = "spec";
+  const artifact = "html";
+  const validation = {
+    command: "validate", type: "workflow", composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } },
+    checks: Array.from({ length: 9 }, (_, index) => ({ name: `check-${index}`, ok: true })),
+  };
+  assert.doesNotThrow(() => validateArchifyReceipt(validation));
+  for (const mutation of [
+    { ...validation, checks: validation.checks.map((check, index) => index === 0 ? { ...check, ok: false } : check) },
+    { ...validation, checks: validation.checks.map((check, index) => index === 8 ? { ...check, name: "check-0" } : check) },
+    { ...validation, command: "deliver" },
+    { ...validation, composition: { ...validation.composition, profile: "standard" } },
+  ]) assert.throws(() => validateArchifyReceipt(mutation), /check|command|showcase/u);
+  assert.throws(() => validateArchifyReceipt({
+    command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "standard" },
+    specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) }, artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
+  }, { specification, artifact }), /showcase/u);
 });
 
 test("builder uses exact canonical CLI arguments and persists only a verified 9/9 receipt", async (t) => {

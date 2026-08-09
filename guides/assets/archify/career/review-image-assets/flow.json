@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "1개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "2개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,125 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "Canonical Artifact",
+        "stable asset ID",
+        "targetState=production-candidate",
+        "actual user decision",
+        "reviewedAt",
+        "immutable structured host-user-image-decision receipt",
+        "named human reviewer",
+        "rightsDecision",
+        "active-rights evidence",
+        "technical fit evidence",
+        "alt text",
+        "readability evidence",
+        "owner",
+        "[stable asset ID]",
+        "[placement]",
+        "[named human reviewer]",
+        "source·attribution 또는 미정 기록",
+        "targetState=document-approved",
+        "placement"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: review-image-assets",
+        "beginner: review-image-assets",
+        "standard: review-image-assets"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "visual-asset-reviewer",
+        "art-brief-director",
+        "creative-design-portfolio",
+        "portfolio-project-brief"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "named human reviewer와 production reviewer owner가 stable asset ID, evidence, rights와 active-rights, technical fit, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
+        "named human reviewer와 rights/visual reviewer owner가 stable asset ID, evidence, rights, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
+        "named human reviewer와 rights/visual reviewer owner가 stable asset ID, evidence, rights, placement, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
+        "stable asset ID finding",
+        "named human decision receipt",
+        "rights/provenance·alt text·readability record",
+        "accepted or held lifecycle transition",
+        "unresolved blocker",
+        "alternative presentation",
+        "evidence.yml receipt",
+        "review handoff",
+        "resumable next action"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "evidenceKey=targetState — targetState가 누락·불일치",
+        "evidenceKey=actualUserDecision — actual user decision이 누락·불일치",
+        "evidenceKey=reviewedAt — reviewedAt이 누락·불일치",
+        "evidenceKey=hostUserImageDecisionReceipt — immutable structured host-user-image-decision receipt가 누락·불일치",
+        "evidenceKey=namedHumanReviewer — named human reviewer가 없음",
+        "evidenceKey=rightsDecision — rightsDecision이 누락·불일치",
+        "evidenceKey=activeRights — active-rights evidence가 누락·불일치",
+        "evidenceKey=technicalFit — technical fit evidence가 누락·불일치",
+        "evidenceKey=altText — alt text가 미정",
+        "evidenceKey=readability — readability evidence가 누락·불일치",
+        "named human reviewer evidence가 없음",
+        "rights/provenance 또는 attribution/source가 미정",
+        "alt text 또는 readability evidence가 없음",
+        "evidenceKey=rightsDecision — rightsDecision evidence가 없음",
+        "evidenceKey=placement — placement가 미정",
+        "evidenceKey=readability — readability evidence가 미정",
+        "review-image-assets/advanced의 검증된 evidence만 보존하고, repair/verify evidenceKeys=[targetState,actualUserDecision,reviewedAt,hostUserImageDecisionReceipt,namedHumanReviewer,rightsDecision,activeRights,technicalFit,altText,readability]의 실제 누락·불일치를 각각 보완·검증한 뒤 current state의 hold 지점부터 재개해.",
+        "review-image-assets/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+        "review-image-assets/standard의 검증된 evidence만 보존하고, repair/verify evidenceKeys=[targetState,actualUserDecision,reviewedAt,hostUserImageDecisionReceipt,namedHumanReviewer,rightsDecision,placement,altText,readability]의 실제 누락·불일치를 각각 보완·검증한 뒤 current state의 hold 지점부터 재개해."
+      ]
     }
   ]
 }

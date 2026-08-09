@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "2개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "2개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,123 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "validated image manifest",
+        "compiled prompt package",
+        "IMAGE_GEN_MODE=all",
+        "redacted provider configuration",
+        "capability snapshot",
+        "declared finite jobs",
+        "IMAGE_GEN_MODE=select",
+        "actual user selection receipt",
+        "ordered stable asset ID",
+        "IMAGE_GEN_MODE=required",
+        "redacted configuration",
+        "declared required stable IDs"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: generate-image-assets → review-image-assets",
+        "beginner: generate-image-assets → review-image-assets",
+        "standard: generate-image-assets → review-image-assets"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "art-brief-director",
+        "visual-asset-reviewer",
+        "game-design-brief"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "visual-asset-reviewer owner가 provenance와 failure handoff를 승인·수정·보류하며 provider 성공은 document-approved나 production-candidate가 아니다.",
+        "visual-asset-reviewer owner가 생성 결과의 검토 handoff를 승인·수정·보류하며 생성은 승인이 아니고 상태는 concept-draft에 머문다.",
+        "visual-asset-reviewer owner가 provider result와 review handoff를 승인·수정·보류하며 unavailable·생성 결과는 document-approved가 아니다.",
+        "all declared finite job list",
+        "OpenAI only or host decision",
+        "per-asset provenance",
+        "explicit failure state",
+        "concept-draft result",
+        "selected stable asset ID",
+        "redacted provider decision",
+        "per-asset result",
+        "concept-draft provenance",
+        "required finite job selection",
+        "capability decision",
+        "unavailable 또는 per-asset result",
+        "preserved prompts and placeholders",
+        "partial successes",
+        "prompt digest",
+        "output digest",
+        "failed state",
+        "partial success state",
+        "resumable handoff",
+        "named human review handoff",
+        "resumable same-provider retry",
+        "redacted no-key receipt",
+        "concept-draft provenance"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "declared finite job이 없음",
+        "provider policy가 불명확함",
+        "manifest validation 실패",
+        "actual user selection receipt가 없음",
+        "stable asset ID가 manifest에 없음",
+        "mode가 select가 아님",
+        "required stable ID가 선언되지 않음",
+        "capability snapshot이 없음",
+        "generate-advanced의 successful concept-draft와 provider failure provenance를 보존하고 같은 provider 정책에서 failed stable ID만 재개해.",
+        "generate-beginner의 selection receipt와 concept-draft provenance를 보존하고 같은 stable asset ID의 명시된 실패 상태부터 재개해.",
+        "generate-standard의 prompt·placeholder와 unavailable receipt를 보존하고 available로 바뀐 capability 또는 실패 stable ID만 반영해 해당 job부터 재개해."
+      ]
     }
   ]
 }

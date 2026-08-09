@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "2개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "2개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,110 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "stale posting evidence",
+        "latest evidence link",
+        "questionId 로그",
+        "coach",
+        "questionId",
+        "portfolio evidence link",
+        "답변 claim",
+        "posting evidence link",
+        "portfolio evidence links",
+        "네 questionId"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: practice-game-design-interview → research-game-design-jobs",
+        "beginner: practice-game-design-interview",
+        "standard: practice-game-design-interview"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "interview-coach",
+        "evidence-auditor",
+        "interview-question-answer-log"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "named interview-coach owner가 latest evidence와 답변 범위를 검토하고 승인 또는 보류한다. coach 검토는 자동 합격 판정이 아니다.",
+        "interview-coach owner가 evidence link와 답변 범위를 검토하고 승인 또는 보류한다.",
+        "interview-coach owner와 evidence-auditor가 stale evidence를 검토하고 승인 또는 보류한다.",
+        "questionId별 latest evidence link와 stale 갱신 기록",
+        "honest-answer, coach feedback, fact/inference/recommendation",
+        "questionId와 evidence link가 있는 질문·답변",
+        "stale posting이면 최신 evidence 갱신 후 재개",
+        "fact/inference/recommendation 및 honest-answer pattern",
+        "네 questionId 유형과 evidence link",
+        "stale posting 갱신·재개 조건",
+        "fact/inference/recommendation 및 honest-answer",
+        "counterexample follow-up",
+        "reflection",
+        "feedback record",
+        "resume task",
+        "verification task",
+        "verification task queue"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "latest evidence link가 없음",
+        "coach가 stale claim을 확인하지 않음",
+        "questionId가 없음",
+        "evidence link가 미정",
+        "posting evidence가 stale이며 최신 evidence가 없음",
+        "questionId가 evidence link에 연결되지 않음",
+        "interview-advanced의 questionId와 stale 기록을 보존하고 latest evidence 확인 후 재개해.",
+        "interview-beginner의 questionId와 evidence link를 보존하고 답변 claim 확인부터 재개해.",
+        "interview-standard의 questionId 기록을 보존하고 최신 evidence 갱신 후 재개해."
+      ]
     }
   ]
 }

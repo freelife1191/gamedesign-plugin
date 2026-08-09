@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "5개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "4개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,125 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "role review scope",
+        "active handoffs",
+        "owners",
+        "hold conditions",
+        "resume evidence",
+        "re-evaluation date",
+        "current stage",
+        "goal",
+        "current evidence",
+        "constraints",
+        "available time",
+        "career goal",
+        "research evidence state",
+        "portfolio evidence",
+        "handoff owner",
+        "review date"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: orchestrate-game-design-career → research-game-design-jobs → map-game-design-career → reverse-engineer-game-design → build-game-design-portfolio",
+        "beginner: orchestrate-game-design-career → map-game-design-career",
+        "standard: orchestrate-game-design-career → research-game-design-jobs → map-game-design-career → build-game-design-portfolio"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "career-strategist",
+        "game-design-mentor",
+        "evidence-auditor",
+        "portfolio-reviewer",
+        "career-stage-goal",
+        "transition-readiness",
+        "portfolio-backlog"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "career-strategist owner가 role review를 검토하고 game-design-mentor·evidence-auditor와 handoff를 승인 또는 보류한다. 승인 전에는 route와 합격 가능성을 확정하지 않는다.",
+        "career-strategist owner가 stage와 next skill을 검토하고 game-design-mentor와 승인 또는 보류한다. brief는 채용 결과를 보장하지 않는다.",
+        "career-strategist owner가 research→portfolio handoff를 검토하고 evidence-auditor·portfolio-reviewer와 승인 또는 보류한다. handoff는 채용 적합성이나 합격을 보장하지 않는다.",
+        "role review",
+        "actual skill handoffs",
+        "owner/hold/resume matrix",
+        "re-evaluation condition",
+        "fact/inference/recommendation label",
+        "stage",
+        "goal",
+        "next skill handoff",
+        "review date",
+        "research→portfolio handoff",
+        "owner",
+        "hold condition",
+        "rights review dependency",
+        "uncertainty list",
+        "source freshness note",
+        "route decision receipt",
+        "recovery queue",
+        "evidence gap",
+        "portfolio backlog"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "named owner가 없음",
+        "stale source·rights blocker·resume evidence가 unresolved",
+        "stage 또는 goal이 미정",
+        "current evidence 없이 next skill을 단정함",
+        "research evidence가 stale",
+        "handoff owner 또는 review date가 미정",
+        "orchestrate-advanced의 owner/hold/resume matrix를 보존하고 named owner가 확인한 evidence만 반영해 blocked handoff부터 재개해.",
+        "orchestrate-beginner brief와 uncertainty를 보존하고 확인된 stage만 반영해 next skill 선택부터 재개해.",
+        "orchestrate-standard의 research state와 portfolio handoff를 보존하고 fresh evidence를 확인해 hold condition부터 재개해."
+      ]
     }
   ]
 }

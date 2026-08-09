@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "3개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "3개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,130 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "canonical Artifact versions",
+        "cross-domain evidence",
+        "finding owner",
+        "decision owner",
+        "review gate",
+        "canonical artifact path",
+        "version",
+        "review question",
+        "stable section ID",
+        "canonical artifact path/version",
+        "evidence locator",
+        "review boundary",
+        "severity 기준",
+        "responsible owner"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: review-game-design → visualize-game-design → export-game-design-documents",
+        "beginner: review-game-design",
+        "standard: review-game-design → export-game-design-documents"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "lead-game-designer",
+        "production-feasibility-critic",
+        "ux-accessibility-reviewer",
+        "game-design-review",
+        "decision-change-log",
+        "economy-balance",
+        "production-scope-risk"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "lead-game-designer named decision owner와 affected domain owner가 cross-domain finding·disagreement·handoff를 승인·수정·보류하며 queue는 gate 통과·출시·성공을 보장하지 않는다.",
+        "lead-game-designer decision owner가 finding과 최소 수정을 승인·수정·보류하며 review는 readiness·출시 또는 성공을 보장하지 않는다.",
+        "responsible owner와 lead-game-designer가 severity·minimal fix·gate 상태를 승인·수정·보류하며 reviewer finding은 readiness·출시·성공을 보장하지 않는다.",
+        "cross-domain finding",
+        "direct evidence와 impact",
+        "decision queue",
+        "blocked handoff 조건",
+        "evidence-backed 질문",
+        "affected section ID",
+        "최소 수정 후보",
+        "decision owner",
+        "finding ID와 severity",
+        "minimal fix",
+        "responsible owner",
+        "diagram gap",
+        "export readiness 상태",
+        "severity 가설",
+        "source-unavailable hold",
+        "role disagreement",
+        "target-stage 영향",
+        "disagreement receipt",
+        "최소 수리 순서",
+        "재검토 조건",
+        "decision log handoff",
+        "export hold",
+        "재검토 handoff"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "cross-domain evidence가 없음",
+        "affected owner가 없음",
+        "all blocker 해소 증거가 없음",
+        "source Artifact가 없음",
+        "version이 없음",
+        "review question 또는 owner가 없음",
+        "evidence locator가 없음",
+        "responsible owner가 없음",
+        "source version이 invalid임",
+        "review-advanced의 cross-domain finding과 disagreement receipt를 보존하고 승인된 최소 수정 하나만 연결해 decision queue 확인부터 재개해.",
+        "review-beginner의 evidence-backed 질문과 source-unavailable hold를 보존하고 복구된 version만 연결해 같은 질문부터 재개해.",
+        "review-standard의 finding ID·severity·evidence gap을 보존하고 최소 수정 반영 증거 하나만 연결해 같은 owner의 재검토부터 재개해."
+      ]
     }
   ]
 }

@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/svg-infographic/flow.json",
   "output": "guides/assets/archify/studio/svg-infographic/flow.html",
-  "specification": {
-    "sha256": "7c41a5f3e6447bd26843cb07dd3b01aa6f3ad22bf15dac7e2198b08acc1a0eac",
-    "bytes": 3499
-  },
-  "artifact": {
-    "sha256": "8db4063a9c5b5589e451c01198f7f7528327981fb09e990290cc1661274e95b7",
-    "bytes": 604324
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "8bc5d911cfbc25ff37c7f3b527ddbe345c18f9bf77dc49e0fa986df07555b97a",
+    "bytes": 7539
+  },
+  "artifact": {
+    "sha256": "cb867e7bc1b93076e258857d5a6b5822edf7f2d8a3b228e2897eae7229b30c0e",
+    "bytes": 610287
   }
 }

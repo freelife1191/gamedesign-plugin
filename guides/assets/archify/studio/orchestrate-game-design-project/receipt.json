@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/orchestrate-game-design-project/flow.json",
   "output": "guides/assets/archify/studio/orchestrate-game-design-project/flow.html",
-  "specification": {
-    "sha256": "dc6e6c6f4ef538c2040d5fd88b128779f1d0f8f59b651f4ac331bc6b1a2c7c9d",
-    "bytes": 3502
-  },
-  "artifact": {
-    "sha256": "34796ee81584391e0cae3978270920ef4393324b52e1c9e7a12845c34eec411b",
-    "bytes": 604333
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "76a43e4e8f39d2b275ae712c937bc8c7c27f053eec7ea82c2112ebcc924a843c",
+    "bytes": 7467
+  },
+  "artifact": {
+    "sha256": "39a59bf49dd892a77d2f99b17cfb7ce8f21a36e0382e175b8e23e9cfa2661455",
+    "bytes": 610296
   }
 }

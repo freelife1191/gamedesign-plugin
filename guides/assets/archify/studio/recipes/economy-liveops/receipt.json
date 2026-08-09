@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/recipes/economy-liveops/flow.json",
   "output": "guides/assets/archify/studio/recipes/economy-liveops/flow.html",
-  "specification": {
-    "sha256": "9f8311be81a30d11bca9214ae52cb094244c9b8b14f13e13395201acd8cd7024",
-    "bytes": 2955
-  },
-  "artifact": {
-    "sha256": "36b61634398a55985176d204aeb329d2831f3ed6efa3b812d17a6172e26e7dee",
-    "bytes": 603897
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "f89ebfbbecdf609262183267c9f53ef14372dd68e8c03d41cf5a830963ea9c6e",
+    "bytes": 4619
+  },
+  "artifact": {
+    "sha256": "b7365dec16ced954e038a85f5432d81dbb9a78dfe7711456fbb4428fe3547386",
+    "bytes": 606794
   }
 }

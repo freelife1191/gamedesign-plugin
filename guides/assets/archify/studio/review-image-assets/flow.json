@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "2개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "2개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,127 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "validated image manifest",
+        "stable asset ID",
+        "document-approved lifecycle receipt",
+        "named human rights reviewer",
+        "technical fit",
+        "gameplay readability",
+        "active rights decision",
+        "current lifecycle state",
+        "placement",
+        "alt text",
+        "artifact-local evidence",
+        "requested transition",
+        "named human decision receipt",
+        "placement·alt·readability evidence",
+        "rights/provenance decision"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: review-image-assets",
+        "beginner: review-image-assets",
+        "standard: review-image-assets → export-game-design-documents"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "visual-asset-reviewer",
+        "art-brief-director",
+        "game-design-brief"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "이름 있는 사람인 visual-asset-reviewer owner와 rights reviewer가 active rights·technical fit를 승인·수정·보류하며 production-candidate는 release·legal·production approval이 아니고 game resource 자동 승격을 금지한다.",
+        "이름 있는 사람인 visual-asset-reviewer owner가 evidence gap을 승인·수정·보류하며 specialist finding은 document-approved가 아니다.",
+        "실제 담당자인 visual-asset-reviewer owner가 named human receipt와 rights를 승인·수정·보류하며 document-approved만 export binding 후보이고 agent는 승인할 수 없다.",
+        "concept-draft → document-approved → production-candidate lifecycle receipt",
+        "active rights decision",
+        "technical fit와 gameplay readability",
+        "production-candidate or hold",
+        "stable asset ID finding",
+        "placement·alt·readability gap",
+        "blocked document approval",
+        "derivative ineligibility",
+        "requested transition",
+        "named human decision record",
+        "rights·readability·placement findings",
+        "document-approved or blocked state",
+        "revocation",
+        "restriction",
+        "rework request",
+        "rights question",
+        "recommended revision",
+        "revocation handoff",
+        "no game-resource promotion receipt",
+        "re-review handoff",
+        "named human decision handoff",
+        "derivative eligibility",
+        "export handoff condition"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "document-approved receipt가 없음",
+        "active rights가 아님",
+        "technical fit 또는 gameplay readability evidence가 없음",
+        "stable asset ID가 없음",
+        "placement 또는 alt text가 없음",
+        "human decision evidence가 없음",
+        "named human receipt가 없음",
+        "rights/provenance가 unreviewed",
+        "placement·alt·readability evidence가 없음",
+        "review-advanced의 lifecycle receipt와 revocation record를 보존하고 새 named-human rights decision만 반영해 production-candidate 재검토부터 재개해.",
+        "review-beginner의 concept-draft finding을 보존하고 새 artifact-local evidence만 연결해 placement와 alt text 검토부터 재개해.",
+        "review-standard의 named human decision과 blocked evidence를 보존하고 해결된 rights 또는 placement 증거 하나만 반영해 document-approved 검토부터 재개해."
+      ]
     }
   ]
 }

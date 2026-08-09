@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/suite/work-to-public-case/flow.json",
   "output": "guides/assets/archify/suite/work-to-public-case/flow.html",
-  "specification": {
-    "sha256": "85aa0a8b5c6512a499c4882a43f46eae1e4509de2eac6298e9c6b3ba54317a99",
-    "bytes": 2963
-  },
-  "artifact": {
-    "sha256": "c68479af0336111d69433e981e48cb1e95cf95af50bc1d007878428412af78fe",
-    "bytes": 603921
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "869c1f0d4bd855be76c2a1129c2f190d13a8147e622c60a9fc69be1213c92edb",
+    "bytes": 4534
+  },
+  "artifact": {
+    "sha256": "a7b839a2cd4f96f4fabb7d07780fbb1bbb4e7cadd3dc21f51ad7cf6fa381281d",
+    "bytes": 606725
   }
 }

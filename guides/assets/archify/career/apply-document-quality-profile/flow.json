@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "1개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "3개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,116 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "artifact ID",
+        "template ID",
+        "evidence state",
+        "fallback 후보",
+        "reviewer",
+        "목표 역할 문서 목적",
+        "대상 독자",
+        "형식",
+        "audience",
+        "requested format",
+        "preset 후보"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: apply-document-quality-profile",
+        "beginner: apply-document-quality-profile",
+        "standard: apply-document-quality-profile"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "document-quality-editor",
+        "evidence-auditor",
+        "portfolio-reviewer",
+        "reverse-design-document",
+        "game-design-role-map",
+        "portfolio-project-brief"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "document-quality-editor owner가 evidence state와 fallback을 검토하고 evidence-auditor와 함께 승인 또는 보류한다. fallback은 source 사실을 대체하지 않는다.",
+        "document-quality-editor owner가 profile 선택을 검토하고 승인 또는 보류한다. selection record는 문서 승인 자체가 아니다.",
+        "document-quality-editor owner와 portfolio-reviewer가 preset을 검토하고 승인 또는 보류한다. profile 선택은 포트폴리오 품질이나 채용 결과를 보장하지 않는다.",
+        "evidence state",
+        "fallback 조건",
+        "reviewer boundary",
+        "fact/inference/recommendation label",
+        "primary quality profile",
+        "선택 이유",
+        "누락 입력",
+        "audience/format/preset 선택",
+        "quality checklist",
+        "selection digest",
+        "selection record",
+        "additive source 후보",
+        "immutable state envelope",
+        "conflict decision record",
+        "requirement manifest",
+        "profile conflict note"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "evidence state가 미정",
+        "fallback이 reviewer 승인 없이 current fact를 변경함",
+        "template ID가 미정",
+        "서로 다른 Artifact의 profile을 하나로 단정함",
+        "audience와 format이 충돌함",
+        "unknown preset을 사실처럼 적용하려 함",
+        "profile-advanced evidence state와 conflict record를 보존하고 reviewer 확인을 반영해 fallback 검토부터 재개해.",
+        "profile-beginner selection record를 보존하고 확인된 대상과 형식만 반영해 누락 입력 확인부터 재개해.",
+        "profile-standard의 preset과 checklist를 보존하고 확인된 audience와 format만 반영해 conflict 확인부터 재개해."
+      ]
     }
   ]
 }

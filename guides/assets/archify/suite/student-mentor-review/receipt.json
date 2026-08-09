@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/suite/student-mentor-review/flow.json",
   "output": "guides/assets/archify/suite/student-mentor-review/flow.html",
-  "specification": {
-    "sha256": "7737f6cd048554cf1e52cdf517c499e58b31bb62491b0b8bda86c5447fd7e662",
-    "bytes": 2965
-  },
-  "artifact": {
-    "sha256": "2fe61a169edf4cbfa79f7107600099cab2b1a9b4893a2d99d3e6c891bc19fe76",
-    "bytes": 603927
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "59b80e5881874bca41fbcbbf07742f0e4b84ddd946e6ca59280e9e9c1f1caf22",
+    "bytes": 4537
+  },
+  "artifact": {
+    "sha256": "4fe4b986a399785a8ae1af41c7d183220846ae6a7a5829e835b34c69ff704657",
+    "bytes": 606732
   }
 }

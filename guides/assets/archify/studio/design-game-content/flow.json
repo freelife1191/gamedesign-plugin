@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "4개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "3개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,130 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "narrative choice",
+        "system/data dependency",
+        "production evidence",
+        "rights/provenance status",
+        "human approver",
+        "content purpose",
+        "target player state",
+        "supporting system ID",
+        "player choice",
+        "reward",
+        "owner",
+        "content graph goal",
+        "character or encounter",
+        "supporting system/data ID"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: design-game-content → design-game-systems → plan-game-production → review-game-design",
+        "beginner: design-game-content",
+        "standard: design-game-content → design-game-systems → review-game-design"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "content-narrative-designer",
+        "production-feasibility-critic",
+        "lead-game-designer",
+        "narrative-quest-npc",
+        "production-scope-risk",
+        "decision-change-log",
+        "character-skill-combat-monster"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "narrative·production·rights owner가 선택 의미, 제작 범위와 rights gate를 승인·수정·보류하며 자동 생성 결과는 승인이 아니다.",
+        "content-narrative-designer가 choice와 NPC 반응을 검토하고 lead-game-designer가 system dependency를 확인한다.",
+        "content-narrative-designer가 content graph를 검토하고 production-feasibility-critic이 resource와 repeatability 위험을 검토한다.",
+        "narrative state dependency",
+        "production blocker",
+        "rights/provenance status",
+        "approval gate",
+        "content purpose",
+        "player choice",
+        "state delta",
+        "outcome",
+        "recovery",
+        "content graph",
+        "state dependency",
+        "reward",
+        "production resource",
+        "UGC moderation question",
+        "repeatability comparison",
+        "NPC response",
+        "repeatability goal",
+        "counterplay",
+        "monster telegraph",
+        "human approval receipt 대기",
+        "scope decision log",
+        "system/data dependency",
+        "validation task",
+        "repeatability criterion",
+        "review finding"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "system/data dependency가 없음",
+        "rights 또는 consent 상태가 없음",
+        "human approver가 없음",
+        "supporting system ID가 없음",
+        "player choice의 결과가 정의되지 않음",
+        "행동 또는 reward의 system/data ID가 없음",
+        "production evidence가 없음",
+        "content-advanced의 narrative dependency와 rights gate를 보존하고 human approver가 확인한 provenance 또는 production evidence만 반영해 blocker부터 재개해.",
+        "content-beginner의 quest state와 NPC 반응을 보존하고 확인된 system ID만 연결해 failure recovery부터 재개해.",
+        "content-standard의 graph와 reward 연결을 유지하고 새로 측정된 encounter 제작 근거만 더해 production blocker부터 재개해."
+      ]
     }
   ]
 }

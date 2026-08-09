@@ -78,48 +78,49 @@
       "lane": "input-lane",
       "col": 0,
       "type": "external",
-      "label": "준비 입력",
-      "sublabel": "공개 가능한 입력"
+      "label": "준비 입력"
     },
     {
       "id": "skill",
       "lane": "execution-lane",
       "col": 1,
       "type": "backend",
-      "label": "스킬 체인",
-      "sublabel": "3개 스킬"
+      "label": "순서 스킬 체인"
     },
     {
       "id": "artifact",
       "lane": "execution-lane",
       "col": 3,
       "type": "database",
-      "label": "중간 Artifact",
-      "sublabel": "작업 기록"
+      "label": "중간 Artifact"
     },
     {
       "id": "review",
       "lane": "review-lane",
       "col": 4,
       "type": "security",
-      "label": "사람 검토",
-      "sublabel": "4개 전문 역할"
+      "label": "사람 검토·승인"
     },
     {
       "id": "result",
       "lane": "result-lane",
       "col": 5,
       "type": "cloud",
-      "label": "최소 결과",
-      "sublabel": "결과 계약"
+      "label": "결과 계약"
+    },
+    {
+      "id": "hold",
+      "lane": "review-lane",
+      "col": 2,
+      "type": "security",
+      "label": "보류 조건"
     },
     {
       "id": "resume",
       "lane": "result-lane",
-      "col": 2,
+      "col": 0,
       "type": "messagebus",
-      "label": "보류·재개",
-      "sublabel": "재개 요청"
+      "label": "재개 요청"
     }
   ],
   "edges": [
@@ -152,14 +153,128 @@
       "variant": "emphasis"
     },
     {
-      "id": "review-resume",
+      "id": "review-hold",
       "from": "review",
-      "to": "resume",
+      "to": "hold",
+      "label": "승인 보류",
       "role": "branch",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right",
+      "route": "return-left"
+    },
+    {
+      "id": "hold-resume",
+      "from": "hold",
+      "to": "resume",
+      "label": "보존 후 재개",
+      "role": "return",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
       "route": "drop"
+    },
+    {
+      "id": "resume-skill",
+      "from": "resume",
+      "to": "skill",
+      "role": "return",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "up-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "준비 입력",
+      "items": [
+        "review artifact ID",
+        "game-design-review template",
+        "현재 selection record",
+        "decision owner",
+        "근거 상태",
+        "문서 goal",
+        "audience",
+        "artifact type",
+        "requested format",
+        "template ID",
+        "artifact ID",
+        "system artifact ID",
+        "system-specification template",
+        "known overlay"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "순서 스킬 체인",
+      "items": [
+        "advanced: apply-document-quality-profile → review-game-design",
+        "beginner: apply-document-quality-profile",
+        "standard: apply-document-quality-profile → design-game-systems"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "전문 역할과 중간 Artifact",
+      "items": [
+        "document-quality-editor",
+        "lead-game-designer",
+        "production-feasibility-critic",
+        "system-economy-designer",
+        "game-design-review",
+        "decision-change-log",
+        "game-design-brief",
+        "system-specification",
+        "rule-exception-matrix"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 검토와 결과 계약",
+      "items": [
+        "named decision owner가 fallback과 document-approved 전이를 승인·수정·보류하며 자동화된 state receipt는 승인 receipt가 아니다.",
+        "document-quality-editor가 profile 선택을 검토하지만 선택 기록 자체는 문서 승인이나 게임 디자인 승인이 아니다.",
+        "document-quality-editor가 additive source의 호환성을 확인하고 system owner가 선택된 route의 설계 범위를 결정한다.",
+        "fail-closed fallback",
+        "blocked requirement",
+        "immutable state receipt",
+        "선택한 primary profile",
+        "누락 입력 목록",
+        "stable checklist",
+        "primary profile",
+        "허용된 overlay 목록",
+        "requirement manifest",
+        "profile conflict matrix",
+        "owner별 검토 질문",
+        "platform 가정",
+        "neutral preset 후보",
+        "neutral preset",
+        "profile 차이 설명",
+        "승인 가능한 routing record",
+        "document state transition 근거",
+        "requirement manifest",
+        "선택 이유",
+        "section/table/diagram/image checklist",
+        "routing handoff record"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "보류와 재개",
+      "items": [
+        "named decision owner가 없음",
+        "fallback이 설치된 profile과 호환되지 않음",
+        "승인 receipt가 없음",
+        "template ID가 없음",
+        "서로 다른 deliverable에 하나의 primary profile을 공유하려 함",
+        "overlay가 primary profile과 호환되지 않음",
+        "요청된 preset이 설치되지 않음",
+        "profile-advanced의 immutable state receipt와 blocked requirement를 그대로 두고 사람 결정으로 해소된 충돌 하나만 반영해 재개해.",
+        "기존 profile-beginner selection record를 보존하고 새로 확인된 대상 독자와 형식만 반영해 누락 입력 확인부터 재개해.",
+        "profile-standard의 기존 manifest와 digest-bound selection record를 보존하고 확인된 live-service overlay만 다시 합성해 재개해."
+      ]
     }
   ]
 }

@@ -1,18 +1,9 @@
 {
   "schemaVersion": 1,
-  "ok": true,
   "command": "deliver",
   "type": "workflow",
   "input": "guides/assets/archify/studio/apply-document-quality-profile/flow.json",
   "output": "guides/assets/archify/studio/apply-document-quality-profile/flow.html",
-  "specification": {
-    "sha256": "5bea545121ed09f99e5c0d0e3ce6e0078c252950fcc08d8da810142191298c66",
-    "bytes": 3504
-  },
-  "artifact": {
-    "sha256": "89cabd6fdc56c745b248cdbb40439cbc5b4fc912262404469e55e0cd9416a673",
-    "bytes": 604339
-  },
   "validation": {
     "checksPassed": 9,
     "checkCount": 9,
@@ -20,5 +11,13 @@
     "compositionStatus": "pass",
     "errors": 0,
     "warnings": 0
+  },
+  "specification": {
+    "sha256": "40191902b1d235d0a2070a4f5ccafa771c6ea33c7a24845e7facf3b3443b1bb3",
+    "bytes": 7366
+  },
+  "artifact": {
+    "sha256": "8108ccd0b705dc46c1c20bec6bce7ddfc1d76cb580730fb355e7644c86ef3aa0",
+    "bytes": 610154
   }
 }
