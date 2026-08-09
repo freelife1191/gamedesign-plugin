@@ -961,7 +961,7 @@ test("Career review standard and advanced prompt leaves require immutable named-
   const standardTerms = ["targetState=document-approved", ...commonTransitionTerms];
   const advancedTerms = [
     "targetState=production-candidate", ...commonTransitionTerms,
-    "rightsDecision", "active-rights evidence", "technical fit evidence", "readability evidence",
+    "rightsDecision", "active-rights evidence", "technical fit evidence", "alt text", "readability evidence",
   ];
   const assertTerms = (leaf, terms) => {
     for (const term of terms) assert.match(leaf, new RegExp(term, "iu"));
@@ -994,8 +994,8 @@ test("Career review standard and advanced hold and resume stable evidence keys h
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
   )).filter(({ skill, level }) => skill === "review-image-assets" && ["standard", "advanced"].includes(level));
   const keysByLevel = {
-    standard: ["targetState", "actualUserDecision", "reviewedAt", "hostUserImageDecisionReceipt"],
-    advanced: ["targetState", "actualUserDecision", "reviewedAt", "hostUserImageDecisionReceipt", "rightsDecision", "activeRights", "technicalFit", "readability"],
+    standard: ["targetState", "actualUserDecision", "reviewedAt", "hostUserImageDecisionReceipt", "namedHumanReviewer", "rightsDecision", "placement", "altText", "readability"],
+    advanced: ["targetState", "actualUserDecision", "reviewedAt", "hostUserImageDecisionReceipt", "namedHumanReviewer", "rightsDecision", "activeRights", "technicalFit", "altText", "readability"],
   };
   const extractHoldKeys = (entry) => entry.hold_conditions.map((condition) => {
     const keys = [...condition.matchAll(/\bevidenceKey=([A-Za-z][A-Za-z0-9]*)\b/gu)].map(([, key]) => key);
@@ -1042,6 +1042,67 @@ test("Career review standard and advanced hold and resume stable evidence keys h
       const mutation = structuredClone(entry);
       mutate(mutation);
       assert.throws(() => assertParity(mutation), assert.AssertionError, `${entry.id} ${label}`);
+    }
+  }
+});
+
+test("Career review hold and resume derive every required human-review evidence key", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  )).filter(({ skill, level }) => skill === "review-image-assets" && ["standard", "advanced"].includes(level));
+  const reviewEvidenceByLevel = {
+    standard: [
+      { evidenceKey: "namedHumanReviewer", requiredInput: "named human reviewer", boundary: /named human reviewer/iu },
+      { evidenceKey: "rightsDecision", requiredInput: "rightsDecision", boundary: /rights/iu },
+      { evidenceKey: "placement", requiredInput: "placement", boundary: /placement/iu },
+      { evidenceKey: "altText", requiredInput: "alt text", boundary: /alt text/iu },
+      { evidenceKey: "readability", requiredInput: "readability evidence", boundary: /readability/iu },
+    ],
+    advanced: [
+      { evidenceKey: "namedHumanReviewer", requiredInput: "named human reviewer", boundary: /named human reviewer/iu },
+      { evidenceKey: "rightsDecision", requiredInput: "rightsDecision", boundary: /rights/iu },
+      { evidenceKey: "activeRights", requiredInput: "active-rights evidence", boundary: /active-rights/iu },
+      { evidenceKey: "technicalFit", requiredInput: "technical fit evidence", boundary: /technical fit/iu },
+      { evidenceKey: "altText", requiredInput: "alt text", boundary: /alt text/iu },
+      { evidenceKey: "readability", requiredInput: "readability evidence", boundary: /readability/iu },
+    ],
+  };
+  const extractHoldKeys = (entry) => entry.hold_conditions.map((condition) => {
+    const keys = [...condition.matchAll(/\bevidenceKey=([A-Za-z][A-Za-z0-9]*)\b/gu)].map(([, key]) => key);
+    assert.equal(keys.length, 1, `${entry.id} hold condition must declare exactly one evidence key`);
+    return keys[0];
+  });
+  const extractResumeKeys = (entry) => {
+    const [match] = [...entry.resume_prompt.matchAll(/repair\/verify evidenceKeys=\[([A-Za-z0-9,]+)\]/gu)];
+    assert.ok(match, `${entry.id} resume repair/verify key list`);
+    return match[1].split(",");
+  };
+  const deriveHumanReviewKeys = (entry) => reviewEvidenceByLevel[entry.level].map(({ evidenceKey, requiredInput, boundary }) => {
+    assert.ok(entry.required_inputs.includes(requiredInput), `${entry.id} required input ${requiredInput}`);
+    assert.match(entry.human_review_boundary, boundary, `${entry.id} human boundary ${evidenceKey}`);
+    return evidenceKey;
+  });
+  const assertDerivedCoverage = (entry) => {
+    const held = extractHoldKeys(entry);
+    const resumed = extractResumeKeys(entry);
+    for (const key of deriveHumanReviewKeys(entry)) {
+      assert.ok(held.includes(key), `${entry.id} hold retains required human-review evidence ${key}`);
+      assert.ok(resumed.includes(key), `${entry.id} resume retains required human-review evidence ${key}`);
+    }
+  };
+
+  assert.equal(entries.length, 2);
+  for (const entry of entries) {
+    assertDerivedCoverage(entry);
+    for (const key of deriveHumanReviewKeys(entry)) {
+      const holdMutation = structuredClone(entry);
+      holdMutation.hold_conditions = holdMutation.hold_conditions.filter((condition) => !condition.includes(`evidenceKey=${key}`));
+      assert.throws(() => assertDerivedCoverage(holdMutation), assert.AssertionError, `${entry.id} rejects missing hold ${key}`);
+
+      const resumeMutation = structuredClone(entry);
+      resumeMutation.resume_prompt = resumeMutation.resume_prompt.replace(new RegExp(`(?:${key},|,${key}(?=[,\\]]))`, "u"), "");
+      assert.throws(() => assertDerivedCoverage(resumeMutation), assert.AssertionError, `${entry.id} rejects missing resume ${key}`);
     }
   }
 });
