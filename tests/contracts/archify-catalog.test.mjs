@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -71,5 +72,35 @@ test("production exclusions retain exact package classes and source-specific evi
   for (const entry of catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text")) {
     assert.notEqual(entry.decision_reason, "이 문서는 단일 설명·참조·요청문을 직접 읽는 편이 관계 도식보다 명확하다.", entry.source_document);
     assert.ok(entry.decision_reason.includes(entry.source_section), entry.source_document);
+  }
+});
+
+test("production selection excludes the existing plugin selection Skillstead flow", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const entry = catalog.entries.find((item) => item.id === "suite-entry-navigation");
+  assert.ok(entry);
+  assert.equal(entry.decision, "excluded");
+  assert.equal(entry.exclusion_code, "excluded-skillstead-overlap");
+  assert.match(entry.decision_reason, /guides\/assets\/shared\/plugin-selection-flow\.svg/u);
+});
+
+test("production text exclusions have non-repeating evidence-backed reasoning", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const skeletons = new Map();
+  for (const entry of catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text")) {
+    const evidence = /근거: `([^`]+)`/u.exec(entry.decision_reason);
+    assert.ok(evidence, entry.source_document);
+    const source = await readFile(path.join(repoRoot, entry.source_document), "utf8");
+    const sourceBody = source.replace(/^(?: {0,3})#{1,6}\s+.*$/gmu, "");
+    assert.ok(sourceBody.includes(evidence[1]), entry.source_document);
+    const headings = [...source.matchAll(/^(?: {0,3})#{1,6}\s+(.+?)(?:\s+#+)?\s*$/gmu)].map((match) => match[1].trim());
+    let normalized = entry.decision_reason
+      .replaceAll(entry.source_document, "<source>")
+      .replaceAll(entry.source_section, "<section>");
+    for (const heading of headings) normalized = normalized.replaceAll(heading, "<heading>");
+    skeletons.set(normalized, [...(skeletons.get(normalized) ?? []), entry.source_document]);
+  }
+  for (const [skeleton, documents] of skeletons) {
+    assert.ok(documents.length === 1, `${documents.join(", ")} share template: ${skeleton}`);
   }
 });
