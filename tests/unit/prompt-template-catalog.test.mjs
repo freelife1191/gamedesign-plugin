@@ -252,21 +252,73 @@ test("Studio visual catalog has exact skill-level bindings and matching Studio p
 
 test("Studio visual catalog preserves image mode routing, no-key capability boundaries, and defaults", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
-  const entries = JSON.parse(await readFile(
-    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"),
-    "utf8",
-  ));
+  const [entries, imagePolicy] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "game-design-studio", "image-assets.md"), "utf8"),
+  ]);
   const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
     ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const imageModes = (value) => [...new Set(leaves(value).flatMap((leaf) => (
+    [...leaf.matchAll(/\bIMAGE_GEN_MODE\s*=\s*([a-z][a-z-]*)\b/giu)].map(([, mode]) => mode)
+  )))].sort();
+  const policyModes = [...imagePolicy.matchAll(/^\|\s*`([a-z][a-z-]*)`\s*\|/gmu)]
+    .map(([, mode]) => mode)
+    .sort();
+  const allowedModes = ["all", "prompt-only", "required", "select"];
   const imageEntries = entries.filter(({ skill }) => ["plan-image-assets", "generate-image-assets"].includes(skill));
   const contract = leaves(imageEntries).join(" ");
 
-  assert.match(contract, /IMAGE_GEN_MODE.*prompt-only.*select.*required.*all|prompt-only.*select.*required.*all.*IMAGE_GEN_MODE/iu);
+  assert.deepEqual(policyModes, allowedModes, "source image policy closed mode set");
+  assert.deepEqual(imageModes(entries), allowedModes, "Studio visual IMAGE_GEN_MODE values");
+  const autoModeMutation = structuredClone(entries);
+  autoModeMutation.find(({ id }) => id === "studio:generate-image-assets:advanced")
+    .app_prompt.template += " IMAGE_GEN_MODE=auto";
+  assert.throws(
+    () => assert.deepEqual(imageModes(autoModeMutation), allowedModes),
+    assert.AssertionError,
+    "IMAGE_GEN_MODE=auto must fail the closed mode set",
+  );
   assert.match(contract, /IMAGE_MODEL.*gpt-image-2|gpt-image-2.*IMAGE_MODEL/iu);
   assert.match(contract, /IMAGE_QUALITY.*low|low.*IMAGE_QUALITY/iu);
   assert.match(contract, /OPENAI_API_KEY.*OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)|OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)/iu);
   assert.match(contract, /key가 없.*host.*available.*(?:사용|전달).*unknown.*unavailable.*(?:호출하지 않|prompt.*placeholder.*보존)/iu);
   assert.doesNotMatch(contract, /\[(?:API key|OPENAI_API_KEY|credential|자격 증명)\]/iu);
+});
+
+test("Studio visual catalog placeholders exactly match both reusable prompt templates", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"),
+    "utf8",
+  ));
+  const tokens = (prompt) => [...prompt.matchAll(/\[([^\]]+)\]/gu)].map(([, token]) => `[${token}]`).sort();
+  const expectedPlaceholders = (entry) => [...new Set([
+    ...tokens(entry.app_prompt.template),
+    ...tokens(entry.cli_prompt.template),
+  ])].sort();
+  const assertPlaceholders = (entry) => {
+    assert.deepEqual(entry.placeholders.slice().sort(), expectedPlaceholders(entry), entry.id);
+  };
+
+  for (const entry of entries) {
+    assertPlaceholders(entry);
+
+    const missingMutation = structuredClone(entry);
+    missingMutation.placeholders = missingMutation.placeholders.slice(1);
+    assert.throws(
+      () => assertPlaceholders(missingMutation),
+      assert.AssertionError,
+      `${entry.id} rejects a missing placeholder`,
+    );
+
+    const extraMutation = structuredClone(entry);
+    extraMutation.placeholders = [...extraMutation.placeholders, "[extra placeholder]"];
+    assert.throws(
+      () => assertPlaceholders(extraMutation),
+      assert.AssertionError,
+      `${entry.id} rejects an extra placeholder`,
+    );
+  }
 });
 
 test("Studio visual catalog separates asset lifecycle approval from generation and game-resource promotion", async () => {
