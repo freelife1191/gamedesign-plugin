@@ -179,13 +179,13 @@ const studioRepositoryCheckoutGuides = Object.freeze([
   ["공통 결과물 카탈로그", "guides/use-cases/output-catalog.md", "결과물 카탈로그"],
 ]);
 
-const studioGoalOutputs = new Map([
-  ["규칙·핵심 루프", ["game-design-brief", "vision-pillars"]],
-  ["시스템", ["system-specification"]],
-  ["UX·접근성", ["ui-ux-flow-state"]],
-  ["콘텐츠·퀘스트", ["narrative-quest-npc"]],
-  ["경제·LiveOps", ["economy-balance"]],
-  ["전체 프로젝트", ["production-scope-risk", "export-manifest.yml"]],
+const studioGoalOutputLayers = new Map([
+  ["규칙·핵심 루프", { minimum: ["game-design-brief", "vision-pillars"], optional: [], expanded: [] }],
+  ["시스템", { minimum: ["system-specification"], optional: [], expanded: [] }],
+  ["UX·접근성", { minimum: ["ui-ux-flow-state"], optional: [], expanded: [] }],
+  ["콘텐츠·퀘스트", { minimum: ["narrative-quest-npc"], optional: [], expanded: [] }],
+  ["경제·LiveOps", { minimum: ["economy-balance"], optional: [], expanded: [] }],
+  ["전체 프로젝트", { minimum: ["production-scope-risk", "export-manifest.yml"], optional: [], expanded: [] }],
 ]);
 
 const directOutputOwnership = Object.freeze([
@@ -335,16 +335,25 @@ function assertStudioUseCaseReadme(readme) {
   assert.match(section, /\[설치된 템플릿\]\(assets\/templates\/system-specification\/\)/u, "package-local template link must remain distinct");
 }
 
+function artifactIds(field) {
+  return [...field.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+}
+
 function assertGoalOutputSummary(section, goals, product) {
   assert.match(section, /^### 목표별 대표 요청과 결과$/mu, `${product}: goal/output summary heading`);
-  for (const [goal, outputs] of goals) {
+  const summaries = new Map();
+  for (const [goal, layers] of goals) {
     const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
     assert.ok(line, `${product}: goal summary missing: ${goal}`);
-    assert.match(line, /대표 요청: `\$game-design-studio:[^`]+`/u, `${product}: ${goal} representative request`);
-    assert.match(line, /최소 Artifact:/u, `${product}: ${goal} minimum artifact`);
-    assert.match(line, /선택·확장 결과:/u, `${product}: ${goal} optional or expanded output`);
-    for (const output of outputs) assert.ok(line.includes(`\`${output}\``), `${product}: ${goal} output: ${output}`);
+    const fields = /^- \*\*.+\*\* — 대표 요청: (`\$game-design-studio:[^`]+`); 최소 결과: (?<minimum>[^;]+); 선택 결과: (?<optional>[^;]+); 확장 결과: (?<expanded>[^;]+); 사람 검토 경계: (?<humanReview>.+)$/u.exec(line)?.groups;
+    assert.ok(fields, `${product}: ${goal} must keep request, minimum, optional, expanded, and human-review fields separate`);
+    assert.deepEqual(artifactIds(fields.minimum), layers.minimum, `${product}: ${goal} minimum artifacts`);
+    assert.deepEqual(artifactIds(fields.optional), layers.optional, `${product}: ${goal} optional artifacts`);
+    assert.deepEqual(artifactIds(fields.expanded), layers.expanded, `${product}: ${goal} expanded artifacts`);
+    assert.match(fields.humanReview, /\S/u, `${product}: ${goal} human-review boundary`);
+    summaries.set(goal, fields);
   }
+  return summaries;
 }
 
 test("release documentation ships the plugin license and third-party notices", async () => {
@@ -471,7 +480,7 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   assertStudioUseCaseReadme(readme);
   const section = readmeSection(readme, "활용 경로와 결과");
   const [, allowedOutputs] = await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
-  assertGoalOutputSummary(section, studioGoalOutputs, "Studio product README");
+  assertGoalOutputSummary(section, studioGoalOutputLayers, "Studio product README");
   for (const { label, rowOutput } of directOutputOwnership) {
     const row = representativeTableRows(section).find(({ cells }) => cells[0] === label);
     assert.ok(row, `owned-output table row missing: ${label}`);
@@ -512,6 +521,10 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   await assert.rejects(assertRepositoryCheckoutGuides(swappedPaths), /checkout-only path must be plain code/, "wrong-but-valid checkout paths must fail");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
+  assert.throws(
+    () => assertGoalOutputSummary(section.replace("최소 결과: `game-design-brief`, `vision-pillars`; 선택 결과:", "최소 결과: `game-design-brief`; 선택 결과: `vision-pillars`,"), studioGoalOutputLayers, "mutated Studio product README"),
+    "vision-pillars must remain a minimum result",
+  );
   const economySkill = await readFile(path.join(pluginRoot, "skills/design-game-economy-and-liveops/SKILL.md"), "utf8");
   assert.throws(() => assertCanonicalOutputContract(directOutputOwnership[0], economySkill.replace("Produce either", "Deprecated: Produce either")), "output-contract prefixes must fail exact section-local matching");
 });

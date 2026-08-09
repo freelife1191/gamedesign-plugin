@@ -117,13 +117,13 @@ function tableIds(markdown, heading) {
 
 const representativeCareerCaseIds = ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"];
 
-const careerGoalOutputs = new Map([
-  ["직무 탐색·학습", ["game-design-role-map", "learning-roadmap"]],
-  ["역기획", ["reverse-design-document"]],
-  ["창작 포트폴리오", ["creative-design-portfolio"]],
-  ["포트폴리오 검토", ["five-axis-review"]],
-  ["면접", ["interview-question-answer-log"]],
-  ["성장·전환", ["junior-growth-review", "transition-readiness"]],
+const careerGoalOutputLayers = new Map([
+  ["직무 탐색·학습", { minimum: ["game-design-role-map", "learning-roadmap"], optional: [], expanded: [] }],
+  ["역기획", { minimum: ["reverse-design-document"], optional: [], expanded: [] }],
+  ["창작 포트폴리오", { minimum: ["creative-design-portfolio"], optional: [], expanded: [] }],
+  ["포트폴리오 검토", { minimum: ["five-axis-review"], optional: [], expanded: [] }],
+  ["면접", { minimum: ["interview-question-answer-log"], optional: [], expanded: [] }],
+  ["성장·전환", { minimum: ["junior-growth-review", "transition-readiness"], optional: [], expanded: [] }],
 ]);
 
 const careerRepositoryCheckoutGuides = Object.freeze([
@@ -262,16 +262,25 @@ function assertNoHiringGuarantee(markdown, label) {
   assert.doesNotMatch(markdown, /(?:합격|취업|채용)[^.\n]{0,24}(?:100%\s*)?(?:보장|약속|확정)(?!(?:하지|할\s*수\s*없|못|되지\s*않))/u, `${label}: no affirmative hiring guarantee`);
 }
 
+function careerArtifactIds(field) {
+  return [...field.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+}
+
 function assertCareerGoalOutputSummary(section) {
   assert.match(section, /^### 목표별 대표 결과$/mu, "Career product README: goal/output summary heading");
-  for (const [goal, outputs] of careerGoalOutputs) {
+  const summaries = new Map();
+  for (const [goal, layers] of careerGoalOutputLayers) {
     const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
     assert.ok(line, `Career product README: goal summary missing: ${goal}`);
-    assert.match(line, /대표 요청: `\$game-design-career:[^`]+`/u, `Career product README: ${goal} representative request`);
-    assert.match(line, /최소 Artifact:/u, `Career product README: ${goal} minimum artifact`);
-    assert.match(line, /선택·확장 결과:/u, `Career product README: ${goal} optional or expanded output`);
-    for (const output of outputs) assert.ok(line.includes(`\`${output}\``), `Career product README: ${goal} output: ${output}`);
+    const fields = /^- \*\*.+\*\* — 대표 요청: (`\$game-design-career:[^`]+`); 최소 결과: (?<minimum>[^;]+); 선택 결과: (?<optional>[^;]+); 확장 결과: (?<expanded>[^;]+); 사람 검토 경계: (?<humanReview>.+)$/u.exec(line)?.groups;
+    assert.ok(fields, `Career product README: ${goal} must keep request, minimum, optional, expanded, and human-review fields separate`);
+    assert.deepEqual(careerArtifactIds(fields.minimum), layers.minimum, `Career product README: ${goal} minimum artifacts`);
+    assert.deepEqual(careerArtifactIds(fields.optional), layers.optional, `Career product README: ${goal} optional artifacts`);
+    assert.deepEqual(careerArtifactIds(fields.expanded), layers.expanded, `Career product README: ${goal} expanded artifacts`);
+    assert.match(fields.humanReview, /\S/u, `Career product README: ${goal} human-review boundary`);
+    summaries.set(goal, fields);
   }
+  return summaries;
 }
 
 function assertCareerRepositoryCheckoutGuides(section) {
@@ -733,4 +742,12 @@ test("README binds Career entry users to canonical representative case routes wi
 
   assertCareerRepositoryCheckoutGuides(readmeSection(readme, "Repository checkout only guides"));
   await Promise.all(careerRepositoryCheckoutGuides.map((guidePath) => access(path.join(repoRoot, guidePath))));
+  assert.throws(
+    () => assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `game-design-role-map`, `learning-roadmap`; 선택 결과:", "최소 결과: `game-design-role-map`; 선택 결과: `learning-roadmap`,")),
+    "learning-roadmap must remain a minimum result",
+  );
+  assert.throws(
+    () => assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `junior-growth-review`, `transition-readiness`; 선택 결과:", "최소 결과: `junior-growth-review`; 선택 결과: `transition-readiness`,")),
+    "transition-readiness must remain a minimum result",
+  );
 });

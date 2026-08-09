@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "91e3ca5ae827f5f11da23667c33103dbd63fc86bb75bf62c0e60e5a212ef2c14",
+  "treeSha256": "80767ceed4ff3c30ba3f0e1bcd4fc93b62c4db09f0333e28326b4d1986721997",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "32c473bf96a1d9652d6f070410d538593ab11cec7c41507d91e5307b2405442c",
-      "size": 47111
+      "sha256": "bb69b8e5873ba3e0b598eed23757d5d13e795cb1c7fd45858053318469ce9d6f",
+      "size": 48167
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
