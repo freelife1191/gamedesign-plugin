@@ -218,6 +218,112 @@ test("Studio foundation catalog reads canonical Artifact files before optional d
   }
 });
 
+test("Studio visual catalog has exact skill-level bindings and matching Studio prompt namespaces", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"),
+    "utf8",
+  ));
+  const skills = [
+    "plan-image-assets",
+    "generate-image-assets",
+    "review-image-assets",
+    "visualize-game-design",
+    "svg-infographic",
+  ];
+  const levels = ["beginner", "standard", "advanced"];
+  const expectedIds = skills.flatMap((skill) => levels.map((level) => `studio:${skill}:${level}`)).sort();
+
+  assert.equal(entries.length, 15);
+  assert.deepEqual(entries.map(({ id }) => id).sort(), expectedIds);
+  assert.deepEqual(
+    entries.map(({ skill, level }) => `${skill}:${level}`).sort(),
+    expectedIds.map((id) => id.replace(/^studio:/u, "")).sort(),
+  );
+  for (const entry of entries) {
+    assert.equal(entry.kind, "skill-template");
+    assert.equal(entry.product, "studio");
+    assert.match(entry.app_prompt.example, /@Game Design Studio/u, entry.id);
+    assert.match(entry.app_prompt.template, /@Game Design Studio/u, entry.id);
+    assert.match(entry.cli_prompt.example, new RegExp(`\\$game-design-studio:${entry.skill}(?:\\s|$)`, "u"), entry.id);
+    assert.match(entry.cli_prompt.template, new RegExp(`\\$game-design-studio:${entry.skill}(?:\\s|$)`, "u"), entry.id);
+  }
+});
+
+test("Studio visual catalog preserves image mode routing, no-key capability boundaries, and defaults", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"),
+    "utf8",
+  ));
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const imageEntries = entries.filter(({ skill }) => ["plan-image-assets", "generate-image-assets"].includes(skill));
+  const contract = leaves(imageEntries).join(" ");
+
+  assert.match(contract, /IMAGE_GEN_MODE.*prompt-only.*select.*required.*all|prompt-only.*select.*required.*all.*IMAGE_GEN_MODE/iu);
+  assert.match(contract, /IMAGE_MODEL.*gpt-image-2|gpt-image-2.*IMAGE_MODEL/iu);
+  assert.match(contract, /IMAGE_QUALITY.*low|low.*IMAGE_QUALITY/iu);
+  assert.match(contract, /OPENAI_API_KEY.*OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)|OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)/iu);
+  assert.match(contract, /key가 없.*host.*available.*(?:사용|전달).*unknown.*unavailable.*(?:호출하지 않|prompt.*placeholder.*보존)/iu);
+  assert.doesNotMatch(contract, /\[(?:API key|OPENAI_API_KEY|credential|자격 증명)\]/iu);
+});
+
+test("Studio visual catalog separates asset lifecycle approval from generation and game-resource promotion", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"),
+    "utf8",
+  ));
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const contract = leaves(entries).join(" ");
+  const reviewEntries = entries.filter(({ skill }) => skill === "review-image-assets");
+
+  assert.match(contract, /concept-draft\s*→\s*document-approved\s*→\s*production-candidate/u);
+  assert.match(contract, /generation.*(?:승인.*아님|승인이 아니다)|생성.*(?:승인.*아님|승인이 아니다)/iu);
+  assert.match(contract, /production-candidate.*(?:release|legal|production approval).*아님|production-candidate.*(?:출시|법무|production).*아님/iu);
+  assert.match(contract, /(?:game resource|게임 리소스).*(?:자동.*승격.*금지|자동.*승격.*하지 않)|(?:자동.*승격.*금지|자동.*승격.*하지 않).*(?:game resource|게임 리소스)/iu);
+  for (const entry of reviewEntries) {
+    assert.match(entry.human_review_boundary, /named human|실제 담당자|이름 있는 사람/iu, entry.id);
+    assert.match(entry.human_review_boundary, /승인/u, entry.id);
+    assert.match(entry.human_review_boundary, /보류|hold/iu, entry.id);
+  }
+});
+
+test("Studio visual catalog records Archify priority, honest Skillstead fallback, canonical read order, and diagram bindings", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [entries, diagramSources, useCaseManifest] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-visual.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "assets", "use-case-diagram-sources.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "use-cases", "use-case-manifest.json"), "utf8").then(JSON.parse),
+  ]);
+  const visualEntries = entries.filter(({ skill }) => ["visualize-game-design", "svg-infographic"].includes(skill));
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+
+  for (const entry of entries) {
+    const base = entry.expected_file_tree[0].replace(/\/content\.md$/u, "");
+    assert.deepEqual(entry.read_order.slice(0, 3), [
+      `${base}/content.md`,
+      `${base}/evidence.yml`,
+      `${base}/export-manifest.yml`,
+    ], entry.id);
+    const source = diagramSources.find(({ semantic }) => semantic?.skill === entry.skill);
+    const skillCase = useCaseManifest.skill_cases.find(({ skill }) => skill === entry.skill);
+    assert.ok(source, entry.id);
+    assert.ok(skillCase, entry.id);
+    assert.equal(entry.diagram_binding.id, source.id, entry.id);
+    assert.equal(entry.diagram_binding.svg, skillCase.diagram.svg, entry.id);
+    assert.equal(entry.diagram_binding.png, skillCase.diagram.png, entry.id);
+  }
+  const visualContract = leaves(visualEntries).join(" ");
+  assert.match(visualContract, /Archify.*(?:available|사용 가능).*우선/iu);
+  assert.match(visualContract, /Archify.*(?:absent|failure|부재|실패).*Skillstead.*editable SVG.*2× PNG/iu);
+  assert.match(visualContract, /fallback.*Archify 결과로.*표시.*않|Skillstead.*자동 승인.*않/iu);
+  assert.match(visualContract, /lint.*0.*warning.*error.*2×.*(?:accessibility|접근성).*human approval/iu);
+});
+
 test("Studio production catalog has the exact IDs, levels, and Studio namespaces", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json");
