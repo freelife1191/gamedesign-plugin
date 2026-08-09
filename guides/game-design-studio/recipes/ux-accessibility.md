@@ -86,3 +86,104 @@ Canonical Artifact의 `content.md`, 플랫폼 matrix, 사용자 관찰과 미해
 
 - [플레이어 경험 스킬](../skills/design-player-experience.md), [문서 품질](../document-quality.md), [전체 워크플로](../workflow.md)
 - [Canonical Artifact 수명주기](../../assets/shared/canonical-artifact-lifecycle.png)를 함께 확인합니다.
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:recipe:ux-accessibility -->
+<!-- PROMPT-CARD: studio:recipe:ux-accessibility -->
+#### studio:recipe:ux-accessibility
+
+**ux-accessibility recipe**
+
+ux-accessibility recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio 첫 세션의 critical action을 모바일과 PC 입력, focus, text scale, visual/audio alternative, loading·error·offline recovery까지 설계해. 현재 근거와 가정을 분리하고 accessibility owner 승인을 대기해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio 첫 세션의 critical action을 모바일과 PC 입력, focus, text scale, visual/audio alternative, loading·error·offline recovery까지 설계해. 현재 근거와 가정을 분리하고 accessibility owner 승인을 대기해. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:design-player-experience game-design/<project-id>/ui-ux-flow-state/에서 작성한 뒤 $game-design-studio:apply-document-quality-profile 및 $game-design-studio:review-game-design으로 접근성 gate를 검토해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:design-player-experience game-design/[프로젝트 ID]/ui-ux-flow-state/에서 작성한 뒤 $game-design-studio:apply-document-quality-profile 및 $game-design-studio:review-game-design으로 접근성 gate를 검토해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: design-player-experience
+- 스킬 흐름: design-player-experience → apply-document-quality-profile → review-game-design
+- 전문 역할: lead-game-designer
+
+##### 중간 산출물
+- ui-ux-flow-state
+
+##### 예상 결과물
+###### 최소 결과물
+- ui-ux-flow-state canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/ui-ux-flow-state/content.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml
+- game-design/[프로젝트 ID]/ui-ux-flow-state/decisions/README.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/assets/README.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml
+- game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/ui-ux-flow-state/content.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml
+- game-design/[프로젝트 ID]/ui-ux-flow-state/decisions/README.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/assets/README.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml
+- game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md
+
+##### 도식 바인딩
+- ID: st-s01
+- SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
+- PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
+- 대체 텍스트: Studio recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 ux-accessibility의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ux-accessibility의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END game-design-studio:recipe:ux-accessibility -->

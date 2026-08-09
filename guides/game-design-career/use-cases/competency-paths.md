@@ -75,6 +75,102 @@ $game-design-career:map-game-design-career artifact=game-design-career/role-map 
 
 현재 evidence가 실제로 지지하는 path와 희망을 구분했는가? 분석 언어가 필요하면 `CA-C02`, current requirement가 필요하면 `CA-C03`으로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-c01 -->
+<!-- PROMPT-CARD: career:case:CA-C01 -->
+#### career:case:CA-C01
+
+**CA-C01 source-bound scenario**
+
+CA-C01 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C01의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C01를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:research-game-design-jobs CA-C01의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:research-game-design-jobs [경력 ID] [공개 정보] CA-C01의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → map-game-design-career → research-game-design-jobs
+- 전문 역할: career-strategist → game-design-mentor
+
+##### 중간 산출물
+- career-stage-goal
+- game-design-role-map
+- learning-roadmap
+
+##### 예상 결과물
+###### 최소 결과물
+- game-design-role-map
+- learning-roadmap
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/career-stage-goal/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/career-stage-goal/content.md
+- game-design-career/[경력 ID]/career-stage-goal/evidence.yml
+- game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c01
+- SVG: guides/assets/game-design-career/use-cases/ca-c01.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c01.png
+- 대체 텍스트: CA-C01 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 목표 → evidence → gap → proof task → 결정 기록입니다. **검토 체크포인트:** `game-design-role-map` → `learning-roadmap` 순서로 읽고 역할 후보와 proof task의 연결을 확인합니다. **사람 결정:** 사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다. 도구 실행은 자동 승인이 아닙니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c01 -->
+
 ## CA-C02 게임 분석 언어와 관찰·추론 분리
 
 [![게임 분석의 관찰과 추론을 분리하는 흐름](../../assets/game-design-career/use-cases/ca-c02.png)](../../assets/game-design-career/use-cases/ca-c02.svg)
@@ -147,6 +243,102 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 ### 자기점검과 다음 학습
 
 각 문장이 직접 본 사실인지, 해석인지, 다음 제안인지 설명할 수 있는가? 역할·공고 요구와 연결하려면 `CA-C03` 또는 `CA-C04`로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-c02 -->
+<!-- PROMPT-CARD: career:case:CA-C02 -->
+#### career:case:CA-C02
+
+**CA-C02 source-bound scenario**
+
+CA-C02 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C02의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C02를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:review-game-design-portfolio CA-C02의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-C02의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → reverse-engineer-game-design → review-game-design-portfolio
+- 전문 역할: reverse-design-critic → game-design-mentor
+
+##### 중간 산출물
+- game-analysis-report
+- reverse-design-document
+- five-axis-review
+
+##### 예상 결과물
+###### 최소 결과물
+- game-analysis-report
+- reverse-design-document
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+- game-design-career/[경력 ID]/game-analysis-report/evidence.yml
+- game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c02
+- SVG: guides/assets/game-design-career/use-cases/ca-c02.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c02.png
+- 대체 텍스트: CA-C02 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 관찰 → 추론 → 반례 → 제안 → 권리 경계입니다. **검토 체크포인트:** `game-analysis-report` → `reverse-design-document` 순서로 읽고 관찰과 해석의 경계를 확인합니다. **사람 결정:** 작성자와 멘토가 관찰의 정확성, 공개 범위와 다음 검증을 결정합니다. 자동 분석은 사실이나 승인을 대신하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c02 -->
 
 ## CA-C03 현재 채용공고 조사
 
@@ -222,6 +414,102 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 
 모든 current claim이 dated 공식 표본으로 되짚어지는가? gap을 학습 과제로 바꾸려면 `CA-C04`로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-c03 -->
+<!-- PROMPT-CARD: career:case:CA-C03 -->
+#### career:case:CA-C03
+
+**CA-C03 source-bound scenario**
+
+CA-C03 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C03의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C03를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:research-game-design-jobs $game-design-career:map-game-design-career $game-design-career:apply-document-quality-profile CA-C03의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:research-game-design-jobs $game-design-career:map-game-design-career $game-design-career:apply-document-quality-profile [경력 ID] [공개 정보] CA-C03의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: research-game-design-jobs
+- 스킬 흐름: research-game-design-jobs → map-game-design-career → apply-document-quality-profile
+- 전문 역할: evidence-auditor → portfolio-reviewer
+
+##### 중간 산출물
+- job-posting-evidence
+- game-design-role-map
+- competency-matrix
+
+##### 예상 결과물
+###### 최소 결과물
+- job-posting-evidence
+- game-design-role-map
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/job-posting-evidence/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/job-posting-evidence/content.md
+- game-design-career/[경력 ID]/job-posting-evidence/evidence.yml
+- game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c03
+- SVG: guides/assets/game-design-career/use-cases/ca-c03.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c03.png
+- 대체 텍스트: CA-C03 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** source record → sample boundary → observation → inference → proposal입니다. **검토 체크포인트:** `job-posting-evidence` → `game-design-role-map` 순서로 읽고 source record와 role inference를 확인합니다. **사람 결정:** Research Owner와 Portfolio Reviewer가 region, reviewAfter, 공개 가능한 evidence와 backlog를 결정합니다. source 수집은 자동 승인을 하지 않으며 채용을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c03 -->
+
 ## CA-C04 역량 격차와 학습·증거 계획
 
 [![역량 격차를 학습과 증거 과제로 전환하는 흐름](../../assets/game-design-career/use-cases/ca-c04.png)](../../assets/game-design-career/use-cases/ca-c04.svg)
@@ -294,6 +582,102 @@ $game-design-career:map-game-design-career artifact=game-design-career/learning-
 ### 자기점검과 다음 학습
 
 gap이 능력의 낙인 대신 검증 가능한 다음 작업으로 적혔는가? 관찰 기반 사례는 `CA-C05`, 창작 사례는 `CA-C06`으로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-c04 -->
+<!-- PROMPT-CARD: career:case:CA-C04 -->
+#### career:case:CA-C04
+
+**CA-C04 source-bound scenario**
+
+CA-C04 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C04의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C04를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents CA-C04의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C04의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → map-game-design-career → visualize-career-roadmap → export-career-documents
+- 전문 역할: career-strategist → game-design-mentor
+
+##### 중간 산출물
+- competency-matrix
+- learning-roadmap
+- career-stage-goal
+
+##### 예상 결과물
+###### 최소 결과물
+- competency-matrix
+- learning-roadmap
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/competency-matrix/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/competency-matrix/content.md
+- game-design-career/[경력 ID]/competency-matrix/evidence.yml
+- game-design-career/[경력 ID]/competency-matrix/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c04
+- SVG: guides/assets/game-design-career/use-cases/ca-c04.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c04.png
+- 대체 텍스트: CA-C04 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** current evidence → gap → proof task → cadence → 결정입니다. **검토 체크포인트:** `competency-matrix` → `learning-roadmap` 순서로 읽고 gap과 proof task의 우선순위를 확인합니다. **사람 결정:** 작성자와 멘토가 우선순위, 가능한 범위와 공개 여부를 결정합니다. 계획 생성은 자동 승인을 하지 않으며 성장을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c04 -->
 
 ## CA-C05 관찰 기반 역기획
 
@@ -368,6 +752,101 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 
 관찰을 구현 사실처럼 썼거나 팀 결과를 개인 기여로 썼는가? 창작 설계 사례가 필요하면 `CA-C06`으로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-c05 -->
+<!-- PROMPT-CARD: career:case:CA-C05 -->
+#### career:case:CA-C05
+
+**CA-C05 source-bound scenario**
+
+CA-C05 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C05의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C05를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:export-career-documents CA-C05의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C05의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → reverse-engineer-game-design → export-career-documents
+- 전문 역할: reverse-design-critic → visual-asset-reviewer
+
+##### 중간 산출물
+- reverse-design-document
+- game-analysis-report
+
+##### 예상 결과물
+###### 최소 결과물
+- reverse-design-document
+- game-analysis-report
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/reverse-design-document/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/reverse-design-document/content.md
+- game-design-career/[경력 ID]/reverse-design-document/evidence.yml
+- game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c05
+- SVG: guides/assets/game-design-career/use-cases/ca-c05.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c05.png
+- 대체 텍스트: CA-C05 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `reverse-design-document` → `game-analysis-report` 순서로 읽고 관찰 evidence와 분석 claim을 확인합니다. **사람 결정:** 작성자와 public-rights reviewer가 공개 범위, 인용·capture 권리와 개인 기여 서술을 승인·수정·보류합니다. 분석은 자동 승인을 하지 않으며 품질, 채용 또는 공개를 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c05 -->
+
 ## CA-C06 창작 기획 포트폴리오
 
 [![창작 기획의 판단과 근거를 포트폴리오로 연결하는 흐름](../../assets/game-design-career/use-cases/ca-c06.png)](../../assets/game-design-career/use-cases/ca-c06.svg)
@@ -440,6 +919,102 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 ### 자기점검과 다음 학습
 
 문제, 내 판단, 검증 evidence가 연결되는가? 수정 우선순위와 발표가 필요하면 `CA-C07`로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-c06 -->
+<!-- PROMPT-CARD: career:case:CA-C06 -->
+#### career:case:CA-C06
+
+**CA-C06 source-bound scenario**
+
+CA-C06 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C06의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C06를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-C06의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:apply-document-quality-profile $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-C06의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: portfolio-reviewer → visual-asset-reviewer
+
+##### 중간 산출물
+- portfolio-project-brief
+- creative-design-portfolio
+- five-axis-review
+
+##### 예상 결과물
+###### 최소 결과물
+- portfolio-project-brief
+- creative-design-portfolio
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/portfolio-project-brief/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/portfolio-project-brief/content.md
+- game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml
+- game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c06
+- SVG: guides/assets/game-design-career/use-cases/ca-c06.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c06.png
+- 대체 텍스트: CA-C06 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 개인 기여와 공개 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer가 공개 가능한 claim과 asset을 결정합니다. 생성 결과는 자동 승인을 하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c06 -->
 
 ## CA-C07 포트폴리오 검토·수정·발표
 
@@ -514,6 +1089,103 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/por
 
 각 발표 claim이 evidence ID와 개인 기여 범위로 돌아가는가? honest gap 답변과 성장 계획은 `CA-C08`으로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-c07 -->
+<!-- PROMPT-CARD: career:case:CA-C07 -->
+#### career:case:CA-C07
+
+**CA-C07 source-bound scenario**
+
+CA-C07 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C07의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C07를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:review-game-design-portfolio $game-design-career:build-game-design-portfolio $game-design-career:practice-game-design-interview $game-design-career:export-career-documents CA-C07의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:review-game-design-portfolio $game-design-career:build-game-design-portfolio $game-design-career:practice-game-design-interview $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C07의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: review-game-design-portfolio
+- 스킬 흐름: review-game-design-portfolio → build-game-design-portfolio → practice-game-design-interview → export-career-documents
+- 전문 역할: portfolio-reviewer → game-design-mentor → visual-asset-reviewer
+
+##### 중간 산출물
+- five-axis-review
+- portfolio-backlog
+- introduction-motivation
+
+##### 예상 결과물
+###### 최소 결과물
+- five-axis-review
+- portfolio-backlog
+- introduction-motivation
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/five-axis-review/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/five-axis-review/content.md
+- game-design-career/[경력 ID]/five-axis-review/evidence.yml
+- game-design-career/[경력 ID]/five-axis-review/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c07
+- SVG: guides/assets/game-design-career/use-cases/ca-c07.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c07.png
+- 대체 텍스트: CA-C07 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → backlog입니다. **검토 체크포인트:** `five-axis-review` → `portfolio-backlog` → `introduction-motivation` 순서로 읽고 finding, repair, 발표 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer와 멘토가 수정·발표·공개 범위를 결정합니다. review는 자동 승인을 하지 않으며 합격, 시장 반응 또는 팀 성과를 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c07 -->
+
 ## CA-C08 면접·주니어 성장·직무 전환
 
 [![면접과 주니어 성장 및 직무 전환의 증거 흐름](../../assets/game-design-career/use-cases/ca-c08.png)](../../assets/game-design-career/use-cases/ca-c08.svg)
@@ -586,3 +1258,100 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/g
 ### 자기점검과 다음 학습
 
 답변이 evidence ID와 실제 개인 기여로 추적되는가? stale current evidence는 재검색했는가? 다음 주기의 역할·gap 비교는 `CA-C03`과 `CA-C04`로 돌아갑니다.
+
+<!-- PROMPT-TEMPLATES:START ca-c08 -->
+<!-- PROMPT-CARD: career:case:CA-C08 -->
+#### career:case:CA-C08
+
+**CA-C08 source-bound scenario**
+
+CA-C08 manifest의 audience, skill, template, result를 보존한다.
+
+##### 사용하는 경우
+CA-C08의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career CA-C08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C08를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:practice-game-design-interview $game-design-career:plan-junior-growth $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents CA-C08의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:practice-game-design-interview $game-design-career:plan-junior-growth $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C08의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: practice-game-design-interview
+- 스킬 흐름: practice-game-design-interview → plan-junior-growth → visualize-career-roadmap → export-career-documents
+- 전문 역할: game-design-mentor → career-strategist → portfolio-reviewer → visual-asset-reviewer
+
+##### 중간 산출물
+- interview-question-answer-log
+- junior-growth-review
+- transition-readiness
+
+##### 예상 결과물
+###### 최소 결과물
+- interview-question-answer-log
+- junior-growth-review
+- transition-readiness
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/interview-question-answer-log/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/interview-question-answer-log/content.md
+- game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml
+- game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-c08
+- SVG: guides/assets/game-design-career/use-cases/ca-c08.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-c08.png
+- 대체 텍스트: CA-C08 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback입니다. **검토 체크포인트:** `interview-question-answer-log` → `junior-growth-review` → `transition-readiness` 순서로 읽고 honest gap, feedback, 다음 proof task를 확인합니다. **사람 결정:** 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다. 이 기록은 자동 승인을 하지 않으며 채용, 승진, 이직, 팀 기여 또는 시장 가치를 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END ca-c08 -->

@@ -129,14 +129,14 @@ test("buildPromptGuides writes all derived files only after an in-memory graph i
   const catalog = { entries: [validSkillEntry()] };
 
   const result = await buildPromptGuides({ repoRoot, __testCatalog: catalog });
-  assert.deepEqual(result, { markdown: 1, projections: 2, checked: false });
+  assert.deepEqual(result, { markdown: 2, managed: 0, projections: 2, checked: false });
 
   const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
   const projectionPath = path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json");
   assert.match(await readFile(libraryPath, "utf8"), /PT-001/u);
   assert.deepEqual(JSON.parse(await readFile(projectionPath, "utf8")).entries.map(({ id }) => id), ["PT-001"]);
 
-  assert.deepEqual(await buildPromptGuides({ repoRoot, __testCatalog: catalog, check: true }), { markdown: 1, projections: 2, checked: true });
+  assert.deepEqual(await buildPromptGuides({ repoRoot, __testCatalog: catalog, check: true }), { markdown: 2, managed: 0, projections: 2, checked: true });
   await writeFile(libraryPath, "drift\n");
   await assert.rejects(
     () => buildPromptGuides({ repoRoot, __testCatalog: catalog, check: true }),

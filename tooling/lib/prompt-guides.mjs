@@ -24,92 +24,194 @@ function textBlock(value) {
   return `${fence}text\n${value}\n${fence}`;
 }
 
-export function renderPromptCard(entry) {
-  if (!entry || typeof entry !== "object") throw new Error("prompt template entry must be an object");
-  const title = `${entry.id} — ${entry.title}`;
+function heading(level, value) {
+  return `${"#".repeat(level)} ${value}`;
+}
+
+function detailLink(entry) {
+  if (entry.kind === "use-case" || entry.kind === "recipe") {
+    return `../${entry.source_references[0].replace(/^guides\//u, "")}#${entryAnchor(entry)}`;
+  }
+  const segment = entry.kind === "suite-case" ? `suite/${entry.id.split(":")[1]}` : `${entry.product}/${entry.skill}`;
+  return `${segment}.md#${entryAnchor(entry)}`;
+}
+
+function entryAnchor(entry) {
+  return entry.id.toLowerCase().replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "").replace(/\s+/gu, "-");
+}
+
+function indexSection(title, entries, label) {
   return [
     `## ${title}`,
     "",
+    ...entries.map((entry) => `- [${label(entry)}](${detailLink(entry)})`),
+    "",
+  ].join("\n");
+}
+
+export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
+  if (!entry || typeof entry !== "object") throw new Error("prompt template entry must be an object");
+  const section = headingLevel + 1;
+  const subSection = section + 1;
+  return [
+    `<!-- PROMPT-CARD: ${entry.id} -->`,
+    heading(headingLevel, entry.id),
+    "",
+    `**${entry.title}**`,
+    "",
     entry.purpose,
     "",
-    "### 사용하는 경우",
+    heading(section, "사용하는 경우"),
     entry.when_to_use,
     "",
-    "### 사용하지 않는 경우",
+    heading(section, "사용하지 않는 경우"),
     entry.when_not_to_use,
     "",
-    "### 준비 입력",
-    "#### 필수 입력",
+    heading(section, "준비 입력"),
+    heading(subSection, "필수 입력"),
     list(entry.required_inputs),
     "",
-    "#### 선택 입력",
+    heading(subSection, "선택 입력"),
     list(entry.optional_inputs),
     "",
-    "### 바꿀 자리표시자",
+    heading(section, "바꿀 자리표시자"),
     list(entry.placeholders),
     "",
-    "### Codex App 완성 예시",
+    heading(section, "Codex App 완성 예시"),
     textBlock(entry.app_prompt.example),
     "",
-    "### Codex App 재사용 템플릿",
+    heading(section, "Codex App 재사용 템플릿"),
     textBlock(entry.app_prompt.template),
     "",
-    "### Codex CLI 완성 예시",
+    heading(section, "Codex CLI 완성 예시"),
     textBlock(entry.cli_prompt.example),
     "",
-    "### Codex CLI 재사용 템플릿",
+    heading(section, "Codex CLI 재사용 템플릿"),
     textBlock(entry.cli_prompt.template),
     "",
-    "### 스킬·전문 역할 흐름",
+    heading(section, "스킬·전문 역할 흐름"),
     `- 기본 스킬: ${entry.skill}`,
     `- 스킬 흐름: ${entry.skill_chain.join(" → ")}`,
     `- 전문 역할: ${entry.specialist_roles.join(" → ")}`,
     "",
-    "### 중간 산출물",
+    heading(section, "중간 산출물"),
     list(entry.intermediate_artifacts),
     "",
-    "### 예상 결과물",
-    "#### 최소 결과물",
+    heading(section, "예상 결과물"),
+    heading(subSection, "최소 결과물"),
     list(entry.minimum_outputs),
     "",
-    "#### 선택 결과물",
+    heading(subSection, "선택 결과물"),
     list(entry.optional_outputs),
     "",
-    "#### 확장 결과물",
+    heading(subSection, "확장 결과물"),
     list(entry.extended_outputs),
     "",
-    "### 파일 구조",
+    heading(section, "파일 구조"),
     list(entry.expected_file_tree),
     "",
-    "### 읽는 순서",
+    heading(section, "읽는 순서"),
     list(entry.read_order),
     "",
-    "### 사람 검토",
-    "#### 승인 경계",
+    heading(section, "도식 바인딩"),
+    `- ID: ${entry.diagram_binding.id}`,
+    `- SVG: ${entry.diagram_binding.svg}`,
+    `- PNG: ${entry.diagram_binding.png}`,
+    `- 대체 텍스트: ${entry.diagram_binding.alt}`,
+    "",
+    heading(section, "사람 검토"),
+    heading(subSection, "승인 경계"),
     entry.human_review_boundary,
     "",
-    "#### 보류 조건",
+    heading(subSection, "보류 조건"),
     list(entry.hold_conditions),
     "",
-    "#### 안전 경계",
+    heading(subSection, "안전 경계"),
     entry.safety_boundary,
     "",
-    "### 실패와 재개",
+    heading(section, "실패와 재개"),
     textBlock(entry.resume_prompt),
+  ].join("\n");
+}
+
+export function validateRenderedPromptCard(entry, markdown) {
+  if (typeof markdown !== "string") throw new Error(`rendered prompt card must be text: ${entry.id}`);
+  const required = [
+    `<!-- PROMPT-CARD: ${entry.id} -->`,
+    `- 스킬 흐름: ${entry.skill_chain.join(" → ")}`,
+    "최소 결과물",
+    "선택 결과물",
+    "확장 결과물",
+    entry.human_review_boundary,
+    entry.diagram_binding.id,
+    entry.diagram_binding.svg,
+    entry.diagram_binding.png,
+    entry.app_prompt.example,
+    entry.app_prompt.template,
+    entry.cli_prompt.example,
+    entry.cli_prompt.template,
+    entry.resume_prompt,
+  ];
+  for (const fragment of required) {
+    if (!markdown.includes(fragment)) throw new Error(`rendered prompt card is missing required contract: ${entry.id}`);
+  }
+  if ((markdown.match(/^```text$/gmu) ?? []).length !== 5) {
+    throw new Error(`rendered prompt card must have five text blocks: ${entry.id}`);
+  }
+  const expectedNamespace = entry.product === "studio" ? "$game-design-studio:" : entry.product === "career" ? "$game-design-career:" : null;
+  if (expectedNamespace && (!entry.cli_prompt.example.includes(expectedNamespace) || !entry.cli_prompt.template.includes(expectedNamespace))) {
+    throw new Error(`rendered prompt card has an invalid CLI namespace: ${entry.id}`);
+  }
+  return true;
+}
+
+export function renderPromptGuideSummary(entries) {
+  const ordered = orderedEntries(entries);
+  return [
+    "### 재사용 프롬프트 템플릿",
+    "",
+    ...ordered.map((entry) => `- [${entry.level} — ${entry.title}](../../prompt-templates/${entry.product}/${entry.skill}.md#${entryAnchor(entry)})`),
+  ].join("\n");
+}
+
+export function renderPromptDetailPage(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) throw new Error("prompt detail page needs entries");
+  const first = orderedEntries(entries)[0];
+  const cards = orderedEntries(entries).map((entry) => {
+    const markdown = renderPromptCard(entry);
+    validateRenderedPromptCard(entry, markdown);
+    return markdown;
+  });
+  return [
+    `# ${first.product === "studio" ? "Game Design Studio" : first.product === "career" ? "Game Design Career" : "Game Design Plugin Suite"} 프롬프트`,
+    "",
+    "모르는 정보는 `미정`으로 남기고, 자동 결과를 사람의 승인으로 바꾸지 마세요.",
+    "",
+    ...cards,
+    "",
   ].join("\n");
 }
 
 export function renderPromptLibrary(catalog) {
   if (!catalog || !Array.isArray(catalog.entries)) throw new Error("prompt catalog must contain an entries array");
-  const cards = orderedEntries(catalog.entries).map((entry) => renderPromptCard(entry));
-  return [
+  const entries = orderedEntries(catalog.entries);
+  const sections = [
+    indexSection("사용자 유형", entries, (entry) => `${entry.audiences.join(", ")} — ${entry.id}`),
+    indexSection("목표", entries, (entry) => `${entry.intents.join(", ")} — ${entry.id}`),
+    indexSection("난이도", entries, (entry) => `${entry.level} — ${entry.id}`),
+    indexSection("플러그인", entries, (entry) => `${entry.product} — ${entry.id}`),
+    indexSection("스킬", entries, (entry) => `${entry.skill} — ${entry.id}`),
+    indexSection("결과 문서 형식", entries, (entry) => `${[...entry.minimum_outputs, ...entry.optional_outputs, ...entry.extended_outputs].join(", ")} — ${entry.id}`),
+    indexSection("이미지·도식 필요 여부", entries, (entry) => `${entry.diagram_binding.id} — ${entry.id}`),
+    indexSection("사람 검토 유형", entries, (entry) => `${entry.human_review_boundary} — ${entry.id}`),
+  ];
+  return `${[
     "# 재사용 프롬프트 라이브러리",
     "",
-    "이 라이브러리는 검증된 카탈로그에서 결정론적으로 생성됩니다. 모르는 정보는 `미정`으로 남기고 승인 경계를 넘지 마세요.",
+    "이 라이브러리는 검증된 카탈로그에서 결정론적으로 생성됩니다. 아래 탐색 축에서 카드의 목적에 맞는 상세 페이지를 선택하세요. 모르는 정보는 `미정`으로 남기고 승인 경계를 넘지 마세요.",
     "",
-    ...cards,
-    "",
-  ].join("\n");
+    ...sections,
+  ].join("\n").trimEnd()}\n`;
 }
 
 export function replaceManagedSection(markdown, markerId, body) {

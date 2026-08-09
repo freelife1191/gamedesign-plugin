@@ -99,6 +99,102 @@ $game-design-studio:define-game-vision 기존 game-design/island-restoration/vis
 - 다음 학습: 행동을 루프로 구체화하려면 `ST-C02`, 규칙으로 내리려면 `ST-C03`으로 이동합니다.
 - 관련 문서: [새 게임 GDD 레시피](../recipes/new-game-gdd.md), [비전 스킬](../skills/define-game-vision.md), [템플릿](../templates.md).
 
+<!-- PROMPT-TEMPLATES:START st-c01 -->
+<!-- PROMPT-CARD: studio:case:ST-C01 -->
+#### studio:case:ST-C01
+
+**ST-C01 source-bound scenario**
+
+ST-C01의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C01의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C01 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C01를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:define-game-vision $game-design-studio:orchestrate-game-design-project $game-design-studio:review-game-design ST-C01의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:define-game-vision $game-design-studio:orchestrate-game-design-project $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C01의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → define-game-vision → orchestrate-game-design-project → review-game-design
+- 전문 역할: lead-game-designer
+
+##### 중간 산출물
+- vision-pillars
+- game-design-brief
+
+##### 예상 결과물
+###### 최소 결과물
+- vision-pillars
+- game-design-brief
+- game-design-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/vision-pillars/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/vision-pillars/content.md
+- game-design/[프로젝트 ID]/vision-pillars/evidence.yml
+- game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c01
+- SVG: guides/assets/game-design-studio/use-cases/st-c01.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c01.png
+- 대체 텍스트: 플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c01 -->
+
 ## ST-C02 행동·핵심 루프·의미 있는 선택
 
 [![플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름](../../assets/game-design-studio/use-cases/st-c02.png)](../../assets/game-design-studio/use-cases/st-c02.svg)
@@ -193,6 +289,102 @@ verb가 추상적이거나 모든 분기가 같은 결과면 해당 단계는 `b
 - 회고에서 선택한 loop, 버린 대안과 다음 실험을 설명합니다.
 - 다음 학습은 `ST-C03`의 규칙 계약 또는 `ST-C04`의 첫 세션 feedback입니다.
 - 관련 문서: [비전 스킬](../skills/define-game-vision.md), [시스템 스킬](../skills/design-game-systems.md), [플레이어 경험 스킬](../skills/design-player-experience.md).
+
+<!-- PROMPT-TEMPLATES:START st-c02 -->
+<!-- PROMPT-CARD: studio:case:ST-C02 -->
+#### studio:case:ST-C02
+
+**ST-C02 source-bound scenario**
+
+ST-C02의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C02의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C02 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C02를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-C02의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C02의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: define-game-vision
+- 스킬 흐름: define-game-vision → design-game-systems → design-player-experience → review-game-design
+- 전문 역할: lead-game-designer → ux-accessibility-reviewer
+
+##### 중간 산출물
+- core-motivation-loop
+- system-specification
+
+##### 예상 결과물
+###### 최소 결과물
+- core-motivation-loop
+- system-specification
+- game-design-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/core-motivation-loop/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/core-motivation-loop/content.md
+- game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml
+- game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c02
+- SVG: guides/assets/game-design-studio/use-cases/st-c02.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c02.png
+- 대체 텍스트: 플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** `content.md`의 loop와 rule ID, `evidence.yml`의 관찰, `decisions/`의 대안 순서입니다. 중간 결과에서 모든 단계가 입력과 feedback을 갖고 실패 뒤 복구 가능한지 확인합니다. **사람 결정:** design owner와 player-protection owner가 의미 있는 선택, stop condition과 다음 prototype을 승인하거나 보류합니다. 자동화는 재미나 retention을 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c02 -->
 
 ## ST-C03 규칙·상태·예외·데이터
 
@@ -289,6 +481,103 @@ $game-design-studio:design-game-systems game-design/shared-workbench/system-spec
 - 다음 학습은 `ST-C04`에서 상태를 플레이어 경험으로 검토하거나 `ST-C06`에서 전투 규칙에 적용합니다.
 - 관련 문서: [시스템 기능 명세 레시피](../recipes/system-feature-spec.md), [시스템 스킬](../skills/design-game-systems.md), [템플릿](../templates.md).
 
+<!-- PROMPT-TEMPLATES:START st-c03 -->
+<!-- PROMPT-CARD: studio:case:ST-C03 -->
+#### studio:case:ST-C03
+
+**ST-C03 source-bound scenario**
+
+ST-C03의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C03의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C03 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C03를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-C03의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C03의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → design-game-systems → design-player-experience → review-game-design
+- 전문 역할: lead-game-designer → system-economy-designer
+
+##### 중간 산출물
+- system-specification
+- rule-exception-matrix
+- data-schema-table-contract
+
+##### 예상 결과물
+###### 최소 결과물
+- system-specification
+- rule-exception-matrix
+- data-schema-table-contract
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/system-specification/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/system-specification/content.md
+- game-design/[프로젝트 ID]/system-specification/evidence.yml
+- game-design/[프로젝트 ID]/system-specification/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c03
+- SVG: guides/assets/game-design-studio/use-cases/st-c03.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c03.png
+- 대체 텍스트: 규칙과 상태 전이 및 예외와 데이터 계약의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c03 -->
+
 ## ST-C04 UI·UX·온보딩·접근성
 
 [![UI UX 온보딩과 접근성 검토의 흐름](../../assets/game-design-studio/use-cases/st-c04.png)](../../assets/game-design-studio/use-cases/st-c04.svg)
@@ -383,6 +672,102 @@ current platform 근거나 테스트 환경이 없으면 compliance를 주장하
 - 회고에서 선택한 onboarding 순서와 제외한 cue, 다음 usability 질문을 설명합니다.
 - 다음 학습은 콘텐츠 흐름의 상태가 필요하면 `ST-C05`, 전체 review와 출력은 `ST-C08`입니다.
 - 관련 문서: [UX·접근성 레시피](../recipes/ux-accessibility.md), [플레이어 경험 스킬](../skills/design-player-experience.md), [시각화](../visualization.md).
+
+<!-- PROMPT-TEMPLATES:START st-c04 -->
+<!-- PROMPT-CARD: studio:case:ST-C04 -->
+#### studio:case:ST-C04
+
+**ST-C04 source-bound scenario**
+
+ST-C04의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C04의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C04 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C04를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-player-experience $game-design-studio:review-game-design $game-design-studio:visualize-game-design ST-C04의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-player-experience $game-design-studio:review-game-design $game-design-studio:visualize-game-design [프로젝트 ID] [공개 정보] ST-C04의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → design-player-experience → review-game-design → visualize-game-design
+- 전문 역할: ux-accessibility-reviewer → lead-game-designer
+
+##### 중간 산출물
+- ui-ux-flow-state
+- accessibility-platform-matrix
+
+##### 예상 결과물
+###### 최소 결과물
+- ui-ux-flow-state
+- accessibility-platform-matrix
+- game-design-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/ui-ux-flow-state/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/ui-ux-flow-state/content.md
+- game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml
+- game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c04
+- SVG: guides/assets/game-design-studio/use-cases/st-c04.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c04.png
+- 대체 텍스트: UI UX 온보딩과 접근성 검토의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c04 -->
 
 ## ST-C05 콘텐츠·내러티브·퀘스트·NPC
 
@@ -479,6 +864,102 @@ $game-design-studio:design-game-content 기존 Q-ARCH-01과 승인된 state를 �
 - 다음 학습은 전투 단위를 깊게 다루는 `ST-C06` 또는 제작 범위를 검토하는 `ST-C08`입니다.
 - 관련 문서: [콘텐츠·퀘스트 레시피](../recipes/content-quest-design.md), [콘텐츠 스킬](../skills/design-game-content.md), [템플릿](../templates.md).
 
+<!-- PROMPT-TEMPLATES:START st-c05 -->
+<!-- PROMPT-CARD: studio:case:ST-C05 -->
+#### studio:case:ST-C05
+
+**ST-C05 source-bound scenario**
+
+ST-C05의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C05의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C05 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C05를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:plan-game-production $game-design-studio:review-game-design ST-C05의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:plan-game-production $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C05의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → design-game-content → design-game-systems → plan-game-production → review-game-design
+- 전문 역할: content-narrative-designer → system-economy-designer → production-feasibility-critic → visual-asset-reviewer
+
+##### 중간 산출물
+- narrative-quest-npc
+- character-skill-combat-monster
+
+##### 예상 결과물
+###### 최소 결과물
+- narrative-quest-npc
+- character-skill-combat-monster
+- game-design-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/narrative-quest-npc/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/narrative-quest-npc/content.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml
+- game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c05
+- SVG: guides/assets/game-design-studio/use-cases/st-c05.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c05.png
+- 대체 텍스트: 콘텐츠와 내러티브 및 퀘스트와 NPC 제작 계약의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** purpose → entry/state → choice·consequence → dependency → production·rights evidence → decisions입니다. 중간 결과에서 연결되지 않은 system/data ID와 근거 없는 제작 비용을 blocker로 봅니다. **사람 결정:** content owner, system owner, production owner와 권리 담당자가 분기, 범위, provenance·consent를 승인합니다. 생성된 서사나 이미지가 자동 승인되지는 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c05 -->
+
 ## ST-C06 캐릭터·스킬·전투·몬스터
 
 [![캐릭터와 스킬 및 전투와 몬스터 설계의 흐름](../../assets/game-design-studio/use-cases/st-c06.png)](../../assets/game-design-studio/use-cases/st-c06.svg)
@@ -574,6 +1055,102 @@ canonical rule 또는 prototype evidence가 없으면 숫자를 채우지 않고
 - 다음 학습은 경제·성장 연결이 필요하면 `ST-C07`, 제작·검토는 `ST-C08`입니다.
 - 관련 문서: [콘텐츠 스킬](../skills/design-game-content.md), [시스템 스킬](../skills/design-game-systems.md), [템플릿](../templates.md).
 
+<!-- PROMPT-TEMPLATES:START st-c06 -->
+<!-- PROMPT-CARD: studio:case:ST-C06 -->
+#### studio:case:ST-C06
+
+**ST-C06 source-bound scenario**
+
+ST-C06의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C06의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C06 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C06를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:review-game-design ST-C06의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C06의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → design-game-content → design-game-systems → review-game-design
+- 전문 역할: system-economy-designer → ux-accessibility-reviewer
+
+##### 중간 산출물
+- character-skill-combat-monster
+- system-specification
+
+##### 예상 결과물
+###### 최소 결과물
+- character-skill-combat-monster
+- system-specification
+- game-design-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/character-skill-combat-monster/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/character-skill-combat-monster/content.md
+- game-design/[프로젝트 ID]/character-skill-combat-monster/evidence.yml
+- game-design/[프로젝트 ID]/character-skill-combat-monster/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c06
+- SVG: guides/assets/game-design-studio/use-cases/st-c06.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c06.png
+- 대체 텍스트: 캐릭터와 스킬 및 전투와 몬스터 설계의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** role·strategy → skill/monster state → telegraph·counterplay → system/data mapping → test evidence입니다. 중간 결과에서 읽을 수 없는 위협, 대응 없는 공격, 미확인 data key를 blocker로 봅니다. **사람 결정:** combat owner와 accessibility owner가 strategy, cue, counterplay, provisional test 범위를 승인합니다. reviewer나 prototype 파일은 자동 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c06 -->
+
 ## ST-C07 성장·경제·밸런스·LiveOps
 
 [![성장과 경제 및 밸런스와 LiveOps 실험의 흐름](../../assets/game-design-studio/use-cases/st-c07.png)](../../assets/game-design-studio/use-cases/st-c07.svg)
@@ -668,6 +1245,102 @@ $game-design-studio:design-game-economy-and-liveops EXP-FEST-01의 가정과 con
 - 회고에서 선택한 가정, 기각한 rollout, 보호 기준과 다음 telemetry 검증을 설명합니다.
 - 다음 학습은 `ST-C08`에서 production risk, review와 승인 가능한 출력으로 연결합니다.
 - 관련 문서: [경제·LiveOps 레시피](../recipes/economy-liveops.md), [경제 스킬](../skills/design-game-economy-and-liveops.md), [이미지 자산](../image-assets.md).
+
+<!-- PROMPT-TEMPLATES:START st-c07 -->
+<!-- PROMPT-CARD: studio:case:ST-C07 -->
+#### studio:case:ST-C07
+
+**ST-C07 source-bound scenario**
+
+ST-C07의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C07의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C07 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C07를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-systems $game-design-studio:review-game-design ST-C07의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-systems $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C07의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: apply-document-quality-profile
+- 스킬 흐름: apply-document-quality-profile → design-game-economy-and-liveops → design-game-systems → review-game-design
+- 전문 역할: system-economy-designer → liveops-data-designer → ux-accessibility-reviewer
+
+##### 중간 산출물
+- economy-balance
+- liveops-experiment-event
+
+##### 예상 결과물
+###### 최소 결과물
+- economy-balance
+- liveops-experiment-event
+- game-design-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/economy-balance/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/economy-balance/content.md
+- game-design/[프로젝트 ID]/economy-balance/evidence.yml
+- game-design/[프로젝트 ID]/economy-balance/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c07
+- SVG: guides/assets/game-design-studio/use-cases/st-c07.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c07.png
+- 대체 텍스트: 성장과 경제 및 밸런스와 LiveOps 실험의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** resource flow → progression/recovery → price·probability evidence → experiment → guardrail·rollback → decisions입니다. 중간 결과에서 source 없는 수치, 다중 변수, 복구 불가 변경을 blocker로 봅니다. **사람 결정:** economy, LiveOps, policy와 accessibility owner가 실험 실행·중단·rollback을 승인합니다. simulation, telemetry 수집과 reviewer 권고는 자동 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c07 -->
 
 ## ST-C08 제작·검토·이미지·출력
 
@@ -765,3 +1438,100 @@ $game-design-studio:export-game-design-documents game-design/exploration-prototy
 - 회고에서 commit하지 않은 범위, review disagreement, 이미지·형식별 blocker와 다음 사람 결정을 설명합니다.
 - 다음 학습은 [결과물 카탈로그](../../use-cases/output-catalog.md)로 파일 읽기 순서를 확인하고 필요한 domain 사례로 돌아가는 것입니다.
 - 관련 문서: [제작·검토·내보내기 레시피](../recipes/production-review-export.md), [이미지 자산](../image-assets.md), [내보내기](../exports.md).
+
+<!-- PROMPT-TEMPLATES:START st-c08 -->
+<!-- PROMPT-CARD: studio:case:ST-C08 -->
+#### studio:case:ST-C08
+
+**ST-C08 source-bound scenario**
+
+ST-C08의 source manifest skill과 artifact를 보존한다.
+
+##### 사용하는 경우
+ST-C08의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
+
+##### 사용하지 않는 경우
+승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- ST-C08 공개 가능한 설계 경계
+
+###### 선택 입력
+- 검증 근거와 decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio ST-C08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C08를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:plan-game-production $game-design-studio:review-game-design $game-design-studio:plan-image-assets $game-design-studio:visualize-game-design $game-design-studio:export-game-design-documents ST-C08의 공개 가능한 사실, 추론, 제안을 분리해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:plan-game-production $game-design-studio:review-game-design $game-design-studio:plan-image-assets $game-design-studio:visualize-game-design $game-design-studio:export-game-design-documents [프로젝트 ID] [공개 정보] ST-C08의 fact, inference, recommendation을 분리해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: plan-game-production
+- 스킬 흐름: plan-game-production → review-game-design → plan-image-assets → visualize-game-design → export-game-design-documents
+- 전문 역할: production-feasibility-critic → lead-game-designer → visual-asset-reviewer → document-quality-editor
+
+##### 중간 산출물
+- production-scope-risk
+- game-design-review
+- decision-change-log
+
+##### 예상 결과물
+###### 최소 결과물
+- production-scope-risk
+- game-design-review
+- export-preparation-manifest
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/production-scope-risk/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/production-scope-risk/content.md
+- game-design/[프로젝트 ID]/production-scope-risk/evidence.yml
+- game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml
+
+##### 도식 바인딩
+- ID: st-c08
+- SVG: guides/assets/game-design-studio/use-cases/st-c08.svg
+- PNG: guides/assets/game-design-studio/use-cases/st-c08.png
+- 대체 텍스트: 제작과 검토 및 이미지와 출력 준비의 흐름
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서 blocker, capacity gap, image lifecycle, renderer capability와 형식별 QA를 따로 봅니다. **사람 결정:** production owner가 scope·kill, review decision owner가 finding disposition, rights/asset owner가 이미지 transition, export owner가 실제 format QA를 승인합니다. 생성, render, lint, reviewer finding과 state 문자열은 자동 승인하지 않습니다.
+
+###### 보류 조건
+- 근거, 권리, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+ST-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END st-c08 -->

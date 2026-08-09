@@ -116,6 +116,10 @@ function inventoryForTests({ skillIds = ["define-game-vision"], templateIds = []
   return { skillIds, templateIds };
 }
 
+function withoutPromptTemplateSections(markdown) {
+  return markdown.replace(/\n?<!-- PROMPT-TEMPLATES:START [^>]+ -->[\s\S]*?<!-- PROMPT-TEMPLATES:END [^>]+ -->\n?/gu, "\n");
+}
+
 async function fixtureRoot(t, { entries, symlinkShard = false }) {
   const root = await mkdtemp(path.join(os.tmpdir(), "prompt-template-catalog-"));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -1731,7 +1735,7 @@ test("scenario catalog binds every source case and recipe command in order", asy
   for (const entry of recipes) {
     const source = entry.source_references.find((value) => /\/recipes\/.*\.md$/u.test(value));
     assert.ok(source, `${entry.id} recipe source`);
-    const markdown = await readFile(path.join(repoRoot, source), "utf8");
+    const markdown = withoutPromptTemplateSections(await readFile(path.join(repoRoot, source), "utf8"));
     const expectedCommands = [...markdown.matchAll(/\$game-design-(?:studio|career):[a-z-]+/gu)].map(([command]) => command);
     const actualCommands = [...entry.cli_prompt.example.matchAll(/\$game-design-(?:studio|career):[a-z-]+/gu)].map(([command]) => command);
     assert.deepEqual(actualCommands, expectedCommands, entry.id);

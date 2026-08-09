@@ -135,3 +135,11 @@ $game-design-career:review-image-assets artifact=<artifact-path> 기존 evidence
 ## 관련 문서
 
 [템플릿 카탈로그](../templates.md), [review-image-assets 스킬](./review-image-assets.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:generate-image-assets -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 선택한 포트폴리오 cover concept 생성 경로](../../prompt-templates/career/generate-image-assets.md#careergenerate-image-assetsbeginner)
+- [standard — proof 이미지 receipt와 provenance 기록](../../prompt-templates/career/generate-image-assets.md#careergenerate-image-assetsstandard)
+- [advanced — provider failure·provenance·retry handoff](../../prompt-templates/career/generate-image-assets.md#careergenerate-image-assetsadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:generate-image-assets -->

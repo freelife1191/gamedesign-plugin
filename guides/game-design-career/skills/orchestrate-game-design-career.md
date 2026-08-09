@@ -159,3 +159,11 @@ $game-design-career:<selected-skill> artifact=artifacts/<artifact-id> scenario c
 ## 관련 문서
 
 [career-stage-goal 템플릿](../templates.md#career-stage-goal), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:orchestrate-game-design-career -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 단계와 목표를 정하는 Career orchestration brief](../../prompt-templates/career/orchestrate-game-design-career.md#careerorchestrate-game-design-careerbeginner)
+- [standard — research에서 portfolio로 잇는 Career orchestration](../../prompt-templates/career/orchestrate-game-design-career.md#careerorchestrate-game-design-careerstandard)
+- [advanced — 역할 검토·handoff·재개를 관리하는 Career orchestration](../../prompt-templates/career/orchestrate-game-design-career.md#careerorchestrate-game-design-careeradvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:orchestrate-game-design-career -->

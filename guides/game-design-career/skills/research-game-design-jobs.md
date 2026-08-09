@@ -141,3 +141,11 @@ $game-design-career:practice-game-design-interview artifact=<artifact-path> 기�
 ## 관련 문서
 
 [job-posting-evidence 템플릿](../templates.md#job-posting-evidence), [map-game-design-career 스킬](./map-game-design-career.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:research-game-design-jobs -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 공식 공고 한 개를 근거로 읽는 채용 조사](../../prompt-templates/career/research-game-design-jobs.md#careerresearch-game-design-jobsbeginner)
+- [standard — 날짜·지역·표본을 경계로 하는 채용 조사](../../prompt-templates/career/research-game-design-jobs.md#careerresearch-game-design-jobsstandard)
+- [advanced — 최신성·blind spot·일반화 한계를 검토하는 채용 조사](../../prompt-templates/career/research-game-design-jobs.md#careerresearch-game-design-jobsadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:research-game-design-jobs -->

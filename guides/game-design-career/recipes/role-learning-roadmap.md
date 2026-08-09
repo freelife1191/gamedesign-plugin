@@ -89,3 +89,113 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 
 - [전체 워크플로](../workflow.md), [역할 매핑](../skills/map-game-design-career.md), [Career 시각화](../visualization.md)
 - [학습 로드맵](../templates.md), [공통 이미지 모드](../../assets/shared/image-generation-mode-routing.png)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:recipe:role-learning-roadmap -->
+<!-- PROMPT-CARD: career:recipe:role-learning-roadmap -->
+#### career:recipe:role-learning-roadmap
+
+**role-learning-roadmap recipe**
+
+role-learning-roadmap recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID만 사용해 시스템 기획 역할과 현재 증거의 gap을 로드맵으로 정리해. 관찰 사실, 추론, 제안을 분리하고 검토자를 지정해.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID만 사용해 시스템 기획 역할과 현재 증거의 gap을 로드맵으로 정리해. 관찰 사실, 추론, 제안을 분리하고 검토자를 지정해. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:orchestrate-game-design-career game-design-career/<career-id>/career-stage-goal/를 기준으로 $game-design-career:map-game-design-career, $game-design-career:apply-document-quality-profile를 실행하고 game-design-career/<career-id>/learning-roadmap/에 저장해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:orchestrate-game-design-career game-design-career/[경력 ID]/career-stage-goal/를 기준으로 $game-design-career:map-game-design-career, $game-design-career:apply-document-quality-profile를 실행하고 game-design-career/[경력 ID]/learning-roadmap/에 저장해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: orchestrate-game-design-career
+- 스킬 흐름: orchestrate-game-design-career → map-game-design-career → apply-document-quality-profile
+- 전문 역할: career-strategist
+
+##### 중간 산출물
+- career-stage-goal
+- learning-roadmap
+
+##### 예상 결과물
+###### 최소 결과물
+- career-stage-goal canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design-career/[경력 ID]/career-stage-goal/content.md
+- game-design-career/[경력 ID]/career-stage-goal/evidence.yml
+- game-design-career/[경력 ID]/career-stage-goal/decisions/README.md
+- game-design-career/[경력 ID]/career-stage-goal/assets/README.md
+- game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml
+- game-design-career/[경력 ID]/learning-roadmap/content.md
+- game-design-career/[경력 ID]/learning-roadmap/evidence.yml
+- game-design-career/[경력 ID]/learning-roadmap/decisions/README.md
+- game-design-career/[경력 ID]/learning-roadmap/assets/README.md
+- game-design-career/[경력 ID]/learning-roadmap/export-manifest.yml
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/career-stage-goal/content.md
+- game-design-career/[경력 ID]/career-stage-goal/evidence.yml
+- game-design-career/[경력 ID]/career-stage-goal/decisions/README.md
+- game-design-career/[경력 ID]/career-stage-goal/assets/README.md
+- game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml
+- game-design-career/[경력 ID]/learning-roadmap/content.md
+- game-design-career/[경력 ID]/learning-roadmap/evidence.yml
+- game-design-career/[경력 ID]/learning-roadmap/decisions/README.md
+- game-design-career/[경력 ID]/learning-roadmap/assets/README.md
+- game-design-career/[경력 ID]/learning-roadmap/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-s05
+- SVG: guides/assets/game-design-career/skills/map-game-design-career.svg
+- PNG: guides/assets/game-design-career/skills/map-game-design-career.png
+- 대체 텍스트: Career recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 role-learning-roadmap의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, 또는 owner receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+role-learning-roadmap의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END game-design-career:recipe:role-learning-roadmap -->

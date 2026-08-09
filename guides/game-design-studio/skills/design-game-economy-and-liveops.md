@@ -117,3 +117,11 @@ $game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/
 ## 관련 문서
 
 [economy-balance 템플릿](../templates.md#economy-balance), [liveops-experiment-event 템플릿](../templates.md#liveops-experiment-event), [review-game-design 스킬](./review-game-design.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:design-game-economy-and-liveops -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — Source·sink 가설을 기록하는 경제 기초](../../prompt-templates/studio/design-game-economy-and-liveops.md#studiodesign-game-economy-and-liveopsbeginner)
+- [standard — Progression·guardrail·rollback을 갖춘 경제 계획](../../prompt-templates/studio/design-game-economy-and-liveops.md#studiodesign-game-economy-and-liveopsstandard)
+- [advanced — Experiment·telemetry·player protection을 분리하는 경제 검토](../../prompt-templates/studio/design-game-economy-and-liveops.md#studiodesign-game-economy-and-liveopsadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:design-game-economy-and-liveops -->

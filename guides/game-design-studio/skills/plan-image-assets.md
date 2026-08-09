@@ -129,3 +129,11 @@ $game-design-studio:visualize-game-design artifact=artifacts/coop-rpg-brief Skil
 ## 관련 문서
 
 [템플릿 카탈로그](../templates.md), [generate-image-assets 스킬](./generate-image-assets.md), [visualize-game-design 스킬](./visualize-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:plan-image-assets -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — prompt-only 이미지 slot과 placeholder 계획](../../prompt-templates/studio/plan-image-assets.md#studioplan-image-assetsbeginner)
+- [standard — stable ID·alt·count를 갖춘 이미지 manifest 계획](../../prompt-templates/studio/plan-image-assets.md#studioplan-image-assetsstandard)
+- [advanced — profile slot·rights·diagram handoff가 있는 자산 계획](../../prompt-templates/studio/plan-image-assets.md#studioplan-image-assetsadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:plan-image-assets -->

@@ -159,3 +159,11 @@ $game-design-career:<selected-skill> artifact=artifacts/<artifact-id> routing.js
 ## 관련 문서
 
 [템플릿 카탈로그](../templates.md), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:apply-document-quality-profile -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 목표 역할 문서의 품질 프로필 선택](../../prompt-templates/career/apply-document-quality-profile.md#careerapply-document-quality-profilebeginner)
+- [standard — 대상·형식·preset을 맞춘 문서 품질 선택](../../prompt-templates/career/apply-document-quality-profile.md#careerapply-document-quality-profilestandard)
+- [advanced — evidence state와 fallback을 검토하는 문서 품질 선택](../../prompt-templates/career/apply-document-quality-profile.md#careerapply-document-quality-profileadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:apply-document-quality-profile -->

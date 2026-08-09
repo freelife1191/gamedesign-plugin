@@ -137,3 +137,11 @@ $game-design-career:export-career-documents artifact=<artifact-path> 기존 evid
 ## 관련 문서
 
 [템플릿 카탈로그](../templates.md), [export-career-documents 스킬](./export-career-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:review-image-assets -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 문서 concept 이미지 검토 요청](../../prompt-templates/career/review-image-assets.md#careerreview-image-assetsbeginner)
+- [standard — 공개 권리·가독성 document approval](../../prompt-templates/career/review-image-assets.md#careerreview-image-assetsstandard)
+- [advanced — production candidate·review cycle 증빙](../../prompt-templates/career/review-image-assets.md#careerreview-image-assetsadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:review-image-assets -->

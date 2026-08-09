@@ -117,3 +117,11 @@ $game-design-studio:design-game-systems artifact=<artifact-path> 기존 evidence
 ## 관련 문서
 
 [vision-pillars 템플릿](../templates.md#vision-pillars), [design-game-systems 스킬](./design-game-systems.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:define-game-vision -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 대상과 player promise를 정하는 게임 비전](../../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner)
+- [standard — Pillar와 anti-pillar를 검증하는 게임 비전](../../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionstandard)
+- [advanced — 상충 기능과 근거 owner를 다루는 게임 비전](../../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:define-game-vision -->

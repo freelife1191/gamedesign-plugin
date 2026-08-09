@@ -139,3 +139,11 @@ $game-design-studio:<selected-skill> artifact=artifacts/<artifact-id> routing.js
 ## 관련 문서
 
 [템플릿 카탈로그](../templates.md), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:apply-document-quality-profile -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 문서 목적과 대상에 맞는 품질 프로필 선택](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profilebeginner)
+- [standard — Overlay와 preset manifest를 갖춘 품질 프로필 선택](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profilestandard)
+- [advanced — Fallback과 state receipt를 가진 품질 프로필 검토](../../prompt-templates/studio/apply-document-quality-profile.md#studioapply-document-quality-profileadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:apply-document-quality-profile -->

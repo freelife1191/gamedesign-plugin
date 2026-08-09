@@ -80,3 +80,102 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 
 - [면접 연습](../skills/practice-game-design-interview.md), [공고 조사](../skills/research-game-design-jobs.md), [portfolio 검토](../skills/review-game-design-portfolio.md)
 - [Career workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:recipe:interview-preparation -->
+<!-- PROMPT-CARD: career:recipe:interview-preparation -->
+#### career:recipe:interview-preparation
+
+**interview-preparation recipe**
+
+interview-preparation recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+
+##### Codex App 완성 예시
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 posting·portfolio evidence ID만 사용해 질문 연습을 만들어. 관찰 사실·추론·제안과 honest gap을 같은 questionId에 남겨.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 posting·portfolio evidence ID만 사용해 질문 연습을 만들어. 관찰 사실·추론·제안과 honest gap을 같은 questionId에 남겨. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:practice-game-design-interview game-design-career/<career-id>/interview-question-answer-log/에서 $game-design-career:research-game-design-jobs, $game-design-career:review-game-design-portfolio evidence를 연결해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:practice-game-design-interview game-design-career/[경력 ID]/interview-question-answer-log/에서 $game-design-career:research-game-design-jobs, $game-design-career:review-game-design-portfolio evidence를 연결해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: practice-game-design-interview
+- 스킬 흐름: practice-game-design-interview → research-game-design-jobs → review-game-design-portfolio
+- 전문 역할: career-strategist
+
+##### 중간 산출물
+- interview-question-answer-log
+
+##### 예상 결과물
+###### 최소 결과물
+- interview-question-answer-log canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design-career/[경력 ID]/interview-question-answer-log/content.md
+- game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml
+- game-design-career/[경력 ID]/interview-question-answer-log/decisions/README.md
+- game-design-career/[경력 ID]/interview-question-answer-log/assets/README.md
+- game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/interview-question-answer-log/content.md
+- game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml
+- game-design-career/[경력 ID]/interview-question-answer-log/decisions/README.md
+- game-design-career/[경력 ID]/interview-question-answer-log/assets/README.md
+- game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-s05
+- SVG: guides/assets/game-design-career/skills/map-game-design-career.svg
+- PNG: guides/assets/game-design-career/skills/map-game-design-career.png
+- 대체 텍스트: Career recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 interview-preparation의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, 또는 owner receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+interview-preparation의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END game-design-career:recipe:interview-preparation -->

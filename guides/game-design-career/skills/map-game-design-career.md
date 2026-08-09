@@ -143,3 +143,11 @@ $game-design-career:build-game-design-portfolio artifact=<artifact-path> 기존 
 ## 관련 문서
 
 [game-design-role-map 템플릿](../templates.md#game-design-role-map), [build-game-design-portfolio 스킬](./build-game-design-portfolio.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:map-game-design-career -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 두 게임 기획 역할을 비교하는 Career map](../../prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner)
+- [standard — 역량 gap과 12주 evidence 과제를 잇는 Career map](../../prompt-templates/career/map-game-design-career.md#careermap-game-design-careerstandard)
+- [advanced — 복수 경로·교환조건·재평가를 다루는 Career map](../../prompt-templates/career/map-game-design-career.md#careermap-game-design-careeradvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:map-game-design-career -->

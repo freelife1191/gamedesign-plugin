@@ -86,3 +86,105 @@ system ID가 바뀌거나 rights evidence가 빠지면 해당 stage를 `blocked`
 
 - [콘텐츠 스킬](../skills/design-game-content.md), [제작 스킬](../skills/plan-game-production.md), [이미지 자산](../image-assets.md)
 - [이미지 자산 수명주기](../../assets/shared/image-asset-lifecycle.png)는 illustration 승인 경계를 설명합니다.
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:recipe:content-quest-design -->
+<!-- PROMPT-CARD: studio:recipe:content-quest-design -->
+#### studio:recipe:content-quest-design
+
+**content-quest-design recipe**
+
+content-quest-design recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+
+##### Codex App 완성 예시
+```text
+@Game Design Studio 폐광 퀘스트의 stage, branch, NPC, choice, reward와 실패 복구를 시스템 state ID에 연결해. 외부 원작·UGC·AI 대사는 rights와 consent가 없으면 blocker로 남겨.
+```
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio 폐광 퀘스트의 stage, branch, NPC, choice, reward와 실패 복구를 시스템 state ID에 연결해. 외부 원작·UGC·AI 대사는 rights와 consent가 없으면 blocker로 남겨. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:design-game-content game-design/<project-id>/narrative-quest-npc/를 작성하고 $game-design-studio:design-game-systems 및 $game-design-studio:plan-game-production으로 의존성과 제작 위험을 검토해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:design-game-content game-design/[프로젝트 ID]/narrative-quest-npc/를 작성하고 $game-design-studio:design-game-systems 및 $game-design-studio:plan-game-production으로 의존성과 제작 위험을 검토해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: design-game-content
+- 스킬 흐름: design-game-content → design-game-systems → plan-game-production
+- 전문 역할: lead-game-designer
+
+##### 중간 산출물
+- narrative-quest-npc
+- character-skill-combat-monster
+
+##### 예상 결과물
+###### 최소 결과물
+- narrative-quest-npc canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/narrative-quest-npc/content.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml
+- game-design/[프로젝트 ID]/narrative-quest-npc/decisions/README.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/assets/README.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml
+- game-design/[프로젝트 ID]/character-skill-combat-monster/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/narrative-quest-npc/content.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml
+- game-design/[프로젝트 ID]/narrative-quest-npc/decisions/README.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/assets/README.md
+- game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml
+- game-design/[프로젝트 ID]/character-skill-combat-monster/content.md
+
+##### 도식 바인딩
+- ID: st-s01
+- SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
+- PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
+- 대체 텍스트: Studio recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 content-quest-design의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+content-quest-design의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+<!-- PROMPT-TEMPLATES:END game-design-studio:recipe:content-quest-design -->
