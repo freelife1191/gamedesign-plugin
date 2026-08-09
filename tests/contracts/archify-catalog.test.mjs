@@ -40,3 +40,36 @@ test("production inventory has bounded diagrams and explicit package exclusions"
     assert.match(entry.decision_reason, /products\/game-design-(?:studio|career)/u);
   }
 });
+
+test("production selection does not duplicate existing Skillstead diagrams", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const overlappingSkillsteadPaths = new Map([
+    ["career-junior-growth-transition", "guides/assets/game-design-career/career-stage-routing.svg"],
+    ["career-portfolio-review-cycle", "guides/assets/game-design-career/portfolio-review-loop.svg"],
+    ["studio-economy-liveops-lifecycle", "guides/assets/game-design-studio/economy-balance-liveops-loop.svg"],
+    ["studio-production-review-export", "guides/assets/game-design-studio/production-risk-review-flow.svg"],
+    ["suite-audience-paths", "guides/assets/use-cases/audiences/aud-01.svg"],
+  ]);
+
+  for (const [id, evidencePath] of overlappingSkillsteadPaths) {
+    const entry = catalog.entries.find((item) => item.id === id);
+    assert.ok(entry, id);
+    assert.equal(entry.decision, "excluded", id);
+    assert.equal(entry.exclusion_code, "excluded-skillstead-overlap", id);
+    assert.match(entry.decision_reason, new RegExp(evidencePath.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), id);
+  }
+});
+
+test("production exclusions retain exact package classes and source-specific evidence", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  for (const entry of catalog.entries.filter((item) => item.source_document.startsWith("products/"))) {
+    assert.equal(entry.exclusion_code, "excluded-package-surface", entry.source_document);
+  }
+  for (const entry of catalog.entries.filter((item) => item.source_document.startsWith("plugins/"))) {
+    assert.equal(entry.exclusion_code, "excluded-package-mirror", entry.source_document);
+  }
+  for (const entry of catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text")) {
+    assert.notEqual(entry.decision_reason, "이 문서는 단일 설명·참조·요청문을 직접 읽는 편이 관계 도식보다 명확하다.", entry.source_document);
+    assert.ok(entry.decision_reason.includes(entry.source_section), entry.source_document);
+  }
+});
