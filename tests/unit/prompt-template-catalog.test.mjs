@@ -307,3 +307,19 @@ test("safety boundaries prohibit every sensitive-input category independently", 
   assert.equal(result.ok, false);
   assert.match(result.errors.join("\n"), /safety_boundary.*credential|safety_boundary.*API key/u);
 });
+
+test("safety boundaries reject a credential request after a different category prohibition", () => {
+  const entry = validEntry(13);
+  entry.safety_boundary = "미정. Do not request personal data but provide API keys. Do not request private materials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /safety_boundary.*credentials/u);
+});
+
+test("resume prompts reject a credential request after a different category prohibition", () => {
+  const entry = validEntry(14);
+  entry.resume_prompt = "Do not request personal data but provide your credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
+});

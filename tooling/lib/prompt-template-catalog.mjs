@@ -38,12 +38,13 @@ const ENTRY_KEYS = new Set([
 ]);
 const INDEX_KEYS = new Set(["version", "sources"]);
 const SENSITIVE_CATEGORIES = Object.freeze([
-  { name: "credentials", pattern: /(?:api[ _-]?key|secret(?:s)?|credential(?:s)?|password|access[ _-]?token)/iu },
+  { name: "credentials", pattern: /(?:api[ _-]?keys?|secret(?:s)?|credential(?:s)?|password|access[ _-]?tokens?)/iu },
   { name: "personal data", pattern: /(?:personal(?:[ _-]?data|[ _-]?information)|개인\s*정보)/iu },
-  { name: "private materials", pattern: /(?:private(?:[ _-]?(?:material|data|information))?|비공개\s*(?:자료|회사\s*자료))/iu },
+  { name: "private materials", pattern: /(?:private(?:[ _-]?(?:materials?|data|information))?|비공개\s*(?:자료|회사\s*자료))/iu },
 ]);
-const DIRECT_PROHIBITION_PREFIX = /(?:do not|don't|never|must not)\s+(?:request|ask(?:\s+for)?|require|provide|enter|share|submit|upload|paste|use|collect|input|store|process|disclose|reveal|give)|(?:not request|not required|not needed|금지|요청하지|입력하지|제공하지|불필요|요구하지 않음|입력하지 않음)/iu;
+const DIRECT_PROHIBITION_START = /^(?:(?:do not|don't|never|must not)\s+(?:request|ask(?:\s+for)?|require|provide|enter|share|submit|upload|paste|use|collect|input|store|process|disclose|reveal|give)|not request|not required|not needed|금지|요청하지|입력하지|제공하지|불필요|요구하지 않음|입력하지 않음)\s+/iu;
 const DIRECT_PROHIBITION_SUFFIX = /(?:not required|not needed|prohibited|금지|요청하지 않음|입력하지 않음|제공하지 않음|불필요)/iu;
+const POSITIVE_INPUT_REQUEST = /(?:provide|share|enter|submit|upload|paste|input|give|disclose|reveal|제공|공유|입력|업로드)\s+(?:your\s+)?/iu;
 const CLI_MENTION = /\$(game-design-studio|game-design-career):([^\s]*)/gu;
 
 function isObject(value) {
@@ -66,18 +67,31 @@ function textClauses(value) {
   return value.split(/[.;!?。！？\n]+/u).map((clause) => clause.trim()).filter(Boolean);
 }
 
+function isPureSensitiveCategoryList(value) {
+  let remainder = value;
+  for (const category of SENSITIVE_CATEGORIES) {
+    remainder = remainder.replace(new RegExp(category.pattern.source, "giu"), "§");
+  }
+  return /^[\s,]*(?:§)(?:[\s,]*(?:and|or)?[\s,]*§)*[\s,]*$/iu.test(remainder);
+}
+
 function clauseProhibitsCategory(clause, category) {
   if (!category.pattern.test(clause)) return false;
-  const prohibitedBefore = new RegExp(
-    `${DIRECT_PROHIBITION_PREFIX.source}(?:\\s+[^.;!?]{0,40})?\\s+${category.pattern.source}`,
-    "iu",
-  );
+  const positiveRequest = new RegExp(`${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`, "iu");
+  if (positiveRequest.test(clause)) return false;
+  const prohibition = DIRECT_PROHIBITION_START.exec(clause);
+  const target = prohibition ? clause.slice(prohibition[0].length).trim() : "";
+  const directTarget = new RegExp(`^(?:your\\s+|the\\s+)?${category.pattern.source}(?:$|[\\s,])`, "iu");
   const prohibitedAfter = new RegExp(
-    `${category.pattern.source}(?:\\s+[^.;!?]{0,24})?\\s+${DIRECT_PROHIBITION_SUFFIX.source}`,
+    `${category.pattern.source}(?:\\s+(?:is|are|was|were|은|는|이|가))?\\s+${DIRECT_PROHIBITION_SUFFIX.source}(?:$|[\\s,])`,
     "iu",
   );
   const withoutCategory = new RegExp(`\\bwithout\\s+(?:any\\s+)?${category.pattern.source}`, "iu");
-  return prohibitedBefore.test(clause) || prohibitedAfter.test(clause) || withoutCategory.test(clause);
+  return (
+    (prohibition !== null && (directTarget.test(target) || isPureSensitiveCategoryList(target)))
+    || prohibitedAfter.test(clause)
+    || withoutCategory.test(clause)
+  );
 }
 
 function requestsSensitiveInput(value) {
