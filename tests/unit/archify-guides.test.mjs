@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { lstat, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdtemp, mkdir, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -74,7 +74,7 @@ function validationReceipt({ warnings = 0, checks = 9 } = {}) {
   });
 }
 
-function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterministic = false, includePaths = false } = {}) {
+function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterministic = false, includePaths = false, htmlSymlink = false } = {}) {
   let sequence = 0;
   return async (args) => {
     calls.push(args);
@@ -83,7 +83,8 @@ function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterminist
     const specification = await readFile(args[2], "utf8");
     if (command === "validate") return { code: 0, stdout: validationReceipt({ warnings, checks }), stderr: "" };
     const html = `<!doctype html><title>flow-${nondeterministic ? sequence++ : "stable"}</title>`;
-    await writeFile(args[3], html);
+    if (htmlSymlink) await symlink(path.join(path.dirname(args[3]), "outside.html"), args[3]);
+    else await writeFile(args[3], html);
     const delivered = JSON.parse(receipt(specification, html, { warnings, checks }));
     if (includePaths) Object.assign(delivered, { input: args[2], output: args[3] });
     return { code: 0, stdout: JSON.stringify(delivered), stderr: "" };
@@ -115,6 +116,50 @@ test("workflow projection is bounded and keeps the required showcase contract", 
   for (const left of workflow.nodes) for (const right of workflow.nodes) {
     if (left.id < right.id && left.lane === right.lane) assert.ok(Math.abs(left.col - right.col) >= 2);
   }
+});
+
+test("direct delivered HTML symlink is rejected before any publication", async (t) => {
+  const repoRoot = await repo(t);
+  await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: { entries: skillEntries() }, runCli: fakeCli([], { htmlSymlink: true }) }), /symlink/u);
+  await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
+});
+
+test("stage workflow parent swap after validate cannot escape or publish", async (t) => {
+  const repoRoot = await repo(t);
+  const outside = await mkdtemp(path.join(os.tmpdir(), "archify-outside-"));
+  t.after(() => rm(outside, { recursive: true, force: true }));
+  const base = fakeCli([]);
+  let swapped = false;
+  const runCli = async (args) => {
+    const result = await base(args);
+    if (!swapped && args[0] === "validate") {
+      swapped = true;
+      const parent = path.dirname(args[2]);
+      await rename(parent, `${parent}-preserved`);
+      await symlink(outside, parent);
+    }
+    return result;
+  };
+  await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: { entries: skillEntries() }, runCli }), /symlink|identity|escapes/u);
+  assert.deepEqual(await (await import("node:fs/promises")).readdir(outside), []);
+  await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
+});
+
+test("rollback restore loss is an AggregateError and retains forensic backup", async (t) => {
+  const repoRoot = await repo(t);
+  const catalog = { entries: skillEntries() };
+  await buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]) });
+  let error;
+  try {
+    await buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]), __testHooks: {
+      afterPublish: () => { throw new Error("original publication failure"); },
+      beforeRestore: () => { throw new Error("rollback restore failure"); },
+    } });
+  } catch (caught) { error = caught; }
+  assert.equal(error.constructor, AggregateError);
+  assert.equal(error.errors.length, 2);
+  const assets = await (await import("node:fs/promises")).readdir(path.join(repoRoot, "guides/assets"));
+  assert.ok(assets.some((name) => name.startsWith(".archify-guides-backup-")));
 });
 
 const normalized = (value) => String(value).replace(/\s+/gu, "");

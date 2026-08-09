@@ -478,7 +478,10 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
         const current = await lstat(existingRoot).catch(() => null);
         if (current) await rename(existingRoot, path.join(assets.filename, `.archify-guides-quarantine-${randomUUID()}`));
       }
-      if (backup) await rename(backup, existingRoot);
+      if (backup) {
+        await __testHooks?.beforeRestore?.({ backup, target: existingRoot });
+        await rename(backup, existingRoot);
+      }
     } catch (rollbackError) { recovery.push(rollbackError); }
     if (recovery.length) throw new AggregateError([error, ...recovery], "Archify publication failed and rollback preserved forensic paths");
     throw error;
