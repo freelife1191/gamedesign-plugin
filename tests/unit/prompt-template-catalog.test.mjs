@@ -516,6 +516,151 @@ test("Career foundation user-facing prompt and minimum-output fields reject inve
   }
 });
 
+test("Career evidence catalog has exact skill-level IDs, installed bindings, placeholders, and canonical read order", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [entries, manifest, careerInventory] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-evidence.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "assets", "diagram-manifest.json"), "utf8").then(JSON.parse),
+    collectProductInventory(repoRoot, "game-design-career"),
+  ]);
+  const skills = [
+    "build-game-design-portfolio",
+    "practice-game-design-interview",
+    "review-game-design-portfolio",
+    "plan-junior-growth",
+    "export-career-documents",
+  ];
+  const levels = ["beginner", "standard", "advanced"];
+  const expectedIds = skills.flatMap((skill) => levels.map((level) => `career:${skill}:${level}`)).sort();
+  const diagramIdBySkill = new Map([
+    ["build-game-design-portfolio", "ca-s02"],
+    ["export-career-documents", "ca-s03"],
+    ["plan-junior-growth", "ca-s08"],
+    ["practice-game-design-interview", "ca-s09"],
+    ["review-game-design-portfolio", "ca-s12"],
+  ]);
+  const roleIds = new Set((await Promise.all([
+    "career-strategist", "document-quality-editor", "evidence-auditor", "game-design-mentor", "interview-coach", "portfolio-reviewer",
+  ].map(async (role) => {
+    await readFile(path.join(repoRoot, "products", "game-design-career", "plugin", "agents", `${role}.md`), "utf8");
+    return role;
+  }))));
+  const tokens = (prompt) => [...prompt.matchAll(/\[([^\]]+)\]/gu)].map(([, token]) => `[${token}]`).sort();
+
+  assert.equal(entries.length, 15);
+  assert.deepEqual(entries.map(({ id }) => id).sort(), expectedIds);
+  assert.deepEqual(entries.map(({ skill, level }) => `${skill}:${level}`).sort(), expectedIds.map((id) => id.replace(/^career:/u, "")));
+  for (const entry of entries) {
+    assert.equal(entry.kind, "skill-template", entry.id);
+    assert.equal(entry.product, "career", entry.id);
+    assert.match(entry.app_prompt.example, /@Game Design Career/u, entry.id);
+    assert.match(entry.app_prompt.template, /@Game Design Career/u, entry.id);
+    const command = new RegExp(`\\$game-design-career:${entry.skill}(?:\\s|$)`, "u");
+    assert.match(entry.cli_prompt.example, command, entry.id);
+    assert.match(entry.cli_prompt.template, command, entry.id);
+    assert.deepEqual(entry.placeholders.slice().sort(), [...new Set([
+      ...tokens(entry.app_prompt.template),
+      ...tokens(entry.cli_prompt.template),
+    ])].sort(), entry.id);
+    assert.ok(careerInventory.skillIds.includes(entry.skill), `${entry.id} installed skill`);
+    for (const artifact of entry.intermediate_artifacts) {
+      assert.ok(careerInventory.templateIds.includes(artifact), `${entry.id} installed template ${artifact}`);
+    }
+    for (const role of entry.specialist_roles) assert.ok(roleIds.has(role), `${entry.id} installed role ${role}`);
+    const diagram = manifest.diagrams.find(({ id }) => id === diagramIdBySkill.get(entry.skill));
+    assert.ok(diagram, `${entry.id} diagram manifest`);
+    assert.equal(entry.diagram_binding.id, diagram.id, entry.id);
+    assert.equal(entry.diagram_binding.svg, `guides/assets/${diagram.svg}`, entry.id);
+    assert.equal(entry.diagram_binding.png, `guides/assets/${diagram.png}`, entry.id);
+    const base = entry.expected_file_tree[0].replace(/\/content\.md$/u, "");
+    assert.deepEqual(entry.read_order.slice(0, 3), [
+      `${base}/content.md`,
+      `${base}/evidence.yml`,
+      `${base}/export-manifest.yml`,
+    ], entry.id);
+  }
+});
+
+test("Career evidence templates preserve traceable claims, honest interview boundaries, growth evidence, review ownership, and export gates", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-evidence.json"),
+    "utf8",
+  ));
+  const text = (entry) => [
+    entry.app_prompt.example,
+    entry.app_prompt.template,
+    entry.cli_prompt.example,
+    entry.cli_prompt.template,
+    ...entry.minimum_outputs,
+    ...entry.optional_outputs,
+    ...entry.extended_outputs,
+    entry.human_review_boundary,
+    entry.hold_conditions.join(" "),
+    entry.resume_prompt,
+    entry.safety_boundary,
+  ].join(" ");
+  const leaves = (entry) => [
+    entry.app_prompt.example,
+    entry.app_prompt.template,
+    entry.cli_prompt.example,
+    entry.cli_prompt.template,
+    ...entry.minimum_outputs,
+  ];
+
+  for (const entry of entries) {
+    assert.match(text(entry), /fact|사실/u, `${entry.id} fact label`);
+    assert.match(text(entry), /inference|추론/u, `${entry.id} inference label`);
+    assert.match(text(entry), /recommendation|제안/u, `${entry.id} recommendation label`);
+    assert.match(entry.human_review_boundary, /owner|담당자/u, `${entry.id} owner`);
+    assert.match(entry.human_review_boundary, /승인/u, `${entry.id} approval`);
+    assert.match(entry.human_review_boundary, /보류|hold/iu, `${entry.id} hold`);
+    assert.match(entry.resume_prompt, /보존.*재개|재개.*보존/iu, `${entry.id} resume`);
+    assert.match(entry.safety_boundary, /미정/u, `${entry.id} unknown`);
+    for (const leaf of leaves(entry)) {
+      assert.doesNotMatch(leaf, /채용\s*확률은\s*95%|내가\s*실제로\s*리드해서\s*성과를\s*냈다|합격을\s*보장/u, `${entry.id} honest leaf`);
+    }
+  }
+
+  for (const entry of entries.filter(({ skill }) => skill === "build-game-design-portfolio")) {
+    const contract = text(entry);
+    for (const term of ["claimId", "evidenceAddress", "source", "personal contribution", "team contribution", "미정", "비공개"]) {
+      assert.match(contract, new RegExp(term, "iu"), `${entry.id} ${term}`);
+    }
+  }
+  for (const entry of entries.filter(({ skill }) => skill === "practice-game-design-interview")) {
+    const contract = text(entry);
+    for (const term of ["questionId", "evidence", "stale", "최신", "honest-answer"]) {
+      assert.match(contract, new RegExp(term, "iu"), `${entry.id} ${term}`);
+    }
+  }
+  assert.match(text(entries.find(({ id }) => id === "career:practice-game-design-interview:advanced")), /coach|interview-coach/u);
+
+  for (const entry of entries.filter(({ skill }) => skill === "review-game-design-portfolio")) {
+    const contract = text(entry);
+    for (const term of ["finding", "severity", "queue"]) assert.match(contract, new RegExp(term, "iu"), `${entry.id} ${term}`);
+  }
+  const advancedReview = text(entries.find(({ id }) => id === "career:review-game-design-portfolio:advanced"));
+  for (const term of ["presentation readiness", "named human", "자동 합격 판정 금지"]) {
+    assert.match(advancedReview, new RegExp(term, "iu"), `advanced review ${term}`);
+  }
+
+  assert.match(text(entries.find(({ id }) => id === "career:plan-junior-growth:beginner")), /4주/u);
+  assert.match(text(entries.find(({ id }) => id === "career:plan-junior-growth:standard")), /12주.*evidence project|evidence project.*12주/u);
+  const advancedGrowth = text(entries.find(({ id }) => id === "career:plan-junior-growth:advanced"));
+  for (const term of ["fresh requirement", "re-evaluation", "observable"]) {
+    assert.match(advancedGrowth, new RegExp(term, "iu"), `advanced growth ${term}`);
+  }
+
+  for (const entry of entries.filter(({ skill }) => skill === "export-career-documents")) {
+    const contract = text(entry);
+    for (const term of ["canonical", "preflight", "capability", "renderer", "format QA", "human review"]) {
+      assert.match(contract, new RegExp(term, "iu"), `${entry.id} ${term}`);
+    }
+    assert.match(contract, /actual output.*전.*전달 완료|전달 완료.*actual output.*전/u, `${entry.id} non-terminal export`);
+  }
+});
+
 test("Studio visual catalog has exact skill-level bindings and matching Studio prompt namespaces", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const entries = JSON.parse(await readFile(
