@@ -82,7 +82,7 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 - **준비 입력:** 공개적으로 관찰 가능한 기능 하나, 입력과 결과, 모르는 규칙, 개인 작업 범위와 시스템 기획 멘토를 준비합니다.
 - **전체 스킬 경로:** `$game-design-career:map-game-design-career` → `$game-design-career:build-game-design-portfolio` → `$game-design-career:plan-junior-growth`
 - **직접 요청문:** `$game-design-career:map-game-design-career artifact=game-design-career/system-student 규칙·상태·예외를 competency-matrix와 learning-roadmap으로 연결해.`
-- **결과 ID · owner · root:** `competency-matrix` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/competency-matrix`; `learning-roadmap` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/learning-roadmap`
+- **결과 ID · owner · root:** `game-design-role-map` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/game-design-role-map`; `competency-matrix` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/competency-matrix`; `learning-roadmap` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/learning-roadmap`
 - **읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문
 
 ### CA-T04 — 경제·밸런스·LiveOps 준비생 — AUD-01 · AUD-02
@@ -90,7 +90,7 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 - **준비 입력:** 공개적으로 보이는 재화 흐름, source·sink 가정, 이벤트 목적, guardrail, rollback과 검토자를 준비합니다.
 - **전체 스킬 경로:** `$game-design-career:reverse-engineer-game-design` → `$game-design-career:build-game-design-portfolio` → `$game-design-career:review-game-design-portfolio`
 - **직접 요청문:** `$game-design-career:reverse-engineer-game-design artifact=game-design-career/economy-prep 공개 관찰을 source, sink와 가설로 분리한 game-analysis-report로 정리해.`
-- **결과 ID · owner · root:** `portfolio-project-brief` (`$game-design-career:build-game-design-portfolio`) → `game-design-career/<career-id>/portfolio-project-brief`; `five-axis-review` (`$game-design-career:review-game-design-portfolio`) → `game-design-career/<career-id>/five-axis-review`
+- **결과 ID · owner · root:** `game-analysis-report` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/game-analysis-report`; `portfolio-project-brief` (`$game-design-career:build-game-design-portfolio`) → `game-design-career/<career-id>/portfolio-project-brief`; `five-axis-review` (`$game-design-career:review-game-design-portfolio`) → `game-design-career/<career-id>/five-axis-review`
 - **읽는 순서:** source·sink → 가설 → guardrail → rollback
 
 ### CA-T05 — UI·UX 기획 준비생 — AUD-01 · AUD-02
@@ -106,7 +106,7 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 - **준비 입력:** 최소 입력: 공개 location, `evidence ID`, 관찰 범위, 개인 기여 경계, 공개·권리 검토자; - 선택 입력: version, timestamp, counterexample, 재관찰 날짜.
 - **전체 스킬 경로:** `$game-design-career:apply-document-quality-profile` → `$game-design-career:reverse-engineer-game-design` → `$game-design-career:export-career-documents`
 - **직접 요청문:** `$game-design-career:reverse-engineer-game-design artifact=game-design-career/reverse-design EVID-RD-01 관찰을 보존하고 reverse-design-document를 작성해.`
-- **결과 ID · owner · root:** `reverse-design-document` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/reverse-design-document`
+- **결과 ID · owner · root:** `reverse-design-document` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/reverse-design-document`; `game-analysis-report` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/game-analysis-report`
 - **읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review
 
 ### CA-C06 — 창작 기획 포트폴리오 — AUD-02 · AUD-03 · AUD-04 · AUD-05 · AUD-06

@@ -379,121 +379,133 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 #### 준비 입력
 
-- player promise, core loop, non-goal, prototype 질문
+- 선수 지식: 게임에서 확인한 사실과 자신의 해석을 분리하는 방법.
+- 최소 입력: 아이디어 한 문장, 예상 대상, 플랫폼 가정, 원하는 감정, 알려진 제약, 실제 decision owner.
+- 선택 입력: 인터뷰·플레이테스트 기록, 유사 경험 관찰, 기존 범위 결정. 제3자 자료는 출처와 이용 범위를 기록합니다.
 
 #### 연결 흐름
 
-- `orchestrate-game-design-project` → 비전과 검토 route
+`apply-document-quality-profile` → `define-game-vision` → 필요 시 `orchestrate-game-design-project` → `review-game-design` 순서입니다. 템플릿은 `vision-pillars`, `game-design-brief`입니다. **역할 경계:** `document-quality-editor`는 구조 누락, `lead-game-designer`와 `content-narrative-designer`는 근거 연결 finding, `production-feasibility-critic`은 범위 위험을 보고합니다. 전문 역할은 원본을 승인하거나 재작성하지 않고, 실제 design owner가 pillar와 non-goal을 결정합니다.
 
 #### 예상 결과
 
-- 최소: `game-design-brief`, `vision-pillars`
-- 선택: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획
-- 확장: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거
+- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록.
+- 선택: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획. 생성·렌더 성공은 승인이 아닙니다.
+- 확장: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거.
 
 #### 사람 검토
 
-- 실제 design owner가 pillar와 non-goal을 승인·수정·보류
+- **읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.
 
 ### 시스템
 
 #### 준비 입력
 
-- 장비 강화의 rule ID, state transition, precedence와 exception
+- 선수 지식: 입력·상태·출력을 분리하고 happy path만으로 완료하지 않는 태도.
+- 최소 입력: system boundary, actor, input, precondition, authoritative state, 예상 output, 실패와 recovery, owner.
+- 선택 입력: 기존 API/schema, concurrency 관찰, platform 상태, engineering·QA 질문. 실제 schema가 없으면 design meaning만 provisional로 둡니다.
 
 #### 연결 흐름
 
-- `design-game-systems` → 시스템 owner 검토
+`apply-document-quality-profile` → `design-game-systems` → `design-player-experience` → `review-game-design` 순서입니다. 템플릿은 `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`입니다. **역할 경계:** `document-quality-editor`는 필수 계약, `system-economy-designer`는 rule·authority, `ux-accessibility-reviewer`는 feedback·recovery finding을 냅니다. design·engineering owner가 precedence와 runtime mapping을 결정합니다.
 
 #### 예상 결과
 
-- 최소: `system-specification`
-- 선택: 상태 관계가 prose보다 명확할 때만 source mapping이 있는 도식 계획
-- 확장: owner 결정과 test evidence가 연결된 개발·QA handoff
+- 최소: `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`.
+- 선택: 상태 관계가 prose보다 명확할 때만 source mapping이 있는 도식 계획.
+- 확장: owner 결정과 test evidence가 연결된 개발·QA handoff.
 
 #### 사람 검토
 
-- design·engineering owner가 precedence와 runtime mapping을 결정
+- **읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
 
 ### UX·접근성
 
 #### 준비 입력
 
-- 첫 세션의 critical action, 대체 입력과 오류 recovery
+- 선수 지식: user goal과 system state를 분리하는 방법.
+- 최소 입력: 대상 플레이어, critical actions, 화면·상태, 플랫폼, 입력 장치, feedback, recovery, owner.
+- 선택 입력: current platform·accessibility 1차 근거, usability 관찰, device 제약, interruption 사례.
 
 #### 연결 흐름
 
-- `design-player-experience` → accessibility·design owner 검토
+`apply-document-quality-profile` → `design-player-experience` → `review-game-design` → 설명 가치가 있을 때 `visualize-game-design` 순서입니다. 템플릿은 `ui-ux-flow-state`, `accessibility-platform-matrix`입니다. **역할 경계:** `document-quality-editor`는 구조, `ux-accessibility-reviewer`는 critical action과 대체 경로, `lead-game-designer`는 목표 경험 연결을 검토합니다. 실제 accessibility·design owner가 지원 범위와 blocker disposition을 결정합니다.
 
 #### 예상 결과
 
-- 최소: `ui-ux-flow-state`
-- 선택: source-backed interaction 도식 계획이나 검토용 화면 reference prompt
-- 확장: usability evidence와 사람 승인을 반영한 UX·QA handoff
+- 최소: `ui-ux-flow-state`, `accessibility-platform-matrix`, `game-design-review`.
+- 선택: source-backed interaction 도식 계획이나 검토용 화면 reference prompt.
+- 확장: usability evidence와 사람 승인을 반영한 UX·QA handoff.
 
 #### 사람 검토
 
-- 실제 accessibility·design owner가 지원 범위와 blocker disposition을 결정
+- **읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.
 
 ### 콘텐츠·퀘스트
 
 #### 준비 입력
 
-- 협동 복구 퀘스트의 목표, NPC state, choice와 consequence
+- 선수 지식: 퀘스트 서술과 실행 상태를 구분하는 방법.
+- 최소 입력: player purpose, entry condition, system/data IDs, 선택, consequence, state, reward, failure·recovery, owner.
+- 선택 입력: tone 범위, production rate evidence, localization·accessibility 요구, 권리와 consent 근거.
 
 #### 연결 흐름
 
-- `design-game-content` → content·rights·production owner 검토
+`apply-document-quality-profile` → `design-game-content` → `design-game-systems` → `plan-game-production` → `review-game-design` 순서입니다. 템플릿은 `narrative-quest-npc`, `character-skill-combat-monster`입니다. **역할 경계:** `content-narrative-designer`는 choice·state, `lead-game-designer`는 목표 경험, `production-feasibility-critic`은 dependency·제작 근거 finding을 냅니다. 실제 content·rights·production owner가 결정을 내립니다.
 
 #### 예상 결과
 
-- 최소: `narrative-quest-npc`
-- 선택: 승인 전 narrative image prompt 또는 source-backed quest flow 계획
-- 확장: system/data/production owner 검토를 통과한 콘텐츠 handoff
+- 최소: `narrative-quest-npc`, `character-skill-combat-monster`, `game-design-review`.
+- 선택: 승인 전 narrative image prompt 또는 source-backed quest flow 계획.
+- 확장: system/data/production owner 검토를 통과한 콘텐츠 handoff.
 
 #### 사람 검토·근거
 
-- 실제 content·rights·production owner가 결정을 내림
+- **읽는 순서:** purpose → entry/state → choice·consequence → dependency → production·rights evidence → decisions입니다. 중간 결과에서 연결되지 않은 system/data ID와 근거 없는 제작 비용을 blocker로 봅니다. **사람 결정:** content owner, system owner, production owner와 권리 담당자가 분기, 범위, provenance·consent를 승인합니다. 생성된 서사나 이미지가 자동 승인되지는 않습니다.
 
 ### 경제·LiveOps
 
 #### 준비 입력
 
-- 토큰 source/sink, guardrail, stop 조건과 rollback 증거
+- 선수 지식: system boundary와 가정·evidence 구분.
+- 최소 입력: resource IDs, source, sink, inventory/progression 의도, eligibility, hypothesis, control, guardrail, stop·rollback, owner.
+- 선택 입력: current policy, consent basis, telemetry definition, tested rollback, prototype/simulation result. 실제 수치는 source locator와 freshness가 있을 때만 사용합니다.
 
 #### 연결 흐름
 
-- `design-game-economy-and-liveops` → economy·LiveOps·policy owner 검토
+`apply-document-quality-profile` → `design-game-economy-and-liveops` → `design-game-systems` → `review-game-design` 순서입니다. 템플릿은 `economy-balance`, `liveops-experiment-event`입니다. **역할 경계:** `system-economy-designer`는 value flow, `liveops-data-designer`는 experiment·telemetry, `ux-accessibility-reviewer`는 player protection finding을 제출합니다. 실제 economy·LiveOps·policy owner가 가격·확률·실험과 rollback을 결정합니다.
 
 #### 예상 결과
 
-- 최소: `economy-balance`
-- 선택: source-backed economy/experiment 관계 계획 또는 communication image prompt
-- 확장: current evidence, tested rollback과 사람 결정을 가진 운영 검토 패키지
+- 최소: `economy-balance`, `liveops-experiment-event`, `game-design-review`.
+- 선택: source-backed economy/experiment 관계 계획 또는 communication image prompt.
+- 확장: current evidence, tested rollback과 사람 결정을 가진 운영 검토 패키지.
 
 #### 사람 검토·근거
 
-- 실제 economy·LiveOps·policy owner가 가격·확률·실험과 rollback을 결정
+- **읽는 순서:** resource flow → progression/recovery → price·probability evidence → experiment → guardrail·rollback → decisions입니다. 중간 결과에서 source 없는 수치, 다중 변수, 복구 불가 변경을 blocker로 봅니다. **사람 결정:** economy, LiveOps, policy와 accessibility owner가 실험 실행·중단·rollback을 승인합니다. simulation, telemetry 수집과 reviewer 권고는 자동 승인하지 않습니다.
 
 ### 전체 프로젝트
 
 #### 준비 입력
 
-- prototype scope, dependency, kill criteria와 review owner
+- 선수 지식: 앞선 사례 중 필요한 domain Artifact와 `content.md` 기준 원칙.
+- 최소 입력: target experience, scope 후보, dependency, capacity evidence 또는 공백, owner, review 질문, image 목적, 요청 형식.
+- 선택 입력: prototype result, measured throughput, rights·consent evidence, current renderer capability, 실제 named-human decision receipt.
 
 #### 연결 흐름
 
-- `orchestrate-game-design-project` → production·review·rights·asset·export owner 검토 → 필요 시 형식 준비
+`plan-game-production` → `review-game-design` → `plan-image-assets` → 필요할 때 `visualize-game-design` → `export-game-design-documents` 순서입니다. 템플릿은 `production-scope-risk`, `game-design-review`, `decision-change-log`입니다. **역할 경계:** `production-feasibility-critic`은 범위·출력 위험, `lead-game-designer`는 목표 연결, `art-brief-director`는 이미지 계획, `ux-accessibility-reviewer`는 접근성 finding을 제출합니다. 전문 역할과 자동화는 staffing, scope, 비용, 권리, 이미지 transition, document approval 또는 release를 결정하지 않습니다.
 
 #### 예상 결과
 
-- 최소: `production-scope-risk`, `export-manifest.yml`
-- 선택: mode와 receipt가 허용한 prompt·이미지·source-backed SVG·PNG와 형식 준비 job
-- 확장: 이름 있는 사람의 승인과 asset·format·visual QA evidence가 있는 전달 패키지
+- 최소: `production-scope-risk`, `game-design-review`, `export-preparation-manifest`에 해당하는 canonical 내용, finding과 renderer-neutral 준비 상태.
+- 선택: mode와 receipt가 허용한 prompt·이미지, source-backed SVG·PNG, PDF·DOCX·PPTX 준비 job.
+- 확장: 이름 있는 사람의 승인과 asset·format·visual QA evidence가 있는 전달 패키지.
 
 #### 사람 검토·근거
 
-- production, review, rights·asset, export owner가 각 승인 경계를 결정
+- **읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서 blocker, capacity gap, image lifecycle, renderer capability와 형식별 QA를 따로 봅니다. **사람 결정:** production owner가 scope·kill, review decision owner가 finding disposition, rights/asset owner가 이미지 transition, export owner가 실제 format QA를 승인합니다. 생성, render, lint, reviewer finding과 state 문자열은 자동 승인하지 않습니다.
 
 ### 대표 요청과 예상 결과
 

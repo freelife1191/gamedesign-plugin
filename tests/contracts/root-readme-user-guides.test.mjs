@@ -58,6 +58,16 @@ const representativePromptTemplateIds = [
   "career:build-game-design-portfolio:advanced",
   "suite:career-proof-project-interview:case",
 ];
+const representativePromptCards = [
+  ["비전 가설을 시작하는 입문 카드", "studio:define-game-vision:beginner", "guides/prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner"],
+  ["규칙·상태·예외를 정리하는 표준 카드", "studio:design-game-systems:standard", "guides/prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard"],
+  ["UX·접근성 검토를 시작하는 표준 카드", "studio:design-player-experience:standard", "guides/prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard"],
+  ["차단된 프로젝트를 재개하는 고급 카드", "studio:orchestrate-game-design-project:advanced", "guides/prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced"],
+  ["직무 가설을 세우는 입문 카드", "career:map-game-design-career:beginner", "guides/prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner"],
+  ["관찰 기반 역기획 표준 카드", "career:reverse-engineer-game-design:standard", "guides/prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard"],
+  ["개인 기여를 보존하는 포트폴리오 고급 카드", "career:build-game-design-portfolio:advanced", "guides/prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced"],
+  ["프로젝트 증거와 면접을 잇는 사례 카드", "suite:career-proof-project-interview:case", "guides/prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase"],
+];
 
 function section(markdown, heading) {
   const marker = `## ${heading}\n`;
@@ -296,9 +306,11 @@ async function assertRootUseCaseNavigation(markdown, manifest) {
     assert.ok(exploration.includes(id), `root prompt-template route: ${id}`);
   }
   const promptCards = subsection(exploration, "난이도별 요청문 카드");
-  const visiblePromptIds = promptCards.match(/(?:studio|career|suite):[a-z0-9-]+:(?:beginner|standard|advanced|case)/gu) ?? [];
-  assert.equal(visiblePromptIds.length, 8, "root representative prompt card count");
-  assert.deepEqual(visiblePromptIds, representativePromptTemplateIds, "root representative prompt cards are exact and ordered");
+  const visiblePromptCards = [...promptCards.matchAll(/^- \[([^\]]+) — ((?:studio|career|suite):[a-z0-9-]+:(?:beginner|standard|advanced|case))\]\(([^)]+)\)$/gmu)]
+    .map(([, label, id, target]) => [label, id, target]);
+  assert.equal(visiblePromptCards.length, 8, "root representative prompt card count");
+  assert.deepEqual(visiblePromptCards, representativePromptCards, "root representative prompt card fields are exact and ordered");
+  assert.deepEqual(visiblePromptCards.map(([, id]) => id), representativePromptTemplateIds, "root representative prompt card IDs are exact and ordered");
   const goalStart = subsection(exploration, "목표별 바로 시작");
   const workScale = subsection(exploration, "작업 규모별 사용 예시");
   const outputLayer = subsection(exploration, "요청하면 얻는 결과");
@@ -517,6 +529,8 @@ test("root README contract rejects unsafe mutations in memory", async () => {
     ["audience targets swapped", swappedAudienceTargets],
     ["representative prompt route duplicated", readme.replace("studio:define-game-vision:beginner", "studio:define-game-vision:beginner\nstudio:define-game-vision:beginner")],
     ["additional representative prompt route added", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project-interview:case\nstudio:define-game-vision:advanced")],
+    ["representative prompt route gains a prefix", readme.replace("studio:define-game-vision:beginner", "xstudio:define-game-vision:beginner")],
+    ["representative prompt route gains a suffix", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project:interview:case")],
   ]) {
     await assert.rejects(() => assertRootUseCaseNavigation(mutation, manifest), label);
   }

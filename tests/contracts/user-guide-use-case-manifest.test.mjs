@@ -75,10 +75,19 @@ test("result-boundary readability counts rendered inline labels but excludes hid
     "- `expanded` 결과: 검토 패키지",
     "- [승인 주체](https://example.invalid/owner): 멘토",
   ].join("\n");
+  const hiddenDestinations = [
+    "[ref](https://example.invalid/a(b)minimum/optional/expanded)",
+    "[ref](https://example.invalid/a\\(b\\)/minimum/optional/expanded)",
+    "<span title=\"> minimum optional expanded\">ok</span>",
+    "<https://example.invalid/minimum/optional/expanded>",
+  ].join(" ");
+  const visibleThree = "[minimum](https://example.invalid/a(b)) [optional](https://example.invalid/c) <span>expanded</span>";
 
   assert.throws(() => assertReadableResultBoundaries(renderedDense), /minimum, optional, expanded/u);
   assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenOnly));
   assert.doesNotThrow(() => assertReadableResultBoundaries(cards));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenDestinations));
+  assert.throws(() => assertReadableResultBoundaries(visibleThree), /minimum, optional, expanded/u);
 });
 
 async function createCompleteUseCaseFixture(t) {

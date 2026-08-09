@@ -205,17 +205,19 @@ function routingResultContracts(routing) {
   ];
 }
 
-async function authorizedRepresentativeResults(entry, routing, skillOutputIds) {
+async function authorizedRepresentativeResults(entry, routing, skillOutputIds, skillGuideSources) {
   const resultContracts = routingResultContracts(routing);
   const results = [];
   for (const output of entry.outputs) {
     const owners = entry.skills.filter((skill) => skillOutputIds.get(skill)?.has(output));
-    if (owners.length === 0) continue;
     assert.equal(owners.length, 1, `${entry.id}: ${output} has one ordered-path SKILL owner`);
     const owner = owners[0];
     const contracts = resultContracts.filter((contract) => contract.id === output && contract.owner === owner);
-    assert.ok(contracts.length > 0, `${entry.id}: ${output} has routing root owned by ${owner}`);
     const roots = [...new Set(contracts.map((contract) => contract.path))];
+    if (roots.length === 0) {
+      assert.ok(skillGuideSources.get(owner)?.includes(`\`${output}\``), `${entry.id}: ${output} is declared by its owning skill guide`);
+      roots.push(`game-design-career/<career-id>/${output}`);
+    }
     assert.equal(roots.length, 1, `${entry.id}: ${output} has one exact routing root`);
     const template = await readFile(path.join(pluginRoot, "assets/templates", output, "content.md"), "utf8");
     assert.match(template, new RegExp(`^artifact_id: ${output}$`, "mu"), `${entry.id}: ${output} registered template`);
@@ -224,14 +226,14 @@ async function authorizedRepresentativeResults(entry, routing, skillOutputIds) {
   return results;
 }
 
-async function canonicalRepresentativeRoute(entry, source, routing, skillOutputIds) {
+async function canonicalRepresentativeRoute(entry, source, routing, skillOutputIds, skillGuideSources) {
   const card = extractCaseCard(source, entry.id);
   const review = extractCaseSubsection(card, "검토와 승인");
   const readOrder = /\*\*읽는 순서:\*\* ([^.]+)입니다\./u.exec(review);
   assert.ok(readOrder, `${entry.id}: canonical read order`);
   const title = new RegExp(`^## ${entry.id} (.+)$`, "mu").exec(source);
   assert.ok(title, `${entry.id}: canonical title`);
-  const results = await authorizedRepresentativeResults(entry, routing, skillOutputIds);
+  const results = await authorizedRepresentativeResults(entry, routing, skillOutputIds, skillGuideSources);
   return {
     caseId: entry.id,
     case: `\`${entry.id}\` — ${title[1]} — ${entry.audiences.join(" · ")}`,
@@ -394,6 +396,12 @@ function assertRepresentativeMutationMatrix(markdown, expected, label) {
   }
   const reorderedRows = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated.reverse(); });
   assert.throws(() => assertRepresentativeRouteTable(reorderedRows, expected, `${label}: reordered rows`), `${label}: reordered rows`);
+}
+
+function mutateRepresentativeCardResult(markdown, caseId, mutate) {
+  const expression = new RegExp(`(^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · owner · root:\\*\\* )(.+)$`, "mu");
+  assert.match(markdown, expression, `${caseId}: result card field`);
+  return markdown.replace(expression, (_match, prefix, result) => prefix + mutate(result));
 }
 
 async function walkFiles(root) {
@@ -753,19 +761,43 @@ test("README binds Career entry users to canonical representative case routes wi
   await assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점"));
 
   const expected = [];
-  const skillOutputIds = new Map(await Promise.all(
-    [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).skills))]
-      .map(async (skill) => [skill, outputContractIds(await readFile(path.join(pluginRoot, "skills", skill, "SKILL.md"), "utf8"))]),
-  ));
+  const representativeSkills = [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).skills))];
+  const skillGuideSources = new Map(await Promise.all(representativeSkills.map(async (skill) => [
+    skill,
+    await readFile(path.join(repoRoot, "guides/game-design-career/skills", `${skill}.md`), "utf8"),
+  ])));
+  const candidateOutputs = [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).outputs))];
+  const skillOutputIds = new Map(await Promise.all(representativeSkills.map(async (skill) => [
+    skill,
+    new Set([
+      ...skillCases.filter((entry) => entry.skill === skill).flatMap((entry) => entry.outputs),
+      ...outputContractIds(await readFile(path.join(pluginRoot, "skills", skill, "SKILL.md"), "utf8")),
+      ...candidateOutputs.filter((output) => skillGuideSources.get(skill).includes(`\`${output}\``)),
+    ]),
+  ])));
   for (const caseId of representativeCareerCaseIds) {
     const entry = careerCases.find(({ id }) => id === caseId);
     assert.ok(entry, `representative Career case: ${caseId}`);
     const source = await readFile(path.join(repoRoot, entry.document), "utf8");
-    expected.push(await canonicalRepresentativeRoute(entry, source, routing, skillOutputIds));
+    expected.push(await canonicalRepresentativeRoute(entry, source, routing, skillOutputIds, skillGuideSources));
   }
   assertRepresentativeRouteTable(readme, expected, "Career product README");
   assertNoHiringGuarantee(readme, "Career product README");
   assertRepresentativeMutationMatrix(readme, expected, "Career product README");
+  for (const route of expected) {
+    const firstResult = /`([a-z0-9-]+)`/u.exec(route.results)?.[1];
+    assert.ok(firstResult, `${route.caseId}: canonical result ID`);
+    for (const [mutation, mutate] of [
+      ["duplicate", (result) => `${result}; \`${firstResult}\` ($game-design-career:map-game-design-career) → \`game-design-career/<career-id>/${firstResult}\``],
+      ["missing", (result) => result.replace(`\`${firstResult}\``, "")],
+      ["unknown", (result) => result.replace(`\`${firstResult}\``, "`unknown-output`")],
+    ]) {
+      assert.throws(
+        () => assertRepresentativeRouteTable(mutateRepresentativeCardResult(readme, route.caseId, mutate), expected, `Career product README ${mutation}`),
+        `${route.caseId}: ${mutation} result IDs must fail`,
+      );
+    }
+  }
   for (const positivePromise of [
     "합격을 약속합니다.",
     "합격을 보장할 수 있습니다.",

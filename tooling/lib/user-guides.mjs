@@ -515,15 +515,70 @@ const RESULT_BOUNDARY_LABELS = [
   ["safety", /(?:\bsafety\b|안전·증거 경계)/iu],
 ];
 
+function inlineHtmlEnd(source, start) {
+  let quote;
+  for (let cursor = start + 1; cursor < source.length; cursor += 1) {
+    const character = source[cursor];
+    if (quote) {
+      if (character === quote && !escaped(source, cursor)) quote = undefined;
+      continue;
+    }
+    if (character === "\"" || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === ">") return cursor + 1;
+  }
+  return undefined;
+}
+
 function renderedBoundaryText(source) {
-  return source
-    .replace(/!?(?:\[([^\]]*)\])\([^)]*\)/gu, "$1")
-    .replace(/<[^>]*>/gu, "")
-    .replace(/`+/gu, "")
-    .replace(/(?<!\\)[*_~]+/gu, "")
-    .replace(/(?: {2,}|\\)$/u, "")
-    .replace(/\s+/gu, " ")
-    .trim();
+  let text = "";
+  for (let cursor = 0; cursor < source.length;) {
+    if (source[cursor] === "`" && !escaped(source, cursor)) {
+      const span = inlineCodeSpan(source, cursor);
+      if (span) {
+        const length = /^`+/u.exec(source.slice(cursor))[0].length;
+        text += source.slice(cursor + length, span.end - length);
+        cursor = span.end;
+        continue;
+      }
+    }
+    if (source[cursor] === "[" && !escaped(source, cursor)) {
+      const link = parseLinkAt(source, source, cursor);
+      if (link) {
+        text += renderedBoundaryText(link.rawLabel);
+        cursor = link.end;
+        continue;
+      }
+    }
+    if (source[cursor] === "<") {
+      const end = inlineHtmlEnd(source, cursor);
+      if (end) {
+        const raw = source.slice(cursor + 1, end - 1).trim();
+        if (/^(?:https?:|mailto:)/iu.test(raw)) {
+          cursor = end;
+          continue;
+        }
+        if (/^\/?[A-Za-z][A-Za-z\d-]*(?:\s|\/|$)/u.test(raw)) {
+          cursor = end;
+          continue;
+        }
+      }
+    }
+    if (source[cursor] === "\\" && cursor + 1 < source.length) {
+      text += source[cursor + 1];
+      cursor += 2;
+      continue;
+    }
+    if ("*_~".includes(source[cursor]) && !escaped(source, cursor)) {
+      cursor += 1;
+      continue;
+    }
+    text += source[cursor];
+    cursor += 1;
+  }
+  return text.replace(/(?: {2,}|\\)$/u, "").replace(/\s+/gu, " ").trim();
 }
 
 export function assertReadableResultBoundaries(markdown) {
