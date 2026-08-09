@@ -919,6 +919,134 @@ test("Studio visual catalog records Archify priority, honest Skillstead fallback
   assert.match(visualContract, /lint.*0.*warning.*error.*2×.*(?:accessibility|접근성).*human approval/iu);
 });
 
+test("Career visual catalog has exact skill-level, inventory, diagram, and prompt bindings", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [entries, diagramSources, useCaseManifest, careerInventory] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "assets", "use-case-diagram-sources.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "use-cases", "use-case-manifest.json"), "utf8").then(JSON.parse),
+    collectProductInventory(repoRoot, "game-design-career"),
+  ]);
+  const skills = [
+    "plan-image-assets",
+    "generate-image-assets",
+    "review-image-assets",
+    "visualize-career-roadmap",
+    "svg-infographic",
+  ];
+  const levels = ["beginner", "standard", "advanced"];
+  const expectedIds = skills.flatMap((skill) => levels.map((level) => `career:${skill}:${level}`)).sort();
+
+  assert.equal(entries.length, 15);
+  assert.deepEqual(entries.map(({ id }) => id).sort(), expectedIds);
+  assert.deepEqual(entries.map(({ skill, level }) => `${skill}:${level}`).sort(), expectedIds.map((id) => id.replace(/^career:/u, "")));
+  for (const entry of entries) {
+    assert.equal(entry.kind, "skill-template", entry.id);
+    assert.equal(entry.product, "career", entry.id);
+    assert.match(entry.app_prompt.example, /@Game Design Career/u, entry.id);
+    assert.match(entry.app_prompt.template, /@Game Design Career/u, entry.id);
+    const command = new RegExp(`\\$game-design-career:${entry.skill}(?:\\s|$)`, "u");
+    assert.match(entry.cli_prompt.example, command, entry.id);
+    assert.match(entry.cli_prompt.template, command, entry.id);
+    assert.ok(careerInventory.skillIds.includes(entry.skill), `${entry.id} installed skill`);
+    for (const artifact of entry.intermediate_artifacts) {
+      assert.ok(careerInventory.templateIds.includes(artifact), `${entry.id} installed template ${artifact}`);
+    }
+    const source = diagramSources.find(({ scope, semantic }) => (
+      scope === "game-design-career-skill" && semantic?.skill === entry.skill
+    ));
+    const skillCase = useCaseManifest.skill_cases.find(({ product, skill }) => (
+      product === "game-design-career" && skill === entry.skill
+    ));
+    assert.ok(source, `${entry.id} diagram source`);
+    assert.ok(skillCase, `${entry.id} diagram manifest`);
+    assert.equal(entry.diagram_binding.id, source.id, entry.id);
+    assert.equal(entry.diagram_binding.svg, skillCase.diagram.svg, entry.id);
+    assert.equal(entry.diagram_binding.png, skillCase.diagram.png, entry.id);
+  }
+});
+
+test("Career visual catalog preserves closed image modes, safe provider routing, placeholders, and canonical reads", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const [entries, imagePolicy] = await Promise.all([
+    readFile(path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8").then(JSON.parse),
+    readFile(path.join(repoRoot, "guides", "game-design-career", "image-assets.md"), "utf8"),
+  ]);
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const tokens = (prompt) => [...prompt.matchAll(/\[([^\]]+)\]/gu)].map(([, token]) => `[${token}]`).sort();
+  const imageModes = (value) => [...new Set(leaves(value).flatMap((leaf) => (
+    [...leaf.matchAll(/\bIMAGE_GEN_MODE\s*=\s*([a-z][a-z-]*)\b/giu)].map(([, mode]) => mode)
+  )))].sort();
+  const allowedModes = ["all", "prompt-only", "required", "select"];
+  const imageEntries = entries.filter(({ skill }) => ["plan-image-assets", "generate-image-assets"].includes(skill));
+  const contract = leaves(imageEntries).join(" ");
+
+  assert.deepEqual(imagePolicy.match(/^\|\s*`([a-z][a-z-]*)`\s*\|/gmu)?.map((row) => row.match(/`([a-z][a-z-]*)`/u)[1]).sort(), allowedModes);
+  assert.deepEqual(imageModes(entries), allowedModes);
+  assert.match(contract, /IMAGE_MODEL.*gpt-image-2|gpt-image-2.*IMAGE_MODEL/iu);
+  assert.match(contract, /IMAGE_QUALITY.*low|low.*IMAGE_QUALITY/iu);
+  assert.match(contract, /OPENAI_API_KEY.*OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)|OpenAI only.*(?:fallback|전환).*(?:금지|하지 않)/iu);
+  assert.match(contract, /key가 없.*host.*available.*(?:사용|전달).*unknown.*unavailable.*(?:호출하지 않|prompt.*placeholder.*보존)/iu);
+  assert.doesNotMatch(contract, /\[(?:API key|OPENAI_API_KEY|credential|자격 증명)\]/iu);
+
+  for (const entry of entries) {
+    assert.deepEqual(entry.placeholders.slice().sort(), [...new Set([
+      ...tokens(entry.app_prompt.template),
+      ...tokens(entry.cli_prompt.template),
+    ])].sort(), entry.id);
+    const base = entry.expected_file_tree[0].replace(/\/content\.md$/u, "");
+    assert.deepEqual(entry.read_order.slice(0, 3), [
+      `${base}/content.md`, `${base}/evidence.yml`, `${base}/export-manifest.yml`,
+    ], entry.id);
+  }
+});
+
+test("Career visual catalog keeps portfolio publication, rights, lifecycle, and named-human evidence separate", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  ));
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const contract = leaves(entries).join(" ");
+  const reviewEntries = entries.filter(({ skill }) => skill === "review-image-assets");
+
+  assert.match(contract, /portfolio publication.*named human reviewer evidence|named human reviewer evidence.*portfolio publication/iu);
+  assert.match(contract, /personal information|개인정보|PII/iu);
+  assert.match(contract, /private material|비공개 자료|company asset|회사 자산/iu);
+  assert.match(contract, /attribution|source/iu);
+  assert.match(contract, /alt text.*readability|readability.*alt text/iu);
+  assert.match(contract, /concept-draft\s*→\s*document-approved\s*→\s*production-candidate/u);
+  assert.match(contract, /(?:portfolio publication|actual portfolio publication|게임 리소스|game resource).*(?:자동.*승인.*금지|자동.*승인.*하지 않)|(?:자동.*승인.*금지|자동.*승인.*하지 않).*(?:portfolio publication|actual portfolio publication|게임 리소스|game resource)/iu);
+  for (const entry of reviewEntries) {
+    assert.match(entry.human_review_boundary, /named human|실제 담당자|이름 있는 사람/iu, entry.id);
+    assert.match(entry.human_review_boundary, /승인/u, entry.id);
+    assert.match(entry.human_review_boundary, /보류|hold/iu, entry.id);
+  }
+  for (const entry of entries) {
+    assert.match(entry.human_review_boundary, /owner|담당자/u, `${entry.id} owner`);
+    assert.match(entry.resume_prompt, /보존.*재개|재개.*보존/iu, entry.id);
+    assert.match(entry.safety_boundary, /미정/u, entry.id);
+  }
+});
+
+test("Career visual catalog routes structural diagrams through Archify before an honest Skillstead fallback", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  ));
+  const leaves = (value) => typeof value === "string" ? [value] : Array.isArray(value)
+    ? value.flatMap(leaves) : value && typeof value === "object" ? Object.values(value).flatMap(leaves) : [];
+  const visualContract = leaves(entries.filter(({ skill }) => ["visualize-career-roadmap", "svg-infographic"].includes(skill))).join(" ");
+
+  assert.match(visualContract, /Archify.*(?:available|사용 가능).*우선/iu);
+  assert.match(visualContract, /Archify.*(?:absent|failure|부재|실패).*Skillstead.*editable SVG.*2× PNG/iu);
+  assert.match(visualContract, /source.*receipt.*(?:분리|separate)|(?:분리|separate).*source.*receipt/iu);
+  assert.match(visualContract, /fallback.*Archify 결과로.*표시.*않|Skillstead.*자동 승인.*않/iu);
+  assert.match(visualContract, /lint.*0.*warning.*error.*2×.*(?:accessibility|접근성).*human approval/iu);
+});
+
 test("Studio production catalog has the exact IDs, levels, and Studio namespaces", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const catalogPath = path.join(repoRoot, "guides", "prompt-templates", "catalog", "studio-production.json");
