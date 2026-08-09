@@ -2361,7 +2361,7 @@ test("Career ordered-resume, refresh-workflow, and stale-permission mutations ar
   assert.deepEqual(acceptedMutations, [], `Career mutations accepted: ${acceptedMutations.join(", ")}`);
 });
 
-test("each Career competency case preserves its anchored case-card, evidence boundary, and deferred index routes", async () => {
+test("each Career competency case preserves its anchored case-card, evidence boundary, and published index routes", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index, competencyPaths } = await readCareerCompetencyGuides();
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");

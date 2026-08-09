@@ -118,12 +118,12 @@ function tableIds(markdown, heading) {
 const representativeCareerCaseIds = ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"];
 
 const careerGoalOutputLayers = new Map([
-  ["직무 탐색·학습", { minimum: ["game-design-role-map", "learning-roadmap"], optional: [], expanded: [] }],
-  ["역기획", { minimum: ["reverse-design-document"], optional: [], expanded: [] }],
-  ["창작 포트폴리오", { minimum: ["creative-design-portfolio"], optional: [], expanded: [] }],
-  ["포트폴리오 검토", { minimum: ["five-axis-review"], optional: [], expanded: [] }],
-  ["면접", { minimum: ["interview-question-answer-log"], optional: [], expanded: [] }],
-  ["성장·전환", { minimum: ["junior-growth-review", "transition-readiness"], optional: [], expanded: [] }],
+  ["직무 탐색·학습", { minimum: ["game-design-role-map", "learning-roadmap"], competency: { optionalHeading: "CA-C01 기획 직무와 전문 분야 탐색", expandedHeading: "CA-C01 기획 직무와 전문 분야 탐색", reviewHeading: "CA-C01 기획 직무와 전문 분야 탐색", optional: ["review", "evidence"], expanded: ["review", "evidence", "deliverable"], reviewers: ["사용자", "멘토"] } }],
+  ["역기획", { minimum: ["reverse-design-document"], competency: { optionalHeading: "CA-C02 게임 분석 언어와 관찰·추론 분리", expandedHeading: "CA-C02 게임 분석 언어와 관찰·추론 분리", reviewHeading: "CA-C02 게임 분석 언어와 관찰·추론 분리", optional: [], expanded: ["review", "deliverable", "rights"], reviewers: ["작성자", "멘토"] } }],
+  ["창작 포트폴리오", { minimum: ["creative-design-portfolio"], competency: { optionalHeading: "CA-C06 창작 기획 포트폴리오", expandedHeading: "CA-C06 창작 기획 포트폴리오", reviewHeading: "CA-C06 창작 기획 포트폴리오", optional: ["review"], expanded: ["review", "deliverable", "rights"], reviewers: ["작성자", "portfolio reviewer", "public-rights reviewer"] } }],
+  ["포트폴리오 검토", { minimum: ["five-axis-review"], competency: { optionalHeading: "CA-C07 포트폴리오 검토·수정·발표", expandedHeading: "CA-C07 포트폴리오 검토·수정·발표", reviewHeading: "CA-C07 포트폴리오 검토·수정·발표", optional: ["rights"], expanded: ["review", "deliverable"], reviewers: ["작성자", "portfolio reviewer", "public-rights reviewer", "멘토"] } }],
+  ["면접", { minimum: ["interview-question-answer-log"], competency: { optionalHeading: "CA-C08 면접·주니어 성장·직무 전환", expandedHeading: "CA-C08 면접·주니어 성장·직무 전환", reviewHeading: "CA-C08 면접·주니어 성장·직무 전환", optional: ["visual", "evidence", "preparation"], expanded: ["review", "evidence", "deliverable", "rights"], reviewers: ["작성자", "멘토", "manager", "career reviewer", "public-rights reviewer"] } }],
+  ["성장·전환", { minimum: ["junior-growth-review", "transition-readiness"], competency: { optionalHeading: "CA-C03 현재 채용공고 조사", expandedHeading: "CA-C08 면접·주니어 성장·직무 전환", reviewHeading: "CA-C08 면접·주니어 성장·직무 전환", optional: ["evidence"], expanded: ["rights"], reviewers: ["manager", "career reviewer"] } }],
 ]);
 
 const careerRepositoryCheckoutGuides = Object.freeze([
@@ -266,8 +266,46 @@ function careerArtifactIds(field) {
   return [...field.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
 }
 
-function assertCareerGoalOutputSummary(section) {
+function competencyBlock(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `authoritative competency block: ${heading}`);
+  const next = markdown.indexOf("\n## ", start + marker.length);
+  return markdown.slice(start, next === -1 ? markdown.length : next);
+}
+
+function competencyField(block, label) {
+  const value = new RegExp(`\\*\\*${label}:\\*\\* (.+)$`, "mu").exec(block)?.[1];
+  assert.ok(value, `authoritative competency ${label}`);
+  return value;
+}
+
+function normalizedOutcomeMeaning(value) {
+  const signals = [
+    ["visual", /도식|diagram|svg|png|이미지|image/iu],
+    ["review", /검토|review|승인/iu],
+    ["evidence", /evidence|proof|timestamp|feedback|current/iu],
+    ["deliverable", /artifact|사례|case study|package/iu],
+    ["preparation", /준비|job|receipt|mode|export/iu],
+    ["rights", /권리|rights|public-rights|공개/iu],
+  ];
+  return signals.filter(([, expression]) => expression.test(value)).map(([meaning]) => meaning);
+}
+
+function assertNormalizedOutcomeMeaning(value, expected, label) {
+  const actual = normalizedOutcomeMeaning(value);
+  assert.ok(expected.every((meaning) => actual.includes(meaning)), `${label}: normalized outcome meaning ${JSON.stringify(actual)} must include ${JSON.stringify(expected)}`);
+}
+
+function assertHumanDecision(value, reviewers, label) {
+  assert.deepEqual(reviewers.filter((reviewer) => value.toLowerCase().includes(reviewer)), reviewers, `${label}: named human decision-makers`);
+  assert.match(value, /승인|결정|수정|보류|검토/u, `${label}: human decision action`);
+  assert.doesNotMatch(value, /(?:자동|self)[\s-]*(?:승인|approval)\s*(?:됩니다|된다|됨|처리|합니다)/iu, `${label}: automatic approval is forbidden`);
+}
+
+async function assertCareerGoalOutputSummary(section) {
   assert.match(section, /^### 목표별 대표 결과$/mu, "Career product README: goal/output summary heading");
+  const competencySource = await readFile(path.join(repoRoot, "guides/game-design-career/use-cases/competency-paths.md"), "utf8");
   const summaries = new Map();
   for (const [goal, layers] of careerGoalOutputLayers) {
     const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
@@ -275,9 +313,15 @@ function assertCareerGoalOutputSummary(section) {
     const fields = /^- \*\*.+\*\* — 대표 요청: (`\$game-design-career:[^`]+`); 최소 결과: (?<minimum>[^;]+); 선택 결과: (?<optional>[^;]+); 확장 결과: (?<expanded>[^;]+); 사람 검토 경계: (?<humanReview>.+)$/u.exec(line)?.groups;
     assert.ok(fields, `Career product README: ${goal} must keep request, minimum, optional, expanded, and human-review fields separate`);
     assert.deepEqual(careerArtifactIds(fields.minimum), layers.minimum, `Career product README: ${goal} minimum artifacts`);
-    assert.deepEqual(careerArtifactIds(fields.optional), layers.optional, `Career product README: ${goal} optional artifacts`);
-    assert.deepEqual(careerArtifactIds(fields.expanded), layers.expanded, `Career product README: ${goal} expanded artifacts`);
-    assert.match(fields.humanReview, /\S/u, `Career product README: ${goal} human-review boundary`);
+    const optionalCompetency = competencyBlock(competencySource, layers.competency.optionalHeading);
+    const expandedCompetency = competencyBlock(competencySource, layers.competency.expandedHeading);
+    const reviewCompetency = competencyBlock(competencySource, layers.competency.reviewHeading);
+    assertNormalizedOutcomeMeaning(competencyField(optionalCompetency, "선택 결과"), layers.competency.optional, `${goal}: authoritative optional outcome`);
+    assertNormalizedOutcomeMeaning(fields.optional, layers.competency.optional, `Career product README: ${goal} optional outcome`);
+    assertNormalizedOutcomeMeaning(competencyField(expandedCompetency, "확장 결과"), layers.competency.expanded, `${goal}: authoritative expanded outcome`);
+    assertNormalizedOutcomeMeaning(fields.expanded, layers.competency.expanded, `Career product README: ${goal} expanded outcome`);
+    assertHumanDecision(competencyField(reviewCompetency, "사람 결정"), layers.competency.reviewers, `${goal}: authoritative human decision`);
+    assertHumanDecision(fields.humanReview, layers.competency.reviewers, `Career product README: ${goal} human-review boundary`);
     summaries.set(goal, fields);
   }
   return summaries;
@@ -700,7 +744,7 @@ test("README binds Career entry users to canonical representative case routes wi
     `${routing.faqContracts.length}개 FAQ`,
     `${careerCases.length + skillCases.length}개 도식`,
   ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);
-  assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점"));
+  await assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점"));
 
   const expected = [];
   const skillOutputIds = new Map(await Promise.all(
@@ -742,12 +786,32 @@ test("README binds Career entry users to canonical representative case routes wi
 
   assertCareerRepositoryCheckoutGuides(readmeSection(readme, "Repository checkout only guides"));
   await Promise.all(careerRepositoryCheckoutGuides.map((guidePath) => access(path.join(repoRoot, guidePath))));
-  assert.throws(
-    () => assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `game-design-role-map`, `learning-roadmap`; 선택 결과:", "최소 결과: `game-design-role-map`; 선택 결과: `learning-roadmap`,")),
+  await assert.rejects(
+    assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `game-design-role-map`, `learning-roadmap`; 선택 결과:", "최소 결과: `game-design-role-map`; 선택 결과: `learning-roadmap`,")),
     "learning-roadmap must remain a minimum result",
   );
-  assert.throws(
-    () => assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `junior-growth-review`, `transition-readiness`; 선택 결과:", "최소 결과: `junior-growth-review`; 선택 결과: `transition-readiness`,")),
+  await assert.rejects(
+    assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `junior-growth-review`, `transition-readiness`; 선택 결과:", "최소 결과: `junior-growth-review`; 선택 결과: `transition-readiness`,")),
     "transition-readiness must remain a minimum result",
+  );
+});
+
+test("Career goal summaries reject swapped outcome layers, auto-approval, and a removed reviewer", async () => {
+  const section = readmeSection(await readFile(readmePath, "utf8"), "활용 시작점");
+  const swappedLayers = section.replace(
+    "선택 결과: 사람 검토를 위한 공개 가능한 evidence summary; 확장 결과: 검토자가 다음 proof task를 확인한 Career Artifact",
+    "선택 결과: 검토자가 다음 proof task를 확인한 Career Artifact; 확장 결과: 사람 검토를 위한 공개 가능한 evidence summary",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(swappedLayers),
+    "Career summary must reject an optional/expanded outcome swap",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(section.replace("사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다.", "자동 승인됩니다.")),
+    "Career summary must reject auto approval",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(section.replace("사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다.", "역할 후보, 공개 범위와 다음 과제를 검토합니다.")),
+    "Career summary must reject a removed human decision-maker",
   );
 });

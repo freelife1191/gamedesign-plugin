@@ -180,12 +180,12 @@ const studioRepositoryCheckoutGuides = Object.freeze([
 ]);
 
 const studioGoalOutputLayers = new Map([
-  ["규칙·핵심 루프", { minimum: ["game-design-brief", "vision-pillars"], optional: [], expanded: [] }],
-  ["시스템", { minimum: ["system-specification"], optional: [], expanded: [] }],
-  ["UX·접근성", { minimum: ["ui-ux-flow-state"], optional: [], expanded: [] }],
-  ["콘텐츠·퀘스트", { minimum: ["narrative-quest-npc"], optional: [], expanded: [] }],
-  ["경제·LiveOps", { minimum: ["economy-balance"], optional: [], expanded: [] }],
-  ["전체 프로젝트", { minimum: ["production-scope-risk", "export-manifest.yml"], optional: [], expanded: [] }],
+  ["규칙·핵심 루프", { minimum: ["game-design-brief", "vision-pillars"], competency: { optionalHeading: "ST-C01 플레이어 경험과 게임 비전", expandedHeading: "ST-C01 플레이어 경험과 게임 비전", reviewHeading: "ST-C01 플레이어 경험과 게임 비전", optional: ["prompt", "visual", "source", "review"], expanded: ["review", "evidence", "deliverable"], reviewers: ["design owner"] } }],
+  ["시스템", { minimum: ["system-specification"], competency: { optionalHeading: "ST-C03 규칙·상태·예외·데이터", expandedHeading: "ST-C03 규칙·상태·예외·데이터", reviewHeading: "ST-C03 규칙·상태·예외·데이터", optional: ["visual", "source"], expanded: ["evidence", "deliverable"], reviewers: ["design", "engineering owner"] } }],
+  ["UX·접근성", { minimum: ["ui-ux-flow-state"], competency: { optionalHeading: "ST-C04 UI·UX·온보딩·접근성", expandedHeading: "ST-C04 UI·UX·온보딩·접근성", reviewHeading: "ST-C04 UI·UX·온보딩·접근성", optional: ["prompt", "visual", "source", "review"], expanded: ["review", "evidence", "deliverable"], reviewers: ["accessibility", "design owner"] } }],
+  ["콘텐츠·퀘스트", { minimum: ["narrative-quest-npc"], competency: { optionalHeading: "ST-C05 콘텐츠·내러티브·퀘스트·NPC", expandedHeading: "ST-C05 콘텐츠·내러티브·퀘스트·NPC", reviewHeading: "ST-C05 콘텐츠·내러티브·퀘스트·NPC", optional: ["prompt", "visual", "source", "review"], expanded: ["review", "deliverable"], reviewers: ["content", /rights|권리/u, "production owner"] } }],
+  ["경제·LiveOps", { minimum: ["economy-balance"], competency: { optionalHeading: "ST-C07 성장·경제·밸런스·LiveOps", expandedHeading: "ST-C07 성장·경제·밸런스·LiveOps", reviewHeading: "ST-C07 성장·경제·밸런스·LiveOps", optional: ["prompt", "visual", "source"], expanded: ["review", "evidence"], reviewers: ["economy", "liveops", "policy"] } }],
+  ["전체 프로젝트", { minimum: ["production-scope-risk", "export-manifest.yml"], competency: { optionalHeading: "ST-C08 제작·검토·이미지·출력", expandedHeading: "ST-C08 제작·검토·이미지·출력", reviewHeading: "ST-C08 제작·검토·이미지·출력", optional: ["prompt", "visual", "source", "preparation"], expanded: ["review", "evidence", "deliverable"], reviewers: [/production/u, /review/u, "rights", /asset/u, "export owner"] } }],
 ]);
 
 const directOutputOwnership = Object.freeze([
@@ -339,8 +339,46 @@ function artifactIds(field) {
   return [...field.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
 }
 
-function assertGoalOutputSummary(section, goals, product) {
+function competencyBlock(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `authoritative competency block: ${heading}`);
+  const next = markdown.indexOf("\n## ", start + marker.length);
+  return markdown.slice(start, next === -1 ? markdown.length : next);
+}
+
+function competencyField(block, label) {
+  const value = new RegExp(`\\*\\*${label}:\\*\\* (.+)$`, "mu").exec(block)?.[1];
+  assert.ok(value, `authoritative competency ${label}`);
+  return value;
+}
+
+function normalizedOutcomeMeaning(value) {
+  const signals = [
+    ["prompt", /prompt/iu],
+    ["visual", /도식|diagram|svg|png|이미지|image/iu],
+    ["source", /source/iu],
+    ["review", /검토|review|승인/iu],
+    ["evidence", /evidence|proof|rollback|qa|test|usability|current|guardrail/iu],
+    ["deliverable", /handoff|brief|artifact|package|사례|case study|전달/iu],
+    ["preparation", /준비|job|receipt|mode|export/iu],
+  ];
+  return signals.filter(([, expression]) => expression.test(value)).map(([meaning]) => meaning);
+}
+
+function assertNormalizedOutcomeMeaning(value, expected, label) {
+  assert.deepEqual(normalizedOutcomeMeaning(value), expected, `${label}: normalized outcome meaning`);
+}
+
+function assertHumanDecision(value, reviewers, label) {
+  assert.deepEqual(reviewers.filter((reviewer) => typeof reviewer === "string" ? value.toLowerCase().includes(reviewer) : reviewer.test(value)), reviewers, `${label}: named human decision-makers`);
+  assert.match(value, /승인|결정|수정|보류|검토/u, `${label}: human decision action`);
+  assert.doesNotMatch(value, /(?:자동|self)[\s-]*(?:승인|approval)\s*(?:됩니다|된다|됨|처리|합니다)/iu, `${label}: automatic approval is forbidden`);
+}
+
+async function assertGoalOutputSummary(section, goals, product) {
   assert.match(section, /^### 목표별 대표 요청과 결과$/mu, `${product}: goal/output summary heading`);
+  const competencySource = await readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/competency-paths.md"), "utf8");
   const summaries = new Map();
   for (const [goal, layers] of goals) {
     const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
@@ -348,9 +386,15 @@ function assertGoalOutputSummary(section, goals, product) {
     const fields = /^- \*\*.+\*\* — 대표 요청: (`\$game-design-studio:[^`]+`); 최소 결과: (?<minimum>[^;]+); 선택 결과: (?<optional>[^;]+); 확장 결과: (?<expanded>[^;]+); 사람 검토 경계: (?<humanReview>.+)$/u.exec(line)?.groups;
     assert.ok(fields, `${product}: ${goal} must keep request, minimum, optional, expanded, and human-review fields separate`);
     assert.deepEqual(artifactIds(fields.minimum), layers.minimum, `${product}: ${goal} minimum artifacts`);
-    assert.deepEqual(artifactIds(fields.optional), layers.optional, `${product}: ${goal} optional artifacts`);
-    assert.deepEqual(artifactIds(fields.expanded), layers.expanded, `${product}: ${goal} expanded artifacts`);
-    assert.match(fields.humanReview, /\S/u, `${product}: ${goal} human-review boundary`);
+    const optionalCompetency = competencyBlock(competencySource, layers.competency.optionalHeading);
+    const expandedCompetency = competencyBlock(competencySource, layers.competency.expandedHeading);
+    const reviewCompetency = competencyBlock(competencySource, layers.competency.reviewHeading);
+    assertNormalizedOutcomeMeaning(competencyField(optionalCompetency, "선택 결과"), layers.competency.optional, `${goal}: authoritative optional outcome`);
+    assertNormalizedOutcomeMeaning(fields.optional, layers.competency.optional, `${product}: ${goal} optional outcome`);
+    assertNormalizedOutcomeMeaning(competencyField(expandedCompetency, "확장 결과"), layers.competency.expanded, `${goal}: authoritative expanded outcome`);
+    assertNormalizedOutcomeMeaning(fields.expanded, layers.competency.expanded, `${product}: ${goal} expanded outcome`);
+    assertHumanDecision(competencyField(reviewCompetency, "사람 결정"), layers.competency.reviewers, `${goal}: authoritative human decision`);
+    assertHumanDecision(fields.humanReview, layers.competency.reviewers, `${product}: ${goal} human-review boundary`);
     summaries.set(goal, fields);
   }
   return summaries;
@@ -480,7 +524,7 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   assertStudioUseCaseReadme(readme);
   const section = readmeSection(readme, "활용 경로와 결과");
   const [, allowedOutputs] = await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
-  assertGoalOutputSummary(section, studioGoalOutputLayers, "Studio product README");
+  await assertGoalOutputSummary(section, studioGoalOutputLayers, "Studio product README");
   for (const { label, rowOutput } of directOutputOwnership) {
     const row = representativeTableRows(section).find(({ cells }) => cells[0] === label);
     assert.ok(row, `owned-output table row missing: ${label}`);
@@ -521,12 +565,32 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   await assert.rejects(assertRepositoryCheckoutGuides(swappedPaths), /checkout-only path must be plain code/, "wrong-but-valid checkout paths must fail");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
-  assert.throws(
-    () => assertGoalOutputSummary(section.replace("최소 결과: `game-design-brief`, `vision-pillars`; 선택 결과:", "최소 결과: `game-design-brief`; 선택 결과: `vision-pillars`,"), studioGoalOutputLayers, "mutated Studio product README"),
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("최소 결과: `game-design-brief`, `vision-pillars`; 선택 결과:", "최소 결과: `game-design-brief`; 선택 결과: `vision-pillars`,"), studioGoalOutputLayers, "mutated Studio product README"),
     "vision-pillars must remain a minimum result",
   );
   const economySkill = await readFile(path.join(pluginRoot, "skills/design-game-economy-and-liveops/SKILL.md"), "utf8");
   assert.throws(() => assertCanonicalOutputContract(directOutputOwnership[0], economySkill.replace("Produce either", "Deprecated: Produce either")), "output-contract prefixes must fail exact section-local matching");
+});
+
+test("Studio goal summaries reject swapped outcome layers, auto-approval, and a removed reviewer", async () => {
+  const section = readmeSection(await readFile(readmePath, "utf8"), "활용 경로와 결과");
+  const swappedLayers = section.replace(
+    "선택 결과: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획; 확장 결과: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거",
+    "선택 결과: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거; 확장 결과: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(swappedLayers, studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio summary must reject an optional/expanded outcome swap",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("실제 design owner가 pillar와 non-goal을 승인·수정·보류합니다.", "자동 승인됩니다."), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio summary must reject auto approval",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("실제 design owner가 pillar와 non-goal을 승인·수정·보류합니다.", "pillar와 non-goal을 검토합니다."), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio summary must reject a removed human decision-maker",
+  );
 });
 
 test("README documents the closed Studio document-quality workflow and installed contracts", async () => {
