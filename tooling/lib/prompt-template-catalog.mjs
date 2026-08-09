@@ -37,8 +37,13 @@ const ENTRY_KEYS = new Set([
   "related_recipes", "source_references",
 ]);
 const INDEX_KEYS = new Set(["version", "sources"]);
-const SENSITIVE_INPUT = /(?:api[ _-]?key|secret(?:s)?|credential(?:s)?|password|access[ _-]?token|personal(?:[ _-]?data|[ _-]?information)|private(?:[ _-]?(?:material|data|information))?|개인\s*정보|비공개\s*(?:자료|회사\s*자료))/iu;
-const SENSITIVE_PROHIBITION = /(?:do not|don't|never|must not|not request|without|금지|요청하지|입력하지|제공하지)/iu;
+const SENSITIVE_CATEGORIES = Object.freeze([
+  { name: "credentials", pattern: /(?:api[ _-]?key|secret(?:s)?|credential(?:s)?|password|access[ _-]?token)/iu },
+  { name: "personal data", pattern: /(?:personal(?:[ _-]?data|[ _-]?information)|개인\s*정보)/iu },
+  { name: "private materials", pattern: /(?:private(?:[ _-]?(?:material|data|information))?|비공개\s*(?:자료|회사\s*자료))/iu },
+]);
+const DIRECT_PROHIBITION_PREFIX = /(?:do not|don't|never|must not)\s+(?:request|ask(?:\s+for)?|require|provide|enter|share|submit|upload|paste|use|collect|input|store|process|disclose|reveal|give)|(?:not request|not required|not needed|금지|요청하지|입력하지|제공하지|불필요|요구하지 않음|입력하지 않음)/iu;
+const DIRECT_PROHIBITION_SUFFIX = /(?:not required|not needed|prohibited|금지|요청하지 않음|입력하지 않음|제공하지 않음|불필요)/iu;
 const CLI_MENTION = /\$(game-design-studio|game-design-career):([^\s]*)/gu;
 
 function isObject(value) {
@@ -57,15 +62,37 @@ function requireString(value, label, errors) {
   if (!isNonemptyString(value)) errors.push(`${label} must be a non-empty string`);
 }
 
-function requestsSensitiveInput(value) {
-  if (!isNonemptyString(value) || !SENSITIVE_INPUT.test(value)) return false;
-  const prohibitedBefore = new RegExp(`(?:${SENSITIVE_PROHIBITION.source})[\\s\\S]{0,120}${SENSITIVE_INPUT.source}`, "iu");
-  const prohibitedAfter = new RegExp(`${SENSITIVE_INPUT.source}[\\s\\S]{0,80}(?:not required|not needed|불필요|요구하지 않음|입력하지 않음)`, "iu");
-  return !prohibitedBefore.test(value) && !prohibitedAfter.test(value);
+function textClauses(value) {
+  return value.split(/[.;!?。！？\n]+/u).map((clause) => clause.trim()).filter(Boolean);
 }
 
-function hasSensitiveInputProhibition(value) {
-  return isNonemptyString(value) && SENSITIVE_INPUT.test(value) && SENSITIVE_PROHIBITION.test(value);
+function clauseProhibitsCategory(clause, category) {
+  if (!category.pattern.test(clause)) return false;
+  const prohibitedBefore = new RegExp(
+    `${DIRECT_PROHIBITION_PREFIX.source}(?:\\s+[^.;!?]{0,40})?\\s+${category.pattern.source}`,
+    "iu",
+  );
+  const prohibitedAfter = new RegExp(
+    `${category.pattern.source}(?:\\s+[^.;!?]{0,24})?\\s+${DIRECT_PROHIBITION_SUFFIX.source}`,
+    "iu",
+  );
+  const withoutCategory = new RegExp(`\\bwithout\\s+(?:any\\s+)?${category.pattern.source}`, "iu");
+  return prohibitedBefore.test(clause) || prohibitedAfter.test(clause) || withoutCategory.test(clause);
+}
+
+function requestsSensitiveInput(value) {
+  if (!isNonemptyString(value)) return false;
+  return textClauses(value).some((clause) => SENSITIVE_CATEGORIES.some((category) => (
+    category.pattern.test(clause) && !clauseProhibitsCategory(clause, category)
+  )));
+}
+
+function missingSafetyProhibitions(value) {
+  if (!isNonemptyString(value)) return SENSITIVE_CATEGORIES.map(({ name }) => name);
+  const clauses = textClauses(value);
+  return SENSITIVE_CATEGORIES
+    .filter((category) => !clauses.some((clause) => clauseProhibitsCategory(clause, category)))
+    .map(({ name }) => name);
 }
 
 function validateStringArray(value, label, errors, { nonempty = true, safePaths = false } = {}) {
@@ -184,8 +211,8 @@ function validateEntry(entry, index, errors, ids, texts) {
   if (!isNonemptyString(entry.safety_boundary) || !entry.safety_boundary.includes("미정")) {
     errors.push(`${label}.safety_boundary must preserve unknown information as 미정`);
   }
-  if (!hasSensitiveInputProhibition(entry.safety_boundary)) {
-    errors.push(`${label}.safety_boundary must prohibit credential or personal/private data requests`);
+  for (const category of missingSafetyProhibitions(entry.safety_boundary)) {
+    errors.push(`${label}.safety_boundary must explicitly prohibit ${category} requests`);
   }
   for (const [field, values] of Object.entries({
     required_inputs: entry.required_inputs,

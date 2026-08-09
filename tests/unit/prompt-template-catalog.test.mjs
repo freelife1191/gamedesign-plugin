@@ -283,3 +283,27 @@ test("safety boundary requires 미정 handling and resume prompts cannot request
   assert.match(result.errors.join("\n"), /미정/u);
   assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
 });
+
+test("resume prompts do not treat an unrelated without phrase as a credential prohibition", () => {
+  const entry = validEntry(10);
+  entry.resume_prompt = "Resume without delay after you provide your credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
+});
+
+test("resume prompts require a prohibition directed at the sensitive input", () => {
+  const entry = validEntry(12);
+  entry.resume_prompt = "Do not delay, then provide your credentials.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /resume_prompt.*credentials/u);
+});
+
+test("safety boundaries prohibit every sensitive-input category independently", () => {
+  const entry = validEntry(11);
+  entry.safety_boundary = "미정. Provide API keys; do not request personal data.";
+  const result = validatePromptTemplateCatalog({ entries: [entry] });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join("\n"), /safety_boundary.*credential|safety_boundary.*API key/u);
+});
