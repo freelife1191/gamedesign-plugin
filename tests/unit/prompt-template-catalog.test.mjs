@@ -869,15 +869,24 @@ test("Career visual plan and review prompt leaves prohibit provider calls indepe
   const entries = JSON.parse(await readFile(
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
   ));
+  const planTerms = [
+    ["prompt와", /prompt와/iu],
+    ["placeholder와", /placeholder와/iu],
+    ["manifest,", /manifest,/iu],
+    ["generation handoff", /generation handoff/iu],
+    ["provider/image generation 호출 0회", /provider\/image generation 호출 0회/iu],
+  ];
+  const reviewTerms = [
+    ["existing asset와", /existing asset와/iu],
+    ["immutable receipt만", /immutable receipt만/iu],
+    ["provider/image generation 호출 금지", /provider\/image generation 호출 금지/iu],
+  ];
   const assertPlanLeaf = (leaf) => {
-    assert.match(leaf, /prompt.*placeholder.*manifest|manifest.*prompt.*placeholder/iu);
-    assert.match(leaf, /generation handoff/iu);
-    assert.match(leaf, /provider\/image generation 호출 0회/iu);
+    for (const [, pattern] of planTerms) assert.match(leaf, pattern);
     assert.doesNotMatch(leaf, /OPENAI_API_KEY|OpenAI only|host available|selected jobs/iu);
   };
   const assertReviewLeaf = (leaf) => {
-    assert.match(leaf, /existing asset.*receipt|receipt.*existing asset/iu);
-    assert.match(leaf, /provider\/image generation 호출 금지/iu);
+    for (const [, pattern] of reviewTerms) assert.match(leaf, pattern);
     assert.doesNotMatch(leaf, /OPENAI_API_KEY|OpenAI only|host available|selected jobs/iu);
   };
 
@@ -885,18 +894,22 @@ test("Career visual plan and review prompt leaves prohibit provider calls indepe
     for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
       const leaf = entry[promptType][field];
       assertPlanLeaf(leaf);
-      const mutation = structuredClone(entry);
-      mutation[promptType][field] = leaf.replace("provider/image generation 호출 0회", "omitted-call-boundary");
-      assert.throws(() => assertPlanLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field}`);
+      for (const [term] of planTerms) {
+        const mutation = structuredClone(entry);
+        mutation[promptType][field] = leaf.replaceAll(term, "omitted-call-boundary");
+        assert.throws(() => assertPlanLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field} ${term}`);
+      }
     }
   }
   for (const entry of entries.filter(({ skill }) => skill === "review-image-assets")) {
     for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
       const leaf = entry[promptType][field];
       assertReviewLeaf(leaf);
-      const mutation = structuredClone(entry);
-      mutation[promptType][field] = leaf.replace("provider/image generation 호출 금지", "omitted-call-boundary");
-      assert.throws(() => assertReviewLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field}`);
+      for (const [term] of reviewTerms) {
+        const mutation = structuredClone(entry);
+        mutation[promptType][field] = leaf.replaceAll(term, "omitted-call-boundary");
+        assert.throws(() => assertReviewLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field} ${term}`);
+      }
     }
   }
 });
@@ -906,19 +919,32 @@ test("Career visual generation prompt leaves carry provider routing independentl
   const entries = JSON.parse(await readFile(
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
   )).filter(({ skill }) => skill === "generate-image-assets");
+  const providerTerms = [
+    ["IMAGE_MODEL=gpt-image-2", /IMAGE_MODEL=gpt-image-2/iu],
+    ["IMAGE_QUALITY=low", /IMAGE_QUALITY=low/iu],
+    ["OPENAI_API_KEY", /OPENAI_API_KEY/iu],
+    ["OpenAI only", /OpenAI only/iu],
+    ["fallback 전환 금지", /fallback 전환 금지/iu],
+    ["key가 없고", /key가 없고/iu],
+    ["host available", /host available/iu],
+    ["selected jobs만", /selected jobs만/iu],
+    ["unknown 또는 unavailable", /unknown 또는 unavailable/iu],
+    ["generator를 호출하지 않고", /generator를 호출하지 않고/iu],
+    ["prompt와 placeholder를 보존한다", /prompt와 placeholder를 보존한다/iu],
+  ];
   const assertGenerationLeaf = (leaf) => {
-    assert.match(leaf, /IMAGE_MODEL=gpt-image-2.*IMAGE_QUALITY=low/iu);
-    assert.match(leaf, /OPENAI_API_KEY.*OpenAI only.*fallback.*금지/iu);
-    assert.match(leaf, /key가 없.*host available.*selected jobs.*unknown.*unavailable.*호출하지 않.*prompt.*placeholder.*보존/iu);
+    for (const [, pattern] of providerTerms) assert.match(leaf, pattern);
   };
 
   for (const entry of entries) {
     for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
       const leaf = entry[promptType][field];
       assertGenerationLeaf(leaf);
-      const mutation = structuredClone(entry);
-      mutation[promptType][field] = leaf.replace("OpenAI only", "omitted-provider-policy");
-      assert.throws(() => assertGenerationLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field}`);
+      for (const [term] of providerTerms) {
+        const mutation = structuredClone(entry);
+        mutation[promptType][field] = leaf.replaceAll(term, "omitted-provider-policy");
+        assert.throws(() => assertGenerationLeaf(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field} ${term}`);
+      }
     }
   }
 });
@@ -928,22 +954,23 @@ test("Career review standard and advanced prompt leaves require immutable named-
   const entries = JSON.parse(await readFile(
     path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
   )).filter(({ skill, level }) => skill === "review-image-assets" && ["standard", "advanced"].includes(level));
-  const assertTransitionLeaf = (leaf) => {
-    for (const term of ["actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt"]) {
-      assert.match(leaf, new RegExp(term, "iu"));
-    }
-    assert.match(leaf, /누락|불일치/u);
-    assert.match(leaf, /current state.*유지|현재 state.*유지/iu);
+  const commonTransitionTerms = [
+    "actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt",
+    "누락 또는 불일치", "current state", "유지·hold",
+  ];
+  const standardTerms = ["targetState=document-approved", ...commonTransitionTerms];
+  const advancedTerms = [
+    "targetState=production-candidate", ...commonTransitionTerms,
+    "rightsDecision", "active-rights evidence", "technical fit evidence", "readability evidence",
+  ];
+  const assertTerms = (leaf, terms) => {
+    for (const term of terms) assert.match(leaf, new RegExp(term, "iu"));
   };
   const assertStandardLeaf = (leaf) => {
-    assertTransitionLeaf(leaf);
-    assert.match(leaf, /targetState=document-approved/iu);
+    assertTerms(leaf, standardTerms);
   };
   const assertAdvancedLeaf = (leaf) => {
-    assertTransitionLeaf(leaf);
-    for (const term of ["targetState=production-candidate", "rightsDecision", "active-rights evidence", "technical fit evidence", "readability evidence"]) {
-      assert.match(leaf, new RegExp(term, "iu"));
-    }
+    assertTerms(leaf, advancedTerms);
   };
 
   assert.equal(entries.length, 2);
@@ -952,11 +979,41 @@ test("Career review standard and advanced prompt leaves require immutable named-
     for (const [promptType, field] of [["app_prompt", "example"], ["app_prompt", "template"], ["cli_prompt", "example"], ["cli_prompt", "template"]]) {
       const leaf = entry[promptType][field];
       assertion(leaf);
-      for (const term of entry.level === "advanced" ? ["immutable structured host-user-image-decision receipt", "rightsDecision", "active-rights evidence"] : ["immutable structured host-user-image-decision receipt", "actual user decision", "reviewedAt"]) {
+      for (const term of entry.level === "advanced" ? advancedTerms : standardTerms) {
         const mutation = structuredClone(entry);
         mutation[promptType][field] = leaf.replaceAll(term, "omitted-transition-evidence");
         assert.throws(() => assertion(mutation[promptType][field]), assert.AssertionError, `${entry.id} ${promptType}.${field} ${term}`);
       }
+    }
+  }
+});
+
+test("Career review standard and advanced resumes repair every held evidence item with exact parity", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(
+    path.join(repoRoot, "guides", "prompt-templates", "catalog", "career-visual.json"), "utf8",
+  )).filter(({ skill, level }) => skill === "review-image-assets" && ["standard", "advanced"].includes(level));
+  const termsByLevel = {
+    standard: ["targetState", "actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt", "placement", "alt text", "readability evidence", "named human reviewer", "rightsDecision"],
+    advanced: ["targetState", "actual user decision", "reviewedAt", "immutable structured host-user-image-decision receipt", "rightsDecision", "active-rights evidence", "technical fit evidence", "readability evidence", "named human reviewer"],
+  };
+  const assertParity = (entry) => {
+    const terms = termsByLevel[entry.level];
+    const held = entry.hold_conditions.join(" ");
+    assert.match(entry.resume_prompt, /검증된 evidence만 보존/iu, entry.id);
+    for (const term of terms) {
+      assert.match(held, new RegExp(term, "iu"), `${entry.id} hold ${term}`);
+      assert.match(entry.resume_prompt, new RegExp(term, "iu"), `${entry.id} resume ${term}`);
+    }
+  };
+
+  assert.equal(entries.length, 2);
+  for (const entry of entries) {
+    assertParity(entry);
+    for (const term of termsByLevel[entry.level]) {
+      const mutation = structuredClone(entry);
+      mutation.resume_prompt = entry.resume_prompt.replaceAll(term, "omitted-resume-repair");
+      assert.throws(() => assertParity(mutation), assert.AssertionError, `${entry.id} resume ${term}`);
     }
   }
 });

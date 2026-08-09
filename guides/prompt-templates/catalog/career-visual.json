@@ -819,11 +819,17 @@
     ],
     "human_review_boundary": "named human reviewer와 rights/visual reviewer owner가 stable asset ID, evidence, rights, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
     "hold_conditions": [
-      "targetState, actual user decision, reviewedAt 또는 immutable structured host-user-image-decision receipt가 누락·불일치",
-      "placement, alt text 또는 readability evidence가 미정",
-      "named human reviewer와 rightsDecision evidence가 없음"
+      "targetState가 누락·불일치",
+      "actual user decision이 누락·불일치",
+      "reviewedAt이 누락·불일치",
+      "immutable structured host-user-image-decision receipt가 누락·불일치",
+      "placement가 미정",
+      "alt text가 미정",
+      "readability evidence가 미정",
+      "named human reviewer가 없음",
+      "rightsDecision evidence가 없음"
     ],
-    "resume_prompt": "review-image-assets/standard의 current state, immutable receipt와 통과한 evidence를 보존하고 누락·불일치한 targetState·actual user decision·reviewedAt만 보완해 hold 지점부터 재개해.",
+    "resume_prompt": "review-image-assets/standard의 검증된 evidence만 보존하고, 누락·불일치한 targetState, actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, placement, alt text, readability evidence, named human reviewer, rightsDecision evidence를 각각 보완·검증한 뒤 current state의 hold 지점부터 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
     "diagram_binding": {
       "id": "ca-s13",
@@ -935,11 +941,17 @@
     ],
     "human_review_boundary": "named human reviewer와 production reviewer owner가 stable asset ID, evidence, rights, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
     "hold_conditions": [
-      "targetState, actual user decision, reviewedAt 또는 immutable structured host-user-image-decision receipt가 누락·불일치",
-      "rightsDecision 또는 active-rights evidence가 없음",
-      "technical fit evidence 또는 readability evidence가 없음"
+      "targetState가 누락·불일치",
+      "actual user decision이 누락·불일치",
+      "reviewedAt이 누락·불일치",
+      "immutable structured host-user-image-decision receipt가 누락·불일치",
+      "named human reviewer가 없음",
+      "rightsDecision evidence가 없음",
+      "active-rights evidence가 없음",
+      "technical fit evidence가 없음",
+      "readability evidence가 없음"
     ],
-    "resume_prompt": "review-image-assets/advanced의 current state, immutable receipt와 active-rights evidence를 보존하고 누락·불일치한 targetState·rightsDecision·technical fit evidence만 보완해 hold 지점부터 재개해.",
+    "resume_prompt": "review-image-assets/advanced의 검증된 evidence만 보존하고, 누락·불일치한 targetState, actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, named human reviewer, rightsDecision evidence, active-rights evidence, technical fit evidence, readability evidence를 각각 보완·검증한 뒤 current state의 hold 지점부터 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
     "diagram_binding": {
       "id": "ca-s13",
