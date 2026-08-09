@@ -235,6 +235,16 @@ async function regularFile(filename, label) {
   return stats;
 }
 
+async function fileRecord(filename, label) {
+  const stats = await regularFile(filename, label);
+  return { dev: stats.dev, ino: stats.ino, size: stats.size, sha256: sha256(await readFile(filename)) };
+}
+
+async function assertFileRecord(filename, record, label) {
+  const current = await fileRecord(filename, label);
+  if (current.dev !== record.dev || current.ino !== record.ino || current.size !== record.size || current.sha256 !== record.sha256) throw new Error(`${label} identity changed`);
+}
+
 async function assertContainedRegularPath(root, filename, label) {
   const canonicalRoot = await realpath(root);
   const relative = path.relative(canonicalRoot, filename);
@@ -292,9 +302,10 @@ export async function resolveArchifyCli({ env = process.env, home = os.homedir()
   throw new Error("Archify host capability is unavailable; preserve the Skillstead fallback");
 }
 
-async function execute(cli, runCli, command, specPath, htmlPath = undefined, stageRoot = undefined) {
+async function execute(cli, runCli, command, specPath, htmlPath = undefined, stageRoot = undefined, cliRecord = undefined) {
   if (stageRoot) await assertContainedRegularPath(stageRoot, specPath, "Archify specification");
   if (!runCli) await assertContainedRegularPath(path.dirname(path.dirname(cli)), cli, "Archify CLI");
+  if (cliRecord) await assertFileRecord(cli, cliRecord, "Archify CLI");
   const args = command === "validate"
     ? ["validate", "workflow", specPath, ...SHOWCASE_ARGS]
     : ["deliver", "workflow", specPath, htmlPath, ...SHOWCASE_ARGS];
@@ -307,6 +318,7 @@ async function execute(cli, runCli, command, specPath, htmlPath = undefined, sta
     await assertContainedRegularPath(stageRoot, specPath, "Archify specification");
     if (htmlPath) await assertContainedRegularPath(stageRoot, htmlPath, "Archify delivered HTML");
   }
+  if (cliRecord) await assertFileRecord(cli, cliRecord, "Archify CLI");
   return parseReceipt(String(result.stdout ?? ""), command);
 }
 
@@ -420,11 +432,12 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
   let tempCleaned = false;
   try {
     const cli = runCli ? undefined : (cliPath ?? await resolveArchifyCli());
+    const cliRecord = cli ? await fileRecord(cli, "Archify CLI") : undefined;
     const records = [];
     for (const entries of workflows) {
       const record = await writeWorkflow(temp.root, { entries });
-      await execute(cli, runCli, "validate", record.specPath, undefined, temp.root);
-      const receipt = await execute(cli, runCli, "deliver", record.specPath, record.htmlPath, temp.root);
+      await execute(cli, runCli, "validate", record.specPath, undefined, temp.root, cliRecord);
+      const receipt = await execute(cli, runCli, "deliver", record.specPath, record.htmlPath, temp.root, cliRecord);
       await regularFile(record.htmlPath, "Archify delivered HTML");
       const artifact = await readFile(record.htmlPath, "utf8");
       validateArchifyReceipt(receipt, { specification: record.specification, artifact });
