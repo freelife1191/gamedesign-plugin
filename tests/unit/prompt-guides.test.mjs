@@ -246,3 +246,165 @@ test("buildPromptGuides rejects a parent symlink swap before it can publish outs
     await rename(preservedDirectory, promptDirectory).catch(() => {});
   }
 });
+
+test("buildPromptGuides revalidates after every promotion hook before a rename can escape the repository", async (t) => {
+  const catalog = { entries: [validSkillEntry()] };
+
+  for (const phase of ["backup", "publish"]) {
+    await t.test(phase, async (t) => {
+      const repoRoot = await temporaryRepo(t);
+      const promptDirectory = path.join(repoRoot, "guides", "prompt-templates");
+      const preservedDirectory = path.join(repoRoot, `preserved-${phase}`);
+      const outside = await mkdtemp(path.join(os.tmpdir(), "prompt-guides-outside-"));
+      const libraryPath = path.join(promptDirectory, "README.md");
+      await writeFile(libraryPath, "old library\n");
+      t.after(() => rm(outside, { recursive: true, force: true }));
+
+      try {
+        await assert.rejects(
+          () => buildPromptGuides({
+            repoRoot,
+            __testCatalog: catalog,
+            __testHooks: {
+              beforeRename: async (operation) => {
+                if (operation.phase !== phase || operation.index !== 0) return;
+                await rename(promptDirectory, preservedDirectory);
+                await symlink(outside, promptDirectory);
+              },
+            },
+          }),
+          (error) => /identity changed|symlink|missing/u.test(error.message)
+            || error.errors?.some((item) => /identity changed|symlink|missing/u.test(item.message)),
+        );
+        assert.deepEqual(await readdir(outside), []);
+
+        if (phase === "backup") {
+          assert.equal(await readFile(path.join(preservedDirectory, "README.md"), "utf8"), "old library\n");
+        } else {
+          const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
+          assert.ok(stageRoot, "a failed recovery must retain its forensic backup");
+          assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
+        }
+      } finally {
+        await rm(promptDirectory, { recursive: true, force: true });
+        await rename(preservedDirectory, promptDirectory).catch(() => {});
+      }
+    });
+  }
+});
+
+test("buildPromptGuides preserves a concurrently replaced published target and its backup", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+  await writeFile(libraryPath, "old library\n");
+
+  await assert.rejects(
+    () => buildPromptGuides({
+      repoRoot,
+      __testCatalog: catalog,
+      __testHooks: {
+        afterRename: async (operation) => {
+          if (operation.phase !== "publish" || operation.index !== 0) return;
+          await rename(libraryPath, path.join(repoRoot, "displaced-library"));
+          await writeFile(libraryPath, "concurrent replacement\n");
+        },
+        beforeRename: (operation) => {
+          if (operation.phase === "publish" && operation.index === 1) {
+            throw new Error("later promotion failure");
+          }
+        },
+      },
+    }),
+    (error) => error instanceof AggregateError
+      && error.errors.some((item) => /later promotion failure/u.test(item.message))
+      && error.errors.some((item) => /published target identity changed/u.test(item.message)),
+  );
+
+  assert.equal(await readFile(libraryPath, "utf8"), "concurrent replacement\n");
+  const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
+  assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
+  await assert.rejects(() => readFile(path.join(repoRoot, "guides", "prompt-templates", "studio", "define-game-vision.md")), { code: "ENOENT" });
+});
+
+test("buildPromptGuides retains recoverable backups when target restoration fails, while removing safe empty directories", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+  await writeFile(libraryPath, "old library\n");
+
+  await assert.rejects(
+    () => buildPromptGuides({
+      repoRoot,
+      __testCatalog: catalog,
+      __testHooks: {
+        beforeRename: (operation) => {
+          if (operation.phase === "publish" && operation.index === 1) {
+            throw new Error("original promotion failure");
+          }
+        },
+        beforeRollbackRename: (operation) => {
+          if (operation.phase === "restore" && operation.index === 0) {
+            throw new Error("injected target restoration failure");
+          }
+        },
+      },
+    }),
+    (error) => error instanceof AggregateError
+      && error.errors.some((item) => /original promotion failure/u.test(item.message))
+      && error.errors.some((item) => /target restoration failure/u.test(item.message)),
+  );
+
+  const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
+  assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
+  await assert.rejects(() => readFile(libraryPath), { code: "ENOENT" });
+  await assert.rejects(() => readdir(path.join(repoRoot, "guides", "prompt-templates", "studio")), { code: "ENOENT" });
+});
+
+test("buildPromptGuides removes a newly published target when a later promotion fails", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+
+  await assert.rejects(
+    () => buildPromptGuides({
+      repoRoot,
+      __testCatalog: catalog,
+      __testHooks: {
+        beforeRename: (operation) => {
+          if (operation.phase === "publish" && operation.index === 1) {
+            throw new Error("later promotion failure");
+          }
+        },
+      },
+    }),
+    /later promotion failure/u,
+  );
+
+  await assert.rejects(() => readFile(libraryPath), { code: "ENOENT" });
+  assert.deepEqual((await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-")), []);
+});
+
+test("buildPromptGuides does not roll back committed targets when final stage cleanup fails", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+  await writeFile(libraryPath, "old library\n");
+
+  await assert.rejects(
+    () => buildPromptGuides({
+      repoRoot,
+      __testCatalog: catalog,
+      __testHooks: {
+        beforeStageCleanup: () => {
+          throw new Error("injected final cleanup failure");
+        },
+      },
+    }),
+    /published but stage cleanup failed/u,
+  );
+
+  assert.match(await readFile(libraryPath, "utf8"), /PT-001/u);
+  const [stageRoot] = (await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-"));
+  assert.equal(await readFile(path.join(repoRoot, stageRoot, "0.backup"), "utf8"), "old library\n");
+});

@@ -191,10 +191,22 @@ async function prepareOutputTarget(root, relative, contents) {
 }
 
 async function assertTargetStable(root, plan) {
+  return assertTargetState(root, plan, plan.targetIdentity ? "original" : "absent");
+}
+
+async function assertTargetParentsStable(root, plan) {
   for (const record of plan.records) await assertDirectoryRecord(root, record);
-  if (!plan.targetIdentity) return;
-  const stats = await lstat(plan.target);
-  if (!stats.isFile() || stats.isSymbolicLink() || !sameIdentity(plan.targetIdentity, identity(stats))) {
+}
+
+async function assertTargetState(root, plan, state) {
+  await assertTargetParentsStable(root, plan);
+  const stats = await lstat(plan.target).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (state === "absent") {
+    if (stats) throw new Error(`prompt guide output must remain absent: ${plan.normalized}`);
+    return;
+  }
+  const expectedIdentity = state === "published" ? plan.publishedIdentity : plan.targetIdentity;
+  if (!expectedIdentity || !stats || !stats.isFile() || stats.isSymbolicLink() || !sameIdentity(expectedIdentity, identity(stats))) {
     throw new Error(`prompt guide output identity changed: ${plan.normalized}`);
   }
   if (!isContained(root, await realpath(plan.target))) throw new Error(`prompt guide output escapes repository: ${plan.normalized}`);
@@ -227,6 +239,7 @@ async function writeExclusiveStageFile(stage, contents) {
   }
   const stats = await lstat(stage);
   if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`prompt guide stage is not a regular file: ${stage}`);
+  return identity(stats);
 }
 
 async function removeCreatedDirectories(createdDirectories) {
@@ -254,22 +267,54 @@ async function invokeRenameHook(hooks, operation) {
   if (hooks?.beforeRename) await hooks.beforeRename(operation);
 }
 
-async function rollbackPromotion(root, plans, createdDirectories, stageRoot) {
+async function invokeRollbackRenameHook(hooks, operation) {
+  if (hooks?.beforeRollbackRename) await hooks.beforeRollbackRename(operation);
+}
+
+async function assertStageStable(plan) {
+  const stats = await lstat(plan.stage);
+  if (!stats.isFile() || stats.isSymbolicLink() || !sameIdentity(plan.stageIdentity, identity(stats))) {
+    throw new Error(`prompt guide stage identity changed: ${plan.normalized}`);
+  }
+}
+
+async function recordPublishedTarget(root, plan) {
+  const stats = await lstat(plan.target);
+  if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`published prompt guide is not a regular file: ${plan.normalized}`);
+  if (!isContained(root, await realpath(plan.target))) throw new Error(`published prompt guide escapes repository: ${plan.normalized}`);
+  plan.publishedIdentity = identity(stats);
+}
+
+async function rollbackPromotion(root, plans, createdDirectories, stageRoot, hooks) {
   const errors = [];
   for (const plan of [...plans].reverse()) {
     try {
       if (!plan.published && !plan.backedUp) continue;
-      await assertTargetStable(root, { ...plan, targetIdentity: null });
-      if (plan.published) await rm(plan.target, { force: true });
-      if (plan.backedUp) await rename(plan.backup, plan.target);
+      if (plan.published) {
+        await assertTargetParentsStable(root, plan);
+        const stats = await lstat(plan.target).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+        if (!stats || !stats.isFile() || stats.isSymbolicLink() || !sameIdentity(plan.publishedIdentity, identity(stats))) {
+          throw new Error(`published target identity changed during rollback: ${plan.normalized}`);
+        }
+        await rm(plan.target);
+      } else {
+        await assertTargetState(root, plan, "absent");
+      }
+      if (plan.backedUp) {
+        await invokeRollbackRenameHook(hooks, { phase: "restore", index: plan.index, target: plan.target });
+        await assertTargetState(root, plan, "absent");
+        await rename(plan.backup, plan.target);
+      }
     } catch (error) {
       errors.push(error);
     }
   }
-  try {
-    await removeStageRoot(stageRoot);
-  } catch (error) {
-    errors.push(error);
+  if (errors.length === 0) {
+    try {
+      await removeStageRoot(stageRoot);
+    } catch (error) {
+      errors.push(error);
+    }
   }
   errors.push(...await removeCreatedDirectories(createdDirectories));
   return errors;
@@ -284,9 +329,10 @@ async function promoteOutputBatch(root, outputs, hooks) {
   const createdDirectories = [];
   try {
     for (const [index, plan] of plans.entries()) {
+      plan.index = index;
       plan.stage = path.join(stageRoot, `${index}.stage`);
       plan.backup = path.join(stageRoot, `${index}.backup`);
-      await writeExclusiveStageFile(plan.stage, plan.contents);
+      plan.stageIdentity = await writeExclusiveStageFile(plan.stage, plan.contents);
     }
     for (const plan of plans) await ensureTargetParents(root, plan, createdDirectories);
     for (const plan of plans) await assertTargetStable(root, plan);
@@ -294,21 +340,30 @@ async function promoteOutputBatch(root, outputs, hooks) {
     for (const plan of plans) await assertTargetStable(root, plan);
 
     for (const [index, plan] of plans.entries()) {
-      await assertTargetStable(root, plan);
       if (plan.existed) {
         await invokeRenameHook(hooks, { phase: "backup", index, target: plan.target });
+        await assertTargetState(root, plan, "original");
         await rename(plan.target, plan.backup);
         plan.backedUp = true;
       }
       await invokeRenameHook(hooks, { phase: "publish", index, target: plan.target });
+      await assertTargetState(root, plan, "absent");
+      await assertStageStable(plan);
       await rename(plan.stage, plan.target);
+      await recordPublishedTarget(root, plan);
       plan.published = true;
+      if (hooks?.afterRename) await hooks.afterRename({ phase: "publish", index, target: plan.target });
     }
-    await removeStageRoot(stageRoot);
   } catch (error) {
-    const recoveryErrors = await rollbackPromotion(root, plans, createdDirectories, stageRoot);
+    const recoveryErrors = await rollbackPromotion(root, plans, createdDirectories, stageRoot, hooks);
     if (recoveryErrors.length > 0) throw new AggregateError([error, ...recoveryErrors], "prompt guide promotion failed and rollback encountered errors");
     throw error;
+  }
+  try {
+    if (hooks?.beforeStageCleanup) await hooks.beforeStageCleanup();
+    await removeStageRoot(stageRoot);
+  } catch (error) {
+    throw new AggregateError([error], "prompt guide published but stage cleanup failed");
   }
 }
 
