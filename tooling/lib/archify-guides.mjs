@@ -272,6 +272,28 @@ async function assertDirectoryStable(record, label) {
   }
 }
 
+async function mutationBoundaryRecord(filename, label) {
+  const stats = await lstat(filename, { bigint: true });
+  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`${label} must be a non-symlink directory: ${filename}`);
+  return {
+    filename,
+    dev: stats.dev,
+    ino: stats.ino,
+    ctimeNs: stats.ctimeNs,
+    mtimeNs: stats.mtimeNs,
+    canonical: await realpath(filename),
+  };
+}
+
+async function assertMutationBoundaryStable(record, label) {
+  const current = await mutationBoundaryRecord(record.filename, label);
+  if (
+    current.dev !== record.dev || current.ino !== record.ino ||
+    current.ctimeNs !== record.ctimeNs || current.mtimeNs !== record.mtimeNs ||
+    current.canonical !== record.canonical
+  ) throw new Error(`${label} identity changed: ${record.filename}`);
+}
+
 async function existingOutput(root, relative, label) {
   const target = joinWithin(root, relative, label);
   await regularFile(target, label);
@@ -430,17 +452,29 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
   let failure;
   let published = false;
   let tempCleaned = false;
+  let committed = false;
   try {
     const cli = runCli ? undefined : (cliPath ?? await resolveArchifyCli());
     const cliRecord = cli ? await fileRecord(cli, "Archify CLI") : undefined;
     const records = [];
     for (const entries of workflows) {
       const record = await writeWorkflow(temp.root, { entries });
-      await execute(cli, runCli, "validate", record.specPath, undefined, temp.root, cliRecord);
-      const receipt = await execute(cli, runCli, "deliver", record.specPath, record.htmlPath, temp.root, cliRecord);
-      await regularFile(record.htmlPath, "Archify delivered HTML");
-      const artifact = await readFile(record.htmlPath, "utf8");
+      const deliveryParent = path.join(temp.root, "delivery", identifier(workflowId(entries)));
+      const deliveryJob = path.join(deliveryParent, "job");
+      await mkdir(deliveryJob, { recursive: true, mode: 0o700 });
+      const deliverySpec = path.join(deliveryJob, "flow.json");
+      const deliveryHtml = path.join(deliveryJob, "flow.html");
+      await writeFile(deliverySpec, record.specification, { encoding: "utf8", flag: "wx", mode: 0o600 });
+      const deliveryBoundary = await mutationBoundaryRecord(deliveryParent, "Archify delivery parent");
+      await execute(cli, runCli, "validate", deliverySpec, undefined, temp.root, cliRecord);
+      await assertMutationBoundaryStable(deliveryBoundary, "Archify delivery parent");
+      await __testHooks?.afterValidate?.({ cli });
+      const receipt = await execute(cli, runCli, "deliver", deliverySpec, deliveryHtml, temp.root, cliRecord);
+      await assertMutationBoundaryStable(deliveryBoundary, "Archify delivery parent");
+      await regularFile(deliveryHtml, "Archify delivered HTML");
+      const artifact = await readFile(deliveryHtml, "utf8");
       validateArchifyReceipt(receipt, { specification: record.specification, artifact });
+      await writeFile(record.htmlPath, artifact, { encoding: "utf8", flag: "wx", mode: 0o600 });
       const receiptPath = path.join(path.dirname(record.specPath), "receipt.json");
       const savedReceipt = stableJson(persistedReceipt(receipt, record.relativeDirectory));
       await writeFile(receiptPath, savedReceipt, "utf8");
@@ -483,11 +517,18 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
     await __testHooks?.beforeTempCleanup?.();
     await cleanupGuardedTempRoot(temp);
     tempCleaned = true;
+    await assertExistingOutputsSafe(root, records);
+    await assertExactManagedSet(root, records);
+    committed = true;
     await __testHooks?.beforeBackupCleanup?.({ backup });
-    if (backup) await rm(backup, { recursive: true, force: false });
+    if (backup) {
+      if (__testHooks?.cleanupBackup) await __testHooks.cleanupBackup({ backup });
+      else await rm(backup, { recursive: true, force: false });
+    }
     return { workflows: records.length, checked: false };
   } catch (error) {
     failure = error;
+    if (committed) throw error;
     const recovery = [];
     try {
       if (published) {

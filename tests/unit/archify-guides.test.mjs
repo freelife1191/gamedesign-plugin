@@ -74,7 +74,7 @@ function validationReceipt({ warnings = 0, checks = 9 } = {}) {
   });
 }
 
-function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterministic = false, includePaths = false, htmlSymlink = false } = {}) {
+function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterministic = false, includePaths = false, htmlSymlink = false, receiptMutation = undefined } = {}) {
   let sequence = 0;
   return async (args) => {
     calls.push(args);
@@ -87,6 +87,7 @@ function fakeCli(calls, { warnings = 0, checks = 9, exitCode = 0, nondeterminist
     else await writeFile(args[3], html);
     const delivered = JSON.parse(receipt(specification, html, { warnings, checks }));
     if (includePaths) Object.assign(delivered, { input: args[2], output: args[3] });
+    receiptMutation?.(delivered);
     return { code: 0, stdout: JSON.stringify(delivered), stderr: "" };
   };
 }
@@ -142,6 +143,55 @@ test("stage workflow parent swap after validate cannot escape or publish", async
   };
   await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: { entries: skillEntries() }, runCli }), /symlink|identity|escapes/u);
   assert.deepEqual(await (await import("node:fs/promises")).readdir(outside), []);
+  await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
+});
+
+test("stage delivery parent swap and restore is detected before publication", async (t) => {
+  const repoRoot = await repo(t);
+  const outside = await mkdtemp(path.join(os.tmpdir(), "archify-swap-back-"));
+  t.after(() => rm(outside, { recursive: true, force: true }));
+  const base = fakeCli([]);
+  const runCli = async (args) => {
+    if (args[0] !== "deliver") return base(args);
+    const job = path.dirname(args[3]);
+    const preserved = `${job}-preserved`;
+    await rename(job, preserved);
+    await symlink(outside, job);
+    await writeFile(args[3], "outside write");
+    await rm(job);
+    await rename(preserved, job);
+    return base(args);
+  };
+  await assert.rejects(
+    () => buildArchifyGuides({ repoRoot, __testCatalog: { entries: skillEntries() }, runCli }),
+    /identity changed/u,
+  );
+  assert.equal(await readFile(path.join(outside, "flow.html"), "utf8"), "outside write");
+  await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
+});
+
+test("Archify CLI replacement between validate and deliver is rejected", async (t) => {
+  const repoRoot = await repo(t);
+  const capabilityRoot = await mkdtemp(path.join(os.tmpdir(), "archify-cli-pin-"));
+  t.after(() => rm(capabilityRoot, { recursive: true, force: true }));
+  const canonicalCapabilityRoot = await (await import("node:fs/promises")).realpath(capabilityRoot);
+  const cli = path.join(canonicalCapabilityRoot, "bin", "archify.mjs");
+  await mkdir(path.dirname(cli), { recursive: true });
+  const valid = {
+    schemaVersion: 1,
+    ok: true,
+    command: "validate",
+    type: "workflow",
+    checks: Array.from({ length: 9 }, (_, index) => ({ name: `check-${index}`, ok: true })),
+    composition: { profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } },
+  };
+  await writeFile(cli, `process.stdout.write(${JSON.stringify(JSON.stringify(valid))});\n`);
+  await assert.rejects(() => buildArchifyGuides({
+    repoRoot,
+    cliPath: cli,
+    __testCatalog: { entries: skillEntries() },
+    __testHooks: { afterValidate: () => writeFile(cli, "process.stdout.write('replacement');\n") },
+  }), /Archify CLI identity changed/u);
   await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
 });
 
@@ -228,6 +278,10 @@ test("validate and deliver receipts fail closed on false, duplicate, or wrong-qu
     schemaVersion: 1, ok: true, command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "standard" },
     specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) }, artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
   }, { specification, artifact }), /showcase/u);
+  assert.throws(() => validateArchifyReceipt({
+    schemaVersion: 1, ok: true, command: "deliver", type: "workflow", validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0 },
+    specification: { sha256: digest(specification), bytes: Buffer.byteLength(specification) }, artifact: { sha256: digest(artifact), bytes: Buffer.byteLength(artifact) },
+  }, { specification, artifact }), /showcase|pass/u);
 });
 
 test("builder uses exact canonical CLI arguments and persists only a verified 9/9 receipt", async (t) => {
@@ -294,11 +348,22 @@ test("receipt persists stable repository-relative source and artifact paths", as
   const saved = JSON.parse(await readFile(receiptPath, "utf8"));
   assert.equal(saved.input, "guides/assets/archify/studio/define-game-vision/flow.json");
   assert.equal(saved.output, "guides/assets/archify/studio/define-game-vision/flow.html");
+  assert.deepEqual(Object.keys(saved.specification).sort(), ["bytes", "sha256"]);
+  assert.deepEqual(Object.keys(saved.artifact).sort(), ["bytes", "sha256"]);
+  await buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([], {
+    receiptMutation: (savedReceipt) => {
+      savedReceipt.specification.debugPath = "file:///private/var/secret/spec.json";
+      savedReceipt.artifact.nested = { windowsPath: "C:\\secret\\flow.html", traversal: "../../secret" };
+    },
+  }) });
+  const sanitized = JSON.parse(await readFile(receiptPath, "utf8"));
+  assert.deepEqual(Object.keys(sanitized.specification).sort(), ["bytes", "sha256"]);
+  assert.deepEqual(Object.keys(sanitized.artifact).sort(), ["bytes", "sha256"]);
   await buildArchifyGuides({ repoRoot, __testCatalog: catalog, check: true, runCli: fakeCli([], { includePaths: true }) });
 });
 
 test("transaction failure hooks restore the exact trusted tree and preserve absence", async (t) => {
-  for (const phase of ["backup", "publish", "after-publish", "temp-cleanup", "backup-cleanup"]) {
+  for (const phase of ["backup", "publish", "after-publish", "temp-cleanup"]) {
     await t.test(phase, async (t) => {
       const repoRoot = await repo(t);
       const catalog = { entries: skillEntries() };
@@ -320,4 +385,24 @@ test("transaction failure hooks restore the exact trusted tree and preserve abse
   const repoRoot = await repo(t);
   await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: { entries: skillEntries() }, runCli: fakeCli([]), __testHooks: { afterPublish: () => { throw new Error("absent failure"); } } }), /absent failure/u);
   await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
+});
+
+test("partial post-commit backup cleanup never restores a damaged backup", async (t) => {
+  const repoRoot = await repo(t);
+  const catalog = { entries: skillEntries() };
+  await buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]) });
+  const output = path.join(repoRoot, "guides/assets/archify");
+  await assert.rejects(() => buildArchifyGuides({
+    repoRoot,
+    __testCatalog: catalog,
+    runCli: fakeCli([], { nondeterministic: true }),
+    __testHooks: {
+      cleanupBackup: async ({ backup }) => {
+        await rm(path.join(backup, "manifest.json"));
+        throw new Error("partial backup cleanup failure");
+      },
+    },
+  }), /partial backup cleanup failure/u);
+  assert.match(await readFile(path.join(output, "studio/define-game-vision/flow.html"), "utf8"), /flow-0/u);
+  assert.doesNotReject(() => lstat(path.join(output, "manifest.json")));
 });
