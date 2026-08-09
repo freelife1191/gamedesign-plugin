@@ -13,8 +13,11 @@ import {
   validateArchifyCatalog,
 } from "../../tooling/lib/archify-catalog.mjs";
 
-const SCAN_ROOTS = ["README.md", "guides"];
-const SCAN_EXCLUDES = ["guides/assets/archify", ".git", ".worktrees", ".tmp", ".build"];
+const SCAN_ROOTS = [
+  "README.md", "guides", "products/game-design-studio", "products/game-design-career",
+  "plugins/game-design-studio", "plugins/game-design-career",
+];
+const SCAN_EXCLUDES = ["guides/assets/archify", "shared/vendor", ".git", ".worktrees", ".tmp", ".build"];
 const SOURCE_TEXT = "# Document\n\n## Exact heading\n\nSource body.\n";
 
 function digest(value) {
@@ -27,6 +30,7 @@ function selectedEntry({
   sourceDocument = "README.md",
   sourceSection = "Exact heading",
   sourceDigest = digest(SOURCE_TEXT),
+  diagramType = "workflow",
   priority = "primary",
   secondaryReason = null,
   deliveryStatus = "planned",
@@ -43,7 +47,7 @@ function selectedEntry({
     question: "이 도식이 답하는 한 문장 질문",
     decision: "selected",
     decision_reason: "텍스트보다 관계를 더 명확하게 보여 주는 근거",
-    diagram_type: "workflow",
+    diagram_type: diagramType,
     diagram_type_reason: "역할별 단계와 승인 분기가 핵심이기 때문",
     priority,
     secondary_reason: secondaryReason,
@@ -70,13 +74,33 @@ function excludedEntry(sourceDocument = "README.md") {
     source_digest: digest(SOURCE_TEXT),
     decision: "excluded",
     exclusion_code: "non-structural-content",
-    exclusion_reason: "구조 도식보다 문서 본문이 더 명확하다",
+    decision_reason: "구조 도식보다 문서 본문이 더 명확하다",
     diagnostics: [],
     spec: null,
     html: null,
     receipt: null,
     delivery_status: "not-applicable",
     visual_review: "not-applicable",
+  };
+}
+
+function blockedDiagnostic() {
+  return [{
+    code: "render-overflow",
+    subject: "stable-id",
+    evidence: "overflow: 12px",
+    attempted_fix: "label wrap",
+    round: 2,
+    remaining_error: "overflow: 2px",
+  }];
+}
+
+function catalogFor(entry) {
+  return {
+    schema_version: 1,
+    scan_roots: SCAN_ROOTS,
+    scan_excludes: SCAN_EXCLUDES,
+    entries: [entry],
   };
 }
 
@@ -87,14 +111,22 @@ async function writeRelative(root, relativePath, content) {
   return filename;
 }
 
-async function catalogFixture(t, { documents = ["README.md"], entries = [excludedEntry()] } = {}) {
+async function catalogFixture(t, {
+  documents = ["README.md"],
+  entries = [excludedEntry()],
+  scanRoots = SCAN_ROOTS,
+  scanExcludes = SCAN_EXCLUDES,
+} = {}) {
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "archify-catalog-"));
   t.after(() => rm(repoRoot, { recursive: true, force: true }));
   for (const document of documents) await writeRelative(repoRoot, document, SOURCE_TEXT);
+  for (const directory of SCAN_ROOTS.filter((root) => root !== "README.md")) {
+    await mkdir(path.join(repoRoot, ...directory.split("/")), { recursive: true });
+  }
   await writeRelative(repoRoot, "guides/archify-diagrams/catalog.json", JSON.stringify({
     schema_version: 1,
-    scan_roots: SCAN_ROOTS,
-    scan_excludes: SCAN_EXCLUDES,
+    scan_roots: scanRoots,
+    scan_excludes: scanExcludes,
     entries,
   }));
   return repoRoot;
@@ -191,14 +223,7 @@ async function blockedPublishableFixture(t) {
       deliveryStatus: "passed",
       visualReview: "passed",
       reviewer: "reviewer",
-      diagnostics: [{
-        code: "render-overflow",
-        subject: "stable-id",
-        evidence: "overflow: 12px",
-        attempted_fix: "label wrap",
-        round: 2,
-        remaining_error: "overflow: 2px",
-      }],
+      diagnostics: blockedDiagnostic(),
     })],
   });
 }
@@ -224,7 +249,7 @@ test("catalog rejects unknown fields, symlinks, unsafe paths, and illegal states
   await assert.rejects(() => loadArchifyCatalog({ repoRoot: unknownField }), /unknown field/u);
   await assert.rejects(() => loadArchifyCatalog({ repoRoot: symlinkSource }), /symlink/u);
   await assert.rejects(() => loadArchifyCatalog({ repoRoot: traversal }), /contained/u);
-  await assert.rejects(() => loadArchifyCatalog({ repoRoot: publishedWithoutQa }), /published.*visual review/u);
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot: publishedWithoutQa }), /published.*visual_review/u);
 });
 
 for (const [name, build, pattern] of [
@@ -235,7 +260,7 @@ for (const [name, build, pattern] of [
   ["missing secondary rationale", secondaryWithoutReasonFixture, /secondary_reason/u],
   ["stale source digest", staleDigestFixture, /stale-source/u],
   ["missing heading", missingHeadingFixture, /source_section/u],
-  ["blocked publishable entry", blockedPublishableFixture, /blocked.*publish/u],
+  ["blocked publishable entry", blockedPublishableFixture, /passed.*diagnostics/u],
 ]) {
   test(`catalog rejects ${name}`, async (t) => {
     const repoRoot = await build(t);
@@ -258,7 +283,7 @@ test("validation projects only reviewed passed and published selected entries", 
   assert.deepEqual(publishableArchifyEntries({ entries: [
     { decision: "selected", delivery_status: "passed", visual_review: "passed", id: "passed" },
     { decision: "selected", delivery_status: "published", visual_review: "passed", id: "published" },
-    { decision: "selected", delivery_status: "blocked-visual", visual_review: "blocked", id: "blocked" },
+    { decision: "selected", delivery_status: "blocked-visual", visual_review: "failed", id: "blocked" },
   ] }).map(({ id }) => id), ["passed", "published"]);
 });
 
@@ -269,4 +294,65 @@ test("loader resolves an explicit fixture catalog path from the repository root"
     catalogPath: "guides/archify-diagrams/catalog.json",
   });
   assert.equal(catalog.entries[0].id, "excluded-README");
+});
+
+test("catalog accepts Suite selected entries with Suite deterministic paths", async (t) => {
+  const repoRoot = await catalogFixture(t, {
+    entries: [selectedEntry({ id: "suite-map", product: "suite" })],
+  });
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  assert.deepEqual(catalog.entries[0], selectedEntry({ id: "suite-map", product: "suite" }));
+});
+
+test("catalog rejects a scan corpus reduced to exclude its only Markdown", async (t) => {
+  const repoRoot = await catalogFixture(t, {
+    entries: [],
+    scanRoots: ["README.md"],
+    scanExcludes: ["README.md"],
+  });
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot }), /scan_roots must exactly match/u);
+});
+
+test("excluded entries retain the canonical decision_reason contract", async (t) => {
+  const repoRoot = await catalogFixture(t, { entries: [excludedEntry()] });
+  await assert.doesNotReject(() => loadArchifyCatalog({ repoRoot }));
+});
+
+for (const [name, entry] of [
+  ["blocked schema", selectedEntry({ deliveryStatus: "blocked-schema", visualReview: "not-applicable", diagnostics: blockedDiagnostic() })],
+  ["blocked validation", selectedEntry({ deliveryStatus: "blocked-validation", visualReview: "not-applicable", diagnostics: blockedDiagnostic() })],
+  ["blocked visual", selectedEntry({ deliveryStatus: "blocked-visual", visualReview: "failed", reviewer: "visual-reviewer", diagnostics: blockedDiagnostic() })],
+  ["stale source", selectedEntry({ deliveryStatus: "stale-source", visualReview: "stale-source" })],
+  ["passed", selectedEntry({ deliveryStatus: "passed", visualReview: "passed", reviewer: "visual-reviewer" })],
+  ["published", selectedEntry({ deliveryStatus: "published", visualReview: "passed", reviewer: "visual-reviewer" })],
+]) {
+  test(`validator accepts the exact ${name} visual-review state`, async () => {
+    assert.deepEqual((await validateArchifyCatalog(catalogFor(entry))).errors, []);
+  });
+}
+
+for (const [name, entry, pattern] of [
+  ["blocked schema pending", selectedEntry({ deliveryStatus: "blocked-schema", visualReview: "pending", diagnostics: blockedDiagnostic() }), /blocked-schema.*visual_review/u],
+  ["blocked validation pending", selectedEntry({ deliveryStatus: "blocked-validation", visualReview: "pending", diagnostics: blockedDiagnostic() }), /blocked-validation.*visual_review/u],
+  ["blocked visual pending", selectedEntry({ deliveryStatus: "blocked-visual", visualReview: "pending", diagnostics: blockedDiagnostic() }), /blocked-visual.*visual_review/u],
+  ["stale source pending", selectedEntry({ deliveryStatus: "stale-source", visualReview: "pending" }), /stale-source.*visual_review/u],
+]) {
+  test(`validator rejects ${name} visual-review mutation`, async () => {
+    assert.match((await validateArchifyCatalog(catalogFor(entry))).errors.join("\n"), pattern);
+  });
+}
+
+test("catalog rejects diagram types outside the structural adapter vocabulary", async (t) => {
+  const repoRoot = await catalogFixture(t, { entries: [selectedEntry({ diagramType: "pie" })] });
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot }), /diagram_type/u);
+});
+
+test("schema exposes the same fixed corpus, products, diagram types, and visual-review values", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../guides/archify-diagrams/catalog.schema.json", import.meta.url), "utf8"));
+  assert.deepEqual(schema.properties.scan_roots.const, SCAN_ROOTS);
+  assert.deepEqual(schema.properties.scan_excludes.const, SCAN_EXCLUDES);
+  assert.deepEqual(schema.$defs.selectedEntry.properties.product.enum, ["studio", "career", "suite"]);
+  assert.deepEqual(schema.$defs.selectedEntry.properties.visual_system.enum, ["studio", "career", "suite"]);
+  assert.deepEqual(schema.$defs.selectedEntry.properties.diagram_type.enum, ["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
+  assert.deepEqual(schema.$defs.selectedEntry.properties.visual_review.enum, ["pending", "passed", "failed", "stale-source", "not-applicable"]);
 });

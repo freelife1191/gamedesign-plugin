@@ -11,6 +11,13 @@ export const DELIVERY_STATES = Object.freeze([
 ]);
 
 const CATALOG_PATH = "guides/archify-diagrams/catalog.json";
+const APPROVED_SCAN_ROOTS = Object.freeze([
+  "README.md", "guides", "products/game-design-studio", "products/game-design-career",
+  "plugins/game-design-studio", "plugins/game-design-career",
+]);
+const APPROVED_SCAN_EXCLUDES = Object.freeze([
+  "guides/assets/archify", "shared/vendor", ".git", ".worktrees", ".tmp", ".build",
+]);
 const CATALOG_KEYS = new Set(["schema_version", "scan_roots", "scan_excludes", "entries"]);
 const SELECTED_KEYS = new Set([
   "id", "product", "source_document", "source_section", "source_digest", "question",
@@ -21,13 +28,24 @@ const SELECTED_KEYS = new Set([
 ]);
 const EXCLUDED_KEYS = new Set([
   "id", "product", "source_document", "source_section", "source_digest", "decision",
-  "exclusion_code", "exclusion_reason", "diagnostics", "spec", "html", "receipt",
+  "exclusion_code", "decision_reason", "diagnostics", "spec", "html", "receipt",
   "delivery_status", "visual_review",
 ]);
 const DIAGNOSTIC_KEYS = new Set(["code", "subject", "evidence", "attempted_fix", "round", "remaining_error"]);
-const PRODUCTS = new Set(["studio", "career"]);
-const BLOCKED_STATES = new Set(["blocked-schema", "blocked-validation", "blocked-visual"]);
+const PRODUCTS = new Set(["studio", "career", "suite"]);
+const DIAGRAM_TYPES = new Set(["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
 const SPEC_REQUIRED_STATES = new Set(["spec-authored", "auto-validated", "stale-source", "passed", "published"]);
+const STATE_CONTRACTS = Object.freeze({
+  planned: { visualReview: "pending", reviewer: "null", diagnostics: "empty" },
+  "spec-authored": { visualReview: "pending", reviewer: "null", diagnostics: "empty" },
+  "auto-validated": { visualReview: "pending", reviewer: "null", diagnostics: "empty" },
+  "blocked-schema": { visualReview: "not-applicable", reviewer: "null", diagnostics: "required" },
+  "blocked-validation": { visualReview: "not-applicable", reviewer: "null", diagnostics: "required" },
+  "blocked-visual": { visualReview: "failed", reviewer: "required", diagnostics: "required" },
+  "stale-source": { visualReview: "stale-source", reviewer: "null", diagnostics: "empty" },
+  passed: { visualReview: "passed", reviewer: "required", diagnostics: "empty" },
+  published: { visualReview: "passed", reviewer: "required", diagnostics: "empty" },
+});
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -111,6 +129,10 @@ function validatePathList(value, label, errors) {
   return values;
 }
 
+function hasExactOrder(values, expected) {
+  return values.length === expected.length && values.every((value, index) => value === expected[index]);
+}
+
 function validateSelectedEntry(entry, index, errors, seenIds, seenRecords, priorities) {
   const label = `entry[${index}]`;
   if (!assertExactKeys(entry, SELECTED_KEYS, label, errors)) return;
@@ -121,6 +143,7 @@ function validateSelectedEntry(entry, index, errors, seenIds, seenRecords, prior
   if (entry.decision !== "selected") errors.push(`${label}.decision must be selected`);
   if (!PRODUCTS.has(entry.product)) errors.push(`${label}.product is unknown`);
   if (entry.visual_system !== entry.product) errors.push(`${label}.visual_system must match product`);
+  if (!DIAGRAM_TYPES.has(entry.diagram_type)) errors.push(`${label}.diagram_type is invalid`);
   if (!['primary', 'secondary'].includes(entry.priority)) errors.push(`${label}.priority is invalid`);
   if (entry.priority === "secondary" && !isNonemptyString(entry.secondary_reason)) {
     errors.push(`${label}.secondary_reason is required for a secondary entry`);
@@ -171,39 +194,26 @@ function validateCommonEntry(entry, label, errors, seenIds, seenRecords) {
 }
 
 function validateSelectedState(entry, label, errors) {
-  if (!DELIVERY_STATES.includes(entry.delivery_status) || entry.delivery_status === "not-applicable") {
+  const contract = STATE_CONTRACTS[entry.delivery_status];
+  if (!DELIVERY_STATES.includes(entry.delivery_status) || contract === undefined) {
     errors.push(`${label}.delivery_status is invalid for a selected entry`);
     return;
   }
-  if (!["pending", "blocked", "passed"].includes(entry.visual_review)) {
-    errors.push(`${label}.visual_review is invalid for a selected entry`);
+  if (entry.visual_review !== contract.visualReview) {
+    errors.push(`${label}.${entry.delivery_status}.visual_review must be ${contract.visualReview}`);
   }
-  if (entry.delivery_status === "planned") {
-    if (entry.visual_review !== "pending" || entry.reviewer !== null || entry.diagnostics.length !== 0) {
-      errors.push(`${label}.planned must have pending visual review, no reviewer, and no diagnostics`);
-    }
+  if (contract.reviewer === "null" && entry.reviewer !== null) {
+    errors.push(`${label}.${entry.delivery_status}.reviewer must be null`);
   }
-  if (["spec-authored", "auto-validated", "stale-source"].includes(entry.delivery_status)) {
-    if (entry.visual_review !== "pending" || entry.reviewer !== null || entry.diagnostics.length !== 0) {
-      errors.push(`${label}.${entry.delivery_status} must have pending visual review, no reviewer, and no diagnostics`);
-    }
+  if (contract.reviewer === "required" && !isNonemptyString(entry.reviewer)) {
+    errors.push(`${label}.${entry.delivery_status}.reviewer must be a non-empty string`);
   }
-  if (BLOCKED_STATES.has(entry.delivery_status)) {
-    if (entry.visual_review === "passed" || entry.diagnostics.length === 0) {
-      errors.push(`${label}.blocked entry cannot publish and requires diagnostics`);
-    }
-    if (entry.reviewer !== null && !isNonemptyString(entry.reviewer)) errors.push(`${label}.reviewer must be null or non-empty`);
+  if (contract.diagnostics === "empty" && entry.diagnostics.length !== 0) {
+    errors.push(`${label}.${entry.delivery_status}.diagnostics must be empty`);
   }
-  if (["passed", "published"].includes(entry.delivery_status)) {
-    if (entry.visual_review !== "passed" || !isNonemptyString(entry.reviewer) || entry.diagnostics.length !== 0) {
-      errors.push(`${label}.${entry.delivery_status} requires passed visual review, a reviewer, and no diagnostics`);
-    }
-    if (entry.diagnostics.length !== 0) errors.push(`${label}.blocked diagnostics cannot publish`);
+  if (contract.diagnostics === "required" && entry.diagnostics.length === 0) {
+    errors.push(`${label}.${entry.delivery_status}.diagnostics are required`);
   }
-  if (entry.delivery_status === "published" && entry.visual_review !== "passed") {
-    errors.push(`${label}.published requires passed visual review`);
-  }
-  if (entry.reviewer !== null && !isNonemptyString(entry.reviewer)) errors.push(`${label}.reviewer must be null or non-empty`);
 }
 
 function validateExcludedEntry(entry, index, errors, seenIds, seenRecords) {
@@ -212,7 +222,7 @@ function validateExcludedEntry(entry, index, errors, seenIds, seenRecords) {
   validateCommonEntry(entry, label, errors, seenIds, seenRecords);
   if (entry.decision !== "excluded") errors.push(`${label}.decision must be excluded`);
   requireString(entry.exclusion_code, `${label}.exclusion_code`, errors);
-  requireString(entry.exclusion_reason, `${label}.exclusion_reason`, errors);
+  requireString(entry.decision_reason, `${label}.decision_reason`, errors);
   if (!Array.isArray(entry.diagnostics) || entry.diagnostics.length !== 0) errors.push(`${label}.excluded diagnostics must be empty`);
   for (const field of ["spec", "html", "receipt"]) {
     if (entry[field] !== null) errors.push(`${label}.${field} must be null for an excluded entry`);
@@ -319,6 +329,12 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
   if (catalog.schema_version !== 1) errors.push("catalog.schema_version must be 1");
   const scanRoots = validatePathList(catalog.scan_roots, "catalog.scan_roots", errors);
   const scanExcludes = validatePathList(catalog.scan_excludes, "catalog.scan_excludes", errors);
+  if (!hasExactOrder(scanRoots, APPROVED_SCAN_ROOTS)) {
+    errors.push("catalog.scan_roots must exactly match the approved ordered corpus");
+  }
+  if (!hasExactOrder(scanExcludes, APPROVED_SCAN_EXCLUDES)) {
+    errors.push("catalog.scan_excludes must exactly match the approved ordered exclusions");
+  }
   if (!Array.isArray(catalog.entries)) {
     errors.push("catalog.entries must be an array");
     return { ok: false, errors, uncovered };
