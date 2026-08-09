@@ -43,6 +43,20 @@ async function repo(t) {
   return root;
 }
 
+async function treeBytes(root) {
+  const result = new Map();
+  async function walk(directory, relative = "") {
+    for (const item of await (await import("node:fs/promises")).readdir(directory, { withFileTypes: true })) {
+      const next = relative ? `${relative}/${item.name}` : item.name;
+      const target = path.join(directory, item.name);
+      if (item.isDirectory()) await walk(target, next);
+      else result.set(next, await readFile(target));
+    }
+  }
+  await walk(root);
+  return result;
+}
+
 function receipt(specification, artifact, { warnings = 0, checks = 9 } = {}) {
   return JSON.stringify({
     command: "deliver", type: "workflow",
@@ -228,4 +242,27 @@ test("receipt persists stable repository-relative source and artifact paths", as
   assert.equal(saved.input, "guides/assets/archify/studio/define-game-vision/flow.json");
   assert.equal(saved.output, "guides/assets/archify/studio/define-game-vision/flow.html");
   await buildArchifyGuides({ repoRoot, __testCatalog: catalog, check: true, runCli: fakeCli([], { includePaths: true }) });
+});
+
+test("transaction failure hooks restore the exact trusted tree and preserve absence", async (t) => {
+  for (const phase of ["backup", "publish", "after-publish", "temp-cleanup", "backup-cleanup"]) {
+    await t.test(phase, async (t) => {
+      const repoRoot = await repo(t);
+      const catalog = { entries: skillEntries() };
+      await buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]) });
+      const output = path.join(repoRoot, "guides/assets/archify");
+      const trusted = await treeBytes(output);
+      const hooks = {
+        beforeRename: ({ phase: current }) => { if (phase === current) throw new Error(`${phase} failure`); },
+        afterPublish: () => { if (phase === "after-publish") throw new Error(`${phase} failure`); },
+        beforeTempCleanup: () => { if (phase === "temp-cleanup") throw new Error(`${phase} failure`); },
+        beforeBackupCleanup: () => { if (phase === "backup-cleanup") throw new Error(`${phase} failure`); },
+      };
+      await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]), __testHooks: hooks }), /failure/u);
+      assert.deepEqual(await treeBytes(output), trusted);
+    });
+  }
+  const repoRoot = await repo(t);
+  await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: { entries: skillEntries() }, runCli: fakeCli([]), __testHooks: { afterPublish: () => { throw new Error("absent failure"); } } }), /absent failure/u);
+  await assert.rejects(() => lstat(path.join(repoRoot, "guides/assets/archify/manifest.json")), { code: "ENOENT" });
 });

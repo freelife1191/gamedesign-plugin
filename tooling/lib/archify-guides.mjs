@@ -454,9 +454,10 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
     }
     if (!originalOutput && currentStats) throw new Error(`Archify output root appeared during build: ${existingRoot}`);
     if (originalOutput) {
-      backup = path.join(assets.filename, `.archify-guides-backup-${randomUUID()}`);
+      const backupTarget = path.join(assets.filename, `.archify-guides-backup-${randomUUID()}`);
       await __testHooks?.beforeRename?.({ phase: "backup", target: existingRoot });
-      await rename(existingRoot, backup);
+      await rename(existingRoot, backupTarget);
+      backup = backupTarget;
     }
     await assertDirectoryStable(assets, "assets directory");
     await __testHooks?.beforeRename?.({ phase: "publish", target: existingRoot });
