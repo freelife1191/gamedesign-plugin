@@ -24,6 +24,22 @@ function textBlock(value) {
   return `${fence}text\n${value}\n${fence}`;
 }
 
+function countTextBlocks(markdown) {
+  const lines = markdown.split("\n");
+  let blocks = 0;
+  for (let index = 0; index < lines.length; index += 1) {
+    const opening = /^(?<fence>`{3,})text\s*$/u.exec(lines[index]);
+    if (!opening) continue;
+    const closing = new RegExp(`^${opening.groups.fence}\\s*$`, "u");
+    let cursor = index + 1;
+    while (cursor < lines.length && !closing.test(lines[cursor])) cursor += 1;
+    if (cursor === lines.length) throw new Error("rendered prompt card has an unterminated matching text fence");
+    blocks += 1;
+    index = cursor;
+  }
+  return blocks;
+}
+
 function heading(level, value) {
   return `${"#".repeat(level)} ${value}`;
 }
@@ -155,8 +171,8 @@ export function validateRenderedPromptCard(entry, markdown) {
   for (const fragment of required) {
     if (!markdown.includes(fragment)) throw new Error(`rendered prompt card is missing required contract: ${entry.id}`);
   }
-  if ((markdown.match(/^```text$/gmu) ?? []).length !== 5) {
-    throw new Error(`rendered prompt card must have five text blocks: ${entry.id}`);
+  if (countTextBlocks(markdown) !== 5) {
+    throw new Error(`rendered prompt card must have five matching text fences: ${entry.id}`);
   }
   const expectedNamespace = entry.product === "studio" ? "$game-design-studio:" : entry.product === "career" ? "$game-design-career:" : null;
   if (expectedNamespace && (!entry.cli_prompt.example.includes(expectedNamespace) || !entry.cli_prompt.template.includes(expectedNamespace))) {
@@ -214,7 +230,22 @@ export function renderPromptLibrary(catalog) {
   ].join("\n").trimEnd()}\n`;
 }
 
-export function replaceManagedSection(markdown, markerId, body) {
+function assertManagedMarkerPairs(markdown) {
+  const openMarkers = [...markdown.matchAll(/<!-- PROMPT-TEMPLATES:(START|END) ([^\s]+) -->/gu)];
+  const markerStack = [];
+  for (const [, kind, id] of openMarkers) {
+    if (kind === "START") {
+      markerStack.push(id);
+      continue;
+    }
+    const expected = markerStack.pop();
+    if (expected !== id) throw new Error(`mismatched prompt-template marker pair: expected ${expected ?? "START"}, found ${id}`);
+  }
+  if (markerStack.length > 0) throw new Error(`mismatched prompt-template marker pair: missing END for ${markerStack.at(-1)}`);
+}
+
+export function assertManagedSection(markdown, markerId) {
+  assertManagedMarkerPairs(markdown);
   const start = `<!-- PROMPT-TEMPLATES:START ${markerId} -->`;
   const end = `<!-- PROMPT-TEMPLATES:END ${markerId} -->`;
   if (markdown.split(start).length !== 2 || markdown.split(end).length !== 2) {
@@ -223,6 +254,14 @@ export function replaceManagedSection(markdown, markerId, body) {
   const startOffset = markdown.indexOf(start);
   const endOffset = markdown.indexOf(end);
   if (endOffset < startOffset) throw new Error(`prompt-template marker pair must be ordered: ${markerId}`);
+}
+
+export function replaceManagedSection(markdown, markerId, body) {
+  assertManagedSection(markdown, markerId);
+  const start = `<!-- PROMPT-TEMPLATES:START ${markerId} -->`;
+  const end = `<!-- PROMPT-TEMPLATES:END ${markerId} -->`;
+  const startOffset = markdown.indexOf(start);
+  const endOffset = markdown.indexOf(end);
   return markdown.slice(0, startOffset + start.length)
     + `\n${body.trim()}\n`
     + markdown.slice(endOffset);

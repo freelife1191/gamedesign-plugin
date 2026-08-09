@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { randomUUID } from "node:crypto";
-import { lstat, mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { lstat, mkdir, open, readFile, realpath, rename, rmdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -10,11 +11,13 @@ import { fileURLToPath } from "node:url";
 import { createGuardedTempRoot, cleanupGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { productPromptProjection, loadPromptTemplateCatalog } from "./lib/prompt-template-catalog.mjs";
 import {
+  assertManagedSection,
   renderProductPromptProjection,
   renderPromptCard,
   renderPromptDetailPage,
   renderPromptGuideSummary,
   renderPromptLibrary,
+  replaceManagedSection,
   validateRenderedPromptCard,
 } from "./lib/prompt-guides.mjs";
 import { joinWithin, normalizeRelativePath } from "./lib/paths.mjs";
@@ -75,10 +78,7 @@ function replaceOrInsertManagedSection(markdown, entry, body) {
   const ends = markdown.split(end).length - 1;
   const section = markerPair(markerId, body);
   if (starts === 1 && ends === 1) {
-    const startOffset = markdown.indexOf(start);
-    const endOffset = markdown.indexOf(end);
-    if (endOffset < startOffset) throw new Error(`prompt-template marker pair must be ordered: ${markerId}`);
-    return markdown.slice(0, startOffset) + section + markdown.slice(endOffset + end.length);
+    return replaceManagedSection(markdown, markerId, body);
   }
   if (starts !== 0 || ends !== 0) throw new Error(`expected exactly one prompt-template marker pair: ${markerId}`);
   if (entry.kind !== "use-case") return `${markdown.trimEnd()}\n\n${section}\n`;
@@ -121,6 +121,9 @@ async function buildOutputPlan(catalog, repoRoot, { includeManaged } = {}) {
       )));
       sourceContents.set(source, replaceOrInsertManagedSection(sourceContents.get(source), entry, body));
     }
+    for (const entry of catalog.entries.filter((candidate) => candidate.kind === "recipe")) {
+      assertManagedSection(sourceContents.get(entry.source_references[0]), managedMarkerId(entry));
+    }
     for (const [relative, contents] of sourceContents) outputs.set(relative, `${contents.trimEnd()}\n`);
   }
 
@@ -143,48 +146,168 @@ async function assertSafeDirectory(root, label) {
   return realpath(root);
 }
 
-async function assertSafeTarget(root, relative, { requireExisting = false } = {}) {
+function sameIdentity(left, right) {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+function identity(stats) {
+  return { dev: stats.dev, ino: stats.ino };
+}
+
+async function directoryRecord(root, directory, label) {
+  const stats = await lstat(directory);
+  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`${label} is not a non-symlink directory: ${directory}`);
+  if (!isContained(root, await realpath(directory))) throw new Error(`${label} escapes repository: ${directory}`);
+  return { directory, identity: identity(stats), label };
+}
+
+async function assertDirectoryRecord(root, record) {
+  const stats = await lstat(record.directory);
+  if (!stats.isDirectory() || stats.isSymbolicLink() || !sameIdentity(record.identity, identity(stats))) {
+    throw new Error(`${record.label} identity changed: ${record.directory}`);
+  }
+  if (!isContained(root, await realpath(record.directory))) throw new Error(`${record.label} escapes repository: ${record.directory}`);
+}
+
+async function prepareOutputTarget(root, relative, contents) {
   const normalized = normalizeRelativePath(relative, "prompt guide output");
   const target = joinWithin(root, normalized, "prompt guide output");
   if (!isContained(root, target)) throw new Error(`unsafe prompt guide output: ${relative}`);
+  const parentPaths = [];
+  const records = [];
   let current = root;
+  records.push(await directoryRecord(root, current, "repository root"));
   for (const part of normalized.split("/").slice(0, -1)) {
     current = path.join(current, part);
+    parentPaths.push(current);
     const stats = await lstat(current).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
-    if (!stats?.isDirectory() || stats.isSymbolicLink()) throw new Error(`prompt guide output parent is not a non-symlink directory: ${current}`);
-    if (!isContained(root, await realpath(current))) throw new Error(`prompt guide output parent escapes repository: ${current}`);
+    if (!stats) continue;
+    records.push(await directoryRecord(root, current, "prompt guide output parent"));
   }
-  const existing = await lstat(target).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
-  if (requireExisting && !existing) throw new Error(`missing generated prompt guide: ${normalized}`);
-  if (existing && (!existing.isFile() || existing.isSymbolicLink())) {
-    throw new Error(`prompt guide output is not a regular file: ${normalized}`);
-  }
-  if (existing && !isContained(root, await realpath(target))) throw new Error(`prompt guide output escapes repository: ${normalized}`);
-  return { normalized, target };
+  const stats = await lstat(target).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (stats && (!stats.isFile() || stats.isSymbolicLink())) throw new Error(`prompt guide output is not a regular file: ${normalized}`);
+  if (stats && !isContained(root, await realpath(target))) throw new Error(`prompt guide output escapes repository: ${normalized}`);
+  return { normalized, target, contents, parentPaths, records, targetIdentity: stats ? identity(stats) : null, existed: Boolean(stats) };
 }
 
-async function ensureSafeTargetParents(root, relative) {
-  const normalized = normalizeRelativePath(relative, "prompt guide output");
-  let current = root;
-  for (const part of normalized.split("/").slice(0, -1)) {
-    current = path.join(current, part);
-    const stats = await lstat(current).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
-    if (!stats) {
-      await mkdir(current);
+async function assertTargetStable(root, plan) {
+  for (const record of plan.records) await assertDirectoryRecord(root, record);
+  if (!plan.targetIdentity) return;
+  const stats = await lstat(plan.target);
+  if (!stats.isFile() || stats.isSymbolicLink() || !sameIdentity(plan.targetIdentity, identity(stats))) {
+    throw new Error(`prompt guide output identity changed: ${plan.normalized}`);
+  }
+  if (!isContained(root, await realpath(plan.target))) throw new Error(`prompt guide output escapes repository: ${plan.normalized}`);
+}
+
+async function ensureTargetParents(root, plan, createdDirectories) {
+  for (const directory of plan.parentPaths) {
+    const existing = await lstat(directory).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (!existing) {
+      await mkdir(directory);
+      const record = await directoryRecord(root, directory, "created prompt guide output parent");
+      plan.records.push(record);
+      createdDirectories.push(record);
       continue;
     }
-    if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`prompt guide output parent is not a non-symlink directory: ${current}`);
-    if (!isContained(root, await realpath(current))) throw new Error(`prompt guide output parent escapes repository: ${current}`);
+    await assertDirectoryRecord(root, { directory, identity: identity(existing), label: "prompt guide output parent" });
+    if (!plan.records.some((record) => record.directory === directory)) {
+      plan.records.push(await directoryRecord(root, directory, "prompt guide output parent"));
+    }
   }
 }
 
-async function writeAtomically(target, contents) {
-  const temporary = path.join(path.dirname(target), `.${path.basename(target)}.prompt-guides-${randomUUID()}`);
-  await writeFile(temporary, contents, "utf8");
+async function writeExclusiveStageFile(stage, contents) {
+  const flags = fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY | (fsConstants.O_NOFOLLOW ?? 0);
+  const handle = await open(stage, flags, 0o600);
   try {
-    await rename(temporary, target);
+    await handle.writeFile(contents, "utf8");
+  } finally {
+    await handle.close();
+  }
+  const stats = await lstat(stage);
+  if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`prompt guide stage is not a regular file: ${stage}`);
+}
+
+async function removeCreatedDirectories(createdDirectories) {
+  const errors = [];
+  for (const record of [...createdDirectories].reverse()) {
+    try {
+      const stats = await lstat(record.directory).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+      if (!stats || !stats.isDirectory() || stats.isSymbolicLink() || !sameIdentity(record.identity, identity(stats))) continue;
+      await rmdir(record.directory);
+    } catch (error) {
+      if (error?.code !== "ENOTEMPTY") errors.push(error);
+    }
+  }
+  return errors;
+}
+
+async function removeStageRoot(stageRoot) {
+  const stats = await lstat(stageRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (!stats) return;
+  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`prompt guide stage root is unsafe: ${stageRoot}`);
+  await rm(stageRoot, { recursive: true, force: true });
+}
+
+async function invokeRenameHook(hooks, operation) {
+  if (hooks?.beforeRename) await hooks.beforeRename(operation);
+}
+
+async function rollbackPromotion(root, plans, createdDirectories, stageRoot) {
+  const errors = [];
+  for (const plan of [...plans].reverse()) {
+    try {
+      if (!plan.published && !plan.backedUp) continue;
+      await assertTargetStable(root, { ...plan, targetIdentity: null });
+      if (plan.published) await rm(plan.target, { force: true });
+      if (plan.backedUp) await rename(plan.backup, plan.target);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  try {
+    await removeStageRoot(stageRoot);
   } catch (error) {
-    await rm(temporary, { force: true }).catch(() => {});
+    errors.push(error);
+  }
+  errors.push(...await removeCreatedDirectories(createdDirectories));
+  return errors;
+}
+
+async function promoteOutputBatch(root, outputs, hooks) {
+  const plans = [];
+  for (const [relative, contents] of outputs) plans.push(await prepareOutputTarget(root, relative, contents));
+  for (const plan of plans) await assertTargetStable(root, plan);
+  const stageRoot = path.join(root, `.prompt-guides-stage-${randomUUID()}`);
+  await mkdir(stageRoot, { mode: 0o700 });
+  const createdDirectories = [];
+  try {
+    for (const [index, plan] of plans.entries()) {
+      plan.stage = path.join(stageRoot, `${index}.stage`);
+      plan.backup = path.join(stageRoot, `${index}.backup`);
+      await writeExclusiveStageFile(plan.stage, plan.contents);
+    }
+    for (const plan of plans) await ensureTargetParents(root, plan, createdDirectories);
+    for (const plan of plans) await assertTargetStable(root, plan);
+    if (hooks?.beforePublish) await hooks.beforePublish();
+    for (const plan of plans) await assertTargetStable(root, plan);
+
+    for (const [index, plan] of plans.entries()) {
+      await assertTargetStable(root, plan);
+      if (plan.existed) {
+        await invokeRenameHook(hooks, { phase: "backup", index, target: plan.target });
+        await rename(plan.target, plan.backup);
+        plan.backedUp = true;
+      }
+      await invokeRenameHook(hooks, { phase: "publish", index, target: plan.target });
+      await rename(plan.stage, plan.target);
+      plan.published = true;
+    }
+    await removeStageRoot(stageRoot);
+  } catch (error) {
+    const recoveryErrors = await rollbackPromotion(root, plans, createdDirectories, stageRoot);
+    if (recoveryErrors.length > 0) throw new AggregateError([error, ...recoveryErrors], "prompt guide promotion failed and rollback encountered errors");
     throw error;
   }
 }
@@ -197,7 +320,7 @@ async function writeCheckFiles(root, outputs) {
   }
 }
 
-export async function buildPromptGuides({ repoRoot, check = false, __testCatalog } = {}) {
+export async function buildPromptGuides({ repoRoot, check = false, __testCatalog, __testHooks } = {}) {
   const canonicalRepoRoot = await assertSafeDirectory(path.resolve(repoRoot), "repository root");
   const catalog = __testCatalog ?? await loadPromptTemplateCatalog({ repoRoot: canonicalRepoRoot });
   const outputs = await buildOutputPlan(catalog, canonicalRepoRoot, { includeManaged: !__testCatalog });
@@ -207,7 +330,9 @@ export async function buildPromptGuides({ repoRoot, check = false, __testCatalog
     try {
       await writeCheckFiles(temp.root, outputs);
       for (const [relative] of outputs) {
-        const { target } = await assertSafeTarget(canonicalRepoRoot, relative, { requireExisting: true });
+        const { target } = await prepareOutputTarget(canonicalRepoRoot, relative, "");
+        const stats = await lstat(target).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+        if (!stats) throw new Error(`missing generated prompt guide: ${relative}`);
         const temporary = joinWithin(temp.root, relative, "temporary prompt guide output");
         const [expected, actual] = await Promise.all([readFile(temporary), readFile(target)]);
         if (!expected.equals(actual)) throw new Error(`generated prompt guide differs: ${relative}`);
@@ -216,14 +341,7 @@ export async function buildPromptGuides({ repoRoot, check = false, __testCatalog
       await cleanupGuardedTempRoot(temp);
     }
   } else {
-    const targets = [];
-    for (const [relative, contents] of outputs) {
-      await ensureSafeTargetParents(canonicalRepoRoot, relative);
-      targets.push({ ...(await assertSafeTarget(canonicalRepoRoot, relative)), contents });
-    }
-    for (const { target, contents } of targets) {
-      await writeAtomically(target, contents);
-    }
+    await promoteOutputBatch(canonicalRepoRoot, outputs, __testHooks);
   }
 
   return {

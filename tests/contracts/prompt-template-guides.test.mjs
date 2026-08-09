@@ -83,6 +83,14 @@ test("prompt guide library publishes the complete deterministic card graph", asy
     assert.ok(body.includes(entry.diagram_binding.id), `${entry.id} diagram binding`);
     assert.ok(body.includes(expectedNamespace), `${entry.id} CLI namespace`);
   }
+
+  for (const entry of catalog.entries.filter((candidate) => candidate.kind === "recipe")) {
+    const body = await readFile(path.join(root, entry.source_references[0]), "utf8");
+    const markerId = `${products.get(entry.product)}:recipe:${entry.id.split(":").at(-1)}`;
+    const escaped = markerId.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+    assert.equal(count(body, new RegExp(`<!-- PROMPT-TEMPLATES:START ${escaped} -->`, "gu")), 1, `${entry.id} start marker`);
+    assert.equal(count(body, new RegExp(`<!-- PROMPT-TEMPLATES:END ${escaped} -->`, "gu")), 1, `${entry.id} end marker`);
+  }
 });
 
 test("rendered cards reject chain, result, namespace, reviewer, and diagram mutations", async () => {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,6 +8,7 @@ import {
   renderPromptCard,
   renderPromptLibrary,
   replaceManagedSection,
+  validateRenderedPromptCard,
 } from "../../tooling/lib/prompt-guides.mjs";
 import { buildPromptGuides } from "../../tooling/build-prompt-guides.mjs";
 
@@ -92,6 +93,18 @@ test("renderPromptCard emits the fixed readable order and exactly five text bloc
   assert.match(markdown, /#### 승인 경계[\s\S]*#### 보류 조건[\s\S]*#### 안전 경계/u);
 });
 
+test("renderPromptCard validates five dynamically fenced text blocks", () => {
+  const entry = validSkillEntry();
+  entry.app_prompt.example = "@Game Design Studio keep ``` and ```` inside this prompt.";
+  const markdown = renderPromptCard(entry);
+  assert.match(markdown, /^`````text$/mu, "the outer fence must exceed the longest prompt fence");
+  assert.doesNotThrow(() => validateRenderedPromptCard(entry, markdown));
+  assert.throws(
+    () => validateRenderedPromptCard(entry, markdown.replace(/^`````$/mu, "```")),
+    /matching text fence/u,
+  );
+});
+
 test("renderPromptLibrary keeps cards in stable product, skill, level and ID order", () => {
   const catalog = {
     entries: [
@@ -109,18 +122,26 @@ test("renderPromptLibrary keeps cards in stable product, skill, level and ID ord
 });
 
 test("managed sections require one exact ordered marker pair", () => {
-  assert.throws(() => replaceManagedSection("no markers", "studio:vision", "new"), /exactly one/u);
+  assert.throws(() => replaceManagedSection("no markers", "studio:vision", "new"), /exactly one|mismatched/u);
   assert.throws(
     () => replaceManagedSection("<!-- PROMPT-TEMPLATES:START studio:vision --><!-- PROMPT-TEMPLATES:START studio:vision --><!-- PROMPT-TEMPLATES:END studio:vision -->", "studio:vision", "new"),
-    /exactly one/u,
+    /exactly one|mismatched/u,
   );
   assert.throws(
     () => replaceManagedSection("<!-- PROMPT-TEMPLATES:END studio:vision --><!-- PROMPT-TEMPLATES:START studio:vision -->", "studio:vision", "new"),
-    /ordered/u,
+    /ordered|mismatched/u,
   );
   assert.equal(
     replaceManagedSection("before\n<!-- PROMPT-TEMPLATES:START studio:vision -->\nstale\n<!-- PROMPT-TEMPLATES:END studio:vision -->\nafter", "studio:vision", "fresh\nbody"),
     "before\n<!-- PROMPT-TEMPLATES:START studio:vision -->\nfresh\nbody\n<!-- PROMPT-TEMPLATES:END studio:vision -->\nafter",
+  );
+  assert.throws(
+    () => replaceManagedSection("<!-- PROMPT-TEMPLATES:START studio:vision -->\n<!-- PROMPT-TEMPLATES:END studio:other -->\n<!-- PROMPT-TEMPLATES:END studio:vision -->", "studio:vision", "fresh"),
+    /mismatched/u,
+  );
+  assert.throws(
+    () => replaceManagedSection("<!-- PROMPT-TEMPLATES:START game-design-studio:recipe:new-game-gdd -->\n<!-- PROMPT-TEMPLATES:END game-design-studio:recipe:other -->", "game-design-studio:recipe:new-game-gdd", "fresh"),
+    /mismatched/u,
   );
 });
 
@@ -156,4 +177,72 @@ test("buildPromptGuides rejects an incomplete graph before it writes any target"
     () => readFile(path.join(repoRoot, "guides", "prompt-templates", "README.md")),
     { code: "ENOENT" },
   );
+});
+
+test("buildPromptGuides rolls back every target and removes temporary paths when a promotion rename fails", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const libraryPath = path.join(repoRoot, "guides", "prompt-templates", "README.md");
+  const studioProjection = path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json");
+  const careerProjection = path.join(repoRoot, "products", "game-design-career", "plugin", "references", "prompt-templates.json");
+  await Promise.all([
+    writeFile(libraryPath, "old library\n"),
+    writeFile(studioProjection, "old studio projection\n"),
+    writeFile(careerProjection, "old career projection\n"),
+  ]);
+  let renameCount = 0;
+
+  await assert.rejects(
+    () => buildPromptGuides({
+      repoRoot,
+      __testCatalog: catalog,
+      __testHooks: {
+        beforeRename: () => {
+          renameCount += 1;
+          if (renameCount === 3) throw new Error("injected promotion rename failure");
+        },
+      },
+    }),
+    /injected promotion rename failure/u,
+  );
+
+  assert.equal(await readFile(libraryPath, "utf8"), "old library\n");
+  assert.equal(await readFile(studioProjection, "utf8"), "old studio projection\n");
+  assert.equal(await readFile(careerProjection, "utf8"), "old career projection\n");
+  await assert.rejects(() => readFile(path.join(repoRoot, "guides", "prompt-templates", "studio", "define-game-vision.md")), { code: "ENOENT" });
+  assert.deepEqual((await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-")), []);
+  assert.deepEqual((await readdir(path.join(repoRoot, "guides", "prompt-templates"))).filter((name) => name === "studio"), []);
+});
+
+test("buildPromptGuides rejects a parent symlink swap before it can publish outside the repository", async (t) => {
+  const repoRoot = await temporaryRepo(t);
+  const catalog = { entries: [validSkillEntry()] };
+  const promptDirectory = path.join(repoRoot, "guides", "prompt-templates");
+  const preservedDirectory = path.join(repoRoot, "preserved-prompt-templates");
+  const outside = path.join(repoRoot, "outside");
+  const studioProjection = path.join(repoRoot, "products", "game-design-studio", "plugin", "references", "prompt-templates.json");
+  await writeFile(studioProjection, "old studio projection\n");
+  await mkdir(outside);
+
+  try {
+    await assert.rejects(
+      () => buildPromptGuides({
+        repoRoot,
+        __testCatalog: catalog,
+        __testHooks: {
+          beforePublish: async () => {
+            await rename(promptDirectory, preservedDirectory);
+            await symlink(outside, promptDirectory);
+          },
+        },
+      }),
+      /identity changed|symlink/u,
+    );
+    assert.deepEqual(await readdir(outside), []);
+    assert.equal(await readFile(studioProjection, "utf8"), "old studio projection\n");
+    assert.deepEqual((await readdir(repoRoot)).filter((name) => name.startsWith(".prompt-guides-")), []);
+  } finally {
+    await rm(promptDirectory, { recursive: true, force: true });
+    await rename(preservedDirectory, promptDirectory).catch(() => {});
+  }
 });
