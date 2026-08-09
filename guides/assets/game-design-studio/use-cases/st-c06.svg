@@ -1,70 +1,65 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="캐릭터와 스킬 및 전투와 몬스터 설계의 흐름">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="캐릭터와 스킬 및 전투와 몬스터 설계의 흐름" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
   <title>전투와 몬스터 설계</title>
-  <desc>캐릭터와 스킬 및 전투와 몬스터 설계의 흐름</desc>
+  <desc>캐릭터와 스킬 및 전투와 몬스터 설계의 흐름. 캐릭터·스킬·몬스터를 반응 가능한 전투 계약으로 만듭니다.. steps[1].stage: 입력; steps[1].label: 캐릭터 역할; steps[1].detail: 전투 목적을 정합니다.; steps[2].stage: 전문 스킬; steps[2].label: 전투 설계; steps[2].detail: 전문 판단을 적용합니다.; steps[3].stage: Canonical Artifact; steps[3].label: 전투 콘텐츠; steps[3].detail: 근거와 가정을 남깁니다.; steps[4].stage: 검토; steps[4].label: 설계 검토; steps[4].detail: owner와 경계를 확인합니다.; steps[5].stage: 출력; steps[5].label: 검토 finding; steps[5].detail: 다음 artifact로 넘깁니다.; semantic.specialist: design-game-content; semantic.outputs[1]: character-skill-combat-monster; semantic.outputs[2]: system-specification; semantic.outputs[3]: game-design-review; semantic.review.skill: review-game-design; semantic.review.condition: named owner가 근거·가정·blocker를 검토</desc>
   <defs>
-    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto">
       <path d="M 2 2 L 10 6 L 2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round"/>
     </marker>
   </defs>
   <rect width="1400" height="900" fill="#F7FAFD"/>
-  <rect x="52" y="52" width="8" height="138" rx="4" fill="#1F6FB2"/>
-  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">ST-C06 · COMPETENCY</text>
-  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">전투와 몬스터 설계</text>
-  <text x="88" y="192" fill="#5B6675" font-size="24">캐릭터·스킬·몬스터를 반응 가능한 전투 계약으로 만듭니다.</text>
+  <rect x="52" y="52" width="8" height="168" rx="4" fill="#1F6FB2"/>
+  <text data-text-role="eyebrow" x="88" y="86" text-anchor="start" dominant-baseline="central" fill="#1F6FB2" font-size="18" font-weight="700"><tspan x="88" dy="0">ST-C06 · COMPETENCY</tspan></text>
+  <text data-text-role="title" x="88" y="141" text-anchor="start" dominant-baseline="central" fill="#1F2733" font-size="42" font-weight="700"><tspan x="88" dy="0">전투와 몬스터 설계</tspan></text>
+  <text data-text-role="description" x="88" y="218" text-anchor="start" dominant-baseline="central" fill="#5B6675" font-size="18" font-weight="400"><tspan x="88" dy="0">캐릭터·스킬·몬스터를 반응 가능한 전투 계약으로 만듭니다.</tspan></text>
   <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>
-  <path d="M 312 450 L 323 474" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 567 474 L 578 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 822 450 L 833 474" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 1077 474 L 1088 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 312 450 L 323 474" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 567 474 L 578 450" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 822 450 L 833 474" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 1077 474 L 1088 450" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <g aria-label="읽기 순서 1: 캐릭터 역할">
     <rect x="80" y="342" width="220" height="216" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
     <rect x="108" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
-    <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
-    <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">입력</text>
-      <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">캐릭터 역할</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">전투 목적을 정합니다</text>
-      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">.</text>
+    <text data-text-role="caption" x="134" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="134" dy="0">1</tspan></text>
+    <text data-text-role="caption" x="168" y="390" text-anchor="start" dominant-baseline="central" fill="#124267" font-size="13" font-weight="700"><tspan x="168" dy="0">입력</tspan></text>
+    <text data-text-role="card-title" x="108" y="438" text-anchor="start" dominant-baseline="central" fill="#124267" font-size="20" font-weight="700"><tspan x="108" dy="0">캐릭터 역할</tspan></text>
+    <text data-text-role="card-body" x="108" y="497.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="108" dy="0">전투 목적을</tspan><tspan x="108" dy="19">정합니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 2: 전투 설계">
     <rect x="335" y="366" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="363" y="394" width="52" height="32" rx="16" fill="#534AB7"/>
-    <text x="389" y="416" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
-    <text x="423" y="416" fill="#3C3489" font-size="14" font-weight="700">전문 스킬</text>
-      <text x="363" y="462" fill="#3C3489" font-size="22" font-weight="700">전투 설계</text>
-      <text x="363" y="524" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">design-game-content</text>
+    <text data-text-role="caption" x="389" y="411" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="389" dy="0">2</tspan></text>
+    <text data-text-role="caption" x="423" y="414" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="700"><tspan x="423" dy="0">전문 스킬</tspan></text>
+    <text data-text-role="card-title" x="363" y="462" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="20" font-weight="700"><tspan x="363" dy="0">전투 설계</tspan></text>
+    <text data-text-role="card-body" x="363" y="521.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="363" dy="0">전문 판단을</tspan><tspan x="363" dy="19">적용합니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 3: 전투 콘텐츠">
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="618" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
-    <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
-    <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">Canonical Artifact</text>
-      <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">전투 콘텐츠</text>
-      <text x="618" y="500" fill="#354152" font-size="8" textLength="164" lengthAdjust="spacingAndGlyphs">character-skill-combat-monster</text>
-      <text x="618" y="516" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">system-specification</text>
-      <text x="618" y="532" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">game-design-review</text>
+    <text data-text-role="caption" x="644" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="644" dy="0">3</tspan></text>
+    <text data-text-role="caption" x="678" y="382.5" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="13" font-weight="700"><tspan x="678" dy="0">Canonical</tspan><tspan x="678" dy="15">Artifact</tspan></text>
+    <text data-text-role="card-title" x="618" y="438" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="20" font-weight="700"><tspan x="618" dy="0">전투 콘텐츠</tspan></text>
+    <text data-text-role="card-body" x="618" y="497.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="618" dy="0">근거와 가정을</tspan><tspan x="618" dy="19">남깁니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 4: 설계 검토">
     <rect x="845" y="366" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="873" y="394" width="52" height="32" rx="16" fill="#A75B00"/>
-    <text x="899" y="416" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
-    <text x="933" y="416" fill="#814600" font-size="14" font-weight="700">검토</text>
-      <text x="873" y="462" fill="#814600" font-size="22" font-weight="700">설계 검토</text>
-      <text x="873" y="524" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">review-game-design</text>
+    <text data-text-role="caption" x="899" y="411" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="899" dy="0">4</tspan></text>
+    <text data-text-role="caption" x="933" y="414" text-anchor="start" dominant-baseline="central" fill="#814600" font-size="13" font-weight="700"><tspan x="933" dy="0">검토</tspan></text>
+    <text data-text-role="card-title" x="873" y="462" text-anchor="start" dominant-baseline="central" fill="#814600" font-size="20" font-weight="700"><tspan x="873" dy="0">설계 검토</tspan></text>
+    <text data-text-role="card-body" x="873" y="521.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="873" dy="0">owner와 경계를</tspan><tspan x="873" dy="19">확인합니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 5: 검토 finding">
     <rect x="1100" y="342" width="220" height="216" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
     <rect x="1128" y="370" width="52" height="32" rx="16" fill="#A52B5D"/>
-    <text x="1154" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">5</text>
-    <text x="1188" y="392" fill="#7A1942" font-size="14" font-weight="700">출력</text>
-      <text x="1128" y="438" fill="#7A1942" font-size="22" font-weight="700">검토 finding</text>
-      <text x="1128" y="500" fill="#354152" font-size="18" font-weight="400">다음 artifact</text>
-      <text x="1128" y="526" fill="#354152" font-size="18" font-weight="400">로 넘깁니다.</text>
+    <text data-text-role="caption" x="1154" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="1154" dy="0">5</tspan></text>
+    <text data-text-role="caption" x="1188" y="390" text-anchor="start" dominant-baseline="central" fill="#7A1942" font-size="13" font-weight="700"><tspan x="1188" dy="0">출력</tspan></text>
+    <text data-text-role="card-title" x="1128" y="426.5" text-anchor="start" dominant-baseline="central" fill="#7A1942" font-size="20" font-weight="700"><tspan x="1128" dy="0">검토</tspan><tspan x="1128" dy="23">finding</tspan></text>
+    <text data-text-role="card-body" x="1128" y="488" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="1128" dy="0">다음</tspan><tspan x="1128" dy="19">artifact로</tspan><tspan x="1128" dy="19">넘깁니다.</tspan></text>
   </g>
-  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
-  <text x="72" y="650" fill="#354152" font-size="9">specialist: design-game-content</text>
-  <text x="72" y="662" fill="#354152" font-size="9">outputs: character-skill-combat-monster · system-specification · game-design-review</text>
-  <text x="72" y="674" fill="#354152" font-size="9">review: review-game-design</text>
-  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
-  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
-  <text x="84" y="798" fill="#1F2733" font-size="24">combat 가설은 prototype 관찰과 사람 검토가 있어야 확정됩니다.</text>
+  <rect x="52" y="636" width="1296" height="166" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
+  <text data-text-role="semantic-rail" x="72" y="650" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">specialist: design-game-content</tspan></text>
+  <text data-text-role="semantic-rail" x="72" y="664" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">outputs: character-skill-combat-monster ·</tspan><tspan x="72" dy="14">system-specification · game-design-review</tspan></text>
+  <text data-text-role="semantic-rail" x="72" y="692" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">review: review-game-design — named owner가</tspan><tspan x="72" dy="14">근거·가정·blocker를 검토</tspan></text>
+  <rect x="52" y="814" width="1296" height="70" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
+  <text data-text-role="footer" x="84" y="850" text-anchor="start" dominant-baseline="central" fill="#1F2733" font-size="18" font-weight="400"><tspan x="84" dy="0">combat 가설은 prototype 관찰과 사람 검토가 있어야 확정됩니다.</tspan></text>
 </svg>

@@ -1,83 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
   <title>로그라이트 run 판단</title>
-  <desc>PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름</desc>
+  <desc>PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름. run 선택·실패 원인·메타 성장의 범위를 결정합니다.. steps[1].stage: 제약; steps[1].label: run 목표; steps[1].detail: 반복 목표를 정합니다.; steps[2].stage: 선택지; steps[2].label: 대안 두 가지; steps[2].detail: 보호와 확장을 비교합니다.; steps[3].stage: 판단 기준; steps[3].label: 실패 원인; steps[3].detail: telegraph miss를 기록합니다.; steps[4].stage: 결정; steps[4].label: 메타 성장; steps[4].detail: scope 근거를 검토합니다.; steps[5].stage: 검증; steps[5].label: 검증 계획; steps[5].detail: 관찰과 evidence를 남깁니다.; semantic.specialist: design-game-content; semantic.outputs[1]: core-motivation-loop; semantic.outputs[2]: character-skill-combat-monster; semantic.outputs[3]: production-scope-risk; semantic.validation: run failure prototype와 scope evidence; semantic.branches[1]: 위험 경로; semantic.branches[2]: 안전 보상</desc>
   <defs>
-    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto">
       <path d="M 2 2 L 10 6 L 2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round"/>
     </marker>
   </defs>
   <rect width="1400" height="900" fill="#F7FAFD"/>
-  <rect x="52" y="52" width="8" height="138" rx="4" fill="#1F6FB2"/>
-  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">ST-G05 · CONCEPT</text>
-  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">로그라이트 run 판단</text>
-  <text x="88" y="192" fill="#5B6675" font-size="24">run 선택·실패 원인·메타 성장의 범위를 결정합니다.</text>
+  <rect x="52" y="52" width="8" height="168" rx="4" fill="#1F6FB2"/>
+  <text data-text-role="eyebrow" x="88" y="86" text-anchor="start" dominant-baseline="central" fill="#1F6FB2" font-size="18" font-weight="700"><tspan x="88" dy="0">ST-G05 · CONCEPT</tspan></text>
+  <text data-text-role="title" x="88" y="141" text-anchor="start" dominant-baseline="central" fill="#1F2733" font-size="42" font-weight="700"><tspan x="88" dy="0">로그라이트 run 판단</tspan></text>
+  <text data-text-role="description" x="88" y="218" text-anchor="start" dominant-baseline="central" fill="#5B6675" font-size="18" font-weight="400"><tspan x="88" dy="0">run 선택·실패 원인·메타 성장의 범위를 결정합니다.</tspan></text>
   <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>
-  <path d="M 292 445 L 308 445" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 1012 445 L 1028 362" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 1140 442 L 1140 453" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path class="decision-branch" d="M 532 445 L 548 328" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 292 445 L 308 445" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 1012 445 L 1028 362" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 1140 442 L 1140 453" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path class="decision-branch" d="M 532 445 L 548 328" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <g class="decision-branch" aria-label="선택지 1: 위험 경로">
     <rect x="560" y="298" width="180" height="60" rx="14" fill="#F8F6FF" stroke="#534AB7" stroke-width="2"/>
-    <text x="574" y="323" fill="#3C3489" font-size="15" font-weight="700">위험 경로</text>
-    <text x="574" y="344" fill="#354152" font-size="13">보상 가설 검증</text>
+    <text data-text-role="card-body" x="574" y="318" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="15" font-weight="700"><tspan x="574" dy="0">위험 경로</tspan></text>
+    <text data-text-role="caption" x="574" y="341" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="574" dy="0">보상 가설 검증</tspan></text>
   </g>
-  <path class="decision-branch" d="M 752 328 L 788 445" fill="none" stroke="#0F7A5F" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path class="decision-branch" d="M 532 445 L 548 535" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path class="decision-branch" d="M 752 328 L 788 445" fill="none" stroke="#0F7A5F" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path class="decision-branch" d="M 532 445 L 548 535" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <g class="decision-branch" aria-label="선택지 2: 안전 보상">
     <rect x="560" y="505" width="180" height="60" rx="14" fill="#F8F6FF" stroke="#534AB7" stroke-width="2"/>
-    <text x="574" y="530" fill="#3C3489" font-size="15" font-weight="700">안전 보상</text>
-    <text x="574" y="551" fill="#354152" font-size="13">run 범위 보호</text>
+    <text data-text-role="card-body" x="574" y="525" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="15" font-weight="700"><tspan x="574" dy="0">안전 보상</tspan></text>
+    <text data-text-role="caption" x="574" y="548" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="574" dy="0">run 범위 보호</tspan></text>
   </g>
-  <path class="decision-branch" d="M 752 535 L 788 445" fill="none" stroke="#0F7A5F" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <text x="800" y="354" fill="#0F7A5F" font-size="14" font-weight="700">재결합: 판단 기준</text>
+  <path class="decision-branch" d="M 752 535 L 788 445" fill="none" stroke="#0F7A5F" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <text data-text-role="caption" x="800" y="354" text-anchor="start" dominant-baseline="central" fill="#0F7A5F" font-size="13" font-weight="700"><tspan x="800" dy="0">재결합: 판단 기준</tspan></text>
   <g aria-label="읽기 순서 1: run 목표">
     <rect x="80" y="370" width="200" height="150" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
     <rect x="108" y="398" width="52" height="32" rx="16" fill="#1F6FB2"/>
-    <text x="134" y="420" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
-    <text x="168" y="420" fill="#124267" font-size="14" font-weight="700">제약</text>
-      <text x="108" y="450" fill="#124267" font-size="17" font-weight="700">run 목표</text>
-      <text x="108" y="488" fill="#354152" font-size="13" font-weight="400">반복 목표를 정합니다</text>
-      <text x="108" y="509" fill="#354152" font-size="13" font-weight="400">.</text>
+    <text data-text-role="caption" x="134" y="415" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="134" dy="0">1</tspan></text>
+    <text data-text-role="caption" x="168" y="418" text-anchor="start" dominant-baseline="central" fill="#124267" font-size="13" font-weight="700"><tspan x="168" dy="0">제약</tspan></text>
+    <text data-text-role="card-title" x="108" y="472" text-anchor="start" dominant-baseline="central" fill="#124267" font-size="20" font-weight="700"><tspan x="108" dy="0">run 목표</tspan></text>
+
   </g>
   <g aria-label="읽기 순서 2: 위험 경로">
     <rect x="320" y="370" width="200" height="150" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="348" y="398" width="52" height="32" rx="16" fill="#534AB7"/>
-    <text x="374" y="420" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
-    <text x="408" y="420" fill="#3C3489" font-size="14" font-weight="700">선택지</text>
-      <text x="348" y="450" fill="#3C3489" font-size="17" font-weight="700">위험 경로</text>
-      <text x="348" y="488" fill="#354152" font-size="13" font-weight="400">안전 보상</text>
+    <text data-text-role="caption" x="374" y="415" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="374" dy="0">2</tspan></text>
+    <text data-text-role="caption" x="408" y="418" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="700"><tspan x="408" dy="0">선택지</tspan></text>
+    <text data-text-role="card-title" x="348" y="472" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="20" font-weight="700"><tspan x="348" dy="0">위험 경로</tspan></text>
+
   </g>
   <g aria-label="읽기 순서 3: 실패 원인">
     <rect x="800" y="370" width="200" height="150" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="828" y="398" width="52" height="32" rx="16" fill="#0F7A5F"/>
-    <text x="854" y="420" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
-    <text x="888" y="420" fill="#085041" font-size="14" font-weight="700">판단 기준</text>
-      <text x="828" y="450" fill="#085041" font-size="17" font-weight="700">실패 원인</text>
-      <text x="828" y="488" fill="#354152" font-size="13" font-weight="400">telegraph m</text>
-      <text x="828" y="509" fill="#354152" font-size="13" font-weight="400">iss를 기록합니다.</text>
+    <text data-text-role="caption" x="854" y="415" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="854" dy="0">3</tspan></text>
+    <text data-text-role="caption" x="888" y="418" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="13" font-weight="700"><tspan x="888" dy="0">판단 기준</tspan></text>
+    <text data-text-role="card-title" x="828" y="472" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="20" font-weight="700"><tspan x="828" dy="0">실패 원인</tspan></text>
+
   </g>
   <g aria-label="읽기 순서 4: 메타 성장">
     <rect x="1040" y="282" width="200" height="160" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="1068" y="310" width="52" height="32" rx="16" fill="#A75B00"/>
-    <text x="1094" y="332" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
-    <text x="1128" y="332" fill="#814600" font-size="14" font-weight="700">결정</text>
-      <text x="1068" y="362" fill="#814600" font-size="17" font-weight="700">메타 성장</text>
-      <text x="1068" y="400" fill="#354152" font-size="13" font-weight="400">scope 근거를 검</text>
-      <text x="1068" y="421" fill="#354152" font-size="13" font-weight="400">토합니다.</text>
+    <text data-text-role="caption" x="1094" y="327" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="1094" dy="0">4</tspan></text>
+    <text data-text-role="caption" x="1128" y="330" text-anchor="start" dominant-baseline="central" fill="#814600" font-size="13" font-weight="700"><tspan x="1128" dy="0">결정</tspan></text>
+    <text data-text-role="card-title" x="1068" y="384" text-anchor="start" dominant-baseline="central" fill="#814600" font-size="20" font-weight="700"><tspan x="1068" dy="0">메타 성장</tspan></text>
+
   </g>
   <g aria-label="읽기 순서 5: 검증">
     <rect x="1040" y="465" width="200" height="160" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
     <rect x="1068" y="493" width="52" height="32" rx="16" fill="#A52B5D"/>
-    <text x="1094" y="515" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">5</text>
-    <text x="1128" y="515" fill="#7A1942" font-size="14" font-weight="700">검증</text>
-      <text x="1068" y="545" fill="#7A1942" font-size="17" font-weight="700">검증</text>
-      <text x="1068" y="583" fill="#354152" font-size="7" textLength="164" lengthAdjust="spacingAndGlyphs">run failure prototype와 scope evidence</text>
+    <text data-text-role="caption" x="1094" y="510" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="1094" dy="0">5</tspan></text>
+    <text data-text-role="caption" x="1128" y="513" text-anchor="start" dominant-baseline="central" fill="#7A1942" font-size="13" font-weight="700"><tspan x="1128" dy="0">검증</tspan></text>
+    <text data-text-role="card-title" x="1068" y="567" text-anchor="start" dominant-baseline="central" fill="#7A1942" font-size="20" font-weight="700"><tspan x="1068" dy="0">검증</tspan></text>
+
   </g>
-  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
-  <text x="72" y="650" fill="#354152" font-size="9">specialist: design-game-content</text>
-  <text x="72" y="662" fill="#354152" font-size="9">outputs: core-motivation-loop · character-skill-combat-monster · production-scope-risk</text>
-  <text x="72" y="674" fill="#354152" font-size="9">validation: run failure prototype와 scope evidence</text>
-  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
-  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
-  <text x="84" y="798" fill="#1F2733" font-size="24">난이도와 콘텐츠 범위는 입력 장치 관찰 및 production 검토로 제한합니다.</text>
+  <rect x="52" y="636" width="1296" height="166" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
+  <text data-text-role="semantic-rail" x="72" y="650" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">specialist: design-game-content</tspan></text>
+  <text data-text-role="semantic-rail" x="72" y="664" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">outputs: core-motivation-loop ·</tspan><tspan x="72" dy="14">character-skill-combat-monster ·</tspan><tspan x="72" dy="14">production-scope-risk</tspan></text>
+  <text data-text-role="semantic-rail" x="72" y="706" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">validation: run failure prototype와 scope</tspan><tspan x="72" dy="14">evidence</tspan></text>
+  <rect x="52" y="814" width="1296" height="70" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
+  <text data-text-role="footer" x="84" y="850" text-anchor="start" dominant-baseline="central" fill="#1F2733" font-size="18" font-weight="400"><tspan x="84" dy="0">난이도와 콘텐츠 범위는 입력 장치 관찰 및 production 검토로 제한합니다.</tspan></text>
 </svg>

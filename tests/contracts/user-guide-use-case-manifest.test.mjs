@@ -18,7 +18,7 @@ import {
   validateUserGuides,
 } from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
-import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
 import {
   STUDIO_CANONICAL_ROUTE_ARRAY_POLICY,
   STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT,
@@ -3378,6 +3378,22 @@ test("each audience route preserves its executable case, output, review, and res
     assert.equal(codeValue(cardFields.get("재개 요청"), `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
     assert.ok(cardFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
   }
+});
+
+test("product use-case SVG contract rejects glyph distortion and unreadable text with repair instructions", async () => {
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const source = sources.find(({ id }) => id === "ca-c01");
+  const svg = renderDiagramSvg(source);
+
+  assert.doesNotThrow(() => validateUseCaseDiagramSvg(svg, source.id));
+  assert.throws(
+    () => validateUseCaseDiagramSvg(svg.replace(/(data-text-role="card-body"[^>]*font-size=")15/u, "$112"), source.id),
+    /ca-c01.*card-body.*repair source layout\/wrapping, regenerate SVG, rerender 2× PNG, then re-inspect/u,
+  );
+  assert.throws(
+    () => validateUseCaseDiagramSvg(svg.replace("<text", '<text textLength="164" lengthAdjust="spacingAndGlyphs"'), source.id),
+    /ca-c01.*textLength.*repair source layout\/wrapping, regenerate SVG, rerender 2× PNG, then re-inspect/u,
+  );
 });
 
 test("audience diagrams register six complete source-linked learning paths", async () => {

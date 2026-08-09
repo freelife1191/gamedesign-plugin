@@ -81,6 +81,10 @@ function isCareerSource(source) {
   return source.scope === "game-design-career-use-case" || source.scope === "game-design-career-skill";
 }
 
+function isProductUseCaseSource(source) {
+  return source.scope === "game-design-studio-use-case" || source.scope === "game-design-career-use-case";
+}
+
 function assertStringArray(value, label) {
   if (!Array.isArray(value) || value.length === 0 || value.some((item) => !isNonemptyString(item))) {
     throw new TypeError(`${label} must contain nonempty strings`);
@@ -370,8 +374,230 @@ export function validateDiagramSource(source) {
   validateCareerSemanticContract(source);
 }
 
+const USE_CASE_REPAIR_INSTRUCTION = "repair source layout/wrapping, regenerate SVG, rerender 2× PNG, then re-inspect";
+
+function svgAttribute(attributes, name) {
+  const match = attributes.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "u"));
+  return match ? (match[1] ?? match[2]) : null;
+}
+
+export function validateUseCaseDiagramSvg(svg, id) {
+  if (!isNonemptyString(svg)) throw new TypeError("use-case SVG must be a nonempty string");
+  if (!isNonemptyString(id)) throw new TypeError("use-case SVG ID must be a nonempty string");
+  const fail = (role, issue) => {
+    throw new Error(`${id} use-case SVG ${role}: ${issue}; ${USE_CASE_REPAIR_INSTRUCTION}`);
+  };
+  if (/<style(?:\s|>)[^>]*>[\s\S]*?(?:font(?:-size|-stretch)?\s*:|font-size|font-stretch)[\s\S]*?<\/style>/iu.test(svg)) fail("style", "forbidden inherited typography rule");
+  if (/<(?:g|svg)\b[^>]*transform\s*=\s*(?:"[^"]*(?:scale|matrix|skew(?:X|Y)?)\s*\(|'[^']*(?:scale|matrix|skew(?:X|Y)?)\s*\()/iu.test(svg)) fail("ancestor", "forbidden glyph-scaling transform");
+  const minimumByRole = { title: 42, description: 18, "card-title": 20, "card-body": 15, caption: 13, "semantic-rail": 13, footer: 18, eyebrow: 18 };
+  for (const match of svg.matchAll(/<(text|tspan)\b([^>]*)>/gu)) {
+    const [, element, attributes] = match;
+    const role = svgAttribute(attributes, "data-text-role") ?? element;
+    for (const forbidden of ["textLength", "lengthAdjust", "font-stretch"]) {
+      if (new RegExp(`\\b${forbidden}\\s*=`, "u").test(attributes)) fail(role, `forbidden ${forbidden}`);
+    }
+    const transform = svgAttribute(attributes, "transform");
+    if (transform && /(?:scale|matrix|skew(?:X|Y)?)\s*\(/u.test(transform)) fail(role, "forbidden glyph-scaling transform");
+    const inlineStyle = svgAttribute(attributes, "style");
+    const className = svgAttribute(attributes, "class");
+    if (/(?:font(?:-size|-stretch)?|font-size|font-stretch)\s*:/iu.test(inlineStyle ?? "") || /(?:font(?:-size|-stretch)?|font-size|font-stretch)/iu.test(className ?? "")) {
+      fail(role, "forbidden inherited typography override");
+    }
+    if (element === "text" && !svgAttribute(attributes, "data-text-role")) fail("text", "missing data-text-role");
+    const rawFontSize = svgAttribute(attributes, "font-size");
+    if (element === "tspan" && rawFontSize !== null) fail("title", "forbidden tspan font-size override");
+    if (element === "text" && rawFontSize === null) fail(role, "missing explicit font-size");
+    if (rawFontSize === null) continue;
+    const fontSize = Number(rawFontSize);
+    if (!Number.isFinite(fontSize)) fail(role, `invalid font-size ${rawFontSize}`);
+    const minimum = minimumByRole[role] ?? 13;
+    if (fontSize < minimum) fail(role, `font-size ${fontSize} is below ${minimum}px`);
+  }
+}
+
+function wrapCjk(value, maxCharacters, maxLines) {
+  let characters = [...String(value).trim()];
+  const lines = [];
+  while (characters.length > 0 && lines.length < maxLines) {
+    if (characters.length <= maxCharacters) {
+      lines.push(characters.join(""));
+      characters = [];
+      break;
+    }
+    const candidate = characters.slice(0, maxCharacters).join("");
+    const spaceAt = candidate.lastIndexOf(" ");
+    const hyphenAt = candidate.lastIndexOf("-");
+    const nextBreak = characters.findIndex((character, index) => index > 0 && (character === " " || character === "-"));
+    const tokenLength = nextBreak === -1 ? characters.length : nextBreak;
+    const token = characters.slice(0, tokenLength).join("");
+    let cut = spaceAt > 0
+      ? spaceAt
+      : hyphenAt >= Math.floor(maxCharacters / 2) ? hyphenAt + 1
+        : /^[\x00-\x7F]+$/u.test(token) ? tokenLength : maxCharacters;
+    if (/^[A-Za-z0-9]$/u.test(characters[cut - 1] ?? "") && /^[A-Za-z0-9]$/u.test(characters[cut] ?? "")) {
+      let start = cut;
+      let end = cut;
+      while (start > 0 && /^[A-Za-z0-9]$/u.test(characters[start - 1])) start -= 1;
+      while (end < characters.length && /^[A-Za-z0-9]$/u.test(characters[end])) end += 1;
+      cut = start > 0 ? start : end;
+    }
+    lines.push(characters.slice(0, cut).join(""));
+    characters = characters.slice(cut);
+    while (characters[0] === " ") characters = characters.slice(1);
+  }
+  if (characters.length > 0) throw new Error(`text exceeds its ${maxLines}-line layout budget: ${value}`);
+  return lines.length > 0 ? lines : [""];
+}
+
+function accessibleSemanticDescription(source) {
+  const values = [];
+  const visit = (value, label = "") => {
+    if (typeof value === "string") values.push(`${label}: ${value}`);
+    else if (Array.isArray(value)) value.forEach((item, index) => visit(item, `${label}[${index + 1}]`));
+    else if (isObject(value)) Object.entries(value).forEach(([key, item]) => visit(item, label ? `${label}.${key}` : key));
+  };
+  visit(source.steps, "steps");
+  visit(source.semantic, "semantic");
+  return `${source.alt}. ${source.description}. ${values.join("; ")}`;
+}
+
+function wrappedText(value, { x, y, fill, fontSize, role, maxCharacters, maxLines = Number.POSITIVE_INFINITY, weight = 400, lineHeight = fontSize + 5, anchor = "start" }) {
+  const lines = wrapCjk(value, maxCharacters, maxLines);
+  const startY = y - ((lines.length - 1) * lineHeight) / 2;
+  const tspans = lines.map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : lineHeight}">${escapeXml(line)}</tspan>`).join("");
+  return `<text data-text-role="${role}" x="${x}" y="${startY}" text-anchor="${anchor}" dominant-baseline="central" fill="${fill}" font-size="${fontSize}" font-weight="${weight}">${tspans}</text>`;
+}
+
+function readableRailGroups(source) {
+  if (isCareerSource(source)) {
+    if (source.type === "decision-flow") {
+      return {
+        left: [
+          `role / stage: ${source.semantic.role} / ${source.semantic.stage}`,
+          `evidence / work: ${source.semantic.evidence} → ${source.semantic.owned_work}`,
+          `review / boundary: ${source.semantic.human_review} / ${source.semantic.boundary}`,
+          `outputs: ${source.semantic.outputs.join(" · ")}`,
+        ],
+        right: [
+          `routes: ${source.semantic.next_routes.map(({ condition, target }) => `${condition}→${target}`).join(" · ")}`,
+          `failure / preserve: ${source.semantic.failure} / ${source.semantic.preserve}`,
+          `confirm / resume: ${source.semantic.human_confirmation} / ${source.semantic.resume}`,
+          `next / condition: ${source.semantic.next_route} / ${source.semantic.next_condition}`,
+        ],
+      };
+    }
+    return {
+      left: [
+        `evidence / work: ${source.semantic.evidence} → ${source.semantic.owned_work}`,
+        `review / boundary: ${source.semantic.human_review} / ${source.semantic.boundary}`,
+        `outputs / next: ${source.semantic.outputs.join(" · ")} / ${source.semantic.next_route}`,
+      ],
+      right: [],
+    };
+  }
+  if (source.type === "design-pipeline") {
+    return { left: [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `review: ${source.semantic.review.skill} — ${source.semantic.review.condition}`], right: [] };
+  }
+  return { left: [`specialist: ${source.semantic.specialist}`, `outputs: ${source.semantic.outputs.join(" · ")}`, `validation: ${source.semantic.validation}`], right: [] };
+}
+
+function renderReadableUseCaseSvg(source) {
+  const cards = layoutFor(source.type, source.steps.length, source);
+  const isBranchedDecision = source.type === "decision-flow" && Array.isArray(source.branches) && source.branches.length >= 2;
+  const cardMarkup = source.steps.map((rawStep, index) => {
+    const step = visibleStep(source, rawStep, index);
+    const card = cards[index];
+    const colors = cardColor(index);
+    const compact = card.height <= 160;
+    const title = wrappedText(step.label, { x: card.x + 28, y: card.y + (compact ? 102 : 96), fill: colors.accent, fontSize: 20, role: "card-title", maxCharacters: 8, maxLines: 3, weight: 700, lineHeight: 23 });
+    const fullDetail = step.detail;
+    const detail = isBranchedDecision
+      ? ""
+      : wrappedText(fullDetail, { x: card.x + 28, y: card.y + 165, fill: "#354152", fontSize: 15, role: "card-body", maxCharacters: 11, maxLines: 3, lineHeight: 19 });
+    const stage = wrappedText(step.stage, { x: card.x + 88, y: card.y + 48, fill: colors.accent, fontSize: 13, role: "caption", maxCharacters: 14, maxLines: 2, weight: 700, lineHeight: 15 });
+    return [
+      `  <g aria-label="읽기 순서 ${index + 1}: ${escapeXml(step.label)}">`,
+      `    <rect x="${card.x}" y="${card.y}" width="${card.width}" height="${card.height}" rx="18" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="2"/>`,
+      `    <rect x="${card.x + 28}" y="${card.y + 28}" width="52" height="32" rx="16" fill="${colors.stroke}"/>`,
+      `    ${wrappedText(String(index + 1), { x: card.x + 54, y: card.y + 45, fill: "#FFFFFF", fontSize: 15, role: "caption", maxCharacters: 2, maxLines: 1, weight: 700, anchor: "middle" })}`,
+      `    ${stage}`,
+      `    ${title}`,
+      detail && `    ${detail}`,
+      "  </g>",
+    ].join("\n");
+  }).join("\n");
+  const connectorPairs = isBranchedDecision ? [[0, 1], [2, 3], [3, 4]] : cards.slice(0, -1).map((_, index) => [index, index + 1]);
+  const connectors = connectorPairs.map(([index, nextIndex]) => {
+    const card = cards[index];
+    const next = cards[nextIndex];
+    const vertical = isBranchedDecision && card.x === next.x && card.y + card.height <= next.y;
+    const startX = vertical ? card.x + card.width / 2 : card.x + card.width + 12;
+    const endX = vertical ? next.x + next.width / 2 : next.x - 12;
+    const startY = vertical ? card.y + card.height : card.y + card.height / 2;
+    const endY = vertical ? next.y - 12 : next.y + next.height / 2;
+    return `  <path d="M ${startX} ${startY} L ${endX} ${endY}" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>`;
+  }).join("\n");
+  const decisionBranches = isBranchedDecision ? source.branches.map((branch, index) => {
+    const y = index === 0 ? 298 : 505;
+    const branchCenterY = y + 30;
+    const sourceCard = cards[1];
+    const targetCard = cards[2];
+    return [
+      `  <path class="decision-branch" d="M ${sourceCard.x + sourceCard.width + 12} ${sourceCard.y + sourceCard.height / 2} L 548 ${branchCenterY}" fill="none" stroke="#534AB7" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>`,
+      `  <g class="decision-branch" aria-label="선택지 ${index + 1}: ${escapeXml(branch.label)}">`,
+      `    <rect x="560" y="${y}" width="180" height="60" rx="14" fill="#F8F6FF" stroke="#534AB7" stroke-width="2"/>`,
+      `    ${wrappedText(branch.label, { x: 574, y: y + 20, fill: "#3C3489", fontSize: 15, role: "card-body", maxCharacters: 18, maxLines: 1, weight: 700 })}`,
+      `    ${wrappedText(branch.detail, { x: 574, y: y + 43, fill: "#354152", fontSize: 13, role: "caption", maxCharacters: 18, maxLines: 1 })}`,
+      "  </g>",
+      `  <path class="decision-branch" d="M 752 ${branchCenterY} L ${targetCard.x - 12} ${targetCard.y + targetCard.height / 2}" fill="none" stroke="#0F7A5F" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>`,
+    ].join("\n");
+  }).join("\n") : "";
+  const railGroups = readableRailGroups(source);
+  const railColumn = (lines, x) => {
+    let y = 650;
+    return lines.flatMap((line) => {
+      const wrapped = wrapCjk(line, 44, Number.POSITIVE_INFINITY);
+      const markup = wrappedText(line, { x, y: y + ((wrapped.length - 1) * 7), fill: "#354152", fontSize: 13, role: "semantic-rail", maxCharacters: 44, lineHeight: 14 });
+      y += wrapped.length * 14;
+      return markup;
+    });
+  };
+  const conclusion = wrappedText(source.conclusion, { x: 84, y: 850, fill: "#1F2733", fontSize: 18, role: "footer", maxCharacters: 56, maxLines: 2, lineHeight: 23 });
+  const title = wrappedText(source.title, { x: 88, y: 141, fill: "#1F2733", fontSize: 42, role: "title", maxCharacters: 29, maxLines: 2, weight: 700, lineHeight: 46 });
+  const description = wrappedText(source.description, { x: 88, y: 218, fill: "#5B6675", fontSize: 18, role: "description", maxCharacters: 68, maxLines: 2, lineHeight: 22 });
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="${escapeXml(source.alt)}" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">`,
+    `  <title>${escapeXml(source.title)}</title>`,
+    `  <desc>${escapeXml(accessibleSemanticDescription(source))}</desc>`,
+    "  <defs>",
+    '    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto">',
+    '      <path d="M 2 2 L 10 6 L 2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round"/>',
+    "    </marker>",
+    "  </defs>",
+    '  <rect width="1400" height="900" fill="#F7FAFD"/>',
+    '  <rect x="52" y="52" width="8" height="168" rx="4" fill="#1F6FB2"/>',
+    `  ${wrappedText(source.eyebrow, { x: 88, y: 86, fill: "#1F6FB2", fontSize: 18, role: "eyebrow", maxCharacters: 42, maxLines: 1, weight: 700 })}`,
+    `  ${title}`,
+    `  ${description}`,
+    '  <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>',
+    connectors,
+    decisionBranches,
+    isBranchedDecision ? `  ${wrappedText("재결합: 판단 기준", { x: 800, y: 354, fill: "#0F7A5F", fontSize: 13, role: "caption", maxCharacters: 18, maxLines: 1, weight: 700 })}` : "",
+    cardMarkup,
+    '  <rect x="52" y="636" width="1296" height="166" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>',
+    ...railColumn(railGroups.left, 72).map((line) => `  ${line}`),
+    ...railColumn(railGroups.right, 710).map((line) => `  ${line}`),
+    '  <rect x="52" y="814" width="1296" height="70" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>',
+    `  ${conclusion}`,
+    "</svg>",
+    "",
+  ].filter(Boolean).join("\n") + "\n";
+}
+
 export function renderDiagramSvg(source) {
   validateDiagramSource(source);
+  if (isProductUseCaseSource(source)) return renderReadableUseCaseSvg(source);
   const titleFit = isCareerSource(source) && characterLength(source.title) > 24 ? ' textLength="1220" lengthAdjust="spacingAndGlyphs"' : "";
   const descriptionFit = isCareerSource(source) && characterLength(source.description) > 45 ? ' textLength="1220" lengthAdjust="spacingAndGlyphs"' : "";
   const cards = layoutFor(source.type, source.steps.length, source);

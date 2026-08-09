@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderDiagramSvg, validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
 
 const validFixture = Object.freeze({
   id: "aud-01",
@@ -129,11 +129,9 @@ test("Studio competency cards expose their exact specialist and output IDs", () 
     },
   };
   const svg = renderDiagramSvg(source);
-  const card = (index) => new RegExp(`<g aria-label="읽기 순서 ${index}: [\\s\\S]*?</g>`, "u").exec(svg)?.[0] ?? "";
-
-  assert.match(card(2), /design-game-economy-and-liveops/u);
-  assert.match(card(3), /economy-balance/u);
-  assert.match(card(3), /liveops-experiment-event/u);
+  for (const value of [source.semantic.specialist, ...source.semantic.outputs]) assert.match(svg, new RegExp(value, "u"));
+  assert.doesNotMatch(svg, /(?:textLength|lengthAdjust|font-stretch)|…/u);
+  assert.doesNotThrow(() => validateUseCaseDiagramSvg(svg, source.id));
 });
 
 test("Studio skill flow exposes exact outputs and every conditional next route", () => {
@@ -155,7 +153,7 @@ test("Studio skill flow exposes exact outputs and every conditional next route",
   assert.ok([...svg.matchAll(/<text x="72" y="(\d+)"/gu)].every((match) => Number(match[1]) < 704), "semantic rail stays above the conclusion strip");
 });
 
-test("long conditional routes stay inside their exact-output card budget", () => {
+test("legacy skill-flow retains its established generator contract", () => {
   const source = {
     ...validFixture,
     id: "st-s07",
@@ -172,10 +170,10 @@ test("long conditional routes stay inside their exact-output card budget", () =>
   };
   const svg = renderDiagramSvg(source);
 
-  assert.match(svg, /font-size="7" textLength="164"[^>]*>pending format job → downstream renderer QA</u);
+  assert.match(svg, /pending format job → downstream renderer QA/u);
 });
 
-test("mixed-language validation strings use the compact exact-text budget", () => {
+test("mixed-language validation strings preserve whole Latin tokens in natural tspans", () => {
   const source = {
     ...validFixture,
     id: "st-g03",
@@ -187,7 +185,37 @@ test("mixed-language validation strings use the compact exact-text budget", () =
   };
   const svg = renderDiagramSvg(source);
 
-  assert.match(svg, /font-size="8" textLength="164"[^>]*>co-op rejoin prototype와 이탈 telemetry</u);
+  assert.match(svg, /co-op rejoin prototype와 이탈/u);
+  assert.doesNotMatch(svg, /(?:textLength|lengthAdjust)|…/u);
+});
+
+test("product SVGs fail closed for spaced distortion attributes and every typography-role minimum", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-economy-and-liveops", outputs: ["economy-balance"], validation: "telemetry" },
+    branches: [{ label: "보호", detail: "guardrail" }, { label: "확장", detail: "rollback" }],
+  };
+  const svg = renderDiagramSvg(source);
+  for (const [mutation, role] of [
+    [svg.replace('font-size="42"', 'font-size="13"'), "title"],
+    [svg.replace("<text", '<text textLength = "1"'), "textLength"],
+    [svg.replace("<text", '<text style="font: 1px serif"'), "typography"],
+    [svg.replace("<text", '<text style= "font: 1px serif"'), "typography"],
+    [svg.replace("<text", "<text style = 'font-size: 1px'"), "typography"],
+    [svg.replace("<text", '<text style\t=\n"font: 1px serif"'), "typography"],
+    [svg.replace("<g class=", '<g transform = "scale(0.1)" class='), "ancestor"],
+    [svg.replace("<g class=", '<g transform = "skewX(15)" class='), "ancestor"],
+    [svg.replace("<g class=", "<g transform= 'skewX(15)' class="), "ancestor"],
+    [svg.replace("<text", '<text transform="skewY(15)"'), "glyph-scaling"],
+    [svg.replace("<text", "<text transform = 'skewX(15)'"), "glyph-scaling"],
+    [svg.replace('<tspan x="88"', '<tspan font-size="13" x="88"'), "title"],
+    [svg.replace('<tspan x="88"', "<tspan font-size= '13' x=\"88\""), "title"],
+    [svg.replace('<tspan x="88"', '<tspan font-size = "13" x="88"'), "title"],
+  ]) assert.throws(() => validateUseCaseDiagramSvg(mutation, source.id), new RegExp(`${source.id}.*${role}.*repair source layout`, "u"));
 });
 
 test("branched decision-flow uses a vertical 4-to-5 connector with a twelve-pixel target gap", () => {

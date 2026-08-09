@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { loadUseCaseManifest } from "./lib/use-case-guides.mjs";
 import { validateCareerDiagramProductionBatch } from "./lib/career-diagram-production-contract.mjs";
-import { renderDiagramSvg, validateDiagramSource } from "./lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "./lib/use-case-diagrams.mjs";
 import { validateStudioDiagramProductionBatch } from "./lib/studio-diagram-production-contract.mjs";
 
 const sourceFile = "guides/assets/use-case-diagram-sources.json";
@@ -176,12 +176,18 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check, optiona
   if (check) {
     await assertSafeExistingFile(repoRoot, output.svg, { optionalLstat });
     await assertSafeExistingFile(repoRoot, output.png, { optionalLstat });
+    if (source.scope === "game-design-studio-use-case" || source.scope === "game-design-career-use-case") {
+      validateUseCaseDiagramSvg(await readFile(output.svg, "utf8"), source.id);
+    }
     await assertSafeOutputFile(outputRoot, pngPath, { createParents: true });
   } else {
     await assertSafeOutputFile(repoRoot, output.svg, { createParents: true });
     await assertSafeOutputFile(repoRoot, output.png, { createParents: true });
   }
   const svg = renderDiagramSvg(source);
+  if (source.scope === "game-design-studio-use-case" || source.scope === "game-design-career-use-case") {
+    validateUseCaseDiagramSvg(svg, source.id);
+  }
   await writeSvg(svgPath, svg, outputRoot);
   await assertSafeExistingFile(outputRoot, svgPath, { optionalLstat });
   const wrapper = path.join(repoRoot, wrapperFile);
