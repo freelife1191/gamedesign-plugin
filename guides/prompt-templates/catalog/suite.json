@@ -42,7 +42,8 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "game-design-review",
+      "creative-design-portfolio"
     ],
     "minimum_outputs": [
       "공개 가능한 문제·판단·검증 summary"
@@ -123,7 +124,9 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "reverse-design-document",
+      "system-specification",
+      "game-design-review"
     ],
     "minimum_outputs": [
       "fact/inference 역기획과 system specification"
@@ -205,7 +208,10 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "system-specification",
+      "ui-ux-flow-state",
+      "economy-balance",
+      "creative-design-portfolio"
     ],
     "minimum_outputs": [
       "개인 판단과 evidence index"
@@ -287,7 +293,8 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "game-design-brief",
+      "game-design-review"
     ],
     "minimum_outputs": [
       "content.md, approved images, PPTX preflight"
@@ -368,7 +375,9 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "game-design-role-map",
+      "system-specification",
+      "interview-question-answer-log"
     ],
     "minimum_outputs": [
       "12주 proof와 evidence-linked 답변"
@@ -448,7 +457,8 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "system-specification",
+      "five-axis-review"
     ],
     "minimum_outputs": [
       "과제, 루브릭, 수정 기록"
@@ -528,7 +538,8 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "game-design-review",
+      "creative-design-portfolio"
     ],
     "minimum_outputs": [
       "공개 요약과 제외 기록"
@@ -595,11 +606,14 @@
       "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 resume-failed-derivatives handoff를 작성해."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:export-game-design-documents $game-design-career:export-career-documents resume-failed-derivatives handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-studio:export-game-design-documents $game-design-career:export-career-documents [공개 정보] resume-failed-derivatives handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-studio:plan-image-assets $game-design-studio:generate-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents $game-design-career:export-career-documents canonical artifact를 보존하고 failed image/export blocker를 기록한 뒤 retry receipt로 재개해.",
+      "template": "$game-design-studio:plan-image-assets $game-design-studio:generate-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents $game-design-career:export-career-documents [공개 정보] canonical artifact, failed image/export blocker, retry receipt를 fact, inference, recommendation으로 기록해."
     },
-    "skill": "export-game-design-documents",
+    "skill": "plan-image-assets",
     "skill_chain": [
+      "plan-image-assets",
+      "generate-image-assets",
+      "review-image-assets",
       "export-game-design-documents",
       "export-career-documents"
     ],
@@ -608,7 +622,9 @@
       "career-strategist"
     ],
     "intermediate_artifacts": [
-      "public-evidence-summary"
+      "game-design-brief",
+      "decision-change-log",
+      "creative-design-portfolio"
     ],
     "minimum_outputs": [
       "보존 파일, blocker, resume receipt"

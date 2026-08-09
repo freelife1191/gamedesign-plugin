@@ -44,7 +44,8 @@
       "research-game-design-jobs"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "career-strategist",
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "career-stage-goal",
@@ -69,7 +70,7 @@
       "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
       "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C01 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 목표 → evidence → gap → proof task → 결정 기록입니다. **검토 체크포인트:** `game-design-role-map` → `learning-roadmap` 순서로 읽고 역할 후보와 proof task의 연결을 확인합니다. **사람 결정:** 사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다. 도구 실행은 자동 승인이 아닙니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -135,7 +136,8 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "reverse-design-critic",
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-analysis-report",
@@ -160,7 +162,7 @@
       "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
       "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C02 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 관찰 → 추론 → 반례 → 제안 → 권리 경계입니다. **검토 체크포인트:** `game-analysis-report` → `reverse-design-document` 순서로 읽고 관찰과 해석의 경계를 확인합니다. **사람 결정:** 작성자와 멘토가 관찰의 정확성, 공개 범위와 다음 검증을 결정합니다. 자동 분석은 사실이나 승인을 대신하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -225,7 +227,8 @@
       "apply-document-quality-profile"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "evidence-auditor",
+      "portfolio-reviewer"
     ],
     "intermediate_artifacts": [
       "job-posting-evidence",
@@ -250,7 +253,7 @@
       "game-design-career/[경력 ID]/job-posting-evidence/evidence.yml",
       "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C03 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** source record → sample boundary → observation → inference → proposal입니다. **검토 체크포인트:** `job-posting-evidence` → `game-design-role-map` 순서로 읽고 source record와 role inference를 확인합니다. **사람 결정:** Research Owner와 Portfolio Reviewer가 region, reviewAfter, 공개 가능한 evidence와 backlog를 결정합니다. source 수집은 자동 승인을 하지 않으며 채용을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -317,7 +320,8 @@
       "export-career-documents"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "career-strategist",
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "competency-matrix",
@@ -342,7 +346,7 @@
       "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
       "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C04 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** current evidence → gap → proof task → cadence → 결정입니다. **검토 체크포인트:** `competency-matrix` → `learning-roadmap` 순서로 읽고 gap과 proof task의 우선순위를 확인합니다. **사람 결정:** 작성자와 멘토가 우선순위, 가능한 범위와 공개 여부를 결정합니다. 계획 생성은 자동 승인을 하지 않으며 성장을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -408,7 +412,8 @@
       "export-career-documents"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "reverse-design-critic",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "reverse-design-document",
@@ -432,7 +437,7 @@
       "game-design-career/[경력 ID]/reverse-design-document/evidence.yml",
       "game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C05 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `reverse-design-document` → `game-analysis-report` 순서로 읽고 관찰 evidence와 분석 claim을 확인합니다. **사람 결정:** 작성자와 public-rights reviewer가 공개 범위, 인용·capture 권리와 개인 기여 서술을 승인·수정·보류합니다. 분석은 자동 승인을 하지 않으며 품질, 채용 또는 공개를 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -498,7 +503,8 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "portfolio-reviewer",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "portfolio-project-brief",
@@ -523,7 +529,7 @@
       "game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml",
       "game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C06 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 개인 기여와 공개 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer가 공개 가능한 claim과 asset을 결정합니다. 생성 결과는 자동 승인을 하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -589,7 +595,9 @@
       "export-career-documents"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "portfolio-reviewer",
+      "game-design-mentor",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "five-axis-review",
@@ -615,7 +623,7 @@
       "game-design-career/[경력 ID]/five-axis-review/evidence.yml",
       "game-design-career/[경력 ID]/five-axis-review/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C07 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → backlog입니다. **검토 체크포인트:** `five-axis-review` → `portfolio-backlog` → `introduction-motivation` 순서로 읽고 finding, repair, 발표 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer와 멘토가 수정·발표·공개 범위를 결정합니다. review는 자동 승인을 하지 않으며 합격, 시장 반응 또는 팀 성과를 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -680,7 +688,10 @@
       "export-career-documents"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor",
+      "career-strategist",
+      "portfolio-reviewer",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "interview-question-answer-log",
@@ -706,7 +717,7 @@
       "game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml",
       "game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-C08 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback입니다. **검토 체크포인트:** `interview-question-answer-log` → `junior-growth-review` → `transition-readiness` 순서로 읽고 honest gap, feedback, 다음 proof task를 확인합니다. **사람 결정:** 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다. 이 기록은 자동 승인을 하지 않으며 채용, 승진, 이직, 팀 기여 또는 시장 가치를 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -769,7 +780,7 @@
       "plan-junior-growth"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-design-role-map",
@@ -795,7 +806,7 @@
       "game-design-career/[경력 ID]/game-design-role-map/evidence.yml",
       "game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T01 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문입니다. **검토 체크포인트:** `game-design-role-map` → `competency-matrix` → `learning-roadmap` 순서로 읽고 상태와 예외의 근거를 확인합니다. **사람 결정:** 시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다. 스킬 실행은 자동 승인을 하지 않으며 실제 역할 적합성을 확정하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -858,7 +869,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-design-role-map",
@@ -884,7 +895,7 @@
       "game-design-career/[경력 ID]/game-design-role-map/evidence.yml",
       "game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T02 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 목표 → 분기 → 실패 복구 → 대안입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 분기와 제작 범위를 확인합니다. **사람 결정:** 콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다. 생성 내용은 자동 승인을 하지 않으며 실제 제작 성과를 대신하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -947,7 +958,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-analysis-report",
@@ -973,7 +984,7 @@
       "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
       "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T03 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 관찰 → 스킬 명세 → 반례 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 관찰과 반례를 확인합니다. **사람 결정:** 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. 자동 승인을 하지 않으며 재미나 직무 적합성을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1036,7 +1047,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-analysis-report",
@@ -1062,7 +1073,7 @@
       "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
       "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T04 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** source·sink → 가설 → guardrail → rollback입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 가설과 guardrail을 확인합니다. **사람 결정:** 경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다. 자동 승인을 하지 않으며 시장 성공을 확정하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1125,7 +1136,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "competency-matrix",
@@ -1151,7 +1162,7 @@
       "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
       "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T05 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 행동 → 오류 → focus → 대체 입력입니다. **검토 체크포인트:** `competency-matrix` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 오류와 대체 입력을 확인합니다. **사람 결정:** UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다. 자동 승인을 하지 않으며 접근성 적합성을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1214,7 +1225,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-design-role-map",
@@ -1240,7 +1251,7 @@
       "game-design-career/[경력 ID]/game-design-role-map/evidence.yml",
       "game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T06 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 장면 목적 → 선택 → handoff → 공개 경계입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 장면 목적과 공개 경계를 확인합니다. **사람 결정:** 내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다. 자동 승인을 하지 않으며 실제 협업 경험을 대신하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1303,7 +1314,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "game-design-mentor"
     ],
     "intermediate_artifacts": [
       "game-analysis-report",
@@ -1329,7 +1340,7 @@
       "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
       "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T07 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 동선 → 시야 → 막힘 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 동선과 playtest 질문을 확인합니다. **사람 결정:** 레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다. 자동 승인을 하지 않으며 실무 경험을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1393,7 +1404,7 @@
       "review-game-design-portfolio"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "portfolio-reviewer"
     ],
     "intermediate_artifacts": [
       "career-stage-goal",
@@ -1419,7 +1430,7 @@
       "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
       "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T08 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 문제 → 근거 → 수정 전후 → honest gap입니다. **검토 체크포인트:** `career-stage-goal` → `portfolio-project-brief` → `portfolio-backlog` 순서로 읽고 개인 기여와 수정 근거를 확인합니다. **사람 결정:** 포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다. 자동 승인을 하지 않으며 신입 채용을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1508,7 +1519,7 @@
       "game-design-career/[경력 ID]/transition-readiness/evidence.yml",
       "game-design-career/[경력 ID]/transition-readiness/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T09 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 이전 사실 → 전이 역량 → 새 evidence → 공개 경계입니다. **검토 체크포인트:** `transition-readiness` → `game-design-role-map` → `portfolio-project-brief` 순서로 읽고 사실과 새 evidence를 확인합니다. **사람 결정:** Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다. 자동 승인을 하지 않으며 이직을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1573,7 +1584,8 @@
       "export-career-documents"
     ],
     "specialist_roles": [
-      "career-strategist"
+      "career-strategist",
+      "interview-coach"
     ],
     "intermediate_artifacts": [
       "junior-growth-review",
@@ -1599,7 +1611,7 @@
       "game-design-career/[경력 ID]/junior-growth-review/evidence.yml",
       "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 CA-T10 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** 수정 사례 → current requirement → honest gap → 답변입니다. **검토 체크포인트:** `junior-growth-review` → `transition-readiness` → `interview-question-answer-log` 순서로 읽고 날짜와 다음 review를 확인합니다. **사람 결정:** manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다. 자동 승인을 하지 않으며 승진·이직을 보장하지 않습니다.",
     "hold_conditions": [
       "evidence, rights, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1675,11 +1687,17 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design-career/[경력 ID]/interview-question-answer-log/content.md"
+      "game-design-career/[경력 ID]/interview-question-answer-log/content.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml",
+      "game-design-career/[경력 ID]/interview-question-answer-log/decisions/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/assets/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml"
     ],
     "read_order": [
       "game-design-career/[경력 ID]/interview-question-answer-log/content.md",
       "game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml",
+      "game-design-career/[경력 ID]/interview-question-answer-log/decisions/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/assets/README.md",
       "game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 interview-preparation의 approval 또는 보류를 결정한다.",
@@ -1760,12 +1778,38 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design-career/[경력 ID]/job-posting-evidence/content.md"
+      "game-design-career/[경력 ID]/job-posting-evidence/content.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/evidence.yml",
+      "game-design-career/[경력 ID]/job-posting-evidence/decisions/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/assets/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml",
+      "game-design-career/[경력 ID]/competency-matrix/content.md",
+      "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
+      "game-design-career/[경력 ID]/competency-matrix/decisions/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/assets/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/content.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml"
     ],
     "read_order": [
       "game-design-career/[경력 ID]/job-posting-evidence/content.md",
       "game-design-career/[경력 ID]/job-posting-evidence/evidence.yml",
-      "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml"
+      "game-design-career/[경력 ID]/job-posting-evidence/decisions/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/assets/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml",
+      "game-design-career/[경력 ID]/competency-matrix/content.md",
+      "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
+      "game-design-career/[경력 ID]/competency-matrix/decisions/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/assets/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/content.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 job-research-gap의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -1845,12 +1889,28 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design-career/[경력 ID]/junior-growth-review/content.md"
+      "game-design-career/[경력 ID]/junior-growth-review/content.md",
+      "game-design-career/[경력 ID]/junior-growth-review/evidence.yml",
+      "game-design-career/[경력 ID]/junior-growth-review/decisions/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/assets/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/transition-readiness/content.md",
+      "game-design-career/[경력 ID]/transition-readiness/evidence.yml",
+      "game-design-career/[경력 ID]/transition-readiness/decisions/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/assets/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/export-manifest.yml"
     ],
     "read_order": [
       "game-design-career/[경력 ID]/junior-growth-review/content.md",
       "game-design-career/[경력 ID]/junior-growth-review/evidence.yml",
-      "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml"
+      "game-design-career/[경력 ID]/junior-growth-review/decisions/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/assets/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/transition-readiness/content.md",
+      "game-design-career/[경력 ID]/transition-readiness/evidence.yml",
+      "game-design-career/[경력 ID]/transition-readiness/decisions/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/assets/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 junior-growth-transition의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -1930,12 +1990,38 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design-career/[경력 ID]/creative-design-portfolio/content.md"
+      "game-design-career/[경력 ID]/creative-design-portfolio/content.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/evidence.yml",
+      "game-design-career/[경력 ID]/creative-design-portfolio/decisions/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/assets/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/export-manifest.yml",
+      "game-design-career/[경력 ID]/five-axis-review/content.md",
+      "game-design-career/[경력 ID]/five-axis-review/evidence.yml",
+      "game-design-career/[경력 ID]/five-axis-review/decisions/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/assets/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/content.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/export-manifest.yml"
     ],
     "read_order": [
       "game-design-career/[경력 ID]/creative-design-portfolio/content.md",
       "game-design-career/[경력 ID]/creative-design-portfolio/evidence.yml",
-      "game-design-career/[경력 ID]/creative-design-portfolio/export-manifest.yml"
+      "game-design-career/[경력 ID]/creative-design-portfolio/decisions/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/assets/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/export-manifest.yml",
+      "game-design-career/[경력 ID]/five-axis-review/content.md",
+      "game-design-career/[경력 ID]/five-axis-review/evidence.yml",
+      "game-design-career/[경력 ID]/five-axis-review/decisions/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/assets/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/content.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 portfolio-build-review의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -2013,11 +2099,17 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design-career/[경력 ID]/reverse-design-document/content.md"
+      "game-design-career/[경력 ID]/reverse-design-document/content.md",
+      "game-design-career/[경력 ID]/reverse-design-document/evidence.yml",
+      "game-design-career/[경력 ID]/reverse-design-document/decisions/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/assets/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml"
     ],
     "read_order": [
       "game-design-career/[경력 ID]/reverse-design-document/content.md",
       "game-design-career/[경력 ID]/reverse-design-document/evidence.yml",
+      "game-design-career/[경력 ID]/reverse-design-document/decisions/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/assets/README.md",
       "game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 reverse-design의 approval 또는 보류를 결정한다.",
@@ -2097,12 +2189,28 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design-career/[경력 ID]/career-stage-goal/content.md"
+      "game-design-career/[경력 ID]/career-stage-goal/content.md",
+      "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
+      "game-design-career/[경력 ID]/career-stage-goal/decisions/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/assets/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/content.md",
+      "game-design-career/[경력 ID]/learning-roadmap/evidence.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/decisions/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/assets/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/export-manifest.yml"
     ],
     "read_order": [
       "game-design-career/[경력 ID]/career-stage-goal/content.md",
       "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
-      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml"
+      "game-design-career/[경력 ID]/career-stage-goal/decisions/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/assets/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/content.md",
+      "game-design-career/[경력 ID]/learning-roadmap/evidence.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/decisions/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/assets/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 role-learning-roadmap의 approval 또는 보류를 결정한다.",
     "hold_conditions": [

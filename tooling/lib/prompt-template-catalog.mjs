@@ -123,7 +123,12 @@ function requestsSensitiveInput(value) {
       `${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`,
       "iu",
     ).test(clause));
-    return requestsInput && !clauseIsPureSensitiveInputProhibition(clause);
+    const koreanPositiveRequest = SENSITIVE_CATEGORIES.some((category) => (
+      category.pattern.test(clause)
+      && /(?:제공해라|입력해라|요청한다|공유해라|업로드해라)/u.test(clause)
+      && !clauseProhibitsCategory(clause, category)
+    ));
+    return (requestsInput && !clauseIsPureSensitiveInputProhibition(clause)) || koreanPositiveRequest;
   });
 }
 
@@ -255,6 +260,9 @@ function validateEntry(entry, index, errors, ids, texts) {
   }
   if (!isNonemptyString(entry.safety_boundary) || !entry.safety_boundary.includes("미정")) {
     errors.push(`${label}.safety_boundary must preserve unknown information as 미정`);
+  }
+  if (requestsSensitiveInput(entry.safety_boundary)) {
+    errors.push(`${label}.safety_boundary must not request credentials or personal/private data`);
   }
   for (const category of missingSafetyProhibitions(entry.safety_boundary)) {
     errors.push(`${label}.safety_boundary must explicitly prohibit ${category} requests`);

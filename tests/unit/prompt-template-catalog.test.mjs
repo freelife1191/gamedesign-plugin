@@ -1738,6 +1738,102 @@ test("scenario catalog binds every source case and recipe command in order", asy
   }
 });
 
+test("scenario use cases preserve source review owners, approval scope, and full specialist roles", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const files = [
+    "guides/game-design-studio/use-cases/competency-paths.md",
+    "guides/game-design-studio/use-cases/concept-scenarios.md",
+    "guides/game-design-career/use-cases/competency-paths.md",
+    "guides/game-design-career/use-cases/concept-scenarios.md",
+  ];
+  const expectedRoles = {
+    "ST-C01": ["lead-game-designer"], "ST-C02": ["lead-game-designer", "ux-accessibility-reviewer"],
+    "ST-C03": ["lead-game-designer", "system-economy-designer"], "ST-C04": ["ux-accessibility-reviewer", "lead-game-designer"],
+    "ST-C05": ["content-narrative-designer", "system-economy-designer", "production-feasibility-critic", "visual-asset-reviewer"],
+    "ST-C06": ["system-economy-designer", "ux-accessibility-reviewer"], "ST-C07": ["system-economy-designer", "liveops-data-designer", "ux-accessibility-reviewer"],
+    "ST-C08": ["production-feasibility-critic", "lead-game-designer", "visual-asset-reviewer", "document-quality-editor"],
+    "ST-G01": ["lead-game-designer", "liveops-data-designer", "ux-accessibility-reviewer"], "ST-G02": ["lead-game-designer", "ux-accessibility-reviewer"],
+    "ST-G03": ["lead-game-designer", "system-economy-designer", "ux-accessibility-reviewer"], "ST-G04": ["system-economy-designer", "ux-accessibility-reviewer"],
+    "ST-G05": ["lead-game-designer", "system-economy-designer", "production-feasibility-critic", "ux-accessibility-reviewer"], "ST-G06": ["content-narrative-designer", "system-economy-designer", "production-feasibility-critic", "visual-asset-reviewer"],
+    "ST-G07": ["lead-game-designer", "content-narrative-designer", "ux-accessibility-reviewer"], "ST-G08": ["liveops-data-designer", "system-economy-designer", "ux-accessibility-reviewer"],
+    "ST-G09": ["content-narrative-designer", "visual-asset-reviewer", "ux-accessibility-reviewer"], "ST-G10": ["lead-game-designer", "content-narrative-designer", "ux-accessibility-reviewer", "visual-asset-reviewer"],
+    "CA-C01": ["career-strategist", "game-design-mentor"], "CA-C02": ["reverse-design-critic", "game-design-mentor"], "CA-C03": ["evidence-auditor", "portfolio-reviewer"],
+    "CA-C04": ["career-strategist", "game-design-mentor"], "CA-C05": ["reverse-design-critic", "visual-asset-reviewer"], "CA-C06": ["portfolio-reviewer", "visual-asset-reviewer"],
+    "CA-C07": ["portfolio-reviewer", "game-design-mentor", "visual-asset-reviewer"], "CA-C08": ["game-design-mentor", "career-strategist", "portfolio-reviewer", "visual-asset-reviewer"],
+    "CA-T01": ["game-design-mentor"], "CA-T02": ["game-design-mentor"], "CA-T03": ["game-design-mentor"], "CA-T04": ["game-design-mentor"],
+    "CA-T05": ["game-design-mentor"], "CA-T06": ["game-design-mentor"], "CA-T07": ["game-design-mentor"], "CA-T08": ["portfolio-reviewer"],
+    "CA-T09": ["career-strategist"], "CA-T10": ["career-strategist", "interview-coach"],
+  };
+  const entries = [
+    ...JSON.parse(await readFile(path.join(repoRoot, "guides/prompt-templates/catalog/studio-scenarios.json"), "utf8")),
+    ...JSON.parse(await readFile(path.join(repoRoot, "guides/prompt-templates/catalog/career-scenarios.json"), "utf8")),
+  ].filter(({ kind }) => kind === "use-case");
+  const reviews = new Map();
+  for (const file of files) {
+    const markdown = await readFile(path.join(repoRoot, file), "utf8");
+    for (const [, id, body] of markdown.matchAll(/^## ((?:ST|CA)-[CGT]\d{2})[^\n]*\n([\s\S]*?)(?=^## |$(?![\s\S]))/gmu)) {
+      reviews.set(id, body.match(/### 검토와 승인\n\n([\s\S]*?)(?=\n### |$)/u)?.[1].trim().replaceAll("\n", " "));
+    }
+  }
+  for (const entry of entries) {
+    assert.equal(entry.human_review_boundary, reviews.get(entry.source_case_id), entry.id);
+    assert.deepEqual(entry.specialist_roles, expectedRoles[entry.source_case_id], entry.id);
+    assert.match(entry.human_review_boundary, /사람 결정/u, entry.id);
+    assert.match(entry.human_review_boundary, /자동[^.]*승인/u, entry.id);
+  }
+});
+
+test("recipe scenarios preserve every source artifact tree and canonical read order", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const layers = (root) => ["content.md", "evidence.yml", "decisions/README.md", "assets/README.md", "export-manifest.yml"].map((leaf) => `${root}/${leaf}`);
+  const expected = {
+    "studio:recipe:content-quest-design": [...layers("game-design/[프로젝트 ID]/narrative-quest-npc"), "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"],
+    "studio:recipe:economy-liveops": [...layers("game-design/[프로젝트 ID]/economy-balance"), ...layers("game-design/[프로젝트 ID]/liveops-experiment-event")],
+    "studio:recipe:new-game-gdd": [...layers("game-design/[프로젝트 ID]/vision-pillars"), "game-design/[프로젝트 ID]/game-design-brief/content.md"],
+    "studio:recipe:production-review-export": [...layers("game-design/[프로젝트 ID]/production-scope-risk"), ...layers("game-design/[프로젝트 ID]/game-design-review"), "game-design/[프로젝트 ID]/decision-change-log/content.md"],
+    "studio:recipe:system-feature-spec": [...layers("game-design/[프로젝트 ID]/system-specification"), "game-design/[프로젝트 ID]/rule-exception-matrix/content.md"],
+    "studio:recipe:ux-accessibility": [...layers("game-design/[프로젝트 ID]/ui-ux-flow-state"), "game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md"],
+    "career:recipe:interview-preparation": layers("game-design-career/[경력 ID]/interview-question-answer-log"),
+    "career:recipe:job-research-gap": [...layers("game-design-career/[경력 ID]/job-posting-evidence"), ...layers("game-design-career/[경력 ID]/competency-matrix"), ...layers("game-design-career/[경력 ID]/portfolio-project-brief")],
+    "career:recipe:junior-growth-transition": [...layers("game-design-career/[경력 ID]/junior-growth-review"), ...layers("game-design-career/[경력 ID]/transition-readiness")],
+    "career:recipe:portfolio-build-review": [...layers("game-design-career/[경력 ID]/creative-design-portfolio"), ...layers("game-design-career/[경력 ID]/five-axis-review"), ...layers("game-design-career/[경력 ID]/portfolio-backlog")],
+    "career:recipe:reverse-design": layers("game-design-career/[경력 ID]/reverse-design-document"),
+    "career:recipe:role-learning-roadmap": [...layers("game-design-career/[경력 ID]/career-stage-goal"), ...layers("game-design-career/[경력 ID]/learning-roadmap")],
+  };
+  const entries = [
+    ...JSON.parse(await readFile(path.join(repoRoot, "guides/prompt-templates/catalog/studio-scenarios.json"), "utf8")),
+    ...JSON.parse(await readFile(path.join(repoRoot, "guides/prompt-templates/catalog/career-scenarios.json"), "utf8")),
+  ].filter(({ kind }) => kind === "recipe");
+  for (const entry of entries) {
+    assert.deepEqual(entry.expected_file_tree, expected[entry.id], entry.id);
+    assert.deepEqual(entry.read_order, expected[entry.id], entry.id);
+  }
+});
+
+test("suite scenarios bind installed templates and their exact ordered chains", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const entries = JSON.parse(await readFile(path.join(repoRoot, "guides/prompt-templates/catalog/suite.json"), "utf8"));
+  const expected = {
+    "suite:studio-to-career-handoff:case": [["review-game-design", "build-game-design-portfolio"], "공개 가능한 문제·판단·검증 summary"],
+    "suite:reverse-to-system-proposal:case": [["reverse-engineer-game-design", "design-game-systems", "review-game-design"], "fact/inference 역기획과 system specification"],
+    "suite:multi-domain-portfolio:case": [["design-game-systems", "design-player-experience", "design-game-economy-and-liveops", "build-game-design-portfolio"], "개인 판단과 evidence index"],
+    "suite:gdd-image-presentation:case": [["orchestrate-game-design-project", "plan-image-assets", "review-image-assets", "export-game-design-documents"], "content.md, approved images, PPTX preflight"],
+    "suite:career-proof-project-interview:case": [["map-game-design-career", "design-game-systems", "practice-game-design-interview"], "12주 proof와 evidence-linked 답변"],
+    "suite:student-mentor-review:case": [["design-game-systems", "review-game-design-portfolio"], "과제, 루브릭, 수정 기록"],
+    "suite:work-to-public-case:case": [["review-game-design", "build-game-design-portfolio"], "공개 요약과 제외 기록"],
+    "suite:resume-failed-derivatives:case": [["plan-image-assets", "generate-image-assets", "review-image-assets", "export-game-design-documents", "export-career-documents"], "보존 파일, blocker, resume receipt"],
+  };
+  const inventories = await Promise.all([collectProductInventory(repoRoot, "game-design-studio"), collectProductInventory(repoRoot, "game-design-career")]);
+  const templates = new Set(inventories.flatMap(({ templateIds }) => templateIds));
+  for (const entry of entries) {
+    assert.deepEqual([entry.skill_chain, entry.minimum_outputs[0]], expected[entry.id], entry.id);
+    for (const artifact of entry.intermediate_artifacts) assert.ok(templates.has(artifact), `${entry.id} ${artifact}`);
+    const mutation = structuredClone(entry);
+    mutation.skill_chain = [...mutation.skill_chain].reverse();
+    assert.throws(() => assert.deepEqual(mutation.skill_chain, expected[entry.id][0]), assert.AssertionError, `${entry.id} chain mutation`);
+  }
+});
+
 test("suite prompt paths reject arbitrary App mentions and missing or unknown CLI commands", () => {
   const entry = validEntry(6, "suite-case");
   entry.app_prompt.example = "@Unrelated App complete prompt";
@@ -1844,6 +1940,19 @@ test("safety boundaries accept a pure Korean category list with an explicit requ
   const invalid = validatePromptTemplateCatalog({ entries: [entry] });
   assert.equal(invalid.ok, false);
   assert.match(invalid.errors.join("\n"), /credentials/u);
+});
+
+test("safety boundaries reject a separate Korean positive request after a direct prohibition", () => {
+  for (const boundary of [
+    "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. credentials를 제공해라.",
+    "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청하지 않는다. API keys를 입력해라.",
+  ]) {
+    const entry = validEntry(24);
+    entry.safety_boundary = boundary;
+    const result = validatePromptTemplateCatalog({ entries: [entry] });
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join("\n"), /safety_boundary.*credentials/u);
+  }
 });
 
 test("resume prompts allow direct prohibitions on providing API keys", () => {

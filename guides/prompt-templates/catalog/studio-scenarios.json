@@ -70,7 +70,7 @@
       "game-design/[프로젝트 ID]/vision-pillars/evidence.yml",
       "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C01의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -135,7 +135,8 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "core-motivation-loop",
@@ -160,7 +161,7 @@
       "game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml",
       "game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C02의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md`의 loop와 rule ID, `evidence.yml`의 관찰, `decisions/`의 대안 순서입니다. 중간 결과에서 모든 단계가 입력과 feedback을 갖고 실패 뒤 복구 가능한지 확인합니다. **사람 결정:** design owner와 player-protection owner가 의미 있는 선택, stop condition과 다음 prototype을 승인하거나 보류합니다. 자동화는 재미나 retention을 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -225,7 +226,8 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "system-economy-designer"
     ],
     "intermediate_artifacts": [
       "system-specification",
@@ -251,7 +253,7 @@
       "game-design/[프로젝트 ID]/system-specification/evidence.yml",
       "game-design/[프로젝트 ID]/system-specification/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C03의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -316,6 +318,7 @@
       "visualize-game-design"
     ],
     "specialist_roles": [
+      "ux-accessibility-reviewer",
       "lead-game-designer"
     ],
     "intermediate_artifacts": [
@@ -341,7 +344,7 @@
       "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
       "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C04의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -407,7 +410,10 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "content-narrative-designer",
+      "system-economy-designer",
+      "production-feasibility-critic",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "narrative-quest-npc",
@@ -432,7 +438,7 @@
       "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
       "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C05의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** purpose → entry/state → choice·consequence → dependency → production·rights evidence → decisions입니다. 중간 결과에서 연결되지 않은 system/data ID와 근거 없는 제작 비용을 blocker로 봅니다. **사람 결정:** content owner, system owner, production owner와 권리 담당자가 분기, 범위, provenance·consent를 승인합니다. 생성된 서사나 이미지가 자동 승인되지는 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -497,7 +503,8 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "character-skill-combat-monster",
@@ -522,7 +529,7 @@
       "game-design/[프로젝트 ID]/character-skill-combat-monster/evidence.yml",
       "game-design/[프로젝트 ID]/character-skill-combat-monster/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C06의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** role·strategy → skill/monster state → telegraph·counterplay → system/data mapping → test evidence입니다. 중간 결과에서 읽을 수 없는 위협, 대응 없는 공격, 미확인 data key를 blocker로 봅니다. **사람 결정:** combat owner와 accessibility owner가 strategy, cue, counterplay, provisional test 범위를 승인합니다. reviewer나 prototype 파일은 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -587,7 +594,9 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "system-economy-designer",
+      "liveops-data-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "economy-balance",
@@ -612,7 +621,7 @@
       "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
       "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C07의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** resource flow → progression/recovery → price·probability evidence → experiment → guardrail·rollback → decisions입니다. 중간 결과에서 source 없는 수치, 다중 변수, 복구 불가 변경을 blocker로 봅니다. **사람 결정:** economy, LiveOps, policy와 accessibility owner가 실험 실행·중단·rollback을 승인합니다. simulation, telemetry 수집과 reviewer 권고는 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -678,7 +687,10 @@
       "export-game-design-documents"
     ],
     "specialist_roles": [
-      "production-feasibility-critic"
+      "production-feasibility-critic",
+      "lead-game-designer",
+      "visual-asset-reviewer",
+      "document-quality-editor"
     ],
     "intermediate_artifacts": [
       "production-scope-risk",
@@ -704,7 +716,7 @@
       "game-design/[프로젝트 ID]/production-scope-risk/evidence.yml",
       "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-C08의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서 blocker, capacity gap, image lifecycle, renderer capability와 형식별 QA를 따로 봅니다. **사람 결정:** production owner가 scope·kill, review decision owner가 finding disposition, rights/asset owner가 이미지 transition, export owner가 실제 format QA를 승인합니다. 생성, render, lint, reviewer finding과 state 문자열은 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -769,7 +781,9 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "liveops-data-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "game-design-brief",
@@ -795,7 +809,7 @@
       "game-design/[프로젝트 ID]/game-design-brief/evidence.yml",
       "game-design/[프로젝트 ID]/game-design-brief/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G01의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** 지정된 design·economy·policy owner가 경제 규칙, 실험 범위, telemetry 동의와 rollback을 승인·수정·보류합니다. 생성 결과는 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -859,7 +873,8 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "core-motivation-loop",
@@ -884,7 +899,7 @@
       "game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml",
       "game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G02의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·UX·accessibility owner가 오프라인 규칙, 복귀 cue와 검증 범위를 결정하며 생성물을 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -950,7 +965,9 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "system-specification",
@@ -976,7 +993,7 @@
       "game-design/[프로젝트 ID]/system-specification/evidence.yml",
       "game-design/[프로젝트 ID]/system-specification/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G03의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·engineering·player-safety owner가 authority, 역할 의존, 기록 동의와 제작 범위를 결정합니다. 자동화는 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1041,7 +1058,8 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "system-economy-designer"
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "character-skill-combat-monster",
@@ -1067,7 +1085,7 @@
       "game-design/[프로젝트 ID]/character-skill-combat-monster/evidence.yml",
       "game-design/[프로젝트 ID]/character-skill-combat-monster/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G04의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** combat·UX·accessibility·player-safety owner가 전투 규칙, 데이터 해석과 보호 정책을 승인·수정·보류하며 출력을 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1133,7 +1151,10 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "system-economy-designer",
+      "production-feasibility-critic",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "core-motivation-loop",
@@ -1159,7 +1180,7 @@
       "game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml",
       "game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G05의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·combat·production·accessibility owner가 run 규칙, 입력 대응과 콘텐츠 범위를 결정하며 생성 결과는 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1224,7 +1245,10 @@
       "visualize-game-design"
     ],
     "specialist_roles": [
-      "content-narrative-designer"
+      "content-narrative-designer",
+      "system-economy-designer",
+      "production-feasibility-critic",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "narrative-quest-npc",
@@ -1250,7 +1274,7 @@
       "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
       "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G06의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** narrative·system·production·rights owner가 선택 의미, 상태 규칙, 민감성·권리와 제작 범위를 결정하며 자동화는 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1314,7 +1338,9 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "content-narrative-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "ui-ux-flow-state",
@@ -1340,7 +1366,7 @@
       "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
       "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G07의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·content·accessibility owner가 시간 압력, 관계 표현과 대안을 승인·수정·보류합니다. 자동 생성은 승인을 대신하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1405,7 +1431,9 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "liveops-data-designer"
+      "liveops-data-designer",
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "economy-balance",
@@ -1431,7 +1459,7 @@
       "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
       "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G08의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** economy·system·UX owner가 규칙, provisional 값, 정보 계층과 rollback을 결정합니다. simulation과 생성 결과는 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1497,7 +1525,9 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "content-narrative-designer"
+      "content-narrative-designer",
+      "visual-asset-reviewer",
+      "ux-accessibility-reviewer"
     ],
     "intermediate_artifacts": [
       "narrative-quest-npc",
@@ -1523,7 +1553,7 @@
       "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
       "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G09의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** moderation·rights·accessibility·ethics owner가 게시, 차단, 삭제와 appeal을 승인·수정·보류합니다. 자동 분류나 생성물은 자동 승인하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1588,7 +1618,10 @@
       "review-game-design"
     ],
     "specialist_roles": [
-      "lead-game-designer"
+      "lead-game-designer",
+      "content-narrative-designer",
+      "ux-accessibility-reviewer",
+      "visual-asset-reviewer"
     ],
     "intermediate_artifacts": [
       "game-design-brief",
@@ -1614,7 +1647,7 @@
       "game-design/[프로젝트 ID]/game-design-brief/evidence.yml",
       "game-design/[프로젝트 ID]/game-design-brief/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 ST-G10의 범위와 evidence를 승인 또는 보류한다.",
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** 대상 당사자, 교육·domain·rights·accessibility·ethics owner가 목적, 표현, 동의, 평가와 공개 범위를 결정합니다. 자동화는 사람의 승인을 대신하지 않습니다.",
     "hold_conditions": [
       "근거, 권리, 또는 owner approval receipt가 없으면 보류"
     ],
@@ -1691,12 +1724,20 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md"
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/decisions/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/assets/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"
     ],
     "read_order": [
       "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
       "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
-      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
+      "game-design/[프로젝트 ID]/narrative-quest-npc/decisions/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/assets/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"
     ],
     "human_review_boundary": "named human decision owner가 content-quest-design의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -1775,12 +1816,28 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design/[프로젝트 ID]/economy-balance/content.md"
+      "game-design/[프로젝트 ID]/economy-balance/content.md",
+      "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
+      "game-design/[프로젝트 ID]/economy-balance/decisions/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/assets/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/content.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/evidence.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/decisions/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/assets/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/export-manifest.yml"
     ],
     "read_order": [
       "game-design/[프로젝트 ID]/economy-balance/content.md",
       "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
-      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml"
+      "game-design/[프로젝트 ID]/economy-balance/decisions/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/assets/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/content.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/evidence.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/decisions/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/assets/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/export-manifest.yml"
     ],
     "human_review_boundary": "named human decision owner가 economy-liveops의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -1860,12 +1917,20 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design/[프로젝트 ID]/vision-pillars/content.md"
+      "game-design/[프로젝트 ID]/vision-pillars/content.md",
+      "game-design/[프로젝트 ID]/vision-pillars/evidence.yml",
+      "game-design/[프로젝트 ID]/vision-pillars/decisions/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/assets/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-brief/content.md"
     ],
     "read_order": [
       "game-design/[프로젝트 ID]/vision-pillars/content.md",
       "game-design/[프로젝트 ID]/vision-pillars/evidence.yml",
-      "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml"
+      "game-design/[프로젝트 ID]/vision-pillars/decisions/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/assets/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-brief/content.md"
     ],
     "human_review_boundary": "named human decision owner가 new-game-gdd의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -1947,12 +2012,30 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design/[프로젝트 ID]/production-scope-risk/content.md"
+      "game-design/[프로젝트 ID]/production-scope-risk/content.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/evidence.yml",
+      "game-design/[프로젝트 ID]/production-scope-risk/decisions/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/assets/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-review/content.md",
+      "game-design/[프로젝트 ID]/game-design-review/evidence.yml",
+      "game-design/[프로젝트 ID]/game-design-review/decisions/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/assets/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/export-manifest.yml",
+      "game-design/[프로젝트 ID]/decision-change-log/content.md"
     ],
     "read_order": [
       "game-design/[프로젝트 ID]/production-scope-risk/content.md",
       "game-design/[프로젝트 ID]/production-scope-risk/evidence.yml",
-      "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml"
+      "game-design/[프로젝트 ID]/production-scope-risk/decisions/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/assets/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-review/content.md",
+      "game-design/[프로젝트 ID]/game-design-review/evidence.yml",
+      "game-design/[프로젝트 ID]/game-design-review/decisions/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/assets/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/export-manifest.yml",
+      "game-design/[프로젝트 ID]/decision-change-log/content.md"
     ],
     "human_review_boundary": "named human decision owner가 production-review-export의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -2030,12 +2113,20 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design/[프로젝트 ID]/system-specification/content.md"
+      "game-design/[프로젝트 ID]/system-specification/content.md",
+      "game-design/[프로젝트 ID]/system-specification/evidence.yml",
+      "game-design/[프로젝트 ID]/system-specification/decisions/README.md",
+      "game-design/[프로젝트 ID]/system-specification/assets/README.md",
+      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml",
+      "game-design/[프로젝트 ID]/rule-exception-matrix/content.md"
     ],
     "read_order": [
       "game-design/[프로젝트 ID]/system-specification/content.md",
       "game-design/[프로젝트 ID]/system-specification/evidence.yml",
-      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml"
+      "game-design/[프로젝트 ID]/system-specification/decisions/README.md",
+      "game-design/[프로젝트 ID]/system-specification/assets/README.md",
+      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml",
+      "game-design/[프로젝트 ID]/rule-exception-matrix/content.md"
     ],
     "human_review_boundary": "named human decision owner가 system-feature-spec의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
@@ -2113,12 +2204,20 @@
       "downstream handoff"
     ],
     "expected_file_tree": [
-      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md"
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/decisions/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/assets/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml",
+      "game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md"
     ],
     "read_order": [
       "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md",
       "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
-      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml"
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/decisions/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/assets/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml",
+      "game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md"
     ],
     "human_review_boundary": "named human decision owner가 ux-accessibility의 approval 또는 보류를 결정한다.",
     "hold_conditions": [
