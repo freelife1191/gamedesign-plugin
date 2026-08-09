@@ -116,6 +116,14 @@ function tableIds(markdown, heading) {
 }
 
 const representativeCareerCaseIds = ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"];
+const representativeCareerResultContracts = Object.freeze([
+  ["CA-T01", [["game-design-role-map", "map-game-design-career", "game-design-career/<career-id>/game-design-role-map"], ["competency-matrix", "map-game-design-career", "game-design-career/<career-id>/competency-matrix"], ["learning-roadmap", "map-game-design-career", "game-design-career/<career-id>/learning-roadmap"]]],
+  ["CA-T04", [["game-analysis-report", "reverse-engineer-game-design", "game-design-career/<career-id>/game-analysis-report"], ["portfolio-project-brief", "build-game-design-portfolio", "game-design-career/<career-id>/portfolio-project-brief"], ["five-axis-review", "review-game-design-portfolio", "game-design-career/<career-id>/five-axis-review"]]],
+  ["CA-T05", [["competency-matrix", "map-game-design-career", "game-design-career/<career-id>/competency-matrix"], ["portfolio-project-brief", "build-game-design-portfolio", "game-design-career/<career-id>/portfolio-project-brief"], ["five-axis-review", "review-game-design-portfolio", "game-design-career/<career-id>/five-axis-review"]]],
+  ["CA-C05", [["reverse-design-document", "reverse-engineer-game-design", "game-design-career/<career-id>/reverse-design-document"], ["game-analysis-report", "reverse-engineer-game-design", "game-design-career/<career-id>/game-analysis-report"]]],
+  ["CA-C06", [["portfolio-project-brief", "build-game-design-portfolio", "game-design-career/<career-id>/portfolio-project-brief"], ["creative-design-portfolio", "build-game-design-portfolio", "game-design-career/<career-id>/creative-design-portfolio"]]],
+  ["CA-C08", [["interview-question-answer-log", "practice-game-design-interview", "game-design-career/<career-id>/interview-question-answer-log"], ["junior-growth-review", "plan-junior-growth", "game-design-career/<career-id>/junior-growth-review"], ["transition-readiness", "plan-junior-growth", "game-design-career/<career-id>/transition-readiness"]]],
+]);
 
 const careerGoalOutputLayers = new Map([
   ["직무 탐색·학습", { minimum: ["game-design-role-map", "learning-roadmap"], competency: { optionalHeading: "CA-C01 기획 직무와 전문 분야 탐색", expandedHeading: "CA-C01 기획 직무와 전문 분야 탐색", reviewHeading: "CA-C01 기획 직무와 전문 분야 탐색", optional: ["review", "evidence"], expanded: ["review", "evidence", "deliverable"], reviewers: ["사용자", "멘토"] } }],
@@ -182,58 +190,42 @@ function codeBlock(section, label) {
   return normalizeTableCell(match[1]);
 }
 
-function outputContractIds(skillSource) {
-  if (!/^## Output Contract$/mu.test(skillSource)) return new Set();
-  const marker = "## Output Contract\n";
-  const start = skillSource.indexOf(marker);
-  const bodyStart = start + marker.length;
-  const next = skillSource.indexOf("\n## ", bodyStart);
-  const outputContract = skillSource.slice(bodyStart, next === -1 ? skillSource.length : next);
-  return new Set([...outputContract.matchAll(/`([a-z0-9-]+)`/gu)].map((match) => match[1]));
+function representativeResultContract(caseId) {
+  const contract = representativeCareerResultContracts.find(([id]) => id === caseId)?.[1];
+  assert.ok(contract, `${caseId}: independent representative result contract`);
+  return contract;
 }
 
-function routingResultContracts(routing) {
-  return [
-    ...routing.recipeContracts.flatMap((recipe) => recipe.artifactContracts.map((contract) => ({
-      id: contract.expectedOutputId,
-      owner: contract.ownerSkill,
-      path: contract.path,
-    }))),
-    ...routing.faqContracts.flatMap((faq) => faq.expectedOutputs
-      .filter((output) => output.kind === "template")
-      .map((output) => ({ id: output.id, owner: faq.primarySkill, path: output.path }))),
-  ];
+function cardResultContracts(markdown, caseId) {
+  const expression = new RegExp(`^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · owner · root:\\*\\* (.+)$`, "mu");
+  const field = expression.exec(markdown)?.[1];
+  assert.ok(field, `${caseId}: result owner/root card`);
+  return [...field.matchAll(/`([a-z0-9-]+)` \(`\$game-design-career:([a-z0-9-]+)`\) → `([^`]+)`/gu)].map(([, id, owner, root]) => [id, owner, root]);
 }
 
-async function authorizedRepresentativeResults(entry, routing, skillOutputIds, skillGuideSources) {
-  const resultContracts = routingResultContracts(routing);
-  const results = [];
-  for (const output of entry.outputs) {
-    const owners = entry.skills.filter((skill) => skillOutputIds.get(skill)?.has(output));
-    assert.equal(owners.length, 1, `${entry.id}: ${output} has one ordered-path SKILL owner`);
-    const owner = owners[0];
-    const contracts = resultContracts.filter((contract) => contract.id === output && contract.owner === owner);
-    const roots = [...new Set(contracts.map((contract) => contract.path))];
-    if (roots.length === 0) {
-      assert.ok(skillGuideSources.get(owner)?.includes(`\`${output}\``), `${entry.id}: ${output} is declared by its owning skill guide`);
-      roots.push(`game-design-career/<career-id>/${output}`);
+function assertRepresentativeResultContract(manifest, markdown, label) {
+  const cases = manifest.cases.filter(({ product }) => product === "game-design-career");
+  assert.deepEqual(representativeCareerResultContracts.map(([caseId]) => caseId), representativeCareerCaseIds, `${label}: independent case-ID order`);
+  for (const [caseId, expectedResults] of representativeCareerResultContracts) {
+    const entry = cases.find(({ id }) => id === caseId);
+    assert.ok(entry, `${label}: ${caseId} manifest case`);
+    assert.deepEqual(entry.outputs, expectedResults.map(([id]) => id), `${label}: ${caseId} manifest output IDs`);
+    for (const [, owner, root] of expectedResults) {
+      assert.ok(entry.skills.includes(owner), `${label}: ${caseId} ${owner} is an ordered case skill`);
+      assert.match(root, /^game-design-career\/<career-id>\/[a-z0-9-]+$/u, `${label}: ${caseId} exact routing root`);
     }
-    assert.equal(roots.length, 1, `${entry.id}: ${output} has one exact routing root`);
-    const template = await readFile(path.join(pluginRoot, "assets/templates", output, "content.md"), "utf8");
-    assert.match(template, new RegExp(`^artifact_id: ${output}$`, "mu"), `${entry.id}: ${output} registered template`);
-    results.push({ id: output, owner, path: roots[0] });
+    assert.deepEqual(cardResultContracts(markdown, caseId), expectedResults, `${label}: ${caseId} card output/owner/root contract`);
   }
-  return results;
 }
 
-async function canonicalRepresentativeRoute(entry, source, routing, skillOutputIds, skillGuideSources) {
+function canonicalRepresentativeRoute(entry, source) {
   const card = extractCaseCard(source, entry.id);
   const review = extractCaseSubsection(card, "검토와 승인");
   const readOrder = /\*\*읽는 순서:\*\* ([^.]+)입니다\./u.exec(review);
   assert.ok(readOrder, `${entry.id}: canonical read order`);
   const title = new RegExp(`^## ${entry.id} (.+)$`, "mu").exec(source);
   assert.ok(title, `${entry.id}: canonical title`);
-  const results = await authorizedRepresentativeResults(entry, routing, skillOutputIds, skillGuideSources);
+  const results = representativeResultContract(entry.id).map(([id, owner, resultPath]) => ({ id, owner, path: resultPath }));
   return {
     caseId: entry.id,
     case: `\`${entry.id}\` — ${title[1]} — ${entry.audiences.join(" · ")}`,
@@ -747,6 +739,19 @@ test("README binds Career entry users to canonical representative case routes wi
   const manifest = JSON.parse(manifestSource);
   const careerCases = manifest.cases.filter(({ product }) => product === "game-design-career");
   const skillCases = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
+  assertRepresentativeResultContract(manifest, readme, "Career product README");
+  const [firstCaseId, firstResults] = representativeCareerResultContracts[0];
+  const [firstId, firstOwner, firstRoot] = firstResults[0];
+  const concurrentlyShrunkenManifest = structuredClone(manifest);
+  concurrentlyShrunkenManifest.cases.find(({ id }) => id === firstCaseId).outputs.shift();
+  await assert.rejects(
+    async () => assertRepresentativeResultContract(
+      concurrentlyShrunkenManifest,
+      mutateRepresentativeCardResult(readme, firstCaseId, (result) => result.replace(`\`${firstId}\` (\`$game-design-career:${firstOwner}\`) → \`${firstRoot}\`; `, "")),
+      "concurrently shrunken Career source and README",
+    ),
+    "independent Career result contract rejects simultaneous source and README shrinking",
+  );
 
   assert.match(readme, /^## 활용 시작점$/mu);
   for (const audience of ["취업 준비", "주니어", "전환", "멘토"]) assert.ok(readme.includes(audience), `target audience: ${audience}`);
@@ -761,25 +766,11 @@ test("README binds Career entry users to canonical representative case routes wi
   await assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점"));
 
   const expected = [];
-  const representativeSkills = [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).skills))];
-  const skillGuideSources = new Map(await Promise.all(representativeSkills.map(async (skill) => [
-    skill,
-    await readFile(path.join(repoRoot, "guides/game-design-career/skills", `${skill}.md`), "utf8"),
-  ])));
-  const candidateOutputs = [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).outputs))];
-  const skillOutputIds = new Map(await Promise.all(representativeSkills.map(async (skill) => [
-    skill,
-    new Set([
-      ...skillCases.filter((entry) => entry.skill === skill).flatMap((entry) => entry.outputs),
-      ...outputContractIds(await readFile(path.join(pluginRoot, "skills", skill, "SKILL.md"), "utf8")),
-      ...candidateOutputs.filter((output) => skillGuideSources.get(skill).includes(`\`${output}\``)),
-    ]),
-  ])));
   for (const caseId of representativeCareerCaseIds) {
     const entry = careerCases.find(({ id }) => id === caseId);
     assert.ok(entry, `representative Career case: ${caseId}`);
     const source = await readFile(path.join(repoRoot, entry.document), "utf8");
-    expected.push(await canonicalRepresentativeRoute(entry, source, routing, skillOutputIds, skillGuideSources));
+    expected.push(canonicalRepresentativeRoute(entry, source));
   }
   assertRepresentativeRouteTable(readme, expected, "Career product README");
   assertNoHiringGuarantee(readme, "Career product README");
@@ -791,6 +782,7 @@ test("README binds Career entry users to canonical representative case routes wi
       ["duplicate", (result) => `${result}; \`${firstResult}\` ($game-design-career:map-game-design-career) → \`game-design-career/<career-id>/${firstResult}\``],
       ["missing", (result) => result.replace(`\`${firstResult}\``, "")],
       ["unknown", (result) => result.replace(`\`${firstResult}\``, "`unknown-output`")],
+      ["reordered", (result) => result.split("; ").reverse().join("; ")],
     ]) {
       assert.throws(
         () => assertRepresentativeRouteTable(mutateRepresentativeCardResult(readme, route.caseId, mutate), expected, `Career product README ${mutation}`),

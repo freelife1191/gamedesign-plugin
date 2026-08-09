@@ -82,12 +82,29 @@ test("result-boundary readability counts rendered inline labels but excludes hid
     "<https://example.invalid/minimum/optional/expanded>",
   ].join(" ");
   const visibleThree = "[minimum](https://example.invalid/a(b)) [optional](https://example.invalid/c) <span>expanded</span>";
+  const multilineHiddenAttribute = [
+    "note <span title=\"minimum",
+    "optional expanded\">ok</span>",
+  ].join("\n");
+  const multilineVisibleChildren = [
+    "note <span title=\"minimum",
+    "optional expanded\">minimum</span> optional expanded",
+  ].join("\n");
+  const autolinkDestinations = [
+    "<minimum@optional.expanded>",
+    "<https://example.invalid/minimum's?optional=expanded>",
+    "<https://example.invalid/minimum\\/optional\\/expanded>",
+    "<span title=\"quoted > minimum optional expanded\">ok</span>",
+  ].join(" ");
 
   assert.throws(() => assertReadableResultBoundaries(renderedDense), /minimum, optional, expanded/u);
   assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenOnly));
   assert.doesNotThrow(() => assertReadableResultBoundaries(cards));
   assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenDestinations));
   assert.throws(() => assertReadableResultBoundaries(visibleThree), /minimum, optional, expanded/u);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(multilineHiddenAttribute));
+  assert.throws(() => assertReadableResultBoundaries(multilineVisibleChildren), /minimum, optional, expanded/u);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(autolinkDestinations));
 });
 
 async function createCompleteUseCaseFixture(t) {

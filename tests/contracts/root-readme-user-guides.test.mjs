@@ -306,8 +306,13 @@ async function assertRootUseCaseNavigation(markdown, manifest) {
     assert.ok(exploration.includes(id), `root prompt-template route: ${id}`);
   }
   const promptCards = subsection(exploration, "난이도별 요청문 카드");
-  const visiblePromptCards = [...promptCards.matchAll(/^- \[([^\]]+) — ((?:studio|career|suite):[a-z0-9-]+:(?:beginner|standard|advanced|case))\]\(([^)]+)\)$/gmu)]
-    .map(([, label, id, target]) => [label, id, target]);
+  const rawPromptCardRows = promptCards.split("\n").filter((line) => /^- /u.test(line));
+  assert.equal(rawPromptCardRows.length, 8, "root representative prompt card raw row count");
+  const visiblePromptCards = rawPromptCardRows.map((row) => {
+    const match = /^- \[([^\]]+) — ((?:studio|career|suite):[a-z0-9-]+:(?:beginner|standard|advanced|case))\]\(([^)]+)\)$/u.exec(row);
+    assert.ok(match, `root representative prompt card grammar: ${row}`);
+    return match.slice(1);
+  });
   assert.equal(visiblePromptCards.length, 8, "root representative prompt card count");
   assert.deepEqual(visiblePromptCards, representativePromptCards, "root representative prompt card fields are exact and ordered");
   assert.deepEqual(visiblePromptCards.map(([, id]) => id), representativePromptTemplateIds, "root representative prompt card IDs are exact and ordered");
@@ -531,6 +536,10 @@ test("root README contract rejects unsafe mutations in memory", async () => {
     ["additional representative prompt route added", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project-interview:case\nstudio:define-game-vision:advanced")],
     ["representative prompt route gains a prefix", readme.replace("studio:define-game-vision:beginner", "xstudio:define-game-vision:beginner")],
     ["representative prompt route gains a suffix", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project:interview:case")],
+    ["representative prompt card adds an independent bullet", readme.replace("\n전체 목록은", "\n- 별도 안내 bullet\n\n전체 목록은")],
+    ["representative prompt card loses its ID", readme.replace("career:map-game-design-career:beginner", "")],
+    ["representative prompt card uses an unsupported namespace", readme.replace("career:map-game-design-career:beginner", "other:map-game-design-career:beginner")],
+    ["representative prompt card uses an unsupported level", readme.replace("career:map-game-design-career:beginner", "career:map-game-design-career:expert")],
   ]) {
     await assert.rejects(() => assertRootUseCaseNavigation(mutation, manifest), label);
   }

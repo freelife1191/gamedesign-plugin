@@ -532,6 +532,11 @@ function inlineHtmlEnd(source, start) {
   return undefined;
 }
 
+function autolinkDestination(raw) {
+  return /^(?:https?:|mailto:)/iu.test(raw)
+    || /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/u.test(raw);
+}
+
 function renderedBoundaryText(source) {
   let text = "";
   for (let cursor = 0; cursor < source.length;) {
@@ -553,10 +558,15 @@ function renderedBoundaryText(source) {
       }
     }
     if (source[cursor] === "<") {
+      const autolinkEnd = source.indexOf(">", cursor + 1);
+      if (autolinkEnd !== -1 && autolinkDestination(source.slice(cursor + 1, autolinkEnd).trim())) {
+        cursor = autolinkEnd + 1;
+        continue;
+      }
       const end = inlineHtmlEnd(source, cursor);
       if (end) {
         const raw = source.slice(cursor + 1, end - 1).trim();
-        if (/^(?:https?:|mailto:)/iu.test(raw)) {
+        if (autolinkDestination(raw)) {
           cursor = end;
           continue;
         }
@@ -585,8 +595,9 @@ export function assertReadableResultBoundaries(markdown) {
   let paragraph = [];
   const assertParagraph = () => {
     if (paragraph.length === 0) return;
+    const rendered = renderedBoundaryText(paragraph.join("\n"));
     const labels = RESULT_BOUNDARY_LABELS
-      .filter(([, pattern]) => pattern.test(paragraph.join(" ")))
+      .filter(([, pattern]) => pattern.test(rendered))
       .map(([label]) => label);
     if (labels.length >= 3) {
       throw new Error(`result-boundary paragraph is too dense: ${labels.join(", ")}`);
@@ -597,7 +608,7 @@ export function assertReadableResultBoundaries(markdown) {
     const rendered = renderedBoundaryText(line.blockText);
     if (line.kind === "plain" && rendered) {
       if (/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/u.test(line.source)) assertParagraph();
-      paragraph.push(rendered);
+      paragraph.push(line.blockText);
     } else {
       assertParagraph();
     }
