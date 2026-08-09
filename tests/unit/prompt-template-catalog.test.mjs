@@ -1986,6 +1986,33 @@ test("safety boundaries accept explicit Korean non-request forms for every categ
   }
 });
 
+test("safety boundaries classify every Korean sensitive-input verb occurrence independently", () => {
+  const rejected = [
+    "credentials를 제공하고 개인정보는 요청하지 않는다.",
+    "credentials를 요청하고 개인정보는 요청하지 않는다.",
+    "credentials를 알려 주고 개인정보는 요청하지 않는다.",
+    "credentials를 기입하고 개인정보는 요청하지 않는다.",
+    "credentials를 제공하고 credentials를 요청하지 않는다.",
+  ];
+  for (const clause of rejected) {
+    const entry = validEntry(27);
+    entry.safety_boundary = `모르는 정보는 미정으로 남긴다. ${clause} 비공개 자료를 요청하지 않는다.`;
+    const result = validatePromptTemplateCatalog({ entries: [entry] });
+    assert.equal(result.ok, false, clause);
+    assert.match(result.errors.join("\n"), /safety_boundary.*credentials/u, clause);
+  }
+
+  for (const clause of [
+    "credentials를 제공하지 말고 API keys도 입력하지 마세요. 개인정보와 비공개 자료를 요청하지 않는다.",
+    "credentials를 요청·공개하지 않는다. API keys를 입력하지 말고 개인정보와 비공개 자료를 공유하면 안 된다.",
+  ]) {
+    const entry = validEntry(28);
+    entry.safety_boundary = `모르는 정보는 미정으로 남긴다. ${clause}`;
+    const result = validatePromptTemplateCatalog({ entries: [entry] });
+    assert.equal(result.ok, true, result.errors.join("\n"));
+  }
+});
+
 test("resume prompts allow direct prohibitions on providing API keys", () => {
   const entry = validEntry(16);
   entry.resume_prompt = "Do not provide API keys.";

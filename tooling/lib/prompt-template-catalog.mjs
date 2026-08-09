@@ -96,7 +96,7 @@ function clauseProhibitsCategory(clause, category) {
     : undefined;
   const koreanPureList = koreanList !== undefined
     && /^[\s,·]*(?:§)(?:[\s,·]*(?:또는|및|and|or)?[\s,·]*§)*[\s,·]*$/iu.test(koreanList);
-  const koreanDirectCategoryProhibition = koreanCategoryHasExplicitProhibition(koreanCategoryTail(clause, category));
+  const koreanDirectCategoryProhibition = koreanCategoryOccurrencesAreExplicitlyProhibited(clause, category);
   return (
     (prohibition !== null && isPureSensitiveCategoryList(directTarget))
     || prohibitedAfter.test(clause)
@@ -135,6 +135,44 @@ function koreanCategoryHasPositiveRequest(tail) {
   return /(?:을|를|은|는|이|가)?(?:\s+[\p{L}\p{N}-]+){0,4}\s*(?:제공|입력|공유|업로드|요청|전달|제출|알려|기입)/u.test(tail);
 }
 
+function koreanSensitiveOccurrences(clause) {
+  return SENSITIVE_CATEGORIES.flatMap((category) => {
+    const pattern = new RegExp(category.pattern.source, "giu");
+    return [...clause.matchAll(pattern)].map((match) => ({
+      category,
+      start: match.index,
+      end: match.index + match[0].length,
+    }));
+  }).sort((left, right) => left.start - right.start);
+}
+
+function koreanCategoryOccurrencesAreExplicitlyProhibited(clause, category) {
+  const occurrences = koreanSensitiveOccurrences(clause);
+  const matching = occurrences.filter((occurrence) => occurrence.category === category);
+  if (matching.length === 0) return false;
+  const explicitlyProhibited = matching.every((occurrence) => {
+    const index = occurrences.indexOf(occurrence);
+    return koreanCategoryHasExplicitProhibition(clause.slice(occurrence.end, occurrences[index + 1]?.start));
+  });
+  if (explicitlyProhibited) return true;
+  if (koreanSensitiveInputHasPositiveRequest(clause)) return false;
+  return matching.every((occurrence) => {
+    const index = occurrences.indexOf(occurrence);
+    return occurrences.slice(index).some((later) => {
+      const laterIndex = occurrences.indexOf(later);
+      return koreanCategoryHasExplicitProhibition(clause.slice(later.end, occurrences[laterIndex + 1]?.start));
+    });
+  });
+}
+
+function koreanSensitiveInputHasPositiveRequest(clause) {
+  const occurrences = koreanSensitiveOccurrences(clause);
+  return occurrences.some((occurrence, index) => {
+    const next = occurrences[index + 1];
+    return koreanCategoryHasPositiveRequest(clause.slice(occurrence.end, next?.start));
+  });
+}
+
 function requestsSensitiveInput(value) {
   if (!isNonemptyString(value)) return false;
   return textClauses(value).some((clause) => {
@@ -142,10 +180,7 @@ function requestsSensitiveInput(value) {
       `${POSITIVE_INPUT_REQUEST.source}${category.pattern.source}`,
       "iu",
     ).test(clause));
-    const koreanPositiveRequest = SENSITIVE_CATEGORIES.some((category) => (
-      koreanCategoryHasPositiveRequest(koreanCategoryTail(clause, category))
-      && !clauseProhibitsCategory(clause, category)
-    ));
+    const koreanPositiveRequest = koreanSensitiveInputHasPositiveRequest(clause);
     return (requestsInput && !clauseIsPureSensitiveInputProhibition(clause)) || koreanPositiveRequest;
   });
 }
