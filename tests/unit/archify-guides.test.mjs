@@ -278,6 +278,14 @@ test("check detects drift and symlink outputs; repeated delivery bytes are deter
   await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]) }), /symlink/u);
 });
 
+test("nondeterministic deliver bytes fail check mode", async (t) => {
+  const repoRoot = await repo(t);
+  const runner = fakeCli([], { nondeterministic: true });
+  const catalog = { entries: skillEntries() };
+  await buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: runner });
+  await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: catalog, check: true, runCli: runner }), /drift/u);
+});
+
 test("receipt persists stable repository-relative source and artifact paths", async (t) => {
   const repoRoot = await repo(t);
   const catalog = { entries: skillEntries() };
@@ -305,6 +313,8 @@ test("transaction failure hooks restore the exact trusted tree and preserve abse
       };
       await assert.rejects(() => buildArchifyGuides({ repoRoot, __testCatalog: catalog, runCli: fakeCli([]), __testHooks: hooks }), /failure/u);
       assert.deepEqual(await treeBytes(output), trusted);
+      const siblings = await (await import("node:fs/promises")).readdir(path.join(repoRoot, "guides/assets"));
+      assert.equal(siblings.some((name) => name.startsWith(".archify-guides-")), false);
     });
   }
   const repoRoot = await repo(t);

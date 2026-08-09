@@ -414,6 +414,7 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
   const originalOutput = existingStats ? { dev: existingStats.dev, ino: existingStats.ino } : null;
   const temp = await createGuardedTempRoot({ parent: assets.filename, prefix: ".archify-guides-" });
   let backup;
+  let quarantine;
   let failure;
   let published = false;
   let tempCleaned = false;
@@ -478,12 +479,16 @@ export async function buildArchifyGuides({ repoRoot, check = false, ids = undefi
     try {
       if (published) {
         const current = await lstat(existingRoot).catch(() => null);
-        if (current) await rename(existingRoot, path.join(assets.filename, `.archify-guides-quarantine-${randomUUID()}`));
+        if (current) {
+          quarantine = path.join(assets.filename, `.archify-guides-quarantine-${randomUUID()}`);
+          await rename(existingRoot, quarantine);
+        }
       }
       if (backup) {
         await __testHooks?.beforeRestore?.({ backup, target: existingRoot });
         await rename(backup, existingRoot);
       }
+      if (quarantine) await rm(quarantine, { recursive: true, force: false });
     } catch (rollbackError) { recovery.push(rollbackError); }
     if (recovery.length) throw new AggregateError([error, ...recovery], "Archify publication failed and rollback preserved forensic paths");
     throw error;
