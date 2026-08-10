@@ -22,8 +22,8 @@
       "exit_code": 0,
       "candidate": {
         "path": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
-        "sha256": "9e83f69a5ea19e08c5e051f3cb8d48e13f90cac7b1c4857daa43a7e6b9fb7787",
-        "bytes": 5255
+        "sha256": "ab5593a804ff0214640eef37dfd918de973d3b690e4f8a46fb074a3af694cf1c",
+        "bytes": 5346
       },
       "stdout": {
         "path": "final.validate.stdout.json",
@@ -43,7 +43,7 @@
   ],
   "final_receipt": {
     "path": "final.receipt.json",
-    "sha256": "fc7b26fe9b7cfd72c9e1cc45f2d252a69cd75e4a6f723118adad27b7138fb6d8",
+    "sha256": "5cee76c573a84a422f901857020acc54719e94db786889215c6eaecfa0777e00",
     "bytes": 657
   }
 }

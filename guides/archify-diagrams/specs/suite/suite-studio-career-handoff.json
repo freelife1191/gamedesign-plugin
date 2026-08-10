@@ -25,7 +25,7 @@
       {
         "id": "resume-held-review",
         "label": "Resume held review",
-        "focus": ["held_handoff", "resume_receipt", "decision_owner"],
+        "focus": ["studio_boundary", "public_evidence_summary", "decision_owner", "career_boundary", "held_handoff", "resume_receipt", "career_portfolio_input"],
         "note": "Preserve the blocker and resume the same public-only review after a new receipt is available."
       }
     ]

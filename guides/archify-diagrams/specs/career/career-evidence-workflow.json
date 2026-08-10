@@ -18,7 +18,7 @@
       {
         "id": "career-routes",
         "label": "Portfolio, interview, growth",
-        "focus": ["portfolio_case", "growth_experiment", "human_review"],
+        "focus": ["stage_diagnosis", "disclosure_approval", "evidence_project", "portfolio_case", "growth_experiment", "human_review"],
         "note": "Case-study and next-experiment routes are nodes; the evidence-ID interview route remains explicit in the route card."
       },
       {
@@ -30,7 +30,7 @@
       {
         "id": "resume-contract",
         "label": "Resume held research",
-        "focus": ["held_context", "evidence_research", "evidence_project"],
+        "focus": ["held_context", "evidence_research", "evidence_project", "human_review", "export_prepare"],
         "note": "Keep the blocked claim, evidence date, and next verification task; resume the held job-listing freshness check."
       }
     ]

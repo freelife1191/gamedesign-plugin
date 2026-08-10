@@ -93,8 +93,10 @@ test("production inventory has state-aware materialization contracts", async () 
   const career = catalog.entries.find((entry) => entry.id === "career-evidence-workflow");
   const suite = catalog.entries.find((entry) => entry.id === "suite-studio-career-handoff");
   assert.equal(studio?.delivery_status, "blocked-validation");
-  assert.equal(career?.delivery_status, "auto-validated");
-  assert.equal(suite?.delivery_status, "auto-validated");
+  assert.equal(career?.delivery_status, "blocked-visual");
+  assert.equal(career?.visual_review, "failed");
+  assert.equal(suite?.delivery_status, "passed");
+  assert.equal(suite?.visual_review, "passed");
   await assertStateAwareMaterialization(studio);
   await assertStateAwareMaterialization(career);
   await assertStateAwareMaterialization(suite);

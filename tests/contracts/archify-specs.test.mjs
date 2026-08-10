@@ -440,14 +440,17 @@ test("Suite specs remain source-bound and structurally distinct", async () => {
   assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
 });
 
-test("selected Career workflow retains a schema-valid state after visual approval", async () => {
+test("selected Career workflow retains a schema-valid blocked-visual state after two unresolved correction rounds", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "career");
   const entry = catalog.entries.find((item) => item.id === "career-evidence-workflow");
   const spec = careerWorkflowSpec(specsById);
   assertPrimaryNodeBound(spec);
-  assert.equal(entry.delivery_status, "passed");
-  assert.equal(entry.visual_review, "passed");
-  assert.deepEqual(entry.diagnostics, []);
+  assert.equal(entry.delivery_status, "blocked-visual");
+  assert.equal(entry.visual_review, "failed");
+  assert.equal(entry.reviewer, "Codex Task 11 visual QA");
+  assert.equal(entry.diagnostics.length, 1);
+  assert.equal(entry.diagnostics[0].code, "visual-defect");
+  assert.equal(entry.diagnostics[0].round, 2);
   await assert.doesNotReject(() => validateInstalledWorkflowSpec(spec));
 });
 

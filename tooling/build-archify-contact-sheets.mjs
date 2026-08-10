@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { loadArchifyVisualQa, renderArchifyContactSheets } from "./lib/archify-visual-qa.mjs";
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { comparePaths } from "./lib/paths.mjs";
+import { inspectCompletePng } from "../shared/scripts/lib/complete-png-validation.mjs";
 
 const OUTPUT_ROOT = "guides/archify-diagrams/visual-qa/contact-sheets";
 
@@ -32,9 +33,26 @@ async function assertDirectoryPath(root, relative, { create } = {}) {
   return current;
 }
 
-async function assertExactOutput(directory, sheets) {
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function assertContactRecord(record, expectedHtml, expectedReadDigests) {
+  if (record === null || typeof record !== "object" || Array.isArray(record)) throw new Error("contact sheet record must be an object");
+  const keys = ["html", "html_sha256", "png", "png_sha256", "width", "height", "source_read_sha256"];
+  if (Object.keys(record).sort(comparePaths).join("|") !== keys.sort(comparePaths).join("|")) throw new Error("contact sheet record has invalid fields");
+  if (record.html !== expectedHtml || record.png !== expectedHtml.replace(/\.html$/u, ".png")) throw new Error(`contact sheet record does not match ${expectedHtml}`);
+  for (const field of ["html_sha256", "png_sha256"]) if (!/^[0-9a-f]{64}$/u.test(record[field])) throw new Error(`contact sheet ${field} is invalid`);
+  if (!Number.isInteger(record.width) || !Number.isInteger(record.height) || record.width < 1 || record.height < 1) throw new Error("contact sheet dimensions are invalid");
+  if (!Array.isArray(record.source_read_sha256) || record.source_read_sha256.length === 0 || record.source_read_sha256.some((digest) => !/^[0-9a-f]{64}$/u.test(digest))) throw new Error("contact sheet source READ digests are invalid");
+  if (JSON.stringify([...new Set(record.source_read_sha256)].sort(comparePaths)) !== JSON.stringify([...expectedReadDigests].sort(comparePaths))) throw new Error(`contact sheet source READ digest binding is stale: ${expectedHtml}`);
+}
+
+async function assertExactOutput(directory, sheets, qa = null) {
   const actual = (await readdir(directory)).sort(comparePaths);
-  const expected = [...sheets.keys()].sort(comparePaths);
+  const records = qa?.contact_sheets ?? [];
+  const recordByHtml = new Map(records.map((record) => [record?.html, record]));
+  const expected = [...sheets.keys(), ...records.map((record) => record?.png)].sort(comparePaths);
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("contact sheet output set is stale or incomplete");
   for (const [name, expectedBytes] of sheets) {
     const filename = path.join(directory, name);
@@ -42,7 +60,22 @@ async function assertExactOutput(directory, sheets) {
     if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`contact sheet output is unsafe: ${name}`);
     const actualBytes = await readFile(filename, "utf8");
     if (actualBytes !== expectedBytes) throw new Error(`contact sheet bytes are stale: ${name}`);
+    const record = recordByHtml.get(name);
+    if (!record) continue;
+    const expectedReadDigests = qa.entries.filter((entry) => expectedBytes.includes(`../${entry.renders.read.path}`)).map((entry) => entry.renders.read.sha256);
+    assertContactRecord(record, name, expectedReadDigests);
+    if (sha256(Buffer.from(actualBytes, "utf8")) !== record.html_sha256) throw new Error(`contact sheet HTML digest is stale: ${name}`);
+    const pngPath = path.join(directory, record.png);
+    const pngStats = await lstat(pngPath).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (!pngStats) throw new Error(`missing contact sheet PNG: ${record.png}`);
+    if (!pngStats.isFile() || pngStats.isSymbolicLink()) throw new Error(`contact sheet PNG is unsafe: ${record.png}`);
+    const png = await readFile(pngPath);
+    const inspection = inspectCompletePng(png);
+    if (!inspection.ok) throw new Error(`contact sheet PNG validation failed: ${record.png}`);
+    if (sha256(png) !== record.png_sha256) throw new Error(`contact sheet PNG digest is stale: ${record.png}`);
+    if (inspection.width !== record.width || inspection.height !== record.height) throw new Error(`contact sheet PNG dimensions are stale: ${record.png}`);
   }
+  if (records.length > 0 && (records.length !== sheets.size || recordByHtml.size !== sheets.size)) throw new Error("contact sheet evidence set is stale or incomplete");
 }
 
 async function writeExactOutput(directory, sheets) {
@@ -57,7 +90,7 @@ export async function buildArchifyContactSheets({ repoRoot, check = false, __tes
   const directory = path.join(repoRoot, OUTPUT_ROOT);
   if (check) {
     await assertDirectoryPath(repoRoot, OUTPUT_ROOT, { create: false });
-    await assertExactOutput(directory, sheets);
+    await assertExactOutput(directory, sheets, qa);
     return { checked: true, outputs: [...sheets.keys()].sort(comparePaths) };
   }
   const parent = await assertDirectoryPath(repoRoot, path.posix.dirname(OUTPUT_ROOT), { create: true });

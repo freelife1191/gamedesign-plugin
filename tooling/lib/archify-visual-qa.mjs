@@ -20,7 +20,7 @@ const CHECK_KEYS = Object.freeze([
   "edge_label_collision", "ambiguous_corridor", "branch_merge_retry_resume", "rail_legend_footer",
   "light_dark_contrast", "guided_view_usefulness", "within_product_diversity", "cross_product_distinction",
 ]);
-const DEFECT_KEYS = Object.freeze(["view", "subject", "symptom", "correction_outcome"]);
+const DEFECT_KEYS = Object.freeze(["view", "subject", "symptom", "correction_outcome", "round", "correction_evidence"]);
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -65,6 +65,9 @@ async function regularContained(root, relative, label) {
 }
 
 function artifactPath(entry) {
+  if (entry.delivery_status === "blocked-visual") {
+    return `guides/archify-diagrams/visual-qa/failed-artifacts/${entry.product}/${entry.id}.html`;
+  }
   return entry.delivery_status === "published"
     ? entry.html
     : `.tmp/curated-archify/current/${entry.product}/${entry.id}.html`;
@@ -90,10 +93,14 @@ function validateDefects(entry, label, views) {
   if (entry.verdict === "failed" && entry.defects.length === 0) throw new Error(`${label}.failed verdict requires a defect record`);
   for (const [index, defect] of entry.defects.entries()) {
     assertExactKeys(defect, DEFECT_KEYS, `${label}.defects[${index}]`);
-    for (const key of DEFECT_KEYS) if (!nonempty(defect[key])) throw new Error(`${label}.defects[${index}].${key} must be a non-empty string`);
+    for (const key of ["view", "subject", "symptom", "correction_outcome", "correction_evidence"]) if (!nonempty(defect[key])) throw new Error(`${label}.defects[${index}].${key} must be a non-empty string`);
+    if (!Number.isInteger(defect.round) || defect.round < 1 || defect.round > 2) throw new Error(`${label}.defects[${index}].round must be an integer from 1 through 2`);
     if (!views.has(defect.view)) throw new Error(`${label}.defects[${index}].view must name an existing render`);
     if (!["resolved", "unresolved", "blocked"].includes(defect.correction_outcome)) throw new Error(`${label}.defects[${index}].correction_outcome is invalid`);
   }
+  if (entry.correction_rounds === 0 && entry.defects.length > 0) throw new Error(`${label} max correction round must be 0 when there are no corrections`);
+  if (entry.correction_rounds > 0 && entry.defects.length === 0) throw new Error(`${label} requires correction evidence for each nonzero correction round`);
+  if (entry.defects.length > 0 && Math.max(...entry.defects.map((defect) => defect.round)) !== entry.correction_rounds) throw new Error(`${label} max correction round must match correction_rounds`);
   if (entry.verdict === "failed" && !entry.defects.some((defect) => ["unresolved", "blocked"].includes(defect.correction_outcome))) throw new Error(`${label}.failed verdict requires an unresolved or blocked defect`);
 }
 
@@ -191,9 +198,10 @@ export async function loadArchifyVisualQa({ repoRoot, manifestPath, catalog: sup
     const bytes = manifestBytes ?? await readFile((await regularContained(repoRoot, relative, "visual QA manifest")).filename, "utf8");
     qa = JSON.parse(Buffer.isBuffer(bytes) ? bytes.toString("utf8") : bytes);
   } catch (error) { throw new Error(`invalid visual QA manifest JSON: ${error.message}`); }
-  assertExactKeys(qa, ["schema_version", "entries"], "visual QA manifest");
+  assertExactKeys(qa, ["schema_version", "entries", "contact_sheets"], "visual QA manifest");
   if (qa.schema_version !== 1) throw new Error("visual QA manifest schema_version must be 1");
   if (!Array.isArray(qa.entries)) throw new Error("visual QA manifest entries must be an array");
+  if (!Array.isArray(qa.contact_sheets)) throw new Error("visual QA manifest contact_sheets must be an array");
   const required = catalog.entries.filter((entry) => entry.decision === "selected" && ["passed", "published"].includes(entry.delivery_status));
   if (qa.entries.length === 0) {
     if (required.length > 0) throw new Error(`visual QA manifest requires passed records: ${required.map((entry) => entry.id).join(", ")}`);

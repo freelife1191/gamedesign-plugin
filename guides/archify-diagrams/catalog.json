@@ -674,12 +674,21 @@
       "composition_rationale": "진단·조사·증거 프로젝트의 주 경로 뒤에 포트폴리오·면접·성장 분기와 검토·재개를 배치한다.",
       "shared_process_with": null,
       "shared_process_reason": null,
-      "diagnostics": [],
+      "diagnostics": [
+        {
+          "code": "visual-defect",
+          "subject": "Career rail labels and guided framing",
+          "evidence": "Round 2 original-size renders retain rail-label ellipses, a cropped career-routes frame, and a review annotation collision.",
+          "attempted_fix": "Expanded the affected guided focuses and recaptured every Career view at 1600px.",
+          "round": 2,
+          "remaining_error": "Visual defects remain after the final allowed correction round."
+        }
+      ],
       "spec": "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
       "html": "guides/assets/archify/career/career-evidence-workflow.html",
       "receipt": "guides/assets/archify/career/career-evidence-workflow.receipt.json",
-      "delivery_status": "passed",
-      "visual_review": "passed",
+      "delivery_status": "blocked-visual",
+      "visual_review": "failed",
       "reviewer": "Codex Task 11 visual QA"
     },
     {

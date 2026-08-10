@@ -100,7 +100,10 @@ async function visualQaFixture(t, { omit, checks, deliveryStatus = "passed", vis
   await writeRelative(root, "README.md", SOURCE);
   for (const directory of SCAN_ROOTS.filter((item) => item !== "README.md")) await mkdir(path.join(root, directory), { recursive: true });
   await writeRelative(root, "guides/archify-diagrams/specs/studio/stable-id.json", SPEC);
-  await writeRelative(root, ".tmp/curated-archify/current/studio/stable-id.html", "<main>artifact</main>\n");
+  const artifact = deliveryStatus === "blocked-visual"
+    ? "guides/archify-diagrams/visual-qa/failed-artifacts/studio/stable-id.html"
+    : ".tmp/curated-archify/current/studio/stable-id.html";
+  await writeRelative(root, artifact, "<main>artifact</main>\n");
   const renderFiles = {};
   for (const name of ["read", "light", "dark", "guided"]) {
     const relative = `guides/archify-diagrams/visual-qa/renders/studio/stable-id/${name}.png`;
@@ -108,7 +111,7 @@ async function visualQaFixture(t, { omit, checks, deliveryStatus = "passed", vis
     await writeRelative(root, relative, bytes);
     renderFiles[name] = { relative: relative.replace("guides/archify-diagrams/visual-qa/", ""), bytes };
   }
-  const qa = { schema_version: 1, entries: [qaEntry(renderFiles, { checks })] };
+  const qa = { schema_version: 1, entries: [qaEntry(renderFiles, { checks })], contact_sheets: [] };
   if (omit === "guided") qa.entries[0].renders.guided_views = [];
   else if (omit) delete qa.entries[0].renders[omit];
   const catalog = { schema_version: 1, scan_roots: SCAN_ROOTS, scan_excludes: SCAN_EXCLUDES, entries: [catalogEntry({ deliveryStatus, visualReview })] };
@@ -139,8 +142,9 @@ function corruptSpecificationDigest(fixture) { fixture.qa.entries[0].specificati
 function corruptArtifactDigest(fixture) { fixture.qa.entries[0].artifact_sha256 = "0".repeat(64); }
 function markFailedEntryPublished(fixture) {
   fixture.qa.entries[0].verdict = "failed";
+  fixture.qa.entries[0].correction_rounds = 1;
   fixture.qa.entries[0].checks.text_clipping = "failed";
-  fixture.qa.entries[0].defects = [{ view: "read", subject: "label", symptom: "clipped", correction_outcome: "blocked" }];
+  fixture.qa.entries[0].defects = [{ view: "read", subject: "label", symptom: "clipped", correction_outcome: "blocked", round: 1, correction_evidence: "recorded failure" }];
   fixture.qa.entries[0].reviewer = "reviewer";
 }
 async function markEntryStale(fixture) {
@@ -167,20 +171,35 @@ test("visual QA requires the exact review method, valid guided defect view, and 
   const fixture = await visualQaFixture(t, { deliveryStatus: "blocked-visual", visualReview: "failed" });
   fixture.qa.entries[0].verdict = "failed";
   fixture.qa.entries[0].checks.text_clipping = "failed";
-  fixture.qa.entries[0].defects = [{ view: "view-focus", subject: "node", symptom: "overlap", correction_outcome: "blocked" }];
+  fixture.qa.entries[0].defects = [{ view: "view-focus", subject: "node", symptom: "overlap", correction_outcome: "blocked", round: 1, correction_evidence: "recorded failure" }];
   fixture.qa.entries[0].review_method = "manual";
   await rewrite(fixture);
   await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /review_method/u);
   fixture.qa.entries[0].review_method = "headless-agent-browser + original-size image reader";
   fixture.qa.entries[0].verdict = "failed";
   fixture.qa.entries[0].checks.text_clipping = "failed";
-  fixture.qa.entries[0].defects = [{ view: "view-missing", subject: "node", symptom: "overlap", correction_outcome: "blocked" }];
+  fixture.qa.entries[0].defects = [{ view: "view-missing", subject: "node", symptom: "overlap", correction_outcome: "blocked", round: 1, correction_evidence: "recorded failure" }];
   await rewrite(fixture);
   await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /existing render/u);
   fixture.qa.entries[0].defects[0].view = "view-focus";
   fixture.qa.entries[0].defects[0].correction_outcome = "later";
   await rewrite(fixture);
   await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /correction_outcome/u);
+});
+
+test("visual QA binds every correction round to a resolved defect and evidence", async (t) => {
+  const fixture = await visualQaFixture(t);
+  fixture.qa.entries[0].correction_rounds = 1;
+  fixture.qa.entries[0].defects = [{ view: "read", subject: "label", symptom: "clipped", correction_outcome: "resolved", round: 1, correction_evidence: "recaptured read.png" }];
+  await rewrite(fixture);
+  await assert.doesNotReject(() => loadArchifyVisualQa({ repoRoot: fixture.root }));
+  fixture.qa.entries[0].correction_rounds = 0;
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /max correction round/u);
+  fixture.qa.entries[0].correction_rounds = 1;
+  fixture.qa.entries[0].defects = [];
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /requires correction evidence/u);
 });
 
 test("visual QA rejects missing and corrupted PNG IDAT payloads through the shared complete-PNG inspector", async (t) => {
@@ -242,6 +261,31 @@ test("contact sheet builder checks exact bytes and rejects an omitted passed ent
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /contact sheet bytes/u);
 });
 
+test("contact sheet check binds the exact HTML and PNG capture set to READ evidence", async (t) => {
+  const fixture = await visualQaFixture(t);
+  await buildArchifyContactSheets({ repoRoot: fixture.root });
+  const directory = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets");
+  const sourceRead = fixture.qa.entries[0].renders.read.sha256;
+  fixture.qa.contact_sheets = ["all", "product-studio", "type-workflow"].map((base) => ({
+    html: `${base}.html`, html_sha256: "0".repeat(64),
+    png: `${base}.png`, png_sha256: sha256(fixture.renderFiles.read.bytes), width: 2, height: 2,
+    source_read_sha256: [sourceRead],
+  }));
+  for (const record of fixture.qa.contact_sheets) {
+    record.html_sha256 = sha256(await readFile(path.join(directory, record.html)));
+    await writeFile(path.join(directory, record.png), fixture.renderFiles.read.bytes);
+  }
+  await rewrite(fixture);
+  await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }));
+  await rm(path.join(directory, "all.png"));
+  await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /output set|missing contact sheet PNG/u);
+  await writeFile(path.join(directory, "all.png"), png(3, 2));
+  await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /PNG digest|dimensions/u);
+  await writeFile(path.join(directory, "all.png"), fixture.renderFiles.read.bytes);
+  await writeFile(path.join(directory, "all.html"), "stale\n");
+  await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /HTML digest|bytes/u);
+});
+
 test("contact sheet builder transactionally replaces stale groups with a bounded visibility gap and restores on failure", async (t) => {
   const fixture = await visualQaFixture(t);
   await buildArchifyContactSheets({ repoRoot: fixture.root });
@@ -278,8 +322,9 @@ test("contact sheet build collision preserves the original backup for forensics"
 test("blocked visual entries require a failed verdict and a complete defect record", async (t) => {
   const fixture = await visualQaFixture(t, { deliveryStatus: "blocked-visual", visualReview: "failed" });
   fixture.qa.entries[0].verdict = "failed";
+  fixture.qa.entries[0].correction_rounds = 1;
   fixture.qa.entries[0].checks.text_clipping = "failed";
-  fixture.qa.entries[0].defects = [{ view: "read", subject: "node", symptom: "overlap", correction_outcome: "blocked" }];
+  fixture.qa.entries[0].defects = [{ view: "read", subject: "node", symptom: "overlap", correction_outcome: "blocked", round: 1, correction_evidence: "recorded failure" }];
   await rewrite(fixture);
   await assert.doesNotReject(() => loadArchifyVisualQa({ repoRoot: fixture.root }));
   fixture.qa.entries[0].verdict = "passed";
