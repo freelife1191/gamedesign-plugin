@@ -8,8 +8,10 @@ import test from "node:test";
 
 import { hashArchifySource, loadArchifyCatalog } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
+import { stageCuratedArchify } from "../../tooling/lib/archify-delivery.mjs";
 import { sha256 } from "../../tooling/lib/hash.mjs";
 import { assertNoSymlinkPath, joinWithin } from "../../tooling/lib/paths.mjs";
+import { validateArchifyDeliverReceipt } from "../../tooling/lib/archify-receipt.mjs";
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
@@ -197,8 +199,16 @@ function assertSuiteHandoffSemantics(spec) {
 
 function assertSuiteSafetyLanguage(spec) {
   const visibleText = JSON.stringify(spec);
-  assert.match(visibleText, /public[\s/-]*evidence-safe|public summary|public-only/iu);
-  assert.doesNotMatch(visibleText, /approval\s+is\s+automatic|automatic\s+approval|자동\s*승인|승인이\s*자동/iu);
+  for (const phrase of [
+    "public/evidence-safe",
+    "public-only",
+    "Approval is not automatic",
+    "does not guarantee a hiring outcome",
+  ]) assert.ok(visibleText.includes(phrase), `${phrase} is required`);
+  assert.doesNotMatch(
+    visibleText,
+    /approval\s+is\s+automatic|automatic\s+approval|hiring\s+is\s+guaranteed|guaranteed\s+hiring|자동\s*승인|승인이\s*자동|채용\s*보장|채용이\s*보장/iu,
+  );
 }
 
 const suiteEvidenceDirectory = "guides/archify-diagrams/validation-evidence/suite-studio-career-handoff";
@@ -209,6 +219,45 @@ async function readEvidenceFile(relativePath, label) {
   const stats = await lstat(filename);
   assert.ok(stats.isFile(), `${label} must be a regular file`);
   return readFile(filename);
+}
+
+function assertSuiteCliIdentity(manifest, installation) {
+  assert.deepEqual(Object.keys(manifest.cli).sort(), ["bytes", "provider", "sha256", "version"]);
+  assert.equal(manifest.cli.provider, installation.provider, "manifest cli provider must match resolver");
+  assert.equal(manifest.cli.version, installation.version, "manifest cli version must match resolver");
+  assert.equal(manifest.cli.sha256, installation.cli.sha256, "manifest cli sha256 must match resolver");
+  assert.equal(manifest.cli.bytes, Number(installation.cli.size), "manifest cli bytes must match resolver");
+}
+
+function assertSuiteReceiptContract(receipt, entry, specification, artifact) {
+  assert.equal(receipt.schemaVersion, 1, "receipt schemaVersion");
+  assert.equal(receipt.ok, true, "receipt ok");
+  assert.equal(receipt.command, "deliver", "receipt command");
+  assert.equal(receipt.type, "dataflow", "receipt type");
+  assert.equal(receipt.quality, "showcase", "receipt quality");
+  assert.equal(receipt.input, entry.spec, "receipt input");
+  assert.equal(receipt.output, entry.html, "receipt output");
+  assert.deepEqual({ checksPassed: receipt.checksPassed, checkCount: receipt.checkCount, errors: receipt.errors, warnings: receipt.warnings }, {
+    checksPassed: 9, checkCount: 9, errors: 0, warnings: 0,
+  });
+  assert.equal(receipt.compositionProfile, "showcase", "receipt compositionProfile");
+  assert.equal(receipt.compositionStatus, "pass", "receipt compositionStatus");
+  validateArchifyDeliverReceipt({
+    ...receipt,
+    validation: {
+      checksPassed: receipt.checksPassed,
+      checkCount: receipt.checkCount,
+      errors: receipt.errors,
+      warnings: receipt.warnings,
+      compositionProfile: receipt.compositionProfile,
+      compositionStatus: receipt.compositionStatus,
+    },
+  }, { specification, artifact });
+}
+
+async function stageSuiteArtifact(entry) {
+  await stageCuratedArchify({ repoRoot, ids: [entry.id] });
+  return readFile(path.join(repoRoot, ".tmp", "curated-archify", "current", entry.product, `${entry.id}.html`));
 }
 
 async function assertSuiteValidationEvidence(entry, spec) {
@@ -247,16 +296,14 @@ async function assertSuiteValidationEvidence(entry, spec) {
   assert.equal(manifest.final_receipt.sha256, sha256(receiptBytes));
   assert.equal(manifest.final_receipt.bytes, receiptBytes.byteLength);
   const receipt = JSON.parse(receiptBytes.toString("utf8"));
-  assert.deepEqual(receipt.specification, { sha256: round.candidate.sha256, bytes: round.candidate.bytes });
-  assert.deepEqual({ checksPassed: receipt.checksPassed, checkCount: receipt.checkCount, errors: receipt.errors, warnings: receipt.warnings }, {
-    checksPassed: 9, checkCount: 9, errors: 0, warnings: 0,
-  });
   const installation = await (archifyInstallation ??= resolveArchifyInstallation(process.env));
   assert.equal(installation.status, "available");
-  assert.deepEqual(Object.keys(manifest.cli).sort(), ["provider", "sha256", "version"]);
-  assert.equal(typeof manifest.cli.provider, "string");
-  assert.equal(typeof manifest.cli.version, "string");
-  assert.match(manifest.cli.sha256, /^[a-f0-9]{64}$/u);
+  assertSuiteCliIdentity(manifest, installation);
+  const artifact = await stageSuiteArtifact(entry);
+  assertSuiteReceiptContract(receipt, entry, candidate, artifact);
+  assert.deepEqual(receipt.specification, { sha256: round.candidate.sha256, bytes: round.candidate.bytes });
+  assert.equal(receipt.artifact.sha256, sha256(artifact));
+  assert.equal(receipt.artifact.bytes, artifact.byteLength);
 }
 
 test("every selected Studio entry owns one exact fresh showcase spec", async () => {
@@ -292,6 +339,7 @@ test("Suite specs exist only for questions that cross both product boundaries", 
     assert.ok(hasNamedProductBoundary(spec, "Studio"));
     assert.ok(hasNamedProductBoundary(spec, "Career"));
     assertSuiteHandoffSemantics(spec);
+    assertSuiteSafetyLanguage(spec);
   }
 });
 
@@ -333,6 +381,49 @@ test("Suite dataflow contract rejects schema, unsafe approval, and held-route mu
   assert.throws(() => assertSuiteSafetyLanguage(automaticApproval), /automatic/u);
   assert.throws(() => assertSuiteHandoffSemantics(wrongResume), /decision_owner/u);
   assert.throws(() => assertSuiteHandoffSemantics(missingHeldReceipt), /held_handoff/u);
+});
+
+test("Suite safety contract rejects removal and bilingual approval or hiring guarantees", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "suite");
+  const spec = specsById.get("suite-studio-career-handoff");
+  const replaceVisibleText = (value, target, replacement) => {
+    if (typeof value === "string") return value.replaceAll(target, replacement);
+    if (Array.isArray(value)) return value.map((item) => replaceVisibleText(item, target, replacement));
+    if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceVisibleText(item, target, replacement)]));
+    return value;
+  };
+  for (const phrase of ["public/evidence-safe", "public-only", "Approval is not automatic", "does not guarantee a hiring outcome"]) {
+    assert.throws(() => assertSuiteSafetyLanguage(replaceVisibleText(spec, phrase, "redacted")), new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
+  }
+  for (const contradiction of ["Approval is automatic", "자동 승인", "Hiring is guaranteed", "채용 보장"]) {
+    const mutated = structuredClone(spec);
+    mutated.cards[1].items.push(contradiction);
+    assert.throws(() => assertSuiteSafetyLanguage(mutated));
+  }
+});
+
+test("Suite evidence rejects resolver identity and receipt provenance mutations", async () => {
+  const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
+  const entry = catalog.entries.find((item) => item.id === "suite-studio-career-handoff");
+  const spec = specsById.get("suite-studio-career-handoff");
+  const manifest = JSON.parse((await readEvidenceFile(`${suiteEvidenceDirectory}/manifest.json`, "Suite validation manifest")).toString("utf8"));
+  const receipt = JSON.parse((await readEvidenceFile(`${suiteEvidenceDirectory}/final.receipt.json`, "Suite final receipt")).toString("utf8"));
+  const candidate = await readEvidenceFile(entry.spec, "Suite candidate");
+  const artifact = await stageSuiteArtifact(entry);
+  const installation = await (archifyInstallation ??= resolveArchifyInstallation(process.env));
+  for (const field of ["provider", "version", "sha256", "bytes"]) {
+    const mutated = structuredClone(manifest);
+    mutated.cli[field] = field === "bytes" ? 0 : "wrong";
+    assert.throws(() => assertSuiteCliIdentity(mutated, installation), new RegExp(field, "u"));
+  }
+  for (const [field, value] of [
+    ["command", "validate"], ["type", "workflow"], ["quality", "standard"],
+    ["input", "wrong-input"], ["output", "wrong-output"], ["compositionProfile", "standard"],
+    ["compositionStatus", "failed"], ["artifact", { sha256: "0".repeat(64), bytes: artifact.byteLength }],
+  ]) {
+    const mutated = { ...receipt, [field]: value };
+    assert.throws(() => assertSuiteReceiptContract(mutated, entry, candidate, artifact), new RegExp(field === "artifact" ? "artifact" : field, "iu"));
+  }
 });
 
 test("Suite specs remain source-bound and structurally distinct", async () => {

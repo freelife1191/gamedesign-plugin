@@ -2,8 +2,8 @@
 
 ## Final status
 
-- **Status:** complete (Fix1: catalog, semantic, validator, and portable-evidence contracts)
-- **Commit:** this commit (`test: harden Suite Archify evidence contracts`)
+- **Status:** complete (Fix2: resolver, receipt, re-delivery provenance, and safety mutation contracts)
+- **Commit:** this commit (`test: verify Suite Archify delivery provenance`)
 - **Selected entry:** `suite-studio-career-handoff` (the only selected Suite entry)
 - **Catalog state:** `auto-validated` / `pending`; diagnostics are empty and reviewer is `null`.
 - **Scope isolation:** the existing Studio `blocked-validation` and Career `auto-validated` states were not changed.
@@ -18,11 +18,13 @@ The historical 8 → 6 → 1 repair candidates and their raw streams were not tr
 
 The tracked, reproducible final evidence is under `guides/archify-diagrams/validation-evidence/suite-studio-career-handoff/`:
 
-- `manifest.json` records a repo-relative validator argv, the logical resolver identity (`provider`, `version`, and CLI SHA-256), source-spec hash/bytes, path-normalized stdout hash/bytes, empty stderr hash/bytes, and receipt digest binding.
+- `manifest.json` records a repo-relative validator argv, the exact resolved CLI `provider`, `version`, SHA-256, and bytes, source-spec hash/bytes, path-normalized stdout hash/bytes, empty stderr hash/bytes, and receipt digest binding.
 - `final.validate.stdout.json` is the final validate stdout after replacing only the workspace-root prefix in `input` with the repo-relative candidate path; no host absolute path is persisted.
 - `final.receipt.json` is the 9/9/0/0 delivery receipt bound to the same source-spec digest.
 
 The final candidate passed the portable resolver with all nine artifact checks and a showcase composition result of `errors: 0`, `warnings: 0`.
+
+Fix2 parses the tracked persisted receipt through the production delivery-receipt validator after restoring its validation envelope, verifies its stable input/output paths and every 9/9/0/0 showcase field, then re-delivers the tracked spec through the guarded per-ID staging builder and binds the actual staged HTML SHA-256 and bytes to the tracked receipt. The contract also fails provider/version/hash/bytes and receipt command/type/quality/input/output/composition/artifact-digest mutations.
 
 The tracked final receipt is:
 
@@ -50,7 +52,7 @@ The tracked final receipt is:
 - `node --test --test-name-pattern='Suite|state-aware materialization' tests/contracts/archify-specs.test.mjs tests/contracts/archify-catalog.test.mjs` — catalog integration and Suite contracts passed.
 - `npm run build:curated-archify -- --product suite` — staged only `suite-studio-career-handoff`.
 - `npm run build:curated-archify -- --id suite-studio-career-handoff` — staged the exact Suite entry only.
-- `node --test tests/contracts/archify-specs.test.mjs tests/contracts/archify-catalog.test.mjs tests/unit/archify-signature.test.mjs tests/unit/archify-delivery.test.mjs` — 91 passed.
+- `node --test tests/contracts/archify-specs.test.mjs tests/contracts/archify-catalog.test.mjs tests/unit/archify-signature.test.mjs tests/unit/archify-delivery.test.mjs` — 93 passed.
 - `npm run validate:archify-catalog` — passed.
 - `git diff --check` — passed.
 

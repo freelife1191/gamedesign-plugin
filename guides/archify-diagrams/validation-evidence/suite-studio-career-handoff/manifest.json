@@ -5,7 +5,8 @@
   "cli": {
     "provider": "host-archify-skill",
     "version": "2.13.0",
-    "sha256": "91de5dc9131a7602d4f923b6cfdda942bca26941fa37f7bf92ffd95a3864ee50"
+    "sha256": "91de5dc9131a7602d4f923b6cfdda942bca26941fa37f7bf92ffd95a3864ee50",
+    "bytes": 54402
   },
   "rounds": [
     {
