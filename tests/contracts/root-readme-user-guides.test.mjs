@@ -62,16 +62,19 @@ const readmeSkillsteadDiagrams = [
     section: "케이스별 프롬프트로 시작하기",
     id: "prompt-to-result-flow",
     alt: "요청문에서 기획 결과와 다음 요청으로 이어지는 흐름",
+    phrases: ["플러그인 선택", "원하는 작업 사례 선택", "전문 스킬 실행", "기획 결과 폴더", "사람 검토", "다음 요청·재개"],
   },
   {
     section: "스킬별로 바로 실행하기",
     id: "skill-agent-collaboration",
     alt: "전문 스킬과 위임된 에이전트가 협업하는 흐름",
+    phrases: ["직접 호출 또는 조율 요청", "전문 스킬", "위임된 전문 검토 역할", "검토 의견과 수정 근거", "기획 결과 폴더", "사람 검토"],
   },
   {
     section: "요청 뒤에 생성되는 결과물",
     id: "artifact-review-flow",
     alt: "Canonical Artifact를 읽고 사람이 승인하는 순서",
+    phrases: ["기획 본문", "검토 근거", "주요 의사결정 기록", "이미지·첨부 자료", "출력 준비표", "이름 있는 사람"],
   },
 ];
 const skillsteadCheckSvg = path.join(
@@ -960,9 +963,64 @@ async function assertRootLinks(markdown) {
   for (const link of visibleMarkdownLinks(markdown)) await validateVisibleLocalLink(readmePath, link, root);
 }
 
+function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
+  assert.match(svgSource, /<svg\b[^>]*\bviewBox="0 0 1400 900"/u, `${id}: SVG viewBox is 1400×900`);
+  assert.match(svgSource, /<svg\b[^>]*\bwidth="1400"/u, `${id}: SVG width is 1400`);
+  assert.match(svgSource, /<svg\b[^>]*\bheight="900"/u, `${id}: SVG height is 900`);
+  const title = /<title>([\s\S]*?)<\/title>/u.exec(svgSource)?.[1] ?? "";
+  const description = /<desc>([\s\S]*?)<\/desc>/u.exec(svgSource)?.[1] ?? "";
+  assert.match(title, /[가-힣]/u, `${id}: SVG title is Korean`);
+  assert.match(description, /[가-힣]/u, `${id}: SVG description is Korean`);
+  assert.doesNotMatch(svgSource, /preserveAspectRatio\s*=\s*["']none["']/iu, `${id}: SVG forbids distorted aspect ratio`);
+  assert.doesNotMatch(svgSource, /\b(?:textLength|lengthAdjust)\s*=/u, `${id}: SVG forbids compressed text attributes`);
+  assert.doesNotMatch(svgSource, /\b(?:skewX|skewY|matrix)\s*\(/u, `${id}: SVG forbids skew or matrix transforms`);
+  assert.doesNotMatch(svgSource, /\b(?:scaleX|scaleY)\s*\(/u, `${id}: SVG forbids non-uniform scale functions`);
+  assert.doesNotMatch(svgSource, /transform\s*:\s*[^;}]*\b(?:matrix|skew|scaleX|scaleY)\b/iu, `${id}: SVG forbids style or class transform bypasses`);
+  for (const match of svgSource.matchAll(/\bscale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\s*\)/gu)) {
+    const [, x, y] = match;
+    assert.ok(y === undefined || Number(x) === Number(y), `${id}: SVG forbids direct or ancestor non-uniform scale`);
+  }
+  const visibleBody = svgSource.slice(svgSource.indexOf("</defs>") + "</defs>".length);
+  const mainFlowStart = visibleBody.indexOf("<!-- main-flow -->");
+  assert.notEqual(mainFlowStart, -1, `${id}: marks the visible main flow for semantic validation`);
+  const mainFlow = visibleBody.slice(mainFlowStart);
+  let previous = -1;
+  for (const phrase of phrases) {
+    const index = mainFlow.indexOf(phrase);
+    assert.notEqual(index, -1, `${id}: required semantic phrase is present: ${phrase}`);
+    assert.ok(index > previous, `${id}: required semantic phrases stay in reading order: ${phrase}`);
+    previous = index;
+  }
+  assert.doesNotMatch(svgSource, /증거 후보/u, `${id}: avoids abstract evidence-candidate terminology`);
+  if (id === "prompt-to-result-flow") assert.match(svgSource, /승인·보류/u, `${id}: human review keeps approval and hold choices`);
+  if (id === "skill-agent-collaboration") {
+    assert.match(svgSource, /필요한 역할을 최대 세 개까지 위임/u, `${id}: limits delegated specialist roles to three`);
+    assert.match(svgSource, /사용자가 직접 호출하지 않/u, `${id}: agents are not direct commands`);
+    assert.match(svgSource, /자동 승인(?:할 수)? 없/u, `${id}: agents cannot auto-approve`);
+    assert.deepEqual(
+      [...svgSource.matchAll(/data-delegated-role="([^"]+)"/gu)].map((match) => match[1]),
+      ["기획 판단 검토자", "문서 품질 편집자", "제작 가능성 비평가"],
+      `${id}: delegates exactly three named specialist roles`,
+    );
+  }
+  if (id === "artifact-review-flow") {
+    assert.match(svgSource, /승인 또는 보류/u, `${id}: named human keeps approval and hold choices`);
+    let previousFile = -1;
+    for (const filename of ["content.md", "evidence.yml", "decisions/", "assets/", "export-manifest.yml"]) {
+      const index = mainFlow.indexOf(filename);
+      assert.notEqual(index, -1, `${id}: keeps exact artifact file reference: ${filename}`);
+      assert.ok(index > previousFile, `${id}: keeps the exact artifact file order: ${filename}`);
+      previousFile = index;
+    }
+  }
+}
+
 async function assertReadmeSkillsteadDiagrams(markdown) {
   const readmePath = path.join(root, "README.md");
-  for (const { section: sectionHeading, id, alt } of readmeSkillsteadDiagrams) {
+  const assetDirectory = path.join(root, "guides/assets/readme");
+  assertReadmeSkillsteadAssetNames(await readdir(assetDirectory));
+  for (const diagram of readmeSkillsteadDiagrams) {
+    const { section: sectionHeading, id, alt } = diagram;
     const body = exactSection(markdown, sectionHeading);
     const png = `guides/assets/readme/${id}.png`;
     const svg = `guides/assets/readme/${id}.svg`;
@@ -975,15 +1033,7 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
     await assertRegularNonSymlinkFile(svgPath, root);
 
     const svgSource = await readFile(svgPath, "utf8");
-    assert.match(svgSource, /<svg\b[^>]*\bviewBox="0 0 1400 900"/u, `${id}: SVG viewBox is 1400×900`);
-    assert.match(svgSource, /<svg\b[^>]*\bwidth="1400"/u, `${id}: SVG width is 1400`);
-    assert.match(svgSource, /<svg\b[^>]*\bheight="900"/u, `${id}: SVG height is 900`);
-    const title = /<title>([\s\S]*?)<\/title>/u.exec(svgSource)?.[1] ?? "";
-    const description = /<desc>([\s\S]*?)<\/desc>/u.exec(svgSource)?.[1] ?? "";
-    assert.match(title, /[가-힣]/u, `${id}: SVG title is Korean`);
-    assert.match(description, /[가-힣]/u, `${id}: SVG description is Korean`);
-    assert.doesNotMatch(svgSource, /preserveAspectRatio\s*=\s*["']none["']/iu, `${id}: SVG forbids distorted aspect ratio`);
-    assert.doesNotMatch(svgSource, /\b(?:scaleX|scaleY)\s*\(/u, `${id}: SVG forbids non-uniform scale transforms`);
+    assertReadmeSkillsteadDiagramSource(svgSource, diagram);
     const lint = spawnSync(process.execPath, [skillsteadCheckSvg, svgPath], { encoding: "utf8" });
     assert.equal(lint.status, 0, `${id}: Skillstead source lint passes\n${lint.stdout}\n${lint.stderr}`);
     assert.match(lint.stdout, /0 warning\(s\)/u, `${id}: Skillstead source lint has no warnings\n${lint.stdout}`);
@@ -993,6 +1043,21 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
     assert.equal(pngBytes.readUInt32BE(16), 2800, `${id}: PNG width is exactly 2800`);
     assert.equal(pngBytes.readUInt32BE(20), 1800, `${id}: PNG height is exactly 1800`);
   }
+}
+
+function assertReadmeSkillsteadAssetNames(files) {
+  const expectedFiles = readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]).sort();
+  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly three PNG/SVG pairs");
+}
+
+function assertReadmeSkillsteadSourceRejected(source, diagram, label) {
+  try {
+    assertReadmeSkillsteadDiagramSource(source, diagram);
+  } catch (error) {
+    assertNoGenericTypeError(error, `${diagram.id}: ${label}`);
+    return;
+  }
+  assert.fail(`${diagram.id}: ${label} mutation unexpectedly satisfied the diagram contract`);
 }
 
 function assertSharedPngLinks(markdown) {
@@ -1304,6 +1369,48 @@ test("root README follows the approved task-oriented information architecture", 
 test("root README embeds three machine-linted Skillstead explanation diagrams", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertReadmeSkillsteadDiagrams(readme);
+});
+
+test("README Skillstead explanation diagrams reject semantic and distortion regressions", async () => {
+  assert.throws(
+    () => assertReadmeSkillsteadAssetNames([...readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]), "fourth-flow.svg"]),
+    /exactly three PNG\/SVG pairs/u,
+    "a fourth unowned explainer pair is rejected",
+  );
+  for (const diagram of readmeSkillsteadDiagrams) {
+    const source = await readFile(path.join(root, "guides/assets/readme", `${diagram.id}.svg`), "utf8");
+    assert.doesNotThrow(() => assertReadmeSkillsteadDiagramSource(source, diagram), `${diagram.id}: baseline source is semantically complete`);
+    const missingNode = source.replaceAll(diagram.phrases[2], "누락된 단계");
+    const reorderedNode = source.replaceAll(diagram.phrases[1], "__second__").replaceAll(diagram.phrases[2], diagram.phrases[1]).replaceAll("__second__", diagram.phrases[2]);
+    const compressedText = source.replace("<svg ", '<svg textLength="1" ');
+    const directScale = source.replace("<svg ", '<svg transform="scale(1 0.8)" ');
+    const styleBypass = source.replace("<style>", "<style>.bypass{transform:scaleX(.8)}");
+    for (const [label, mutated] of [
+      ["missing semantic node", missingNode],
+      ["reordered semantic nodes", reorderedNode],
+      ["compressed text attribute", compressedText],
+      ["text length adjustment", source.replace("<svg ", '<svg lengthAdjust="spacingAndGlyphs" ')],
+      ["direct non-uniform scale", directScale],
+      ["ancestor non-uniform scale", source.replace("<!-- main-flow -->", '<g transform="scale(1 0.8)"><!-- main-flow -->')],
+      ["matrix transform", source.replace("<svg ", '<svg transform="matrix(1 0 0 .8 0 0)" ')],
+      ["skew transform", source.replace("<svg ", '<svg transform="skewX(10)" ')],
+      ["style transform bypass", styleBypass],
+    ]) {
+      assert.notEqual(mutated, source, `${diagram.id}: ${label} mutation changes source`);
+      assertReadmeSkillsteadSourceRejected(mutated, diagram, label);
+    }
+  }
+  const collaboration = readmeSkillsteadDiagrams.find(({ id }) => id === "skill-agent-collaboration");
+  assert.ok(collaboration, "collaboration diagram registry exists");
+  const collaborationSource = await readFile(path.join(root, "guides/assets/readme/skill-agent-collaboration.svg"), "utf8");
+  for (const [label, mutated] of [
+    ["automatic approval", collaborationSource.replaceAll("자동 승인할 수 없습니다", "자동 승인합니다")],
+    ["direct agent command", collaborationSource.replaceAll("사용자가 직접 호출하지 않습니다", "사용자가 직접 호출합니다")],
+    ["fourth delegated role", collaborationSource.replace("data-delegated-role=\"제작 가능성 비평가\"", "data-delegated-role=\"제작 가능성 비평가\"/><rect data-delegated-role=\"네 번째 역할\"")],
+  ]) {
+    assert.notEqual(mutated, collaborationSource, `${label}: mutation changes collaboration source`);
+    assertReadmeSkillsteadSourceRejected(mutated, collaboration, label);
+  }
 });
 
 test("portfolio quick start rejects abstract, unordered, and auto-approved variants", async () => {

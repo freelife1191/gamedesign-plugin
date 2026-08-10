@@ -19,6 +19,7 @@
   <text x="70" y="116" class="sub">영문 ID는 찾기용 참조입니다. 화면에서는 한국어 과제와 결과를 먼저 읽습니다.</text>
   <rect x="55" y="180" width="1290" height="390" rx="22" fill="#FFFFFF" stroke="var(--hair)" stroke-width="2"/>
   <path class="line" d="M300 380H345"/><path class="line" d="M555 380H600"/><path class="line" d="M810 380H855"/><path class="line" d="M1065 380H1110"/>
+  <!-- main-flow -->
   <g>
     <rect x="90" y="270" width="210" height="220" rx="16" fill="var(--blue-fill)" stroke="var(--blue)" class="card"/>
     <rect x="112" y="292" width="38" height="30" rx="15" fill="var(--blue)"/><text x="131" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">1</text>
@@ -29,7 +30,7 @@
     <rect x="345" y="270" width="210" height="220" rx="16" fill="var(--violet-fill)" stroke="var(--violet)" class="card"/>
     <rect x="367" y="292" width="38" height="30" rx="15" fill="var(--violet)"/><text x="386" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">2</text>
     <circle cx="450" cy="353" r="34" fill="#E2E0FA"/><use href="#ic-card" x="430" y="333" width="40" height="40" style="color:#534AB7"/>
-    <text x="450" y="415" class="card-title" fill="var(--violet)" text-anchor="middle">한글 사례 카드</text><text x="450" y="447" class="card-body" text-anchor="middle">문제와 목표 확인</text>
+    <text x="450" y="415" class="card-title" fill="var(--violet)" text-anchor="middle" style="font-size:18px">원하는 작업 사례 선택</text><text x="450" y="447" class="card-body" text-anchor="middle">문제와 목표를 고르기</text>
   </g>
   <g>
     <rect x="600" y="270" width="210" height="220" rx="16" fill="var(--green-fill)" stroke="var(--green)" class="card"/>
@@ -41,7 +42,7 @@
     <rect x="855" y="270" width="210" height="220" rx="16" fill="#F1F4F8" stroke="#64748B" class="card"/>
     <rect x="877" y="292" width="38" height="30" rx="15" fill="#64748B"/><text x="896" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">4</text>
     <circle cx="960" cy="353" r="34" fill="#E3E8EF"/><use href="#ic-folder" x="940" y="333" width="40" height="40" style="color:#475569"/>
-    <text x="960" y="408" class="card-title" fill="#475569" text-anchor="middle">기획 결과 폴더</text><text x="960" y="438" class="card-body" text-anchor="middle">Canonical Artifact</text><text x="960" y="463" class="caption" text-anchor="middle">기준 파일 보존</text>
+    <text x="960" y="408" class="card-title" fill="#475569" text-anchor="middle">기획 결과 폴더</text><text x="960" y="438" class="card-body" text-anchor="middle">(Canonical Artifact)</text><text x="960" y="463" class="caption" text-anchor="middle">기준 파일 보존</text>
   </g>
   <g>
     <rect x="1110" y="270" width="210" height="220" rx="16" fill="var(--rose-fill)" stroke="var(--rose)" class="card"/>
