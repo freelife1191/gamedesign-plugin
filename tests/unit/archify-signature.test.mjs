@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 import {
@@ -155,6 +156,43 @@ function workflowGraph(name, undirectedEdges) {
   };
 }
 
+function symmetricWorkflow(ids, complete = false) {
+  return {
+    schema_version: 1,
+    diagram_type: "workflow",
+    meta: meta(complete ? "완전 그래프" : "빈 그래프"),
+    lanes: [{ id: "core", label: "핵심" }],
+    nodes: ids.map((id) => ({ id, lane: "core", col: 0, type: "backend", label: "동일 노드" })),
+    mainPath: ids,
+    edges: complete ? ids.flatMap((from) => ids.filter((to) => to !== from).map((to) => ({ from, to, variant: "default", role: "main" }))) : [],
+  };
+}
+
+function boundedWorkflowSignatures(specs) {
+  const signatureModule = new URL("../../tooling/lib/archify-signature.mjs", import.meta.url).href;
+  const program = [
+    `import { structuralSignature } from ${JSON.stringify(signatureModule)};`,
+    `const specs = ${JSON.stringify(specs)};`,
+    'console.log(JSON.stringify(specs.map((spec) => structuralSignature({ type: "workflow", spec }))));',
+  ].join("\n");
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", program], {
+    encoding: "utf8",
+    timeout: 3_000,
+  });
+  assert.equal(result.error?.code, undefined, result.stderr);
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
+
+function minimalArchitectureFixture() {
+  return {
+    schema_version: 1,
+    diagram_type: "architecture",
+    meta: meta("단일 컴포넌트"),
+    components: [{ id: "api", type: "backend", label: "API" }],
+  };
+}
+
 function duplicateCatalog({ firstException = null, secondException = null } = {}) {
   return {
     entries: [
@@ -198,6 +236,32 @@ test("non-isomorphic regular directed graphs have different signatures", () => {
   const k33 = workflowGraph("K3,3", [["a", "d"], ["a", "e"], ["a", "f"], ["b", "d"], ["b", "e"], ["b", "f"], ["c", "d"], ["c", "e"], ["c", "f"]]);
   const prism = workflowGraph("triangular prism", [["a", "b"], ["b", "c"], ["c", "a"], ["d", "e"], ["e", "f"], ["f", "d"], ["a", "d"], ["b", "e"], ["c", "f"]]);
   assert.notEqual(structuralSignature({ type: "workflow", spec: k33 }), structuralSignature({ type: "workflow", spec: prism }));
+});
+
+test("12-node empty workflow is bounded and invariant to IDs and array order", () => {
+  const first = symmetricWorkflow(Array.from({ length: 12 }, (_, index) => `node${index}`));
+  const second = symmetricWorkflow(Array.from({ length: 12 }, (_, index) => `renamed${11 - index}`));
+  second.nodes.reverse();
+  const [firstSignature, secondSignature] = boundedWorkflowSignatures([first, second]);
+  assert.equal(firstSignature, secondSignature);
+});
+
+test("12-node complete workflow is bounded and invariant to IDs and array order", () => {
+  const first = symmetricWorkflow(Array.from({ length: 12 }, (_, index) => `node${index}`), true);
+  const second = symmetricWorkflow(Array.from({ length: 12 }, (_, index) => `renamed${11 - index}`), true);
+  second.nodes.reverse();
+  const [firstSignature, secondSignature] = boundedWorkflowSignatures([first, second]);
+  assert.equal(firstSignature, secondSignature);
+});
+
+test("components-only architecture follows the official optional collection contract", () => {
+  const minimal = minimalArchitectureFixture();
+  assert.doesNotThrow(() => structuralSignature({ type: "architecture", spec: minimal }));
+  for (const field of ["connections", "boundaries"]) {
+    const malformed = structuredClone(minimal);
+    malformed[field] = {};
+    assert.throws(() => structuralSignature({ type: "architecture", spec: malformed }), /array when present/u);
+  }
 });
 
 test("architecture boundary wraps and positions participate without labels", () => {

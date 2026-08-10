@@ -95,7 +95,9 @@ function buildGraph(type, spec) {
   const adapter = adapters[type];
   if (!adapter) throw new Error(`unsupported Archify diagram type: ${type}`);
   const nodes = arrayField(spec, adapter.nodes, type);
-  const edges = arrayField(spec, adapter.edges, type);
+  const edges = type === "architecture"
+    ? optionalArrayField(spec, adapter.edges)
+    : arrayField(spec, adapter.edges, type);
   if (nodes.length > 12) throw new Error(`${type} supports at most 12 primary nodes for structural canonicalization`);
 
   const nodeIndex = new Map();
@@ -117,13 +119,16 @@ function buildGraph(type, spec) {
     if (from === undefined || to === undefined) throw new Error(`${type} ${adapter.edges}[${index}] has an unresolved endpoint`);
     return { from, to, attributes: edgeAttributes(type, edge, index, yRanks) };
   });
-  return { adapter, edges: normalizedEdges, layouts, nodeIndex, nodes };
+  const relationships = Array.from({ length: nodes.length }, () => Array.from({ length: nodes.length }, () => []));
+  for (const edge of normalizedEdges) relationships[edge.from][edge.to].push(canonicalJson(edge.attributes));
+  for (const rows of relationships) for (const relationship of rows) relationship.sort();
+  return { adapter, edges: normalizedEdges, layouts, nodeIndex, nodes, relationships };
 }
 
 function containersFor(type, spec, graph) {
   const { nodeIndex, nodes } = graph;
   if (type === "architecture") {
-    return arrayField(spec, "boundaries", type).map((boundary, index) => {
+    return optionalArrayField(spec, "boundaries").map((boundary, index) => {
       if (!Array.isArray(boundary?.wraps)) throw new Error(`architecture boundaries[${index}].wraps must be an array`);
       const members = boundary.wraps.map((id, memberIndex) => {
         const node = nodeIndex.get(stringId(id, `architecture boundaries[${index}].wraps[${memberIndex}]`));
@@ -165,11 +170,15 @@ function containersFor(type, spec, graph) {
 }
 
 function initialColors(graph) {
-  const keys = graph.nodes.map((node, index) => canonicalJson({
-    layout: graph.layouts[index],
-    type: node.type ?? "unspecified",
-  }));
+  const keys = graph.nodes.map((_, index) => nodeRecord(graph, index));
   return assignColors(keys);
+}
+
+function nodeRecord(graph, index) {
+  return canonicalJson({
+    layout: graph.layouts[index],
+    type: graph.nodes[index].type ?? "unspecified",
+  });
 }
 
 function assignColors(keys) {
@@ -185,7 +194,7 @@ function refine(graph, initial) {
       color: colors[index],
       incoming: graph.edges.filter((edge) => edge.to === index)
         .map((edge) => ({ attributes: edge.attributes, color: colors[edge.from] })).sort(compareCanonical),
-      node: { layout: graph.layouts[index], type: node.type ?? "unspecified" },
+      node: nodeRecord(graph, index),
       outgoing: graph.edges.filter((edge) => edge.from === index)
         .map((edge) => ({ attributes: edge.attributes, color: colors[edge.to] })).sort(compareCanonical),
     }));
@@ -201,23 +210,95 @@ function compareCanonical(left, right) {
 }
 
 function canonicalEncoding(graph, containers) {
+  const stateMemo = new Map();
+
   function search(colors, individualization) {
     const refined = refine(graph, colors);
+    const stateKey = partitionStateKey(graph, containers, refined);
+    const knownStates = stateMemo.get(stateKey) ?? [];
+    for (const known of knownStates) {
+      if (isColorPreservingAutomorphism(graph, containers, refined, known.colors)) return known.encoding;
+    }
     const classes = new Map();
     for (const [index, color] of refined.entries()) classes.set(color, [...(classes.get(color) ?? []), index]);
     const ambiguous = [...classes.entries()].filter(([, members]) => members.length > 1).sort(([left], [right]) => left.localeCompare(right));
-    if (ambiguous.length === 0) return encodeDiscrete(graph, containers, refined);
-    const [, members] = ambiguous[0];
-    let best;
-    for (const member of members) {
-      const next = [...refined];
-      next[member] = `individual-${individualization}`;
-      const candidate = search(next, individualization + 1);
-      if (best === undefined || candidate < best) best = candidate;
+    let encoding;
+    if (ambiguous.length === 0) {
+      encoding = encodeDiscrete(graph, containers, refined);
+    } else {
+      const [, members] = ambiguous[0];
+      for (const member of members) {
+        const next = [...refined];
+        next[member] = `individual-${individualization}`;
+        const candidate = search(next, individualization + 1);
+        if (encoding === undefined || candidate < encoding) encoding = candidate;
+      }
     }
-    return best;
+    stateMemo.set(stateKey, [...knownStates, { colors: refined, encoding }]);
+    return encoding;
   }
   return search(initialColors(graph), 0);
+}
+
+function partitionStateKey(graph, containers, colors) {
+  return canonicalJson({
+    containers: containers.map((container) => ({
+      ...container,
+      members: container.members?.map((member) => colors[member]).sort(),
+    })).sort(compareCanonical),
+    edges: graph.edges.map((edge) => ({
+      attributes: edge.attributes,
+      from: colors[edge.from],
+      to: colors[edge.to],
+    })).sort(compareCanonical),
+    nodes: graph.nodes.map((_, index) => ({ color: colors[index], node: nodeRecord(graph, index) })).sort(compareCanonical),
+  });
+}
+
+function isColorPreservingAutomorphism(graph, containers, sourceColors, targetColors) {
+  const candidates = graph.nodes.map((_, source) => graph.nodes.flatMap((__, target) => (
+    sourceColors[source] === targetColors[target] && nodeRecord(graph, source) === nodeRecord(graph, target) ? [target] : []
+  )));
+  if (candidates.some((options) => options.length === 0)) return false;
+  const order = [...graph.nodes.keys()].sort((left, right) => candidates[left].length - candidates[right].length || left - right);
+  const mapped = new Map();
+  const used = new Set();
+
+  function preservesMappedRelationships(source, target) {
+    if (graph.relationships[source][source].join("\u0000") !== graph.relationships[target][target].join("\u0000")) return false;
+    for (const [mappedSource, mappedTarget] of mapped) {
+      if (graph.relationships[source][mappedSource].join("\u0000") !== graph.relationships[target][mappedTarget].join("\u0000")) return false;
+      if (graph.relationships[mappedSource][source].join("\u0000") !== graph.relationships[mappedTarget][target].join("\u0000")) return false;
+    }
+    return true;
+  }
+
+  function preservesContainers() {
+    const mappedContainers = containers.map((container) => ({
+      ...container,
+      members: container.members?.map((member) => mapped.get(member)).sort((left, right) => left - right),
+    })).sort(compareCanonical);
+    const expected = containers.map((container) => ({
+      ...container,
+      members: container.members?.slice().sort((left, right) => left - right),
+    })).sort(compareCanonical);
+    return canonicalJson(mappedContainers) === canonicalJson(expected);
+  }
+
+  function visit(index) {
+    if (index === order.length) return preservesContainers();
+    const source = order[index];
+    for (const target of candidates[source]) {
+      if (used.has(target) || !preservesMappedRelationships(source, target)) continue;
+      mapped.set(source, target);
+      used.add(target);
+      if (visit(index + 1)) return true;
+      used.delete(target);
+      mapped.delete(source);
+    }
+    return false;
+  }
+  return visit(0);
 }
 
 function encodeDiscrete(graph, containers, colors) {
