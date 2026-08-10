@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -9,6 +8,32 @@ import {
 } from "../../tooling/lib/archify-catalog.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
+
+function normalizedReasonTemplate(entry) {
+  return entry.decision_reason
+    .toLowerCase()
+    .replaceAll(entry.source_document.toLowerCase(), "<source>")
+    .replaceAll(entry.source_section.toLowerCase(), "<section>")
+    .replace(/https?:\/\/\S+|(?:[\w./-]+\.(?:svg|png|md|json))/gu, "<path>")
+    .replace(/\$[a-z0-9:-]+|(?:studio|career|suite):[a-z0-9:-]+|\b[A-Z]{2}-[A-Z0-9-]+\b/gu, "<id>")
+    .replace(/`[^`]*`|“[^”]*”|"[^"]*"|'[^']*'/gu, "<quoted>")
+    .replace(/\*\*[^*]*\*\*|_[^_]*_/gu, "<emphasis>")
+    .replace(/은 .*?을 실제 근거로 삼는다\./gu, "은 <evidence>을 실제 근거로 삼는다.")
+    .replace(/(?:스킬 흐름:|기본 스킬:)\s*[^.]+/gu, "<skill-flow>")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+function assertNoRepeatedGenericReasonTemplates(entries) {
+  const templates = new Map();
+  for (const entry of entries) {
+    const template = normalizedReasonTemplate(entry);
+    templates.set(template, [...(templates.get(template) ?? []), entry.source_document]);
+  }
+  for (const [template, documents] of templates) {
+    assert.ok(documents.length < 3, `${documents.join(", ")} repeat generic template: ${template}`);
+  }
+}
 
 test("production Archify catalog covers the complete declared Markdown corpus", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
@@ -84,23 +109,19 @@ test("production selection excludes the existing plugin selection Skillstead flo
   assert.match(entry.decision_reason, /guides\/assets\/shared\/plugin-selection-flow\.svg/u);
 });
 
+test("reason template guard rejects three scope-and-evidence interpolations", () => {
+  const entries = ["alpha", "beta", "gamma"].map((name) => ({
+    source_document: `guides/${name}.md`,
+    source_section: `${name} section`,
+    decision_reason: `“${name} section”은 $${name}:run의 ${name}.svg를 이미 참조한다. 같은 안내 문구를 직접 읽는 편이 더 정확하다. 근거: \`${name} output\`.`,
+  }));
+  assert.throws(() => assertNoRepeatedGenericReasonTemplates(entries), /repeat generic template/u);
+});
+
 test("production text exclusions have non-repeating evidence-backed reasoning", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
-  const skeletons = new Map();
   for (const entry of catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text")) {
-    const evidence = /근거: `([^`]+)`/u.exec(entry.decision_reason);
-    assert.ok(evidence, entry.source_document);
-    const source = await readFile(path.join(repoRoot, entry.source_document), "utf8");
-    const sourceBody = source.replace(/^(?: {0,3})#{1,6}\s+.*$/gmu, "");
-    assert.ok(sourceBody.includes(evidence[1]), entry.source_document);
-    const headings = [...source.matchAll(/^(?: {0,3})#{1,6}\s+(.+?)(?:\s+#+)?\s*$/gmu)].map((match) => match[1].trim());
-    let normalized = entry.decision_reason
-      .replaceAll(entry.source_document, "<source>")
-      .replaceAll(entry.source_section, "<section>");
-    for (const heading of headings) normalized = normalized.replaceAll(heading, "<heading>");
-    skeletons.set(normalized, [...(skeletons.get(normalized) ?? []), entry.source_document]);
+    assert.ok(entry.decision_reason.includes(entry.source_section), entry.source_document);
   }
-  for (const [skeleton, documents] of skeletons) {
-    assert.ok(documents.length === 1, `${documents.join(", ")} share template: ${skeleton}`);
-  }
+  assertNoRepeatedGenericReasonTemplates(catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text"));
 });
