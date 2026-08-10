@@ -18,6 +18,8 @@
 - 설치 스킬 15개는 제품 source 스킬 14개와 vendored Skillstead `svg-infographic` 1개로 구분한다.
 - 모든 스킬 행은 설치 namespace 직접 호출 커맨드와 상세 가이드 링크를 가진다.
 - 모든 에이전트 행은 역할, 주요 검토 지점, 호출 경계와 상세 역할 문서 링크를 가진다.
+- 사례, 스킬과 에이전트의 첫 표시는 한글 제목 또는 역할명이 먼저 오고 stable 영문 ID는 괄호에 둔다.
+- README의 추가 설명 도식은 Skillstead 0.8.3으로 작성하고 editable SVG와 2× PNG를 함께 보존한다.
 - 복사 가능한 prompt 코드 줄은 80자를 넘기지 않는다.
 - 편집 원본은 `products/<product>/plugin/`이며 `plugins/<product>/`는 표준 빌드가 생성한다.
 - generated plugin tree와 `BUILD-MANIFEST.json`을 직접 편집하지 않는다.
@@ -47,6 +49,12 @@
 - `guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/view-plugin-boundaries.png`: 플러그인 경계 guided view
 - `guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/view-artifact-validation.png`: Artifact·검증 guided view
 - `guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/view-human-approval.png`: 사람 승인 guided view
+- `guides/assets/readme/prompt-to-result-flow.svg`: 사례 선택부터 다음 요청까지 설명하는 editable Skillstead source
+- `guides/assets/readme/prompt-to-result-flow.png`: 위 도식의 2× PNG
+- `guides/assets/readme/skill-agent-collaboration.svg`: 스킬과 에이전트 협업을 설명하는 editable Skillstead source
+- `guides/assets/readme/skill-agent-collaboration.png`: 위 도식의 2× PNG
+- `guides/assets/readme/artifact-review-flow.svg`: Artifact 읽기와 승인 순서를 설명하는 editable Skillstead source
+- `guides/assets/readme/artifact-review-flow.png`: 위 도식의 2× PNG
 
 ### Modify
 
@@ -83,7 +91,7 @@
 
 **Interfaces:**
 - Consumes: `collectMarkdownHeadings()`, `extractMarkdownLinks()`, `collectProductInventory()` from `tooling/lib/user-guides.mjs`
-- Produces: exact root README contract for Task 2 and architecture embed contract hook for Task 5
+- Produces: exact root README contract for Task 2, beginner-readable labels for Task 4, and architecture embed contract hook for Task 7
 
 - [ ] **Step 1: Replace the old H2 contract with the approved ordered set**
 
@@ -228,7 +236,7 @@ git commit -m "test: define structured README contracts"
 
 **Interfaces:**
 - Consumes: exact headings, card IDs, result IDs and tree counts from Task 1
-- Produces: complete textual README surface; Task 5 adds the final architecture image link without restructuring sections
+- Produces: complete textual README surface; Tasks 4–5 improve beginner readability and Skillstead explanations, Task 7 adds the final architecture image link without restructuring sections
 
 - [ ] **Step 1: Write the new opener and TOC**
 
@@ -314,7 +322,7 @@ Run:
 node --test tests/contracts/root-readme-user-guides.test.mjs
 ```
 
-Expected: PASS for TOC, H2 order, 18 cards, prompt width, 30 installed skill rows, 18 agent rows, six results and both file trees. The architecture embed assertion remains absent until Task 5.
+Expected: PASS for TOC, H2 order, 18 cards, prompt width, 30 installed skill rows, 18 agent rows, six results and both file trees. The architecture embed assertion remains absent until Task 7.
 
 - [ ] **Step 14: Run guide validation and commit**
 
@@ -339,7 +347,7 @@ Expected: guide validation exit 0 and no whitespace errors.
 
 **Interfaces:**
 - Consumes: installed Archify architecture schema, common schema, one architecture example and the README/file-tree semantics from Task 2
-- Produces: immutable auto-validated spec and catalog record for Task 4 delivery
+- Produces: immutable auto-validated spec and catalog record for Task 6 delivery
 
 - [ ] **Step 1: Read only the required Archify authoring inputs**
 
@@ -430,7 +438,120 @@ git commit -m "docs: author the suite system architecture"
 
 ---
 
-### Task 4: Deliver, visually inspect, and publish the architecture
+### Task 4: Replace code-first labels with beginner-readable Korean guidance
+
+**Files:**
+- Modify: `README.md`
+- Modify: `tests/contracts/root-readme-user-guides.test.mjs`
+- Modify: `guides/archify-diagrams/catalog.json`
+
+**Interfaces:**
+- Consumes: 18 source-bound prompt cards, 30 installed skills, 18 agents and six result IDs from Tasks 1–2
+- Produces: a beginner-readable README whose stable IDs remain available as secondary technical references
+
+- [ ] **Step 1: Add RED contracts for human-readable summaries**
+
+Require every representative `<summary>` to start with a Korean task title, include its stable case ID in parentheses, and be followed by a visible Korean one-sentence description that states when to use it or what it produces. Reject ID-first summaries, slug-only result lists, missing Hangul, swapped IDs and generic repeated descriptions.
+
+- [ ] **Step 2: Add RED contracts for Korean skill and agent names**
+
+Require every skill row to begin with a unique Korean skill name followed by the exact English skill ID in parentheses. Require every agent row to begin with a Korean role name followed by the exact English agent ID in parentheses. Each row must retain its command/link/delegation contract and add a plain-Korean role explanation. Mutations that remove the Korean name, move the ID before the name or reuse one generic description across a product must fail with the affected ID.
+
+- [ ] **Step 3: Add RED contracts for result labels and section introductions**
+
+Require every result example to use `한글 결과명 (English artifact ID)` and each Studio, Career and Suite case group to start with a two-sentence Korean introduction explaining who should choose the group and what reviewable result it creates.
+
+- [ ] **Step 4: Rewrite the 18 case summaries and introductions**
+
+Use source-backed use-case titles or faithful Korean task names. Translate levels as `기본`, `표준`, `심화` in visible prose while retaining the catalog level in the card body when needed. Keep the stable ID and artifact slugs as secondary technical evidence, not the leading message.
+
+- [ ] **Step 5: Rewrite all skill, agent and result labels**
+
+Add concise, unique Korean names and beginner-facing explanations to all 30 installed skills, all 18 agents and six result examples. Preserve exact English IDs, commands, links, output order and human-review boundaries.
+
+- [ ] **Step 6: Run focused contracts and refresh the Archify source digest**
+
+```bash
+node --test tests/contracts/root-readme-user-guides.test.mjs
+npm run validate:guides
+```
+
+Compute the new README SHA-256 and update only the `suite-plugin-system-architecture` catalog `source_digest`; do not edit the frozen Archify spec. Run `npm run validate:archify-catalog` and `git diff --check`.
+
+- [ ] **Step 7: Commit the readable labels**
+
+```bash
+git add README.md tests/contracts/root-readme-user-guides.test.mjs \
+  guides/archify-diagrams/catalog.json
+git commit -m "docs: make README examples beginner-readable"
+```
+
+---
+
+### Task 5: Add Skillstead diagrams for the beginner README flows
+
+**Files:**
+- Create: `guides/assets/readme/prompt-to-result-flow.svg`
+- Create: `guides/assets/readme/prompt-to-result-flow.png`
+- Create: `guides/assets/readme/skill-agent-collaboration.svg`
+- Create: `guides/assets/readme/skill-agent-collaboration.png`
+- Create: `guides/assets/readme/artifact-review-flow.svg`
+- Create: `guides/assets/readme/artifact-review-flow.png`
+- Modify: `README.md`
+- Modify: `tests/contracts/root-readme-user-guides.test.mjs`
+- Modify: `guides/archify-diagrams/catalog.json`
+
+**Interfaces:**
+- Consumes: the Korean case, skill/agent and result explanations from Task 4
+- Produces: three editable, machine-linted, visually reviewed Skillstead diagram pairs embedded in their owning README sections
+
+- [ ] **Step 1: Add the Skillstead asset RED contract**
+
+Require these exact PNG→SVG linked embeds in the case, skill and result sections. Resolve every target as a contained regular non-symlink file. Require SVG root `1400×900`, Korean `<title>/<desc>`, no distortion attributes and successful Skillstead source lint. Require every PNG IHDR to be exactly `2800×1800`.
+
+- [ ] **Step 2: Read the installed Skillstead authoring contract**
+
+Read the complete installed `svg-infographic` `SKILL.md` and `references/authoring.md`, plus the Flow and Approval/sequence-lite sections of `references/archetypes.md`. Confirm Node 18+ and use `guides/assets/readme/` as the already-approved in-project output directory.
+
+- [ ] **Step 3: Author `prompt-to-result-flow`**
+
+Use the Flow archetype with at most five main nodes: 플러그인 선택 → 한글 사례 카드 → 전문 스킬 실행 → Canonical Artifact → 사람 검토. Add one dashed branch from 사람 검토 to 다음 요청/재개. State the conclusion that IDs are references and the Korean task/result is the primary reading surface.
+
+- [ ] **Step 4: Author `skill-agent-collaboration`**
+
+Use a two-lane Flow or Approval archetype: 사용자 직접 호출/오케스트레이터 → 전문 스킬 → 최대 세 전문 에이전트 검토 → findings merge → Artifact 보완·보류·재개. Make clear that agents are delegated roles, not direct user commands, and that they cannot auto-approve.
+
+- [ ] **Step 5: Author `artifact-review-flow`**
+
+Use the Flow archetype with the exact order `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`, followed by a named-human approval gate. Distinguish always-read files, optional assets and renderer-dependent derivatives.
+
+- [ ] **Step 6: Lint and render through canonical Skillstead**
+
+Run the installed `check-svg.mjs` and `render.mjs` for every SVG. The renderer must report its Chromium executable/version and exact `2800×1800` PNG dimensions. Hard errors or warnings are not accepted without correction.
+
+- [ ] **Step 7: Inspect all six files at fit and original size**
+
+Inspect each SVG/PNG pair and all three PNGs at fit-to-page and original size. Reject tofu, glyph compression, clipping, overflow, overlap, mid-token split, unreadable connector, head-only arrow, weak fit-page flow, or an unclear human gate. Fix SVG source and rerender; never patch PNG pixels.
+
+- [ ] **Step 8: Embed the diagrams and refresh the README digest**
+
+Place the three PNG→SVG links after the corresponding section introduction. Recompute the root architecture catalog `source_digest` without changing the frozen Archify spec.
+
+- [ ] **Step 9: Verify and commit**
+
+```bash
+node --test tests/contracts/root-readme-user-guides.test.mjs
+npm run validate:guides
+npm run validate:archify-catalog
+git diff --check
+git add README.md guides/assets/readme tests/contracts/root-readme-user-guides.test.mjs \
+  guides/archify-diagrams/catalog.json
+git commit -m "docs: add Skillstead README explainers"
+```
+
+---
+
+### Task 6: Deliver, visually inspect, and publish the architecture
 
 **Files:**
 - Create: `guides/assets/archify/suite/suite-plugin-system-architecture.html`
@@ -443,7 +564,7 @@ git commit -m "docs: author the suite system architecture"
 
 **Interfaces:**
 - Consumes: frozen auto-validated spec from Task 3
-- Produces: published HTML, receipt and pinned visual evidence for Task 5
+- Produces: published HTML, receipt and pinned visual evidence for Task 7
 
 - [ ] **Step 1: Add the visual-QA RED contract**
 
@@ -512,7 +633,7 @@ git commit -m "feat: publish the Korean suite architecture"
 
 ---
 
-### Task 5: Embed the architecture and expose the four verified diagrams
+### Task 7: Embed the architecture and expose the four verified diagrams
 
 **Files:**
 - Modify: `README.md`
@@ -523,7 +644,7 @@ git commit -m "feat: publish the Korean suite architecture"
 - Test: `tests/contracts/archify-visual-qa.test.mjs`
 
 **Interfaces:**
-- Consumes: published HTML and `read.png` from Task 4
+- Consumes: published HTML and `read.png` from Task 6
 - Produces: GitHub-visible architecture preview and complete diagram navigation
 
 - [ ] **Step 1: Add the architecture embed contract**
@@ -580,10 +701,10 @@ git commit -m "docs: expose the verified plugin architecture"
 
 ---
 
-### Task 6: Run writing, regression, and final review gates
+### Task 8: Run writing, regression, and final review gates
 
 **Files:**
-- Modify only files that fail a documented contract from Tasks 1–5
+- Modify only files that fail a documented contract from Tasks 1–7
 - Verify: all files changed since `7b605cc`
 
 **Interfaces:**
@@ -605,7 +726,7 @@ node tooling/build-archify-contact-sheets.mjs --check
 npm run build -- --check
 ```
 
-Expected: every command exits 0; guide diagrams report 72 SVG and 72 PNG unless this task intentionally adds no Skillstead asset.
+Expected: every command exits 0; managed use-case diagrams report 72 SVG and 72 PNG, and the three README Skillstead SVG·PNG pairs pass their dedicated contract.
 
 - [ ] **Step 3: Run targeted tests**
 
@@ -645,7 +766,7 @@ Expected: no diff errors, no symlinks, no `.DS_Store`, no private transaction re
 
 - [ ] **Step 6: Request independent code and visual review**
 
-Code review scope: README contract quality, catalog/source binding, Archify delivery/receipt security, generated-tree policy and test mutation adequacy. Visual review scope: README preview readability and all six new architecture views at fit and original size. Fix every Critical or Important finding, rerun the affected test from RED to GREEN and repeat review until both verdicts are APPROVE.
+Code review scope: README contract quality, Korean-name/source binding, Skillstead asset contracts, catalog/source binding, Archify delivery/receipt security, generated-tree policy and test mutation adequacy. Visual review scope: all three README Skillstead diagrams plus the README architecture preview and all six new architecture views at fit and original size. Fix every Critical or Important finding, rerun the affected test from RED to GREEN and repeat review until both verdicts are APPROVE.
 
 - [ ] **Step 7: Commit any verified review fixes**
 

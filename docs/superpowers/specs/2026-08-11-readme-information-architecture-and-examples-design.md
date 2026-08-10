@@ -128,7 +128,14 @@ TOC는 목록의 표현과 실제 H2 anchor가 정확히 일치해야 한다. �
 
 ### 5.3 케이스별 프롬프트
 
-README에는 18개의 대표 케이스를 제공한다. 각 카드는 `<details>`로 접고 `summary`에 목적, 난이도와 핵심 결과를 표시한다.
+README에는 18개의 대표 케이스를 제공한다. 각 카드는 `<details>`로 접되 `summary`를 코드 inventory처럼 쓰지 않는다. 한글 작업 제목과 한 문장 목적을 먼저 표시하고, stable ID·난이도·영문 Artifact ID는 보조 정보로 괄호 또는 본문에 둔다.
+
+```text
+게임 비전과 핵심 기둥 정리 (ST-C01)
+대상 플레이어와 핵심 재미를 검토 가능한 기획 브리프로 바꿉니다.
+```
+
+접힌 상태에서도 사용자가 `무엇을 하는 사례인지`, `언제 쓰는지`, `무엇을 얻는지`를 한글로 이해할 수 있어야 한다. 영문 ID만 나열한 summary와 한국어 설명 없이 Artifact slug만 이어 붙인 summary는 허용하지 않는다.
 
 #### Studio 7개
 
@@ -196,18 +203,28 @@ README에는 18개의 대표 케이스를 제공한다. 각 카드는 `<details>
 - 일반 역할 에이전트 7개와 이미지 전문 에이전트 2개, 합계 9개
 - Studio와 Career를 합쳐 설치 스킬 30개와 에이전트 18개
 
-각 스킬 행은 `스킬 ID`, `사용하는 때`, `핵심 결과`, `직접 호출 커맨드`, `상세 가이드`를 제공한다. 직접 호출 커맨드는 설치 namespace를 포함한 다음 형식으로 쓴다.
+각 스킬 행은 `한글 스킬명 (영문 스킬 ID)`, `사용하는 때`, `핵심 결과`, `직접 호출 커맨드`, `상세 가이드`를 제공한다. 한글 스킬명과 쉬운 설명이 먼저 오고 stable ID는 괄호에 둔다. 직접 호출 커맨드는 설치 namespace를 포함한 다음 형식으로 쓴다.
 
 ```text
 $game-design-studio:<skill-id>
 $game-design-career:<skill-id>
 ```
 
-각 에이전트 행은 `에이전트 ID`, `역할`, `주요 검토 지점`, `호출 경계`, `상세 역할 문서`를 제공한다. 에이전트는 사용자가 직접 호출하는 스킬로 오인하지 않도록 전문 스킬 또는 오케스트레이터가 전달하는 역할 자산이라고 명시한다.
+각 에이전트 행은 `한글 역할명 (영문 에이전트 ID)`, `쉬운 역할 설명`, `주요 검토 지점`, `호출 경계`, `상세 역할 문서`를 제공한다. 에이전트는 사용자가 직접 호출하는 스킬로 오인하지 않도록 전문 스킬 또는 오케스트레이터가 전달하는 역할 자산이라고 명시한다.
 
 `svg-infographic`는 제품 source의 14개 스킬과 달리 표준 빌드에서 Skillstead 0.8.3으로 vendoring되는 설치 스킬이다. README의 상세 링크는 제품별 `guides/<product>/skills/svg-infographic.md`로 연결하고, 직접 호출 커맨드는 최종 설치 namespace를 사용한다.
 
-### 5.5 플러그인별 file tree
+### 5.5 Skillstead 설명 도식
+
+코드와 표만으로 처음 사용 흐름을 해석하지 않도록 README에 세 개의 한국어 Skillstead 도식을 추가한다.
+
+1. `사례 선택에서 다음 요청까지`: 플러그인 선택 → 한글 prompt 카드 → 스킬 실행 → Canonical Artifact → 사람 검토 → 다음 요청
+2. `스킬과 에이전트가 함께 일하는 방식`: 사용자 직접 호출 또는 오케스트레이션 → 전문 스킬 → 전문 에이전트 검토 → 결과·보류·재개
+3. `Canonical Artifact 읽기와 승인 순서`: `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` → 사람 승인
+
+각 도식은 editable SVG와 2× PNG를 함께 제공하고 해당 README 섹션에 PNG를 SVG 링크로 감싸 배치한다. 제목·노드·보조 설명은 한국어를 기본으로 하며 stable filename 또는 command만 영문을 유지한다. Skillstead 0.8.3의 source lint, canonical Chromium renderer, 정확한 2× dimension 검증과 fit-to-page·original-size 시각 QA를 모두 통과해야 한다.
+
+### 5.6 플러그인별 file tree
 
 `플러그인 구조와 전체 시스템 아키텍처`의 첫 부분에 Studio와 Career의 설치 패키지 file tree를 각각 둔다. 두 tree는 실제 배포 snapshot인 `plugins/<product>/`를 보여 주되, 편집 원본은 `products/<product>/plugin/`이고 `plugins/<product>/`는 표준 빌드가 생성한다는 점을 먼저 설명한다.
 
@@ -409,6 +426,9 @@ README 편집은 다음 규칙을 적용한다.
 - 30개 스킬 행은 실제 설치 namespace의 직접 호출 커맨드와 제품별 상세 가이드에 결합된다.
 - Studio와 Career 각각 9개 에이전트를 정확히 나열하고 역할 문서 링크와 오케스트레이터 전달 경계를 표시한다.
 - 누락, 중복, 잘못된 namespace, 제품 간 스킬·에이전트 교환과 존재하지 않는 상세 링크를 거부한다.
+- 18개 사례 summary가 한글 제목, 괄호 속 stable ID와 한글 한 문장 설명을 가지며 코드·slug 나열만으로 끝나지 않는다.
+- 30개 스킬과 18개 에이전트의 첫 표시가 `한글 이름 (영문 ID)` 형식이며 쉬운 한글 역할 설명을 가진다.
+- 세 Skillstead SVG·PNG 쌍이 정확한 README 섹션에 연결되고 regular non-symlink 파일, source lint와 2× dimension 계약을 통과한다.
 - 대표 결과 ID와 read order가 prompt catalog 또는 use-case manifest와 일치한다.
 - 긴 요청문 코드 줄이 80자를 넘지 않는다.
 - Studio와 Career file tree가 각각 존재하고 required top-level 경로와 실제 agent·skill·template·script 수를 정확히 표시한다.
@@ -457,8 +477,11 @@ README 편집은 다음 규칙을 적용한다.
 - README 상단에 정확한 TOC가 있다.
 - 30초 선택, 설치와 5분 시작이 문서 앞부분에 연속해서 배치된다.
 - 18개 대표 케이스에 복사 가능한 요청문, 스킬 흐름과 예상 결과가 있다.
+- 18개 사례는 접힌 상태에서도 한글 제목·설명·예상 결과를 이해할 수 있다.
 - 스킬 빠른 사용표와 30개 전체 스킬 인벤토리가 직접 호출 커맨드·역할·상세 가이드로 연결된다.
 - 18개 전체 에이전트 인벤토리가 역할·검토 지점·호출 경계·상세 역할 문서로 연결된다.
+- 30개 스킬과 18개 에이전트가 `한글 이름 (영문 ID)`와 쉬운 설명으로 표시된다.
+- 세 개의 Skillstead 설명 도식이 사례 실행, 스킬·에이전트 협업, Artifact 검토·승인 흐름을 설명한다.
 - Studio와 Career 각각의 file tree가 주요 경로, 실제 수량과 편집 책임을 설명한다.
 - 결과물 예시가 실제 Canonical Artifact 파일과 읽는 순서를 설명한다.
 - 새 한국어 Archify 전체 시스템 아키텍처 PNG가 README에 보이고 클릭하면 대화형 HTML이 열린다.
