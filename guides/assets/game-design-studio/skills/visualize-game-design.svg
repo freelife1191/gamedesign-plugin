@@ -21,10 +21,10 @@
     <rect x="108" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
     <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
     <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
-      <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">시각화 trigge</text>
-      <text x="108" y="468" fill="#124267" font-size="22" font-weight="700">r</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">관계 질문을 받습니다</text>
-      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">.</text>
+      <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">시각화</text>
+      <text x="108" y="468" fill="#124267" font-size="22" font-weight="700">trigger</text>
+      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">관계 질문을</text>
+      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">받습니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 입력 계약">
     <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
@@ -47,8 +47,8 @@
     <rect x="873" y="412" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="899" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
     <text x="933" y="434" fill="#814600" font-size="14" font-weight="700">output</text>
-      <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">editable S</text>
-      <text x="873" y="510" fill="#814600" font-size="22" font-weight="700">VG</text>
+      <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">editable</text>
+      <text x="873" y="510" fill="#814600" font-size="22" font-weight="700">SVG</text>
       <text x="873" y="542" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">editable-svg</text>
       <text x="873" y="558" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">png-2x</text>
       <text x="873" y="574" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">visualization-evidence</text>

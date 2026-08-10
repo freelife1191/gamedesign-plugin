@@ -22,8 +22,8 @@
     <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
     <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
       <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">경제 trigger</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">성장 질문을 받습니다</text>
-      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">.</text>
+      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">성장 질문을</text>
+      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">받습니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 입력 계약">
     <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
@@ -39,7 +39,7 @@
     <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
     <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">skill-owned work</text>
       <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">경제·LiveOps</text>
-      <text x="618" y="468" fill="#085041" font-size="22" font-weight="700"> 설계</text>
+      <text x="618" y="468" fill="#085041" font-size="22" font-weight="700">설계</text>
       <text x="618" y="500" fill="#354152" font-size="8" textLength="164" lengthAdjust="spacingAndGlyphs">design-game-economy-and-liveops</text>
   </g>
   <g aria-label="읽기 순서 4: 경제 밸런스">

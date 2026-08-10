@@ -22,8 +22,9 @@
     <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
     <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
       <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">검토 trigger</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">draft recei</text>
-      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">pt를 받습니다.</text>
+      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">draft</text>
+      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">receipt를</text>
+      <text x="108" y="552" fill="#354152" font-size="18" font-weight="400">받습니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 입력 계약">
     <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
@@ -38,17 +39,18 @@
     <rect x="618" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
     <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">skill-owned work</text>
-      <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">asset life</text>
-      <text x="618" y="468" fill="#085041" font-size="22" font-weight="700">cycle 검토</text>
-      <text x="618" y="500" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">review-image-assets</text>
+      <text x="618" y="438" fill="#085041" font-size="20" font-weight="700">asset</text>
+      <text x="618" y="466" fill="#085041" font-size="20" font-weight="700">lifecycle</text>
+      <text x="618" y="494" fill="#085041" font-size="20" font-weight="700">검토</text>
+      <text x="618" y="518" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">review-image-assets</text>
   </g>
   <g aria-label="읽기 순서 4: asset review">
     <rect x="845" y="384" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="873" y="412" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="899" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
     <text x="933" y="434" fill="#814600" font-size="14" font-weight="700">output</text>
-      <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">asset revi</text>
-      <text x="873" y="510" fill="#814600" font-size="22" font-weight="700">ew</text>
+      <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">asset</text>
+      <text x="873" y="510" fill="#814600" font-size="22" font-weight="700">review</text>
       <text x="873" y="542" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">image-asset-review</text>
       <text x="873" y="558" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">lifecycle-receipt</text>
   </g>

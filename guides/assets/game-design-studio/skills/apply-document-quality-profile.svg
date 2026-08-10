@@ -22,8 +22,8 @@
     <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
     <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
       <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">품질 trigger</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">profile 요청을</text>
-      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400"> 받습니다.</text>
+      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">profile</text>
+      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">요청을 받습니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 입력 계약">
     <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
@@ -38,8 +38,8 @@
     <rect x="618" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
     <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">skill-owned work</text>
-      <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">품질 profile</text>
-      <text x="618" y="468" fill="#085041" font-size="22" font-weight="700"> 적용</text>
+      <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">품질</text>
+      <text x="618" y="468" fill="#085041" font-size="22" font-weight="700">profile 적용</text>
       <text x="618" y="500" fill="#354152" font-size="8" textLength="164" lengthAdjust="spacingAndGlyphs">apply-document-quality-profile</text>
   </g>
   <g aria-label="읽기 순서 4: 프로필 선택">

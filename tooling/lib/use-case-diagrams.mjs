@@ -37,11 +37,7 @@ function escapeXml(value) {
 }
 
 function splitLines(value, maxLength = 10) {
-  const characters = [...value.trim()];
-  return Array.from(
-    { length: Math.ceil(characters.length / maxLength) },
-    (_, index) => characters.slice(index * maxLength, (index + 1) * maxLength).join(""),
-  );
+  return wrapCjk(value, maxLength, Number.POSITIVE_INFINITY);
 }
 
 function layoutFor(type, count, source) {
@@ -610,8 +606,9 @@ export function renderDiagramSvg(source) {
     const detailLines = splitLines(step.detail, 11);
     const compact = card.height <= 160;
     const titleY = card.y + (compact ? 80 : 96);
-    const detailY = card.y + (compact ? 118 : 158);
-    const titleFontSize = compact ? 17 : 22;
+    const titleFontSize = compact ? 17 : titleLines.length > 2 ? 20 : 22;
+    const titleBottom = titleY + ((titleLines.length - 1) * (titleFontSize + 8));
+    const detailY = Math.max(card.y + (compact ? 118 : 158), titleBottom + 24);
     const detailFontSize = compact ? 13 : 18;
     const stageMarkup = isStudioSource(source)
       ? `    <text x="${card.x + 88}" y="${card.y + 50}" fill="${colors.accent}" font-size="14" font-weight="700">${escapeXml(step.stage)}</text>`

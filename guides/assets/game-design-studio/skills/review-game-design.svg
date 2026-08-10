@@ -22,7 +22,7 @@
     <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
     <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
       <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">검토 trigger</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">review 질문을 </text>
+      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">review 질문을</text>
       <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">받습니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 입력 계약">

@@ -173,6 +173,35 @@ test("legacy skill-flow retains its established generator contract", () => {
   assert.match(svg, /pending format job → downstream renderer QA/u);
 });
 
+test("Studio skill cards wrap whole Latin and hyphenated tokens without splitting them", () => {
+  const source = {
+    ...validFixture,
+    id: "st-s03",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: index === 0 ? "콘텐츠 trigger" : index === 2 ? "asset lifecycle 검토" : `단계 ${index + 1}`,
+      detail: index === 0 ? "co-op handoff" : `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "design-game-content",
+      required_input: "quest intent + rights boundary",
+      outputs: ["narrative-quest-npc"],
+      next_routes: ["review-game-design"],
+    },
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.match(svg, />콘텐츠<\/text>\n\s*<text[^>]*>trigger<\/text>/u);
+  assert.match(svg, />co-op<\/text>\n\s*<text[^>]*>handoff<\/text>/u);
+  assert.doesNotMatch(svg, />trigge<\/text>\n\s*<text[^>]*>r<\/text>/u);
+  assert.doesNotMatch(svg, />hando<\/text>\n\s*<text[^>]*>ff<\/text>/u);
+  const titleBottom = Number(svg.match(/<text[^>]*y="(\d+)"[^>]*>검토<\/text>/u)?.[1]);
+  const exactTop = Number(svg.match(/<text[^>]*y="(\d+)"[^>]*>design-game-content<\/text>/u)?.[1]);
+  assert.ok(exactTop - titleBottom >= 24, `skill ID must clear the wrapped card title: ${titleBottom} -> ${exactTop}`);
+});
+
 test("mixed-language validation strings preserve whole Latin tokens in natural tspans", () => {
   const source = {
     ...validFixture,
