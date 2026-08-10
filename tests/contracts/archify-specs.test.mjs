@@ -164,6 +164,23 @@ function assertArchitectureConnection(spec, from, to) {
   assert.ok(spec.connections.some((connection) => connection.from === from && connection.to === to), `${from} -> ${to} is required`);
 }
 
+const suiteInterfaceCards = [
+  {
+    title: "전문 스킬 인터페이스",
+    items: [
+      "game-design-studio namespace는 Studio orchestrator와 전문 skill 실행을 제공합니다.",
+      "game-design-career namespace는 Career orchestrator와 전문 skill 실행을 제공합니다.",
+    ],
+  },
+  {
+    title: "근거·결정 인터페이스",
+    items: [
+      "content.md, evidence.yml, decisions/는 Canonical Artifact에서 함께 보존합니다.",
+      "export-manifest.yml manifest는 Artifact의 전달 후보와 검증 맥락을 보존합니다.",
+    ],
+  },
+];
+
 function architecturePathExists(spec, from, to, excluded = new Set()) {
   const adjacent = new Map();
   for (const connection of spec.connections) {
@@ -209,6 +226,12 @@ function assertSuitePluginSystemArchitecture(spec) {
   assert.match(`${byId.get("career_plugin").label} ${byId.get("career_plugin").sublabel}`, /Career.*전문 스킬|전문 스킬.*Career/u);
   assert.match(`${byId.get("studio_artifact").label} ${byId.get("studio_artifact").sublabel}`, /Canonical Artifact/u);
   assert.match(`${byId.get("studio_artifact").label} ${byId.get("studio_artifact").sublabel}`, /content\.md.*evidence\.yml.*decisions\//u);
+  assert.deepEqual(
+    spec.cards.map(({ title, items }) => ({ title, items })),
+    suiteInterfaceCards,
+    "interface cards must remain two independent visible contracts",
+  );
+  assert.equal(spec.components.some((component) => suiteInterfaceCards.some((card) => card.title === component.label)), false, "interface cards must not masquerade as topology nodes");
   for (const [from, to] of [
     ["app_cli", "marketplace"], ["marketplace", "studio_plugin"], ["marketplace", "career_plugin"],
     ["studio_plugin", "studio_artifact"], ["career_plugin", "career_evidence"],
@@ -392,6 +415,34 @@ test("Suite plugin system architecture rejects approval and hold bypasses plus s
   assert.throws(() => assertSuitePluginSystemArchitecture(studioPluginBypass), /Studio may reach Career evidence only after human approval/u);
   assert.throws(() => assertSuitePluginSystemArchitecture(validationBypass), /validation failure may return to the Artifact only through held_lane/u);
   assert.throws(() => assertSuitePluginSystemArchitecture(withoutHeldLane), /held_lane/u);
+});
+
+test("Suite plugin system architecture rejects missing, swapped, merged, or sublabel-only interface cards", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "suite");
+  const spec = suitePluginSystemArchitecture(specsById);
+  const withoutSkillCard = { ...spec, cards: spec.cards.filter((card) => card.title !== "전문 스킬 인터페이스") };
+  const swappedCards = {
+    ...spec,
+    cards: suiteInterfaceCards.map((card, index) => ({ ...card, items: suiteInterfaceCards[1 - index].items })),
+  };
+  const mergedCards = {
+    ...spec,
+    cards: [{ ...suiteInterfaceCards[0], items: [...suiteInterfaceCards[0].items, ...suiteInterfaceCards[1].items] }],
+  };
+  const sublabelOnly = {
+    ...spec,
+    cards: suiteInterfaceCards.map((card) => ({ ...card, items: [] })),
+    components: spec.components.map((component) => component.id === "studio_plugin"
+      ? { ...component, sublabel: "Studio 전문 스킬과 game-design-studio namespace" }
+      : component.id === "career_plugin"
+        ? { ...component, sublabel: "Career 전문 스킬과 game-design-career namespace" }
+        : component.id === "studio_artifact"
+          ? { ...component, sublabel: "content.md, evidence.yml, decisions/, export-manifest.yml" }
+          : component),
+  };
+  for (const mutated of [withoutSkillCard, swappedCards, mergedCards, sublabelOnly]) {
+    assert.throws(() => assertSuitePluginSystemArchitecture(mutated), /interface cards|Expected values/u);
+  }
 });
 
 test("Suite specs exist only for questions that cross both product boundaries", async () => {

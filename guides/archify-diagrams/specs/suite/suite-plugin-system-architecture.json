@@ -55,8 +55,21 @@
     { "from": "held_lane", "to": "studio_artifact", "variant": "dashed", "route": "orthogonal-h" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "분리된 제품 저장소", "items": ["Studio Canonical Artifact와 Career 증거 후보는 각 제품 저장소가 독립 소유합니다.", "두 저장 경계는 겹치지 않으며 승인된 공개 증거만 Career에 전달합니다."] },
-    { "dot": "amber", "title": "검증과 사람 승인", "items": ["시각화와 내보내기는 자동 검증을 거쳐 사람 승인을 받아야 전달됩니다.", "승인은 자동이 아니며 채용 결과를 보장하지 않습니다."] },
-    { "dot": "violet", "title": "보류와 재개", "items": ["자동 검증 실패는 lane 보류를 거쳐 Canonical Artifact를 보존합니다.", "수정 후 같은 Artifact를 기준으로 검증을 재개합니다."] }
+    {
+      "dot": "cyan",
+      "title": "전문 스킬 인터페이스",
+      "items": [
+        "game-design-studio namespace는 Studio orchestrator와 전문 skill 실행을 제공합니다.",
+        "game-design-career namespace는 Career orchestrator와 전문 skill 실행을 제공합니다."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "근거·결정 인터페이스",
+      "items": [
+        "content.md, evidence.yml, decisions/는 Canonical Artifact에서 함께 보존합니다.",
+        "export-manifest.yml manifest는 Artifact의 전달 후보와 검증 맥락을 보존합니다."
+      ]
+    }
   ]
 }
