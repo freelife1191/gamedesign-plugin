@@ -976,6 +976,10 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
   assert.doesNotMatch(svgSource, /\b(?:skewX|skewY|matrix)\s*\(/u, `${id}: SVG forbids skew or matrix transforms`);
   assert.doesNotMatch(svgSource, /\b(?:scaleX|scaleY)\s*\(/u, `${id}: SVG forbids non-uniform scale functions`);
   assert.doesNotMatch(svgSource, /transform\s*:\s*[^;}]*\b(?:matrix|skew|scaleX|scaleY)\b/iu, `${id}: SVG forbids style or class transform bypasses`);
+  assert.doesNotMatch(svgSource, /\bfont\s*:/iu, `${id}: SVG forbids font shorthand bypasses`);
+  for (const match of svgSource.matchAll(/\bfont-size\s*(?::|=)\s*["']?([\d.]+)px/giu)) {
+    assert.ok(Number(match[1]) >= 16, `${id}: visible body and caption text is at least 16px`);
+  }
   for (const match of svgSource.matchAll(/\bscale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\s*\)/gu)) {
     const [, x, y] = match;
     assert.ok(y === undefined || Number(x) === Number(y), `${id}: SVG forbids direct or ancestor non-uniform scale`);
@@ -992,7 +996,16 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
     previous = index;
   }
   assert.doesNotMatch(svgSource, /증거 후보/u, `${id}: avoids abstract evidence-candidate terminology`);
-  if (id === "prompt-to-result-flow") assert.match(svgSource, /승인·보류/u, `${id}: human review keeps approval and hold choices`);
+  if (id === "prompt-to-result-flow") {
+    assert.match(svgSource, /승인·보류/u, `${id}: human review keeps approval and hold choices`);
+    assert.match(svgSource, /<g\b[^>]*data-flow-node="human-review"/u, `${id}: binds the human review node`);
+    assert.match(svgSource, /<g\b[^>]*data-flow-node="next-request-resume"/u, `${id}: binds the next-request and resume node`);
+    assert.match(
+      svgSource,
+      /<path\b[^>]*data-flow-edge="human-review-to-next-request-resume"[^>]*data-from="human-review"[^>]*data-to="next-request-resume"[^>]*stroke-dasharray="[^"]+"/u,
+      `${id}: keeps the human-review to resume dashed edge`,
+    );
+  }
   if (id === "skill-agent-collaboration") {
     assert.match(svgSource, /필요한 역할을 최대 세 개까지 위임/u, `${id}: limits delegated specialist roles to three`);
     assert.match(svgSource, /사용자가 직접 호출하지 않/u, `${id}: agents are not direct commands`);
@@ -1002,16 +1015,45 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
       ["기획 판단 검토자", "문서 품질 편집자", "제작 가능성 비평가"],
       `${id}: delegates exactly three named specialist roles`,
     );
+    assert.match(svgSource, /<g\b[^>]*data-flow-node="artifact"/u, `${id}: binds the Artifact node`);
+    assert.match(
+      svgSource,
+      /<g\b[^>]*data-human-gate="사람 검토"[^>]*data-gate-role="approval-hold"[^>]*data-gate-label="승인·보류"/u,
+      `${id}: binds the human approval and hold gate after the Artifact`,
+    );
+    assert.match(
+      svgSource,
+      /<path\b[^>]*data-flow-edge="artifact-to-human-review"[^>]*data-from="artifact"[^>]*data-to="human-review"/u,
+      `${id}: keeps the Artifact-to-human-review edge`,
+    );
   }
   if (id === "artifact-review-flow") {
-    assert.match(svgSource, /승인 또는 보류/u, `${id}: named human keeps approval and hold choices`);
-    let previousFile = -1;
-    for (const filename of ["content.md", "evidence.yml", "decisions/", "assets/", "export-manifest.yml"]) {
-      const index = mainFlow.indexOf(filename);
-      assert.notEqual(index, -1, `${id}: keeps exact artifact file reference: ${filename}`);
-      assert.ok(index > previousFile, `${id}: keeps the exact artifact file order: ${filename}`);
-      previousFile = index;
+    const expectedCards = [
+      ["기획 본문", "content.md"],
+      ["검토 근거", "evidence.yml"],
+      ["주요 의사결정 기록", "decisions/"],
+      ["이미지·첨부 자료", "assets/"],
+      ["출력 준비표", "export-manifest.yml"],
+    ];
+    const cardPattern = /<g\b(?=[^>]*data-korean-label="([^"]+)")(?=[^>]*data-file-id="([^"]+)")[^>]*>[\s\S]*?<\/g>/gu;
+    const cards = [...mainFlow.matchAll(cardPattern)].map((match) => ({
+      korean: match[1],
+      file: match[2],
+      source: match[0],
+    }));
+    assert.deepEqual(cards.map(({ korean, file }) => [korean, file]), expectedCards, `${id}: binds exact Korean-first Artifact cards in source order`);
+    for (const { korean, file, source } of cards) {
+      const visibleCard = source.slice(source.indexOf(">") + 1);
+      assert.ok(visibleCard.indexOf(korean) < visibleCard.indexOf(file), `${id}: Korean card label precedes its English file path: ${file}`);
     }
+    const humanGates = [...mainFlow.matchAll(/<g\b[^>]*data-human-gate="([^"]+)"[^>]*data-gate-role="([^"]+)"[^>]*data-gate-label="([^"]+)"[^>]*>/gu)];
+    assert.deepEqual(humanGates.map((match) => match.slice(1, 4)), [["김기획자", "approval-hold", "승인·보류"]], `${id}: keeps exactly one named human approval and hold gate`);
+    assert.ok(mainFlow.indexOf('data-file-id="export-manifest.yml"') < mainFlow.indexOf('data-human-gate="김기획자"'), `${id}: places the named human gate after export-manifest`);
+    assert.match(
+      svgSource,
+      /<path\b[^>]*data-flow-edge="export-manifest-to-human-gate"[^>]*data-from="export-manifest.yml"[^>]*data-to="human-gate"/u,
+      `${id}: binds export-manifest to the named human gate`,
+    );
   }
 }
 
@@ -1395,6 +1437,8 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
       ["matrix transform", source.replace("<svg ", '<svg transform="matrix(1 0 0 .8 0 0)" ')],
       ["skew transform", source.replace("<svg ", '<svg transform="skewX(10)" ')],
       ["style transform bypass", styleBypass],
+      ["sub-minimum body type", source.replace("font-size:16px", "font-size:15px")],
+      ["font shorthand bypass", source.replace("<style>", "<style>.bypass{font:12px sans-serif}")],
     ]) {
       assert.notEqual(mutated, source, `${diagram.id}: ${label} mutation changes source`);
       assertReadmeSkillsteadSourceRejected(mutated, diagram, label);
@@ -1404,12 +1448,38 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
   assert.ok(collaboration, "collaboration diagram registry exists");
   const collaborationSource = await readFile(path.join(root, "guides/assets/readme/skill-agent-collaboration.svg"), "utf8");
   for (const [label, mutated] of [
-    ["automatic approval", collaborationSource.replaceAll("자동 승인할 수 없습니다", "자동 승인합니다")],
+    ["automatic approval", collaborationSource.replaceAll("자동 승인", "자동 시스템 승인")],
     ["direct agent command", collaborationSource.replaceAll("사용자가 직접 호출하지 않습니다", "사용자가 직접 호출합니다")],
     ["fourth delegated role", collaborationSource.replace("data-delegated-role=\"제작 가능성 비평가\"", "data-delegated-role=\"제작 가능성 비평가\"/><rect data-delegated-role=\"네 번째 역할\"")],
   ]) {
     assert.notEqual(mutated, collaborationSource, `${label}: mutation changes collaboration source`);
     assertReadmeSkillsteadSourceRejected(mutated, collaboration, label);
+  }
+  const promptFlow = readmeSkillsteadDiagrams.find(({ id }) => id === "prompt-to-result-flow");
+  const artifactFlow = readmeSkillsteadDiagrams.find(({ id }) => id === "artifact-review-flow");
+  assert.ok(promptFlow && artifactFlow, "prompt and Artifact diagram registries exist");
+  const promptSource = await readFile(path.join(root, "guides/assets/readme/prompt-to-result-flow.svg"), "utf8");
+  for (const [label, mutated] of [
+    ["missing dashed resume edge", promptSource.replace('data-flow-edge="human-review-to-next-request-resume"', 'data-flow-edge="deleted-resume-edge"')],
+    ["missing resume destination", promptSource.replace('data-to="next-request-resume"', 'data-to="deleted-target"')],
+  ]) {
+    assert.notEqual(mutated, promptSource, `${label}: mutation changes prompt flow source`);
+    assertReadmeSkillsteadSourceRejected(mutated, promptFlow, label);
+  }
+  const artifactSource = await readFile(path.join(root, "guides/assets/readme/artifact-review-flow.svg"), "utf8");
+  for (const [label, mutated] of [
+    ["missing named human gate", artifactSource.replace('data-human-gate="김기획자"', 'data-human-gate=""')],
+    ["automatic system approval", artifactSource.replaceAll("승인·보류", "자동 시스템 처리")],
+    [
+      "English path before Korean card label",
+      artifactSource.replace(
+        '<text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">기획 본문</text><text x="172" y="423" class="body" text-anchor="middle">(content.md) · 항상 읽기</text>',
+        '<text x="172" y="393" class="card-title" fill="var(--blue)" text-anchor="middle">(content.md)</text><text x="172" y="423" class="body" text-anchor="middle">기획 본문 · 항상 읽기</text>',
+      ),
+    ],
+  ]) {
+    assert.notEqual(mutated, artifactSource, `${label}: mutation changes Artifact flow source`);
+    assertReadmeSkillsteadSourceRejected(mutated, artifactFlow, label);
   }
 });
 
