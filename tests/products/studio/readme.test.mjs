@@ -117,10 +117,13 @@ const documentQualityPaths = [
   "schema/reference-preset.schema.json",
 ];
 
-function tableIds(markdown, heading) {
-  const start = markdown.indexOf(`## ${heading}`);
+function tableIds(markdown, heading, level = 2) {
+  const marker = `${"#".repeat(level)} ${heading}`;
+  const start = markdown.indexOf(marker);
   assert.notEqual(start, -1, `missing section: ${heading}`);
-  const section = markdown.slice(start + heading.length + 3).split("\n## ")[0];
+  const remainder = markdown.slice(start + marker.length);
+  const nextHeading = remainder.search(new RegExp(`\\n#{1,${level}} `, "u"));
+  const section = nextHeading < 0 ? remainder : remainder.slice(0, nextHeading);
   return [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
 }
 
@@ -733,19 +736,19 @@ test("README inventories the exact packaged runtime scripts and shared quality s
 
 test("root README describes both packaged quality-profile catalogs without source attribution claims", async () => {
   const readme = await readFile(path.join(repoRoot, "README.md"), "utf8");
-  assert.deepEqual(tableIds(readme, "설치된 top-level scripts"), topLevelScriptIds);
-  assert.deepEqual(tableIds(readme, "설치된 document-quality 경로"), documentQualityPaths);
+  assert.deepEqual(tableIds(readme, "설치된 최상위 스크립트 (top-level scripts)", 3), topLevelScriptIds);
+  assert.deepEqual(tableIds(readme, "설치된 문서 품질 경로 (document-quality)", 3), documentQualityPaths);
   for (const contract of [
-    "Studio 17개",
-    "Career 13개",
-    "additive overlay 3개",
-    "neutral reference preset 7개",
-    "authoring-only source",
-    "공식 endorsement",
-    "plugins/game-design-studio/references/shared/document-quality/",
-    "plugins/game-design-career/references/shared/document-quality/",
+    /Studio 17개/u,
+    /Career 13개/u,
+    /추가형 오버레이\s*\(additive overlay\) 3개/u,
+    /중립 참고 사전 설정\s*\(neutral reference preset\) 7개/u,
+    /저작용 전용 출처\s*\(authoring-only source\)/u,
+    /추천·보증\s*\(공식 endorsement\)/u,
+    /plugins\/game-design-studio\/references\/shared\/document-quality\//u,
+    /plugins\/game-design-career\/references\/shared\/document-quality\//u,
   ]) {
-    assert.ok(readme.includes(contract), `missing root quality-profile contract: ${contract}`);
+    assert.match(readme, contract, `missing root quality-profile contract: ${contract}`);
   }
 });
 

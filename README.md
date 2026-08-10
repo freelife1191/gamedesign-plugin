@@ -1877,6 +1877,60 @@ generated snapshot: plugins/game-design-career/
 | `hooks/` | 중단·검토·재개 경계 | 제품 편집 원본 (source)에서 편집 |
 | `BUILD-MANIFEST.json` | 배포 파일과 digest 증거 | 표준 빌드에서만 갱신 |
 
+<details>
+<summary><strong>설치 패키지의 공통 검증 파일까지 확인하기</strong></summary>
+
+처음 사용할 때는 이 목록을 외울 필요가 없습니다. 설치본이 어떤 검증·이미지·문서
+품질 도구를 포함하는지 감사하거나, 플러그인을 수정한 뒤 생성본 누락을 확인할 때
+펼쳐 보세요.
+
+### 설치된 최상위 스크립트 (top-level scripts)
+
+| 파일 | 하는 일 |
+| --- | --- |
+| `build-image-asset-plan.mjs` | 품질 기준과 기획 결과물에서 이미지 제작 계획을 만듭니다. |
+| `capability-probe.mjs` | 사용할 수 있는 문서·이미지 변환 기능을 확인합니다. |
+| `compile-image-prompts.mjs` | 이미지 프롬프트 묶음을 Markdown과 JSON으로 만듭니다. |
+| `data-only-snapshot.mjs` | 검토 경계를 넘는 입력이 순수 데이터인지 확인합니다. |
+| `generate-openai-images.mjs` | 설정된 OpenAI Images API 호출을 제한된 범위에서 실행합니다. |
+| `quality-source-anchors.mjs` | 문서 품질 원본의 바이트와 의미 기준점을 고정합니다. |
+| `resolve-quality-profile.mjs` | 문서 품질 기준을 선택·합성하고 상태 기록을 만듭니다. |
+| `run-image-asset-workflow.mjs` | 이미지 계획·생성·검토 단계를 연결합니다. |
+| `stop-artifact-review.mjs` | 완료 직전 결과물을 검토하고 한 번의 수정 재개를 관리합니다. |
+| `validate-artifact.mjs` | 기준 기획 결과물 폴더의 필수 파일과 상태를 검사합니다. |
+| `validate-image-assets.mjs` | 이미지 목록, 승인 단계와 파일 정합성을 검사합니다. |
+| `validate-image-config.mjs` | 비밀값을 노출하지 않고 이미지 생성 설정을 검사합니다. |
+| `validate-quality-profile.mjs` | 선택한 문서 품질 기준의 닫힌 계약을 검사합니다. |
+| `validate-reference-preset.mjs` | 중립 참고 사전 설정의 허용 범위를 검사합니다. |
+
+### 설치된 문서 품질 경로 (document-quality)
+
+두 설치 패키지는 Studio 17개와 Career 13개 품질 기준 목록, 추가형 오버레이
+(additive overlay) 3개, 중립 참고 사전 설정 (neutral reference preset) 7개를
+검사 가능한 복사본으로 포함합니다.
+
+| 상대 경로 | 들어 있는 내용 |
+| --- | --- |
+| `indexes/career.json` | Career 품질 기준 선택 목록 |
+| `indexes/studio.json` | Studio 품질 기준 선택 목록 |
+| `profiles/career/` | Career 13개 품질 기준 |
+| `profiles/studio/` | Studio 17개 품질 기준 |
+| `overlays/` | 추가형 오버레이 3개 |
+| `presets/` | 중립 참고 사전 설정 7개 |
+| `render-contracts/long-form-document.json` | 장문 기획서 변환 계약 |
+| `render-contracts/presentation.json` | 발표 자료 변환 계약 |
+| `render-contracts/review-report.json` | 검토 보고서 변환 계약 |
+| `schema/quality-profile-selection.schema.json` | 품질 기준 선택 스키마 |
+| `schema/quality-profile.schema.json` | 문서 품질 기준 스키마 |
+| `schema/reference-preset.schema.json` | 중립 참고 사전 설정 스키마 |
+
+중립 참고 사전 설정은 저작용 전용 출처 (authoring-only source)의 귀속이나 공식
+추천·보증 (공식 endorsement)을 뜻하지 않습니다. 실제 설치 복사본은
+`plugins/game-design-studio/references/shared/document-quality/`와
+`plugins/game-design-career/references/shared/document-quality/`에서 확인합니다.
+
+</details>
+
 ### 상황별로 열어볼 Archify 도식 4종
 
 필요한 질문에 맞는 도식만 여세요. 각 HTML은 검증을 통과한 한국어 도식이며,
