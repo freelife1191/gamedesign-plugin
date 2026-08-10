@@ -80,7 +80,7 @@ catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 invento
 
 - 제품·유형·상태: `studio` · `workflow` · `published` (`visual_review: passed`)
 - 답하는 질문: 게임 비전부터 설계, 검토와 내보내기까지 Studio 작업을 어떤 순서로 확인하는가?
-- 원문 근거: [Studio workflow source](specs/studio/studio-project-workflow.json)
+- 원문 근거: [Studio 전체 워크플로 원문](../game-design-studio/workflow.md#game-design-studio-전체-워크플로)
 - 공개물: [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)
 - 명세·검증: [Studio workflow spec](specs/studio/studio-project-workflow.json) · [delivery receipt](../assets/archify/studio/studio-project-workflow.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
@@ -88,7 +88,7 @@ catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 invento
 
 - 제품·유형·상태: `career` · `workflow` · `published` (`visual_review: passed`)
 - 답하는 질문: 역할 탐색, 학습 과제, 포트폴리오와 면접 준비를 어떤 검토 순서로 연결하는가?
-- 원문 근거: [Career workflow source](specs/career/career-evidence-workflow.json)
+- 원문 근거: [Career 전체 워크플로 원문](../game-design-career/workflow.md#game-design-career-전체-워크플로)
 - 공개물: [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)
 - 명세·검증: [Career workflow spec](specs/career/career-evidence-workflow.json) · [delivery receipt](../assets/archify/career/career-evidence-workflow.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
@@ -96,10 +96,10 @@ catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 invento
 
 - 제품·유형·상태: `suite` · `dataflow` · `published` (`visual_review: passed`)
 - 답하는 질문: 검토한 Studio 결과에서 공개 가능한 내용만 Career 포트폴리오와 면접 준비로 어떻게 인계하는가?
-- 원문 근거: [Suite handoff source](specs/suite/suite-studio-career-handoff.json)
+- 원문 근거: [Studio → Career 인계 원문](../prompt-templates/suite/studio-to-career-handoff.md#suitestudio-to-career-handoffcase)
 - 공개물: [한국어 Studio → Career 공개 근거 handoff](../assets/archify/suite/suite-studio-career-handoff.html)
 - 명세·검증: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · [delivery receipt](../assets/archify/suite/suite-studio-career-handoff.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
 ## Blocked diagrams
 
-**0개 (없음).** 현재 선택된 세 도식에는 남은 `blocked-*` 상태가 없습니다. 이후 source digest, Archify 검증 또는 시각 QA가 실패하면 공개 상태를 유지하지 않고 이 섹션에 차단 이유·증거·재시도 경계를 기록합니다.
+**0개 (없음).** 현재 선택된 4개 도식에는 남은 `blocked-*` 상태가 없습니다. 이후 source digest, Archify 검증 또는 시각 QA가 실패하면 공개 상태를 유지하지 않고 이 섹션에 차단 이유·증거·재시도 경계를 기록합니다.

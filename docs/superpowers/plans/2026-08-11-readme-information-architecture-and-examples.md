@@ -714,7 +714,7 @@ git commit -m "feat: publish the Korean suite architecture"
 Require this exact Markdown relationship in `플러그인 구조와 전체 시스템 아키텍처`:
 
 ```md
-[![Game Design Plugin Suite 전체 시스템 아키텍처](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/read.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
+[![게임 기획 플러그인 모음 전체 시스템 구조](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/read.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
 ```
 
 Use the visible link validator to require regular non-symlink PNG and HTML targets. Add mutations for a missing image, unwrapped PNG, wrong HTML ID and stale receipt link.

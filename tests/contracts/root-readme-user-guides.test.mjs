@@ -800,15 +800,18 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
 async function assertSuiteArchitectureEmbed(markdown) {
   const architecture = section(markdown, suiteArchitectureEmbed.section);
   const readableArchitecture = architecture.replace(/\s+/gu, " ");
+  const previewEnd = architecture.indexOf("### 경로별 역할과 편집 경계");
+  assert.notEqual(previewEnd, -1, "architecture preview appears before the component-boundary explanation");
+  const readablePreview = architecture.slice(0, previewEnd).replace(/\s+/gu, " ");
   const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.html})`;
   assert.ok(architecture.includes(exactEmbed), "architecture preview keeps the exact PNG-to-HTML relationship");
   assert.match(
-    readableArchitecture,
-    /Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결/u,
-    "architecture preview explains the full system question in Korean",
+    readablePreview,
+    /시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계/u,
+    "architecture preview explains the overall system purpose without repeating a route question",
   );
   assert.match(
-    readableArchitecture,
+    readablePreview,
     /두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때/u,
     "architecture preview names a concrete opening moment",
   );

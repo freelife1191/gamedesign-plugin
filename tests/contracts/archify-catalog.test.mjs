@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -8,6 +8,10 @@ import {
   loadArchifyCatalog,
 } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
+import {
+  collectMarkdownHeadings,
+  extractMarkdownLinks,
+} from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -45,6 +49,72 @@ function assertSuiteCatalogCardinality(catalog) {
     1,
     "README.md must have exactly one catalog record",
   );
+}
+
+const publishedSourceLabels = new Map([
+  ["studio-project-workflow", "Studio 전체 워크플로 원문"],
+  ["career-evidence-workflow", "Career 전체 워크플로 원문"],
+  ["suite-studio-career-handoff", "Studio → Career 인계 원문"],
+]);
+
+function publishedDiagramSection(markdown, id) {
+  const marker = `### \`${id}\`\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `published diagram section exists: ${id}`);
+  const end = markdown.indexOf("\n### ", start + marker.length);
+  return markdown.slice(start, end === -1 ? markdown.length : end);
+}
+
+async function sourceTargetFromCuratedIndex(entry) {
+  const sourcePath = path.join(repoRoot, entry.source_document);
+  const source = await readFile(sourcePath, "utf8");
+  const heading = collectMarkdownHeadings(source).find((candidate) => candidate.label === entry.source_section);
+  assert.ok(heading, `${entry.id}: catalog source section resolves in its source document`);
+  const indexDir = path.join(repoRoot, "guides/archify-diagrams");
+  return `${path.relative(indexDir, sourcePath).split(path.sep).join("/")}#${heading.anchor}`;
+}
+
+async function assertCuratedPublishedIndex(catalog, markdown) {
+  const selected = catalog.entries.filter((entry) => entry.decision === "selected");
+  const published = selected.filter((entry) => entry.delivery_status === "published");
+  assert.equal(selected.length, 4, "selected count is the published index source of truth");
+  assert.equal(published.length, 4, "published count is the published index source of truth");
+  const productCounts = Object.fromEntries(["studio", "career", "suite"].map((product) => [
+    product,
+    published.filter((entry) => entry.product === product).length,
+  ]));
+  const typeCounts = Object.fromEntries(["architecture", "workflow", "dataflow"].map((type) => [
+    type,
+    published.filter((entry) => entry.diagram_type === type).length,
+  ]));
+  assert.ok(markdown.includes(`**${published.length}개.**`), "published count is rendered from the catalog count");
+  assert.ok(
+    markdown.includes(`Studio ${productCounts.studio}개, Career ${productCounts.career}개, Suite ${productCounts.suite}개`),
+    "published product counts match the catalog",
+  );
+  assert.ok(
+    markdown.includes(`architecture ${typeCounts.architecture}개, workflow ${typeCounts.workflow}개, dataflow ${typeCounts.dataflow}개`),
+    "published type counts match the catalog",
+  );
+  assert.ok(
+    markdown.includes(`현재 선택된 ${selected.length}개 도식에는 남은 \`blocked-*\` 상태가 없습니다.`),
+    "blocked summary uses the actual selected count",
+  );
+
+  for (const entry of published.filter((candidate) => publishedSourceLabels.has(candidate.id))) {
+    const label = publishedSourceLabels.get(entry.id);
+    const target = await sourceTargetFromCuratedIndex(entry);
+    const section = publishedDiagramSection(markdown, entry.id);
+    const sourceLine = section.split("\n").find((line) => line.startsWith("- 원문 근거:"));
+    assert.ok(sourceLine, `${entry.id}: source line exists`);
+    assert.ok(sourceLine.includes(`[${label}](${target})`), `${entry.id}: source link names the catalog source document and section`);
+    assert.equal(sourceLine.includes("specs/"), false, `${entry.id}: a spec cannot be presented as the source document`);
+    const link = extractMarkdownLinks(sourceLine).find((candidate) => candidate.label === label);
+    assert.ok(link, `${entry.id}: source link is visible Markdown`);
+    const sourcePath = path.resolve(path.join(repoRoot, "guides/archify-diagrams"), link.target.split("#", 1)[0]);
+    const stat = await lstat(sourcePath);
+    assert.equal(stat.isFile() && !stat.isSymbolicLink(), true, `${entry.id}: source target is a regular local file`);
+  }
 }
 
 function assertSourceBodyEvidence(entry, source) {
@@ -218,6 +288,32 @@ test("root README selects the Suite system architecture without changing corpus 
     ])),
     { studio: 1, career: 1, suite: 2 },
   );
+});
+
+test("curated Archify index renders catalog counts and links each workflow to its actual source", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const index = await readFile(path.join(repoRoot, "guides/archify-diagrams/README.md"), "utf8");
+  await assertCuratedPublishedIndex(catalog, index);
+});
+
+test("curated Archify index rejects stale counts and spec links presented as source documents", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const index = await readFile(path.join(repoRoot, "guides/archify-diagrams/README.md"), "utf8");
+  const mutations = [
+    ["stale published count", index.replace("**4개.**", "**3개.**")],
+    ["stale blocked count", index.replace("현재 선택된 4개 도식", "현재 선택된 세 도식")],
+    [
+      "Studio spec presented as source",
+      index.replace(
+        "[Studio 전체 워크플로 원문](../game-design-studio/workflow.md#game-design-studio-전체-워크플로)",
+        "[Studio 전체 워크플로 원문](specs/studio/studio-project-workflow.json)",
+      ),
+    ],
+  ];
+  for (const [label, mutated] of mutations) {
+    assert.notEqual(mutated, index, `${label}: mutation changes the curated index`);
+    await assert.rejects(() => assertCuratedPublishedIndex(catalog, mutated), undefined, label);
+  }
 });
 
 test("Suite catalog cardinality rejects an appended record or duplicate README record", async () => {
