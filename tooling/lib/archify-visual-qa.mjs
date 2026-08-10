@@ -108,7 +108,8 @@ async function validateRender(root, render, label, usedPaths, { guided = false, 
   if (!normalized.startsWith("renders/") || !normalized.endsWith(".png")) throw new Error(`${label}.path must be a renders/*.png path`);
   if (usedPaths.has(normalized)) throw new Error(`duplicate render path: ${normalized}`);
   usedPaths.add(normalized);
-  const bytes = renderSnapshots?.get(normalized) ?? await (async () => {
+  if (renderSnapshots && !renderSnapshots.has(normalized)) throw new Error(`missing pinned ${label}: ${normalized}`);
+  const bytes = renderSnapshots ? renderSnapshots.get(normalized) : await (async () => {
     const { filename } = await regularContained(root, `${QA_ROOT}/${normalized}`, label);
     return readFile(filename);
   })();

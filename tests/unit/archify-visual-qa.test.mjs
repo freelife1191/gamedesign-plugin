@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -242,7 +242,7 @@ test("contact sheet builder checks exact bytes and rejects an omitted passed ent
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /contact sheet bytes/u);
 });
 
-test("contact sheet builder removes stale groups atomically and restores the prior tree on failure", async (t) => {
+test("contact sheet builder transactionally replaces stale groups with a bounded visibility gap and restores on failure", async (t) => {
   const fixture = await visualQaFixture(t);
   await buildArchifyContactSheets({ repoRoot: fixture.root });
   const directory = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets");
@@ -252,6 +252,8 @@ test("contact sheet builder removes stale groups atomically and restores the pri
   const before = await readFile(path.join(directory, "all.html"), "utf8");
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforePublish: async () => { throw new Error("stop"); } } }), /stop/u);
   assert.equal(await readFile(path.join(directory, "all.html"), "utf8"), before);
+  const qaDirectory = path.dirname(directory);
+  assert.equal((await readdir(qaDirectory)).some((name) => name.startsWith(".contact-sheets-backup-") || name.startsWith("contact-sheet-")), false);
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforeBackupCleanup: async () => { throw new Error("cleanup stop"); } } }), /backup cleanup failed/u);
   await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }));
 });
@@ -292,4 +294,13 @@ test("render paths are contained regular non-symlink PNG files", async (t) => {
   const filename = path.join(fixture.root, "guides/archify-diagrams/visual-qa/renders/studio/stable-id/read.png");
   assert.ok((await lstat(filename)).isFile());
   await assert.doesNotReject(() => loadArchifyVisualQa({ repoRoot: fixture.root }));
+});
+
+test("pinned render validation never falls back to the live filesystem", async (t) => {
+  const fixture = await visualQaFixture(t);
+  const loaded = await loadArchifyVisualQa({ repoRoot: fixture.root });
+  await assert.rejects(() => loadArchifyVisualQa({
+    repoRoot: fixture.root, catalog: loaded.catalog,
+    manifestBytes: Buffer.from(JSON.stringify(fixture.qa)), renderSnapshots: new Map(),
+  }), /missing pinned/u);
 });

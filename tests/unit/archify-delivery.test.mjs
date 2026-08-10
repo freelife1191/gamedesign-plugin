@@ -292,6 +292,16 @@ test("publication rejects visual QA manifest or render replacement after their s
   }
 });
 
+test("publication detects a visual-QA ancestor swap-and-restore after evidence snapshots", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-qa-snapshot": async ({ qaRoot }) => {
+      const parked = `${qaRoot}.parked`; await rename(qaRoot, parked); await mkdir(qaRoot); await rmdir(qaRoot); await rename(parked, qaRoot);
+    } },
+  }), /identity changed|pinned input changed/u);
+});
+
 test("thin CLI accepts only an explicit delivery mode, repeated ids, and one product", () => {
   assert.deepEqual(parseCuratedArchifyArguments(["--stage", "--id", "one", "--id", "two", "--product", "studio"]), {
     mode: "stage", ids: ["one", "two"], product: "studio",
