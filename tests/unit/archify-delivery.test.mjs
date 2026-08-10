@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { access, lstat, mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -97,6 +97,41 @@ test("stage creates only an exact staged managed set and check rejects stale ext
   await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /exact managed set|stale/i);
 });
 
+test("check rejects a stale production managed tree even when no entry is publishable", async (t) => {
+  const f = await fixture(t);
+  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await write(f.root, "guides/assets/archify/stale.html", "untrusted\n");
+  await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /exact set|stale/i);
+});
+
+test("delivery runs a repo-private CLI copy when the source CLI is replaced after validate", async (t) => {
+  const f = await fixture(t);
+  const replacement = `${fakeCli()}\nawait (await import("node:fs/promises")).writeFile(${JSON.stringify(path.join(f.root, "external-sentinel"))}, "executed replacement\\n");\n`;
+  await writeFile(`${f.cli}.replacement`, replacement);
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-validate": async () => rename(`${f.cli}.replacement`, f.cli) },
+  });
+  await assert.rejects(access(path.join(f.root, "external-sentinel")), { code: "ENOENT" });
+});
+
+test("delivery rejects validate receipts not bound to the selected diagram type", async (t) => {
+  const f = await fixture(t);
+  await writeFile(f.cli, fakeCli().replace("command, type, input, checks", 'command, type: "architecture", input, checks'));
+  await assert.rejects(() => stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /receipt type/i);
+});
+
+test("commit refuses source or spec bytes changed after delivery", async (t) => {
+  for (const relative of ["README.md", "guides/archify-diagrams/specs/studio/stable-id.json"]) {
+    const f = await fixture(t);
+    await assert.rejects(() => stageCuratedArchify({
+      repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+      __testHooks: { "after-validate": async () => writeFile(path.join(f.root, relative), "changed\n") },
+    }), /pinned input changed|invalid JSON/u);
+    await assert.rejects(access(path.join(f.root, ".tmp/curated-archify/current")), { code: "ENOENT" });
+  }
+});
+
 test("publication rejects a passed record whose visual-QA digests do not bind the re-delivered artifact", async (t) => {
   const f = await fixture(t, { status: "passed", visual: "passed" });
   const manifestPath = path.join(f.root, "guides/archify-diagrams/visual-qa/manifest.json");
@@ -116,27 +151,110 @@ test("thin CLI accepts only an explicit delivery mode, repeated ids, and one pro
   }
 });
 
-for (const seam of [
-  "replace-cli-after-validate", "swap-stage-parent-and-restore", "symlink-delivered-html", "nondeterministic-deliver",
-  "fail-backup-rename", "fail-publish-rename", "fail-post-publish-verification", "fail-temp-cleanup",
-  "partially-fail-backup-cleanup", "fail-rollback-restore", "fail-without-prior-output", "rollback-without-private-siblings",
-]) {
-  test(`delivery fails closed at ${seam}`, async (t) => {
-    const f = await fixture(t, { status: "passed", visual: "passed" });
-    const hooks = { [seam]: async (context) => {
-      if (seam === "replace-cli-after-validate") await rename(f.cli, `${f.cli}.replaced`);
-      if (seam === "symlink-delivered-html") { await rm(context.html); await symlink(path.join(f.root, "README.md"), context.html); }
-      if (seam === "nondeterministic-deliver") await writeFile(context.html, "different\n");
-      if (!["replace-cli-after-validate", "symlink-delivered-html", "nondeterministic-deliver"].includes(seam)) throw new Error(seam);
-    } };
-    const needsPrior = ["fail-backup-rename", "partially-fail-backup-cleanup", "fail-rollback-restore"].includes(seam);
-    if (needsPrior) await write(f.root, "guides/assets/archify/old.txt", "trusted-old\n");
-    if (seam === "fail-rollback-restore") hooks["fail-post-publish-verification"] = async () => { throw new Error("force rollback"); };
-    await assert.rejects(() => publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions, __testHooks: hooks }));
-    const managed = path.join(f.root, "guides/assets/archify");
-    const stats = await lstat(managed).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-    if (["partially-fail-backup-cleanup", "fail-temp-cleanup"].includes(seam)) assert.ok(stats, "committed publication must survive cleanup failure");
-    else if (needsPrior && seam !== "fail-rollback-restore") assert.equal((await readFile(path.join(managed, "old.txt"))).toString(), "trusted-old\n");
-    else if (seam !== "fail-rollback-restore") assert.equal(stats, null, `${seam} must not publish a new trusted tree`);
-  });
+async function oldManagedTree(f) {
+  await write(f.root, "guides/assets/archify/old/one.html", "old-html\n");
+  await write(f.root, "guides/assets/archify/old/one.receipt.json", "old-receipt\n");
 }
+
+async function assertOldTree(f) {
+  assert.equal((await readFile(path.join(f.root, "guides/assets/archify/old/one.html"))).toString(), "old-html\n");
+  assert.equal((await readFile(path.join(f.root, "guides/assets/archify/old/one.receipt.json"))).toString(), "old-receipt\n");
+}
+
+test("swap-and-restore of a workflow ancestor is detected while it is swapped", async (t) => {
+  const f = await fixture(t);
+  await assert.rejects(() => stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-validate": async ({ workflow, assertAncestors }) => {
+      const parent = path.dirname(workflow); const parked = `${parent}.parked`;
+      await rename(parent, parked); await symlink(path.join(f.root, "README.md"), parent);
+      try { await assertAncestors(); } finally { await rm(parent); await rename(parked, parent); }
+    } },
+  }), /identity changed/u);
+  await assert.rejects(access(path.join(f.root, ".tmp/curated-archify/current")), { code: "ENOENT" });
+});
+
+test("a delivered HTML symlink is rejected", async (t) => {
+  const f = await fixture(t);
+  await assert.rejects(() => stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-deliver": async ({ html }) => { await rm(html); await symlink(path.join(f.root, "README.md"), html); } },
+  }), /regular non-symlink/u);
+});
+
+test("check rejects deterministic fresh re-delivery drift", async (t) => {
+  const f = await fixture(t);
+  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await writeFile(f.cli, fakeCli().replace("verified", "verified-different"));
+  await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /bytes drift/u);
+});
+
+test("backup rename refuses a target replaced by a symlink and preserves the old tree", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-backup-rename": async ({ target }) => { const parked = `${target}.parked`; await rename(target, parked); await symlink(path.join(f.root, "README.md"), target); await rm(target); await rename(parked, target); } },
+  }));
+  await assertOldTree(f);
+});
+
+test("publish rename failure restores exact prior bytes", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-publish-rename": async ({ candidate }) => rename(candidate, `${candidate}.moved`) },
+  }));
+  await assertOldTree(f);
+});
+
+test("post-publish verification failure restores exact prior bytes with no private siblings", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-publish-rename": async ({ candidate }) => writeFile(path.join(candidate, "studio/stable-id.html"), "mutated\n") },
+  }), /bytes drift/u);
+  await assertOldTree(f);
+  const siblings = await readdir(path.join(f.root, "guides/assets"));
+  assert.equal(siblings.some((name) => name.startsWith(".curated-archify-")), false);
+});
+
+test("successful commit survives a temporary cleanup identity failure", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-temp-cleanup": async ({ temp }) => { const parked = `${temp}.parked`; await rename(temp, parked); await symlink(path.join(f.root, "README.md"), temp); } },
+  }), /cleanup/u);
+  assert.equal((await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"))).toString(), "<!doctype html><title>verified</title>\n");
+});
+
+test("partial backup cleanup failure keeps the new canonical tree", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-backup-cleanup": async ({ backup }) => { const parked = `${backup}.forensic`; await rename(backup, parked); await symlink(path.join(f.root, "README.md"), backup); } },
+  }), /backup cleanup/u);
+  assert.equal((await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"))).toString(), "<!doctype html><title>verified</title>\n");
+});
+
+test("restore loss reports both causes and preserves forensic paths", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  let failure;
+  try {
+    await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions, __testHooks: {
+      "before-publish-rename": async ({ candidate }) => writeFile(path.join(candidate, "studio/stable-id.html"), "mutated\n"),
+      "before-rollback-restore": async ({ backup }) => rename(backup, `${backup}.forensic`),
+    } });
+  } catch (error) { failure = error; }
+  assert.ok(failure instanceof AggregateError); assert.equal(failure.errors.length, 2);
+  const siblings = await readdir(path.join(f.root, "guides/assets"));
+  assert.ok(siblings.some((name) => name.includes("forensic")));
+});
+
+test("failed publication without prior output leaves no new output", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-publish-rename": async ({ candidate }) => writeFile(path.join(candidate, "studio/stable-id.html"), "mutated\n") },
+  }), /bytes drift/u);
+  await assert.rejects(access(path.join(f.root, "guides/assets/archify")), { code: "ENOENT" });
+});

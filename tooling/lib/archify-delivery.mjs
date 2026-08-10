@@ -1,360 +1,472 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
+import { chmod, lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
 import path from "node:path";
 
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
 import { loadArchifyCatalog, publishableArchifyEntries } from "./archify-catalog.mjs";
+import { findStructuralDuplicates } from "./archify-signature.mjs";
 import { toPersistedArchifyReceipt, validateArchifyDeliverReceipt, validateArchifyValidateReceipt } from "./archify-receipt.mjs";
-import { createGuardedTempRoot, cleanupGuardedTempRoot } from "./guarded-temp.mjs";
+import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./guarded-temp.mjs";
 import { sha256 } from "./hash.mjs";
 import { comparePaths, joinWithin } from "./paths.mjs";
 
-const STAGE_PARENT = ".tmp";
-const STAGE_CURRENT = ".tmp/curated-archify/current";
+const CURRENT_STAGE = ".tmp/curated-archify/current";
+const CATALOG = "guides/archify-diagrams/catalog.json";
 const QA_MANIFEST = "guides/archify-diagrams/visual-qa/manifest.json";
-
-function identity(stats) {
-  return { dev: stats.dev, ino: stats.ino };
-}
-
-function sameIdentity(left, right) {
-  return left.dev === right.dev && left.ino === right.ino;
-}
 
 function isContained(root, candidate) {
   const relative = path.relative(root, candidate);
   return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
-async function safeDirectory(directory, label, { create = false, root } = {}) {
-  if (create) await mkdir(directory, { recursive: true, mode: 0o700 });
-  const stats = await lstat(directory);
+function fileIdentity(stats) {
+  return Object.freeze({ dev: stats.dev, ino: stats.ino, mode: stats.mode, size: stats.size, mtimeNs: stats.mtimeNs, ctimeNs: stats.ctimeNs });
+}
+
+function sameFileIdentity(left, right) {
+  return ["dev", "ino", "mode", "size", "mtimeNs", "ctimeNs"].every((key) => left[key] === right[key]);
+}
+
+function directoryIdentity(stats) {
+  return Object.freeze({ dev: stats.dev, ino: stats.ino, mode: stats.mode, mtimeNs: stats.mtimeNs, ctimeNs: stats.ctimeNs });
+}
+
+function sameDirectoryIdentity(left, right) {
+  return ["dev", "ino", "mode", "mtimeNs", "ctimeNs"].every((key) => left[key] === right[key]);
+}
+
+async function directoryRecord(filename, label, root) {
+  const requested = path.resolve(filename);
+  const stats = await lstat(requested, { bigint: true });
   if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`${label} must be a non-symlink directory`);
-  const canonical = await realpath(directory);
-  if (root && !isContained(root, canonical)) throw new Error(`${label} escapes repository`);
-  return Object.freeze({ path: canonical, identity: identity(stats), label });
+  const canonical = await realpath(requested);
+  const canonicalRoot = root ? await realpath(path.resolve(root)) : null;
+  if (canonicalRoot && !isContained(canonicalRoot, canonical)) throw new Error(`${label} escapes its trusted root`);
+  return Object.freeze({ path: canonical, label, identity: directoryIdentity(stats) });
 }
 
 async function assertDirectory(record) {
-  const stats = await lstat(record.path);
-  if (!stats.isDirectory() || stats.isSymbolicLink() || !sameIdentity(identity(stats), record.identity) || await realpath(record.path) !== record.path) {
-    throw new Error(`${record.label} identity changed`);
+  const stats = await lstat(record.path, { bigint: true });
+  if (!stats.isDirectory() || stats.isSymbolicLink() || !sameDirectoryIdentity(record.identity, directoryIdentity(stats)) || await realpath(record.path) !== record.path) {
+    throw new Error(`${record.label} identity changed; preserved path: ${record.path}`);
   }
 }
 
-async function safeRegular(filename, label) {
-  const stats = await lstat(filename).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-  if (!stats || !stats.isFile() || stats.isSymbolicLink()) throw new Error(`${label} must be a regular file`);
-  return stats;
+async function ancestorRecords(root, leaf, label) {
+  const canonicalRoot = path.resolve(root);
+  const canonicalLeaf = path.resolve(leaf);
+  if (!isContained(canonicalRoot, canonicalLeaf)) throw new Error(`${label} escapes repository`);
+  const records = [];
+  let current = canonicalRoot;
+  records.push(await directoryRecord(current, `${label} ancestor`, canonicalRoot));
+  for (const segment of path.relative(canonicalRoot, canonicalLeaf).split(path.sep).filter(Boolean)) {
+    current = path.join(current, segment);
+    records.push(await directoryRecord(current, `${label} ancestor`, canonicalRoot));
+  }
+  return Object.freeze(records);
 }
 
-async function assertRepoRoot(repoRoot) {
-  const absolute = path.resolve(repoRoot);
-  const stats = await lstat(absolute);
-  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error("repository root must be a non-symlink directory");
-  const canonical = await realpath(absolute);
-  return safeDirectory(canonical, "repository root", { root: canonical });
+async function assertAncestors(records) {
+  for (const record of records) await assertDirectory(record);
 }
 
-function selectedEntries(catalog, { ids = [], product = null, publishable = false } = {}) {
+async function snapshotRegular(filename, label) {
+  const requested = path.resolve(filename);
+  let handle;
+  let primary;
+  try {
+    const beforePath = await lstat(requested, { bigint: true });
+    if (!beforePath.isFile() || beforePath.isSymbolicLink()) throw new Error(`${label} must be a regular non-symlink file`);
+    handle = await open(requested, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    const before = await handle.stat({ bigint: true });
+    const bytes = await handle.readFile();
+    const after = await handle.stat({ bigint: true });
+    const canonical = await realpath(requested);
+    const afterPath = await lstat(requested, { bigint: true });
+    if (!Buffer.isBuffer(bytes) || !sameFileIdentity(fileIdentity(beforePath), fileIdentity(before))
+      || !sameFileIdentity(fileIdentity(before), fileIdentity(after)) || !sameFileIdentity(fileIdentity(before), fileIdentity(afterPath))
+      || before.size !== BigInt(bytes.byteLength)) throw new Error(`${label} identity changed while read`);
+    const snapshot = Object.freeze({ path: canonical, identity: fileIdentity(before), bytes, sha256: sha256(bytes), bytesLength: bytes.byteLength });
+    await handle.close();
+    handle = null;
+    return snapshot;
+  } catch (error) {
+    primary = error;
+  }
+  try { await handle?.close(); } catch (close) { throw primary ? new AggregateError([primary, close], `${label} read and close failed`) : close; }
+  throw primary;
+}
+
+async function assertSnapshotCurrent(snapshot) {
+  const current = await snapshotRegular(snapshot.path, "pinned input");
+  if (!sameFileIdentity(snapshot.identity, current.identity) || snapshot.sha256 !== current.sha256 || snapshot.bytesLength !== current.bytesLength) {
+    throw new Error(`pinned input changed; preserved path: ${snapshot.path}`);
+  }
+}
+
+async function writeExclusive(filename, bytes, mode = 0o600) {
+  await mkdir(path.dirname(filename), { recursive: true, mode: 0o700 });
+  const handle = await open(filename, fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_NOFOLLOW, mode);
+  try { await handle.writeFile(bytes); } finally { await handle.close(); }
+  return snapshotRegular(filename, "private delivery file");
+}
+
+async function removePinnedTree(record, parent, label) {
+  await assertDirectory(record);
+  await assertDirectory(parent);
+  const quarantine = path.join(parent.path, `.${label}-quarantine-${randomUUID()}`);
+  await rename(record.path, quarantine);
+  const quarantined = await directoryRecord(quarantine, `${label} quarantine`, parent.path);
+  await assertDirectory(quarantined);
+  await rm(quarantined.path, { recursive: true });
+}
+
+async function renameDirectory(record, target, parent, label, targetRoot = parent.path) {
+  await assertDirectory(record);
+  await assertDirectory(parent);
+  await rename(record.path, target);
+  return directoryRecord(target, label, targetRoot);
+}
+
+async function invoke(hooks, name, context) {
+  await hooks?.[name]?.(Object.freeze(context));
+}
+
+async function finalizeTemp(temp, result, primary, hooks) {
+  let cleanup;
+  try {
+    await invoke(hooks, "before-temp-cleanup", { temp: temp.root });
+    await invoke(hooks, "fail-temp-cleanup", { temp: temp.root });
+    await cleanupGuardedTempRoot(temp);
+  } catch (error) { cleanup = error; }
+  if (primary && cleanup) throw new AggregateError([primary, cleanup], "Archify operation and temporary cleanup failed");
+  if (primary) throw primary;
+  if (cleanup) throw new AggregateError([cleanup], "Archify operation succeeded but temporary cleanup failed");
+  return result;
+}
+
+async function repoRootRecord(repoRoot) {
+  const root = path.resolve(repoRoot);
+  return directoryRecord(root, "repository root", root);
+}
+
+function selectEntries(catalog, { ids = [], product = null, publishable = false } = {}) {
   if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || id.length === 0)) throw new Error("ids must be non-empty strings");
   if (product !== null && !["studio", "career", "suite"].includes(product)) throw new Error("product must be studio, career, or suite");
-  const allowed = new Set(ids);
-  const entries = (publishable ? publishableArchifyEntries(catalog) : catalog.entries.filter((entry) => entry.decision === "selected"))
-    .filter((entry) => (allowed.size === 0 || allowed.has(entry.id)) && (product === null || entry.product === product));
-  if (allowed.size > 0 && entries.length !== allowed.size) throw new Error("requested Archify id is not selected for this operation");
-  return entries.sort((left, right) => comparePaths(left.id, right.id));
+  const requested = new Set(ids);
+  const source = publishable ? publishableArchifyEntries(catalog) : catalog.entries.filter((entry) => entry.decision === "selected");
+  const result = source.filter((entry) => (!requested.size || requested.has(entry.id)) && (product === null || entry.product === product)).sort((a, b) => comparePaths(a.id, b.id));
+  if (!result.length) throw new Error("no Archify entries selected");
+  if (requested.size && result.length !== requested.size) throw new Error("requested Archify id is not selected");
+  return result;
 }
 
-async function readCommittedSpec(repoRoot, entry) {
-  const filename = joinWithin(repoRoot, entry.spec, "committed Archify spec");
-  const stats = await lstat(filename).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-  if (!stats) throw new Error(`missing committed Archify spec: ${entry.spec}`);
-  if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`committed Archify spec must be a regular file: ${entry.spec}`);
-  const bytes = await readFile(filename);
-  // Parsing proves this is an authored JSON source; its topology is deliberately opaque here.
-  try { JSON.parse(bytes.toString("utf8")); } catch { throw new Error(`committed Archify spec is invalid JSON: ${entry.spec}`); }
-  return Object.freeze({ path: filename, bytes, sha256: sha256(bytes), size: bytes.byteLength });
+async function loadCatalogSnapshot(root) {
+  const snapshot = await snapshotRegular(joinWithin(root.path, CATALOG, "Archify catalog"), "Archify catalog");
+  const catalog = await loadArchifyCatalog({ repoRoot: root.path });
+  await assertSnapshotCurrent(snapshot);
+  return { catalog, snapshot };
 }
 
-async function pinArchifyCli({ env, archifyOptions }) {
-  const installation = await resolveArchifyInstallation(env, archifyOptions);
+async function pinCli(env, options) {
+  const installation = await resolveArchifyInstallation(env, options);
   if (installation.status !== "available") throw new Error(`Archify CLI is ${installation.status}`);
-  return installation.cli;
+  const snapshot = await snapshotRegular(installation.cli.path, "Archify CLI");
+  if (snapshot.identity.dev !== installation.cli.dev || snapshot.identity.ino !== installation.cli.ino || snapshot.identity.size !== installation.cli.size || snapshot.sha256 !== installation.cli.sha256) {
+    throw new Error("Archify CLI identity disagrees with Task 5 pin");
+  }
+  return snapshot;
 }
 
-async function assertPinnedArchifyCli(cli) {
-  const [stats, canonical, bytes] = await Promise.all([
-    lstat(cli.path, { bigint: true }), realpath(cli.path), readFile(cli.path),
-  ]);
-  if (!stats.isFile() || stats.isSymbolicLink() || canonical !== cli.realpath || stats.dev !== cli.dev || stats.ino !== cli.ino
-    || stats.size !== cli.size || sha256(bytes) !== cli.sha256) throw new Error("Archify CLI identity changed");
-}
-
-async function runArchify(cli, args) {
-  await assertPinnedArchifyCli(cli);
+async function runCli(cli, args, ancestors, hooks, phase, context) {
+  await assertSnapshotCurrent(cli);
+  await assertAncestors(ancestors);
+  await invoke(hooks, `before-${phase}-spawn`, { ...context, cli: cli.path, assertAncestors: () => assertAncestors(ancestors) });
+  await assertSnapshotCurrent(cli);
+  await assertAncestors(ancestors);
   const result = await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [cli.path, ...args], { shell: false, stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
+    let stdout = ""; let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; });
     child.stderr.on("data", (chunk) => { stderr += chunk; });
     child.once("error", reject);
     child.once("close", (code, signal) => resolve({ code, signal, stdout, stderr }));
   });
-  await assertPinnedArchifyCli(cli);
-  if (result.code !== 0 || result.signal) throw new Error(`Archify ${args[0]} failed: ${result.stderr || result.signal || result.code}`);
-  try { return JSON.parse(result.stdout); } catch { throw new Error(`Archify ${args[0]} emitted invalid JSON`); }
+  await assertSnapshotCurrent(cli);
+  await assertAncestors(ancestors);
+  if (result.code !== 0 || result.signal) throw new Error(`Archify ${phase} failed: ${result.stderr || result.signal || result.code}`);
+  try { return JSON.parse(result.stdout); } catch { throw new Error(`Archify ${phase} emitted invalid JSON`); }
+}
+
+function bindValidate(receipt, entry, input) {
+  validateArchifyValidateReceipt(receipt);
+  if (receipt.type !== entry.diagram_type) throw new Error("receipt type does not match selected entry");
+  if (receipt.input !== input) throw new Error("receipt input does not match pinned spec");
+}
+
+function bindDeliver(receipt, entry, input, output, spec, artifact) {
+  validateArchifyDeliverReceipt(receipt, { specification: spec.bytes, artifact: artifact.bytes });
+  if (receipt.type !== entry.diagram_type) throw new Error("receipt type does not match selected entry");
+  if (receipt.input !== input) throw new Error("receipt input does not match pinned spec");
+  if (receipt.output !== output) throw new Error("receipt output does not match pinned HTML");
+}
+
+async function sourceSnapshot(root, entry) {
+  const snapshot = await snapshotRegular(joinWithin(root, entry.source_document, "Archify source"), "Archify source");
+  if (snapshot.sha256 !== entry.source_digest) throw new Error(`source or catalog drift: ${entry.source_document}`);
+  return snapshot;
 }
 
 function outputRelative(entry, field) {
   const prefix = "guides/assets/archify/";
-  const source = entry[field];
-  if (!source.startsWith(prefix)) throw new Error(`invalid managed ${field} path`);
-  return source.slice(prefix.length);
+  if (!entry[field].startsWith(prefix)) throw new Error(`invalid managed ${field} path`);
+  return entry[field].slice(prefix.length);
 }
 
-async function invoke(hooks, name, context) {
-  await hooks?.[name]?.(context);
+async function deliverRecord({ root, temp, cliSource, entry, hooks }) {
+  const spec = await snapshotRegular(joinWithin(root.path, entry.spec, "committed Archify spec"), "committed Archify spec").catch((error) => {
+    if (error?.code === "ENOENT") throw new Error(`missing committed Archify spec: ${entry.spec}`);
+    throw error;
+  });
+  try { JSON.parse(spec.bytes.toString("utf8")); } catch { throw new Error(`committed Archify spec is invalid JSON: ${entry.spec}`); }
+  const source = await sourceSnapshot(root.path, entry);
+  const workflowPath = path.join(temp.root, "workflow", entry.id);
+  await mkdir(path.join(workflowPath, "exec"), { recursive: true, mode: 0o700 });
+  await mkdir(path.join(workflowPath, "output"), { recursive: true, mode: 0o700 });
+  const ancestors = await ancestorRecords(root.path, workflowPath, "delivery workflow");
+  const privateCli = await writeExclusive(path.join(workflowPath, "exec", "archify.mjs"), cliSource.bytes, 0o500);
+  await chmod(privateCli.path, 0o500);
+  const copiedCli = await snapshotRegular(privateCli.path, "private Archify CLI");
+  if (copiedCli.sha256 !== cliSource.sha256 || copiedCli.bytesLength !== cliSource.bytesLength) throw new Error("private Archify CLI copy does not match source pin");
+  await assertSnapshotCurrent(cliSource);
+  const privateSpec = await writeExclusive(path.join(workflowPath, "exec", "spec.json"), spec.bytes);
+  if (privateSpec.sha256 !== spec.sha256) throw new Error("private spec copy does not match committed bytes");
+  const html = path.join(workflowPath, "output", `${entry.id}.html`);
+  const context = { entry, workflow: workflowPath, html };
+  const validate = await runCli(copiedCli, ["validate", entry.diagram_type, privateSpec.path, "--quality", "showcase", "--json"], ancestors, hooks, "validate", context);
+  bindValidate(validate, entry, privateSpec.path);
+  await invoke(hooks, "after-validate", { ...context, cli: cliSource.path, assertAncestors: () => assertAncestors(ancestors) });
+  await invoke(hooks, "replace-cli-after-validate", { ...context, cli: cliSource.path });
+  await invoke(hooks, "swap-stage-parent-and-restore", { ...context, cli: cliSource.path });
+  const deliver = await runCli(copiedCli, ["deliver", entry.diagram_type, privateSpec.path, html, "--quality", "showcase", "--json"], ancestors, hooks, "deliver", context);
+  await invoke(hooks, "after-deliver", context);
+  await invoke(hooks, "symlink-delivered-html", context);
+  await invoke(hooks, "nondeterministic-deliver", context);
+  const artifact = await snapshotRegular(html, "delivered Archify HTML");
+  bindDeliver(deliver, entry, privateSpec.path, html, spec, artifact);
+  return Object.freeze({ entry, spec, source, artifact, receipt: toPersistedArchifyReceipt(deliver, { input: entry.spec, output: entry.html }, { specification: spec.bytes, artifact: artifact.bytes }) });
 }
 
-async function deliverEntry({ cli, temp, entry, spec, hooks }) {
-  const workflow = await safeDirectory(path.join(temp.root, "workflow"), "delivery workflow", { create: true, root: temp.root });
-  const html = path.join(workflow.path, `${entry.id}.html`);
-  await assertDirectory(workflow);
-  const validation = validateArchifyValidateReceipt(await runArchify(cli, ["validate", entry.diagram_type, spec.path, "--quality", "showcase", "--json"]));
-  await invoke(hooks, "after-validate", { cli: cli.path, entry, stage: workflow.path });
-  await invoke(hooks, "replace-cli-after-validate", { cli: cli.path, entry, stage: workflow.path });
-  await assertDirectory(workflow);
-  await invoke(hooks, "before-deliver", { cli: cli.path, entry, stage: workflow.path, html });
-  await invoke(hooks, "swap-stage-parent-and-restore", { cli: cli.path, entry, stage: workflow.path, html });
-  await assertDirectory(workflow);
-  const deliver = await runArchify(cli, ["deliver", entry.diagram_type, spec.path, html, "--quality", "showcase", "--json"]);
-  await invoke(hooks, "after-deliver", { cli: cli.path, entry, stage: workflow.path, html });
-  await invoke(hooks, "symlink-delivered-html", { cli: cli.path, entry, stage: workflow.path, html });
-  await invoke(hooks, "nondeterministic-deliver", { cli: cli.path, entry, stage: workflow.path, html });
-  await assertDirectory(workflow);
-  await safeRegular(html, "delivered Archify HTML");
-  const artifact = await readFile(html);
-  validateArchifyDeliverReceipt(deliver, { specification: spec.bytes, artifact });
-  const stablePaths = { input: entry.spec, output: entry.html };
-  const receipt = toPersistedArchifyReceipt(deliver, stablePaths, { specification: spec.bytes, artifact });
-  return Object.freeze({ entry, spec, validation, artifact, receipt });
+async function validateRecordInputs(records, catalogSnapshot) {
+  await assertSnapshotCurrent(catalogSnapshot);
+  for (const record of records) {
+    await assertSnapshotCurrent(record.spec);
+    await assertSnapshotCurrent(record.source);
+  }
 }
 
-async function createTemporaryRoot(repoRoot) {
-  const tmp = await safeDirectory(path.join(repoRoot, STAGE_PARENT), ".tmp", { create: true, root: repoRoot });
+function validateExactStructuralSignatures(catalog, records) {
+  const specs = new Map(records.map((record) => [record.entry.id, JSON.parse(record.spec.bytes.toString("utf8"))]));
+  const duplicates = findStructuralDuplicates({ catalog, specsById: specs });
+  if (duplicates.length) throw new Error(`duplicate structural signature: ${duplicates[0].ids.join(", ")}`);
+}
+
+async function createTemp(root) {
+  const tmpPath = path.join(root.path, ".tmp");
+  await mkdir(tmpPath, { recursive: true, mode: 0o700 });
+  const tmp = await directoryRecord(tmpPath, ".tmp", root.path);
   await assertDirectory(tmp);
   return createGuardedTempRoot({ parent: tmp.path, prefix: "curated-archify-" });
 }
 
 async function writeRecords(root, records) {
-  const expected = [];
   for (const record of records) {
-    const html = outputRelative(record.entry, "html");
-    const receipt = outputRelative(record.entry, "receipt");
-    expected.push(html, receipt);
-    await mkdir(path.dirname(path.join(root, html)), { recursive: true, mode: 0o700 });
-    await writeFile(path.join(root, html), record.artifact, { flag: "wx" });
-    await writeFile(path.join(root, receipt), `${JSON.stringify(record.receipt, null, 2)}\n`, { flag: "wx" });
+    const html = path.join(root, outputRelative(record.entry, "html"));
+    const receipt = path.join(root, outputRelative(record.entry, "receipt"));
+    await mkdir(path.dirname(html), { recursive: true, mode: 0o700 });
+    await writeExclusive(html, record.artifact.bytes);
+    await writeExclusive(receipt, Buffer.from(`${JSON.stringify(record.receipt, null, 2)}\n`));
   }
-  return expected.sort(comparePaths);
 }
 
-async function removeSafeTree(directory) {
-  const stats = await lstat(directory).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-  if (!stats) return;
-  if (!stats.isDirectory() || stats.isSymbolicLink()) throw new Error(`managed tree is unsafe: ${directory}`);
-  await rm(directory, { recursive: true });
+async function managedFileSet(root) {
+  const stats = await lstat(root).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
+  if (!stats) return [];
+  const record = await directoryRecord(root, "managed tree", path.dirname(root));
+  async function visit(directory, prefix = "") {
+    const entries = await readdir(directory, { withFileTypes: true });
+    const output = [];
+    for (const entry of entries.sort((a, b) => comparePaths(a.name, b.name))) {
+      const child = path.join(directory, entry.name); const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const childStats = await lstat(child);
+      if (childStats.isSymbolicLink()) throw new Error(`managed output contains a symlink: ${relative}`);
+      if (childStats.isDirectory()) output.push(...await visit(child, relative));
+      else if (childStats.isFile()) output.push(relative);
+      else throw new Error(`managed output has unsupported entry: ${relative}`);
+    }
+    return output;
+  }
+  await assertDirectory(record);
+  return visit(record.path);
 }
 
-async function commitStageCandidate({ repoRoot, temp, records, hooks }) {
-  const stage = path.join(temp.root, "candidate");
-  await mkdir(stage, { mode: 0o700 });
-  const expected = await writeRecords(stage, records);
-  const parent = await safeDirectory(path.join(repoRoot, ".tmp/curated-archify"), "curated stage parent", { create: true, root: repoRoot });
-  const current = path.join(parent.path, "current");
-  const backup = path.join(parent.path, `.current-backup-${randomUUID()}`);
-  const existing = await lstat(current).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-  if (existing) {
-    if (!existing.isDirectory() || existing.isSymbolicLink()) throw new Error("current stage is unsafe");
-    await rename(current, backup);
+function expectedSet(entries) {
+  return entries.flatMap((entry) => [outputRelative(entry, "html"), outputRelative(entry, "receipt")]).sort(comparePaths);
+}
+
+async function compareRecords(root, records) {
+  for (const record of records) {
+    const artifact = await snapshotRegular(path.join(root, outputRelative(record.entry, "html")), "managed HTML");
+    const receipt = await snapshotRegular(path.join(root, outputRelative(record.entry, "receipt")), "managed receipt");
+    if (!artifact.bytes.equals(record.artifact.bytes) || !receipt.bytes.equals(Buffer.from(`${JSON.stringify(record.receipt, null, 2)}\n`))) throw new Error(`managed output bytes drift: ${record.entry.id}`);
   }
+}
+
+async function assertExactManagedTree(root, entries, records = []) {
+  const actual = await managedFileSet(root);
+  const expected = expectedSet(entries);
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("managed output exact set is stale or incomplete");
+  await compareRecords(root, records);
+}
+
+async function qaBindings(root, records) {
+  if (!records.length) return;
+  const manifest = await snapshotRegular(joinWithin(root, QA_MANIFEST, "visual QA manifest"), "visual QA manifest");
+  let parsed; try { parsed = JSON.parse(manifest.bytes); } catch { throw new Error("visual QA manifest is invalid JSON"); }
+  if (parsed?.schema_version !== 1 || !Array.isArray(parsed.entries)) throw new Error("visual QA manifest schema version is invalid");
+  for (const record of records) {
+    const entry = parsed.entries.find((candidate) => candidate?.id === record.entry.id);
+    if (!entry || entry.reviewer !== record.entry.reviewer || entry.specification_sha256 !== record.spec.sha256 || entry.artifact_sha256 !== record.artifact.sha256) throw new Error(`visual QA binding does not match: ${record.entry.id}`);
+  }
+  return manifest;
+}
+
+async function stageCommit({ root, temp, catalog, catalogSnapshot, records, hooks }) {
+  const candidatePath = path.join(temp.root, "candidate");
+  await mkdir(candidatePath, { mode: 0o700 });
+  await writeRecords(candidatePath, records);
+  const candidate = await directoryRecord(candidatePath, "stage candidate", temp.root);
+  const parentPath = path.join(root.path, ".tmp", "curated-archify");
+  await mkdir(parentPath, { recursive: true, mode: 0o700 });
+  let parent = await directoryRecord(parentPath, "stage parent", root.path);
+  const currentPath = path.join(parent.path, "current");
+  const existing = await lstat(currentPath).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
+  let backup; let current;
   try {
-    await assertDirectory(parent);
-    await rename(stage, current);
-    await invoke(hooks, "after-stage-commit", { current });
-    if (existing) await removeSafeTree(backup);
-  } catch (error) {
-    const failures = [error];
+    await validateRecordInputs(records, catalogSnapshot); validateExactStructuralSignatures(catalog, records);
+    if (existing) {
+      backup = await renameDirectory(await directoryRecord(currentPath, "current stage", parent.path), path.join(parent.path, `.current-backup-${randomUUID()}`), parent, "stage backup");
+      parent = await directoryRecord(parent.path, "stage parent", root.path);
+    }
+    current = await renameDirectory(candidate, currentPath, parent, "current stage", root.path);
+    parent = await directoryRecord(parent.path, "stage parent", root.path);
+    await assertExactManagedTree(current.path, records.map((record) => record.entry), records);
+    await invoke(hooks, "after-stage-commit", { current: current.path });
+  } catch (primary) {
+    const rollback = [];
     try {
-      const currentStats = await lstat(current).catch(() => null);
-      if (currentStats) await rename(current, stage);
-      if (existing) await rename(backup, current);
-    } catch (rollback) { failures.push(rollback); }
-    if (failures.length > 1) throw new AggregateError(failures, "staging commit and rollback failed");
-    throw error;
+      if (current) { await renameDirectory(current, candidatePath, parent, "stage candidate rollback", temp.root); parent = await directoryRecord(parent.path, "stage parent", root.path); }
+      if (backup) await renameDirectory(backup, currentPath, parent, "current stage restore");
+    } catch (error) { rollback.push(error); }
+    if (rollback.length) throw new AggregateError([primary, ...rollback], "stage commit and rollback failed");
+    throw primary;
   }
-  return Object.freeze({ root: current, expected });
+  if (backup) {
+    try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, parent, "current-backup"); }
+    catch (cleanup) { throw new AggregateError([cleanup], "stage committed but backup cleanup failed"); }
+  }
+  return current.path;
 }
 
-async function produce({ repoRoot, ids, product, env, archifyOptions, hooks, publishable = false }) {
-  const root = await assertRepoRoot(repoRoot);
-  const catalog = await loadArchifyCatalog({ repoRoot: root.path });
-  const entries = selectedEntries(catalog, { ids, product, publishable });
-  if (entries.length === 0) throw new Error("no Archify entries selected");
-  const cli = await pinArchifyCli({ env, archifyOptions });
-  const temp = await createTemporaryRoot(root.path);
+async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot, records, hooks }) {
+  const candidatePath = path.join(temp.root, "publish");
+  await mkdir(candidatePath, { mode: 0o700 }); await writeRecords(candidatePath, records);
+  const candidate = await directoryRecord(candidatePath, "publish candidate", temp.root);
+  const assetsPath = path.join(root.path, "guides", "assets"); await mkdir(assetsPath, { recursive: true, mode: 0o700 });
+  let assets = await directoryRecord(assetsPath, "assets parent", root.path);
+  const targetPath = path.join(assets.path, "archify");
+  const original = await lstat(targetPath).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
+  let backup; let published;
+  try {
+    await validateRecordInputs(records, catalogSnapshot); await assertSnapshotCurrent(qaSnapshot); validateExactStructuralSignatures(catalog, records);
+    if (original) {
+      await invoke(hooks, "before-backup-rename", { target: targetPath });
+      backup = await renameDirectory(await directoryRecord(targetPath, "managed publish target", assets.path), path.join(assets.path, `.curated-archify-backup-${randomUUID()}`), assets, "publish backup");
+      assets = await directoryRecord(assets.path, "assets parent", root.path);
+    }
+    await invoke(hooks, "before-publish-rename", { target: targetPath, candidate: candidate.path });
+    published = await renameDirectory(candidate, targetPath, assets, "published managed tree", root.path);
+    assets = await directoryRecord(assets.path, "assets parent", root.path);
+    await assertExactManagedTree(published.path, records.map((record) => record.entry), records);
+    await invoke(hooks, "after-publish-verification", { target: published.path });
+    await assertExactManagedTree(published.path, records.map((record) => record.entry), records);
+  } catch (primary) {
+    const rollback = [];
+    try {
+      if (published) { await renameDirectory(published, candidatePath, assets, "publish rollback candidate", temp.root); assets = await directoryRecord(assets.path, "assets parent", root.path); }
+      if (backup) {
+        await invoke(hooks, "before-rollback-restore", { target: targetPath, backup: backup.path });
+        await renameDirectory(backup, targetPath, assets, "publish rollback restore");
+      }
+    } catch (error) { rollback.push(error); }
+    if (rollback.length) throw new AggregateError([primary, ...rollback], `publication failed and rollback failed: ${primary.message}; ${rollback.map((error) => error.message).join("; ")}`);
+    throw primary;
+  }
+  if (backup) {
+    try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, assets, "publish-backup"); }
+    catch (cleanup) { throw new AggregateError([cleanup], "publication committed but backup cleanup failed"); }
+  }
+}
+
+async function prepare({ repoRoot, ids, product, env, archifyOptions, hooks, publishable }) {
+  const root = await repoRootRecord(repoRoot);
+  const { catalog, snapshot: catalogSnapshot } = await loadCatalogSnapshot(root);
+  const entries = selectEntries(catalog, { ids, product, publishable });
+  const cli = await pinCli(env, archifyOptions);
+  const temp = await createTemp(root);
   try {
     const records = [];
-    for (const entry of entries) {
-      const spec = await readCommittedSpec(root.path, entry);
-      const record = await deliverEntry({ cli, temp, entry, spec, hooks });
-      records.push(record);
-    }
-    return { root: root.path, catalog, entries, records, temp };
-  } catch (error) {
-    try { await cleanupGuardedTempRoot(temp); } catch (cleanup) { throw new AggregateError([error, cleanup], "Archify delivery and temporary cleanup failed"); }
-    throw error;
-  }
+    for (const entry of entries) records.push(await deliverRecord({ root, temp, cliSource: cli, entry, hooks }));
+    return { root, catalog, catalogSnapshot, entries, records, temp };
+  } catch (primary) { return finalizeTemp(temp, undefined, primary, hooks); }
 }
 
 export async function stageCuratedArchify({ repoRoot, ids = [], product = null, env = process.env, archifyOptions = {}, __testHooks } = {}) {
-  const produced = await produce({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks });
-  try {
-    const staged = await commitStageCandidate({ repoRoot: produced.root, temp: produced.temp, records: produced.records, hooks: __testHooks });
-    return { staged: staged.root, entries: produced.records.map((record) => record.entry.id) };
-  } finally {
-    await cleanupGuardedTempRoot(produced.temp).catch((error) => { throw new AggregateError([error], "staging temporary cleanup failed"); });
-  }
-}
-
-async function listFiles(root, prefix = "") {
-  const entries = await readdir(root, { withFileTypes: true });
-  const output = [];
-  for (const entry of entries.sort((a, b) => comparePaths(a.name, b.name))) {
-    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
-    const target = path.join(root, entry.name);
-    const stats = await lstat(target);
-    if (stats.isSymbolicLink()) throw new Error(`managed output contains a symlink: ${relative}`);
-    if (stats.isDirectory()) output.push(...await listFiles(target, relative));
-    else if (stats.isFile()) output.push(relative);
-    else throw new Error(`managed output has unsupported entry: ${relative}`);
-  }
-  return output;
-}
-
-async function compareManagedTree(root, records) {
-  const expected = [];
-  for (const record of records) expected.push(outputRelative(record.entry, "html"), outputRelative(record.entry, "receipt"));
-  expected.sort(comparePaths);
-  const actual = await listFiles(root);
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("managed output exact set is stale or incomplete");
-  for (const record of records) {
-    const [html, receipt] = await Promise.all([
-      readFile(path.join(root, outputRelative(record.entry, "html"))),
-      readFile(path.join(root, outputRelative(record.entry, "receipt"))),
-    ]);
-    if (!html.equals(record.artifact) || !receipt.equals(Buffer.from(`${JSON.stringify(record.receipt, null, 2)}\n`))) {
-      throw new Error(`managed output bytes drift: ${record.entry.id}`);
-    }
-  }
+  let prepared; let primary; let result;
+  try { prepared = await prepare({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks, publishable: false }); result = await stageCommit({ ...prepared, hooks: __testHooks }); }
+  catch (error) { primary = error; }
+  if (!prepared) throw primary;
+  return finalizeTemp(prepared.temp, primary ? undefined : { staged: result, entries: prepared.entries.map((entry) => entry.id) }, primary, __testHooks);
 }
 
 export async function checkCuratedArchify({ repoRoot, ids = [], product = null, env = process.env, archifyOptions = {}, __testHooks } = {}) {
-  const produced = await produce({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks });
+  let prepared; let primary; let result;
   try {
-    const stage = path.join(produced.root, STAGE_CURRENT);
-    await safeDirectory(stage, "curated stage", { root: produced.root });
-    await compareManagedTree(stage, produced.records);
-    const published = publishableArchifyEntries(produced.catalog);
-    await loadQaBindings(produced.root, produced.records.filter((record) => published.some((entry) => entry.id === record.entry.id)));
-    if (published.length > 0) await compareManagedTree(path.join(produced.root, "guides/assets/archify"), produced.records.filter((record) => published.some((entry) => entry.id === record.entry.id)));
-    return { checked: true, entries: produced.records.map((record) => record.entry.id) };
-  } finally {
-    await cleanupGuardedTempRoot(produced.temp);
-  }
-}
-
-async function loadQaBindings(repoRoot, records) {
-  if (records.length === 0) return;
-  const manifestPath = joinWithin(repoRoot, QA_MANIFEST, "visual QA manifest");
-  await safeRegular(manifestPath, "visual QA manifest").catch(() => { throw new Error("visual QA manifest is required for publication"); });
-  const bytes = await readFile(manifestPath);
-  let manifest;
-  try { manifest = JSON.parse(bytes); } catch { throw new Error("visual QA manifest is invalid JSON"); }
-  if (manifest?.schema_version !== 1 && manifest?.schemaVersion !== 1) throw new Error("visual QA manifest schema version is invalid");
-  const rows = Array.isArray(manifest.entries) ? manifest.entries : [];
-  for (const record of records) {
-    const row = rows.find((candidate) => candidate?.id === record.entry.id);
-    if (!row || row.reviewer !== record.entry.reviewer || row.specification_sha256 !== record.spec.sha256 || row.artifact_sha256 !== sha256(record.artifact)) {
-      throw new Error(`visual QA binding does not match: ${record.entry.id}`);
-    }
-  }
-}
-
-async function publishTree({ repoRoot, records, temp, hooks }) {
-  const candidate = path.join(temp.root, "publish");
-  await mkdir(candidate, { mode: 0o700 });
-  await writeRecords(candidate, records);
-  const assets = await safeDirectory(path.join(repoRoot, "guides/assets"), "assets parent", { create: true, root: repoRoot });
-  const target = path.join(assets.path, "archify");
-  const backup = path.join(assets.path, `.curated-archify-backup-${randomUUID()}`);
-  const original = await lstat(target).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-  if (original && (!original.isDirectory() || original.isSymbolicLink())) throw new Error("managed publish target is unsafe");
-  let backedUp = false;
-  let published = false;
-  try {
-    if (original) {
-      await invoke(hooks, "before-backup-rename", { target, backup });
-      await invoke(hooks, "fail-backup-rename", { target, backup });
-      await rename(target, backup); backedUp = true;
-    }
-    await invoke(hooks, "before-publish-rename", { target, candidate });
-    await invoke(hooks, "fail-without-prior-output", { target, candidate });
-    await invoke(hooks, "fail-publish-rename", { target, candidate });
-    await assertDirectory(assets);
-    await rename(candidate, target); published = true;
-    await compareManagedTree(target, records);
-    await invoke(hooks, "after-publish-verification", { target });
-    await invoke(hooks, "rollback-without-private-siblings", { target });
-    await invoke(hooks, "fail-post-publish-verification", { target });
-  } catch (error) {
-    const rollbackErrors = [];
-    try {
-      if (published) await rename(target, candidate);
-      if (backedUp) {
-        await invoke(hooks, "before-rollback-restore", { target, backup });
-        await invoke(hooks, "fail-rollback-restore", { target, backup });
-        await rename(backup, target);
-      }
-    } catch (rollback) { rollbackErrors.push(rollback); }
-    if (rollbackErrors.length) throw new AggregateError([error, ...rollbackErrors], "publication failed and rollback failed");
-    throw error;
-  }
-  try {
-    if (backedUp) {
-      await invoke(hooks, "before-backup-cleanup", { backup });
-      await invoke(hooks, "partially-fail-backup-cleanup", { backup });
-      await removeSafeTree(backup);
-    }
-    await invoke(hooks, "before-temp-cleanup", { candidate });
-    await invoke(hooks, "fail-temp-cleanup", { candidate });
-  } catch (cleanup) {
-    throw new AggregateError([cleanup], "published Archify tree but cleanup failed");
-  }
+    prepared = await prepare({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks, publishable: false });
+    const stage = path.join(prepared.root.path, CURRENT_STAGE);
+    await assertExactManagedTree(stage, prepared.entries, prepared.records);
+    const allPublished = publishableArchifyEntries(prepared.catalog);
+    const publishedRecords = prepared.records.filter((record) => allPublished.some((entry) => entry.id === record.entry.id));
+    await qaBindings(prepared.root.path, publishedRecords);
+    await assertExactManagedTree(path.join(prepared.root.path, "guides", "assets", "archify"), allPublished, publishedRecords);
+    result = { checked: true, entries: prepared.entries.map((entry) => entry.id) };
+  } catch (error) { primary = error; }
+  if (!prepared) throw primary;
+  return finalizeTemp(prepared.temp, result, primary, __testHooks);
 }
 
 export async function publishCuratedArchify({ repoRoot, ids = [], product = null, env = process.env, archifyOptions = {}, __testHooks } = {}) {
-  const produced = await produce({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks, publishable: true });
+  let prepared; let primary; let result;
   try {
-    const allPassed = publishableArchifyEntries(produced.catalog);
-    if (produced.records.length !== allPassed.length) throw new Error("publish must include the complete passed Archify set");
-    await loadQaBindings(produced.root, produced.records);
-    await publishTree({ repoRoot: produced.root, records: produced.records, temp: produced.temp, hooks: __testHooks });
-    return { published: true, entries: produced.records.map((record) => record.entry.id) };
-  } finally {
-    await cleanupGuardedTempRoot(produced.temp).catch((error) => { throw new AggregateError([error], "publication temporary cleanup failed"); });
-  }
+    prepared = await prepare({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks, publishable: true });
+    const allPassed = publishableArchifyEntries(prepared.catalog);
+    if (prepared.entries.length !== allPassed.length) throw new Error("publish must include the complete passed Archify set");
+    const qaSnapshot = await qaBindings(prepared.root.path, prepared.records);
+    await publishCommit({ ...prepared, qaSnapshot, hooks: __testHooks });
+    result = { published: true, entries: prepared.entries.map((entry) => entry.id) };
+  } catch (error) { primary = error; }
+  if (!prepared) throw primary;
+  return finalizeTemp(prepared.temp, result, primary, __testHooks);
 }
