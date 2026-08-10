@@ -52,6 +52,7 @@
           }
         ]
       },
+      "readme_preview": null,
       "checks": {
         "text_clipping": "passed",
         "glyph_distortion": "passed",
@@ -136,6 +137,7 @@
           }
         ]
       },
+      "readme_preview": null,
       "checks": {
         "text_clipping": "passed",
         "glyph_distortion": "passed",
@@ -221,6 +223,7 @@
           }
         ]
       },
+      "readme_preview": null,
       "checks": {
         "text_clipping": "passed",
         "glyph_distortion": "passed",
@@ -272,7 +275,7 @@
         },
         "light": {
           "path": "renders/suite/suite-plugin-system-architecture/light.png",
-          "sha256": "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f",
+          "sha256": "ec53d27f768b843223a7a6b0c59e6beb300177b35f737bf58251d268c02acd53",
           "width": 1600,
           "height": 1200
         },
@@ -305,6 +308,12 @@
             "height": 1200
           }
         ]
+      },
+      "readme_preview": {
+        "path": "renders/suite/suite-plugin-system-architecture/readme-preview.png",
+        "sha256": "1c416ff0b977c4c9fc7f11471709e9e6f883bb87723775a779ec8f98216d2733",
+        "width": 1600,
+        "height": 900
       },
       "checks": {
         "text_clipping": "passed",

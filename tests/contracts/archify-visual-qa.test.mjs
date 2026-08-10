@@ -37,6 +37,14 @@ test("the Korean suite system architecture has six complete published visual QA 
     ["read", "light", "dark", ...qa.renders.guided_views.map((view) => view.id)].sort(),
     ["read", "light", "dark", "view-plugin-boundaries", "view-artifact-validation", "view-human-approval"].sort(),
   );
+  assert.ok(qa.readme_preview, "suite system architecture publishes a dedicated README preview capture");
+  assert.equal(
+    qa.readme_preview.path,
+    "renders/suite/suite-plugin-system-architecture/readme-preview.png",
+    "README preview is distinct from the full-page READ capture",
+  );
+  assert.ok(qa.readme_preview.width >= 1200 && qa.readme_preview.height >= 600, "README preview keeps readable architecture occupancy");
+  assert.match(qa.readme_preview.sha256, /^[0-9a-f]{64}$/u, "README preview has digest-bound QA evidence");
   for (const render of [qa.renders.read, qa.renders.light, qa.renders.dark, ...qa.renders.guided_views]) {
     assert.equal(render.width, 1600, `${render.path} uses the production viewport width`);
     assert.ok(render.height > 0, `${render.path} has an inspected nonzero height`);

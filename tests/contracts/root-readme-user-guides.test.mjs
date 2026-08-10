@@ -12,6 +12,7 @@ import {
   extractMarkdownLinks as visibleMarkdownLinks,
 } from "../../tooling/lib/user-guides.mjs";
 import { loadPromptTemplateCatalog } from "../../tooling/lib/prompt-template-catalog.mjs";
+import { inspectCompletePng, inspectPngVisualContent } from "../../shared/scripts/lib/complete-png-validation.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const guideRoot = path.join(root, "guides");
@@ -60,7 +61,7 @@ const resultExampleIds = [
 const suiteArchitectureEmbed = {
   section: "플러그인 구조와 전체 시스템 아키텍처",
   alt: "게임 기획 플러그인 모음 전체 시스템 구조",
-  png: "guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/read.png",
+  png: "guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/readme-preview.png",
   html: "guides/assets/archify/suite/suite-plugin-system-architecture.html",
 };
 const verifiedArchifyRoutes = [
@@ -865,6 +866,17 @@ async function assertSuiteArchitectureEmbed(markdown) {
     target: suiteArchitectureEmbed.png,
     label: suiteArchitectureEmbed.alt,
   }, root);
+  const preview = path.join(root, suiteArchitectureEmbed.png);
+  const previewStats = await lstat(preview);
+  assert.ok(previewStats.isFile() && !previewStats.isSymbolicLink(), "architecture README preview is a regular non-symlink file");
+  const previewBytes = await readFile(preview);
+  const previewInspection = inspectCompletePng(previewBytes);
+  assert.ok(previewInspection.ok, `architecture README preview is a complete PNG: ${previewInspection.errors.join("; ")}`);
+  assert.ok(previewInspection.width >= 1200, "architecture README preview preserves a readable desktop width");
+  assert.ok(previewInspection.height >= 600, "architecture README preview preserves sufficient diagram height");
+  const previewContent = inspectPngVisualContent(previewBytes);
+  assert.ok(previewContent.ok, `architecture README preview has visible UI and diagram content: ${previewContent.errors.join("; ")}`);
+  assert.ok(previewContent.foregroundRatio >= 0.07, "architecture README preview gives the guided architecture enough visible occupancy");
   await validateVisibleLocalLink(readmePath, {
     target: suiteArchitectureEmbed.html,
     label: suiteArchitectureEmbed.alt,

@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { deflateSync } from "node:zlib";
 
-import { loadArchifyVisualQa, renderArchifyContactSheets } from "../../tooling/lib/archify-visual-qa.mjs";
+import { collectArchifyVisualQaRenderPaths, loadArchifyVisualQa, renderArchifyContactSheets } from "../../tooling/lib/archify-visual-qa.mjs";
 import { buildArchifyContactSheets } from "../../tooling/build-archify-contact-sheets.mjs";
 
 const SCAN_ROOTS = [
@@ -45,15 +45,26 @@ function pngChunk(type, data) {
   return chunk;
 }
 
-function png(width = 2, height = 2) {
+function png(width = 2, height = 2, { blank = false } = {}) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
   header[8] = 8;
   header[9] = 6;
+  const background = [242, 238, 229, 255];
+  const foreground = [48, 43, 35, 255];
+  const rows = Array.from({ length: height }, (_, row) => {
+    const scanline = Buffer.alloc(width * 4 + 1);
+    for (let column = 0; column < width; column += 1) {
+      const pixel = !blank && row === Math.floor(height / 2) && column === Math.floor(width / 2)
+        ? foreground : background;
+      scanline.set(pixel, 1 + column * 4);
+    }
+    return scanline;
+  });
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(Buffer.concat(Array.from({ length: height }, () => Buffer.alloc(width * 4 + 1))))), pngChunk("IEND", Buffer.alloc(0)),
+    pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(Buffer.concat(rows))), pngChunk("IEND", Buffer.alloc(0)),
   ]);
 }
 
@@ -89,7 +100,7 @@ function qaEntry(renderFiles, { verdict = "passed", checks = Object.fromEntries(
   return {
     id: "stable-id", specification_sha256: sha256(SPEC), artifact_sha256: sha256("<main>artifact</main>\n"),
     reviewer: "reviewer", review_method: "headless-original-and-fit", correction_rounds: 0,
-    verdict, renders: { read: render("read"), light: render("light"), dark: render("dark"), guided_views: [{ id: "view-focus", ...render("guided") }] },
+    verdict, renders: { read: render("read"), light: render("light"), dark: render("dark"), guided_views: [{ id: "view-focus", ...render("guided") }] }, readme_preview: null,
     checks, defects: [],
   };
 }
@@ -230,6 +241,16 @@ test("visual QA rejects missing and corrupted PNG IDAT payloads through the shar
   fixture.qa.entries[0].renders.read.sha256 = sha256(corrupt);
   await rewrite(fixture);
   await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /PNG validation/u);
+});
+
+test("visual QA rejects a PNG-valid but perceptually blank theme capture", async (t) => {
+  const fixture = await visualQaFixture(t);
+  const blank = png(2, 2, { blank: true });
+  const filename = path.join(fixture.root, "guides/archify-diagrams/visual-qa/renders/studio/stable-id/light.png");
+  await writeFile(filename, blank);
+  fixture.qa.entries[0].renders.light.sha256 = sha256(blank);
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /perceptually blank/u);
 });
 
 for (const [name, mutate, pattern] of [
@@ -388,4 +409,17 @@ test("pinned render validation never falls back to the live filesystem", async (
     repoRoot: fixture.root, catalog: loaded.catalog,
     manifestBytes: Buffer.from(JSON.stringify(fixture.qa)), renderSnapshots: new Map(),
   }), /missing pinned/u);
+});
+
+test("pinned render collection includes a digest-bound README preview when present", async (t) => {
+  const fixture = await visualQaFixture(t);
+  const preview = png(2, 2);
+  const relative = "renders/studio/stable-id/readme-preview.png";
+  await writeRelative(fixture.root, `guides/archify-diagrams/visual-qa/${relative}`, preview);
+  fixture.qa.entries[0].readme_preview = { path: relative, sha256: sha256(preview), width: 2, height: 2 };
+  await rewrite(fixture);
+  assert.ok(
+    collectArchifyVisualQaRenderPaths(fixture.qa).includes(relative),
+    "the delivery snapshot set includes the README preview before validating its digest",
+  );
 });

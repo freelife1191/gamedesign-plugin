@@ -1836,7 +1836,10 @@ generated snapshot: plugins/game-design-career/
 확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지
 빠르게 파악할 수 있습니다.
 
-[![게임 기획 플러그인 모음 전체 시스템 구조](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/read.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
+[![게임 기획 플러그인 모음 전체 시스템 구조](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/readme-preview.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
+
+미리보기는 **사람 검토·승인과 보류 후 재개 경로**를 강조합니다. 전체 연결과
+다른 안내 보기는 이미지를 클릭해 HTML에서 확인하세요.
 
 ### 경로별 역할과 편집 경계
 

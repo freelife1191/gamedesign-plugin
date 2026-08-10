@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { inspectCompletePng } from "../../shared/scripts/lib/complete-png-validation.mjs";
+import { inspectCompletePng, inspectPngVisualContent } from "../../shared/scripts/lib/complete-png-validation.mjs";
 import { loadArchifyCatalog } from "./archify-catalog.mjs";
 import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 
@@ -13,7 +13,7 @@ const RENDER_KEYS = Object.freeze(["path", "sha256", "width", "height"]);
 const GUIDED_RENDER_KEYS = Object.freeze(["id", ...RENDER_KEYS]);
 const ENTRY_KEYS = Object.freeze([
   "id", "specification_sha256", "artifact_sha256", "reviewer", "review_method", "correction_rounds", "verdict",
-  "renders", "checks", "defects",
+  "renders", "readme_preview", "checks", "defects",
 ]);
 const CHECK_KEYS = Object.freeze([
   "text_clipping", "glyph_distortion", "blur_or_tofu", "node_text_collision", "edge_node_collision",
@@ -123,6 +123,8 @@ async function validateRender(root, render, label, usedPaths, { guided = false, 
   if (!Buffer.isBuffer(bytes)) throw new Error(`missing pinned ${label}: ${normalized}`);
   const inspection = inspectCompletePng(bytes);
   if (!inspection.ok) throw new Error(`${label} PNG validation failed: ${inspection.errors.join("; ")}`);
+  const visual = inspectPngVisualContent(bytes);
+  if (!visual.ok) throw new Error(`${label} PNG is perceptually blank: ${visual.errors.join("; ")}`);
   if (inspection.width !== render.width || inspection.height !== render.height) throw new Error(`${label} dimensions do not match PNG`);
   if (sha256(bytes) !== render.sha256) throw new Error(`${label} render digest does not match bytes`);
 }
@@ -175,6 +177,9 @@ async function validateEntry(root, entry, catalogEntry, index, usedPaths, render
   if (sha256(artifactBytes) !== entry.artifact_sha256) throw new Error(`${label} artifact digest does not match bytes`);
   validateChecks(entry, label);
   const views = await validateRenders(root, entry, label, usedPaths, renderSnapshots);
+  if (entry.readme_preview !== null) {
+    await validateRender(root, entry.readme_preview, `${label}.readme_preview`, usedPaths, { renderSnapshots });
+  }
   validateDefects(entry, label, views);
 }
 
@@ -183,7 +188,11 @@ export function collectArchifyVisualQaRenderPaths(manifest) {
   const paths = new Set();
   for (const entry of manifest.entries) {
     if (!isObject(entry) || !isObject(entry.renders)) continue;
-    for (const render of [entry.renders.read, entry.renders.light, entry.renders.dark, ...(Array.isArray(entry.renders.guided_views) ? entry.renders.guided_views : [])]) {
+    for (const render of [
+      entry.renders.read, entry.renders.light, entry.renders.dark,
+      ...(Array.isArray(entry.renders.guided_views) ? entry.renders.guided_views : []),
+      entry.readme_preview,
+    ]) {
       if (!isObject(render) || typeof render.path !== "string") continue;
       paths.add(normalizeRelativePath(render.path, "visual QA render path"));
     }
