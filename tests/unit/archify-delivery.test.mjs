@@ -73,7 +73,7 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
       renders[name] = { path: relative, sha256: DIGEST(bytes), width: 2, height: 2 };
     }
     const checks = Object.fromEntries(["text_clipping", "glyph_distortion", "blur_or_tofu", "node_text_collision", "edge_node_collision", "edge_label_collision", "ambiguous_corridor", "branch_merge_retry_resume", "rail_legend_footer", "light_dark_contrast", "guided_view_usefulness", "within_product_diversity", "cross_product_distinction"].map((key) => [key, "passed"]));
-    const qaEntry = { id: selected.id, reviewer: "reviewer", review_method: "headless-agent-browser + original-size image reader", correction_rounds: 0, verdict: "passed", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact), renders: { read: renders.read, light: renders.light, dark: renders.dark, guided_views: [{ id: "view-focus", ...renders.guided }] }, checks, defects: [] };
+    const qaEntry = { id: selected.id, reviewer: "reviewer", review_method: "headless-original-and-fit", correction_rounds: 0, verdict: "passed", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact), renders: { read: renders.read, light: renders.light, dark: renders.dark, guided_views: [{ id: "view-focus", ...renders.guided }] }, checks, defects: [] };
     await write(root, "guides/archify-diagrams/visual-qa/manifest.json", `${JSON.stringify({ schema_version: 1, entries: [qaEntry], contact_sheets: [] })}\n`);
   }
   const home = await mkdtemp(path.join(os.tmpdir(), "archify-delivery-home-"));
@@ -180,6 +180,7 @@ test("closure localisation rewrites representative viewer UI only in the private
   assert.match(localized, /설계도 \/ 개정 01/u);
   assert.match(localized, /편집형 \/ 현장 기록/u);
   assert.match(localized, /아키파이 \/ 도판 04/u);
+  assert.match(localized, /시스템 구조 도식/u);
   assert.match(localized, /id="btn-export">Export<\/button>/u);
   assert.match(localized, />format_qa_export<\/code>/u);
   assert.doesNotMatch(localized, /format_qa_내보내기/u);

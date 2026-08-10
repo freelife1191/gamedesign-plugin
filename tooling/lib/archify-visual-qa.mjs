@@ -155,7 +155,7 @@ async function validateEntry(root, entry, catalogEntry, index, usedPaths, render
   assertDigest(entry.specification_sha256, `${label}.specification_sha256`);
   assertDigest(entry.artifact_sha256, `${label}.artifact_sha256`);
   if (!nonempty(entry.reviewer)) throw new Error(`${label}.reviewer must be a non-empty string`);
-  if (entry.review_method !== "headless-agent-browser + original-size image reader") throw new Error(`${label}.review_method must be the required review method`);
+  if (entry.review_method !== "headless-original-and-fit") throw new Error(`${label}.review_method must be the required review method`);
   if (!Number.isInteger(entry.correction_rounds) || entry.correction_rounds < 0 || entry.correction_rounds > 2) {
     throw new Error(`${label}.correction_rounds must be an integer from 0 through 2`);
   }

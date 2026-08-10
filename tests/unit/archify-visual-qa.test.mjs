@@ -88,7 +88,7 @@ function qaEntry(renderFiles, { verdict = "passed", checks = Object.fromEntries(
   const render = (name) => ({ path: renderFiles[name].relative, sha256: sha256(renderFiles[name].bytes), width: 2, height: 2 });
   return {
     id: "stable-id", specification_sha256: sha256(SPEC), artifact_sha256: sha256("<main>artifact</main>\n"),
-    reviewer: "reviewer", review_method: "headless-agent-browser + original-size image reader", correction_rounds: 0,
+    reviewer: "reviewer", review_method: "headless-original-and-fit", correction_rounds: 0,
     verdict, renders: { read: render("read"), light: render("light"), dark: render("dark"), guided_views: [{ id: "view-focus", ...render("guided") }] },
     checks, defects: [],
   };
@@ -190,7 +190,7 @@ test("visual QA requires the exact review method, valid guided defect view, and 
   fixture.qa.entries[0].review_method = "manual";
   await rewrite(fixture);
   await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /review_method/u);
-  fixture.qa.entries[0].review_method = "headless-agent-browser + original-size image reader";
+  fixture.qa.entries[0].review_method = "headless-original-and-fit";
   fixture.qa.entries[0].verdict = "failed";
   fixture.qa.entries[0].checks.text_clipping = "failed";
   fixture.qa.entries[0].defects = [{ view: "view-missing", subject: "node", symptom: "overlap", correction_outcome: "blocked", round: 1, correction_evidence: "recorded failure" }];

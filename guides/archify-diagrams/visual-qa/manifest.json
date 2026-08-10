@@ -4,9 +4,9 @@
     {
       "id": "studio-project-workflow",
       "specification_sha256": "2616dee286467b2d84a9e043d5b38df1a6f5ff3b3f93fda7d4dfc61ee19666b7",
-      "artifact_sha256": "78be05e04e8c227ee7369ee892c399803300890671317707d324c79cd27d7006",
+      "artifact_sha256": "f9f39d2b0281d4e2b9e967ea8b71f448c375a81bb74fc779508e64469880cdad",
       "reviewer": "Codex 헤드리스 시각 QA",
-      "review_method": "headless-agent-browser + original-size image reader",
+      "review_method": "headless-original-and-fit",
       "correction_rounds": 1,
       "verdict": "passed",
       "renders": {
@@ -81,9 +81,9 @@
     {
       "id": "career-evidence-workflow",
       "specification_sha256": "37fceb8e99e52c3aa1696213c94172ea3837fd7f6e2ce38b51eecdbfc2ad4407",
-      "artifact_sha256": "637a1564123394bf2b5f465b83a30939efa6e77962f97af0fe93f5ab1ef6e6a4",
+      "artifact_sha256": "aa39f02924f5db38750325798a2ecc3773037a3bd3a19d6d64d5d8dabd273518",
       "reviewer": "Codex 헤드리스 시각 QA",
-      "review_method": "headless-agent-browser + original-size image reader",
+      "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
       "verdict": "passed",
       "renders": {
@@ -173,9 +173,9 @@
     {
       "id": "suite-studio-career-handoff",
       "specification_sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
-      "artifact_sha256": "d0d0c950e8d322de5a9d63fd8ff6fdb08ec26b895a8f897e2cd70f2c4eb7e8c2",
+      "artifact_sha256": "d7931fc67fd4ba33a69b382c96a9b26bd1666aaa2c46bce22d9123687fdc15c4",
       "reviewer": "Codex 헤드리스 시각 QA",
-      "review_method": "headless-agent-browser + original-size image reader",
+      "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
       "verdict": "passed",
       "renders": {
@@ -257,52 +257,52 @@
     },
     {
       "id": "suite-plugin-system-architecture",
-      "specification_sha256": "a0e4a5426387195165a73d28a7c7deb75e5ea078aa87e69a436549ac771b476b",
-      "artifact_sha256": "c64bdab31e3d59f8974755ce2ddf28b9a40b2780c76bcb56dd8656662fd47b90",
+      "specification_sha256": "f32a1cef7643a1fb735b282ea76d5f72782c221e7a165be0c032fa2f8d60280d",
+      "artifact_sha256": "a1173d2083f56745b0f31e4ad7e7f820b4a1408583d8a0e72f6c6565d7835e48",
       "reviewer": "Codex 헤드리스 시각 QA",
-      "review_method": "headless-agent-browser + original-size image reader",
-      "correction_rounds": 0,
+      "review_method": "headless-original-and-fit",
+      "correction_rounds": 1,
       "verdict": "passed",
       "renders": {
         "read": {
           "path": "renders/suite/suite-plugin-system-architecture/read.png",
-          "sha256": "54f00ade009312d2950d33cc4339f155bf43663741874e431c616e163fd33ef7",
+          "sha256": "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f",
           "width": 1600,
-          "height": 1000
+          "height": 1200
         },
         "light": {
           "path": "renders/suite/suite-plugin-system-architecture/light.png",
-          "sha256": "54f00ade009312d2950d33cc4339f155bf43663741874e431c616e163fd33ef7",
+          "sha256": "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f",
           "width": 1600,
-          "height": 1000
+          "height": 1200
         },
         "dark": {
           "path": "renders/suite/suite-plugin-system-architecture/dark.png",
-          "sha256": "9973d671e26b9fea9b6af856419451959d0df492f34f8e0b4e805872a6877a76",
+          "sha256": "ed05cf0f804e64f822860ac9638344212e2f926e43cd89225af0c4f964b0400c",
           "width": 1600,
-          "height": 1000
+          "height": 1200
         },
         "guided_views": [
           {
             "id": "view-plugin-boundaries",
             "path": "renders/suite/suite-plugin-system-architecture/view-plugin-boundaries.png",
-            "sha256": "98546a49d3e39932d293e8af1c62dfefab160c3d16e03a0d4230d732b70466e6",
+            "sha256": "e9d925b9c6163eb8f22c4b495ad552040538b108a51290648787c3a20ba94322",
             "width": 1600,
-            "height": 1039
+            "height": 1200
           },
           {
             "id": "view-artifact-validation",
             "path": "renders/suite/suite-plugin-system-architecture/view-artifact-validation.png",
-            "sha256": "2e8a6ddda6e8419454f595fa7add07f3b385ccf3510f342217cb6cbfab346d40",
+            "sha256": "2b283c792f4fa5fc339ebb125ef6edeec02a29cc11b1658a6566cf8404e3bc09",
             "width": 1600,
-            "height": 1039
+            "height": 1200
           },
           {
             "id": "view-human-approval",
             "path": "renders/suite/suite-plugin-system-architecture/view-human-approval.png",
-            "sha256": "d6373e7ae8d83fbdad8d261b36938c52c8b8929d028b4219ef8a473016725747",
+            "sha256": "b1439bc204b49b18f6fcc91b4d9d977bf9e6db230d63fd46775de454fa7fb755",
             "width": 1600,
-            "height": 1039
+            "height": 1200
           }
         ]
       },
@@ -321,29 +321,38 @@
         "within_product_diversity": "passed",
         "cross_product_distinction": "passed"
       },
-      "defects": []
+      "defects": [
+        {
+          "view": "view-human-approval",
+          "subject": "한국어 우선 안내와 검토 보류 재개 경로",
+          "symptom": "이전 화면은 영어 우선 용어와 희미한 보류·재개 경로 때문에 사람 검토·승인 흐름을 빠르게 읽기 어려웠습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "한국어 우선 사양을 Archify 9개 검사로 재검증하고, 1600px 원본과 맞춤 화면에서 자동 검증·검토 보류·수정·재검토·사람 검토·승인 경로를 확인했습니다."
+        }
+      ]
     }
   ],
   "contact_sheets": [
     {
       "html": "all.html",
-      "html_sha256": "d71cb1abd623cdd83d25f2436e1c2a1556f0d424c45c93a2a15439b0bae49380",
+      "html_sha256": "72e9fd9c4aa5e2c636b96a0ef4d372256292548460c1f07a0120129710160796",
       "png": "all.png",
-      "png_sha256": "56cae160ec16f51410acc3f8592e17bab960208c73e5d3ea6a2be2da582c20fa",
+      "png_sha256": "fd18dd2dcaa2b9ff811792bd6cbee4e5f23c6fcfbe4696986736c7bcb25c8e7a",
       "width": 1800,
-      "height": 6340,
+      "height": 6540,
       "source_read_sha256": [
         "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e",
         "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
         "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983",
-        "54f00ade009312d2950d33cc4339f155bf43663741874e431c616e163fd33ef7"
+        "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f"
       ]
     },
     {
       "html": "product-career.html",
       "html_sha256": "ee1dfb8ed062eb271eb7e17b34402f7ddbd6e51cfc75824b957306f94bb9dc21",
       "png": "product-career.png",
-      "png_sha256": "2106010ca92d68b98ce44f3a94cc1a74120790656b03b8ddd2c593f447cc1117",
+      "png_sha256": "07181b5a392b1980bc7a9a500eec0e81744a337137a0aab87164b7ea99273101",
       "width": 1800,
       "height": 1887,
       "source_read_sha256": [
@@ -354,7 +363,7 @@
       "html": "product-studio.html",
       "html_sha256": "0ed7bb72a8470d3a8d6d74baca55d655879547f3adf723e8b6bdd765b33e08bd",
       "png": "product-studio.png",
-      "png_sha256": "71fad77bb06e969ce134ee8a5b6e17d808dc67b806b09bbfaa407e16e0b993bb",
+      "png_sha256": "0ceff88f2d55bcccd9edbda71eb837935dcfa2fe9f286420e0f739d5b93c2422",
       "width": 1800,
       "height": 2011,
       "source_read_sha256": [
@@ -363,32 +372,32 @@
     },
     {
       "html": "product-suite.html",
-      "html_sha256": "1a8db6fd59bda802483652cadd9c375e2c72152f044e83c68a1f6cea4a139e78",
+      "html_sha256": "a750e193a69b1f73b318d0dd4819899b9141663d3601f18497c6bb6d6a7cd3d3",
       "png": "product-suite.png",
-      "png_sha256": "e78cc4fe6b9ffe0336fdf5b65009313880262d1e788c85e44ed73ea74f6dd0b9",
+      "png_sha256": "40aae00139e5e43bea49b3672fc2ac81591d256335efafa5b036dab695427bea",
       "width": 1800,
-      "height": 2599,
+      "height": 2799,
       "source_read_sha256": [
         "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983",
-        "54f00ade009312d2950d33cc4339f155bf43663741874e431c616e163fd33ef7"
+        "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f"
       ]
     },
     {
       "html": "type-architecture.html",
-      "html_sha256": "988e219c5e1f7547401f66f2c9d8ef176d44de0295fe8a2dec90ea894dca98ce",
+      "html_sha256": "aba168bd542cf3dda2c57f2138926e703ca89b6559377435c93c30e62c017ade",
       "png": "type-architecture.png",
-      "png_sha256": "5adb80df2cb45b662747068261949ee5850d9f30274980c40a6117f466f6085f",
+      "png_sha256": "abda7c84e2e8e7e32cd0e8be891f50d1efa940aa92d03812004d47719d66cf38",
       "width": 1800,
-      "height": 1276,
+      "height": 1476,
       "source_read_sha256": [
-        "54f00ade009312d2950d33cc4339f155bf43663741874e431c616e163fd33ef7"
+        "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f"
       ]
     },
     {
       "html": "type-dataflow.html",
       "html_sha256": "200e66f3e103e26af1d437cead9999054b81fe180d8024547e622e4438c0ea45",
       "png": "type-dataflow.png",
-      "png_sha256": "dc267473489415185df441018737740b2579e59fb254f3a94718984c2079aeb9",
+      "png_sha256": "3e7eba38f939d44c372ab0398c81fad1c99e8aed758b5861fa9e66e8f5f5b3f7",
       "width": 1800,
       "height": 1401,
       "source_read_sha256": [
@@ -399,7 +408,7 @@
       "html": "type-workflow.html",
       "html_sha256": "ef38992bd3de26d5b8196c12d9c416ed2594ec057594e139d32b24ff164252b4",
       "png": "type-workflow.png",
-      "png_sha256": "4fbf78753f32e587aa90b478277dfb64ada373a7eae5717c28ed3cfd2b3bf90f",
+      "png_sha256": "c92d2a5d03e7f3acfd64d6f88ee66d235eb8e93e1afa71aa173c8ab46c353749",
       "width": 1800,
       "height": 3820,
       "source_read_sha256": [

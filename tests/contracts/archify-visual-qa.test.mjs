@@ -32,7 +32,7 @@ test("the Korean suite system architecture has six complete published visual QA 
   const qa = loaded.qa.entries.find((candidate) => candidate.id === entry.id);
   assert.ok(qa, "suite system architecture QA record exists");
   assert.equal(qa.verdict, "passed");
-  assert.equal(qa.review_method, "headless-agent-browser + original-size image reader");
+  assert.equal(qa.review_method, "headless-original-and-fit");
   assert.deepEqual(
     ["read", "light", "dark", ...qa.renders.guided_views.map((view) => view.id)].sort(),
     ["read", "light", "dark", "view-plugin-boundaries", "view-artifact-validation", "view-human-approval"].sort(),
