@@ -176,7 +176,7 @@ App
 
 그다음 @Game Design Career에서 포트폴리오 작성
 (build-game-design-portfolio)을 실행해 검토된 내용만 사용하여
-포트폴리오 사례 본문, 개인 기여 요약, 면접 답변 소재와
+포트폴리오 사례 본문, 개인 기여와 선택 근거, 주요 의사결정 기록과
 공개 전 확인 목록을 작성해 줘.
 
 CLI
@@ -185,8 +185,8 @@ $game-design-studio:review-game-design
 선택 이유와 검증 결과를 구분해 줘.
 
 $game-design-career:build-game-design-portfolio
-검토된 내용만 사용해 포트폴리오 사례 본문, 개인 기여 요약,
-면접 답변 소재와 공개 전 확인 목록을 만들어 줘.
+검토된 내용만 사용해 포트폴리오 사례 본문, 개인 기여와 선택 근거,
+주요 의사결정 기록과 공개 전 확인 목록을 만들어 줘.
 ```
 
 **얻게 되는 결과:**
@@ -195,8 +195,10 @@ $game-design-career:build-game-design-portfolio
   문제, 내 역할, 판단과 검증 결과를 읽는 사람이 따라갈 수 있게 정리합니다.
 - **개인 기여와 선택 근거** (`creative-design-portfolio/evidence.yml`):
   내가 한 일과 그 선택을 뒷받침하는 내용을 분리해 기록합니다.
-- **면접 답변 소재** (`creative-design-portfolio/decisions/`):
-  예상 질문에 설명할 판단, 대안과 배운 점을 정리합니다.
+- **주요 의사결정 기록** (`creative-design-portfolio/decisions/`):
+  선택한 판단, 대안과 다음 결정을 바꿀 조건을 기록합니다. 이 기록은
+  이후 별도 면접 연습(`practice-game-design-interview`)에서 질문과 답변을
+  준비할 때 참고할 수 있습니다.
 - **공개 전 확인 목록** (`creative-design-portfolio/export-manifest.yml`):
   공개할 파일, 보류 항목과 내보내기 상태를 확인합니다.
 

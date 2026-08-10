@@ -89,6 +89,66 @@ const readableResultLabels = new Map([
   ["creative-design-portfolio", "창작 기획 포트폴리오"],
   ["export-preparation-manifest", "문서 내보내기 준비 목록"],
 ]);
+const readableSkillMetadata = new Map([
+  ["game-design-studio", new Map([
+    ["apply-document-quality-profile", ["문서 품질 기준 적용", "문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다."]],
+    ["define-game-vision", ["게임 비전 정의", "대상 플레이어, 핵심 재미와 검증 기준을 정리해 비전 기둥을 만듭니다."]],
+    ["design-game-content", ["게임 콘텐츠 설계", "퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다."]],
+    ["design-game-economy-and-liveops", ["경제와 라이브 운영 설계", "재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다."]],
+    ["design-game-systems", ["게임 시스템 설계", "규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다."]],
+    ["design-player-experience", ["플레이어 경험 설계", "정보 구조, 상호작용, 온보딩과 접근성 흐름을 정리합니다."]],
+    ["export-game-design-documents", ["기획 문서 내보내기 준비", "검증된 Artifact의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
+    ["generate-image-assets", ["이미지 자산 생성", "승인된 목록의 선택 작업만 생성하고 제공자 상태를 기록합니다."]],
+    ["orchestrate-game-design-project", ["게임 기획 프로젝트 조율", "여러 기획 분야의 범위, 순서와 검토 지점을 프로젝트 브리프로 묶습니다."]],
+    ["plan-game-production", ["게임 제작 계획", "시제품 기준, 의존성, 담당자와 중단 기준을 제작 계획으로 만듭니다."]],
+    ["plan-image-assets", ["이미지 자산 계획", "기준 문서에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
+    ["review-game-design", ["게임 기획 검토", "근거, 위험과 막힌 지점을 검토해 최소 수정이 담긴 검토 문서를 만듭니다."]],
+    ["review-image-assets", ["이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
+    ["svg-infographic", ["기획 도식 만들기", "Skillstead 0.8.3에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
+  ])],
+  ["game-design-career", new Map([
+    ["apply-document-quality-profile", ["경력 문서 품질 기준 적용", "경력 문서 목적과 형식에 맞는 품질 기준과 선택 기록을 만듭니다."]],
+    ["build-game-design-portfolio", ["기획 포트폴리오 만들기", "공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다."]],
+    ["export-career-documents", ["경력 문서 내보내기 준비", "Career Artifact의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
+    ["generate-image-assets", ["경력 이미지 자산 생성", "승인된 이미지 목록의 선택 작업만 생성하고 제공자 상태를 기록합니다."]],
+    ["map-game-design-career", ["게임 기획 경력 지도 만들기", "역할군, 목표 수준과 역량 격차를 비교해 경력 지도를 만듭니다."]],
+    ["orchestrate-game-design-career", ["게임 기획 경력 조율", "경력 단계, 작업 순서와 검토를 하나의 경력 계획으로 묶습니다."]],
+    ["plan-image-assets", ["경력 이미지 자산 계획", "Career Artifact에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
+    ["plan-junior-growth", ["주니어 성장 계획", "분기 목표, 증거 과제와 피드백 주기를 성장 계획으로 만듭니다."]],
+    ["practice-game-design-interview", ["게임 기획 면접 연습", "공고와 포트폴리오 근거를 질문, 답변과 피드백 기록으로 연결합니다."]],
+    ["research-game-design-jobs", ["게임 기획 채용 조사", "최신 공고와 회사 근거를 모아 요구사항과 지원자 격차를 기록합니다."]],
+    ["reverse-engineer-game-design", ["게임 기획 역기획", "공개 관찰과 추론을 분리해 검토 가능한 역기획 문서를 만듭니다."]],
+    ["review-game-design-portfolio", ["기획 포트폴리오 검토", "증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 검토 문서로 만듭니다."]],
+    ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
+    ["svg-infographic", ["경력 도식 만들기", "Skillstead 0.8.3에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
+    ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
+  ])],
+]);
+const readableAgentMetadata = new Map([
+  ["game-design-studio", new Map([
+    ["art-brief-director", ["이미지 기획 총괄", "이미지 목적과 프롬프트 초안을 읽고 빠진 요구사항을 찾습니다."]],
+    ["content-narrative-designer", ["콘텐츠와 서사 설계자", "콘텐츠 선택이 시스템과 제작 범위에 맞는지 검토합니다."]],
+    ["document-quality-editor", ["문서 품질 편집자", "문서 구조와 발표 흐름이 읽기 쉬운지 점검합니다."]],
+    ["lead-game-designer", ["수석 게임 기획자", "비전과 결정이 서로 어긋나지 않는지 전체 기준으로 검토합니다."]],
+    ["liveops-data-designer", ["라이브 운영 데이터 설계자", "운영 지표와 실험이 성장·경제 설계와 연결되는지 확인합니다."]],
+    ["production-feasibility-critic", ["제작 가능성 비평가", "일정, 인력과 의존성을 기준으로 제작 가능한 범위를 점검합니다."]],
+    ["system-economy-designer", ["시스템과 경제 설계자", "규칙, 재화와 악용 가능성을 함께 살펴 시스템 균형을 검토합니다."]],
+    ["ux-accessibility-reviewer", ["UX와 접근성 검토자", "입력, 피드백과 접근성 문제가 화면 흐름에 없는지 점검합니다."]],
+    ["visual-asset-reviewer", ["시각 자산 검토자", "이미지가 읽기 쉽고 권리와 배치 기준을 지키는지 검토합니다."]],
+  ])],
+  ["game-design-career", new Map([
+    ["art-brief-director", ["경력 이미지 기획 총괄", "포트폴리오 이미지의 근거와 프롬프트 초안을 검토합니다."]],
+    ["career-strategist", ["경력 전략가", "목표 직무와 현실적인 선택지를 비교해 경력 방향을 점검합니다."]],
+    ["document-quality-editor", ["경력 문서 품질 편집자", "증거가 빠지지 않고 문서와 발표 흐름이 읽히는지 확인합니다."]],
+    ["evidence-auditor", ["근거 감사자", "출처, 최신성, 권리와 근거 연결이 충분한지 살펴봅니다."]],
+    ["game-design-mentor", ["게임 기획 멘토", "학습 목표와 연습 과제가 목표 직무에 맞는지 검토합니다."]],
+    ["interview-coach", ["면접 코치", "답변의 주장과 근거가 연결되는지 확인하고 보완 질문을 남깁니다."]],
+    ["portfolio-reviewer", ["포트폴리오 검토자", "개인 기여와 공개 가능한 증거가 선명한지 검토합니다."]],
+    ["reverse-design-critic", ["역기획 비평가", "관찰과 추론을 구분하고 반례 검증이 가능한지 점검합니다."]],
+    ["visual-asset-reviewer", ["경력 시각 자산 검토자", "공개할 이미지의 가독성, 대체 텍스트와 권리를 검토합니다."]],
+  ])],
+]);
 const technicalAppendixMarker = "<details>\n<summary>패키지 기술 inventory</summary>\n";
 const requiredUseCaseGuidePaths = [
   "use-cases/README.md",
@@ -337,6 +397,14 @@ async function sourceAgentIds(product) {
     .sort();
 }
 
+function readableMetadata(metadataByProduct, product, id, kind) {
+  const productMetadata = metadataByProduct.get(product);
+  assert.ok(productMetadata, `${product}: ${kind} display metadata exists`);
+  const metadata = productMetadata.get(id);
+  assert.ok(metadata, `${product}:${id}: ${kind} display metadata exists`);
+  return metadata;
+}
+
 async function assertSkillInventoryTable(markdown, product) {
   const sourceProduct = sourceProductId(product);
   const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 설치 스킬 15개`;
@@ -366,12 +434,17 @@ async function assertSkillInventoryTable(markdown, product) {
     const match = /^([^()]+) \(`([a-z0-9-]+)`\)$/u.exec(nameCell);
     assert.ok(match, `${product}:${idHint}: skill name precedes literal installed skill ID`);
     const [, koreanName, id] = match;
+    const [expectedName, expectedDescription] = readableMetadata(readableSkillMetadata, product, id, "skill");
     actual.push(id);
+    assert.equal(koreanName, expectedName, `${product}:${id}: skill uses its canonical Korean display name`);
     assert.match(koreanName, /[가-힣]/u, `${product}:${id}: Korean skill name is visible first`);
+    assert.doesNotMatch(koreanName, /^(?:스킬|기능)\s*\d+$/u, `${product}:${id}: generic numbered skill name is rejected`);
     assert.ok(!names.has(koreanName), `${product}:${id}: Korean skill name is unique within the product`);
     names.add(koreanName);
     assert.equal(command, `\`$game-design-${sourceProduct}:${id}\``, `${product}:${id}: exact direct command`);
+    assert.equal(role, expectedDescription, `${product}:${id}: skill uses its source-backed Korean role description`);
     assert.match(role, /[가-힣]/u, `${product}:${id}: plain-Korean role explanation is non-empty`);
+    assert.doesNotMatch(role, new RegExp(`${escapeRegExp(id)}\\s*(?:작업|스킬)`, "u"), `${product}:${id}: slug-derived role description is rejected`);
     assert.ok(!descriptions.has(role), `${product}:${id}: role explanation is not a generic repeated sentence`);
     descriptions.add(role);
     await assertResolvableRowLink(path.join(root, "README.md"), guide, `guides/${product}/skills/${id}.md`, `${product}:${id}`);
@@ -408,11 +481,16 @@ async function assertAgentInventoryTable(markdown, product) {
     const match = /^([^()]+) \(`([a-z0-9-]+)`\)$/u.exec(nameCell);
     assert.ok(match, `${product}:${idHint}: Korean agent role precedes literal agent ID`);
     const [, koreanName, id] = match;
+    const [expectedName, expectedDescription] = readableMetadata(readableAgentMetadata, product, id, "agent");
     actual.push(id);
+    assert.equal(koreanName, expectedName, `${product}:${id}: agent uses its canonical Korean display name`);
     assert.match(koreanName, /[가-힣]/u, `${product}:${id}: Korean agent role is visible first`);
+    assert.doesNotMatch(koreanName, /^(?:역할|에이전트)\s*\d+$/u, `${product}:${id}: generic numbered agent role is rejected`);
     assert.ok(!names.has(koreanName), `${product}:${id}: Korean agent role is unique within the product`);
     names.add(koreanName);
+    assert.equal(role, expectedDescription, `${product}:${id}: agent uses its source-backed Korean role description`);
     assert.match(role, /[가-힣]/u, `${product}:${id}: plain-Korean role explanation is non-empty`);
+    assert.doesNotMatch(role, new RegExp(`${escapeRegExp(id)}\\s*(?:관점|역할|에이전트)`, "u"), `${product}:${id}: slug-derived agent description is rejected`);
     assert.ok(!descriptions.has(role), `${product}:${id}: agent explanation is not a generic repeated sentence`);
     descriptions.add(role);
     assert.ok(focus.length > 0, `${product}:${id}: review focus is non-empty`);
@@ -527,9 +605,34 @@ const portfolioQuickStartLabels = [
 const portfolioQuickStartOutputs = [
   ["포트폴리오 사례 본문", "creative-design-portfolio/content.md"],
   ["개인 기여와 선택 근거", "creative-design-portfolio/evidence.yml"],
-  ["면접 답변 소재", "creative-design-portfolio/decisions/"],
+  ["주요 의사결정 기록", "creative-design-portfolio/decisions/"],
   ["공개 전 확인 목록", "creative-design-portfolio/export-manifest.yml"],
 ];
+
+function mutatePortfolioPromptSurface(markdown, label, transform) {
+  const portfolio = subsection(markdown, portfolioQuickStartHeading);
+  const [prompt] = textBlocks(portfolio);
+  assert.ok(prompt, `portfolio quick start has one copyable prompt before ${label} mutation`);
+  const nextLabel = label === "App" ? "CLI" : undefined;
+  const surface = promptSurfaceBody(prompt, label, nextLabel);
+  const changedSurface = transform(surface);
+  assert.notEqual(changedSurface, surface, `${label}: prompt surface mutation changes the prompt`);
+  const changedPrompt = prompt.replace(surface, changedSurface);
+  assert.notEqual(changedPrompt, prompt, `${label}: prompt mutation changes the fenced prompt`);
+  const changedPortfolio = portfolio.replace(prompt, changedPrompt);
+  assert.notEqual(changedPortfolio, portfolio, `${label}: prompt mutation changes the portfolio quick start`);
+  return markdown.replace(portfolio, changedPortfolio);
+}
+
+function assertPortfolioQuickStartRejected(markdown, label) {
+  try {
+    assertPortfolioQuickStart(markdown);
+  } catch (error) {
+    assertNoGenericTypeError(error, label);
+    return;
+  }
+  assert.fail(`${label}: portfolio quick start mutation unexpectedly satisfied the contract`);
+}
 
 function assertPortfolioQuickStart(markdown) {
   const quickStart = exactSection(markdown, "5분 안에 첫 결과 만들기");
@@ -546,11 +649,20 @@ function assertPortfolioQuickStart(markdown) {
   const portfolioSkill = "$game-design-career:build-game-design-portfolio";
   assert.match(portfolio, /review-game-design/u, "portfolio quick start names the Studio review skill");
   assert.match(portfolio, /build-game-design-portfolio/u, "portfolio quick start names the Career portfolio skill");
-  const reviewIndex = portfolio.indexOf(review);
-  const portfolioSkillIndex = portfolio.indexOf(portfolioSkill);
-  assert.notEqual(reviewIndex, -1, "portfolio quick start has the Studio review CLI command");
-  assert.notEqual(portfolioSkillIndex, -1, "portfolio quick start has the Career portfolio CLI command");
-  assert.ok(reviewIndex < portfolioSkillIndex, "Studio review precedes portfolio construction");
+  const prompts = textBlocks(portfolio);
+  assert.equal(prompts.length, 1, "portfolio quick start has one copyable prompt");
+  const appPrompt = promptSurfaceBody(prompts[0], "App", "CLI");
+  const cliPrompt = promptSurfaceBody(prompts[0], "CLI");
+  for (const [surface, reviewSkill, buildSkill] of [
+    [appPrompt, "review-game-design", "build-game-design-portfolio"],
+    [cliPrompt, review, portfolioSkill],
+  ]) {
+    const reviewIndex = surface.indexOf(reviewSkill);
+    const portfolioSkillIndex = surface.indexOf(buildSkill);
+    assert.notEqual(reviewIndex, -1, "portfolio prompt surface has the Studio review step");
+    assert.notEqual(portfolioSkillIndex, -1, "portfolio prompt surface has the Career portfolio step");
+    assert.ok(reviewIndex < portfolioSkillIndex, "Studio review precedes portfolio construction on every prompt surface");
+  }
   for (const [label, technicalPath] of portfolioQuickStartOutputs) {
     assert.ok(
       portfolio.includes(`**${label}** (\`${technicalPath}\`)`),
@@ -560,7 +672,9 @@ function assertPortfolioQuickStart(markdown) {
   assert.match(portfolio, /실제 기여(?:\s*범위)?/u, "author verifies actual contribution");
   assert.match(portfolio, /공개 권한/u, "author verifies publication rights");
   assert.match(portfolio, /자동 승인하지 않/u, "publication is never auto-approved");
-  for (const block of textBlocks(portfolio)) {
+  assert.match(portfolio, /별도 면접 연습/u, "portfolio decisions can inform a separate interview practice step");
+  assert.doesNotMatch(portfolio, /면접 답변 소재|interview-question-answer-log/u, "portfolio output does not misrepresent durable decisions as interview records");
+  for (const block of prompts) {
     for (const line of block.split("\n")) {
       if (line.trim()) assert.ok(Array.from(line).length <= 80, "portfolio prompt line stays within 80 Unicode code points");
     }
@@ -647,16 +761,24 @@ async function buildValidStructuredReadmeFixture() {
     const productLabel = product === "game-design-studio" ? "Studio" : "Career";
     const namespace = product === "game-design-studio" ? "studio" : "career";
     const inventory = await collectProductInventory(root, product);
+    const skillRows = inventory.skillIds.map((id) => {
+      const [name, description] = readableMetadata(readableSkillMetadata, product, id, "skill");
+      return `| ${name} (\`${id}\`) | \`$game-design-${namespace}:${id}\` | ${description} | [상세 가이드](guides/${product}/skills/${id}.md) |`;
+    });
+    const agentRows = (await sourceAgentIds(product)).map((id) => {
+      const [name, description] = readableMetadata(readableAgentMetadata, product, id, "agent");
+      return `| ${name} (\`${id}\`) | ${description} | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`;
+    });
     inventoryTables.push(
       `### ${productLabel} 설치 스킬 15개`,
       "| 스킬 이름과 ID | 직접 호출 | 쉬운 역할 설명 | 상세 가이드 |",
       "| --- | --- | --- | --- |",
-      ...inventory.skillIds.map((id, index) => `| 스킬 ${index + 1} (\`${id}\`) | \`$game-design-${namespace}:${id}\` | ${id === "svg-infographic" ? "번들 도식화 스킬로 SVG와 PNG를 만듭니다." : `${id} 작업의 결과와 검토 범위를 안내합니다.`} | [상세 가이드](guides/${product}/skills/${id}.md) |`),
+      ...skillRows,
       "",
       `### ${productLabel} 에이전트 9개`,
       "| 에이전트 역할과 ID | 쉬운 역할 설명 | 검토 초점 | 호출 경계 | 역할 문서 |",
       "| --- | --- | --- | --- | --- |",
-      ...(await sourceAgentIds(product)).map((id, index) => `| 역할 ${index + 1} (\`${id}\`) | ${id} 관점에서 기획 판단을 검토하고 권고를 남깁니다. | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`),
+      ...agentRows,
       "",
     );
   }
@@ -1132,10 +1254,27 @@ test("portfolio quick start rejects abstract, unordered, and auto-approved varia
     ["missing Studio review", readme.replace("$game-design-studio:review-game-design", "$game-design-studio:review-removed")],
     ["missing portfolio result path", readme.replace("creative-design-portfolio/evidence.yml", "portfolio/evidence.yml")],
     ["missing human publication boundary", readme.replace("실제 기여 범위와 공개 권한", "자료 범위")],
+    ["auto-approved publication", readme.replace("공개를 자동 승인하지 않으며", "공개를 자동 승인하며")],
+    [
+      "reversed App order",
+      mutatePortfolioPromptSurface(readme, "App", (surface) => surface
+        .replaceAll("review-game-design", "__studio_review__")
+        .replaceAll("build-game-design-portfolio", "review-game-design")
+        .replaceAll("__studio_review__", "build-game-design-portfolio"),
+      ),
+    ],
+    [
+      "reversed CLI order",
+      mutatePortfolioPromptSurface(readme, "CLI", (surface) => surface
+        .replaceAll("$game-design-studio:review-game-design", "__studio_review__")
+        .replaceAll("$game-design-career:build-game-design-portfolio", "$game-design-studio:review-game-design")
+        .replaceAll("__studio_review__", "$game-design-career:build-game-design-portfolio"),
+      ),
+    ],
   ];
   for (const [label, mutated] of mutations) {
     assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
-    assert.throws(() => assertPortfolioQuickStart(mutated), undefined, `${label}: portfolio route is rejected`);
+    assertPortfolioQuickStartRejected(mutated, label);
   }
 });
 
@@ -1206,28 +1345,34 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   );
 
   const product = "game-design-studio";
-  const removedSkill = readme.replace("스킬 2 (`define-game-vision`)", "스킬 2 (`missing-skill`)");
-  const duplicateSkill = readme.replace("스킬 2 (`define-game-vision`)", "스킬 2 (`apply-document-quality-profile`)");
-  const crossProductSkill = readme.replace("스킬 2 (`define-game-vision`)", "스킬 2 (`map-game-design-career`)");
-  const missingKoreanSkillName = readme.replace("스킬 2 (`define-game-vision`)", "(`define-game-vision`)");
-  const repeatedSkillDescription = readme.replace(
-    "define-game-vision 작업의 결과와 검토 범위를 안내합니다.",
-    "apply-document-quality-profile 작업의 결과와 검토 범위를 안내합니다.",
-  );
-  const inventedAgent = readme.replace("역할 4 (`lead-game-designer`)", "역할 4 (`invented-agent`)");
-  const missingKoreanAgentRole = readme.replace("역할 4 (`lead-game-designer`)", "(`lead-game-designer`)");
-  const repeatedAgentDescription = readme.replace(
-    "lead-game-designer 관점에서 기획 판단을 검토하고 권고를 남깁니다.",
-    "art-brief-director 관점에서 기획 판단을 검토하고 권고를 남깁니다.",
-  );
+  const [visionName, visionDescription] = readableMetadata(readableSkillMetadata, product, "define-game-vision", "skill");
+  const [, qualityDescription] = readableMetadata(readableSkillMetadata, product, "apply-document-quality-profile", "skill");
+  const [leadName, leadDescription] = readableMetadata(readableAgentMetadata, product, "lead-game-designer", "agent");
+  const [, artDescription] = readableMetadata(readableAgentMetadata, product, "art-brief-director", "agent");
+  const removedSkill = readme.replace(`${visionName} (\`define-game-vision\`)`, `${visionName} (\`missing-skill\`)`);
+  const duplicateSkill = readme.replace(`${visionName} (\`define-game-vision\`)`, `${visionName} (\`apply-document-quality-profile\`)`);
+  const crossProductSkill = readme.replace(`${visionName} (\`define-game-vision\`)`, `${visionName} (\`map-game-design-career\`)`);
+  const missingKoreanSkillName = readme.replace(`${visionName} (\`define-game-vision\`)`, "(`define-game-vision`)");
+  const genericKoreanSkillName = readme.replace(`${visionName} (\`define-game-vision\`)`, "스킬 2 (`define-game-vision`)");
+  const slugDerivedSkillDescription = readme.replace(visionDescription, "define-game-vision 작업의 결과와 검토 범위를 안내합니다.");
+  const repeatedSkillDescription = readme.replace(visionDescription, qualityDescription);
+  const inventedAgent = readme.replace(`${leadName} (\`lead-game-designer\`)`, `${leadName} (\`invented-agent\`)`);
+  const missingKoreanAgentRole = readme.replace(`${leadName} (\`lead-game-designer\`)`, "(`lead-game-designer`)");
+  const genericKoreanAgentRole = readme.replace(`${leadName} (\`lead-game-designer\`)`, "역할 4 (`lead-game-designer`)");
+  const slugDerivedAgentDescription = readme.replace(leadDescription, "lead-game-designer 관점에서 기획 판단을 검토하고 권고를 남깁니다.");
+  const repeatedAgentDescription = readme.replace(leadDescription, artDescription);
   for (const [label, mutated, id, validate] of [
-    ["missing skill", removedSkill, "define-game-vision", assertSkillInventoryTable],
+    ["missing skill", removedSkill, "missing-skill", assertSkillInventoryTable],
     ["duplicate skill", duplicateSkill, "apply-document-quality-profile", assertSkillInventoryTable],
     ["cross-product skill", crossProductSkill, "map-game-design-career", assertSkillInventoryTable],
     ["missing Korean skill name", missingKoreanSkillName, "define-game-vision", assertSkillInventoryTable],
+    ["generic Korean skill name", genericKoreanSkillName, "define-game-vision", assertSkillInventoryTable],
+    ["slug-derived skill description", slugDerivedSkillDescription, "define-game-vision", assertSkillInventoryTable],
     ["repeated skill description", repeatedSkillDescription, "define-game-vision", assertSkillInventoryTable],
     ["invented agent", inventedAgent, "invented-agent", assertAgentInventoryTable],
     ["missing Korean agent role", missingKoreanAgentRole, "lead-game-designer", assertAgentInventoryTable],
+    ["generic Korean agent role", genericKoreanAgentRole, "lead-game-designer", assertAgentInventoryTable],
+    ["slug-derived agent description", slugDerivedAgentDescription, "lead-game-designer", assertAgentInventoryTable],
     ["repeated agent description", repeatedAgentDescription, "lead-game-designer", assertAgentInventoryTable],
   ]) await assertRejectedForId(() => validate(mutated, product), id, label);
 
