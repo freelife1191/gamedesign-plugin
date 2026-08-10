@@ -356,6 +356,40 @@ test("card roles reject over-wide unbreakable ASCII tokens across every renderer
   }
 });
 
+test("pure ASCII punctuation tokens use the same width gate as alphanumeric tokens", () => {
+  const underscoreToken = "_".repeat(20);
+  const slashToken = "/".repeat(20);
+  const source = fixtureFor("learning-path", 3);
+
+  for (const field of ["label", "detail"]) {
+    const mutated = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, [field]: underscoreToken } : step) };
+    const expected = new RegExp(`steps\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box`, "u");
+    assert.throws(() => validateDiagramSource(mutated), expected, `${field}/${underscoreToken} validates`);
+    assert.throws(() => renderDiagramSvg(mutated), expected, `${field}/${underscoreToken} renders`);
+  }
+
+  const slashLabelSource = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, label: slashToken } : step) };
+  assert.throws(() => validateDiagramSource(slashLabelSource), /steps\[0\]\.label.*unbreakable ASCII token.*exceeds.*text box/u);
+  assert.throws(() => renderDiagramSvg(slashLabelSource), /steps\[0\]\.label.*unbreakable ASCII token.*exceeds.*text box/u);
+
+  const decisionSource = fixtureFor("decision-flow", 5);
+  for (const field of ["label", "detail"]) {
+    const mutated = { ...decisionSource, branches: decisionSource.branches.map((branch, index) => index === 0 ? { ...branch, [field]: underscoreToken } : branch) };
+    const expected = new RegExp(`branches\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box`, "u");
+    assert.throws(() => validateDiagramSource(mutated), expected, `branch/${field}/${underscoreToken} validates`);
+    assert.throws(() => renderDiagramSvg(mutated), expected, `branch/${field}/${underscoreToken} renders`);
+  }
+
+  const boundaryToken = ".".repeat(20);
+  const boundarySource = {
+    ...decisionSource,
+    steps: decisionSource.steps.map((step, index) => index === 0 ? { ...step, label: boundaryToken, detail: slashToken } : step),
+    branches: decisionSource.branches.map((branch, index) => index === 0 ? { label: slashToken, detail: boundaryToken } : branch),
+  };
+  assert.doesNotThrow(() => validateDiagramSource(boundarySource));
+  assert.doesNotThrow(() => renderDiagramSvg(boundarySource));
+});
+
 test("the tightest card accepts a boundary-fit Latin run and wraps only at hyphens", () => {
   const source = {
     ...validFixture,

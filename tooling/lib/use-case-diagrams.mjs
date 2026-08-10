@@ -344,7 +344,7 @@ function estimatedAsciiTokenWidth(token, fontSize) {
 function unbreakableAsciiTokens(value) {
   return String(value)
     .split(/[ -]+/u)
-    .filter((token) => token.length > 0 && /^[\x00-\x7F]+$/u.test(token) && /[A-Za-z0-9]/u.test(token));
+    .filter((token) => token.length > 0 && /^[\x00-\x7F]+$/u.test(token));
 }
 
 function validateUnbreakableAsciiTokens(value, path, { width, fontSize }) {
