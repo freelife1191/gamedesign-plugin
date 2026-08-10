@@ -4,7 +4,7 @@
     {
       "id": "studio-project-workflow",
       "specification_sha256": "2616dee286467b2d84a9e043d5b38df1a6f5ff3b3f93fda7d4dfc61ee19666b7",
-      "artifact_sha256": "f9f39d2b0281d4e2b9e967ea8b71f448c375a81bb74fc779508e64469880cdad",
+      "artifact_sha256": "2bf1cb76771455e54cb84ea8e58c7d7891c8e2bafa5be578b42552c5c232e570",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 1,
@@ -82,7 +82,7 @@
     {
       "id": "career-evidence-workflow",
       "specification_sha256": "37fceb8e99e52c3aa1696213c94172ea3837fd7f6e2ce38b51eecdbfc2ad4407",
-      "artifact_sha256": "aa39f02924f5db38750325798a2ecc3773037a3bd3a19d6d64d5d8dabd273518",
+      "artifact_sha256": "aa426208a1a6b8228757b571c58cc75576ce9a518b5391029898f5c9ac7b4afc",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -175,7 +175,7 @@
     {
       "id": "suite-studio-career-handoff",
       "specification_sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
-      "artifact_sha256": "d7931fc67fd4ba33a69b382c96a9b26bd1666aaa2c46bce22d9123687fdc15c4",
+      "artifact_sha256": "6928403d8603dae09d80a9ff2ee6b1fdc8fdfd9c77f3b11d1d410a55073e3a00",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 2,
@@ -261,7 +261,7 @@
     {
       "id": "suite-plugin-system-architecture",
       "specification_sha256": "f32a1cef7643a1fb735b282ea76d5f72782c221e7a165be0c032fa2f8d60280d",
-      "artifact_sha256": "a1173d2083f56745b0f31e4ad7e7f820b4a1408583d8a0e72f6c6565d7835e48",
+      "artifact_sha256": "2eb2aab316eadde477487fe59d71eb98cdfe54c3e14b58a0514965d67eaf75f1",
       "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-original-and-fit",
       "correction_rounds": 1,
