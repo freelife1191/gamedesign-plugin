@@ -129,8 +129,9 @@ function exactSection(markdown, heading, level = 2) {
   const start = markdown.indexOf(marker);
   assert.notEqual(start, -1, `missing section: ${heading}`);
   const bodyStart = start + marker.length;
-  const next = markdown.search(new RegExp(`\\n#{1,${level}} `, "u"), bodyStart);
-  return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
+  const remainder = markdown.slice(bodyStart);
+  const next = remainder.search(new RegExp(`\\n#{1,${level}} `, "u"));
+  return remainder.slice(0, next === -1 ? remainder.length : next);
 }
 
 function textBlocks(markdown) {
@@ -146,10 +147,12 @@ function renderedPromptCards(markdown) {
 
 function cardLabelBody(card, label) {
   const escaped = escapeRegExp(label);
-  const expression = new RegExp(`^#### ${escaped}\\n([\\s\\S]*?)(?=^#### |$)`, "gmu");
+  const expression = new RegExp(`^#### ${escaped}\\n`, "gmu");
   const matches = [...card.body.matchAll(expression)];
   assert.equal(matches.length, 1, `${card.id}: visible label must occur exactly once: ${label}`);
-  return matches[0][1].trim();
+  const value = card.body.slice(matches[0].index + matches[0][0].length);
+  const nextLabel = /^#### /mu.exec(value);
+  return value.slice(0, nextLabel?.index ?? value.length).trim();
 }
 
 function assertNoGenericTypeError(error, label) {
@@ -183,7 +186,10 @@ function assertPromptCard(card, entry) {
   assert.equal(cardLabelBody(card, "다음 요청"), entry.resume_prompt, `${entry.id}: resume_prompt is source-bound`);
 
   const copyPrompt = cardLabelBody(card, "복사할 요청문");
-  assert.ok(copyPrompt.includes(`$game-design-${entry.product === "career" ? "career" : "studio"}:`), `${entry.id}: copyable prompt uses the product namespace`);
+  const promptBlocks = textBlocks(copyPrompt);
+  assert.equal(promptBlocks.length, 1, `${entry.id}: copyable prompt has one text fence`);
+  const namespace = `$game-design-${entry.product === "career" ? "career" : "studio"}:`;
+  assert.match(promptBlocks[0], new RegExp(`${escapeRegExp(namespace + entry.skill)}(?:\\s|$)`, "u"), `${entry.id}: fenced prompt invokes the source-bound skill command`);
   for (const line of textBlocks(card.body)) {
     for (const sourceLine of line.split("\n")) {
       if (!sourceLine.trim()) continue;
@@ -203,12 +209,13 @@ async function assertRepresentativePromptCards(markdown) {
     seen.add(card.id);
     for (const label of requiredCardLabels) cardLabelBody(card, label);
   }
+  const actualIds = cards.map((card) => card.id);
   const expectedSet = new Set(expectedIds);
-  const selected = cards.filter((card) => expectedSet.has(card.id));
-  assert.equal(selected.length, expectedIds.length, "README renders every representative source-bound prompt card once");
-  assert.equal(new Set(selected.map((card) => card.id)).size, expectedIds.length, "README representative prompt card IDs are unique");
-  assert.deepEqual(selected.map((card) => card.id), expectedIds, "README representative cards preserve the approved source order");
-  for (const card of selected) {
+  assert.equal(actualIds.length, expectedIds.length, "README renders exactly 18 approved representative prompt cards");
+  for (const id of actualIds) assert.ok(expectedSet.has(id), `${id}: invented prompt card is not approved for the README`);
+  for (const id of expectedIds) assert.ok(actualIds.includes(id), `${id}: approved representative prompt card is missing`);
+  assert.deepEqual(actualIds, expectedIds, "README representative cards preserve the approved source order");
+  for (const card of cards) {
     const entry = catalog.byId.get(card.id);
     assert.ok(entry, `${card.id}: representative card exists in production prompt catalog`);
     assertPromptCard(card, entry);
@@ -367,6 +374,7 @@ async function assertResultExamples(markdown) {
     assert.ok(optionalAsset.length > 0, `${id}: optional asset is explicit`);
     assert.match(readOrder, /content\.md[\s\S]*evidence\.yml[\s\S]*export-manifest\.yml/u, `${id}: reading order is explicit`);
     assert.match(holdBoundary, /승인|보류|hold/iu, `${id}: pre-approval hold boundary is explicit`);
+    assert.match(holdBoundary, /자동 승인되지 않/iu, `${id}: images, derivatives, and review findings are not auto-approved before human approval`);
     if (id === "export-preparation-manifest") {
       assert.ok(manifestOutputs.has(id), `${id}: result category is backed by the use-case manifest`);
     } else {
@@ -376,7 +384,13 @@ async function assertResultExamples(markdown) {
   assert.deepEqual(actual, resultExampleIds, "README result examples are exact and ordered");
 }
 
-async function assertStructuredRootReadme(markdown) {
+function assertSafetyBoundary(markdown) {
+  const safety = exactSection(markdown, "안전·권리·사람 승인 경계");
+  assert.match(safety, /이미지·파생 문서·검토 결과는 자동 승인되지 않습니다\./u, "safety-boundary: images, derived documents, and review findings require human approval");
+  assert.doesNotMatch(safety, /(?:이미지|파생 문서|검토 결과)[^.\n]{0,100}자동 승인(?:됩니다|한다)/u, "safety-boundary: README must reject automatic approval claims");
+}
+
+async function assertStructuredRootReadme(markdown, { validateLinks = true } = {}) {
   assert.deepEqual(h2Headings(markdown), requiredRootHeadings, "root README H2 order is exact");
   const toc = exactSection(markdown, "목차");
   const tocLinks = visibleMarkdownLinks(toc);
@@ -393,7 +407,131 @@ async function assertStructuredRootReadme(markdown) {
     await assertAgentInventoryTable(markdown, product);
   }
   await assertResultExamples(markdown);
-  await assertRootLinks(markdown);
+  assertSafetyBoundary(markdown);
+  if (validateLinks) await assertRootLinks(markdown);
+}
+
+async function buildValidStructuredReadmeFixture() {
+  const catalog = await loadPromptTemplateCatalog({ repoRoot: root });
+  const cards = Object.values(representativeCards).flat().map((id) => {
+    const entry = catalog.byId.get(id);
+    assert.ok(entry, `${id}: fixture requires production catalog entry`);
+    const namespace = entry.product === "career" ? "career" : "studio";
+    return [
+      `<details data-prompt-id="${id}">`,
+      `<summary>${id}</summary>`,
+      "#### 사용 시점",
+      entry.when_to_use,
+      "#### 준비 입력",
+      entry.required_inputs.join(", "),
+      "#### 복사할 요청문",
+      "```text",
+      `$game-design-${namespace}:${entry.skill} fixture-request`,
+      "```",
+      "#### 실행 흐름",
+      entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "),
+      "#### 예상 결과",
+      entry.minimum_outputs.map((output) => `\`${output}\``).join(" "),
+      "#### 읽는 순서",
+      entry.read_order.map((step) => `\`${step}\``).join(" → "),
+      "#### 사람 검토",
+      entry.human_review_boundary,
+      "#### 다음 요청",
+      entry.resume_prompt,
+      "</details>",
+    ].join("\n");
+  });
+  const inventoryTables = [];
+  for (const product of products) {
+    const productLabel = product === "game-design-studio" ? "Studio" : "Career";
+    const namespace = product === "game-design-studio" ? "studio" : "career";
+    const inventory = await collectProductInventory(root, product);
+    inventoryTables.push(
+      `### ${productLabel} 설치 스킬 15개`,
+      "| 설치 스킬 ID | 직접 호출 | 역할·결과 | 상세 가이드 |",
+      "| --- | --- | --- | --- |",
+      ...inventory.skillIds.map((id) => `| \`${id}\` | \`$game-design-${namespace}:${id}\` | ${id === "svg-infographic" ? "vendored 시각화 결과" : "역할과 결과"} | [상세 가이드](guides/${product}/skills/${id}.md) |`),
+      "",
+      `### ${productLabel} 에이전트 9개`,
+      "| 에이전트 ID | 역할 | 검토 초점 | 호출 경계 | 역할 문서 |",
+      "| --- | --- | --- | --- | --- |",
+      ...(await sourceAgentIds(product)).map((id) => `| \`${id}\` | 역할 | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`),
+      "",
+    );
+  }
+  const trees = products.flatMap((product) => [
+    "```text",
+    `plugins/${product}/`,
+    "├── .codex-plugin/plugin.json",
+    "├── agents/",
+    "├── skills/",
+    "├── assets/templates/",
+    "├── assets/shared/",
+    "├── references/",
+    "├── scripts/",
+    "├── hooks/hooks.json",
+    "├── .env.example",
+    "├── README.md",
+    "└── BUILD-MANIFEST.json",
+    `authoring source: products/${product}/plugin/`,
+    `generated snapshot: plugins/${product}/`,
+    "```",
+    "",
+  ]);
+  const expectedToc = requiredRootHeadings.slice(1).map((heading, index) => `${index + 1}. [${heading}](#${visibleMarkdownHeadings(`## ${heading}`)[0].anchor})`);
+  return [
+    "# Structured README fixture",
+    "",
+    "## 목차",
+    ...expectedToc,
+    "",
+    "## 30초 안에 플러그인 선택하기",
+    "선택 안내",
+    "",
+    "## 설치하기",
+    "설치 안내",
+    "",
+    "## 5분 안에 첫 결과 만들기",
+    "첫 결과 안내",
+    "",
+    "## 케이스별 프롬프트로 시작하기",
+    ...cards,
+    "",
+    "## 스킬별로 바로 실행하기",
+    ...inventoryTables,
+    "## 요청 뒤에 생성되는 결과물",
+    "```text",
+    "artifact/",
+    "├── content.md",
+    "├── evidence.yml",
+    "├── decisions/",
+    "├── assets/",
+    "└── export-manifest.yml",
+    "```",
+    "",
+    "### 결과 예시 6종",
+    "| 결과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |",
+    "| --- | --- | --- | --- | --- |",
+    ...resultExampleIds.map((id) => `| \`${id}\` | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`export-manifest.yml\` | 사람 승인 전 보류하며 자동 승인되지 않습니다. |`),
+    "",
+    "## 플러그인 구조와 전체 시스템 아키텍처",
+    ...trees,
+    "## 이미지·도식·문서 내보내기",
+    "이미지와 문서 출력은 사람이 검토합니다.",
+    "",
+    "## 상세 가이드에서 더 알아보기",
+    "상세 가이드",
+    "",
+    "## 안전·권리·사람 승인 경계",
+    "이미지·파생 문서·검토 결과는 자동 승인되지 않습니다.",
+    "",
+    "## 문제를 해결하고 작업 재개하기",
+    "재개 안내",
+    "",
+    "## 기술 문서·기여·라이선스",
+    "기술 문서",
+    "",
+  ].join("\n");
 }
 
 function assertNavigationTable(markdown, headers, routes, label) {
@@ -774,7 +912,8 @@ test("root README follows the approved task-oriented information architecture", 
 });
 
 test("structured README contracts reject card, inventory, and generated-tree mutations", async () => {
-  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  const readme = await buildValidStructuredReadmeFixture();
+  await assert.doesNotReject(() => assertStructuredRootReadme(readme, { validateLinks: false }), "independent fixture satisfies every structured README contract before mutation");
   const affectedCard = "studio:case:ST-C01";
   const card = renderedPromptCards(readme).find((candidate) => candidate.id === affectedCard);
   assert.ok(card, `${affectedCard}: baseline representative card exists before mutation checks`);
@@ -784,13 +923,15 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const changedSkill = replaceCard(card.raw.replace("`apply-document-quality-profile`", "`invented-skill`"));
   const reversedReadOrder = replaceCard(card.raw.replace(/(#### 읽는 순서\n)([^\n]+)\n/u, (_, prefix, order) => `${prefix}${order.split(" → ").reverse().join(" → ")}\n`));
   const removedApproval = replaceCard(card.raw.replace(/사람 결정/g, "자동 결정"));
-  for (const [label, mutated] of [
-    ["missing card label", missingLabel],
-    ["duplicate prompt ID", duplicateId],
-    ["wrong skill chain", changedSkill],
-    ["reversed read order", reversedReadOrder],
-    ["missing human approval", removedApproval],
-  ]) await assertRejectedForId(() => assertRepresentativePromptCards(mutated), affectedCard, label);
+  const inventedCard = readme.replace(card.raw, card.raw.replace(affectedCard, "studio:case:INVENTED"));
+  for (const [label, mutated, id] of [
+    ["missing card label", missingLabel, affectedCard],
+    ["duplicate prompt ID", duplicateId, affectedCard],
+    ["wrong skill chain", changedSkill, affectedCard],
+    ["reversed read order", reversedReadOrder, affectedCard],
+    ["missing human approval", removedApproval, affectedCard],
+    ["invented prompt card", inventedCard, "studio:case:INVENTED"],
+  ]) await assertRejectedForId(() => assertRepresentativePromptCards(mutated), id, label);
 
   const product = "game-design-studio";
   const removedSkill = readme.replace("| `define-game-vision`", "| `missing-skill`");
@@ -806,6 +947,11 @@ test("structured README contracts reject card, inventory, and generated-tree mut
 
   const directManifestEdit = readme.replace(`plugins/${product}/`, `plugins/${product}/\nBUILD-MANIFEST.json을 직접 수정합니다.\n`);
   await assertRejectedForId(() => assertPluginTreeContract(directManifestEdit, product), product, "direct BUILD-MANIFEST edit instruction");
+
+  const autoApprovedResult = readme.replace("사람 승인 전 보류하며 자동 승인되지 않습니다.", "이미지와 파생 문서, 검토 결과는 자동 승인됩니다.");
+  await assertRejectedForId(() => assertResultExamples(autoApprovedResult), "game-design-brief", "automatic approval in result example");
+  const autoApprovedSafety = readme.replace("이미지·파생 문서·검토 결과는 자동 승인되지 않습니다.", "이미지·파생 문서·검토 결과는 자동 승인됩니다.");
+  await assertRejectedForId(() => Promise.resolve(assertSafetyBoundary(autoApprovedSafety)), "safety-boundary", "automatic approval in safety boundary");
 });
 
 test("global and product indexes reach 30 skills, 30 templates, and 12 recipes", async () => {
