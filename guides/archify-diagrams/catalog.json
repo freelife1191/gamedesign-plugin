@@ -22,7 +22,7 @@
       "product": "suite",
       "source_document": "README.md",
       "source_section": "플러그인 구조와 전체 시스템 아키텍처",
-      "source_digest": "1c2a3220f9b2625057c163cb6ea2bbf27099a11c8a522ab45dc611562b9850b5",
+      "source_digest": "e03f0fba24bf3c4c954fdf1c288ced89ba018595705bae55eeecc189a33615a8",
       "question": "Codex 진입점에서 두 플러그인의 전문 스킬, Canonical Artifact, 검증과 사람 승인을 거쳐 결과가 어떻게 전달되는가?",
       "decision": "selected",
       "decision_reason": "Studio와 Career의 분리된 플러그인 경계가 전문 스킬, Canonical Artifact, 검증 및 사람 승인과 만나는 전체 전달 구조를 함께 설명한다.",

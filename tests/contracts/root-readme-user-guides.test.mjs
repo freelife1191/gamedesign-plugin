@@ -56,6 +56,39 @@ const resultExampleIds = [
   "game-design-brief", "system-specification", "ui-ux-flow-state", "reverse-design-document",
   "creative-design-portfolio", "export-preparation-manifest",
 ];
+const readableCaseLabels = new Map([
+  ["studio:case:ST-C01", ["게임의 방향과 핵심 재미 정의", "게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 브리프로 정리합니다."]],
+  ["studio:case:ST-C02", ["핵심 플레이 루프와 선택 설계", "플레이어가 반복할 행동과 의미 있는 선택을 시스템 명세로 만들 때 사용합니다."]],
+  ["studio:case:ST-C03", ["규칙과 예외를 시스템 명세로 정리", "규칙이 충돌하거나 예외가 늘어날 때 상태와 데이터를 검토 가능한 표로 정리합니다."]],
+  ["studio:case:ST-C04", ["화면 흐름과 접근성 점검", "온보딩과 UI 흐름이 헷갈릴 때 화면 상태와 접근성 기준을 함께 점검합니다."]],
+  ["studio:case:ST-C05", ["퀘스트와 캐릭터 콘텐츠 설계", "퀘스트, NPC, 전투 요소가 얽힐 때 선택과 결과가 보이는 콘텐츠 명세를 만듭니다."]],
+  ["studio:case:ST-C07", ["성장·경제·라이브 운영 설계", "성장 보상과 이벤트 운영이 필요한 프로젝트에서 재화 흐름과 측정 기준을 정리합니다."]],
+  ["studio:case:ST-C08", ["제작 범위와 출시 위험 점검", "일정과 인력이 불확실할 때 제작 범위, 의존성, 중단 기준을 검토합니다."]],
+  ["career:case:CA-C01", ["기획 직무와 전문 분야 탐색", "어떤 기획 직무를 목표로 할지 고민할 때 역할 후보와 학습 과제를 비교합니다."]],
+  ["career:case:CA-C04", ["12주 역량 증거 계획 만들기", "목표 직무에 필요한 역량을 12주 동안 증명할 과제로 나눌 때 사용합니다."]],
+  ["career:case:CA-C05", ["관찰을 근거로 역기획하기", "공개 플레이 경험을 분석해 관찰과 추론을 구분한 역기획 문서를 만들 때 사용합니다."]],
+  ["career:case:CA-C06", ["창작 기획 포트폴리오 만들기", "개인 기여를 보여 줄 새 기획 프로젝트를 포트폴리오 사례로 만들 때 사용합니다."]],
+  ["career:case:CA-C07", ["포트폴리오를 다섯 축으로 점검", "포트폴리오의 빈틈을 찾아 수정 순서와 발표 문장을 정리할 때 사용합니다."]],
+  ["career:case:CA-C08", ["면접 답변과 성장 과제 정리", "면접 답변의 근거를 보강하고 다음 성장 과제를 정할 때 사용합니다."]],
+  ["career:case:CA-T01", ["역할 선택부터 학습 계획까지 설계", "관심 분야를 고른 뒤 역량 격차와 학습 순서를 한 번에 정리할 때 사용합니다."]],
+  ["suite:studio-to-career-handoff:case", ["제작 결과를 포트폴리오 증거로 연결", "Studio 기획 결과에서 공개 가능한 문제, 판단, 검증 근거를 포트폴리오로 옮길 때 사용합니다."]],
+  ["suite:career-proof-project-interview:case", ["프로젝트 증거를 면접 답변으로 연결", "시스템 기획 과제를 12주 증거 계획과 면접 답변으로 연결할 때 사용합니다."]],
+  ["suite:gdd-image-presentation:case", ["기획서와 이미지·발표 자료 함께 준비", "기획서, 승인된 이미지, 발표 자료를 같은 검토 경계 안에서 준비할 때 사용합니다."]],
+  ["suite:resume-failed-derivatives:case", ["막힌 이미지·문서 출력 안전하게 재개", "이미지나 내보내기가 막혔을 때 보존 파일과 blocker를 확인해 필요한 작업만 재개합니다."]],
+]);
+const caseGroupIntroductions = new Map([
+  ["Studio 기획 사례 7개", "게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 Artifact와 사람 검토 지점을 남깁니다."],
+  ["Career 학습·취업 사례 7개", "게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 증거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 Artifact를 만듭니다."],
+  ["Studio와 Career 연계 사례 4개", "제작 기획을 경력 증거, 발표 자료 또는 재개 계획으로 연결하려면 연계 사례를 고릅니다. 각 사례는 공개 범위와 이름 있는 사람의 승인 지점을 보존한 인계 Artifact를 만듭니다."],
+]);
+const readableResultLabels = new Map([
+  ["game-design-brief", "게임 기획 브리프"],
+  ["system-specification", "시스템 명세서"],
+  ["ui-ux-flow-state", "UI·UX 흐름과 상태표"],
+  ["reverse-design-document", "관찰 기반 역기획 문서"],
+  ["creative-design-portfolio", "창작 기획 포트폴리오"],
+  ["export-preparation-manifest", "문서 내보내기 준비 목록"],
+]);
 const technicalAppendixMarker = "<details>\n<summary>패키지 기술 inventory</summary>\n";
 const requiredUseCaseGuidePaths = [
   "use-cases/README.md",
@@ -155,6 +188,29 @@ function cardLabelBody(card, label) {
   return value.slice(0, nextLabel?.index ?? value.length).trim();
 }
 
+function assertReadableCaseGroupIntroductions(markdown) {
+  for (const [heading, expected] of caseGroupIntroductions) {
+    const group = exactSection(markdown, heading, 3);
+    const beforeFirstCard = group.slice(0, group.indexOf("<details data-prompt-id="));
+    assert.equal(beforeFirstCard.trim(), expected, `${heading}: two-sentence beginner introduction is exact`);
+    assert.equal((beforeFirstCard.match(/\./gu) ?? []).length, 2, `${heading}: introduction has two sentences`);
+    assert.match(beforeFirstCard, /[가-힣]/u, `${heading}: introduction is visible Korean prose`);
+  }
+}
+
+function assertReadableCardSummary(card) {
+  const expected = readableCaseLabels.get(card.id);
+  assert.ok(expected, `${card.id}: readable case metadata exists`);
+  const [title, description] = expected;
+  const summaryMatch = /^<summary>([^\n]+)<\/summary>\n\n([^\n]+)\n\n#### /u.exec(card.body);
+  assert.ok(summaryMatch, `${card.id}: summary is followed immediately by one visible Korean sentence`);
+  assert.equal(summaryMatch[1], `${title} (${card.id})`, `${card.id}: Korean task title precedes stable case ID`);
+  assert.equal(summaryMatch[2], description, `${card.id}: visible one-sentence description is unique and task-specific`);
+  assert.match(title, /[가-힣]/u, `${card.id}: summary begins with Korean task title`);
+  assert.match(description, /[가-힣]/u, `${card.id}: visible summary description contains Korean`);
+  assert.doesNotMatch(summaryMatch[1], /^(?:studio|career|suite):|^[A-Z]{2}-[A-Z]\d+/u, `${card.id}: summary is not ID-first`);
+}
+
 function assertNoGenericTypeError(error, label) {
   assert.ok(error instanceof Error, `${label}: validator must throw an Error`);
   assert.notEqual(error.name, "TypeError", `${label}: mutation must not pass through generic TypeError`);
@@ -240,6 +296,7 @@ async function assertRepresentativePromptCards(markdown) {
     assert.ok(!seen.has(card.id), `${card.id}: duplicate data-prompt-id in README`);
     seen.add(card.id);
     for (const label of requiredCardLabels) cardLabelBody(card, label);
+    assertReadableCardSummary(card);
   }
   const actualIds = cards.map((card) => card.id);
   const expectedSet = new Set(expectedIds);
@@ -252,6 +309,7 @@ async function assertRepresentativePromptCards(markdown) {
     assert.ok(entry, `${card.id}: representative card exists in production prompt catalog`);
     assertPromptCard(card, entry);
   }
+  assertReadableCaseGroupIntroductions(markdown);
 }
 
 function assertTableShape(markdown, heading, headers, label) {
@@ -282,7 +340,7 @@ async function sourceAgentIds(product) {
 async function assertSkillInventoryTable(markdown, product) {
   const sourceProduct = sourceProductId(product);
   const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 설치 스킬 15개`;
-  const rows = assertTableShape(markdown, heading, ["설치 스킬 ID", "직접 호출", "역할·결과", "상세 가이드"], `${product} skills`);
+  const rows = assertTableShape(markdown, heading, ["스킬 이름과 ID", "직접 호출", "쉬운 역할 설명", "상세 가이드"], `${product} skills`);
   const inventory = await collectProductInventory(root, product);
   const sourceSkills = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
@@ -299,22 +357,30 @@ async function assertSkillInventoryTable(markdown, product) {
   assert.deepEqual(generatedSkills, inventory.skillIds, `${product}: generated skill snapshot matches production inventory`);
   const expected = inventory.skillIds;
   const actual = [];
+  const names = new Set();
+  const descriptions = new Set();
   for (const row of rows) {
     assert.equal(row.length, 4, `${product}: skill row has four cells`);
-    const [idCell, command, role, guide] = row;
-    const match = /^`([a-z0-9-]+)`$/u.exec(idCell);
-    assert.ok(match, `${product}: skill ID cell is a literal installed skill ID`);
-    const id = match[1];
+    const [nameCell, command, role, guide] = row;
+    const idHint = /`([a-z0-9-]+)`/u.exec(nameCell)?.[1] ?? "unknown-skill";
+    const match = /^([^()]+) \(`([a-z0-9-]+)`\)$/u.exec(nameCell);
+    assert.ok(match, `${product}:${idHint}: skill name precedes literal installed skill ID`);
+    const [, koreanName, id] = match;
     actual.push(id);
+    assert.match(koreanName, /[가-힣]/u, `${product}:${id}: Korean skill name is visible first`);
+    assert.ok(!names.has(koreanName), `${product}:${id}: Korean skill name is unique within the product`);
+    names.add(koreanName);
     assert.equal(command, `\`$game-design-${sourceProduct}:${id}\``, `${product}:${id}: exact direct command`);
-    assert.ok(role.length > 0, `${product}:${id}: role/result description is non-empty`);
+    assert.match(role, /[가-힣]/u, `${product}:${id}: plain-Korean role explanation is non-empty`);
+    assert.ok(!descriptions.has(role), `${product}:${id}: role explanation is not a generic repeated sentence`);
+    descriptions.add(role);
     await assertResolvableRowLink(path.join(root, "README.md"), guide, `guides/${product}/skills/${id}.md`, `${product}:${id}`);
   }
   for (const id of expected) assert.ok(actual.includes(id), `${product}:${id}: installed skill is missing from README inventory`);
   assert.equal(new Set(actual).size, actual.length, `${product}: duplicate skill ID in README inventory`);
   for (const id of actual) assert.ok(expected.includes(id), `${product}:${id}: invented or cross-product skill ID in README inventory`);
   assert.deepEqual(actual, expected, `${product}: README skill inventory preserves installed snapshot order`);
-  const vendorRow = rows.find(([idCell]) => idCell === "`svg-infographic`");
+  const vendorRow = rows.find(([nameCell]) => nameCell.endsWith("(`svg-infographic`)"));
   assert.ok(vendorRow, `${product}: vendored svg-infographic row exists`);
   assert.match(vendorRow[2], /vendored|번들/iu, `${product}: svg-infographic is identified as a vendored installed skill`);
   assert.doesNotMatch(vendorRow[2], /제품 source|제품 원본/u, `${product}: svg-infographic must not be presented as a product source skill`);
@@ -324,7 +390,7 @@ async function assertSkillInventoryTable(markdown, product) {
 async function assertAgentInventoryTable(markdown, product) {
   const sourceProduct = sourceProductId(product);
   const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 에이전트 9개`;
-  const rows = assertTableShape(markdown, heading, ["에이전트 ID", "역할", "검토 초점", "호출 경계", "역할 문서"], `${product} agents`);
+  const rows = assertTableShape(markdown, heading, ["에이전트 역할과 ID", "쉬운 역할 설명", "검토 초점", "호출 경계", "역할 문서"], `${product} agents`);
   const expected = await sourceAgentIds(product);
   assert.equal(expected.length, 9, `${product}: source product owns exactly nine agents`);
   const generated = (await readdir(path.join(root, "plugins", product, "agents")))
@@ -333,14 +399,22 @@ async function assertAgentInventoryTable(markdown, product) {
     .sort();
   assert.deepEqual(generated, expected, `${product}: generated agent snapshot matches source inventory`);
   const actual = [];
+  const names = new Set();
+  const descriptions = new Set();
   for (const row of rows) {
     assert.equal(row.length, 5, `${product}: agent row has five cells`);
-    const [idCell, role, focus, boundary, document] = row;
-    const match = /^`([a-z0-9-]+)`$/u.exec(idCell);
-    assert.ok(match, `${product}: agent ID cell is a literal agent ID`);
-    const id = match[1];
+    const [nameCell, role, focus, boundary, document] = row;
+    const idHint = /`([a-z0-9-]+)`/u.exec(nameCell)?.[1] ?? "unknown-agent";
+    const match = /^([^()]+) \(`([a-z0-9-]+)`\)$/u.exec(nameCell);
+    assert.ok(match, `${product}:${idHint}: Korean agent role precedes literal agent ID`);
+    const [, koreanName, id] = match;
     actual.push(id);
-    assert.ok(role.length > 0, `${product}:${id}: role is non-empty`);
+    assert.match(koreanName, /[가-힣]/u, `${product}:${id}: Korean agent role is visible first`);
+    assert.ok(!names.has(koreanName), `${product}:${id}: Korean agent role is unique within the product`);
+    names.add(koreanName);
+    assert.match(role, /[가-힣]/u, `${product}:${id}: plain-Korean role explanation is non-empty`);
+    assert.ok(!descriptions.has(role), `${product}:${id}: agent explanation is not a generic repeated sentence`);
+    descriptions.add(role);
     assert.ok(focus.length > 0, `${product}:${id}: review focus is non-empty`);
     assert.match(boundary, /오케스트레이터|전문가|specialist|delegat/iu, `${product}:${id}: orchestration or specialist delegation boundary is explicit`);
     await assertResolvableRowLink(path.join(root, "README.md"), document, `plugins/${product}/agents/${id}.md`, `${product}:${id}`);
@@ -389,7 +463,7 @@ async function assertResultExamples(markdown) {
   for (const required of ["content.md", "evidence.yml", "decisions/", "assets/", "export-manifest.yml"]) {
     assert.ok(artifactTree.includes(required), `Canonical Artifact tree contains ${required}`);
   }
-  const rows = assertTableShape(markdown, "결과 예시 6종", ["결과 ID", "핵심 파일", "선택 자산", "읽는 순서", "승인 전 보류 경계"], "result examples");
+  const rows = assertTableShape(markdown, "결과 예시 6종", ["결과 이름과 ID", "핵심 파일", "선택 자산", "읽는 순서", "승인 전 보류 경계"], "result examples");
   const inventories = await Promise.all(products.map((product) => collectProductInventory(root, product)));
   const templateIds = new Set(inventories.flatMap((inventory) => inventory.templateIds));
   const manifest = JSON.parse(await readFile(path.join(root, "guides", "use-cases", "use-case-manifest.json"), "utf8"));
@@ -397,11 +471,13 @@ async function assertResultExamples(markdown) {
   const actual = [];
   for (const row of rows) {
     assert.equal(row.length, 5, "result example row has five cells");
-    const [idCell, coreFile, optionalAsset, readOrder, holdBoundary] = row;
-    const match = /^`([a-z0-9-]+)`$/u.exec(idCell);
-    assert.ok(match, "result example ID is a literal");
-    const id = match[1];
+    const [nameCell, coreFile, optionalAsset, readOrder, holdBoundary] = row;
+    const idHint = /`([a-z0-9-]+)`/u.exec(nameCell)?.[1] ?? "unknown-result";
+    const match = /^([^()]+) \(`([a-z0-9-]+)`\)$/u.exec(nameCell);
+    assert.ok(match, `${idHint}: result example shows Korean result name before literal ID`);
+    const [, koreanName, id] = match;
     actual.push(id);
+    assert.equal(koreanName, readableResultLabels.get(id), `${id}: Korean result name is exact and readable`);
     assert.match(coreFile, /content\.md/u, `${id}: core file is explicit`);
     assert.ok(optionalAsset.length > 0, `${id}: optional asset is explicit`);
     assertExactOrderedValues(
@@ -467,9 +543,13 @@ async function buildValidStructuredReadmeFixture() {
   const cards = Object.values(representativeCards).flat().map((id) => {
     const entry = catalog.byId.get(id);
     assert.ok(entry, `${id}: fixture requires production catalog entry`);
+    const [title, description] = readableCaseLabels.get(id);
     return [
       `<details data-prompt-id="${id}">`,
-      `<summary>${id}</summary>`,
+      `<summary>${title} (${id})</summary>`,
+      "",
+      description,
+      "",
       "#### 사용 시점",
       entry.when_to_use,
       "#### 준비 입력",
@@ -495,6 +575,22 @@ async function buildValidStructuredReadmeFixture() {
       "</details>",
     ].join("\n");
   });
+  const caseGroups = [
+    "### Studio 기획 사례 7개",
+    caseGroupIntroductions.get("Studio 기획 사례 7개"),
+    "",
+    ...cards.slice(0, representativeCards.studio.length),
+    "",
+    "### Career 학습·취업 사례 7개",
+    caseGroupIntroductions.get("Career 학습·취업 사례 7개"),
+    "",
+    ...cards.slice(representativeCards.studio.length, representativeCards.studio.length + representativeCards.career.length),
+    "",
+    "### Studio와 Career 연계 사례 4개",
+    caseGroupIntroductions.get("Studio와 Career 연계 사례 4개"),
+    "",
+    ...cards.slice(representativeCards.studio.length + representativeCards.career.length),
+  ];
   const inventoryTables = [];
   for (const product of products) {
     const productLabel = product === "game-design-studio" ? "Studio" : "Career";
@@ -502,14 +598,14 @@ async function buildValidStructuredReadmeFixture() {
     const inventory = await collectProductInventory(root, product);
     inventoryTables.push(
       `### ${productLabel} 설치 스킬 15개`,
-      "| 설치 스킬 ID | 직접 호출 | 역할·결과 | 상세 가이드 |",
+      "| 스킬 이름과 ID | 직접 호출 | 쉬운 역할 설명 | 상세 가이드 |",
       "| --- | --- | --- | --- |",
-      ...inventory.skillIds.map((id) => `| \`${id}\` | \`$game-design-${namespace}:${id}\` | ${id === "svg-infographic" ? "vendored 시각화 결과" : "역할과 결과"} | [상세 가이드](guides/${product}/skills/${id}.md) |`),
+      ...inventory.skillIds.map((id, index) => `| 스킬 ${index + 1} (\`${id}\`) | \`$game-design-${namespace}:${id}\` | ${id === "svg-infographic" ? "번들 도식화 스킬로 SVG와 PNG를 만듭니다." : `${id} 작업의 결과와 검토 범위를 안내합니다.`} | [상세 가이드](guides/${product}/skills/${id}.md) |`),
       "",
       `### ${productLabel} 에이전트 9개`,
-      "| 에이전트 ID | 역할 | 검토 초점 | 호출 경계 | 역할 문서 |",
+      "| 에이전트 역할과 ID | 쉬운 역할 설명 | 검토 초점 | 호출 경계 | 역할 문서 |",
       "| --- | --- | --- | --- | --- |",
-      ...(await sourceAgentIds(product)).map((id) => `| \`${id}\` | 역할 | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`),
+      ...(await sourceAgentIds(product)).map((id, index) => `| 역할 ${index + 1} (\`${id}\`) | ${id} 관점에서 기획 판단을 검토하고 권고를 남깁니다. | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`),
       "",
     );
   }
@@ -558,7 +654,7 @@ async function buildValidStructuredReadmeFixture() {
     "첫 결과 안내",
     "",
     "## 케이스별 프롬프트로 시작하기",
-    ...cards,
+    ...caseGroups,
     "",
     "## 스킬별로 바로 실행하기",
     ...inventoryTables,
@@ -573,9 +669,9 @@ async function buildValidStructuredReadmeFixture() {
     "```",
     "",
     "### 결과 예시 6종",
-    "| 결과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |",
+    "| 결과 이름과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |",
     "| --- | --- | --- | --- | --- |",
-    ...resultExampleIds.map((id) => `| \`${id}\` | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`decisions/\` → \`assets/\` → \`export-manifest.yml\` | 사람 승인 전 보류하며 자동 승인되지 않습니다. |`),
+    ...resultExampleIds.map((id) => `| ${readableResultLabels.get(id)} (\`${id}\`) | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`decisions/\` → \`assets/\` → \`export-manifest.yml\` | 사람 승인 전 보류하며 자동 승인되지 않습니다. |`),
     "",
     "## 플러그인 구조와 전체 시스템 아키텍처",
     ...trees,
@@ -987,6 +1083,14 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const reversedReadOrder = replaceCard(card.raw.replace(/(#### 읽는 순서\n)([^\n]+)\n/u, (_, prefix, order) => `${prefix}${order.split(" → ").reverse().join(" → ")}\n`));
   const removedApproval = replaceCard(card.raw.replace(/사람 결정/g, "자동 결정"));
   const inventedCard = readme.replace(card.raw, card.raw.replace(affectedCard, "studio:case:INVENTED"));
+  const idFirstSummary = replaceCard(card.raw.replace(
+    "게임의 방향과 핵심 재미 정의 (studio:case:ST-C01)",
+    "studio:case:ST-C01 게임의 방향과 핵심 재미 정의",
+  ));
+  const genericCardDescription = replaceCard(card.raw.replace(
+    readableCaseLabels.get(affectedCard)[1],
+    "필요한 내용을 정리할 때 사용합니다.",
+  ));
   for (const [label, mutated, id] of [
     ["missing card label", missingLabel, affectedCard],
     ["duplicate prompt ID", duplicateId, affectedCard],
@@ -994,6 +1098,8 @@ test("structured README contracts reject card, inventory, and generated-tree mut
     ["reversed read order", reversedReadOrder, affectedCard],
     ["missing human approval", removedApproval, affectedCard],
     ["invented prompt card", inventedCard, "studio:case:INVENTED"],
+    ["ID-first prompt summary", idFirstSummary, affectedCard],
+    ["generic prompt summary description", genericCardDescription, affectedCard],
   ]) await assertRejectedForId(() => assertRepresentativePromptCards(mutated), id, label);
 
   const suiteId = "suite:studio-to-career-handoff:case";
@@ -1031,15 +1137,29 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   );
 
   const product = "game-design-studio";
-  const removedSkill = readme.replace("| `define-game-vision`", "| `missing-skill`");
-  const duplicateSkill = readme.replace("| `define-game-vision`", "| `apply-document-quality-profile`");
-  const crossProductSkill = readme.replace("| `define-game-vision`", "| `map-game-design-career`");
-  const inventedAgent = readme.replace("| `lead-game-designer`", "| `invented-agent`");
+  const removedSkill = readme.replace("스킬 2 (`define-game-vision`)", "스킬 2 (`missing-skill`)");
+  const duplicateSkill = readme.replace("스킬 2 (`define-game-vision`)", "스킬 2 (`apply-document-quality-profile`)");
+  const crossProductSkill = readme.replace("스킬 2 (`define-game-vision`)", "스킬 2 (`map-game-design-career`)");
+  const missingKoreanSkillName = readme.replace("스킬 2 (`define-game-vision`)", "(`define-game-vision`)");
+  const repeatedSkillDescription = readme.replace(
+    "define-game-vision 작업의 결과와 검토 범위를 안내합니다.",
+    "apply-document-quality-profile 작업의 결과와 검토 범위를 안내합니다.",
+  );
+  const inventedAgent = readme.replace("역할 4 (`lead-game-designer`)", "역할 4 (`invented-agent`)");
+  const missingKoreanAgentRole = readme.replace("역할 4 (`lead-game-designer`)", "(`lead-game-designer`)");
+  const repeatedAgentDescription = readme.replace(
+    "lead-game-designer 관점에서 기획 판단을 검토하고 권고를 남깁니다.",
+    "art-brief-director 관점에서 기획 판단을 검토하고 권고를 남깁니다.",
+  );
   for (const [label, mutated, id, validate] of [
     ["missing skill", removedSkill, "define-game-vision", assertSkillInventoryTable],
     ["duplicate skill", duplicateSkill, "apply-document-quality-profile", assertSkillInventoryTable],
     ["cross-product skill", crossProductSkill, "map-game-design-career", assertSkillInventoryTable],
+    ["missing Korean skill name", missingKoreanSkillName, "define-game-vision", assertSkillInventoryTable],
+    ["repeated skill description", repeatedSkillDescription, "define-game-vision", assertSkillInventoryTable],
     ["invented agent", inventedAgent, "invented-agent", assertAgentInventoryTable],
+    ["missing Korean agent role", missingKoreanAgentRole, "lead-game-designer", assertAgentInventoryTable],
+    ["repeated agent description", repeatedAgentDescription, "lead-game-designer", assertAgentInventoryTable],
   ]) await assertRejectedForId(() => validate(mutated, product), id, label);
 
   const directManifestEdit = readme.replace(`plugins/${product}/`, `plugins/${product}/\nBUILD-MANIFEST.json을 직접 수정합니다.\n`);
@@ -1047,6 +1167,11 @@ test("structured README contracts reject card, inventory, and generated-tree mut
 
   const autoApprovedResult = readme.replace("사람 승인 전 보류하며 자동 승인되지 않습니다.", "이미지와 파생 문서, 검토 결과는 자동 승인됩니다.");
   await assertRejectedForId(() => assertResultExamples(autoApprovedResult), "game-design-brief", "automatic approval in result example");
+  const EnglishFirstResult = readme.replace(
+    "게임 기획 브리프 (`game-design-brief`)",
+    "`game-design-brief` 게임 기획 브리프",
+  );
+  await assertRejectedForId(() => assertResultExamples(EnglishFirstResult), "game-design-brief", "English-first result label");
   const incompleteResultReadOrder = readme.replace(
     "`content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml`",
     "`content.md` → `evidence.yml` → `export-manifest.yml`",

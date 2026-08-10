@@ -173,8 +173,12 @@ Production catalog의 대표 카드 18개를 Studio 7개, Career 7개, 연계 4�
 
 ### Studio 기획 사례 7개
 
+게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 Artifact와 사람 검토 지점을 남깁니다.
+
 <details data-prompt-id="studio:case:ST-C01">
-<summary>ST-C01 · standard · vision-pillars, game-design-brief, game-design-review</summary>
+<summary>게임의 방향과 핵심 재미 정의 (studio:case:ST-C01)</summary>
+
+게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 브리프로 정리합니다.
 
 #### 사용 시점
 
@@ -222,7 +226,9 @@ ST-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="studio:case:ST-C02">
-<summary>ST-C02 · standard · core-motivation-loop, system-specification, game-design-review</summary>
+<summary>핵심 플레이 루프와 선택 설계 (studio:case:ST-C02)</summary>
+
+플레이어가 반복할 행동과 의미 있는 선택을 시스템 명세로 만들 때 사용합니다.
 
 #### 사용 시점
 
@@ -269,7 +275,9 @@ ST-C02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="studio:case:ST-C03">
-<summary>ST-C03 · advanced · system-specification, rule-exception-matrix, data-schema-table-contract</summary>
+<summary>규칙과 예외를 시스템 명세로 정리 (studio:case:ST-C03)</summary>
+
+규칙이 충돌하거나 예외가 늘어날 때 상태와 데이터를 검토 가능한 표로 정리합니다.
 
 #### 사용 시점
 
@@ -317,7 +325,9 @@ ST-C03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="studio:case:ST-C04">
-<summary>ST-C04 · advanced · ui-ux-flow-state, accessibility-platform-matrix, game-design-review</summary>
+<summary>화면 흐름과 접근성 점검 (studio:case:ST-C04)</summary>
+
+온보딩과 UI 흐름이 헷갈릴 때 화면 상태와 접근성 기준을 함께 점검합니다.
 
 #### 사용 시점
 
@@ -365,7 +375,9 @@ ST-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="studio:case:ST-C05">
-<summary>ST-C05 · advanced · narrative-quest-npc, character-skill-combat-monster, game-design-review</summary>
+<summary>퀘스트와 캐릭터 콘텐츠 설계 (studio:case:ST-C05)</summary>
+
+퀘스트, NPC, 전투 요소가 얽힐 때 선택과 결과가 보이는 콘텐츠 명세를 만듭니다.
 
 #### 사용 시점
 
@@ -414,7 +426,9 @@ ST-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="studio:case:ST-C07">
-<summary>ST-C07 · advanced · economy-balance, liveops-experiment-event, game-design-review</summary>
+<summary>성장·경제·라이브 운영 설계 (studio:case:ST-C07)</summary>
+
+성장 보상과 이벤트 운영이 필요한 프로젝트에서 재화 흐름과 측정 기준을 정리합니다.
 
 #### 사용 시점
 
@@ -461,7 +475,9 @@ ST-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="studio:case:ST-C08">
-<summary>ST-C08 · advanced · production-scope-risk, game-design-review, export-preparation-manifest</summary>
+<summary>제작 범위와 출시 위험 점검 (studio:case:ST-C08)</summary>
+
+일정과 인력이 불확실할 때 제작 범위, 의존성, 중단 기준을 검토합니다.
 
 #### 사용 시점
 
@@ -510,8 +526,12 @@ ST-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 
 ### Career 학습·취업 사례 7개
 
+게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 증거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 Artifact를 만듭니다.
+
 <details data-prompt-id="career:case:CA-C01">
-<summary>CA-C01 · standard · game-design-role-map, learning-roadmap</summary>
+<summary>기획 직무와 전문 분야 탐색 (career:case:CA-C01)</summary>
+
+어떤 기획 직무를 목표로 할지 고민할 때 역할 후보와 학습 과제를 비교합니다.
 
 #### 사용 시점
 
@@ -558,7 +578,9 @@ CA-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="career:case:CA-C04">
-<summary>CA-C04 · advanced · competency-matrix, learning-roadmap</summary>
+<summary>12주 역량 증거 계획 만들기 (career:case:CA-C04)</summary>
+
+목표 직무에 필요한 역량을 12주 동안 증명할 과제로 나눌 때 사용합니다.
 
 #### 사용 시점
 
@@ -606,7 +628,9 @@ CA-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="career:case:CA-C05">
-<summary>CA-C05 · advanced · reverse-design-document, game-analysis-report</summary>
+<summary>관찰을 근거로 역기획하기 (career:case:CA-C05)</summary>
+
+공개 플레이 경험을 분석해 관찰과 추론을 구분한 역기획 문서를 만들 때 사용합니다.
 
 #### 사용 시점
 
@@ -653,7 +677,9 @@ CA-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="career:case:CA-C06">
-<summary>CA-C06 · advanced · portfolio-project-brief, creative-design-portfolio</summary>
+<summary>창작 기획 포트폴리오 만들기 (career:case:CA-C06)</summary>
+
+개인 기여를 보여 줄 새 기획 프로젝트를 포트폴리오 사례로 만들 때 사용합니다.
 
 #### 사용 시점
 
@@ -700,7 +726,9 @@ CA-C06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="career:case:CA-C07">
-<summary>CA-C07 · advanced · five-axis-review, portfolio-backlog, introduction-motivation</summary>
+<summary>포트폴리오를 다섯 축으로 점검 (career:case:CA-C07)</summary>
+
+포트폴리오의 빈틈을 찾아 수정 순서와 발표 문장을 정리할 때 사용합니다.
 
 #### 사용 시점
 
@@ -748,7 +776,9 @@ CA-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="career:case:CA-C08">
-<summary>CA-C08 · advanced · interview-question-answer-log, junior-growth-review, transition-readiness</summary>
+<summary>면접 답변과 성장 과제 정리 (career:case:CA-C08)</summary>
+
+면접 답변의 근거를 보강하고 다음 성장 과제를 정할 때 사용합니다.
 
 #### 사용 시점
 
@@ -796,7 +826,9 @@ CA-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 </details>
 
 <details data-prompt-id="career:case:CA-T01">
-<summary>CA-T01 · standard · game-design-role-map, competency-matrix, learning-roadmap</summary>
+<summary>역할 선택부터 학습 계획까지 설계 (career:case:CA-T01)</summary>
+
+관심 분야를 고른 뒤 역량 격차와 학습 순서를 한 번에 정리할 때 사용합니다.
 
 #### 사용 시점
 
@@ -844,8 +876,12 @@ CA-T01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 �
 
 ### Studio와 Career 연계 사례 4개
 
+제작 기획을 경력 증거, 발표 자료 또는 재개 계획으로 연결하려면 연계 사례를 고릅니다. 각 사례는 공개 범위와 이름 있는 사람의 승인 지점을 보존한 인계 Artifact를 만듭니다.
+
 <details data-prompt-id="suite:studio-to-career-handoff:case">
-<summary>studio-to-career-handoff suite case · advanced · 공개 가능한 문제·판단·검증 summary</summary>
+<summary>제작 결과를 포트폴리오 증거로 연결 (suite:studio-to-career-handoff:case)</summary>
+
+Studio 기획 결과에서 공개 가능한 문제, 판단, 검증 근거를 포트폴리오로 옮길 때 사용합니다.
 
 #### 사용 시점
 
@@ -891,7 +927,9 @@ studio-to-career-handoff의 보존 파일과 blocker를 읽고 공개 정보만�
 </details>
 
 <details data-prompt-id="suite:career-proof-project-interview:case">
-<summary>career-proof-project-interview suite case · advanced · 12주 proof와 evidence-linked 답변</summary>
+<summary>프로젝트 증거를 면접 답변으로 연결 (suite:career-proof-project-interview:case)</summary>
+
+시스템 기획 과제를 12주 증거 계획과 면접 답변으로 연결할 때 사용합니다.
 
 #### 사용 시점
 
@@ -938,7 +976,9 @@ career-proof-project-interview의 보존 파일과 blocker를 읽고 공개 정�
 </details>
 
 <details data-prompt-id="suite:gdd-image-presentation:case">
-<summary>gdd-image-presentation suite case · advanced · content.md, approved images, PPTX preflight</summary>
+<summary>기획서와 이미지·발표 자료 함께 준비 (suite:gdd-image-presentation:case)</summary>
+
+기획서, 승인된 이미지, 발표 자료를 같은 검토 경계 안에서 준비할 때 사용합니다.
 
 #### 사용 시점
 
@@ -985,7 +1025,9 @@ gdd-image-presentation의 보존 파일과 blocker를 읽고 공개 정보만으
 </details>
 
 <details data-prompt-id="suite:resume-failed-derivatives:case">
-<summary>resume-failed-derivatives suite case · advanced · 보존 파일, blocker, resume receipt</summary>
+<summary>막힌 이미지·문서 출력 안전하게 재개 (suite:resume-failed-derivatives:case)</summary>
+
+이미지나 내보내기가 막혔을 때 보존 파일과 blocker를 확인해 필요한 작업만 재개합니다.
 
 #### 사용 시점
 
@@ -1061,23 +1103,23 @@ resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만
 
 ### Studio 설치 스킬 15개
 
-| 설치 스킬 ID | 직접 호출 | 역할·결과 | 상세 가이드 |
+| 스킬 이름과 ID | 직접 호출 | 쉬운 역할 설명 | 상세 가이드 |
 | --- | --- | --- | --- |
-| `apply-document-quality-profile` | `$game-design-studio:apply-document-quality-profile` | 문서 목적과 형식에 맞는 품질 profile을 고정하고 selection record를 만든다. | [apply-document-quality-profile 상세 가이드](guides/game-design-studio/skills/apply-document-quality-profile.md) |
-| `define-game-vision` | `$game-design-studio:define-game-vision` | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 vision pillars를 만든다. | [define-game-vision 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
-| `design-game-content` | `$game-design-studio:design-game-content` | 퀘스트·레벨·조우·캐릭터를 제작 가능한 콘텐츠 명세로 만든다. | [design-game-content 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
-| `design-game-economy-and-liveops` | `$game-design-studio:design-game-economy-and-liveops` | 재화 흐름, 성장, 보상과 LiveOps 결정을 경제 명세로 만든다. | [design-game-economy-and-liveops 상세 가이드](guides/game-design-studio/skills/design-game-economy-and-liveops.md) |
-| `design-game-systems` | `$game-design-studio:design-game-systems` | 규칙, 상태, 우선순위, 예외와 데이터 계약을 시스템 명세로 만든다. | [design-game-systems 상세 가이드](guides/game-design-studio/skills/design-game-systems.md) |
-| `design-player-experience` | `$game-design-studio:design-player-experience` | 정보 구조, 상호작용 상태, 온보딩과 접근성 흐름을 만든다. | [design-player-experience 상세 가이드](guides/game-design-studio/skills/design-player-experience.md) |
-| `export-game-design-documents` | `$game-design-studio:export-game-design-documents` | 검증된 Artifact의 MD·PDF·DOCX·PPTX 준비 상태를 기록한다. | [export-game-design-documents 상세 가이드](guides/game-design-studio/skills/export-game-design-documents.md) |
-| `generate-image-assets` | `$game-design-studio:generate-image-assets` | 승인된 manifest의 선택 job만 생성하고 provider 상태를 기록한다. | [generate-image-assets 상세 가이드](guides/game-design-studio/skills/generate-image-assets.md) |
-| `orchestrate-game-design-project` | `$game-design-studio:orchestrate-game-design-project` | 여러 기획 분야의 범위, 순서와 검토 게이트를 프로젝트 브리프로 묶는다. | [orchestrate-game-design-project 상세 가이드](guides/game-design-studio/skills/orchestrate-game-design-project.md) |
-| `plan-game-production` | `$game-design-studio:plan-game-production` | prototype gate, 의존성, owner와 중단 기준을 제작 계획으로 만든다. | [plan-game-production 상세 가이드](guides/game-design-studio/skills/plan-game-production.md) |
-| `plan-image-assets` | `$game-design-studio:plan-image-assets` | 기준 문서에서 이미지 manifest, prompt package와 placeholder를 만든다. | [plan-image-assets 상세 가이드](guides/game-design-studio/skills/plan-image-assets.md) |
-| `review-game-design` | `$game-design-studio:review-game-design` | 근거, 위험과 blocker를 검토해 최소 수정이 있는 review를 만든다. | [review-game-design 상세 가이드](guides/game-design-studio/skills/review-game-design.md) |
-| `review-image-assets` | `$game-design-studio:review-image-assets` | 시각 품질, 접근성, 권리와 배치를 검토해 사람 결정 요청을 남긴다. | [review-image-assets 상세 가이드](guides/game-design-studio/skills/review-image-assets.md) |
-| `svg-infographic` | `$game-design-studio:svg-infographic` | Skillstead 0.8.3의 vendored 설치 스킬로 편집 가능한 SVG와 검증용 PNG를 만든다. | [svg-infographic 상세 가이드](guides/game-design-studio/skills/svg-infographic.md) |
-| `visualize-game-design` | `$game-design-studio:visualize-game-design` | 루프, 상태, 흐름과 의존성을 접근 가능한 SVG·PNG 도식으로 만든다. | [visualize-game-design 상세 가이드](guides/game-design-studio/skills/visualize-game-design.md) |
+| 문서 품질 기준 적용 (`apply-document-quality-profile`) | `$game-design-studio:apply-document-quality-profile` | 문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다. | [apply-document-quality-profile 상세 가이드](guides/game-design-studio/skills/apply-document-quality-profile.md) |
+| 게임 비전 정의 (`define-game-vision`) | `$game-design-studio:define-game-vision` | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 비전 기둥을 만듭니다. | [define-game-vision 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
+| 게임 콘텐츠 설계 (`design-game-content`) | `$game-design-studio:design-game-content` | 퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다. | [design-game-content 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
+| 경제와 라이브 운영 설계 (`design-game-economy-and-liveops`) | `$game-design-studio:design-game-economy-and-liveops` | 재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다. | [design-game-economy-and-liveops 상세 가이드](guides/game-design-studio/skills/design-game-economy-and-liveops.md) |
+| 게임 시스템 설계 (`design-game-systems`) | `$game-design-studio:design-game-systems` | 규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다. | [design-game-systems 상세 가이드](guides/game-design-studio/skills/design-game-systems.md) |
+| 플레이어 경험 설계 (`design-player-experience`) | `$game-design-studio:design-player-experience` | 정보 구조, 상호작용, 온보딩과 접근성 흐름을 정리합니다. | [design-player-experience 상세 가이드](guides/game-design-studio/skills/design-player-experience.md) |
+| 기획 문서 내보내기 준비 (`export-game-design-documents`) | `$game-design-studio:export-game-design-documents` | 검증된 Artifact의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다. | [export-game-design-documents 상세 가이드](guides/game-design-studio/skills/export-game-design-documents.md) |
+| 이미지 자산 생성 (`generate-image-assets`) | `$game-design-studio:generate-image-assets` | 승인된 목록의 선택 작업만 생성하고 제공자 상태를 기록합니다. | [generate-image-assets 상세 가이드](guides/game-design-studio/skills/generate-image-assets.md) |
+| 게임 기획 프로젝트 조율 (`orchestrate-game-design-project`) | `$game-design-studio:orchestrate-game-design-project` | 여러 기획 분야의 범위, 순서와 검토 지점을 프로젝트 브리프로 묶습니다. | [orchestrate-game-design-project 상세 가이드](guides/game-design-studio/skills/orchestrate-game-design-project.md) |
+| 게임 제작 계획 (`plan-game-production`) | `$game-design-studio:plan-game-production` | 시제품 기준, 의존성, 담당자와 중단 기준을 제작 계획으로 만듭니다. | [plan-game-production 상세 가이드](guides/game-design-studio/skills/plan-game-production.md) |
+| 이미지 자산 계획 (`plan-image-assets`) | `$game-design-studio:plan-image-assets` | 기준 문서에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다. | [plan-image-assets 상세 가이드](guides/game-design-studio/skills/plan-image-assets.md) |
+| 게임 기획 검토 (`review-game-design`) | `$game-design-studio:review-game-design` | 근거, 위험과 막힌 지점을 검토해 최소 수정이 담긴 검토 문서를 만듭니다. | [review-game-design 상세 가이드](guides/game-design-studio/skills/review-game-design.md) |
+| 이미지 자산 검토 (`review-image-assets`) | `$game-design-studio:review-image-assets` | 시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다. | [review-image-assets 상세 가이드](guides/game-design-studio/skills/review-image-assets.md) |
+| 기획 도식 만들기 (`svg-infographic`) | `$game-design-studio:svg-infographic` | Skillstead 0.8.3에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다. | [svg-infographic 상세 가이드](guides/game-design-studio/skills/svg-infographic.md) |
+| 게임 기획 시각화 (`visualize-game-design`) | `$game-design-studio:visualize-game-design` | 루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다. | [visualize-game-design 상세 가이드](guides/game-design-studio/skills/visualize-game-design.md) |
 
 </details>
 
@@ -1086,23 +1128,23 @@ resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만
 
 ### Career 설치 스킬 15개
 
-| 설치 스킬 ID | 직접 호출 | 역할·결과 | 상세 가이드 |
+| 스킬 이름과 ID | 직접 호출 | 쉬운 역할 설명 | 상세 가이드 |
 | --- | --- | --- | --- |
-| `apply-document-quality-profile` | `$game-design-career:apply-document-quality-profile` | 경력 문서 목적과 형식에 맞는 품질 profile과 selection record를 만든다. | [apply-document-quality-profile 상세 가이드](guides/game-design-career/skills/apply-document-quality-profile.md) |
-| `build-game-design-portfolio` | `$game-design-career:build-game-design-portfolio` | 공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만든다. | [build-game-design-portfolio 상세 가이드](guides/game-design-career/skills/build-game-design-portfolio.md) |
-| `export-career-documents` | `$game-design-career:export-career-documents` | Career Artifact의 MD·PDF·DOCX·PPTX 준비 상태를 기록한다. | [export-career-documents 상세 가이드](guides/game-design-career/skills/export-career-documents.md) |
-| `generate-image-assets` | `$game-design-career:generate-image-assets` | 승인된 manifest의 선택 job만 생성하고 provider 상태를 기록한다. | [generate-image-assets 상세 가이드](guides/game-design-career/skills/generate-image-assets.md) |
-| `map-game-design-career` | `$game-design-career:map-game-design-career` | 역할군, 목표 수준과 역량 gap을 비교해 role map과 matrix를 만든다. | [map-game-design-career 상세 가이드](guides/game-design-career/skills/map-game-design-career.md) |
-| `orchestrate-game-design-career` | `$game-design-career:orchestrate-game-design-career` | 경력 단계, 작업 순서와 검토를 경력 계획으로 묶는다. | [orchestrate-game-design-career 상세 가이드](guides/game-design-career/skills/orchestrate-game-design-career.md) |
-| `plan-image-assets` | `$game-design-career:plan-image-assets` | Career Artifact에서 이미지 manifest, prompt package와 placeholder를 만든다. | [plan-image-assets 상세 가이드](guides/game-design-career/skills/plan-image-assets.md) |
-| `plan-junior-growth` | `$game-design-career:plan-junior-growth` | 분기 목표, 증거 과제와 피드백 주기를 성장 계획으로 만든다. | [plan-junior-growth 상세 가이드](guides/game-design-career/skills/plan-junior-growth.md) |
-| `practice-game-design-interview` | `$game-design-career:practice-game-design-interview` | 공고와 포트폴리오 근거를 질문·답변·피드백 기록으로 연결한다. | [practice-game-design-interview 상세 가이드](guides/game-design-career/skills/practice-game-design-interview.md) |
-| `research-game-design-jobs` | `$game-design-career:research-game-design-jobs` | 최신 공고와 회사 근거를 수집해 요구사항과 candidate gap을 기록한다. | [research-game-design-jobs 상세 가이드](guides/game-design-career/skills/research-game-design-jobs.md) |
-| `reverse-engineer-game-design` | `$game-design-career:reverse-engineer-game-design` | 공개 관찰과 추론을 분리해 역기획 문서를 만든다. | [reverse-engineer-game-design 상세 가이드](guides/game-design-career/skills/reverse-engineer-game-design.md) |
-| `review-game-design-portfolio` | `$game-design-career:review-game-design-portfolio` | 증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 review로 만든다. | [review-game-design-portfolio 상세 가이드](guides/game-design-career/skills/review-game-design-portfolio.md) |
-| `review-image-assets` | `$game-design-career:review-image-assets` | 시각 품질, 접근성, 권리와 배치를 검토해 사람 결정 요청을 남긴다. | [review-image-assets 상세 가이드](guides/game-design-career/skills/review-image-assets.md) |
-| `svg-infographic` | `$game-design-career:svg-infographic` | Skillstead 0.8.3의 vendored 설치 스킬로 편집 가능한 SVG와 검증용 PNG를 만든다. | [svg-infographic 상세 가이드](guides/game-design-career/skills/svg-infographic.md) |
-| `visualize-career-roadmap` | `$game-design-career:visualize-career-roadmap` | 역할, 역량, 학습 의존성과 성장 경로를 접근 가능한 SVG·PNG로 만든다. | [visualize-career-roadmap 상세 가이드](guides/game-design-career/skills/visualize-career-roadmap.md) |
+| 경력 문서 품질 기준 적용 (`apply-document-quality-profile`) | `$game-design-career:apply-document-quality-profile` | 경력 문서 목적과 형식에 맞는 품질 기준과 선택 기록을 만듭니다. | [apply-document-quality-profile 상세 가이드](guides/game-design-career/skills/apply-document-quality-profile.md) |
+| 기획 포트폴리오 만들기 (`build-game-design-portfolio`) | `$game-design-career:build-game-design-portfolio` | 공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다. | [build-game-design-portfolio 상세 가이드](guides/game-design-career/skills/build-game-design-portfolio.md) |
+| 경력 문서 내보내기 준비 (`export-career-documents`) | `$game-design-career:export-career-documents` | Career Artifact의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다. | [export-career-documents 상세 가이드](guides/game-design-career/skills/export-career-documents.md) |
+| 경력 이미지 자산 생성 (`generate-image-assets`) | `$game-design-career:generate-image-assets` | 승인된 이미지 목록의 선택 작업만 생성하고 제공자 상태를 기록합니다. | [generate-image-assets 상세 가이드](guides/game-design-career/skills/generate-image-assets.md) |
+| 게임 기획 경력 지도 만들기 (`map-game-design-career`) | `$game-design-career:map-game-design-career` | 역할군, 목표 수준과 역량 격차를 비교해 경력 지도를 만듭니다. | [map-game-design-career 상세 가이드](guides/game-design-career/skills/map-game-design-career.md) |
+| 게임 기획 경력 조율 (`orchestrate-game-design-career`) | `$game-design-career:orchestrate-game-design-career` | 경력 단계, 작업 순서와 검토를 하나의 경력 계획으로 묶습니다. | [orchestrate-game-design-career 상세 가이드](guides/game-design-career/skills/orchestrate-game-design-career.md) |
+| 경력 이미지 자산 계획 (`plan-image-assets`) | `$game-design-career:plan-image-assets` | Career Artifact에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다. | [plan-image-assets 상세 가이드](guides/game-design-career/skills/plan-image-assets.md) |
+| 주니어 성장 계획 (`plan-junior-growth`) | `$game-design-career:plan-junior-growth` | 분기 목표, 증거 과제와 피드백 주기를 성장 계획으로 만듭니다. | [plan-junior-growth 상세 가이드](guides/game-design-career/skills/plan-junior-growth.md) |
+| 게임 기획 면접 연습 (`practice-game-design-interview`) | `$game-design-career:practice-game-design-interview` | 공고와 포트폴리오 근거를 질문, 답변과 피드백 기록으로 연결합니다. | [practice-game-design-interview 상세 가이드](guides/game-design-career/skills/practice-game-design-interview.md) |
+| 게임 기획 채용 조사 (`research-game-design-jobs`) | `$game-design-career:research-game-design-jobs` | 최신 공고와 회사 근거를 모아 요구사항과 지원자 격차를 기록합니다. | [research-game-design-jobs 상세 가이드](guides/game-design-career/skills/research-game-design-jobs.md) |
+| 게임 기획 역기획 (`reverse-engineer-game-design`) | `$game-design-career:reverse-engineer-game-design` | 공개 관찰과 추론을 분리해 검토 가능한 역기획 문서를 만듭니다. | [reverse-engineer-game-design 상세 가이드](guides/game-design-career/skills/reverse-engineer-game-design.md) |
+| 기획 포트폴리오 검토 (`review-game-design-portfolio`) | `$game-design-career:review-game-design-portfolio` | 증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 검토 문서로 만듭니다. | [review-game-design-portfolio 상세 가이드](guides/game-design-career/skills/review-game-design-portfolio.md) |
+| 경력 이미지 자산 검토 (`review-image-assets`) | `$game-design-career:review-image-assets` | 시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다. | [review-image-assets 상세 가이드](guides/game-design-career/skills/review-image-assets.md) |
+| 경력 도식 만들기 (`svg-infographic`) | `$game-design-career:svg-infographic` | Skillstead 0.8.3에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다. | [svg-infographic 상세 가이드](guides/game-design-career/skills/svg-infographic.md) |
+| 경력 성장 경로 시각화 (`visualize-career-roadmap`) | `$game-design-career:visualize-career-roadmap` | 역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다. | [visualize-career-roadmap 상세 가이드](guides/game-design-career/skills/visualize-career-roadmap.md) |
 
 </details>
 
@@ -1113,17 +1155,17 @@ resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만
 
 ### Studio 에이전트 9개
 
-| 에이전트 ID | 역할 | 검토 초점 | 호출 경계 | 역할 문서 |
+| 에이전트 역할과 ID | 쉬운 역할 설명 | 검토 초점 | 호출 경계 | 역할 문서 |
 | --- | --- | --- | --- | --- |
-| `art-brief-director` | 이미지 brief 검토 | 목적·가독성·prompt·variant | 이미지 전문 스킬이 전문가에게 위임 | [art-brief-director 역할 문서](plugins/game-design-studio/agents/art-brief-director.md) |
-| `content-narrative-designer` | 콘텐츠·서사 설계 검토 | 시스템 의존성·선택·결과·제작 권리 | 오케스트레이터가 콘텐츠 전문가에게 위임 | [content-narrative-designer 역할 문서](plugins/game-design-studio/agents/content-narrative-designer.md) |
-| `document-quality-editor` | 문서 구조 편집 검토 | checklist·PPT story contract·최소 구조 수정 | 품질 전문 스킬이 전문가에게 위임 | [document-quality-editor 역할 문서](plugins/game-design-studio/agents/document-quality-editor.md) |
-| `lead-game-designer` | 전체 기획 기준 검토 | 비전·일관성·의사결정·검토 게이트 | 오케스트레이터가 수석 전문가에게 위임 | [lead-game-designer 역할 문서](plugins/game-design-studio/agents/lead-game-designer.md) |
-| `liveops-data-designer` | LiveOps·데이터 검토 | 지표·실험·세분화·중단 기준 | 경제 전문 스킬이 전문가에게 위임 | [liveops-data-designer 역할 문서](plugins/game-design-studio/agents/liveops-data-designer.md) |
-| `production-feasibility-critic` | 제작 가능성 검토 | 범위·의존성·effort 근거·kill criteria | 오케스트레이터가 제작 전문가에게 위임 | [production-feasibility-critic 역할 문서](plugins/game-design-studio/agents/production-feasibility-critic.md) |
-| `system-economy-designer` | 시스템·경제 검토 | 규칙·상태·재화 흐름·악용 가능성 | 시스템 또는 경제 전문 스킬이 전문가에게 위임 | [system-economy-designer 역할 문서](plugins/game-design-studio/agents/system-economy-designer.md) |
-| `ux-accessibility-reviewer` | UX·접근성 검토 | 상태 coverage·입력·피드백·접근성 | 경험 설계 전문 스킬이 전문가에게 위임 | [ux-accessibility-reviewer 역할 문서](plugins/game-design-studio/agents/ux-accessibility-reviewer.md) |
-| `visual-asset-reviewer` | 시각 자산 검토 | 가독성·alt text·권리·배치 | 이미지 검토 전문 스킬이 전문가에게 위임 | [visual-asset-reviewer 역할 문서](plugins/game-design-studio/agents/visual-asset-reviewer.md) |
+| 이미지 기획 총괄 (`art-brief-director`) | 이미지 목적과 프롬프트 초안을 읽고 빠진 요구사항을 찾습니다. | 목적·가독성·prompt·variant | 이미지 전문 스킬이 전문가에게 위임 | [art-brief-director 역할 문서](plugins/game-design-studio/agents/art-brief-director.md) |
+| 콘텐츠와 서사 설계자 (`content-narrative-designer`) | 콘텐츠 선택이 시스템과 제작 범위에 맞는지 검토합니다. | 시스템 의존성·선택·결과·제작 권리 | 오케스트레이터가 콘텐츠 전문가에게 위임 | [content-narrative-designer 역할 문서](plugins/game-design-studio/agents/content-narrative-designer.md) |
+| 문서 품질 편집자 (`document-quality-editor`) | 문서 구조와 발표 흐름이 읽기 쉬운지 점검합니다. | checklist·PPT story contract·최소 구조 수정 | 품질 전문 스킬이 전문가에게 위임 | [document-quality-editor 역할 문서](plugins/game-design-studio/agents/document-quality-editor.md) |
+| 수석 게임 기획자 (`lead-game-designer`) | 비전과 결정이 서로 어긋나지 않는지 전체 기준으로 검토합니다. | 비전·일관성·의사결정·검토 게이트 | 오케스트레이터가 수석 전문가에게 위임 | [lead-game-designer 역할 문서](plugins/game-design-studio/agents/lead-game-designer.md) |
+| 라이브 운영 데이터 설계자 (`liveops-data-designer`) | 운영 지표와 실험이 성장·경제 설계와 연결되는지 확인합니다. | 지표·실험·세분화·중단 기준 | 경제 전문 스킬이 전문가에게 위임 | [liveops-data-designer 역할 문서](plugins/game-design-studio/agents/liveops-data-designer.md) |
+| 제작 가능성 비평가 (`production-feasibility-critic`) | 일정, 인력과 의존성을 기준으로 제작 가능한 범위를 점검합니다. | 범위·의존성·effort 근거·kill criteria | 오케스트레이터가 제작 전문가에게 위임 | [production-feasibility-critic 역할 문서](plugins/game-design-studio/agents/production-feasibility-critic.md) |
+| 시스템과 경제 설계자 (`system-economy-designer`) | 규칙, 재화와 악용 가능성을 함께 살펴 시스템 균형을 검토합니다. | 규칙·상태·재화 흐름·악용 가능성 | 시스템 또는 경제 전문 스킬이 전문가에게 위임 | [system-economy-designer 역할 문서](plugins/game-design-studio/agents/system-economy-designer.md) |
+| UX와 접근성 검토자 (`ux-accessibility-reviewer`) | 입력, 피드백과 접근성 문제가 화면 흐름에 없는지 점검합니다. | 상태 coverage·입력·피드백·접근성 | 경험 설계 전문 스킬이 전문가에게 위임 | [ux-accessibility-reviewer 역할 문서](plugins/game-design-studio/agents/ux-accessibility-reviewer.md) |
+| 시각 자산 검토자 (`visual-asset-reviewer`) | 이미지가 읽기 쉽고 권리와 배치 기준을 지키는지 검토합니다. | 가독성·alt text·권리·배치 | 이미지 검토 전문 스킬이 전문가에게 위임 | [visual-asset-reviewer 역할 문서](plugins/game-design-studio/agents/visual-asset-reviewer.md) |
 
 </details>
 
@@ -1132,17 +1174,17 @@ resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만
 
 ### Career 에이전트 9개
 
-| 에이전트 ID | 역할 | 검토 초점 | 호출 경계 | 역할 문서 |
+| 에이전트 역할과 ID | 쉬운 역할 설명 | 검토 초점 | 호출 경계 | 역할 문서 |
 | --- | --- | --- | --- | --- |
-| `art-brief-director` | 경력 자산 brief 검토 | 근거 보존·가독성·prompt·variant | 이미지 전문 스킬이 전문가에게 위임 | [art-brief-director 역할 문서](plugins/game-design-career/agents/art-brief-director.md) |
-| `career-strategist` | 경력 방향 검토 | tradeoff·제약·근거 순서·일반화 방지 | 오케스트레이터가 경력 전문가에게 위임 | [career-strategist 역할 문서](plugins/game-design-career/agents/career-strategist.md) |
-| `document-quality-editor` | 문서 구조 편집 검토 | checklist·PPT story contract·증거 보존 | 품질 전문 스킬이 전문가에게 위임 | [document-quality-editor 역할 문서](plugins/game-design-career/agents/document-quality-editor.md) |
-| `evidence-auditor` | 근거 감사 | freshness·primary source·provenance·권리 | 조사 또는 검토 전문 스킬이 전문가에게 위임 | [evidence-auditor 역할 문서](plugins/game-design-career/agents/evidence-auditor.md) |
-| `game-design-mentor` | 학습·성장 검토 | 요구 역량·연습·artifact·feedback | 오케스트레이터가 멘토 전문가에게 위임 | [game-design-mentor 역할 문서](plugins/game-design-career/agents/game-design-mentor.md) |
-| `interview-coach` | 면접 답변 검토 | claim·evidence·선택·대안·정직한 gap | 면접 전문 스킬이 전문가에게 위임 | [interview-coach 역할 문서](plugins/game-design-career/agents/interview-coach.md) |
-| `portfolio-reviewer` | 포트폴리오 검토 | 역량 증거·개인 기여·inspectability·권리 | 포트폴리오 전문 스킬이 전문가에게 위임 | [portfolio-reviewer 역할 문서](plugins/game-design-career/agents/portfolio-reviewer.md) |
-| `reverse-design-critic` | 역기획 claim 검토 | 관찰·추론·반례·검증 방법 | 역기획 전문 스킬이 전문가에게 위임 | [reverse-design-critic 역할 문서](plugins/game-design-career/agents/reverse-design-critic.md) |
-| `visual-asset-reviewer` | 시각 자산 검토 | 가독성·alt text·권리·배치 | 이미지 검토 전문 스킬이 전문가에게 위임 | [visual-asset-reviewer 역할 문서](plugins/game-design-career/agents/visual-asset-reviewer.md) |
+| 경력 이미지 기획 총괄 (`art-brief-director`) | 포트폴리오 이미지의 근거와 프롬프트 초안을 검토합니다. | 근거 보존·가독성·prompt·variant | 이미지 전문 스킬이 전문가에게 위임 | [art-brief-director 역할 문서](plugins/game-design-career/agents/art-brief-director.md) |
+| 경력 전략가 (`career-strategist`) | 목표 직무와 현실적인 선택지를 비교해 경력 방향을 점검합니다. | tradeoff·제약·근거 순서·일반화 방지 | 오케스트레이터가 경력 전문가에게 위임 | [career-strategist 역할 문서](plugins/game-design-career/agents/career-strategist.md) |
+| 경력 문서 품질 편집자 (`document-quality-editor`) | 증거가 빠지지 않고 문서와 발표 흐름이 읽히는지 확인합니다. | checklist·PPT story contract·증거 보존 | 품질 전문 스킬이 전문가에게 위임 | [document-quality-editor 역할 문서](plugins/game-design-career/agents/document-quality-editor.md) |
+| 근거 감사자 (`evidence-auditor`) | 출처, 최신성, 권리와 근거 연결이 충분한지 살펴봅니다. | freshness·primary source·provenance·권리 | 조사 또는 검토 전문 스킬이 전문가에게 위임 | [evidence-auditor 역할 문서](plugins/game-design-career/agents/evidence-auditor.md) |
+| 게임 기획 멘토 (`game-design-mentor`) | 학습 목표와 연습 과제가 목표 직무에 맞는지 검토합니다. | 요구 역량·연습·artifact·feedback | 오케스트레이터가 멘토 전문가에게 위임 | [game-design-mentor 역할 문서](plugins/game-design-career/agents/game-design-mentor.md) |
+| 면접 코치 (`interview-coach`) | 답변의 주장과 근거가 연결되는지 확인하고 보완 질문을 남깁니다. | claim·evidence·선택·대안·정직한 gap | 면접 전문 스킬이 전문가에게 위임 | [interview-coach 역할 문서](plugins/game-design-career/agents/interview-coach.md) |
+| 포트폴리오 검토자 (`portfolio-reviewer`) | 개인 기여와 공개 가능한 증거가 선명한지 검토합니다. | 역량 증거·개인 기여·inspectability·권리 | 포트폴리오 전문 스킬이 전문가에게 위임 | [portfolio-reviewer 역할 문서](plugins/game-design-career/agents/portfolio-reviewer.md) |
+| 역기획 비평가 (`reverse-design-critic`) | 관찰과 추론을 구분하고 반례 검증이 가능한지 점검합니다. | 관찰·추론·반례·검증 방법 | 역기획 전문 스킬이 전문가에게 위임 | [reverse-design-critic 역할 문서](plugins/game-design-career/agents/reverse-design-critic.md) |
+| 경력 시각 자산 검토자 (`visual-asset-reviewer`) | 공개할 이미지의 가독성, 대체 텍스트와 권리를 검토합니다. | 가독성·alt text·권리·배치 | 이미지 검토 전문 스킬이 전문가에게 위임 | [visual-asset-reviewer 역할 문서](plugins/game-design-career/agents/visual-asset-reviewer.md) |
 
 </details>
 
@@ -1171,14 +1213,14 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 renderer와 시각적 품질 
 
 각 행의 생성 폴더는 핵심 파일 칸에 함께 표시합니다. 선택 자산과 검토 결과는 이름 있는 사람의 승인 전까지 보류합니다.
 
-| 결과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |
+| 결과 이름과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |
 | --- | --- | --- | --- | --- |
-| `game-design-brief` | 생성 폴더 `game-design/[프로젝트 ID]/game-design-brief/`, 핵심 파일 `content.md` | 비전 도식·concept 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `system-specification` | 생성 폴더 `game-design/[프로젝트 ID]/system-specification/`, 핵심 파일 `content.md` | 상태 전이 SVG·PNG | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `ui-ux-flow-state` | 생성 폴더 `game-design/[프로젝트 ID]/ui-ux-flow-state/`, 핵심 파일 `content.md` | UX flow·화면 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `reverse-design-document` | 생성 폴더 `game-design-career/[경력 ID]/reverse-design-document/`, 핵심 파일 `content.md` | 관찰 도식·공개 screenshot | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `creative-design-portfolio` | 생성 폴더 `game-design-career/[경력 ID]/creative-design-portfolio/`, 핵심 파일 `content.md` | 포트폴리오 도식·발표 자산 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `export-preparation-manifest` | 생성 폴더 `project-artifact/export-preparation-manifest/`, 핵심 파일 `content.md` | PDF·DOCX·PPTX 파생 후보 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| 게임 기획 브리프 (`game-design-brief`) | 생성 폴더 `game-design/[프로젝트 ID]/game-design-brief/`, 핵심 파일 `content.md` | 비전 도식·concept 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| 시스템 명세서 (`system-specification`) | 생성 폴더 `game-design/[프로젝트 ID]/system-specification/`, 핵심 파일 `content.md` | 상태 전이 SVG·PNG | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| UI·UX 흐름과 상태표 (`ui-ux-flow-state`) | 생성 폴더 `game-design/[프로젝트 ID]/ui-ux-flow-state/`, 핵심 파일 `content.md` | UX flow·화면 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| 관찰 기반 역기획 문서 (`reverse-design-document`) | 생성 폴더 `game-design-career/[경력 ID]/reverse-design-document/`, 핵심 파일 `content.md` | 관찰 도식·공개 screenshot | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| 창작 기획 포트폴리오 (`creative-design-portfolio`) | 생성 폴더 `game-design-career/[경력 ID]/creative-design-portfolio/`, 핵심 파일 `content.md` | 포트폴리오 도식·발표 자산 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| 문서 내보내기 준비 목록 (`export-preparation-manifest`) | 생성 폴더 `project-artifact/export-preparation-manifest/`, 핵심 파일 `content.md` | PDF·DOCX·PPTX 파생 후보 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
 
 ## 플러그인 구조와 전체 시스템 아키텍처
 
