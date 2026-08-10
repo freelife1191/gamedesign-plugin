@@ -513,6 +513,13 @@ function assertPromptCard(card, entry) {
   for (const [surface, example] of [["App", appPrompt.example], ["CLI", cliPrompt.example]]) {
     assert.match(example, /[가-힣]/u, `${entry.id}: ${surface} example has concrete Korean input`);
     assert.doesNotMatch(example, /\[[^\]]+\]/u, `${entry.id}: ${surface} example fills every placeholder`);
+    if (/\b(?:fact|inference|recommendation)\b/u.test(example)) {
+      assert.match(
+        example,
+        /(?:확인한 )?사실\s*\(fact\)[\s\S]*추론\s*\(inference\)[\s\S]*제안\s*\(recommendation\)/u,
+        `${entry.id}: ${surface} example explains fact, inference, and recommendation in Korean first`,
+      );
+    }
   }
   for (const line of textBlocks(card.body)) {
     for (const sourceLine of line.split("\n")) {

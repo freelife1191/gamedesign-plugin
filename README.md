@@ -810,7 +810,8 @@ CA-C01를 작성해.
 채운 예시 (App)
 @Game Design Career 민서-첫기획 공개된 시스템 기획 공고 2개와
 내 튜토리얼
-분석 메모를 비교해 fact, inference, recommendation을 분리하고
+분석 메모를 비교해 확인한 사실 (fact), 추론 (inference),
+제안 (recommendation)을 분리하고
 CA-C01을 작성해.
 
 CLI
@@ -1196,9 +1197,8 @@ CA-C08를 작성해.
 채운 예시 (App)
 @Game Design Career 시스템 기획 포트폴리오 EVID-SYS-01과 공고의
 규칙 설계
-요구를 연결해 면접 질문 4개, 정직한 부족점 (honest gap), 다음 4주
-성장
-과제를 작성해.
+요구를 연결해 면접 질문 4개와 정직한 부족점 (honest gap)을 정리하고,
+다음 4주 성장 과제를 작성해.
 
 CLI
 $game-design-career:practice-game-design-interview
