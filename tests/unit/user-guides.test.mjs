@@ -199,6 +199,29 @@ test("Markdown helpers track rendered HTML ancestry across lines for links", () 
   );
 });
 
+test("Markdown helpers retain clickable raw HTML code links and first duplicate href", () => {
+  const markdown = [
+    '<pre><a href="pre-link.html">pre</a></pre>',
+    '<code><a href="code-link.html">code</a></code>',
+    '<a href="first-production.html" href="safe.md">first wins</a>',
+    '<a HREF=safe.md',
+    '  href="second-production.html">first unquoted wins</a>',
+    '<a href="safe-after-production.md" HREF=second-production.html>first quoted wins</a>',
+    '```md',
+    '<pre><a href="fenced-pre.html">fenced</a></pre>',
+    '```',
+    '`<code><a href="backtick-code.html">backtick</a></code>`',
+  ].join("\n");
+
+  assert.deepEqual(extractMarkdownLinks(markdown).map(({ target }) => target), [
+    "pre-link.html",
+    "code-link.html",
+    "first-production.html",
+    "safe.md",
+    "safe-after-production.md",
+  ]);
+});
+
 test("Markdown helpers preserve token precedence, balanced destinations, and rendered labels", () => {
   const markdown = [
     "`<!--` [visible](visible.md#visible)",

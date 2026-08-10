@@ -871,7 +871,7 @@ function htmlTagAt(source, start) {
       value = raw.slice(valueStart, cursor);
       if (quote) cursor += 1;
     }
-    attributes.set(attribute, value);
+    if (!attributes.has(attribute)) attributes.set(attribute, value);
   }
   return { end, name, closing, selfClosing, attributes };
 }
@@ -879,7 +879,7 @@ function htmlTagAt(source, start) {
 const HTML_VOID_ELEMENTS = new Set([
   "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr",
 ]);
-const HTML_INERT_ELEMENTS = new Set(["pre", "script", "style", "template", "textarea"]);
+const HTML_INERT_ELEMENTS = new Set(["script", "style", "template", "textarea"]);
 
 function decodedHtmlAttribute(value) {
   return value.replace(/&(?:#x([0-9a-f]+)|#(\d+)|amp|apos|gt|lt|quot);/giu, (entity, hexadecimal, decimal) => {

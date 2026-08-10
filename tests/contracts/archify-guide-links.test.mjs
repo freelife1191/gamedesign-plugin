@@ -197,6 +197,9 @@ test("root README rejects rendered reference, raw-anchor, receipt, and fragment/
     ["nested raw anchor", '<div><a href="guides/assets/archify/studio/studio-project-workflow.html">blocked</a></div>'],
     ["multiline quoted raw anchor", '<a\nHREF="guides/assets/archify/studio/studio-project-workflow.html">blocked</a>'],
     ["multiline unquoted raw anchor", '<a\nhref=guides/assets/archify/studio/studio-project-workflow.html>blocked</a>'],
+    ["pre raw anchor", '<pre><a href="guides/assets/archify/studio/studio-project-workflow.html">blocked</a></pre>'],
+    ["code raw anchor", '<code><a href="guides/assets/archify/studio/studio-project-workflow.html">blocked</a></code>'],
+    ["first duplicate href", '<a href="guides/assets/archify/studio/studio-project-workflow.html" href="safe.md">blocked</a>'],
   ]) {
     assert.throws(() => assertExactProductionLinks([{ filename: "README.md", markdown }], expected), /published-and-passed|legacy flow/u, label);
   }
