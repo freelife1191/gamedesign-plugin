@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Game Design Studio Project Workflow",
+    "subtitle": "Vision becomes a canonical design document, receives human decisions and asset evidence, then resumes from preserved context.",
+    "output": "guides/assets/archify/studio/studio-project-workflow.html",
+    "animation": "none",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "vision-to-review",
+        "label": "Vision to human decision",
+        "focus": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision"],
+        "note": "The approved player experience becomes a canonical document before specialist findings return to a human decision."
+      },
+      {
+        "id": "asset-evidence",
+        "label": "Image and format evidence",
+        "focus": ["image_asset_plan", "image_asset_review", "format_qa_export"],
+        "note": "Image planning and human approval stay distinct from the renderer-specific QA needed for exported formats."
+      },
+      {
+        "id": "resume-contract",
+        "label": "Resume from context",
+        "focus": ["canonical_artifact", "image_asset_review", "resume_context"],
+        "note": "The canonical path is preserved, while the next request re-enters the blocked image approval instead of recreating the document."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "human", "label": "Human decisions" },
+    { "id": "studio", "label": "Game Design Studio" },
+    { "id": "specialists", "label": "Specialist review" },
+    { "id": "assets_renderer", "label": "Assets and renderer" }
+  ],
+  "phases": [
+    { "id": "frame", "label": "Frame", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "design", "label": "Design and decide", "fromCol": 2, "toCol": 3 },
+    { "id": "evidence", "label": "Asset and export evidence", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "canonical_design", "label": "Canonical design record", "lane": "studio", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "asset_evidence", "label": "Provider and format evidence", "lane": "assets_renderer", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision", "image_asset_plan", "image_asset_review", "format_qa_export"],
+  "nodes": [
+    { "id": "vision_approval", "lane": "human", "col": 0, "type": "external", "label": "Approve vision", "sublabel": "player, fun, non-goals" },
+    { "id": "resume_context", "lane": "studio", "col": 5, "width": 72, "type": "messagebus", "label": "Resume", "sublabel": "path + task" },
+    { "id": "canonical_artifact", "lane": "studio", "col": 1, "width": 52, "type": "database", "label": "Doc", "sublabel": "decisions" },
+    { "id": "domain_design", "lane": "studio", "col": 2, "width": 52, "type": "backend", "label": "Scope", "sublabel": "domains" },
+    { "id": "specialist_review", "lane": "specialists", "col": 3, "type": "security", "label": "Review", "sublabel": "quality + feasibility" },
+    { "id": "finding_decision", "lane": "human", "col": 4, "type": "external", "label": "Decision", "sublabel": "fix, exception, or hold", "tag": "human gate" },
+    { "id": "image_asset_plan", "lane": "assets_renderer", "col": 4, "width": 52, "type": "cloud", "label": "Plan", "sublabel": "prompts" },
+    { "id": "image_asset_review", "lane": "human", "col": 5, "type": "external", "label": "Approve", "sublabel": "images" },
+    { "id": "format_qa_export", "lane": "assets_renderer", "col": 5, "width": 52, "type": "security", "label": "QA", "sublabel": "export" }
+  ],
+  "edges": [
+    { "from": "vision_approval", "to": "canonical_artifact", "role": "main", "variant": "emphasis" },
+    { "from": "canonical_artifact", "to": "domain_design", "role": "main", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "domain_design", "to": "specialist_review", "role": "main" },
+    { "from": "specialist_review", "to": "finding_decision", "role": "main", "variant": "security" },
+    { "from": "finding_decision", "to": "image_asset_plan", "role": "main", "variant": "emphasis" },
+    { "from": "image_asset_plan", "to": "image_asset_review", "role": "main", "variant": "security" },
+    { "from": "image_asset_review", "to": "format_qa_export", "role": "main", "variant": "emphasis" },
+    { "from": "image_asset_review", "to": "resume_context", "label": "blocked", "role": "branch", "variant": "dashed", "route": "straight", "fromSide": "bottom", "toSide": "top" },
+    { "from": "resume_context", "to": "image_asset_review", "label": "resume", "role": "return", "variant": "dashed", "route": "outside-right", "fromSide": "right", "toSide": "right" }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Canonical design record",
+      "items": [
+        "Domain work merges through stable sections and decision records",
+        "Conflicting recommendations remain visible for a human decision",
+        "Missing evidence never becomes an AI approval"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Asset and export boundaries",
+      "items": [
+        "Image plans keep stable asset IDs and prompts before provider work",
+        "Image approval remains a human review step",
+        "Export formats need renderer-specific QA evidence"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Resume contract",
+      "items": [
+        "Keep the canonical path, version, completed sections, and verified assets",
+        "Retain pending, blocked, and unavailable causes",
+        "Resume the blocked image approval with one next-request prompt"
+      ]
+    }
+  ]
+}

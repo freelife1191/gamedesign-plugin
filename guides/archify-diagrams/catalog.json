@@ -1272,15 +1272,32 @@
       "priority": "primary",
       "secondary_reason": null,
       "visual_system": "studio",
-      "composition_rationale": "비전에서 설계·검토·자산·내보내기로 이어지는 주 경로에 사람 승인과 재개를 외곽 분기로 둔다.",
+      "composition_rationale": "비전·전문 finding·이미지 승인은 사람 lane에 두고, Studio의 Canonical Artifact와 자산·형식 QA를 분리해 원문의 승인·근거·재개 책임을 보인다.",
       "shared_process_with": null,
       "shared_process_reason": null,
-      "diagnostics": [],
+      "diagnostics": [
+        {
+          "code": "clean-flow/edge-through-node",
+          "subject": "workflow edges[6] image_asset_review -> format_qa_export",
+          "evidence": "The source-to-target segment [625, 145] -> [625, 290] crosses resume_context with 2px clearance.",
+          "attempted_fix": "Moved the source-backed resume context through two alternate lanes and isolated its routes; both attempts increased the error count from 2 to 4 and then 7.",
+          "round": 3,
+          "remaining_error": "The restored best candidate still sends image_asset_review -> format_qa_export through resume_context."
+        },
+        {
+          "code": "layout/constraint",
+          "subject": "workflow edges[7] image_asset_review -> resume_context",
+          "evidence": "Label blocked rect [603, 125, 44, 14] overlaps image_asset_review rect [579, 93, 92, 52].",
+          "attempted_fix": "Tried a diagnosed lower label and alternate lane placements; the two successive alternatives increased total errors.",
+          "round": 3,
+          "remaining_error": "The restored best candidate retains the blocked label overlap."
+        }
+      ],
       "spec": "guides/archify-diagrams/specs/studio/studio-project-workflow.json",
       "html": "guides/assets/archify/studio/studio-project-workflow.html",
       "receipt": "guides/assets/archify/studio/studio-project-workflow.receipt.json",
-      "delivery_status": "planned",
-      "visual_review": "pending",
+      "delivery_status": "blocked-validation",
+      "visual_review": "not-applicable",
       "reviewer": null
     },
     {
