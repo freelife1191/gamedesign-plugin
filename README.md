@@ -82,7 +82,46 @@ codex plugin list
 
 Marketplace refresh와 설치 패키지 교체는 서로 다른 작업입니다.
 
-Git marketplace의 `codex plugin marketplace upgrade game-design-suite`는 marketplace snapshot을 refresh할 뿐 설치된 플러그인을 교체하지 않습니다. 로컬 checkout을 갱신하고 검증한 뒤 해당 제품을 제거하고 다시 설치하세요.
+#### Codex App
+
+1. 로컬 checkout을 갱신하고 저장소 루트에서 `npm run build`와 `npm run validate`를 실행합니다.
+2. ChatGPT 데스크톱 앱을 다시 시작해 로컬 marketplace를 다시 읽습니다.
+3. **Plugins**의 설치된 Studio 또는 Career 상세 화면에서 **Uninstall plugin**을 선택합니다.
+4. **Plugins Directory**의 `game-design-suite`에서 제거한 제품을 다시 설치합니다.
+5. Plugins 목록에서 설치 확인을 마친 뒤 **새 채팅**을 열고 제품을 선택합니다.
+
+관리자가 제공한 기본 플러그인처럼 제거할 수 없는 항목은 관리자에게 업데이트를 요청하세요.
+
+#### Codex CLI
+
+1. 로컬 checkout을 갱신하고 저장소 루트에서 package를 빌드·검증합니다.
+
+```bash
+npm run build
+npm run validate
+```
+
+2. 설치한 제품만 제거합니다. 둘 다 설치했다면 두 명령을 모두 실행합니다.
+
+```bash
+codex plugin remove game-design-studio@game-design-suite
+codex plugin remove game-design-career@game-design-suite
+```
+
+3. 제거한 제품만 다시 설치합니다.
+
+```bash
+codex plugin add game-design-studio@game-design-suite
+codex plugin add game-design-career@game-design-suite
+```
+
+4. 설치 상태를 확인한 뒤 **새 세션**을 시작합니다.
+
+```bash
+codex plugin list
+```
+
+Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace upgrade game-design-suite`로 설치 가능한 snapshot을 refresh할 수 있습니다. 이 명령은 설치된 플러그인을 교체하지 않으므로 위 제거·재설치 단계를 계속 수행해야 합니다.
 
 ## 5분 안에 첫 결과 만들기
 
@@ -825,7 +864,6 @@ recommendation으로 분리해 studio-to-career-handoff handoff를 작성해.
 
 CLI
 $game-design-studio:review-game-design
-$game-design-studio:review-game-design
 $game-design-career:build-game-design-portfolio [공개 정보]
 studio-to-career-handoff handoff의 fact, inference, recommendation을 작성해.
 ```
@@ -871,7 +909,6 @@ App
 recommendation으로 분리해 career-proof-project-interview handoff를 작성해.
 
 CLI
-$game-design-studio:map-game-design-career
 $game-design-career:map-game-design-career
 $game-design-studio:design-game-systems
 $game-design-career:practice-game-design-interview [공개 정보]
@@ -920,7 +957,6 @@ recommendation으로 분리해 gdd-image-presentation handoff를 작성해.
 
 CLI
 $game-design-studio:orchestrate-game-design-project
-$game-design-studio:orchestrate-game-design-project
 $game-design-studio:plan-image-assets $game-design-studio:review-image-assets
 $game-design-studio:export-game-design-documents [공개 정보]
 gdd-image-presentation handoff의 fact, inference, recommendation을 작성해.
@@ -967,7 +1003,6 @@ App
 recommendation으로 분리해 resume-failed-derivatives handoff를 작성해.
 
 CLI
-$game-design-studio:plan-image-assets
 $game-design-studio:plan-image-assets
 $game-design-studio:generate-image-assets
 $game-design-studio:review-image-assets
@@ -1138,12 +1173,12 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 renderer와 시각적 품질 
 
 | 결과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |
 | --- | --- | --- | --- | --- |
-| `game-design-brief` | 생성 폴더 `game-design/[프로젝트 ID]/game-design-brief/`, 핵심 파일 `content.md` | 비전 도식·concept 이미지 | `content.md` → `evidence.yml` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `system-specification` | 생성 폴더 `game-design/[프로젝트 ID]/system-specification/`, 핵심 파일 `content.md` | 상태 전이 SVG·PNG | `content.md` → `evidence.yml` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `ui-ux-flow-state` | 생성 폴더 `game-design/[프로젝트 ID]/ui-ux-flow-state/`, 핵심 파일 `content.md` | UX flow·화면 이미지 | `content.md` → `evidence.yml` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `reverse-design-document` | 생성 폴더 `game-design-career/[경력 ID]/reverse-design-document/`, 핵심 파일 `content.md` | 관찰 도식·공개 screenshot | `content.md` → `evidence.yml` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `creative-design-portfolio` | 생성 폴더 `game-design-career/[경력 ID]/creative-design-portfolio/`, 핵심 파일 `content.md` | 포트폴리오 도식·발표 자산 | `content.md` → `evidence.yml` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
-| `export-preparation-manifest` | 생성 폴더 `project-artifact/export-preparation-manifest/`, 핵심 파일 `content.md` | PDF·DOCX·PPTX 파생 후보 | `content.md` → `evidence.yml` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| `game-design-brief` | 생성 폴더 `game-design/[프로젝트 ID]/game-design-brief/`, 핵심 파일 `content.md` | 비전 도식·concept 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| `system-specification` | 생성 폴더 `game-design/[프로젝트 ID]/system-specification/`, 핵심 파일 `content.md` | 상태 전이 SVG·PNG | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| `ui-ux-flow-state` | 생성 폴더 `game-design/[프로젝트 ID]/ui-ux-flow-state/`, 핵심 파일 `content.md` | UX flow·화면 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| `reverse-design-document` | 생성 폴더 `game-design-career/[경력 ID]/reverse-design-document/`, 핵심 파일 `content.md` | 관찰 도식·공개 screenshot | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| `creative-design-portfolio` | 생성 폴더 `game-design-career/[경력 ID]/creative-design-portfolio/`, 핵심 파일 `content.md` | 포트폴리오 도식·발표 자산 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| `export-preparation-manifest` | 생성 폴더 `project-artifact/export-preparation-manifest/`, 핵심 파일 `content.md` | PDF·DOCX·PPTX 파생 후보 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
 
 ## 플러그인 구조와 전체 시스템 아키텍처
 

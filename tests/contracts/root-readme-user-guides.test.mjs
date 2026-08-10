@@ -176,6 +176,36 @@ function assertExactOrderedValues(value, expected, label) {
   assert.deepEqual(actual, expected, label);
 }
 
+function normalizePromptWhitespace(value) {
+  return value.trim().replace(/\s+/gu, " ");
+}
+
+function promptSurfaceBody(promptBlock, label, nextLabel) {
+  const marker = `${label}\n`;
+  const start = promptBlock.indexOf(marker);
+  assert.notEqual(start, -1, `copyable prompt includes ${label} surface`);
+  assert.equal(promptBlock.indexOf(marker, start + marker.length), -1, `copyable prompt includes one ${label} surface`);
+  const bodyStart = start + marker.length;
+  const end = nextLabel ? promptBlock.indexOf(`\n${nextLabel}\n`, bodyStart) : promptBlock.length;
+  assert.ok(end >= bodyStart, `copyable prompt keeps ${label} before ${nextLabel}`);
+  return promptBlock.slice(bodyStart, end).trim();
+}
+
+function wrapPromptTemplate(value, width = 80) {
+  const output = [];
+  let line = "";
+  for (const word of value.split(/\s+/u)) {
+    if (!line) line = word;
+    else if (Array.from(`${line} ${word}`).length <= width) line += ` ${word}`;
+    else {
+      output.push(line);
+      line = word;
+    }
+  }
+  if (line) output.push(line);
+  return output;
+}
+
 function assertPromptCard(card, entry) {
   for (const label of requiredCardLabels) cardLabelBody(card, label);
   const flow = cardLabelBody(card, "실행 흐름");
@@ -188,8 +218,10 @@ function assertPromptCard(card, entry) {
   const copyPrompt = cardLabelBody(card, "복사할 요청문");
   const promptBlocks = textBlocks(copyPrompt);
   assert.equal(promptBlocks.length, 1, `${entry.id}: copyable prompt has one text fence`);
-  const namespace = `$game-design-${entry.product === "career" ? "career" : "studio"}:`;
-  assert.match(promptBlocks[0], new RegExp(`${escapeRegExp(namespace + entry.skill)}(?:\\s|$)`, "u"), `${entry.id}: fenced prompt invokes the source-bound skill command`);
+  const appPrompt = promptSurfaceBody(promptBlocks[0], "App", "CLI");
+  const cliPrompt = promptSurfaceBody(promptBlocks[0], "CLI");
+  assert.equal(normalizePromptWhitespace(appPrompt), normalizePromptWhitespace(entry.app_prompt.template), `${entry.id}: App prompt template is source-bound`);
+  assert.equal(normalizePromptWhitespace(cliPrompt), normalizePromptWhitespace(entry.cli_prompt.template), `${entry.id}: CLI prompt template, order, and namespaces are source-bound`);
   for (const line of textBlocks(card.body)) {
     for (const sourceLine of line.split("\n")) {
       if (!sourceLine.trim()) continue;
@@ -372,7 +404,11 @@ async function assertResultExamples(markdown) {
     actual.push(id);
     assert.match(coreFile, /content\.md/u, `${id}: core file is explicit`);
     assert.ok(optionalAsset.length > 0, `${id}: optional asset is explicit`);
-    assert.match(readOrder, /content\.md[\s\S]*evidence\.yml[\s\S]*export-manifest\.yml/u, `${id}: reading order is explicit`);
+    assertExactOrderedValues(
+      readOrder,
+      ["content.md", "evidence.yml", "decisions/", "assets/", "export-manifest.yml"],
+      `${id}: reading order is complete and exact`,
+    );
     assert.match(holdBoundary, /승인|보류|hold/iu, `${id}: pre-approval hold boundary is explicit`);
     assert.match(holdBoundary, /자동 승인되지 않/iu, `${id}: images, derivatives, and review findings are not auto-approved before human approval`);
     if (id === "export-preparation-manifest") {
@@ -388,6 +424,20 @@ function assertSafetyBoundary(markdown) {
   const safety = exactSection(markdown, "안전·권리·사람 승인 경계");
   assert.match(safety, /이미지·파생 문서·검토 결과는 자동 승인되지 않습니다\./u, "safety-boundary: images, derived documents, and review findings require human approval");
   assert.doesNotMatch(safety, /(?:이미지|파생 문서|검토 결과)[^.\n]{0,100}자동 승인(?:됩니다|한다)/u, "safety-boundary: README must reject automatic approval claims");
+}
+
+function assertUpdateAndReinstallInstructions(markdown) {
+  const instructions = exactSection(markdown, "업데이트·재설치하기", 3);
+  for (const phrase of ["Codex App", "Plugins", "Uninstall plugin", "다시 시작", "다시 설치", "설치 확인", "새 채팅"]) {
+    assert.ok(instructions.includes(phrase), `App update instructions include ${phrase}`);
+  }
+  for (const phrase of ["Codex CLI", "npm run build", "npm run validate", "codex plugin list", "새 세션"]) {
+    assert.ok(instructions.includes(phrase), `CLI update instructions include ${phrase}`);
+  }
+  for (const product of products) {
+    assert.ok(instructions.includes(`codex plugin remove ${product}@game-design-suite`), `${product}: CLI removal command`);
+    assert.ok(instructions.includes(`codex plugin add ${product}@game-design-suite`), `${product}: CLI reinstall command`);
+  }
 }
 
 async function assertStructuredRootReadme(markdown, { validateLinks = true } = {}) {
@@ -408,6 +458,7 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
   }
   await assertResultExamples(markdown);
   assertSafetyBoundary(markdown);
+  assertUpdateAndReinstallInstructions(markdown);
   if (validateLinks) await assertRootLinks(markdown);
 }
 
@@ -416,7 +467,6 @@ async function buildValidStructuredReadmeFixture() {
   const cards = Object.values(representativeCards).flat().map((id) => {
     const entry = catalog.byId.get(id);
     assert.ok(entry, `${id}: fixture requires production catalog entry`);
-    const namespace = entry.product === "career" ? "career" : "studio";
     return [
       `<details data-prompt-id="${id}">`,
       `<summary>${id}</summary>`,
@@ -426,7 +476,11 @@ async function buildValidStructuredReadmeFixture() {
       entry.required_inputs.join(", "),
       "#### 복사할 요청문",
       "```text",
-      `$game-design-${namespace}:${entry.skill} fixture-request`,
+      "App",
+      ...wrapPromptTemplate(entry.app_prompt.template),
+      "",
+      "CLI",
+      ...wrapPromptTemplate(entry.cli_prompt.template),
       "```",
       "#### 실행 흐름",
       entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "),
@@ -491,6 +545,15 @@ async function buildValidStructuredReadmeFixture() {
     "## 설치하기",
     "설치 안내",
     "",
+    "### 업데이트·재설치하기",
+    "Codex App Plugins에서 Uninstall plugin을 선택하고 앱을 다시 시작한 뒤 다시 설치합니다. 설치 확인 후 새 채팅을 엽니다.",
+    "Codex CLI에서 npm run build와 npm run validate를 실행합니다.",
+    "codex plugin remove game-design-studio@game-design-suite",
+    "codex plugin add game-design-studio@game-design-suite",
+    "codex plugin remove game-design-career@game-design-suite",
+    "codex plugin add game-design-career@game-design-suite",
+    "codex plugin list로 확인하고 새 세션을 엽니다.",
+    "",
     "## 5분 안에 첫 결과 만들기",
     "첫 결과 안내",
     "",
@@ -512,7 +575,7 @@ async function buildValidStructuredReadmeFixture() {
     "### 결과 예시 6종",
     "| 결과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |",
     "| --- | --- | --- | --- | --- |",
-    ...resultExampleIds.map((id) => `| \`${id}\` | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`export-manifest.yml\` | 사람 승인 전 보류하며 자동 승인되지 않습니다. |`),
+    ...resultExampleIds.map((id) => `| \`${id}\` | \`content.md\` | 선택 자산 | \`content.md\` → \`evidence.yml\` → \`decisions/\` → \`assets/\` → \`export-manifest.yml\` | 사람 승인 전 보류하며 자동 승인되지 않습니다. |`),
     "",
     "## 플러그인 구조와 전체 시스템 아키텍처",
     ...trees,
@@ -933,6 +996,40 @@ test("structured README contracts reject card, inventory, and generated-tree mut
     ["invented prompt card", inventedCard, "studio:case:INVENTED"],
   ]) await assertRejectedForId(() => assertRepresentativePromptCards(mutated), id, label);
 
+  const suiteId = "suite:studio-to-career-handoff:case";
+  const suiteCard = renderedPromptCards(readme).find((candidate) => candidate.id === suiteId);
+  assert.ok(suiteCard, `${suiteId}: baseline suite card exists before prompt mutation checks`);
+  const duplicateSuiteCommand = readme.replace(
+    suiteCard.raw,
+    suiteCard.raw.replace(
+      "CLI\n$game-design-studio:review-game-design",
+      "CLI\n$game-design-studio:review-game-design\n$game-design-studio:review-game-design",
+    ),
+  );
+  assert.notEqual(duplicateSuiteCommand, readme, "duplicate suite CLI command mutation changes the fixture");
+  await assertRejectedForId(
+    () => assertRepresentativePromptCards(duplicateSuiteCommand),
+    suiteId,
+    "duplicate suite CLI command",
+  );
+
+  const careerSuiteId = "suite:career-proof-project-interview:case";
+  const careerSuiteCard = renderedPromptCards(readme).find((candidate) => candidate.id === careerSuiteId);
+  assert.ok(careerSuiteCard, `${careerSuiteId}: baseline suite card exists before namespace mutation check`);
+  const wrongSuiteNamespace = readme.replace(
+    careerSuiteCard.raw,
+    careerSuiteCard.raw.replace(
+      "$game-design-career:map-game-design-career",
+      "$game-design-studio:map-game-design-career",
+    ),
+  );
+  assert.notEqual(wrongSuiteNamespace, readme, "wrong suite namespace mutation changes the fixture");
+  await assertRejectedForId(
+    () => assertRepresentativePromptCards(wrongSuiteNamespace),
+    careerSuiteId,
+    "wrong suite CLI namespace",
+  );
+
   const product = "game-design-studio";
   const removedSkill = readme.replace("| `define-game-vision`", "| `missing-skill`");
   const duplicateSkill = readme.replace("| `define-game-vision`", "| `apply-document-quality-profile`");
@@ -950,8 +1047,17 @@ test("structured README contracts reject card, inventory, and generated-tree mut
 
   const autoApprovedResult = readme.replace("사람 승인 전 보류하며 자동 승인되지 않습니다.", "이미지와 파생 문서, 검토 결과는 자동 승인됩니다.");
   await assertRejectedForId(() => assertResultExamples(autoApprovedResult), "game-design-brief", "automatic approval in result example");
+  const incompleteResultReadOrder = readme.replace(
+    "`content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml`",
+    "`content.md` → `evidence.yml` → `export-manifest.yml`",
+  );
+  assert.notEqual(incompleteResultReadOrder, readme, "incomplete result read-order mutation changes the fixture");
+  await assertRejectedForId(() => assertResultExamples(incompleteResultReadOrder), "game-design-brief", "incomplete result read order");
   const autoApprovedSafety = readme.replace("이미지·파생 문서·검토 결과는 자동 승인되지 않습니다.", "이미지·파생 문서·검토 결과는 자동 승인됩니다.");
   await assertRejectedForId(() => Promise.resolve(assertSafetyBoundary(autoApprovedSafety)), "safety-boundary", "automatic approval in safety boundary");
+  const incompleteUpdate = readme.replace("Uninstall plugin", "Remove later");
+  assert.notEqual(incompleteUpdate, readme, "incomplete App update mutation changes the fixture");
+  assert.throws(() => assertUpdateAndReinstallInstructions(incompleteUpdate), /Uninstall plugin/u, "incomplete App update instructions are rejected");
 });
 
 test("global and product indexes reach 30 skills, 30 templates, and 12 recipes", async () => {
