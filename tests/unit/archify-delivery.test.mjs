@@ -279,6 +279,19 @@ test("publication rejects a passed record whose visual-QA digests do not bind th
   await assert.rejects(access(path.join(f.root, "guides/assets/archify")), { code: "ENOENT" });
 });
 
+test("publication rejects visual QA manifest or render replacement after their snapshots are pinned", async (t) => {
+  for (const mutate of [
+    async (f) => writeFile(path.join(f.root, "guides/archify-diagrams/visual-qa/manifest.json"), "{\"schema_version\":1,\"entries\":[]}\n"),
+    async (f) => writeFile(path.join(f.root, "guides/archify-diagrams/visual-qa/renders/studio/stable-id/read.png"), Buffer.from("replaced\n")),
+  ]) {
+    const f = await fixture(t, { status: "passed", visual: "passed" });
+    await assert.rejects(() => publishCuratedArchify({
+      repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+      __testHooks: { "before-qa-render-snapshot": async () => mutate(f) },
+    }), /pinned input changed|PNG validation|visual QA/u);
+  }
+});
+
 test("thin CLI accepts only an explicit delivery mode, repeated ids, and one product", () => {
   assert.deepEqual(parseCuratedArchifyArguments(["--stage", "--id", "one", "--id", "two", "--product", "studio"]), {
     mode: "stage", ids: ["one", "two"], product: "studio",

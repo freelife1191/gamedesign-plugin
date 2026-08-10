@@ -97,7 +97,7 @@ function validateDefects(entry, label, views) {
   if (entry.verdict === "failed" && !entry.defects.some((defect) => ["unresolved", "blocked"].includes(defect.correction_outcome))) throw new Error(`${label}.failed verdict requires an unresolved or blocked defect`);
 }
 
-async function validateRender(root, render, label, usedPaths, { guided = false } = {}) {
+async function validateRender(root, render, label, usedPaths, { guided = false, renderSnapshots } = {}) {
   assertExactKeys(render, guided ? GUIDED_RENDER_KEYS : RENDER_KEYS, label);
   if (guided && (!/^view-[a-z0-9][a-z0-9-]*$/u.test(render.id))) throw new Error(`${label}.id must be a view-* identifier`);
   if (!Number.isInteger(render.width) || !Number.isInteger(render.height) || render.width < 1 || render.height < 1) {
@@ -108,36 +108,39 @@ async function validateRender(root, render, label, usedPaths, { guided = false }
   if (!normalized.startsWith("renders/") || !normalized.endsWith(".png")) throw new Error(`${label}.path must be a renders/*.png path`);
   if (usedPaths.has(normalized)) throw new Error(`duplicate render path: ${normalized}`);
   usedPaths.add(normalized);
-  const { filename } = await regularContained(root, `${QA_ROOT}/${normalized}`, label);
-  const bytes = await readFile(filename);
+  const bytes = renderSnapshots?.get(normalized) ?? await (async () => {
+    const { filename } = await regularContained(root, `${QA_ROOT}/${normalized}`, label);
+    return readFile(filename);
+  })();
+  if (!Buffer.isBuffer(bytes)) throw new Error(`missing pinned ${label}: ${normalized}`);
   const inspection = inspectCompletePng(bytes);
   if (!inspection.ok) throw new Error(`${label} PNG validation failed: ${inspection.errors.join("; ")}`);
   if (inspection.width !== render.width || inspection.height !== render.height) throw new Error(`${label} dimensions do not match PNG`);
   if (sha256(bytes) !== render.sha256) throw new Error(`${label} render digest does not match bytes`);
 }
 
-async function validateRenders(root, entry, label, usedPaths) {
+async function validateRenders(root, entry, label, usedPaths, renderSnapshots) {
   for (const view of ["read", "light", "dark"]) {
     if (!Object.hasOwn(entry.renders, view)) throw new Error(`${label} is missing ${view} render`);
   }
   if (!Object.hasOwn(entry.renders, "guided_views")) throw new Error(`${label} is missing guided view render`);
   assertExactKeys(entry.renders, REQUIRED_RENDER_KEYS, `${label}.renders`);
   for (const view of ["read", "light", "dark"]) {
-    await validateRender(root, entry.renders[view], `${label}.${view}`, usedPaths);
+    await validateRender(root, entry.renders[view], `${label}.${view}`, usedPaths, { renderSnapshots });
   }
   if (!Array.isArray(entry.renders.guided_views) || entry.renders.guided_views.length === 0) {
     throw new Error(`${label} is missing guided view render`);
   }
   const views = new Set(["read", "light", "dark"]);
   for (const [index, render] of entry.renders.guided_views.entries()) {
-    await validateRender(root, render, `${label}.guided_views[${index}]`, usedPaths, { guided: true });
+    await validateRender(root, render, `${label}.guided_views[${index}]`, usedPaths, { guided: true, renderSnapshots });
     if (views.has(render.id)) throw new Error(`${label} has duplicate guided view id: ${render.id}`);
     views.add(render.id);
   }
   return views;
 }
 
-async function validateEntry(root, entry, catalogEntry, index, usedPaths) {
+async function validateEntry(root, entry, catalogEntry, index, usedPaths, renderSnapshots) {
   const label = `visual QA entry[${index}]`;
   assertExactKeys(entry, ENTRY_KEYS, label);
   if (!nonempty(entry.id) || entry.id !== catalogEntry.id) throw new Error(`${label}.id must bind a catalog entry`);
@@ -161,17 +164,32 @@ async function validateEntry(root, entry, catalogEntry, index, usedPaths) {
   if (sha256(await readFile(spec.filename)) !== entry.specification_sha256) throw new Error(`${label} specification digest does not match bytes`);
   if (sha256(await readFile(artifact.filename)) !== entry.artifact_sha256) throw new Error(`${label} artifact digest does not match bytes`);
   validateChecks(entry, label);
-  const views = await validateRenders(root, entry, label, usedPaths);
+  const views = await validateRenders(root, entry, label, usedPaths, renderSnapshots);
   validateDefects(entry, label, views);
 }
 
-export async function loadArchifyVisualQa({ repoRoot, manifestPath } = {}) {
+export function collectArchifyVisualQaRenderPaths(manifest) {
+  if (!isObject(manifest) || !Array.isArray(manifest.entries)) throw new Error("visual QA manifest entries must be an array");
+  const paths = new Set();
+  for (const entry of manifest.entries) {
+    if (!isObject(entry) || !isObject(entry.renders)) continue;
+    for (const render of [entry.renders.read, entry.renders.light, entry.renders.dark, ...(Array.isArray(entry.renders.guided_views) ? entry.renders.guided_views : [])]) {
+      if (!isObject(render) || typeof render.path !== "string") continue;
+      paths.add(normalizeRelativePath(render.path, "visual QA render path"));
+    }
+  }
+  return [...paths].sort(comparePaths);
+}
+
+export async function loadArchifyVisualQa({ repoRoot, manifestPath, catalog: suppliedCatalog, manifestBytes, renderSnapshots } = {}) {
   if (!nonempty(repoRoot)) throw new Error("repoRoot must be a non-empty path");
-  const catalog = await loadArchifyCatalog({ repoRoot });
+  const catalog = suppliedCatalog ?? await loadArchifyCatalog({ repoRoot });
   const relative = manifestPath ?? MANIFEST_PATH;
-  const manifest = await regularContained(repoRoot, relative, "visual QA manifest");
   let qa;
-  try { qa = JSON.parse(await readFile(manifest.filename, "utf8")); } catch (error) { throw new Error(`invalid visual QA manifest JSON: ${error.message}`); }
+  try {
+    const bytes = manifestBytes ?? await readFile((await regularContained(repoRoot, relative, "visual QA manifest")).filename, "utf8");
+    qa = JSON.parse(Buffer.isBuffer(bytes) ? bytes.toString("utf8") : bytes);
+  } catch (error) { throw new Error(`invalid visual QA manifest JSON: ${error.message}`); }
   assertExactKeys(qa, ["schema_version", "entries"], "visual QA manifest");
   if (qa.schema_version !== 1) throw new Error("visual QA manifest schema_version must be 1");
   if (!Array.isArray(qa.entries)) throw new Error("visual QA manifest entries must be an array");
@@ -189,7 +207,7 @@ export async function loadArchifyVisualQa({ repoRoot, manifestPath } = {}) {
     seen.add(entry.id);
     const catalogEntry = catalogById.get(entry.id);
     if (!catalogEntry) throw new Error(`visual QA entry does not exist in selected catalog: ${entry.id}`);
-    await validateEntry(repoRoot, entry, catalogEntry, index, usedPaths);
+    await validateEntry(repoRoot, entry, catalogEntry, index, usedPaths, renderSnapshots);
   }
   for (const entry of required) if (!seen.has(entry.id)) throw new Error(`missing visual QA passed record: ${entry.id}`);
   return { catalog, qa };

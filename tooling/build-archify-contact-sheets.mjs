@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { randomUUID } from "node:crypto";
 import { lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -62,7 +63,7 @@ export async function buildArchifyContactSheets({ repoRoot, check = false, __tes
   const parent = await assertDirectoryPath(repoRoot, path.posix.dirname(OUTPUT_ROOT), { create: true });
   const temporary = await createGuardedTempRoot({ parent, prefix: "contact-sheet-" });
   const candidate = path.join(temporary.root, "contact-sheets");
-  const backup = path.join(parent, ".contact-sheets-backup");
+  const backup = path.join(parent, `.contact-sheets-backup-${randomUUID()}`);
   let movedOld = false;
   let movedNew = false;
   try {
@@ -70,7 +71,6 @@ export async function buildArchifyContactSheets({ repoRoot, check = false, __tes
     const existing = await lstat(directory).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
     if (existing) {
       if (!existing.isDirectory() || existing.isSymbolicLink()) throw new Error("contact sheet output directory is unsafe");
-      await rm(backup, { recursive: true, force: true });
       await rename(directory, backup); movedOld = true;
     }
     await __testHooks.beforePublish?.({ candidate, directory, backup });
@@ -78,11 +78,17 @@ export async function buildArchifyContactSheets({ repoRoot, check = false, __tes
     await assertExactOutput(directory, sheets);
     await __testHooks.afterPublish?.({ directory, backup });
     await assertExactOutput(directory, sheets);
-    if (movedOld) await rm(backup, { recursive: true, force: true });
+    if (movedOld) {
+      try { await __testHooks.beforeBackupCleanup?.({ directory, backup }); await rm(backup, { recursive: true }); }
+      catch (cleanup) { throw new AggregateError([cleanup], `contact sheet committed but backup cleanup failed: ${cleanup.message}`); }
+    }
     return { built: true, outputs: [...sheets.keys()].sort(comparePaths) };
   } catch (error) {
-    if (movedNew) await rename(directory, candidate).catch(() => undefined);
-    if (movedOld) await rename(backup, directory).catch(() => undefined);
+    if (error instanceof AggregateError && String(error.message).includes("backup cleanup failed")) throw error;
+    const rollback = [];
+    if (movedNew) try { await rename(directory, candidate); } catch (rollbackError) { rollback.push(rollbackError); }
+    if (movedOld) try { await rename(backup, directory); } catch (rollbackError) { rollback.push(rollbackError); }
+    if (rollback.length > 0) throw new AggregateError([error, ...rollback], `contact sheet publish and rollback failed; forensic paths: ${directory}, ${backup}`);
     throw error;
   } finally {
     await cleanupGuardedTempRoot(temporary);

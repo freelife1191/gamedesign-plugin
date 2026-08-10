@@ -252,6 +252,25 @@ test("contact sheet builder removes stale groups atomically and restores the pri
   const before = await readFile(path.join(directory, "all.html"), "utf8");
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforePublish: async () => { throw new Error("stop"); } } }), /stop/u);
   assert.equal(await readFile(path.join(directory, "all.html"), "utf8"), before);
+  await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforeBackupCleanup: async () => { throw new Error("cleanup stop"); } } }), /backup cleanup failed/u);
+  await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }));
+});
+
+test("contact sheet build collision preserves the original backup for forensics", async (t) => {
+  const fixture = await visualQaFixture(t);
+  await buildArchifyContactSheets({ repoRoot: fixture.root });
+  const directory = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets");
+  let backup;
+  let failure;
+  try {
+    await buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforePublish: async ({ backup: value }) => {
+      backup = value; await mkdir(directory); await writeFile(path.join(directory, "concurrent.html"), "collision\n");
+    } } });
+  } catch (error) { failure = error; }
+  assert.ok(failure instanceof AggregateError);
+  assert.match(failure.message, /forensic paths/u);
+  assert.ok((await lstat(backup)).isDirectory());
+  assert.equal(await readFile(path.join(directory, "concurrent.html"), "utf8"), "collision\n");
 });
 
 test("blocked visual entries require a failed verdict and a complete defect record", async (t) => {

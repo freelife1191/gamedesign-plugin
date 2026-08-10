@@ -6,7 +6,7 @@ import path from "node:path";
 
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
 import { loadArchifyCatalog, publishableArchifyEntries } from "./archify-catalog.mjs";
-import { loadArchifyVisualQa } from "./archify-visual-qa.mjs";
+import { collectArchifyVisualQaRenderPaths, loadArchifyVisualQa } from "./archify-visual-qa.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
 import { toPersistedArchifyReceipt, validateArchifyDeliverReceipt, validateArchifyValidateReceipt } from "./archify-receipt.mjs";
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./guarded-temp.mjs";
@@ -591,16 +591,14 @@ async function loadPublishedRecords(root, entries) {
   return records;
 }
 
-async function qaBindings(root, records) {
+async function qaBindings(root, records, catalog, hooks = {}) {
   if (!records.length) return;
-  const loaded = await loadArchifyVisualQa({ repoRoot: root });
   const manifest = await snapshotRegular(joinWithin(root, QA_MANIFEST, "visual QA manifest"), "visual QA manifest");
-  const renders = [];
-  for (const entry of loaded.qa.entries) {
-    for (const render of [entry.renders.read, entry.renders.light, entry.renders.dark, ...entry.renders.guided_views]) {
-      renders.push(await snapshotRegular(joinWithin(root, `guides/archify-diagrams/visual-qa/${render.path}`, "visual QA render"), "visual QA render"));
-    }
-  }
+  let raw; try { raw = JSON.parse(manifest.bytes.toString("utf8")); } catch { throw new Error("visual QA manifest is invalid JSON"); }
+  await invoke(hooks, "before-qa-render-snapshot", { manifest });
+  const renders = await Promise.all(collectArchifyVisualQaRenderPaths(raw).map((relative) => snapshotRegular(joinWithin(root, `guides/archify-diagrams/visual-qa/${relative}`, "visual QA render"), "visual QA render")));
+  const renderSnapshots = new Map(renders.map((snapshot) => [path.relative(path.join(root, "guides", "archify-diagrams", "visual-qa"), snapshot.path).split(path.sep).join("/"), snapshot.bytes]));
+  const loaded = await loadArchifyVisualQa({ repoRoot: root, catalog, manifestBytes: manifest.bytes, renderSnapshots });
   for (const record of records) {
     const entry = loaded.qa.entries.find((candidate) => candidate.id === record.entry.id);
     if (!entry || entry.reviewer !== record.entry.reviewer || entry.specification_sha256 !== record.spec.sha256 || entry.artifact_sha256 !== record.artifact.sha256) throw new Error(`visual QA binding does not match: ${record.entry.id}`);
@@ -724,7 +722,7 @@ export async function checkCuratedArchify({ repoRoot, ids = [], product = null, 
     const allPublished = publishableArchifyEntries(prepared.catalog);
     await assertExactManagedTree(path.join(prepared.root.path, "guides", "assets", "archify"), allPublished);
     const publishedRecords = await loadPublishedRecords(prepared.root.path, allPublished);
-    await qaBindings(prepared.root.path, publishedRecords);
+    await qaBindings(prepared.root.path, publishedRecords, prepared.catalog, __testHooks);
     result = { checked: true, entries: prepared.entries.map((entry) => entry.id) };
   } catch (error) { primary = error; }
   if (!prepared) throw primary;
@@ -737,7 +735,7 @@ export async function publishCuratedArchify({ repoRoot, ids = [], product = null
     prepared = await prepare({ repoRoot, ids, product, env, archifyOptions, hooks: __testHooks, publishable: true });
     const allPassed = publishableArchifyEntries(prepared.catalog);
     if (prepared.entries.length !== allPassed.length) throw new Error("publish must include the complete passed Archify set");
-    const qaSnapshot = await qaBindings(prepared.root.path, prepared.records);
+    const qaSnapshot = await qaBindings(prepared.root.path, prepared.records, prepared.catalog, __testHooks);
     await publishCommit({ ...prepared, qaSnapshot, hooks: __testHooks });
     result = { published: true, entries: prepared.entries.map((entry) => entry.id) };
   } catch (error) { primary = error; }
