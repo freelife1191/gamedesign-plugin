@@ -143,6 +143,62 @@ test("Markdown helpers expose only visible links and headings", () => {
   assert.deepEqual([...collectHeadingAnchors(markdown)], ["첫-요청"]);
 });
 
+test("Markdown helpers track rendered HTML ancestry across lines for links", () => {
+  const markdown = [
+    '<div><a href="nested.html">nested</a></div>',
+    "",
+    '<a',
+    '  HREF="quoted.html">quoted</a>',
+    '<A',
+    '  href=unquoted.html>unquoted</A>',
+    '<span hidden>',
+    '[hidden-markdown](hidden-markdown.html)',
+    '<a href="hidden-anchor.html">hidden anchor</a>',
+    '</span>',
+    '[visible-after-hidden](visible-after-hidden.html)',
+    '<template>',
+    '<a href="template.html">template</a>',
+    '</template>',
+    '<section inert>',
+    '[inert-markdown](inert-markdown.html)',
+    '</section>',
+    '<span aria-hidden="true">',
+    '[aria-hidden-markdown](aria-hidden-markdown.html)',
+    '</span>',
+    '<script>',
+    '<a href="script.html">script</a>',
+    '</script>',
+    '<a href="entity&#46;html#part">entity</a>',
+    '<a href="  whitespace.html?view=1#part  ">whitespace</a>',
+    '`<a href="code.html">code</a>`',
+    '<!-- <a href="comment.html">comment</a> -->',
+  ].join("\n");
+
+  assert.deepEqual(extractMarkdownLinks(markdown).map(({ target }) => target), [
+    "nested.html",
+    "quoted.html",
+    "unquoted.html",
+    "visible-after-hidden.html",
+    "entity.html#part",
+    "whitespace.html?view=1#part",
+  ]);
+  assert.deepEqual(
+    extractMarkdownLinks("<script>\n[hidden](hidden-after-unclosed-script.html)").map(({ target }) => target),
+    [],
+    "an unclosed dangerous HTML element must fail closed through end of document",
+  );
+  assert.deepEqual(
+    extractMarkdownLinks("<script\n[ordinary](ordinary-after-malformed-tag.html)").map(({ target }) => target),
+    ["ordinary-after-malformed-tag.html"],
+    "a malformed non-tag must not hide ordinary Markdown",
+  );
+  assert.deepEqual(
+    extractMarkdownLinks('<a href="javascript:alert(1)">script</a> <a href="data:text/plain,test">data</a>').map(({ target }) => target),
+    ["javascript:alert(1)", "data:text/plain,test"],
+    "non-local URI schemes remain URI targets for callers to reject rather than relative paths",
+  );
+});
+
 test("Markdown helpers preserve token precedence, balanced destinations, and rendered labels", () => {
   const markdown = [
     "`<!--` [visible](visible.md#visible)",

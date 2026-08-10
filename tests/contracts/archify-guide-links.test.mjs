@@ -194,6 +194,9 @@ test("root README rejects rendered reference, raw-anchor, receipt, and fragment/
     ["raw anchor", '<a href="guides/assets/archify/studio/studio-project-workflow.html">blocked</a>'],
     ["receipt", '[receipt](guides/assets/archify/studio/studio-project-workflow.receipt.json)'],
     ["legacy", '[legacy](guides/assets/archify/studio/flow.html)'],
+    ["nested raw anchor", '<div><a href="guides/assets/archify/studio/studio-project-workflow.html">blocked</a></div>'],
+    ["multiline quoted raw anchor", '<a\nHREF="guides/assets/archify/studio/studio-project-workflow.html">blocked</a>'],
+    ["multiline unquoted raw anchor", '<a\nhref=guides/assets/archify/studio/studio-project-workflow.html>blocked</a>'],
   ]) {
     assert.throws(() => assertExactProductionLinks([{ filename: "README.md", markdown }], expected), /published-and-passed|legacy flow/u, label);
   }
@@ -206,6 +209,13 @@ test("root README rejects rendered reference, raw-anchor, receipt, and fragment/
     () => assertExactProductionLinks([{ filename: "README.md", markdown: '[query](guides/assets/archify/studio/published.html?view=1)' }], ["guides/assets/archify/studio/published.html"]),
     /published-and-passed/u,
     "queries on production output are rejected instead of normalizing to the published path",
+  );
+  assert.doesNotThrow(
+    () => assertExactProductionLinks([{
+      filename: "README.md",
+      markdown: '<span hidden>\n[blocked](guides/assets/archify/studio/studio-project-workflow.html)\n</span>',
+    }], expected),
+    "a multiline hidden container must not make its Markdown link visible",
   );
 });
 
