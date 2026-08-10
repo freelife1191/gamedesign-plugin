@@ -233,6 +233,24 @@ test("closure localisation replaces complete viewer tokens without corrupting or
   assert.equal(document.nodes[8]["aria-label"], "AUTOMATION");
 });
 
+test("closure localisation translates full CSS badge content without mutating ordinary compounds", async (t) => {
+  const f = await fixture(t);
+  let localized;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async ({ closure }) => { localized = await readFile(path.join(closure, "assets/template.html"), "utf8"); } },
+  });
+  const localizer = localized.match(/<script data-archify-ko-localizer>([\s\S]+)<\/script>/u)?.[1];
+  const cssBadges = 'content: "BLUEPRINT / REV 01"; content: "EDITORIAL / FIELD NOTE"; content: "ARCHIFY / PLATE 04"; content: "SIGNAL FLOW";';
+  const ordinaryLabels = ["EDITORIALISM", "ARCHIFYING", "BLUEPRINTED", "SIGNAL FLOWER", "AUTOMATION"];
+  const document = localizerDocument([{ value: cssBadges }, ...ordinaryLabels.map((value) => ({ value }))]);
+  class MutationObserver { constructor() {} observe() {} }
+  new Function("document", "MutationObserver", localizer)(document, MutationObserver);
+
+  assert.equal(document.nodes[0].nodeValue, 'content: "설계도 / 개정 01"; content: "편집형 / 현장 기록"; content: "아키파이 / 도판 04"; content: "신호 흐름";');
+  assert.deepEqual(document.nodes.slice(1).map((node) => node.nodeValue), ordinaryLabels);
+});
+
 function fakeCli() {
   return `#!/usr/bin/env node
 import { createHash } from "node:crypto";
