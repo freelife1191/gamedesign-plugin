@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { access, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, mkdtemp, readFile, readdir, rename, rmdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -101,7 +101,12 @@ test("catalog wording changes never create or rewrite a spec", async (t) => {
 
 test("stage creates only an exact staged managed set and check rejects stale extras", async (t) => {
   const f = await fixture(t);
-  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  let closureCopies = 0;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async () => { closureCopies += 1; } },
+  });
+  assert.equal(closureCopies, 1);
   const current = path.join(f.root, ".tmp/curated-archify/current");
   assert.deepEqual((await readFile(path.join(current, "studio/stable-id.html"))).toString(), "<!doctype html><title>verified</title>\n");
   await writeFile(path.join(current, "extra.html"), "stale\n");
@@ -110,7 +115,12 @@ test("stage creates only an exact staged managed set and check rejects stale ext
 
 test("check rejects a stale production managed tree even when no entry is publishable", async (t) => {
   const f = await fixture(t);
-  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  let closureCopies = 0;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async () => { closureCopies += 1; } },
+  });
+  assert.equal(closureCopies, 1);
   await write(f.root, "guides/assets/archify/stale.html", "untrusted\n");
   await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /exact set|stale/i);
 });
@@ -135,7 +145,12 @@ test("a scoped check still verifies every published receipt and artifact binding
   const qa = JSON.parse(await readFile(qaPath, "utf8"));
   qa.entries.push({ id: second.id, reviewer: "reviewer", specification_sha256: DIGEST(secondSpec), artifact_sha256: DIGEST(Buffer.from("<!doctype html><title>verified</title>\n")) });
   await writeFile(qaPath, `${JSON.stringify(qa)}\n`);
-  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  let sharedClosureCopies = 0;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async () => { sharedClosureCopies += 1; } },
+  });
+  assert.equal(sharedClosureCopies, 1);
   await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
   await stageCuratedArchify({ repoRoot: f.root, ids: [f.selected.id], env: f.env, archifyOptions: f.archifyOptions });
   await writeFile(path.join(f.root, second.html), "corrupted\n");
@@ -155,6 +170,33 @@ test("delivery runs a repo-private CLI copy when the source CLI is replaced afte
     __testHooks: { "after-validate": async () => rename(`${f.cli}.replacement`, f.cli) },
   });
   assert.equal(await readFile(sentinel, "utf8"), "sentinel-before\n");
+});
+
+test("closure snapshot rejects a nested source directory swap-and-restore", async (t) => {
+  const f = await fixture(t);
+  await assert.rejects(() => stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async ({ sourceRoot }) => {
+      const nested = path.join(sourceRoot, "renderers/shared"); const parked = `${nested}.parked`;
+      await rename(nested, parked); await mkdir(nested); await rmdir(nested); await rename(parked, nested);
+    } },
+  }), /identity|child set/u);
+});
+
+test("closure spawn rejects nested copied-directory swaps and unmanifested children", async (t) => {
+  for (const mutate of [
+    async (closure) => {
+      const nested = path.join(closure, "renderers/shared"); const parked = `${nested}.parked`;
+      await rename(nested, parked); await mkdir(nested); await rmdir(nested); await rename(parked, nested);
+    },
+    async (closure) => writeFile(path.join(closure, "unmanifested.mjs"), "export {};\n"),
+  ]) {
+    const f = await fixture(t);
+    await assert.rejects(() => stageCuratedArchify({
+      repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+      __testHooks: { "before-validate-spawn": async ({ closure }) => mutate(closure) },
+    }), /identity|child set/u);
+  }
 });
 
 test("a private snapshot of the installed Archify execution closure validates and delivers", async (t) => {
@@ -284,6 +326,28 @@ test("a publish target swapped after rename is preserved for forensics and never
   assert.ok(siblings.some((name) => name.startsWith(".curated-archify-backup-")));
 });
 
+test("post-rename missing and symlink targets are normalized and preserved as forensic paths", async (t) => {
+  for (const mutate of [
+    async ({ target }) => rename(target, `${target}.forensic-missing`),
+    async ({ target }) => { const parked = `${target}.forensic-symlink`; await rename(target, parked); await symlink(path.join(path.dirname(path.dirname(target)), "README.md"), target); },
+  ]) {
+    const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+    let failure;
+    try {
+      await publishCuratedArchify({
+        repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+        __testHooks: { "after-rename": async (context) => { if (context.label === "publish backup") await mutate(context); } },
+      });
+    } catch (error) { failure = error; }
+    assert.ok(failure instanceof AggregateError);
+    assert.match(failure.message, /expected forensic path|original dev/u);
+    const siblings = await readdir(path.join(f.root, "guides/assets"));
+    const forensic = siblings.find((name) => name.includes("forensic"));
+    assert.ok(forensic);
+    assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "old/one.html"), "utf8"), "old-html\n");
+  }
+});
+
 test("publish rename failure restores exact prior bytes", async (t) => {
   const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
   await assert.rejects(() => publishCuratedArchify({
@@ -338,6 +402,22 @@ test("partial backup cleanup failure keeps the new canonical tree", async (t) =>
     __testHooks: { "before-backup-cleanup": async ({ backup }) => { const parked = `${backup}.forensic`; await rename(backup, parked); await symlink(path.join(f.root, "README.md"), backup); } },
   }), /backup cleanup/u);
   assert.equal((await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"))).toString(), "<!doctype html><title>verified</title>\n");
+});
+
+test("quarantine pre-delete swaps stop bounded cleanup and preserve the old tree for forensics", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "before-quarantine-delete": async ({ quarantine, label }) => {
+      if (label !== "publish-backup") return;
+      const parked = `${quarantine}.forensic`; await rename(quarantine, parked); await symlink(path.join(f.root, "README.md"), quarantine);
+    } },
+  }), /quarantine cleanup failed|forensic path/u);
+  assert.equal(await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"), "utf8"), "<!doctype html><title>verified</title>\n");
+  const siblings = await readdir(path.join(f.root, "guides/assets"));
+  const forensic = siblings.find((name) => name.includes("forensic"));
+  assert.ok(forensic);
+  assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "old/one.html"), "utf8"), "old-html\n");
 });
 
 test("restore loss reports both causes and preserves forensic paths", async (t) => {

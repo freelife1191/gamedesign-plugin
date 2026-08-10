@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
+import { lstat, mkdir, open, readdir, realpath, rename, rmdir, unlink } from "node:fs/promises";
 import path from "node:path";
 
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
@@ -15,7 +15,6 @@ import { comparePaths, joinWithin } from "./paths.mjs";
 const CURRENT_STAGE = ".tmp/curated-archify/current";
 const CATALOG = "guides/archify-diagrams/catalog.json";
 const QA_MANIFEST = "guides/archify-diagrams/visual-qa/manifest.json";
-const EXECUTION_CLOSURE = Object.freeze(["bin", "renderers", "schemas", "assets", "scripts", "package.json", "package-lock.json"]);
 
 function isContained(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -59,6 +58,44 @@ async function assertDirectory(record) {
   if (!stats.isDirectory() || stats.isSymbolicLink() || !sameDirectoryIdentity(record.identity, directoryIdentity(stats)) || await realpath(record.path) !== record.path) {
     throw new Error(`${record.label} identity changed; preserved path: ${record.path}`);
   }
+}
+
+function sameDirectorySnapshot(left, right) {
+  return sameDirectoryIdentity(left.identity, right.identity)
+    && JSON.stringify(left.children) === JSON.stringify(right.children);
+}
+
+async function snapshotDirectory(filename, label, root) {
+  const requested = path.resolve(filename);
+  let handle;
+  let primary;
+  try {
+    const beforePath = await lstat(requested, { bigint: true });
+    if (!beforePath.isDirectory() || beforePath.isSymbolicLink()) throw new Error(`${label} must be a non-symlink directory`);
+    handle = await open(requested, fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
+    const before = await handle.stat({ bigint: true });
+    const children = (await readdir(requested)).sort(comparePaths);
+    const after = await handle.stat({ bigint: true });
+    const canonical = await realpath(requested);
+    const afterPath = await lstat(requested, { bigint: true });
+    const canonicalRoot = root ? await realpath(path.resolve(root)) : null;
+    if (canonicalRoot && !isContained(canonicalRoot, canonical)) throw new Error(`${label} escapes its trusted root`);
+    if (!sameDirectoryIdentity(directoryIdentity(beforePath), directoryIdentity(before))
+      || !sameDirectoryIdentity(directoryIdentity(before), directoryIdentity(after))
+      || !sameDirectoryIdentity(directoryIdentity(before), directoryIdentity(afterPath))) {
+      throw new Error(`${label} identity changed while read`);
+    }
+    const snapshot = Object.freeze({ path: canonical, label, identity: directoryIdentity(before), children: Object.freeze(children) });
+    await handle.close(); handle = null;
+    return snapshot;
+  } catch (error) { primary = error; }
+  try { await handle?.close(); } catch (close) { throw primary ? new AggregateError([primary, close], `${label} read and close failed`) : close; }
+  throw primary;
+}
+
+async function assertDirectorySnapshot(snapshot) {
+  const current = await snapshotDirectory(snapshot.path, snapshot.label, path.dirname(snapshot.path));
+  if (!sameDirectorySnapshot(snapshot, current)) throw new Error(`${snapshot.label} identity or child set changed; preserved path: ${snapshot.path}`);
 }
 
 async function ancestorRecords(root, leaf, label) {
@@ -120,23 +157,72 @@ async function writeExclusive(filename, bytes, mode = 0o600) {
   return snapshotRegular(filename, "private delivery file");
 }
 
+function renameForensicError(label, record, target, cause) {
+  const identity = record.identity;
+  const detail = `expected forensic path: ${target}; original dev=${identity.dev} ino=${identity.ino} mode=${identity.mode} mtimeNs=${identity.mtimeNs} ctimeNs=${identity.ctimeNs}`;
+  return new AggregateError([cause instanceof Error ? cause : new Error(String(cause))], `${label} rename is untrusted; ${detail}`);
+}
+
+async function snapshotPinnedTree(directory, label) {
+  const snapshot = await snapshotDirectory(directory.path, label, path.dirname(directory.path));
+  const children = [];
+  for (const name of snapshot.children) {
+    const child = path.join(snapshot.path, name);
+    const stats = await lstat(child, { bigint: true });
+    if (stats.isSymbolicLink()) throw new Error(`${label} contains a symlink: ${child}`);
+    if (stats.isDirectory()) children.push(Object.freeze({ name, directory: await snapshotPinnedTree(await directoryRecord(child, label, snapshot.path), label) }));
+    else if (stats.isFile()) children.push(Object.freeze({ name, file: await snapshotRegular(child, label) }));
+    else throw new Error(`${label} contains an unsupported entry: ${child}`);
+  }
+  await assertDirectorySnapshot(snapshot);
+  return Object.freeze({ directory: snapshot, children: Object.freeze(children) });
+}
+
+async function deletePinnedTree(tree) {
+  let current = tree.directory;
+  for (const child of tree.children) {
+    await assertDirectorySnapshot(current);
+    const childPath = path.join(current.path, child.name);
+    if (child.file) {
+      await assertSnapshotCurrent(child.file);
+      await unlink(childPath);
+    } else {
+      await deletePinnedTree(child.directory);
+    }
+    const next = await snapshotDirectory(current.path, current.label, path.dirname(current.path));
+    const expected = current.children.filter((name) => name !== child.name);
+    if (JSON.stringify(next.children) !== JSON.stringify(expected)) throw new Error(`${current.label} child set changed during bounded deletion; preserved path: ${current.path}`);
+    current = next;
+  }
+  await assertDirectorySnapshot(current);
+  await rmdir(current.path);
+}
+
 async function removePinnedTree(record, parent, label, hooks) {
   const quarantine = path.join(parent.path, `.${label}-quarantine-${randomUUID()}`);
   const quarantined = await renameDirectory(record, quarantine, parent, `${label} quarantine`, parent.path, hooks);
-  await assertDirectory(quarantined);
-  await rm(quarantined.path, { recursive: true });
+  let tree;
+  try {
+    tree = await snapshotPinnedTree(quarantined, `${label} quarantine`);
+    await invoke(hooks, "before-quarantine-delete", { quarantine: quarantined.path, label });
+    await deletePinnedTree(tree);
+  } catch (error) {
+    throw new AggregateError([error], `${label} quarantine cleanup failed; forensic path: ${quarantined.path}`);
+  }
 }
 
 async function renameDirectory(record, target, parent, label, targetRoot = parent.path, hooks) {
   await assertDirectory(record);
   await assertDirectory(parent);
-  await rename(record.path, target);
-  await invoke(hooks, "after-rename", { source: record.path, target, label });
-  const moved = await directoryRecord(target, label, targetRoot);
-  if (!sameMovedDirectoryIdentity(record.identity, moved.identity)) {
-    throw new AggregateError([new Error(`${label} moved identity mismatch; forensic path: ${moved.path}`)], `${label} rename produced an untrusted forensic tree`);
+  try {
+    await rename(record.path, target);
+    await invoke(hooks, "after-rename", { source: record.path, target, label });
+    const moved = await directoryRecord(target, label, targetRoot);
+    if (!sameMovedDirectoryIdentity(record.identity, moved.identity)) throw new Error(`${label} moved identity mismatch`);
+    return moved;
+  } catch (error) {
+    throw renameForensicError(label, record, target, error);
   }
-  return moved;
 }
 
 async function invoke(hooks, name, context) {
@@ -189,69 +275,55 @@ async function pinCli(env, options) {
   return snapshot;
 }
 
-async function copyClosureDirectory(source, destination, sourceRoot, records) {
-  const directory = await directoryRecord(source, "Archify execution closure directory", sourceRoot);
+async function copyClosureDirectory(source, destination, sourceRoot, manifest) {
+  const sourceDirectory = await snapshotDirectory(source, "Archify execution closure source directory", sourceRoot);
   await mkdir(destination, { recursive: true, mode: 0o700 });
-  const entries = await readdir(directory.path, { withFileTypes: true });
-  for (const entry of entries.sort((left, right) => comparePaths(left.name, right.name))) {
-    const sourceChild = path.join(directory.path, entry.name);
-    const destinationChild = path.join(destination, entry.name);
+  for (const name of sourceDirectory.children) {
+    const sourceChild = path.join(sourceDirectory.path, name);
+    const destinationChild = path.join(destination, name);
     const relative = path.relative(sourceRoot, sourceChild).split(path.sep).join("/");
     const stats = await lstat(sourceChild, { bigint: true });
     if (stats.isSymbolicLink()) throw new Error(`Archify execution closure contains a symlink: ${relative}`);
-    if (stats.isDirectory()) {
-      await copyClosureDirectory(sourceChild, destinationChild, sourceRoot, records);
-    } else if (stats.isFile()) {
+    if (stats.isDirectory()) await copyClosureDirectory(sourceChild, destinationChild, sourceRoot, manifest);
+    else if (stats.isFile()) {
       const sourceSnapshot = await snapshotRegular(sourceChild, "Archify execution closure file");
       const copySnapshot = await writeExclusive(destinationChild, sourceSnapshot.bytes);
       if (sourceSnapshot.sha256 !== copySnapshot.sha256 || sourceSnapshot.bytesLength !== copySnapshot.bytesLength) throw new Error(`Archify closure copy mismatch: ${relative}`);
-      records.push(Object.freeze({ relative, source: sourceSnapshot, copy: copySnapshot }));
-    } else {
-      throw new Error(`Archify execution closure has unsupported entry: ${relative}`);
-    }
+      manifest.files.push(Object.freeze({ relative, source: sourceSnapshot, copy: copySnapshot }));
+    } else throw new Error(`Archify execution closure has unsupported entry: ${relative}`);
   }
+  await assertDirectorySnapshot(sourceDirectory);
+  const copiedDirectory = await snapshotDirectory(destination, "private Archify execution closure directory", path.dirname(destination));
+  if (JSON.stringify(sourceDirectory.children) !== JSON.stringify(copiedDirectory.children)) throw new Error(`Archify closure child set mismatch: ${sourceDirectory.path}`);
+  manifest.directories.push(Object.freeze({ relative: path.relative(sourceRoot, sourceDirectory.path).split(path.sep).join("/"), source: sourceDirectory, copy: copiedDirectory }));
 }
 
-async function snapshotExecutionClosure(cliSource, destination) {
+async function snapshotExecutionClosure(cliSource, destination, hooks) {
   const sourceRoot = path.dirname(path.dirname(cliSource.path));
   if (path.basename(path.dirname(cliSource.path)) !== "bin" || path.basename(cliSource.path) !== "archify.mjs") {
     throw new Error("Task 5 CLI path is outside the fixed Archify execution closure");
   }
-  const sourceRootRecord = await directoryRecord(sourceRoot, "Archify execution closure root", sourceRoot);
-  await mkdir(destination, { recursive: true, mode: 0o700 });
-  const records = [];
-  for (const relative of EXECUTION_CLOSURE) {
-    const source = path.join(sourceRootRecord.path, relative);
-    const target = path.join(destination, relative);
-    const stats = await lstat(source).catch((error) => error.code === "ENOENT" && relative === "package-lock.json" ? null : Promise.reject(error));
-    if (!stats) continue;
-    if (stats.isSymbolicLink()) throw new Error(`Archify execution closure contains a symlink: ${relative}`);
-    if (stats.isDirectory()) await copyClosureDirectory(source, target, sourceRootRecord.path, records);
-    else if (stats.isFile()) {
-      const sourceSnapshot = await snapshotRegular(source, "Archify execution closure file");
-      const copySnapshot = await writeExclusive(target, sourceSnapshot.bytes);
-      if (sourceSnapshot.sha256 !== copySnapshot.sha256 || sourceSnapshot.bytesLength !== copySnapshot.bytesLength) throw new Error(`Archify closure copy mismatch: ${relative}`);
-      records.push(Object.freeze({ relative, source: sourceSnapshot, copy: copySnapshot }));
-    } else throw new Error(`Archify execution closure has unsupported entry: ${relative}`);
-  }
-  const expected = ["bin/archify.mjs", "package.json"];
-  if (!expected.every((relative) => records.some((record) => record.relative === relative))) throw new Error("Archify execution closure is incomplete");
-  await assertDirectory(sourceRootRecord);
-  for (const record of records) await assertSnapshotCurrent(record.source);
-  const copiedRoot = await directoryRecord(destination, "private Archify execution closure", path.dirname(destination));
+  const manifest = { directories: [], files: [] };
+  await copyClosureDirectory(sourceRoot, destination, sourceRoot, manifest);
+  await invoke(hooks, "after-closure-copy", { sourceRoot, closure: destination });
+  for (const record of manifest.directories) await assertDirectorySnapshot(record.source);
+  for (const record of manifest.files) await assertSnapshotCurrent(record.source);
+  const cli = manifest.files.find((record) => record.relative === "bin/archify.mjs")?.copy;
+  if (!cli) throw new Error("Archify execution closure is incomplete");
+  const copiedRoot = manifest.directories.find((record) => record.relative === "")?.copy;
+  if (!copiedRoot) throw new Error("Archify execution closure root is incomplete");
   return Object.freeze({
-    sourceRoot: sourceRootRecord,
+    sourceRoot,
     copiedRoot,
-    manifest: Object.freeze(records.sort((left, right) => comparePaths(left.relative, right.relative))),
-    cli: records.find((record) => record.relative === "bin/archify.mjs").copy,
+    directories: Object.freeze(manifest.directories.sort((left, right) => comparePaths(left.relative, right.relative))),
+    files: Object.freeze(manifest.files.sort((left, right) => comparePaths(left.relative, right.relative))),
+    cli,
   });
 }
 
 async function assertExecutionClosure(closure) {
-  await assertDirectory(closure.copiedRoot);
-  for (const record of closure.manifest) {
-    await assertSnapshotCurrent(record.copy);
-  }
+  for (const record of closure.directories) await assertDirectorySnapshot(record.copy);
+  for (const record of closure.files) await assertSnapshotCurrent(record.copy);
 }
 
 async function runCli(cli, closure, args, ancestors, hooks, phase, context) {
@@ -302,7 +374,7 @@ function outputRelative(entry, field) {
   return entry[field].slice(prefix.length);
 }
 
-async function deliverRecord({ root, temp, cliSource, entry, hooks }) {
+async function deliverRecord({ root, temp, closure, entry, hooks }) {
   const spec = await snapshotRegular(joinWithin(root.path, entry.spec, "committed Archify spec"), "committed Archify spec").catch((error) => {
     if (error?.code === "ENOENT") throw new Error(`missing committed Archify spec: ${entry.spec}`);
     throw error;
@@ -312,18 +384,17 @@ async function deliverRecord({ root, temp, cliSource, entry, hooks }) {
   const workflowPath = path.join(temp.root, "workflow", entry.id);
   await mkdir(path.join(workflowPath, "exec"), { recursive: true, mode: 0o700 });
   await mkdir(path.join(workflowPath, "output"), { recursive: true, mode: 0o700 });
-  const closure = await snapshotExecutionClosure(cliSource, path.join(workflowPath, "exec", "archify"));
-  const copiedCli = await snapshotRegular(closure.cli.path, "private Archify CLI");
+  const copiedCli = closure.cli;
   const privateSpec = await writeExclusive(path.join(workflowPath, "exec", "spec.json"), spec.bytes);
   if (privateSpec.sha256 !== spec.sha256) throw new Error("private spec copy does not match committed bytes");
   const ancestors = await ancestorRecords(root.path, path.join(workflowPath, "exec"), "delivery workflow");
   const html = path.join(workflowPath, "output", `${entry.id}.html`);
-  const context = { entry, workflow: workflowPath, html };
+  const context = { entry, workflow: workflowPath, html, closure: closure.copiedRoot.path };
   const validate = await runCli(copiedCli, closure, ["validate", entry.diagram_type, privateSpec.path, "--quality", "showcase", "--json"], ancestors, hooks, "validate", context);
   bindValidate(validate, entry, privateSpec.path);
-  await invoke(hooks, "after-validate", { ...context, cli: cliSource.path, assertAncestors: () => assertAncestors(ancestors) });
-  await invoke(hooks, "replace-cli-after-validate", { ...context, cli: cliSource.path });
-  await invoke(hooks, "swap-stage-parent-and-restore", { ...context, cli: cliSource.path });
+  await invoke(hooks, "after-validate", { ...context, assertAncestors: () => assertAncestors(ancestors) });
+  await invoke(hooks, "replace-cli-after-validate", context);
+  await invoke(hooks, "swap-stage-parent-and-restore", context);
   const deliver = await runCli(copiedCli, closure, ["deliver", entry.diagram_type, privateSpec.path, html, "--quality", "showcase", "--json"], ancestors, hooks, "deliver", context);
   await invoke(hooks, "after-deliver", context);
   await invoke(hooks, "symlink-delivered-html", context);
@@ -468,7 +539,7 @@ async function stageCommit({ root, temp, catalog, catalogSnapshot, records, hook
   }
   if (backup) {
     try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, parent, "current-backup", hooks); }
-    catch (cleanup) { throw new AggregateError([cleanup], "stage committed but backup cleanup failed"); }
+    catch (cleanup) { throw new AggregateError([cleanup], `stage committed but backup cleanup failed: ${cleanup.message}`); }
   }
   return current.path;
 }
@@ -509,7 +580,7 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
   }
   if (backup) {
     try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, assets, "publish-backup", hooks); }
-    catch (cleanup) { throw new AggregateError([cleanup], "publication committed but backup cleanup failed"); }
+    catch (cleanup) { throw new AggregateError([cleanup], `publication committed but backup cleanup failed: ${cleanup.message}`); }
   }
 }
 
@@ -520,8 +591,9 @@ async function prepare({ repoRoot, ids, product, env, archifyOptions, hooks, pub
   const cli = await pinCli(env, archifyOptions);
   const temp = await createTemp(root);
   try {
+    const closure = await snapshotExecutionClosure(cli, path.join(temp.root, "execution-closure"), hooks);
     const records = [];
-    for (const entry of entries) records.push(await deliverRecord({ root, temp, cliSource: cli, entry, hooks }));
+    for (const entry of entries) records.push(await deliverRecord({ root, temp, closure, entry, hooks }));
     return { root, catalog, catalogSnapshot, entries, records, temp };
   } catch (primary) { return finalizeTemp(temp, undefined, primary, hooks); }
 }
