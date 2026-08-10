@@ -326,7 +326,7 @@ test("a publish target swapped after rename is preserved for forensics and never
   assert.ok(siblings.some((name) => name.startsWith(".curated-archify-backup-")));
 });
 
-test("post-rename missing and symlink targets are normalized and preserved as forensic paths", async (t) => {
+test("post-rename missing and symlink published trees preserve the old tree and forensic artifact", async (t) => {
   for (const mutate of [
     async ({ target }) => rename(target, `${target}.forensic-missing`),
     async ({ target }) => { const parked = `${target}.forensic-symlink`; await rename(target, parked); await symlink(path.join(path.dirname(path.dirname(target)), "README.md"), target); },
@@ -336,7 +336,7 @@ test("post-rename missing and symlink targets are normalized and preserved as fo
     try {
       await publishCuratedArchify({
         repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
-        __testHooks: { "after-rename": async (context) => { if (context.label === "publish backup") await mutate(context); } },
+        __testHooks: { "after-rename": async (context) => { if (context.label === "published managed tree") await mutate(context); } },
       });
     } catch (error) { failure = error; }
     assert.ok(failure instanceof AggregateError);
@@ -344,7 +344,16 @@ test("post-rename missing and symlink targets are normalized and preserved as fo
     const siblings = await readdir(path.join(f.root, "guides/assets"));
     const forensic = siblings.find((name) => name.includes("forensic"));
     assert.ok(forensic);
-    assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "old/one.html"), "utf8"), "old-html\n");
+    const preservedOldTree = await Promise.all(siblings
+      .filter((name) => name === "archify" || name.startsWith(".curated-archify-backup-"))
+      .map(async (name) => {
+        const candidate = path.join(f.root, "guides/assets", name);
+        const stats = await lstat(candidate);
+        return stats.isDirectory() && !stats.isSymbolicLink()
+          && await readFile(path.join(candidate, "old/one.html"), "utf8") === "old-html\n";
+      }));
+    assert.ok(preservedOldTree.some(Boolean));
+    assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "studio/stable-id.html"), "utf8"), "<!doctype html><title>verified</title>\n");
   }
 });
 
@@ -418,6 +427,51 @@ test("quarantine pre-delete swaps stop bounded cleanup and preserve the old tree
   const forensic = siblings.find((name) => name.includes("forensic"));
   assert.ok(forensic);
   assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "old/one.html"), "utf8"), "old-html\n");
+});
+
+test("bounded cleanup rejects a same-name replacement parent before deleting its original entries", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  let replacement;
+  let failure;
+  try {
+    await publishCuratedArchify({
+      repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+      __testHooks: { "before-forensic-delete-rename": async ({ parent, name, label }) => {
+        if (label !== "publish-backup" || name !== "one.html") return;
+        replacement = `${parent}.same-names-forensic`;
+        await rename(parent, replacement);
+        await mkdir(parent);
+        await writeFile(path.join(parent, "one.html"), "replacement\n");
+        await writeFile(path.join(parent, "one.receipt.json"), "replacement\n");
+      } },
+    });
+  } catch (error) { failure = error; }
+  assert.ok(failure instanceof AggregateError);
+  assert.match(failure.message, /identity|forensic/u);
+  assert.equal(await readFile(path.join(replacement, "one.html"), "utf8"), "old-html\n");
+  assert.equal(await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"), "utf8"), "<!doctype html><title>verified</title>\n");
+});
+
+test("bounded cleanup rejects an entry replaced between verification and forensic rename", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  let parked;
+  let failure;
+  try {
+    await publishCuratedArchify({
+      repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+      __testHooks: { "before-forensic-delete-rename": async ({ parent, name, label }) => {
+        if (label !== "publish-backup" || name !== "one.html") return;
+        const entry = path.join(parent, name);
+        parked = `${entry}.original-forensic`;
+        await rename(entry, parked);
+        await writeFile(entry, "replacement\n");
+      } },
+    });
+  } catch (error) { failure = error; }
+  assert.ok(failure instanceof AggregateError);
+  assert.match(failure.message, /identity|forensic/u);
+  assert.equal(await readFile(parked, "utf8"), "old-html\n");
+  assert.equal(await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"), "utf8"), "<!doctype html><title>verified</title>\n");
 });
 
 test("restore loss reports both causes and preserves forensic paths", async (t) => {

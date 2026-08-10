@@ -178,24 +178,106 @@ async function snapshotPinnedTree(directory, label) {
   return Object.freeze({ directory: snapshot, children: Object.freeze(children) });
 }
 
-async function deletePinnedTree(tree) {
-  let current = tree.directory;
-  for (const child of tree.children) {
-    await assertDirectorySnapshot(current);
-    const childPath = path.join(current.path, child.name);
-    if (child.file) {
-      await assertSnapshotCurrent(child.file);
-      await unlink(childPath);
-    } else {
-      await deletePinnedTree(child.directory);
-    }
-    const next = await snapshotDirectory(current.path, current.label, path.dirname(current.path));
-    const expected = current.children.filter((name) => name !== child.name);
-    if (JSON.stringify(next.children) !== JSON.stringify(expected)) throw new Error(`${current.label} child set changed during bounded deletion; preserved path: ${current.path}`);
-    current = next;
+function sameStableDirectoryIdentity(left, right) {
+  return left.dev === right.dev && left.ino === right.ino && left.mode === right.mode;
+}
+
+function deletionState(snapshot, stableIdentity = snapshot.identity) {
+  return Object.freeze({
+    path: snapshot.path,
+    label: snapshot.label,
+    stableIdentity,
+    identity: snapshot.identity,
+    children: Object.freeze([...snapshot.children]),
+  });
+}
+
+function withExpectedDeletionChildren(state, children) {
+  return Object.freeze({ ...state, children: Object.freeze(children) });
+}
+
+function deleteEntryForensicError(label, entry, target, cause) {
+  const identity = entry.identity;
+  const detail = `expected forensic path: ${target}; original dev=${identity.dev} ino=${identity.ino} mode=${identity.mode}`;
+  return new AggregateError([cause instanceof Error ? cause : new Error(String(cause))], `${label} forensic deletion is untrusted; ${detail}`);
+}
+
+async function assertDeletionState(state) {
+  const current = await snapshotDirectory(state.path, state.label, path.dirname(state.path));
+  if (!sameStableDirectoryIdentity(state.stableIdentity, current.identity)
+    || JSON.stringify(state.children) !== JSON.stringify(current.children)) {
+    throw new Error(`${state.label} identity or child set changed during bounded deletion; preserved path: ${state.path}`);
   }
-  await assertDirectorySnapshot(current);
-  await rmdir(current.path);
+  return Object.freeze({ ...state, identity: current.identity });
+}
+
+function entryIdentity(entry) {
+  return entry.file ? entry.file.identity : entry.directory.identity;
+}
+
+function entryTypeMatches(stats, entry) {
+  return entry.file ? stats.isFile() && !stats.isSymbolicLink() : stats.isDirectory() && !stats.isSymbolicLink();
+}
+
+function sameStableEntryIdentity(entry, stats) {
+  const identity = entryIdentity(entry);
+  return identity.dev === stats.dev && identity.ino === stats.ino && identity.mode === stats.mode;
+}
+
+async function assertOriginalDeleteEntry(entry, parent) {
+  const entryPath = path.join(parent.path, entry.name);
+  if (entry.file) {
+    await assertSnapshotCurrent(entry.file);
+    return;
+  }
+  const current = await snapshotDirectory(entryPath, parent.label, parent.path);
+  if (!entryTypeMatches(await lstat(entryPath, { bigint: true }), entry)
+    || !sameStableDirectoryIdentity(entry.directory.identity, current.identity)
+    || JSON.stringify(current.children) !== JSON.stringify([])) {
+    throw new Error(`${parent.label} delete entry changed; preserved path: ${entryPath}`);
+  }
+}
+
+async function deletePinnedEntry(entry, parent, label, hooks) {
+  let current = await assertDeletionState(parent);
+  await assertOriginalDeleteEntry(entry, current);
+  await invoke(hooks, "before-forensic-delete-rename", { parent: current.path, name: entry.name, label, entry: path.join(current.path, entry.name) });
+  current = await assertDeletionState(current);
+  await assertOriginalDeleteEntry(entry, current);
+  const movedName = `.forensic-delete-${randomUUID()}`;
+  const source = path.join(current.path, entry.name);
+  const moved = path.join(current.path, movedName);
+  const movedChildren = current.children.map((name) => name === entry.name ? movedName : name).sort(comparePaths);
+  try {
+    await rename(source, moved);
+    const movedStats = await lstat(moved, { bigint: true });
+    if (!entryTypeMatches(movedStats, entry) || !sameStableEntryIdentity(entry, movedStats)) {
+      throw new Error(`${label} moved entry identity mismatch`);
+    }
+    current = await assertDeletionState(withExpectedDeletionChildren(current, movedChildren));
+    const finalChildren = current.children.filter((name) => name !== movedName);
+    await rmdirOrUnlink(entry, moved);
+    return assertDeletionState(withExpectedDeletionChildren(current, finalChildren));
+  } catch (error) {
+    throw deleteEntryForensicError(label, entry, moved, error);
+  }
+}
+
+async function rmdirOrUnlink(entry, moved) {
+  const stats = await lstat(moved, { bigint: true });
+  if (!entryTypeMatches(stats, entry) || !sameStableEntryIdentity(entry, stats)) throw new Error(`forensic delete entry identity mismatch: ${moved}`);
+  if (entry.file) await unlink(moved);
+  else await rmdir(moved);
+}
+
+async function deletePinnedTree(tree, parent, name, label, hooks) {
+  let current = deletionState(tree.directory);
+  for (const child of tree.children) {
+    if (child.file) current = await deletePinnedEntry(child, current, label, hooks);
+    else current = await deletePinnedTree(child.directory, current, child.name, label, hooks);
+  }
+  const rootEntry = Object.freeze({ name, directory: Object.freeze({ ...tree.directory, children: Object.freeze([]) }) });
+  return deletePinnedEntry(rootEntry, parent, label, hooks);
 }
 
 async function removePinnedTree(record, parent, label, hooks) {
@@ -205,7 +287,8 @@ async function removePinnedTree(record, parent, label, hooks) {
   try {
     tree = await snapshotPinnedTree(quarantined, `${label} quarantine`);
     await invoke(hooks, "before-quarantine-delete", { quarantine: quarantined.path, label });
-    await deletePinnedTree(tree);
+    const quarantineParent = deletionState(await snapshotDirectory(parent.path, parent.label, path.dirname(parent.path)), parent.identity);
+    await deletePinnedTree(tree, quarantineParent, path.basename(quarantined.path), label, hooks);
   } catch (error) {
     throw new AggregateError([error], `${label} quarantine cleanup failed; forensic path: ${quarantined.path}`);
   }
