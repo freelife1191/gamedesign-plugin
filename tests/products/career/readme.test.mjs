@@ -237,10 +237,15 @@ function canonicalRepresentativeRoute(entry, source) {
   };
 }
 
-function assertRepresentativeRouteTable(markdown, expected, expectedTable, label) {
+function assertRepresentativeRouteTable(markdown, expected, label) {
   const { headers, rows } = extractMarkdownTable(markdown, "활용 시작점");
-  assert.deepEqual(headers, expectedTable.headers, `${label}: representative route-table headers`);
-  assert.deepEqual(rows, expectedTable.rows, `${label}: canonical representative route rows and order`);
+  assert.deepEqual(
+    headers,
+    ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · owner · root", "사례 읽는 순서"],
+    `${label}: representative route-table headers`,
+  );
+  const expectedRows = expected.map((route) => [route.case, route.input, route.skills, route.directRequest, route.results, route.readOrder]);
+  assert.deepEqual(rows, expectedRows, `${label}: canonical representative route rows and order`);
   const normalizeCardField = (value) => value
     .replace(/<br>/gu, " ")
     .replace(/`/gu, "")
@@ -361,24 +366,35 @@ function mutateMarkdownTable(markdown, heading, mutate) {
   return `${markdown.slice(0, sectionStart)}${lines.join("\n")}${markdown.slice(sectionEnd)}`;
 }
 
-function assertRepresentativeMutationMatrix(markdown, expected, expectedTable, label) {
+function assertRepresentativeMutationMatrix(markdown, expected, label) {
   const { rows } = extractMarkdownTable(markdown, "활용 시작점");
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
     for (let cellIndex = 0; cellIndex < rows[rowIndex].length; cellIndex += 1) {
       const deleted = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][cellIndex] = ""; });
-      assert.throws(() => assertRepresentativeRouteTable(deleted, expected, expectedTable, `${label}: deleted ${rowIndex}/${cellIndex}`), `${label}: deletion ${rowIndex}/${cellIndex}`);
+      assert.throws(() => assertRepresentativeRouteTable(deleted, expected, `${label}: deleted ${rowIndex}/${cellIndex}`), `${label}: deletion ${rowIndex}/${cellIndex}`);
       const partner = rows.findIndex((candidate, index) => index !== rowIndex && candidate[cellIndex] !== rows[rowIndex][cellIndex]);
       if (partner === -1) continue;
       const swapped = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
         [mutated[rowIndex][cellIndex], mutated[partner][cellIndex]] = [mutated[partner][cellIndex], mutated[rowIndex][cellIndex]];
       });
-      assert.throws(() => assertRepresentativeRouteTable(swapped, expected, expectedTable, `${label}: cross-row swap ${rowIndex}/${cellIndex}`), `${label}: cross-row swap ${rowIndex}/${cellIndex}`);
+      assert.throws(() => assertRepresentativeRouteTable(swapped, expected, `${label}: cross-row swap ${rowIndex}/${cellIndex}`), `${label}: cross-row swap ${rowIndex}/${cellIndex}`);
     }
     const duplicated = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex] = [...mutated[(rowIndex + 1) % mutated.length]]; });
-    assert.throws(() => assertRepresentativeRouteTable(duplicated, expected, expectedTable, `${label}: duplicate ${rowIndex}`), `${label}: duplicate ${rowIndex}`);
+    assert.throws(() => assertRepresentativeRouteTable(duplicated, expected, `${label}: duplicate ${rowIndex}`), `${label}: duplicate ${rowIndex}`);
   }
   const reorderedRows = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated.reverse(); });
-  assert.throws(() => assertRepresentativeRouteTable(reorderedRows, expected, expectedTable, `${label}: reordered rows`), `${label}: reordered rows`);
+  assert.throws(() => assertRepresentativeRouteTable(reorderedRows, expected, `${label}: reordered rows`), `${label}: reordered rows`);
+}
+
+function assertRepresentativeTableMutationFails(markdown, expected, label) {
+  assert.throws(
+    () => assertRepresentativeRouteTable(markdown, expected, label),
+    (error) => {
+      assert.notEqual(error?.name, "TypeError", `${label}: must reach the representative-table assertion`);
+      assert.match(error?.message ?? "", /canonical representative route rows and order/u, `${label}: representative-table assertion`);
+      return true;
+    },
+  );
 }
 
 function mutateRepresentativeCardResult(markdown, caseId, mutate) {
@@ -720,9 +736,8 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
 });
 
 test("README binds Career entry users to canonical representative case routes without package-escaping links", async () => {
-  const [readme, guide, routingSource, manifestSource, inventory] = await Promise.all([
+  const [readme, routingSource, manifestSource, inventory] = await Promise.all([
     readFile(readmePath, "utf8"),
-    readFile(path.join(repoRoot, "guides/game-design-career/README.md"), "utf8"),
     readFile(path.join(pluginRoot, "references/routing.json"), "utf8"),
     readFile(path.join(repoRoot, "guides/use-cases/use-case-manifest.json"), "utf8"),
     collectProductInventory(repoRoot, "game-design-career"),
@@ -764,10 +779,22 @@ test("README binds Career entry users to canonical representative case routes wi
     const source = await readFile(path.join(repoRoot, entry.document), "utf8");
     expected.push(canonicalRepresentativeRoute(entry, source));
   }
-  const expectedTable = extractMarkdownTable(guide, "대표 사례");
-  assertRepresentativeRouteTable(readme, expected, expectedTable, "Career product README");
+  assertRepresentativeRouteTable(readme, expected, "Career product README");
   assertNoHiringGuarantee(readme, "Career product README");
-  assertRepresentativeMutationMatrix(readme, expected, expectedTable, "Career product README");
+  assertRepresentativeMutationMatrix(readme, expected, "Career product README");
+  const deletedInput = mutateMarkdownTable(readme, "활용 시작점", (rows) => { rows[0][1] = ""; });
+  assertRepresentativeTableMutationFails(deletedInput, expected, "Career product README deleted input cell");
+  for (const [routeIndex, route] of expected.entries()) {
+    for (const [resultId] of representativeResultContract(route.caseId)) {
+      const omittedResult = mutateMarkdownTable(readme, "활용 시작점", (rows) => {
+        rows[routeIndex][4] = rows[routeIndex][4]
+          .split("<br>")
+          .filter((result) => !result.includes(`\`${resultId}\``))
+          .join("<br>");
+      });
+      assertRepresentativeTableMutationFails(omittedResult, expected, `${route.caseId}: omitted ${resultId}`);
+    }
+  }
   for (const route of expected) {
     const firstResult = /`([a-z0-9-]+)`/u.exec(route.results)?.[1];
     assert.ok(firstResult, `${route.caseId}: canonical result ID`);
