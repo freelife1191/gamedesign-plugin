@@ -167,13 +167,47 @@ test("production exclusions retain exact package classes and source-specific evi
   }
 });
 
-test("production selection excludes the existing plugin selection Skillstead flow", async () => {
+test("root README selects the Suite system architecture without changing corpus coverage", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
-  const entry = catalog.entries.find((item) => item.id === "suite-entry-navigation");
+  const entry = catalog.entries.find((item) => item.id === "suite-plugin-system-architecture");
   assert.ok(entry);
-  assert.equal(entry.decision, "excluded");
-  assert.equal(entry.exclusion_code, "excluded-skillstead-overlap");
-  assert.match(entry.decision_reason, /guides\/assets\/shared\/plugin-selection-flow\.svg/u);
+  assert.deepEqual({
+    id: entry.id,
+    product: entry.product,
+    source_document: entry.source_document,
+    source_section: entry.source_section,
+    question: entry.question,
+    decision: entry.decision,
+    diagram_type: entry.diagram_type,
+    priority: entry.priority,
+    visual_system: entry.visual_system,
+    delivery_status: entry.delivery_status,
+    visual_review: entry.visual_review,
+    reviewer: entry.reviewer,
+  }, {
+    id: "suite-plugin-system-architecture",
+    product: "suite",
+    source_document: "README.md",
+    source_section: "플러그인 구조와 전체 시스템 아키텍처",
+    question: "Codex 진입점에서 두 플러그인의 전문 스킬, Canonical Artifact, 검증과 사람 승인을 거쳐 결과가 어떻게 전달되는가?",
+    decision: "selected",
+    diagram_type: "architecture",
+    priority: "primary",
+    visual_system: "suite",
+    delivery_status: "auto-validated",
+    visual_review: "pending",
+    reviewer: null,
+  });
+  assert.equal(catalog.entries.some((item) => item.id === "suite-entry-navigation"), false);
+  const selected = catalog.entries.filter((item) => item.decision === "selected");
+  assert.equal(selected.length, 4);
+  assert.deepEqual(
+    Object.fromEntries(["studio", "career", "suite"].map((product) => [
+      product,
+      selected.filter((item) => item.product === product).length,
+    ])),
+    { studio: 1, career: 1, suite: 2 },
+  );
 });
 
 test("reason template guard rejects three scope-and-evidence interpolations", () => {
