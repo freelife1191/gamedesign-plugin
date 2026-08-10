@@ -152,7 +152,7 @@ async function validateVisibleLocalLink(sourcePath, link, boundary) {
   const anchor = decodeLinkPart(rawAnchor, target);
   const targetPath = filename ? assertContainedPath(sourcePath, filename, boundary) : sourcePath;
   const extension = path.extname(targetPath).toLowerCase();
-  assert.ok([".md", ".png", ".svg"].includes(extension), `unsupported local link extension: ${target}`);
+  assert.ok([".md", ".png", ".svg", ".json", ".html"].includes(extension), `unsupported local link extension: ${target}`);
   await assertRegularNonSymlinkFile(targetPath, boundary);
   if (anchor) {
     assert.equal(extension, ".md", `anchors require Markdown targets: ${target}`);
@@ -549,7 +549,8 @@ test("root README contract rejects unsafe mutations in memory", async () => {
 
 test("global and product indexes reach 30 skills, 30 templates, and 12 recipes", async () => {
   const reachable = await reachableMarkdownPaths(path.join(guideRoot, "README.md"));
-  assert.equal(reachable.size, 118, "guide link graph reaches the prompt-template library and all guide documents");
+  assert.equal(reachable.size, 119, "guide link graph reaches the prompt-template library, curated Archify status index, and all guide documents");
+  assert.ok(reachable.has(path.join(guideRoot, "archify-diagrams/README.md")), "curated Archify status index is reachable");
   for (const relative of requiredUseCaseGuidePaths) {
     assert.ok(reachable.has(path.join(guideRoot, relative)), `new use-case guide is unreachable: ${relative}`);
   }

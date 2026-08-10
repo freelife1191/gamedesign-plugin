@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { loadArchifyCatalog } from "../../tooling/lib/archify-catalog.mjs";
+import { extractMarkdownLinks } from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const statusIndex = "guides/archify-diagrams/README.md";
@@ -13,39 +14,18 @@ const statusRoutes = Object.freeze([
   "guides/game-design-career/README.md",
 ]);
 
-function withoutNonRenderedMarkdown(markdown) {
-  const withoutComments = markdown.replace(/<!--[\s\S]*?-->/gu, "");
-  const withoutHiddenHtml = withoutComments.replace(/<([A-Za-z][\w-]*)(?:\s[^>]*)?\s+hidden(?:\s[^>]*)?>[\s\S]*?<\/\1\s*>/giu, "");
-  const visibleLines = [];
-  let fence;
-  for (const line of withoutHiddenHtml.split(/\r?\n/gu)) {
-    const marker = /^(?: {0,3})(`{3,}|~{3,})/u.exec(line)?.[1];
-    if (fence) {
-      if (marker?.[0] === fence[0] && marker.length >= fence.length) fence = undefined;
-      continue;
-    }
-    if (marker) {
-      fence = marker;
-      continue;
-    }
-    visibleLines.push(line.replace(/(`+)(?:[^`]|`(?!\1))*\1/gu, ""));
-  }
-  return visibleLines.join("\n");
-}
-
 function visibleLinks(markdown) {
-  const links = [];
-  const rendered = withoutNonRenderedMarkdown(markdown);
-  const matcher = /(?<!!)(?<!\\)\[[^\]]*\]\((?<destination><[^>]+>|[^\s)]+)(?:\s+[^)]*)?\)/gu;
-  for (const match of rendered.matchAll(matcher)) {
-    links.push(match.groups.destination.replace(/^<|>$/gu, ""));
-  }
-  return links;
+  return extractMarkdownLinks(markdown).map((link) => link.target);
 }
 
 function resolveDestination(document, destination) {
-  const target = destination.split("#", 1)[0];
-  if (!target || /^[a-z][a-z0-9+.-]*:/iu.test(target) || target.startsWith("/")) return null;
+  if (!destination || /^[a-z][a-z0-9+.-]*:/iu.test(destination) || destination.startsWith("/")) return null;
+  let target;
+  try {
+    target = decodeURIComponent(destination);
+  } catch {
+    return "guides/assets/archify/__invalid-relative-target__";
+  }
   return path.posix.normalize(path.posix.join(path.posix.dirname(document), target));
 }
 
@@ -65,7 +45,7 @@ function assertExactProductionLinks(documents, expected) {
   for (const link of links) assert.ok(!link.destination.endsWith("/flow.html"), "legacy flow.html must not be linked");
 }
 
-function sourceSection(markdown, expectedHeading) {
+function sourceSectionBounds(markdown, expectedHeading) {
   const lines = markdown.split(/\r?\n/gu);
   let start = -1;
   let level = 0;
@@ -86,7 +66,13 @@ function sourceSection(markdown, expectedHeading) {
       break;
     }
   }
-  return lines.slice(start, end).join("\n");
+  return { firstLine: start + 1, lastLine: end };
+}
+
+function sourceSection(markdown, expectedHeading) {
+  const bounds = sourceSectionBounds(markdown, expectedHeading);
+  if (!bounds) return null;
+  return markdown.split(/\r?\n/gu).slice(bounds.firstLine - 1, bounds.lastLine).join("\n");
 }
 
 function assertPublishedSourceBindings(documents, published) {
@@ -94,10 +80,12 @@ function assertPublishedSourceBindings(documents, published) {
   for (const entry of published) {
     const source = documentsByFilename.get(entry.source_document);
     assert.ok(source, `${entry.id} source document must be checked for its production link`);
-    const section = sourceSection(source.markdown, entry.source_section);
+    const section = sourceSectionBounds(source.markdown, entry.source_section);
     assert.ok(section, `${entry.id} catalog source section must exist`);
     assert.ok(
-      visibleLinks(section).some((destination) => resolveDestination(entry.source_document, destination) === entry.html),
+      extractMarkdownLinks(source.markdown).some((link) => link.line >= section.firstLine
+        && link.line < section.lastLine
+        && resolveDestination(entry.source_document, link.target) === entry.html),
       `${entry.id} production link must appear in its catalog source section`,
     );
   }
@@ -123,6 +111,15 @@ function assertedStatusIndex(markdown, blocked, filename = statusIndex) {
   }
 }
 
+function assertCurrentInventoryIntro(markdown) {
+  const intro = markdown.slice(0, markdown.indexOf("## 증거와 전수 범위"));
+  assert.match(intro, /3개[^\n]*selected[^\n]*spec/iu, "inventory intro must state that all three selected entries have committed specs");
+  assert.match(intro, /blocked-validation/u, "inventory intro must state the Studio validation block");
+  assert.match(intro, /blocked-visual/u, "inventory intro must state the visual blocks");
+  assert.match(intro, /passed\s*\/\s*published[^\n]*0/u, "inventory intro must state the zero passed/published count");
+  assert.doesNotMatch(intro, /아직은\s*`?delivery_status:\s*planned`?/u, "inventory intro must not describe the selected entries as planned");
+}
+
 async function markdownFiles(directory) {
   const entries = await readdir(path.join(repoRoot, directory), { withFileTypes: true });
   const files = [];
@@ -136,13 +133,14 @@ async function markdownFiles(directory) {
 
 async function guideDocuments(catalog) {
   const filenames = new Set(await markdownFiles("guides"));
-  for (const entry of catalog.entries.filter((item) => item.delivery_status === "published" && item.source_document === "README.md")) filenames.add("README.md");
+  filenames.add("README.md");
   return Promise.all([...filenames].map(async (filename) => ({ filename, markdown: await readFile(path.join(repoRoot, filename), "utf8") })));
 }
 
 test("curated Archify guide routing exposes only published, visually passed production diagrams", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const documents = await guideDocuments(catalog);
+  assert.ok(documents.some((document) => document.filename === "README.md"), "root README must always be checked for production Archify links");
   const expected = catalog.entries
     .filter((entry) => entry.delivery_status === "published" && entry.visual_review === "passed")
     .map((entry) => entry.html)
@@ -151,7 +149,9 @@ test("curated Archify guide routing exposes only published, visually passed prod
 
   assertExactProductionLinks(documents, expected);
   assertPublishedSourceBindings(documents, catalog.entries.filter((entry) => entry.delivery_status === "published"));
-  assertedStatusIndex(documents.find((document) => document.filename === statusIndex).markdown, blocked);
+  const index = documents.find((document) => document.filename === statusIndex).markdown;
+  assertCurrentInventoryIntro(index);
+  assertedStatusIndex(index, blocked);
   for (const document of documents.filter((item) => statusRoutes.includes(item.filename))) {
     assert.ok(
       visibleLinks(document.markdown).some((destination) => resolveDestination(document.filename, destination) === statusIndex),
@@ -170,11 +170,11 @@ test("curated Archify guide routing exposes only published, visually passed prod
   }
 });
 
-test("production-link parser ignores non-rendered Markdown but rejects visible blocked and legacy links", () => {
+test("production-link parser covers rendered Markdown references and raw anchors while ignoring hidden content", () => {
   const blocked = "guides/assets/archify/studio/studio-project-workflow.html";
   const visible = "guides/assets/archify/career/career-evidence-workflow.html";
-  const onlyVisible = `\`[inline](${blocked})\`\n\n<!-- [comment](${blocked}) -->\n\n<span hidden>[hidden](${blocked})</span>\n\n\`\`\`md\n[code](${blocked})\n\`\`\`\n\n[visible](assets/archify/career/career-evidence-workflow.html)`;
-  assert.doesNotThrow(() => assertExactProductionLinks([{ filename: "guides/test.md", markdown: onlyVisible }], [visible]));
+  const onlyVisible = `\`[inline](${blocked})\`\n\n<!-- [comment](${blocked}) -->\n\n<span hidden>[hidden](${blocked})</span>\n\n\`\`\`md\n[code](${blocked})\n\`\`\`\n\n[visible](assets/archify/career/career-evidence-workflow.html)\n\n[reference][visible-reference]\n\n[visible-reference]: assets/archify/career/career-evidence-workflow.html\n\n<a href="assets/archify/career/career-evidence-workflow.html">raw anchor</a>`;
+  assert.doesNotThrow(() => assertExactProductionLinks([{ filename: "guides/test.md", markdown: onlyVisible }], [visible, visible, visible]));
   assert.throws(
     () => assertExactProductionLinks([{ filename: "guides/test.md", markdown: "[blocked](assets/archify/studio/studio-project-workflow.html)" }], []),
     /published-and-passed/u,
@@ -184,6 +184,28 @@ test("production-link parser ignores non-rendered Markdown but rejects visible b
     () => assertExactProductionLinks([{ filename: "guides/test.md", markdown: "[legacy](assets/archify/studio/flow.html)" }], ["guides/assets/archify/studio/flow.html"]),
     /legacy flow\.html/u,
     "a visible legacy flow.html link must be rejected",
+  );
+});
+
+test("root README rejects rendered reference, raw-anchor, receipt, and fragment/query production-link bypasses", () => {
+  const expected = [];
+  for (const [label, markdown] of [
+    ["reference", "[blocked][r]\n\n[r]: guides/assets/archify/studio/studio-project-workflow.html"],
+    ["raw anchor", '<a href="guides/assets/archify/studio/studio-project-workflow.html">blocked</a>'],
+    ["receipt", '[receipt](guides/assets/archify/studio/studio-project-workflow.receipt.json)'],
+    ["legacy", '[legacy](guides/assets/archify/studio/flow.html)'],
+  ]) {
+    assert.throws(() => assertExactProductionLinks([{ filename: "README.md", markdown }], expected), /published-and-passed|legacy flow/u, label);
+  }
+  assert.throws(
+    () => assertExactProductionLinks([{ filename: "README.md", markdown: '[fragment](guides/assets/archify/studio/published.html#view)' }], ["guides/assets/archify/studio/published.html"]),
+    /published-and-passed/u,
+    "fragments on production output are rejected instead of normalizing to the published path",
+  );
+  assert.throws(
+    () => assertExactProductionLinks([{ filename: "README.md", markdown: '[query](guides/assets/archify/studio/published.html?view=1)' }], ["guides/assets/archify/studio/published.html"]),
+    /published-and-passed/u,
+    "queries on production output are rejected instead of normalizing to the published path",
   );
 });
 
@@ -213,4 +235,7 @@ test("published production links must remain inside the catalog source section",
   assert.doesNotThrow(() => assertPublishedSourceBindings([
     { filename: "guides/source.md", markdown: "# Source\n\n## Expected section\n\n[bound](assets/archify/studio/bound-id.html)\n" },
   ], [entry]));
+  assert.doesNotThrow(() => assertPublishedSourceBindings([
+    { filename: "guides/source.md", markdown: "# Source\n\n## Expected section\n\n[bound][r]\n\n## Definitions\n\n[r]: assets/archify/studio/bound-id.html\n" },
+  ], [entry]), "a reference definition outside the source section still binds its rendered link");
 });

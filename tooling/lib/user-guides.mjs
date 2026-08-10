@@ -746,11 +746,181 @@ function parseLinkAt(source, original, start) {
   };
 }
 
+function referenceKey(value) {
+  return unescapeMarkdown(value).replace(/\s+/gu, " ").trim().toLowerCase();
+}
+
+function parseReferenceDestination(source) {
+  let cursor = 0;
+  while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
+  if (source[cursor] === "<") {
+    const start = ++cursor;
+    while (cursor < source.length && (source[cursor] !== ">" || escaped(source, cursor))) cursor += 1;
+    if (source[cursor] !== ">") return undefined;
+    return source.slice(start, cursor);
+  }
+  const start = cursor;
+  while (cursor < source.length && !/\s/u.test(source[cursor])) cursor += 1;
+  return cursor === start ? undefined : source.slice(start, cursor);
+}
+
+function referenceDefinitions(lines) {
+  const definitions = new Map();
+  for (const { kind, blockText } of lines) {
+    if (kind !== "link-reference") continue;
+    const match = /^ {0,3}\[([^\]]+)\]:[ \t]*(.*)$/u.exec(blockText);
+    if (!match) continue;
+    const target = parseReferenceDestination(match[2]);
+    const key = referenceKey(match[1]);
+    if (target && key && !definitions.has(key)) definitions.set(key, normaliseTarget(target));
+  }
+  return definitions;
+}
+
+function linkLabelEnd(source, start) {
+  let cursor = start + 1;
+  let depth = 1;
+  while (cursor < source.length) {
+    if (!escaped(source, cursor) && source[cursor] === "[") depth += 1;
+    if (!escaped(source, cursor) && source[cursor] === "]") {
+      depth -= 1;
+      if (depth === 0) return cursor;
+    }
+    cursor += 1;
+  }
+  return undefined;
+}
+
+function parseReferenceLinkAt(source, original, start, definitions) {
+  if (source[start] !== "[" || escaped(source, start)) return undefined;
+  const image = start > 0 && source[start - 1] === "!" && !escaped(source, start - 1);
+  const labelEnd = linkLabelEnd(source, start);
+  if (labelEnd === undefined || source[labelEnd + 1] === "(") return undefined;
+  let end = labelEnd + 1;
+  let reference = source.slice(start + 1, labelEnd);
+  if (source[end] === "[") {
+    const referenceEnd = source.indexOf("]", end + 1);
+    if (referenceEnd === -1 || escaped(source, referenceEnd)) return undefined;
+    reference = source.slice(end + 1, referenceEnd) || reference;
+    end = referenceEnd + 1;
+  }
+  const destination = definitions.get(referenceKey(reference));
+  if (!destination) return undefined;
+  return {
+    end,
+    image,
+    label: renderedLabel(original.slice(start + 1, labelEnd)),
+    rawLabel: original.slice(start + 1, labelEnd),
+    target: destination.target,
+    fragment: destination.fragment,
+  };
+}
+
+function htmlTagAt(source, start) {
+  if (source[start] !== "<" || escaped(source, start)) return undefined;
+  const end = inlineHtmlEnd(source, start);
+  if (!end) return undefined;
+  const raw = source.slice(start + 1, end - 1);
+  let cursor = 0;
+  while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+  const closing = raw[cursor] === "/";
+  if (closing) cursor += 1;
+  const nameStart = cursor;
+  while (/[A-Za-z\d-]/u.test(raw[cursor] ?? "")) cursor += 1;
+  const name = raw.slice(nameStart, cursor).toLowerCase();
+  if (!name || (raw[cursor] && !/\s|\//u.test(raw[cursor]))) return undefined;
+  const attributes = new Map();
+  let selfClosing = false;
+  while (cursor < raw.length) {
+    while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+    if (raw[cursor] === "/") {
+      selfClosing = true;
+      cursor += 1;
+      continue;
+    }
+    const attributeStart = cursor;
+    while (/[A-Za-z\d:_-]/u.test(raw[cursor] ?? "")) cursor += 1;
+    const attribute = raw.slice(attributeStart, cursor).toLowerCase();
+    if (!attribute) return undefined;
+    while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+    let value = "";
+    if (raw[cursor] === "=") {
+      cursor += 1;
+      while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+      const quote = raw[cursor] === "\"" || raw[cursor] === "'" ? raw[cursor++] : undefined;
+      const valueStart = cursor;
+      while (cursor < raw.length && (quote ? raw[cursor] !== quote : !/\s|\//u.test(raw[cursor]))) cursor += 1;
+      if (quote && raw[cursor] !== quote) return undefined;
+      value = raw.slice(valueStart, cursor);
+      if (quote) cursor += 1;
+    }
+    attributes.set(attribute, value);
+  }
+  return { end, name, closing, selfClosing, attributes };
+}
+
+function hiddenHtmlRanges(source) {
+  const ranges = [];
+  const open = [];
+  let start;
+  for (let cursor = 0; cursor < source.length;) {
+    const tag = htmlTagAt(source, cursor);
+    if (!tag) {
+      cursor += 1;
+      continue;
+    }
+    if (tag.closing) {
+      const index = open.map((entry) => entry.name).lastIndexOf(tag.name);
+      if (index !== -1) open.splice(index, 1);
+      if (start !== undefined && open.length === 0) {
+        ranges.push({ start, end: tag.end });
+        start = undefined;
+      }
+    } else if (tag.attributes.has("hidden") && !tag.selfClosing) {
+      if (open.length === 0) start = cursor;
+      open.push(tag);
+    } else if (open.length > 0 && !tag.selfClosing) {
+      open.push(tag);
+    }
+    cursor = tag.end;
+  }
+  if (start !== undefined) ranges.push({ start, end: source.length });
+  return ranges;
+}
+
+function rangeAt(ranges, cursor) {
+  return ranges.find((range) => cursor >= range.start && cursor < range.end);
+}
+
+function parseRawAnchorAt(source, start) {
+  const tag = htmlTagAt(source, start);
+  if (!tag || tag.closing || tag.name !== "a" || tag.attributes.has("hidden")) return undefined;
+  const rawTarget = tag.attributes.get("href");
+  if (!rawTarget) return undefined;
+  const { target, fragment } = normaliseTarget(rawTarget);
+  return { end: tag.end, target, fragment };
+}
+
 export function extractMarkdownLinks(markdown) {
   const links = [];
-  for (const { line, text, source: original } of scanVisibleMarkdown(markdown)) {
+  const lines = scanVisibleMarkdown(markdown);
+  const definitions = referenceDefinitions(lines);
+  for (const { line, text, source: original, kind } of lines) {
+    if (kind === "link-reference") continue;
+    const hidden = hiddenHtmlRanges(original);
     for (let cursor = 0; cursor < text.length;) {
-      const link = parseLinkAt(text, original, cursor);
+      const hiddenRange = rangeAt(hidden, cursor);
+      if (hiddenRange) {
+        cursor = hiddenRange.end;
+        continue;
+      }
+      const rawAnchor = parseRawAnchorAt(text, cursor);
+      if (rawAnchor) {
+        links.push({ label: "", target: rawAnchor.target, fragment: rawAnchor.fragment, line });
+        cursor = rawAnchor.end;
+        continue;
+      }
+      const link = parseLinkAt(text, original, cursor) ?? parseReferenceLinkAt(text, original, cursor, definitions);
       if (!link) {
         cursor += 1;
         continue;

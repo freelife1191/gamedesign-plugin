@@ -54,7 +54,7 @@
       "product": "suite",
       "source_document": "guides/archify-diagrams/README.md",
       "source_section": "Curated Archify inventory",
-      "source_digest": "f4fdfcb04a3de47f03c4bbb0c531cb595e4c6c9c947f5ba71f7313209fd3a537",
+      "source_digest": "50152e86421fd5912f6f35699b3c194d7664b7275b9ef039753a044c5bd1a112",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
     "decision_reason": "“Curated Archify inventory”은 catalog의 planned·blocked·published 상태와 evidence ledger 사용법을 설명하는 저작 정책 문서다. 근거: `catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 inventory만으로 어떤 diagram의 존재나 사람 승인을 주장하지 않습니다.`.",

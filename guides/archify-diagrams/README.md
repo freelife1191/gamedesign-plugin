@@ -1,13 +1,13 @@
 # Curated Archify inventory
 
-이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 이 단계는 후보 결정의 증거를 고정할 뿐 HTML이나 spec을 만들지 않습니다.
+이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 현재 3개 `selected` 항목은 모두 committed `spec`과 검증 기록을 가지지만, 검증·시각 QA를 모두 통과한 공개 결과물은 아직 없습니다.
 
 ## 처음 보는 사용자를 위한 흐름
 
 1. `catalog.json`에서 문서별 `selected` 또는 `excluded` 결정을 찾습니다.
 2. `selected`의 `question`, `diagram_type_reason`, `composition_rationale`가 실제로 어떤 질문을 도식으로 풀지 설명합니다.
-3. 아직은 `delivery_status: planned`이므로 `spec`, `html`, `receipt`는 미래의 결정론적 경로일 뿐 파일이 아닙니다.
-4. 이후 저작 단계가 source digest를 다시 확인하고 spec을 만든 뒤 검증·시각 검토를 통과해야만 HTML을 공개할 수 있습니다.
+3. 현재 3개 `selected` spec 중 Studio workflow는 `blocked-validation`이고, Career workflow와 Suite handoff는 `blocked-visual`입니다. 각 차단 사유와 증거는 아래 상태 인덱스에서 확인합니다.
+4. `passed/published`는 0개입니다. `guides/assets/archify/`에는 공개 HTML·receipt가 없으며, failed render는 검토 증거일 뿐 공개 결과물이 아닙니다.
 
 ## 증거와 전수 범위
 
