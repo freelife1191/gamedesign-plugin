@@ -328,6 +328,46 @@ function careerRouteFooterLines(source) {
   });
 }
 
+function estimatedLatinRunWidth(run, fontSize) {
+  const em = [...run].reduce((width, character) => {
+    if (/[WM]/u.test(character)) return width + 1;
+    if (/[mw]/u.test(character)) return width + 0.9;
+    if (/[A-Z]/u.test(character)) return width + 0.75;
+    if (/[ilI1]/u.test(character)) return width + 0.35;
+    return width + 0.62;
+  }, 0);
+  return Math.ceil(em * fontSize);
+}
+
+function validateUnbreakableLatinRuns(value, path, { width, fontSize }) {
+  for (const match of String(value).matchAll(/[A-Za-z0-9]+/gu)) {
+    const estimatedWidth = estimatedLatinRunWidth(match[0], fontSize);
+    if (estimatedWidth > width) {
+      throw new TypeError(`${path} contains unbreakable Latin token "${match[0]}" whose estimated width ${estimatedWidth}px exceeds its ${width}px card text box at ${fontSize}px; add spaces or hyphens at semantic boundaries`);
+    }
+  }
+}
+
+function validateCardTextFit(source) {
+  const cards = layoutFor(source.type, source.steps.length, source);
+  const readable = isProductUseCaseSource(source);
+  for (const [index, step] of source.steps.entries()) {
+    const card = cards[index];
+    const width = card.width - 56;
+    const compact = card.height <= 160;
+    const labelFontSize = readable ? 20 : compact ? 17 : splitLines(step.label).length > 2 ? 20 : 22;
+    const detailFontSize = readable ? 15 : compact ? 13 : 18;
+    validateUnbreakableLatinRuns(step.label, `diagram source steps[${index}].label`, { width, fontSize: labelFontSize });
+    validateUnbreakableLatinRuns(step.detail, `diagram source steps[${index}].detail`, { width, fontSize: detailFontSize });
+  }
+  if (source.type === "decision-flow") {
+    for (const [index, branch] of source.branches.entries()) {
+      validateUnbreakableLatinRuns(branch.label, `diagram source branches[${index}].label`, { width: 152, fontSize: 15 });
+      validateUnbreakableLatinRuns(branch.detail, `diagram source branches[${index}].detail`, { width: 152, fontSize: 13 });
+    }
+  }
+}
+
 export function validateDiagramSource(source) {
   if (!isObject(source)) throw new TypeError("diagram source must be an object");
   for (const field of REQUIRED_FIELDS) {
@@ -368,6 +408,7 @@ export function validateDiagramSource(source) {
   }
   validateStudioSemanticContract(source);
   validateCareerSemanticContract(source);
+  validateCardTextFit(source);
 }
 
 const USE_CASE_REPAIR_INSTRUCTION = "repair source layout/wrapping, regenerate SVG, rerender 2× PNG, then re-inspect";

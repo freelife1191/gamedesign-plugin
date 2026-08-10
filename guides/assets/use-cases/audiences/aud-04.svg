@@ -20,7 +20,7 @@
     <rect x="198" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
     <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
       <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">범위 정의</text>
-      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">제외 목록과 위험을 </text>
+      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">제외 목록과 위험을</text>
       <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">남깁니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 핵심 루프">
@@ -28,15 +28,15 @@
     <rect x="478" y="370" width="52" height="32" rx="16" fill="#534AB7"/>
     <text x="504" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
       <text x="478" y="438" fill="#3C3489" font-size="22" font-weight="700">핵심 루프</text>
-      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">가장 작은 플레이 흐</text>
-      <text x="478" y="526" fill="#354152" font-size="18" font-weight="400">름을 만듭니다.</text>
+      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">가장 작은 플레이</text>
+      <text x="478" y="526" fill="#354152" font-size="18" font-weight="400">흐름을 만듭니다.</text>
   </g>
   <g aria-label="읽기 순서 3: 제작 검토">
     <rect x="730" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="758" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="784" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
       <text x="758" y="438" fill="#085041" font-size="22" font-weight="700">제작 검토</text>
-      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">결정과 보류 항목을 </text>
+      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">결정과 보류 항목을</text>
       <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">점검합니다.</text>
   </g>
   <g aria-label="읽기 순서 4: QA 증거">
@@ -44,8 +44,8 @@
     <rect x="1038" y="370" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="1064" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
       <text x="1038" y="438" fill="#814600" font-size="22" font-weight="700">QA 증거</text>
-      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">재현 가능한 검토 기</text>
-      <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">록을 보존합니다.</text>
+      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">재현 가능한 검토</text>
+      <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">기록을 보존합니다.</text>
   </g>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>

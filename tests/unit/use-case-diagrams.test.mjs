@@ -283,6 +283,87 @@ test("diagram source rejects card text that cannot fit without truncation", () =
   }), /detail.*length|detail.*fit/u);
 });
 
+test("card roles reject over-wide Latin runs consistently across every renderer layout", () => {
+  const longToken = "W".repeat(20);
+  const studioPipeline = {
+    ...validFixture,
+    id: "st-c01",
+    scope: "game-design-studio-use-case",
+    type: "design-pipeline",
+    steps: ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      specialist: "define-game-vision",
+      outputs: ["vision-pillars"],
+      review: { skill: "review-game-design", condition: "named owner 검토" },
+    },
+  };
+  const studioDecision = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-systems", outputs: ["system-specification"], validation: "telemetry" },
+    branches: [{ label: "보호 경로", detail: "guardrail" }, { label: "확장 경로", detail: "rollback" }],
+  };
+  const studioSkill = {
+    ...validFixture,
+    id: "st-s03",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      skill: "design-game-content",
+      required_input: "quest intent + rights boundary",
+      outputs: ["narrative-quest-npc"],
+      next_routes: ["review-game-design"],
+    },
+  };
+  const sources = [
+    fixtureFor("learning-path", 3),
+    fixtureFor("design-pipeline", 5),
+    fixtureFor("decision-flow", 5),
+    fixtureFor("skill-flow", 5),
+    studioPipeline,
+    studioDecision,
+    studioSkill,
+  ];
+
+  for (const source of sources) {
+    for (const field of ["label", "detail"]) {
+      const mutated = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, [field]: longToken } : step) };
+      const expected = new RegExp(`steps\\[0\\]\\.${field}.*unbreakable Latin token.*exceeds.*text box.*spaces or hyphens`, "u");
+      assert.throws(() => validateDiagramSource(mutated), expected, `${source.scope}/${source.type}/${field} validates`);
+      assert.throws(() => renderDiagramSvg(mutated), expected, `${source.scope}/${source.type}/${field} renders`);
+    }
+  }
+});
+
+test("the tightest card accepts a boundary-fit Latin run and wraps only at hyphens", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({
+      stage,
+      label: index === 0 ? "W".repeat(7) : `판단 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: { specialist: "design-game-systems", outputs: ["system-specification"], validation: "telemetry" },
+    branches: [{ label: "보호 경로", detail: "guardrail" }, { label: "확장 경로", detail: "rollback" }],
+  };
+
+  assert.doesNotThrow(() => validateDiagramSource(source));
+  const svg = renderDiagramSvg(source);
+  assert.match(svg, />WWWWWWW<\/tspan>/u);
+
+  const hyphenSource = fixtureFor("learning-path", 3);
+  hyphenSource.steps[0].label = "WWWWWW-WWWWWW";
+  assert.doesNotThrow(() => validateDiagramSource(hyphenSource));
+  assert.match(renderDiagramSvg(hyphenSource), />WWWWWW-<\/text>\n\s*<text[^>]*>WWWWWW<\/text>/u);
+});
+
 test("renderDiagramSvg preserves every multi-code-unit character at the card length limits", () => {
   const label = "🧩".repeat(20);
   const detail = "🧠".repeat(22);

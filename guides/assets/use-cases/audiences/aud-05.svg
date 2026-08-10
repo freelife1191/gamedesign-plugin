@@ -20,31 +20,31 @@
     <rect x="198" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
     <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
       <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">문제 정의</text>
-      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">검증할 문제를 분명히</text>
-      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400"> 합니다.</text>
+      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">검증할 문제를</text>
+      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">분명히 합니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 규칙·결정">
     <rect x="450" y="342" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="478" y="370" width="52" height="32" rx="16" fill="#534AB7"/>
     <text x="504" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
       <text x="478" y="438" fill="#3C3489" font-size="22" font-weight="700">규칙·결정</text>
-      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">근거와 선택을 기록합</text>
-      <text x="478" y="526" fill="#354152" font-size="18" font-weight="400">니다.</text>
+      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">근거와 선택을</text>
+      <text x="478" y="526" fill="#354152" font-size="18" font-weight="400">기록합니다.</text>
   </g>
   <g aria-label="읽기 순서 3: 리뷰 큐">
     <rect x="730" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="758" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="784" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
       <text x="758" y="438" fill="#085041" font-size="22" font-weight="700">리뷰 큐</text>
-      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">수정 우선순위를 정합</text>
-      <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">니다.</text>
+      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">수정 우선순위를</text>
+      <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">정합니다.</text>
   </g>
   <g aria-label="읽기 순서 4: Handoff">
     <rect x="1010" y="342" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="1038" y="370" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="1064" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
       <text x="1038" y="438" fill="#814600" font-size="22" font-weight="700">Handoff</text>
-      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">공개 가능한 사실만 </text>
+      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">공개 가능한 사실만</text>
       <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">전달합니다.</text>
   </g>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
