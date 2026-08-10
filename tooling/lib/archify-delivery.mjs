@@ -6,6 +6,7 @@ import path from "node:path";
 
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
 import { loadArchifyCatalog, publishableArchifyEntries } from "./archify-catalog.mjs";
+import { loadArchifyVisualQa } from "./archify-visual-qa.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
 import { toPersistedArchifyReceipt, validateArchifyDeliverReceipt, validateArchifyValidateReceipt } from "./archify-receipt.mjs";
 import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./guarded-temp.mjs";
@@ -592,14 +593,24 @@ async function loadPublishedRecords(root, entries) {
 
 async function qaBindings(root, records) {
   if (!records.length) return;
+  const loaded = await loadArchifyVisualQa({ repoRoot: root });
   const manifest = await snapshotRegular(joinWithin(root, QA_MANIFEST, "visual QA manifest"), "visual QA manifest");
-  let parsed; try { parsed = JSON.parse(manifest.bytes); } catch { throw new Error("visual QA manifest is invalid JSON"); }
-  if (parsed?.schema_version !== 1 || !Array.isArray(parsed.entries)) throw new Error("visual QA manifest schema version is invalid");
+  const renders = [];
+  for (const entry of loaded.qa.entries) {
+    for (const render of [entry.renders.read, entry.renders.light, entry.renders.dark, ...entry.renders.guided_views]) {
+      renders.push(await snapshotRegular(joinWithin(root, `guides/archify-diagrams/visual-qa/${render.path}`, "visual QA render"), "visual QA render"));
+    }
+  }
   for (const record of records) {
-    const entry = parsed.entries.find((candidate) => candidate?.id === record.entry.id);
+    const entry = loaded.qa.entries.find((candidate) => candidate.id === record.entry.id);
     if (!entry || entry.reviewer !== record.entry.reviewer || entry.specification_sha256 !== record.spec.sha256 || entry.artifact_sha256 !== record.artifact.sha256) throw new Error(`visual QA binding does not match: ${record.entry.id}`);
   }
-  return manifest;
+  return Object.freeze({ manifest, renders: Object.freeze(renders) });
+}
+
+async function assertQaSnapshotCurrent(snapshot) {
+  await assertSnapshotCurrent(snapshot.manifest);
+  for (const render of snapshot.renders) await assertSnapshotCurrent(render);
 }
 
 async function stageCommit({ root, temp, catalog, catalogSnapshot, records, hooks }) {
@@ -649,7 +660,7 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
   const original = await lstat(targetPath).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
   let backup; let published; let publishedRenameMoved = false;
   try {
-    await validateRecordInputs(records, catalogSnapshot); await assertSnapshotCurrent(qaSnapshot); validateExactStructuralSignatures(catalog, records);
+    await validateRecordInputs(records, catalogSnapshot); await assertQaSnapshotCurrent(qaSnapshot); validateExactStructuralSignatures(catalog, records);
     if (original) {
       await invoke(hooks, "before-backup-rename", { target: targetPath });
       backup = await renameDirectory(await directoryRecord(targetPath, "managed publish target", assets.path), path.join(assets.path, `.curated-archify-backup-${randomUUID()}`), assets, "publish backup", assets.path, hooks);

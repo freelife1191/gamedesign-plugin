@@ -4,6 +4,7 @@ import { lstat, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { deflateSync } from "node:zlib";
 
 import { loadArchifyVisualQa, renderArchifyContactSheets } from "../../tooling/lib/archify-visual-qa.mjs";
 import { buildArchifyContactSheets } from "../../tooling/build-archify-contact-sheets.mjs";
@@ -44,7 +45,7 @@ function pngChunk(type, data) {
   return chunk;
 }
 
-function png(width = 1600, height = 1200) {
+function png(width = 2, height = 2) {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
@@ -52,8 +53,13 @@ function png(width = 1600, height = 1200) {
   header[9] = 6;
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    pngChunk("IHDR", header), pngChunk("IEND", Buffer.alloc(0)),
+    pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(Buffer.concat(Array.from({ length: height }, () => Buffer.alloc(width * 4 + 1))))), pngChunk("IEND", Buffer.alloc(0)),
   ]);
+}
+
+function pngWithoutIdat() {
+  const header = Buffer.from([0, 0, 0, 2, 0, 0, 0, 2, 8, 6, 0, 0, 0]);
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), pngChunk("IHDR", header), pngChunk("IEND", Buffer.alloc(0))]);
 }
 
 async function writeRelative(root, relative, bytes) {
@@ -79,11 +85,11 @@ function catalogEntry({ deliveryStatus = "passed", visualReview = "passed" } = {
 }
 
 function qaEntry(renderFiles, { verdict = "passed", checks = Object.fromEntries(CHECKS.map((key) => [key, "passed"])) } = {}) {
-  const render = (name) => ({ path: renderFiles[name].relative, sha256: sha256(renderFiles[name].bytes), width: 1600, height: 1200 });
+  const render = (name) => ({ path: renderFiles[name].relative, sha256: sha256(renderFiles[name].bytes), width: 2, height: 2 });
   return {
     id: "stable-id", specification_sha256: sha256(SPEC), artifact_sha256: sha256("<main>artifact</main>\n"),
     reviewer: "reviewer", review_method: "headless-agent-browser + original-size image reader", correction_rounds: 0,
-    verdict, renders: { read: render("read"), light: render("light"), dark: render("dark"), guided_views: [render("guided")] },
+    verdict, renders: { read: render("read"), light: render("light"), dark: render("dark"), guided_views: [{ id: "view-focus", ...render("guided") }] },
     checks, defects: [],
   };
 }
@@ -157,8 +163,43 @@ test("visual review cannot pass with an unchecked defect class", async (t) => {
   await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /edge_node_collision/u);
 });
 
+test("visual QA requires the exact review method, valid guided defect view, and closed defect outcomes", async (t) => {
+  const fixture = await visualQaFixture(t, { deliveryStatus: "blocked-visual", visualReview: "failed" });
+  fixture.qa.entries[0].verdict = "failed";
+  fixture.qa.entries[0].checks.text_clipping = "failed";
+  fixture.qa.entries[0].defects = [{ view: "view-focus", subject: "node", symptom: "overlap", correction_outcome: "blocked" }];
+  fixture.qa.entries[0].review_method = "manual";
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /review_method/u);
+  fixture.qa.entries[0].review_method = "headless-agent-browser + original-size image reader";
+  fixture.qa.entries[0].verdict = "failed";
+  fixture.qa.entries[0].checks.text_clipping = "failed";
+  fixture.qa.entries[0].defects = [{ view: "view-missing", subject: "node", symptom: "overlap", correction_outcome: "blocked" }];
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /existing render/u);
+  fixture.qa.entries[0].defects[0].view = "view-focus";
+  fixture.qa.entries[0].defects[0].correction_outcome = "later";
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /correction_outcome/u);
+});
+
+test("visual QA rejects missing and corrupted PNG IDAT payloads through the shared complete-PNG inspector", async (t) => {
+  const fixture = await visualQaFixture(t);
+  const filename = path.join(fixture.root, "guides/archify-diagrams/visual-qa/renders/studio/stable-id/read.png");
+  const missing = pngWithoutIdat();
+  await writeFile(filename, missing);
+  fixture.qa.entries[0].renders.read.sha256 = sha256(missing);
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /PNG validation/u);
+  const corrupt = png(); corrupt[45] ^= 0xff;
+  await writeFile(filename, corrupt);
+  fixture.qa.entries[0].renders.read.sha256 = sha256(corrupt);
+  await rewrite(fixture);
+  await assert.rejects(() => loadArchifyVisualQa({ repoRoot: fixture.root }), /PNG validation/u);
+});
+
 for (const [name, mutate, pattern] of [
-  ["PNG signature", replacePngWithText, /PNG signature/u],
+  ["PNG signature", replacePngWithText, /signature/u],
   ["zero dimensions", (q) => { q.qa.entries[0].renders.read.width = 0; }, /dimensions/u],
   ["render digest", corruptReadDigest, /render digest/u],
   ["guided view", removeRequiredGuidedView, /guided view/u],
@@ -184,6 +225,9 @@ test("contact sheets escape data, order entries, and include every passed READ r
   const all = sheets.get("all.html");
   assert.match(all, /&lt;unsafe &amp; question&gt;/u);
   assert.match(all, /renders\/studio\/stable-id\/read\.png/u);
+  for (const name of ["all.html", "product-studio.html", "type-workflow.html"]) {
+    assert.match(sheets.get(name), /href="\.\.\/\.\.\/\.\.\/\.\.\/README\.md"/u);
+  }
   assert.ok(sheets.has("product-studio.html"));
   assert.ok(sheets.has("type-workflow.html"));
   assert.equal(sheets.get("all.html"), renderArchifyContactSheets({ catalog, qa }).get("all.html"));
@@ -196,6 +240,18 @@ test("contact sheet builder checks exact bytes and rejects an omitted passed ent
   const output = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets/all.html");
   await writeFile(output, (await readFile(output, "utf8")).replaceAll("stable-id", "removed-id"));
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /contact sheet bytes/u);
+});
+
+test("contact sheet builder removes stale groups atomically and restores the prior tree on failure", async (t) => {
+  const fixture = await visualQaFixture(t);
+  await buildArchifyContactSheets({ repoRoot: fixture.root });
+  const directory = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets");
+  await writeFile(path.join(directory, "stale.html"), "stale\n");
+  await buildArchifyContactSheets({ repoRoot: fixture.root });
+  await assert.rejects(readFile(path.join(directory, "stale.html")), { code: "ENOENT" });
+  const before = await readFile(path.join(directory, "all.html"), "utf8");
+  await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforePublish: async () => { throw new Error("stop"); } } }), /stop/u);
+  assert.equal(await readFile(path.join(directory, "all.html"), "utf8"), before);
 });
 
 test("blocked visual entries require a failed verdict and a complete defect record", async (t) => {

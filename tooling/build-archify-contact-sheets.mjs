@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-import { lstat, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { loadArchifyVisualQa, renderArchifyContactSheets } from "./lib/archify-visual-qa.mjs";
+import { cleanupGuardedTempRoot, createGuardedTempRoot } from "./lib/guarded-temp.mjs";
 import { comparePaths } from "./lib/paths.mjs";
 
 const OUTPUT_ROOT = "guides/archify-diagrams/visual-qa/contact-sheets";
@@ -43,17 +44,49 @@ async function assertExactOutput(directory, sheets) {
   }
 }
 
-export async function buildArchifyContactSheets({ repoRoot, check = false } = {}) {
+async function writeExactOutput(directory, sheets) {
+  await mkdir(directory);
+  for (const [name, bytes] of sheets) await writeFile(path.join(directory, name), bytes, "utf8");
+  await assertExactOutput(directory, sheets);
+}
+
+export async function buildArchifyContactSheets({ repoRoot, check = false, __testHooks = {} } = {}) {
   const { catalog, qa } = await loadArchifyVisualQa({ repoRoot });
   const sheets = renderArchifyContactSheets({ catalog, qa });
-  const directory = await assertDirectoryPath(repoRoot, OUTPUT_ROOT, { create: !check });
+  const directory = path.join(repoRoot, OUTPUT_ROOT);
   if (check) {
+    await assertDirectoryPath(repoRoot, OUTPUT_ROOT, { create: false });
     await assertExactOutput(directory, sheets);
     return { checked: true, outputs: [...sheets.keys()].sort(comparePaths) };
   }
-  for (const [name, bytes] of sheets) await writeFile(path.join(directory, name), bytes, "utf8");
-  await assertExactOutput(directory, sheets);
-  return { built: true, outputs: [...sheets.keys()].sort(comparePaths) };
+  const parent = await assertDirectoryPath(repoRoot, path.posix.dirname(OUTPUT_ROOT), { create: true });
+  const temporary = await createGuardedTempRoot({ parent, prefix: "contact-sheet-" });
+  const candidate = path.join(temporary.root, "contact-sheets");
+  const backup = path.join(parent, ".contact-sheets-backup");
+  let movedOld = false;
+  let movedNew = false;
+  try {
+    await writeExactOutput(candidate, sheets);
+    const existing = await lstat(directory).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (existing) {
+      if (!existing.isDirectory() || existing.isSymbolicLink()) throw new Error("contact sheet output directory is unsafe");
+      await rm(backup, { recursive: true, force: true });
+      await rename(directory, backup); movedOld = true;
+    }
+    await __testHooks.beforePublish?.({ candidate, directory, backup });
+    await rename(candidate, directory); movedNew = true;
+    await assertExactOutput(directory, sheets);
+    await __testHooks.afterPublish?.({ directory, backup });
+    await assertExactOutput(directory, sheets);
+    if (movedOld) await rm(backup, { recursive: true, force: true });
+    return { built: true, outputs: [...sheets.keys()].sort(comparePaths) };
+  } catch (error) {
+    if (movedNew) await rename(directory, candidate).catch(() => undefined);
+    if (movedOld) await rename(backup, directory).catch(() => undefined);
+    throw error;
+  } finally {
+    await cleanupGuardedTempRoot(temporary);
+  }
 }
 
 const invoked = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

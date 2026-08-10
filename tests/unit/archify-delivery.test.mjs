@@ -4,6 +4,7 @@ import { access, lstat, mkdir, mkdtemp, readFile, readdir, rename, rmdir, rm, sy
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { deflateSync } from "node:zlib";
 
 import {
   checkCuratedArchify,
@@ -15,6 +16,23 @@ import { parseCuratedArchifyArguments } from "../../tooling/build-curated-archif
 const SOURCE = "# Source\n\n## Exact heading\n\nBody.\n";
 const SPEC = `${JSON.stringify({ schema_version: 1, diagram_type: "workflow", meta: { title: "검토", quality_profile: "showcase" }, lanes: [{ id: "main", label: "주 경로" }], nodes: [{ id: "start", lane: "main", col: 0, type: "backend", label: "시작" }], edges: [], mainPath: ["start"] })}\n`;
 const DIGEST = (bytes) => createHash("sha256").update(bytes).digest("hex");
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) { crc ^= byte; for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1)); }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const typeBytes = Buffer.from(type, "ascii"); const chunk = Buffer.alloc(12 + data.length);
+  chunk.writeUInt32BE(data.length, 0); typeBytes.copy(chunk, 4); data.copy(chunk, 8);
+  chunk.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), 8 + data.length); return chunk;
+}
+
+function png() {
+  const header = Buffer.from([0, 0, 0, 2, 0, 0, 0, 2, 8, 6, 0, 0, 0]);
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(Buffer.alloc(18))), pngChunk("IEND", Buffer.alloc(0))]);
+}
 
 function entry({ status = "planned", visual = "pending", reviewer = null } = {}) {
   return {
@@ -47,7 +65,16 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
   if (withSpec) await write(root, selected.spec, SPEC);
   if (status === "passed") {
     const artifact = Buffer.from("<!doctype html><title>verified</title>\n");
-    await write(root, "guides/archify-diagrams/visual-qa/manifest.json", `${JSON.stringify({ schema_version: 1, entries: [{ id: selected.id, reviewer: "reviewer", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact) }] })}\n`);
+    await write(root, ".tmp/curated-archify/current/studio/stable-id.html", artifact);
+    const renders = {};
+    for (const name of ["read", "light", "dark", "guided"]) {
+      const relative = `renders/studio/${selected.id}/${name}.png`; const bytes = png();
+      await write(root, `guides/archify-diagrams/visual-qa/${relative}`, bytes);
+      renders[name] = { path: relative, sha256: DIGEST(bytes), width: 2, height: 2 };
+    }
+    const checks = Object.fromEntries(["text_clipping", "glyph_distortion", "blur_or_tofu", "node_text_collision", "edge_node_collision", "edge_label_collision", "ambiguous_corridor", "branch_merge_retry_resume", "rail_legend_footer", "light_dark_contrast", "guided_view_usefulness", "within_product_diversity", "cross_product_distinction"].map((key) => [key, "passed"]));
+    const qaEntry = { id: selected.id, reviewer: "reviewer", review_method: "headless-agent-browser + original-size image reader", correction_rounds: 0, verdict: "passed", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact), renders: { read: renders.read, light: renders.light, dark: renders.dark, guided_views: [{ id: "view-focus", ...renders.guided }] }, checks, defects: [] };
+    await write(root, "guides/archify-diagrams/visual-qa/manifest.json", `${JSON.stringify({ schema_version: 1, entries: [qaEntry] })}\n`);
   }
   const home = await mkdtemp(path.join(os.tmpdir(), "archify-delivery-home-"));
   t.after(() => rm(home, { recursive: true, force: true }));
@@ -143,7 +170,13 @@ test("a scoped check still verifies every published receipt and artifact binding
   await write(f.root, second.spec, secondSpec);
   const qaPath = path.join(f.root, "guides/archify-diagrams/visual-qa/manifest.json");
   const qa = JSON.parse(await readFile(qaPath, "utf8"));
-  qa.entries.push({ id: second.id, reviewer: "reviewer", specification_sha256: DIGEST(secondSpec), artifact_sha256: DIGEST(Buffer.from("<!doctype html><title>verified</title>\n")) });
+  const careerRenders = {};
+  for (const name of ["read", "light", "dark", "guided"]) {
+    const relative = `renders/career/${second.id}/${name}.png`; const bytes = png();
+    await write(f.root, `guides/archify-diagrams/visual-qa/${relative}`, bytes);
+    careerRenders[name] = { path: relative, sha256: DIGEST(bytes), width: 2, height: 2 };
+  }
+  qa.entries.push({ ...qa.entries[0], id: second.id, specification_sha256: DIGEST(secondSpec), artifact_sha256: DIGEST(Buffer.from("<!doctype html><title>verified</title>\n")), renders: { read: careerRenders.read, light: careerRenders.light, dark: careerRenders.dark, guided_views: [{ id: "view-focus", ...careerRenders.guided }] } });
   await writeFile(qaPath, `${JSON.stringify(qa)}\n`);
   let sharedClosureCopies = 0;
   await stageCuratedArchify({
@@ -242,7 +275,7 @@ test("publication rejects a passed record whose visual-QA digests do not bind th
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   manifest.entries[0].artifact_sha256 = "0".repeat(64);
   await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
-  await assert.rejects(() => publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /visual QA binding/u);
+  await assert.rejects(() => publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /artifact digest|visual QA binding/u);
   await assert.rejects(access(path.join(f.root, "guides/assets/archify")), { code: "ENOENT" });
 });
 

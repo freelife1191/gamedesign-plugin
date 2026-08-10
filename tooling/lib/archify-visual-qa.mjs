@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { inspectCompletePng } from "../../shared/scripts/lib/complete-png-validation.mjs";
 import { loadArchifyCatalog } from "./archify-catalog.mjs";
 import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 
@@ -9,6 +10,7 @@ const MANIFEST_PATH = "guides/archify-diagrams/visual-qa/manifest.json";
 const QA_ROOT = "guides/archify-diagrams/visual-qa";
 const REQUIRED_RENDER_KEYS = Object.freeze(["read", "light", "dark", "guided_views"]);
 const RENDER_KEYS = Object.freeze(["path", "sha256", "width", "height"]);
+const GUIDED_RENDER_KEYS = Object.freeze(["id", ...RENDER_KEYS]);
 const ENTRY_KEYS = Object.freeze([
   "id", "specification_sha256", "artifact_sha256", "reviewer", "review_method", "correction_rounds", "verdict",
   "renders", "checks", "defects",
@@ -19,7 +21,6 @@ const CHECK_KEYS = Object.freeze([
   "light_dark_contrast", "guided_view_usefulness", "within_product_diversity", "cross_product_distinction",
 ]);
 const DEFECT_KEYS = Object.freeze(["view", "subject", "symptom", "correction_outcome"]);
-const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -42,49 +43,6 @@ function assertExactKeys(value, keys, label) {
 
 function assertDigest(value, label) {
   if (typeof value !== "string" || !/^[0-9a-f]{64}$/u.test(value)) throw new Error(`${label} must be 64 lowercase hex characters`);
-}
-
-function crc32(bytes) {
-  let crc = 0xffffffff;
-  for (const byte of bytes) {
-    crc ^= byte;
-    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngDimensions(bytes, label) {
-  if (bytes.length < 45 || !bytes.subarray(0, 8).equals(PNG_SIGNATURE)) throw new Error(`${label} has invalid PNG signature`);
-  let offset = 8;
-  let first = true;
-  let dimensions;
-  let foundIend = false;
-  while (offset + 12 <= bytes.length) {
-    const length = bytes.readUInt32BE(offset);
-    const type = bytes.subarray(offset + 4, offset + 8).toString("ascii");
-    const end = offset + 12 + length;
-    if (end > bytes.length) throw new Error(`${label} has malformed PNG structure`);
-    const payload = bytes.subarray(offset + 8, offset + 8 + length);
-    const actualCrc = bytes.readUInt32BE(offset + 8 + length);
-    if (crc32(Buffer.concat([Buffer.from(type, "ascii"), payload])) !== actualCrc) throw new Error(`${label} has invalid PNG CRC`);
-    if (first && (type !== "IHDR" || length !== 13)) throw new Error(`${label} has malformed PNG structure`);
-    if (type === "IHDR") {
-      if (!first) throw new Error(`${label} has malformed PNG structure`);
-      const width = payload.readUInt32BE(0);
-      const height = payload.readUInt32BE(4);
-      if (width === 0 || height === 0) throw new Error(`${label} has invalid PNG dimensions`);
-      dimensions = { width, height };
-    }
-    offset = end;
-    first = false;
-    if (type === "IEND") {
-      if (length !== 0 || offset !== bytes.length) throw new Error(`${label} has malformed PNG structure`);
-      foundIend = true;
-      break;
-    }
-  }
-  if (!dimensions || !foundIend) throw new Error(`${label} has malformed PNG structure`);
-  return dimensions;
 }
 
 async function regularContained(root, relative, label) {
@@ -126,18 +84,22 @@ function validateChecks(entry, label) {
   if (entry.verdict === "failed" && !values.includes("failed")) throw new Error(`${label}.failed verdict requires a failed check`);
 }
 
-function validateDefects(entry, label) {
+function validateDefects(entry, label, views) {
   if (!Array.isArray(entry.defects)) throw new Error(`${label}.defects must be an array`);
-  if (entry.verdict === "passed" && entry.defects.length !== 0) throw new Error(`${label}.passed verdict cannot have defects`);
+  if (entry.verdict === "passed" && entry.defects.some((defect) => ["unresolved", "blocked"].includes(defect.correction_outcome))) throw new Error(`${label}.passed verdict cannot have unresolved defects`);
   if (entry.verdict === "failed" && entry.defects.length === 0) throw new Error(`${label}.failed verdict requires a defect record`);
   for (const [index, defect] of entry.defects.entries()) {
     assertExactKeys(defect, DEFECT_KEYS, `${label}.defects[${index}]`);
     for (const key of DEFECT_KEYS) if (!nonempty(defect[key])) throw new Error(`${label}.defects[${index}].${key} must be a non-empty string`);
+    if (!views.has(defect.view)) throw new Error(`${label}.defects[${index}].view must name an existing render`);
+    if (!["resolved", "unresolved", "blocked"].includes(defect.correction_outcome)) throw new Error(`${label}.defects[${index}].correction_outcome is invalid`);
   }
+  if (entry.verdict === "failed" && !entry.defects.some((defect) => ["unresolved", "blocked"].includes(defect.correction_outcome))) throw new Error(`${label}.failed verdict requires an unresolved or blocked defect`);
 }
 
-async function validateRender(root, render, label, usedPaths) {
-  assertExactKeys(render, RENDER_KEYS, label);
+async function validateRender(root, render, label, usedPaths, { guided = false } = {}) {
+  assertExactKeys(render, guided ? GUIDED_RENDER_KEYS : RENDER_KEYS, label);
+  if (guided && (!/^view-[a-z0-9][a-z0-9-]*$/u.test(render.id))) throw new Error(`${label}.id must be a view-* identifier`);
   if (!Number.isInteger(render.width) || !Number.isInteger(render.height) || render.width < 1 || render.height < 1) {
     throw new Error(`${label} has invalid dimensions`);
   }
@@ -148,8 +110,9 @@ async function validateRender(root, render, label, usedPaths) {
   usedPaths.add(normalized);
   const { filename } = await regularContained(root, `${QA_ROOT}/${normalized}`, label);
   const bytes = await readFile(filename);
-  const dimensions = pngDimensions(bytes, label);
-  if (dimensions.width !== render.width || dimensions.height !== render.height) throw new Error(`${label} dimensions do not match PNG`);
+  const inspection = inspectCompletePng(bytes);
+  if (!inspection.ok) throw new Error(`${label} PNG validation failed: ${inspection.errors.join("; ")}`);
+  if (inspection.width !== render.width || inspection.height !== render.height) throw new Error(`${label} dimensions do not match PNG`);
   if (sha256(bytes) !== render.sha256) throw new Error(`${label} render digest does not match bytes`);
 }
 
@@ -165,7 +128,13 @@ async function validateRenders(root, entry, label, usedPaths) {
   if (!Array.isArray(entry.renders.guided_views) || entry.renders.guided_views.length === 0) {
     throw new Error(`${label} is missing guided view render`);
   }
-  for (const [index, render] of entry.renders.guided_views.entries()) await validateRender(root, render, `${label}.guided_views[${index}]`, usedPaths);
+  const views = new Set(["read", "light", "dark"]);
+  for (const [index, render] of entry.renders.guided_views.entries()) {
+    await validateRender(root, render, `${label}.guided_views[${index}]`, usedPaths, { guided: true });
+    if (views.has(render.id)) throw new Error(`${label} has duplicate guided view id: ${render.id}`);
+    views.add(render.id);
+  }
+  return views;
 }
 
 async function validateEntry(root, entry, catalogEntry, index, usedPaths) {
@@ -175,7 +144,7 @@ async function validateEntry(root, entry, catalogEntry, index, usedPaths) {
   assertDigest(entry.specification_sha256, `${label}.specification_sha256`);
   assertDigest(entry.artifact_sha256, `${label}.artifact_sha256`);
   if (!nonempty(entry.reviewer)) throw new Error(`${label}.reviewer must be a non-empty string`);
-  if (!nonempty(entry.review_method)) throw new Error(`${label}.review_method must be a non-empty string`);
+  if (entry.review_method !== "headless-agent-browser + original-size image reader") throw new Error(`${label}.review_method must be the required review method`);
   if (!Number.isInteger(entry.correction_rounds) || entry.correction_rounds < 0 || entry.correction_rounds > 2) {
     throw new Error(`${label}.correction_rounds must be an integer from 0 through 2`);
   }
@@ -192,8 +161,8 @@ async function validateEntry(root, entry, catalogEntry, index, usedPaths) {
   if (sha256(await readFile(spec.filename)) !== entry.specification_sha256) throw new Error(`${label} specification digest does not match bytes`);
   if (sha256(await readFile(artifact.filename)) !== entry.artifact_sha256) throw new Error(`${label} artifact digest does not match bytes`);
   validateChecks(entry, label);
-  validateDefects(entry, label);
-  await validateRenders(root, entry, label, usedPaths);
+  const views = await validateRenders(root, entry, label, usedPaths);
+  validateDefects(entry, label, views);
 }
 
 export async function loadArchifyVisualQa({ repoRoot, manifestPath } = {}) {
@@ -236,13 +205,19 @@ function compareEntries(left, right) {
     || comparePaths(left.catalog.id, right.catalog.id);
 }
 
-function renderSheet(title, entries) {
+function hrefFromSheet(sheetName, target) {
+  const sheetDirectory = path.posix.dirname(`guides/archify-diagrams/visual-qa/contact-sheets/${sheetName}`);
+  const relative = path.posix.relative(sheetDirectory, target.replaceAll("\\", "/"));
+  return relative.split("/").map(encodeURIComponent).join("/");
+}
+
+function renderSheet(title, entries, sheetName) {
   const cards = [...entries].sort(compareEntries).map(({ catalog, qa }) => [
     `<article data-visual-qa-id="${escapeHtml(catalog.id)}">`,
     `  <h2>${escapeHtml(catalog.id)}</h2>`,
     `  <p><strong>Question:</strong> ${escapeHtml(catalog.question)}</p>`,
     `  <p><strong>Type:</strong> ${escapeHtml(catalog.diagram_type)} · <strong>Product:</strong> ${escapeHtml(catalog.product)}</p>`,
-    `  <p><a href="../../../${escapeHtml(catalog.source_document)}">Source</a></p>`,
+    `  <p><a href="${escapeHtml(hrefFromSheet(sheetName, catalog.source_document))}">Source</a></p>`,
     `  <figure><img src="../${escapeHtml(qa.renders.read.path)}" width="${qa.renders.read.width}" height="${qa.renders.read.height}" alt="READ — ${escapeHtml(catalog.id)}"><figcaption>READ</figcaption></figure>`,
     "</article>",
   ].join("\n"));
@@ -257,12 +232,14 @@ export function renderArchifyContactSheets({ catalog, qa }) {
   const catalogById = new Map(catalog.entries.map((entry) => [entry.id, entry]));
   const passed = qa.entries.filter((entry) => entry.verdict === "passed").map((entry) => ({ catalog: catalogById.get(entry.id), qa: entry }));
   if (passed.some((entry) => !entry.catalog)) throw new Error("contact sheet has an unknown catalog entry");
-  const sheets = new Map([["all.html", renderSheet("All curated Archify diagrams", passed)]]);
+  const sheets = new Map([["all.html", renderSheet("All curated Archify diagrams", passed, "all.html")]]);
   for (const product of [...new Set(passed.map((entry) => entry.catalog.product))].sort(comparePaths)) {
-    sheets.set(`product-${product}.html`, renderSheet(`Curated Archify diagrams — ${product}`, passed.filter((entry) => entry.catalog.product === product)));
+    const name = `product-${product}.html`;
+    sheets.set(name, renderSheet(`Curated Archify diagrams — ${product}`, passed.filter((entry) => entry.catalog.product === product), name));
   }
   for (const type of [...new Set(passed.map((entry) => entry.catalog.diagram_type))].sort(comparePaths)) {
-    sheets.set(`type-${type}.html`, renderSheet(`Curated Archify diagrams — ${type}`, passed.filter((entry) => entry.catalog.diagram_type === type)));
+    const name = `type-${type}.html`;
+    sheets.set(name, renderSheet(`Curated Archify diagrams — ${type}`, passed.filter((entry) => entry.catalog.diagram_type === type), name));
   }
   assertArchifyContactSheetCoverage(sheets, passed);
   return sheets;
