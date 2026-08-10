@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="제작과 검토 및 이미지와 출력 준비의 흐름" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
   <title>제작 검토와 출력</title>
-  <desc>제작과 검토 및 이미지와 출력 준비의 흐름. scope·검토·도식·출력 준비를 순서대로 연결합니다.. steps[1].stage: 입력; steps[1].label: scope와 위험; steps[1].detail: kill criteria를 정합니다.; steps[2].stage: 전문 스킬; steps[2].label: scope 계획; steps[2].detail: 전문 판단을 적용합니다.; steps[3].stage: Canonical Artifact; steps[3].label: 제작 위험; steps[3].detail: 근거와 가정을 남깁니다.; steps[4].stage: 검토; steps[4].label: 설계 검토; steps[4].detail: owner와 경계를 확인합니다.; steps[5].stage: 출력; steps[5].label: 출력 준비; steps[5].detail: 다음 artifact로 넘깁니다.; semantic.specialist: plan-game-production; semantic.outputs[1]: production-scope-risk; semantic.outputs[2]: game-design-review; semantic.outputs[3]: export-preparation-manifest; semantic.review.skill: review-game-design; semantic.review.condition: named owner가 근거·가정·blocker를 검토</desc>
+  <desc>제작과 검토 및 이미지와 출력 준비의 흐름. scope·검토·도식·출력 준비를 순서대로 연결합니다.. steps[1].stage: 입력; steps[1].label: scope와 위험; steps[1].detail: kill criteria를 정합니다.; steps[2].stage: 전문 스킬; steps[2].label: scope 계획; steps[2].detail: 범위 위험·출력 상태를 기록합니다.; steps[3].stage: Canonical Artifact; steps[3].label: 제작 위험; steps[3].detail: 근거와 가정을 남깁니다.; steps[4].stage: 검토; steps[4].label: 설계 검토; steps[4].detail: owner와 경계를 확인합니다.; steps[5].stage: 출력; steps[5].label: 출력 준비; steps[5].detail: 다음 artifact로 넘깁니다.; semantic.specialist: plan-game-production; semantic.outputs[1]: production-scope-risk; semantic.outputs[2]: game-design-review; semantic.outputs[3]: export-preparation-manifest; semantic.review.skill: review-game-design; semantic.review.condition: named owner가 근거·가정·blocker를 검토</desc>
   <defs>
     <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto">
       <path d="M 2 2 L 10 6 L 2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round"/>
@@ -30,7 +30,7 @@
     <text data-text-role="caption" x="389" y="411" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="389" dy="0">2</tspan></text>
     <text data-text-role="caption" x="423" y="414" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="700"><tspan x="423" dy="0">전문 스킬</tspan></text>
     <text data-text-role="card-title" x="363" y="462" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="20" font-weight="700"><tspan x="363" dy="0">scope 계획</tspan></text>
-    <text data-text-role="card-body" x="363" y="521.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="363" dy="0">전문 판단을</tspan><tspan x="363" dy="19">적용합니다.</tspan></text>
+    <text data-text-role="card-body" x="363" y="521.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="363" dy="0">범위 위험·출력</tspan><tspan x="363" dy="19">상태를 기록합니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 3: 제작 위험">
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>

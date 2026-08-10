@@ -225,7 +225,7 @@
       {
         "stage": "전문 스킬",
         "label": "비전 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "행동·선택·피드백을 연결합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -280,7 +280,7 @@
       {
         "stage": "전문 스킬",
         "label": "시스템 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "행동·피드백·보상을 연결합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -335,7 +335,7 @@
       {
         "stage": "전문 스킬",
         "label": "시스템 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "규칙 전이·예외 순서를 명세합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -390,7 +390,7 @@
       {
         "stage": "전문 스킬",
         "label": "UX 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "UX 상태·대체 입력을 명세합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -445,7 +445,7 @@
       {
         "stage": "전문 스킬",
         "label": "퀘스트 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "퀘스트 선택·NPC 상태를 연결합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -500,7 +500,7 @@
       {
         "stage": "전문 스킬",
         "label": "전투 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "공격 신호·대응 상태를 명세합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -555,7 +555,7 @@
       {
         "stage": "전문 스킬",
         "label": "경제 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "경제 흐름·실험 중단을 기록합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -610,7 +610,7 @@
       {
         "stage": "전문 스킬",
         "label": "scope 계획",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "범위 위험·출력 상태를 기록합니다."
       },
       {
         "stage": "Canonical Artifact",
