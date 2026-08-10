@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -10,27 +10,51 @@ import {
   collectProductInventory,
   extractMarkdownLinks as visibleMarkdownLinks,
 } from "../../tooling/lib/user-guides.mjs";
+import { loadPromptTemplateCatalog } from "../../tooling/lib/prompt-template-catalog.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const guideRoot = path.join(root, "guides");
 const products = ["game-design-studio", "game-design-career"];
 const requiredRootHeadings = [
-  "이 플러그인으로 할 수 있는 일",
-  "한국어 Archify 아키텍처 도식",
-  "사용자 유형별 추천 시작점",
-  "활용 방법 선택",
-  "어떤 플러그인을 설치할까",
-  "지원 환경",
-  "Codex App 설치",
-  "Codex CLI 설치",
-  "5분 빠른 시작",
-  "기획 문서 템플릿",
-  "이미지와 도식화",
-  "문서 내보내기",
-  "상세 사용 가이드",
-  "제한·개인정보·권리·사람 승인",
-  "문제 해결",
+  "목차",
+  "30초 안에 플러그인 선택하기",
+  "설치하기",
+  "5분 안에 첫 결과 만들기",
+  "케이스별 프롬프트로 시작하기",
+  "스킬별로 바로 실행하기",
+  "요청 뒤에 생성되는 결과물",
+  "플러그인 구조와 전체 시스템 아키텍처",
+  "이미지·도식·문서 내보내기",
+  "상세 가이드에서 더 알아보기",
+  "안전·권리·사람 승인 경계",
+  "문제를 해결하고 작업 재개하기",
   "기술 문서·기여·라이선스",
+];
+const representativeCards = {
+  studio: [
+    "studio:case:ST-C01", "studio:case:ST-C02", "studio:case:ST-C03", "studio:case:ST-C04",
+    "studio:case:ST-C05", "studio:case:ST-C07", "studio:case:ST-C08",
+  ],
+  career: [
+    "career:case:CA-C01", "career:case:CA-C04", "career:case:CA-C05", "career:case:CA-C06",
+    "career:case:CA-C07", "career:case:CA-C08", "career:case:CA-T01",
+  ],
+  suite: [
+    "suite:studio-to-career-handoff:case", "suite:career-proof-project-interview:case",
+    "suite:gdd-image-presentation:case", "suite:resume-failed-derivatives:case",
+  ],
+};
+const requiredCardLabels = [
+  "사용 시점", "준비 입력", "복사할 요청문", "실행 흐름",
+  "예상 결과", "읽는 순서", "사람 검토", "다음 요청",
+];
+const expectedPluginTreeCounts = {
+  "game-design-studio": { agents: 9, skills: 15, templates: 15, scripts: 14 },
+  "game-design-career": { agents: 9, skills: 15, templates: 15, scripts: 14 },
+};
+const resultExampleIds = [
+  "game-design-brief", "system-specification", "ui-ux-flow-state", "reverse-design-document",
+  "creative-design-portfolio", "export-preparation-manifest",
 ];
 const technicalAppendixMarker = "<details>\n<summary>패키지 기술 inventory</summary>\n";
 const requiredUseCaseGuidePaths = [
@@ -94,6 +118,282 @@ function markdownTableRows(markdown) {
     .filter((line) => line.startsWith("|") && line.endsWith("|"))
     .map((line) => line.slice(1, -1).split("|").map((cell) => cell.trim()))
     .filter((cells) => !cells.every((cell) => /^:?-{3,}:?$/.test(cell)));
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+function exactSection(markdown, heading, level = 2) {
+  const marker = `${"#".repeat(level)} ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `missing section: ${heading}`);
+  const bodyStart = start + marker.length;
+  const next = markdown.search(new RegExp(`\\n#{1,${level}} `, "u"), bodyStart);
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : next);
+}
+
+function textBlocks(markdown) {
+  return [...markdown.matchAll(/```text\n([\s\S]*?)```/gu)].map((match) => match[1]);
+}
+
+function renderedPromptCards(markdown) {
+  const cards = [];
+  const expression = /<details\s+data-prompt-id="([^"]+)">\n([\s\S]*?)<\/details>/gu;
+  for (const match of markdown.matchAll(expression)) cards.push({ id: match[1], body: match[2], raw: match[0] });
+  return cards;
+}
+
+function cardLabelBody(card, label) {
+  const escaped = escapeRegExp(label);
+  const expression = new RegExp(`^#### ${escaped}\\n([\\s\\S]*?)(?=^#### |$)`, "gmu");
+  const matches = [...card.body.matchAll(expression)];
+  assert.equal(matches.length, 1, `${card.id}: visible label must occur exactly once: ${label}`);
+  return matches[0][1].trim();
+}
+
+function assertNoGenericTypeError(error, label) {
+  assert.ok(error instanceof Error, `${label}: validator must throw an Error`);
+  assert.notEqual(error.name, "TypeError", `${label}: mutation must not pass through generic TypeError`);
+}
+
+async function assertRejectedForId(work, id, label) {
+  try {
+    await work();
+  } catch (error) {
+    assertNoGenericTypeError(error, label);
+    assert.match(error.message, new RegExp(escapeRegExp(id), "u"), `${label}: error identifies affected card or row`);
+    return;
+  }
+  assert.fail(`${label}: mutation unexpectedly satisfied the README contract`);
+}
+
+function assertExactOrderedValues(value, expected, label) {
+  const actual = [...value.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+  assert.deepEqual(actual, expected, label);
+}
+
+function assertPromptCard(card, entry) {
+  for (const label of requiredCardLabels) cardLabelBody(card, label);
+  const flow = cardLabelBody(card, "실행 흐름");
+  assert.equal(flow, entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "), `${entry.id}: skill_chain is source-bound`);
+  assertExactOrderedValues(cardLabelBody(card, "예상 결과"), entry.minimum_outputs, `${entry.id}: minimum_outputs are source-bound`);
+  assertExactOrderedValues(cardLabelBody(card, "읽는 순서"), entry.read_order, `${entry.id}: read_order is source-bound`);
+  assert.equal(cardLabelBody(card, "사람 검토"), entry.human_review_boundary, `${entry.id}: human_review_boundary is source-bound`);
+  assert.equal(cardLabelBody(card, "다음 요청"), entry.resume_prompt, `${entry.id}: resume_prompt is source-bound`);
+
+  const copyPrompt = cardLabelBody(card, "복사할 요청문");
+  assert.ok(copyPrompt.includes(`$game-design-${entry.product === "career" ? "career" : "studio"}:`), `${entry.id}: copyable prompt uses the product namespace`);
+  for (const line of textBlocks(card.body)) {
+    for (const sourceLine of line.split("\n")) {
+      if (!sourceLine.trim()) continue;
+      assert.ok(Array.from(sourceLine).length <= 80, `${entry.id}: text prompt line exceeds 80 Unicode code points`);
+    }
+  }
+}
+
+async function assertRepresentativePromptCards(markdown) {
+  const catalog = await loadPromptTemplateCatalog({ repoRoot: root });
+  assert.equal(catalog.counts.total, 146, "production loader reads all nine validated prompt catalog shards");
+  const expectedIds = Object.values(representativeCards).flat();
+  const cards = renderedPromptCards(markdown);
+  const seen = new Set();
+  for (const card of cards) {
+    assert.ok(!seen.has(card.id), `${card.id}: duplicate data-prompt-id in README`);
+    seen.add(card.id);
+    for (const label of requiredCardLabels) cardLabelBody(card, label);
+  }
+  const expectedSet = new Set(expectedIds);
+  const selected = cards.filter((card) => expectedSet.has(card.id));
+  assert.equal(selected.length, expectedIds.length, "README renders every representative source-bound prompt card once");
+  assert.equal(new Set(selected.map((card) => card.id)).size, expectedIds.length, "README representative prompt card IDs are unique");
+  assert.deepEqual(selected.map((card) => card.id), expectedIds, "README representative cards preserve the approved source order");
+  for (const card of selected) {
+    const entry = catalog.byId.get(card.id);
+    assert.ok(entry, `${card.id}: representative card exists in production prompt catalog`);
+    assertPromptCard(card, entry);
+  }
+}
+
+function assertTableShape(markdown, heading, headers, label) {
+  const rows = markdownTableRows(exactSection(markdown, heading, 3));
+  assert.ok(rows.length >= 2, `${label}: table has header and rows`);
+  assert.deepEqual(rows[0], headers, `${label}: table headers are exact`);
+  return rows.slice(1);
+}
+
+async function assertResolvableRowLink(sourcePath, cell, expectedTarget, label) {
+  const links = visibleMarkdownLinks(cell);
+  assert.equal(links.length, 1, `${label}: exactly one detail link`);
+  assert.equal(links[0].target, expectedTarget, `${label}: detail link target`);
+  await validateVisibleLocalLink(sourcePath, links[0], root);
+}
+
+function sourceProductId(product) {
+  return product === "game-design-studio" ? "studio" : "career";
+}
+
+async function sourceAgentIds(product) {
+  return (await readdir(path.join(root, "products", product, "plugin", "agents")))
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => name.slice(0, -3))
+    .sort();
+}
+
+async function assertSkillInventoryTable(markdown, product) {
+  const sourceProduct = sourceProductId(product);
+  const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 설치 스킬 15개`;
+  const rows = assertTableShape(markdown, heading, ["설치 스킬 ID", "직접 호출", "역할·결과", "상세 가이드"], `${product} skills`);
+  const inventory = await collectProductInventory(root, product);
+  const sourceSkills = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  assert.equal(sourceSkills.length, 14, `${product}: source product owns exactly 14 skills`);
+  assert.ok(!sourceSkills.includes("svg-infographic"), `${product}: svg-infographic is not a product source skill`);
+  assert.deepEqual(inventory.skillIds.length, 15, `${product}: production inventory includes 14 source skills plus vendored skill`);
+  assert.deepEqual(sourceSkills, inventory.skillIds.filter((id) => id !== "svg-infographic"), `${product}: production inventory derives its 14 product skills from source`);
+  const generatedSkills = (await readdir(path.join(root, "plugins", product, "skills"), { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  assert.deepEqual(generatedSkills, inventory.skillIds, `${product}: generated skill snapshot matches production inventory`);
+  const expected = inventory.skillIds;
+  const actual = [];
+  for (const row of rows) {
+    assert.equal(row.length, 4, `${product}: skill row has four cells`);
+    const [idCell, command, role, guide] = row;
+    const match = /^`([a-z0-9-]+)`$/u.exec(idCell);
+    assert.ok(match, `${product}: skill ID cell is a literal installed skill ID`);
+    const id = match[1];
+    actual.push(id);
+    assert.equal(command, `\`$game-design-${sourceProduct}:${id}\``, `${product}:${id}: exact direct command`);
+    assert.ok(role.length > 0, `${product}:${id}: role/result description is non-empty`);
+    await assertResolvableRowLink(path.join(root, "README.md"), guide, `guides/${product}/skills/${id}.md`, `${product}:${id}`);
+  }
+  for (const id of expected) assert.ok(actual.includes(id), `${product}:${id}: installed skill is missing from README inventory`);
+  assert.equal(new Set(actual).size, actual.length, `${product}: duplicate skill ID in README inventory`);
+  for (const id of actual) assert.ok(expected.includes(id), `${product}:${id}: invented or cross-product skill ID in README inventory`);
+  assert.deepEqual(actual, expected, `${product}: README skill inventory preserves installed snapshot order`);
+  const vendorRow = rows.find(([idCell]) => idCell === "`svg-infographic`");
+  assert.ok(vendorRow, `${product}: vendored svg-infographic row exists`);
+  assert.match(vendorRow[2], /vendored|번들/iu, `${product}: svg-infographic is identified as a vendored installed skill`);
+  assert.doesNotMatch(vendorRow[2], /제품 source|제품 원본/u, `${product}: svg-infographic must not be presented as a product source skill`);
+  assert.doesNotMatch(markdown, /(?:14개[^\n.]{0,100}(?:제품|source)[^\n.]{0,100}svg-infographic|svg-infographic[^\n.]{0,100}14개[^\n.]{0,100}(?:제품|source))/iu, `${product}: README must not claim vendored svg-infographic is one of 14 product source skills`);
+}
+
+async function assertAgentInventoryTable(markdown, product) {
+  const sourceProduct = sourceProductId(product);
+  const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 에이전트 9개`;
+  const rows = assertTableShape(markdown, heading, ["에이전트 ID", "역할", "검토 초점", "호출 경계", "역할 문서"], `${product} agents`);
+  const expected = await sourceAgentIds(product);
+  assert.equal(expected.length, 9, `${product}: source product owns exactly nine agents`);
+  const generated = (await readdir(path.join(root, "plugins", product, "agents")))
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => name.slice(0, -3))
+    .sort();
+  assert.deepEqual(generated, expected, `${product}: generated agent snapshot matches source inventory`);
+  const actual = [];
+  for (const row of rows) {
+    assert.equal(row.length, 5, `${product}: agent row has five cells`);
+    const [idCell, role, focus, boundary, document] = row;
+    const match = /^`([a-z0-9-]+)`$/u.exec(idCell);
+    assert.ok(match, `${product}: agent ID cell is a literal agent ID`);
+    const id = match[1];
+    actual.push(id);
+    assert.ok(role.length > 0, `${product}:${id}: role is non-empty`);
+    assert.ok(focus.length > 0, `${product}:${id}: review focus is non-empty`);
+    assert.match(boundary, /오케스트레이터|전문가|specialist|delegat/iu, `${product}:${id}: orchestration or specialist delegation boundary is explicit`);
+    await assertResolvableRowLink(path.join(root, "README.md"), document, `plugins/${product}/agents/${id}.md`, `${product}:${id}`);
+  }
+  for (const id of expected) assert.ok(actual.includes(id), `${product}:${id}: agent is missing from README inventory`);
+  assert.equal(new Set(actual).size, actual.length, `${product}: duplicate agent ID in README inventory`);
+  for (const id of actual) assert.ok(expected.includes(id), `${product}:${id}: invented or cross-product agent ID in README inventory`);
+  assert.deepEqual(actual, expected, `${product}: README agent inventory preserves installed snapshot order`);
+}
+
+async function assertPluginTreeContract(markdown, product) {
+  const expected = expectedPluginTreeCounts[product];
+  const snapshotRoot = path.join(root, "plugins", product);
+  const tree = textBlocks(markdown).find((block) => block.startsWith(`plugins/${product}/`));
+  assert.ok(tree, `${product}: README has a separate generated plugin tree text block`);
+  for (const required of [
+    ".codex-plugin/plugin.json", "agents/", "skills/", "assets/templates/", "assets/shared/", "references/",
+    "scripts/", "hooks/hooks.json", ".env.example", "README.md", "BUILD-MANIFEST.json",
+  ]) assert.ok(tree.includes(required), `${product}: README tree includes ${required}`);
+  for (const [directory, count] of Object.entries(expected)) {
+    const relative = directory === "templates" ? "assets/templates" : directory;
+    const filesystemEntries = await readdir(path.join(snapshotRoot, relative));
+    const actual = directory === "scripts"
+      ? filesystemEntries.filter((name) => name.endsWith(".mjs")).length
+      : filesystemEntries.length;
+    assert.equal(actual, count, `${product}: generated ${directory} count`);
+  }
+  const inventory = await collectProductInventory(root, product);
+  assert.equal(inventory.skillIds.length, expected.skills, `${product}: production skill inventory matches generated tree`);
+  assert.equal(inventory.templateIds.length, expected.templates, `${product}: production template inventory matches generated tree`);
+  const generatedTemplates = (await readdir(path.join(snapshotRoot, "assets", "templates"), { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+  assert.deepEqual(generatedTemplates, inventory.templateIds, `${product}: generated template snapshot matches production inventory`);
+  assert.equal((await sourceAgentIds(product)).length, expected.agents, `${product}: source agent inventory matches generated tree`);
+  assert.match(tree, new RegExp(`products/${escapeRegExp(product)}/plugin/`, "u"), `${product}: tree identifies authoring source`);
+  assert.match(tree, new RegExp(`plugins/${escapeRegExp(product)}/`, "u"), `${product}: tree identifies generated snapshot`);
+  assert.doesNotMatch(markdown, /BUILD-MANIFEST\.json[^\n]*(?:직접\s*(?:편집|수정)|edit directly)|(?:직접\s*(?:편집|수정)|edit directly)[^\n]*BUILD-MANIFEST\.json/iu, `${product}: README must not instruct readers to edit BUILD-MANIFEST directly`);
+  assert.doesNotMatch(tree, /BUILD-MANIFEST\.json[^\n]*(?:직접\s*(?:편집|수정)|edit directly)|(?:직접\s*(?:편집|수정)|edit directly)[^\n]*BUILD-MANIFEST\.json/iu, `${product}: BUILD-MANIFEST is not edited directly`);
+}
+
+async function assertResultExamples(markdown) {
+  const artifactTree = textBlocks(markdown).find((block) => block.includes("content.md") && block.includes("export-manifest.yml"));
+  assert.ok(artifactTree, "README shows a Canonical Artifact tree");
+  for (const required of ["content.md", "evidence.yml", "decisions/", "assets/", "export-manifest.yml"]) {
+    assert.ok(artifactTree.includes(required), `Canonical Artifact tree contains ${required}`);
+  }
+  const rows = assertTableShape(markdown, "결과 예시 6종", ["결과 ID", "핵심 파일", "선택 자산", "읽는 순서", "승인 전 보류 경계"], "result examples");
+  const inventories = await Promise.all(products.map((product) => collectProductInventory(root, product)));
+  const templateIds = new Set(inventories.flatMap((inventory) => inventory.templateIds));
+  const manifest = JSON.parse(await readFile(path.join(root, "guides", "use-cases", "use-case-manifest.json"), "utf8"));
+  const manifestOutputs = new Set(manifest.cases.flatMap((entry) => entry.outputs));
+  const actual = [];
+  for (const row of rows) {
+    assert.equal(row.length, 5, "result example row has five cells");
+    const [idCell, coreFile, optionalAsset, readOrder, holdBoundary] = row;
+    const match = /^`([a-z0-9-]+)`$/u.exec(idCell);
+    assert.ok(match, "result example ID is a literal");
+    const id = match[1];
+    actual.push(id);
+    assert.match(coreFile, /content\.md/u, `${id}: core file is explicit`);
+    assert.ok(optionalAsset.length > 0, `${id}: optional asset is explicit`);
+    assert.match(readOrder, /content\.md[\s\S]*evidence\.yml[\s\S]*export-manifest\.yml/u, `${id}: reading order is explicit`);
+    assert.match(holdBoundary, /승인|보류|hold/iu, `${id}: pre-approval hold boundary is explicit`);
+    if (id === "export-preparation-manifest") {
+      assert.ok(manifestOutputs.has(id), `${id}: result category is backed by the use-case manifest`);
+    } else {
+      assert.ok(templateIds.has(id), `${id}: result category is an installed Studio or Career template`);
+    }
+  }
+  assert.deepEqual(actual, resultExampleIds, "README result examples are exact and ordered");
+}
+
+async function assertStructuredRootReadme(markdown) {
+  assert.deepEqual(h2Headings(markdown), requiredRootHeadings, "root README H2 order is exact");
+  const toc = exactSection(markdown, "목차");
+  const tocLinks = visibleMarkdownLinks(toc);
+  const expectedToc = requiredRootHeadings.slice(1).map((label) => {
+    const heading = visibleMarkdownHeadings(markdown).find((candidate) => candidate.level === 2 && candidate.label === label);
+    assert.ok(heading, `TOC target heading exists: ${label}`);
+    return { label, target: `#${heading.anchor}` };
+  });
+  assert.deepEqual(tocLinks.map(({ label, target }) => ({ label, target })), expectedToc, "목차 has only ordered links to every following root section");
+  await assertRepresentativePromptCards(markdown);
+  for (const product of products) {
+    await assertPluginTreeContract(markdown, product);
+    await assertSkillInventoryTable(markdown, product);
+    await assertAgentInventoryTable(markdown, product);
+  }
+  await assertResultExamples(markdown);
+  await assertRootLinks(markdown);
 }
 
 function assertNavigationTable(markdown, headers, routes, label) {
@@ -468,84 +768,44 @@ test("visible Markdown guide graph validates every local edge and permits safe c
   }
 });
 
-test("root README is a safe beginner landing page for both App and CLI", async () => {
-  const [readme, manifestSource, globalGuide] = await Promise.all([
-    readFile(path.join(root, "README.md"), "utf8"),
-    readFile(path.join(guideRoot, "use-cases/use-case-manifest.json"), "utf8"),
-    readFile(path.join(guideRoot, "README.md"), "utf8"),
-  ]);
-  assertRootContentContract(readme);
-  await assertRootUseCaseNavigation(readme, JSON.parse(manifestSource));
-  assertGlobalUseCaseNavigation(globalGuide);
-  await assertRootLinks(readme);
+test("root README follows the approved task-oriented information architecture", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  await assertStructuredRootReadme(readme);
 });
 
-test("root README contract rejects unsafe mutations in memory", async () => {
-  const [readme, manifestSource] = await Promise.all([
-    readFile(path.join(root, "README.md"), "utf8"),
-    readFile(path.join(guideRoot, "use-cases/use-case-manifest.json"), "utf8"),
-  ]);
-  const manifest = JSON.parse(manifestSource);
-  const mutations = [
-    ["both CLI prompts removed", (value) => value
-      .replace(/\$game-design-studio:orchestrate-game-design-project/g, "")
-      .replace(/\$game-design-career:orchestrate-game-design-career/g, "")],
-    ["Studio CLI namespace swapped", (value) => value.replace("$game-design-studio:orchestrate-game-design-project", "$game-design-career:orchestrate-game-design-career")],
-    ["safety section deleted", (value) => value.replace(/## 제한·개인정보·권리·사람 승인[\s\S]*?(?=\n## 문제 해결)/, "")],
-    ["shared PNG no longer links to SVG", (value) => value.replace("guides/assets/shared/plugin-selection-flow.svg", "guides/README.md")],
-    ["marketplace refresh is collapsed into plugin update", (value) => value.replace("refresh할 뿐 설치된 플러그인을 교체하지 않습니다", "설치된 플러그인을 자동 업데이트합니다")],
-    ["two products are installed in one mandatory block", (value) => value.replace("codex plugin add game-design-studio@game-design-suite", "codex plugin add game-design-studio@game-design-suite\ncodex plugin add game-design-career@game-design-suite")],
-    ["three unpaired shared PNG embeds are added", (value) => value + "\n![A](guides/assets/shared/a.png)\n![B](guides/assets/shared/b.png)\n![C](guides/assets/shared/c.png)\n"],
-    ["paired shared PNG gains a bare duplicate", (value) => value + "\n![bare duplicate](guides/assets/shared/plugin-selection-flow.png)\n"],
-    ["use-case heading is removed", (value) => value.replace(/## 활용 방법 선택[\s\S]*?(?=\n## 어떤 플러그인을 설치할까)/, "")],
-  ];
-  for (const [label, mutate] of mutations) {
-    assert.throws(() => assertRootContentContract(mutate(readme)), undefined, label);
-  }
-  const brokenLink = readme.replace("guides/game-design-studio/README.md", "guides/missing.md");
-  await assert.rejects(() => assertRootLinks(brokenLink));
+test("structured README contracts reject card, inventory, and generated-tree mutations", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  const affectedCard = "studio:case:ST-C01";
+  const card = renderedPromptCards(readme).find((candidate) => candidate.id === affectedCard);
+  assert.ok(card, `${affectedCard}: baseline representative card exists before mutation checks`);
+  const replaceCard = (replacement) => readme.replace(card.raw, replacement);
+  const missingLabel = replaceCard(card.raw.replace("#### 준비 입력\n", ""));
+  const duplicateId = readme.replace(card.raw, `${card.raw}\n${card.raw}`);
+  const changedSkill = replaceCard(card.raw.replace("`apply-document-quality-profile`", "`invented-skill`"));
+  const reversedReadOrder = replaceCard(card.raw.replace(/(#### 읽는 순서\n)([^\n]+)\n/u, (_, prefix, order) => `${prefix}${order.split(" → ").reverse().join(" → ")}\n`));
+  const removedApproval = replaceCard(card.raw.replace(/사람 결정/g, "자동 결정"));
+  for (const [label, mutated] of [
+    ["missing card label", missingLabel],
+    ["duplicate prompt ID", duplicateId],
+    ["wrong skill chain", changedSkill],
+    ["reversed read order", reversedReadOrder],
+    ["missing human approval", removedApproval],
+  ]) await assertRejectedForId(() => assertRepresentativePromptCards(mutated), affectedCard, label);
 
-  const canonicalLinks = await canonicalRootUseCaseLinks(manifest);
-  const [studioCase, , careerCase] = canonicalLinks.slice(manifest.audience_paths.length);
-  const [firstAudience, secondAudience] = canonicalLinks;
-  const { target: studioTarget } = studioCase;
-  const { target: careerTarget } = careerCase;
-  const unknownCase = readme.replace(studioTarget, `${studioTarget.split("#", 1)[0]}#unknown-case`);
-  const brokenCase = readme.replace(studioTarget, "guides/game-design-studio/use-cases/missing.md#unknown-case");
-  const traversalCase = readme.replace(studioTarget, "guides/../README.md#unknown-case");
-  const crossProductCase = readme.replace(studioTarget, careerTarget);
-  const swappedCases = readme.replace(studioTarget, "__CASE_SWAP__")
-    .replace(careerTarget, studioTarget)
-    .replace("__CASE_SWAP__", careerTarget);
-  const wrongTitle = readme.replace(studioCase.label, `${studioCase.label} (잘못된 제목)`);
-  const swappedAudienceLabels = readme.replace(firstAudience.label, "__AUDIENCE_SWAP__")
-    .replace(secondAudience.label, firstAudience.label)
-    .replace("__AUDIENCE_SWAP__", secondAudience.label);
-  const swappedAudienceTargets = readme.replace(firstAudience.target, "__AUDIENCE_SWAP__")
-    .replace(secondAudience.target, firstAudience.target)
-    .replace("__AUDIENCE_SWAP__", secondAudience.target);
-  for (const [label, mutation] of [
-    ["unknown case anchor", unknownCase],
-    ["broken case target", brokenCase],
-    ["path traversal case link", traversalCase],
-    ["cross-product case link", crossProductCase],
-    ["representative case links swapped", swappedCases],
-    ["representative case label differs from the visible heading", wrongTitle],
-    ["audience labels swapped", swappedAudienceLabels],
-    ["audience targets swapped", swappedAudienceTargets],
-    ["representative prompt route duplicated", readme.replace("studio:define-game-vision:beginner", "studio:define-game-vision:beginner\nstudio:define-game-vision:beginner")],
-    ["additional representative prompt route added", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project-interview:case\nstudio:define-game-vision:advanced")],
-    ["representative prompt route gains a prefix", readme.replace("studio:define-game-vision:beginner", "xstudio:define-game-vision:beginner")],
-    ["representative prompt route gains a suffix", readme.replace("suite:career-proof-project-interview:case", "suite:career-proof-project:interview:case")],
-    ["representative prompt card adds an independent bullet", readme.replace("\n전체 목록은", "\n- 별도 안내 bullet\n\n전체 목록은")],
-    ["representative prompt card loses its ID", readme.replace("career:map-game-design-career:beginner", "")],
-    ["representative prompt card uses an unsupported namespace", readme.replace("career:map-game-design-career:beginner", "other:map-game-design-career:beginner")],
-    ["representative prompt card uses an unsupported level", readme.replace("career:map-game-design-career:beginner", "career:map-game-design-career:expert")],
-  ]) {
-    await assert.rejects(() => assertRootUseCaseNavigation(mutation, manifest), label);
-  }
-  await assert.rejects(() => assertRootLinks(brokenCase), "broken case target must not resolve");
-  await assert.rejects(() => assertRootLinks(traversalCase), "traversal target must not resolve");
+  const product = "game-design-studio";
+  const removedSkill = readme.replace("| `define-game-vision`", "| `missing-skill`");
+  const duplicateSkill = readme.replace("| `define-game-vision`", "| `apply-document-quality-profile`");
+  const crossProductSkill = readme.replace("| `define-game-vision`", "| `map-game-design-career`");
+  const inventedAgent = readme.replace("| `lead-game-designer`", "| `invented-agent`");
+  for (const [label, mutated, id, validate] of [
+    ["missing skill", removedSkill, "define-game-vision", assertSkillInventoryTable],
+    ["duplicate skill", duplicateSkill, "apply-document-quality-profile", assertSkillInventoryTable],
+    ["cross-product skill", crossProductSkill, "map-game-design-career", assertSkillInventoryTable],
+    ["invented agent", inventedAgent, "invented-agent", assertAgentInventoryTable],
+  ]) await assertRejectedForId(() => validate(mutated, product), id, label);
+
+  const directManifestEdit = readme.replace(`plugins/${product}/`, `plugins/${product}/\nBUILD-MANIFEST.json을 직접 수정합니다.\n`);
+  await assertRejectedForId(() => assertPluginTreeContract(directManifestEdit, product), product, "direct BUILD-MANIFEST edit instruction");
 });
 
 test("global and product indexes reach 30 skills, 30 templates, and 12 recipes", async () => {
