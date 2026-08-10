@@ -39,7 +39,7 @@ const SPEC_REQUIRED_STATES = new Set([
   "spec-authored", "auto-validated", "blocked-schema", "blocked-validation", "blocked-visual",
   "stale-source", "passed", "published",
 ]);
-const DELIVERY_RECEIPT_STATES = new Set(["passed", "published"]);
+const DELIVERY_RECEIPT_STATES = new Set(["published"]);
 const STATE_CONTRACTS = Object.freeze({
   planned: { visualReview: "pending", reviewer: "null", diagnostics: "empty" },
   "spec-authored": { visualReview: "pending", reviewer: "null", diagnostics: "empty" },

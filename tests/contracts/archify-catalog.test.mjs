@@ -78,7 +78,7 @@ async function assertStateAwareMaterialization(entry) {
     return;
   }
   await access(spec);
-  if (["passed", "published"].includes(entry.delivery_status)) {
+  if (entry.delivery_status === "published") {
     assert.equal(entry.visual_review, "passed", entry.id);
     assert.equal(typeof entry.reviewer, "string", entry.id);
     await access(path.join(repoRoot, entry.html));
@@ -107,8 +107,11 @@ test("production inventory has state-aware materialization contracts", async () 
     () => assertStateAwareMaterialization({ ...suite, delivery_status: "auto-validated" }),
     { code: "ENOENT" },
   );
-  await assert.rejects(
+  await assert.doesNotReject(
     () => assertStateAwareMaterialization({ ...career, delivery_status: "passed", visual_review: "passed", reviewer: "reviewer" }),
+  );
+  await assert.rejects(
+    () => assertStateAwareMaterialization({ ...career, delivery_status: "published", visual_review: "passed", reviewer: "reviewer" }),
     { code: "ENOENT" },
   );
 
