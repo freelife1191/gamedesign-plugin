@@ -38,23 +38,20 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSourceBodyEvidence(entry, source) {
-  const sourceBody = source.replace(/^(?: {0,3})#{1,6}\s+.*$/gmu, "").toLowerCase();
-  const explicitEvidence = /근거:\s*(.+?)(?:[.!?。]|$)/u.exec(entry.decision_reason)?.[1]?.trim();
-  if (explicitEvidence !== undefined) {
-    assert.ok(
-      sourceBody.includes(explicitEvidence.toLowerCase()),
-      `${entry.source_document} lacks source body evidence: ${explicitEvidence}`,
-    );
-    return;
-  }
-
-  const ignoredTokens = new Set(["archify", "career", "studio", "suite", "문서", "본문", "텍스트", "관계", "관계도", "도식", "안내", "질문", "근거", "직접", "이미", "별도", "기존", "더", "한다", "이다"]);
-  const evidenceTokens = [...entry.decision_reason.toLowerCase().matchAll(/[a-z0-9][a-z0-9_./:-]{3,}|[가-힣]{3,}/gu)]
-    .map((match) => match[0])
-    .filter((token) => !ignoredTokens.has(token) && sourceBody.includes(token));
+  const sourceBody = source.replace(/^(?: {0,3})#{1,6}\s+.*$/gmu, "");
+  const explicitEvidence = /근거:\s*`([^`]+)`/u.exec(entry.decision_reason)?.[1];
+  const boilerplateEvidence = new Set(["예상 결과", "artifact", "사용법"]);
   assert.ok(
-    evidenceTokens.length > 0,
-    `${entry.source_document} lacks source body evidence`,
+    explicitEvidence,
+    `${entry.source_document} lacks an explicit backticked source-body evidence excerpt`,
+  );
+  assert.ok(
+    explicitEvidence.length >= 12 && !boilerplateEvidence.has(explicitEvidence.toLowerCase()),
+    `${entry.source_document} has short or boilerplate evidence: ${explicitEvidence}`,
+  );
+  assert.ok(
+    sourceBody.includes(explicitEvidence),
+    `${entry.source_document} lacks exact source body evidence: ${explicitEvidence}`,
   );
 }
 
@@ -171,14 +168,50 @@ test("reason template guard allows three different semantic exclusion reasons", 
   assert.doesNotThrow(() => assertNoRepeatedGenericReasonTemplates(entries));
 });
 
-test("source body evidence guard rejects an invented reason that only repeats its heading", () => {
+test("source body evidence guard rejects three invented prose reasons without explicit excerpts", () => {
+  const source = "# Alpha\n\n## Alpha heading\n\nObserved source evidence payload with an actual semantic distinction.\n";
+  for (const name of ["alpha", "beta", "gamma"]) {
+    const entry = {
+      source_document: `guides/${name}.md`,
+      source_section: "Alpha heading",
+      decision_reason: `“Alpha heading”은 lunar unicorn escrow topology ${name}를 직접 읽는 편이 명확하다. artifact`,
+    };
+    assert.throws(() => assertSourceBodyEvidence(entry, source), /explicit backticked/u);
+  }
+});
+
+test("source body evidence guard rejects an excerpt invented outside the source body", () => {
   const entry = {
     source_document: "guides/alpha.md",
     source_section: "Alpha heading",
-    decision_reason: "“Alpha heading”은 근거: invented evidence payload. 관계도보다 직접 읽는 편이 명확하다.",
+    decision_reason: "“Alpha heading”은 근거: `invented evidence payload`. 관계도보다 직접 읽는 편이 명확하다.",
   };
   const source = "# Alpha\n\n## Alpha heading\n\nObserved source evidence payload.\n";
-  assert.throws(() => assertSourceBodyEvidence(entry, source), /source body evidence/u);
+  assert.throws(() => assertSourceBodyEvidence(entry, source), /exact source body evidence/u);
+});
+
+test("source body evidence guard rejects short and boilerplate excerpts", () => {
+  const source = "# Alpha\n\n## Alpha heading\n\nartifact 사용법과 예상 결과를 비교한다.\n";
+  for (const excerpt of ["artifact", "사용법", "예상 결과"]) {
+    const entry = {
+      source_document: "guides/alpha.md",
+      source_section: "Alpha heading",
+      decision_reason: `“Alpha heading”은 근거: \`${excerpt}\`. 관계도보다 직접 읽는 편이 명확하다.`,
+    };
+    assert.throws(() => assertSourceBodyEvidence(entry, source), /short or boilerplate/u);
+  }
+});
+
+test("source body evidence guard accepts distinct semantic reasons with exact excerpts", () => {
+  const source = "# Alpha\n\n## Alpha heading\n\nThe review owner records the evidence custody boundary before approval.\n";
+  const entries = [
+    "“Alpha heading”은 review owner의 승인 경계를 표로 읽는 정책이다. 근거: `records the evidence custody boundary`.",
+    "“Alpha heading”은 evidence custody를 승인 전 보존하는 책임 설명이다. 근거: `review owner records the evidence`.",
+    "“Alpha heading”은 approval 전에 남기는 review owner 기록을 안내한다. 근거: `boundary before approval`.",
+  ];
+  for (const decision_reason of entries) {
+    assert.doesNotThrow(() => assertSourceBodyEvidence({ source_document: "guides/alpha.md", decision_reason }, source));
+  }
 });
 
 test("production text exclusions have non-repeating evidence-backed reasoning", async () => {
