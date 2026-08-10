@@ -124,6 +124,31 @@ test('execution resolver rejects a same-size CLI replacement while reading its p
   assert.deepEqual(result, { status: 'unknown' });
 });
 
+test('execution resolver rejects a same-size CLI replacement after its final realpath', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  const cli = join(root, 'bin', 'archify.mjs');
+  const replacement = join(root, 'bin', 'replacement.mjs');
+  const original = await readFile(cli);
+  await writeFile(replacement, Buffer.alloc(original.byteLength, 0x79));
+  let cliRealpathCalls = 0;
+
+  const result = await resolveArchifyInstallation({}, {
+    home,
+    realpathFn: async (path) => {
+      const canonical = await realpath(path);
+      if (path.endsWith('/bin/archify.mjs') && ++cliRealpathCalls === 3) {
+        await rename(replacement, path);
+      }
+      return canonical;
+    },
+  });
+
+  assert.equal(cliRealpathCalls, 3);
+  assert.deepEqual(result, { status: 'unknown' });
+});
+
 test('execution resolver closes the pinned file handle and fails closed on close errors', async () => {
   const home = await temporaryWorkspace();
   const root = join(home, '.agents', 'skills', 'archify');

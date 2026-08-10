@@ -408,6 +408,7 @@ export async function resolveArchifyInstallation(env = process.env, options = {}
   let beforeStats;
   let afterStats;
   let pathnameStats;
+  let finalPathnameStats;
   let firstCanonical;
   let canonical;
   let failure;
@@ -419,7 +420,11 @@ export async function resolveArchifyInstallation(env = process.env, options = {}
     firstCanonical = await realpathFn(result.cliPath);
     pathnameStats = await lstatFn(result.cliPath, { bigint: true });
     canonical = await realpathFn(result.cliPath);
+    // The final pathname operation is lstat: no later pathname lookup can
+    // replace the regular file after its canonical path has been checked.
+    finalPathnameStats = await lstatFn(result.cliPath, { bigint: true });
     if (!Buffer.isBuffer(bytes) || !samePinnedCliStats(beforeStats, afterStats) || !samePinnedCliStats(beforeStats, pathnameStats)
+      || !samePinnedCliStats(beforeStats, finalPathnameStats)
       || beforeStats.size !== BigInt(bytes.byteLength) || firstCanonical !== canonical || !containedIn(result.cliBase, canonical)) {
       failure = new Error('Archify CLI identity changed while it was read.');
     }
