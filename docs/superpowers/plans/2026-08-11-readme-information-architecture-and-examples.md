@@ -14,6 +14,10 @@
 - 작업 경로는 `/Users/freelife/game/gamedesign-plugin/.worktrees/readme-use-case-navigation`이다.
 - 루트 `README.md`는 Landing 문서이며 상세 스킬·프롬프트 계약을 중복 소유하지 않는다.
 - README의 대표 카드는 Studio 7개, Career 7개, Suite 4개로 정확히 18개다.
+- README는 Studio와 Career 각각 설치 스킬 15개와 에이전트 9개를 전부 나열한다.
+- 설치 스킬 15개는 제품 source 스킬 14개와 vendored Skillstead `svg-infographic` 1개로 구분한다.
+- 모든 스킬 행은 설치 namespace 직접 호출 커맨드와 상세 가이드 링크를 가진다.
+- 모든 에이전트 행은 역할, 주요 검토 지점, 호출 경계와 상세 역할 문서 링크를 가진다.
 - 복사 가능한 prompt 코드 줄은 80자를 넘기지 않는다.
 - 편집 원본은 `products/<product>/plugin/`이며 `plugins/<product>/`는 표준 빌드가 생성한다.
 - generated plugin tree와 `BUILD-MANIFEST.json`을 직접 편집하지 않는다.
@@ -174,7 +178,13 @@ const expectedPluginTreeCounts = {
 
 Require `.codex-plugin/plugin.json`, `agents/`, `skills/`, `assets/templates/`, `assets/shared/`, `references/`, `scripts/`, `hooks/hooks.json`, `.env.example`, `README.md` and `BUILD-MANIFEST.json`. Require visible source/generated text containing both `products/<product>/plugin/` and `plugins/<product>/`. Add a mutation that tells readers to edit `BUILD-MANIFEST.json` directly and require rejection.
 
-- [ ] **Step 6: Add result-example contracts**
+- [ ] **Step 6: Add complete skill and agent inventory contracts**
+
+Require two product-scoped skill tables containing the exact 14 product skill directories plus the generated snapshot's vendored `svg-infographic`, for 15 installed skills per product. Every row must contain the exact namespaced command `$game-design-studio:<skill-id>` or `$game-design-career:<skill-id>`, a non-empty role/result description and a resolvable detailed guide link.
+
+Require two product-scoped agent tables containing the exact nine `agents/*.md` IDs per product. Every row must contain a non-empty role, review focus, an orchestrator/specialist delegation boundary and a resolvable link to the role document. Reject missing, duplicate, cross-product-swapped and invented skill or agent IDs. Reject a README claim that `svg-infographic` is one of the 14 product source skills instead of a vendored installed skill. Mutation failures must name the affected product and ID and must not pass through a generic `TypeError`.
+
+- [ ] **Step 7: Add result-example contracts**
 
 Require the Canonical Artifact tree to include `content.md`, `evidence.yml`, `decisions/`, `assets/` and `export-manifest.yml`. Require six exact result categories:
 
@@ -191,7 +201,7 @@ const resultExampleIds = [
 
 For every result row, require core file, optional asset, read order and pre-approval hold boundary. Cross-check template IDs against Studio or Career template inventories.
 
-- [ ] **Step 7: Run the focused test and confirm RED**
+- [ ] **Step 8: Run the focused test and confirm RED**
 
 Run:
 
@@ -201,7 +211,7 @@ node --test tests/contracts/root-readme-user-guides.test.mjs
 
 Expected: FAIL on the first new heading or TOC assertion because the current README still uses the old H2 order.
 
-- [ ] **Step 8: Commit the RED contract**
+- [ ] **Step 9: Commit the RED contract**
 
 ```bash
 git add tests/contracts/root-readme-user-guides.test.mjs
@@ -272,23 +282,31 @@ Link the final heading to `guides/prompt-templates/README.md`.
 
 Create six rows: 전체 조율, 탐색·분석, 핵심 설계, 콘텐츠·경험, 검토·품질, 이미지·도식·출력. Each row names Studio and Career skills, direct-call conditions and representative output. Link to both product skill indexes.
 
-- [ ] **Step 7: Add six concrete result examples**
+- [ ] **Step 7: Add complete Studio and Career skill inventories**
+
+After the six-row quick reference, add one collapsed `<details>` block per product. Inside each block list all 14 product skills plus the vendored Skillstead `svg-infographic`, for exactly 15 installed skills. Each row provides the skill ID, when to use it, representative output, the exact namespaced direct-call command and a detailed guide link. Explain the source-versus-vendored distinction without presenting `svg-infographic` as a product source directory.
+
+- [ ] **Step 8: Add complete Studio and Career agent inventories**
+
+Add one collapsed `<details>` block per product with the exact nine agent IDs from `products/<product>/plugin/agents/*.md`. Each row provides the agent's role, primary review focus, whether an orchestrator or specialist skill delegates to it, and a link to the exact role Markdown. State explicitly that agents are delegated reviewer/design roles, not user-facing skill commands.
+
+- [ ] **Step 9: Add six concrete result examples**
 
 Show the Canonical Artifact tree, then add the six result IDs from Task 1. Each row includes `생성 폴더`, `핵심 파일`, `선택 자산`, `읽는 순서`, `승인 전 보류 항목`. State that MD is always preserved but PDF, DOCX and PPTX require renderer and visual QA.
 
-- [ ] **Step 8: Add Studio and Career file trees**
+- [ ] **Step 10: Add Studio and Career file trees**
 
 Use the two exact tree shapes from the design spec. Explain that `products/<product>/plugin/` is source and `plugins/<product>/` is generated. Add the path-role-editability table. Link agents to the technical product README and skills/templates to the user guides.
 
-- [ ] **Step 9: Consolidate image, diagram and export policy**
+- [ ] **Step 11: Consolidate image, diagram and export policy**
 
 Preserve `IMAGE_GEN_MODE` values `prompt-only`, `select`, `required`, `all`; the `OPENAI_API_KEY` exclusive API behavior; host fallback when no key exists; Skillstead editable SVG rule; and export statuses `not-requested`, `blocked`, `pending`, `unavailable`.
 
-- [ ] **Step 10: Rebuild detailed-guide, safety and troubleshooting routing**
+- [ ] **Step 12: Rebuild detailed-guide, safety and troubleshooting routing**
 
 Use task-named link labels. Preserve Studio/Career installation, quick start, workflow, skill, template, use-case, FAQ, image, visualization and export links. Keep the technical inventory inside one `<details>` block after the technical section introduction.
 
-- [ ] **Step 11: Run the focused README contract and iterate to GREEN**
+- [ ] **Step 13: Run the focused README contract and iterate to GREEN**
 
 Run:
 
@@ -296,9 +314,9 @@ Run:
 node --test tests/contracts/root-readme-user-guides.test.mjs
 ```
 
-Expected: PASS for TOC, H2 order, 18 cards, prompt width, six results and both file trees. The architecture embed assertion remains absent until Task 5.
+Expected: PASS for TOC, H2 order, 18 cards, prompt width, 30 installed skill rows, 18 agent rows, six results and both file trees. The architecture embed assertion remains absent until Task 5.
 
-- [ ] **Step 12: Run guide validation and commit**
+- [ ] **Step 14: Run guide validation and commit**
 
 ```bash
 npm run validate:guides

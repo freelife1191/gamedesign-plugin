@@ -170,9 +170,9 @@ README에는 18개의 대표 케이스를 제공한다. 각 카드는 `<details>
 
 대표 카드의 문구와 스킬 순서는 `guides/prompt-templates/catalog.json`, `guides/use-cases/use-case-manifest.json`과 제품 스킬 계약에서 파생한다. README 문구만으로 새로운 스킬 체인이나 결과를 만들어 내지 않는다.
 
-### 5.4 스킬별 빠른 사용표
+### 5.4 스킬·에이전트 빠른 사용표와 전체 인벤토리
 
-30개 스킬을 모두 긴 카드로 복제하지 않는다. 제품별로 자주 쓰는 스킬을 작업 유형별 표로 묶고 전체 카탈로그로 연결한다.
+먼저 제품별로 자주 쓰는 스킬을 작업 유형별 표로 묶어 초보자가 시작점을 고르게 한다.
 
 | 그룹 | Studio 예시 | Career 예시 |
 | --- | --- | --- |
@@ -189,6 +189,23 @@ README에는 18개의 대표 케이스를 제공한다. 각 카드는 `<details>
 - 어떤 입력이 필요한가
 - 어떤 대표 Artifact를 얻는가
 - 전체 오케스트레이터 대신 직접 호출할 때의 경계는 무엇인가
+
+빠른 사용표 다음에는 Studio와 Career를 각각 접이식 인벤토리로 제공한다. 사용자가 README만으로 설치 패키지의 전체 역할 구성을 확인할 수 있도록 다음 수량과 구분을 정확히 표시한다.
+
+- 제품 전용 스킬 14개와 vendored Skillstead `svg-infographic` 1개, 합계 15개
+- 일반 역할 에이전트 7개와 이미지 전문 에이전트 2개, 합계 9개
+- Studio와 Career를 합쳐 설치 스킬 30개와 에이전트 18개
+
+각 스킬 행은 `스킬 ID`, `사용하는 때`, `핵심 결과`, `직접 호출 커맨드`, `상세 가이드`를 제공한다. 직접 호출 커맨드는 설치 namespace를 포함한 다음 형식으로 쓴다.
+
+```text
+$game-design-studio:<skill-id>
+$game-design-career:<skill-id>
+```
+
+각 에이전트 행은 `에이전트 ID`, `역할`, `주요 검토 지점`, `호출 경계`, `상세 역할 문서`를 제공한다. 에이전트는 사용자가 직접 호출하는 스킬로 오인하지 않도록 전문 스킬 또는 오케스트레이터가 전달하는 역할 자산이라고 명시한다.
+
+`svg-infographic`는 제품 source의 14개 스킬과 달리 표준 빌드에서 Skillstead 0.8.3으로 vendoring되는 설치 스킬이다. README의 상세 링크는 제품별 `guides/<product>/skills/svg-infographic.md`로 연결하고, 직접 호출 커맨드는 최종 설치 namespace를 사용한다.
 
 ### 5.5 플러그인별 file tree
 
@@ -381,7 +398,10 @@ README 편집은 다음 규칙을 적용한다.
 - TOC 링크의 anchor가 실제 visible heading에 존재한다.
 - Studio, Career와 연계 예시 수가 각각 7, 7, 4개다.
 - 18개 카드가 사용 시점, 입력, 요청문, 스킬 흐름, 결과, 읽는 순서, 사람 검토와 다음 요청을 가진다.
-- 대표 스킬 ID가 실제 제품 inventory에 존재한다.
+- Studio와 Career 각각 제품 스킬 14개와 vendored Skillstead 1개를 합친 15개 설치 스킬을 정확히 나열한다.
+- 30개 스킬 행은 실제 설치 namespace의 직접 호출 커맨드와 제품별 상세 가이드에 결합된다.
+- Studio와 Career 각각 9개 에이전트를 정확히 나열하고 역할 문서 링크와 오케스트레이터 전달 경계를 표시한다.
+- 누락, 중복, 잘못된 namespace, 제품 간 스킬·에이전트 교환과 존재하지 않는 상세 링크를 거부한다.
 - 대표 결과 ID와 read order가 prompt catalog 또는 use-case manifest와 일치한다.
 - 긴 요청문 코드 줄이 80자를 넘지 않는다.
 - Studio와 Career file tree가 각각 존재하고 required top-level 경로와 실제 agent·skill·template·script 수를 정확히 표시한다.
@@ -430,7 +450,8 @@ README 편집은 다음 규칙을 적용한다.
 - README 상단에 정확한 TOC가 있다.
 - 30초 선택, 설치와 5분 시작이 문서 앞부분에 연속해서 배치된다.
 - 18개 대표 케이스에 복사 가능한 요청문, 스킬 흐름과 예상 결과가 있다.
-- 스킬 빠른 사용표가 제품별 상세 스킬 가이드로 연결된다.
+- 스킬 빠른 사용표와 30개 전체 스킬 인벤토리가 직접 호출 커맨드·역할·상세 가이드로 연결된다.
+- 18개 전체 에이전트 인벤토리가 역할·검토 지점·호출 경계·상세 역할 문서로 연결된다.
 - Studio와 Career 각각의 file tree가 주요 경로, 실제 수량과 편집 책임을 설명한다.
 - 결과물 예시가 실제 Canonical Artifact 파일과 읽는 순서를 설명한다.
 - 새 한국어 Archify 전체 시스템 아키텍처 PNG가 README에 보이고 클릭하면 대화형 HTML이 열린다.
