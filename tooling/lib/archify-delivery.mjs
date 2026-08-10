@@ -601,19 +601,24 @@ async function qaBindings(root, records, catalog, hooks = {}) {
   const manifest = await snapshotRegular(joinWithin(root, QA_MANIFEST, "visual QA manifest"), "visual QA manifest");
   let raw; try { raw = JSON.parse(manifest.bytes.toString("utf8")); } catch { throw new Error("visual QA manifest is invalid JSON"); }
   await invoke(hooks, "before-qa-render-snapshot", { manifest });
-  const renders = await Promise.all(collectArchifyVisualQaRenderPaths(raw).map((relative) => snapshotRegular(joinWithin(root, `guides/archify-diagrams/visual-qa/${relative}`, "visual QA render"), "visual QA render")));
-  const renderSnapshots = new Map(renders.map((snapshot) => [path.relative(path.join(root, "guides", "archify-diagrams", "visual-qa"), snapshot.path).split(path.sep).join("/"), snapshot.bytes]));
+  const renderPaths = collectArchifyVisualQaRenderPaths(raw);
+  const renderFiles = renderPaths.map((relative) => joinWithin(qaRoot, relative, "visual QA render"));
+  const renderAncestors = await Promise.all(renderFiles.map((filename) => ancestorRecords(qaRoot, path.dirname(filename), "visual QA render")));
+  const renders = await Promise.all(renderFiles.map((filename) => snapshotRegular(filename, "visual QA render")));
+  for (const records of renderAncestors) await assertAncestors(records);
+  const renderSnapshots = new Map(renderPaths.map((relative, index) => [relative, renders[index].bytes]));
   const loaded = await loadArchifyVisualQa({ repoRoot: root, catalog, manifestBytes: manifest.bytes, renderSnapshots });
   await invoke(hooks, "after-qa-snapshot", { manifest, renders, qaRoot });
   for (const record of records) {
     const entry = loaded.qa.entries.find((candidate) => candidate.id === record.entry.id);
     if (!entry || entry.reviewer !== record.entry.reviewer || entry.specification_sha256 !== record.spec.sha256 || entry.artifact_sha256 !== record.artifact.sha256) throw new Error(`visual QA binding does not match: ${record.entry.id}`);
   }
-  return Object.freeze({ manifest, renders: Object.freeze(renders), ancestors });
+  return Object.freeze({ manifest, renders: Object.freeze(renders), ancestors, renderAncestors: Object.freeze(renderAncestors) });
 }
 
 async function assertQaSnapshotCurrent(snapshot) {
   await assertAncestors(snapshot.ancestors);
+  for (const records of snapshot.renderAncestors) await assertAncestors(records);
   await assertSnapshotCurrent(snapshot.manifest);
   for (const render of snapshot.renders) await assertSnapshotCurrent(render);
 }
