@@ -110,7 +110,7 @@ const readmeSkillsteadDiagrams = [
   {
     section: "요청 뒤에 생성되는 결과물",
     id: "artifact-review-flow",
-    alt: "Canonical Artifact를 읽고 사람이 승인하는 순서",
+    alt: "기준 결과 폴더 (Canonical Artifact)를 읽고 사람이 승인하는 순서",
     phrases: ["기획 본문", "검토 근거", "주요 의사결정 기록", "이미지·첨부 자료", "출력 준비표", "이름 있는 사람"],
   },
 ];
@@ -172,7 +172,7 @@ const readableCaseLabels = new Map([
   ["suite:resume-failed-derivatives:case", ["막힌 이미지·문서 출력 안전하게 재개", "이미지나 내보내기가 막혔을 때 보존 파일과 미해결 항목을 확인해 필요한 작업만 재개합니다."]],
 ]);
 const caseGroupIntroductions = new Map([
-  ["Studio 기획 사례 7개", "게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 Artifact와 사람 검토 지점을 남깁니다."],
+  ["Studio 기획 사례 7개", "게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 결과 폴더 (Artifact)와 사람 검토 지점을 남깁니다."],
   ["Career 학습·취업 사례 7개", "게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 근거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 결과물을 만듭니다."],
   ["Studio와 Career 연계 사례 4개", "제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다."],
 ]);
@@ -192,8 +192,8 @@ const readableSkillMetadata = new Map([
     ["design-game-economy-and-liveops", ["경제와 라이브 운영 설계", "재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다."]],
     ["design-game-systems", ["게임 시스템 설계", "규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다."]],
     ["design-player-experience", ["플레이어 경험 설계", "정보 구조, 상호작용, 온보딩과 접근성 흐름을 정리합니다."]],
-    ["export-game-design-documents", ["기획 문서 내보내기 준비", "검증된 Artifact의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
-    ["generate-image-assets", ["이미지 자산 생성", "승인된 목록의 선택 작업만 생성하고 제공자 상태를 기록합니다."]],
+    ["export-game-design-documents", ["기획 문서 내보내기 준비", "검증된 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
+    ["generate-image-assets", ["이미지 자산 생성", "승인된 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["orchestrate-game-design-project", ["게임 기획 프로젝트 조율", "여러 기획 분야의 범위, 순서와 검토 지점을 프로젝트 브리프로 묶습니다."]],
     ["plan-game-production", ["게임 제작 계획", "시제품 기준, 의존성, 담당자와 중단 기준을 제작 계획으로 만듭니다."]],
     ["plan-image-assets", ["이미지 자산 계획", "기준 문서에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
@@ -205,11 +205,11 @@ const readableSkillMetadata = new Map([
   ["game-design-career", new Map([
     ["apply-document-quality-profile", ["경력 문서 품질 기준 적용", "경력 문서 목적과 형식에 맞는 품질 기준과 선택 기록을 만듭니다."]],
     ["build-game-design-portfolio", ["기획 포트폴리오 만들기", "공개 가능한 판단, 개인 기여와 검증을 포트폴리오 사례로 만듭니다."]],
-    ["export-career-documents", ["경력 문서 내보내기 준비", "Career Artifact의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
-    ["generate-image-assets", ["경력 이미지 자산 생성", "승인된 이미지 목록의 선택 작업만 생성하고 제공자 상태를 기록합니다."]],
+    ["export-career-documents", ["경력 문서 내보내기 준비", "경력 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
+    ["generate-image-assets", ["경력 이미지 자산 생성", "승인된 이미지 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["map-game-design-career", ["게임 기획 경력 지도 만들기", "역할군, 목표 수준과 역량 격차를 비교해 경력 지도를 만듭니다."]],
     ["orchestrate-game-design-career", ["게임 기획 경력 조율", "경력 단계, 작업 순서와 검토를 하나의 경력 계획으로 묶습니다."]],
-    ["plan-image-assets", ["경력 이미지 자산 계획", "Career Artifact에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
+    ["plan-image-assets", ["경력 이미지 자산 계획", "경력 기준 결과 폴더에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
     ["plan-junior-growth", ["주니어 성장 계획", "분기 목표, 증거 과제와 피드백 주기를 성장 계획으로 만듭니다."]],
     ["practice-game-design-interview", ["게임 기획 면접 연습", "공고와 포트폴리오 근거를 질문, 답변과 피드백 기록으로 연결합니다."]],
     ["research-game-design-jobs", ["게임 기획 채용 조사", "최신 공고와 회사 근거를 모아 요구사항과 지원자 격차를 기록합니다."]],
@@ -218,6 +218,42 @@ const readableSkillMetadata = new Map([
     ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
     ["svg-infographic", ["경력 도식 만들기", "Skillstead 0.8.3에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
     ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
+  ])],
+]);
+const readableSkillUsage = new Map([
+  ["game-design-studio", new Map([
+    ["apply-document-quality-profile", "문서의 독자·형식·검토 기준을 먼저 고정할 때"],
+    ["define-game-vision", "대상 플레이어와 핵심 재미를 한 문장으로 정할 때"],
+    ["design-game-content", "퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때"],
+    ["design-game-economy-and-liveops", "재화·보상·이벤트의 측정 기준을 정할 때"],
+    ["design-game-systems", "규칙·상태·예외를 구현 가능한 기준으로 정리할 때"],
+    ["design-player-experience", "화면 흐름·입력·접근성 문제를 점검할 때"],
+    ["export-game-design-documents", "검토한 기획서를 PDF·문서·발표 자료로 준비할 때"],
+    ["generate-image-assets", "승인된 이미지 목록에서 필요한 항목만 만들 때"],
+    ["orchestrate-game-design-project", "여러 기획 분야를 하나의 프로젝트 순서로 묶을 때"],
+    ["plan-game-production", "시제품 범위·일정·의존성과 중단 기준을 검토할 때"],
+    ["plan-image-assets", "기획서에 필요한 이미지와 프롬프트를 먼저 목록화할 때"],
+    ["review-game-design", "기획서의 근거·위험·미결정을 사람 검토 전에 찾을 때"],
+    ["review-image-assets", "이미지의 읽기 쉬움·권리·배치를 승인 전에 확인할 때"],
+    ["svg-infographic", "표나 설명만으로 관계를 이해하기 어려울 때"],
+    ["visualize-game-design", "루프·상태·의존성을 기획 문서에 도식으로 넣을 때"],
+  ])],
+  ["game-design-career", new Map([
+    ["apply-document-quality-profile", "지원·학습 문서의 독자와 평가 기준을 먼저 정할 때"],
+    ["build-game-design-portfolio", "공개 가능한 기획 결과를 포트폴리오 사례로 정리할 때"],
+    ["export-career-documents", "검토한 경력 문서를 제출·발표 형식으로 준비할 때"],
+    ["generate-image-assets", "승인된 포트폴리오 이미지 항목만 만들 때"],
+    ["map-game-design-career", "목표 직무와 현재 역량의 차이를 비교할 때"],
+    ["orchestrate-game-design-career", "역할 탐색·학습·포트폴리오 작업을 한 경로로 묶을 때"],
+    ["plan-image-assets", "포트폴리오에 넣을 이미지와 프롬프트를 먼저 정리할 때"],
+    ["plan-junior-growth", "주차별 학습 과제와 멘토 피드백 일정을 세울 때"],
+    ["practice-game-design-interview", "포트폴리오 근거로 면접 질문과 답변을 연습할 때"],
+    ["research-game-design-jobs", "목표 회사·직무의 최근 요구사항을 조사할 때"],
+    ["reverse-engineer-game-design", "공개 플레이 관찰을 기획 분석 문서로 바꿀 때"],
+    ["review-game-design-portfolio", "포트폴리오의 기여·근거·권리 누락을 찾을 때"],
+    ["review-image-assets", "공개 전 이미지의 읽기 쉬움·권리·배치를 확인할 때"],
+    ["svg-infographic", "학습 경로나 포트폴리오 구조를 그림으로 설명할 때"],
+    ["visualize-career-roadmap", "역할·역량·학습 순서를 한눈에 보여 줄 때"],
   ])],
 ]);
 const readableAgentMetadata = new Map([
@@ -548,7 +584,7 @@ function readableMetadata(metadataByProduct, product, id, kind) {
 async function assertSkillInventoryTable(markdown, product) {
   const sourceProduct = sourceProductId(product);
   const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 설치 스킬 15개`;
-  const rows = assertTableShape(markdown, heading, ["스킬 이름과 ID", "직접 호출", "쉬운 역할 설명", "상세 가이드"], `${product} skills`);
+  const rows = assertTableShape(markdown, heading, ["스킬 이름과 ID", "사용하는 때", "핵심 결과", "직접 호출", "상세 가이드"], `${product} skills`);
   const inventory = await collectProductInventory(root, product);
   const sourceSkills = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
@@ -566,10 +602,11 @@ async function assertSkillInventoryTable(markdown, product) {
   const expected = inventory.skillIds;
   const actual = [];
   const names = new Set();
+  const usages = new Set();
   const descriptions = new Set();
   for (const row of rows) {
-    assert.equal(row.length, 4, `${product}: skill row has four cells`);
-    const [nameCell, command, role, guide] = row;
+    assert.equal(row.length, 5, `${product}: skill row has five explicit fields`);
+    const [nameCell, usage, role, command, guide] = row;
     const idHint = /`([a-z0-9-]+)`/u.exec(nameCell)?.[1] ?? "unknown-skill";
     const match = /^([^()]+) \(`([a-z0-9-]+)`\)$/u.exec(nameCell);
     assert.ok(match, `${product}:${idHint}: skill name precedes literal installed skill ID`);
@@ -581,6 +618,13 @@ async function assertSkillInventoryTable(markdown, product) {
     assert.doesNotMatch(koreanName, /^(?:스킬|기능)\s*\d+$/u, `${product}:${id}: generic numbered skill name is rejected`);
     assert.ok(!names.has(koreanName), `${product}:${id}: Korean skill name is unique within the product`);
     names.add(koreanName);
+    const expectedUsage = readableSkillUsage.get(product)?.get(id);
+    assert.ok(expectedUsage, `${product}:${id}: source-bound Korean usage exists`);
+    assert.equal(usage, expectedUsage, `${product}:${id}: skill usage is specific and source-bound`);
+    assert.match(usage, /[가-힣]/u, `${product}:${id}: Korean usage is visible`);
+    assert.doesNotMatch(usage, /^(?:필요할 때|사용할 때|작업할 때|상황에 따라)$/u, `${product}:${id}: generic usage is rejected`);
+    assert.ok(!usages.has(usage), `${product}:${id}: usage is not a generic repeated sentence`);
+    usages.add(usage);
     assert.equal(command, `\`$game-design-${sourceProduct}:${id}\``, `${product}:${id}: exact direct command`);
     assert.equal(role, expectedDescription, `${product}:${id}: skill uses its source-backed Korean role description`);
     assert.match(role, /[가-힣]/u, `${product}:${id}: plain-Korean role explanation is non-empty`);
@@ -598,6 +642,36 @@ async function assertSkillInventoryTable(markdown, product) {
   assert.match(vendorRow[2], /vendored|번들/iu, `${product}: svg-infographic is identified as a vendored installed skill`);
   assert.doesNotMatch(vendorRow[2], /제품 source|제품 원본/u, `${product}: svg-infographic must not be presented as a product source skill`);
   assert.doesNotMatch(markdown, /(?:14개[^\n.]{0,100}(?:제품|source)[^\n.]{0,100}svg-infographic|svg-infographic[^\n.]{0,100}14개[^\n.]{0,100}(?:제품|source))/iu, `${product}: README must not claim vendored svg-infographic is one of 14 product source skills`);
+}
+
+function assertKoreanFirstReadmeTerms(markdown) {
+  for (const [korean, english] of [
+    ["제작용 요청문 목록", "Production catalog"],
+    ["기준 결과 폴더", "Canonical Artifact"],
+    ["사실", "fact"],
+    ["추론", "inference"],
+    ["제안", "recommendation"],
+    ["되돌리기", "rollback"],
+    ["핵심 시제품", "vertical slice"],
+    ["증거 과제", "proof task"],
+    ["심각도별", "severity"],
+    ["수정 목록", "backlog"],
+    ["정직한 부족점", "honest gap"],
+    ["프롬프트 묶음", "prompt package"],
+    ["렌더러", "renderer"],
+    ["콘셉트 이미지", "concept"],
+    ["사용자 경험 흐름", "UX flow"],
+    ["화면 캡처", "screenshot"],
+  ]) {
+    const englishPattern = escapeRegExp(english).replace(" ", "\\s+");
+    assert.match(markdown, new RegExp(`${escapeRegExp(korean)}[\\s\\S]{0,32}${englishPattern}`, "u"), `${english}: Korean meaning precedes the English helper term`);
+  }
+  assert.match(markdown, /중단 기록 \(blocker receipt\)/u, "restart receipt names its Korean purpose first");
+  assert.match(markdown, /이미지 제공자 사용 가능 여부 \(provider capability\)/u, "troubleshooting names provider capability in Korean first");
+  assert.match(markdown, /권리 상태 \(rights\)/u, "troubleshooting names rights in Korean first");
+  assert.match(markdown, /자산 ID \(asset ID\)/u, "troubleshooting names asset ID in Korean first");
+  assert.match(markdown, /근거 공백 \(evidence gap\)/u, "troubleshooting names evidence gap in Korean first");
+  assert.match(markdown, /담당자 \(named owner\)/u, "troubleshooting names owner in Korean first");
 }
 
 async function assertAgentInventoryTable(markdown, product) {
@@ -1017,7 +1091,8 @@ async function buildValidStructuredReadmeFixture() {
     const inventory = await collectProductInventory(root, product);
     const skillRows = inventory.skillIds.map((id) => {
       const [name, description] = readableMetadata(readableSkillMetadata, product, id, "skill");
-      return `| ${name} (\`${id}\`) | \`$game-design-${namespace}:${id}\` | ${description} | [상세 가이드](guides/${product}/skills/${id}.md) |`;
+      const usage = readableSkillUsage.get(product)?.get(id);
+      return `| ${name} (\`${id}\`) | ${usage} | ${description} | \`$game-design-${namespace}:${id}\` | [상세 가이드](guides/${product}/skills/${id}.md) |`;
     });
     const agentRows = (await sourceAgentIds(product)).map((id) => {
       const [name, description] = readableMetadata(readableAgentMetadata, product, id, "agent");
@@ -1025,8 +1100,8 @@ async function buildValidStructuredReadmeFixture() {
     });
     inventoryTables.push(
       `### ${productLabel} 설치 스킬 15개`,
-      "| 스킬 이름과 ID | 직접 호출 | 쉬운 역할 설명 | 상세 가이드 |",
-      "| --- | --- | --- | --- |",
+      "| 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |",
+      "| --- | --- | --- | --- | --- |",
       ...skillRows,
       "",
       `### ${productLabel} 에이전트 9개`,
@@ -1675,6 +1750,14 @@ test("root README follows the approved task-oriented information architecture", 
   assertBeginnerReadableRootAdditions(readme);
 });
 
+test("root README keeps Korean meanings before English helper terms outside canonical commands", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  assert.doesNotThrow(() => assertKoreanFirstReadmeTerms(readme), "baseline README is Korean-first");
+  const EnglishFirst = readme.replace("제작용 요청문 목록 (Production catalog)", "Production catalog (제작용 요청문 목록)");
+  assert.notEqual(EnglishFirst, readme, "English-first terminology mutation changes README");
+  assert.throws(() => assertKoreanFirstReadmeTerms(EnglishFirst), /Production catalog/u, "English-first terminology is rejected");
+});
+
 test("root README exposes the verified Suite architecture with friendly diagram routes", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertSuiteArchitectureEmbed(readme);
@@ -1884,6 +1967,8 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const product = "game-design-studio";
   const [visionName, visionDescription] = readableMetadata(readableSkillMetadata, product, "define-game-vision", "skill");
   const [, qualityDescription] = readableMetadata(readableSkillMetadata, product, "apply-document-quality-profile", "skill");
+  const visionUsage = readableSkillUsage.get(product).get("define-game-vision");
+  const qualityUsage = readableSkillUsage.get(product).get("apply-document-quality-profile");
   const [leadName, leadDescription] = readableMetadata(readableAgentMetadata, product, "lead-game-designer", "agent");
   const [, artDescription] = readableMetadata(readableAgentMetadata, product, "art-brief-director", "agent");
   const removedSkill = readme.replace(`${visionName} (\`define-game-vision\`)`, `${visionName} (\`missing-skill\`)`);
@@ -1893,6 +1978,9 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const genericKoreanSkillName = readme.replace(`${visionName} (\`define-game-vision\`)`, "스킬 2 (`define-game-vision`)");
   const slugDerivedSkillDescription = readme.replace(visionDescription, "define-game-vision 작업의 결과와 검토 범위를 안내합니다.");
   const repeatedSkillDescription = readme.replace(visionDescription, qualityDescription);
+  const missingSkillUsage = readme.replace(visionUsage, "");
+  const genericSkillUsage = readme.replace(visionUsage, "필요할 때");
+  const swappedSkillUsage = readme.replace(visionUsage, qualityUsage);
   const inventedAgent = readme.replace(`${leadName} (\`lead-game-designer\`)`, `${leadName} (\`invented-agent\`)`);
   const missingKoreanAgentRole = readme.replace(`${leadName} (\`lead-game-designer\`)`, "(`lead-game-designer`)");
   const genericKoreanAgentRole = readme.replace(`${leadName} (\`lead-game-designer\`)`, "역할 4 (`lead-game-designer`)");
@@ -1906,6 +1994,9 @@ test("structured README contracts reject card, inventory, and generated-tree mut
     ["generic Korean skill name", genericKoreanSkillName, "define-game-vision", assertSkillInventoryTable],
     ["slug-derived skill description", slugDerivedSkillDescription, "define-game-vision", assertSkillInventoryTable],
     ["repeated skill description", repeatedSkillDescription, "define-game-vision", assertSkillInventoryTable],
+    ["missing Korean skill usage", missingSkillUsage, "define-game-vision", assertSkillInventoryTable],
+    ["generic Korean skill usage", genericSkillUsage, "define-game-vision", assertSkillInventoryTable],
+    ["swapped skill usage", swappedSkillUsage, "define-game-vision", assertSkillInventoryTable],
     ["invented agent", inventedAgent, "invented-agent", assertAgentInventoryTable],
     ["missing Korean agent role", missingKoreanAgentRole, "lead-game-designer", assertAgentInventoryTable],
     ["generic Korean agent role", genericKoreanAgentRole, "lead-game-designer", assertAgentInventoryTable],
