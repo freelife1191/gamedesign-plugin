@@ -678,7 +678,7 @@
       "spec": "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
       "html": "guides/assets/archify/career/career-evidence-workflow.html",
       "receipt": "guides/assets/archify/career/career-evidence-workflow.receipt.json",
-      "delivery_status": "planned",
+      "delivery_status": "auto-validated",
       "visual_review": "pending",
       "reviewer": null
     },

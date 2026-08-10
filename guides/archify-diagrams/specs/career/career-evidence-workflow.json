@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Game Design Career Evidence Workflow",
+    "subtitle": "A career diagnosis becomes dated evidence, reviewable work, human review, and an export preparation record.",
+    "output": "guides/assets/archify/career/career-evidence-workflow.html",
+    "animation": "none",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "evidence-path",
+        "label": "Evidence to review",
+        "focus": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "career_routes", "human_review"],
+        "note": "Only current, scoped claims become a small reviewable project and a human review decision."
+      },
+      {
+        "id": "resume-contract",
+        "label": "Resume held research",
+        "focus": ["evidence_research", "held_context"],
+        "note": "Keep the blocked claim, evidence date, and next verification task; resume the held job-listing freshness check."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "human", "label": "Human decisions" },
+    { "id": "career", "label": "Career work" },
+    { "id": "review", "label": "Review" },
+    { "id": "delivery", "label": "Artifact preparation" }
+  ],
+  "phases": [
+    { "id": "frame", "label": "Diagnose and disclose", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "evidence", "label": "Research and make evidence", "fromCol": 2, "toCol": 3 },
+    { "id": "review_export", "label": "Review and prepare", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "claim_record", "label": "Dated claim record", "lane": "career", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "review_boundary", "label": "Human review boundary", "lane": "review", "fromCol": 5, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "career_routes", "human_review", "export_prepare"],
+  "nodes": [
+    { "id": "stage_diagnosis", "lane": "human", "col": 0, "type": "external", "label": "Choose stage", "sublabel": "role + constraints" },
+    { "id": "disclosure_approval", "lane": "human", "col": 1, "width": 52, "type": "external", "label": "Scope", "sublabel": "rights" },
+    { "id": "held_context", "lane": "career", "col": 0, "width": 52, "type": "messagebus", "label": "Hold", "sublabel": "claim" },
+    { "id": "evidence_research", "lane": "career", "col": 2, "width": 52, "type": "database", "label": "Claim", "sublabel": "dated" },
+    { "id": "evidence_project", "lane": "career", "col": 3, "width": 72, "type": "backend", "label": "Project", "sublabel": "1–12 weeks" },
+    { "id": "career_routes", "lane": "career", "col": 5, "type": "backend", "label": "Paths", "sublabel": "portfolio + interview" },
+    { "id": "human_review", "lane": "review", "col": 5, "type": "external", "label": "Human review", "sublabel": "content + evidence", "tag": "human gate" },
+    { "id": "export_prepare", "lane": "delivery", "col": 5, "type": "security", "label": "Prepare export", "sublabel": "MD, PDF, DOCX, PPTX" }
+  ],
+  "edges": [
+    { "from": "stage_diagnosis", "to": "disclosure_approval", "role": "main", "variant": "emphasis" },
+    { "from": "disclosure_approval", "to": "evidence_research", "role": "main", "variant": "security", "route": "bottom-channel" },
+    { "from": "evidence_research", "to": "evidence_project", "role": "main", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "evidence_project", "to": "career_routes", "role": "main", "variant": "emphasis" },
+    { "from": "career_routes", "to": "human_review", "role": "main", "variant": "security" },
+    { "from": "human_review", "to": "export_prepare", "role": "main", "variant": "emphasis" },
+    { "from": "evidence_research", "to": "held_context", "label": "blocked", "role": "branch", "variant": "dashed", "route": "straight", "fromSide": "left", "toSide": "right" },
+    { "from": "held_context", "to": "evidence_research", "label": "resume", "role": "return", "variant": "dashed", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Evidence boundary",
+      "items": [
+        "Each claim retains its source, reference date, scope, and limit",
+        "Do not turn a missing job listing into a general role requirement",
+        "Record only work and contributions that actually happened"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Human review and export",
+      "items": [
+        "Conflicting review recommendations remain decision items",
+        "Privacy, third-party rights, company confidentiality, and inflated claims are resolved before approval",
+        "Preparing files does not guarantee a hiring outcome"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Resume contract",
+      "items": [
+        "Keep artifact path, diagnosis stage, evidence date, completed work, and blocked claim",
+        "Resume the held job-listing freshness check, not a generic earlier stage",
+        "The next learning target comes from the recorded evidence gap"
+      ]
+    }
+  ]
+}

@@ -69,6 +69,12 @@ function studioWorkflowSpec(specsById) {
   return spec;
 }
 
+function careerWorkflowSpec(specsById) {
+  const spec = specsById.get("career-evidence-workflow");
+  assert.ok(spec, "career-evidence-workflow spec is required");
+  return spec;
+}
+
 function assertEdge(spec, from, to) {
   assert.ok(spec.edges.some((edge) => edge.from === from && edge.to === to), `${from} -> ${to} is required`);
 }
@@ -89,6 +95,17 @@ function assertResumeReturnsToBlockedImageReview(spec) {
   assert.equal(spec.edges.some((edge) => edge.from === "resume_context" && edge.to === "canonical_artifact"), false);
 }
 
+function assertCareerHoldResumesEvidenceResearch(spec) {
+  const hold = spec.edges.find((edge) => edge.from === "evidence_research" && edge.to === "held_context");
+  assert.deepEqual(hold && { role: hold.role, label: hold.label }, { role: "branch", label: "blocked" });
+  const resume = spec.edges.find((edge) => edge.from === "held_context");
+  assert.deepEqual(resume && { to: resume.to, role: resume.role, label: resume.label }, {
+    to: "evidence_research",
+    role: "return",
+    label: "resume",
+  });
+}
+
 test("every selected Studio entry owns one exact fresh showcase spec", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const studio = catalog.entries.filter((entry) => entry.decision === "selected" && entry.product === "studio");
@@ -99,6 +116,66 @@ test("every selected Studio entry owns one exact fresh showcase spec", async () 
     assert.equal(entry.visual_system, "studio");
     assert.ok(entry.composition_rationale.length >= 20);
   }
+});
+
+test("every selected Career entry owns one exact fresh showcase spec", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const career = catalog.entries.filter((entry) => entry.decision === "selected" && entry.product === "career");
+  for (const entry of career) {
+    const spec = JSON.parse(await readFile(path.join(repoRoot, entry.spec), "utf8"));
+    assert.equal(spec.diagram_type, entry.diagram_type);
+    assert.equal(spec.meta.quality_profile, "showcase");
+    assert.equal(entry.visual_system, "career");
+    assert.match(entry.composition_rationale, /증거|검토|학습|승인|재개/u);
+  }
+});
+
+test("selected Career workflow records a real schema-valid auto-validation state", async () => {
+  const { catalog, specsById } = await loadProductionSpecs(repoRoot, "career");
+  const entry = catalog.entries.find((item) => item.id === "career-evidence-workflow");
+  const spec = careerWorkflowSpec(specsById);
+  assertPrimaryNodeBound(spec);
+  assert.equal(entry.delivery_status, "auto-validated");
+  assert.equal(entry.visual_review, "pending");
+  assert.deepEqual(entry.diagnostics, []);
+  await assert.doesNotReject(() => validateInstalledWorkflowSpec(spec));
+});
+
+test("Career workflow preserves evidence, human review, disclosure, and the actual resume target", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "career");
+  const spec = careerWorkflowSpec(specsById);
+  const ids = new Set(semanticNodeIds(spec));
+  for (const id of [
+    "stage_diagnosis",
+    "disclosure_approval",
+    "evidence_research",
+    "evidence_project",
+    "career_routes",
+    "human_review",
+    "export_prepare",
+    "held_context",
+  ]) assert.ok(ids.has(id), `${id} is required`);
+  assertEdge(spec, "stage_diagnosis", "disclosure_approval");
+  assertEdge(spec, "disclosure_approval", "evidence_research");
+  assertEdge(spec, "evidence_research", "evidence_project");
+  assertEdge(spec, "evidence_project", "career_routes");
+  assertEdge(spec, "career_routes", "human_review");
+  assertEdge(spec, "human_review", "export_prepare");
+  assertCareerHoldResumesEvidenceResearch(spec);
+  const visibleText = JSON.stringify(spec);
+  assert.equal(spec.nodes.find((node) => node.id === "human_review")?.type, "external");
+  assert.match(visibleText, /does not guarantee a hiring outcome/i);
+  assert.doesNotMatch(visibleText, /자동\s*승인|auto\s*approval|채용\s*(결과\s*)?보장/u);
+});
+
+test("Career workflow contract rejects a resume mutation that changes the held work", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "career");
+  const spec = careerWorkflowSpec(specsById);
+  const wrongResume = {
+    ...spec,
+    edges: spec.edges.map((edge) => edge.from === "held_context" ? { ...edge, to: "evidence_project" } : edge),
+  };
+  assert.throws(() => assertCareerHoldResumesEvidenceResearch(wrongResume), /evidence_research/u);
 });
 
 test("selected Studio workflow records either a validated spec or a truthful validator block", async () => {
@@ -188,6 +265,16 @@ test("blocked Studio entry leaves no stale current-stage HTML or receipt", async
 test("Studio specs remain source-bound and do not recreate the retired six-node template", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "studio");
   for (const entry of catalog.entries.filter((item) => item.decision === "selected" && item.product === "studio")) {
+    assert.equal(await hashArchifySource(path.join(repoRoot, entry.source_document)), entry.source_digest);
+    assert.equal(await markdownHasHeading(path.join(repoRoot, entry.source_document), entry.source_section), true);
+    assert.notDeepEqual(semanticNodeIds(specsById.get(entry.id)), ["input", "skill", "artifact", "review", "result", "resume"]);
+  }
+  assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
+});
+
+test("Career specs remain source-bound and do not recreate the retired six-node template", async () => {
+  const { catalog, specsById } = await loadProductionSpecs(repoRoot, "career");
+  for (const entry of catalog.entries.filter((item) => item.decision === "selected" && item.product === "career")) {
     assert.equal(await hashArchifySource(path.join(repoRoot, entry.source_document)), entry.source_digest);
     assert.equal(await markdownHasHeading(path.join(repoRoot, entry.source_document), entry.source_section), true);
     assert.notDeepEqual(semanticNodeIds(specsById.get(entry.id)), ["input", "skill", "artifact", "review", "result", "resume"]);
