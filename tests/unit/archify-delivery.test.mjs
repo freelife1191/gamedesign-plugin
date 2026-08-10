@@ -474,6 +474,65 @@ test("bounded cleanup rejects an entry replaced between verification and forensi
   assert.equal(await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"), "utf8"), "<!doctype html><title>verified</title>\n");
 });
 
+test("bounded cleanup preserves moved file and empty-directory entries replaced after forensic rename", async (t) => {
+  for (const [name, replace, expectedBytes] of [
+    ["one.html", async (moved) => writeFile(moved, "replacement-file\n"), "old-html\n"],
+    ["empty", async (moved) => mkdir(moved), null],
+  ]) {
+    const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+    if (name === "empty") await mkdir(path.join(f.root, "guides/assets/archify/old/empty"));
+    let original; let failure;
+    try {
+      await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions, __testHooks: {
+        "after-forensic-delete-rename": async ({ moved, label, name: movedName }) => {
+          if (label !== "publish-backup" || movedName !== name) return;
+          original = `${moved}.original-forensic`;
+          await rename(moved, original);
+          await replace(moved);
+        },
+      } });
+    } catch (error) { failure = error; }
+    assert.ok(failure instanceof AggregateError);
+    assert.match(failure.message, /backup cleanup/u);
+    assert.ok(failure.errors[0] instanceof AggregateError);
+    assert.match(failure.errors[0].message, /forensic path/u);
+    assert.ok(failure.errors[0].errors[0] instanceof AggregateError);
+    assert.match(failure.errors[0].errors[0].message, /forensic deletion is untrusted; expected forensic path: .*original dev=.*ino=.*mode=/u);
+    assert.match(failure.errors[0].errors[0].errors[0].message, /moved entry identity mismatch/u);
+    if (expectedBytes) assert.equal(await readFile(original, "utf8"), expectedBytes);
+    else assert.equal((await lstat(original)).isDirectory(), true);
+  }
+});
+
+test("published managed-tree symlink is preserved while rollback keeps old backup forensic bytes", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  const sentinel = path.join(f.root, "external-sentinel");
+  await writeFile(sentinel, "external sentinel bytes\n");
+  let symlinkIdentity; let symlinkPath; let backup;
+  let failure;
+  try {
+    await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions, __testHooks: {
+      "after-rename": async ({ target, label }) => {
+        if (label === "publish backup") backup = target;
+        if (label !== "published managed tree") return;
+        await rename(target, `${target}.published-forensic`);
+        await symlink(sentinel, target);
+        symlinkPath = target;
+        const stats = await lstat(target, { bigint: true });
+        symlinkIdentity = { dev: stats.dev, ino: stats.ino, mode: stats.mode };
+      },
+    } });
+  } catch (error) { failure = error; }
+  assert.ok(failure instanceof AggregateError);
+  assert.match(failure.message, /published managed tree|rollback/u);
+  const symlinkStats = await lstat(symlinkPath, { bigint: true });
+  assert.equal(symlinkStats.isSymbolicLink(), true);
+  assert.deepEqual({ dev: symlinkStats.dev, ino: symlinkStats.ino, mode: symlinkStats.mode }, symlinkIdentity);
+  assert.equal(await readFile(sentinel, "utf8"), "external sentinel bytes\n");
+  assert.equal(await readFile(path.join(backup, "old/one.html"), "utf8"), "old-html\n");
+  assert.equal(await readFile(path.join(backup, "old/one.receipt.json"), "utf8"), "old-receipt\n");
+});
+
 test("restore loss reports both causes and preserves forensic paths", async (t) => {
   const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
   let failure;

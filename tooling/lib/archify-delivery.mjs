@@ -197,7 +197,7 @@ function withExpectedDeletionChildren(state, children) {
 }
 
 function deleteEntryForensicError(label, entry, target, cause) {
-  const identity = entry.identity;
+  const identity = entryIdentity(entry);
   const detail = `expected forensic path: ${target}; original dev=${identity.dev} ino=${identity.ino} mode=${identity.mode}`;
   return new AggregateError([cause instanceof Error ? cause : new Error(String(cause))], `${label} forensic deletion is untrusted; ${detail}`);
 }
@@ -250,6 +250,7 @@ async function deletePinnedEntry(entry, parent, label, hooks) {
   const movedChildren = current.children.map((name) => name === entry.name ? movedName : name).sort(comparePaths);
   try {
     await rename(source, moved);
+    await invoke(hooks, "after-forensic-delete-rename", { parent: current.path, name: entry.name, label, source, moved });
     const movedStats = await lstat(moved, { bigint: true });
     if (!entryTypeMatches(movedStats, entry) || !sameStableEntryIdentity(entry, movedStats)) {
       throw new Error(`${label} moved entry identity mismatch`);
@@ -261,6 +262,16 @@ async function deletePinnedEntry(entry, parent, label, hooks) {
   } catch (error) {
     throw deleteEntryForensicError(label, entry, moved, error);
   }
+}
+
+async function assertVerifiedMissing(filename, label) {
+  try {
+    await lstat(filename, { bigint: true });
+  } catch (error) {
+    if (error?.code === "ENOENT") return;
+    throw error;
+  }
+  throw new Error(`${label} target is not verified ENOENT; preserved path: ${filename}`);
 }
 
 async function rmdirOrUnlink(entry, moved) {
@@ -294,11 +305,12 @@ async function removePinnedTree(record, parent, label, hooks) {
   }
 }
 
-async function renameDirectory(record, target, parent, label, targetRoot = parent.path, hooks) {
+async function renameDirectory(record, target, parent, label, targetRoot = parent.path, hooks, onRenamed) {
   await assertDirectory(record);
   await assertDirectory(parent);
   try {
     await rename(record.path, target);
+    await onRenamed?.();
     await invoke(hooks, "after-rename", { source: record.path, target, label });
     const moved = await directoryRecord(target, label, targetRoot);
     if (!sameMovedDirectoryIdentity(record.identity, moved.identity)) throw new Error(`${label} moved identity mismatch`);
@@ -635,7 +647,7 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
   let assets = await directoryRecord(assetsPath, "assets parent", root.path);
   const targetPath = path.join(assets.path, "archify");
   const original = await lstat(targetPath).catch((error) => error.code === "ENOENT" ? null : Promise.reject(error));
-  let backup; let published;
+  let backup; let published; let publishedRenameMoved = false;
   try {
     await validateRecordInputs(records, catalogSnapshot); await assertSnapshotCurrent(qaSnapshot); validateExactStructuralSignatures(catalog, records);
     if (original) {
@@ -644,7 +656,7 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
       assets = await directoryRecord(assets.path, "assets parent", root.path);
     }
     await invoke(hooks, "before-publish-rename", { target: targetPath, candidate: candidate.path });
-    published = await renameDirectory(candidate, targetPath, assets, "published managed tree", root.path, hooks);
+    published = await renameDirectory(candidate, targetPath, assets, "published managed tree", root.path, hooks, () => { publishedRenameMoved = true; });
     assets = await directoryRecord(assets.path, "assets parent", root.path);
     await assertExactManagedTree(published.path, records.map((record) => record.entry), records);
     await invoke(hooks, "after-publish-verification", { target: published.path });
@@ -652,9 +664,12 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
   } catch (primary) {
     const rollback = [];
     try {
+      if (publishedRenameMoved && !published) throw new Error(`published managed tree state is untrusted; preserved path: ${targetPath}`);
+      assets = await directoryRecord(assets.path, "assets parent", root.path);
       if (published) { await renameDirectory(published, candidatePath, assets, "publish rollback candidate", temp.root, hooks); assets = await directoryRecord(assets.path, "assets parent", root.path); }
       if (backup) {
         await invoke(hooks, "before-rollback-restore", { target: targetPath, backup: backup.path });
+        await assertVerifiedMissing(targetPath, "publish rollback restore");
         await renameDirectory(backup, targetPath, assets, "publish rollback restore", assets.path, hooks);
       }
     } catch (error) { rollback.push(error); }
