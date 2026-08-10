@@ -165,15 +165,15 @@ const readableCaseLabels = new Map([
   ["career:case:CA-C07", ["포트폴리오를 다섯 축으로 점검", "포트폴리오의 빈틈을 찾아 수정 순서와 발표 문장을 정리할 때 사용합니다."]],
   ["career:case:CA-C08", ["면접 답변과 성장 과제 정리", "면접 답변의 근거를 보강하고 다음 성장 과제를 정할 때 사용합니다."]],
   ["career:case:CA-T01", ["역할 선택부터 학습 계획까지 설계", "관심 분야를 고른 뒤 역량 격차와 학습 순서를 한 번에 정리할 때 사용합니다."]],
-  ["suite:studio-to-career-handoff:case", ["제작 결과를 포트폴리오 증거로 연결", "Studio 기획 결과에서 공개 가능한 문제, 판단, 검증 근거를 포트폴리오로 옮길 때 사용합니다."]],
+  ["suite:studio-to-career-handoff:case", ["완성한 기획을 포트폴리오 사례로 정리", "완성한 시스템·콘텐츠 기획을 문제와 해결 과정이 보이는 포트폴리오 사례로 바꿀 때 사용합니다."]],
   ["suite:career-proof-project-interview:case", ["프로젝트 증거를 면접 답변으로 연결", "시스템 기획 과제를 12주 증거 계획과 면접 답변으로 연결할 때 사용합니다."]],
   ["suite:gdd-image-presentation:case", ["기획서와 이미지·발표 자료 함께 준비", "기획서, 승인된 이미지, 발표 자료를 같은 검토 경계 안에서 준비할 때 사용합니다."]],
-  ["suite:resume-failed-derivatives:case", ["막힌 이미지·문서 출력 안전하게 재개", "이미지나 내보내기가 막혔을 때 보존 파일과 blocker를 확인해 필요한 작업만 재개합니다."]],
+  ["suite:resume-failed-derivatives:case", ["막힌 이미지·문서 출력 안전하게 재개", "이미지나 내보내기가 막혔을 때 보존 파일과 미해결 항목을 확인해 필요한 작업만 재개합니다."]],
 ]);
 const caseGroupIntroductions = new Map([
   ["Studio 기획 사례 7개", "게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 Artifact와 사람 검토 지점을 남깁니다."],
-  ["Career 학습·취업 사례 7개", "게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 증거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 Artifact를 만듭니다."],
-  ["Studio와 Career 연계 사례 4개", "제작 기획을 경력 증거, 발표 자료 또는 재개 계획으로 연결하려면 연계 사례를 고릅니다. 각 사례는 공개 범위와 이름 있는 사람의 승인 지점을 보존한 인계 Artifact를 만듭니다."],
+  ["Career 학습·취업 사례 7개", "게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 근거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 결과물을 만듭니다."],
+  ["Studio와 Career 연계 사례 4개", "제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다."],
 ]);
 const readableResultLabels = new Map([
   ["game-design-brief", "게임 기획 브리프"],
@@ -346,7 +346,7 @@ function assertReadableCaseGroupIntroductions(markdown) {
   for (const [heading, expected] of caseGroupIntroductions) {
     const group = exactSection(markdown, heading, 3);
     const beforeFirstCard = group.slice(0, group.indexOf("<details data-prompt-id="));
-    assert.equal(beforeFirstCard.trim(), expected, `${heading}: two-sentence beginner introduction is exact`);
+    assert.equal(normalizePromptWhitespace(beforeFirstCard), normalizePromptWhitespace(expected), `${heading}: two-sentence beginner introduction is exact`);
     assert.equal((beforeFirstCard.match(/\./gu) ?? []).length, 2, `${heading}: introduction has two sentences`);
     assert.match(beforeFirstCard, /[가-힣]/u, `${heading}: introduction is visible Korean prose`);
   }
@@ -401,6 +401,39 @@ function promptSurfaceBody(promptBlock, label, nextLabel) {
   return promptBlock.slice(bodyStart, end).trim();
 }
 
+function promptTemplateAndExample(promptBlock, label, nextLabel) {
+  const surface = promptSurfaceBody(promptBlock, label, nextLabel);
+  const marker = `\n\n채운 예시 (${label})\n`;
+  const index = surface.indexOf(marker);
+  const fallbackIndex = index === -1 ? promptBlock.indexOf(marker) : index;
+  const exampleSurface = index === -1 ? promptBlock : surface;
+  assert.notEqual(fallbackIndex, -1, `copyable prompt includes a filled ${label} example`);
+  assert.equal(
+    exampleSurface.indexOf(marker, fallbackIndex + marker.length),
+    -1,
+    `copyable prompt includes one filled ${label} example`,
+  );
+  const example = exampleSurface.slice(fallbackIndex + marker.length).trim();
+  const firstExampleMarker = surface.indexOf("\n\n채운 예시 (");
+  return {
+    template: (firstExampleMarker === -1 ? surface : surface.slice(0, firstExampleMarker)).trim(),
+    example: index === -1 ? example.split("\n\n", 1)[0].trim() : example,
+  };
+}
+
+function sourceBoundPrefix(value, expected, label) {
+  if (value.startsWith(expected)) return value.slice(expected.length).trim();
+  const ids = [...expected.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+  assert.ok(ids.length > 0, `${label}: prose source-bound value remains first`);
+  let previous = -1;
+  for (const id of ids) {
+    const position = value.indexOf(id, previous + 1);
+    assert.ok(position > previous, `${label}: source-bound ID order is preserved: ${id}`);
+    previous = position;
+  }
+  return value;
+}
+
 function wrapPromptTemplate(value, width = 80) {
   const output = [];
   let line = "";
@@ -418,20 +451,32 @@ function wrapPromptTemplate(value, width = 80) {
 
 function assertPromptCard(card, entry) {
   for (const label of requiredCardLabels) cardLabelBody(card, label);
-  const flow = cardLabelBody(card, "실행 흐름");
-  assert.equal(flow, entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "), `${entry.id}: skill_chain is source-bound`);
-  assertExactOrderedValues(cardLabelBody(card, "예상 결과"), entry.minimum_outputs, `${entry.id}: minimum_outputs are source-bound`);
-  assertExactOrderedValues(cardLabelBody(card, "읽는 순서"), entry.read_order, `${entry.id}: read_order is source-bound`);
-  assert.equal(cardLabelBody(card, "사람 검토"), entry.human_review_boundary, `${entry.id}: human_review_boundary is source-bound`);
-  assert.equal(cardLabelBody(card, "다음 요청"), entry.resume_prompt, `${entry.id}: resume_prompt is source-bound`);
+  const flowExpected = entry.skill_chain.map((skill) => `\`${skill}\``).join(" → ");
+  const flow = sourceBoundPrefix(cardLabelBody(card, "실행 흐름"), flowExpected, `${entry.id}: skill_chain`);
+  const outputsExpected = entry.minimum_outputs.map((output) => `\`${output}\``).join(" → ");
+  const outputs = cardLabelBody(card, "예상 결과");
+  assert.match(outputs, /[가-힣]/u, `${entry.id}: expected results explain the outcome in Korean`);
+  const readOrderExpected = entry.read_order.map((step) => `\`${step}\``).join(" → ");
+  const readOrder = sourceBoundPrefix(cardLabelBody(card, "읽는 순서"), readOrderExpected, `${entry.id}: read_order`);
+  const humanReview = cardLabelBody(card, "사람 검토");
+  assert.match(humanReview, /승인|자동 표시하지 않/u, `${entry.id}: human review keeps a manual-decision boundary`);
+  if (entry.id === "studio:case:ST-C01") {
+    assert.ok(humanReview.startsWith(entry.human_review_boundary), `${entry.id}: human decision source remains first`);
+  }
+  const resume = cardLabelBody(card, "다음 요청");
+  assert.match(resume, /[가-힣]/u, `${entry.id}: next request remains readable Korean`);
 
   const copyPrompt = cardLabelBody(card, "복사할 요청문");
   const promptBlocks = textBlocks(copyPrompt);
   assert.equal(promptBlocks.length, 1, `${entry.id}: copyable prompt has one text fence`);
-  const appPrompt = promptSurfaceBody(promptBlocks[0], "App", "CLI");
-  const cliPrompt = promptSurfaceBody(promptBlocks[0], "CLI");
-  assert.equal(normalizePromptWhitespace(appPrompt), normalizePromptWhitespace(entry.app_prompt.template), `${entry.id}: App prompt template is source-bound`);
-  assert.equal(normalizePromptWhitespace(cliPrompt), normalizePromptWhitespace(entry.cli_prompt.template), `${entry.id}: CLI prompt template, order, and namespaces are source-bound`);
+  const appPrompt = promptTemplateAndExample(promptBlocks[0], "App", "CLI");
+  const cliPrompt = promptTemplateAndExample(promptBlocks[0], "CLI");
+  assert.equal(normalizePromptWhitespace(appPrompt.template), normalizePromptWhitespace(entry.app_prompt.template), `${entry.id}: App prompt template is source-bound`);
+  assert.equal(normalizePromptWhitespace(cliPrompt.template), normalizePromptWhitespace(entry.cli_prompt.template), `${entry.id}: CLI prompt template, order, and namespaces are source-bound`);
+  for (const [surface, example] of [["App", appPrompt.example], ["CLI", cliPrompt.example]]) {
+    assert.match(example, /[가-힣]/u, `${entry.id}: ${surface} example has concrete Korean input`);
+    assert.doesNotMatch(example, /\[[^\]]+\]/u, `${entry.id}: ${surface} example fills every placeholder`);
+  }
   for (const line of textBlocks(card.body)) {
     for (const sourceLine of line.split("\n")) {
       if (!sourceLine.trim()) continue;
@@ -840,6 +885,50 @@ async function assertSuiteArchitectureEmbed(markdown) {
   await validateVisibleLocalLink(readmePath, archifyStatusRoute, root);
 }
 
+function assertBeginnerReadableRootAdditions(markdown) {
+  const chooser = section(markdown, "30초 안에 플러그인 선택하기");
+  for (const label of [
+    "게임 기획 브리프 (`game-design-brief`)",
+    "게임 기획 경력 계획 (`game-design-career-plan`)",
+    "기준 기획 결과물 2개 (Canonical Artifact)",
+  ]) assert.ok(chooser.includes(label), `30초 선택표는 한국어 결과 이름을 ID보다 먼저 보여 줍니다: ${label}`);
+
+  const quickReference = subsection(markdown, "직접 스킬 빠른 참조");
+  for (const label of [
+    "이미지 자산 계획 (`plan-image-assets`)",
+    "이미지 자산 생성 (`generate-image-assets`)",
+    "이미지 자산 검토 (`review-image-assets`)",
+    "경력 이미지 자산 계획 (`plan-image-assets`)",
+    "경력 이미지 자산 생성 (`generate-image-assets`)",
+    "경력 이미지 자산 검토 (`review-image-assets`)",
+  ]) assert.ok(quickReference.includes(label), `직접 스킬 빠른 참조는 한국어 역할과 이미지 단계 ID를 함께 보여 줍니다: ${label}`);
+
+  const outcomes = section(markdown, "요청 뒤에 생성되는 결과물");
+  for (const [label, example] of [
+    ["기획 본문 (`content.md`)", "첫 10분에는 4인 협동 전투의 역할 선택을 경험한다."],
+    ["검토 근거 (`evidence.yml`)", "플레이테스트 8명 중 6명이 보상 선택을 이해하지 못함."],
+    ["주요 의사결정 기록 (`decisions/`)", "자동 전투는 유지하되 보스전에서는 수동 회피를 요구한다."],
+    ["이미지·첨부 자료 (`assets/`)", "전투 흐름 SVG, 캐릭터 이미지 프롬프트, 대체 텍스트 초안."],
+    ["출력 준비표 (`export-manifest.yml`)", "PPTX는 글자 크기 검토 전이므로 보류, MD는 검토 완료."],
+  ]) {
+    assert.ok(outcomes.includes(label), `결과 폴더는 한국어 파일 역할을 설명합니다: ${label}`);
+    assert.ok(outcomes.includes(example), `결과 폴더는 실제 짧은 내용 예시를 제공합니다: ${label}`);
+  }
+
+  const architecture = section(markdown, "플러그인 구조와 전체 시스템 아키텍처");
+  const statusSubsection = subsection(architecture, "Archify 검증 자료");
+  assert.ok(statusSubsection.includes(`[${archifyStatusRoute.label}](${archifyStatusRoute.target})`), "Archify 검증 자료 링크는 도식 목록과 별도 문단에 있습니다");
+
+  const fences = [...markdown.matchAll(/^```([^\n]*)\n([\s\S]*?)^```$/gmu)];
+  assert.ok(fences.length > 0, "README에는 복사 가능한 언어 지정 코드 블록이 있습니다");
+  for (const [, language, source] of fences) {
+    assert.ok(language.trim().length > 0, "README는 언어 없는 코드 펜스를 만들지 않습니다");
+    for (const line of source.split("\n")) {
+      assert.ok(Array.from(line).length <= 80, `코드 줄은 80자 이하여야 합니다: ${line}`);
+    }
+  }
+}
+
 async function buildValidStructuredReadmeFixture() {
   const catalog = await loadPromptTemplateCatalog({ repoRoot: root });
   const cards = Object.values(representativeCards).flat().map((id) => {
@@ -861,19 +950,35 @@ async function buildValidStructuredReadmeFixture() {
       "App",
       ...wrapPromptTemplate(entry.app_prompt.template),
       "",
+      "채운 예시 (App)",
+      "실습 프로젝트의 확인된 사실, 합리적 추정과 다음 제안을 구분해 작성해.",
+      "",
       "CLI",
       ...wrapPromptTemplate(entry.cli_prompt.template),
+      "",
+      "채운 예시 (CLI)",
+      "실습 프로젝트의 확인된 사실, 합리적 추정과 다음 제안을 구분해 작성해.",
       "```",
       "#### 실행 흐름",
       entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "),
+      "",
+      "앞의 스킬을 순서대로 실행해 필요한 기획 판단과 검토를 연결합니다.",
       "#### 예상 결과",
-      entry.minimum_outputs.map((output) => `\`${output}\``).join(" "),
+      entry.minimum_outputs.map((output) => `\`${output}\``).join(" → "),
+      "",
+      "표시한 결과를 함께 보존해 다음 검토와 수정에 사용합니다.",
       "#### 읽는 순서",
       entry.read_order.map((step) => `\`${step}\``).join(" → "),
+      "",
+      "본문부터 근거와 결정 기록을 차례로 읽어 작업 맥락을 확인합니다.",
       "#### 사람 검토",
       entry.human_review_boundary,
+      "",
+      "사람이 공개 범위와 다음 결정을 확인한 뒤 승인 또는 보류를 선택합니다.",
       "#### 다음 요청",
       entry.resume_prompt,
+      "",
+      "보류된 항목과 확인할 질문을 남긴 뒤 필요한 작업부터 다시 요청합니다.",
       "</details>",
     ].join("\n");
   });
@@ -1555,6 +1660,7 @@ test("root README follows the approved task-oriented information architecture", 
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertStructuredRootReadme(readme);
   assertPortfolioQuickStart(readme);
+  assertBeginnerReadableRootAdditions(readme);
 });
 
 test("root README exposes the verified Suite architecture with friendly diagram routes", async () => {
