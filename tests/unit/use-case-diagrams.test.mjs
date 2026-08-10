@@ -283,8 +283,12 @@ test("diagram source rejects card text that cannot fit without truncation", () =
   }), /detail.*length|detail.*fit/u);
 });
 
-test("card roles reject over-wide Latin runs consistently across every renderer layout", () => {
-  const longToken = "W".repeat(20);
+test("card roles reject over-wide unbreakable ASCII tokens across every renderer layout", () => {
+  const longTokens = [
+    "WWWW_WWWW_WWWW",
+    "WWWW.WWWW.WWWW",
+    "WWWW/WWWW/WWWW",
+  ];
   const studioPipeline = {
     ...validFixture,
     id: "st-c01",
@@ -331,10 +335,23 @@ test("card roles reject over-wide Latin runs consistently across every renderer 
 
   for (const source of sources) {
     for (const field of ["label", "detail"]) {
-      const mutated = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, [field]: longToken } : step) };
-      const expected = new RegExp(`steps\\[0\\]\\.${field}.*unbreakable Latin token.*exceeds.*text box.*spaces or hyphens`, "u");
-      assert.throws(() => validateDiagramSource(mutated), expected, `${source.scope}/${source.type}/${field} validates`);
-      assert.throws(() => renderDiagramSvg(mutated), expected, `${source.scope}/${source.type}/${field} renders`);
+      for (const longToken of longTokens) {
+        const mutated = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, [field]: longToken } : step) };
+        const expected = new RegExp(`steps\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box.*spaces or hyphens`, "u");
+        assert.throws(() => validateDiagramSource(mutated), expected, `${source.scope}/${source.type}/${field}/${longToken} validates`);
+        assert.throws(() => renderDiagramSvg(mutated), expected, `${source.scope}/${source.type}/${field}/${longToken} renders`);
+      }
+    }
+
+    if (source.type === "decision-flow") {
+      for (const field of ["label", "detail"]) {
+        for (const longToken of longTokens) {
+          const mutated = { ...source, branches: source.branches.map((branch, index) => index === 0 ? { ...branch, [field]: longToken } : branch) };
+          const expected = new RegExp(`branches\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box.*spaces or hyphens`, "u");
+          assert.throws(() => validateDiagramSource(mutated), expected, `${source.scope}/${source.type}/branch/${field}/${longToken} validates`);
+          assert.throws(() => renderDiagramSvg(mutated), expected, `${source.scope}/${source.type}/branch/${field}/${longToken} renders`);
+        }
+      }
     }
   }
 });
