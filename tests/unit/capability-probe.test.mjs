@@ -11,6 +11,7 @@ import {
   probeArchifyCapability,
   probeChromium,
   probeImageGenerationCapability,
+  resolveArchifyInstallation,
 } from '../../shared/scripts/capability-probe.mjs';
 
 const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs', import.meta.url));
@@ -73,6 +74,46 @@ test('detects a regular host Archify skill without exposing its path', async () 
     provider: 'host-archify-skill',
     version: '2.13.0',
   });
+});
+
+test('execution resolver pins regular CLI bytes while public probe hides paths', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+
+  const installation = await resolveArchifyInstallation({}, { home });
+  assert.equal(installation.status, 'available');
+  assert.equal(installation.provider, 'host-archify-skill');
+  assert.equal(installation.version, '2.13.0');
+  assert.equal(installation.cli.path, await realpath(join(root, 'bin', 'archify.mjs')));
+  assert.equal(installation.cli.realpath, await realpath(join(root, 'bin', 'archify.mjs')));
+  assert.equal(typeof installation.cli.dev, 'bigint');
+  assert.equal(typeof installation.cli.ino, 'bigint');
+  assert.equal(typeof installation.cli.size, 'bigint');
+  assert.match(installation.cli.sha256, /^[a-f0-9]{64}$/u);
+
+  const publicResult = await probeArchifyCapability({}, { home });
+  assert.deepEqual(Object.keys(publicResult).sort(), ['provider', 'status', 'version']);
+  assert.equal(JSON.stringify(publicResult).includes(home), false);
+});
+
+test('execution resolver preserves higher-priority Archify terminal outcomes', async () => {
+  const home = await temporaryWorkspace();
+  const codexHome = join(home, 'portable-codex-home');
+  await writeArchifySkill(join(home, '.agents', 'skills', 'archify'));
+
+  assert.deepEqual(await resolveArchifyInstallation({ CODEX_HOME: codexHome }, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+    cli: await resolveArchifyInstallation({}, { home }).then((result) => result.cli),
+  });
+
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'), '2.12.9');
+  assert.deepEqual(await resolveArchifyInstallation({ CODEX_HOME: codexHome }, { home }), { status: 'unavailable' });
+
+  await writeFile(join(codexHome, 'skills', 'archify', 'package.json'), '{');
+  assert.deepEqual(await resolveArchifyInstallation({ CODEX_HOME: codexHome }, { home }), { status: 'unknown' });
 });
 
 test('continues after an absent higher Archify root but not after malformed higher metadata', async () => {
