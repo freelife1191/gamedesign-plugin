@@ -57,6 +57,42 @@ const resultExampleIds = [
   "game-design-brief", "system-specification", "ui-ux-flow-state", "reverse-design-document",
   "creative-design-portfolio", "export-preparation-manifest",
 ];
+const suiteArchitectureEmbed = {
+  section: "플러그인 구조와 전체 시스템 아키텍처",
+  alt: "게임 기획 플러그인 모음 전체 시스템 구조",
+  png: "guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/read.png",
+  html: "guides/assets/archify/suite/suite-plugin-system-architecture.html",
+};
+const verifiedArchifyRoutes = [
+  {
+    label: "전체 플러그인 시스템 구조",
+    target: "guides/assets/archify/suite/suite-plugin-system-architecture.html",
+    explains: "Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결",
+    when: "두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때",
+  },
+  {
+    label: "Studio 기획 프로젝트 흐름",
+    target: "guides/assets/archify/studio/studio-project-workflow.html",
+    explains: "게임 비전부터 설계, 검토와 내보내기까지의 제작 흐름",
+    when: "새 게임 기획 프로젝트를 시작하거나 제작 순서를 점검할 때",
+  },
+  {
+    label: "Career 학습·취업 흐름",
+    target: "guides/assets/archify/career/career-evidence-workflow.html",
+    explains: "역할 탐색, 학습 과제, 포트폴리오와 면접 준비의 연결",
+    when: "학습 계획이나 취업 준비 결과를 다음 과제로 연결할 때",
+  },
+  {
+    label: "Studio 결과를 Career로 정리하는 흐름",
+    target: "guides/assets/archify/suite/suite-studio-career-handoff.html",
+    explains: "검토한 제작 결과를 공개 가능한 포트폴리오 자료로 정리하는 순서",
+    when: "완성한 기획서를 포트폴리오 사례나 면접 근거로 바꿀 때",
+  },
+];
+const archifyStatusRoute = {
+  label: "Archify 검증 상태·원본·QA 근거",
+  target: "guides/archify-diagrams/README.md",
+};
 const readmeSkillsteadDiagrams = [
   {
     section: "케이스별 프롬프트로 시작하기",
@@ -759,6 +795,46 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
   assertSafetyBoundary(markdown);
   assertUpdateAndReinstallInstructions(markdown);
   if (validateLinks) await assertRootLinks(markdown);
+}
+
+async function assertSuiteArchitectureEmbed(markdown) {
+  const architecture = section(markdown, suiteArchitectureEmbed.section);
+  const readableArchitecture = architecture.replace(/\s+/gu, " ");
+  const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.html})`;
+  assert.ok(architecture.includes(exactEmbed), "architecture preview keeps the exact PNG-to-HTML relationship");
+  assert.match(
+    readableArchitecture,
+    /Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결/u,
+    "architecture preview explains the full system question in Korean",
+  );
+  assert.match(
+    readableArchitecture,
+    /두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때/u,
+    "architecture preview names a concrete opening moment",
+  );
+  const readmePath = path.join(root, "README.md");
+  await validateVisibleLocalLink(readmePath, {
+    target: suiteArchitectureEmbed.png,
+    label: suiteArchitectureEmbed.alt,
+  }, root);
+  await validateVisibleLocalLink(readmePath, {
+    target: suiteArchitectureEmbed.html,
+    label: suiteArchitectureEmbed.alt,
+  }, root);
+  for (const route of verifiedArchifyRoutes) {
+    assert.ok(
+      architecture.includes(`[${route.label}](${route.target})`),
+      `architecture route keeps a friendly named link: ${route.label}`,
+    );
+    assert.ok(readableArchitecture.includes(route.explains), `architecture route explains its answer: ${route.label}`);
+    assert.ok(readableArchitecture.includes(route.when), `architecture route explains when to open it: ${route.label}`);
+    await validateVisibleLocalLink(readmePath, { target: route.target, label: route.label }, root);
+  }
+  assert.ok(
+    architecture.includes(`[${archifyStatusRoute.label}](${archifyStatusRoute.target})`),
+    "architecture section links to the named Archify status index",
+  );
+  await validateVisibleLocalLink(readmePath, archifyStatusRoute, root);
 }
 
 async function buildValidStructuredReadmeFixture() {
@@ -1476,6 +1552,26 @@ test("root README follows the approved task-oriented information architecture", 
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertStructuredRootReadme(readme);
   assertPortfolioQuickStart(readme);
+});
+
+test("root README exposes the verified Suite architecture with friendly diagram routes", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  await assertSuiteArchitectureEmbed(readme);
+});
+
+test("Suite architecture embed rejects missing, unwrapped, stale, and wrong targets", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.html})`;
+  const mutations = [
+    ["missing preview", readme.replace(exactEmbed, "")],
+    ["unwrapped preview", readme.replace(exactEmbed, `![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})`)],
+    ["wrong HTML ID", readme.replace(suiteArchitectureEmbed.html, "guides/assets/archify/suite/wrong-system-architecture.html")],
+    ["stale receipt link", readme.replace(suiteArchitectureEmbed.html, "guides/assets/archify/suite/suite-plugin-system-architecture.receipt.json")],
+  ];
+  for (const [label, mutated] of mutations) {
+    assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
+    await assert.rejects(() => assertSuiteArchitectureEmbed(mutated), undefined, label);
+  }
 });
 
 test("root README embeds three machine-linted Skillstead explanation diagrams", async () => {

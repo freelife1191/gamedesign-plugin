@@ -199,7 +199,7 @@ test("root README selects the Suite system architecture without changing corpus 
     product: "suite",
     source_document: "README.md",
     source_section: "플러그인 구조와 전체 시스템 아키텍처",
-    question: "Codex 진입점에서 두 플러그인의 전문 스킬, Canonical Artifact, 검증과 사람 승인을 거쳐 결과가 어떻게 전달되는가?",
+    question: "사용자 진입점에서 두 기획 플러그인의 작업, 기준 기획 결과물, 자동 검증과 사람 검토·승인을 거쳐 결과가 어떻게 전달되는가?",
     decision: "selected",
     diagram_type: "architecture",
     priority: "primary",

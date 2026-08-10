@@ -1,13 +1,13 @@
 # Curated Archify inventory
 
-이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 현재 3개 `selected` 항목은 모두 committed `spec`과 검증 기록을 가지며, 검증·시각 QA를 통과한 한국어 HTML 3개를 `published` 상태로 공개합니다.
+이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 현재 4개 `selected` 항목은 모두 committed `spec`과 검증 기록을 가지며, 검증·시각 QA를 통과한 한국어 HTML 4개를 `published` 상태로 공개합니다.
 
 ## 처음 보는 사용자를 위한 흐름
 
 1. `catalog.json`에서 문서별 `selected` 또는 `excluded` 결정을 찾습니다.
 2. `selected`의 `question`, `diagram_type_reason`, `composition_rationale`가 실제로 어떤 질문을 도식으로 풀지 설명합니다.
-3. 현재 3개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0, headless 원본 크기 시각 QA를 통과했습니다.
-4. `published`는 3개입니다. 각 공개 HTML은 한국어 뷰어와 검증 receipt를 가지며, 아래 Published 목록에서 바로 열 수 있습니다.
+3. 현재 4개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0을 통과했습니다.
+4. `published`는 4개입니다. 각 공개 HTML은 한국어 뷰어와 검증 receipt를 가지며, Chromium headless에서 원본 크기와 페이지 맞춤(fit) 관점을 검토했습니다. 아래 Published 목록에서 바로 열 수 있습니다.
 
 ## 증거와 전수 범위
 
@@ -66,25 +66,39 @@ catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 invento
 
 ## Published diagrams
 
-**3개.** 아래 결과물은 모두 `published`이고 `visual_review: passed`이며, 공통 조작 UI와 사용자 가시 설명을 한국어로 제공합니다.
+**4개.** 아래 결과물은 모두 `published`이고 `visual_review: passed`이며, 공통 조작 UI와 사용자 가시 설명을 한국어로 제공합니다. 제품별 수량은 Studio 1개, Career 1개, Suite 2개이며, 유형별 수량은 architecture 1개, workflow 2개, dataflow 1개입니다.
+
+### `suite-plugin-system-architecture`
+
+- 제품·유형·상태: `suite` · `architecture` · `published` (`visual_review: passed`)
+- 답하는 질문: 사용자 진입점에서 두 기획 플러그인의 작업, 기준 기획 결과물, 자동 검증과 사람 검토·승인을 거쳐 결과가 어떻게 전달되는가?
+- 원문 근거: 루트 `README.md`의 `플러그인 구조와 전체 시스템 아키텍처` 섹션
+- 공개물: [한국어 게임 기획 플러그인 모음 전체 시스템 구조](../assets/archify/suite/suite-plugin-system-architecture.html)
+- 명세·검증: [전체 시스템 구조 spec](specs/suite/suite-plugin-system-architecture.json) · [delivery receipt](../assets/archify/suite/suite-plugin-system-architecture.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
 ### `studio-project-workflow`
 
 - 제품·유형·상태: `studio` · `workflow` · `published` (`visual_review: passed`)
+- 답하는 질문: 게임 비전부터 설계, 검토와 내보내기까지 Studio 작업을 어떤 순서로 확인하는가?
+- 원문 근거: [Studio workflow source](specs/studio/studio-project-workflow.json)
 - 공개물: [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)
-- 명세·증거: [Studio workflow spec](specs/studio/studio-project-workflow.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [Studio workflow spec](specs/studio/studio-project-workflow.json) · [delivery receipt](../assets/archify/studio/studio-project-workflow.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
 ### `career-evidence-workflow`
 
 - 제품·유형·상태: `career` · `workflow` · `published` (`visual_review: passed`)
+- 답하는 질문: 역할 탐색, 학습 과제, 포트폴리오와 면접 준비를 어떤 검토 순서로 연결하는가?
+- 원문 근거: [Career workflow source](specs/career/career-evidence-workflow.json)
 - 공개물: [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)
-- 명세·증거: [Career workflow spec](specs/career/career-evidence-workflow.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [Career workflow spec](specs/career/career-evidence-workflow.json) · [delivery receipt](../assets/archify/career/career-evidence-workflow.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
 ### `suite-studio-career-handoff`
 
 - 제품·유형·상태: `suite` · `dataflow` · `published` (`visual_review: passed`)
+- 답하는 질문: 검토한 Studio 결과에서 공개 가능한 내용만 Career 포트폴리오와 면접 준비로 어떻게 인계하는가?
+- 원문 근거: [Suite handoff source](specs/suite/suite-studio-career-handoff.json)
 - 공개물: [한국어 Studio → Career 공개 근거 handoff](../assets/archify/suite/suite-studio-career-handoff.html)
-- 명세·증거: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · [QA manifest](visual-qa/manifest.json)
+- 명세·검증: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · [delivery receipt](../assets/archify/suite/suite-studio-career-handoff.receipt.json) · [QA manifest](visual-qa/manifest.json)
 
 ## Blocked diagrams
 

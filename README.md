@@ -1324,6 +1324,16 @@ authoring source: products/game-design-career/plugin/
 generated snapshot: plugins/game-design-career/
 ```
 
+### 전체 시스템 구조를 먼저 확인하기
+
+두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요.
+**Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결**을
+한 화면에서 보여 줍니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를
+확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지
+빠르게 파악할 수 있습니다.
+
+[![게임 기획 플러그인 모음 전체 시스템 구조](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/read.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
+
 ### 경로별 역할과 편집 경계
 
 제품 source를 편집한 뒤 표준 빌드로 generated snapshot을 갱신합니다.
@@ -1339,14 +1349,26 @@ generated snapshot: plugins/game-design-career/
 | `hooks/` | 중단·검토·재개 경계 | 제품 source에서 편집 |
 | `BUILD-MANIFEST.json` | 배포 파일과 digest 증거 | 표준 빌드에서만 갱신 |
 
-### 기존 Archify 워크플로 3종
+### 상황별로 열어볼 Archify 도식 4종
 
-현재는 검증된 기존 HTML 워크플로 3종과 검증 상태 문서를 연결합니다.
+필요한 질문에 맞는 도식만 여세요. 각 HTML은 검증을 통과한 한국어 도식이며,
+선택·검토·재개 경계를 텍스트보다 빠르게 확인하는 보조 자료입니다.
 
-- [Studio 프로젝트 워크플로 열기](guides/assets/archify/studio/studio-project-workflow.html)
-- [Career 증거 워크플로 열기](guides/assets/archify/career/career-evidence-workflow.html)
-- [Studio에서 Career로 넘기는 공개 근거 흐름 열기](guides/assets/archify/suite/suite-studio-career-handoff.html)
-- [Archify 검증 상태와 QA 근거 보기](guides/archify-diagrams/README.md)
+- [전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html):
+  Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결을
+  설명합니다. 두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때
+  엽니다.
+- [Studio 기획 프로젝트 흐름](guides/assets/archify/studio/studio-project-workflow.html):
+  게임 비전부터 설계, 검토와 내보내기까지의 제작 흐름을 설명합니다. 새 게임
+  기획 프로젝트를 시작하거나 제작 순서를 점검할 때 엽니다.
+- [Career 학습·취업 흐름](guides/assets/archify/career/career-evidence-workflow.html):
+  역할 탐색, 학습 과제, 포트폴리오와 면접 준비의 연결을 설명합니다. 학습 계획이나
+  취업 준비 결과를 다음 과제로 연결할 때 엽니다.
+- [Studio 결과를 Career로 정리하는 흐름](guides/assets/archify/suite/suite-studio-career-handoff.html):
+  검토한 제작 결과를 공개 가능한 포트폴리오 자료로 정리하는 순서를 설명합니다.
+  완성한 기획서를 포트폴리오 사례나 면접 근거로 바꿀 때 엽니다.
+- [Archify 검증 상태·원본·QA 근거](guides/archify-diagrams/README.md):
+  도식의 질문, 원본 명세, 공개 HTML과 품질 검토 근거를 한곳에서 확인합니다.
 
 ## 이미지·도식·문서 내보내기
 
