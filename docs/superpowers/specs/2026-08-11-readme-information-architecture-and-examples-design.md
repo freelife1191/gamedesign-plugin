@@ -39,8 +39,9 @@ README에 새 한국어 Archify 전체 시스템 아키텍처를 추가한다. G
 5. 각 예시에서 플러그인, 직접 스킬, 실행 흐름, 최소 결과, 선택 결과, 사람 검토와 다음 요청을 확인한다.
 6. 각 결과물이 저장되는 Canonical Artifact 구조와 읽는 순서를 실제 파일명으로 보여 준다.
 7. 전체 플러그인 시스템의 구성 요소, 신뢰 경계, 자동 검증과 사람 승인 관계를 Archify로 설명한다.
-8. 설치, 이미지, 내보내기, 권리와 승인에 관한 기존 fail-closed 계약을 유지한다.
-9. README의 상세 링크와 실제 가이드, 스킬, 템플릿, Archify 산출물이 일치하도록 테스트한다.
+8. Studio와 Career 설치 패키지의 file tree, 주요 디렉터리 역할과 source/generated 관계를 한눈에 보여 준다.
+9. 설치, 이미지, 내보내기, 권리와 승인에 관한 기존 fail-closed 계약을 유지한다.
+10. README의 상세 링크와 실제 가이드, 스킬, 템플릿, Archify 산출물이 일치하도록 테스트한다.
 
 ### 3.2 비목표
 
@@ -189,6 +190,69 @@ README에는 18개의 대표 케이스를 제공한다. 각 카드는 `<details>
 - 어떤 대표 Artifact를 얻는가
 - 전체 오케스트레이터 대신 직접 호출할 때의 경계는 무엇인가
 
+### 5.5 플러그인별 file tree
+
+`플러그인 구조와 전체 시스템 아키텍처`의 첫 부분에 Studio와 Career의 설치 패키지 file tree를 각각 둔다. 두 tree는 실제 배포 snapshot인 `plugins/<product>/`를 보여 주되, 편집 원본은 `products/<product>/plugin/`이고 `plugins/<product>/`는 표준 빌드가 생성한다는 점을 먼저 설명한다.
+
+Studio tree는 다음 구조와 수량을 표시한다.
+
+```text
+plugins/game-design-studio/
+├── .codex-plugin/plugin.json   # 플러그인 manifest
+├── agents/                     # 전문 에이전트 9개
+├── skills/                     # 제품 스킬 14개 + Skillstead 1개
+├── assets/
+│   ├── templates/              # Canonical Artifact 템플릿 15개
+│   └── shared/                 # 공통 템플릿·지원 자산
+├── references/
+│   ├── document-quality/       # 문서 품질 profile·preset
+│   ├── methods/                # 기획 방법 reference
+│   ├── shared/                 # 공통 계약과 책임 설계
+│   └── source/                 # 근거 문서의 설치 snapshot
+├── scripts/                    # 검증·이미지·내보내기 지원 script 14개
+├── hooks/hooks.json            # 작업 중단·검토 hook
+├── .env.example                # 이미지 생성 설정 예시
+├── README.md
+└── BUILD-MANIFEST.json         # 생성 snapshot 무결성
+```
+
+Career tree는 다음 구조와 수량을 표시한다.
+
+```text
+plugins/game-design-career/
+├── .codex-plugin/plugin.json   # 플러그인 manifest
+├── agents/                     # 전문 에이전트 9개
+├── skills/                     # 제품 스킬 14개 + Skillstead 1개
+├── assets/
+│   ├── templates/              # Canonical Artifact 템플릿 15개
+│   └── shared/                 # 공통 템플릿·지원 자산
+├── references/
+│   ├── document-quality/       # 문서 품질 profile·preset
+│   ├── methods/                # 학습·취업 방법 reference
+│   ├── shared/                 # 공통 계약과 책임 설계
+│   └── source/                 # 근거 문서의 설치 snapshot
+├── scripts/                    # 검증·이미지·내보내기 지원 script 14개
+├── hooks/hooks.json            # 작업 중단·검토 hook
+├── .env.example                # 이미지 생성 설정 예시
+├── README.md
+└── BUILD-MANIFEST.json         # 생성 snapshot 무결성
+```
+
+각 tree 아래에는 주요 디렉터리의 역할을 설명하는 짧은 표를 둔다.
+
+| 경로 | 사용자가 확인하는 내용 | 직접 편집 여부 |
+| --- | --- | --- |
+| `.codex-plugin/` | 설치 ID와 플러그인 metadata | source manifest에서만 편집 |
+| `agents/` | 어떤 전문가가 검토·설계에 참여하는지 | 제품 source에서 편집 |
+| `skills/` | 직접 호출할 수 있는 작업 단위 | 제품 source에서 편집 |
+| `assets/templates/` | 생성되는 Canonical Artifact 종류 | 제품 source에서 편집 |
+| `references/` | 품질·방법·근거 계약 | 제품 또는 shared source에서 편집 |
+| `scripts/` | 검증·이미지·내보내기 실행 지원 | shared source에서 편집 |
+| `hooks/` | 중단·검토·재개 경계 | 제품 source에서 편집 |
+| `BUILD-MANIFEST.json` | 배포 snapshot 파일·digest 증거 | 직접 편집하지 않음 |
+
+README의 tree는 모든 하위 파일을 나열하지 않는다. 에이전트와 스킬의 정확한 이름은 제품별 `agents/`, `skills/` 목록과 상세 가이드 링크로 이어진다. 이 방식은 구조를 한눈에 보여 주면서 README가 수백 개 파일의 중복 inventory가 되는 것을 막는다.
+
 ## 6. 결과물 설명 계약
 
 `요청 뒤에 생성되는 결과물`은 추상적인 목록 대신 하나의 예시 디렉터리와 결과별 역할을 보여 준다.
@@ -252,6 +316,7 @@ diagram type은 `architecture`를 사용한다. 이 질문은 단계 순서보�
 
 - App와 CLI는 같은 플러그인 계약을 다른 호출 표면으로 사용한다.
 - Studio와 Career 작업 기준은 서로 섞이지 않는다.
+- 두 플러그인의 `agents/`, `skills/`, `assets/`, `references/`, `scripts/`, `hooks/` 책임 경계를 file tree와 같은 용어로 표시한다.
 - 모든 파생 이미지와 문서는 Canonical Artifact를 기준으로 한다.
 - 자동 검증은 사람의 기획·권리·공개 승인을 대체하지 않는다.
 - 실패한 renderer나 QA는 기준 Markdown과 검증 결과를 보존하고 해당 lane만 차단한다.
@@ -319,6 +384,9 @@ README 편집은 다음 규칙을 적용한다.
 - 대표 스킬 ID가 실제 제품 inventory에 존재한다.
 - 대표 결과 ID와 read order가 prompt catalog 또는 use-case manifest와 일치한다.
 - 긴 요청문 코드 줄이 80자를 넘지 않는다.
+- Studio와 Career file tree가 각각 존재하고 required top-level 경로와 실제 agent·skill·template·script 수를 정확히 표시한다.
+- file tree가 `products/<product>/plugin/`을 편집 원본, `plugins/<product>/`를 generated snapshot으로 구분한다.
+- `BUILD-MANIFEST.json`과 generated `plugins/` tree를 직접 편집하라고 안내하지 않는다.
 - 전체 시스템 PNG가 HTML 링크로 감싸져 있고 두 파일이 regular non-symlink 파일이다.
 - 기존 설치, 이미지 모드, export 상태와 안전 경계 계약이 유지된다.
 
@@ -363,6 +431,7 @@ README 편집은 다음 규칙을 적용한다.
 - 30초 선택, 설치와 5분 시작이 문서 앞부분에 연속해서 배치된다.
 - 18개 대표 케이스에 복사 가능한 요청문, 스킬 흐름과 예상 결과가 있다.
 - 스킬 빠른 사용표가 제품별 상세 스킬 가이드로 연결된다.
+- Studio와 Career 각각의 file tree가 주요 경로, 실제 수량과 편집 책임을 설명한다.
 - 결과물 예시가 실제 Canonical Artifact 파일과 읽는 순서를 설명한다.
 - 새 한국어 Archify 전체 시스템 아키텍처 PNG가 README에 보이고 클릭하면 대화형 HTML이 열린다.
 - 기존 3개 한국어 Archify 상세 도식으로 이동할 수 있다.
