@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, lstat, readFile, readdir, realpath } from 'node:fs/promises';
+import { access, lstat, open, readFile, readdir, realpath } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -293,6 +293,16 @@ function containedIn(base, candidate) {
   return pathFromBase === '' || (!pathFromBase.startsWith(`..${sep}`) && pathFromBase !== '..' && !isAbsolute(pathFromBase));
 }
 
+function pinnedCliStats(stats) {
+  return stats?.isFile?.() && !stats.isSymbolicLink() && typeof stats.dev === 'bigint' && typeof stats.ino === 'bigint'
+    && typeof stats.size === 'bigint' && typeof stats.mtimeNs === 'bigint' && typeof stats.ctimeNs === 'bigint';
+}
+
+function samePinnedCliStats(left, right) {
+  return pinnedCliStats(left) && pinnedCliStats(right) && left.dev === right.dev && left.ino === right.ino
+    && left.size === right.size && left.mtimeNs === right.mtimeNs && left.ctimeNs === right.ctimeNs;
+}
+
 async function inspectArchifyPath(path, expectedType, { lstatFn, accessFn, realpathFn, base }) {
   try {
     const stats = await lstatFn(path);
@@ -338,7 +348,13 @@ async function inspectArchifyCandidate(base, components, { lstatFn, accessFn, re
   const version = parseArchifyVersion(packageJson);
   if (!version) return { status: 'unknown' };
   if (!supportedArchifyVersion(version)) return { status: 'unavailable' };
-  return { status: 'available', provider: 'host-archify-skill', version: version.version, cliPath };
+  return {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: version.version,
+    cliPath,
+    cliBase: inspectedBase.canonical,
+  };
 }
 
 async function inspectConfiguredArchifyCandidates(env = process.env, {
@@ -380,24 +396,44 @@ async function inspectConfiguredArchifyCandidates(env = process.env, {
 export async function resolveArchifyInstallation(env = process.env, options = {}) {
   const {
     lstatFn = lstat,
+    openFn = open,
     readFileFn = readFile,
     realpathFn = realpath,
   } = options;
   const result = await inspectConfiguredArchifyCandidates(env, options);
   if (result.status !== 'available') return { status: result.status };
 
+  let handle;
   let bytes;
-  let stats;
+  let beforeStats;
+  let afterStats;
+  let pathnameStats;
+  let firstCanonical;
   let canonical;
+  let failure;
   try {
-    bytes = await readFileFn(result.cliPath);
-    stats = await lstatFn(result.cliPath, { bigint: true });
+    handle = await openFn(result.cliPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    beforeStats = await handle.stat({ bigint: true });
+    bytes = await handle.readFile();
+    afterStats = await handle.stat({ bigint: true });
+    firstCanonical = await realpathFn(result.cliPath);
+    pathnameStats = await lstatFn(result.cliPath, { bigint: true });
     canonical = await realpathFn(result.cliPath);
-  } catch {
-    return { status: 'unknown' };
+    if (!Buffer.isBuffer(bytes) || !samePinnedCliStats(beforeStats, afterStats) || !samePinnedCliStats(beforeStats, pathnameStats)
+      || beforeStats.size !== BigInt(bytes.byteLength) || firstCanonical !== canonical || !containedIn(result.cliBase, canonical)) {
+      failure = new Error('Archify CLI identity changed while it was read.');
+    }
+  } catch (error) {
+    failure = error;
   }
-  if (!Buffer.isBuffer(bytes) || !stats.isFile() || stats.isSymbolicLink() || typeof stats.dev !== 'bigint'
-    || typeof stats.ino !== 'bigint' || typeof stats.size !== 'bigint' || stats.size !== BigInt(bytes.byteLength)) {
+  if (handle) {
+    try {
+      await handle.close();
+    } catch (error) {
+      failure = failure ? new AggregateError([failure, error], 'Archify CLI inspection and close both failed.') : error;
+    }
+  }
+  if (failure) {
     return { status: 'unknown' };
   }
   return {
@@ -407,9 +443,9 @@ export async function resolveArchifyInstallation(env = process.env, options = {}
     cli: Object.freeze({
       path: result.cliPath,
       realpath: canonical,
-      dev: stats.dev,
-      ino: stats.ino,
-      size: stats.size,
+      dev: beforeStats.dev,
+      ino: beforeStats.ino,
+      size: beforeStats.size,
       sha256: createHash('sha256').update(bytes).digest('hex'),
     }),
   };

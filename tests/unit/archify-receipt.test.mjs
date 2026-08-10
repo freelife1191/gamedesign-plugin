@@ -81,6 +81,22 @@ test('accepts the exact actual Archify deliver receipt contract', () => {
   assert.equal(validateArchifyDeliverReceipt(deliverReceipt(), fixtureFiles()).validation.checkCount, 9);
 });
 
+test('deliver and persisted receipts require independently supplied artifact bytes', () => {
+  const receipt = deliverReceipt();
+  assert.throws(() => validateArchifyDeliverReceipt(receipt), /evidence/u);
+  assert.throws(() => toPersistedArchifyReceipt(receipt, stablePaths()), /evidence/u);
+});
+
+test('deliver receipt rejects self-reported identity evidence', () => {
+  const receipt = deliverReceipt();
+  const forgedIdentity = {
+    specification: { sha256: receipt.specification.sha256, bytes: receipt.specification.bytes },
+    artifact: { sha256: receipt.artifact.sha256, bytes: receipt.artifact.bytes },
+  };
+  assert.throws(() => validateArchifyDeliverReceipt(receipt, forgedIdentity), /bytes/u);
+  assert.throws(() => toPersistedArchifyReceipt(receipt, stablePaths(), forgedIdentity), /bytes/u);
+});
+
 test('receipt validators reject each omitted top-level required value', () => {
   for (const key of ['schemaVersion', 'ok', 'command', 'type', 'input', 'checks', 'composition']) {
     const receipt = validateReceipt();
@@ -176,6 +192,17 @@ test('persisted receipt has an exact allowlisted shape', () => {
     artifact: { sha256: DIGEST(ARTIFACT), bytes: ARTIFACT.byteLength },
   });
   assert.equal(Object.isFrozen(saved), true);
+});
+
+test('persisted receipt rejects both wrong specification bytes and wrong artifact bytes', () => {
+  assert.throws(() => toPersistedArchifyReceipt(deliverReceipt(), stablePaths(), {
+    specification: Buffer.from('forged specification\n'),
+    artifact: ARTIFACT,
+  }), /digest|byte count/u);
+  assert.throws(() => toPersistedArchifyReceipt(deliverReceipt(), stablePaths(), {
+    specification: SPECIFICATION,
+    artifact: Buffer.from('forged artifact\n'),
+  }), /digest|byte count/u);
 });
 
 test('receipt validators reject unsupported diagram types', () => {

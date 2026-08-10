@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -95,6 +95,59 @@ test('execution resolver pins regular CLI bytes while public probe hides paths',
   const publicResult = await probeArchifyCapability({}, { home });
   assert.deepEqual(Object.keys(publicResult).sort(), ['provider', 'status', 'version']);
   assert.equal(JSON.stringify(publicResult).includes(home), false);
+});
+
+test('execution resolver rejects a same-size CLI replacement while reading its pinned file handle', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  const cli = join(root, 'bin', 'archify.mjs');
+  const replacement = join(root, 'bin', 'replacement.mjs');
+  const original = await readFile(cli);
+  await writeFile(replacement, Buffer.alloc(original.byteLength, 0x78));
+
+  const result = await resolveArchifyInstallation({}, {
+    home,
+    openFn: async (path, flags) => {
+      const handle = await open(path, flags);
+      return {
+        stat: (...args) => handle.stat(...args),
+        readFile: async (...args) => {
+          await rename(replacement, path);
+          return handle.readFile(...args);
+        },
+        close: () => handle.close(),
+      };
+    },
+  });
+
+  assert.deepEqual(result, { status: 'unknown' });
+});
+
+test('execution resolver closes the pinned file handle and fails closed on close errors', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  let closeCalls = 0;
+
+  const result = await resolveArchifyInstallation({}, {
+    home,
+    openFn: async (path, flags) => {
+      const handle = await open(path, flags);
+      return {
+        stat: (...args) => handle.stat(...args),
+        readFile: (...args) => handle.readFile(...args),
+        close: async () => {
+          closeCalls += 1;
+          await handle.close();
+          throw new Error('close failed after releasing the handle');
+        },
+      };
+    },
+  });
+
+  assert.equal(closeCalls, 1);
+  assert.deepEqual(result, { status: 'unknown' });
 });
 
 test('execution resolver preserves higher-priority Archify terminal outcomes', async () => {

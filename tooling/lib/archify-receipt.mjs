@@ -87,23 +87,18 @@ function validateDigestRecord(record, label) {
   requireByteCount(record.bytes, label);
 }
 
-function identityFrom(value, label) {
+function bytesFromEvidence(value, label) {
   if (Buffer.isBuffer(value) || value instanceof Uint8Array) {
-    const bytes = Buffer.from(value);
-    return { sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.byteLength };
+    return Buffer.from(value);
   }
-  if (value && typeof value === 'object') {
-    validateDigestRecord(value, label);
-    return { sha256: value.sha256, bytes: value.bytes };
-  }
-  throw new Error(`${label} identity must provide bytes or sha256 and byte count`);
+  throw new Error(`${label} evidence must provide raw bytes`);
 }
 
-function assertIdentityMatches(receiptIdentity, actual, label) {
-  if (actual === undefined) return;
-  const expected = identityFrom(actual, label);
-  if (receiptIdentity.sha256 !== expected.sha256) throw new Error(`${label} digest does not match bytes`);
-  if (receiptIdentity.bytes !== expected.bytes) throw new Error(`${label} byte count does not match bytes`);
+function assertEvidenceMatches(receiptIdentity, evidence, label) {
+  const bytes = bytesFromEvidence(evidence, label);
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  if (receiptIdentity.sha256 !== digest) throw new Error(`${label} digest does not match bytes`);
+  if (receiptIdentity.bytes !== bytes.byteLength) throw new Error(`${label} byte count does not match bytes`);
 }
 
 function stablePath(value, label) {
@@ -126,22 +121,20 @@ export function validateArchifyValidateReceipt(receipt) {
   return receipt;
 }
 
-export function validateArchifyDeliverReceipt(receipt, files = undefined) {
+export function validateArchifyDeliverReceipt(receipt, files) {
   validateReceiptHeader(receipt, 'deliver');
   requireNonEmptyString(receipt.input, 'input');
   requireNonEmptyString(receipt.output, 'output');
   validateDigestRecord(receipt.specification, 'specification');
   validateDigestRecord(receipt.artifact, 'artifact');
   validateDeliverValidation(receipt.validation);
-  if (files !== undefined) {
-    requireRecord(files, 'receipt files');
-    assertIdentityMatches(receipt.specification, files.specification, 'specification');
-    assertIdentityMatches(receipt.artifact, files.artifact, 'artifact');
-  }
+  requireRecord(files, 'receipt evidence');
+  assertEvidenceMatches(receipt.specification, files.specification, 'specification');
+  assertEvidenceMatches(receipt.artifact, files.artifact, 'artifact');
   return receipt;
 }
 
-export function toPersistedArchifyReceipt(receipt, stablePaths, files = undefined) {
+export function toPersistedArchifyReceipt(receipt, stablePaths, files) {
   validateArchifyDeliverReceipt(receipt, files);
   requireRecord(stablePaths, 'stable paths');
   const input = stablePath(stablePaths.input, 'input');
