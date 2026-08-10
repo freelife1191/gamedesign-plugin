@@ -94,7 +94,7 @@ test("production inventory has state-aware materialization contracts", async () 
   const suite = catalog.entries.find((entry) => entry.id === "suite-studio-career-handoff");
   assert.equal(studio?.delivery_status, "blocked-validation");
   assert.equal(career?.delivery_status, "auto-validated");
-  assert.equal(suite?.delivery_status, "planned");
+  assert.equal(suite?.delivery_status, "auto-validated");
   await assertStateAwareMaterialization(studio);
   await assertStateAwareMaterialization(career);
   await assertStateAwareMaterialization(suite);
@@ -104,8 +104,8 @@ test("production inventory has state-aware materialization contracts", async () 
     /Missing expected rejection/u,
   );
   await assert.rejects(
-    () => assertStateAwareMaterialization({ ...suite, delivery_status: "auto-validated" }),
-    { code: "ENOENT" },
+    () => assertStateAwareMaterialization({ ...suite, delivery_status: "planned" }),
+    /Missing expected rejection/u,
   );
   await assert.doesNotReject(
     () => assertStateAwareMaterialization({ ...career, delivery_status: "passed", visual_review: "passed", reviewer: "reviewer" }),

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile as execFileCallback } from "node:child_process";
-import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -8,6 +8,8 @@ import test from "node:test";
 
 import { hashArchifySource, loadArchifyCatalog } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
+import { sha256 } from "../../tooling/lib/hash.mjs";
+import { assertNoSymlinkPath, joinWithin } from "../../tooling/lib/paths.mjs";
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
@@ -32,7 +34,7 @@ async function loadProductionSpecs(repoRoot, product) {
   return { catalog, specsById };
 }
 
-async function validateInstalledWorkflowSpec(spec) {
+async function validateInstalledSpec(spec, type) {
   const directory = await mkdtemp(path.join(tmpdir(), "studio-archify-spec-"));
   const filename = path.join(directory, "candidate.json");
   try {
@@ -43,7 +45,7 @@ async function validateInstalledWorkflowSpec(spec) {
     return await execFile(process.execPath, [
       installation.cli.realpath,
       "validate",
-      "workflow",
+      type,
       filename,
       "--quality",
       "showcase",
@@ -54,9 +56,13 @@ async function validateInstalledWorkflowSpec(spec) {
   }
 }
 
-async function installedValidationError(spec) {
+async function validateInstalledWorkflowSpec(spec) {
+  return validateInstalledSpec(spec, "workflow");
+}
+
+async function installedValidationError(spec, type = "workflow") {
   try {
-    await validateInstalledWorkflowSpec(spec);
+    await validateInstalledSpec(spec, type);
   } catch (error) {
     return `${error.stdout ?? ""}\n${error.stderr ?? ""}`;
   }
@@ -178,13 +184,79 @@ function assertSuiteHandoffSemantics(spec) {
   assertFlow(spec, "public_evidence_summary", "decision_owner");
   assertFlow(spec, "decision_owner", "career_boundary");
   assertFlow(spec, "career_boundary", "career_portfolio_input");
+  assert.equal(spec.nodes.find((node) => node.id === "decision_owner")?.type, "external");
   const hold = spec.flows.find((flow) => flow.from === "decision_owner" && flow.to === "held_handoff");
   assert.equal(hold?.classification, "hold");
-  const resume = spec.flows.find((flow) => flow.from === "resume_receipt");
+  assertFlow(spec, "held_handoff", "resume_receipt");
+  const resume = spec.flows.find((flow) => flow.from === "resume_receipt" && flow.to === "decision_owner");
   assert.deepEqual(resume && { to: resume.to, classification: resume.classification }, {
     to: "decision_owner",
     classification: "return",
   });
+}
+
+function assertSuiteSafetyLanguage(spec) {
+  const visibleText = JSON.stringify(spec);
+  assert.match(visibleText, /public[\s/-]*evidence-safe|public summary|public-only/iu);
+  assert.doesNotMatch(visibleText, /approval\s+is\s+automatic|automatic\s+approval|자동\s*승인|승인이\s*자동/iu);
+}
+
+const suiteEvidenceDirectory = "guides/archify-diagrams/validation-evidence/suite-studio-career-handoff";
+
+async function readEvidenceFile(relativePath, label) {
+  const filename = joinWithin(repoRoot, relativePath, label);
+  await assertNoSymlinkPath(repoRoot, relativePath, label);
+  const stats = await lstat(filename);
+  assert.ok(stats.isFile(), `${label} must be a regular file`);
+  return readFile(filename);
+}
+
+async function assertSuiteValidationEvidence(entry, spec) {
+  const manifestPath = `${suiteEvidenceDirectory}/manifest.json`;
+  const manifest = JSON.parse((await readEvidenceFile(manifestPath, "Suite validation manifest")).toString("utf8"));
+  assert.deepEqual(Object.keys(manifest).sort(), ["cli", "entry_id", "final_receipt", "rounds", "schema_version", "stdout_path_normalization"]);
+  assert.equal(manifest.schema_version, 1);
+  assert.equal(manifest.entry_id, entry.id);
+  assert.equal(manifest.stdout_path_normalization, "repo-root-relative");
+  assert.equal(manifest.rounds.length, 1);
+  const [round] = manifest.rounds;
+  assert.deepEqual(round.argv, ["validate", "dataflow", entry.spec, "--quality", "showcase", "--json"]);
+  assert.equal(round.exit_code, 0);
+  assert.deepEqual(round.diagnostics, { errors: 0, warnings: 0 });
+  assert.equal(round.candidate.path, entry.spec);
+  const candidate = await readEvidenceFile(round.candidate.path, "Suite candidate");
+  assert.deepEqual(JSON.parse(candidate.toString("utf8")), spec);
+  assert.equal(round.candidate.sha256, sha256(candidate));
+  assert.equal(round.candidate.bytes, candidate.byteLength);
+  const stdout = JSON.parse((await readEvidenceFile(`${suiteEvidenceDirectory}/${round.stdout.path}`, "Suite validator stdout")).toString("utf8"));
+  assert.equal(round.stdout.sha256, sha256(Buffer.from(`${JSON.stringify(stdout, null, 2)}\n`, "utf8")));
+  assert.equal(round.stdout.bytes, Buffer.byteLength(`${JSON.stringify(stdout, null, 2)}\n`));
+  assert.equal(stdout.ok, true);
+  assert.equal(stdout.command, "validate");
+  assert.equal(stdout.input, entry.spec);
+  assert.equal(stdout.composition.summary.errors, round.diagnostics.errors);
+  assert.equal(stdout.composition.summary.warnings, round.diagnostics.warnings);
+  const stderr = await readEvidenceFile(`${suiteEvidenceDirectory}/${round.stderr.path}`, "Suite validator stderr");
+  assert.equal(stderr.byteLength, 0);
+  assert.deepEqual(round.stderr, {
+    path: "final.validate.stderr.txt",
+    bytes: 0,
+    sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  });
+  const receiptBytes = await readEvidenceFile(`${suiteEvidenceDirectory}/${manifest.final_receipt.path}`, "Suite final receipt");
+  assert.equal(manifest.final_receipt.sha256, sha256(receiptBytes));
+  assert.equal(manifest.final_receipt.bytes, receiptBytes.byteLength);
+  const receipt = JSON.parse(receiptBytes.toString("utf8"));
+  assert.deepEqual(receipt.specification, { sha256: round.candidate.sha256, bytes: round.candidate.bytes });
+  assert.deepEqual({ checksPassed: receipt.checksPassed, checkCount: receipt.checkCount, errors: receipt.errors, warnings: receipt.warnings }, {
+    checksPassed: 9, checkCount: 9, errors: 0, warnings: 0,
+  });
+  const installation = await (archifyInstallation ??= resolveArchifyInstallation(process.env));
+  assert.equal(installation.status, "available");
+  assert.deepEqual(Object.keys(manifest.cli).sort(), ["provider", "sha256", "version"]);
+  assert.equal(typeof manifest.cli.provider, "string");
+  assert.equal(typeof manifest.cli.version, "string");
+  assert.match(manifest.cli.sha256, /^[a-f0-9]{64}$/u);
 }
 
 test("every selected Studio entry owns one exact fresh showcase spec", async () => {
@@ -231,6 +303,36 @@ test("Suite specs stay bounded and do not concatenate both product graphs", asyn
     assert.equal(containsCompleteProductGraph(spec, "studio"), false, entry.id);
     assert.equal(containsCompleteProductGraph(spec, "career"), false, entry.id);
   }
+});
+
+test("Suite dataflow has a portable showcase validator and bound final evidence", async () => {
+  const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
+  const entry = catalog.entries.find((item) => item.id === "suite-studio-career-handoff");
+  const spec = specsById.get("suite-studio-career-handoff");
+  assert.equal(entry?.delivery_status, "auto-validated");
+  assert.equal(entry?.visual_review, "pending");
+  await assert.doesNotReject(() => validateInstalledSpec(spec, "dataflow"));
+  await assertSuiteValidationEvidence(entry, spec);
+});
+
+test("Suite dataflow contract rejects schema, unsafe approval, and held-route mutations", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "suite");
+  const spec = specsById.get("suite-studio-career-handoff");
+  const invalidSchema = { ...spec, diagram_type: "workflow" };
+  const automaticApproval = structuredClone(spec);
+  automaticApproval.cards[1].items.push("Approval is automatic");
+  const wrongResume = {
+    ...spec,
+    flows: spec.flows.map((flow) => flow.from === "resume_receipt" ? { ...flow, to: "career_portfolio_input" } : flow),
+  };
+  const missingHeldReceipt = {
+    ...spec,
+    flows: spec.flows.filter((flow) => !(flow.from === "held_handoff" && flow.to === "resume_receipt")),
+  };
+  assert.match(await installedValidationError(invalidSchema, "dataflow"), /schema|diagram_type/u);
+  assert.throws(() => assertSuiteSafetyLanguage(automaticApproval), /automatic/u);
+  assert.throws(() => assertSuiteHandoffSemantics(wrongResume), /decision_owner/u);
+  assert.throws(() => assertSuiteHandoffSemantics(missingHeldReceipt), /held_handoff/u);
 });
 
 test("Suite specs remain source-bound and structurally distinct", async () => {

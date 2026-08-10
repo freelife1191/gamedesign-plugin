@@ -2,8 +2,8 @@
 
 ## Final status
 
-- **Status:** complete
-- **Commit:** this commit (`docs: author evidence-backed Suite Archify specs`)
+- **Status:** complete (Fix1: catalog, semantic, validator, and portable-evidence contracts)
+- **Commit:** this commit (`test: harden Suite Archify evidence contracts`)
 - **Selected entry:** `suite-studio-career-handoff` (the only selected Suite entry)
 - **Catalog state:** `auto-validated` / `pending`; diagnostics are empty and reviewer is `null`.
 - **Scope isolation:** the existing Studio `blocked-validation` and Career `auto-validated` states were not changed.
@@ -14,21 +14,17 @@
 
 ## Validation evidence
 
-The first portable-resolver validation was retained as a raw failure record before repair:
+The historical 8 → 6 → 1 repair candidates and their raw streams were not tracked. They are therefore not represented as preserved evidence and are not reconstructed or presented as raw output here.
 
-```text
-{ "ok": false, "command": "validate", "stage": "render", "type": "dataflow" }
-Data-flow layout validation failed:
-- public-evidence and owner labels/sublabels exceeded their available node width
-- the return route crossed the held-handoff node
-- same-stage hold/resume segments were below the showcase micro-segment floor
-- flow labels overlapped their endpoints and one another
-- stages exceeded the original viewBox width
-```
+The tracked, reproducible final evidence is under `guides/archify-diagrams/validation-evidence/suite-studio-career-handoff/`:
 
-Focused repairs reduced the multi-error first run to 8, 6, and then 1 remaining error before the final route-label clearance adjustment. The frozen final candidate passed the portable resolver with all nine artifact checks and a showcase composition result of `errors: 0`, `warnings: 0`.
+- `manifest.json` records a repo-relative validator argv, the logical resolver identity (`provider`, `version`, and CLI SHA-256), source-spec hash/bytes, path-normalized stdout hash/bytes, empty stderr hash/bytes, and receipt digest binding.
+- `final.validate.stdout.json` is the final validate stdout after replacing only the workspace-root prefix in `input` with the repo-relative candidate path; no host absolute path is persisted.
+- `final.receipt.json` is the 9/9/0/0 delivery receipt bound to the same source-spec digest.
 
-The staged delivery receipt is present at `.tmp/curated-archify/current/suite/suite-studio-career-handoff.receipt.json`:
+The final candidate passed the portable resolver with all nine artifact checks and a showcase composition result of `errors: 0`, `warnings: 0`.
+
+The tracked final receipt is:
 
 ```json
 {
@@ -51,13 +47,14 @@ The staged delivery receipt is present at `.tmp/curated-archify/current/suite/su
 
 ## Tests and checks
 
-- `node --test --test-name-pattern='Suite' tests/contracts/archify-specs.test.mjs` — 3 passed.
+- `node --test --test-name-pattern='Suite|state-aware materialization' tests/contracts/archify-specs.test.mjs tests/contracts/archify-catalog.test.mjs` — catalog integration and Suite contracts passed.
 - `npm run build:curated-archify -- --product suite` — staged only `suite-studio-career-handoff`.
-- `node --test tests/contracts/archify-specs.test.mjs tests/unit/archify-signature.test.mjs` — 44 passed.
+- `npm run build:curated-archify -- --id suite-studio-career-handoff` — staged the exact Suite entry only.
+- `node --test tests/contracts/archify-specs.test.mjs tests/contracts/archify-catalog.test.mjs tests/unit/archify-signature.test.mjs tests/unit/archify-delivery.test.mjs` — 91 passed.
 - `npm run validate:archify-catalog` — passed.
 - `git diff --check` — passed.
 
 ## Concerns
 
-- The generated HTML and receipt remain staged in `.tmp/`; publication and human visual review are intentionally out of scope, so the catalog remains `pending` rather than claiming a visual review.
+- The generated HTML remains staged in `.tmp/`; publication and human visual review are intentionally out of scope, so the catalog remains `pending` rather than claiming a visual review.
 - No browser, artifact opening, or preview command was used.
