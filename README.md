@@ -209,6 +209,8 @@ $game-design-career:build-game-design-portfolio
 
 Production catalog의 대표 카드 18개를 Studio 7개, Career 7개, 연계 4개 순서로 제공합니다. 카드를 열어 입력, 실행 흐름, 결과와 사람 검토 경계를 확인하세요.
 
+[![요청문에서 기획 결과와 다음 요청으로 이어지는 흐름](guides/assets/readme/prompt-to-result-flow.png)](guides/assets/readme/prompt-to-result-flow.svg)
+
 ### Studio 기획 사례 7개
 
 게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 Artifact와 사람 검토 지점을 남깁니다.
@@ -1121,6 +1123,8 @@ resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만
 
 오케스트레이터가 필요 없는 좁은 작업에서는 설치 namespace를 붙여 스킬을 직접 호출하세요. [Studio 스킬 인덱스](guides/game-design-studio/skills/README.md)와 [Career 스킬 인덱스](guides/game-design-career/skills/README.md)에서 입력 계약을 먼저 확인할 수 있습니다.
 
+[![전문 스킬과 위임된 에이전트가 협업하는 흐름](guides/assets/readme/skill-agent-collaboration.png)](guides/assets/readme/skill-agent-collaboration.svg)
+
 ### 직접 스킬 빠른 참조
 
 작업 범위가 한 행에 머물고 필요한 입력을 제공할 수 있을 때 직접 호출합니다.
@@ -1229,6 +1233,8 @@ resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만
 ## 요청 뒤에 생성되는 결과물
 
 모든 주요 결과는 Canonical Artifact 폴더에 기준 내용, 근거, 결정, 자산과 내보내기 상태를 함께 보존합니다.
+
+[![Canonical Artifact를 읽고 사람이 승인하는 순서](guides/assets/readme/artifact-review-flow.png)](guides/assets/readme/artifact-review-flow.svg)
 
 ```text
 project-artifact/

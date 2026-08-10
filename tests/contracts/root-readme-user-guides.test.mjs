@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -56,6 +57,27 @@ const resultExampleIds = [
   "game-design-brief", "system-specification", "ui-ux-flow-state", "reverse-design-document",
   "creative-design-portfolio", "export-preparation-manifest",
 ];
+const readmeSkillsteadDiagrams = [
+  {
+    section: "케이스별 프롬프트로 시작하기",
+    id: "prompt-to-result-flow",
+    alt: "요청문에서 기획 결과와 다음 요청으로 이어지는 흐름",
+  },
+  {
+    section: "스킬별로 바로 실행하기",
+    id: "skill-agent-collaboration",
+    alt: "전문 스킬과 위임된 에이전트가 협업하는 흐름",
+  },
+  {
+    section: "요청 뒤에 생성되는 결과물",
+    id: "artifact-review-flow",
+    alt: "Canonical Artifact를 읽고 사람이 승인하는 순서",
+  },
+];
+const skillsteadCheckSvg = path.join(
+  root,
+  "plugins/game-design-studio/skills/svg-infographic/scripts/check-svg.mjs",
+);
 const readableCaseLabels = new Map([
   ["studio:case:ST-C01", ["게임의 방향과 핵심 재미 정의", "게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 브리프로 정리합니다."]],
   ["studio:case:ST-C02", ["핵심 플레이 루프와 선택 설계", "플레이어가 반복할 행동과 의미 있는 선택을 시스템 명세로 만들 때 사용합니다."]],
@@ -938,6 +960,41 @@ async function assertRootLinks(markdown) {
   for (const link of visibleMarkdownLinks(markdown)) await validateVisibleLocalLink(readmePath, link, root);
 }
 
+async function assertReadmeSkillsteadDiagrams(markdown) {
+  const readmePath = path.join(root, "README.md");
+  for (const { section: sectionHeading, id, alt } of readmeSkillsteadDiagrams) {
+    const body = exactSection(markdown, sectionHeading);
+    const png = `guides/assets/readme/${id}.png`;
+    const svg = `guides/assets/readme/${id}.svg`;
+    const embed = `[![${alt}](${png})](${svg})`;
+    assert.ok(body.includes(embed), `${id}: ${sectionHeading} must embed the exact PNG-to-SVG pair`);
+
+    const pngPath = assertContainedPath(readmePath, png, root);
+    const svgPath = assertContainedPath(readmePath, svg, root);
+    await assertRegularNonSymlinkFile(pngPath, root);
+    await assertRegularNonSymlinkFile(svgPath, root);
+
+    const svgSource = await readFile(svgPath, "utf8");
+    assert.match(svgSource, /<svg\b[^>]*\bviewBox="0 0 1400 900"/u, `${id}: SVG viewBox is 1400×900`);
+    assert.match(svgSource, /<svg\b[^>]*\bwidth="1400"/u, `${id}: SVG width is 1400`);
+    assert.match(svgSource, /<svg\b[^>]*\bheight="900"/u, `${id}: SVG height is 900`);
+    const title = /<title>([\s\S]*?)<\/title>/u.exec(svgSource)?.[1] ?? "";
+    const description = /<desc>([\s\S]*?)<\/desc>/u.exec(svgSource)?.[1] ?? "";
+    assert.match(title, /[가-힣]/u, `${id}: SVG title is Korean`);
+    assert.match(description, /[가-힣]/u, `${id}: SVG description is Korean`);
+    assert.doesNotMatch(svgSource, /preserveAspectRatio\s*=\s*["']none["']/iu, `${id}: SVG forbids distorted aspect ratio`);
+    assert.doesNotMatch(svgSource, /\b(?:scaleX|scaleY)\s*\(/u, `${id}: SVG forbids non-uniform scale transforms`);
+    const lint = spawnSync(process.execPath, [skillsteadCheckSvg, svgPath], { encoding: "utf8" });
+    assert.equal(lint.status, 0, `${id}: Skillstead source lint passes\n${lint.stdout}\n${lint.stderr}`);
+    assert.match(lint.stdout, /0 warning\(s\)/u, `${id}: Skillstead source lint has no warnings\n${lint.stdout}`);
+
+    const pngBytes = await readFile(pngPath);
+    assert.ok(pngBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${id}: PNG signature is valid`);
+    assert.equal(pngBytes.readUInt32BE(16), 2800, `${id}: PNG width is exactly 2800`);
+    assert.equal(pngBytes.readUInt32BE(20), 1800, `${id}: PNG height is exactly 1800`);
+  }
+}
+
 function assertSharedPngLinks(markdown) {
   const pngEmbeds = [...markdown.matchAll(/!\[[^\]]*\]\((guides\/assets\/shared\/[^)]+\.png)\)/g)]
     .map((match) => ({
@@ -1242,6 +1299,11 @@ test("root README follows the approved task-oriented information architecture", 
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertStructuredRootReadme(readme);
   assertPortfolioQuickStart(readme);
+});
+
+test("root README embeds three machine-linted Skillstead explanation diagrams", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  await assertReadmeSkillsteadDiagrams(readme);
 });
 
 test("portfolio quick start rejects abstract, unordered, and auto-approved variants", async () => {
