@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -14,8 +15,9 @@ function normalizedReasonTemplate(entry) {
     .toLowerCase()
     .replaceAll(entry.source_document.toLowerCase(), "<source>")
     .replaceAll(entry.source_section.toLowerCase(), "<section>")
-    .replace(/https?:\/\/\S+|(?:[\w./-]+\.(?:svg|png|md|json))/gu, "<path>")
-    .replace(/\$[a-z0-9:-]+|(?:studio|career|suite):[a-z0-9:-]+|\b[A-Z]{2}-[A-Z0-9-]+\b/gu, "<id>")
+    .replace(/https?:\/\/\S+|(?:[\w.-]+\/)+(?:[\w.-]+)|[\w.-]+\.[a-z0-9]+/gu, "<path>")
+    .replace(/\$[a-z0-9:-]+|(?:studio|career|suite):[a-z0-9:-]+|\b[a-z]{2}-[a-z0-9-]+\b/gu, "<id>")
+    .replace(/근거:\s*[^.!?。]+/gu, "근거: <evidence>")
     .replace(/`[^`]*`|“[^”]*”|"[^"]*"|'[^']*'/gu, "<quoted>")
     .replace(/\*\*[^*]*\*\*|_[^_]*_/gu, "<emphasis>")
     .replace(/은 .*?을 실제 근거로 삼는다\./gu, "은 <evidence>을 실제 근거로 삼는다.")
@@ -33,6 +35,27 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
   for (const [template, documents] of templates) {
     assert.ok(documents.length < 3, `${documents.join(", ")} repeat generic template: ${template}`);
   }
+}
+
+function assertSourceBodyEvidence(entry, source) {
+  const sourceBody = source.replace(/^(?: {0,3})#{1,6}\s+.*$/gmu, "").toLowerCase();
+  const explicitEvidence = /근거:\s*(.+?)(?:[.!?。]|$)/u.exec(entry.decision_reason)?.[1]?.trim();
+  if (explicitEvidence !== undefined) {
+    assert.ok(
+      sourceBody.includes(explicitEvidence.toLowerCase()),
+      `${entry.source_document} lacks source body evidence: ${explicitEvidence}`,
+    );
+    return;
+  }
+
+  const ignoredTokens = new Set(["archify", "career", "studio", "suite", "문서", "본문", "텍스트", "관계", "관계도", "도식", "안내", "질문", "근거", "직접", "이미", "별도", "기존", "더", "한다", "이다"]);
+  const evidenceTokens = [...entry.decision_reason.toLowerCase().matchAll(/[a-z0-9][a-z0-9_./:-]{3,}|[가-힣]{3,}/gu)]
+    .map((match) => match[0])
+    .filter((token) => !ignoredTokens.has(token) && sourceBody.includes(token));
+  assert.ok(
+    evidenceTokens.length > 0,
+    `${entry.source_document} lacks source body evidence`,
+  );
 }
 
 test("production Archify catalog covers the complete declared Markdown corpus", async () => {
@@ -118,10 +141,51 @@ test("reason template guard rejects three scope-and-evidence interpolations", ()
   assert.throws(() => assertNoRepeatedGenericReasonTemplates(entries), /repeat generic template/u);
 });
 
+test("reason template guard rejects bare IDs, YAML paths, and plain evidence payload interpolations", () => {
+  const entries = ["alpha", "beta", "gamma"].map((name, index) => ({
+    source_document: `guides/${name}.md`,
+    source_section: `${name} section`,
+    decision_reason: `“${name} section”은 CA-C0${index + 1}의 ${name}.evidence.yml을 적용한다. 근거: ${name} output. 같은 안내 문구를 직접 읽는 편이 더 정확하다.`,
+  }));
+  assert.throws(() => assertNoRepeatedGenericReasonTemplates(entries), /repeat generic template/u);
+});
+
+test("reason template guard allows three different semantic exclusion reasons", () => {
+  const entries = [
+    {
+      source_document: "guides/alpha.md",
+      source_section: "Alpha",
+      decision_reason: "“Alpha”은 role evidence matrix의 주장 경계를 표로 비교하는 안내라서 직접 읽는 편이 낫다.",
+    },
+    {
+      source_document: "guides/beta.md",
+      source_section: "Beta",
+      decision_reason: "“Beta”는 retry checkpoint에서 artifact custody를 복구하는 절차를 단계별 텍스트로 보존한다.",
+    },
+    {
+      source_document: "guides/gamma.md",
+      source_section: "Gamma",
+      decision_reason: "“Gamma”는 provider policy의 approval boundary와 금지 조건을 대조하는 정책표다.",
+    },
+  ];
+  assert.doesNotThrow(() => assertNoRepeatedGenericReasonTemplates(entries));
+});
+
+test("source body evidence guard rejects an invented reason that only repeats its heading", () => {
+  const entry = {
+    source_document: "guides/alpha.md",
+    source_section: "Alpha heading",
+    decision_reason: "“Alpha heading”은 근거: invented evidence payload. 관계도보다 직접 읽는 편이 명확하다.",
+  };
+  const source = "# Alpha\n\n## Alpha heading\n\nObserved source evidence payload.\n";
+  assert.throws(() => assertSourceBodyEvidence(entry, source), /source body evidence/u);
+});
+
 test("production text exclusions have non-repeating evidence-backed reasoning", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   for (const entry of catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text")) {
     assert.ok(entry.decision_reason.includes(entry.source_section), entry.source_document);
+    assertSourceBodyEvidence(entry, await readFile(path.join(repoRoot, entry.source_document), "utf8"));
   }
   assertNoRepeatedGenericReasonTemplates(catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text"));
 });
