@@ -516,6 +516,57 @@ function assertUpdateAndReinstallInstructions(markdown) {
   }
 }
 
+const portfolioQuickStartHeading = "완성한 게임 기획을 취업용 포트폴리오 사례로 정리하기";
+const portfolioQuickStartLabels = [
+  "이럴 때 사용",
+  "준비물",
+  "실행 순서",
+  "얻게 되는 결과",
+  "공개 전 확인",
+];
+const portfolioQuickStartOutputs = [
+  ["포트폴리오 사례 본문", "creative-design-portfolio/content.md"],
+  ["개인 기여와 선택 근거", "creative-design-portfolio/evidence.yml"],
+  ["면접 답변 소재", "creative-design-portfolio/decisions/"],
+  ["공개 전 확인 목록", "creative-design-portfolio/export-manifest.yml"],
+];
+
+function assertPortfolioQuickStart(markdown) {
+  const quickStart = exactSection(markdown, "5분 안에 첫 결과 만들기");
+  const headings = [...quickStart.matchAll(/^### ([^\n]+)$/gmu)].map((match) => match[1]);
+  assert.equal(headings.length, 3, "quick start keeps exactly three actionable routes");
+  assert.equal(headings[2], portfolioQuickStartHeading, "third quick-start route names the portfolio task");
+  assert.doesNotMatch(markdown, /(?:공개\s*)?증거 후보/u, "user-facing README avoids the abstract evidence-candidate term");
+
+  const portfolio = subsection(markdown, portfolioQuickStartHeading);
+  for (const label of portfolioQuickStartLabels) {
+    assert.match(portfolio, new RegExp(`\\*\\*${escapeRegExp(label)}:\\*\\*`, "u"), `portfolio quick start shows ${label}`);
+  }
+  const review = "$game-design-studio:review-game-design";
+  const portfolioSkill = "$game-design-career:build-game-design-portfolio";
+  assert.match(portfolio, /review-game-design/u, "portfolio quick start names the Studio review skill");
+  assert.match(portfolio, /build-game-design-portfolio/u, "portfolio quick start names the Career portfolio skill");
+  const reviewIndex = portfolio.indexOf(review);
+  const portfolioSkillIndex = portfolio.indexOf(portfolioSkill);
+  assert.notEqual(reviewIndex, -1, "portfolio quick start has the Studio review CLI command");
+  assert.notEqual(portfolioSkillIndex, -1, "portfolio quick start has the Career portfolio CLI command");
+  assert.ok(reviewIndex < portfolioSkillIndex, "Studio review precedes portfolio construction");
+  for (const [label, technicalPath] of portfolioQuickStartOutputs) {
+    assert.ok(
+      portfolio.includes(`**${label}** (\`${technicalPath}\`)`),
+      `portfolio quick start shows ${label} with its technical path`,
+    );
+  }
+  assert.match(portfolio, /실제 기여(?:\s*범위)?/u, "author verifies actual contribution");
+  assert.match(portfolio, /공개 권한/u, "author verifies publication rights");
+  assert.match(portfolio, /자동 승인하지 않/u, "publication is never auto-approved");
+  for (const block of textBlocks(portfolio)) {
+    for (const line of block.split("\n")) {
+      if (line.trim()) assert.ok(Array.from(line).length <= 80, "portfolio prompt line stays within 80 Unicode code points");
+    }
+  }
+}
+
 async function assertStructuredRootReadme(markdown, { validateLinks = true } = {}) {
   assert.deepEqual(h2Headings(markdown), requiredRootHeadings, "root README H2 order is exact");
   const toc = exactSection(markdown, "목차");
@@ -1068,6 +1119,24 @@ test("visible Markdown guide graph validates every local edge and permits safe c
 test("root README follows the approved task-oriented information architecture", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertStructuredRootReadme(readme);
+  assertPortfolioQuickStart(readme);
+});
+
+test("portfolio quick start rejects abstract, unordered, and auto-approved variants", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  assert.doesNotThrow(() => assertPortfolioQuickStart(readme), "baseline portfolio route is actionable");
+  const mutations = [
+    ["wrong task title", readme.replace(portfolioQuickStartHeading, "Studio 결과를 Career로 연결하기")],
+    ["missing visible label", readme.replace("**준비물:**", "**입력:**")],
+    ["abstract evidence candidate", readme.replace("포트폴리오 사례를 만듭니다.", "공개 증거 후보를 만듭니다.")],
+    ["missing Studio review", readme.replace("$game-design-studio:review-game-design", "$game-design-studio:review-removed")],
+    ["missing portfolio result path", readme.replace("creative-design-portfolio/evidence.yml", "portfolio/evidence.yml")],
+    ["missing human publication boundary", readme.replace("실제 기여 범위와 공개 권한", "자료 범위")],
+  ];
+  for (const [label, mutated] of mutations) {
+    assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
+    assert.throws(() => assertPortfolioQuickStart(mutated), undefined, `${label}: portfolio route is rejected`);
+  }
 });
 
 test("structured README contracts reject card, inventory, and generated-tree mutations", async () => {

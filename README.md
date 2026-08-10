@@ -29,7 +29,7 @@ Game Design Plugin Suite는 게임 제작 기획용 **Game Design Studio**와 �
 | --- | --- | --- | --- | --- |
 | Studio | 게임 기획 학생, 현업 기획자, 팀 리드 | 비전·규칙·콘텐츠·UX·경제·제작 범위 설계 | `game-design-brief` | [Studio 사용자 가이드](guides/game-design-studio/README.md) |
 | Career | 취업 준비생, 주니어, 직무 전환자, 멘토 | 역할 탐색·역기획·포트폴리오·면접·성장 계획 | `game-design-career-plan` | [Career 사용자 가이드](guides/game-design-career/README.md) |
-| 둘 다 | 제작 결과를 공개 가능한 경력 증거로 연결하는 기획자 | Studio 검토 뒤 Career 증거 후보로 전달 | 제품별 Canonical Artifact 2개 | [전체 사용자 가이드](guides/README.md) |
+| 둘 다 | 완성한 기획서를 취업용 포트폴리오 사례로 정리할 기획자 | Studio 검토 뒤 Career 포트폴리오 사례로 정리 | 제품별 Canonical Artifact 2개 | [전체 사용자 가이드](guides/README.md) |
 
 [![Studio와 Career 선택·설치 흐름](guides/assets/shared/plugin-selection-flow.png)](guides/assets/shared/plugin-selection-flow.svg)
 
@@ -153,19 +153,55 @@ $game-design-career:orchestrate-game-design-career
 주 8시간 기준 12주 증거 계획을 미정 항목과 함께 작성해.
 ```
 
-### Studio 결과를 Career 증거 후보로 연결하기
+### 완성한 게임 기획을 취업용 포트폴리오 사례로 정리하기
 
-예상 첫 Artifact는 공개 가능한 `creative-design-portfolio` 후보입니다. Studio `content.md`, 공개 검토 `evidence.yml`, Career `content.md` 순서로 읽으세요.
+Studio에서 사람이 검토한 기획서 하나를 바탕으로, 내가 해결한 문제와
+기여를 보여 주는 취업용 포트폴리오 사례를 만듭니다.
+
+**이럴 때 사용:** 수업·개인 프로젝트에서 완성한 기획서를 포트폴리오와
+면접 준비에 활용하고 싶을 때 사용합니다.
+
+**준비물:** Studio에서 작성하고 검토한 기획서 1개와 내가 실제로 맡은
+범위, 공개 가능한 정보입니다.
+
+**실행 순서:** 먼저 Studio 기획 검토(`review-game-design`)로 공개할
+내용을 구분한 뒤, Career 포트폴리오 작성(`build-game-design-portfolio`)으로
+사례를 재구성합니다.
 
 ```text
-@Game Design Studio와 @Game Design Career에서
-승인된 Studio 결과의 공개 가능한 문제, 판단, 검증만 분리해
-Career 포트폴리오 증거 후보로 작성해.
+App
+@Game Design Studio에서 기획 검토(review-game-design)를 먼저 실행해,
+완성한 기획서에서 공개할 수 있는 문제, 내가 맡은 범위,
+선택 이유와 검증 결과를 구분해 줘.
 
+그다음 @Game Design Career에서 포트폴리오 작성
+(build-game-design-portfolio)을 실행해 검토된 내용만 사용하여
+포트폴리오 사례 본문, 개인 기여 요약, 면접 답변 소재와
+공개 전 확인 목록을 작성해 줘.
+
+CLI
 $game-design-studio:review-game-design
+완성한 기획서에서 공개할 수 있는 문제, 내가 맡은 범위,
+선택 이유와 검증 결과를 구분해 줘.
+
 $game-design-career:build-game-design-portfolio
-승인된 공개 정보만 사용하고 미정과 제외 항목을 보존해.
+검토된 내용만 사용해 포트폴리오 사례 본문, 개인 기여 요약,
+면접 답변 소재와 공개 전 확인 목록을 만들어 줘.
 ```
+
+**얻게 되는 결과:**
+
+- **포트폴리오 사례 본문** (`creative-design-portfolio/content.md`):
+  문제, 내 역할, 판단과 검증 결과를 읽는 사람이 따라갈 수 있게 정리합니다.
+- **개인 기여와 선택 근거** (`creative-design-portfolio/evidence.yml`):
+  내가 한 일과 그 선택을 뒷받침하는 내용을 분리해 기록합니다.
+- **면접 답변 소재** (`creative-design-portfolio/decisions/`):
+  예상 질문에 설명할 판단, 대안과 배운 점을 정리합니다.
+- **공개 전 확인 목록** (`creative-design-portfolio/export-manifest.yml`):
+  공개할 파일, 보류 항목과 내보내기 상태를 확인합니다.
+
+**공개 전 확인:** 작성자가 실제 기여 범위와 공개 권한을 직접 확인합니다.
+이 플러그인은 공개를 자동 승인하지 않으며, 미정·제외 내용은 보존합니다.
 
 ## 케이스별 프롬프트로 시작하기
 
