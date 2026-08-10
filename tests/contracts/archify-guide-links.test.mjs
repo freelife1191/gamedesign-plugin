@@ -4,7 +4,10 @@ import path from "node:path";
 import test from "node:test";
 
 import { loadArchifyCatalog } from "../../tooling/lib/archify-catalog.mjs";
-import { extractMarkdownLinks } from "../../tooling/lib/user-guides.mjs";
+import {
+  extractMarkdownLinks,
+  scanVisibleMarkdown,
+} from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const statusIndex = "guides/archify-diagrams/README.md";
@@ -36,38 +39,41 @@ function productionLinks(documents) {
     .filter((link) => link.destination?.startsWith("guides/assets/archify/")));
 }
 
-function assertExactProductionLinks(documents, expected) {
+function assertExactProductionLinks(documents, expected, expectedReceipts = []) {
   const links = productionLinks(documents);
+  const htmlLinks = links.filter((link) => /\.html(?:[?#].*)?$/u.test(link.destination));
+  const receiptLinks = links.filter((link) => /\.receipt\.json(?:[?#].*)?$/u.test(link.destination));
+  const supportedLinks = new Set([...htmlLinks, ...receiptLinks]);
+  assert.equal(supportedLinks.size, links.length, "production assets must be HTML diagrams or delivery receipts");
   assert.deepEqual(
-    [...new Set(links.map((link) => link.destination))].sort(),
+    [...new Set(htmlLinks.map((link) => link.destination))].sort(),
     [...new Set(expected)].sort(),
     "visible production-link targets must equal the published-and-passed catalog set",
   );
-  for (const link of links) assert.ok(!link.destination.endsWith("/flow.html"), "legacy flow.html must not be linked");
+  assert.deepEqual(
+    [...new Set(receiptLinks.map((link) => link.destination))].sort(),
+    [...new Set(expectedReceipts)].sort(),
+    "visible receipt targets must equal the published-and-passed catalog receipts",
+  );
+  for (const link of htmlLinks) assert.ok(!link.destination.endsWith("/flow.html"), "legacy flow.html must not be linked");
+  for (const link of receiptLinks) {
+    assert.equal(link.filename, statusIndex, "delivery receipts may be linked only from the Archify status index");
+  }
 }
 
 function sourceSectionBounds(markdown, expectedHeading) {
-  const lines = markdown.split(/\r?\n/gu);
-  let start = -1;
-  let level = 0;
-  for (let index = 0; index < lines.length; index += 1) {
-    const match = /^(#{1,6})\s+(.+?)(?:\s+#+)?\s*$/u.exec(lines[index]);
-    if (match && match[2].trim() === expectedHeading) {
-      start = index;
-      level = match[1].length;
-      break;
-    }
-  }
+  const headings = scanVisibleMarkdown(markdown).flatMap(({ blockText, line }) => {
+    const match = /^(?: {0,3})(#{1,6})\s+(.+?)\s*#*\s*$/u.exec(blockText);
+    return match ? [{ label: match[2].trim(), level: match[1].length, line }] : [];
+  });
+  const start = headings.findIndex((heading) => heading.label === expectedHeading);
   if (start < 0) return null;
-  let end = lines.length;
-  for (let index = start + 1; index < lines.length; index += 1) {
-    const match = /^(#{1,6})\s+/u.exec(lines[index]);
-    if (match && match[1].length <= level) {
-      end = index;
-      break;
-    }
-  }
-  return { firstLine: start + 1, lastLine: end };
+  const heading = headings[start];
+  const next = headings.slice(start + 1).find((candidate) => candidate.level <= heading.level);
+  return {
+    firstLine: heading.line,
+    lastLine: next?.line ?? markdown.split(/\r?\n/gu).length + 1,
+  };
 }
 
 function sourceSection(markdown, expectedHeading) {
@@ -104,6 +110,10 @@ function assertedStatusIndex(markdown, published, blocked, filename = statusInde
       visibleLinks(detail).some((destination) => resolveDestination(filename, destination) === entry.html),
       `${entry.id} published HTML link missing from index`,
     );
+    assert.ok(
+      visibleLinks(detail).some((destination) => resolveDestination(filename, destination) === entry.receipt),
+      `${entry.id} delivery receipt link missing from index`,
+    );
   }
   assert.match(markdown, /^## Blocked\b/mu, "status index must have a separate Blocked section");
   if (blocked.length === 0) assert.match(markdown, /(?:Blocked[^\n]*\n)(?:[\s\S]{0,300}?)(?:0\s*(?:개|items?)|none|없음)/iu, "Blocked must explicitly report zero items");
@@ -123,10 +133,18 @@ function assertedStatusIndex(markdown, published, blocked, filename = statusInde
   }
 }
 
-function assertCurrentInventoryIntro(markdown) {
+function assertCurrentInventoryIntro(markdown, { selectedCount, publishedCount }) {
   const intro = markdown.slice(0, markdown.indexOf("## 증거와 전수 범위"));
-  assert.match(intro, /3개[^\n]*selected[^\n]*spec/iu, "inventory intro must state that all three selected entries have committed specs");
-  assert.match(intro, /published[^\n]*3개/u, "inventory intro must state the three published entries");
+  assert.match(
+    intro,
+    new RegExp(`${selectedCount}개[^\\n]*selected[^\\n]*spec`, "iu"),
+    "inventory intro must state that every selected entry has a committed spec",
+  );
+  assert.match(
+    intro,
+    new RegExp(`published[^\\n]*${publishedCount}개`, "u"),
+    "inventory intro must state the catalog-derived published count",
+  );
   assert.match(intro, /한국어/u, "inventory intro must state that the published viewer is localized in Korean");
   assert.doesNotMatch(intro, /blocked-validation|blocked-visual/u, "inventory intro must not retain resolved block states");
   assert.doesNotMatch(intro, /아직은\s*`?delivery_status:\s*planned`?/u, "inventory intro must not describe the selected entries as planned");
@@ -157,12 +175,19 @@ test("curated Archify guide routing exposes only published, visually passed prod
     .filter((entry) => entry.delivery_status === "published" && entry.visual_review === "passed")
     .map((entry) => entry.html)
     .sort();
+  const expectedReceipts = catalog.entries
+    .filter((entry) => entry.delivery_status === "published" && entry.visual_review === "passed")
+    .map((entry) => entry.receipt)
+    .sort();
   const blocked = catalog.entries.filter((entry) => entry.decision === "selected" && entry.delivery_status.startsWith("blocked-"));
 
-  assertExactProductionLinks(documents, expected);
+  assertExactProductionLinks(documents, expected, expectedReceipts);
   assertPublishedSourceBindings(documents, catalog.entries.filter((entry) => entry.delivery_status === "published"));
   const index = documents.find((document) => document.filename === statusIndex).markdown;
-  assertCurrentInventoryIntro(index);
+  assertCurrentInventoryIntro(index, {
+    selectedCount: catalog.entries.filter((entry) => entry.decision === "selected").length,
+    publishedCount: catalog.entries.filter((entry) => entry.delivery_status === "published").length,
+  });
   assertedStatusIndex(index, catalog.entries.filter((entry) => entry.delivery_status === "published"), blocked);
   for (const document of documents.filter((item) => statusRoutes.includes(item.filename))) {
     assert.ok(
@@ -196,6 +221,22 @@ test("production-link parser covers rendered Markdown references and raw anchors
     () => assertExactProductionLinks([{ filename: "guides/test.md", markdown: "[legacy](assets/archify/studio/flow.html)" }], ["guides/assets/archify/studio/flow.html"]),
     /legacy flow\.html/u,
     "a visible legacy flow.html link must be rejected",
+  );
+  const receipt = "guides/assets/archify/career/career-evidence-workflow.receipt.json";
+  assert.doesNotThrow(
+    () => assertExactProductionLinks([{
+      filename: statusIndex,
+      markdown: "[receipt](../assets/archify/career/career-evidence-workflow.receipt.json)",
+    }], [], [receipt]),
+    "an exact published receipt is allowed from the Archify status index",
+  );
+  assert.throws(
+    () => assertExactProductionLinks([{
+      filename: "guides/test.md",
+      markdown: "[receipt](assets/archify/career/career-evidence-workflow.receipt.json)",
+    }], [], [receipt]),
+    /only from the Archify status index/u,
+    "a delivery receipt must not be exposed from an ordinary guide",
   );
 });
 
