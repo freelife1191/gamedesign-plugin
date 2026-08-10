@@ -38,6 +38,15 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
   }
 }
 
+function assertSuiteCatalogCardinality(catalog) {
+  assert.equal(catalog.entries.length, 612, "catalog must retain exactly 612 entries");
+  assert.equal(
+    catalog.entries.filter((entry) => entry.source_document === "README.md").length,
+    1,
+    "README.md must have exactly one catalog record",
+  );
+}
+
 function assertSourceBodyEvidence(entry, source) {
   const sourceBody = source.replace(/^(?: {0,3})#{1,6}\s+.*$/gmu, "");
   const explicitEvidence = /근거:\s*`([^`]+)`/u.exec(entry.decision_reason)?.[1];
@@ -169,6 +178,7 @@ test("production exclusions retain exact package classes and source-specific evi
 
 test("root README selects the Suite system architecture without changing corpus coverage", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
+  assertSuiteCatalogCardinality(catalog);
   const entry = catalog.entries.find((item) => item.id === "suite-plugin-system-architecture");
   assert.ok(entry);
   assert.deepEqual({
@@ -208,6 +218,19 @@ test("root README selects the Suite system architecture without changing corpus 
     ])),
     { studio: 1, career: 1, suite: 2 },
   );
+});
+
+test("Suite catalog cardinality rejects an appended record or duplicate README record", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const appended = structuredClone(catalog);
+  appended.entries.push({ ...appended.entries[0], id: "unexpected-613th-record", source_document: "guides/README.md" });
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /612/u);
+  const duplicateReadme = structuredClone(catalog);
+  duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /612/u);
+  duplicateReadme.entries.pop();
+  duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);
 });
 
 test("reason template guard rejects three scope-and-evidence interpolations", () => {

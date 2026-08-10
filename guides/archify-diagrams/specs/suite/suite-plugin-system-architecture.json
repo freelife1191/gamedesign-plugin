@@ -3,7 +3,7 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "Game Design Plugin Suite 시스템 아키텍처",
-    "subtitle": "Codex 진입점에서 분리된 Studio·Career 플러그인, Canonical Artifact, 검증과 사람 승인을 거쳐 결과를 전달합니다.",
+    "subtitle": "Codex 진입점에서 분리된 Studio·Career 저장소, 검증 보류와 사람 승인을 거쳐 결과를 전달합니다.",
     "output": "guides/assets/archify/suite/suite-plugin-system-architecture.html",
     "animation": "none",
     "visual_preset": "editorial",
@@ -12,72 +12,75 @@
       {
         "id": "plugin-boundaries",
         "label": "플러그인 경계",
-        "focus": ["app_cli", "marketplace", "studio_plugin", "career_plugin", "specialist_skills"],
+        "focus": ["entry_marketplace", "studio_plugin", "career_plugin", "specialist_skills"],
         "note": "App·CLI와 마켓플레이스는 Studio 또는 Career의 분리된 전문 작업으로 진입합니다."
       },
       {
         "id": "artifact-validation",
         "label": "Artifact와 검증",
-        "focus": ["canonical_artifact", "evidence_decisions", "visual_lane", "export_lane", "automated_validation"],
-        "note": "두 파생 lane은 검증 실패 시 Canonical Artifact와 근거·결정 기록을 보존한 채 보류합니다."
+        "focus": ["studio_artifact", "evidence_decisions", "visual_lane", "export_lane", "validation_hold"],
+        "note": "검증 실패는 근거·결정 기록에 보류하고 Studio Canonical Artifact를 보존합니다."
       },
       {
         "id": "human-approval",
         "label": "사람 승인",
-        "focus": ["studio_plugin", "human_approval", "career_plugin", "delivered_result"],
-        "note": "Studio 검토 결과의 공개 범위와 전달 결과는 사람 승인 뒤에만 이동합니다."
+        "focus": ["studio_plugin", "human_approval", "career_evidence", "delivered_result"],
+        "note": "Studio 검토 결과의 공개 범위와 Career 증거 후보는 사람 승인 뒤에만 이동합니다."
       }
     ]
   },
   "layout": {
     "mode": "grid",
-    "cols": 9
+    "cols": 8
   },
   "components": [
-    { "id": "app_cli", "type": "external", "label": "Codex App·CLI", "sublabel": "사용자 진입점", "row": 0, "col": 0 },
-    { "id": "marketplace", "type": "cloud", "label": "마켓플레이스", "sublabel": "플러그인 선택", "row": 0, "col": 1 },
-    { "id": "studio_plugin", "type": "backend", "label": "Game Design Studio", "sublabel": "기획 전문 플러그인", "row": 0, "col": 2 },
-    { "id": "career_plugin", "type": "backend", "label": "Game Design Career", "sublabel": "경력 전문 플러그인", "row": 1, "col": 2 },
-    { "id": "specialist_skills", "type": "backend", "label": "전문 스킬", "sublabel": "설계·검토·근거 작업", "row": 0, "col": 3 },
-    { "id": "canonical_artifact", "type": "database", "label": "Canonical Artifact", "sublabel": "기준 작업 폴더", "row": 0, "col": 4 },
-    { "id": "evidence_decisions", "type": "database", "label": "근거·결정 기록", "sublabel": "evidence.yml·decisions/", "row": 1, "col": 4 },
-    { "id": "visual_lane", "type": "cloud", "label": "시각화 lane", "sublabel": "도식·이미지 후보", "row": 0, "col": 5 },
-    { "id": "export_lane", "type": "cloud", "label": "내보내기 lane", "sublabel": "파생 문서 후보", "row": 1, "col": 5 },
-    { "id": "automated_validation", "type": "security", "label": "자동 검증", "sublabel": "형식·근거·품질 검사", "row": 0, "col": 6 },
-    { "id": "human_approval", "type": "external", "label": "사람 승인", "sublabel": "공개 범위와 전달 결정", "row": 0, "col": 7 },
-    { "id": "delivered_result", "type": "external", "label": "전달 결과", "sublabel": "승인된 결과만", "row": 0, "col": 8 }
+    { "id": "entry_marketplace", "type": "external", "label": "Codex 진입·마켓", "sublabel": "App·CLI에서 플러그인 선택", "row": 0, "col": 0 },
+    { "id": "studio_plugin", "type": "backend", "label": "Game Design Studio", "sublabel": "기획 전문 플러그인", "row": 0, "col": 1 },
+    { "id": "career_plugin", "type": "backend", "label": "Game Design Career", "sublabel": "경력 전문 플러그인", "row": 2, "col": 1 },
+    { "id": "specialist_skills", "type": "backend", "label": "전문 스킬", "sublabel": "설계·검토·근거 작업", "row": 1, "col": 2 },
+    { "id": "studio_artifact", "type": "database", "label": "Canonical Artifact", "sublabel": "Studio 기준 작업 폴더", "row": 0, "col": 3 },
+    { "id": "evidence_decisions", "type": "database", "label": "근거·결정 기록", "sublabel": "evidence.yml·decisions/", "row": 1, "col": 3 },
+    { "id": "career_evidence", "type": "database", "label": "Career 증거 후보", "sublabel": "승인된 공개 범위만", "row": 2, "col": 3 },
+    { "id": "visual_lane", "type": "cloud", "label": "시각화 lane", "sublabel": "도식·이미지 후보", "row": 0, "col": 4 },
+    { "id": "export_lane", "type": "cloud", "label": "내보내기 lane", "sublabel": "파생 문서 후보", "row": 1, "col": 4 },
+    { "id": "validation_hold", "type": "security", "label": "자동 검증·lane 보류", "sublabel": "형식·근거·품질 검사", "row": 0, "col": 5 },
+    { "id": "human_approval", "type": "external", "label": "사람 승인", "sublabel": "공개 범위와 전달 결정", "row": 0, "col": 6 },
+    { "id": "delivered_result", "type": "external", "label": "전달 결과", "sublabel": "승인된 결과만", "row": 0, "col": 7 }
   ],
   "boundaries": [
-    { "kind": "region", "label": "Studio 경계", "wraps": ["studio_plugin"] },
-    { "kind": "region", "label": "Career 경계", "wraps": ["career_plugin"] },
-    { "kind": "security-group", "label": "Canonical 저장소", "wraps": ["canonical_artifact", "evidence_decisions"] },
-    { "kind": "security-group", "label": "검토 경계", "wraps": ["automated_validation", "human_approval"] }
+    { "kind": "region", "label": "Studio 플러그인 경계", "wraps": ["studio_plugin"] },
+    { "kind": "region", "label": "Career 플러그인 경계", "wraps": ["career_plugin"] },
+    { "kind": "security-group", "label": "Studio 저장소", "wraps": ["studio_artifact", "evidence_decisions"] },
+    { "kind": "security-group", "label": "Career 저장소", "wraps": ["career_evidence"] },
+    { "kind": "security-group", "label": "검토 경계", "wraps": ["validation_hold", "human_approval"] }
   ],
   "connections": [
-    { "from": "app_cli", "to": "marketplace", "variant": "emphasis" },
-    { "from": "marketplace", "to": "studio_plugin", "variant": "emphasis", "route": "straight" },
-    { "from": "marketplace", "to": "career_plugin", "label": "Career", "variant": "emphasis" },
-    { "from": "studio_plugin", "to": "specialist_skills", "route": "straight" },
+    { "from": "entry_marketplace", "to": "studio_plugin", "variant": "emphasis", "route": "straight" },
+    { "from": "entry_marketplace", "to": "career_plugin", "variant": "emphasis" },
+    { "from": "studio_plugin", "to": "specialist_skills" },
     { "from": "career_plugin", "to": "specialist_skills" },
-    { "from": "specialist_skills", "to": "canonical_artifact", "variant": "emphasis" },
-    { "from": "canonical_artifact", "to": "visual_lane", "variant": "emphasis", "route": "straight" },
-    { "from": "canonical_artifact", "to": "export_lane", "variant": "emphasis" },
-    { "from": "visual_lane", "to": "automated_validation" },
-    { "from": "export_lane", "to": "automated_validation", "fromSide": "right", "toSide": "bottom" },
-    { "from": "automated_validation", "to": "human_approval", "variant": "security", "route": "straight" },
+    { "from": "specialist_skills", "to": "studio_artifact", "variant": "emphasis" },
+    { "from": "specialist_skills", "to": "career_evidence", "variant": "emphasis" },
+    { "from": "studio_artifact", "to": "evidence_decisions", "variant": "dashed" },
+    { "from": "evidence_decisions", "to": "visual_lane", "variant": "emphasis" },
+    { "from": "evidence_decisions", "to": "export_lane", "variant": "emphasis", "route": "straight" },
+    { "from": "visual_lane", "to": "validation_hold", "route": "straight" },
+    { "from": "export_lane", "to": "validation_hold" },
+    { "from": "validation_hold", "to": "human_approval", "variant": "security" },
     { "from": "human_approval", "to": "delivered_result", "variant": "security" },
-    { "from": "canonical_artifact", "to": "evidence_decisions", "label": "근거·결정 보존", "variant": "dashed", "labelAt": [740, 154] },
     { "from": "studio_plugin", "to": "human_approval", "label": "Studio 검토 결과", "variant": "dashed", "fromSide": "top" },
-    { "from": "human_approval", "to": "career_plugin", "label": "승인된 Career 증거 후보", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom", "via": [[1220, 380], [420, 380]] },
-    { "from": "automated_validation", "to": "canonical_artifact", "label": "실패: lane 보류·Artifact 보존", "variant": "dashed", "fromSide": "bottom" }
+    { "from": "human_approval", "to": "career_evidence", "label": "승인된 Career 증거 후보", "variant": "dashed" },
+    { "from": "career_evidence", "to": "career_plugin", "variant": "dashed" },
+    { "from": "validation_hold", "to": "evidence_decisions", "variant": "dashed", "fromSide": "bottom" },
+    { "from": "evidence_decisions", "to": "studio_artifact", "variant": "dashed" }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "분리된 제품 경계",
+      "title": "분리된 제품 저장소",
       "items": [
-        "Studio와 Career는 별도 플러그인과 저장 경계를 유지합니다.",
-        "Studio 검토 결과는 사람의 공개 범위 승인 뒤 Career 근거 후보로만 전달합니다."
+        "Studio Canonical Artifact와 근거·결정 기록은 Studio 저장소가 소유합니다.",
+        "Career 증거 후보는 Career 저장소에만 남고 두 저장 경계는 겹치지 않습니다."
       ]
     },
     {
@@ -92,7 +95,7 @@
       "dot": "violet",
       "title": "보류와 재개",
       "items": [
-        "검증 실패한 lane은 보류하고 실패 원인과 Canonical Artifact를 보존합니다.",
+        "검증 실패는 근거·결정 기록에 보류하고 Studio Canonical Artifact를 보존합니다.",
         "수정 후 같은 Artifact를 기준으로 검증을 재개합니다."
       ]
     }

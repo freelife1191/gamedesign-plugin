@@ -164,52 +164,59 @@ function assertArchitectureConnection(spec, from, to) {
   assert.ok(spec.connections.some((connection) => connection.from === from && connection.to === to), `${from} -> ${to} is required`);
 }
 
+function architecturePathExists(spec, from, to) {
+  const adjacent = new Map();
+  for (const connection of spec.connections) {
+    adjacent.set(connection.from, [...(adjacent.get(connection.from) ?? []), connection.to]);
+  }
+  const pending = [from];
+  const visited = new Set();
+  while (pending.length > 0) {
+    const current = pending.shift();
+    if (current === to) return true;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    pending.push(...(adjacent.get(current) ?? []));
+  }
+  return false;
+}
+
 function assertSuitePluginSystemArchitecture(spec) {
   assert.equal(spec.diagram_type, "architecture");
   assert.equal(spec.meta.quality_profile, "showcase");
   assert.deepEqual(spec.meta.views.map((view) => view.label), ["플러그인 경계", "Artifact와 검증", "사람 승인"]);
   const ids = new Set(semanticNodeIds(spec));
   for (const id of [
-    "app_cli", "marketplace", "studio_plugin", "career_plugin", "specialist_skills",
-    "canonical_artifact", "visual_lane", "export_lane", "automated_validation",
-    "human_approval", "delivered_result", "evidence_decisions",
+    "entry_marketplace", "studio_plugin", "career_plugin", "specialist_skills",
+    "studio_artifact", "evidence_decisions", "career_evidence", "visual_lane",
+    "export_lane", "validation_hold", "human_approval", "delivered_result",
   ]) assert.ok(ids.has(id), `${id} is required`);
-  assert.ok(spec.components.length <= 12, "architecture has more than 12 primary components");
+  assert.equal(spec.components.length, 12, "architecture must retain exactly 12 primary components");
   const boundaryByLabel = new Map(spec.boundaries.map((boundary) => [boundary.label, boundary]));
-  for (const label of ["Studio 경계", "Career 경계", "Canonical 저장소", "검토 경계"]) {
+  for (const label of ["Studio 저장소", "Career 저장소", "검토 경계"]) {
     assert.ok(boundaryByLabel.has(label), `${label} is required`);
   }
-  assert.equal(boundaryByLabel.get("Studio 경계").wraps.includes("career_plugin"), false, "Studio and Career storage must remain separate");
-  assert.equal(boundaryByLabel.get("Career 경계").wraps.includes("studio_plugin"), false, "Studio and Career storage must remain separate");
+  const studioStorage = new Set(boundaryByLabel.get("Studio 저장소").wraps);
+  const careerStorage = new Set(boundaryByLabel.get("Career 저장소").wraps);
+  assert.equal(studioStorage.has("studio_artifact"), true, "Studio owns its Canonical Artifact");
+  assert.equal(studioStorage.has("evidence_decisions"), true, "Studio owns its evidence and decisions");
+  assert.equal(careerStorage.has("career_evidence"), true, "Career owns its evidence candidate");
+  assert.equal([...studioStorage].some((id) => careerStorage.has(id)), false, "Studio and Career storage must not overlap");
   for (const [from, to] of [
-    ["app_cli", "marketplace"], ["marketplace", "studio_plugin"], ["marketplace", "career_plugin"],
+    ["entry_marketplace", "studio_plugin"], ["entry_marketplace", "career_plugin"],
     ["studio_plugin", "specialist_skills"], ["career_plugin", "specialist_skills"],
-    ["specialist_skills", "canonical_artifact"], ["canonical_artifact", "visual_lane"],
-    ["canonical_artifact", "export_lane"], ["visual_lane", "automated_validation"],
-    ["export_lane", "automated_validation"], ["automated_validation", "human_approval"],
-    ["human_approval", "delivered_result"], ["canonical_artifact", "evidence_decisions"],
-    ["automated_validation", "canonical_artifact"],
+    ["specialist_skills", "studio_artifact"], ["specialist_skills", "career_evidence"],
+    ["studio_artifact", "evidence_decisions"], ["evidence_decisions", "visual_lane"],
+    ["evidence_decisions", "export_lane"], ["visual_lane", "validation_hold"],
+    ["export_lane", "validation_hold"], ["validation_hold", "human_approval"],
+    ["human_approval", "delivered_result"], ["studio_plugin", "human_approval"],
+    ["human_approval", "career_evidence"], ["career_evidence", "career_plugin"],
+    ["validation_hold", "evidence_decisions"], ["evidence_decisions", "studio_artifact"],
   ]) assertArchitectureConnection(spec, from, to);
-  assert.deepEqual(
-    spec.connections.find((connection) => connection.from === "canonical_artifact" && connection.to === "evidence_decisions"),
-    { from: "canonical_artifact", to: "evidence_decisions", label: "근거·결정 보존", variant: "dashed", labelAt: [740, 154] },
-  );
-  assert.deepEqual(
-    spec.connections.find((connection) => connection.from === "studio_plugin" && connection.to === "human_approval"),
-    { from: "studio_plugin", to: "human_approval", label: "Studio 검토 결과", variant: "dashed", fromSide: "top" },
-  );
-  assert.deepEqual(
-    spec.connections.find((connection) => connection.from === "human_approval" && connection.to === "career_plugin"),
-    {
-      from: "human_approval", to: "career_plugin", label: "승인된 Career 증거 후보", variant: "dashed",
-      fromSide: "bottom", toSide: "bottom", via: [[1220, 380], [420, 380]],
-    },
-  );
-  assert.deepEqual(
-    spec.connections.find((connection) => connection.from === "automated_validation" && connection.to === "canonical_artifact"),
-    { from: "automated_validation", to: "canonical_artifact", label: "실패: lane 보류·Artifact 보존", variant: "dashed", fromSide: "bottom" },
-  );
-  assert.equal(boundaryByLabel.get("Canonical 저장소").wraps.includes("evidence_decisions"), true, "evidence and decisions must remain with the Canonical Artifact");
+  for (const [from, to] of [
+    ["studio_plugin", "career_evidence"], ["validation_hold", "studio_artifact"],
+    ["studio_artifact", "delivered_result"],
+  ]) assert.equal(architecturePathExists(spec, from, to), true, `${from} must reach ${to}`);
   assert.equal(spec.connections.some((connection) => connection.to === "delivered_result" && connection.from !== "human_approval"), false, "derived output must not bypass human approval");
 }
 
@@ -334,7 +341,7 @@ test("Suite plugin system architecture preserves product boundaries, artifact la
   assertSuitePluginSystemArchitecture(spec);
 });
 
-test("Suite plugin system architecture rejects approval bypass, merged boundaries, and absent hold", async () => {
+test("Suite plugin system architecture rejects approval bypass, storage merge, candidate removal, and broken hold", async () => {
   const { specsById } = await loadProductionSpecs(repoRoot, "suite");
   const spec = suitePluginSystemArchitecture(specsById);
   const withoutApproval = {
@@ -348,18 +355,24 @@ test("Suite plugin system architecture rejects approval bypass, merged boundarie
   };
   const mergedProductStorage = {
     ...spec,
-    boundaries: spec.boundaries.map((boundary) => boundary.label === "Studio 경계"
-      ? { ...boundary, wraps: ["studio_plugin", "career_plugin"] }
+    boundaries: spec.boundaries.map((boundary) => boundary.label === "Studio 저장소"
+      ? { ...boundary, wraps: [...boundary.wraps, "career_evidence"] }
       : boundary),
   };
-  const withoutFailureHold = {
+  const withoutCareerCandidate = {
     ...spec,
-    connections: spec.connections.filter((connection) => !(connection.from === "automated_validation" && connection.to === "canonical_artifact")),
+    components: spec.components.filter((component) => component.id !== "career_evidence"),
+    connections: spec.connections.filter((connection) => connection.from !== "career_evidence" && connection.to !== "career_evidence"),
+  };
+  const withoutHeldRecord = {
+    ...spec,
+    connections: spec.connections.filter((connection) => !(connection.from === "validation_hold" && connection.to === "evidence_decisions")),
   };
   assert.throws(() => assertSuitePluginSystemArchitecture(withoutApproval), /human_approval/u);
   assert.throws(() => assertSuitePluginSystemArchitecture(directDelivery), /bypass human approval/u);
-  assert.throws(() => assertSuitePluginSystemArchitecture(mergedProductStorage), /separate/u);
-  assert.throws(() => assertSuitePluginSystemArchitecture(withoutFailureHold), /automated_validation -> canonical_artifact/u);
+  assert.throws(() => assertSuitePluginSystemArchitecture(mergedProductStorage), /not overlap/u);
+  assert.throws(() => assertSuitePluginSystemArchitecture(withoutCareerCandidate), /career_evidence/u);
+  assert.throws(() => assertSuitePluginSystemArchitecture(withoutHeldRecord), /validation_hold -> evidence_decisions/u);
 });
 
 test("Suite specs exist only for questions that cross both product boundaries", async () => {
