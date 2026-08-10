@@ -304,6 +304,35 @@ test("catalog accepts Suite selected entries with Suite deterministic paths", as
   assert.deepEqual(catalog.entries[0], selectedEntry({ id: "suite-map", product: "suite" }));
 });
 
+test("catalog rejects duplicate structures from materialized selected specs", async (t) => {
+  const first = selectedEntry({ id: "first", sourceDocument: "README.md" });
+  const second = selectedEntry({ id: "second", sourceDocument: "guides/second.md" });
+  const repoRoot = await catalogFixture(t, {
+    documents: ["README.md", "guides/second.md"],
+    entries: [first, second],
+  });
+  const workflowSpec = (ids, labels) => ({
+    lanes: [{ id: "author" }, { id: "reviewer" }],
+    nodes: ids.map((id, index) => ({
+      id,
+      label: labels[index],
+      type: index === 1 ? "approval" : "task",
+      variant: index === 1 ? "decision" : "default",
+      lane: index === 1 ? "reviewer" : "author",
+      position: { x: index * 200, y: 0 },
+    })),
+    edges: [
+      { from: ids[0], to: ids[1], variant: "default" },
+      { from: ids[1], to: ids[2], variant: "default" },
+    ],
+    mainPath: ids,
+  });
+  await writeRelative(repoRoot, first.spec, JSON.stringify(workflowSpec(["a", "b", "c"], ["입력", "검토", "완료"])));
+  await writeRelative(repoRoot, second.spec, JSON.stringify(workflowSpec(["x", "y", "z"], ["자료", "승인", "출력"])));
+
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot }), /duplicate structural signature/u);
+});
+
 test("catalog rejects a scan corpus reduced to exclude its only Markdown", async (t) => {
   const repoRoot = await catalogFixture(t, {
     entries: [],

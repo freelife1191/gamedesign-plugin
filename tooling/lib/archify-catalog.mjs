@@ -3,6 +3,7 @@ import { lstat, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
+import { findStructuralDuplicates } from "./archify-signature.mjs";
 
 export const DELIVERY_STATES = Object.freeze([
   "not-applicable", "planned", "spec-authored", "auto-validated",
@@ -325,6 +326,7 @@ export function publishableArchifyEntries(catalog) {
 export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
   const errors = [];
   const uncovered = [];
+  const specsById = new Map();
   if (!assertExactKeys(catalog, CATALOG_KEYS, "catalog", errors)) return { ok: false, errors, uncovered };
   if (catalog.schema_version !== 1) errors.push("catalog.schema_version must be 1");
   const scanRoots = validatePathList(catalog.scan_roots, "catalog.scan_roots", errors);
@@ -382,7 +384,12 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
       if (entry.decision === "selected") {
         const specRequired = SPEC_REQUIRED_STATES.has(entry.delivery_status);
         try {
-          await assertRegularContained(repoRoot, entry.spec, `${label}.spec`, { required: specRequired });
+          const specFile = await assertRegularContained(repoRoot, entry.spec, `${label}.spec`, { required: specRequired });
+          if (specFile !== undefined) {
+            const spec = JSON.parse(await readFile(specFile, "utf8"));
+            if (!isObject(spec)) throw new Error(`${label}.spec must contain a JSON object`);
+            specsById.set(entry.id, spec);
+          }
         } catch (error) {
           errors.push(error instanceof Error ? error.message : String(error));
         }
@@ -396,6 +403,14 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
           }
         }
       }
+    }
+    try {
+      const duplicates = findStructuralDuplicates({ catalog, specsById });
+      for (const duplicate of duplicates) {
+        errors.push(`duplicate structural signature: ${duplicate.ids.join(", ")}`);
+      }
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
     }
     for (const document of uncovered) errors.push(`uncovered source document: ${document}`);
   }

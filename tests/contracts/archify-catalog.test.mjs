@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
@@ -7,6 +7,7 @@ import {
   discoverArchifySourceDocuments,
   loadArchifyCatalog,
 } from "../../tooling/lib/archify-catalog.mjs";
+import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 
@@ -68,6 +69,16 @@ test("production Archify catalog covers the complete declared Markdown corpus", 
     [...new Set(catalog.entries.map((entry) => entry.source_document))].sort(),
     documents,
   );
+});
+
+test("production planned inventory has no materialized specs to compare", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const specsById = new Map();
+  for (const entry of catalog.entries.filter((item) => item.decision === "selected")) {
+    await assert.rejects(access(path.join(repoRoot, entry.spec)), { code: "ENOENT" }, entry.id);
+  }
+
+  assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
 });
 
 test("production inventory has bounded diagrams and explicit package exclusions", async () => {
