@@ -74,7 +74,7 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
     }
     const checks = Object.fromEntries(["text_clipping", "glyph_distortion", "blur_or_tofu", "node_text_collision", "edge_node_collision", "edge_label_collision", "ambiguous_corridor", "branch_merge_retry_resume", "rail_legend_footer", "light_dark_contrast", "guided_view_usefulness", "within_product_diversity", "cross_product_distinction"].map((key) => [key, "passed"]));
     const qaEntry = { id: selected.id, reviewer: "reviewer", review_method: "headless-agent-browser + original-size image reader", correction_rounds: 0, verdict: "passed", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact), renders: { read: renders.read, light: renders.light, dark: renders.dark, guided_views: [{ id: "view-focus", ...renders.guided }] }, checks, defects: [] };
-    await write(root, "guides/archify-diagrams/visual-qa/manifest.json", `${JSON.stringify({ schema_version: 1, entries: [qaEntry] })}\n`);
+    await write(root, "guides/archify-diagrams/visual-qa/manifest.json", `${JSON.stringify({ schema_version: 1, entries: [qaEntry], contact_sheets: [] })}\n`);
   }
   const home = await mkdtemp(path.join(os.tmpdir(), "archify-delivery-home-"));
   t.after(() => rm(home, { recursive: true, force: true }));
@@ -152,6 +152,23 @@ test("stage excludes a selected blocked-validation entry while retaining every r
   await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
   await access(path.join(f.root, ".tmp/curated-archify/current/studio/stable-id.html"));
   await assert.rejects(access(path.join(f.root, ".tmp/curated-archify/current/studio/blocked-id.html")), { code: "ENOENT" });
+});
+
+test("stage and check commit exact empty managed sets when every selected entry is blocked", async (t) => {
+  const f = await fixture(t, { status: "auto-validated" });
+  const catalogPath = path.join(f.root, "guides/archify-diagrams/catalog.json");
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  catalog.entries[0] = {
+    ...catalog.entries[0],
+    delivery_status: "blocked-validation",
+    visual_review: "not-applicable",
+    reviewer: null,
+    diagnostics: [{ code: "showcase-failed", subject: "stable-id", evidence: "1 error", attempted_fix: "none", round: 2, remaining_error: "blocked" }],
+  };
+  await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+  assert.deepEqual((await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
+  assert.deepEqual(await readdir(path.join(f.root, ".tmp/curated-archify/current")), []);
+  assert.deepEqual((await checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
 });
 
 test("check rejects a stale production managed tree even when no entry is publishable", async (t) => {

@@ -259,6 +259,7 @@ export function renderArchifyContactSheets({ catalog, qa }) {
   const catalogById = new Map(catalog.entries.map((entry) => [entry.id, entry]));
   const passed = qa.entries.filter((entry) => entry.verdict === "passed").map((entry) => ({ catalog: catalogById.get(entry.id), qa: entry }));
   if (passed.some((entry) => !entry.catalog)) throw new Error("contact sheet has an unknown catalog entry");
+  if (passed.length === 0) return new Map();
   const sheets = new Map([["all.html", renderSheet("All curated Archify diagrams", passed, "all.html")]]);
   for (const product of [...new Set(passed.map((entry) => entry.catalog.product))].sort(comparePaths)) {
     const name = `product-${product}.html`;
@@ -273,6 +274,10 @@ export function renderArchifyContactSheets({ catalog, qa }) {
 }
 
 export function assertArchifyContactSheetCoverage(sheets, passed) {
+  if (passed.length === 0) {
+    if (sheets.size !== 0) throw new Error("empty passed contact sheet set must be empty");
+    return;
+  }
   const all = sheets.get("all.html");
   if (typeof all !== "string") throw new Error("contact sheet is missing all.html");
   for (const { catalog } of passed) {

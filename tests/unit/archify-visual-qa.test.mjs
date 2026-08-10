@@ -125,6 +125,21 @@ async function rewrite(fixture) {
   await writeFile(path.join(fixture.root, fixture.manifest), `${JSON.stringify(fixture.qa, null, 2)}\n`);
 }
 
+async function bindContactCaptures(fixture) {
+  const directory = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets");
+  const sourceRead = fixture.qa.entries[0].renders.read.sha256;
+  fixture.qa.contact_sheets = ["all", "product-studio", "type-workflow"].map((base) => ({
+    html: `${base}.html`, html_sha256: "",
+    png: `${base}.png`, png_sha256: sha256(fixture.renderFiles.read.bytes), width: 2, height: 2,
+    source_read_sha256: [sourceRead],
+  }));
+  for (const record of fixture.qa.contact_sheets) {
+    record.html_sha256 = sha256(await readFile(path.join(directory, record.html)));
+    await writeFile(path.join(directory, record.png), fixture.renderFiles.read.bytes);
+  }
+  await rewrite(fixture);
+}
+
 async function visualQaMutationFixture(t, mutate) {
   const fixture = await visualQaFixture(t);
   await mutate(fixture);
@@ -255,6 +270,7 @@ test("contact sheets escape data, order entries, and include every passed READ r
 test("contact sheet builder checks exact bytes and rejects an omitted passed entry", async (t) => {
   const fixture = await visualQaFixture(t);
   await buildArchifyContactSheets({ repoRoot: fixture.root });
+  await bindContactCaptures(fixture);
   await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }));
   const output = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets/all.html");
   await writeFile(output, (await readFile(output, "utf8")).replaceAll("stable-id", "removed-id"));
@@ -284,6 +300,26 @@ test("contact sheet check binds the exact HTML and PNG capture set to READ evide
   await writeFile(path.join(directory, "all.png"), fixture.renderFiles.read.bytes);
   await writeFile(path.join(directory, "all.html"), "stale\n");
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /HTML digest|bytes/u);
+  fixture.qa.contact_sheets[0].html = "bogus.html";
+  fixture.qa.contact_sheets[0].png = "bogus.png";
+  await rewrite(fixture);
+  await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }), /record does not match|evidence set|output set/u);
+});
+
+test("contact sheet builder removes every managed output when no visual review passed", async (t) => {
+  const fixture = await visualQaFixture(t, { deliveryStatus: "blocked-visual", visualReview: "failed" });
+  fixture.qa.entries[0].verdict = "failed";
+  fixture.qa.entries[0].correction_rounds = 1;
+  fixture.qa.entries[0].checks.text_clipping = "failed";
+  fixture.qa.entries[0].defects = [{ view: "read", subject: "frame", symptom: "cropped", correction_outcome: "unresolved", round: 1, correction_evidence: "original inspection" }];
+  await rewrite(fixture);
+  const directory = path.join(fixture.root, "guides/archify-diagrams/visual-qa/contact-sheets");
+  await mkdir(directory, { recursive: true });
+  await writeFile(path.join(directory, "stale.html"), "stale\n");
+  await writeFile(path.join(directory, "stale.png"), fixture.renderFiles.read.bytes);
+  assert.deepEqual(await buildArchifyContactSheets({ repoRoot: fixture.root }), { built: true, outputs: [] });
+  assert.deepEqual(await readdir(directory), []);
+  await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root }));
 });
 
 test("contact sheet builder transactionally replaces stale groups with a bounded visibility gap and restores on failure", async (t) => {
@@ -299,7 +335,7 @@ test("contact sheet builder transactionally replaces stale groups with a bounded
   const qaDirectory = path.dirname(directory);
   assert.equal((await readdir(qaDirectory)).some((name) => name.startsWith(".contact-sheets-backup-") || name.startsWith("contact-sheet-")), false);
   await assert.rejects(() => buildArchifyContactSheets({ repoRoot: fixture.root, __testHooks: { beforeBackupCleanup: async () => { throw new Error("cleanup stop"); } } }), /backup cleanup failed/u);
-  await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root, check: true }));
+  await assert.doesNotReject(() => buildArchifyContactSheets({ repoRoot: fixture.root }));
 });
 
 test("contact sheet build collision preserves the original backup for forensics", async (t) => {

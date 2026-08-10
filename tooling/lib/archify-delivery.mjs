@@ -351,7 +351,7 @@ function selectEntries(catalog, { ids = [], product = null, publishable = false 
     ? publishableArchifyEntries(catalog)
     : catalog.entries.filter((entry) => entry.decision === "selected" && !entry.delivery_status.startsWith("blocked-") && entry.delivery_status !== "stale-source");
   const result = source.filter((entry) => (!requested.size || requested.has(entry.id)) && (product === null || entry.product === product)).sort((a, b) => comparePaths(a.id, b.id));
-  if (!result.length) throw new Error("no Archify entries selected");
+  if (!result.length && requested.size) throw new Error("no Archify entries selected");
   if (requested.size && result.length !== requested.size) throw new Error("requested Archify id is not selected");
   return result;
 }
@@ -709,9 +709,10 @@ async function prepare({ repoRoot, ids, product, env, archifyOptions, hooks, pub
   const root = await repoRootRecord(repoRoot);
   const { catalog, snapshot: catalogSnapshot } = await loadCatalogSnapshot(root);
   const entries = selectEntries(catalog, { ids, product, publishable });
-  const cli = await pinCli(env, archifyOptions);
   const temp = await createTemp(root);
   try {
+    if (entries.length === 0) return { root, catalog, catalogSnapshot, entries, records: [], temp };
+    const cli = await pinCli(env, archifyOptions);
     const closure = await snapshotExecutionClosure(cli, path.join(temp.root, "execution-closure"), hooks);
     const records = [];
     for (const entry of entries) records.push(await deliverRecord({ root, temp, closure, entry, hooks }));

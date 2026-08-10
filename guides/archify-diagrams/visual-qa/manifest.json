@@ -35,7 +35,7 @@
       "reviewer": "Codex Task 11 visual QA",
       "review_method": "headless-agent-browser + original-size image reader",
       "correction_rounds": 2,
-      "verdict": "passed",
+      "verdict": "failed",
       "renders": {
         "read": { "path": "renders/suite/suite-studio-career-handoff/read.png", "sha256": "b677988e44ba678fdafa04fbd9092f1643470e8138468354abd4c0e53c99c5ca", "width": 1600, "height": 1223 },
         "light": { "path": "renders/suite/suite-studio-career-handoff/light.png", "sha256": "578e7f00dd9e9c84b77b7a12361464a6ed4cb57999506c50bf52c58dfd401b86", "width": 1600, "height": 1223 },
@@ -46,40 +46,12 @@
           { "id": "view-resume-held-review", "path": "renders/suite/suite-studio-career-handoff/view-resume-held-review.png", "sha256": "1b9772b9e95e1c0d23c2c7cdcc20bffb315a77a4326f1ac1d917f2f6368cca46", "width": 1600, "height": 1324 }
         ]
       },
-      "checks": { "text_clipping": "passed", "glyph_distortion": "passed", "blur_or_tofu": "passed", "node_text_collision": "passed", "edge_node_collision": "passed", "edge_label_collision": "passed", "ambiguous_corridor": "passed", "branch_merge_retry_resume": "passed", "rail_legend_footer": "passed", "light_dark_contrast": "passed", "guided_view_usefulness": "passed", "within_product_diversity": "passed", "cross_product_distinction": "passed" },
+      "checks": { "text_clipping": "failed", "glyph_distortion": "passed", "blur_or_tofu": "passed", "node_text_collision": "failed", "edge_node_collision": "passed", "edge_label_collision": "passed", "ambiguous_corridor": "passed", "branch_merge_retry_resume": "passed", "rail_legend_footer": "passed", "light_dark_contrast": "passed", "guided_view_usefulness": "failed", "within_product_diversity": "passed", "cross_product_distinction": "passed" },
       "defects": [
         { "view": "view-resume-held-review", "subject": "resume held-review framing", "symptom": "The first correction still cropped Receipt and part of the Hold-to-Receipt-to-Named owner path.", "correction_outcome": "resolved", "round": 1, "correction_evidence": "The round-2 all-node focus was recaptured and inspected at fit and original size." },
-        { "view": "view-resume-held-review", "subject": "resume held-review framing", "symptom": "The revised focus required confirmation that Public summary, Hold, Receipt, and Named owner are all inside the image.", "correction_outcome": "resolved", "round": 2, "correction_evidence": "Round 2 original-size PNG shows Public summary, Hold, Receipt, Named owner, and both custody edges together." }
+        { "view": "view-resume-held-review", "subject": "guided focus boundary framing", "symptom": "Studio boundary and Career input/Receipt node borders extend beyond the guided frame at round 2.", "correction_outcome": "unresolved", "round": 2, "correction_evidence": "Round 2 fit and original PNG inspections show the left Studio boundary and the right Career input/Receipt borders clipped by the focus frame." }
       ]
     }
   ],
-  "contact_sheets": [
-    {
-      "html": "all.html",
-      "html_sha256": "271ad4e74ac080e8b04d442a3e451152e44209f3f3b820c47a7531bd34af2aeb",
-      "png": "all.png",
-      "png_sha256": "00147f2017b17b3b8a4c85d2febd3f41a0423b7fcd5d01deb0e187d0c6fe6836",
-      "width": 1648,
-      "height": 1499,
-      "source_read_sha256": ["b677988e44ba678fdafa04fbd9092f1643470e8138468354abd4c0e53c99c5ca"]
-    },
-    {
-      "html": "product-suite.html",
-      "html_sha256": "6ac109202869de4dd136800b459307c81de6d52d67b5174349a48501678fd09a",
-      "png": "product-suite.png",
-      "png_sha256": "35c0e4065565acf8864c34987dc9f9ecdb0a10496e599cbb15da582c6e3cf4ad",
-      "width": 1648,
-      "height": 1499,
-      "source_read_sha256": ["b677988e44ba678fdafa04fbd9092f1643470e8138468354abd4c0e53c99c5ca"]
-    },
-    {
-      "html": "type-dataflow.html",
-      "html_sha256": "123743cef1fc2dcc1a1c13b585111f681a08c331a982ef082b92c204ad40ffd2",
-      "png": "type-dataflow.png",
-      "png_sha256": "fe74d8848f891706c30ea4aa48d7ff45becfe147361b48f1dbf589a17e1daee5",
-      "width": 1648,
-      "height": 1499,
-      "source_read_sha256": ["b677988e44ba678fdafa04fbd9092f1643470e8138468354abd4c0e53c99c5ca"]
-    }
-  ]
+  "contact_sheets": []
 }

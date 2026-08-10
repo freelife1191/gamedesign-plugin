@@ -256,6 +256,9 @@ function assertSuiteReceiptContract(receipt, entry, specification, artifact) {
 }
 
 async function stageSuiteArtifact(entry) {
+  if (entry.delivery_status === "blocked-visual") {
+    return readFile(path.join(repoRoot, "guides/archify-diagrams/visual-qa/failed-artifacts", entry.product, `${entry.id}.html`));
+  }
   await stageCuratedArchify({ repoRoot, ids: [entry.id] });
   return readFile(path.join(repoRoot, ".tmp", "curated-archify", "current", entry.product, `${entry.id}.html`));
 }
@@ -353,12 +356,13 @@ test("Suite specs stay bounded and do not concatenate both product graphs", asyn
   }
 });
 
-test("Suite dataflow retains its portable validator evidence after visual approval", async () => {
+test("Suite dataflow retains its portable validator evidence after the final blocked-visual review", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
   const entry = catalog.entries.find((item) => item.id === "suite-studio-career-handoff");
   const spec = specsById.get("suite-studio-career-handoff");
-  assert.equal(entry?.delivery_status, "passed");
-  assert.equal(entry?.visual_review, "passed");
+  assert.equal(entry?.delivery_status, "blocked-visual");
+  assert.equal(entry?.visual_review, "failed");
+  assert.equal(entry?.diagnostics[0]?.round, 2);
   await assert.doesNotReject(() => validateInstalledSpec(spec, "dataflow"));
   await assertSuiteValidationEvidence(entry, spec);
 });

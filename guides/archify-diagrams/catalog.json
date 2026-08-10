@@ -1918,12 +1918,21 @@
       "composition_rationale": "Studio review artifact에서 public/evidence-safe summary를 거쳐 Career portfolio로 이동시키고 권리·승인 부족은 hold로 분기한다.",
       "shared_process_with": null,
       "shared_process_reason": null,
-      "diagnostics": [],
+      "diagnostics": [
+        {
+          "code": "visual-defect",
+          "subject": "Suite held-review focus boundary framing",
+          "evidence": "Round 2 original-size review still places the Studio boundary and Career input/Receipt node borders outside the guided frame.",
+          "attempted_fix": "Expanded the held-review focus through round 2 and recaptured all six Suite views at 1600px.",
+          "round": 2,
+          "remaining_error": "Required boundary and node borders remain clipped after the final allowed correction round."
+        }
+      ],
       "spec": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
       "html": "guides/assets/archify/suite/suite-studio-career-handoff.html",
       "receipt": "guides/assets/archify/suite/suite-studio-career-handoff.receipt.json",
-      "delivery_status": "passed",
-      "visual_review": "passed",
+      "delivery_status": "blocked-visual",
+      "visual_review": "failed",
       "reviewer": "Codex Task 11 visual QA"
     },
     {

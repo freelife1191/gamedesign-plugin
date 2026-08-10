@@ -48,10 +48,15 @@ function assertContactRecord(record, expectedHtml, expectedReadDigests) {
   if (JSON.stringify([...new Set(record.source_read_sha256)].sort(comparePaths)) !== JSON.stringify([...expectedReadDigests].sort(comparePaths))) throw new Error(`contact sheet source READ digest binding is stale: ${expectedHtml}`);
 }
 
-async function assertExactOutput(directory, sheets, qa = null) {
+async function assertExactOutput(directory, sheets, qa) {
   const actual = (await readdir(directory)).sort(comparePaths);
-  const records = qa?.contact_sheets ?? [];
+  if (!qa || !Array.isArray(qa.contact_sheets)) throw new Error("contact sheet evidence records are required");
+  const records = qa.contact_sheets;
   const recordByHtml = new Map(records.map((record) => [record?.html, record]));
+  if (records.length !== sheets.size || recordByHtml.size !== sheets.size) throw new Error("contact sheet evidence set is stale or incomplete");
+  for (const record of records) {
+    if (!sheets.has(record?.html)) throw new Error(`contact sheet record does not match generated sheet: ${record?.html}`);
+  }
   const expected = [...sheets.keys(), ...records.map((record) => record?.png)].sort(comparePaths);
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("contact sheet output set is stale or incomplete");
   for (const [name, expectedBytes] of sheets) {
@@ -61,7 +66,7 @@ async function assertExactOutput(directory, sheets, qa = null) {
     const actualBytes = await readFile(filename, "utf8");
     if (actualBytes !== expectedBytes) throw new Error(`contact sheet bytes are stale: ${name}`);
     const record = recordByHtml.get(name);
-    if (!record) continue;
+    if (!record) throw new Error(`missing contact sheet record: ${name}`);
     const expectedReadDigests = qa.entries.filter((entry) => expectedBytes.includes(`../${entry.renders.read.path}`)).map((entry) => entry.renders.read.sha256);
     assertContactRecord(record, name, expectedReadDigests);
     if (sha256(Buffer.from(actualBytes, "utf8")) !== record.html_sha256) throw new Error(`contact sheet HTML digest is stale: ${name}`);
@@ -75,13 +80,24 @@ async function assertExactOutput(directory, sheets, qa = null) {
     if (sha256(png) !== record.png_sha256) throw new Error(`contact sheet PNG digest is stale: ${record.png}`);
     if (inspection.width !== record.width || inspection.height !== record.height) throw new Error(`contact sheet PNG dimensions are stale: ${record.png}`);
   }
-  if (records.length > 0 && (records.length !== sheets.size || recordByHtml.size !== sheets.size)) throw new Error("contact sheet evidence set is stale or incomplete");
+}
+
+async function assertGeneratedHtmlOutput(directory, sheets) {
+  const actual = (await readdir(directory)).sort(comparePaths);
+  const expected = [...sheets.keys()].sort(comparePaths);
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error("contact sheet output set is stale or incomplete");
+  for (const [name, expectedBytes] of sheets) {
+    const filename = path.join(directory, name);
+    const stats = await lstat(filename);
+    if (!stats.isFile() || stats.isSymbolicLink()) throw new Error(`contact sheet output is unsafe: ${name}`);
+    if (await readFile(filename, "utf8") !== expectedBytes) throw new Error(`contact sheet bytes are stale: ${name}`);
+  }
 }
 
 async function writeExactOutput(directory, sheets) {
   await mkdir(directory);
   for (const [name, bytes] of sheets) await writeFile(path.join(directory, name), bytes, "utf8");
-  await assertExactOutput(directory, sheets);
+  await assertGeneratedHtmlOutput(directory, sheets);
 }
 
 export async function buildArchifyContactSheets({ repoRoot, check = false, __testHooks = {} } = {}) {
@@ -108,9 +124,9 @@ export async function buildArchifyContactSheets({ repoRoot, check = false, __tes
     }
     await __testHooks.beforePublish?.({ candidate, directory, backup });
     await rename(candidate, directory); movedNew = true;
-    await assertExactOutput(directory, sheets);
+    await assertGeneratedHtmlOutput(directory, sheets);
     await __testHooks.afterPublish?.({ directory, backup });
-    await assertExactOutput(directory, sheets);
+    await assertGeneratedHtmlOutput(directory, sheets);
     if (movedOld) {
       try { await __testHooks.beforeBackupCleanup?.({ directory, backup }); await rm(backup, { recursive: true }); }
       catch (cleanup) { throw new AggregateError([cleanup], `contact sheet committed but backup cleanup failed: ${cleanup.message}`); }

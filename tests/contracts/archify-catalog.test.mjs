@@ -95,8 +95,10 @@ test("production inventory has state-aware materialization contracts", async () 
   assert.equal(studio?.delivery_status, "blocked-validation");
   assert.equal(career?.delivery_status, "blocked-visual");
   assert.equal(career?.visual_review, "failed");
-  assert.equal(suite?.delivery_status, "passed");
-  assert.equal(suite?.visual_review, "passed");
+  assert.equal(suite?.delivery_status, "blocked-visual");
+  assert.equal(suite?.visual_review, "failed");
+  assert.equal(suite?.diagnostics.length, 1);
+  assert.equal(suite?.diagnostics[0].round, 2);
   await assertStateAwareMaterialization(studio);
   await assertStateAwareMaterialization(career);
   await assertStateAwareMaterialization(suite);
