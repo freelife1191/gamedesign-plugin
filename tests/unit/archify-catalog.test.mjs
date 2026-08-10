@@ -312,14 +312,16 @@ test("catalog rejects duplicate structures from materialized selected specs", as
     entries: [first, second],
   });
   const workflowSpec = (ids, labels) => ({
-    lanes: [{ id: "author" }, { id: "reviewer" }],
+    schema_version: 1,
+    diagram_type: "workflow",
+    meta: { title: "검토 흐름", quality_profile: "showcase" },
+    lanes: [{ id: "author", label: "작성" }, { id: "reviewer", label: "검토" }],
     nodes: ids.map((id, index) => ({
       id,
       label: labels[index],
-      type: index === 1 ? "approval" : "task",
-      variant: index === 1 ? "decision" : "default",
+      type: index === 1 ? "security" : "backend",
       lane: index === 1 ? "reviewer" : "author",
-      position: { x: index * 200, y: 0 },
+      col: index,
     })),
     edges: [
       { from: ids[0], to: ids[1], variant: "default" },

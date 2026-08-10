@@ -6,23 +6,29 @@ import {
   structuralSignature,
 } from "../../tooling/lib/archify-signature.mjs";
 
+function meta(title) {
+  return { title, quality_profile: "showcase" };
+}
+
 function workflowFixture({
   ids = ["a", "b", "c"],
   labels = ["입력", "검토", "완료"],
 } = {}) {
   return {
-    lanes: [{ id: "author" }, { id: "reviewer" }],
+    schema_version: 1,
+    diagram_type: "workflow",
+    meta: meta("검토 흐름"),
+    lanes: [{ id: "author", label: "작성" }, { id: "review", label: "검토" }],
     nodes: ids.map((id, index) => ({
       id,
+      lane: index === 1 ? "review" : "author",
+      col: index,
+      type: index === 1 ? "security" : "backend",
       label: labels[index],
-      type: index === 1 ? "approval" : "task",
-      variant: index === 1 ? "decision" : "default",
-      lane: index === 1 ? "reviewer" : "author",
-      position: { x: index * 240, y: index === 1 ? 140 : 0 },
     })),
     edges: [
-      { from: ids[0], to: ids[1], variant: "default" },
-      { from: ids[1], to: ids[2], variant: "default" },
+      { from: ids[0], to: ids[1], variant: "default", role: "main" },
+      { from: ids[1], to: ids[2], variant: "emphasis", role: "main" },
     ],
     mainPath: ids,
   };
@@ -30,86 +36,123 @@ function workflowFixture({
 
 function lifecycleFixture() {
   return {
-    lanes: [{ id: "active" }],
+    schema_version: 1,
+    diagram_type: "lifecycle",
+    meta: meta("검토 상태"),
+    lanes: [{ id: "main", label: "주 상태" }, { id: "wait", label: "대기" }],
     states: [
-      { id: "draft", label: "초안", type: "state", variant: "default", lane: "active", position: { x: 0, y: 0 } },
-      { id: "review", label: "검토", type: "state", variant: "default", lane: "active", position: { x: 200, y: 0 } },
-      { id: "done", label: "완료", type: "terminal", variant: "success", lane: "active", position: { x: 400, y: 0 } },
+      { id: "draft", type: "start", label: "초안", lane: "main", col: 0 },
+      { id: "review", type: "active", label: "검토", lane: "main", col: 1 },
+      { id: "done", type: "success", label: "완료", lane: "main", col: 2 },
     ],
     transitions: [
-      { from: "draft", to: "review", variant: "advance" },
-      { from: "review", to: "done", variant: "advance" },
+      { from: "draft", to: "review", variant: "default" },
+      { from: "review", to: "done", variant: "emphasis" },
     ],
   };
 }
 
 function architectureFixture() {
   return {
-    boundaries: [{ id: "client" }, { id: "service" }],
+    schema_version: 1,
+    diagram_type: "architecture",
+    meta: meta("서비스 경계"),
     components: [
-      { id: "ui", label: "UI", type: "client", variant: "default", boundary: "client", position: { x: 0, y: 0 } },
-      { id: "api", label: "API", type: "service", variant: "default", boundary: "service", position: { x: 300, y: 0 } },
+      { id: "client", type: "external", label: "클라이언트", pos: [0, 0] },
+      { id: "api", type: "backend", label: "API", pos: [200, 0] },
+      { id: "store", type: "database", label: "저장소", pos: [400, 0] },
     ],
-    connections: [{ from: "ui", to: "api", variant: "request" }],
+    boundaries: [{ kind: "region", label: "서비스", wraps: ["api", "store"] }],
+    connections: [
+      { from: "client", to: "api", variant: "default" },
+      { from: "api", to: "store", variant: "emphasis" },
+    ],
   };
 }
 
 function sequenceFixture() {
   return {
-    segments: [{ id: "request" }],
+    schema_version: 1,
+    diagram_type: "sequence",
+    meta: meta("요청 왕복"),
     participants: [
-      { id: "caller", label: "호출자", type: "actor", variant: "default", position: { x: 0, y: 0 } },
-      { id: "service", label: "서비스", type: "service", variant: "default", position: { x: 240, y: 0 } },
+      { id: "client", type: "external", label: "클라이언트" },
+      { id: "api", type: "backend", label: "API" },
+      { id: "store", type: "database", label: "저장소" },
     ],
-    messages: [{ from: "caller", to: "service", variant: "request" }],
+    messages: [
+      { from: "client", to: "api", y: 180, label: "요청", variant: "default" },
+      { from: "api", to: "store", y: 240, label: "저장", variant: "emphasis" },
+    ],
+  };
+}
+
+function dataflowFixture() {
+  return {
+    schema_version: 1,
+    diagram_type: "dataflow",
+    meta: meta("자료 흐름"),
+    stages: [{ label: "수집" }, { label: "저장" }],
+    nodes: [
+      { id: "source", type: "frontend", label: "소스", stage: 0, row: 0 },
+      { id: "warehouse", type: "database", label: "웨어하우스", stage: 1, row: 1 },
+    ],
+    flows: [{ from: "source", to: "warehouse", label: "이벤트", variant: "emphasis" }],
   };
 }
 
 function addBranch(spec) {
-  spec.nodes.push({
-    id: "reject", label: "반려", type: "task", variant: "default", lane: "reviewer", position: { x: 480, y: 140 },
-  });
-  spec.edges.push({ from: "b", to: "reject", variant: "reject" });
+  spec.nodes.push({ id: "reject", lane: "review", col: 2, type: "backend", label: "반려" });
+  spec.edges.push({ from: "b", to: "reject", variant: "security", role: "branch" });
 }
 
 function addRetryCycle(spec) {
-  spec.edges.push({ from: "c", to: "b", variant: "retry" });
+  spec.edges.push({ from: "c", to: "b", variant: "dashed", role: "return" });
 }
 
 function extendMainPath(spec) {
-  spec.nodes.push({
-    id: "archive", label: "보관", type: "task", variant: "default", lane: "author", position: { x: 720, y: 0 },
-  });
+  spec.nodes.push({ id: "archive", lane: "author", col: 3, type: "database", label: "보관" });
   spec.edges[1].to = "archive";
-  spec.edges.push({ from: "archive", to: "c", variant: "default" });
+  spec.edges.push({ from: "archive", to: "c", variant: "emphasis", role: "main" });
   spec.mainPath.push("archive");
 }
 
 function addHoldResumeLoop(spec) {
-  spec.states.push({
-    id: "hold", label: "보류", type: "state", variant: "hold", lane: "active", position: { x: 200, y: 160 },
-  });
+  spec.states.push({ id: "hold", type: "waiting", label: "보류", lane: "wait", col: 1 });
   spec.transitions.push(
-    { from: "review", to: "hold", variant: "hold" },
-    { from: "hold", to: "review", variant: "resume" },
+    { from: "review", to: "hold", variant: "security" },
+    { from: "hold", to: "review", variant: "emphasis" },
   );
 }
 
 function addLane(spec) {
-  spec.lanes.push({ id: "compliance" });
+  spec.lanes.push({ id: "compliance", label: "준수" });
   spec.nodes[2].lane = "compliance";
 }
 
 function addBoundary(spec) {
-  spec.boundaries.push({ id: "audit" });
-  spec.components[1].boundary = "audit";
+  spec.boundaries.push({ kind: "security-group", label: "격리", wraps: ["store"] });
 }
 
 function addParticipant(spec) {
-  spec.participants.push({
-    id: "store", label: "저장소", type: "database", variant: "default", position: { x: 480, y: 0 },
-  });
-  spec.messages.push({ from: "service", to: "store", variant: "write" });
+  spec.participants.push({ id: "audit", type: "cloud", label: "감사" });
+  spec.messages.push({ from: "api", to: "audit", y: 300, label: "기록", variant: "dashed" });
+}
+
+function workflowGraph(name, undirectedEdges) {
+  const ids = ["a", "b", "c", "d", "e", "f"];
+  return {
+    schema_version: 1,
+    diagram_type: "workflow",
+    meta: meta(name),
+    lanes: [{ id: "core", label: "핵심" }],
+    nodes: ids.map((id) => ({ id, lane: "core", col: 0, type: "backend", label: id })),
+    mainPath: ids,
+    edges: undirectedEdges.flatMap(([from, to]) => [
+      { from, to, variant: "default", role: "main" },
+      { from: to, to: from, variant: "default", role: "main" },
+    ]),
+  };
 }
 
 function duplicateCatalog({ firstException = null, secondException = null } = {}) {
@@ -131,11 +174,7 @@ function duplicateSpecs() {
 test("label-only workflow clones have the same structural signature", () => {
   const first = workflowFixture({ ids: ["a", "b", "c"], labels: ["입력", "검토", "완료"] });
   const second = workflowFixture({ ids: ["x", "y", "z"], labels: ["자료", "승인", "출력"] });
-
-  assert.equal(
-    structuralSignature({ type: "workflow", spec: first }),
-    structuralSignature({ type: "workflow", spec: second }),
-  );
+  assert.equal(structuralSignature({ type: "workflow", spec: first }), structuralSignature({ type: "workflow", spec: second }));
 });
 
 for (const [name, type, fixture, mutate] of [
@@ -151,37 +190,77 @@ for (const [name, type, fixture, mutate] of [
     const original = fixture();
     const changed = structuredClone(original);
     mutate(changed);
-
-    assert.notEqual(
-      structuralSignature({ type, spec: original }),
-      structuralSignature({ type, spec: changed }),
-    );
+    assert.notEqual(structuralSignature({ type, spec: original }), structuralSignature({ type, spec: changed }));
   });
 }
 
+test("non-isomorphic regular directed graphs have different signatures", () => {
+  const k33 = workflowGraph("K3,3", [["a", "d"], ["a", "e"], ["a", "f"], ["b", "d"], ["b", "e"], ["b", "f"], ["c", "d"], ["c", "e"], ["c", "f"]]);
+  const prism = workflowGraph("triangular prism", [["a", "b"], ["b", "c"], ["c", "a"], ["d", "e"], ["e", "f"], ["f", "d"], ["a", "d"], ["b", "e"], ["c", "f"]]);
+  assert.notEqual(structuralSignature({ type: "workflow", spec: k33 }), structuralSignature({ type: "workflow", spec: prism }));
+});
+
+test("architecture boundary wraps and positions participate without labels", () => {
+  const original = architectureFixture();
+  const membershipChanged = structuredClone(original);
+  membershipChanged.boundaries[0].wraps = ["client", "api"];
+  const positionChanged = structuredClone(original);
+  [positionChanged.components[0].pos, positionChanged.components[2].pos] = [positionChanged.components[2].pos, positionChanged.components[0].pos];
+  assert.notEqual(structuralSignature({ type: "architecture", spec: original }), structuralSignature({ type: "architecture", spec: membershipChanged }));
+  assert.notEqual(structuralSignature({ type: "architecture", spec: original }), structuralSignature({ type: "architecture", spec: positionChanged }));
+});
+
+test("sequence participant order and message y participate in the signature", () => {
+  const original = sequenceFixture();
+  const reordered = structuredClone(original);
+  [reordered.participants[0], reordered.participants[2]] = [reordered.participants[2], reordered.participants[0]];
+  const movedMessage = structuredClone(original);
+  movedMessage.messages[1].y = 160;
+  assert.notEqual(structuralSignature({ type: "sequence", spec: original }), structuralSignature({ type: "sequence", spec: reordered }));
+  assert.notEqual(structuralSignature({ type: "sequence", spec: original }), structuralSignature({ type: "sequence", spec: movedMessage }));
+});
+
+test("workflow roles and variant placement participate in canonical adjacency", () => {
+  const original = workflowFixture({ ids: ["a", "b", "c", "d", "e"], labels: ["a", "b", "c", "d", "e"] });
+  original.nodes.forEach((node, index) => { node.col = index; node.type = "backend"; node.lane = "author"; });
+  original.edges = [
+    { from: "a", to: "b", variant: "emphasis", role: "main" },
+    { from: "a", to: "c", variant: "default", role: "branch" },
+    { from: "b", to: "d", variant: "default", role: "main" },
+    { from: "c", to: "d", variant: "emphasis", role: "main" },
+    { from: "d", to: "e", variant: "default", role: "main" },
+  ];
+  const roleChanged = structuredClone(original);
+  roleChanged.edges[0].role = "branch";
+  const variantRepositioned = structuredClone(original);
+  [variantRepositioned.edges[0].variant, variantRepositioned.edges[1].variant] = [variantRepositioned.edges[1].variant, variantRepositioned.edges[0].variant];
+  assert.notEqual(structuralSignature({ type: "workflow", spec: original }), structuralSignature({ type: "workflow", spec: roleChanged }));
+  assert.notEqual(structuralSignature({ type: "workflow", spec: original }), structuralSignature({ type: "workflow", spec: variantRepositioned }));
+});
+
+test("dataflow stage and row participate in the signature", () => {
+  const original = dataflowFixture();
+  const changed = structuredClone(original);
+  changed.nodes[1].row = 3;
+  assert.notEqual(structuralSignature({ type: "dataflow", spec: original }), structuralSignature({ type: "dataflow", spec: changed }));
+});
+
 test("diagram type participates in the signature", () => {
-  assert.notEqual(
-    structuralSignature({ type: "workflow", spec: workflowFixture() }),
-    structuralSignature({ type: "lifecycle", spec: lifecycleFixture() }),
-  );
+  assert.notEqual(structuralSignature({ type: "workflow", spec: workflowFixture() }), structuralSignature({ type: "lifecycle", spec: lifecycleFixture() }));
 });
 
 test("duplicates require a symmetric documented shared-process exception", () => {
-  assert.throws(
-    () => findStructuralDuplicates({
-      catalog: duplicateCatalog({
-        firstException: { shared_process_with: "second", shared_process_reason: null },
-        secondException: { shared_process_with: "first", shared_process_reason: null },
-      }),
-      specsById: duplicateSpecs(),
+  assert.throws(() => findStructuralDuplicates({
+    catalog: duplicateCatalog({
+      firstException: { shared_process_with: "second", shared_process_reason: null },
+      secondException: { shared_process_with: "first", shared_process_reason: null },
     }),
-    /shared_process_reason/u,
-  );
+    specsById: duplicateSpecs(),
+  }), /shared_process_reason/u);
 });
 
 test("unexceptioned structural duplicates are returned for catalog rejection", () => {
   const findings = findStructuralDuplicates({ catalog: duplicateCatalog(), specsById: duplicateSpecs() });
-
   assert.deepEqual(findings.map((finding) => finding.ids), [["first", "second"]]);
 });
 
@@ -190,35 +269,48 @@ test("a symmetric evidence-backed shared-process exception approves a duplicate"
     firstException: { shared_process_with: "second", shared_process_reason: "두 문서는 같은 승인 프로세스의 서로 다른 근거를 기록한다." },
     secondException: { shared_process_with: "first", shared_process_reason: "두 문서는 같은 승인 프로세스의 서로 다른 근거를 기록한다." },
   };
-
-  assert.deepEqual(
-    findStructuralDuplicates({ catalog: duplicateCatalog(exceptions), specsById: duplicateSpecs() }),
-    [],
-  );
+  assert.deepEqual(findStructuralDuplicates({ catalog: duplicateCatalog(exceptions), specsById: duplicateSpecs() }), []);
 });
 
-test("one-sided shared-process exception does not approve a duplicate", () => {
-  const exceptions = {
-    firstException: { shared_process_with: "second", shared_process_reason: "공통 절차의 source evidence가 있다." },
-    secondException: { shared_process_with: "unrelated", shared_process_reason: "공통 절차의 source evidence가 있다." },
-  };
-
-  assert.throws(
-    () => findStructuralDuplicates({ catalog: duplicateCatalog(exceptions), specsById: duplicateSpecs() }),
-    /symmetric shared-process exception/u,
-  );
+test("mutual exceptions with different signatures are rejected before duplicate grouping", () => {
+  const catalog = duplicateCatalog({
+    firstException: { shared_process_with: "second", shared_process_reason: "공통 근거" },
+    secondException: { shared_process_with: "first", shared_process_reason: "공통 근거" },
+  });
+  const specsById = duplicateSpecs();
+  specsById.get("second").nodes.push({ id: "extra", lane: "author", col: 3, type: "backend", label: "추가" });
+  specsById.get("second").edges.push({ from: "second-c", to: "extra", variant: "default", role: "main" });
+  assert.throws(() => findStructuralDuplicates({ catalog, specsById }), /same structural signature/u);
 });
 
-test("exact pixel changes do not alter the quantized relative layout", () => {
-  const original = workflowFixture();
-  const changed = structuredClone(original);
-  for (const node of changed.nodes) {
-    node.position.x = node.position.x * 3 + 17;
-    node.position.y = node.position.y * 3 + 17;
-  }
-
-  assert.equal(
-    structuralSignature({ type: "workflow", spec: original }),
-    structuralSignature({ type: "workflow", spec: changed }),
-  );
+test("declared shared-process exception requires an existing selected target", () => {
+  const catalog = duplicateCatalog({
+    firstException: { shared_process_with: "missing", shared_process_reason: "공통 근거" },
+  });
+  assert.throws(() => findStructuralDuplicates({ catalog, specsById: new Map() }), /target does not exist/u);
 });
+
+test("only a fully non-materialized shared-process pair is deferred", () => {
+  const catalog = duplicateCatalog({
+    firstException: { shared_process_with: "second", shared_process_reason: "공통 근거" },
+    secondException: { shared_process_with: "first", shared_process_reason: "공통 근거" },
+  });
+  assert.deepEqual(findStructuralDuplicates({ catalog, specsById: new Map() }), []);
+  assert.throws(() => findStructuralDuplicates({
+    catalog,
+    specsById: new Map([["first", workflowFixture()]]),
+  }), /both have materialized specs/u);
+});
+
+for (const [name, mutate, pattern] of [
+  ["missing endpoint", (spec) => { delete spec.edges[0].from; }, /from/u],
+  ["unresolved endpoint", (spec) => { spec.edges[0].to = "missing"; }, /unresolved/u],
+  ["object endpoint", (spec) => { spec.edges[0].from = { id: "a" }; }, /string/u],
+  ["duplicate node ID", (spec) => { spec.nodes.push({ ...spec.nodes[0], label: "복제" }); }, /duplicate node id/u],
+]) {
+  test(`workflow rejects ${name} instead of silently omitting topology`, () => {
+    const spec = workflowFixture();
+    mutate(spec);
+    assert.throws(() => structuralSignature({ type: "workflow", spec }), pattern);
+  });
+}
