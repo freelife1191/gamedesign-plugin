@@ -81,6 +81,14 @@ function isProductUseCaseSource(source) {
   return source.scope === "game-design-studio-use-case" || source.scope === "game-design-career-use-case";
 }
 
+function isProductSkillSource(source) {
+  return source.scope === "game-design-studio-skill" || source.scope === "game-design-career-skill";
+}
+
+function isProductDiagramSource(source) {
+  return isProductUseCaseSource(source) || isProductSkillSource(source);
+}
+
 function assertStringArray(value, label) {
   if (!Array.isArray(value) || value.length === 0 || value.some((item) => !isNonemptyString(item))) {
     throw new TypeError(`${label} must contain nonempty strings`);
@@ -515,6 +523,26 @@ function wrappedText(value, { x, y, fill, fontSize, role, maxCharacters, maxLine
 
 function readableRailGroups(source) {
   if (isCareerSource(source)) {
+    if (source.scope === "game-design-career-skill") {
+      const targets = source.semantic.next_routes.map(({ target }) => target);
+      const routeSummary = targets.length > 0
+        ? `${targets.length}개 route · 첫 경로 ${targets[0]}`
+        : "terminal · 자동 route 없음";
+      return {
+        left: [
+          `skill / reviewer: ${source.semantic.skill} / ${source.semantic.reviewer}`,
+          `trigger: ${source.semantic.trigger}`,
+          `input: ${source.semantic.required_input}`,
+          `work / outputs: ${source.semantic.owned_work} / ${source.semantic.outputs.join(" · ")}`,
+        ],
+        right: [
+          `boundary: ${source.semantic.boundary}`,
+          `failure / preserve: ${source.semantic.failure} / ${source.semantic.preserve}`,
+          `confirm / resume: ${source.semantic.human_confirmation} / ${source.semantic.resume}`,
+          `next: ${routeSummary} / ${source.semantic.next_condition}`,
+        ],
+      };
+    }
     if (source.type === "decision-flow") {
       return {
         left: [
@@ -538,6 +566,19 @@ function readableRailGroups(source) {
         `outputs / next: ${source.semantic.outputs.join(" · ")} / ${source.semantic.next_route}`,
       ],
       right: [],
+    };
+  }
+  if (source.scope === "game-design-studio-skill") {
+    const routes = source.semantic.next_routes.length > 0
+      ? `${source.semantic.next_routes.length}개 route · 첫 경로 ${source.semantic.next_routes[0]}`
+      : `terminal / ${source.semantic.next_condition}`;
+    return {
+      left: [
+        `skill: ${source.semantic.skill}`,
+        `input: ${source.semantic.required_input}`,
+        `outputs: ${source.semantic.outputs.join(" · ")}`,
+      ],
+      right: [`next: ${routes}`],
     };
   }
   if (source.type === "design-pipeline") {
@@ -642,7 +683,7 @@ function renderReadableUseCaseSvg(source) {
 
 export function renderDiagramSvg(source) {
   validateDiagramSource(source);
-  if (isProductUseCaseSource(source)) return renderReadableUseCaseSvg(source);
+  if (isProductDiagramSource(source)) return renderReadableUseCaseSvg(source);
   const titleFit = isCareerSource(source) && characterLength(source.title) > 24 ? ' textLength="1220" lengthAdjust="spacingAndGlyphs"' : "";
   const descriptionFit = isCareerSource(source) && characterLength(source.description) > 45 ? ' textLength="1220" lengthAdjust="spacingAndGlyphs"' : "";
   const cards = layoutFor(source.type, source.steps.length, source);

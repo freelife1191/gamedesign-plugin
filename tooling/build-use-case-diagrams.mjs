@@ -18,6 +18,15 @@ const studioRoutingFile = "products/game-design-studio/plugin/references/routing
 const wrapperFile = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs";
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
+function isValidatedProductDiagram(source) {
+  return [
+    "game-design-studio-use-case",
+    "game-design-career-use-case",
+    "game-design-studio-skill",
+    "game-design-career-skill",
+  ].includes(source.scope);
+}
+
 function isContained(root, target) {
   const relative = path.relative(root, target);
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
@@ -176,7 +185,7 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check, optiona
   if (check) {
     await assertSafeExistingFile(repoRoot, output.svg, { optionalLstat });
     await assertSafeExistingFile(repoRoot, output.png, { optionalLstat });
-    if (source.scope === "game-design-studio-use-case" || source.scope === "game-design-career-use-case") {
+    if (isValidatedProductDiagram(source)) {
       validateUseCaseDiagramSvg(await readFile(output.svg, "utf8"), source.id);
     }
     await assertSafeOutputFile(outputRoot, pngPath, { createParents: true });
@@ -185,7 +194,7 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check, optiona
     await assertSafeOutputFile(repoRoot, output.png, { createParents: true });
   }
   const svg = renderDiagramSvg(source);
-  if (source.scope === "game-design-studio-use-case" || source.scope === "game-design-career-use-case") {
+  if (isValidatedProductDiagram(source)) {
     validateUseCaseDiagramSvg(svg, source.id);
   }
   await writeSvg(svgPath, svg, outputRoot);

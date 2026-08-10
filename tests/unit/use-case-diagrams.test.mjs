@@ -153,6 +153,64 @@ test("Studio skill flow exposes exact outputs and every conditional next route",
   assert.ok([...svg.matchAll(/<text x="72" y="(\d+)"/gu)].every((match) => Number(match[1]) < 704), "semantic rail stays above the conclusion strip");
 });
 
+test("Studio and Career skill diagrams reject glyph scaling and keep readable typography", () => {
+  const studio = {
+    ...validFixture,
+    id: "st-s02",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: `단계 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "define-game-vision",
+      required_input: "player promise + design constraints",
+      outputs: ["vision-pillars", "core-motivation-loop"],
+      next_routes: ["design-game-systems"],
+    },
+  };
+  const career = {
+    ...validFixture,
+    id: "ca-s11",
+    scope: "game-design-career-skill",
+    type: "skill-flow",
+    steps: ["trigger", "evidence input", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: `단계 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "reverse-engineer-game-design",
+      trigger: "한 public build 관찰",
+      required_input: "public build와 source ID",
+      owned_work: "관찰·추론·반례",
+      outputs: ["reverse-design-document", "game-analysis-report"],
+      reviewer: "reverse-design-critic·evidence-auditor",
+      boundary: "관찰·추론·제안을 분리하고 내부 구현을 추정하지 않음",
+      failure: "observation 또는 source 부재",
+      preserve: "unknown implementation detail",
+      human_confirmation: "review owner가 공개 관찰과 source citation을 확인",
+      resume: "validation queue에서 재개",
+      next_condition: "portfolio·export 조건일 때",
+      next_route: "build-game-design-portfolio",
+      next_routes: [
+        { condition: "portfolio 조건", target: "build-game-design-portfolio" },
+        { condition: "export 조건", target: "export-career-documents" },
+      ],
+    },
+  };
+
+  for (const source of [studio, career]) {
+    const svg = renderDiagramSvg(source);
+    assert.doesNotMatch(svg, /(?:textLength|lengthAdjust|font-stretch)|…/u, source.id);
+    assert.doesNotThrow(() => validateUseCaseDiagramSvg(svg, source.id), source.id);
+    assert.match(svg, /data-text-role="card-body"[^>]*font-size="15"/u, source.id);
+    assert.match(svg, /data-text-role="semantic-rail"[^>]*font-size="13"/u, source.id);
+  }
+});
+
 test("legacy skill-flow retains its established generator contract", () => {
   const source = {
     ...validFixture,
@@ -193,13 +251,14 @@ test("Studio skill cards wrap whole Latin and hyphenated tokens without splittin
   };
   const svg = renderDiagramSvg(source);
 
-  assert.match(svg, />콘텐츠<\/text>\n\s*<text[^>]*>trigger<\/text>/u);
-  assert.match(svg, />co-op<\/text>\n\s*<text[^>]*>handoff<\/text>/u);
-  assert.doesNotMatch(svg, />trigge<\/text>\n\s*<text[^>]*>r<\/text>/u);
-  assert.doesNotMatch(svg, />hando<\/text>\n\s*<text[^>]*>ff<\/text>/u);
-  const titleBottom = Number(svg.match(/<text[^>]*y="(\d+)"[^>]*>검토<\/text>/u)?.[1]);
-  const exactTop = Number(svg.match(/<text[^>]*y="(\d+)"[^>]*>design-game-content<\/text>/u)?.[1]);
-  assert.ok(exactTop - titleBottom >= 24, `skill ID must clear the wrapped card title: ${titleBottom} -> ${exactTop}`);
+  assert.match(svg, /<tspan[^>]*>콘텐츠<\/tspan><tspan[^>]*>trigger<\/tspan>/u);
+  assert.match(svg, /<tspan[^>]*>co-op<\/tspan><tspan[^>]*>handoff<\/tspan>/u);
+  assert.doesNotMatch(svg, /<tspan[^>]*>trigge<\/tspan><tspan[^>]*>r<\/tspan>/u);
+  assert.doesNotMatch(svg, /<tspan[^>]*>hando<\/tspan><tspan[^>]*>ff<\/tspan>/u);
+  const thirdCard = svg.match(/<g aria-label="읽기 순서 3:[\s\S]*?<\/g>/u)?.[0] ?? "";
+  const titleY = Number(thirdCard.match(/data-text-role="card-title"[^>]*y="([\d.]+)"/u)?.[1]);
+  const detailY = Number(thirdCard.match(/data-text-role="card-body"[^>]*y="([\d.]+)"/u)?.[1]);
+  assert.ok(detailY - titleY >= 80, `skill card body must clear its three-line title: ${titleY} -> ${detailY}`);
 });
 
 test("mixed-language validation strings preserve whole Latin tokens in natural tspans", () => {

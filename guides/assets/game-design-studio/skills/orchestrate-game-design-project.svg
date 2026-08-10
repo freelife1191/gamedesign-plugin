@@ -1,70 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="게임 기획 프로젝트 오케스트레이션 직접 호출 흐름">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" aria-label="게임 기획 프로젝트 오케스트레이션 직접 호출 흐름" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
   <title>프로젝트 오케스트레이션</title>
-  <desc>게임 기획 프로젝트 오케스트레이션 직접 호출 흐름</desc>
+  <desc>게임 기획 프로젝트 오케스트레이션 직접 호출 흐름. 여러 domain 요청을 bounded route와 completion gate로 나눕니다.. steps[1].stage: trigger; steps[1].label: 복합 trigger; steps[1].detail: 여러 domain을 받습니다.; steps[2].stage: 필수 입력; steps[2].label: Artifact·domain 요청; steps[2].detail: 필수 값을 둡니다.; steps[3].stage: skill-owned work; steps[3].label: route 오케스트레이션; steps[3].detail: 작업 경계를 수행합니다.; steps[4].stage: output; steps[4].label: 게임 브리프; steps[4].detail: 정확한 ID를 남깁니다.; steps[5].stage: next route; steps[5].label: 비전 설계; steps[5].detail: 조건부 handoff입니다.; semantic.skill: orchestrate-game-design-project; semantic.outputs[1]: game-design-brief; semantic.outputs[2]: canonical-artifact; semantic.next_routes[1]: define-game-vision; semantic.next_routes[2]: design-game-systems; semantic.next_routes[3]: design-game-content; semantic.next_routes[4]: design-player-experience; semantic.next_routes[5]: design-game-economy-and-liveops; semantic.next_routes[6]: plan-game-production; semantic.next_routes[7]: review-game-design; semantic.next_routes[8]: visualize-game-design; semantic.next_routes[9]: export-game-design-documents; semantic.required_input: canonical-artifact + domain route requests</desc>
   <defs>
-    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+    <marker id="open-arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11.25" markerHeight="11.25" markerUnits="userSpaceOnUse" orient="auto">
       <path d="M 2 2 L 10 6 L 2 10" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round"/>
     </marker>
   </defs>
   <rect width="1400" height="900" fill="#F7FAFD"/>
-  <rect x="52" y="52" width="8" height="138" rx="4" fill="#1F6FB2"/>
-  <text x="88" y="86" fill="#1F6FB2" font-size="18" font-weight="700">ST-S09 · SKILL</text>
-  <text x="88" y="148" fill="#1F2733" font-size="54" font-weight="700">프로젝트 오케스트레이션</text>
-  <text x="88" y="192" fill="#5B6675" font-size="24">여러 domain 요청을 bounded route와 completion gate로 나눕니다.</text>
+  <rect x="52" y="52" width="8" height="168" rx="4" fill="#1F6FB2"/>
+  <text data-text-role="eyebrow" x="88" y="86" text-anchor="start" dominant-baseline="central" fill="#1F6FB2" font-size="18" font-weight="700"><tspan x="88" dy="0">ST-S09 · SKILL</tspan></text>
+  <text data-text-role="title" x="88" y="141" text-anchor="start" dominant-baseline="central" fill="#1F2733" font-size="42" font-weight="700"><tspan x="88" dy="0">프로젝트 오케스트레이션</tspan></text>
+  <text data-text-role="description" x="88" y="218" text-anchor="start" dominant-baseline="central" fill="#5B6675" font-size="18" font-weight="400"><tspan x="88" dy="0">여러 domain 요청을 bounded route와 completion gate로 나눕니다.</tspan></text>
   <rect x="52" y="274" width="1296" height="356" rx="28" fill="#FFFFFF" stroke="#D6E0EC" stroke-width="2"/>
-  <path d="M 312 450 L 323 492" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 567 492 L 578 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 822 450 L 833 492" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
-  <path d="M 1077 492 L 1088 450" fill="none" stroke="#5B6675" stroke-width="2" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 312 450 L 323 492" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 567 492 L 578 450" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 822 450 L 833 492" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
+  <path d="M 1077 492 L 1088 450" fill="none" stroke="#5B6675" stroke-width="2.5" stroke-linecap="round" marker-end="url(#open-arrow)"/>
   <g aria-label="읽기 순서 1: 복합 trigger">
     <rect x="80" y="342" width="220" height="216" rx="18" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
     <rect x="108" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
-    <text x="134" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
-    <text x="168" y="392" fill="#124267" font-size="14" font-weight="700">trigger</text>
-      <text x="108" y="438" fill="#124267" font-size="22" font-weight="700">복합 trigger</text>
-      <text x="108" y="500" fill="#354152" font-size="18" font-weight="400">여러 domain을</text>
-      <text x="108" y="526" fill="#354152" font-size="18" font-weight="400">받습니다.</text>
+    <text data-text-role="caption" x="134" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="134" dy="0">1</tspan></text>
+    <text data-text-role="caption" x="168" y="390" text-anchor="start" dominant-baseline="central" fill="#124267" font-size="13" font-weight="700"><tspan x="168" dy="0">trigger</tspan></text>
+    <text data-text-role="card-title" x="108" y="426.5" text-anchor="start" dominant-baseline="central" fill="#124267" font-size="20" font-weight="700"><tspan x="108" dy="0">복합</tspan><tspan x="108" dy="23">trigger</tspan></text>
+    <text data-text-role="card-body" x="108" y="497.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="108" dy="0">여러 domain을</tspan><tspan x="108" dy="19">받습니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 2: 입력 계약">
     <rect x="335" y="384" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="363" y="412" width="52" height="32" rx="16" fill="#534AB7"/>
-    <text x="389" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
-    <text x="423" y="434" fill="#3C3489" font-size="14" font-weight="700">필수 입력</text>
-      <text x="363" y="480" fill="#3C3489" font-size="22" font-weight="700">입력 계약</text>
-      <text x="363" y="542" fill="#354152" font-size="7" textLength="164" lengthAdjust="spacingAndGlyphs">canonical-artifact + domain route requests</text>
+    <text data-text-role="caption" x="389" y="429" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="389" dy="0">2</tspan></text>
+    <text data-text-role="caption" x="423" y="432" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="13" font-weight="700"><tspan x="423" dy="0">필수 입력</tspan></text>
+    <text data-text-role="card-title" x="363" y="480" text-anchor="start" dominant-baseline="central" fill="#3C3489" font-size="20" font-weight="700"><tspan x="363" dy="0">입력 계약</tspan></text>
+    <text data-text-role="card-body" x="363" y="549" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="363" dy="0">필수 값을 둡니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 3: route 오케스트레이션">
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="618" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
-    <text x="644" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
-    <text x="678" y="392" fill="#085041" font-size="14" font-weight="700">skill-owned work</text>
-      <text x="618" y="438" fill="#085041" font-size="22" font-weight="700">route</text>
-      <text x="618" y="468" fill="#085041" font-size="22" font-weight="700">오케스트레이션</text>
-      <text x="618" y="500" fill="#354152" font-size="8" textLength="164" lengthAdjust="spacingAndGlyphs">orchestrate-game-design-project</text>
+    <text data-text-role="caption" x="644" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="644" dy="0">3</tspan></text>
+    <text data-text-role="caption" x="678" y="382.5" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="13" font-weight="700"><tspan x="678" dy="0">skill-owned</tspan><tspan x="678" dy="15">work</tspan></text>
+    <text data-text-role="card-title" x="618" y="426.5" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="20" font-weight="700"><tspan x="618" dy="0">route</tspan><tspan x="618" dy="23">오케스트레이션</tspan></text>
+    <text data-text-role="card-body" x="618" y="497.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="618" dy="0">작업 경계를</tspan><tspan x="618" dy="19">수행합니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 4: 게임 브리프">
     <rect x="845" y="384" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="873" y="412" width="52" height="32" rx="16" fill="#A75B00"/>
-    <text x="899" y="434" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
-    <text x="933" y="434" fill="#814600" font-size="14" font-weight="700">output</text>
-      <text x="873" y="480" fill="#814600" font-size="22" font-weight="700">게임 브리프</text>
-      <text x="873" y="542" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">game-design-brief</text>
-      <text x="873" y="558" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">canonical-artifact</text>
+    <text data-text-role="caption" x="899" y="429" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="899" dy="0">4</tspan></text>
+    <text data-text-role="caption" x="933" y="432" text-anchor="start" dominant-baseline="central" fill="#814600" font-size="13" font-weight="700"><tspan x="933" dy="0">output</tspan></text>
+    <text data-text-role="card-title" x="873" y="480" text-anchor="start" dominant-baseline="central" fill="#814600" font-size="20" font-weight="700"><tspan x="873" dy="0">게임 브리프</tspan></text>
+    <text data-text-role="card-body" x="873" y="539.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="873" dy="0">정확한 ID를</tspan><tspan x="873" dy="19">남깁니다.</tspan></text>
   </g>
   <g aria-label="읽기 순서 5: 다음 route">
     <rect x="1100" y="342" width="220" height="216" rx="18" fill="#FCECF3" stroke="#A52B5D" stroke-width="2"/>
     <rect x="1128" y="370" width="52" height="32" rx="16" fill="#A52B5D"/>
-    <text x="1154" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">5</text>
-    <text x="1188" y="392" fill="#7A1942" font-size="14" font-weight="700">next route</text>
-      <text x="1128" y="438" fill="#7A1942" font-size="22" font-weight="700">다음 route</text>
-      <text x="1128" y="500" fill="#354152" font-size="10" textLength="164" lengthAdjust="spacingAndGlyphs">define-game-vision</text>
+    <text data-text-role="caption" x="1154" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="1154" dy="0">5</tspan></text>
+    <text data-text-role="caption" x="1188" y="390" text-anchor="start" dominant-baseline="central" fill="#7A1942" font-size="13" font-weight="700"><tspan x="1188" dy="0">next route</tspan></text>
+    <text data-text-role="card-title" x="1128" y="438" text-anchor="start" dominant-baseline="central" fill="#7A1942" font-size="20" font-weight="700"><tspan x="1128" dy="0">다음 route</tspan></text>
+    <text data-text-role="card-body" x="1128" y="497.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="1128" dy="0">조건부</tspan><tspan x="1128" dy="19">handoff입니다.</tspan></text>
   </g>
-  <rect x="52" y="636" width="1296" height="60" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
-  <text x="72" y="650" fill="#354152" font-size="9">skill: orchestrate-game-design-project</text>
-  <text x="72" y="662" fill="#354152" font-size="9">outputs: game-design-brief · canonical-artifact</text>
-  <text x="72" y="674" fill="#354152" font-size="9">next: define-game-vision · design-game-systems · design-game-content · design-player-experience · design-game-economy-and-liveops</text>
-  <text x="72" y="686" fill="#354152" font-size="9">next: plan-game-production · review-game-design · visualize-game-design · export-game-design-documents</text>
-  <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
-  <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>
-  <text x="84" y="798" fill="#1F2733" font-size="24">game-design-brief의 선택 route만 해당 specialist로 순차 handoff합니다.</text>
+  <rect x="52" y="636" width="1296" height="166" rx="14" fill="#F2F6FB" stroke="#C9D8E8" stroke-width="1"/>
+  <text data-text-role="semantic-rail" x="72" y="650" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">skill: orchestrate-game-design-project</tspan></text>
+  <text data-text-role="semantic-rail" x="72" y="664" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">input: canonical-artifact + domain route</tspan><tspan x="72" dy="14">requests</tspan></text>
+  <text data-text-role="semantic-rail" x="72" y="692" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="72" dy="0">outputs: game-design-brief ·</tspan><tspan x="72" dy="14">canonical-artifact</tspan></text>
+  <text data-text-role="semantic-rail" x="710" y="650" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="13" font-weight="400"><tspan x="710" dy="0">next: 9개 route · 첫 경로 define-game-vision</tspan></text>
+  <rect x="52" y="814" width="1296" height="70" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
+  <text data-text-role="footer" x="84" y="838.5" text-anchor="start" dominant-baseline="central" fill="#1F2733" font-size="18" font-weight="400"><tspan x="84" dy="0">game-design-brief의 선택 route만 해당 specialist로 순차</tspan><tspan x="84" dy="23">handoff합니다.</tspan></text>
 </svg>
