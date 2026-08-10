@@ -18,7 +18,11 @@
     "build:guide-diagrams": "node tooling/build-use-case-diagrams.mjs",
     "check:guide-diagrams": "node tooling/build-use-case-diagrams.mjs --check",
     "build:prompt-guides": "node tooling/build-prompt-guides.mjs",
-    "check:prompt-guides": "node tooling/build-prompt-guides.mjs --check"
+    "check:prompt-guides": "node tooling/build-prompt-guides.mjs --check",
+    "validate:archify-catalog": "node tooling/validate-archify-catalog.mjs",
+    "build:curated-archify": "node tooling/build-curated-archify.mjs --stage",
+    "check:curated-archify": "node tooling/build-curated-archify.mjs --check",
+    "publish:curated-archify": "node tooling/build-curated-archify.mjs --publish"
   },
   "engines": { "node": ">=18" }
 }
