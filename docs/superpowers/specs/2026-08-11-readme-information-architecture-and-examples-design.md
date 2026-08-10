@@ -314,20 +314,27 @@ diagram type은 `architecture`를 사용한다. 이 질문은 단계 순서보�
 
 ### 7.2 구성 요소
 
-도식은 최대 12개 primary node와 다음 경계를 사용한다.
+도식은 최대 12개 primary node와 두 개의 독립 interface card를 사용한다. primary node는 실행·승인·보류 경로를, card는 topology를 복잡하게 만들지 않고 설치 계약을 설명한다.
 
 1. Codex App와 Codex CLI 진입점
 2. `game-design-suite` marketplace
-3. Game Design Studio 플러그인 경계
-4. Game Design Career 플러그인 경계
-5. Studio 오케스트레이터와 전문 스킬
-6. Career 오케스트레이터와 전문 스킬
-7. Canonical Artifact와 내용 기준 `content.md`
-8. 근거·결정·manifest 저장 영역
-9. Skillstead·이미지 prompt·생성 후보 시각화 lane
-10. MD·PDF·DOCX·PPTX 내보내기 lane
-11. 자동 validation과 형식별 QA
-12. 이름 있는 사람의 검토·승인과 전달 결과
+3. Game Design Studio 플러그인과 오케스트레이터
+4. Game Design Career 플러그인과 오케스트레이터
+5. Studio Canonical Artifact 저장소
+6. 승인된 Career 공개 증거 후보 저장소
+7. Skillstead·이미지 prompt·생성 후보 시각화 lane
+8. MD·PDF·DOCX·PPTX 내보내기 lane
+9. 자동 validation과 형식별 QA
+10. 실패한 lane의 보류 상태
+11. 이름 있는 사람의 검토·승인
+12. 전달 결과
+
+두 interface card는 다음 의미를 독립적으로 보존한다.
+
+- `전문 스킬 인터페이스`: Studio와 Career가 각 제품 namespace의 오케스트레이터와 전문 스킬을 실행한다.
+- `근거·결정 인터페이스`: Canonical Artifact가 `content.md`, `evidence.yml`, `decisions/`와 manifest를 보존한다.
+
+card는 component를 대체하는 숨은 topology가 아니다. component 경로는 승인 성공, 승인된 Career 증거 인계와 실패 보류·복구 순서를 직접 증명하고, card는 해당 노드가 사용하는 설치 계약을 설명하는 사용자 가시 보조 surface다.
 
 관계는 다음 불변식을 보여 준다.
 

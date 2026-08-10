@@ -369,7 +369,7 @@ Keep total catalog coverage at 612 records by replacing `suite-entry-navigation`
 
 - [ ] **Step 3: Add semantic spec assertions before the spec exists**
 
-Require components for App/CLI, marketplace, Studio, Career, specialist skills, Canonical Artifact, evidence/decisions, visual lane, export lane, automated validation, human approval and delivered result. Require boundaries for Studio, Career, canonical storage and review. Require relationships that prove:
+Require no more than 12 primary components for App/CLI, marketplace, Studio, Career, Studio Canonical Artifact storage, Career evidence candidate storage, visual lane, export lane, automated validation, held lane, human approval and delivered result. Require two independent visible interface cards named `전문 스킬 인터페이스` and `근거·결정 인터페이스`; their items must bind the product namespaces and `content.md`, `evidence.yml`, `decisions/`, manifest contract without masquerading as relationship nodes. Require non-overlapping Studio/Career storage boundaries and a review boundary. Require relationships and all-path guards that prove:
 
 ```text
 App·CLI → marketplace → Studio 또는 Career
@@ -392,7 +392,7 @@ Expected: FAIL because the catalog still contains `suite-entry-navigation` and t
 
 - [ ] **Step 5: Write the first candidate immediately**
 
-Create the candidate with no more than 12 primary components, one clear left-to-right main relationship path and short side branches. Use Korean component names and descriptions. Set `meta.quality_profile` to `showcase`. Define three guided views named `플러그인 경계`, `Artifact와 검증`, `사람 승인`.
+Create the candidate with no more than 12 primary components, exactly the two visible interface cards from Step 3, one clear left-to-right main relationship path and short side branches. Use Korean component names, descriptions and card text. Set `meta.quality_profile` to `showcase`. Define three guided views named `플러그인 경계`, `Artifact와 검증`, `사람 승인`.
 
 - [ ] **Step 6: Validate and repair only diagnosed subjects**
 
