@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { chmod, lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
+import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
 import path from "node:path";
 
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
@@ -15,6 +15,7 @@ import { comparePaths, joinWithin } from "./paths.mjs";
 const CURRENT_STAGE = ".tmp/curated-archify/current";
 const CATALOG = "guides/archify-diagrams/catalog.json";
 const QA_MANIFEST = "guides/archify-diagrams/visual-qa/manifest.json";
+const EXECUTION_CLOSURE = Object.freeze(["bin", "renderers", "schemas", "assets", "scripts", "package.json", "package-lock.json"]);
 
 function isContained(root, candidate) {
   const relative = path.relative(root, candidate);
@@ -35,6 +36,12 @@ function directoryIdentity(stats) {
 
 function sameDirectoryIdentity(left, right) {
   return ["dev", "ino", "mode", "mtimeNs", "ctimeNs"].every((key) => left[key] === right[key]);
+}
+
+function sameMovedDirectoryIdentity(before, after) {
+  return before.dev === after.dev && before.ino === after.ino && before.mode === after.mode
+    // ctime changes on rename on the supported filesystem; mtime must not.
+    && before.mtimeNs === after.mtimeNs;
 }
 
 async function directoryRecord(filename, label, root) {
@@ -113,21 +120,23 @@ async function writeExclusive(filename, bytes, mode = 0o600) {
   return snapshotRegular(filename, "private delivery file");
 }
 
-async function removePinnedTree(record, parent, label) {
-  await assertDirectory(record);
-  await assertDirectory(parent);
+async function removePinnedTree(record, parent, label, hooks) {
   const quarantine = path.join(parent.path, `.${label}-quarantine-${randomUUID()}`);
-  await rename(record.path, quarantine);
-  const quarantined = await directoryRecord(quarantine, `${label} quarantine`, parent.path);
+  const quarantined = await renameDirectory(record, quarantine, parent, `${label} quarantine`, parent.path, hooks);
   await assertDirectory(quarantined);
   await rm(quarantined.path, { recursive: true });
 }
 
-async function renameDirectory(record, target, parent, label, targetRoot = parent.path) {
+async function renameDirectory(record, target, parent, label, targetRoot = parent.path, hooks) {
   await assertDirectory(record);
   await assertDirectory(parent);
   await rename(record.path, target);
-  return directoryRecord(target, label, targetRoot);
+  await invoke(hooks, "after-rename", { source: record.path, target, label });
+  const moved = await directoryRecord(target, label, targetRoot);
+  if (!sameMovedDirectoryIdentity(record.identity, moved.identity)) {
+    throw new AggregateError([new Error(`${label} moved identity mismatch; forensic path: ${moved.path}`)], `${label} rename produced an untrusted forensic tree`);
+  }
+  return moved;
 }
 
 async function invoke(hooks, name, context) {
@@ -180,20 +189,88 @@ async function pinCli(env, options) {
   return snapshot;
 }
 
-async function runCli(cli, args, ancestors, hooks, phase, context) {
+async function copyClosureDirectory(source, destination, sourceRoot, records) {
+  const directory = await directoryRecord(source, "Archify execution closure directory", sourceRoot);
+  await mkdir(destination, { recursive: true, mode: 0o700 });
+  const entries = await readdir(directory.path, { withFileTypes: true });
+  for (const entry of entries.sort((left, right) => comparePaths(left.name, right.name))) {
+    const sourceChild = path.join(directory.path, entry.name);
+    const destinationChild = path.join(destination, entry.name);
+    const relative = path.relative(sourceRoot, sourceChild).split(path.sep).join("/");
+    const stats = await lstat(sourceChild, { bigint: true });
+    if (stats.isSymbolicLink()) throw new Error(`Archify execution closure contains a symlink: ${relative}`);
+    if (stats.isDirectory()) {
+      await copyClosureDirectory(sourceChild, destinationChild, sourceRoot, records);
+    } else if (stats.isFile()) {
+      const sourceSnapshot = await snapshotRegular(sourceChild, "Archify execution closure file");
+      const copySnapshot = await writeExclusive(destinationChild, sourceSnapshot.bytes);
+      if (sourceSnapshot.sha256 !== copySnapshot.sha256 || sourceSnapshot.bytesLength !== copySnapshot.bytesLength) throw new Error(`Archify closure copy mismatch: ${relative}`);
+      records.push(Object.freeze({ relative, source: sourceSnapshot, copy: copySnapshot }));
+    } else {
+      throw new Error(`Archify execution closure has unsupported entry: ${relative}`);
+    }
+  }
+}
+
+async function snapshotExecutionClosure(cliSource, destination) {
+  const sourceRoot = path.dirname(path.dirname(cliSource.path));
+  if (path.basename(path.dirname(cliSource.path)) !== "bin" || path.basename(cliSource.path) !== "archify.mjs") {
+    throw new Error("Task 5 CLI path is outside the fixed Archify execution closure");
+  }
+  const sourceRootRecord = await directoryRecord(sourceRoot, "Archify execution closure root", sourceRoot);
+  await mkdir(destination, { recursive: true, mode: 0o700 });
+  const records = [];
+  for (const relative of EXECUTION_CLOSURE) {
+    const source = path.join(sourceRootRecord.path, relative);
+    const target = path.join(destination, relative);
+    const stats = await lstat(source).catch((error) => error.code === "ENOENT" && relative === "package-lock.json" ? null : Promise.reject(error));
+    if (!stats) continue;
+    if (stats.isSymbolicLink()) throw new Error(`Archify execution closure contains a symlink: ${relative}`);
+    if (stats.isDirectory()) await copyClosureDirectory(source, target, sourceRootRecord.path, records);
+    else if (stats.isFile()) {
+      const sourceSnapshot = await snapshotRegular(source, "Archify execution closure file");
+      const copySnapshot = await writeExclusive(target, sourceSnapshot.bytes);
+      if (sourceSnapshot.sha256 !== copySnapshot.sha256 || sourceSnapshot.bytesLength !== copySnapshot.bytesLength) throw new Error(`Archify closure copy mismatch: ${relative}`);
+      records.push(Object.freeze({ relative, source: sourceSnapshot, copy: copySnapshot }));
+    } else throw new Error(`Archify execution closure has unsupported entry: ${relative}`);
+  }
+  const expected = ["bin/archify.mjs", "package.json"];
+  if (!expected.every((relative) => records.some((record) => record.relative === relative))) throw new Error("Archify execution closure is incomplete");
+  await assertDirectory(sourceRootRecord);
+  for (const record of records) await assertSnapshotCurrent(record.source);
+  const copiedRoot = await directoryRecord(destination, "private Archify execution closure", path.dirname(destination));
+  return Object.freeze({
+    sourceRoot: sourceRootRecord,
+    copiedRoot,
+    manifest: Object.freeze(records.sort((left, right) => comparePaths(left.relative, right.relative))),
+    cli: records.find((record) => record.relative === "bin/archify.mjs").copy,
+  });
+}
+
+async function assertExecutionClosure(closure) {
+  await assertDirectory(closure.copiedRoot);
+  for (const record of closure.manifest) {
+    await assertSnapshotCurrent(record.copy);
+  }
+}
+
+async function runCli(cli, closure, args, ancestors, hooks, phase, context) {
+  await assertExecutionClosure(closure);
   await assertSnapshotCurrent(cli);
   await assertAncestors(ancestors);
   await invoke(hooks, `before-${phase}-spawn`, { ...context, cli: cli.path, assertAncestors: () => assertAncestors(ancestors) });
+  await assertExecutionClosure(closure);
   await assertSnapshotCurrent(cli);
   await assertAncestors(ancestors);
   const result = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [cli.path, ...args], { shell: false, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(process.execPath, [cli.path, ...args], { cwd: closure.copiedRoot.path, shell: false, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = ""; let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; });
     child.stderr.on("data", (chunk) => { stderr += chunk; });
     child.once("error", reject);
     child.once("close", (code, signal) => resolve({ code, signal, stdout, stderr }));
   });
+  await assertExecutionClosure(closure);
   await assertSnapshotCurrent(cli);
   await assertAncestors(ancestors);
   if (result.code !== 0 || result.signal) throw new Error(`Archify ${phase} failed: ${result.stderr || result.signal || result.code}`);
@@ -235,22 +312,19 @@ async function deliverRecord({ root, temp, cliSource, entry, hooks }) {
   const workflowPath = path.join(temp.root, "workflow", entry.id);
   await mkdir(path.join(workflowPath, "exec"), { recursive: true, mode: 0o700 });
   await mkdir(path.join(workflowPath, "output"), { recursive: true, mode: 0o700 });
-  const ancestors = await ancestorRecords(root.path, workflowPath, "delivery workflow");
-  const privateCli = await writeExclusive(path.join(workflowPath, "exec", "archify.mjs"), cliSource.bytes, 0o500);
-  await chmod(privateCli.path, 0o500);
-  const copiedCli = await snapshotRegular(privateCli.path, "private Archify CLI");
-  if (copiedCli.sha256 !== cliSource.sha256 || copiedCli.bytesLength !== cliSource.bytesLength) throw new Error("private Archify CLI copy does not match source pin");
-  await assertSnapshotCurrent(cliSource);
+  const closure = await snapshotExecutionClosure(cliSource, path.join(workflowPath, "exec", "archify"));
+  const copiedCli = await snapshotRegular(closure.cli.path, "private Archify CLI");
   const privateSpec = await writeExclusive(path.join(workflowPath, "exec", "spec.json"), spec.bytes);
   if (privateSpec.sha256 !== spec.sha256) throw new Error("private spec copy does not match committed bytes");
+  const ancestors = await ancestorRecords(root.path, path.join(workflowPath, "exec"), "delivery workflow");
   const html = path.join(workflowPath, "output", `${entry.id}.html`);
   const context = { entry, workflow: workflowPath, html };
-  const validate = await runCli(copiedCli, ["validate", entry.diagram_type, privateSpec.path, "--quality", "showcase", "--json"], ancestors, hooks, "validate", context);
+  const validate = await runCli(copiedCli, closure, ["validate", entry.diagram_type, privateSpec.path, "--quality", "showcase", "--json"], ancestors, hooks, "validate", context);
   bindValidate(validate, entry, privateSpec.path);
   await invoke(hooks, "after-validate", { ...context, cli: cliSource.path, assertAncestors: () => assertAncestors(ancestors) });
   await invoke(hooks, "replace-cli-after-validate", { ...context, cli: cliSource.path });
   await invoke(hooks, "swap-stage-parent-and-restore", { ...context, cli: cliSource.path });
-  const deliver = await runCli(copiedCli, ["deliver", entry.diagram_type, privateSpec.path, html, "--quality", "showcase", "--json"], ancestors, hooks, "deliver", context);
+  const deliver = await runCli(copiedCli, closure, ["deliver", entry.diagram_type, privateSpec.path, html, "--quality", "showcase", "--json"], ancestors, hooks, "deliver", context);
   await invoke(hooks, "after-deliver", context);
   await invoke(hooks, "symlink-delivered-html", context);
   await invoke(hooks, "nondeterministic-deliver", context);
@@ -331,6 +405,25 @@ async function assertExactManagedTree(root, entries, records = []) {
   await compareRecords(root, records);
 }
 
+async function loadPublishedRecords(root, entries) {
+  const records = [];
+  for (const entry of entries) {
+    const spec = await snapshotRegular(joinWithin(root, entry.spec, "published committed Archify spec"), "published committed Archify spec");
+    const artifact = await snapshotRegular(joinWithin(root, entry.html, "published Archify HTML"), "published Archify HTML");
+    const receiptSnapshot = await snapshotRegular(joinWithin(root, entry.receipt, "published Archify receipt"), "published Archify receipt");
+    let receipt;
+    try { receipt = JSON.parse(receiptSnapshot.bytes.toString("utf8")); } catch { throw new Error(`published receipt is invalid JSON: ${entry.id}`); }
+    if (receipt?.schemaVersion !== 1 || receipt.ok !== true || receipt.command !== "deliver"
+      || receipt.type !== entry.diagram_type || receipt.input !== entry.spec || receipt.output !== entry.html
+      || receipt.specification?.sha256 !== spec.sha256 || receipt.specification?.bytes !== spec.bytesLength
+      || receipt.artifact?.sha256 !== artifact.sha256 || receipt.artifact?.bytes !== artifact.bytesLength) {
+      throw new Error(`published receipt does not bind exact managed bytes: ${entry.id}`);
+    }
+    records.push(Object.freeze({ entry, spec, artifact, receipt }));
+  }
+  return records;
+}
+
 async function qaBindings(root, records) {
   if (!records.length) return;
   const manifest = await snapshotRegular(joinWithin(root, QA_MANIFEST, "visual QA manifest"), "visual QA manifest");
@@ -357,24 +450,24 @@ async function stageCommit({ root, temp, catalog, catalogSnapshot, records, hook
   try {
     await validateRecordInputs(records, catalogSnapshot); validateExactStructuralSignatures(catalog, records);
     if (existing) {
-      backup = await renameDirectory(await directoryRecord(currentPath, "current stage", parent.path), path.join(parent.path, `.current-backup-${randomUUID()}`), parent, "stage backup");
+      backup = await renameDirectory(await directoryRecord(currentPath, "current stage", parent.path), path.join(parent.path, `.current-backup-${randomUUID()}`), parent, "stage backup", parent.path, hooks);
       parent = await directoryRecord(parent.path, "stage parent", root.path);
     }
-    current = await renameDirectory(candidate, currentPath, parent, "current stage", root.path);
+    current = await renameDirectory(candidate, currentPath, parent, "current stage", root.path, hooks);
     parent = await directoryRecord(parent.path, "stage parent", root.path);
     await assertExactManagedTree(current.path, records.map((record) => record.entry), records);
     await invoke(hooks, "after-stage-commit", { current: current.path });
   } catch (primary) {
     const rollback = [];
     try {
-      if (current) { await renameDirectory(current, candidatePath, parent, "stage candidate rollback", temp.root); parent = await directoryRecord(parent.path, "stage parent", root.path); }
-      if (backup) await renameDirectory(backup, currentPath, parent, "current stage restore");
+      if (current) { await renameDirectory(current, candidatePath, parent, "stage candidate rollback", temp.root, hooks); parent = await directoryRecord(parent.path, "stage parent", root.path); }
+      if (backup) await renameDirectory(backup, currentPath, parent, "current stage restore", parent.path, hooks);
     } catch (error) { rollback.push(error); }
     if (rollback.length) throw new AggregateError([primary, ...rollback], "stage commit and rollback failed");
     throw primary;
   }
   if (backup) {
-    try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, parent, "current-backup"); }
+    try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, parent, "current-backup", hooks); }
     catch (cleanup) { throw new AggregateError([cleanup], "stage committed but backup cleanup failed"); }
   }
   return current.path;
@@ -393,11 +486,11 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
     await validateRecordInputs(records, catalogSnapshot); await assertSnapshotCurrent(qaSnapshot); validateExactStructuralSignatures(catalog, records);
     if (original) {
       await invoke(hooks, "before-backup-rename", { target: targetPath });
-      backup = await renameDirectory(await directoryRecord(targetPath, "managed publish target", assets.path), path.join(assets.path, `.curated-archify-backup-${randomUUID()}`), assets, "publish backup");
+      backup = await renameDirectory(await directoryRecord(targetPath, "managed publish target", assets.path), path.join(assets.path, `.curated-archify-backup-${randomUUID()}`), assets, "publish backup", assets.path, hooks);
       assets = await directoryRecord(assets.path, "assets parent", root.path);
     }
     await invoke(hooks, "before-publish-rename", { target: targetPath, candidate: candidate.path });
-    published = await renameDirectory(candidate, targetPath, assets, "published managed tree", root.path);
+    published = await renameDirectory(candidate, targetPath, assets, "published managed tree", root.path, hooks);
     assets = await directoryRecord(assets.path, "assets parent", root.path);
     await assertExactManagedTree(published.path, records.map((record) => record.entry), records);
     await invoke(hooks, "after-publish-verification", { target: published.path });
@@ -405,17 +498,17 @@ async function publishCommit({ root, temp, catalog, catalogSnapshot, qaSnapshot,
   } catch (primary) {
     const rollback = [];
     try {
-      if (published) { await renameDirectory(published, candidatePath, assets, "publish rollback candidate", temp.root); assets = await directoryRecord(assets.path, "assets parent", root.path); }
+      if (published) { await renameDirectory(published, candidatePath, assets, "publish rollback candidate", temp.root, hooks); assets = await directoryRecord(assets.path, "assets parent", root.path); }
       if (backup) {
         await invoke(hooks, "before-rollback-restore", { target: targetPath, backup: backup.path });
-        await renameDirectory(backup, targetPath, assets, "publish rollback restore");
+        await renameDirectory(backup, targetPath, assets, "publish rollback restore", assets.path, hooks);
       }
     } catch (error) { rollback.push(error); }
     if (rollback.length) throw new AggregateError([primary, ...rollback], `publication failed and rollback failed: ${primary.message}; ${rollback.map((error) => error.message).join("; ")}`);
     throw primary;
   }
   if (backup) {
-    try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, assets, "publish-backup"); }
+    try { await invoke(hooks, "before-backup-cleanup", { backup: backup.path }); await removePinnedTree(backup, assets, "publish-backup", hooks); }
     catch (cleanup) { throw new AggregateError([cleanup], "publication committed but backup cleanup failed"); }
   }
 }
@@ -448,9 +541,9 @@ export async function checkCuratedArchify({ repoRoot, ids = [], product = null, 
     const stage = path.join(prepared.root.path, CURRENT_STAGE);
     await assertExactManagedTree(stage, prepared.entries, prepared.records);
     const allPublished = publishableArchifyEntries(prepared.catalog);
-    const publishedRecords = prepared.records.filter((record) => allPublished.some((entry) => entry.id === record.entry.id));
+    await assertExactManagedTree(path.join(prepared.root.path, "guides", "assets", "archify"), allPublished);
+    const publishedRecords = await loadPublishedRecords(prepared.root.path, allPublished);
     await qaBindings(prepared.root.path, publishedRecords);
-    await assertExactManagedTree(path.join(prepared.root.path, "guides", "assets", "archify"), allPublished, publishedRecords);
     result = { checked: true, entries: prepared.entries.map((entry) => entry.id) };
   } catch (error) { primary = error; }
   if (!prepared) throw primary;

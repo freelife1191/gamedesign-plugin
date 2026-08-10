@@ -52,6 +52,10 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
   const home = await mkdtemp(path.join(os.tmpdir(), "archify-delivery-home-"));
   t.after(() => rm(home, { recursive: true, force: true }));
   const cli = await write(home, ".agents/skills/archify/bin/archify.mjs", fakeCli());
+  await write(home, ".agents/skills/archify/renderers/shared/resource.mjs", 'export const artifactSuffix = "";\n');
+  await mkdir(path.join(home, ".agents/skills/archify/schemas"), { recursive: true });
+  await mkdir(path.join(home, ".agents/skills/archify/assets"), { recursive: true });
+  await mkdir(path.join(home, ".agents/skills/archify/scripts"), { recursive: true });
   await write(home, ".agents/skills/archify/SKILL.md", "---\nname: archify\n---\n");
   await write(home, ".agents/skills/archify/package.json", '{"version":"2.13.0"}\n');
   return { root, selected, cli, env: { CODEX_HOME: path.join(home, ".missing-codex") }, archifyOptions: { home }, seam };
@@ -61,12 +65,19 @@ function fakeCli() {
   return `#!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
+import { artifactSuffix } from "../renderers/shared/resource.mjs";
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const checks = ["single_svg","finite_svg","orthogonal_arrows","label_route_clearance","relationship_crossings","relationship_corridors","container_border_runs","route_rhythm","legend_clearance"].map((name) => ({ name, ok: true }));
 const [, , command, type, input, output] = process.argv;
 const spec = await readFile(input);
+let stateSuffix = artifactSuffix;
+if (process.env.ARCHIFY_TEST_COUNTER) {
+  const current = Number((await readFile(process.env.ARCHIFY_TEST_COUNTER, "utf8").catch(() => "0")).trim());
+  await writeFile(process.env.ARCHIFY_TEST_COUNTER, String(current + 1));
+  stateSuffix += "-" + current;
+}
 if (command === "validate") console.log(JSON.stringify({ schemaVersion: 1, ok: true, command, type, input, checks, composition: { schemaVersion: 1, profile: "showcase", status: "pass", summary: { errors: 0, warnings: 0 } } }));
-else { const artifact = Buffer.from("<!doctype html><title>verified</title>\\n"); await writeFile(output, artifact); console.log(JSON.stringify({ schemaVersion: 1, ok: true, command, type, input, output, specification: { sha256: sha(spec), bytes: spec.length }, artifact: { sha256: sha(artifact), bytes: artifact.length }, validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "showcase", compositionStatus: "pass" } })); }
+else { const artifact = Buffer.from("<!doctype html><title>verified" + stateSuffix + "</title>\\n"); await writeFile(output, artifact); console.log(JSON.stringify({ schemaVersion: 1, ok: true, command, type, input, output, specification: { sha256: sha(spec), bytes: spec.length }, artifact: { sha256: sha(artifact), bytes: artifact.length }, validation: { checksPassed: 9, checkCount: 9, errors: 0, warnings: 0, compositionProfile: "showcase", compositionStatus: "pass" } })); }
 `;
 }
 
@@ -104,21 +115,72 @@ test("check rejects a stale production managed tree even when no entry is publis
   await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /exact set|stale/i);
 });
 
+test("a scoped check still verifies every published receipt and artifact binding", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  const secondSource = "# Another source\n\n## Another heading\n\nBody.\n";
+  const secondSpec = `${JSON.stringify({ schema_version: 1, diagram_type: "workflow", meta: { title: "다른 검토", quality_profile: "showcase" }, lanes: [{ id: "main", label: "주 경로" }], nodes: [{ id: "start", lane: "main", col: 0, type: "backend", label: "시작" }, { id: "finish", lane: "main", col: 1, type: "backend", label: "종료" }], edges: [{ from: "start", to: "finish" }], mainPath: ["start", "finish"] })}\n`;
+  const catalogPath = path.join(f.root, "guides/archify-diagrams/catalog.json");
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  const second = {
+    ...f.selected, id: "career-id", product: "career", source_document: "guides/second.md", source_section: "Another heading", source_digest: DIGEST(secondSource),
+    question: "무엇이 다른가?", priority: "primary", spec: "guides/archify-diagrams/specs/career/career-id.json",
+    html: "guides/assets/archify/career/career-id.html", receipt: "guides/assets/archify/career/career-id.receipt.json",
+    visual_system: "career",
+  };
+  catalog.entries.push(second);
+  await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+  await write(f.root, second.source_document, secondSource);
+  await write(f.root, second.spec, secondSpec);
+  const qaPath = path.join(f.root, "guides/archify-diagrams/visual-qa/manifest.json");
+  const qa = JSON.parse(await readFile(qaPath, "utf8"));
+  qa.entries.push({ id: second.id, reviewer: "reviewer", specification_sha256: DIGEST(secondSpec), artifact_sha256: DIGEST(Buffer.from("<!doctype html><title>verified</title>\n")) });
+  await writeFile(qaPath, `${JSON.stringify(qa)}\n`);
+  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await stageCuratedArchify({ repoRoot: f.root, ids: [f.selected.id], env: f.env, archifyOptions: f.archifyOptions });
+  await writeFile(path.join(f.root, second.html), "corrupted\n");
+  await assert.rejects(() => checkCuratedArchify({
+    repoRoot: f.root, ids: [f.selected.id], env: f.env, archifyOptions: f.archifyOptions,
+  }), /published receipt|managed bytes/u);
+});
+
 test("delivery runs a repo-private CLI copy when the source CLI is replaced after validate", async (t) => {
   const f = await fixture(t);
+  const sentinel = path.join(f.root, "external-sentinel");
+  await writeFile(sentinel, "sentinel-before\n");
   const replacement = `${fakeCli()}\nawait (await import("node:fs/promises")).writeFile(${JSON.stringify(path.join(f.root, "external-sentinel"))}, "executed replacement\\n");\n`;
   await writeFile(`${f.cli}.replacement`, replacement);
   await stageCuratedArchify({
     repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
     __testHooks: { "after-validate": async () => rename(`${f.cli}.replacement`, f.cli) },
   });
-  await assert.rejects(access(path.join(f.root, "external-sentinel")), { code: "ENOENT" });
+  assert.equal(await readFile(sentinel, "utf8"), "sentinel-before\n");
 });
 
-test("delivery rejects validate receipts not bound to the selected diagram type", async (t) => {
+test("a private snapshot of the installed Archify execution closure validates and delivers", async (t) => {
+  const home = process.env.HOME;
+  const installedSpec = path.join(home, ".agents/skills/archify/examples/agent-tool-call.workflow.json");
+  try { await access(installedSpec); } catch { t.skip("installed Archify example is unavailable"); return; }
   const f = await fixture(t);
-  await writeFile(f.cli, fakeCli().replace("command, type, input, checks", 'command, type: "architecture", input, checks'));
-  await assert.rejects(() => stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /receipt type/i);
+  await writeFile(path.join(f.root, f.selected.spec), await readFile(installedSpec));
+  await stageCuratedArchify({
+    repoRoot: f.root,
+    env: { CODEX_HOME: path.join(f.root, ".missing-codex-home") },
+    archifyOptions: { home },
+  });
+  assert.match((await readFile(path.join(f.root, ".tmp/curated-archify/current/studio/stable-id.html"), "utf8")), /<svg\b/u);
+});
+
+test("delivery rejects validate and deliver receipts not bound to exact type, input, and output", async (t) => {
+  for (const [needle, replacement, expected] of [
+    ["command, type, input, checks", 'command, type: "architecture", input, checks', /receipt type/i],
+    ["command, type, input, checks", 'command, type, input: "wrong-input", checks', /receipt input/i],
+    ["command, type, input, output, specification", 'command, type, input, output: "wrong-output", specification', /receipt output/i],
+  ]) {
+    const f = await fixture(t);
+    await writeFile(f.cli, fakeCli().replace(needle, replacement));
+    await assert.rejects(() => stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), expected);
+  }
 });
 
 test("commit refuses source or spec bytes changed after delivery", async (t) => {
@@ -182,10 +244,17 @@ test("a delivered HTML symlink is rejected", async (t) => {
   }), /regular non-symlink/u);
 });
 
-test("check rejects deterministic fresh re-delivery drift", async (t) => {
+test("check rejects a fresh re-delivery drift from stateful identical private CLI snapshots", async (t) => {
   const f = await fixture(t);
+  const counter = path.join(f.root, "delivery-counter");
+  await writeFile(counter, "0");
+  const prior = process.env.ARCHIFY_TEST_COUNTER;
+  process.env.ARCHIFY_TEST_COUNTER = counter;
+  t.after(() => {
+    if (prior === undefined) delete process.env.ARCHIFY_TEST_COUNTER;
+    else process.env.ARCHIFY_TEST_COUNTER = prior;
+  });
   await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
-  await writeFile(f.cli, fakeCli().replace("verified", "verified-different"));
   await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /bytes drift/u);
 });
 
@@ -196,6 +265,23 @@ test("backup rename refuses a target replaced by a symlink and preserves the old
     __testHooks: { "before-backup-rename": async ({ target }) => { const parked = `${target}.parked`; await rename(target, parked); await symlink(path.join(f.root, "README.md"), target); await rm(target); await rename(parked, target); } },
   }));
   await assertOldTree(f);
+});
+
+test("a publish target swapped after rename is preserved for forensics and never committed", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-rename": async ({ source, target, label }) => {
+      if (label !== "publish backup") return;
+      const parked = `${target}.parked`;
+      await rename(target, parked);
+      await mkdir(target);
+      await rename(parked, source);
+    } },
+  }), /moved identity mismatch|forensic/u);
+  await assertOldTree(f);
+  const siblings = await readdir(path.join(f.root, "guides/assets"));
+  assert.ok(siblings.some((name) => name.startsWith(".curated-archify-backup-")));
 });
 
 test("publish rename failure restores exact prior bytes", async (t) => {
@@ -227,6 +313,24 @@ test("successful commit survives a temporary cleanup identity failure", async (t
   assert.equal((await readFile(path.join(f.root, "guides/assets/archify/studio/stable-id.html"))).toString(), "<!doctype html><title>verified</title>\n");
 });
 
+test("a primary transaction failure and a temp cleanup identity failure retain ordered causes", async (t) => {
+  const f = await fixture(t);
+  let failure;
+  try {
+    await stageCuratedArchify({
+      repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+      __testHooks: {
+        "after-validate": async () => writeFile(path.join(f.root, "README.md"), "changed\n"),
+        "before-temp-cleanup": async ({ temp }) => { const parked = `${temp}.parked`; await rename(temp, parked); await symlink(path.join(f.root, "README.md"), temp); },
+      },
+    });
+  } catch (error) { failure = error; }
+  assert.ok(failure instanceof AggregateError);
+  assert.equal(failure.errors.length, 2);
+  assert.match(failure.errors[0].message, /pinned input changed/u);
+  assert.match(failure.errors[1].message, /identity changed|cleanup/u);
+});
+
 test("partial backup cleanup failure keeps the new canonical tree", async (t) => {
   const f = await fixture(t, { status: "passed", visual: "passed" }); await oldManagedTree(f);
   await assert.rejects(() => publishCuratedArchify({
@@ -247,7 +351,10 @@ test("restore loss reports both causes and preserves forensic paths", async (t) 
   } catch (error) { failure = error; }
   assert.ok(failure instanceof AggregateError); assert.equal(failure.errors.length, 2);
   const siblings = await readdir(path.join(f.root, "guides/assets"));
-  assert.ok(siblings.some((name) => name.includes("forensic")));
+  const forensic = siblings.find((name) => name.includes("forensic"));
+  assert.ok(forensic);
+  assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "old/one.html"), "utf8"), "old-html\n");
+  assert.equal(await readFile(path.join(f.root, "guides/assets", forensic, "old/one.receipt.json"), "utf8"), "old-receipt\n");
 });
 
 test("failed publication without prior output leaves no new output", async (t) => {
