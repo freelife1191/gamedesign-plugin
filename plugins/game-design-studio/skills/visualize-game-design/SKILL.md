@@ -36,6 +36,12 @@ Proceed only when spatial structure materially improves understanding over conci
 
 Map every generated node, connector, label, date, and numeric annotation to a source locator. Keep illustrative placeholders explicitly non-canonical; never allow illustrative placeholders to become source-derived content through layout, captions, or export.
 
+## Optional Archify structural-diagram route
+
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before authoring. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+
+Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+
 ## Workflow
 
 1. Load `../../references/visualization-presets.json` and select exactly one suitable preset.

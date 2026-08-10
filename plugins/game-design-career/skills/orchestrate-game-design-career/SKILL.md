@@ -38,6 +38,12 @@ Diagnose the career decision before selecting specialist work. Route evidence-ce
 8. Merge findings by `severity`, `evidence-gap-id`, `artifact-section-id`, then `role-priority`. Preserve conflicting recommendations as explicit decisions.
 9. Apply every applicable evidence and responsible-design gate. Missing evidence remains a visible gap and never becomes approval.
 
+## Optional Archify structural-diagram route
+
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before dispatching visualization. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+
+Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+
 ## Output Contract
 
 Return a Career Stage & Goal Brief as the `career-stage-goal` output containing:

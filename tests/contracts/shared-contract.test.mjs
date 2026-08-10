@@ -143,7 +143,7 @@ function assertSessionStartOutput(output) {
   assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
   assert.equal(typeof output.hookSpecificOutput.additionalContext, "string");
   assert.deepEqual(Object.keys(output.capabilities), [
-    "node", "chromium", "soffice", "documents", "pdf", "presentations", "image_generation",
+    "node", "chromium", "soffice", "documents", "pdf", "presentations", "image_generation", "archify",
   ]);
   assertCapability(output.capabilities.node, ["available", "version"]);
   assert.equal(output.capabilities.node.available, true);

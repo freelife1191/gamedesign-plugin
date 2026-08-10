@@ -1976,7 +1976,7 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 118,
+    guides: 119,
     skillGuides: 30,
     templates: 30,
     svg: 90,

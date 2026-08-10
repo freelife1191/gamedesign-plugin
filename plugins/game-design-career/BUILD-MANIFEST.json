@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "80767ceed4ff3c30ba3f0e1bcd4fc93b62c4db09f0333e28326b4d1986721997",
+  "treeSha256": "0fce5ce2147c0c929acd26624ed673879cd8a068d8186af22047da03f302f30b",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "bb69b8e5873ba3e0b598eed23757d5d13e795cb1c7fd45858053318469ce9d6f",
-      "size": 48167
+      "sha256": "1ccdf9bc37be3a48b36c3f62407c5202f5f5eb66924e589b962744283369c81a",
+      "size": 51243
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -1296,8 +1296,8 @@
     },
     {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "a69c0c29e305e09cd273ac67978a2e448ace8af6778a3425b2b956f4b688798b",
-      "size": 12044
+      "sha256": "f12b4cf9f4c56d0b4138cd4e4e77e62c878b3dd82b920f1896e259a980e55e1d",
+      "size": 19947
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1316,8 +1316,8 @@
     },
     {
       "path": "scripts/lib/complete-png-validation.mjs",
-      "sha256": "eebfda1ab740f6739872c54e078cdf864917722dffc5b420e340307b2d2b0f33",
-      "size": 2826
+      "sha256": "fafa95ae9f14e28b05e64f34bf815b8fa69fe00b3c4b9686dd6210833a2eedc8",
+      "size": 2995
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
@@ -1451,8 +1451,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-career/SKILL.md",
-      "sha256": "e587001fc4c83aa12e3321196d5a3be8f5c1dc63ce1319718afa778c7fc19e51",
-      "size": 4485
+      "sha256": "0deec7f2bfb6d5cd625cf7549f5bd85426698ab0c7062767b26c7beb5831ceea",
+      "size": 5339
     },
     {
       "path": "skills/orchestrate-game-design-career/agents/openai.yaml",
@@ -1786,8 +1786,8 @@
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",
-      "sha256": "8f56adf7806feb72b258efa0605d89ffb15c718fa17397ebc0dc56368dfdf0a9",
-      "size": 4754
+      "sha256": "97c010ad63409eb5ce9d609572dbeb90c66106a7c656d0c6dd51066b4490109d",
+      "size": 5592
     },
     {
       "path": "skills/visualize-career-roadmap/agents/openai.yaml",

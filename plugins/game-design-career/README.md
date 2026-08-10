@@ -4,6 +4,55 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 
 플러그인은 14개 워크플로 스킬, 일반 역할 7개와 이미지 전문 역할 2개, 15개 Canonical Artifact 템플릿, 13개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. vendored Skillstead를 포함한 설치 스킬은 15개입니다.
 
+## 대표 작업 경로
+
+| 목표 | 시작 스킬 |
+| --- | --- |
+| 직무 탐색·학습 | `map-game-design-career` |
+| 역기획 | `reverse-engineer-game-design` |
+| 포트폴리오 | `build-game-design-portfolio` |
+| 면접·성장·전환 | `practice-game-design-interview` 또는 `plan-junior-growth` |
+
+### 직무 탐색·학습
+
+#### 준비 입력
+
+- 현재 경험, 목표 역할, 공개 가능한 관찰과 멘토
+
+#### 연결 흐름
+
+- `map-game-design-career` → `build-game-design-portfolio` → `plan-junior-growth`
+
+#### 예상 결과
+
+- 최소: `game-design-role-map`, `competency-matrix`, `learning-roadmap`
+- 선택: 공개 가능한 evidence summary와 다음 proof task
+- 확장: 검토자가 확인한 Career Artifact
+
+#### 사람 검토
+
+- 사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류
+
+### 역기획·포트폴리오·면접
+
+#### 준비 입력
+
+- `evidence ID`, 관찰 범위, 개인 기여, 권리 검토자와 feedback owner
+
+#### 연결 흐름
+
+- `reverse-engineer-game-design` 또는 `build-game-design-portfolio` → `review-game-design-portfolio` → 필요 시 면접·내보내기
+
+#### 예상 결과
+
+- 최소: `reverse-design-document`, `creative-design-portfolio`, `five-axis-review`, `interview-question-answer-log`
+- 선택: timestamp 관찰, review queue, 발표 질문과 도식·export 준비 상태
+- 확장: public-rights review와 사람 피드백을 거친 portfolio 또는 성장 evidence package
+
+#### 사람 검토
+
+- 작성자, 멘토·manager·career reviewer, portfolio reviewer와 public-rights reviewer가 claim·asset·공개 범위와 다음 task를 결정
+
 ## 활용 시작점
 
 취업 준비 학생, 주니어, 직무 전환자와 멘토는 현재 근거와 원하는 한 가지 결과를 먼저 적습니다. 여러 Career 단계와 산출물이 함께 남거나 우선순위를 정해야 하면 [`orchestrate-game-design-career`](skills/orchestrate-game-design-career/SKILL.md)로 시작합니다. 한 산출물과 입력이 분명하면 아래의 명시적 직접 요청으로 시작합니다. 전체 스킬 경로는 canonical 사례의 순서를 모두 보존하며, 명시적 직접 요청과 혼동하지 않습니다. 18개 사례, 15개 직접 스킬, 18개 FAQ와 33개 도식 쌍은 설치된 skill·template·evidence 경계를 설명하며 합격이나 채용 결과를 보장하지 않습니다.
@@ -19,14 +68,62 @@ Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직
 - **면접** — 대표 요청: `$game-design-career:practice-game-design-interview 공고와 포트폴리오 evidence ID로 기본·후속·반론 질문을 만들어.`; 최소 결과: `interview-question-answer-log`; 선택 결과: feedback cadence, proof task, 도식·export 준비 상태; 확장 결과: public-rights review와 사람 피드백을 거친 성장·전환 evidence package; 사람 검토 경계: 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다.
 - **성장·전환** — 대표 요청: `$game-design-career:plan-junior-growth 최근 프로젝트 사건과 피드백을 목표 역할 요구사항에 연결해.`; 최소 결과: `junior-growth-review`, `transition-readiness`; 선택 결과: current requirement 표본과 다음 review 계획; 확장 결과: 공개·개인 기여 경계를 확인한 성장 설명; 사람 검토 경계: manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다.
 
-| 사례 ID · 제목 · 대상 | 정확한 준비 입력 | 전체 스킬 경로 | 명시적 직접 요청 | 결과 ID · owner · root | 사례 읽는 순서 |
-| --- | --- | --- | --- | --- | --- |
-| `CA-T01` — 시스템 기획 입문 학생 — AUD-01 · AUD-02 | 공개적으로 관찰 가능한 기능 하나, 입력과 결과, 모르는 규칙, 개인 작업 범위와 시스템 기획 멘토를 준비합니다. | $game-design-career:map-game-design-career → $game-design-career:build-game-design-portfolio → $game-design-career:plan-junior-growth | $game-design-career:map-game-design-career artifact=game-design-career/system-student 규칙·상태·예외를 competency-matrix와 learning-roadmap으로 연결해. | `competency-matrix` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/competency-matrix`<br>`learning-roadmap` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/learning-roadmap` | 상태표 → 규칙표 → 반례 → 다음 질문 |
-| `CA-T04` — 경제·밸런스·LiveOps 준비생 — AUD-01 · AUD-02 | 공개적으로 보이는 재화 흐름, source·sink 가정, 이벤트 목적, guardrail, rollback과 검토자를 준비합니다. | $game-design-career:reverse-engineer-game-design → $game-design-career:build-game-design-portfolio → $game-design-career:review-game-design-portfolio | $game-design-career:reverse-engineer-game-design artifact=game-design-career/economy-prep 공개 관찰을 source, sink와 가설로 분리한 game-analysis-report로 정리해. | `portfolio-project-brief` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/portfolio-project-brief`<br>`five-axis-review` ($game-design-career:review-game-design-portfolio) → `game-design-career/<career-id>/five-axis-review` | source·sink → 가설 → guardrail → rollback |
-| `CA-T05` — UI·UX 기획 준비생 — AUD-01 · AUD-02 | 공개 화면, 주요 행동, 오류 상태, focus 순서, 대체 입력 가정과 UX·접근성 검토자를 준비합니다. | $game-design-career:map-game-design-career → $game-design-career:build-game-design-portfolio → $game-design-career:review-game-design-portfolio | $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux-prep 온보딩 한 장면의 오류와 대체 입력을 portfolio-project-brief로 작성해. | `competency-matrix` ($game-design-career:map-game-design-career) → `game-design-career/<career-id>/competency-matrix`<br>`portfolio-project-brief` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/portfolio-project-brief`<br>`five-axis-review` ($game-design-career:review-game-design-portfolio) → `game-design-career/<career-id>/five-axis-review` | 행동 → 오류 → focus → 대체 입력 |
-| `CA-C05` — 관찰 기반 역기획 — AUD-01 · AUD-02 · AUD-03 · AUD-04 · AUD-05 | - 최소 입력: 공개 location, `evidence ID`, 관찰 범위, 개인 기여 경계, 공개·권리 검토자.<br>- 선택 입력: version, timestamp, counterexample, 재관찰 날짜. | $game-design-career:apply-document-quality-profile → $game-design-career:reverse-engineer-game-design → $game-design-career:export-career-documents | $game-design-career:reverse-engineer-game-design artifact=game-design-career/reverse-design EVID-RD-01 관찰을 보존하고 reverse-design-document를 작성해. | `reverse-design-document` ($game-design-career:reverse-engineer-game-design) → `game-design-career/<career-id>/reverse-design-document` | observation evidence ID → inference → proposal → 개인 기여 → public-rights review |
-| `CA-C06` — 창작 기획 포트폴리오 — AUD-02 · AUD-03 · AUD-04 · AUD-05 · AUD-06 | - 최소 입력: 문제, 설계 제약, `evidence ID`, 실제 개인 기여, public-rights review owner.<br>- 선택 입력: feedback, prototype 관찰, 기각한 대안, 공개 목표. | $game-design-career:apply-document-quality-profile → $game-design-career:build-game-design-portfolio → $game-design-career:review-game-design-portfolio | $game-design-career:build-game-design-portfolio artifact=game-design-career/creative-case EVID-CP-01과 개인 기여 경계를 보존해 creative-design-portfolio를 작성해. | `portfolio-project-brief` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/portfolio-project-brief`<br>`creative-design-portfolio` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/creative-design-portfolio` | evidence ID → observation → inference → proposal → 개인 기여 → public-rights review |
-| `CA-C08` — 면접·주니어 성장·직무 전환 — AUD-03 · AUD-05 · AUD-06 | - 최소 입력: posting 또는 portfolio `evidence ID`, 개인 기여 경계, feedback owner, public-rights review owner.<br>- 선택 입력: target role, reviewAfter, 실험할 proof task, 공개 가능 여부. | $game-design-career:practice-game-design-interview → $game-design-career:plan-junior-growth → $game-design-career:visualize-career-roadmap → $game-design-career:export-career-documents | $game-design-career:practice-game-design-interview artifact=game-design-career/growth-transition EVID-GR-01을 보존하고 interview-question-answer-log와 다음 proof task를 연결해. | `interview-question-answer-log` ($game-design-career:practice-game-design-interview) → `game-design-career/<career-id>/interview-question-answer-log`<br>`junior-growth-review` ($game-design-career:plan-junior-growth) → `game-design-career/<career-id>/junior-growth-review`<br>`transition-readiness` ($game-design-career:plan-junior-growth) → `game-design-career/<career-id>/transition-readiness` | evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback |
+| 대표 사례 | 시작점 |
+| --- | --- |
+| `CA-T01` 시스템 기획 입문 | 아래 개별 사례 카드 |
+| `CA-T04` 경제·밸런스·LiveOps | 아래 개별 사례 카드 |
+| `CA-T05` UI·UX 기획 | 아래 개별 사례 카드 |
+| `CA-C05` 관찰 기반 역기획 | 아래 개별 사례 카드 |
+| `CA-C06` 창작 기획 포트폴리오 | 아래 개별 사례 카드 |
+| `CA-C08` 면접·주니어 성장·직무 전환 | 아래 개별 사례 카드 |
+
+### CA-T01 — 시스템 기획 입문 학생 — AUD-01 · AUD-02
+
+- **준비 입력:** 공개적으로 관찰 가능한 기능 하나, 입력과 결과, 모르는 규칙, 개인 작업 범위와 시스템 기획 멘토를 준비합니다.
+- **전체 스킬 경로:** `$game-design-career:map-game-design-career` → `$game-design-career:build-game-design-portfolio` → `$game-design-career:plan-junior-growth`
+- **직접 요청문:** `$game-design-career:map-game-design-career artifact=game-design-career/system-student 규칙·상태·예외를 competency-matrix와 learning-roadmap으로 연결해.`
+- **결과 ID · owner · root:** `game-design-role-map` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/game-design-role-map`; `competency-matrix` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/competency-matrix`; `learning-roadmap` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/learning-roadmap`
+- **읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문
+
+### CA-T04 — 경제·밸런스·LiveOps 준비생 — AUD-01 · AUD-02
+
+- **준비 입력:** 공개적으로 보이는 재화 흐름, source·sink 가정, 이벤트 목적, guardrail, rollback과 검토자를 준비합니다.
+- **전체 스킬 경로:** `$game-design-career:reverse-engineer-game-design` → `$game-design-career:build-game-design-portfolio` → `$game-design-career:review-game-design-portfolio`
+- **직접 요청문:** `$game-design-career:reverse-engineer-game-design artifact=game-design-career/economy-prep 공개 관찰을 source, sink와 가설로 분리한 game-analysis-report로 정리해.`
+- **결과 ID · owner · root:** `game-analysis-report` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/game-analysis-report`; `portfolio-project-brief` (`$game-design-career:build-game-design-portfolio`) → `game-design-career/<career-id>/portfolio-project-brief`; `five-axis-review` (`$game-design-career:review-game-design-portfolio`) → `game-design-career/<career-id>/five-axis-review`
+- **읽는 순서:** source·sink → 가설 → guardrail → rollback
+
+### CA-T05 — UI·UX 기획 준비생 — AUD-01 · AUD-02
+
+- **준비 입력:** 공개 화면, 주요 행동, 오류 상태, focus 순서, 대체 입력 가정과 UX·접근성 검토자를 준비합니다.
+- **전체 스킬 경로:** `$game-design-career:map-game-design-career` → `$game-design-career:build-game-design-portfolio` → `$game-design-career:review-game-design-portfolio`
+- **직접 요청문:** `$game-design-career:build-game-design-portfolio artifact=game-design-career/uiux-prep 온보딩 한 장면의 오류와 대체 입력을 portfolio-project-brief로 작성해.`
+- **결과 ID · owner · root:** `competency-matrix` (`$game-design-career:map-game-design-career`) → `game-design-career/<career-id>/competency-matrix`; `portfolio-project-brief` (`$game-design-career:build-game-design-portfolio`) → `game-design-career/<career-id>/portfolio-project-brief`; `five-axis-review` (`$game-design-career:review-game-design-portfolio`) → `game-design-career/<career-id>/five-axis-review`
+- **읽는 순서:** 행동 → 오류 → focus → 대체 입력
+
+### CA-C05 — 관찰 기반 역기획 — AUD-01 · AUD-02 · AUD-03 · AUD-04 · AUD-05
+
+- **준비 입력:** 최소 입력: 공개 location, `evidence ID`, 관찰 범위, 개인 기여 경계, 공개·권리 검토자; - 선택 입력: version, timestamp, counterexample, 재관찰 날짜.
+- **전체 스킬 경로:** `$game-design-career:apply-document-quality-profile` → `$game-design-career:reverse-engineer-game-design` → `$game-design-career:export-career-documents`
+- **직접 요청문:** `$game-design-career:reverse-engineer-game-design artifact=game-design-career/reverse-design EVID-RD-01 관찰을 보존하고 reverse-design-document를 작성해.`
+- **결과 ID · owner · root:** `reverse-design-document` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/reverse-design-document`; `game-analysis-report` (`$game-design-career:reverse-engineer-game-design`) → `game-design-career/<career-id>/game-analysis-report`
+- **읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review
+
+### CA-C06 — 창작 기획 포트폴리오 — AUD-02 · AUD-03 · AUD-04 · AUD-05 · AUD-06
+
+- **준비 입력:** 최소 입력: 문제, 설계 제약, `evidence ID`, 실제 개인 기여, public-rights review owner; - 선택 입력: feedback, prototype 관찰, 기각한 대안, 공개 목표.
+- **전체 스킬 경로:** `$game-design-career:apply-document-quality-profile` → `$game-design-career:build-game-design-portfolio` → `$game-design-career:review-game-design-portfolio`
+- **직접 요청문:** `$game-design-career:build-game-design-portfolio artifact=game-design-career/creative-case EVID-CP-01과 개인 기여 경계를 보존해 creative-design-portfolio를 작성해.`
+- **결과 ID · owner · root:** `portfolio-project-brief` (`$game-design-career:build-game-design-portfolio`) → `game-design-career/<career-id>/portfolio-project-brief`; `creative-design-portfolio` (`$game-design-career:build-game-design-portfolio`) → `game-design-career/<career-id>/creative-design-portfolio`
+- **읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review
+
+### CA-C08 — 면접·주니어 성장·직무 전환 — AUD-03 · AUD-05 · AUD-06
+
+- **준비 입력:** 최소 입력: posting 또는 portfolio `evidence ID`, 개인 기여 경계, feedback owner, public-rights review owner; - 선택 입력: target role, reviewAfter, 실험할 proof task, 공개 가능 여부.
+- **전체 스킬 경로:** `$game-design-career:practice-game-design-interview` → `$game-design-career:plan-junior-growth` → `$game-design-career:visualize-career-roadmap` → `$game-design-career:export-career-documents`
+- **직접 요청문:** `$game-design-career:practice-game-design-interview artifact=game-design-career/growth-transition EVID-GR-01을 보존하고 interview-question-answer-log와 다음 proof task를 연결해.`
+- **결과 ID · owner · root:** `interview-question-answer-log` (`$game-design-career:practice-game-design-interview`) → `game-design-career/<career-id>/interview-question-answer-log`; `junior-growth-review` (`$game-design-career:plan-junior-growth`) → `game-design-career/<career-id>/junior-growth-review`; `transition-readiness` (`$game-design-career:plan-junior-growth`) → `game-design-career/<career-id>/transition-readiness`
+- **읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback
 
 각 결과는 원본과 evidence를 먼저 읽고, 이미지·도식·MD/PDF/DOCX/PPTX 같은 파생 결과는 capability와 사람 검토가 갖춰진 뒤에만 확인합니다. `IMAGE_GEN_MODE`는 계획·provider 경로를 고를 뿐 이미지 권리·품질 승인이나 공개 권한을 대신하지 않습니다.
 

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
-import { access, lstat, readdir, realpath } from 'node:fs/promises';
+import { access, lstat, open, readFile, readdir, realpath } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
-import { delimiter, isAbsolute, join, resolve, win32 as pathWin32 } from 'node:path';
+import { delimiter, isAbsolute, join, relative, resolve, sep, win32 as pathWin32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { loadImageConfig, toPublicImageConfig } from './validate-image-config.mjs';
@@ -258,7 +259,210 @@ export async function probeImageGenerationCapability(env = process.env, { lstatF
   return { status: 'unavailable' };
 }
 
-export async function probeCapabilities({ platform = process.platform, env = process.env } = {}) {
+function parseArchifyVersion(source) {
+  let metadata;
+  try {
+    metadata = JSON.parse(source);
+  } catch {
+    return null;
+  }
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata) || typeof metadata.version !== 'string') return null;
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/u.exec(metadata.version);
+  if (!match) return null;
+  const prerelease = match[4]?.split('.') ?? [];
+  if (prerelease.some((identifier) => /^\d+$/u.test(identifier) && identifier.length > 1 && identifier.startsWith('0'))) return null;
+  return {
+    version: metadata.version,
+    major: BigInt(match[1]),
+    minor: BigInt(match[2]),
+    patch: BigInt(match[3]),
+    prerelease,
+  };
+}
+
+function supportedArchifyVersion(version) {
+  if (version.major !== 2n) return false;
+  if (version.minor > 13n) return true;
+  if (version.minor < 13n) return false;
+  if (version.patch > 0n) return true;
+  return version.prerelease.length === 0;
+}
+
+function containedIn(base, candidate) {
+  const pathFromBase = relative(base, candidate);
+  return pathFromBase === '' || (!pathFromBase.startsWith(`..${sep}`) && pathFromBase !== '..' && !isAbsolute(pathFromBase));
+}
+
+function pinnedCliStats(stats) {
+  return stats?.isFile?.() && !stats.isSymbolicLink() && typeof stats.dev === 'bigint' && typeof stats.ino === 'bigint'
+    && typeof stats.size === 'bigint' && typeof stats.mtimeNs === 'bigint' && typeof stats.ctimeNs === 'bigint';
+}
+
+function samePinnedCliStats(left, right) {
+  return pinnedCliStats(left) && pinnedCliStats(right) && left.dev === right.dev && left.ino === right.ino
+    && left.size === right.size && left.mtimeNs === right.mtimeNs && left.ctimeNs === right.ctimeNs;
+}
+
+async function inspectArchifyPath(path, expectedType, { lstatFn, accessFn, realpathFn, base }) {
+  try {
+    const stats = await lstatFn(path);
+    if (stats.isSymbolicLink() || (expectedType === 'file' ? !stats.isFile() : !stats.isDirectory())) return { status: 'unknown' };
+    await accessFn(path, expectedType === 'directory' ? constants.R_OK | constants.X_OK : constants.R_OK);
+    const canonical = await realpathFn(path);
+    if (base && !containedIn(base, canonical)) return { status: 'unknown' };
+    return { status: 'available', canonical };
+  } catch (error) {
+    return { status: isAbsentPathError(error) ? 'unavailable' : 'unknown' };
+  }
+}
+
+async function inspectArchifyCandidate(base, components, { lstatFn, accessFn, readFileFn, realpathFn }) {
+  const inspectedBase = await inspectArchifyPath(base, 'directory', {
+    lstatFn, accessFn, realpathFn, base: null,
+  });
+  if (inspectedBase.status !== 'available') {
+    return inspectedBase.status === 'unavailable' ? { status: 'unavailable', candidateAbsent: true } : inspectedBase;
+  }
+
+  let currentPath = inspectedBase.canonical;
+  let packagePath;
+  let cliPath;
+  for (const [name, expectedType, allowsCandidateAbsence] of components) {
+    const inspected = await inspectArchifyPath(join(currentPath, name), expectedType, {
+      lstatFn, accessFn, realpathFn, base: inspectedBase.canonical,
+    });
+    if (inspected.status !== 'available') {
+      if (inspected.status === 'unavailable' && allowsCandidateAbsence) return { status: 'unavailable', candidateAbsent: true };
+      return { status: 'unknown' };
+    }
+    if (name === 'package.json') packagePath = inspected.canonical;
+    if (name === 'archify.mjs') cliPath = inspected.canonical;
+    if (expectedType === 'directory') currentPath = inspected.canonical;
+  }
+  let packageJson;
+  try {
+    packageJson = await readFileFn(packagePath, 'utf8');
+  } catch {
+    return { status: 'unknown' };
+  }
+  const version = parseArchifyVersion(packageJson);
+  if (!version) return { status: 'unknown' };
+  if (!supportedArchifyVersion(version)) return { status: 'unavailable' };
+  return {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: version.version,
+    cliPath,
+    cliBase: inspectedBase.canonical,
+  };
+}
+
+async function inspectConfiguredArchifyCandidates(env = process.env, {
+  home = homedir(),
+  lstatFn = lstat,
+  accessFn = access,
+  readFileFn = readFile,
+  realpathFn = realpath,
+} = {}) {
+  const codexHome = safeAbsoluteCandidate(env.CODEX_HOME) ?? join(home, '.codex');
+  const candidates = [
+    [codexHome, [
+      ['skills', 'directory', true],
+      ['archify', 'directory', true],
+      ['SKILL.md', 'file', false],
+      ['package.json', 'file', false],
+      ['bin', 'directory', false],
+      ['archify.mjs', 'file', false],
+    ]],
+    [home, [
+      ['.agents', 'directory', true],
+      ['skills', 'directory', true],
+      ['archify', 'directory', true],
+      ['SKILL.md', 'file', false],
+      ['package.json', 'file', false],
+      ['bin', 'directory', false],
+      ['archify.mjs', 'file', false],
+    ]],
+  ];
+  for (const [base, components] of candidates) {
+    const result = await inspectArchifyCandidate(base, components, { lstatFn, accessFn, readFileFn, realpathFn });
+    if (result.status === 'unavailable' && result.candidateAbsent) continue;
+    if (result.status === 'available') return result;
+    return { status: result.status };
+  }
+  return { status: 'unavailable' };
+}
+
+export async function resolveArchifyInstallation(env = process.env, options = {}) {
+  const {
+    lstatFn = lstat,
+    openFn = open,
+    readFileFn = readFile,
+    realpathFn = realpath,
+  } = options;
+  const result = await inspectConfiguredArchifyCandidates(env, options);
+  if (result.status !== 'available') return { status: result.status };
+
+  let handle;
+  let bytes;
+  let beforeStats;
+  let afterStats;
+  let pathnameStats;
+  let finalPathnameStats;
+  let firstCanonical;
+  let canonical;
+  let failure;
+  try {
+    handle = await openFn(result.cliPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+    beforeStats = await handle.stat({ bigint: true });
+    bytes = await handle.readFile();
+    afterStats = await handle.stat({ bigint: true });
+    firstCanonical = await realpathFn(result.cliPath);
+    pathnameStats = await lstatFn(result.cliPath, { bigint: true });
+    canonical = await realpathFn(result.cliPath);
+    // The final pathname operation is lstat: no later pathname lookup can
+    // replace the regular file after its canonical path has been checked.
+    finalPathnameStats = await lstatFn(result.cliPath, { bigint: true });
+    if (!Buffer.isBuffer(bytes) || !samePinnedCliStats(beforeStats, afterStats) || !samePinnedCliStats(beforeStats, pathnameStats)
+      || !samePinnedCliStats(beforeStats, finalPathnameStats)
+      || beforeStats.size !== BigInt(bytes.byteLength) || firstCanonical !== canonical || !containedIn(result.cliBase, canonical)) {
+      failure = new Error('Archify CLI identity changed while it was read.');
+    }
+  } catch (error) {
+    failure = error;
+  }
+  if (handle) {
+    try {
+      await handle.close();
+    } catch (error) {
+      failure = failure ? new AggregateError([failure, error], 'Archify CLI inspection and close both failed.') : error;
+    }
+  }
+  if (failure) {
+    return { status: 'unknown' };
+  }
+  return {
+    status: 'available',
+    provider: result.provider,
+    version: result.version,
+    cli: Object.freeze({
+      path: result.cliPath,
+      realpath: canonical,
+      dev: beforeStats.dev,
+      ino: beforeStats.ino,
+      size: beforeStats.size,
+      sha256: createHash('sha256').update(bytes).digest('hex'),
+    }),
+  };
+}
+
+export async function probeArchifyCapability(env = process.env, options = {}) {
+  const result = await resolveArchifyInstallation(env, options);
+  if (result.status !== 'available') return result;
+  return { status: result.status, provider: result.provider, version: result.version };
+}
+
+export async function probeCapabilities({ platform = process.platform, env = process.env, home = homedir() } = {}) {
   const capabilities = {
     node: { available: true, version: process.versions.node },
     chromium: await probeChromium({ platform, env }),
@@ -267,6 +471,7 @@ export async function probeCapabilities({ platform = process.platform, env = pro
     pdf: await findBundledSkill('pdf', env),
     presentations: await findBundledSkill('presentations', env),
     image_generation: await probeImageGenerationCapability(env),
+    archify: await probeArchifyCapability(env, { home }),
   };
   const warnings = [];
   for (const name of ['chromium', 'soffice', 'documents', 'pdf', 'presentations']) {

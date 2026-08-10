@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "5f421054b04108b2c4a66d10825dec981cd7915c905dc858278d956efacb5b4a",
+  "treeSha256": "369cfa8e7fef5ed56f4796faab00086d8c1198a5a545d4aa09953f832b276c34",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "d1999968be088107a7d35e448c974cd0b89eca5bafdfc817b225f38e349a7da9",
-      "size": 49785
+      "sha256": "fa78eb5fcff008d7906e85b794349f508cfc8017d8358223c670a1ed69f380c1",
+      "size": 57578
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -1301,8 +1301,8 @@
     },
     {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "a69c0c29e305e09cd273ac67978a2e448ace8af6778a3425b2b956f4b688798b",
-      "size": 12044
+      "sha256": "f12b4cf9f4c56d0b4138cd4e4e77e62c878b3dd82b920f1896e259a980e55e1d",
+      "size": 19947
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1321,8 +1321,8 @@
     },
     {
       "path": "scripts/lib/complete-png-validation.mjs",
-      "sha256": "eebfda1ab740f6739872c54e078cdf864917722dffc5b420e340307b2d2b0f33",
-      "size": 2826
+      "sha256": "fafa95ae9f14e28b05e64f34bf815b8fa69fe00b3c4b9686dd6210833a2eedc8",
+      "size": 2995
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
@@ -1496,8 +1496,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "b8f4fb717d514a9b0d0e9159bc8b9438ef9d39ee7d9d39868c779b6ec5fe1e9f",
-      "size": 2875
+      "sha256": "ad42a800902e414c0ee1ad3a0c95cc6d90cac1d3fd99e28c237c835b15c1e275",
+      "size": 3729
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",
@@ -1826,8 +1826,8 @@
     },
     {
       "path": "skills/visualize-game-design/SKILL.md",
-      "sha256": "55a508028ceaf33edd060f4a76730e270ad07322e9604a9ffa3e57c5143a6367",
-      "size": 5695
+      "sha256": "39b323cabf4acd50170d8700bb4bcb9d117f539147fa0d11ef0516d878b4ca12",
+      "size": 6533
     },
     {
       "path": "skills/visualize-game-design/agents/openai.yaml",
