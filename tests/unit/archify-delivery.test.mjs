@@ -171,6 +171,24 @@ test("stage and check commit exact empty managed sets when every selected entry 
   assert.deepEqual((await checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
 });
 
+test("publication atomically commits an exact empty managed tree when no entry passed", async (t) => {
+  const f = await fixture(t, { status: "auto-validated" });
+  const catalogPath = path.join(f.root, "guides/archify-diagrams/catalog.json");
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  catalog.entries[0] = {
+    ...catalog.entries[0],
+    delivery_status: "blocked-validation",
+    visual_review: "not-applicable",
+    reviewer: null,
+    diagnostics: [{ code: "showcase-failed", subject: "stable-id", evidence: "1 error", attempted_fix: "none", round: 2, remaining_error: "blocked" }],
+  };
+  await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+
+  assert.deepEqual((await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
+  assert.deepEqual(await readdir(path.join(f.root, "guides/assets/archify")), []);
+  assert.deepEqual((await checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
+});
+
 test("check rejects a stale production managed tree even when no entry is publishable", async (t) => {
   const f = await fixture(t);
   let closureCopies = 0;

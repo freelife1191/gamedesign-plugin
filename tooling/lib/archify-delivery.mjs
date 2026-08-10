@@ -619,6 +619,7 @@ async function qaBindings(root, records, catalog, hooks = {}) {
 }
 
 async function assertQaSnapshotCurrent(snapshot) {
+  if (!snapshot) return;
   await assertAncestors(snapshot.ancestors);
   for (const records of snapshot.renderAncestors) await assertAncestors(records);
   await assertSnapshotCurrent(snapshot.manifest);

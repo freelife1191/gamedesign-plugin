@@ -2,6 +2,10 @@
 
 Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존하는 Canonical Artifact(기준 작업 폴더)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
+## Curated Archify 상태
+
+[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Studio 후보의 검증 상태와 재시도 경계를 확인합니다. 현재 공개된 Archify diagram은 **0개**이므로 이 README에는 Archify HTML 결과물 링크가 없습니다.
+
 ## 작업 규모와 결과
 
 | 목표 규모 | 권장 시작 | 예상 결과 | 다음 문서 |

@@ -63,3 +63,30 @@ node tooling/validate-archify-catalog.mjs --json
 - `excluded-package-mirror`: plugins 배포 mirror
 
 catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 inventory만으로 어떤 diagram의 존재나 사람 승인을 주장하지 않습니다.
+
+## Published diagrams
+
+**0개 (없음).** 현재 `published`이고 `visual_review: passed`인 항목이 없으므로, `guides/assets/archify/`의 공개 HTML·receipt와 사용자 가이드의 Archify 결과물 링크도 없습니다. 차단 또는 실패한 렌더는 아래 상태와 증거를 검토하기 위한 기록일 뿐 공개 결과물이 아닙니다.
+
+## Blocked diagrams
+
+### `studio-project-workflow`
+
+- 제품·유형·상태: `studio` · `workflow` · `blocked-validation` (`visual_review: not-applicable`)
+- 이유: `image_asset_review -> format_qa_export` 경로가 `resume_context`를 통과하고, `image_asset_review -> resume_context` 라벨이 노드와 겹칩니다. 대안 배치는 각각 오류 수를 늘렸습니다.
+- 명세: [Studio workflow spec](specs/studio/studio-project-workflow.json) · 진단 증거: [catalog 진단 ledger](catalog.json)
+- 재시도 경계: 현재 3회 검증 수정으로 최선 후보를 복원했습니다. topology를 다시 저작해 두 validation 진단을 모두 해소한 뒤에만 validate와 시각 검토를 다시 시작합니다.
+
+### `career-evidence-workflow`
+
+- 제품·유형·상태: `career` · `workflow` · `blocked-visual` (`visual_review: failed`)
+- 이유: 2차 원본 크기 렌더에도 rail label 줄임표, career-routes 프레임 crop, 검토 주석 충돌이 남았습니다.
+- 명세: [Career workflow spec](specs/career/career-evidence-workflow.json) · 시각 QA 증거: [실패 artifact](visual-qa/failed-artifacts/career/career-evidence-workflow.html) · [QA manifest](visual-qa/manifest.json)
+- 재시도 경계: 허용된 2회 보정이 끝났습니다. label·frame·clearance를 다시 저작하고 모든 뷰를 재렌더한 새 QA 기록이 생긴 뒤에만 시각 검토를 재시도합니다.
+
+### `suite-studio-career-handoff`
+
+- 제품·유형·상태: `suite` · `dataflow` · `blocked-visual` (`visual_review: failed`)
+- 이유: 2차 held-review focus에도 Studio 경계와 Career input·Receipt node border가 프레임 밖으로 잘립니다.
+- 명세: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · 검증 증거: [final validation receipt](validation-evidence/suite-studio-career-handoff/final.receipt.json) · 시각 QA 증거: [실패 artifact](visual-qa/failed-artifacts/suite/suite-studio-career-handoff.html) · [QA manifest](visual-qa/manifest.json)
+- 재시도 경계: 허용된 2회 보정이 끝났습니다. focus 경계와 노드 여백을 재저작하고 모든 뷰 재렌더·QA를 통과한 새 증거가 생긴 뒤에만 시각 검토를 재시도합니다.

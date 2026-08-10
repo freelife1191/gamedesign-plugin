@@ -15,6 +15,10 @@
 - [Studio 목적별 레시피 6개](game-design-studio/README.md#목적별-레시피)
 - [Game Design Career 가이드](game-design-career/README.md)
 
+## Curated Archify 상태
+
+[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 Archify diagram은 **0개**이므로 이 가이드는 HTML 결과물로 연결하지 않습니다.
+
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
 
 ## 목표에서 다음 문서까지
