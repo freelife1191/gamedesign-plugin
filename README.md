@@ -219,6 +219,19 @@ $game-design-career:build-game-design-portfolio
 
 제작용 요청문 목록 (Production catalog)의 대표 카드 18개를 Studio 7개, Career 7개, 연계 4개 순서로 제공합니다. 카드를 열어 입력, 실행 흐름, 결과와 사람 검토 경계를 확인하세요.
 
+#### 빈칸 요청문을 읽는 법
+
+`복사할 요청문`의 빈칸 템플릿은 전체 제작용 요청문 카탈로그 (Production catalog)와
+호환되어야 하므로 고정된 영문 용어를 유지합니다. 다음 뜻으로 읽으면 됩니다.
+
+- `fact, inference, recommendation`: 확인한 사실, 그 사실에서 나온 추론, 아직 결정하지 않은 제안
+- `handoff`: 다음 플러그인이나 작업자에게 넘기는 인계
+- `canonical artifact`: 검토 기준이 되는 기준 결과 폴더
+- `failed image/export blocker`: 실패한 이미지·내보내기를 멈춘 중단 항목
+
+처음 사용하는 사람은 빈칸 템플릿보다 바로 아래 `채운 예시`를 먼저 복사한 뒤,
+프로젝트 이름과 공개 가능한 입력만 바꿔 시작하세요.
+
 [![요청문에서 기획 결과와 다음 요청으로 이어지는 흐름](guides/assets/readme/prompt-to-result-flow.png)](guides/assets/readme/prompt-to-result-flow.svg)
 
 ### Studio 기획 사례 7개
@@ -267,7 +280,8 @@ $game-design-studio:define-game-vision
 $game-design-studio:orchestrate-game-design-project
 $game-design-studio:review-game-design 바람섬-협동RPG 공개 가능한
 플레이테스트 메모
-ST-C01의 사실 (fact), 추론 (inference), 제안 (recommendation)을 분리해.
+ST-C01의 사실 (fact), 추론 (inference), 제안 (recommendation)을
+분리해.
 ```
 
 #### 실행 흐름
@@ -342,7 +356,8 @@ $game-design-studio:design-game-systems
 $game-design-studio:design-player-experience
 $game-design-studio:review-game-design 별빛원정대 4인 협동 전투의
 공개 테스트 규칙
-ST-C02의 사실 (fact), 추론 (inference), 제안 (recommendation)을 분리해.
+ST-C02의 사실 (fact), 추론 (inference), 제안 (recommendation)을
+분리해.
 ```
 
 #### 실행 흐름
@@ -417,7 +432,8 @@ $game-design-studio:design-game-systems
 $game-design-studio:design-player-experience
 $game-design-studio:review-game-design 고대유적-레이드 파티 보상
 규칙의 공개 명세
-ST-C03의 사실 (fact), 추론 (inference), 제안 (recommendation)을 분리해.
+ST-C03의 사실 (fact), 추론 (inference), 제안 (recommendation)을
+분리해.
 ```
 
 #### 실행 흐름
@@ -717,7 +733,8 @@ $game-design-studio:export-game-design-documents [프로젝트 ID] [공개
 fact, inference, recommendation을 분리해.
 
 채운 예시 (App)
-@Game Design Studio 해류도시-협동RPG 핵심 시제품 (vertical slice)의 8주 일정, 3인
+@Game Design Studio 해류도시-협동RPG 핵심 시제품 (vertical slice)의
+8주 일정, 3인
 팀,
 핵심 전투와 최소 이미지 산출물만 공개 가능한 가정으로
 분리해 ST-C08을 작성해.
@@ -890,7 +907,8 @@ $game-design-career:map-game-design-career
 $game-design-career:visualize-career-roadmap
 $game-design-career:export-career-documents 민서-12주 시스템기획의
 역량 격차,
-주차별 증거 과제 (proof task)와 멘토 검토 지점을 CA-C04로 정리해.
+주차별 증거 과제 (proof task)와 멘토 검토 지점을
+CA-C04로 정리해.
 ```
 
 #### 실행 흐름
@@ -1100,7 +1118,8 @@ CA-C07를 작성해.
 채운 예시 (App)
 @Game Design Career 시스템 기획 포트폴리오의
 문제·판단·검증·개인 기여 섹션과
-EVID-SYS-01을 5축으로 점검해 심각도별 (severity) 수정 목록 (backlog)과 발표
+EVID-SYS-01을 5축으로 점검해 심각도별 (severity) 수정 목록
+(backlog)과 발표
 문장을 작성해.
 
 CLI
@@ -1177,7 +1196,8 @@ CA-C08를 작성해.
 채운 예시 (App)
 @Game Design Career 시스템 기획 포트폴리오 EVID-SYS-01과 공고의
 규칙 설계
-요구를 연결해 면접 질문 4개, 정직한 부족점 (honest gap), 다음 4주 성장
+요구를 연결해 면접 질문 4개, 정직한 부족점 (honest gap), 다음 4주
+성장
 과제를 작성해.
 
 CLI
@@ -1604,7 +1624,7 @@ $game-design-studio:export-game-design-documents \
 
 ### [전체 146개 요청문 찾기](guides/prompt-templates/README.md)
 
-사용자 유형, 난이도와 결과를 기준으로 production catalog 전체를 찾을 수 있습니다.
+사용자 유형, 난이도와 결과를 기준으로 제작용 요청문 목록 전체를 찾을 수 있습니다.
 
 ## 스킬별로 바로 실행하기
 
@@ -1769,7 +1789,7 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 렌더러와 시각 품질 �
 ## 플러그인 구조와 전체 시스템 아키텍처
 
 `products/<product>/plugin/`은 사람이 편집하는 원본이고 `plugins/<product>/`는
-표준 빌드가 만드는 생성본 (generated snapshot)입니다. 생성본은 직접 수정하지
+표준 빌드가 만드는 설치용 생성본 (generated snapshot)입니다. 생성본은 직접 수정하지
 않으며, 파일 목록과 무결성 정보 (manifest)는 빌드에서만 갱신합니다.
 
 ### Studio 설치 패키지 구조
@@ -1843,17 +1863,18 @@ generated snapshot: plugins/game-design-career/
 
 ### 경로별 역할과 편집 경계
 
-제품 source를 편집한 뒤 표준 빌드로 generated snapshot을 갱신합니다.
+제품 편집 원본 (source)을 편집한 뒤 표준 빌드로 설치용 생성본 (generated snapshot)을
+갱신합니다.
 
 | 경로 | 확인하는 내용 | 직접 편집 여부 |
 | --- | --- | --- |
 | `.codex-plugin/` | 설치 ID와 metadata | source manifest에서만 편집 |
-| `agents/` | 검토·설계에 참여하는 전문가 | 제품 source에서 편집. [Studio 기술 README](plugins/game-design-studio/README.md), [Career 기술 README](plugins/game-design-career/README.md) 참고 |
-| `skills/` | 직접 호출하는 작업 단위 | 제품 source에서 편집. [Studio 스킬 가이드](guides/game-design-studio/skills/README.md), [Career 스킬 가이드](guides/game-design-career/skills/README.md) 참고 |
-| `assets/templates/` | Canonical Artifact 종류 | 제품 source에서 편집. [Studio 템플릿](guides/game-design-studio/templates.md), [Career 템플릿](guides/game-design-career/templates.md) 참고 |
+| `agents/` | 검토·설계에 참여하는 전문가 | 제품 편집 원본 (source)에서 편집. [Studio 기술 README](plugins/game-design-studio/README.md), [Career 기술 README](plugins/game-design-career/README.md) 참고 |
+| `skills/` | 직접 호출하는 작업 단위 | 제품 편집 원본 (source)에서 편집. [Studio 스킬 가이드](guides/game-design-studio/skills/README.md), [Career 스킬 가이드](guides/game-design-career/skills/README.md) 참고 |
+| `assets/templates/` | 기준 결과 폴더 (Canonical Artifact) 종류 | 제품 편집 원본 (source)에서 편집. [Studio 템플릿](guides/game-design-studio/templates.md), [Career 템플릿](guides/game-design-career/templates.md) 참고 |
 | `references/` | 품질·방법·근거 계약 | 제품 또는 shared source에서 편집 |
 | `scripts/` | 검증·이미지·내보내기 지원 | shared source에서 편집 |
-| `hooks/` | 중단·검토·재개 경계 | 제품 source에서 편집 |
+| `hooks/` | 중단·검토·재개 경계 | 제품 편집 원본 (source)에서 편집 |
 | `BUILD-MANIFEST.json` | 배포 파일과 digest 증거 | 표준 빌드에서만 갱신 |
 
 ### 상황별로 열어볼 Archify 도식 4종
