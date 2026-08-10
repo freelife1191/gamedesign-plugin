@@ -77,6 +77,39 @@ const readmeSkillsteadDiagrams = [
     phrases: ["기획 본문", "검토 근거", "주요 의사결정 기록", "이미지·첨부 자료", "출력 준비표", "이름 있는 사람"],
   },
 ];
+const readmeSkillsteadGraphContracts = new Map([
+  ["prompt-to-result-flow", {
+    nodes: ["plugin-choice", "case-choice", "specialist-skill", "canonical-artifact", "human-review", "next-request-resume"],
+    edges: [
+      ["plugin-choice-to-case-choice", "plugin-choice", "case-choice"],
+      ["case-choice-to-specialist-skill", "case-choice", "specialist-skill"],
+      ["specialist-skill-to-canonical-artifact", "specialist-skill", "canonical-artifact"],
+      ["canonical-artifact-to-human-review", "canonical-artifact", "human-review"],
+      ["human-review-to-next-request-resume", "human-review", "next-request-resume"],
+    ],
+  }],
+  ["skill-agent-collaboration", {
+    nodes: ["request", "specialist-skill", "delegated-roles", "findings-merge", "artifact", "human-review", "resume"],
+    edges: [
+      ["request-to-skill", "request", "specialist-skill"],
+      ["skill-to-delegated-roles", "specialist-skill", "delegated-roles"],
+      ["roles-to-findings", "delegated-roles", "findings-merge"],
+      ["findings-to-artifact", "findings-merge", "artifact"],
+      ["artifact-to-human-review", "artifact", "human-review"],
+      ["findings-to-resume", "findings-merge", "resume"],
+    ],
+  }],
+  ["artifact-review-flow", {
+    nodes: ["content", "evidence", "decisions", "assets", "export-manifest", "human-gate"],
+    edges: [
+      ["content-to-evidence", "content", "evidence"],
+      ["evidence-to-decisions", "evidence", "decisions"],
+      ["decisions-to-assets", "decisions", "assets"],
+      ["assets-to-export-manifest", "assets", "export-manifest"],
+      ["export-manifest-to-human-gate", "export-manifest", "human-gate"],
+    ],
+  }],
+]);
 const skillsteadCheckSvg = path.join(
   root,
   "plugins/game-design-studio/skills/svg-infographic/scripts/check-svg.mjs",
@@ -963,6 +996,45 @@ async function assertRootLinks(markdown) {
   for (const link of visibleMarkdownLinks(markdown)) await validateVisibleLocalLink(readmePath, link, root);
 }
 
+function svgAttribute(tag, name) {
+  return new RegExp(`\\b${escapeRegExp(name)}="([^"]+)"`, "u").exec(tag)?.[1];
+}
+
+function assertReadmeSkillsteadTypography(svgSource, id) {
+  assert.doesNotMatch(svgSource, /\bfont\s*(?::|=)/iu, `${id}: SVG forbids font shorthand bypasses`);
+  const declarations = [
+    ...svgSource.matchAll(/\bfont-size\s*=\s*["']([^"']+)["']/giu),
+    ...svgSource.matchAll(/\bfont-size\s*:\s*([^;}"']+)/giu),
+  ].map((match) => match[1].trim());
+  assert.ok(declarations.length > 0, `${id}: SVG declares explicit font sizes`);
+  for (const value of declarations) {
+    assert.match(value, /^\d+(?:\.\d+)?px$/u, `${id}: every font-size declaration is explicit numeric px`);
+    assert.ok(Number.parseFloat(value) >= 16, `${id}: visible body and caption text is at least 16px`);
+  }
+
+  const sizedClasses = new Set([...svgSource.matchAll(/\.([\w-]+)\{[^}]*\bfont-size\s*:\s*\d+(?:\.\d+)?px/gu)].map((match) => match[1]));
+  for (const tag of svgSource.matchAll(/<(?:text|tspan)\b[^>]*>/gu)) {
+    const classNames = (svgAttribute(tag[0], "class") ?? "").split(/\s+/u).filter(Boolean);
+    const hasExplicitSize = /\bfont-size\s*(?::|=)/iu.test(tag[0]);
+    assert.ok(hasExplicitSize || classNames.some((className) => sizedClasses.has(className)), `${id}: every visible text node has a known explicit size source`);
+  }
+}
+
+function assertReadmeSkillsteadGraph(svgSource, id) {
+  const contract = readmeSkillsteadGraphContracts.get(id);
+  assert.ok(contract, `${id}: graph contract exists`);
+  const nodes = [...svgSource.matchAll(/<g\b[^>]*\bdata-flow-node="([^"]+)"[^>]*>/gu)].map((match) => match[1]);
+  assert.deepEqual(nodes, contract.nodes, `${id}: meaningful node groups are exact and ordered`);
+  assert.equal(new Set(nodes).size, nodes.length, `${id}: flow node IDs are unique`);
+  const edges = [...svgSource.matchAll(/<path\b[^>]*\bdata-flow-edge="([^"]+)"[^>]*\bdata-from="([^"]+)"[^>]*\bdata-to="([^"]+)"[^>]*>/gu)]
+    .map((match) => match.slice(1, 4));
+  assert.deepEqual(edges, contract.edges, `${id}: graph edges are exact and ordered`);
+  for (const [, source, target] of edges) {
+    assert.ok(nodes.includes(source), `${id}: edge source resolves to exactly one node: ${source}`);
+    assert.ok(nodes.includes(target), `${id}: edge target resolves to exactly one node: ${target}`);
+  }
+}
+
 function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
   assert.match(svgSource, /<svg\b[^>]*\bviewBox="0 0 1400 900"/u, `${id}: SVG viewBox is 1400×900`);
   assert.match(svgSource, /<svg\b[^>]*\bwidth="1400"/u, `${id}: SVG width is 1400`);
@@ -976,10 +1048,8 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
   assert.doesNotMatch(svgSource, /\b(?:skewX|skewY|matrix)\s*\(/u, `${id}: SVG forbids skew or matrix transforms`);
   assert.doesNotMatch(svgSource, /\b(?:scaleX|scaleY)\s*\(/u, `${id}: SVG forbids non-uniform scale functions`);
   assert.doesNotMatch(svgSource, /transform\s*:\s*[^;}]*\b(?:matrix|skew|scaleX|scaleY)\b/iu, `${id}: SVG forbids style or class transform bypasses`);
-  assert.doesNotMatch(svgSource, /\bfont\s*:/iu, `${id}: SVG forbids font shorthand bypasses`);
-  for (const match of svgSource.matchAll(/\bfont-size\s*(?::|=)\s*["']?([\d.]+)px/giu)) {
-    assert.ok(Number(match[1]) >= 16, `${id}: visible body and caption text is at least 16px`);
-  }
+  assertReadmeSkillsteadTypography(svgSource, id);
+  assertReadmeSkillsteadGraph(svgSource, id);
   for (const match of svgSource.matchAll(/\bscale\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?\s*\)/gu)) {
     const [, x, y] = match;
     assert.ok(y === undefined || Number(x) === Number(y), `${id}: SVG forbids direct or ancestor non-uniform scale`);
@@ -1051,7 +1121,7 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
     assert.ok(mainFlow.indexOf('data-file-id="export-manifest.yml"') < mainFlow.indexOf('data-human-gate="김기획자"'), `${id}: places the named human gate after export-manifest`);
     assert.match(
       svgSource,
-      /<path\b[^>]*data-flow-edge="export-manifest-to-human-gate"[^>]*data-from="export-manifest.yml"[^>]*data-to="human-gate"/u,
+      /<path\b[^>]*data-flow-edge="export-manifest-to-human-gate"[^>]*data-from="export-manifest"[^>]*data-to="human-gate"/u,
       `${id}: binds export-manifest to the named human gate`,
     );
   }
@@ -1427,6 +1497,8 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
     const compressedText = source.replace("<svg ", '<svg textLength="1" ');
     const directScale = source.replace("<svg ", '<svg transform="scale(1 0.8)" ');
     const styleBypass = source.replace("<style>", "<style>.bypass{transform:scaleX(.8)}");
+    const graph = readmeSkillsteadGraphContracts.get(diagram.id);
+    assert.ok(graph, `${diagram.id}: graph contract exists for mutations`);
     for (const [label, mutated] of [
       ["missing semantic node", missingNode],
       ["reordered semantic nodes", reorderedNode],
@@ -1438,7 +1510,16 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
       ["skew transform", source.replace("<svg ", '<svg transform="skewX(10)" ')],
       ["style transform bypass", styleBypass],
       ["sub-minimum body type", source.replace("font-size:16px", "font-size:15px")],
+      ["unitless font size attribute", source.replace("<svg ", '<svg font-size="15" ')],
+      ["unitless font size declaration", source.replace("font-size:16px", "font-size:15")],
+      ["em font size declaration", source.replace("font-size:16px", "font-size:.8em")],
+      ["calc font size declaration", source.replace("font-size:16px", "font-size:calc(12px)")],
+      ["variable font size declaration", source.replace("font-size:16px", "font-size:var(--tiny)")],
+      ["inherited font size declaration", source.replace("font-size:16px", "font-size:inherit")],
       ["font shorthand bypass", source.replace("<style>", "<style>.bypass{font:12px sans-serif}")],
+      ["dangling edge source", source.replace(/\bdata-from="[^"]+"/u, 'data-from="missing-source"')],
+      ["dangling edge target", source.replace(/\bdata-to="[^"]+"/u, 'data-to="missing-target"')],
+      ["duplicate flow node", source.replace("<!-- main-flow -->", `<g data-flow-node="${graph.nodes[0]}"></g><!-- main-flow -->`)],
     ]) {
       assert.notEqual(mutated, source, `${diagram.id}: ${label} mutation changes source`);
       assertReadmeSkillsteadSourceRejected(mutated, diagram, label);

@@ -55,8 +55,10 @@
     <text x="1265" y="370" class="card-title" fill="var(--rose)" text-anchor="middle" style="font-size:18px">사람 검토</text><text x="1265" y="402" class="small" text-anchor="middle">승인·보류</text><text x="1265" y="424" class="small" text-anchor="middle">결정</text>
   </g>
   <path class="dashed" data-flow-edge="findings-to-resume" data-from="findings-merge" data-to="resume" stroke-dasharray="8 7" d="M912 459V552H377V459"/>
-  <rect x="313" y="570" width="350" height="60" rx="15" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
-  <text x="488" y="593" class="body" text-anchor="middle">보류 이유를 기록하고</text><text x="488" y="616" class="body" text-anchor="middle">필요한 스킬만 다시 실행</text>
+  <g data-flow-node="resume">
+    <rect x="313" y="570" width="350" height="60" rx="15" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
+    <text x="488" y="593" class="body" text-anchor="middle">보류 이유를 기록하고</text><text x="488" y="616" class="body" text-anchor="middle">필요한 스킬만 다시 실행</text>
+  </g>
   <rect x="55" y="720" width="1290" height="105" rx="16" fill="#EAF3FC" stroke="var(--blue)" stroke-width="2"/>
   <text x="88" y="755" class="card-title" fill="var(--blue)">중요한 경계</text><text x="88" y="787" class="body">에이전트는 사용자가 직접 호출하지 않습니다. 전문 스킬이나 오케스트레이터가 위임합니다.</text><text x="88" y="813" class="body">검토 역할은 결과를 자동 승인할 수 없으며, 사람 검토에서 승인·보류를 결정합니다.</text>
 </svg>
