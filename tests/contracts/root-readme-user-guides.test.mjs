@@ -63,6 +63,7 @@ const suiteArchitectureEmbed = {
   alt: "게임 기획 플러그인 모음 전체 시스템 구조",
   png: "guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/readme-preview.png",
   html: "guides/assets/archify/suite/suite-plugin-system-architecture.html",
+  directHtmlLabel: "Archify HTML에서 전체 시스템 구조 열기",
 };
 const verifiedArchifyRoutes = [
   {
@@ -932,6 +933,10 @@ async function assertSuiteArchitectureEmbed(markdown) {
   const readablePreview = architecture.slice(0, previewEnd).replace(/\s+/gu, " ");
   const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.html})`;
   assert.ok(architecture.includes(exactEmbed), "architecture preview keeps the exact PNG-to-HTML relationship");
+  assert.ok(
+    readablePreview.includes(`[${suiteArchitectureEmbed.directHtmlLabel}](${suiteArchitectureEmbed.html})`),
+    "architecture opening area exposes an explicit Archify HTML link beside the clickable preview",
+  );
   assert.match(
     readablePreview,
     /시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계/u,
@@ -960,7 +965,7 @@ async function assertSuiteArchitectureEmbed(markdown) {
   assert.ok(previewContent.foregroundRatio >= 0.07, "architecture README preview gives the guided architecture enough visible occupancy");
   await validateVisibleLocalLink(readmePath, {
     target: suiteArchitectureEmbed.html,
-    label: suiteArchitectureEmbed.alt,
+    label: suiteArchitectureEmbed.directHtmlLabel,
   }, root);
   for (const route of verifiedArchifyRoutes) {
     assert.ok(

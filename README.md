@@ -1858,6 +1858,9 @@ generated snapshot: plugins/game-design-career/
 
 [![게임 기획 플러그인 모음 전체 시스템 구조](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/readme-preview.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
 
+▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html)
+— 확대·축소, 밝은 화면과 어두운 화면, 단계별 집중 보기를 사용할 수 있습니다.
+
 미리보기는 **사람 검토·승인과 보류 후 재개 경로**를 강조합니다. 전체 연결과
 다른 안내 보기는 이미지를 클릭해 HTML에서 확인하세요.
 
