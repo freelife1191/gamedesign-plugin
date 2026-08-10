@@ -677,13 +677,13 @@ test("guide validation decodes anchors exactly without case or punctuation norma
   });
 });
 
-test("production guides expose 119 files and 2,218 labeled visible Markdown links", async () => {
+test("production guides expose 119 files and 2,228 labeled visible Markdown links", async () => {
   const files = await markdownFiles(path.join(repoRoot, "guides"));
   const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
   assert.equal(files.length, 119);
-  assert.equal(links.length, 2218);
+  assert.equal(links.length, 2228);
   assert.equal(links.filter(({ label }) => label === "").length, 0);
-  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2206);
+  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2216);
 });
 
 test("complete guide validation excludes skills indexes and counts all 30 installed guides", async () => {
