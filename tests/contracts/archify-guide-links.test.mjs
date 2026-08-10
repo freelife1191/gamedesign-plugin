@@ -135,16 +135,23 @@ function assertedStatusIndex(markdown, published, blocked, filename = statusInde
 
 function assertCurrentInventoryIntro(markdown, { selectedCount, publishedCount }) {
   const intro = markdown.slice(0, markdown.indexOf("## 증거와 전수 범위"));
-  assert.match(
-    intro,
-    new RegExp(`${selectedCount}개[^\\n]*selected[^\\n]*spec`, "iu"),
-    "inventory intro must state that every selected entry has a committed spec",
-  );
-  assert.match(
-    intro,
-    new RegExp(`published[^\\n]*${publishedCount}개`, "u"),
-    "inventory intro must state the catalog-derived published count",
-  );
+  const lines = intro.split(/\r?\n/gu);
+  const selectedLines = lines.filter((line) => line.includes("`selected`") && /\d+개/u.test(line));
+  const selectedClaims = [...intro.matchAll(/(\d+)개\s+`selected`/gu)]
+    .map((match) => Number(match[1]));
+  assert.equal(selectedClaims.length, selectedLines.length, "every selected entry count claim must be numeric");
+  assert.ok(selectedClaims.length > 0, "inventory intro must state the selected entry count");
+  for (const count of selectedClaims) {
+    assert.equal(count, selectedCount, "every selected entry count must equal the catalog-derived count");
+  }
+  const publishedLines = lines.filter((line) => line.includes("`published`") && /\d+개/u.test(line));
+  const publishedClaims = [...intro.matchAll(/(?:(\d+)개(?:를)?\s+`published`|`published`(?:는|은)?\s*(\d+)개)/gu)]
+    .map((match) => Number(match[1] ?? match[2]));
+  assert.equal(publishedClaims.length, publishedLines.length, "every published count claim must be numeric");
+  assert.ok(publishedClaims.length > 0, "inventory intro must state the published count");
+  for (const count of publishedClaims) {
+    assert.equal(count, publishedCount, "every published count must equal the catalog-derived count");
+  }
   assert.match(intro, /한국어/u, "inventory intro must state that the published viewer is localized in Korean");
   assert.doesNotMatch(intro, /blocked-validation|blocked-visual/u, "inventory intro must not retain resolved block states");
   assert.doesNotMatch(intro, /아직은\s*`?delivery_status:\s*planned`?/u, "inventory intro must not describe the selected entries as planned");
@@ -238,6 +245,30 @@ test("production-link parser covers rendered Markdown references and raw anchors
     /only from the Archify status index/u,
     "a delivery receipt must not be exposed from an ordinary guide",
   );
+});
+
+test("inventory intro rejects multi-digit and single-claim count drift", () => {
+  const intro = [
+    "현재 4개 `selected` 항목은 모두 committed `spec`을 가집니다.",
+    "한국어 HTML 4개를 `published` 상태로 공개합니다.",
+    "현재 4개 `selected` spec은 검증을 통과했습니다.",
+    "`published`는 4개입니다.",
+    "",
+    "## 증거와 전수 범위",
+  ].join("\n");
+  const expected = { selectedCount: 4, publishedCount: 4 };
+  assert.doesNotThrow(() => assertCurrentInventoryIntro(intro, expected));
+  for (const [label, markdown] of [
+    ["multi-digit selected", intro.replace("현재 4개 `selected` 항목", "현재 14개 `selected` 항목")],
+    ["one selected claim", intro.replace("현재 4개 `selected` spec", "현재 5개 `selected` spec")],
+    ["one published claim", intro.replace("`published`는 4개", "`published`는 5개")],
+  ]) {
+    assert.throws(
+      () => assertCurrentInventoryIntro(markdown, expected),
+      /catalog-derived|selected entry/u,
+      label,
+    );
+  }
 });
 
 test("root README rejects rendered reference, raw-anchor, receipt, and fragment/query production-link bypasses", () => {
