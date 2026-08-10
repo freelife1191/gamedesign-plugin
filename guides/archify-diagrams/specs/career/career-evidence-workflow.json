@@ -24,13 +24,13 @@
       {
         "id": "review-layers",
         "label": "Three review layers",
-        "focus": ["human_review"],
+        "focus": ["evidence_project", "human_review", "export_prepare"],
         "note": "Content, evidence, and document quality remain separate review questions before export preparation."
       },
       {
         "id": "resume-contract",
         "label": "Resume held research",
-        "focus": ["evidence_research", "held_context"],
+        "focus": ["held_context", "evidence_research", "evidence_project"],
         "note": "Keep the blocked claim, evidence date, and next verification task; resume the held job-listing freshness check."
       }
     ]

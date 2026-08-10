@@ -8,11 +8,11 @@ import { loadArchifyVisualQa } from "../../tooling/lib/archify-visual-qa.mjs";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 
-test("production visual QA manifest is an empty pending ledger until a catalog entry passes or publishes", async () => {
+test("production visual QA manifest binds every passed catalog entry", async () => {
   const manifest = JSON.parse(await readFile(path.join(repoRoot, "guides/archify-diagrams/visual-qa/manifest.json"), "utf8"));
-  assert.deepEqual(manifest, { schema_version: 1, entries: [] });
   const catalog = await loadArchifyCatalog({ repoRoot });
-  assert.equal(catalog.entries.some((entry) => ["passed", "published"].includes(entry.delivery_status)), false);
+  const passed = catalog.entries.filter((entry) => ["passed", "published"].includes(entry.delivery_status)).map((entry) => entry.id).sort();
+  assert.deepEqual(manifest.entries.map((entry) => entry.id).sort(), passed);
   const loaded = await loadArchifyVisualQa({ repoRoot });
-  assert.deepEqual(loaded.qa.entries, []);
+  assert.deepEqual(loaded.qa.entries.map((entry) => entry.id).sort(), passed);
 });

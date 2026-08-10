@@ -678,9 +678,9 @@
       "spec": "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
       "html": "guides/assets/archify/career/career-evidence-workflow.html",
       "receipt": "guides/assets/archify/career/career-evidence-workflow.receipt.json",
-      "delivery_status": "auto-validated",
-      "visual_review": "pending",
-      "reviewer": null
+      "delivery_status": "passed",
+      "visual_review": "passed",
+      "reviewer": "Codex Task 11 visual QA"
     },
     {
       "id": "excluded-d06ce7364b1e",
@@ -1913,9 +1913,9 @@
       "spec": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
       "html": "guides/assets/archify/suite/suite-studio-career-handoff.html",
       "receipt": "guides/assets/archify/suite/suite-studio-career-handoff.receipt.json",
-      "delivery_status": "auto-validated",
-      "visual_review": "pending",
-      "reviewer": null
+      "delivery_status": "passed",
+      "visual_review": "passed",
+      "reviewer": "Codex Task 11 visual QA"
     },
     {
       "id": "excluded-e3ebbf9911c5",

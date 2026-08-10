@@ -347,7 +347,9 @@ function selectEntries(catalog, { ids = [], product = null, publishable = false 
   if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || id.length === 0)) throw new Error("ids must be non-empty strings");
   if (product !== null && !["studio", "career", "suite"].includes(product)) throw new Error("product must be studio, career, or suite");
   const requested = new Set(ids);
-  const source = publishable ? publishableArchifyEntries(catalog) : catalog.entries.filter((entry) => entry.decision === "selected");
+  const source = publishable
+    ? publishableArchifyEntries(catalog)
+    : catalog.entries.filter((entry) => entry.decision === "selected" && !entry.delivery_status.startsWith("blocked-") && entry.delivery_status !== "stale-source");
   const result = source.filter((entry) => (!requested.size || requested.has(entry.id)) && (product === null || entry.product === product)).sort((a, b) => comparePaths(a.id, b.id));
   if (!result.length) throw new Error("no Archify entries selected");
   if (requested.size && result.length !== requested.size) throw new Error("requested Archify id is not selected");

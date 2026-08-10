@@ -17,6 +17,7 @@ export function inspectCompletePng(bytes) {
   let offset = 8;
   let width = null;
   let height = null;
+  let channels = null;
   let imageData = [];
   let seenHeader = false;
   let seenEnd = false;
@@ -35,7 +36,9 @@ export function inspectCompletePng(bytes) {
         seenHeader = true;
         width = bytes.readUInt32BE(dataStart);
         height = bytes.readUInt32BE(dataStart + 4);
-        if (!(width > 0 && height > 0) || bytes[dataStart + 8] !== 8 || bytes[dataStart + 9] !== 6 || bytes[dataStart + 10] !== 0 || bytes[dataStart + 11] !== 0 || bytes[dataStart + 12] !== 0) errors.push("PNG must be non-interlaced 8-bit RGBA");
+        const colorType = bytes[dataStart + 9];
+        channels = colorType === 2 ? 3 : colorType === 6 ? 4 : null;
+        if (!(width > 0 && height > 0) || bytes[dataStart + 8] !== 8 || channels === null || bytes[dataStart + 10] !== 0 || bytes[dataStart + 11] !== 0 || bytes[dataStart + 12] !== 0) errors.push("PNG must be non-interlaced 8-bit RGB or RGBA");
       }
     } else if (type === "IDAT") imageData.push(bytes.subarray(dataStart, dataEnd));
     else if (type === "IEND") {
@@ -48,8 +51,9 @@ export function inspectCompletePng(bytes) {
   if (errors.length === 0) {
     try {
       const pixels = inflateSync(Buffer.concat(imageData), { maxOutputLength: 256 * 1024 * 1024 });
-      if (pixels.length !== height * (width * 4 + 1)) errors.push("PNG decompressed image data length does not match IHDR");
-      else for (let row = 0; row < height; row += 1) if (pixels[row * (width * 4 + 1)] > 4) errors.push(`PNG row ${row} has an invalid filter type`);
+      const rowBytes = width * channels + 1;
+      if (pixels.length !== height * rowBytes) errors.push("PNG decompressed image data length does not match IHDR");
+      else for (let row = 0; row < height; row += 1) if (pixels[row * rowBytes] > 4) errors.push(`PNG row ${row} has an invalid filter type`);
     } catch { errors.push("PNG IDAT zlib stream is invalid"); }
   }
   return { ok: errors.length === 0, errors, width, height };

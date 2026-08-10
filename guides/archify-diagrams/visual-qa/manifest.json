@@ -1,4 +1,48 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "career-evidence-workflow",
+      "specification_sha256": "4e63b42b503657a8b8bc48df43d4e4a1c09493121d707e76092f18435ad04692",
+      "artifact_sha256": "d006294ac271ab71c463734d688e9d71d8d0f4ff660cd507c609212d3e81937c",
+      "reviewer": "Codex Task 11 visual QA",
+      "review_method": "headless-agent-browser + original-size image reader",
+      "correction_rounds": 1,
+      "verdict": "passed",
+      "renders": {
+        "read": { "path": "renders/career/career-evidence-workflow/read.png", "sha256": "8c3e39b006f63c66a2766d71deb1eb73b5521294973cc42aec40ee7fdf02f924", "width": 1280, "height": 1734 },
+        "light": { "path": "renders/career/career-evidence-workflow/light.png", "sha256": "13204667c65610ab2021cc8265ed7694543d9f872134b114ce6f72a20bce2614", "width": 1280, "height": 1734 },
+        "dark": { "path": "renders/career/career-evidence-workflow/dark.png", "sha256": "b789a752697311c600b2c5a968777064c7a59bb611381cd152b3689d8ad39a23", "width": 1280, "height": 1734 },
+        "guided_views": [
+          { "id": "view-evidence-path", "path": "renders/career/career-evidence-workflow/view-evidence-path.png", "sha256": "9eb1464f1f313de960d6076cb3a2de1e130f8ff3ca25ac1a6bd39bb706858b89", "width": 1280, "height": 1835 },
+          { "id": "view-career-routes", "path": "renders/career/career-evidence-workflow/view-career-routes.png", "sha256": "1570c0077ffec7d894756a165fe0fde23d0201553a3f8990dc1353a6797a35c4", "width": 1280, "height": 1835 },
+          { "id": "view-review-layers", "path": "renders/career/career-evidence-workflow/view-review-layers.png", "sha256": "86a7d715ab35dc55b5ce6a20ecd3024a5aee637e62adde0cb81f25a19242c2a6", "width": 1280, "height": 1835 },
+          { "id": "view-resume-contract", "path": "renders/career/career-evidence-workflow/view-resume-contract.png", "sha256": "bd0666494d103de7d994ab9db1eb0b1d2c30f2c7320d0b64aad9bc963698f378", "width": 1280, "height": 1835 }
+        ]
+      },
+      "checks": { "text_clipping": "passed", "glyph_distortion": "passed", "blur_or_tofu": "passed", "node_text_collision": "passed", "edge_node_collision": "passed", "edge_label_collision": "passed", "ambiguous_corridor": "passed", "branch_merge_retry_resume": "passed", "rail_legend_footer": "passed", "light_dark_contrast": "passed", "guided_view_usefulness": "passed", "within_product_diversity": "passed", "cross_product_distinction": "passed" },
+      "defects": [ { "view": "view-review-layers", "subject": "guided camera focus", "symptom": "Single-node review focus cropped lane labels at the viewport edge.", "correction_outcome": "resolved" }, { "view": "view-resume-contract", "subject": "guided camera focus", "symptom": "Two-node hold/resume focus cropped lane labels at the viewport edge.", "correction_outcome": "resolved" } ]
+    },
+    {
+      "id": "suite-studio-career-handoff",
+      "specification_sha256": "9e83f69a5ea19e08c5e051f3cb8d48e13f90cac7b1c4857daa43a7e6b9fb7787",
+      "artifact_sha256": "39b2ca5d9fc35c6996a77dfd97e309b761ff76982aee8cd292e853acb6a0d693",
+      "reviewer": "Codex Task 11 visual QA",
+      "review_method": "headless-agent-browser + original-size image reader",
+      "correction_rounds": 0,
+      "verdict": "passed",
+      "renders": {
+        "read": { "path": "renders/suite/suite-studio-career-handoff/read.png", "sha256": "f53b2cb8a3208a2dcd5db0a35a3a034a751fce32e53632b0364bb53fc7e77180", "width": 1280, "height": 1223 },
+        "light": { "path": "renders/suite/suite-studio-career-handoff/light.png", "sha256": "bc489312a1decac1d2eb45c9c4df919cba147a7cd4308119f4a9b6538e1e58e7", "width": 1280, "height": 1223 },
+        "dark": { "path": "renders/suite/suite-studio-career-handoff/dark.png", "sha256": "6aeb44eb629ff61cfbd9f4ba5976d2dbbd2ee5a00af719904c6c1d6dede271a0", "width": 1280, "height": 1223 },
+        "guided_views": [
+          { "id": "view-bounded-handoff", "path": "renders/suite/suite-studio-career-handoff/view-bounded-handoff.png", "sha256": "67d7c336f8f36ac536ab40b7204f78d9dea91f6b8c1ad63699527d19e099efa1", "width": 1280, "height": 1324 },
+          { "id": "view-human-approval", "path": "renders/suite/suite-studio-career-handoff/view-human-approval.png", "sha256": "e9035a210988a2b1928644b0149d83a5a27e0b3a7b9ee9f719fc866a9b6de8fd", "width": 1280, "height": 1324 },
+          { "id": "view-resume-held-review", "path": "renders/suite/suite-studio-career-handoff/view-resume-held-review.png", "sha256": "1cfb2d999e7d2f77951941795a695f89dc0b84b91aeb30b7f116ecaa6b2734af", "width": 1280, "height": 1324 }
+        ]
+      },
+      "checks": { "text_clipping": "passed", "glyph_distortion": "passed", "blur_or_tofu": "passed", "node_text_collision": "passed", "edge_node_collision": "passed", "edge_label_collision": "passed", "ambiguous_corridor": "passed", "branch_merge_retry_resume": "passed", "rail_legend_footer": "passed", "light_dark_contrast": "passed", "guided_view_usefulness": "passed", "within_product_diversity": "passed", "cross_product_distinction": "passed" },
+      "defects": []
+    }
+  ]
 }

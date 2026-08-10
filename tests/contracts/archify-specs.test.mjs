@@ -353,12 +353,12 @@ test("Suite specs stay bounded and do not concatenate both product graphs", asyn
   }
 });
 
-test("Suite dataflow has a portable showcase validator and bound final evidence", async () => {
+test("Suite dataflow retains its portable validator evidence after visual approval", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
   const entry = catalog.entries.find((item) => item.id === "suite-studio-career-handoff");
   const spec = specsById.get("suite-studio-career-handoff");
-  assert.equal(entry?.delivery_status, "auto-validated");
-  assert.equal(entry?.visual_review, "pending");
+  assert.equal(entry?.delivery_status, "passed");
+  assert.equal(entry?.visual_review, "passed");
   await assert.doesNotReject(() => validateInstalledSpec(spec, "dataflow"));
   await assertSuiteValidationEvidence(entry, spec);
 });
@@ -440,13 +440,13 @@ test("Suite specs remain source-bound and structurally distinct", async () => {
   assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
 });
 
-test("selected Career workflow records a real schema-valid auto-validation state", async () => {
+test("selected Career workflow retains a schema-valid state after visual approval", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "career");
   const entry = catalog.entries.find((item) => item.id === "career-evidence-workflow");
   const spec = careerWorkflowSpec(specsById);
   assertPrimaryNodeBound(spec);
-  assert.equal(entry.delivery_status, "auto-validated");
-  assert.equal(entry.visual_review, "pending");
+  assert.equal(entry.delivery_status, "passed");
+  assert.equal(entry.visual_review, "passed");
   assert.deepEqual(entry.diagnostics, []);
   await assert.doesNotReject(() => validateInstalledWorkflowSpec(spec));
 });

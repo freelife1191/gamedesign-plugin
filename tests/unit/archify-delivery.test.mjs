@@ -140,6 +140,20 @@ test("stage creates only an exact staged managed set and check rejects stale ext
   await assert.rejects(() => checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /exact managed set|stale/i);
 });
 
+test("stage excludes a selected blocked-validation entry while retaining every reviewable artifact", async (t) => {
+  const f = await fixture(t, { status: "auto-validated" });
+  const catalogPath = path.join(f.root, "guides/archify-diagrams/catalog.json");
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  const blocked = { ...f.selected, id: "blocked-id", source_document: "guides/blocked.md", source_digest: DIGEST(SOURCE), spec: "guides/archify-diagrams/specs/studio/blocked-id.json", html: "guides/assets/archify/studio/blocked-id.html", receipt: "guides/assets/archify/studio/blocked-id.receipt.json", delivery_status: "blocked-validation", visual_review: "not-applicable", reviewer: null, diagnostics: [{ code: "showcase-failed", subject: "blocked-id", evidence: "1 error", attempted_fix: "none", round: 2, remaining_error: "blocked" }] };
+  catalog.entries.push(blocked);
+  await write(f.root, blocked.source_document, SOURCE);
+  await write(f.root, blocked.spec, `${JSON.stringify({ ...JSON.parse(SPEC), nodes: [{ id: "start", lane: "main", col: 0, type: "backend", label: "시작" }, { id: "end", lane: "main", col: 1, type: "backend", label: "종료" }], edges: [{ from: "start", to: "end" }], mainPath: ["start", "end"] })}\n`);
+  await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await access(path.join(f.root, ".tmp/curated-archify/current/studio/stable-id.html"));
+  await assert.rejects(access(path.join(f.root, ".tmp/curated-archify/current/studio/blocked-id.html")), { code: "ENOENT" });
+});
+
 test("check rejects a stale production managed tree even when no entry is publishable", async (t) => {
   const f = await fixture(t);
   let closureCopies = 0;
