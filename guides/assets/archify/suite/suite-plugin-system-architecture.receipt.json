@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "quality": "showcase",
+  "checksPassed": 9,
+  "checkCount": 9,
+  "errors": 0,
+  "warnings": 0,
+  "compositionProfile": "showcase",
+  "compositionStatus": "pass",
+  "input": "guides/archify-diagrams/specs/suite/suite-plugin-system-architecture.json",
+  "output": "guides/assets/archify/suite/suite-plugin-system-architecture.html",
+  "specification": {
+    "sha256": "a0e4a5426387195165a73d28a7c7deb75e5ea078aa87e69a436549ac771b476b",
+    "bytes": 5636
+  },
+  "artifact": {
+    "sha256": "c64bdab31e3d59f8974755ce2ddf28b9a40b2780c76bcb56dd8656662fd47b90",
+    "bytes": 625879
+  }
+}

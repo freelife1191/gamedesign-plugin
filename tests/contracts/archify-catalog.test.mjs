@@ -204,9 +204,9 @@ test("root README selects the Suite system architecture without changing corpus 
     diagram_type: "architecture",
     priority: "primary",
     visual_system: "suite",
-    delivery_status: "auto-validated",
-    visual_review: "pending",
-    reviewer: null,
+    delivery_status: "published",
+    visual_review: "passed",
+    reviewer: "Codex 헤드리스 시각 QA",
   });
   assert.equal(catalog.entries.some((item) => item.id === "suite-entry-navigation"), false);
   const selected = catalog.entries.filter((item) => item.decision === "selected");

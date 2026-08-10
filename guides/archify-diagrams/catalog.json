@@ -38,9 +38,9 @@
       "spec": "guides/archify-diagrams/specs/suite/suite-plugin-system-architecture.json",
       "html": "guides/assets/archify/suite/suite-plugin-system-architecture.html",
       "receipt": "guides/assets/archify/suite/suite-plugin-system-architecture.receipt.json",
-      "delivery_status": "auto-validated",
-      "visual_review": "pending",
-      "reviewer": null
+      "delivery_status": "published",
+      "visual_review": "passed",
+      "reviewer": "Codex 헤드리스 시각 QA"
     },
     {
       "id": "excluded-649d189a8231",

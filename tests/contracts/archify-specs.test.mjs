@@ -364,9 +364,9 @@ test("Suite plugin system architecture preserves product boundaries, artifact la
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
   const entry = catalog.entries.find((item) => item.id === "suite-plugin-system-architecture");
   const spec = suitePluginSystemArchitecture(specsById);
-  assert.equal(entry?.delivery_status, "auto-validated");
-  assert.equal(entry?.visual_review, "pending");
-  assert.equal(entry?.reviewer, null);
+  assert.equal(entry?.delivery_status, "published");
+  assert.equal(entry?.visual_review, "passed");
+  assert.equal(entry?.reviewer, "Codex 헤드리스 시각 QA");
   await assert.doesNotReject(() => validateInstalledSpec(spec, "architecture"));
   assertSuitePluginSystemArchitecture(spec);
 });

@@ -19,3 +19,29 @@ test("production visual QA manifest binds every published entry to passing headl
   assert.deepEqual(loaded.qa.entries.filter((entry) => entry.verdict === "passed").map((entry) => entry.id).sort(), passed);
   assert.deepEqual(loaded.qa.entries.filter((entry) => entry.verdict === "failed").map((entry) => entry.id), []);
 });
+
+test("the Korean suite system architecture has six complete published visual QA views", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const entry = catalog.entries.find((candidate) => candidate.id === "suite-plugin-system-architecture");
+  assert.ok(entry, "suite system architecture catalog record exists");
+  assert.equal(entry.delivery_status, "published");
+  assert.equal(entry.visual_review, "passed");
+  assert.equal(entry.reviewer, "Codex 헤드리스 시각 QA");
+
+  const loaded = await loadArchifyVisualQa({ repoRoot, catalog });
+  const qa = loaded.qa.entries.find((candidate) => candidate.id === entry.id);
+  assert.ok(qa, "suite system architecture QA record exists");
+  assert.equal(qa.verdict, "passed");
+  assert.equal(qa.review_method, "headless-agent-browser + original-size image reader");
+  assert.deepEqual(
+    ["read", "light", "dark", ...qa.renders.guided_views.map((view) => view.id)].sort(),
+    ["read", "light", "dark", "view-plugin-boundaries", "view-artifact-validation", "view-human-approval"].sort(),
+  );
+  for (const render of [qa.renders.read, qa.renders.light, qa.renders.dark, ...qa.renders.guided_views]) {
+    assert.equal(render.width, 1600, `${render.path} uses the production viewport width`);
+    assert.ok(render.height > 0, `${render.path} has an inspected nonzero height`);
+    assert.match(render.sha256, /^[0-9a-f]{64}$/u, `${render.path} has a pinned digest`);
+  }
+  assert.equal(loaded.qa.contact_sheets.some((sheet) => sheet.html === "product-suite.html"), true);
+  assert.equal(loaded.qa.contact_sheets.some((sheet) => sheet.html === "type-architecture.html"), true);
+});
