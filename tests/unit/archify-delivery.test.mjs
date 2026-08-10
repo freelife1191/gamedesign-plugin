@@ -31,7 +31,9 @@ function pngChunk(type, data) {
 
 function png() {
   const header = Buffer.from([0, 0, 0, 2, 0, 0, 0, 2, 8, 6, 0, 0, 0]);
-  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(Buffer.alloc(18))), pngChunk("IEND", Buffer.alloc(0))]);
+  const pixels = Buffer.alloc(18);
+  pixels.set([20, 50, 90, 255], 1);
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(pixels)), pngChunk("IEND", Buffer.alloc(0))]);
 }
 
 function entry({ status = "planned", visual = "pending", reviewer = null } = {}) {
@@ -73,7 +75,7 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
       renders[name] = { path: relative, sha256: DIGEST(bytes), width: 2, height: 2 };
     }
     const checks = Object.fromEntries(["text_clipping", "glyph_distortion", "blur_or_tofu", "node_text_collision", "edge_node_collision", "edge_label_collision", "ambiguous_corridor", "branch_merge_retry_resume", "rail_legend_footer", "light_dark_contrast", "guided_view_usefulness", "within_product_diversity", "cross_product_distinction"].map((key) => [key, "passed"]));
-    const qaEntry = { id: selected.id, reviewer: "reviewer", review_method: "headless-original-and-fit", correction_rounds: 0, verdict: "passed", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact), renders: { read: renders.read, light: renders.light, dark: renders.dark, guided_views: [{ id: "view-focus", ...renders.guided }] }, checks, defects: [] };
+    const qaEntry = { id: selected.id, reviewer: "reviewer", review_method: "headless-original-and-fit", correction_rounds: 0, verdict: "passed", specification_sha256: DIGEST(SPEC), artifact_sha256: DIGEST(artifact), renders: { read: renders.read, light: renders.light, dark: renders.dark, guided_views: [{ id: "view-focus", ...renders.guided }] }, readme_preview: null, checks, defects: [] };
     await write(root, "guides/archify-diagrams/visual-qa/manifest.json", `${JSON.stringify({ schema_version: 1, entries: [qaEntry], contact_sheets: [] })}\n`);
   }
   const home = await mkdtemp(path.join(os.tmpdir(), "archify-delivery-home-"));
@@ -89,6 +91,20 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
   await write(home, ".agents/skills/archify/SKILL.md", "---\nname: archify\n---\n");
   await write(home, ".agents/skills/archify/package.json", '{"version":"2.13.0"}\n');
   return { root, selected, cli, env: { CODEX_HOME: path.join(home, ".missing-codex") }, archifyOptions: { home }, seam };
+}
+
+function localizerDocument(values) {
+  const text = (value) => ({ nodeType: 3, nodeValue: value });
+  const element = ({ children = [], attributes = {} } = {}) => ({
+    nodeType: 1,
+    childNodes: children,
+    ...attributes,
+    hasAttribute(name) { return Object.hasOwn(this, name); },
+    getAttribute(name) { return this[name]; },
+    setAttribute(name, value) { this[name] = value; },
+  });
+  const nodes = values.map(({ value, attribute }) => attribute ? element({ attributes: { [attribute]: value } }) : text(value));
+  return { documentElement: element({ children: nodes }), nodes };
 }
 
 async function addBlockedVisualEntry(f) {
@@ -188,6 +204,33 @@ test("closure localisation rewrites representative viewer UI only in the private
   assert.equal(typeof localizer, "string");
   assert.doesNotThrow(() => new Function(localizer));
   assert.match(await readFile(path.join(path.dirname(path.dirname(f.cli)), "assets/template.html"), "utf8"), /Explore this system/u);
+});
+
+test("closure localisation replaces complete viewer tokens without corrupting ordinary labels", async (t) => {
+  const f = await fixture(t);
+  let localized;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async ({ closure }) => { localized = await readFile(path.join(closure, "assets/template.html"), "utf8"); } },
+  });
+  const localizer = localized.match(/<script data-archify-ko-localizer>([\s\S]+)<\/script>/u)?.[1];
+  const document = localizerDocument([
+    { value: "FULL" },
+    { value: "AUTO" },
+    { value: "FULL 100%" },
+    { value: "AUTO 100%" },
+    { value: "AUTOMATION" },
+    { value: "AUTOMATED" },
+    { value: "AUTOGRAPH" },
+    { value: "FULLNESS" },
+    { value: "AUTOMATION", attribute: "aria-label" },
+  ]);
+  class MutationObserver { constructor() {} observe() {} }
+  new Function("document", "MutationObserver", localizer)(document, MutationObserver);
+
+  assert.deepEqual(document.nodes.slice(0, 4).map((node) => node.nodeValue), ["전체", "자동", "전체 100%", "자동 100%"]);
+  assert.deepEqual(document.nodes.slice(4, 8).map((node) => node.nodeValue), ["AUTOMATION", "AUTOMATED", "AUTOGRAPH", "FULLNESS"]);
+  assert.equal(document.nodes[8]["aria-label"], "AUTOMATION");
 });
 
 function fakeCli() {
