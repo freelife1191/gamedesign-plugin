@@ -677,10 +677,10 @@ test("guide validation decodes anchors exactly without case or punctuation norma
   });
 });
 
-test("production guides expose 912 labeled visible Markdown links", async () => {
+test("production guides expose 119 files and 912 labeled visible Markdown links", async () => {
   const files = await markdownFiles(path.join(repoRoot, "guides"));
   const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
-  assert.equal(files.length, 79);
+  assert.equal(files.length, 119);
   assert.equal(links.length, 912);
   assert.equal(links.filter(({ label }) => label === "").length, 0);
   assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 900);
