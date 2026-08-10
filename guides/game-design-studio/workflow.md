@@ -2,6 +2,8 @@
 
 Studio는 기준 Markdown을 먼저 만들고 선택 기능을 뒤에 붙입니다. 권장 순서는 다음과 같습니다.
 
+[한국어 Archify 전체 프로젝트 워크플로 열기](../assets/archify/studio/studio-project-workflow.html)
+
 ```text
 비전
 → 시스템·콘텐츠·UX·경제·제작

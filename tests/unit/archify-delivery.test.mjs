@@ -80,6 +80,9 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
   t.after(() => rm(home, { recursive: true, force: true }));
   const cli = await write(home, ".agents/skills/archify/bin/archify.mjs", fakeCli());
   await write(home, ".agents/skills/archify/renderers/shared/resource.mjs", 'export const artifactSuffix = "";\n');
+  await write(home, ".agents/skills/archify/assets/template.html", "<!doctype html><html lang=\"en\"><style>.blueprint::before{content:\"BLUEPRINT / REV 01\"}.editorial::before{content:\"EDITORIAL / FIELD NOTE\"}.plate::before{content:\"ARCHIFY / PLATE 04\"}</style><body><strong id=\"guided-view-label\">Explore this system</strong><button id=\"btn-export\">Export</button><code>format_qa_export</code></body>\n");
+  await write(home, ".agents/skills/archify/renderers/shared/cli.mjs", "export const footer = 'Built with Archify';\nfunction output() { fs.writeFileSync(outPath, applyTemplate(template, {\n  }));\n  outputPathGuards.delete(outPath);\n}\n");
+  await write(home, ".agents/skills/archify/renderers/shared/legend.mjs", "export const title = '>Legend<';\n");
   await mkdir(path.join(home, ".agents/skills/archify/schemas"), { recursive: true });
   await mkdir(path.join(home, ".agents/skills/archify/assets"), { recursive: true });
   await mkdir(path.join(home, ".agents/skills/archify/scripts"), { recursive: true });
@@ -87,6 +90,104 @@ async function fixture(t, { withSpec = true, status = "planned", visual = "pendi
   await write(home, ".agents/skills/archify/package.json", '{"version":"2.13.0"}\n');
   return { root, selected, cli, env: { CODEX_HOME: path.join(home, ".missing-codex") }, archifyOptions: { home }, seam };
 }
+
+async function addBlockedVisualEntry(f) {
+  const blockedSource = "# Blocked source\n\n## Blocked heading\n\nBody.\n";
+  const blockedSpec = `${JSON.stringify({
+    schema_version: 1,
+    diagram_type: "workflow",
+    meta: { title: "차단 검토", quality_profile: "showcase" },
+    lanes: [{ id: "main", label: "주 경로" }],
+    nodes: [
+      { id: "start", lane: "main", col: 0, type: "backend", label: "시작" },
+      { id: "end", lane: "main", col: 1, type: "backend", label: "종료" },
+    ],
+    edges: [{ from: "start", to: "end" }],
+    mainPath: ["start", "end"],
+  })}\n`;
+  const catalogPath = path.join(f.root, "guides/archify-diagrams/catalog.json");
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  const blocked = {
+    ...f.selected,
+    id: "blocked-id",
+    source_document: "guides/blocked.md",
+    source_section: "Blocked heading",
+    source_digest: DIGEST(blockedSource),
+    question: "무엇이 시각 검토를 막는가?",
+    priority: "secondary",
+    secondary_reason: "시각 차단 상태 회귀를 검증합니다.",
+    composition_rationale: "두 단계 차단 경로입니다.",
+    diagnostics: [{ code: "visual-defect", subject: "blocked-id", evidence: "review failed", attempted_fix: "label adjustment", round: 1, remaining_error: "overlap" }],
+    spec: "guides/archify-diagrams/specs/studio/blocked-id.json",
+    html: "guides/assets/archify/studio/blocked-id.html",
+    receipt: "guides/assets/archify/studio/blocked-id.receipt.json",
+    delivery_status: "blocked-visual",
+    visual_review: "failed",
+    reviewer: "reviewer",
+  };
+  catalog.entries.push(blocked);
+  await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+  await write(f.root, blocked.source_document, blockedSource);
+  await write(f.root, blocked.spec, blockedSpec);
+  const artifact = Buffer.from("<!doctype html><title>blocked</title>\n");
+  const artifactPath = `guides/archify-diagrams/visual-qa/failed-artifacts/studio/${blocked.id}.html`;
+  await write(f.root, artifactPath, artifact);
+
+  const manifestPath = path.join(f.root, "guides/archify-diagrams/visual-qa/manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const base = manifest.entries[0];
+  const render = {};
+  for (const name of ["read", "light", "dark", "guided"]) {
+    const relative = `renders/studio/${blocked.id}/${name}.png`;
+    const bytes = png();
+    await write(f.root, `guides/archify-diagrams/visual-qa/${relative}`, bytes);
+    render[name] = { path: relative, sha256: DIGEST(bytes), width: 2, height: 2 };
+  }
+  manifest.entries.push({
+    ...base,
+    id: blocked.id,
+    specification_sha256: DIGEST(blockedSpec),
+    artifact_sha256: DIGEST(artifact),
+    correction_rounds: 1,
+    verdict: "failed",
+    renders: { read: render.read, light: render.light, dark: render.dark, guided_views: [{ id: "view-focus", ...render.guided }] },
+    checks: { ...base.checks, text_clipping: "failed" },
+    defects: [{ view: "read", subject: "frame", symptom: "cropped", correction_outcome: "unresolved", round: 1, correction_evidence: "original inspection" }],
+  });
+  await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
+  return { blocked, artifactPath };
+}
+
+test("closure localisation fails closed for missing viewer markers and preserves the installed inputs", async (t) => {
+  const f = await fixture(t);
+  const template = path.join(path.dirname(path.dirname(f.cli)), "assets/template.html");
+  await writeFile(template, "<!doctype html><body>missing marker</body>\n");
+  const tampered = await readFile(template);
+  await assert.rejects(() => stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }), /Korean localization.*marker/u);
+  assert.deepEqual(await readFile(template), tampered);
+});
+
+test("closure localisation rewrites representative viewer UI only in the private copy", async (t) => {
+  const f = await fixture(t);
+  let localized;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async ({ closure }) => { localized = await readFile(path.join(closure, "assets/template.html"), "utf8"); } },
+  });
+  assert.match(localized, /data-archify-ko-localizer/u);
+  assert.match(localized, /document\.documentElement\.lang='ko'/u);
+  assert.match(localized, /도식 살펴보기/u);
+  assert.match(localized, /설계도 \/ 개정 01/u);
+  assert.match(localized, /편집형 \/ 현장 기록/u);
+  assert.match(localized, /아키파이 \/ 도판 04/u);
+  assert.match(localized, /id="btn-export">Export<\/button>/u);
+  assert.match(localized, />format_qa_export<\/code>/u);
+  assert.doesNotMatch(localized, /format_qa_내보내기/u);
+  const localizer = localized.match(/<script data-archify-ko-localizer>([\s\S]+)<\/script>/u)?.[1];
+  assert.equal(typeof localizer, "string");
+  assert.doesNotThrow(() => new Function(localizer));
+  assert.match(await readFile(path.join(path.dirname(path.dirname(f.cli)), "assets/template.html"), "utf8"), /Explore this system/u);
+});
 
 function fakeCli() {
   return `#!/usr/bin/env node
@@ -187,6 +288,45 @@ test("publication atomically commits an exact empty managed tree when no entry p
   assert.deepEqual((await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
   assert.deepEqual(await readdir(path.join(f.root, "guides/assets/archify")), []);
   assert.deepEqual((await checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions })).entries, []);
+});
+
+test("publication refreshes an already-published entry against the newly delivered artifact", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+
+  const catalogPath = path.join(f.root, "guides/archify-diagrams/catalog.json");
+  const catalog = JSON.parse(await readFile(catalogPath, "utf8"));
+  catalog.entries[0].delivery_status = "published";
+  await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`);
+
+  await writeFile(path.join(path.dirname(path.dirname(f.cli)), "renderers/shared/resource.mjs"), 'export const artifactSuffix = "-v2";\n');
+  const refreshedArtifact = Buffer.from("<!doctype html><title>verified-v2</title>\n");
+  const manifestPath = path.join(f.root, "guides/archify-diagrams/visual-qa/manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  manifest.entries[0].artifact_sha256 = DIGEST(refreshedArtifact);
+  await writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
+
+  await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  assert.deepEqual(await readFile(path.join(f.root, f.selected.html)), refreshedArtifact);
+});
+
+test("publication and check pin blocked visual artifacts alongside publishable entries", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  await addBlockedVisualEntry(f);
+  await stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await publishCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+  await checkCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions });
+});
+
+test("publication rejects a blocked visual artifact replaced after its snapshot", async (t) => {
+  const f = await fixture(t, { status: "passed", visual: "passed" });
+  const { artifactPath } = await addBlockedVisualEntry(f);
+  await assert.rejects(() => publishCuratedArchify({
+    repoRoot: f.root,
+    env: f.env,
+    archifyOptions: f.archifyOptions,
+    __testHooks: { "after-qa-snapshot": async () => writeFile(path.join(f.root, artifactPath), "replaced\n") },
+  }), /pinned input changed/u);
 });
 
 test("check rejects a stale production managed tree even when no entry is publishable", async (t) => {

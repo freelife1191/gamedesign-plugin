@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "quality": "showcase",
+  "checksPassed": 9,
+  "checkCount": 9,
+  "errors": 0,
+  "warnings": 0,
+  "compositionProfile": "showcase",
+  "compositionStatus": "pass",
+  "input": "guides/archify-diagrams/specs/studio/studio-project-workflow.json",
+  "output": "guides/assets/archify/studio/studio-project-workflow.html",
+  "specification": {
+    "sha256": "2616dee286467b2d84a9e043d5b38df1a6f5ff3b3f93fda7d4dfc61ee19666b7",
+    "bytes": 6178
+  },
+  "artifact": {
+    "sha256": "78be05e04e8c227ee7369ee892c399803300890671317707d324c79cd27d7006",
+    "bytes": 626972
+  }
+}

@@ -9,6 +9,8 @@
 
 studio-to-career-handoff의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
+[한국어 Archify Studio → Career 공개 근거 handoff 열기](../../assets/archify/suite/suite-studio-career-handoff.html)
+
 ### 사용하는 경우
 두 제품의 canonical artifact handoff가 필요할 때 사용한다.
 

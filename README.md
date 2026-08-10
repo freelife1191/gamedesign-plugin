@@ -10,6 +10,14 @@ Game Design Plugin Suite는 게임을 만들기 위한 **Game Design Studio**와
 
 모든 경로는 `content.md`와 `evidence.yml`을 보존합니다. SVG·PNG는 검토 가능한 도식 자산이고, MD는 renderer가 없어도 남습니다. PDF·DOCX·PPTX는 별도 renderer와 형식·visual QA가 확인된 뒤에만 파생 결과로 다룹니다.
 
+## 한국어 Archify 아키텍처 도식
+
+검증·시각 QA를 통과한 대화형 HTML 도식 3종을 한국어 뷰어로 제공합니다. 전체 상태와 검증 근거는 [Curated Archify 상태 인덱스](guides/archify-diagrams/README.md)에서 확인합니다.
+
+- [Studio 전체 프로젝트 워크플로](guides/assets/archify/studio/studio-project-workflow.html)
+- [Career 증거·포트폴리오 워크플로](guides/assets/archify/career/career-evidence-workflow.html)
+- [Studio → Career 공개 근거 handoff](guides/assets/archify/suite/suite-studio-career-handoff.html)
+
 ## 사용자 유형별 추천 시작점
 
 현재 상황에 맞는 [사용자 경로](guides/use-cases/audience-paths.md)를 선택합니다.

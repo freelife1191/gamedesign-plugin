@@ -9,6 +9,7 @@ import { extractMarkdownLinks } from "../../tooling/lib/user-guides.mjs";
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const statusIndex = "guides/archify-diagrams/README.md";
 const statusRoutes = Object.freeze([
+  "README.md",
   "guides/README.md",
   "guides/game-design-studio/README.md",
   "guides/game-design-career/README.md",
@@ -38,9 +39,9 @@ function productionLinks(documents) {
 function assertExactProductionLinks(documents, expected) {
   const links = productionLinks(documents);
   assert.deepEqual(
-    links.map((link) => link.destination).sort(),
-    [...expected].sort(),
-    "visible production links must equal the published-and-passed catalog set",
+    [...new Set(links.map((link) => link.destination))].sort(),
+    [...new Set(expected)].sort(),
+    "visible production-link targets must equal the published-and-passed catalog set",
   );
   for (const link of links) assert.ok(!link.destination.endsWith("/flow.html"), "legacy flow.html must not be linked");
 }
@@ -91,10 +92,21 @@ function assertPublishedSourceBindings(documents, published) {
   }
 }
 
-function assertedStatusIndex(markdown, blocked, filename = statusIndex) {
+function assertedStatusIndex(markdown, published, blocked, filename = statusIndex) {
   assert.match(markdown, /^## Published\b/mu, "status index must have a separate Published section");
-  assert.match(markdown, /(?:Published[^\n]*\n)(?:[\s\S]{0,300}?)(?:0\s*(?:개|items?)|none|없음)/iu, "Published must explicitly report zero items");
+  for (const entry of published) {
+    const detail = sourceSection(markdown, `\`${entry.id}\``);
+    assert.ok(detail, `${entry.id} missing from Published`);
+    assert.match(detail, new RegExp(`\\b${entry.product}\\b`, "u"), `${entry.id} product missing from index`);
+    assert.match(detail, new RegExp(`\\b${entry.diagram_type}\\b`, "u"), `${entry.id} type missing from index`);
+    assert.match(detail, /한국어/u, `${entry.id} Korean UI state missing from index`);
+    assert.ok(
+      visibleLinks(detail).some((destination) => resolveDestination(filename, destination) === entry.html),
+      `${entry.id} published HTML link missing from index`,
+    );
+  }
   assert.match(markdown, /^## Blocked\b/mu, "status index must have a separate Blocked section");
+  if (blocked.length === 0) assert.match(markdown, /(?:Blocked[^\n]*\n)(?:[\s\S]{0,300}?)(?:0\s*(?:개|items?)|none|없음)/iu, "Blocked must explicitly report zero items");
   for (const entry of blocked) {
     const detail = sourceSection(markdown, `\`${entry.id}\``);
     assert.ok(detail, `${entry.id} missing from Blocked`);
@@ -114,9 +126,9 @@ function assertedStatusIndex(markdown, blocked, filename = statusIndex) {
 function assertCurrentInventoryIntro(markdown) {
   const intro = markdown.slice(0, markdown.indexOf("## 증거와 전수 범위"));
   assert.match(intro, /3개[^\n]*selected[^\n]*spec/iu, "inventory intro must state that all three selected entries have committed specs");
-  assert.match(intro, /blocked-validation/u, "inventory intro must state the Studio validation block");
-  assert.match(intro, /blocked-visual/u, "inventory intro must state the visual blocks");
-  assert.match(intro, /passed\s*\/\s*published[^\n]*0/u, "inventory intro must state the zero passed/published count");
+  assert.match(intro, /published[^\n]*3개/u, "inventory intro must state the three published entries");
+  assert.match(intro, /한국어/u, "inventory intro must state that the published viewer is localized in Korean");
+  assert.doesNotMatch(intro, /blocked-validation|blocked-visual/u, "inventory intro must not retain resolved block states");
   assert.doesNotMatch(intro, /아직은\s*`?delivery_status:\s*planned`?/u, "inventory intro must not describe the selected entries as planned");
 }
 
@@ -151,7 +163,7 @@ test("curated Archify guide routing exposes only published, visually passed prod
   assertPublishedSourceBindings(documents, catalog.entries.filter((entry) => entry.delivery_status === "published"));
   const index = documents.find((document) => document.filename === statusIndex).markdown;
   assertCurrentInventoryIntro(index);
-  assertedStatusIndex(index, blocked);
+  assertedStatusIndex(index, catalog.entries.filter((entry) => entry.delivery_status === "published"), blocked);
   for (const document of documents.filter((item) => statusRoutes.includes(item.filename))) {
     assert.ok(
       visibleLinks(document.markdown).some((destination) => resolveDestination(document.filename, destination) === statusIndex),
@@ -228,7 +240,7 @@ test("status index contract rejects a missing blocked entry", () => {
     spec: "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
   }];
   assert.throws(
-    () => assertedStatusIndex("## Published\n\n0개\n\n## Blocked\n\n재시도와 evidence를 확인합니다.", blocked),
+    () => assertedStatusIndex("## Published\n\n0개\n\n## Blocked\n\n재시도와 evidence를 확인합니다.", [], blocked),
     /missing from Blocked/u,
   );
 });

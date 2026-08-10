@@ -4,7 +4,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 
 ## Curated Archify 상태
 
-[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Career 후보의 시각 QA 상태와 재시도 경계를 확인합니다. 현재 공개된 Archify diagram은 **0개**이므로 이 README에는 Archify HTML 결과물 링크가 없습니다.
+[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Career 후보의 검증·시각 QA 근거를 확인합니다. [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)는 단계 진단, 증거 프로젝트, 포트폴리오·면접·성장 분기와 사람 검토 후 재개를 대화형 HTML로 보여 줍니다.
 
 ## 사례 탐색 경로
 

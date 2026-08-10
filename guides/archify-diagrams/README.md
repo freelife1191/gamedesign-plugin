@@ -1,13 +1,13 @@
 # Curated Archify inventory
 
-이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 현재 3개 `selected` 항목은 모두 committed `spec`과 검증 기록을 가지지만, 검증·시각 QA를 모두 통과한 공개 결과물은 아직 없습니다.
+이 디렉터리는 과거의 일괄 생성 Archify 가이드를 대신하는 **선별 inventory**입니다. 이전 계층은 같은 형식의 HTML을 문서 수에 맞춰 넓게 만들었지만, 이제는 관계·분기·상태·책임 handoff가 원문보다 더 잘 읽히는 경우만 후보로 남깁니다. 현재 3개 `selected` 항목은 모두 committed `spec`과 검증 기록을 가지며, 검증·시각 QA를 통과한 한국어 HTML 3개를 `published` 상태로 공개합니다.
 
 ## 처음 보는 사용자를 위한 흐름
 
 1. `catalog.json`에서 문서별 `selected` 또는 `excluded` 결정을 찾습니다.
 2. `selected`의 `question`, `diagram_type_reason`, `composition_rationale`가 실제로 어떤 질문을 도식으로 풀지 설명합니다.
-3. 현재 3개 `selected` spec 중 Studio workflow는 `blocked-validation`이고, Career workflow와 Suite handoff는 `blocked-visual`입니다. 각 차단 사유와 증거는 아래 상태 인덱스에서 확인합니다.
-4. `passed/published`는 0개입니다. `guides/assets/archify/`에는 공개 HTML·receipt가 없으며, failed render는 검토 증거일 뿐 공개 결과물이 아닙니다.
+3. 현재 3개 `selected` spec은 모두 Archify showcase 9/9, 오류·경고 0, headless 원본 크기 시각 QA를 통과했습니다.
+4. `published`는 3개입니다. 각 공개 HTML은 한국어 뷰어와 검증 receipt를 가지며, 아래 Published 목록에서 바로 열 수 있습니다.
 
 ## 증거와 전수 범위
 
@@ -66,27 +66,26 @@ catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 invento
 
 ## Published diagrams
 
-**0개 (없음).** 현재 `published`이고 `visual_review: passed`인 항목이 없으므로, `guides/assets/archify/`의 공개 HTML·receipt와 사용자 가이드의 Archify 결과물 링크도 없습니다. 차단 또는 실패한 렌더는 아래 상태와 증거를 검토하기 위한 기록일 뿐 공개 결과물이 아닙니다.
-
-## Blocked diagrams
+**3개.** 아래 결과물은 모두 `published`이고 `visual_review: passed`이며, 공통 조작 UI와 사용자 가시 설명을 한국어로 제공합니다.
 
 ### `studio-project-workflow`
 
-- 제품·유형·상태: `studio` · `workflow` · `blocked-validation` (`visual_review: not-applicable`)
-- 이유: `image_asset_review -> format_qa_export` 경로가 `resume_context`를 통과하고, `image_asset_review -> resume_context` 라벨이 노드와 겹칩니다. 대안 배치는 각각 오류 수를 늘렸습니다.
-- 명세: [Studio workflow spec](specs/studio/studio-project-workflow.json) · 진단 증거: [catalog 진단 ledger](catalog.json)
-- 재시도 경계: 현재 3회 검증 수정으로 최선 후보를 복원했습니다. topology를 다시 저작해 두 validation 진단을 모두 해소한 뒤에만 validate와 시각 검토를 다시 시작합니다.
+- 제품·유형·상태: `studio` · `workflow` · `published` (`visual_review: passed`)
+- 공개물: [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)
+- 명세·증거: [Studio workflow spec](specs/studio/studio-project-workflow.json) · [QA manifest](visual-qa/manifest.json)
 
 ### `career-evidence-workflow`
 
-- 제품·유형·상태: `career` · `workflow` · `blocked-visual` (`visual_review: failed`)
-- 이유: 2차 원본 크기 렌더에도 rail label 줄임표, career-routes 프레임 crop, 검토 주석 충돌이 남았습니다.
-- 명세: [Career workflow spec](specs/career/career-evidence-workflow.json) · 시각 QA 증거: [실패 artifact](visual-qa/failed-artifacts/career/career-evidence-workflow.html) · [QA manifest](visual-qa/manifest.json)
-- 재시도 경계: 허용된 2회 보정이 끝났습니다. label·frame·clearance를 다시 저작하고 모든 뷰를 재렌더한 새 QA 기록이 생긴 뒤에만 시각 검토를 재시도합니다.
+- 제품·유형·상태: `career` · `workflow` · `published` (`visual_review: passed`)
+- 공개물: [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)
+- 명세·증거: [Career workflow spec](specs/career/career-evidence-workflow.json) · [QA manifest](visual-qa/manifest.json)
 
 ### `suite-studio-career-handoff`
 
-- 제품·유형·상태: `suite` · `dataflow` · `blocked-visual` (`visual_review: failed`)
-- 이유: 2차 held-review focus에도 Studio 경계와 Career input·Receipt node border가 프레임 밖으로 잘립니다.
-- 명세: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · 검증 증거: [final validation receipt](validation-evidence/suite-studio-career-handoff/final.receipt.json) · 시각 QA 증거: [실패 artifact](visual-qa/failed-artifacts/suite/suite-studio-career-handoff.html) · [QA manifest](visual-qa/manifest.json)
-- 재시도 경계: 허용된 2회 보정이 끝났습니다. focus 경계와 노드 여백을 재저작하고 모든 뷰 재렌더·QA를 통과한 새 증거가 생긴 뒤에만 시각 검토를 재시도합니다.
+- 제품·유형·상태: `suite` · `dataflow` · `published` (`visual_review: passed`)
+- 공개물: [한국어 Studio → Career 공개 근거 handoff](../assets/archify/suite/suite-studio-career-handoff.html)
+- 명세·증거: [Suite handoff spec](specs/suite/suite-studio-career-handoff.json) · [QA manifest](visual-qa/manifest.json)
+
+## Blocked diagrams
+
+**0개 (없음).** 현재 선택된 세 도식에는 남은 `blocked-*` 상태가 없습니다. 이후 source digest, Archify 검증 또는 시각 QA가 실패하면 공개 상태를 유지하지 않고 이 섹션에 차단 이유·증거·재시도 경계를 기록합니다.

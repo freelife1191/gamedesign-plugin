@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile as execFileCallback } from "node:child_process";
-import { access, lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -8,9 +8,7 @@ import test from "node:test";
 
 import { hashArchifySource, loadArchifyCatalog } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
-import { stageCuratedArchify } from "../../tooling/lib/archify-delivery.mjs";
 import { sha256 } from "../../tooling/lib/hash.mjs";
-import { assertNoSymlinkPath, joinWithin } from "../../tooling/lib/paths.mjs";
 import { validateArchifyDeliverReceipt } from "../../tooling/lib/archify-receipt.mjs";
 import { resolveArchifyInstallation } from "../../shared/scripts/capability-probe.mjs";
 
@@ -97,24 +95,24 @@ function assertPrimaryNodeBound(spec) {
 
 function assertResumeReturnsToBlockedImageReview(spec) {
   const branch = spec.edges.find((edge) => edge.from === "image_asset_review" && edge.to === "resume_context");
-  assert.deepEqual(branch && { role: branch.role, label: branch.label }, { role: "branch", label: "blocked" });
+  assert.deepEqual(branch && { role: branch.role, label: branch.label }, { role: "branch", label: "보류" });
   const resume = spec.edges.find((edge) => edge.from === "resume_context");
   assert.deepEqual(resume && { to: resume.to, role: resume.role, label: resume.label }, {
     to: "image_asset_review",
     role: "return",
-    label: "resume",
+    label: "재개",
   });
   assert.equal(spec.edges.some((edge) => edge.from === "resume_context" && edge.to === "canonical_artifact"), false);
 }
 
 function assertCareerHoldResumesEvidenceResearch(spec) {
   const hold = spec.edges.find((edge) => edge.from === "evidence_research" && edge.to === "held_context");
-  assert.deepEqual(hold && { role: hold.role, label: hold.label }, { role: "branch", label: "blocked" });
+  assert.deepEqual(hold && { role: hold.role, label: hold.label }, { role: "branch", label: "보류" });
   const resume = spec.edges.find((edge) => edge.from === "held_context");
   assert.deepEqual(resume && { to: resume.to, role: resume.role, label: resume.label }, {
     to: "evidence_research",
     role: "return",
-    label: "resume",
+    label: "재개",
   });
 }
 
@@ -134,18 +132,18 @@ function assertCareerRouteAndReviewTopology(spec) {
   assertEdge(spec, "portfolio_case", "human_review");
   branch("growth_experiment", "human_review");
   assertEdge(spec, "human_review", "export_prepare");
-  const careerRoutes = spec.cards.find((card) => card.title === "Career routes");
-  assert.ok(careerRoutes?.items.some((item) => /interview/u.test(item) && item.includes("evidence IDs")), "Interview route card is required");
-  const reviewLayers = spec.cards.find((card) => card.title === "Review layers");
-  assert.ok(reviewLayers, "Review layers card is required");
-  for (const layer of ["Content", "Evidence", "Document quality"]) {
+  const careerRoutes = spec.cards.find((card) => card.title === "경력 경로");
+  assert.ok(careerRoutes?.items.some((item) => /면접/u.test(item) && item.includes("근거 ID")), "면접 경로 카드가 필요합니다");
+  const reviewLayers = spec.cards.find((card) => card.title === "검토 층");
+  assert.ok(reviewLayers, "검토 층 카드가 필요합니다");
+  for (const layer of ["내용", "근거", "문서 품질"]) {
     assert.ok(reviewLayers.items.some((item) => item.includes(layer)), `${layer} review layer is required`);
   }
 }
 
 function assertCareerSafetyLanguage(spec) {
   const visibleText = JSON.stringify(spec);
-  assert.match(visibleText, /does not guarantee a hiring outcome/i);
+  assert.match(visibleText, /채용 결과를 보장하지 않습니다/u);
   assert.doesNotMatch(
     visibleText,
     /approval\s+is\s+automatic|automatic\s+approval|hiring\s+is\s+guaranteed|guaranteed\s+hiring|자동\s*승인|승인이\s*자동|채용\s*보장|채용이\s*보장/iu,
@@ -157,7 +155,8 @@ function primaryNodeCount(spec) {
 }
 
 function hasNamedProductBoundary(spec, product) {
-  return spec.nodes.some((node) => node.label === `${product} boundary`);
+  const labels = { Studio: "스튜디오 경계", Career: "커리어 경계" };
+  return spec.nodes.some((node) => node.label === labels[product]);
 }
 
 function containsCompleteProductGraph(spec, product) {
@@ -188,45 +187,27 @@ function assertSuiteHandoffSemantics(spec) {
   assertFlow(spec, "career_boundary", "career_portfolio_input");
   assert.equal(spec.nodes.find((node) => node.id === "decision_owner")?.type, "external");
   const hold = spec.flows.find((flow) => flow.from === "decision_owner" && flow.to === "held_handoff");
-  assert.equal(hold?.classification, "hold");
+  assert.equal(hold?.classification, "보류");
   assertFlow(spec, "held_handoff", "resume_receipt");
   const resume = spec.flows.find((flow) => flow.from === "resume_receipt" && flow.to === "decision_owner");
   assert.deepEqual(resume && { to: resume.to, classification: resume.classification }, {
     to: "decision_owner",
-    classification: "return",
+    classification: "재개",
   });
 }
 
 function assertSuiteSafetyLanguage(spec) {
   const visibleText = JSON.stringify(spec);
   for (const phrase of [
-    "public/evidence-safe",
-    "public-only",
-    "Approval is not automatic",
-    "does not guarantee a hiring outcome",
+    "공개 가능한 문제·결정·대안·검증한 근거 요약만 보냅니다",
+    "이름이 있는 사람 결정 담당자가 공개 범위를 승인하거나 보류합니다",
+    "승인은 자동이 아니며",
+    "채용 결과를 보장하지 않습니다",
   ]) assert.ok(visibleText.includes(phrase), `${phrase} is required`);
   assert.doesNotMatch(
     visibleText,
     /approval\s+is\s+automatic|automatic\s+approval|hiring\s+is\s+guaranteed|guaranteed\s+hiring|자동\s*승인|승인이\s*자동|채용\s*보장|채용이\s*보장/iu,
   );
-}
-
-const suiteEvidenceDirectory = "guides/archify-diagrams/validation-evidence/suite-studio-career-handoff";
-
-async function readEvidenceFile(relativePath, label) {
-  const filename = joinWithin(repoRoot, relativePath, label);
-  await assertNoSymlinkPath(repoRoot, relativePath, label);
-  const stats = await lstat(filename);
-  assert.ok(stats.isFile(), `${label} must be a regular file`);
-  return readFile(filename);
-}
-
-function assertSuiteCliIdentity(manifest, installation) {
-  assert.deepEqual(Object.keys(manifest.cli).sort(), ["bytes", "provider", "sha256", "version"]);
-  assert.equal(manifest.cli.provider, installation.provider, "manifest cli provider must match resolver");
-  assert.equal(manifest.cli.version, installation.version, "manifest cli version must match resolver");
-  assert.equal(manifest.cli.sha256, installation.cli.sha256, "manifest cli sha256 must match resolver");
-  assert.equal(manifest.cli.bytes, Number(installation.cli.size), "manifest cli bytes must match resolver");
 }
 
 function assertSuiteReceiptContract(receipt, entry, specification, artifact) {
@@ -255,58 +236,8 @@ function assertSuiteReceiptContract(receipt, entry, specification, artifact) {
   }, { specification, artifact });
 }
 
-async function stageSuiteArtifact(entry) {
-  if (entry.delivery_status === "blocked-visual") {
-    return readFile(path.join(repoRoot, "guides/archify-diagrams/visual-qa/failed-artifacts", entry.product, `${entry.id}.html`));
-  }
-  await stageCuratedArchify({ repoRoot, ids: [entry.id] });
-  return readFile(path.join(repoRoot, ".tmp", "curated-archify", "current", entry.product, `${entry.id}.html`));
-}
-
-async function assertSuiteValidationEvidence(entry, spec) {
-  const manifestPath = `${suiteEvidenceDirectory}/manifest.json`;
-  const manifest = JSON.parse((await readEvidenceFile(manifestPath, "Suite validation manifest")).toString("utf8"));
-  assert.deepEqual(Object.keys(manifest).sort(), ["cli", "entry_id", "final_receipt", "rounds", "schema_version", "stdout_path_normalization"]);
-  assert.equal(manifest.schema_version, 1);
-  assert.equal(manifest.entry_id, entry.id);
-  assert.equal(manifest.stdout_path_normalization, "repo-root-relative");
-  assert.equal(manifest.rounds.length, 1);
-  const [round] = manifest.rounds;
-  assert.deepEqual(round.argv, ["validate", "dataflow", entry.spec, "--quality", "showcase", "--json"]);
-  assert.equal(round.exit_code, 0);
-  assert.deepEqual(round.diagnostics, { errors: 0, warnings: 0 });
-  assert.equal(round.candidate.path, entry.spec);
-  const candidate = await readEvidenceFile(round.candidate.path, "Suite candidate");
-  assert.deepEqual(JSON.parse(candidate.toString("utf8")), spec);
-  assert.equal(round.candidate.sha256, sha256(candidate));
-  assert.equal(round.candidate.bytes, candidate.byteLength);
-  const stdout = JSON.parse((await readEvidenceFile(`${suiteEvidenceDirectory}/${round.stdout.path}`, "Suite validator stdout")).toString("utf8"));
-  assert.equal(round.stdout.sha256, sha256(Buffer.from(`${JSON.stringify(stdout, null, 2)}\n`, "utf8")));
-  assert.equal(round.stdout.bytes, Buffer.byteLength(`${JSON.stringify(stdout, null, 2)}\n`));
-  assert.equal(stdout.ok, true);
-  assert.equal(stdout.command, "validate");
-  assert.equal(stdout.input, entry.spec);
-  assert.equal(stdout.composition.summary.errors, round.diagnostics.errors);
-  assert.equal(stdout.composition.summary.warnings, round.diagnostics.warnings);
-  const stderr = await readEvidenceFile(`${suiteEvidenceDirectory}/${round.stderr.path}`, "Suite validator stderr");
-  assert.equal(stderr.byteLength, 0);
-  assert.deepEqual(round.stderr, {
-    path: "final.validate.stderr.txt",
-    bytes: 0,
-    sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  });
-  const receiptBytes = await readEvidenceFile(`${suiteEvidenceDirectory}/${manifest.final_receipt.path}`, "Suite final receipt");
-  assert.equal(manifest.final_receipt.sha256, sha256(receiptBytes));
-  assert.equal(manifest.final_receipt.bytes, receiptBytes.byteLength);
-  const receipt = JSON.parse(receiptBytes.toString("utf8"));
-  const installation = await (archifyInstallation ??= resolveArchifyInstallation(process.env));
-  assert.equal(installation.status, "available");
-  assertSuiteCliIdentity(manifest, installation);
-  const artifact = await stageSuiteArtifact(entry);
-  assertSuiteReceiptContract(receipt, entry, candidate, artifact);
-  assert.deepEqual(receipt.specification, { sha256: round.candidate.sha256, bytes: round.candidate.bytes });
-  assert.equal(receipt.artifact.sha256, sha256(artifact));
-  assert.equal(receipt.artifact.bytes, artifact.byteLength);
+async function publishedSuiteArtifact(entry) {
+  return readFile(path.join(repoRoot, entry.html));
 }
 
 test("every selected Studio entry owns one exact fresh showcase spec", async () => {
@@ -356,15 +287,22 @@ test("Suite specs stay bounded and do not concatenate both product graphs", asyn
   }
 });
 
-test("Suite dataflow retains its portable validator evidence after the final blocked-visual review", async () => {
+test("Suite dataflow publishes a current localized artifact and exact receipt after visual review", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
   const entry = catalog.entries.find((item) => item.id === "suite-studio-career-handoff");
   const spec = specsById.get("suite-studio-career-handoff");
-  assert.equal(entry?.delivery_status, "blocked-visual");
-  assert.equal(entry?.visual_review, "failed");
-  assert.equal(entry?.diagnostics[0]?.round, 2);
+  assert.equal(entry?.delivery_status, "published");
+  assert.equal(entry?.visual_review, "passed");
+  assert.deepEqual(entry?.diagnostics, []);
   await assert.doesNotReject(() => validateInstalledSpec(spec, "dataflow"));
-  await assertSuiteValidationEvidence(entry, spec);
+  const specification = await readFile(path.join(repoRoot, entry.spec));
+  const artifact = await publishedSuiteArtifact(entry);
+  const receipt = JSON.parse(await readFile(path.join(repoRoot, entry.receipt), "utf8"));
+  assertSuiteReceiptContract(receipt, entry, specification, artifact);
+  assert.deepEqual(receipt.specification, { sha256: sha256(specification), bytes: specification.byteLength });
+  assert.deepEqual(receipt.artifact, { sha256: sha256(artifact), bytes: artifact.byteLength });
+  assert.match(artifact.toString("utf8"), /<html lang="ko"/u);
+  assert.match(artifact.toString("utf8"), /data-archify-ko-localizer/u);
 });
 
 test("Suite dataflow contract rejects schema, unsafe approval, and held-route mutations", async () => {
@@ -396,7 +334,12 @@ test("Suite safety contract rejects removal and bilingual approval or hiring gua
     if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, replaceVisibleText(item, target, replacement)]));
     return value;
   };
-  for (const phrase of ["public/evidence-safe", "public-only", "Approval is not automatic", "does not guarantee a hiring outcome"]) {
+  for (const phrase of [
+    "공개 가능한 문제·결정·대안·검증한 근거 요약만 보냅니다",
+    "이름이 있는 사람 결정 담당자가 공개 범위를 승인하거나 보류합니다",
+    "승인은 자동이 아니며",
+    "채용 결과를 보장하지 않습니다",
+  ]) {
     assert.throws(() => assertSuiteSafetyLanguage(replaceVisibleText(spec, phrase, "redacted")), new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"));
   }
   for (const contradiction of ["Approval is automatic", "자동 승인", "Hiring is guaranteed", "채용 보장"]) {
@@ -406,20 +349,13 @@ test("Suite safety contract rejects removal and bilingual approval or hiring gua
   }
 });
 
-test("Suite evidence rejects resolver identity and receipt provenance mutations", async () => {
+test("Suite published receipt rejects exact provenance mutations", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
   const entry = catalog.entries.find((item) => item.id === "suite-studio-career-handoff");
-  const spec = specsById.get("suite-studio-career-handoff");
-  const manifest = JSON.parse((await readEvidenceFile(`${suiteEvidenceDirectory}/manifest.json`, "Suite validation manifest")).toString("utf8"));
-  const receipt = JSON.parse((await readEvidenceFile(`${suiteEvidenceDirectory}/final.receipt.json`, "Suite final receipt")).toString("utf8"));
-  const candidate = await readEvidenceFile(entry.spec, "Suite candidate");
-  const artifact = await stageSuiteArtifact(entry);
-  const installation = await (archifyInstallation ??= resolveArchifyInstallation(process.env));
-  for (const field of ["provider", "version", "sha256", "bytes"]) {
-    const mutated = structuredClone(manifest);
-    mutated.cli[field] = field === "bytes" ? 0 : "wrong";
-    assert.throws(() => assertSuiteCliIdentity(mutated, installation), new RegExp(field, "u"));
-  }
+  assert.ok(specsById.get("suite-studio-career-handoff"));
+  const receipt = JSON.parse(await readFile(path.join(repoRoot, entry.receipt), "utf8"));
+  const candidate = await readFile(path.join(repoRoot, entry.spec));
+  const artifact = await publishedSuiteArtifact(entry);
   for (const [field, value] of [
     ["command", "validate"], ["type", "workflow"], ["quality", "standard"],
     ["input", "wrong-input"], ["output", "wrong-output"], ["compositionProfile", "standard"],
@@ -444,17 +380,15 @@ test("Suite specs remain source-bound and structurally distinct", async () => {
   assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
 });
 
-test("selected Career workflow retains a schema-valid blocked-visual state after two unresolved correction rounds", async () => {
+test("selected Career workflow is published only after schema and visual review pass", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "career");
   const entry = catalog.entries.find((item) => item.id === "career-evidence-workflow");
   const spec = careerWorkflowSpec(specsById);
   assertPrimaryNodeBound(spec);
-  assert.equal(entry.delivery_status, "blocked-visual");
-  assert.equal(entry.visual_review, "failed");
-  assert.equal(entry.reviewer, "Codex Task 11 visual QA");
-  assert.equal(entry.diagnostics.length, 1);
-  assert.equal(entry.diagnostics[0].code, "visual-defect");
-  assert.equal(entry.diagnostics[0].round, 2);
+  assert.equal(entry.delivery_status, "published");
+  assert.equal(entry.visual_review, "passed");
+  assert.equal(entry.reviewer, "Codex 헤드리스 시각 QA");
+  assert.deepEqual(entry.diagnostics, []);
   await assert.doesNotReject(() => validateInstalledWorkflowSpec(spec));
 });
 
@@ -500,9 +434,9 @@ test("Career workflow contract rejects removal of growth or document-quality rev
   };
   assert.throws(() => assertCareerRouteAndReviewTopology(withoutGrowth), /growth_experiment/u);
   const withoutDocumentQuality = structuredClone(spec);
-  const reviewLayers = withoutDocumentQuality.cards.find((card) => card.title === "Review layers");
-  reviewLayers.items = reviewLayers.items.filter((item) => !item.includes("Document quality"));
-  assert.throws(() => assertCareerRouteAndReviewTopology(withoutDocumentQuality), /Document quality/u);
+  const reviewLayers = withoutDocumentQuality.cards.find((card) => card.title === "검토 층");
+  reviewLayers.items = reviewLayers.items.filter((item) => !item.includes("문서 품질"));
+  assert.throws(() => assertCareerRouteAndReviewTopology(withoutDocumentQuality), /문서 품질/u);
 });
 
 test("Career workflow contract rejects automatic approval and guaranteed hiring contradictions", async () => {
@@ -515,21 +449,16 @@ test("Career workflow contract rejects automatic approval and guaranteed hiring 
   }
 });
 
-test("selected Studio workflow records either a validated spec or a truthful validator block", async () => {
+test("selected Studio workflow is published only after validation and visual review pass", async () => {
   const { catalog, specsById } = await loadProductionSpecs(repoRoot, "studio");
   const entry = catalog.entries.find((item) => item.id === "studio-project-workflow");
   const spec = studioWorkflowSpec(specsById);
   assertPrimaryNodeBound(spec);
-  if (entry.delivery_status === "auto-validated") {
-    assert.equal(entry.visual_review, "pending");
-    assert.deepEqual(entry.diagnostics, []);
-    await assert.doesNotReject(() => validateInstalledWorkflowSpec(spec));
-    return;
-  }
-  assert.equal(entry.delivery_status, "blocked-validation");
-  assert.equal(entry.visual_review, "not-applicable");
-  assert.ok(entry.diagnostics.length > 0);
-  assert.match(await installedValidationError(spec), /resume_context|blocked/u);
+  assert.equal(entry.delivery_status, "published");
+  assert.equal(entry.visual_review, "passed");
+  assert.equal(entry.reviewer, "Codex 헤드리스 시각 QA");
+  assert.deepEqual(entry.diagnostics, []);
+  await assert.doesNotReject(() => validateInstalledWorkflowSpec(spec));
 });
 
 test("Studio workflow preserves the source-backed vision, review, asset, export, and resume sequence", async () => {
@@ -589,14 +518,15 @@ test("Studio workflow contract rejects invalid-schema and thirteen-node mutation
   assert.throws(() => assertPrimaryNodeBound(overflow), /at most 12/u);
 });
 
-test("blocked Studio entry leaves no stale current-stage HTML or receipt", async () => {
+test("published Studio entry exposes its exact HTML and receipt", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const entry = catalog.entries.find((item) => item.id === "studio-project-workflow");
-  assert.equal(entry.delivery_status, "blocked-validation");
-  const currentDirectory = path.join(repoRoot, ".tmp", "curated-archify", "current", entry.product);
-  for (const extension of ["html", "receipt.json"]) {
-    await assert.rejects(access(path.join(currentDirectory, `${entry.id}.${extension}`)), { code: "ENOENT" });
-  }
+  assert.equal(entry.delivery_status, "published");
+  await access(path.join(repoRoot, entry.html));
+  await access(path.join(repoRoot, entry.receipt));
+  const html = await readFile(path.join(repoRoot, entry.html), "utf8");
+  assert.match(html, /<html lang="ko"/u);
+  assert.match(html, /data-archify-ko-localizer/u);
 });
 
 test("Studio specs remain source-bound and do not recreate the retired six-node template", async () => {

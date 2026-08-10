@@ -64,7 +64,7 @@ async function regularContained(root, relative, label) {
   return { normalized, filename };
 }
 
-function artifactPath(entry) {
+export function archifyVisualQaArtifactPath(entry) {
   if (entry.delivery_status === "blocked-visual") {
     return `guides/archify-diagrams/visual-qa/failed-artifacts/${entry.product}/${entry.id}.html`;
   }
@@ -148,7 +148,7 @@ async function validateRenders(root, entry, label, usedPaths, renderSnapshots) {
   return views;
 }
 
-async function validateEntry(root, entry, catalogEntry, index, usedPaths, renderSnapshots) {
+async function validateEntry(root, entry, catalogEntry, index, usedPaths, renderSnapshots, artifactSnapshots) {
   const label = `visual QA entry[${index}]`;
   assertExactKeys(entry, ENTRY_KEYS, label);
   if (!nonempty(entry.id) || entry.id !== catalogEntry.id) throw new Error(`${label}.id must bind a catalog entry`);
@@ -168,9 +168,11 @@ async function validateEntry(root, entry, catalogEntry, index, usedPaths, render
   }
   if (catalogEntry.reviewer !== entry.reviewer) throw new Error(`${label}.reviewer does not match catalog reviewer`);
   const spec = await regularContained(root, catalogEntry.spec, `${label} specification`);
-  const artifact = await regularContained(root, artifactPath(catalogEntry), `${label} artifact`);
   if (sha256(await readFile(spec.filename)) !== entry.specification_sha256) throw new Error(`${label} specification digest does not match bytes`);
-  if (sha256(await readFile(artifact.filename)) !== entry.artifact_sha256) throw new Error(`${label} artifact digest does not match bytes`);
+  const pinnedArtifact = artifactSnapshots?.get(entry.id);
+  if (artifactSnapshots && !Buffer.isBuffer(pinnedArtifact)) throw new Error(`missing pinned ${label} artifact: ${entry.id}`);
+  const artifactBytes = pinnedArtifact ?? await readFile((await regularContained(root, archifyVisualQaArtifactPath(catalogEntry), `${label} artifact`)).filename);
+  if (sha256(artifactBytes) !== entry.artifact_sha256) throw new Error(`${label} artifact digest does not match bytes`);
   validateChecks(entry, label);
   const views = await validateRenders(root, entry, label, usedPaths, renderSnapshots);
   validateDefects(entry, label, views);
@@ -189,7 +191,7 @@ export function collectArchifyVisualQaRenderPaths(manifest) {
   return [...paths].sort(comparePaths);
 }
 
-export async function loadArchifyVisualQa({ repoRoot, manifestPath, catalog: suppliedCatalog, manifestBytes, renderSnapshots } = {}) {
+export async function loadArchifyVisualQa({ repoRoot, manifestPath, catalog: suppliedCatalog, manifestBytes, renderSnapshots, artifactSnapshots } = {}) {
   if (!nonempty(repoRoot)) throw new Error("repoRoot must be a non-empty path");
   const catalog = suppliedCatalog ?? await loadArchifyCatalog({ repoRoot });
   const relative = manifestPath ?? MANIFEST_PATH;
@@ -216,7 +218,7 @@ export async function loadArchifyVisualQa({ repoRoot, manifestPath, catalog: sup
     seen.add(entry.id);
     const catalogEntry = catalogById.get(entry.id);
     if (!catalogEntry) throw new Error(`visual QA entry does not exist in selected catalog: ${entry.id}`);
-    await validateEntry(repoRoot, entry, catalogEntry, index, usedPaths, renderSnapshots);
+    await validateEntry(repoRoot, entry, catalogEntry, index, usedPaths, renderSnapshots, artifactSnapshots);
   }
   for (const entry of required) if (!seen.has(entry.id)) throw new Error(`missing visual QA passed record: ${entry.id}`);
   return { catalog, qa };
@@ -242,14 +244,14 @@ function renderSheet(title, entries, sheetName) {
   const cards = [...entries].sort(compareEntries).map(({ catalog, qa }) => [
     `<article data-visual-qa-id="${escapeHtml(catalog.id)}">`,
     `  <h2>${escapeHtml(catalog.id)}</h2>`,
-    `  <p><strong>Question:</strong> ${escapeHtml(catalog.question)}</p>`,
-    `  <p><strong>Type:</strong> ${escapeHtml(catalog.diagram_type)} · <strong>Product:</strong> ${escapeHtml(catalog.product)}</p>`,
-    `  <p><a href="${escapeHtml(hrefFromSheet(sheetName, catalog.source_document))}">Source</a></p>`,
+    `  <p><strong>질문:</strong> ${escapeHtml(catalog.question)}</p>`,
+    `  <p><strong>유형:</strong> ${escapeHtml(catalog.diagram_type)} · <strong>제품:</strong> ${escapeHtml(catalog.product)}</p>`,
+    `  <p><a href="${escapeHtml(hrefFromSheet(sheetName, catalog.source_document))}">원문</a></p>`,
     `  <figure><img src="../${escapeHtml(qa.renders.read.path)}" width="${qa.renders.read.width}" height="${qa.renders.read.height}" alt="READ — ${escapeHtml(catalog.id)}"><figcaption>READ</figcaption></figure>`,
     "</article>",
   ].join("\n"));
   return [
-    "<!doctype html>", "<html lang=\"en\">", "<meta charset=\"utf-8\">", `<title>${escapeHtml(title)}</title>`,
+    "<!doctype html>", "<html lang=\"ko\">", "<meta charset=\"utf-8\">", `<title>${escapeHtml(title)}</title>`,
     `<h1>${escapeHtml(title)}</h1>`, ...cards, "",
   ].join("\n");
 }
@@ -260,14 +262,14 @@ export function renderArchifyContactSheets({ catalog, qa }) {
   const passed = qa.entries.filter((entry) => entry.verdict === "passed").map((entry) => ({ catalog: catalogById.get(entry.id), qa: entry }));
   if (passed.some((entry) => !entry.catalog)) throw new Error("contact sheet has an unknown catalog entry");
   if (passed.length === 0) return new Map();
-  const sheets = new Map([["all.html", renderSheet("All curated Archify diagrams", passed, "all.html")]]);
+  const sheets = new Map([["all.html", renderSheet("검증된 Archify 도식 전체", passed, "all.html")]]);
   for (const product of [...new Set(passed.map((entry) => entry.catalog.product))].sort(comparePaths)) {
     const name = `product-${product}.html`;
-    sheets.set(name, renderSheet(`Curated Archify diagrams — ${product}`, passed.filter((entry) => entry.catalog.product === product), name));
+    sheets.set(name, renderSheet(`검증된 Archify 도식 — ${product}`, passed.filter((entry) => entry.catalog.product === product), name));
   }
   for (const type of [...new Set(passed.map((entry) => entry.catalog.diagram_type))].sort(comparePaths)) {
     const name = `type-${type}.html`;
-    sheets.set(name, renderSheet(`Curated Archify diagrams — ${type}`, passed.filter((entry) => entry.catalog.diagram_type === type), name));
+    sheets.set(name, renderSheet(`검증된 Archify 도식 — ${type}`, passed.filter((entry) => entry.catalog.diagram_type === type), name));
   }
   assertArchifyContactSheetCoverage(sheets, passed);
   return sheets;

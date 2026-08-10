@@ -257,6 +257,10 @@ test("contact sheets escape data, order entries, and include every passed READ r
   catalog.entries[0].question = "<unsafe & question>";
   const sheets = renderArchifyContactSheets({ catalog, qa });
   const all = sheets.get("all.html");
+  assert.match(all, /<html lang="ko">/u);
+  assert.match(all, /<strong>질문:<\/strong>/u);
+  assert.match(all, /<strong>유형:<\/strong>/u);
+  assert.match(all, />원문<\/a>/u);
   assert.match(all, /&lt;unsafe &amp; question&gt;/u);
   assert.match(all, /renders\/studio\/stable-id\/read\.png/u);
   for (const name of ["all.html", "product-studio.html", "type-workflow.html"]) {

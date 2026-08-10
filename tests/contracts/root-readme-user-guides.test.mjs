@@ -16,6 +16,7 @@ const guideRoot = path.join(root, "guides");
 const products = ["game-design-studio", "game-design-career"];
 const requiredRootHeadings = [
   "이 플러그인으로 할 수 있는 일",
+  "한국어 Archify 아키텍처 도식",
   "사용자 유형별 추천 시작점",
   "활용 방법 선택",
   "어떤 플러그인을 설치할까",

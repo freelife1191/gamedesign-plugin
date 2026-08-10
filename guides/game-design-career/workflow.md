@@ -2,6 +2,8 @@
 
 Career는 현재 단계를 진단한 뒤 필요한 근거만 조사하고, 작은 증거 프로젝트를 포트폴리오·면접·성장 계획으로 연결합니다.
 
+[한국어 Archify 증거·포트폴리오 워크플로 열기](../assets/archify/career/career-evidence-workflow.html)
+
 ```text
 단계 진단
 → 현재 근거 조사

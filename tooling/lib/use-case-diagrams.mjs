@@ -442,7 +442,7 @@ export function validateUseCaseDiagramSvg(svg, id) {
   };
   if (/<style(?:\s|>)[^>]*>[\s\S]*?(?:font(?:-size|-stretch)?\s*:|font-size|font-stretch)[\s\S]*?<\/style>/iu.test(svg)) fail("style", "forbidden inherited typography rule");
   if (/<(?:g|svg)\b[^>]*transform\s*=\s*(?:"[^"]*(?:scale|matrix|skew(?:X|Y)?)\s*\(|'[^']*(?:scale|matrix|skew(?:X|Y)?)\s*\()/iu.test(svg)) fail("ancestor", "forbidden glyph-scaling transform");
-  const minimumByRole = { title: 42, description: 18, "card-title": 20, "card-body": 15, caption: 13, "semantic-rail": 13, footer: 18, eyebrow: 18 };
+  const minimumByRole = { title: 42, description: 18, "card-title": 20, "card-body": 15, caption: 13, "semantic-rail": 13, "route-footer": 8, footer: 18, eyebrow: 18 };
   for (const match of svg.matchAll(/<(text|tspan)\b([^>]*)>/gu)) {
     const [, element, attributes] = match;
     const role = svgAttribute(attributes, "data-text-role") ?? element;
@@ -590,13 +590,14 @@ function readableRailGroups(source) {
 function renderReadableUseCaseSvg(source) {
   const cards = layoutFor(source.type, source.steps.length, source);
   const isBranchedDecision = source.type === "decision-flow" && Array.isArray(source.branches) && source.branches.length >= 2;
+  const careerRouteLines = careerRouteFooterLines(source);
   const cardMarkup = source.steps.map((rawStep, index) => {
     const step = visibleStep(source, rawStep, index);
     const card = cards[index];
     const colors = cardColor(index);
     const compact = card.height <= 160;
     const title = wrappedText(step.label, { x: card.x + 28, y: card.y + (compact ? 102 : 96), fill: colors.accent, fontSize: 20, role: "card-title", maxCharacters: 8, maxLines: 3, weight: 700, lineHeight: 23 });
-    const fullDetail = step.detail;
+    const fullDetail = careerRouteLines.length > 0 && index === 4 ? step.exact[0] : step.detail;
     const detail = isBranchedDecision
       ? ""
       : wrappedText(fullDetail, { x: card.x + 28, y: card.y + 165, fill: "#354152", fontSize: 15, role: "card-body", maxCharacters: 11, maxLines: 3, lineHeight: 19 });
@@ -648,7 +649,19 @@ function renderReadableUseCaseSvg(source) {
       return markup;
     });
   };
-  const conclusion = wrappedText(source.conclusion, { x: 84, y: 850, fill: "#1F2733", fontSize: 18, role: "footer", maxCharacters: 56, maxLines: 2, lineHeight: 23 });
+  const conclusion = wrappedText(source.conclusion, {
+    x: 84,
+    y: careerRouteLines.length > 0 ? 826 : 850,
+    fill: "#1F2733",
+    fontSize: 18,
+    role: "footer",
+    maxCharacters: 56,
+    maxLines: careerRouteLines.length > 0 ? 1 : 2,
+    lineHeight: 23,
+  });
+  const careerRouteMarkup = careerRouteLines.map((line, index) => (
+    `  <text data-career-route-line="true" data-text-role="route-footer" x="84" y="${846 + index * 11}" fill="#354152" font-size="8" font-weight="500">${escapeXml(line)}</text>`
+  )).join("\n");
   const title = wrappedText(source.title, { x: 88, y: 141, fill: "#1F2733", fontSize: 42, role: "title", maxCharacters: 29, maxLines: 2, weight: 700, lineHeight: 46 });
   const description = wrappedText(source.description, { x: 88, y: 218, fill: "#5B6675", fontSize: 18, role: "description", maxCharacters: 68, maxLines: 2, lineHeight: 22 });
 
@@ -676,6 +689,7 @@ function renderReadableUseCaseSvg(source) {
     ...railColumn(railGroups.right, 710).map((line) => `  ${line}`),
     '  <rect x="52" y="814" width="1296" height="70" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>',
     `  ${conclusion}`,
+    careerRouteMarkup,
     "</svg>",
     "",
   ].filter(Boolean).join("\n") + "\n";

@@ -2,8 +2,8 @@
   "schema_version": 1,
   "diagram_type": "workflow",
   "meta": {
-    "title": "Game Design Studio Project Workflow",
-    "subtitle": "Vision becomes a canonical design document, receives human decisions and asset evidence, then resumes from preserved context.",
+    "title": "게임 디자인 스튜디오 프로젝트 흐름",
+    "subtitle": "비전은 기준 설계 문서가 되고, 사람의 결정과 자산 근거를 거쳐 보존된 맥락에서 다시 시작합니다.",
     "output": "guides/assets/archify/studio/studio-project-workflow.html",
     "animation": "none",
     "visual_preset": "blueprint",
@@ -11,50 +11,51 @@
     "views": [
       {
         "id": "vision-to-review",
-        "label": "Vision to human decision",
+        "label": "비전에서 사람 결정까지",
         "focus": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision"],
-        "note": "The approved player experience becomes a canonical document before specialist findings return to a human decision."
+        "note": "승인된 플레이어 경험은 전문 검토 결과가 사람의 결정으로 돌아오기 전에 기준 문서가 됩니다."
       },
       {
         "id": "asset-evidence",
-        "label": "Image and format evidence",
+        "label": "이미지와 형식 근거",
         "focus": ["image_asset_plan", "image_asset_review", "format_qa_export"],
-        "note": "Image planning and human approval stay distinct from the renderer-specific QA needed for exported formats."
+        "note": "이미지 계획과 사람 승인은 내보낸 형식에 필요한 렌더러별 품질 검토와 분리합니다."
       },
       {
         "id": "resume-contract",
-        "label": "Resume from context",
+        "label": "맥락에서 재개",
         "focus": ["canonical_artifact", "image_asset_review", "resume_context"],
-        "note": "The canonical path is preserved, while the next request re-enters the blocked image approval instead of recreating the document."
+        "note": "기준 경로를 보존하고, 다음 요청은 문서를 새로 만들지 않고 보류된 이미지 승인으로 돌아갑니다."
       }
     ]
   },
   "lanes": [
-    { "id": "human", "label": "Human decisions" },
-    { "id": "studio", "label": "Game Design Studio" },
-    { "id": "specialists", "label": "Specialist review" },
-    { "id": "assets_renderer", "label": "Assets and renderer" }
+    { "id": "human", "label": "사람의 결정" },
+    { "id": "studio", "label": "게임 디자인 스튜디오" },
+    { "id": "specialists", "label": "전문 검토" },
+    { "id": "assets_renderer", "label": "자산과 렌더러" },
+    { "id": "resume", "label": "보류 작업과 재개", "variant": "exception" }
   ],
   "phases": [
-    { "id": "frame", "label": "Frame", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
-    { "id": "design", "label": "Design and decide", "fromCol": 2, "toCol": 3 },
-    { "id": "evidence", "label": "Asset and export evidence", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+    { "id": "frame", "label": "방향 설정", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "design", "label": "설계와 결정", "fromCol": 2, "toCol": 3 },
+    { "id": "evidence", "label": "자산과 내보내기 근거", "fromCol": 4, "toCol": 5, "variant": "dashed" }
   ],
   "groups": [
-    { "id": "canonical_design", "label": "Canonical design record", "lane": "studio", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
-    { "id": "asset_evidence", "label": "Provider and format evidence", "lane": "assets_renderer", "fromCol": 4, "toCol": 5, "variant": "security" }
+    { "id": "canonical_design", "label": "기준 설계 기록", "lane": "studio", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "asset_evidence", "label": "제공자와 형식 근거", "lane": "assets_renderer", "fromCol": 4, "toCol": 5, "variant": "security" }
   ],
   "mainPath": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision", "image_asset_plan", "image_asset_review", "format_qa_export"],
   "nodes": [
-    { "id": "vision_approval", "lane": "human", "col": 0, "type": "external", "label": "Approve vision", "sublabel": "player, fun, non-goals" },
-    { "id": "resume_context", "lane": "studio", "col": 5, "width": 72, "type": "messagebus", "label": "Resume", "sublabel": "path + task" },
-    { "id": "canonical_artifact", "lane": "studio", "col": 1, "width": 52, "type": "database", "label": "Doc", "sublabel": "decisions" },
-    { "id": "domain_design", "lane": "studio", "col": 2, "width": 52, "type": "backend", "label": "Scope", "sublabel": "domains" },
-    { "id": "specialist_review", "lane": "specialists", "col": 3, "type": "security", "label": "Review", "sublabel": "quality + feasibility" },
-    { "id": "finding_decision", "lane": "human", "col": 4, "type": "external", "label": "Decision", "sublabel": "fix, exception, or hold", "tag": "human gate" },
-    { "id": "image_asset_plan", "lane": "assets_renderer", "col": 4, "width": 52, "type": "cloud", "label": "Plan", "sublabel": "prompts" },
-    { "id": "image_asset_review", "lane": "human", "col": 5, "type": "external", "label": "Approve", "sublabel": "images" },
-    { "id": "format_qa_export", "lane": "assets_renderer", "col": 5, "width": 52, "type": "security", "label": "QA", "sublabel": "export" }
+    { "id": "vision_approval", "lane": "human", "col": 0, "type": "external", "label": "비전 승인", "sublabel": "플레이어·재미·비목표" },
+    { "id": "resume_context", "lane": "resume", "col": 4, "width": 72, "type": "messagebus", "label": "작업 재개", "sublabel": "같은 보류 작업" },
+    { "id": "canonical_artifact", "lane": "studio", "col": 1, "width": 52, "type": "database", "label": "기준", "sublabel": "결정 기록" },
+    { "id": "domain_design", "lane": "studio", "col": 2, "width": 52, "type": "backend", "label": "범위", "sublabel": "설계 영역" },
+    { "id": "specialist_review", "lane": "specialists", "col": 3, "type": "security", "label": "전문 검토", "sublabel": "품질·실현성" },
+    { "id": "finding_decision", "lane": "human", "col": 4, "type": "external", "label": "결정", "sublabel": "수정·예외·보류", "tag": "사람 결정" },
+    { "id": "image_asset_plan", "lane": "assets_renderer", "col": 4, "width": 68, "type": "cloud", "label": "자산 계획", "sublabel": "요청문" },
+    { "id": "image_asset_review", "lane": "human", "col": 5, "type": "external", "label": "이미지 승인", "sublabel": "이미지" },
+    { "id": "format_qa_export", "lane": "assets_renderer", "col": 5, "width": 68, "type": "security", "label": "형식 검토", "sublabel": "내보내기" }
   ],
   "edges": [
     { "from": "vision_approval", "to": "canonical_artifact", "role": "main", "variant": "emphasis" },
@@ -64,35 +65,35 @@
     { "from": "finding_decision", "to": "image_asset_plan", "role": "main", "variant": "emphasis" },
     { "from": "image_asset_plan", "to": "image_asset_review", "role": "main", "variant": "security" },
     { "from": "image_asset_review", "to": "format_qa_export", "role": "main", "variant": "emphasis" },
-    { "from": "image_asset_review", "to": "resume_context", "label": "blocked", "role": "branch", "variant": "dashed", "route": "straight", "fromSide": "bottom", "toSide": "top" },
-    { "from": "resume_context", "to": "image_asset_review", "label": "resume", "role": "return", "variant": "dashed", "route": "outside-right", "fromSide": "right", "toSide": "right" }
+    { "from": "image_asset_review", "to": "resume_context", "label": "보류", "role": "branch", "variant": "dashed", "route": "outside-right", "fromSide": "right", "toSide": "right", "channelX": 704 },
+    { "from": "resume_context", "to": "image_asset_review", "label": "재개", "role": "return", "variant": "dashed", "route": "outside-right", "fromSide": "right", "toSide": "right", "channelX": 736, "labelDy": 24 }
   ],
   "cards": [
     {
       "dot": "violet",
-      "title": "Canonical design record",
+      "title": "기준 설계 기록",
       "items": [
-        "Domain work merges through stable sections and decision records",
-        "Conflicting recommendations remain visible for a human decision",
-        "Missing evidence never becomes an AI approval"
+        "설계 영역 작업은 안정된 절과 결정 기록으로 합칩니다",
+        "상충하는 권고는 사람이 결정할 수 있게 남깁니다",
+        "없는 근거를 AI 승인을 대신하는 데 쓰지 않습니다"
       ]
     },
     {
       "dot": "amber",
-      "title": "Asset and export boundaries",
+      "title": "자산과 내보내기 경계",
       "items": [
-        "Image plans keep stable asset IDs and prompts before provider work",
-        "Image approval remains a human review step",
-        "Export formats need renderer-specific QA evidence"
+        "이미지 계획은 제공자 작업 전에 안정된 자산 ID와 요청문을 보존합니다",
+        "이미지 승인은 사람 검토 단계로 남깁니다",
+        "내보내기 형식에는 렌더러별 품질 검토 근거가 필요합니다"
       ]
     },
     {
       "dot": "cyan",
-      "title": "Resume contract",
+      "title": "재개 규약",
       "items": [
-        "Keep the canonical path, version, completed sections, and verified assets",
-        "Retain pending, blocked, and unavailable causes",
-        "Resume the blocked image approval with one next-request prompt"
+        "기준 경로·버전·완료 절·검증 자산을 보존합니다",
+        "대기·보류·사용 불가의 원인을 남깁니다",
+        "다음 요청 하나로 보류된 이미지 승인을 재개합니다"
       ]
     }
   ]

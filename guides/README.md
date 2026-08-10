@@ -17,7 +17,11 @@
 
 ## Curated Archify 상태
 
-[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 Archify diagram은 **0개**이므로 이 가이드는 HTML 결과물로 연결하지 않습니다.
+[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **3개**입니다.
+
+- [Studio 전체 프로젝트 워크플로](assets/archify/studio/studio-project-workflow.html)
+- [Career 증거·포트폴리오 워크플로](assets/archify/career/career-evidence-workflow.html)
+- [Studio → Career 공개 근거 handoff](assets/archify/suite/suite-studio-career-handoff.html)
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
 

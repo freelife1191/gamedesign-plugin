@@ -12,7 +12,7 @@ import {
   validateCareerDiagramProductionBatch,
   validateCareerDiagramProductionContract,
 } from "../../tooling/lib/career-diagram-production-contract.mjs";
-import { renderDiagramSvg, validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const expectedIds = [
@@ -131,9 +131,18 @@ test("CA-S01 and CA-S06 render every authority route across bounded footer lines
 
     assert.equal(routeLines.length, Math.ceil(expected.length / 3), `${id} bounded route line count`);
     assert.ok(routeElements.every((match) => !/textLength=/u.test(match[0])), `${id} route lines use their natural width`);
+    assert.ok(routeElements.every((match) => /data-text-role="route-footer"/u.test(match[0]) && /font-size="8"/u.test(match[0])), `${id} route lines use the guarded readable footer role`);
+    assert.throws(
+      () => validateUseCaseDiagramSvg(svg.replace('font-size="8"', 'font-size="7"'), id),
+      /route-footer.*below 8px.*repair source layout/u,
+      `${id} route footer rejects unreadable type`,
+    );
     assert.ok(routeLines.every((line) => [...line.matchAll(/→/gu)].length <= 3), `${id} routes are grouped at no more than three per line`);
     const nextRouteCard = /<g aria-label="읽기 순서 5:[\s\S]*?<\/g>/u.exec(svg)?.[0] ?? "";
-    assert.match(nextRouteCard, new RegExp(`${expected.length} ordered routes · 아래 전체 표시`, "u"), `${id} next-route card delegates the full list to the footer`);
+    const nextRouteText = nextRouteCard
+      .replace(/<\/tspan>\s*<tspan[^>]*>/gu, " ")
+      .replace(/<[^>]+>/gu, "");
+    assert.match(nextRouteText, new RegExp(`${expected.length} ordered routes · 아래 전체 표시`, "u"), `${id} next-route card delegates the full list to the footer`);
     for (const { condition, target } of expected) {
       assert.ok(routeLines.some((line) => line.includes(`${condition}→${target}`)), `${id} renders ${condition}→${target}`);
     }

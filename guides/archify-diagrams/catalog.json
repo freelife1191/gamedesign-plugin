@@ -22,7 +22,7 @@
       "product": "suite",
       "source_document": "README.md",
       "source_section": "활용 방법 선택",
-      "source_digest": "e4ad90c1878df34dbceafd97ad7c450a356fd4c180e708549584d4faa4d9b169",
+      "source_digest": "bd92ccfe15dfb05fad80ca45be1581fab6c65f9b8fa9a367dda45be1c5dca9e9",
       "decision": "excluded",
       "exclusion_code": "excluded-skillstead-overlap",
       "decision_reason": "“활용 방법 선택”의 Studio·Career 플러그인 선택 질문은 기존 guides/assets/shared/plugin-selection-flow.svg가 동일한 선택·설치 흐름을 이미 답하므로 직교 Archify 질문이 없다.",
@@ -38,7 +38,7 @@
       "product": "suite",
       "source_document": "guides/README.md",
       "source_section": "Game Design Plugin 사용자 가이드",
-      "source_digest": "ebe721c22e6a3d2a982bdcbbec860f3b678cadcdea6097f1c89ed01b2b2761d0",
+      "source_digest": "70eb9a2b283d402007c50dc7334caf141a6ac3ddd23b130330f581b4a79ef221",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
     "decision_reason": "“Game Design Plugin 사용자 가이드”은 Studio와 Career의 독립 설치, Artifact 분리, 초보자 읽기 경로를 링크 표로 비교하는 안내 허브다. 근거: `[공통 활용 허브](use-cases/README.md)는 사용자 상황과 요청문을, [사용자 경로](use-cases/audience-paths.md)는 여섯 사용자군의 단계별 경로를, [결과물 카탈로그](use-cases/output-catalog.md)는 최소·선택·확장 결과와 Studio → Career handoff 경계를 설명합니다. 도식의 확인 기준은 [Visual QA](assets/VISUAL-QA.md)에서 봅니다.`.",
@@ -54,7 +54,7 @@
       "product": "suite",
       "source_document": "guides/archify-diagrams/README.md",
       "source_section": "Curated Archify inventory",
-      "source_digest": "50152e86421fd5912f6f35699b3c194d7664b7275b9ef039753a044c5bd1a112",
+      "source_digest": "1c3a81445c34b7f0dacf9e94e5f6989dc50e3164c67354c1a04f4d8c23fe7f4e",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
     "decision_reason": "“Curated Archify inventory”은 catalog의 planned·blocked·published 상태와 evidence ledger 사용법을 설명하는 저작 정책 문서다. 근거: `catalog은 추후 spec 저작과 검수의 evidence ledger입니다. 이 inventory만으로 어떤 diagram의 존재나 사람 승인을 주장하지 않습니다.`.",
@@ -86,7 +86,7 @@
       "product": "career",
       "source_document": "guides/game-design-career/README.md",
       "source_section": "Game Design Career 사용자 가이드",
-      "source_digest": "279fd4ccb1e623f512dbf9383554d12d1b84862af9419947598c434840e6eccc",
+      "source_digest": "9e4d9bfc6062bc4ceb1b6a4e3b7b866552c990c19f3b912a018be21e045220b0",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
     "decision_reason": "“Game Design Career 사용자 가이드”은 역할 진단·증거 프로젝트·포트폴리오·면접을 네 개의 시작 문서와 18개 사례 링크로 찾게 하는 진입 색인이다. 근거: `Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채용 근거와 역량 격차를 학습·증거 프로젝트·포트폴리오·면접·성장 계획으로 연결합니다. 사실, 추론, 공백과 다음 검증 작업을 보존하는 Canonical Artifact(기준 작업 폴더)를 사용하며, 합격이나 한 가지 정답 진로를 약속하지 않습니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.`.",
@@ -662,7 +662,7 @@
       "product": "career",
       "source_document": "guides/game-design-career/workflow.md",
       "source_section": "Game Design Career 전체 워크플로",
-      "source_digest": "3d67403a2f7172048791d17e9d2d72ef9a62797cb4ec38cb7fccd0a44dd1887e",
+      "source_digest": "f72dfcd9e26e06295fd2775e9308c747b361bb81d8fe3d1dd7d46acf065939b4",
       "question": "Career에서 단계 진단과 근거 조사가 증거 프로젝트·포트폴리오·면접·성장으로 어떻게 연결되는가?",
       "decision": "selected",
       "decision_reason": "진단, 조사, 증거, 검토, 내보내기의 책임 handoff와 사람 승인 경계가 순서에 따라 달라진다.",
@@ -674,29 +674,20 @@
       "composition_rationale": "진단·조사·증거 프로젝트의 주 경로 뒤에 포트폴리오·면접·성장 분기와 검토·재개를 배치한다.",
       "shared_process_with": null,
       "shared_process_reason": null,
-      "diagnostics": [
-        {
-          "code": "visual-defect",
-          "subject": "Career rail labels and guided framing",
-          "evidence": "Round 2 original-size renders retain rail-label ellipses, a cropped career-routes frame, and a review annotation collision.",
-          "attempted_fix": "Expanded the affected guided focuses and recaptured every Career view at 1600px.",
-          "round": 2,
-          "remaining_error": "Visual defects remain after the final allowed correction round."
-        }
-      ],
+    "diagnostics": [],
       "spec": "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
       "html": "guides/assets/archify/career/career-evidence-workflow.html",
       "receipt": "guides/assets/archify/career/career-evidence-workflow.receipt.json",
-      "delivery_status": "blocked-visual",
-      "visual_review": "failed",
-      "reviewer": "Codex Task 11 visual QA"
+    "delivery_status": "published",
+    "visual_review": "passed",
+    "reviewer": "Codex 헤드리스 시각 QA"
     },
     {
       "id": "excluded-d06ce7364b1e",
       "product": "studio",
       "source_document": "guides/game-design-studio/README.md",
       "source_section": "Game Design Studio 사용자 가이드",
-      "source_digest": "6e563793bcd8c68ef8a585e9f04234b4f0c6032ad32aebccb06d8c8ca0c457b3",
+      "source_digest": "fd1ecb3a62d286a16860f2e4b1d2897cd78b99665e99f0bd9d66249125809b81",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
     "decision_reason": "“Game Design Studio 사용자 가이드”은 게임 비전에서 시스템·콘텐츠·UX·경제·제작까지의 Studio 가이드 입구와 별도 Career handoff 경계를 링크로 안내한다. 근거: `Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다.`.",
@@ -1272,7 +1263,7 @@
       "product": "studio",
       "source_document": "guides/game-design-studio/workflow.md",
       "source_section": "Game Design Studio 전체 워크플로",
-      "source_digest": "aa92ae89d7a53f6f20380599c3a48e48fff9b440840e5bd85d76135df0b0313d",
+      "source_digest": "f7c682292fce38a22e52681a77001ff0cb40ed3ec7e071681e362b9b48cfac13",
       "question": "Studio에서 비전부터 검토·자산·내보내기와 재개까지 어떤 책임 순서로 진행하는가?",
       "decision": "selected",
       "decision_reason": "비전, 설계 영역, 검토, 자산, 내보내기와 재개 조건의 의존 순서 및 사람 결정을 한 화면에서 비교해야 한다.",
@@ -1284,30 +1275,13 @@
       "composition_rationale": "비전·전문 finding·이미지 승인은 사람 lane에 두고, Studio의 Canonical Artifact와 자산·형식 QA를 분리해 원문의 승인·근거·재개 책임을 보인다.",
       "shared_process_with": null,
       "shared_process_reason": null,
-      "diagnostics": [
-        {
-          "code": "clean-flow/edge-through-node",
-          "subject": "workflow edges[6] image_asset_review -> format_qa_export",
-          "evidence": "The source-to-target segment [625, 145] -> [625, 290] crosses resume_context with 2px clearance.",
-          "attempted_fix": "Moved the source-backed resume context through two alternate lanes and isolated its routes; both attempts increased the error count from 2 to 4 and then 7.",
-          "round": 3,
-          "remaining_error": "The restored best candidate still sends image_asset_review -> format_qa_export through resume_context."
-        },
-        {
-          "code": "layout/constraint",
-          "subject": "workflow edges[7] image_asset_review -> resume_context",
-          "evidence": "Label blocked rect [603, 125, 44, 14] overlaps image_asset_review rect [579, 93, 92, 52].",
-          "attempted_fix": "Tried a diagnosed lower label and alternate lane placements; the two successive alternatives increased total errors.",
-          "round": 3,
-          "remaining_error": "The restored best candidate retains the blocked label overlap."
-        }
-      ],
+    "diagnostics": [],
       "spec": "guides/archify-diagrams/specs/studio/studio-project-workflow.json",
       "html": "guides/assets/archify/studio/studio-project-workflow.html",
       "receipt": "guides/assets/archify/studio/studio-project-workflow.receipt.json",
-      "delivery_status": "blocked-validation",
-      "visual_review": "not-applicable",
-      "reviewer": null
+    "delivery_status": "published",
+    "visual_review": "passed",
+    "reviewer": "Codex 헤드리스 시각 QA"
     },
     {
       "id": "excluded-fda033979112",
@@ -1906,7 +1880,7 @@
       "product": "suite",
       "source_document": "guides/prompt-templates/suite/studio-to-career-handoff.md",
       "source_section": "suite:studio-to-career-handoff:case",
-      "source_digest": "fe0d0fe36dd5482c124a3b0e521cc94f0ca6ea7b06db27373c2e705507442365",
+      "source_digest": "8de62bd67f850f0ff7e693c4e085174a52753796fe3f9800d465b61dcbc089db",
       "question": "Studio 검토 결과에서 공개 가능한 evidence summary만 Career 포트폴리오로 어떻게 전달하고 승인·보류하는가?",
       "decision": "selected",
       "decision_reason": "Studio의 검토 artifact에서 Career의 별도 portfolio input으로 공개 범위, evidence, 사람 승인 receipt가 이동·보류되는 관계가 핵심이다.",
@@ -1918,22 +1892,13 @@
       "composition_rationale": "Studio review artifact에서 public/evidence-safe summary를 거쳐 Career portfolio로 이동시키고 권리·승인 부족은 hold로 분기한다.",
       "shared_process_with": null,
       "shared_process_reason": null,
-      "diagnostics": [
-        {
-          "code": "visual-defect",
-          "subject": "Suite held-review focus boundary framing",
-          "evidence": "Round 2 original-size review still places the Studio boundary and Career input/Receipt node borders outside the guided frame.",
-          "attempted_fix": "Expanded the held-review focus through round 2 and recaptured all six Suite views at 1600px.",
-          "round": 2,
-          "remaining_error": "Required boundary and node borders remain clipped after the final allowed correction round."
-        }
-      ],
+    "diagnostics": [],
       "spec": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
       "html": "guides/assets/archify/suite/suite-studio-career-handoff.html",
       "receipt": "guides/assets/archify/suite/suite-studio-career-handoff.receipt.json",
-      "delivery_status": "blocked-visual",
-      "visual_review": "failed",
-      "reviewer": "Codex Task 11 visual QA"
+    "delivery_status": "published",
+    "visual_review": "passed",
+    "reviewer": "Codex 헤드리스 시각 QA"
     },
     {
       "id": "excluded-e3ebbf9911c5",

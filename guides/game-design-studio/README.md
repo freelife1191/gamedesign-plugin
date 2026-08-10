@@ -4,7 +4,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 ## Curated Archify 상태
 
-[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Studio 후보의 검증 상태와 재시도 경계를 확인합니다. 현재 공개된 Archify diagram은 **0개**이므로 이 README에는 Archify HTML 결과물 링크가 없습니다.
+[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Studio 후보의 검증·시각 QA 근거를 확인합니다. [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)는 비전, 설계, 검토, 자산, 내보내기와 보류 후 재개 경로를 대화형 HTML로 보여 줍니다.
 
 ## 작업 규모와 결과
 

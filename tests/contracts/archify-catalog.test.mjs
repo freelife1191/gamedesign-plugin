@@ -92,13 +92,12 @@ test("production inventory has state-aware materialization contracts", async () 
   const studio = catalog.entries.find((entry) => entry.id === "studio-project-workflow");
   const career = catalog.entries.find((entry) => entry.id === "career-evidence-workflow");
   const suite = catalog.entries.find((entry) => entry.id === "suite-studio-career-handoff");
-  assert.equal(studio?.delivery_status, "blocked-validation");
-  assert.equal(career?.delivery_status, "blocked-visual");
-  assert.equal(career?.visual_review, "failed");
-  assert.equal(suite?.delivery_status, "blocked-visual");
-  assert.equal(suite?.visual_review, "failed");
-  assert.equal(suite?.diagnostics.length, 1);
-  assert.equal(suite?.diagnostics[0].round, 2);
+  for (const entry of [studio, career, suite]) {
+    assert.equal(entry?.delivery_status, "published", entry?.id);
+    assert.equal(entry?.visual_review, "passed", entry?.id);
+    assert.deepEqual(entry?.diagnostics, [], entry?.id);
+    assert.equal(typeof entry?.reviewer, "string", entry?.id);
+  }
   await assertStateAwareMaterialization(studio);
   await assertStateAwareMaterialization(career);
   await assertStateAwareMaterialization(suite);
@@ -112,11 +111,7 @@ test("production inventory has state-aware materialization contracts", async () 
     /Missing expected rejection/u,
   );
   await assert.doesNotReject(
-    () => assertStateAwareMaterialization({ ...career, delivery_status: "passed", visual_review: "passed", reviewer: "reviewer" }),
-  );
-  await assert.rejects(
     () => assertStateAwareMaterialization({ ...career, delivery_status: "published", visual_review: "passed", reviewer: "reviewer" }),
-    { code: "ENOENT" },
   );
 
   assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);

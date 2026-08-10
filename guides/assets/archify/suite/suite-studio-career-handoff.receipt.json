@@ -13,11 +13,11 @@
   "input": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
   "output": "guides/assets/archify/suite/suite-studio-career-handoff.html",
   "specification": {
-    "sha256": "ab5593a804ff0214640eef37dfd918de973d3b690e4f8a46fb074a3af694cf1c",
-    "bytes": 5346
+    "sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
+    "bytes": 5370
   },
   "artifact": {
-    "sha256": "42dd9e27254acc307f48cf1e63288b6b38f9dc65378e742e9f5f0244187474e5",
-    "bytes": 611018
+    "sha256": "d0d0c950e8d322de5a9d63fd8ff6fdb08ec26b895a8f897e2cd70f2c4eb7e8c2",
+    "bytes": 623391
   }
 }

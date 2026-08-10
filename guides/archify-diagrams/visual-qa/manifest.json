@@ -2,56 +2,329 @@
   "schema_version": 1,
   "entries": [
     {
-      "id": "career-evidence-workflow",
-      "specification_sha256": "bec8fc108f7d0401e3bbb757e8954934ff4ae1d26717dc389529a91868221f08",
-      "artifact_sha256": "33433322ba5893588a00450a9231295a87fdc73765616acd01994e0dffb51062",
-      "reviewer": "Codex Task 11 visual QA",
+      "id": "studio-project-workflow",
+      "specification_sha256": "2616dee286467b2d84a9e043d5b38df1a6f5ff3b3f93fda7d4dfc61ee19666b7",
+      "artifact_sha256": "78be05e04e8c227ee7369ee892c399803300890671317707d324c79cd27d7006",
+      "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-agent-browser + original-size image reader",
-      "correction_rounds": 2,
-      "verdict": "failed",
+      "correction_rounds": 1,
+      "verdict": "passed",
       "renders": {
-        "read": { "path": "renders/career/career-evidence-workflow/read.png", "sha256": "8f874cb01d271ac78e13b7a8e68bd5a0620979e432331dd227c8da2bb055e898", "width": 1600, "height": 1734 },
-        "light": { "path": "renders/career/career-evidence-workflow/light.png", "sha256": "f0f233a46c84376acfa655a22e6740d4823c3c35fdaa79cf72c15903d137d67b", "width": 1600, "height": 1734 },
-        "dark": { "path": "renders/career/career-evidence-workflow/dark.png", "sha256": "bc857c57b63897d1ee14acbb0a7610e53ee54ed7db940579316b6edbe1a04e04", "width": 1600, "height": 1734 },
+        "read": {
+          "path": "renders/studio/studio-project-workflow/read.png",
+          "sha256": "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e",
+          "width": 1600,
+          "height": 1735
+        },
+        "light": {
+          "path": "renders/studio/studio-project-workflow/light.png",
+          "sha256": "47f1d6966c0a22eab873a4afc572f7f8f5376b98358cb5417b0d69924d6b50e9",
+          "width": 1600,
+          "height": 1735
+        },
+        "dark": {
+          "path": "renders/studio/studio-project-workflow/dark.png",
+          "sha256": "64941edeb4e2d70b46a390aecd9d42af338d40f4e6e44c8f5ebae35f9b86eed0",
+          "width": 1600,
+          "height": 1735
+        },
         "guided_views": [
-          { "id": "view-evidence-path", "path": "renders/career/career-evidence-workflow/view-evidence-path.png", "sha256": "f89237e8d30c7ddedebe0778b898d5becb1633f5749c128548a07accf8b96d97", "width": 1600, "height": 1835 },
-          { "id": "view-career-routes", "path": "renders/career/career-evidence-workflow/view-career-routes.png", "sha256": "f5e823c61886cbfe6708cf64c2c8d6b9650024fa33e59143fc60e655c761bb4f", "width": 1600, "height": 1835 },
-          { "id": "view-review-layers", "path": "renders/career/career-evidence-workflow/view-review-layers.png", "sha256": "b61d0a0d1c6f87c4c1ecb759626661b155aa16dec3ca31d55e32ad3ade76e226", "width": 1600, "height": 1835 },
-          { "id": "view-resume-contract", "path": "renders/career/career-evidence-workflow/view-resume-contract.png", "sha256": "5fecdd62bca6654fef4f063c5b8925ad75c8abce4add5f5704a7260c38ca9243", "width": 1600, "height": 1835 }
+          {
+            "id": "view-vision-to-review",
+            "path": "renders/studio/studio-project-workflow/view-vision-to-review.png",
+            "sha256": "77b2d4c72cc9f015e8880127e0d96020e778222ff6485375fa8b087b804096f0",
+            "width": 1600,
+            "height": 1836
+          },
+          {
+            "id": "view-asset-evidence",
+            "path": "renders/studio/studio-project-workflow/view-asset-evidence.png",
+            "sha256": "a61f494c3347d08a1d7a2f04e38ff6da91350888bcf8ef238bfcba52457435b7",
+            "width": 1600,
+            "height": 1836
+          },
+          {
+            "id": "view-resume-contract",
+            "path": "renders/studio/studio-project-workflow/view-resume-contract.png",
+            "sha256": "2bf1cf71e92e0290295bee4be1b002b4ef8f0d8f898e520e931360f69626981c",
+            "width": 1600,
+            "height": 1836
+          }
         ]
       },
-      "checks": { "text_clipping": "failed", "glyph_distortion": "passed", "blur_or_tofu": "passed", "node_text_collision": "passed", "edge_node_collision": "passed", "edge_label_collision": "failed", "ambiguous_corridor": "passed", "branch_merge_retry_resume": "passed", "rail_legend_footer": "failed", "light_dark_contrast": "passed", "guided_view_usefulness": "failed", "within_product_diversity": "passed", "cross_product_distinction": "passed" },
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
       "defects": [
-        { "view": "view-review-layers", "subject": "guided camera focus", "symptom": "The original review focus cropped lane labels at the viewport edge.", "correction_outcome": "resolved", "round": 1, "correction_evidence": "Round 1 expanded the focus and the all-view recapture kept the review lanes readable." },
-        { "view": "read", "subject": "guided tab labels", "symptom": "READ, light, and dark rails still ellipsize Portfolio, interview, review-layer, and resume labels at 1600px.", "correction_outcome": "unresolved", "round": 2, "correction_evidence": "Round 2 original-size recaptures show Portfolio, inter…, Three review lay…, and Resume held rese…." },
-        { "view": "view-career-routes", "subject": "guided camera framing", "symptom": "The expanded route view still clips the right-side route frame and weakens the lane/legend reading.", "correction_outcome": "unresolved", "round": 2, "correction_evidence": "Round 2 original-size capture retains the cropped route frame at the right viewport edge." },
-        { "view": "view-resume-contract", "subject": "review annotation clearance", "symptom": "Separated review layers remains too close to the Human review node and nearby edge labels.", "correction_outcome": "unresolved", "round": 2, "correction_evidence": "Round 2 original-size capture retains the annotation-to-node/edge collision." }
+        {
+          "view": "view-resume-contract",
+          "subject": "재개 경로 프레이밍",
+          "symptom": "초기 재개 경로가 검토·자산 노드와 겹쳤습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "한국어 최종 사양을 다시 검증하고 1600px 원본 캡처에서 재개 경로와 노드 경계를 확인했습니다."
+        }
+      ]
+    },
+    {
+      "id": "career-evidence-workflow",
+      "specification_sha256": "37fceb8e99e52c3aa1696213c94172ea3837fd7f6e2ce38b51eecdbfc2ad4407",
+      "artifact_sha256": "637a1564123394bf2b5f465b83a30939efa6e77962f97af0fe93f5ab1ef6e6a4",
+      "reviewer": "Codex 헤드리스 시각 QA",
+      "review_method": "headless-agent-browser + original-size image reader",
+      "correction_rounds": 2,
+      "verdict": "passed",
+      "renders": {
+        "read": {
+          "path": "renders/career/career-evidence-workflow/read.png",
+          "sha256": "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
+          "width": 1600,
+          "height": 1611
+        },
+        "light": {
+          "path": "renders/career/career-evidence-workflow/light.png",
+          "sha256": "2919865b5a4f1782b76262c15d82dcc15131eaf66cee8fae384004b8c0e74398",
+          "width": 1600,
+          "height": 1611
+        },
+        "dark": {
+          "path": "renders/career/career-evidence-workflow/dark.png",
+          "sha256": "2430f591415488413da9a87ed36e81ca12a629083d4690cc649b0c9ec51b6eb0",
+          "width": 1600,
+          "height": 1611
+        },
+        "guided_views": [
+          {
+            "id": "view-evidence-path",
+            "path": "renders/career/career-evidence-workflow/view-evidence-path.png",
+            "sha256": "cf6686d43fa15f93ddbc0fee6f48b511a2284a9349fc59327f0a8090125c260f",
+            "width": 1600,
+            "height": 1712
+          },
+          {
+            "id": "view-career-routes",
+            "path": "renders/career/career-evidence-workflow/view-career-routes.png",
+            "sha256": "b85a88a1446e136dcc03e733113cd3d3c2c707622d5a1bb258c2b1833bd69bbe",
+            "width": 1600,
+            "height": 1712
+          },
+          {
+            "id": "view-review-layers",
+            "path": "renders/career/career-evidence-workflow/view-review-layers.png",
+            "sha256": "9a417c3461319614bb427c6b02b8b90d2ed81d350c81fc71499976f7959e2f6d",
+            "width": 1600,
+            "height": 1712
+          },
+          {
+            "id": "view-resume-contract",
+            "path": "renders/career/career-evidence-workflow/view-resume-contract.png",
+            "sha256": "791ecb7427cbfe29d4c310c7c112f273633691f7b7a6d7883b84f61163602ec9",
+            "width": 1600,
+            "height": 1712
+          }
+        ]
+      },
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
+      "defects": [
+        {
+          "view": "view-career-routes",
+          "subject": "경력 경로 프레이밍",
+          "symptom": "초기 확대 화면에서 경력 경로의 우측 프레임이 잘렸습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "포커스 범위를 다시 지정하고 1600px 원본 캡처에서 프로젝트·포트폴리오·검토 경로를 확인했습니다."
+        },
+        {
+          "view": "view-resume-contract",
+          "subject": "보류 재개 주석 간격",
+          "symptom": "초기 보류 재개 주석이 사람 검토 노드와 가까웠습니다.",
+          "correction_outcome": "resolved",
+          "round": 2,
+          "correction_evidence": "한국어 최종 사양의 보류·재개 화면을 다시 캡처해 선택 노드와 경로 라벨의 분리를 확인했습니다."
+        }
       ]
     },
     {
       "id": "suite-studio-career-handoff",
-      "specification_sha256": "ab5593a804ff0214640eef37dfd918de973d3b690e4f8a46fb074a3af694cf1c",
-      "artifact_sha256": "42dd9e27254acc307f48cf1e63288b6b38f9dc65378e742e9f5f0244187474e5",
-      "reviewer": "Codex Task 11 visual QA",
+      "specification_sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
+      "artifact_sha256": "d0d0c950e8d322de5a9d63fd8ff6fdb08ec26b895a8f897e2cd70f2c4eb7e8c2",
+      "reviewer": "Codex 헤드리스 시각 QA",
       "review_method": "headless-agent-browser + original-size image reader",
       "correction_rounds": 2,
-      "verdict": "failed",
+      "verdict": "passed",
       "renders": {
-        "read": { "path": "renders/suite/suite-studio-career-handoff/read.png", "sha256": "b677988e44ba678fdafa04fbd9092f1643470e8138468354abd4c0e53c99c5ca", "width": 1600, "height": 1223 },
-        "light": { "path": "renders/suite/suite-studio-career-handoff/light.png", "sha256": "578e7f00dd9e9c84b77b7a12361464a6ed4cb57999506c50bf52c58dfd401b86", "width": 1600, "height": 1223 },
-        "dark": { "path": "renders/suite/suite-studio-career-handoff/dark.png", "sha256": "fe20bdcf507c1e898597e8cd89be56cd6abc9f589fd808be7e2e4cb8f39fa26b", "width": 1600, "height": 1223 },
+        "read": {
+          "path": "renders/suite/suite-studio-career-handoff/read.png",
+          "sha256": "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983",
+          "width": 1600,
+          "height": 1125
+        },
+        "light": {
+          "path": "renders/suite/suite-studio-career-handoff/light.png",
+          "sha256": "21015f832e47228dcda5b5b15c9b6ae7284af17a92795c8844ca5c9902acd63b",
+          "width": 1600,
+          "height": 1125
+        },
+        "dark": {
+          "path": "renders/suite/suite-studio-career-handoff/dark.png",
+          "sha256": "8d373d1ed6e60dee31d024422e2404c34cc82f1a16fd40e58e4a6d71d8129a50",
+          "width": 1600,
+          "height": 1125
+        },
         "guided_views": [
-          { "id": "view-bounded-handoff", "path": "renders/suite/suite-studio-career-handoff/view-bounded-handoff.png", "sha256": "74c136e23272a23638d9b11f91e656b4e934e7a8657ff4a67bb6840ee1fbc27f", "width": 1600, "height": 1324 },
-          { "id": "view-human-approval", "path": "renders/suite/suite-studio-career-handoff/view-human-approval.png", "sha256": "0138353d439cec41dee055af9636e8e33a4956c9f6f733cba302b6c4c0562076", "width": 1600, "height": 1324 },
-          { "id": "view-resume-held-review", "path": "renders/suite/suite-studio-career-handoff/view-resume-held-review.png", "sha256": "1b9772b9e95e1c0d23c2c7cdcc20bffb315a77a4326f1ac1d917f2f6368cca46", "width": 1600, "height": 1324 }
+          {
+            "id": "view-bounded-handoff",
+            "path": "renders/suite/suite-studio-career-handoff/view-bounded-handoff.png",
+            "sha256": "64f885cc2158fa13373d1e95bf420700c6f4fd3d493ae41e9c86cefe35c2752b",
+            "width": 1600,
+            "height": 1225
+          },
+          {
+            "id": "view-human-approval",
+            "path": "renders/suite/suite-studio-career-handoff/view-human-approval.png",
+            "sha256": "a1b00ef6762fa9524a3134dc30fd4a941d33cc5d958538c27ca057d3bc7b00fd",
+            "width": 1600,
+            "height": 1225
+          },
+          {
+            "id": "view-resume-held-review",
+            "path": "renders/suite/suite-studio-career-handoff/view-resume-held-review.png",
+            "sha256": "02b7a025652678995258d5ecd9d65dd8c2117c8bb4c2ceb25d09302e4e76f711",
+            "width": 1600,
+            "height": 1225
+          }
         ]
       },
-      "checks": { "text_clipping": "failed", "glyph_distortion": "passed", "blur_or_tofu": "passed", "node_text_collision": "failed", "edge_node_collision": "passed", "edge_label_collision": "passed", "ambiguous_corridor": "passed", "branch_merge_retry_resume": "passed", "rail_legend_footer": "passed", "light_dark_contrast": "passed", "guided_view_usefulness": "failed", "within_product_diversity": "passed", "cross_product_distinction": "passed" },
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
       "defects": [
-        { "view": "view-resume-held-review", "subject": "resume held-review framing", "symptom": "The first correction still cropped Receipt and part of the Hold-to-Receipt-to-Named owner path.", "correction_outcome": "resolved", "round": 1, "correction_evidence": "The round-2 all-node focus was recaptured and inspected at fit and original size." },
-        { "view": "view-resume-held-review", "subject": "guided focus boundary framing", "symptom": "Studio boundary and Career input/Receipt node borders extend beyond the guided frame at round 2.", "correction_outcome": "unresolved", "round": 2, "correction_evidence": "Round 2 fit and original PNG inspections show the left Studio boundary and the right Career input/Receipt borders clipped by the focus frame." }
+        {
+          "view": "view-resume-held-review",
+          "subject": "보류 검토 재개 프레이밍",
+          "symptom": "초기 안내 화면에서 영수증과 보류 경로 일부가 잘렸습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "담당자·보류·승인 영수증 전체를 포함하도록 포커스를 수정하고 원본 크기로 확인했습니다."
+        },
+        {
+          "view": "view-resume-held-review",
+          "subject": "제품 경계 가독성",
+          "symptom": "초기 화면에서 스튜디오와 커리어 경계가 포커스 가장자리와 겹쳤습니다.",
+          "correction_outcome": "resolved",
+          "round": 2,
+          "correction_evidence": "한국어 최종 사양을 다시 캡처해 담당자·커리어 경계·승인 영수증의 구분과 재개 경로를 확인했습니다."
+        }
       ]
     }
   ],
-  "contact_sheets": []
+  "contact_sheets": [
+    {
+      "html": "all.html",
+      "html_sha256": "902af9db958d0a73cbe6112539731de8881f5269b30c398bf3af116b528d29c9",
+      "png": "all.png",
+      "png_sha256": "39b9f074bf686a179c7fcb544769c7f3bbd64e90c4cd890dc5bbf78a9bd9113b",
+      "width": 1800,
+      "height": 5142,
+      "source_read_sha256": [
+        "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
+        "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e",
+        "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983"
+      ]
+    },
+    {
+      "html": "product-career.html",
+      "html_sha256": "ee1dfb8ed062eb271eb7e17b34402f7ddbd6e51cfc75824b957306f94bb9dc21",
+      "png": "product-career.png",
+      "png_sha256": "07181b5a392b1980bc7a9a500eec0e81744a337137a0aab87164b7ea99273101",
+      "width": 1800,
+      "height": 1887,
+      "source_read_sha256": [
+        "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d"
+      ]
+    },
+    {
+      "html": "product-studio.html",
+      "html_sha256": "0ed7bb72a8470d3a8d6d74baca55d655879547f3adf723e8b6bdd765b33e08bd",
+      "png": "product-studio.png",
+      "png_sha256": "0ceff88f2d55bcccd9edbda71eb837935dcfa2fe9f286420e0f739d5b93c2422",
+      "width": 1800,
+      "height": 2011,
+      "source_read_sha256": [
+        "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e"
+      ]
+    },
+    {
+      "html": "product-suite.html",
+      "html_sha256": "8f4ea3bd6457f799dc281cc62eef3848209128967df0fd6668c590c135e401f7",
+      "png": "product-suite.png",
+      "png_sha256": "96d27267f6674628c611474452337109d4d064de05c7e460efad75bca18a80a2",
+      "width": 1800,
+      "height": 1401,
+      "source_read_sha256": [
+        "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983"
+      ]
+    },
+    {
+      "html": "type-dataflow.html",
+      "html_sha256": "200e66f3e103e26af1d437cead9999054b81fe180d8024547e622e4438c0ea45",
+      "png": "type-dataflow.png",
+      "png_sha256": "3e7eba38f939d44c372ab0398c81fad1c99e8aed758b5861fa9e66e8f5f5b3f7",
+      "width": 1800,
+      "height": 1401,
+      "source_read_sha256": [
+        "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983"
+      ]
+    },
+    {
+      "html": "type-workflow.html",
+      "html_sha256": "ef38992bd3de26d5b8196c12d9c416ed2594ec057594e139d32b24ff164252b4",
+      "png": "type-workflow.png",
+      "png_sha256": "c92d2a5d03e7f3acfd64d6f88ee66d235eb8e93e1afa71aa173c8ab46c353749",
+      "width": 1800,
+      "height": 3820,
+      "source_read_sha256": [
+        "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
+        "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e"
+      ]
+    }
+  ]
 }
