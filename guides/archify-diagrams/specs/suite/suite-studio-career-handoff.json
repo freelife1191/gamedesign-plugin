@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Studio to Career Public Evidence Handoff",
+    "subtitle": "A separate public/evidence-safe summary crosses two product boundaries only after named human approval.",
+    "output": "guides/assets/archify/suite/suite-studio-career-handoff.html",
+    "viewBox": [1200, 660],
+    "animation": "none",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "bounded-handoff",
+        "label": "Bounded handoff",
+        "focus": ["studio_boundary", "public_evidence_summary", "career_boundary", "career_portfolio_input"],
+        "note": "Studio and Career artifacts remain separate; only a public, evidence-safe summary crosses the handoff."
+      },
+      {
+        "id": "human-approval",
+        "label": "Human approval",
+        "focus": ["public_evidence_summary", "decision_owner", "held_handoff"],
+        "note": "The named decision owner approves public scope or holds the handoff when rights, evidence, or the receipt is missing."
+      },
+      {
+        "id": "resume-held-review",
+        "label": "Resume held review",
+        "focus": ["held_handoff", "resume_receipt", "decision_owner"],
+        "note": "Preserve the blocker and resume the same public-only review after a new receipt is available."
+      }
+    ]
+  },
+  "stages": [
+    { "label": "Studio boundary" },
+    { "label": "Public handoff artifact" },
+    { "label": "Human approval boundary" },
+    { "label": "Career boundary" },
+    { "label": "Career input" }
+  ],
+  "nodes": [
+    {
+      "id": "studio_boundary",
+      "type": "external",
+      "label": "Studio boundary",
+      "sublabel": "artifact remains separate",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "public_evidence_summary",
+      "type": "database",
+      "label": "Public summary",
+      "sublabel": "verified evidence only",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "decision_owner",
+      "type": "external",
+      "label": "Named owner",
+      "sublabel": "human scope approval",
+      "tag": "human gate",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "held_handoff",
+      "type": "messagebus",
+      "label": "Hold",
+      "sublabel": "preserve blocker",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "resume_receipt",
+      "type": "messagebus",
+      "label": "Receipt",
+      "sublabel": "new approval evidence",
+      "stage": 4,
+      "row": 1
+    },
+    {
+      "id": "career_boundary",
+      "type": "external",
+      "label": "Career boundary",
+      "sublabel": "separate portfolio artifact",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "career_portfolio_input",
+      "type": "backend",
+      "label": "Career input",
+      "sublabel": "fact / inference / recommendation",
+      "width": 132,
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "studio_boundary",
+      "to": "public_evidence_summary",
+      "label": "public summary",
+      "classification": "handoff",
+      "variant": "emphasis"
+    },
+    {
+      "from": "public_evidence_summary",
+      "to": "decision_owner",
+      "label": "approve scope",
+      "classification": "review",
+      "variant": "security"
+    },
+    {
+      "from": "decision_owner",
+      "to": "career_boundary",
+      "label": "approved scope",
+      "classification": "approved",
+      "variant": "security",
+      "route": "straight",
+      "labelDx": -100,
+      "labelDy": 55
+    },
+    {
+      "from": "career_boundary",
+      "to": "career_portfolio_input",
+      "label": "separate input",
+      "classification": "handoff",
+      "variant": "emphasis"
+    },
+    {
+      "from": "decision_owner",
+      "to": "held_handoff",
+      "label": "hold",
+      "classification": "hold",
+      "variant": "dashed",
+      "labelDy": 80
+    },
+    {
+      "from": "held_handoff",
+      "to": "resume_receipt",
+      "label": "preserve",
+      "classification": "preserve",
+      "variant": "dashed"
+    },
+    {
+      "from": "resume_receipt",
+      "to": "decision_owner",
+      "label": "resume review",
+      "classification": "return",
+      "variant": "dashed",
+      "route": "bottom-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Handoff artifact",
+      "items": [
+        "Send only a public problem, decision, alternatives, and verified evidence summary",
+        "Do not copy the Studio canonical artifact into the Career portfolio artifact",
+        "Keep fact, inference, and recommendation distinct in the Career input"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Human approval boundary",
+      "items": [
+        "A named human decision owner approves or holds the public scope",
+        "Do not request credentials, personal data, or private materials",
+        "Approval is not automatic and does not guarantee a hiring outcome"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Hold and resume",
+      "items": [
+        "Hold when rights, evidence, or the approval receipt is missing",
+        "Preserve the blocked public-only context and blocker",
+        "Resume the same human public-only review after the receipt is available"
+      ]
+    }
+  ]
+}

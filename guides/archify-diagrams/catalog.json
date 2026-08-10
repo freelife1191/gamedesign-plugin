@@ -1900,7 +1900,7 @@
       "source_digest": "fe0d0fe36dd5482c124a3b0e521cc94f0ca6ea7b06db27373c2e705507442365",
       "question": "Studio 검토 결과에서 공개 가능한 evidence summary만 Career 포트폴리오로 어떻게 전달하고 승인·보류하는가?",
       "decision": "selected",
-      "decision_reason": "두 독립 제품 사이에서 artifact, 공개 범위, evidence와 사람 승인 receipt가 이동·차단되는 관계가 핵심이다.",
+      "decision_reason": "Studio의 검토 artifact에서 Career의 별도 portfolio input으로 공개 범위, evidence, 사람 승인 receipt가 이동·보류되는 관계가 핵심이다.",
       "diagram_type": "dataflow",
       "diagram_type_reason": "Studio와 Career 경계를 넘는 산출물 custody와 공개 가능성 필터를 보여 주므로 dataflow가 적합하다.",
       "priority": "primary",
@@ -1913,7 +1913,7 @@
       "spec": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
       "html": "guides/assets/archify/suite/suite-studio-career-handoff.html",
       "receipt": "guides/assets/archify/suite/suite-studio-career-handoff.receipt.json",
-      "delivery_status": "planned",
+      "delivery_status": "auto-validated",
       "visual_review": "pending",
       "reviewer": null
     },

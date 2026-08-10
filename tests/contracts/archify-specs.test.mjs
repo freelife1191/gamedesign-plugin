@@ -79,6 +79,10 @@ function assertEdge(spec, from, to) {
   assert.ok(spec.edges.some((edge) => edge.from === from && edge.to === to), `${from} -> ${to} is required`);
 }
 
+function assertFlow(spec, from, to) {
+  assert.ok(spec.flows.some((flow) => flow.from === from && flow.to === to), `${from} -> ${to} is required`);
+}
+
 function assertPrimaryNodeBound(spec) {
   assert.ok(spec.nodes.length <= 12, `workflow has ${spec.nodes.length} primary nodes; at most 12 are allowed`);
 }
@@ -140,6 +144,49 @@ function assertCareerSafetyLanguage(spec) {
   );
 }
 
+function primaryNodeCount(spec) {
+  return spec.nodes.length;
+}
+
+function hasNamedProductBoundary(spec, product) {
+  return spec.nodes.some((node) => node.label === `${product} boundary`);
+}
+
+function containsCompleteProductGraph(spec, product) {
+  const normalized = product.toLowerCase();
+  const nodeIds = new Set(semanticNodeIds(spec));
+  const completeGraphs = {
+    studio: [
+      "vision_approval", "canonical_artifact", "domain_design", "specialist_review",
+      "finding_decision", "image_asset_plan", "image_asset_review", "format_qa_export",
+    ],
+    career: [
+      "stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project",
+      "portfolio_case", "growth_experiment", "human_review", "export_prepare",
+    ],
+  };
+  return (completeGraphs[normalized] ?? []).every((id) => nodeIds.has(id));
+}
+
+function assertSuiteHandoffSemantics(spec) {
+  const ids = new Set(semanticNodeIds(spec));
+  for (const id of [
+    "studio_boundary", "public_evidence_summary", "decision_owner", "career_boundary",
+    "career_portfolio_input", "held_handoff", "resume_receipt",
+  ]) assert.ok(ids.has(id), `${id} is required`);
+  assertFlow(spec, "studio_boundary", "public_evidence_summary");
+  assertFlow(spec, "public_evidence_summary", "decision_owner");
+  assertFlow(spec, "decision_owner", "career_boundary");
+  assertFlow(spec, "career_boundary", "career_portfolio_input");
+  const hold = spec.flows.find((flow) => flow.from === "decision_owner" && flow.to === "held_handoff");
+  assert.equal(hold?.classification, "hold");
+  const resume = spec.flows.find((flow) => flow.from === "resume_receipt");
+  assert.deepEqual(resume && { to: resume.to, classification: resume.classification }, {
+    to: "decision_owner",
+    classification: "return",
+  });
+}
+
 test("every selected Studio entry owns one exact fresh showcase spec", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const studio = catalog.entries.filter((entry) => entry.decision === "selected" && entry.product === "studio");
@@ -162,6 +209,42 @@ test("every selected Career entry owns one exact fresh showcase spec", async () 
     assert.equal(entry.visual_system, "career");
     assert.match(entry.composition_rationale, /증거|검토|학습|승인|재개/u);
   }
+});
+
+test("Suite specs exist only for questions that cross both product boundaries", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  for (const entry of catalog.entries.filter((item) => item.decision === "selected" && item.product === "suite")) {
+    assert.match(entry.decision_reason, /Studio/u);
+    assert.match(entry.decision_reason, /Career/u);
+    const spec = JSON.parse(await readFile(path.join(repoRoot, entry.spec), "utf8"));
+    assert.ok(hasNamedProductBoundary(spec, "Studio"));
+    assert.ok(hasNamedProductBoundary(spec, "Career"));
+    assertSuiteHandoffSemantics(spec);
+  }
+});
+
+test("Suite specs stay bounded and do not concatenate both product graphs", async () => {
+  const { catalog, specsById } = await loadProductionSpecs(repoRoot, "suite");
+  for (const entry of catalog.entries.filter((item) => item.decision === "selected" && item.product === "suite")) {
+    const spec = specsById.get(entry.id);
+    assert.ok(primaryNodeCount(spec) <= 12, entry.id);
+    assert.equal(containsCompleteProductGraph(spec, "studio"), false, entry.id);
+    assert.equal(containsCompleteProductGraph(spec, "career"), false, entry.id);
+  }
+});
+
+test("Suite specs remain source-bound and structurally distinct", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const specsById = new Map();
+  for (const entry of catalog.entries.filter((item) => item.decision === "selected")) {
+    specsById.set(entry.id, JSON.parse(await readFile(path.join(repoRoot, entry.spec), "utf8")));
+  }
+  for (const entry of catalog.entries.filter((item) => item.decision === "selected" && item.product === "suite")) {
+    assert.equal(await hashArchifySource(path.join(repoRoot, entry.source_document)), entry.source_digest);
+    assert.equal(await markdownHasHeading(path.join(repoRoot, entry.source_document), entry.source_section), true);
+    assert.notDeepEqual(semanticNodeIds(specsById.get(entry.id)), ["input", "skill", "artifact", "review", "result", "resume"]);
+  }
+  assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
 });
 
 test("selected Career workflow records a real schema-valid auto-validation state", async () => {
