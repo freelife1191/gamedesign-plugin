@@ -71,12 +71,46 @@ test("production Archify catalog covers the complete declared Markdown corpus", 
   );
 });
 
-test("production planned inventory has no materialized specs to compare", async () => {
+async function assertStateAwareMaterialization(entry) {
+  const spec = path.join(repoRoot, entry.spec);
+  if (entry.delivery_status === "planned") {
+    await assert.rejects(access(spec), { code: "ENOENT" }, entry.id);
+    return;
+  }
+  await access(spec);
+  if (["passed", "published"].includes(entry.delivery_status)) {
+    assert.equal(entry.visual_review, "passed", entry.id);
+    assert.equal(typeof entry.reviewer, "string", entry.id);
+    await access(path.join(repoRoot, entry.html));
+    await access(path.join(repoRoot, entry.receipt));
+  }
+}
+
+test("production inventory has state-aware materialization contracts", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const specsById = new Map();
-  for (const entry of catalog.entries.filter((item) => item.decision === "selected")) {
-    await assert.rejects(access(path.join(repoRoot, entry.spec)), { code: "ENOENT" }, entry.id);
-  }
+  const studio = catalog.entries.find((entry) => entry.id === "studio-project-workflow");
+  const career = catalog.entries.find((entry) => entry.id === "career-evidence-workflow");
+  const suite = catalog.entries.find((entry) => entry.id === "suite-studio-career-handoff");
+  assert.equal(studio?.delivery_status, "blocked-validation");
+  assert.equal(career?.delivery_status, "auto-validated");
+  assert.equal(suite?.delivery_status, "planned");
+  await assertStateAwareMaterialization(studio);
+  await assertStateAwareMaterialization(career);
+  await assertStateAwareMaterialization(suite);
+
+  await assert.rejects(
+    () => assertStateAwareMaterialization({ ...career, delivery_status: "planned" }),
+    /Missing expected rejection/u,
+  );
+  await assert.rejects(
+    () => assertStateAwareMaterialization({ ...suite, delivery_status: "auto-validated" }),
+    { code: "ENOENT" },
+  );
+  await assert.rejects(
+    () => assertStateAwareMaterialization({ ...career, delivery_status: "passed", visual_review: "passed", reviewer: "reviewer" }),
+    { code: "ENOENT" },
+  );
 
   assert.deepEqual(findStructuralDuplicates({ catalog, specsById }), []);
 });

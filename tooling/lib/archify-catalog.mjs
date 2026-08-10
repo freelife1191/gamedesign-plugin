@@ -35,7 +35,11 @@ const EXCLUDED_KEYS = new Set([
 const DIAGNOSTIC_KEYS = new Set(["code", "subject", "evidence", "attempted_fix", "round", "remaining_error"]);
 const PRODUCTS = new Set(["studio", "career", "suite"]);
 const DIAGRAM_TYPES = new Set(["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
-const SPEC_REQUIRED_STATES = new Set(["spec-authored", "auto-validated", "stale-source", "passed", "published"]);
+const SPEC_REQUIRED_STATES = new Set([
+  "spec-authored", "auto-validated", "blocked-schema", "blocked-validation", "blocked-visual",
+  "stale-source", "passed", "published",
+]);
+const DELIVERY_RECEIPT_STATES = new Set(["passed", "published"]);
 const STATE_CONTRACTS = Object.freeze({
   planned: { visualReview: "pending", reviewer: "null", diagnostics: "empty" },
   "spec-authored": { visualReview: "pending", reviewer: "null", diagnostics: "empty" },
@@ -393,7 +397,7 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
         } catch (error) {
           errors.push(error instanceof Error ? error.message : String(error));
         }
-        if (entry.delivery_status === "published") {
+        if (DELIVERY_RECEIPT_STATES.has(entry.delivery_status)) {
           for (const field of ["html", "receipt"]) {
             try {
               await assertRegularContained(repoRoot, entry[field], `${label}.${field}`);

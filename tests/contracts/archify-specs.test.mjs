@@ -106,6 +106,40 @@ function assertCareerHoldResumesEvidenceResearch(spec) {
   });
 }
 
+function assertCareerRouteAndReviewTopology(spec) {
+  const ids = new Set(semanticNodeIds(spec));
+  for (const id of [
+    "portfolio_case",
+    "growth_experiment",
+    "human_review",
+  ]) assert.ok(ids.has(id), `${id} is required`);
+  const branch = (from, to) => {
+    const edge = spec.edges.find((item) => item.from === from && item.to === to);
+    assert.equal(edge?.role, "branch", `${from} -> ${to} must be a real branch`);
+  };
+  assertEdge(spec, "evidence_project", "portfolio_case");
+  branch("evidence_project", "growth_experiment");
+  assertEdge(spec, "portfolio_case", "human_review");
+  branch("growth_experiment", "human_review");
+  assertEdge(spec, "human_review", "export_prepare");
+  const careerRoutes = spec.cards.find((card) => card.title === "Career routes");
+  assert.ok(careerRoutes?.items.some((item) => /interview/u.test(item) && item.includes("evidence IDs")), "Interview route card is required");
+  const reviewLayers = spec.cards.find((card) => card.title === "Review layers");
+  assert.ok(reviewLayers, "Review layers card is required");
+  for (const layer of ["Content", "Evidence", "Document quality"]) {
+    assert.ok(reviewLayers.items.some((item) => item.includes(layer)), `${layer} review layer is required`);
+  }
+}
+
+function assertCareerSafetyLanguage(spec) {
+  const visibleText = JSON.stringify(spec);
+  assert.match(visibleText, /does not guarantee a hiring outcome/i);
+  assert.doesNotMatch(
+    visibleText,
+    /approval\s+is\s+automatic|automatic\s+approval|hiring\s+is\s+guaranteed|guaranteed\s+hiring|자동\s*승인|승인이\s*자동|채용\s*보장|채용이\s*보장/iu,
+  );
+}
+
 test("every selected Studio entry owns one exact fresh showcase spec", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const studio = catalog.entries.filter((entry) => entry.decision === "selected" && entry.product === "studio");
@@ -150,22 +184,16 @@ test("Career workflow preserves evidence, human review, disclosure, and the actu
     "disclosure_approval",
     "evidence_research",
     "evidence_project",
-    "career_routes",
-    "human_review",
     "export_prepare",
     "held_context",
   ]) assert.ok(ids.has(id), `${id} is required`);
   assertEdge(spec, "stage_diagnosis", "disclosure_approval");
   assertEdge(spec, "disclosure_approval", "evidence_research");
   assertEdge(spec, "evidence_research", "evidence_project");
-  assertEdge(spec, "evidence_project", "career_routes");
-  assertEdge(spec, "career_routes", "human_review");
-  assertEdge(spec, "human_review", "export_prepare");
+  assertCareerRouteAndReviewTopology(spec);
   assertCareerHoldResumesEvidenceResearch(spec);
-  const visibleText = JSON.stringify(spec);
   assert.equal(spec.nodes.find((node) => node.id === "human_review")?.type, "external");
-  assert.match(visibleText, /does not guarantee a hiring outcome/i);
-  assert.doesNotMatch(visibleText, /자동\s*승인|auto\s*approval|채용\s*(결과\s*)?보장/u);
+  assertCareerSafetyLanguage(spec);
 });
 
 test("Career workflow contract rejects a resume mutation that changes the held work", async () => {
@@ -176,6 +204,32 @@ test("Career workflow contract rejects a resume mutation that changes the held w
     edges: spec.edges.map((edge) => edge.from === "held_context" ? { ...edge, to: "evidence_project" } : edge),
   };
   assert.throws(() => assertCareerHoldResumesEvidenceResearch(wrongResume), /evidence_research/u);
+});
+
+test("Career workflow contract rejects removal of growth or document-quality review", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "career");
+  const spec = careerWorkflowSpec(specsById);
+  const withoutGrowth = {
+    ...spec,
+    nodes: spec.nodes.filter((node) => node.id !== "growth_experiment"),
+    edges: spec.edges.filter((edge) => edge.from !== "growth_experiment" && edge.to !== "growth_experiment"),
+    mainPath: spec.mainPath.filter((id) => id !== "growth_experiment"),
+  };
+  assert.throws(() => assertCareerRouteAndReviewTopology(withoutGrowth), /growth_experiment/u);
+  const withoutDocumentQuality = structuredClone(spec);
+  const reviewLayers = withoutDocumentQuality.cards.find((card) => card.title === "Review layers");
+  reviewLayers.items = reviewLayers.items.filter((item) => !item.includes("Document quality"));
+  assert.throws(() => assertCareerRouteAndReviewTopology(withoutDocumentQuality), /Document quality/u);
+});
+
+test("Career workflow contract rejects automatic approval and guaranteed hiring contradictions", async () => {
+  const { specsById } = await loadProductionSpecs(repoRoot, "career");
+  const spec = careerWorkflowSpec(specsById);
+  for (const contradiction of ["Approval is automatic", "Hiring is guaranteed", "자동 승인", "채용 보장"]) {
+    const mutated = structuredClone(spec);
+    mutated.cards[1].items.push(contradiction);
+    assert.throws(() => assertCareerSafetyLanguage(mutated));
+  }
 });
 
 test("selected Studio workflow records either a validated spec or a truthful validator block", async () => {

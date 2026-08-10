@@ -11,9 +11,21 @@
     "views": [
       {
         "id": "evidence-path",
-        "label": "Evidence to review",
-        "focus": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "career_routes", "human_review"],
-        "note": "Only current, scoped claims become a small reviewable project and a human review decision."
+        "label": "Evidence work",
+        "focus": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project"],
+        "note": "Only current, scoped claims become a small project with dated, reviewable evidence."
+      },
+      {
+        "id": "career-routes",
+        "label": "Portfolio, interview, growth",
+        "focus": ["portfolio_case", "growth_experiment", "human_review"],
+        "note": "Case-study and next-experiment routes are nodes; the evidence-ID interview route remains explicit in the route card."
+      },
+      {
+        "id": "review-layers",
+        "label": "Three review layers",
+        "focus": ["human_review"],
+        "note": "Content, evidence, and document quality remain separate review questions before export preparation."
       },
       {
         "id": "resume-contract",
@@ -24,7 +36,7 @@
     ]
   },
   "lanes": [
-    { "id": "human", "label": "Human decisions" },
+    { "id": "human", "label": "Student and human decisions" },
     { "id": "career", "label": "Career work" },
     { "id": "review", "label": "Review" },
     { "id": "delivery", "label": "Artifact preparation" }
@@ -32,29 +44,32 @@
   "phases": [
     { "id": "frame", "label": "Diagnose and disclose", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
     { "id": "evidence", "label": "Research and make evidence", "fromCol": 2, "toCol": 3 },
-    { "id": "review_export", "label": "Review and prepare", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+    { "id": "review_export", "label": "Route, review, prepare", "fromCol": 4, "toCol": 5, "variant": "dashed" }
   ],
   "groups": [
     { "id": "claim_record", "label": "Dated claim record", "lane": "career", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
-    { "id": "review_boundary", "label": "Human review boundary", "lane": "review", "fromCol": 5, "toCol": 5, "variant": "security" }
+    { "id": "review_boundary", "label": "Separated review layers", "lane": "review", "fromCol": 5, "toCol": 5, "variant": "security" }
   ],
-  "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "career_routes", "human_review", "export_prepare"],
+  "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
   "nodes": [
     { "id": "stage_diagnosis", "lane": "human", "col": 0, "type": "external", "label": "Choose stage", "sublabel": "role + constraints" },
     { "id": "disclosure_approval", "lane": "human", "col": 1, "width": 52, "type": "external", "label": "Scope", "sublabel": "rights" },
     { "id": "held_context", "lane": "career", "col": 0, "width": 52, "type": "messagebus", "label": "Hold", "sublabel": "claim" },
     { "id": "evidence_research", "lane": "career", "col": 2, "width": 52, "type": "database", "label": "Claim", "sublabel": "dated" },
     { "id": "evidence_project", "lane": "career", "col": 3, "width": 72, "type": "backend", "label": "Project", "sublabel": "1–12 weeks" },
-    { "id": "career_routes", "lane": "career", "col": 5, "type": "backend", "label": "Paths", "sublabel": "portfolio + interview" },
-    { "id": "human_review", "lane": "review", "col": 5, "type": "external", "label": "Human review", "sublabel": "content + evidence", "tag": "human gate" },
+    { "id": "portfolio_case", "lane": "career", "col": 5, "type": "backend", "label": "Portfolio", "sublabel": "case study" },
+    { "id": "growth_experiment", "lane": "human", "col": 4, "width": 52, "type": "backend", "label": "Grow" },
+    { "id": "human_review", "lane": "review", "col": 5, "type": "external", "label": "Human review", "sublabel": "three layers", "tag": "human gate" },
     { "id": "export_prepare", "lane": "delivery", "col": 5, "type": "security", "label": "Prepare export", "sublabel": "MD, PDF, DOCX, PPTX" }
   ],
   "edges": [
     { "from": "stage_diagnosis", "to": "disclosure_approval", "role": "main", "variant": "emphasis" },
     { "from": "disclosure_approval", "to": "evidence_research", "role": "main", "variant": "security", "route": "bottom-channel" },
     { "from": "evidence_research", "to": "evidence_project", "role": "main", "route": "straight", "fromSide": "right", "toSide": "left" },
-    { "from": "evidence_project", "to": "career_routes", "role": "main", "variant": "emphasis" },
-    { "from": "career_routes", "to": "human_review", "role": "main", "variant": "security" },
+    { "from": "evidence_project", "to": "portfolio_case", "role": "main", "variant": "emphasis" },
+    { "from": "evidence_project", "to": "growth_experiment", "role": "branch", "variant": "default", "route": "return-left", "fromSide": "left", "toSide": "left" },
+    { "from": "portfolio_case", "to": "human_review", "role": "main", "variant": "security" },
+    { "from": "growth_experiment", "to": "human_review", "role": "branch", "variant": "security", "route": "outside-right", "fromSide": "right", "toSide": "right" },
     { "from": "human_review", "to": "export_prepare", "role": "main", "variant": "emphasis" },
     { "from": "evidence_research", "to": "held_context", "label": "blocked", "role": "branch", "variant": "dashed", "route": "straight", "fromSide": "left", "toSide": "right" },
     { "from": "held_context", "to": "evidence_research", "label": "resume", "role": "return", "variant": "dashed", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom" }
@@ -65,17 +80,28 @@
       "title": "Evidence boundary",
       "items": [
         "Each claim retains its source, reference date, scope, and limit",
+        "A 1–12 week student project turns the recorded gap into reviewable work",
         "Do not turn a missing job listing into a general role requirement",
         "Record only work and contributions that actually happened"
       ]
     },
     {
       "dot": "amber",
-      "title": "Human review and export",
+      "title": "Career routes",
       "items": [
-        "Conflicting review recommendations remain decision items",
-        "Privacy, third-party rights, company confidentiality, and inflated claims are resolved before approval",
+        "Portfolio makes problem, judgment, contribution, result, and evidence a case study; interview connects job requirements to evidence IDs",
+        "Growth connects project impact, feedback, and the next experiment",
         "Preparing files does not guarantee a hiring outcome"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Review layers",
+      "items": [
+        "Content: judge the case-study explanation separately",
+        "Evidence: keep each claim verifiable or mark its gap",
+        "Document quality: keep format and clarity separate from content and evidence",
+        "Conflicting recommendations remain decision items; resolve privacy, rights, confidentiality, and inflated claims before approval"
       ]
     },
     {
