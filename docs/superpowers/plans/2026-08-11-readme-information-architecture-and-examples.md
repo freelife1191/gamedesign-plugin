@@ -384,7 +384,7 @@ App·CLI → marketplace → Studio 또는 Career
 Studio·Career → 전문 스킬 → Canonical Artifact
 Canonical Artifact → 시각화 lane 및 내보내기 lane
 두 lane → 자동 검증 → 사람 승인 → 전달 결과
-Studio 검토 결과 → 공개 범위 승인 → Career 증거 후보
+Studio 검토 결과 → 공개 범위 승인 → Career 포트폴리오 작업공간
 검증 실패 → 해당 lane 보류 → Canonical Artifact 보존
 ```
 
@@ -484,6 +484,68 @@ Compute the new README SHA-256 and update only the `suite-plugin-system-architec
 git add README.md tests/contracts/root-readme-user-guides.test.mjs \
   guides/archify-diagrams/catalog.json
 git commit -m "docs: make README examples beginner-readable"
+```
+
+---
+
+### Task 4A: Replace the abstract cross-plugin quick start with a portfolio task
+
+**Files:**
+- Modify: `README.md`
+- Modify: `tests/contracts/root-readme-user-guides.test.mjs`
+- Modify: `guides/archify-diagrams/catalog.json`
+
+**Interfaces:**
+- Consumes: the completed Studio `game-design-brief` or another human-reviewed Studio Canonical Artifact
+- Produces: a beginner-readable `creative-design-portfolio` quick-start route whose purpose, steps, outputs and review boundary are explicit
+
+- [ ] **Step 1: Add a focused RED contract**
+
+Require the third quick-start heading to be `완성한 게임 기획을 취업용 포트폴리오 사례로 정리하기`. Require visible labels for `이럴 때 사용`, `준비물`, `실행 순서`, `얻게 되는 결과` and `공개 전 확인`. Reject the user-facing phrases `증거 후보`, `공개 증거 후보` and a prompt that calls both products abstractly without naming the review and portfolio skills.
+
+- [ ] **Step 2: Require exact actionable outputs**
+
+Require these four Korean output labels with their stable technical files or IDs as secondary references:
+
+```text
+포트폴리오 사례 본문 (creative-design-portfolio/content.md)
+개인 기여와 선택 근거 (creative-design-portfolio/evidence.yml)
+면접 답변 소재 (creative-design-portfolio/decisions/)
+공개 전 확인 목록 (creative-design-portfolio/export-manifest.yml)
+```
+
+Require the human boundary to say that the author verifies actual contribution and publication rights and that the plugin does not auto-approve publication.
+
+- [ ] **Step 3: Rewrite the quick-start copy and prompt**
+
+Explain that this route is for a student or junior who already has one reviewed Studio design document and wants to turn it into a portfolio case. Use this ordered CLI flow and an equivalent natural-language App request:
+
+```text
+$game-design-studio:review-game-design
+완성한 기획서에서 공개할 수 있는 문제, 내가 맡은 범위,
+선택 이유와 검증 결과를 구분해 줘.
+
+$game-design-career:build-game-design-portfolio
+검토된 내용만 사용해 포트폴리오 사례 본문, 개인 기여 요약,
+면접 답변 소재와 공개 전 확인 목록을 만들어 줘.
+```
+
+Keep every source line at 80 Unicode code points or fewer. Use `creative-design-portfolio` only as the technical result ID after the Korean result name.
+
+- [ ] **Step 4: Refresh the root architecture source digest**
+
+Compute the new README SHA-256 and update only the `suite-plugin-system-architecture` catalog record's `source_digest`. Do not edit the already auto-validated Archify spec in this task.
+
+- [ ] **Step 5: Verify and commit**
+
+```bash
+node --test tests/contracts/root-readme-user-guides.test.mjs
+npm run validate:guides
+npm run validate:archify-catalog
+git diff --check
+git add README.md tests/contracts/root-readme-user-guides.test.mjs \
+  guides/archify-diagrams/catalog.json
+git commit -m "docs: make the portfolio quick start actionable"
 ```
 
 ---
