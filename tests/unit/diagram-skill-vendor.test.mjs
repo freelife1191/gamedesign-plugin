@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { cp, lstat, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -88,6 +88,72 @@ const EXPECTED = Object.freeze({
 });
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+const gitBlobSha = (value) => createHash("sha1").update(`blob ${Buffer.byteLength(value)}\0`).update(value).digest("hex");
+
+function storedZip(files) {
+  const localEntries = [];
+  const centralEntries = [];
+  let offset = 0;
+  for (const { path: filename, bytes, externalAttributes = 0 } of files) {
+    const name = Buffer.from(filename, "utf8");
+    const content = Buffer.from(bytes);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0x0800, 6);
+    local.writeUInt16LE(0, 8);
+    local.writeUInt32LE(content.length, 18);
+    local.writeUInt32LE(content.length, 22);
+    local.writeUInt16LE(name.length, 26);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0x0800, 8);
+    central.writeUInt16LE(0, 10);
+    central.writeUInt32LE(content.length, 20);
+    central.writeUInt32LE(content.length, 24);
+    central.writeUInt16LE(name.length, 28);
+    central.writeUInt32LE(externalAttributes >>> 0, 38);
+    central.writeUInt32LE(offset, 42);
+    localEntries.push(local, name, content);
+    centralEntries.push(central, name);
+    offset += local.length + name.length + content.length;
+  }
+  const central = Buffer.concat(centralEntries);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(central.length, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...localEntries, central, end]);
+}
+
+async function vendorState(root, name) {
+  const lock = await readFile(path.join(root, "vendor.lock.json"));
+  const notices = await readFile(path.join(root, "THIRD_PARTY_NOTICES.md"));
+  const tree = await listRegularFiles(path.join(root, EXPECTED[name].treeRoot));
+  return { lock, notices, tree };
+}
+
+async function archiveFilesForVendor(root, name, mutate = (files) => files) {
+  const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8"));
+  const files = await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
+    path: relativePath,
+    bytes: await readFile(path.join(root, lock.tree.root, relativePath)),
+  })));
+  return mutate(files);
+}
+
+async function rawArchiveForVendor(root, name, mutate) {
+  const prefix = name === "skillstead" ? "skillstead-commit/skills/svg-infographic/" : "archify/";
+  return storedZip((await archiveFilesForVendor(root, name, mutate)).map((file) => ({ ...file, path: `${prefix}${file.path}` })));
+}
+
+async function officialTreeForVendor(root, name) {
+  return (await archiveFilesForVendor(root, name)).map((file) => ({ path: file.path, sha: gitBlobSha(file.bytes) }));
+}
 
 async function listRegularFiles(root, prefix = "") {
   const entries = [];
@@ -199,6 +265,183 @@ test("offline diagram vendor verifier rejects a changed payload byte, symlink, a
   }
 });
 
+test("recovery rejects malformed, escaping, and symlinked journals without changing the active closure", async (t) => {
+  const { recoverDiagramSkillVendor } = await loadUpdaterOrFail();
+  const valid = {
+    schemaVersion: 1,
+    name: "archify",
+    oldRoot: "archify/2.13.0",
+    newRoot: "archify/2.13.1",
+    ownerNonce: "a".repeat(32),
+  };
+  for (const [label, journal] of [
+    ["wrong-schema", { ...valid, schemaVersion: 2 }],
+    ["traversal", { ...valid, oldRoot: "../escape" }],
+    ["absolute", { ...valid, newRoot: "/tmp/escape" }],
+  ]) {
+    const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+    const before = await vendorState(vendorRoot, "archify");
+    const journalPath = path.join(vendorRoot, ".vendor-update.json");
+    await writeFile(journalPath, `${JSON.stringify(journal)}\n`);
+    await assert.rejects(recoverDiagramSkillVendor({ root: vendorRoot, name: "archify" }), (error) => error.code === "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", label);
+    assert.deepEqual(await vendorState(vendorRoot, "archify"), before, `${label}: active closure remains byte-identical`);
+    assert.equal(await readFile(journalPath, "utf8"), `${JSON.stringify(journal)}\n`, `${label}: invalid journal remains evidence`);
+  }
+
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await vendorState(vendorRoot, "archify");
+  const journalPath = path.join(vendorRoot, ".vendor-update.json");
+  const external = path.join(path.dirname(vendorRoot), "external-journal.json");
+  await writeFile(external, `${JSON.stringify(valid)}\n`);
+  await symlink(external, journalPath);
+  await assert.rejects(recoverDiagramSkillVendor({ root: vendorRoot, name: "archify" }), (error) => error.code === "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID");
+  assert.deepEqual(await vendorState(vendorRoot, "archify"), before, "symlink journal: active closure remains byte-identical");
+  assert.equal((await lstat(journalPath)).isSymbolicLink(), true, "symlink journal is never unlinked by recovery");
+
+  const noOwner = await copiedVendorWorkspace(t, "archify");
+  const noOwnerBefore = await vendorState(noOwner.vendorRoot, "archify");
+  await writeFile(path.join(noOwner.vendorRoot, ".vendor-update.json"), `${JSON.stringify(valid)}\n`);
+  await assert.rejects(recoverDiagramSkillVendor({ root: noOwner.vendorRoot, name: "archify" }), (error) => error.code === "DIAGRAM_VENDOR_RECOVERY_OWNER_REQUIRED");
+  assert.deepEqual(await vendorState(noOwner.vendorRoot, "archify"), noOwnerBefore, "missing owner never authorizes recovery");
+});
+
+test("a live operation owner blocks recovery and never lets a verifier delete its candidate tree", async (t) => {
+  const { recoverDiagramSkillVendor, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await vendorState(vendorRoot, "archify");
+  const lockRoot = path.join(vendorRoot, ".vendor-operation.lock");
+  await mkdir(lockRoot);
+  await writeFile(path.join(lockRoot, "owner.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", nonce: "b".repeat(32), startedAt: new Date().toISOString() })}\n`);
+  await writeFile(path.join(vendorRoot, ".vendor-update.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", oldRoot: "archify/2.13.0", newRoot: "archify/2.13.1", ownerNonce: "b".repeat(32) })}\n`);
+  await mkdir(path.join(vendorRoot, "archify/2.13.1"), { recursive: true });
+  await writeFile(path.join(vendorRoot, "archify/2.13.1", "candidate.txt"), "do not delete");
+  for (const operation of [recoverDiagramSkillVendor, verifyDiagramSkillVendor]) {
+    await assert.rejects(operation({ root: vendorRoot, name: "archify" }), (error) => error.code === "DIAGRAM_VENDOR_OPERATION_ACTIVE");
+  }
+  assert.deepEqual(await vendorState(vendorRoot, "archify"), before, "live owner cannot change active closure");
+  assert.equal(await readFile(path.join(vendorRoot, "archify/2.13.1", "candidate.txt"), "utf8"), "do not delete");
+});
+
+test("raw archives are verified internally against independent release metadata before staging", async (t) => {
+  const { updateDiagramSkill } = await loadUpdaterOrFail();
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await vendorState(vendorRoot, "archify");
+  const stagingRoot = path.join(path.dirname(vendorRoot), "malicious-raw-stage");
+  const malicious = storedZip([
+    { path: "archify/SKILL.md", bytes: Buffer.from("malicious\n") },
+    { path: "archify/LICENSE", bytes: Buffer.from("fake license\n") },
+    { path: "archify/bin/ordinary-extra.mjs", bytes: Buffer.from("export {};\n") },
+  ]);
+  await assert.rejects(
+    updateDiagramSkill({
+      root: vendorRoot,
+      name: "archify",
+      stagingRoot,
+      fetchRelease: async () => ({
+        tag: "v2.13.1",
+        releasedAt: "2026-08-12T00:00:00Z",
+        releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: sha256(Buffer.from("independent official asset")) },
+      }),
+      resolveTagCommit: async () => "2".repeat(40),
+      fetchArchive: async () => malicious,
+    }),
+    (error) => error.code === "DIAGRAM_VENDOR_ARCHIVE_HASH_MISMATCH",
+  );
+  assert.deepEqual(await vendorState(vendorRoot, "archify"), before, "matching caller claims cannot self-sign a malicious raw payload");
+  assert.equal(existsSync(stagingRoot), false, "unverified bytes never create a staging tree");
+});
+
+test("immutable Skillstead tree and ZIP metadata reject ordinary extras and symlinks before staging", async (t) => {
+  const { updateDiagramSkill } = await loadUpdaterOrFail();
+  for (const [label, rawFactory, expectedCode] of [
+    [
+      "ordinary-extra",
+      async (vendorRoot) => rawArchiveForVendor(vendorRoot, "skillstead", (files) => [...files, { path: "notes/ordinary-extra.txt", bytes: Buffer.from("not in official tree\n") }]),
+      "DIAGRAM_VENDOR_ARCHIVE_TREE_MISMATCH",
+    ],
+    [
+      "symlink-metadata",
+      async (vendorRoot) => {
+        const files = await archiveFilesForVendor(vendorRoot, "skillstead");
+        return storedZip([
+          ...files.map((file) => ({ ...file, path: `skillstead-commit/skills/svg-infographic/${file.path}` })),
+          { path: "skillstead-commit/skills/svg-infographic/notes/link", bytes: Buffer.from("SKILL.md"), externalAttributes: 0o120777 << 16 },
+        ]);
+      },
+      "DIAGRAM_VENDOR_ARCHIVE_SYMLINK",
+    ],
+  ]) {
+    const { vendorRoot } = await copiedVendorWorkspace(t, "skillstead");
+    const before = await vendorState(vendorRoot, "skillstead");
+    const stagingRoot = path.join(path.dirname(vendorRoot), `${label}-stage`);
+    await assert.rejects(
+      updateDiagramSkill({
+        root: vendorRoot,
+        name: "skillstead",
+        stagingRoot,
+        fetchRelease: async () => ({ tag: "svg-infographic/v0.9.1", releasedAt: "2026-08-12T00:00:00Z" }),
+        resolveTagCommit: async () => "2".repeat(40),
+        fetchOfficialTree: async () => officialTreeForVendor(vendorRoot, "skillstead"),
+        fetchArchive: async () => rawFactory(vendorRoot),
+      }),
+      (error) => error.code === expectedCode,
+      label,
+    );
+    assert.deepEqual(await vendorState(vendorRoot, "skillstead"), before, `${label}: active closure remains byte-identical`);
+    assert.equal(existsSync(stagingRoot), false, `${label}: rejected bytes never create a staging tree`);
+  }
+});
+
+test("only a stale owner may be recovered, and recovery leaves the valid active root intact", async (t) => {
+  const { recoverDiagramSkillVendor, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await vendorState(vendorRoot, "archify");
+  const lockRoot = path.join(vendorRoot, ".vendor-operation.lock");
+  await mkdir(lockRoot);
+  await writeFile(path.join(lockRoot, "owner.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", nonce: "c".repeat(32), startedAt: "2000-01-01T00:00:00.000Z" })}\n`);
+  await writeFile(path.join(vendorRoot, ".vendor-update.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", oldRoot: "archify/2.13.0", newRoot: "archify/2.13.1", ownerNonce: "c".repeat(32) })}\n`);
+  await mkdir(path.join(vendorRoot, "archify/2.13.1"), { recursive: true });
+  await writeFile(path.join(vendorRoot, "archify/2.13.1", "candidate.txt"), "discard stale candidate");
+  assert.equal(await recoverDiagramSkillVendor({ root: vendorRoot, name: "archify", now: Date.parse("2000-01-01T00:10:00.000Z") }), true);
+  assert.equal(existsSync(lockRoot), false, "stale lock is removed only after its owner schema is verified");
+  assert.equal(existsSync(path.join(vendorRoot, "archify/2.13.1")), false, "only stale inactive tree is removed");
+  assert.deepEqual(await vendorState(vendorRoot, "archify"), before, "active closure is retained exactly");
+  await verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" });
+});
+
+test("an interleaving verifier is excluded while an updater owns the candidate transition", async (t) => {
+  const { updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const rawArchive = await rawArchiveForVendor(vendorRoot, "archify");
+  let archiveRequested;
+  let releaseArchive;
+  const entered = new Promise((resolve) => { archiveRequested = resolve; });
+  const release = new Promise((resolve) => { releaseArchive = resolve; });
+  const update = updateDiagramSkill({
+    root: vendorRoot,
+    name: "archify",
+    stagingRoot: path.join(path.dirname(vendorRoot), "interleaving-stage"),
+    fetchRelease: async () => ({
+      tag: "v2.13.1",
+      releasedAt: "2026-08-12T00:00:00Z",
+      releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: sha256(rawArchive) },
+    }),
+    resolveTagCommit: async () => "2".repeat(40),
+    fetchArchive: async () => {
+      archiveRequested();
+      await release;
+      return rawArchive;
+    },
+  });
+  await entered;
+  await assert.rejects(verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" }), (error) => error.code === "DIAGRAM_VENDOR_OPERATION_ACTIVE");
+  releaseArchive();
+  const updated = await update;
+  assert.deepEqual(updated, { name: "archify", tag: "v2.13.1", verifiedFiles: 60 });
+  assert.equal(existsSync(path.join(vendorRoot, "archify/2.13.1")), true, "interleaving verifier never removes the committed new tree");
+  assert.deepEqual(await verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" }), updated);
+});
+
 test("diagram vendor updater keeps check offline and latest/update explicit", async () => {
   if (!existsSync(fileURLToPath(updaterUrl))) {
     await loadUpdaterOrFail();
@@ -249,14 +492,7 @@ test("updater rejects an unverified Archify asset digest and does not alter the 
   const { updateDiagramSkill } = await loadUpdaterOrFail();
   const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
   const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
-  const lock = JSON.parse(before);
-  const archive = {
-    files: await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
-      path: relativePath,
-      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
-    }))),
-    assetSha256: "b".repeat(64),
-  };
+  const archive = await rawArchiveForVendor(vendorRoot, "archify");
   await assert.rejects(
     updateDiagramSkill({
       root: vendorRoot,
@@ -283,19 +519,17 @@ test("updater rejects a fake license or an archive-supplied updater before writi
     ["updater", (files) => [...files, { path: "scripts/update.mjs", bytes: Buffer.from("export {};\n") }], "DIAGRAM_VENDOR_ARCHIVE_UPDATER_FORBIDDEN"],
   ]) {
     const { vendorRoot } = await copiedVendorWorkspace(t, "skillstead");
-    const lock = JSON.parse(await readFile(path.join(vendorRoot, "vendor.lock.json"), "utf8"));
-    const files = await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
-      path: relativePath,
-      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
-    })));
+    const archive = await rawArchiveForVendor(vendorRoot, "skillstead", mutate);
+    const officialTree = await officialTreeForVendor(vendorRoot, "skillstead");
     await assert.rejects(
       updateDiagramSkill({
         root: vendorRoot,
         name: "skillstead",
         stagingRoot: path.join(path.dirname(vendorRoot), `${label}-stage`),
-        fetchRelease: async () => release,
-        resolveTagCommit: async () => "2".repeat(40),
-        fetchArchive: async () => ({ files: mutate(files) }),
+      fetchRelease: async () => release,
+      resolveTagCommit: async () => "2".repeat(40),
+      fetchOfficialTree: async () => officialTree,
+      fetchArchive: async () => archive,
       }),
       (error) => error.code === expectedCode,
     );
@@ -306,18 +540,11 @@ test("failed lock replacement recovers the previous immutable closure", async (t
   const { recoverDiagramSkillVendor, updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
   const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
   const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
-  const lock = JSON.parse(before);
-  const archive = {
-    files: await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
-      path: relativePath,
-      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
-    }))),
-    assetSha256: "a".repeat(64),
-  };
+  const archive = await rawArchiveForVendor(vendorRoot, "archify");
   const futureRelease = {
     tag: "v2.13.1",
     releasedAt: "2026-08-12T00:00:00Z",
-    releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: "a".repeat(64) },
+    releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: sha256(archive) },
   };
   await assert.rejects(
     updateDiagramSkill({
@@ -344,10 +571,11 @@ test("injected latest check is read-only and injected update atomically stages a
   const { checkLatestDiagramSkills, updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
   const { workspaceRoot, vendorRoot } = await copiedVendorWorkspace(t, "archify");
   const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
+  const archive = await rawArchiveForVendor(vendorRoot, "archify");
   const futureRelease = {
     tag: "v2.13.1",
     releasedAt: "2026-08-12T00:00:00Z",
-    releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: "a".repeat(64) },
+    releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: sha256(archive) },
   };
   const latest = await checkLatestDiagramSkills({
     root: workspaceRoot,
@@ -362,13 +590,6 @@ test("injected latest check is read-only and injected update atomically stages a
   assert.deepEqual(latest, [{ name: "archify", status: "outdated", installedTag: "v2.13.0", latestTag: "v2.13.1", updateAvailable: true }]);
   assert.deepEqual(await readFile(path.join(vendorRoot, "vendor.lock.json")), before, "latest check never changes the installed vendor");
 
-  const lock = JSON.parse(before);
-  const archive = {
-    files: await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
-      path: relativePath,
-      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
-    }))),
-  };
   const stagingRoot = path.join(path.dirname(vendorRoot), "archify-stage");
   const result = await updateDiagramSkill({
     root: vendorRoot,
@@ -379,7 +600,7 @@ test("injected latest check is read-only and injected update atomically stages a
     fetchArchive: async ({ name, release }) => {
       assert.equal(name, "archify");
       assert.deepEqual(release, futureRelease);
-      return { ...archive, assetSha256: "a".repeat(64) };
+      return archive;
     },
   });
   assert.deepEqual(result, { name: "archify", tag: "v2.13.1", verifiedFiles: 60 });
