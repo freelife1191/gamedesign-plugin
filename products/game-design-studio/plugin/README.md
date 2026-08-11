@@ -360,7 +360,9 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 ### 스킬 중심
 
-한 작업의 입력과 원하는 결과가 분명하면 전문 스킬을 직접 호출합니다. 예를 들어 rule/state/exception 하나만 필요하면 `$game-design-studio:design-game-systems`를 사용합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작해 최소 스킬 체인과 사람 gate를 정합니다. 스킬 워크벤치는 직접 호출 신호·피할 때·다음 handoff를 비교합니다.
+일반적인 작업은 스킬 이름을 고를 필요가 없습니다. `@Game Design Studio` 뒤에 만들고 싶은 결과와 가진 자료를 자연어로 적으면, 한 분야가 분명한 요청은 해당 전문 스킬로 보내고 여러 분야가 섞였거나 범위가 불명확한 요청은 오케스트레이터가 필요한 경로만 고릅니다. 작업이 끝나면 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 알려 줍니다. 이 자동 선택은 자동 승인이 아닙니다.
+
+같은 경로를 다시 실행하거나 특정 단계부터 재개해야 할 때만 전문 스킬을 직접 호출합니다. 한 작업의 입력과 원하는 결과가 분명하면 `$game-design-studio:design-game-systems`처럼 해당 전문 스킬을 직접 지정할 수 있습니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 실행 순서를 고정할 수 있습니다. 스킬 워크벤치는 직접 호출이 유용한 때와 다음 작업 인계를 비교합니다.
 
 ### 대표 작업 경로
 

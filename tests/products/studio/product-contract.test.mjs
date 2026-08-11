@@ -186,6 +186,18 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.plannedPaths, plannedPaths);
 });
 
+test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
+  const skill = await readFile(path.join(pluginRoot, "skills/orchestrate-game-design-project/SKILL.md"), "utf8");
+  for (const phrase of [
+    "Users do not need to name a skill or case ID",
+    "Route a clear single-domain request directly to its specialist skill",
+    "Route mixed, cross-domain, or unclear requests through this orchestrator",
+    "Honor an explicit user-selected skill",
+    "Report the selected skills, selected review roles, artifact paths, and remaining decisions",
+    "Automatic route selection is not automatic approval",
+  ]) assert.match(skill, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+});
+
 test("Every Studio route is deterministic and points at its planned artifact source", async () => {
   const routing = await readJson("references/routing.json");
   assert.equal(routing.schemaVersion, 1);

@@ -39,6 +39,21 @@ const imageSpecialistIds = ["art-brief-director", "visual-asset-reviewer"];
 
 const stages = ["entry", "new-hire", "junior-growth", "transition"];
 
+test("Career orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
+  const skill = await readFile(
+    path.join(productRoot, "plugin/skills/orchestrate-game-design-career/SKILL.md"),
+    "utf8",
+  );
+  for (const phrase of [
+    "Users do not need to name a skill or case ID",
+    "Route a clear single-output request directly to its specialist skill",
+    "Route mixed, multi-stage, or unclear requests through this orchestrator",
+    "Honor an explicit user-selected skill",
+    "Report the selected skills, selected review roles, artifact paths, and remaining decisions",
+    "Automatic route selection is not automatic approval",
+  ]) assert.match(skill, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+});
+
 const scenarioChains = [
   {
     id: "entry-12-week-roadmap",
