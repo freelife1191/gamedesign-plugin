@@ -821,20 +821,18 @@ test("portable CODEX_HOME shell expansion preserves spaces and honors an overrid
   }
 });
 
-test("source-local shared link mirrors remain byte-identical to canonical shared inputs", async () => {
-  const mirrors = [
-    ["shared/responsible-design/gates.json", "references/shared/responsible-design/gates.json"],
-    ["shared/knowledge/trends/2026-current-practices.md", "references/shared/knowledge/trends/2026-current-practices.md"],
-    ["shared/knowledge/trends/source-register.json", "references/shared/knowledge/trends/source-register.json"],
-    ["shared/templates/review-finding.md", "assets/shared/templates/review-finding.md"],
+test("source-local links do not shadow canonical shared template inputs", async () => {
+  const prohibitedProductCopies = [
+    "assets/shared/templates/review-finding.md",
+    "references/shared/responsible-design/gates.json",
+    "references/shared/knowledge/trends/2026-current-practices.md",
+    "references/shared/knowledge/trends/source-register.json",
   ];
-  for (const [canonical, mirror] of mirrors) {
-    assert.deepEqual(
-      await readFile(path.join(repoRoot, canonical)),
-      await readFile(path.join(pluginRoot, mirror)),
-      `${mirror} must match ${canonical}`,
-    );
-  }
+  for (const relativePath of prohibitedProductCopies) await assert.rejects(
+    access(path.join(pluginRoot, relativePath)),
+    { code: "ENOENT" },
+    `${relativePath} must be supplied only by the canonical shared module during buildProduct`,
+  );
 });
 
 test("README explains the source overlay and complete independent built-plugin structure", async () => {
