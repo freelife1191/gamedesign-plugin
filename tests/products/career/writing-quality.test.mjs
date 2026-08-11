@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -36,6 +36,16 @@ function extractJsonContract(markdown, name) {
   return JSON.parse(match[1]);
 }
 
+function parseFrontmatter(markdown) {
+  const match = markdown.match(/^---\n([\s\S]*?)\n---\n/u);
+  assert.ok(match, "skill frontmatter is missing");
+  return Object.fromEntries(match[1].split("\n").map((line) => {
+    const separator = line.indexOf(": ");
+    assert.notEqual(separator, -1, `frontmatter field: ${line}`);
+    return [line.slice(0, separator), line.slice(separator + 2)];
+  }));
+}
+
 test("Career registry exposes writing polish as a dedicated specialist pass, outside primary reviewer bounds", async () => {
   const routing = JSON.parse(await readFile(path.join(pluginRoot, "references/routing.json"), "utf8"));
 
@@ -46,6 +56,7 @@ test("Career registry exposes writing polish as a dedicated specialist pass, out
     role: specialistId,
     placement: "after-content-domain-review-before-export",
     reviewerBound: "dedicated-specialist-pass-outside-primary-reviewer-cap",
+    bundledStylePath: "references/shared/document-quality/game-design-writing-style.md",
   });
   for (const route of routing.routes) {
     assert.ok(route.roles.length <= 3, `${route.id}: primary reviewer cap`);
@@ -53,10 +64,29 @@ test("Career registry exposes writing polish as a dedicated specialist pass, out
   }
 });
 
+test("Career writing-polish skill is directly discoverable through parsed skill metadata", async () => {
+  const [skill, openai] = await Promise.all([
+    readFile(path.join(pluginRoot, `skills/${skillId}/SKILL.md`), "utf8"),
+    readFile(path.join(pluginRoot, `skills/${skillId}/agents/openai.yaml`), "utf8"),
+  ]);
+
+  assert.deepEqual(parseFrontmatter(skill), {
+    name: skillId,
+    description: "Use when a Korean game design document needs a minimal readability revision that preserves protected content and approval state.",
+  });
+  assert.match(openai, /^interface:\n  display_name: "Polish Game Design Writing"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$polish-game-design-writing [^"]+"\n$/u);
+});
+
 test("Career writing-polish skill publishes a direct command, separate outputs, and a safe host fallback", async () => {
-  const skill = await readFile(path.join(pluginRoot, `skills/${skillId}/SKILL.md`), "utf8");
+  const [skill, routing] = await Promise.all([
+    readFile(path.join(pluginRoot, `skills/${skillId}/SKILL.md`), "utf8"),
+    readFile(path.join(pluginRoot, "references/routing.json"), "utf8").then(JSON.parse),
+  ]);
 
   assert.deepEqual(extractJsonContract(skill, "game-design-writing-contract"), expectedSkillContract);
+  const fallback = path.join(pluginRoot, routing.writingWorkflow.bundledStylePath);
+  const fallbackStat = await lstat(fallback);
+  assert.equal(fallbackStat.isFile() && !fallbackStat.isSymbolicLink(), true, `bundled fallback must be a regular product file: ${fallback}`);
 });
 
 test("Career writing specialist records bounded revisions without approval authority", async () => {
