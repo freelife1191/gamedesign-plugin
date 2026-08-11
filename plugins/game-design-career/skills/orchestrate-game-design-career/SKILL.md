@@ -9,6 +9,8 @@ description: Use when a game-design entrant, new graduate, junior, or transition
 
 Diagnose the career decision before selecting specialist work. Route evidence-centered work without promising outcomes, inventing experience, or prescribing one universally correct career.
 
+Users do not need to name a skill or case ID. Read an ordinary natural-language request, infer the career goal and requested result, and choose the smallest evidence-safe route that can produce it.
+
 ## Load References
 
 1. Read `../../references/intake.md` to normalize the request and decide whether one material question is required.
@@ -37,6 +39,14 @@ Diagnose the career decision before selecting specialist work. Route evidence-ce
 7. In parallel mode, dispatch independent envelopes. In sequential fallback, filter the fixed `rolePriority` to the selected roles and run the same roles with the same `questionsByRole` entries. Do not rewrite or broaden questions between modes.
 8. Merge findings by `severity`, `evidence-gap-id`, `artifact-section-id`, then `role-priority`. Preserve conflicting recommendations as explicit decisions.
 9. Apply every applicable evidence and responsible-design gate. Missing evidence remains a visible gap and never becomes approval.
+
+## Natural-Language Routing Rules
+
+- Route a clear single-output request directly to its specialist skill.
+- Route mixed, multi-stage, or unclear requests through this orchestrator.
+- Honor an explicit user-selected skill when it is compatible with the requested result and all safety, rights, evidence, and human-approval boundaries.
+- Report the selected skills, selected review roles, artifact paths, and remaining decisions.
+- Automatic route selection is not automatic approval. A named person still approves, revises, or holds every applicable result and derivative.
 
 ## Optional Archify structural-diagram route
 

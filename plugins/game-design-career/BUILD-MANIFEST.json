@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "f47e25bdb3d599dde735c5866044adcb642c44258a8491ac909c2d36566686b7",
+  "treeSha256": "beba38df6dcf4ea8caca9481839354e5b65932001e889cdd17605675fb6a9c29",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "01eb572b65f215167a6e55d5900778ce8197f52b17c9a45f919202d2c5d18532",
-      "size": 57077
+      "sha256": "7736abce81e37d428b76f95dd7582edaa204e84b6c01c4a3c07cf299b229e8a0",
+      "size": 57508
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -1451,8 +1451,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-career/SKILL.md",
-      "sha256": "0deec7f2bfb6d5cd625cf7549f5bd85426698ab0c7062767b26c7beb5831ceea",
-      "size": 5339
+      "sha256": "933e588d5e0ecf8f0b9708d1c872d73757f4c90bdb325f92d8a6ec3c0291eaff",
+      "size": 6112
     },
     {
       "path": "skills/orchestrate-game-design-career/agents/openai.yaml",

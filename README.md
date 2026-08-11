@@ -127,39 +127,66 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 
 ## 5분 안에 첫 결과 만들기
 
-모르는 정보는 미정으로 남깁니다. 아래 세 경로는 첫 기준 결과 폴더 (Artifact)와 먼저 읽을 파일을 함께 지정합니다.
+스킬 이름과 사례 번호를 외울 필요는 없습니다. `@Game Design Studio` 또는
+`@Game Design Career` 뒤에 원하는 결과와 가진 자료를 한 문장으로 요청하세요.
+모르는 정보는 `미정`으로 남겨도 됩니다.
+
+플러그인은 다음 일을 알아서 처리합니다.
+
+1. 요청의 목적과 원하는 결과를 파악합니다.
+2. 한 분야가 분명하면 전문 스킬을 선택합니다.
+3. 여러 분야가 섞였거나 범위가 불명확하면 오케스트레이터가 필요한 경로만 고릅니다.
+4. 서로 다른 검토가 필요할 때만 전문 역할을 최대 세 개 선택합니다.
+5. 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 마지막에 알려 줍니다.
+
+자동 선택은 자동 승인을 뜻하지 않습니다. 기획 결과와 파생 자료는 이름과
+역할을 기록한 사람이 승인·수정·보류합니다.
+
+아래 Skillstead 흐름도는 한 문장 요청이 전문 스킬 또는 오케스트레이터를 거쳐
+첫 결과와 사람 승인으로 이어지는 과정을 보여 줍니다. 이미지를 누르면 편집
+가능한 SVG 원본이 열립니다.
+
+[![한 문장 요청에서 스킬 선택과 사람 승인까지 이어지는 첫 결과 흐름](guides/assets/readme/first-result-routing-flow.png)](guides/assets/readme/first-result-routing-flow.svg)
 
 ### Studio에서 첫 게임 기획 브리프 만들기
 
-예상 첫 결과는 **게임 기획 브리프** (`game-design-brief`)입니다. `content.md`,
-`evidence.yml`, `export-manifest.yml` 순서로 먼저 읽으세요. App 또는 CLI 중
-**하나만 골라** 아래 요청문을 새 채팅 또는 새 세션에 복사하세요.
+아이디어의 대상 플레이어와 핵심 재미를 정리하고 싶다면 이렇게 시작합니다.
 
 ```text
-@Game Design Studio 모바일 협동 RPG의 대상 플레이어와 핵심
-재미를
-미정 항목과 함께 game-design-brief로 작성해.
-
-$game-design-studio:orchestrate-game-design-project
-모바일 협동 RPG의 대상 플레이어와 핵심 재미를
-미정 항목과 함께 game-design-brief로 작성해.
+@Game Design Studio 모바일 협동 RPG의 대상 플레이어와 핵심 재미를
+게임 기획 브리프로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
 ```
+
+받게 되는 첫 결과는 **게임 기획 브리프** (`game-design-brief`)입니다.
+`content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
 
 ### Career에서 첫 경력 계획 만들기
 
-예상 첫 결과는 **게임 기획 경력 계획** (`game-design-career-plan`)입니다.
-`content.md`, `evidence.yml`, `export-manifest.yml` 순서로 먼저 읽으세요. App 또는
-CLI 중 **하나만 골라** 아래 요청문을 새 채팅 또는 새 세션에 복사하세요.
+목표 직무와 공부 순서를 정하고 싶다면 이렇게 시작합니다.
 
 ```text
-@Game Design Career 시스템 기획과 콘텐츠 기획의 교환조건을
-비교하고
-주 8시간 기준 12주 증거 계획을 미정 항목과 함께 작성해.
+@Game Design Career 시스템 기획 취업을 준비하고 있어.
+현재 경험을 바탕으로 부족한 역량과 12주 학습 계획을 정리해 줘.
+```
+
+받게 되는 첫 결과는 **게임 기획 경력 계획** (`game-design-career-plan`)입니다.
+`content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
+
+<details>
+<summary>고급 사용: 실행 경로를 직접 고정하기</summary>
+
+같은 경로를 다시 실행하거나 특정 단계부터 재개해야 할 때만 명시적 스킬을
+사용합니다.
+
+```text
+$game-design-studio:orchestrate-game-design-project
+모바일 협동 RPG의 대상 플레이어와 핵심 재미를 브리프로 정리해.
 
 $game-design-career:orchestrate-game-design-career
-시스템 기획과 콘텐츠 기획의 교환조건을 비교하고
-주 8시간 기준 12주 증거 계획을 미정 항목과 함께 작성해.
+시스템 기획 취업을 위한 12주 학습 계획을 정리해.
 ```
+
+</details>
 
 ### 완성한 게임 기획을 취업용 포트폴리오 사례로 정리하기
 
@@ -229,14 +256,30 @@ $game-design-career:build-game-design-portfolio
 - `canonical artifact`: 검토 기준이 되는 기준 결과 폴더
 - `failed image/export blocker`: 실패한 이미지·내보내기를 멈춘 중단 항목
 
-처음 사용하는 사람은 빈칸 템플릿보다 바로 아래 `채운 예시`를 먼저 복사한 뒤,
-프로젝트 이름과 공개 가능한 입력만 바꿔 시작하세요.
+처음 사용하는 사람은 아래의 간단한 요청 표에서 목적에 맞는 문장을 골라
+시작하세요. 세부 카드는 같은 작업을 반복하거나 경로를 직접 고정할 때
+참고하면 됩니다.
 
 [![요청문에서 기획 결과와 다음 요청으로 이어지는 흐름](guides/assets/readme/prompt-to-result-flow.png)](guides/assets/readme/prompt-to-result-flow.svg)
 
 ### Studio 기획 사례 7개
 
 게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 결과 폴더 (Artifact)와 사람 검토 지점을 남깁니다.
+
+한 줄 요청만으로 시작할 수 있습니다. 플러그인은 요청에 따라 선택하고 필요한
+경로만 실행한 뒤, 결과를 사람 검토에 넘깁니다.
+
+[![Studio 한 줄 요청이 필요한 스킬과 사람 검토로 이어지는 흐름](guides/assets/readme/studio-smart-request-flow.png)](guides/assets/readme/studio-smart-request-flow.svg)
+
+| 하려는 일 | 간단한 요청 | 플러그인이 고르는 대표 경로 | 받게 되는 결과 |
+| --- | --- | --- | --- |
+| 게임 방향 정하기 | `@Game Design Studio 협동 RPG의 대상 플레이어와 핵심 재미를 정리해 줘.` | 게임 비전 정의 → 기획 검토 | 비전 기둥, 게임 기획 브리프 |
+| 핵심 루프 설계 | `@Game Design Studio 탐험과 전투가 이어지는 핵심 플레이 루프를 설계해 줘.` | 시스템 설계 → 플레이어 경험 검토 | 핵심 동기 루프, 시스템 명세 |
+| 규칙·예외 정리 | `@Game Design Studio 장비 강화 규칙과 실패·예외 처리를 명세해 줘.` | 시스템 설계 → 기획 검토 | 시스템 명세, 규칙·예외 표 |
+| 화면 흐름 점검 | `@Game Design Studio 첫 세션 화면 흐름과 접근성 문제를 점검해 줘.` | 플레이어 경험 설계 → 시각화 | UI·UX 흐름, 접근성 표 |
+| 퀘스트·캐릭터 설계 | `@Game Design Studio 협동 복구 퀘스트와 NPC 선택 결과를 설계해 줘.` | 콘텐츠 설계 → 시스템·제작 검토 | 퀘스트·NPC 명세, 전투 콘텐츠 명세 |
+| 경제·운영 설계 | `@Game Design Studio 이벤트 재화의 유입·소비와 중단 기준을 설계해 줘.` | 경제·라이브 운영 설계 → 검토 | 경제 명세, 이벤트 실험 계획 |
+| 제작 범위 점검 | `@Game Design Studio 8주 시제품의 범위와 출시 위험을 점검해 줘.` | 제작 계획 → 기획 검토 → 출력 준비 | 제작 범위·위험 명세, 출력 준비 목록 |
 
 <details data-prompt-id="studio:case:ST-C01">
 <summary>게임의 방향과 핵심 재미 정의 (studio:case:ST-C01)</summary>
@@ -253,7 +296,7 @@ $game-design-career:build-game-design-portfolio
 게임 한 줄 소개, 예상 플레이 시간, 대상 플레이어와 확인한 사실·미정 항목을
 적습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -261,10 +304,9 @@ App
 recommendation을 분리해
 ST-C01를 작성해.
 
-채운 예시 (App)
-@Game Design Studio 바람섬-협동RPG 공개 가능한 플레이테스트
-메모의 사실 (fact),
-추론 (inference), 제안 (recommendation)을 분리해 ST-C01를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 바람섬 협동 RPG의 대상 플레이어와 핵심 재미를
+게임 기획 브리프로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
 
 CLI
 $game-design-studio:apply-document-quality-profile
@@ -274,7 +316,7 @@ $game-design-studio:review-game-design [프로젝트 ID] [공개 정보]
 ST-C01의 fact,
 inference, recommendation을 분리해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:apply-document-quality-profile
 $game-design-studio:define-game-vision
 $game-design-studio:orchestrate-game-design-project
@@ -284,13 +326,13 @@ ST-C01의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 분리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `define-game-vision` → `orchestrate-game-design-project` → `review-game-design`
 
 비전 기준을 세우고 기획 브리프로 묶은 뒤 검토하는 순서입니다.
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `vision-pillars` → `game-design-brief` → `game-design-review`
 
@@ -330,7 +372,7 @@ ST-C01의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 
 반복 행동, 성공·실패 조건, 보상, 중단 행동과 관찰할 플레이어 반응을 적습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -338,10 +380,9 @@ App
 recommendation을 분리해
 ST-C02를 작성해.
 
-채운 예시 (App)
-@Game Design Studio 별빛원정대 4인 협동 전투의 공개 테스트
-규칙의 사실 (fact),
-추론 (inference), 제안 (recommendation)을 분리해 ST-C02를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 별빛원정대의 탐험·전투·보상 흐름을 살펴보고
+플레이어가 반복할 핵심 행동과 의미 있는 선택을 설계해 줘.
 
 CLI
 $game-design-studio:define-game-vision $game-design-studio:design-game-systems
@@ -350,7 +391,7 @@ $game-design-studio:review-game-design [프로젝트 ID] [공개 정보]
 ST-C02의 fact,
 inference, recommendation을 분리해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:define-game-vision
 $game-design-studio:design-game-systems
 $game-design-studio:design-player-experience
@@ -360,13 +401,13 @@ ST-C02의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 분리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `define-game-vision` → `design-game-systems` → `design-player-experience` → `review-game-design`
 
 비전의 약속을 규칙과 화면 피드백으로 옮긴 뒤 선택을 검토합니다.
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `core-motivation-loop` → `system-specification` → `game-design-review`
 
@@ -405,7 +446,7 @@ ST-C02의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 
 상태, 기본 규칙, 예외, 우선순위, 저장 데이터와 테스트 사례를 적습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -413,10 +454,9 @@ App
 recommendation을 분리해
 ST-C03를 작성해.
 
-채운 예시 (App)
-@Game Design Studio 고대유적-레이드 파티 보상 규칙의 공개
-명세의 사실 (fact),
-추론 (inference), 제안 (recommendation)을 분리해 ST-C03를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 고대 유적 레이드의 파티 보상 규칙을 정리해 줘.
+중도 이탈과 중복 수령 같은 예외와 우선순위도 함께 검토해 줘.
 
 CLI
 $game-design-studio:apply-document-quality-profile
@@ -426,7 +466,7 @@ $game-design-studio:review-game-design [프로젝트 ID] [공개 정보]
 ST-C03의 fact,
 inference, recommendation을 분리해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:apply-document-quality-profile
 $game-design-studio:design-game-systems
 $game-design-studio:design-player-experience
@@ -436,13 +476,13 @@ ST-C03의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 분리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `design-game-systems` → `design-player-experience` → `review-game-design`
 
 규칙과 화면 상태를 맞추고 충돌과 누락을 검토합니다.
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `system-specification` → `rule-exception-matrix` → `data-schema-table-contract`
 
@@ -484,7 +524,7 @@ ST-C03의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 첫 세션의 핵심 행동 2~3개, 지원 플랫폼과 입력 방식, 화면별 현재 문제,
 접근성 요구(키보드 조작·자막·색상 외 신호 등)를 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -500,12 +540,11 @@ $game-design-studio:visualize-game-design [프로젝트 ID] [공개 정보]
 ST-C04의 fact,
 inference, recommendation을 분리해.
 
-채운 예시 (App)
-@Game Design Studio 달빛항구-모바일RPG 첫 세션의
-길찾기·자동전투·보상수령
-흐름과 공개 가능한 접근성 요구를 바탕으로 ST-C04를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 달빛항구 모바일 RPG의 첫 세션 화면 흐름을
+점검해 줘. 길찾기, 자동 전투, 보상 수령과 대체 입력도 확인해 줘.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:apply-document-quality-profile
 $game-design-studio:design-player-experience
 $game-design-studio:review-game-design 달빛항구-모바일RPG 첫 세션의
@@ -515,16 +554,16 @@ $game-design-studio:visualize-game-design 달빛항구-모바일RPG ST-C04의
 화면 상태와 오류 복구 흐름을 도식화해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `design-player-experience` → `review-game-design` → `visualize-game-design`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `화면 흐름·상태 명세 (ui-ux-flow-state)` → `접근성·플랫폼 매트릭스
 (accessibility-platform-matrix)` → `게임 기획 검토 (game-design-review)`
 
-채운 예시에서는 첫 세션 화면 목록, 상태별 입력·피드백 표, 플랫폼별 대체
+이 요청을 사용하면 첫 세션 화면 목록, 상태별 입력·피드백 표, 플랫폼별 대체
 입력 경로, 검토 의견 (finding)과 화면 전환·오류 복구 도식이 생성됩니다.
 
 #### 읽는 순서
@@ -560,7 +599,7 @@ ST-C04의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 퀘스트 목표와 진입 조건, NPC 상태, 플레이어 선택, 결과·보상, 연결할 전투
 요소, 반복 여부, 제작 예산과 공개 가능한 저작권·출처 범위를 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -577,13 +616,11 @@ $game-design-studio:review-game-design [프로젝트 ID] [공개 정보]
 ST-C05의 fact,
 inference, recommendation을 분리해.
 
-채운 예시 (App)
-@Game Design Studio 유리숲-구조대장 퀘스트에서 NPC 신뢰도
-선택이 전투와
-보상에 미치는 결과, 공개 가능한 출처 범위를 바탕으로
-ST-C05를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 유리숲 구조대장 퀘스트에서 NPC 신뢰도 선택이
+전투와 보상에 미치는 결과를 설계하고 필요한 제작 항목도 정리해 줘.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:apply-document-quality-profile
 $game-design-studio:design-game-content
 $game-design-studio:design-game-systems
@@ -593,16 +630,16 @@ $game-design-studio:review-game-design 유리숲-구조대장 퀘스트의
 연결과 공개 가능한 출처 범위를 ST-C05로 검토해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `design-game-content` → `design-game-systems` → `plan-game-production` → `review-game-design`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `내러티브·퀘스트·NPC 명세 (narrative-quest-npc)` → `캐릭터·스킬·전투·몬스터
 명세 (character-skill-combat-monster)` → `게임 기획 검토 (game-design-review)`
 
-채운 예시에서는 NPC 상태와 선택·결과 표, 전투 역할·텔레그래프·카운터플레이
+이 요청을 사용하면 NPC 상태와 선택·결과 표, 전투 역할·텔레그래프·카운터플레이
 명세, 제작 의존성, 권리 확인 항목과 검토 의견 (finding)이 생성됩니다.
 
 #### 읽는 순서
@@ -638,7 +675,7 @@ ST-C05의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 재화 종류와 현재 유입·소비량, 성장 목표, 이벤트 가설과 대조군, 기간·대상
 세그먼트, 보호 지표와 중단·되돌리기 기준 (rollback)을 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -653,13 +690,11 @@ $game-design-studio:design-game-systems $game-design-studio:review-game-design
 [프로젝트 ID] [공개 정보] ST-C07의 fact, inference, recommendation을
 분리해.
 
-채운 예시 (App)
-@Game Design Studio 별빛농장 시즌 이벤트의 씨앗·골드 유입과
-소비, 신규·복귀
-플레이어 보호 지표를 공개 가능한 가정으로 분리해
-ST-C07를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 별빛농장 시즌 이벤트의 씨앗·골드 유입과 소비를
+설계해 줘. 신규·복귀 플레이어 보호 기준과 되돌리기 조건도 넣어 줘.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:apply-document-quality-profile
 $game-design-studio:design-game-economy-and-liveops
 $game-design-studio:design-game-systems
@@ -668,16 +703,16 @@ $game-design-studio:review-game-design 별빛농장 시즌 이벤트의 재화
 보호 지표와 되돌리기 기준 (rollback)을 ST-C07로 검토해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `design-game-economy-and-liveops` → `design-game-systems` → `review-game-design`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `경제·밸런스 명세 (economy-balance)` → `LiveOps 실험·이벤트 계획
 (liveops-experiment-event)` → `게임 기획 검토 (game-design-review)`
 
-채운 예시에서는 재화 유입·소비 (source/sink)와 목표 보유량 표, 이벤트 가설·대조군·
+이 요청을 사용하면 재화 유입·소비 (source/sink)와 목표 보유량 표, 이벤트 가설·대조군·
 보호 지표·중단·되돌리기 계획 (rollback), 그리고 수치 근거에 대한 검토 의견 (finding)이
 생성됩니다.
 
@@ -716,7 +751,7 @@ ST-C07의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 목표 경험과 팀 역할, 일정·기술 제약, 기능 의존성, 필수·선택 범위, 이미지
 제작 계획, 출시 형식과 각 단계의 완료 기준·중단 기준을 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -732,14 +767,11 @@ $game-design-studio:export-game-design-documents [프로젝트 ID] [공개
 정보] ST-C08의
 fact, inference, recommendation을 분리해.
 
-채운 예시 (App)
-@Game Design Studio 해류도시-협동RPG 핵심 시제품 (vertical slice)의
-8주 일정, 3인
-팀,
-핵심 전투와 최소 이미지 산출물만 공개 가능한 가정으로
-분리해 ST-C08을 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 해류도시 협동 RPG의 8주 시제품 범위를 정리해 줘.
+3인 팀이 검증할 핵심 전투, 필요한 이미지와 중단 기준을 함께 점검해 줘.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:plan-game-production
 $game-design-studio:review-game-design
 $game-design-studio:plan-image-assets
@@ -750,16 +782,16 @@ slice의
 정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `plan-game-production` → `review-game-design` → `plan-image-assets` → `visualize-game-design` → `export-game-design-documents`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `제작 범위·리스크 명세 (production-scope-risk)` → `게임 기획 검토
 (game-design-review)` → `출력 준비 매니페스트 (export-preparation-manifest)`
 
-채운 예시에서는 우선순위 범위표 (MoSCoW), 의존성·역량 공백·중단 기준 (kill criteria), 이미지 작업
+이 요청을 사용하면 우선순위 범위표 (MoSCoW), 의존성·역량 공백·중단 기준 (kill criteria), 이미지 작업
 목록과 문서 형식별 품질 확인 (QA) 항목, 최종 출력 준비 상태가 생성됩니다.
 
 #### 읽는 순서
@@ -785,6 +817,21 @@ ST-C08의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오
 결과물을 만듭니다.
 
+한 줄 요청만으로 시작할 수 있습니다. 경력 단계와 목표를 진단한 뒤 최소 스킬
+경로만 실행하고, 결과는 멘토 또는 본인 검토를 거칩니다.
+
+[![Career 한 줄 요청이 최소 스킬 경로와 멘토 검토로 이어지는 흐름](guides/assets/readme/career-smart-request-flow.png)](guides/assets/readme/career-smart-request-flow.svg)
+
+| 하려는 일 | 간단한 요청 | 플러그인이 고르는 대표 경로 | 받게 되는 결과 |
+| --- | --- | --- | --- |
+| 직무 탐색 | `@Game Design Career 시스템·콘텐츠 기획 중 나에게 맞는 역할을 비교해 줘.` | 경력 지도 → 공개 채용 근거 확인 | 역할 비교표, 첫 학습 과제 |
+| 12주 학습 계획 | `@Game Design Career 주 8시간으로 실력을 증명할 12주 계획을 짜 줘.` | 역량 격차 분석 → 성장 경로 시각화 | 역량 표, 학습 로드맵 |
+| 역기획 연습 | `@Game Design Career 공개 플레이 관찰을 바탕으로 역기획 문서를 만들어 줘.` | 역기획 → 문서 검토 | 역기획 문서, 게임 분석 보고서 |
+| 창작 포트폴리오 | `@Game Design Career 내가 만든 전투 시스템을 포트폴리오 사례로 정리해 줘.` | 포트폴리오 작성 → 근거 검토 | 프로젝트 브리프, 창작 기획 포트폴리오 |
+| 포트폴리오 점검 | `@Game Design Career 이 포트폴리오의 부족한 점과 수정 순서를 알려 줘.` | 5축 포트폴리오 검토 → 수정 계획 | 검토표, 수정 작업 목록 |
+| 면접 준비 | `@Game Design Career 내 포트폴리오 근거로 면접 질문과 답변을 연습해 줘.` | 면접 연습 → 성장 계획 | 질문·답변 기록, 다음 검증 과제 |
+| 역할부터 학습까지 | `@Game Design Career 목표 역할 선택부터 학습 순서까지 한 번에 정리해 줘.` | 경력 오케스트레이터 → 최소 스킬 경로 | 역할 지도, 역량 표, 학습 로드맵 |
+
 <details data-prompt-id="career:case:CA-C01">
 <summary>기획 직무와 전문 분야 탐색 (career:case:CA-C01)</summary>
 
@@ -799,7 +846,7 @@ ST-C08의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 현재 해 본 작업 목록, 관심 직무 2~3개, 공개된 채용 공고 또는 학습 자료와
 멘토에게 물어볼 질문을 준비합니다. 비공개 회사 자료나 개인정보는 넣지 않습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -807,12 +854,9 @@ App
 recommendation을 분리해
 CA-C01를 작성해.
 
-채운 예시 (App)
-@Game Design Career 민서-첫기획 공개된 시스템 기획 공고 2개와
-내 튜토리얼
-분석 메모를 비교해 확인한 사실 (fact), 추론 (inference),
-제안 (recommendation)을 분리하고
-CA-C01을 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 공개된 시스템 기획 공고 두 개와 내 튜토리얼
+분석 메모를 비교해, 목표 직무 후보와 다음 학습 과제를 정리해 줘.
 
 CLI
 $game-design-career:apply-document-quality-profile
@@ -821,7 +865,7 @@ $game-design-career:research-game-design-jobs [경력 ID] [공개 정보]
 CA-C01의 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:apply-document-quality-profile
 $game-design-career:map-game-design-career
 $game-design-career:research-game-design-jobs 민서-첫기획 공개 공고
@@ -830,7 +874,7 @@ $game-design-career:research-game-design-jobs 민서-첫기획 공개 공고
 작성해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `map-game-design-career` →
 `research-game-design-jobs`
@@ -838,7 +882,7 @@ $game-design-career:research-game-design-jobs 민서-첫기획 공개 공고
 작성 기준을 맞춘 뒤 역할 후보를 비교하고, 현재 자료로 확인할 수 없는 부분은
 추가 조사나 학습 과제로 남깁니다.
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `게임 기획 역할 비교표 (game-design-role-map)` →
 `학습 로드맵 (learning-roadmap)`
@@ -880,7 +924,7 @@ CA-C01의 보존 결과물과 중단 기록을 읽고, 역할 비교에 필요�
 현재 포트폴리오의 역량별 근거, 주당 학습 가능 시간, 목표 기간, 피드백을 줄
 멘토와 공개 가능한 학습 자료를 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -888,11 +932,9 @@ App
 recommendation을 분리해
 CA-C04를 작성해.
 
-채운 예시 (App)
-@Game Design Career 민서-12주 시스템기획 공개 포트폴리오의
-규칙 명세 1개와
-주당 6시간 학습 가능 조건으로 부족한 역량과 12주
-증거 과제 (proof task)를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 시스템 기획 포트폴리오 한 편과 주당 6시간을
+기준으로, 부족한 역량과 12주 동안 만들 학습 결과물을 정리해 줘.
 
 CLI
 $game-design-career:apply-document-quality-profile
@@ -902,7 +944,7 @@ $game-design-career:export-career-documents [경력 ID] [공개 정보]
 CA-C04의 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:apply-document-quality-profile
 $game-design-career:map-game-design-career
 $game-design-career:visualize-career-roadmap
@@ -912,12 +954,12 @@ $game-design-career:export-career-documents 민서-12주 시스템기획의
 CA-C04로 정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `map-game-design-career` →
 `visualize-career-roadmap` → `export-career-documents`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `역량 매트릭스 (competency-matrix)` → `학습 로드맵 (learning-roadmap)`
 
@@ -958,7 +1000,7 @@ CA-C04의 보존 결과물과 중단 기록을 읽고, 미완료 증거 과제 (
 직접 플레이한 구간, 버전·날짜, 캡처 또는 공개 링크, 관찰 메모와 분석할
 기능 범위를 준비합니다. 보지 못한 구현을 사실처럼 적지 않습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -966,11 +1008,9 @@ App
 recommendation을 분리해
 CA-C05를 작성해.
 
-채운 예시 (App)
-@Game Design Career 별빛원정대 튜토리얼 공개 플레이 메모와
-패치노트 링크를
-사용해 관찰·추론·제안과 개인 기여 범위를 분리한
-CA-C05를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 별빛원정대 튜토리얼의 공개 플레이 메모와
+패치 노트를 바탕으로 관찰과 해석을 구분한 역기획 문서를 만들어 줘.
 
 CLI
 $game-design-career:apply-document-quality-profile
@@ -979,7 +1019,7 @@ $game-design-career:export-career-documents [경력 ID] [공개 정보]
 CA-C05의 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:apply-document-quality-profile
 $game-design-career:reverse-engineer-game-design
 $game-design-career:export-career-documents 별빛원정대 튜토리얼의
@@ -987,12 +1027,12 @@ $game-design-career:export-career-documents 별빛원정대 튜토리얼의
 추론의 반례, 개선 제안을 역기획 사례로 정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `reverse-engineer-game-design` →
 `export-career-documents`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `역기획 문서 (reverse-design-document)` →
 `게임 분석 보고서 (game-analysis-report)`
@@ -1032,7 +1072,7 @@ CA-C05의 보존 결과물과 중단 기록을 읽고 누락된 관찰 링크나
 문제와 대상 플레이어, 핵심 루프 초안, 직접 만든 규칙·화면·도식, 개인 기여
 범위와 공개 가능한 이미지·문서만 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1040,11 +1080,9 @@ App
 recommendation을 분리해
 CA-C06를 작성해.
 
-채운 예시 (App)
-@Game Design Career 해류도시-첫시즌 협동 RPG의 대상 플레이어,
-핵심 루프,
-전투 규칙 초안과 내 판단 근거를 연결해 CA-C06 포트폴리오
-사례로 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 해류도시 협동 RPG에서 내가 설계한 전투 규칙을
+문제, 선택 이유, 검증 결과와 개인 기여가 보이는 포트폴리오로 정리해 줘.
 
 CLI
 $game-design-career:apply-document-quality-profile
@@ -1053,7 +1091,7 @@ $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보]
 CA-C06의 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:apply-document-quality-profile
 $game-design-career:build-game-design-portfolio
 $game-design-career:review-game-design-portfolio 해류도시-첫시즌의
@@ -1062,12 +1100,12 @@ $game-design-career:review-game-design-portfolio 해류도시-첫시즌의
 정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `apply-document-quality-profile` → `build-game-design-portfolio` →
 `review-game-design-portfolio`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `포트폴리오 프로젝트 브리프 (portfolio-project-brief)` →
 `창작 기획 포트폴리오 (creative-design-portfolio)`
@@ -1108,7 +1146,7 @@ CA-C06의 보존 결과물과 중단 기록을 읽고 미완성 evidence와 공�
 포트폴리오 섹션 ID, 각 주장에 연결된 evidence ID, 현재 피드백, 공개 권한과
 발표 대상(멘토·채용 담당자 등)을 준비합니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1116,12 +1154,9 @@ App
 recommendation을 분리해
 CA-C07를 작성해.
 
-채운 예시 (App)
-@Game Design Career 시스템 기획 포트폴리오의
-문제·판단·검증·개인 기여 섹션과
-EVID-SYS-01을 5축으로 점검해 심각도별 (severity) 수정 목록
-(backlog)과 발표
-문장을 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 시스템 기획 포트폴리오를 문제 정의, 기획 판단,
+구현 연결, 근거, 회고 관점에서 점검하고 수정 순서를 알려 줘.
 
 CLI
 $game-design-career:review-game-design-portfolio
@@ -1131,7 +1166,7 @@ $game-design-career:export-career-documents [경력 ID] [공개 정보]
 CA-C07의 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:review-game-design-portfolio
 $game-design-career:build-game-design-portfolio
 $game-design-career:practice-game-design-interview
@@ -1140,15 +1175,15 @@ $game-design-career:export-career-documents 시스템 기획
 근거를 5축 finding으로 정리하고 면접용 설명까지 준비해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `review-game-design-portfolio` → `build-game-design-portfolio` →
 `practice-game-design-interview` → `export-career-documents`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `5축 포트폴리오 검토 (five-axis-review)` →
-`포트폴리오 수정 백로그 (portfolio-backlog)` →
+`포트폴리오 수정 목록 (portfolio-backlog)` →
 `자기소개·지원동기 (introduction-motivation)`
 
 발견된 문제의 심각도, 최소 수정 작업, 발표 전에 확인할 질문과 근거 기반의
@@ -1168,7 +1203,8 @@ $game-design-career:export-career-documents 시스템 기획
 
 #### 다음 요청
 
-CA-C07의 보존 결과물과 중단 기록을 읽고 가장 높은 심각도 (severity)의 근거와 수정부터 재개해.
+CA-C07의 보존 결과물과 중단 기록을 읽고 심각도별 (severity) 문제 가운데
+가장 높은 항목의 근거와 수정부터 재개해.
 
 </details>
 
@@ -1186,7 +1222,7 @@ CA-C07의 보존 결과물과 중단 기록을 읽고 가장 높은 심각도 (s
 지원할 역할의 공개 공고, 포트폴리오 evidence ID, 예상 질문, 실제 개인 기여와
 멘토 피드백을 준비합니다. 경험·성과·합격을 추측해 채우지 않습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1194,11 +1230,9 @@ App
 recommendation을 분리해
 CA-C08를 작성해.
 
-채운 예시 (App)
-@Game Design Career 시스템 기획 포트폴리오 EVID-SYS-01과 공고의
-규칙 설계
-요구를 연결해 면접 질문 4개와 정직한 부족점 (honest gap)을 정리하고,
-다음 4주 성장 과제를 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 시스템 기획 포트폴리오와 공개 채용 공고를
+바탕으로 면접 질문 네 개, 답변 초안과 다음 4주 성장 과제를 만들어 줘.
 
 CLI
 $game-design-career:practice-game-design-interview
@@ -1208,7 +1242,7 @@ $game-design-career:export-career-documents [경력 ID] [공개 정보]
 CA-C08의 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:practice-game-design-interview
 $game-design-career:plan-junior-growth
 $game-design-career:visualize-career-roadmap
@@ -1217,12 +1251,12 @@ $game-design-career:export-career-documents 시스템 기획 지원용
 정직한 미답변과 4주 증거 과제 (proof task)를 CA-C08로 정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `practice-game-design-interview` → `plan-junior-growth` →
 `visualize-career-roadmap` → `export-career-documents`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `면접 질문·답변 기록 (interview-question-answer-log)` →
 `주니어 성장 검토 (junior-growth-review)` →
@@ -1263,7 +1297,7 @@ CA-C08의 보존 결과물과 중단 기록을 읽고 질문별 최신 evidence�
 관심 직무 2~3개, 해 본 작은 기획 작업, 주당 가능 시간, 목표 기간과 멘토에게
 확인할 질문을 준비합니다. 적합성을 단정할 개인 정보나 비공개 자료는 넣지 않습니다.
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1271,11 +1305,9 @@ App
 recommendation을 분리해
 CA-T01를 작성해.
 
-채운 예시 (App)
-@Game Design Career 신입-역할선택 시스템 기획과 콘텐츠
-기획의 관심도,
-튜토리얼 분석 1건, 주당 5시간 조건으로 역할 비교와 8주
-학습 계획을 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 시스템 기획과 콘텐츠 기획 중 어느 쪽부터
+준비할지 비교하고, 주당 5시간으로 실행할 8주 학습 계획을 짜 줘.
 
 CLI
 $game-design-career:map-game-design-career
@@ -1284,7 +1316,7 @@ $game-design-career:plan-junior-growth [경력 ID] [공개 정보] CA-T01의
 fact,
 inference, recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:map-game-design-career
 $game-design-career:build-game-design-portfolio
 $game-design-career:plan-junior-growth 신입-역할선택의 역할 후보,
@@ -1292,11 +1324,11 @@ $game-design-career:plan-junior-growth 신입-역할선택의 역할 후보,
 작은 포트폴리오 과제와 8주 학습 순서를 CA-T01로 정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `map-game-design-career` → `build-game-design-portfolio` → `plan-junior-growth`
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `게임 기획 역할 비교표 (game-design-role-map)` →
 `역량 매트릭스 (competency-matrix)` → `학습 로드맵 (learning-roadmap)`
@@ -1328,6 +1360,18 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도
 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다.
 
+한 줄 요청에서 공개 범위를 먼저 확인하고 필요한 경로만 실행합니다. 결과는
+사람 승인 또는 보류가 기록되기 전까지 공개·제출 완료로 표시하지 않습니다.
+
+[![Studio 결과가 Career 활용 자료와 사람 승인으로 이어지는 흐름](guides/assets/readme/suite-smart-request-flow.png)](guides/assets/readme/suite-smart-request-flow.svg)
+
+| 하려는 일 | 간단한 요청 | 플러그인이 고르는 대표 경로 | 받게 되는 결과 |
+| --- | --- | --- | --- |
+| 기획서를 포트폴리오로 전환 | `검토한 전투 기획을 공개 가능한 포트폴리오 사례로 정리해 줘.` | Studio 공개 검토 → Career 포트폴리오 작성 | 사례 본문, 개인 기여와 공개 확인 목록 |
+| 프로젝트를 면접 근거로 연결 | `내 시스템 기획 과제를 12주 학습 기록과 면접 답변으로 연결해 줘.` | Career 역량 분석 → Studio 과제 → 면접 연습 | 학습 계획, 답변과 연결 근거 |
+| 기획서·이미지·발표 준비 | `기획서에 필요한 이미지와 발표 자료를 검토 가능한 상태로 준비해 줘.` | Studio 기획 → 이미지 계획·검토 → 문서 출력 | 기획서, 이미지 프롬프트, 발표 자료 초안 |
+| 실패 작업만 재개 | `보존된 원본을 읽고 실패한 이미지와 문서 출력만 다시 진행해 줘.` | 중단 사유 확인 → 실패 경로만 재실행 | 원본 보존 목록, 재시도 기록, 검토 대기 목록 |
+
 <details data-prompt-id="suite:studio-to-career-handoff:case">
 <summary>완성한 기획을 포트폴리오 사례로 정리 (suite:studio-to-career-handoff:case)</summary>
 
@@ -1342,7 +1386,7 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 
 공개 가능한 기획 요약, 본인이 내린 결정 2~3개, 검증 결과와 제외할 내용
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1350,10 +1394,9 @@ App
 inference, recommendation으로 분리해 studio-to-career-handoff handoff를
 작성해.
 
-채운 예시 (App)
-@Game Design Studio의 협동 RPG 전투 기획에서 공개 가능한
-문제와 내 판단을
-정리한 뒤, @Game Design Career 포트폴리오 사례로 바꿔 줘.
+바로 복사해 쓰는 App 예시
+검토가 끝난 협동 RPG 전투 기획에서 공개 가능한 내용만 골라
+내 문제 해결 과정과 기여가 보이는 포트폴리오 사례로 정리해 줘.
 
 CLI
 $game-design-studio:review-game-design
@@ -1361,18 +1404,18 @@ $game-design-career:build-game-design-portfolio
   [공개 정보] studio-to-career-handoff handoff의 fact, inference,
   recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:review-game-design
 $game-design-career:build-game-design-portfolio \
   공개 가능한 협동 RPG 전투 기획만 포트폴리오 사례로
   정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `review-game-design` → `build-game-design-portfolio` → 공개 전 사람 검토
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `포트폴리오 사례 content.md`, `주요 결정 목록`, `검증 결과 요약`,
 `공개하지 않을 항목 목록`
@@ -1409,7 +1452,7 @@ $game-design-career:build-game-design-portfolio \
 
 지원 공고, 자신의 시스템 명세서, 결정 이유, 테스트 결과와 멘토 피드백
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1418,11 +1461,9 @@ inference, recommendation으로 분리해 career-proof-project-interview
 handoff를
 작성해.
 
-채운 예시 (App)
-시스템 기획자 공고와 내 협동 RPG 전투 명세서를 비교해,
-12주 학습 계획과
-"왜 이 규칙을 선택했나요?" 답변을 사실과 보완 과제로
-나눠 작성해.
+바로 복사해 쓰는 App 예시
+@Game Design Career 시스템 기획자 공고와 내 협동 RPG 전투 명세를
+비교해 12주 학습 계획과 면접 답변 연습을 함께 준비해 줘.
 
 CLI
 $game-design-career:map-game-design-career
@@ -1431,7 +1472,7 @@ $game-design-career:practice-game-design-interview
   [공개 정보] career-proof-project-interview handoff의 fact, inference,
   recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-career:map-game-design-career
 $game-design-studio:design-game-systems
 $game-design-career:practice-game-design-interview \
@@ -1439,12 +1480,12 @@ $game-design-career:practice-game-design-interview \
   작성해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `map-game-design-career` → `design-game-systems` →
 `practice-game-design-interview` → 멘토 모의 면접
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `12주 학습 계획`, `질문별 답변 초안`, `답변에 연결된 기획 근거`,
 `추가 학습 과제`
@@ -1484,7 +1525,7 @@ PPT 순서를 아직 정하지 못했을 때 사용합니다. 미승인 이미�
 확정된 기획 본문, 필요한 이미지 목록, 이미지 생성 모드, 발표 대상과
 슬라이드 수, 사용 가능한 이미지 권리 정보
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1492,11 +1533,9 @@ App
 inference, recommendation으로 분리해 gdd-image-presentation handoff를
 작성해.
 
-채운 예시 (App)
-협동 RPG 보스전 기획을 8장 발표 자료로 만들고, 전투 흐름
-도식과 주인공
-스킬·전투 배경 이미지 프롬프트를 준비해. 미승인
-이미지는 표시해 둬.
+바로 복사해 쓰는 App 예시
+@Game Design Studio 협동 RPG 보스전 기획을 8장 발표 자료로 만들고,
+필요한 전투 흐름 도식과 이미지 프롬프트도 함께 준비해 줘.
 
 CLI
 $game-design-studio:orchestrate-game-design-project
@@ -1506,7 +1545,7 @@ $game-design-studio:export-game-design-documents
   [공개 정보] gdd-image-presentation handoff의 fact, inference,
   recommendation을 작성해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:orchestrate-game-design-project
 $game-design-studio:plan-image-assets
 $game-design-studio:review-image-assets
@@ -1515,12 +1554,12 @@ $game-design-studio:export-game-design-documents \
   준비해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `orchestrate-game-design-project` → `plan-image-assets` →
 `review-image-assets` → `export-game-design-documents` → 사람 검토
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `기획서 content.md`, `이미지 프롬프트·생성 기록`, `검토된 이미지 목록`,
 `PPTX 초안과 형식 점검 결과`
@@ -1560,7 +1599,7 @@ $game-design-studio:export-game-design-documents \
 실패한 파일 경로, 오류 메시지, 마지막 성공 단계, 이미지 생성·내보내기
 설정과 재시도하지 말아야 할 파일 목록
 
-#### 복사할 요청문
+#### 바로 써 보는 요청
 
 ```text
 App
@@ -1568,11 +1607,9 @@ App
 inference, recommendation으로 분리해 resume-failed-derivatives handoff를
 작성해.
 
-채운 예시 (App)
-협동 RPG 발표 자료의 배경 이미지와 PPT 내보내기 실패
-기록을 읽고, 성공한
-파일은 보존한 채 실패한 항목만 재시도 순서와 담당자
-확인 목록으로 정리해.
+바로 복사해 쓰는 App 예시
+보존된 협동 RPG 발표 자료를 읽고 실패한 배경 이미지와 PPT 출력만
+다시 진행해 줘. 성공한 파일은 바꾸지 말고 검토할 항목을 알려 줘.
 
 CLI
 $game-design-studio:plan-image-assets
@@ -1584,7 +1621,7 @@ $game-design-career:export-career-documents
   receipt를
   fact, inference, recommendation으로 기록해.
 
-채운 예시 (CLI)
+경로를 직접 지정하는 CLI 예시
 $game-design-studio:plan-image-assets
 $game-design-studio:generate-image-assets
 $game-design-studio:review-image-assets
@@ -1593,12 +1630,12 @@ $game-design-studio:export-game-design-documents \
   정리해.
 ```
 
-#### 실행 흐름
+#### 플러그인이 선택하는 작업 순서
 
 `plan-image-assets` → `generate-image-assets` → `review-image-assets` →
 `export-game-design-documents` → `export-career-documents` → 실패 항목만 재실행
 
-#### 예상 결과
+#### 받게 되는 결과
 
 `원본 보존 목록`, `실패 원인과 재시도 순서`, `재실행 결과 기록`,
 `사람 검토 대기 목록`
@@ -1792,6 +1829,22 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 렌더러와 시각 품질 �
 표준 빌드가 만드는 설치용 생성본 (generated snapshot)입니다. 생성본은 직접 수정하지
 않으며, 파일 목록과 무결성 정보 (manifest)는 빌드에서만 갱신합니다.
 
+### 전체 시스템 구조를 먼저 확인하기
+
+두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요.
+**시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계**를
+한 화면에서 보여 줍니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를
+확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지
+빠르게 파악할 수 있습니다.
+
+[![게임 기획 플러그인 모음 전체 시스템 구조](guides/assets/readme/plugin-system-overview.png)](guides/assets/readme/plugin-system-overview.svg)
+
+▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html)
+— 확대·축소, 밝은 화면과 어두운 화면, 단계별 집중 보기를 사용할 수 있습니다.
+
+Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·보류**를 한눈에
+보여 줍니다. 더 자세한 연결과 단계별 집중 보기는 위 Archify HTML에서 확인하세요.
+
 ### Studio 설치 패키지 구조
 
 Studio 생성본 (snapshot)은 에이전트 9개, 설치 스킬 15개, 템플릿 15개와
@@ -1847,22 +1900,6 @@ plugins/game-design-career/
 authoring source: products/game-design-career/plugin/
 generated snapshot: plugins/game-design-career/
 ```
-
-### 전체 시스템 구조를 먼저 확인하기
-
-두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요.
-**시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계**를
-한 화면에서 보여 줍니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를
-확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지
-빠르게 파악할 수 있습니다.
-
-[![게임 기획 플러그인 모음 전체 시스템 구조](guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/readme-preview.png)](guides/assets/archify/suite/suite-plugin-system-architecture.html)
-
-▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html)
-— 확대·축소, 밝은 화면과 어두운 화면, 단계별 집중 보기를 사용할 수 있습니다.
-
-미리보기는 **사람 검토·승인과 보류 후 재개 경로**를 강조합니다. 전체 연결과
-다른 안내 보기는 이미지를 클릭해 HTML에서 확인하세요.
 
 ### 경로별 역할과 편집 경계
 

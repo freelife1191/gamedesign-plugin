@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title>한 문장 요청에서 첫 기획 결과와 사람 승인까지 이어지는 흐름</title>
+  <desc>Studio 또는 Career 요청을 분석해 전문 스킬이나 오케스트레이터를 선택하고 검토 역할, 기준 결과 폴더, 이름 있는 사람의 승인과 다음 요청으로 연결합니다.</desc>
+  <style>
+    svg{--paper:#F5F5F5;--ink:#2D3142;--muted:#5F6675;--accent:#EB6C36;--blue:#3C6EAF;--green:#238266;--violet:#6257B5;--rose:#B03A67;--line:#6C7686}.title{font-size:40px;font-weight:700;fill:var(--ink)}.sub{font-size:18px;fill:var(--muted)}.node-title{font-size:19px;font-weight:700}.node-body{font-size:16px;fill:var(--muted)}.small{font-size:16px;font-weight:600}.edge{fill:none;stroke:var(--line);stroke-width:3;marker-end:url(#arrow)}.optional{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:9 8;marker-end:url(#arrow-accent)}.panel{fill:#FFFFFF;stroke:#D5DAE2;stroke-width:2}.card{stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#6C7686" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-accent" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#EB6C36" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="var(--paper)"/>
+  <text x="54" y="66" class="title">한 문장으로 시작해도 체계적인 첫 결과가 나옵니다</text>
+  <text x="54" y="102" class="sub">일반 작업은 스킬을 직접 고르지 않아도 됩니다. 사람 승인 단계는 언제나 남습니다.</text>
+  <rect x="38" y="138" width="1324" height="680" rx="24" class="panel"/>
+
+  <path class="edge" data-flow-edge="request-to-analysis" data-from="request" data-to="analysis" d="M260 300H320"/>
+  <path class="edge" data-flow-edge="analysis-to-decision" data-from="analysis" data-to="decision" d="M540 300H650"/>
+  <path class="edge" data-flow-edge="decision-to-specialist" data-from="decision" data-to="specialist" d="M750 220V190H920"/>
+  <path class="edge" data-flow-edge="decision-to-orchestrator" data-from="decision" data-to="orchestrator" d="M750 380V410H920"/>
+  <path class="edge" data-flow-edge="specialist-to-roles" data-from="specialist" data-to="roles" d="M1120 190H1138V280H1160"/>
+  <path class="edge" data-flow-edge="orchestrator-to-roles" data-from="orchestrator" data-to="roles" d="M1120 410H1148V320H1160"/>
+  <path class="edge" data-flow-edge="roles-to-artifact" data-from="roles" data-to="artifact" d="M1260 350V552H1070V610"/>
+  <path class="edge" data-flow-edge="artifact-to-human" data-from="artifact" data-to="human" d="M920 660H820"/>
+  <path class="edge" data-flow-edge="human-to-resume" data-from="human" data-to="resume" d="M620 660H520"/>
+  <path class="optional" d="M690 350V548H970V610"/>
+  <text x="704" y="532" class="small" fill="var(--accent)">검토 역할이 필요 없을 때</text>
+
+  <!-- main-flow -->
+  <g data-flow-node="request" data-stage-label="Studio 또는 Career 한 문장 요청"><rect x="60" y="245" width="200" height="110" rx="18" fill="#EAF2FC" stroke="var(--blue)" class="card"/><text x="160" y="286" class="node-title" fill="var(--blue)" text-anchor="middle">Studio 또는 Career</text><text x="160" y="314" class="node-title" fill="var(--blue)" text-anchor="middle">한 문장 요청</text><text x="160" y="340" class="node-body" text-anchor="middle">목표·자료·원하는 결과</text></g>
+  <g data-flow-node="analysis" data-stage-label="요청 목적·원하는 결과 분석"><rect x="320" y="245" width="220" height="110" rx="18" fill="#F0EEFC" stroke="var(--violet)" class="card"/><text x="430" y="282" class="node-title" fill="var(--violet)" text-anchor="middle">요청 목적·결과</text><text x="430" y="308" class="node-title" fill="var(--violet)" text-anchor="middle">분석</text><text x="430" y="337" class="node-body" text-anchor="middle">미정 정보는 그대로 둠</text></g>
+  <g data-flow-node="decision" data-stage-label="한 분야가 분명한가?"><polygon points="650,300 750,220 850,300 750,380" fill="#FFF1EA" stroke="var(--accent)" class="card"/><text x="750" y="294" class="node-title" fill="var(--accent)" text-anchor="middle">한 분야가</text><text x="750" y="322" class="node-title" fill="var(--accent)" text-anchor="middle">분명한가?</text></g>
+  <g data-flow-node="specialist"><rect x="920" y="140" width="200" height="100" rx="18" fill="#E8F6F1" stroke="var(--green)" class="card"/><text x="1020" y="179" class="node-title" fill="var(--green)" text-anchor="middle">전문 스킬</text><text x="1020" y="210" class="node-body" text-anchor="middle">비전·시스템·역할 지도</text></g>
+  <g data-flow-node="orchestrator" data-stage-label="Studio·Career 오케스트레이터"><rect x="920" y="360" width="200" height="100" rx="18" fill="#E8F6F1" stroke="var(--green)" class="card"/><text x="1020" y="393" class="node-title" fill="var(--green)" text-anchor="middle">Studio·Career</text><text x="1020" y="419" class="node-title" fill="var(--green)" text-anchor="middle">작업 조율</text><text x="1020" y="446" class="node-body" text-anchor="middle">최소 작업 경로 선택</text></g>
+  <g data-flow-node="roles" data-stage-label="필요한 검토 역할 최대 세 개"><rect x="1160" y="250" width="190" height="100" rx="18" fill="#FFF1EA" stroke="var(--accent)" class="card"/><text x="1255" y="284" class="node-title" fill="var(--accent)" text-anchor="middle">필요한 검토 역할</text><text x="1255" y="310" class="node-title" fill="var(--accent)" text-anchor="middle">최대 세 개</text><text x="1255" y="337" class="node-body" text-anchor="middle">다른 질문만 나눔</text></g>
+  <g data-flow-node="artifact" data-stage-label="기준 결과 폴더 작성·검증"><rect x="920" y="610" width="200" height="100" rx="18" fill="#F1F3F6" stroke="#697587" class="card"/><text x="1020" y="642" class="node-title" fill="#536071" text-anchor="middle">기준 결과 폴더</text><text x="1020" y="668" class="node-title" fill="#536071" text-anchor="middle">작성·검증</text><text x="1020" y="695" class="node-body" text-anchor="middle">본문·근거·결정·상태</text></g>
+  <g data-flow-node="human" data-stage-label="이름 있는 사람의 승인·수정·보류" data-human-gate="이름 있는 사람" data-gate-role="approval-revise-hold" data-gate-label="승인·수정·보류"><rect x="620" y="610" width="200" height="100" rx="18" fill="#FDECF3" stroke="var(--rose)" class="card"/><text x="720" y="645" class="node-title" fill="var(--rose)" text-anchor="middle">이름 있는 사람의</text><text x="720" y="673" class="node-title" fill="var(--rose)" text-anchor="middle">승인·수정·보류</text><text x="720" y="698" class="node-body" text-anchor="middle">자동 승인 없음</text></g>
+  <g data-flow-node="resume"><rect x="320" y="610" width="200" height="100" rx="18" fill="#FFF1EA" stroke="var(--accent)" class="card"/><text x="420" y="649" class="node-title" fill="var(--accent)" text-anchor="middle">다음 요청·재개</text><text x="420" y="680" class="node-body" text-anchor="middle">보류 이유부터 재개</text></g>
+  <text x="72" y="776" class="sub">결과 보고에는 선택한 스킬, 검토 역할, 결과 파일과 남은 결정이 포함됩니다.</text>
+</svg>

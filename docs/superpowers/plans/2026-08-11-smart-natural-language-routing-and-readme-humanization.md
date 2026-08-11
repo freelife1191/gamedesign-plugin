@@ -4,9 +4,9 @@
 
 **Goal:** 처음 설치한 사용자가 `@Game Design Studio` 또는 `@Game Design Career` 뒤에 원하는 일을 한 문장으로 적어 시작하고, README만 읽어도 플러그인이 고르는 스킬·검토 역할·결과물·사람 승인 흐름을 이해하게 한다.
 
-**Architecture:** 제품 원천의 오케스트레이터가 자연어 요청을 분류해 단일 분야는 전문 스킬로, 복합·불명확 요청은 최소 스킬 체인으로 보낸다. 루트 README는 자연어 기본 사용법을 먼저 설명하고 사례 ID와 명시적 CLI 호출은 고급 제어로 분리한다. Diagram Design은 첫 결과의 분기 흐름을 독립 HTML/SVG/PNG로, Skillstead는 Studio·Career·연계 사례 묶음의 자동 선택 흐름을 SVG/PNG로 제공한다.
+**Architecture:** 제품 원천의 오케스트레이터가 자연어 요청을 분류해 단일 분야는 전문 스킬로, 복합·불명확 요청은 최소 스킬 체인으로 보낸다. 루트 README는 자연어 기본 사용법을 먼저 설명하고 사례 ID와 명시적 CLI 호출은 고급 제어로 분리한다. README의 첫 결과, Studio·Career·연계 사례, 전체 시스템 구조는 모두 Skillstead SVG/PNG로 제공하고, Archify HTML은 전체 시스템을 자세히 탐색하는 별도 링크로 보존한다.
 
-**Tech Stack:** Markdown, Node.js 18+, Node test runner, JSON, Diagram Design 2.0, Skillstead 0.8.3, headless Chromium, repository build/guide/catalog validators
+**Tech Stack:** Markdown, Node.js 18+, Node test runner, JSON, Skillstead 0.8.3, headless Chromium, repository build/guide/catalog validators
 
 ## Global Constraints
 
@@ -24,8 +24,8 @@
 - 기본 App 예시에는 사례 ID, 명시적 스킬 체인, `fact/inference/recommendation`을 요구하지 않는다.
 - 고급 CLI 예시는 접힌 영역에서 권장 진입 스킬 하나와 선택 후속 작업을 설명한다.
 - 복사 가능한 요청문의 한 줄은 Unicode code point 기준 80자를 넘지 않는다.
-- Diagram Design 결과는 self-contained HTML, editable SVG, 정확한 2× PNG를 모두 보존한다.
-- Skillstead 결과는 editable SVG와 정확한 2× PNG를 함께 보존한다.
+- README 정적 도식은 모두 Skillstead의 editable SVG와 정확한 2× PNG를 함께 보존한다.
+- 전체 시스템 구조에는 Skillstead 정적 미리보기와 별도로 검증된 Archify HTML 상세 링크를 둔다.
 - 모든 도식은 한국어 우선, 한글 글꼴 대체 목록, 이름 있는 사람의 승인·보류 게이트를 가진다.
 - 도식의 글자 찌그러짐, 흐림, tofu, clipping, overflow, 겹침, 중간 토큰 분할, head-only arrow는 실패다.
 - 대각선·겹친 연결선·공유 부착점·화살표 위 라벨은 사용하지 않는다.
@@ -39,8 +39,7 @@
 
 ### Create
 
-- `guides/assets/readme/first-result-routing-flow.html`: Diagram Design 기반 첫 결과 분기 흐름 원본
-- `guides/assets/readme/first-result-routing-flow.svg`: README용 editable 정적 원본
+- `guides/assets/readme/first-result-routing-flow.svg`: Skillstead 기반 첫 결과 분기 흐름 원본
 - `guides/assets/readme/first-result-routing-flow.png`: 정확한 2× README 미리보기
 - `guides/assets/readme/studio-smart-request-flow.svg`: Studio 자연어 자동 선택 Skillstead 원본
 - `guides/assets/readme/studio-smart-request-flow.png`: 위 도식의 2× PNG
@@ -48,6 +47,8 @@
 - `guides/assets/readme/career-smart-request-flow.png`: 위 도식의 2× PNG
 - `guides/assets/readme/suite-smart-request-flow.svg`: Studio·Career 연계 Skillstead 원본
 - `guides/assets/readme/suite-smart-request-flow.png`: 위 도식의 2× PNG
+- `guides/assets/readme/plugin-system-overview.svg`: 전체 시스템 구조 Skillstead 원본
+- `guides/assets/readme/plugin-system-overview.png`: 위 도식의 2× PNG
 
 ### Modify
 
@@ -147,18 +148,18 @@ Review each sub-5,000-character section for translationese, repetitive sentence 
 
 Run focused root tests, scan fenced prompt line lengths, validate all internal links and update the catalog digest.
 
-### Task 4: Build the Diagram Design first-result flow
+### Task 4: Build the Skillstead first-result flow
 
 **Files:**
-- Create: `guides/assets/readme/first-result-routing-flow.{html,svg,png}`
+- Create: `guides/assets/readme/first-result-routing-flow.{svg,png}`
 - Modify: `README.md`
 - Modify: `tests/contracts/root-readme-user-guides.test.mjs`
 
 - [ ] **Step 1: Add RED semantic and asset contracts**
 
-Require exact decision branches, specialist and orchestrator convergence, optional review-role skip, canonical result creation, named-human approval, and hold/resume. Require the PNG embed to link to the HTML, HTML to be self-contained, and PNG dimensions to be exactly 2× SVG dimensions.
+Require exact decision branches, specialist and orchestrator convergence, optional review-role skip, canonical result creation, named-human approval, and hold/resume. Require the PNG embed to link to the SVG and PNG dimensions to be exactly 2× SVG dimensions.
 
-- [ ] **Step 2: Author with Diagram Design 2.0**
+- [ ] **Step 2: Author with the packaged Skillstead renderer**
 
 Use an orthogonal flowchart with Korean-first labels and secondary IDs. Keep one primary left-to-right path, reserve a separate return lane for resume, and avoid shared connector attachment points.
 
@@ -168,12 +169,13 @@ Render with headless Chromium, run SVG/HTML structural checks, then inspect fit 
 
 - [ ] **Step 4: Embed below the five-minute explanation**
 
-Add a short sentence explaining what the diagram answers and link the PNG to the interactive HTML.
+Add a short sentence explaining what the diagram answers and link the PNG to the editable SVG.
 
-### Task 5: Build three Skillstead smart-request diagrams
+### Task 5: Build three smart-request diagrams and the full system overview
 
 **Files:**
 - Create: `guides/assets/readme/{studio,career,suite}-smart-request-flow.{svg,png}`
+- Create: `guides/assets/readme/plugin-system-overview.{svg,png}`
 - Modify: `README.md`
 - Modify: `tests/contracts/root-readme-user-guides.test.mjs`
 
@@ -183,7 +185,7 @@ Require exact ordered nodes, edges, representative Korean skill names with Engli
 
 - [ ] **Step 2: Author through the packaged Skillstead renderer**
 
-Create one diagram per case-group introduction. Keep body and captions at least 16px, use natural-width text without `textLength` or scaling transforms, and wrap only at semantic whitespace or hyphens.
+Create one diagram per case-group introduction and replace the README system preview with a Skillstead overview. Keep body and captions at least 16px, use natural-width text without `textLength` or scaling transforms, and wrap only at semantic whitespace or hyphens.
 
 - [ ] **Step 3: Render all three at exact 2× size**
 
@@ -204,7 +206,7 @@ Explain that the path is selected per request and that users do not need to type
 
 - [ ] **Step 1: Run focused verification**
 
-Run root README contracts, Studio product contracts, Career product contracts, Diagram Design asset tests, and Skillstead graph/visual contracts.
+Run root README contracts, Studio product contracts, Career product contracts, and Skillstead graph/visual contracts.
 
 - [ ] **Step 2: Run repository validation**
 
@@ -230,13 +232,13 @@ Record a per-file PASS/FAIL for text clarity, geometry, connectors, Korean-first
 
 - [ ] **Step 5: Commit in reviewable units**
 
-Commit product routing contracts, README content, Diagram Design assets, Skillstead assets, and final validation fixes separately. End with a clean worktree and no pending required task.
+Commit product routing contracts, README content, Skillstead assets, and final validation fixes separately. End with a clean worktree and no pending required task.
 
 ---
 
 ## Plan Self-Review
 
-- The plan covers every approved design section: natural-language routing, README labels, 18 simple examples, three group tables, one Diagram Design flow, three Skillstead flows, product contracts, human approval, and full verification.
+- The plan covers every approved design section: natural-language routing, README labels, 18 simple examples, three group tables, five new Skillstead flows, product contracts, human approval, and full verification.
 - Every created asset has a source, renderer, contract, README placement, and visual QA step.
 - Product source and generated plugin boundaries are explicit; no generated tree is edited by hand.
 - Existing case IDs, skill IDs, result files, prompt catalog structure, safety, rights, and approval contracts remain stable.

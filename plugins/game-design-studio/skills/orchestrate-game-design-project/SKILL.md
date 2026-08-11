@@ -9,6 +9,8 @@ description: Use when a game-design request spans multiple disciplines, has ambi
 
 Turn mixed or ambiguous game-design intent into a bounded Canonical Artifact. Route only established intent, preserve assumptions and blockers, and finish with evidence-backed completion gates.
 
+Users do not need to name a skill or case ID. Read an ordinary natural-language request, infer the goal and requested result, and choose the smallest safe route that can produce it.
+
 ## Workflow
 
 1. Read [intake.md](references/intake.md). Capture the brief, record safe assumptions, and ask only questions that can materially change the result.
@@ -28,12 +30,15 @@ Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, wi
 
 ## Operating Rules
 
-- Route a direct single-domain request to its declared specialist skill.
+- Route a clear single-domain request directly to its specialist skill.
+- Route mixed, cross-domain, or unclear requests through this orchestrator.
+- Honor an explicit user-selected skill when it is compatible with the requested result and all safety, rights, evidence, and human-approval boundaries.
 - Keep unknown or ambiguous intent in this orchestrator; never guess a specialist.
 - Treat profiles as additional questions and gates, not permission to invent facts.
 - Select one to three roles for distinct review questions. Do not add a role merely to fill the limit.
 - Preserve the canonical Markdown artifact when optional review, visualization, export, or host capabilities are absent.
-- Report assumptions, unresolved questions, blocked gates, selected routes and roles, artifact paths, requested format status, and the next decision owner.
+- Report the selected skills, selected review roles, artifact paths, and remaining decisions. Also report assumptions, unresolved questions, blocked gates, requested format status, and the next decision owner.
+- Automatic route selection is not automatic approval. A named human still approves, revises, or holds every applicable result and derivative.
 
 ## Completion Signal
 

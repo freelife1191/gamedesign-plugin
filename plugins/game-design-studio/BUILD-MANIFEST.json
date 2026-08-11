@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "1b9a4fef2f755674be1a0c96d6e7c5444bbffb3313c52dd902ffd969b71c825c",
+  "treeSha256": "12ea5cdd178191924c29b192f167c2cf8701bcb39fd83b35737e97ba093f6622",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "fa78eb5fcff008d7906e85b794349f508cfc8017d8358223c670a1ed69f380c1",
-      "size": 57578
+      "sha256": "b038c4cf5b8d1cf02e76740eba6192b4687406d60eddec8d61600540a43d914e",
+      "size": 58153
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -1496,8 +1496,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "ad42a800902e414c0ee1ad3a0c95cc6d90cac1d3fd99e28c237c835b15c1e275",
-      "size": 3729
+      "sha256": "0f5371d0b0ffb48f47a8e9df0a1ae7c0fb139a81bd2f09b9ac0e649feb63d29a",
+      "size": 4337
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",

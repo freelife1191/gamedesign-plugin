@@ -47,8 +47,26 @@ const representativeCards = {
   ],
 };
 const requiredCardLabels = [
-  "사용 시점", "준비 입력", "복사할 요청문", "실행 흐름",
-  "예상 결과", "읽는 순서", "사람 검토", "다음 요청",
+  "사용 시점", "준비 입력", "바로 써 보는 요청", "플러그인이 선택하는 작업 순서",
+  "받게 되는 결과", "읽는 순서", "사람 검토", "다음 요청",
+];
+
+const smartRequestGroupContracts = [
+  {
+    heading: "Studio 기획 사례 7개",
+    rows: 7,
+    phrases: ["한 줄 요청", "요청에 따라 선택", "필요한 경로만 실행", "사람 검토"],
+  },
+  {
+    heading: "Career 학습·취업 사례 7개",
+    rows: 7,
+    phrases: ["한 줄 요청", "경력 단계", "최소 스킬 경로", "멘토 또는 본인 검토"],
+  },
+  {
+    heading: "Studio와 Career 연계 사례 4개",
+    rows: 4,
+    phrases: ["한 줄 요청", "공개 범위", "필요한 경로만 실행", "사람 승인 또는 보류"],
+  },
 ];
 const expectedPluginTreeCounts = {
   "game-design-studio": { agents: 9, skills: 15, templates: 15, scripts: 14 },
@@ -61,7 +79,8 @@ const resultExampleIds = [
 const suiteArchitectureEmbed = {
   section: "플러그인 구조와 전체 시스템 아키텍처",
   alt: "게임 기획 플러그인 모음 전체 시스템 구조",
-  png: "guides/archify-diagrams/visual-qa/renders/suite/suite-plugin-system-architecture/readme-preview.png",
+  png: "guides/assets/readme/plugin-system-overview.png",
+  svg: "guides/assets/readme/plugin-system-overview.svg",
   html: "guides/assets/archify/suite/suite-plugin-system-architecture.html",
   directHtmlLabel: "Archify HTML에서 전체 시스템 구조 열기",
 };
@@ -97,6 +116,16 @@ const archifyStatusRoute = {
 };
 const readmeSkillsteadDiagrams = [
   {
+    section: "5분 안에 첫 결과 만들기",
+    id: "first-result-routing-flow",
+    alt: "한 문장 요청에서 스킬 선택과 사람 승인까지 이어지는 첫 결과 흐름",
+    phrases: [
+      "Studio 또는 Career 한 문장 요청", "요청 목적·원하는 결과 분석", "한 분야가 분명한가?",
+      "전문 스킬", "Studio·Career 오케스트레이터", "필요한 검토 역할 최대 세 개",
+      "기준 결과 폴더 작성·검증", "이름 있는 사람의 승인·수정·보류", "다음 요청·재개",
+    ],
+  },
+  {
     section: "케이스별 프롬프트로 시작하기",
     id: "prompt-to-result-flow",
     alt: "요청문에서 기획 결과와 다음 요청으로 이어지는 흐름",
@@ -114,8 +143,45 @@ const readmeSkillsteadDiagrams = [
     alt: "기준 결과 폴더 (Canonical Artifact)를 읽고 사람이 승인하는 순서",
     phrases: ["기획 본문", "검토 근거", "주요 의사결정 기록", "이미지·첨부 자료", "출력 준비표", "이름 있는 사람"],
   },
+  {
+    section: "케이스별 프롬프트로 시작하기",
+    subsection: "Studio 기획 사례 7개",
+    id: "studio-smart-request-flow",
+    alt: "Studio 한 줄 요청이 필요한 스킬과 사람 검토로 이어지는 흐름",
+    phrases: ["Studio 한 줄 요청", "목적·결과 분석", "전문 스킬 또는 프로젝트 조율", "검토 역할 선택", "기준 결과 폴더", "사람 검토"],
+  },
+  {
+    section: "케이스별 프롬프트로 시작하기",
+    subsection: "Career 학습·취업 사례 7개",
+    id: "career-smart-request-flow",
+    alt: "Career 한 줄 요청이 최소 스킬 경로와 멘토 검토로 이어지는 흐름",
+    phrases: ["Career 한 줄 요청", "경력 단계·목표 진단", "최소 스킬 경로", "근거 검토 역할", "학습·취업 결과", "멘토·본인 검토"],
+  },
+  {
+    section: "케이스별 프롬프트로 시작하기",
+    subsection: "Studio와 Career 연계 사례 4개",
+    id: "suite-smart-request-flow",
+    alt: "Studio 결과가 Career 활용 자료와 사람 승인으로 이어지는 흐름",
+    phrases: ["연계 한 줄 요청", "Studio 원본·공개 범위", "Career 전환 스킬", "결과 검토", "포트폴리오·면접·발표", "사람 승인·보류"],
+  },
+  {
+    section: "플러그인 구조와 전체 시스템 아키텍처",
+    id: "plugin-system-overview",
+    alt: "게임 기획 플러그인 모음 전체 시스템 구조",
+    phrases: ["요청 시작점", "Game Design Studio", "Studio 기준 결과", "Game Design Career", "Career 활용 결과", "자동 검증", "사람 승인·보류", "검토된 문서·이미지·도식"],
+  },
 ];
 const readmeSkillsteadGraphContracts = new Map([
+  ["first-result-routing-flow", {
+    nodes: ["request", "analysis", "decision", "specialist", "orchestrator", "roles", "artifact", "human", "resume"],
+    edges: [
+      ["request-to-analysis", "request", "analysis"], ["analysis-to-decision", "analysis", "decision"],
+      ["decision-to-specialist", "decision", "specialist"], ["decision-to-orchestrator", "decision", "orchestrator"],
+      ["specialist-to-roles", "specialist", "roles"], ["orchestrator-to-roles", "orchestrator", "roles"],
+      ["roles-to-artifact", "roles", "artifact"], ["artifact-to-human", "artifact", "human"],
+      ["human-to-resume", "human", "resume"],
+    ],
+  }],
   ["prompt-to-result-flow", {
     nodes: ["plugin-choice", "case-choice", "specialist-skill", "canonical-artifact", "human-review", "next-request-resume"],
     edges: [
@@ -145,6 +211,45 @@ const readmeSkillsteadGraphContracts = new Map([
       ["decisions-to-assets", "decisions", "assets"],
       ["assets-to-export-manifest", "assets", "export-manifest"],
       ["export-manifest-to-human-gate", "export-manifest", "human-gate"],
+    ],
+  }],
+  ["studio-smart-request-flow", {
+    nodes: ["studio-request", "studio-intent", "studio-route", "studio-roles", "studio-artifact", "studio-human"],
+    edges: [
+      ["studio-request-to-intent", "studio-request", "studio-intent"],
+      ["studio-intent-to-route", "studio-intent", "studio-route"],
+      ["studio-route-to-roles", "studio-route", "studio-roles"],
+      ["studio-roles-to-artifact", "studio-roles", "studio-artifact"],
+      ["studio-artifact-to-human", "studio-artifact", "studio-human"],
+    ],
+  }],
+  ["career-smart-request-flow", {
+    nodes: ["career-request", "career-diagnosis", "career-route", "career-roles", "career-artifact", "career-human"],
+    edges: [
+      ["career-request-to-diagnosis", "career-request", "career-diagnosis"],
+      ["career-diagnosis-to-route", "career-diagnosis", "career-route"],
+      ["career-route-to-roles", "career-route", "career-roles"],
+      ["career-roles-to-artifact", "career-roles", "career-artifact"],
+      ["career-artifact-to-human", "career-artifact", "career-human"],
+    ],
+  }],
+  ["suite-smart-request-flow", {
+    nodes: ["suite-request", "suite-source", "suite-transfer", "suite-review", "suite-artifact", "suite-human"],
+    edges: [
+      ["suite-request-to-source", "suite-request", "suite-source"],
+      ["suite-source-to-transfer", "suite-source", "suite-transfer"],
+      ["suite-transfer-to-review", "suite-transfer", "suite-review"],
+      ["suite-review-to-artifact", "suite-review", "suite-artifact"],
+      ["suite-artifact-to-human", "suite-artifact", "suite-human"],
+    ],
+  }],
+  ["plugin-system-overview", {
+    nodes: ["entry", "studio", "studio-artifact", "career", "career-artifact", "validation", "human", "delivery"],
+    edges: [
+      ["entry-to-studio", "entry", "studio"], ["studio-to-studio-artifact", "studio", "studio-artifact"],
+      ["studio-artifact-to-career", "studio-artifact", "career"], ["career-to-career-artifact", "career", "career-artifact"],
+      ["studio-artifact-to-validation", "studio-artifact", "validation"], ["career-artifact-to-validation", "career-artifact", "validation"],
+      ["validation-to-human", "validation", "human"], ["human-to-delivery", "human", "delivery"],
     ],
   }],
 ]);
@@ -384,8 +489,11 @@ function assertReadableCaseGroupIntroductions(markdown) {
   for (const [heading, expected] of caseGroupIntroductions) {
     const group = exactSection(markdown, heading, 3);
     const beforeFirstCard = group.slice(0, group.indexOf("<details data-prompt-id="));
-    assert.equal(normalizePromptWhitespace(beforeFirstCard), normalizePromptWhitespace(expected), `${heading}: two-sentence beginner introduction is exact`);
-    assert.equal((beforeFirstCard.match(/\./gu) ?? []).length, 2, `${heading}: introduction has two sentences`);
+    assert.ok(
+      normalizePromptWhitespace(beforeFirstCard).startsWith(normalizePromptWhitespace(expected)),
+      `${heading}: two-sentence beginner introduction is exact and precedes simple examples`,
+    );
+    assert.equal((expected.match(/\./gu) ?? []).length, 2, `${heading}: canonical introduction has two sentences`);
     assert.match(beforeFirstCard, /[가-힣]/u, `${heading}: introduction is visible Korean prose`);
   }
 }
@@ -441,7 +549,9 @@ function promptSurfaceBody(promptBlock, label, nextLabel) {
 
 function promptTemplateAndExample(promptBlock, label, nextLabel) {
   const surface = promptSurfaceBody(promptBlock, label, nextLabel);
-  const marker = `\n\n채운 예시 (${label})\n`;
+  const marker = label === "App"
+    ? "\n\n바로 복사해 쓰는 App 예시\n"
+    : "\n\n경로를 직접 지정하는 CLI 예시\n";
   const index = surface.indexOf(marker);
   const fallbackIndex = index === -1 ? promptBlock.indexOf(marker) : index;
   const exampleSurface = index === -1 ? promptBlock : surface;
@@ -452,11 +562,52 @@ function promptTemplateAndExample(promptBlock, label, nextLabel) {
     `copyable prompt includes one filled ${label} example`,
   );
   const example = exampleSurface.slice(fallbackIndex + marker.length).trim();
-  const firstExampleMarker = surface.indexOf("\n\n채운 예시 (");
+  const firstExampleMarkers = [
+    surface.indexOf("\n\n바로 복사해 쓰는 App 예시\n"),
+    surface.indexOf("\n\n경로를 직접 지정하는 CLI 예시\n"),
+  ].filter((index) => index !== -1);
+  const firstExampleMarker = firstExampleMarkers.length > 0 ? Math.min(...firstExampleMarkers) : -1;
   return {
     template: (firstExampleMarker === -1 ? surface : surface.slice(0, firstExampleMarker)).trim(),
     example: index === -1 ? example.split("\n\n", 1)[0].trim() : example,
   };
+}
+
+function assertNaturalLanguageFirstRoot(markdown) {
+  const quickStart = exactSection(markdown, "5분 안에 첫 결과 만들기");
+  for (const phrase of [
+    "한 문장으로 요청",
+    "한 분야가 분명하면 전문 스킬",
+    "여러 분야가 섞였거나 범위가 불명확하면 오케스트레이터",
+    "선택한 스킬과 검토 역할",
+    "자동 선택은 자동 승인을 뜻하지 않습니다",
+  ]) assert.match(quickStart, new RegExp(escapeRegExp(phrase), "u"), `five-minute start explains ${phrase}`);
+
+  for (const plugin of ["@Game Design Studio", "@Game Design Career"]) {
+    const simplePrompts = textBlocks(quickStart).filter((block) => block.trimStart().startsWith(plugin));
+    assert.ok(simplePrompts.length > 0, `five-minute start includes a natural-language ${plugin} prompt`);
+    for (const prompt of simplePrompts) {
+      assert.doesNotMatch(prompt, /\b(?:ST|CA)-(?:C|T)\d{2}\b/u, `${plugin}: basic prompt omits a case ID`);
+      assert.doesNotMatch(prompt, /\$game-design-(?:studio|career):/u, `${plugin}: basic prompt omits explicit skill commands`);
+    }
+  }
+
+  assert.doesNotMatch(markdown, /채운 예시/u, "README removes the awkward filled-example label");
+  for (const contract of smartRequestGroupContracts) {
+    const group = exactSection(markdown, contract.heading, 3);
+    const intro = group.slice(0, group.indexOf("<details data-prompt-id="));
+    const normalizedIntro = normalizePromptWhitespace(intro);
+    for (const phrase of contract.phrases) {
+      assert.match(normalizedIntro, new RegExp(escapeRegExp(phrase), "u"), `${contract.heading}: explains ${phrase}`);
+    }
+    const rows = markdownTableRows(intro);
+    assert.deepEqual(
+      rows[0],
+      ["하려는 일", "간단한 요청", "플러그인이 고르는 대표 경로", "받게 되는 결과"],
+      `${contract.heading}: simple prompt table headers`,
+    );
+    assert.equal(rows.length - 1, contract.rows, `${contract.heading}: simple prompt row count`);
+  }
 }
 
 function sourceBoundPrefix(value, expected, label) {
@@ -490,9 +641,9 @@ function wrapPromptTemplate(value, width = 80) {
 function assertPromptCard(card, entry) {
   for (const label of requiredCardLabels) cardLabelBody(card, label);
   const flowExpected = entry.skill_chain.map((skill) => `\`${skill}\``).join(" → ");
-  const flow = sourceBoundPrefix(cardLabelBody(card, "실행 흐름"), flowExpected, `${entry.id}: skill_chain`);
+  const flow = sourceBoundPrefix(cardLabelBody(card, "플러그인이 선택하는 작업 순서"), flowExpected, `${entry.id}: skill_chain`);
   const outputsExpected = entry.minimum_outputs.map((output) => `\`${output}\``).join(" → ");
-  const outputs = cardLabelBody(card, "예상 결과");
+  const outputs = cardLabelBody(card, "받게 되는 결과");
   assert.match(outputs, /[가-힣]/u, `${entry.id}: expected results explain the outcome in Korean`);
   const readOrderExpected = entry.read_order.map((step) => `\`${step}\``).join(" → ");
   const readOrder = sourceBoundPrefix(cardLabelBody(card, "읽는 순서"), readOrderExpected, `${entry.id}: read_order`);
@@ -504,7 +655,7 @@ function assertPromptCard(card, entry) {
   const resume = cardLabelBody(card, "다음 요청");
   assert.match(resume, /[가-힣]/u, `${entry.id}: next request remains readable Korean`);
 
-  const copyPrompt = cardLabelBody(card, "복사할 요청문");
+  const copyPrompt = cardLabelBody(card, "바로 써 보는 요청");
   const promptBlocks = textBlocks(copyPrompt);
   assert.equal(promptBlocks.length, 1, `${entry.id}: copyable prompt has one text fence`);
   const appPrompt = promptTemplateAndExample(promptBlocks[0], "App", "CLI");
@@ -931,8 +1082,8 @@ async function assertSuiteArchitectureEmbed(markdown) {
   const previewEnd = architecture.indexOf("### 경로별 역할과 편집 경계");
   assert.notEqual(previewEnd, -1, "architecture preview appears before the component-boundary explanation");
   const readablePreview = architecture.slice(0, previewEnd).replace(/\s+/gu, " ");
-  const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.html})`;
-  assert.ok(architecture.includes(exactEmbed), "architecture preview keeps the exact PNG-to-HTML relationship");
+  const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.svg})`;
+  assert.ok(architecture.includes(exactEmbed), "architecture preview keeps the exact Skillstead PNG-to-SVG relationship");
   assert.ok(
     readablePreview.includes(`[${suiteArchitectureEmbed.directHtmlLabel}](${suiteArchitectureEmbed.html})`),
     "architecture opening area exposes an explicit Archify HTML link beside the clickable preview",
@@ -952,6 +1103,10 @@ async function assertSuiteArchitectureEmbed(markdown) {
     target: suiteArchitectureEmbed.png,
     label: suiteArchitectureEmbed.alt,
   }, root);
+  await validateVisibleLocalLink(readmePath, {
+    target: suiteArchitectureEmbed.svg,
+    label: suiteArchitectureEmbed.alt,
+  }, root);
   const preview = path.join(root, suiteArchitectureEmbed.png);
   const previewStats = await lstat(preview);
   assert.ok(previewStats.isFile() && !previewStats.isSymbolicLink(), "architecture README preview is a regular non-symlink file");
@@ -962,7 +1117,9 @@ async function assertSuiteArchitectureEmbed(markdown) {
   assert.ok(previewInspection.height >= 600, "architecture README preview preserves sufficient diagram height");
   const previewContent = inspectPngVisualContent(previewBytes);
   assert.ok(previewContent.ok, `architecture README preview has visible UI and diagram content: ${previewContent.errors.join("; ")}`);
-  assert.ok(previewContent.foregroundRatio >= 0.07, "architecture README preview gives the guided architecture enough visible occupancy");
+  assert.ok(previewContent.foregroundRatio >= 0.04, "architecture README preview gives the Skillstead system map enough visible occupancy");
+  assert.ok(previewContent.boundingBox?.width >= previewInspection.width * 0.85, "architecture README preview uses most of the available width");
+  assert.ok(previewContent.boundingBox?.height >= previewInspection.height * 0.75, "architecture README preview uses most of the available height");
   await validateVisibleLocalLink(readmePath, {
     target: suiteArchitectureEmbed.html,
     label: suiteArchitectureEmbed.directHtmlLabel,
@@ -1043,25 +1200,25 @@ async function buildValidStructuredReadmeFixture() {
       entry.when_to_use,
       "#### 준비 입력",
       entry.required_inputs.join(", "),
-      "#### 복사할 요청문",
+      "#### 바로 써 보는 요청",
       "```text",
       "App",
       ...wrapPromptTemplate(entry.app_prompt.template),
       "",
-      "채운 예시 (App)",
+      "바로 복사해 쓰는 App 예시",
       "실습 프로젝트의 확인된 사실, 합리적 추정과 다음 제안을 구분해 작성해.",
       "",
       "CLI",
       ...wrapPromptTemplate(entry.cli_prompt.template),
       "",
-      "채운 예시 (CLI)",
+      "경로를 직접 지정하는 CLI 예시",
       "실습 프로젝트의 확인된 사실, 합리적 추정과 다음 제안을 구분해 작성해.",
       "```",
-      "#### 실행 흐름",
+      "#### 플러그인이 선택하는 작업 순서",
       entry.skill_chain.map((skill) => `\`${skill}\``).join(" → "),
       "",
       "앞의 스킬을 순서대로 실행해 필요한 기획 판단과 검토를 연결합니다.",
-      "#### 예상 결과",
+      "#### 받게 되는 결과",
       entry.minimum_outputs.map((output) => `\`${output}\``).join(" → "),
       "",
       "표시한 결과를 함께 보존해 다음 검토와 수정에 사용합니다.",
@@ -1416,7 +1573,8 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
   assertReadmeSkillsteadAssetNames(await readdir(assetDirectory));
   for (const diagram of readmeSkillsteadDiagrams) {
     const { section: sectionHeading, id, alt } = diagram;
-    const body = exactSection(markdown, sectionHeading);
+    const sectionBody = exactSection(markdown, sectionHeading);
+    const body = diagram.subsection ? exactSection(sectionBody, diagram.subsection, 3) : sectionBody;
     const png = `guides/assets/readme/${id}.png`;
     const svg = `guides/assets/readme/${id}.svg`;
     const embed = `[![${alt}](${png})](${svg})`;
@@ -1442,7 +1600,7 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
 
 function assertReadmeSkillsteadAssetNames(files) {
   const expectedFiles = readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]).sort();
-  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly three PNG/SVG pairs");
+  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly eight Skillstead PNG/SVG pairs");
 }
 
 function assertReadmeSkillsteadSourceRejected(source, diagram, label) {
@@ -1762,6 +1920,12 @@ test("root README follows the approved task-oriented information architecture", 
   assertBeginnerReadableRootAdditions(readme);
 });
 
+test("root README starts with simple natural-language requests and keeps explicit routes advanced", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  assertNaturalLanguageFirstRoot(readme);
+  await assertRepresentativePromptCards(readme);
+});
+
 test("root README keeps Korean meanings before English helper terms outside canonical commands", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   assert.doesNotThrow(() => assertKoreanFirstReadmeTerms(readme), "baseline README is Korean-first");
@@ -1777,10 +1941,11 @@ test("root README exposes the verified Suite architecture with friendly diagram 
 
 test("Suite architecture embed rejects missing, unwrapped, stale, and wrong targets", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
-  const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.html})`;
+  const exactEmbed = `[![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})](${suiteArchitectureEmbed.svg})`;
   const mutations = [
     ["missing preview", readme.replace(exactEmbed, "")],
     ["unwrapped preview", readme.replace(exactEmbed, `![${suiteArchitectureEmbed.alt}](${suiteArchitectureEmbed.png})`)],
+    ["wrong Skillstead SVG", readme.replace(suiteArchitectureEmbed.svg, "guides/assets/readme/wrong-system-overview.svg")],
     ["wrong HTML ID", readme.replace(suiteArchitectureEmbed.html, "guides/assets/archify/suite/wrong-system-architecture.html")],
     ["stale receipt link", readme.replace(suiteArchitectureEmbed.html, "guides/assets/archify/suite/suite-plugin-system-architecture.receipt.json")],
   ];
@@ -1790,7 +1955,7 @@ test("Suite architecture embed rejects missing, unwrapped, stale, and wrong targ
   }
 });
 
-test("root README embeds three machine-linted Skillstead explanation diagrams", async () => {
+test("root README embeds eight machine-linted Skillstead explanation diagrams", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertReadmeSkillsteadDiagrams(readme);
 });
@@ -1798,8 +1963,8 @@ test("root README embeds three machine-linted Skillstead explanation diagrams", 
 test("README Skillstead explanation diagrams reject semantic and distortion regressions", async () => {
   assert.throws(
     () => assertReadmeSkillsteadAssetNames([...readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]), "fourth-flow.svg"]),
-    /exactly three PNG\/SVG pairs/u,
-    "a fourth unowned explainer pair is rejected",
+    /exactly eight Skillstead PNG\/SVG pairs/u,
+    "an unowned explainer file is rejected",
   );
   for (const diagram of readmeSkillsteadDiagrams) {
     const source = await readFile(path.join(root, "guides/assets/readme", `${diagram.id}.svg`), "utf8");
