@@ -22,7 +22,7 @@ const roleIds = [
 ];
 
 const studioOnlyReviewRoles = ["combat-encounter-reviewer", "level-puzzle-reviewer"];
-const expectedRolePriority = [...roleIds, "document-quality-editor"];
+const expectedRolePriority = [...roleIds, "document-quality-editor", "game-design-writing-editor"];
 const domainRouteFixtures = [
   {
     role: "combat-encounter-reviewer",

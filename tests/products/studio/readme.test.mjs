@@ -13,6 +13,33 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const readmePath = path.join(pluginRoot, "README.md");
 const temporaryDirectories = [];
+const canonicalSourceLinks = new Map([
+  ["skills/define-game-vision/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-game-content/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-game-economy-and-liveops/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-game-systems/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-player-experience/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/plan-game-production/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/review-game-design/SKILL.md", new Map([["../../../../../shared/templates/review-finding.md", "templates/review-finding.md"]])],
+  ["references/methods/content-specification.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["references/methods/economy-liveops.md", new Map([
+    ["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"],
+    ["../../../../../shared/knowledge/trends/2026-current-practices.md", "knowledge/trends/2026-current-practices.md"],
+    ["../../../../../shared/knowledge/trends/source-register.json", "knowledge/trends/source-register.json"],
+  ])],
+  ["references/methods/player-experience.md", new Map([
+    ["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"],
+    ["../../../../../shared/knowledge/trends/2026-current-practices.md", "knowledge/trends/2026-current-practices.md"],
+    ["../../../../../shared/knowledge/trends/source-register.json", "knowledge/trends/source-register.json"],
+  ])],
+  ["references/methods/production.md", new Map([
+    ["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"],
+    ["../../../../../shared/knowledge/trends/2026-current-practices.md", "knowledge/trends/2026-current-practices.md"],
+    ["../../../../../shared/knowledge/trends/source-register.json", "knowledge/trends/source-register.json"],
+  ])],
+  ["references/methods/system-specification.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["references/methods/vision.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+]);
 
 test.afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
@@ -33,6 +60,7 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
 ];
 
 const roleIds = [
@@ -43,6 +71,9 @@ const roleIds = [
   "ux-accessibility-reviewer",
   "liveops-data-designer",
   "production-feasibility-critic",
+  "combat-encounter-reviewer",
+  "level-puzzle-reviewer",
+  "game-design-writing-editor",
 ];
 
 const imageRoleIds = ["art-brief-director", "visual-asset-reviewer"];
@@ -93,6 +124,7 @@ const topLevelScriptIds = [
   "generate-openai-images.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
@@ -100,6 +132,7 @@ const topLevelScriptIds = [
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
   "validate-reference-preset.mjs",
+  "validate-writing-revision.mjs",
 ];
 
 const documentQualityPaths = [
@@ -166,11 +199,29 @@ async function assertContainedLink(root, markdownFile, target) {
   assert.ok(canonicalRelative && !canonicalRelative.startsWith("..") && !path.isAbsolute(canonicalRelative), `real link target escapes plugin root: ${target}`);
 }
 
-async function assertAllMarkdownLinksContained(root) {
+async function assertCanonicalSourceLink(markdownFile, target, expectedRelativePath) {
+  const sharedRoot = await realpath(path.join(repoRoot, "shared"));
+  const targetReal = await realpath(path.resolve(path.dirname(markdownFile), target));
+  assert.equal(
+    path.relative(sharedRoot, targetReal),
+    expectedRelativePath,
+    `source-only canonical link must resolve to the approved shared input: ${target}`,
+  );
+}
+
+async function assertAllMarkdownLinksContained(root, sourceLinks = new Map()) {
   const markdownFiles = (await walkFiles(root)).filter((file) => file.endsWith(".md"));
   for (const markdownFile of markdownFiles) {
     const markdown = await readFile(markdownFile, "utf8");
-    for (const target of localMarkdownLinks(markdown)) await assertContainedLink(root, markdownFile, target);
+    const relativeMarkdownFile = path.relative(root, markdownFile).split(path.sep).join("/");
+    for (const target of localMarkdownLinks(markdown)) {
+      const expectedCanonicalTarget = sourceLinks.get(relativeMarkdownFile)?.get(target);
+      if (expectedCanonicalTarget) {
+        await assertCanonicalSourceLink(markdownFile, target, expectedCanonicalTarget);
+      } else {
+        await assertContainedLink(root, markdownFile, target);
+      }
+    }
   }
 }
 
@@ -450,7 +501,7 @@ test("release documentation ships the plugin license and third-party notices", a
   ]);
   assert.match(license, /MIT License/);
   assert.match(notices, /Skillstead svg-infographic/);
-  assert.match(notices, /0\.8\.3/);
+  assert.match(notices, /0\.9\.0/);
   assert.match(notices, /Apache-2\.0/);
   assert.match(notices, /Copyright 2026 Kyungseo Park/);
   assert.match(notices, /49/);
@@ -459,6 +510,9 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, profile, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
+  assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 18개/u, "README states the complete installed-skill count");
+  assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
   assert.deepEqual(tableIds(readme, "이미지 전문 역할 레지스트리"), imageRoleIds);
@@ -759,7 +813,7 @@ test("README local links resolve inside the source plugin root", async () => {
 });
 
 test("source and clean-built Markdown links stay inside their own plugin roots", async () => {
-  await assertAllMarkdownLinksContained(pluginRoot);
+  await assertAllMarkdownLinksContained(pluginRoot, canonicalSourceLinks);
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-readme-links-"));
   temporaryDirectories.push(stagingRoot);
   const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
@@ -835,15 +889,34 @@ test("source-local links do not shadow canonical shared template inputs", async 
   );
 });
 
+test("review skill projects the canonical finding template into the package", async () => {
+  const sourceLink = "../../../../../shared/templates/review-finding.md";
+  const packagedLink = "../../assets/shared/templates/review-finding.md";
+  const canonicalTemplate = await readFile(path.join(repoRoot, "shared/templates/review-finding.md"));
+  const sourceSkillPath = path.join(pluginRoot, "skills/review-game-design/SKILL.md");
+  const sourceSkill = await readFile(sourceSkillPath, "utf8");
+  assert.match(sourceSkill, new RegExp(`\\[review-finding\\.md\\]\\(${sourceLink.replaceAll(".", "\\.")}\\)`, "u"));
+  assert.deepEqual(await readFile(path.resolve(path.dirname(sourceSkillPath), sourceLink)), canonicalTemplate);
+
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-review-template-"));
+  temporaryDirectories.push(stagingRoot);
+  const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const packagedSkillPath = path.join(build.outputDir, "skills/review-game-design/SKILL.md");
+  const packagedSkill = await readFile(packagedSkillPath, "utf8");
+  assert.match(packagedSkill, new RegExp(`\\[review-finding\\.md\\]\\(${packagedLink.replaceAll(".", "\\.")}\\)`, "u"));
+  assert.deepEqual(await readFile(path.resolve(path.dirname(packagedSkillPath), packagedLink)), canonicalTemplate);
+});
+
 test("README explains the source overlay and complete independent built-plugin structure", async () => {
   const readme = await readFile(readmePath, "utf8");
   for (const pathOrCount of [
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
     ".codex-plugin/plugin.json",
-    "skills/ (15개)",
+    "skills/ (18개)",
+    "<15개 Studio 제품 스킬>",
     "skills/svg-infographic/",
-    "agents/ (9개)",
+    "agents/ (12개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",
@@ -873,7 +946,7 @@ test("README explains the source overlay and complete independent built-plugin s
   ]) {
     assert.ok(readme.includes(contract), `missing structure boundary: ${contract}`);
   }
-  assert.ok(readme.includes("1개 universal core와 3개 선택 프로필"));
+  assert.ok(readme.includes("4개: universal core 1 + 선택 프로필 3"));
   assert.ok(readme.includes("저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다"));
   assert.ok(readme.includes("이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며"));
 });

@@ -28,6 +28,7 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
 ];
 
 const roleIds = [
@@ -38,6 +39,7 @@ const roleIds = [
   "reverse-design-critic",
   "interview-coach",
   "evidence-auditor",
+  "game-design-writing-editor",
 ];
 
 const imageRoleIds = ["art-brief-director", "visual-asset-reviewer"];
@@ -84,6 +86,7 @@ const topLevelScriptIds = [
   "generate-openai-images.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
@@ -91,6 +94,7 @@ const topLevelScriptIds = [
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
   "validate-reference-preset.mjs",
+  "validate-writing-revision.mjs",
 ];
 
 const documentQualityPaths = [
@@ -429,7 +433,7 @@ test("release documentation ships the plugin license and third-party notices", a
   ]);
   assert.match(license, /MIT License/);
   assert.match(notices, /Skillstead svg-infographic/);
-  assert.match(notices, /0\.8\.3/);
+  assert.match(notices, /0\.9\.0/);
   assert.match(notices, /Apache-2\.0/);
   assert.match(notices, /Copyright 2026 Kyungseo Park/);
   assert.match(notices, /49/);
@@ -438,6 +442,9 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, stage, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
+  assert.match(readme, /15개 워크플로 스킬/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 18개/u, "README states the complete installed-skill count");
+  assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
   assert.deepEqual(tableIds(readme, "이미지 전문 역할 레지스트리"), imageRoleIds);
@@ -612,9 +619,10 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-career/plugin",
     "plugins/game-design-career",
     ".codex-plugin/plugin.json",
-    "skills/ (15개)",
+    "skills/ (18개)",
+    "<15개 Career 제품 스킬>",
     "skills/svg-infographic/",
-    "agents/ (9개)",
+    "agents/ (10개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",
@@ -725,7 +733,7 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
     const environment = { ...process.env, CODEX_HOME: codexHome };
     const skillRun = spawnSync("/bin/bash", ["-c", skillCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(skillRun.status, 0, skillRun.stderr);
-    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 14);
+    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, skillIds.length);
 
     const pluginRun = spawnSync("/bin/bash", ["-c", pluginCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(pluginRun.status, 0, pluginRun.stderr);
@@ -766,7 +774,7 @@ test("README binds Career entry users to canonical representative case routes wi
   assert.match(readme, /한 산출물.*직접.*스킬/su, "direct-skill scope");
   for (const summary of [
     `${careerCases.length}개 사례`,
-    `${inventory.skillIds.length}개 직접 스킬`,
+    `${skillIds.length}개 직접 스킬`,
     `${routing.faqContracts.length}개 FAQ`,
     `${careerCases.length + skillCases.length}개 도식`,
   ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);

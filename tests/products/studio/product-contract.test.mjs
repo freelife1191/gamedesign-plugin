@@ -8,6 +8,7 @@ import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { loadProductContract } from "../../../tooling/lib/product-contract.mjs";
+import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const productRoot = path.join(repoRoot, "products/game-design-studio");
@@ -32,6 +33,8 @@ const skillIds = [
   "humanize-korean",
   "archify",
 ];
+const directSkillIds = skillIds.slice(0, 15);
+const installedSkillIds = [...directSkillIds, "archify", "humanize-korean", "svg-infographic"].sort();
 
 const roleIds = [
   "lead-game-designer",
@@ -202,6 +205,14 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.rolePriority, roleIds);
   assert.equal(routing.unknownIntentFallback, "orchestrate-game-design-project");
   assert.deepEqual(routing.plannedPaths, plannedPaths);
+});
+
+test("Studio keeps the 15-direct and 18-installed skill inventory contract", async () => {
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+
+  assert.equal(directSkillIds.length, 15, "Studio has exactly 15 direct product skills");
+  assert.deepEqual(inventory.skillIds, installedSkillIds);
+  assert.equal(inventory.skillIds.length, 18, "Studio installs the 15 direct skills plus three bundled skills");
 });
 
 test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {

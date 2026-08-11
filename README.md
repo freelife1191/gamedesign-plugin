@@ -1964,6 +1964,7 @@ generated snapshot: plugins/game-design-career/
 | `generate-openai-images.mjs` | 설정된 OpenAI Images API 호출을 제한된 범위에서 실행합니다. |
 | `quality-source-anchors.mjs` | 문서 품질 원본의 바이트와 의미 기준점을 고정합니다. |
 | `resolve-quality-profile.mjs` | 문서 품질 기준을 선택·합성하고 상태 기록을 만듭니다. |
+| `run-game-design-writing-polish.mjs` | 문장 편집 전문가와 한국어 다듬기 도구를 차례로 실행해 최소 수정안을 만듭니다. |
 | `run-image-asset-workflow.mjs` | 이미지 계획·생성·검토 단계를 연결합니다. |
 | `stop-artifact-review.mjs` | 완료 직전 결과물을 검토하고 한 번의 수정 재개를 관리합니다. |
 | `validate-artifact.mjs` | 기준 기획 결과물 폴더의 필수 파일과 상태를 검사합니다. |
@@ -1971,6 +1972,7 @@ generated snapshot: plugins/game-design-career/
 | `validate-image-config.mjs` | 비밀값을 노출하지 않고 이미지 생성 설정을 검사합니다. |
 | `validate-quality-profile.mjs` | 선택한 문서 품질 기준의 닫힌 계약을 검사합니다. |
 | `validate-reference-preset.mjs` | 중립 참고 사전 설정의 허용 범위를 검사합니다. |
+| `validate-writing-revision.mjs` | 글의 핵심 사실과 수치가 바뀌지 않았는지, 수정 기록이 빠지지 않았는지 검사합니다. |
 
 ### 설치된 문서 품질 경로 (document-quality)
 

@@ -78,7 +78,7 @@ codex plugin marketplace remove game-design-suite
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
-├── skills/ (15개)
+├── skills/ (18개)
 │   ├── <15개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── archify/                      # vendored Archify 2.13.0
@@ -140,6 +140,7 @@ plugins/game-design-studio/
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `run-game-design-writing-polish.mjs` | writing specialist와 bundled humanize-korean을 거치는 bounded revision 실행 |
 | `run-image-asset-workflow.mjs` | image workflow composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
@@ -147,6 +148,7 @@ plugins/game-design-studio/
 | `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
+| `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
 
 ## 설치된 document-quality 경로
 
@@ -171,7 +173,7 @@ plugins/game-design-studio/
 
 `references/source/docs/`의 원문 49개는 사용자 제공 workspace에서 왔으며, 사용자가 요청한 로컬 플러그인 제작·사용을 위해 복사됩니다. [원문 권리 매니페스트](references/source-document-rights.json)는 각 문서의 정확한 package path와 SHA-256, `user-provided-workspace` origin, 로컬 포함 근거, MIT 제외 상태, 공개 재배포 상태, 검토일과 필요한 후속 조치를 기록합니다.
 
-플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.8.3에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
+플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.9.0에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
 
 [원문 재배포 가드](skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs)는 매니페스트 49개와 실제 package bytes를 대조합니다. `local`과 `private` 모드는 요청된 로컬·사설 사용을 허용합니다.
 
@@ -275,6 +277,7 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 | `plan-image-assets` | 이미지가 필요한 profile/brief를 계획할 때 | stable asset ID, placeholders, `assets/image-assets.yml`, Markdown/JSON prompts |
 | `generate-image-assets` | 명시적으로 선택/허용된 asset만 생성할 때 | provider policy, immutable selection receipt, truthful provenance 또는 placeholder |
 | `review-image-assets` | 사람의 이미지 검토를 기록할 때 | named human evidence, rights/provenance review와 approval transition |
+| `polish-game-design-writing` | 기획 문장을 전문적으로 점검·최소 수정할 때 | protected content receipt, revision findings, human review handoff |
 
 ## 전문 역할 프롬프트
 
@@ -287,6 +290,9 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 | `ux-accessibility-reviewer` | critical actions, states, onboarding, input, performance, access | `accessibility` |
 | `liveops-data-designer` | hypothesis, control, variable, sample, guardrail, stop, rollback | `liveops-experiment` |
 | `production-feasibility-critic` | contribution, effort evidence, dependencies, prototype, milestones, kill criteria | `scope-control` |
+| `combat-encounter-reviewer` | encounter signal, counterplay, failure recovery와 evidence gap 검토 | blocker 승인·artifact 재작성 권한 없음 |
+| `level-puzzle-reviewer` | level·puzzle path, reset/retry, accessibility recovery와 evidence gap 검토 | blocker 승인·artifact 재작성 권한 없음 |
+| `game-design-writing-editor` | 번역투·반복·문맥 단절을 찾아 최소 수정안 기록 | 사실·수치·근거·승인 상태를 바꾸지 않음 |
 
 역할은 산출물 전체를 다시 쓰거나 자신에게 없는 게이트를 승인하지 않습니다. finding에는 stable source ID, severity, evidence, impact, affected section, assumptions, minimal fix와 역할이 필요합니다.
 
@@ -616,7 +622,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ## Skillstead 도식화
 
-[visualize-game-design](skills/visualize-game-design/SKILL.md)는 spatial encoding이 실제로 관계를 더 명확하게 할 때만 Skillstead `svg-infographic` 0.8.3을 사용합니다. 지원 preset은 core/motivation loop, state/rule flow, economy source/sink, progression/lifecycle, production timeline/dependency, RACI/role flow입니다. 단순 목록은 본문이나 표로 유지합니다.
+[visualize-game-design](skills/visualize-game-design/SKILL.md)는 spatial encoding이 실제로 관계를 더 명확하게 할 때만 Skillstead `svg-infographic` 0.9.0을 사용합니다. 지원 preset은 core/motivation loop, state/rule flow, economy source/sink, progression/lifecycle, production timeline/dependency, RACI/role flow입니다. 단순 목록은 본문이나 표로 유지합니다.
 
 모든 node, connector, label, date와 numeric annotation은 stable source locator에 연결해야 합니다. SVG에는 `<title>`, `<desc>`, alt text가 필요합니다. 패키지의 SVG lint를 통과한 뒤 Chromium이 있으면 canonical renderer로 정확한 2× PNG를 생성하고 browser identity/version, source/output digest, 실제 dimensions와 fit-to-page·close-up visual QA를 기록합니다.
 
@@ -702,4 +708,4 @@ python3 "$CODEX_ROOT/skills/.system/plugin-creator/scripts/validate_plugin.py" p
 
 ## 라이선스
 
-Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.8.3은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.
+Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.9.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.

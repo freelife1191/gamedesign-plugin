@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { loadProductContract } from "../../../tooling/lib/product-contract.mjs";
+import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const productRoot = path.join(repoRoot, "products/game-design-career");
@@ -28,6 +29,8 @@ const skillIds = [
   "humanize-korean",
   "archify",
 ];
+const directSkillIds = skillIds.slice(0, 15);
+const installedSkillIds = [...directSkillIds, "archify", "humanize-korean", "svg-infographic"].sort();
 
 const roleIds = [
   "career-strategist",
@@ -137,6 +140,14 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.stages, stages);
   assert.equal(new Set(routing.skillIds).size, 17);
   assert.equal(new Set(routing.roleIds).size, 8);
+});
+
+test("Career keeps the 15-direct and 18-installed skill inventory contract", async () => {
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
+
+  assert.equal(directSkillIds.length, 15, "Career has exactly 15 direct product skills");
+  assert.deepEqual(inventory.skillIds, installedSkillIds);
+  assert.equal(inventory.skillIds.length, 18, "Career installs the 15 direct skills plus three bundled skills");
 });
 
 test("Every route declares deterministic evidence and completion decisions", async () => {
