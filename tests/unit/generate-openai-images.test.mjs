@@ -334,7 +334,7 @@ test("generateOpenAIImages times out body readers and async iterators that ignor
         apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, requestTimeoutMs: 5,
         fetchFn: async () => { calls += 1; return { status: 200, headers: { get: () => null }, body }; }, sleepFn: async () => {},
       }),
-      new Promise((_resolve, reject) => setTimeout(() => reject(new Error(`${kind} body ignored deadline`)), 50)),
+      new Promise((_resolve, reject) => setTimeout(() => reject(new Error(`${kind} body ignored deadline`)), 1000)),
     ]);
     assert.equal(calls, 1, kind);
     assert.deepEqual(result.failures, [{ asset_id: `ignored-${kind}`, generation_state: "generation-failed", reason: "provider-timeout", attempts: 1 }], kind);

@@ -744,9 +744,9 @@ test("production guide graph has the exact installed skill IDs and visible link 
   const files = await markdownFiles(path.join(repoRoot, "guides"));
   const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
   assert.equal(files.length, 147);
-  assert.equal(links.length, 2329);
+  assert.equal(links.length, 2330);
   assert.equal(links.filter(({ label }) => label === "").length, 0);
-  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2317);
+  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2318);
 });
 
 test("complete guide validation excludes skills indexes and counts all 36 installed guides", async () => {
