@@ -10,6 +10,14 @@
 
 The vendored component retains its upstream `LICENSE.txt`. Game Design Studio selects game-design diagram presets and invokes the vendored lint and render scripts; it does not relicense the upstream component.
 
+## im-not-ai humanize-korean
+
+- Upstream: https://github.com/epoko77-ai/im-not-ai
+- Version: `v2.3.0` (`82137e858763dadb99561f194c5c00465735017b`)
+- License: MIT
+
+The packaged `$humanize-korean` skill is a regular-file, SHA-256-locked copy. Installation uses this local bundle and never runs remote update code.
+
 ## Project-provided game-design documents
 
 The knowledge pipeline indexes 49 Korean Markdown documents below the repository `docs/` directory in five categories: career, fun and intent, systems, content, and feedback. The source index records repository-relative path, title, SHA-256, word count, claim classes, and derived-Core links.

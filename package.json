@@ -22,7 +22,10 @@
     "validate:archify-catalog": "node tooling/validate-archify-catalog.mjs",
     "build:curated-archify": "node tooling/build-curated-archify.mjs --stage",
     "check:curated-archify": "node tooling/build-curated-archify.mjs --check",
-    "publish:curated-archify": "node tooling/build-curated-archify.mjs --publish"
+    "publish:curated-archify": "node tooling/build-curated-archify.mjs --publish",
+    "check:im-not-ai": "node tooling/sync-im-not-ai.mjs --check",
+    "check:im-not-ai-latest": "node tooling/sync-im-not-ai.mjs --check-latest",
+    "update:im-not-ai": "node tooling/sync-im-not-ai.mjs --update"
   },
   "engines": { "node": ">=18" }
 }

@@ -13,6 +13,7 @@ const sharedMappings = {
   "responsible-design": ["shared/responsible-design", "references/shared/responsible-design"],
   export: ["shared/export", "references/shared/export"],
   vendor: ["shared/vendor/skillstead/svg-infographic/0.8.3", "skills/svg-infographic"],
+  "im-not-ai": ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
   "document-quality": ["shared/document-quality", "references/shared/document-quality"],
   "image-assets": ["shared/image-assets", "references/shared/image-assets"],
 };

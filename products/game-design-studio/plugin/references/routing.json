@@ -14,7 +14,9 @@
     "apply-document-quality-profile",
     "plan-image-assets",
     "generate-image-assets",
-    "review-image-assets"
+    "review-image-assets",
+    "polish-game-design-writing",
+    "humanize-korean"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -25,7 +27,8 @@
     "production-feasibility-critic",
     "combat-encounter-reviewer",
     "level-puzzle-reviewer",
-    "document-quality-editor"
+    "document-quality-editor",
+    "game-design-writing-editor"
   ],
   "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
   "profileIds": ["live-service-rpg", "mobile", "pc-console"],
@@ -38,7 +41,8 @@
     "production-feasibility-critic",
     "combat-encounter-reviewer",
     "level-puzzle-reviewer",
-    "document-quality-editor"
+    "document-quality-editor",
+    "game-design-writing-editor"
   ],
   "unknownIntentFallback": "orchestrate-game-design-project",
   "plannedPaths": {
@@ -56,7 +60,9 @@
       "skills/apply-document-quality-profile/SKILL.md",
       "skills/plan-image-assets/SKILL.md",
       "skills/generate-image-assets/SKILL.md",
-      "skills/review-image-assets/SKILL.md"
+      "skills/review-image-assets/SKILL.md",
+      "skills/polish-game-design-writing/SKILL.md",
+      "skills/humanize-korean/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -67,7 +73,8 @@
       "agents/production-feasibility-critic.md",
       "agents/combat-encounter-reviewer.md",
       "agents/level-puzzle-reviewer.md",
-      "agents/document-quality-editor.md"
+      "agents/document-quality-editor.md",
+      "agents/game-design-writing-editor.md"
     ],
     "imageSpecialists": ["agents/art-brief-director.md", "agents/visual-asset-reviewer.md"],
     "profiles": [
@@ -116,6 +123,14 @@
       "ui-ux-flow-state-specification",
       "vision-one-pager"
     ]
+  },
+  "writingSpecialistIds": ["game-design-writing-editor"],
+  "writingWorkflow": {
+    "skill": "polish-game-design-writing",
+    "role": "game-design-writing-editor",
+    "placement": "after-content-domain-review-before-export",
+    "reviewerBound": "dedicated-specialist-pass-outside-primary-reviewer-cap",
+    "humanizeKoreanSkill": "humanize-korean"
   },
   "routes": [
     {

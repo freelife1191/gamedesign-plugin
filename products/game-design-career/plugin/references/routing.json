@@ -14,7 +14,9 @@
     "apply-document-quality-profile",
     "plan-image-assets",
     "generate-image-assets",
-    "review-image-assets"
+    "review-image-assets",
+    "polish-game-design-writing",
+    "humanize-korean"
   ],
   "roleIds": [
     "career-strategist",
@@ -23,9 +25,18 @@
     "reverse-design-critic",
     "interview-coach",
     "evidence-auditor",
-    "document-quality-editor"
+    "document-quality-editor",
+    "game-design-writing-editor"
   ],
   "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
+  "writingSpecialistIds": ["game-design-writing-editor"],
+  "writingWorkflow": {
+    "skill": "polish-game-design-writing",
+    "role": "game-design-writing-editor",
+    "placement": "after-content-domain-review-before-export",
+    "reviewerBound": "dedicated-specialist-pass-outside-primary-reviewer-cap",
+    "humanizeKoreanSkill": "humanize-korean"
+  },
   "directUseReviewOwners": [
     {
       "skill": "apply-document-quality-profile",

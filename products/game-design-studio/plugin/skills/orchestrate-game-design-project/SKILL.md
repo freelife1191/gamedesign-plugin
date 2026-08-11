@@ -20,7 +20,8 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 5. Create or update the Canonical Artifact. Keep `content.md` authoritative and link evidence, decisions, reviews, and assets instead of scattering conclusions across chat.
 6. Dispatch independent review envelopes when subagents exist. Otherwise execute the identical envelope list sequentially in declared role priority.
 7. Merge findings deterministically. Preserve disagreements as decision items; never let completion timing determine order or resolution.
-8. Read [completion-gates.md](references/completion-gates.md). Apply document-quality, domain, responsible-design, Canonical Artifact, visualization, image approval, and requested-format gates before claiming completion.
+8. After content and domain review, use `polish-game-design-writing` only when a Korean readability pass is requested or useful. It runs the bundled `humanize-korean` skill and protected-content validator as a separate specialist pass, creates a draft and receipt, and waits for a named person. It is outside the three-role review limit and never changes the Canonical Artifact in place.
+9. Read [completion-gates.md](references/completion-gates.md). Apply document-quality, domain, responsible-design, Canonical Artifact, visualization, image approval, and requested-format gates before claiming completion.
 
 ## Optional Archify structural-diagram route
 
