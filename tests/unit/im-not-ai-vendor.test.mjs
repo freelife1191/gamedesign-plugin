@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -103,18 +104,80 @@ async function snapshotVendor(root) {
 }
 
 async function trustedFutureArchive(root) {
+  const completeFile = async (sourcePath, targetPath) => {
+    const bytes = await readFile(path.join(root, sourcePath));
+    return { path: targetPath, bytes, sha256: sha256(bytes) };
+  };
   return {
     ...futureRelease,
     files: [
-      { path: "LICENSE", bytes: await readFile(path.join(root, "LICENSE")) },
-      { path: "codex/skills/humanize-korean/SKILL.md", bytes: await readFile(path.join(root, expectedLock.tree.root, "SKILL.md")) },
-      ...await Promise.all(expectedFiles.filter((file) => file.path.startsWith("references/")).map(async (file) => ({ path: `.claude/skills/humanize-korean/references/${file.path.slice("references/".length)}`, bytes: await readFile(path.join(root, expectedLock.tree.root, file.path)) }))),
+      await completeFile("LICENSE", "LICENSE"),
+      await completeFile(`${expectedLock.tree.root}/SKILL.md`, "codex/skills/humanize-korean/SKILL.md"),
+      ...await Promise.all(expectedFiles.filter((file) => file.path.startsWith("references/")).map((file) => completeFile(`${expectedLock.tree.root}/${file.path}`, `.claude/skills/humanize-korean/references/${file.path.slice("references/".length)}`))),
     ],
   };
 }
 
+function runNode(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", reject);
+    child.on("close", (exitCode) => resolve({ exitCode, stderr, stdout }));
+  });
+}
+
+async function assertArchiveRejectedWithoutWrites(t, mutate, expected) {
+  const { updateImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const stagingRoot = path.join(path.dirname(fixture), "rejected-im-not-ai-stage");
+  const before = await snapshotVendor(fixture);
+  const archive = await trustedFutureArchive(fixture);
+  await mutate(archive);
+  await assert.rejects(
+    updateImNotAi({
+      root: fixture,
+      stagingRoot,
+      fetchRelease: async () => futureRelease,
+      fetchArchive: async () => archive,
+    }),
+    (error) => {
+      assert.deepEqual({ code: error.code, path: error.path }, expected);
+      return true;
+    },
+  );
+  assert.deepEqual(await snapshotVendor(fixture), before, "rejected archive must not alter the original vendor root");
+  await assert.rejects(lstat(stagingRoot), { code: "ENOENT" }, "rejected archive must not create staging output");
+}
+
 test("im-not-ai vendor lock pins the official release, MIT license, and exact regular tree", async () => {
   await assertLiteralVendorTree();
+});
+
+test("offline verifier module imports only after fetch, HTTP, HTTPS, and child-process sentinels are installed", async (t) => {
+  const temporaryRoot = await mkdtemp(path.join(tmpdir(), "im-not-ai-import-sentinel-"));
+  t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
+  const loaderPath = path.join(temporaryRoot, "block-network-loader.mjs");
+  const runnerPath = path.join(temporaryRoot, "import-offline-verifier.mjs");
+  await writeFile(loaderPath, `
+const blocked = new Set(["node:http", "node:https", "node:child_process", "http", "https", "child_process"]);
+export async function resolve(specifier, context, nextResolve) {
+  if (blocked.has(specifier)) throw new Error("offline verifier import attempted forbidden capability: " + specifier);
+  return nextResolve(specifier, context);
+}
+`);
+  await writeFile(runnerPath, `
+globalThis.fetch = async () => { throw new Error("offline verifier import attempted global fetch"); };
+await import(process.argv[2]);
+process.stdout.write("offline-verifier-imported\\n");
+`);
+  const result = await runNode(["--experimental-loader", loaderPath, runnerPath, updaterUrl.href]);
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout, "offline-verifier-imported\n");
+  assert.match(result.stderr, /ExperimentalWarning/u);
 });
 
 test("pure offline verifier accepts the pinned vendor without a network capability", async () => {
@@ -179,11 +242,32 @@ test("update writes only a trusted future archive to staging and refreshes its l
   const { updateImNotAi } = await import(updaterUrl.href);
   const fixture = await copiedVendor(t);
   const stagingRoot = path.join(path.dirname(fixture), "staged-im-not-ai");
+  const before = await snapshotVendor(fixture);
   const archive = await trustedFutureArchive(fixture);
   const calls = [];
   const result = await updateImNotAi({ root: fixture, stagingRoot, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; }, fetchArchive: async (release) => { calls.push({ fetchArchive: release }); return archive; } });
   assert.deepEqual(calls, ["fetchRelease", { fetchArchive: futureRelease }]);
   assert.deepEqual(result, { status: "updated", tag: "v2.3.1", verifiedFiles: 15 });
+  assert.deepEqual(await snapshotVendor(fixture), before, "successful update must leave the original vendor root byte-for-byte unchanged");
   assert.deepEqual(JSON.parse(await readFile(path.join(stagingRoot, "vendor.lock.json"), "utf8")), { ...expectedLock, upstream: { ...expectedLock.upstream, tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" }, tree: { ...expectedLock.tree, root: "humanize-korean/v2.3.1" } });
   assert.deepEqual(await listRegularFiles(path.join(stagingRoot, "humanize-korean/v2.3.1")), expectedFiles);
+});
+
+test("update rejects an untrusted archive repository without staging or original writes", async (t) => {
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.repository = "https://example.invalid/untrusted/im-not-ai"; }, { code: "IM_NOT_AI_UNTRUSTED_REPOSITORY", path: "archive.repository" });
+});
+test("update rejects an archive tag mismatch without staging or original writes", async (t) => {
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.tag = "v9.9.9"; }, { code: "IM_NOT_AI_ARCHIVE_TAG_MISMATCH", path: "archive.tag" });
+});
+test("update rejects an archive commit mismatch without staging or original writes", async (t) => {
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.commit = "2".repeat(40); }, { code: "IM_NOT_AI_ARCHIVE_COMMIT_MISMATCH", path: "archive.commit" });
+});
+test("update rejects altered archive license bytes without staging or original writes", async (t) => {
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.files.find((file) => file.path === "LICENSE").bytes = Buffer.from("altered license\n"); }, { code: "IM_NOT_AI_LICENSE_HASH_MISMATCH", path: "archive/LICENSE" });
+});
+test("update rejects altered archive payload bytes without staging or original writes", async (t) => {
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { archive.files.find((file) => file.path === ".claude/skills/humanize-korean/references/quick-rules.md").bytes = Buffer.from("altered rules\n"); }, { code: "IM_NOT_AI_ARCHIVE_FILE_HASH_MISMATCH", path: ".claude/skills/humanize-korean/references/quick-rules.md" });
+});
+test("update rejects an extra archive script without staging or original writes", async (t) => {
+  await assertArchiveRejectedWithoutWrites(t, (archive) => { const bytes = Buffer.from("export default null;\n"); archive.files.push({ path: "scripts/update.mjs", bytes, sha256: sha256(bytes) }); }, { code: "IM_NOT_AI_ARCHIVE_UNREGISTERED_FILE", path: "scripts/update.mjs" });
 });
