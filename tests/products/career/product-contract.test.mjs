@@ -24,6 +24,9 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
+  "humanize-korean",
+  "archify",
 ];
 
 const roleIds = [
@@ -34,6 +37,7 @@ const roleIds = [
   "interview-coach",
   "evidence-auditor",
   "document-quality-editor",
+  "game-design-writing-editor",
 ];
 const imageSpecialistIds = ["art-brief-director", "visual-asset-reviewer"];
 
@@ -118,7 +122,7 @@ test("Career product selects the complete shared contract and source corpus", as
   const product = await loadProductContract({ repoRoot, productName: "game-design-career" });
 
   assert.equal(product.name, "game-design-career");
-  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"]);
+  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"]);
   assert.equal(product.sharedRuntime, true);
   assert.deepEqual(product.sourceRoots, ["plugin"]);
   assert.deepEqual(product.sourceDocumentCategories, ["career", "fun-intent", "systems", "content", "feedback"]);
@@ -131,8 +135,8 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.deepEqual(routing.stages, stages);
-  assert.equal(new Set(routing.skillIds).size, 14);
-  assert.equal(new Set(routing.roleIds).size, 7);
+  assert.equal(new Set(routing.skillIds).size, 17);
+  assert.equal(new Set(routing.roleIds).size, 8);
 });
 
 test("Every route declares deterministic evidence and completion decisions", async () => {

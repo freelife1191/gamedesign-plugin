@@ -16,7 +16,8 @@
     "generate-image-assets",
     "review-image-assets",
     "polish-game-design-writing",
-    "humanize-korean"
+    "humanize-korean",
+    "archify"
   ],
   "roleIds": [
     "career-strategist",
@@ -38,6 +39,11 @@
     "humanizeKoreanSkill": "humanize-korean"
   },
   "directUseReviewOwners": [
+    {
+      "skill": "archify",
+      "owners": ["game-design-mentor"],
+      "conditionalOwners": []
+    },
     {
       "skill": "apply-document-quality-profile",
       "owners": ["document-quality-editor"],

@@ -107,20 +107,20 @@ function exactHookCommand(hooks, eventName) {
 
 async function verifyVendor(pluginRoot) {
   const lock = JSON.parse(await readFile(path.join(pluginRoot, "references/shared/vendor/skillstead/vendor.lock.json"), "utf8"));
-  if (lock?.package?.name !== "svg-infographic" || lock.package.version !== "0.8.3" || !Array.isArray(lock.files)) {
+  if (lock?.upstream?.tag !== "svg-infographic/v0.9.0" || lock?.tree?.root !== "svg-infographic/0.9.0" || !Array.isArray(lock.tree.files)) {
     throw new Error("package-local vendor lock mismatch");
   }
   const entries = await collectTree(path.join(pluginRoot, "skills/svg-infographic"), { label: "isolated Skillstead skill" });
   const actual = new Map(entries.map((entry) => [entry.relativePath, entry.bytes]));
-  if (lock.files.length !== 48 || actual.size !== 48) throw new Error(`vendor file count mismatch: ${lock.files.length}/${actual.size}`);
-  for (const expected of lock.files) {
+  if (lock.tree.files.length !== 55 || actual.size !== 55) throw new Error(`vendor file count mismatch: ${lock.tree.files.length}/${actual.size}`);
+  for (const expected of lock.tree.files) {
     const bytes = actual.get(expected.path);
     if (!bytes) throw new Error(`missing vendored file: ${expected.path}`);
     if (bytes.length !== expected.size || sha256(bytes) !== expected.sha256) {
       throw new Error(`modified vendored file: ${expected.path}`);
     }
   }
-  if ([...actual.keys()].some((relative) => !lock.files.some(({ path: locked }) => locked === relative))) {
+  if ([...actual.keys()].some((relative) => !lock.tree.files.some(({ path: locked }) => locked === relative))) {
     throw new Error("unexpected vendored file");
   }
   return actual.size;
@@ -167,7 +167,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });
   const skills = skillEntries.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
-  if (skills.length !== 15) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
+  if (skills.length !== 18) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
   for (const skill of skills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
 
   const vendorFileCount = await verifyVendor(pluginRoot);

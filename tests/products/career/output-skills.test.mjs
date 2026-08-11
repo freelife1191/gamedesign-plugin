@@ -274,17 +274,12 @@ test("structural diagram routes prefer optional Archify while retaining packaged
   ]);
 
   for (const skill of skills) {
-    assert.match(skill, /architecture, workflow, sequence, dataflow, or lifecycle/iu);
-    assert.match(skill, /capabilities\.archify.*status.*available/isu);
-    assert.match(skill, /host Archify/iu);
-    assert.match(skill, /JSON spec.*checked HTML.*receipt/isu);
-    assert.match(skill, /packaged Skillstead SVG.*2.?× PNG.*Markdown/isu);
-    assert.match(skill, /archify-unavailable.*archify-failed/isu);
-    assert.match(skill, /status is `unavailable`.*archify-unavailable/isu);
-    assert.match(skill, /status is `unknown`.*archify-unknown/isu);
-    assert.match(skill, /nonzero.*receipt.*archify-failed/isu);
-    assert.match(skill, /never label.*fallback.*Archify/isu);
-    assert.match(skill, /never auto-approve.*asset/isu);
+    assert.match(skill, /(?:architecture|component boundaries), workflow, sequence, dataflow, or lifecycle/iu);
+    assert.match(skill, /packaged `?\$archify`?/iu);
+    assert.match(skill, /source-backed JSON spec.*checked HTML.*receipt/isu);
+    assert.match(skill, /packaged `?\$svg-infographic`?/iu);
+    assert.match(skill, /(?:does not replace|never replaces).*grants? approval/isu);
+    assert.doesNotMatch(skill, /capabilities\.archify|host Archify|archify-unavailable/isu);
   }
 });
 

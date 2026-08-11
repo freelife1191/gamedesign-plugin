@@ -28,6 +28,9 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
+  "humanize-korean",
+  "archify",
 ];
 
 const roleIds = [
@@ -40,6 +43,7 @@ const roleIds = [
   "combat-encounter-reviewer",
   "level-puzzle-reviewer",
   "document-quality-editor",
+  "game-design-writing-editor",
 ];
 const imageSpecialistIds = ["art-brief-director", "visual-asset-reviewer"];
 
@@ -171,7 +175,7 @@ test("Studio product selects the complete shared contract and 49-document corpus
     name: "game-design-studio",
     displayName: "Game Design Studio",
     description: "Professional game design, review, visualization, and export workflows.",
-    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"],
+    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"],
     sharedRuntime: true,
     sourceRoots: ["plugin"],
     sourceDocumentCategories: ["career", "fun-intent", "systems", "content", "feedback"],
@@ -190,10 +194,10 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 14);
+  assert.equal(new Set(routing.skillIds).size, 17);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
-  assert.equal(new Set(routing.roleIds).size, 9);
+  assert.equal(new Set(routing.roleIds).size, 10);
   assert.deepEqual(routing.profileIds, profileIds);
   assert.deepEqual(routing.rolePriority, roleIds);
   assert.equal(routing.unknownIntentFallback, "orchestrate-game-design-project");

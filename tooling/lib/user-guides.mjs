@@ -5,7 +5,7 @@ import {
   isCompletePng,
   parseViewBox,
   pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 
 export const PRODUCT_IDS = Object.freeze([
   "game-design-career",
@@ -55,7 +55,7 @@ export async function collectProductInventory(repoRoot, productId) {
   const productSkills = await directoryIds(path.join(productRoot, "skills"), "SKILL.md");
   const vendorSkill = path.join(
     repoRoot,
-    "shared/vendor/skillstead/svg-infographic/0.8.3/SKILL.md",
+    "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md",
   );
   await assertRegularFile(vendorSkill);
   const templateIds = await directoryIds(path.join(productRoot, "assets/templates"), "content.md");

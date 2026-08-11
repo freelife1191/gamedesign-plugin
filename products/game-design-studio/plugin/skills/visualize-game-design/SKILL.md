@@ -38,9 +38,9 @@ Map every generated node, connector, label, date, and numeric annotation to a so
 
 ## Optional Archify structural-diagram route
 
-For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before authoring. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON spec, checked HTML, and receipt as separate evidence. This does not replace the packaged static asset lane or grant approval.
 
-Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+Use packaged `$svg-infographic` for Markdown-friendly SVG and 2× PNG output. Keep Archify HTML and Skillstead receipts distinct, and never auto-approve either diagram.
 
 ## Workflow
 

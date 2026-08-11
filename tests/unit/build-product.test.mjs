@@ -45,7 +45,7 @@ async function createRepo(t, mutate = async () => {}) {
   await writeText(repoRoot, "shared/templates/template.txt", "template\n");
   await writeText(repoRoot, "shared/responsible-design/safety.md", "safety\n");
   await writeText(repoRoot, "shared/export/export.md", "export\n");
-  await writeText(repoRoot, "shared/vendor/skillstead/svg-infographic/0.8.3/SKILL.md", "vendor\n");
+  await writeText(repoRoot, "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md", "vendor\n");
   await writeText(repoRoot, "shared/hooks/runtime.mjs", "export default {};\n");
   await writeText(repoRoot, "shared/scripts/check.mjs", "export default true;\n");
   await writeText(repoRoot, "docs/guides/one.md", "one\n");

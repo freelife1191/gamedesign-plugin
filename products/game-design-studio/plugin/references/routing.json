@@ -16,7 +16,8 @@
     "generate-image-assets",
     "review-image-assets",
     "polish-game-design-writing",
-    "humanize-korean"
+    "humanize-korean",
+    "archify"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -62,7 +63,8 @@
       "skills/generate-image-assets/SKILL.md",
       "skills/review-image-assets/SKILL.md",
       "skills/polish-game-design-writing/SKILL.md",
-      "skills/humanize-korean/SKILL.md"
+      "skills/humanize-korean/SKILL.md",
+      "skills/archify/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",

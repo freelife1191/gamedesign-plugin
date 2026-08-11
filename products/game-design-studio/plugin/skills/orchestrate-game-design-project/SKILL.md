@@ -25,9 +25,9 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 
 ## Optional Archify structural-diagram route
 
-For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before dispatching visualization. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+For component boundaries, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON specification. Preserve its checked HTML and receipt as separate evidence; an architecture diagram never replaces the Canonical Artifact or grants approval.
 
-Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+Use the packaged `$svg-infographic` skill for document-friendly static flows, comparisons, and 2× PNG fallback. Keep Archify HTML and Skillstead SVG/PNG receipts distinct, and never auto-approve either diagram.
 
 ## Operating Rules
 

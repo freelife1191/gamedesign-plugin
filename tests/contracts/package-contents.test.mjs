@@ -143,11 +143,11 @@ test("generated snapshots contain the exact clean product build plus the suite m
         assert.doesNotMatch(workflow, /\.\.\/image-assets\//u);
       }
 
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 15);
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 14);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 18);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 17);
       assert.equal(
         pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length,
-        productName === "game-design-studio" ? 11 : 9,
+        productName === "game-design-studio" ? 12 : 10,
       );
       assert.equal(pathsUnder(packageFiles, "references/source/docs/").filter((file) => file.endsWith(".md")).length, 49);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/core/").length, 7);
@@ -199,6 +199,9 @@ test("generated snapshots contain the exact clean product build plus the suite m
         "agents/document-quality-editor.md",
         "skills/svg-infographic/SKILL.md",
         "skills/svg-infographic/LICENSE.txt",
+        "skills/archify/SKILL.md",
+        "skills/archify/bin/archify.mjs",
+        "skills/humanize-korean/SKILL.md",
         "README.md",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",

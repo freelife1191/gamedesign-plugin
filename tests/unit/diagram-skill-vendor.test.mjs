@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { cp, lstat, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -209,11 +210,145 @@ test("diagram vendor updater keeps check offline and latest/update explicit", as
   assert.deepEqual(parseDiagramSkillUpdaterArgs(["--update", "archify"]), { mode: "update", network: true, skill: "archify" });
 });
 
+test("latest discovery peels the official tag instead of trusting release target metadata", async () => {
+  const { checkLatestDiagramSkills } = await loadUpdaterOrFail();
+  const calls = [];
+  const latest = await checkLatestDiagramSkills({
+    root: repoRoot,
+    skill: "archify",
+    fetchRelease: async () => ({
+      tag: "v2.13.1",
+      commit: "f".repeat(40),
+      releasedAt: "2026-08-12T00:00:00Z",
+      releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: "a".repeat(64) },
+    }),
+    resolveTagCommit: async ({ name, tag }) => {
+      calls.push({ name, tag });
+      return "2".repeat(40);
+    },
+  });
+  assert.deepEqual(calls, [{ name: "archify", tag: "v2.13.1" }]);
+  assert.deepEqual(latest, [{ name: "archify", status: "outdated", installedTag: "v2.13.0", latestTag: "v2.13.1", updateAvailable: true }]);
+});
+
+test("Skillstead latest discovery selects the highest stable svg-infographic release from the complete release set", async () => {
+  const { selectNewestSkillsteadRelease } = await loadUpdaterOrFail();
+  assert.deepEqual(
+    selectNewestSkillsteadRelease([
+      { tag_name: "v9.0.0", published_at: "2026-08-12T00:00:00Z" },
+      { tag_name: "svg-infographic/v0.10.0-rc.1", published_at: "2026-08-12T00:00:00Z", prerelease: true },
+      { tag_name: "svg-infographic/v0.9.0", published_at: "2026-08-08T16:41:59Z" },
+      { tag_name: "svg-infographic/v0.10.0", published_at: "2026-08-13T00:00:00Z" },
+      { tag_name: "svg-infographic/v0.11.0", published_at: "2026-08-14T00:00:00Z", draft: true },
+    ]),
+    { tag: "svg-infographic/v0.10.0", releasedAt: "2026-08-13T00:00:00Z" },
+  );
+});
+
+test("updater rejects an unverified Archify asset digest and does not alter the installed closure", async (t) => {
+  const { updateDiagramSkill } = await loadUpdaterOrFail();
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
+  const lock = JSON.parse(before);
+  const archive = {
+    files: await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
+      path: relativePath,
+      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
+    }))),
+    assetSha256: "b".repeat(64),
+  };
+  await assert.rejects(
+    updateDiagramSkill({
+      root: vendorRoot,
+      name: "archify",
+      stagingRoot: path.join(path.dirname(vendorRoot), "asset-mismatch-stage"),
+      fetchRelease: async () => ({
+        tag: "v2.13.1",
+        releasedAt: "2026-08-12T00:00:00Z",
+        releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: "a".repeat(64) },
+      }),
+      resolveTagCommit: async () => "2".repeat(40),
+      fetchArchive: async () => archive,
+    }),
+    (error) => error.code === "DIAGRAM_VENDOR_ARCHIVE_HASH_MISMATCH",
+  );
+  assert.deepEqual(await readFile(path.join(vendorRoot, "vendor.lock.json")), before);
+});
+
+test("updater rejects a fake license or an archive-supplied updater before writing a new closure", async (t) => {
+  const { updateDiagramSkill } = await loadUpdaterOrFail();
+  const release = { tag: "svg-infographic/v0.9.1", releasedAt: "2026-08-12T00:00:00Z" };
+  for (const [label, mutate, expectedCode] of [
+    ["license", (files) => files.map((file) => file.path === "LICENSE.txt" ? { ...file, bytes: Buffer.from("fake license\n") } : file), "DIAGRAM_VENDOR_ARCHIVE_LICENSE_HASH_MISMATCH"],
+    ["updater", (files) => [...files, { path: "scripts/update.mjs", bytes: Buffer.from("export {};\n") }], "DIAGRAM_VENDOR_ARCHIVE_UPDATER_FORBIDDEN"],
+  ]) {
+    const { vendorRoot } = await copiedVendorWorkspace(t, "skillstead");
+    const lock = JSON.parse(await readFile(path.join(vendorRoot, "vendor.lock.json"), "utf8"));
+    const files = await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
+      path: relativePath,
+      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
+    })));
+    await assert.rejects(
+      updateDiagramSkill({
+        root: vendorRoot,
+        name: "skillstead",
+        stagingRoot: path.join(path.dirname(vendorRoot), `${label}-stage`),
+        fetchRelease: async () => release,
+        resolveTagCommit: async () => "2".repeat(40),
+        fetchArchive: async () => ({ files: mutate(files) }),
+      }),
+      (error) => error.code === expectedCode,
+    );
+  }
+});
+
+test("failed lock replacement recovers the previous immutable closure", async (t) => {
+  const { recoverDiagramSkillVendor, updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
+  const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
+  const lock = JSON.parse(before);
+  const archive = {
+    files: await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
+      path: relativePath,
+      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
+    }))),
+    assetSha256: "a".repeat(64),
+  };
+  const futureRelease = {
+    tag: "v2.13.1",
+    releasedAt: "2026-08-12T00:00:00Z",
+    releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: "a".repeat(64) },
+  };
+  await assert.rejects(
+    updateDiagramSkill({
+      root: vendorRoot,
+      name: "archify",
+      stagingRoot: path.join(path.dirname(vendorRoot), "rename-boundary-stage"),
+      fetchRelease: async () => futureRelease,
+      resolveTagCommit: async () => "2".repeat(40),
+      fetchArchive: async () => archive,
+      renamePath: async (from, to) => {
+        if (to === path.join(vendorRoot, "vendor.lock.json")) throw new Error("injected lock rename failure");
+        const { rename } = await import("node:fs/promises");
+        return rename(from, to);
+      },
+    }),
+    /injected lock rename failure/u,
+  );
+  await recoverDiagramSkillVendor({ root: vendorRoot, name: "archify" });
+  assert.deepEqual(await readFile(path.join(vendorRoot, "vendor.lock.json")), before);
+  assert.deepEqual(await verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" }), { name: "archify", tag: "v2.13.0", verifiedFiles: 60 });
+});
+
 test("injected latest check is read-only and injected update atomically stages a verified future closure", async (t) => {
   const { checkLatestDiagramSkills, updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
   const { workspaceRoot, vendorRoot } = await copiedVendorWorkspace(t, "archify");
   const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
-  const futureRelease = { tag: "v2.13.1", commit: "1".repeat(40), releasedAt: "2026-08-12T00:00:00Z" };
+  const futureRelease = {
+    tag: "v2.13.1",
+    releasedAt: "2026-08-12T00:00:00Z",
+    releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: "a".repeat(64) },
+  };
   const latest = await checkLatestDiagramSkills({
     root: workspaceRoot,
     skill: "archify",
@@ -222,6 +357,7 @@ test("injected latest check is read-only and injected update atomically stages a
       assert.equal(repository, "https://github.com/tt-a1i/archify");
       return futureRelease;
     },
+    resolveTagCommit: async () => "1".repeat(40),
   });
   assert.deepEqual(latest, [{ name: "archify", status: "outdated", installedTag: "v2.13.0", latestTag: "v2.13.1", updateAvailable: true }]);
   assert.deepEqual(await readFile(path.join(vendorRoot, "vendor.lock.json")), before, "latest check never changes the installed vendor");
@@ -239,9 +375,11 @@ test("injected latest check is read-only and injected update atomically stages a
     name: "archify",
     stagingRoot,
     fetchRelease: async () => futureRelease,
-    fetchArchive: async (release) => {
+    resolveTagCommit: async () => "1".repeat(40),
+    fetchArchive: async ({ name, release }) => {
+      assert.equal(name, "archify");
       assert.deepEqual(release, futureRelease);
-      return archive;
+      return { ...archive, assetSha256: "a".repeat(64) };
     },
   });
   assert.deepEqual(result, { name: "archify", tag: "v2.13.1", verifiedFiles: 60 });
@@ -266,5 +404,27 @@ test("both product builds retain both direct skills and their complete local run
     assert.equal(build.files.some((file) => file.endsWith("sync-diagram-skills.mjs")), false, `${productName}: updater is never shipped in a plugin package`);
     const routing = JSON.parse(await readFile(path.join(repoRoot, "products", productName, "plugin/references/routing.json"), "utf8"));
     assert.ok(routing.skillIds.includes("archify"), `${productName}: natural-language orchestration can choose Archify`);
+  }
+});
+
+test("both packaged Archify runtimes pass doctor, validate, and deliver without a host skill", async (t) => {
+  for (const productName of productNames) {
+    const stagingRoot = await mkdtemp(path.join(tmpdir(), "archify-package-smoke-"));
+    t.after(() => rm(stagingRoot, { recursive: true, force: true }));
+    const build = await buildProduct({ repoRoot, productName, stagingRoot, sourceDateEpoch: 0 });
+    const archify = path.join(build.outputDir, "skills/archify/bin/archify.mjs");
+    const example = path.join(build.outputDir, "skills/archify/examples/web-app.architecture.json");
+    const output = path.join(build.outputDir, "archify-package-smoke.html");
+    for (const args of [
+      [archify, "doctor"],
+      [archify, "validate", "architecture", example, "--quality", "standard", "--json"],
+      [archify, "deliver", "architecture", example, output, "--quality", "standard", "--json"],
+    ]) {
+      const result = spawnSync(process.execPath, args, { cwd: build.outputDir, encoding: "utf8" });
+      assert.equal(result.status, 0, `${productName}: ${args.at(-1)}\n${result.stdout}\n${result.stderr}`);
+    }
+    const receipt = JSON.parse(spawnSync(process.execPath, [archify, "validate", "architecture", example, "--quality", "standard", "--json"], { cwd: build.outputDir, encoding: "utf8" }).stdout);
+    assert.equal(receipt.ok, true, `${productName}: delivered runtime validates its own source`);
+    assert.equal(existsSync(output), true, `${productName}: delivered checked HTML exists`);
   }
 });

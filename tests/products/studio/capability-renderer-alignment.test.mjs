@@ -7,7 +7,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
-import { resolveBrowser } from "../../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+import { resolveBrowser } from "../../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const temporaryDirectories = [];
