@@ -260,7 +260,11 @@ export async function publishPreparedImNotAi({ root = DEFAULT_VENDOR_ROOT, stagi
     if (error.code === "IM_NOT_AI_STAGING_EXISTS") return path.resolve(stagingRoot);
     throw error;
   });
-  await verifyVendoredImNotAi({ root: stage }).catch((error) => { throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", error.path ?? "stage"); });
+  const stagedLock = await readJson(path.join(stage, "vendor.lock.json")).catch((error) => { throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", error.path ?? "stage"); });
+  if (stagedLock?.upstream?.repository !== OFFICIAL_REPOSITORY || !Array.isArray(stagedLock?.tree?.files) || stagedLock.tree.files.length !== PINNED_FILES.length) {
+    throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "vendor.lock.json");
+  }
+  await regularFiles(stage).catch((error) => { throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", error.path ?? "stage"); });
   const backup = path.join(path.dirname(vendorRoot), `.${path.basename(vendorRoot)}.backup-${process.pid}`);
   await fsOps.rename(vendorRoot, backup);
   try {
