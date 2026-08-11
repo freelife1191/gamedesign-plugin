@@ -31,6 +31,16 @@ const expectedSkillContract = {
     path: "../humanize-korean/SKILL.md",
   },
   sharedWrapper: "scripts/run-game-design-writing-polish.mjs",
+  changeRateGate: {
+    reviewAbove: 0.3,
+    abortAbove: 0.5,
+    comparisonLimit: 1000000,
+    maxUtf8BytesPerDocument: 131072,
+    maxCodepointsPerDocument: 65536,
+    onInputLimitExceeded: "reject-and-split-document",
+    onComputationLimitExceeded: "reject-and-split-document",
+    receiptFields: ["changeRate", "changeRateStatus"],
+  },
   workflow: [
     "lock-protected-content",
     "run-bundled-humanize-korean",

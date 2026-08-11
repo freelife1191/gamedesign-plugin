@@ -168,6 +168,13 @@ function assertRepoManifestContract(manifest) {
   assert.ok(Array.isArray(manifest.interface.capabilities));
   assert.ok(Array.isArray(manifest.interface.defaultPrompt));
   assert.ok(manifest.interface.defaultPrompt.length > 0 && manifest.interface.defaultPrompt.length <= 3);
+  for (const field of ["shortDescription", "longDescription"]) {
+    assert.match(manifest.interface[field], /[가-힣]/u, `interface.${field} must be Korean-first`);
+  }
+  for (const prompt of manifest.interface.defaultPrompt) {
+    assert.match(prompt, /[가-힣]/u, "interface.defaultPrompt must be Korean-first");
+    assert.ok(prompt.length <= 128, "interface.defaultPrompt is bounded");
+  }
 }
 
 test("Studio product selects the complete shared contract and 49-document corpus", async () => {

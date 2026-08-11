@@ -98,6 +98,8 @@ test("real writing-polish runner returns a separate readable draft and preserves
   assert.match(result.receipt.originalDigest, /^[a-f0-9]{64}$/u);
   assert.match(result.receipt.revisedDigest, /^[a-f0-9]{64}$/u);
   assert.notEqual(result.receipt.originalDigest, result.receipt.revisedDigest);
+  assert.ok(result.receipt.changeRate > 0 && result.receipt.changeRate <= 0.3);
+  assert.equal(result.receipt.changeRateStatus, "within-limit");
 });
 
 // Mutation caught: moving validation after the humanizer lets an unbound rewrite run

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "741ba8962b969d7fb635b10ea65ae4ad6cfea19a9b6a8386601d9ac6a7f1bc0b",
+  "treeSha256": "ab018216d32f4441246e349eb706647a8d5a6ac793723c8499c1126c1dc20dce",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "9155d8e886d873133f8772a8b39bb071f76c63538156486bbf466ed4cc01e8df",
-      "size": 733
+      "sha256": "096830e3c0c31b672d68a3cf0f69a9c2710dc2737ca4700444d298024b183f00",
+      "size": 1068
     },
     {
       "path": ".env.example",
@@ -1426,8 +1426,8 @@
     },
     {
       "path": "scripts/validate-writing-revision.mjs",
-      "sha256": "79e26c877142779a62fcc03b17e67bbea4bf0f306f6bda0214c1f8873f307ace",
-      "size": 14473
+      "sha256": "04b71cc7fc7bf315f5e89a76fb9d24fba67030748a45d3853dc9ed87af687a23",
+      "size": 20788
     },
     {
       "path": "skills/apply-document-quality-profile/SKILL.md",
@@ -1901,8 +1901,8 @@
     },
     {
       "path": "skills/polish-game-design-writing/SKILL.md",
-      "sha256": "74c077ed573a2333cdf4a163703057c0a88b944b55800df94b81f7de665ec684",
-      "size": 2707
+      "sha256": "a2277771d828e59ddee1bb43ea9a49b1076b58c9806caa108fa23ac32ad901fe",
+      "size": 3674
     },
     {
       "path": "skills/polish-game-design-writing/agents/openai.yaml",

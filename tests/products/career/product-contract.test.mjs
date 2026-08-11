@@ -260,7 +260,14 @@ test("Plugin manifest stays within the supported local schema and omits hooks", 
   assert.equal(manifest.interface.displayName, "Game Design Career");
   assert.equal(typeof manifest.interface.shortDescription, "string");
   assert.equal(typeof manifest.interface.longDescription, "string");
-  assert.equal(typeof manifest.interface.defaultPrompt, "string");
+  assert.match(manifest.interface.shortDescription, /[가-힣]/u);
+  assert.match(manifest.interface.longDescription, /[가-힣]/u);
+  assert.ok(Array.isArray(manifest.interface.defaultPrompt));
+  assert.ok(manifest.interface.defaultPrompt.length > 0 && manifest.interface.defaultPrompt.length <= 3);
+  for (const prompt of manifest.interface.defaultPrompt) {
+    assert.match(prompt, /[가-힣]/u);
+    assert.ok(prompt.length <= 128);
+  }
 });
 
 test("Product mark is a simple accessible vector", async () => {

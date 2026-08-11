@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 const validatorUrl = new URL("../../shared/scripts/validate-writing-revision.mjs", import.meta.url);
@@ -73,12 +74,137 @@ function assertRejected(result, label, errors) {
   assert.deepEqual(result.errors, errors, `${label}: exact protected-content errors`);
 }
 
+function calculatePythonSequenceMatcherChangeRate(originalText, revisedText) {
+  const execution = spawnSync(
+    "python3",
+    [
+      "-c",
+      [
+        "import json, sys",
+        "from difflib import SequenceMatcher",
+        "original, revised = json.load(sys.stdin)",
+        "print(1 - SequenceMatcher(None, original, revised, autojunk=False).ratio())",
+      ].join("\n"),
+    ],
+    { encoding: "utf8", input: JSON.stringify([originalText, revisedText]) },
+  );
+  assert.equal(execution.status, 0, execution.stderr);
+  return Number(execution.stdout.trim());
+}
+
+test("writing change rate matches the bundled im-not-ai SequenceMatcher contract", async () => {
+  const { calculateWritingChangeRate } = await import(validatorUrl.href);
+
+  assert.equal(calculateWritingChangeRate("abcd", "abxd"), 0.25);
+  assert.equal(
+    calculateWritingChangeRate(
+      "게임의 첫 장면은 항구에서 시작한다. 플레이어는 등대지기를 만나 첫 임무를 받는다.",
+      "게임의 도입부는 항구에서 시작한다. 주인공은 등대지기를 만나 해야 할 일을 듣는다.",
+    ),
+    0.32608695652173914,
+  );
+});
+
+test("writing change rate keeps Python SequenceMatcher precision for the review and abort boundaries", async () => {
+  const { calculateWritingChangeRate } = await import(validatorUrl.href);
+  const cases = [
+    ["exact review boundary", "abcdefghij", "abcXYZghij", 0.3],
+    ["above review boundary", "abcdefghij", "abcWXYZhij", 0.4],
+    ["exact abort boundary", "abcdefghij", "abcdeVWXYZ", 0.5],
+    ["above abort boundary", "abcdefghij", "abcdUVWXYZ", 0.6],
+  ];
+
+  for (const [label, source, candidate, expected] of cases) {
+    const pythonRate = calculatePythonSequenceMatcherChangeRate(source, candidate);
+    assert.ok(Math.abs(pythonRate - expected) < Number.EPSILON, `${label}: Python oracle`);
+    assert.equal(calculateWritingChangeRate(source, candidate), pythonRate, `${label}: JavaScript implementation`);
+  }
+});
+
+test("writing revision applies exact raw change-rate boundaries and rounds only the receipt display", async () => {
+  const cases = [
+    ["exact review boundary", "abcdefghij", "abcXYZghij", true, "within-limit", 0.3],
+    ["above review boundary", "abcdefghij", "abcWXYZhij", true, "review-required", 0.4],
+    ["exact abort boundary", "abcdefghij", "abcdeVWXYZ", true, "review-required", 0.5],
+    ["above abort boundary", "abcdefghij", "abcdUVWXYZ", false, "rejected", 0.6],
+  ];
+
+  for (const [label, source, candidate, valid, status, displayedRate] of cases) {
+    const result = await validate(source, candidate);
+    assert.equal(result.valid, valid, label);
+    assert.equal(result.receipt.changeRateStatus, status, label);
+    assert.equal(result.receipt.changeRate, displayedRate, label);
+    if (!valid) assert.equal(result.errors[0].code, "over-polish-change-rate", label);
+  }
+
+  const preciseSource = "게임의 첫 장면은 항구에서 시작한다. 플레이어는 등대지기를 만나 첫 임무를 받는다.";
+  const preciseCandidate = "게임의 도입부는 항구에서 시작한다. 주인공은 등대지기를 만나 해야 할 일을 듣는다.";
+  const preciseResult = await validate(preciseSource, preciseCandidate);
+  const rawRate = calculatePythonSequenceMatcherChangeRate(preciseSource, preciseCandidate);
+  assert.notEqual(rawRate, Number(rawRate.toFixed(6)), "oracle rate must prove display rounding is separate");
+  assert.equal(preciseResult.receipt.changeRate, Number(rawRate.toFixed(6)));
+  assert.equal(preciseResult.receipt.changeRateStatus, "review-required");
+});
+
+test("writing revision fails closed instead of doing unbounded matching on repetitive hostile text", async () => {
+  const source = "가나".repeat(1600);
+  const candidate = "나가".repeat(1600);
+  const result = await validate(source, candidate);
+
+  assert.equal(result.valid, false);
+  assert.deepEqual(result.errors, [{
+    code: "writing-change-rate-computation-limit",
+    detail: { kind: "writing-change-rate", before: 1000000, after: 1000001 },
+  }]);
+  assert.equal(result.receipt.status, "rejected");
+  assert.equal(result.receipt.changeRateStatus, "rejected");
+});
+
+test("writing revision rejects oversized UTF-8 and codepoint inputs before starting sequence matching", async () => {
+  const { calculateWritingChangeRate } = await import(validatorUrl.href);
+  const cases = [
+    ["codepoint", "a".repeat(65_537), "", "writing-change-rate-codepoint-limit", "writing-change-rate-codepoints", 65_536, 65_537],
+    ["UTF-8 byte", "가".repeat(43_691), "", "writing-change-rate-utf8-byte-limit", "writing-change-rate-utf8-bytes", 131_072, 131_073],
+  ];
+
+  for (const [label, source, candidate, code, kind, limit, observed] of cases) {
+    let matcherCalls = 0;
+    assert.throws(
+      () => calculateWritingChangeRate(source, candidate, { onSequenceMatcherStart: () => { matcherCalls += 1; } }),
+      (error) => error.code === code && error.limit === limit && error.observed === observed,
+      label,
+    );
+    assert.equal(matcherCalls, 0, `${label}: input limit must reject before sequence matching`);
+
+    const result = await validate(source, candidate);
+    assert.equal(result.valid, false, label);
+    assert.deepEqual(result.errors, [{ code, detail: { kind, before: limit, after: observed } }], label);
+    assert.equal(result.receipt.status, "rejected", label);
+    assert.equal(result.receipt.changeRateStatus, "rejected", label);
+  }
+});
+
+test("writing revision reports semantic mutations before considering a large rewrite rate", async () => {
+  const source = "- fact: 첫 보상은 10개다.\n".concat("가나다라마바사".repeat(200));
+  const candidate = "- fact: 첫 보상은 20개다.\n".concat("하거너더러머서".repeat(200));
+  const result = await validate(source, candidate);
+
+  assert.equal(result.valid, false);
+  assert.deepEqual(result.errors, [{
+    code: "fact-claim-changed",
+    detail: { kind: "fact", before: "첫 보상은 10개다.", after: "첫 보상은 20개다." },
+  }]);
+  assert.equal(result.receipt.changeRate, undefined);
+});
+
 test("writing revision accepts a natural Korean restatement and issues a protected-content receipt", async () => {
   const result = await validate(original, revised);
 
   assert.equal(result.valid, true);
   assert.deepEqual(result.errors, []);
   assert.equal(result.receipt.status, "preserved");
+  assert.ok(result.receipt.changeRate > 0 && result.receipt.changeRate <= 0.5);
+  assert.match(result.receipt.changeRateStatus, /^(?:within-limit|review-required)$/u);
   assert.deepEqual(result.receipt.protectedKinds, [
     "code-span",
     "stable-id",
@@ -98,6 +224,16 @@ test("writing revision accepts a natural Korean restatement and issues a protect
   assert.equal(revised.includes("대응 수단"), false);
   assert.equal(revised.includes("보상 안내의 순서"), false);
   assert.equal(revised.includes("플레이어 경험을 더 좋게 하기 위한 목적"), true);
+});
+
+test("writing revision marks a substantial but bounded rewrite for human review", async () => {
+  const source = "게임의 첫 장면은 항구에서 시작한다. 플레이어는 등대지기를 만나 첫 임무를 받는다.";
+  const candidate = "게임의 도입부는 항구에서 시작한다. 주인공은 등대지기를 만나 해야 할 일을 듣는다.";
+  const result = await validate(source, candidate);
+
+  assert.equal(result.valid, true);
+  assert.equal(result.receipt.changeRateStatus, "review-required");
+  assert.ok(result.receipt.changeRate > 0.3 && result.receipt.changeRate <= 0.5);
 });
 
 test("writing polish runs bundled humanize before validation and validates the humanized revision", async () => {
@@ -201,6 +337,30 @@ test("writing polish fails closed when the stricter validator rejects the humani
       });
       return true;
     },
+  );
+});
+
+test("writing polish rejects a style-only rewrite that changes more than half of the document", async () => {
+  const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  const source = [
+    "플레이어는 항구에서 출발한다.",
+    "첫 임무는 등대지기를 돕는 일이다.",
+    "완료 뒤에는 마을 광장으로 돌아온다.",
+  ].join("\n");
+  const manifest = await protectedManifest(source);
+
+  await assert.rejects(
+    runGameDesignWritingPolish({
+      source,
+      protectedManifest: manifest,
+      humanize: async () => [
+        "전혀 다른 세계관을 소개한다.",
+        "새로운 전투 규칙과 보상 체계를 제안한다.",
+        "기존 임무 흐름은 모두 삭제한다.",
+      ].join("\n"),
+    }),
+    (error) => error.code === "WRITING_POLISH_VALIDATION_FAILED"
+      && error.errors?.[0]?.code === "over-polish-change-rate",
   );
 });
 

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 
 const PROTECTED_KINDS = Object.freeze([
   "code-span",
@@ -28,9 +29,143 @@ const GATE = /^\s*-\s*gate:\s*(pending|blocked|approved)\s*$/gmu;
 const UNCERTAINTY = /^\s*-\s*uncertainty:\s*(.+)$/gmu;
 const EVIDENCE = /^\s*-\s*evidence:\s*(.+)$/gmu;
 const DESIGN_FIELD = /^\s*-\s*(goal|mechanism):\s*(.+)$/gmu;
+const CHANGE_RATE_REVIEW_THRESHOLD = 0.3;
+const CHANGE_RATE_ABORT_THRESHOLD = 0.5;
+const CHANGE_RATE_COMPARISON_LIMIT = 1_000_000;
+const CHANGE_RATE_UTF8_BYTE_LIMIT = 131_072;
+const CHANGE_RATE_CODEPOINT_LIMIT = 65_536;
 
 function digest(value) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function sequencePositions(sequence) {
+  const positions = new Map();
+  for (let index = 0; index < sequence.length; index += 1) {
+    const values = positions.get(sequence[index]) ?? [];
+    values.push(index);
+    positions.set(sequence[index], values);
+  }
+  return positions;
+}
+
+function changeRateComputationLimitError(comparisons) {
+  const error = new RangeError("writing change-rate comparison limit exceeded");
+  error.code = "writing-change-rate-computation-limit";
+  error.limit = CHANGE_RATE_COMPARISON_LIMIT;
+  error.comparisons = comparisons;
+  return error;
+}
+
+function changeRateInputLimitError(code, kind, limit, observed) {
+  const error = new RangeError(`${kind} limit exceeded`);
+  error.code = code;
+  error.kind = kind;
+  error.limit = limit;
+  error.observed = observed;
+  return error;
+}
+
+function assertWritingChangeRateInputLimit(value) {
+  const utf8Bytes = Buffer.byteLength(value, "utf8");
+  if (utf8Bytes > CHANGE_RATE_UTF8_BYTE_LIMIT) {
+    throw changeRateInputLimitError(
+      "writing-change-rate-utf8-byte-limit",
+      "writing-change-rate-utf8-bytes",
+      CHANGE_RATE_UTF8_BYTE_LIMIT,
+      utf8Bytes,
+    );
+  }
+  let codepoints = 0;
+  for (const _codepoint of value) {
+    codepoints += 1;
+    if (codepoints > CHANGE_RATE_CODEPOINT_LIMIT) {
+      throw changeRateInputLimitError(
+        "writing-change-rate-codepoint-limit",
+        "writing-change-rate-codepoints",
+        CHANGE_RATE_CODEPOINT_LIMIT,
+        codepoints,
+      );
+    }
+  }
+}
+
+function longestSequenceMatch(left, rightPositions, leftStart, leftEnd, rightStart, rightEnd, budget) {
+  let bestLeft = leftStart;
+  let bestRight = rightStart;
+  let bestSize = 0;
+  let previousLengths = new Map();
+  for (let leftIndex = leftStart; leftIndex < leftEnd; leftIndex += 1) {
+    const currentLengths = new Map();
+    for (const rightIndex of rightPositions.get(left[leftIndex]) ?? []) {
+      budget.comparisons += 1;
+      if (budget.comparisons > CHANGE_RATE_COMPARISON_LIMIT) throw changeRateComputationLimitError(budget.comparisons);
+      if (rightIndex < rightStart) continue;
+      if (rightIndex >= rightEnd) break;
+      const size = (previousLengths.get(rightIndex - 1) ?? 0) + 1;
+      currentLengths.set(rightIndex, size);
+      if (size > bestSize) {
+        bestLeft = leftIndex - size + 1;
+        bestRight = rightIndex - size + 1;
+        bestSize = size;
+      }
+    }
+    previousLengths = currentLengths;
+  }
+  return { left: bestLeft, right: bestRight, size: bestSize };
+}
+
+function sequenceMatchCount(left, right) {
+  const rightPositions = sequencePositions(right);
+  const pending = [[0, left.length, 0, right.length]];
+  const matches = [];
+  const budget = { comparisons: 0 };
+  while (pending.length > 0) {
+    const [leftStart, leftEnd, rightStart, rightEnd] = pending.pop();
+    const match = longestSequenceMatch(left, rightPositions, leftStart, leftEnd, rightStart, rightEnd, budget);
+    if (match.size === 0) continue;
+    matches.push(match);
+    if (leftStart < match.left && rightStart < match.right) {
+      pending.push([leftStart, match.left, rightStart, match.right]);
+    }
+    const nextLeft = match.left + match.size;
+    const nextRight = match.right + match.size;
+    if (nextLeft < leftEnd && nextRight < rightEnd) pending.push([nextLeft, leftEnd, nextRight, rightEnd]);
+  }
+  return matches.reduce((total, match) => total + match.size, 0);
+}
+
+function calculateWritingChangeMetrics(original, revised, { onSequenceMatcherStart } = {}) {
+  assertWritingChangeRateInputLimit(original);
+  assertWritingChangeRateInputLimit(revised);
+  if (original === revised) return { matches: 0, total: 0 };
+  const left = Array.from(original);
+  const right = Array.from(revised);
+  const total = left.length + right.length;
+  if (total === 0) return { matches: 0, total: 0 };
+  if (typeof onSequenceMatcherStart === "function") onSequenceMatcherStart();
+  return { matches: sequenceMatchCount(left, right), total };
+}
+
+function rawChangeRate({ matches, total }) {
+  return total === 0 ? 0 : 1 - (2 * matches) / total;
+}
+
+function displayedChangeRate(rawRate) {
+  return Number(rawRate.toFixed(6));
+}
+
+function exceedsReviewThreshold({ matches, total }) {
+  return total !== 0 && (total - (2 * matches)) * 10 > total * 3;
+}
+
+function exceedsAbortThreshold({ matches, total }) {
+  return total !== 0 && (total - (2 * matches)) * 2 > total;
+}
+
+/** Match the bundled im-not-ai character SequenceMatcher change-rate contract. */
+export function calculateWritingChangeRate(original, revised, options) {
+  return rawChangeRate(calculateWritingChangeMetrics(original, revised, options));
 }
 
 function collectMatches(source, expression, group = 1) {
@@ -265,6 +400,49 @@ export function validateWritingRevision({ original, revised, protectedTerms, pro
     if (result) return result;
   }
 
+  let changeMetrics;
+  try {
+    changeMetrics = calculateWritingChangeMetrics(original, revised);
+  } catch (error) {
+    if (![
+      "writing-change-rate-computation-limit",
+      "writing-change-rate-utf8-byte-limit",
+      "writing-change-rate-codepoint-limit",
+    ].includes(error?.code)) throw error;
+    return {
+      valid: false,
+      errors: [changed(error.code, error.kind ?? "writing-change-rate", error.limit, error.observed ?? error.comparisons)],
+      receipt: {
+        status: "rejected",
+        protectedKinds: PROTECTED_KINDS,
+        originalDigest: digest(original),
+        revisedDigest: digest(revised),
+        changeRateStatus: "rejected",
+      },
+    };
+  }
+  const rawRate = rawChangeRate(changeMetrics);
+  const changeRate = displayedChangeRate(rawRate);
+  const changeRateStatus = changeMetrics.total === 0
+    ? "unchanged"
+    : exceedsReviewThreshold(changeMetrics)
+      ? "review-required"
+      : "within-limit";
+  if (exceedsAbortThreshold(changeMetrics)) {
+    return {
+      valid: false,
+      errors: [changed("over-polish-change-rate", "writing-change-rate", CHANGE_RATE_ABORT_THRESHOLD, rawRate)],
+      receipt: {
+        status: "rejected",
+        protectedKinds: PROTECTED_KINDS,
+        originalDigest: digest(original),
+        revisedDigest: digest(revised),
+        changeRate,
+        changeRateStatus: "rejected",
+      },
+    };
+  }
+
   return {
     valid: true,
     errors: [],
@@ -273,6 +451,8 @@ export function validateWritingRevision({ original, revised, protectedTerms, pro
       protectedKinds: PROTECTED_KINDS,
       originalDigest: digest(original),
       revisedDigest: digest(revised),
+      changeRate,
+      changeRateStatus,
     },
   };
 }

@@ -25,6 +25,14 @@
 | FALSE-01 | 성공 문구를 악용하는 도구 | `SUCCESS` 출력 뒤 exit 1·skip·부분 로그 | bounded harness | exit code와 실패 표식을 우선해 실패 처리 | 성공 문구를 무시하고 실패 처리 | PASS | false-success child probe | 자식 종료·fixture 삭제 |
 | ASSET-01 | 잘못된 이미지·도식 입력 | 이미지 cycle·stale ref·vendor 변조 | 공개 validator·CLI | provider 0회, 도식·vendor fail-closed | provider 0회, output 0, 변조 거부 | PASS | image lineage·Archify CLI·vendor probes | fixture 삭제 |
 | FLAKE-01 | 간헐 실패 테스트 | 같은 대상 3회 반복 | `node --test tests/e2e/suite/*.test.mjs` | 세 번 모두 통과, 실패 군집 없음 | 21/21을 3회 연속 통과, 추가 post-commit 통과 | PASS | 총 56개 하위 probe | 잔여 프로세스 0 |
+| SIMPLE-01 | 스킬 이름을 모르는 처음 사용자 | 평범한 한국어 한 문장으로 Studio·Career 작업 요청 | 격리 marketplace 설치 + `codex exec` | 플러그인이 경로를 골라 검증 가능한 결과물 생성 | Career는 `entry-role-map`, Studio는 `vision` 경로를 선택했다. 기준 결과물 구조·요청 반영·설치 안내문 해시·요청 해시·비공개 결합값에 묶인 경로 선택 기록을 연속 2회 검증했다. | PASS | 스킬 ID·경로를 프롬프트에 넣지 않은 실제 설치 실행 | 격리 HOME·작업 폴더 삭제 |
+| PKG-01 | Codex 플러그인 설치 사용자 | 한국어 시작 문구와 인터페이스 스키마 확인 | Plugin Creator 공식 validator + 제품 계약 | 한국어 설명, 시작 프롬프트 배열 1~3개 | 원천·설치본 4개 모두 통과 | PASS | manifest schema·한국어 우선 검사 | 변경 없음 |
+| SKILL-01 | 직접 스킬을 호출하는 사용자 | 설치된 36개 스킬의 메타데이터와 경로 검사 | Skill Creator `quick_validate.py` | 모든 스킬이 발견·실행 가능한 구조 | 36/36 통과 | PASS | 실제 설치 트리 검사 | 변경 없음 |
+| HK-01 | 문체를 지나치게 바꾸는 윤문기 | 원문의 절반 이상을 다른 문장으로 교체 | im-not-ai 변경률 + 보호 내용 validator | 30% 초과 재검토, 50% 초과 폐기 | 반올림 전 SequenceMatcher 비율로 경계를 판정하고 과윤문 차단 | PASS | 변경률 receipt·롤백 회귀 | 임시 입력 삭제 |
+| HK-02 | 아주 크거나 반복 문자가 많은 문서를 보내는 사용자 | 메모리와 비교 횟수를 폭증시키는 문서 윤문 | 입력 크기·100만 회 비교 상한 + fail-closed validator | 배열 변환 전에 크기를 확인하고 필요하면 분할 재개 | 문서별 UTF-8 128KiB·코드포인트 65,536개를 먼저 확인하고, 이후 비교도 100만 회를 넘기기 전에 거부 | PASS | matcher 시작 전 크기 검사·의미 변경 우선 진단 | 임시 입력 삭제 |
+| SVG-01 | 문서용 흐름도가 필요한 사용자 | Skillstead SVG lint·2× PNG 렌더 | 설치형 Skillstead CLI | 오류·경고 0, 잘림 없는 2× PNG | Studio·Career 모두 2800×1800 생성 | PASS | 정상·malformed SVG 검사 | `/tmp` 산출물 삭제 |
+| ARCH-01 | 구조도를 탐색하는 사용자 | Archify validate·deliver·테마·키보드 검사 | 설치형 Archify CLI·headless Chrome | 9/9, 오류·경고 0, 한글 UI·관계 탐색 | 밝은·어두운 화면과 오류 경계 통과 | PASS | HTML·상호작용·traversal 검사 | `/tmp` 산출물 삭제 |
+| IMG-01 | 마스터 이미지를 기준으로 파생 이미지를 만드는 사용자 | `gpt-image-2` 생성·편집·계보·승인 검사 | mock provider + 실제 workflow | 마스터 우선, 참조 SHA 고정, 사람 승인 전 보류 | 151/151 통과, 외부 과금 호출 0 | PASS | timeout·stale·symlink·oversize 포함 | 임시 이미지 삭제 |
 
 ## 명령 실행 기록
 
@@ -34,9 +42,15 @@
 - `[0] npm run check:prompt-guides` — Markdown 89개와 product projection 2개 통과.
 - `[0] npm run check:im-not-ai` — 고정 v2.3.0, 15개 파일 검증.
 - `[0] npm run check:diagram-skills` — Skillstead v0.9.0 55개, Archify v2.13.0 60개 파일 검증.
+- `[0 × 2] npm run smoke:marketplace` — 스킬 이름·경로를 프롬프트와 proof 명령에 넣지 않은 한국어 요청으로 Career `entry-role-map → map-game-design-career`, Studio `vision → define-game-vision`을 연속 두 번 선택. 실행기가 설치본의 기준 결과물 구조를 먼저 복사하고 모델은 본문과 선택 경로만 작성했다. 원래 frontmatter·제목 ID·근거 파일·출력 준비표·파일 집합이 그대로인지, 요청의 모든 의미 축이 코드 블록·주석이 아닌 본문에 있는지, 요청 해시·비공개 결합값과 설치 안내문 SHA-256이 일치하는지 검증했다. 운영 상태와 임시 파일도 원상 복구됐다.
+- `[0] Plugin Creator 공식 validator` — 원천·설치 Studio/Career 4개 모두 통과.
+- `[0] Skill Creator quick validator` — 설치된 스킬 36/36 통과.
+- `[0] 이미지 파이프라인 대상 테스트` — 151/151 통과. 마스터·파생 계보, 참조 편집, 승인, 시간 초과와 경로 공격을 포함하며 외부 호출은 0회.
+- `[0] Skillstead·Archify 설치 실행 QA` — SVG lint 0/0, 2× PNG, Archify 9/9·오류 0·경고 0, 밝은·어두운 화면과 키보드 탐색 통과.
 - `[1→0] npm run check:guide-diagrams` — Studio 콘텐츠 경로 trigger contract 누락을 검출한 뒤 수정. 단위 31/31, Studio SVG 39개 lint 0/0, 전체 check 통과.
-- `[0] npm run validate` — 단위 790/790, 제품 394/394, 계약·격리·형식 검증을 포함한 release readiness 전체 통과.
-- `[0] npm test` — 1,595/1,595 통과, 실패·건너뜀 0, 637.02초.
+- `[0] npm run validate` — 단위·제품·계약·격리·형식 검증을 포함한 배포 준비 검사가 모두 통과.
+- `[0] npm run test:unit` — 819/819 통과, 실패·건너뜀 0.
+- `[0] npm test` — 1,620/1,620 통과, 실패·건너뜀 0, 653.13초.
 - `[0] npm run validate:archify-catalog` — 692개 source record, selected 4개, errors·uncovered 0.
 - `[0] npm run check:curated-archify` — 공개 HTML 4개와 receipt·시각 QA 결합 통과.
 - `[0] node tooling/build-archify-contact-sheets.mjs --check` — 전체·제품·유형별 contact sheet 7개 통과.
@@ -54,6 +68,13 @@
 - Skillstead 0.9.0과 문체 검수 workflow 추가 뒤 일부 release 계약이 0.8.3과 예전 script·role 수를 기대했다.
 - Suite handoff의 Archify 링크가 생성 원천이 아니라 생성된 Markdown에 직접 들어가 있었다.
 - 30개 사용자 결과 템플릿이 영어 표제 앞에 `기획 항목:`만 붙였고 본문과 표 작업 지시도 영어로 남아 있었다.
+- Career 플러그인의 `interface.defaultPrompt`가 배열이 아닌 문자열이어서 Plugin Creator 인터페이스 계약과 달랐다. 두 제품의 사용자용 설명과 시작 문구도 영어 우선이었다.
+- marketplace 실행 검사가 설치 스킬 수를 예전 15개로 고정하고, 실제 사용 흐름도 스킬 이름을 명시해야만 통과하도록 짜여 있었다.
+- 한국어 윤문 validator가 뜻·수치·ID는 지켰지만, 원문의 절반 이상을 바꾸는 과도한 수정까지 성공으로 처리했다.
+- marketplace proof 명령이 오케스트레이터 안내문 경로를 포함해, 자연어만으로 작업 경로를 고른다는 검증을 약하게 만들었다. 초기 자연어 스모크는 모델이 경로 기록이나 기준 기획 폴더의 필수 구조를 빠뜨릴 때 실패 단계를 구분하지 못했다.
+- im-not-ai 변경률 계산이 큰 입력을 배열로 바꾸기 전에 크기를 제한하지 않았고, 반복 문자가 많은 문서의 비교 횟수도 제한하지 않았다. 30%·50% 경계도 반올림한 표시값으로 판정했다.
+- 모델이 엄격한 결과물 파일 전체를 다시 만들게 하자 YAML 구조와 제목 ID가 실행마다 달라지는 문제가 있었다. 기준 구조를 미리 제공한 뒤에도 초기 사후 검사는 frontmatter·제목 ID·근거 파일 변조와 일부 핵심어만 있는 결과를 놓쳤다.
+- 가시 본문 검사에서 코드 블록의 가짜 닫힘 표식과 닫히지 않은 HTML 주석을 실제 본문으로 잘못 읽을 수 있었다.
 
 ## 적용한 수정
 
@@ -67,6 +88,10 @@
 - 양 제품 문서와 release 계약을 직접 스킬 15개·설치 스킬 18개, Skillstead 0.9.0, 문체 검수 스크립트와 역할 우선순위에 맞췄다.
 - Suite prompt catalog의 diagram binding에 관리되는 Archify HTML 경로를 추가해, 프롬프트 가이드 재생성 뒤에도 링크가 보존되도록 했다.
 - Studio·Career 결과 템플릿 30개의 표제·설명·표 작업 지시를 실제 한국어로 교정했다. 감사기는 혼합 접두어 표제와 한글 몇 글자로 숨긴 영어 우세 문장도 실패로 처리한다.
+- 두 플러그인의 설명과 시작 요청을 한국어 우선으로 고치고, Career 시작 요청을 3개 이하 배열로 맞췄다.
+- marketplace 설치 검사를 현재 설치 수인 18개로 고쳤다. 최종 프롬프트와 proof 명령에서 스킬 이름·경로를 제거했다. runner가 미리 만든 요청 해시·무작위 결합값은 프롬프트에 값을 노출하지 않고, 모델은 이를 보존하면서 선택 route ID만 채운다. proof harness는 설치본 registry와 실제 `SKILL.md` 해시를 대조해 선택 스킬을 도출한다. 실패 결과는 제품·단계·허용된 진단 코드만 남긴다.
+- 번들된 im-not-ai의 SequenceMatcher 변경률을 Node validator에 맞춰 구현했다. 배열 변환 전에 문서별 UTF-8 128KiB·코드포인트 65,536개 상한을 적용하고, 이후 반복 입력은 100만 회 비교 상한에서 중단한다. 반올림 전 값으로 30%·50% 경계를 판정하고 영수증에만 소수점 여섯째 자리까지 표시하며, 상한 초과 시 문서를 의미 단위로 나눠 재개하도록 안내한다.
+- marketplace runner가 설치본의 검증된 기준 결과물 구조를 먼저 복사하고 모델은 `content.md` 본문과 선택 경로만 채우도록 책임을 분리했다. frontmatter·순서가 있는 제목과 ID·나머지 파일의 경로·종류·SHA-256을 실행 전 상태에 고정하고, 요청 의미 축은 모두 실제 본문에 있어야 한다. fenced code는 설치 validator와 같은 규칙으로 제외하고 HTML 주석은 닫힘 또는 문서 끝까지 제외한다. 구조 변조·가짜 fence 종료·열린 주석·일부 핵심어만 있는 결과는 적대적 테스트에서 모두 실패한다.
 
 ## 정리와 되돌림
 
@@ -77,10 +102,10 @@
 
 ## 남은 위험
 
-- 자연어의 의미를 자유롭게 해석하는 부분은 호스트 LLM의 책임이다. 이 저장소의 자동 검증은 의미가 정규화된 뒤의 경로·스킬·검토 역할·결과물·승인 경계를 실행형 계약으로 확인한다. 실제 외부 모델 호출은 비용·네트워크 부작용 때문에 이 검증 범위에서 제외한다.
+- 자유로운 자연어 해석 자체는 호스트 LLM의 책임이다. 다만 실제 격리 설치 스모크는 스킬 이름·경로를 주지 않고 모델을 실행해 선택 경로와 설치 안내문 해시를 검증했다. 이미지 생성용 외부 모델 호출만 비용·네트워크 부작용 때문에 mock 계약으로 대체했다.
 
 ## 증거
 
 - E2E 실행형 테스트 21개, 표 내부 하위 probe 56개.
 - 가이드·프롬프트·vendor·빌드 검증 결과는 위 명령 기록에 남겼다.
-- 전체 저장소 테스트 1,595/1,595와 Archify 카탈로그·공개 산출물·콘택트 시트 검증이 모두 통과했다.
+- 전체 저장소 테스트 1,620/1,620와 Archify 카탈로그·공개 산출물·콘택트 시트 검증이 모두 통과했다.
