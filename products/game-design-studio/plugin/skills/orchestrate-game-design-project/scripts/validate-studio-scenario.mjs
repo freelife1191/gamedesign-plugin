@@ -264,6 +264,41 @@ function extractReviewPolicy(markdown) {
   return JSON.parse(match[1]);
 }
 
+function rolePriorityComparator(rolePriority) {
+  const rank = new Map(rolePriority.map((role, index) => [role, index]));
+  return (left, right) => (rank.get(left) ?? Number.POSITIVE_INFINITY) - (rank.get(right) ?? Number.POSITIVE_INFINITY)
+    || (left < right ? -1 : left > right ? 1 : 0);
+}
+
+export function selectRouteReviewers(route, intents, rolePriority) {
+  if (!isRecord(route) || !Array.isArray(intents) || !Array.isArray(rolePriority)
+    || !Array.isArray(route.defaultReviewers) || !Number.isInteger(route.maxReviewers)) return [];
+  const selected = [];
+  const add = (role) => {
+    if (typeof role === "string" && !selected.includes(role) && selected.length < route.maxReviewers) selected.push(role);
+  };
+  for (const role of route.defaultReviewers) add(role);
+  const compareRoles = rolePriorityComparator(rolePriority);
+  const matchingCandidates = (route.conditionalReviewers ?? [])
+    .filter((candidate) => isRecord(candidate)
+      && Array.isArray(candidate.triggerIntents)
+      && candidate.triggerIntents.some((intent) => intents.includes(intent))
+      && Array.isArray(candidate.reviewers))
+    .sort((left, right) => compareRoles(left.role, right.role));
+  for (const candidate of matchingCandidates) {
+    for (const role of candidate.reviewers) add(role);
+  }
+  return selected;
+}
+
+export function validateReviewerSelection({ routes, intents, roleIds, rolePriority, knownRoleIds }) {
+  if (!Array.isArray(routes) || !Array.isArray(intents) || !Array.isArray(roleIds)
+    || !Array.isArray(rolePriority) || !Array.isArray(knownRoleIds)
+    || roleIds.length > 3 || new Set(roleIds).size !== roleIds.length) return false;
+  const allowedRoles = new Set(routes.flatMap((route) => selectRouteReviewers(route, intents, rolePriority)));
+  return roleIds.every((roleId) => knownRoleIds.includes(roleId) && allowedRoles.has(roleId));
+}
+
 function validateRequest(request, errors) {
   if (!hasExactKeys(request, REQUEST_KEYS, "scenario.request-keys", errors, "Scenario request")) return null;
   if (request.schemaVersion !== 1 || !isText(request.scenarioId)
@@ -330,13 +365,17 @@ async function validateRoutingProfilesAndRoles(request, result, scenario, errors
     }
   }
 
-  const allowedRoles = new Set(routes.flatMap(({ defaultReviewers }) => defaultReviewers));
   const rolePriority = routing.rolePriority;
   const canonicalRoles = [...scenario.roles].sort((left, right) => rolePriority.indexOf(left) - rolePriority.indexOf(right));
   if (!sameArray(result.roleIds, canonicalRoles)
     || !Array.isArray(result.roleIds)
-    || result.roleIds.length > 3
-    || result.roleIds.some((roleId) => !routing.roleIds.includes(roleId) || !allowedRoles.has(roleId))) {
+    || !validateReviewerSelection({
+      routes,
+      intents: request.intents,
+      roleIds: result.roleIds,
+      rolePriority,
+      knownRoleIds: routing.roleIds,
+    })) {
     errors.push(finding("review.roles", "Review roles must be eligible, unique, capped at three, and ordered by registry priority."));
   }
   for (const roleId of canonicalRoles) {

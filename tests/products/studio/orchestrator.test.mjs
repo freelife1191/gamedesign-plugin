@@ -47,6 +47,8 @@ const conditionalReviewerSelectionContract = {
   matchRule: "conditionalReviewers[].triggerIntents includes conditionalIntent",
   finalReviewerSet: "unique(defaultReviewers + selectedConditionalReviewers)",
   deduplicate: true,
+  conditionalRoleOrder: "rolePriority",
+  selectionPolicy: "append unique defaultReviewers, then matching conditional reviewers in rolePriority order until maxReviewers",
   maxReviewers: 3,
 };
 

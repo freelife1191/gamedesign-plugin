@@ -20,6 +20,8 @@ Choose roles from each selected route's `defaultReviewers` that answer distinct 
   "matchRule": "conditionalReviewers[].triggerIntents includes conditionalIntent",
   "finalReviewerSet": "unique(defaultReviewers + selectedConditionalReviewers)",
   "deduplicate": true,
+  "conditionalRoleOrder": "rolePriority",
+  "selectionPolicy": "append unique defaultReviewers, then matching conditional reviewers in rolePriority order until maxReviewers",
   "maxReviewers": 3
 }
 ```

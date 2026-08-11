@@ -65,6 +65,8 @@
       "agents/ux-accessibility-reviewer.md",
       "agents/liveops-data-designer.md",
       "agents/production-feasibility-critic.md",
+      "agents/combat-encounter-reviewer.md",
+      "agents/level-puzzle-reviewer.md",
       "agents/document-quality-editor.md"
     ],
     "imageSpecialists": ["agents/art-brief-director.md", "agents/visual-asset-reviewer.md"],
