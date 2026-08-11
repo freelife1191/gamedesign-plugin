@@ -96,8 +96,8 @@
       "guides/game-design-studio/skills/design-game-economy-and-liveops.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: Source·sink 가설을 기록하는 경제 기초",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 · 표: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:design-game-economy-and-liveops:beginner; 파일: game-design/studio-production/economy-beginner/content.md)"
+    "display_title": "재화 획득처와 소비처 가설을 기록하는 경제 기초",
+    "sample_result_excerpt": "산호 조각은 정원 손질에서 얻고 묘목 구매에 쓰며, 임시 보유 한도는 200개로 두었습니다. 획득량과 한도는 플레이 기록이 없어 경제 담당자가 다시 정해야 합니다. (ID: studio:design-game-economy-and-liveops:beginner; 파일: game-design/studio-production/economy-beginner/content.md)"
   },
   {
     "id": "studio:design-game-economy-and-liveops:standard",
@@ -201,8 +201,8 @@
       "guides/game-design-studio/skills/design-game-economy-and-liveops.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: Progression·guardrail·rollback을 갖춘 경제 계획",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:design-game-economy-and-liveops:standard; 파일: game-design/studio-production/economy-standard/content.md)"
+    "display_title": "성장 목표·안전 기준·되돌리기 절차를 갖춘 경제 계획",
+    "sample_result_excerpt": "우주선 부품 해금 목표를 3회 탐사로 잡고, 평균 소요 시간이 기준을 넘으면 보상 변경을 멈추도록 적었습니다. 되돌리기 절차는 시험 이력이 확인된 뒤에만 사용할 수 있습니다. (ID: studio:design-game-economy-and-liveops:standard; 파일: game-design/studio-production/economy-standard/content.md)"
   },
   {
     "id": "studio:design-game-economy-and-liveops:advanced",
@@ -312,8 +312,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: Experiment·telemetry·player protection을 분리하는 경제 검토",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:design-game-economy-and-liveops:advanced; 파일: game-design/studio-production/economy-advanced/content.md)"
+    "display_title": "실험·행동 데이터·플레이어 보호를 분리하는 경제 검토",
+    "sample_result_excerpt": "지도 조각 묶음 가격 실험은 구매 전환 정의와 천장 보장 근거가 없어 ‘진행 불가’로 분리했습니다. 가격·확률·보호 기준은 각 책임자가 자료를 보완해야 합니다. (ID: studio:design-game-economy-and-liveops:advanced; 파일: game-design/studio-production/economy-advanced/content.md)"
   },
   {
     "id": "studio:plan-game-production:beginner",
@@ -414,8 +414,8 @@
       "guides/game-design-studio/skills/plan-game-production.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: 범위와 제외 항목을 갖춘 최소 제작 계획",
-    "sample_result_excerpt": "예시 산출물 조각: 범위 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:plan-game-production:beginner; 파일: game-design/studio-production/production-beginner/content.md)"
+    "display_title": "포함 범위와 제외 항목을 갖춘 최소 제작 계획",
+    "sample_result_excerpt": "눈 마을 수비 시제품에는 성문 1곳과 적 2종만 넣고, 날씨 변화와 음성 연출은 제외했습니다. 전투 담당자가 핵심 반복 플레이를 검토한 뒤 범위를 고정합니다. (ID: studio:plan-game-production:beginner; 파일: game-design/studio-production/production-beginner/content.md)"
   },
   {
     "id": "studio:plan-game-production:standard",
@@ -520,8 +520,8 @@
       "guides/game-design-studio/skills/plan-game-production.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: Milestone 의존성과 owner를 갖춘 제작 계획",
-    "sample_result_excerpt": "가상 결과 조각: 와: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:plan-game-production:standard; 파일: game-design/studio-production/production-standard/content.md)"
+    "display_title": "주요 일정의 의존 관계와 책임자를 갖춘 제작 계획",
+    "sample_result_excerpt": "등대 복구 시제품은 전력 퍼즐 구현 뒤 협동 동기화 시험으로 이어지며, 각 단계에 시스템·네트워크 책임자를 지정했습니다. 완료 기준은 실제 인력 산정과 대조해야 합니다. (ID: studio:plan-game-production:standard; 파일: game-design/studio-production/production-standard/content.md)"
   },
   {
     "id": "studio:plan-game-production:advanced",
@@ -628,8 +628,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: Kill criteria와 외주·license 위험을 검토하는 제작 계획",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:plan-game-production:advanced; 파일: game-design/studio-production/production-advanced/content.md)"
+    "display_title": "중단 기준과 외주·사용권 위험을 검토하는 제작 계획",
+    "sample_result_excerpt": "폐역 음성 해독 기능은 2주 안에 인식률 기준을 못 맞추면 범위에서 빼는 안을 적었습니다. 외주 음성 데이터의 사용권 조항은 법무와 제작 책임자가 확인해야 합니다. (ID: studio:plan-game-production:advanced; 파일: game-design/studio-production/production-advanced/content.md)"
   },
   {
     "id": "studio:orchestrate-game-design-project:beginner",
@@ -729,8 +729,8 @@
       "guides/game-design-studio/skills/orchestrate-game-design-project.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: 제한된 brief를 한 route로 라우팅",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:orchestrate-game-design-project:beginner; 파일: game-design/studio-production/orchestrate-beginner/content.md)"
+    "display_title": "범위를 정한 기획서를 하나의 작업 경로로 연결",
+    "sample_result_excerpt": "계절 시장 아이디어는 경제 설계 경로 하나로 보내고, 산출물은 경제 균형 문서로 제한했습니다. 완료 관문과 다음 책임자는 프로젝트 담당자가 확인해야 합니다. (ID: studio:orchestrate-game-design-project:beginner; 파일: game-design/studio-production/orchestrate-beginner/content.md)"
   },
   {
     "id": "studio:orchestrate-game-design-project:standard",
@@ -839,8 +839,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: 여러 Artifact를 연결하는 프로젝트 라우팅",
-    "sample_result_excerpt": "검토용 가상 산출물: 목록 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:orchestrate-game-design-project:standard; 파일: game-design/studio-production/orchestrate-standard/content.md)"
+    "display_title": "여러 산출물을 연결하는 프로젝트 작업 경로",
+    "sample_result_excerpt": "비행 규칙 명세에서 사용자 경험 흐름과 콘텐츠 퀘스트 문서로 이어지는 순서를 지정했습니다. 역할별 검토 사항은 세 건으로 제한했으며 관문 통과 여부는 결정 담당자가 정합니다. (ID: studio:orchestrate-game-design-project:standard; 파일: game-design/studio-production/orchestrate-standard/content.md)"
   },
   {
     "id": "studio:orchestrate-game-design-project:advanced",
@@ -949,8 +949,8 @@
       "guides/game-design-studio/document-quality.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: 역할 검토와 결정 병합을 갖춘 재개 라우팅",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:orchestrate-game-design-project:advanced; 파일: game-design/studio-production/orchestrate-advanced/content.md)"
+    "display_title": "역할별 검토와 결정 병합을 갖춘 재개 경로",
+    "sample_result_excerpt": "해저 정원 협동 흐름은 접근성 관문에서 멈춘 상태로 남기고, 기획·사용자 경험 검토 의견을 하나의 결정 대기열에 모았습니다. 접근성 책임자의 답변이 들어온 뒤 해당 관문부터 다시 시작합니다. (ID: studio:orchestrate-game-design-project:advanced; 파일: game-design/studio-production/orchestrate-advanced/content.md)"
   },
   {
     "id": "studio:review-game-design:beginner",
@@ -1050,8 +1050,8 @@
       "guides/game-design-studio/skills/review-game-design.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: 누락과 모순을 질문으로 남기는 기획 검토",
-    "sample_result_excerpt": "초안 결과: 근거 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:review-game-design:beginner; 파일: game-design/studio-production/review-beginner/content.md)"
+    "display_title": "누락과 모순을 질문으로 남기는 기획 검토",
+    "sample_result_excerpt": "수리 재료는 ‘탐사에서 획득’으로 적혔지만 탐사 보상표에는 항목이 없어 근거 위치를 묻는 질문을 남겼습니다. 수정안은 재료 출처를 한 곳에 연결하는 수준이며 채택은 담당자가 결정합니다. (ID: studio:review-game-design:beginner; 파일: game-design/studio-production/review-beginner/content.md)"
   },
   {
     "id": "studio:review-game-design:standard",
@@ -1158,8 +1158,8 @@
       "guides/game-design-studio/skills/review-game-design.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: Evidence gap과 severity를 owner에게 배정하는 검토",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 검토 발견 사항 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:review-game-design:standard; 파일: game-design/studio-production/review-standard/content.md)"
+    "display_title": "근거 공백과 심각도를 책임자에게 배정하는 검토",
+    "sample_result_excerpt": "F-012는 지도 조각 소모 규칙의 원문 근거가 없다는 ‘높음’ 심각도 발견 사항입니다. 영향 범위와 최소 수정안을 적었지만 심각도와 담당자는 검토 책임자가 확인해야 합니다. (ID: studio:review-game-design:standard; 파일: game-design/studio-production/review-standard/content.md)"
   },
   {
     "id": "studio:review-game-design:advanced",
@@ -1272,8 +1272,8 @@
       "guides/game-design-studio/workflow.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: 교차 도메인 finding과 decision queue를 분리하는 검토",
-    "sample_result_excerpt": "예시 산출물 조각: 검토 발견 사항 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:review-game-design:advanced; 파일: game-design/studio-production/review-advanced/content.md)"
+    "display_title": "분야 간 발견 사항과 결정 대기열을 나누는 검토",
+    "sample_result_excerpt": "성문 수리 비용 증가는 경제와 사용자 경험 양쪽에 영향을 주므로 근거·영향·이견을 한 발견 사항에 묶었습니다. 비용 유지 여부는 제작 결정 대기열에 남아 있습니다. (ID: studio:review-game-design:advanced; 파일: game-design/studio-production/review-advanced/content.md)"
   },
   {
     "id": "studio:export-game-design-documents:beginner",
@@ -1372,8 +1372,8 @@
       "guides/game-design-studio/skills/export-game-design-documents.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: Markdown terminal handoff를 준비하는 문서 출력",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:export-game-design-documents:beginner; 파일: game-design/studio-production/export-beginner/content.md)"
+    "display_title": "마크다운(Markdown) 터미널 인계를 준비하는 문서 출력",
+    "sample_result_excerpt": "등대섬 비전 문서를 마크다운 출력 대상으로 등록하고 안전한 출력 폴더와 검증 책임자를 명세에 적었습니다. 실제 변환과 터미널 검증은 아직 실행하지 않았습니다. (ID: studio:export-game-design-documents:beginner; 파일: game-design/studio-production/export-beginner/content.md)"
   },
   {
     "id": "studio:export-game-design-documents:standard",
@@ -1477,8 +1477,8 @@
       "guides/game-design-studio/skills/export-game-design-documents.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: PDF·DOCX capability preflight를 갖춘 문서 출력",
-    "sample_result_excerpt": "가상의 검토 기록 — 별: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:export-game-design-documents:standard; 파일: game-design/studio-production/export-standard/content.md)"
+    "display_title": "문서 기능 사전 점검을 갖춘 출력 (PDF·DOCX)",
+    "sample_result_excerpt": "폐역 기획서의 PDF 변환기는 사용 가능, DOCX 변환기는 확인 대기로 기록했습니다. 두 형식 모두 렌더링과 품질 검사는 실행 전이며 후속 담당자가 배정돼야 합니다. (ID: studio:export-game-design-documents:standard; 파일: game-design/studio-production/export-standard/content.md)"
   },
   {
     "id": "studio:export-game-design-documents:advanced",
@@ -1586,7 +1586,7 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: PPTX story·format QA와 부분 재개를 갖춘 문서 출력",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:export-game-design-documents:advanced; 파일: game-design/studio-production/export-advanced/content.md)"
+    "display_title": "이야기 구성·형식 품질 검사와 부분 재개를 갖춘 문서 출력 (PPTX)",
+    "sample_result_excerpt": "계절 시장 발표 자료는 문제·플레이 흐름·경제 위험 순서로 독립적인 이야기 개요를 잡았습니다. PPTX 렌더링은 실행 전이고, PDF만 끝난 경우의 재개 지점도 따로 남겼습니다. (ID: studio:export-game-design-documents:advanced; 파일: game-design/studio-production/export-advanced/content.md)"
   }
 ]

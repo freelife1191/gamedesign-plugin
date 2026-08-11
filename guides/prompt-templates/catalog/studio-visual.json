@@ -107,8 +107,8 @@
       "guides/game-design-studio/skills/plan-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: prompt-only 이미지 slot과 placeholder 계획",
-    "sample_result_excerpt": "검토용 가상 산출물: 내보내기 전 점검 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:plan-image-assets:beginner; 파일: game-design/studio-visual/plan-beginner/content.md)"
+    "display_title": "프롬프트 전용 이미지 자리와 대체 표시 계획",
+    "sample_result_excerpt": "글라이더 조작 설명 옆에 들어갈 바람길 개념도 1개를 `concept-draft`로 계획하고 대체 텍스트 초안을 붙였습니다. 이미지는 생성하지 않았으며 배치와 문구는 담당자 검토가 필요합니다. (ID: studio:plan-image-assets:beginner; 파일: game-design/studio-visual/plan-beginner/content.md)"
   },
   {
     "id": "studio:plan-image-assets:standard",
@@ -219,8 +219,8 @@
       "guides/game-design-studio/skills/plan-image-assets.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: stable ID·alt·count를 갖춘 이미지 manifest 계획",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 자산 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:plan-image-assets:standard; 파일: game-design/studio-visual/plan-standard/content.md)"
+    "display_title": "고정 ID·대체 텍스트·수량을 갖춘 이미지 명세 계획",
+    "sample_result_excerpt": "해저 정원 문서에 수질 순환도 1개와 협동 작업 삽화 2개를 배정하고 각각 고정 자산 ID를 붙였습니다. 보존·제외 대상과 대체 텍스트는 편집자가 확인해야 합니다. (ID: studio:plan-image-assets:standard; 파일: game-design/studio-visual/plan-standard/content.md)"
   },
   {
     "id": "studio:plan-image-assets:advanced",
@@ -333,8 +333,8 @@
       "guides/game-design-studio/image-assets.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: profile slot·rights·diagram handoff가 있는 자산 계획",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:plan-image-assets:advanced; 파일: game-design/studio-visual/plan-advanced/content.md)"
+    "display_title": "프로필 자리·권리 조건·도식 인계를 포함한 자산 계획",
+    "sample_result_excerpt": "우주선 수리 절차도는 도식 작업으로 넘기고 승무원 삽화는 별도 자산 자리에 배정했습니다. 참고 사진의 권리와 철회 조건이 비어 있어 두 자산 모두 기획 초안 상태입니다. (ID: studio:plan-image-assets:advanced; 파일: game-design/studio-visual/plan-advanced/content.md)"
   },
   {
     "id": "studio:generate-image-assets:beginner",
@@ -438,8 +438,8 @@
       "guides/game-design-studio/skills/generate-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: 사용자 선택 stable asset 하나 생성",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 자산 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:generate-image-assets:beginner; 파일: game-design/studio-visual/generate-beginner/content.md)"
+    "display_title": "사용자가 고른 고정 자산 하나 생성",
+    "sample_result_excerpt": "사용자 선택 기록에는 `library-map-cover-01` 한 건만 들어 있어 이 자산만 생성 대상으로 잡았습니다. 제공자 결정과 결과 경로는 가린 기록으로 남기며, 결과물은 검토 전 개념 초안입니다. (ID: studio:generate-image-assets:beginner; 파일: game-design/studio-visual/generate-beginner/content.md)"
   },
   {
     "id": "studio:generate-image-assets:standard",
@@ -545,8 +545,8 @@
       "guides/game-design-studio/skills/generate-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: required mode receipt와 no-key capability 경계",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:generate-image-assets:standard; 파일: game-design/studio-visual/generate-standard/content.md)"
+    "display_title": "필수 생성 기록과 API 키 부재 시의 기능 경계",
+    "sample_result_excerpt": "필수 자산은 `snow-gate-layout-01`과 `rookie-guard-pose-01` 두 건으로 한정했습니다. API 키가 없어 호출은 하지 않았고 프롬프트와 대체 표시만 보존했습니다. (ID: studio:generate-image-assets:standard; 파일: game-design/studio-visual/generate-standard/content.md)"
   },
   {
     "id": "studio:generate-image-assets:advanced",
@@ -653,8 +653,8 @@
       "guides/game-design-studio/skills/generate-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: all mode OpenAI-only failure와 provenance 분리",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:generate-image-assets:advanced; 파일: game-design/studio-visual/generate-advanced/content.md)"
+    "display_title": "전체 생성 모드의 OpenAI 전용 실패와 출처 기록 분리",
+    "sample_result_excerpt": "등대섬 자산 4건을 선언된 순서대로 작업 목록에 올렸고, 두 번째 호출 실패는 다른 제공자로 넘기지 않았습니다. 성공·실패 기록은 자산별로 나뉘며 결과물은 모두 사람 검토 전 상태입니다. (ID: studio:generate-image-assets:advanced; 파일: game-design/studio-visual/generate-advanced/content.md)"
   },
   {
     "id": "studio:review-image-assets:beginner",
@@ -758,8 +758,8 @@
       "guides/game-design-studio/skills/review-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: concept-draft 문서 적합성 검토",
-    "sample_result_excerpt": "가상의 검토 기록 — 검토 발견 사항: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:review-image-assets:beginner; 파일: game-design/studio-visual/review-beginner/content.md)"
+    "display_title": "개념 초안 이미지의 문서 적합성 검토",
+    "sample_result_excerpt": "폐역 신호판 삽화는 본문 배치 목적과 맞지만, 작은 화면에서 글자가 뭉개지고 대체 텍스트에 신호 순서가 빠져 있습니다. 이 발견 사항만으로 문서 승인 상태로 바꾸지는 않습니다. (ID: studio:review-image-assets:beginner; 파일: game-design/studio-visual/review-beginner/content.md)"
   },
   {
     "id": "studio:review-image-assets:standard",
@@ -866,8 +866,8 @@
       "guides/game-design-studio/skills/review-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: rights·readability·placement 문서 승인 검토",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:review-image-assets:standard; 파일: game-design/studio-visual/review-standard/content.md)"
+    "display_title": "사용 권리·가독성·배치를 살피는 문서 승인 검토",
+    "sample_result_excerpt": "계절 시장 전경은 배치와 가독성 기준을 충족한다는 검토 의견이 있지만, 사용 권리 결정 기록이 첨부되지 않았습니다. 이름이 적힌 사람의 결정 기록이 들어오기 전에는 승인 보류입니다. (ID: studio:review-image-assets:standard; 파일: game-design/studio-visual/review-standard/content.md)"
   },
   {
     "id": "studio:review-image-assets:advanced",
@@ -976,8 +976,8 @@
       "guides/game-design-studio/skills/review-image-assets.md",
       "guides/game-design-studio/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: production-candidate 재검토와 권리 revocation",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:review-image-assets:advanced; 파일: game-design/studio-visual/review-advanced/content.md)"
+    "display_title": "제작 후보 재검토와 사용 권리 철회 대응",
+    "sample_result_excerpt": "글라이더 삽화는 문서 승인 기록이 있으나 최신 권리 확인 날짜가 비어 있어 제작 후보 전환을 보류했습니다. 기술 적합성과 플레이 중 식별성도 지정 검토자가 다시 살펴봐야 합니다. (ID: studio:review-image-assets:advanced; 파일: game-design/studio-visual/review-advanced/content.md)"
   },
   {
     "id": "studio:visualize-game-design:beginner",
@@ -1082,8 +1082,8 @@
       "guides/game-design-studio/skills/visualize-game-design.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: source-backed 규칙 흐름 도식",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 도식 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:visualize-game-design:beginner; 파일: game-design/studio-visual/visualize-beginner/content.md)"
+    "display_title": "원문 근거를 연결한 규칙 흐름 도식",
+    "sample_result_excerpt": "산소 부족→경고→동료 지원→회복 흐름을 원문 절 ID 네 곳에 연결하고 상태 흐름 프리셋을 골랐습니다. 편집 가능한 SVG와 대체 텍스트는 요청 상태이며 아직 생성되지 않았습니다. (ID: studio:visualize-game-design:beginner; 파일: game-design/studio-visual/visualize-beginner/content.md)"
   },
   {
     "id": "studio:visualize-game-design:standard",
@@ -1193,8 +1193,8 @@
       "guides/game-design-studio/skills/visualize-game-design.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: Archify 우선 구조 도식과 honest fallback",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:visualize-game-design:standard; 파일: game-design/studio-visual/visualize-standard/content.md)"
+    "display_title": "구조 도식용 Archify 우선 적용과 정직한 대체 경로",
+    "sample_result_excerpt": "우주선 수리 작업 순서는 Archify 사용 가능 여부를 먼저 확인하도록 잡았습니다. 기능이 없거나 실패하면 편집 가능한 SVG와 2배 PNG 요청으로 전환하되, 생성하지 않은 결과를 완료로 표시하지 않습니다. (ID: studio:visualize-game-design:standard; 파일: game-design/studio-visual/visualize-standard/content.md)"
   },
   {
     "id": "studio:visualize-game-design:advanced",
@@ -1308,8 +1308,8 @@
       "guides/game-design-studio/skills/visualize-game-design.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: source mapping·receipt·visual QA를 갖춘 lifecycle 도식",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:visualize-game-design:advanced; 파일: game-design/studio-visual/visualize-advanced/content.md)"
+    "display_title": "원문 연결·실행 기록·시각 품질 검사를 갖춘 수명 주기 도식",
+    "sample_result_excerpt": "지도 조각의 발견·조합·사용·폐기 상태를 원문 절과 연결하고 요청·생성·검사 상태를 따로 기록했습니다. 전체 보기와 확대 보기 품질 검사는 아직 사람 확인 대기입니다. (ID: studio:visualize-game-design:advanced; 파일: game-design/studio-visual/visualize-advanced/content.md)"
   },
   {
     "id": "studio:svg-infographic:beginner",
@@ -1416,8 +1416,8 @@
       "guides/game-design-studio/skills/svg-infographic.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: 간단한 source-mapped SVG 흐름",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:svg-infographic:beginner; 파일: game-design/studio-visual/svg-beginner/content.md)"
+    "display_title": "원문 위치를 연결한 간단한 SVG 흐름도",
+    "sample_result_excerpt": "성문 방어의 탐지→경보→배치 흐름을 세 노드 SVG로 구성하고 제목·설명·인접 대체 텍스트를 넣었습니다. 노드와 원문 절의 연결은 기획 담당자가 확인해야 합니다. (ID: studio:svg-infographic:beginner; 파일: game-design/studio-visual/svg-beginner/content.md)"
   },
   {
     "id": "studio:svg-infographic:standard",
@@ -1525,8 +1525,8 @@
       "guides/game-design-studio/skills/svg-infographic.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: source-backed 2× PNG가 있는 SVG handoff",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:svg-infographic:standard; 파일: game-design/studio-visual/svg-standard/content.md)"
+    "display_title": "원문 근거와 2배 PNG를 갖춘 SVG 인계",
+    "sample_result_excerpt": "등대 전력 흐름의 편집 원본은 SVG로 두고, 원문 상태 ID와 렌더링 조건을 인계 기록에 적었습니다. 래퍼 검사와 정확한 2배 PNG 생성 결과는 실행 기록을 확인하기 전까지 미정입니다. (ID: studio:svg-infographic:standard; 파일: game-design/studio-visual/svg-standard/content.md)"
   },
   {
     "id": "studio:svg-infographic:advanced",
@@ -1640,7 +1640,7 @@
       "guides/game-design-studio/skills/svg-infographic.md",
       "guides/game-design-studio/visualization.md"
     ],
-    "display_title": "게임 기획 결과: lint 0 warning/error·접근성·human approval SVG QA",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:svg-infographic:advanced; 파일: game-design/studio-visual/svg-advanced/content.md)"
+    "display_title": "경고·오류 0건, 접근성, 사람 승인을 확인하는 SVG 품질 검사",
+    "sample_result_excerpt": "폐역 신호 관계도에는 제목·설명·인접 대체 텍스트가 들어 있지만 검사 0건과 정확한 2배 렌더링은 아직 증빙이 없습니다. 지정 승인자가 전체 보기와 확대 보기를 확인한 뒤 상태를 갱신합니다. (ID: studio:svg-infographic:advanced; 파일: game-design/studio-visual/svg-advanced/content.md)"
   }
 ]

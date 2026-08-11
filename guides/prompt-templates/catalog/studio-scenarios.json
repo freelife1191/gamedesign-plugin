@@ -89,8 +89,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C01 source-bound scenario",
-    "sample_result_excerpt": "검토용 가상 산출물: 기획 원칙 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:case:ST-C01; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)"
+    "display_title": "플레이어 경험과 게임 비전 정리 (ST-C01)",
+    "sample_result_excerpt": "플레이 약속은 ‘둘이서 바람길을 읽고 섬 사이를 잇는다’, 핵심 원칙은 협동 항해로 적었습니다. 대상 플레이어 근거와 배제 원칙은 비전 책임자가 확인해야 합니다. (ID: studio:case:ST-C01; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)"
   },
   {
     "id": "studio:case:ST-C02",
@@ -182,8 +182,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C02 source-bound scenario",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:case:ST-C02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
+    "display_title": "행동·핵심 반복 플레이·의미 있는 선택 설계 (ST-C02)",
+    "sample_result_excerpt": "산호 채집→정원 복원→새 생물 발견을 핵심 반복 플레이로 두고, 제한된 산소를 탐사와 돌봄 중 어디에 쓸지 선택하게 했습니다. 선택의 재미가 유지되는지는 플레이 관찰이 필요합니다. (ID: studio:case:ST-C02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
   },
   {
     "id": "studio:case:ST-C03",
@@ -276,8 +276,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C03 source-bound scenario",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:case:ST-C03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
+    "display_title": "규칙·상태·예외·데이터 계약 설계 (ST-C03)",
+    "sample_result_excerpt": "엔진 부품 장착은 전력 확인 뒤 내구도 차감 순서로 처리하고, 두 명이 동시에 장착할 때는 첫 요청만 반영하는 예외를 제안했습니다. 권위 데이터와 동시성 규칙은 개발 검토 전까지 임시입니다. (ID: studio:case:ST-C03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
   },
   {
     "id": "studio:case:ST-C04",
@@ -369,8 +369,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C04 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:case:ST-C04; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
+    "display_title": "화면 흐름·첫 진입 안내·접근성 검토 (ST-C04)",
+    "sample_result_excerpt": "지도 조각을 얻으면 보관함 버튼이 점멸하고 화면 읽기 도구가 새 항목 이름을 알리도록 흐름을 잡았습니다. 초점 이동 순서와 글자 확대 기준은 접근성 담당자가 살펴봐야 합니다. (ID: studio:case:ST-C04; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
   },
   {
     "id": "studio:case:ST-C05",
@@ -465,8 +465,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C05 source-bound scenario",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:case:ST-C05; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+    "display_title": "콘텐츠·서사·퀘스트·비플레이어 캐릭터 설계 (ST-C05)",
+    "sample_result_excerpt": "초보 수비대 퀘스트는 주민 대피와 성문 방어 중 하나를 고르게 하며, 선택에 따라 다음 날 NPC 대사가 달라집니다. 보상과 제작 분량은 콘텐츠 책임자 검토 뒤 정합니다. (ID: studio:case:ST-C05; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
   },
   {
     "id": "studio:case:ST-C06",
@@ -558,8 +558,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C06 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:case:ST-C06; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)"
+    "display_title": "캐릭터·기술·전투·몬스터 설계 (ST-C06)",
+    "sample_result_excerpt": "탐험가의 ‘빛줄기 연결’ 기술은 동료가 반사판을 맞출 때만 보호막을 끊는 안으로 적었습니다. 피해량과 재사용 시간은 전투 데이터가 없어 시스템 담당자 확인이 필요합니다. (ID: studio:case:ST-C06; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)"
   },
   {
     "id": "studio:case:ST-C07",
@@ -652,8 +652,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C07 source-bound scenario",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:case:ST-C07; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
+    "display_title": "성장·경제·균형·라이브 운영 실험 설계 (ST-C07)",
+    "sample_result_excerpt": "신호 해독 토큰은 탐사에서 얻고 장비 보정에 쓰는 구조로 잡았으며, 보유 한도는 미정으로 남겼습니다. 운영 실험의 중단 기준과 되돌리기 절차도 경제 책임자의 근거가 필요합니다. (ID: studio:case:ST-C07; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
   },
   {
     "id": "studio:case:ST-C08",
@@ -749,8 +749,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: ST-C08 source-bound scenario",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:case:ST-C08; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)"
+    "display_title": "제작·검토·이미지·출력 준비 연결 (ST-C08)",
+    "sample_result_excerpt": "계절 시장 시제품에는 노점 4종과 하루 일정만 포함하고 축제 연출은 제외했습니다. 이미지 자산과 문서 출력은 범위·권리 검토가 끝난 항목만 준비 대상으로 넘깁니다. (ID: studio:case:ST-C08; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)"
   },
   {
     "id": "studio:case:ST-G01",
@@ -844,8 +844,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G01 source-bound scenario",
-    "sample_result_excerpt": "검토용 가상 산출물: 기획 산출물 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:case:ST-G01; 파일: game-design/[프로젝트 ID]/game-design-brief/content.md)"
+    "display_title": "모바일 수집형 역할수행게임과 라이브 서비스 기획 (ST-G01)",
+    "sample_result_excerpt": "수집 동기는 바람 정령의 능력을 조합해 항로를 넓히는 데 두고, 반복 콘텐츠는 주간 탐사로 제안했습니다. 뽑기 확률과 운영 주기는 근거가 없어 경제·정책 책임자 결정 대기입니다. (ID: studio:case:ST-G01; 파일: game-design/[프로젝트 ID]/game-design-brief/content.md)"
   },
   {
     "id": "studio:case:ST-G02",
@@ -936,8 +936,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G02 source-bound scenario",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:case:ST-G02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
+    "display_title": "캐주얼 퍼즐 방치형 게임 기획 (ST-G02)",
+    "sample_result_excerpt": "산호 퍼즐을 풀면 정원이 자동으로 자라고, 복귀할 때 새 생물을 배치하는 흐름을 제안했습니다. 방치 보상 상한과 알림 빈도는 사용자 관찰 자료를 본 뒤 정합니다. (ID: studio:case:ST-G02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
   },
   {
     "id": "studio:case:ST-G03",
@@ -1032,8 +1032,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G03 source-bound scenario",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:case:ST-G03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
+    "display_title": "협동 생존 액션 게임 기획 (ST-G03)",
+    "sample_result_excerpt": "탐사대는 수리·정찰 역할로 나뉘고, 산소가 바닥나면 동료가 끌어 안전실로 복귀시킬 수 있습니다. 역할별 자원 소모와 네트워크 복구 규칙은 기술 검토 전까지 가설입니다. (ID: studio:case:ST-G03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
   },
   {
     "id": "studio:case:ST-G04",
@@ -1126,8 +1126,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G04 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:case:ST-G04; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)"
+    "display_title": "경쟁형 이용자 간 대전(PvP) 경기장 기획 (ST-G04)",
+    "sample_result_excerpt": "돌진 기술은 준비 동작을 보고 옆으로 피할 수 있고, 실패하면 짧게 빈틈이 생기도록 맞대응 수단을 적었습니다. 판정 범위와 색상 식별성은 전투·접근성 검토가 필요합니다. (ID: studio:case:ST-G04; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)"
   },
   {
     "id": "studio:case:ST-G05",
@@ -1223,8 +1223,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G05 source-bound scenario",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:case:ST-G05; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
+    "display_title": "개인용 컴퓨터(PC)·콘솔 액션 로그라이트 기획 (ST-G05)",
+    "sample_result_excerpt": "한 회차는 설원 진입→유물 선택→성문 보스전으로 이어지고, 실패 뒤에는 발견한 전술 정보만 남습니다. 영구 성장 폭과 보스 제작 범위는 플레이 시험과 인력 산정 뒤 조정합니다. (ID: studio:case:ST-G05; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
   },
   {
     "id": "studio:case:ST-G06",
@@ -1319,8 +1319,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G06 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:case:ST-G06; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+    "display_title": "선택형 서사 모험 게임 기획 (ST-G06)",
+    "sample_result_excerpt": "등대 기록을 공개하면 주민 신뢰는 오르지만 밀수업자 협력 경로가 닫히는 상태 변화를 적었습니다. 두 분기가 다시 만나는 조건과 모순 가능성은 서사 담당자가 확인해야 합니다. (ID: studio:case:ST-G06; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
   },
   {
     "id": "studio:case:ST-G07",
@@ -1413,8 +1413,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G07 source-bound scenario",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:case:ST-G07; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
+    "display_title": "편안한 생활 시뮬레이션 기획 (ST-G07)",
+    "sample_result_excerpt": "하루 목표를 강제하지 않고 정원 돌보기·이웃 방문·휴식 중 원하는 활동을 고르게 했습니다. 시간 압박을 줄이는 설정과 입력 대안은 접근성 담당자 검토를 기다립니다. (ID: studio:case:ST-G07; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
   },
   {
     "id": "studio:case:ST-G08",
@@ -1508,8 +1508,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G08 source-bound scenario",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:case:ST-G08; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
+    "display_title": "경영 타이쿤 시뮬레이션 기획 (ST-G08)",
+    "sample_result_excerpt": "노점 임대료·재고 폐기·방문객 만족도를 하루 결산에 함께 보여주는 안을 잡았습니다. 가격 탄력과 수요 계산식은 근거 데이터가 없어 경제 책임자가 정해야 합니다. (ID: studio:case:ST-G08; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
   },
   {
     "id": "studio:case:ST-G09",
@@ -1604,8 +1604,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G09 source-bound scenario",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:case:ST-G09; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+    "display_title": "샌드박스 사용자 제작 콘텐츠(UGC) 기획 (ST-G09)",
+    "sample_result_excerpt": "플레이어가 바람길 경주를 만들고 태그로 공개할 수 있게 하되, 신고된 코스는 검색 노출만 임시 중단하는 흐름을 제안했습니다. 권리·동의·운영 기준은 정책 담당자가 검토해야 합니다. (ID: studio:case:ST-G09; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
   },
   {
     "id": "studio:case:ST-G10",
@@ -1700,8 +1700,8 @@
     "source_references": [
       "guides/game-design-studio/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: ST-G10 source-bound scenario",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 기획 산출물: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:case:ST-G10; 파일: game-design/[프로젝트 ID]/game-design-brief/content.md)"
+    "display_title": "교육·사회문제·접근성 중심 게임 기획 (ST-G10)",
+    "sample_result_excerpt": "해양 쓰레기 분류 활동은 정답 암기보다 선택 결과를 비교하게 하고, 텍스트·음성·그림 설명을 함께 제공하는 안입니다. 학습 목표와 당사자 표현은 교육·접근성 검토자가 확인해야 합니다. (ID: studio:case:ST-G10; 파일: game-design/[프로젝트 ID]/game-design-brief/content.md)"
   },
   {
     "id": "studio:recipe:content-quest-design",
@@ -1794,8 +1794,8 @@
     "source_references": [
       "guides/game-design-studio/recipes/content-quest-design.md"
     ],
-    "display_title": "게임 기획 결과: content-quest-design recipe",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:recipe:content-quest-design; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+    "display_title": "콘텐츠와 퀘스트 설계 절차",
+    "sample_result_excerpt": "폐광 퀘스트는 입구 조사→광부 구조 또는 광맥 봉쇄→귀환으로 나뉘며, 각 선택에 상태 ID와 실패 복구를 붙였습니다. 외부 원작을 참고한 대사는 권리와 동의 확인 전까지 막힘으로 남습니다. (ID: studio:recipe:content-quest-design; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
   },
   {
     "id": "studio:recipe:economy-liveops",
@@ -1896,8 +1896,8 @@
     "source_references": [
       "guides/game-design-studio/recipes/economy-liveops.md"
     ],
-    "display_title": "게임 기획 결과: economy-liveops recipe",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:recipe:economy-liveops; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
+    "display_title": "게임 경제와 라이브 운영 설계 절차",
+    "sample_result_excerpt": "골드는 전투에서 얻어 장비 강화에 쓰고, 토큰은 행사 임무에서만 얻는 구조로 분리했습니다. 가격·확률·천장 수치는 근거 없음으로 표시했으며 실험 중단 기준과 되돌리기는 경제 책임자 확인 대기입니다. (ID: studio:recipe:economy-liveops; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
   },
   {
     "id": "studio:recipe:new-game-gdd",
@@ -1991,8 +1991,8 @@
     "source_references": [
       "guides/game-design-studio/recipes/new-game-gdd.md"
     ],
-    "display_title": "게임 기획 결과: new-game-gdd recipe",
-    "sample_result_excerpt": "예시 산출물 조각: 기획 원칙 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:recipe:new-game-gdd; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)"
+    "display_title": "새 게임 기획서(GDD) 작성 절차",
+    "sample_result_excerpt": "협동 역할수행게임의 핵심 재미는 ‘서로 다른 단서를 합쳐 길을 찾는 경험’으로 적고, 혼자서 모든 역할을 해결하는 기능은 배제했습니다. 대상 플레이어 가정과 다음 시제품 범위는 수석 기획자 결정 전까지 미정입니다. (ID: studio:recipe:new-game-gdd; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)"
   },
   {
     "id": "studio:recipe:production-review-export",
@@ -2098,8 +2098,8 @@
     "source_references": [
       "guides/game-design-studio/recipes/production-review-export.md"
     ],
-    "display_title": "게임 기획 결과: production-review-export recipe",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:recipe:production-review-export; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)"
+    "display_title": "제작 범위 검토와 문서 출력 준비 절차",
+    "sample_result_excerpt": "등대섬 기능 목록에서 협동 전력 퍼즐만 이번 주요 일정에 남기고 사진 모드는 제외 후보로 표시했습니다. 검토 막힘이 해소된 `content.md`만 출력 준비 명세로 넘기며 실제 변환은 아직 하지 않습니다. (ID: studio:recipe:production-review-export; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)"
   },
   {
     "id": "studio:recipe:system-feature-spec",
@@ -2191,8 +2191,8 @@
     "source_references": [
       "guides/game-design-studio/recipes/system-feature-spec.md"
     ],
-    "display_title": "게임 기획 결과: system-feature-spec recipe",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:recipe:system-feature-spec; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
+    "display_title": "시스템 기능 명세 작성 절차",
+    "sample_result_excerpt": "제작 기능은 재료 선택→수량 검사→제작 대기→결과 수령 순서이며, 취소와 재접속 예외를 따로 적었습니다. 표 데이터와 실행 중 상태의 연결, 접근성 핵심 행동은 설계 책임자가 검토해야 합니다. (ID: studio:recipe:system-feature-spec; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
   },
   {
     "id": "studio:recipe:ux-accessibility",
@@ -2284,7 +2284,7 @@
     "source_references": [
       "guides/game-design-studio/recipes/ux-accessibility.md"
     ],
-    "display_title": "게임 기획 결과: ux-accessibility recipe",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:recipe:ux-accessibility; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
+    "display_title": "사용자 경험과 접근성 설계 절차",
+    "sample_result_excerpt": "첫 세션의 상품 진열 행동을 모바일 터치와 PC 키보드 입력으로 나누고, 초점·글자 확대·시각 및 소리 대안을 함께 적었습니다. 오프라인 복구와 입력 우선순위는 접근성 책임자 확인 전까지 제안 상태입니다. (ID: studio:recipe:ux-accessibility; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
   }
 ]

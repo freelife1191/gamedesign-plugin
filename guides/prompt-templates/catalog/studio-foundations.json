@@ -98,8 +98,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: 문서 목적과 대상에 맞는 품질 프로필 선택",
-    "sample_result_excerpt": "초안 결과: 문서 품질 프로필에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)"
+    "display_title": "문서 목적과 독자에 맞는 품질 프로필 선택",
+    "sample_result_excerpt": "주 품질 프로필은 ‘간결한 기획 브리프’로 잡았고, 독자 역할과 출력 형식은 아직 비어 있습니다. 두 값을 담당자가 확인하기 전에는 체크리스트를 확정하지 않습니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)"
   },
   {
     "id": "studio:apply-document-quality-profile:standard",
@@ -206,8 +206,8 @@
       "guides/game-design-studio/skills/design-game-systems.md",
       "guides/game-design-studio/document-quality.md"
     ],
-    "display_title": "게임 기획 결과: Overlay와 preset manifest를 갖춘 품질 프로필 선택",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 문서 품질 프로필 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:apply-document-quality-profile:standard; 파일: game-design/studio-foundations/profile-standard/content.md)"
+    "display_title": "덧씌움 규칙과 프리셋 명세를 포함한 품질 프로필 선택",
+    "sample_result_excerpt": "시스템 명세에는 기본 프로필과 ‘접근성 검토’ 덧씌움 규칙을 함께 제안했습니다. 요구사항 명세의 적용 범위는 문서 책임자가 검토해야 합니다. (ID: studio:apply-document-quality-profile:standard; 파일: game-design/studio-foundations/profile-standard/content.md)"
   },
   {
     "id": "studio:apply-document-quality-profile:advanced",
@@ -314,8 +314,8 @@
       "guides/game-design-studio/document-quality.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: Fallback과 state receipt를 가진 품질 프로필 검토",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:apply-document-quality-profile:advanced; 파일: game-design/studio-foundations/profile-advanced/content.md)"
+    "display_title": "대체 규칙과 상태 기록을 갖춘 품질 프로필 검토",
+    "sample_result_excerpt": "‘상세 명세’와 ‘경영진 요약’ 프로필이 충돌해 안전한 기본 프로필로 되돌리는 안을 남겼습니다. 충돌 해소와 상태 기록 승인은 결정 담당자 몫입니다. (ID: studio:apply-document-quality-profile:advanced; 파일: game-design/studio-foundations/profile-advanced/content.md)"
   },
   {
     "id": "studio:define-game-vision:beginner",
@@ -416,8 +416,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: 대상과 player promise를 정하는 게임 비전",
-    "sample_result_excerpt": "가상 결과 조각: 대상 플레이어: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:define-game-vision:beginner; 파일: game-design/studio-foundations/vision-beginner/content.md)"
+    "display_title": "대상 플레이어와 플레이 약속을 정하는 게임 비전",
+    "sample_result_excerpt": "대상 플레이어는 짧은 협동을 선호하는 2인 친구이며, 플레이 약속은 ‘매일 하나씩 등대섬을 되살린다’입니다. 이 가설은 인터뷰 근거와 연결한 뒤 채택 여부를 정합니다. (ID: studio:define-game-vision:beginner; 파일: game-design/studio-foundations/vision-beginner/content.md)"
   },
   {
     "id": "studio:define-game-vision:standard",
@@ -522,8 +522,8 @@
       "guides/game-design-studio/skills/design-game-systems.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: Pillar와 anti-pillar를 검증하는 게임 비전",
-    "sample_result_excerpt": "가상의 검토 기록 — 기획 원칙: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:define-game-vision:standard; 파일: game-design/studio-foundations/vision-standard/content.md)"
+    "display_title": "핵심 원칙과 배제 원칙을 검증하는 게임 비전",
+    "sample_result_excerpt": "핵심 원칙은 ‘관찰로 푸는 협동 추리’, 배제 원칙은 ‘반복 전투로 진행 막기’로 적었습니다. 폐역 신호 해독 프로토타입에서 두 원칙이 실제 선택 기준이 되는지 살펴봐야 합니다. (ID: studio:define-game-vision:standard; 파일: game-design/studio-foundations/vision-standard/content.md)"
   },
   {
     "id": "studio:define-game-vision:advanced",
@@ -630,8 +630,8 @@
       "guides/game-design-studio/skills/review-game-design.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: 상충 기능과 근거 owner를 다루는 게임 비전",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 비교 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)"
+    "display_title": "상충하는 기능과 근거 책임자를 다루는 게임 비전",
+    "sample_result_excerpt": "‘자동 가격 조정’은 시장 운영의 이해도를 낮출 수 있어 ‘직접 흥정’ 기능과 나란히 비교했습니다. 플레이 관찰 자료의 책임자가 근거를 보완한 뒤 기능 채택을 판단합니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)"
   },
   {
     "id": "studio:design-player-experience:beginner",
@@ -737,8 +737,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/recipes/ux-accessibility.md"
     ],
-    "display_title": "게임 기획 결과: 행동과 피드백이 있는 첫 세션 UX",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:design-player-experience:beginner; 파일: game-design/studio-foundations/ux-beginner/content.md)"
+    "display_title": "행동과 반응을 연결한 첫 세션 사용자 경험(UX)",
+    "sample_result_excerpt": "첫 핵심 행동은 바람 고리를 통과하는 조작이며, 성공하면 날개 끝이 밝아지고 짧은 진동이 울립니다. 고리를 놓쳤을 때의 복귀 위치는 플레이 테스트 뒤 정합니다. (ID: studio:design-player-experience:beginner; 파일: game-design/studio-foundations/ux-beginner/content.md)"
   },
   {
     "id": "studio:design-player-experience:standard",
@@ -849,8 +849,8 @@
       "guides/game-design-studio/recipes/ux-accessibility.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: Onboarding과 접근성을 검토하는 플레이어 경험",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 튜토리얼 건너뛰기·다시 보기: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:design-player-experience:standard; 파일: game-design/studio-foundations/ux-standard/content.md)"
+    "display_title": "첫 진입 안내와 접근성을 검토하는 플레이어 경험",
+    "sample_result_excerpt": "해저 정원 튜토리얼은 언제든 건너뛰고 작업대에서 다시 볼 수 있게 구성했습니다. 색상 외에 형태와 소리로도 산소 부족을 알리는 안은 접근성 검토가 필요합니다. (ID: studio:design-player-experience:standard; 파일: game-design/studio-foundations/ux-standard/content.md)"
   },
   {
     "id": "studio:design-player-experience:advanced",
@@ -962,8 +962,8 @@
       "guides/game-design-studio/skills/design-game-systems.md",
       "guides/game-design-studio/skills/review-game-design.md"
     ],
-    "display_title": "게임 기획 결과: 멀티모달 UX와 책임 gate를 갖춘 플레이어 경험",
-    "sample_result_excerpt": "초안 결과: 검토 발견 사항에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:design-player-experience:advanced; 파일: game-design/studio-foundations/ux-advanced/content.md)"
+    "display_title": "복합 감각 사용자 경험과 책임 관문을 갖춘 플레이어 경험",
+    "sample_result_excerpt": "엔진 과열은 계기판 점멸·경고음·진동으로 함께 알리되, 세 신호 모두 동일한 상태값을 참조하도록 적었습니다. 경고 강도와 접근성 근거는 담당자가 확인해야 합니다. (ID: studio:design-player-experience:advanced; 파일: game-design/studio-foundations/ux-advanced/content.md)"
   },
   {
     "id": "studio:design-game-systems:beginner",
@@ -1069,8 +1069,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/recipes/system-feature-spec.md"
     ],
-    "display_title": "게임 기획 결과: 규칙과 상태를 정의하는 게임 시스템",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 규칙 적용 순서 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:design-game-systems:beginner; 파일: game-design/studio-foundations/systems-beginner/content.md)"
+    "display_title": "규칙과 상태를 정의하는 게임 시스템",
+    "sample_result_excerpt": "지도를 펼치면 단서 토큰 1개를 쓰고 ‘탐색 중’ 상태로 바뀌며, 토큰이 없으면 행동을 취소합니다. 토큰 원본 데이터와 취소 뒤 상태는 시스템 담당자가 확인해야 합니다. (ID: studio:design-game-systems:beginner; 파일: game-design/studio-foundations/systems-beginner/content.md)"
   },
   {
     "id": "studio:design-game-systems:standard",
@@ -1181,8 +1181,8 @@
       "guides/game-design-studio/recipes/system-feature-spec.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: 예외와 데이터를 연결하는 게임 시스템",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:design-game-systems:standard; 파일: game-design/studio-foundations/systems-standard/content.md)"
+    "display_title": "예외 규칙과 데이터를 연결하는 게임 시스템",
+    "sample_result_excerpt": "두 수비대가 같은 성문을 동시에 수리하면 먼저 완료된 요청만 내구도를 반영하고 나머지는 자원을 돌려주는 규칙을 제안했습니다. 동시 처리 순서는 서버 구현과 대조해야 합니다. (ID: studio:design-game-systems:standard; 파일: game-design/studio-foundations/systems-standard/content.md)"
   },
   {
     "id": "studio:design-game-systems:advanced",
@@ -1293,8 +1293,8 @@
       "guides/game-design-studio/skills/review-game-design.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: 상호 시스템 반례와 engineering handoff",
-    "sample_result_excerpt": "가상 결과 조각: 상호 시스템: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:design-game-systems:advanced; 파일: game-design/studio-foundations/systems-advanced/content.md)"
+    "display_title": "시스템 간 반례와 개발 인계 사항",
+    "sample_result_excerpt": "두 탐험가가 동시에 등대 전력을 복구하면 보상 시스템이 완료 횟수를 두 번 셀 수 있다는 반례를 남겼습니다. 임시 상태 구조와 원자적 처리 여부는 개발 담당자가 검토합니다. (ID: studio:design-game-systems:advanced; 파일: game-design/studio-foundations/systems-advanced/content.md)"
   },
   {
     "id": "studio:design-game-content:beginner",
@@ -1398,8 +1398,8 @@
       "guides/game-design-studio/templates.md",
       "guides/game-design-studio/workflow.md"
     ],
-    "display_title": "게임 기획 결과: 퀘스트와 NPC 한 개를 설계하는 게임 콘텐츠",
-    "sample_result_excerpt": "가상의 검토 기록 — 콘텐츠 목적: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:design-game-content:beginner; 파일: game-design/studio-foundations/content-beginner/content.md)"
+    "display_title": "퀘스트와 비플레이어 캐릭터(NPC) 하나 설계하기",
+    "sample_result_excerpt": "역무원 NPC는 플레이어에게 세 신호 중 하나를 골라 복구하게 하고, 잘못 고르면 다음 밤에 새 단서를 제공합니다. 보상 수치와 실패 뒤 대사는 콘텐츠 담당자 검토 전까지 비워 둡니다. (ID: studio:design-game-content:beginner; 파일: game-design/studio-foundations/content-beginner/content.md)"
   },
   {
     "id": "studio:design-game-content:standard",
@@ -1509,8 +1509,8 @@
       "guides/game-design-studio/skills/design-game-systems.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: Content graph와 보상을 연결하는 게임 콘텐츠",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:design-game-content:standard; 파일: game-design/studio-foundations/content-standard/content.md)"
+    "display_title": "콘텐츠 관계도와 보상을 연결하는 게임 콘텐츠",
+    "sample_result_excerpt": "봄 장터 퀘스트를 마치면 씨앗 상점과 여름 의뢰가 열리지만, 희귀 씨앗 보상은 생산 비용 근거가 없어 보류했습니다. 필요한 NPC 표정 3종도 제작 자원 목록에 넣었습니다. (ID: studio:design-game-content:standard; 파일: game-design/studio-foundations/content-standard/content.md)"
   },
   {
     "id": "studio:design-game-content:advanced",
@@ -1622,7 +1622,7 @@
       "guides/game-design-studio/use-cases/concept-scenarios.md",
       "guides/game-design-studio/templates.md"
     ],
-    "display_title": "게임 기획 결과: 서사·제작·권리 경계를 갖춘 게임 콘텐츠",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:design-game-content:advanced; 파일: game-design/studio-foundations/content-advanced/content.md)"
+    "display_title": "서사·제작·권리 경계를 갖춘 게임 콘텐츠",
+    "sample_result_excerpt": "견습생이 금지된 바람길을 공개하는 선택은 다음 지역의 경비 상태와 대사를 바꿉니다. 참고 민요의 사용 권리와 성우 동의가 확인되기 전에는 제작 관문을 넘기지 않습니다. (ID: studio:design-game-content:advanced; 파일: game-design/studio-foundations/content-advanced/content.md)"
   }
 ]
