@@ -230,13 +230,17 @@ Run the new sample test and root README contract.
 - Create: `tooling/audit-game-design-docs.mjs`
 - Create: `tests/unit/audit-game-design-docs.test.mjs`
 - Create: `guides/reviews/2026-08-11-document-language-audit.md`
+- Modify: user-facing Korean labels and instructions under `shared/templates` and `products/*/plugin/assets/templates`
+- Modify: `tooling/lib/prompt-template-catalog.mjs`
+- Modify: `tooling/lib/prompt-guides.mjs`
+- Modify: prompt catalog sources under `guides/prompt-templates/catalog/*.json`
 - Modify: source Markdown files reported as high-severity under `products/*/plugin`, `shared`, `guides`, and root `README.md`
 - Modify: `shared/knowledge/trends/2026-current-practices.md`
 - Modify: `shared/knowledge/trends/source-register.json`
 
 **Interfaces:**
 - Consumes: source-of-truth documentation inventory and the game-design writing style rules.
-- Produces: deterministic audit report, high-severity corrections, current-practice evidence updates.
+- Produces: deterministic audit report, Korean-first result templates, beginner-readable prompt cards, high-severity corrections, and current-practice evidence updates.
 
 - [ ] **Step 1: Write RED audit tests**
 
@@ -246,15 +250,27 @@ Test translation-like passive forms, unsupported hype, unexplained English-first
 
 Record each inspected file and issue count. Do not treat generated `plugins/*`, vendor files, or copied source documents as authoring roots.
 
-- [ ] **Step 3: Fix only high-value source issues**
+- [ ] **Step 3: Localize the actual result templates**
+
+Convert the user-facing headings, guidance, table labels, and review instructions in the shared and product artifact templates to Korean-first wording. Preserve canonical file names, IDs, YAML/JSON keys, Markdown structure, and standard terms such as UX, UI, LiveOps, API, prompt, and token. Add behavior tests that render representative Studio and Career artifacts and verify that the resulting `content.md`, `decisions/README.md`, and `assets/README.md` are understandable without reading the English schema.
+
+- [ ] **Step 4: Split prompt cards into simple and advanced views**
+
+Extend the prompt catalog and renderer with a beginner-facing view containing one natural-language request, a short Korean workflow explanation, and a concrete sample-result excerpt. Keep exact skill IDs, CLI commands, safety contracts, and recovery receipts under a collapsed advanced section. Do not replace stable IDs or code fields with translated aliases.
+
+- [ ] **Step 5: Fix only high-value source issues**
 
 Use `humanize-korean` rules conservatively. Preserve facts, citations, IDs, code, links, and document genre. Record why other files were left unchanged.
 
-- [ ] **Step 4: Refresh current practices**
+- [ ] **Step 6: Refresh current practices**
 
 Add or reverify official evidence for playtesting, Xbox accessibility, LiveOps event entry/recovery, Steam Early Access claims, economy/loot-box disclosure, UGC moderation, and student portfolio boundaries. Store verification date, review date, scope, and limitation.
 
-- [ ] **Step 5: Run the audit and commit**
+- [ ] **Step 7: Rebuild generated guides and verify**
+
+Run `npm run build:prompt-guides`, the representative artifact render tests, prompt-guide checks, and guide validation. Generated `plugins/*` output remains a later standard-build responsibility and is never edited by hand.
+
+- [ ] **Step 8: Run the audit and commit**
 
 Require zero unresolved high-severity issues in owned source documents.
 
