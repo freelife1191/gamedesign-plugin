@@ -135,7 +135,7 @@ async function assertVendorClosure(name, root = path.join(repoRoot, EXPECTED[nam
   }
 
   const rootFiles = await listRegularFiles(root);
-  const expectedPaths = ["THIRD_PARTY_NOTICES.md", "vendor.lock.json", ...actual.map(({ path: relativePath }) => `${contract.treeRoot}/${relativePath}`)].sort();
+  const expectedPaths = ["THIRD_PARTY_NOTICES.md", "vendor.lock.json", ...actual.map(({ path: relativePath }) => `${contract.treeRoot}/${relativePath}`)].sort((left, right) => left.localeCompare(right));
   assert.deepEqual(rootFiles.map(({ path: relativePath }) => relativePath), expectedPaths, `${name}: vendor root has no extra or executable updater`);
   const notices = await readFile(path.join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
   for (const literal of [contract.lock.upstream.repository, contract.lock.upstream.tag, contract.lock.license.spdx, contract.lock.license.sha256]) {
@@ -149,6 +149,14 @@ async function copiedVendor(t, name) {
   const destination = path.join(temporaryRoot, name);
   await cp(path.join(repoRoot, EXPECTED[name].root), destination, { recursive: true });
   return destination;
+}
+
+async function copiedVendorWorkspace(t, name) {
+  const temporaryRoot = await mkdtemp(path.join(tmpdir(), `diagram-vendor-workspace-${name}-`));
+  t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
+  const vendorRoot = path.join(temporaryRoot, "shared/vendor", name);
+  await cp(path.join(repoRoot, EXPECTED[name].root), vendorRoot, { recursive: true });
+  return { workspaceRoot: temporaryRoot, vendorRoot };
 }
 
 async function loadUpdaterOrFail() {
@@ -199,6 +207,48 @@ test("diagram vendor updater keeps check offline and latest/update explicit", as
   assert.deepEqual(parseDiagramSkillUpdaterArgs(["--check"]), { mode: "check", network: false, skill: "all" });
   assert.deepEqual(parseDiagramSkillUpdaterArgs(["--check-latest"]), { mode: "check-latest", network: true, skill: "all" });
   assert.deepEqual(parseDiagramSkillUpdaterArgs(["--update", "archify"]), { mode: "update", network: true, skill: "archify" });
+});
+
+test("injected latest check is read-only and injected update atomically stages a verified future closure", async (t) => {
+  const { checkLatestDiagramSkills, updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
+  const { workspaceRoot, vendorRoot } = await copiedVendorWorkspace(t, "archify");
+  const before = await readFile(path.join(vendorRoot, "vendor.lock.json"));
+  const futureRelease = { tag: "v2.13.1", commit: "1".repeat(40), releasedAt: "2026-08-12T00:00:00Z" };
+  const latest = await checkLatestDiagramSkills({
+    root: workspaceRoot,
+    skill: "archify",
+    fetchRelease: async ({ name, repository }) => {
+      assert.equal(name, "archify");
+      assert.equal(repository, "https://github.com/tt-a1i/archify");
+      return futureRelease;
+    },
+  });
+  assert.deepEqual(latest, [{ name: "archify", status: "outdated", installedTag: "v2.13.0", latestTag: "v2.13.1", updateAvailable: true }]);
+  assert.deepEqual(await readFile(path.join(vendorRoot, "vendor.lock.json")), before, "latest check never changes the installed vendor");
+
+  const lock = JSON.parse(before);
+  const archive = {
+    files: await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
+      path: relativePath,
+      bytes: await readFile(path.join(vendorRoot, lock.tree.root, relativePath)),
+    }))),
+  };
+  const stagingRoot = path.join(path.dirname(vendorRoot), "archify-stage");
+  const result = await updateDiagramSkill({
+    root: vendorRoot,
+    name: "archify",
+    stagingRoot,
+    fetchRelease: async () => futureRelease,
+    fetchArchive: async (release) => {
+      assert.deepEqual(release, futureRelease);
+      return archive;
+    },
+  });
+  assert.deepEqual(result, { name: "archify", tag: "v2.13.1", verifiedFiles: 60 });
+  const updated = JSON.parse(await readFile(path.join(vendorRoot, "vendor.lock.json"), "utf8"));
+  assert.equal(updated.upstream.tag, "v2.13.1");
+  assert.equal(updated.tree.root, "archify/2.13.1");
+  assert.deepEqual(await verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" }), result);
 });
 
 test("both product builds retain both direct skills and their complete local runtime closures", async (t) => {

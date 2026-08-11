@@ -1,251 +1,295 @@
 {
-  "package": {
-    "name": "svg-infographic",
-    "version": "0.8.3",
-    "upstream": "https://github.com/kyungseo/skillstead",
-    "license": "Apache-2.0",
-    "copyright": "Copyright 2026 Kyungseo Park"
+  "schemaVersion": 1,
+  "upstream": {
+    "repository": "https://github.com/kyungseo/skillstead",
+    "tag": "svg-infographic/v0.9.0",
+    "commit": "6e5b850f66716af9eb3c6a79f60e4f8ff5716dee",
+    "releasedAt": "2026-08-08T16:41:59Z",
+    "skillPath": "skills/svg-infographic"
   },
-  "files": [
-    {
-      "path": "CHANGELOG.md",
-      "sha256": "794ca707fdc1647975030c97b171c31f1ae14b526483286696cfaf3d35e8329e",
-      "size": 2684
-    },
-    {
-      "path": "LICENSE.txt",
-      "sha256": "4739c79c8017b90a46ab26f8972fd4ac56c9ea459b89bf9671359b462f62a4a6",
-      "size": 11344
-    },
-    {
-      "path": "README.ko.md",
-      "sha256": "d981158c3087cc3f853004178a9a27505c74da9bb8bd4716caf04fa510e4ddaa",
-      "size": 16590
-    },
-    {
-      "path": "README.md",
-      "sha256": "ee63d45454d3147fbf14a927a28a74f9a3fe545e549b12dadc6c0867a65cdc51",
-      "size": 14103
-    },
-    {
-      "path": "SKILL.md",
-      "sha256": "6d5a2d278ca0aaa045b636d7a5faf83e825908ba7a28dac09faa6c01e442f2f1",
-      "size": 22012
-    },
-    {
-      "path": "references/archetypes.md",
-      "sha256": "f0c8de46fb2a25fdd13de021c22c0390f40b760af6224120d2f16957f216605f",
-      "size": 11548
-    },
-    {
-      "path": "references/authoring.md",
-      "sha256": "2b8239cd836a7753cab5c67840c631347b58b4806848bbffe2e0653d214b6317",
-      "size": 20718
-    },
-    {
-      "path": "references/sketch.md",
-      "sha256": "887c33236665d3e7645b3bedaff564a7326542c1de1b4ecc6497a007c7aa8403",
-      "size": 8431
-    },
-    {
-      "path": "scripts/check-svg.mjs",
-      "sha256": "3990a96078ce8c0c4692213820ce72fc228a1b827459792d5ccc45932f5f9a41",
-      "size": 41219
-    },
-    {
-      "path": "scripts/check-svg.test.mjs",
-      "sha256": "a3f73ff0ccd03189fbd8eb4dc45fd8ec72cf02024afbca9eada3c713d953c808",
-      "size": 14481
-    },
-    {
-      "path": "scripts/fixtures/curve-head-unverified.svg",
-      "sha256": "48894c6edc6671feb2133164030802f9dc4ee47d5ad13957a6889a2ab9e44c7b",
-      "size": 642
-    },
-    {
-      "path": "scripts/fixtures/dangling-ref.svg",
-      "sha256": "c65a722af8c8dfdb1b94d8968d1b11cf3935c9d6f7906f8bf111573daf2491f1",
-      "size": 380
-    },
-    {
-      "path": "scripts/fixtures/exponent-coords.svg",
-      "sha256": "066233a756d23b2d7021e969f505676e43ca0119265d86093c96cd5e8281e87e",
-      "size": 933
-    },
-    {
-      "path": "scripts/fixtures/exponent-markerwidth.svg",
-      "sha256": "a5d05eaba46a060ad4b929a2eb054eeb3444044617420401af39afefcd3484f2",
-      "size": 924
-    },
-    {
-      "path": "scripts/fixtures/filtered-css-override-unsafe.svg",
-      "sha256": "1493957ad14af00d2344461c5b0608df33b1d92fc3dc367c583748356f48b152",
-      "size": 823
-    },
-    {
-      "path": "scripts/fixtures/filtered-curved-connector.svg",
-      "sha256": "20cb5ad8a7c6ec6b0cf82c069080fcc016f337e6bc67c2b91174142ca7cf38c3",
-      "size": 778
-    },
-    {
-      "path": "scripts/fixtures/filtered-horizontal-connectors.svg",
-      "sha256": "706dc9ea02819d827fd5ea5d34b8e8a05ce2369e226db0ee72d18665aba30526",
-      "size": 771
-    },
-    {
-      "path": "scripts/fixtures/filtered-safe-userspace.svg",
-      "sha256": "e8b295c695f646b937b0809deb07286343c435ad4fea2363ba5c99ddb3c5cb2e",
-      "size": 793
-    },
-    {
-      "path": "scripts/fixtures/filtered-unpainted-strokes.svg",
-      "sha256": "ad175d5a0c815757cf34193885797012985bd9ab707a58043cfff8827b61c9f4",
-      "size": 534
-    },
-    {
-      "path": "scripts/fixtures/filtered-unresolved-strokewidth.svg",
-      "sha256": "8020447852a9b81e7bbe40c218a6f417a0ce125b5879aa449bb90a9f44f8f377",
-      "size": 596
-    },
-    {
-      "path": "scripts/fixtures/filtered-userspace-calc-region.svg",
-      "sha256": "6d3f4a0f717b1a70f000a615a7987336e19cb638c4cd5d60b0e37681647e1dfa",
-      "size": 613
-    },
-    {
-      "path": "scripts/fixtures/filtered-userspace-negative-region.svg",
-      "sha256": "03bdf95dfdc862650f63d6ebf7f189ed618c9bbd4d531fa432803b2aebcd7419",
-      "size": 606
-    },
-    {
-      "path": "scripts/fixtures/filtered-userspace-percent-zero-region.svg",
-      "sha256": "3b4e3c55d60266fc68916d0ef7f2dbc81147273e757bb72cd267883fe4e50a07",
-      "size": 606
-    },
-    {
-      "path": "scripts/fixtures/filtered-userspace-zero-region.svg",
-      "sha256": "45e9503872b09fbdabcb8f6a0fa85baa872241e72a9f4e455c32d4a497c13a82",
-      "size": 605
-    },
-    {
-      "path": "scripts/fixtures/filtered-vertical-connectors.svg",
-      "sha256": "2decf3c1429a12edf4fd1ddd10702926d10642dfb9b218948545371a48a49ed4",
-      "size": 771
-    },
-    {
-      "path": "scripts/fixtures/filtered-zero-strokewidth.svg",
-      "sha256": "2244bd9cee9e22588a3746d287349b9068080d2b4eb730311896ff0ca1bf25a2",
-      "size": 769
-    },
-    {
-      "path": "scripts/fixtures/huge-viewport-small-glyph.svg",
-      "sha256": "dbb331b91ca32a50ee8240e0f9c1e86e0c9686eb76429746766994f82325b52b",
-      "size": 923
-    },
-    {
-      "path": "scripts/fixtures/inline-style-oversized.svg",
-      "sha256": "4cadf4265f6c5ce3700a7ddf673b736066cbf5ff9ae8a0a24cf3a3cebb517a02",
-      "size": 602
-    },
-    {
-      "path": "scripts/fixtures/korean-overflow.svg",
-      "sha256": "b40f230844438345595c9730cf0794371edb0f4e8ceb34b2a4897a87aea34cfa",
-      "size": 344
-    },
-    {
-      "path": "scripts/fixtures/latin-overflow.svg",
-      "sha256": "655ff0cb3e4802db3b6d0d64a55fcc45abb5a0baed0fda81ac5b61d7d796f318",
-      "size": 336
-    },
-    {
-      "path": "scripts/fixtures/missing-marker-units.svg",
-      "sha256": "1ecf88c9b6dc3701736f3ff9a1b912e94ff0a1dc1234b4f824e561a03d8c880e",
-      "size": 526
-    },
-    {
-      "path": "scripts/fixtures/mixed-known-unknown.svg",
-      "sha256": "8ca65bdec0443da6b13ea075a0abab4e0f7df48e4043e05e244b72617e25d906",
-      "size": 895
-    },
-    {
-      "path": "scripts/fixtures/multi-stroke-all-clean.svg",
-      "sha256": "e160b3cb55d83f2221da9aedf8fc1df7ebe6614e76d255336dca3f4cd34d8daa",
-      "size": 878
-    },
-    {
-      "path": "scripts/fixtures/multi-stroke-thin-violation.svg",
-      "sha256": "6d4aa0d3d820579475f52556122cf3e25ae91bee6ed4f843a3a2bba6160b6bf6",
-      "size": 884
-    },
-    {
-      "path": "scripts/fixtures/oversized-head.svg",
-      "sha256": "3f32fb831221b2c659699fb7ef5d77869b92bb32bd0b412dc5cc17d73b7c3a55",
-      "size": 577
-    },
-    {
-      "path": "scripts/fixtures/oversized-visible-head.svg",
-      "sha256": "780ffe2f9396e5942909fef3b6324223639b34816d271fbbdab7108d40428534",
-      "size": 926
-    },
-    {
-      "path": "scripts/fixtures/par-slice.svg",
-      "sha256": "c8308ae0402541b7e0c5fd5aaae4931b0f772ee942736535db38f4788310e914",
-      "size": 965
-    },
-    {
-      "path": "scripts/fixtures/relative-path-oversized.svg",
-      "sha256": "bbc65e2c09641d414fee3ca17030b7823fafbb8e76056e2a069c0c92f837bc6a",
-      "size": 636
-    },
-    {
-      "path": "scripts/fixtures/split-css-rules.svg",
-      "sha256": "f2f302614b414224dee8bc54027e08999689664863a8471b619301ff1601bcfd",
-      "size": 655
-    },
-    {
-      "path": "scripts/fixtures/undersized-head.svg",
-      "sha256": "355ff911fda9ec5bb9c7b18bcc42495141891a00d14d0ca84016fadc0158e60d",
-      "size": 920
-    },
-    {
-      "path": "scripts/fixtures/unknown-stroke-ref.svg",
-      "sha256": "bad76753e4db73d47ba3db15c1ca8a054038139c5dfac25f1bf8eb83cc17db16",
-      "size": 933
-    },
-    {
-      "path": "scripts/fixtures/unproven-extreme-viewport.svg",
-      "sha256": "078726a7018f40ac748bba74929bb9b9b425bb11df92a154bafe2fd3b61d34de",
-      "size": 921
-    },
-    {
-      "path": "scripts/fixtures/unused-css-rule.svg",
-      "sha256": "370b7ed3b8166b926d12c121c57853683ef7bc25b09eb87d9ac704fe8d4e2cb5",
-      "size": 977
-    },
-    {
-      "path": "scripts/fixtures/valid.svg",
-      "sha256": "c6602e579d74b4cf84adf94510dd199afe7eec543aa91aa9562a00d0db8cd53d",
-      "size": 928
-    },
-    {
-      "path": "scripts/fixtures/warning-transform.svg",
-      "sha256": "d8640a11bcb7f0f237b9b329f04afe863f30092270f66ee1624972aa9ec435f6",
-      "size": 346
-    },
-    {
-      "path": "scripts/render.mjs",
-      "sha256": "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e",
-      "size": 19876
-    },
-    {
-      "path": "scripts/render.sh",
-      "sha256": "1515fbab7fb6ec2b7a76e50055e8c9160a4c8bb974487e48d25c7259f70ade35",
-      "size": 2162
-    },
-    {
-      "path": "scripts/render.test.mjs",
-      "sha256": "40f3150dd8902527e6e7945366ad717e70b2bc7fb84e39b11f7a63fbe7b3fcb1",
-      "size": 17368
-    }
-  ]
+  "license": {
+    "spdx": "Apache-2.0",
+    "path": "LICENSE.txt",
+    "sha256": "4739c79c8017b90a46ab26f8972fd4ac56c9ea459b89bf9671359b462f62a4a6"
+  },
+  "tree": {
+    "root": "svg-infographic/0.9.0",
+    "files": [
+      {
+        "path": "CHANGELOG.md",
+        "size": 3117,
+        "sha256": "2b22255c3f8df790c447b5810d5efff4c893b544aad41036cd6131e0d388e78a"
+      },
+      {
+        "path": "LICENSE.txt",
+        "size": 11344,
+        "sha256": "4739c79c8017b90a46ab26f8972fd4ac56c9ea459b89bf9671359b462f62a4a6"
+      },
+      {
+        "path": "README.ko.md",
+        "size": 16846,
+        "sha256": "3be6be71eb58f3873186a4f140242ca0373b8c5d9d3f60404a1950cc1223b9df"
+      },
+      {
+        "path": "README.md",
+        "size": 14331,
+        "sha256": "2917952c8c9d157c55682811b4fe4171fcae34f78630af8e51628139b947d598"
+      },
+      {
+        "path": "references/archetypes.md",
+        "size": 11832,
+        "sha256": "7199fb4c6303a80cb78078a81b40b10d73e37e0b03802b50a6fe1047e181a6af"
+      },
+      {
+        "path": "references/authoring.md",
+        "size": 25752,
+        "sha256": "a2c8cdf6c528df360dbbe245370a5c52076359544fb7341f8263afe45d8fcae7"
+      },
+      {
+        "path": "references/sketch.md",
+        "size": 8431,
+        "sha256": "887c33236665d3e7645b3bedaff564a7326542c1de1b4ecc6497a007c7aa8403"
+      },
+      {
+        "path": "scripts/check-svg.mjs",
+        "size": 60617,
+        "sha256": "61271a00d5466438eeabe5aeedf961d5df802c0976732ed193e265a7c94493e3"
+      },
+      {
+        "path": "scripts/check-svg.test.mjs",
+        "size": 22477,
+        "sha256": "e6e9bd03a6ae4dd30267fd1556e83c607842b67a89d8fc4d59abd579d8fcb9b7"
+      },
+      {
+        "path": "scripts/fixtures/curve-head-unverified.svg",
+        "size": 642,
+        "sha256": "48894c6edc6671feb2133164030802f9dc4ee47d5ad13957a6889a2ab9e44c7b"
+      },
+      {
+        "path": "scripts/fixtures/dangling-ref.svg",
+        "size": 380,
+        "sha256": "c65a722af8c8dfdb1b94d8968d1b11cf3935c9d6f7906f8bf111573daf2491f1"
+      },
+      {
+        "path": "scripts/fixtures/exponent-coords.svg",
+        "size": 933,
+        "sha256": "066233a756d23b2d7021e969f505676e43ca0119265d86093c96cd5e8281e87e"
+      },
+      {
+        "path": "scripts/fixtures/exponent-markerwidth.svg",
+        "size": 924,
+        "sha256": "a5d05eaba46a060ad4b929a2eb054eeb3444044617420401af39afefcd3484f2"
+      },
+      {
+        "path": "scripts/fixtures/filtered-css-override-unsafe.svg",
+        "size": 823,
+        "sha256": "1493957ad14af00d2344461c5b0608df33b1d92fc3dc367c583748356f48b152"
+      },
+      {
+        "path": "scripts/fixtures/filtered-curved-connector.svg",
+        "size": 778,
+        "sha256": "20cb5ad8a7c6ec6b0cf82c069080fcc016f337e6bc67c2b91174142ca7cf38c3"
+      },
+      {
+        "path": "scripts/fixtures/filtered-horizontal-connectors.svg",
+        "size": 771,
+        "sha256": "706dc9ea02819d827fd5ea5d34b8e8a05ce2369e226db0ee72d18665aba30526"
+      },
+      {
+        "path": "scripts/fixtures/filtered-safe-userspace.svg",
+        "size": 793,
+        "sha256": "e8b295c695f646b937b0809deb07286343c435ad4fea2363ba5c99ddb3c5cb2e"
+      },
+      {
+        "path": "scripts/fixtures/filtered-unpainted-strokes.svg",
+        "size": 534,
+        "sha256": "ad175d5a0c815757cf34193885797012985bd9ab707a58043cfff8827b61c9f4"
+      },
+      {
+        "path": "scripts/fixtures/filtered-unresolved-strokewidth.svg",
+        "size": 596,
+        "sha256": "8020447852a9b81e7bbe40c218a6f417a0ce125b5879aa449bb90a9f44f8f377"
+      },
+      {
+        "path": "scripts/fixtures/filtered-userspace-calc-region.svg",
+        "size": 613,
+        "sha256": "6d3f4a0f717b1a70f000a615a7987336e19cb638c4cd5d60b0e37681647e1dfa"
+      },
+      {
+        "path": "scripts/fixtures/filtered-userspace-negative-region.svg",
+        "size": 606,
+        "sha256": "03bdf95dfdc862650f63d6ebf7f189ed618c9bbd4d531fa432803b2aebcd7419"
+      },
+      {
+        "path": "scripts/fixtures/filtered-userspace-percent-zero-region.svg",
+        "size": 606,
+        "sha256": "3b4e3c55d60266fc68916d0ef7f2dbc81147273e757bb72cd267883fe4e50a07"
+      },
+      {
+        "path": "scripts/fixtures/filtered-userspace-zero-region.svg",
+        "size": 605,
+        "sha256": "45e9503872b09fbdabcb8f6a0fa85baa872241e72a9f4e455c32d4a497c13a82"
+      },
+      {
+        "path": "scripts/fixtures/filtered-vertical-connectors.svg",
+        "size": 771,
+        "sha256": "2decf3c1429a12edf4fd1ddd10702926d10642dfb9b218948545371a48a49ed4"
+      },
+      {
+        "path": "scripts/fixtures/filtered-zero-strokewidth.svg",
+        "size": 769,
+        "sha256": "2244bd9cee9e22588a3746d287349b9068080d2b4eb730311896ff0ca1bf25a2"
+      },
+      {
+        "path": "scripts/fixtures/huge-viewport-small-glyph.svg",
+        "size": 923,
+        "sha256": "dbb331b91ca32a50ee8240e0f9c1e86e0c9686eb76429746766994f82325b52b"
+      },
+      {
+        "path": "scripts/fixtures/inline-style-oversized.svg",
+        "size": 602,
+        "sha256": "4cadf4265f6c5ce3700a7ddf673b736066cbf5ff9ae8a0a24cf3a3cebb517a02"
+      },
+      {
+        "path": "scripts/fixtures/korean-overflow.svg",
+        "size": 344,
+        "sha256": "b40f230844438345595c9730cf0794371edb0f4e8ceb34b2a4897a87aea34cfa"
+      },
+      {
+        "path": "scripts/fixtures/latin-overflow.svg",
+        "size": 336,
+        "sha256": "655ff0cb3e4802db3b6d0d64a55fcc45abb5a0baed0fda81ac5b61d7d796f318"
+      },
+      {
+        "path": "scripts/fixtures/layout-budget-contract-invalid.svg",
+        "size": 4133,
+        "sha256": "ff2cae07871a41bb7e3e751e28f4cd858ef3412427738b276f458ac542de8584"
+      },
+      {
+        "path": "scripts/fixtures/layout-budget-invalid.svg",
+        "size": 3798,
+        "sha256": "2e859d8f9c2560616038b9b7cb6bc5bb67360e03f7e7fcc0a3d67c4e93447901"
+      },
+      {
+        "path": "scripts/fixtures/layout-budget-unverified.svg",
+        "size": 3113,
+        "sha256": "63cec33f427b614c12f7d6279dd3fadc621548f57d7acdd030f46b244bd3a902"
+      },
+      {
+        "path": "scripts/fixtures/layout-budget-valid.svg",
+        "size": 3850,
+        "sha256": "ee9328aff0ee6939ee294b4d7d03d5898b19be540d8e9fec72b02fe8934dfa7e"
+      },
+      {
+        "path": "scripts/fixtures/missing-marker-units.svg",
+        "size": 526,
+        "sha256": "1ecf88c9b6dc3701736f3ff9a1b912e94ff0a1dc1234b4f824e561a03d8c880e"
+      },
+      {
+        "path": "scripts/fixtures/mixed-known-unknown.svg",
+        "size": 895,
+        "sha256": "8ca65bdec0443da6b13ea075a0abab4e0f7df48e4043e05e244b72617e25d906"
+      },
+      {
+        "path": "scripts/fixtures/multi-stroke-all-clean.svg",
+        "size": 878,
+        "sha256": "e160b3cb55d83f2221da9aedf8fc1df7ebe6614e76d255336dca3f4cd34d8daa"
+      },
+      {
+        "path": "scripts/fixtures/multi-stroke-thin-violation.svg",
+        "size": 884,
+        "sha256": "6d4aa0d3d820579475f52556122cf3e25ae91bee6ed4f843a3a2bba6160b6bf6"
+      },
+      {
+        "path": "scripts/fixtures/oversized-head.svg",
+        "size": 577,
+        "sha256": "3f32fb831221b2c659699fb7ef5d77869b92bb32bd0b412dc5cc17d73b7c3a55"
+      },
+      {
+        "path": "scripts/fixtures/oversized-visible-head.svg",
+        "size": 926,
+        "sha256": "780ffe2f9396e5942909fef3b6324223639b34816d271fbbdab7108d40428534"
+      },
+      {
+        "path": "scripts/fixtures/par-slice.svg",
+        "size": 965,
+        "sha256": "c8308ae0402541b7e0c5fd5aaae4931b0f772ee942736535db38f4788310e914"
+      },
+      {
+        "path": "scripts/fixtures/relative-path-oversized.svg",
+        "size": 636,
+        "sha256": "bbc65e2c09641d414fee3ca17030b7823fafbb8e76056e2a069c0c92f837bc6a"
+      },
+      {
+        "path": "scripts/fixtures/split-css-rules.svg",
+        "size": 655,
+        "sha256": "f2f302614b414224dee8bc54027e08999689664863a8471b619301ff1601bcfd"
+      },
+      {
+        "path": "scripts/fixtures/title-rail-invalid.svg",
+        "size": 1824,
+        "sha256": "3ffff1586d5f96bea17b3bfadcef5dc7e99304db316ac14795bb5e7bed9b8a07"
+      },
+      {
+        "path": "scripts/fixtures/title-rail-unverified.svg",
+        "size": 1026,
+        "sha256": "481ce11c9ad9ffe83571d57d3e786a46cc5a14727b69017d94ed95b76d7fbaae"
+      },
+      {
+        "path": "scripts/fixtures/title-rail-valid.svg",
+        "size": 1805,
+        "sha256": "d0f7d64b50fdaa422cbbdf5654cf9ff224fc95a6f743daef483a63d05f27f48d"
+      },
+      {
+        "path": "scripts/fixtures/undersized-head.svg",
+        "size": 920,
+        "sha256": "355ff911fda9ec5bb9c7b18bcc42495141891a00d14d0ca84016fadc0158e60d"
+      },
+      {
+        "path": "scripts/fixtures/unknown-stroke-ref.svg",
+        "size": 933,
+        "sha256": "bad76753e4db73d47ba3db15c1ca8a054038139c5dfac25f1bf8eb83cc17db16"
+      },
+      {
+        "path": "scripts/fixtures/unproven-extreme-viewport.svg",
+        "size": 921,
+        "sha256": "078726a7018f40ac748bba74929bb9b9b425bb11df92a154bafe2fd3b61d34de"
+      },
+      {
+        "path": "scripts/fixtures/unused-css-rule.svg",
+        "size": 977,
+        "sha256": "370b7ed3b8166b926d12c121c57853683ef7bc25b09eb87d9ac704fe8d4e2cb5"
+      },
+      {
+        "path": "scripts/fixtures/valid.svg",
+        "size": 928,
+        "sha256": "c6602e579d74b4cf84adf94510dd199afe7eec543aa91aa9562a00d0db8cd53d"
+      },
+      {
+        "path": "scripts/fixtures/warning-transform.svg",
+        "size": 346,
+        "sha256": "d8640a11bcb7f0f237b9b329f04afe863f30092270f66ee1624972aa9ec435f6"
+      },
+      {
+        "path": "scripts/render.mjs",
+        "size": 19876,
+        "sha256": "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e"
+      },
+      {
+        "path": "scripts/render.sh",
+        "size": 2162,
+        "sha256": "1515fbab7fb6ec2b7a76e50055e8c9160a4c8bb974487e48d25c7259f70ade35"
+      },
+      {
+        "path": "scripts/render.test.mjs",
+        "size": 17368,
+        "sha256": "40f3150dd8902527e6e7945366ad717e70b2bc7fb84e39b11f7a63fbe7b3fcb1"
+      },
+      {
+        "path": "SKILL.md",
+        "size": 23508,
+        "sha256": "65834a67f0aa273c65923555b1a1440fe31e468a2c42f5a761b04eacf2682035"
+      }
+    ]
+  }
 }
