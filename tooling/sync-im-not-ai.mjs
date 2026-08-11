@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, realpath, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -34,6 +34,10 @@ const DEFAULT_VENDOR_ROOT = path.join(REPO_ROOT, "shared/vendor/im-not-ai");
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function closureDigest(files) {
+  return sha256(Buffer.from(JSON.stringify(files.map(({ path: filePath, sha256: hash, size }) => ({ path: filePath, sha256: hash, size })).sort((a, b) => a.path.localeCompare(b.path)))));
 }
 
 function vendorError(code, target) {
@@ -187,7 +191,8 @@ async function defaultArchive(release) {
     if (!response.ok) throw new Error(`Official im-not-ai archive file unavailable: ${sourcePath}`);
     return { path: sourcePath, bytes: Buffer.from(await response.arrayBuffer()) };
   }));
-  return { ...release, files };
+  const closureFiles = files.map(({ path: filePath, bytes }) => ({ path: filePath, sha256: sha256(bytes), size: bytes.length }));
+  return { ...release, files, closure: { files: closureFiles, licenseSha256: sha256(archiveFile({ files }, "LICENSE")), digest: closureDigest(closureFiles) } };
 }
 
 function archiveFile(archive, sourcePath) {
@@ -205,17 +210,23 @@ function verifyFutureArchive(archive, release) {
     `${PINNED.skillPath}/SKILL.md`,
     ...PINNED_FILES.filter(([file]) => file.startsWith("references/")).map(([file]) => `${PINNED.referencesSource}/${file.slice("references/".length)}`),
   ]);
+  if (!Array.isArray(release.closure?.files) || typeof release.closure?.digest !== "string") throw vendorError("IM_NOT_AI_RELEASE_CLOSURE_MISSING", "release.closure");
+  const declared = new Map(release.closure.files.map((file) => [file.path, file]));
+  if (declared.size !== expectedPaths.size || [...declared.keys()].some((file) => !expectedPaths.has(file))) throw vendorError("IM_NOT_AI_RELEASE_CLOSURE_INVALID", "release.closure.files");
+  if (closureDigest(release.closure.files) !== release.closure.digest) throw vendorError("IM_NOT_AI_RELEASE_CLOSURE_DIGEST_MISMATCH", "release.closure.digest");
+  if (release.closure.licenseSha256 !== PINNED.licenseSha256) throw vendorError("IM_NOT_AI_LICENSE_HASH_MISMATCH", "release.closure.licenseSha256");
   if (!Array.isArray(archive.files)) throw vendorError("IM_NOT_AI_ARCHIVE_INVALID", "archive.files");
   for (const entry of archive.files) {
     if (!expectedPaths.has(entry?.path)) throw vendorError("IM_NOT_AI_ARCHIVE_UNREGISTERED_FILE", entry?.path ?? "archive.files");
     if (!Buffer.isBuffer(entry.bytes)) throw vendorError("IM_NOT_AI_ARCHIVE_INVALID", entry.path);
   }
   if (archive.files.length !== expectedPaths.size) throw vendorError("IM_NOT_AI_ARCHIVE_FILE_COUNT_MISMATCH", "archive.files");
-  if (sha256(archiveFile(archive, "LICENSE")) !== PINNED.licenseSha256) throw vendorError("IM_NOT_AI_LICENSE_HASH_MISMATCH", "archive/LICENSE");
-  for (const [relativePath, expectedHash, expectedSize] of PINNED_FILES) {
-    const sourcePath = relativePath === "SKILL.md" ? `${PINNED.skillPath}/SKILL.md` : `${PINNED.referencesSource}/${relativePath.slice("references/".length)}`;
+  if (sha256(archiveFile(archive, "LICENSE")) !== release.closure.licenseSha256) throw vendorError("IM_NOT_AI_LICENSE_HASH_MISMATCH", "archive/LICENSE");
+  for (const sourcePath of expectedPaths) {
+    if (sourcePath === "LICENSE") continue;
     const bytes = archiveFile(archive, sourcePath);
-    if (bytes.length !== expectedSize || sha256(bytes) !== expectedHash) throw vendorError("IM_NOT_AI_ARCHIVE_FILE_HASH_MISMATCH", sourcePath);
+    const expected = declared.get(sourcePath);
+    if (bytes.length !== expected.size || sha256(bytes) !== expected.sha256) throw vendorError("IM_NOT_AI_ARCHIVE_FILE_HASH_MISMATCH", sourcePath);
   }
 }
 
@@ -232,7 +243,37 @@ function makeLock(release, oldLock, files) {
   };
 }
 
-export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, fetchRelease = officialLatestRelease, fetchArchive = defaultArchive } = {}) {
+async function removeEmptyTree(root) {
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const target = path.join(root, entry.name);
+    const stat = await lstat(target);
+    if (stat.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", target);
+    if (stat.isDirectory()) await removeEmptyTree(target);
+    else await (await import("node:fs/promises")).unlink(target);
+  }
+  await (await import("node:fs/promises")).rmdir(root);
+}
+
+export async function publishPreparedImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, fsOps = { rename } } = {}) {
+  const vendorRoot = await realpath(root);
+  const stage = await assertSafeStagingRoot(vendorRoot, stagingRoot).catch((error) => {
+    if (error.code === "IM_NOT_AI_STAGING_EXISTS") return path.resolve(stagingRoot);
+    throw error;
+  });
+  await verifyVendoredImNotAi({ root: stage }).catch((error) => { throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", error.path ?? "stage"); });
+  const backup = path.join(path.dirname(vendorRoot), `.${path.basename(vendorRoot)}.backup-${process.pid}`);
+  await fsOps.rename(vendorRoot, backup);
+  try {
+    await fsOps.rename(stage, vendorRoot);
+  } catch (error) {
+    await fsOps.rename(backup, vendorRoot);
+    throw error;
+  }
+  await removeEmptyTree(backup);
+  return { status: "published", root: vendorRoot };
+}
+
+export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, publish = false, fetchRelease = officialLatestRelease, fetchArchive = defaultArchive } = {}) {
   if (typeof stagingRoot !== "string") throw new Error("stagingRoot is required for a non-destructive vendor update");
   const oldLock = await readJson(path.join(root, "vendor.lock.json"));
   const release = await fetchRelease();
@@ -240,12 +281,13 @@ export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, f
   if (compareSemver(release.tag, oldLock.upstream.tag) <= 0) return { status: "current", tag: oldLock.upstream.tag, verifiedFiles: oldLock.tree.files.length };
   if (!/^[a-f0-9]{40}$/u.test(release.commit)) throw new Error("Release commit must be an exact SHA-1");
   const archive = await fetchArchive(release);
-  verifyFutureArchive(archive, release);
+  const releaseWithClosure = { ...release, closure: release.closure ?? archive.closure };
+  verifyFutureArchive(archive, releaseWithClosure);
   const files = oldLock.tree.files.map((file) => {
     const sourcePath = file.path === "SKILL.md" ? `${PINNED.skillPath}/SKILL.md` : `${PINNED.referencesSource}/${file.path.slice("references/".length)}`;
     return { path: file.path, bytes: archiveFile(archive, sourcePath) };
   });
-  const lockedRelease = { ...release, archive };
+  const lockedRelease = { ...releaseWithClosure, archive };
   const nextLock = makeLock(lockedRelease, oldLock, files);
   const safeStagingRoot = await assertSafeStagingRoot(root, stagingRoot);
   await mkdir(path.join(safeStagingRoot, nextLock.tree.root), { recursive: true });
@@ -257,7 +299,8 @@ export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, f
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, file.bytes);
   }
-  return { status: "updated", tag: release.tag, verifiedFiles: files.length };
+  if (publish) await publishPreparedImNotAi({ root, stagingRoot: safeStagingRoot });
+  return { status: publish ? "published" : "updated", tag: release.tag, verifiedFiles: files.length };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

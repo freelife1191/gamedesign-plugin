@@ -35,7 +35,12 @@ const expectedLock = {
   license: { spdx: "MIT", path: "LICENSE", sha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f" },
   tree: { root: "humanize-korean/v2.3.0", files: expectedFiles },
 };
-const futureRelease = { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" };
+const futureClosureFiles = [
+  { path: "LICENSE", sha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f", size: 1066 },
+  ...expectedFiles.map((file) => ({ path: file.path === "SKILL.md" ? "codex/skills/humanize-korean/SKILL.md" : `.claude/skills/humanize-korean/references/${file.path.slice("references/".length)}`, sha256: file.sha256, size: file.size })),
+];
+const futureClosure = { files: futureClosureFiles, licenseSha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f", digest: createHash("sha256").update(Buffer.from(JSON.stringify(futureClosureFiles.map(({ path: filePath, sha256: hash, size }) => ({ path: filePath, sha256: hash, size })).sort((a, b) => a.path.localeCompare(b.path))))).digest("hex") };
+const futureRelease = { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z", closure: futureClosure };
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
