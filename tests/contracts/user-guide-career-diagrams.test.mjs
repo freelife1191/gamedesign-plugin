@@ -12,7 +12,7 @@ import {
   isCompletePng,
   parseViewBox,
   pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 import { validateVisualizationState } from "../../products/game-design-career/plugin/skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
@@ -167,7 +167,7 @@ async function assertRecipeMetadata(sourceRouting, {
       assert.ok(Array.isArray(artifact.fields) && artifact.fields.length > 0, `${contract.id} artifact fields: ${artifact.artifactId}`);
       assert.equal(new Set(artifact.fields).size, artifact.fields.length, `${contract.id} unique artifact fields: ${artifact.artifactId}`);
       const template = await readFile(path.join(sourceRoot, artifact.artifactId, "content.md"), "utf8");
-      const workingRecord = markdownSectionBody(template, "Working Record {#working-record}");
+      const workingRecord = markdownSectionBody(template, "기획 항목: Working Record {#working-record}");
       for (const field of artifact.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${artifact.artifactId}.${field}`);
       const skillSource = await readFile(path.join(skillRoot, artifact.ownerSkill, "SKILL.md"), "utf8");
       const outputContract = skillSection(skillSource, "Output contract");

@@ -8,7 +8,7 @@ import {
   isCompletePng,
   parseViewBox,
   pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
 import {
   assertReadableResultBoundaries,
@@ -33,6 +33,7 @@ const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-ca
 const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
+const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set(["archify", "humanize-korean", "polish-game-design-writing"]);
 
 test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
   const denseBoundary = "**최소 결과:** 초안. **선택 결과:** 도식. **확장 결과:** 검토 패키지. **승인 주체:** 멘토. **보류 대상:** 패키지. **재개 조건:** 권한 확인. **안전·증거 경계:** 자동 승인은 하지 않음.";
@@ -1863,7 +1864,7 @@ async function assertCareerFaqMetadata(routing, {
           assert.ok(leafInventory.some((item) => item.startsWith(directory)), `${contract.id} recursive template directory inventory: ${directory}`);
         }
         const content = await readFile(path.join(templateDirectory, "content.md"), "utf8");
-        const workingRecord = markdownSectionBody(content, "Working Record {#working-record}");
+        const workingRecord = markdownSectionBody(content, "기획 항목: Working Record {#working-record}");
         for (const field of contract.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${field}`);
       } else {
         assert.equal(output.kind, "skill-owned", `${contract.id} known output kind`);
@@ -1976,8 +1977,8 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 119,
-    skillGuides: 30,
+    guides: 147,
+    skillGuides: 36,
     templates: 30,
     svg: 90,
     png: 90,
@@ -2242,7 +2243,7 @@ test("Career manifest declares the ordered case and installed-skill coverage wit
     "CA-S06", "CA-S07", "CA-S08", "CA-S09", "CA-S10",
     "CA-S11", "CA-S12", "CA-S13", "CA-S14", "CA-S15",
   ]);
-  assert.deepEqual(careerSkillCases.map((entry) => entry.skill), careerInventory.skillIds);
+  assert.deepEqual(careerSkillCases.map((entry) => entry.skill), careerInventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)));
   assertCareerManifestMetadata({ cases: careerCases, skillCases: careerSkillCases });
 
   const copy = (entries) => structuredClone(entries);
@@ -2629,7 +2630,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   });
   assert.deepEqual(studioCases.map(projectCase), STUDIO_CASE_CONTRACT, "all Studio case metadata matches the declared coverage contract");
   assert.deepEqual(studioSkillCases.map(projectSkillCase), STUDIO_SKILL_CASE_CONTRACT, "all Studio direct-use metadata matches the declared coverage contract");
-  assert.deepEqual(studioSkillCases.map((entry) => entry.skill), inventory.skillIds, "one direct-use case for every installed Studio skill");
+  assert.deepEqual(studioSkillCases.map((entry) => entry.skill), inventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)), "one direct-use case for every direct-use Studio skill");
 
   const result = await validateUseCaseGuides({
     repoRoot,
@@ -2661,6 +2662,7 @@ function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
     "generate-image-assets",
     "review-image-assets",
     "svg-infographic",
+    ...DIRECT_USE_EXCLUDED_SKILL_IDS,
   ]);
   assert.ok(routing.routes.length > 0, "canonical routing.routes must not be empty");
   assert.deepEqual(
@@ -2669,7 +2671,7 @@ function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
     "every non-boundary installed skill has an actual canonical route",
   );
 
-  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds, "skill cases follow the installed inventory");
+  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)), "skill cases follow the direct-use inventory");
   for (const entry of cases) {
     assert.ok(routedSkills.has(entry.skill) || nonRouteBoundarySkills.has(entry.skill), `${entry.skill}: canonical route or explicit boundary`);
   }
@@ -2704,7 +2706,7 @@ test("Career skill cases resolve to their exact manifest direct-use anchors", as
   const cases = manifest.skill_cases.filter((entry) => entry.product === "game-design-career");
 
   assert.equal(cases.length, 15, "Career direct-use case count");
-  assert.deepEqual(cases.map(({ skill }) => skill), inventory.skillIds, "Career direct-use cases follow installed inventory");
+  assert.deepEqual(cases.map(({ skill }) => skill), inventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)), "Career direct-use cases follow the direct-use inventory");
   for (const entry of cases) {
     const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
     const expectedHeading = `### ${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`;

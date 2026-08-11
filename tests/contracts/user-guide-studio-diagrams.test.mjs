@@ -10,7 +10,7 @@ import {
   isCompletePng,
   parseViewBox,
   pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const manifestPath = path.join(root, "guides/assets/diagram-manifest.json");
