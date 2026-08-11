@@ -22,6 +22,24 @@ const roleIds = [
 ];
 
 const studioOnlyReviewRoles = ["combat-encounter-reviewer", "level-puzzle-reviewer"];
+const expectedRolePriority = [...roleIds, "document-quality-editor"];
+const domainRouteFixtures = [
+  {
+    role: "combat-encounter-reviewer",
+    triggerIntents: ["combat", "boss", "encounter"],
+  },
+  {
+    role: "level-puzzle-reviewer",
+    triggerIntents: ["puzzle", "level", "soft lock", "reset/retry"],
+  },
+];
+
+const reviewRoutingFixture = {
+  id: "review",
+  maxReviewers: 3,
+  defaultReviewers: ["lead-game-designer", "production-feasibility-critic", "ux-accessibility-reviewer"],
+  conditionalReviewers: domainRouteFixtures.map(({ role, triggerIntents }) => ({ role, triggerIntents, reviewers: [role] })),
+};
 
 async function readSkill(relativePath) {
   return readFile(path.join(skillRoot, relativePath), "utf8");
@@ -47,6 +65,37 @@ function extractJsonContract(markdown, contractName) {
   const match = markdown.match(pattern);
   assert.ok(match, `${contractName} contract is missing`);
   return JSON.parse(match[1]);
+}
+
+function reviewerLists(route) {
+  return [
+    { label: `${route.id}.defaultReviewers`, reviewers: route.defaultReviewers },
+    ...(route.conditionalReviewers ?? []).map(({ reviewers }, index) => ({
+      label: `${route.id}.conditionalReviewers[${index}].reviewers`,
+      reviewers,
+    })),
+  ];
+}
+
+function assertReviewerBounds(route) {
+  assert.ok(Number.isInteger(route.maxReviewers), `${route.id}: maxReviewers`);
+  assert.ok(route.maxReviewers <= 3, `${route.id}: maxReviewers`);
+  for (const { label, reviewers } of reviewerLists(route)) {
+    assert.ok(Array.isArray(reviewers), `${label}: reviewer list`);
+    assert.ok(reviewers.length <= route.maxReviewers, `${label}: route max`);
+    assert.ok(reviewers.length <= 3, `${label}: three-reviewer bound`);
+  }
+}
+
+function assertDomainIntentRouting(route) {
+  assert.equal(route.id, "review");
+  assertReviewerBounds(route);
+  for (const { role, triggerIntents } of domainRouteFixtures) {
+    const selection = route.conditionalReviewers?.find((candidate) => candidate.role === role);
+    assert.ok(selection, `${role}: conditional selection`);
+    assert.deepEqual(selection.triggerIntents, triggerIntents, `${role}: trigger intents`);
+    assert.deepEqual(selection.reviewers, [role], `${role}: exact reviewer selection`);
+  }
 }
 
 test("orchestrator skill uses the official minimal metadata and interface contract", async () => {
@@ -100,11 +149,8 @@ test("authoritative routing registry maps all ten direct route variants", async 
 test("authoritative routing registry includes Studio-only domain reviewers", async () => {
   const routing = await readRouting();
 
-  assert.deepEqual(routing.roleIds, routing.rolePriority);
-  for (const role of roleIds) {
-    assert.ok(routing.roleIds.includes(role), `Studio roleIds: ${role}`);
-    assert.ok(routing.rolePriority.includes(role), `Studio rolePriority: ${role}`);
-  }
+  assert.deepEqual(routing.roleIds, expectedRolePriority);
+  assert.deepEqual(routing.rolePriority, expectedRolePriority);
 });
 
 test("Career routing does not adopt Studio-only combat and level reviewers", async () => {
@@ -115,10 +161,33 @@ test("Career routing does not adopt Studio-only combat and level reviewers", asy
   }
 });
 
-test("authoritative routing registry caps every route at three reviewers", async () => {
+test("domain intent routing fixture rejects missing intents and fourth reviewers", () => {
+  assert.doesNotThrow(() => assertDomainIntentRouting(reviewRoutingFixture));
+  for (const { role, triggerIntents } of domainRouteFixtures) {
+    for (const triggerIntent of triggerIntents) {
+      const mutation = structuredClone(reviewRoutingFixture);
+      const selection = mutation.conditionalReviewers.find((candidate) => candidate.role === role);
+      selection.triggerIntents = selection.triggerIntents.filter((intent) => intent !== triggerIntent);
+      assert.throws(() => assertDomainIntentRouting(mutation), undefined, `${role}: ${triggerIntent} mutation survived`);
+    }
+  }
+  const mutation = structuredClone(reviewRoutingFixture);
+  mutation.conditionalReviewers[0].reviewers.push("system-economy-designer", "content-narrative-designer", "liveops-data-designer");
+  assert.throws(() => assertDomainIntentRouting(mutation), undefined, "fourth reviewer mutation survived");
+});
+
+test("Studio review route selects domain reviewers for combat and puzzle intents", async () => {
+  const routing = await readRouting();
+  const reviewRoute = routing.routes.find(({ id }) => id === "review");
+
+  assert.ok(reviewRoute, "review route");
+  assertDomainIntentRouting(reviewRoute);
+});
+
+test("authoritative routing registry caps every route and conditional selection at three reviewers", async () => {
   const routing = await readRouting();
 
-  assert.ok(routing.routes.every(({ maxReviewers }) => maxReviewers <= 3));
+  for (const route of routing.routes) assertReviewerBounds(route);
 });
 
 test("workflow loads routing decisions from the registry instead of copying them", async () => {

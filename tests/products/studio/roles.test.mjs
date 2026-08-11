@@ -22,6 +22,7 @@ const roles = [
   "combat-encounter-reviewer",
   "level-puzzle-reviewer",
 ];
+const domainRoleIds = new Set(["combat-encounter-reviewer", "level-puzzle-reviewer"]);
 const responsibleGates = JSON.parse(await readFile(path.join(repoRoot, "shared/responsible-design/gates.json"), "utf8"));
 const gateIds = responsibleGates.gates.map(({ id }) => id);
 const blockerGateByRole = {
@@ -59,12 +60,31 @@ const copiedBugConstraints = [
   { literal: "BUG", pattern: /\bBUG\b/u },
   { literal: "V1", pattern: /\bV1\b/u },
   { literal: "4-8 person", pattern: /\b4-8 person\b/iu },
+  { literal: "team of 4–8 people", pattern: /\bteam of 4[-–]8 people\b/iu },
   { literal: "8-12 hour", pattern: /\b8-12 hour\b/iu },
+  { literal: "8–12 hours", pattern: /\b8[-–]12 hours\b/iu },
   { literal: "three currencies", pattern: /\bthree currencies\b/iu },
+  { literal: "3 currencies", pattern: /\b3 currencies\b/iu },
   { literal: "three shops", pattern: /\bthree shops\b/iu },
+  { literal: "3 shops", pattern: /\b3 shops\b/iu },
   { literal: "Higgsfield", pattern: /\bHiggsfield\b/iu },
-  { literal: "automatic approval", pattern: /\b(?:automatic(?:ally)?\s+(?:approve|approval)|(?:approve|approval)\s+automatically)\b/iu },
+  { literal: "Steam", pattern: /\bSteam\b/u },
+  { literal: "automatic approval", pattern: /\b(?:automatic(?:ally)?\s+(?:approve|approved|approval)|(?:approve|approved|approval)\s+automatically)\b/iu },
 ];
+
+const domainFindingFixtures = domainReviewFixtures.map(({ role }) => ({
+  findingId: `${role}-finding`,
+  role,
+  severity: "high",
+  affectedSectionId: "encounter-or-puzzle",
+  findingType: "missing-evidence",
+  summary: "The supplied design claim lacks inspectable evidence.",
+  evidenceIds: ["artifact-evidence-1"],
+  impact: "A reviewer cannot assess the player-facing risk.",
+  assumptions: ["The canonical artifact is the only supplied source."],
+  applicableGate: "none",
+  minimalFix: "Add the missing design evidence without changing the artifact.",
+}));
 
 const findingFieldNames = [
   "findingId",
@@ -89,6 +109,58 @@ function section(markdown, heading) {
   assert.ok(match, `missing section: ${heading}`);
   assert.notEqual(match[1].trim(), "", `empty section: ${heading}`);
   return match[1];
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+function domainPromptFixture({ role, requiredReviewQuestions }) {
+  return [
+    `# ${role}`,
+    "",
+    "## Responsibility",
+    "Return findings only; do not rewrite the artifact or make approval decisions.",
+    "",
+    "## Review Questions",
+    ...requiredReviewQuestions.map((question) => `- Is ${question} inspectable from supplied evidence?`),
+    "",
+    "## Forbidden Assumptions",
+    "Do not invent balance values, playtest evidence, or approval outcomes.",
+    "",
+    "## Finding Schema",
+    "| `severity` | Use only `high`, `medium`, or `low`; never `blocker`. |",
+    "| `applicableGate` | Use `none` only. |",
+    "",
+  ].join("\n");
+}
+
+function assertDomainRolePromptContract({ role, requiredReviewQuestions }, markdown) {
+  assert.match(markdown, new RegExp(`^# ${escapeRegExp(role)}$`, "mu"));
+  assert.match(section(markdown, "Responsibility"), /findings only/iu);
+  const reviewQuestions = section(markdown, "Review Questions");
+  for (const question of requiredReviewQuestions) {
+    assert.match(reviewQuestions, new RegExp(escapeRegExp(question), "iu"), `${role}: ${question}`);
+  }
+  const forbiddenAssumptions = section(markdown, "Forbidden Assumptions");
+  for (const prohibition of ["balance values", "playtest evidence", "approval outcomes"]) {
+    assert.match(forbiddenAssumptions, new RegExp(`do not invent[^.]*${escapeRegExp(prohibition)}`, "iu"), `${role}: ${prohibition}`);
+  }
+  const findingSchema = section(markdown, "Finding Schema");
+  assert.match(findingSchema, /`severity`[^\n]*`high`[^\n]*`medium`[^\n]*`low`/iu);
+  assert.match(findingSchema, /never `blocker`/iu);
+  assert.match(findingSchema, /`applicableGate`[^\n]*`none` only/iu);
+  for (const { pattern } of copiedBugConstraints) {
+    assert.doesNotMatch(markdown, pattern, `${role}: copied BUG constraint`);
+  }
+}
+
+function assertDomainFindingContract(finding) {
+  assert.deepEqual(Object.keys(finding), findingFieldNames);
+  assert.ok(domainRoleIds.has(finding.role), `domain role: ${finding.role}`);
+  assert.ok(["high", "medium", "low"].includes(finding.severity), `severity: ${finding.severity}`);
+  assert.equal(finding.applicableGate, "none");
+  assert.doesNotMatch(JSON.stringify(finding), /(?:damage to 5,000|playtest proves 82%|automatically approved)/iu);
 }
 
 function findingFields(markdown) {
@@ -118,7 +190,7 @@ function assertRolePromptContract(role, markdown) {
   }
   assert.match(markdown, /write.*findingsPath/isu);
   assert.deepEqual(findingFields(markdown), findingFieldNames);
-  assert.match(markdown, /`blocker` > `high` > `medium` > `low`/u);
+  if (!domainRoleIds.has(role)) assert.match(markdown, /`blocker` > `high` > `medium` > `low`/u);
   assert.match(markdown, /finding.*minimal fix/isu);
   assert.match(markdown, /do not rewrite.*artifact/isu);
   for (const phrase of specializations[role]) {
@@ -180,22 +252,69 @@ test("all eight bounded role prompts define exact review and blocker contracts",
   }
 });
 
-test("domain review prompts ask the combat and level fixtures' inspectable questions", async () => {
-  for (const { role, requiredReviewQuestions } of domainReviewFixtures) {
-    const reviewQuestions = section(await readPlugin(`agents/${role}.md`), "Review Questions");
-    for (const question of requiredReviewQuestions) {
-      assert.match(reviewQuestions, new RegExp(question.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "iu"), `${role}: ${question}`);
+test("domain prompt contracts validate independent fixtures and reject every question and constraint mutation", () => {
+  for (const fixture of domainReviewFixtures) {
+    const markdown = domainPromptFixture(fixture);
+    assert.doesNotThrow(() => assertDomainRolePromptContract(fixture, markdown));
+    assert.throws(
+      () => assertDomainRolePromptContract(fixture, markdown.replace("findings only", "artifact rewrites")),
+      undefined,
+      `${fixture.role}: findings-only mutation survived`,
+    );
+    assert.throws(
+      () => assertDomainRolePromptContract(fixture, markdown.replace("never `blocker`", "or `blocker`")),
+      undefined,
+      `${fixture.role}: blocker mutation survived`,
+    );
+    for (const question of fixture.requiredReviewQuestions) {
+      assert.throws(
+        () => assertDomainRolePromptContract(fixture, markdown.replace(question, "uninspectable question")),
+        undefined,
+        `${fixture.role}: missing ${question} survived`,
+      );
+    }
+    for (const { literal } of copiedBugConstraints) {
+      assert.throws(
+        () => assertDomainRolePromptContract(fixture, `${markdown}\n${literal}`),
+        undefined,
+        `${fixture.role}: ${literal} mutation survived`,
+      );
     }
   }
 });
 
-test("domain review prompts reject copied BUG constraints and automatic approval", async () => {
-  for (const { role } of domainReviewFixtures) {
-    const markdown = await readPlugin(`agents/${role}.md`);
-    for (const { literal, pattern } of copiedBugConstraints) {
-      assert.doesNotMatch(markdown, pattern, `${role}: copied BUG constraint`);
-      assert.throws(() => assert.doesNotMatch(`${markdown}\n${literal}`, pattern), undefined, `${role}: mutation survived`);
+test("domain role files satisfy the combat and level prompt contracts", async () => {
+  for (const fixture of domainReviewFixtures) {
+    assertDomainRolePromptContract(fixture, await readPlugin(`agents/${fixture.role}.md`));
+  }
+});
+
+test("domain finding contracts allow only findings-only severities and no gate", () => {
+  for (const fixture of domainFindingFixtures) {
+    assert.doesNotThrow(() => assertDomainFindingContract(fixture));
+    for (const mutation of [
+      { ...fixture, severity: "blocker" },
+      { ...fixture, applicableGate: "scope-control" },
+      { ...fixture, summary: "Set damage to 5,000." },
+      { ...fixture, evidenceIds: ["playtest proves 82% of players succeed"] },
+      { ...fixture, summary: "The design is automatically approved." },
+    ]) assert.throws(() => assertDomainFindingContract(mutation), undefined, `${fixture.role}: finding mutation survived`);
+  }
+});
+
+test("merger accepts domain high medium low findings but fails closed on blocker findings", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  for (const fixture of domainFindingFixtures) {
+    for (const severity of ["high", "medium", "low"]) {
+      const valid = { ...fixture, findingId: `${fixture.findingId}-${severity}`, severity };
+      assertDomainFindingContract(valid);
+      assert.doesNotThrow(() => mergeRoleFindings({ schemaVersion: 1, findings: [valid] }), `${fixture.role}: ${severity}`);
     }
+    assert.throws(
+      () => mergeRoleFindings({ schemaVersion: 1, findings: [{ ...fixture, findingId: `${fixture.findingId}-blocker`, severity: "blocker" }] }),
+      undefined,
+      `${fixture.role}: blocker was accepted`,
+    );
   }
 });
 
