@@ -41,6 +41,14 @@ const contentRoutingFixture = {
   conditionalReviewers: domainRouteFixtures.map(({ role, triggerIntents }) => ({ role, triggerIntents, reviewers: [role] })),
 };
 
+const conditionalReviewerSelectionContract = {
+  intentInput: "conditionalIntent",
+  selectionSource: "routing.routes[].conditionalReviewers",
+  finalReviewerSet: "unique(defaultReviewers + selectedConditionalReviewers)",
+  deduplicate: true,
+  maxReviewers: 3,
+};
+
 async function readSkill(relativePath) {
   return readFile(path.join(skillRoot, relativePath), "utf8");
 }
@@ -103,6 +111,10 @@ function assertDomainIntentRouting(route) {
     assert.deepEqual(selection.reviewers, [role], `${role}: exact reviewer selection`);
     assert.ok(selectedReviewers(route, role).length <= 3, `${role}: selected reviewer bound`);
   }
+}
+
+function assertConditionalReviewerSelectionContract(contract) {
+  assert.deepEqual(contract, conditionalReviewerSelectionContract);
 }
 
 test("orchestrator skill uses the official minimal metadata and interface contract", async () => {
@@ -181,6 +193,26 @@ test("content routing fixture rejects missing intents and a fourth selected revi
   const mutation = structuredClone(contentRoutingFixture);
   mutation.defaultReviewers.push("production-feasibility-critic");
   assert.throws(() => assertDomainIntentRouting(mutation), undefined, "default three plus conditional one survived");
+});
+
+test("conditional reviewer workflow contract rejects removal of every selection step", () => {
+  assert.doesNotThrow(() => assertConditionalReviewerSelectionContract(conditionalReviewerSelectionContract));
+  for (const field of Object.keys(conditionalReviewerSelectionContract)) {
+    const mutation = structuredClone(conditionalReviewerSelectionContract);
+    delete mutation[field];
+    assert.throws(
+      () => assertConditionalReviewerSelectionContract(mutation),
+      undefined,
+      `conditional reviewer workflow: ${field} removal survived`,
+    );
+  }
+});
+
+test("workflow consumes conditional intents into a deduplicated bounded final reviewer set", async () => {
+  const workflow = await readSkill("references/workflow.md");
+  const contract = extractJsonContract(workflow, "conditional-reviewer-selection");
+
+  assertConditionalReviewerSelectionContract(contract);
 });
 
 test("Studio content route selects domain reviewers for combat and puzzle intents", async () => {

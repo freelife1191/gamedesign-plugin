@@ -72,11 +72,6 @@ const copiedBugConstraints = [
   { literal: "automatically approved", pattern: /\bautomatically approved\b/iu },
 ];
 
-const unsupportedSteamCommitments = [
-  { literal: "Launch exclusively on Steam with workshop support.", pattern: /\blaunch exclusively on Steam with workshop support\b/iu },
-  { literal: "Steam-only release includes controller support.", pattern: /\bSteam-only release includes controller support\b/iu },
-];
-
 const domainFindingFixtures = domainReviewFixtures.map(({ role }) => ({
   findingId: `${role}-finding`,
   role,
@@ -132,6 +127,7 @@ function domainPromptFixture({ role, requiredReviewQuestions }) {
     "",
     "## Forbidden Assumptions",
     "Do not invent balance values, playtest evidence, or approval outcomes.",
+    "Do not promise Steam release or support without project-supplied source/evidence.",
     "",
     "## Finding Schema",
     "| `severity` | Use only `high`, `medium`, or `low`; never `blocker`. |",
@@ -151,6 +147,11 @@ function assertDomainRolePromptContract({ role, requiredReviewQuestions }, markd
   for (const prohibition of ["balance values", "playtest evidence", "approval outcomes"]) {
     assert.match(forbiddenAssumptions, new RegExp(`do not invent[^.]*${escapeRegExp(prohibition)}`, "iu"), `${role}: ${prohibition}`);
   }
+  assert.match(
+    forbiddenAssumptions,
+    /do not promise[^.]*Steam[^.]*without[^.]*project-supplied (?:source|evidence)/iu,
+    `${role}: unsupported Steam commitment policy`,
+  );
   const findingSchema = section(markdown, "Finding Schema");
   assert.match(findingSchema, /`severity`[^\n]*`high`[^\n]*`medium`[^\n]*`low`/iu);
   assert.match(findingSchema, /never `blocker`/iu);
@@ -158,8 +159,12 @@ function assertDomainRolePromptContract({ role, requiredReviewQuestions }, markd
   for (const { pattern } of copiedBugConstraints) {
     assert.doesNotMatch(markdown, pattern, `${role}: copied BUG constraint`);
   }
-  for (const { pattern } of unsupportedSteamCommitments) {
-    assert.doesNotMatch(markdown, pattern, `${role}: unsupported Steam commitment`);
+}
+
+function assertSteamCommitmentEvidence(statement) {
+  if (!/\bSteam\b/iu.test(statement)) return;
+  if (/\b(?:ship|launch|release|support|integrate)\b/iu.test(statement)) {
+    assert.match(statement, /\bproject-supplied (?:source|evidence)\b/iu, "Steam commitment lacks project-supplied evidence");
   }
 }
 
@@ -274,6 +279,14 @@ test("domain prompt contracts validate independent fixtures and reject every que
       undefined,
       `${fixture.role}: blocker mutation survived`,
     );
+    assert.throws(
+      () => assertDomainRolePromptContract(
+        fixture,
+        markdown.replace("Do not promise Steam release or support without project-supplied source/evidence.", "Steam promises are allowed."),
+      ),
+      undefined,
+      `${fixture.role}: Steam policy removal survived`,
+    );
     for (const question of fixture.requiredReviewQuestions) {
       assert.throws(
         () => assertDomainRolePromptContract(fixture, markdown.replace(question, "uninspectable question")),
@@ -292,13 +305,15 @@ test("domain prompt contracts validate independent fixtures and reject every que
       () => assertDomainRolePromptContract(fixture, `${markdown}\nSteam player reports supplied as evidence require a source citation.`),
       `${fixture.role}: evidence-backed Steam mention was rejected`,
     );
-    for (const { literal } of unsupportedSteamCommitments) {
-      assert.throws(
-        () => assertDomainRolePromptContract(fixture, `${markdown}\n${literal}`),
-        undefined,
-        `${fixture.role}: unsupported Steam commitment survived`,
-      );
-    }
+    assert.doesNotThrow(() => assertSteamCommitmentEvidence("Steam player reports supplied as evidence require a source citation."));
+    assert.throws(
+      () => assertSteamCommitmentEvidence("Ship solely through Steam and integrate Steam Workshop."),
+      undefined,
+      `${fixture.role}: unsupported Steam commitment survived`,
+    );
+    assert.doesNotThrow(() => assertSteamCommitmentEvidence(
+      "Ship solely through Steam and integrate Steam Workshop; project-supplied evidence records the platform commitment.",
+    ));
   }
 });
 
