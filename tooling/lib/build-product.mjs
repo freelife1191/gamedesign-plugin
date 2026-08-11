@@ -40,6 +40,21 @@ const packageLinkProjections = Object.freeze({
       source: "../../../../../shared/responsible-design/gates.json",
       package: "../shared/responsible-design/gates.json",
     }),
+    Object.freeze({
+      path: /^references\/methods\/[^/]+\.md$/u,
+      source: "../../../../../shared/knowledge/trends/2026-current-practices.md",
+      package: "../shared/knowledge/trends/2026-current-practices.md",
+    }),
+    Object.freeze({
+      path: /^references\/methods\/[^/]+\.md$/u,
+      source: "../../../../../shared/knowledge/trends/source-register.json",
+      package: "../shared/knowledge/trends/source-register.json",
+    }),
+    Object.freeze({
+      path: /^skills\/review-game-design\/SKILL\.md$/u,
+      source: "../../../../../shared/templates/review-finding.md",
+      package: "../../assets/shared/templates/review-finding.md",
+    }),
   ]),
 });
 const snapshotStagingCapabilities = new WeakSet();

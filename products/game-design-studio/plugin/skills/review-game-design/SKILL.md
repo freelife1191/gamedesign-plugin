@@ -30,7 +30,7 @@ Never reconstruct an absent source, invent evidence, or present illustrative con
 
 ## Workflow
 
-1. Load [review-contract.md](references/review-contract.md) and the packaged [review-finding.md](../../assets/shared/templates/review-finding.md).
+1. Load [review-contract.md](references/review-contract.md) and the canonical [review-finding.md](../../../../../shared/templates/review-finding.md).
 2. Validate the canonical artifact before reading claims. If unavailable or invalid, record `source-unavailable` and stop the substantive review.
 3. Scope each review question to stable section IDs and evidence records. Select at most three role reviewers; run the same envelopes sequentially in declared role priority when parallel review is unavailable.
 4. Normalize every actionable issue to the Finding contract. Keep unsupported concerns as questions, not findings.

@@ -14,8 +14,10 @@ const skillGateRegistry = "../../../../../shared/responsible-design/gates.json";
 const packagedSkillGateRegistry = "../../references/shared/responsible-design/gates.json";
 const methodGateRegistry = "../../../../../shared/responsible-design/gates.json";
 const packagedMethodGateRegistry = "../shared/responsible-design/gates.json";
-const currentPracticePath = "../shared/knowledge/trends/2026-current-practices.md";
-const currentRegisterPath = "../shared/knowledge/trends/source-register.json";
+const currentPracticePath = "../../../../../shared/knowledge/trends/2026-current-practices.md";
+const currentRegisterPath = "../../../../../shared/knowledge/trends/source-register.json";
+const packagedCurrentPracticePath = "../shared/knowledge/trends/2026-current-practices.md";
+const packagedCurrentRegisterPath = "../shared/knowledge/trends/source-register.json";
 
 const contracts = {
   "design-player-experience": {
@@ -320,6 +322,8 @@ test("operational skill gate links project the canonical source registry into th
   t.after(() => rm(stagingRoot, { recursive: true, force: true }));
 
   const canonicalRegistry = await readFile(gateRegistryPath);
+  const canonicalCurrentPractice = await readFile(path.join(repoRoot, "shared/knowledge/trends/2026-current-practices.md"));
+  const canonicalCurrentRegister = await readFile(path.join(repoRoot, "shared/knowledge/trends/source-register.json"));
   const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
 
   for (const [skillId, contract] of Object.entries(contracts)) {
@@ -341,6 +345,14 @@ test("operational skill gate links project the canonical source registry into th
     assert.match(packagedMethod, new RegExp(`\\[gates\\.json\\]\\(${packagedMethodGateRegistry.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: package-local method link`);
     assert.deepEqual(await readFile(path.resolve(path.dirname(sourceMethodPath), methodGateRegistry)), canonicalRegistry, `${skillId}: canonical source method bytes`);
     assert.deepEqual(await readFile(path.resolve(path.dirname(packagedMethodPath), packagedMethodGateRegistry)), canonicalRegistry, `${skillId}: packaged method registry bytes`);
+    assert.match(sourceMethod, new RegExp(`\\[2026-current-practices\\.md\\]\\(${currentPracticePath.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: canonical source Current practice link`);
+    assert.match(sourceMethod, new RegExp(`\\[source-register\\.json\\]\\(${currentRegisterPath.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: canonical source Current register link`);
+    assert.match(packagedMethod, new RegExp(`\\[2026-current-practices\\.md\\]\\(${packagedCurrentPracticePath.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: package-local Current practice link`);
+    assert.match(packagedMethod, new RegExp(`\\[source-register\\.json\\]\\(${packagedCurrentRegisterPath.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: package-local Current register link`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(sourceMethodPath), currentPracticePath)), canonicalCurrentPractice, `${skillId}: canonical source Current practice bytes`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(sourceMethodPath), currentRegisterPath)), canonicalCurrentRegister, `${skillId}: canonical source Current register bytes`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(packagedMethodPath), packagedCurrentPracticePath)), canonicalCurrentPractice, `${skillId}: packaged Current practice bytes`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(packagedMethodPath), packagedCurrentRegisterPath)), canonicalCurrentRegister, `${skillId}: packaged Current register bytes`);
   }
 });
 
