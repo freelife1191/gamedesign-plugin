@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -63,6 +64,24 @@ function job(overrides = {}) {
     output: { path: "assets/generated/hero-image.png", width: 1024, height: 1024, format: "png" },
     ...overrides,
   };
+}
+
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function derivativeJob(overrides = {}) {
+  const master = png();
+  return job({
+    asset_id: "hero-derivative",
+    output: { path: "assets/generated/hero-derivative.png", width: 1024, height: 1024, format: "png" },
+    asset_set_id: "wind-island",
+    derivative_of: "hero-master",
+    reference_images: [{ asset_id: "hero-master", path: "assets/generated/hero-master.png", sha256: sha256(master) }],
+    consistency_profile: { style_anchor_asset_ids: ["hero-master"], character_anchor_asset_ids: ["hero-master"] },
+    prompt_lineage: { parent_prompt_digests: [sha256("Master character prompt.")] },
+    ...overrides,
+  });
 }
 
 async function staging(t) {
@@ -148,6 +167,53 @@ test("generateOpenAIImages forwards every config-safe model and quality to the r
   assert.deepEqual(JSON.parse(calls[0].options.body), { model: "other-model", quality: "high", prompt: "A safe original hero image.", size: "16x16", n: 1 });
   assert.equal(result.results[0].provenance.model, "other-model");
   assert.equal(result.results[0].provenance.quality, "high");
+});
+
+test("generateOpenAIImages sends master-referenced gpt-image-2 jobs as ordered multipart edits without input_fidelity", async (t) => {
+  const root = await staging(t);
+  await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+  await writeFile(path.join(root, "assets", "generated", "hero-master.png"), png());
+  const calls = [];
+  const result = await generateOpenAIImages({
+    jobs: [derivativeJob()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async (url, options) => { calls.push({ url, options }); return successResponse(); }, sleepFn: async () => {},
+  });
+
+  assert.equal(result.failures.length, 0);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "https://api.openai.com/v1/images/edits");
+  assert.equal(calls[0].options.method, "POST");
+  assert.equal(calls[0].options.headers.Authorization, `Bearer ${key}`);
+  assert.ok(calls[0].options.body instanceof FormData);
+  assert.equal(calls[0].options.body.get("model"), "gpt-image-2");
+  assert.equal(calls[0].options.body.get("quality"), "low");
+  assert.equal(calls[0].options.body.get("size"), "1024x1024");
+  assert.equal(calls[0].options.body.get("prompt"), "A safe original hero image.");
+  assert.equal(calls[0].options.body.has("input_fidelity"), false);
+  assert.deepEqual(calls[0].options.body.getAll("image[]").map((file) => file.name), ["hero-master.png"]);
+  assert.deepEqual(Buffer.from(await calls[0].options.body.getAll("image[]")[0].arrayBuffer()), png());
+});
+
+test("generateOpenAIImages aborts a never-resolving OpenAI request, writes no PNG, and does not fall back", async (t) => {
+  const root = await staging(t);
+  let aborts = 0;
+  let calls = 0;
+  const result = await generateOpenAIImages({
+    jobs: [job({ asset_id: "timed-out", output: { path: "assets/generated/timed-out.png", width: 1024, height: 1024, format: "png" } })],
+    apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, requestTimeoutMs: 5,
+    fetchFn: async (_url, options) => {
+      calls += 1;
+      assert.ok(options.signal instanceof AbortSignal, "OpenAI requests must receive an AbortSignal");
+      return new Promise((_resolve, reject) => {
+        options.signal.addEventListener("abort", () => { aborts += 1; reject(options.signal.reason); }, { once: true });
+      });
+    },
+    sleepFn: async () => assert.fail("a timed-out request must not retry or switch providers"),
+  });
+  assert.equal(calls, 1);
+  assert.equal(aborts, 1);
+  assert.deepEqual(result.failures, [{ asset_id: "timed-out", generation_state: "generation-failed", reason: "provider-timeout", attempts: 1 }]);
+  await assert.rejects(lstat(path.join(root, "assets", "generated", "timed-out.png")));
 });
 
 test("generateOpenAIImages rejects empty or unsafe model and quality without a network call or secret echo", async (t) => {
