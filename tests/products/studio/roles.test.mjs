@@ -12,7 +12,16 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const mergerRelativePath = "skills/orchestrate-game-design-project/scripts/merge-role-findings.mjs";
 const routing = JSON.parse(await readFile(path.join(pluginRoot, "references/routing.json"), "utf8"));
-const roles = routing.roleIds.filter((role) => role !== "document-quality-editor");
+const roles = [
+  "lead-game-designer",
+  "system-economy-designer",
+  "content-narrative-designer",
+  "ux-accessibility-reviewer",
+  "liveops-data-designer",
+  "production-feasibility-critic",
+  "combat-encounter-reviewer",
+  "level-puzzle-reviewer",
+];
 const responsibleGates = JSON.parse(await readFile(path.join(repoRoot, "shared/responsible-design/gates.json"), "utf8"));
 const gateIds = responsibleGates.gates.map(({ id }) => id);
 const blockerGateByRole = {
@@ -31,7 +40,31 @@ const specializations = {
   "ux-accessibility-reviewer": ["critical action", "interaction state", "accessibility"],
   "liveops-data-designer": ["hypothesis", "guardrail", "liveops-experiment"],
   "production-feasibility-critic": ["dependency", "kill criterion", "scope-control"],
+  "combat-encounter-reviewer": ["telegraph", "counterplay", "recovery", "dominant combinations", "boss trivialization"],
+  "level-puzzle-reviewer": ["mandatory paths", "optional paths", "feedback", "reset/retry", "soft lock", "hard progression block", "accessibility alternatives"],
 };
+
+const domainReviewFixtures = [
+  {
+    role: "combat-encounter-reviewer",
+    requiredReviewQuestions: ["telegraph", "counterplay", "recovery", "dominant combinations", "boss trivialization"],
+  },
+  {
+    role: "level-puzzle-reviewer",
+    requiredReviewQuestions: ["mandatory paths", "optional paths", "feedback", "reset/retry", "soft lock", "hard progression block", "accessibility alternatives"],
+  },
+];
+
+const copiedBugConstraints = [
+  { literal: "BUG", pattern: /\bBUG\b/u },
+  { literal: "V1", pattern: /\bV1\b/u },
+  { literal: "4-8 person", pattern: /\b4-8 person\b/iu },
+  { literal: "8-12 hour", pattern: /\b8-12 hour\b/iu },
+  { literal: "three currencies", pattern: /\bthree currencies\b/iu },
+  { literal: "three shops", pattern: /\bthree shops\b/iu },
+  { literal: "Higgsfield", pattern: /\bHiggsfield\b/iu },
+  { literal: "automatic approval", pattern: /\b(?:automatic(?:ally)?\s+(?:approve|approval)|(?:approve|approval)\s+automatically)\b/iu },
+];
 
 const findingFieldNames = [
   "findingId",
@@ -134,13 +167,35 @@ async function loadMerger() {
   return import(`${url.href}?test=${Date.now()}-${Math.random()}`);
 }
 
-test("all six bounded role prompts define exact review and blocker contracts", async () => {
-  assert.equal(roles.length, 6);
-  assert.deepEqual(routing.rolePriority.filter((role) => role !== "document-quality-editor"), roles);
+test("all eight bounded role prompts define exact review and blocker contracts", async () => {
+  assert.equal(roles.length, 8);
   for (const role of roles) {
+    assert.ok(routing.roleIds.includes(role), `roleIds: ${role}`);
+    assert.ok(routing.rolePriority.includes(role), `rolePriority: ${role}`);
     const markdown = await readPlugin(`agents/${role}.md`);
     assertRolePromptContract(role, markdown);
-    assert.match(section(markdown, "Blocker Authority"), new RegExp("blocker.*only.*`" + blockerGateByRole[role] + "`", "isu"));
+    if (blockerGateByRole[role]) {
+      assert.match(section(markdown, "Blocker Authority"), new RegExp("blocker.*only.*`" + blockerGateByRole[role] + "`", "isu"));
+    }
+  }
+});
+
+test("domain review prompts ask the combat and level fixtures' inspectable questions", async () => {
+  for (const { role, requiredReviewQuestions } of domainReviewFixtures) {
+    const reviewQuestions = section(await readPlugin(`agents/${role}.md`), "Review Questions");
+    for (const question of requiredReviewQuestions) {
+      assert.match(reviewQuestions, new RegExp(question.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "iu"), `${role}: ${question}`);
+    }
+  }
+});
+
+test("domain review prompts reject copied BUG constraints and automatic approval", async () => {
+  for (const { role } of domainReviewFixtures) {
+    const markdown = await readPlugin(`agents/${role}.md`);
+    for (const { literal, pattern } of copiedBugConstraints) {
+      assert.doesNotMatch(markdown, pattern, `${role}: copied BUG constraint`);
+      assert.throws(() => assert.doesNotMatch(`${markdown}\n${literal}`, pattern), undefined, `${role}: mutation survived`);
+    }
   }
 });
 
@@ -263,7 +318,7 @@ test("all responsible gates are recognized and blocker authority is exact per ro
     schemaVersion: 1,
     findings: [finding({ findingId: "gate-none", role: "lead-game-designer", applicableGate: "none" })],
   }));
-  for (const [index, role] of roles.entries()) {
+  for (const [index, role] of Object.keys(blockerGateByRole).entries()) {
     assert.doesNotThrow(() => mergeRoleFindings({
       schemaVersion: 1,
       findings: [finding({

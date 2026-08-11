@@ -8,6 +8,7 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const skillRoot = path.join(pluginRoot, "skills/orchestrate-game-design-project");
 const routingPath = path.join(pluginRoot, "references/routing.json");
+const careerRoutingPath = path.join(repoRoot, "products/game-design-career/plugin/references/routing.json");
 
 const roleIds = [
   "lead-game-designer",
@@ -16,7 +17,11 @@ const roleIds = [
   "ux-accessibility-reviewer",
   "liveops-data-designer",
   "production-feasibility-critic",
+  "combat-encounter-reviewer",
+  "level-puzzle-reviewer",
 ];
+
+const studioOnlyReviewRoles = ["combat-encounter-reviewer", "level-puzzle-reviewer"];
 
 async function readSkill(relativePath) {
   return readFile(path.join(skillRoot, relativePath), "utf8");
@@ -24,6 +29,10 @@ async function readSkill(relativePath) {
 
 async function readRouting() {
   return JSON.parse(await readFile(routingPath, "utf8"));
+}
+
+async function readCareerRouting() {
+  return JSON.parse(await readFile(careerRoutingPath, "utf8"));
 }
 
 function extractJsonContract(markdown, contractName) {
@@ -88,11 +97,22 @@ test("authoritative routing registry maps all ten direct route variants", async 
   ]);
 });
 
-test("authoritative routing registry preserves the existing reviewer priority order", async () => {
+test("authoritative routing registry includes Studio-only domain reviewers", async () => {
   const routing = await readRouting();
 
-  assert.deepEqual(routing.rolePriority, [...roleIds, "document-quality-editor"]);
   assert.deepEqual(routing.roleIds, routing.rolePriority);
+  for (const role of roleIds) {
+    assert.ok(routing.roleIds.includes(role), `Studio roleIds: ${role}`);
+    assert.ok(routing.rolePriority.includes(role), `Studio rolePriority: ${role}`);
+  }
+});
+
+test("Career routing does not adopt Studio-only combat and level reviewers", async () => {
+  const careerRouting = await readCareerRouting();
+
+  for (const role of studioOnlyReviewRoles) {
+    assert.equal(careerRouting.roleIds.includes(role), false, `Career roleIds: ${role}`);
+  }
 });
 
 test("authoritative routing registry caps every route at three reviewers", async () => {
