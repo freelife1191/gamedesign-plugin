@@ -9962,7 +9962,7 @@
       "product": "suite",
       "source_document": "guides/reviews/2026-08-11-ultraqa-report.md",
       "source_section": "UltraQA 보고서",
-      "source_digest": "8f61661196ad6aa78b03aa8b9ac4b45aa4a82cd8f81f44abb62381190e3d5d8e",
+      "source_digest": "2cbb554735f559d52847e31be142f4d7a300a78b53f41ccc02ddb10fee6ccc92",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
       "decision_reason": "“UltraQA 보고서”은 - 목표: 간단한 자연어 요청이 올바른 Studio·Career 작업 경로로 이어지고, 문체 검수·이미지 계보·도식 검증·사람 승인 경계를 건너뛰지 않는지 실행형 시나리오로 확인한다.라는 현재 원문의 구체적 안내를 직접 보존한다. 이 문서는 단계·입력·경계를 독자가 순서대로 읽어야 하므로 관계도보다 텍스트가 명확하다. 근거: `- 목표: 간단한 자연어 요청이 올바른 Studio·Career 작업 경로로 이어지고, 문체 검수·이미지 계보·도식 검증·사람 승인 경계를 건너뛰지 않는지 실행형 시나리오로 확인한다.`.",
