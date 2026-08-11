@@ -35,7 +35,7 @@ evidence_ids: none
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 provider 상태와 권리 정보는 미정으로 남깁니다.
 
 ## 사람 결정
-named human decision owner가 resume-failed-derivatives handoff의 공개 범위를 승인 또는 보류한다.
+지정된 의사결정권자가 resume-failed-derivatives의 공개 범위와 재개 지점을 승인하거나 보류한다.
 
 - 결정 상태: blocked
 - 가능한 행동: 승인·수정·보류
