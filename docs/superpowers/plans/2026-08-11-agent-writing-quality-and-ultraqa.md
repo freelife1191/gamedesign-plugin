@@ -108,7 +108,7 @@ Add alternative/tradeoff checks to `lead-game-designer`, build/reselection/grind
 
 - [ ] **Step 6: Run GREEN tests and commit**
 
-Run the Task 1 command and commit the product source changes.
+Run `tests/products/studio/roles.test.mjs` and `tests/products/studio/orchestrator.test.mjs` to GREEN and commit the product source changes. The generated-package count contract remains intentionally RED until Task 8 runs the standard build; Task 8 must make `tests/contracts/package-contents.test.mjs` GREEN.
 
 ### Task 3: Define the writing-polish skill with RED preservation tests
 
