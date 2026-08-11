@@ -114,6 +114,7 @@ Run `tests/products/studio/roles.test.mjs` and `tests/products/studio/orchestrat
 
 **Files:**
 - Create: `tests/unit/writing-revision.test.mjs`
+- Create: `tests/unit/im-not-ai-vendor.test.mjs`
 - Create: `tests/products/studio/writing-quality.test.mjs`
 - Create: `tests/products/career/writing-quality.test.mjs`
 
@@ -133,11 +134,15 @@ Require a revised document to replace translation-like and machine-like prose wi
 
 Reject changed numbers, IDs, links, table rows, paths, approval states, removed uncertainty, invented evidence, and `approved` substituted for `pending` or `blocked`.
 
-- [ ] **Step 4: Add product discovery contracts**
+- [ ] **Step 4: Add official im-not-ai vendor contracts**
 
-Require `polish-game-design-writing`, `game-design-writing-editor`, `writingSpecialistIds` containing only that specialist, the direct command, output files, and a host `humanize-korean` optional path with a bundled fallback.
+Require the bundled `humanize-korean` skill to come from `https://github.com/epoko77-ai/im-not-ai`, use the latest verified release at implementation time (`v2.3.0` on 2026-08-11), preserve the upstream MIT license, contain regular non-symlink `SKILL.md` and reference files, and record repository, tag, commit, release time, file hashes, and license in a vendor lock. Require an offline-safe bundled install and a separate release-time latest-version check/update command; plugin installation itself must not execute unpinned remote code.
 
-- [ ] **Step 5: Run RED tests and commit**
+- [ ] **Step 5: Add product discovery contracts**
+
+Require `polish-game-design-writing`, `humanize-korean`, `game-design-writing-editor`, `writingSpecialistIds` containing only that specialist, both direct commands, output files, and the bundled upstream skill path. The game-design wrapper must call the bundled skill and then apply its stricter protected-content validator.
+
+- [ ] **Step 6: Run RED tests and commit**
 
 Run the three new test files. Expected: missing module, skill, agent, and registry failures.
 
@@ -146,6 +151,10 @@ Run the three new test files. Expected: missing module, skill, agent, and regist
 **Files:**
 - Create: `shared/scripts/validate-writing-revision.mjs`
 - Create: `shared/document-quality/game-design-writing-style.md`
+- Create: `shared/vendor/im-not-ai/vendor.lock.json`
+- Create: `shared/vendor/im-not-ai/LICENSE`
+- Create: `shared/vendor/im-not-ai/humanize-korean/v2.3.0/**`
+- Create: `tooling/sync-im-not-ai.mjs`
 - Create: `products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md`
 - Create: `products/game-design-studio/plugin/skills/polish-game-design-writing/agents/openai.yaml`
 - Create: `products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md`
@@ -155,33 +164,42 @@ Run the three new test files. Expected: missing module, skill, agent, and regist
 - Modify: `products/game-design-studio/plugin/references/routing.json`
 - Modify: `products/game-design-career/plugin/references/routing.json`
 - Modify: `products/game-design-career/plugin/references/career-stages.json`
+- Modify: `products/game-design-studio/product.json`
+- Modify: `products/game-design-career/product.json`
+- Modify: both product `THIRD_PARTY_NOTICES.md` files
+- Modify: `tooling/lib/build-product.mjs`
+- Modify: `package.json`
 - Modify: both product orchestrator `SKILL.md` files
 
 **Interfaces:**
-- Consumes: before/after Markdown, optional host `humanize-korean`, bundled style rules.
+- Consumes: before/after Markdown, the verified bundled `humanize-korean`, and game-design-specific protected-content rules.
 - Produces: separate revised draft, findings file, protected-content receipt, human-review handoff.
 
 - [ ] **Step 1: Implement protected-content capture**
 
 Capture and compare code spans, URLs, Markdown destinations, stable IDs, numeric tokens with units, table rows, explicit file paths, fact/inference/recommendation labels, and gate states. Reject control characters, non-NFC identifiers, prototype data, and path traversal.
 
-- [ ] **Step 2: Implement product skill contracts**
+- [ ] **Step 2: Vendor the official im-not-ai Codex skill**
 
-Describe the exact sequence: lock protected content, diagnose, revise minimally, validate, return changed draft and receipt, wait for human review. Do not modify the canonical source in place.
+Fetch only the official repository during the explicit update command, select the highest stable SemVer tag, verify the expected tag and commit, materialize the official Codex `SKILL.md` plus the referenced rule files as regular files, preserve the MIT license, and write a deterministic vendor lock. `--check` must compare the lock and bundled tree without network; `--check-latest` may query the official remote and report a newer release without changing files. The standard plugin build packages the verified bundle as `skills/humanize-korean` for both products.
 
-- [ ] **Step 3: Implement the writing specialist**
+- [ ] **Step 3: Implement product skill contracts**
+
+Describe the exact sequence: lock protected content, run the bundled `humanize-korean`, apply game-design terminology and protected-content validation, return changed draft and receipt, wait for human review. Do not modify the canonical source in place.
+
+- [ ] **Step 4: Implement the writing specialist**
 
 The agent reports awkward phrases, context breaks, unexplained code terms, and minimum repairs. It cannot verify truth, invent evidence, change approval, or overwrite the document.
 
-- [ ] **Step 4: Add direct routing and orchestrator placement**
+- [ ] **Step 5: Add direct routing and orchestrator placement**
 
 Run writing polish after content/domain review and before export. Keep it outside the primary three-role stage as a dedicated specialist pass.
 
-- [ ] **Step 5: Validate skill metadata**
+- [ ] **Step 6: Validate skill metadata and vendor integrity**
 
-Run the installed skill validator against both skill folders and the Task 3 tests.
+Run the installed skill validator against the product wrapper and bundled upstream skill, then run the Task 3 tests and the offline vendor integrity check.
 
-- [ ] **Step 6: Commit GREEN implementation**
+- [ ] **Step 7: Commit GREEN implementation**
 
 Commit shared validator, both product skills, agents, and routing updates.
 
@@ -325,7 +343,7 @@ List Korean name first, English ID in parentheses, use case, result, direct comm
 
 - [ ] **Step 2: Update exact package and guide counts**
 
-Studio: 12 agents, 15 product skills, and one packaged Skillstead skill, for 16 installed skills in total. Career: 10 agents, 15 product skills, and one packaged Skillstead skill, for 16 installed skills in total. Keep template and script counts derived from the actual build.
+Studio: 12 agents, 16 product skills including bundled `humanize-korean`, and one packaged Skillstead skill, for 17 installed skills in total. Career: 10 agents, 16 product skills including bundled `humanize-korean`, and one packaged Skillstead skill, for 17 installed skills in total. Keep template and script counts derived from the actual build.
 
 - [ ] **Step 3: Run the standard build**
 

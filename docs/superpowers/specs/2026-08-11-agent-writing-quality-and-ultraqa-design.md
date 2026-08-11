@@ -30,7 +30,11 @@ Studio에 `combat-encounter-reviewer`, `level-puzzle-reviewer`만 추가한다. 
 
 ### 신규 스킬
 
-Studio와 Career에 `polish-game-design-writing`을 추가한다. 이 스킬은 `humanize-korean`이 호스트에 있으면 그 규칙을 활용하고, 없어도 플러그인에 포함된 게임 기획 문체 점검표로 동작한다.
+Studio와 Career에 `polish-game-design-writing`을 추가한다. 이 스킬은 게임 기획 문서의 보호 대상과 승인 경계를 잠근 뒤, 함께 설치되는 `humanize-korean`을 문장 윤문 엔진으로 사용한다.
+
+`humanize-korean`은 공식 [`epoko77-ai/im-not-ai`](https://github.com/epoko77-ai/im-not-ai)의 Codex 배포본을 두 플러그인에 번들한다. 2026-08-11 확인 기준 최신 릴리스는 `v2.3.0`, 태그 커밋은 `82137e858763dadb99561f194c5c00465735017b`, 라이선스는 MIT다. 심링크가 아닌 일반 파일로 `SKILL.md`와 전체 reference를 보존하고, 저장소·태그·커밋·릴리스 시각·파일 해시·라이선스를 vendor lock에 기록한다.
+
+플러그인 설치 중 임의의 원격 코드를 실행하지 않는다. 대신 릴리스 준비 단계에서 공식 GitHub 최신 릴리스를 조회하는 검증·업데이트 명령을 제공하고, 검증된 최신 버전을 플러그인 패키지에 포함한다. 사용자는 Game Design Studio 또는 Career를 설치하면 `$humanize-korean`을 바로 사용할 수 있다. 네트워크를 사용할 수 없어도 번들 버전이 동작하며, 새 upstream 릴리스가 발견되면 검증·잠금 갱신 전까지 기존 버전을 안전하게 유지한다.
 
 작업 순서는 다음과 같다.
 
@@ -42,6 +46,8 @@ Studio와 Career에 `polish-game-design-writing`을 추가한다. 이 스킬은 
 6. 사람 검토자가 수정본을 승인하거나 보류한다.
 
 긴 문서는 절 단위로 처리하되 앞뒤 절의 용어, 결정, 전제를 다시 대조한다. 문체 수정으로 근거가 추가되거나 삭제되면 실패다.
+
+`humanize-korean` 단독 호출은 일반 한국어 윤문에 사용한다. `polish-game-design-writing`은 그 앞뒤에 게임 기획 전용 보호·검증·승인 경계를 추가한다. 두 스킬을 하나로 합치지 않는다.
 
 ### 기존 역할 보강
 
