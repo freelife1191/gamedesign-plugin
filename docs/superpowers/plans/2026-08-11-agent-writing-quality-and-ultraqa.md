@@ -34,7 +34,7 @@
 
 - [ ] **Step 1: Write failing role inventory tests**
 
-Assert that Studio `roleIds` and `rolePriority` include the two new domain roles, while `writingSpecialistIds` contains only `game-design-writing-editor`. Assert Career does not contain the two Studio roles.
+Assert that Studio `roleIds` and `rolePriority` include the two new domain roles. Assert Career does not contain the two Studio roles. The separate `writingSpecialistIds` contract belongs to Task 3 so Task 2 can reach GREEN without implementing Task 4 early.
 
 - [ ] **Step 2: Write failing behavior tests**
 
@@ -135,7 +135,7 @@ Reject changed numbers, IDs, links, table rows, paths, approval states, removed 
 
 - [ ] **Step 4: Add product discovery contracts**
 
-Require `polish-game-design-writing`, `game-design-writing-editor`, the direct command, output files, and a host `humanize-korean` optional path with a bundled fallback.
+Require `polish-game-design-writing`, `game-design-writing-editor`, `writingSpecialistIds` containing only that specialist, the direct command, output files, and a host `humanize-korean` optional path with a bundled fallback.
 
 - [ ] **Step 5: Run RED tests and commit**
 
