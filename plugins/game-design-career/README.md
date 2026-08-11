@@ -254,6 +254,7 @@ codex plugin marketplace remove game-design-suite
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `run-game-design-writing-polish.mjs` | writing specialist와 bundled humanize-korean을 거치는 bounded revision 실행 |
 | `run-image-asset-workflow.mjs` | image workflow composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
@@ -261,6 +262,7 @@ codex plugin marketplace remove game-design-suite
 | `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
+| `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
 
 ## 설치된 document-quality 경로
 
@@ -359,6 +361,7 @@ apply-document-quality-profile: portfolio-case-study를 recruiter 대상 MD로 �
 | `plan-image-assets` | 이미지가 필요한 profile/brief를 계획할 때 | stable asset ID, placeholders, `assets/image-assets.yml`, Markdown/JSON prompts |
 | `generate-image-assets` | 명시적으로 선택/허용된 asset만 생성할 때 | provider policy, immutable selection receipt, truthful provenance 또는 placeholder |
 | `review-image-assets` | 사람의 이미지 검토를 기록할 때 | named human evidence, rights/provenance review와 approval transition |
+| `polish-game-design-writing` | 기획 문장을 전문적으로 점검·최소 수정할 때 | protected content receipt, revision findings, human review handoff |
 
 ## 전문 역할 프롬프트
 
@@ -371,6 +374,7 @@ apply-document-quality-profile: portfolio-case-study를 recruiter 대상 MD로 �
 | `reverse-design-critic` | 관찰·사실·추론과 반증 경로 검토 | 내부 의도나 구현을 사실로 단정하지 않음 |
 | `interview-coach` | 답변의 주장·근거·선택·대안·결과·성찰 연결 확인 | 경험이나 성과를 조작하지 않음 |
 | `evidence-auditor` | 최신성, 1차 출처, 범위, 일반화 한계 감사 | 누락·오래됨·비1차 근거를 승인하지 않음 |
+| `game-design-writing-editor` | 번역투·반복·문맥 단절을 찾아 최소 수정안 기록 | 사실·수치·근거·승인 상태를 바꾸지 않음 |
 
 ## 이미지 전문 역할 레지스트리
 
@@ -514,7 +518,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ## Skillstead 도식화
 
-[visualize-career-roadmap](skills/visualize-career-roadmap/SKILL.md)는 관계가 실제로 더 명확해질 때만 Skillstead `svg-infographic` 0.8.3을 사용합니다. 역할 맵, 역량 의존도, 학습 순서, 개발 프로세스, 포트폴리오 정보 구조, 복수 성장 경로 프리셋을 비교하고 선택·제외 이유를 남깁니다. 단순 목록이나 근거 없는 수치는 표 또는 본문으로 유지합니다.
+[visualize-career-roadmap](skills/visualize-career-roadmap/SKILL.md)는 관계가 실제로 더 명확해질 때만 Skillstead `svg-infographic` 0.9.0을 사용합니다. 역할 맵, 역량 의존도, 학습 순서, 개발 프로세스, 포트폴리오 정보 구조, 복수 성장 경로 프리셋을 비교하고 선택·제외 이유를 남깁니다. 단순 목록이나 근거 없는 수치는 표 또는 본문으로 유지합니다.
 
 SVG에는 `<title>`, `<desc>`, 결론을 설명하는 alt text가 필요합니다. 패키지의 SVG lint는 정확한 SVG bytes와 digest를 다시 검사합니다. Chromium이 있으면 2× PNG 렌더를 준비할 수 있지만, terminal 성공은 downstream trusted bundled renderer와 visual QA가 실제 SVG/PNG 파일, 정확한 크기와 artifact digest를 결합해 확인한 뒤에만 기록합니다. 브라우저가 없으면 편집 가능한 lint 통과 SVG를 보존하고 PNG를 `unavailable`로 표시하며, 렌더·검증 성공을 주장하지 않습니다.
 
@@ -594,4 +598,4 @@ python3 "$CODEX_PLUGIN_CREATOR_ROOT/scripts/validate_plugin.py" products/game-de
 
 ## 라이선스
 
-Game Design Career 자체는 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.8.3은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 프로젝트 제공 원문과 제3자 자료의 권리는 각각의 권리자에게 남습니다.
+Game Design Career 자체는 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.9.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 프로젝트 제공 원문과 제3자 자료의 권리는 각각의 권리자에게 남습니다.
