@@ -1602,6 +1602,107 @@ test("loader rejects duplicate IDs and symlink shards", async (t) => {
   );
 });
 
+test("all 152 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalogDir = path.join(repoRoot, "guides", "prompt-templates");
+  const index = JSON.parse(await readFile(path.join(catalogDir, "catalog.json"), "utf8"));
+  const entries = (await Promise.all(index.sources.map(async (source) => (
+    JSON.parse(await readFile(path.join(catalogDir, source), "utf8"))
+  )))).flat();
+  assert.equal(entries.length, 152);
+  assert.deepEqual(koreanPresentationErrors(entries), []);
+});
+
+test("Korean catalog presentation audit rejects each independent defect mutation", () => {
+  const original = validEntry(301);
+  original.display_title = "협동 게임의 첫 화면 흐름 (UI)";
+  original.sample_result_excerpt = `첫 행동은 발전기 수리, 즉시 반응은 조명 점등으로 적었습니다. 재시도 안내 문구는 담당자 검토 전까지 미정입니다. (ID: ${original.id}; 파일: ${original.expected_file_tree[0]})`;
+  original.source_references = ["guides/game-design-studio/skills/define-game-vision.md"];
+  assert.deepEqual(koreanPresentationErrors([original]), []);
+
+  const mutations = [
+    ["missing title", (entry) => { entry.display_title = ""; }, "MISSING_DISPLAY_TITLE"],
+    ["missing excerpt", (entry) => { entry.sample_result_excerpt = ""; }, "MISSING_EXCERPT"],
+    ["English-first title", (entry) => { entry.display_title = "Overlay 품질 설정"; }, "ENGLISH_FIRST_TITLE"],
+    ["unwrapped English title", (entry) => { entry.display_title = "첫 화면 UI 흐름"; }, "UNWRAPPED_ENGLISH_TITLE"],
+    ["stock excerpt skeleton", (entry) => { entry.sample_result_excerpt = `초안 결과: 핵심 결과 항목을 적었습니다. 검토가 필요합니다. (ID: ${entry.id}; 파일: ${entry.expected_file_tree[0]})`; }, "STOCK_EXCERPT"],
+    ["broken source ID", (entry) => { entry.sample_result_excerpt = entry.sample_result_excerpt.replace(entry.id, "BROKEN-ID"); }, "MISSING_SOURCE_ID"],
+    ["broken source path", (entry) => { entry.sample_result_excerpt = entry.sample_result_excerpt.replace(entry.expected_file_tree[0], "broken/content.md"); }, "MISSING_SOURCE_PATH"],
+    ["broken skill source", (entry) => { entry.source_references = ["guides/other.md"]; }, "MISSING_SKILL_SOURCE"],
+    ["automatic approval", (entry) => { entry.sample_result_excerpt = entry.sample_result_excerpt.replace(/[^.!?]+[.!?]/u, "검토 없이 자동 승인됩니다. "); }, "AUTOMATIC_DECISION"],
+    ["outcome guarantee", (entry) => { entry.sample_result_excerpt = entry.sample_result_excerpt.replace(/[^.!?]+[.!?]/u, "이 결과는 출시 성과를 보장합니다. "); }, "AUTOMATIC_DECISION"],
+  ];
+  for (const [label, mutate, expectedCode] of mutations) {
+    const target = structuredClone(original);
+    mutate(target);
+    assert.ok(koreanPresentationErrors([target]).some((error) => error === `${expectedCode}:${target.id}`), label);
+  }
+
+  const duplicated = [structuredClone(original), structuredClone(original)];
+  duplicated[1].id = "PT-302";
+  const duplicateErrors = koreanPresentationErrors(duplicated);
+  assert.ok(duplicateErrors.some((error) => error === `DUPLICATE_EXCERPT:${duplicated[1].id}`));
+  assert.ok(duplicateErrors.some((error) => error === `MISSING_SOURCE_ID:${duplicated[1].id}`));
+
+  const normalizedDuplicate = structuredClone(original);
+  normalizedDuplicate.id = "PT-302";
+  normalizedDuplicate.expected_file_tree = ["artifacts/PT-302/content.md"];
+  normalizedDuplicate.sample_result_excerpt = original.sample_result_excerpt.replace(
+    `(ID: ${original.id}; 파일: ${original.expected_file_tree[0]})`,
+    `(ID: ${normalizedDuplicate.id}; 파일: ${normalizedDuplicate.expected_file_tree[0]})`,
+  );
+  assert.ok(koreanPresentationErrors([original, normalizedDuplicate]).includes(`DUPLICATE_NORMALIZED_EXCERPT:${normalizedDuplicate.id}`));
+});
+
+function koreanPresentationErrors(entries) {
+  const errors = [];
+  const forbiddenSkeleton = /^(?:게임 기획 결과|초안 결과|가상 결과 기록|가상 결과 조각|가상의 검토 기록|예시 산출물 조각|결과 미리보기|검토용 가상 산출물|가상 문서 조각)/u;
+  const englishFirst = /^(?:[^가-힣]*[A-Za-z][^가-힣]*)(?=[가-힣])/u;
+  const englishParticle = /\b[A-Za-z][A-Za-z /-]*(?:을|를|은|는|이|가|과|와|로|으로|에|의)\b/u;
+  const automaticDecision = /(?:검토\s*없이[^.!?]*(?:승인|확정|완료)|자동(?:으로)?\s*(?:승인|확정|완료)(?![^.!?]*(?:아니|않|금지))|(?:채용|출시|성과)[^.!?]*보장(?!하지))/u;
+  const exactExcerpts = new Set();
+  const normalizedExcerpts = new Set();
+
+  for (const entry of entries) {
+    const title = entry.display_title;
+    const excerpt = entry.sample_result_excerpt;
+    const label = (code) => errors.push(`${code}:${entry.id}`);
+    if (typeof title !== "string" || title.trim() === "") label("MISSING_DISPLAY_TITLE");
+    else {
+      if (!/[가-힣]/u.test(title) || englishFirst.test(title)) label("ENGLISH_FIRST_TITLE");
+      if (forbiddenSkeleton.test(title)) label("STOCK_TITLE");
+      for (const match of title.matchAll(/[A-Za-z][A-Za-z0-9-]*/gu)) {
+        const before = title.slice(0, match.index);
+        const after = title.slice(match.index + match[0].length);
+        const inParentheses = before.lastIndexOf("(") > before.lastIndexOf(")") && after.indexOf(")") >= 0;
+        const inCode = ((before.match(/`/gu) ?? []).length % 2) === 1 && after.indexOf("`") >= 0;
+        if (!inParentheses && !inCode) label("UNWRAPPED_ENGLISH_TITLE");
+      }
+    }
+    if (typeof excerpt !== "string" || excerpt.trim() === "") {
+      label("MISSING_EXCERPT");
+      continue;
+    }
+    if (forbiddenSkeleton.test(excerpt) || /핵심 결과 항목/u.test(excerpt)) label("STOCK_EXCERPT");
+    if (englishParticle.test(excerpt)) label("ENGLISH_PARTICLE");
+    if (!excerpt.includes(`(ID: ${entry.id};`)) label("MISSING_SOURCE_ID");
+    const expectedPath = entry.expected_file_tree?.[0];
+    if (typeof expectedPath !== "string" || !excerpt.includes(`파일: ${expectedPath})`)) label("MISSING_SOURCE_PATH");
+    if (entry.kind === "skill-template" && !entry.source_references.some((source) => source.includes(`/skills/${entry.skill}`))) label("MISSING_SKILL_SOURCE");
+    if (!/검토|보류|미정|초안|아직|확인|승인|결정|정해야|정합니다|채택 여부|대조해야|확정하지|살펴봐야|재평가|관찰|필요|알 수 없|쓸 수 없|가설|임시|진행 불가|보완해야|실행 전|재개|호출은 하지/u.test(excerpt)) label("MISSING_HUMAN_REVIEW_STATE");
+    if (automaticDecision.test(excerpt)) label("AUTOMATIC_DECISION");
+    if (exactExcerpts.has(excerpt)) label("DUPLICATE_EXCERPT");
+    exactExcerpts.add(excerpt);
+    const normalized = excerpt
+      .replace(/\s*\(ID:[\s\S]*$/u, "")
+      .replace(/[\p{P}\p{S}\d\s]+/gu, "")
+      .toLowerCase();
+    if (normalizedExcerpts.has(normalized)) label("DUPLICATE_NORMALIZED_EXCERPT");
+    normalizedExcerpts.add(normalized);
+  }
+  return errors;
+}
+
 test("validator closes unknown fields and rejects unsafe or sensitive prompt contracts", () => {
   const entry = validEntry(1);
   const result = validatePromptTemplateCatalog({
