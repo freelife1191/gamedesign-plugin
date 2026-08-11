@@ -97,83 +97,83 @@ const recordFields = {
 };
 
 const approvedContentHashes = {
-  "career-stage-goal": "8988c7f4668fb38f11a63f11106fb6e7a52274187413a43321b539bb3170fb07",
-  "competency-matrix": "336df258170a0ae9e2398492439c995570fb23c6ddf73eb7a6067d819e1bf04a",
-  "creative-design-portfolio": "609f12bad50bad55f1686e3a7b8827c8646124c07fe8c2c8d49b9eaf0ffd63b2",
-  "five-axis-review": "873a22fadf561ecf807ccf5ee4b996ae8413d7191baf6afb4984e0d8c7c22c40",
-  "game-analysis-report": "0f68cd1d83bc122886020faa89e8965613ae6e8e43c321f6fea77288855cc562",
-  "game-design-role-map": "b51bb263324055b57cc8ce1c78bda815bcd4a5452ce50053d008c827168a989a",
-  "interview-question-answer-log": "c709da4339c52c03ecff50335127e94884b94b2bb8db1d0c97b6ef8ca87075bc",
-  "introduction-motivation": "dc714fc34cb47351ea4c7a70d4def91bea99b8b939a7138e82d0c075477bddcd",
-  "job-posting-evidence": "d1549a9ed9254132c7676feea3bfe067917b1043da7a3bd6f03fc9510893a846",
-  "junior-growth-review": "1cc111b43306ab86338964d6266a0da26b9084014e31c19e78cf3da03323ebe5",
-  "learning-roadmap": "3244065e066a815ac7ae2ba73539b4dc7af460e9bb0976a5dcec7b46fb85f733",
-  "portfolio-backlog": "82109b8d827a08847028e6e61ac5b522e850fd5ee6799629b53cb7417f32767d",
-  "portfolio-project-brief": "7969531595b351c1557cb0bbd52fceffd48338b5dd153cf17ca74b6a3810b8e6",
-  "reverse-design-document": "f491b1a9d1a8a0e24b4b6f2de4d8323f9cdd36e3684f0ccc825c7d36f0e1610c",
-  "transition-readiness": "d3760dede563fbbdc330872ea0e8f3bb2bd887782c3c563c85aa77791757e4c5",
+  "career-stage-goal": "66ce9414a478093868108b46cdf3ffac5b314fe9c4a83487f427085cb29b68c2",
+  "competency-matrix": "8621a15621bfc9f92aea13f916f0ae0656a396f3189d0975b467c3095ecd2041",
+  "creative-design-portfolio": "53f33680a25e2e6d20f7a803a546fa661af0ee143f94240173c2bb19a90106e1",
+  "five-axis-review": "6ebc2d76404e33de64f9edd6b578655c2b5e52411e2d8263a73af73e8b500907",
+  "game-analysis-report": "baee921aa080af9613f1b0e84982bb1d156f78b9dae32d154e3c2e82eec45188",
+  "game-design-role-map": "112ac687c6874e3226fa149bb89ff731982edba359ee172f26ac7c01845a9eb4",
+  "interview-question-answer-log": "a1d305a4f24e16d514c3cdaccc44fe77dbf371ba0e97dbd17df6c398e953cf68",
+  "introduction-motivation": "1b9db5ef249f10e94652f7458d0f70fae128a9c667b7f865a6c9d2b083bc3942",
+  "job-posting-evidence": "e8dabd635711c99706b93ba31b8ffc4867958901634b87374c8a84315565cd24",
+  "junior-growth-review": "174c05bb166dc6ff08d90ee9514fdba0e647566a0c0631d4139129f9d01c414e",
+  "learning-roadmap": "c0a2e6674c1c1dd2f69b2fa15e6d06a2290173c964232953198a642f99772779",
+  "portfolio-backlog": "5525d81a9b2def0fad24fdb37cf932cd0bb1dd6c0237f5e18281acf6b0cddb56",
+  "portfolio-project-brief": "ca069e5a3fbbc547769c6e202fb87d17534906c26929ac71e312df792ae02dc8",
+  "reverse-design-document": "77936ac937b8e48a39a886749cfe8235da2061090df29e25f6627743255726a2",
+  "transition-readiness": "41fd6128d915e9dd372b2d6c68ce8c5a4d198fda817b61a4257ef1a03b9d9550",
 };
 
 const semanticContracts = {
   "career-stage-goal": [
-    ["Stage and Target Role", "stage-and-target-role", "stage: Record entry, new-hire, junior-growth, or transition. target-role: Name a role family and level only when evidence supports it."],
-    ["Goal Contract", "goal-contract", "Define a bounded outcome, success evidence, time constraint, owner, and review date. Keep multiple paths when one correct career is not established."],
+    ["stage-and-target-role", "stage: Record entry, new-hire, junior-growth, or transition. target-role: Name a role family and level only when evidence supports it."],
+    ["goal-contract", "Define a bounded outcome, success evidence, time constraint, owner, and review date. Keep multiple paths when one correct career is not established."],
   ],
   "game-design-role-map": [
-    ["Role Families and Tradeoffs", "role-families-and-tradeoffs", "For each role-family, record target-level, current-evidence, gap, tradeoff, learning task, feedback cadence, and proof-artifact."],
-    ["Provisional Paths", "provisional-paths", "Keep at least two plausible paths when the target is unclear. Never rank by age, education, major, or employment gap."],
+    ["role-families-and-tradeoffs", "For each role-family, record target-level, current-evidence, gap, tradeoff, learning task, feedback cadence, and proof-artifact."],
+    ["provisional-paths", "Keep at least two plausible paths when the target is unclear. Never rank by age, education, major, or employment gap."],
   ],
   "competency-matrix": [
-    ["Requirement Matrix", "requirement-matrix", "Each requirement-id links to a stable evidence-id, observation state, scope, and reviewer. Use not-observed when evidence is unavailable."],
-    ["Repair and Re-evaluation", "repair-and-re-evaluation", "Do not convert missing evidence into an ability score of zero. Record minimum-repair, owner, proof artifact, and re-evaluation date."],
+    ["requirement-matrix", "Each requirement-id links to a stable evidence-id, observation state, scope, and reviewer. Use not-observed when evidence is unavailable."],
+    ["repair-and-re-evaluation", "Do not convert missing evidence into an ability score of zero. Record minimum-repair, owner, proof artifact, and re-evaluation date."],
   ],
   "learning-roadmap": [
-    ["Roadmap Commitments", "roadmap-commitments", "For every requirement-id, record a learning-task, owner, cadence, proof-artifact, reviewer, and re-evaluation decision."],
-    ["Sequence and Dependencies", "sequence-and-dependencies", "Mark durations as provisional until capacity evidence exists. Keep prerequisites, feedback points, and scope choices explicit."],
+    ["roadmap-commitments", "For every requirement-id, record a learning-task, owner, cadence, proof-artifact, reviewer, and re-evaluation decision."],
+    ["sequence-and-dependencies", "Mark durations as provisional until capacity evidence exists. Keep prerequisites, feedback points, and scope choices explicit."],
   ],
   "job-posting-evidence": [
-    ["Posting Records", "posting-records", "Each record requires source-id, company, project if stated, region, employment type, posted-date, source-url, retrieval-date, source-type, responsibilities, required skills, and preferred skills."],
-    ["Freshness and Sample Limits", "freshness-and-sample-limits", "Record freshness classification, sample size, sample-geography, blind spots, and non-generalizable requirements. A repeated signal requires multiple source IDs."],
+    ["posting-records", "Each record requires source-id, company, project if stated, region, employment type, posted-date, source-url, retrieval-date, source-type, responsibilities, required skills, and preferred skills."],
+    ["freshness-and-sample-limits", "Record freshness classification, sample size, sample-geography, blind spots, and non-generalizable requirements. A repeated signal requires multiple source IDs."],
   ],
   "portfolio-backlog": [
-    ["Backlog Records", "backlog-records", "Each item links claim-id, evidence-id, target competency, provenance, personal or team attribution, rights, privacy, strength, status, and inspectability."],
-    ["Minimum Repairs", "minimum-repairs", "Missing support receives a minimum-repair, recovery owner, action, proof artifact, and review gate before publication."],
+    ["backlog-records", "Each item links claim-id, evidence-id, target competency, provenance, personal or team attribution, rights, privacy, strength, status, and inspectability."],
+    ["minimum-repairs", "Missing support receives a minimum-repair, recovery owner, action, proof artifact, and review gate before publication."],
   ],
   "portfolio-project-brief": [
-    ["Decision Chain", "decision-chain", "Use the exact sequence target-competency → problem-user → evidence → hypothesis-intent → rules/UI/data/content → constraints-alternatives → implementation-test → result-decision → retrospective."],
-    ["Publication Boundary", "publication-boundary", "Record personal/team attribution, third-party source, use purpose, rights, privacy, implementation status, and evidence limitations."],
+    ["decision-chain", "Use the exact sequence target-competency → problem-user → evidence → hypothesis-intent → rules/UI/data/content → constraints-alternatives → implementation-test → result-decision → retrospective."],
+    ["publication-boundary", "Record personal/team attribution, third-party source, use purpose, rights, privacy, implementation status, and evidence limitations."],
   ],
   "reverse-design-document": [
-    ["Claim Records", "claim-records", "Each claim-id independently records observation, source address, scope, inference, confidence, counterexample, alternative, and validation-method."],
-    ["Fact and Inference Boundary", "fact-and-inference-boundary", "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact."],
+    ["claim-records", "Each claim-id independently records observation, source address, scope, inference, confidence, counterexample, alternative, and validation-method."],
+    ["fact-and-inference-boundary", "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact."],
   ],
   "creative-design-portfolio": [
-    ["Portfolio Story", "portfolio-story", "For every material claim-id, connect target competency, problem, decision rationale, alternative, implementation boundary, result, and reflection to an evidence-id."],
-    ["Third-party and Publication Rights", "third-party-and-publication-rights", "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability before publication."],
+    ["portfolio-story", "For every material claim-id, connect target competency, problem, decision rationale, alternative, implementation boundary, result, and reflection to an evidence-id."],
+    ["third-party-and-publication-rights", "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability before publication."],
   ],
   "game-analysis-report": [
-    ["Analysis Claims", "analysis-claims", "For each stable claim, record observation, source-address, source type, scope, inference, confidence, counterexample, alternative, and validation-method."],
-    ["Decision Use", "decision-use", "State what a designer may learn, what remains unknown, and which evidence would change the analysis. Avoid reconstructing undocumented internal intent as fact."],
+    ["analysis-claims", "For each stable claim, record observation, source-address, source type, scope, inference, confidence, counterexample, alternative, and validation-method."],
+    ["decision-use", "State what a designer may learn, what remains unknown, and which evidence would change the analysis. Avoid reconstructing undocumented internal intent as fact."],
   ],
   "five-axis-review": [
-    ["Review Records", "review-records", "Every record carries finding ID, axis ID, stable section-id, stable evidence-id, observation state, score or not-scored, impact, and minimum-repair."],
-    ["Observation and Penalty Rules", "observation-and-penalty-rules", "Keep not-observed, no-defect, and defect-observed distinct. Apply each penalty separately for contradiction, unsupported certainty, duplication, scope, or source."],
+    ["review-records", "Every record carries finding ID, axis ID, stable section-id, stable evidence-id, observation state, score or not-scored, impact, and minimum-repair."],
+    ["observation-and-penalty-rules", "Keep not-observed, no-defect, and defect-observed distinct. Apply each penalty separately for contradiction, unsupported certainty, duplication, scope, or source."],
   ],
   "interview-question-answer-log": [
-    ["Question Set", "question-set", "Trace every base-question, follow-up, objection, and situational question to a posting-evidence-id, portfolio-evidence-id, or explicit role-general source."],
-    ["Honest Answer Boundary", "honest-answer-boundary", "Connect claim, evidence, choice, alternative, result, and reflection. do-not-fabricate team size, revenue, retention, ownership, or implementation results; use an honest-answer and verification task when support is missing."],
+    ["question-set", "Trace every base-question, follow-up, objection, and situational question to a posting-evidence-id, portfolio-evidence-id, or explicit role-general source."],
+    ["honest-answer-boundary", "Connect claim, evidence, choice, alternative, result, and reflection. do-not-fabricate team size, revenue, retention, ownership, or implementation results; use an honest-answer and verification task when support is missing."],
   ],
   "introduction-motivation": [
-    ["Claim Map", "claim-map", "Every claim-id links a target-role requirement, evidence-id, personal/team scope, and source limitation. Separate motivation from verified experience."],
-    ["Honest and Private Boundary", "honest-and-private-boundary", "Use an honest-boundary for missing evidence. Remove unnecessary personal data and record privacy and publication approval before sharing."],
+    ["claim-map", "Every claim-id links a target-role requirement, evidence-id, personal/team scope, and source limitation. Separate motivation from verified experience."],
+    ["honest-and-private-boundary", "Use an honest-boundary for missing evidence. Remove unnecessary personal data and record privacy and publication approval before sharing."],
   ],
   "junior-growth-review": [
-    ["Quarterly Evidence", "quarterly-evidence", "Each requirement-id links project-event-evidence, personal/team attribution, decision, result status, limitation, and proof-artifact."],
-    ["Growth Commitments", "growth-commitments", "For every goal record owner, cadence, reviewer, input artifact, next-review-date, target depth or breadth, and re-evaluation rule."],
+    ["quarterly-evidence", "Each requirement-id links project-event-evidence, personal/team attribution, decision, result status, limitation, and proof-artifact."],
+    ["growth-commitments", "For every goal record owner, cadence, reviewer, input artifact, next-review-date, target depth or breadth, and re-evaluation rule."],
   ],
   "transition-readiness": [
-    ["Readiness Matrix", "readiness-matrix", "Link each target-requirement to current-evidence and posting-evidence-id. Record source URL, retrieval-date, region, source type, gap, scope, and freshness."],
-    ["Decision Options", "decision-options", "Keep alternative paths, tradeoffs, minimum evidence, owner, verification-task, review date, and no-hiring-promise boundary explicit."],
+    ["readiness-matrix", "Link each target-requirement to current-evidence and posting-evidence-id. Record source URL, retrieval-date, region, source type, gap, scope, and freshness."],
+    ["decision-options", "Keep alternative paths, tradeoffs, minimum evidence, owner, verification-task, review date, and no-hiring-promise boundary explicit."],
   ],
 };
 
@@ -185,19 +185,28 @@ const commonSemanticClauses = [
   "Do not split Markdown mechanically by headings.",
 ];
 
-function semanticSection(content, heading, id) {
-  const marker = `## ${heading} {#${id}}\n\n`;
-  const start = content.indexOf(marker);
-  assert.notEqual(start, -1, `missing semantic section ${id}`);
-  const bodyStart = start + marker.length;
+function semanticSection(content, id) {
+  const marker = new RegExp("^## [^\\r\\n]* \\{#" + id + "\\}\\r?\\n", "mu");
+  const match = marker.exec(content);
+  assert.ok(match, "missing semantic section " + id);
+  const bodyStart = match.index + match[0].length;
   const next = content.indexOf("\n## ", bodyStart);
   return content.slice(bodyStart, next === -1 ? content.length : next).trim();
 }
 
+function assertStableSection(content, id) {
+  assert.match(content, new RegExp("^## [^\\r\\n]* \\{#" + id + "\\}$", "mu"), "missing stable section " + id);
+}
+
+test("semantic sections use stable anchors instead of localized visible titles", () => {
+  const content = "## 기획 항목: Localized title {#stable-section}\n\nRequired semantic meaning.\n\n## 다음 섹션 {#next-section}\n\nOther meaning.\n";
+  assert.equal(semanticSection(content, "stable-section"), "Required semantic meaning.");
+});
+
 function assertSemanticContract(templateId, content) {
   assert.deepEqual(Object.keys(semanticContracts).sort(), [...templateIds].sort());
-  for (const [heading, id, requiredMeaning] of semanticContracts[templateId]) {
-    assert.equal(semanticSection(content, heading, id), requiredMeaning, `${templateId}: semantic contract ${id}`);
+  for (const [id, requiredMeaning] of semanticContracts[templateId]) {
+    assert.equal(semanticSection(content, id), requiredMeaning, `${templateId}: semantic contract ${id}`);
   }
   for (const clause of commonSemanticClauses) {
     assert.ok(content.includes(clause), `${templateId}: missing semantic clause ${clause}`);
@@ -255,10 +264,10 @@ function assertUsableTemplate(templateId, content, evidence, manifest, expectedC
   const metadata = parseContentFrontmatter(content);
   assert.equal(metadata.artifact_id, templateId, `${templateId}: frontmatter identity`);
   assert.match(content, /^# .+ \{#[a-z0-9-]+\}$/mu);
-  assert.match(content, /## Assumptions and Boundaries \{#assumptions-and-boundaries\}/u);
-  assert.match(content, /## Owners and Approvals \{#owners-and-approvals\}/u);
-  assert.match(content, /## Change History \{#change-history\}/u);
-  assert.match(content, /## Evidence and Freshness \{#evidence-and-freshness\}/u);
+  assertStableSection(content, "assumptions-and-boundaries");
+  assertStableSection(content, "owners-and-approvals");
+  assertStableSection(content, "change-history");
+  assertStableSection(content, "evidence-and-freshness");
   assert.doesNotMatch(content, /\b(?:TODO|TBD|lorem ipsum|fill this|placeholder)\b/iu);
   for (const token of typeContracts[templateId]) {
     assert.match(content, new RegExp(token, "iu"), `${templateId}: missing ${token}`);

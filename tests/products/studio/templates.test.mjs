@@ -60,79 +60,79 @@ const requiredFiles = [
 ];
 
 const approvedSeedHashes = {
-  "accessibility-platform-matrix/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "accessibility-platform-matrix/content.md": "15f4797992d9deee0b65696b1fadde5388a1991e498a55244e08a05a3c20157f",
-  "accessibility-platform-matrix/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "accessibility-platform-matrix/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "accessibility-platform-matrix/content.md": "5626cec4279cffba3def13b9a2f1f2653bbb86b247f8d8a098338339c2cb5c0a",
+  "accessibility-platform-matrix/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "accessibility-platform-matrix/evidence.yml": "5cc40446bea64211ff0c242e49af505826735d253abb51162c005e0f2496ff97",
   "accessibility-platform-matrix/export-manifest.yml": "a0df5b01d7ab4662892bb06b8da1de586a9baa7c313fbeac28be3c491546b56b",
-  "character-skill-combat-monster/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "character-skill-combat-monster/content.md": "30dc99ded4878662e12de22c5ed5f23942daf66c89c99c36e6ae4939ef09c54b",
-  "character-skill-combat-monster/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "character-skill-combat-monster/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "character-skill-combat-monster/content.md": "14fddc61c7ea7429d9f5de0519b86ddf92fab02771bd4755ed715e4df1be14d3",
+  "character-skill-combat-monster/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "character-skill-combat-monster/evidence.yml": "24432843d612e0e87c12bf7e4a352f621d7871dad6ffd7d38d5edfa68ae6b20b",
   "character-skill-combat-monster/export-manifest.yml": "b5a21c28d758fffacebab5eac10187767c8c9f687654130006ba36d8923e69f5",
-  "core-motivation-loop/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "core-motivation-loop/content.md": "b15d54981ee757aca0b7e8f0db5f93c0ddb0cd96f702ad7567ef52e87cf49d6f",
-  "core-motivation-loop/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "core-motivation-loop/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "core-motivation-loop/content.md": "c7fd45bd37c51038731cbca87220facf66e1fa993fdad03be0673193fe137643",
+  "core-motivation-loop/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "core-motivation-loop/evidence.yml": "4ce9d79abe00b9531640ffa28da47f1af8dd727e4a910223080a4e68fc8e30cb",
   "core-motivation-loop/export-manifest.yml": "d35deb851062f21cb36610bb1eef164d5dd21e7ae6a4dce052478074f2e69f02",
-  "data-schema-table-contract/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "data-schema-table-contract/content.md": "d17c4f05ebf3d0d03bcdcbda7bb051f9a5f3b2007e0ab44fa41c701bf0d9909b",
-  "data-schema-table-contract/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "data-schema-table-contract/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "data-schema-table-contract/content.md": "5dfa16cab191b49b1af0e14c320c48b60306b4ea7804d311ed5c5b0896d6c130",
+  "data-schema-table-contract/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "data-schema-table-contract/evidence.yml": "6a672a07b5b4ff865fdc507f3e6f8af0faf5e6db934f0c7a582c6f1c96452c70",
   "data-schema-table-contract/export-manifest.yml": "ca42b32d884f7f4d22a5aa9dc4197f8bedc053faddf1ab1bb70fd96389971e2d",
-  "decision-change-log/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "decision-change-log/content.md": "9d9ef4dfba4b9d17bb8211083780e7d45196b0ab43e862e684ac311cdab3b575",
-  "decision-change-log/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "decision-change-log/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "decision-change-log/content.md": "30679aef9101c27132ea0d5d238ad51ce6f4420d3c0d0aee085c585e51784b2e",
+  "decision-change-log/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "decision-change-log/evidence.yml": "fedc034c5c7c3ffe37c7286c612f0ce77919f8caea74c39b8b17605fbfe200ab",
   "decision-change-log/export-manifest.yml": "132eabb61d4b264c2d908c19788071c75a9a04284dbd589dfc5fec2f20d87ed9",
-  "economy-balance/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "economy-balance/content.md": "18d2dd9ca5d5c7b010798f64dc12fa86f2a8078f2ad9b6657b50e2bf315d4c2a",
-  "economy-balance/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "economy-balance/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "economy-balance/content.md": "2bf41b4b755bf6e55d47c5e63d81ae31d6ef43b99ea4e34d0a9d1d484b1a2349",
+  "economy-balance/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "economy-balance/evidence.yml": "f5660aefba9fc8f67a97a86502a816fa2be16ff446f40c38b311ae8e129a0da7",
   "economy-balance/export-manifest.yml": "aaec2e67c761dd661f8d86175b723e43b9ae897907d574e13b092e1b21fb0ca4",
-  "game-design-brief/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "game-design-brief/content.md": "042608c612cd0e536fe5495aa64dc7f2069d53decde55ca6669a8d9c32ee7d15",
-  "game-design-brief/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "game-design-brief/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "game-design-brief/content.md": "a283b02f0c27f4dcb425fa96ad8458ae0975fd61276e65f17822ed7798382da0",
+  "game-design-brief/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "game-design-brief/evidence.yml": "f19bb04d8077ba405dc1b22edb2b2e574d27b00499ea960cbe41e25290ddd5fb",
   "game-design-brief/export-manifest.yml": "3b066e718628dcf059d803dc8be26ca646ae7c7d618b806334b0674f7a5883f3",
-  "game-design-review/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "game-design-review/content.md": "3674d400eb322a1bee77fa3dc704d73c3ee8da89b6e0fabfa4c498cffd8e1a78",
-  "game-design-review/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "game-design-review/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "game-design-review/content.md": "472c6ad263eebf457f46d3dbf2804dbee04369ef7eefd14773a0156a812d677f",
+  "game-design-review/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "game-design-review/evidence.yml": "65bb1f4de923bf3b71ecc9f419cc659c55af18fc4751cda50e4ea33747096c38",
   "game-design-review/export-manifest.yml": "eca03c395d31e0fa49994446a0f7a8f2393cfeb21ccfdc837171611c9fd57aa0",
-  "liveops-experiment-event/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "liveops-experiment-event/content.md": "a6ae8cee4a750b8a81ac72c4eea2df235ab57865db478ec1aa4294829dfe6cdb",
-  "liveops-experiment-event/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "liveops-experiment-event/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "liveops-experiment-event/content.md": "8c2c65833f9f6a6db6cd16133864e2a4ea42b92e8f5b09f05543d1b4c66fea73",
+  "liveops-experiment-event/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "liveops-experiment-event/evidence.yml": "a89d56b34a05e46354278b564c236d76fca03bff2332567415fef29c2f80c148",
   "liveops-experiment-event/export-manifest.yml": "b6934f5d78951b0840436297658717f0404ef9dd3eda905a446698855c666a22",
-  "narrative-quest-npc/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "narrative-quest-npc/content.md": "728f44035c4b4303348703e47cda76a3f867b5cb3c1bf3f517cdbd21817765d5",
-  "narrative-quest-npc/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "narrative-quest-npc/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "narrative-quest-npc/content.md": "8f5285edbc941f8f9ee8f60b2d0a6605c3697007029f5b128ea6347afe7dd19b",
+  "narrative-quest-npc/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "narrative-quest-npc/evidence.yml": "5204b30729fa4ada897664e433791500acef62f490719427c1be269e941fc56e",
   "narrative-quest-npc/export-manifest.yml": "3ac51fc84152a138b78f5df7c62cb6778589869886e12e7fd834716fe16a2c48",
-  "production-scope-risk/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "production-scope-risk/content.md": "fb8a2b7e201cb6a5d5b45af53c98765b73234bf2a1c7799bc64fb6607d6e3921",
-  "production-scope-risk/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "production-scope-risk/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "production-scope-risk/content.md": "9242f0e01f800c5098b5dd52e67f485b5e5d6062ef0ae8188365cb6299939878",
+  "production-scope-risk/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "production-scope-risk/evidence.yml": "cb6f05e00e3fab3b9c58e1550ca54893d179d68098393eeb52c3698c25d196c2",
   "production-scope-risk/export-manifest.yml": "83e311c5d931b49bd329a615ec81bfdd217605fd328cc355c92bbb879bf7ad36",
-  "rule-exception-matrix/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "rule-exception-matrix/content.md": "df5b84f89d15886750741e2cb3560bb112d2a1f82ee3247361ea4d0ecf047af0",
-  "rule-exception-matrix/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "rule-exception-matrix/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "rule-exception-matrix/content.md": "ce58a0a1558f3d24b84bc66f0304534f612cce7e87e394c61b037263d5c39329",
+  "rule-exception-matrix/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "rule-exception-matrix/evidence.yml": "72838c93aadc5f48751dce8ff2e484d53dbcde4438b67a11b38513d26d8880c9",
   "rule-exception-matrix/export-manifest.yml": "c286f34b582856310e947cbe99cc8094d9964552fbd08c61cdadf4a2aa18fc3f",
-  "system-specification/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "system-specification/content.md": "9fa0adae044c0e5a5bd6cac1505f639c62c60cea6c5f13dc8212da94eaf0779a",
-  "system-specification/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "system-specification/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "system-specification/content.md": "32932507ae69e5243b57c4b00d38ec806daffe2f2886b1b3c699cbeb5dda7a54",
+  "system-specification/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "system-specification/evidence.yml": "a22c6454fb2b8a1f2a5a3e7c5b6c3ffef5a69535454a04115cfeae15b3b40263",
   "system-specification/export-manifest.yml": "b78dd77c281917c2e7e1099912d9144d8510b9e10621881d78008055d0e1bdf0",
-  "ui-ux-flow-state/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "ui-ux-flow-state/content.md": "87c1012582d4c49662f609d9f61f1c72b52a207956fabcfaaf117a26c9ab1fb5",
-  "ui-ux-flow-state/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "ui-ux-flow-state/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "ui-ux-flow-state/content.md": "7b1cd76451482da7bb3bd8d40efd98e700b48b87a008e307ed797e7265404ebe",
+  "ui-ux-flow-state/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "ui-ux-flow-state/evidence.yml": "9b571c210e2417bebb5a9eb614d87269d75996f1b39399c0d7c410514581e040",
   "ui-ux-flow-state/export-manifest.yml": "365df35e89ce4faa3b109aca775e7a0ffafc3f18dbe91ff2f14b49b5112c093d",
-  "vision-pillars/assets/README.md": "1d40684fd611cd7f27e92bf4beaaa9213efad2aa75ef930d7f8e078c923adb30",
-  "vision-pillars/content.md": "42aeaf6740677304f2bf6417032c295042f2effd43f414e6f8a28816968ec427",
-  "vision-pillars/decisions/README.md": "faa68e2a1148ff09d866d0a07f11079a8596f4e5eddb2709d60303d907b27e1c",
+  "vision-pillars/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
+  "vision-pillars/content.md": "00a27e7d62873569b914b7f8196f961cf19d129fc73a6559a26f061665b06780",
+  "vision-pillars/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "vision-pillars/evidence.yml": "5a32187a996c28f8d3042aa333865254037664eb7218b72e258c4db255af9bdc",
   "vision-pillars/export-manifest.yml": "f48e93574eb4b19076afaaf9740c41472d1bae6fe2fcc0c2568b06739180b3b2",
 };
@@ -141,106 +141,106 @@ const contracts = {
   "game-design-brief": {
     fields: ["target-player", "experience-intent", "platform", "genre", "business-model", "core-loop", "scope", "non-goals", "success-metric", "owner"],
     sections: [
-      ["Brief Contract", "brief-contract", "Define the target player, experience intent, desired emotion, platform, genre, business model, online mode, core loop, scope, non-goals, success metric, constraints, and owner before approval."],
-      ["Release Boundary", "release-boundary", "A concept may remain provisional. Do not approve production commitment while target experience, prototype evidence, owner, or success criteria are missing."],
+      ["brief-contract", "Define the target player, experience intent, desired emotion, platform, genre, business model, online mode, core loop, scope, non-goals, success metric, constraints, and owner before approval."],
+      ["release-boundary", "A concept may remain provisional. Do not approve production commitment while target experience, prototype evidence, owner, or success criteria are missing."],
     ],
   },
   "vision-pillars": {
     fields: ["pillar-id", "player-promise", "design-rule", "anti-pillar", "evidence-id", "success-signal", "owner"],
     sections: [
-      ["Vision and Pillars", "vision-and-pillars", "Connect each pillar-id to a target-player promise, desired emotion, core fun, meaningful choice, design rule, anti-pillar, evidence-id, success signal, and owner."],
-      ["Unsupported Fun Boundary", "unsupported-fun-boundary", "Fun adjectives are hypotheses, not evidence. Keep assumptions visible and require an observable player behavior or test before approval."],
+      ["vision-and-pillars", "Connect each pillar-id to a target-player promise, desired emotion, core fun, meaningful choice, design rule, anti-pillar, evidence-id, success signal, and owner."],
+      ["unsupported-fun-boundary", "Fun adjectives are hypotheses, not evidence. Keep assumptions visible and require an observable player behavior or test before approval."],
     ],
   },
   "core-motivation-loop": {
     fields: ["loop-step", "player-input", "system-response", "feedback", "reward", "motivation-need", "meaningful-choice", "failure-recovery", "metric"],
     sections: [
-      ["Loop Contract", "loop-contract", "Trace trigger, player input, system response, feedback, reward, motivation need, meaningful choice, repetition, failure, recovery, and measurable outcome for every loop-step."],
-      ["Compulsion Safety", "compulsion-safety", "Do not use obscured odds, coercive urgency, loss framing, or infinite escalation as a substitute for meaningful choice. Record stop conditions and player protection metrics."],
+      ["loop-contract", "Trace trigger, player input, system response, feedback, reward, motivation need, meaningful choice, repetition, failure, recovery, and measurable outcome for every loop-step."],
+      ["compulsion-safety", "Do not use obscured odds, coercive urgency, loss framing, or infinite escalation as a substitute for meaningful choice. Record stop conditions and player protection metrics."],
     ],
   },
   "system-specification": {
     fields: ["rule-id", "input", "precondition", "state-transition", "output", "feedback", "precedence", "exception", "failure-recovery", "data-runtime-mapping"],
     sections: [
-      ["System Contract", "system-contract", "For every rule-id specify input, precondition, rule, state transition, output, feedback, exception, priority, concurrency, failure, recovery, abuse case, UI state, and owner."],
-      ["Precedence and Runtime Mapping", "precedence-and-runtime-mapping", "Resolve rule precedence explicitly. Map each design field to its data source, table or schema key, runtime consumer, authority, synchronization rule, validation method, and rollback path."],
+      ["system-contract", "For every rule-id specify input, precondition, rule, state transition, output, feedback, exception, priority, concurrency, failure, recovery, abuse case, UI state, and owner."],
+      ["precedence-and-runtime-mapping", "Resolve rule precedence explicitly. Map each design field to its data source, table or schema key, runtime consumer, authority, synchronization rule, validation method, and rollback path."],
     ],
   },
   "rule-exception-matrix": {
     fields: ["rule-id", "priority", "condition", "exception-id", "concurrency", "authority", "failure", "recovery", "test-case"],
     sections: [
-      ["Rule and Exception Order", "rule-and-exception-order", "Give every rule-id and exception-id a deterministic priority, condition, authority, concurrency behavior, conflict resolution, failure state, recovery action, and test-case."],
-      ["Conflict Boundary", "conflict-boundary", "Never resolve contradictory rules by document order or unstated intuition. Unresolved precedence blocks implementation approval and becomes a decision record."],
+      ["rule-and-exception-order", "Give every rule-id and exception-id a deterministic priority, condition, authority, concurrency behavior, conflict resolution, failure state, recovery action, and test-case."],
+      ["conflict-boundary", "Never resolve contradictory rules by document order or unstated intuition. Unresolved precedence blocks implementation approval and becomes a decision record."],
     ],
   },
   "ui-ux-flow-state": {
     fields: ["state-id", "entry-condition", "information-priority", "critical-action", "input", "loading-empty-error", "exit-condition", "accessibility", "telemetry"],
     sections: [
-      ["Flow and State Contract", "flow-and-state-contract", "For each state-id record entry condition, information priority, critical action, input, focus order, loading, empty, error, offline, interruption, recovery, exit condition, and telemetry."],
-      ["Access to Critical Actions", "access-to-critical-actions", "A critical action requires keyboard or controller reachability, visible focus, readable status beyond color alone, scalable text, captions where audio conveys meaning, and an accessible recovery path."],
+      ["flow-and-state-contract", "For each state-id record entry condition, information priority, critical action, input, focus order, loading, empty, error, offline, interruption, recovery, exit condition, and telemetry."],
+      ["access-to-critical-actions", "A critical action requires keyboard or controller reachability, visible focus, readable status beyond color alone, scalable text, captions where audio conveys meaning, and an accessible recovery path."],
     ],
   },
   "data-schema-table-contract": {
     fields: ["field-id", "table", "primary-key", "foreign-key", "type-range", "default-null", "design-meaning", "runtime-consumer", "authority-sync", "migration-validation"],
     sections: [
-      ["Schema Contract", "schema-contract", "For each field-id record table, primary key, foreign key, type and range, default and null policy, design meaning, source of truth, runtime consumer, authority and synchronization, migration, validation, and rollback."],
-      ["Design to Runtime Boundary", "design-to-runtime-boundary", "A label without an exact table or schema key is not a runtime mapping. Schema changes require compatibility, ownership, migration, observability, and rollback evidence."],
+      ["schema-contract", "For each field-id record table, primary key, foreign key, type and range, default and null policy, design meaning, source of truth, runtime consumer, authority and synchronization, migration, validation, and rollback."],
+      ["design-to-runtime-boundary", "A label without an exact table or schema key is not a runtime mapping. Schema changes require compatibility, ownership, migration, observability, and rollback evidence."],
     ],
   },
   "narrative-quest-npc": {
     fields: ["content-id", "player-purpose", "entry-condition", "choice-consequence", "quest-state", "npc-state", "telegraph", "reward", "repeatability", "rights-consent"],
     sections: [
-      ["Narrative Content Contract", "narrative-content-contract", "Connect each content-id to player purpose, system inputs, production resources, entry condition, choice and consequence, quest state, NPC state, telegraph, outcome, reward, repeatability, and owner."],
-      ["AI and UGC Rights Boundary", "ai-and-ugc-rights-boundary", "When AI-generated, performer-derived, or user-generated material is used, record source, creator or contributor, attribution, use purpose, rights or consent, privacy, moderation, approver, and revocation path before release."],
+      ["narrative-content-contract", "Connect each content-id to player purpose, system inputs, production resources, entry condition, choice and consequence, quest state, NPC state, telegraph, outcome, reward, repeatability, and owner."],
+      ["ai-and-ugc-rights-boundary", "When AI-generated, performer-derived, or user-generated material is used, record source, creator or contributor, attribution, use purpose, rights or consent, privacy, moderation, approver, and revocation path before release."],
     ],
   },
   "character-skill-combat-monster": {
     fields: ["entity-id", "combat-role", "player-strategy", "input-timing", "state-rule", "telegraph", "counterplay", "failure-recovery", "data-key", "balance-test"],
     sections: [
-      ["Combat Content Contract", "combat-content-contract", "For every entity-id connect combat role, player strategy, input timing, state rule, telegraph, counterplay, output, reward, failure, recovery, data key, production cost, and balance test."],
-      ["Fairness and Readability", "fairness-and-readability", "Critical threats require perceivable telegraphs, consistent rule precedence, accessible cues beyond color or audio alone, bounded randomness, and a testable counterplay window."],
+      ["combat-content-contract", "For every entity-id connect combat role, player strategy, input timing, state rule, telegraph, counterplay, output, reward, failure, recovery, data key, production cost, and balance test."],
+      ["fairness-and-readability", "Critical threats require perceivable telegraphs, consistent rule precedence, accessible cues beyond color or audio alone, bounded randomness, and a testable counterplay window."],
     ],
   },
   "economy-balance": {
     fields: ["resource-id", "source", "sink", "target-inventory", "progression-time", "real-price", "probability", "pity", "inflation-risk", "rollback"],
     sections: [
-      ["Economy Contract", "economy-contract", "For every resource-id record source, sink, target inventory, progression time, exchange rule, segmentation limit, inflation risk, exploit risk, telemetry, owner, and review cadence."],
-      ["Price Probability and Recovery Gate", "price-probability-and-recovery-gate", "Release approval is blocked until real-price presentation, probability disclosure, pity or guarantee behavior, purchase confirmation, refund boundary, anomaly detection, stop condition, and rollback are explicit and current-policy evidence is linked."],
+      ["economy-contract", "For every resource-id record source, sink, target inventory, progression time, exchange rule, segmentation limit, inflation risk, exploit risk, telemetry, owner, and review cadence."],
+      ["price-probability-and-recovery-gate", "Release approval is blocked until real-price presentation, probability disclosure, pity or guarantee behavior, purchase confirmation, refund boundary, anomaly detection, stop condition, and rollback are explicit and current-policy evidence is linked."],
     ],
   },
   "liveops-experiment-event": {
     fields: ["experiment-id", "hypothesis", "control", "single-variable", "sample", "duration", "success", "guardrail", "stop-condition", "rollback"],
     sections: [
-      ["Experiment Contract", "experiment-contract", "Every experiment-id requires one falsifiable hypothesis, a control, one changed variable, eligible sample, exclusions, duration, success metric, guardrail metric, analysis owner, and decision rule."],
-      ["Protection and Rollback Gate", "protection-and-rollback-gate", "Do not launch without consent or policy basis where required, player protection metrics, stop condition, rollback owner, recovery procedure, contamination check, and a plan for inconclusive results."],
+      ["experiment-contract", "Every experiment-id requires one falsifiable hypothesis, a control, one changed variable, eligible sample, exclusions, duration, success metric, guardrail metric, analysis owner, and decision rule."],
+      ["protection-and-rollback-gate", "Do not launch without consent or policy basis where required, player protection metrics, stop condition, rollback owner, recovery procedure, contamination check, and a plan for inconclusive results."],
     ],
   },
   "accessibility-platform-matrix": {
     fields: ["platform", "critical-action", "input-method", "focus-navigation", "visual-alternative", "audio-alternative", "text-scale", "performance", "offline-interruption", "verification"],
     sections: [
-      ["Platform Access Matrix", "platform-access-matrix", "For every platform and critical action record input method, remapping, focus navigation, visual alternative, audio alternative, text scale, motion or haptic option, performance budget, safe area, offline or interruption behavior, and verification."],
-      ["Accessibility Completion Gate", "accessibility-completion-gate", "A critical action is not complete when a required state, cue, input path, recovery path, or equivalent sensory alternative is missing or unverified on a supported platform."],
+      ["platform-access-matrix", "For every platform and critical action record input method, remapping, focus navigation, visual alternative, audio alternative, text scale, motion or haptic option, performance budget, safe area, offline or interruption behavior, and verification."],
+      ["accessibility-completion-gate", "A critical action is not complete when a required state, cue, input path, recovery path, or equivalent sensory alternative is missing or unverified on a supported platform."],
     ],
   },
   "production-scope-risk": {
     fields: ["scope-id", "core-loop-contribution", "moscow", "effort", "dependency", "maintenance", "rights-outsource-risk", "prototype-hypothesis", "definition-of-done", "kill-criterion"],
     sections: [
-      ["Scope and Risk Contract", "scope-and-risk-contract", "For each scope-id record core-loop contribution, MoSCoW class, effort, dependency, maintenance burden, licensing or outsource risk, prototype hypothesis, milestone, owner, definition of done, and kill-criterion."],
-      ["Commitment Gate", "commitment-gate", "Do not approve a large commitment without target-experience evidence, prototype result, capacity evidence, named owner, measurable definition of done, kill criterion, contingency, and reopen condition."],
+      ["scope-and-risk-contract", "For each scope-id record core-loop contribution, MoSCoW class, effort, dependency, maintenance burden, licensing or outsource risk, prototype hypothesis, milestone, owner, definition of done, and kill-criterion."],
+      ["commitment-gate", "Do not approve a large commitment without target-experience evidence, prototype result, capacity evidence, named owner, measurable definition of done, kill criterion, contingency, and reopen condition."],
     ],
   },
   "game-design-review": {
     fields: ["finding-id", "severity", "evidence-id", "impact", "section-id", "minimal-fix", "role", "status", "decision-id"],
     sections: [
-      ["Review Finding Contract", "review-finding-contract", "Every finding-id carries severity, evidence-id, observed impact, affected stable section-id, minimal-fix, reviewer role, status, and decision-id for unresolved disagreement."],
-      ["Review Boundary", "review-boundary", "Reviewers report bounded findings and minimum repairs; they do not rewrite the whole artifact, invent evidence, silently choose between conflicting assumptions, or grant approval."],
+      ["review-finding-contract", "Every finding-id carries severity, evidence-id, observed impact, affected stable section-id, minimal-fix, reviewer role, status, and decision-id for unresolved disagreement."],
+      ["review-boundary", "Reviewers report bounded findings and minimum repairs; they do not rewrite the whole artifact, invent evidence, silently choose between conflicting assumptions, or grant approval."],
     ],
   },
   "decision-change-log": {
     fields: ["decision-id", "date", "owner", "status", "context", "alternatives", "evidence-ids", "rationale", "approver", "reopen-condition"],
     sections: [
-      ["Decision Contract", "decision-contract", "Every decision-id records date, owner, status, context, alternatives, evidence IDs, rationale, consequences, approver, approval date, and reopen condition."],
-      ["Change Traceability", "change-traceability", "Every material change links the affected stable section IDs, previous decision, new evidence, compatibility or migration impact, rollback path, and next review date."],
+      ["decision-contract", "Every decision-id records date, owner, status, context, alternatives, evidence IDs, rationale, consequences, approver, approval date, and reopen condition."],
+      ["change-traceability", "Every material change links the affected stable section IDs, previous decision, new evidence, compatibility or migration impact, rollback path, and next review date."],
     ],
   },
 };
@@ -253,14 +253,23 @@ const commonClauses = [
   "Do not split Markdown mechanically by headings.",
 ];
 
-function semanticSection(content, heading, id) {
-  const marker = `## ${heading} {#${id}}\n\n`;
-  const start = content.indexOf(marker);
-  assert.notEqual(start, -1, `missing semantic section ${id}`);
-  const bodyStart = start + marker.length;
+function semanticSection(content, id) {
+  const marker = new RegExp("^## [^\\r\\n]* \\{#" + id + "\\}\\r?\\n", "mu");
+  const match = marker.exec(content);
+  assert.ok(match, "missing semantic section " + id);
+  const bodyStart = match.index + match[0].length;
   const next = content.indexOf("\n## ", bodyStart);
   return content.slice(bodyStart, next === -1 ? content.length : next).trim();
 }
+
+function assertStableSection(content, id) {
+  assert.match(content, new RegExp("^## [^\\r\\n]* \\{#" + id + "\\}$", "mu"), "missing stable section " + id);
+}
+
+test("semantic sections use stable anchors instead of localized visible titles", () => {
+  const content = "## 기획 항목: Localized title {#stable-section}\n\nRequired semantic meaning.\n\n## 다음 섹션 {#next-section}\n\nOther meaning.\n";
+  assert.equal(semanticSection(content, "stable-section"), "Required semantic meaning.");
+});
 
 function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---\n/u);
@@ -287,17 +296,17 @@ function assertTemplateContract(templateId, content, evidence, manifest) {
   const metadata = parseFrontmatter(content);
   assert.equal(metadata.artifact_id, templateId);
   assert.match(content, /^# .+ \{#[a-z0-9-]+\}$/mu);
-  assert.match(content, /## Working Record \{#working-record\}/u);
-  assert.match(content, /## Assumptions and Boundaries \{#assumptions-and-boundaries\}/u);
-  assert.match(content, /## Owners and Approvals \{#owners-and-approvals\}/u);
-  assert.match(content, /## Evidence and Freshness \{#evidence-and-freshness\}/u);
-  assert.match(content, /## Applicable Safety Gates \{#applicable-safety-gates\}/u);
-  assert.match(content, /## Output Story Hints \{#output-story-hints\}/u);
-  assert.match(content, /## Change History \{#change-history\}/u);
+  assertStableSection(content, "working-record");
+  assertStableSection(content, "assumptions-and-boundaries");
+  assertStableSection(content, "owners-and-approvals");
+  assertStableSection(content, "evidence-and-freshness");
+  assertStableSection(content, "applicable-safety-gates");
+  assertStableSection(content, "output-story-hints");
+  assertStableSection(content, "change-history");
   assert.doesNotMatch(content, /\b(?:TODO|TBD|lorem ipsum|fill this|placeholder)\b/iu);
 
-  for (const [heading, id, meaning] of contracts[templateId].sections) {
-    assert.equal(semanticSection(content, heading, id), meaning, `${templateId}: ${id}`);
+  for (const [id, meaning] of contracts[templateId].sections) {
+    assert.equal(semanticSection(content, id), meaning, `${templateId}: ${id}`);
   }
   for (const clause of commonClauses) assert.ok(content.includes(clause), `${templateId}: ${clause}`);
 
@@ -501,8 +510,8 @@ test("every template instantiates with representative project data and remains a
       contracts[templateId].fields,
       `${templateId}: instantiated required fields`,
     );
-    for (const [heading, id, meaning] of contracts[templateId].sections) {
-      assert.equal(semanticSection(content, heading, id), meaning, `${templateId}: instantiated ${id}`);
+    for (const [id, meaning] of contracts[templateId].sections) {
+      assert.equal(semanticSection(content, id), meaning, `${templateId}: instantiated ${id}`);
     }
   }
 });
@@ -573,7 +582,7 @@ test("generic tokens cannot replace exact type semantics", async () => {
   const evidence = parseRestrictedYaml(await readFile(path.join(root, "evidence.yml"), "utf8"));
   const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
   const generic = content.replace(
-    contracts[templateId].sections[0][2],
+    contracts[templateId].sections[0][1],
     "hypothesis control single-variable sample duration success guardrail stop-condition rollback.",
   );
   assert.throws(() => assertTemplateContract(templateId, generic, evidence, manifest));
