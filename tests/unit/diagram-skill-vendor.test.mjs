@@ -137,6 +137,11 @@ async function vendorState(root, name) {
   return { lock, notices, tree };
 }
 
+async function writeRecoveryBackups(root) {
+  await writeFile(path.join(root, ".vendor-update-lock-backup.json"), await readFile(path.join(root, "vendor.lock.json")));
+  await writeFile(path.join(root, ".vendor-update-notices-backup.md"), await readFile(path.join(root, "THIRD_PARTY_NOTICES.md")));
+}
+
 async function archiveFilesForVendor(root, name, mutate = (files) => files) {
   const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8"));
   const files = await Promise.all(lock.tree.files.map(async ({ path: relativePath }) => ({
@@ -268,14 +273,16 @@ test("offline diagram vendor verifier rejects a changed payload byte, symlink, a
 test("recovery rejects malformed, escaping, and symlinked journals without changing the active closure", async (t) => {
   const { recoverDiagramSkillVendor } = await loadUpdaterOrFail();
   const valid = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     name: "archify",
     oldRoot: "archify/2.13.0",
     newRoot: "archify/2.13.1",
     ownerNonce: "a".repeat(32),
+    lockBackup: ".vendor-update-lock-backup.json",
+    noticesBackup: ".vendor-update-notices-backup.md",
   };
   for (const [label, journal] of [
-    ["wrong-schema", { ...valid, schemaVersion: 2 }],
+    ["wrong-schema", { ...valid, schemaVersion: 1 }],
     ["traversal", { ...valid, oldRoot: "../escape" }],
     ["absolute", { ...valid, newRoot: "/tmp/escape" }],
   ]) {
@@ -312,7 +319,7 @@ test("a live operation owner blocks recovery and never lets a verifier delete it
   const lockRoot = path.join(vendorRoot, ".vendor-operation.lock");
   await mkdir(lockRoot);
   await writeFile(path.join(lockRoot, "owner.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", nonce: "b".repeat(32), startedAt: new Date().toISOString() })}\n`);
-  await writeFile(path.join(vendorRoot, ".vendor-update.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", oldRoot: "archify/2.13.0", newRoot: "archify/2.13.1", ownerNonce: "b".repeat(32) })}\n`);
+  await writeFile(path.join(vendorRoot, ".vendor-update.json"), `${JSON.stringify({ schemaVersion: 2, name: "archify", oldRoot: "archify/2.13.0", newRoot: "archify/2.13.1", ownerNonce: "b".repeat(32), lockBackup: ".vendor-update-lock-backup.json", noticesBackup: ".vendor-update-notices-backup.md" })}\n`);
   await mkdir(path.join(vendorRoot, "archify/2.13.1"), { recursive: true });
   await writeFile(path.join(vendorRoot, "archify/2.13.1", "candidate.txt"), "do not delete");
   for (const operation of [recoverDiagramSkillVendor, verifyDiagramSkillVendor]) {
@@ -399,7 +406,8 @@ test("only a stale owner may be recovered, and recovery leaves the valid active 
   const lockRoot = path.join(vendorRoot, ".vendor-operation.lock");
   await mkdir(lockRoot);
   await writeFile(path.join(lockRoot, "owner.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", nonce: "c".repeat(32), startedAt: "2000-01-01T00:00:00.000Z" })}\n`);
-  await writeFile(path.join(vendorRoot, ".vendor-update.json"), `${JSON.stringify({ schemaVersion: 1, name: "archify", oldRoot: "archify/2.13.0", newRoot: "archify/2.13.1", ownerNonce: "c".repeat(32) })}\n`);
+  await writeRecoveryBackups(vendorRoot);
+  await writeFile(path.join(vendorRoot, ".vendor-update.json"), `${JSON.stringify({ schemaVersion: 2, name: "archify", oldRoot: "archify/2.13.0", newRoot: "archify/2.13.1", ownerNonce: "c".repeat(32), lockBackup: ".vendor-update-lock-backup.json", noticesBackup: ".vendor-update-notices-backup.md" })}\n`);
   await mkdir(path.join(vendorRoot, "archify/2.13.1"), { recursive: true });
   await writeFile(path.join(vendorRoot, "archify/2.13.1", "candidate.txt"), "discard stale candidate");
   assert.equal(await recoverDiagramSkillVendor({ root: vendorRoot, name: "archify", now: Date.parse("2000-01-01T00:10:00.000Z") }), true);
@@ -565,6 +573,57 @@ test("failed lock replacement recovers the previous immutable closure", async (t
   await recoverDiagramSkillVendor({ root: vendorRoot, name: "archify" });
   assert.deepEqual(await readFile(path.join(vendorRoot, "vendor.lock.json")), before);
   assert.deepEqual(await verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" }), { name: "archify", tag: "v2.13.0", verifiedFiles: 60 });
+});
+
+test("notices transaction failures restore the complete previous closure", async (t) => {
+  const { updateDiagramSkill, verifyDiagramSkillVendor } = await loadUpdaterOrFail();
+  for (const [label, injected] of [
+    ["notices-rename", {
+      renamePath: async (from, to, vendorRoot) => {
+        if (to === path.join(vendorRoot, "THIRD_PARTY_NOTICES.md")) throw new Error("injected notices rename failure");
+        return (await import("node:fs/promises")).rename(from, to);
+      },
+    }],
+    ["notices-partial-write", {
+      writePath: async (filename, contents) => {
+        if (filename.includes("THIRD_PARTY_NOTICES.md")) {
+          await writeFile(filename, "partial notices");
+          throw new Error("injected notices partial write failure");
+        }
+        await writeFile(filename, contents);
+      },
+    }],
+    ["after-notices", { afterNotices: async () => { throw new Error("injected after notices failure"); } }],
+  ]) {
+    const { vendorRoot } = await copiedVendorWorkspace(t, "archify");
+    const before = await vendorState(vendorRoot, "archify");
+    const archive = await rawArchiveForVendor(vendorRoot, "archify");
+    const release = {
+      tag: "v2.13.1",
+      releasedAt: "2026-08-12T00:00:00Z",
+      releaseAsset: { name: "archify.zip", url: "https://github.com/tt-a1i/archify/releases/download/v2.13.1/archify.zip", sha256: sha256(archive) },
+    };
+    await assert.rejects(
+      updateDiagramSkill({
+        root: vendorRoot,
+        name: "archify",
+        stagingRoot: path.join(path.dirname(vendorRoot), `${label}-stage`),
+        fetchRelease: async () => release,
+        resolveTagCommit: async () => "2".repeat(40),
+        fetchArchive: async () => archive,
+        ...(injected.renamePath ? { renamePath: (from, to) => injected.renamePath(from, to, vendorRoot) } : {}),
+        ...(injected.writePath ? { writePath: injected.writePath } : {}),
+        ...(injected.afterNotices ? { afterNotices: injected.afterNotices } : {}),
+      }),
+      new RegExp(`injected ${label.replaceAll("-", " ")} failure`, "u"),
+      label,
+    );
+    assert.deepEqual(await vendorState(vendorRoot, "archify"), before, `${label}: lock, notices, and old tree are restored together`);
+    assert.equal(existsSync(path.join(vendorRoot, ".vendor-update.json")), false, `${label}: journal is removed`);
+    assert.equal(existsSync(path.join(vendorRoot, ".vendor-update-lock-backup.json")), false, `${label}: lock backup is removed`);
+    assert.equal(existsSync(path.join(vendorRoot, ".vendor-update-notices-backup.md")), false, `${label}: notices backup is removed`);
+    await verifyDiagramSkillVendor({ root: vendorRoot, name: "archify" });
+  }
 });
 
 test("injected latest check is read-only and injected update atomically stages a verified future closure", async (t) => {

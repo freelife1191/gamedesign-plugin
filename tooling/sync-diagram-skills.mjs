@@ -23,6 +23,8 @@ const TRUSTED_LICENSES = Object.freeze({
 const JOURNAL_FILENAME = ".vendor-update.json";
 const OPERATION_LOCK_DIRECTORY = ".vendor-operation.lock";
 const OPERATION_STALE_MS = 5 * 60 * 1000;
+const LOCK_BACKUP_FILENAME = ".vendor-update-lock-backup.json";
+const NOTICES_BACKUP_FILENAME = ".vendor-update-notices-backup.md";
 
 function vendorError(code, relativePath, message = code) {
   const error = new Error(message);
@@ -114,11 +116,11 @@ async function pathExists(filename) {
   }
 }
 
-async function atomicWriteFile(filename, contents, { renamePath = rename } = {}) {
+async function atomicWriteFile(filename, contents, { renamePath = rename, writePath = writeFile } = {}) {
   const temporary = path.join(path.dirname(filename), `.${path.basename(filename)}.${process.pid}.tmp`);
   await assertMissing(temporary, path.basename(temporary));
   try {
-    await writeFile(temporary, contents, { mode: 0o644 });
+    await writePath(temporary, contents, { mode: 0o644 });
     await renamePath(temporary, filename);
   } catch (error) {
     await rm(temporary, { force: true }).catch(() => undefined);
@@ -203,7 +205,7 @@ async function assertJournal(absoluteRoot, name, { expectedOwnerNonce } = {}) {
   } catch {
     throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", JOURNAL_FILENAME);
   }
-  if (!journal || Object.keys(journal).sort().join(",") !== "name,newRoot,oldRoot,ownerNonce,schemaVersion" || journal.schemaVersion !== 1 || journal.name !== name
+  if (!journal || Object.keys(journal).sort().join(",") !== "lockBackup,name,newRoot,noticesBackup,oldRoot,ownerNonce,schemaVersion" || journal.schemaVersion !== 2 || journal.name !== name
       || !/^[a-f0-9]{32}$/u.test(journal.ownerNonce ?? "")) {
     throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", JOURNAL_FILENAME);
   }
@@ -212,6 +214,9 @@ async function assertJournal(absoluteRoot, name, { expectedOwnerNonce } = {}) {
     assertVersionedTreeRoot(name, candidate, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", `${JOURNAL_FILENAME}.${label}`);
   }
   if (journal.oldRoot === journal.newRoot) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", JOURNAL_FILENAME);
+  if (journal.lockBackup !== LOCK_BACKUP_FILENAME || journal.noticesBackup !== NOTICES_BACKUP_FILENAME) {
+    throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", JOURNAL_FILENAME);
+  }
   if (expectedOwnerNonce && journal.ownerNonce !== expectedOwnerNonce) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", JOURNAL_FILENAME);
   return journal;
 }
@@ -225,17 +230,29 @@ async function assertSymlinkFreeDirectory(directory, label) {
 async function recoverWithinOperation({ root, name, owner, expectedJournalOwnerNonce = owner.nonce }) {
   const journal = await assertJournal(root, name, { expectedOwnerNonce: expectedJournalOwnerNonce });
   if (!journal) return false;
-  const lock = await readVendorLock(root, name);
-  const activeRoot = assertVersionedTreeRoot(name, lock.tree.root, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "vendor.lock.json.tree.root");
-  if (![journal.oldRoot, journal.newRoot].includes(activeRoot)) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", JOURNAL_FILENAME);
-  const activePath = assertContained(root, activeRoot, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "activeRoot");
-  const inactiveRoot = activeRoot === journal.newRoot ? journal.oldRoot : journal.newRoot;
-  const inactivePath = assertContained(root, inactiveRoot, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "inactiveRoot");
-  await assertSymlinkFreeDirectory(activePath, activeRoot);
-  const inactiveStats = await lstat(inactivePath).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error));
-  if (inactiveStats && (inactiveStats.isSymbolicLink() || !inactiveStats.isDirectory())) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", inactiveRoot);
-  if (inactiveStats) await assertSymlinkFreeDirectory(inactivePath, inactiveRoot);
-  if (inactiveStats) await rm(inactivePath, { recursive: true, force: true });
+  const oldPath = assertContained(root, journal.oldRoot, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "oldRoot");
+  const newPath = assertContained(root, journal.newRoot, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "newRoot");
+  await assertSymlinkFreeDirectory(oldPath, journal.oldRoot);
+  const lockBackup = assertContained(root, journal.lockBackup, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "lockBackup");
+  const noticesBackup = assertContained(root, journal.noticesBackup, "DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", "noticesBackup");
+  for (const [label, filename] of [[journal.lockBackup, lockBackup], [journal.noticesBackup, noticesBackup]]) {
+    const stats = await lstat(filename).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error));
+    if (!stats || stats.isSymbolicLink() || !stats.isFile()) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", label);
+  }
+  const oldLock = await readFile(lockBackup, "utf8");
+  const oldNotices = await readFile(noticesBackup, "utf8");
+  let parsedOldLock;
+  try { parsedOldLock = JSON.parse(oldLock); } catch { throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", journal.lockBackup); }
+  assertLockIdentity(parsedOldLock, name);
+  if (parsedOldLock.tree.root !== journal.oldRoot) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", journal.lockBackup);
+  const newStats = await lstat(newPath).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error));
+  if (newStats && (newStats.isSymbolicLink() || !newStats.isDirectory())) throw vendorError("DIAGRAM_VENDOR_RECOVERY_JOURNAL_INVALID", journal.newRoot);
+  if (newStats) await assertSymlinkFreeDirectory(newPath, journal.newRoot);
+  await atomicWriteFile(path.join(root, "vendor.lock.json"), oldLock);
+  await atomicWriteFile(path.join(root, "THIRD_PARTY_NOTICES.md"), oldNotices);
+  if (newStats) await rm(newPath, { recursive: true, force: true });
+  await rm(lockBackup, { force: true });
+  await rm(noticesBackup, { force: true });
   await rm(path.join(root, JOURNAL_FILENAME), { force: true });
   return true;
 }
@@ -582,7 +599,7 @@ async function assertMissing(pathname, label) {
   throw vendorError("DIAGRAM_VENDOR_STAGING_EXISTS", label);
 }
 
-export async function updateDiagramSkill({ root, name, stagingRoot, fetchRelease = defaultFetchRelease, resolveTagCommit = defaultResolveTagCommit, fetchOfficialTree = defaultFetchOfficialTree, fetchArchive = defaultFetchArchive, renamePath = rename, now, staleAfterMs } = {}) {
+export async function updateDiagramSkill({ root, name, stagingRoot, fetchRelease = defaultFetchRelease, resolveTagCommit = defaultResolveTagCommit, fetchOfficialTree = defaultFetchOfficialTree, fetchArchive = defaultFetchArchive, renamePath = rename, writePath = writeFile, afterNotices, now, staleAfterMs } = {}) {
   if (!KNOWN_SKILLS.includes(name)) throw vendorError("DIAGRAM_VENDOR_UNKNOWN_SKILL", "name");
   if (typeof fetchArchive !== "function") throw vendorError("DIAGRAM_VENDOR_ARCHIVE_FETCHER_REQUIRED", "fetchArchive");
   const vendorRoot = path.resolve(root ?? DEFAULT_ROOTS[name]);
@@ -637,17 +654,39 @@ export async function updateDiagramSkill({ root, name, stagingRoot, fetchRelease
     await assertMissing(newTree, "newTree");
     const journalPath = path.join(vendorRoot, JOURNAL_FILENAME);
     await assertMissing(journalPath, "journal");
-    const journal = { schemaVersion: 1, name, oldRoot: installed.tree.root, newRoot: treeRoot, ownerNonce: owner.nonce };
+    const journal = {
+      schemaVersion: 2,
+      name,
+      oldRoot: installed.tree.root,
+      newRoot: treeRoot,
+      ownerNonce: owner.nonce,
+      lockBackup: LOCK_BACKUP_FILENAME,
+      noticesBackup: NOTICES_BACKUP_FILENAME,
+    };
+    const lockBackupPath = path.join(vendorRoot, LOCK_BACKUP_FILENAME);
+    const noticesBackupPath = path.join(vendorRoot, NOTICES_BACKUP_FILENAME);
+    await assertMissing(lockBackupPath, "lockBackup");
+    await assertMissing(noticesBackupPath, "noticesBackup");
     try {
+      await atomicWriteFile(lockBackupPath, await readFile(path.join(vendorRoot, "vendor.lock.json"), "utf8"));
+      await atomicWriteFile(noticesBackupPath, await readFile(path.join(vendorRoot, "THIRD_PARTY_NOTICES.md"), "utf8"));
       await atomicWriteFile(journalPath, `${JSON.stringify(journal)}\n`, { renamePath });
       await renamePath(stagedTree, newTree);
-      await atomicWriteFile(path.join(vendorRoot, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`, { renamePath });
-      await atomicWriteFile(path.join(vendorRoot, "THIRD_PARTY_NOTICES.md"), noticeFor(lock), { renamePath });
+      await atomicWriteFile(path.join(vendorRoot, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`, { renamePath, writePath });
+      await atomicWriteFile(path.join(vendorRoot, "THIRD_PARTY_NOTICES.md"), noticeFor(lock), { renamePath, writePath });
+      if (afterNotices) await afterNotices({ root: vendorRoot, name, lock });
       await rm(assertContained(vendorRoot, installed.tree.root, "DIAGRAM_VENDOR_ARCHIVE_PATH_INVALID", "oldRoot"), { recursive: true, force: true });
       await rm(journalPath, { force: true });
+      await rm(lockBackupPath, { force: true });
+      await rm(noticesBackupPath, { force: true });
       await rm(absoluteStagingRoot, { recursive: true, force: true });
     } catch (error) {
-      await recoverWithinOperation({ root: vendorRoot, name, owner }).catch(() => undefined);
+      if (await pathExists(journalPath)) {
+        await recoverWithinOperation({ root: vendorRoot, name, owner }).catch(() => undefined);
+      } else {
+        await rm(lockBackupPath, { force: true }).catch(() => undefined);
+        await rm(noticesBackupPath, { force: true }).catch(() => undefined);
+      }
       throw error;
     }
     return verified;
