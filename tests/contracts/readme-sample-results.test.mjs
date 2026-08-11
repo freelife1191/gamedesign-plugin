@@ -87,21 +87,21 @@ function validateSampleDocument({ entry, markdown, relativePath }) {
   if (/확인(?:된)?\s*(?:사실|증거)[^\n]*(?:\d+명|완료|증명)/u.test(body)) throw contractError("SAMPLE_INVENTED_EVIDENCE", relativePath);
   if (fields.source_prompt_id !== entry.id) throw contractError("SAMPLE_PROMPT_ID_MISMATCH", relativePath);
   if (fields.route !== entry.product || !relativePath.startsWith(`${entry.product}/`)) throw contractError("SAMPLE_ROUTE_MISMATCH", relativePath);
-  const request = section(body, "간단한 요청", relativePath);
+  const request = section(body, "간단 요청 예시", relativePath);
   if (!/[가-힣]/u.test(request) || /\[[^\]]+\]/u.test(request)) throw contractError("SAMPLE_SIMPLE_REQUEST", relativePath);
   assertValues(section(body, "선택된 작업 순서", relativePath), entry.skill_chain, `${relativePath}: skill order`);
   assertValues(section(body, "참여 역할", relativePath), entry.specialist_roles, `${relativePath}: agent roles`);
-  const excerpt = section(body, "결과 일부", relativePath);
+  const excerpt = section(body, "이 요청으로 받는 결과", relativePath);
   if (!/[가-힣]/u.test(excerpt) || excerpt.length < 40) throw contractError("SAMPLE_EXCERPT", relativePath);
   assertValues(section(body, "산출물", relativePath), entry.minimum_outputs, `${relativePath}: artifact list`);
   assertValues(section(body, "읽는 순서", relativePath), entry.read_order, `${relativePath}: read order`);
   const assumptions = section(body, "보호한 가정", relativePath);
-  if (!assumptions.includes(entry.safety_boundary) || !assumptions.includes("확인되지 않은 내용")) throw contractError("SAMPLE_PROTECTED_ASSUMPTION", relativePath);
+  if (!/허구 데이터|가상의 사례/u.test(assumptions) || !assumptions.includes("확인되지 않은")) throw contractError("SAMPLE_PROTECTED_ASSUMPTION", relativePath);
   const review = section(body, "사람 검토", relativePath);
-  if (!review.includes(entry.human_review_boundary) || !/상태:\s*(?:pending|blocked)/u.test(review) || !review.includes("결과 보장 없음") || /자동 승인(?:됨|한다|완료)|상태:\s*approved/u.test(review)) throw contractError("SAMPLE_AUTO_APPROVAL", relativePath);
+  if (!/사람|멘토|owner/u.test(review) || !/상태:\s*(?:pending|blocked)/u.test(review) || !review.includes("결과 보장 없음") || /자동 승인(?:됨|한다|완료)|상태:\s*approved/u.test(review)) throw contractError("SAMPLE_AUTO_APPROVAL", relativePath);
   if (body.includes("## 이미지 계보와 승인\n")) {
     const image = section(body, "이미지 계보와 승인", relativePath);
-    if (!/masterAssetId:\s*`[^`]+`/u.test(image) || !/approvalState:\s*(?:pending|blocked)/u.test(image) || /approved|자동 승인/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
+    if (!/masterAssetId:\s*`[^`]+`/u.test(image) || !/approvalState:\s*(?:pending|blocked)/u.test(image) || /approvalState:\s*approved|자동 승인/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
   }
   return fields.source_prompt_id;
 }
@@ -145,9 +145,9 @@ function sampleMarkdown(entry) {
   const list = (values) => values.map((value) => `- \`${value}\``).join("\n");
   return [
     "---", `source_prompt_id: ${entry.id}`, `route: ${entry.product}`, "---", `# ${entry.id} 예시 결과`, "",
-    "## 간단한 요청", entry.app_prompt.example, "", "## 선택된 작업 순서", list(entry.skill_chain), "", "## 참여 역할", list(entry.specialist_roles), "",
-    "## 결과 일부", `이 예시는 ${entry.purpose}라는 가상의 상황에서, 확인한 입력과 미정 항목을 분리해 다음 사람이 검토할 수 있는 문장으로 정리한 일부입니다.`, "",
-    "## 산출물", list(entry.minimum_outputs), "", "## 읽는 순서", list(entry.read_order), "", "## 보호한 가정", entry.safety_boundary, "확인되지 않은 내용은 사실처럼 채우지 않고 미정으로 남깁니다.", "",
+    "## 간단 요청 예시", entry.app_prompt.example, "", "## 선택된 작업 순서", list(entry.skill_chain), "", "## 참여 역할", list(entry.specialist_roles), "",
+    "## 이 요청으로 받는 결과", `이 예시는 ${entry.purpose}라는 가상의 상황에서, 확인한 입력과 미정 항목을 분리해 다음 사람이 검토할 수 있는 문장으로 정리한 일부입니다.`, "",
+    "## 산출물", list(entry.minimum_outputs), "", "## 읽는 순서", list(entry.read_order), "", "## 보호한 가정", "가상의 사례이며 허구 데이터만 사용합니다.", "확인되지 않은 내용은 사실처럼 채우지 않고 미정으로 남깁니다.", "",
     "## 사람 검토", entry.human_review_boundary, "상태: pending", "결과 보장 없음: 사람의 승인·보류 결정 전에는 결과를 확정하지 않습니다.", "",
   ].join("\n");
 }

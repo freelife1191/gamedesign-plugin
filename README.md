@@ -356,6 +356,8 @@ ST-C01의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 
 예: “바람섬 협동 RPG의 첫 15분 전투 시제품 범위를 추가해 줘.”
 
+[Sample 결과 보기](guides/sample-results/studio/st-c01.md)
+
 </details>
 
 <details data-prompt-id="studio:case:ST-C02">
@@ -430,6 +432,8 @@ ST-C02의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 ST-C02의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
 
 예: “정찰-협동전투-제작 루프의 실패 복구 선택 2개를 비교해 줘.”
+
+[Sample 결과 보기](guides/sample-results/studio/st-c02.md)
 
 </details>
 
@@ -506,6 +510,8 @@ ST-C03의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 
 예: “파티 탈퇴 중 보상 수령 예외의 우선순위와 테스트를 추가해 줘.”
 
+[Sample 결과 보기](guides/sample-results/studio/st-c03.md)
+
 </details>
 
 <details data-prompt-id="studio:case:ST-C04">
@@ -580,6 +586,8 @@ ST-C04의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 
 예: “보상 수령 화면의 색상 외 피드백과 키보드 대체 입력을 추가하고,
 오류 상태에서 재시도·나가기 선택을 비교해 줘.”
+
+[Sample 결과 보기](guides/sample-results/studio/st-c04.md)
 
 </details>
 
@@ -657,6 +665,8 @@ ST-C05의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 예: “신뢰도 2단계의 협상·전투 분기를 비교하고, 각 분기에 필요한 NPC 대사,
 스킬 텔레그래프와 제작 리소스의 최소 범위를 정리해 줘.”
 
+[Sample 결과 보기](guides/sample-results/studio/st-c05.md)
+
 </details>
 
 <details data-prompt-id="studio:case:ST-C07">
@@ -733,6 +743,8 @@ ST-C07의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 예: “신규·복귀 플레이어의 7일 보유량을 보호하는 상한을 제안하고,
 실험 중단 조건과 이전 설정으로 되돌리는 절차를 추가해 줘.”
 
+[Sample 결과 보기](guides/sample-results/studio/st-c07.md)
+
 </details>
 
 <details data-prompt-id="studio:case:ST-C08">
@@ -808,6 +820,8 @@ ST-C08의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 
 
 예: “8주 안에 전투 한 판을 검증해야 한다면 NPC 장식과 추가 이벤트를
 후순위로 미루고, 이미지 생성 실패와 PDF 변환 실패의 대체 경로를 추가해 줘.”
+
+[Sample 결과 보기](guides/sample-results/studio/st-c08.md)
 
 </details>
 
@@ -908,6 +922,8 @@ $game-design-career:research-game-design-jobs 민서-첫기획 공개 공고
 CA-C01의 보존 결과물과 중단 기록을 읽고, 역할 비교에 필요한 공개 자료를
 보완한 뒤 재개해.
 
+[Sample 결과 보기](guides/sample-results/career/ca-c01.md)
+
 </details>
 
 <details data-prompt-id="career:case:CA-C04">
@@ -984,6 +1000,8 @@ CA-C04로 정리해.
 CA-C04의 보존 결과물과 중단 기록을 읽고, 미완료 증거 과제 (proof task)와 다음 피드백
 시점을 확인한 뒤 재개해.
 
+[Sample 결과 보기](guides/sample-results/career/ca-c04.md)
+
 </details>
 
 <details data-prompt-id="career:case:CA-C05">
@@ -1055,6 +1073,8 @@ $game-design-career:export-career-documents 별빛원정대 튜토리얼의
 #### 다음 요청
 
 CA-C05의 보존 결과물과 중단 기록을 읽고 누락된 관찰 링크나 권리 확인부터 보완해 재개해.
+
+[Sample 결과 보기](guides/sample-results/career/ca-c05.md)
 
 </details>
 
@@ -1129,6 +1149,8 @@ $game-design-career:review-game-design-portfolio 해류도시-첫시즌의
 #### 다음 요청
 
 CA-C06의 보존 결과물과 중단 기록을 읽고 미완성 evidence와 공개 권리 확인부터 재개해.
+
+[Sample 결과 보기](guides/sample-results/career/ca-c06.md)
 
 </details>
 
@@ -1206,6 +1228,8 @@ $game-design-career:export-career-documents 시스템 기획
 CA-C07의 보존 결과물과 중단 기록을 읽고 심각도별 (severity) 문제 가운데
 가장 높은 항목의 근거와 수정부터 재개해.
 
+[Sample 결과 보기](guides/sample-results/career/ca-c07.md)
+
 </details>
 
 <details data-prompt-id="career:case:CA-C08">
@@ -1281,6 +1305,8 @@ $game-design-career:export-career-documents 시스템 기획 지원용
 
 CA-C08의 보존 결과물과 중단 기록을 읽고 질문별 최신 evidence와 피드백부터 확인해 재개해.
 
+[Sample 결과 보기](guides/sample-results/career/ca-c08.md)
+
 </details>
 
 <details data-prompt-id="career:case:CA-T01">
@@ -1351,6 +1377,8 @@ $game-design-career:plan-junior-growth 신입-역할선택의 역할 후보,
 #### 다음 요청
 
 CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와 멘토 질문부터 보완해 재개해.
+
+[Sample 결과 보기](guides/sample-results/career/ca-t01.md)
 
 </details>
 
@@ -1436,6 +1464,8 @@ $game-design-career:build-game-design-portfolio \
 `studio-to-career-handoff`의 보존 파일과 미해결 항목을 읽고, 공개 가능한
 자료만 남겨 포트폴리오 사례 정리를 재개해. 담당자 검토 전 상태로 유지해.
 
+[Sample 결과 보기](guides/sample-results/suite/studio-to-career-handoff.md)
+
 </details>
 
 <details data-prompt-id="suite:career-proof-project-interview:case">
@@ -1506,6 +1536,8 @@ $game-design-career:practice-game-design-interview \
 `career-proof-project-interview`의 질문별 미완성 답변과 피드백을 읽고,
 가장 낮은 점수의 질문 하나를 골라 답변을 다시 작성해. 멘토 검토 전으로
 남겨 둬.
+
+[Sample 결과 보기](guides/sample-results/suite/career-proof-project-interview.md)
 
 </details>
 
@@ -1582,6 +1614,8 @@ $game-design-studio:export-game-design-documents \
 가장 먼저 보류된 이미지의 프롬프트 또는 슬라이드만 수정해 재개해.
 담당자 검토 전 상태를 유지해.
 
+[Sample 결과 보기](guides/sample-results/suite/gdd-image-presentation.md)
+
 </details>
 
 <details data-prompt-id="suite:resume-failed-derivatives:case">
@@ -1656,6 +1690,8 @@ $game-design-studio:export-game-design-documents \
 `resume-failed-derivatives`의 보존 목록과 실패 기록을 읽고, 재실행하지
 못한 첫 번째 항목부터 원인·수정·결과를 기록하며 재개해. 담당자 검토 전
 상태로 남겨 둬.
+
+[Sample 결과 보기](guides/sample-results/suite/resume-failed-derivatives.md)
 
 </details>
 
