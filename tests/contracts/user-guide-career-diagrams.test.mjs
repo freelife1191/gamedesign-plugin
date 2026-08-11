@@ -108,10 +108,10 @@ function artifactExampleSegment(example, artifactId) {
   return next < 0 ? example.slice(start) : example.slice(start, start + marker.length + next);
 }
 
-function markdownSectionBody(markdown, heading) {
-  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`^## ${escaped}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
-  assert.ok(match, `missing markdown section: ${heading}`);
+function markdownSectionBody(markdown, anchor) {
+  const escaped = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = markdown.match(new RegExp(`^## [^\\r\\n]* \\{#${escaped}\\}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
+  assert.ok(match, `missing markdown section anchor: ${anchor}`);
   return match[1];
 }
 
@@ -167,7 +167,7 @@ async function assertRecipeMetadata(sourceRouting, {
       assert.ok(Array.isArray(artifact.fields) && artifact.fields.length > 0, `${contract.id} artifact fields: ${artifact.artifactId}`);
       assert.equal(new Set(artifact.fields).size, artifact.fields.length, `${contract.id} unique artifact fields: ${artifact.artifactId}`);
       const template = await readFile(path.join(sourceRoot, artifact.artifactId, "content.md"), "utf8");
-      const workingRecord = markdownSectionBody(template, "기획 항목: Working Record {#working-record}");
+      const workingRecord = markdownSectionBody(template, "working-record");
       for (const field of artifact.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${artifact.artifactId}.${field}`);
       const skillSource = await readFile(path.join(skillRoot, artifact.ownerSkill, "SKILL.md"), "utf8");
       const outputContract = skillSection(skillSource, "Output contract");
@@ -476,7 +476,9 @@ test("Career recipe rejects every template inventory and Working Record source m
         const canonical = await readFile(contentPath, "utf8");
         for (const field of artifact.fields) {
           const wrongField = allFields.find((candidate) => !artifact.fields.includes(candidate));
-          const mutated = canonical.replace(`\`${field}\``, `\`${wrongField}\``);
+          const fieldPattern = new RegExp("^\\| `" + field.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&") + "` \\|", "mu");
+          assert.match(canonical, fieldPattern, `${recipe.id} Working Record row precondition: ${artifact.artifactId}.${field}`);
+          const mutated = canonical.replace(fieldPattern, `| \`${wrongField}\` |`);
           assert.notEqual(mutated, canonical, `${recipe.id} Working Record mutation precondition: ${artifact.artifactId}.${field}`);
           await writeFile(contentPath, mutated, "utf8");
           await assert.rejects(() => assertRecipeMetadata(routing, { sourceRoot }), /source-owned Working Record field/, `${recipe.id} ${artifact.artifactId}.${field} Working Record mutation`);

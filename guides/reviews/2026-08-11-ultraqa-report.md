@@ -53,6 +53,7 @@
 - Studio source의 공통 gate·현행 지식·검토 양식 링크가 삭제된 product-local mirror를 가리켰다.
 - Skillstead 0.9.0과 문체 검수 workflow 추가 뒤 일부 release 계약이 0.8.3과 예전 script·role 수를 기대했다.
 - Suite handoff의 Archify 링크가 생성 원천이 아니라 생성된 Markdown에 직접 들어가 있었다.
+- 30개 사용자 결과 템플릿이 영어 표제 앞에 `기획 항목:`만 붙였고 본문과 표 작업 지시도 영어로 남아 있었다.
 
 ## 적용한 수정
 
@@ -65,6 +66,7 @@
 - Studio source의 공통 gate·현행 지식·검토 양식은 canonical shared path를, 설치본은 package-local path를 가리키도록 build projection을 명시했다.
 - 양 제품 문서와 release 계약을 직접 스킬 15개·설치 스킬 18개, Skillstead 0.9.0, 문체 검수 스크립트와 역할 우선순위에 맞췄다.
 - Suite prompt catalog의 diagram binding에 관리되는 Archify HTML 경로를 추가해, 프롬프트 가이드 재생성 뒤에도 링크가 보존되도록 했다.
+- Studio·Career 결과 템플릿 30개의 표제·설명·표 작업 지시를 실제 한국어로 교정했다. 감사기는 혼합 접두어 표제와 한글 몇 글자로 숨긴 영어 우세 문장도 실패로 처리한다.
 
 ## 정리와 되돌림
 

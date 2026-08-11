@@ -1757,10 +1757,10 @@ function assertStudioFaq(markdown) {
   }
 }
 
-function markdownSectionBody(markdown, heading) {
-  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`^## ${escaped}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
-  assert.ok(match, `missing markdown section: ${heading}`);
+function markdownSectionBody(markdown, anchor) {
+  const escaped = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = markdown.match(new RegExp(`^## [^\\r\\n]* \\{#${escaped}\\}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
+  assert.ok(match, `missing markdown section anchor: ${anchor}`);
   return match[1];
 }
 
@@ -1864,7 +1864,7 @@ async function assertCareerFaqMetadata(routing, {
           assert.ok(leafInventory.some((item) => item.startsWith(directory)), `${contract.id} recursive template directory inventory: ${directory}`);
         }
         const content = await readFile(path.join(templateDirectory, "content.md"), "utf8");
-        const workingRecord = markdownSectionBody(content, "기획 항목: Working Record {#working-record}");
+        const workingRecord = markdownSectionBody(content, "working-record");
         for (const field of contract.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${field}`);
       } else {
         assert.equal(output.kind, "skill-owned", `${contract.id} known output kind`);

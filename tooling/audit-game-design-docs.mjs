@@ -49,10 +49,38 @@ function englishFirstLabel(text) {
   return !label.split(/[ /&-]+/u).every((word) => STANDARD_TERMS.has(word));
 }
 
-function issuesForLine(line, lineNumber, pathname, conclusions) {
+function headingLabel(text) {
+  return text
+    .replace(/^#{1,6}\s+/u, "")
+    .replace(/\s+\{#[a-z0-9-]+\}\s*$/u, "")
+    .trim();
+}
+
+function mixedPrefixLabel(text) {
+  if (!/^#{1,6}\s+/u.test(text)) return false;
+  const label = headingLabel(text);
+  const suffix = label.match(/^[가-힣][^:]{0,40}:\s*(.+)$/u)?.[1] ?? "";
+  const latinWords = suffix.match(/[A-Za-z][A-Za-z'-]{2,}/gu) ?? [];
+  return latinWords.length >= 2 && !/[가-힣]/u.test(suffix);
+}
+
+function englishDominantProse(text) {
+  if (text.length === 0 || /^#{1,6}\s+/u.test(text) || /^\|?(?:\s*:?-{3,}:?\s*\|)+\s*$/u.test(text)) return false;
+  const prose = text
+    .replace(/`[^`]*`/gu, " ")
+    .replace(/https?:\/\/\S+/gu, " ")
+    .replace(/[|>*_[\](){}#]/gu, " ");
+  const latinWords = prose.match(/[A-Za-z][A-Za-z'-]{2,}/gu) ?? [];
+  const koreanSyllables = prose.match(/[가-힣]/gu)?.length ?? 0;
+  return latinWords.length >= 5 && latinWords.length > koreanSyllables;
+}
+
+function issuesForLine(line, lineNumber, pathname, conclusions, { inspectArtifactProse = false } = {}) {
   const issues = [];
   const visible = line.trim();
   if (englishFirstLabel(visible)) issues.push({ code: "ENGLISH_FIRST_LABEL", path: pathname, line: lineNumber, severity: "high", text: visible.replace(/^#{1,6}\s+/u, "").replace(/\s+\{#[a-z0-9-]+\}\s*$/u, "") });
+  if (inspectArtifactProse && mixedPrefixLabel(visible)) issues.push({ code: "MIXED_PREFIX_LABEL", path: pathname, line: lineNumber, severity: "high", text: headingLabel(visible) });
+  if (inspectArtifactProse && englishDominantProse(visible)) issues.push({ code: "ENGLISH_DOMINANT_PROSE", path: pathname, line: lineNumber, severity: "high", text: visible });
   if (/자동으로\s+[^.!?\n]{0,40}(?:됩니다|되었다|되었습니다|된다)\./u.test(visible)) issues.push({ code: "TRANSLATION_LIKE_PASSIVE", path: pathname, line: lineNumber, severity: "high", text: visible });
   if (/(?:최고(?:의)?|완벽(?:한)?|혁신(?:적)?)[^.!?\n]{0,50}(?:결과|품질|성공)?[^.!?\n]{0,20}보장(?:합니다|한다)\./u.test(visible)) issues.push({ code: "UNSUPPORTED_HYPE", path: pathname, line: lineNumber, severity: "high", text: visible });
   if (visible.includes("결론적으로")) {
@@ -71,9 +99,25 @@ export async function auditGameDesignDocs({ repoRoot, roots = SOURCE_ROOTS } = {
   for (const pathname of files) {
     const markdown = await readFile(path.join(repoRoot, pathname), "utf8");
     let conclusions = 0;
+    let inFrontmatter = false;
+    let inFence = false;
+    const inspectArtifactProse = /\/assets\/templates\/[^/]+\/content\.md$/u.test(pathname);
     const fileIssues = [];
     for (const [index, line] of markdown.split("\n").entries()) {
-      const result = issuesForLine(line, index + 1, pathname, conclusions);
+      const visible = line.trim();
+      if (index === 0 && visible === "---") {
+        inFrontmatter = true;
+        continue;
+      }
+      if (inFrontmatter) {
+        if (visible === "---") inFrontmatter = false;
+        continue;
+      }
+      if (/^(?:```|~~~)/u.test(visible)) {
+        inFence = !inFence;
+        continue;
+      }
+      const result = issuesForLine(line, index + 1, pathname, conclusions, { inspectArtifactProse: inspectArtifactProse && !inFence });
       conclusions = result.conclusions;
       fileIssues.push(...result.issues);
     }

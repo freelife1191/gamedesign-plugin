@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "3ed745f9c778d5804a10daf711464564f09311a0b6e5163cfbde1bb6deef0587",
+  "treeSha256": "741ba8962b969d7fb635b10ea65ae4ad6cfea19a9b6a8386601d9ac6a7f1bc0b",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -156,8 +156,8 @@
     },
     {
       "path": "assets/templates/career-stage-goal/content.md",
-      "sha256": "66ce9414a478093868108b46cdf3ffac5b314fe9c4a83487f427085cb29b68c2",
-      "size": 3518
+      "sha256": "b561dd2134b5358d18266c71b09a0cd010647b53852cbefcb0b83a9b3045885b",
+      "size": 3812
     },
     {
       "path": "assets/templates/career-stage-goal/decisions/README.md",
@@ -181,8 +181,8 @@
     },
     {
       "path": "assets/templates/competency-matrix/content.md",
-      "sha256": "8621a15621bfc9f92aea13f916f0ae0656a396f3189d0975b467c3095ecd2041",
-      "size": 3679
+      "sha256": "1654f4533eb7cccfddd2725c38bc39f8c0f8268be5e2f7c964ff785f85cb5f86",
+      "size": 3913
     },
     {
       "path": "assets/templates/competency-matrix/decisions/README.md",
@@ -206,8 +206,8 @@
     },
     {
       "path": "assets/templates/creative-design-portfolio/content.md",
-      "sha256": "53f33680a25e2e6d20f7a803a546fa661af0ee143f94240173c2bb19a90106e1",
-      "size": 3868
+      "sha256": "4b557714dff893071562ff92dad150c99908f7ce8b42cb0a0c87ecf006a3e083",
+      "size": 4057
     },
     {
       "path": "assets/templates/creative-design-portfolio/decisions/README.md",
@@ -231,8 +231,8 @@
     },
     {
       "path": "assets/templates/five-axis-review/content.md",
-      "sha256": "6ebc2d76404e33de64f9edd6b578655c2b5e52411e2d8263a73af73e8b500907",
-      "size": 3708
+      "sha256": "5446da50e85a09446326e8165295e969656866040a91960dde96d092be2e20e5",
+      "size": 4024
     },
     {
       "path": "assets/templates/five-axis-review/decisions/README.md",
@@ -256,8 +256,8 @@
     },
     {
       "path": "assets/templates/game-analysis-report/content.md",
-      "sha256": "baee921aa080af9613f1b0e84982bb1d156f78b9dae32d154e3c2e82eec45188",
-      "size": 3911
+      "sha256": "205fe0015ef17c45f1f99ca4f0ae7b277050163b659bd3c412c2e3b13a0273d2",
+      "size": 4170
     },
     {
       "path": "assets/templates/game-analysis-report/decisions/README.md",
@@ -281,8 +281,8 @@
     },
     {
       "path": "assets/templates/game-design-role-map/content.md",
-      "sha256": "112ac687c6874e3226fa149bb89ff731982edba359ee172f26ac7c01845a9eb4",
-      "size": 3650
+      "sha256": "ce1d1b6b60e088fc988fa6ce90dedf0410b6f6337bf431dd663b7ca8c2496ee1",
+      "size": 3968
     },
     {
       "path": "assets/templates/game-design-role-map/decisions/README.md",
@@ -306,8 +306,8 @@
     },
     {
       "path": "assets/templates/interview-question-answer-log/content.md",
-      "sha256": "a1d305a4f24e16d514c3cdaccc44fe77dbf371ba0e97dbd17df6c398e953cf68",
-      "size": 3721
+      "sha256": "3075c3f45953ac4fc6df5c0a069f16000fa5289551192e39f9b7c1990cb5278b",
+      "size": 3991
     },
     {
       "path": "assets/templates/interview-question-answer-log/decisions/README.md",
@@ -331,8 +331,8 @@
     },
     {
       "path": "assets/templates/introduction-motivation/content.md",
-      "sha256": "1b9db5ef249f10e94652f7458d0f70fae128a9c667b7f865a6c9d2b083bc3942",
-      "size": 3580
+      "sha256": "10f9d9a8063a5ebb93890f0ac323d5595be6cf4a1d044962f60639f1a04b8eed",
+      "size": 3822
     },
     {
       "path": "assets/templates/introduction-motivation/decisions/README.md",
@@ -356,8 +356,8 @@
     },
     {
       "path": "assets/templates/job-posting-evidence/content.md",
-      "sha256": "e8dabd635711c99706b93ba31b8ffc4867958901634b87374c8a84315565cd24",
-      "size": 4110
+      "sha256": "06a18d257861d74a60a97f8a5fbe8b11090ccc8bf1847c10c4fb8f34bf95f691",
+      "size": 4422
     },
     {
       "path": "assets/templates/job-posting-evidence/decisions/README.md",
@@ -381,8 +381,8 @@
     },
     {
       "path": "assets/templates/junior-growth-review/content.md",
-      "sha256": "174c05bb166dc6ff08d90ee9514fdba0e647566a0c0631d4139129f9d01c414e",
-      "size": 3648
+      "sha256": "8f1ae546910b5fc1104c244b0dcbe2bb55a5dce9cc571c5124f40f5a8d889a1a",
+      "size": 3923
     },
     {
       "path": "assets/templates/junior-growth-review/decisions/README.md",
@@ -406,8 +406,8 @@
     },
     {
       "path": "assets/templates/learning-roadmap/content.md",
-      "sha256": "c0a2e6674c1c1dd2f69b2fa15e6d06a2290173c964232953198a642f99772779",
-      "size": 3528
+      "sha256": "b5d4cf5fad12d9eac2fbd01441ed4fc7a2627c9176b7ceae66978dacb32ba4d6",
+      "size": 3813
     },
     {
       "path": "assets/templates/learning-roadmap/decisions/README.md",
@@ -431,8 +431,8 @@
     },
     {
       "path": "assets/templates/portfolio-backlog/content.md",
-      "sha256": "5525d81a9b2def0fad24fdb37cf932cd0bb1dd6c0237f5e18281acf6b0cddb56",
-      "size": 3872
+      "sha256": "0f515970462832b3d439861f9db72603503cd3f6b57b5ed42a521d26ca40991b",
+      "size": 4142
     },
     {
       "path": "assets/templates/portfolio-backlog/decisions/README.md",
@@ -456,8 +456,8 @@
     },
     {
       "path": "assets/templates/portfolio-project-brief/content.md",
-      "sha256": "ca069e5a3fbbc547769c6e202fb87d17534906c26929ac71e312df792ae02dc8",
-      "size": 4022
+      "sha256": "856f6c9ab5bd0946c4ff10ee74d15fae235da2154c9e74f87388af5f00ea0d69",
+      "size": 4310
     },
     {
       "path": "assets/templates/portfolio-project-brief/decisions/README.md",
@@ -481,8 +481,8 @@
     },
     {
       "path": "assets/templates/reverse-design-document/content.md",
-      "sha256": "77936ac937b8e48a39a886749cfe8235da2061090df29e25f6627743255726a2",
-      "size": 3806
+      "sha256": "bd3f786f95fd75bbfe78d64cad663fcb5c4d6543555ebd6edbe38a0c7ba0e5ac",
+      "size": 4063
     },
     {
       "path": "assets/templates/reverse-design-document/decisions/README.md",
@@ -506,8 +506,8 @@
     },
     {
       "path": "assets/templates/transition-readiness/content.md",
-      "sha256": "41fd6128d915e9dd372b2d6c68ce8c5a4d198fda817b61a4257ef1a03b9d9550",
-      "size": 3679
+      "sha256": "7834ee78642beb8b49990ba4e5fbad5f2c00d9c0692cac73c42f509a625501a4",
+      "size": 3987
     },
     {
       "path": "assets/templates/transition-readiness/decisions/README.md",

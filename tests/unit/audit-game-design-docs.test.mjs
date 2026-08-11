@@ -134,6 +134,48 @@ test("auditGameDesignDocs reports only deterministic high-severity Korean docume
   ].join("\n"));
 });
 
+test("auditGameDesignDocs rejects Korean-prefix heading workarounds and English artifact prose", async (t) => {
+  const root = await temporaryRepo(t);
+  await write(root, "products/game-design-career/plugin/assets/templates/report/content.md", [
+    "---",
+    "title: stable machine metadata",
+    "artifact_id: report",
+    "---",
+    "# 게임 분석 보고서 {#report}",
+    "## 기획 항목: Analysis Claims {#analysis-claims}",
+    "설명: For each stable claim, record observation, source address, scope, and confidence.",
+    "| 항목 ID | 현재 상태 | 근거 또는 다음 작업 | 담당자 |",
+    "| --- | --- | --- | --- |",
+    "| `claim-id` | not-observed | Record a project-specific value before approval. | artifact-owner |",
+  ].join("\n"));
+
+  const result = await auditGameDesignDocs({ repoRoot: root });
+
+  assert.deepEqual(result.issues, [
+    {
+      code: "MIXED_PREFIX_LABEL",
+      path: "products/game-design-career/plugin/assets/templates/report/content.md",
+      line: 6,
+      severity: "high",
+      text: "기획 항목: Analysis Claims",
+    },
+    {
+      code: "ENGLISH_DOMINANT_PROSE",
+      path: "products/game-design-career/plugin/assets/templates/report/content.md",
+      line: 7,
+      severity: "high",
+      text: "설명: For each stable claim, record observation, source address, scope, and confidence.",
+    },
+    {
+      code: "ENGLISH_DOMINANT_PROSE",
+      path: "products/game-design-career/plugin/assets/templates/report/content.md",
+      line: 10,
+      severity: "high",
+      text: "| `claim-id` | not-observed | Record a project-specific value before approval. | artifact-owner |",
+    },
+  ]);
+});
+
 test("renderPromptCard keeps a Korean-first request and result excerpt before collapsed advanced contracts", () => {
   const markdown = renderPromptCard(promptEntry());
 
@@ -175,11 +217,11 @@ test("representative Studio and Career artifact templates present Korean-first l
 
   assert.match(studio, /^artifact_id: game-design-brief$/mu);
   assert.match(studio, /^# 게임 기획 브리프 \{#game-design-brief\}$/mu);
-  assert.match(studio, /^## 기획 항목: 작업 기록 \{#working-record\}$/mu);
-  assert.match(studio, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
+  assert.match(studio, /^## 작업 기록 \{#working-record\}$/mu);
+  assert.match(studio, /^\| 항목 ID \| 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
   assert.match(career, /^artifact_id: game-analysis-report$/mu);
   assert.match(career, /^# 게임 분석 보고서 \{#game-analysis-report\}$/mu);
-  assert.match(career, /^## 기획 항목: 작업 기록 \{#working-record\}$/mu);
+  assert.match(career, /^## 작업 기록 \{#working-record\}$/mu);
   assert.match(career, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
 });
 
@@ -193,9 +235,15 @@ test("all 30 artifact content templates keep anchored visible headings and table
     const headings = [...body.matchAll(/^#{1,6}\s+(.+?)\s*$/gmu)].map(([, label]) => label.replace(/\s+\{#[a-z0-9-]+\}\s*$/u, ""));
     assert.ok(headings.length > 0, `${file}: visible heading`);
     for (const heading of headings) assert.match(heading, /[가-힣]/u, `${file}: ${heading}`);
-    assert.match(body, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu, `${file}: work table labels`);
+    assert.doesNotMatch(body, /^#{1,6}\s+기획 항목:/mu, `${file}: no Korean-prefix workaround`);
+    assert.match(body, /^## (?:작업|작성) 기록 \{#working-record\}$/mu, `${file}: working record heading`);
+    assert.match(body, /^\| 항목 ID \| (?:현재 )?상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu, `${file}: work table labels`);
     assert.match(body, /^\| 버전 \| 날짜 \| 담당자 \| 변경 내용 \| 승인 \|$/mu, `${file}: history table labels`);
   }
+
+  const audit = await auditGameDesignDocs({ repoRoot });
+  const templateIssues = audit.issues.filter((issue) => /\/assets\/templates\/[^/]+\/content\.md$/u.test(issue.path));
+  assert.deepEqual(templateIssues, [], "artifact content templates contain no mixed-prefix labels or English-dominant prose");
 });
 
 test("audit evidence keeps the top-level and every source at the same retrieval date", async () => {
