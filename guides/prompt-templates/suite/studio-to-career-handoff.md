@@ -86,6 +86,7 @@ $game-design-studio:review-game-design $game-design-career:build-game-design-por
 - suite/studio-to-career-handoff/export-manifest.yml
 
 ### 도식 바인딩
+- Archify: [한국어 Studio → Career 공개 근거 handoff 열기](../../assets/archify/suite/suite-studio-career-handoff.html)
 - ID: st-s01
 - SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
 - PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
