@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  FORMAT_COVERAGE,
   commitGeneratedTrees,
   renderDocxQa,
   renderSavedPptxQa,
@@ -101,7 +102,7 @@ test("exported DOCX renderer lets the verifier recreate QA from the saved artifa
   const pdftoppm = path.join(root, "pdftoppm");
   await mkdir(qaDir, { recursive: true });
   await writeFile(docx, "saved-document");
-  await writeFile(quickLook, "#!/bin/sh\nmkdir -p \"$3/brief.docx.qlpreview\"\nprintf '<html><head></head><body>저장된 문서</body></html>' > \"$3/brief.docx.qlpreview/Preview.html\"\n");
+  await writeFile(quickLook, "#!/bin/sh\nmkdir -p \"$3/brief.docx.qlpreview\"\nprintf '<html><head></head><body><div><div><p><span>저장된 문서</span></p></div><p>본문</p><p><span>Task 11 · format harness</span></p></div></body></html>' > \"$3/brief.docx.qlpreview/Preview.html\"\n");
   await writeFile(chrome, "#!/bin/sh\nfor arg in \"$@\"; do case \"$arg\" in --print-to-pdf=*) printf 'pdf' > \"${arg#*=}\";; esac; done\n");
   await writeFile(pdftoppm, "#!/bin/sh\nprintf 'png' > \"$5-1.png\"\n");
   await Promise.all([chmod(quickLook, 0o755), chmod(chrome, 0o755), chmod(pdftoppm, 0o755)]);
@@ -113,7 +114,7 @@ test("exported DOCX renderer lets the verifier recreate QA from the saved artifa
     qaDir,
     previewBase,
     runtime: { commands: { pdftoppm } },
-    caseInfo: { caseId: "case", expectedPages: { docx: 1 } },
+    caseInfo: { caseId: "case", title: "저장된 문서", expectedPages: { docx: 1 } },
   });
 
   assert.equal(await readFile(path.join(qaDir, "brief.pdf"), "utf8"), "pdf");
@@ -183,6 +184,7 @@ test("manifest binds every review image to the staged artifact set", async (t) =
   assert.deepEqual(manifest.renderBinding.pptx.qaFiles.map((entry) => entry.path), ["pptx/slide-1.png"]);
   assert.deepEqual(manifest.renderBinding.docx.qaFiles.map((entry) => entry.path), ["docx/brief.pdf", "docx/page-1.png"]);
   assert.equal(manifest.renderBinding.pdf.artifactSha256, sha("artifact:brief.pdf"));
+  assert.deepEqual(manifest.formatCoverage, FORMAT_COVERAGE);
   assert.equal(manifest.visualAttestation.artifactSetSha256, expectedArtifactSet);
   assert.equal(manifest.visualAttestation.qaSetSha256, expectedQaSet);
 });

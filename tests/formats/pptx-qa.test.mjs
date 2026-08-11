@@ -27,3 +27,14 @@ test("PPTX generator uses Quick Look-native rectangles for QA-critical geometry"
   const source = await readFile(new URL("./generators/generate_presentation.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(source, /roundRect/u, "rounded geometry becomes cross-slide PDF attachments in Quick Look");
 });
+
+test("representative half-slide copy declares readable phrase-boundary line breaks", async () => {
+  for (const caseId of ["studio-live-service-rpg-economy", "career-entry-12-week-roadmap"]) {
+    const spec = JSON.parse(await readFile(new URL(`./fixtures/${caseId}/presentation.json`, import.meta.url), "utf8"));
+    const half = spec.slides.find(({ layout }) => layout === "half");
+    const lines = half.body.split("\n");
+    assert.ok(lines.length >= 2, `${caseId}: half-slide body needs deliberate line breaks`);
+    assert.ok(lines.every((line) => [...line].length <= 30), `${caseId}: half-slide line exceeds 30 characters`);
+    assert.ok(lines.every((line) => !/\s$/u.test(line)), `${caseId}: half-slide line has trailing whitespace`);
+  }
+});

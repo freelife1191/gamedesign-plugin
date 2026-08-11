@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -17,6 +18,7 @@ import {
   validateZipMembers,
 } from "./lib/inspectors.mjs";
 import { verifyFormats } from "./verify-formats.mjs";
+import { resolveRuntime } from "./lib/runtime-resolver.mjs";
 
 test("missing committed outputs are rejected", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "format-empty-"));
@@ -113,6 +115,18 @@ test("PDF signature and Korean anchors are hard gates", () => {
   assert.throws(() => validatePdfSignature(Buffer.from("not pdf")), /PDF signature/);
   assert.doesNotThrow(() => validatePdfSignature(Buffer.from("%PDF-1.7\n")));
   assert.throws(() => assertKorean("ascii only", ["한국어"]), /Korean anchor/);
+});
+
+test("Career PDF keeps stable evidence IDs on one visual line", async () => {
+  const runtime = await resolveRuntime();
+  const result = spawnSync(runtime.commands.pdftotext, [
+    "-layout", "-f", "2", "-l", "2",
+    path.resolve("tests/formats/output/career-entry-12-week-roadmap/brief.pdf"),
+    "-",
+  ], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /gap-playtest-learning/u);
+  assert.doesNotMatch(result.stdout, /gap-playtest-learnin\s*\ng/u);
 });
 
 test("truncated PNG and wrong dimensions are rejected", async () => {

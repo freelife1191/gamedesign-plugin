@@ -21,6 +21,7 @@ import { validateOoxmlArchive } from "./lib/ooxml.mjs";
 import { inspectPdfArtifact, validateRenderBindingManifest, verifyFreshRenderBindings } from "./lib/render-bindings.mjs";
 import { resolveRuntime } from "./lib/runtime-resolver.mjs";
 import { openZip } from "./lib/zip.mjs";
+import { DOCX_VISUAL_RENDERER, FORMAT_COVERAGE } from "./generate-formats.mjs";
 
 const CASE_IDS = ["studio-live-service-rpg-economy", "career-entry-12-week-roadmap"];
 const ARTIFACTS = ["brief.md", "brief.pdf", "brief.docx", "brief.pptx", "visualization.svg", "visualization.png"];
@@ -115,11 +116,13 @@ async function validateCase({ caseId, outputRoot, fixtureRoot, qaRoot, runtime }
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   if (manifest.schemaVersion !== 1 || manifest.caseId !== caseId) throw new Error(`${caseId} manifest identity mismatch`);
   assertPortableManifest(manifest);
-  sameArray(manifest.canonicalExportManifest?.formats, ["md", "pdf", "docx", "pptx"], `${caseId} canonical formats`);
+  if ("canonicalExportManifest" in manifest) throw new Error(`${caseId} renderer fixture must not claim a canonical product export set`);
+  sameArray(manifest.representativeHarnessExportSet?.formats, ["md", "pdf", "docx", "pptx"], `${caseId} representative harness formats`);
+  if (JSON.stringify(manifest.formatCoverage) !== JSON.stringify(FORMAT_COVERAGE)) throw new Error(`${caseId} format coverage boundary mismatch`);
   sameArray(manifest.visualizationLane?.formats, ["svg", "png"], `${caseId} visualization formats`);
   if (manifest.visualizationLane?.lint !== "passed") throw new Error(`${caseId} Skillstead lint is not passed`);
   if (manifest.presentation?.artifactToolOnly !== true || manifest.presentation?.overflowTest !== "passed") throw new Error(`${caseId} presentation proof is incomplete`);
-  if (manifest.runtime?.docxVisualRenderer !== "macOS-quick-look-html+chromium-print") throw new Error(`${caseId} DOCX visual renderer is not bound`);
+  if (manifest.runtime?.docxVisualRenderer !== DOCX_VISUAL_RENDERER) throw new Error(`${caseId} DOCX visual renderer is not bound`);
 
   sameArray(Object.keys(manifest.artifacts ?? {}), ARTIFACTS, `${caseId} artifact set`);
   const artifactDigests = {};

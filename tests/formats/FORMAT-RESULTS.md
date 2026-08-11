@@ -1,9 +1,22 @@
 # 대표 형식 검증 결과
 
-검증일: 2026-08-05
+검증일: 2026-08-12
 상태: **PASS**
 
-이 문서는 Studio와 Career 플러그인의 대표 Canonical Artifact를 실제 여섯 형식으로 생성하고 검증한 결과를 기록한다. MD/PDF/DOCX/PPTX는 문서 export lane이며 SVG/PNG는 Skillstead 시각화 lane이다.
+이 문서는 Studio와 Career 플러그인의 대표 기준 결과 폴더를 실제 여섯 형식으로 생성하고 검증한 결과를 기록한다. MD/PDF/DOCX/PPTX는 문서 내보내기 경로이며 SVG/PNG는 Skillstead 시각화 경로다.
+
+## 검증 범위
+
+30개 템플릿은 품질 기준에 선언된 필수 형식과 사용할 수 없는 형식을 전수 검사했다.
+
+- Studio 15개: MD 15 · PDF 15 · DOCX 8 · PPTX 0
+- Career 15개: MD 14 · PDF 15 · DOCX 1 · PPTX 1
+
+실제 바이너리 생성은 대표 사례 2건을 대상으로 MD·PDF·DOCX·PPTX와 SVG·PNG까지 수행했다. 이는 렌더러와 검수 경로가 실제 파일을 만들고 다시 읽을 수 있다는 종단 간 증거이며, 30개 템플릿 전체를 네 형식으로 생성했다는 뜻은 아니다. 각 템플릿에서 허용되는 형식도 서로 다르므로, 품질 기준이 요구하지 않는 형식을 억지로 만들지 않는다.
+
+특히 Studio 대표 사례의 PPTX는 호스트 렌더러 자체를 검증하기 위한 시험 산출물이다. Studio의 현재 품질 기준에는 PPTX를 요구하는 템플릿이 없으며, 실제 플러그인 요청에서는 지원하지 않는 형식을 거부한다. 검증 manifest도 이 네 형식을 제품의 정식 내보내기 목록이 아니라 `representativeHarnessExportSet`으로 기록한다.
+
+플러그인은 기준 결과 폴더와 내보내기 작업을 준비하고 검증한다. 최종 PDF·DOCX·PPTX 파일 생성과 페이지·슬라이드 검수는 신뢰할 수 있는 호스트 문서 도구가 맡는다.
 
 ## 검증 사례
 
@@ -43,6 +56,14 @@
 
 총 30개 이미지에서 한글 소실/tofu, clipping, overflow, 빈 페이지·슬라이드, 중복·손상 렌더를 확인했다. Studio와 Career 모두 독립 vision reviewer와 primary reviewer의 승인을 받았다. 승인 목록은 각 artifact manifest의 `visualAttestation`에 기록되어 있으며 verifier가 정확한 15개 경로, PNG 구조, 중복 hash, 페이지·슬라이드 수를 다시 확인한다.
 
+이번 실생성 검수에서 발견한 문제도 그대로 남기지 않았다.
+
+- DOCX 검수본의 둘째·넷째 페이지에서 머리말과 꼬리말이 빠지는 문제를 고정 인쇄 영역으로 보완했다.
+- Career PDF의 긴 식별자가 마지막 글자만 다음 줄로 떨어지지 않도록 열 너비를 조정했다.
+- Studio·Career PPTX에서 단어 중간이 끊기던 문장을 의미 단위 줄바꿈으로 고쳤다.
+
+수정 후 30개 이미지를 원본 크기로 다시 전수 검사했다. 현재 검증본에는 한글 소실, 잘림, 넘침, 겹침, 빈 페이지·슬라이드, 단어 중간 분리 문제가 남아 있지 않다.
+
 Studio 문서의 source footer는 다음 순서로 검증됐다.
 
 1. `economy + responsibleGates/0`
@@ -63,8 +84,9 @@ DOCX 자체의 OOXML과 한글은 정상이다. 번들 LibreOffice renderer가 �
 
 1. macOS Quick Look이 DOCX를 semantic HTML로 해석한다.
 2. form-feed를 명시적인 Letter page break로 변환한다.
-3. Chromium이 HTML을 PDF로 인쇄한다.
-4. Poppler가 PDF 네 페이지를 PNG로 변환한다.
+3. 원본 DOCX의 머리말과 꼬리말을 고정 인쇄 영역에 결속해 모든 페이지에 반복한다.
+4. Chromium이 HTML을 PDF로 인쇄한다.
+5. Poppler가 PDF 네 페이지를 PNG로 변환한다.
 
 이 경로는 DOCX 생성 방식이나 문서 내용을 바꾸지 않는 QA adapter다. `qlmanage` 또는 Chromium이 없으면 생성기는 성공을 추정하지 않고 실패한다.
 
@@ -89,7 +111,7 @@ node tests/formats/verify-formats.mjs tests/formats/output
 npm run validate:release
 ```
 
-`test:formats`는 7개 공격·회귀 테스트 파일을 실행한 뒤 현재 대표 산출물 두 세트를 다시 검증한다. release gate도 같은 runner를 호출하므로 CRC·관계·host path·PDF 의미 계약 회귀를 대표 파일이 우연히 정상이라는 이유로 건너뛰지 않는다.
+`test:formats`는 8개 공격·회귀 테스트 파일을 실행한 뒤 현재 대표 산출물 두 세트를 다시 검증한다. release gate도 같은 runner를 호출하므로 CRC·관계·host path·PDF 의미 계약 회귀를 대표 파일이 우연히 정상이라는 이유로 건너뛰지 않는다.
 
 `generate-formats.mjs`는 출력과 QA corpus를 동일 stage에서 완성한 뒤 하나의 rollback 가능한 트랜잭션으로 교체하고 새 manifest의 시각 상태를 `pending-individual-inspection`으로 되돌린다. 두 번째 설치가 실패하면 두 destination 모두 이전 검증본으로 복구한다. 따라서 재생성 후에는 30개 이미지를 다시 검사하고, 현재 산출물·QA 집합 hash에 대한 승인 증명을 manifest에 기록한 뒤 release 검증을 실행해야 한다.
 
@@ -98,10 +120,10 @@ npm run validate:release
 - Codex primary runtime 공식 cache
 - Node 24.14.0
 - Python 3.12.13
-- `@oai/artifact-tool` 2.8.31
+- `@oai/artifact-tool` 2.8.39
 - LibreOfficeDev 26.8 계열 capability
 - Poppler 26.05 계열
-- Google Chrome 151 계열
+- Google Chrome 151.0.7922.108
 - D2Coding 1.3.2, SIL OFL 1.1
 
 manifest에는 runtime의 공개 버전과 source class만 기록하고 사용자 홈 또는 절대 설치 경로는 기록하지 않는다.

@@ -44,8 +44,8 @@
   "presentationAnchors": ["5,000", "목표 보유량", "일일 미션", "주간 인플레이션율", "자동 롤백"],
   "expectedPdfPageTextSha256": [
     "cf09426617c7a92bacfca932f47e3647a699a120173e4a6553422d392da98234",
-    "acdf3023442480f620da05d14011bf5badf3dc03031445a6c2596321b4d656d3",
-    "a55aa4f76dc94a025c64c8d92e91044aecad5f0e49f2318c05f93fa24d140ee5",
+    "9789f507035e2e04de54e13861700f16d4010d9db1bedc86c2d6c3166797f106",
+    "7a91a3abc96cceb160a00310148aa72a9636de28e748dc6f859a4ad5777f97ef",
     "865eefdf9ec04e40fe875b0a28cc8bef7971e825547089ddbed888b074c458ca"
   ],
   "expectedPages": { "pdf": 4, "docx": 4 },
