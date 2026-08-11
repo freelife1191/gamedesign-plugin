@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add only evidence-backed game-design review roles, introduce a portable Korean game-design writing polish skill and agent, connect all 18 README prompts to sample results, verify the image path, and complete adversarial UltraQA.
+**Goal:** Add only evidence-backed game-design review roles, introduce a portable Korean game-design writing polish skill and agent, bundle verified Skillstead and Archify diagram skills, connect all 18 README prompts to sample results, support `gpt-image-2` master-image derivatives, and complete adversarial UltraQA.
 
-**Architecture:** Product source remains under `products/*/plugin` and shared deterministic validation remains under `shared/`. Studio gains two domain review roles; both products gain one writing specialist and one direct writing-polish skill. README sample results are standalone guide artifacts bound to production prompt IDs. Generated `plugins/*` trees are rebuilt, never edited by hand.
+**Architecture:** Product source remains under `products/*/plugin` and shared deterministic validation remains under `shared/`. Studio gains two domain review roles; both products gain one writing specialist and one direct writing-polish skill. Official im-not-ai, Skillstead, and Archify releases are pinned as offline vendor closures and copied into both products by the standard build. README sample results are standalone guide artifacts bound to production prompt IDs. Image manifests carry master/derivative lineage before any provider call. Generated `plugins/*` trees are rebuilt, never edited by hand.
 
 **Tech Stack:** Markdown skills and agents, JSON routing registries, Node.js ESM validators and tests, repository snapshot builder, Codex plugin manifests, UltraQA state and temporary harnesses.
 
@@ -17,6 +17,7 @@
 - `IMAGE_GEN_MODE=prompt-only`, `IMAGE_MODEL=gpt-image-2`, and `IMAGE_QUALITY=low` remain the defaults.
 - A non-empty `OPENAI_API_KEY` means OpenAI only; failures never fall back to Codex.
 - No live image call in default QA. Live smoke remains explicit and credential-gated.
+- Vendor updates use only official stable release tags, exact commits, licenses, regular-file closures, and SHA-256 locks. Plugin installation never runs unpinned remote code.
 - Human review is required for document, image, production, publication, hiring, and release decisions.
 
 ---
@@ -144,7 +145,7 @@ Require `polish-game-design-writing`, `humanize-korean`, `game-design-writing-ed
 
 - [ ] **Step 6: Run RED tests and commit**
 
-Run the three new test files. Expected: missing module, skill, agent, and registry failures.
+Run the four new test files. Expected: missing validator, vendor bundle, updater, skill, agent, and registry failures.
 
 ### Task 4: Implement the writing validator, skill, and specialist
 
@@ -202,6 +203,45 @@ Run the installed skill validator against the product wrapper and bundled upstre
 - [ ] **Step 7: Commit GREEN implementation**
 
 Commit shared validator, both product skills, agents, and routing updates.
+
+### Task 4A: Upgrade Skillstead and bundle Archify in both products
+
+**Files:**
+- Modify: `shared/vendor/skillstead/vendor.lock.json`
+- Replace: `shared/vendor/skillstead/svg-infographic/0.8.3/**` with `shared/vendor/skillstead/svg-infographic/0.9.0/**`
+- Create: `shared/vendor/archify/vendor.lock.json`
+- Create: `shared/vendor/archify/archify/2.13.0/**`
+- Create: `tooling/sync-diagram-skills.mjs`
+- Create: `tests/unit/diagram-skill-vendor.test.mjs`
+- Modify: `tooling/lib/build-product.mjs`
+- Modify: both product `product.json`, `THIRD_PARTY_NOTICES.md`, routing registries, and orchestrator skills
+- Modify: `package.json`
+
+**Interfaces:**
+- Consumes: official Skillstead `svg-infographic/v0.9.0` and Archify `v2.13.0` release closures.
+- Produces: offline `skills/svg-infographic` and `skills/archify` packages in both products, deterministic vendor verification, and natural-language routing.
+
+- [ ] **Step 1: Write RED exact-closure tests**
+
+Require Skillstead 55 regular files and Archify 60 regular files, exact relative paths, byte sizes, SHA-256 hashes, no symlinks, no extra files, pinned tag/commit/release metadata, and preserved Apache-2.0/MIT notices. Reject an extra executable, changed payload byte, altered lock entry, missing renderer/schema, or updater copied into a product package.
+
+- [ ] **Step 2: Vendor official stable releases**
+
+Pin Skillstead `svg-infographic/v0.9.0` at `6e5b850f66716af9eb3c6a79f60e4f8ff5716dee`. Pin Archify `v2.13.0` at `2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3` and release asset SHA-256 `9aca2bc07812cbef2a7c177f4d3ef74669814c980621daea6e0fd9ee7ed8fd21`. Materialize only regular files inside the canonical shared vendor roots.
+
+- [ ] **Step 3: Implement offline check and explicit latest/update modes**
+
+`--check` is pure local verification and cannot access network or spawn package installers. `--check-latest` may query only the two official repositories and must not change files. `--update <skill>` stages a verified future stable release, validates exact closure/license/hash, and atomically replaces the vendor root and lock. Tests inject a fake future release and prove check-latest is read-only.
+
+- [ ] **Step 4: Package and route both skills**
+
+Copy Skillstead to `skills/svg-infographic` and Archify to `skills/archify` for Studio and Career. Add direct discovery and Korean guidance: use Skillstead for document-friendly static flows/comparisons; use Archify for component boundaries, state, data flow, and explorable system architecture. Natural-language orchestration may select either skill, but diagram validation never grants document approval.
+
+- [ ] **Step 5: Validate real packaged runtimes**
+
+Run Skillstead lint/render smoke with its canonical Chromium contract and Archify `doctor`, typed schema validation, and one temporary `deliver` smoke from each installed product. Assert no network fetch during normal validation/delivery, no persistent temp files, and no writes outside the temporary artifact root.
+
+- [ ] **Step 6: Commit vendor and packaging implementation**
 
 ### Task 5: Add 18 source-bound Sample result documents
 
@@ -292,36 +332,63 @@ Run `npm run build:prompt-guides`, the representative artifact render tests, pro
 
 Require zero unresolved high-severity issues in owned source documents.
 
-### Task 7: Close image runtime gaps without changing provider policy
+### Task 7: Add bounded `gpt-image-2` master-image generation
 
 **Files:**
+- Modify: `shared/image-assets/schema/image-assets.schema.json`
+- Modify: `shared/image-assets/schema/image-review.schema.json`
+- Modify: `shared/scripts/build-image-asset-plan.mjs`
+- Modify: `shared/scripts/run-image-asset-workflow.mjs`
+- Modify: `shared/scripts/lib/image-provider.mjs`
 - Modify: `shared/scripts/generate-openai-images.mjs`
 - Modify: `tests/unit/generate-openai-images.test.mjs`
+- Modify: `tests/unit/image-provider.test.mjs`
+- Modify: `tests/products/studio/image-assets.test.mjs`
 - Modify: `tooling/smoke-openai-image.mjs`
 - Create: `tests/unit/smoke-openai-image.test.mjs`
-- Modify: `.env.example` only if the audit finds a mismatch
+- Modify: `.env.example`
 
 **Interfaces:**
-- Consumes: validated config and injectable `fetchFn`.
-- Produces: bounded Abort/timeout behavior and live smoke that respects redacted model/quality overrides.
+- Consumes: validated config, artifact-local master/reference images, and injectable OpenAI/Codex provider adapters.
+- Produces: bounded `gpt-image-2` generation/edit requests, master/derivative lineage, reviewable receipts, and approved-only export bindings.
 
-- [ ] **Step 1: Write RED never-resolving fetch test**
+- [ ] **Step 1: Write RED lineage and reference-boundary tests**
+
+Add `asset_set_id`, `derivative_of`, ordered reference IDs, artifact-local paths and SHA-256 hashes, style/character anchors, and prompt lineage. Reject missing sources, stale hashes, self-reference, cycles, traversal, symlinks, unknown parents, and references to unapproved external material before any provider call.
+
+- [ ] **Step 2: Write RED OpenAI and Codex adapter tests**
+
+For a master image plus multiple derivatives, require OpenAI to use multipart `POST /v1/images/edits` with `model=gpt-image-2`, ordered `image[]` inputs, prompt, quality, and size. Do not send `input_fidelity` for `gpt-image-2`. Require the Codex host callback to receive the same reference metadata and bounded bytes. Preserve prompt-only no-call and API-key no-fallback policies.
+
+- [ ] **Step 3: Write RED never-resolving fetch test**
 
 Use a bounded test timeout. Expect Abort, an explicit failed receipt, no partial PNG, no provider fallback, and no leaked key.
 
-- [ ] **Step 2: Implement request timeout**
+- [ ] **Step 4: Implement master/derivative planning and receipts**
+
+Validate and topologically order an asset set. Generate or select the master first, then create derivative jobs that bind reference IDs, exact input digests, parent relation, prompt digest, model/quality, output digest, and named review state. Preserve the relationship through retry/resume.
+
+- [ ] **Step 5: Implement the two OpenAI request shapes**
+
+Use `/v1/images/generations` only for independent text-only assets and `/v1/images/edits` for master/reference workflows. Build multipart bodies without buffering unbounded files, permit only validated image formats/sizes, and keep the API-key route API-only.
+
+- [ ] **Step 6: Implement request timeout**
 
 Use an AbortController and a documented finite default. Preserve the retry cap and fail closed.
 
-- [ ] **Step 3: Test live-smoke configuration wiring**
+- [ ] **Step 7: Preserve human review and document insertion boundaries**
 
-Verify that the smoke runner uses validated `IMAGE_MODEL` and `IMAGE_QUALITY` instead of hard-coded values while never printing secrets.
+Generated master and derivatives remain `concept-draft`. Only exact digest-bound `document-approved` assets may be attached to a document/export manifest. Changing the master invalidates descendant approvals until regeneration and named-human re-review.
 
-- [ ] **Step 4: Run image unit and product E2E tests**
+- [ ] **Step 8: Test `.env` and live-smoke configuration wiring**
+
+Document `OPENAI_API_KEY`, `IMAGE_GEN_MODE`, `IMAGE_MODEL=gpt-image-2`, `IMAGE_QUALITY`, request timeout, and explicit cost-bearing smoke behavior. Verify that the smoke runner uses validated model/quality without printing secrets. `.env.example` contains placeholders only.
+
+- [ ] **Step 9: Run image unit and product E2E tests**
 
 Do not run a live network call.
 
-- [ ] **Step 5: Commit the bounded runtime fix**
+- [ ] **Step 10: Commit the master-image implementation**
 
 ### Task 8: Update inventories, guides, and generated products
 
@@ -339,11 +406,11 @@ Do not run a live network call.
 
 - [ ] **Step 1: Update human-readable inventories**
 
-List Korean name first, English ID in parentheses, use case, result, direct command, agent boundary, and detailed guide link.
+List Korean name first, English ID in parentheses, use case, result, direct command, agent boundary, bundled im-not-ai/Skillstead/Archify status, and detailed guide link.
 
 - [ ] **Step 2: Update exact package and guide counts**
 
-Studio: 12 agents, 16 product skills including bundled `humanize-korean`, and one packaged Skillstead skill, for 17 installed skills in total. Career: 10 agents, 16 product skills including bundled `humanize-korean`, and one packaged Skillstead skill, for 17 installed skills in total. Keep template and script counts derived from the actual build.
+Studio: 12 agents, 17 routed product skills including bundled `humanize-korean` and `archify`, plus packaged Skillstead `svg-infographic`, for 18 installed skills in total. Career: 10 agents, 17 routed product skills including bundled `humanize-korean` and `archify`, plus packaged Skillstead `svg-infographic`, for 18 installed skills in total. Keep template and script counts derived from the actual build.
 
 - [ ] **Step 3: Run the standard build**
 
@@ -381,7 +448,7 @@ Run targeted tests, product E2E, build check, guide validation, suite validation
 
 - [ ] **Step 3: Run dynamic adversarial E2E**
 
-Use temporary HOME, CODEX_HOME, workspace, isolated state, bounded child timeouts, prompt-injection sentinel, dirty-tree sentinel, repeated continue/cancel/resume, stale receipts, and false-success exits.
+Use temporary HOME, CODEX_HOME, workspace, isolated state, bounded child timeouts, prompt-injection sentinel, dirty-tree sentinel, repeated continue/cancel/resume, stale receipts, false-success exits, vendor payload tampering, master-image cycles, stale reference hashes, and diagram renderer failures.
 
 - [ ] **Step 4: Diagnose and fix failures**
 

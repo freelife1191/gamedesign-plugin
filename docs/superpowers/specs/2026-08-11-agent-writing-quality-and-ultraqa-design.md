@@ -87,6 +87,35 @@ README의 Studio 7개, Career 7개, 연계 4개 사례에 각각 Sample 결과 �
 
 `required`와 `all`은 문서 품질 프로필과 manifest에 선언된 이미지 슬롯만 처리한다. 문서에서 이미지를 무제한으로 추측하지 않는다. 생성물은 참고 시안이며, named human review 전에는 문서 승인이나 제작 후보로 승격하지 않는다. 실제 네트워크 호출은 기본 QA에서 실행하지 않는다.
 
+현행 구현은 텍스트 프롬프트로 서로 독립된 이미지를 만드는 데까지만 지원한다. 마스터 이미지를 기준으로 캐릭터·배경·UI·아이템 파생 이미지를 만드는 기능은 별도로 추가한다. 공식 OpenAI Image API의 `gpt-image-2` 편집 엔드포인트(`/v1/images/edits`)와 복수 `image[]` 입력을 사용하고, 이 모델에서 허용되지 않는 `input_fidelity` 옵션은 보내지 않는다.
+
+마스터 이미지 흐름은 다음 계약을 지킨다.
+
+1. `asset_set_id`로 같은 이미지 묶음을 식별하고, 마스터와 파생 이미지에 서로 다른 stable asset ID를 준다.
+2. 파생 이미지는 `derivative_of`, 참조 이미지 ID·파일 경로·SHA-256, 스타일·캐릭터 기준, 프롬프트 계보를 기록한다.
+3. 자기 참조, 순환 참조, 작업 폴더 밖 경로, 심링크, 누락되거나 해시가 다른 참조 파일은 API 호출 전에 거부한다.
+4. OpenAI 경로와 Codex 호스트 경로는 같은 참조 메타데이터를 받는다. 키가 있는 OpenAI 요청이 실패해도 다른 공급자로 자동 전환하지 않는다.
+5. 생성 영수증에는 마스터·파생 관계, 참조 해시, 프롬프트 해시, 모델, 품질, 결과 해시를 남긴다.
+6. 생성물은 사람 검토 전까지 참고 시안이다. 승인된 이미지만 문서나 내보내기 결과에 연결한다.
+
+`.env.example`에는 실제 키를 넣지 않고 `OPENAI_API_KEY`, `IMAGE_GEN_MODE`, `IMAGE_MODEL=gpt-image-2`, `IMAGE_QUALITY`의 용도와 비용이 드는 명시적 실행 조건을 안내한다. 기본 테스트는 가짜 HTTP/호스트 어댑터와 작은 로컬 fixture만 사용한다.
+
+## 함께 설치되는 도식화 스킬
+
+두 플러그인은 기획 문서의 흐름도와 시스템 구조를 만들 수 있도록 다음 공식 스킬을 오프라인 번들로 함께 설치한다.
+
+- Skillstead `svg-infographic` `0.9.0`: 일반 흐름도, 비교표, 검토·승인 흐름, 기획 한 장 요약을 editable SVG와 검증된 2배 PNG로 만든다. 공식 저장소는 [`kyungseo/skillstead`](https://github.com/kyungseo/skillstead), 고정 커밋은 `6e5b850f66716af9eb3c6a79f60e4f8ff5716dee`, 라이선스는 Apache-2.0이다.
+- Archify `2.13.0`: 플러그인·기획 시스템의 architecture, workflow, sequence, data-flow, lifecycle을 검증된 standalone HTML로 만든다. 공식 저장소는 [`tt-a1i/archify`](https://github.com/tt-a1i/archify), 고정 커밋은 `2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3`, 라이선스는 MIT다.
+
+Skillstead는 현재 포함된 `0.8.3`을 최신 안정판 `0.9.0`으로 갱신한다. Archify는 릴리스의 `archify.zip` SHA-256 `9aca2bc07812cbef2a7c177f4d3ef74669814c980621daea6e0fd9ee7ed8fd21`과 60개 일반 파일 closure를 검증한 뒤 번들한다. 두 스킬 모두 플러그인 설치 중 원격 코드를 실행하거나 최신 main을 따라가지 않는다. 릴리스 준비 명령에서만 공식 최신 안정판을 확인하고, 검증된 vendor lock·라이선스·정확한 파일 트리를 표준 빌드가 양쪽 제품의 `skills/` 아래로 복사한다.
+
+오케스트레이터는 산출물에 도식이 필요하다고 판단하면 다음처럼 선택한다.
+
+- 읽기 쉬운 정적 기획 흐름·비교·승인 경계는 `svg-infographic`을 사용한다.
+- 여러 구성 요소, 소유권 경계, 데이터 이동, 상태 전환을 탐색해야 하면 `archify`를 사용한다.
+- 둘 다 필요하면 Archify의 구조 원문과 Skillstead의 문서용 요약을 별도 산출물로 만든다. 하나의 결과가 다른 결과를 자동 승인하지 않는다.
+- 생성된 SVG·PNG·HTML은 각 스킬의 validator와 시각 검수를 통과해야 하며, 사람이 읽기 어려운 글자·겹침·잘림·불필요한 영어 우선 표현이 있으면 실패로 처리한다.
+
 ## 문서 현행화
 
 원본과 생성본을 구분한다. `products/*/plugin`, `shared`, `guides`, 루트 README를 원본으로 고치고 `plugins/*`는 표준 빌드로 재생성한다.
