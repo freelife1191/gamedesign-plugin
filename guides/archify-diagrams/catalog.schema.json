@@ -33,6 +33,15 @@
         "remaining_error": { "type": "string", "minLength": 1 }
       }
     },
+    "originSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_document", "build_mapping"],
+      "properties": {
+        "source_document": { "type": "string", "minLength": 1 },
+        "build_mapping": { "enum": ["document-quality", "archify", "im-not-ai"] }
+      }
+    },
     "selectedEntry": {
       "type": "object",
       "additionalProperties": false,
@@ -81,7 +90,8 @@
         "html": { "type": "null" },
         "receipt": { "type": "null" },
         "delivery_status": { "const": "not-applicable" },
-        "visual_review": { "const": "not-applicable" }
+        "visual_review": { "const": "not-applicable" },
+        "origin_source": { "$ref": "#/$defs/originSource" }
       }
     }
   }

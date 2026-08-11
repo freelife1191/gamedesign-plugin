@@ -84,6 +84,20 @@ function excludedEntry(sourceDocument = "README.md") {
   };
 }
 
+function sharedPackageMirrorEntry({
+  sourceDocument = "plugins/game-design-studio/skills/archify/SKILL.md",
+  originSource = {
+    source_document: "shared/vendor/archify/archify/2.13.0/SKILL.md",
+    build_mapping: "archify",
+  },
+} = {}) {
+  return {
+    ...excludedEntry(sourceDocument),
+    exclusion_code: "excluded-package-mirror",
+    origin_source: originSource,
+  };
+}
+
 function blockedDiagnostic() {
   return [{
     code: "render-overflow",
@@ -128,6 +142,28 @@ async function catalogFixture(t, {
     scan_roots: scanRoots,
     scan_excludes: scanExcludes,
     entries,
+  }));
+  return repoRoot;
+}
+
+async function sharedPackageMirrorFixture(t, {
+  entry = sharedPackageMirrorEntry(),
+  originContent = SOURCE_TEXT,
+} = {}) {
+  const repoRoot = await catalogFixture(t, {
+    documents: ["README.md", entry.source_document],
+    entries: [excludedEntry("README.md"), entry],
+  });
+  await writeRelative(repoRoot, entry.origin_source.source_document, originContent);
+  await writeRelative(repoRoot, "products/game-design-studio/product.json", JSON.stringify({
+    schemaVersion: 1,
+    name: "game-design-studio",
+    displayName: "Studio",
+    description: "Fixture product",
+    sharedModules: [entry.origin_source.build_mapping],
+    sharedRuntime: true,
+    sourceRoots: ["plugin"],
+    sourceDocumentCategories: ["fixture"],
   }));
   return repoRoot;
 }
@@ -347,6 +383,38 @@ test("catalog rejects a scan corpus reduced to exclude its only Markdown", async
 test("excluded entries retain the canonical decision_reason contract", async (t) => {
   const repoRoot = await catalogFixture(t, { entries: [excludedEntry()] });
   await assert.doesNotReject(() => loadArchifyCatalog({ repoRoot }));
+});
+
+test("shared package mirrors require an allowed, regular, byte-identical structured origin", async (t) => {
+  const valid = await sharedPackageMirrorFixture(t);
+  await assert.doesNotReject(() => loadArchifyCatalog({ repoRoot: valid }));
+
+  const missingOrigin = await sharedPackageMirrorFixture(t);
+  const missingCatalogPath = path.join(missingOrigin, "guides/archify-diagrams/catalog.json");
+  const missingCatalog = JSON.parse(await readFile(missingCatalogPath, "utf8"));
+  delete missingCatalog.entries[1].origin_source;
+  await writeFile(missingCatalogPath, JSON.stringify(missingCatalog));
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot: missingOrigin }), /origin_source/u);
+
+  const wrongMapping = await sharedPackageMirrorFixture(t, {
+    entry: sharedPackageMirrorEntry({
+      originSource: {
+        source_document: "shared/vendor/archify/archify/2.13.0/SKILL.md",
+        build_mapping: "im-not-ai",
+      },
+    }),
+  });
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot: wrongMapping }), /build_mapping/u);
+
+  const changedBytes = await sharedPackageMirrorFixture(t, { originContent: "different source bytes" });
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot: changedBytes }), /byte-identical/u);
+
+  const symlinkedOrigin = await sharedPackageMirrorFixture(t);
+  const origin = "shared/vendor/archify/archify/2.13.0/SKILL.md";
+  const external = await writeRelative(symlinkedOrigin, "outside.md", SOURCE_TEXT);
+  await rm(path.join(symlinkedOrigin, origin));
+  await symlink(external, path.join(symlinkedOrigin, origin));
+  await assert.rejects(() => loadArchifyCatalog({ repoRoot: symlinkedOrigin }), /symlink.*origin_source/u);
 });
 
 for (const [name, entry] of [

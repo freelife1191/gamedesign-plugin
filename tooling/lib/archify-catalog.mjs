@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { comparePaths, joinWithin, normalizeRelativePath } from "./paths.mjs";
 import { findStructuralDuplicates } from "./archify-signature.mjs";
+import { loadProductContract } from "./product-contract.mjs";
 
 export const DELIVERY_STATES = Object.freeze([
   "not-applicable", "planned", "spec-authored", "auto-validated",
@@ -32,8 +33,34 @@ const EXCLUDED_KEYS = new Set([
   "exclusion_code", "decision_reason", "diagnostics", "spec", "html", "receipt",
   "delivery_status", "visual_review",
 ]);
+const EXCLUDED_ORIGIN_KEYS = new Set([...EXCLUDED_KEYS, "origin_source"]);
+const ORIGIN_SOURCE_KEYS = new Set(["source_document", "build_mapping"]);
 const DIAGNOSTIC_KEYS = new Set(["code", "subject", "evidence", "attempted_fix", "round", "remaining_error"]);
 const PRODUCTS = new Set(["studio", "career", "suite"]);
+const PRODUCT_PACKAGE_NAMES = Object.freeze({
+  studio: "game-design-studio",
+  career: "game-design-career",
+});
+const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
+  Object.freeze({
+    id: "document-quality",
+    module: "document-quality",
+    sourceRoot: "shared/document-quality",
+    destinationRoot: "references/shared/document-quality",
+  }),
+  Object.freeze({
+    id: "archify",
+    module: "archify",
+    sourceRoot: "shared/vendor/archify/archify/2.13.0",
+    destinationRoot: "skills/archify",
+  }),
+  Object.freeze({
+    id: "im-not-ai",
+    module: "im-not-ai",
+    sourceRoot: "shared/vendor/im-not-ai/humanize-korean/v2.3.0",
+    destinationRoot: "skills/humanize-korean",
+  }),
+]);
 const DIAGRAM_TYPES = new Set(["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
 const SPEC_REQUIRED_STATES = new Set([
   "spec-authored", "auto-validated", "blocked-schema", "blocked-validation", "blocked-visual",
@@ -221,9 +248,44 @@ function validateSelectedState(entry, label, errors) {
   }
 }
 
+function packageMirrorMappingFor(entry) {
+  const productName = PRODUCT_PACKAGE_NAMES[entry.product];
+  if (productName === undefined || !isNonemptyString(entry.source_document)) return undefined;
+  let sourceDocument;
+  try {
+    sourceDocument = normalizeRelativePath(entry.source_document, "package mirror source document");
+  } catch {
+    return undefined;
+  }
+  const packagePrefix = `plugins/${productName}/`;
+  if (!sourceDocument.startsWith(packagePrefix)) return undefined;
+  const packageRelative = sourceDocument.slice(packagePrefix.length);
+  for (const mapping of SHARED_PACKAGE_MIRROR_MAPPINGS) {
+    const destinationPrefix = `${mapping.destinationRoot}/`;
+    if (packageRelative.startsWith(destinationPrefix)) {
+      return { ...mapping, sourceDocument, suffix: packageRelative.slice(destinationPrefix.length) };
+    }
+  }
+  return undefined;
+}
+
+function validateOriginSource(entry, mapping, label, errors) {
+  if (!assertExactKeys(entry.origin_source, ORIGIN_SOURCE_KEYS, `${label}.origin_source`, errors)) return;
+  const source = safeRelative(entry.origin_source.source_document, `${label}.origin_source.source_document`, errors);
+  requireString(entry.origin_source.build_mapping, `${label}.origin_source.build_mapping`, errors);
+  if (entry.origin_source.build_mapping !== mapping.id) {
+    errors.push(`${label}.origin_source.build_mapping must be ${mapping.id}`);
+  }
+  const expectedSource = `${mapping.sourceRoot}/${mapping.suffix}`;
+  if (source !== undefined && source !== expectedSource) {
+    errors.push(`${label}.origin_source.source_document must be ${expectedSource}`);
+  }
+}
+
 function validateExcludedEntry(entry, index, errors, seenIds, seenRecords) {
   const label = `entry[${index}]`;
-  if (!assertExactKeys(entry, EXCLUDED_KEYS, label, errors)) return;
+  const mapping = packageMirrorMappingFor(entry);
+  if (!assertExactKeys(entry, mapping === undefined ? EXCLUDED_KEYS : EXCLUDED_ORIGIN_KEYS, label, errors)) return;
   validateCommonEntry(entry, label, errors, seenIds, seenRecords);
   if (entry.decision !== "excluded") errors.push(`${label}.decision must be excluded`);
   requireString(entry.exclusion_code, `${label}.exclusion_code`, errors);
@@ -235,6 +297,7 @@ function validateExcludedEntry(entry, index, errors, seenIds, seenRecords) {
   if (entry.delivery_status !== "not-applicable" || entry.visual_review !== "not-applicable") {
     errors.push(`${label}.excluded entry must be not-applicable`);
   }
+  if (mapping !== undefined) validateOriginSource(entry, mapping, label, errors);
 }
 
 async function assertRegularContained(repoRoot, relativePath, label, { required = true } = {}) {
@@ -260,6 +323,24 @@ async function assertRegularContained(repoRoot, relativePath, label, { required 
     if (index === parts.length - 1 && !stats.isFile()) throw new Error(`${label} must be a regular file: ${relativePath}`);
   }
   return filename;
+}
+
+async function assertPackageMirrorOrigin(repoRoot, entry) {
+  const mapping = packageMirrorMappingFor(entry);
+  if (mapping === undefined) return;
+  const label = `entry ${entry.id}`;
+  const product = await loadProductContract({ repoRoot, productName: PRODUCT_PACKAGE_NAMES[entry.product] });
+  if (!product.sharedModules.includes(mapping.module)) {
+    throw new Error(`${label}.origin_source.build_mapping is not enabled by products/${product.name}/product.json`);
+  }
+  const [mirrorFile, originFile] = await Promise.all([
+    assertRegularContained(repoRoot, mapping.sourceDocument, `${label}.source_document`),
+    assertRegularContained(repoRoot, entry.origin_source.source_document, `${label}.origin_source.source_document`),
+  ]);
+  const [mirrorBytes, originBytes] = await Promise.all([readFile(mirrorFile), readFile(originFile)]);
+  if (!mirrorBytes.equals(originBytes)) {
+    throw new Error(`${label}.origin_source must be byte-identical to ${mapping.sourceDocument}`);
+  }
 }
 
 function isExcluded(relativePath, excludes) {
@@ -384,6 +465,13 @@ export async function validateArchifyCatalog(catalog, { repoRoot } = {}) {
         if (entry.source_digest !== actualDigest) errors.push(`stale-source: ${source}`);
       } catch (error) {
         errors.push(error instanceof Error ? error.message : String(error));
+      }
+      if (entry.decision === "excluded" && packageMirrorMappingFor(entry) !== undefined) {
+        try {
+          await assertPackageMirrorOrigin(repoRoot, entry);
+        } catch (error) {
+          errors.push(error instanceof Error ? error.message : String(error));
+        }
       }
       if (entry.decision === "selected") {
         const specRequired = SPEC_REQUIRED_STATES.has(entry.delivery_status);

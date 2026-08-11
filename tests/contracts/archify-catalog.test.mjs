@@ -209,7 +209,11 @@ test("production inventory has bounded diagrams and explicit package exclusions"
   }
   for (const entry of catalog.entries.filter((item) => item.source_document.startsWith("plugins/"))) {
     assert.equal(entry.decision, "excluded");
-    assert.match(entry.decision_reason, /products\/game-design-(?:studio|career)/u);
+    if (Object.hasOwn(entry, "origin_source")) {
+      assert.match(entry.decision_reason, /공유 build mapping/u);
+    } else {
+      assert.match(entry.decision_reason, /products\/game-design-(?:studio|career)/u);
+    }
   }
 });
 
@@ -243,6 +247,39 @@ test("production exclusions retain exact package classes and source-specific evi
   for (const entry of catalog.entries.filter((item) => item.exclusion_code === "excluded-better-as-text")) {
     assert.notEqual(entry.decision_reason, "이 문서는 단일 설명·참조·요청문을 직접 읽는 편이 관계 도식보다 명확하다.", entry.source_document);
     assert.ok(entry.decision_reason.includes(entry.source_section), entry.source_document);
+  }
+});
+
+test("production shared package mirrors retain structured build origins", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const origins = catalog.entries.filter((entry) => Object.hasOwn(entry, "origin_source"));
+  assert.equal(origins.length, 42, "only shared-source package mirrors declare an origin_source");
+
+  const mappings = new Map([
+    ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
+    ["archify", ["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
+    ["im-not-ai", ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
+  ]);
+  for (const entry of origins) {
+    assert.equal(entry.exclusion_code, "excluded-package-mirror", entry.id);
+    assert.deepEqual(Object.keys(entry.origin_source).sort(), ["build_mapping", "source_document"]);
+    const [sourceRoot, destinationRoot] = mappings.get(entry.origin_source.build_mapping) ?? [];
+    assert.ok(sourceRoot, `${entry.id}: origin source uses an approved build mapping`);
+    const productName = `game-design-${entry.product}`;
+    const suffix = entry.source_document.slice(`plugins/${productName}/${destinationRoot}/`.length);
+    assert.notEqual(suffix, entry.source_document, `${entry.id}: mirror uses the declared mapping destination`);
+    assert.equal(entry.origin_source.source_document, `${sourceRoot}/${suffix}`, entry.id);
+    assert.equal(entry.decision_reason.includes("원본은 products/"), false, `${entry.id}: no phantom products origin claim`);
+
+    const [sourceStats, mirrorStats, sourceBytes, mirrorBytes] = await Promise.all([
+      lstat(path.join(repoRoot, entry.origin_source.source_document)),
+      lstat(path.join(repoRoot, entry.source_document)),
+      readFile(path.join(repoRoot, entry.origin_source.source_document)),
+      readFile(path.join(repoRoot, entry.source_document)),
+    ]);
+    assert.equal(sourceStats.isFile() && !sourceStats.isSymbolicLink(), true, `${entry.id}: origin is a regular non-symlink file`);
+    assert.equal(mirrorStats.isFile() && !mirrorStats.isSymbolicLink(), true, `${entry.id}: mirror is a regular non-symlink file`);
+    assert.deepEqual(sourceBytes, mirrorBytes, `${entry.id}: mirror remains byte-identical to its origin`);
   }
 });
 
