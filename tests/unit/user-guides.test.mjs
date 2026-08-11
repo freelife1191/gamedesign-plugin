@@ -13,17 +13,76 @@ import {
 } from "../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
-const productSkillIds = Array.from({ length: 14 }, (_, index) => `skill-${index + 1}`);
-const documentedSkillIds = [...productSkillIds, "svg-infographic"];
+const sourceSkillIdsByProduct = Object.freeze({
+  "game-design-career": [
+    "apply-document-quality-profile",
+    "build-game-design-portfolio",
+    "export-career-documents",
+    "generate-image-assets",
+    "map-game-design-career",
+    "orchestrate-game-design-career",
+    "plan-image-assets",
+    "plan-junior-growth",
+    "polish-game-design-writing",
+    "practice-game-design-interview",
+    "research-game-design-jobs",
+    "reverse-engineer-game-design",
+    "review-game-design-portfolio",
+    "review-image-assets",
+    "visualize-career-roadmap",
+  ],
+  "game-design-studio": [
+    "apply-document-quality-profile",
+    "define-game-vision",
+    "design-game-content",
+    "design-game-economy-and-liveops",
+    "design-game-systems",
+    "design-player-experience",
+    "export-game-design-documents",
+    "generate-image-assets",
+    "orchestrate-game-design-project",
+    "plan-game-production",
+    "plan-image-assets",
+    "polish-game-design-writing",
+    "review-game-design",
+    "review-image-assets",
+    "visualize-game-design",
+  ],
+});
+const sharedVendorSkills = Object.freeze([
+  {
+    id: "svg-infographic",
+    skillPath: ["skillstead", "svg-infographic", "0.9.0", "SKILL.md"],
+    lockPath: ["skillstead", "vendor.lock.json"],
+  },
+  {
+    id: "archify",
+    skillPath: ["archify", "archify", "2.13.0", "SKILL.md"],
+    lockPath: ["archify", "vendor.lock.json"],
+  },
+  {
+    id: "humanize-korean",
+    skillPath: ["im-not-ai", "humanize-korean", "v2.3.0", "SKILL.md"],
+    lockPath: ["im-not-ai", "vendor.lock.json"],
+  },
+]);
+const sharedVendorSkillIds = sharedVendorSkills.map(({ id }) => id).sort();
+const expectedSkillIdsByProduct = Object.freeze(Object.fromEntries(
+  Object.entries(sourceSkillIdsByProduct).map(([productId, ids]) => [productId, [...ids, ...sharedVendorSkillIds].sort()]),
+));
 
-async function withGuideFixture({ omitCareerSkill = false }, check) {
+async function withGuideFixture({ omitDocumentedSkill, omitVendorSkill } = {}, check) {
   const root = await mkdtemp(path.join(tmpdir(), "user-guides-"));
   try {
-    const vendorRoot = path.join(root, "shared/vendor/skillstead/svg-infographic/0.8.3");
-    await mkdir(vendorRoot, { recursive: true });
-    await writeFile(path.join(vendorRoot, "SKILL.md"), "# Skillstead\n");
+    for (const { id, skillPath, lockPath } of sharedVendorSkills) {
+      const vendorRoot = path.join(root, "shared/vendor", ...skillPath.slice(0, -1));
+      await mkdir(vendorRoot, { recursive: true });
+      await mkdir(path.join(root, "shared/vendor", ...lockPath.slice(0, -1)), { recursive: true });
+      await writeFile(path.join(root, "shared/vendor", ...lockPath), "{\"fixture\":true}\n");
+      if (id !== omitVendorSkill) await writeFile(path.join(vendorRoot, "SKILL.md"), "# Shared vendor skill\n");
+    }
     await writeFile(path.join(root, "README.md"), "# Root\n\nOPENAI_API_KEY=\n");
-    for (const productId of ["game-design-career", "game-design-studio"]) {
+    for (const [productId, productSkillIds] of Object.entries(sourceSkillIdsByProduct)) {
       const productRoot = path.join(root, "products", productId, "plugin");
       await mkdir(path.join(productRoot, "assets/templates"), { recursive: true });
       for (const skillId of productSkillIds) {
@@ -34,8 +93,8 @@ async function withGuideFixture({ omitCareerSkill = false }, check) {
       const guidesRoot = path.join(root, "guides", productId, "skills");
       await mkdir(guidesRoot, { recursive: true });
       await writeFile(path.join(guidesRoot, "README.md"), "prompt-only select required all gpt-image-2 low\n");
-      for (const skillId of documentedSkillIds) {
-        if (omitCareerSkill && productId === "game-design-career" && skillId === "svg-infographic") continue;
+      for (const skillId of expectedSkillIdsByProduct[productId]) {
+        if (omitDocumentedSkill?.productId === productId && omitDocumentedSkill.skillId === skillId) continue;
         await writeFile(path.join(guidesRoot, `${skillId}.md`), `# ${skillId}\n`);
       }
     }
@@ -100,15 +159,12 @@ async function writeUseCaseValidationFixture(root, manifest) {
   ]);
 }
 
-test("product inventory includes 14 product skills plus vendored Skillstead", async () => {
-  const studio = await collectProductInventory(repoRoot, "game-design-studio");
-  const career = await collectProductInventory(repoRoot, "game-design-career");
-  assert.equal(studio.skillIds.length, 15);
-  assert.equal(career.skillIds.length, 15);
-  assert.equal(studio.templateIds.length, 15);
-  assert.equal(career.templateIds.length, 15);
-  assert.ok(studio.skillIds.includes("svg-infographic"));
-  assert.ok(career.skillIds.includes("svg-infographic"));
+test("product inventory matches each product's 15 source skills and three shared vendor skills", async () => {
+  for (const productId of Object.keys(sourceSkillIdsByProduct)) {
+    const inventory = await collectProductInventory(repoRoot, productId);
+    assert.deepEqual(inventory.skillIds, expectedSkillIdsByProduct[productId]);
+    assert.equal(inventory.templateIds.length, 15);
+  }
 });
 
 test("Markdown helpers expose only visible links and headings", () => {
@@ -677,28 +733,49 @@ test("guide validation decodes anchors exactly without case or punctuation norma
   });
 });
 
-test("production guides expose 119 files and 2,228 labeled visible Markdown links", async () => {
+test("production guide graph has the exact installed skill IDs and visible link inventory", async () => {
+  for (const [productId, expectedSkillIds] of Object.entries(expectedSkillIdsByProduct)) {
+    const actualSkillIds = (await readdir(path.join(repoRoot, "guides", productId, "skills"), { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && entry.name !== "README.md" && entry.name.endsWith(".md"))
+      .map((entry) => path.basename(entry.name, ".md"))
+      .sort();
+    assert.deepEqual(actualSkillIds, expectedSkillIds, `${productId}: guides match the installed skill inventory`);
+  }
   const files = await markdownFiles(path.join(repoRoot, "guides"));
   const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
-  assert.equal(files.length, 119);
-  assert.equal(links.length, 2228);
+  assert.equal(files.length, 147);
+  assert.equal(links.length, 2329);
   assert.equal(links.filter(({ label }) => label === "").length, 0);
-  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2216);
+  assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2317);
 });
 
-test("complete guide validation excludes skills indexes and counts all 30 installed guides", async () => {
+test("complete guide validation excludes skills indexes and counts all 36 installed guides", async () => {
   await withGuideFixture({}, async (root) => {
     const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
-    assert.equal(result.counts.skillGuides, 30);
+    assert.equal(result.counts.skillGuides, 36);
     assert.equal(result.errors.some((error) => error.includes("skill guide inventory mismatch")), false);
   });
 });
 
-test("complete guide validation rejects a product whose guide IDs differ from inventory", async () => {
-  await withGuideFixture({ omitCareerSkill: true }, async (root) => {
-    const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
-    assert.ok(result.errors.some((error) => error.includes("game-design-career skill guide inventory mismatch")));
-  });
+test("complete guide validation rejects every missing shared skill guide", async () => {
+  for (const skillId of sharedVendorSkillIds) {
+    await withGuideFixture({ omitDocumentedSkill: { productId: "game-design-career", skillId } }, async (root) => {
+      const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
+      assert.ok(result.errors.some((error) => error.includes("game-design-career skill guide inventory mismatch")), skillId);
+    });
+  }
+});
+
+test("product inventory rejects every missing shared vendor skill file", async () => {
+  for (const skillId of sharedVendorSkillIds) {
+    await withGuideFixture({ omitVendorSkill: skillId }, async (root) => {
+      await assert.rejects(
+        collectProductInventory(root, "game-design-career"),
+        (error) => error?.code === "ENOENT" && error.path.endsWith(path.join(...sharedVendorSkills.find((skill) => skill.id === skillId).skillPath)),
+        skillId,
+      );
+    });
+  }
 });
 
 test("guide secret scanner includes root README while allowing empty-key examples", async () => {
