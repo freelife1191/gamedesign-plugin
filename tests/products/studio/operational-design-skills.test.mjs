@@ -1,14 +1,19 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
+
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
-const gateRegistryPath = path.join(pluginRoot, "references/shared/responsible-design/gates.json");
-const skillGateRegistry = "../../references/shared/responsible-design/gates.json";
-const methodGateRegistry = "../shared/responsible-design/gates.json";
+const gateRegistryPath = path.join(repoRoot, "shared/responsible-design/gates.json");
+const skillGateRegistry = "../../../../../shared/responsible-design/gates.json";
+const packagedSkillGateRegistry = "../../references/shared/responsible-design/gates.json";
+const methodGateRegistry = "../../../../../shared/responsible-design/gates.json";
+const packagedMethodGateRegistry = "../shared/responsible-design/gates.json";
 const currentPracticePath = "../shared/knowledge/trends/2026-current-practices.md";
 const currentRegisterPath = "../shared/knowledge/trends/source-register.json";
 
@@ -307,6 +312,35 @@ test("every operational skill owns its workflow, output, review, and gate contra
     );
     for (const reviewer of contract.reviewers) assert.match(section(skill, "Role reviewers"), new RegExp(`\\b${reviewer}\\b`, "u"));
     for (const blocker of contract.blockers) assert.match(section(skill, "Completion checks"), new RegExp(`\\b${blocker}\\b`, "u"));
+  }
+});
+
+test("operational skill gate links project the canonical source registry into the package", async (t) => {
+  const stagingRoot = await mkdtemp(path.join(tmpdir(), "studio-operational-gates-"));
+  t.after(() => rm(stagingRoot, { recursive: true, force: true }));
+
+  const canonicalRegistry = await readFile(gateRegistryPath);
+  const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+
+  for (const [skillId, contract] of Object.entries(contracts)) {
+    const sourceSkillPath = path.join(pluginRoot, "skills", skillId, "SKILL.md");
+    const packagedSkillPath = path.join(build.outputDir, "skills", skillId, "SKILL.md");
+    const sourceSkill = await readFile(sourceSkillPath, "utf8");
+    const packagedSkill = await readFile(packagedSkillPath, "utf8");
+
+    assert.match(sourceSkill, new RegExp(`\\[gates\\.json\\]\\(${skillGateRegistry.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: canonical source link`);
+    assert.match(packagedSkill, new RegExp(`\\[gates\\.json\\]\\(${packagedSkillGateRegistry.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: package-local link`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(sourceSkillPath), skillGateRegistry)), canonicalRegistry, `${skillId}: canonical source bytes`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(packagedSkillPath), packagedSkillGateRegistry)), canonicalRegistry, `${skillId}: packaged registry bytes`);
+
+    const sourceMethodPath = path.join(pluginRoot, "references", "methods", contract.method);
+    const packagedMethodPath = path.join(build.outputDir, "references", "methods", contract.method);
+    const sourceMethod = await readFile(sourceMethodPath, "utf8");
+    const packagedMethod = await readFile(packagedMethodPath, "utf8");
+    assert.match(sourceMethod, new RegExp(`\\[gates\\.json\\]\\(${methodGateRegistry.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: canonical source method link`);
+    assert.match(packagedMethod, new RegExp(`\\[gates\\.json\\]\\(${packagedMethodGateRegistry.replaceAll(".", "\\.")}\\)`, "u"), `${skillId}: package-local method link`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(sourceMethodPath), methodGateRegistry)), canonicalRegistry, `${skillId}: canonical source method bytes`);
+    assert.deepEqual(await readFile(path.resolve(path.dirname(packagedMethodPath), packagedMethodGateRegistry)), canonicalRegistry, `${skillId}: packaged method registry bytes`);
   }
 });
 

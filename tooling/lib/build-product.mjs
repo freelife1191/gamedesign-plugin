@@ -28,6 +28,20 @@ const sourceOnlySkillsteadFallbacks = Object.freeze({
     source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
 });
+const packageLinkProjections = Object.freeze({
+  "game-design-studio": Object.freeze([
+    Object.freeze({
+      path: /^skills\/[^/]+\/SKILL\.md$/u,
+      source: "../../../../../shared/responsible-design/gates.json",
+      package: "../../references/shared/responsible-design/gates.json",
+    }),
+    Object.freeze({
+      path: /^references\/methods\/[^/]+\.md$/u,
+      source: "../../../../../shared/responsible-design/gates.json",
+      package: "../shared/responsible-design/gates.json",
+    }),
+  ]),
+});
 const snapshotStagingCapabilities = new WeakSet();
 
 function isInside(root, candidate) {
@@ -252,6 +266,18 @@ function removeSourceOnlySkillsteadFallback(entry, productName) {
   return { ...entry, bytes: Buffer.from(source.replace(fallback.source, "")) };
 }
 
+function projectPackageLocalLinks(entry, productName) {
+  const projections = packageLinkProjections[productName];
+  if (!projections) return entry;
+
+  let source = entry.bytes.toString("utf8");
+  for (const projection of projections) {
+    if (!projection.path.test(entry.relativePath)) continue;
+    source = source.replaceAll(`](${projection.source})`, `](${projection.package})`);
+  }
+  return { ...entry, bytes: Buffer.from(source) };
+}
+
 function isRealEnvironmentFile(relativePath) {
   const name = path.posix.basename(relativePath);
   return name === ".env" || (name.startsWith(".env.") && name !== ".env.example");
@@ -355,7 +381,14 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     const sourceDirectory = joinWithin(productRoot, sourceRoot, "product source root");
     const entries = await collectTree(sourceDirectory, { label: `products/${productName}/${sourceRoot}` });
     assertNoRealEnvironmentFiles(entries, `products/${productName}/${sourceRoot}`);
-    for (const entry of entries) addEntry(targets, removeSourceOnlySkillsteadFallback(entry, productName), "", `product:${sourceRoot}`);
+    for (const entry of entries) {
+      addEntry(
+        targets,
+        projectPackageLocalLinks(removeSourceOnlySkillsteadFallback(entry, productName), productName),
+        "",
+        `product:${sourceRoot}`,
+      );
+    }
   }
 
   const entries = [...targets.values()].sort((left, right) => comparePaths(left.relativePath, right.relativePath));
