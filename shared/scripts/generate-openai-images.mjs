@@ -1,9 +1,7 @@
 import { createHash } from "node:crypto";
-import { lstat, readFile } from "node:fs/promises";
-import path from "node:path";
 
 import { decodeOpenAIImage, prepareImageOutput, promoteValidatedPng } from "./lib/image-file-validation.mjs";
-import { inspectCompletePng } from "./lib/complete-png-validation.mjs";
+import { loadSecureReferenceInputs } from "./lib/image-reference-loader.mjs";
 
 const generationEndpoint = "https://api.openai.com/v1/images/generations";
 const editEndpoint = "https://api.openai.com/v1/images/edits";
@@ -13,7 +11,6 @@ const retryDelayCeilingMs = 2_000;
 const safeRequestId = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const safeModel = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,127})$/u;
 const qualities = new Set(["low", "medium", "high", "auto"]);
-const digestPattern = /^[a-f0-9]{64}$/u;
 const defaultRequestTimeoutMs = 30_000;
 const minimumRequestTimeoutMs = 1;
 const maximumRequestTimeoutMs = 120_000;
@@ -41,43 +38,17 @@ function validJob(job) {
     && typeof job.prompt === "string" && job.prompt.trim() !== "" && job.output && typeof job.output === "object";
 }
 
-function safeReferencePath(value) {
-  return typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\\")
-    && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value.startsWith("assets/generated/");
-}
-
 function isReferenceJob(job) {
   return Array.isArray(job?.reference_images) && job.reference_images.length > 0;
 }
 
 async function readReferenceInputs(job, stagingRoot) {
   if (!isReferenceJob(job)) return { ok: true, inputs: [] };
-  if (typeof stagingRoot !== "string" || stagingRoot.length === 0) return { ok: false };
-  const root = path.resolve(stagingRoot);
-  const references = [];
-  const seen = new Set();
-  for (const reference of job.reference_images) {
-    if (!reference || typeof reference !== "object" || Object.keys(reference).length !== 3
-      || typeof reference.asset_id !== "string" || !safeReferencePath(reference.path) || !digestPattern.test(reference.sha256 ?? "")
-      || seen.has(reference.asset_id)) return { ok: false };
-    seen.add(reference.asset_id);
-    let cursor = root;
-    try {
-      for (const segment of reference.path.split("/")) {
-        cursor = path.resolve(cursor, segment);
-        const stats = await lstat(cursor);
-        if (stats.isSymbolicLink()) return { ok: false };
-      }
-      const stats = await lstat(cursor);
-      if (!stats.isFile() || stats.size > 12 * 1024 * 1024) return { ok: false };
-      const bytes = await readFile(cursor);
-      if (createHash("sha256").update(bytes).digest("hex") !== reference.sha256 || !inspectCompletePng(bytes).ok) return { ok: false };
-      references.push({ ...reference, bytes, filename: path.posix.basename(reference.path) });
-    } catch {
-      return { ok: false };
-    }
+  try {
+    return { ok: true, inputs: await loadSecureReferenceInputs({ artifactRoot: stagingRoot, references: job.reference_images }) };
+  } catch {
+    return { ok: false };
   }
-  return { ok: true, inputs: references };
 }
 
 function gptImageSizeIsValid(output) {
@@ -249,8 +220,9 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
-    clearTimeout(timeout);
     const parsed = await readBoundedJson(response);
+    clearTimeout(timeout);
+    if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
     if (!parsed.ok) {
       if (response?.status >= 500 && attempts < maximumAttempts) {
         await sleepFn(retryDelay(response, attempts, now));

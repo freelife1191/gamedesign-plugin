@@ -194,6 +194,50 @@ test("generateOpenAIImages sends master-referenced gpt-image-2 jobs as ordered m
   assert.deepEqual(Buffer.from(await calls[0].options.body.getAll("image[]")[0].arrayBuffer()), png());
 });
 
+test("generateOpenAIImages rejects excess reference inputs before any provider request", async (t) => {
+  const root = await staging(t);
+  await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+  const bytes = png();
+  const reference_images = await Promise.all(Array.from({ length: 9 }, async (_value, index) => {
+    const asset_id = `reference-${index}`;
+    const referencePath = `assets/generated/${asset_id}.png`;
+    await writeFile(path.join(root, referencePath), bytes);
+    return { asset_id, path: referencePath, sha256: sha256(bytes) };
+  }));
+  let calls = 0;
+  const result = await generateOpenAIImages({
+    jobs: [job({ asset_id: "too-many-references", output: { path: "assets/generated/too-many-references.png", width: 1024, height: 1024, format: "png" }, reference_images })],
+    apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async () => { calls += 1; return successResponse(); }, sleepFn: async () => {},
+  });
+  assert.equal(calls, 0);
+  assert.deepEqual(result.failures, [{ asset_id: "too-many-references", generation_state: "qa-failed", reason: "invalid-generation-reference", attempts: 0 }]);
+});
+
+test("generateOpenAIImages rebuilds ordered edit multipart data for every retry", async (t) => {
+  const root = await staging(t);
+  await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+  const master = png();
+  await writeFile(path.join(root, "assets", "generated", "hero-master.png"), master);
+  const bodies = [];
+  let attempts = 0;
+  const result = await generateOpenAIImages({
+    jobs: [derivativeJob()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+    fetchFn: async (_url, options) => {
+      bodies.push(options.body);
+      attempts += 1;
+      return attempts === 1
+        ? response({ status: 503, body: { error: { type: "server_error", code: "server_error" } } })
+        : successResponse();
+    },
+    sleepFn: async () => {},
+  });
+  assert.equal(result.failures.length, 0);
+  assert.equal(bodies.length, 2);
+  assert.notEqual(bodies[0], bodies[1]);
+  for (const body of bodies) assert.deepEqual(body.getAll("image[]").map((file) => file.name), ["hero-master.png"]);
+});
+
 test("generateOpenAIImages aborts a never-resolving OpenAI request, writes no PNG, and does not fall back", async (t) => {
   const root = await staging(t);
   let aborts = 0;
@@ -214,6 +258,39 @@ test("generateOpenAIImages aborts a never-resolving OpenAI request, writes no PN
   assert.equal(aborts, 1);
   assert.deepEqual(result.failures, [{ asset_id: "timed-out", generation_state: "generation-failed", reason: "provider-timeout", attempts: 1 }]);
   await assert.rejects(lstat(path.join(root, "assets", "generated", "timed-out.png")));
+});
+
+test("generateOpenAIImages keeps its timeout active until a streamed response body finishes decoding", async (t) => {
+  const root = await staging(t);
+  let calls = 0;
+  let cancels = 0;
+  const result = await Promise.race([
+    generateOpenAIImages({
+      jobs: [job({ asset_id: "body-timeout", output: { path: "assets/generated/body-timeout.png", width: 1024, height: 1024, format: "png" } })],
+      apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, requestTimeoutMs: 5,
+      fetchFn: async (_url, options) => {
+        calls += 1;
+        return {
+          status: 200,
+          headers: { get: () => null },
+          body: {
+            getReader() {
+              return {
+                read() { return new Promise((_resolve, reject) => options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true })); },
+                async cancel() { cancels += 1; },
+                releaseLock() {},
+              };
+            },
+          },
+        };
+      },
+      sleepFn: async () => assert.fail("timed out response decoding must not retry"),
+    }),
+    new Promise((_resolve, reject) => setTimeout(() => reject(new Error("response decode timeout remained unbounded")), 100)),
+  ]);
+  assert.equal(calls, 1);
+  assert.equal(cancels, 1);
+  assert.deepEqual(result.failures, [{ asset_id: "body-timeout", generation_state: "generation-failed", reason: "provider-timeout", attempts: 1 }]);
 });
 
 test("generateOpenAIImages rejects empty or unsafe model and quality without a network call or secret echo", async (t) => {

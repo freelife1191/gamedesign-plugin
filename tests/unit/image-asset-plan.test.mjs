@@ -82,6 +82,52 @@ test("buildImageAssetPlan derives a deterministic closed manifest from validated
   assert.deepEqual(first.summary, { required: 1, recommended: 1, variants: 1, total: 3 });
 });
 
+test("buildImageAssetPlan derives a master-first derivative declaration entirely from image_needs", () => {
+  const master = { ...artifact.image_needs[0], variant: "master" };
+  const derivative = {
+    ...artifact.image_needs[0],
+    variant: "detail",
+    derivative_of: "boss-telegraph-master",
+    reference_asset_ids: ["boss-telegraph-master"],
+    style_anchor_asset_ids: ["boss-telegraph-master"],
+    character_anchor_asset_ids: ["boss-telegraph-master"],
+  };
+
+  const { manifest } = buildImageAssetPlan({
+    artifact: { ...artifact, image_needs: [derivative, master] },
+    qualityProfile,
+  });
+
+  assert.deepEqual(manifest.assets.map((asset) => ({
+    asset_id: asset.asset_id,
+    derivative_of: asset.derivative_of,
+    reference_asset_ids: asset.reference_asset_ids,
+    reference_images: asset.reference_images,
+    consistency_profile: asset.consistency_profile,
+    prompt_lineage: asset.prompt_lineage,
+  })), [
+    {
+      asset_id: "boss-telegraph-detail",
+      derivative_of: "boss-telegraph-master",
+      reference_asset_ids: ["boss-telegraph-master"],
+      reference_images: [],
+      consistency_profile: { style_anchor_asset_ids: ["boss-telegraph-master"], character_anchor_asset_ids: ["boss-telegraph-master"] },
+      prompt_lineage: { parent_prompt_digests: [] },
+    },
+    {
+      asset_id: "boss-telegraph-master",
+      derivative_of: null,
+      reference_asset_ids: [],
+      reference_images: [],
+      consistency_profile: { style_anchor_asset_ids: [], character_anchor_asset_ids: [] },
+      prompt_lineage: { parent_prompt_digests: [] },
+    },
+  ]);
+  assert.deepEqual(selectGenerationJobs({ manifest, mode: "all" }).map(({ asset_id }) => asset_id), [
+    "boss-telegraph-master", "boss-telegraph-detail",
+  ]);
+});
+
 test("buildImageAssetPlan preserves generated approved removed slots and requires planning review without altering lifecycle data", () => {
   const existing = plan().manifest;
   const preserved = structuredClone(existing.assets[0]);
@@ -235,6 +281,20 @@ test("selectGenerationJobs applies only finite manifest-declared scope without m
     selectedAssetIds: ["boss-telegraph-close-up", "combat-cover"],
   }).map(({ asset_id }) => asset_id), ["combat-cover", "boss-telegraph-close-up"]);
   assert.deepEqual(manifest, before);
+});
+
+test("selectGenerationJobs requires a declared master to be generated or selected before its derivative", () => {
+  const master = { ...artifact.image_needs[0], variant: "master" };
+  const derivative = {
+    ...artifact.image_needs[0], variant: "detail", derivative_of: "boss-telegraph-master",
+    reference_asset_ids: ["boss-telegraph-master"],
+  };
+  const manifest = buildImageAssetPlan({ artifact: { ...artifact, image_needs: [derivative, master] }, qualityProfile }).manifest;
+
+  assert.throws(() => selectGenerationJobs({ manifest, mode: "select", selectedAssetIds: ["boss-telegraph-detail"] }), /master.*generated|generated.*master/i);
+  assert.deepEqual(selectGenerationJobs({
+    manifest, mode: "select", selectedAssetIds: ["boss-telegraph-detail", "boss-telegraph-master"],
+  }).map(({ asset_id }) => asset_id), ["boss-telegraph-master", "boss-telegraph-detail"]);
 });
 
 test("selectGenerationJobs returns the planning target output without mutating a retained actual output", () => {

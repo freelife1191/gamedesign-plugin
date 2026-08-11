@@ -7,6 +7,7 @@ import { buildImageAssetPlan, selectGenerationJobs } from "./build-image-asset-p
 import { compileImagePrompts } from "./compile-image-prompts.mjs";
 import { generateOpenAIImages } from "./generate-openai-images.mjs";
 import { prepareImageOutput, promoteValidatedPng } from "./lib/image-file-validation.mjs";
+import { loadSecureReferenceInputs, readSecureReferenceFile } from "./lib/image-reference-loader.mjs";
 import { resolveImageProvider } from "./lib/image-provider.mjs";
 import { canonicalArtifactRoot, ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { applyImageReviewTransition, validateImageAssetManifest } from "./validate-image-assets.mjs";
@@ -402,10 +403,33 @@ async function hostJobsForCallback(root, jobs) {
     reference_images: clone(reference_images ?? []),
     consistency_profile: clone(consistency_profile ?? { style_anchor_asset_ids: [], character_anchor_asset_ids: [] }),
     prompt_lineage: clone(prompt_lineage ?? { parent_prompt_digests: [] }),
-    reference_inputs: await Promise.all((reference_images ?? []).map(async (reference) => ({
-      ...clone(reference), bytes: await readRegularArtifactBytes(root, reference.path),
-    }))),
+    reference_inputs: (await loadSecureReferenceInputs({ artifactRoot: root, references: reference_images ?? [] }))
+      .map(({ asset_id: referenceAssetId, path: referencePath, sha256: referenceDigest, bytes }) => ({
+        asset_id: referenceAssetId, path: referencePath, sha256: referenceDigest, bytes,
+      })),
   })));
+}
+
+async function bindDeclaredReferenceInputs(root, manifest, job) {
+  if (!Array.isArray(job.reference_asset_ids)) return job;
+  if (job.reference_asset_ids.length === 0) return job;
+  const byId = new Map(manifest.assets.map((asset) => [asset.asset_id, asset]));
+  const referenceImages = [];
+  const parentPromptDigests = [];
+  for (const assetId of job.reference_asset_ids) {
+    const source = byId.get(assetId);
+    if (!source || source.generation_state !== "generated" || !digestPattern.test(source.prompt_digest ?? "")) {
+      throw new Error("Declared reference asset is not generated with a bound prompt.");
+    }
+    const file = await readSecureReferenceFile({ artifactRoot: root, path: source.output?.path });
+    referenceImages.push({ asset_id: source.asset_id, path: source.output.path, sha256: file.digest });
+    parentPromptDigests.push(source.prompt_digest);
+  }
+  return {
+    ...clone(job),
+    reference_images: referenceImages,
+    prompt_lineage: { parent_prompt_digests: parentPromptDigests },
+  };
 }
 
 async function prepareHostOutputs(root, jobs) {
@@ -486,6 +510,8 @@ export async function generateImageAssetWorkflow({
   }
   const { apiKey, ...publicConfig } = config;
   assertCompiledPromptBindings(manifest);
+  const sourceValidation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  if (!sourceValidation.ok) throw new Error(`Generation requires a current image manifest: ${sourceValidation.errors.map(({ code }) => code).join(", ")}`);
   const receipt = publicConfig.mode === "select" ? validateSelectionReceipt(selectionReceipt, selectedAssetIds) : undefined;
   const jobs = selectGenerationJobs({ manifest, mode: publicConfig.mode, selectedAssetIds });
   const selection = selectionRecord(publicConfig.mode, selectedAssetIds, receipt);
@@ -502,11 +528,51 @@ export async function generateImageAssetWorkflow({
     reservation = await reserveGenerationAttempt(root, jobs, decision.provider, publicConfig, now, attemptId);
   }
   let providerResult = { results: [], failures: [] };
-  if (jobs.length > 0 && decision.provider === "openai") {
+  let executionManifest = clone(manifest);
+  const executedJobs = [];
+  const hasDeclaredReferences = jobs.some((job) => Array.isArray(job.reference_asset_ids) && job.reference_asset_ids.length > 0);
+  if (jobs.length > 0 && hasDeclaredReferences && ["openai", "codex"].includes(decision.provider)) {
+    for (const job of jobs) {
+      let boundJob;
+      try {
+        boundJob = await bindDeclaredReferenceInputs(root, executionManifest, job);
+      } catch {
+        providerResult.failures.push({ asset_id: job.asset_id, generation_state: "qa-failed", reason: "invalid-generation-reference", provenance: { provider: "codex-host" } });
+        executedJobs.push(job);
+        continue;
+      }
+      executedJobs.push(boundJob);
+      let one;
+      if (decision.provider === "openai") {
+        one = await generateViaOpenAI({
+          jobs: [boundJob], apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
+          requestTimeoutMs: config.requestTimeoutMs ?? 30_000, generateOpenAIImagesFn,
+        });
+      } else if (typeof hostGenerate !== "function") {
+        one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" }] };
+      } else {
+        try {
+          one = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: await hostJobsForCallback(root, [boundJob]) }), [boundJob]), [boundJob], preparedHostOutputs);
+        } catch (error) {
+          if (error?.message?.startsWith("Host generation")) throw error;
+          one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } }] };
+        }
+      }
+      providerResult.results.push(...one.results);
+      providerResult.failures.push(...one.failures);
+      executionManifest = applyProviderResults(executionManifest, one, decision.provider, publicConfig);
+      const sourceIndex = executionManifest.assets.findIndex(({ asset_id }) => asset_id === boundJob.asset_id);
+      if (sourceIndex !== -1) {
+        executionManifest.assets[sourceIndex].reference_images = clone(boundJob.reference_images ?? []);
+        executionManifest.assets[sourceIndex].prompt_lineage = clone(boundJob.prompt_lineage ?? { parent_prompt_digests: [] });
+      }
+    }
+  } else if (jobs.length > 0 && decision.provider === "openai") {
     providerResult = await generateViaOpenAI({
       jobs, apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
       requestTimeoutMs: config.requestTimeoutMs ?? 30_000, generateOpenAIImagesFn,
     });
+    executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "codex") {
     if (typeof hostGenerate !== "function") {
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
@@ -518,13 +584,15 @@ export async function generateImageAssetWorkflow({
         providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
       }
     }
+    executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "unavailable") {
     providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "no-provider-available" })) };
+    executedJobs.push(...jobs);
   }
   const generationReceipts = jobs.length > 0
-    ? await writeGenerationReceipts(root, jobs, providerResult, decision.provider, publicConfig, now, attemptId, reservation)
+    ? await writeGenerationReceipts(root, executedJobs, providerResult, decision.provider, publicConfig, now, attemptId, reservation)
     : new Map();
-  const nextManifest = applyProviderResults(manifest, providerResult, decision.provider, publicConfig, generationReceipts);
+  const nextManifest = applyProviderResults(executionManifest, providerResult, decision.provider, publicConfig, generationReceipts);
   const validation = validateImageAssetManifest(nextManifest, { artifactRoot: root });
   if (!validation.ok) throw new Error(`Workflow produced an invalid image manifest: ${validation.errors.map(({ code }) => code).join(", ")}`);
 

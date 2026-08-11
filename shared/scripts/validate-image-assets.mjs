@@ -97,6 +97,12 @@ function validateLineage(errors, asset, assetPath, artifactRoot) {
     errors.push(error("invalid_derivative_parent", `${assetPath}.derivative_of`, "Derivative parent must be null or a stable asset ID."));
   }
   let referenceFault = false;
+  const declaredReferenceIds = asset.reference_asset_ids;
+  if (declaredReferenceIds !== undefined && (!Array.isArray(declaredReferenceIds)
+    || new Set(declaredReferenceIds).size !== declaredReferenceIds.length
+    || !declaredReferenceIds.every((id) => assetIdPattern.test(id)))) {
+    errors.push(error("invalid_reference_asset_ids", `${assetPath}.reference_asset_ids`, "Reference asset IDs must be an ordered array of unique stable asset IDs."));
+  }
   if (!Array.isArray(asset.reference_images)) {
     errors.push(error("invalid_reference_images", `${assetPath}.reference_images`, "Reference images must be an ordered array."));
   } else {
@@ -116,6 +122,11 @@ function validateLineage(errors, asset, assetPath, artifactRoot) {
         referenceFault = true;
       }
     });
+    if (Array.isArray(declaredReferenceIds) && declaredReferenceIds.length > 0 && asset.reference_images.length > 0
+      && JSON.stringify(asset.reference_images.map(({ asset_id }) => asset_id)) !== JSON.stringify(declaredReferenceIds)) {
+      errors.push(error("reference_asset_binding_mismatch", `${assetPath}.reference_images`, "Bound reference images must match the declared ordered reference asset IDs."));
+      referenceFault = true;
+    }
   }
   if (!exactKeys(asset.consistency_profile, ["style_anchor_asset_ids", "character_anchor_asset_ids"])
     || !Array.isArray(asset.consistency_profile?.style_anchor_asset_ids) || !Array.isArray(asset.consistency_profile?.character_anchor_asset_ids)
@@ -125,6 +136,9 @@ function validateLineage(errors, asset, assetPath, artifactRoot) {
   if (!exactKeys(asset.prompt_lineage, ["parent_prompt_digests"])
     || !Array.isArray(asset.prompt_lineage?.parent_prompt_digests) || !asset.prompt_lineage.parent_prompt_digests.every((value) => digestPattern.test(value))) {
     errors.push(error("invalid_prompt_lineage", `${assetPath}.prompt_lineage`, "Prompt lineage requires SHA-256 parent prompt digests."));
+  } else if (Array.isArray(declaredReferenceIds) && declaredReferenceIds.length > 0 && asset.reference_images?.length > 0
+    && asset.prompt_lineage.parent_prompt_digests.length !== declaredReferenceIds.length) {
+    errors.push(error("prompt_lineage_binding_mismatch", `${assetPath}.prompt_lineage.parent_prompt_digests`, "Bound reference images require matching ordered parent prompt digests."));
   }
   if (referenceFault && asset.approval_state !== "concept-draft") {
     errors.push(error("approved_derivative_reference_stale", `${assetPath}.reference_images`, "Approved derivatives require current master reference bytes."));
@@ -154,7 +168,8 @@ function validateLineageRelationships(errors, assets) {
           errors.push(error("self_reference", `${assetPath}.derivative_of`, "An image cannot reference itself."));
         }
         if (parent.asset_set_id !== asset.asset_set_id) errors.push(error("cross_set_derivative", `${assetPath}.derivative_of`, "Derivative parent must belong to the same asset set."));
-        if (!asset.reference_images?.some((reference) => reference.asset_id === parent.asset_id)) {
+        const declaredReferences = asset.reference_asset_ids?.length ? asset.reference_asset_ids : asset.reference_images?.map((reference) => reference.asset_id) ?? [];
+        if (!declaredReferences.includes(parent.asset_id)) {
           errors.push(error("missing_parent_reference", `${assetPath}.reference_images`, "Derivative parent must be an ordered reference image."));
         }
         visit(parent, [...stack, asset.asset_id]);
@@ -164,6 +179,27 @@ function validateLineageRelationships(errors, assets) {
       const anchor = byId.get(anchorId);
       if (!anchor || anchor.asset_set_id !== asset.asset_set_id) {
         errors.push(error("invalid_consistency_anchor", `assets[${assets.indexOf(asset)}].consistency_profile`, "Consistency anchors must exist in the same asset set."));
+      }
+    }
+    if (Array.isArray(asset.reference_asset_ids) && asset.reference_asset_ids.length > 0) {
+      const declaredReferences = new Set(asset.reference_asset_ids);
+      for (const anchorId of [...(asset.consistency_profile?.style_anchor_asset_ids ?? []), ...(asset.consistency_profile?.character_anchor_asset_ids ?? [])]) {
+        if (!declaredReferences.has(anchorId)) {
+          errors.push(error("consistency_anchor_not_reference", `assets[${assets.indexOf(asset)}].consistency_profile`, "Declared consistency anchors must be ordered reference asset IDs."));
+        }
+      }
+      if (Array.isArray(asset.reference_images) && asset.reference_images.length > 0) {
+        asset.reference_images.forEach((reference, referenceIndex) => {
+          const source = byId.get(reference.asset_id);
+          if (source?.output?.path !== reference.path) {
+            errors.push(error("reference_path_binding_mismatch", `assets[${assets.indexOf(asset)}].reference_images[${referenceIndex}].path`, "Reference paths must bind to their manifest asset output path."));
+          }
+          const expectedPromptDigest = source?.prompt_digest;
+          if (digestPattern.test(expectedPromptDigest ?? "")
+            && asset.prompt_lineage?.parent_prompt_digests?.[referenceIndex] !== expectedPromptDigest) {
+            errors.push(error("prompt_digest_binding_mismatch", `assets[${assets.indexOf(asset)}].prompt_lineage.parent_prompt_digests[${referenceIndex}]`, "Parent prompt digest must bind to the same ordered reference asset."));
+          }
+        });
       }
     }
     visiting.delete(asset.asset_id);
@@ -251,7 +287,7 @@ function validateAsset(asset, index, artifactRoot) {
   rejectUnknownProperties(errors, asset, new Set([
     "asset_id", "type", "requirement", "generation_state", "approval_state", "planning", "purpose", "placement", "alt_text", "readability",
     "art_brief", "prompt", "prompt_digest", "output", "provider", "generation_receipts", "rights", "reviews", "technical_fit", "gameplay_readability",
-    "asset_set_id", "derivative_of", "reference_images", "consistency_profile", "prompt_lineage",
+    "asset_set_id", "derivative_of", "reference_asset_ids", "reference_images", "consistency_profile", "prompt_lineage",
   ]), assetPath);
   if (!assetIdPattern.test(asset.asset_id ?? "")) errors.push(error("invalid_asset_id", `${assetPath}.asset_id`, "Asset IDs must be stable kebab-case identifiers."));
   if (!assetTypes.has(asset.type)) errors.push(error("invalid_asset_type", `${assetPath}.type`, "Asset type is not approved."));

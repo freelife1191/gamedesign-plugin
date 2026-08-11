@@ -241,6 +241,42 @@ test("Studio master image and two derivatives require one set ID, ordered local 
   ]);
 });
 
+test("Studio generates an image_needs-declared master before binding its derivative to the current ordered reference", async (t) => {
+  const root = await workflowRoot(t, "studio-declared-master-dag-");
+  const declared = {
+    ...artifact,
+    image_needs: [
+      { ...artifact.image_needs[0], variant: "master" },
+      {
+        ...artifact.image_needs[0], variant: "detail", derivative_of: "hero-master",
+        reference_asset_ids: ["hero-master"],
+        consistency_anchors: { style_anchor_asset_ids: ["hero-master"], character_anchor_asset_ids: ["hero-master"] },
+      },
+    ],
+  };
+  const calls = [];
+  const result = await runImageAssetWorkflow({
+    artifactRoot: root, artifact: declared, qualityProfile: profile,
+    config: { mode: "all", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
+    codexCapability: { status: "unavailable" }, sleepFn: async () => {},
+    fetchFn: async (url, options) => {
+      calls.push({ url, options });
+      const body = Buffer.from(JSON.stringify({ data: [{ b64_json: png().toString("base64") }] }));
+      return { status: 200, headers: { get: (name) => name === "content-length" ? String(body.length) : "req-declared-dag" }, body: { async *[Symbol.asyncIterator]() { yield body; } } };
+    },
+  });
+  const master = result.manifest.assets.find(({ asset_id }) => asset_id === "hero-master");
+  const derivative = result.manifest.assets.find(({ asset_id }) => asset_id === "hero-detail");
+
+  assert.deepEqual(calls.map(({ url }) => url), ["https://api.openai.com/v1/images/generations", "https://api.openai.com/v1/images/edits"]);
+  assert.deepEqual(calls[1].options.body.getAll("image[]").map((file) => file.name), ["hero-master.png"]);
+  assert.deepEqual(derivative.reference_asset_ids, [master.asset_id]);
+  assert.deepEqual(derivative.reference_images.map(({ asset_id, path: referencePath }) => ({ asset_id, path: referencePath })), [{ asset_id: master.asset_id, path: master.output.path }]);
+  assert.equal(derivative.reference_images[0].sha256, digest(await readFile(path.join(root, master.output.path))));
+  assert.deepEqual(derivative.prompt_lineage.parent_prompt_digests, [master.prompt_digest]);
+  assert.equal(validateImageAssetManifest(result.manifest, { artifactRoot: root }).ok, true);
+});
+
 test("Studio sends the Codex host callback the same ordered master-reference metadata used by OpenAI", async (t) => {
   const { root, manifest, master, character } = await masterDerivativeFixture(t);
   master.generation_state = "generated";
@@ -279,6 +315,20 @@ test("Studio rejects a derivative whose master bytes no longer match the recorde
   const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
   assert.equal(validation.ok, false);
   assert.equal(lineageError(validation, "stale_reference_digest"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects a stale host derivative before invoking the host provider", async (t) => {
+  const { root, manifest, master, character } = await masterDerivativeFixture(t);
+  await writeFile(path.join(root, master.output.path), Buffer.from("forged-master"));
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-stale-host-reference", asset_ids: [character.asset_id] },
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  }), /current image manifest/i);
+  assert.equal(hostCalls, 0);
 });
 
 test("Studio rejects an image that names itself as its master or reference", async (t) => {
