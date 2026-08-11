@@ -1,6 +1,8 @@
 ---
 source_prompt_id: suite:studio-to-career-handoff:case
 route: suite
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 바람섬 handoff: 공개 가능한 근거 요약
 

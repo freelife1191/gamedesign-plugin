@@ -1,6 +1,8 @@
 ---
 source_prompt_id: studio:case:ST-C08
 route: studio
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 여덟 주 시제품: 범위·출력 준비 초안
 
@@ -45,6 +47,9 @@ route: studio
 결과 보장 없음: render와 lint는 format QA 승인을 대신하지 않습니다.
 
 ## 이미지 계보와 검토 상태
+- `asset_id`: `wind-island-master`
+- `derivative_of`: `null`
+- `approval_state`: `concept-draft`
 - `asset_id`: `wind-island-flow-diagram`
 - `derivative_of`: `wind-island-master`
 - `approval_state`: `concept-draft`

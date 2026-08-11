@@ -65,6 +65,23 @@ function normalizedExcerpt(value) {
   return value.normalize("NFC").replace(/\s+/gu, " ").trim();
 }
 
+function sourceIds(value) {
+  return value === "none" ? [] : value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function quantifiedConfirmations(value) {
+  return [...value.matchAll(/확인 정보:\s*([\s\S]*?)(?=\s*(?:가정|제안|다음 질문):|$)/gu)]
+    .map((match) => normalizedExcerpt(match[1]))
+    .filter((confirmation) => /\d|[０-９]/u.test(confirmation));
+}
+
+function imageRecords(value) {
+  const records = [];
+  const pattern = /- `asset_id`:\s*`([a-z][a-z0-9-]*)`\n- `derivative_of`:\s*`([a-z][a-z0-9-]*|null)`\n- `approval_state`:\s*`(concept-draft|document-approved|production-candidate)`/gu;
+  for (const match of value.matchAll(pattern)) records.push({ assetId: match[1], derivativeOf: match[2], approvalState: match[3] });
+  return records;
+}
+
 function visibleText(markdown) {
   return markdown.replace(/^---\n[\s\S]*?\n---\n/u, "").replace(/```[\s\S]*?```/gu, "");
 }
@@ -97,7 +114,13 @@ function validateSampleDocument({ entry, markdown, relativePath }) {
   assertValues(section(body, "참여 역할", relativePath), entry.specialist_roles, `${relativePath}: agent roles`);
   const excerpt = section(body, "이 요청으로 받는 결과", relativePath);
   if (!/[가-힣]/u.test(excerpt) || excerpt.length < 40) throw contractError("SAMPLE_EXCERPT", relativePath);
-  if (/확인 정보:[^.\n]*(?:\d|[０-９])/u.test(excerpt) && !/(?:입력 ID|evidence ID):\s*`[^`]+`/u.test(excerpt)) throw contractError("SAMPLE_UNSOURCED_QUANTIFIED_FACT", relativePath);
+  const confirmations = quantifiedConfirmations(excerpt);
+  if (confirmations.length > 0) {
+    const suppliedIds = sourceIds(fields.supplied_fact_ids ?? "none");
+    const evidenceIds = sourceIds(fields.evidence_ids ?? "none");
+    const records = body.includes("## 제공 근거\n") ? section(body, "제공 근거", relativePath) : "";
+    if (suppliedIds.length === 0 || evidenceIds.length === 0 || !suppliedIds.every((id) => evidenceIds.includes(id)) || !confirmations.every((confirmation) => suppliedIds.some((id) => records.includes(`\`${id}\``) && normalizedExcerpt(records).includes(confirmation)))) throw contractError("SAMPLE_FACT_RECORD", relativePath);
+  }
   assertValues(section(body, "산출물", relativePath), entry.minimum_outputs, `${relativePath}: artifact list`);
   assertValues(section(body, "읽는 순서", relativePath), entry.read_order, `${relativePath}: read order`);
   const assumptions = section(body, "보호한 가정", relativePath);
@@ -106,7 +129,9 @@ function validateSampleDocument({ entry, markdown, relativePath }) {
   if (!review.includes(entry.human_review_boundary) || !/- 결정 상태:\s*(?:pending|blocked)/u.test(review) || !/- 가능한 행동: 승인·수정·보류/u.test(review) || !review.includes("결과 보장 없음") || /자동 승인(?:됨|한다|완료)|결정 상태:\s*approved/u.test(review)) throw contractError("SAMPLE_HUMAN_DECISION_BOUNDARY", relativePath);
   if (body.includes("## 이미지 계보와 검토 상태\n")) {
     const image = section(body, "이미지 계보와 검토 상태", relativePath);
-    if (!/`asset_id`:\s*`[a-z][a-z0-9-]*`/u.test(image) || !/`derivative_of`:\s*`[a-z][a-z0-9-]*`/u.test(image) || !/`approval_state`:\s*`(?:concept-draft|document-approved|production-candidate)`/u.test(image) || !/`review_decision`:\s*`(?:pending|blocked)`/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
+    const records = imageRecords(image);
+    const ids = new Set(records.map((record) => record.assetId));
+    if (records.length < 2 || ids.size !== records.length || records.some((record) => record.derivativeOf !== "null" && (!ids.has(record.derivativeOf) || record.derivativeOf === record.assetId)) || !records.some((record) => record.derivativeOf === "null") || !records.some((record) => record.derivativeOf !== "null") || !/`review_decision`:\s*`(?:pending|blocked)`/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
   }
   return { id: fields.source_prompt_id, excerpt: normalizedExcerpt(excerpt) };
 }
@@ -152,7 +177,7 @@ function fixturePath(entry, index) {
 function sampleMarkdown(entry) {
   const list = (values) => values.map((value) => `- \`${value}\``).join("\n");
   return [
-    "---", `source_prompt_id: ${entry.id}`, `route: ${entry.product}`, "---", `# ${entry.id} 예시 결과`, "",
+    "---", `source_prompt_id: ${entry.id}`, `route: ${entry.product}`, "supplied_fact_ids: none", "evidence_ids: none", "---", `# ${entry.id} 예시 결과`, "",
     "## 간단 요청 예시", entry.app_prompt.example, "", "## 선택된 작업 순서", list(entry.skill_chain), "", "## 참여 역할", list(entry.specialist_roles), "",
     "## 이 요청으로 받는 결과", `이 예시는 ${entry.purpose}라는 가상의 상황에서, 확인한 입력과 미정 항목을 분리해 다음 사람이 검토할 수 있는 문장으로 정리한 일부입니다.`, "",
     "## 산출물", list(entry.minimum_outputs), "", "## 읽는 순서", list(entry.read_order), "", "## 보호한 가정", "가상의 사례이며 허구 데이터만 사용합니다.", "확인되지 않은 내용은 사실처럼 채우지 않고 미정으로 남깁니다.", "",
@@ -220,7 +245,13 @@ test("sample results reject invented evidence in a concrete excerpt", async (t) 
   await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, `${await readFile(target, "utf8")}\n확인된 증거: 120명이 완료했다.\n`); }, { code: "SAMPLE_INVENTED_EVIDENCE", target: "studio/01.md" });
 });
 test("sample results reject an unsourced quantified confirmation", async (t) => {
-  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("이 예시는", "확인 정보: 120명 중 87%가 완료했다. 이 예시는")); }, { code: "SAMPLE_UNSOURCED_QUANTIFIED_FACT", target: "studio/01.md" });
+  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("이 예시는", "확인 정보: 120명 중 87%가 완료했다. 이 예시는")); }, { code: "SAMPLE_FACT_RECORD", target: "studio/01.md" });
+});
+test("sample results reject a fake frontmatter evidence ID without a source record", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("supplied_fact_ids: none\nevidence_ids: none", "supplied_fact_ids: fake-evidence\nevidence_ids: fake-evidence").replace("이 예시는", "확인 정보: 120명 중 87%가 완료했다. 이 예시는")); }, { code: "SAMPLE_FACT_RECORD", target: "studio/01.md" });
+});
+test("sample results reject a source record that does not bind the confirmed quantity", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, `${(await readFile(target, "utf8")).replace("supplied_fact_ids: none\nevidence_ids: none", "supplied_fact_ids: fact-001\nevidence_ids: fact-001").replace("이 예시는", "확인 정보: 120명 중 87%가 완료했다. 이 예시는")}\n## 제공 근거\n- \`fact-001\`: 120명만 확인됨\n`); }, { code: "SAMPLE_FACT_RECORD", target: "studio/01.md" });
 });
 test("sample results reject a normalized result excerpt copied from another sample", async (t) => {
   await assertMutationRejected(t, async ({ root }, catalog) => {
@@ -237,12 +268,18 @@ test("sample results allow schema-bound image lineage only with a separate pendi
   const catalog = await productionCatalog();
   const fixture = await createValidFixture(t, catalog);
   const target = path.join(fixture.root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
-  await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
+  await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
   assert.deepEqual(await validateSampleResults({ catalog, markdown: fixture.markdown, root: fixture.root }), { count: 18, ids: expectedPromptIds });
 });
 test("sample results reject a non-schema image approval state", async (t) => {
   await assertMutationRejected(t, async ({ root }, catalog) => {
     const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
-    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`pending\`\n- \`review_decision\`: \`pending\`\n`);
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`pending\`\n- \`review_decision\`: \`pending\`\n`);
+  }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
+});
+test("sample results reject a derivative whose parent record is absent", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => {
+    const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`does-not-exist\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
   }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
 });

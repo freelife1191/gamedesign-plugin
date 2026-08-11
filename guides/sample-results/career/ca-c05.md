@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-C05
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 퍼즐 전투 관찰: 역기획 초안
 

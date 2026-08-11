@@ -1,6 +1,8 @@
 ---
 source_prompt_id: studio:case:ST-C03
 route: studio
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 장비 강화: 규칙과 예외 초안
 

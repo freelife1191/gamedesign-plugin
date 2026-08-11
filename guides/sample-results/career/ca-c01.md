@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-C01
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 민서의 역할 탐색: 12주 증거 계획
 

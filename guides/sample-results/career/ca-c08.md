@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-C08
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 주니어 면접: honest gap 기록
 

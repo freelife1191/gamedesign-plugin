@@ -1,6 +1,8 @@
 ---
 source_prompt_id: studio:case:ST-C04
 route: studio
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 첫 세션: 접근성 흐름 초안
 

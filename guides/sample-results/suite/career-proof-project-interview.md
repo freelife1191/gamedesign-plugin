@@ -1,6 +1,8 @@
 ---
 source_prompt_id: suite:career-proof-project-interview:case
 route: suite
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 12주 proof: 프로젝트와 면접 연결
 

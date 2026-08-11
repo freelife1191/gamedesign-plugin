@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-C04
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 지훈의 역량 간격: 주간 cadence
 

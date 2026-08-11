@@ -1,6 +1,8 @@
 ---
 source_prompt_id: studio:case:ST-C07
 route: studio
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 등대 축제: 경제 실험 초안
 

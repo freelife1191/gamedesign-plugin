@@ -1,6 +1,8 @@
 ---
 source_prompt_id: studio:case:ST-C01
 route: studio
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 바람섬 협동 RPG: 비전 초안
 

@@ -1,6 +1,8 @@
 ---
 source_prompt_id: suite:gdd-image-presentation:case
 route: suite
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # GDD 이미지 발표: concept-draft handoff
 
@@ -40,6 +42,9 @@ named human decision owner가 gdd-image-presentation handoff의 공개 범위를
 결과 보장 없음: preflight는 PPTX 승인이나 권리 허가를 보장하지 않습니다.
 
 ## 이미지 계보와 검토 상태
+- `asset_id`: `lighthouse-master`
+- `derivative_of`: `null`
+- `approval_state`: `concept-draft`
 - `asset_id`: `lighthouse-slide`
 - `derivative_of`: `lighthouse-master`
 - `approval_state`: `concept-draft`

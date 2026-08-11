@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-C06
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 로그라이크 모드: 포트폴리오 프로젝트 초안
 

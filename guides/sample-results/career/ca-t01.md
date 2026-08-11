@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-T01
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 전환 준비: 상태표와 반례
 

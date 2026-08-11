@@ -1,6 +1,8 @@
 ---
 source_prompt_id: career:case:CA-C07
 route: career
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 발표 전 점검: 다섯 축 개선 backlog
 

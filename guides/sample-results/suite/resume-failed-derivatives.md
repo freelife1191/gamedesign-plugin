@@ -1,6 +1,8 @@
 ---
 source_prompt_id: suite:resume-failed-derivatives:case
 route: suite
+supplied_fact_ids: none
+evidence_ids: none
 ---
 # 실패한 파생 이미지: 안전한 재개
 
@@ -41,6 +43,9 @@ named human decision owner가 resume-failed-derivatives handoff의 공개 범위
 결과 보장 없음: resume receipt는 파생 이미지 승인을 보장하지 않습니다.
 
 ## 이미지 계보와 검토 상태
+- `asset_id`: `lighthouse-master`
+- `derivative_of`: `null`
+- `approval_state`: `concept-draft`
 - `asset_id`: `lighthouse-banner`
 - `derivative_of`: `lighthouse-master`
 - `approval_state`: `concept-draft`
