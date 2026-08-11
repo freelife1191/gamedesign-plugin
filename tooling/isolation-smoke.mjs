@@ -23,6 +23,19 @@ import { auditTree } from "./lib/tree-audit.mjs";
 
 const TEMP_PREFIX = "game-design-isolation-";
 const PRODUCT_NAMES = Object.freeze(["game-design-career", "game-design-studio"]);
+const EXACT_SKILL_IDS = Object.freeze({
+  "game-design-career": Object.freeze([
+    "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "generate-image-assets", "humanize-korean",
+    "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing",
+    "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets",
+    "svg-infographic", "archify", "visualize-career-roadmap",
+  ].sort()),
+  "game-design-studio": Object.freeze([
+    "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems",
+    "design-player-experience", "export-game-design-documents", "generate-image-assets", "humanize-korean", "orchestrate-game-design-project",
+    "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "svg-infographic", "archify", "visualize-game-design",
+  ].sort()),
+});
 const EXPECTED_HOOKS = Object.freeze({
   SessionStart: {
     command: 'node "${PLUGIN_ROOT}/scripts/capability-probe.mjs"',
@@ -105,25 +118,25 @@ function exactHookCommand(hooks, eventName) {
   return hook;
 }
 
-async function verifyVendor(pluginRoot) {
-  const lock = JSON.parse(await readFile(path.join(pluginRoot, "references/shared/vendor/skillstead/vendor.lock.json"), "utf8"));
-  if (lock?.package?.name !== "svg-infographic" || lock.package.version !== "0.8.3" || !Array.isArray(lock.files)) {
-    throw new Error("package-local vendor lock mismatch");
+async function verifyVendor(pluginRoot, { name, skillId, tag, treeRoot, files }) {
+  const lock = JSON.parse(await readFile(path.join(pluginRoot, `references/shared/vendor/${name}/vendor.lock.json`), "utf8"));
+  if (lock?.upstream?.tag !== tag || lock?.tree?.root !== treeRoot || !Array.isArray(lock.tree.files)) {
+    throw new Error(`${name} package-local vendor lock mismatch`);
   }
-  const entries = await collectTree(path.join(pluginRoot, "skills/svg-infographic"), { label: "isolated Skillstead skill" });
+  const entries = await collectTree(path.join(pluginRoot, "skills", skillId), { label: `isolated ${name} skill` });
   const actual = new Map(entries.map((entry) => [entry.relativePath, entry.bytes]));
-  if (lock.files.length !== 48 || actual.size !== 48) throw new Error(`vendor file count mismatch: ${lock.files.length}/${actual.size}`);
-  for (const expected of lock.files) {
+  if (lock.tree.files.length !== files || actual.size !== files) throw new Error(`${name} vendor file count mismatch: ${lock.tree.files.length}/${actual.size}`);
+  for (const expected of lock.tree.files) {
     const bytes = actual.get(expected.path);
     if (!bytes) throw new Error(`missing vendored file: ${expected.path}`);
     if (bytes.length !== expected.size || sha256(bytes) !== expected.sha256) {
       throw new Error(`modified vendored file: ${expected.path}`);
     }
   }
-  if ([...actual.keys()].some((relative) => !lock.files.some(({ path: locked }) => locked === relative))) {
+  if ([...actual.keys()].some((relative) => !lock.tree.files.some(({ path: locked }) => locked === relative))) {
     throw new Error("unexpected vendored file");
   }
-  return actual.size;
+  return { name, files: actual.size };
 }
 
 async function officialValidatorPath() {
@@ -167,10 +180,13 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   }
   const skillEntries = await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true });
   const skills = skillEntries.filter((entry) => entry.isDirectory()).map(({ name }) => name).sort();
-  if (skills.length !== 15) throw new Error(`${productName} skill count mismatch: ${skills.length}`);
+  if (JSON.stringify(skills) !== JSON.stringify(EXACT_SKILL_IDS[productName])) throw new Error(`${productName} exact skill IDs mismatch: ${skills.join(",")}`);
   for (const skill of skills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
 
-  const vendorFileCount = await verifyVendor(pluginRoot);
+  const vendors = await Promise.all([
+    verifyVendor(pluginRoot, { name: "skillstead", skillId: "svg-infographic", tag: "svg-infographic/v0.9.0", treeRoot: "svg-infographic/0.9.0", files: 55 }),
+    verifyVendor(pluginRoot, { name: "archify", skillId: "archify", tag: "v2.13.0", treeRoot: "archify/2.13.0", files: 60 }),
+  ]);
   const hooks = JSON.parse(await readFile(path.join(pluginRoot, "hooks/hooks.json"), "utf8"));
   exactHookCommand(hooks, "SessionStart");
   exactHookCommand(hooks, "Stop");
@@ -264,6 +280,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
       || persistedManifest.assets[0]?.approval_state !== "concept-draft" || !promptMarkdown.includes("Expected count: 1") || JSON.parse(promptJson).prompts?.length !== 1) {
     throw new Error(`${productName} isolated prompt-only image plan mismatch`);
   }
+  if (networkCalls !== 0 || generationCalls !== 0) throw new Error(`${productName} isolation smoke attempted image generation or network access`);
 
   const sentinel = '<!-- game-design-plugin:artifact {"path":"artifact","formats":["md"]} -->';
   const stop = runProcess(process.execPath, [path.join(pluginRoot, "scripts/stop-artifact-review.mjs")], {
@@ -280,7 +297,7 @@ async function verifyOne({ repoRoot, productName, isolationRoot, mutateCopy, act
   return {
     name: productName,
     skillCount: skills.length,
-    vendorFileCount,
+    vendorFiles: vendors,
     hooks: Object.keys(hooks.hooks).sort(),
     validation: { ok: validation.ok, requestedFormats: validation.requestedFormats },
     stopStatus: stopOutput.status,
@@ -323,7 +340,7 @@ export async function runIsolationSmoke({ repoRoot = fileURLToPath(new URL("..",
 async function main() {
   const report = await runIsolationSmoke();
   for (const result of report) {
-    process.stdout.write(`${result.name}: PASS (${result.skillCount} skills, ${result.vendorFileCount} vendor files, canonical MD + quality profile + hooks)\n`);
+    process.stdout.write(`${result.name}: PASS (${result.skillCount} exact skills, ${result.vendorFiles.map(({ name, files }) => `${name}:${files}`).join(", ")} vendor files, network:0, canonical MD + quality profile + hooks)\n`);
   }
 }
 

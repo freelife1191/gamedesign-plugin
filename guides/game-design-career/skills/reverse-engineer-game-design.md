@@ -135,3 +135,11 @@ $game-design-career:export-career-documents artifact=<artifact-path> 기존 evid
 ## 관련 문서
 
 [reverse-design-document 템플릿](../templates.md#reverse-design-document), [export-career-documents 스킬](./export-career-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:reverse-engineer-game-design -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 관찰과 추론을 분리하는 게임 역기획](../../prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designbeginner)
+- [standard — rule·UI·economy 가설을 검증하는 게임 역기획](../../prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard)
+- [advanced — 반증·rights·대안을 갖춘 게임 역기획](../../prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:reverse-engineer-game-design -->

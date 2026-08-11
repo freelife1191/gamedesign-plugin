@@ -18,7 +18,7 @@ const validatorPath = path.join(repoRoot, "shared/scripts/validate-artifact.mjs"
 const prepareScript = path.join(skillRoot, "export-game-design-documents/scripts/prepare-studio-export.mjs");
 const exportValidatorScript = path.join(skillRoot, "export-game-design-documents/scripts/validate-studio-export.mjs");
 const visualizationValidatorScript = path.join(skillRoot, "visualize-game-design/scripts/validate-visualization-evidence.mjs");
-const skillsteadScriptRoot = path.join(repoRoot, "shared/vendor/skillstead/svg-infographic/0.8.3/scripts");
+const skillsteadScriptRoot = path.join(repoRoot, "shared/vendor/skillstead/svg-infographic/0.9.0/scripts");
 const visualizationWrapper = "skills/visualize-game-design/scripts/run-skillstead.mjs";
 const temporaryDirectories = [];
 
@@ -205,6 +205,22 @@ test("visualization presets cover six game-design structures with packaged Skill
   assert.match(section(skill, "Completion checks"), /command.*file evidence/isu);
 });
 
+test("structural diagram routes prefer optional Archify while retaining packaged fallback evidence", async () => {
+  const skills = await Promise.all([
+    readSkill("visualize-game-design"),
+    readSkill("orchestrate-game-design-project"),
+  ]);
+
+  for (const skill of skills) {
+    assert.match(skill, /(?:architecture|component boundaries), workflow, sequence, dataflow, or lifecycle/iu);
+    assert.match(skill, /packaged `?\$archify`?/iu);
+    assert.match(skill, /source-backed JSON spec.*checked HTML.*receipt/isu);
+    assert.match(skill, /packaged `?\$svg-infographic`?/iu);
+    assert.match(skill, /(?:does not replace|never replaces).*grants? approval/isu);
+    assert.doesNotMatch(skill, /capabilities\.archify|host Archify|archify-unavailable/isu);
+  }
+});
+
 test("plugin-owned visualization validator proves ordered same-file lint render and 2x verification", async () => {
   const artifactRoot = await temporaryDirectory("studio-visualization-evidence-");
   const assets = path.join(artifactRoot, "assets");
@@ -249,10 +265,10 @@ test("plugin-owned visualization validator proves ordered same-file lint render 
     },
     linted: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest: sha256(svg),
-      linter: "Skillstead svg-infographic", linterVersion: "0.8.3", linterDigest,
+      linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest,
       evidence: [{
         command: `node ${visualizationWrapper} lint assets/loop.svg`, exitCode: 0, log: "check-svg: 0 error(s), 0 warning(s)",
-        linter: "Skillstead svg-infographic", linterVersion: "0.8.3", linterDigest,
+        linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest,
         svgPath: "assets/loop.svg", svgDigest: sha256(svg),
       }],
     },
@@ -513,10 +529,10 @@ test("visualization validator accepts a verified SVG fallback when PNG rendering
     },
     linted: {
       status: "passed", svgPath: "assets/loop.svg", svgDigest,
-      linter: "Skillstead svg-infographic", linterVersion: "0.8.3", linterDigest,
+      linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest,
       evidence: [{
         command: `node ${visualizationWrapper} lint assets/loop.svg`, exitCode: 0, log: "check-svg: 0 error(s), 0 warning(s)",
-        linter: "Skillstead svg-infographic", linterVersion: "0.8.3", linterDigest, svgPath: "assets/loop.svg", svgDigest,
+        linter: "Skillstead svg-infographic", linterVersion: "0.9.0", linterDigest, svgPath: "assets/loop.svg", svgDigest,
       }],
     },
     rendered: {

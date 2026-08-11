@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { access, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -12,6 +13,33 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const readmePath = path.join(pluginRoot, "README.md");
 const temporaryDirectories = [];
+const canonicalSourceLinks = new Map([
+  ["skills/define-game-vision/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-game-content/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-game-economy-and-liveops/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-game-systems/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/design-player-experience/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/plan-game-production/SKILL.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["skills/review-game-design/SKILL.md", new Map([["../../../../../shared/templates/review-finding.md", "templates/review-finding.md"]])],
+  ["references/methods/content-specification.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["references/methods/economy-liveops.md", new Map([
+    ["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"],
+    ["../../../../../shared/knowledge/trends/2026-current-practices.md", "knowledge/trends/2026-current-practices.md"],
+    ["../../../../../shared/knowledge/trends/source-register.json", "knowledge/trends/source-register.json"],
+  ])],
+  ["references/methods/player-experience.md", new Map([
+    ["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"],
+    ["../../../../../shared/knowledge/trends/2026-current-practices.md", "knowledge/trends/2026-current-practices.md"],
+    ["../../../../../shared/knowledge/trends/source-register.json", "knowledge/trends/source-register.json"],
+  ])],
+  ["references/methods/production.md", new Map([
+    ["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"],
+    ["../../../../../shared/knowledge/trends/2026-current-practices.md", "knowledge/trends/2026-current-practices.md"],
+    ["../../../../../shared/knowledge/trends/source-register.json", "knowledge/trends/source-register.json"],
+  ])],
+  ["references/methods/system-specification.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+  ["references/methods/vision.md", new Map([["../../../../../shared/responsible-design/gates.json", "responsible-design/gates.json"]])],
+]);
 
 test.afterEach(async () => {
   await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
@@ -32,6 +60,7 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
 ];
 
 const roleIds = [
@@ -42,6 +71,9 @@ const roleIds = [
   "ux-accessibility-reviewer",
   "liveops-data-designer",
   "production-feasibility-critic",
+  "combat-encounter-reviewer",
+  "level-puzzle-reviewer",
+  "game-design-writing-editor",
 ];
 
 const imageRoleIds = ["art-brief-director", "visual-asset-reviewer"];
@@ -92,6 +124,7 @@ const topLevelScriptIds = [
   "generate-openai-images.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
@@ -99,6 +132,7 @@ const topLevelScriptIds = [
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
   "validate-reference-preset.mjs",
+  "validate-writing-revision.mjs",
 ];
 
 const documentQualityPaths = [
@@ -116,10 +150,13 @@ const documentQualityPaths = [
   "schema/reference-preset.schema.json",
 ];
 
-function tableIds(markdown, heading) {
-  const start = markdown.indexOf(`## ${heading}`);
+function tableIds(markdown, heading, level = 2) {
+  const marker = `${"#".repeat(level)} ${heading}`;
+  const start = markdown.indexOf(marker);
   assert.notEqual(start, -1, `missing section: ${heading}`);
-  const section = markdown.slice(start + heading.length + 3).split("\n## ")[0];
+  const remainder = markdown.slice(start + marker.length);
+  const nextHeading = remainder.search(new RegExp(`\\n#{1,${level}} `, "u"));
+  const section = nextHeading < 0 ? remainder : remainder.slice(0, nextHeading);
   return [...section.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
 }
 
@@ -162,11 +199,29 @@ async function assertContainedLink(root, markdownFile, target) {
   assert.ok(canonicalRelative && !canonicalRelative.startsWith("..") && !path.isAbsolute(canonicalRelative), `real link target escapes plugin root: ${target}`);
 }
 
-async function assertAllMarkdownLinksContained(root) {
+async function assertCanonicalSourceLink(markdownFile, target, expectedRelativePath) {
+  const sharedRoot = await realpath(path.join(repoRoot, "shared"));
+  const targetReal = await realpath(path.resolve(path.dirname(markdownFile), target));
+  assert.equal(
+    path.relative(sharedRoot, targetReal),
+    expectedRelativePath,
+    `source-only canonical link must resolve to the approved shared input: ${target}`,
+  );
+}
+
+async function assertAllMarkdownLinksContained(root, sourceLinks = new Map()) {
   const markdownFiles = (await walkFiles(root)).filter((file) => file.endsWith(".md"));
   for (const markdownFile of markdownFiles) {
     const markdown = await readFile(markdownFile, "utf8");
-    for (const target of localMarkdownLinks(markdown)) await assertContainedLink(root, markdownFile, target);
+    const relativeMarkdownFile = path.relative(root, markdownFile).split(path.sep).join("/");
+    for (const target of localMarkdownLinks(markdown)) {
+      const expectedCanonicalTarget = sourceLinks.get(relativeMarkdownFile)?.get(target);
+      if (expectedCanonicalTarget) {
+        await assertCanonicalSourceLink(markdownFile, target, expectedCanonicalTarget);
+      } else {
+        await assertContainedLink(root, markdownFile, target);
+      }
+    }
   }
 }
 
@@ -177,6 +232,24 @@ const studioRepositoryCheckoutGuides = Object.freeze([
   ["Studio 스킬 워크벤치", "guides/game-design-studio/use-cases/skill-workbench.md", "Studio 스킬 워크벤치"],
   ["Studio FAQ", "guides/game-design-studio/faq.md", "Studio FAQ"],
   ["공통 결과물 카탈로그", "guides/use-cases/output-catalog.md", "결과물 카탈로그"],
+]);
+
+const studioGoalOutputLayers = new Map([
+  ["규칙·핵심 루프", { competencyHeading: "ST-C01 플레이어 경험과 게임 비전", minimum: ["vision-pillars", "game-design-brief", "game-design-review"] }],
+  ["시스템", { competencyHeading: "ST-C03 규칙·상태·예외·데이터", minimum: ["system-specification", "rule-exception-matrix", "data-schema-table-contract"] }],
+  ["UX·접근성", { competencyHeading: "ST-C04 UI·UX·온보딩·접근성", minimum: ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"] }],
+  ["콘텐츠·퀘스트", { competencyHeading: "ST-C05 콘텐츠·내러티브·퀘스트·NPC", minimum: ["narrative-quest-npc", "character-skill-combat-monster", "game-design-review"] }],
+  ["경제·LiveOps", { competencyHeading: "ST-C07 성장·경제·밸런스·LiveOps", minimum: ["economy-balance", "liveops-experiment-event", "game-design-review"] }],
+  ["전체 프로젝트", { competencyHeading: "ST-C08 제작·검토·이미지·출력", minimum: ["production-scope-risk", "game-design-review", "export-preparation-manifest"] }],
+]);
+
+const studioRouteSnapshot = new Map([
+  ["규칙·핵심 루프", ["ST-C01 플레이어 경험과 게임 비전", "762cb46b68d03b05870e32df687a8ce81196056ca2e47d1a0ac12424ada9aff1", "38a70ec770ea16754f76f0a4d3bf1e32e118b458a019f1c58b070fd52c162ad8", "16dcb91bee726bad9f69aa6422bdb9cc979cafc09394251abefd0a22705ab221", "f1d19c03b47e8783b21ba1ba32d630fcac645ae7fb41ebe3a0093e4802ec565f", "9c1a1846afa35a90455baa1e8c129d757421f437c871f7af97800483d093aeed", "750bb598d39be97df5e599a6bdaf13a15871fc5e44c511c3d5da82836bd8f6e2"]],
+  ["시스템", ["ST-C03 규칙·상태·예외·데이터", "a06353e36fa9f3f465ea283796f2d400a51d789fdac45536d9b9fcfcb4b01b71", "c018994c23be32c294a2d88ab53570aa9879ae4e9259737be6de328d83ee44d5", "af08f7b4af35c8a47e4f291d5c3f84ade8fb0b70374f1d711d4206315e111fcd", "79b3bf803bf2757880723a94b761676111e008f928da737b6adcaeabe4d9ba0a", "d055b03ac1881532a52c4761a23c13f0649d5e0622e6bf24eaa994341637ff4d", "9b2365ecb61e2bb4355a13875482b54ef94183b1604ed5063ac51f394553c394"]],
+  ["UX·접근성", ["ST-C04 UI·UX·온보딩·접근성", "a1b41bcc8ff1564476f1c649ca7cd46a1d3177dec142297dcfcabddc96c43d1b", "df5317d373d9b83a5b3c8a98b6a5f2b24079414ece84a1deec520c597801ee49", "bdd95d8dade7e63f8f6e12f28a4e2e2a2033ad535258b9408a88b44690f2a3b7", "1c6d347d284b6ab68d9358c52108717956465b9ef544d1fae466519dc5c09fb2", "658f38f1ad521b9d08adc3d02849f933a45181595c626760e42211161ccf8f3a", "d22e1843374c35ae4830425993518187ae5ec327b97936ba373d0b30a130b1b6"]],
+  ["콘텐츠·퀘스트", ["ST-C05 콘텐츠·내러티브·퀘스트·NPC", "3067580859b32ae9790688b9ff6fe30ede2b5c8c38a5b24273c7cd8d34ac2bdd", "b8ceb125947c1b22b1b3eebb2add7e1a120132f6a81a8aac6a9dd8a2b7745321", "90d6cd23158e43cc88339e9b5a52dd902295fbb16c60176b236f9a2e5d66f6b3", "f0be1e0265318c241d274af4f3744c18ae56fddad26a9b2585a0cf012077d0e2", "18e58edf90ff467026491de0ff3b65f9792aa17e6da5e954d4c3b3f950a3d2ad", "54c90232303ecefca2e81740e7861afad6afd9146ef3258348fe82abaccf47f5"]],
+  ["경제·LiveOps", ["ST-C07 성장·경제·밸런스·LiveOps", "9787c90c1d6f65692bff340b4657518c5b175ae3a6e6a1d23176c1e6649fca35", "7cfa812f9af6ff440803459fac7d5da123a109c27afcdab8c38c44e64dd5be2e", "259f3649898c9ecb6dd7e2e30f13b28a5e7e47d91b3bf409a56f682b52a930d4", "e1aa8bbf6696132cb86d578ef68dbe9b690fec3fdf15fd09f6f2c2579092784c", "805e5767dc3abb86f5860ff8c560e61d72faa362a29ca366439b89c0dae09df6", "73872bbcbb68cc6bcd83e7b045bc9878670844a2bd4933962073056e02bb6350"]],
+  ["전체 프로젝트", ["ST-C08 제작·검토·이미지·출력", "1a6b13c519879b0bf3c13911d028e7a2ab78323f61e756d8e8a4eaa0044eab2c", "9dd9732790d2e1b29fad9cbe3c2cf6be2e328d3e0ce8bd876709399d16ee221f", "6ab10636b16381bb34f74297b2ce7e7f92a3f2254ba74e42a554986de33f344b", "3e895f1afdf89ac642bcf84d0b22ccebeffb0238647911e0bf518ea5d68f73f9", "d3265ea853c8b75e774daa8ec819689240ece8cd77762cc3dce6ad75a1590e73", "d623d61bec8afa412d7cd25c8fece231c36382f4219fc081f1d6606c3134d6a0"]],
 ]);
 
 const directOutputOwnership = Object.freeze([
@@ -197,7 +270,7 @@ const directOutputOwnership = Object.freeze([
 ]);
 
 const representativeRequestResultRows = Object.freeze([
-  "| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, player promise, core loop, non-goal과 prototype 질문을 정리해.` | `game-design-brief`와 `vision-pillars`를 담은 Canonical Artifact 초안 |",
+  "| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, 플레이 경험의 약속, 핵심 플레이 흐름, 제외 목표와 시험 제작 질문을 정리해.` | 게임 기획 요약서(`game-design-brief`)와 게임 방향 원칙(`vision-pillars`)을 담은 기준 기획 폴더 초안 |",
   "| 시스템 명세 | `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence, exception과 data authority를 명세해.` | `system-specification`의 규칙·상태·예외·검증 표 |",
   "| UX·접근성 | `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력, 오류 recovery와 접근성 검토를 연결해.` | `ui-ux-flow-state`와 접근성 검토 큐 |",
   "| 콘텐츠·퀘스트 | `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.` | `narrative-quest-npc`의 quest state와 제작 handoff |",
@@ -257,7 +330,8 @@ function splitMarkdownTableRow(row) {
 function representativeTableRows(section) {
   return section.split("\n")
     .filter((line) => /^\| (?:새 게임 GDD|시스템 명세|UX·접근성|콘텐츠·퀘스트|경제·LiveOps|제작 검토·출력) \|/.test(line))
-    .map((line) => ({ line, cells: splitMarkdownTableRow(line) }));
+    .map((line) => ({ line, cells: splitMarkdownTableRow(line) }))
+    .filter(({ cells }) => cells.length === 3);
 }
 
 function swapRepresentativeTableCells(readme, label) {
@@ -326,6 +400,94 @@ function assertStudioUseCaseReadme(readme) {
   assert.match(section, /\[설치된 템플릿\]\(assets\/templates\/system-specification\/\)/u, "package-local template link must remain distinct");
 }
 
+function artifactIds(field) {
+  return [...field.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+}
+
+function competencyBlock(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `authoritative competency block: ${heading}`);
+  const next = markdown.indexOf("\n## ", start + marker.length);
+  return markdown.slice(start, next === -1 ? markdown.length : next);
+}
+
+function markdownSubsection(markdown, heading, depth) {
+  const marker = `${"#".repeat(depth)} ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `missing ${heading}`);
+  const bodyStart = start + marker.length;
+  const next = markdown.slice(bodyStart).search(new RegExp(`^#{1,${depth}} `, "m"));
+  return markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next).trim();
+}
+
+function normalizedCardText(value) {
+  return value.replace(/\s+/gu, " ").trim();
+}
+
+function snapshotDigest(value) {
+  return createHash("sha256").update(normalizedCardText(value)).digest("hex");
+}
+
+function resultField(value, label) {
+  const match = new RegExp(`\\*\\*${label}:\\*\\* (.+)$`, "mu").exec(value);
+  assert.ok(match, `missing ${label}`);
+  return match[1];
+}
+
+function routeCard(section, title) {
+  const marker = `### ${title}\n`;
+  const start = section.indexOf(marker);
+  const next = section.indexOf("\n### ", start + marker.length);
+  assert.notEqual(start, -1, `route card ${title}`);
+  return section.slice(start + marker.length, next === -1 ? undefined : next).trim();
+}
+
+async function assertGoalOutputSummary(section, goals, product, competencySourceOverride) {
+  assert.match(section, /^### 대표 작업 경로$/mu, `${product}: readable work-route heading`);
+  assert.match(section, /^\| 목표 \| 시작 스킬 \|$/mu, `${product}: concise route summary table`);
+  const competencySource = competencySourceOverride ?? await readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/competency-paths.md"), "utf8");
+  const cardsStart = section.indexOf("### 대표 작업 경로\n");
+  const cardsEnd = section.indexOf("\n### 대표 요청과 예상 결과", cardsStart);
+  assert.notEqual(cardsStart, -1, `${product}: route-card start`);
+  assert.notEqual(cardsEnd, -1, `${product}: route-card end`);
+  const actualTitles = [...section.slice(cardsStart, cardsEnd).matchAll(/^### (.+)$/gmu)].map((match) => match[1]).slice(1);
+  assert.deepEqual(actualTitles, [...goals.keys()], `${product}: six route cards keep their exact ordered headings`);
+  assert.deepEqual([...studioRouteSnapshot.keys()], [...goals.keys()], `${product}: independent six-card snapshot order`);
+  for (const [title, layers] of goals) {
+    const body = routeCard(section, title);
+    for (const heading of ["준비 입력", "연결 흐름", "예상 결과"]) assert.match(body, new RegExp(`^#### ${heading}$`, "mu"), `${product}: ${title} ${heading} card`);
+    assert.match(body, /^#### 사람 검토(?:·근거)?$/mu, `${product}: ${title} human-review card`);
+    const source = competencyBlock(competencySource, layers.competencyHeading);
+    const sourceInput = markdownSubsection(source, "준비 입력", 3);
+    const sourceChain = markdownSubsection(source, "스킬·템플릿 흐름", 3);
+    const sourceResults = markdownSubsection(source, "결과물", 3);
+    const sourceReview = markdownSubsection(source, "검토와 승인", 3);
+    const cardInput = markdownSubsection(body, "준비 입력", 4);
+    const cardChain = markdownSubsection(body, "연결 흐름", 4);
+    const cardResults = markdownSubsection(body, "예상 결과", 4);
+    const reviewHeading = /^#### 사람 검토·근거$/mu.test(body) ? "사람 검토·근거" : "사람 검토";
+    const cardReview = markdownSubsection(body, reviewHeading, 4);
+    const [sourceHeading, inputHash, chainHash, minimumHash, optionalHash, expandedHash, reviewHash] = studioRouteSnapshot.get(title);
+    assert.equal(layers.competencyHeading, sourceHeading, `${product}: ${title} independent source heading`);
+    for (const [field, value, expectedHash] of [["input", sourceInput, inputHash], ["chain", sourceChain, chainHash], ["minimum", resultField(sourceResults, "최소 결과"), minimumHash], ["optional", resultField(sourceResults, "선택 결과"), optionalHash], ["expanded", resultField(sourceResults, "확장 결과"), expandedHash], ["review", sourceReview, reviewHash]]) {
+      assert.equal(snapshotDigest(value), expectedHash, `${product}: ${title} source ${field} snapshot`);
+    }
+    assert.equal(normalizedCardText(cardInput), normalizedCardText(sourceInput), `${product}: ${title} source-derived inputs`);
+    assert.equal(normalizedCardText(cardChain), normalizedCardText(sourceChain), `${product}: ${title} full source-derived skill chain`);
+    const fields = /^- 최소: (?<minimum>.+)\n- 선택: (?<optional>.+)\n- 확장: (?<expanded>.+)$/mu.exec(cardResults)?.groups;
+    assert.ok(fields, `${product}: ${title} output layers stay separate`);
+    assert.equal(normalizedCardText(fields.minimum), normalizedCardText(resultField(sourceResults, "최소 결과")), `${product}: ${title} source-derived minimum result`);
+    assert.equal(normalizedCardText(fields.optional), normalizedCardText(resultField(sourceResults, "선택 결과")), `${product}: ${title} source-derived optional result`);
+    assert.equal(normalizedCardText(fields.expanded), normalizedCardText(resultField(sourceResults, "확장 결과")), `${product}: ${title} source-derived expanded result`);
+    assert.deepEqual(artifactIds(fields.minimum), layers.minimum, `${product}: ${title} independent minimum-output manifest`);
+    assert.equal(normalizedCardText(cardReview.replace(/^- /mu, "")), normalizedCardText(sourceReview), `${product}: ${title} source-derived human review`);
+    for (const [field, value, expectedHash] of [["input", cardInput, inputHash], ["chain", cardChain, chainHash], ["minimum", fields.minimum, minimumHash], ["optional", fields.optional, optionalHash], ["expanded", fields.expanded, expandedHash], ["review", cardReview.replace(/^- /mu, ""), reviewHash]]) {
+      assert.equal(snapshotDigest(value), expectedHash, `${product}: ${title} README ${field} snapshot`);
+    }
+  }
+}
+
 test("release documentation ships the plugin license and third-party notices", async () => {
   await Promise.all([
     access(readmePath),
@@ -339,7 +501,7 @@ test("release documentation ships the plugin license and third-party notices", a
   ]);
   assert.match(license, /MIT License/);
   assert.match(notices, /Skillstead svg-infographic/);
-  assert.match(notices, /0\.8\.3/);
+  assert.match(notices, /0\.9\.0/);
   assert.match(notices, /Apache-2\.0/);
   assert.match(notices, /Copyright 2026 Kyungseo Park/);
   assert.match(notices, /49/);
@@ -348,6 +510,9 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, profile, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
+  assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 18개/u, "README states the complete installed-skill count");
+  assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
   assert.deepEqual(tableIds(readme, "이미지 전문 역할 레지스트리"), imageRoleIds);
@@ -450,6 +615,7 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   assertStudioUseCaseReadme(readme);
   const section = readmeSection(readme, "활용 경로와 결과");
   const [, allowedOutputs] = await Promise.all([assertRepositoryCheckoutGuides(section), assertRepresentativeOutputOwnership()]);
+  await assertGoalOutputSummary(section, studioGoalOutputLayers, "Studio product README");
   for (const { label, rowOutput } of directOutputOwnership) {
     const row = representativeTableRows(section).find(({ cells }) => cells[0] === label);
     assert.ok(row, `owned-output table row missing: ${label}`);
@@ -490,8 +656,65 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   await assert.rejects(assertRepositoryCheckoutGuides(swappedPaths), /checkout-only path must be plain code/, "wrong-but-valid checkout paths must fail");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.", "- 최소: `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록."), studioGoalOutputLayers, "mutated Studio product README"),
+    "vision-pillars must remain a minimum result",
+  );
   const economySkill = await readFile(path.join(pluginRoot, "skills/design-game-economy-and-liveops/SKILL.md"), "utf8");
   assert.throws(() => assertCanonicalOutputContract(directOutputOwnership[0], economySkill.replace("Produce either", "Deprecated: Produce either")), "output-contract prefixes must fail exact section-local matching");
+});
+
+test("Studio goal summaries reject swapped outcome layers, auto-approval, and a removed reviewer", async () => {
+  const section = readmeSection(await readFile(readmePath, "utf8"), "활용 경로와 결과");
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("- 선택: 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다.", "- 확장: 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다."), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must retain the optional result card",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다.", "자동 승인"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must reject auto approval",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다.", "설계 원칙과 제외 목표를 검토"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must retain a named reviewer",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("### 시스템", "### 규칙·핵심 루프"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must retain exactly six ordered headings",
+  );
+  await assert.rejects(
+    assertGoalOutputSummary(section.replace("\n### 대표 요청과 예상 결과", "\n### 추가 목표\n\n누락된 카드.\n\n### 대표 요청과 예상 결과"), studioGoalOutputLayers, "mutated Studio product README"),
+    "Studio cards must reject an additional route heading",
+  );
+  const competencySource = await readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/competency-paths.md"), "utf8");
+  const sourceMinimum = "**최소 결과:** `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.";
+  await assert.rejects(
+    assertGoalOutputSummary(
+      section.replace("- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.", "- 최소: `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록."),
+      studioGoalOutputLayers,
+      "concurrently shrunken Studio product README",
+      competencySource.replace(sourceMinimum, "**최소 결과:** `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록."),
+    ),
+    "independent minimum-output manifest rejects concurrent source and README shrinking",
+  );
+  const firstSource = competencyBlock(competencySource, "ST-C01 플레이어 경험과 게임 비전");
+  const firstCard = routeCard(section, "규칙·핵심 루프");
+  const sourceResults = markdownSubsection(firstSource, "결과물", 3);
+  const cardResults = markdownSubsection(firstCard, "예상 결과", 4);
+  const sourceFields = [
+    ["input", markdownSubsection(firstSource, "준비 입력", 3), markdownSubsection(firstCard, "준비 입력", 4)],
+    ["chain", markdownSubsection(firstSource, "스킬·템플릿 흐름", 3), markdownSubsection(firstCard, "연결 흐름", 4)],
+    ["minimum", resultField(sourceResults, "최소 결과"), /^- 최소: (.+)$/mu.exec(cardResults)[1]],
+    ["optional", resultField(sourceResults, "선택 결과"), /^- 선택: (.+)$/mu.exec(cardResults)[1]],
+    ["expanded", resultField(sourceResults, "확장 결과"), /^- 확장: (.+)$/mu.exec(cardResults)[1]],
+    ["review", markdownSubsection(firstSource, "검토와 승인", 3), markdownSubsection(firstCard, "사람 검토", 4).replace(/^- /mu, "")],
+  ];
+  for (const [field, sourceValue, cardValue] of sourceFields) {
+    await assert.rejects(
+      assertGoalOutputSummary(section.replace(cardValue, `${cardValue} 축소`), studioGoalOutputLayers, `concurrently shrunken ${field} README`, competencySource.replace(sourceValue, `${sourceValue} 축소`)),
+      `independent Studio snapshot rejects concurrent ${field} source and README shrinking`,
+    );
+  }
 });
 
 test("README documents the closed Studio document-quality workflow and installed contracts", async () => {
@@ -567,19 +790,19 @@ test("README inventories the exact packaged runtime scripts and shared quality s
 
 test("root README describes both packaged quality-profile catalogs without source attribution claims", async () => {
   const readme = await readFile(path.join(repoRoot, "README.md"), "utf8");
-  assert.deepEqual(tableIds(readme, "설치된 top-level scripts"), topLevelScriptIds);
-  assert.deepEqual(tableIds(readme, "설치된 document-quality 경로"), documentQualityPaths);
+  assert.deepEqual(tableIds(readme, "설치된 최상위 스크립트 (top-level scripts)", 3), topLevelScriptIds);
+  assert.deepEqual(tableIds(readme, "설치된 문서 품질 경로 (document-quality)", 3), documentQualityPaths);
   for (const contract of [
-    "Studio 17개",
-    "Career 13개",
-    "additive overlay 3개",
-    "neutral reference preset 7개",
-    "authoring-only source",
-    "공식 endorsement",
-    "plugins/game-design-studio/references/shared/document-quality/",
-    "plugins/game-design-career/references/shared/document-quality/",
+    /Studio 17개/u,
+    /Career 13개/u,
+    /추가형 오버레이\s*\(additive overlay\) 3개/u,
+    /중립 참고 사전 설정\s*\(neutral reference preset\) 7개/u,
+    /저작용 전용 출처\s*\(authoring-only source\)/u,
+    /추천·보증\s*\(공식 endorsement\)/u,
+    /plugins\/game-design-studio\/references\/shared\/document-quality\//u,
+    /plugins\/game-design-career\/references\/shared\/document-quality\//u,
   ]) {
-    assert.ok(readme.includes(contract), `missing root quality-profile contract: ${contract}`);
+    assert.match(readme, contract, `missing root quality-profile contract: ${contract}`);
   }
 });
 
@@ -590,7 +813,7 @@ test("README local links resolve inside the source plugin root", async () => {
 });
 
 test("source and clean-built Markdown links stay inside their own plugin roots", async () => {
-  await assertAllMarkdownLinksContained(pluginRoot);
+  await assertAllMarkdownLinksContained(pluginRoot, canonicalSourceLinks);
   const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-readme-links-"));
   temporaryDirectories.push(stagingRoot);
   const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
@@ -652,20 +875,36 @@ test("portable CODEX_HOME shell expansion preserves spaces and honors an overrid
   }
 });
 
-test("source-local shared link mirrors remain byte-identical to canonical shared inputs", async () => {
-  const mirrors = [
-    ["shared/responsible-design/gates.json", "references/shared/responsible-design/gates.json"],
-    ["shared/knowledge/trends/2026-current-practices.md", "references/shared/knowledge/trends/2026-current-practices.md"],
-    ["shared/knowledge/trends/source-register.json", "references/shared/knowledge/trends/source-register.json"],
-    ["shared/templates/review-finding.md", "assets/shared/templates/review-finding.md"],
+test("source-local links do not shadow canonical shared template inputs", async () => {
+  const prohibitedProductCopies = [
+    "assets/shared/templates/review-finding.md",
+    "references/shared/responsible-design/gates.json",
+    "references/shared/knowledge/trends/2026-current-practices.md",
+    "references/shared/knowledge/trends/source-register.json",
   ];
-  for (const [canonical, mirror] of mirrors) {
-    assert.deepEqual(
-      await readFile(path.join(repoRoot, canonical)),
-      await readFile(path.join(pluginRoot, mirror)),
-      `${mirror} must match ${canonical}`,
-    );
-  }
+  for (const relativePath of prohibitedProductCopies) await assert.rejects(
+    access(path.join(pluginRoot, relativePath)),
+    { code: "ENOENT" },
+    `${relativePath} must be supplied only by the canonical shared module during buildProduct`,
+  );
+});
+
+test("review skill projects the canonical finding template into the package", async () => {
+  const sourceLink = "../../../../../shared/templates/review-finding.md";
+  const packagedLink = "../../assets/shared/templates/review-finding.md";
+  const canonicalTemplate = await readFile(path.join(repoRoot, "shared/templates/review-finding.md"));
+  const sourceSkillPath = path.join(pluginRoot, "skills/review-game-design/SKILL.md");
+  const sourceSkill = await readFile(sourceSkillPath, "utf8");
+  assert.match(sourceSkill, new RegExp(`\\[review-finding\\.md\\]\\(${sourceLink.replaceAll(".", "\\.")}\\)`, "u"));
+  assert.deepEqual(await readFile(path.resolve(path.dirname(sourceSkillPath), sourceLink)), canonicalTemplate);
+
+  const stagingRoot = await mkdtemp(path.join(os.tmpdir(), "studio-review-template-"));
+  temporaryDirectories.push(stagingRoot);
+  const build = await buildProduct({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  const packagedSkillPath = path.join(build.outputDir, "skills/review-game-design/SKILL.md");
+  const packagedSkill = await readFile(packagedSkillPath, "utf8");
+  assert.match(packagedSkill, new RegExp(`\\[review-finding\\.md\\]\\(${packagedLink.replaceAll(".", "\\.")}\\)`, "u"));
+  assert.deepEqual(await readFile(path.resolve(path.dirname(packagedSkillPath), packagedLink)), canonicalTemplate);
 });
 
 test("README explains the source overlay and complete independent built-plugin structure", async () => {
@@ -674,9 +913,10 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
     ".codex-plugin/plugin.json",
-    "skills/ (15개)",
+    "skills/ (18개)",
+    "<15개 Studio 제품 스킬>",
     "skills/svg-infographic/",
-    "agents/ (9개)",
+    "agents/ (12개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",
@@ -706,7 +946,7 @@ test("README explains the source overlay and complete independent built-plugin s
   ]) {
     assert.ok(readme.includes(contract), `missing structure boundary: ${contract}`);
   }
-  assert.ok(readme.includes("1개 universal core와 3개 선택 프로필"));
+  assert.ok(readme.includes("4개: universal core 1 + 선택 프로필 3"));
   assert.ok(readme.includes("저수준 `buildProduct()` 출력에는 `BUILD-MANIFEST.json`이 없습니다"));
   assert.ok(readme.includes("이 suite distribution snapshot에는 `BUILD-MANIFEST.json`이 있으며"));
 });

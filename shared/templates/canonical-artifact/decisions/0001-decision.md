@@ -1,17 +1,17 @@
 # Decision 0001: Define the artifact purpose
 
-## Status
+## 상태
 
 Proposed
 
-## Context
+## 맥락
 
 State the problem, constraints, evidence, and affected players or stakeholders.
 
-## Decision
+## 결정
 
 Record the chosen direction and its owner.
 
-## Consequences
+## 결과
 
 Record expected benefits, tradeoffs, follow-up checks, and reversal conditions.

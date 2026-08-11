@@ -20,15 +20,15 @@
     <rect x="198" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
     <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
       <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">평가 질문</text>
-      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">학습자가 설명할 판단</text>
-      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">을 정합니다.</text>
+      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">학습자가 설명할</text>
+      <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">판단을 정합니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 학습 증거 기준">
     <rect x="450" y="342" width="220" height="216" rx="18" fill="#ECEBFB" stroke="#534AB7" stroke-width="2"/>
     <rect x="478" y="370" width="52" height="32" rx="16" fill="#534AB7"/>
     <text x="504" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
       <text x="478" y="438" fill="#3C3489" font-size="22" font-weight="700">학습 증거 기준</text>
-      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">관찰 근거와 가정을 </text>
+      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">관찰 근거와 가정을</text>
       <text x="478" y="526" fill="#354152" font-size="18" font-weight="400">나눕니다.</text>
   </g>
   <g aria-label="읽기 순서 3: 검토 큐">
@@ -36,15 +36,15 @@
     <rect x="758" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="784" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
       <text x="758" y="438" fill="#085041" font-size="22" font-weight="700">검토 큐</text>
-      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">다음 과제를 우선순위</text>
-      <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">화합니다.</text>
+      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">다음 과제를</text>
+      <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">우선순위화합니다.</text>
   </g>
   <g aria-label="읽기 순서 4: 피드백 계획">
     <rect x="1010" y="342" width="220" height="216" rx="18" fill="#FFF3DF" stroke="#A75B00" stroke-width="2"/>
     <rect x="1038" y="370" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="1064" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
       <text x="1038" y="438" fill="#814600" font-size="22" font-weight="700">피드백 계획</text>
-      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">사람 피드백 지점을 </text>
+      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">사람 피드백 지점을</text>
       <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">남깁니다.</text>
   </g>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>

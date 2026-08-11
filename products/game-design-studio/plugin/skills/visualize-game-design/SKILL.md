@@ -36,6 +36,12 @@ Proceed only when spatial structure materially improves understanding over conci
 
 Map every generated node, connector, label, date, and numeric annotation to a source locator. Keep illustrative placeholders explicitly non-canonical; never allow illustrative placeholders to become source-derived content through layout, captions, or export.
 
+## Optional Archify structural-diagram route
+
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON spec, checked HTML, and receipt as separate evidence. This does not replace the packaged static asset lane or grant approval.
+
+Use packaged `$svg-infographic` for Markdown-friendly SVG and 2× PNG output. Keep Archify HTML and Skillstead receipts distinct, and never auto-approve either diagram.
+
 ## Workflow
 
 1. Load `../../references/visualization-presets.json` and select exactly one suitable preset.

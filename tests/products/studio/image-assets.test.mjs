@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 
-import { reviewImageAssetWorkflow, runImageAssetWorkflow as runImageAssetWorkflowBase } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import { generateImageAssetWorkflow, reviewImageAssetWorkflow, runImageAssetWorkflow as runImageAssetWorkflowBase } from "../../../shared/scripts/run-image-asset-workflow.mjs";
+import { buildImageAssetPlan } from "../../../shared/scripts/build-image-asset-plan.mjs";
+import { validateImageAssetManifest } from "../../../shared/scripts/validate-image-assets.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
@@ -54,6 +56,44 @@ async function workflowRoot(t, prefix) {
   await mkdir(path.join(root, "assets", "prompts"), { recursive: true });
   await mkdir(path.join(root, "decisions"));
   return root;
+}
+
+function digest(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+async function masterDerivativeFixture(t) {
+  const root = await workflowRoot(t, "studio-master-derivative-");
+  const needs = [
+    { ...artifact.image_needs[0], variant: "master" },
+    { ...artifact.image_needs[0], variant: "character", subject: "The same original silhouette in a close gameplay view." },
+    { ...artifact.image_needs[0], variant: "ui", type: "ui-icon", subject: "A readable icon for the same original silhouette." },
+  ];
+  const manifest = structuredClone(buildImageAssetPlan({ artifact: { ...artifact, image_needs: needs }, qualityProfile: profile }).manifest);
+  const master = manifest.assets.find(({ asset_id }) => asset_id === "hero-master");
+  const character = manifest.assets.find(({ asset_id }) => asset_id === "hero-character");
+  const ui = manifest.assets.find(({ asset_id }) => asset_id === "hero-ui");
+  await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+  const masterBytes = png();
+  await writeFile(path.join(root, master.output.path), masterBytes);
+  for (const asset of manifest.assets) {
+    asset.prompt_digest = digest(asset.prompt);
+    asset.asset_set_id = "wind-island";
+    asset.derivative_of = null;
+    asset.reference_images = [];
+    asset.consistency_profile = { style_anchor_asset_ids: [master.asset_id], character_anchor_asset_ids: [master.asset_id] };
+    asset.prompt_lineage = { parent_prompt_digests: [] };
+  }
+  for (const derivative of [character, ui]) {
+    derivative.derivative_of = master.asset_id;
+    derivative.reference_images = [{ asset_id: master.asset_id, path: master.output.path, sha256: digest(masterBytes) }];
+    derivative.prompt_lineage = { parent_prompt_digests: [master.prompt_digest] };
+  }
+  return { root, manifest, master, character, ui, masterBytes };
+}
+
+function lineageError(validation, code) {
+  return validation.errors.some((entry) => entry.code === code);
 }
 
 test("Studio plan-image-assets makes a profile-preflight plan and hands Skillstead evidence to visual QA", async () => {
@@ -188,4 +228,188 @@ test("Studio review requires an artifact-local host-user receipt rather than an 
     artifactRoot: root, manifest, assetId: "hero", targetState: "document-approved", reviewer: "Minji Kim",
     reviewedAt: "2026-08-06T00:00:00Z", rightsDecision: "approved", evidencePaths: ["evidence/visual.md"], decisionReceipt: receipt,
   }), /receipt/i);
+});
+
+test("Studio master image and two derivatives require one set ID, ordered local reference metadata, and prompt lineage", async (t) => {
+  const { root, manifest } = await masterDerivativeFixture(t);
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, true, JSON.stringify(validation.errors));
+  assert.deepEqual(manifest.assets.map(({ asset_id, derivative_of }) => ({ asset_id, derivative_of })), [
+    { asset_id: "hero-master", derivative_of: null },
+    { asset_id: "hero-character", derivative_of: "hero-master" },
+    { asset_id: "hero-ui", derivative_of: "hero-master" },
+  ]);
+});
+
+test("Studio generates an image_needs-declared master before binding its derivative to the current ordered reference", async (t) => {
+  const root = await workflowRoot(t, "studio-declared-master-dag-");
+  const declared = {
+    ...artifact,
+    image_needs: [
+      { ...artifact.image_needs[0], variant: "master" },
+      {
+        ...artifact.image_needs[0], variant: "detail", derivative_of: "hero-master",
+        reference_asset_ids: ["hero-master"],
+        consistency_anchors: { style_anchor_asset_ids: ["hero-master"], character_anchor_asset_ids: ["hero-master"] },
+      },
+    ],
+  };
+  const calls = [];
+  const result = await runImageAssetWorkflow({
+    artifactRoot: root, artifact: declared, qualityProfile: profile,
+    config: { mode: "all", model: "gpt-image-2", quality: "low", apiKey: "secret-never-written", apiKeyPresent: true },
+    codexCapability: { status: "unavailable" }, sleepFn: async () => {},
+    fetchFn: async (url, options) => {
+      calls.push({ url, options });
+      const body = Buffer.from(JSON.stringify({ data: [{ b64_json: png().toString("base64") }] }));
+      return { status: 200, headers: { get: (name) => name === "content-length" ? String(body.length) : "req-declared-dag" }, body: { async *[Symbol.asyncIterator]() { yield body; } } };
+    },
+  });
+  const master = result.manifest.assets.find(({ asset_id }) => asset_id === "hero-master");
+  const derivative = result.manifest.assets.find(({ asset_id }) => asset_id === "hero-detail");
+
+  assert.deepEqual(calls.map(({ url }) => url), ["https://api.openai.com/v1/images/generations", "https://api.openai.com/v1/images/edits"]);
+  assert.deepEqual(calls[1].options.body.getAll("image[]").map((file) => file.name), ["hero-master.png"]);
+  assert.deepEqual(derivative.reference_asset_ids, [master.asset_id]);
+  assert.deepEqual(derivative.reference_images.map(({ asset_id, path: referencePath }) => ({ asset_id, path: referencePath })), [{ asset_id: master.asset_id, path: master.output.path }]);
+  assert.equal(derivative.reference_images[0].sha256, digest(await readFile(path.join(root, master.output.path))));
+  assert.deepEqual(derivative.prompt_lineage.parent_prompt_digests, [master.prompt_digest]);
+  assert.equal(validateImageAssetManifest(result.manifest, { artifactRoot: root }).ok, true);
+});
+
+test("Studio sends the Codex host callback the same ordered master-reference metadata used by OpenAI", async (t) => {
+  const { root, manifest, master, character } = await masterDerivativeFixture(t);
+  master.generation_state = "generated";
+  let callbackJobs;
+  await generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-master-reference", asset_ids: [character.asset_id] },
+    hostGenerate: async ({ jobs }) => {
+      callbackJobs = jobs;
+      return { results: [], failures: [{
+        asset_id: character.asset_id, generation_state: "generation-failed", reason: "host-reported-failure",
+        provenance: { provider: "codex-host" },
+      }] };
+    },
+    attemptIdFactory: () => "master-reference-attempt",
+  });
+  assert.equal(callbackJobs.length, 1);
+  assert.deepEqual(callbackJobs[0].reference_images, character.reference_images);
+  assert.deepEqual(callbackJobs[0].consistency_profile, character.consistency_profile);
+  assert.deepEqual(callbackJobs[0].prompt_lineage, character.prompt_lineage);
+});
+
+test("Studio rejects a derivative whose artifact-local master reference is missing before a provider call", async (t) => {
+  const { root, manifest, master } = await masterDerivativeFixture(t);
+  await rm(path.join(root, master.output.path));
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "missing_reference_source"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects a derivative whose master bytes no longer match the recorded SHA-256", async (t) => {
+  const { root, manifest, master } = await masterDerivativeFixture(t);
+  await writeFile(path.join(root, master.output.path), Buffer.from("changed-master-bytes"));
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "stale_reference_digest"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects a stale host derivative before invoking the host provider", async (t) => {
+  const { root, manifest, master, character } = await masterDerivativeFixture(t);
+  await writeFile(path.join(root, master.output.path), Buffer.from("forged-master"));
+  let hostCalls = 0;
+  await assert.rejects(() => generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-stale-host-reference", asset_ids: [character.asset_id] },
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  }), /current image manifest/i);
+  assert.equal(hostCalls, 0);
+});
+
+test("Studio rechecks pinned parent identities after a deterministic rename-away-and-restore before host delivery", async (t) => {
+  const { root, manifest, master, character } = await masterDerivativeFixture(t);
+  master.generation_state = "generated";
+  let hostCalls = 0;
+  const result = await generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-pinned-host-reference", asset_ids: [character.asset_id] },
+    beforeProvider: async () => {
+      const assets = path.join(root, "assets");
+      const moved = path.join(root, "assets-moved");
+      await rename(assets, moved);
+      await rename(moved, assets);
+    },
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  });
+  assert.equal(hostCalls, 0);
+  assert.deepEqual(result.providerResult.failures.map(({ asset_id, reason }) => ({ asset_id, reason })), [{ asset_id: character.asset_id, reason: "host-callback-failed" }]);
+});
+
+test("Studio rejects an image that names itself as its master or reference", async (t) => {
+  const { root, manifest, character } = await masterDerivativeFixture(t);
+  character.derivative_of = character.asset_id;
+  character.reference_images = [{ asset_id: character.asset_id, path: character.output.path, sha256: "0".repeat(64) }];
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "self_reference"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects a two-image master/derivative cycle", async (t) => {
+  const { root, manifest, character, ui } = await masterDerivativeFixture(t);
+  character.derivative_of = ui.asset_id;
+  character.reference_images = [{ asset_id: ui.asset_id, path: ui.output.path, sha256: "1".repeat(64) }];
+  ui.derivative_of = character.asset_id;
+  ui.reference_images = [{ asset_id: character.asset_id, path: character.output.path, sha256: "2".repeat(64) }];
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "reference_cycle"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects a derivative with an unknown parent even when its path looks local", async (t) => {
+  const { root, manifest, character } = await masterDerivativeFixture(t);
+  character.derivative_of = "missing-master";
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "unknown_derivative_parent"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects traversal in a reference image path before reading or generating", async (t) => {
+  const { root, manifest, character } = await masterDerivativeFixture(t);
+  character.reference_images[0].path = "../outside-master.png";
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "reference_path_outside_artifact"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio rejects symbolic links in a master reference path before a provider sees bytes", async (t) => {
+  const { root, manifest, master, character, masterBytes } = await masterDerivativeFixture(t);
+  const linkPath = path.join(root, "assets", "generated", "master-link.png");
+  await symlink(path.basename(master.output.path), linkPath);
+  character.reference_images[0] = { asset_id: master.asset_id, path: "assets/generated/master-link.png", sha256: digest(masterBytes) };
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "reference_symlink"), true, JSON.stringify(validation.errors));
+});
+
+test("Studio invalidates a document-approved derivative binding when its master digest changes", async (t) => {
+  const { root, manifest, master, character } = await masterDerivativeFixture(t);
+  await mkdir(path.join(root, "evidence"), { recursive: true });
+  await writeFile(path.join(root, "evidence", "character-review.md"), "A named reviewer checked this derivative.\n");
+  character.approval_state = "document-approved";
+  character.reviews = [{
+    state: "document-approved", reviewer: "Minji Kim", reviewer_kind: "human", reviewer_role: "visual-reviewer",
+    review_scope: "document-visual", reviewed_at: "2026-08-11T00:00:00Z", evidence_paths: ["evidence/character-review.md"], rights_decision: "approved",
+  }];
+  await writeFile(path.join(root, master.output.path), Buffer.from("a regenerated master must invalidate old derivative binding"));
+  const validation = validateImageAssetManifest(manifest, { artifactRoot: root });
+  assert.equal(validation.ok, false);
+  assert.equal(lineageError(validation, "stale_reference_digest"), true, JSON.stringify(validation.errors));
+  assert.equal(lineageError(validation, "approved_derivative_reference_stale"), true, JSON.stringify(validation.errors));
 });

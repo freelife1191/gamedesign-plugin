@@ -1,61 +1,61 @@
 ---
-title: Job Posting Evidence
+title: 채용 공고 근거
 artifact_id: job-posting-evidence
 quality_profile: job-posting-evidence
 version: 1
 ---
-# Job Posting Evidence {#job-posting-evidence}
+# 채용 공고 근거 {#job-posting-evidence}
 
-## Posting Records {#posting-records}
+## 채용 공고 기록 {#posting-records}
 
-Each record requires source-id, company, project if stated, region, employment type, posted-date, source-url, retrieval-date, source-type, responsibilities, required skills, and preferred skills.
+각 기록에는 출처 ID(`source-id`), 회사, 명시된 경우 프로젝트, 지역, 고용 형태, 게시일(`posted-date`), 출처 URL(`source-url`), 조회일(`retrieval-date`), 출처 유형(`source-type`), 담당 업무, 필수 역량, 우대 역량을 기록합니다.
 
-## Freshness and Sample Limits {#freshness-and-sample-limits}
+## 최신성과 표본 한계 {#freshness-and-sample-limits}
 
-Record freshness classification, sample size, sample-geography, blind spots, and non-generalizable requirements. A repeated signal requires multiple source IDs.
+최신성 분류, 표본 수, sample-geography, 사각지대, 일반화할 수 없는 요구 사항을 기록합니다. 반복되는 신호는 여러 source ID로 확인합니다.
 
-## Working Record {#working-record}
+## 작업 기록 {#working-record}
 
-| Field ID | Current state | Evidence or next action | Owner |
+| 항목 ID | 현재 상태 | 근거 또는 다음 작업 | 담당자 |
 | --- | --- | --- | --- |
-| `source-id` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `company` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `project` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `region` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `employment-type` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `posted-date` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `source-url` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `retrieval-date` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `source-type` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `sample-geography` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
-| `freshness` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
+| `source-id` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `company` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `project` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `region` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `employment-type` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `posted-date` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `source-url` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `retrieval-date` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `source-type` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `sample-geography` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
+| `freshness` | not-observed | 승인 전에 프로젝트별 값과 근거 위치를 함께 기록합니다. | artifact-owner |
 
-## Assumptions and Boundaries {#assumptions-and-boundaries}
+## 전제와 범위 {#assumptions-and-boundaries}
 
-Record each assumption with a stable ID, evidence status, owner, validation action, and the decision that remains blocked. An assumption is not an approved fact.
+각 전제는 안정적인 ID, 근거 상태, 담당자, 검증 작업, 아직 결정을 막고 있는 사유와 함께 기록합니다. 전제는 승인된 사실이 아닙니다.
 
-## Owners and Approvals {#owners-and-approvals}
+## 담당자와 승인 {#owners-and-approvals}
 
-Name the artifact owner, evidence reviewer, publication or privacy approver where applicable, approval status, approval date, and reopen condition. Automation cannot grant approval or rights.
+산출물 담당자, 근거 검토자, 공개 또는 개인정보 승인 담당자(해당하는 경우), 승인 상태, 승인일, 재검토 조건을 기록합니다. 자동화 도구는 승인이나 권한을 부여할 수 없습니다.
 
-## Evidence and Freshness {#evidence-and-freshness}
+## 근거와 최신성 {#evidence-and-freshness}
 
-Link material claims to `evidence.yml`. Classify evidence as evergreen, contextual, or time-sensitive; current claims require a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner. Third-party material also records source, attribution, use purpose, rights or quotation notes, and privacy disposition.
+주요 주장에는 `evidence.yml`의 근거를 연결합니다. 근거는 상시 유효, 맥락 의존, 시점 민감으로 구분합니다. 최신 주장은 날짜가 있는 1차 출처, 조회일, 지역 또는 적용 범위, 재검토일, 갱신 담당자를 갖춰야 합니다. 제3자 자료에는 출처, 출처 표기, 이용 목적, 권리 또는 인용 유의사항, 개인정보 처리 방침도 기록합니다.
 
-## Output Story Hints {#output-story-hints}
+## 산출물 구성 가이드 {#output-story-hints}
 
-The Markdown source preserves the full decision record. PDF and DOCX keep the same hierarchy. PPTX tells a short audience-specific story: context and decision, evidence and alternatives, then result or unresolved verification work. Do not split Markdown mechanically by headings.
+Markdown 원본에는 전체 의사결정 기록을 남깁니다. PDF와 DOCX도 같은 계층을 유지합니다. PPTX는 청중에 맞춰 맥락과 결정, 근거와 대안, 결과 또는 미해결 검증 작업 순으로 짧게 구성합니다. Markdown을 제목 단위로 기계적으로 나누지 마세요.
 
-## Assets {#assets}
+## 첨부 자료 {#assets}
 
-The first diagram may be added later after evidence is available. Store only relative local files under `assets/`, add nonempty alt text, and record source and rights in `assets/README.md`.
+근거가 확보된 뒤 첫 번째 다이어그램을 추가할 수 있습니다. `assets/`에는 상대 경로의 로컬 파일만 보관하고, 비어 있지 않은 대체 텍스트를 작성합니다. 출처와 권리는 `assets/README.md`에 기록합니다.
 
-## Decisions {#decisions}
+## 의사결정 {#decisions}
 
-Record durable scope, evidence, and publication choices under `decisions/`. Each decision names alternatives, rationale, owner, approval state, and reopen condition.
+`decisions/`에 지속해서 참고할 범위, 근거, 공개 관련 결정을 기록합니다. 각 결정에는 대안, 근거, 담당자, 승인 상태, 재검토 조건을 포함합니다.
 
-## Change History {#change-history}
+## 변경 이력 {#change-history}
 
-| Version | Date | Owner | Change | Approval |
+| 버전 | 날짜 | 담당자 | 변경 내용 | 승인 |
 | --- | --- | --- | --- | --- |
-| 1 | 2026-08-04 | artifact-owner | Created the reviewable seed and its completion boundaries. | pending human review |
+| 1 | 2026-08-04 | artifact-owner | 검토 가능한 초안과 완료 범위를 만들었습니다. | pending human review |

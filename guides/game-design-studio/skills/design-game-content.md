@@ -117,3 +117,11 @@ $game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/
 ## 관련 문서
 
 [narrative-quest-npc 템플릿](../templates.md#narrative-quest-npc), [review-game-design 스킬](./review-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:design-game-content -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 퀘스트와 NPC 한 개를 설계하는 게임 콘텐츠](../../prompt-templates/studio/design-game-content.md#studiodesign-game-contentbeginner)
+- [standard — Content graph와 보상을 연결하는 게임 콘텐츠](../../prompt-templates/studio/design-game-content.md#studiodesign-game-contentstandard)
+- [advanced — 서사·제작·권리 경계를 갖춘 게임 콘텐츠](../../prompt-templates/studio/design-game-content.md#studiodesign-game-contentadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:design-game-content -->

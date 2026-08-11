@@ -74,11 +74,14 @@ const WORKBENCH_LANES = Object.freeze({
   "design-game-economy-and-liveops": "도메인 설계",
   "plan-game-production": "도메인 설계",
   "apply-document-quality-profile": "품질·검토",
+  "humanize-korean": "품질·검토",
+  "polish-game-design-writing": "품질·검토",
   "review-game-design": "품질·검토",
   "plan-image-assets": "이미지",
   "generate-image-assets": "이미지",
   "review-image-assets": "이미지",
   "visualize-game-design": "시각화",
+  "archify": "시각화",
   "svg-infographic": "시각화",
   "export-game-design-documents": "출력",
 });
@@ -258,7 +261,7 @@ function assertStudioGuideRouting(index, skillIndex) {
 
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
-  assert.equal(inventory.skillIds.length, 15);
+  assert.equal(inventory.skillIds.length, 18);
 
   for (const skillId of inventory.skillIds) {
     const markdown = await readFile(
@@ -266,7 +269,7 @@ test("Studio documents every installed skill with the common contract", async ()
       "utf8",
     );
     assertSkillContract(markdown, skillId);
-    assertDirectUseContract(markdown, skillId);
+    if (Object.hasOwn(DIRECT_USE_OUTPUTS, skillId)) assertDirectUseContract(markdown, skillId);
     assert.match(markdown, /복사 가능한 요청문/);
     assert.match(markdown, /예상 결과/);
   }

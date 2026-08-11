@@ -82,6 +82,118 @@ $game-design-career:map-game-design-career artifact=game-design-career/system-st
 
 규칙을 내부 구현처럼 단정했는가? 콘텐츠 흐름은 CA-T02, 전투 선택은 CA-T03으로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-t01 -->
+<!-- PROMPT-CARD: career:case:CA-T01 -->
+#### career:case:CA-T01
+
+**상태·규칙·예외로 보여 주는 시스템 기획 (CA-T01)**
+
+CA-T01 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → plan-junior-growth
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+상점 재고를 ‘잠김·판매 중·품절’로 나누고 상태 전환 조건과 중복 구매 예외를 표로 만들었습니다. 빠진 예외와 다음 검증 질문은 시스템 기획 멘토 검토 전입니다. (ID: career:case:CA-T01; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T01의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T01를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth CA-T01의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth [경력 ID] [공개 정보] CA-T01의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: map-game-design-career
+- 스킬 흐름: map-game-design-career → build-game-design-portfolio → plan-junior-growth
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- game-design-role-map
+- competency-matrix
+- learning-roadmap
+
+##### 예상 결과물
+###### 최소 결과물
+- game-design-role-map
+- competency-matrix
+- learning-roadmap
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-design-role-map/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-design-role-map/content.md
+- game-design-career/[경력 ID]/game-design-role-map/evidence.yml
+- game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t01
+- SVG: guides/assets/game-design-career/use-cases/ca-t01.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t01.png
+- 대체 텍스트: CA-T01 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문입니다. **검토 체크포인트:** `game-design-role-map` → `competency-matrix` → `learning-roadmap` 순서로 읽고 상태와 예외의 근거를 확인합니다. **사람 결정:** 시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다. 스킬 실행은 자동 승인을 하지 않으며 실제 역할 적합성을 확정하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t01 -->
+
 ## CA-T02 콘텐츠·퀘스트 기획 준비생
 
 [![콘텐츠와 퀘스트 기획 준비생의 제작 가능성 증거 흐름](../../assets/game-design-career/use-cases/ca-t02.png)](../../assets/game-design-career/use-cases/ca-t02.svg)
@@ -161,6 +273,118 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/ques
 ### 자기점검과 다음 학습
 
 NPC 대사를 시스템처럼 단정했는가? 협업 계약은 CA-T06, 공간 흐름은 CA-T07으로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-t02 -->
+<!-- PROMPT-CARD: career:case:CA-T02 -->
+#### career:case:CA-T02
+
+**분기와 실패 복구를 설계하는 콘텐츠 기획 (CA-T02)**
+
+CA-T02 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+구조 요청을 거절한 플레이어에게 잠입 경로가 열리고, 실패하면 경비의 신뢰를 회복하는 보조 임무로 이어지게 구성했습니다. 분기 수와 실제 제작 범위는 콘텐츠 기획 멘토 검토 전입니다. (ID: career:case:CA-T02; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T02의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T02를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T02의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T02의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: map-game-design-career
+- 스킬 흐름: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- game-design-role-map
+- portfolio-project-brief
+- creative-design-portfolio
+
+##### 예상 결과물
+###### 최소 결과물
+- game-design-role-map
+- portfolio-project-brief
+- creative-design-portfolio
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-design-role-map/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-design-role-map/content.md
+- game-design-career/[경력 ID]/game-design-role-map/evidence.yml
+- game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t02
+- SVG: guides/assets/game-design-career/use-cases/ca-t02.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t02.png
+- 대체 텍스트: CA-T02 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 목표 → 분기 → 실패 복구 → 대안입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 분기와 제작 범위를 확인합니다. **사람 결정:** 콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다. 생성 내용은 자동 승인을 하지 않으며 실제 제작 성과를 대신하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t02 -->
 
 ## CA-T03 전투·캐릭터 기획 준비생
 
@@ -242,6 +466,118 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/com
 
 관찰을 내부 공식으로 바꾸었는가? 경제 가설은 CA-T04, 공간 playtest는 CA-T07으로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-t03 -->
+<!-- PROMPT-CARD: career:case:CA-T03 -->
+#### career:case:CA-T03
+
+**관찰과 반례로 다듬는 전투 기획 사례 (CA-T03)**
+
+CA-T03 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+강공격 뒤 1.2초 빈틈이 선택을 만든다는 관찰을 스킬 명세로 옮겼습니다. 회피 위주 플레이에서는 빈틈이 의미 없다는 반례가 있어 수치와 재미 판단은 전투 기획 멘토 검토 전입니다. (ID: career:case:CA-T03; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T03의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T03를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T03의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T03의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: reverse-engineer-game-design
+- 스킬 흐름: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- game-analysis-report
+- portfolio-project-brief
+- creative-design-portfolio
+
+##### 예상 결과물
+###### 최소 결과물
+- game-analysis-report
+- portfolio-project-brief
+- creative-design-portfolio
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+- game-design-career/[경력 ID]/game-analysis-report/evidence.yml
+- game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t03
+- SVG: guides/assets/game-design-career/use-cases/ca-t03.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t03.png
+- 대체 텍스트: CA-T03 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 관찰 → 스킬 명세 → 반례 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 관찰과 반례를 확인합니다. **사람 결정:** 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. 자동 승인을 하지 않으며 재미나 직무 적합성을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t03 -->
+
 ## CA-T04 경제·밸런스·LiveOps 준비생
 
 [![경제와 밸런스 및 LiveOps 준비생의 가정 검증 흐름](../../assets/game-design-career/use-cases/ca-t04.png)](../../assets/game-design-career/use-cases/ca-t04.svg)
@@ -321,6 +657,118 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/eco
 ### 자기점검과 다음 학습
 
 가설을 실제 KPI처럼 썼는가? 규칙 모델은 CA-T01, 성장 기록은 CA-T10으로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-t04 -->
+<!-- PROMPT-CARD: career:case:CA-T04 -->
+#### career:case:CA-T04
+
+**재화 흐름과 보호 기준을 세우는 경제 기획 (CA-T04)**
+
+CA-T04 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+일일 퀘스트를 주요 재화 공급원, 장비 강화와 상점을 소비처로 놓고 14일 흐름 가설을 작성했습니다. 재화 고갈 시 완화 기준과 되돌림 조건은 경제·밸런스 검토자가 확인해야 합니다. (ID: career:case:CA-T04; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T04의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T04를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T04의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T04의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: reverse-engineer-game-design
+- 스킬 흐름: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- game-analysis-report
+- portfolio-project-brief
+- five-axis-review
+
+##### 예상 결과물
+###### 최소 결과물
+- game-analysis-report
+- portfolio-project-brief
+- five-axis-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+- game-design-career/[경력 ID]/game-analysis-report/evidence.yml
+- game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t04
+- SVG: guides/assets/game-design-career/use-cases/ca-t04.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t04.png
+- 대체 텍스트: CA-T04 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** source·sink → 가설 → guardrail → rollback입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 가설과 guardrail을 확인합니다. **사람 결정:** 경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다. 자동 승인을 하지 않으며 시장 성공을 확정하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t04 -->
 
 ## CA-T05 UI·UX 기획 준비생
 
@@ -402,6 +850,118 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux
 
 사용성 가정을 조사 결과처럼 썼는가? 콘텐츠 흐름은 CA-T02, 첫 사례의 반복은 CA-T08로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-t05 -->
+<!-- PROMPT-CARD: career:case:CA-T05 -->
+#### career:case:CA-T05
+
+**오류와 대체 입력을 살피는 접근성 기획 (UX·CA-T05)**
+
+CA-T05 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+키보드만 사용할 때 제작 창의 재료 목록으로 초점이 이동하지 않는 문제를 기록했습니다. 방향키 이동과 검색 입력을 대안으로 제안했으며 접근성 적합성은 전문 검토 전까지 확정하지 않습니다. (ID: career:case:CA-T05; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T05의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T05를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T05의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T05의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: map-game-design-career
+- 스킬 흐름: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- competency-matrix
+- portfolio-project-brief
+- five-axis-review
+
+##### 예상 결과물
+###### 최소 결과물
+- competency-matrix
+- portfolio-project-brief
+- five-axis-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/competency-matrix/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/competency-matrix/content.md
+- game-design-career/[경력 ID]/competency-matrix/evidence.yml
+- game-design-career/[경력 ID]/competency-matrix/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t05
+- SVG: guides/assets/game-design-career/use-cases/ca-t05.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t05.png
+- 대체 텍스트: CA-T05 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 행동 → 오류 → focus → 대체 입력입니다. **검토 체크포인트:** `competency-matrix` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 오류와 대체 입력을 확인합니다. **사람 결정:** UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다. 자동 승인을 하지 않으며 접근성 적합성을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t05 -->
+
 ## CA-T06 내러티브 기획 준비생
 
 [![내러티브 기획 준비생의 협업 계약과 증거 흐름](../../assets/game-design-career/use-cases/ca-t06.png)](../../assets/game-design-career/use-cases/ca-t06.svg)
@@ -481,6 +1041,118 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/narr
 ### 자기점검과 다음 학습
 
 대사를 실제 팀 기여로 바꾸었는가? 퀘스트 흐름은 CA-T02, 공간 연출은 CA-T07으로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-t06 -->
+<!-- PROMPT-CARD: career:case:CA-T06 -->
+#### career:case:CA-T06
+
+**장면 목적과 협업 경계를 밝히는 내러티브 기획 (CA-T06)**
+
+CA-T06 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+폐역 재회 장면의 목적을 ‘동료를 믿을지 선택하게 하기’로 정하고 대사 선택 뒤 필요한 연출 전달사항을 적었습니다. 대사와 연출의 작업 경계는 내러티브 기획 멘토가 검토합니다. (ID: career:case:CA-T06; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T06의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T06를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T06의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T06의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: map-game-design-career
+- 스킬 흐름: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- game-design-role-map
+- portfolio-project-brief
+- creative-design-portfolio
+
+##### 예상 결과물
+###### 최소 결과물
+- game-design-role-map
+- portfolio-project-brief
+- creative-design-portfolio
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-design-role-map/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-design-role-map/content.md
+- game-design-career/[경력 ID]/game-design-role-map/evidence.yml
+- game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t06
+- SVG: guides/assets/game-design-career/use-cases/ca-t06.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t06.png
+- 대체 텍스트: CA-T06 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 장면 목적 → 선택 → handoff → 공개 경계입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 장면 목적과 공개 경계를 확인합니다. **사람 결정:** 내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다. 자동 승인을 하지 않으며 실제 협업 경험을 대신하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t06 -->
 
 ## CA-T07 레벨 디자인 준비생
 
@@ -562,6 +1234,118 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/lev
 
 관찰을 실제 사용자 결과처럼 썼는가? 전투 선택은 CA-T03, 첫 사례 반복은 CA-T08로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-t07 -->
+<!-- PROMPT-CARD: career:case:CA-T07 -->
+#### career:case:CA-T07
+
+**동선과 시야를 플레이 질문으로 바꾸는 레벨 기획 (CA-T07)**
+
+CA-T07 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+첫 갈림길에서 목표물이 벽에 가려져 세 명 중 두 명이 반대편으로 이동했다는 관찰을 남겼습니다. 조명과 표지 위치 수정안은 검토 전이며 다음 플레이테스트 뒤 채택 여부를 정합니다. (ID: career:case:CA-T07; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T07의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T07를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T07의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T07의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: reverse-engineer-game-design
+- 스킬 흐름: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: game-design-mentor
+
+##### 중간 산출물
+- game-analysis-report
+- portfolio-project-brief
+- five-axis-review
+
+##### 예상 결과물
+###### 최소 결과물
+- game-analysis-report
+- portfolio-project-brief
+- five-axis-review
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/game-analysis-report/content.md
+- game-design-career/[경력 ID]/game-analysis-report/evidence.yml
+- game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t07
+- SVG: guides/assets/game-design-career/use-cases/ca-t07.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t07.png
+- 대체 텍스트: CA-T07 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 동선 → 시야 → 막힘 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 동선과 playtest 질문을 확인합니다. **사람 결정:** 레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다. 자동 승인을 하지 않으며 실무 경험을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t07 -->
+
 ## CA-T08 실무 경험이 없는 신입
 
 [![실무 경험이 없는 신입의 판단과 반복 개선 증거 흐름](../../assets/game-design-career/use-cases/ca-t08.png)](../../assets/game-design-career/use-cases/ca-t08.svg)
@@ -641,6 +1425,118 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/new-
 ### 자기점검과 다음 학습
 
 수정 이유 없이 완성도만 주장했는가? 역할별 첫 과제는 CA-T01, 전환 경로는 CA-T09로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-t08 -->
+<!-- PROMPT-CARD: career:case:CA-T08 -->
+#### career:case:CA-T08
+
+**수정 전후와 개인 기여를 보여 주는 신입 포트폴리오 (CA-T08)**
+
+CA-T08 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer
+
+##### 이 요청으로 받는 결과
+튜토리얼 목표 문구를 바꾸기 전후의 화면과 테스트 메모를 나란히 놓고, 문구 설계와 기록 정리만 개인 기여로 적었습니다. 변화의 원인 해석은 포트폴리오 검토자가 확인합니다. (ID: career:case:CA-T08; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T08의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T08를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T08의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T08의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: map-game-design-career
+- 스킬 흐름: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 전문 역할: portfolio-reviewer
+
+##### 중간 산출물
+- career-stage-goal
+- portfolio-project-brief
+- portfolio-backlog
+
+##### 예상 결과물
+###### 최소 결과물
+- career-stage-goal
+- portfolio-project-brief
+- portfolio-backlog
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/career-stage-goal/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/career-stage-goal/content.md
+- game-design-career/[경력 ID]/career-stage-goal/evidence.yml
+- game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t08
+- SVG: guides/assets/game-design-career/use-cases/ca-t08.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t08.png
+- 대체 텍스트: CA-T08 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 문제 → 근거 → 수정 전후 → honest gap입니다. **검토 체크포인트:** `career-stage-goal` → `portfolio-project-brief` → `portfolio-backlog` 순서로 읽고 개인 기여와 수정 근거를 확인합니다. **사람 결정:** 포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다. 자동 승인을 하지 않으며 신입 채용을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t08 -->
 
 ## CA-T09 비전공자·다른 직군 전환자
 
@@ -722,6 +1618,118 @@ $game-design-career:map-game-design-career artifact=game-design-career/transitio
 
 이전 팀 성과를 개인 기여로 썼는가? 전투·분석 proof는 CA-T03, 성장·이직 검토는 CA-T10으로 이동합니다.
 
+<!-- PROMPT-TEMPLATES:START ca-t09 -->
+<!-- PROMPT-CARD: career:case:CA-T09 -->
+#### career:case:CA-T09
+
+**이전 경험을 새 직무 증거로 잇는 전환 계획 (CA-T09)**
+
+CA-T09 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T09의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → research-game-design-jobs → build-game-design-portfolio → plan-junior-growth
+- 함께 검토하는 역할: career-strategist
+
+##### 이 요청으로 받는 결과
+QA 경험에서 재현 절차 작성은 확인된 강점으로, 규칙 설계는 새로 증명할 영역으로 나눴습니다. 다음 과제는 상태 전이 문서이며 이직 준비도는 진로 검토자의 판단 전입니다. (ID: career:case:CA-T09; 파일: game-design-career/[경력 ID]/transition-readiness/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T09의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T09를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:map-game-design-career $game-design-career:research-game-design-jobs $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth CA-T09의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:map-game-design-career $game-design-career:research-game-design-jobs $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth [경력 ID] [공개 정보] CA-T09의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: map-game-design-career
+- 스킬 흐름: map-game-design-career → research-game-design-jobs → build-game-design-portfolio → plan-junior-growth
+- 전문 역할: career-strategist
+
+##### 중간 산출물
+- transition-readiness
+- game-design-role-map
+- portfolio-project-brief
+
+##### 예상 결과물
+###### 최소 결과물
+- transition-readiness
+- game-design-role-map
+- portfolio-project-brief
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/transition-readiness/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/transition-readiness/content.md
+- game-design-career/[경력 ID]/transition-readiness/evidence.yml
+- game-design-career/[경력 ID]/transition-readiness/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t09
+- SVG: guides/assets/game-design-career/use-cases/ca-t09.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t09.png
+- 대체 텍스트: CA-T09 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 이전 사실 → 전이 역량 → 새 evidence → 공개 경계입니다. **검토 체크포인트:** `transition-readiness` → `game-design-role-map` → `portfolio-project-brief` 순서로 읽고 사실과 새 evidence를 확인합니다. **사람 결정:** Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다. 자동 승인을 하지 않으며 이직을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T09의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t09 -->
+
 ## CA-T10 주니어의 성장·이직
 
 [![주니어의 성장과 이직 준비도 증거 흐름](../../assets/game-design-career/use-cases/ca-t10.png)](../../assets/game-design-career/use-cases/ca-t10.svg)
@@ -801,6 +1809,118 @@ $game-design-career:plan-junior-growth artifact=game-design-career/growth-transi
 ### 자기점검과 다음 학습
 
 준비도를 확정 사실처럼 썼는가? 경제 가설의 검토는 CA-T04, 전환 경계는 CA-T09로 이동합니다.
+
+<!-- PROMPT-TEMPLATES:START ca-t10 -->
+<!-- PROMPT-CARD: career:case:CA-T10 -->
+#### career:case:CA-T10
+
+**성장 기록을 다음 면접 답변으로 잇기 (CA-T10)**
+
+CA-T10 manifest의 audience, skill, template, result를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T10의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: plan-junior-growth → research-game-design-jobs → practice-game-design-interview → visualize-career-roadmap → export-career-documents
+- 함께 검토하는 역할: career-strategist → interview-coach
+
+##### 이 요청으로 받는 결과
+지난 검토 뒤 경제표의 예외 규칙을 3건 보완했고, 아직 지표 해석 사례는 없습니다. 면접 답변에는 이 차이를 솔직히 밝히고 다음 검토일을 적었으며 승진·이직 판단과는 분리했습니다. (ID: career:case:CA-T10; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+CA-T10의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 evidence와 작업 범위
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+- [공개 정보]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T10를 작성해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:plan-junior-growth $game-design-career:research-game-design-jobs $game-design-career:practice-game-design-interview $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents CA-T10의 공개 가능한 evidence를 작성해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:plan-junior-growth $game-design-career:research-game-design-jobs $game-design-career:practice-game-design-interview $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-T10의 fact, inference, recommendation을 작성해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: plan-junior-growth
+- 스킬 흐름: plan-junior-growth → research-game-design-jobs → practice-game-design-interview → visualize-career-roadmap → export-career-documents
+- 전문 역할: career-strategist → interview-coach
+
+##### 중간 산출물
+- junior-growth-review
+- transition-readiness
+- interview-question-answer-log
+
+##### 예상 결과물
+###### 최소 결과물
+- junior-growth-review
+- transition-readiness
+- interview-question-answer-log
+
+###### 선택 결과물
+- decision receipt
+
+###### 확장 결과물
+- 공개 가능한 evidence summary
+
+##### 파일 구조
+- game-design-career/[경력 ID]/junior-growth-review/content.md
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/junior-growth-review/content.md
+- game-design-career/[경력 ID]/junior-growth-review/evidence.yml
+- game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-t10
+- SVG: guides/assets/game-design-career/use-cases/ca-t10.svg
+- PNG: guides/assets/game-design-career/use-cases/ca-t10.png
+- 대체 텍스트: CA-T10 source diagram
+
+##### 사람 검토
+###### 승인 경계
+**읽는 순서:** 수정 사례 → current requirement → honest gap → 답변입니다. **검토 체크포인트:** `junior-growth-review` → `transition-readiness` → `interview-question-answer-log` 순서로 읽고 날짜와 다음 review를 확인합니다. **사람 결정:** manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다. 자동 승인을 하지 않으며 승진·이직을 보장하지 않습니다.
+
+###### 보류 조건
+- evidence, rights, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+CA-T10의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END ca-t10 -->
 
 ## 직무별 비교
 

@@ -12,7 +12,7 @@ import { discoverSourceFiles } from "../../tooling/index-references.mjs";
 import { buildProduct } from "../../tooling/lib/build-product.mjs";
 import { collectTree } from "../../tooling/lib/copy-tree.mjs";
 import { loadProductContract, validateProductContract } from "../../tooling/lib/product-contract.mjs";
-import { verifyVendorHash } from "../../tooling/verify-vendor-hash.mjs";
+import { verifyDiagramSkillVendor } from "../../tooling/sync-diagram-skills.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const sourceDocumentCategories = ["career", "fun-intent", "systems", "content", "feedback"];
@@ -25,6 +25,9 @@ const sharedMappings = new Map([
   ["templates", ["shared/templates", "assets/shared/templates"]],
   ["responsible-design", ["shared/responsible-design", "references/shared/responsible-design"]],
   ["export", ["shared/export", "references/shared/export"]],
+  ["vendor", ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]],
+  ["archify", ["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
+  ["im-not-ai", ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
   ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
   ["image-assets", ["shared/image-assets", "references/shared/image-assets"]],
 ]);
@@ -39,7 +42,7 @@ async function mappedTreeFiles(sourceRoot, source, destination) {
     .sort();
 }
 
-async function assertBuiltProductContract({ build, product, sourceRoot, referenceIndex, vendorLock }) {
+async function assertBuiltProductContract({ build, product, sourceRoot, referenceIndex, vendorLocks }) {
   for (const [moduleName, [source, destination]] of sharedMappings) {
     if (!product.sharedModules.includes(moduleName)) continue;
     assert.deepEqual(
@@ -58,12 +61,6 @@ async function assertBuiltProductContract({ build, product, sourceRoot, referenc
     await mappedTreeFiles(sourceRoot, "shared/scripts", "scripts"),
     `${product.name}: reserved scripts`,
   );
-  assert.deepEqual(
-    build.files.filter((file) => file.startsWith("skills/svg-infographic/")).sort(),
-    vendorLock.files.map(({ path: vendorPath }) => `skills/svg-infographic/${vendorPath}`).sort(),
-    `${product.name}: reserved Skillstead vendor`,
-  );
-
   const categories = new Set(product.sourceDocumentCategories ?? []);
   const expectedSources = referenceIndex.documents
     .filter(({ category }) => categories.has(category))
@@ -97,12 +94,12 @@ async function discoverProductContracts(sourceRoot) {
   return names.sort();
 }
 
-async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIndex, vendorLock }) {
+async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIndex, vendorLocks }) {
   const productNames = await discoverProductContracts(sourceRoot);
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -113,7 +110,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
       product,
       sourceRoot,
       referenceIndex,
-      vendorLock,
+      vendorLocks,
     });
   }
   return productNames;
@@ -143,7 +140,7 @@ function assertSessionStartOutput(output) {
   assert.equal(output.hookSpecificOutput.hookEventName, "SessionStart");
   assert.equal(typeof output.hookSpecificOutput.additionalContext, "string");
   assert.deepEqual(Object.keys(output.capabilities), [
-    "node", "chromium", "soffice", "documents", "pdf", "presentations", "image_generation",
+    "node", "chromium", "soffice", "documents", "pdf", "presentations", "image_generation", "archify",
   ]);
   assertCapability(output.capabilities.node, ["available", "version"]);
   assert.equal(output.capabilities.node.available, true);
@@ -254,7 +251,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "document-quality", "image-assets"],
+    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;
@@ -271,18 +268,22 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   );
 
   const referenceIndex = await readJson("shared/knowledge/reference-index.json");
-  const vendorLock = await readJson("shared/vendor/skillstead/vendor.lock.json");
+  const vendorLocks = {
+    vendor: await readJson("shared/vendor/skillstead/vendor.lock.json"),
+    archify: await readJson("shared/vendor/archify/vendor.lock.json"),
+    "im-not-ai": await readJson("shared/vendor/im-not-ai/vendor.lock.json"),
+  };
   const built = await buildProduct({ repoRoot: fixtureRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
   await assertBuiltProductContract({
     build: built,
     product: selectableFixture,
     sourceRoot: fixtureRoot,
     referenceIndex,
-    vendorLock,
+    vendorLocks,
   });
   assert.equal(built.files.filter((file) => file.startsWith("references/source/docs/")).length, 49);
 
-  await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLock });
+  await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLocks });
   const [studioBuild, careerBuild] = await Promise.all([
     buildProduct({
       repoRoot,
@@ -307,7 +308,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     );
   }
   await assert.rejects(
-    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
+    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLocks }),
     /Unexpected product contract: products\/unexpected-product\/product\.json/,
   );
   await rm(path.join(fixtureRoot, "products/unexpected-product"), { recursive: true, force: true });
@@ -318,7 +319,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   );
   await symlink("../unexpected-product-target", path.join(fixtureRoot, "products/unexpected-product"));
   await assert.rejects(
-    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
+    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLocks }),
     /Unsupported products entry: products\/unexpected-product is a symlink/,
   );
   await rm(path.join(fixtureRoot, "products/unexpected-product"), { force: true });
@@ -328,7 +329,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     { recursive: true },
   );
   await assert.rejects(
-    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLock }),
+    () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLocks }),
     /Product name mismatch: expected game-design-career, received game-design-studio/,
   );
   await rm(path.join(fixtureRoot, "products/game-design-career"), { recursive: true, force: true });
@@ -348,7 +349,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       product: selectableFixture,
       sourceRoot: fixtureRoot,
       referenceIndex,
-      vendorLock,
+      vendorLocks,
     }),
     /reserved hooks/,
   );
@@ -452,8 +453,8 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     assert.deepEqual([...gate.allowed_states].sort(), [...allowedStates].sort(), `${gate.id}: allowed_states`);
   }
 
-  assert.equal(vendorLock.files.length, 48);
-  assert.equal(await verifyVendorHash(repoRoot), 48);
+  assert.equal(vendorLocks.vendor.tree.files.length, 55);
+  assert.deepEqual(await verifyDiagramSkillVendor({ root: path.join(repoRoot, "shared/vendor/skillstead"), name: "skillstead" }), { name: "skillstead", tag: "svg-infographic/v0.9.0", verifiedFiles: 55 });
   assert.equal(typeof buildProduct, "function");
   assert.equal(typeof loadProductContract, "function");
   assert.equal(typeof validateProductContract, "function");

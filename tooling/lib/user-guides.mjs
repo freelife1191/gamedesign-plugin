@@ -5,7 +5,7 @@ import {
   isCompletePng,
   parseViewBox,
   pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 
 export const PRODUCT_IDS = Object.freeze([
   "game-design-career",
@@ -55,12 +55,17 @@ export async function collectProductInventory(repoRoot, productId) {
   const productSkills = await directoryIds(path.join(productRoot, "skills"), "SKILL.md");
   const vendorSkill = path.join(
     repoRoot,
-    "shared/vendor/skillstead/svg-infographic/0.8.3/SKILL.md",
+    "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md",
   );
-  await assertRegularFile(vendorSkill);
+  const sharedSkills = [
+    ["svg-infographic", vendorSkill],
+    ["archify", path.join(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md")],
+    ["humanize-korean", path.join(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md")],
+  ];
+  for (const [, skillPath] of sharedSkills) await assertRegularFile(skillPath);
   const templateIds = await directoryIds(path.join(productRoot, "assets/templates"), "content.md");
   return {
-    skillIds: [...productSkills, "svg-infographic"].sort(compareIds),
+    skillIds: [...productSkills, ...sharedSkills.map(([id]) => id)].sort(compareIds),
     templateIds: templateIds.sort(compareIds),
   };
 }
@@ -160,10 +165,13 @@ function markdownContainer(source) {
 
 function rawHtmlBlockStart(line) {
   const source = line.content;
-  const terminated = /^ {0,3}<(script|pre|style|textarea)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
-  if (terminated) return { tag: terminated, termination: "tag" };
-  const blankTerminated = /^ {0,3}<(div|details)(?:[ \t>]|$)/iu.exec(source)?.[1]?.toLowerCase();
-  if (blankTerminated) return { tag: blankTerminated, termination: "blank" };
+  const prefix = /^ {0,3}</u.exec(source);
+  const opener = prefix ? htmlTagAt(source, prefix[0].length - 1) : undefined;
+  if (!opener || opener.closing) return undefined;
+  if (["script", "pre", "style", "textarea"].includes(opener.name)) {
+    return { tag: opener.name, termination: "tag" };
+  }
+  if (["div", "details"].includes(opener.name)) return { tag: opener.name, termination: "blank" };
   return undefined;
 }
 
@@ -378,6 +386,7 @@ export function scanVisibleMarkdown(markdown) {
   const lines = structuralLines(markdown).map((line) => ({
     ...line,
     hidden: Array(line.source.length).fill(false),
+    rawHtml: Array(line.source.length).fill(false),
   }));
   const rawRanges = inlineCodeRanges(lines);
   const rangeStartAt = lines.map((line) => Array(line.source.length));
@@ -393,6 +402,7 @@ export function scanVisibleMarkdown(markdown) {
   let activeSegment;
   for (const [lineIndex, line] of lines.entries()) {
     const hide = (start, end) => line.hidden.fill(true, start, end);
+    const markRawHtml = (start, end) => line.rawHtml.fill(true, start, end);
     const source = line.content;
     if (line.segment !== activeSegment) activeCodeRange = undefined;
     activeSegment = line.segment;
@@ -408,6 +418,7 @@ export function scanVisibleMarkdown(markdown) {
     if (rawHtml) {
       activeCodeRange = undefined;
       hide(0, line.source.length);
+      markRawHtml(0, line.source.length);
       if ((rawHtml.termination === "tag" && closesRawHtmlBlock(source, rawHtml))
         || (rawHtml.termination === "blank" && source.trim() === "")) rawHtml = undefined;
       continue;
@@ -428,6 +439,7 @@ export function scanVisibleMarkdown(markdown) {
       if (html) {
         activeCodeRange = undefined;
         hide(0, line.source.length);
+        markRawHtml(0, line.source.length);
         if (html.termination === "blank" || !closesRawHtmlBlock(source, html)) rawHtml = { ...html, scope: line.container.scope };
         continue;
       }
@@ -502,7 +514,128 @@ export function scanVisibleMarkdown(markdown) {
     maskInlineParagraph(lines, region);
   }
 
-  return lines.map(({ line, text, source, blockText, kind }) => ({ line, text: text.join(""), source, blockText, kind }));
+  return lines.map(({ line, text, source, blockText, kind, hidden, rawHtml, container }) => ({
+    line,
+    text: text.join(""),
+    source,
+    blockText,
+    kind,
+    scope: container.scope,
+    htmlVisible: hidden.map((masked, cursor) => rawHtml[cursor]
+      || (!masked && (source[cursor] === " " || text[cursor] !== " "))),
+  }));
+}
+
+const RESULT_BOUNDARY_LABELS = [
+  ["minimum", /(?:\bminimum\b|최소 결과)/iu],
+  ["optional", /(?:\boptional\b|선택 결과)/iu],
+  ["expanded", /(?:\bexpanded\b|확장 결과)/iu],
+  ["owner", /(?:\bowner\b|승인 주체)/iu],
+  ["hold", /(?:\bhold\b|보류 대상)/iu],
+  ["resume", /(?:\bresume\b|재개 조건(?:·요청)?)/iu],
+  ["safety", /(?:\bsafety\b|안전·증거 경계)/iu],
+];
+
+function inlineHtmlEnd(source, start) {
+  let quote;
+  for (let cursor = start + 1; cursor < source.length; cursor += 1) {
+    const character = source[cursor];
+    if (quote) {
+      if (character === quote && !escaped(source, cursor)) quote = undefined;
+      continue;
+    }
+    if (character === "\"" || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === ">") return cursor + 1;
+  }
+  return undefined;
+}
+
+function autolinkDestination(raw) {
+  return /^[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s\u0000-\u001F\u007F<>]+$/u.test(raw)
+    || /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/u.test(raw);
+}
+
+function renderedBoundaryText(source) {
+  let text = "";
+  for (let cursor = 0; cursor < source.length;) {
+    if (source[cursor] === "`" && !escaped(source, cursor)) {
+      const span = inlineCodeSpan(source, cursor);
+      if (span) {
+        const length = /^`+/u.exec(source.slice(cursor))[0].length;
+        text += source.slice(cursor + length, span.end - length);
+        cursor = span.end;
+        continue;
+      }
+    }
+    if (source[cursor] === "[" && !escaped(source, cursor)) {
+      const link = parseLinkAt(source, source, cursor);
+      if (link) {
+        text += renderedBoundaryText(link.rawLabel);
+        cursor = link.end;
+        continue;
+      }
+    }
+    if (source[cursor] === "<") {
+      const autolinkEnd = source.indexOf(">", cursor + 1);
+      if (autolinkEnd !== -1 && autolinkDestination(source.slice(cursor + 1, autolinkEnd))) {
+        cursor = autolinkEnd + 1;
+        continue;
+      }
+      const end = inlineHtmlEnd(source, cursor);
+      if (end) {
+        const raw = source.slice(cursor + 1, end - 1);
+        if (autolinkDestination(raw)) {
+          cursor = end;
+          continue;
+        }
+        const htmlCandidate = raw.trim();
+        if (raw === htmlCandidate && /^\/?[A-Za-z][A-Za-z\d-]*(?:\s|\/|$)/u.test(htmlCandidate)) {
+          cursor = end;
+          continue;
+        }
+      }
+    }
+    if (source[cursor] === "\\" && cursor + 1 < source.length) {
+      text += source[cursor + 1];
+      cursor += 2;
+      continue;
+    }
+    if ("*_~".includes(source[cursor]) && !escaped(source, cursor)) {
+      cursor += 1;
+      continue;
+    }
+    text += source[cursor];
+    cursor += 1;
+  }
+  return text.replace(/(?: {2,}|\\)$/u, "").replace(/\s+/gu, " ").trim();
+}
+
+export function assertReadableResultBoundaries(markdown) {
+  let paragraph = [];
+  const assertParagraph = () => {
+    if (paragraph.length === 0) return;
+    const rendered = renderedBoundaryText(paragraph.join("\n"));
+    const labels = RESULT_BOUNDARY_LABELS
+      .filter(([, pattern]) => pattern.test(rendered))
+      .map(([label]) => label);
+    if (labels.length >= 3) {
+      throw new Error(`result-boundary paragraph is too dense: ${labels.join(", ")}`);
+    }
+    paragraph = [];
+  };
+  for (const line of scanVisibleMarkdown(markdown)) {
+    const rendered = renderedBoundaryText(line.blockText);
+    if (line.kind === "plain" && rendered) {
+      if (/^ {0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+/u.test(line.source)) assertParagraph();
+      paragraph.push(line.blockText);
+    } else {
+      assertParagraph();
+    }
+  }
+  assertParagraph();
 }
 
 function unescapeMarkdown(value) {
@@ -634,27 +767,289 @@ function parseLinkAt(source, original, start) {
   };
 }
 
+function referenceKey(value) {
+  return unescapeMarkdown(value).replace(/\s+/gu, " ").trim().toLowerCase();
+}
+
+function parseReferenceDestination(source) {
+  let cursor = 0;
+  while (/\s/u.test(source[cursor] ?? "")) cursor += 1;
+  if (source[cursor] === "<") {
+    const start = ++cursor;
+    while (cursor < source.length && (source[cursor] !== ">" || escaped(source, cursor))) cursor += 1;
+    if (source[cursor] !== ">") return undefined;
+    return source.slice(start, cursor);
+  }
+  const start = cursor;
+  while (cursor < source.length && !/\s/u.test(source[cursor])) cursor += 1;
+  return cursor === start ? undefined : source.slice(start, cursor);
+}
+
+function referenceDefinitions(lines, rendered) {
+  const definitions = new Map();
+  for (const [lineIndex, { kind, blockText }] of lines.entries()) {
+    if (kind !== "link-reference") continue;
+    if (!rendered[lineIndex].every(Boolean)) continue;
+    const match = /^ {0,3}\[([^\]]+)\]:[ \t]*(.*)$/u.exec(blockText);
+    if (!match) continue;
+    const target = parseReferenceDestination(match[2]);
+    const key = referenceKey(match[1]);
+    if (target && key && !definitions.has(key)) definitions.set(key, normaliseTarget(target));
+  }
+  return definitions;
+}
+
+function linkLabelEnd(source, start) {
+  let cursor = start + 1;
+  let depth = 1;
+  while (cursor < source.length) {
+    if (!escaped(source, cursor) && source[cursor] === "[") depth += 1;
+    if (!escaped(source, cursor) && source[cursor] === "]") {
+      depth -= 1;
+      if (depth === 0) return cursor;
+    }
+    cursor += 1;
+  }
+  return undefined;
+}
+
+function parseReferenceLinkAt(source, original, start, definitions) {
+  if (source[start] !== "[" || escaped(source, start)) return undefined;
+  const image = start > 0 && source[start - 1] === "!" && !escaped(source, start - 1);
+  const labelEnd = linkLabelEnd(source, start);
+  if (labelEnd === undefined || source[labelEnd + 1] === "(") return undefined;
+  let end = labelEnd + 1;
+  let reference = source.slice(start + 1, labelEnd);
+  if (source[end] === "[") {
+    const referenceEnd = source.indexOf("]", end + 1);
+    if (referenceEnd === -1 || escaped(source, referenceEnd)) return undefined;
+    reference = source.slice(end + 1, referenceEnd) || reference;
+    end = referenceEnd + 1;
+  }
+  const destination = definitions.get(referenceKey(reference));
+  if (!destination) return undefined;
+  return {
+    end,
+    image,
+    label: renderedLabel(original.slice(start + 1, labelEnd)),
+    rawLabel: original.slice(start + 1, labelEnd),
+    target: destination.target,
+    fragment: destination.fragment,
+  };
+}
+
+function htmlTagAt(source, start) {
+  if (source[start] !== "<" || escaped(source, start)) return undefined;
+  const end = inlineHtmlEnd(source, start);
+  if (!end) return undefined;
+  const raw = source.slice(start + 1, end - 1);
+  let cursor = 0;
+  while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+  const closing = raw[cursor] === "/";
+  if (closing) cursor += 1;
+  const nameStart = cursor;
+  while (/[A-Za-z\d-]/u.test(raw[cursor] ?? "")) cursor += 1;
+  const name = raw.slice(nameStart, cursor).toLowerCase();
+  if (!name || (raw[cursor] && !/\s|\//u.test(raw[cursor]))) return undefined;
+  const attributes = new Map();
+  let selfClosing = false;
+  while (cursor < raw.length) {
+    while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+    if (raw[cursor] === "/") {
+      selfClosing = true;
+      cursor += 1;
+      continue;
+    }
+    const attributeStart = cursor;
+    while (/[A-Za-z\d:_-]/u.test(raw[cursor] ?? "")) cursor += 1;
+    const attribute = raw.slice(attributeStart, cursor).toLowerCase();
+    if (!attribute) return undefined;
+    while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+    let value = "";
+    if (raw[cursor] === "=") {
+      cursor += 1;
+      while (/\s/u.test(raw[cursor] ?? "")) cursor += 1;
+      const quote = raw[cursor] === "\"" || raw[cursor] === "'" ? raw[cursor++] : undefined;
+      const valueStart = cursor;
+      while (cursor < raw.length && (quote ? raw[cursor] !== quote : !/\s/u.test(raw[cursor]))) cursor += 1;
+      if (quote && raw[cursor] !== quote) return undefined;
+      value = raw.slice(valueStart, cursor);
+      if (quote) cursor += 1;
+    }
+    if (!attributes.has(attribute)) attributes.set(attribute, value);
+  }
+  return { end, name, closing, selfClosing, attributes };
+}
+
+const HTML_VOID_ELEMENTS = new Set([
+  "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr",
+]);
+const HTML_INERT_ELEMENTS = new Set(["script", "style", "template", "textarea"]);
+
+function decodedHtmlAttribute(value) {
+  return value.replace(/&(?:#x([0-9a-f]+)|#(\d+)|amp|apos|gt|lt|quot);/giu, (entity, hexadecimal, decimal) => {
+    const numeric = hexadecimal ? Number.parseInt(hexadecimal, 16) : decimal ? Number.parseInt(decimal, 10) : undefined;
+    if (numeric !== undefined) return numeric <= 0x10ffff ? String.fromCodePoint(numeric) : entity;
+    return ({ "&amp;": "&", "&apos;": "'", "&gt;": ">", "&lt;": "<", "&quot;": "\"" })[entity.toLowerCase()] ?? entity;
+  });
+}
+
+function hiddenHtmlElement(tag) {
+  return HTML_INERT_ELEMENTS.has(tag.name)
+    || tag.attributes.has("hidden")
+    || tag.attributes.has("inert")
+    || decodedHtmlAttribute(tag.attributes.get("aria-hidden") ?? "").trim().toLowerCase() === "true";
+}
+
+function joinedHtmlSource(lines) {
+  const starts = [];
+  const visibility = [];
+  let source = "";
+  for (const [lineIndex, line] of lines.entries()) {
+    starts.push(source.length);
+    source += line.source;
+    visibility.push(...line.htmlVisible);
+    if (lineIndex < lines.length - 1) {
+      source += "\n";
+      visibility.push(true);
+    }
+  }
+  return { source, starts, visibility };
+}
+
+function sourceLineAt(starts, offset) {
+  let first = 0;
+  let last = starts.length - 1;
+  while (first <= last) {
+    const middle = Math.floor((first + last) / 2);
+    if (starts[middle] <= offset) first = middle + 1;
+    else last = middle - 1;
+  }
+  return Math.max(0, last);
+}
+
+function visibleRange(visibility, start, end) {
+  for (let cursor = start; cursor < end; cursor += 1) {
+    if (!visibility[cursor]) return false;
+  }
+  return true;
+}
+
+function visibleMarkdownLinkRange(visibility, text, start, end) {
+  for (let cursor = start; cursor < end; cursor += 1) {
+    if (text[cursor] !== " " && !visibility[cursor]) return false;
+  }
+  return true;
+}
+
+function renderedHtmlVisibility(lines) {
+  const { source, starts, visibility } = joinedHtmlSource(lines);
+  const rendered = Array(source.length).fill(false);
+  const ancestry = [];
+  let activeScope;
+  for (let cursor = 0; cursor < source.length;) {
+    const lineIndex = sourceLineAt(starts, cursor);
+    if (lines[lineIndex].scope !== activeScope) {
+      ancestry.length = 0;
+      activeScope = lines[lineIndex].scope;
+    }
+    const tag = htmlTagAt(source, cursor);
+    const visibleBefore = ancestry.every((entry) => !entry.hidden);
+    if (tag && visibleRange(visibility, cursor, tag.end)) {
+      rendered.fill(visibleBefore, cursor, tag.end);
+      if (tag.closing) {
+        const index = ancestry.map((entry) => entry.name).lastIndexOf(tag.name);
+        if (index !== -1) ancestry.splice(index);
+      } else if (!tag.selfClosing && !HTML_VOID_ELEMENTS.has(tag.name)) {
+        ancestry.push({ name: tag.name, hidden: hiddenHtmlElement(tag) });
+      }
+      cursor = tag.end;
+      continue;
+    }
+    if (visibility[cursor] && visibleBefore) rendered[cursor] = true;
+    cursor += 1;
+  }
+  return { source, starts, visibility, rendered, lines };
+}
+
+function lineRenderVisibility(lines, state) {
+  return lines.map((line, lineIndex) => state.rendered.slice(
+    state.starts[lineIndex],
+    state.starts[lineIndex] + line.source.length,
+  ));
+}
+
+function rawHtmlAnchors(state) {
+  const links = [];
+  const ancestry = [];
+  let activeScope;
+  for (let cursor = 0; cursor < state.source.length;) {
+    const lineIndex = sourceLineAt(state.starts, cursor);
+    if (state.lines[lineIndex].scope !== activeScope) {
+      ancestry.length = 0;
+      activeScope = state.lines[lineIndex].scope;
+    }
+    const tag = htmlTagAt(state.source, cursor);
+    const visibleBefore = ancestry.every((entry) => !entry.hidden);
+    if (!tag || !visibleRange(state.visibility, cursor, tag.end)) {
+      cursor += 1;
+      continue;
+    }
+    if (tag.closing) {
+      const index = ancestry.map((entry) => entry.name).lastIndexOf(tag.name);
+      if (index !== -1) ancestry.splice(index);
+    } else {
+      const hidden = hiddenHtmlElement(tag);
+      if (tag.name === "a" && visibleBefore && !hidden) {
+        const rawTarget = tag.attributes.get("href");
+        if (rawTarget) {
+          const { target, fragment } = normaliseTarget(decodedHtmlAttribute(rawTarget).trim());
+          links.push({
+            label: "",
+            target,
+            fragment,
+            line: lineIndex + 1,
+            column: cursor - state.starts[lineIndex],
+          });
+        }
+      }
+      if (!tag.selfClosing && !HTML_VOID_ELEMENTS.has(tag.name)) ancestry.push({ name: tag.name, hidden });
+    }
+    cursor = tag.end;
+  }
+  return links;
+}
+
 export function extractMarkdownLinks(markdown) {
   const links = [];
-  for (const { line, text, source: original } of scanVisibleMarkdown(markdown)) {
+  const lines = scanVisibleMarkdown(markdown);
+  const htmlState = renderedHtmlVisibility(lines);
+  const rendered = lineRenderVisibility(lines, htmlState);
+  const definitions = referenceDefinitions(lines, rendered);
+  for (const [lineIndex, { line, text, source: original, kind }] of lines.entries()) {
+    if (kind === "link-reference") continue;
     for (let cursor = 0; cursor < text.length;) {
-      const link = parseLinkAt(text, original, cursor);
+      const link = parseLinkAt(text, original, cursor) ?? parseReferenceLinkAt(text, original, cursor, definitions);
       if (!link) {
         cursor += 1;
         continue;
       }
-      if (!link.image) {
+      if (!link.image && visibleMarkdownLinkRange(rendered[lineIndex], text, cursor, link.end)) {
         links.push({
           label: link.label,
           target: link.target,
           fragment: link.fragment,
           line,
+          column: cursor,
         });
       }
       cursor = link.end;
     }
   }
-  return links;
+  links.push(...rawHtmlAnchors(htmlState));
+  return links
+    .sort((left, right) => left.line - right.line || left.column - right.column)
+    .map(({ column, ...link }) => link);
 }
 
 function normaliseCodeSpanContent(value) {
@@ -1083,6 +1478,13 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
         counts.templates += inventories.get(relative[0]).templateIds.length;
       }
       await validateLinks(root, markdownPath, markdown, errors);
+      if (relative.join("/") === "use-cases/audience-paths.md") {
+        try {
+          assertReadableResultBoundaries(markdown);
+        } catch (error) {
+          errors.push(`${markdownPath}: ${error.message}`);
+        }
+      }
       findSecrets(markdown, markdownPath, errors);
     } catch (error) {
       errors.push(`unable to validate guide ${markdownPath}: ${error.message}`);

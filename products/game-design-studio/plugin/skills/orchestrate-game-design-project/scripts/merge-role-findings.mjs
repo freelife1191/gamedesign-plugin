@@ -30,6 +30,15 @@ const blockerGateByRole = new Map([
   ["liveops-data-designer", "liveops-experiment"],
   ["production-feasibility-critic", "scope-control"],
 ]);
+const findingsOnlyRoleIds = new Set([
+  "combat-encounter-reviewer",
+  "level-puzzle-reviewer",
+]);
+for (const role of findingsOnlyRoleIds) {
+  if (blockerGateByRole.has(role)) {
+    throw new Error(`${role} must not be assigned blocker authority.`);
+  }
+}
 const roleRank = new Map(rolePriority.map((role, index) => [role, index]));
 const severityRank = new Map(severityOrder.map((severity, index) => [severity, index]));
 const inputKeys = ["schemaVersion", "findings"];
@@ -203,6 +212,10 @@ function validateFinding(value, index, { outputMode }) {
   if (!severityRank.has(value.severity)) throw new Error(`${label}.severity is unknown.`);
   if (value.applicableGate !== "none" && !gateIds.has(value.applicableGate)) {
     throw new Error(`${label}.applicableGate is unknown.`);
+  }
+  if (findingsOnlyRoleIds.has(value.role)
+    && (value.severity === "blocker" || value.applicableGate !== "none")) {
+    throw new Error(`${label} exceeds the role's blocker authority.`);
   }
   if (value.severity === "blocker" && blockerGateByRole.get(value.role) !== value.applicableGate) {
     throw new Error(`${label} exceeds the role's blocker authority.`);

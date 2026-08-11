@@ -1,0 +1,1628 @@
+[
+  {
+    "id": "studio:apply-document-quality-profile:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "문서 목적과 대상에 맞는 품질 프로필 선택",
+    "purpose": "짧은 기획 요약서에 필요한 주 품질 기준과 누락 입력을 안전하게 선택한다.",
+    "audiences": [
+      "game-designer",
+      "document-quality-editor"
+    ],
+    "intents": [
+      "문서 구조 선택",
+      "품질 체크리스트 시작"
+    ],
+    "level": "beginner",
+    "when_to_use": "한 Artifact의 목적·대상·형식이 정해졌고 본문 작성 전에 구조 계약이 필요할 때 사용한다.",
+    "when_not_to_use": "본문·이미지·도식을 만들거나 여러 도메인의 실행 순서를 결정할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "문서 goal",
+      "audience",
+      "artifact type",
+      "requested format",
+      "template ID",
+      "artifact ID"
+    ],
+    "optional_inputs": [
+      "platform 가정",
+      "기존 checklist"
+    ],
+    "placeholders": [
+      "[artifact ID]",
+      "[template ID]",
+      "[문서 목적]",
+      "[대상 독자]",
+      "[형식]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 섬 복구 게임의 신규 플레이어용 기획 요약서에 맞는 목적, 대상, Markdown 형식을 정리하고 적용할 품질 기준과 빠진 입력을 골라 줘. 모르는 정보는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [문서 목적]의 [대상 독자]용 [형식] Artifact에 맞는 품질 profile과 누락 입력을 선택해 줘. 모르는 정보는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile artifact=game-design/island/brief template=game-design-brief 신규 플레이어용 협동 섬 복구 게임 브리프의 대상과 Markdown 형식을 기록하고 profile과 누락 입력만 선택해.",
+      "template": "$game-design-studio:apply-document-quality-profile artifact=[artifact ID] template=[template ID] [문서 목적]의 대상과 [형식]을 기록하고 profile과 누락 입력만 선택해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile"
+    ],
+    "specialist_roles": [
+      "document-quality-editor"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "선택한 primary profile",
+      "누락 입력 목록",
+      "stable checklist"
+    ],
+    "optional_outputs": [
+      "platform 가정",
+      "neutral preset 후보"
+    ],
+    "extended_outputs": [
+      "requirement manifest",
+      "선택 이유"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/profile-beginner/content.md",
+      "game-design/studio-foundations/profile-beginner/evidence.yml",
+      "game-design/studio-foundations/profile-beginner/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/profile-beginner/content.md",
+      "game-design/studio-foundations/profile-beginner/evidence.yml",
+      "game-design/studio-foundations/profile-beginner/export-manifest.yml"
+    ],
+    "human_review_boundary": "document-quality-editor가 profile 선택을 검토하지만 선택 기록 자체는 문서 승인이나 게임 디자인 승인이 아니다.",
+    "hold_conditions": [
+      "template ID가 없음",
+      "서로 다른 deliverable에 하나의 primary profile을 공유하려 함"
+    ],
+    "resume_prompt": "기존 profile-beginner selection record를 보존하고 새로 확인된 대상 독자와 형식만 반영해 누락 입력 확인부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "문서 품질 프로필 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/apply-document-quality-profile.md",
+      "guides/game-design-studio/templates.md",
+      "guides/game-design-studio/document-quality.md"
+    ],
+    "display_title": "문서 목적과 독자에 맞는 품질 프로필 선택",
+    "sample_result_excerpt": "주 품질 프로필은 ‘간결한 기획 요약서’로 잡았고, 독자 역할과 출력 형식은 아직 비어 있습니다. 두 값을 담당자가 확인하기 전에는 체크리스트를 확정하지 않습니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)"
+  },
+  {
+    "id": "studio:apply-document-quality-profile:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "Overlay와 preset manifest를 갖춘 품질 프로필 선택",
+    "purpose": "시스템 명세의 primary profile, additive overlay, neutral preset과 requirement manifest를 일관되게 정한다.",
+    "audiences": [
+      "game-designer",
+      "system-economy-designer",
+      "document-quality-editor"
+    ],
+    "intents": [
+      "overlay 합성",
+      "manifest 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "명세 템플릿과 플랫폼·live-service 제약이 알려져 있고 overlay의 호환성을 검토해야 할 때 사용한다.",
+    "when_not_to_use": "unknown override를 강제로 적용하거나 rule/state 자체를 설계할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "system artifact ID",
+      "system-specification template",
+      "audience",
+      "requested format",
+      "known overlay"
+    ],
+    "optional_inputs": [
+      "neutral preset",
+      "기존 selection record",
+      "기존 requirement manifest"
+    ],
+    "placeholders": [
+      "[시스템 Artifact]",
+      "[overlay ID]",
+      "[preset ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 라이브 서비스 RPG 스태미나 시스템 명세에 system-feature-specification profile을 고르고 live-service overlay와 호환 preset을 manifest로 정리해 줘. 충돌과 미확정 값은 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [시스템 Artifact]에 [overlay ID]와 [preset ID]를 검토해 primary profile, additive overlay, requirement manifest를 정리해 줘. 충돌은 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile artifact=game-design/island/stamina template=system-specification overlayIds=live-service 스태미나 규칙·상태 검토용 checklist와 requirement manifest를 갱신해.",
+      "template": "$game-design-studio:apply-document-quality-profile artifact=[시스템 Artifact] template=system-specification overlayIds=[overlay ID] [preset ID]를 검토하고 manifest와 checklist를 갱신해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "design-game-systems"
+    ],
+    "specialist_roles": [
+      "document-quality-editor",
+      "system-economy-designer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification",
+      "rule-exception-matrix"
+    ],
+    "minimum_outputs": [
+      "primary profile",
+      "허용된 overlay 목록",
+      "requirement manifest"
+    ],
+    "optional_outputs": [
+      "neutral preset",
+      "profile 차이 설명"
+    ],
+    "extended_outputs": [
+      "section/table/diagram/image checklist",
+      "routing handoff record"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/profile-standard/content.md",
+      "game-design/studio-foundations/profile-standard/evidence.yml",
+      "game-design/studio-foundations/profile-standard/decisions/README.md",
+      "game-design/studio-foundations/profile-standard/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/profile-standard/content.md",
+      "game-design/studio-foundations/profile-standard/evidence.yml",
+      "game-design/studio-foundations/profile-standard/export-manifest.yml",
+      "game-design/studio-foundations/profile-standard/decisions/README.md"
+    ],
+    "human_review_boundary": "document-quality-editor가 additive source의 호환성을 확인하고 system owner가 선택된 route의 설계 범위를 결정한다.",
+    "hold_conditions": [
+      "overlay가 primary profile과 호환되지 않음",
+      "요청된 preset이 설치되지 않음"
+    ],
+    "resume_prompt": "profile-standard의 기존 manifest와 digest-bound selection record를 보존하고 확인된 live-service overlay만 다시 합성해 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "문서 품질 프로필과 시스템 route 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/apply-document-quality-profile.md",
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/document-quality.md"
+    ],
+    "display_title": "덧씌움 규칙과 프리셋 명세를 포함한 품질 프로필 선택",
+    "sample_result_excerpt": "시스템 명세에는 기본 프로필과 ‘접근성 검토’ 덧씌움 규칙을 함께 제안했습니다. 요구사항 명세의 적용 범위는 문서 책임자가 검토해야 합니다. (ID: studio:apply-document-quality-profile:standard; 파일: game-design/studio-foundations/profile-standard/content.md)"
+  },
+  {
+    "id": "studio:apply-document-quality-profile:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "Fallback과 state receipt를 가진 품질 프로필 검토",
+    "purpose": "profile 충돌을 fail-closed로 분리하고 사람 승인 전까지 state receipt를 보존한다.",
+    "audiences": [
+      "lead-game-designer",
+      "document-quality-editor",
+      "production-feasibility-critic"
+    ],
+    "intents": [
+      "fallback 기록",
+      "승인 대기"
+    ],
+    "level": "advanced",
+    "when_to_use": "review Artifact에서 profile 충돌, blocked requirement, evidence 상태와 named decision owner를 함께 다뤄야 할 때 사용한다.",
+    "when_not_to_use": "사람 receipt 없이 document-approved 상태를 주장하거나 호환되지 않는 profile을 자동 병합할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "review artifact ID",
+      "game-design-review template",
+      "현재 selection record",
+      "decision owner",
+      "근거 상태"
+    ],
+    "optional_inputs": [
+      "fallback profile 후보",
+      "blocked requirement 목록",
+      "기존 state receipt"
+    ],
+    "placeholders": [
+      "[검토 Artifact]",
+      "[decision owner]",
+      "[fallback profile]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 보스 전투 검토 문서의 profile 충돌을 분리하고 fallback, immutable state receipt, blocked requirement와 사람 승인 대기 지점을 정리해 줘. 근거 없는 값은 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [검토 Artifact]의 profile 충돌을 [fallback profile]로 비교하고 state receipt, blocked requirement, [decision owner] 승인 대기를 정리해 줘. 근거 없는 값은 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile artifact=game-design/island/review template=game-design-review profile=design-review-decision-log 근거 상태와 named decision owner를 보존하고 profile 충돌과 blocked requirement를 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile artifact=[검토 Artifact] template=game-design-review profile=[fallback profile] state receipt를 보존하고 [decision owner] 승인을 기다려."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "document-quality-editor",
+      "lead-game-designer",
+      "production-feasibility-critic"
+    ],
+    "intermediate_artifacts": [
+      "game-design-review",
+      "decision-change-log"
+    ],
+    "minimum_outputs": [
+      "fail-closed fallback",
+      "blocked requirement",
+      "immutable state receipt"
+    ],
+    "optional_outputs": [
+      "profile conflict matrix",
+      "owner별 검토 질문"
+    ],
+    "extended_outputs": [
+      "승인 가능한 routing record",
+      "document state transition 근거"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/profile-advanced/content.md",
+      "game-design/studio-foundations/profile-advanced/evidence.yml",
+      "game-design/studio-foundations/profile-advanced/decisions/README.md",
+      "game-design/studio-foundations/profile-advanced/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/profile-advanced/content.md",
+      "game-design/studio-foundations/profile-advanced/evidence.yml",
+      "game-design/studio-foundations/profile-advanced/export-manifest.yml",
+      "game-design/studio-foundations/profile-advanced/decisions/README.md"
+    ],
+    "human_review_boundary": "named decision owner가 fallback과 document-approved 전이를 승인·수정·보류하며 자동화된 state receipt는 승인 receipt가 아니다.",
+    "hold_conditions": [
+      "named decision owner가 없음",
+      "fallback이 설치된 profile과 호환되지 않음",
+      "승인 receipt가 없음"
+    ],
+    "resume_prompt": "profile-advanced의 immutable state receipt와 blocked requirement를 그대로 두고 사람 결정으로 해소된 충돌 하나만 반영해 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "문서 품질 프로필 fallback과 승인 경계 흐름"
+    },
+    "related_use_cases": [
+      "ST-C01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/apply-document-quality-profile.md",
+      "guides/game-design-studio/document-quality.md",
+      "guides/game-design-studio/workflow.md"
+    ],
+    "display_title": "대체 규칙과 상태 기록을 갖춘 품질 프로필 검토",
+    "sample_result_excerpt": "‘상세 명세’와 ‘경영진 요약’ 프로필이 충돌해 안전한 기본 프로필로 되돌리는 안을 남겼습니다. 충돌 해소와 상태 기록 승인은 결정 담당자 몫입니다. (ID: studio:apply-document-quality-profile:advanced; 파일: game-design/studio-foundations/profile-advanced/content.md)"
+  },
+  {
+    "id": "studio:define-game-vision:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "대상 플레이어와 약속할 경험을 정하는 게임 방향",
+    "purpose": "한 문장 게임 아이디어를 대상 플레이어, 플레이어에게 약속할 경험, 설계 원칙과 검증 질문이 있는 짧은 기획 요약서로 바꾼다.",
+    "audiences": [
+      "lead-game-designer",
+      "game-designer"
+    ],
+    "intents": [
+      "플레이어에게 약속할 경험 정의",
+      "비전 가설 작성"
+    ],
+    "level": "beginner",
+    "when_to_use": "새 게임의 핵심 경험과 기능 선택 기준을 처음 정할 때 사용한다.",
+    "when_not_to_use": "실행 규칙·상태 전이나 퀘스트 단위의 상세 설계가 이미 목표일 때는 사용하지 않는다.",
+    "required_inputs": [
+      "게임 아이디어",
+      "target player 근거",
+      "desired emotion",
+      "제약",
+      "decision owner"
+    ],
+    "optional_inputs": [
+      "player research",
+      "platform 제약",
+      "기존 vision 문서"
+    ],
+    "placeholders": [
+      "[게임 아이디어]",
+      "[검토자 역할]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 낯선 섬 협동 복구 게임의 대상 플레이어, 플레이어에게 약속할 경험, 설계 원칙 하나와 검증 질문을 짧은 기획 요약서로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [게임 아이디어]의 대상 플레이어, 플레이어에게 약속할 경험, 설계 원칙 하나와 검증 질문을 짧은 기획 요약서로 만들어 줘. 모르는 정보는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision 낯선 섬 협동 복구 게임을 vision-pillars와 game-design-brief로 작성하고 기획 책임자의 결정을 기다려.",
+      "template": "$game-design-studio:define-game-vision [게임 아이디어]를 vision-pillars와 game-design-brief로 작성하고 [검토자 역할] 결정을 기다려."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "content-narrative-designer"
+    ],
+    "intermediate_artifacts": [
+      "vision-pillars",
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "target player",
+      "플레이어에게 약속할 경험",
+      "설계 원칙 하나",
+      "검증 질문"
+    ],
+    "optional_outputs": [
+      "desired emotion",
+      "core fun 가설"
+    ],
+    "extended_outputs": [
+      "core-motivation-loop",
+      "provisional validation task"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/vision-beginner/content.md",
+      "game-design/studio-foundations/vision-beginner/evidence.yml",
+      "game-design/studio-foundations/vision-beginner/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/vision-beginner/content.md",
+      "game-design/studio-foundations/vision-beginner/evidence.yml",
+      "game-design/studio-foundations/vision-beginner/export-manifest.yml"
+    ],
+    "human_review_boundary": "수석 게임 기획자가 플레이어에게 약속할 경험과 설계 원칙을 승인·수정·보류하며, 초안 작성만으로 기능 범위가 승인되지는 않는다.",
+    "hold_conditions": [
+      "target player 근거가 없음",
+      "decision owner가 없음"
+    ],
+    "resume_prompt": "vision-beginner의 플레이 경험 약속과 질문을 보존하고 새 플레이어 관찰 근거를 evidence.yml에 연결한 뒤 미정 기준부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s02",
+      "svg": "guides/assets/game-design-studio/skills/define-game-vision.svg",
+      "png": "guides/assets/game-design-studio/skills/define-game-vision.png",
+      "alt": "게임 비전 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/define-game-vision.md",
+      "guides/game-design-studio/templates.md",
+      "guides/game-design-studio/workflow.md"
+    ],
+    "display_title": "대상 플레이어와 플레이 약속을 정하는 게임 비전",
+    "sample_result_excerpt": "대상 플레이어는 짧은 협동을 선호하는 2인 친구이며, 플레이 약속은 ‘매일 하나씩 등대섬을 되살린다’입니다. 이 가설은 인터뷰 근거와 연결한 뒤 채택 여부를 정합니다. (ID: studio:define-game-vision:beginner; 파일: game-design/studio-foundations/vision-beginner/content.md)"
+  },
+  {
+    "id": "studio:define-game-vision:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "지킬 원칙과 하지 않을 원칙을 검증하는 게임 방향",
+    "purpose": "지킬 설계 원칙, 하지 않을 설계 원칙과 제외 목표를 시험 제작 관찰 질문에 연결해 팀이 기능 선택에 쓸 기준을 만든다.",
+    "audiences": [
+      "lead-game-designer",
+      "content-narrative-designer"
+    ],
+    "intents": [
+      "비전 경계 설정",
+      "시험 제작 검증 계획"
+    ],
+    "level": "standard",
+    "when_to_use": "핵심 재미는 설명할 수 있지만 유사 기능의 포함·제외 기준과 시험 제작 관찰 방법이 필요할 때 사용한다.",
+    "when_not_to_use": "설계 원칙 승인 전에 세부 규칙이나 수치 밸런스를 확정하려 할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "기존 게임 방향",
+      "후보 설계 원칙",
+      "하지 않을 설계 원칙",
+      "시험 제작 제약",
+      "기획 책임자"
+    ],
+    "optional_inputs": [
+      "플레이테스트 메모",
+      "business constraint",
+      "검토 질문"
+    ],
+    "placeholders": [
+      "[기존 게임 방향]",
+      "[시험 제작 제약]",
+      "[검증 방법]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 복구 게임의 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표를 시험 제작 관찰 질문과 연결하고 각 가정의 근거 상태를 구분해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [기존 게임 방향]의 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표를 [검증 방법]과 연결해 줘. 확인되지 않은 수치는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision artifact=game-design/island/vision 협동 복구의 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표와 시험 제작 관찰 질문을 vision-pillars에 연결해.",
+      "template": "$game-design-studio:define-game-vision artifact=[기존 게임 방향] [시험 제작 제약] 아래 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표를 vision-pillars에 연결해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-game-systems"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "content-narrative-designer"
+    ],
+    "intermediate_artifacts": [
+      "vision-pillars",
+      "core-motivation-loop"
+    ],
+    "minimum_outputs": [
+      "지킬 설계 원칙",
+      "하지 않을 설계 원칙",
+      "제외 목표",
+      "prototype 관찰 질문"
+    ],
+    "optional_outputs": [
+      "player verb",
+      "success signal"
+    ],
+    "extended_outputs": [
+      "core loop 가설",
+      "system handoff criteria"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/vision-standard/content.md",
+      "game-design/studio-foundations/vision-standard/evidence.yml",
+      "game-design/studio-foundations/vision-standard/decisions/README.md",
+      "game-design/studio-foundations/vision-standard/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/vision-standard/content.md",
+      "game-design/studio-foundations/vision-standard/evidence.yml",
+      "game-design/studio-foundations/vision-standard/export-manifest.yml",
+      "game-design/studio-foundations/vision-standard/decisions/README.md"
+    ],
+    "human_review_boundary": "수석 게임 기획자가 제외 목표와 시험 제작 기준을 결정하고 콘텐츠·내러티브 기획자는 표현의 일관성을 검토한다.",
+    "hold_conditions": [
+      "지킬 설계 원칙과 하지 않을 설계 원칙이 구분되지 않음",
+      "prototype 관찰 방법이 없음"
+    ],
+    "resume_prompt": "vision-standard의 지킬 설계 원칙과 하지 않을 설계 원칙을 유지하고 새 시험 제작 관찰 결과만 evidence.yml에 붙여 검증 질문부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s02",
+      "svg": "guides/assets/game-design-studio/skills/define-game-vision.svg",
+      "png": "guides/assets/game-design-studio/skills/define-game-vision.png",
+      "alt": "게임 방향에서 시스템 설계로 이어지는 설계 원칙 흐름"
+    },
+    "related_use_cases": [
+      "ST-C02"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/define-game-vision.md",
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/templates.md"
+    ],
+    "display_title": "핵심 원칙과 배제 원칙을 검증하는 게임 비전",
+    "sample_result_excerpt": "핵심 원칙은 ‘관찰로 푸는 협동 추리’, 배제 원칙은 ‘반복 전투로 진행 막기’로 적었습니다. 폐역 신호 해독 프로토타입에서 두 원칙이 실제 선택 기준이 되는지 살펴봐야 합니다. (ID: studio:define-game-vision:standard; 파일: game-design/studio-foundations/vision-standard/content.md)"
+  },
+  {
+    "id": "studio:define-game-vision:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "상충 기능과 근거 owner를 다루는 게임 비전",
+    "purpose": "상충하는 기능 제안을 설계 원칙·제외 목표와 근거 상태로 비교하고 담당자가 판단할 수 있게 만든다.",
+    "audiences": [
+      "lead-game-designer",
+      "production-feasibility-critic",
+      "content-narrative-designer"
+    ],
+    "intents": [
+      "기능 충돌 비교",
+      "담당자 결정 대기"
+    ],
+    "level": "advanced",
+    "when_to_use": "여러 기능 제안이 같은 플레이 경험을 약속하지만 범위·근거·게임 방향 적합성이 충돌할 때 사용한다.",
+    "when_not_to_use": "근거가 없는 수치로 기능 우선순위를 정하거나 담당자 없이 게임 방향 결정을 확정할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "vision-pillars",
+      "기능 후보",
+      "근거",
+      "결정 담당자",
+      "제약"
+    ],
+    "optional_inputs": [
+      "플레이테스트 결과",
+      "제작 위험",
+      "기존 결정 기록"
+    ],
+    "placeholders": [
+      "[기능 후보 A]",
+      "[기능 후보 B]",
+      "[결정 담당자]",
+      "[vision ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 복구 게임의 경쟁 PvP 기능과 비동기 도움 기능을 설계 원칙·제외 목표·플레이테스트 근거로 비교하고, 결정 담당자가 승인할 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [기능 후보 A]와 [기능 후보 B]를 설계 원칙·제외 목표·근거 상태로 비교하고 [결정 담당자]의 결정 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision artifact=game-design/island/vision 기존 근거와 결정 담당자를 보존하고 경쟁 PvP와 비동기 도움 제안을 설계 원칙·제외 목표 기준으로 비교해.",
+      "template": "$game-design-studio:define-game-vision artifact=game-design/[vision ID] [기능 후보 A]와 [기능 후보 B]를 비교하고 [결정 담당자] 결정을 기다려."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "production-feasibility-critic",
+      "content-narrative-designer"
+    ],
+    "intermediate_artifacts": [
+      "vision-pillars",
+      "decision-change-log"
+    ],
+    "minimum_outputs": [
+      "feature 비교",
+      "근거 상태",
+      "owner 질문"
+    ],
+    "optional_outputs": [
+      "scope risk",
+      "prototype follow-up"
+    ],
+    "extended_outputs": [
+      "승인 receipt 대기 record",
+      "system handoff 조건"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/vision-advanced/content.md",
+      "game-design/studio-foundations/vision-advanced/evidence.yml",
+      "game-design/studio-foundations/vision-advanced/decisions/README.md",
+      "game-design/studio-foundations/vision-advanced/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/vision-advanced/content.md",
+      "game-design/studio-foundations/vision-advanced/evidence.yml",
+      "game-design/studio-foundations/vision-advanced/export-manifest.yml",
+      "game-design/studio-foundations/vision-advanced/decisions/README.md"
+    ],
+    "human_review_boundary": "기획 책임자가 상충 기능의 채택·수정·보류를 결정하며 근거가 미정인 항목은 자동 승인하지 않는다.",
+    "hold_conditions": [
+      "feature 후보의 근거가 분리되지 않음",
+      "decision owner의 receipt가 없음"
+    ],
+    "resume_prompt": "vision-advanced의 비교표와 owner 질문을 보존하고 새로 확인된 플레이테스트 evidence만 연결해 provisional 선택지부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s02",
+      "svg": "guides/assets/game-design-studio/skills/define-game-vision.svg",
+      "png": "guides/assets/game-design-studio/skills/define-game-vision.png",
+      "alt": "게임 비전의 feature 충돌과 사람 결정 흐름"
+    },
+    "related_use_cases": [
+      "ST-C01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/define-game-vision.md",
+      "guides/game-design-studio/skills/review-game-design.md",
+      "guides/game-design-studio/workflow.md"
+    ],
+    "display_title": "상충하는 기능과 근거 책임자를 다루는 게임 비전",
+    "sample_result_excerpt": "‘자동 가격 조정’은 시장 운영의 이해도를 낮출 수 있어 ‘직접 흥정’ 기능과 나란히 비교했습니다. 플레이 관찰 자료의 책임자가 근거를 보완한 뒤 기능 채택을 판단합니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)"
+  },
+  {
+    "id": "studio:design-player-experience:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "행동과 피드백이 있는 첫 세션 UX",
+    "purpose": "첫 critical action의 행동, feedback, 오류와 recovery를 QA 가능한 UI 흐름으로 정리한다.",
+    "audiences": [
+      "ux-accessibility-reviewer",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "critical action 설계",
+      "오류 복구 정의"
+    ],
+    "level": "beginner",
+    "when_to_use": "첫 5분의 first success와 하나의 critical action에 필요한 UI state를 정의할 때 사용한다.",
+    "when_not_to_use": "authoritative rule이 비어 있거나 경제 수치와 확률을 결정해야 할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "target experience",
+      "critical action",
+      "players",
+      "platform",
+      "input",
+      "UI surface",
+      "owner"
+    ],
+    "optional_inputs": [
+      "기존 flow",
+      "performance observation",
+      "review question"
+    ],
+    "placeholders": [
+      "[UX Artifact]",
+      "[critical action]",
+      "[플랫폼]",
+      "[오류 상황]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 섬 복구 게임 첫 세션의 다리 수리 행동을 UI state, feedback, 오류 메시지와 recovery까지 정리해 줘. 검증되지 않은 정보는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [critical action]의 [플랫폼] UI state, feedback, [오류 상황]과 recovery를 정리해 줘. 검증되지 않은 정보는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-player-experience artifact=game-design/island/first-session 다리 수리의 첫 critical action, feedback, 오류와 recovery를 ui-ux-flow-state로 정리해.",
+      "template": "$game-design-studio:design-player-experience artifact=[UX Artifact] [critical action]의 feedback, 오류와 recovery를 ui-ux-flow-state로 정리해."
+    },
+    "skill": "design-player-experience",
+    "skill_chain": [
+      "design-player-experience"
+    ],
+    "specialist_roles": [
+      "ux-accessibility-reviewer",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "ui-ux-flow-state"
+    ],
+    "minimum_outputs": [
+      "critical action",
+      "UI state",
+      "feedback",
+      "오류 recovery"
+    ],
+    "optional_outputs": [
+      "first success cue",
+      "loading state"
+    ],
+    "extended_outputs": [
+      "QA validation task",
+      "cross-platform note"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/ux-beginner/content.md",
+      "game-design/studio-foundations/ux-beginner/evidence.yml",
+      "game-design/studio-foundations/ux-beginner/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/ux-beginner/content.md",
+      "game-design/studio-foundations/ux-beginner/evidence.yml",
+      "game-design/studio-foundations/ux-beginner/export-manifest.yml"
+    ],
+    "human_review_boundary": "ux-accessibility-reviewer가 critical action의 state와 recovery를 검토하고 product owner가 release 범위를 결정한다.",
+    "hold_conditions": [
+      "critical action이 정의되지 않음",
+      "authoritative rule과 UI feedback이 충돌함"
+    ],
+    "resume_prompt": "ux-beginner의 action과 recovery를 보존하고 실제 관찰된 오류 feedback만 evidence.yml에 연결해 blocked state부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s06",
+      "svg": "guides/assets/game-design-studio/skills/design-player-experience.svg",
+      "png": "guides/assets/game-design-studio/skills/design-player-experience.png",
+      "alt": "플레이어 경험 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C04"
+    ],
+    "related_recipes": [
+      "ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/design-player-experience.md",
+      "guides/game-design-studio/templates.md",
+      "guides/game-design-studio/recipes/ux-accessibility.md"
+    ],
+    "display_title": "행동과 반응을 연결한 첫 세션 사용자 경험(UX)",
+    "sample_result_excerpt": "첫 핵심 행동은 바람 고리를 통과하는 조작이며, 성공하면 날개 끝이 밝아지고 짧은 진동이 울립니다. 고리를 놓쳤을 때의 복귀 위치는 플레이 테스트 뒤 정합니다. (ID: studio:design-player-experience:beginner; 파일: game-design/studio-foundations/ux-beginner/content.md)"
+  },
+  {
+    "id": "studio:design-player-experience:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "Onboarding과 접근성을 검토하는 플레이어 경험",
+    "purpose": "tutorial skip/revisit, input alternative, sensory cue와 오류 복구를 하나의 onboarding 흐름으로 연결한다.",
+    "audiences": [
+      "ux-accessibility-reviewer",
+      "lead-game-designer",
+      "system-economy-designer"
+    ],
+    "intents": [
+      "onboarding 설계",
+      "접근성 대안 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "첫 세션의 튜토리얼, platform별 입력과 접근 가능한 대안이 함께 필요할 때 사용한다.",
+    "when_not_to_use": "새 gameplay rule을 UI가 만들어 내거나 접근성 근거 없이 release를 승인하려 할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "onboarding goal",
+      "critical actions",
+      "platforms",
+      "devices",
+      "input alternatives",
+      "owner"
+    ],
+    "optional_inputs": [
+      "accessibility evidence",
+      "controller test",
+      "test participant"
+    ],
+    "placeholders": [
+      "[UX Artifact]",
+      "[onboarding goal]",
+      "[input alternative]",
+      "[sensory cue]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 모바일 협동 복구 게임의 onboarding에 tutorial skip/revisit, 터치·controller 대안, sensory cue, 오류 복구와 접근성 검토 질문을 연결해 줘. 최신 근거가 없으면 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [onboarding goal]에 [input alternative], [sensory cue], tutorial skip/revisit와 오류 복구를 연결해 줘. 최신 근거가 없으면 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-player-experience artifact=game-design/island/first-session tutorial skip/revisit, input alternative와 sensory cue를 accessibility-platform-matrix에 연결해.",
+      "template": "$game-design-studio:design-player-experience artifact=[UX Artifact] [input alternative]와 [sensory cue]를 accessibility-platform-matrix에 연결해."
+    },
+    "skill": "design-player-experience",
+    "skill_chain": [
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "ux-accessibility-reviewer",
+      "lead-game-designer",
+      "system-economy-designer"
+    ],
+    "intermediate_artifacts": [
+      "ui-ux-flow-state",
+      "accessibility-platform-matrix"
+    ],
+    "minimum_outputs": [
+      "tutorial skip/revisit",
+      "input alternative",
+      "sensory cue",
+      "error recovery"
+    ],
+    "optional_outputs": [
+      "performance observation",
+      "controller test result"
+    ],
+    "extended_outputs": [
+      "inaccessible-critical-action finding",
+      "review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/ux-standard/content.md",
+      "game-design/studio-foundations/ux-standard/evidence.yml",
+      "game-design/studio-foundations/ux-standard/decisions/README.md",
+      "game-design/studio-foundations/ux-standard/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/ux-standard/content.md",
+      "game-design/studio-foundations/ux-standard/evidence.yml",
+      "game-design/studio-foundations/ux-standard/export-manifest.yml",
+      "game-design/studio-foundations/ux-standard/decisions/README.md"
+    ],
+    "human_review_boundary": "ux-accessibility-reviewer가 accessible alternative와 test gap을 판정하고 lead-game-designer가 experience 범위를 결정한다.",
+    "hold_conditions": [
+      "입력 대안이 critical action을 완료하지 못함",
+      "최신 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "ux-standard의 onboarding state를 유지하고 새 controller test 결과와 접근성 근거만 연결해 inaccessible-critical-action부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s06",
+      "svg": "guides/assets/game-design-studio/skills/design-player-experience.svg",
+      "png": "guides/assets/game-design-studio/skills/design-player-experience.png",
+      "alt": "플레이어 경험 onboarding과 접근성 흐름"
+    },
+    "related_use_cases": [
+      "ST-C04"
+    ],
+    "related_recipes": [
+      "ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/design-player-experience.md",
+      "guides/game-design-studio/recipes/ux-accessibility.md",
+      "guides/game-design-studio/templates.md"
+    ],
+    "display_title": "첫 진입 안내와 접근성을 검토하는 플레이어 경험",
+    "sample_result_excerpt": "해저 정원 튜토리얼은 언제든 건너뛰고 작업대에서 다시 볼 수 있게 구성했습니다. 색상 외에 형태와 소리로도 산소 부족을 알리는 안은 접근성 검토가 필요합니다. (ID: studio:design-player-experience:standard; 파일: game-design/studio-foundations/ux-standard/content.md)"
+  },
+  {
+    "id": "studio:design-player-experience:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "멀티모달 UX와 책임 gate를 갖춘 플레이어 경험",
+    "purpose": "멀티모달 feedback이 authoritative game state를 발명하지 않는지 확인하고 책임 owner의 gate를 남긴다.",
+    "audiences": [
+      "ux-accessibility-reviewer",
+      "lead-game-designer",
+      "system-economy-designer"
+    ],
+    "intents": [
+      "멀티모달 UX 검토",
+      "책임 gate 설정"
+    ],
+    "level": "advanced",
+    "when_to_use": "복수 입력·시각·청각 cue가 있는 UX에서 state authority, accessibility, release gate를 함께 검토할 때 사용한다.",
+    "when_not_to_use": "UI feedback만으로 authoritative state를 확정하거나 근거 없는 threshold로 접근성 승인을 할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "authoritative rule reference",
+      "multimodal cue",
+      "critical action",
+      "accessibility evidence",
+      "responsible owner"
+    ],
+    "optional_inputs": [
+      "offline scenario",
+      "performance measurement",
+      "review finding"
+    ],
+    "placeholders": [
+      "[UX Artifact]",
+      "[authoritative rule]",
+      "[멀티모달 cue]",
+      "[responsible owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 보스 전투의 화면·진동·사운드 cue가 authoritative state를 발명하지 않는지 검토하고, critical action 접근성 gate와 책임 owner의 승인 대기를 정리해 줘. 증거가 없으면 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [authoritative rule]의 [멀티모달 cue]를 검토하고 critical action 접근성 gate와 [responsible owner] 승인 대기를 정리해 줘. 증거가 없으면 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-player-experience artifact=game-design/island/boss-ui 기존 관찰 evidence를 보존하고 UI feedback이 authoritative game state를 발명하는 지점을 finding으로 분리해.",
+      "template": "$game-design-studio:design-player-experience artifact=[UX Artifact] [멀티모달 cue]가 authoritative state를 발명하는 finding을 분리하고 [responsible owner] gate를 기다려."
+    },
+    "skill": "design-player-experience",
+    "skill_chain": [
+      "design-player-experience",
+      "design-game-systems",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "ux-accessibility-reviewer",
+      "system-economy-designer",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "ui-ux-flow-state",
+      "accessibility-platform-matrix",
+      "game-design-review"
+    ],
+    "minimum_outputs": [
+      "authority finding",
+      "multimodal cue mapping",
+      "critical action gate"
+    ],
+    "optional_outputs": [
+      "offline recovery scenario",
+      "performance risk"
+    ],
+    "extended_outputs": [
+      "owner approval receipt 대기",
+      "release blocker"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/ux-advanced/content.md",
+      "game-design/studio-foundations/ux-advanced/evidence.yml",
+      "game-design/studio-foundations/ux-advanced/decisions/README.md",
+      "game-design/studio-foundations/ux-advanced/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/ux-advanced/content.md",
+      "game-design/studio-foundations/ux-advanced/evidence.yml",
+      "game-design/studio-foundations/ux-advanced/export-manifest.yml",
+      "game-design/studio-foundations/ux-advanced/decisions/README.md"
+    ],
+    "human_review_boundary": "responsible UX·system owner가 authority finding과 release gate를 승인·수정·보류하며 자동 UX 검토는 release 승인으로 전환되지 않는다.",
+    "hold_conditions": [
+      "cue의 source state가 불명확함",
+      "책임 owner가 없음",
+      "접근성 blocker가 해소되지 않음"
+    ],
+    "resume_prompt": "ux-advanced의 authority finding과 멀티모달 mapping을 보존하고 owner가 확인한 source state만 반영해 blocked critical action부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s06",
+      "svg": "guides/assets/game-design-studio/skills/design-player-experience.svg",
+      "png": "guides/assets/game-design-studio/skills/design-player-experience.png",
+      "alt": "플레이어 경험 authority와 책임 gate 흐름"
+    },
+    "related_use_cases": [
+      "ST-C04"
+    ],
+    "related_recipes": [
+      "ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/design-player-experience.md",
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/skills/review-game-design.md"
+    ],
+    "display_title": "복합 감각 사용자 경험과 책임 관문을 갖춘 플레이어 경험",
+    "sample_result_excerpt": "엔진 과열은 계기판 점멸·경고음·진동으로 함께 알리되, 세 신호 모두 동일한 상태값을 참조하도록 적었습니다. 경고 강도와 접근성 근거는 담당자가 확인해야 합니다. (ID: studio:design-player-experience:advanced; 파일: game-design/studio-foundations/ux-advanced/content.md)"
+  },
+  {
+    "id": "studio:design-game-systems:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "규칙과 상태를 정의하는 게임 시스템",
+    "purpose": "단일 mechanic의 input, rule, state transition, output, failure recovery를 실행 가능한 초안으로 만든다.",
+    "audiences": [
+      "system-economy-designer",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "규칙 명세",
+      "상태 전이 작성"
+    ],
+    "level": "beginner",
+    "when_to_use": "스태미나·제작처럼 한 시스템의 실행 규칙과 실패 복구를 명확히 해야 할 때 사용한다.",
+    "when_not_to_use": "플레이어에게 약속할 경험이 아직 모호하거나 전체 콘텐츠 제작 범위를 정해야 할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "목적",
+      "actor",
+      "input",
+      "constraints",
+      "current rules",
+      "authoritative data",
+      "owner"
+    ],
+    "optional_inputs": [
+      "UI surface",
+      "기존 spec",
+      "failure expectation"
+    ],
+    "placeholders": [
+      "[system Artifact]",
+      "[mechanic]",
+      "[actor]",
+      "[failure case]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 섬 복구 게임의 나무 수집 규칙을 actor, input, state transition, output, 실패와 recovery로 명세해 줘. 승인 근거가 없는 수치는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [mechanic]의 [actor] 규칙을 input, state transition, output, [failure case]와 recovery로 명세해 줘. 승인 근거가 없는 수치는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-systems artifact=game-design/island/gathering 나무 수집의 input, state transition, output과 failure recovery를 system-specification으로 작성해.",
+      "template": "$game-design-studio:design-game-systems artifact=[system Artifact] [mechanic]의 input, state transition, output과 recovery를 system-specification으로 작성해."
+    },
+    "skill": "design-game-systems",
+    "skill_chain": [
+      "design-game-systems"
+    ],
+    "specialist_roles": [
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "ordered rule",
+      "state transition",
+      "failure recovery",
+      "authoritative data note"
+    ],
+    "optional_outputs": [
+      "UI feedback",
+      "test case"
+    ],
+    "extended_outputs": [
+      "rule ID",
+      "validation task"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/systems-beginner/content.md",
+      "game-design/studio-foundations/systems-beginner/evidence.yml",
+      "game-design/studio-foundations/systems-beginner/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/systems-beginner/content.md",
+      "game-design/studio-foundations/systems-beginner/evidence.yml",
+      "game-design/studio-foundations/systems-beginner/export-manifest.yml"
+    ],
+    "human_review_boundary": "system owner가 rule과 state transition을 결정하고 engineering handoff는 별도 구현 승인으로 남긴다.",
+    "hold_conditions": [
+      "authoritative data가 없음",
+      "failure recovery가 정의되지 않음"
+    ],
+    "resume_prompt": "systems-beginner의 rule과 transition을 보존하고 확인된 authoritative data만 연결해 실패 복구 섹션부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s05",
+      "svg": "guides/assets/game-design-studio/skills/design-game-systems.svg",
+      "png": "guides/assets/game-design-studio/skills/design-game-systems.png",
+      "alt": "게임 시스템 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/templates.md",
+      "guides/game-design-studio/recipes/system-feature-spec.md"
+    ],
+    "display_title": "규칙과 상태를 정의하는 게임 시스템",
+    "sample_result_excerpt": "지도를 펼치면 단서 토큰 1개를 쓰고 ‘탐색 중’ 상태로 바뀌며, 토큰이 없으면 행동을 취소합니다. 토큰 원본 데이터와 취소 뒤 상태는 시스템 담당자가 확인해야 합니다. (ID: studio:design-game-systems:beginner; 파일: game-design/studio-foundations/systems-beginner/content.md)"
+  },
+  {
+    "id": "studio:design-game-systems:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "예외와 데이터를 연결하는 게임 시스템",
+    "purpose": "concurrency exception, rule precedence, authoritative state와 test case를 rule·state·exception·data 계약으로 연결한다.",
+    "audiences": [
+      "system-economy-designer",
+      "ux-accessibility-reviewer",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "예외 우선순위",
+      "data mapping"
+    ],
+    "level": "standard",
+    "when_to_use": "동시 행동, rule precedence, state authority와 검증 가능한 exception 처리까지 정해야 할 때 사용한다.",
+    "when_not_to_use": "balance 근거 없는 확률을 확정하거나 cross-system economy를 단일 mechanic처럼 다룰 때는 사용하지 않는다.",
+    "required_inputs": [
+      "rule set",
+      "state model",
+      "concurrency case",
+      "authoritative data",
+      "owner"
+    ],
+    "optional_inputs": [
+      "network model",
+      "UI feedback",
+      "balance evidence"
+    ],
+    "placeholders": [
+      "[system Artifact]",
+      "[rule set]",
+      "[concurrency case]",
+      "[data ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 두 플레이어가 같은 수리 재료를 동시에 쓰는 상황의 rule precedence, authoritative state, exception, recovery와 test case를 데이터 ID에 연결해 줘. 검증되지 않은 값은 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [rule set]의 [concurrency case]를 rule precedence, authoritative state, exception, recovery와 [data ID]에 연결해 줘. 검증되지 않은 값은 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-systems artifact=game-design/island/shared-material 동시 수리의 concurrency exception, rule precedence, authoritative state와 test case를 rule-exception-matrix에 연결해.",
+      "template": "$game-design-studio:design-game-systems artifact=[system Artifact] [concurrency case]의 precedence와 exception을 rule-exception-matrix와 [data ID]에 연결해."
+    },
+    "skill": "design-game-systems",
+    "skill_chain": [
+      "design-game-systems",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "system-economy-designer",
+      "ux-accessibility-reviewer",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification",
+      "rule-exception-matrix",
+      "data-schema-table-contract"
+    ],
+    "minimum_outputs": [
+      "rule precedence",
+      "exception matrix",
+      "authoritative state",
+      "test case"
+    ],
+    "optional_outputs": [
+      "UI feedback mapping",
+      "network assumption"
+    ],
+    "extended_outputs": [
+      "PK/FK contract",
+      "review question"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/systems-standard/content.md",
+      "game-design/studio-foundations/systems-standard/evidence.yml",
+      "game-design/studio-foundations/systems-standard/decisions/README.md",
+      "game-design/studio-foundations/systems-standard/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/systems-standard/content.md",
+      "game-design/studio-foundations/systems-standard/evidence.yml",
+      "game-design/studio-foundations/systems-standard/export-manifest.yml",
+      "game-design/studio-foundations/systems-standard/decisions/README.md"
+    ],
+    "human_review_boundary": "system owner가 exception precedence와 authoritative data를 승인·수정·보류하고 UX reviewer는 feedback 영향을 검토한다.",
+    "hold_conditions": [
+      "precedence가 결정되지 않음",
+      "authoritative state와 UI state가 다름"
+    ],
+    "resume_prompt": "systems-standard의 exception matrix를 보존하고 새로 확인된 concurrency evidence만 연결해 미해결 precedence부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s05",
+      "svg": "guides/assets/game-design-studio/skills/design-game-systems.svg",
+      "png": "guides/assets/game-design-studio/skills/design-game-systems.png",
+      "alt": "게임 시스템 rule·state·exception 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/recipes/system-feature-spec.md",
+      "guides/game-design-studio/templates.md"
+    ],
+    "display_title": "예외 규칙과 데이터를 연결하는 게임 시스템",
+    "sample_result_excerpt": "두 수비대가 같은 성문을 동시에 수리하면 먼저 완료된 요청만 내구도를 반영하고 나머지는 자원을 돌려주는 규칙을 제안했습니다. 동시 처리 순서는 서버 구현과 대조해야 합니다. (ID: studio:design-game-systems:standard; 파일: game-design/studio-foundations/systems-standard/content.md)"
+  },
+  {
+    "id": "studio:design-game-systems:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "상호 시스템 반례와 engineering handoff",
+    "purpose": "여러 시스템의 상호작용, 반례, runtime mapping과 engineering 검토 경계를 명시한다.",
+    "audiences": [
+      "system-economy-designer",
+      "lead-game-designer",
+      "production-feasibility-critic"
+    ],
+    "intents": [
+      "상호 시스템 반례",
+      "engineering handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "제작·인벤토리·동기화 등 서로 다른 system의 authority와 data contract가 충돌할 수 있을 때 사용한다.",
+    "when_not_to_use": "unknown schema를 완성된 runtime mapping으로 선언하거나 engineering 구현 승인을 자동으로 내릴 때는 사용하지 않는다.",
+    "required_inputs": [
+      "interacting systems",
+      "counterexample",
+      "authoritative data",
+      "runtime constraint",
+      "engineering owner"
+    ],
+    "optional_inputs": [
+      "abuse case",
+      "existing schema",
+      "review finding"
+    ],
+    "placeholders": [
+      "[system Artifact]",
+      "[system A]",
+      "[system B]",
+      "[engineering owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 공동 창고와 제작 대기열이 동시에 재료를 소비하는 반례를 분석해 rule·state·exception·data mapping과 engineering 검토 질문으로 정리해 줘. unknown schema는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [system A]와 [system B]의 반례를 rule·state·exception·data mapping과 [engineering owner] 검토 질문으로 정리해 줘. unknown schema는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-systems artifact=game-design/island/shared-inventory 확인된 runtime mapping만 data-schema-table-contract에 넣고 공동 창고·제작 대기열의 unknown schema는 provisional로 보존해.",
+      "template": "$game-design-studio:design-game-systems artifact=[system Artifact] [system A]와 [system B]의 확인된 mapping만 data-schema-table-contract에 넣고 [engineering owner] 검토를 기다려."
+    },
+    "skill": "design-game-systems",
+    "skill_chain": [
+      "design-game-systems",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "system-economy-designer",
+      "lead-game-designer",
+      "production-feasibility-critic"
+    ],
+    "intermediate_artifacts": [
+      "system-specification",
+      "rule-exception-matrix",
+      "data-schema-table-contract"
+    ],
+    "minimum_outputs": [
+      "상호 시스템 counterexample",
+      "provisional schema",
+      "engineering question"
+    ],
+    "optional_outputs": [
+      "abuse case",
+      "runtime constraint"
+    ],
+    "extended_outputs": [
+      "implementation handoff boundary",
+      "review blocker"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/systems-advanced/content.md",
+      "game-design/studio-foundations/systems-advanced/evidence.yml",
+      "game-design/studio-foundations/systems-advanced/decisions/README.md",
+      "game-design/studio-foundations/systems-advanced/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/systems-advanced/content.md",
+      "game-design/studio-foundations/systems-advanced/evidence.yml",
+      "game-design/studio-foundations/systems-advanced/export-manifest.yml",
+      "game-design/studio-foundations/systems-advanced/decisions/README.md"
+    ],
+    "human_review_boundary": "engineering owner가 runtime feasibility와 implementation을 결정하며 시스템 카탈로그 항목은 engineering 승인이나 schema 생성 권한을 갖지 않는다.",
+    "hold_conditions": [
+      "counterexample의 authority가 없음",
+      "unknown schema가 구현 계약으로 오인됨",
+      "engineering owner가 없음"
+    ],
+    "resume_prompt": "systems-advanced의 counterexample과 provisional schema를 보존하고 engineering owner가 확인한 runtime mapping만 추가해 handoff 질문부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s05",
+      "svg": "guides/assets/game-design-studio/skills/design-game-systems.svg",
+      "png": "guides/assets/game-design-studio/skills/design-game-systems.png",
+      "alt": "게임 시스템 상호작용과 engineering handoff 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/skills/review-game-design.md",
+      "guides/game-design-studio/templates.md"
+    ],
+    "display_title": "시스템 간 반례와 개발 인계 사항",
+    "sample_result_excerpt": "두 탐험가가 동시에 등대 전력을 복구하면 보상 시스템이 완료 횟수를 두 번 셀 수 있다는 반례를 남겼습니다. 임시 상태 구조와 원자적 처리 여부는 개발 담당자가 검토합니다. (ID: studio:design-game-systems:advanced; 파일: game-design/studio-foundations/systems-advanced/content.md)"
+  },
+  {
+    "id": "studio:design-game-content:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "퀘스트와 NPC 한 개를 설계하는 게임 콘텐츠",
+    "purpose": "한 퀘스트 또는 NPC의 목적, 선택, 상태, 결과, 보상과 실패 복구를 시스템 ID에 연결한다.",
+    "audiences": [
+      "content-narrative-designer",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "퀘스트 설계",
+      "NPC 반응 정의"
+    ],
+    "level": "beginner",
+    "when_to_use": "목적이 분명한 퀘스트·NPC 하나의 player choice와 outcome을 작성할 때 사용한다.",
+    "when_not_to_use": "전체 비전 또는 아직 확정되지 않은 rule authority를 대신 결정할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "content purpose",
+      "target player state",
+      "supporting system ID",
+      "player choice",
+      "reward",
+      "owner"
+    ],
+    "optional_inputs": [
+      "기존 narrative",
+      "accessibility need",
+      "review question"
+    ],
+    "placeholders": [
+      "[content Artifact]",
+      "[퀘스트 또는 NPC]",
+      "[system ID]",
+      "[reward]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 폭풍 전 등대를 복구하는 퀘스트와 안내 NPC 하나를 목적, player choice, 상태 변화, 결과, 보상과 실패 복구로 정리하고 system ID에 연결해 줘. 모르는 제작 정보는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [퀘스트 또는 NPC]를 목적, player choice, 상태 변화, 결과, [reward]와 실패 복구로 정리하고 [system ID]에 연결해 줘. 모르는 제작 정보는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-content artifact=game-design/island/lighthouse-quest 등대 복구 퀘스트의 목적, player choice, 상태, 실패 복구와 NPC 반응을 narrative-quest-npc로 정리해.",
+      "template": "$game-design-studio:design-game-content artifact=[content Artifact] [퀘스트 또는 NPC]의 목적, choice, 상태와 [reward]를 narrative-quest-npc로 정리해."
+    },
+    "skill": "design-game-content",
+    "skill_chain": [
+      "design-game-content"
+    ],
+    "specialist_roles": [
+      "content-narrative-designer",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc"
+    ],
+    "minimum_outputs": [
+      "content purpose",
+      "player choice",
+      "state delta",
+      "outcome",
+      "recovery"
+    ],
+    "optional_outputs": [
+      "NPC response",
+      "repeatability goal"
+    ],
+    "extended_outputs": [
+      "system/data dependency",
+      "validation task"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/content-beginner/content.md",
+      "game-design/studio-foundations/content-beginner/evidence.yml",
+      "game-design/studio-foundations/content-beginner/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/content-beginner/content.md",
+      "game-design/studio-foundations/content-beginner/evidence.yml",
+      "game-design/studio-foundations/content-beginner/export-manifest.yml"
+    ],
+    "human_review_boundary": "content-narrative-designer가 choice와 NPC 반응을 검토하고 lead-game-designer가 system dependency를 확인한다.",
+    "hold_conditions": [
+      "supporting system ID가 없음",
+      "player choice의 결과가 정의되지 않음"
+    ],
+    "resume_prompt": "content-beginner의 quest state와 NPC 반응을 보존하고 확인된 system ID만 연결해 failure recovery부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s03",
+      "svg": "guides/assets/game-design-studio/skills/design-game-content.svg",
+      "png": "guides/assets/game-design-studio/skills/design-game-content.png",
+      "alt": "게임 콘텐츠 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C05"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/design-game-content.md",
+      "guides/game-design-studio/templates.md",
+      "guides/game-design-studio/workflow.md"
+    ],
+    "display_title": "퀘스트와 비플레이어 캐릭터(NPC) 하나 설계하기",
+    "sample_result_excerpt": "역무원 NPC는 플레이어에게 세 신호 중 하나를 골라 복구하게 하고, 잘못 고르면 다음 밤에 새 단서를 제공합니다. 보상 수치와 실패 뒤 대사는 콘텐츠 담당자 검토 전까지 비워 둡니다. (ID: studio:design-game-content:beginner; 파일: game-design/studio-foundations/content-beginner/content.md)"
+  },
+  {
+    "id": "studio:design-game-content:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "Content graph와 보상을 연결하는 게임 콘텐츠",
+    "purpose": "퀘스트·캐릭터·보스 encounter의 content graph, 상태, reward와 production resource를 연결한다.",
+    "audiences": [
+      "content-narrative-designer",
+      "production-feasibility-critic",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "content graph 설계",
+      "보상과 제작 연결"
+    ],
+    "level": "standard",
+    "when_to_use": "여러 content node의 흐름, combat role, reward와 생산 자원을 같은 계약으로 검토할 때 사용한다.",
+    "when_not_to_use": "규칙 authority가 없는 행동·보상을 invent하거나 production capacity를 근거 없이 확정할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "content graph goal",
+      "character or encounter",
+      "supporting system/data ID",
+      "reward",
+      "production evidence",
+      "owner"
+    ],
+    "optional_inputs": [
+      "counterplay",
+      "monster telegraph",
+      "accessibility need"
+    ],
+    "placeholders": [
+      "[content Artifact]",
+      "[content graph goal]",
+      "[encounter]",
+      "[production evidence]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 섬 복구의 세 퀘스트와 보스 encounter를 content graph로 연결하고, 각 상태·보상·counterplay·monster telegraph·production resource를 system/data ID에 붙여 줘. 불확실한 제작량은 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [content graph goal]의 [encounter]를 상태·보상·counterplay·telegraph와 [production evidence]에 연결해 줘. 불확실한 제작량은 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-content artifact=game-design/island/storm-boss character role, skill rule, counterplay, monster telegraph와 production resource를 character-skill-combat-monster에 연결해.",
+      "template": "$game-design-studio:design-game-content artifact=[content Artifact] [encounter]의 역할, counterplay, 보상과 [production evidence]를 character-skill-combat-monster에 연결해."
+    },
+    "skill": "design-game-content",
+    "skill_chain": [
+      "design-game-content",
+      "design-game-systems",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "content-narrative-designer",
+      "production-feasibility-critic",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc",
+      "character-skill-combat-monster"
+    ],
+    "minimum_outputs": [
+      "content graph",
+      "state dependency",
+      "reward",
+      "production resource"
+    ],
+    "optional_outputs": [
+      "counterplay",
+      "monster telegraph"
+    ],
+    "extended_outputs": [
+      "repeatability criterion",
+      "review finding"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/content-standard/content.md",
+      "game-design/studio-foundations/content-standard/evidence.yml",
+      "game-design/studio-foundations/content-standard/decisions/README.md",
+      "game-design/studio-foundations/content-standard/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/content-standard/content.md",
+      "game-design/studio-foundations/content-standard/evidence.yml",
+      "game-design/studio-foundations/content-standard/export-manifest.yml",
+      "game-design/studio-foundations/content-standard/decisions/README.md"
+    ],
+    "human_review_boundary": "content-narrative-designer가 content graph를 검토하고 production-feasibility-critic이 resource와 repeatability 위험을 검토한다.",
+    "hold_conditions": [
+      "행동 또는 reward의 system/data ID가 없음",
+      "production evidence가 없음"
+    ],
+    "resume_prompt": "content-standard의 graph와 reward 연결을 유지하고 새로 측정된 encounter 제작 근거만 더해 production blocker부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s03",
+      "svg": "guides/assets/game-design-studio/skills/design-game-content.svg",
+      "png": "guides/assets/game-design-studio/skills/design-game-content.png",
+      "alt": "게임 콘텐츠 graph와 production 흐름"
+    },
+    "related_use_cases": [
+      "ST-C06"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/design-game-content.md",
+      "guides/game-design-studio/skills/design-game-systems.md",
+      "guides/game-design-studio/templates.md"
+    ],
+    "display_title": "콘텐츠 관계도와 보상을 연결하는 게임 콘텐츠",
+    "sample_result_excerpt": "봄 장터 퀘스트를 마치면 씨앗 상점과 여름 의뢰가 열리지만, 희귀 씨앗 보상은 생산 비용 근거가 없어 보류했습니다. 필요한 NPC 표정 3종도 제작 자원 목록에 넣었습니다. (ID: studio:design-game-content:standard; 파일: game-design/studio-foundations/content-standard/content.md)"
+  },
+  {
+    "id": "studio:design-game-content:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "서사·제작·권리 경계를 갖춘 게임 콘텐츠",
+    "purpose": "narrative choice, production scope, rights·consent·provenance와 사람 승인 조건을 함께 기록한다.",
+    "audiences": [
+      "content-narrative-designer",
+      "production-feasibility-critic",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "서사와 제작 충돌 검토",
+      "rights gate 설정"
+    ],
+    "level": "advanced",
+    "when_to_use": "반복성·제작 비용·서사 선택·AI 또는 UGC 자료의 rights 경계가 상충할 때 사용한다.",
+    "when_not_to_use": "provenance·rights·consent 없이 AI·UGC 자료를 승인하거나 사람 approver 없이 콘텐츠 범위를 확정할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "narrative choice",
+      "system/data dependency",
+      "production evidence",
+      "rights/provenance status",
+      "human approver"
+    ],
+    "optional_inputs": [
+      "UGC moderation policy",
+      "repeatability evidence",
+      "scope decision"
+    ],
+    "placeholders": [
+      "[content Artifact]",
+      "[narrative choice]",
+      "[rights status]",
+      "[human approver]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 분기 퀘스트의 선택 의미와 재합류를 system state에 연결하고, 반복성·제작 비용·AI 보조 대사의 provenance·rights·consent와 사람 승인 gate를 분리해 줘. 근거 없는 상태는 미정으로 남겨 줘.",
+      "template": "@Game Design Studio [narrative choice]를 system state에 연결하고 [rights status], 제작 범위와 [human approver] 승인 gate를 분리해 줘. 근거 없는 상태는 미정으로 남겨 줘."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-content artifact=game-design/branching-adventure/river-crossing 기존 evidence와 scope decision을 보존하고 repeatability와 제작 cost가 충돌하는 content 후보, rights와 approval gate를 비교해.",
+      "template": "$game-design-studio:design-game-content artifact=[content Artifact] [narrative choice]의 scope·rights·provenance를 보존하고 [human approver] 승인 전 blocker를 비교해."
+    },
+    "skill": "design-game-content",
+    "skill_chain": [
+      "design-game-content",
+      "design-game-systems",
+      "plan-game-production",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "content-narrative-designer",
+      "production-feasibility-critic",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc",
+      "production-scope-risk",
+      "decision-change-log"
+    ],
+    "minimum_outputs": [
+      "narrative state dependency",
+      "production blocker",
+      "rights/provenance status",
+      "approval gate"
+    ],
+    "optional_outputs": [
+      "UGC moderation question",
+      "repeatability comparison"
+    ],
+    "extended_outputs": [
+      "human approval receipt 대기",
+      "scope decision log"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-foundations/content-advanced/content.md",
+      "game-design/studio-foundations/content-advanced/evidence.yml",
+      "game-design/studio-foundations/content-advanced/decisions/README.md",
+      "game-design/studio-foundations/content-advanced/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/studio-foundations/content-advanced/content.md",
+      "game-design/studio-foundations/content-advanced/evidence.yml",
+      "game-design/studio-foundations/content-advanced/export-manifest.yml",
+      "game-design/studio-foundations/content-advanced/decisions/README.md"
+    ],
+    "human_review_boundary": "narrative·production·rights owner가 선택 의미, 제작 범위와 rights gate를 승인·수정·보류하며 자동 생성 결과는 승인이 아니다.",
+    "hold_conditions": [
+      "system/data dependency가 없음",
+      "rights 또는 consent 상태가 없음",
+      "human approver가 없음"
+    ],
+    "resume_prompt": "content-advanced의 narrative dependency와 rights gate를 보존하고 human approver가 확인한 provenance 또는 production evidence만 반영해 blocker부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s03",
+      "svg": "guides/assets/game-design-studio/skills/design-game-content.svg",
+      "png": "guides/assets/game-design-studio/skills/design-game-content.png",
+      "alt": "게임 콘텐츠 서사·제작·권리 승인 흐름"
+    },
+    "related_use_cases": [
+      "ST-C05"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/skills/design-game-content.md",
+      "guides/game-design-studio/use-cases/concept-scenarios.md",
+      "guides/game-design-studio/templates.md"
+    ],
+    "display_title": "서사·제작·권리 경계를 갖춘 게임 콘텐츠",
+    "sample_result_excerpt": "견습생이 금지된 바람길을 공개하는 선택은 다음 지역의 경비 상태와 대사를 바꿉니다. 참고 민요의 사용 권리와 성우 동의가 확인되기 전에는 제작 관문을 넘기지 않습니다. (ID: studio:design-game-content:advanced; 파일: game-design/studio-foundations/content-advanced/content.md)"
+  }
+]

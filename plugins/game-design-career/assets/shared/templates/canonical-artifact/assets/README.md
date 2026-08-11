@@ -1,4 +1,4 @@
-# Image assets
+# 이미지 자산
 
 `image-assets.yml`은 이미지 매니페스트의 시작점이고, `prompts/`에는 생성 여부와 무관하게 재사용 가능한 Markdown·JSON 프롬프트를 둡니다.
 

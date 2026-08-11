@@ -235,6 +235,43 @@ test("production builder rejects the exact missing 33 Studio sources when only n
   );
 });
 
+test("check mode rejects a committed Studio skill SVG with glyph-scaling attributes", async (t) => {
+  const skillSource = {
+    ...source,
+    id: "st-s02",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: `단계 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "define-game-vision",
+      required_input: "player promise + design constraints",
+      outputs: ["vision-pillars", "core-motivation-loop"],
+      next_routes: ["design-game-systems"],
+    },
+  };
+  const repoRoot = await writeFixture(t, {
+    fixtureSource: skillSource,
+    existingOutputs: true,
+    manifest: {
+      version: 1,
+      audience_paths: [],
+      cases: [],
+      skill_cases: [skillCaseEntry("st-s02", { svg: svgPath, png: pngPath, alt: skillSource.alt })],
+    },
+  });
+  const committedSvg = path.join(repoRoot, svgPath);
+  await writeFile(committedSvg, (await readFile(committedSvg, "utf8")).replace("<text", '<text textLength="164" lengthAdjust="spacingAndGlyphs"'));
+
+  await assert.rejects(
+    () => buildUseCaseDiagrams({ repoRoot, ids: [skillSource.id], check: true }),
+    /st-s02.*textLength.*repair source layout\/wrapping/u,
+  );
+});
+
 test("production builder rejects an S routeId whose canonical target differs from the loaded source skill", async (t) => {
   const { repoRoot } = await writeStudioProductionFixture(t, ({ sources }) => {
     studioSource(sources, "st-s02").semantic.skill = "design-game-systems";
@@ -279,6 +316,27 @@ test("production batch rejects a boundary nextRoutes target absent from installe
     () => studioProductionContract.validateStudioDiagramProductionBatch(sources, routing),
     /st-s14.*nextRoutes.*svg-infographic.*installed skillIds/u,
   );
+});
+
+test("production batch accepts the published content combat and puzzle routing intents", async () => {
+  const { sources, routing } = await readStudioProductionInputs();
+  assert.deepStrictEqual(studioRoute(routing, "content").triggerIntents, [
+    "quest",
+    "level content",
+    "narrative",
+    "character",
+    "enemy",
+    "combat",
+    "boss",
+    "encounter",
+    "puzzle",
+    "level design",
+    "soft lock",
+    "secret route",
+    "reset",
+    "retry",
+  ]);
+  assert.doesNotThrow(() => studioProductionContract.validateStudioDiagramProductionBatch(sources, routing));
 });
 
 test("builder propagates zero-exit Skillstead warnings from its fixed wrapper", async (t) => {

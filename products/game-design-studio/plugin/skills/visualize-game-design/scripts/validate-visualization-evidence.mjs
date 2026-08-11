@@ -19,11 +19,11 @@ const PRESET_IDS = new Set([
 const QA_CHECKS = Object.freeze(["fit-to-page", "close-up", "alt-text", "source-fidelity"]);
 const STABLE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const LINTER_ID = "Skillstead svg-infographic";
-const LINTER_VERSION = "0.8.3";
+const LINTER_VERSION = "0.9.0";
 const WRAPPER_PATH = "skills/visualize-game-design/scripts/run-skillstead.mjs";
 const TRUSTED_RUNTIME_DIGESTS = Object.freeze({
   wrapper: "98d897f7c8ee0848592a926a1ccf0865838c2bf71064eda165e2d13f3a157220",
-  linter: "3990a96078ce8c0c4692213820ce72fc228a1b827459792d5ccc45932f5f9a41",
+  linter: "61271a00d5466438eeabe5aeedf961d5df802c0976732ed193e265a7c94493e3",
   renderer: "5f2d6f43c1c6ee43e4c52c9bdf02053297e13ca3315ea16652741f3fe85e3d8e",
 });
 const lintCache = new Map();

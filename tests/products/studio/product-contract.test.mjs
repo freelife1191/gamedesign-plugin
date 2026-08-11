@@ -5,9 +5,10 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { loadProductContract } from "../../../tooling/lib/product-contract.mjs";
+import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const productRoot = path.join(repoRoot, "products/game-design-studio");
@@ -28,7 +29,12 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
+  "humanize-korean",
+  "archify",
 ];
+const directSkillIds = skillIds.slice(0, 15);
+const installedSkillIds = [...directSkillIds, "archify", "humanize-korean", "svg-infographic"].sort();
 
 const roleIds = [
   "lead-game-designer",
@@ -37,7 +43,10 @@ const roleIds = [
   "ux-accessibility-reviewer",
   "liveops-data-designer",
   "production-feasibility-critic",
+  "combat-encounter-reviewer",
+  "level-puzzle-reviewer",
   "document-quality-editor",
+  "game-design-writing-editor",
 ];
 const imageSpecialistIds = ["art-brief-director", "visual-asset-reviewer"];
 
@@ -89,6 +98,18 @@ const routeContract = {
     skill: "design-game-content",
     reference: "references/methods/content-specification.md",
     artifactType: "narrative-quest-npc",
+    conditionalReviewers: [
+      {
+        role: "combat-encounter-reviewer",
+        triggerIntents: ["combat", "boss", "encounter"],
+        reviewers: ["combat-encounter-reviewer"],
+      },
+      {
+        role: "level-puzzle-reviewer",
+        triggerIntents: ["puzzle", "level design", "secret route", "soft lock", "reset", "retry"],
+        reviewers: ["level-puzzle-reviewer"],
+      },
+    ],
   },
   "player-experience": {
     skill: "design-player-experience",
@@ -147,6 +168,13 @@ function assertRepoManifestContract(manifest) {
   assert.ok(Array.isArray(manifest.interface.capabilities));
   assert.ok(Array.isArray(manifest.interface.defaultPrompt));
   assert.ok(manifest.interface.defaultPrompt.length > 0 && manifest.interface.defaultPrompt.length <= 3);
+  for (const field of ["shortDescription", "longDescription"]) {
+    assert.match(manifest.interface[field], /[가-힣]/u, `interface.${field} must be Korean-first`);
+  }
+  for (const prompt of manifest.interface.defaultPrompt) {
+    assert.match(prompt, /[가-힣]/u, "interface.defaultPrompt must be Korean-first");
+    assert.ok(prompt.length <= 128, "interface.defaultPrompt is bounded");
+  }
 }
 
 test("Studio product selects the complete shared contract and 49-document corpus", async () => {
@@ -157,7 +185,7 @@ test("Studio product selects the complete shared contract and 49-document corpus
     name: "game-design-studio",
     displayName: "Game Design Studio",
     description: "Professional game design, review, visualization, and export workflows.",
-    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"],
+    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"],
     sharedRuntime: true,
     sourceRoots: ["plugin"],
     sourceDocumentCategories: ["career", "fun-intent", "systems", "content", "feedback"],
@@ -176,14 +204,34 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 14);
+  assert.equal(new Set(routing.skillIds).size, 17);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
-  assert.equal(new Set(routing.roleIds).size, 7);
+  assert.equal(new Set(routing.roleIds).size, 10);
   assert.deepEqual(routing.profileIds, profileIds);
   assert.deepEqual(routing.rolePriority, roleIds);
   assert.equal(routing.unknownIntentFallback, "orchestrate-game-design-project");
   assert.deepEqual(routing.plannedPaths, plannedPaths);
+});
+
+test("Studio keeps the 15-direct and 18-installed skill inventory contract", async () => {
+  const inventory = await collectProductInventory(repoRoot, "game-design-studio");
+
+  assert.equal(directSkillIds.length, 15, "Studio has exactly 15 direct product skills");
+  assert.deepEqual(inventory.skillIds, installedSkillIds);
+  assert.equal(inventory.skillIds.length, 18, "Studio installs the 15 direct skills plus three bundled skills");
+});
+
+test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
+  const skill = await readFile(path.join(pluginRoot, "skills/orchestrate-game-design-project/SKILL.md"), "utf8");
+  for (const phrase of [
+    "Users do not need to name a skill or case ID",
+    "Route a clear single-domain request directly to its specialist skill",
+    "Route mixed, cross-domain, or unclear requests through this orchestrator",
+    "Honor an explicit user-selected skill",
+    "Report the selected skills, selected review roles, artifact paths, and remaining decisions",
+    "Automatic route selection is not automatic approval",
+  ]) assert.match(skill, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
 });
 
 test("Every Studio route is deterministic and points at its planned artifact source", async () => {
@@ -199,6 +247,7 @@ test("Every Studio route is deterministic and points at its planned artifact sou
     const expectedKeys = [
       "artifactType",
       "completionGates",
+      ...(expected.conditionalReviewers ? ["conditionalReviewers"] : []),
       "defaultReviewers",
       "eligibleProfiles",
       "id",
@@ -223,9 +272,60 @@ test("Every Studio route is deterministic and points at its planned artifact sou
     assert.ok(route.defaultReviewers.length <= route.maxReviewers, `${routeId}: reviewer limit`);
     assert.ok(route.references.includes(expected.reference), `${routeId}: planned reference`);
     assert.ok(route.references.every((reference) => plannedPaths.references.includes(reference)), `${routeId}: allowlisted references`);
+    if (expected.conditionalReviewers) {
+      assert.deepEqual(route.conditionalReviewers, expected.conditionalReviewers);
+    }
     if (expected.outputArtifacts) assert.deepEqual(route.outputArtifacts, expected.outputArtifacts);
     assert.ok(route.completionGates.length > 0, `${routeId}: completionGates`);
   }
+});
+
+test("Studio content reviewer selection uses priority slots and rejects ineligible conditional roles", async () => {
+  const routing = await readJson("references/routing.json");
+  const contentRoute = routing.routes.find(({ id }) => id === "content");
+  const validatorPath = path.join(
+    pluginRoot,
+    "skills/orchestrate-game-design-project/scripts/validate-studio-scenario.mjs",
+  );
+  const { selectRouteReviewers, validateReviewerSelection } = await import(
+    `${pathToFileURL(validatorPath).href}?selection=${Date.now()}-${Math.random()}`,
+  );
+  const bossAndPuzzle = ["boss", "puzzle"];
+  const expected = [
+    "content-narrative-designer",
+    "lead-game-designer",
+    "combat-encounter-reviewer",
+  ];
+
+  assert.deepEqual(selectRouteReviewers(contentRoute, bossAndPuzzle, routing.rolePriority), expected);
+  assert.equal(validateReviewerSelection({
+    routes: [contentRoute],
+    intents: bossAndPuzzle,
+    roleIds: expected,
+    rolePriority: routing.rolePriority,
+    knownRoleIds: routing.roleIds,
+  }), true);
+  assert.equal(validateReviewerSelection({
+    routes: [contentRoute],
+    intents: ["boss"],
+    roleIds: ["content-narrative-designer", "lead-game-designer", "level-puzzle-reviewer"],
+    rolePriority: routing.rolePriority,
+    knownRoleIds: routing.roleIds,
+  }), false, "irrelevant conditional role is rejected");
+  assert.equal(validateReviewerSelection({
+    routes: [contentRoute],
+    intents: bossAndPuzzle,
+    roleIds: ["content-narrative-designer", "lead-game-designer", "combat-encounter-reviewer", "level-puzzle-reviewer"],
+    rolePriority: routing.rolePriority,
+    knownRoleIds: routing.roleIds,
+  }), false, "four-role mutation is rejected");
+  assert.equal(validateReviewerSelection({
+    routes: [contentRoute],
+    intents: bossAndPuzzle,
+    roleIds: ["content-narrative-designer", "lead-game-designer", "level-puzzle-reviewer"],
+    rolePriority: routing.rolePriority,
+    knownRoleIds: routing.roleIds,
+  }), false, "unselected conditional role is rejected");
 });
 
 test("Studio trigger phrases are globally unique so routing never depends on a guess", async () => {

@@ -197,6 +197,26 @@ function safeDigest(value) {
   return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value);
 }
 
+function validGenerationReceiptShape(receipt) {
+  const base = ['schema_version', 'kind', 'asset_id', 'attempt_id', 'reservation_path', 'reservation_sha256', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'];
+  const lineage = ['asset_set_id', 'derivative_of', 'reference_images', 'parent_prompt_digests'];
+  if (exactKeys(receipt, base)) return true;
+  return exactKeys(receipt, [...base, ...lineage])
+    && typeof receipt.asset_set_id === 'string' && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(receipt.asset_set_id)
+    && typeof receipt.derivative_of === 'string' && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(receipt.derivative_of)
+    && Array.isArray(receipt.reference_images) && receipt.reference_images.length > 0
+    && receipt.reference_images.every((reference) => reference && typeof reference === 'object' && exactKeys(reference, ['asset_id', 'path', 'sha256'])
+      && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(reference.asset_id) && isSafeRelativeArtifactPath(reference.path) && safeDigest(reference.sha256))
+    && Array.isArray(receipt.parent_prompt_digests) && receipt.parent_prompt_digests.every(safeDigest);
+}
+
+function matchesAssetLineage(receipt, asset) {
+  if (asset.derivative_of === null || asset.derivative_of === undefined) return !Object.hasOwn(receipt, 'derivative_of');
+  return receipt.asset_set_id === asset.asset_set_id && receipt.derivative_of === asset.derivative_of
+    && JSON.stringify(receipt.reference_images) === JSON.stringify(asset.reference_images)
+    && JSON.stringify(receipt.parent_prompt_digests) === JSON.stringify(asset.prompt_lineage?.parent_prompt_digests ?? []);
+}
+
 async function hasBoundGenerationReceipt(artifactPath, asset) {
   const binding = asset.generation_receipts?.at(-1);
   if (!binding || !exactKeys(binding, ['attempt_id', 'path', 'sha256']) || !safeDigest(binding.sha256)
@@ -206,7 +226,7 @@ async function hasBoundGenerationReceipt(artifactPath, asset) {
     const bytes = await readFile(resolve(artifactPath, binding.path));
     const receipt = JSON.parse(bytes.toString('utf8'));
     return digest(bytes) === binding.sha256
-      && exactKeys(receipt, ['schema_version', 'kind', 'asset_id', 'attempt_id', 'reservation_path', 'reservation_sha256', 'provider', 'request_id', 'generated_at', 'prompt_digest', 'output_digest', 'requested_model', 'requested_quality', 'applied_model', 'applied_quality', 'failure_reason'])
+      && validGenerationReceiptShape(receipt)
       && receipt.schema_version === 1 && receipt.kind === 'image-generation-receipt' && receipt.asset_id === asset.asset_id && receipt.attempt_id === binding.attempt_id
       && receipt.reservation_path === `assets/receipts/image-generation-attempt-${binding.attempt_id}.json` && safeDigest(receipt.reservation_sha256)
       && (await safeManagedArtifactFile(artifactPath, receipt.reservation_path))
@@ -219,7 +239,7 @@ async function hasBoundGenerationReceipt(artifactPath, asset) {
       && ['low', 'medium', 'high', 'auto'].includes(receipt.requested_quality)
       && (receipt.applied_model === null || typeof receipt.applied_model === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u.test(receipt.applied_model))
       && (receipt.applied_quality === null || ['low', 'medium', 'high', 'auto'].includes(receipt.applied_quality))
-      && receipt.failure_reason === null;
+      && receipt.failure_reason === null && matchesAssetLineage(receipt, asset);
   } catch {
     return false;
   }

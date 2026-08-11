@@ -135,3 +135,11 @@ $game-design-career:build-game-design-portfolio artifact=<artifact-path> 기존 
 ## 관련 문서
 
 [five-axis-review 템플릿](../templates.md#five-axis-review), [build-game-design-portfolio 스킬](./build-game-design-portfolio.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:review-game-design-portfolio -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 5축 빠른 검토](../../prompt-templates/career/review-game-design-portfolio.md#careerreview-game-design-portfoliobeginner)
+- [standard — finding·severity·queue 검토](../../prompt-templates/career/review-game-design-portfolio.md#careerreview-game-design-portfoliostandard)
+- [advanced — mutation·발표 readiness·승인 검토](../../prompt-templates/career/review-game-design-portfolio.md#careerreview-game-design-portfolioadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-career:review-game-design-portfolio -->

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title>한국어 기획 사례에서 사람 검토와 다음 요청으로 이어지는 흐름</title>
+  <desc>플러그인 선택, 한글 사례 카드, 전문 스킬 실행, Canonical Artifact, 사람 검토를 왼쪽에서 오른쪽으로 보여 주고, 사람 검토 뒤에는 점선으로 다음 요청과 재개 흐름을 표시합니다.</desc>
+  <style>
+    svg{--bg:#F8FBFF;--ink:#1F2733;--muted:#5B6675;--hair:#C9D8E8;--blue:#1F6FB2;--blue-fill:#E8F1FB;--violet:#534AB7;--violet-fill:#ECEBFB;--green:#0F7A5F;--green-fill:#E7F5EF;--amber:#B56A00;--amber-fill:#FFF4DF;--rose:#A62560;--rose-fill:#FDECF3;}
+    .title{fill:var(--ink);font-size:42px;font-weight:700}.sub{fill:var(--muted);font-size:19px}.card{stroke-width:2}.card-title{font-size:22px;font-weight:700}.card-body{font-size:16px;fill:var(--muted)}.badge{font-size:18px;font-weight:700}.caption{font-size:16px;fill:var(--muted)}.foot{font-size:17px;fill:var(--ink);font-weight:600}.on-accent{fill:#fff}.line{fill:none;stroke:#52647A;stroke-width:2.8;marker-end:url(#arrow)}.feedback{fill:none;stroke:var(--amber);stroke-width:2.8;stroke-dasharray:8 7;marker-end:url(#arrow-amber)}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#52647A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#B56A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <symbol id="ic-choice" viewBox="0 0 24 24"><path d="M5 4h14v5H5zM5 15h14v5H5zM8 9v6M16 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-card" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M3.5 7.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-human" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 21c.6-4 3-6 6.5-6s5.9 2 6.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  </defs>
+  <rect width="1400" height="900" fill="var(--bg)"/>
+  <text x="70" y="78" class="title">한국어 작업 설명으로 시작하면 다음 행동이 선명해집니다</text>
+  <text x="70" y="116" class="sub">영문 ID는 찾기용 참조입니다. 화면에서는 한국어 과제와 결과를 먼저 읽습니다.</text>
+  <rect x="55" y="180" width="1290" height="390" rx="22" fill="#FFFFFF" stroke="var(--hair)" stroke-width="2"/>
+  <path class="line" data-flow-edge="plugin-choice-to-case-choice" data-from="plugin-choice" data-to="case-choice" d="M300 380H345"/><path class="line" data-flow-edge="case-choice-to-specialist-skill" data-from="case-choice" data-to="specialist-skill" d="M555 380H600"/><path class="line" data-flow-edge="specialist-skill-to-canonical-artifact" data-from="specialist-skill" data-to="canonical-artifact" d="M810 380H855"/><path class="line" data-flow-edge="canonical-artifact-to-human-review" data-from="canonical-artifact" data-to="human-review" d="M1065 380H1110"/>
+  <!-- main-flow -->
+  <g data-flow-node="plugin-choice">
+    <rect x="90" y="270" width="210" height="220" rx="16" fill="var(--blue-fill)" stroke="var(--blue)" class="card"/>
+    <rect x="112" y="292" width="38" height="30" rx="15" fill="var(--blue)"/><text x="131" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">1</text>
+    <circle cx="195" cy="353" r="34" fill="#D6E9FB"/><use href="#ic-choice" x="175" y="333" width="40" height="40" style="color:#1F6FB2"/>
+    <text x="195" y="415" class="card-title" fill="var(--blue)" text-anchor="middle">플러그인 선택</text><text x="195" y="447" class="card-body" text-anchor="middle">Studio · Career</text>
+  </g>
+  <g data-flow-node="case-choice">
+    <rect x="345" y="270" width="210" height="220" rx="16" fill="var(--violet-fill)" stroke="var(--violet)" class="card"/>
+    <rect x="367" y="292" width="38" height="30" rx="15" fill="var(--violet)"/><text x="386" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">2</text>
+    <circle cx="450" cy="353" r="34" fill="#E2E0FA"/><use href="#ic-card" x="430" y="333" width="40" height="40" style="color:#534AB7"/>
+    <text x="450" y="415" class="card-title" fill="var(--violet)" text-anchor="middle" style="font-size:18px">원하는 작업 사례 선택</text><text x="450" y="447" class="card-body" text-anchor="middle">문제와 목표를 고르기</text>
+  </g>
+  <g data-flow-node="specialist-skill">
+    <rect x="600" y="270" width="210" height="220" rx="16" fill="var(--green-fill)" stroke="var(--green)" class="card"/>
+    <rect x="622" y="292" width="38" height="30" rx="15" fill="var(--green)"/><text x="641" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">3</text>
+    <circle cx="705" cy="353" r="34" fill="#D7F0E6"/><use href="#ic-gear" x="685" y="333" width="40" height="40" style="color:#0F7A5F"/>
+    <text x="705" y="415" class="card-title" fill="var(--green)" text-anchor="middle">전문 스킬 실행</text><text x="705" y="447" class="card-body" text-anchor="middle">필요한 작업만 실행</text>
+  </g>
+  <g data-flow-node="canonical-artifact">
+    <rect x="855" y="270" width="210" height="220" rx="16" fill="#F1F4F8" stroke="#64748B" class="card"/>
+    <rect x="877" y="292" width="38" height="30" rx="15" fill="#64748B"/><text x="896" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">4</text>
+    <circle cx="960" cy="353" r="34" fill="#E3E8EF"/><use href="#ic-folder" x="940" y="333" width="40" height="40" style="color:#475569"/>
+    <text x="960" y="408" class="card-title" fill="#475569" text-anchor="middle">기획 결과 폴더</text><text x="960" y="438" class="card-body" text-anchor="middle">(Canonical Artifact)</text><text x="960" y="463" class="caption" text-anchor="middle">기준 파일 보존</text>
+  </g>
+  <g data-flow-node="human-review">
+    <rect x="1110" y="270" width="210" height="220" rx="16" fill="var(--rose-fill)" stroke="var(--rose)" class="card"/>
+    <rect x="1132" y="292" width="38" height="30" rx="15" fill="var(--rose)"/><text x="1151" y="307" class="badge on-accent" text-anchor="middle" dominant-baseline="central">5</text>
+    <circle cx="1215" cy="353" r="34" fill="#F7DCE9"/><use href="#ic-human" x="1195" y="333" width="40" height="40" style="color:#A62560"/>
+    <text x="1215" y="415" class="card-title" fill="var(--rose)" text-anchor="middle">사람 검토</text><text x="1215" y="447" class="card-body" text-anchor="middle">승인·보류를 결정</text>
+  </g>
+  <path class="feedback" data-flow-edge="human-review-to-next-request-resume" data-from="human-review" data-to="next-request-resume" stroke-dasharray="8 7" d="M1215 501V620H765"/>
+  <g data-flow-node="next-request-resume">
+    <rect x="570" y="600" width="195" height="92" rx="16" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
+    <text x="667" y="632" class="card-title" fill="var(--amber)" text-anchor="middle">다음 요청·재개</text><text x="667" y="663" class="card-body" text-anchor="middle">보류 이유를 읽고 수정</text>
+  </g>
+  <text x="860" y="644" class="caption" fill="var(--amber)">점선: 검토 뒤 재개하는 흐름</text>
+  <rect x="55" y="735" width="1290" height="94" rx="16" fill="#EAF3FC" stroke="var(--blue)" stroke-width="2"/>
+  <text x="88" y="775" class="foot">핵심 원칙</text><text x="88" y="808" class="caption">영문 ID를 암기하지 않아도 됩니다. 한국어 과제 설명을 고르고, 결과 폴더와 사람 검토를 따라가면 됩니다.</text>
+</svg>

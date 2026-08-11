@@ -211,36 +211,36 @@
     "id": "st-c01",
     "scope": "game-design-studio-use-case",
     "title": "플레이어 경험과 게임 비전",
-    "description": "플레이어 약속을 검토 가능한 비전 기준으로 고정합니다.",
+    "description": "플레이어에게 약속할 경험을 검토 가능한 게임 방향 기준으로 정리합니다.",
     "alt": "플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름",
     "type": "design-pipeline",
     "eyebrow": "ST-C01 · COMPETENCY",
-    "conclusion": "플레이어 약속과 비전 기둥은 사람 검토 뒤에만 다음 설계 기준으로 확정합니다.",
+    "conclusion": "플레이어에게 약속할 경험과 게임 방향 원칙은 사람 검토를 거친 뒤 다음 설계 기준으로 확정합니다.",
     "steps": [
       {
         "stage": "입력",
-        "label": "플레이어 약속",
+        "label": "약속할 경험",
         "detail": "대상 경험을 고정합니다."
       },
       {
         "stage": "전문 스킬",
         "label": "비전 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "행동·선택·피드백을 연결합니다."
       },
       {
         "stage": "Canonical Artifact",
-        "label": "비전 기둥",
+        "label": "게임 방향 원칙",
         "detail": "근거와 가정을 남깁니다."
       },
       {
         "stage": "검토",
         "label": "설계 검토",
-        "detail": "owner와 경계를 확인합니다."
+        "detail": "책임자와 적용 범위를 확인합니다."
       },
       {
         "stage": "출력",
-        "label": "검토 finding",
-        "detail": "다음 artifact로 넘깁니다."
+        "label": "검토 의견",
+        "detail": "다음 기획 결과물로 넘깁니다."
       }
     ],
     "source_paths": [
@@ -258,7 +258,7 @@
       ],
       "review": {
         "skill": "review-game-design",
-        "condition": "named owner가 근거·가정·blocker를 검토"
+        "condition": "지정된 책임자가 근거·가정·중단 사유를 검토"
       }
     }
   },
@@ -280,7 +280,7 @@
       {
         "stage": "전문 스킬",
         "label": "시스템 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "행동·피드백·보상을 연결합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -335,7 +335,7 @@
       {
         "stage": "전문 스킬",
         "label": "시스템 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "규칙 전이·예외 순서를 명세합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -390,7 +390,7 @@
       {
         "stage": "전문 스킬",
         "label": "UX 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "UX 상태·대체 입력을 명세합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -445,7 +445,7 @@
       {
         "stage": "전문 스킬",
         "label": "퀘스트 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "퀘스트 선택·NPC 상태를 연결합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -500,7 +500,7 @@
       {
         "stage": "전문 스킬",
         "label": "전투 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "공격 신호·대응 상태를 명세합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -555,7 +555,7 @@
       {
         "stage": "전문 스킬",
         "label": "경제 설계",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "경제 흐름·실험 중단을 기록합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -610,7 +610,7 @@
       {
         "stage": "전문 스킬",
         "label": "scope 계획",
-        "detail": "전문 판단을 적용합니다."
+        "detail": "범위 위험·출력 상태를 기록합니다."
       },
       {
         "stage": "Canonical Artifact",
@@ -664,7 +664,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "수집 압력 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -730,7 +730,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "복귀 처리 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -796,7 +796,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "구조·탈출 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -862,7 +862,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "공격·대응 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -928,7 +928,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "위험·안전 보상",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -994,7 +994,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "관계 변화 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -1060,7 +1060,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "일정 선택 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -1126,7 +1126,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "투자·보존 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -1192,7 +1192,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "게시·검토 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -1258,7 +1258,7 @@
       },
       {
         "stage": "선택지",
-        "label": "대안 두 가지",
+        "label": "참여·대체 경로",
         "detail": "보호와 확장을 비교합니다."
       },
       {
@@ -1324,7 +1324,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "Artifact·품질 기준",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1374,20 +1374,20 @@
     "id": "st-s02",
     "scope": "game-design-studio-skill",
     "title": "게임 비전 직접 호출",
-    "description": "플레이어 약속을 비전 기둥과 core loop로 고정합니다.",
+    "description": "플레이어에게 약속할 경험을 게임 방향 원칙과 핵심 플레이 흐름으로 구체화합니다.",
     "alt": "게임 비전 직접 호출 흐름",
     "type": "skill-flow",
     "eyebrow": "ST-S02 · SKILL",
-    "conclusion": "vision-pillars와 core-motivation-loop은 systems 또는 experience route의 입력입니다.",
+    "conclusion": "게임 방향 원칙과 핵심 플레이 흐름은 규칙 설계나 플레이 경험 설계의 입력으로 이어집니다.",
     "steps": [
       {
         "stage": "trigger",
-        "label": "비전 trigger",
+        "label": "경험 목표",
         "detail": "경험 목표를 받습니다."
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "약속·설계 제약",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1397,13 +1397,13 @@
       },
       {
         "stage": "output",
-        "label": "비전 기둥",
+        "label": "게임 방향 원칙",
         "detail": "정확한 ID를 남깁니다."
       },
       {
         "stage": "next route",
         "label": "규칙·상태 설계",
-        "detail": "조건부 handoff입니다."
+        "detail": "필요할 때 다음 작업으로 넘깁니다."
       }
     ],
     "source_paths": [
@@ -1421,7 +1421,7 @@
       "next_routes": [
         "design-game-systems"
       ],
-      "required_input": "player promise + design constraints"
+      "required_input": "플레이어에게 약속할 경험 + 설계 제약"
     }
   },
   {
@@ -1441,7 +1441,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "퀘스트 의도·권리",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1495,7 +1495,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "경제 질문·보호 기준",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1549,7 +1549,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "규칙 질문·권위 상태",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1604,7 +1604,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "사용 흐름·접근성 제약",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1658,7 +1658,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "Artifact·출력 형식",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1711,7 +1711,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "선택 receipt·승인 prompt",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1765,7 +1765,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "Artifact·domain 요청",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1827,7 +1827,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "slice·scope 제약",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1881,7 +1881,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "asset 필요·권리 제약",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1936,7 +1936,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "Artifact·검토 질문",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -1992,7 +1992,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "draft receipt·상태",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -2046,7 +2046,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "관계 구조·근거",
         "detail": "필수 값을 둡니다."
       },
       {
@@ -2101,7 +2101,7 @@
       },
       {
         "stage": "필수 입력",
-        "label": "artifact와 경계",
+        "label": "관계 질문·source",
         "detail": "필수 값을 둡니다."
       },
       {

@@ -80,3 +80,117 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 
 - [역기획](../skills/reverse-engineer-game-design.md), [Career 시각화](../skills/visualize-career-roadmap.md), [내보내기](../exports.md)
 - [문서 내보내기 흐름](../../assets/shared/document-export-flow.png)
+
+<!-- PROMPT-TEMPLATES:START game-design-career:recipe:reverse-design -->
+<!-- PROMPT-CARD: career:recipe:reverse-design -->
+#### career:recipe:reverse-design
+
+**관찰에서 검증 가능한 역기획까지 (reverse-design)**
+
+reverse-design recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → visualize-career-roadmap → export-career-documents
+- 함께 검토하는 역할: career-strategist
+
+##### 이 요청으로 받는 결과
+플레이 장면을 기록하고 규칙 가설, 반례, 확인 방법 순서로 역기획 문서를 구성했습니다. 내부 의도처럼 보일 수 있는 문장은 추론으로 표시했으며 공개 범위는 권리 검토 뒤 정합니다. (ID: career:recipe:reverse-design; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [경력 ID]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-career:reverse-engineer-game-design game-design-career/<career-id>/reverse-design-document/에서 관찰 record를 만들고 $game-design-career:visualize-career-roadmap, $game-design-career:export-career-documents로 검토용 SVG와 export manifest를 준비해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-career:reverse-engineer-game-design game-design-career/[경력 ID]/reverse-design-document/에서 관찰 record를 만들고 $game-design-career:visualize-career-roadmap, $game-design-career:export-career-documents로 검토용 SVG와 export manifest를 준비해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: reverse-engineer-game-design
+- 스킬 흐름: reverse-engineer-game-design → visualize-career-roadmap → export-career-documents
+- 전문 역할: career-strategist
+
+##### 중간 산출물
+- reverse-design-document
+
+##### 예상 결과물
+###### 최소 결과물
+- reverse-design-document canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design-career/[경력 ID]/reverse-design-document/content.md
+- game-design-career/[경력 ID]/reverse-design-document/evidence.yml
+- game-design-career/[경력 ID]/reverse-design-document/decisions/README.md
+- game-design-career/[경력 ID]/reverse-design-document/assets/README.md
+- game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml
+
+##### 읽는 순서
+- game-design-career/[경력 ID]/reverse-design-document/content.md
+- game-design-career/[경력 ID]/reverse-design-document/evidence.yml
+- game-design-career/[경력 ID]/reverse-design-document/decisions/README.md
+- game-design-career/[경력 ID]/reverse-design-document/assets/README.md
+- game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml
+
+##### 도식 바인딩
+- ID: ca-s05
+- SVG: guides/assets/game-design-career/skills/map-game-design-career.svg
+- PNG: guides/assets/game-design-career/skills/map-game-design-career.png
+- 대체 텍스트: Career recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 reverse-design의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, 또는 owner receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+reverse-design의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END game-design-career:recipe:reverse-design -->

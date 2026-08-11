@@ -26,6 +26,12 @@ For every number or statistical claim, record `source`, `baseline`, `owner`, and
 
 Do not infer role prevalence, hiring probability, competency level, progress percentage, schedule, or outcome from layout, area, color, or position. Qualitative ordering must say what evidence supports it.
 
+## Optional Archify structural-diagram route
+
+For architecture, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON spec, checked HTML, and receipt as separate evidence. This does not replace the packaged static asset lane or grant approval.
+
+Use packaged `$svg-infographic` for Markdown-friendly SVG and 2× PNG output. Keep Archify HTML and Skillstead receipts distinct, and never auto-approve either diagram.
+
 ## Produce and Verify
 
 Track these states independently:

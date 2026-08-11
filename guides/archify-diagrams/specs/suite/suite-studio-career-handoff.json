@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "스튜디오에서 커리어로 전달하는 공개 근거",
+    "subtitle": "공개 가능한 근거 요약은 이름이 있는 사람의 승인 뒤에만 제품 경계를 넘습니다.",
+    "output": "guides/assets/archify/suite/suite-studio-career-handoff.html",
+    "viewBox": [1320, 720],
+    "animation": "none",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "bounded-handoff",
+        "label": "공개 전달",
+        "focus": ["studio_boundary", "public_evidence_summary", "career_boundary", "career_portfolio_input"],
+        "note": "스튜디오와 커리어 결과물은 분리하고, 공개 가능한 근거 요약만 전달 경로를 지납니다."
+      },
+      {
+        "id": "human-approval",
+        "label": "승인 관문",
+        "focus": ["public_evidence_summary", "decision_owner", "held_handoff"],
+        "note": "권리·근거·영수증이 없으면 이름이 있는 결정 담당자가 공개 범위를 승인하거나 전달을 보류합니다."
+      },
+      {
+        "id": "resume-held-review",
+        "label": "보류 검토 재개",
+        "focus": ["decision_owner", "held_handoff", "resume_receipt"],
+        "note": "차단 원인을 보존하고 새 영수증이 생긴 뒤 같은 공개 범위 검토를 재개합니다."
+      }
+    ]
+  },
+  "stages": [
+    { "label": "스튜디오" },
+    { "label": "공개 요약" },
+    { "label": "사람 승인" },
+    { "label": "커리어" },
+    { "label": "포트폴리오 입력" }
+  ],
+  "nodes": [
+    {
+      "id": "studio_boundary",
+      "type": "external",
+      "label": "스튜디오 경계",
+      "sublabel": "원본 결과물은 분리",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "public_evidence_summary",
+      "type": "database",
+      "label": "공개 요약",
+      "sublabel": "검증한 근거만",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "decision_owner",
+      "type": "external",
+      "label": "담당자",
+      "sublabel": "사람의 공개 범위 승인",
+      "tag": "사람 승인",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "held_handoff",
+      "type": "messagebus",
+      "label": "보류",
+      "sublabel": "차단 원인 보존",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "resume_receipt",
+      "type": "messagebus",
+      "label": "승인 영수증",
+      "sublabel": "새 승인 근거",
+      "stage": 4,
+      "row": 1
+    },
+    {
+      "id": "career_boundary",
+      "type": "external",
+      "label": "커리어 경계",
+      "sublabel": "포트폴리오는 분리",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "career_portfolio_input",
+      "type": "backend",
+      "label": "커리어 입력",
+      "sublabel": "사실·추론·권고",
+      "width": 120,
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "studio_boundary",
+      "to": "public_evidence_summary",
+      "label": "공개 요약",
+      "classification": "전달",
+      "variant": "emphasis"
+    },
+    {
+      "from": "public_evidence_summary",
+      "to": "decision_owner",
+      "label": "범위 승인",
+      "classification": "검토",
+      "variant": "security"
+    },
+    {
+      "from": "decision_owner",
+      "to": "career_boundary",
+      "label": "승인 범위",
+      "classification": "승인",
+      "variant": "security",
+      "route": "straight",
+      "labelDy": -34
+    },
+    {
+      "from": "career_boundary",
+      "to": "career_portfolio_input",
+      "label": "분리된 입력",
+      "classification": "전달",
+      "variant": "emphasis"
+    },
+    {
+      "from": "decision_owner",
+      "to": "held_handoff",
+      "label": "보류",
+      "classification": "보류",
+      "variant": "dashed",
+      "labelDy": 80
+    },
+    {
+      "from": "held_handoff",
+      "to": "resume_receipt",
+      "label": "보존",
+      "classification": "보존",
+      "variant": "dashed"
+    },
+    {
+      "from": "resume_receipt",
+      "to": "decision_owner",
+      "label": "검토 재개",
+      "classification": "재개",
+      "variant": "dashed",
+      "route": "bottom-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "전달 결과물",
+      "items": [
+        "공개 가능한 문제·결정·대안·검증한 근거 요약만 보냅니다",
+        "스튜디오의 기준 결과물을 커리어 포트폴리오 결과물에 복사하지 않습니다",
+        "커리어 입력에서 사실·추론·권고를 구분합니다"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "사람 승인 경계",
+      "items": [
+        "이름이 있는 사람 결정 담당자가 공개 범위를 승인하거나 보류합니다",
+        "자격 증명·개인정보·비공개 자료를 요청하지 않습니다",
+        "승인은 자동이 아니며 채용 결과를 보장하지 않습니다"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "보류와 재개",
+      "items": [
+        "권리·근거·승인 영수증이 없으면 보류합니다",
+        "차단된 공개 범위 맥락과 원인을 보존합니다",
+        "영수증이 생긴 뒤 같은 사람의 공개 범위 검토를 재개합니다"
+      ]
+    }
+  ]
+}

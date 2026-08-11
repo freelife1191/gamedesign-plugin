@@ -143,9 +143,12 @@ test("generated snapshots contain the exact clean product build plus the suite m
         assert.doesNotMatch(workflow, /\.\.\/image-assets\//u);
       }
 
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 15);
-      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 14);
-      assert.equal(pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length, 9);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md")).length, 18);
+      assert.equal(pathsUnder(packageFiles, "skills/").filter((file) => file.endsWith("/SKILL.md") && !file.startsWith("skills/svg-infographic/")).length, 17);
+      assert.equal(
+        pathsUnder(packageFiles, "agents/").filter((file) => file.endsWith(".md")).length,
+        productName === "game-design-studio" ? 12 : 10,
+      );
       assert.equal(pathsUnder(packageFiles, "references/source/docs/").filter((file) => file.endsWith(".md")).length, 49);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/core/").length, 7);
       assert.equal(pathsUnder(packageFiles, "references/shared/knowledge/trends/").length, 2);
@@ -196,12 +199,22 @@ test("generated snapshots contain the exact clean product build plus the suite m
         "agents/document-quality-editor.md",
         "skills/svg-infographic/SKILL.md",
         "skills/svg-infographic/LICENSE.txt",
+        "skills/archify/SKILL.md",
+        "skills/archify/bin/archify.mjs",
+        "skills/humanize-korean/SKILL.md",
         "README.md",
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
         vendorLockPath,
         "BUILD-MANIFEST.json",
       ]) assert.ok(packageFiles.includes(required), `${productName}: missing ${required}`);
+
+      if (productName === "game-design-studio") {
+        for (const required of [
+          "agents/combat-encounter-reviewer.md",
+          "agents/level-puzzle-reviewer.md",
+        ]) assert.ok(packageFiles.includes(required), `${productName}: missing ${required}`);
+      }
 
       for (const forbidden of [
         ".env",

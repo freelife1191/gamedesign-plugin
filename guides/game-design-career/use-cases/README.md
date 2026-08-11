@@ -7,8 +7,8 @@
 | 진입점 | 선택할 때 | 현재 상태 |
 | --- | --- | --- |
 | 역량 | 직무 탐색부터 공개 가능한 증거·성장 기록까지의 공통 방법을 연습할 때 | [역량 사례 8개](competency-paths.md) |
-| 대상 | 특정 준비 단계와 역할 맥락으로 사례를 고를 때 | Task 3에서 본문을 추가할 예정인 경로 |
-| 직접 스킬 | 입력과 원하는 Artifact가 분명한 한 작업을 수행할 때 | [스킬 레퍼런스](../skills/README.md) |
+| 대상 | 특정 준비 단계와 역할 맥락으로 사례를 고를 때 | [대상 사례 10개](concept-scenarios.md) |
+| 직접 스킬 | 입력과 원하는 Artifact가 분명한 한 작업을 수행할 때 | [스킬 워크벤치](skill-workbench.md) |
 
 입력이 아직 불명확하면 `CA-C01` 또는 `CA-C03`에서 경계와 다음 증거 작업을 먼저 정합니다. Studio Artifact를 Career Artifact에 병합하지 않으며, 공개 가능한 문제·결정·대안·검증 evidence의 요약만 별도 입력으로 넘깁니다.
 
@@ -30,23 +30,23 @@
 - [CA-C07 포트폴리오 검토·수정·발표](competency-paths.md#ca-c07-포트폴리오-검토수정발표)
 - [CA-C08 면접·주니어 성장·직무 전환](competency-paths.md#ca-c08-면접주니어-성장직무-전환)
 
-## 대상별 사례 — Task 3 deferred
+## 대상별 사례
 
-아래 링크의 본문은 아직 작성되지 않았습니다. 현재는 manifest가 선언한 경로를 미리 보여 주며, 완료된 사례처럼 취급하지 않습니다.
+- [CA-T01 시스템 기획 입문 학생](concept-scenarios.md#ca-t01-시스템-기획-입문-학생)
+- [CA-T02 콘텐츠·퀘스트 기획 준비생](concept-scenarios.md#ca-t02-콘텐츠퀘스트-기획-준비생)
+- [CA-T03 전투·캐릭터 기획 준비생](concept-scenarios.md#ca-t03-전투캐릭터-기획-준비생)
+- [CA-T04 경제·밸런스·LiveOps 준비생](concept-scenarios.md#ca-t04-경제밸런스liveops-준비생)
+- [CA-T05 UI·UX 기획 준비생](concept-scenarios.md#ca-t05-uiux-기획-준비생)
+- [CA-T06 내러티브 기획 준비생](concept-scenarios.md#ca-t06-내러티브-기획-준비생)
+- [CA-T07 레벨 디자인 준비생](concept-scenarios.md#ca-t07-레벨-디자인-준비생)
+- [CA-T08 실무 경험이 없는 신입](concept-scenarios.md#ca-t08-실무-경험이-없는-신입)
+- [CA-T09 비전공자·다른 직군 전환자](concept-scenarios.md#ca-t09-비전공자다른-직군-전환자)
+- [CA-T10 주니어의 성장·이직](concept-scenarios.md#ca-t10-주니어의-성장이직)
 
-- **CA-T01 시스템 기획 입문 학생** — 예정 경로: `concept-scenarios.md#ca-t01-시스템-기획-입문-학생`
-- **CA-T02 콘텐츠·퀘스트 기획 준비생** — 예정 경로: `concept-scenarios.md#ca-t02-콘텐츠퀘스트-기획-준비생`
-- **CA-T03 전투·캐릭터 기획 준비생** — 예정 경로: `concept-scenarios.md#ca-t03-전투캐릭터-기획-준비생`
-- **CA-T04 경제·밸런스·LiveOps 준비생** — 예정 경로: `concept-scenarios.md#ca-t04-경제밸런스liveops-준비생`
-- **CA-T05 UI·UX 기획 준비생** — 예정 경로: `concept-scenarios.md#ca-t05-uiux-기획-준비생`
-- **CA-T06 내러티브 기획 준비생** — 예정 경로: `concept-scenarios.md#ca-t06-내러티브-기획-준비생`
-- **CA-T07 레벨 디자인 준비생** — 예정 경로: `concept-scenarios.md#ca-t07-레벨-디자인-준비생`
-- **CA-T08 실무 경험이 없는 신입** — 예정 경로: `concept-scenarios.md#ca-t08-실무-경험이-없는-신입`
-- **CA-T09 비전공자·다른 직군 전환자** — 예정 경로: `concept-scenarios.md#ca-t09-비전공자다른-직군-전환자`
-- **CA-T10 주니어의 성장·이직** — 예정 경로: `concept-scenarios.md#ca-t10-주니어의-성장이직`
+## 직접 스킬
+
+[스킬 워크벤치](skill-workbench.md)는 입력과 원하는 Artifact가 정해진 작업을 직접 실행할 수 있는 사례별 진입점입니다. [스킬 레퍼런스](../skills/README.md)는 설치된 스킬의 역할과 사용 범위를 확인하는 참조 문서이므로, 작업 사례를 고르는 워크벤치와 구분해 사용합니다.
 
 ## 공통 질문과 결과물
 
 [공통 FAQ](../../use-cases/README.md#공통-faq)에서 설치, Artifact, 공개 권한과 승인 경계를 확인합니다. [공유 결과물 카탈로그](../../use-cases/output-catalog.md)는 최소·선택·확장 결과와 Studio → Career handoff를 정의합니다.
-
-Task 4의 직접 스킬 워크벤치와 Task 5의 추가 경로·도식은 deferred입니다. 이 문서는 해당 파일이나 diagram을 embed하지 않습니다.

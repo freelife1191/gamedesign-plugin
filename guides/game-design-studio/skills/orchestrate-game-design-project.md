@@ -143,3 +143,11 @@ $game-design-studio:<selected-skill> artifact=artifacts/<artifact-id> routing.js
 ## 관련 문서
 
 [game-design-brief 템플릿](../templates.md#game-design-brief), [스킬 선택표](README.md), [문서 placeholder 규칙](../../README.md#용어), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:orchestrate-game-design-project -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 제한된 brief를 한 route로 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectbeginner)
+- [standard — 여러 Artifact를 연결하는 프로젝트 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectstandard)
+- [advanced — 역할 검토와 결정 병합을 갖춘 재개 라우팅](../../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:orchestrate-game-design-project -->

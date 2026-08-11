@@ -131,3 +131,11 @@ $game-design-studio:export-game-design-documents artifact=<artifact-path> 승인
 ## 관련 문서
 
 [game-design-review 템플릿](../templates.md#game-design-review), [도식화](./visualize-game-design.md), [내보내기](./export-game-design-documents.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:review-game-design -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 누락과 모순을 질문으로 남기는 기획 검토](../../prompt-templates/studio/review-game-design.md#studioreview-game-designbeginner)
+- [standard — Evidence gap과 severity를 owner에게 배정하는 검토](../../prompt-templates/studio/review-game-design.md#studioreview-game-designstandard)
+- [advanced — 교차 도메인 finding과 decision queue를 분리하는 검토](../../prompt-templates/studio/review-game-design.md#studioreview-game-designadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:review-game-design -->

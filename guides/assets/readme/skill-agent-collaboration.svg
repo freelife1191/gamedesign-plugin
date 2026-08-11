@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title>전문 스킬과 위임된 검토 역할이 기획 결과를 보완하는 흐름</title>
+  <desc>사용자의 직접 스킬 호출 또는 오케스트레이터가 전문 스킬을 실행하고, 최대 세 명의 위임된 전문 검토 역할이 남긴 검토 의견을 합쳐 기획 결과 폴더를 보완하거나 보류·재개하는 과정을 보여 줍니다. 검토 역할은 사용자가 직접 호출하는 명령이 아니며 자동 승인할 수 없습니다.</desc>
+  <style>
+    svg{--bg:#F8FBFF;--ink:#1F2733;--muted:#5B6675;--hair:#C9D8E8;--blue:#1F6FB2;--blue-fill:#E8F1FB;--violet:#534AB7;--violet-fill:#ECEBFB;--green:#0F7A5F;--green-fill:#E7F5EF;--amber:#B56A00;--amber-fill:#FFF4DF;--rose:#A62560;--rose-fill:#FDECF3;}
+    .title{fill:var(--ink);font-size:42px;font-weight:700}.sub{fill:var(--muted);font-size:19px}.lane-title{font-size:18px;font-weight:700}.card{stroke-width:2}.card-title{font-size:22px;font-weight:700}.body{font-size:16px;fill:var(--muted)}.small{font-size:16px;fill:var(--muted)}.badge{font-size:16px;font-weight:700}.line{fill:none;stroke:#52647A;stroke-width:2.8;marker-end:url(#arrow)}.dashed{fill:none;stroke:var(--amber);stroke-width:2.8;stroke-dasharray:8 7;marker-end:url(#arrow-amber)}.on-accent{fill:#fff}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#52647A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#B56A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 21c.6-4 3-6 6.5-6s5.9 2 6.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ic-team" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="9" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 20c.4-3.4 2.1-5.2 4.5-5.2s4.1 1.8 4.5 5.2M13.5 15.5c2.9 0 4.5 1.5 4.9 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="ic-merge" viewBox="0 0 24 24"><path d="M5 5v4c0 3 2 5 5 5h9M5 19v-4c0-3 2-5 5-5h2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 10l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M3.5 7.5h6l2 2h9v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  </defs>
+  <rect width="1400" height="900" fill="var(--bg)"/>
+  <text x="70" y="78" class="title">전문 스킬은 검토 역할을 모아 결과를 보완합니다</text>
+  <text x="70" y="116" class="sub">에이전트는 사용자 명령이 아닌 위임된 전문 역할입니다. 검토 의견은 승인 대신 수정 근거를 남깁니다.</text>
+  <rect x="55" y="175" width="1290" height="480" rx="22" fill="#FFFFFF" stroke="var(--hair)" stroke-width="2"/>
+  <rect x="78" y="204" width="195" height="32" rx="16" fill="var(--blue-fill)"/><text x="175" y="220" class="lane-title" fill="var(--blue)" text-anchor="middle" dominant-baseline="central">사용자 요청 경로</text>
+  <rect x="78" y="530" width="195" height="32" rx="16" fill="var(--violet-fill)"/><text x="175" y="546" class="lane-title" fill="var(--violet)" text-anchor="middle" dominant-baseline="central">보류·재개 경로</text>
+  <path class="line" data-flow-edge="request-to-skill" data-from="request" data-to="specialist-skill" d="M260 362H290"/><path class="line" data-flow-edge="skill-to-delegated-roles" data-from="specialist-skill" data-to="delegated-roles" d="M465 362H495"/><path class="line" data-flow-edge="roles-to-findings" data-from="delegated-roles" data-to="findings-merge" d="M795 362H825"/><path class="line" data-flow-edge="findings-to-artifact" data-from="findings-merge" data-to="artifact" d="M1000 362H1030"/><path class="line" data-flow-edge="artifact-to-human-review" data-from="artifact" data-to="human-review" d="M1180 362H1210"/>
+  <!-- main-flow -->
+  <g data-flow-node="request" data-korean-label="직접 호출 또는 조율 요청">
+    <rect x="85" y="276" width="175" height="172" rx="16" fill="var(--blue-fill)" stroke="var(--blue)" class="card"/>
+    <circle cx="172" cy="326" r="32" fill="#D6E9FB"/><use href="#ic-user" x="152" y="306" width="40" height="40" style="color:#1F6FB2"/>
+    <text x="172" y="380" class="card-title" fill="var(--blue)" text-anchor="middle" style="font-size:20px">시작 방법 선택</text><text x="172" y="406" class="body" text-anchor="middle">직접 호출 또는</text><text x="172" y="429" class="body" text-anchor="middle">조율 요청</text>
+  </g>
+  <g data-flow-node="specialist-skill">
+    <rect x="290" y="276" width="175" height="172" rx="16" fill="var(--green-fill)" stroke="var(--green)" class="card"/>
+    <circle cx="377" cy="326" r="32" fill="#D7F0E6"/><use href="#ic-gear" x="357" y="306" width="40" height="40" style="color:#0F7A5F"/>
+    <text x="377" y="386" class="card-title" fill="var(--green)" text-anchor="middle">전문 스킬</text><text x="377" y="416" class="body" text-anchor="middle">범위와 기준을 실행</text>
+  </g>
+  <g data-flow-node="delegated-roles" data-delegation-limit="필요한 역할을 최대 세 개까지 위임">
+    <rect x="495" y="260" width="300" height="288" rx="18" fill="var(--violet-fill)" stroke="var(--violet)" class="card"/>
+    <circle cx="536" cy="305" r="27" fill="#E2E0FA"/><use href="#ic-team" x="520" y="289" width="32" height="32" style="color:#534AB7"/>
+    <text x="645" y="300" class="card-title" fill="var(--violet)" text-anchor="middle" style="font-size:19px">위임된 전문 검토 역할</text><text x="645" y="326" class="small" text-anchor="middle">필요한 역할을 최대</text><text x="645" y="348" class="small" text-anchor="middle">세 개까지 위임</text>
+    <rect data-delegated-role="기획 판단 검토자" x="525" y="365" width="240" height="42" rx="12" fill="#FFFFFF" stroke="#B9B4EA"/><text x="645" y="386" class="body" text-anchor="middle" dominant-baseline="central">기획 판단 검토자</text>
+    <rect data-delegated-role="문서 품질 편집자" x="525" y="422" width="240" height="42" rx="12" fill="#FFFFFF" stroke="#B9B4EA"/><text x="645" y="443" class="body" text-anchor="middle" dominant-baseline="central">문서 품질 편집자</text>
+    <rect data-delegated-role="제작 가능성 비평가" x="525" y="479" width="240" height="42" rx="12" fill="#FFFFFF" stroke="#B9B4EA"/><text x="645" y="500" class="body" text-anchor="middle" dominant-baseline="central">제작 가능성 비평가</text>
+  </g>
+  <g data-flow-node="findings-merge" data-korean-label="검토 의견과 수정 근거">
+    <rect x="825" y="276" width="175" height="172" rx="16" fill="var(--amber-fill)" stroke="var(--amber)" class="card"/>
+    <circle cx="912" cy="326" r="32" fill="#FCE9C8"/><use href="#ic-merge" x="892" y="306" width="40" height="40" style="color:#B56A00"/>
+    <text x="912" y="380" class="card-title" fill="var(--amber)" text-anchor="middle" style="font-size:19px">검토 의견 합치기</text><text x="912" y="406" class="body" text-anchor="middle">검토 의견과</text><text x="912" y="429" class="body" text-anchor="middle">수정 근거</text>
+  </g>
+  <g data-flow-node="artifact">
+    <rect x="1030" y="276" width="150" height="172" rx="16" fill="var(--rose-fill)" stroke="var(--rose)" class="card"/>
+    <circle cx="1105" cy="326" r="28" fill="#F7DCE9"/><use href="#ic-folder" x="1087" y="308" width="36" height="36" style="color:#A62560"/>
+    <text x="1105" y="379" class="card-title" fill="var(--rose)" text-anchor="middle" style="font-size:16px">기획 결과 폴더</text><text x="1105" y="408" class="small" text-anchor="middle">(Artifact)</text><text x="1105" y="431" class="small" text-anchor="middle">보완·보류·재개</text>
+  </g>
+  <g data-human-gate="사람 검토" data-gate-role="approval-hold" data-gate-label="승인·보류" data-flow-node="human-review">
+    <rect x="1210" y="276" width="110" height="172" rx="16" fill="#FDECF3" stroke="var(--rose)" class="card"/>
+    <text x="1265" y="370" class="card-title" fill="var(--rose)" text-anchor="middle" style="font-size:18px">사람 검토</text><text x="1265" y="402" class="small" text-anchor="middle">승인·보류</text><text x="1265" y="424" class="small" text-anchor="middle">결정</text>
+  </g>
+  <path class="dashed" data-flow-edge="findings-to-resume" data-from="findings-merge" data-to="resume" stroke-dasharray="8 7" d="M912 459V552H377V459"/>
+  <g data-flow-node="resume">
+    <rect x="313" y="570" width="350" height="60" rx="15" fill="var(--amber-fill)" stroke="var(--amber)" stroke-width="2"/>
+    <text x="488" y="593" class="body" text-anchor="middle">보류 이유를 기록하고</text><text x="488" y="616" class="body" text-anchor="middle">필요한 스킬만 다시 실행</text>
+  </g>
+  <rect x="55" y="720" width="1290" height="105" rx="16" fill="#EAF3FC" stroke="var(--blue)" stroke-width="2"/>
+  <text x="88" y="755" class="card-title" fill="var(--blue)">중요한 경계</text><text x="88" y="787" class="body">에이전트는 사용자가 직접 호출하지 않습니다. 전문 스킬이나 오케스트레이터가 위임합니다.</text><text x="88" y="813" class="body">검토 역할은 결과를 자동 승인할 수 없으며, 사람 검토에서 승인·보류를 결정합니다.</text>
+</svg>

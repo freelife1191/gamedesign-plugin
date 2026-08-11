@@ -2,13 +2,27 @@
 
 Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존하는 Canonical Artifact(기준 작업 폴더)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
+## Curated Archify 상태
+
+[Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Studio 후보의 검증·시각 QA 근거를 확인합니다. [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)는 비전, 설계, 검토, 자산, 내보내기와 보류 후 재개 경로를 대화형 HTML로 보여 줍니다.
+
+## 작업 규모와 결과
+
+| 목표 규모 | 권장 시작 | 예상 결과 | 다음 문서 |
+| --- | --- | --- | --- |
+| 작은 실습 | [Studio 활용 사례 인덱스](use-cases/README.md) | 10분 안에 설명할 플레이 경험의 약속, 플레이 흐름 또는 규칙 가정 | [역량 사례](use-cases/competency-paths.md) |
+| 단일 명세 | [스킬 워크벤치](use-cases/skill-workbench.md) | 상태·예외·UX·콘텐츠 중 하나의 검토 가능한 작업 초안 | [Studio FAQ](faq.md) |
+| 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 gate와 재개 조건이 있는 Studio Artifact | [결과물 카탈로그](../use-cases/output-catalog.md) |
+
+작은 실습과 단일 명세도 `content.md`와 근거를 남기며, 전체 프로젝트는 이를 대체하지 않고 범위와 사람 결정을 추가합니다. 최소·선택·확장 결과와 Studio → Career handoff는 [결과물 카탈로그](../use-cases/output-catalog.md)에서 확인합니다.
+
 ## 활용 사례와 진입점
 
 ### 대상 사용자
 
 | 사용자 | 먼저 고를 경로 | 처음 확인할 결과 |
 | --- | --- | --- |
-| 기획 입문 학생 | [역량 사례](use-cases/competency-paths.md) | 작게 검증할 player promise, loop 또는 rule 초안 |
+| 기획 입문 학생 | [역량 사례](use-cases/competency-paths.md) | 작게 검증할 플레이 경험의 약속, 플레이 흐름 또는 규칙 초안 |
 | 솔로·인디 개발자 | [콘셉트 사례](use-cases/concept-scenarios.md) | 제약·scope·prototype 질문이 있는 설계 경로 |
 | 현업 기획자 | [스킬 워크벤치](use-cases/skill-workbench.md) | 특정 작업의 입력, 결과와 다음 handoff |
 | 팀 리드·교육자·멘토 | [역량 사례](use-cases/competency-paths.md)와 [Studio FAQ](faq.md) | 검토 기준, 사람 결정과 재개 질문 |
@@ -23,7 +37,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 | 사례 | 적합한 시작 | 구체적인 예상 결과 |
 | --- | --- | --- |
-| ST-C01 | [플레이어 경험과 게임 비전](use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전) | `vision-pillars`와 `game-design-brief`의 player promise·non-goal 초안 |
+| ST-C01 | [플레이어 경험과 게임 비전](use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전) | 게임 방향 원칙(`vision-pillars`)과 게임 기획 요약서(`game-design-brief`)의 플레이 경험 약속·제외 목표 초안 |
 | ST-C03 | [규칙·상태·예외·데이터](use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | `system-specification`의 rule, state, exception, authority 표 |
 | ST-C04 | [UI·UX·온보딩·접근성](use-cases/competency-paths.md#st-c04-uiux온보딩접근성) | `ui-ux-flow-state`의 critical action·recovery와 접근성 검토 큐 |
 | ST-C05 | [콘텐츠·내러티브·퀘스트·NPC](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) | `narrative-quest-npc`의 quest state·choice·consequence 초안 |
@@ -34,15 +48,17 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 - [Studio 활용 사례 인덱스](use-cases/README.md): 역량·콘셉트·직접 스킬 중 무엇부터 볼지 선택합니다.
 - [역량 사례 8개](use-cases/competency-paths.md)와 [콘셉트 사례 10개](use-cases/concept-scenarios.md): 사례의 전체 흐름과 검토·재개를 읽습니다.
-- [스킬 워크벤치](use-cases/skill-workbench.md): 설치된 15개 스킬의 직접 호출 신호와 피할 때를 비교합니다.
+- [스킬 워크벤치](use-cases/skill-workbench.md): 설치된 18개 스킬의 직접 호출 신호와 피할 때를 비교합니다.
 - [Studio FAQ](faq.md): 현재 막힌 질문의 실행 요청과 관련 사례를 찾습니다.
 - [공통 결과물 카탈로그](../use-cases/output-catalog.md): 최소·선택·확장 결과와 Canonical Artifact 읽는 순서를 확인합니다.
+- [요청문 템플릿 허브](../prompt-templates/README.md): 사용자 유형·난이도별 요청과 예상 결과를 비교합니다.
+- 대표 카드: [비전 입문](../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner), [시스템 표준](../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX 표준](../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard), [프로젝트 재개 고급](../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
 
 ## 처음 시작하기
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
 2. [5분 빠른 시작](quick-start.md)의 요청문 하나를 복사합니다.
-3. [템플릿 15개](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 15개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
+3. [템플릿 15개](templates.md)에서 목적에 맞는 템플릿을 고르고, 필요하면 [스킬 18개](skills/README.md)의 연결된 스킬을 직접 호출합니다.
 4. [목적별 레시피](#목적별-레시피) 하나를 선택합니다.
 5. [전체 워크플로](workflow.md)에서 현재 단계와 다음 사람 결정을 확인합니다.
 6. [이미지 자산](image-assets.md)에서 image slot과 사람 승인 경계를 계획합니다.
@@ -77,14 +93,14 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 전체 레퍼런스:
 
-- [스킬 15개](skills/README.md)
+- [스킬 18개](skills/README.md)
 - [템플릿 15개](templates.md)
 - [문서 품질 profile](document-quality.md)
 - [이미지 자산](image-assets.md)
 - [시각화](visualization.md)
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
-각 스킬 ID는 [스킬 15개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
+각 스킬 ID는 [스킬 18개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
 
 ## 작업 원칙
 

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "quality": "showcase",
+  "checksPassed": 9,
+  "checkCount": 9,
+  "errors": 0,
+  "warnings": 0,
+  "compositionProfile": "showcase",
+  "compositionStatus": "pass",
+  "input": "guides/archify-diagrams/specs/career/career-evidence-workflow.json",
+  "output": "guides/assets/archify/career/career-evidence-workflow.html",
+  "specification": {
+    "sha256": "37fceb8e99e52c3aa1696213c94172ea3837fd7f6e2ce38b51eecdbfc2ad4407",
+    "bytes": 6623
+  },
+  "artifact": {
+    "sha256": "aa426208a1a6b8228757b571c58cc75576ce9a518b5391029898f5c9ac7b4afc",
+    "bytes": 626394
+  }
+}

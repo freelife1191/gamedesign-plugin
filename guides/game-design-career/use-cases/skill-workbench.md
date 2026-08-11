@@ -1,12 +1,14 @@
 # Career 스킬 워크벤치
 
-이 표는 설치된 Career 스킬 15개를 한 번씩만 분류합니다. 입력과 output 하나가 확정된 작업은 직접 스킬 호출로 시작하고, 여러 단계·역할·우선순위가 섞일 때만 오케스트레이터로 범위를 나눕니다. 생성·렌더·추천은 사람 승인이나 채용 결과를 대신하지 않습니다.
+이 표는 설치된 Career 스킬 18개를 한 번씩만 분류합니다. 입력과 output 하나가 확정된 작업은 직접 스킬 호출로 시작하고, 여러 단계·역할·우선순위가 섞일 때만 오케스트레이터로 범위를 나눕니다. 생성·렌더·추천은 사람 승인이나 채용 결과를 대신하지 않습니다.
 
 ## 역할·근거 lane
 
 | 스킬 | 직접 호출할 때 | evidence와 사람 경계 |
 | --- | --- | --- |
 | [`apply-document-quality-profile`](../skills/apply-document-quality-profile.md) | 한 Artifact의 template·profile과 checklist만 고정할 때 | selection record는 `document-quality-editor` 검토 전 승인 자체가 아닙니다. |
+| [`humanize-korean`](../skills/humanize-korean.md) | 증거와 수치를 바꾸지 않고 문체만 다듬을 때 | 수정안은 `game-design-writing-editor` 또는 작성자가 의미·주장 경계를 확인합니다. |
+| [`polish-game-design-writing`](../skills/polish-game-design-writing.md) | 긴 포트폴리오·학습 문장의 표현만 윤문할 때 | 경험·증거 ID와 공개·보류 판단은 사람이 다시 확인합니다. |
 | [`map-game-design-career`](../skills/map-game-design-career.md) | 한 역할의 current evidence와 gap만 비교할 때 | `career-strategist`가 사실·추론·제안을 구분합니다. |
 | [`orchestrate-game-design-career`](../skills/orchestrate-game-design-career.md) | 여러 Career stage와 completion gate를 한 brief로 묶을 때 | route 선택은 사실·추론·제안과 named owner를 보존합니다. |
 | [`research-game-design-jobs`](../skills/research-game-design-jobs.md) | 한 role·level·region의 current posting sample만 조사할 때 | `sourceUrl`, `location`, `retrievalDate`, `region`, sample boundary, `reviewAfter`가 없으면 current claim을 만들지 않습니다. |
@@ -36,6 +38,7 @@
 | [`generate-image-assets`](../skills/generate-image-assets.md) | selection receipt가 있는 finite provider job을 실행할 때 | provider routing과 `IMAGE_GEN_MODE`를 기록하며 AI 결과는 자동 승인되지 않습니다. |
 | [`review-image-assets`](../skills/review-image-assets.md) | 한 asset ID의 lifecycle transition을 검토할 때 | named human approval과 rights evidence 없이는 state를 전진하지 않습니다. |
 | [`svg-infographic`](../skills/svg-infographic.md) | 하나의 구조 SVG를 직접 authoring·검증할 때 | Skillstead와 Node-free Chromium fallback은 문서 승인과 별개입니다. |
+| [`archify`](../skills/archify.md) | 경력 흐름을 탐색 가능한 HTML로 설명할 때 | 노드의 근거와 공개 범위는 멘토 또는 작성자가 확인합니다. |
 | [`visualize-career-roadmap`](../skills/visualize-career-roadmap.md) | 하나의 source-mapped role·learning relationship을 도식화할 때 | SVG/PNG evidence와 visual QA는 named human 내용 승인을 대신하지 않습니다. |
 
 ## export lane

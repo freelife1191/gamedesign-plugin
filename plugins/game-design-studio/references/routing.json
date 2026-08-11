@@ -14,7 +14,10 @@
     "apply-document-quality-profile",
     "plan-image-assets",
     "generate-image-assets",
-    "review-image-assets"
+    "review-image-assets",
+    "polish-game-design-writing",
+    "humanize-korean",
+    "archify"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -23,7 +26,10 @@
     "ux-accessibility-reviewer",
     "liveops-data-designer",
     "production-feasibility-critic",
-    "document-quality-editor"
+    "combat-encounter-reviewer",
+    "level-puzzle-reviewer",
+    "document-quality-editor",
+    "game-design-writing-editor"
   ],
   "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
   "profileIds": ["live-service-rpg", "mobile", "pc-console"],
@@ -34,7 +40,10 @@
     "ux-accessibility-reviewer",
     "liveops-data-designer",
     "production-feasibility-critic",
-    "document-quality-editor"
+    "combat-encounter-reviewer",
+    "level-puzzle-reviewer",
+    "document-quality-editor",
+    "game-design-writing-editor"
   ],
   "unknownIntentFallback": "orchestrate-game-design-project",
   "plannedPaths": {
@@ -52,7 +61,10 @@
       "skills/apply-document-quality-profile/SKILL.md",
       "skills/plan-image-assets/SKILL.md",
       "skills/generate-image-assets/SKILL.md",
-      "skills/review-image-assets/SKILL.md"
+      "skills/review-image-assets/SKILL.md",
+      "skills/polish-game-design-writing/SKILL.md",
+      "skills/humanize-korean/SKILL.md",
+      "skills/archify/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -61,7 +73,10 @@
       "agents/ux-accessibility-reviewer.md",
       "agents/liveops-data-designer.md",
       "agents/production-feasibility-critic.md",
-      "agents/document-quality-editor.md"
+      "agents/combat-encounter-reviewer.md",
+      "agents/level-puzzle-reviewer.md",
+      "agents/document-quality-editor.md",
+      "agents/game-design-writing-editor.md"
     ],
     "imageSpecialists": ["agents/art-brief-director.md", "agents/visual-asset-reviewer.md"],
     "profiles": [
@@ -111,6 +126,14 @@
       "vision-one-pager"
     ]
   },
+  "writingSpecialistIds": ["game-design-writing-editor"],
+  "writingWorkflow": {
+    "skill": "polish-game-design-writing",
+    "role": "game-design-writing-editor",
+    "placement": "after-content-domain-review-before-export",
+    "reviewerBound": "dedicated-specialist-pass-outside-primary-reviewer-cap",
+    "humanizeKoreanSkill": "humanize-korean"
+  },
   "routes": [
     {
       "id": "project-orchestration",
@@ -154,11 +177,23 @@
     },
     {
       "id": "content",
-      "triggerIntents": ["quest", "level content", "narrative", "character", "enemy"],
+      "triggerIntents": ["quest", "level content", "narrative", "character", "enemy", "combat", "boss", "encounter", "puzzle", "level design", "soft lock", "secret route", "reset", "retry"],
       "requiredInputs": ["content purpose", "supporting systems", "production budget", "repeatability target"],
       "skill": "design-game-content",
       "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
-      "defaultReviewers": ["content-narrative-designer", "lead-game-designer", "production-feasibility-critic"],
+      "defaultReviewers": ["content-narrative-designer", "lead-game-designer"],
+      "conditionalReviewers": [
+        {
+          "role": "combat-encounter-reviewer",
+          "triggerIntents": ["combat", "boss", "encounter"],
+          "reviewers": ["combat-encounter-reviewer"]
+        },
+        {
+          "role": "level-puzzle-reviewer",
+          "triggerIntents": ["puzzle", "level design", "secret route", "soft lock", "reset", "retry"],
+          "reviewers": ["level-puzzle-reviewer"]
+        }
+      ],
       "maxReviewers": 3,
       "references": ["references/methods/content-specification.md"],
       "artifactType": "narrative-quest-npc",

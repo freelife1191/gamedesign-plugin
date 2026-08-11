@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "게임 디자인 커리어 근거 작업 흐름",
+    "subtitle": "범위가 정해진 경력 공백을 날짜가 있는 근거, 검토 가능한 프로젝트, 사람 검토를 거친 내보내기 기록으로 바꿉니다.",
+    "output": "guides/assets/archify/career/career-evidence-workflow.html",
+    "animation": "none",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "evidence-path",
+        "label": "근거 경로",
+        "focus": ["evidence_project"],
+        "note": "현재 범위의 주장은 작고 검토 가능한 프로젝트와 날짜가 있는 근거로만 바꿉니다."
+      },
+      {
+        "id": "career-routes",
+        "label": "포트폴리오 경로",
+        "focus": ["portfolio_case"],
+        "note": "사례 연구와 다음 실험의 경로를 분리하고, 면접은 근거 ID로 연결합니다."
+      },
+      {
+        "id": "review-layers",
+        "label": "검토와 내보내기",
+        "focus": ["human_review"],
+        "note": "내용·근거·문서 품질은 내보내기 전에 각각 확인합니다."
+      },
+      {
+        "id": "resume-contract",
+        "label": "보류 조사 재개",
+        "focus": ["held_context"],
+        "note": "보류된 주장·근거 날짜·다음 확인 작업을 남기고 같은 최신성 확인을 재개합니다."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "human", "label": "학습자와 사람의 결정" },
+    { "id": "career", "label": "경력 근거 작업" },
+    { "id": "review", "label": "검토" },
+    { "id": "delivery", "label": "내보내기 준비" }
+  ],
+  "phases": [
+    { "id": "frame", "label": "진단", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
+    { "id": "evidence", "label": "근거 만들기", "fromCol": 2, "toCol": 3 },
+    { "id": "review_export", "label": "검토와 내보내기", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "claim_record", "label": "날짜가 있는 주장 기록", "lane": "career", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "review_boundary", "label": "세 가지 검토 층", "lane": "review", "fromCol": 5, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
+  "nodes": [
+    { "id": "stage_diagnosis", "lane": "human", "col": 0, "type": "external", "label": "단계 선택", "sublabel": "역할·제약" },
+    { "id": "disclosure_approval", "lane": "human", "col": 1, "width": 52, "type": "external", "label": "범위", "sublabel": "권리" },
+    { "id": "held_context", "lane": "career", "col": 0, "width": 52, "type": "messagebus", "label": "보류", "sublabel": "주장" },
+    { "id": "evidence_research", "lane": "career", "col": 2, "width": 52, "type": "database", "label": "주장", "sublabel": "날짜 기록" },
+    { "id": "evidence_project", "lane": "career", "col": 3, "width": 72, "type": "backend", "label": "프로젝트", "sublabel": "1–12주" },
+    { "id": "portfolio_case", "lane": "career", "col": 5, "type": "backend", "label": "포트폴리오", "sublabel": "사례 연구" },
+    { "id": "growth_experiment", "lane": "human", "col": 4, "width": 52, "type": "backend", "label": "성장" },
+    { "id": "human_review", "lane": "review", "col": 5, "type": "external", "label": "사람 검토", "sublabel": "세 검토 층", "tag": "사람 승인" },
+    { "id": "export_prepare", "lane": "delivery", "col": 5, "type": "security", "label": "내보내기 준비", "sublabel": "MD·PDF·DOCX·PPTX" }
+  ],
+  "edges": [
+    { "from": "stage_diagnosis", "to": "disclosure_approval", "role": "main", "variant": "emphasis" },
+    { "from": "disclosure_approval", "to": "evidence_research", "role": "main", "variant": "security", "route": "bottom-channel" },
+    { "from": "evidence_research", "to": "evidence_project", "role": "main", "route": "straight", "fromSide": "right", "toSide": "left" },
+    { "from": "evidence_project", "to": "portfolio_case", "role": "main", "variant": "emphasis" },
+    { "from": "evidence_project", "to": "growth_experiment", "role": "branch", "variant": "default", "route": "return-left", "fromSide": "left", "toSide": "left" },
+    { "from": "portfolio_case", "to": "human_review", "role": "main", "variant": "security" },
+    { "from": "growth_experiment", "to": "human_review", "role": "branch", "variant": "security", "route": "outside-right", "fromSide": "right", "toSide": "right" },
+    { "from": "human_review", "to": "export_prepare", "role": "main", "variant": "emphasis" },
+    { "from": "evidence_research", "to": "held_context", "label": "보류", "role": "branch", "variant": "dashed", "route": "straight", "fromSide": "left", "toSide": "right" },
+    { "from": "held_context", "to": "evidence_research", "label": "재개", "role": "return", "variant": "dashed", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "근거 경계",
+      "items": [
+        "모든 주장에 출처·기준 날짜·범위·한계를 함께 남깁니다",
+        "기록한 공백 하나를 1–12주의 검토 가능한 작업으로 바꿉니다",
+        "빠진 공고 하나를 일반적인 직무 요건으로 바꾸지 않습니다"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "경력 경로",
+      "items": [
+        "포트폴리오는 문제·판단·기여·결과·근거를 연결합니다",
+        "면접은 직무 요건을 근거 ID로 연결하고, 성장은 다음 실험을 기록합니다",
+        "파일을 준비해도 채용 결과를 보장하지 않습니다"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "검토 층",
+      "items": [
+        "내용: 사례 연구 설명을 별도로 판단합니다",
+        "근거: 각 주장을 검증 가능하게 남기거나 공백을 표시합니다",
+        "문서 품질: 형식과 명료성을 별도로 확인합니다",
+        "승인 전 개인정보·권리·기밀·과장된 주장을 해결합니다"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "조사 재개",
+      "items": [
+        "결과물 경로·단계·근거 날짜·완료 작업·보류 주장을 남깁니다",
+        "일반적인 이전 단계가 아니라 보류된 최신성 확인을 재개합니다",
+        "기록한 근거 공백에서 다음 학습 목표를 정합니다"
+      ]
+    }
+  ]
+}

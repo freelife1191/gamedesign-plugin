@@ -24,7 +24,7 @@ test("PDF inspection binds exact page count, Korean text, and page source sets",
     ],
     expectedPageTextSha256: [
       "ea4c96250de1fff51cbcfacb7022720ad3625b25257f8f9fc2ce88a3d89b91ba",
-      "5395d818ed24c4d993f8a1c71ad353663e5c26b98cf85d04764ab89a8ee2583b",
+      "03984676058b865fe69988b79c0aa08e5afa081b3ac79408878cdf863412cbce",
       "139094522dc58f80e61e78a485b92cf0a0e991839b64ccd447013074c673176b",
       "de7fc4033ecb57819afabd89be4ba34cc8bf8f573b3763536fbfb92a1ce6f81d",
     ],
@@ -38,7 +38,7 @@ test("PDF inspection rejects semantic text changes that preserve anchors and sou
   const extracted = execFileSync(runtime.commands.pdftotext, ["-layout", filename, "-"], { encoding: "utf8" });
   const expectedPageTextSha256 = [
     "ea4c96250de1fff51cbcfacb7022720ad3625b25257f8f9fc2ce88a3d89b91ba",
-    "5395d818ed24c4d993f8a1c71ad353663e5c26b98cf85d04764ab89a8ee2583b",
+    "03984676058b865fe69988b79c0aa08e5afa081b3ac79408878cdf863412cbce",
     "139094522dc58f80e61e78a485b92cf0a0e991839b64ccd447013074c673176b",
     "de7fc4033ecb57819afabd89be4ba34cc8bf8f573b3763536fbfb92a1ce6f81d",
   ];
@@ -159,13 +159,13 @@ test("fresh DOCX rerender rejects a substituted committed page image", async () 
   const outputDir = path.resolve("tests/formats/output/career-entry-12-week-roadmap");
   const qaDir = path.resolve("tests/formats/qa/career-entry-12-week-roadmap");
   await assert.doesNotReject(verifyFreshRenderBindings({
-    caseInfo: { product: "career", caseId: "career-entry-12-week-roadmap", expectedPages: { docx: 4 } }, outputDir, qaDir, runtime, lanes: ["docx"],
+    caseInfo: { product: "career", caseId: "career-entry-12-week-roadmap", title: "입문 게임 디자이너 12주 로드맵", expectedPages: { docx: 4 } }, outputDir, qaDir, runtime, lanes: ["docx"],
   }));
   const substituted = await mkdtemp(path.join(tmpdir(), "format-substituted-docx-"));
   await cp(path.join(qaDir, "docx"), path.join(substituted, "docx"), { recursive: true });
   await copyFile(path.resolve("tests/formats/qa/studio-live-service-rpg-economy/docx/page-1.png"), path.join(substituted, "docx", "page-1.png"));
   await assert.rejects(
-    verifyFreshRenderBindings({ caseInfo: { product: "career", caseId: "career-entry-12-week-roadmap", expectedPages: { docx: 4 } }, outputDir, qaDir: substituted, runtime, lanes: ["docx"] }),
+    verifyFreshRenderBindings({ caseInfo: { product: "career", caseId: "career-entry-12-week-roadmap", title: "입문 게임 디자이너 12주 로드맵", expectedPages: { docx: 4 } }, outputDir, qaDir: substituted, runtime, lanes: ["docx"] }),
     /fresh render.*docx\/page-1\.png/i,
   );
 });

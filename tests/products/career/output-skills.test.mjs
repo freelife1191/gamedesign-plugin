@@ -267,6 +267,22 @@ test("visualization presets and skill preserve structural selection and evidence
   assertVisualizationContract(presets, skill);
 });
 
+test("structural diagram routes prefer optional Archify while retaining packaged fallback evidence", async () => {
+  const skills = await Promise.all([
+    read("skills/visualize-career-roadmap/SKILL.md"),
+    read("skills/orchestrate-game-design-career/SKILL.md"),
+  ]);
+
+  for (const skill of skills) {
+    assert.match(skill, /(?:architecture|component boundaries), workflow, sequence, dataflow, or lifecycle/iu);
+    assert.match(skill, /packaged `?\$archify`?/iu);
+    assert.match(skill, /source-backed JSON spec.*checked HTML.*receipt/isu);
+    assert.match(skill, /packaged `?\$svg-infographic`?/iu);
+    assert.match(skill, /(?:does not replace|never replaces).*grants? approval/isu);
+    assert.doesNotMatch(skill, /capabilities\.archify|host Archify|archify-unavailable/isu);
+  }
+});
+
 test("visualization mutation guard rejects missing presets and weakened evidence boundaries", async () => {
   const presets = JSON.parse(await read("references/visualization-presets.json"));
   const skill = await read("skills/visualize-career-roadmap/SKILL.md");

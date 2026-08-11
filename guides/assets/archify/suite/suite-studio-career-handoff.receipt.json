@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "dataflow",
+  "quality": "showcase",
+  "checksPassed": 9,
+  "checkCount": 9,
+  "errors": 0,
+  "warnings": 0,
+  "compositionProfile": "showcase",
+  "compositionStatus": "pass",
+  "input": "guides/archify-diagrams/specs/suite/suite-studio-career-handoff.json",
+  "output": "guides/assets/archify/suite/suite-studio-career-handoff.html",
+  "specification": {
+    "sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
+    "bytes": 5370
+  },
+  "artifact": {
+    "sha256": "6928403d8603dae09d80a9ff2ee6b1fdc8fdfd9c77f3b11d1d410a55073e3a00",
+    "bytes": 623729
+  }
+}

@@ -6,7 +6,7 @@
 
 | 목표 | 선택 | 첫 결과 |
 | --- | --- | --- |
-| 게임 아이디어를 실제 제작 가능한 기획으로 구체화 | Game Design Studio | 비전, 핵심 재미, 설계 원칙과 검증 기준을 담은 기획 브리프 |
+| 게임 아이디어를 실제 제작 가능한 기획으로 구체화 | Game Design Studio | 게임 방향, 핵심 재미, 설계 원칙과 검증 기준을 담은 기획 요약서 |
 | 시스템·콘텐츠·UX·경제·LiveOps·제작 계획을 연결 | Game Design Studio | 검토 가능한 게임 기획 Canonical Artifact |
 | 목표 직무와 현재 역량을 진단하고 취업을 준비 | Game Design Career | 역할 선택, 역량 격차와 학습·증거 로드맵 |
 | 역기획·포트폴리오·면접·주니어 성장을 관리 | Game Design Career | 근거가 연결된 Career Canonical Artifact |
@@ -15,7 +15,24 @@
 - [Studio 목적별 레시피 6개](game-design-studio/README.md#목적별-레시피)
 - [Game Design Career 가이드](game-design-career/README.md)
 
+## Curated Archify 상태
+
+[Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **3개**입니다.
+
+- [Studio 전체 프로젝트 워크플로](assets/archify/studio/studio-project-workflow.html)
+- [Career 증거·포트폴리오 워크플로](assets/archify/career/career-evidence-workflow.html)
+- [Studio → Career 공개 근거 handoff](assets/archify/suite/suite-studio-career-handoff.html)
+
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
+
+## 목표에서 다음 문서까지
+
+| 목표 | 대표 문서 | 예상 결과 | 다음 상세 문서 |
+| --- | --- | --- | --- |
+| 작은 규칙·루프·시스템·UX를 학습 | [Studio 활용 사례 인덱스](game-design-studio/use-cases/README.md) | 작게 검토할 가정, 규칙 또는 UX 초안 | [Studio 스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) · [Studio FAQ](game-design-studio/faq.md) |
+| 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
+| 직무 탐색·역기획·포트폴리오·면접 준비 | [Career 활용 사례 인덱스](game-design-career/use-cases/README.md) | 근거·개인 기여·다음 증거 작업 | [Career 스킬 워크벤치](game-design-career/use-cases/skill-workbench.md) · [Career FAQ](game-design-career/faq.md) |
+| 현재 상황과 결과 경계를 먼저 확인 | [사용자 경로](use-cases/audience-paths.md) | 권장 시작점, 최소 결과와 사람 검토 경계 | [공통 활용 허브](use-cases/README.md) · [결과물 카탈로그](use-cases/output-catalog.md) |
 
 ## 처음 시작하기
 
@@ -30,6 +47,16 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 7. [Studio 시각화](game-design-studio/visualization.md) 또는 [Career 시각화](game-design-career/visualization.md)에서 Skillstead SVG를 만듭니다.
 8. [Studio 내보내기](game-design-studio/exports.md) 또는 [Career 내보내기](game-design-career/exports.md)로 필요한 형식만 준비합니다.
 9. [Studio 문제 해결](game-design-studio/troubleshooting.md) 또는 [Career 문제 해결](game-design-career/troubleshooting.md)로 안전하게 재개합니다.
+
+### 사용자 유형·난이도별 요청문
+
+[요청문 템플릿 허브](prompt-templates/README.md)는 입문·표준·고급·사례 카드를 사용자 유형과 목표별로 묶습니다. 각 카드에서 복사할 요청문, 실행 흐름, 예상 결과, 사람 검토와 실패·재개 경계를 함께 확인합니다.
+
+- Studio 입문: [비전 가설](prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner)
+- Studio 표준: [시스템](prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX·접근성](prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard)
+- Studio 고급: [차단된 프로젝트 재개](prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
+- Career 입문·표준·고급: [직무 가설](prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner), [역기획](prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard), [포트폴리오](prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
+- 사례: [프로젝트 증거와 면접](prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
 
 ## 전체 가이드 탐색
 

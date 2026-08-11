@@ -9,6 +9,8 @@ description: Use when a game-design entrant, new graduate, junior, or transition
 
 Diagnose the career decision before selecting specialist work. Route evidence-centered work without promising outcomes, inventing experience, or prescribing one universally correct career.
 
+Users do not need to name a skill or case ID. Read an ordinary natural-language request, infer the career goal and requested result, and choose the smallest evidence-safe route that can produce it.
+
 ## Load References
 
 1. Read `../../references/intake.md` to normalize the request and decide whether one material question is required.
@@ -36,7 +38,22 @@ Diagnose the career decision before selecting specialist work. Route evidence-ce
 
 7. In parallel mode, dispatch independent envelopes. In sequential fallback, filter the fixed `rolePriority` to the selected roles and run the same roles with the same `questionsByRole` entries. Do not rewrite or broaden questions between modes.
 8. Merge findings by `severity`, `evidence-gap-id`, `artifact-section-id`, then `role-priority`. Preserve conflicting recommendations as explicit decisions.
-9. Apply every applicable evidence and responsible-design gate. Missing evidence remains a visible gap and never becomes approval.
+9. After content and domain review, use `polish-game-design-writing` only when a Korean readability pass is requested or useful. It runs the bundled `humanize-korean` skill and protected-content validator as a separate specialist pass, creates a draft and receipt, and waits for a named person. It is outside the three-role review limit and never changes the Canonical Artifact in place.
+10. Apply every applicable evidence and responsible-design gate. Missing evidence remains a visible gap and never becomes approval.
+
+## Natural-Language Routing Rules
+
+- Route a clear single-output request directly to its specialist skill.
+- Route mixed, multi-stage, or unclear requests through this orchestrator.
+- Honor an explicit user-selected skill when it is compatible with the requested result and all safety, rights, evidence, and human-approval boundaries.
+- Report the selected skills, selected review roles, artifact paths, and remaining decisions.
+- Automatic route selection is not automatic approval. A named person still approves, revises, or holds every applicable result and derivative.
+
+## Optional Archify structural-diagram route
+
+For component boundaries, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON specification. Preserve its checked HTML and receipt as separate evidence; an architecture diagram never replaces the Canonical Artifact or grants approval.
+
+Use the packaged `$svg-infographic` skill for document-friendly static flows, comparisons, and 2× PNG fallback. Keep Archify HTML and Skillstead SVG/PNG receipts distinct, and never auto-approve either diagram.
 
 ## Output Contract
 

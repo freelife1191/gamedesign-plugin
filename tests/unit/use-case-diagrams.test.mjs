@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderDiagramSvg, validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
 
 const validFixture = Object.freeze({
   id: "aud-01",
@@ -129,11 +129,9 @@ test("Studio competency cards expose their exact specialist and output IDs", () 
     },
   };
   const svg = renderDiagramSvg(source);
-  const card = (index) => new RegExp(`<g aria-label="읽기 순서 ${index}: [\\s\\S]*?</g>`, "u").exec(svg)?.[0] ?? "";
-
-  assert.match(card(2), /design-game-economy-and-liveops/u);
-  assert.match(card(3), /economy-balance/u);
-  assert.match(card(3), /liveops-experiment-event/u);
+  for (const value of [source.semantic.specialist, ...source.semantic.outputs]) assert.match(svg, new RegExp(value, "u"));
+  assert.doesNotMatch(svg, /(?:textLength|lengthAdjust|font-stretch)|…/u);
+  assert.doesNotThrow(() => validateUseCaseDiagramSvg(svg, source.id));
 });
 
 test("Studio skill flow exposes exact outputs and every conditional next route", () => {
@@ -155,7 +153,100 @@ test("Studio skill flow exposes exact outputs and every conditional next route",
   assert.ok([...svg.matchAll(/<text x="72" y="(\d+)"/gu)].every((match) => Number(match[1]) < 704), "semantic rail stays above the conclusion strip");
 });
 
-test("long conditional routes stay inside their exact-output card budget", () => {
+test("Studio diagrams show plain Korean stage names without changing source contract values", () => {
+  const competency = {
+    ...validFixture,
+    id: "st-c01",
+    scope: "game-design-studio-use-case",
+    type: "design-pipeline",
+    steps: ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      specialist: "define-game-vision",
+      outputs: ["vision-pillars", "game-design-brief"],
+      review: { skill: "review-game-design", condition: "지정된 책임자 검토" },
+    },
+  };
+  const skill = {
+    ...validFixture,
+    id: "st-s02",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      skill: "define-game-vision",
+      required_input: "플레이어에게 약속할 경험 + 설계 제약",
+      outputs: ["vision-pillars", "core-motivation-loop"],
+      next_routes: ["design-game-systems"],
+    },
+  };
+
+  const competencySvg = renderDiagramSvg(competency);
+  const skillSvg = renderDiagramSvg(skill);
+  assert.match(competencySvg, />기획 결과물</u);
+  assert.doesNotMatch(competencySvg, />Canonical Artifact</u);
+  for (const label of ["요청", "필수 입력", "스킬 작업", "결과", "다음 작업"]) assert.match(skillSvg, new RegExp(`>${label}<`, "u"));
+  assert.doesNotMatch(skillSvg, />(?:trigger|skill-owned work|output|next route)</u);
+});
+
+test("Studio and Career skill diagrams reject glyph scaling and keep readable typography", () => {
+  const studio = {
+    ...validFixture,
+    id: "st-s02",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: `단계 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "define-game-vision",
+      required_input: "player promise + design constraints",
+      outputs: ["vision-pillars", "core-motivation-loop"],
+      next_routes: ["design-game-systems"],
+    },
+  };
+  const career = {
+    ...validFixture,
+    id: "ca-s11",
+    scope: "game-design-career-skill",
+    type: "skill-flow",
+    steps: ["trigger", "evidence input", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: `단계 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "reverse-engineer-game-design",
+      trigger: "한 public build 관찰",
+      required_input: "public build와 source ID",
+      owned_work: "관찰·추론·반례",
+      outputs: ["reverse-design-document", "game-analysis-report"],
+      reviewer: "reverse-design-critic·evidence-auditor",
+      boundary: "관찰·추론·제안을 분리하고 내부 구현을 추정하지 않음",
+      failure: "observation 또는 source 부재",
+      preserve: "unknown implementation detail",
+      human_confirmation: "review owner가 공개 관찰과 source citation을 확인",
+      resume: "validation queue에서 재개",
+      next_condition: "portfolio·export 조건일 때",
+      next_route: "build-game-design-portfolio",
+      next_routes: [
+        { condition: "portfolio 조건", target: "build-game-design-portfolio" },
+        { condition: "export 조건", target: "export-career-documents" },
+      ],
+    },
+  };
+
+  for (const source of [studio, career]) {
+    const svg = renderDiagramSvg(source);
+    assert.doesNotMatch(svg, /(?:textLength|lengthAdjust|font-stretch)|…/u, source.id);
+    assert.doesNotThrow(() => validateUseCaseDiagramSvg(svg, source.id), source.id);
+    assert.match(svg, /data-text-role="card-body"[^>]*font-size="15"/u, source.id);
+    assert.match(svg, /data-text-role="semantic-rail"[^>]*font-size="13"/u, source.id);
+  }
+});
+
+test("legacy skill-flow retains its established generator contract", () => {
   const source = {
     ...validFixture,
     id: "st-s07",
@@ -172,10 +263,40 @@ test("long conditional routes stay inside their exact-output card budget", () =>
   };
   const svg = renderDiagramSvg(source);
 
-  assert.match(svg, /font-size="7" textLength="164"[^>]*>pending format job → downstream renderer QA</u);
+  assert.match(svg, /pending format job → downstream renderer QA/u);
 });
 
-test("mixed-language validation strings use the compact exact-text budget", () => {
+test("Studio skill cards wrap whole Latin and hyphenated tokens without splitting them", () => {
+  const source = {
+    ...validFixture,
+    id: "st-s03",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({
+      stage,
+      label: index === 0 ? "콘텐츠 trigger" : index === 2 ? "asset lifecycle 검토" : `단계 ${index + 1}`,
+      detail: index === 0 ? "co-op handoff" : `근거 ${index + 1}`,
+    })),
+    semantic: {
+      skill: "design-game-content",
+      required_input: "quest intent + rights boundary",
+      outputs: ["narrative-quest-npc"],
+      next_routes: ["review-game-design"],
+    },
+  };
+  const svg = renderDiagramSvg(source);
+
+  assert.match(svg, /<tspan[^>]*>콘텐츠<\/tspan><tspan[^>]*>trigger<\/tspan>/u);
+  assert.match(svg, /<tspan[^>]*>co-op<\/tspan><tspan[^>]*>handoff<\/tspan>/u);
+  assert.doesNotMatch(svg, /<tspan[^>]*>trigge<\/tspan><tspan[^>]*>r<\/tspan>/u);
+  assert.doesNotMatch(svg, /<tspan[^>]*>hando<\/tspan><tspan[^>]*>ff<\/tspan>/u);
+  const thirdCard = svg.match(/<g aria-label="읽기 순서 3:[\s\S]*?<\/g>/u)?.[0] ?? "";
+  const titleY = Number(thirdCard.match(/data-text-role="card-title"[^>]*y="([\d.]+)"/u)?.[1]);
+  const detailY = Number(thirdCard.match(/data-text-role="card-body"[^>]*y="([\d.]+)"/u)?.[1]);
+  assert.ok(detailY - titleY >= 80, `skill card body must clear its three-line title: ${titleY} -> ${detailY}`);
+});
+
+test("mixed-language validation strings preserve whole Latin tokens in natural tspans", () => {
   const source = {
     ...validFixture,
     id: "st-g03",
@@ -187,7 +308,37 @@ test("mixed-language validation strings use the compact exact-text budget", () =
   };
   const svg = renderDiagramSvg(source);
 
-  assert.match(svg, /font-size="8" textLength="164"[^>]*>co-op rejoin prototype와 이탈 telemetry</u);
+  assert.match(svg, /co-op rejoin prototype와 이탈/u);
+  assert.doesNotMatch(svg, /(?:textLength|lengthAdjust)|…/u);
+});
+
+test("product SVGs fail closed for spaced distortion attributes and every typography-role minimum", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-economy-and-liveops", outputs: ["economy-balance"], validation: "telemetry" },
+    branches: [{ label: "보호", detail: "guardrail" }, { label: "확장", detail: "rollback" }],
+  };
+  const svg = renderDiagramSvg(source);
+  for (const [mutation, role] of [
+    [svg.replace('font-size="42"', 'font-size="13"'), "title"],
+    [svg.replace("<text", '<text textLength = "1"'), "textLength"],
+    [svg.replace("<text", '<text style="font: 1px serif"'), "typography"],
+    [svg.replace("<text", '<text style= "font: 1px serif"'), "typography"],
+    [svg.replace("<text", "<text style = 'font-size: 1px'"), "typography"],
+    [svg.replace("<text", '<text style\t=\n"font: 1px serif"'), "typography"],
+    [svg.replace("<g class=", '<g transform = "scale(0.1)" class='), "ancestor"],
+    [svg.replace("<g class=", '<g transform = "skewX(15)" class='), "ancestor"],
+    [svg.replace("<g class=", "<g transform= 'skewX(15)' class="), "ancestor"],
+    [svg.replace("<text", '<text transform="skewY(15)"'), "glyph-scaling"],
+    [svg.replace("<text", "<text transform = 'skewX(15)'"), "glyph-scaling"],
+    [svg.replace('<tspan x="88"', '<tspan font-size="13" x="88"'), "title"],
+    [svg.replace('<tspan x="88"', "<tspan font-size= '13' x=\"88\""), "title"],
+    [svg.replace('<tspan x="88"', '<tspan font-size = "13" x="88"'), "title"],
+  ]) assert.throws(() => validateUseCaseDiagramSvg(mutation, source.id), new RegExp(`${source.id}.*${role}.*repair source layout`, "u"));
 });
 
 test("branched decision-flow uses a vertical 4-to-5 connector with a twelve-pixel target gap", () => {
@@ -224,6 +375,138 @@ test("diagram source rejects card text that cannot fit without truncation", () =
     ...validFixture,
     steps: [{ ...validFixture.steps[0], detail }, ...validFixture.steps.slice(1)],
   }), /detail.*length|detail.*fit/u);
+});
+
+test("card roles reject over-wide unbreakable ASCII tokens across every renderer layout", () => {
+  const longTokens = [
+    "WWWW_WWWW_WWWW",
+    "WWWW.WWWW.WWWW",
+    "WWWW/WWWW/WWWW",
+  ];
+  const studioPipeline = {
+    ...validFixture,
+    id: "st-c01",
+    scope: "game-design-studio-use-case",
+    type: "design-pipeline",
+    steps: ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      specialist: "define-game-vision",
+      outputs: ["vision-pillars"],
+      review: { skill: "review-game-design", condition: "named owner 검토" },
+    },
+  };
+  const studioDecision = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({ stage, label: `판단 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: { specialist: "design-game-systems", outputs: ["system-specification"], validation: "telemetry" },
+    branches: [{ label: "보호 경로", detail: "guardrail" }, { label: "확장 경로", detail: "rollback" }],
+  };
+  const studioSkill = {
+    ...validFixture,
+    id: "st-s03",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      skill: "design-game-content",
+      required_input: "quest intent + rights boundary",
+      outputs: ["narrative-quest-npc"],
+      next_routes: ["review-game-design"],
+    },
+  };
+  const sources = [
+    fixtureFor("learning-path", 3),
+    fixtureFor("design-pipeline", 5),
+    fixtureFor("decision-flow", 5),
+    fixtureFor("skill-flow", 5),
+    studioPipeline,
+    studioDecision,
+    studioSkill,
+  ];
+
+  for (const source of sources) {
+    for (const field of ["label", "detail"]) {
+      for (const longToken of longTokens) {
+        const mutated = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, [field]: longToken } : step) };
+        const expected = new RegExp(`steps\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box.*spaces or hyphens`, "u");
+        assert.throws(() => validateDiagramSource(mutated), expected, `${source.scope}/${source.type}/${field}/${longToken} validates`);
+        assert.throws(() => renderDiagramSvg(mutated), expected, `${source.scope}/${source.type}/${field}/${longToken} renders`);
+      }
+    }
+
+    if (source.type === "decision-flow") {
+      for (const field of ["label", "detail"]) {
+        for (const longToken of longTokens) {
+          const mutated = { ...source, branches: source.branches.map((branch, index) => index === 0 ? { ...branch, [field]: longToken } : branch) };
+          const expected = new RegExp(`branches\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box.*spaces or hyphens`, "u");
+          assert.throws(() => validateDiagramSource(mutated), expected, `${source.scope}/${source.type}/branch/${field}/${longToken} validates`);
+          assert.throws(() => renderDiagramSvg(mutated), expected, `${source.scope}/${source.type}/branch/${field}/${longToken} renders`);
+        }
+      }
+    }
+  }
+});
+
+test("pure ASCII punctuation tokens use the same width gate as alphanumeric tokens", () => {
+  const underscoreToken = "_".repeat(20);
+  const slashToken = "/".repeat(20);
+  const source = fixtureFor("learning-path", 3);
+
+  for (const field of ["label", "detail"]) {
+    const mutated = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, [field]: underscoreToken } : step) };
+    const expected = new RegExp(`steps\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box`, "u");
+    assert.throws(() => validateDiagramSource(mutated), expected, `${field}/${underscoreToken} validates`);
+    assert.throws(() => renderDiagramSvg(mutated), expected, `${field}/${underscoreToken} renders`);
+  }
+
+  const slashLabelSource = { ...source, steps: source.steps.map((step, index) => index === 0 ? { ...step, label: slashToken } : step) };
+  assert.throws(() => validateDiagramSource(slashLabelSource), /steps\[0\]\.label.*unbreakable ASCII token.*exceeds.*text box/u);
+  assert.throws(() => renderDiagramSvg(slashLabelSource), /steps\[0\]\.label.*unbreakable ASCII token.*exceeds.*text box/u);
+
+  const decisionSource = fixtureFor("decision-flow", 5);
+  for (const field of ["label", "detail"]) {
+    const mutated = { ...decisionSource, branches: decisionSource.branches.map((branch, index) => index === 0 ? { ...branch, [field]: underscoreToken } : branch) };
+    const expected = new RegExp(`branches\\[0\\]\\.${field}.*unbreakable ASCII token.*exceeds.*text box`, "u");
+    assert.throws(() => validateDiagramSource(mutated), expected, `branch/${field}/${underscoreToken} validates`);
+    assert.throws(() => renderDiagramSvg(mutated), expected, `branch/${field}/${underscoreToken} renders`);
+  }
+
+  const boundaryToken = ".".repeat(20);
+  const boundarySource = {
+    ...decisionSource,
+    steps: decisionSource.steps.map((step, index) => index === 0 ? { ...step, label: boundaryToken, detail: slashToken } : step),
+    branches: decisionSource.branches.map((branch, index) => index === 0 ? { label: slashToken, detail: boundaryToken } : branch),
+  };
+  assert.doesNotThrow(() => validateDiagramSource(boundarySource));
+  assert.doesNotThrow(() => renderDiagramSvg(boundarySource));
+});
+
+test("the tightest card accepts a boundary-fit Latin run and wraps only at hyphens", () => {
+  const source = {
+    ...validFixture,
+    id: "st-g01",
+    scope: "game-design-studio-use-case",
+    type: "decision-flow",
+    steps: ["제약", "선택지", "판단 기준", "결정", "검증"].map((stage, index) => ({
+      stage,
+      label: index === 0 ? "W".repeat(7) : `판단 ${index + 1}`,
+      detail: `근거 ${index + 1}`,
+    })),
+    semantic: { specialist: "design-game-systems", outputs: ["system-specification"], validation: "telemetry" },
+    branches: [{ label: "보호 경로", detail: "guardrail" }, { label: "확장 경로", detail: "rollback" }],
+  };
+
+  assert.doesNotThrow(() => validateDiagramSource(source));
+  const svg = renderDiagramSvg(source);
+  assert.match(svg, />WWWWWWW<\/tspan>/u);
+
+  const hyphenSource = fixtureFor("learning-path", 3);
+  hyphenSource.steps[0].label = "WWWWWW-WWWWWW";
+  assert.doesNotThrow(() => validateDiagramSource(hyphenSource));
+  assert.match(renderDiagramSvg(hyphenSource), />WWWWWW-<\/text>\n\s*<text[^>]*>WWWWWW<\/text>/u);
 });
 
 test("renderDiagramSvg preserves every multi-code-unit character at the card length limits", () => {

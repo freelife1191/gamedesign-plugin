@@ -1,0 +1,2290 @@
+[
+  {
+    "id": "studio:case:ST-C01",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C01",
+    "title": "ST-C01 source-bound scenario",
+    "purpose": "ST-C01의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "ST-C01의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C01 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C01를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile $game-design-studio:define-game-vision $game-design-studio:orchestrate-game-design-project $game-design-studio:review-game-design ST-C01의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile $game-design-studio:define-game-vision $game-design-studio:orchestrate-game-design-project $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C01의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "define-game-vision",
+      "orchestrate-game-design-project",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "vision-pillars",
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "vision-pillars",
+      "game-design-brief",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/vision-pillars/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/vision-pillars/content.md",
+      "game-design/[프로젝트 ID]/vision-pillars/evidence.yml",
+      "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 플레이어에게 약속할 경험과 각 설계 원칙이 행동·선택·반응에 연결되는지 먼저 봅니다. **사람 결정:** 실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다. 스킬 실행, 검토 의견과 파일 생성은 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C01의 보존 결과 폴더와 중단·재개 기록을 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c01",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c01.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c01.png",
+      "alt": "플레이어 경험과 게임 비전을 검증 가능한 기준으로 만드는 흐름"
+    },
+    "related_use_cases": [
+      "ST-C01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "플레이어 경험과 게임 비전 정리 (ST-C01)",
+    "sample_result_excerpt": "플레이 약속은 ‘둘이서 바람길을 읽고 섬 사이를 잇는다’, 핵심 원칙은 협동 항해로 적었습니다. 대상 플레이어 근거와 배제 원칙은 비전 책임자가 확인해야 합니다. (ID: studio:case:ST-C01; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C02",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C02",
+    "title": "ST-C02 source-bound scenario",
+    "purpose": "ST-C02의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "ST-C02의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C02 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C02를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-C02의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C02의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-game-systems",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "core-motivation-loop",
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "core-motivation-loop",
+      "system-specification",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/core-motivation-loop/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/core-motivation-loop/content.md",
+      "game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml",
+      "game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md`의 loop와 rule ID, `evidence.yml`의 관찰, `decisions/`의 대안 순서입니다. 중간 결과에서 모든 단계가 입력과 feedback을 갖고 실패 뒤 복구 가능한지 확인합니다. **사람 결정:** design owner와 player-protection owner가 의미 있는 선택, stop condition과 다음 prototype을 승인하거나 보류합니다. 자동화는 재미나 retention을 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c02",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c02.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c02.png",
+      "alt": "플레이어 행동과 핵심 루프 및 의미 있는 선택의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C02"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "행동·핵심 반복 플레이·의미 있는 선택 설계 (ST-C02)",
+    "sample_result_excerpt": "산호 채집→정원 복원→새 생물 발견을 핵심 반복 플레이로 두고, 제한된 산소를 탐사와 돌봄 중 어디에 쓸지 선택하게 했습니다. 선택의 재미가 유지되는지는 플레이 관찰이 필요합니다. (ID: studio:case:ST-C02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C03",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C03",
+    "title": "ST-C03 source-bound scenario",
+    "purpose": "ST-C03의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-C03의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C03 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C03를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-C03의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C03의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "design-game-systems",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "system-economy-designer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification",
+      "rule-exception-matrix",
+      "data-schema-table-contract"
+    ],
+    "minimum_outputs": [
+      "system-specification",
+      "rule-exception-matrix",
+      "data-schema-table-contract"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/system-specification/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/system-specification/content.md",
+      "game-design/[프로젝트 ID]/system-specification/evidence.yml",
+      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 시스템 경계 → 규칙표 → 예외표 → 데이터 관계 → 근거·결정 순서입니다. 중간 결과에서 규칙 ID마다 상태, 반응, 실패 처리와 시험 항목이 있는지 봅니다. **사람 결정:** 기획 책임자와 개발 책임자가 권한, 우선순위, 이전 방법과 되돌리기 기준을 승인합니다. 검토 의견과 자동 검사만으로 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c03",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c03.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c03.png",
+      "alt": "규칙과 상태 전이 및 예외와 데이터 계약의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "규칙·상태·예외·데이터 계약 설계 (ST-C03)",
+    "sample_result_excerpt": "엔진 부품 장착은 전력 확인 뒤 내구도 차감 순서로 처리하고, 두 명이 동시에 장착할 때는 첫 요청만 반영하는 예외를 제안했습니다. 권위 데이터와 동시성 규칙은 개발 검토 전까지 임시입니다. (ID: studio:case:ST-C03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C04",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C04",
+    "title": "ST-C04 source-bound scenario",
+    "purpose": "ST-C04의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-C04의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C04 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C04를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-player-experience $game-design-studio:review-game-design $game-design-studio:visualize-game-design ST-C04의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-player-experience $game-design-studio:review-game-design $game-design-studio:visualize-game-design [프로젝트 ID] [공개 정보] ST-C04의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "design-player-experience",
+      "review-game-design",
+      "visualize-game-design"
+    ],
+    "specialist_roles": [
+      "ux-accessibility-reviewer",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "ui-ux-flow-state",
+      "accessibility-platform-matrix"
+    ],
+    "minimum_outputs": [
+      "ui-ux-flow-state",
+      "accessibility-platform-matrix",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 사용자 목표 → 핵심 행동표 → 상태 범위 → 플랫폼표 → 근거·결정 순서입니다. 중간 결과에서 로딩·빈 화면·오류·중단 상황과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자가 지원 플랫폼, 검증 방법과 진행을 막는 문제를 승인·수정·보류합니다. 화면 시안·문서 변환 도구·검토 결과는 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c04",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c04.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c04.png",
+      "alt": "UI UX 온보딩과 접근성 검토의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C04"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "화면 흐름·첫 진입 안내·접근성 검토 (ST-C04)",
+    "sample_result_excerpt": "지도 조각을 얻으면 보관함 버튼이 점멸하고 화면 읽기 도구가 새 항목 이름을 알리도록 흐름을 잡았습니다. 초점 이동 순서와 글자 확대 기준은 접근성 담당자가 살펴봐야 합니다. (ID: studio:case:ST-C04; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C05",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C05",
+    "title": "ST-C05 source-bound scenario",
+    "purpose": "ST-C05의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-C05의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C05 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C05를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:plan-game-production $game-design-studio:review-game-design ST-C05의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:plan-game-production $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C05의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "design-game-content",
+      "design-game-systems",
+      "plan-game-production",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "content-narrative-designer",
+      "system-economy-designer",
+      "production-feasibility-critic",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc",
+      "character-skill-combat-monster"
+    ],
+    "minimum_outputs": [
+      "narrative-quest-npc",
+      "character-skill-combat-monster",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** purpose → entry/state → choice·consequence → dependency → production·rights evidence → decisions입니다. 중간 결과에서 연결되지 않은 system/data ID와 근거 없는 제작 비용을 blocker로 봅니다. **사람 결정:** content owner, system owner, production owner와 권리 담당자가 분기, 범위, provenance·consent를 승인합니다. 생성된 서사나 이미지가 자동 승인되지는 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c05",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c05.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c05.png",
+      "alt": "콘텐츠와 내러티브 및 퀘스트와 NPC 제작 계약의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C05"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "콘텐츠·서사·퀘스트·비플레이어 캐릭터 설계 (ST-C05)",
+    "sample_result_excerpt": "초보 수비대 퀘스트는 주민 대피와 성문 방어 중 하나를 고르게 하며, 선택에 따라 다음 날 NPC 대사가 달라집니다. 보상과 제작 분량은 콘텐츠 책임자 검토 뒤 정합니다. (ID: studio:case:ST-C05; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C06",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C06",
+    "title": "ST-C06 source-bound scenario",
+    "purpose": "ST-C06의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-C06의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C06 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C06를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:review-game-design ST-C06의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C06의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "design-game-content",
+      "design-game-systems",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "character-skill-combat-monster",
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "character-skill-combat-monster",
+      "system-specification",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/evidence.yml",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** role·strategy → skill/monster state → telegraph·counterplay → system/data mapping → test evidence입니다. 중간 결과에서 읽을 수 없는 위협, 대응 없는 공격, 미확인 data key를 blocker로 봅니다. **사람 결정:** combat owner와 accessibility owner가 strategy, cue, counterplay, provisional test 범위를 승인합니다. reviewer나 prototype 파일은 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c06",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c06.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c06.png",
+      "alt": "캐릭터와 스킬 및 전투와 몬스터 설계의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C06"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "캐릭터·기술·전투·몬스터 설계 (ST-C06)",
+    "sample_result_excerpt": "탐험가의 ‘빛줄기 연결’ 기술은 동료가 반사판을 맞출 때만 보호막을 끊는 안으로 적었습니다. 피해량과 재사용 시간은 전투 데이터가 없어 시스템 담당자 확인이 필요합니다. (ID: studio:case:ST-C06; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C07",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C07",
+    "title": "ST-C07 source-bound scenario",
+    "purpose": "ST-C07의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-04",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-C07의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C07 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C07를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-systems $game-design-studio:review-game-design ST-C07의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:apply-document-quality-profile $game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-systems $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-C07의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "design-game-economy-and-liveops",
+      "design-game-systems",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "system-economy-designer",
+      "liveops-data-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "economy-balance",
+      "liveops-experiment-event"
+    ],
+    "minimum_outputs": [
+      "economy-balance",
+      "liveops-experiment-event",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/economy-balance/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/economy-balance/content.md",
+      "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
+      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** resource flow → progression/recovery → price·probability evidence → experiment → guardrail·rollback → decisions입니다. 중간 결과에서 source 없는 수치, 다중 변수, 복구 불가 변경을 blocker로 봅니다. **사람 결정:** economy, LiveOps, policy와 accessibility owner가 실험 실행·중단·rollback을 승인합니다. simulation, telemetry 수집과 reviewer 권고는 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c07",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c07.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c07.png",
+      "alt": "성장과 경제 및 밸런스와 LiveOps 실험의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C07"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "성장·경제·균형·라이브 운영 실험 설계 (ST-C07)",
+    "sample_result_excerpt": "신호 해독 토큰은 탐사에서 얻고 장비 보정에 쓰는 구조로 잡았으며, 보유 한도는 미정으로 남겼습니다. 운영 실험의 중단 기준과 되돌리기 절차도 경제 책임자의 근거가 필요합니다. (ID: studio:case:ST-C07; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
+  },
+  {
+    "id": "studio:case:ST-C08",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-C08",
+    "title": "ST-C08 source-bound scenario",
+    "purpose": "ST-C08의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-04",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-C08의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-C08 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-C08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-C08를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:plan-game-production $game-design-studio:review-game-design $game-design-studio:plan-image-assets $game-design-studio:visualize-game-design $game-design-studio:export-game-design-documents ST-C08의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:plan-game-production $game-design-studio:review-game-design $game-design-studio:plan-image-assets $game-design-studio:visualize-game-design $game-design-studio:export-game-design-documents [프로젝트 ID] [공개 정보] ST-C08의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "plan-game-production",
+    "skill_chain": [
+      "plan-game-production",
+      "review-game-design",
+      "plan-image-assets",
+      "visualize-game-design",
+      "export-game-design-documents"
+    ],
+    "specialist_roles": [
+      "production-feasibility-critic",
+      "lead-game-designer",
+      "visual-asset-reviewer",
+      "document-quality-editor"
+    ],
+    "intermediate_artifacts": [
+      "production-scope-risk",
+      "game-design-review",
+      "decision-change-log"
+    ],
+    "minimum_outputs": [
+      "production-scope-risk",
+      "game-design-review",
+      "export-preparation-manifest"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/production-scope-risk/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/production-scope-risk/content.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/evidence.yml",
+      "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서 blocker, capacity gap, image lifecycle, renderer capability와 형식별 QA를 따로 봅니다. **사람 결정:** production owner가 scope·kill, review decision owner가 finding disposition, rights/asset owner가 이미지 transition, export owner가 실제 format QA를 승인합니다. 생성, render, lint, reviewer finding과 state 문자열은 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-c08",
+      "svg": "guides/assets/game-design-studio/use-cases/st-c08.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-c08.png",
+      "alt": "제작과 검토 및 이미지와 출력 준비의 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/competency-paths.md"
+    ],
+    "display_title": "제작·검토·이미지·출력 준비 연결 (ST-C08)",
+    "sample_result_excerpt": "계절 시장 시제품에는 노점 4종과 하루 일정만 포함하고 축제 연출은 제외했습니다. 이미지 자산과 문서 출력은 범위·권리 검토가 끝난 항목만 준비 대상으로 넘깁니다. (ID: studio:case:ST-C08; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G01",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G01",
+    "title": "ST-G01 source-bound scenario",
+    "purpose": "ST-G01의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G01의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G01 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G01를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-content $game-design-studio:review-game-design ST-G01의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-content $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G01의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-game-economy-and-liveops",
+      "design-game-content",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "liveops-data-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief",
+      "economy-balance",
+      "liveops-experiment-event"
+    ],
+    "minimum_outputs": [
+      "game-design-brief",
+      "economy-balance",
+      "liveops-experiment-event"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/game-design-brief/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/game-design-brief/content.md",
+      "game-design/[프로젝트 ID]/game-design-brief/evidence.yml",
+      "game-design/[프로젝트 ID]/game-design-brief/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** 지정된 design·economy·policy owner가 경제 규칙, 실험 범위, telemetry 동의와 rollback을 승인·수정·보류합니다. 생성 결과는 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g01",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g01.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g01.png",
+      "alt": "모바일 수집형 RPG LiveService 콘셉트의 설계 흐름"
+    },
+    "related_use_cases": [
+      "ST-G01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "모바일 수집형 역할수행게임과 라이브 서비스 기획 (ST-G01)",
+    "sample_result_excerpt": "수집 동기는 바람 정령의 능력을 조합해 항로를 넓히는 데 두고, 반복 콘텐츠는 주간 탐사로 제안했습니다. 뽑기 확률과 운영 주기는 근거가 없어 경제·정책 책임자 결정 대기입니다. (ID: studio:case:ST-G01; 파일: game-design/[프로젝트 ID]/game-design-brief/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G02",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G02",
+    "title": "ST-G02 source-bound scenario",
+    "purpose": "ST-G02의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "ST-G02의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G02 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G02를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-G02의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G02의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-game-systems",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "core-motivation-loop",
+      "ui-ux-flow-state"
+    ],
+    "minimum_outputs": [
+      "core-motivation-loop",
+      "ui-ux-flow-state",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/core-motivation-loop/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/core-motivation-loop/content.md",
+      "game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml",
+      "game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·UX·accessibility owner가 오프라인 규칙, 복귀 cue와 검증 범위를 결정하며 생성물을 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g02",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g02.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g02.png",
+      "alt": "캐주얼 퍼즐 방치형 콘셉트의 세션 루프와 복귀 흐름"
+    },
+    "related_use_cases": [
+      "ST-G02"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "캐주얼 퍼즐 방치형 게임 기획 (ST-G02)",
+    "sample_result_excerpt": "산호 퍼즐을 풀면 정원이 자동으로 자라고, 복귀할 때 새 생물을 배치하는 흐름을 제안했습니다. 방치 보상 상한과 알림 빈도는 사용자 관찰 자료를 본 뒤 정합니다. (ID: studio:case:ST-G02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G03",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G03",
+    "title": "ST-G03 source-bound scenario",
+    "purpose": "ST-G03의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G03의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G03 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G03를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-game-content $game-design-studio:plan-game-production $game-design-studio:review-game-design ST-G03의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-game-systems $game-design-studio:design-game-content $game-design-studio:plan-game-production $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G03의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-game-systems",
+      "design-game-content",
+      "plan-game-production",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification",
+      "character-skill-combat-monster",
+      "production-scope-risk"
+    ],
+    "minimum_outputs": [
+      "system-specification",
+      "character-skill-combat-monster",
+      "production-scope-risk"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/system-specification/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/system-specification/content.md",
+      "game-design/[프로젝트 ID]/system-specification/evidence.yml",
+      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·engineering·player-safety owner가 authority, 역할 의존, 기록 동의와 제작 범위를 결정합니다. 자동화는 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g03",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g03.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g03.png",
+      "alt": "협동 생존 액션 콘셉트의 역할과 자원 및 복구 흐름"
+    },
+    "related_use_cases": [
+      "ST-G03"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "협동 생존 액션 게임 기획 (ST-G03)",
+    "sample_result_excerpt": "탐사대는 수리·정찰 역할로 나뉘고, 산소가 바닥나면 동료가 끌어 안전실로 복귀시킬 수 있습니다. 역할별 자원 소모와 네트워크 복구 규칙은 기술 검토 전까지 가설입니다. (ID: studio:case:ST-G03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G04",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G04",
+    "title": "ST-G04 source-bound scenario",
+    "purpose": "ST-G04의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G04의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G04 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G04를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-systems $game-design-studio:design-game-content $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-G04의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:design-game-systems $game-design-studio:design-game-content $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G04의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "design-game-systems",
+    "skill_chain": [
+      "design-game-systems",
+      "design-game-content",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "character-skill-combat-monster",
+      "system-specification",
+      "ui-ux-flow-state"
+    ],
+    "minimum_outputs": [
+      "character-skill-combat-monster",
+      "system-specification",
+      "ui-ux-flow-state"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/evidence.yml",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** combat·UX·accessibility·player-safety owner가 전투 규칙, 데이터 해석과 보호 정책을 승인·수정·보류하며 출력을 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g04",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g04.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g04.png",
+      "alt": "경쟁 PvP 아레나 콘셉트의 counterplay와 가독성 흐름"
+    },
+    "related_use_cases": [
+      "ST-G04"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "경쟁형 이용자 간 대전(PvP) 경기장 기획 (ST-G04)",
+    "sample_result_excerpt": "돌진 기술은 준비 동작을 보고 옆으로 피할 수 있고, 실패하면 짧게 빈틈이 생기도록 맞대응 수단을 적었습니다. 판정 범위와 색상 식별성은 전투·접근성 검토가 필요합니다. (ID: studio:case:ST-G04; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G05",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G05",
+    "title": "ST-G05 source-bound scenario",
+    "purpose": "ST-G05의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G05의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G05 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G05를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:plan-game-production $game-design-studio:review-game-design ST-G05의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:plan-game-production $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G05의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-game-content",
+      "design-game-systems",
+      "plan-game-production",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "system-economy-designer",
+      "production-feasibility-critic",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "core-motivation-loop",
+      "character-skill-combat-monster",
+      "production-scope-risk"
+    ],
+    "minimum_outputs": [
+      "core-motivation-loop",
+      "character-skill-combat-monster",
+      "production-scope-risk"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/core-motivation-loop/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/core-motivation-loop/content.md",
+      "game-design/[프로젝트 ID]/core-motivation-loop/evidence.yml",
+      "game-design/[프로젝트 ID]/core-motivation-loop/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·combat·production·accessibility owner가 run 규칙, 입력 대응과 콘텐츠 범위를 결정하며 생성 결과는 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g05",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g05.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g05.png",
+      "alt": "PC 콘솔 액션 로그라이트 콘셉트의 run loop와 성장 흐름"
+    },
+    "related_use_cases": [
+      "ST-G05"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "개인용 컴퓨터(PC)·콘솔 액션 로그라이트 기획 (ST-G05)",
+    "sample_result_excerpt": "한 회차는 설원 진입→유물 선택→성문 보스전으로 이어지고, 실패 뒤에는 발견한 전술 정보만 남습니다. 영구 성장 폭과 보스 제작 범위는 플레이 시험과 인력 산정 뒤 조정합니다. (ID: studio:case:ST-G05; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G06",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G06",
+    "title": "ST-G06 source-bound scenario",
+    "purpose": "ST-G06의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G06의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G06 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G06를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:review-game-design $game-design-studio:visualize-game-design ST-G06의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:review-game-design $game-design-studio:visualize-game-design [프로젝트 ID] [공개 정보] ST-G06의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "design-game-content",
+    "skill_chain": [
+      "design-game-content",
+      "design-game-systems",
+      "review-game-design",
+      "visualize-game-design"
+    ],
+    "specialist_roles": [
+      "content-narrative-designer",
+      "system-economy-designer",
+      "production-feasibility-critic",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc",
+      "system-specification",
+      "rule-exception-matrix"
+    ],
+    "minimum_outputs": [
+      "narrative-quest-npc",
+      "system-specification",
+      "rule-exception-matrix"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** narrative·system·production·rights owner가 선택 의미, 상태 규칙, 민감성·권리와 제작 범위를 결정하며 자동화는 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g06",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g06.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g06.png",
+      "alt": "선택형 내러티브 어드벤처 콘셉트의 상태와 분기 흐름"
+    },
+    "related_use_cases": [
+      "ST-G06"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "선택형 서사 모험 게임 기획 (ST-G06)",
+    "sample_result_excerpt": "등대 기록을 공개하면 주민 신뢰는 오르지만 밀수업자 협력 경로가 닫히는 상태 변화를 적었습니다. 두 분기가 다시 만나는 조건과 모순 가능성은 서사 담당자가 확인해야 합니다. (ID: studio:case:ST-G06; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G07",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G07",
+    "title": "ST-G07 source-bound scenario",
+    "purpose": "ST-G07의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "ST-G07의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G07 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G07를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-player-experience $game-design-studio:design-game-content $game-design-studio:review-game-design ST-G07의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-player-experience $game-design-studio:design-game-content $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G07의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-player-experience",
+      "design-game-content",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "content-narrative-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "ui-ux-flow-state",
+      "narrative-quest-npc",
+      "accessibility-platform-matrix"
+    ],
+    "minimum_outputs": [
+      "ui-ux-flow-state",
+      "narrative-quest-npc",
+      "accessibility-platform-matrix"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** design·content·accessibility owner가 시간 압력, 관계 표현과 대안을 승인·수정·보류합니다. 자동 생성은 승인을 대신하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g07",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g07.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g07.png",
+      "alt": "코지 생활 시뮬레이션 콘셉트의 자율성과 접근성 흐름"
+    },
+    "related_use_cases": [
+      "ST-G07"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "편안한 생활 시뮬레이션 기획 (ST-G07)",
+    "sample_result_excerpt": "하루 목표를 강제하지 않고 정원 돌보기·이웃 방문·휴식 중 원하는 활동을 고르게 했습니다. 시간 압박을 줄이는 설정과 입력 대안은 접근성 담당자 검토를 기다립니다. (ID: studio:case:ST-G07; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G08",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G08",
+    "title": "ST-G08 source-bound scenario",
+    "purpose": "ST-G08의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G08의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G08 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G08를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-G08의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:design-game-economy-and-liveops $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G08의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "design-game-economy-and-liveops",
+    "skill_chain": [
+      "design-game-economy-and-liveops",
+      "design-game-systems",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "liveops-data-designer",
+      "system-economy-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "economy-balance",
+      "system-specification",
+      "ui-ux-flow-state"
+    ],
+    "minimum_outputs": [
+      "economy-balance",
+      "system-specification",
+      "ui-ux-flow-state"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/economy-balance/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/economy-balance/content.md",
+      "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
+      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** economy·system·UX owner가 규칙, provisional 값, 정보 계층과 rollback을 결정합니다. simulation과 생성 결과는 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g08",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g08.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g08.png",
+      "alt": "경영 타이쿤 시뮬레이션 콘셉트의 경제와 피드백 흐름"
+    },
+    "related_use_cases": [
+      "ST-G08"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "경영 타이쿤 시뮬레이션 기획 (ST-G08)",
+    "sample_result_excerpt": "노점 임대료·재고 폐기·방문객 만족도를 하루 결산에 함께 보여주는 안을 잡았습니다. 가격 탄력과 수요 계산식은 근거 데이터가 없어 경제 책임자가 정해야 합니다. (ID: studio:case:ST-G08; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G09",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G09",
+    "title": "ST-G09 source-bound scenario",
+    "purpose": "ST-G09의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G09의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G09 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G09의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G09를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design ST-G09의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:design-game-content $game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G09의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "design-game-content",
+    "skill_chain": [
+      "design-game-content",
+      "design-game-systems",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "content-narrative-designer",
+      "visual-asset-reviewer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc",
+      "system-specification",
+      "game-design-review"
+    ],
+    "minimum_outputs": [
+      "narrative-quest-npc",
+      "system-specification",
+      "game-design-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** moderation·rights·accessibility·ethics owner가 게시, 차단, 삭제와 appeal을 승인·수정·보류합니다. 자동 분류나 생성물은 자동 승인하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G09의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g09",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g09.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g09.png",
+      "alt": "샌드박스 UGC 콘셉트의 창작과 발견 및 moderation 흐름"
+    },
+    "related_use_cases": [
+      "ST-G09"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "샌드박스 사용자 제작 콘텐츠(UGC) 기획 (ST-G09)",
+    "sample_result_excerpt": "플레이어가 바람길 경주를 만들고 태그로 공개할 수 있게 하되, 신고된 코스는 검색 노출만 임시 중단하는 흐름을 제안했습니다. 권리·동의·운영 기준은 정책 담당자가 검토해야 합니다. (ID: studio:case:ST-G09; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+  },
+  {
+    "id": "studio:case:ST-G10",
+    "kind": "use-case",
+    "product": "studio",
+    "source_case_id": "ST-G10",
+    "title": "ST-G10 source-bound scenario",
+    "purpose": "ST-G10의 source manifest skill과 artifact를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-04",
+      "AUD-06"
+    ],
+    "intents": [
+      "concept",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "ST-G10의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.",
+    "when_not_to_use": "승인되지 않은 결과, 민감정보, 비공개 자료를 공개하거나 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "ST-G10 공개 가능한 설계 경계"
+    ],
+    "optional_inputs": [
+      "검증 근거와 decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio ST-G10의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Studio [프로젝트 ID] [공개 정보]의 fact, inference, recommendation을 분리해 ST-G10를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:define-game-vision $game-design-studio:design-player-experience $game-design-studio:design-game-content $game-design-studio:review-game-design ST-G10의 공개 가능한 사실, 추론, 제안을 분리해.",
+      "template": "$game-design-studio:define-game-vision $game-design-studio:design-player-experience $game-design-studio:design-game-content $game-design-studio:review-game-design [프로젝트 ID] [공개 정보] ST-G10의 fact, inference, recommendation을 분리해."
+    },
+    "skill": "define-game-vision",
+    "skill_chain": [
+      "define-game-vision",
+      "design-player-experience",
+      "design-game-content",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "content-narrative-designer",
+      "ux-accessibility-reviewer",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief",
+      "ui-ux-flow-state",
+      "accessibility-platform-matrix"
+    ],
+    "minimum_outputs": [
+      "game-design-brief",
+      "ui-ux-flow-state",
+      "accessibility-platform-matrix"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/game-design-brief/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/game-design-brief/content.md",
+      "game-design/[프로젝트 ID]/game-design-brief/evidence.yml",
+      "game-design/[프로젝트 ID]/game-design-brief/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** `content.md → evidence.yml → decisions/ → export-manifest.yml`. **사람 결정:** 대상 당사자, 교육·domain·rights·accessibility·ethics owner가 목적, 표현, 동의, 평가와 공개 범위를 결정합니다. 자동화는 사람의 승인을 대신하지 않습니다.",
+    "hold_conditions": [
+      "근거, 권리, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ST-G10의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-g10",
+      "svg": "guides/assets/game-design-studio/use-cases/st-g10.svg",
+      "png": "guides/assets/game-design-studio/use-cases/st-g10.png",
+      "alt": "교육과 사회문제 및 접근성 중심 게임 콘셉트의 검증 흐름"
+    },
+    "related_use_cases": [
+      "ST-G10"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-studio/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "교육·사회문제·접근성 중심 게임 기획 (ST-G10)",
+    "sample_result_excerpt": "해양 쓰레기 분류 활동은 정답 암기보다 선택 결과를 비교하게 하고, 텍스트·음성·그림 설명을 함께 제공하는 안입니다. 학습 목표와 당사자 표현은 교육·접근성 검토자가 확인해야 합니다. (ID: studio:case:ST-G10; 파일: game-design/[프로젝트 ID]/game-design-brief/content.md)"
+  },
+  {
+    "id": "studio:recipe:content-quest-design",
+    "kind": "recipe",
+    "product": "studio",
+    "title": "content-quest-design recipe",
+    "purpose": "content-quest-design recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "content-quest-design"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 폐광 퀘스트의 stage, branch, NPC, choice, reward와 실패 복구를 시스템 state ID에 연결해. 외부 원작·UGC·AI 대사는 rights와 consent가 없으면 blocker로 남겨.",
+      "template": "@Game Design Studio 폐광 퀘스트의 stage, branch, NPC, choice, reward와 실패 복구를 시스템 state ID에 연결해. 외부 원작·UGC·AI 대사는 rights와 consent가 없으면 blocker로 남겨. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-content game-design/<project-id>/narrative-quest-npc/를 작성하고 $game-design-studio:design-game-systems 및 $game-design-studio:plan-game-production으로 의존성과 제작 위험을 검토해.",
+      "template": "$game-design-studio:design-game-content game-design/[프로젝트 ID]/narrative-quest-npc/를 작성하고 $game-design-studio:design-game-systems 및 $game-design-studio:plan-game-production으로 의존성과 제작 위험을 검토해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "design-game-content",
+    "skill_chain": [
+      "design-game-content",
+      "design-game-systems",
+      "plan-game-production"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "narrative-quest-npc",
+      "character-skill-combat-monster"
+    ],
+    "minimum_outputs": [
+      "narrative-quest-npc canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/decisions/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/assets/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/narrative-quest-npc/content.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/evidence.yml",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/decisions/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/assets/README.md",
+      "game-design/[프로젝트 ID]/narrative-quest-npc/export-manifest.yml",
+      "game-design/[프로젝트 ID]/character-skill-combat-monster/content.md"
+    ],
+    "human_review_boundary": "named human decision owner가 content-quest-design의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "content-quest-design의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "Studio recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "studio:recipe:content-quest-design"
+    ],
+    "source_references": [
+      "guides/game-design-studio/recipes/content-quest-design.md"
+    ],
+    "display_title": "콘텐츠와 퀘스트 설계 절차",
+    "sample_result_excerpt": "폐광 퀘스트는 입구 조사→광부 구조 또는 광맥 봉쇄→귀환으로 나뉘며, 각 선택에 상태 ID와 실패 복구를 붙였습니다. 외부 원작을 참고한 대사는 권리와 동의 확인 전까지 막힘으로 남습니다. (ID: studio:recipe:content-quest-design; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)"
+  },
+  {
+    "id": "studio:recipe:economy-liveops",
+    "kind": "recipe",
+    "product": "studio",
+    "title": "economy-liveops recipe",
+    "purpose": "economy-liveops recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "economy-liveops"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 골드와 토큰의 source/sink, target inventory, progression, price·odds·pity 가정을 기록하고 LiveOps 실험의 control, guardrail, stop과 rollback을 설계해. 근거 없는 수치와 monetization 승인은 만들지 마.",
+      "template": "@Game Design Studio 골드와 토큰의 source/sink, target inventory, progression, price·odds·pity 가정을 기록하고 LiveOps 실험의 control, guardrail, stop과 rollback을 설계해. 근거 없는 수치와 monetization 승인은 만들지 마. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-economy-and-liveops game-design/<project-id>/economy-balance/와 liveops-experiment-event/를 작성한 뒤 $game-design-studio:design-game-systems 및 $game-design-studio:plan-game-production으로 rollback dependency를 검토해.",
+      "template": "$game-design-studio:design-game-economy-and-liveops game-design/[프로젝트 ID]/economy-balance/와 liveops-experiment-event/를 작성한 뒤 $game-design-studio:design-game-systems 및 $game-design-studio:plan-game-production으로 rollback dependency를 검토해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "design-game-economy-and-liveops",
+    "skill_chain": [
+      "design-game-economy-and-liveops",
+      "design-game-systems",
+      "plan-game-production"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "economy-balance",
+      "liveops-experiment-event"
+    ],
+    "minimum_outputs": [
+      "economy-balance canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/economy-balance/content.md",
+      "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
+      "game-design/[프로젝트 ID]/economy-balance/decisions/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/assets/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/content.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/evidence.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/decisions/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/assets/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/economy-balance/content.md",
+      "game-design/[프로젝트 ID]/economy-balance/evidence.yml",
+      "game-design/[프로젝트 ID]/economy-balance/decisions/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/assets/README.md",
+      "game-design/[프로젝트 ID]/economy-balance/export-manifest.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/content.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/evidence.yml",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/decisions/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/assets/README.md",
+      "game-design/[프로젝트 ID]/liveops-experiment-event/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 economy-liveops의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "economy-liveops의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "Studio recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "studio:recipe:economy-liveops"
+    ],
+    "source_references": [
+      "guides/game-design-studio/recipes/economy-liveops.md"
+    ],
+    "display_title": "게임 경제와 라이브 운영 설계 절차",
+    "sample_result_excerpt": "골드는 전투에서 얻어 장비 강화에 쓰고, 토큰은 행사 임무에서만 얻는 구조로 분리했습니다. 가격·확률·천장 수치는 근거 없음으로 표시했으며 실험 중단 기준과 되돌리기는 경제 책임자 확인 대기입니다. (ID: studio:recipe:economy-liveops; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)"
+  },
+  {
+    "id": "studio:recipe:new-game-gdd",
+    "kind": "recipe",
+    "product": "studio",
+    "title": "new-game-gdd recipe",
+    "purpose": "new-game-gdd recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "new-game-gdd"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 새 협동 RPG의 대상 플레이어, 핵심 재미, pillar, anti-pillar와 non-goal을 분리해 GDD 기준을 만들어 줘. 근거 없는 주장은 assumption으로 남기고 lead design owner의 승인을 기다려.",
+      "template": "@Game Design Studio 새 협동 RPG의 대상 플레이어, 핵심 재미, pillar, anti-pillar와 non-goal을 분리해 GDD 기준을 만들어 줘. 근거 없는 주장은 assumption으로 남기고 lead design owner의 승인을 기다려. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:orchestrate-game-design-project game-design/<project-id>/vision-pillars/의 content.md를 기준으로 $game-design-studio:apply-document-quality-profile, $game-design-studio:define-game-vision, $game-design-studio:review-game-design을 순서대로 실행해.",
+      "template": "$game-design-studio:orchestrate-game-design-project game-design/[프로젝트 ID]/vision-pillars/의 content.md를 기준으로 $game-design-studio:apply-document-quality-profile, $game-design-studio:define-game-vision, $game-design-studio:review-game-design을 순서대로 실행해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "orchestrate-game-design-project",
+    "skill_chain": [
+      "orchestrate-game-design-project",
+      "apply-document-quality-profile",
+      "define-game-vision",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "vision-pillars",
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "vision-pillars canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/vision-pillars/content.md",
+      "game-design/[프로젝트 ID]/vision-pillars/evidence.yml",
+      "game-design/[프로젝트 ID]/vision-pillars/decisions/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/assets/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-brief/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/vision-pillars/content.md",
+      "game-design/[프로젝트 ID]/vision-pillars/evidence.yml",
+      "game-design/[프로젝트 ID]/vision-pillars/decisions/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/assets/README.md",
+      "game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-brief/content.md"
+    ],
+    "human_review_boundary": "named human decision owner가 new-game-gdd의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "new-game-gdd의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "Studio recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "studio:recipe:new-game-gdd"
+    ],
+    "source_references": [
+      "guides/game-design-studio/recipes/new-game-gdd.md"
+    ],
+    "display_title": "새 게임 기획서(GDD) 작성 절차",
+    "sample_result_excerpt": "협동 역할수행게임의 핵심 재미는 ‘서로 다른 단서를 합쳐 길을 찾는 경험’으로 적고, 혼자서 모든 역할을 해결하는 기능은 배제했습니다. 대상 플레이어 가정과 다음 시제품 범위는 수석 기획자 결정 전까지 미정입니다. (ID: studio:recipe:new-game-gdd; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)"
+  },
+  {
+    "id": "studio:recipe:production-review-export",
+    "kind": "recipe",
+    "product": "studio",
+    "title": "production-review-export recipe",
+    "purpose": "production-review-export recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "production-review-export"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 현재 feature set의 scope, capacity, dependency, milestone, hard No-Go와 kill criteria를 검토해. blocker를 owner와 최소 수정으로 남기고, 승인된 content.md만 MD·PDF·DOCX·PPTX 준비 manifest로 보내 줘.",
+      "template": "@Game Design Studio 현재 feature set의 scope, capacity, dependency, milestone, hard No-Go와 kill criteria를 검토해. blocker를 owner와 최소 수정으로 남기고, 승인된 content.md만 MD·PDF·DOCX·PPTX 준비 manifest로 보내 줘. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:plan-game-production game-design/<project-id>/production-scope-risk/를 작성하고 $game-design-studio:review-game-design, $game-design-studio:plan-image-assets, $game-design-studio:visualize-game-design 뒤 $game-design-studio:export-game-design-documents로 renderer-neutral export manifest를 준비해.",
+      "template": "$game-design-studio:plan-game-production game-design/[프로젝트 ID]/production-scope-risk/를 작성하고 $game-design-studio:review-game-design, $game-design-studio:plan-image-assets, $game-design-studio:visualize-game-design 뒤 $game-design-studio:export-game-design-documents로 renderer-neutral export manifest를 준비해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "plan-game-production",
+    "skill_chain": [
+      "plan-game-production",
+      "review-game-design",
+      "plan-image-assets",
+      "visualize-game-design",
+      "export-game-design-documents"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "production-scope-risk",
+      "game-design-review",
+      "decision-change-log"
+    ],
+    "minimum_outputs": [
+      "production-scope-risk canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/production-scope-risk/content.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/evidence.yml",
+      "game-design/[프로젝트 ID]/production-scope-risk/decisions/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/assets/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-review/content.md",
+      "game-design/[프로젝트 ID]/game-design-review/evidence.yml",
+      "game-design/[프로젝트 ID]/game-design-review/decisions/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/assets/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/export-manifest.yml",
+      "game-design/[프로젝트 ID]/decision-change-log/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/production-scope-risk/content.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/evidence.yml",
+      "game-design/[프로젝트 ID]/production-scope-risk/decisions/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/assets/README.md",
+      "game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml",
+      "game-design/[프로젝트 ID]/game-design-review/content.md",
+      "game-design/[프로젝트 ID]/game-design-review/evidence.yml",
+      "game-design/[프로젝트 ID]/game-design-review/decisions/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/assets/README.md",
+      "game-design/[프로젝트 ID]/game-design-review/export-manifest.yml",
+      "game-design/[프로젝트 ID]/decision-change-log/content.md"
+    ],
+    "human_review_boundary": "named human decision owner가 production-review-export의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "production-review-export의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "Studio recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "studio:recipe:production-review-export"
+    ],
+    "source_references": [
+      "guides/game-design-studio/recipes/production-review-export.md"
+    ],
+    "display_title": "제작 범위 검토와 문서 출력 준비 절차",
+    "sample_result_excerpt": "등대섬 기능 목록에서 협동 전력 퍼즐만 이번 주요 일정에 남기고 사진 모드는 제외 후보로 표시했습니다. 검토 막힘이 해소된 `content.md`만 출력 준비 명세로 넘기며 실제 변환은 아직 하지 않습니다. (ID: studio:recipe:production-review-export; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)"
+  },
+  {
+    "id": "studio:recipe:system-feature-spec",
+    "kind": "recipe",
+    "product": "studio",
+    "title": "system-feature-spec recipe",
+    "purpose": "system-feature-spec recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "system-feature-spec"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 제작 기능의 input, rule, state, exception precedence, failure/recovery와 table/runtime mapping을 명세해. 접근성 critical action도 누락하지 말고 design owner 검토 전에는 승인하지 마.",
+      "template": "@Game Design Studio 제작 기능의 input, rule, state, exception precedence, failure/recovery와 table/runtime mapping을 명세해. 접근성 critical action도 누락하지 말고 design owner 검토 전에는 승인하지 마. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-game-systems game-design/<project-id>/system-specification/에서 rule과 state를 명세한 뒤 $game-design-studio:design-player-experience 및 $game-design-studio:review-game-design으로 검토해.",
+      "template": "$game-design-studio:design-game-systems game-design/[프로젝트 ID]/system-specification/에서 rule과 state를 명세한 뒤 $game-design-studio:design-player-experience 및 $game-design-studio:review-game-design으로 검토해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "design-game-systems",
+    "skill_chain": [
+      "design-game-systems",
+      "design-player-experience",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "system-specification canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/system-specification/content.md",
+      "game-design/[프로젝트 ID]/system-specification/evidence.yml",
+      "game-design/[프로젝트 ID]/system-specification/decisions/README.md",
+      "game-design/[프로젝트 ID]/system-specification/assets/README.md",
+      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml",
+      "game-design/[프로젝트 ID]/rule-exception-matrix/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/system-specification/content.md",
+      "game-design/[프로젝트 ID]/system-specification/evidence.yml",
+      "game-design/[프로젝트 ID]/system-specification/decisions/README.md",
+      "game-design/[프로젝트 ID]/system-specification/assets/README.md",
+      "game-design/[프로젝트 ID]/system-specification/export-manifest.yml",
+      "game-design/[프로젝트 ID]/rule-exception-matrix/content.md"
+    ],
+    "human_review_boundary": "named human decision owner가 system-feature-spec의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "system-feature-spec의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "Studio recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "studio:recipe:system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/recipes/system-feature-spec.md"
+    ],
+    "display_title": "시스템 기능 명세 작성 절차",
+    "sample_result_excerpt": "제작 기능은 재료 선택→수량 검사→제작 대기→결과 수령 순서이며, 취소와 재접속 예외를 따로 적었습니다. 표 데이터와 실행 중 상태의 연결, 접근성 핵심 행동은 설계 책임자가 검토해야 합니다. (ID: studio:recipe:system-feature-spec; 파일: game-design/[프로젝트 ID]/system-specification/content.md)"
+  },
+  {
+    "id": "studio:recipe:ux-accessibility",
+    "kind": "recipe",
+    "product": "studio",
+    "title": "ux-accessibility recipe",
+    "purpose": "ux-accessibility recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "ux-accessibility"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[프로젝트 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 첫 세션의 critical action을 모바일과 PC 입력, focus, text scale, visual/audio alternative, loading·error·offline recovery까지 설계해. 현재 근거와 가정을 분리하고 accessibility owner 승인을 대기해.",
+      "template": "@Game Design Studio 첫 세션의 critical action을 모바일과 PC 입력, focus, text scale, visual/audio alternative, loading·error·offline recovery까지 설계해. 현재 근거와 가정을 분리하고 accessibility owner 승인을 대기해. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:design-player-experience game-design/<project-id>/ui-ux-flow-state/에서 작성한 뒤 $game-design-studio:apply-document-quality-profile 및 $game-design-studio:review-game-design으로 접근성 gate를 검토해.",
+      "template": "$game-design-studio:design-player-experience game-design/[프로젝트 ID]/ui-ux-flow-state/에서 작성한 뒤 $game-design-studio:apply-document-quality-profile 및 $game-design-studio:review-game-design으로 접근성 gate를 검토해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "design-player-experience",
+    "skill_chain": [
+      "design-player-experience",
+      "apply-document-quality-profile",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "ui-ux-flow-state"
+    ],
+    "minimum_outputs": [
+      "ui-ux-flow-state canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/decisions/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/assets/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml",
+      "game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md"
+    ],
+    "read_order": [
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/content.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/evidence.yml",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/decisions/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/assets/README.md",
+      "game-design/[프로젝트 ID]/ui-ux-flow-state/export-manifest.yml",
+      "game-design/[프로젝트 ID]/accessibility-platform-matrix/content.md"
+    ],
+    "human_review_boundary": "named human decision owner가 ux-accessibility의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "ux-accessibility의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s01",
+      "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
+      "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "alt": "Studio recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "studio:recipe:ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/recipes/ux-accessibility.md"
+    ],
+    "display_title": "사용자 경험과 접근성 설계 절차",
+    "sample_result_excerpt": "첫 세션의 상품 진열 행동을 모바일 터치와 PC 키보드 입력으로 나누고, 초점·글자 확대·시각 및 소리 대안을 함께 적었습니다. 오프라인 복구와 입력 우선순위는 접근성 책임자 확인 전까지 제안 상태입니다. (ID: studio:recipe:ux-accessibility; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)"
+  }
+]

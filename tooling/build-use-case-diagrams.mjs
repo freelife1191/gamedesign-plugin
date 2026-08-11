@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { loadUseCaseManifest } from "./lib/use-case-guides.mjs";
 import { validateCareerDiagramProductionBatch } from "./lib/career-diagram-production-contract.mjs";
-import { renderDiagramSvg, validateDiagramSource } from "./lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "./lib/use-case-diagrams.mjs";
 import { validateStudioDiagramProductionBatch } from "./lib/studio-diagram-production-contract.mjs";
 
 const sourceFile = "guides/assets/use-case-diagram-sources.json";
@@ -17,6 +17,15 @@ const careerRoutingFile = "products/game-design-career/plugin/references/routing
 const studioRoutingFile = "products/game-design-studio/plugin/references/routing.json";
 const wrapperFile = "products/game-design-studio/plugin/skills/visualize-game-design/scripts/run-skillstead.mjs";
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+function isValidatedProductDiagram(source) {
+  return [
+    "game-design-studio-use-case",
+    "game-design-career-use-case",
+    "game-design-studio-skill",
+    "game-design-career-skill",
+  ].includes(source.scope);
+}
 
 function isContained(root, target) {
   const relative = path.relative(root, target);
@@ -176,12 +185,18 @@ async function buildOne({ source, manifest, repoRoot, outputRoot, check, optiona
   if (check) {
     await assertSafeExistingFile(repoRoot, output.svg, { optionalLstat });
     await assertSafeExistingFile(repoRoot, output.png, { optionalLstat });
+    if (isValidatedProductDiagram(source)) {
+      validateUseCaseDiagramSvg(await readFile(output.svg, "utf8"), source.id);
+    }
     await assertSafeOutputFile(outputRoot, pngPath, { createParents: true });
   } else {
     await assertSafeOutputFile(repoRoot, output.svg, { createParents: true });
     await assertSafeOutputFile(repoRoot, output.png, { createParents: true });
   }
   const svg = renderDiagramSvg(source);
+  if (isValidatedProductDiagram(source)) {
+    validateUseCaseDiagramSvg(svg, source.id);
+  }
   await writeSvg(svgPath, svg, outputRoot);
   await assertSafeExistingFile(outputRoot, svgPath, { optionalLstat });
   const wrapper = path.join(repoRoot, wrapperFile);

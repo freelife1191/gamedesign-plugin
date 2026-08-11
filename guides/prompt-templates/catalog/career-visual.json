@@ -1,0 +1,1623 @@
+[
+  {
+    "id": "career:plan-image-assets:beginner",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "포트폴리오 placeholder 이미지 슬롯 계획",
+    "purpose": "생성 없이 포트폴리오 사례의 placeholder 이미지 슬롯, stable asset ID, count와 alt text를 concept-draft로 기록한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "plan-image-assets",
+      "안전한 시작"
+    ],
+    "level": "beginner",
+    "when_to_use": "포트폴리오 placeholder 이미지 슬롯 계획에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[profile slot]",
+      "[source section ID]",
+      "[명시적 count]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[profile slot]",
+      "[source section ID]",
+      "[명시적 count]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "@Game Design Career [Canonical Artifact], [profile slot], [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source section ID], [명시적 count]\" 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[profile slot], [source section ID], [명시적 count]\" 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+    },
+    "skill": "plan-image-assets",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "plan-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "portfolio-project-brief"
+    ],
+    "minimum_outputs": [
+      "profile-slot preflight",
+      "stable asset ID·count·placeholder",
+      "alt text·rights/attribution handoff",
+      "concept-draft plan"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/plan-image-assets/beginner/content.md",
+      "career/visual/plan-image-assets/beginner/evidence.yml",
+      "career/visual/plan-image-assets/beginner/export-manifest.yml",
+      "career/visual/plan-image-assets/beginner/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/plan-image-assets/beginner/content.md",
+      "career/visual/plan-image-assets/beginner/evidence.yml",
+      "career/visual/plan-image-assets/beginner/export-manifest.yml",
+      "career/visual/plan-image-assets/beginner/assets/README.md"
+    ],
+    "human_review_boundary": "art-brief-director owner가 입력, source, rights/attribution, alt text와 handoff를 승인·수정·보류한다. 생성 또는 actual portfolio publication은 named human reviewer evidence 없이는 승인하지 않는다.",
+    "hold_conditions": [
+      "Canonical Artifact 또는 stable asset ID가 없음",
+      "rights/attribution 또는 source가 미정",
+      "named decision owner가 없음"
+    ],
+    "resume_prompt": "plan-image-assets/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s07",
+      "svg": "guides/assets/game-design-career/skills/plan-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/plan-image-assets.png",
+      "alt": "Career 이미지 자산 계획 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/plan-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "포트폴리오 이미지 자리와 대체 문구 계획",
+    "sample_result_excerpt": "표지에는 ASSET-COVER-01 자리 하나를 두고 ‘규칙표와 테스트 메모가 놓인 작업 책상’이라는 대체 문구를 붙였습니다. 이미지는 생성하지 않았으며 출처와 사용 권리는 미정으로 남겼습니다. (ID: career:plan-image-assets:beginner; 파일: career/visual/plan-image-assets/beginner/content.md)"
+  },
+  {
+    "id": "career:plan-image-assets:standard",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "proof 이미지·alt·권리 manifest 계획",
+    "purpose": "proof 이미지의 source·attribution·rights 상태, alt text와 readability 목표를 prompt package와 분리해 기록한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "plan-image-assets",
+      "증빙 가능한 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "proof 이미지·alt·권리 manifest 계획에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[profile slots]",
+      "[source IDs]",
+      "[rights owner]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[profile slots]",
+      "[source IDs]",
+      "[rights owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "@Game Design Career [Canonical Artifact], [profile slots], [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source IDs], [rights owner]\" proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[profile slots], [source IDs], [rights owner]\" proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+    },
+    "skill": "plan-image-assets",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "plan-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "profile-slot preflight",
+      "stable asset ID·count·placeholder",
+      "alt text·rights/attribution handoff",
+      "concept-draft plan"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/plan-image-assets/standard/content.md",
+      "career/visual/plan-image-assets/standard/evidence.yml",
+      "career/visual/plan-image-assets/standard/export-manifest.yml",
+      "career/visual/plan-image-assets/standard/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/plan-image-assets/standard/content.md",
+      "career/visual/plan-image-assets/standard/evidence.yml",
+      "career/visual/plan-image-assets/standard/export-manifest.yml",
+      "career/visual/plan-image-assets/standard/assets/README.md"
+    ],
+    "human_review_boundary": "art-brief-director owner가 입력, source, rights/attribution, alt text와 handoff를 승인·수정·보류한다. 생성 또는 actual portfolio publication은 named human reviewer evidence 없이는 승인하지 않는다.",
+    "hold_conditions": [
+      "Canonical Artifact 또는 stable asset ID가 없음",
+      "rights/attribution 또는 source가 미정",
+      "named decision owner가 없음"
+    ],
+    "resume_prompt": "plan-image-assets/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s07",
+      "svg": "guides/assets/game-design-career/skills/plan-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/plan-image-assets.png",
+      "alt": "Career 이미지 자산 계획 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/plan-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "증명 이미지의 대체 문구와 권리 기록 계획",
+    "sample_result_excerpt": "사례 2에는 수정 전후 화면 두 장을 배치하고 각 이미지의 출처, 권리 담당자, 대체 문구를 기록하도록 정했습니다. 실제 파일 생성과 공개 사용은 권리 담당자 검토 뒤 별도 단계에서 진행합니다. (ID: career:plan-image-assets:standard; 파일: career/visual/plan-image-assets/standard/content.md)"
+  },
+  {
+    "id": "career:plan-image-assets:advanced",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "profile 슬롯과 presentation handoff 계획",
+    "purpose": "profile 슬롯, presentation placement, 권리·privacy hold와 named human reviewer evidence 요청을 가진 handoff를 계획한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "plan-image-assets",
+      "고급 handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "profile 슬롯과 presentation handoff 계획에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[presentation slot]",
+      "[decision owner]",
+      "[reviewer evidence path]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[presentation slot]",
+      "[decision owner]",
+      "[reviewer evidence path]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "@Game Design Career [Canonical Artifact], [presentation slot], [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:plan-image-assets artifact=career/sample-artifact inputs=\"sample-input, [decision owner], [reviewer evidence path]\" profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.",
+      "template": "$game-design-career:plan-image-assets artifact=[Canonical Artifact] inputs=\"[presentation slot], [decision owner], [reviewer evidence path]\" profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only."
+    },
+    "skill": "plan-image-assets",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "plan-image-assets",
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "portfolio-backlog"
+    ],
+    "minimum_outputs": [
+      "profile-slot preflight",
+      "stable asset ID·count·placeholder",
+      "alt text·rights/attribution handoff",
+      "concept-draft plan"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/plan-image-assets/advanced/content.md",
+      "career/visual/plan-image-assets/advanced/evidence.yml",
+      "career/visual/plan-image-assets/advanced/export-manifest.yml",
+      "career/visual/plan-image-assets/advanced/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/plan-image-assets/advanced/content.md",
+      "career/visual/plan-image-assets/advanced/evidence.yml",
+      "career/visual/plan-image-assets/advanced/export-manifest.yml",
+      "career/visual/plan-image-assets/advanced/assets/README.md"
+    ],
+    "human_review_boundary": "art-brief-director owner가 입력, source, rights/attribution, alt text와 handoff를 승인·수정·보류한다. 생성 또는 actual portfolio publication은 named human reviewer evidence 없이는 승인하지 않는다.",
+    "hold_conditions": [
+      "Canonical Artifact 또는 stable asset ID가 없음",
+      "rights/attribution 또는 source가 미정",
+      "named decision owner가 없음"
+    ],
+    "resume_prompt": "plan-image-assets/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s07",
+      "svg": "guides/assets/game-design-career/skills/plan-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/plan-image-assets.png",
+      "alt": "Career 이미지 자산 계획 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/plan-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "소개용 이미지 자리와 발표 자료 인계 계획",
+    "sample_result_excerpt": "프로필, 대표 사례, 과정 설명에 쓸 이미지 자리를 각각 고유 자산 식별자로 나눴습니다. 발표 자료 담당자에게 넘길 크기와 대체 문구는 적었지만 공개 가능한 자산인지는 아직 검토 중입니다. (ID: career:plan-image-assets:advanced; 파일: career/visual/plan-image-assets/advanced/content.md)"
+  },
+  {
+    "id": "career:generate-image-assets:beginner",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "선택한 포트폴리오 cover concept 생성 경로",
+    "purpose": "실제 사용자가 선택한 stable asset ID의 cover concept를 제한된 생성 경로로 보내고 concept-draft 상태를 보존한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "generate-image-assets",
+      "안전한 시작"
+    ],
+    "level": "beginner",
+    "when_to_use": "선택한 포트폴리오 cover concept 생성 경로에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[selected stable asset IDs]",
+      "[selection receipt]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[selected stable asset IDs]",
+      "[selection receipt]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [selection receipt]를 사용해 선택한 포트폴리오 cover concept 생성 경로를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=select.",
+      "template": "@Game Design Career [Canonical Artifact], [selected stable asset IDs], [selection receipt]를 사용해 선택한 포트폴리오 cover concept 생성 경로를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=select."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:generate-image-assets artifact=career/sample-artifact inputs=\"sample-input, [selection receipt]\" 선택한 포트폴리오 cover concept 생성 경로를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=select.",
+      "template": "$game-design-career:generate-image-assets artifact=[Canonical Artifact] inputs=\"[selected stable asset IDs], [selection receipt]\" 선택한 포트폴리오 cover concept 생성 경로를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=select."
+    },
+    "skill": "generate-image-assets",
+    "skill_chain": [
+      "plan-image-assets",
+      "generate-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "portfolio-project-brief"
+    ],
+    "minimum_outputs": [
+      "mode·selected IDs·provider decision",
+      "prompt·placeholder·provenance receipt",
+      "concept-draft per-asset result",
+      "named human review handoff"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/generate-image-assets/beginner/content.md",
+      "career/visual/generate-image-assets/beginner/evidence.yml",
+      "career/visual/generate-image-assets/beginner/export-manifest.yml",
+      "career/visual/generate-image-assets/beginner/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/generate-image-assets/beginner/content.md",
+      "career/visual/generate-image-assets/beginner/evidence.yml",
+      "career/visual/generate-image-assets/beginner/export-manifest.yml",
+      "career/visual/generate-image-assets/beginner/assets/README.md"
+    ],
+    "human_review_boundary": "art-brief-director owner가 입력, source, rights/attribution, alt text와 handoff를 승인·수정·보류한다. 생성 또는 actual portfolio publication은 named human reviewer evidence 없이는 승인하지 않는다.",
+    "hold_conditions": [
+      "Canonical Artifact 또는 stable asset ID가 없음",
+      "rights/attribution 또는 source가 미정",
+      "named decision owner가 없음"
+    ],
+    "resume_prompt": "generate-image-assets/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s04",
+      "svg": "guides/assets/game-design-career/skills/generate-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/generate-image-assets.png",
+      "alt": "Career 이미지 자산 생성 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/generate-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "선택한 포트폴리오 표지 시안 만들기",
+    "sample_result_excerpt": "표지 자산 ASSET-COVER-01에는 격자 종이 위 규칙 카드와 연필이 놓인 차분한 시안을 선택했습니다. 생성 기록과 프롬프트는 남겼지만 포트폴리오 사용 여부는 시각 담당자 검토 전입니다. (ID: career:generate-image-assets:beginner; 파일: career/visual/generate-image-assets/beginner/content.md)"
+  },
+  {
+    "id": "career:generate-image-assets:standard",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "proof 이미지 receipt와 provenance 기록",
+    "purpose": "선택한 proof 이미지의 provider result, prompt/output digest, receipt와 provenance를 named human review 이전에 기록한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "generate-image-assets",
+      "증빙 가능한 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "proof 이미지 receipt와 provenance 기록에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[selected stable asset IDs]",
+      "[source attribution]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[selected stable asset IDs]",
+      "[source attribution]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source attribution]를 사용해 proof 이미지 receipt와 provenance 기록를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=required.",
+      "template": "@Game Design Career [Canonical Artifact], [selected stable asset IDs], [source attribution]를 사용해 proof 이미지 receipt와 provenance 기록를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=required."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:generate-image-assets artifact=career/sample-artifact inputs=\"sample-input, [source attribution]\" proof 이미지 receipt와 provenance 기록를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=required.",
+      "template": "$game-design-career:generate-image-assets artifact=[Canonical Artifact] inputs=\"[selected stable asset IDs], [source attribution]\" proof 이미지 receipt와 provenance 기록를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=required."
+    },
+    "skill": "generate-image-assets",
+    "skill_chain": [
+      "plan-image-assets",
+      "generate-image-assets",
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "mode·selected IDs·provider decision",
+      "prompt·placeholder·provenance receipt",
+      "concept-draft per-asset result",
+      "named human review handoff"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/generate-image-assets/standard/content.md",
+      "career/visual/generate-image-assets/standard/evidence.yml",
+      "career/visual/generate-image-assets/standard/export-manifest.yml",
+      "career/visual/generate-image-assets/standard/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/generate-image-assets/standard/content.md",
+      "career/visual/generate-image-assets/standard/evidence.yml",
+      "career/visual/generate-image-assets/standard/export-manifest.yml",
+      "career/visual/generate-image-assets/standard/assets/README.md"
+    ],
+    "human_review_boundary": "art-brief-director owner가 입력, source, rights/attribution, alt text와 handoff를 승인·수정·보류한다. 생성 또는 actual portfolio publication은 named human reviewer evidence 없이는 승인하지 않는다.",
+    "hold_conditions": [
+      "Canonical Artifact 또는 stable asset ID가 없음",
+      "rights/attribution 또는 source가 미정",
+      "named decision owner가 없음"
+    ],
+    "resume_prompt": "generate-image-assets/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s04",
+      "svg": "guides/assets/game-design-career/skills/generate-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/generate-image-assets.png",
+      "alt": "Career 이미지 자산 생성 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/generate-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "증명 이미지의 생성 이력과 출처 기록",
+    "sample_result_excerpt": "수정 전후 비교 도표 두 장에 선택 자산 ID, 생성 방식, 프롬프트, 원본 근거 주소를 연결했습니다. 두 결과 모두 사람 검토 전 시안이며 실제 작업 증거를 대신하지 않습니다. (ID: career:generate-image-assets:standard; 파일: career/visual/generate-image-assets/standard/content.md)"
+  },
+  {
+    "id": "career:generate-image-assets:advanced",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "provider failure·provenance·retry handoff",
+    "purpose": "provider failure를 숨기지 않고 prompt·placeholder·provenance를 보존해 재시도 조건과 review handoff를 분리한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "generate-image-assets",
+      "고급 handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "provider failure·provenance·retry handoff에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[failed stable asset ID]",
+      "[retry owner]",
+      "[failure receipt]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[failed stable asset ID]",
+      "[retry owner]",
+      "[failure receipt]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [retry owner], [failure receipt]를 사용해 provider failure·provenance·retry handoff를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=all.",
+      "template": "@Game Design Career [Canonical Artifact], [failed stable asset ID], [retry owner], [failure receipt]를 사용해 provider failure·provenance·retry handoff를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=all."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:generate-image-assets artifact=career/sample-artifact inputs=\"sample-input, [retry owner], [failure receipt]\" provider failure·provenance·retry handoff를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=all.",
+      "template": "$game-design-career:generate-image-assets artifact=[Canonical Artifact] inputs=\"[failed stable asset ID], [retry owner], [failure receipt]\" provider failure·provenance·retry handoff를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=all."
+    },
+    "skill": "generate-image-assets",
+    "skill_chain": [
+      "plan-image-assets",
+      "generate-image-assets",
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "portfolio-backlog"
+    ],
+    "minimum_outputs": [
+      "mode·selected IDs·provider decision",
+      "prompt·placeholder·provenance receipt",
+      "concept-draft per-asset result",
+      "named human review handoff"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/generate-image-assets/advanced/content.md",
+      "career/visual/generate-image-assets/advanced/evidence.yml",
+      "career/visual/generate-image-assets/advanced/export-manifest.yml",
+      "career/visual/generate-image-assets/advanced/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/generate-image-assets/advanced/content.md",
+      "career/visual/generate-image-assets/advanced/evidence.yml",
+      "career/visual/generate-image-assets/advanced/export-manifest.yml",
+      "career/visual/generate-image-assets/advanced/assets/README.md"
+    ],
+    "human_review_boundary": "art-brief-director owner가 입력, source, rights/attribution, alt text와 handoff를 승인·수정·보류한다. 생성 또는 actual portfolio publication은 named human reviewer evidence 없이는 승인하지 않는다.",
+    "hold_conditions": [
+      "Canonical Artifact 또는 stable asset ID가 없음",
+      "rights/attribution 또는 source가 미정",
+      "named decision owner가 없음"
+    ],
+    "resume_prompt": "generate-image-assets/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s04",
+      "svg": "guides/assets/game-design-career/skills/generate-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/generate-image-assets.png",
+      "alt": "Career 이미지 자산 생성 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/generate-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "이미지 생성 실패 기록과 재시도 인계",
+    "sample_result_excerpt": "과정 이미지 ASSET-PROCESS-03 생성이 시간 초과로 멈춰 실패 시각과 사용한 입력을 기록했습니다. 자산 식별자는 유지하고 낮은 해상도 재시도안을 남겼으며 실행 여부는 담당자 검토 뒤 정합니다. (ID: career:generate-image-assets:advanced; 파일: career/visual/generate-image-assets/advanced/content.md)"
+  },
+  {
+    "id": "career:review-image-assets:beginner",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "문서 concept 이미지 검토 요청",
+    "purpose": "concept-draft 이미지를 문서 삽입 후보로 검토하되 portfolio publication이나 실제 game resource를 승인하지 않는다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "review-image-assets",
+      "안전한 시작"
+    ],
+    "level": "beginner",
+    "when_to_use": "문서 concept 이미지 검토 요청에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[stable asset ID]",
+      "[placement]",
+      "[named human reviewer]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[placement]",
+      "[named human reviewer]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [placement], [named human reviewer]를 사용해 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
+      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [placement], [named human reviewer]를 사용해 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [placement], [named human reviewer]\" 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다.",
+      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [placement], [named human reviewer]\" 문서 concept 이미지 검토 요청를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다."
+    },
+    "skill": "review-image-assets",
+    "skill_chain": [
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "stable asset ID finding",
+      "named human decision receipt",
+      "rights/provenance·alt text·readability record",
+      "accepted or held lifecycle transition"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/review-image-assets/beginner/content.md",
+      "career/visual/review-image-assets/beginner/evidence.yml",
+      "career/visual/review-image-assets/beginner/export-manifest.yml",
+      "career/visual/review-image-assets/beginner/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/review-image-assets/beginner/content.md",
+      "career/visual/review-image-assets/beginner/evidence.yml",
+      "career/visual/review-image-assets/beginner/export-manifest.yml",
+      "career/visual/review-image-assets/beginner/assets/README.md"
+    ],
+    "human_review_boundary": "named human reviewer와 rights/visual reviewer owner가 stable asset ID, evidence, rights, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
+    "hold_conditions": [
+      "named human reviewer evidence가 없음",
+      "rights/provenance 또는 attribution/source가 미정",
+      "alt text 또는 readability evidence가 없음"
+    ],
+    "resume_prompt": "review-image-assets/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s13",
+      "svg": "guides/assets/game-design-career/skills/review-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/review-image-assets.png",
+      "alt": "Career 이미지 자산 검토 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/review-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "문서용 이미지 시안 검토 요청",
+    "sample_result_excerpt": "표지 시안은 문서 주제와 맞지만 작은 화면에서 부제가 읽히지 않는다는 의견을 남겼습니다. 글자 크기를 키운 수정안과 권리 근거를 사람이 확인하기 전에는 보류 상태입니다. (ID: career:review-image-assets:beginner; 파일: career/visual/review-image-assets/beginner/content.md)"
+  },
+  {
+    "id": "career:review-image-assets:standard",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "공개 권리·가독성 document approval",
+    "purpose": "공개 권리, source·attribution, alt text, readability와 named human reviewer evidence로 document-approved 전이를 검토한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "review-image-assets",
+      "증빙 가능한 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "공개 권리·가독성 document approval에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "stable asset ID",
+      "targetState=document-approved",
+      "actual user decision",
+      "reviewedAt",
+      "immutable structured host-user-image-decision receipt",
+      "named human reviewer",
+      "rightsDecision",
+      "placement",
+      "alt text",
+      "readability evidence",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[targetState]",
+      "[actual user decision]",
+      "[reviewedAt]",
+      "[immutable host-user-image-decision receipt]",
+      "[named human reviewer]",
+      "[rightsDecision]",
+      "[placement]",
+      "[alt text]",
+      "[readability evidence]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]를 사용해 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]를 사용해 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]\" 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [placement], [alt text], [readability evidence]\" 공개 권리·가독성 document approval를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=document-approved 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
+    },
+    "skill": "review-image-assets",
+    "skill_chain": [
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "portfolio-project-brief"
+    ],
+    "minimum_outputs": [
+      "stable asset ID finding",
+      "named human decision receipt",
+      "rights/provenance·alt text·readability record",
+      "accepted or held lifecycle transition"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/review-image-assets/standard/content.md",
+      "career/visual/review-image-assets/standard/evidence.yml",
+      "career/visual/review-image-assets/standard/export-manifest.yml",
+      "career/visual/review-image-assets/standard/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/review-image-assets/standard/content.md",
+      "career/visual/review-image-assets/standard/evidence.yml",
+      "career/visual/review-image-assets/standard/export-manifest.yml",
+      "career/visual/review-image-assets/standard/assets/README.md"
+    ],
+    "human_review_boundary": "named human reviewer와 rights/visual reviewer owner가 stable asset ID, evidence, rights, placement, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
+    "hold_conditions": [
+      "evidenceKey=targetState — targetState가 누락·불일치",
+      "evidenceKey=actualUserDecision — actual user decision이 누락·불일치",
+      "evidenceKey=reviewedAt — reviewedAt이 누락·불일치",
+      "evidenceKey=hostUserImageDecisionReceipt — immutable structured host-user-image-decision receipt가 누락·불일치",
+      "evidenceKey=namedHumanReviewer — named human reviewer가 없음",
+      "evidenceKey=rightsDecision — rightsDecision evidence가 없음",
+      "evidenceKey=placement — placement가 미정",
+      "evidenceKey=altText — alt text가 미정",
+      "evidenceKey=readability — readability evidence가 미정"
+    ],
+    "resume_prompt": "review-image-assets/standard의 검증된 evidence만 보존하고, repair/verify evidenceKeys=[targetState,actualUserDecision,reviewedAt,hostUserImageDecisionReceipt,namedHumanReviewer,rightsDecision,placement,altText,readability]의 실제 누락·불일치를 각각 보완·검증한 뒤 current state의 hold 지점부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s13",
+      "svg": "guides/assets/game-design-career/skills/review-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/review-image-assets.png",
+      "alt": "Career 이미지 자산 검토 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/review-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "이미지 공개 권리와 문서 가독성 검토",
+    "sample_result_excerpt": "검토한 ASSET-CASE-02는 출처 표기가 확인됐지만 대체 문구가 화면의 핵심 변화를 설명하지 못합니다. 문구 수정과 배치 확인이 끝난 뒤에만 문서 사용 여부를 결정합니다. (ID: career:review-image-assets:standard; 파일: career/visual/review-image-assets/standard/content.md)"
+  },
+  {
+    "id": "career:review-image-assets:advanced",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "production candidate·review cycle 증빙",
+    "purpose": "production-candidate 검토 주기를 기록하되 실제 portfolio publication·game resource 승격·legal approval을 자동 승인하지 않는다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "review-image-assets",
+      "고급 handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "production candidate·review cycle 증빙에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "stable asset ID",
+      "targetState=production-candidate",
+      "actual user decision",
+      "reviewedAt",
+      "immutable structured host-user-image-decision receipt",
+      "named human reviewer",
+      "rightsDecision",
+      "active-rights evidence",
+      "technical fit evidence",
+      "alt text",
+      "readability evidence",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[targetState]",
+      "[actual user decision]",
+      "[reviewedAt]",
+      "[immutable host-user-image-decision receipt]",
+      "[named human reviewer]",
+      "[rightsDecision]",
+      "[active-rights evidence]",
+      "[technical fit evidence]",
+      "[alt text]",
+      "[readability evidence]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [alt text], [readability evidence]를 사용해 production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence, alt text와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "@Game Design Career [Canonical Artifact], [stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [alt text], [readability evidence]를 사용해 production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence, alt text와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:review-image-assets artifact=career/sample-artifact inputs=\"sample-input, [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [alt text], [readability evidence]\" production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence, alt text와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다.",
+      "template": "$game-design-career:review-image-assets artifact=[Canonical Artifact] inputs=\"[stable asset ID], [targetState], [actual user decision], [reviewedAt], [immutable host-user-image-decision receipt], [named human reviewer], [rightsDecision], [active-rights evidence], [technical fit evidence], [alt text], [readability evidence]\" production candidate·review cycle 증빙를 수행해. existing asset와 immutable receipt만 검토하고 provider/image generation 호출 금지다. concept-draft → document-approved → production-candidate를 건너뛰지 않는다. generation은 승인 아님이며 actual portfolio publication과 game resource는 named human reviewer evidence 없이는 자동 승인 금지다. targetState=production-candidate 전이는 actual user decision, reviewedAt, immutable structured host-user-image-decision receipt, rightsDecision, active-rights evidence, technical fit evidence, alt text와 readability evidence가 모두 일치할 때만 검토한다. 누락 또는 불일치면 current state 유지·hold하고 evidence를 보존해 재개한다."
+    },
+    "skill": "review-image-assets",
+    "skill_chain": [
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "stable asset ID finding",
+      "named human decision receipt",
+      "rights/provenance·alt text·readability record",
+      "accepted or held lifecycle transition"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/review-image-assets/advanced/content.md",
+      "career/visual/review-image-assets/advanced/evidence.yml",
+      "career/visual/review-image-assets/advanced/export-manifest.yml",
+      "career/visual/review-image-assets/advanced/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/review-image-assets/advanced/content.md",
+      "career/visual/review-image-assets/advanced/evidence.yml",
+      "career/visual/review-image-assets/advanced/export-manifest.yml",
+      "career/visual/review-image-assets/advanced/assets/README.md"
+    ],
+    "human_review_boundary": "named human reviewer와 production reviewer owner가 stable asset ID, evidence, rights와 active-rights, technical fit, alt text와 readability를 검토해 승인·수정·보류한다. actual portfolio publication과 game resource 승인은 별도 named human reviewer evidence가 필요하다.",
+    "hold_conditions": [
+      "evidenceKey=targetState — targetState가 누락·불일치",
+      "evidenceKey=actualUserDecision — actual user decision이 누락·불일치",
+      "evidenceKey=reviewedAt — reviewedAt이 누락·불일치",
+      "evidenceKey=hostUserImageDecisionReceipt — immutable structured host-user-image-decision receipt가 누락·불일치",
+      "evidenceKey=namedHumanReviewer — named human reviewer가 없음",
+      "evidenceKey=rightsDecision — rightsDecision이 누락·불일치",
+      "evidenceKey=activeRights — active-rights evidence가 누락·불일치",
+      "evidenceKey=technicalFit — technical fit evidence가 누락·불일치",
+      "evidenceKey=altText — alt text가 미정",
+      "evidenceKey=readability — readability evidence가 누락·불일치"
+    ],
+    "resume_prompt": "review-image-assets/advanced의 검증된 evidence만 보존하고, repair/verify evidenceKeys=[targetState,actualUserDecision,reviewedAt,hostUserImageDecisionReceipt,namedHumanReviewer,rightsDecision,activeRights,technicalFit,altText,readability]의 실제 누락·불일치를 각각 보완·검증한 뒤 current state의 hold 지점부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s13",
+      "svg": "guides/assets/game-design-career/skills/review-image-assets.svg",
+      "png": "guides/assets/game-design-career/skills/review-image-assets.png",
+      "alt": "Career 이미지 자산 검토 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/review-image-assets.md",
+      "guides/game-design-career/image-assets.md"
+    ],
+    "display_title": "제작 후보 이미지의 반복 검토 기록",
+    "sample_result_excerpt": "세 번째 검토본은 색 대비 기준을 통과했지만 원본 라이선스의 유효 기간을 다시 확인해야 합니다. 기술 규격은 적합 후보로 표시했고 실제 포트폴리오 공개 승인은 별도로 남겨 뒀습니다. (ID: career:review-image-assets:advanced; 파일: career/visual/review-image-assets/advanced/content.md)"
+  },
+  {
+    "id": "career:visualize-career-roadmap:beginner",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "역할 비교 흐름 시각화",
+    "purpose": "역할군과 인접 경로의 차이를 source-mapped structural workflow로 표현하고 사실·추론·제안을 분리한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "visualize-career-roadmap",
+      "안전한 시작"
+    ],
+    "level": "beginner",
+    "when_to_use": "역할 비교 흐름 시각화에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[role families]",
+      "[source IDs]",
+      "[audience]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[role families]",
+      "[source IDs]",
+      "[audience]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source IDs], [audience]를 사용해 역할 비교 흐름 시각화를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.",
+      "template": "@Game Design Career [Canonical Artifact], [role families], [source IDs], [audience]를 사용해 역할 비교 흐름 시각화를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:visualize-career-roadmap artifact=career/sample-artifact inputs=\"sample-input, [source IDs], [audience]\" 역할 비교 흐름 시각화를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.",
+      "template": "$game-design-career:visualize-career-roadmap artifact=[Canonical Artifact] inputs=\"[role families], [source IDs], [audience]\" 역할 비교 흐름 시각화를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다."
+    },
+    "skill": "visualize-career-roadmap",
+    "skill_chain": [
+      "map-game-design-career",
+      "visualize-career-roadmap"
+    ],
+    "specialist_roles": [
+      "career-strategist",
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-design-role-map"
+    ],
+    "minimum_outputs": [
+      "selectedPresetId·rationale·excluded presets",
+      "source-mapped relationship record",
+      "SVG/PNG state and separated receipts",
+      "resumable QA handoff"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/visualize-career-roadmap/beginner/content.md",
+      "career/visual/visualize-career-roadmap/beginner/evidence.yml",
+      "career/visual/visualize-career-roadmap/beginner/export-manifest.yml",
+      "career/visual/visualize-career-roadmap/beginner/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/visualize-career-roadmap/beginner/content.md",
+      "career/visual/visualize-career-roadmap/beginner/evidence.yml",
+      "career/visual/visualize-career-roadmap/beginner/export-manifest.yml",
+      "career/visual/visualize-career-roadmap/beginner/assets/README.md"
+    ],
+    "human_review_boundary": "game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수정·보류한다. 도식 QA는 portfolio publication 또는 document approval이 아니다.",
+    "hold_conditions": [
+      "source ID 또는 selected preset이 미정",
+      "lint/render/receipt evidence가 없음",
+      "human approval 또는 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "visualize-career-roadmap/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s15",
+      "svg": "guides/assets/game-design-career/skills/visualize-career-roadmap.svg",
+      "png": "guides/assets/game-design-career/skills/visualize-career-roadmap.png",
+      "alt": "게임 기획 커리어 로드맵 시각화 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/visualize-career-roadmap.md",
+      "guides/game-design-career/visualization.md"
+    ],
+    "display_title": "게임 기획 역할 비교 흐름도",
+    "sample_result_excerpt": "관심사에서 시스템 기획과 레벨 기획으로 갈라지고 각 역할의 첫 연습 과제로 이어지는 흐름도를 만들었습니다. 연결선은 역할 지도 초안에 근거하며 멘토 확인 전에는 진로 추천으로 보지 않습니다. (ID: career:visualize-career-roadmap:beginner; 파일: career/visual/visualize-career-roadmap/beginner/content.md)"
+  },
+  {
+    "id": "career:visualize-career-roadmap:standard",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "역량 dependency와 evidence map",
+    "purpose": "역량 dependency와 proof evidence를 숫자나 진척률을 발명하지 않고 editable diagram으로 연결한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "visualize-career-roadmap",
+      "증빙 가능한 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "역량 dependency와 evidence map에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[competency dependency]",
+      "[evidence IDs]",
+      "[selected preset]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[competency dependency]",
+      "[evidence IDs]",
+      "[selected preset]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [evidence IDs], [selected preset]를 사용해 역량 dependency와 evidence map를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.",
+      "template": "@Game Design Career [Canonical Artifact], [competency dependency], [evidence IDs], [selected preset]를 사용해 역량 dependency와 evidence map를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:visualize-career-roadmap artifact=career/sample-artifact inputs=\"sample-input, [evidence IDs], [selected preset]\" 역량 dependency와 evidence map를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.",
+      "template": "$game-design-career:visualize-career-roadmap artifact=[Canonical Artifact] inputs=\"[competency dependency], [evidence IDs], [selected preset]\" 역량 dependency와 evidence map를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다."
+    },
+    "skill": "visualize-career-roadmap",
+    "skill_chain": [
+      "map-game-design-career",
+      "visualize-career-roadmap",
+      "svg-infographic"
+    ],
+    "specialist_roles": [
+      "career-strategist",
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "competency-matrix"
+    ],
+    "minimum_outputs": [
+      "selectedPresetId·rationale·excluded presets",
+      "source-mapped relationship record",
+      "SVG/PNG state and separated receipts",
+      "resumable QA handoff"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/visualize-career-roadmap/standard/content.md",
+      "career/visual/visualize-career-roadmap/standard/evidence.yml",
+      "career/visual/visualize-career-roadmap/standard/export-manifest.yml",
+      "career/visual/visualize-career-roadmap/standard/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/visualize-career-roadmap/standard/content.md",
+      "career/visual/visualize-career-roadmap/standard/evidence.yml",
+      "career/visual/visualize-career-roadmap/standard/export-manifest.yml",
+      "career/visual/visualize-career-roadmap/standard/assets/README.md"
+    ],
+    "human_review_boundary": "game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수정·보류한다. 도식 QA는 portfolio publication 또는 document approval이 아니다.",
+    "hold_conditions": [
+      "source ID 또는 selected preset이 미정",
+      "lint/render/receipt evidence가 없음",
+      "human approval 또는 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "visualize-career-roadmap/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s15",
+      "svg": "guides/assets/game-design-career/skills/visualize-career-roadmap.svg",
+      "png": "guides/assets/game-design-career/skills/visualize-career-roadmap.png",
+      "alt": "게임 기획 커리어 로드맵 시각화 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/visualize-career-roadmap.md",
+      "guides/game-design-career/visualization.md"
+    ],
+    "display_title": "역량의 선후 관계와 증거를 잇는 지도",
+    "sample_result_excerpt": "규칙 모델링을 먼저 익혀야 경제 시뮬레이션 과제를 시작할 수 있도록 선후 관계를 표시했습니다. 각 역량 옆에는 현재 문서 근거와 빈 증거를 함께 두었으며 관계의 타당성은 멘토 검토 전입니다. (ID: career:visualize-career-roadmap:standard; 파일: career/visual/visualize-career-roadmap/standard/content.md)"
+  },
+  {
+    "id": "career:visualize-career-roadmap:advanced",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "Archify 우선 로드맵 fallback·receipt",
+    "purpose": "Archify가 available이면 structural workflow를 우선하고 absence/failure에서는 Skillstead editable SVG와 exact 2× PNG fallback 및 분리된 receipt를 기록한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "visualize-career-roadmap",
+      "고급 handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "Archify 우선 로드맵 fallback·receipt에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[relationship]",
+      "[Archify capability state]",
+      "[human approval owner]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[relationship]",
+      "[Archify capability state]",
+      "[human approval owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [Archify capability state], [human approval owner]를 사용해 Archify 우선 로드맵 fallback·receipt를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.",
+      "template": "@Game Design Career [Canonical Artifact], [relationship], [Archify capability state], [human approval owner]를 사용해 Archify 우선 로드맵 fallback·receipt를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:visualize-career-roadmap artifact=career/sample-artifact inputs=\"sample-input, [Archify capability state], [human approval owner]\" Archify 우선 로드맵 fallback·receipt를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.",
+      "template": "$game-design-career:visualize-career-roadmap artifact=[Canonical Artifact] inputs=\"[relationship], [Archify capability state], [human approval owner]\" Archify 우선 로드맵 fallback·receipt를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다."
+    },
+    "skill": "visualize-career-roadmap",
+    "skill_chain": [
+      "visualize-career-roadmap",
+      "svg-infographic"
+    ],
+    "specialist_roles": [
+      "career-strategist",
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "learning-roadmap"
+    ],
+    "minimum_outputs": [
+      "selectedPresetId·rationale·excluded presets",
+      "source-mapped relationship record",
+      "SVG/PNG state and separated receipts",
+      "resumable QA handoff"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/visualize-career-roadmap/advanced/content.md",
+      "career/visual/visualize-career-roadmap/advanced/evidence.yml",
+      "career/visual/visualize-career-roadmap/advanced/export-manifest.yml",
+      "career/visual/visualize-career-roadmap/advanced/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/visualize-career-roadmap/advanced/content.md",
+      "career/visual/visualize-career-roadmap/advanced/evidence.yml",
+      "career/visual/visualize-career-roadmap/advanced/export-manifest.yml",
+      "career/visual/visualize-career-roadmap/advanced/assets/README.md"
+    ],
+    "human_review_boundary": "game-design-mentor owner가 source mapping, receipt와 human approval를 승인·수정·보류한다. 도식 QA는 portfolio publication 또는 document approval이 아니다.",
+    "hold_conditions": [
+      "source ID 또는 selected preset이 미정",
+      "lint/render/receipt evidence가 없음",
+      "human approval 또는 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "visualize-career-roadmap/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s15",
+      "svg": "guides/assets/game-design-career/skills/visualize-career-roadmap.svg",
+      "png": "guides/assets/game-design-career/skills/visualize-career-roadmap.png",
+      "alt": "게임 기획 커리어 로드맵 시각화 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/visualize-career-roadmap.md",
+      "guides/game-design-career/visualization.md"
+    ],
+    "display_title": "진로 로드맵의 우선 구성과 대체 경로 (Archify)",
+    "sample_result_excerpt": "관계가 많은 12주 로드맵에는 Archify 구성을 우선 선택하고 제외한 두 형식의 이유도 적었습니다. 렌더링이 실패하면 정적 벡터 도식(SVG)으로 넘기는 경로가 있으며 최종 도식은 시각 검토가 필요합니다. (ID: career:visualize-career-roadmap:advanced; 파일: career/visual/visualize-career-roadmap/advanced/content.md)"
+  },
+  {
+    "id": "career:svg-infographic:beginner",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "학습 roadmap SVG 초안",
+    "purpose": "source-mapped 학습 roadmap을 editable SVG로 계획하고 아직 생성·문서·포트폴리오 승인을 주장하지 않는다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "svg-infographic",
+      "안전한 시작"
+    ],
+    "level": "beginner",
+    "when_to_use": "학습 roadmap SVG 초안에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[learning relationship]",
+      "[source IDs]",
+      "[alt text]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[learning relationship]",
+      "[source IDs]",
+      "[alt text]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [source IDs], [alt text]를 사용해 학습 roadmap SVG 초안를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.",
+      "template": "@Game Design Career [Canonical Artifact], [learning relationship], [source IDs], [alt text]를 사용해 학습 roadmap SVG 초안를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:svg-infographic artifact=career/sample-artifact inputs=\"sample-input, [source IDs], [alt text]\" 학습 roadmap SVG 초안를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.",
+      "template": "$game-design-career:svg-infographic artifact=[Canonical Artifact] inputs=\"[learning relationship], [source IDs], [alt text]\" 학습 roadmap SVG 초안를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다."
+    },
+    "skill": "svg-infographic",
+    "skill_chain": [
+      "svg-infographic"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "learning-roadmap"
+    ],
+    "minimum_outputs": [
+      "editable SVG authority",
+      "lint/render commands and receipts",
+      "exact 2× PNG state",
+      "accessibility and human approval record"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/svg-infographic/beginner/content.md",
+      "career/visual/svg-infographic/beginner/evidence.yml",
+      "career/visual/svg-infographic/beginner/export-manifest.yml",
+      "career/visual/svg-infographic/beginner/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/svg-infographic/beginner/content.md",
+      "career/visual/svg-infographic/beginner/evidence.yml",
+      "career/visual/svg-infographic/beginner/export-manifest.yml",
+      "career/visual/svg-infographic/beginner/assets/README.md"
+    ],
+    "human_review_boundary": "game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수정·보류한다. 도식 QA는 portfolio publication 또는 document approval이 아니다.",
+    "hold_conditions": [
+      "source ID 또는 selected preset이 미정",
+      "lint/render/receipt evidence가 없음",
+      "human approval 또는 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "svg-infographic/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s14",
+      "svg": "guides/assets/game-design-career/skills/svg-infographic.svg",
+      "png": "guides/assets/game-design-career/skills/svg-infographic.png",
+      "alt": "Career SVG 인포그래픽 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/svg-infographic.md",
+      "guides/game-design-career/visualization.md"
+    ],
+    "display_title": "편집 가능한 학습 로드맵 초안 (SVG)",
+    "sample_result_excerpt": "1~4주 규칙표, 5~8주 시뮬레이션, 9~12주 검토 과정을 편집 가능한 벡터 도식(SVG)으로 배치했습니다. PNG 출력은 아직 만들지 않았고 읽기 순서와 색 대비는 사람 검토 전입니다. (ID: career:svg-infographic:beginner; 파일: career/visual/svg-infographic/beginner/content.md)"
+  },
+  {
+    "id": "career:svg-infographic:standard",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "evidence map editable SVG와 render 상태",
+    "purpose": "evidence map의 SVG authority, derivative PNG, lint·render receipt와 accessibility metadata를 분리한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "svg-infographic",
+      "증빙 가능한 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "evidence map editable SVG와 render 상태에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[selected preset]",
+      "[evidence IDs]",
+      "[output directory]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[selected preset]",
+      "[evidence IDs]",
+      "[output directory]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [evidence IDs], [output directory]를 사용해 evidence map editable SVG와 render 상태를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.",
+      "template": "@Game Design Career [Canonical Artifact], [selected preset], [evidence IDs], [output directory]를 사용해 evidence map editable SVG와 render 상태를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:svg-infographic artifact=career/sample-artifact inputs=\"sample-input, [evidence IDs], [output directory]\" evidence map editable SVG와 render 상태를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.",
+      "template": "$game-design-career:svg-infographic artifact=[Canonical Artifact] inputs=\"[selected preset], [evidence IDs], [output directory]\" evidence map editable SVG와 render 상태를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다."
+    },
+    "skill": "svg-infographic",
+    "skill_chain": [
+      "svg-infographic",
+      "visualize-career-roadmap"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "competency-matrix"
+    ],
+    "minimum_outputs": [
+      "editable SVG authority",
+      "lint/render commands and receipts",
+      "exact 2× PNG state",
+      "accessibility and human approval record"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/svg-infographic/standard/content.md",
+      "career/visual/svg-infographic/standard/evidence.yml",
+      "career/visual/svg-infographic/standard/export-manifest.yml",
+      "career/visual/svg-infographic/standard/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/svg-infographic/standard/content.md",
+      "career/visual/svg-infographic/standard/evidence.yml",
+      "career/visual/svg-infographic/standard/export-manifest.yml",
+      "career/visual/svg-infographic/standard/assets/README.md"
+    ],
+    "human_review_boundary": "game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수정·보류한다. 도식 QA는 portfolio publication 또는 document approval이 아니다.",
+    "hold_conditions": [
+      "source ID 또는 selected preset이 미정",
+      "lint/render/receipt evidence가 없음",
+      "human approval 또는 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "svg-infographic/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s14",
+      "svg": "guides/assets/game-design-career/skills/svg-infographic.svg",
+      "png": "guides/assets/game-design-career/skills/svg-infographic.png",
+      "alt": "Career SVG 인포그래픽 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/svg-infographic.md",
+      "guides/game-design-career/visualization.md"
+    ],
+    "display_title": "편집 가능한 근거 지도와 렌더링 상태",
+    "sample_result_excerpt": "역량 노드 여섯 개와 근거 문서 네 개를 잇는 벡터 도식(SVG)을 만들고 렌더링 명령 결과를 기록했습니다. 2배 PNG 출력은 생성됐지만 두 연결선의 겹침 때문에 시각 검토가 더 필요합니다. (ID: career:svg-infographic:standard; 파일: career/visual/svg-infographic/standard/content.md)"
+  },
+  {
+    "id": "career:svg-infographic:advanced",
+    "kind": "skill-template",
+    "product": "career",
+    "title": "lint·2× render·접근성·승인 SVG QA",
+    "purpose": "lint 0 warning/error, exact 2× PNG, accessibility와 human approval evidence를 갖춘 구조 SVG QA를 수행한다.",
+    "audiences": [
+      "game-designer",
+      "career-candidate"
+    ],
+    "intents": [
+      "svg-infographic",
+      "고급 handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "lint·2× render·접근성·승인 SVG QA에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.",
+    "when_not_to_use": "사실이 아닌 경력·기여·권리·승인을 만들어 내거나 채용·공개를 보장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "[editable SVG]",
+      "[human approval owner]",
+      "[renderer evidence]",
+      "source·attribution 또는 미정 기록",
+      "owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent",
+      "existing evidence path"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[editable SVG]",
+      "[human approval owner]",
+      "[renderer evidence]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career career/sample-artifact, sample-input, [human approval owner], [renderer evidence]를 사용해 lint·2× render·접근성·승인 SVG QA를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.",
+      "template": "@Game Design Career [Canonical Artifact], [editable SVG], [human approval owner], [renderer evidence]를 사용해 lint·2× render·접근성·승인 SVG QA를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:svg-infographic artifact=career/sample-artifact inputs=\"sample-input, [human approval owner], [renderer evidence]\" lint·2× render·접근성·승인 SVG QA를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.",
+      "template": "$game-design-career:svg-infographic artifact=[Canonical Artifact] inputs=\"[editable SVG], [human approval owner], [renderer evidence]\" lint·2× render·접근성·승인 SVG QA를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다."
+    },
+    "skill": "svg-infographic",
+    "skill_chain": [
+      "svg-infographic",
+      "visualize-career-roadmap"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "learning-roadmap"
+    ],
+    "minimum_outputs": [
+      "editable SVG authority",
+      "lint/render commands and receipts",
+      "exact 2× PNG state",
+      "accessibility and human approval record"
+    ],
+    "optional_outputs": [
+      "unresolved blocker",
+      "alternative presentation"
+    ],
+    "extended_outputs": [
+      "evidence.yml receipt",
+      "review handoff",
+      "resumable next action"
+    ],
+    "expected_file_tree": [
+      "career/visual/svg-infographic/advanced/content.md",
+      "career/visual/svg-infographic/advanced/evidence.yml",
+      "career/visual/svg-infographic/advanced/export-manifest.yml",
+      "career/visual/svg-infographic/advanced/assets/README.md"
+    ],
+    "read_order": [
+      "career/visual/svg-infographic/advanced/content.md",
+      "career/visual/svg-infographic/advanced/evidence.yml",
+      "career/visual/svg-infographic/advanced/export-manifest.yml",
+      "career/visual/svg-infographic/advanced/assets/README.md"
+    ],
+    "human_review_boundary": "game-design-mentor owner가 source mapping, receipt와 human approval를 승인·수정·보류한다. 도식 QA는 portfolio publication 또는 document approval이 아니다.",
+    "hold_conditions": [
+      "source ID 또는 selected preset이 미정",
+      "lint/render/receipt evidence가 없음",
+      "human approval 또는 accessibility evidence가 없음"
+    ],
+    "resume_prompt": "svg-infographic/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. 개인정보(PII), 비공개 자료, 회사 자산, private material, API keys 또는 credentials를 요청·공개하지 않는다. attribution과 source가 없으면 공개 권리도 미정으로 보류한다.",
+    "diagram_binding": {
+      "id": "ca-s14",
+      "svg": "guides/assets/game-design-career/skills/svg-infographic.svg",
+      "png": "guides/assets/game-design-career/skills/svg-infographic.png",
+      "alt": "Career SVG 인포그래픽 직접 호출 흐름"
+    },
+    "related_use_cases": [],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/skills/svg-infographic.md",
+      "guides/game-design-career/visualization.md"
+    ],
+    "display_title": "벡터 도식의 문법·2배 렌더링·접근성 종합 점검",
+    "sample_result_excerpt": "벡터 도식의 SVG 문법 검사와 정확한 2배 PNG 렌더링은 통과했지만 스크린 리더용 제목이 두 노드를 구분하지 못했습니다. 접근성 문구를 수정한 뒤 멘토가 최종 사용 여부를 검토합니다. (ID: career:svg-infographic:advanced; 파일: career/visual/svg-infographic/advanced/content.md)"
+  }
+]

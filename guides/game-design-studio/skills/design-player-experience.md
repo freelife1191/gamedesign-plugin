@@ -117,3 +117,11 @@ $game-design-studio:review-game-design artifact=<artifact-path> 기존 evidence/
 ## 관련 문서
 
 [ui-ux-flow-state 템플릿](../templates.md#ui-ux-flow-state), [review-game-design 스킬](./review-game-design.md), [스킬 선택표](README.md), [제품 workflow](../workflow.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:design-player-experience -->
+### 재사용 프롬프트 템플릿
+
+- [beginner — 행동과 피드백이 있는 첫 세션 UX](../../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencebeginner)
+- [standard — Onboarding과 접근성을 검토하는 플레이어 경험](../../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard)
+- [advanced — 멀티모달 UX와 책임 gate를 갖춘 플레이어 경험](../../prompt-templates/studio/design-player-experience.md#studiodesign-player-experienceadvanced)
+<!-- PROMPT-TEMPLATES:END game-design-studio:design-player-experience -->

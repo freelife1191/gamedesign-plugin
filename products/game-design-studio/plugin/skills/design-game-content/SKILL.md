@@ -43,13 +43,15 @@ Produce `narrative-quest-npc` with stable sections for purpose, system inputs, c
 
 ## Responsible-design gates
 
-Read [gates.json](../../references/shared/responsible-design/gates.json) as the authority before evaluating gates. Ask every gate's `applicability_questions`, gather its `evidence_fields`, and keep its declared approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When a gate is applicable, initialize `pending`; otherwise use `not-applicable`. Only `not-applicable`, `pending`, `blocked`, and `approved` are lifecycle values. Missing evidence cannot become approval.
+Read [gates.json](../../../../../shared/responsible-design/gates.json) as the authority before evaluating gates. Ask every gate's `applicability_questions`, gather its `evidence_fields`, and keep its declared approver. Cover `ai-rights-human-approval`, `accessibility`, `economy-transparency`, `liveops-experiment`, `ugc-safety`, `ai-npc-safety`, and `scope-control`. When a gate is applicable, initialize `pending`; otherwise use `not-applicable`. Only `not-applicable`, `pending`, `blocked`, and `approved` are lifecycle values. Missing evidence cannot become approval.
 
 ## Role reviewers
 
 - `content-narrative-designer`: validate purpose, pacing, strategy, telegraph, outcomes, rewards, and repeatability.
 - `lead-game-designer`: validate vision, pillar, loop, and meaningful-choice alignment.
 - `production-feasibility-critic`: validate asset counts, dependencies, pipeline evidence, capacity, and scope.
+- `combat-encounter-reviewer`: when the selected content intent matches its routing trigger, validate telegraphs, counterplay, recovery, dominant combinations, and boss trivialization as findings only.
+- `level-puzzle-reviewer`: when the selected content intent matches its routing trigger, validate paths, feedback, reset/retry, recovery, progression blocks, and accessibility alternatives as findings only.
 
 ## Completion checks
 

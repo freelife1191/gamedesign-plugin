@@ -12,19 +12,50 @@ const sharedMappings = {
   templates: ["shared/templates", "assets/shared/templates"],
   "responsible-design": ["shared/responsible-design", "references/shared/responsible-design"],
   export: ["shared/export", "references/shared/export"],
-  vendor: ["shared/vendor/skillstead/svg-infographic/0.8.3", "skills/svg-infographic"],
+  vendor: ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"],
+  archify: ["shared/vendor/archify/archify/2.13.0", "skills/archify"],
+  "im-not-ai": ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
   "document-quality": ["shared/document-quality", "references/shared/document-quality"],
   "image-assets": ["shared/image-assets", "references/shared/image-assets"],
 };
 const sourceOnlySkillsteadFallbacks = Object.freeze({
   "game-design-career": Object.freeze({
     path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
-    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
+    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
   "game-design-studio": Object.freeze({
     path: "skills/visualize-game-design/scripts/run-skillstead.mjs",
-    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
+    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
+});
+const packageLinkProjections = Object.freeze({
+  "game-design-studio": Object.freeze([
+    Object.freeze({
+      path: /^skills\/[^/]+\/SKILL\.md$/u,
+      source: "../../../../../shared/responsible-design/gates.json",
+      package: "../../references/shared/responsible-design/gates.json",
+    }),
+    Object.freeze({
+      path: /^references\/methods\/[^/]+\.md$/u,
+      source: "../../../../../shared/responsible-design/gates.json",
+      package: "../shared/responsible-design/gates.json",
+    }),
+    Object.freeze({
+      path: /^references\/methods\/[^/]+\.md$/u,
+      source: "../../../../../shared/knowledge/trends/2026-current-practices.md",
+      package: "../shared/knowledge/trends/2026-current-practices.md",
+    }),
+    Object.freeze({
+      path: /^references\/methods\/[^/]+\.md$/u,
+      source: "../../../../../shared/knowledge/trends/source-register.json",
+      package: "../shared/knowledge/trends/source-register.json",
+    }),
+    Object.freeze({
+      path: /^skills\/review-game-design\/SKILL\.md$/u,
+      source: "../../../../../shared/templates/review-finding.md",
+      package: "../../assets/shared/templates/review-finding.md",
+    }),
+  ]),
 });
 const snapshotStagingCapabilities = new WeakSet();
 
@@ -250,6 +281,18 @@ function removeSourceOnlySkillsteadFallback(entry, productName) {
   return { ...entry, bytes: Buffer.from(source.replace(fallback.source, "")) };
 }
 
+function projectPackageLocalLinks(entry, productName) {
+  const projections = packageLinkProjections[productName];
+  if (!projections) return entry;
+
+  let source = entry.bytes.toString("utf8");
+  for (const projection of projections) {
+    if (!projection.path.test(entry.relativePath)) continue;
+    source = source.replaceAll(`](${projection.source})`, `](${projection.package})`);
+  }
+  return { ...entry, bytes: Buffer.from(source) };
+}
+
 function isRealEnvironmentFile(relativePath) {
   const name = path.posix.basename(relativePath);
   return name === ".env" || (name.startsWith(".env.") && name !== ".env.example");
@@ -322,6 +365,19 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       if (!example) throw new Error("Missing shared/image-assets/.env.example");
       addEntry(targets, example, "", "shared:image-assets-root-example");
     }
+    if (moduleName === "im-not-ai") {
+      const license = await readFile(path.join(absoluteRepoRoot, "shared/vendor/im-not-ai/LICENSE"));
+      addEntry(targets, { relativePath: "LICENSE", bytes: license }, "third-party/im-not-ai", "shared:im-not-ai-license");
+    }
+    if (moduleName === "archify") {
+      const lock = await readFile(path.join(absoluteRepoRoot, "shared/vendor/archify/vendor.lock.json"));
+      addEntry(
+        targets,
+        { relativePath: "vendor.lock.json", bytes: lock },
+        "references/shared/vendor/archify",
+        "shared:archify-lock",
+      );
+    }
   }
 
   for (const [sourceRelative, destinationPrefix] of [["shared/hooks", "hooks"], ["shared/scripts", "scripts"]]) {
@@ -340,7 +396,14 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
     const sourceDirectory = joinWithin(productRoot, sourceRoot, "product source root");
     const entries = await collectTree(sourceDirectory, { label: `products/${productName}/${sourceRoot}` });
     assertNoRealEnvironmentFiles(entries, `products/${productName}/${sourceRoot}`);
-    for (const entry of entries) addEntry(targets, removeSourceOnlySkillsteadFallback(entry, productName), "", `product:${sourceRoot}`);
+    for (const entry of entries) {
+      addEntry(
+        targets,
+        projectPackageLocalLinks(removeSourceOnlySkillsteadFallback(entry, productName), productName),
+        "",
+        `product:${sourceRoot}`,
+      );
+    }
   }
 
   const entries = [...targets.values()].sort((left, right) => comparePaths(left.relativePath, right.relativePath));

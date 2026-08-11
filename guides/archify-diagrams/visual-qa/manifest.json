@@ -1,0 +1,429 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "id": "studio-project-workflow",
+      "specification_sha256": "2616dee286467b2d84a9e043d5b38df1a6f5ff3b3f93fda7d4dfc61ee19666b7",
+      "artifact_sha256": "2bf1cb76771455e54cb84ea8e58c7d7891c8e2bafa5be578b42552c5c232e570",
+      "reviewer": "Codex 헤드리스 시각 QA",
+      "review_method": "headless-original-and-fit",
+      "correction_rounds": 1,
+      "verdict": "passed",
+      "renders": {
+        "read": {
+          "path": "renders/studio/studio-project-workflow/read.png",
+          "sha256": "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e",
+          "width": 1600,
+          "height": 1735
+        },
+        "light": {
+          "path": "renders/studio/studio-project-workflow/light.png",
+          "sha256": "47f1d6966c0a22eab873a4afc572f7f8f5376b98358cb5417b0d69924d6b50e9",
+          "width": 1600,
+          "height": 1735
+        },
+        "dark": {
+          "path": "renders/studio/studio-project-workflow/dark.png",
+          "sha256": "64941edeb4e2d70b46a390aecd9d42af338d40f4e6e44c8f5ebae35f9b86eed0",
+          "width": 1600,
+          "height": 1735
+        },
+        "guided_views": [
+          {
+            "id": "view-vision-to-review",
+            "path": "renders/studio/studio-project-workflow/view-vision-to-review.png",
+            "sha256": "77b2d4c72cc9f015e8880127e0d96020e778222ff6485375fa8b087b804096f0",
+            "width": 1600,
+            "height": 1836
+          },
+          {
+            "id": "view-asset-evidence",
+            "path": "renders/studio/studio-project-workflow/view-asset-evidence.png",
+            "sha256": "a61f494c3347d08a1d7a2f04e38ff6da91350888bcf8ef238bfcba52457435b7",
+            "width": 1600,
+            "height": 1836
+          },
+          {
+            "id": "view-resume-contract",
+            "path": "renders/studio/studio-project-workflow/view-resume-contract.png",
+            "sha256": "2bf1cf71e92e0290295bee4be1b002b4ef8f0d8f898e520e931360f69626981c",
+            "width": 1600,
+            "height": 1836
+          }
+        ]
+      },
+      "readme_preview": null,
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
+      "defects": [
+        {
+          "view": "view-resume-contract",
+          "subject": "재개 경로 프레이밍",
+          "symptom": "초기 재개 경로가 검토·자산 노드와 겹쳤습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "한국어 최종 사양을 다시 검증하고 1600px 원본 캡처에서 재개 경로와 노드 경계를 확인했습니다."
+        }
+      ]
+    },
+    {
+      "id": "career-evidence-workflow",
+      "specification_sha256": "37fceb8e99e52c3aa1696213c94172ea3837fd7f6e2ce38b51eecdbfc2ad4407",
+      "artifact_sha256": "aa426208a1a6b8228757b571c58cc75576ce9a518b5391029898f5c9ac7b4afc",
+      "reviewer": "Codex 헤드리스 시각 QA",
+      "review_method": "headless-original-and-fit",
+      "correction_rounds": 2,
+      "verdict": "passed",
+      "renders": {
+        "read": {
+          "path": "renders/career/career-evidence-workflow/read.png",
+          "sha256": "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
+          "width": 1600,
+          "height": 1611
+        },
+        "light": {
+          "path": "renders/career/career-evidence-workflow/light.png",
+          "sha256": "2919865b5a4f1782b76262c15d82dcc15131eaf66cee8fae384004b8c0e74398",
+          "width": 1600,
+          "height": 1611
+        },
+        "dark": {
+          "path": "renders/career/career-evidence-workflow/dark.png",
+          "sha256": "2430f591415488413da9a87ed36e81ca12a629083d4690cc649b0c9ec51b6eb0",
+          "width": 1600,
+          "height": 1611
+        },
+        "guided_views": [
+          {
+            "id": "view-evidence-path",
+            "path": "renders/career/career-evidence-workflow/view-evidence-path.png",
+            "sha256": "cf6686d43fa15f93ddbc0fee6f48b511a2284a9349fc59327f0a8090125c260f",
+            "width": 1600,
+            "height": 1712
+          },
+          {
+            "id": "view-career-routes",
+            "path": "renders/career/career-evidence-workflow/view-career-routes.png",
+            "sha256": "b85a88a1446e136dcc03e733113cd3d3c2c707622d5a1bb258c2b1833bd69bbe",
+            "width": 1600,
+            "height": 1712
+          },
+          {
+            "id": "view-review-layers",
+            "path": "renders/career/career-evidence-workflow/view-review-layers.png",
+            "sha256": "9a417c3461319614bb427c6b02b8b90d2ed81d350c81fc71499976f7959e2f6d",
+            "width": 1600,
+            "height": 1712
+          },
+          {
+            "id": "view-resume-contract",
+            "path": "renders/career/career-evidence-workflow/view-resume-contract.png",
+            "sha256": "791ecb7427cbfe29d4c310c7c112f273633691f7b7a6d7883b84f61163602ec9",
+            "width": 1600,
+            "height": 1712
+          }
+        ]
+      },
+      "readme_preview": null,
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
+      "defects": [
+        {
+          "view": "view-career-routes",
+          "subject": "경력 경로 프레이밍",
+          "symptom": "초기 확대 화면에서 경력 경로의 우측 프레임이 잘렸습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "포커스 범위를 다시 지정하고 1600px 원본 캡처에서 프로젝트·포트폴리오·검토 경로를 확인했습니다."
+        },
+        {
+          "view": "view-resume-contract",
+          "subject": "보류 재개 주석 간격",
+          "symptom": "초기 보류 재개 주석이 사람 검토 노드와 가까웠습니다.",
+          "correction_outcome": "resolved",
+          "round": 2,
+          "correction_evidence": "한국어 최종 사양의 보류·재개 화면을 다시 캡처해 선택 노드와 경로 라벨의 분리를 확인했습니다."
+        }
+      ]
+    },
+    {
+      "id": "suite-studio-career-handoff",
+      "specification_sha256": "cbd81d4ce71e00082a226d094e5aafa1f9b2fdaf53754080a412df94ae717368",
+      "artifact_sha256": "6928403d8603dae09d80a9ff2ee6b1fdc8fdfd9c77f3b11d1d410a55073e3a00",
+      "reviewer": "Codex 헤드리스 시각 QA",
+      "review_method": "headless-original-and-fit",
+      "correction_rounds": 2,
+      "verdict": "passed",
+      "renders": {
+        "read": {
+          "path": "renders/suite/suite-studio-career-handoff/read.png",
+          "sha256": "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983",
+          "width": 1600,
+          "height": 1125
+        },
+        "light": {
+          "path": "renders/suite/suite-studio-career-handoff/light.png",
+          "sha256": "21015f832e47228dcda5b5b15c9b6ae7284af17a92795c8844ca5c9902acd63b",
+          "width": 1600,
+          "height": 1125
+        },
+        "dark": {
+          "path": "renders/suite/suite-studio-career-handoff/dark.png",
+          "sha256": "8d373d1ed6e60dee31d024422e2404c34cc82f1a16fd40e58e4a6d71d8129a50",
+          "width": 1600,
+          "height": 1125
+        },
+        "guided_views": [
+          {
+            "id": "view-bounded-handoff",
+            "path": "renders/suite/suite-studio-career-handoff/view-bounded-handoff.png",
+            "sha256": "64f885cc2158fa13373d1e95bf420700c6f4fd3d493ae41e9c86cefe35c2752b",
+            "width": 1600,
+            "height": 1225
+          },
+          {
+            "id": "view-human-approval",
+            "path": "renders/suite/suite-studio-career-handoff/view-human-approval.png",
+            "sha256": "a1b00ef6762fa9524a3134dc30fd4a941d33cc5d958538c27ca057d3bc7b00fd",
+            "width": 1600,
+            "height": 1225
+          },
+          {
+            "id": "view-resume-held-review",
+            "path": "renders/suite/suite-studio-career-handoff/view-resume-held-review.png",
+            "sha256": "02b7a025652678995258d5ecd9d65dd8c2117c8bb4c2ceb25d09302e4e76f711",
+            "width": 1600,
+            "height": 1225
+          }
+        ]
+      },
+      "readme_preview": null,
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
+      "defects": [
+        {
+          "view": "view-resume-held-review",
+          "subject": "보류 검토 재개 프레이밍",
+          "symptom": "초기 안내 화면에서 영수증과 보류 경로 일부가 잘렸습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "담당자·보류·승인 영수증 전체를 포함하도록 포커스를 수정하고 원본 크기로 확인했습니다."
+        },
+        {
+          "view": "view-resume-held-review",
+          "subject": "제품 경계 가독성",
+          "symptom": "초기 화면에서 스튜디오와 커리어 경계가 포커스 가장자리와 겹쳤습니다.",
+          "correction_outcome": "resolved",
+          "round": 2,
+          "correction_evidence": "한국어 최종 사양을 다시 캡처해 담당자·커리어 경계·승인 영수증의 구분과 재개 경로를 확인했습니다."
+        }
+      ]
+    },
+    {
+      "id": "suite-plugin-system-architecture",
+      "specification_sha256": "f32a1cef7643a1fb735b282ea76d5f72782c221e7a165be0c032fa2f8d60280d",
+      "artifact_sha256": "2eb2aab316eadde477487fe59d71eb98cdfe54c3e14b58a0514965d67eaf75f1",
+      "reviewer": "Codex 헤드리스 시각 QA",
+      "review_method": "headless-original-and-fit",
+      "correction_rounds": 1,
+      "verdict": "passed",
+      "renders": {
+        "read": {
+          "path": "renders/suite/suite-plugin-system-architecture/read.png",
+          "sha256": "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f",
+          "width": 1600,
+          "height": 1200
+        },
+        "light": {
+          "path": "renders/suite/suite-plugin-system-architecture/light.png",
+          "sha256": "ec53d27f768b843223a7a6b0c59e6beb300177b35f737bf58251d268c02acd53",
+          "width": 1600,
+          "height": 1200
+        },
+        "dark": {
+          "path": "renders/suite/suite-plugin-system-architecture/dark.png",
+          "sha256": "ed05cf0f804e64f822860ac9638344212e2f926e43cd89225af0c4f964b0400c",
+          "width": 1600,
+          "height": 1200
+        },
+        "guided_views": [
+          {
+            "id": "view-plugin-boundaries",
+            "path": "renders/suite/suite-plugin-system-architecture/view-plugin-boundaries.png",
+            "sha256": "e9d925b9c6163eb8f22c4b495ad552040538b108a51290648787c3a20ba94322",
+            "width": 1600,
+            "height": 1200
+          },
+          {
+            "id": "view-artifact-validation",
+            "path": "renders/suite/suite-plugin-system-architecture/view-artifact-validation.png",
+            "sha256": "2b283c792f4fa5fc339ebb125ef6edeec02a29cc11b1658a6566cf8404e3bc09",
+            "width": 1600,
+            "height": 1200
+          },
+          {
+            "id": "view-human-approval",
+            "path": "renders/suite/suite-plugin-system-architecture/view-human-approval.png",
+            "sha256": "b1439bc204b49b18f6fcc91b4d9d977bf9e6db230d63fd46775de454fa7fb755",
+            "width": 1600,
+            "height": 1200
+          }
+        ]
+      },
+      "readme_preview": {
+        "path": "renders/suite/suite-plugin-system-architecture/readme-preview.png",
+        "sha256": "1c416ff0b977c4c9fc7f11471709e9e6f883bb87723775a779ec8f98216d2733",
+        "width": 1600,
+        "height": 900
+      },
+      "checks": {
+        "text_clipping": "passed",
+        "glyph_distortion": "passed",
+        "blur_or_tofu": "passed",
+        "node_text_collision": "passed",
+        "edge_node_collision": "passed",
+        "edge_label_collision": "passed",
+        "ambiguous_corridor": "passed",
+        "branch_merge_retry_resume": "passed",
+        "rail_legend_footer": "passed",
+        "light_dark_contrast": "passed",
+        "guided_view_usefulness": "passed",
+        "within_product_diversity": "passed",
+        "cross_product_distinction": "passed"
+      },
+      "defects": [
+        {
+          "view": "view-human-approval",
+          "subject": "한국어 우선 안내와 검토 보류 재개 경로",
+          "symptom": "이전 화면은 영어 우선 용어와 희미한 보류·재개 경로 때문에 사람 검토·승인 흐름을 빠르게 읽기 어려웠습니다.",
+          "correction_outcome": "resolved",
+          "round": 1,
+          "correction_evidence": "한국어 우선 사양을 Archify 9개 검사로 재검증하고, 1600px 원본과 맞춤 화면에서 자동 검증·검토 보류·수정·재검토·사람 검토·승인 경로를 확인했습니다."
+        }
+      ]
+    }
+  ],
+  "contact_sheets": [
+    {
+      "html": "all.html",
+      "html_sha256": "72e9fd9c4aa5e2c636b96a0ef4d372256292548460c1f07a0120129710160796",
+      "png": "all.png",
+      "png_sha256": "fd18dd2dcaa2b9ff811792bd6cbee4e5f23c6fcfbe4696986736c7bcb25c8e7a",
+      "width": 1800,
+      "height": 6540,
+      "source_read_sha256": [
+        "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e",
+        "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
+        "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983",
+        "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f"
+      ]
+    },
+    {
+      "html": "product-career.html",
+      "html_sha256": "ee1dfb8ed062eb271eb7e17b34402f7ddbd6e51cfc75824b957306f94bb9dc21",
+      "png": "product-career.png",
+      "png_sha256": "07181b5a392b1980bc7a9a500eec0e81744a337137a0aab87164b7ea99273101",
+      "width": 1800,
+      "height": 1887,
+      "source_read_sha256": [
+        "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d"
+      ]
+    },
+    {
+      "html": "product-studio.html",
+      "html_sha256": "0ed7bb72a8470d3a8d6d74baca55d655879547f3adf723e8b6bdd765b33e08bd",
+      "png": "product-studio.png",
+      "png_sha256": "0ceff88f2d55bcccd9edbda71eb837935dcfa2fe9f286420e0f739d5b93c2422",
+      "width": 1800,
+      "height": 2011,
+      "source_read_sha256": [
+        "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e"
+      ]
+    },
+    {
+      "html": "product-suite.html",
+      "html_sha256": "a750e193a69b1f73b318d0dd4819899b9141663d3601f18497c6bb6d6a7cd3d3",
+      "png": "product-suite.png",
+      "png_sha256": "40aae00139e5e43bea49b3672fc2ac81591d256335efafa5b036dab695427bea",
+      "width": 1800,
+      "height": 2799,
+      "source_read_sha256": [
+        "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983",
+        "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f"
+      ]
+    },
+    {
+      "html": "type-architecture.html",
+      "html_sha256": "aba168bd542cf3dda2c57f2138926e703ca89b6559377435c93c30e62c017ade",
+      "png": "type-architecture.png",
+      "png_sha256": "abda7c84e2e8e7e32cd0e8be891f50d1efa940aa92d03812004d47719d66cf38",
+      "width": 1800,
+      "height": 1476,
+      "source_read_sha256": [
+        "aac4e781c79762547698c918a2f995f7978ba2052c34c65dfd2e2cc36c186c7f"
+      ]
+    },
+    {
+      "html": "type-dataflow.html",
+      "html_sha256": "200e66f3e103e26af1d437cead9999054b81fe180d8024547e622e4438c0ea45",
+      "png": "type-dataflow.png",
+      "png_sha256": "3e7eba38f939d44c372ab0398c81fad1c99e8aed758b5861fa9e66e8f5f5b3f7",
+      "width": 1800,
+      "height": 1401,
+      "source_read_sha256": [
+        "2d2ab4d1cb65263e3979b9a11e953a4cbdfcafff872f8fc5b8790ce0edabf983"
+      ]
+    },
+    {
+      "html": "type-workflow.html",
+      "html_sha256": "ef38992bd3de26d5b8196c12d9c416ed2594ec057594e139d32b24ff164252b4",
+      "png": "type-workflow.png",
+      "png_sha256": "c92d2a5d03e7f3acfd64d6f88ee66d235eb8e93e1afa71aa173c8ab46c353749",
+      "width": 1800,
+      "height": 3820,
+      "source_read_sha256": [
+        "dafeb8a0c16c1a1ce9f858337edc9503a7f9cd229b3040572a9b2f165033256d",
+        "be9453f78929ea7827bba21722c77cee975c4afe2d8a29f9e2189708916b080e"
+      ]
+    }
+  ]
+}

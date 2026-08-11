@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 14개, 일반 역할 7개와 이미지 전문 역할 2개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, 17개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 15개입니다.
+플러그인은 제품 스킬 15개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 구조 HTML 도식용 Archify, 한국어 문장 검토용 humanize-korean, Skillstead `svg-infographic` 0.9.0을 함께 번들해 설치 스킬이 18개입니다.
 
 ## 설치
 
@@ -78,10 +78,12 @@ codex plugin marketplace remove game-design-suite
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
-├── skills/ (15개)
-│   ├── <14개 Studio 제품 스킬>/
+├── skills/ (18개)
+│   ├── <15개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
-│   └── svg-infographic/             # vendored Skillstead 0.8.3
+│   ├── archify/                      # vendored Archify 2.13.0
+│   ├── humanize-korean/              # vendored im-not-ai
+│   └── svg-infographic/              # vendored Skillstead 0.9.0
 ├── agents/ (9개)                    # 일반 7개와 이미지 전문 2개의 이식 가능한 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
@@ -125,7 +127,7 @@ plugins/game-design-studio/
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
-검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (15개)`는 제품 스킬 14개와 `skills/svg-infographic/`이고 `agents/ (9개)`는 일반 registry 7개와 image specialist registry 2개로, 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
+검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (18개)`는 제품 스킬 15개와 `skills/archify/`, `skills/humanize-korean/`, `skills/svg-infographic/`이고 `agents/ (12개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 자산입니다.
 
 ## 설치된 top-level scripts
 
@@ -138,6 +140,7 @@ plugins/game-design-studio/
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `run-game-design-writing-polish.mjs` | writing specialist와 bundled humanize-korean을 거치는 bounded revision 실행 |
 | `run-image-asset-workflow.mjs` | image workflow composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
@@ -145,6 +148,7 @@ plugins/game-design-studio/
 | `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
+| `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
 
 ## 설치된 document-quality 경로
 
@@ -169,7 +173,7 @@ plugins/game-design-studio/
 
 `references/source/docs/`의 원문 49개는 사용자 제공 workspace에서 왔으며, 사용자가 요청한 로컬 플러그인 제작·사용을 위해 복사됩니다. [원문 권리 매니페스트](references/source-document-rights.json)는 각 문서의 정확한 package path와 SHA-256, `user-provided-workspace` origin, 로컬 포함 근거, MIT 제외 상태, 공개 재배포 상태, 검토일과 필요한 후속 조치를 기록합니다.
 
-플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.8.3에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
+플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정에는 MIT License가 적용됩니다. Skillstead `svg-infographic` 0.9.0에는 Apache-2.0이 적용됩니다. 원문 49개는 MIT로 재허가되지(not sublicensed) 않았고 공개 재배포(public redistribution) 권리는 확인되지 않았습니다. 따라서 현재 상태에서는 원문을 포함한 snapshot을 공개하거나 제3자에게 배포하면 안 됩니다.
 
 [원문 재배포 가드](skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs)는 매니페스트 49개와 실제 package bytes를 대조합니다. `local`과 `private` 모드는 요청된 로컬·사설 사용을 허용합니다.
 
@@ -212,7 +216,7 @@ node "$PLUGIN_ROOT/skills/orchestrate-game-design-project/scripts/check-source-d
 
 | 프로필 ID | 추가 설계 초점 |
 | --- | --- |
-| `universal-core` | 목표 플레이어·경험, core loop·rules, 가정·근거·non-goals, 의존성·위험·결정 |
+| `universal-core` | 목표 플레이어·경험, 핵심 플레이 흐름·규칙, 가정·근거·제외 목표, 의존성·위험·결정 |
 | `live-service-rpg` | 장기 성장, persistent authority, LiveOps calendar·rollback, sources·sinks·inflation |
 | `mobile` | touch/device matrix, short session·interruption recovery, network degradation, store/privacy/commerce policy |
 | `pc-console` | controller·keyboard/mouse, certification·entitlement, hardware performance, save·commerce·release operation |
@@ -273,6 +277,7 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 | `plan-image-assets` | 이미지가 필요한 profile/brief를 계획할 때 | stable asset ID, placeholders, `assets/image-assets.yml`, Markdown/JSON prompts |
 | `generate-image-assets` | 명시적으로 선택/허용된 asset만 생성할 때 | provider policy, immutable selection receipt, truthful provenance 또는 placeholder |
 | `review-image-assets` | 사람의 이미지 검토를 기록할 때 | named human evidence, rights/provenance review와 approval transition |
+| `polish-game-design-writing` | 기획 문장을 전문적으로 점검·최소 수정할 때 | protected content receipt, revision findings, human review handoff |
 
 ## 전문 역할 프롬프트
 
@@ -285,6 +290,9 @@ apply-document-quality-profile: game-design-brief 템플릿으로 production 대
 | `ux-accessibility-reviewer` | critical actions, states, onboarding, input, performance, access | `accessibility` |
 | `liveops-data-designer` | hypothesis, control, variable, sample, guardrail, stop, rollback | `liveops-experiment` |
 | `production-feasibility-critic` | contribution, effort evidence, dependencies, prototype, milestones, kill criteria | `scope-control` |
+| `combat-encounter-reviewer` | encounter signal, counterplay, failure recovery와 evidence gap 검토 | blocker 승인·artifact 재작성 권한 없음 |
+| `level-puzzle-reviewer` | level·puzzle path, reset/retry, accessibility recovery와 evidence gap 검토 | blocker 승인·artifact 재작성 권한 없음 |
+| `game-design-writing-editor` | 번역투·반복·문맥 단절을 찾아 최소 수정안 기록 | 사실·수치·근거·승인 상태를 바꾸지 않음 |
 
 역할은 산출물 전체를 다시 쓰거나 자신에게 없는 게이트를 승인하지 않습니다. finding에는 stable source ID, severity, evidence, impact, affected section, assumptions, minimal fix와 역할이 필요합니다.
 
@@ -327,7 +335,7 @@ artifact-name/
 | 템플릿 ID | 용도 |
 | --- | --- |
 | `game-design-brief` | 목표 플레이어, 경험, 플랫폼, 장르, business model, scope와 owner |
-| `vision-pillars` | player promise, design rules, anti-pillars, success signals |
+| `vision-pillars` | 플레이 경험의 약속, 설계 원칙, 하지 않을 설계 원칙, 성공 신호 |
 | `core-motivation-loop` | input, response, feedback, reward, choice, failure/recovery loop |
 | `system-specification` | executable rules, transitions, precedence, exception, runtime mapping |
 | `rule-exception-matrix` | rule/exception 우선순위, concurrency, authority와 test cases |
@@ -352,7 +360,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 ### 역량 중심
 
-장르와 무관한 player promise, core loop, rule/state, UX, 콘텐츠, 경제와 검토 역량을 작은 실습부터 익힐 때 선택합니다. 사례 본문과 요청문은 아래 repository checkout only 경로에서 확인합니다.
+장르와 무관한 플레이 경험의 약속, 핵심 플레이 흐름, 규칙·상태, 사용자 경험, 콘텐츠, 경제와 검토 역량을 작은 실습부터 익힐 때 선택합니다. 사례 본문과 요청문은 아래 저장소 전용 경로에서 확인합니다.
 
 ### 콘셉트 중심
 
@@ -360,7 +368,154 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 ### 스킬 중심
 
-한 작업의 입력과 원하는 결과가 분명하면 전문 스킬을 직접 호출합니다. 예를 들어 rule/state/exception 하나만 필요하면 `$game-design-studio:design-game-systems`를 사용합니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 시작해 최소 스킬 체인과 사람 gate를 정합니다. 스킬 워크벤치는 직접 호출 신호·피할 때·다음 handoff를 비교합니다.
+일반적인 작업은 스킬 이름을 고를 필요가 없습니다. `@Game Design Studio` 뒤에 만들고 싶은 결과와 가진 자료를 자연어로 적으면, 한 분야가 분명한 요청은 해당 전문 스킬로 보내고 여러 분야가 섞였거나 범위가 불명확한 요청은 오케스트레이터가 필요한 경로만 고릅니다. 작업이 끝나면 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 알려 줍니다. 이 자동 선택은 자동 승인이 아닙니다.
+
+같은 경로를 다시 실행하거나 특정 단계부터 재개해야 할 때만 전문 스킬을 직접 호출합니다. 한 작업의 입력과 원하는 결과가 분명하면 `$game-design-studio:design-game-systems`처럼 해당 전문 스킬을 직접 지정할 수 있습니다. 복수 영역이 얽히거나 범위가 불명확하면 `$game-design-studio:orchestrate-game-design-project`로 실행 순서를 고정할 수 있습니다. 스킬 워크벤치는 직접 호출이 유용한 때와 다음 작업 인계를 비교합니다.
+
+### 대표 작업 경로
+
+아래 요약으로 목적을 고른 뒤 카드에서 입력, 흐름, 결과와 사람 검토 경계를 확인합니다. 기준 결과는 renderer나 image provider와 무관하게 Canonical Artifact에 남습니다.
+
+| 목표 | 시작 스킬 |
+| --- | --- |
+| 규칙·핵심 루프 | `orchestrate-game-design-project` |
+| 시스템 | `design-game-systems` |
+| UX·접근성 | `design-player-experience` |
+| 콘텐츠·퀘스트 | `design-game-content` |
+| 경제·LiveOps | `design-game-economy-and-liveops` |
+| 전체 프로젝트 | `orchestrate-game-design-project` |
+
+### 규칙·핵심 루프
+
+#### 준비 입력
+
+- 선수 지식: 게임에서 확인한 사실과 자신의 해석을 분리하는 방법.
+- 최소 입력: 아이디어 한 문장, 예상 대상, 플랫폼 가정, 원하는 감정, 알려진 제약, 실제 기획 책임자.
+- 선택 입력: 인터뷰·플레이테스트 기록, 유사 경험 관찰, 기존 범위 결정. 제3자 자료는 출처와 이용 범위를 기록합니다.
+
+#### 연결 흐름
+
+`apply-document-quality-profile` → `define-game-vision` → 필요 시 `orchestrate-game-design-project` → `review-game-design` 순서입니다. 템플릿은 게임 방향 원칙(`vision-pillars`)과 게임 기획 요약서(`game-design-brief`)입니다. **역할 경계:** 문서 품질 검토자는 구조 누락을, 수석 게임 기획자와 콘텐츠·내러티브 기획자는 근거 연결 문제를, 제작 가능성 검토자는 범위 위험을 보고합니다. 전문 역할은 원본을 승인하거나 재작성하지 않고, 실제 기획 책임자가 설계 원칙과 이번에 다루지 않을 목표를 결정합니다.
+
+#### 예상 결과
+
+- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.
+- 선택: 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다.
+- 확장: 사람 검토와 형식별 품질 확인을 통과한 팀 기획 요약서 또는 공개 가능한 판단 근거.
+
+#### 사람 검토
+
+- **읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 플레이어에게 약속할 경험과 각 설계 원칙이 행동·선택·반응에 연결되는지 먼저 봅니다. **사람 결정:** 실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다. 스킬 실행, 검토 의견과 파일 생성은 자동 승인하지 않습니다.
+
+### 시스템
+
+#### 준비 입력
+
+- 선수 지식: 입력·상태·출력을 분리하고 happy path만으로 완료하지 않는 태도.
+- 최소 입력: system boundary, actor, input, precondition, authoritative state, 예상 output, 실패와 recovery, owner.
+- 선택 입력: 기존 API/schema, concurrency 관찰, platform 상태, engineering·QA 질문. 실제 schema가 없으면 design meaning만 provisional로 둡니다.
+
+#### 연결 흐름
+
+`apply-document-quality-profile` → `design-game-systems` → `design-player-experience` → `review-game-design` 순서입니다. 템플릿은 `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`입니다. **역할 경계:** `document-quality-editor`는 필수 계약, `system-economy-designer`는 rule·authority, `ux-accessibility-reviewer`는 feedback·recovery finding을 냅니다. design·engineering owner가 precedence와 runtime mapping을 결정합니다.
+
+#### 예상 결과
+
+- 최소: `system-specification`, `rule-exception-matrix`, `data-schema-table-contract`.
+- 선택: 상태 관계가 prose보다 명확할 때만 source mapping이 있는 도식 계획.
+- 확장: owner 결정과 test evidence가 연결된 개발·QA handoff.
+
+#### 사람 검토
+
+- **읽는 순서:** 시스템 경계 → 규칙표 → 예외표 → 데이터 관계 → 근거·결정 순서입니다. 중간 결과에서 규칙 ID마다 상태, 반응, 실패 처리와 시험 항목이 있는지 봅니다. **사람 결정:** 기획 책임자와 개발 책임자가 권한, 우선순위, 이전 방법과 되돌리기 기준을 승인합니다. 검토 의견과 자동 검사만으로 승인하지 않습니다.
+
+### UX·접근성
+
+#### 준비 입력
+
+- 선수 지식: user goal과 system state를 분리하는 방법.
+- 최소 입력: 대상 플레이어, critical actions, 화면·상태, 플랫폼, 입력 장치, feedback, recovery, owner.
+- 선택 입력: current platform·accessibility 1차 근거, usability 관찰, device 제약, interruption 사례.
+
+#### 연결 흐름
+
+`apply-document-quality-profile` → `design-player-experience` → `review-game-design` → 설명 가치가 있을 때 `visualize-game-design` 순서입니다. 템플릿은 화면 흐름·상태표(`ui-ux-flow-state`)와 접근성·플랫폼표(`accessibility-platform-matrix`)입니다. **역할 경계:** 문서 품질 검토자는 구조를, 사용자 경험·접근성 검토자는 핵심 행동과 대체 경로를, 수석 게임 기획자는 목표 경험 연결을 검토합니다. 실제 접근성 책임자와 기획 책임자가 지원 범위와 진행을 막는 문제의 처리 방법을 결정합니다.
+
+#### 예상 결과
+
+- 최소: `ui-ux-flow-state`, `accessibility-platform-matrix`, `game-design-review`.
+- 선택: source-backed interaction 도식 계획이나 검토용 화면 reference prompt.
+- 확장: usability evidence와 사람 승인을 반영한 UX·QA handoff.
+
+#### 사람 검토
+
+- **읽는 순서:** 사용자 목표 → 핵심 행동표 → 상태 범위 → 플랫폼표 → 근거·결정 순서입니다. 중간 결과에서 로딩·빈 화면·오류·중단 상황과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자가 지원 플랫폼, 검증 방법과 진행을 막는 문제를 승인·수정·보류합니다. 화면 시안·문서 변환 도구·검토 결과는 자동 승인하지 않습니다.
+
+### 콘텐츠·퀘스트
+
+#### 준비 입력
+
+- 선수 지식: 퀘스트 서술과 실행 상태를 구분하는 방법.
+- 최소 입력: player purpose, entry condition, system/data IDs, 선택, consequence, state, reward, failure·recovery, owner.
+- 선택 입력: tone 범위, production rate evidence, localization·accessibility 요구, 권리와 consent 근거.
+
+#### 연결 흐름
+
+`apply-document-quality-profile` → `design-game-content` → `design-game-systems` → `plan-game-production` → `review-game-design` 순서입니다. 템플릿은 `narrative-quest-npc`, `character-skill-combat-monster`입니다. **역할 경계:** `content-narrative-designer`는 choice·state, `lead-game-designer`는 목표 경험, `production-feasibility-critic`은 dependency·제작 근거 finding을 냅니다. 실제 content·rights·production owner가 결정을 내립니다.
+
+#### 예상 결과
+
+- 최소: `narrative-quest-npc`, `character-skill-combat-monster`, `game-design-review`.
+- 선택: 승인 전 narrative image prompt 또는 source-backed quest flow 계획.
+- 확장: system/data/production owner 검토를 통과한 콘텐츠 handoff.
+
+#### 사람 검토·근거
+
+- **읽는 순서:** purpose → entry/state → choice·consequence → dependency → production·rights evidence → decisions입니다. 중간 결과에서 연결되지 않은 system/data ID와 근거 없는 제작 비용을 blocker로 봅니다. **사람 결정:** content owner, system owner, production owner와 권리 담당자가 분기, 범위, provenance·consent를 승인합니다. 생성된 서사나 이미지가 자동 승인되지는 않습니다.
+
+### 경제·LiveOps
+
+#### 준비 입력
+
+- 선수 지식: system boundary와 가정·evidence 구분.
+- 최소 입력: resource IDs, source, sink, inventory/progression 의도, eligibility, hypothesis, control, guardrail, stop·rollback, owner.
+- 선택 입력: current policy, consent basis, telemetry definition, tested rollback, prototype/simulation result. 실제 수치는 source locator와 freshness가 있을 때만 사용합니다.
+
+#### 연결 흐름
+
+`apply-document-quality-profile` → `design-game-economy-and-liveops` → `design-game-systems` → `review-game-design` 순서입니다. 템플릿은 `economy-balance`, `liveops-experiment-event`입니다. **역할 경계:** `system-economy-designer`는 value flow, `liveops-data-designer`는 experiment·telemetry, `ux-accessibility-reviewer`는 player protection finding을 제출합니다. 실제 economy·LiveOps·policy owner가 가격·확률·실험과 rollback을 결정합니다.
+
+#### 예상 결과
+
+- 최소: `economy-balance`, `liveops-experiment-event`, `game-design-review`.
+- 선택: source-backed economy/experiment 관계 계획 또는 communication image prompt.
+- 확장: current evidence, tested rollback과 사람 결정을 가진 운영 검토 패키지.
+
+#### 사람 검토·근거
+
+- **읽는 순서:** resource flow → progression/recovery → price·probability evidence → experiment → guardrail·rollback → decisions입니다. 중간 결과에서 source 없는 수치, 다중 변수, 복구 불가 변경을 blocker로 봅니다. **사람 결정:** economy, LiveOps, policy와 accessibility owner가 실험 실행·중단·rollback을 승인합니다. simulation, telemetry 수집과 reviewer 권고는 자동 승인하지 않습니다.
+
+### 전체 프로젝트
+
+#### 준비 입력
+
+- 선수 지식: 앞선 사례 중 필요한 domain Artifact와 `content.md` 기준 원칙.
+- 최소 입력: target experience, scope 후보, dependency, capacity evidence 또는 공백, owner, review 질문, image 목적, 요청 형식.
+- 선택 입력: prototype result, measured throughput, rights·consent evidence, current renderer capability, 실제 named-human decision receipt.
+
+#### 연결 흐름
+
+`plan-game-production` → `review-game-design` → `plan-image-assets` → 필요할 때 `visualize-game-design` → `export-game-design-documents` 순서입니다. 템플릿은 `production-scope-risk`, `game-design-review`, `decision-change-log`입니다. **역할 경계:** `production-feasibility-critic`은 범위·출력 위험, `lead-game-designer`는 목표 연결, `art-brief-director`는 이미지 계획, `ux-accessibility-reviewer`는 접근성 finding을 제출합니다. 전문 역할과 자동화는 staffing, scope, 비용, 권리, 이미지 transition, document approval 또는 release를 결정하지 않습니다.
+
+#### 예상 결과
+
+- 최소: `production-scope-risk`, `game-design-review`, `export-preparation-manifest`에 해당하는 canonical 내용, finding과 renderer-neutral 준비 상태.
+- 선택: mode와 receipt가 허용한 prompt·이미지, source-backed SVG·PNG, PDF·DOCX·PPTX 준비 job.
+- 확장: 이름 있는 사람의 승인과 asset·format·visual QA evidence가 있는 전달 패키지.
+
+#### 사람 검토·근거
+
+- **읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서 blocker, capacity gap, image lifecycle, renderer capability와 형식별 QA를 따로 봅니다. **사람 결정:** production owner가 scope·kill, review decision owner가 finding disposition, rights/asset owner가 이미지 transition, export owner가 실제 format QA를 승인합니다. 생성, render, lint, reviewer finding과 state 문자열은 자동 승인하지 않습니다.
 
 ### 대표 요청과 예상 결과
 
@@ -368,7 +523,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 | 사례 | 복사 가능한 요청 | 예상 결과 |
 | --- | --- | --- |
-| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, player promise, core loop, non-goal과 prototype 질문을 정리해.` | `game-design-brief`와 `vision-pillars`를 담은 Canonical Artifact 초안 |
+| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, 플레이 경험의 약속, 핵심 플레이 흐름, 제외 목표와 시험 제작 질문을 정리해.` | 게임 기획 요약서(`game-design-brief`)와 게임 방향 원칙(`vision-pillars`)을 담은 기준 기획 폴더 초안 |
 | 시스템 명세 | `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence, exception과 data authority를 명세해.` | `system-specification`의 규칙·상태·예외·검증 표 |
 | UX·접근성 | `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력, 오류 recovery와 접근성 검토를 연결해.` | `ui-ux-flow-state`와 접근성 검토 큐 |
 | 콘텐츠·퀘스트 | `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.` | `narrative-quest-npc`의 quest state와 제작 handoff |
@@ -443,7 +598,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ### 새 GDD
 
-> 4인 협동 탐험 게임의 새 GDD를 만들어 줘. 목표 플레이어, 원하는 감정, core loop, pillars, scope와 non-goals를 먼저 정의하고 PC/console 프로필을 적용해. 검증하지 않은 수치는 provisional로 남겨 줘.
+> 4인 협동 탐험 게임의 새 GDD를 만들어 줘. 목표 플레이어, 원하는 감정, 핵심 플레이 흐름, 설계 원칙, 제작 범위와 제외 목표를 먼저 정의하고 PC·콘솔 품질 기준을 적용해. 검증하지 않은 수치는 미정으로 남겨 줘.
 
 ### 시스템 명세
 
@@ -467,7 +622,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ## Skillstead 도식화
 
-[visualize-game-design](skills/visualize-game-design/SKILL.md)는 spatial encoding이 실제로 관계를 더 명확하게 할 때만 Skillstead `svg-infographic` 0.8.3을 사용합니다. 지원 preset은 core/motivation loop, state/rule flow, economy source/sink, progression/lifecycle, production timeline/dependency, RACI/role flow입니다. 단순 목록은 본문이나 표로 유지합니다.
+[visualize-game-design](skills/visualize-game-design/SKILL.md)는 spatial encoding이 실제로 관계를 더 명확하게 할 때만 Skillstead `svg-infographic` 0.9.0을 사용합니다. 지원 preset은 core/motivation loop, state/rule flow, economy source/sink, progression/lifecycle, production timeline/dependency, RACI/role flow입니다. 단순 목록은 본문이나 표로 유지합니다.
 
 모든 node, connector, label, date와 numeric annotation은 stable source locator에 연결해야 합니다. SVG에는 `<title>`, `<desc>`, alt text가 필요합니다. 패키지의 SVG lint를 통과한 뒤 Chromium이 있으면 canonical renderer로 정확한 2× PNG를 생성하고 browser identity/version, source/output digest, 실제 dimensions와 fit-to-page·close-up visual QA를 기록합니다.
 
@@ -553,4 +708,4 @@ python3 "$CODEX_ROOT/skills/.system/plugin-creator/scripts/validate_plugin.py" p
 
 ## 라이선스
 
-Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.8.3은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.
+Game Design Studio 플러그인 코드와 이 프로젝트가 작성한 문서·템플릿·설정은 [MIT License](LICENSE)로 배포됩니다. 포함된 Skillstead `svg-infographic` 0.9.0은 Apache-2.0이며 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 패키지 안의 원본 라이선스가 적용됩니다. 사용자 제공 원문 49개는 MIT 대상에서 제외되고 재허가되지 않으며, 공개 재배포 권리가 문서별로 확인될 때까지 로컬·사설 사용 범위를 벗어나 배포할 수 없습니다.

@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict';
-import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { browserCandidates, probeChromium, probeImageGenerationCapability } from '../../shared/scripts/capability-probe.mjs';
+import {
+  browserCandidates,
+  probeArchifyCapability,
+  probeChromium,
+  probeImageGenerationCapability,
+  resolveArchifyInstallation,
+} from '../../shared/scripts/capability-probe.mjs';
 
 const script = fileURLToPath(new URL('../../shared/scripts/capability-probe.mjs', import.meta.url));
 const temporaryDirs = [];
@@ -49,6 +55,272 @@ test('reports deterministic capability presence and structured optional warnings
     !first.capabilities.chromium.available,
   );
   assert.ok(first.warnings.some(({ code }) => code === 'capability.soffice.absent'));
+});
+
+async function writeArchifySkill(root, version = '2.13.0') {
+  await mkdir(join(root, 'bin'), { recursive: true });
+  await writeFile(join(root, 'SKILL.md'), '---\nname: archify\n---\n');
+  await writeFile(join(root, 'package.json'), JSON.stringify({ version }));
+  await writeFile(join(root, 'bin', 'archify.mjs'), '#!/usr/bin/env node\n');
+}
+
+test('detects a regular host Archify skill without exposing its path', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+
+  assert.deepEqual(await probeArchifyCapability({}, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+  });
+});
+
+test('execution resolver pins regular CLI bytes while public probe hides paths', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+
+  const installation = await resolveArchifyInstallation({}, { home });
+  assert.equal(installation.status, 'available');
+  assert.equal(installation.provider, 'host-archify-skill');
+  assert.equal(installation.version, '2.13.0');
+  assert.equal(installation.cli.path, await realpath(join(root, 'bin', 'archify.mjs')));
+  assert.equal(installation.cli.realpath, await realpath(join(root, 'bin', 'archify.mjs')));
+  assert.equal(typeof installation.cli.dev, 'bigint');
+  assert.equal(typeof installation.cli.ino, 'bigint');
+  assert.equal(typeof installation.cli.size, 'bigint');
+  assert.match(installation.cli.sha256, /^[a-f0-9]{64}$/u);
+
+  const publicResult = await probeArchifyCapability({}, { home });
+  assert.deepEqual(Object.keys(publicResult).sort(), ['provider', 'status', 'version']);
+  assert.equal(JSON.stringify(publicResult).includes(home), false);
+});
+
+test('execution resolver rejects a same-size CLI replacement while reading its pinned file handle', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  const cli = join(root, 'bin', 'archify.mjs');
+  const replacement = join(root, 'bin', 'replacement.mjs');
+  const original = await readFile(cli);
+  await writeFile(replacement, Buffer.alloc(original.byteLength, 0x78));
+
+  const result = await resolveArchifyInstallation({}, {
+    home,
+    openFn: async (path, flags) => {
+      const handle = await open(path, flags);
+      return {
+        stat: (...args) => handle.stat(...args),
+        readFile: async (...args) => {
+          await rename(replacement, path);
+          return handle.readFile(...args);
+        },
+        close: () => handle.close(),
+      };
+    },
+  });
+
+  assert.deepEqual(result, { status: 'unknown' });
+});
+
+test('execution resolver rejects a same-size CLI replacement after its final realpath', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  const cli = join(root, 'bin', 'archify.mjs');
+  const replacement = join(root, 'bin', 'replacement.mjs');
+  const original = await readFile(cli);
+  await writeFile(replacement, Buffer.alloc(original.byteLength, 0x79));
+  let cliRealpathCalls = 0;
+
+  const result = await resolveArchifyInstallation({}, {
+    home,
+    realpathFn: async (path) => {
+      const canonical = await realpath(path);
+      if (path.endsWith('/bin/archify.mjs') && ++cliRealpathCalls === 3) {
+        await rename(replacement, path);
+      }
+      return canonical;
+    },
+  });
+
+  assert.equal(cliRealpathCalls, 3);
+  assert.deepEqual(result, { status: 'unknown' });
+});
+
+test('execution resolver closes the pinned file handle and fails closed on close errors', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  let closeCalls = 0;
+
+  const result = await resolveArchifyInstallation({}, {
+    home,
+    openFn: async (path, flags) => {
+      const handle = await open(path, flags);
+      return {
+        stat: (...args) => handle.stat(...args),
+        readFile: (...args) => handle.readFile(...args),
+        close: async () => {
+          closeCalls += 1;
+          await handle.close();
+          throw new Error('close failed after releasing the handle');
+        },
+      };
+    },
+  });
+
+  assert.equal(closeCalls, 1);
+  assert.deepEqual(result, { status: 'unknown' });
+});
+
+test('execution resolver preserves higher-priority Archify terminal outcomes', async () => {
+  const home = await temporaryWorkspace();
+  const codexHome = join(home, 'portable-codex-home');
+  await writeArchifySkill(join(home, '.agents', 'skills', 'archify'));
+
+  assert.deepEqual(await resolveArchifyInstallation({ CODEX_HOME: codexHome }, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+    cli: await resolveArchifyInstallation({}, { home }).then((result) => result.cli),
+  });
+
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'), '2.12.9');
+  assert.deepEqual(await resolveArchifyInstallation({ CODEX_HOME: codexHome }, { home }), { status: 'unavailable' });
+
+  await writeFile(join(codexHome, 'skills', 'archify', 'package.json'), '{');
+  assert.deepEqual(await resolveArchifyInstallation({ CODEX_HOME: codexHome }, { home }), { status: 'unknown' });
+});
+
+test('continues after an absent higher Archify root but not after malformed higher metadata', async () => {
+  const home = await temporaryWorkspace();
+  const codexHome = join(home, 'portable-codex-home');
+  const lowerRoot = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(lowerRoot);
+
+  assert.deepEqual(await probeArchifyCapability({ CODEX_HOME: codexHome }, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+  });
+
+  await mkdir(join(codexHome, 'skills', 'archify'), { recursive: true });
+  await writeFile(join(codexHome, 'skills', 'archify', 'SKILL.md'), '---\nname: archify\n---\n');
+  assert.deepEqual(await probeArchifyCapability({ CODEX_HOME: codexHome }, { home }), { status: 'unknown' });
+});
+
+test('does not fall through an unsupported higher Archify version', async () => {
+  const home = await temporaryWorkspace();
+  const codexHome = join(home, 'portable-codex-home');
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'), '2.12.9');
+  await writeArchifySkill(join(home, '.agents', 'skills', 'archify'), '2.13.0');
+
+  assert.deepEqual(await probeArchifyCapability({ CODEX_HOME: codexHome }, { home }), { status: 'unavailable' });
+});
+
+test('reports unavailable when neither Archify candidate is present', async () => {
+  const home = await temporaryWorkspace();
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unavailable' });
+});
+
+test('rejects symlinked Archify metadata as unknown', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+  await writeFile(join(home, 'other-skill.md'), '---\nname: archify\n---\n');
+  await rm(join(root, 'SKILL.md'));
+  await symlink(join(home, 'other-skill.md'), join(root, 'SKILL.md'));
+
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unknown' });
+});
+
+test('reports malformed, unsupported, and inaccessible Archify metadata as unknown or unavailable', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root, 'not-semver');
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unknown' });
+
+  await writeFile(join(root, 'package.json'), JSON.stringify({ version: '2.12.9' }));
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unavailable' });
+
+  assert.deepEqual(await probeArchifyCapability({}, {
+    home,
+    lstatFn: async () => { throw Object.assign(new Error('permission denied'), { code: 'EACCES' }); },
+  }), { status: 'unknown' });
+});
+
+test('rejects symlinked Archify parent paths and external escapes as unknown', async () => {
+  const home = await temporaryWorkspace();
+  const outside = await temporaryWorkspace();
+  const externalSkill = join(outside, 'skills');
+  await writeArchifySkill(join(externalSkill, 'archify'));
+  await mkdir(join(home, '.agents'), { recursive: true });
+  await symlink(externalSkill, join(home, '.agents', 'skills'), 'dir');
+
+  assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unknown' });
+
+  const codexHome = join(home, 'portable-codex-home');
+  await mkdir(codexHome, { recursive: true });
+  await symlink(externalSkill, join(codexHome, 'skills'), 'dir');
+  assert.deepEqual(await probeArchifyCapability({ CODEX_HOME: codexHome }, { home }), { status: 'unknown' });
+
+  const isolatedHome = await temporaryWorkspace();
+  await symlink(join(outside, 'agents'), join(isolatedHome, '.agents'), 'dir');
+  assert.deepEqual(await probeArchifyCapability({}, { home: isolatedHome }), { status: 'unknown' });
+});
+
+test('accepts only supported exact SemVer Archify versions', async () => {
+  const home = await temporaryWorkspace();
+  const root = join(home, '.agents', 'skills', 'archify');
+  await writeArchifySkill(root);
+
+  for (const version of ['2.13.0', '2.13.0+build-1', '2.13.1-preview.1', '2.14.0-rc.1']) {
+    await writeFile(join(root, 'package.json'), JSON.stringify({ version }));
+    assert.deepEqual(await probeArchifyCapability({}, { home }), {
+      status: 'available', provider: 'host-archify-skill', version,
+    }, version);
+  }
+
+  for (const version of ['2.13.0-preview.1', '2.12.9', '3.0.0']) {
+    await writeFile(join(root, 'package.json'), JSON.stringify({ version }));
+    assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unavailable' }, version);
+  }
+
+  for (const version of ['2.13.1-01', 'v2.13.0', '2.13.0.1', '2.13', '2.13.0-', '2.13.0+']) {
+    await writeFile(join(root, 'package.json'), JSON.stringify({ version }));
+    assert.deepEqual(await probeArchifyCapability({}, { home }), { status: 'unknown' }, version);
+  }
+});
+
+test('prefers CODEX_HOME Archify over the legacy host candidate', async () => {
+  const home = await temporaryWorkspace();
+  const codexHome = join(home, 'portable-codex-home');
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'), '2.14.0');
+  await writeArchifySkill(join(home, '.agents', 'skills', 'archify'), '2.13.0');
+
+  assert.deepEqual(await probeArchifyCapability({ CODEX_HOME: codexHome }, { home }), {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.14.0',
+  });
+});
+
+test('SessionStart includes Archify capability without an absolute host path', async () => {
+  const cwd = await temporaryWorkspace();
+  const codexHome = join(cwd, 'portable-codex-home');
+  await writeArchifySkill(join(codexHome, 'skills', 'archify'));
+
+  const output = runProbe({ cwd, env: { CODEX_HOME: codexHome, HOME: cwd } });
+  const context = JSON.parse(output.hookSpecificOutput.additionalContext);
+
+  assert.deepEqual(context.capabilities.archify, {
+    status: 'available',
+    provider: 'host-archify-skill',
+    version: '2.13.0',
+  });
+  assert.equal(JSON.stringify(context).includes(codexHome), false);
 });
 
 test('uses the exact portable Skillstead browser candidate order', () => {

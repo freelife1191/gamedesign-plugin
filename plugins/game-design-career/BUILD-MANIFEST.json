@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "name": "game-design-career",
   "sourceDateEpoch": 0,
-  "treeSha256": "632e80997713d21ff0873a01ad38dd23df25a22be49379d08d66e0ae59adad84",
+  "treeSha256": "ab018216d32f4441246e349eb706647a8d5a6ac793723c8499c1126c1dc20dce",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "9155d8e886d873133f8772a8b39bb071f76c63538156486bbf466ed4cc01e8df",
-      "size": 733
+      "sha256": "096830e3c0c31b672d68a3cf0f69a9c2710dc2737ca4700444d298024b183f00",
+      "size": 1068
     },
     {
       "path": ".env.example",
-      "sha256": "ff7fb9efd9f59c433c4024c128d317edcfe2aaf76875fee6deb0e20535905379",
-      "size": 1676
+      "sha256": "4a97417a6073622a9097bdfed2e5ac3eb50d12dc44c27e320b8c0acaf8a10b76",
+      "size": 1940
     },
     {
       "path": "LICENSE",
@@ -21,13 +21,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "7de2334bcc5f9a84b17f06b98fb6c158938fde6e9c46e2b3eafb1f244d70a988",
-      "size": 44201
+      "sha256": "3fa8ac5e29cd9e80f33d15640ad43534a17716c71ac6a0c2b27c9144a1f8f275",
+      "size": 58146
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "sha256": "6b2defb1ce85bace2e4ff735512ae70bc95647f52db98843afc52f338336fe26",
-      "size": 1441
+      "sha256": "d116fa7f09716a0fd366fb8b5a4b4277479f19cac15f802b87d4776b027c4c0e",
+      "size": 2171
     },
     {
       "path": "agents/art-brief-director.md",
@@ -53,6 +53,11 @@
       "path": "agents/game-design-mentor.md",
       "sha256": "b703f4cd2abb27d0c629ece1302d519186ac25ed00d17217ba9e1de8c01b3a12",
       "size": 2397
+    },
+    {
+      "path": "agents/game-design-writing-editor.md",
+      "sha256": "8f047254efb98b79f08595ebf90c6e359431d333649e21eb19f1b13d4246fded",
+      "size": 1234
     },
     {
       "path": "agents/interview-coach.md",
@@ -86,8 +91,8 @@
     },
     {
       "path": "assets/shared/templates/canonical-artifact/assets/README.md",
-      "sha256": "3cc124eedc7f67833689c4ba5cc74e217c87b1836b4377c4f960f290552225be",
-      "size": 1249
+      "sha256": "e0eb196268c47660298a994072749ab178a437d34f412f8bae38046867423c6d",
+      "size": 1253
     },
     {
       "path": "assets/shared/templates/canonical-artifact/assets/diagrams/.gitkeep",
@@ -111,18 +116,18 @@
     },
     {
       "path": "assets/shared/templates/canonical-artifact/assets/prompts/image-prompts.md",
-      "sha256": "a63b5bdb8196f25f8b3726feea3d759c77e85373adce2ad7958b4de1720f7467",
-      "size": 171
+      "sha256": "483e162a659aaf0b128d443e6efdfde5759fcd415b2a36c6edfb9fd9a5489208",
+      "size": 180
     },
     {
       "path": "assets/shared/templates/canonical-artifact/content.md",
-      "sha256": "3ebd700f3565bdf6159c7e1a292513e570b4eb90aa2038e5e13ad498213a4cd9",
-      "size": 773
+      "sha256": "3231ea5339a7e3e9f6c157e8311f862e836ead8fc2e73b8ba5eb0981f7ab8524",
+      "size": 770
     },
     {
       "path": "assets/shared/templates/canonical-artifact/decisions/0001-decision.md",
-      "sha256": "7bc6946a0435aebea697f56ee0bc73137e5d44a357057cd2004a76e60b9908c9",
-      "size": 314
+      "sha256": "d6154f5a13748e958bcbaa98a92dccbac86a8f7b314b29c202e2d91f228a899b",
+      "size": 305
     },
     {
       "path": "assets/shared/templates/canonical-artifact/evidence.yml",
@@ -136,28 +141,28 @@
     },
     {
       "path": "assets/shared/templates/decision-log.md",
-      "sha256": "ba2ff84386ce3323352b9185a70b81a466f860f7f597f29b6539da8a603dda88",
-      "size": 482
+      "sha256": "07e22c2a44ea36c26ce045a75ce26a8149d3e06e8bdcd270bd0944ad0d18274f",
+      "size": 477
     },
     {
       "path": "assets/shared/templates/review-finding.md",
-      "sha256": "314680757d98e4ec69d134ee851e0775d23f77765ce206ad07027b7d860fbe19",
-      "size": 550
+      "sha256": "e9783f2b7e5bb618b2405eb1f2ee8cc39540f2a485fd63a9b478b20d9f856545",
+      "size": 549
     },
     {
       "path": "assets/templates/career-stage-goal/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/career-stage-goal/content.md",
-      "sha256": "8988c7f4668fb38f11a63f11106fb6e7a52274187413a43321b539bb3170fb07",
-      "size": 3334
+      "sha256": "b561dd2134b5358d18266c71b09a0cd010647b53852cbefcb0b83a9b3045885b",
+      "size": 3812
     },
     {
       "path": "assets/templates/career-stage-goal/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/career-stage-goal/evidence.yml",
@@ -171,18 +176,18 @@
     },
     {
       "path": "assets/templates/competency-matrix/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/competency-matrix/content.md",
-      "sha256": "336df258170a0ae9e2398492439c995570fb23c6ddf73eb7a6067d819e1bf04a",
-      "size": 3495
+      "sha256": "1654f4533eb7cccfddd2725c38bc39f8c0f8268be5e2f7c964ff785f85cb5f86",
+      "size": 3913
     },
     {
       "path": "assets/templates/competency-matrix/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/competency-matrix/evidence.yml",
@@ -196,18 +201,18 @@
     },
     {
       "path": "assets/templates/creative-design-portfolio/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/creative-design-portfolio/content.md",
-      "sha256": "609f12bad50bad55f1686e3a7b8827c8646124c07fe8c2c8d49b9eaf0ffd63b2",
-      "size": 3684
+      "sha256": "4b557714dff893071562ff92dad150c99908f7ce8b42cb0a0c87ecf006a3e083",
+      "size": 4057
     },
     {
       "path": "assets/templates/creative-design-portfolio/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/creative-design-portfolio/evidence.yml",
@@ -221,18 +226,18 @@
     },
     {
       "path": "assets/templates/five-axis-review/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/five-axis-review/content.md",
-      "sha256": "873a22fadf561ecf807ccf5ee4b996ae8413d7191baf6afb4984e0d8c7c22c40",
-      "size": 3524
+      "sha256": "5446da50e85a09446326e8165295e969656866040a91960dde96d092be2e20e5",
+      "size": 4024
     },
     {
       "path": "assets/templates/five-axis-review/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/five-axis-review/evidence.yml",
@@ -246,18 +251,18 @@
     },
     {
       "path": "assets/templates/game-analysis-report/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/game-analysis-report/content.md",
-      "sha256": "0f68cd1d83bc122886020faa89e8965613ae6e8e43c321f6fea77288855cc562",
-      "size": 3737
+      "sha256": "205fe0015ef17c45f1f99ca4f0ae7b277050163b659bd3c412c2e3b13a0273d2",
+      "size": 4170
     },
     {
       "path": "assets/templates/game-analysis-report/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/game-analysis-report/evidence.yml",
@@ -271,18 +276,18 @@
     },
     {
       "path": "assets/templates/game-design-role-map/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/game-design-role-map/content.md",
-      "sha256": "b51bb263324055b57cc8ce1c78bda815bcd4a5452ce50053d008c827168a989a",
-      "size": 3466
+      "sha256": "ce1d1b6b60e088fc988fa6ce90dedf0410b6f6337bf431dd663b7ca8c2496ee1",
+      "size": 3968
     },
     {
       "path": "assets/templates/game-design-role-map/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/game-design-role-map/evidence.yml",
@@ -296,18 +301,18 @@
     },
     {
       "path": "assets/templates/interview-question-answer-log/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/interview-question-answer-log/content.md",
-      "sha256": "c709da4339c52c03ecff50335127e94884b94b2bb8db1d0c97b6ef8ca87075bc",
-      "size": 3537
+      "sha256": "3075c3f45953ac4fc6df5c0a069f16000fa5289551192e39f9b7c1990cb5278b",
+      "size": 3991
     },
     {
       "path": "assets/templates/interview-question-answer-log/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/interview-question-answer-log/evidence.yml",
@@ -321,18 +326,18 @@
     },
     {
       "path": "assets/templates/introduction-motivation/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/introduction-motivation/content.md",
-      "sha256": "dc714fc34cb47351ea4c7a70d4def91bea99b8b939a7138e82d0c075477bddcd",
-      "size": 3396
+      "sha256": "10f9d9a8063a5ebb93890f0ac323d5595be6cf4a1d044962f60639f1a04b8eed",
+      "size": 3822
     },
     {
       "path": "assets/templates/introduction-motivation/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/introduction-motivation/evidence.yml",
@@ -346,18 +351,18 @@
     },
     {
       "path": "assets/templates/job-posting-evidence/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/job-posting-evidence/content.md",
-      "sha256": "d1549a9ed9254132c7676feea3bfe067917b1043da7a3bd6f03fc9510893a846",
-      "size": 3926
+      "sha256": "06a18d257861d74a60a97f8a5fbe8b11090ccc8bf1847c10c4fb8f34bf95f691",
+      "size": 4422
     },
     {
       "path": "assets/templates/job-posting-evidence/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/job-posting-evidence/evidence.yml",
@@ -371,18 +376,18 @@
     },
     {
       "path": "assets/templates/junior-growth-review/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/junior-growth-review/content.md",
-      "sha256": "1cc111b43306ab86338964d6266a0da26b9084014e31c19e78cf3da03323ebe5",
-      "size": 3464
+      "sha256": "8f1ae546910b5fc1104c244b0dcbe2bb55a5dce9cc571c5124f40f5a8d889a1a",
+      "size": 3923
     },
     {
       "path": "assets/templates/junior-growth-review/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/junior-growth-review/evidence.yml",
@@ -396,18 +401,18 @@
     },
     {
       "path": "assets/templates/learning-roadmap/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/learning-roadmap/content.md",
-      "sha256": "3244065e066a815ac7ae2ba73539b4dc7af460e9bb0976a5dcec7b46fb85f733",
-      "size": 3344
+      "sha256": "b5d4cf5fad12d9eac2fbd01441ed4fc7a2627c9176b7ceae66978dacb32ba4d6",
+      "size": 3813
     },
     {
       "path": "assets/templates/learning-roadmap/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/learning-roadmap/evidence.yml",
@@ -421,18 +426,18 @@
     },
     {
       "path": "assets/templates/portfolio-backlog/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/portfolio-backlog/content.md",
-      "sha256": "82109b8d827a08847028e6e61ac5b522e850fd5ee6799629b53cb7417f32767d",
-      "size": 3688
+      "sha256": "0f515970462832b3d439861f9db72603503cd3f6b57b5ed42a521d26ca40991b",
+      "size": 4142
     },
     {
       "path": "assets/templates/portfolio-backlog/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/portfolio-backlog/evidence.yml",
@@ -446,18 +451,18 @@
     },
     {
       "path": "assets/templates/portfolio-project-brief/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/portfolio-project-brief/content.md",
-      "sha256": "7969531595b351c1557cb0bbd52fceffd48338b5dd153cf17ca74b6a3810b8e6",
-      "size": 3838
+      "sha256": "856f6c9ab5bd0946c4ff10ee74d15fae235da2154c9e74f87388af5f00ea0d69",
+      "size": 4310
     },
     {
       "path": "assets/templates/portfolio-project-brief/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/portfolio-project-brief/evidence.yml",
@@ -471,18 +476,18 @@
     },
     {
       "path": "assets/templates/reverse-design-document/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/reverse-design-document/content.md",
-      "sha256": "f491b1a9d1a8a0e24b4b6f2de4d8323f9cdd36e3684f0ccc825c7d36f0e1610c",
-      "size": 3622
+      "sha256": "bd3f786f95fd75bbfe78d64cad663fcb5c4d6543555ebd6edbe38a0c7ba0e5ac",
+      "size": 4063
     },
     {
       "path": "assets/templates/reverse-design-document/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/reverse-design-document/evidence.yml",
@@ -496,18 +501,18 @@
     },
     {
       "path": "assets/templates/transition-readiness/assets/README.md",
-      "sha256": "160c4f9d7bc0d165751f1ec203b3b355bf052ac69221adae86c138c0394f9b9c",
-      "size": 282
+      "sha256": "55f81a8686cdd70689182ffba21db6e1cfd595b47c1b45716ecd33be2a0ebf94",
+      "size": 284
     },
     {
       "path": "assets/templates/transition-readiness/content.md",
-      "sha256": "d3760dede563fbbdc330872ea0e8f3bb2bd887782c3c563c85aa77791757e4c5",
-      "size": 3495
+      "sha256": "7834ee78642beb8b49990ba4e5fbad5f2c00d9c0692cac73c42f509a625501a4",
+      "size": 3987
     },
     {
       "path": "assets/templates/transition-readiness/decisions/README.md",
-      "sha256": "f8997bb5f3d6801b58bbfaa7cb842104f006bd52f3e9c80fca395f3fe76e1aaf",
-      "size": 259
+      "sha256": "fc7a705e516ed06a4dde7136f70e80cbdd239d4761039edc822a86701221874d",
+      "size": 256
     },
     {
       "path": "assets/templates/transition-readiness/evidence.yml",
@@ -605,9 +610,19 @@
       "size": 1494
     },
     {
+      "path": "references/prompt-templates.json",
+      "sha256": "4b63da6373a702d9f6842ad9258a2e9225c818b482e88b8ba3b906a209ba8a6f",
+      "size": 416897
+    },
+    {
       "path": "references/routing.json",
-      "sha256": "383640b88d84e5614775b63a64863bb60d9f322d99d49c2138111f40992f434b",
-      "size": 47157
+      "sha256": "9392873d40b16105546fec379c0ac8bd1d785d7e8b26354b82679cd81846cbab",
+      "size": 47990
+    },
+    {
+      "path": "references/shared/document-quality/game-design-writing-style.md",
+      "sha256": "b5dc217b86f93c779d7c8a07ce07b41eca0ba12775d91c376eb4d48201604eec",
+      "size": 1281
     },
     {
       "path": "references/shared/document-quality/indexes/career.json",
@@ -896,8 +911,8 @@
     },
     {
       "path": "references/shared/image-assets/.env.example",
-      "sha256": "ff7fb9efd9f59c433c4024c128d317edcfe2aaf76875fee6deb0e20535905379",
-      "size": 1676
+      "sha256": "4a97417a6073622a9097bdfed2e5ac3eb50d12dc44c27e320b8c0acaf8a10b76",
+      "size": 1940
     },
     {
       "path": "references/shared/image-assets/prompt-patterns/base.json",
@@ -951,8 +966,8 @@
     },
     {
       "path": "references/shared/image-assets/schema/image-assets.schema.json",
-      "sha256": "0ddaad3da4af6a2e034348e541d2fc57b1c660a9c92074cc27417d45ffc527d3",
-      "size": 9727
+      "sha256": "77c9c1e9c1fb2306c2bf529deff8e5bd9d82422aa745e6d8a4b464ef39c0b059",
+      "size": 11504
     },
     {
       "path": "references/shared/image-assets/schema/image-config.schema.json",
@@ -1016,13 +1031,13 @@
     },
     {
       "path": "references/shared/knowledge/trends/2026-current-practices.md",
-      "sha256": "e69b5433c4afc576c79804442b12044d6c696ddfd686f2b3df0fb2ff3168c2e7",
-      "size": 13075
+      "sha256": "02e91e74df5e90612fdf78d114e90f94dbaf2b2c8a5297c90c301f48fee86482",
+      "size": 16652
     },
     {
       "path": "references/shared/knowledge/trends/source-register.json",
-      "sha256": "9c3afdb5705c2364e5ea2d4163691736cb6326d1d640f9fd3894cbf50e6b2192",
-      "size": 9122
+      "sha256": "410f5e1b7445ff2587ed4a7b0b4a48250ddd7f4416226d4af1bf1933390a9d80",
+      "size": 10335
     },
     {
       "path": "references/shared/responsible-design/README.md",
@@ -1035,9 +1050,14 @@
       "size": 4196
     },
     {
+      "path": "references/shared/vendor/archify/vendor.lock.json",
+      "sha256": "f448fab5a108f6ed91fd45ccce8403e4be46f7b4b4daefc59bc48ed0cf6bd290",
+      "size": 11261
+    },
+    {
       "path": "references/shared/vendor/skillstead/vendor.lock.json",
-      "sha256": "5b0c73cecdbb5579f1a4a71ad4ba9764d316b88e8d2588fedbd6af3514ce3916",
-      "size": 8354
+      "sha256": "251c670761e0487aced544c4394516a09bc56e2f4cc4271912c5b4a6dfa233b3",
+      "size": 10421
     },
     {
       "path": "references/source/docs/01. 게임 기획자 취업 튜토리얼/1. [게임 기획 취업] 게임 회사에 취업해야 하는 이유! - 자세한 리포트.md",
@@ -1291,13 +1311,13 @@
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
-      "sha256": "ee66915932c6060e25d9d50f67e55251485934c0c5c2d1ad2c57a5cdf6a2e916",
-      "size": 12309
+      "sha256": "b873ab7acda1b11bedb4cd62292dca73be66a031aabc16b6f16f2967cdb20fce",
+      "size": 16226
     },
     {
       "path": "scripts/capability-probe.mjs",
-      "sha256": "a69c0c29e305e09cd273ac67978a2e448ace8af6778a3425b2b956f4b688798b",
-      "size": 12044
+      "sha256": "f12b4cf9f4c56d0b4138cd4e4e77e62c878b3dd82b920f1896e259a980e55e1d",
+      "size": 19947
     },
     {
       "path": "scripts/compile-image-prompts.mjs",
@@ -1311,13 +1331,13 @@
     },
     {
       "path": "scripts/generate-openai-images.mjs",
-      "sha256": "1d2b7488db823201e45a1083792362da0174c8a6540fcdaf45f5daa377527ef4",
-      "size": 10288
+      "sha256": "a7bfa9e8a5b6a0217340064d07876c5bf57a88f3f9e37978b6497e147d01d567",
+      "size": 14249
     },
     {
       "path": "scripts/lib/complete-png-validation.mjs",
-      "sha256": "eebfda1ab740f6739872c54e078cdf864917722dffc5b420e340307b2d2b0f33",
-      "size": 2826
+      "sha256": "609f74e472047c2d87375d2308d8cb51269579f4f2baf40b736565b0e59a9436",
+      "size": 8586
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
@@ -1333,6 +1353,11 @@
       "path": "scripts/lib/image-provider.mjs",
       "sha256": "ff5150674f9ef072f319ff52c6e2c0969d9b676696dba02329730e70b63a72b4",
       "size": 1140
+    },
+    {
+      "path": "scripts/lib/image-reference-loader.mjs",
+      "sha256": "e571cfdc088b6a99450cffeed398b8368843980dcd4dae8da4121ea6c85116b3",
+      "size": 5954
     },
     {
       "path": "scripts/lib/rfc3339.mjs",
@@ -1360,14 +1385,19 @@
       "size": 71907
     },
     {
+      "path": "scripts/run-game-design-writing-polish.mjs",
+      "sha256": "b5cfff90fa856762ae826693c07feb6521251722b304184ffa2c1fc3cd5fc465",
+      "size": 1356
+    },
+    {
       "path": "scripts/run-image-asset-workflow.mjs",
-      "sha256": "389edb8605c89b4cdea6ce90a6d55c8efd9120b1fcc336ab47e993dfdb607e07",
-      "size": 30798
+      "sha256": "52114ebedc0c2c05a36316bb351a5ffd04cfcf111ac8c34b343e113d6dd41e67",
+      "size": 36938
     },
     {
       "path": "scripts/stop-artifact-review.mjs",
-      "sha256": "58a22a9b1474a5f1f757b61e210b2ce4273555a3c965d9b2beca321ed0d72ac9",
-      "size": 25078
+      "sha256": "6a8cf4fe55ab531c52ec77ba9f74353358286429b6c5c2408d71b23e7b9a2c2f",
+      "size": 26602
     },
     {
       "path": "scripts/validate-artifact.mjs",
@@ -1376,13 +1406,13 @@
     },
     {
       "path": "scripts/validate-image-assets.mjs",
-      "sha256": "250c41cbe79fbc98a58c9ae450de6ad588008098e9246b958e76c00ad7941e45",
-      "size": 25558
+      "sha256": "43c446e57fd5bc4f8fb2a9e866503f69b874c5b769ee49733d4eeb54a9e5e055",
+      "size": 35683
     },
     {
       "path": "scripts/validate-image-config.mjs",
-      "sha256": "08be91a64ee41d09ec36c6f733b24ff9fa16025bd6709fe423a5cf567fc1ef60",
-      "size": 10004
+      "sha256": "2d176e335690cebfea4120ee390fd4dd674929f0f3e2abd01d9c4abcce3503b3",
+      "size": 10902
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
@@ -1395,6 +1425,11 @@
       "size": 4127
     },
     {
+      "path": "scripts/validate-writing-revision.mjs",
+      "sha256": "04b71cc7fc7bf315f5e89a76fb9d24fba67030748a45d3853dc9ed87af687a23",
+      "size": 20788
+    },
+    {
       "path": "skills/apply-document-quality-profile/SKILL.md",
       "sha256": "7dd900b45d45fe38018d18696caf2572b52ff76c9f468b1ca2f12c582d5916bd",
       "size": 8923
@@ -1403,6 +1438,306 @@
       "path": "skills/apply-document-quality-profile/agents/openai.yaml",
       "sha256": "426be3b20ea134202f49ffae43902badab8282019fe4d43d7f714fee3be06a24",
       "size": 270
+    },
+    {
+      "path": "skills/archify/LICENSE",
+      "sha256": "2f724fa953b4eaa8ec75fa56919ce474b57adce54d2456a3791510bc53735cbd",
+      "size": 1146
+    },
+    {
+      "path": "skills/archify/SKILL.md",
+      "sha256": "4946d2fb2af9cb84461b1b98b732b44833e6a1ceaebfe8cd9e9d9ca4e939e12e",
+      "size": 7929
+    },
+    {
+      "path": "skills/archify/assets/template.html",
+      "sha256": "fbdb9e25edfd222d77702eb40ccdddc8cffa2dc2e63c2b769eb4fdd8ec9bc0ef",
+      "size": 600083
+    },
+    {
+      "path": "skills/archify/bin/archify.mjs",
+      "sha256": "91de5dc9131a7602d4f923b6cfdda942bca26941fa37f7bf92ffd95a3864ee50",
+      "size": 54402
+    },
+    {
+      "path": "skills/archify/bin/open-artifact.mjs",
+      "sha256": "add1722186683c12770c575585bbb8774919c15b87361e10d2fe834623223159",
+      "size": 2225
+    },
+    {
+      "path": "skills/archify/bin/preview.mjs",
+      "sha256": "c1f470655f3d09cf1a2f6745ab3cec407e5246926237b92a67d673c74e339e02",
+      "size": 23578
+    },
+    {
+      "path": "skills/archify/delta/architecture-delta.mjs",
+      "sha256": "c89203f7f4954adc5626246f5dbf8b26486d7c3631c5978487fc664aaa0ed64f",
+      "size": 70463
+    },
+    {
+      "path": "skills/archify/examples/agent-run.lifecycle.json",
+      "sha256": "2e756b3d1ebc2f6c3f62f46c0fbb5584ed7bd6213627259ab43153b18c831cdf",
+      "size": 4527
+    },
+    {
+      "path": "skills/archify/examples/agent-tool-call.workflow.json",
+      "sha256": "a3afc6b30044eb256aa15c6195ddfbbcd1a14880d99967ed5605bc621ffb7e5f",
+      "size": 6470
+    },
+    {
+      "path": "skills/archify/examples/async-job-roundtrip.sequence.json",
+      "sha256": "1b53d7c4ce7b2d8f6f40b8f33a394abe1d37fc991272b534c1ccd0255920ab52",
+      "size": 4483
+    },
+    {
+      "path": "skills/archify/examples/cache-miss-request.sequence.json",
+      "sha256": "30098d81006a18813bab447da698edf74604a1463770f01dc056b0af8cb314ef",
+      "size": 4442
+    },
+    {
+      "path": "skills/archify/examples/checkout-platform.base.architecture.json",
+      "sha256": "3cc9e5b6075aa77b51a892d2cfeba16e0f8eb0f00416e0337e94ec8ec6300d8c",
+      "size": 2304
+    },
+    {
+      "path": "skills/archify/examples/checkout-platform.head.architecture.json",
+      "sha256": "54982cff83d1a91316097e27fde009b10e7c07a2e321e8bff94ec21ef902e5f2",
+      "size": 2434
+    },
+    {
+      "path": "skills/archify/examples/dataflow-product-analytics.html",
+      "sha256": "1fe57b42b5707eec1f289b63ea6744d5290dce52fb5b40144683f6625f2ab9b4",
+      "size": 618131
+    },
+    {
+      "path": "skills/archify/examples/deployment-release.lifecycle.json",
+      "sha256": "aa614f0c9a82f210e301e382f362dfbd7f290bda4d5501de3c99a6cd81b4c0a4",
+      "size": 4394
+    },
+    {
+      "path": "skills/archify/examples/event-stream.dataflow.json",
+      "sha256": "bbfedc2f1b73bf50932490f7f56d45d5f853e970d2fab26660a04947a783969c",
+      "size": 5543
+    },
+    {
+      "path": "skills/archify/examples/incident-response.workflow.json",
+      "sha256": "9beb8698b275679a2fc92d4b51288cd5b5fc2115696d06b9168f3d7fef253a72",
+      "size": 5471
+    },
+    {
+      "path": "skills/archify/examples/lifecycle-agent-run.html",
+      "sha256": "5648bea78a6d8d573a964a78c2088441b2e573b571c4a7b580988d7bc71b0a4e",
+      "size": 611784
+    },
+    {
+      "path": "skills/archify/examples/product-analytics.dataflow.json",
+      "sha256": "f71c89288f80255bdedcdc0057bcbc155d1d8b1b7476d024b35f4e27c730c974",
+      "size": 5719
+    },
+    {
+      "path": "skills/archify/examples/production-deployment.architecture.json",
+      "sha256": "03e647d057eb20d99f7fb4ba4ddfdd5d58a7a813865338680e968038e6a90e0f",
+      "size": 5546
+    },
+    {
+      "path": "skills/archify/examples/release-delivery.workflow.json",
+      "sha256": "44aa56ac6ca807937dfe84a6404e8b07d6394a38ae2ac53248a1985337dfd671",
+      "size": 5256
+    },
+    {
+      "path": "skills/archify/examples/sequence-cache-miss-request.html",
+      "sha256": "ec485045370cc80930fb468db3c9e8c4ed2ebea39e99cb4e370e82e60ba40de0",
+      "size": 614556
+    },
+    {
+      "path": "skills/archify/examples/web-app-rendered.html",
+      "sha256": "4de8669a9fd93f4df66e2ca16cc10517a290710b831adf03446256b8d544f137",
+      "size": 611896
+    },
+    {
+      "path": "skills/archify/examples/web-app.architecture.json",
+      "sha256": "01567b5e49cad5139baa071533a028d22f0e80fedfb49095e0d9330aee7f87db",
+      "size": 3863
+    },
+    {
+      "path": "skills/archify/examples/workflow-agent-tool-call-rendered.html",
+      "sha256": "fef035cb0d7c2681266d416e7ff27005002c22d1cf6c97349653c23cd2678be6",
+      "size": 620972
+    },
+    {
+      "path": "skills/archify/package.json",
+      "sha256": "22b58c8b47c920a5cc16614dd95c1194fae8205a2eba033dcb5158155828827d",
+      "size": 303
+    },
+    {
+      "path": "skills/archify/recipes/scenarios.mjs",
+      "sha256": "8220aeaae507dcecedd4e544940b4db46accb0502b2bb512e87ca2ed6670e07f",
+      "size": 27853
+    },
+    {
+      "path": "skills/archify/references/authoring-contract.md",
+      "sha256": "06c0045075aa96f10923c87b6cc8ccf2d63bd8b2475da54c928e78ea5b5ffaa9",
+      "size": 6111
+    },
+    {
+      "path": "skills/archify/references/delivery-contract.md",
+      "sha256": "149846891358a328565d5efc75a69c3f42715ef3e01560f479096ce9d80568a9",
+      "size": 3563
+    },
+    {
+      "path": "skills/archify/references/viewer-runtime.md",
+      "sha256": "dc0d9ffe6b9987d73d2d48710fce5ab4c120bbf1940ff1eb9355259c5d4f32b6",
+      "size": 4243
+    },
+    {
+      "path": "skills/archify/renderers/architecture/grid.mjs",
+      "sha256": "f6de99c32436feed3378b0ddef516bb4732ff27a89c543b50635d4d14a15a55a",
+      "size": 2071
+    },
+    {
+      "path": "skills/archify/renderers/architecture/render-architecture.mjs",
+      "sha256": "4031e5b51c3a28147fc2a2949d3b0ddd70b922c06a2084e0f621397cea415e32",
+      "size": 29348
+    },
+    {
+      "path": "skills/archify/renderers/dataflow/README.md",
+      "sha256": "602ce170c0b1e37a527f8ffebaf3c4b82e2cf7f635a85ee108b4ae758c435c26",
+      "size": 4283
+    },
+    {
+      "path": "skills/archify/renderers/dataflow/render-dataflow.mjs",
+      "sha256": "687e22b2643e7a25189be8635d5bf7b597ed1d8160c46343b69203bcd729fbde",
+      "size": 18802
+    },
+    {
+      "path": "skills/archify/renderers/lifecycle/README.md",
+      "sha256": "8cb753d4bcf11a2914e6a016598e10249c7eb931ce99860c14cd5929dddb59e7",
+      "size": 5035
+    },
+    {
+      "path": "skills/archify/renderers/lifecycle/render-lifecycle.mjs",
+      "sha256": "b89532e86d1b71fffe01962a594c1cd810853d74ac41ad01bb28c23cb545dd23",
+      "size": 21547
+    },
+    {
+      "path": "skills/archify/renderers/sequence/README.md",
+      "sha256": "8a2c52eb248b18767d0a9179f08b3f0f370136df6b63beb528eae02ff400ad20",
+      "size": 4198
+    },
+    {
+      "path": "skills/archify/renderers/sequence/render-sequence.mjs",
+      "sha256": "d12da9a49865dfa88e2c8d47302b07949c5fa78bae7cdb231ead6f97fa5e0f69",
+      "size": 19347
+    },
+    {
+      "path": "skills/archify/renderers/shared/cli.mjs",
+      "sha256": "59f0832292b3422c9441bef9fc21b70f2a4dc9d822e6b53f53cf6095b127cc0a",
+      "size": 10116
+    },
+    {
+      "path": "skills/archify/renderers/shared/diagnostics.mjs",
+      "sha256": "27ac252f47abbda260643f7400c126bab840aca5c050005d721ae32b87744136",
+      "size": 4113
+    },
+    {
+      "path": "skills/archify/renderers/shared/engineering-profiles.mjs",
+      "sha256": "7e99f9d5423f66cc9ab6224da56dc2d5aa6c6faec29178034794e9db6b5b2889",
+      "size": 6936
+    },
+    {
+      "path": "skills/archify/renderers/shared/generated-validators.mjs",
+      "sha256": "89201a8f0916991b597f620891a885c697540de621fd4c0e836fca57acaba102",
+      "size": 382681
+    },
+    {
+      "path": "skills/archify/renderers/shared/geometry.mjs",
+      "sha256": "71e5ee761fced528afa613821e4d4ad47699e1067b83439a1152617536b4cf23",
+      "size": 52614
+    },
+    {
+      "path": "skills/archify/renderers/shared/layout-report.mjs",
+      "sha256": "44c2f74a20e483dd37dae6791ede39284ce3bac1a2a13872d2912999e8504df5",
+      "size": 1015
+    },
+    {
+      "path": "skills/archify/renderers/shared/legend.mjs",
+      "sha256": "c83868715bb49d7d94d77c2d98c7dbc4e6d6029d2497deed0720b3966c3cebe5",
+      "size": 8428
+    },
+    {
+      "path": "skills/archify/renderers/shared/output-path.mjs",
+      "sha256": "9c61692cf9debc99f5cb86e0df8c474d0665921345fecdfc13ded3828c94f0a8",
+      "size": 10618
+    },
+    {
+      "path": "skills/archify/renderers/shared/repository-evidence.mjs",
+      "sha256": "e36c109c84b338ea77d2ae74e9fa9ffe4317e7780a2be8d4d78e588ddb387677",
+      "size": 11445
+    },
+    {
+      "path": "skills/archify/renderers/shared/utils.mjs",
+      "sha256": "cb6b952c5d276f5fedf1c288ed87bae896301beb48f26147eac689ff5b116bd4",
+      "size": 8276
+    },
+    {
+      "path": "skills/archify/renderers/shared/validator.mjs",
+      "sha256": "7460d7fcbcdf710649256c5e96142ae26d807a655d3296ee8caf7f5e158622cc",
+      "size": 3508
+    },
+    {
+      "path": "skills/archify/renderers/workflow/README.md",
+      "sha256": "55abf36513f5cd4c1b06fa0cc2aa158375527b9de45bf45d96cca00a98b6bc51",
+      "size": 5425
+    },
+    {
+      "path": "skills/archify/renderers/workflow/render-workflow.mjs",
+      "sha256": "ff3f1f436991f6e4eaabefb29bd3ee1b4fcd3ec6ecb0a84b89e6ef9500f2c64d",
+      "size": 27607
+    },
+    {
+      "path": "skills/archify/schemas/README.md",
+      "sha256": "a280d6f9fee20ad7f0e75e43b82675d85f89578d6743519e1e19888d307a4d73",
+      "size": 9138
+    },
+    {
+      "path": "skills/archify/schemas/architecture.schema.json",
+      "sha256": "2f2fad88bed1b408a9fd65d62f94f86c43eeefa2e82ff11edc8a2a5f20ac1a07",
+      "size": 6523
+    },
+    {
+      "path": "skills/archify/schemas/common.schema.json",
+      "sha256": "7cbd0cfff3715fb89a50c75188c7893db853f7f27a821522142717300da1c3e4",
+      "size": 2041
+    },
+    {
+      "path": "skills/archify/schemas/dataflow.schema.json",
+      "sha256": "436a03b806061f623fbe9913a1476e61c8af2273047620bc91a823249bb15356",
+      "size": 5972
+    },
+    {
+      "path": "skills/archify/schemas/lifecycle.schema.json",
+      "sha256": "3dc62d8d382e1495c5b43b5a4570716bd57e8e9e02f46b447ba37896b0cf917c",
+      "size": 6662
+    },
+    {
+      "path": "skills/archify/schemas/sequence.schema.json",
+      "sha256": "2da7f92f6fdf12d218edfc4a0b96c494bcf96572982152be002cf5cabf04f272",
+      "size": 5132
+    },
+    {
+      "path": "skills/archify/schemas/workflow.schema.json",
+      "sha256": "4c0d90c4216b8c0fb456dd0912048d00ecc363b6c0cb53faa2837c3d729b2608",
+      "size": 8476
+    },
+    {
+      "path": "skills/archify/scripts/check-render-output.mjs",
+      "sha256": "aec2aa7e56993707248307f596bfcce9a5adbb0af1593f2d2ed5a309de8cd8da",
+      "size": 29622
+    },
+    {
+      "path": "skills/archify/scripts/render-examples.mjs",
+      "sha256": "a173a053fb26c0ac3cd72eb9b4e50411e67ca8c50bec57f05d4ca8ba79db2c0b",
+      "size": 1178
     },
     {
       "path": "skills/build-game-design-portfolio/SKILL.md",
@@ -1440,6 +1775,81 @@
       "size": 242
     },
     {
+      "path": "skills/humanize-korean/SKILL.md",
+      "sha256": "6c34dbf00c23ee52e5cb374273952dab9bb5d38552cf1fb7a90ed42854ee304f",
+      "size": 4352
+    },
+    {
+      "path": "skills/humanize-korean/references/ai-tell-taxonomy.md",
+      "sha256": "57b7b40bc90d927d1b76cd4325ae5a58c92d18a20615339b19bc5eac776a6940",
+      "size": 77157
+    },
+    {
+      "path": "skills/humanize-korean/references/baseline.json",
+      "sha256": "3880335a2b760fd505531e303ff9fff7f0725f8f2e98dc965a7808c21616d958",
+      "size": 6139
+    },
+    {
+      "path": "skills/humanize-korean/references/baseline_v2.json",
+      "sha256": "b5f1725bd02fb4cc40eece68c5b8f1d7c7655775743196d8fd0bc5978f2ed916",
+      "size": 13487
+    },
+    {
+      "path": "skills/humanize-korean/references/design-notes.md",
+      "sha256": "e350884ca1cb10c248d247b7fc2b5236211489757bf65a72360434f0254ae293",
+      "size": 5940
+    },
+    {
+      "path": "skills/humanize-korean/references/diagnosis-rules.md",
+      "sha256": "0a8d2c1ddf4b7294b66ddc549d0600fd74c41a187d6501869cb8c9c4d7d0456a",
+      "size": 13082
+    },
+    {
+      "path": "skills/humanize-korean/references/empirical-validation.md",
+      "sha256": "d23302029934de04baecb48759ca7d804d98e861341edec315ac4a1fc40ce31f",
+      "size": 8339
+    },
+    {
+      "path": "skills/humanize-korean/references/metrics.py",
+      "sha256": "a665faef60c88a045e232ac633fe19335d123a58a5dd8e493708c7c5954a5f60",
+      "size": 14550
+    },
+    {
+      "path": "skills/humanize-korean/references/metrics_v2.py",
+      "sha256": "97343e74d16d71eeaae773cfb2e3b5970bd395239b1457b9ca6e8bebae2740bd",
+      "size": 31314
+    },
+    {
+      "path": "skills/humanize-korean/references/quick-rules.footer.md",
+      "sha256": "933c5300b71fdf6eecc0ec0788910afd9a166ce7969ba129e2029ced000f2335",
+      "size": 1920
+    },
+    {
+      "path": "skills/humanize-korean/references/quick-rules.header.md",
+      "sha256": "e129aa91bfe74433d81ff6817e934a233a9a7febd85f1f9484eca1ced33c1c13",
+      "size": 1156
+    },
+    {
+      "path": "skills/humanize-korean/references/quick-rules.md",
+      "sha256": "cc8947e145a34af000b3684ef09ed62c51c0b35080f43b96bcd38e2ff98d28ef",
+      "size": 10040
+    },
+    {
+      "path": "skills/humanize-korean/references/rewriting-playbook.md",
+      "sha256": "854b9e8fa552747972c319d6b409a00a74ed5afcb69eed019dfc5092238be721",
+      "size": 12133
+    },
+    {
+      "path": "skills/humanize-korean/references/scholarship.md",
+      "sha256": "e83346a5b0147a923b725295cbee6b7fa3b22020840b5eee95c35f615b182e64",
+      "size": 35541
+    },
+    {
+      "path": "skills/humanize-korean/references/web-service-spec.md",
+      "sha256": "be887c5e60b9a37e63a4aa8156ada0da4298098a51451925a3a22b9a37e25f6a",
+      "size": 8010
+    },
+    {
       "path": "skills/map-game-design-career/SKILL.md",
       "sha256": "4bc2e2b48a1e5c9b0a1710bcde5a7048978cdd429917c52cfce12eb1d43e67db",
       "size": 2542
@@ -1451,8 +1861,8 @@
     },
     {
       "path": "skills/orchestrate-game-design-career/SKILL.md",
-      "sha256": "e587001fc4c83aa12e3321196d5a3be8f5c1dc63ce1319718afa778c7fc19e51",
-      "size": 4485
+      "sha256": "c49b02018a34aee11bd15b94e6a2c61c8465e6b327a6997f67a9df834d572dde",
+      "size": 6208
     },
     {
       "path": "skills/orchestrate-game-design-career/agents/openai.yaml",
@@ -1488,6 +1898,16 @@
       "path": "skills/plan-junior-growth/agents/openai.yaml",
       "sha256": "843ef322571bb2c20c89d3539305ab4ddd57f81e3a0f6bad7b9316779347e502",
       "size": 230
+    },
+    {
+      "path": "skills/polish-game-design-writing/SKILL.md",
+      "sha256": "a2277771d828e59ddee1bb43ea9a49b1076b58c9806caa108fa23ac32ad901fe",
+      "size": 3674
+    },
+    {
+      "path": "skills/polish-game-design-writing/agents/openai.yaml",
+      "sha256": "fb796d8b39742b61e34f8970fc56a879a03be3b106f6759cd1284d11ae9e83eb",
+      "size": 256
     },
     {
       "path": "skills/practice-game-design-interview/SKILL.md",
@@ -1546,8 +1966,8 @@
     },
     {
       "path": "skills/svg-infographic/CHANGELOG.md",
-      "sha256": "794ca707fdc1647975030c97b171c31f1ae14b526483286696cfaf3d35e8329e",
-      "size": 2684
+      "sha256": "2b22255c3f8df790c447b5810d5efff4c893b544aad41036cd6131e0d388e78a",
+      "size": 3117
     },
     {
       "path": "skills/svg-infographic/LICENSE.txt",
@@ -1556,28 +1976,28 @@
     },
     {
       "path": "skills/svg-infographic/README.ko.md",
-      "sha256": "d981158c3087cc3f853004178a9a27505c74da9bb8bd4716caf04fa510e4ddaa",
-      "size": 16590
+      "sha256": "3be6be71eb58f3873186a4f140242ca0373b8c5d9d3f60404a1950cc1223b9df",
+      "size": 16846
     },
     {
       "path": "skills/svg-infographic/README.md",
-      "sha256": "ee63d45454d3147fbf14a927a28a74f9a3fe545e549b12dadc6c0867a65cdc51",
-      "size": 14103
+      "sha256": "2917952c8c9d157c55682811b4fe4171fcae34f78630af8e51628139b947d598",
+      "size": 14331
     },
     {
       "path": "skills/svg-infographic/SKILL.md",
-      "sha256": "6d5a2d278ca0aaa045b636d7a5faf83e825908ba7a28dac09faa6c01e442f2f1",
-      "size": 22012
+      "sha256": "65834a67f0aa273c65923555b1a1440fe31e468a2c42f5a761b04eacf2682035",
+      "size": 23508
     },
     {
       "path": "skills/svg-infographic/references/archetypes.md",
-      "sha256": "f0c8de46fb2a25fdd13de021c22c0390f40b760af6224120d2f16957f216605f",
-      "size": 11548
+      "sha256": "7199fb4c6303a80cb78078a81b40b10d73e37e0b03802b50a6fe1047e181a6af",
+      "size": 11832
     },
     {
       "path": "skills/svg-infographic/references/authoring.md",
-      "sha256": "2b8239cd836a7753cab5c67840c631347b58b4806848bbffe2e0653d214b6317",
-      "size": 20718
+      "sha256": "a2c8cdf6c528df360dbbe245370a5c52076359544fb7341f8263afe45d8fcae7",
+      "size": 25752
     },
     {
       "path": "skills/svg-infographic/references/sketch.md",
@@ -1586,13 +2006,13 @@
     },
     {
       "path": "skills/svg-infographic/scripts/check-svg.mjs",
-      "sha256": "3990a96078ce8c0c4692213820ce72fc228a1b827459792d5ccc45932f5f9a41",
-      "size": 41219
+      "sha256": "61271a00d5466438eeabe5aeedf961d5df802c0976732ed193e265a7c94493e3",
+      "size": 60617
     },
     {
       "path": "skills/svg-infographic/scripts/check-svg.test.mjs",
-      "sha256": "a3f73ff0ccd03189fbd8eb4dc45fd8ec72cf02024afbca9eada3c713d953c808",
-      "size": 14481
+      "sha256": "e6e9bd03a6ae4dd30267fd1556e83c607842b67a89d8fc4d59abd579d8fcb9b7",
+      "size": 22477
     },
     {
       "path": "skills/svg-infographic/scripts/fixtures/curve-head-unverified.svg",
@@ -1695,6 +2115,26 @@
       "size": 336
     },
     {
+      "path": "skills/svg-infographic/scripts/fixtures/layout-budget-contract-invalid.svg",
+      "sha256": "ff2cae07871a41bb7e3e751e28f4cd858ef3412427738b276f458ac542de8584",
+      "size": 4133
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/layout-budget-invalid.svg",
+      "sha256": "2e859d8f9c2560616038b9b7cb6bc5bb67360e03f7e7fcc0a3d67c4e93447901",
+      "size": 3798
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/layout-budget-unverified.svg",
+      "sha256": "63cec33f427b614c12f7d6279dd3fadc621548f57d7acdd030f46b244bd3a902",
+      "size": 3113
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/layout-budget-valid.svg",
+      "sha256": "ee9328aff0ee6939ee294b4d7d03d5898b19be540d8e9fec72b02fe8934dfa7e",
+      "size": 3850
+    },
+    {
       "path": "skills/svg-infographic/scripts/fixtures/missing-marker-units.svg",
       "sha256": "1ecf88c9b6dc3701736f3ff9a1b912e94ff0a1dc1234b4f824e561a03d8c880e",
       "size": 526
@@ -1738,6 +2178,21 @@
       "path": "skills/svg-infographic/scripts/fixtures/split-css-rules.svg",
       "sha256": "f2f302614b414224dee8bc54027e08999689664863a8471b619301ff1601bcfd",
       "size": 655
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/title-rail-invalid.svg",
+      "sha256": "3ffff1586d5f96bea17b3bfadcef5dc7e99304db316ac14795bb5e7bed9b8a07",
+      "size": 1824
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/title-rail-unverified.svg",
+      "sha256": "481ce11c9ad9ffe83571d57d3e786a46cc5a14727b69017d94ed95b76d7fbaae",
+      "size": 1026
+    },
+    {
+      "path": "skills/svg-infographic/scripts/fixtures/title-rail-valid.svg",
+      "sha256": "d0f7d64b50fdaa422cbbdf5654cf9ff224fc95a6f743daef483a63d05f27f48d",
+      "size": 1805
     },
     {
       "path": "skills/svg-infographic/scripts/fixtures/undersized-head.svg",
@@ -1786,8 +2241,8 @@
     },
     {
       "path": "skills/visualize-career-roadmap/SKILL.md",
-      "sha256": "8f56adf7806feb72b258efa0605d89ffb15c718fa17397ebc0dc56368dfdf0a9",
-      "size": 4754
+      "sha256": "325328b465d32f2ff4e37ed16de1f1efdbe5cbe453bcb4ccd564ddf1373e3cef",
+      "size": 5233
     },
     {
       "path": "skills/visualize-career-roadmap/agents/openai.yaml",
@@ -1803,6 +2258,11 @@
       "path": "skills/visualize-career-roadmap/scripts/validate-visualization-state.mjs",
       "sha256": "c4a3576a58a557cce0c12cc329e114428957135897d692215bd0757f680b115c",
       "size": 20841
+    },
+    {
+      "path": "third-party/im-not-ai/LICENSE",
+      "sha256": "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f",
+      "size": 1067
     }
   ]
 }

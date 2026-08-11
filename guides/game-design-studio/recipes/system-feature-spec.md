@@ -87,3 +87,119 @@ Canonical Artifact의 `content.md`, 예외 결정과 test case를 함께 전달�
 
 - [시스템 스킬](../skills/design-game-systems.md), [플레이어 경험 스킬](../skills/design-player-experience.md), [시각화](../visualization.md)
 - [이미지 mode 라우팅](../../assets/shared/image-generation-mode-routing.png)은 별도 image slot의 생성 경계를 보여 줍니다.
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:recipe:system-feature-spec -->
+<!-- PROMPT-CARD: studio:recipe:system-feature-spec -->
+#### studio:recipe:system-feature-spec
+
+**시스템 기능 명세 작성 절차**
+
+system-feature-spec recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Studio 제작 기능의 input, rule, state, exception precedence, failure/recovery와 table/runtime mapping을 명세해. 접근성 critical action도 누락하지 말고 design owner 검토 전에는 승인하지 마.
+```
+
+##### 짧은 흐름
+- 작업 순서: design-game-systems → design-player-experience → review-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+제작 기능은 재료 선택→수량 검사→제작 대기→결과 수령 순서이며, 취소와 재접속 예외를 따로 적었습니다. 표 데이터와 실행 중 상태의 연결, 접근성 핵심 행동은 설계 책임자가 검토해야 합니다. (ID: studio:recipe:system-feature-spec; 파일: game-design/[프로젝트 ID]/system-specification/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio 제작 기능의 input, rule, state, exception precedence, failure/recovery와 table/runtime mapping을 명세해. 접근성 critical action도 누락하지 말고 design owner 검토 전에는 승인하지 마. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:design-game-systems game-design/<project-id>/system-specification/에서 rule과 state를 명세한 뒤 $game-design-studio:design-player-experience 및 $game-design-studio:review-game-design으로 검토해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:design-game-systems game-design/[프로젝트 ID]/system-specification/에서 rule과 state를 명세한 뒤 $game-design-studio:design-player-experience 및 $game-design-studio:review-game-design으로 검토해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: design-game-systems
+- 스킬 흐름: design-game-systems → design-player-experience → review-game-design
+- 전문 역할: lead-game-designer
+
+##### 중간 산출물
+- system-specification
+
+##### 예상 결과물
+###### 최소 결과물
+- system-specification canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/system-specification/content.md
+- game-design/[프로젝트 ID]/system-specification/evidence.yml
+- game-design/[프로젝트 ID]/system-specification/decisions/README.md
+- game-design/[프로젝트 ID]/system-specification/assets/README.md
+- game-design/[프로젝트 ID]/system-specification/export-manifest.yml
+- game-design/[프로젝트 ID]/rule-exception-matrix/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/system-specification/content.md
+- game-design/[프로젝트 ID]/system-specification/evidence.yml
+- game-design/[프로젝트 ID]/system-specification/decisions/README.md
+- game-design/[프로젝트 ID]/system-specification/assets/README.md
+- game-design/[프로젝트 ID]/system-specification/export-manifest.yml
+- game-design/[프로젝트 ID]/rule-exception-matrix/content.md
+
+##### 도식 바인딩
+- ID: st-s01
+- SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
+- PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
+- 대체 텍스트: Studio recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 system-feature-spec의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+system-feature-spec의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END game-design-studio:recipe:system-feature-spec -->

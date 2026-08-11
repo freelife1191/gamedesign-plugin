@@ -72,7 +72,7 @@ const typeContracts = {
   "creative-design-portfolio": ["claim-id", "evidence-id", "third-party-source", "attribution", "rights", "use-purpose", "privacy", "inspectability"],
   "game-analysis-report": ["observation", "inference", "source-address", "scope", "alternative", "validation-method"],
   "five-axis-review": ["section-id", "evidence-id", "not-observed", "no-defect", "defect-observed", "minimum-repair", "penalty"],
-  "interview-question-answer-log": ["posting-evidence-id", "portfolio-evidence-id", "base-question", "follow-up", "objection", "situational", "honest-answer", "do-not-fabricate"],
+  "interview-question-answer-log": ["posting-evidence-id", "portfolio-evidence-id", "기본 질문", "꼬리 질문", "반론 질문", "상황 질문", "honest-answer", "do-not-fabricate"],
   "introduction-motivation": ["claim-id", "evidence-id", "target-role", "motivation", "honest-boundary", "privacy"],
   "junior-growth-review": ["requirement-id", "project-event-evidence", "owner", "cadence", "reviewer", "next-review-date", "proof-artifact"],
   "transition-readiness": ["current-evidence", "target-requirement", "posting-evidence-id", "retrieval-date", "region", "gap", "alternative", "verification-task"],
@@ -97,107 +97,116 @@ const recordFields = {
 };
 
 const approvedContentHashes = {
-  "career-stage-goal": "8988c7f4668fb38f11a63f11106fb6e7a52274187413a43321b539bb3170fb07",
-  "competency-matrix": "336df258170a0ae9e2398492439c995570fb23c6ddf73eb7a6067d819e1bf04a",
-  "creative-design-portfolio": "609f12bad50bad55f1686e3a7b8827c8646124c07fe8c2c8d49b9eaf0ffd63b2",
-  "five-axis-review": "873a22fadf561ecf807ccf5ee4b996ae8413d7191baf6afb4984e0d8c7c22c40",
-  "game-analysis-report": "0f68cd1d83bc122886020faa89e8965613ae6e8e43c321f6fea77288855cc562",
-  "game-design-role-map": "b51bb263324055b57cc8ce1c78bda815bcd4a5452ce50053d008c827168a989a",
-  "interview-question-answer-log": "c709da4339c52c03ecff50335127e94884b94b2bb8db1d0c97b6ef8ca87075bc",
-  "introduction-motivation": "dc714fc34cb47351ea4c7a70d4def91bea99b8b939a7138e82d0c075477bddcd",
-  "job-posting-evidence": "d1549a9ed9254132c7676feea3bfe067917b1043da7a3bd6f03fc9510893a846",
-  "junior-growth-review": "1cc111b43306ab86338964d6266a0da26b9084014e31c19e78cf3da03323ebe5",
-  "learning-roadmap": "3244065e066a815ac7ae2ba73539b4dc7af460e9bb0976a5dcec7b46fb85f733",
-  "portfolio-backlog": "82109b8d827a08847028e6e61ac5b522e850fd5ee6799629b53cb7417f32767d",
-  "portfolio-project-brief": "7969531595b351c1557cb0bbd52fceffd48338b5dd153cf17ca74b6a3810b8e6",
-  "reverse-design-document": "f491b1a9d1a8a0e24b4b6f2de4d8323f9cdd36e3684f0ccc825c7d36f0e1610c",
-  "transition-readiness": "d3760dede563fbbdc330872ea0e8f3bb2bd887782c3c563c85aa77791757e4c5",
+  "career-stage-goal": "b561dd2134b5358d18266c71b09a0cd010647b53852cbefcb0b83a9b3045885b",
+  "competency-matrix": "1654f4533eb7cccfddd2725c38bc39f8c0f8268be5e2f7c964ff785f85cb5f86",
+  "creative-design-portfolio": "4b557714dff893071562ff92dad150c99908f7ce8b42cb0a0c87ecf006a3e083",
+  "five-axis-review": "5446da50e85a09446326e8165295e969656866040a91960dde96d092be2e20e5",
+  "game-analysis-report": "205fe0015ef17c45f1f99ca4f0ae7b277050163b659bd3c412c2e3b13a0273d2",
+  "game-design-role-map": "ce1d1b6b60e088fc988fa6ce90dedf0410b6f6337bf431dd663b7ca8c2496ee1",
+  "interview-question-answer-log": "3075c3f45953ac4fc6df5c0a069f16000fa5289551192e39f9b7c1990cb5278b",
+  "introduction-motivation": "10f9d9a8063a5ebb93890f0ac323d5595be6cf4a1d044962f60639f1a04b8eed",
+  "job-posting-evidence": "06a18d257861d74a60a97f8a5fbe8b11090ccc8bf1847c10c4fb8f34bf95f691",
+  "junior-growth-review": "8f1ae546910b5fc1104c244b0dcbe2bb55a5dce9cc571c5124f40f5a8d889a1a",
+  "learning-roadmap": "b5d4cf5fad12d9eac2fbd01441ed4fc7a2627c9176b7ceae66978dacb32ba4d6",
+  "portfolio-backlog": "0f515970462832b3d439861f9db72603503cd3f6b57b5ed42a521d26ca40991b",
+  "portfolio-project-brief": "856f6c9ab5bd0946c4ff10ee74d15fae235da2154c9e74f87388af5f00ea0d69",
+  "reverse-design-document": "bd3f786f95fd75bbfe78d64cad663fcb5c4d6543555ebd6edbe38a0c7ba0e5ac",
+  "transition-readiness": "7834ee78642beb8b49990ba4e5fbad5f2c00d9c0692cac73c42f509a625501a4",
 };
 
 const semanticContracts = {
   "career-stage-goal": [
-    ["Stage and Target Role", "stage-and-target-role", "stage: Record entry, new-hire, junior-growth, or transition. target-role: Name a role family and level only when evidence supports it."],
-    ["Goal Contract", "goal-contract", "Define a bounded outcome, success evidence, time constraint, owner, and review date. Keep multiple paths when one correct career is not established."],
+    ["stage-and-target-role", "`stage`: 경력 단계를 기록합니다. 값은 `entry`, `new-hire`, `junior-growth`, `transition` 중 하나를 사용합니다. `target-role`: 근거가 있을 때만 직무군과 레벨을 적습니다."],
+    ["goal-contract", "달성할 결과, 성공 근거, 기한, 담당자, 검토일을 분명히 정합니다. 정답인 경력 경로가 확정되지 않았다면 여러 경로를 함께 남깁니다."],
   ],
   "game-design-role-map": [
-    ["Role Families and Tradeoffs", "role-families-and-tradeoffs", "For each role-family, record target-level, current-evidence, gap, tradeoff, learning task, feedback cadence, and proof-artifact."],
-    ["Provisional Paths", "provisional-paths", "Keep at least two plausible paths when the target is unclear. Never rank by age, education, major, or employment gap."],
+    ["role-families-and-tradeoffs", "각 직무군(`role-family`)에 목표 레벨, 현재 근거(`current-evidence`), 역량 차이, 선택 기준, 학습 과제, 피드백 주기, 증빙 산출물(`proof-artifact`)을 기록합니다."],
+    ["provisional-paths", "목표가 불분명하면 가능성 있는 경로를 적어도 두 개 남깁니다. 나이, 학력, 전공, 공백 기간으로 순위를 매기지 않습니다."],
   ],
   "competency-matrix": [
-    ["Requirement Matrix", "requirement-matrix", "Each requirement-id links to a stable evidence-id, observation state, scope, and reviewer. Use not-observed when evidence is unavailable."],
-    ["Repair and Re-evaluation", "repair-and-re-evaluation", "Do not convert missing evidence into an ability score of zero. Record minimum-repair, owner, proof artifact, and re-evaluation date."],
+    ["requirement-matrix", "각 requirement-id에 안정적인 evidence-id, 관찰 상태, 범위, 검토자를 연결합니다. 근거가 없을 때는 not-observed를 사용합니다."],
+    ["repair-and-re-evaluation", "근거가 없다고 역량 점수를 0점으로 처리하지 않습니다. minimum-repair, 담당자, 증빙 산출물, 재평가일을 기록합니다."],
   ],
   "learning-roadmap": [
-    ["Roadmap Commitments", "roadmap-commitments", "For every requirement-id, record a learning-task, owner, cadence, proof-artifact, reviewer, and re-evaluation decision."],
-    ["Sequence and Dependencies", "sequence-and-dependencies", "Mark durations as provisional until capacity evidence exists. Keep prerequisites, feedback points, and scope choices explicit."],
+    ["roadmap-commitments", "각 요구 사항 ID(`requirement-id`)에 학습 과제(`learning-task`), 담당자, 주기, 증빙 산출물(`proof-artifact`), 검토자, 재평가 결정을 기록합니다."],
+    ["sequence-and-dependencies", "투입 가능 시간을 뒷받침할 근거가 생기기 전까지 기간은 가설로 표시합니다. 선행 조건, 피드백 시점, 범위 선택을 분명히 남깁니다."],
   ],
   "job-posting-evidence": [
-    ["Posting Records", "posting-records", "Each record requires source-id, company, project if stated, region, employment type, posted-date, source-url, retrieval-date, source-type, responsibilities, required skills, and preferred skills."],
-    ["Freshness and Sample Limits", "freshness-and-sample-limits", "Record freshness classification, sample size, sample-geography, blind spots, and non-generalizable requirements. A repeated signal requires multiple source IDs."],
+    ["posting-records", "각 기록에는 출처 ID(`source-id`), 회사, 명시된 경우 프로젝트, 지역, 고용 형태, 게시일(`posted-date`), 출처 URL(`source-url`), 조회일(`retrieval-date`), 출처 유형(`source-type`), 담당 업무, 필수 역량, 우대 역량을 기록합니다."],
+    ["freshness-and-sample-limits", "최신성 분류, 표본 수, sample-geography, 사각지대, 일반화할 수 없는 요구 사항을 기록합니다. 반복되는 신호는 여러 source ID로 확인합니다."],
   ],
   "portfolio-backlog": [
-    ["Backlog Records", "backlog-records", "Each item links claim-id, evidence-id, target competency, provenance, personal or team attribution, rights, privacy, strength, status, and inspectability."],
-    ["Minimum Repairs", "minimum-repairs", "Missing support receives a minimum-repair, recovery owner, action, proof artifact, and review gate before publication."],
+    ["backlog-records", "각 항목에 claim-id, evidence-id, 목표 역량, 출처 이력, 개인 또는 팀 기여 표기, 권리, 개인정보, 완성도, 상태, 검토 가능성을 연결합니다."],
+    ["minimum-repairs", "근거가 부족한 항목은 공개 전에 minimum-repair, 보완 담당자, 실행 작업, 증빙 산출물, 검토 기준을 기록합니다."],
   ],
   "portfolio-project-brief": [
-    ["Decision Chain", "decision-chain", "Use the exact sequence target-competency → problem-user → evidence → hypothesis-intent → rules/UI/data/content → constraints-alternatives → implementation-test → result-decision → retrospective."],
-    ["Publication Boundary", "publication-boundary", "Record personal/team attribution, third-party source, use purpose, rights, privacy, implementation status, and evidence limitations."],
+    ["decision-chain", "아래 의사결정 항목의 순서를 그대로 사용합니다: `target-competency` → `problem-user` → `evidence` → `hypothesis-intent` → `rules/UI/data/content` → `constraints-alternatives` → `implementation-test` → `result-decision` → `retrospective`."],
+    ["publication-boundary", "개인·팀 기여 표기, 제3자 출처, 이용 목적, 권리, 개인정보, 구현 상태, 근거의 한계를 기록합니다."],
   ],
   "reverse-design-document": [
-    ["Claim Records", "claim-records", "Each claim-id independently records observation, source address, scope, inference, confidence, counterexample, alternative, and validation-method."],
-    ["Fact and Inference Boundary", "fact-and-inference-boundary", "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact."],
+    ["claim-records", "각 주장 ID(`claim-id`)에 관찰 내용, 출처 위치(`source address`), 범위, 추론, 신뢰도, 반례, 대안, 검증 방법(`validation-method`)을 독립적으로 기록합니다."],
+    ["fact-and-inference-boundary", "관찰 내용이 없으면 inference는 null로 두고 confidence를 평가하지 않습니다. 내부 의도나 구현 내용을 사실처럼 제시하지 않습니다."],
   ],
   "creative-design-portfolio": [
-    ["Portfolio Story", "portfolio-story", "For every material claim-id, connect target competency, problem, decision rationale, alternative, implementation boundary, result, and reflection to an evidence-id."],
-    ["Third-party and Publication Rights", "third-party-and-publication-rights", "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability before publication."],
+    ["portfolio-story", "주요 claim-id마다 목표 역량, 문제, 결정 근거, 대안, 구현 범위, 결과, 회고를 evidence-id에 연결합니다."],
+    ["third-party-and-publication-rights", "공개 전에 third-party-source, 출처 표기, 권리, 이용 목적, 개인정보, 인용 범위, 개인·팀 기여 범위, 검토 가능성을 기록합니다."],
   ],
   "game-analysis-report": [
-    ["Analysis Claims", "analysis-claims", "For each stable claim, record observation, source-address, source type, scope, inference, confidence, counterexample, alternative, and validation-method."],
-    ["Decision Use", "decision-use", "State what a designer may learn, what remains unknown, and which evidence would change the analysis. Avoid reconstructing undocumented internal intent as fact."],
+    ["analysis-claims", "각 안정적인 주장에는 관찰 내용, source-address, 출처 유형, 범위, 추론, 신뢰도, 반례, 대안, validation-method를 기록합니다."],
+    ["decision-use", "기획자가 참고할 수 있는 내용, 아직 알 수 없는 내용, 분석을 바꿀 근거를 적습니다. 문서화되지 않은 내부 의도는 사실처럼 재구성하지 않습니다."],
   ],
   "five-axis-review": [
-    ["Review Records", "review-records", "Every record carries finding ID, axis ID, stable section-id, stable evidence-id, observation state, score or not-scored, impact, and minimum-repair."],
-    ["Observation and Penalty Rules", "observation-and-penalty-rules", "Keep not-observed, no-defect, and defect-observed distinct. Apply each penalty separately for contradiction, unsupported certainty, duplication, scope, or source."],
+    ["review-records", "모든 기록에 발견 ID(`finding-id`), 축 ID(`axis-id`), 안정적인 섹션 ID(`section-id`)와 근거 ID(`evidence-id`), 관찰 상태, 점수 또는 미채점(`not-scored`), 영향도, 최소 보완 작업(`minimum-repair`)을 남깁니다."],
+    ["observation-and-penalty-rules", "관찰 불가(`not-observed`), 결함 없음(`no-defect`), 결함 관찰됨(`defect-observed`)을 구분합니다. 모순, 근거 없는 단정, 중복, 범위, 출처는 각각 따로 감점합니다."],
   ],
   "interview-question-answer-log": [
-    ["Question Set", "question-set", "Trace every base-question, follow-up, objection, and situational question to a posting-evidence-id, portfolio-evidence-id, or explicit role-general source."],
-    ["Honest Answer Boundary", "honest-answer-boundary", "Connect claim, evidence, choice, alternative, result, and reflection. do-not-fabricate team size, revenue, retention, ownership, or implementation results; use an honest-answer and verification task when support is missing."],
+    ["question-set", "기본 질문, 꼬리 질문, 반론 질문, 상황 질문마다 채용 공고 근거 ID(`posting-evidence-id`), 포트폴리오 근거 ID(`portfolio-evidence-id`) 또는 명시된 직무 공통 출처를 연결합니다."],
+    ["honest-answer-boundary", "주장, 근거, 선택, 대안, 결과, 회고를 연결합니다. 팀 규모, 매출, 리텐션, 소유권, 구현 결과는 do-not-fabricate 원칙을 지킵니다. 뒷받침할 근거가 없으면 honest-answer와 검증 작업을 기록합니다."],
   ],
   "introduction-motivation": [
-    ["Claim Map", "claim-map", "Every claim-id links a target-role requirement, evidence-id, personal/team scope, and source limitation. Separate motivation from verified experience."],
-    ["Honest and Private Boundary", "honest-and-private-boundary", "Use an honest-boundary for missing evidence. Remove unnecessary personal data and record privacy and publication approval before sharing."],
+    ["claim-map", "모든 claim-id에 목표 직무의 요구 사항, evidence-id, 개인·팀 기여 범위, 출처의 한계를 연결합니다. 지원 동기와 검증된 경험은 구분합니다."],
+    ["honest-and-private-boundary", "근거가 없을 때는 honest-boundary를 사용합니다. 불필요한 개인정보를 삭제하고, 공유 전 개인정보와 공개 승인을 기록합니다."],
   ],
   "junior-growth-review": [
-    ["Quarterly Evidence", "quarterly-evidence", "Each requirement-id links project-event-evidence, personal/team attribution, decision, result status, limitation, and proof-artifact."],
-    ["Growth Commitments", "growth-commitments", "For every goal record owner, cadence, reviewer, input artifact, next-review-date, target depth or breadth, and re-evaluation rule."],
+    ["quarterly-evidence", "각 요구 사항 ID(`requirement-id`)에 프로젝트 이벤트 근거(`project-event-evidence`), 개인·팀 기여 표기, 결정, 결과 상태, 한계, 증빙 산출물(`proof-artifact`)을 연결합니다."],
+    ["growth-commitments", "각 목표에는 담당자, 주기, 검토자, 입력 산출물, next-review-date, 목표 깊이 또는 폭, 재평가 규칙을 기록합니다."],
   ],
   "transition-readiness": [
-    ["Readiness Matrix", "readiness-matrix", "Link each target-requirement to current-evidence and posting-evidence-id. Record source URL, retrieval-date, region, source type, gap, scope, and freshness."],
-    ["Decision Options", "decision-options", "Keep alternative paths, tradeoffs, minimum evidence, owner, verification-task, review date, and no-hiring-promise boundary explicit."],
+    ["readiness-matrix", "각 목표 요구 사항(`target-requirement`)에 현재 근거(`current-evidence`)와 채용 공고 근거 ID(`posting-evidence-id`)를 연결합니다. 출처 URL, 조회일(`retrieval-date`), 지역, 출처 유형, 역량 차이, 범위, 최신성을 기록합니다."],
+    ["decision-options", "대안 경로, 선택 기준, 최소 근거, 담당자, verification-task, 검토일, 채용을 보장하지 않는 범위를 분명히 기록합니다."],
   ],
 };
 
 const commonSemanticClauses = [
-  "An assumption is not an approved fact.",
-  "Automation cannot grant approval or rights.",
-  "current claims require a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
-  "Third-party material also records source, attribution, use purpose, rights or quotation notes, and privacy disposition.",
-  "Do not split Markdown mechanically by headings.",
+  "전제는 승인된 사실이 아닙니다.",
+  "자동화 도구는 승인이나 권한을 부여할 수 없습니다.",
+  "최신 주장은 날짜가 있는 1차 출처, 조회일, 지역 또는 적용 범위, 재검토일, 갱신 담당자를 갖춰야 합니다.",
+  "제3자 자료에는 출처, 출처 표기, 이용 목적, 권리 또는 인용 유의사항, 개인정보 처리 방침도 기록합니다.",
+  "Markdown을 제목 단위로 기계적으로 나누지 마세요.",
 ];
 
-function semanticSection(content, heading, id) {
-  const marker = `## ${heading} {#${id}}\n\n`;
-  const start = content.indexOf(marker);
-  assert.notEqual(start, -1, `missing semantic section ${id}`);
-  const bodyStart = start + marker.length;
+function semanticSection(content, id) {
+  const marker = new RegExp("^## [^\\r\\n]* \\{#" + id + "\\}\\r?\\n", "mu");
+  const match = marker.exec(content);
+  assert.ok(match, "missing semantic section " + id);
+  const bodyStart = match.index + match[0].length;
   const next = content.indexOf("\n## ", bodyStart);
   return content.slice(bodyStart, next === -1 ? content.length : next).trim();
 }
 
+function assertStableSection(content, id) {
+  assert.match(content, new RegExp("^## [^\\r\\n]* \\{#" + id + "\\}$", "mu"), "missing stable section " + id);
+}
+
+test("semantic sections use stable anchors instead of localized visible titles", () => {
+  const content = "## 기획 항목: Localized title {#stable-section}\n\nRequired semantic meaning.\n\n## 다음 섹션 {#next-section}\n\nOther meaning.\n";
+  assert.equal(semanticSection(content, "stable-section"), "Required semantic meaning.");
+});
+
 function assertSemanticContract(templateId, content) {
   assert.deepEqual(Object.keys(semanticContracts).sort(), [...templateIds].sort());
-  for (const [heading, id, requiredMeaning] of semanticContracts[templateId]) {
-    assert.equal(semanticSection(content, heading, id), requiredMeaning, `${templateId}: semantic contract ${id}`);
+  for (const [id, requiredMeaning] of semanticContracts[templateId]) {
+    assert.equal(semanticSection(content, id), requiredMeaning, `${templateId}: semantic contract ${id}`);
   }
   for (const clause of commonSemanticClauses) {
     assert.ok(content.includes(clause), `${templateId}: missing semantic clause ${clause}`);
@@ -255,10 +264,10 @@ function assertUsableTemplate(templateId, content, evidence, manifest, expectedC
   const metadata = parseContentFrontmatter(content);
   assert.equal(metadata.artifact_id, templateId, `${templateId}: frontmatter identity`);
   assert.match(content, /^# .+ \{#[a-z0-9-]+\}$/mu);
-  assert.match(content, /## Assumptions and Boundaries \{#assumptions-and-boundaries\}/u);
-  assert.match(content, /## Owners and Approvals \{#owners-and-approvals\}/u);
-  assert.match(content, /## Change History \{#change-history\}/u);
-  assert.match(content, /## Evidence and Freshness \{#evidence-and-freshness\}/u);
+  assertStableSection(content, "assumptions-and-boundaries");
+  assertStableSection(content, "owners-and-approvals");
+  assertStableSection(content, "change-history");
+  assertStableSection(content, "evidence-and-freshness");
   assert.doesNotMatch(content, /\b(?:TODO|TBD|lorem ipsum|fill this|placeholder)\b/iu);
   for (const token of typeContracts[templateId]) {
     assert.match(content, new RegExp(token, "iu"), `${templateId}: missing ${token}`);
@@ -407,20 +416,20 @@ test("semantic mutation guard rejects reversed safety and evidence meanings", as
   }
 
   await assertMutationRejected("reverse-design-document", (content) => content.replace(
-    "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact.",
-    "When no observation exists, inference may be estimated and confidence is high. Internal intent or implementation may be presented as fact.",
+    "관찰 내용이 없으면 inference는 null로 두고 confidence를 평가하지 않습니다. 내부 의도나 구현 내용을 사실처럼 제시하지 않습니다.",
+    "관찰 내용이 없어도 inference를 추정하고 confidence를 높게 평가합니다. 내부 의도나 구현 내용을 사실처럼 제시해도 됩니다.",
   ));
   await assertMutationRejected("interview-question-answer-log", (content) => content.replace(
-    "do-not-fabricate team size, revenue, retention, ownership, or implementation results; use an honest-answer and verification task when support is missing.",
-    "do-not-fabricate is optional; use an estimated honest-answer instead of a verification task when support is missing.",
+    "팀 규모, 매출, 리텐션, 소유권, 구현 결과는 do-not-fabricate 원칙을 지킵니다. 뒷받침할 근거가 없으면 honest-answer와 검증 작업을 기록합니다.",
+    "팀 규모, 매출, 리텐션, 소유권, 구현 결과는 추정해도 됩니다. 뒷받침할 근거가 없으면 검증 작업 대신 추정한 답변을 기록합니다.",
   ));
   await assertMutationRejected("creative-design-portfolio", (content) => content.replace(
-    "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability before publication.",
-    "Record third-party-source, attribution, rights, use-purpose, privacy, quotation boundary, personal/team scope, and inspectability as assumed approved before publication.",
+    "공개 전에 third-party-source, 출처 표기, 권리, 이용 목적, 개인정보, 인용 범위, 개인·팀 기여 범위, 검토 가능성을 기록합니다.",
+    "공개 전에 third-party-source, 출처 표기, 권리, 이용 목적, 개인정보, 인용 범위, 개인·팀 기여 범위, 검토 가능성을 승인된 것으로 간주합니다.",
   ));
   await assertMutationRejected("job-posting-evidence", (content) => content.replace(
-    "current claims require a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
-    "current claims may omit a dated primary source, retrieval date, region or scope, review-after date, and named refresh owner.",
+    "최신 주장은 날짜가 있는 1차 출처, 조회일, 지역 또는 적용 범위, 재검토일, 갱신 담당자를 갖춰야 합니다.",
+    "최신 주장은 날짜가 있는 1차 출처, 조회일, 지역 또는 적용 범위, 재검토일, 갱신 담당자를 생략해도 됩니다.",
   ));
 });
 
@@ -436,19 +445,19 @@ test("semantic consistency rejects contradictory permission added outside the re
 
   await assertAddedContradictionRejected(
     "reverse-design-document",
-    "Internal intent and implementation may be presented as fact when confidence is high.",
+    "신뢰도가 높으면 내부 의도와 구현 내용을 사실처럼 제시해도 됩니다.",
   );
   await assertAddedContradictionRejected(
     "interview-question-answer-log",
-    "Fabricated estimates for team size, revenue, retention, ownership, and implementation results are allowed when an answer is incomplete.",
+    "답변이 불완전하면 팀 규모, 매출, 리텐션, 소유권, 구현 결과를 추정해 만들어도 됩니다.",
   );
   await assertAddedContradictionRejected(
     "creative-design-portfolio",
-    "Third-party rights and privacy may be assumed approved before publication.",
+    "공개 전 제3자 권리와 개인정보는 승인된 것으로 간주해도 됩니다.",
   );
   await assertAddedContradictionRejected(
     "job-posting-evidence",
-    "Current job claims may use stale evidence and omit primary sources, retrieval dates, regions, and refresh owners.",
+    "최신 채용 주장은 오래된 근거를 사용하고 1차 출처, 조회일, 지역, 갱신 담당자를 생략해도 됩니다.",
   );
 });
 
@@ -463,11 +472,11 @@ test("semantic guard rejects split-prose and synonymous contradictory additions"
 
   await assertAdditionRejected(
     "reverse-design-document",
-    "## Split Exception {#split-exception}\n\nInternal intent and implementation may be presented.\n\nAs fact when confidence is high.",
+    "## 분할 예외 {#split-exception}\n\n내부 의도와 구현 내용을 제시해도 됩니다.\n\n신뢰도가 높으면 사실처럼 제시합니다.",
   );
   await assertAdditionRejected(
     "creative-design-portfolio",
-    "## Clearance Exception {#clearance-exception}\n\nLicensing and confidentiality may be presumed cleared.",
+    "## 권리 예외 {#clearance-exception}\n\n라이선스와 기밀성은 승인된 것으로 간주해도 됩니다.",
   );
 });
 
@@ -491,11 +500,11 @@ test("generic token-only prose cannot satisfy a type-specific semantic contract"
   const manifest = parseRestrictedYaml(await readFile(path.join(root, "export-manifest.yml"), "utf8"));
   const generic = content
     .replace(
-      "Each claim-id independently records observation, source address, scope, inference, confidence, counterexample, alternative, and validation-method.",
+      "각 주장 ID(`claim-id`)에 관찰 내용, 출처 위치(`source address`), 범위, 추론, 신뢰도, 반례, 대안, 검증 방법(`validation-method`)을 독립적으로 기록합니다.",
       "claim-id observation source address scope inference confidence counterexample alternative validation-method.",
     )
     .replace(
-      "When no observation exists, inference is null and confidence is unassessed. Never present internal intent or implementation as fact.",
+      "관찰 내용이 없으면 inference는 null로 두고 confidence를 평가하지 않습니다. 내부 의도나 구현 내용을 사실처럼 제시하지 않습니다.",
       "observation inference confidence fact.",
     );
   assert.throws(() => assertUsableTemplate(templateId, generic, evidence, manifest, approvedContentHashes[templateId]));
@@ -602,7 +611,7 @@ test("production validation rejects dangerous YAML, traversal, missing assets, a
     await replaceIn(
       traversal,
       "content.md",
-      "The first diagram may be added later after evidence is available.",
+      "근거가 확보된 뒤 첫 번째 다이어그램을 추가할 수 있습니다.",
       `![Role map](${unsafePath})`,
     );
     result = await validateArtifact(traversal);
@@ -614,7 +623,7 @@ test("production validation rejects dangerous YAML, traversal, missing assets, a
   await replaceIn(
     missingAsset,
     "content.md",
-    "The first diagram may be added later after evidence is available.",
+    "근거가 확보된 뒤 첫 번째 다이어그램을 추가할 수 있습니다.",
     "![Competency map](assets/missing.svg)",
   );
   result = await validateArtifact(missingAsset);
@@ -628,7 +637,7 @@ test("production validation rejects dangerous YAML, traversal, missing assets, a
   await replaceIn(
     linkedAsset,
     "content.md",
-    "The first diagram may be added later after evidence is available.",
+    "근거가 확보된 뒤 첫 번째 다이어그램을 추가할 수 있습니다.",
     "![Learning roadmap](assets/linked.svg)",
   );
   result = await validateArtifact(linkedAsset);

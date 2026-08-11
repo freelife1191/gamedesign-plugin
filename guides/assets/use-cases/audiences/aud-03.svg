@@ -20,7 +20,7 @@
     <rect x="198" y="370" width="52" height="32" rx="16" fill="#1F6FB2"/>
     <text x="224" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">1</text>
       <text x="198" y="438" fill="#124267" font-size="22" font-weight="700">경험 인벤토리</text>
-      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">이전 경험의 사실을 </text>
+      <text x="198" y="500" fill="#354152" font-size="18" font-weight="400">이전 경험의 사실을</text>
       <text x="198" y="526" fill="#354152" font-size="18" font-weight="400">정리합니다.</text>
   </g>
   <g aria-label="읽기 순서 2: 전이 역량">
@@ -28,7 +28,7 @@
     <rect x="478" y="370" width="52" height="32" rx="16" fill="#534AB7"/>
     <text x="504" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">2</text>
       <text x="478" y="438" fill="#3C3489" font-size="22" font-weight="700">전이 역량</text>
-      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">적용 가능한 역량을 </text>
+      <text x="478" y="500" fill="#354152" font-size="18" font-weight="400">적용 가능한 역량을</text>
       <text x="478" y="526" fill="#354152" font-size="18" font-weight="400">분리합니다.</text>
   </g>
   <g aria-label="읽기 순서 3: 작은 설계 과제">
@@ -36,7 +36,7 @@
     <rect x="758" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text x="784" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">3</text>
       <text x="758" y="438" fill="#085041" font-size="22" font-weight="700">작은 설계 과제</text>
-      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">새 판단을 실습으로 </text>
+      <text x="758" y="500" fill="#354152" font-size="18" font-weight="400">새 판단을 실습으로</text>
       <text x="758" y="526" fill="#354152" font-size="18" font-weight="400">만듭니다.</text>
   </g>
   <g aria-label="읽기 순서 4: 개인 기여 증거">
@@ -44,8 +44,8 @@
     <rect x="1038" y="370" width="52" height="32" rx="16" fill="#A75B00"/>
     <text x="1064" y="392" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="700">4</text>
       <text x="1038" y="438" fill="#814600" font-size="22" font-weight="700">개인 기여 증거</text>
-      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">공개 가능한 검증 기</text>
-      <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">록을 남깁니다.</text>
+      <text x="1038" y="500" fill="#354152" font-size="18" font-weight="400">공개 가능한 검증</text>
+      <text x="1038" y="526" fill="#354152" font-size="18" font-weight="400">기록을 남깁니다.</text>
   </g>
   <rect x="52" y="704" width="1296" height="132" rx="20" fill="#E8F1FB" stroke="#1F6FB2" stroke-width="2"/>
   <text x="84" y="758" fill="#124267" font-size="18" font-weight="700">다음 경계</text>

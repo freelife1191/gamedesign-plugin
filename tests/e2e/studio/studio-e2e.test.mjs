@@ -355,7 +355,11 @@ test("Task 8 hashes reject token-preserving template reversals and export recipe
     fixtureRoot,
     "../../../products/game-design-studio/plugin/assets/templates/economy-balance/content.md",
   ), "utf8");
-  const reversed = source.replace("Release approval is blocked until", "Release approval is allowed even when");
+  const reversed = source.replace(
+    "현행 정책 근거가 연결되기 전에는 출시를 승인하지 않는다.",
+    "현행 정책 근거가 연결되지 않아도 출시를 승인한다.",
+  );
+  assert.notEqual(reversed, source, "한국어 출시 경계 변조가 실제 템플릿 바이트를 바꿔야 한다");
   const integrity = await validateTemplateContentIntegrity("economy-balance", reversed);
   assert.equal(integrity.valid, false);
   assert.equal(validateExportTemplateContract({

@@ -1,0 +1,2283 @@
+[
+  {
+    "id": "career:case:CA-C01",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C01",
+    "title": "CA-C01 source-bound scenario",
+    "purpose": "CA-C01 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02",
+      "AUD-03",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-C01의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C01를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:research-game-design-jobs CA-C01의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:research-game-design-jobs [경력 ID] [공개 정보] CA-C01의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "map-game-design-career",
+      "research-game-design-jobs"
+    ],
+    "specialist_roles": [
+      "career-strategist",
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "career-stage-goal",
+      "game-design-role-map",
+      "learning-roadmap"
+    ],
+    "minimum_outputs": [
+      "game-design-role-map",
+      "learning-roadmap"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/career-stage-goal/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/career-stage-goal/content.md",
+      "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
+      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 목표 → evidence → gap → proof task → 결정 기록입니다. **검토 체크포인트:** `game-design-role-map` → `learning-roadmap` 순서로 읽고 역할 후보와 proof task의 연결을 확인합니다. **사람 결정:** 사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다. 도구 실행은 자동 승인이 아닙니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c01",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c01.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c01.png",
+      "alt": "CA-C01 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "역할 후보와 학습 과제를 잇는 진로 탐색 (CA-C01)",
+    "sample_result_excerpt": "시스템 기획과 콘텐츠 기획을 역할 후보로 남기고, 각각 규칙표 작성과 퀘스트 흐름 설계를 첫 증명 과제로 잡았습니다. 어느 역할을 우선할지는 과제 결과를 본 뒤 사용자와 멘토가 검토해 결정합니다. (ID: career:case:CA-C01; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
+  },
+  {
+    "id": "career:case:CA-C02",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C02",
+    "title": "CA-C02 source-bound scenario",
+    "purpose": "CA-C02 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02",
+      "AUD-03",
+      "AUD-04",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-C02의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C02를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:review-game-design-portfolio CA-C02의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-C02의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "reverse-engineer-game-design",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "reverse-design-critic",
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-analysis-report",
+      "reverse-design-document",
+      "five-axis-review"
+    ],
+    "minimum_outputs": [
+      "game-analysis-report",
+      "reverse-design-document"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md",
+      "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
+      "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 관찰 → 추론 → 반례 → 제안 → 권리 경계입니다. **검토 체크포인트:** `game-analysis-report` → `reverse-design-document` 순서로 읽고 관찰과 해석의 경계를 확인합니다. **사람 결정:** 작성자와 멘토가 관찰의 정확성, 공개 범위와 다음 검증을 결정합니다. 자동 분석은 사실이나 승인을 대신하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c02",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c02.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c02.png",
+      "alt": "CA-C02 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C02"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "관찰과 반례로 완성하는 게임 역기획 (CA-C02)",
+    "sample_result_excerpt": "보스전에서 회피 구간이 두 번 반복된다는 관찰과 ‘전투 속도 조절’ 가설을 나눠 적었습니다. 난이도 완화 목적일 수 있다는 반례와 화면 인용 범위는 작성자와 멘토의 검토 전입니다. (ID: career:case:CA-C02; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+  },
+  {
+    "id": "career:case:CA-C03",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C03",
+    "title": "CA-C03 source-bound scenario",
+    "purpose": "CA-C03 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-02",
+      "AUD-03",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-C03의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C03를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:research-game-design-jobs $game-design-career:map-game-design-career $game-design-career:apply-document-quality-profile CA-C03의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:research-game-design-jobs $game-design-career:map-game-design-career $game-design-career:apply-document-quality-profile [경력 ID] [공개 정보] CA-C03의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "research-game-design-jobs",
+    "skill_chain": [
+      "research-game-design-jobs",
+      "map-game-design-career",
+      "apply-document-quality-profile"
+    ],
+    "specialist_roles": [
+      "evidence-auditor",
+      "portfolio-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "job-posting-evidence",
+      "game-design-role-map",
+      "competency-matrix"
+    ],
+    "minimum_outputs": [
+      "job-posting-evidence",
+      "game-design-role-map"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/job-posting-evidence/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/job-posting-evidence/content.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/evidence.yml",
+      "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** source record → sample boundary → observation → inference → proposal입니다. **검토 체크포인트:** `job-posting-evidence` → `game-design-role-map` 순서로 읽고 source record와 role inference를 확인합니다. **사람 결정:** Research Owner와 Portfolio Reviewer가 region, reviewAfter, 공개 가능한 evidence와 backlog를 결정합니다. source 수집은 자동 승인을 하지 않으며 채용을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c03",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c03.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c03.png",
+      "alt": "CA-C03 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C03"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "채용 공고 근거로 역할 지도를 고치는 조사 (CA-C03)",
+    "sample_result_excerpt": "연습용 조사에서는 국내 시스템 기획 공고 6건을 표본으로 두고 협업 문서와 데이터 표 경험을 역할 지도에 연결했습니다. 실제 지역과 조사 날짜를 확인하지 않았으므로 요구사항의 우선순위는 조사 담당자 검토 전입니다. (ID: career:case:CA-C03; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
+  },
+  {
+    "id": "career:case:CA-C04",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C04",
+    "title": "CA-C04 source-bound scenario",
+    "purpose": "CA-C04 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02",
+      "AUD-03",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-C04의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C04를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents CA-C04의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:apply-document-quality-profile $game-design-career:map-game-design-career $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C04의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "map-game-design-career",
+      "visualize-career-roadmap",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "career-strategist",
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "competency-matrix",
+      "learning-roadmap",
+      "career-stage-goal"
+    ],
+    "minimum_outputs": [
+      "competency-matrix",
+      "learning-roadmap"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/competency-matrix/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/competency-matrix/content.md",
+      "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
+      "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** current evidence → gap → proof task → cadence → 결정입니다. **검토 체크포인트:** `competency-matrix` → `learning-roadmap` 순서로 읽고 gap과 proof task의 우선순위를 확인합니다. **사람 결정:** 작성자와 멘토가 우선순위, 가능한 범위와 공개 여부를 결정합니다. 계획 생성은 자동 승인을 하지 않으며 성장을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c04",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c04.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c04.png",
+      "alt": "CA-C04 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C04"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "역량 차이를 학습 일정으로 바꾸는 성장 계획 (CA-C04)",
+    "sample_result_excerpt": "규칙 문서화는 기존 사례가 있지만 수치 검증 기록은 비어 있어 우선 보완 항목으로 뒀습니다. 격주로 밸런스 가설과 실험표를 한 세트씩 만들겠다는 일정은 멘토가 실행 가능성을 검토합니다. (ID: career:case:CA-C04; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
+  },
+  {
+    "id": "career:case:CA-C05",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C05",
+    "title": "CA-C05 source-bound scenario",
+    "purpose": "CA-C05 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02",
+      "AUD-03",
+      "AUD-04",
+      "AUD-05"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-C05의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C05를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:export-career-documents CA-C05의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:apply-document-quality-profile $game-design-career:reverse-engineer-game-design $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C05의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "reverse-engineer-game-design",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "reverse-design-critic",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "reverse-design-document",
+      "game-analysis-report"
+    ],
+    "minimum_outputs": [
+      "reverse-design-document",
+      "game-analysis-report"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/reverse-design-document/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/reverse-design-document/content.md",
+      "game-design-career/[경력 ID]/reverse-design-document/evidence.yml",
+      "game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `reverse-design-document` → `game-analysis-report` 순서로 읽고 관찰 evidence와 분석 claim을 확인합니다. **사람 결정:** 작성자와 public-rights reviewer가 공개 범위, 인용·capture 권리와 개인 기여 서술을 승인·수정·보류합니다. 분석은 자동 승인을 하지 않으며 품질, 채용 또는 공개를 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c05",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c05.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c05.png",
+      "alt": "CA-C05 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C05"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "공개 근거와 개인 기여를 밝히는 역기획 사례 (CA-C05)",
+    "sample_result_excerpt": "전투 보상 구조 분석에는 직접 기록한 플레이 시점과 해석을 연결하고, 표 구성만 개인 작업으로 표시했습니다. 캡처 사용 범위와 분석 문구는 공개 권리 검토가 끝날 때까지 보류합니다. (ID: career:case:CA-C05; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
+  },
+  {
+    "id": "career:case:CA-C06",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C06",
+    "title": "CA-C06 source-bound scenario",
+    "purpose": "CA-C06 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-02",
+      "AUD-03",
+      "AUD-04",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-C06의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C06를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:apply-document-quality-profile $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-C06의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:apply-document-quality-profile $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-C06의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "apply-document-quality-profile",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "portfolio-reviewer",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "portfolio-project-brief",
+      "creative-design-portfolio",
+      "five-axis-review"
+    ],
+    "minimum_outputs": [
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/portfolio-project-brief/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/portfolio-project-brief/content.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 개인 기여와 공개 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer가 공개 가능한 claim과 asset을 결정합니다. 생성 결과는 자동 승인을 하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c06",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c06.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c06.png",
+      "alt": "CA-C06 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C06"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "근거 있는 프로젝트를 포트폴리오로 엮기 (CA-C06)",
+    "sample_result_excerpt": "협동 퍼즐 사례는 문제, 선택, 테스트 관찰, 개인 기여 순서로 한 페이지에 배치했습니다. 플레이 화면과 팀 작업물은 공개 범위 검토가 끝난 뒤에만 최종 포트폴리오 후보가 됩니다. (ID: career:case:CA-C06; 파일: game-design-career/[경력 ID]/portfolio-project-brief/content.md)"
+  },
+  {
+    "id": "career:case:CA-C07",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C07",
+    "title": "CA-C07 source-bound scenario",
+    "purpose": "CA-C07 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-02",
+      "AUD-03",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-C07의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C07를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:review-game-design-portfolio $game-design-career:build-game-design-portfolio $game-design-career:practice-game-design-interview $game-design-career:export-career-documents CA-C07의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:review-game-design-portfolio $game-design-career:build-game-design-portfolio $game-design-career:practice-game-design-interview $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C07의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "review-game-design-portfolio",
+    "skill_chain": [
+      "review-game-design-portfolio",
+      "build-game-design-portfolio",
+      "practice-game-design-interview",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "portfolio-reviewer",
+      "game-design-mentor",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "five-axis-review",
+      "portfolio-backlog",
+      "introduction-motivation"
+    ],
+    "minimum_outputs": [
+      "five-axis-review",
+      "portfolio-backlog",
+      "introduction-motivation"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/five-axis-review/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/five-axis-review/content.md",
+      "game-design-career/[경력 ID]/five-axis-review/evidence.yml",
+      "game-design-career/[경력 ID]/five-axis-review/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → backlog입니다. **검토 체크포인트:** `five-axis-review` → `portfolio-backlog` → `introduction-motivation` 순서로 읽고 finding, repair, 발표 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer와 멘토가 수정·발표·공개 범위를 결정합니다. review는 자동 승인을 하지 않으며 합격, 시장 반응 또는 팀 성과를 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c07",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c07.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c07.png",
+      "alt": "CA-C07 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C07"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "포트폴리오 진단에서 발표 수정안까지 (CA-C07)",
+    "sample_result_excerpt": "검토에서 ‘선택 이유가 약함’을 높은 우선순위로 잡고, 첫 사례에 비교안을 추가하는 수정 작업을 등록했습니다. 자기소개에 넣을 문구와 공개 범위는 포트폴리오 검토자와 멘토가 함께 확인합니다. (ID: career:case:CA-C07; 파일: game-design-career/[경력 ID]/five-axis-review/content.md)"
+  },
+  {
+    "id": "career:case:CA-C08",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-C08",
+    "title": "CA-C08 source-bound scenario",
+    "purpose": "CA-C08 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-03",
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "competency",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-C08의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-C08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-C08를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:practice-game-design-interview $game-design-career:plan-junior-growth $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents CA-C08의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:practice-game-design-interview $game-design-career:plan-junior-growth $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-C08의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "practice-game-design-interview",
+    "skill_chain": [
+      "practice-game-design-interview",
+      "plan-junior-growth",
+      "visualize-career-roadmap",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "game-design-mentor",
+      "career-strategist",
+      "portfolio-reviewer",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "interview-question-answer-log",
+      "junior-growth-review",
+      "transition-readiness"
+    ],
+    "minimum_outputs": [
+      "interview-question-answer-log",
+      "junior-growth-review",
+      "transition-readiness"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/interview-question-answer-log/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/interview-question-answer-log/content.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml",
+      "game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback입니다. **검토 체크포인트:** `interview-question-answer-log` → `junior-growth-review` → `transition-readiness` 순서로 읽고 honest gap, feedback, 다음 proof task를 확인합니다. **사람 결정:** 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다. 이 기록은 자동 승인을 하지 않으며 채용, 승진, 이직, 팀 기여 또는 시장 가치를 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-c08",
+      "svg": "guides/assets/game-design-career/use-cases/ca-c08.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-c08.png",
+      "alt": "CA-C08 source diagram"
+    },
+    "related_use_cases": [
+      "CA-C08"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/competency-paths.md"
+    ],
+    "display_title": "면접 답변에서 다음 성장 과제를 찾기 (CA-C08)",
+    "sample_result_excerpt": "라이브 운영 경험을 묻는 질문에는 직접 경험이 없다고 쓰고, 이벤트 보상표를 만든 유사 경험을 근거로 붙였습니다. 코치 피드백 뒤 지표 분석 과제를 다음 성장 항목으로 제안했지만 전환 준비 판단은 아직 미정입니다. (ID: career:case:CA-C08; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
+  },
+  {
+    "id": "career:case:CA-T01",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T01",
+    "title": "CA-T01 source-bound scenario",
+    "purpose": "CA-T01 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T01의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T01를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth CA-T01의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth [경력 ID] [공개 정보] CA-T01의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "map-game-design-career",
+    "skill_chain": [
+      "map-game-design-career",
+      "build-game-design-portfolio",
+      "plan-junior-growth"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-design-role-map",
+      "competency-matrix",
+      "learning-roadmap"
+    ],
+    "minimum_outputs": [
+      "game-design-role-map",
+      "competency-matrix",
+      "learning-roadmap"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-design-role-map/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-design-role-map/content.md",
+      "game-design-career/[경력 ID]/game-design-role-map/evidence.yml",
+      "game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 상태표 → 규칙표 → 반례 → 다음 질문입니다. **검토 체크포인트:** `game-design-role-map` → `competency-matrix` → `learning-roadmap` 순서로 읽고 상태와 예외의 근거를 확인합니다. **사람 결정:** 시스템 기획 멘토가 규칙과 예외의 범위를 읽고 질문을 남깁니다. 스킬 실행은 자동 승인을 하지 않으며 실제 역할 적합성을 확정하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t01",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t01.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t01.png",
+      "alt": "CA-T01 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T01"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "상태·규칙·예외로 보여 주는 시스템 기획 (CA-T01)",
+    "sample_result_excerpt": "상점 재고를 ‘잠김·판매 중·품절’로 나누고 상태 전환 조건과 중복 구매 예외를 표로 만들었습니다. 빠진 예외와 다음 검증 질문은 시스템 기획 멘토 검토 전입니다. (ID: career:case:CA-T01; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
+  },
+  {
+    "id": "career:case:CA-T02",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T02",
+    "title": "CA-T02 source-bound scenario",
+    "purpose": "CA-T02 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T02의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T02를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T02의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T02의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "map-game-design-career",
+    "skill_chain": [
+      "map-game-design-career",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-design-role-map",
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "game-design-role-map",
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-design-role-map/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-design-role-map/content.md",
+      "game-design-career/[경력 ID]/game-design-role-map/evidence.yml",
+      "game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 목표 → 분기 → 실패 복구 → 대안입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 분기와 제작 범위를 확인합니다. **사람 결정:** 콘텐츠 기획 멘토가 분기와 제작 범위의 질문을 검토합니다. 생성 내용은 자동 승인을 하지 않으며 실제 제작 성과를 대신하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t02",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t02.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t02.png",
+      "alt": "CA-T02 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T02"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "분기와 실패 복구를 설계하는 콘텐츠 기획 (CA-T02)",
+    "sample_result_excerpt": "구조 요청을 거절한 플레이어에게 잠입 경로가 열리고, 실패하면 경비의 신뢰를 회복하는 보조 임무로 이어지게 구성했습니다. 분기 수와 실제 제작 범위는 콘텐츠 기획 멘토 검토 전입니다. (ID: career:case:CA-T02; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
+  },
+  {
+    "id": "career:case:CA-T03",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T03",
+    "title": "CA-T03 source-bound scenario",
+    "purpose": "CA-T03 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T03의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T03를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T03의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T03의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "reverse-engineer-game-design",
+    "skill_chain": [
+      "reverse-engineer-game-design",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-analysis-report",
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "game-analysis-report",
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md",
+      "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
+      "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 관찰 → 스킬 명세 → 반례 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 관찰과 반례를 확인합니다. **사람 결정:** 전투 기획 멘토가 선택의 이유와 반례를 검토합니다. 자동 승인을 하지 않으며 재미나 직무 적합성을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t03",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t03.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t03.png",
+      "alt": "CA-T03 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T03"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "관찰과 반례로 다듬는 전투 기획 사례 (CA-T03)",
+    "sample_result_excerpt": "강공격 뒤 1.2초 빈틈이 선택을 만든다는 관찰을 스킬 명세로 옮겼습니다. 회피 위주 플레이에서는 빈틈이 의미 없다는 반례가 있어 수치와 재미 판단은 전투 기획 멘토 검토 전입니다. (ID: career:case:CA-T03; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+  },
+  {
+    "id": "career:case:CA-T04",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T04",
+    "title": "CA-T04 source-bound scenario",
+    "purpose": "CA-T04 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T04의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T04를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T04의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T04의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "reverse-engineer-game-design",
+    "skill_chain": [
+      "reverse-engineer-game-design",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-analysis-report",
+      "portfolio-project-brief",
+      "five-axis-review"
+    ],
+    "minimum_outputs": [
+      "game-analysis-report",
+      "portfolio-project-brief",
+      "five-axis-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md",
+      "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
+      "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** source·sink → 가설 → guardrail → rollback입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 가설과 guardrail을 확인합니다. **사람 결정:** 경제·밸런스 검토자가 가설과 보호 기준의 질문을 확인합니다. 자동 승인을 하지 않으며 시장 성공을 확정하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t04",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t04.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t04.png",
+      "alt": "CA-T04 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T04"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "재화 흐름과 보호 기준을 세우는 경제 기획 (CA-T04)",
+    "sample_result_excerpt": "일일 퀘스트를 주요 재화 공급원, 장비 강화와 상점을 소비처로 놓고 14일 흐름 가설을 작성했습니다. 재화 고갈 시 완화 기준과 되돌림 조건은 경제·밸런스 검토자가 확인해야 합니다. (ID: career:case:CA-T04; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+  },
+  {
+    "id": "career:case:CA-T05",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T05",
+    "title": "CA-T05 source-bound scenario",
+    "purpose": "CA-T05 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T05의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T05를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T05의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T05의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "map-game-design-career",
+    "skill_chain": [
+      "map-game-design-career",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "competency-matrix",
+      "portfolio-project-brief",
+      "five-axis-review"
+    ],
+    "minimum_outputs": [
+      "competency-matrix",
+      "portfolio-project-brief",
+      "five-axis-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/competency-matrix/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/competency-matrix/content.md",
+      "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
+      "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 행동 → 오류 → focus → 대체 입력입니다. **검토 체크포인트:** `competency-matrix` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 오류와 대체 입력을 확인합니다. **사람 결정:** UX·접근성 검토자가 사용성 관찰과 누락을 확인합니다. 자동 승인을 하지 않으며 접근성 적합성을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t05",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t05.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t05.png",
+      "alt": "CA-T05 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T05"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "오류와 대체 입력을 살피는 접근성 기획 (UX·CA-T05)",
+    "sample_result_excerpt": "키보드만 사용할 때 제작 창의 재료 목록으로 초점이 이동하지 않는 문제를 기록했습니다. 방향키 이동과 검색 입력을 대안으로 제안했으며 접근성 적합성은 전문 검토 전까지 확정하지 않습니다. (ID: career:case:CA-T05; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
+  },
+  {
+    "id": "career:case:CA-T06",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T06",
+    "title": "CA-T06 source-bound scenario",
+    "purpose": "CA-T06 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T06의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T06를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T06의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T06의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "map-game-design-career",
+    "skill_chain": [
+      "map-game-design-career",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-design-role-map",
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "minimum_outputs": [
+      "game-design-role-map",
+      "portfolio-project-brief",
+      "creative-design-portfolio"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-design-role-map/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-design-role-map/content.md",
+      "game-design-career/[경력 ID]/game-design-role-map/evidence.yml",
+      "game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 장면 목적 → 선택 → handoff → 공개 경계입니다. **검토 체크포인트:** `game-design-role-map` → `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 장면 목적과 공개 경계를 확인합니다. **사람 결정:** 내러티브 기획 멘토가 장면 목적과 협업 경계를 검토합니다. 자동 승인을 하지 않으며 실제 협업 경험을 대신하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t06",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t06.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t06.png",
+      "alt": "CA-T06 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T06"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "장면 목적과 협업 경계를 밝히는 내러티브 기획 (CA-T06)",
+    "sample_result_excerpt": "폐역 재회 장면의 목적을 ‘동료를 믿을지 선택하게 하기’로 정하고 대사 선택 뒤 필요한 연출 전달사항을 적었습니다. 대사와 연출의 작업 경계는 내러티브 기획 멘토가 검토합니다. (ID: career:case:CA-T06; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
+  },
+  {
+    "id": "career:case:CA-T07",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T07",
+    "title": "CA-T07 source-bound scenario",
+    "purpose": "CA-T07 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T07의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T07를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T07의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:reverse-engineer-game-design $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T07의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "reverse-engineer-game-design",
+    "skill_chain": [
+      "reverse-engineer-game-design",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "game-design-mentor"
+    ],
+    "intermediate_artifacts": [
+      "game-analysis-report",
+      "portfolio-project-brief",
+      "five-axis-review"
+    ],
+    "minimum_outputs": [
+      "game-analysis-report",
+      "portfolio-project-brief",
+      "five-axis-review"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/game-analysis-report/content.md",
+      "game-design-career/[경력 ID]/game-analysis-report/evidence.yml",
+      "game-design-career/[경력 ID]/game-analysis-report/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 동선 → 시야 → 막힘 → 수정입니다. **검토 체크포인트:** `game-analysis-report` → `portfolio-project-brief` → `five-axis-review` 순서로 읽고 동선과 playtest 질문을 확인합니다. **사람 결정:** 레벨 디자인 멘토가 공간 의도와 관찰의 범위를 검토합니다. 자동 승인을 하지 않으며 실무 경험을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t07",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t07.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t07.png",
+      "alt": "CA-T07 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T07"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "동선과 시야를 플레이 질문으로 바꾸는 레벨 기획 (CA-T07)",
+    "sample_result_excerpt": "첫 갈림길에서 목표물이 벽에 가려져 세 명 중 두 명이 반대편으로 이동했다는 관찰을 남겼습니다. 조명과 표지 위치 수정안은 검토 전이며 다음 플레이테스트 뒤 채택 여부를 정합니다. (ID: career:case:CA-T07; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+  },
+  {
+    "id": "career:case:CA-T08",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T08",
+    "title": "CA-T08 source-bound scenario",
+    "purpose": "CA-T08 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-01",
+      "AUD-02",
+      "AUD-03"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T08의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T08를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio CA-T08의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-career:build-game-design-portfolio $game-design-career:review-game-design-portfolio [경력 ID] [공개 정보] CA-T08의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "map-game-design-career",
+    "skill_chain": [
+      "map-game-design-career",
+      "build-game-design-portfolio",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "portfolio-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "career-stage-goal",
+      "portfolio-project-brief",
+      "portfolio-backlog"
+    ],
+    "minimum_outputs": [
+      "career-stage-goal",
+      "portfolio-project-brief",
+      "portfolio-backlog"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/career-stage-goal/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/career-stage-goal/content.md",
+      "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
+      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 문제 → 근거 → 수정 전후 → honest gap입니다. **검토 체크포인트:** `career-stage-goal` → `portfolio-project-brief` → `portfolio-backlog` 순서로 읽고 개인 기여와 수정 근거를 확인합니다. **사람 결정:** 포트폴리오 검토자가 개인 기여와 수정 근거를 확인합니다. 자동 승인을 하지 않으며 신입 채용을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t08",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t08.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t08.png",
+      "alt": "CA-T08 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T08"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "수정 전후와 개인 기여를 보여 주는 신입 포트폴리오 (CA-T08)",
+    "sample_result_excerpt": "튜토리얼 목표 문구를 바꾸기 전후의 화면과 테스트 메모를 나란히 놓고, 문구 설계와 기록 정리만 개인 기여로 적었습니다. 변화의 원인 해석은 포트폴리오 검토자가 확인합니다. (ID: career:case:CA-T08; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
+  },
+  {
+    "id": "career:case:CA-T09",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T09",
+    "title": "CA-T09 source-bound scenario",
+    "purpose": "CA-T09 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-03"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "standard",
+    "when_to_use": "CA-T09의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T09의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T09를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:map-game-design-career $game-design-career:research-game-design-jobs $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth CA-T09의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-career:research-game-design-jobs $game-design-career:build-game-design-portfolio $game-design-career:plan-junior-growth [경력 ID] [공개 정보] CA-T09의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "map-game-design-career",
+    "skill_chain": [
+      "map-game-design-career",
+      "research-game-design-jobs",
+      "build-game-design-portfolio",
+      "plan-junior-growth"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "transition-readiness",
+      "game-design-role-map",
+      "portfolio-project-brief"
+    ],
+    "minimum_outputs": [
+      "transition-readiness",
+      "game-design-role-map",
+      "portfolio-project-brief"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/transition-readiness/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/transition-readiness/content.md",
+      "game-design-career/[경력 ID]/transition-readiness/evidence.yml",
+      "game-design-career/[경력 ID]/transition-readiness/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 이전 사실 → 전이 역량 → 새 evidence → 공개 경계입니다. **검토 체크포인트:** `transition-readiness` → `game-design-role-map` → `portfolio-project-brief` 순서로 읽고 사실과 새 evidence를 확인합니다. **사람 결정:** Career 검토자가 이전 경험의 사실과 새 과제의 경계를 확인합니다. 자동 승인을 하지 않으며 이직을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T09의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t09",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t09.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t09.png",
+      "alt": "CA-T09 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T09"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "이전 경험을 새 직무 증거로 잇는 전환 계획 (CA-T09)",
+    "sample_result_excerpt": "QA 경험에서 재현 절차 작성은 확인된 강점으로, 규칙 설계는 새로 증명할 영역으로 나눴습니다. 다음 과제는 상태 전이 문서이며 이직 준비도는 진로 검토자의 판단 전입니다. (ID: career:case:CA-T09; 파일: game-design-career/[경력 ID]/transition-readiness/content.md)"
+  },
+  {
+    "id": "career:case:CA-T10",
+    "kind": "use-case",
+    "product": "career",
+    "source_case_id": "CA-T10",
+    "title": "CA-T10 source-bound scenario",
+    "purpose": "CA-T10 manifest의 audience, skill, template, result를 보존한다.",
+    "audiences": [
+      "AUD-05",
+      "AUD-06"
+    ],
+    "intents": [
+      "target",
+      "source-bound"
+    ],
+    "level": "advanced",
+    "when_to_use": "CA-T10의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.",
+    "when_not_to_use": "민감정보, 비공개 자료, 또는 채용·성과·승인을 발명할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 evidence와 작업 범위"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]",
+      "[공개 정보]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career CA-T10의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.",
+      "template": "@Game Design Career [경력 ID] [공개 정보]의 fact, inference, recommendation을 분리해 CA-T10를 작성해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:plan-junior-growth $game-design-career:research-game-design-jobs $game-design-career:practice-game-design-interview $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents CA-T10의 공개 가능한 evidence를 작성해.",
+      "template": "$game-design-career:plan-junior-growth $game-design-career:research-game-design-jobs $game-design-career:practice-game-design-interview $game-design-career:visualize-career-roadmap $game-design-career:export-career-documents [경력 ID] [공개 정보] CA-T10의 fact, inference, recommendation을 작성해."
+    },
+    "skill": "plan-junior-growth",
+    "skill_chain": [
+      "plan-junior-growth",
+      "research-game-design-jobs",
+      "practice-game-design-interview",
+      "visualize-career-roadmap",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "career-strategist",
+      "interview-coach"
+    ],
+    "intermediate_artifacts": [
+      "junior-growth-review",
+      "transition-readiness",
+      "interview-question-answer-log"
+    ],
+    "minimum_outputs": [
+      "junior-growth-review",
+      "transition-readiness",
+      "interview-question-answer-log"
+    ],
+    "optional_outputs": [
+      "decision receipt"
+    ],
+    "extended_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/junior-growth-review/content.md"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/junior-growth-review/content.md",
+      "game-design-career/[경력 ID]/junior-growth-review/evidence.yml",
+      "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml"
+    ],
+    "human_review_boundary": "**읽는 순서:** 수정 사례 → current requirement → honest gap → 답변입니다. **검토 체크포인트:** `junior-growth-review` → `transition-readiness` → `interview-question-answer-log` 순서로 읽고 날짜와 다음 review를 확인합니다. **사람 결정:** manager 또는 career reviewer가 성장 기록과 다음 질문을 검토합니다. 자동 승인을 하지 않으며 승진·이직을 보장하지 않습니다.",
+    "hold_conditions": [
+      "evidence, rights, 또는 owner approval receipt가 없으면 보류"
+    ],
+    "resume_prompt": "CA-T10의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-t10",
+      "svg": "guides/assets/game-design-career/use-cases/ca-t10.svg",
+      "png": "guides/assets/game-design-career/use-cases/ca-t10.png",
+      "alt": "CA-T10 source diagram"
+    },
+    "related_use_cases": [
+      "CA-T10"
+    ],
+    "related_recipes": [],
+    "source_references": [
+      "guides/game-design-career/use-cases/concept-scenarios.md"
+    ],
+    "display_title": "성장 기록을 다음 면접 답변으로 잇기 (CA-T10)",
+    "sample_result_excerpt": "지난 검토 뒤 경제표의 예외 규칙을 3건 보완했고, 아직 지표 해석 사례는 없습니다. 면접 답변에는 이 차이를 솔직히 밝히고 다음 검토일을 적었으며 승진·이직 판단과는 분리했습니다. (ID: career:case:CA-T10; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
+  },
+  {
+    "id": "career:recipe:interview-preparation",
+    "kind": "recipe",
+    "product": "career",
+    "title": "interview-preparation recipe",
+    "purpose": "interview-preparation recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "interview-preparation"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 posting·portfolio evidence ID만 사용해 질문 연습을 만들어. 관찰 사실·추론·제안과 honest gap을 같은 questionId에 남겨.",
+      "template": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 posting·portfolio evidence ID만 사용해 질문 연습을 만들어. 관찰 사실·추론·제안과 honest gap을 같은 questionId에 남겨. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:practice-game-design-interview game-design-career/<career-id>/interview-question-answer-log/에서 $game-design-career:research-game-design-jobs, $game-design-career:review-game-design-portfolio evidence를 연결해.",
+      "template": "$game-design-career:practice-game-design-interview game-design-career/[경력 ID]/interview-question-answer-log/에서 $game-design-career:research-game-design-jobs, $game-design-career:review-game-design-portfolio evidence를 연결해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "practice-game-design-interview",
+    "skill_chain": [
+      "practice-game-design-interview",
+      "research-game-design-jobs",
+      "review-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "interview-question-answer-log"
+    ],
+    "minimum_outputs": [
+      "interview-question-answer-log canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/interview-question-answer-log/content.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml",
+      "game-design-career/[경력 ID]/interview-question-answer-log/decisions/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/assets/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/interview-question-answer-log/content.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml",
+      "game-design-career/[경력 ID]/interview-question-answer-log/decisions/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/assets/README.md",
+      "game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 interview-preparation의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, 또는 owner receipt가 없으면 보류"
+    ],
+    "resume_prompt": "interview-preparation의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-s05",
+      "svg": "guides/assets/game-design-career/skills/map-game-design-career.svg",
+      "png": "guides/assets/game-design-career/skills/map-game-design-career.png",
+      "alt": "Career recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "career:recipe:interview-preparation"
+    ],
+    "source_references": [
+      "guides/game-design-career/recipes/interview-preparation.md"
+    ],
+    "display_title": "근거 중심 면접 준비 순서 (interview-preparation)",
+    "sample_result_excerpt": "공고 근거를 갱신한 뒤 문제 해결·협업·실패·성장 질문에 사례 주소를 붙였습니다. 빈 경험은 보완 과제로 남겼고 답변 사용 여부는 면접 코치 검토 뒤 결정합니다. (ID: career:recipe:interview-preparation; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
+  },
+  {
+    "id": "career:recipe:job-research-gap",
+    "kind": "recipe",
+    "product": "career",
+    "title": "job-research-gap recipe",
+    "purpose": "job-research-gap recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "job-research-gap"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 한국의 공개 공식 공고만 사용해. 관찰 사실·추론·제안, 출처와 표본 한계를 분리해 역할 gap과 portfolio project brief를 만들어.",
+      "template": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 한국의 공개 공식 공고만 사용해. 관찰 사실·추론·제안, 출처와 표본 한계를 분리해 역할 gap과 portfolio project brief를 만들어. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:research-game-design-jobs game-design-career/<career-id>/job-posting-evidence/를 만들고 $game-design-career:map-game-design-career, $game-design-career:build-game-design-portfolio로 competency-matrix와 portfolio-project-brief를 연결해.",
+      "template": "$game-design-career:research-game-design-jobs game-design-career/[경력 ID]/job-posting-evidence/를 만들고 $game-design-career:map-game-design-career, $game-design-career:build-game-design-portfolio로 competency-matrix와 portfolio-project-brief를 연결해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "research-game-design-jobs",
+    "skill_chain": [
+      "research-game-design-jobs",
+      "map-game-design-career",
+      "build-game-design-portfolio"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "job-posting-evidence",
+      "competency-matrix",
+      "portfolio-project-brief"
+    ],
+    "minimum_outputs": [
+      "job-posting-evidence canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/job-posting-evidence/content.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/evidence.yml",
+      "game-design-career/[경력 ID]/job-posting-evidence/decisions/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/assets/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml",
+      "game-design-career/[경력 ID]/competency-matrix/content.md",
+      "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
+      "game-design-career/[경력 ID]/competency-matrix/decisions/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/assets/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/content.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/job-posting-evidence/content.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/evidence.yml",
+      "game-design-career/[경력 ID]/job-posting-evidence/decisions/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/assets/README.md",
+      "game-design-career/[경력 ID]/job-posting-evidence/export-manifest.yml",
+      "game-design-career/[경력 ID]/competency-matrix/content.md",
+      "game-design-career/[경력 ID]/competency-matrix/evidence.yml",
+      "game-design-career/[경력 ID]/competency-matrix/decisions/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/assets/README.md",
+      "game-design-career/[경력 ID]/competency-matrix/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/content.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-project-brief/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 job-research-gap의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, 또는 owner receipt가 없으면 보류"
+    ],
+    "resume_prompt": "job-research-gap의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-s05",
+      "svg": "guides/assets/game-design-career/skills/map-game-design-career.svg",
+      "png": "guides/assets/game-design-career/skills/map-game-design-career.png",
+      "alt": "Career recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "career:recipe:job-research-gap"
+    ],
+    "source_references": [
+      "guides/game-design-career/recipes/job-research-gap.md"
+    ],
+    "display_title": "채용 조사에서 역량 차이를 찾는 순서 (job-research-gap)",
+    "sample_result_excerpt": "공식 공고의 날짜와 지역을 기록하고 반복 요구를 현재 증거와 대조했습니다. 데이터 분석 경험 부족을 우선 과제 후보로 뒀지만 표본 범위와 우선순위는 담당자 검토 전입니다. (ID: career:recipe:job-research-gap; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
+  },
+  {
+    "id": "career:recipe:junior-growth-transition",
+    "kind": "recipe",
+    "product": "career",
+    "title": "junior-growth-transition recipe",
+    "purpose": "junior-growth-transition recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "junior-growth-transition"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 proof artifact만 사용해 주니어 성장과 전환 준비를 정리해. 관찰 사실·추론·제안, freshness와 재검토 조건을 분리해.",
+      "template": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 proof artifact만 사용해 주니어 성장과 전환 준비를 정리해. 관찰 사실·추론·제안, freshness와 재검토 조건을 분리해. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:plan-junior-growth game-design-career/<career-id>/junior-growth-review/를 만들고 $game-design-career:map-game-design-career, $game-design-career:review-game-design-portfolio, $game-design-career:export-career-documents로 transition-readiness와 export manifest를 연결해.",
+      "template": "$game-design-career:plan-junior-growth game-design-career/[경력 ID]/junior-growth-review/를 만들고 $game-design-career:map-game-design-career, $game-design-career:review-game-design-portfolio, $game-design-career:export-career-documents로 transition-readiness와 export manifest를 연결해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "plan-junior-growth",
+    "skill_chain": [
+      "plan-junior-growth",
+      "map-game-design-career",
+      "review-game-design-portfolio",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "junior-growth-review",
+      "transition-readiness"
+    ],
+    "minimum_outputs": [
+      "junior-growth-review canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/junior-growth-review/content.md",
+      "game-design-career/[경력 ID]/junior-growth-review/evidence.yml",
+      "game-design-career/[경력 ID]/junior-growth-review/decisions/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/assets/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/transition-readiness/content.md",
+      "game-design-career/[경력 ID]/transition-readiness/evidence.yml",
+      "game-design-career/[경력 ID]/transition-readiness/decisions/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/assets/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/junior-growth-review/content.md",
+      "game-design-career/[경력 ID]/junior-growth-review/evidence.yml",
+      "game-design-career/[경력 ID]/junior-growth-review/decisions/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/assets/README.md",
+      "game-design-career/[경력 ID]/junior-growth-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/transition-readiness/content.md",
+      "game-design-career/[경력 ID]/transition-readiness/evidence.yml",
+      "game-design-career/[경력 ID]/transition-readiness/decisions/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/assets/README.md",
+      "game-design-career/[경력 ID]/transition-readiness/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 junior-growth-transition의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, 또는 owner receipt가 없으면 보류"
+    ],
+    "resume_prompt": "junior-growth-transition의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-s05",
+      "svg": "guides/assets/game-design-career/skills/map-game-design-career.svg",
+      "png": "guides/assets/game-design-career/skills/map-game-design-career.png",
+      "alt": "Career recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "career:recipe:junior-growth-transition"
+    ],
+    "source_references": [
+      "guides/game-design-career/recipes/junior-growth-transition.md"
+    ],
+    "display_title": "주니어 성장 기록에서 전환 준비까지 (junior-growth-transition)",
+    "sample_result_excerpt": "12주 성장 기록에서 규칙 문서와 피드백 반영 사례를 골라 전환 준비표에 연결했습니다. 부족한 라이브 지표 경험은 다음 증명 과제로 남겼으며 준비 상태는 멘토 검토 전입니다. (ID: career:recipe:junior-growth-transition; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
+  },
+  {
+    "id": "career:recipe:portfolio-build-review",
+    "kind": "recipe",
+    "product": "career",
+    "title": "portfolio-build-review recipe",
+    "purpose": "portfolio-build-review recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "portfolio-build-review"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID만 사용해 portfolio case study와 5축 review를 만들어. 관찰 사실·추론·제안과 attribution을 분리해.",
+      "template": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID만 사용해 portfolio case study와 5축 review를 만들어. 관찰 사실·추론·제안과 attribution을 분리해. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:build-game-design-portfolio game-design-career/<career-id>/creative-design-portfolio/를 작성하고 $game-design-career:review-game-design-portfolio, $game-design-career:plan-image-assets로 five-axis-review, portfolio-backlog와 asset plan을 연결해.",
+      "template": "$game-design-career:build-game-design-portfolio game-design-career/[경력 ID]/creative-design-portfolio/를 작성하고 $game-design-career:review-game-design-portfolio, $game-design-career:plan-image-assets로 five-axis-review, portfolio-backlog와 asset plan을 연결해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "build-game-design-portfolio",
+    "skill_chain": [
+      "build-game-design-portfolio",
+      "review-game-design-portfolio",
+      "plan-image-assets"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "creative-design-portfolio",
+      "five-axis-review",
+      "portfolio-backlog"
+    ],
+    "minimum_outputs": [
+      "creative-design-portfolio canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/creative-design-portfolio/content.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/evidence.yml",
+      "game-design-career/[경력 ID]/creative-design-portfolio/decisions/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/assets/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/export-manifest.yml",
+      "game-design-career/[경력 ID]/five-axis-review/content.md",
+      "game-design-career/[경력 ID]/five-axis-review/evidence.yml",
+      "game-design-career/[경력 ID]/five-axis-review/decisions/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/assets/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/content.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/creative-design-portfolio/content.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/evidence.yml",
+      "game-design-career/[경력 ID]/creative-design-portfolio/decisions/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/assets/README.md",
+      "game-design-career/[경력 ID]/creative-design-portfolio/export-manifest.yml",
+      "game-design-career/[경력 ID]/five-axis-review/content.md",
+      "game-design-career/[경력 ID]/five-axis-review/evidence.yml",
+      "game-design-career/[경력 ID]/five-axis-review/decisions/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/assets/README.md",
+      "game-design-career/[경력 ID]/five-axis-review/export-manifest.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/content.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/evidence.yml",
+      "game-design-career/[경력 ID]/portfolio-backlog/decisions/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/assets/README.md",
+      "game-design-career/[경력 ID]/portfolio-backlog/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 portfolio-build-review의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, 또는 owner receipt가 없으면 보류"
+    ],
+    "resume_prompt": "portfolio-build-review의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-s05",
+      "svg": "guides/assets/game-design-career/skills/map-game-design-career.svg",
+      "png": "guides/assets/game-design-career/skills/map-game-design-career.png",
+      "alt": "Career recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "career:recipe:portfolio-build-review"
+    ],
+    "source_references": [
+      "guides/game-design-career/recipes/portfolio-build-review.md"
+    ],
+    "display_title": "포트폴리오 제작과 검토를 잇는 순서 (portfolio-build-review)",
+    "sample_result_excerpt": "역기획 사례의 문제·판단·근거를 한 문서로 묶은 뒤 다섯 기준으로 검토해 수정 목록을 만들었습니다. 공개 권리와 개인 기여 문구가 확인되기 전에는 완성본으로 표시하지 않습니다. (ID: career:recipe:portfolio-build-review; 파일: game-design-career/[경력 ID]/creative-design-portfolio/content.md)"
+  },
+  {
+    "id": "career:recipe:reverse-design",
+    "kind": "recipe",
+    "product": "career",
+    "title": "reverse-design recipe",
+    "purpose": "reverse-design recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "reverse-design"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해.",
+      "template": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:reverse-engineer-game-design game-design-career/<career-id>/reverse-design-document/에서 관찰 record를 만들고 $game-design-career:visualize-career-roadmap, $game-design-career:export-career-documents로 검토용 SVG와 export manifest를 준비해.",
+      "template": "$game-design-career:reverse-engineer-game-design game-design-career/[경력 ID]/reverse-design-document/에서 관찰 record를 만들고 $game-design-career:visualize-career-roadmap, $game-design-career:export-career-documents로 검토용 SVG와 export manifest를 준비해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "reverse-engineer-game-design",
+    "skill_chain": [
+      "reverse-engineer-game-design",
+      "visualize-career-roadmap",
+      "export-career-documents"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "reverse-design-document"
+    ],
+    "minimum_outputs": [
+      "reverse-design-document canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/reverse-design-document/content.md",
+      "game-design-career/[경력 ID]/reverse-design-document/evidence.yml",
+      "game-design-career/[경력 ID]/reverse-design-document/decisions/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/assets/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/reverse-design-document/content.md",
+      "game-design-career/[경력 ID]/reverse-design-document/evidence.yml",
+      "game-design-career/[경력 ID]/reverse-design-document/decisions/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/assets/README.md",
+      "game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 reverse-design의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, 또는 owner receipt가 없으면 보류"
+    ],
+    "resume_prompt": "reverse-design의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-s05",
+      "svg": "guides/assets/game-design-career/skills/map-game-design-career.svg",
+      "png": "guides/assets/game-design-career/skills/map-game-design-career.png",
+      "alt": "Career recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "career:recipe:reverse-design"
+    ],
+    "source_references": [
+      "guides/game-design-career/recipes/reverse-design.md"
+    ],
+    "display_title": "관찰에서 검증 가능한 역기획까지 (reverse-design)",
+    "sample_result_excerpt": "플레이 장면을 기록하고 규칙 가설, 반례, 확인 방법 순서로 역기획 문서를 구성했습니다. 내부 의도처럼 보일 수 있는 문장은 추론으로 표시했으며 공개 범위는 권리 검토 뒤 정합니다. (ID: career:recipe:reverse-design; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
+  },
+  {
+    "id": "career:recipe:role-learning-roadmap",
+    "kind": "recipe",
+    "product": "career",
+    "title": "role-learning-roadmap recipe",
+    "purpose": "role-learning-roadmap recipe의 ordered CLI calls와 artifact read order를 보존한다.",
+    "audiences": [
+      "game-designer"
+    ],
+    "intents": [
+      "recipe",
+      "role-learning-roadmap"
+    ],
+    "level": "standard",
+    "when_to_use": "canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.",
+    "when_not_to_use": "evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "공개 가능한 canonical artifact"
+    ],
+    "optional_inputs": [
+      "named human decision receipt"
+    ],
+    "placeholders": [
+      "[경력 ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID만 사용해 시스템 기획 역할과 현재 증거의 gap을 로드맵으로 정리해. 관찰 사실, 추론, 제안을 분리하고 검토자를 지정해.",
+      "template": "@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID만 사용해 시스템 기획 역할과 현재 증거의 gap을 로드맵으로 정리해. 관찰 사실, 추론, 제안을 분리하고 검토자를 지정해. [경력 ID]의 fact, inference, recommendation과 미정 blocker를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-career:orchestrate-game-design-career game-design-career/<career-id>/career-stage-goal/를 기준으로 $game-design-career:map-game-design-career, $game-design-career:apply-document-quality-profile를 실행하고 game-design-career/<career-id>/learning-roadmap/에 저장해.",
+      "template": "$game-design-career:orchestrate-game-design-career game-design-career/[경력 ID]/career-stage-goal/를 기준으로 $game-design-career:map-game-design-career, $game-design-career:apply-document-quality-profile를 실행하고 game-design-career/[경력 ID]/learning-roadmap/에 저장해. fact, inference, recommendation을 보존해."
+    },
+    "skill": "orchestrate-game-design-career",
+    "skill_chain": [
+      "orchestrate-game-design-career",
+      "map-game-design-career",
+      "apply-document-quality-profile"
+    ],
+    "specialist_roles": [
+      "career-strategist"
+    ],
+    "intermediate_artifacts": [
+      "career-stage-goal",
+      "learning-roadmap"
+    ],
+    "minimum_outputs": [
+      "career-stage-goal canonical artifact",
+      "blocker와 resume receipt"
+    ],
+    "optional_outputs": [
+      "공개 가능한 evidence summary"
+    ],
+    "extended_outputs": [
+      "downstream handoff"
+    ],
+    "expected_file_tree": [
+      "game-design-career/[경력 ID]/career-stage-goal/content.md",
+      "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
+      "game-design-career/[경력 ID]/career-stage-goal/decisions/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/assets/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/content.md",
+      "game-design-career/[경력 ID]/learning-roadmap/evidence.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/decisions/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/assets/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/export-manifest.yml"
+    ],
+    "read_order": [
+      "game-design-career/[경력 ID]/career-stage-goal/content.md",
+      "game-design-career/[경력 ID]/career-stage-goal/evidence.yml",
+      "game-design-career/[경력 ID]/career-stage-goal/decisions/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/assets/README.md",
+      "game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/content.md",
+      "game-design-career/[경력 ID]/learning-roadmap/evidence.yml",
+      "game-design-career/[경력 ID]/learning-roadmap/decisions/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/assets/README.md",
+      "game-design-career/[경력 ID]/learning-roadmap/export-manifest.yml"
+    ],
+    "human_review_boundary": "named human decision owner가 role-learning-roadmap의 approval 또는 보류를 결정한다.",
+    "hold_conditions": [
+      "canonical evidence, rights, 또는 owner receipt가 없으면 보류"
+    ],
+    "resume_prompt": "role-learning-roadmap의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "ca-s05",
+      "svg": "guides/assets/game-design-career/skills/map-game-design-career.svg",
+      "png": "guides/assets/game-design-career/skills/map-game-design-career.png",
+      "alt": "Career recipe flow"
+    },
+    "related_use_cases": [],
+    "related_recipes": [
+      "career:recipe:role-learning-roadmap"
+    ],
+    "source_references": [
+      "guides/game-design-career/recipes/role-learning-roadmap.md"
+    ],
+    "display_title": "역할 탐색에서 학습 로드맵까지 (role-learning-roadmap)",
+    "sample_result_excerpt": "역할 후보 두 개를 비교하고 현재 증거가 약한 수치 설계를 8주 학습 과제로 바꿨습니다. 과제 난이도와 역할 우선순위는 사용자와 멘토가 검토한 뒤 조정합니다. (ID: career:recipe:role-learning-roadmap; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
+  }
+]

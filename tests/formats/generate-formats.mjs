@@ -21,6 +21,14 @@ const OUTPUT_ROOT = path.join(FORMATS_ROOT, "output");
 const QA_ROOT = path.join(FORMATS_ROOT, "qa");
 const CASE_IDS = ["studio-live-service-rpg-economy", "career-entry-12-week-roadmap"];
 const ARTIFACTS = ["brief.md", "brief.pdf", "brief.docx", "brief.pptx", "visualization.svg", "visualization.png"];
+export const DOCX_VISUAL_RENDERER = "macOS-quick-look-html+fixed-page-furniture+chromium-print";
+export const FORMAT_COVERAGE = Object.freeze({
+  scope: "representative-renderer-e2e",
+  actualCases: 2,
+  mappedTemplates: 30,
+  allMappedTemplateDerivativesGenerated: false,
+  profileMatrixValidation: "required-and-incompatible-formats",
+});
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { cwd: REPO_ROOT, encoding: "utf8", env: { ...process.env, ...options.env }, stdio: options.capture ? "pipe" : "inherit" });
@@ -66,7 +74,10 @@ export async function renderDocxQa({ chrome, quickLook, docx, qaDir, previewBase
     const quickLookDir = path.join(previewRoot, `${path.basename(docx)}.qlpreview`);
     const sourceHtml = await readFile(path.join(quickLookDir, "Preview.html"), "utf8");
     const printable = path.join(quickLookDir, "Printable.html");
-    await writeFile(printable, transformQuickLookHtml(sourceHtml));
+    await writeFile(printable, transformQuickLookHtml(sourceHtml, {
+      headerText: caseInfo.title,
+      footerText: "Task 11 · format harness",
+    }));
     const pdf = path.join(qaDir, "brief.pdf");
     run(chrome, [
       "--headless",
@@ -212,7 +223,8 @@ export async function writeManifest(caseInfo, outputDir, qaDir, runtimeMetadata,
     schemaVersion: 1,
     caseId: caseInfo.caseId,
     sourceBinding: { rootClass: "repository-e2e-fixture", files: caseInfo.sources, pointers: caseInfo.sourcePointers },
-    canonicalExportManifest: { formats: ["md", "pdf", "docx", "pptx"] },
+    representativeHarnessExportSet: { formats: ["md", "pdf", "docx", "pptx"] },
+    formatCoverage: FORMAT_COVERAGE,
     visualizationLane: { formats: ["svg", "png"], svgViewBox: "0 0 960 540", pngDimensions: { width: 1920, height: 1080 }, renderer: "packaged-skillstead-chromium-2x", lint: "passed" },
     artifacts,
     runtime: { ...runtimeMetadata, ...toolMetadata },
@@ -259,7 +271,7 @@ async function main() {
       libreOffice: version(runtime.commands.soffice),
       poppler: version(runtime.commands.pdftoppm, ["-v"]),
       chromium: version(chrome),
-      docxVisualRenderer: "macOS-quick-look-html+chromium-print",
+      docxVisualRenderer: DOCX_VISUAL_RENDERER,
       pptxVisualRenderer: "saved-pptx+macOS-quick-look-html+chromium-screenshot",
     };
     for (const caseId of CASE_IDS) {

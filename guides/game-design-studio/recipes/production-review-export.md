@@ -92,3 +92,131 @@ unsafe output, preflight failure 또는 unavailable renderer는 canonical text�
 
 - [제작 스킬](../skills/plan-game-production.md), [검토 스킬](../skills/review-game-design.md), [내보내기](../exports.md)
 - [공통 내보내기 흐름](../../assets/shared/document-export-flow.png), [이미지 자산](../image-assets.md)
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:recipe:production-review-export -->
+<!-- PROMPT-CARD: studio:recipe:production-review-export -->
+#### studio:recipe:production-review-export
+
+**제작 범위 검토와 문서 출력 준비 절차**
+
+production-review-export recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Studio 현재 feature set의 scope, capacity, dependency, milestone, hard No-Go와 kill criteria를 검토해. blocker를 owner와 최소 수정으로 남기고, 승인된 content.md만 MD·PDF·DOCX·PPTX 준비 manifest로 보내 줘.
+```
+
+##### 짧은 흐름
+- 작업 순서: plan-game-production → review-game-design → plan-image-assets → visualize-game-design → export-game-design-documents
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+등대섬 기능 목록에서 협동 전력 퍼즐만 이번 주요 일정에 남기고 사진 모드는 제외 후보로 표시했습니다. 검토 막힘이 해소된 `content.md`만 출력 준비 명세로 넘기며 실제 변환은 아직 하지 않습니다. (ID: studio:recipe:production-review-export; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio 현재 feature set의 scope, capacity, dependency, milestone, hard No-Go와 kill criteria를 검토해. blocker를 owner와 최소 수정으로 남기고, 승인된 content.md만 MD·PDF·DOCX·PPTX 준비 manifest로 보내 줘. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:plan-game-production game-design/<project-id>/production-scope-risk/를 작성하고 $game-design-studio:review-game-design, $game-design-studio:plan-image-assets, $game-design-studio:visualize-game-design 뒤 $game-design-studio:export-game-design-documents로 renderer-neutral export manifest를 준비해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:plan-game-production game-design/[프로젝트 ID]/production-scope-risk/를 작성하고 $game-design-studio:review-game-design, $game-design-studio:plan-image-assets, $game-design-studio:visualize-game-design 뒤 $game-design-studio:export-game-design-documents로 renderer-neutral export manifest를 준비해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: plan-game-production
+- 스킬 흐름: plan-game-production → review-game-design → plan-image-assets → visualize-game-design → export-game-design-documents
+- 전문 역할: lead-game-designer
+
+##### 중간 산출물
+- production-scope-risk
+- game-design-review
+- decision-change-log
+
+##### 예상 결과물
+###### 최소 결과물
+- production-scope-risk canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/production-scope-risk/content.md
+- game-design/[프로젝트 ID]/production-scope-risk/evidence.yml
+- game-design/[프로젝트 ID]/production-scope-risk/decisions/README.md
+- game-design/[프로젝트 ID]/production-scope-risk/assets/README.md
+- game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml
+- game-design/[프로젝트 ID]/game-design-review/content.md
+- game-design/[프로젝트 ID]/game-design-review/evidence.yml
+- game-design/[프로젝트 ID]/game-design-review/decisions/README.md
+- game-design/[프로젝트 ID]/game-design-review/assets/README.md
+- game-design/[프로젝트 ID]/game-design-review/export-manifest.yml
+- game-design/[프로젝트 ID]/decision-change-log/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/production-scope-risk/content.md
+- game-design/[프로젝트 ID]/production-scope-risk/evidence.yml
+- game-design/[프로젝트 ID]/production-scope-risk/decisions/README.md
+- game-design/[프로젝트 ID]/production-scope-risk/assets/README.md
+- game-design/[프로젝트 ID]/production-scope-risk/export-manifest.yml
+- game-design/[프로젝트 ID]/game-design-review/content.md
+- game-design/[프로젝트 ID]/game-design-review/evidence.yml
+- game-design/[프로젝트 ID]/game-design-review/decisions/README.md
+- game-design/[프로젝트 ID]/game-design-review/assets/README.md
+- game-design/[프로젝트 ID]/game-design-review/export-manifest.yml
+- game-design/[프로젝트 ID]/decision-change-log/content.md
+
+##### 도식 바인딩
+- ID: st-s01
+- SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
+- PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
+- 대체 텍스트: Studio recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 production-review-export의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+production-review-export의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END game-design-studio:recipe:production-review-export -->

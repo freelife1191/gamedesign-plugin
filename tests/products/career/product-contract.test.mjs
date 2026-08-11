@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { loadProductContract } from "../../../tooling/lib/product-contract.mjs";
+import { collectProductInventory } from "../../../tooling/lib/user-guides.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const productRoot = path.join(repoRoot, "products/game-design-career");
@@ -24,7 +25,12 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
+  "humanize-korean",
+  "archify",
 ];
+const directSkillIds = skillIds.slice(0, 15);
+const installedSkillIds = [...directSkillIds, "archify", "humanize-korean", "svg-infographic"].sort();
 
 const roleIds = [
   "career-strategist",
@@ -34,10 +40,26 @@ const roleIds = [
   "interview-coach",
   "evidence-auditor",
   "document-quality-editor",
+  "game-design-writing-editor",
 ];
 const imageSpecialistIds = ["art-brief-director", "visual-asset-reviewer"];
 
 const stages = ["entry", "new-hire", "junior-growth", "transition"];
+
+test("Career orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
+  const skill = await readFile(
+    path.join(productRoot, "plugin/skills/orchestrate-game-design-career/SKILL.md"),
+    "utf8",
+  );
+  for (const phrase of [
+    "Users do not need to name a skill or case ID",
+    "Route a clear single-output request directly to its specialist skill",
+    "Route mixed, multi-stage, or unclear requests through this orchestrator",
+    "Honor an explicit user-selected skill",
+    "Report the selected skills, selected review roles, artifact paths, and remaining decisions",
+    "Automatic route selection is not automatic approval",
+  ]) assert.match(skill, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "u"), phrase);
+});
 
 const scenarioChains = [
   {
@@ -103,7 +125,7 @@ test("Career product selects the complete shared contract and source corpus", as
   const product = await loadProductContract({ repoRoot, productName: "game-design-career" });
 
   assert.equal(product.name, "game-design-career");
-  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "document-quality", "image-assets"]);
+  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"]);
   assert.equal(product.sharedRuntime, true);
   assert.deepEqual(product.sourceRoots, ["plugin"]);
   assert.deepEqual(product.sourceDocumentCategories, ["career", "fun-intent", "systems", "content", "feedback"]);
@@ -116,8 +138,16 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.deepEqual(routing.stages, stages);
-  assert.equal(new Set(routing.skillIds).size, 14);
-  assert.equal(new Set(routing.roleIds).size, 7);
+  assert.equal(new Set(routing.skillIds).size, 17);
+  assert.equal(new Set(routing.roleIds).size, 8);
+});
+
+test("Career keeps the 15-direct and 18-installed skill inventory contract", async () => {
+  const inventory = await collectProductInventory(repoRoot, "game-design-career");
+
+  assert.equal(directSkillIds.length, 15, "Career has exactly 15 direct product skills");
+  assert.deepEqual(inventory.skillIds, installedSkillIds);
+  assert.equal(inventory.skillIds.length, 18, "Career installs the 15 direct skills plus three bundled skills");
 });
 
 test("Every route declares deterministic evidence and completion decisions", async () => {
@@ -230,7 +260,14 @@ test("Plugin manifest stays within the supported local schema and omits hooks", 
   assert.equal(manifest.interface.displayName, "Game Design Career");
   assert.equal(typeof manifest.interface.shortDescription, "string");
   assert.equal(typeof manifest.interface.longDescription, "string");
-  assert.equal(typeof manifest.interface.defaultPrompt, "string");
+  assert.match(manifest.interface.shortDescription, /[가-힣]/u);
+  assert.match(manifest.interface.longDescription, /[가-힣]/u);
+  assert.ok(Array.isArray(manifest.interface.defaultPrompt));
+  assert.ok(manifest.interface.defaultPrompt.length > 0 && manifest.interface.defaultPrompt.length <= 3);
+  for (const prompt of manifest.interface.defaultPrompt) {
+    assert.match(prompt, /[가-힣]/u);
+    assert.ok(prompt.length <= 128);
+  }
 });
 
 test("Product mark is a simple accessible vector", async () => {

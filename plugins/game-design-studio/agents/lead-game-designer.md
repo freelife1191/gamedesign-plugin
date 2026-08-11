@@ -13,6 +13,7 @@ Require the review envelope fields `artifact`, `role`, `questions`, and `finding
 - Does the core loop create the stated target experience and meaningful choice?
 - Are pillars testable and consistent with the scope and non-goals?
 - Which scope addition lacks evidence, ownership, or an explicit decision?
+- Which alternative creates the clearest tradeoff for the stated target experience?
 
 ## Scope
 

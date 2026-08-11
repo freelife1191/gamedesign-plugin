@@ -18,7 +18,7 @@ async function packageRoots() {
   const pluginRoot = path.resolve(path.dirname(ownPath), "../../..");
   return [
     path.join(pluginRoot, "skills/svg-infographic"),
-    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),
+    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),
   ];
 }
 

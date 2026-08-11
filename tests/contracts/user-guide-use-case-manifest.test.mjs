@@ -8,11 +8,17 @@ import {
   isCompletePng,
   parseViewBox,
   pngDims,
-} from "../../shared/vendor/skillstead/svg-infographic/0.8.3/scripts/render.mjs";
+} from "../../shared/vendor/skillstead/svg-infographic/0.9.0/scripts/render.mjs";
 import { loadUseCaseManifest, validateUseCaseGuides } from "../../tooling/lib/use-case-guides.mjs";
-import { collectHeadingAnchors, collectProductInventory, extractMarkdownLinks, validateUserGuides } from "../../tooling/lib/user-guides.mjs";
+import {
+  assertReadableResultBoundaries,
+  collectHeadingAnchors,
+  collectProductInventory,
+  extractMarkdownLinks,
+  validateUserGuides,
+} from "../../tooling/lib/user-guides.mjs";
 import { buildUseCaseDiagrams } from "../../tooling/build-use-case-diagrams.mjs";
-import { validateDiagramSource } from "../../tooling/lib/use-case-diagrams.mjs";
+import { renderDiagramSvg, validateDiagramSource, validateUseCaseDiagramSvg } from "../../tooling/lib/use-case-diagrams.mjs";
 import {
   STUDIO_CANONICAL_ROUTE_ARRAY_POLICY,
   STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT,
@@ -27,6 +33,96 @@ const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-ca
 const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
+const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set(["archify", "humanize-korean", "polish-game-design-writing"]);
+
+test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
+  const denseBoundary = "**최소 결과:** 초안. **선택 결과:** 도식. **확장 결과:** 검토 패키지. **승인 주체:** 멘토. **보류 대상:** 패키지. **재개 조건:** 권한 확인. **안전·증거 경계:** 자동 승인은 하지 않음.";
+  const resultCards = [
+    "#### 결과물",
+    "",
+    "- 최소 결과: 초안",
+    "- 선택 결과: 도식",
+    "- 확장 결과: 검토 패키지",
+    "",
+    "#### 사람 검토",
+    "",
+    "- 승인 주체: 멘토",
+    "- 보류 대상: 패키지",
+    "",
+    "#### 실패와 재개",
+    "",
+    "- 재개 조건: 권한 확인",
+    "- 안전·증거 경계: 자동 승인은 하지 않음",
+  ].join("\n");
+
+  assert.throws(() => assertReadableResultBoundaries(denseBoundary), /result-boundary/i);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(resultCards));
+});
+
+test("result-boundary readability counts rendered inline labels but excludes hidden Markdown", () => {
+  const renderedDense = [
+    "최소 **결과**: 초안. 선택 *결과*: 도식.",
+    "`expanded` 결과: 검토 패키지. [승인 주체](https://example.invalid/owner): 멘토. 확장 <em>결과</em>: 전달물.",
+  ].join("  \n");
+  const hiddenOnly = [
+    "<!-- 최소 결과: 숨김. 선택 결과: 숨김. 확장 결과: 숨김. -->",
+    "```text",
+    "minimum: hidden; optional: hidden; expanded: hidden",
+    "```",
+  ].join("\n");
+  const cards = [
+    "- 최소 **결과**: 초안",
+    "- 선택 *결과*: 도식",
+    "- `expanded` 결과: 검토 패키지",
+    "- [승인 주체](https://example.invalid/owner): 멘토",
+  ].join("\n");
+  const hiddenDestinations = [
+    "[ref](https://example.invalid/a(b)minimum/optional/expanded)",
+    "[ref](https://example.invalid/a\\(b\\)/minimum/optional/expanded)",
+    "<span title=\"> minimum optional expanded\">ok</span>",
+    "<https://example.invalid/minimum/optional/expanded>",
+  ].join(" ");
+  const visibleThree = "[minimum](https://example.invalid/a(b)) [optional](https://example.invalid/c) <span>expanded</span>";
+  const multilineHiddenAttribute = [
+    "note <span title=\"minimum",
+    "optional expanded\">ok</span>",
+  ].join("\n");
+  const multilineVisibleChildren = [
+    "note <span title=\"minimum",
+    "optional expanded\">minimum</span> optional expanded",
+  ].join("\n");
+  const autolinkDestinations = [
+    "<minimum@optional.expanded>",
+    "<https://example.invalid/minimum's?optional=expanded>",
+    "<https://example.invalid/minimum\\/optional\\/expanded>",
+    "<span title=\"quoted > minimum optional expanded\">ok</span>",
+  ].join(" ");
+  const validUriAutolink = "<ftp://example.invalid/minimum/optional/expanded>";
+  const validCustomAutolink = "<custom+v1:minimum/optional/expanded>";
+  const validEmailAutolink = "<minimum@optional.expanded>";
+  const invalidAutolinks = [
+    ["internal space", "<https://example.invalid/minimum/optional/expanded bad>"],
+    ["leading space", "< https://example.invalid/minimum/optional/expanded>"],
+    ["trailing space", "<https://example.invalid/minimum/optional/expanded >"],
+    ["one-character scheme", "<x:minimum/optional/expanded>"],
+    ["thirty-three-character scheme", "<abcdefghijklmnopqrstuvwxyzabcdefg:minimum/optional/expanded>"],
+  ];
+
+  assert.throws(() => assertReadableResultBoundaries(renderedDense), /minimum, optional, expanded/u);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenOnly));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(cards));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(hiddenDestinations));
+  assert.throws(() => assertReadableResultBoundaries(visibleThree), /minimum, optional, expanded/u);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(multilineHiddenAttribute));
+  assert.throws(() => assertReadableResultBoundaries(multilineVisibleChildren), /minimum, optional, expanded/u);
+  assert.doesNotThrow(() => assertReadableResultBoundaries(autolinkDestinations));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(validUriAutolink));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(validCustomAutolink));
+  assert.doesNotThrow(() => assertReadableResultBoundaries(validEmailAutolink));
+  for (const [label, invalidAutolink] of invalidAutolinks) {
+    assert.throws(() => assertReadableResultBoundaries(invalidAutolink), /minimum, optional, expanded/u, label);
+  }
+});
 
 async function createCompleteUseCaseFixture(t) {
   const fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "complete-use-case-guides-"));
@@ -640,18 +736,18 @@ const STUDIO_NUMERIC_CLAIM_CASES = Object.freeze([
 ]);
 const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
   "ST-C01": [
-    ["player promise", "anti-pillar"],
+    ["플레이어에게 약속할 경험", "하지 않을 설계 원칙"],
     ["시장 규모", "ST-C03"],
-    ["decision owner", "플레이테스트"],
-    ["시스템 반응", "prototype"],
+    ["기획 책임자", "플레이테스트"],
+    ["시스템 반응", "시험 제작"],
     ["`vision-pillars`", "반례 과제"],
     ["포기한 기능", "회사 고유 문서"],
-    ["prototype 검증 질문", "assumption"],
-    ["artifact=game-design/island-restoration/vision-pillars", "실제 design owner"],
-    ["`document-quality-editor`", "`production-feasibility-critic`"],
+    ["시험 제작 질문", "가정"],
+    ["artifact=game-design/island-restoration/vision-pillars", "실제 기획 책임자"],
+    ["문서 품질 검토자", "제작 가능성 검토자"],
     ["P-01", "`game-design-review`"],
-    ["실제 design owner", "자동 승인"],
-    ["validation task", "P-01"],
+    ["실제 기획 책임자", "자동 승인"],
+    ["검증 과제", "P-01"],
     ["`ST-C02`", "`ST-C03`"],
   ],
   "ST-C02": [
@@ -680,7 +776,7 @@ const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
     ["artifact=game-design/shared-workbench/system-specification", "stable rule ID"],
     ["`system-economy-designer`", "engineering owner"],
     ["R-CRAFT-03", "TC-09"],
-    ["system boundary", "engineering owner"],
+    ["시스템 경계", "개발 책임자"],
     ["schema source", "R-CRAFT-03"],
     ["authoritative state", "`ST-C06`"],
   ],
@@ -693,9 +789,9 @@ const STUDIO_COMPETENCY_SEMANTIC_CONTRACT = Object.freeze({
     ["critical action", "비식별화"],
     ["accessible alternative", "interruption"],
     ["artifact=game-design/first-session/ui-ux-flow-state", "accessibility-platform-matrix"],
-    ["`ux-accessibility-reviewer`", "accessibility·design owner"],
+    ["사용자 경험·접근성 검토자", "접근성 책임자"],
     ["UX-ACT-01", "`game-design-review`"],
-    ["platform matrix", "accessibility owner"],
+    ["플랫폼표", "접근성 책임자"],
     ["`pending`", "UX-ACT-01"],
     ["sensory alternative", "`ST-C05`"],
   ],
@@ -1601,8 +1697,8 @@ function assertCareerTargetComparison(conceptScenarios) {
 function assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths }) {
   const links = extractMarkdownLinks(index).map(({ target }) => target);
   const competencyAnchors = collectHeadingAnchors(competencyPaths);
-  const deferredSection = sectionByHeading(index, 2, "대상별 사례 — Task 3 deferred");
-  assert.deepEqual(extractMarkdownLinks(deferredSection), [], "Career deferred routes contain no Markdown links");
+  const targetSection = sectionByHeading(index, 2, "대상별 사례");
+  const targetLinks = extractMarkdownLinks(targetSection).map(({ target }) => target);
   const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   for (const entry of allCareerCases.filter((entry) => entry.view === "competency")) {
     const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
@@ -1612,12 +1708,12 @@ function assertCareerIndexRouteStrings({ index, allCareerCases, competencyPaths 
   }
   for (const entry of allCareerCases.filter((entry) => entry.view === "target")) {
     const target = `${entry.document.split("/").pop()}#${entry.anchor}`;
-    assert.ok(!links.includes(target), `${entry.id} deferred route is not Markdown`);
-    assert.match(index, new RegExp("\\*\\*" + escapeRegExp(entry.id) + "[^\\n]*\\*\\* — 예정 경로: `" + escapeRegExp(target) + "`"), `${entry.id} deferred plain route`);
+    assert.ok(targetLinks.includes(target), `${entry.id} current Markdown link`);
   }
-  for (const target of ["../../use-cases/README.md#공통-faq", "../../use-cases/output-catalog.md"]) {
+  for (const target of ["skill-workbench.md", "../../use-cases/README.md#공통-faq", "../../use-cases/output-catalog.md"]) {
     assert.ok(links.includes(target), `Career index actual shared link: ${target}`);
   }
+  assert.doesNotMatch(index, /Task [345]|deferred|본문을 추가할 예정|아직 작성되지 않았/u);
 }
 
 function assertStudioFaq(markdown) {
@@ -1661,10 +1757,10 @@ function assertStudioFaq(markdown) {
   }
 }
 
-function markdownSectionBody(markdown, heading) {
-  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = markdown.match(new RegExp(`^## ${escaped}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
-  assert.ok(match, `missing markdown section: ${heading}`);
+function markdownSectionBody(markdown, anchor) {
+  const escaped = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = markdown.match(new RegExp(`^## [^\\r\\n]* \\{#${escaped}\\}\\s*$([\\s\\S]*?)(?=^## |$(?![\\s\\S]))`, "m"));
+  assert.ok(match, `missing markdown section anchor: ${anchor}`);
   return match[1];
 }
 
@@ -1768,7 +1864,7 @@ async function assertCareerFaqMetadata(routing, {
           assert.ok(leafInventory.some((item) => item.startsWith(directory)), `${contract.id} recursive template directory inventory: ${directory}`);
         }
         const content = await readFile(path.join(templateDirectory, "content.md"), "utf8");
-        const workingRecord = markdownSectionBody(content, "Working Record {#working-record}");
+        const workingRecord = markdownSectionBody(content, "working-record");
         for (const field of contract.fields) assert.match(workingRecord, new RegExp("`" + field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "`"), `${contract.id} source-owned Working Record field: ${field}`);
       } else {
         assert.equal(output.kind, "skill-owned", `${contract.id} known output kind`);
@@ -1881,8 +1977,8 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 79,
-    skillGuides: 30,
+    guides: 147,
+    skillGuides: 36,
     templates: 30,
     svg: 90,
     png: 90,
@@ -2147,7 +2243,7 @@ test("Career manifest declares the ordered case and installed-skill coverage wit
     "CA-S06", "CA-S07", "CA-S08", "CA-S09", "CA-S10",
     "CA-S11", "CA-S12", "CA-S13", "CA-S14", "CA-S15",
   ]);
-  assert.deepEqual(careerSkillCases.map((entry) => entry.skill), careerInventory.skillIds);
+  assert.deepEqual(careerSkillCases.map((entry) => entry.skill), careerInventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)));
   assertCareerManifestMetadata({ cases: careerCases, skillCases: careerSkillCases });
 
   const copy = (entries) => structuredClone(entries);
@@ -2215,7 +2311,7 @@ test("Career competency and index mutation controls reject semantically wrong bu
     ["CA-C01/02 current-body swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "현재 상황과 목표", c02Current), c02, "현재 상황과 목표", c01Current), /CA-C01 현재 상황과 목표 semantic term: 역할/],
     ["wrong-valid CLI skill", replaceCasePart(competencyPaths, c01, "Codex CLI 요청문", sectionByHeading(sectionByHeading(competencyPaths, 2, c01), 3, "Codex CLI 요청문").replace("$game-design-career:map-game-design-career", "$game-design-career:reverse-engineer-game-design")), /CA-C01 manifest-bound CLI skill: reverse-engineer-game-design/],
     ["TODO standard practice", replaceCasePart(competencyPaths, c01, "표준 실습", "TODO"), /CA-C01 표준 실습 substantive content/],
-    ["CA-C01/02 next-route swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "자기점검과 다음 학습", c02Next), c02, "자기점검과 다음 학습", c01Next), /CA-C01 자기점검과 다음 학습 semantic term: CA-C02/],
+    ["CA-C01/02 next-route swap", replaceCasePart(replaceCasePart(competencyPaths, c01, "자기점검과 다음 학습", c02Next), c02, "자기점검과 다음 학습", c01Next), /CA-C0[12] 자기점검과 다음 학습 semantic term: CA-C04/],
   ];
   for (const [label, mutation, expectedFailure] of mutations) {
     assert.throws(
@@ -2251,18 +2347,18 @@ test("Career competency and index mutation controls reject semantically wrong bu
     /CA-C01 current Markdown link/,
     "current route must remain a Markdown link",
   );
-  const futureMarkdown = index.replace(
-    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생`",
-    "[concept-scenarios.md#ca-t01-시스템-기획-입문-학생](concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
+  const targetPlaintext = index.replace(
+    "[CA-T01 시스템 기획 입문 학생](concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
+    "CA-T01 시스템 기획 입문 학생 (concept-scenarios.md#ca-t01-시스템-기획-입문-학생)",
   );
   assert.throws(
-    () => assertCareerIndexRouteStrings({ index: futureMarkdown, allCareerCases, competencyPaths }),
-    /Career deferred routes contain no Markdown links/,
-    "future route must stay deferred plain text",
+    () => assertCareerIndexRouteStrings({ index: targetPlaintext, allCareerCases, competencyPaths }),
+    /CA-T01 current Markdown link/,
+    "target route must remain a Markdown link",
   );
 });
 
-test("Career residual executable, freshness, and deferred-route mutations are rejected", async () => {
+test("Career residual executable, freshness, and actual-route mutations are rejected", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index, competencyPaths } = await readCareerCompetencyGuides();
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
@@ -2289,14 +2385,14 @@ test("Career residual executable, freshness, and deferred-route mutations are re
     );
   }
 
-  const arbitraryDeferredLink = index.replace(
-    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생`",
-    "`concept-scenarios.md#ca-t01-시스템-기획-입문-학생` [other deferred file](wrong.md#wrong-anchor)",
+  const missingWorkbench = index.replaceAll(
+    "[스킬 워크벤치](skill-workbench.md)",
+    "[스킬 워크벤치](wrong.md#wrong-anchor)",
   );
   assert.throws(
-    () => assertCareerIndexRouteStrings({ index: arbitraryDeferredLink, allCareerCases, competencyPaths }),
-    /Career deferred routes contain no Markdown links/,
-    "deferred rows reject arbitrary broken Markdown links",
+    () => assertCareerIndexRouteStrings({ index: missingWorkbench, allCareerCases, competencyPaths }),
+    /Career index actual shared link: skill-workbench\.md/,
+    "direct skill route must resolve to the workbench",
   );
 });
 
@@ -2361,7 +2457,7 @@ test("Career ordered-resume, refresh-workflow, and stale-permission mutations ar
   assert.deepEqual(acceptedMutations, [], `Career mutations accepted: ${acceptedMutations.join(", ")}`);
 });
 
-test("each Career competency case preserves its anchored case-card, evidence boundary, and deferred index routes", async () => {
+test("each Career competency case preserves its anchored case-card, evidence boundary, and published index routes", async () => {
   const manifest = await loadUseCaseManifest({ repoRoot });
   const { index, competencyPaths } = await readCareerCompetencyGuides();
   const entries = manifest.cases.filter((entry) => entry.product === "game-design-career" && entry.view === "competency");
@@ -2534,7 +2630,7 @@ test("Studio manifest declares the ordered case and installed-skill coverage wit
   });
   assert.deepEqual(studioCases.map(projectCase), STUDIO_CASE_CONTRACT, "all Studio case metadata matches the declared coverage contract");
   assert.deepEqual(studioSkillCases.map(projectSkillCase), STUDIO_SKILL_CASE_CONTRACT, "all Studio direct-use metadata matches the declared coverage contract");
-  assert.deepEqual(studioSkillCases.map((entry) => entry.skill), inventory.skillIds, "one direct-use case for every installed Studio skill");
+  assert.deepEqual(studioSkillCases.map((entry) => entry.skill), inventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)), "one direct-use case for every direct-use Studio skill");
 
   const result = await validateUseCaseGuides({
     repoRoot,
@@ -2566,6 +2662,7 @@ function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
     "generate-image-assets",
     "review-image-assets",
     "svg-infographic",
+    ...DIRECT_USE_EXCLUDED_SKILL_IDS,
   ]);
   assert.ok(routing.routes.length > 0, "canonical routing.routes must not be empty");
   assert.deepEqual(
@@ -2574,7 +2671,7 @@ function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
     "every non-boundary installed skill has an actual canonical route",
   );
 
-  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds, "skill cases follow the installed inventory");
+  assert.deepEqual(cases.map((entry) => entry.skill), inventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)), "skill cases follow the direct-use inventory");
   for (const entry of cases) {
     assert.ok(routedSkills.has(entry.skill) || nonRouteBoundarySkills.has(entry.skill), `${entry.skill}: canonical route or explicit boundary`);
   }
@@ -2609,7 +2706,7 @@ test("Career skill cases resolve to their exact manifest direct-use anchors", as
   const cases = manifest.skill_cases.filter((entry) => entry.product === "game-design-career");
 
   assert.equal(cases.length, 15, "Career direct-use case count");
-  assert.deepEqual(cases.map(({ skill }) => skill), inventory.skillIds, "Career direct-use cases follow installed inventory");
+  assert.deepEqual(cases.map(({ skill }) => skill), inventory.skillIds.filter((skill) => !DIRECT_USE_EXCLUDED_SKILL_IDS.has(skill)), "Career direct-use cases follow the direct-use inventory");
   for (const entry of cases) {
     const markdown = await readFile(path.join(repoRoot, entry.document), "utf8");
     const expectedHeading = `### ${entry.anchor.startsWith("career-") ? "Career " : ""}직접 호출 활용 — ${entry.skill}`;
@@ -2943,8 +3040,10 @@ test("common use-case hub has the exact H2 navigation and twelve FAQ IDs", async
       "무엇을 할 수 있나요",
       "누구를 위한 가이드인가요",
       "역량·콘셉트·스킬 중 선택하기",
+      "탐색 순서",
       "작업 규모 선택하기",
       "결과물 먼저 보기",
+      "사용자 유형·난이도별 요청문",
       "공통 FAQ",
       "제품별 상세 가이드",
     ],
@@ -3265,28 +3364,38 @@ test("each audience route preserves its executable case, output, review, and res
     assert.match(requestBody, /^\*\*CLI 요청:\*\* `\$game-design-(?:studio|career):[\w-]+ .+`$/m, `${entry.id} CLI request`);
 
     const resultBody = byHeading.get("결과와 검토·재개 경계");
-    assert.deepEqual(inlineFieldLabels(resultBody), [
-      "최소 결과",
-      "선택 결과",
-      "확장 결과",
-      "승인 주체",
-      "보류 대상",
-      "사람 검토·승인 경계",
-      "재개 조건·요청",
-      "안전·증거 경계",
-    ], `${entry.id} result levels and review/resume fields`);
-    const resultFields = new Map(inlineFields(resultBody).map((field) => [field.label, field.value]));
-    const reviewBoundary = resultFields.get("사람 검토·승인 경계");
-    assert.equal(terminalPunctuationTrimmed(resultFields.get("승인 주체")), boundary.approver, `${entry.id} approval authority`);
-    assert.equal(terminalPunctuationTrimmed(resultFields.get("보류 대상")), boundary.held, `${entry.id} held result`);
+    const cards = markdownSections(resultBody, 4);
+    assert.deepEqual(cards.map(({ heading }) => heading), ["결과물", "사람 검토", "실패와 재개"], `${entry.id} result cards`);
+    const cardFields = new Map(cards.flatMap(({ body }) => [...body.matchAll(/^- ([^:]+): (.+)$/gm)]).map(([, label, value]) => [label, value]));
+    for (const label of ["최소 결과", "선택 결과", "확장 결과", "승인 주체", "보류 대상", "승인 경계", "재개 조건", "재개 요청", "안전·증거 경계"]) {
+      assert.ok(cardFields.has(label), `${entry.id} ${label}`);
+    }
+    const reviewBoundary = cardFields.get("승인 경계");
+    assert.equal(terminalPunctuationTrimmed(cardFields.get("승인 주체")), boundary.approver, `${entry.id} approval authority`);
+    assert.equal(terminalPunctuationTrimmed(cardFields.get("보류 대상")), boundary.held, `${entry.id} held result`);
     assert.ok(reviewBoundary.includes(boundary.approver), `${entry.id} boundary authority`);
     assert.ok(reviewBoundary.includes(boundary.held), `${entry.id} boundary held result`);
     assert.match(reviewBoundary, /승인 전에는/, `${entry.id} approval gate`);
-    const resume = resultFields.get("재개 조건·요청");
-    assert.ok(resume.startsWith(boundary.condition), `${entry.id} resume condition`);
-    assert.equal(codeValue(resume, `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
-    assert.ok(resultFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
+    assert.ok(cardFields.get("재개 조건").startsWith(boundary.condition), `${entry.id} resume condition`);
+    assert.equal(codeValue(cardFields.get("재개 요청"), `${entry.id} resume`), boundary.action, `${entry.id} resume action`);
+    assert.ok(cardFields.get("안전·증거 경계").includes(boundary.safety), `${entry.id} safety boundary`);
   }
+});
+
+test("product use-case SVG contract rejects glyph distortion and unreadable text with repair instructions", async () => {
+  const sources = JSON.parse(await readFile(path.join(repoRoot, "guides/assets/use-case-diagram-sources.json"), "utf8"));
+  const source = sources.find(({ id }) => id === "ca-c01");
+  const svg = renderDiagramSvg(source);
+
+  assert.doesNotThrow(() => validateUseCaseDiagramSvg(svg, source.id));
+  assert.throws(
+    () => validateUseCaseDiagramSvg(svg.replace(/(data-text-role="card-body"[^>]*font-size=")15/u, "$112"), source.id),
+    /ca-c01.*card-body.*repair source layout\/wrapping, regenerate SVG, rerender 2× PNG, then re-inspect/u,
+  );
+  assert.throws(
+    () => validateUseCaseDiagramSvg(svg.replace("<text", '<text textLength="164" lengthAdjust="spacingAndGlyphs"'), source.id),
+    /ca-c01.*textLength.*repair source layout\/wrapping, regenerate SVG, rerender 2× PNG, then re-inspect/u,
+  );
 });
 
 test("audience diagrams register six complete source-linked learning paths", async () => {
@@ -3579,7 +3688,7 @@ test("Career source semantics reject wrong-valid swaps and removed evidence, hum
 });
 
 const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
-  "st-c01": { kind: "competency", specialist: "define-game-vision", outputs: ["vision-pillars", "game-design-brief", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
+  "st-c01": { kind: "competency", specialist: "define-game-vision", outputs: ["vision-pillars", "game-design-brief", "game-design-review"], review: { skill: "review-game-design", condition: "지정된 책임자가 근거·가정·중단 사유를 검토" } },
   "st-c02": { kind: "competency", specialist: "design-game-systems", outputs: ["core-motivation-loop", "system-specification", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
   "st-c03": { kind: "competency", specialist: "design-game-systems", outputs: ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
   "st-c04": { kind: "competency", specialist: "design-player-experience", outputs: ["ui-ux-flow-state", "accessibility-platform-matrix", "game-design-review"], review: { skill: "review-game-design", condition: "named owner가 근거·가정·blocker를 검토" } },
@@ -3598,7 +3707,7 @@ const STUDIO_DIAGRAM_PRODUCTION_EXPECTED = Object.freeze({
   "st-g09": { kind: "concept", specialist: "design-game-content", outputs: ["narrative-quest-npc", "system-specification", "game-design-review"], constraint: ["창작 상태", "UGC source를 정합니다."], criterion: ["권리와 신고", "appeal을 연결합니다."], decision: ["안전 검토", "ethics owner가 봅니다."], branches: [["공개 게시", "권리 source 확인"], ["검토 대기", "moderation 확인"]], validation: "rights appeal review와 safety evidence" },
   "st-g10": { kind: "concept", specialist: "design-player-experience", outputs: ["game-design-brief", "ui-ux-flow-state", "accessibility-platform-matrix"], constraint: ["학습 맥락", "대상 요구를 확인합니다."], criterion: ["대체 활동", "접근 대안을 둡니다."], decision: ["당사자 검토", "효과 근거를 확인합니다."], branches: [["참여 지속", "동의 상태 확인"], ["대체 활동", "접근 대안 제공"]], validation: "participant feedback과 accessibility evidence" },
   "st-s01": { kind: "skill", skill: "apply-document-quality-profile", trigger: ["품질 trigger", "profile 요청을 받습니다."], requiredInput: "canonical-artifact + quality profile", outputs: ["selection-record", "quality-checklist", "requirement-manifest"], nextRoutes: ["define-game-vision", "design-game-systems", "design-game-content", "design-player-experience", "design-game-economy-and-liveops", "plan-game-production", "review-game-design", "visualize-game-design", "export-game-design-documents"], nextCondition: null, routeIds: [] },
-  "st-s02": { kind: "skill", skill: "define-game-vision", trigger: ["비전 trigger", "경험 목표를 받습니다."], requiredInput: "player promise + design constraints", outputs: ["vision-pillars", "core-motivation-loop"], nextRoutes: ["design-game-systems"], nextCondition: null, routeIds: ["vision"] },
+  "st-s02": { kind: "skill", skill: "define-game-vision", trigger: ["경험 목표", "경험 목표를 받습니다."], requiredInput: "플레이어에게 약속할 경험 + 설계 제약", outputs: ["vision-pillars", "core-motivation-loop"], nextRoutes: ["design-game-systems"], nextCondition: null, routeIds: ["vision"] },
   "st-s03": { kind: "skill", skill: "design-game-content", trigger: ["콘텐츠 trigger", "퀘스트 의도를 받습니다."], requiredInput: "quest intent + rights boundary", outputs: ["narrative-quest-npc", "character-skill-combat-monster"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["content"] },
   "st-s04": { kind: "skill", skill: "design-game-economy-and-liveops", trigger: ["경제 trigger", "성장 질문을 받습니다."], requiredInput: "economy question + telemetry guardrail", outputs: ["economy-balance", "liveops-experiment-event"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["economy", "liveops"] },
   "st-s05": { kind: "skill", skill: "design-game-systems", trigger: ["시스템 trigger", "기능 질문을 받습니다."], requiredInput: "rule question + authoritative state", outputs: ["system-specification", "rule-exception-matrix", "data-schema-table-contract"], nextRoutes: ["review-game-design"], nextCondition: null, routeIds: ["systems"] },
@@ -3618,7 +3727,7 @@ const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
   "project-orchestration": { triggerIntents: ["multi-discipline project", "game design brief", "scope planning", "project roadmap", "milestone planning", "ambiguous design request"], skill: "orchestrate-game-design-project", requiredInputs: ["target player", "target experience", "platform", "genre", "development stage", "constraints", "completion criteria"], artifactType: "game-design-brief" },
   vision: { triggerIntents: ["game vision", "design pillars", "core fun", "motivation loop"], skill: "define-game-vision", requiredInputs: ["target player", "desired emotion", "experience intent", "constraints"], artifactType: "vision-pillars" },
   systems: { triggerIntents: ["game system", "rules", "state transitions", "data schema"], skill: "design-game-systems", requiredInputs: ["system purpose", "inputs", "constraints", "failure expectations"], artifactType: "system-specification" },
-  content: { triggerIntents: ["quest", "level content", "narrative", "character", "enemy"], skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
+  content: { triggerIntents: ["quest", "level content", "narrative", "character", "enemy", "combat", "boss", "encounter", "puzzle", "level design", "soft lock", "secret route", "reset", "retry"], skill: "design-game-content", requiredInputs: ["content purpose", "supporting systems", "production budget", "repeatability target"], artifactType: "narrative-quest-npc" },
   "player-experience": { triggerIntents: ["player experience", "UX flow", "tutorial", "accessibility", "input"], skill: "design-player-experience", requiredInputs: ["critical actions", "platform", "input methods", "first-session goal"], artifactType: "ui-ux-flow-state" },
   economy: { triggerIntents: ["game economy", "monetization", "currency balance", "shop balance"], skill: "design-game-economy-and-liveops", requiredInputs: ["business model", "currencies", "progression target", "target inventory", "real-price policy"], artifactType: "economy-balance" },
   liveops: { triggerIntents: ["LiveOps", "event plan", "experiment", "segment rollout"], skill: "design-game-economy-and-liveops", requiredInputs: ["event goal", "experiment hypothesis", "control", "sample and duration", "protection metrics"], artifactType: "liveops-experiment-event" },

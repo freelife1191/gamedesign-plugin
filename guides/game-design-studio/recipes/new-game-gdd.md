@@ -88,3 +88,120 @@ Canonical Artifact의 `content.md`, evidence와 결정 기록을 함께 전달�
 
 - [전체 워크플로](../workflow.md), [비전 스킬](../skills/define-game-vision.md), [문서 품질](../document-quality.md)
 - [Canonical Artifact 수명주기](../../assets/shared/canonical-artifact-lifecycle.png)는 공통 승인 경계를 설명합니다.
+
+<!-- PROMPT-TEMPLATES:START game-design-studio:recipe:new-game-gdd -->
+<!-- PROMPT-CARD: studio:recipe:new-game-gdd -->
+#### studio:recipe:new-game-gdd
+
+**새 게임 기획서(GDD) 작성 절차**
+
+new-game-gdd recipe의 ordered CLI calls와 artifact read order를 보존한다.
+
+##### 간단 요청 예시
+```text
+@Game Design Studio 새 협동 RPG의 대상 플레이어, 핵심 재미, pillar, anti-pillar와 non-goal을 분리해 GDD 기준을 만들어 줘. 근거 없는 주장은 assumption으로 남기고 lead design owner의 승인을 기다려.
+```
+
+##### 짧은 흐름
+- 작업 순서: orchestrate-game-design-project → apply-document-quality-profile → define-game-vision → review-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+협동 역할수행게임의 핵심 재미는 ‘서로 다른 단서를 합쳐 길을 찾는 경험’으로 적고, 혼자서 모든 역할을 해결하는 기능은 배제했습니다. 대상 플레이어 가정과 다음 시제품 범위는 수석 기획자 결정 전까지 미정입니다. (ID: studio:recipe:new-game-gdd; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
+##### 사용하는 경우
+canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
+
+##### 사용하지 않는 경우
+evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용하지 않는다.
+
+##### 준비 입력
+###### 필수 입력
+- 공개 가능한 canonical artifact
+
+###### 선택 입력
+- named human decision receipt
+
+##### 바꿀 자리표시자
+- [프로젝트 ID]
+
+##### Codex App 완성 예시
+위의 간단 요청 예시를 그대로 사용합니다.
+
+##### Codex App 재사용 템플릿
+```text
+@Game Design Studio 새 협동 RPG의 대상 플레이어, 핵심 재미, pillar, anti-pillar와 non-goal을 분리해 GDD 기준을 만들어 줘. 근거 없는 주장은 assumption으로 남기고 lead design owner의 승인을 기다려. [프로젝트 ID]의 fact, inference, recommendation과 미정 blocker를 보존해.
+```
+
+##### Codex CLI 완성 예시
+```text
+$game-design-studio:orchestrate-game-design-project game-design/<project-id>/vision-pillars/의 content.md를 기준으로 $game-design-studio:apply-document-quality-profile, $game-design-studio:define-game-vision, $game-design-studio:review-game-design을 순서대로 실행해.
+```
+
+##### Codex CLI 재사용 템플릿
+```text
+$game-design-studio:orchestrate-game-design-project game-design/[프로젝트 ID]/vision-pillars/의 content.md를 기준으로 $game-design-studio:apply-document-quality-profile, $game-design-studio:define-game-vision, $game-design-studio:review-game-design을 순서대로 실행해. fact, inference, recommendation을 보존해.
+```
+
+##### 스킬·전문 역할 흐름
+- 기본 스킬: orchestrate-game-design-project
+- 스킬 흐름: orchestrate-game-design-project → apply-document-quality-profile → define-game-vision → review-game-design
+- 전문 역할: lead-game-designer
+
+##### 중간 산출물
+- vision-pillars
+- game-design-brief
+
+##### 예상 결과물
+###### 최소 결과물
+- vision-pillars canonical artifact
+- blocker와 resume receipt
+
+###### 선택 결과물
+- 공개 가능한 evidence summary
+
+###### 확장 결과물
+- downstream handoff
+
+##### 파일 구조
+- game-design/[프로젝트 ID]/vision-pillars/content.md
+- game-design/[프로젝트 ID]/vision-pillars/evidence.yml
+- game-design/[프로젝트 ID]/vision-pillars/decisions/README.md
+- game-design/[프로젝트 ID]/vision-pillars/assets/README.md
+- game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml
+- game-design/[프로젝트 ID]/game-design-brief/content.md
+
+##### 읽는 순서
+- game-design/[프로젝트 ID]/vision-pillars/content.md
+- game-design/[프로젝트 ID]/vision-pillars/evidence.yml
+- game-design/[프로젝트 ID]/vision-pillars/decisions/README.md
+- game-design/[프로젝트 ID]/vision-pillars/assets/README.md
+- game-design/[프로젝트 ID]/vision-pillars/export-manifest.yml
+- game-design/[프로젝트 ID]/game-design-brief/content.md
+
+##### 도식 바인딩
+- ID: st-s01
+- SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
+- PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
+- 대체 텍스트: Studio recipe flow
+
+##### 사람 검토
+###### 승인 경계
+named human decision owner가 new-game-gdd의 approval 또는 보류를 결정한다.
+
+###### 보류 조건
+- canonical evidence, rights, image/export receipt, 또는 owner approval receipt가 없으면 보류
+
+###### 안전 경계
+모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
+
+##### 실패와 재개
+```text
+new-game-gdd의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
+```
+
+</details>
+<!-- PROMPT-TEMPLATES:END game-design-studio:recipe:new-game-gdd -->

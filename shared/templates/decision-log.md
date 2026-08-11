@@ -5,19 +5,19 @@
 - Date: `YYYY-MM-DD`
 - Owner: `[human owner]`
 
-## Context
+## 맥락
 
 [Problem, constraints, affected players, and evidence.]
 
-## Options considered
+## 검토한 선택지
 
 1. [Option and tradeoffs]
 2. [Option and tradeoffs]
 
-## Decision
+## 결정
 
 [Chosen direction and why it best serves the design intent.]
 
-## Consequences and follow-up
+## 결과와 후속 작업
 
 [Risks, responsible-design gates, validation plan, and reversal conditions.]

@@ -19,6 +19,14 @@
 
 문제의 공통 원리를 배우려면 역량 사례를, 장르·플랫폼·목표의 제약을 비교하려면 콘셉트 사례를, 입력과 산출이 분명한 한 작업을 처리하려면 전문 스킬을 선택합니다. 전체 범위가 아직 불명확하면 제품 오케스트레이터로 초안을 만든 뒤 필요한 전문 스킬로 좁힙니다.
 
+## 탐색 순서
+
+1. [사용자 경로](audience-paths.md)에서 현재 목표와 작은 첫 과제를 고릅니다.
+2. [Studio 활용 사례](../game-design-studio/use-cases/README.md) 또는 [Career 활용 사례](../game-design-career/use-cases/README.md)에서 제품과 사례 관점을 선택합니다.
+3. 제품별 [Studio 스킬 워크벤치](../game-design-studio/use-cases/skill-workbench.md) 또는 [Career 스킬 워크벤치](../game-design-career/use-cases/skill-workbench.md)로 입력과 직접 실행 결과를 확인합니다.
+4. [결과물 카탈로그](output-catalog.md)에서 최소·선택·확장 결과와 handoff 경계를 확인합니다.
+5. 막히면 [Studio FAQ](../game-design-studio/faq.md), [Career FAQ](../game-design-career/faq.md)와 이 문서의 [공통 FAQ](#공통-faq)에서 재개 경로를 찾습니다.
+
 ## 작업 규모 선택하기
 
 입문은 개념 하나와 짧은 실습, 기초는 하나의 기획 문제 문서화, 응용은 여러 요소와 검토 기록 연결입니다. 포트폴리오는 공개 가능한 판단·검증 근거를 별도 Career Artifact로 정리하며, 전체 프로젝트는 제품 오케스트레이터와 사람 결정 지점을 포함합니다. 이 단계는 기간이나 품질을 보장하지 않습니다.
@@ -26,6 +34,14 @@
 ## 결과물 먼저 보기
 
 모든 요청은 renderer와 이미지 provider가 없어도 남는 **최소 결과**부터 확인합니다. 이미지·도식·파생 형식은 **선택 결과**이며, 검토와 형식별 QA를 통과해 전달 또는 공개에 쓸 수 있는 자료는 **확장 결과**입니다. 파일 읽기 순서와 각 경계는 [결과물 카탈로그](output-catalog.md)에 있습니다.
+
+## 사용자 유형·난이도별 요청문
+
+[요청문 템플릿 허브](../prompt-templates/README.md)에서 현재 사용자 유형, 난이도와 목표를 조합해 카드를 고릅니다. 카드에는 복사할 요청문, 실행 흐름, 예상 결과, 사람 검토와 실패·재개 경계가 함께 있습니다.
+
+- 입문: [Studio 비전](../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner), [Career 직무 가설](../prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner)
+- 표준: [Studio 시스템](../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX·접근성](../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard), [Career 역기획](../prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard)
+- 고급·사례: [프로젝트 재개](../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced), [포트폴리오](../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced), [프로젝트 증거와 면접](../prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
 
 ## 공통 FAQ
 
@@ -51,7 +67,7 @@
 
 **결론:** 가능합니다. 다만 한 문장은 가설이며 검증된 기획이 아닙니다.\
 **이유와 경계:** 대상, 제약, 미정 사항을 분리해야 그럴듯한 사실을 만들지 않습니다.\
-**지금 실행할 요청문:** `이 아이디어를 가정·질문·검증 기준으로 나눈 작은 기획 브리프로 바꿔 줘.`\
+**지금 실행할 요청문:** `이 아이디어를 가정·질문·검증 기준으로 나눈 작은 기획 요약서로 바꿔 줘.`\
 **예상 결과물:** 가정이 표시된 브리프와 다음 조사 항목입니다.\
 **관련 가이드:** `ST-C01`, [AUD-01 경로](audience-paths.md#aud-01-게임-기획-입문-학생)\
 **권리·근거·승인:** 제3자 작품·회사 자료를 원본처럼 붙이지 않고 출처와 사용 권한을 확인합니다.

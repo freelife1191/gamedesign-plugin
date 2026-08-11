@@ -1,18 +1,22 @@
 {
   "name": "game-design-career",
   "version": "0.1.0",
-  "description": "Evidence-centered game design learning, portfolio, interview, and growth workflows.",
+  "description": "게임 기획 학습, 포트폴리오, 면접, 성장 계획을 근거 중심으로 지원합니다.",
   "author": {
     "name": "Game Design Plugin Suite"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Game Design Career",
-    "shortDescription": "Build evidence for a game design career.",
-    "longDescription": "Map career paths, research current roles, and create reviewable learning, portfolio, interview, and growth artifacts.",
+    "shortDescription": "게임 기획 취업과 성장을 위한 준비 자료를 만듭니다.",
+    "longDescription": "직무와 채용 공고를 비교하고, 역량 차이와 학습 계획을 정리하며, 검토 가능한 포트폴리오·면접·성장 자료를 만드는 데 필요한 스킬을 연결합니다.",
     "developerName": "Game Design Plugin Suite",
     "category": "Productivity",
     "capabilities": [],
-    "defaultPrompt": "Help me choose a game design career workflow and produce an evidence-backed artifact."
+    "defaultPrompt": [
+      "게임 기획 직무를 비교하고 제게 맞는 준비 경로를 정리해 주세요.",
+      "채용 공고를 분석해 역량 차이와 12주 학습 계획을 만들어 주세요.",
+      "포트폴리오를 검토하고 면접에서 보완할 근거를 찾아 주세요."
+    ]
   }
 }

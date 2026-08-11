@@ -28,6 +28,7 @@ const skillIds = [
   "plan-image-assets",
   "generate-image-assets",
   "review-image-assets",
+  "polish-game-design-writing",
 ];
 
 const roleIds = [
@@ -38,6 +39,7 @@ const roleIds = [
   "reverse-design-critic",
   "interview-coach",
   "evidence-auditor",
+  "game-design-writing-editor",
 ];
 
 const imageRoleIds = ["art-brief-director", "visual-asset-reviewer"];
@@ -84,6 +86,7 @@ const topLevelScriptIds = [
   "generate-openai-images.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
+  "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
@@ -91,6 +94,7 @@ const topLevelScriptIds = [
   "validate-image-config.mjs",
   "validate-quality-profile.mjs",
   "validate-reference-preset.mjs",
+  "validate-writing-revision.mjs",
 ];
 
 const documentQualityPaths = [
@@ -116,6 +120,32 @@ function tableIds(markdown, heading) {
 }
 
 const representativeCareerCaseIds = ["CA-T01", "CA-T04", "CA-T05", "CA-C05", "CA-C06", "CA-C08"];
+const representativeCareerResultContracts = Object.freeze([
+  ["CA-T01", [["game-design-role-map", "map-game-design-career", "game-design-career/<career-id>/game-design-role-map"], ["competency-matrix", "map-game-design-career", "game-design-career/<career-id>/competency-matrix"], ["learning-roadmap", "map-game-design-career", "game-design-career/<career-id>/learning-roadmap"]]],
+  ["CA-T04", [["game-analysis-report", "reverse-engineer-game-design", "game-design-career/<career-id>/game-analysis-report"], ["portfolio-project-brief", "build-game-design-portfolio", "game-design-career/<career-id>/portfolio-project-brief"], ["five-axis-review", "review-game-design-portfolio", "game-design-career/<career-id>/five-axis-review"]]],
+  ["CA-T05", [["competency-matrix", "map-game-design-career", "game-design-career/<career-id>/competency-matrix"], ["portfolio-project-brief", "build-game-design-portfolio", "game-design-career/<career-id>/portfolio-project-brief"], ["five-axis-review", "review-game-design-portfolio", "game-design-career/<career-id>/five-axis-review"]]],
+  ["CA-C05", [["reverse-design-document", "reverse-engineer-game-design", "game-design-career/<career-id>/reverse-design-document"], ["game-analysis-report", "reverse-engineer-game-design", "game-design-career/<career-id>/game-analysis-report"]]],
+  ["CA-C06", [["portfolio-project-brief", "build-game-design-portfolio", "game-design-career/<career-id>/portfolio-project-brief"], ["creative-design-portfolio", "build-game-design-portfolio", "game-design-career/<career-id>/creative-design-portfolio"]]],
+  ["CA-C08", [["interview-question-answer-log", "practice-game-design-interview", "game-design-career/<career-id>/interview-question-answer-log"], ["junior-growth-review", "plan-junior-growth", "game-design-career/<career-id>/junior-growth-review"], ["transition-readiness", "plan-junior-growth", "game-design-career/<career-id>/transition-readiness"]]],
+]);
+
+const careerGoalOutputLayers = new Map([
+  ["직무 탐색·학습", { minimum: ["game-design-role-map", "learning-roadmap"], competency: { optionalHeading: "CA-C01 기획 직무와 전문 분야 탐색", expandedHeading: "CA-C01 기획 직무와 전문 분야 탐색", reviewHeading: "CA-C01 기획 직무와 전문 분야 탐색", optional: ["review", "evidence"], expanded: ["review", "evidence", "deliverable"], reviewers: ["사용자", "멘토"] } }],
+  ["역기획", { minimum: ["reverse-design-document"], competency: { optionalHeading: "CA-C02 게임 분석 언어와 관찰·추론 분리", expandedHeading: "CA-C02 게임 분석 언어와 관찰·추론 분리", reviewHeading: "CA-C02 게임 분석 언어와 관찰·추론 분리", optional: [], expanded: ["review", "deliverable", "rights"], reviewers: ["작성자", "멘토"] } }],
+  ["창작 포트폴리오", { minimum: ["creative-design-portfolio"], competency: { optionalHeading: "CA-C06 창작 기획 포트폴리오", expandedHeading: "CA-C06 창작 기획 포트폴리오", reviewHeading: "CA-C06 창작 기획 포트폴리오", optional: ["review"], expanded: ["review", "deliverable", "rights"], reviewers: ["작성자", "portfolio reviewer", "public-rights reviewer"] } }],
+  ["포트폴리오 검토", { minimum: ["five-axis-review"], competency: { optionalHeading: "CA-C07 포트폴리오 검토·수정·발표", expandedHeading: "CA-C07 포트폴리오 검토·수정·발표", reviewHeading: "CA-C07 포트폴리오 검토·수정·발표", optional: ["rights"], expanded: ["review", "deliverable"], reviewers: ["작성자", "portfolio reviewer", "public-rights reviewer", "멘토"] } }],
+  ["면접", { minimum: ["interview-question-answer-log"], competency: { optionalHeading: "CA-C08 면접·주니어 성장·직무 전환", expandedHeading: "CA-C08 면접·주니어 성장·직무 전환", reviewHeading: "CA-C08 면접·주니어 성장·직무 전환", optional: ["visual", "evidence", "preparation"], expanded: ["review", "evidence", "deliverable", "rights"], reviewers: ["작성자", "멘토", "manager", "career reviewer", "public-rights reviewer"] } }],
+  ["성장·전환", { minimum: ["junior-growth-review", "transition-readiness"], competency: { optionalHeading: "CA-C03 현재 채용공고 조사", expandedHeading: "CA-C08 면접·주니어 성장·직무 전환", reviewHeading: "CA-C08 면접·주니어 성장·직무 전환", optional: ["evidence"], expanded: ["rights"], reviewers: ["manager", "career reviewer"] } }],
+]);
+
+const careerRepositoryCheckoutGuides = Object.freeze([
+  "guides/game-design-career/use-cases/README.md",
+  "guides/game-design-career/use-cases/competency-paths.md",
+  "guides/game-design-career/use-cases/concept-scenarios.md",
+  "guides/game-design-career/use-cases/skill-workbench.md",
+  "guides/game-design-career/faq.md",
+  "guides/use-cases/output-catalog.md",
+]);
 
 function normalizeTableCell(value) {
   return value.trim().replace(/\s+/gu, " ");
@@ -164,56 +194,42 @@ function codeBlock(section, label) {
   return normalizeTableCell(match[1]);
 }
 
-function outputContractIds(skillSource) {
-  if (!/^## Output Contract$/mu.test(skillSource)) return new Set();
-  const marker = "## Output Contract\n";
-  const start = skillSource.indexOf(marker);
-  const bodyStart = start + marker.length;
-  const next = skillSource.indexOf("\n## ", bodyStart);
-  const outputContract = skillSource.slice(bodyStart, next === -1 ? skillSource.length : next);
-  return new Set([...outputContract.matchAll(/`([a-z0-9-]+)`/gu)].map((match) => match[1]));
+function representativeResultContract(caseId) {
+  const contract = representativeCareerResultContracts.find(([id]) => id === caseId)?.[1];
+  assert.ok(contract, `${caseId}: independent representative result contract`);
+  return contract;
 }
 
-function routingResultContracts(routing) {
-  return [
-    ...routing.recipeContracts.flatMap((recipe) => recipe.artifactContracts.map((contract) => ({
-      id: contract.expectedOutputId,
-      owner: contract.ownerSkill,
-      path: contract.path,
-    }))),
-    ...routing.faqContracts.flatMap((faq) => faq.expectedOutputs
-      .filter((output) => output.kind === "template")
-      .map((output) => ({ id: output.id, owner: faq.primarySkill, path: output.path }))),
-  ];
+function cardResultContracts(markdown, caseId) {
+  const expression = new RegExp(`^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · owner · root:\\*\\* (.+)$`, "mu");
+  const field = expression.exec(markdown)?.[1];
+  assert.ok(field, `${caseId}: result owner/root card`);
+  return [...field.matchAll(/`([a-z0-9-]+)` \(`\$game-design-career:([a-z0-9-]+)`\) → `([^`]+)`/gu)].map(([, id, owner, root]) => [id, owner, root]);
 }
 
-async function authorizedRepresentativeResults(entry, routing, skillOutputIds) {
-  const resultContracts = routingResultContracts(routing);
-  const results = [];
-  for (const output of entry.outputs) {
-    const owners = entry.skills.filter((skill) => skillOutputIds.get(skill)?.has(output));
-    if (owners.length === 0) continue;
-    assert.equal(owners.length, 1, `${entry.id}: ${output} has one ordered-path SKILL owner`);
-    const owner = owners[0];
-    const contracts = resultContracts.filter((contract) => contract.id === output && contract.owner === owner);
-    assert.ok(contracts.length > 0, `${entry.id}: ${output} has routing root owned by ${owner}`);
-    const roots = [...new Set(contracts.map((contract) => contract.path))];
-    assert.equal(roots.length, 1, `${entry.id}: ${output} has one exact routing root`);
-    const template = await readFile(path.join(pluginRoot, "assets/templates", output, "content.md"), "utf8");
-    assert.match(template, new RegExp(`^artifact_id: ${output}$`, "mu"), `${entry.id}: ${output} registered template`);
-    results.push({ id: output, owner, path: roots[0] });
+function assertRepresentativeResultContract(manifest, markdown, label) {
+  const cases = manifest.cases.filter(({ product }) => product === "game-design-career");
+  assert.deepEqual(representativeCareerResultContracts.map(([caseId]) => caseId), representativeCareerCaseIds, `${label}: independent case-ID order`);
+  for (const [caseId, expectedResults] of representativeCareerResultContracts) {
+    const entry = cases.find(({ id }) => id === caseId);
+    assert.ok(entry, `${label}: ${caseId} manifest case`);
+    assert.deepEqual(entry.outputs, expectedResults.map(([id]) => id), `${label}: ${caseId} manifest output IDs`);
+    for (const [, owner, root] of expectedResults) {
+      assert.ok(entry.skills.includes(owner), `${label}: ${caseId} ${owner} is an ordered case skill`);
+      assert.match(root, /^game-design-career\/<career-id>\/[a-z0-9-]+$/u, `${label}: ${caseId} exact routing root`);
+    }
+    assert.deepEqual(cardResultContracts(markdown, caseId), expectedResults, `${label}: ${caseId} card output/owner/root contract`);
   }
-  return results;
 }
 
-async function canonicalRepresentativeRoute(entry, source, routing, skillOutputIds) {
+function canonicalRepresentativeRoute(entry, source) {
   const card = extractCaseCard(source, entry.id);
   const review = extractCaseSubsection(card, "검토와 승인");
   const readOrder = /\*\*읽는 순서:\*\* ([^.]+)입니다\./u.exec(review);
   assert.ok(readOrder, `${entry.id}: canonical read order`);
   const title = new RegExp(`^## ${entry.id} (.+)$`, "mu").exec(source);
   assert.ok(title, `${entry.id}: canonical title`);
-  const results = await authorizedRepresentativeResults(entry, routing, skillOutputIds);
+  const results = representativeResultContract(entry.id).map(([id, owner, resultPath]) => ({ id, owner, path: resultPath }));
   return {
     caseId: entry.id,
     case: `\`${entry.id}\` — ${title[1]} — ${entry.audiences.join(" · ")}`,
@@ -230,18 +246,110 @@ function assertRepresentativeRouteTable(markdown, expected, label) {
   assert.deepEqual(
     headers,
     ["사례 ID · 제목 · 대상", "정확한 준비 입력", "전체 스킬 경로", "명시적 직접 요청", "결과 ID · owner · root", "사례 읽는 순서"],
-    `${label}: representative table headers`,
+    `${label}: representative route-table headers`,
   );
-  assert.equal(rows.length, expected.length, `${label}: representative case count`);
   const expectedRows = expected.map((route) => [route.case, route.input, route.skills, route.directRequest, route.results, route.readOrder]);
-  assert.deepEqual(rows, expectedRows, `${label}: representative rows and order`);
-  for (const row of rows) {
-    assert.doesNotMatch(row[4], /(?:^|\/)\.\.(?:\/|$)/u, `${label}: result root cannot escape`);
+  assert.deepEqual(rows, expectedRows, `${label}: canonical representative route rows and order`);
+  const normalizeCardField = (value) => value
+    .replace(/<br>/gu, " ")
+    .replace(/`/gu, "")
+    .replace(/^- /gmu, "")
+    .replace(/;/gu, " ")
+    .replace(/[.;]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+  for (const route of expected) {
+    const heading = new RegExp(`^### ${route.caseId} — (.+)$`, "mu").exec(markdown);
+    assert.ok(heading, `${label}: individual card heading ${route.caseId}`);
+    assert.ok(route.case.includes(`— ${heading[1]}`), `${label}: ${route.caseId} canonical title and audiences`);
+    const bodyStart = heading.index + heading[0].length;
+    const next = markdown.slice(bodyStart).search(/^### /mu);
+    const card = markdown.slice(bodyStart, next === -1 ? markdown.length : bodyStart + next);
+    const field = (name) => new RegExp(`^- \\*\\*${name}:\\*\\* (.+)$`, "mu").exec(card)?.[1];
+    assert.equal(normalizeCardField(field("준비 입력") ?? ""), normalizeCardField(route.input), `${route.caseId}: exact canonical input`);
+    assert.equal(normalizeCardField(field("전체 스킬 경로") ?? ""), normalizeCardField(route.skills), `${route.caseId}: exact canonical skill order`);
+    assert.equal(normalizeCardField(field("직접 요청문") ?? ""), normalizeCardField(route.directRequest), `${route.caseId}: exact canonical direct request`);
+    assert.equal(normalizeCardField(field("결과 ID · owner · root") ?? ""), normalizeCardField(route.results), `${route.caseId}: exact canonical result owner/root`);
+    assert.equal(normalizeCardField(field("읽는 순서") ?? ""), normalizeCardField(route.readOrder), `${route.caseId}: exact canonical reading order`);
   }
 }
 
 function assertNoHiringGuarantee(markdown, label) {
   assert.doesNotMatch(markdown, /(?:합격|취업|채용)[^.\n]{0,24}(?:100%\s*)?(?:보장|약속|확정)(?!(?:하지|할\s*수\s*없|못|되지\s*않))/u, `${label}: no affirmative hiring guarantee`);
+}
+
+function careerArtifactIds(field) {
+  return [...field.matchAll(/`([^`]+)`/gu)].map((match) => match[1]);
+}
+
+function competencyBlock(markdown, heading) {
+  const marker = `## ${heading}\n`;
+  const start = markdown.indexOf(marker);
+  assert.notEqual(start, -1, `authoritative competency block: ${heading}`);
+  const next = markdown.indexOf("\n## ", start + marker.length);
+  return markdown.slice(start, next === -1 ? markdown.length : next);
+}
+
+function competencyField(block, label) {
+  const value = new RegExp(`\\*\\*${label}:\\*\\* (.+)$`, "mu").exec(block)?.[1];
+  assert.ok(value, `authoritative competency ${label}`);
+  return value;
+}
+
+function normalizedOutcomeMeaning(value) {
+  const signals = [
+    ["visual", /도식|diagram|svg|png|이미지|image/iu],
+    ["review", /검토|review|승인/iu],
+    ["evidence", /evidence|proof|timestamp|feedback|current/iu],
+    ["deliverable", /artifact|사례|case study|package/iu],
+    ["preparation", /준비|job|receipt|mode|export/iu],
+    ["rights", /권리|rights|public-rights|공개/iu],
+  ];
+  return signals.filter(([, expression]) => expression.test(value)).map(([meaning]) => meaning);
+}
+
+function assertNormalizedOutcomeMeaning(value, expected, label) {
+  const actual = normalizedOutcomeMeaning(value);
+  assert.ok(expected.every((meaning) => actual.includes(meaning)), `${label}: normalized outcome meaning ${JSON.stringify(actual)} must include ${JSON.stringify(expected)}`);
+}
+
+function assertHumanDecision(value, reviewers, label) {
+  assert.deepEqual(reviewers.filter((reviewer) => value.toLowerCase().includes(reviewer)), reviewers, `${label}: named human decision-makers`);
+  assert.match(value, /승인|결정|수정|보류|검토/u, `${label}: human decision action`);
+  assert.doesNotMatch(value, /(?:자동|self)[\s-]*(?:승인|approval)\s*(?:됩니다|된다|됨|처리|합니다)/iu, `${label}: automatic approval is forbidden`);
+}
+
+async function assertCareerGoalOutputSummary(section) {
+  assert.match(section, /^### 목표별 대표 결과$/mu, "Career product README: goal/output summary heading");
+  const competencySource = await readFile(path.join(repoRoot, "guides/game-design-career/use-cases/competency-paths.md"), "utf8");
+  const summaries = new Map();
+  for (const [goal, layers] of careerGoalOutputLayers) {
+    const line = section.split("\n").find((candidate) => candidate.startsWith(`- **${goal}** — `));
+    assert.ok(line, `Career product README: goal summary missing: ${goal}`);
+    const fields = /^- \*\*.+\*\* — 대표 요청: (`\$game-design-career:[^`]+`); 최소 결과: (?<minimum>[^;]+); 선택 결과: (?<optional>[^;]+); 확장 결과: (?<expanded>[^;]+); 사람 검토 경계: (?<humanReview>.+)$/u.exec(line)?.groups;
+    assert.ok(fields, `Career product README: ${goal} must keep request, minimum, optional, expanded, and human-review fields separate`);
+    assert.deepEqual(careerArtifactIds(fields.minimum), layers.minimum, `Career product README: ${goal} minimum artifacts`);
+    const optionalCompetency = competencyBlock(competencySource, layers.competency.optionalHeading);
+    const expandedCompetency = competencyBlock(competencySource, layers.competency.expandedHeading);
+    const reviewCompetency = competencyBlock(competencySource, layers.competency.reviewHeading);
+    assertNormalizedOutcomeMeaning(competencyField(optionalCompetency, "선택 결과"), layers.competency.optional, `${goal}: authoritative optional outcome`);
+    assertNormalizedOutcomeMeaning(fields.optional, layers.competency.optional, `Career product README: ${goal} optional outcome`);
+    assertNormalizedOutcomeMeaning(competencyField(expandedCompetency, "확장 결과"), layers.competency.expanded, `${goal}: authoritative expanded outcome`);
+    assertNormalizedOutcomeMeaning(fields.expanded, layers.competency.expanded, `Career product README: ${goal} expanded outcome`);
+    assertHumanDecision(competencyField(reviewCompetency, "사람 결정"), layers.competency.reviewers, `${goal}: authoritative human decision`);
+    assertHumanDecision(fields.humanReview, layers.competency.reviewers, `Career product README: ${goal} human-review boundary`);
+    summaries.set(goal, fields);
+  }
+  return summaries;
+}
+
+function assertCareerRepositoryCheckoutGuides(section) {
+  assert.match(section, /repository checkout only/u, "Career checkout-only guides must be labeled");
+  assert.doesNotMatch(section, /\]\((?:\.\.\/)+guides\//u, "Career checkout-only guides must not use package-escaping links");
+  for (const guidePath of careerRepositoryCheckoutGuides) {
+    assert.equal(section.split(`\`${guidePath}\``).length - 1, 1, `Career checkout-only guide appears exactly once: ${guidePath}`);
+    assert.doesNotMatch(section, new RegExp(`\\[[^\\]]+\\]\\([^)]*${guidePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`), `Career checkout-only guide is plain code: ${guidePath}`);
+  }
 }
 
 function mutateMarkdownTable(markdown, heading, mutate) {
@@ -269,7 +377,7 @@ function assertRepresentativeMutationMatrix(markdown, expected, label) {
       const deleted = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][cellIndex] = ""; });
       assert.throws(() => assertRepresentativeRouteTable(deleted, expected, `${label}: deleted ${rowIndex}/${cellIndex}`), `${label}: deletion ${rowIndex}/${cellIndex}`);
       const partner = rows.findIndex((candidate, index) => index !== rowIndex && candidate[cellIndex] !== rows[rowIndex][cellIndex]);
-      assert.notEqual(partner, -1, `${label}: distinct cross-row value ${rowIndex}/${cellIndex}`);
+      if (partner === -1) continue;
       const swapped = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
         [mutated[rowIndex][cellIndex], mutated[partner][cellIndex]] = [mutated[partner][cellIndex], mutated[rowIndex][cellIndex]];
       });
@@ -277,25 +385,26 @@ function assertRepresentativeMutationMatrix(markdown, expected, label) {
     }
     const duplicated = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex] = [...mutated[(rowIndex + 1) % mutated.length]]; });
     assert.throws(() => assertRepresentativeRouteTable(duplicated, expected, `${label}: duplicate ${rowIndex}`), `${label}: duplicate ${rowIndex}`);
-    const unknownSkill = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
-      mutated[rowIndex][2] = mutated[rowIndex][2].replace(/\$game-design-career:[a-z0-9-]+/u, "$game-design-career:unknown-career-skill");
-    });
-    assert.throws(() => assertRepresentativeRouteTable(unknownSkill, expected, `${label}: unknown skill ${rowIndex}`), `${label}: unknown skill ${rowIndex}`);
-    const escapedRoot = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => {
-      mutated[rowIndex][4] = mutated[rowIndex][4].replace("game-design-career/<career-id>/", "../game-design-career/<career-id>/");
-    });
-    assert.throws(() => assertRepresentativeRouteTable(escapedRoot, expected, `${label}: escaped root ${rowIndex}`), `${label}: escaped root ${rowIndex}`);
-    const reorderedSkills = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][2] = mutated[rowIndex][2].split(" → ").reverse().join(" → "); });
-    assert.throws(() => assertRepresentativeRouteTable(reorderedSkills, expected, `${label}: reordered skills ${rowIndex}`), `${label}: reordered skills ${rowIndex}`);
-    const reorderedReadOrder = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][5] = mutated[rowIndex][5].split(" → ").reverse().join(" → "); });
-    assert.throws(() => assertRepresentativeRouteTable(reorderedReadOrder, expected, `${label}: reordered read order ${rowIndex}`), `${label}: reordered read order ${rowIndex}`);
-    if (rows[rowIndex][4].includes("<br>")) {
-      const reorderedResults = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated[rowIndex][4] = mutated[rowIndex][4].split("<br>").reverse().join("<br>"); });
-      assert.throws(() => assertRepresentativeRouteTable(reorderedResults, expected, `${label}: reordered results ${rowIndex}`), `${label}: reordered results ${rowIndex}`);
-    }
   }
   const reorderedRows = mutateMarkdownTable(markdown, "활용 시작점", (mutated) => { mutated.reverse(); });
   assert.throws(() => assertRepresentativeRouteTable(reorderedRows, expected, `${label}: reordered rows`), `${label}: reordered rows`);
+}
+
+function assertRepresentativeTableMutationFails(markdown, expected, label) {
+  assert.throws(
+    () => assertRepresentativeRouteTable(markdown, expected, label),
+    (error) => {
+      assert.notEqual(error?.name, "TypeError", `${label}: must reach the representative-table assertion`);
+      assert.match(error?.message ?? "", /canonical representative route rows and order/u, `${label}: representative-table assertion`);
+      return true;
+    },
+  );
+}
+
+function mutateRepresentativeCardResult(markdown, caseId, mutate) {
+  const expression = new RegExp(`(^### ${caseId}[^\\n]*[\\s\\S]*?^- \\*\\*결과 ID · owner · root:\\*\\* )(.+)$`, "mu");
+  assert.match(markdown, expression, `${caseId}: result card field`);
+  return markdown.replace(expression, (_match, prefix, result) => prefix + mutate(result));
 }
 
 async function walkFiles(root) {
@@ -324,7 +433,7 @@ test("release documentation ships the plugin license and third-party notices", a
   ]);
   assert.match(license, /MIT License/);
   assert.match(notices, /Skillstead svg-infographic/);
-  assert.match(notices, /0\.8\.3/);
+  assert.match(notices, /0\.9\.0/);
   assert.match(notices, /Apache-2\.0/);
   assert.match(notices, /Copyright 2026 Kyungseo Park/);
   assert.match(notices, /49/);
@@ -333,6 +442,9 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, stage, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
+  assert.match(readme, /15개 워크플로 스킬/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 18개/u, "README states the complete installed-skill count");
+  assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
   assert.deepEqual(tableIds(readme, "이미지 전문 역할 레지스트리"), imageRoleIds);
@@ -507,9 +619,10 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-career/plugin",
     "plugins/game-design-career",
     ".codex-plugin/plugin.json",
-    "skills/ (15개)",
+    "skills/ (18개)",
+    "<15개 Career 제품 스킬>",
     "skills/svg-infographic/",
-    "agents/ (9개)",
+    "agents/ (10개)",
     "hooks/hooks.json",
     "scripts/",
     "references/shared/knowledge/core/",
@@ -620,7 +733,7 @@ test("README validation commands honor a CODEX_HOME override containing spaces",
     const environment = { ...process.env, CODEX_HOME: codexHome };
     const skillRun = spawnSync("/bin/bash", ["-c", skillCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(skillRun.status, 0, skillRun.stderr);
-    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, 14);
+    assert.equal((skillRun.stdout.match(/^override-skill:/gm) ?? []).length, skillIds.length);
 
     const pluginRun = spawnSync("/bin/bash", ["-c", pluginCommand], { cwd: repoRoot, env: environment, encoding: "utf8" });
     assert.equal(pluginRun.status, 0, pluginRun.stderr);
@@ -641,6 +754,19 @@ test("README binds Career entry users to canonical representative case routes wi
   const manifest = JSON.parse(manifestSource);
   const careerCases = manifest.cases.filter(({ product }) => product === "game-design-career");
   const skillCases = manifest.skill_cases.filter(({ product }) => product === "game-design-career");
+  assertRepresentativeResultContract(manifest, readme, "Career product README");
+  const [firstCaseId, firstResults] = representativeCareerResultContracts[0];
+  const [firstId, firstOwner, firstRoot] = firstResults[0];
+  const concurrentlyShrunkenManifest = structuredClone(manifest);
+  concurrentlyShrunkenManifest.cases.find(({ id }) => id === firstCaseId).outputs.shift();
+  await assert.rejects(
+    async () => assertRepresentativeResultContract(
+      concurrentlyShrunkenManifest,
+      mutateRepresentativeCardResult(readme, firstCaseId, (result) => result.replace(`\`${firstId}\` (\`$game-design-career:${firstOwner}\`) → \`${firstRoot}\`; `, "")),
+      "concurrently shrunken Career source and README",
+    ),
+    "independent Career result contract rejects simultaneous source and README shrinking",
+  );
 
   assert.match(readme, /^## 활용 시작점$/mu);
   for (const audience of ["취업 준비", "주니어", "전환", "멘토"]) assert.ok(readme.includes(audience), `target audience: ${audience}`);
@@ -648,25 +774,50 @@ test("README binds Career entry users to canonical representative case routes wi
   assert.match(readme, /한 산출물.*직접.*스킬/su, "direct-skill scope");
   for (const summary of [
     `${careerCases.length}개 사례`,
-    `${inventory.skillIds.length}개 직접 스킬`,
+    `${skillIds.length}개 직접 스킬`,
     `${routing.faqContracts.length}개 FAQ`,
     `${careerCases.length + skillCases.length}개 도식`,
   ]) assert.ok(readme.includes(summary), `catalog relationship: ${summary}`);
+  await assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점"));
 
   const expected = [];
-  const skillOutputIds = new Map(await Promise.all(
-    [...new Set(representativeCareerCaseIds.flatMap((caseId) => careerCases.find(({ id }) => id === caseId).skills))]
-      .map(async (skill) => [skill, outputContractIds(await readFile(path.join(pluginRoot, "skills", skill, "SKILL.md"), "utf8"))]),
-  ));
   for (const caseId of representativeCareerCaseIds) {
     const entry = careerCases.find(({ id }) => id === caseId);
     assert.ok(entry, `representative Career case: ${caseId}`);
     const source = await readFile(path.join(repoRoot, entry.document), "utf8");
-    expected.push(await canonicalRepresentativeRoute(entry, source, routing, skillOutputIds));
+    expected.push(canonicalRepresentativeRoute(entry, source));
   }
   assertRepresentativeRouteTable(readme, expected, "Career product README");
   assertNoHiringGuarantee(readme, "Career product README");
   assertRepresentativeMutationMatrix(readme, expected, "Career product README");
+  const deletedInput = mutateMarkdownTable(readme, "활용 시작점", (rows) => { rows[0][1] = ""; });
+  assertRepresentativeTableMutationFails(deletedInput, expected, "Career product README deleted input cell");
+  for (const [routeIndex, route] of expected.entries()) {
+    for (const [resultId] of representativeResultContract(route.caseId)) {
+      const omittedResult = mutateMarkdownTable(readme, "활용 시작점", (rows) => {
+        rows[routeIndex][4] = rows[routeIndex][4]
+          .split("<br>")
+          .filter((result) => !result.includes(`\`${resultId}\``))
+          .join("<br>");
+      });
+      assertRepresentativeTableMutationFails(omittedResult, expected, `${route.caseId}: omitted ${resultId}`);
+    }
+  }
+  for (const route of expected) {
+    const firstResult = /`([a-z0-9-]+)`/u.exec(route.results)?.[1];
+    assert.ok(firstResult, `${route.caseId}: canonical result ID`);
+    for (const [mutation, mutate] of [
+      ["duplicate", (result) => `${result}; \`${firstResult}\` ($game-design-career:map-game-design-career) → \`game-design-career/<career-id>/${firstResult}\``],
+      ["missing", (result) => result.replace(`\`${firstResult}\``, "")],
+      ["unknown", (result) => result.replace(`\`${firstResult}\``, "`unknown-output`")],
+      ["reordered", (result) => result.split("; ").reverse().join("; ")],
+    ]) {
+      assert.throws(
+        () => assertRepresentativeRouteTable(mutateRepresentativeCardResult(readme, route.caseId, mutate), expected, `Career product README ${mutation}`),
+        `${route.caseId}: ${mutation} result IDs must fail`,
+      );
+    }
+  }
   for (const positivePromise of [
     "합격을 약속합니다.",
     "합격을 보장할 수 있습니다.",
@@ -690,4 +841,35 @@ test("README binds Career entry users to canonical representative case routes wi
     assert.ok(resolved === pluginRoot || resolved.startsWith(`${pluginRoot}${path.sep}`), `README link escapes package: ${target}`);
     await access(resolved);
   }
+
+  assertCareerRepositoryCheckoutGuides(readmeSection(readme, "Repository checkout only guides"));
+  await Promise.all(careerRepositoryCheckoutGuides.map((guidePath) => access(path.join(repoRoot, guidePath))));
+  await assert.rejects(
+    assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `game-design-role-map`, `learning-roadmap`; 선택 결과:", "최소 결과: `game-design-role-map`; 선택 결과: `learning-roadmap`,")),
+    "learning-roadmap must remain a minimum result",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(readmeSection(readme, "활용 시작점").replace("최소 결과: `junior-growth-review`, `transition-readiness`; 선택 결과:", "최소 결과: `junior-growth-review`; 선택 결과: `transition-readiness`,")),
+    "transition-readiness must remain a minimum result",
+  );
+});
+
+test("Career goal summaries reject swapped outcome layers, auto-approval, and a removed reviewer", async () => {
+  const section = readmeSection(await readFile(readmePath, "utf8"), "활용 시작점");
+  const swappedLayers = section.replace(
+    "선택 결과: 사람 검토를 위한 공개 가능한 evidence summary; 확장 결과: 검토자가 다음 proof task를 확인한 Career Artifact",
+    "선택 결과: 검토자가 다음 proof task를 확인한 Career Artifact; 확장 결과: 사람 검토를 위한 공개 가능한 evidence summary",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(swappedLayers),
+    "Career summary must reject an optional/expanded outcome swap",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(section.replace("사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다.", "자동 승인됩니다.")),
+    "Career summary must reject auto approval",
+  );
+  await assert.rejects(
+    assertCareerGoalOutputSummary(section.replace("사용자와 멘토가 역할 후보, 공개 범위와 다음 과제를 승인·수정·보류합니다.", "역할 후보, 공개 범위와 다음 과제를 검토합니다.")),
+    "Career summary must reject a removed human decision-maker",
+  );
 });

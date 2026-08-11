@@ -266,7 +266,7 @@ def make_pdf(case, sections, font_path, output):
         for item in section.get("bullets", []): story.append(Paragraph(f"• {item}", body))
         if section.get("table"):
             rows = [[Paragraph(str(cell), small if len(section["table"]) > 8 else body) for cell in row] for row in section["table"]]
-            widths = [1.65 * inch, 4.85 * inch] if len(rows[0]) == 2 else [0.6 * inch, 2.95 * inch, 2.95 * inch]
+            widths = [1.9 * inch, 4.6 * inch] if len(rows[0]) == 2 else [0.6 * inch, 2.95 * inch, 2.95 * inch]
             table = Table(rows, colWidths=widths, repeatRows=1)
             table.setStyle(TableStyle([("FONTNAME", (0, 0), (-1, -1), "D2Coding"), ("BACKGROUND", (0, 0), (-1, 0), HexColor("#E8EEF5")), ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#94A3B8")), ("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 6), ("RIGHTPADDING", (0, 0), (-1, -1), 6), ("TOPPADDING", (0, 0), (-1, -1), 5), ("BOTTOMPADDING", (0, 0), (-1, -1), 5)]))
             story.append(table)

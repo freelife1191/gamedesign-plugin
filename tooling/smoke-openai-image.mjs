@@ -20,8 +20,9 @@ async function main() {
         output: { path: "assets/generated/live-smoke-image.png", width: 1024, height: 1024, format: "png" },
       }],
       apiKey: config.apiKey,
-      model: "gpt-image-2",
-      quality: "low",
+      model: config.model,
+      quality: config.quality,
+      requestTimeoutMs: config.requestTimeoutMs,
       stagingRoot,
     });
     console.log(JSON.stringify({ smoke: "openai-image", provider: result.provider, results: result.results, failures: result.failures }));
