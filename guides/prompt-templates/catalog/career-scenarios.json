@@ -89,8 +89,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C01 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 기획 산출물 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:case:CA-C01; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
+    "display_title": "역할 후보와 학습 과제를 잇는 진로 탐색 (CA-C01)",
+    "sample_result_excerpt": "시스템 기획과 콘텐츠 기획을 역할 후보로 남기고, 각각 규칙표 작성과 퀘스트 흐름 설계를 첫 증명 과제로 잡았습니다. 어느 역할을 우선할지는 과제 결과를 본 뒤 사용자와 멘토가 검토해 결정합니다. (ID: career:case:CA-C01; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
   },
   {
     "id": "career:case:CA-C02",
@@ -183,8 +183,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C02 source-bound scenario",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:case:CA-C02; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+    "display_title": "관찰과 반례로 완성하는 게임 역기획 (CA-C02)",
+    "sample_result_excerpt": "보스전에서 회피 구간이 두 번 반복된다는 관찰과 ‘전투 속도 조절’ 가설을 나눠 적었습니다. 난이도 완화 목적일 수 있다는 반례와 화면 인용 범위는 작성자와 멘토의 검토 전입니다. (ID: career:case:CA-C02; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
   },
   {
     "id": "career:case:CA-C03",
@@ -276,8 +276,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C03 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 조각: 근거 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:case:CA-C03; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
+    "display_title": "채용 공고 근거로 역할 지도를 고치는 조사 (CA-C03)",
+    "sample_result_excerpt": "연습용 조사에서는 국내 시스템 기획 공고 6건을 표본으로 두고 협업 문서와 데이터 표 경험을 역할 지도에 연결했습니다. 실제 지역과 조사 날짜를 확인하지 않았으므로 요구사항의 우선순위는 조사 담당자 검토 전입니다. (ID: career:case:CA-C03; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
   },
   {
     "id": "career:case:CA-C04",
@@ -371,8 +371,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C04 source-bound scenario",
-    "sample_result_excerpt": "가상의 검토 기록 — 역량 차이: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:case:CA-C04; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
+    "display_title": "역량 차이를 학습 일정으로 바꾸는 성장 계획 (CA-C04)",
+    "sample_result_excerpt": "규칙 문서화는 기존 사례가 있지만 수치 검증 기록은 비어 있어 우선 보완 항목으로 뒀습니다. 격주로 밸런스 가설과 실험표를 한 세트씩 만들겠다는 일정은 멘토가 실행 가능성을 검토합니다. (ID: career:case:CA-C04; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
   },
   {
     "id": "career:case:CA-C05",
@@ -464,8 +464,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C05 source-bound scenario",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:case:CA-C05; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
+    "display_title": "공개 근거와 개인 기여를 밝히는 역기획 사례 (CA-C05)",
+    "sample_result_excerpt": "전투 보상 구조 분석에는 직접 기록한 플레이 시점과 해석을 연결하고, 표 구성만 개인 작업으로 표시했습니다. 캡처 사용 범위와 분석 문구는 공개 권리 검토가 끝날 때까지 보류합니다. (ID: career:case:CA-C05; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
   },
   {
     "id": "career:case:CA-C06",
@@ -558,8 +558,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C06 source-bound scenario",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:case:CA-C06; 파일: game-design-career/[경력 ID]/portfolio-project-brief/content.md)"
+    "display_title": "근거 있는 프로젝트를 포트폴리오로 엮기 (CA-C06)",
+    "sample_result_excerpt": "협동 퍼즐 사례는 문제, 선택, 테스트 관찰, 개인 기여 순서로 한 페이지에 배치했습니다. 플레이 화면과 팀 작업물은 공개 범위 검토가 끝난 뒤에만 최종 포트폴리오 후보가 됩니다. (ID: career:case:CA-C06; 파일: game-design-career/[경력 ID]/portfolio-project-brief/content.md)"
   },
   {
     "id": "career:case:CA-C07",
@@ -654,8 +654,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C07 source-bound scenario",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 검토 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:case:CA-C07; 파일: game-design-career/[경력 ID]/five-axis-review/content.md)"
+    "display_title": "포트폴리오 진단에서 발표 수정안까지 (CA-C07)",
+    "sample_result_excerpt": "검토에서 ‘선택 이유가 약함’을 높은 우선순위로 잡고, 첫 사례에 비교안을 추가하는 수정 작업을 등록했습니다. 자기소개에 넣을 문구와 공개 범위는 포트폴리오 검토자와 멘토가 함께 확인합니다. (ID: career:case:CA-C07; 파일: game-design-career/[경력 ID]/five-axis-review/content.md)"
   },
   {
     "id": "career:case:CA-C08",
@@ -750,8 +750,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/competency-paths.md"
     ],
-    "display_title": "게임 기획 결과: CA-C08 source-bound scenario",
-    "sample_result_excerpt": "초안 결과: 질문과 답변에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:case:CA-C08; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
+    "display_title": "면접 답변에서 다음 성장 과제를 찾기 (CA-C08)",
+    "sample_result_excerpt": "라이브 운영 경험을 묻는 질문에는 직접 경험이 없다고 쓰고, 이벤트 보상표를 만든 유사 경험을 근거로 붙였습니다. 코치 피드백 뒤 지표 분석 과제를 다음 성장 항목으로 제안했지만 전환 준비 판단은 아직 미정입니다. (ID: career:case:CA-C08; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
   },
   {
     "id": "career:case:CA-T01",
@@ -841,8 +841,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T01 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 기획 산출물 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:case:CA-T01; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
+    "display_title": "상태·규칙·예외로 보여 주는 시스템 기획 (CA-T01)",
+    "sample_result_excerpt": "상점 재고를 ‘잠김·판매 중·품절’로 나누고 상태 전환 조건과 중복 구매 예외를 표로 만들었습니다. 빠진 예외와 다음 검증 질문은 시스템 기획 멘토 검토 전입니다. (ID: career:case:CA-T01; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
   },
   {
     "id": "career:case:CA-T02",
@@ -932,8 +932,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T02 source-bound scenario",
-    "sample_result_excerpt": "예시 산출물 조각: 기획 산출물 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:case:CA-T02; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
+    "display_title": "분기와 실패 복구를 설계하는 콘텐츠 기획 (CA-T02)",
+    "sample_result_excerpt": "구조 요청을 거절한 플레이어에게 잠입 경로가 열리고, 실패하면 경비의 신뢰를 회복하는 보조 임무로 이어지게 구성했습니다. 분기 수와 실제 제작 범위는 콘텐츠 기획 멘토 검토 전입니다. (ID: career:case:CA-T02; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
   },
   {
     "id": "career:case:CA-T03",
@@ -1023,8 +1023,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T03 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:case:CA-T03; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+    "display_title": "관찰과 반례로 다듬는 전투 기획 사례 (CA-T03)",
+    "sample_result_excerpt": "강공격 뒤 1.2초 빈틈이 선택을 만든다는 관찰을 스킬 명세로 옮겼습니다. 회피 위주 플레이에서는 빈틈이 의미 없다는 반례가 있어 수치와 재미 판단은 전투 기획 멘토 검토 전입니다. (ID: career:case:CA-T03; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
   },
   {
     "id": "career:case:CA-T04",
@@ -1114,8 +1114,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T04 source-bound scenario",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:case:CA-T04; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+    "display_title": "재화 흐름과 보호 기준을 세우는 경제 기획 (CA-T04)",
+    "sample_result_excerpt": "일일 퀘스트를 주요 재화 공급원, 장비 강화와 상점을 소비처로 놓고 14일 흐름 가설을 작성했습니다. 재화 고갈 시 완화 기준과 되돌림 조건은 경제·밸런스 검토자가 확인해야 합니다. (ID: career:case:CA-T04; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
   },
   {
     "id": "career:case:CA-T05",
@@ -1205,8 +1205,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T05 source-bound scenario",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 역량 차이 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:case:CA-T05; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
+    "display_title": "오류와 대체 입력을 살피는 접근성 기획 (UX·CA-T05)",
+    "sample_result_excerpt": "키보드만 사용할 때 제작 창의 재료 목록으로 초점이 이동하지 않는 문제를 기록했습니다. 방향키 이동과 검색 입력을 대안으로 제안했으며 접근성 적합성은 전문 검토 전까지 확정하지 않습니다. (ID: career:case:CA-T05; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
   },
   {
     "id": "career:case:CA-T06",
@@ -1296,8 +1296,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T06 source-bound scenario",
-    "sample_result_excerpt": "검토용 가상 산출물: 기획 산출물 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:case:CA-T06; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
+    "display_title": "장면 목적과 협업 경계를 밝히는 내러티브 기획 (CA-T06)",
+    "sample_result_excerpt": "폐역 재회 장면의 목적을 ‘동료를 믿을지 선택하게 하기’로 정하고 대사 선택 뒤 필요한 연출 전달사항을 적었습니다. 대사와 연출의 작업 경계는 내러티브 기획 멘토가 검토합니다. (ID: career:case:CA-T06; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
   },
   {
     "id": "career:case:CA-T07",
@@ -1387,8 +1387,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T07 source-bound scenario",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:case:CA-T07; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
+    "display_title": "동선과 시야를 플레이 질문으로 바꾸는 레벨 기획 (CA-T07)",
+    "sample_result_excerpt": "첫 갈림길에서 목표물이 벽에 가려져 세 명 중 두 명이 반대편으로 이동했다는 관찰을 남겼습니다. 조명과 표지 위치 수정안은 검토 전이며 다음 플레이테스트 뒤 채택 여부를 정합니다. (ID: career:case:CA-T07; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
   },
   {
     "id": "career:case:CA-T08",
@@ -1479,8 +1479,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T08 source-bound scenario",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:case:CA-T08; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
+    "display_title": "수정 전후와 개인 기여를 보여 주는 신입 포트폴리오 (CA-T08)",
+    "sample_result_excerpt": "튜토리얼 목표 문구를 바꾸기 전후의 화면과 테스트 메모를 나란히 놓고, 문구 설계와 기록 정리만 개인 기여로 적었습니다. 변화의 원인 해석은 포트폴리오 검토자가 확인합니다. (ID: career:case:CA-T08; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
   },
   {
     "id": "career:case:CA-T09",
@@ -1570,8 +1570,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T09 source-bound scenario",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:case:CA-T09; 파일: game-design-career/[경력 ID]/transition-readiness/content.md)"
+    "display_title": "이전 경험을 새 직무 증거로 잇는 전환 계획 (CA-T09)",
+    "sample_result_excerpt": "QA 경험에서 재현 절차 작성은 확인된 강점으로, 규칙 설계는 새로 증명할 영역으로 나눴습니다. 다음 과제는 상태 전이 문서이며 이직 준비도는 진로 검토자의 판단 전입니다. (ID: career:case:CA-T09; 파일: game-design-career/[경력 ID]/transition-readiness/content.md)"
   },
   {
     "id": "career:case:CA-T10",
@@ -1664,8 +1664,8 @@
     "source_references": [
       "guides/game-design-career/use-cases/concept-scenarios.md"
     ],
-    "display_title": "게임 기획 결과: CA-T10 source-bound scenario",
-    "sample_result_excerpt": "예시 산출물 조각: 검토 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:case:CA-T10; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
+    "display_title": "성장 기록을 다음 면접 답변으로 잇기 (CA-T10)",
+    "sample_result_excerpt": "지난 검토 뒤 경제표의 예외 규칙을 3건 보완했고, 아직 지표 해석 사례는 없습니다. 면접 답변에는 이 차이를 솔직히 밝히고 다음 검토일을 적었으며 승진·이직 판단과는 분리했습니다. (ID: career:case:CA-T10; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
   },
   {
     "id": "career:recipe:interview-preparation",
@@ -1755,8 +1755,8 @@
     "source_references": [
       "guides/game-design-career/recipes/interview-preparation.md"
     ],
-    "display_title": "게임 기획 결과: interview-preparation recipe",
-    "sample_result_excerpt": "가상 결과 조각: 질문과 답변: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:recipe:interview-preparation; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
+    "display_title": "근거 중심 면접 준비 순서 (interview-preparation)",
+    "sample_result_excerpt": "공고 근거를 갱신한 뒤 문제 해결·협업·실패·성장 질문에 사례 주소를 붙였습니다. 빈 경험은 보완 과제로 남겼고 답변 사용 여부는 면접 코치 검토 뒤 결정합니다. (ID: career:recipe:interview-preparation; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
   },
   {
     "id": "career:recipe:job-research-gap",
@@ -1868,8 +1868,8 @@
     "source_references": [
       "guides/game-design-career/recipes/job-research-gap.md"
     ],
-    "display_title": "게임 기획 결과: job-research-gap recipe",
-    "sample_result_excerpt": "가상의 검토 기록 — 근거 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:recipe:job-research-gap; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
+    "display_title": "채용 조사에서 역량 차이를 찾는 순서 (job-research-gap)",
+    "sample_result_excerpt": "공식 공고의 날짜와 지역을 기록하고 반복 요구를 현재 증거와 대조했습니다. 데이터 분석 경험 부족을 우선 과제 후보로 뒀지만 표본 범위와 우선순위는 담당자 검토 전입니다. (ID: career:recipe:job-research-gap; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
   },
   {
     "id": "career:recipe:junior-growth-transition",
@@ -1971,8 +1971,8 @@
     "source_references": [
       "guides/game-design-career/recipes/junior-growth-transition.md"
     ],
-    "display_title": "게임 기획 결과: junior-growth-transition recipe",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 검토 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:recipe:junior-growth-transition; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
+    "display_title": "주니어 성장 기록에서 전환 준비까지 (junior-growth-transition)",
+    "sample_result_excerpt": "12주 성장 기록에서 규칙 문서와 피드백 반영 사례를 골라 전환 준비표에 연결했습니다. 부족한 라이브 지표 경험은 다음 증명 과제로 남겼으며 준비 상태는 멘토 검토 전입니다. (ID: career:recipe:junior-growth-transition; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
   },
   {
     "id": "career:recipe:portfolio-build-review",
@@ -2084,8 +2084,8 @@
     "source_references": [
       "guides/game-design-career/recipes/portfolio-build-review.md"
     ],
-    "display_title": "게임 기획 결과: portfolio-build-review recipe",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:recipe:portfolio-build-review; 파일: game-design-career/[경력 ID]/creative-design-portfolio/content.md)"
+    "display_title": "포트폴리오 제작과 검토를 잇는 순서 (portfolio-build-review)",
+    "sample_result_excerpt": "역기획 사례의 문제·판단·근거를 한 문서로 묶은 뒤 다섯 기준으로 검토해 수정 목록을 만들었습니다. 공개 권리와 개인 기여 문구가 확인되기 전에는 완성본으로 표시하지 않습니다. (ID: career:recipe:portfolio-build-review; 파일: game-design-career/[경력 ID]/creative-design-portfolio/content.md)"
   },
   {
     "id": "career:recipe:reverse-design",
@@ -2175,8 +2175,8 @@
     "source_references": [
       "guides/game-design-career/recipes/reverse-design.md"
     ],
-    "display_title": "게임 기획 결과: reverse-design recipe",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:recipe:reverse-design; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
+    "display_title": "관찰에서 검증 가능한 역기획까지 (reverse-design)",
+    "sample_result_excerpt": "플레이 장면을 기록하고 규칙 가설, 반례, 확인 방법 순서로 역기획 문서를 구성했습니다. 내부 의도처럼 보일 수 있는 문장은 추론으로 표시했으며 공개 범위는 권리 검토 뒤 정합니다. (ID: career:recipe:reverse-design; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
   },
   {
     "id": "career:recipe:role-learning-roadmap",
@@ -2277,7 +2277,7 @@
     "source_references": [
       "guides/game-design-career/recipes/role-learning-roadmap.md"
     ],
-    "display_title": "게임 기획 결과: role-learning-roadmap recipe",
-    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:recipe:role-learning-roadmap; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
+    "display_title": "역할 탐색에서 학습 로드맵까지 (role-learning-roadmap)",
+    "sample_result_excerpt": "역할 후보 두 개를 비교하고 현재 증거가 약한 수치 설계를 8주 학습 과제로 바꿨습니다. 과제 난이도와 역할 우선순위는 사용자와 멘토가 검토한 뒤 조정합니다. (ID: career:recipe:role-learning-roadmap; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
   }
 ]

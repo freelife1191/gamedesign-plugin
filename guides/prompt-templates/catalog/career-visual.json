@@ -101,8 +101,8 @@
       "guides/game-design-career/skills/plan-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: 포트폴리오 placeholder 이미지 슬롯 계획",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 내보내기 전 점검 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:plan-image-assets:beginner; 파일: career/visual/plan-image-assets/beginner/content.md)"
+    "display_title": "포트폴리오 이미지 자리와 대체 문구 계획",
+    "sample_result_excerpt": "표지에는 ASSET-COVER-01 자리 하나를 두고 ‘규칙표와 테스트 메모가 놓인 작업 책상’이라는 대체 문구를 붙였습니다. 이미지는 생성하지 않았으며 출처와 사용 권리는 미정으로 남겼습니다. (ID: career:plan-image-assets:beginner; 파일: career/visual/plan-image-assets/beginner/content.md)"
   },
   {
     "id": "career:plan-image-assets:standard",
@@ -206,8 +206,8 @@
       "guides/game-design-career/skills/plan-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: proof 이미지·alt·권리 manifest 계획",
-    "sample_result_excerpt": "예시 산출물 조각: 내보내기 전 점검 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:plan-image-assets:standard; 파일: career/visual/plan-image-assets/standard/content.md)"
+    "display_title": "증명 이미지의 대체 문구와 권리 기록 계획",
+    "sample_result_excerpt": "사례 2에는 수정 전후 화면 두 장을 배치하고 각 이미지의 출처, 권리 담당자, 대체 문구를 기록하도록 정했습니다. 실제 파일 생성과 공개 사용은 권리 담당자 검토 뒤 별도 단계에서 진행합니다. (ID: career:plan-image-assets:standard; 파일: career/visual/plan-image-assets/standard/content.md)"
   },
   {
     "id": "career:plan-image-assets:advanced",
@@ -312,8 +312,8 @@
       "guides/game-design-career/skills/plan-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: profile 슬롯과 presentation handoff 계획",
-    "sample_result_excerpt": "가상 결과 조각: 내보내기 전 점검: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:plan-image-assets:advanced; 파일: career/visual/plan-image-assets/advanced/content.md)"
+    "display_title": "소개용 이미지 자리와 발표 자료 인계 계획",
+    "sample_result_excerpt": "프로필, 대표 사례, 과정 설명에 쓸 이미지 자리를 각각 고유 자산 식별자로 나눴습니다. 발표 자료 담당자에게 넘길 크기와 대체 문구는 적었지만 공개 가능한 자산인지는 아직 검토 중입니다. (ID: career:plan-image-assets:advanced; 파일: career/visual/plan-image-assets/advanced/content.md)"
   },
   {
     "id": "career:generate-image-assets:beginner",
@@ -416,8 +416,8 @@
       "guides/game-design-career/skills/generate-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: 선택한 포트폴리오 cover concept 생성 경로",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:generate-image-assets:beginner; 파일: career/visual/generate-image-assets/beginner/content.md)"
+    "display_title": "선택한 포트폴리오 표지 시안 만들기",
+    "sample_result_excerpt": "표지 자산 ASSET-COVER-01에는 격자 종이 위 규칙 카드와 연필이 놓인 차분한 시안을 선택했습니다. 생성 기록과 프롬프트는 남겼지만 포트폴리오 사용 여부는 시각 담당자 검토 전입니다. (ID: career:generate-image-assets:beginner; 파일: career/visual/generate-image-assets/beginner/content.md)"
   },
   {
     "id": "career:generate-image-assets:standard",
@@ -521,8 +521,8 @@
       "guides/game-design-career/skills/generate-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: proof 이미지 receipt와 provenance 기록",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:generate-image-assets:standard; 파일: career/visual/generate-image-assets/standard/content.md)"
+    "display_title": "증명 이미지의 생성 이력과 출처 기록",
+    "sample_result_excerpt": "수정 전후 비교 도표 두 장에 선택 자산 ID, 생성 방식, 프롬프트, 원본 근거 주소를 연결했습니다. 두 결과 모두 사람 검토 전 시안이며 실제 작업 증거를 대신하지 않습니다. (ID: career:generate-image-assets:standard; 파일: career/visual/generate-image-assets/standard/content.md)"
   },
   {
     "id": "career:generate-image-assets:advanced",
@@ -628,8 +628,8 @@
       "guides/game-design-career/skills/generate-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: provider failure·provenance·retry handoff",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:generate-image-assets:advanced; 파일: career/visual/generate-image-assets/advanced/content.md)"
+    "display_title": "이미지 생성 실패 기록과 재시도 인계",
+    "sample_result_excerpt": "과정 이미지 ASSET-PROCESS-03 생성이 시간 초과로 멈춰 실패 시각과 사용한 입력을 기록했습니다. 자산 식별자는 유지하고 낮은 해상도 재시도안을 남겼으며 실행 여부는 담당자 검토 뒤 정합니다. (ID: career:generate-image-assets:advanced; 파일: career/visual/generate-image-assets/advanced/content.md)"
   },
   {
     "id": "career:review-image-assets:beginner",
@@ -733,8 +733,8 @@
       "guides/game-design-career/skills/review-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: 문서 concept 이미지 검토 요청",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 검토 발견 사항: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:review-image-assets:beginner; 파일: career/visual/review-image-assets/beginner/content.md)"
+    "display_title": "문서용 이미지 시안 검토 요청",
+    "sample_result_excerpt": "표지 시안은 문서 주제와 맞지만 작은 화면에서 부제가 읽히지 않는다는 의견을 남겼습니다. 글자 크기를 키운 수정안과 권리 근거를 사람이 확인하기 전에는 보류 상태입니다. (ID: career:review-image-assets:beginner; 파일: career/visual/review-image-assets/beginner/content.md)"
   },
   {
     "id": "career:review-image-assets:standard",
@@ -857,8 +857,8 @@
       "guides/game-design-career/skills/review-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: 공개 권리·가독성 document approval",
-    "sample_result_excerpt": "초안 결과: 검토 발견 사항에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:review-image-assets:standard; 파일: career/visual/review-image-assets/standard/content.md)"
+    "display_title": "이미지 공개 권리와 문서 가독성 검토",
+    "sample_result_excerpt": "검토한 ASSET-CASE-02는 출처 표기가 확인됐지만 대체 문구가 화면의 핵심 변화를 설명하지 못합니다. 문구 수정과 배치 확인이 끝난 뒤에만 문서 사용 여부를 결정합니다. (ID: career:review-image-assets:standard; 파일: career/visual/review-image-assets/standard/content.md)"
   },
   {
     "id": "career:review-image-assets:advanced",
@@ -984,8 +984,8 @@
       "guides/game-design-career/skills/review-image-assets.md",
       "guides/game-design-career/image-assets.md"
     ],
-    "display_title": "게임 기획 결과: production candidate·review cycle 증빙",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 검토 발견 사항 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:review-image-assets:advanced; 파일: career/visual/review-image-assets/advanced/content.md)"
+    "display_title": "제작 후보 이미지의 반복 검토 기록",
+    "sample_result_excerpt": "세 번째 검토본은 색 대비 기준을 통과했지만 원본 라이선스의 유효 기간을 다시 확인해야 합니다. 기술 규격은 적합 후보로 표시했고 실제 포트폴리오 공개 승인은 별도로 남겨 뒀습니다. (ID: career:review-image-assets:advanced; 파일: career/visual/review-image-assets/advanced/content.md)"
   },
   {
     "id": "career:visualize-career-roadmap:beginner",
@@ -1090,8 +1090,8 @@
       "guides/game-design-career/skills/visualize-career-roadmap.md",
       "guides/game-design-career/visualization.md"
     ],
-    "display_title": "게임 기획 결과: 역할 비교 흐름 시각화",
-    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:visualize-career-roadmap:beginner; 파일: career/visual/visualize-career-roadmap/beginner/content.md)"
+    "display_title": "게임 기획 역할 비교 흐름도",
+    "sample_result_excerpt": "관심사에서 시스템 기획과 레벨 기획으로 갈라지고 각 역할의 첫 연습 과제로 이어지는 흐름도를 만들었습니다. 연결선은 역할 지도 초안에 근거하며 멘토 확인 전에는 진로 추천으로 보지 않습니다. (ID: career:visualize-career-roadmap:beginner; 파일: career/visual/visualize-career-roadmap/beginner/content.md)"
   },
   {
     "id": "career:visualize-career-roadmap:standard",
@@ -1197,8 +1197,8 @@
       "guides/game-design-career/skills/visualize-career-roadmap.md",
       "guides/game-design-career/visualization.md"
     ],
-    "display_title": "게임 기획 결과: 역량 dependency와 evidence map",
-    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:visualize-career-roadmap:standard; 파일: career/visual/visualize-career-roadmap/standard/content.md)"
+    "display_title": "역량의 선후 관계와 증거를 잇는 지도",
+    "sample_result_excerpt": "규칙 모델링을 먼저 익혀야 경제 시뮬레이션 과제를 시작할 수 있도록 선후 관계를 표시했습니다. 각 역량 옆에는 현재 문서 근거와 빈 증거를 함께 두었으며 관계의 타당성은 멘토 검토 전입니다. (ID: career:visualize-career-roadmap:standard; 파일: career/visual/visualize-career-roadmap/standard/content.md)"
   },
   {
     "id": "career:visualize-career-roadmap:advanced",
@@ -1303,8 +1303,8 @@
       "guides/game-design-career/skills/visualize-career-roadmap.md",
       "guides/game-design-career/visualization.md"
     ],
-    "display_title": "게임 기획 결과: Archify 우선 로드맵 fallback·receipt",
-    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:visualize-career-roadmap:advanced; 파일: career/visual/visualize-career-roadmap/advanced/content.md)"
+    "display_title": "진로 로드맵의 우선 구성과 대체 경로 (Archify)",
+    "sample_result_excerpt": "관계가 많은 12주 로드맵에는 Archify 구성을 우선 선택하고 제외한 두 형식의 이유도 적었습니다. 렌더링이 실패하면 정적 벡터 도식(SVG)으로 넘기는 경로가 있으며 최종 도식은 시각 검토가 필요합니다. (ID: career:visualize-career-roadmap:advanced; 파일: career/visual/visualize-career-roadmap/advanced/content.md)"
   },
   {
     "id": "career:svg-infographic:beginner",
@@ -1407,8 +1407,8 @@
       "guides/game-design-career/skills/svg-infographic.md",
       "guides/game-design-career/visualization.md"
     ],
-    "display_title": "게임 기획 결과: 학습 roadmap SVG 초안",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:svg-infographic:beginner; 파일: career/visual/svg-infographic/beginner/content.md)"
+    "display_title": "편집 가능한 학습 로드맵 초안 (SVG)",
+    "sample_result_excerpt": "1~4주 규칙표, 5~8주 시뮬레이션, 9~12주 검토 과정을 편집 가능한 벡터 도식(SVG)으로 배치했습니다. PNG 출력은 아직 만들지 않았고 읽기 순서와 색 대비는 사람 검토 전입니다. (ID: career:svg-infographic:beginner; 파일: career/visual/svg-infographic/beginner/content.md)"
   },
   {
     "id": "career:svg-infographic:standard",
@@ -1512,8 +1512,8 @@
       "guides/game-design-career/skills/svg-infographic.md",
       "guides/game-design-career/visualization.md"
     ],
-    "display_title": "게임 기획 결과: evidence map editable SVG와 render 상태",
-    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:svg-infographic:standard; 파일: career/visual/svg-infographic/standard/content.md)"
+    "display_title": "편집 가능한 근거 지도와 렌더링 상태",
+    "sample_result_excerpt": "역량 노드 여섯 개와 근거 문서 네 개를 잇는 벡터 도식(SVG)을 만들고 렌더링 명령 결과를 기록했습니다. 2배 PNG 출력은 생성됐지만 두 연결선의 겹침 때문에 시각 검토가 더 필요합니다. (ID: career:svg-infographic:standard; 파일: career/visual/svg-infographic/standard/content.md)"
   },
   {
     "id": "career:svg-infographic:advanced",
@@ -1617,7 +1617,7 @@
       "guides/game-design-career/skills/svg-infographic.md",
       "guides/game-design-career/visualization.md"
     ],
-    "display_title": "게임 기획 결과: lint·2× render·접근성·승인 SVG QA",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:svg-infographic:advanced; 파일: career/visual/svg-infographic/advanced/content.md)"
+    "display_title": "벡터 도식의 문법·2배 렌더링·접근성 종합 점검",
+    "sample_result_excerpt": "벡터 도식의 SVG 문법 검사와 정확한 2배 PNG 렌더링은 통과했지만 스크린 리더용 제목이 두 노드를 구분하지 못했습니다. 접근성 문구를 수정한 뒤 멘토가 최종 사용 여부를 검토합니다. (ID: career:svg-infographic:advanced; 파일: career/visual/svg-infographic/advanced/content.md)"
   }
 ]
