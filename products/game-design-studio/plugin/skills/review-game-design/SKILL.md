@@ -51,6 +51,8 @@ Produce `game-design-review` with stable sections for review scope, findings, de
 - Use `lead-game-designer` for intent, coherence, meaningful choice, and design trade-offs.
 - Use `production-feasibility-critic` for dependency, estimate, prototype, rights, and commitment risk.
 - Use `ux-accessibility-reviewer` for comprehension, critical actions, alternatives, and player protection.
+- Use `combat-encounter-reviewer` only for matching combat, boss, or encounter questions; it returns non-blocking findings only.
+- Use `level-puzzle-reviewer` only for matching puzzle, level-design, route, reset, retry, or progression-block questions; it returns non-blocking findings only.
 - Retain originating role and role priority on every finding and decision item.
 
 ## Completion checks

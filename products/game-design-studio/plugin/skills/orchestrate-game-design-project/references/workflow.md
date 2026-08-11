@@ -10,7 +10,20 @@ Keep unknown or ambiguous intent with `orchestrate-game-design-project`; never g
 
 ## Review selection
 
-Choose roles from each selected route's `defaultReviewers` that answer distinct material questions. Limit the selection with that route's `maxReviewers`, and reject any role absent from top-level `roleIds`. For mixed launch-readiness, use the `review` route's `defaultReviewers`; do not copy or reorder that list locally.
+Choose roles from each selected route's `defaultReviewers` that answer distinct material questions. For each normalized conditional intent, select only the `conditionalReviewers` whose `triggerIntents` include that intent, then deduplicate the combined reviewers. Limit the final selection with that route's `maxReviewers`, and reject any role absent from top-level `roleIds`. For mixed launch-readiness, use the `review` route's `defaultReviewers`; do not copy or reorder that list locally.
+
+<!-- conditional-reviewer-selection:start -->
+```json
+{
+  "intentInput": "conditionalIntent",
+  "selectionSource": "routing.routes[].conditionalReviewers",
+  "matchRule": "conditionalReviewers[].triggerIntents includes conditionalIntent",
+  "finalReviewerSet": "unique(defaultReviewers + selectedConditionalReviewers)",
+  "deduplicate": true,
+  "maxReviewers": 3
+}
+```
+<!-- conditional-reviewer-selection:end -->
 
 <!-- review-policy:start -->
 ```json

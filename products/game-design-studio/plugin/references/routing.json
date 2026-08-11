@@ -23,6 +23,8 @@
     "ux-accessibility-reviewer",
     "liveops-data-designer",
     "production-feasibility-critic",
+    "combat-encounter-reviewer",
+    "level-puzzle-reviewer",
     "document-quality-editor"
   ],
   "imageSpecialistIds": ["art-brief-director", "visual-asset-reviewer"],
@@ -34,6 +36,8 @@
     "ux-accessibility-reviewer",
     "liveops-data-designer",
     "production-feasibility-critic",
+    "combat-encounter-reviewer",
+    "level-puzzle-reviewer",
     "document-quality-editor"
   ],
   "unknownIntentFallback": "orchestrate-game-design-project",
@@ -154,11 +158,23 @@
     },
     {
       "id": "content",
-      "triggerIntents": ["quest", "level content", "narrative", "character", "enemy"],
+      "triggerIntents": ["quest", "level content", "narrative", "character", "enemy", "combat", "boss", "encounter", "puzzle", "level design", "soft lock", "secret route", "reset", "retry"],
       "requiredInputs": ["content purpose", "supporting systems", "production budget", "repeatability target"],
       "skill": "design-game-content",
       "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
-      "defaultReviewers": ["content-narrative-designer", "lead-game-designer", "production-feasibility-critic"],
+      "defaultReviewers": ["content-narrative-designer", "lead-game-designer"],
+      "conditionalReviewers": [
+        {
+          "role": "combat-encounter-reviewer",
+          "triggerIntents": ["combat", "boss", "encounter"],
+          "reviewers": ["combat-encounter-reviewer"]
+        },
+        {
+          "role": "level-puzzle-reviewer",
+          "triggerIntents": ["puzzle", "level design", "secret route", "soft lock", "reset", "retry"],
+          "reviewers": ["level-puzzle-reviewer"]
+        }
+      ],
       "maxReviewers": 3,
       "references": ["references/methods/content-specification.md"],
       "artifactType": "narrative-quest-npc",

@@ -13,6 +13,7 @@ Require the review envelope fields `artifact`, `role`, `questions`, and `finding
 - Are rule precedence, concurrency, exceptions, failure, and recovery deterministic?
 - Do sources, sinks, target inventory, progression time, and inflation assumptions reconcile?
 - Are real price, probability, pity, eligibility, and purchase consequences inspectable?
+- Are build choice, reselection, grind, and inventory-friction consequences explicit in the supplied rules and evidence?
 
 ## Scope
 

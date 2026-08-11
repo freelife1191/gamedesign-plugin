@@ -35,7 +35,7 @@ Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, wi
 - Honor an explicit user-selected skill when it is compatible with the requested result and all safety, rights, evidence, and human-approval boundaries.
 - Keep unknown or ambiguous intent in this orchestrator; never guess a specialist.
 - Treat profiles as additional questions and gates, not permission to invent facts.
-- Select one to three roles for distinct review questions. Do not add a role merely to fill the limit.
+- Select one to three roles for distinct review questions. Apply a route's conditional reviewers only when the normalized intent is listed in that condition's `triggerIntents`; deduplicate the final reviewer set and do not add a role merely to fill the limit.
 - Preserve the canonical Markdown artifact when optional review, visualization, export, or host capabilities are absent.
 - Report the selected skills, selected review roles, artifact paths, and remaining decisions. Also report assumptions, unresolved questions, blocked gates, requested format status, and the next decision owner.
 - Automatic route selection is not automatic approval. A named human still approves, revises, or holds every applicable result and derivative.
