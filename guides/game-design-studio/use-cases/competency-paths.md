@@ -1,6 +1,6 @@
 # Studio 역량 학습 경로
 
-이 문서는 장르와 회사 양식에 종속되지 않는 여덟 가지 게임 기획 역량을 작은 실습에서 검토 가능한 Artifact까지 확장합니다. 모든 예시는 가상·중립 사례입니다. 재미, 시장성, retention, 일정과 수치는 결론이 아니라 prototype 또는 telemetry로 검증할 가정이며, 자동화와 전문 역할의 finding은 이름 있는 사람의 승인을 대신하지 않습니다.
+이 문서는 장르와 회사 양식에 종속되지 않는 여덟 가지 게임 기획 역량을 작은 실습에서 검토 가능한 기획 결과물까지 확장합니다. 모든 예시는 가상·중립 사례입니다. 재미, 시장성, 재방문율, 일정과 수치는 결론이 아니라 시험 제작이나 실제 관찰 자료로 검증할 가정입니다. 자동화와 전문 역할이 남긴 검토 의견은 담당자의 승인을 대신하지 않습니다.
 
 ## ST-C01 플레이어 경험과 게임 비전
 
@@ -10,60 +10,60 @@
 
 **사용자와 상황:** 한 문장짜리 “낯선 섬을 함께 복구하는 탐험 게임” 아이디어가 있지만 대상 플레이어와 판단 기준이 없습니다.
 
-**학습 목표:** player promise, desired emotion, pillar, anti-pillar, non-goal과 관찰 가능한 success signal을 구분합니다. 핵심 개념은 “재미있다”는 주장과 “플레이어가 어떤 행동·선택·피드백을 경험하는가”라는 검증 가능한 가정의 경계입니다.
+**학습 목표:** 플레이어에게 약속할 경험, 목표 감정, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표, 관찰 가능한 성공 신호를 구분합니다. 핵심은 “재미있다”는 막연한 주장과 “플레이어가 어떤 행동·선택·반응을 경험하는가”라는 검증 가능한 가정을 나누는 것입니다.
 
 ### 적합한 경우와 적합하지 않은 경우
 
 - 적합: 아이디어를 시스템·콘텐츠·제작 판단의 공통 기준으로 바꾸거나, 상충하는 기능 제안을 비전으로 비교할 때.
-- 부적합: 이미 승인된 비전의 세부 runtime 규칙을 쓰거나, 근거 없이 시장 규모·재미·retention을 단정할 때. 세부 규칙은 `ST-C03`으로 이동합니다.
+- 부적합: 이미 승인된 방향의 세부 실행 규칙을 쓰거나, 근거 없이 시장 규모·재미·재방문율을 단정할 때. 세부 규칙은 `ST-C03`에서 다룹니다.
 
 ### 준비 입력
 
 - 선수 지식: 게임에서 확인한 사실과 자신의 해석을 분리하는 방법.
-- 최소 입력: 아이디어 한 문장, 예상 대상, 플랫폼 가정, 원하는 감정, 알려진 제약, 실제 decision owner.
+- 최소 입력: 아이디어 한 문장, 예상 대상, 플랫폼 가정, 원하는 감정, 알려진 제약, 실제 기획 책임자.
 - 선택 입력: 인터뷰·플레이테스트 기록, 유사 경험 관찰, 기존 범위 결정. 제3자 자료는 출처와 이용 범위를 기록합니다.
 
 ### 10분 미니 실습
 
 1. 익숙한 게임 한 장면에서 플레이어 행동, 시스템 반응, 보이는 피드백만 관찰로 적습니다.
-2. 새 예시의 player promise를 한 문장으로 쓰고 pillar 하나와 anti-pillar 하나를 만듭니다.
-3. “재미있다” 같은 형용사를 지우고 prototype에서 관찰할 질문으로 바꿉니다.
+2. 새 예시에서 플레이어에게 약속할 경험을 한 문장으로 쓰고, 지킬 설계 원칙과 하지 않을 설계 원칙을 하나씩 만듭니다.
+3. “재미있다” 같은 형용사를 지우고 시험 제작에서 관찰할 질문으로 바꿉니다.
 
 ### 표준 실습
 
-1. 관찰과 추론을 분리하고, 대상 플레이어 근거가 없으면 `assumption`으로 표시합니다.
-2. player promise → verb → decision → feedback을 연결한 `vision-pillars` 초안을 만듭니다.
-3. 그 약속에 기여하지 않는 기능을 non-goal로 분리한 `game-design-brief`를 작성합니다.
-4. 반례 과제로 “협동이 대기와 지시 따르기로만 변하는 상황”을 찾고 validation task를 만듭니다.
-5. 생성 결과에서 가정, 누락, 모순과 검증되지 않은 주장을 찾아 review 질문으로 넘깁니다.
+1. 관찰과 추론을 분리하고, 대상 플레이어 근거가 없으면 `가정(assumption)`으로 표시합니다.
+2. 플레이어에게 약속할 경험 → 행동 → 결정 → 반응을 연결한 게임 방향 원칙(`vision-pillars`) 초안을 만듭니다.
+3. 그 약속에 기여하지 않는 기능은 이번에 다루지 않을 목표로 분리해 게임 기획 요약서(`game-design-brief`)에 적습니다.
+4. 반례 과제로 “협동이 대기와 지시 따르기로만 변하는 상황”을 찾고 검증 과제를 만듭니다.
+5. 초안에서 가정, 누락, 모순과 확인하지 않은 주장을 찾아 검토 질문으로 넘깁니다.
 
 ### 포트폴리오·실무 확장
 
-최종 문구보다 처음의 모호한 아이디어, 비교한 대안, 포기한 기능, prototype 질문과 사람 결정 기록을 보여 줍니다. 실무에서는 pillar를 기능 승인 기준으로 쓰되 회사 고유 문서나 문체를 복제하지 않고 현재 팀의 공개 가능한 계약에 맞춥니다.
+최종 문구만 보여 주기보다 처음의 모호한 아이디어, 비교한 대안, 포기한 기능, 시험 제작 질문과 사람 결정 기록을 함께 보여 줍니다. 실무에서는 설계 원칙을 기능 승인 기준으로 쓰되 회사 고유 문서나 문체를 복제하지 않고 현재 팀에서 공개할 수 있는 범위에 맞춥니다.
 
 ### Codex App 요청문
 
 ```text
-@Game Design Studio 낯선 섬을 함께 복구하는 탐험 게임 아이디어를 대상 플레이어, player promise, pillar, anti-pillar, non-goal과 prototype 검증 질문으로 나눠 줘. 근거 없는 재미와 시장 주장은 assumption으로 남겨 줘.
+@Game Design Studio 낯선 섬을 함께 복구하는 탐험 게임 아이디어를 대상 플레이어, 플레이어에게 약속할 경험, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 시험 제작 질문으로 나눠 줘. 근거 없는 재미와 시장 주장은 가정으로 남겨 줘.
 ```
 
 ### Codex CLI 요청문
 
 ```text
-$game-design-studio:define-game-vision artifact=game-design/island-restoration/vision-pillars 아이디어 한 문장을 vision-pillars와 game-design-brief로 정리하고 실제 design owner의 결정을 기다려.
+$game-design-studio:define-game-vision artifact=game-design/island-restoration/vision-pillars 아이디어 한 문장을 게임 방향 원칙(vision-pillars)과 게임 기획 요약서(game-design-brief)로 정리하고 실제 기획 책임자의 결정을 기다려.
 ```
 
 ### 스킬·템플릿 흐름
 
-`apply-document-quality-profile` → `define-game-vision` → 필요 시 `orchestrate-game-design-project` → `review-game-design` 순서입니다. 템플릿은 `vision-pillars`, `game-design-brief`입니다. **역할 경계:** `document-quality-editor`는 구조 누락, `lead-game-designer`와 `content-narrative-designer`는 근거 연결 finding, `production-feasibility-critic`은 범위 위험을 보고합니다. 전문 역할은 원본을 승인하거나 재작성하지 않고, 실제 design owner가 pillar와 non-goal을 결정합니다.
+`apply-document-quality-profile` → `define-game-vision` → 필요 시 `orchestrate-game-design-project` → `review-game-design` 순서입니다. 템플릿은 게임 방향 원칙(`vision-pillars`)과 게임 기획 요약서(`game-design-brief`)입니다. **역할 경계:** 문서 품질 검토자는 구조 누락을, 수석 게임 기획자와 콘텐츠·내러티브 기획자는 근거 연결 문제를, 제작 가능성 검토자는 범위 위험을 보고합니다. 전문 역할은 원본을 승인하거나 재작성하지 않고, 실제 기획 책임자가 설계 원칙과 이번에 다루지 않을 목표를 결정합니다.
 
 ### 결과물
 
-**최소 결과:** `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록.
+**최소 결과:** `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.
 
-**선택 결과:** 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획. 생성·렌더 성공은 승인이 아닙니다.
+**선택 결과:** 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다.
 
-**확장 결과:** 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거.
+**확장 결과:** 사람 검토와 형식별 품질 확인을 통과한 팀 기획 요약서 또는 공개 가능한 판단 근거.
 
 **파일 트리:**
 
@@ -76,25 +76,25 @@ game-design/island-restoration/vision-pillars/
 └── export-manifest.yml
 ```
 
-**대표 내용:** `P-01 | 약속: 함께 복구 방향을 선택한다 | 근거: assumption | 검증: prototype에서 선택 이유와 갈등 지점을 관찰 | owner: pending`
+**대표 내용:** `P-01 | 약속: 함께 복구 방향을 선택한다 | 근거: 가정 | 검증: 시험 제작에서 선택 이유와 갈등 지점을 관찰 | 담당자: 미정`
 
 ### 검토와 승인
 
-**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.
+**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 플레이어에게 약속할 경험과 각 설계 원칙이 행동·선택·반응에 연결되는지 먼저 봅니다. **사람 결정:** 실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다. 스킬 실행, 검토 의견과 파일 생성은 자동 승인하지 않습니다.
 
 ### 실패·재개
 
-대상 근거가 없거나 pillar가 형용사뿐이면 확정하지 않고 질문과 validation task로 남깁니다. **보존:** 기존 `content.md`, evidence ID, 결정 기록과 통과한 review finding.
+대상 근거가 없거나 설계 원칙이 형용사뿐이면 확정하지 않고 질문과 검증 과제로 남깁니다. **보존:** 기존 `content.md`, 근거 ID, 결정 기록과 통과한 검토 의견.
 
 **재개 요청문:**
 
 ```text
-$game-design-studio:define-game-vision 기존 game-design/island-restoration/vision-pillars를 보존하고 새 플레이테스트 관찰을 evidence.yml에 연결해 P-01의 provisional 검증 기준부터 재개해.
+$game-design-studio:define-game-vision 기존 game-design/island-restoration/vision-pillars를 보존하고 새 플레이테스트 관찰을 evidence.yml에 연결해 P-01의 임시 검증 기준부터 재개해.
 ```
 
 ### 자기점검과 다음 학습
 
-- 대상 플레이어 근거와 가정을 구분했는가? 선택한 pillar가 실제 기능 결정 하나를 거절할 수 있는가?
+- 대상 플레이어 근거와 가정을 구분했는가? 선택한 설계 원칙이 실제 기능 제안 하나를 거절할 만큼 분명한가?
 - 회고: 채택한 대안, 포기한 조건, 필요한 다음 관찰을 자신의 말로 설명합니다.
 - 다음 학습: 행동을 루프로 구체화하려면 `ST-C02`, 규칙으로 내리려면 `ST-C03`으로 이동합니다.
 - 관련 문서: [새 게임 GDD 레시피](../recipes/new-game-gdd.md), [비전 스킬](../skills/define-game-vision.md), [템플릿](../templates.md).
@@ -194,7 +194,7 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:define-ga
 
 ##### 사람 검토
 ###### 승인 경계
-**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.
+**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 플레이어에게 약속할 경험과 각 설계 원칙이 행동·선택·반응에 연결되는지 먼저 봅니다. **사람 결정:** 실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다. 스킬 실행, 검토 의견과 파일 생성은 자동 승인하지 않습니다.
 
 ###### 보류 조건
 - 근거, 권리, 또는 owner approval receipt가 없으면 보류
@@ -204,7 +204,7 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:define-ga
 
 ##### 실패와 재개
 ```text
-ST-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
+ST-C01의 보존 결과 폴더와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 ```
 
 </details>
@@ -492,7 +492,7 @@ game-design/shared-workbench/system-specification/
 
 ### 검토와 승인
 
-**읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
+**읽는 순서:** 시스템 경계 → 규칙표 → 예외표 → 데이터 관계 → 근거·결정 순서입니다. 중간 결과에서 규칙 ID마다 상태, 반응, 실패 처리와 시험 항목이 있는지 봅니다. **사람 결정:** 기획 책임자와 개발 책임자가 권한, 우선순위, 이전 방법과 되돌리기 기준을 승인합니다. 검토 의견과 자동 검사만으로 승인하지 않습니다.
 
 ### 실패·재개
 
@@ -607,7 +607,7 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-ga
 
 ##### 사람 검토
 ###### 승인 경계
-**읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
+**읽는 순서:** 시스템 경계 → 규칙표 → 예외표 → 데이터 관계 → 근거·결정 순서입니다. 중간 결과에서 규칙 ID마다 상태, 반응, 실패 처리와 시험 항목이 있는지 봅니다. **사람 결정:** 기획 책임자와 개발 책임자가 권한, 우선순위, 이전 방법과 되돌리기 기준을 승인합니다. 검토 의견과 자동 검사만으로 승인하지 않습니다.
 
 ###### 보류 조건
 - 근거, 권리, 또는 owner approval receipt가 없으면 보류
@@ -674,7 +674,7 @@ $game-design-studio:design-player-experience artifact=game-design/first-session/
 
 ### 스킬·템플릿 흐름
 
-`apply-document-quality-profile` → `design-player-experience` → `review-game-design` → 설명 가치가 있을 때 `visualize-game-design` 순서입니다. 템플릿은 `ui-ux-flow-state`, `accessibility-platform-matrix`입니다. **역할 경계:** `document-quality-editor`는 구조, `ux-accessibility-reviewer`는 critical action과 대체 경로, `lead-game-designer`는 목표 경험 연결을 검토합니다. 실제 accessibility·design owner가 지원 범위와 blocker disposition을 결정합니다.
+`apply-document-quality-profile` → `design-player-experience` → `review-game-design` → 설명 가치가 있을 때 `visualize-game-design` 순서입니다. 템플릿은 화면 흐름·상태표(`ui-ux-flow-state`)와 접근성·플랫폼표(`accessibility-platform-matrix`)입니다. **역할 경계:** 문서 품질 검토자는 구조를, 사용자 경험·접근성 검토자는 핵심 행동과 대체 경로를, 수석 게임 기획자는 목표 경험 연결을 검토합니다. 실제 접근성 책임자와 기획 책임자가 지원 범위와 진행을 막는 문제의 처리 방법을 결정합니다.
 
 ### 결과물
 
@@ -699,7 +699,7 @@ game-design/first-session/ui-ux-flow-state/
 
 ### 검토와 승인
 
-**읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.
+**읽는 순서:** 사용자 목표 → 핵심 행동표 → 상태 범위 → 플랫폼표 → 근거·결정 순서입니다. 중간 결과에서 로딩·빈 화면·오류·중단 상황과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자가 지원 플랫폼, 검증 방법과 진행을 막는 문제를 승인·수정·보류합니다. 화면 시안·문서 변환 도구·검토 결과는 자동 승인하지 않습니다.
 
 ### 실패·재개
 
@@ -813,7 +813,7 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-pl
 
 ##### 사람 검토
 ###### 승인 경계
-**읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.
+**읽는 순서:** 사용자 목표 → 핵심 행동표 → 상태 범위 → 플랫폼표 → 근거·결정 순서입니다. 중간 결과에서 로딩·빈 화면·오류·중단 상황과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자가 지원 플랫폼, 검증 방법과 진행을 막는 문제를 승인·수정·보류합니다. 화면 시안·문서 변환 도구·검토 결과는 자동 승인하지 않습니다.
 
 ###### 보류 조건
 - 근거, 권리, 또는 owner approval receipt가 없으면 보류

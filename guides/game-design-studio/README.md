@@ -10,7 +10,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 | 목표 규모 | 권장 시작 | 예상 결과 | 다음 문서 |
 | --- | --- | --- | --- |
-| 작은 실습 | [Studio 활용 사례 인덱스](use-cases/README.md) | 10분 안에 설명할 player promise, loop 또는 rule 가정 | [역량 사례](use-cases/competency-paths.md) |
+| 작은 실습 | [Studio 활용 사례 인덱스](use-cases/README.md) | 10분 안에 설명할 플레이 경험의 약속, 플레이 흐름 또는 규칙 가정 | [역량 사례](use-cases/competency-paths.md) |
 | 단일 명세 | [스킬 워크벤치](use-cases/skill-workbench.md) | 상태·예외·UX·콘텐츠 중 하나의 검토 가능한 작업 초안 | [Studio FAQ](faq.md) |
 | 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 gate와 재개 조건이 있는 Studio Artifact | [결과물 카탈로그](../use-cases/output-catalog.md) |
 
@@ -22,7 +22,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 | 사용자 | 먼저 고를 경로 | 처음 확인할 결과 |
 | --- | --- | --- |
-| 기획 입문 학생 | [역량 사례](use-cases/competency-paths.md) | 작게 검증할 player promise, loop 또는 rule 초안 |
+| 기획 입문 학생 | [역량 사례](use-cases/competency-paths.md) | 작게 검증할 플레이 경험의 약속, 플레이 흐름 또는 규칙 초안 |
 | 솔로·인디 개발자 | [콘셉트 사례](use-cases/concept-scenarios.md) | 제약·scope·prototype 질문이 있는 설계 경로 |
 | 현업 기획자 | [스킬 워크벤치](use-cases/skill-workbench.md) | 특정 작업의 입력, 결과와 다음 handoff |
 | 팀 리드·교육자·멘토 | [역량 사례](use-cases/competency-paths.md)와 [Studio FAQ](faq.md) | 검토 기준, 사람 결정과 재개 질문 |
@@ -37,7 +37,7 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 
 | 사례 | 적합한 시작 | 구체적인 예상 결과 |
 | --- | --- | --- |
-| ST-C01 | [플레이어 경험과 게임 비전](use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전) | `vision-pillars`와 `game-design-brief`의 player promise·non-goal 초안 |
+| ST-C01 | [플레이어 경험과 게임 비전](use-cases/competency-paths.md#st-c01-플레이어-경험과-게임-비전) | 게임 방향 원칙(`vision-pillars`)과 게임 기획 요약서(`game-design-brief`)의 플레이 경험 약속·제외 목표 초안 |
 | ST-C03 | [규칙·상태·예외·데이터](use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | `system-specification`의 rule, state, exception, authority 표 |
 | ST-C04 | [UI·UX·온보딩·접근성](use-cases/competency-paths.md#st-c04-uiux온보딩접근성) | `ui-ux-flow-state`의 critical action·recovery와 접근성 검토 큐 |
 | ST-C05 | [콘텐츠·내러티브·퀘스트·NPC](use-cases/competency-paths.md#st-c05-콘텐츠내러티브퀘스트npc) | `narrative-quest-npc`의 quest state·choice·consequence 초안 |

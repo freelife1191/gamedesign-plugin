@@ -2,7 +2,7 @@
 
 게임을 기획하는 학생·기획자·멘토가 **아이디어를 검토 가능한 기획 문서로 만들고**, 그 결과를 학습·포트폴리오 작업까지 연결하는 두 개의 독립 플러그인입니다. **Game Design Studio**는 게임의 규칙·콘텐츠·UX·제작 범위를 설계하고, **Game Design Career**는 역할 탐색·역기획·포트폴리오·면접·성장 계획을 돕습니다.
 
-**기준 기획 결과물 (Canonical Artifact)**은 한 작업의 기준이 되는 결과 폴더입니다. `content.md`에 기획 본문을, `evidence.yml`에 근거를, `decisions/`에 선택 이유를 보존하므로 다음 수정·검토·내보내기에서 같은 기준을 다시 사용할 수 있습니다.
+**기준 기획 결과물 (Canonical Artifact)** 은 한 작업의 기준이 되는 결과 폴더입니다. `content.md`에 기획 본문을, `evidence.yml`에 근거를, `decisions/`에 선택 이유를 보존하므로 다음 수정·검토·내보내기에서 같은 기준을 다시 사용할 수 있습니다.
 
 이 도구는 판단과 근거 관리를 돕지만 재미, 흥행, 매출, 채용·합격, 법률 준수, 플랫폼 승인 또는 사람 승인을 보장하지 않습니다. 결과를 사용하거나 공개하기 전에 이름 있는 사람이 사실, 범위, 권리와 품질을 검토해야 합니다.
 
@@ -29,7 +29,7 @@
 
 | 선택 | 사용하는 사람 | 첫 요청 유형 | 처음 받는 결과물 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
-| Studio | 게임 기획 학생, 현업 기획자, 팀 리드 | 비전·규칙·콘텐츠·UX·경제·제작 범위 설계 | 게임 기획 브리프 (`game-design-brief`) | [Studio 사용자 가이드](guides/game-design-studio/README.md) |
+| Studio | 게임 기획 학생, 현업 기획자, 팀 리드 | 비전·규칙·콘텐츠·UX·경제·제작 범위 설계 | 게임 기획 요약서 (`game-design-brief`) | [Studio 사용자 가이드](guides/game-design-studio/README.md) |
 | Career | 취업 준비생, 주니어, 직무 전환자, 멘토 | 역할 탐색·역기획·포트폴리오·면접·성장 계획 | 게임 기획 경력 계획 (`game-design-career-plan`) | [Career 사용자 가이드](guides/game-design-career/README.md) |
 | 둘 다 | 완성한 기획서를 취업용 포트폴리오 사례로 정리할 기획자 | Studio 검토 뒤 Career 포트폴리오 사례로 정리 | 제품별 기준 기획 결과물 2개 (Canonical Artifact) | [전체 사용자 가이드](guides/README.md) |
 
@@ -148,16 +148,16 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 
 [![한 문장 요청에서 스킬 선택과 사람 승인까지 이어지는 첫 결과 흐름](guides/assets/readme/first-result-routing-flow.png)](guides/assets/readme/first-result-routing-flow.svg)
 
-### Studio에서 첫 게임 기획 브리프 만들기
+### Studio에서 첫 게임 기획 요약서 만들기
 
 아이디어의 대상 플레이어와 핵심 재미를 정리하고 싶다면 이렇게 시작합니다.
 
 ```text
 @Game Design Studio 모바일 협동 RPG의 대상 플레이어와 핵심 재미를
-게임 기획 브리프로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
+게임 기획 요약서로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
 ```
 
-받게 되는 첫 결과는 **게임 기획 브리프** (`game-design-brief`)입니다.
+받게 되는 첫 결과는 **게임 기획 요약서** (`game-design-brief`)입니다.
 `content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
 
 ### Career에서 첫 경력 계획 만들기
@@ -273,7 +273,7 @@ $game-design-career:build-game-design-portfolio
 
 | 하려는 일 | 간단한 요청 | 플러그인이 고르는 대표 경로 | 받게 되는 결과 |
 | --- | --- | --- | --- |
-| 게임 방향 정하기 | `@Game Design Studio 협동 RPG의 대상 플레이어와 핵심 재미를 정리해 줘.` | 게임 비전 정의 → 기획 검토 | 비전 기둥, 게임 기획 브리프 |
+| 게임 방향 정하기 | `@Game Design Studio 협동 RPG의 대상 플레이어와 핵심 재미를 정리해 줘.` | 게임 비전 정의 → 기획 검토 | 게임 방향 원칙, 게임 기획 요약서 |
 | 핵심 루프 설계 | `@Game Design Studio 탐험과 전투가 이어지는 핵심 플레이 루프를 설계해 줘.` | 시스템 설계 → 플레이어 경험 검토 | 핵심 동기 루프, 시스템 명세 |
 | 규칙·예외 정리 | `@Game Design Studio 장비 강화 규칙과 실패·예외 처리를 명세해 줘.` | 시스템 설계 → 기획 검토 | 시스템 명세, 규칙·예외 표 |
 | 화면 흐름 점검 | `@Game Design Studio 첫 세션 화면 흐름과 접근성 문제를 점검해 줘.` | 플레이어 경험 설계 → 시각화 | UI·UX 흐름, 접근성 표 |
@@ -284,7 +284,7 @@ $game-design-career:build-game-design-portfolio
 <details data-prompt-id="studio:case:ST-C01">
 <summary>게임의 방향과 핵심 재미 정의 (studio:case:ST-C01)</summary>
 
-게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 브리프로 정리합니다.
+게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 요약서로 정리합니다.
 
 #### 사용 시점
 
@@ -306,7 +306,7 @@ ST-C01를 작성해.
 
 바로 복사해 쓰는 App 예시
 @Game Design Studio 바람섬 협동 RPG의 대상 플레이어와 핵심 재미를
-게임 기획 브리프로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
+게임 기획 요약서로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
 
 CLI
 $game-design-studio:apply-document-quality-profile
@@ -330,13 +330,13 @@ ST-C01의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 
 `apply-document-quality-profile` → `define-game-vision` → `orchestrate-game-design-project` → `review-game-design`
 
-비전 기준을 세우고 기획 브리프로 묶은 뒤 검토하는 순서입니다.
+게임 방향을 정하고 기획 요약서로 묶은 뒤 검토하는 순서입니다.
 
 #### 받게 되는 결과
 
 `vision-pillars` → `game-design-brief` → `game-design-review`
 
-비전 기둥은 지켜야 할 약속, 기획 브리프는 다음 설계의 출발점입니다.
+게임 방향 원칙은 끝까지 지켜야 할 플레이 경험의 약속이고, 기획 요약서는 다음 설계의 출발점입니다.
 
 #### 읽는 순서
 
@@ -346,13 +346,13 @@ ST-C01의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 
 #### 사람 검토
 
-**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.
+**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 플레이어에게 약속할 경험과 각 설계 원칙이 행동·선택·반응에 연결되는지 먼저 봅니다. **사람 결정:** 실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다. 스킬 실행, 검토 의견과 파일 생성은 자동 승인하지 않습니다.
 
 사람이 만들지 않을 재미와 다음 시제품 범위를 결정합니다.
 
 #### 다음 요청
 
-ST-C01의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C01의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “바람섬 협동 RPG의 첫 15분 전투 시제품 범위를 추가해 줘.”
 
@@ -423,13 +423,13 @@ ST-C02의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 
 #### 사람 검토
 
-**읽는 순서:** `content.md`의 loop와 rule ID, `evidence.yml`의 관찰, `decisions/`의 대안 순서입니다. 중간 결과에서 모든 단계가 입력과 feedback을 갖고 실패 뒤 복구 가능한지 확인합니다. **사람 결정:** design owner와 player-protection owner가 의미 있는 선택, stop condition과 다음 prototype을 승인하거나 보류합니다. 자동화는 재미나 retention을 승인하지 않습니다.
+**읽는 순서:** `content.md`의 플레이 흐름과 규칙 ID, `evidence.yml`의 관찰, `decisions/`의 대안 순서입니다. 중간 결과에서 모든 단계가 입력과 반응을 갖고 실패 뒤 복구 가능한지 확인합니다. **사람 결정:** 기획 책임자와 플레이어 보호 책임자가 의미 있는 선택, 중단 조건과 다음 시험 제작 범위를 승인하거나 보류합니다. 자동화는 재미나 재방문 가능성을 승인하지 않습니다.
 
 사람이 보상·손실·복구 선택이 공정한지 정합니다.
 
 #### 다음 요청
 
-ST-C02의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C02의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “정찰-협동전투-제작 루프의 실패 복구 선택 2개를 비교해 줘.”
 
@@ -500,13 +500,13 @@ ST-C03의 사실 (fact), 추론 (inference), 제안 (recommendation)을
 
 #### 사람 검토
 
-**읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
+**읽는 순서:** 시스템 경계 → 규칙표 → 예외표 → 데이터 관계 → 근거·결정 순서입니다. 중간 결과에서 규칙 ID마다 상태, 반응, 실패 처리와 시험 항목이 있는지 봅니다. **사람 결정:** 기획 책임자와 개발 책임자가 권한, 우선순위, 이전 방법과 되돌리기 기준을 승인합니다. 검토 의견과 자동 검사만으로 승인하지 않습니다.
 
 사람이 최종 권한과 되돌릴 수 있는 변경인지 정합니다.
 
 #### 다음 요청
 
-ST-C03의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C03의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “파티 탈퇴 중 보상 수령 예외의 우선순위와 테스트를 추가해 줘.”
 
@@ -576,11 +576,11 @@ $game-design-studio:visualize-game-design 달빛항구-모바일RPG ST-C04의
 
 #### 사람 검토
 
-**읽는 순서:** 사용자 목표 (user goal) → 핵심 행동 표 (critical action table) → 상태 범위 (state coverage) → 플랫폼 표 (platform matrix) → 근거·결정 (evidence·decision)입니다. 중간 결과에서 로딩·빈 화면·오류·중단 (loading·empty·error·interruption)과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자 (accessibility owner·design owner)가 지원 플랫폼, 검증 방법과 중단 항목 (blocker)을 승인·수정·보류합니다. 시안·렌더러·검토자 (mockup·renderer·reviewer)는 자동 승인하지 않습니다.
+**읽는 순서:** 사용자 목표 → 핵심 행동표 → 상태 범위 → 플랫폼표 → 근거·결정 순서입니다. 중간 결과에서 로딩·빈 화면·오류·중단 상황과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자가 지원 플랫폼, 검증 방법과 진행을 막는 문제를 승인·수정·보류합니다. 화면 시안·문서 변환 도구·검토자의 결과는 자동 승인하지 않습니다.
 
 #### 다음 요청
 
-ST-C04의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C04의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “보상 수령 화면의 색상 외 피드백과 키보드 대체 입력을 추가하고,
 오류 상태에서 재시도·나가기 선택을 비교해 줘.”
@@ -656,7 +656,7 @@ $game-design-studio:review-game-design 유리숲-구조대장 퀘스트의
 
 #### 다음 요청
 
-ST-C05의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C05의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “신뢰도 2단계의 협상·전투 분기를 비교하고, 각 분기에 필요한 NPC 대사,
 스킬 텔레그래프와 제작 리소스의 최소 범위를 정리해 줘.”
@@ -732,7 +732,7 @@ $game-design-studio:review-game-design 별빛농장 시즌 이벤트의 재화
 
 #### 다음 요청
 
-ST-C07의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C07의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “신규·복귀 플레이어의 7일 보유량을 보호하는 상한을 제안하고,
 실험 중단 조건과 이전 설정으로 되돌리는 절차를 추가해 줘.”
@@ -808,7 +808,7 @@ slice의
 
 #### 다음 요청
 
-ST-C08의 보존 결과 폴더 (artifact)와 중단 기록 (blocker receipt)을 읽고 공개 정보만으로 재개해.
+ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
 예: “8주 안에 전투 한 판을 검증해야 한다면 NPC 장식과 추가 이벤트를
 후순위로 미루고, 이미지 생성 실패와 PDF 변환 실패의 대체 경로를 추가해 줘.”
@@ -1694,9 +1694,9 @@ $game-design-studio:export-game-design-documents \
 
 | 작업 그룹 | Studio: 언제 어떤 결과를 만드는가 | Career: 언제 어떤 결과를 만드는가 |
 | --- | --- | --- |
-| 전체 조율 | 게임 기획 프로젝트 조율 (`orchestrate-game-design-project`): 여러 분야를 연결할 때 호출 → 게임 기획 브리프 (`game-design-brief`) | 게임 기획 경력 조율 (`orchestrate-game-design-career`): 경력 단계와 여러 작업을 연결할 때 호출 → 경력 계획 (`game-design-career-plan`) |
+| 전체 조율 | 게임 기획 프로젝트 조율 (`orchestrate-game-design-project`): 여러 분야를 연결할 때 호출 → 게임 기획 요약서 (`game-design-brief`) | 게임 기획 경력 조율 (`orchestrate-game-design-career`): 경력 단계와 여러 작업을 연결할 때 호출 → 경력 계획 (`game-design-career-plan`) |
 | 탐색·분석 | 게임 기획 검토 (`review-game-design`): 기존 결과물의 근거와 위험을 분석할 때 호출 → 기획 검토 기록 (`game-design-review`) | 채용 조사 (`research-game-design-jobs`)·역기획 (`reverse-engineer-game-design`): 공고 또는 관찰 자료가 있을 때 호출 → 채용 근거 (`job-research-evidence`)·역기획 문서 (`reverse-design-document`) |
-| 핵심 설계 | 게임 비전 정의 (`define-game-vision`)·게임 시스템 설계 (`design-game-systems`): 비전 또는 규칙 범위가 정해졌을 때 호출 → 비전 기둥 (`vision-pillars`)·시스템 명세서 (`system-specification`) | 경력 지도 만들기 (`map-game-design-career`)·주니어 성장 계획 (`plan-junior-growth`): 목표 역할 또는 성장 기간을 비교할 때 호출 → 역량표 (`competency-matrix`)·학습 경로 (`learning-roadmap`) |
+| 핵심 설계 | 게임 비전 정의 (`define-game-vision`)·게임 시스템 설계 (`design-game-systems`): 비전 또는 규칙 범위가 정해졌을 때 호출 → 게임 방향 원칙 (`vision-pillars`)·시스템 명세서 (`system-specification`) | 경력 지도 만들기 (`map-game-design-career`)·주니어 성장 계획 (`plan-junior-growth`): 목표 역할 또는 성장 기간을 비교할 때 호출 → 역량표 (`competency-matrix`)·학습 경로 (`learning-roadmap`) |
 | 콘텐츠·경험 | 게임 콘텐츠 설계 (`design-game-content`)·플레이어 경험 설계 (`design-player-experience`): 콘텐츠 단위나 UX 흐름이 정해졌을 때 호출 → 퀘스트·NPC 명세 (`narrative-quest-npc`)·UI·UX 흐름과 상태표 (`ui-ux-flow-state`) | 기획 포트폴리오 만들기 (`build-game-design-portfolio`)·면접 연습 (`practice-game-design-interview`): 공개 가능한 자료 또는 공고가 있을 때 호출 → 포트폴리오 (`creative-design-portfolio`)·면접 답변 기록 (`interview-question-answer-log`) |
 | 검토·품질 | 게임 기획 검토 (`review-game-design`)·문서 품질 기준 적용 (`apply-document-quality-profile`): 결과물 또는 출력 목적이 있을 때 호출 → 검토 보고서·품질 기준 기록 | 포트폴리오 검토 (`review-game-design-portfolio`)·경력 문서 품질 기준 적용 (`apply-document-quality-profile`): 근거 묶음 또는 출력 목적이 있을 때 호출 → 포트폴리오 검토·품질 기준 기록 |
 | 이미지·도식·출력 | 이미지 자산 계획 (`plan-image-assets`) → 이미지 자산 생성 (`generate-image-assets`) → 이미지 자산 검토 (`review-image-assets`), 게임 기획 시각화 (`visualize-game-design`)·문서 내보내기 준비 (`export-game-design-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 | 경력 이미지 자산 계획 (`plan-image-assets`) → 경력 이미지 자산 생성 (`generate-image-assets`) → 경력 이미지 자산 검토 (`review-image-assets`), 경력 성장 경로 시각화 (`visualize-career-roadmap`)·경력 문서 내보내기 준비 (`export-career-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 |
@@ -1712,7 +1712,7 @@ $game-design-studio:export-game-design-documents \
 | --- | --- | --- | --- | --- |
 | 문서 품질 기준 적용 (`apply-document-quality-profile`) | 문서의 독자·형식·검토 기준을 먼저 고정할 때 | 문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다. | `$game-design-studio:apply-document-quality-profile` | [문서 품질 기준 적용 상세 가이드](guides/game-design-studio/skills/apply-document-quality-profile.md) |
 | 기획 구조 도식 만들기 (`archify`) | 시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-studio:archify` | [기획 구조 도식 만들기 상세 가이드](guides/game-design-studio/skills/archify.md) |
-| 게임 비전 정의 (`define-game-vision`) | 대상 플레이어와 핵심 재미를 한 문장으로 정할 때 | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 비전 기둥을 만듭니다. | `$game-design-studio:define-game-vision` | [게임 비전 정의 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
+| 게임 비전 정의 (`define-game-vision`) | 대상 플레이어와 핵심 재미를 한 문장으로 정할 때 | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다. | `$game-design-studio:define-game-vision` | [게임 비전 정의 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
 | 게임 콘텐츠 설계 (`design-game-content`) | 퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때 | 퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다. | `$game-design-studio:design-game-content` | [게임 콘텐츠 설계 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
 | 경제와 라이브 운영 설계 (`design-game-economy-and-liveops`) | 재화·보상·이벤트의 측정 기준을 정할 때 | 재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다. | `$game-design-studio:design-game-economy-and-liveops` | [경제와 라이브 운영 설계 상세 가이드](guides/game-design-studio/skills/design-game-economy-and-liveops.md) |
 | 게임 시스템 설계 (`design-game-systems`) | 규칙·상태·예외를 구현 가능한 기준으로 정리할 때 | 규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다. | `$game-design-studio:design-game-systems` | [게임 시스템 설계 상세 가이드](guides/game-design-studio/skills/design-game-systems.md) |
@@ -1845,7 +1845,7 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 렌더러와 시각 품질 �
 
 | 결과 이름과 ID | 핵심 파일 | 선택 자산 | 읽는 순서 | 승인 전 보류 경계 |
 | --- | --- | --- | --- | --- |
-| 게임 기획 브리프 (`game-design-brief`) | 생성 폴더 `game-design/[프로젝트 ID]/game-design-brief/`, 핵심 파일 `content.md` | 비전 도식·콘셉트 이미지 (concept) | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
+| 게임 기획 요약서 (`game-design-brief`) | 생성 폴더 `game-design/[프로젝트 ID]/game-design-brief/`, 핵심 파일 `content.md` | 게임 방향 도식·콘셉트 이미지 (concept) | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
 | 시스템 명세서 (`system-specification`) | 생성 폴더 `game-design/[프로젝트 ID]/system-specification/`, 핵심 파일 `content.md` | 상태 전이 SVG·PNG | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
 | UI·UX 흐름과 상태표 (`ui-ux-flow-state`) | 생성 폴더 `game-design/[프로젝트 ID]/ui-ux-flow-state/`, 핵심 파일 `content.md` | 사용자 경험 흐름 (UX flow)·화면 이미지 | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
 | 관찰 기반 역기획 문서 (`reverse-design-document`) | 생성 폴더 `game-design-career/[경력 ID]/reverse-design-document/`, 핵심 파일 `content.md` | 관찰 도식·공개 화면 캡처 (screenshot) | `content.md` → `evidence.yml` → `decisions/` → `assets/` → `export-manifest.yml` | 이미지·파생 문서·검토 결과는 사람 승인 전 보류하며 자동 승인되지 않습니다. |
@@ -2110,7 +2110,7 @@ PDF, DOCX와 PPTX는 렌더러와 형식별 시각 품질 검사 (visual QA)가 
 | 증상 | 확인할 지점 | 재개 방법 |
 | --- | --- | --- |
 | 플러그인이 보이지 않음 | App의 Work/Codex Plugins, CLI의 marketplace·plugin list | App은 새 채팅, CLI는 새 세션에서 다시 호출 |
-| 이미지가 없음 | `IMAGE_GEN_MODE`, 이미지 제공자 사용 가능 여부 (provider capability), 권리 상태 (rights) | 이미지 프롬프트 묶음 (prompt package)과 중단 기록 (blocker receipt)을 읽고 해당 자산 ID (asset ID)만 재개 |
+| 이미지가 없음 | `IMAGE_GEN_MODE`, 이미지 제공 기능과 권리 상태 | 이미지 요청문 묶음과 중단·재개 기록을 읽고 해당 자산 ID만 재개 |
 | PDF·DOCX·PPTX가 없음 | `blocked`, `pending`, `unavailable`, 렌더러 품질 확인 (renderer QA) | MD를 보존하고 실패한 형식만 재개 |
 | 근거·권리 검토가 막힘 | 근거 공백 (evidence gap), 공개 범위, 담당자 (named owner) | 미정과 보류 항목을 유지하고 필요한 근거만 추가 |
 

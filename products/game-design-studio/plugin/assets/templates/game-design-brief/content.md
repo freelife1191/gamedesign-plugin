@@ -1,12 +1,12 @@
 ---
-title: 게임 기획 브리프
+title: 게임 기획 요약서
 artifact_id: game-design-brief
 quality_profile: game-design-brief
 version: 1
 ---
-# 게임 기획 브리프 {#game-design-brief}
+# 게임 기획 요약서 {#game-design-brief}
 
-## 브리프 작성 기준 {#brief-contract}
+## 기획 요약서 작성 기준 {#brief-contract}
 
 승인 전에 목표 플레이어, 경험 의도, 목표 감정, 플랫폼, 장르, 비즈니스 모델, 온라인 모드, 핵심 루프, 범위, 비목표, 성공 지표, 제약 조건, 담당자를 정의한다.
 

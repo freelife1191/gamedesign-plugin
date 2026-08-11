@@ -36,7 +36,7 @@
     <rect x="590" y="342" width="220" height="216" rx="18" fill="#E7F5EF" stroke="#0F7A5F" stroke-width="2"/>
     <rect x="618" y="370" width="52" height="32" rx="16" fill="#0F7A5F"/>
     <text data-text-role="caption" x="644" y="387" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF" font-size="15" font-weight="700"><tspan x="644" dy="0">3</tspan></text>
-    <text data-text-role="caption" x="678" y="382.5" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="13" font-weight="700"><tspan x="678" dy="0">Canonical</tspan><tspan x="678" dy="15">Artifact</tspan></text>
+    <text data-text-role="caption" x="678" y="390" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="13" font-weight="700"><tspan x="678" dy="0">기획 결과물</tspan></text>
     <text data-text-role="card-title" x="618" y="438" text-anchor="start" dominant-baseline="central" fill="#085041" font-size="20" font-weight="700"><tspan x="618" dy="0">전투 콘텐츠</tspan></text>
     <text data-text-role="card-body" x="618" y="497.5" text-anchor="start" dominant-baseline="central" fill="#354152" font-size="15" font-weight="400"><tspan x="618" dy="0">근거와 가정을</tspan><tspan x="618" dy="19">남깁니다.</tspan></text>
   </g>

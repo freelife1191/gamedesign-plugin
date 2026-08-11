@@ -228,21 +228,23 @@ function visibleStep(source, step, index) {
   }
   if (!isStudioSource(source)) return step;
   if (source.type === "design-pipeline") {
-    if (index === 1) return { ...step, exact: [source.semantic.specialist] };
-    if (index === 2) return { ...step, exact: source.semantic.outputs };
-    if (index === 3) return { ...step, exact: [source.semantic.review.skill] };
-    return step;
+    const displayed = { ...step, stage: ["입력", "전문 스킬", "기획 결과물", "검토", "출력"][index] ?? step.stage };
+    if (index === 1) return { ...displayed, exact: [source.semantic.specialist] };
+    if (index === 2) return { ...displayed, exact: source.semantic.outputs };
+    if (index === 3) return { ...displayed, exact: [source.semantic.review.skill] };
+    return displayed;
   }
   if (source.type === "decision-flow") {
     if (index === 1) return { ...step, label: source.branches[0].label, detail: source.branches[1].label };
     if (index === 4) return { ...step, label: "검증", exact: [source.semantic.validation] };
     return step;
   }
-  if (index === 1) return { ...step, label: "입력 계약", exact: [source.semantic.required_input] };
-  if (index === 2) return { ...step, exact: [source.semantic.skill] };
-  if (index === 3) return { ...step, exact: source.semantic.outputs };
-  if (index === 4) return { ...step, label: "다음 route", exact: source.semantic.next_routes.length ? [source.semantic.next_routes[0]] : [source.semantic.next_condition] };
-  return step;
+  const displayed = { ...step, stage: ["요청", "필수 입력", "스킬 작업", "결과", "다음 작업"][index] ?? step.stage };
+  if (index === 1) return { ...displayed, label: "입력 계약", exact: [source.semantic.required_input] };
+  if (index === 2) return { ...displayed, exact: [source.semantic.skill] };
+  if (index === 3) return { ...displayed, exact: source.semantic.outputs };
+  if (index === 4) return { ...displayed, label: "다음 작업", exact: source.semantic.next_routes.length ? [source.semantic.next_routes[0]] : [source.semantic.next_condition] };
+  return displayed;
 }
 
 function semanticRailGroups(source) {

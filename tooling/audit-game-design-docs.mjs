@@ -15,6 +15,7 @@ const SOURCE_ROOTS = [
 const TEXT_EXTENSIONS = new Set([".md", ".json", ".yml", ".yaml"]);
 const EXCLUDED_SEGMENTS = new Set(["plugins", "vendor", "node_modules", ".git"]);
 const STANDARD_TERMS = new Set(["UX", "UI", "LiveOps", "API", "prompt", "token", "Markdown", "PDF", "DOCX", "PPTX", "SVG"]);
+const PROTECTED_MACHINE_PHRASES = ["pending human review", "not-observed", "artifact-owner"];
 
 function relative(root, target) {
   return path.relative(root, target).split(path.sep).join("/");
@@ -60,8 +61,10 @@ function mixedPrefixLabel(text) {
   if (!/^#{1,6}\s+/u.test(text)) return false;
   const label = headingLabel(text);
   const suffix = label.match(/^[가-힣][^:]{0,40}:\s*(.+)$/u)?.[1] ?? "";
-  const latinWords = suffix.match(/[A-Za-z][A-Za-z'-]{2,}/gu) ?? [];
-  return latinWords.length >= 2 && !/[가-힣]/u.test(suffix);
+  const latinWords = suffix.match(/[A-Za-z][A-Za-z'-]*/gu) ?? [];
+  return latinWords.length > 0
+    && !/[가-힣]/u.test(suffix)
+    && !latinWords.every((word) => STANDARD_TERMS.has(word));
 }
 
 function englishDominantProse(text) {
@@ -70,9 +73,13 @@ function englishDominantProse(text) {
     .replace(/`[^`]*`/gu, " ")
     .replace(/https?:\/\/\S+/gu, " ")
     .replace(/[|>*_[\](){}#]/gu, " ");
-  const latinWords = prose.match(/[A-Za-z][A-Za-z'-]{2,}/gu) ?? [];
-  const koreanSyllables = prose.match(/[가-힣]/gu)?.length ?? 0;
-  return latinWords.length >= 5 && latinWords.length > koreanSyllables;
+  const proseWithoutMachineValues = PROTECTED_MACHINE_PHRASES
+    .reduce((value, phrase) => value.replaceAll(phrase, " "), prose);
+  const latinWords = (proseWithoutMachineValues.match(/[A-Za-z][A-Za-z'-]*/gu) ?? [])
+    .filter((word) => !STANDARD_TERMS.has(word));
+  const latinCharacters = latinWords.reduce((count, word) => count + word.replace(/[^A-Za-z]/gu, "").length, 0);
+  const koreanSyllables = proseWithoutMachineValues.match(/[가-힣]/gu)?.length ?? 0;
+  return latinWords.length > 0 && latinCharacters > koreanSyllables;
 }
 
 function issuesForLine(line, lineNumber, pathname, conclusions, { inspectArtifactProse = false } = {}) {

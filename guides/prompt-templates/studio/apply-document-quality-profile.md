@@ -7,11 +7,11 @@
 
 **문서 목적과 독자에 맞는 품질 프로필 선택**
 
-짧은 기획 브리프에 필요한 primary profile과 누락 입력을 안전하게 선택한다.
+짧은 기획 요약서에 필요한 주 품질 기준과 누락 입력을 안전하게 선택한다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio 협동 섬 복구 게임의 신규 플레이어용 기획 브리프에 맞는 목적, 대상, Markdown 형식을 정리하고 적용할 품질 profile과 빠진 입력을 골라 줘. 모르는 정보는 미정으로 남겨 줘.
+@Game Design Studio 협동 섬 복구 게임의 신규 플레이어용 기획 요약서에 맞는 목적, 대상, Markdown 형식을 정리하고 적용할 품질 기준과 빠진 입력을 골라 줘. 모르는 정보는 미정으로 남겨 줘.
 ```
 
 ### 짧은 흐름
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: document-quality-editor
 
 ### 이 요청으로 받는 결과
-주 품질 프로필은 ‘간결한 기획 브리프’로 잡았고, 독자 역할과 출력 형식은 아직 비어 있습니다. 두 값을 담당자가 확인하기 전에는 체크리스트를 확정하지 않습니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)
+주 품질 프로필은 ‘간결한 기획 요약서’로 잡았고, 독자 역할과 출력 형식은 아직 비어 있습니다. 두 값을 담당자가 확인하기 전에는 체크리스트를 확정하지 않습니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

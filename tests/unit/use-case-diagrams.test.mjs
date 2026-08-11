@@ -153,6 +153,41 @@ test("Studio skill flow exposes exact outputs and every conditional next route",
   assert.ok([...svg.matchAll(/<text x="72" y="(\d+)"/gu)].every((match) => Number(match[1]) < 704), "semantic rail stays above the conclusion strip");
 });
 
+test("Studio diagrams show plain Korean stage names without changing source contract values", () => {
+  const competency = {
+    ...validFixture,
+    id: "st-c01",
+    scope: "game-design-studio-use-case",
+    type: "design-pipeline",
+    steps: ["입력", "전문 스킬", "Canonical Artifact", "검토", "출력"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      specialist: "define-game-vision",
+      outputs: ["vision-pillars", "game-design-brief"],
+      review: { skill: "review-game-design", condition: "지정된 책임자 검토" },
+    },
+  };
+  const skill = {
+    ...validFixture,
+    id: "st-s02",
+    scope: "game-design-studio-skill",
+    type: "skill-flow",
+    steps: ["trigger", "필수 입력", "skill-owned work", "output", "next route"].map((stage, index) => ({ stage, label: `단계 ${index + 1}`, detail: `근거 ${index + 1}` })),
+    semantic: {
+      skill: "define-game-vision",
+      required_input: "플레이어에게 약속할 경험 + 설계 제약",
+      outputs: ["vision-pillars", "core-motivation-loop"],
+      next_routes: ["design-game-systems"],
+    },
+  };
+
+  const competencySvg = renderDiagramSvg(competency);
+  const skillSvg = renderDiagramSvg(skill);
+  assert.match(competencySvg, />기획 결과물</u);
+  assert.doesNotMatch(competencySvg, />Canonical Artifact</u);
+  for (const label of ["요청", "필수 입력", "스킬 작업", "결과", "다음 작업"]) assert.match(skillSvg, new RegExp(`>${label}<`, "u"));
+  assert.doesNotMatch(skillSvg, />(?:trigger|skill-owned work|output|next route)</u);
+});
+
 test("Studio and Career skill diagrams reject glyph scaling and keep readable typography", () => {
   const studio = {
     ...validFixture,

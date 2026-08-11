@@ -6,7 +6,7 @@
 
 | 목표 | 선택 | 첫 결과 |
 | --- | --- | --- |
-| 게임 아이디어를 실제 제작 가능한 기획으로 구체화 | Game Design Studio | 비전, 핵심 재미, 설계 원칙과 검증 기준을 담은 기획 브리프 |
+| 게임 아이디어를 실제 제작 가능한 기획으로 구체화 | Game Design Studio | 게임 방향, 핵심 재미, 설계 원칙과 검증 기준을 담은 기획 요약서 |
 | 시스템·콘텐츠·UX·경제·LiveOps·제작 계획을 연결 | Game Design Studio | 검토 가능한 게임 기획 Canonical Artifact |
 | 목표 직무와 현재 역량을 진단하고 취업을 준비 | Game Design Career | 역할 선택, 역량 격차와 학습·증거 로드맵 |
 | 역기획·포트폴리오·면접·주니어 성장을 관리 | Game Design Career | 근거가 연결된 Career Canonical Artifact |

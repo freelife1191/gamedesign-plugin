@@ -7,11 +7,11 @@
 
 **대상 플레이어와 플레이 약속을 정하는 게임 비전**
 
-한 문장 게임 아이디어를 대상 플레이어, player promise, pillar와 검증 질문이 있는 짧은 비전 브리프로 바꾼다.
+한 문장 게임 아이디어를 대상 플레이어, 플레이어에게 약속할 경험, 설계 원칙과 검증 질문이 있는 짧은 기획 요약서로 바꾼다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio 낯선 섬 협동 복구 게임의 대상 플레이어, player promise, pillar 하나와 검증 질문을 짧은 기획 브리프로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.
+@Game Design Studio 낯선 섬 협동 복구 게임의 대상 플레이어, 플레이어에게 약속할 경험, 설계 원칙 하나와 검증 질문을 짧은 기획 요약서로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.
 ```
 
 ### 짧은 흐름
@@ -52,12 +52,12 @@
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio [게임 아이디어]의 대상 플레이어, player promise, pillar 하나와 검증 질문을 짧은 기획 브리프로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.
+@Game Design Studio [게임 아이디어]의 대상 플레이어, 플레이어에게 약속할 경험, 설계 원칙 하나와 검증 질문을 짧은 기획 요약서로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:define-game-vision 낯선 섬 협동 복구 게임을 vision-pillars와 game-design-brief로 작성하고 design owner 결정을 기다려.
+$game-design-studio:define-game-vision 낯선 섬 협동 복구 게임을 vision-pillars와 game-design-brief로 작성하고 기획 책임자의 결정을 기다려.
 ```
 
 ### Codex CLI 재사용 템플릿
@@ -77,8 +77,8 @@ $game-design-studio:define-game-vision [게임 아이디어]를 vision-pillars�
 ### 예상 결과물
 #### 최소 결과물
 - target player
-- player promise
-- pillar 하나
+- 플레이어에게 약속할 경험
+- 설계 원칙 하나
 - 검증 질문
 
 #### 선택 결과물
@@ -107,7 +107,7 @@ $game-design-studio:define-game-vision [게임 아이디어]를 vision-pillars�
 
 ### 사람 검토
 #### 승인 경계
-lead-game-designer가 player promise와 pillar를 승인·수정·보류하며 초안은 기능 범위 승인이 아니다.
+수석 게임 기획자가 플레이어에게 약속할 경험과 설계 원칙을 승인·수정·보류하며, 초안 작성만으로 기능 범위가 승인되지는 않는다.
 
 #### 보류 조건
 - target player 근거가 없음
@@ -118,7 +118,7 @@ lead-game-designer가 player promise와 pillar를 승인·수정·보류하며 �
 
 ### 실패와 재개
 ```text
-vision-beginner의 player promise와 질문을 보존하고 새 플레이어 관찰 근거를 evidence.yml에 연결한 뒤 provisional 기준부터 재개해.
+vision-beginner의 플레이 경험 약속과 질문을 보존하고 새 플레이어 관찰 근거를 evidence.yml에 연결한 뒤 미정 기준부터 재개해.
 ```
 
 </details>
@@ -127,11 +127,11 @@ vision-beginner의 player promise와 질문을 보존하고 새 플레이어 관
 
 **핵심 원칙과 배제 원칙을 검증하는 게임 비전**
 
-pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기능 선택에 쓸 기준을 만든다.
+지킬 설계 원칙, 하지 않을 설계 원칙과 제외 목표를 시험 제작 관찰 질문에 연결해 팀이 기능 선택에 쓸 기준을 만든다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio 협동 복구 게임의 pillar, anti-pillar, non-goal을 prototype 관찰 질문과 연결하고 각 가정의 근거 상태를 구분해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.
+@Game Design Studio 협동 복구 게임의 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표를 시험 제작 관찰 질문과 연결하고 각 가정의 근거 상태를 구분해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.
 ```
 
 ### 짧은 흐름
@@ -145,18 +145,18 @@ pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
-핵심 재미는 설명할 수 있지만 유사 기능의 포함·제외 기준과 prototype 관찰 방법이 필요할 때 사용한다.
+핵심 재미는 설명할 수 있지만 유사 기능의 포함·제외 기준과 시험 제작 관찰 방법이 필요할 때 사용한다.
 
 ### 사용하지 않는 경우
-Pillar 승인 전에 세부 rule이나 수치 밸런스를 확정하려 할 때는 사용하지 않는다.
+설계 원칙 승인 전에 세부 규칙이나 수치 밸런스를 확정하려 할 때는 사용하지 않는다.
 
 ### 준비 입력
 #### 필수 입력
-- 기존 vision
-- candidate pillar
-- anti-pillar
-- prototype 제약
-- design owner
+- 기존 게임 방향
+- 후보 설계 원칙
+- 하지 않을 설계 원칙
+- 시험 제작 제약
+- 기획 책임자
 
 #### 선택 입력
 - 플레이테스트 메모
@@ -164,8 +164,8 @@ Pillar 승인 전에 세부 rule이나 수치 밸런스를 확정하려 할 때�
 - 검토 질문
 
 ### 바꿀 자리표시자
-- [기존 vision]
-- [prototype 제약]
+- [기존 게임 방향]
+- [시험 제작 제약]
 - [검증 방법]
 
 ### Codex App 완성 예시
@@ -173,17 +173,17 @@ Pillar 승인 전에 세부 rule이나 수치 밸런스를 확정하려 할 때�
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio [기존 vision]의 pillar, anti-pillar, non-goal을 [검증 방법]과 연결해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.
+@Game Design Studio [기존 게임 방향]의 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표를 [검증 방법]과 연결해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:define-game-vision artifact=game-design/island/vision 협동 복구의 pillar, anti-pillar, non-goal과 prototype 관찰 질문을 vision-pillars에 연결해.
+$game-design-studio:define-game-vision artifact=game-design/island/vision 협동 복구의 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표와 시험 제작 관찰 질문을 vision-pillars에 연결해.
 ```
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:define-game-vision artifact=[기존 vision] [prototype 제약] 아래 pillar, anti-pillar, non-goal을 vision-pillars에 연결해.
+$game-design-studio:define-game-vision artifact=[기존 게임 방향] [시험 제작 제약] 아래 지킬 설계 원칙, 하지 않을 설계 원칙, 제외 목표를 vision-pillars에 연결해.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -197,9 +197,9 @@ $game-design-studio:define-game-vision artifact=[기존 vision] [prototype 제�
 
 ### 예상 결과물
 #### 최소 결과물
-- pillar
-- anti-pillar
-- non-goal
+- 지킬 설계 원칙
+- 하지 않을 설계 원칙
+- 제외 목표
 - prototype 관찰 질문
 
 #### 선택 결과물
@@ -226,14 +226,14 @@ $game-design-studio:define-game-vision artifact=[기존 vision] [prototype 제�
 - ID: st-s02
 - SVG: guides/assets/game-design-studio/skills/define-game-vision.svg
 - PNG: guides/assets/game-design-studio/skills/define-game-vision.png
-- 대체 텍스트: 게임 비전에서 시스템으로 가는 pillar 흐름
+- 대체 텍스트: 게임 방향에서 시스템 설계로 이어지는 설계 원칙 흐름
 
 ### 사람 검토
 #### 승인 경계
-lead-game-designer가 non-goal과 prototype 기준을 결정하고 content-narrative-designer는 표현의 일관성을 검토한다.
+수석 게임 기획자가 제외 목표와 시험 제작 기준을 결정하고 콘텐츠·내러티브 기획자는 표현의 일관성을 검토한다.
 
 #### 보류 조건
-- pillar와 anti-pillar가 구분되지 않음
+- 지킬 설계 원칙과 하지 않을 설계 원칙이 구분되지 않음
 - prototype 관찰 방법이 없음
 
 #### 안전 경계
@@ -241,7 +241,7 @@ lead-game-designer가 non-goal과 prototype 기준을 결정하고 content-narra
 
 ### 실패와 재개
 ```text
-vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 결과만 evidence.yml에 붙여 검증 질문부터 재개해.
+vision-standard의 지킬 설계 원칙과 하지 않을 설계 원칙을 유지하고 새 시험 제작 관찰 결과만 evidence.yml에 붙여 검증 질문부터 재개해.
 ```
 
 </details>
@@ -250,11 +250,11 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 
 **상충하는 기능과 근거 책임자를 다루는 게임 비전**
 
-상충하는 feature 제안을 pillar·non-goal과 evidence 상태로 비교하고 사람 owner가 판단할 수 있게 만든다.
+상충하는 기능 제안을 설계 원칙·제외 목표와 근거 상태로 비교하고 담당자가 판단할 수 있게 만든다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio 협동 복구 게임의 경쟁 PvP 기능과 비동기 도움 기능을 pillar·non-goal·플레이테스트 근거로 비교하고, 결정 owner가 승인할 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.
+@Game Design Studio 협동 복구 게임의 경쟁 PvP 기능과 비동기 도움 기능을 설계 원칙·제외 목표·플레이테스트 근거로 비교하고, 결정 담당자가 승인할 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.
 ```
 
 ### 짧은 흐름
@@ -268,28 +268,28 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
-여러 feature 제안이 같은 player promise를 주장하지만 범위·근거·비전 적합성이 충돌할 때 사용한다.
+여러 기능 제안이 같은 플레이 경험을 약속하지만 범위·근거·게임 방향 적합성이 충돌할 때 사용한다.
 
 ### 사용하지 않는 경우
-근거가 없는 수치로 feature를 우선순위화하거나 owner 없이 비전 결정을 확정할 때는 사용하지 않는다.
+근거가 없는 수치로 기능 우선순위를 정하거나 담당자 없이 게임 방향 결정을 확정할 때는 사용하지 않는다.
 
 ### 준비 입력
 #### 필수 입력
 - vision-pillars
-- feature 후보
-- evidence
-- decision owner
+- 기능 후보
+- 근거
+- 결정 담당자
 - 제약
 
 #### 선택 입력
-- playtest result
-- production risk
-- 기존 decision log
+- 플레이테스트 결과
+- 제작 위험
+- 기존 결정 기록
 
 ### 바꿀 자리표시자
-- [feature 후보 A]
-- [feature 후보 B]
-- [decision owner]
+- [기능 후보 A]
+- [기능 후보 B]
+- [결정 담당자]
 - [vision ID]
 
 ### Codex App 완성 예시
@@ -297,17 +297,17 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio [feature 후보 A]와 [feature 후보 B]를 pillar·non-goal·근거 상태로 비교하고 [decision owner]의 결정 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.
+@Game Design Studio [기능 후보 A]와 [기능 후보 B]를 설계 원칙·제외 목표·근거 상태로 비교하고 [결정 담당자]의 결정 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:define-game-vision artifact=game-design/island/vision 기존 evidence와 decision owner를 보존하고 경쟁 PvP와 비동기 도움 제안을 pillar·non-goal 기준으로 비교해.
+$game-design-studio:define-game-vision artifact=game-design/island/vision 기존 근거와 결정 담당자를 보존하고 경쟁 PvP와 비동기 도움 제안을 설계 원칙·제외 목표 기준으로 비교해.
 ```
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:define-game-vision artifact=game-design/[vision ID] [feature 후보 A]와 [feature 후보 B]를 비교하고 [decision owner] 결정을 기다려.
+$game-design-studio:define-game-vision artifact=game-design/[vision ID] [기능 후보 A]와 [기능 후보 B]를 비교하고 [결정 담당자] 결정을 기다려.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -353,7 +353,7 @@ $game-design-studio:define-game-vision artifact=game-design/[vision ID] [feature
 
 ### 사람 검토
 #### 승인 경계
-design owner가 상충 기능의 채택·수정·보류를 결정하며 evidence가 provisional인 항목은 자동 승인하지 않는다.
+기획 책임자가 상충 기능의 채택·수정·보류를 결정하며 근거가 미정인 항목은 자동 승인하지 않는다.
 
 #### 보류 조건
 - feature 후보의 근거가 분리되지 않음

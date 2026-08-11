@@ -244,9 +244,9 @@ const studioGoalOutputLayers = new Map([
 ]);
 
 const studioRouteSnapshot = new Map([
-  ["규칙·핵심 루프", ["ST-C01 플레이어 경험과 게임 비전", "15ce92c7ecc1fe101e2d31c259d009eaaa0fdc0f16a703c9c0831515922057e6", "c2e73ef4f4f659dbee911f7d6665ac4cf4c889d5480d161c7d6e5fc9babbca50", "a3a61806cf8be2216f18c893d5cb268595e65fbbf651546d32db6e00081d289e", "95ae260433dfb2e78c29707952037c4cf6a67d88d0c6c1a43326c4aaddbaf878", "71618d91f4710855160f69cf4e22df180f1a94204eb912795f14f9e3df0e3bf9", "49ceecbb9118c738ee8c302f11dd14685130c953183cd10b33aad51bf488ad04"]],
-  ["시스템", ["ST-C03 규칙·상태·예외·데이터", "a06353e36fa9f3f465ea283796f2d400a51d789fdac45536d9b9fcfcb4b01b71", "c018994c23be32c294a2d88ab53570aa9879ae4e9259737be6de328d83ee44d5", "af08f7b4af35c8a47e4f291d5c3f84ade8fb0b70374f1d711d4206315e111fcd", "79b3bf803bf2757880723a94b761676111e008f928da737b6adcaeabe4d9ba0a", "d055b03ac1881532a52c4761a23c13f0649d5e0622e6bf24eaa994341637ff4d", "ee266313a38badbe697586c5e103e82cc1e47c1002cf116a9160901bfd4edbf1"]],
-  ["UX·접근성", ["ST-C04 UI·UX·온보딩·접근성", "a1b41bcc8ff1564476f1c649ca7cd46a1d3177dec142297dcfcabddc96c43d1b", "a67f53527c556c6ac913cdb14bc64e1a4b51fbc38601512fc0c890fe3029b870", "bdd95d8dade7e63f8f6e12f28a4e2e2a2033ad535258b9408a88b44690f2a3b7", "1c6d347d284b6ab68d9358c52108717956465b9ef544d1fae466519dc5c09fb2", "658f38f1ad521b9d08adc3d02849f933a45181595c626760e42211161ccf8f3a", "c050177c15ee17d3243f4b48d0ff67b1cbf474ff4f01d96b5d8a2a8aef314f00"]],
+  ["규칙·핵심 루프", ["ST-C01 플레이어 경험과 게임 비전", "762cb46b68d03b05870e32df687a8ce81196056ca2e47d1a0ac12424ada9aff1", "38a70ec770ea16754f76f0a4d3bf1e32e118b458a019f1c58b070fd52c162ad8", "16dcb91bee726bad9f69aa6422bdb9cc979cafc09394251abefd0a22705ab221", "f1d19c03b47e8783b21ba1ba32d630fcac645ae7fb41ebe3a0093e4802ec565f", "9c1a1846afa35a90455baa1e8c129d757421f437c871f7af97800483d093aeed", "750bb598d39be97df5e599a6bdaf13a15871fc5e44c511c3d5da82836bd8f6e2"]],
+  ["시스템", ["ST-C03 규칙·상태·예외·데이터", "a06353e36fa9f3f465ea283796f2d400a51d789fdac45536d9b9fcfcb4b01b71", "c018994c23be32c294a2d88ab53570aa9879ae4e9259737be6de328d83ee44d5", "af08f7b4af35c8a47e4f291d5c3f84ade8fb0b70374f1d711d4206315e111fcd", "79b3bf803bf2757880723a94b761676111e008f928da737b6adcaeabe4d9ba0a", "d055b03ac1881532a52c4761a23c13f0649d5e0622e6bf24eaa994341637ff4d", "9b2365ecb61e2bb4355a13875482b54ef94183b1604ed5063ac51f394553c394"]],
+  ["UX·접근성", ["ST-C04 UI·UX·온보딩·접근성", "a1b41bcc8ff1564476f1c649ca7cd46a1d3177dec142297dcfcabddc96c43d1b", "df5317d373d9b83a5b3c8a98b6a5f2b24079414ece84a1deec520c597801ee49", "bdd95d8dade7e63f8f6e12f28a4e2e2a2033ad535258b9408a88b44690f2a3b7", "1c6d347d284b6ab68d9358c52108717956465b9ef544d1fae466519dc5c09fb2", "658f38f1ad521b9d08adc3d02849f933a45181595c626760e42211161ccf8f3a", "d22e1843374c35ae4830425993518187ae5ec327b97936ba373d0b30a130b1b6"]],
   ["콘텐츠·퀘스트", ["ST-C05 콘텐츠·내러티브·퀘스트·NPC", "3067580859b32ae9790688b9ff6fe30ede2b5c8c38a5b24273c7cd8d34ac2bdd", "b8ceb125947c1b22b1b3eebb2add7e1a120132f6a81a8aac6a9dd8a2b7745321", "90d6cd23158e43cc88339e9b5a52dd902295fbb16c60176b236f9a2e5d66f6b3", "f0be1e0265318c241d274af4f3744c18ae56fddad26a9b2585a0cf012077d0e2", "18e58edf90ff467026491de0ff3b65f9792aa17e6da5e954d4c3b3f950a3d2ad", "54c90232303ecefca2e81740e7861afad6afd9146ef3258348fe82abaccf47f5"]],
   ["경제·LiveOps", ["ST-C07 성장·경제·밸런스·LiveOps", "9787c90c1d6f65692bff340b4657518c5b175ae3a6e6a1d23176c1e6649fca35", "7cfa812f9af6ff440803459fac7d5da123a109c27afcdab8c38c44e64dd5be2e", "259f3649898c9ecb6dd7e2e30f13b28a5e7e47d91b3bf409a56f682b52a930d4", "e1aa8bbf6696132cb86d578ef68dbe9b690fec3fdf15fd09f6f2c2579092784c", "805e5767dc3abb86f5860ff8c560e61d72faa362a29ca366439b89c0dae09df6", "73872bbcbb68cc6bcd83e7b045bc9878670844a2bd4933962073056e02bb6350"]],
   ["전체 프로젝트", ["ST-C08 제작·검토·이미지·출력", "1a6b13c519879b0bf3c13911d028e7a2ab78323f61e756d8e8a4eaa0044eab2c", "9dd9732790d2e1b29fad9cbe3c2cf6be2e328d3e0ce8bd876709399d16ee221f", "6ab10636b16381bb34f74297b2ce7e7f92a3f2254ba74e42a554986de33f344b", "3e895f1afdf89ac642bcf84d0b22ccebeffb0238647911e0bf518ea5d68f73f9", "d3265ea853c8b75e774daa8ec819689240ece8cd77762cc3dce6ad75a1590e73", "d623d61bec8afa412d7cd25c8fece231c36382f4219fc081f1d6606c3134d6a0"]],
@@ -270,7 +270,7 @@ const directOutputOwnership = Object.freeze([
 ]);
 
 const representativeRequestResultRows = Object.freeze([
-  "| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, player promise, core loop, non-goal과 prototype 질문을 정리해.` | `game-design-brief`와 `vision-pillars`를 담은 Canonical Artifact 초안 |",
+  "| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, 플레이 경험의 약속, 핵심 플레이 흐름, 제외 목표와 시험 제작 질문을 정리해.` | 게임 기획 요약서(`game-design-brief`)와 게임 방향 원칙(`vision-pillars`)을 담은 기준 기획 폴더 초안 |",
   "| 시스템 명세 | `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence, exception과 data authority를 명세해.` | `system-specification`의 규칙·상태·예외·검증 표 |",
   "| UX·접근성 | `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력, 오류 recovery와 접근성 검토를 연결해.` | `ui-ux-flow-state`와 접근성 검토 큐 |",
   "| 콘텐츠·퀘스트 | `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.` | `narrative-quest-npc`의 quest state와 제작 handoff |",
@@ -657,7 +657,7 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`economy-balance`의 source/sink 가정과 guardrail·rollback 질문", "`economy-balance`와 `liveops-experiment-event` 초안")), "economy direct row must reject two outputs");
   assert.throws(() => assertStudioUseCaseReadme(readme.replace("`production-scope-risk`의 scope·dependency·kill criteria 초안", "`production-scope-risk`, review 기록과 `export-manifest.yml` 준비 상태")), "production direct row must reject review/export preclaims");
   await assert.rejects(
-    assertGoalOutputSummary(section.replace("- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록.", "- 최소: `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록."), studioGoalOutputLayers, "mutated Studio product README"),
+    assertGoalOutputSummary(section.replace("- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.", "- 최소: `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록."), studioGoalOutputLayers, "mutated Studio product README"),
     "vision-pillars must remain a minimum result",
   );
   const economySkill = await readFile(path.join(pluginRoot, "skills/design-game-economy-and-liveops/SKILL.md"), "utf8");
@@ -667,15 +667,15 @@ test("README provides package-safe Studio exploration paths, requests, outputs, 
 test("Studio goal summaries reject swapped outcome layers, auto-approval, and a removed reviewer", async () => {
   const section = readmeSection(await readFile(readmePath, "utf8"), "활용 경로와 결과");
   await assert.rejects(
-    assertGoalOutputSummary(section.replace("- 선택: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획. 생성·렌더 성공은 승인이 아닙니다.", "- 확장: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획. 생성·렌더 성공은 승인이 아닙니다."), studioGoalOutputLayers, "mutated Studio product README"),
+    assertGoalOutputSummary(section.replace("- 선택: 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다.", "- 확장: 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다."), studioGoalOutputLayers, "mutated Studio product README"),
     "Studio cards must retain the optional result card",
   );
   await assert.rejects(
-    assertGoalOutputSummary(section.replace("실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다.", "자동 승인"), studioGoalOutputLayers, "mutated Studio product README"),
+    assertGoalOutputSummary(section.replace("실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다.", "자동 승인"), studioGoalOutputLayers, "mutated Studio product README"),
     "Studio cards must reject auto approval",
   );
   await assert.rejects(
-    assertGoalOutputSummary(section.replace("실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다.", "pillar와 non-goal을 검토"), studioGoalOutputLayers, "mutated Studio product README"),
+    assertGoalOutputSummary(section.replace("실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다.", "설계 원칙과 제외 목표를 검토"), studioGoalOutputLayers, "mutated Studio product README"),
     "Studio cards must retain a named reviewer",
   );
   await assert.rejects(
@@ -687,13 +687,13 @@ test("Studio goal summaries reject swapped outcome layers, auto-approval, and a 
     "Studio cards must reject an additional route heading",
   );
   const competencySource = await readFile(path.join(repoRoot, "guides/game-design-studio/use-cases/competency-paths.md"), "utf8");
-  const sourceMinimum = "**최소 결과:** `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록.";
+  const sourceMinimum = "**최소 결과:** `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.";
   await assert.rejects(
     assertGoalOutputSummary(
-      section.replace("- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록.", "- 최소: `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록."),
+      section.replace("- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.", "- 최소: `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록."),
       studioGoalOutputLayers,
       "concurrently shrunken Studio product README",
-      competencySource.replace(sourceMinimum, "**최소 결과:** `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록."),
+      competencySource.replace(sourceMinimum, "**최소 결과:** `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록."),
     ),
     "independent minimum-output manifest rejects concurrent source and README shrinking",
   );

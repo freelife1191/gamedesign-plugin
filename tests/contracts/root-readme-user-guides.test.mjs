@@ -258,7 +258,7 @@ const skillsteadCheckSvg = path.join(
   "plugins/game-design-studio/skills/svg-infographic/scripts/check-svg.mjs",
 );
 const readableCaseLabels = new Map([
-  ["studio:case:ST-C01", ["게임의 방향과 핵심 재미 정의", "게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 브리프로 정리합니다."]],
+  ["studio:case:ST-C01", ["게임의 방향과 핵심 재미 정의", "게임의 방향을 정하지 못했을 때 대상 플레이어와 검증 기준을 기획 요약서로 정리합니다."]],
   ["studio:case:ST-C02", ["핵심 플레이 루프와 선택 설계", "플레이어가 반복할 행동과 의미 있는 선택을 시스템 명세로 만들 때 사용합니다."]],
   ["studio:case:ST-C03", ["규칙과 예외를 시스템 명세로 정리", "규칙이 충돌하거나 예외가 늘어날 때 상태와 데이터를 검토 가능한 표로 정리합니다."]],
   ["studio:case:ST-C04", ["화면 흐름과 접근성 점검", "온보딩과 UI 흐름이 헷갈릴 때 화면 상태와 접근성 기준을 함께 점검합니다."]],
@@ -283,7 +283,7 @@ const caseGroupIntroductions = new Map([
   ["Studio와 Career 연계 사례 4개", "제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다."],
 ]);
 const readableResultLabels = new Map([
-  ["game-design-brief", "게임 기획 브리프"],
+  ["game-design-brief", "게임 기획 요약서"],
   ["system-specification", "시스템 명세서"],
   ["ui-ux-flow-state", "UI·UX 흐름과 상태표"],
   ["reverse-design-document", "관찰 기반 역기획 문서"],
@@ -294,7 +294,7 @@ const readableSkillMetadata = new Map([
   ["game-design-studio", new Map([
     ["apply-document-quality-profile", ["문서 품질 기준 적용", "문서 목적과 형식에 맞는 품질 기준을 고정하고 선택 기록을 만듭니다."]],
     ["archify", ["기획 구조 도식 만들기", "시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다."]],
-    ["define-game-vision", ["게임 비전 정의", "대상 플레이어, 핵심 재미와 검증 기준을 정리해 비전 기둥을 만듭니다."]],
+    ["define-game-vision", ["게임 비전 정의", "대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다."]],
     ["design-game-content", ["게임 콘텐츠 설계", "퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다."]],
     ["design-game-economy-and-liveops", ["경제와 라이브 운영 설계", "재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다."]],
     ["design-game-systems", ["게임 시스템 설계", "규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다."]],
@@ -841,10 +841,10 @@ function assertKoreanFirstReadmeTerms(markdown) {
     const englishPattern = escapeRegExp(english).replace(" ", "\\s+");
     assert.match(markdown, new RegExp(`${escapeRegExp(korean)}[\\s\\S]{0,32}${englishPattern}`, "u"), `${english}: Korean meaning precedes the English helper term`);
   }
-  assert.match(markdown, /중단 기록 \(blocker receipt\)/u, "restart receipt names its Korean purpose first");
-  assert.match(markdown, /이미지 제공자 사용 가능 여부 \(provider capability\)/u, "troubleshooting names provider capability in Korean first");
-  assert.match(markdown, /권리 상태 \(rights\)/u, "troubleshooting names rights in Korean first");
-  assert.match(markdown, /자산 ID \(asset ID\)/u, "troubleshooting names asset ID in Korean first");
+  assert.match(markdown, /중단·재개 기록/u, "restart receipt uses a plain Korean name");
+  assert.doesNotMatch(markdown, /blocker receipt/u, "restart guidance does not expose the internal receipt term");
+  assert.match(markdown, /이미지 제공 기능과 권리 상태/u, "troubleshooting explains provider and rights in plain Korean");
+  assert.match(markdown, /해당 자산 ID만 재개/u, "troubleshooting names the asset identifier in Korean");
   assert.match(markdown, /근거 공백 \(evidence gap\)/u, "troubleshooting names evidence gap in Korean first");
   assert.match(markdown, /담당자 \(named owner\)/u, "troubleshooting names owner in Korean first");
 }
@@ -1159,7 +1159,7 @@ async function assertSuiteArchitectureEmbed(markdown) {
 function assertBeginnerReadableRootAdditions(markdown) {
   const chooser = section(markdown, "30초 안에 플러그인 선택하기");
   for (const label of [
-    "게임 기획 브리프 (`game-design-brief`)",
+    "게임 기획 요약서 (`game-design-brief`)",
     "게임 기획 경력 계획 (`game-design-career-plan`)",
     "기준 기획 결과물 2개 (Canonical Artifact)",
   ]) assert.ok(chooser.includes(label), `30초 선택표는 한국어 결과 이름을 ID보다 먼저 보여 줍니다: ${label}`);
@@ -2203,8 +2203,8 @@ test("structured README contracts reject card, inventory, and generated-tree mut
   const autoApprovedResult = readme.replace("사람 승인 전 보류하며 자동 승인되지 않습니다.", "이미지와 파생 문서, 검토 결과는 자동 승인됩니다.");
   await assertRejectedForId(() => assertResultExamples(autoApprovedResult), "game-design-brief", "automatic approval in result example");
   const EnglishFirstResult = readme.replace(
-    "게임 기획 브리프 (`game-design-brief`)",
-    "`game-design-brief` 게임 기획 브리프",
+    "게임 기획 요약서 (`game-design-brief`)",
+    "`game-design-brief` 게임 기획 요약서",
   );
   await assertRejectedForId(() => assertResultExamples(EnglishFirstResult), "game-design-brief", "English-first result label");
   const incompleteResultReadOrder = readme.replace(

@@ -216,7 +216,7 @@ node "$PLUGIN_ROOT/skills/orchestrate-game-design-project/scripts/check-source-d
 
 | 프로필 ID | 추가 설계 초점 |
 | --- | --- |
-| `universal-core` | 목표 플레이어·경험, core loop·rules, 가정·근거·non-goals, 의존성·위험·결정 |
+| `universal-core` | 목표 플레이어·경험, 핵심 플레이 흐름·규칙, 가정·근거·제외 목표, 의존성·위험·결정 |
 | `live-service-rpg` | 장기 성장, persistent authority, LiveOps calendar·rollback, sources·sinks·inflation |
 | `mobile` | touch/device matrix, short session·interruption recovery, network degradation, store/privacy/commerce policy |
 | `pc-console` | controller·keyboard/mouse, certification·entitlement, hardware performance, save·commerce·release operation |
@@ -335,7 +335,7 @@ artifact-name/
 | 템플릿 ID | 용도 |
 | --- | --- |
 | `game-design-brief` | 목표 플레이어, 경험, 플랫폼, 장르, business model, scope와 owner |
-| `vision-pillars` | player promise, design rules, anti-pillars, success signals |
+| `vision-pillars` | 플레이 경험의 약속, 설계 원칙, 하지 않을 설계 원칙, 성공 신호 |
 | `core-motivation-loop` | input, response, feedback, reward, choice, failure/recovery loop |
 | `system-specification` | executable rules, transitions, precedence, exception, runtime mapping |
 | `rule-exception-matrix` | rule/exception 우선순위, concurrency, authority와 test cases |
@@ -360,7 +360,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 ### 역량 중심
 
-장르와 무관한 player promise, core loop, rule/state, UX, 콘텐츠, 경제와 검토 역량을 작은 실습부터 익힐 때 선택합니다. 사례 본문과 요청문은 아래 repository checkout only 경로에서 확인합니다.
+장르와 무관한 플레이 경험의 약속, 핵심 플레이 흐름, 규칙·상태, 사용자 경험, 콘텐츠, 경제와 검토 역량을 작은 실습부터 익힐 때 선택합니다. 사례 본문과 요청문은 아래 저장소 전용 경로에서 확인합니다.
 
 ### 콘셉트 중심
 
@@ -390,22 +390,22 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 #### 준비 입력
 
 - 선수 지식: 게임에서 확인한 사실과 자신의 해석을 분리하는 방법.
-- 최소 입력: 아이디어 한 문장, 예상 대상, 플랫폼 가정, 원하는 감정, 알려진 제약, 실제 decision owner.
+- 최소 입력: 아이디어 한 문장, 예상 대상, 플랫폼 가정, 원하는 감정, 알려진 제약, 실제 기획 책임자.
 - 선택 입력: 인터뷰·플레이테스트 기록, 유사 경험 관찰, 기존 범위 결정. 제3자 자료는 출처와 이용 범위를 기록합니다.
 
 #### 연결 흐름
 
-`apply-document-quality-profile` → `define-game-vision` → 필요 시 `orchestrate-game-design-project` → `review-game-design` 순서입니다. 템플릿은 `vision-pillars`, `game-design-brief`입니다. **역할 경계:** `document-quality-editor`는 구조 누락, `lead-game-designer`와 `content-narrative-designer`는 근거 연결 finding, `production-feasibility-critic`은 범위 위험을 보고합니다. 전문 역할은 원본을 승인하거나 재작성하지 않고, 실제 design owner가 pillar와 non-goal을 결정합니다.
+`apply-document-quality-profile` → `define-game-vision` → 필요 시 `orchestrate-game-design-project` → `review-game-design` 순서입니다. 템플릿은 게임 방향 원칙(`vision-pillars`)과 게임 기획 요약서(`game-design-brief`)입니다. **역할 경계:** 문서 품질 검토자는 구조 누락을, 수석 게임 기획자와 콘텐츠·내러티브 기획자는 근거 연결 문제를, 제작 가능성 검토자는 범위 위험을 보고합니다. 전문 역할은 원본을 승인하거나 재작성하지 않고, 실제 기획 책임자가 설계 원칙과 이번에 다루지 않을 목표를 결정합니다.
 
 #### 예상 결과
 
-- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 가진 Canonical Markdown과 근거·결정 기록.
-- 선택: 검토 목적이 분명한 이미지 prompt 또는 source-backed 도식 계획. 생성·렌더 성공은 승인이 아닙니다.
-- 확장: 사람 검토와 형식별 QA를 통과한 팀 brief 또는 공개 가능한 판단 증거.
+- 최소: `vision-pillars`, `game-design-brief`, `game-design-review` 내용을 담은 기획 기준 문서와 근거·결정 기록.
+- 선택: 검토 목적이 분명한 이미지 요청문 또는 근거가 연결된 도식 계획. 이미지 생성과 도식 변환 성공은 승인이 아닙니다.
+- 확장: 사람 검토와 형식별 품질 확인을 통과한 팀 기획 요약서 또는 공개 가능한 판단 근거.
 
 #### 사람 검토
 
-- **읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 player promise와 각 pillar가 verb·decision·feedback에 연결되는지 먼저 봅니다. **사람 결정:** 실제 design owner가 대상, pillar, anti-pillar, non-goal과 다음 prototype 범위를 승인·수정·보류합니다. 스킬 실행, reviewer finding과 파일 생성은 자동 승인하지 않습니다.
+- **읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서는 플레이어에게 약속할 경험과 각 설계 원칙이 행동·선택·반응에 연결되는지 먼저 봅니다. **사람 결정:** 실제 기획 책임자가 대상 플레이어, 지킬 설계 원칙, 하지 않을 설계 원칙, 이번에 다루지 않을 목표와 다음 시험 제작 범위를 승인·수정·보류합니다. 스킬 실행, 검토 의견과 파일 생성은 자동 승인하지 않습니다.
 
 ### 시스템
 
@@ -427,7 +427,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 #### 사람 검토
 
-- **읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
+- **읽는 순서:** 시스템 경계 → 규칙표 → 예외표 → 데이터 관계 → 근거·결정 순서입니다. 중간 결과에서 규칙 ID마다 상태, 반응, 실패 처리와 시험 항목이 있는지 봅니다. **사람 결정:** 기획 책임자와 개발 책임자가 권한, 우선순위, 이전 방법과 되돌리기 기준을 승인합니다. 검토 의견과 자동 검사만으로 승인하지 않습니다.
 
 ### UX·접근성
 
@@ -439,7 +439,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 #### 연결 흐름
 
-`apply-document-quality-profile` → `design-player-experience` → `review-game-design` → 설명 가치가 있을 때 `visualize-game-design` 순서입니다. 템플릿은 `ui-ux-flow-state`, `accessibility-platform-matrix`입니다. **역할 경계:** `document-quality-editor`는 구조, `ux-accessibility-reviewer`는 critical action과 대체 경로, `lead-game-designer`는 목표 경험 연결을 검토합니다. 실제 accessibility·design owner가 지원 범위와 blocker disposition을 결정합니다.
+`apply-document-quality-profile` → `design-player-experience` → `review-game-design` → 설명 가치가 있을 때 `visualize-game-design` 순서입니다. 템플릿은 화면 흐름·상태표(`ui-ux-flow-state`)와 접근성·플랫폼표(`accessibility-platform-matrix`)입니다. **역할 경계:** 문서 품질 검토자는 구조를, 사용자 경험·접근성 검토자는 핵심 행동과 대체 경로를, 수석 게임 기획자는 목표 경험 연결을 검토합니다. 실제 접근성 책임자와 기획 책임자가 지원 범위와 진행을 막는 문제의 처리 방법을 결정합니다.
 
 #### 예상 결과
 
@@ -449,7 +449,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 #### 사람 검토
 
-- **읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.
+- **읽는 순서:** 사용자 목표 → 핵심 행동표 → 상태 범위 → 플랫폼표 → 근거·결정 순서입니다. 중간 결과에서 로딩·빈 화면·오류·중단 상황과 대체 입력 누락을 먼저 봅니다. **사람 결정:** 접근성 책임자와 기획 책임자가 지원 플랫폼, 검증 방법과 진행을 막는 문제를 승인·수정·보류합니다. 화면 시안·문서 변환 도구·검토 결과는 자동 승인하지 않습니다.
 
 ### 콘텐츠·퀘스트
 
@@ -523,7 +523,7 @@ Game Design Studio는 기획 입문 학생, 솔로·인디 개발자, 현업 기
 
 | 사례 | 복사 가능한 요청 | 예상 결과 |
 | --- | --- | --- |
-| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, player promise, core loop, non-goal과 prototype 질문을 정리해.` | `game-design-brief`와 `vision-pillars`를 담은 Canonical Artifact 초안 |
+| 새 게임 GDD | `$game-design-studio:orchestrate-game-design-project 4인 협동 탐험 게임의 대상 플레이어, 플레이 경험의 약속, 핵심 플레이 흐름, 제외 목표와 시험 제작 질문을 정리해.` | 게임 기획 요약서(`game-design-brief`)와 게임 방향 원칙(`vision-pillars`)을 담은 기준 기획 폴더 초안 |
 | 시스템 명세 | `$game-design-studio:design-game-systems 장비 강화의 rule ID, state transition, precedence, exception과 data authority를 명세해.` | `system-specification`의 규칙·상태·예외·검증 표 |
 | UX·접근성 | `$game-design-studio:design-player-experience 첫 세션의 critical action, 대체 입력, 오류 recovery와 접근성 검토를 연결해.` | `ui-ux-flow-state`와 접근성 검토 큐 |
 | 콘텐츠·퀘스트 | `$game-design-studio:design-game-content 협동 복구 퀘스트의 목표, NPC state, choice와 consequence를 작성해.` | `narrative-quest-npc`의 quest state와 제작 handoff |
@@ -598,7 +598,7 @@ Skillstead SVG는 권위 있는 도식 원본입니다. 하나의 title/desc와 
 
 ### 새 GDD
 
-> 4인 협동 탐험 게임의 새 GDD를 만들어 줘. 목표 플레이어, 원하는 감정, core loop, pillars, scope와 non-goals를 먼저 정의하고 PC/console 프로필을 적용해. 검증하지 않은 수치는 provisional로 남겨 줘.
+> 4인 협동 탐험 게임의 새 GDD를 만들어 줘. 목표 플레이어, 원하는 감정, 핵심 플레이 흐름, 설계 원칙, 제작 범위와 제외 목표를 먼저 정의하고 PC·콘솔 품질 기준을 적용해. 검증하지 않은 수치는 미정으로 남겨 줘.
 
 ### 시스템 명세
 

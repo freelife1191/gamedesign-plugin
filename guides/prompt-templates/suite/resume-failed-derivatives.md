@@ -70,7 +70,7 @@ $game-design-studio:plan-image-assets $game-design-studio:generate-image-assets 
 
 ### 예상 결과물
 #### 최소 결과물
-- 보존 파일, blocker, resume receipt
+- 보존 파일, 중단 원인, 재개 기록
 
 #### 선택 결과물
 - 제외 기록

@@ -1934,7 +1934,7 @@ test("suite scenarios bind installed templates and their exact ordered chains", 
     "suite:career-proof-project-interview:case": [["map-game-design-career", "design-game-systems", "practice-game-design-interview"], "12주 proof와 evidence-linked 답변"],
     "suite:student-mentor-review:case": [["design-game-systems", "review-game-design-portfolio"], "과제, 루브릭, 수정 기록"],
     "suite:work-to-public-case:case": [["review-game-design", "build-game-design-portfolio"], "공개 요약과 제외 기록"],
-    "suite:resume-failed-derivatives:case": [["plan-image-assets", "generate-image-assets", "review-image-assets", "export-game-design-documents", "export-career-documents"], "보존 파일, blocker, resume receipt"],
+    "suite:resume-failed-derivatives:case": [["plan-image-assets", "generate-image-assets", "review-image-assets", "export-game-design-documents", "export-career-documents"], "보존 파일, 중단 원인, 재개 기록"],
   };
   const inventories = await Promise.all([collectProductInventory(repoRoot, "game-design-studio"), collectProductInventory(repoRoot, "game-design-career")]);
   const templates = new Set(inventories.flatMap(({ templateIds }) => templateIds));

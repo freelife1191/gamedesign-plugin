@@ -36,7 +36,7 @@
 - `[0] npm run check:diagram-skills` — Skillstead v0.9.0 55개, Archify v2.13.0 60개 파일 검증.
 - `[1→0] npm run check:guide-diagrams` — Studio 콘텐츠 경로 trigger contract 누락을 검출한 뒤 수정. 단위 31/31, Studio SVG 39개 lint 0/0, 전체 check 통과.
 - `[0] npm run validate` — 단위 790/790, 제품 394/394, 계약·격리·형식 검증을 포함한 release readiness 전체 통과.
-- `[0] npm test` — 1,591/1,591 통과, fail·skip 0, 642.08초.
+- `[0] npm test` — 1,595/1,595 통과, 실패·건너뜀 0, 637.02초.
 - `[0] npm run validate:archify-catalog` — 692개 source record, selected 4개, errors·uncovered 0.
 - `[0] npm run check:curated-archify` — 공개 HTML 4개와 receipt·시각 QA 결합 통과.
 - `[0] node tooling/build-archify-contact-sheets.mjs --check` — 전체·제품·유형별 contact sheet 7개 통과.
@@ -83,4 +83,4 @@
 
 - E2E 실행형 테스트 21개, 표 내부 하위 probe 56개.
 - 가이드·프롬프트·vendor·빌드 검증 결과는 위 명령 기록에 남겼다.
-- 전체 저장소 테스트 1,591/1,591과 Archify catalog·curated output·contact sheet 검증이 모두 통과했다.
+- 전체 저장소 테스트 1,595/1,595와 Archify 카탈로그·공개 산출물·콘택트 시트 검증이 모두 통과했다.

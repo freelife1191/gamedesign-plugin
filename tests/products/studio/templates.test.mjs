@@ -91,7 +91,7 @@ const approvedSeedHashes = {
   "economy-balance/evidence.yml": "f5660aefba9fc8f67a97a86502a816fa2be16ff446f40c38b311ae8e129a0da7",
   "economy-balance/export-manifest.yml": "aaec2e67c761dd661f8d86175b723e43b9ae897907d574e13b092e1b21fb0ca4",
   "game-design-brief/assets/README.md": "e25ac94a94e787459d566e42b305bdac4379a453b9b48a4765767cb35b5b9e56",
-  "game-design-brief/content.md": "ae31691deac68d35df74689e883890af1fe41d097410f082aa61470c16390886",
+  "game-design-brief/content.md": "3b24442c646dc85059cb09bc7658a3a42254f05a8801cbeed84ffbe4d5f23a4a",
   "game-design-brief/decisions/README.md": "1dc750c01fdffc96fbf1f4a803bdd788df6c5a285cad5f6c8e80d41292d122ad",
   "game-design-brief/evidence.yml": "f19bb04d8077ba405dc1b22edb2b2e574d27b00499ea960cbe41e25290ddd5fb",
   "game-design-brief/export-manifest.yml": "3b066e718628dcf059d803dc8be26ca646ae7c7d618b806334b0674f7a5883f3",

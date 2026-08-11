@@ -176,6 +176,39 @@ test("auditGameDesignDocs rejects Korean-prefix heading workarounds and English 
   ]);
 });
 
+test("artifact prose audit rejects one-word mixed headings and short English instructions", async (t) => {
+  const root = await temporaryRepo(t);
+  await write(root, "products/game-design-studio/plugin/assets/templates/assets/content.md", [
+    "---",
+    "artifact_id: assets",
+    "---",
+    "# 이미지 자료 {#assets}",
+    "## 기획 항목: Assets {#asset-list}",
+    "안내: Record value before approval.",
+    "벡터 도식(SVG)은 그대로 표시합니다.",
+    "참조: `asset-id`",
+  ].join("\n"));
+
+  const result = await auditGameDesignDocs({ repoRoot: root });
+
+  assert.deepEqual(result.issues, [
+    {
+      code: "MIXED_PREFIX_LABEL",
+      path: "products/game-design-studio/plugin/assets/templates/assets/content.md",
+      line: 5,
+      severity: "high",
+      text: "기획 항목: Assets",
+    },
+    {
+      code: "ENGLISH_DOMINANT_PROSE",
+      path: "products/game-design-studio/plugin/assets/templates/assets/content.md",
+      line: 6,
+      severity: "high",
+      text: "안내: Record value before approval.",
+    },
+  ]);
+});
+
 test("renderPromptCard keeps a Korean-first request and result excerpt before collapsed advanced contracts", () => {
   const markdown = renderPromptCard(promptEntry());
 
@@ -216,13 +249,35 @@ test("representative Studio and Career artifact templates present Korean-first l
   ]);
 
   assert.match(studio, /^artifact_id: game-design-brief$/mu);
-  assert.match(studio, /^# 게임 기획 브리프 \{#game-design-brief\}$/mu);
+  assert.match(studio, /^# 게임 기획 요약서 \{#game-design-brief\}$/mu);
   assert.match(studio, /^## 작업 기록 \{#working-record\}$/mu);
   assert.match(studio, /^\| 항목 ID \| 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
   assert.match(career, /^artifact_id: game-analysis-report$/mu);
   assert.match(career, /^# 게임 분석 보고서 \{#game-analysis-report\}$/mu);
   assert.match(career, /^## 작업 기록 \{#working-record\}$/mu);
   assert.match(career, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
+});
+
+test("beginner-facing Studio entry points explain planning terms in plain Korean", async () => {
+  const repoRoot = path.resolve(import.meta.dirname, "../..");
+  const entryPoints = [
+    "README.md",
+    "guides/game-design-studio/README.md",
+    "guides/game-design-studio/quick-start.md",
+    "guides/sample-results/studio/st-c01.md",
+    "guides/sample-results/suite/resume-failed-derivatives.md",
+    "products/game-design-studio/plugin/README.md",
+  ];
+  const awkwardDisplayTerms = /비전 기둥|게임 기획 브리프|player promise|anti-pillar|non-goals?|blocker receipt|resume receipt|rights owner|design owner/u;
+
+  for (const pathname of entryPoints) {
+    const body = await readFile(path.join(repoRoot, pathname), "utf8");
+    assert.doesNotMatch(body, awkwardDisplayTerms, `${pathname}: plain Korean display terms`);
+  }
+
+  const rootReadme = await readFile(path.join(repoRoot, "README.md"), "utf8");
+  assert.match(rootReadme, /게임 방향 원칙 \(`vision-pillars`\)/u);
+  assert.match(rootReadme, /게임 기획 요약서 \(`game-design-brief`\)/u);
 });
 
 test("all 30 artifact content templates keep anchored visible headings and table labels Korean-first", async () => {

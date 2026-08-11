@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "16d78290e0790ec69a2690dfc6b34e934063097db203cc4dfac1725f32d04d4f",
+  "treeSha256": "46f73741913081f0f0f265b7deccce7f2e0fa4978152f733b94136e5c3121dbc",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "21ae3da337b27e88f09d25efdb0a86aa1f2a7532bb3833663fd15debe12f2574",
-      "size": 59115
+      "sha256": "a573bb89af9d7fb22e6320b31daa137a1864cd26b197f667d1b58c144e907cde",
+      "size": 59740
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -316,8 +316,8 @@
     },
     {
       "path": "assets/templates/game-design-brief/content.md",
-      "sha256": "ae31691deac68d35df74689e883890af1fe41d097410f082aa61470c16390886",
-      "size": 4742
+      "sha256": "3b24442c646dc85059cb09bc7658a3a42254f05a8801cbeed84ffbe4d5f23a4a",
+      "size": 4749
     },
     {
       "path": "assets/templates/game-design-brief/decisions/README.md",
@@ -616,8 +616,8 @@
     },
     {
       "path": "references/prompt-templates.json",
-      "sha256": "b934934b6483de8597d90ff449fcd62bba9be1be791e7126fe7d04ffb31a689b",
-      "size": 374758
+      "sha256": "a33af887ea8cdf7b0c802aff553cfe150f158a2df6aa538335a42d7177bde5bf",
+      "size": 375683
     },
     {
       "path": "references/routing.json",
