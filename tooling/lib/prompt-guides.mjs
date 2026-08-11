@@ -56,6 +56,13 @@ function entryAnchor(entry) {
   return entry.id.toLowerCase().replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "").replace(/\s+/gu, "-");
 }
 
+function interactiveDiagramLines(entry) {
+  const html = entry.diagram_binding.html;
+  if (typeof html !== "string") return [];
+  const relative = html.replace(/^guides\/assets\//u, "../../assets/");
+  return [`- 대화형 HTML: [${entry.diagram_binding.alt}](${relative})`];
+}
+
 function indexSection(title, entries, label) {
   return [
     `## ${title}`,
@@ -143,6 +150,7 @@ export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
     list(entry.read_order),
     "",
     heading(section, "도식 바인딩"),
+    ...interactiveDiagramLines(entry),
     `- ID: ${entry.diagram_binding.id}`,
     `- SVG: ${entry.diagram_binding.svg}`,
     `- PNG: ${entry.diagram_binding.png}`,
@@ -183,6 +191,7 @@ export function validateRenderedPromptCard(entry, markdown) {
     entry.diagram_binding.id,
     entry.diagram_binding.svg,
     entry.diagram_binding.png,
+    ...(entry.diagram_binding.html ? [entry.diagram_binding.html.replace(/^guides\/assets\//u, "../../assets/")] : []),
     entry.sample_result_excerpt,
   ];
   for (const fragment of required) {

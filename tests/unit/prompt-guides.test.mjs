@@ -79,7 +79,9 @@ async function temporaryRepo(t) {
 }
 
 test("renderPromptCard emits the fixed readable order and exactly five text blocks", () => {
-  const markdown = renderPromptCard(validSkillEntry());
+  const entry = validSkillEntry();
+  entry.diagram_binding.html = "guides/assets/archify/studio/vision.html";
+  const markdown = renderPromptCard(entry);
 
   assertOrdered(markdown, [
     "### 사용하는 경우", "### 준비 입력", "### 바꿀 자리표시자",
@@ -91,6 +93,12 @@ test("renderPromptCard emits the fixed readable order and exactly five text bloc
   assert.equal((markdown.match(/^```text$/gmu) ?? []).length, 5);
   assert.match(markdown, /#### 최소 결과물[\s\S]*#### 선택 결과물[\s\S]*#### 확장 결과물/u);
   assert.match(markdown, /#### 승인 경계[\s\S]*#### 보류 조건[\s\S]*#### 안전 경계/u);
+  assert.match(markdown, /- 대화형 HTML: \[Vision prompt flow\]\(\.\.\/\.\.\/assets\/archify\/studio\/vision\.html\)/u);
+  assert.doesNotThrow(() => validateRenderedPromptCard(entry, markdown));
+  assert.throws(
+    () => validateRenderedPromptCard(entry, markdown.replace("../../assets/archify/studio/vision.html", "../../assets/archify/studio/other.html")),
+    /missing required contract/u,
+  );
 });
 
 test("renderPromptCard validates five dynamically fenced text blocks", () => {

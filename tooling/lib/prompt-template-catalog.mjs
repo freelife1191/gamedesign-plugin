@@ -243,7 +243,7 @@ function validateDiagramBinding(value, label, errors) {
     errors.push(`${label} must be an object`);
     return;
   }
-  const allowed = new Set(["id", "svg", "png", "alt"]);
+  const allowed = new Set(["id", "svg", "png", "html", "alt"]);
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) errors.push(`${label} has unknown field: ${key}`);
   }
@@ -256,6 +256,19 @@ function validateDiagramBinding(value, label, errors) {
       normalizeRelativePath(value[field], `${label}.${field}`);
     } catch {
       errors.push(`${label}.${field} has unsafe path: ${value[field]}`);
+    }
+  }
+  if (value.html !== undefined) {
+    requireString(value.html, `${label}.html`, errors);
+    if (isNonemptyString(value.html)) {
+      try {
+        normalizeRelativePath(value.html, `${label}.html`);
+        if (!value.html.startsWith("guides/assets/archify/") || !value.html.endsWith(".html")) {
+          errors.push(`${label}.html must be a managed Archify HTML path`);
+        }
+      } catch {
+        errors.push(`${label}.html has unsafe path: ${value.html}`);
+      }
     }
   }
 }

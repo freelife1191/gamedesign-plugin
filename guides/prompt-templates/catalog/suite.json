@@ -72,6 +72,7 @@
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
+      "html": "guides/assets/archify/suite/suite-studio-career-handoff.html",
       "alt": "Studio 검토 결과를 Career 포트폴리오로 넘기는 흐름"
     },
     "related_use_cases": [],
