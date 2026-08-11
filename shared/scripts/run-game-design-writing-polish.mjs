@@ -13,7 +13,8 @@ function failure(code, stage, cause, errors) {
  * Execute the explicit two-stage writing pass. A caller supplies the bundled
  * humanizer adapter because a Markdown skill is executed by the host, not Node.
  */
-export async function runGameDesignWritingPolish({ source, humanize, validate = validateWritingRevision }) {
+export async function runGameDesignWritingPolish({ source, protectedManifest, humanize, validate = validateWritingRevision }) {
+  if (protectedManifest === undefined) throw failure("WRITING_POLISH_PROTECTED_MANIFEST_REQUIRED", "manifest");
   let revised;
   try {
     revised = await humanize(source);
@@ -24,7 +25,7 @@ export async function runGameDesignWritingPolish({ source, humanize, validate = 
 
   let validation;
   try {
-    validation = await validate({ original: source, revised });
+    validation = await validate({ original: source, revised, protectedManifest });
   } catch (error) {
     throw failure("WRITING_POLISH_VALIDATION_FAILED", "validate", error);
   }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -123,9 +123,9 @@ async function trustedFutureArchive(root) {
   };
 }
 
-function runNode(args) {
+function runNode(args, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(process.execPath, args, { stdio: ["ignore", "pipe", "pipe"], ...options });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; });
@@ -256,19 +256,142 @@ test("check-latest uses the injected release capability and leaves the tree and 
   assert.deepEqual(result, { status: "outdated", installedTag: "v2.3.0", latestTag: "v2.3.1", updateAvailable: true });
   assert.deepEqual(await snapshotVendor(fixture), before);
 });
-test("update writes only a trusted future archive to staging and refreshes its lock", async (t) => {
+test("update prepares a private sibling stage and publishes only through its opaque receipt", async (t) => {
   const { updateImNotAi } = await import(updaterUrl.href);
   const fixture = await copiedVendor(t);
-  const stagingRoot = path.join(path.dirname(fixture), "staged-im-not-ai");
   const before = await snapshotVendor(fixture);
   const archive = await trustedFutureArchive(fixture);
   const calls = [];
-  const result = await updateImNotAi({ root: fixture, stagingRoot, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; }, fetchArchive: async (release) => { calls.push({ fetchArchive: release }); return archive; } });
+  const result = await updateImNotAi({ root: fixture, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; }, fetchArchive: async (release) => { calls.push({ fetchArchive: release }); return archive; } });
   assert.deepEqual(calls, ["fetchRelease", { fetchArchive: futureRelease }]);
-  assert.deepEqual(result, { status: "updated", tag: "v2.3.1", verifiedFiles: 15 });
+  assert.deepEqual({ status: result.status, tag: result.tag, verifiedFiles: result.verifiedFiles }, { status: "updated", tag: "v2.3.1", verifiedFiles: 15 });
+  assert.equal(typeof result.publish, "function");
   assert.deepEqual(await snapshotVendor(fixture), before, "successful update must leave the original vendor root byte-for-byte unchanged");
-  assert.deepEqual(JSON.parse(await readFile(path.join(stagingRoot, "vendor.lock.json"), "utf8")), { ...expectedLock, upstream: { ...expectedLock.upstream, tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" }, tree: { ...expectedLock.tree, root: "humanize-korean/v2.3.1" } });
-  assert.deepEqual(await listRegularFiles(path.join(stagingRoot, "humanize-korean/v2.3.1")), expectedFiles);
+  await result.publish();
+  assert.deepEqual(JSON.parse(await readFile(path.join(fixture, "vendor.lock.json"), "utf8")), { ...expectedLock, upstream: { ...expectedLock.upstream, tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" }, tree: { ...expectedLock.tree, root: "humanize-korean/v2.3.1" } });
+  assert.deepEqual(await listRegularFiles(path.join(fixture, "humanize-korean/v2.3.1")), expectedFiles);
+  assert.equal((await readdir(path.dirname(fixture))).some((entry) => entry.startsWith(".im-not-ai.stage-")), false, "published private stage must be removed");
+});
+
+test("real --update CLI builds a private sibling stage and atomically publishes the verified archive", async (t) => {
+  const fixtureRoot = await mkdtemp(path.join(tmpdir(), "im-not-ai-cli-update-"));
+  t.after(() => rm(fixtureRoot, { recursive: true, force: true }));
+  await mkdir(path.join(fixtureRoot, "tooling"));
+  await mkdir(path.join(fixtureRoot, "shared/vendor"), { recursive: true });
+  await cp(new URL("../../tooling/sync-im-not-ai.mjs", import.meta.url), path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"));
+  await cp(vendorRoot, path.join(fixtureRoot, "shared/vendor/im-not-ai"), { recursive: true });
+  const preload = path.join(fixtureRoot, "mock-official-im-not-ai.mjs");
+  await writeFile(preload, `
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+const root = process.env.IM_NOT_AI_CLI_FIXTURE_ROOT;
+const vendor = path.join(root, "shared/vendor/im-not-ai");
+const tree = "humanize-korean/v2.3.0";
+const commit = "${futureRelease.commit}";
+globalThis.fetch = async (url) => {
+  if (url.includes("/releases?")) return { ok: true, json: async () => [{ tag_name: "v2.3.1", published_at: "2026-08-12T00:00:00Z", draft: false, prerelease: false }] };
+  if (url.includes("/git/ref/tags/v2.3.1")) return { ok: true, json: async () => ({ object: { type: "commit", sha: commit } }) };
+  const marker = \`raw.githubusercontent.com/epoko77-ai/im-not-ai/\${commit}/\`;
+  const source = url.slice(url.indexOf(marker) + marker.length);
+  const local = source === "LICENSE" ? path.join(vendor, "LICENSE")
+    : source === "codex/skills/humanize-korean/SKILL.md" ? path.join(vendor, tree, "SKILL.md")
+      : path.join(vendor, tree, "references", path.basename(source));
+  const bytes = await readFile(local);
+  return { ok: true, arrayBuffer: async () => bytes };
+};
+`);
+  const result = await runNode(["--import", preload, path.join(fixtureRoot, "tooling/sync-im-not-ai.mjs"), "--update"], { env: { ...process.env, IM_NOT_AI_CLI_FIXTURE_ROOT: fixtureRoot } });
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.match(result.stdout, /\S/u, `CLI produced no result: ${result.stderr}`);
+  assert.deepEqual(JSON.parse(result.stdout), { status: "published", root: await realpath(path.join(fixtureRoot, "shared/vendor/im-not-ai")) });
+  const installed = path.join(fixtureRoot, "shared/vendor/im-not-ai");
+  assert.equal(JSON.parse(await readFile(path.join(installed, "vendor.lock.json"), "utf8")).upstream.tag, "v2.3.1");
+  assert.equal((await readdir(path.dirname(installed))).some((entry) => entry.startsWith(".im-not-ai.stage-") || entry.startsWith(".im-not-ai.backup-")), false);
+});
+
+test("publish accepts only the opaque prepared receipt and never an arbitrary staging path", async (t) => {
+  const { publishPreparedImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const before = await snapshotVendor(fixture);
+  const arbitraryStage = path.join(path.dirname(fixture), "attacker-controlled-stage");
+  await mkdir(arbitraryStage);
+  await writeFile(path.join(arbitraryStage, "vendor.lock.json"), "{}\n");
+  await assert.rejects(
+    publishPreparedImNotAi({ root: fixture, stagingRoot: arbitraryStage }),
+    (error) => error.code === "IM_NOT_AI_PREPARED_CAPABILITY_REQUIRED",
+  );
+  assert.deepEqual(await snapshotVendor(fixture), before, "untrusted stage rejection must perform zero vendor writes");
+  assert.equal((await lstat(arbitraryStage)).isDirectory(), true, "untrusted stage must remain untouched");
+});
+
+test("prepared publish rolls back the old vendor and removes its private stage when the final rename fails", async (t) => {
+  const { updateImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const before = await snapshotVendor(fixture);
+  const prepared = await updateImNotAi({ root: fixture, fetchRelease: async () => futureRelease, fetchArchive: async () => trustedFutureArchive(fixture) });
+  let renames = 0;
+  await assert.rejects(
+    prepared.publish({ fsOps: { rename: async (...args) => {
+      renames += 1;
+      if (renames === 2) throw Object.assign(new Error("injected final rename failure"), { code: "EIO" });
+      return (await import("node:fs/promises")).rename(...args);
+    } } }),
+    /injected final rename failure/u,
+  );
+  assert.deepEqual(await snapshotVendor(fixture), before, "failed publish must restore the prior vendor byte-for-byte");
+  const siblings = await readdir(path.dirname(fixture));
+  assert.equal(siblings.some((entry) => entry.startsWith(".im-not-ai.stage-")), false, "failed publish must clean its private stage");
+});
+
+test("a post-rename race that tampers with the new vendor is detected and rolled back", async (t) => {
+  const { updateImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const before = await snapshotVendor(fixture);
+  const prepared = await updateImNotAi({ root: fixture, fetchRelease: async () => futureRelease, fetchArchive: async () => trustedFutureArchive(fixture) });
+  let renames = 0;
+  await assert.rejects(
+    prepared.publish({ fsOps: { rename: async (...args) => {
+      renames += 1;
+      await (await import("node:fs/promises")).rename(...args);
+      if (renames === 2) await writeFile(path.join(args[1], "LICENSE"), "race-tampered\n");
+    } } }),
+    (error) => error.code === "IM_NOT_AI_STAGE_VERIFICATION_FAILED",
+  );
+  assert.deepEqual(await snapshotVendor(fixture), before, "post-rename tampering must restore the old vendor");
+  assert.equal((await readdir(path.dirname(fixture))).some((entry) => entry.startsWith(".im-not-ai.backup-") || entry.startsWith(".im-not-ai.rejected-") || entry.startsWith(".im-not-ai.stage-")), false);
+});
+
+test("tampered or symlinked private staging is rejected before vendor rename and cleaned up", async (t) => {
+  const { updateImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const before = await snapshotVendor(fixture);
+  const prepared = await updateImNotAi({ root: fixture, fetchRelease: async () => futureRelease, fetchArchive: async () => trustedFutureArchive(fixture) });
+  const parent = path.dirname(fixture);
+  const stage = (await readdir(parent)).find((entry) => entry.startsWith(".im-not-ai.stage-"));
+  assert.ok(stage, "private stage exists only while its opaque receipt is live");
+  const target = path.join(parent, stage, "humanize-korean/v2.3.1/references/quick-rules.md");
+  await rm(target);
+  await symlink("rewriting-playbook.md", target);
+  await assert.rejects(prepared.publish(), (error) => error.code === "IM_NOT_AI_SYMLINK");
+  assert.deepEqual(await snapshotVendor(fixture), before, "stage tampering must perform zero writes to the vendor root");
+  assert.equal((await readdir(parent)).some((entry) => entry === stage), false, "rejected private stage must be removed");
+});
+
+test("injected private stage write failure preserves the original vendor and cleans the temp directory", async (t) => {
+  const { updateImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const before = await snapshotVendor(fixture);
+  await assert.rejects(
+    updateImNotAi({
+      root: fixture,
+      fetchRelease: async () => futureRelease,
+      fetchArchive: async () => trustedFutureArchive(fixture),
+      fsOps: { open: async () => { throw Object.assign(new Error("injected stage write failure"), { code: "EIO" }); } },
+    }),
+    /injected stage write failure/u,
+  );
+  assert.deepEqual(await snapshotVendor(fixture), before);
+  assert.equal((await readdir(path.dirname(fixture))).some((entry) => entry.startsWith(".im-not-ai.stage-")), false);
 });
 
 test("update rejects an untrusted archive repository without staging or original writes", async (t) => {

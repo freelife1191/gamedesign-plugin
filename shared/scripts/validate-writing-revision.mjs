@@ -109,6 +109,58 @@ function validateProtectedSpans(value) {
   return value;
 }
 
+function occurrences(source, text) {
+  const positions = [];
+  for (let index = source.indexOf(text); index !== -1; index = source.indexOf(text, index + text.length)) positions.push(index);
+  return positions;
+}
+
+function manifestEntries(source, protectedTerms, protectedSpans) {
+  const entries = [];
+  for (const term of protectedTerms) {
+    for (const start of occurrences(source, term)) entries.push({ kind: "protected-term", id: term, text: term, start });
+  }
+  for (const span of protectedSpans) {
+    for (const start of occurrences(source, span.text)) entries.push({ kind: "protected-span", id: span.id, text: span.text, start });
+  }
+  return entries.sort((left, right) => left.start - right.start || left.kind.localeCompare(right.kind) || left.id.localeCompare(right.id));
+}
+
+/** Build the source-bound manifest required by the writing-polish runner. */
+export function createProtectedWritingManifest({ source, protectedTerms, protectedSpans } = {}) {
+  const inputError = invalidInput(source, "source");
+  if (inputError) throw new TypeError(`source is invalid: ${inputError.code}`);
+  const terms = validateProtectedStrings(protectedTerms, "protectedTerms");
+  const spans = validateProtectedSpans(protectedSpans);
+  for (const span of spans) if (!source.includes(span.text)) throw new TypeError(`protected span is absent from source: ${span.id}`);
+  return {
+    schemaVersion: 1,
+    sourceDigest: digest(source),
+    protectedTerms: terms,
+    protectedSpans: spans.map(({ id, text }) => ({ id, text })),
+    entries: manifestEntries(source, terms, spans).map((entry) => ({ ...entry, positionDigest: digest(`${entry.start}:${entry.text}`) })),
+  };
+}
+
+function validateProtectedManifest(source, revised, manifest) {
+  if (manifest === undefined) return undefined;
+  if (manifest === null || Object.getPrototypeOf(manifest) !== Object.prototype || manifest.schemaVersion !== 1 || typeof manifest.sourceDigest !== "string" || !Array.isArray(manifest.entries)) {
+    throw new TypeError("protectedManifest must be a source-bound manifest");
+  }
+  if (manifest.sourceDigest !== digest(source)) return changed("protected-manifest-source-mismatch", "protected-manifest", manifest.sourceDigest, digest(source));
+  const terms = validateProtectedStrings(manifest.protectedTerms, "protectedManifest.protectedTerms");
+  const spans = validateProtectedSpans(manifest.protectedSpans);
+  const expected = manifestEntries(source, terms, spans).map((entry) => ({ ...entry, positionDigest: digest(`${entry.start}:${entry.text}`) }));
+  if (JSON.stringify(manifest.entries) !== JSON.stringify(expected)) throw new TypeError("protectedManifest entries must exactly describe the source");
+  for (const entry of expected) {
+    const revisedStart = revised.indexOf(entry.text, entry.start);
+    if (revisedStart !== entry.start || digest(`${revisedStart}:${entry.text}`) !== entry.positionDigest) {
+      return changed("protected-manifest-occurrence-changed", entry.kind, entry.text, revisedStart === -1 ? null : entry.text);
+    }
+  }
+  return undefined;
+}
+
 function sequenceError(source, revised, { expression, kind, code, group = 1 }) {
   const difference = firstDifference(collectMatches(source, expression, group), collectMatches(revised, expression, group));
   return difference ? changed(code, kind, difference.before, difference.after) : undefined;
@@ -136,11 +188,14 @@ function designFieldError(source, revised, field) {
  * Reject revisions that alter game-design facts, evidence, decisions, or approval states.
  * The validator deliberately checks only concrete protected tokens; it is not a truth engine.
  */
-export function validateWritingRevision({ original, revised, protectedTerms, protectedSpans }) {
+export function validateWritingRevision({ original, revised, protectedTerms, protectedSpans, protectedManifest }) {
   const inputError = invalidInput(original, "original") ?? invalidInput(revised, "revised");
   if (inputError) return { valid: false, errors: [inputError], receipt: { status: "rejected", protectedKinds: PROTECTED_KINDS } };
 
   const reject = (error) => error ? { valid: false, errors: [error], receipt: { status: "rejected", protectedKinds: PROTECTED_KINDS, originalDigest: digest(original), revisedDigest: digest(revised) } } : undefined;
+  const manifestDifference = validateProtectedManifest(original, revised, protectedManifest);
+  const manifestRejected = reject(manifestDifference);
+  if (manifestRejected) return manifestRejected;
   for (const term of validateProtectedStrings(protectedTerms, "protectedTerms")) {
     if (!revised.includes(term)) return reject(changed("protected-term-changed", "protected-term", term, null));
   }

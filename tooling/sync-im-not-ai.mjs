@@ -1,5 +1,6 @@
-import { createHash } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, realpath, rename, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { constants } from "node:fs";
+import { lstat, mkdir, mkdtemp, open, readFile, readdir, realpath, rename, rmdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,6 +32,10 @@ const PINNED_FILES = Object.freeze([
 ]);
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DEFAULT_VENDOR_ROOT = path.join(REPO_ROOT, "shared/vendor/im-not-ai");
+const PREPARED_VENDOR = new WeakMap();
+const WRITE_NO_FOLLOW = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW;
+const READ_NO_FOLLOW = constants.O_RDONLY | constants.O_NOFOLLOW;
+const DEFAULT_FS_OPS = Object.freeze({ lstat, mkdir, mkdtemp, open, readdir, realpath, rename, rmdir, unlink });
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -60,23 +65,18 @@ function compareSemver(left, right) {
 }
 
 async function readJson(file) {
-  return JSON.parse(await readFile(file, "utf8"));
+  return JSON.parse((await readNoFollow(file)).toString("utf8"));
 }
 
-async function assertSafeStagingRoot(root, stagingRoot) {
-  const vendorRoot = await realpath(path.resolve(root));
-  const requested = path.resolve(stagingRoot);
-  const candidate = path.join(await realpath(path.dirname(requested)), path.basename(requested));
-  if (path.dirname(candidate) !== path.dirname(vendorRoot) || candidate === vendorRoot) {
-    throw vendorError("IM_NOT_AI_UNSAFE_STAGING_ROOT", candidate);
+async function readNoFollow(file) {
+  const handle = await open(file, READ_NO_FOLLOW);
+  try {
+    const info = await handle.stat();
+    if (!info.isFile()) throw vendorError("IM_NOT_AI_NON_REGULAR_FILE", file);
+    return await handle.readFile();
+  } finally {
+    await handle.close();
   }
-  for (let current = vendorRoot; current !== path.dirname(current); current = path.dirname(current)) {
-    const stat = await lstat(current);
-    if (stat.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", current);
-  }
-  const existing = await lstat(candidate).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error));
-  if (existing) throw vendorError("IM_NOT_AI_STAGING_EXISTS", candidate);
-  return candidate;
 }
 
 async function regularFiles(root, prefix = "") {
@@ -91,7 +91,7 @@ async function regularFiles(root, prefix = "") {
     const stat = await lstat(absolutePath);
     if (stat.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", relativePath);
     if (stat.isDirectory()) output.push(...await regularFiles(absolutePath, relativePath));
-    else if (stat.isFile()) output.push({ path: relativePath, bytes: await readFile(absolutePath) });
+    else if (stat.isFile()) output.push({ path: relativePath, bytes: await readNoFollow(absolutePath) });
     else throw vendorError("IM_NOT_AI_NON_REGULAR_FILE", relativePath);
   }
   return output.sort((left, right) => left.path.localeCompare(right.path));
@@ -255,42 +255,155 @@ function makeLock(release, oldLock, files) {
   };
 }
 
-async function removeEmptyTree(root) {
-  for (const entry of await readdir(root, { withFileTypes: true })) {
-    const target = path.join(root, entry.name);
-    const stat = await lstat(target);
-    if (stat.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", target);
-    if (stat.isDirectory()) await removeEmptyTree(target);
-    else await (await import("node:fs/promises")).unlink(target);
-  }
-  await (await import("node:fs/promises")).rmdir(root);
+function mergedFsOps(overrides = {}) {
+  return { ...DEFAULT_FS_OPS, ...overrides };
 }
 
-export async function publishPreparedImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, fsOps = { rename } } = {}) {
-  const vendorRoot = await realpath(root);
-  const stage = await assertSafeStagingRoot(vendorRoot, stagingRoot).catch((error) => {
-    if (error.code === "IM_NOT_AI_STAGING_EXISTS") return path.resolve(stagingRoot);
-    throw error;
-  });
-  const stagedLock = await readJson(path.join(stage, "vendor.lock.json")).catch((error) => { throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", error.path ?? "stage"); });
-  if (stagedLock?.upstream?.repository !== OFFICIAL_REPOSITORY || !Array.isArray(stagedLock?.tree?.files) || stagedLock.tree.files.length !== PINNED_FILES.length) {
-    throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "vendor.lock.json");
-  }
-  await regularFiles(stage).catch((error) => { throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", error.path ?? "stage"); });
-  const backup = path.join(path.dirname(vendorRoot), `.${path.basename(vendorRoot)}.backup-${process.pid}`);
-  await fsOps.rename(vendorRoot, backup);
+function sameIdentity(left, right) {
+  return left.realpath === right.realpath && left.dev === right.dev && left.ino === right.ino;
+}
+
+async function directoryIdentity(target, fsOps = DEFAULT_FS_OPS) {
+  const requested = path.resolve(target);
+  const info = await fsOps.lstat(requested);
+  if (info.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", requested);
+  if (!info.isDirectory()) throw vendorError("IM_NOT_AI_NON_REGULAR_FILE", requested);
+  const canonical = await fsOps.realpath(requested);
+  return { realpath: canonical, dev: info.dev, ino: info.ino };
+}
+
+function safeRelative(root, target) {
+  const relative = path.relative(root, target);
+  if (relative === "" || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw vendorError("IM_NOT_AI_UNSAFE_STAGING_ROOT", target);
+}
+
+async function ensurePrivateDirectory(root, target, fsOps) {
+  safeRelative(root, target);
+  await fsOps.mkdir(target, { recursive: true, mode: 0o700 });
+  const info = await fsOps.lstat(target);
+  if (info.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", target);
+  if (!info.isDirectory()) throw vendorError("IM_NOT_AI_NON_REGULAR_FILE", target);
+}
+
+async function writePrivateFile(file, bytes, fsOps) {
+  const handle = await fsOps.open(file, WRITE_NO_FOLLOW, 0o600);
   try {
-    await fsOps.rename(stage, vendorRoot);
+    await handle.writeFile(bytes);
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+}
+
+async function removePrivateTree(root, fsOps) {
+  const info = await fsOps.lstat(root).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error));
+  if (!info) return;
+  if (info.isSymbolicLink()) {
+    await fsOps.unlink(root);
+    return;
+  }
+  if (!info.isDirectory()) {
+    await fsOps.unlink(root);
+    return;
+  }
+  for (const entry of await fsOps.readdir(root, { withFileTypes: true })) await removePrivateTree(path.join(root, entry.name), fsOps);
+  await fsOps.rmdir(root);
+}
+
+async function verifyPreparedTree(root, { expectedIdentity, expectedLockHash, expectedClosureHash } = {}) {
+  const identity = await directoryIdentity(root);
+  if (expectedIdentity && !sameIdentity(identity, expectedIdentity)) throw vendorError("IM_NOT_AI_STAGE_IDENTITY_CHANGED", identity.realpath);
+  const lockBytes = await readNoFollow(path.join(identity.realpath, "vendor.lock.json"));
+  const lock = JSON.parse(lockBytes.toString("utf8"));
+  if (lock?.upstream?.repository !== OFFICIAL_REPOSITORY || !/^v?\d+\.\d+\.\d+$/u.test(lock?.upstream?.tag) || !/^[a-f0-9]{40}$/u.test(lock?.upstream?.commit)) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "vendor.lock.json");
+  if (lock?.license?.spdx !== "MIT" || lock.license.path !== "LICENSE" || !/^[a-f0-9]{64}$/u.test(lock.license.sha256)) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "license");
+  if (typeof lock?.tree?.root !== "string" || lock.tree.root.startsWith("/") || lock.tree.root.includes("..") || !Array.isArray(lock.tree.files)) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "tree");
+  const names = new Set();
+  for (const file of lock.tree.files) {
+    if (!file || typeof file.path !== "string" || file.path.startsWith("/") || file.path.includes("..") || !/^[a-f0-9]{64}$/u.test(file.sha256) || !Number.isSafeInteger(file.size) || file.size < 0 || names.has(file.path)) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "tree.files");
+    names.add(file.path);
+  }
+  const expected = new Set(["LICENSE", "THIRD_PARTY_NOTICES.md", "vendor.lock.json", ...lock.tree.files.map((file) => `${lock.tree.root}/${file.path}`)]);
+  for (const file of await regularFiles(identity.realpath)) if (!expected.has(file.path)) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", file.path);
+  const license = await readNoFollow(path.join(identity.realpath, "LICENSE"));
+  if (sha256(license) !== lock.license.sha256) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", "LICENSE");
+  const closureFiles = [{ path: "LICENSE", sha256: sha256(license), size: license.length }];
+  for (const file of lock.tree.files) {
+    const target = path.join(identity.realpath, lock.tree.root, ...file.path.split("/"));
+    const info = await lstat(target);
+    if (info.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", target);
+    if (!info.isFile()) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", target);
+    const bytes = await readNoFollow(target);
+    if (bytes.length !== file.size || sha256(bytes) !== file.sha256) throw vendorError("IM_NOT_AI_STAGE_VERIFICATION_FAILED", target);
+    closureFiles.push({ path: `${lock.tree.root}/${file.path}`, sha256: file.sha256, size: file.size });
+  }
+  const verified = { identity, lockHash: sha256(lockBytes), closureHash: closureDigest(closureFiles), lock };
+  if (expectedLockHash && verified.lockHash !== expectedLockHash) throw vendorError("IM_NOT_AI_STAGE_LOCK_CHANGED", "vendor.lock.json");
+  if (expectedClosureHash && verified.closureHash !== expectedClosureHash) throw vendorError("IM_NOT_AI_STAGE_CLOSURE_CHANGED", "tree");
+  return verified;
+}
+
+function createPreparedReceipt({ root, original, staged }) {
+  const capability = Object.freeze({});
+  PREPARED_VENDOR.set(capability, { root, original, staged });
+  return Object.freeze({
+    publish: async ({ fsOps } = {}) => publishPreparedImNotAi({ prepared: capability, fsOps }),
+  });
+}
+
+export async function publishPreparedImNotAi({ prepared, fsOps: overrides } = {}) {
+  const preparedState = PREPARED_VENDOR.get(prepared);
+  if (!preparedState) throw vendorError("IM_NOT_AI_PREPARED_CAPABILITY_REQUIRED", "prepared");
+  const fsOps = mergedFsOps(overrides);
+  const vendorRoot = preparedState.root;
+  const parent = path.dirname(vendorRoot);
+  let stageMoved = false;
+  let backupMoved = false;
+  let backup;
+  try {
+    const staged = await verifyPreparedTree(preparedState.staged.identity.realpath, preparedState.staged);
+    await verifyPreparedTree(vendorRoot, preparedState.original);
+    backup = path.join(parent, `.${path.basename(vendorRoot)}.backup-${randomUUID()}`);
+    await fsOps.lstat(backup).then(() => { throw vendorError("IM_NOT_AI_BACKUP_EXISTS", backup); }).catch((error) => {
+      if (error.code !== "ENOENT") throw error;
+    });
+    await fsOps.rename(vendorRoot, backup);
+    backupMoved = true;
+    try {
+      await fsOps.rename(staged.identity.realpath, vendorRoot);
+      stageMoved = true;
+    } catch (error) {
+      await fsOps.rename(backup, vendorRoot);
+      backupMoved = false;
+      throw error;
+    }
+    try {
+      await verifyPreparedTree(vendorRoot, { expectedLockHash: staged.lockHash, expectedClosureHash: staged.closureHash });
+    } catch (error) {
+      const rejected = path.join(parent, `.${path.basename(vendorRoot)}.rejected-${randomUUID()}`);
+      await fsOps.rename(vendorRoot, rejected);
+      await fsOps.rename(backup, vendorRoot);
+      backupMoved = false;
+      await removePrivateTree(rejected, fsOps);
+      throw error;
+    }
   } catch (error) {
-    await fsOps.rename(backup, vendorRoot);
+    if (backupMoved && !stageMoved && backup) {
+      await fsOps.rename(backup, vendorRoot).catch(() => undefined);
+    }
+    if (!stageMoved) await removePrivateTree(preparedState.staged.identity.realpath, fsOps).catch(() => undefined);
     throw error;
   }
-  await removeEmptyTree(backup);
+  await removePrivateTree(backup, fsOps).catch(() => undefined);
+  PREPARED_VENDOR.delete(prepared);
   return { status: "published", root: vendorRoot };
 }
 
-export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, publish = false, fetchRelease = fetchOfficialLatestImNotAiRelease, fetchArchive = defaultArchive } = {}) {
-  if (typeof stagingRoot !== "string") throw new Error("stagingRoot is required for a non-destructive vendor update");
+export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, publish = false, fetchRelease = fetchOfficialLatestImNotAiRelease, fetchArchive = defaultArchive, fsOps: overrides } = {}) {
+  const fsOps = mergedFsOps(overrides);
+  const rootIdentity = await directoryIdentity(root, fsOps);
+  const vendorRoot = rootIdentity.realpath;
+  const vendorParent = path.dirname(vendorRoot);
   const oldLock = await readJson(path.join(root, "vendor.lock.json"));
   const release = await fetchRelease();
   if (release.repository !== OFFICIAL_REPOSITORY) throw vendorError("IM_NOT_AI_UNTRUSTED_REPOSITORY", "release.repository");
@@ -305,26 +418,37 @@ export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, p
   });
   const lockedRelease = { ...releaseWithClosure, archive };
   const nextLock = makeLock(lockedRelease, oldLock, files);
-  const safeStagingRoot = await assertSafeStagingRoot(root, stagingRoot);
-  await mkdir(path.join(safeStagingRoot, nextLock.tree.root), { recursive: true });
-  await writeFile(path.join(safeStagingRoot, "LICENSE"), archiveFile(archive, "LICENSE"));
-  await writeFile(path.join(safeStagingRoot, "THIRD_PARTY_NOTICES.md"), `# im-not-ai\n\n- Upstream: ${OFFICIAL_REPOSITORY}\n- Pinned release: \`${release.tag}\` (\`${release.commit}\`)\n- License: MIT\n- License SHA-256: \`${nextLock.license.sha256}\`\n`);
-  await writeFile(path.join(safeStagingRoot, "vendor.lock.json"), `${JSON.stringify(nextLock, null, 2)}\n`);
-  for (const file of files) {
-    const destination = path.join(safeStagingRoot, nextLock.tree.root, ...file.path.split("/"));
-    await mkdir(path.dirname(destination), { recursive: true });
-    await writeFile(destination, file.bytes);
+  if (stagingRoot !== undefined) throw vendorError("IM_NOT_AI_UNSAFE_STAGING_ROOT", path.resolve(stagingRoot));
+  const privateStage = await fsOps.mkdtemp(path.join(vendorParent, `.${path.basename(vendorRoot)}.stage-`));
+  try {
+    const stageIdentity = await directoryIdentity(privateStage, fsOps);
+    if (path.dirname(stageIdentity.realpath) !== vendorParent) throw vendorError("IM_NOT_AI_UNSAFE_STAGING_ROOT", stageIdentity.realpath);
+    await ensurePrivateDirectory(stageIdentity.realpath, path.join(stageIdentity.realpath, nextLock.tree.root), fsOps);
+    await writePrivateFile(path.join(stageIdentity.realpath, "LICENSE"), archiveFile(archive, "LICENSE"), fsOps);
+    await writePrivateFile(path.join(stageIdentity.realpath, "THIRD_PARTY_NOTICES.md"), `# im-not-ai\n\n- Upstream: ${OFFICIAL_REPOSITORY}\n- Pinned release: \`${release.tag}\` (\`${release.commit}\`)\n- License: MIT\n- License SHA-256: \`${nextLock.license.sha256}\`\n`, fsOps);
+    await writePrivateFile(path.join(stageIdentity.realpath, "vendor.lock.json"), `${JSON.stringify(nextLock, null, 2)}\n`, fsOps);
+    for (const file of files) {
+      const destination = path.join(stageIdentity.realpath, nextLock.tree.root, ...file.path.split("/"));
+      await ensurePrivateDirectory(stageIdentity.realpath, path.dirname(destination), fsOps);
+      await writePrivateFile(destination, file.bytes, fsOps);
+    }
+    const staged = await verifyPreparedTree(stageIdentity.realpath, { expectedIdentity: stageIdentity });
+    const original = await verifyPreparedTree(vendorRoot, { expectedIdentity: rootIdentity });
+    const receipt = createPreparedReceipt({ root: vendorRoot, original, staged });
+    if (publish) return receipt.publish({ fsOps });
+    return { status: "updated", tag: release.tag, verifiedFiles: files.length, publish: receipt.publish };
+  } catch (error) {
+    await removePrivateTree(privateStage, fsOps).catch(() => undefined);
+    throw error;
   }
-  if (publish) await publishPreparedImNotAi({ root, stagingRoot: safeStagingRoot });
-  return { status: publish ? "published" : "updated", tag: release.tag, verifiedFiles: files.length };
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && await realpath(process.argv[1]).catch(() => path.resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
   const { mode } = parseImNotAiUpdaterArgs(process.argv.slice(2));
   const result = mode === "check"
     ? await verifyVendoredImNotAi()
     : mode === "check-latest"
       ? await checkLatestImNotAi()
-      : await updateImNotAi({ stagingRoot: path.join(REPO_ROOT, ".vendor-staging", "im-not-ai") });
+      : await updateImNotAi({ publish: true });
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }

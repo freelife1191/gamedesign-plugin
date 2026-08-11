@@ -63,6 +63,11 @@ async function validate(source, candidate, options = {}) {
   return validateWritingRevision({ original: source, revised: candidate, ...options });
 }
 
+async function protectedManifest(source, options = {}) {
+  const { createProtectedWritingManifest } = await import(validatorUrl.href);
+  return createProtectedWritingManifest({ source, ...options });
+}
+
 function assertRejected(result, label, errors) {
   assert.equal(result.valid, false, `${label}: mutation must be rejected`);
   assert.deepEqual(result.errors, errors, `${label}: exact protected-content errors`);
@@ -100,8 +105,10 @@ test("writing polish runs bundled humanize before validation and validates the h
   const calls = [];
   const humanized = "사람이 쓴 듯 다듬은 문장";
   const receipt = { status: "preserved", protectedKinds: ["gate-state"] };
+  const manifest = await protectedManifest("보스 보상 문장");
   const result = await runGameDesignWritingPolish({
     source: "보스 보상 문장",
+    protectedManifest: manifest,
     humanize: async (input) => {
       calls.push({ step: "humanize", input });
       return humanized;
@@ -114,7 +121,7 @@ test("writing polish runs bundled humanize before validation and validates the h
 
   assert.deepEqual(calls, [
     { step: "humanize", input: "보스 보상 문장" },
-    { step: "validate", input: { original: "보스 보상 문장", revised: "사람이 쓴 듯 다듬은 문장" } },
+    { step: "validate", input: { original: "보스 보상 문장", revised: "사람이 쓴 듯 다듬은 문장", protectedManifest: manifest } },
   ]);
   assert.deepEqual(result, {
     revised: "사람이 쓴 듯 다듬은 문장",
@@ -122,12 +129,42 @@ test("writing polish runs bundled humanize before validation and validates the h
   });
 });
 
+test("writing polish fails closed before humanization when the source-defined protected manifest is absent", async () => {
+  const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  let calls = 0;
+  await assert.rejects(
+    runGameDesignWritingPolish({
+      source: "바람섬의 항구는 바람섬 주민 전용이다.",
+      humanize: async () => { calls += 1; return "불꽃섬의 항구는 불꽃섬 주민 전용이다."; },
+    }),
+    (error) => error.code === "WRITING_POLISH_PROTECTED_MANIFEST_REQUIRED" && error.stage === "manifest",
+  );
+  assert.equal(calls, 0, "missing manifest must not expose the source to the humanizer");
+});
+
+test("writing polish preserves each ordered duplicate protected span from its source-defined manifest", async () => {
+  const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  const source = "바람섬은 항구 도시다. 바람섬은 계절풍을 기록한다.";
+  const manifest = await protectedManifest(source, { protectedSpans: [{ id: "island", text: "바람섬" }] });
+  await assert.rejects(
+    runGameDesignWritingPolish({
+      source,
+      protectedManifest: manifest,
+      humanize: async () => "불꽃섬은 항구 도시다. 바람섬은 계절풍을 기록한다.",
+    }),
+    (error) => error.code === "WRITING_POLISH_VALIDATION_FAILED"
+      && error.errors?.[0]?.code === "protected-manifest-occurrence-changed",
+  );
+});
+
 test("writing polish fails closed when bundled humanize fails", async () => {
   const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  const manifest = await protectedManifest("보스 보상 문장");
   let validatorCalls = 0;
   await assert.rejects(
     runGameDesignWritingPolish({
       source: "보스 보상 문장",
+      protectedManifest: manifest,
       humanize: async () => { throw new Error("humanize interrupted"); },
       validate: async () => { validatorCalls += 1; return { valid: true, errors: [], receipt: {} }; },
     }),
@@ -141,6 +178,7 @@ test("writing polish fails closed when bundled humanize fails", async () => {
 
 test("writing polish fails closed when the stricter validator rejects the humanized revision", async () => {
   const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  const manifest = await protectedManifest("- gate: pending");
   const validation = {
     valid: false,
     errors: [{ code: "gate-state-changed", detail: { before: "pending", after: "approved" } }],
@@ -148,9 +186,10 @@ test("writing polish fails closed when the stricter validator rejects the humani
   await assert.rejects(
     runGameDesignWritingPolish({
       source: "- gate: pending",
+      protectedManifest: manifest,
       humanize: async () => "- gate: approved",
       validate: async (input) => {
-        assert.deepEqual(input, { original: "- gate: pending", revised: "- gate: approved" });
+        assert.deepEqual(input, { original: "- gate: pending", revised: "- gate: approved", protectedManifest: manifest });
         return validation;
       },
     }),
