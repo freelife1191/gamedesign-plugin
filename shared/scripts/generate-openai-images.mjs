@@ -45,7 +45,7 @@ function isReferenceJob(job) {
 async function readReferenceInputs(job, stagingRoot) {
   if (!isReferenceJob(job)) return { ok: true, inputs: [] };
   try {
-    return { ok: true, inputs: await loadSecureReferenceInputs({ artifactRoot: stagingRoot, references: job.reference_images }) };
+    return { ok: true, ...(await loadSecureReferenceInputs({ artifactRoot: stagingRoot, references: job.reference_images })) };
   } catch {
     return { ok: false };
   }
@@ -84,20 +84,41 @@ function declaredLength(response) {
   return Number(value);
 }
 
-async function cancelQuietly(target) {
+function settleQuietly(value) {
   try {
-    await target?.cancel?.();
+    Promise.resolve(value).catch(() => {});
+  } catch {
+    // Hostile cleanup callbacks must not alter the redacted provider result.
+  }
+}
+
+function cancelQuietly(target) {
+  try {
+    settleQuietly(target?.cancel?.());
   } catch {
     // Stream cleanup must not alter the redacted provider result.
   }
 }
 
-async function releaseQuietly(reader) {
+function releaseQuietly(reader) {
   try {
-    await reader?.releaseLock?.();
+    settleQuietly(reader?.releaseLock?.());
   } catch {
     // A hostile lock implementation must not alter the redacted provider result.
   }
+}
+
+function abortRace(signal) {
+  if (!signal) return undefined;
+  return new Promise((_resolve, reject) => {
+    if (signal.aborted) reject(signal.reason ?? new Error("request aborted"));
+    else signal.addEventListener("abort", () => reject(signal.reason ?? new Error("request aborted")), { once: true });
+  });
+}
+
+async function awaitBounded(value, signal) {
+  const aborted = abortRace(signal);
+  return aborted ? Promise.race([Promise.resolve(value), aborted]) : value;
 }
 
 function parseBufferedJson(chunks, total) {
@@ -109,12 +130,15 @@ function parseBufferedJson(chunks, total) {
   }
 }
 
-async function readAsyncIterableJson(body) {
+async function readAsyncIterableJson(body, signal) {
   const chunks = [];
   let total = 0;
   let normal = false;
   try {
-    for await (const chunk of body) {
+    const iterator = body[Symbol.asyncIterator]();
+    while (true) {
+      const { done, value: chunk } = await awaitBounded(iterator.next(), signal);
+      if (done) break;
       if (!(chunk instanceof Uint8Array) || total + chunk.byteLength > maximumResponseBytes) return { ok: false };
       chunks.push(Buffer.from(chunk));
       total += chunk.byteLength;
@@ -125,11 +149,11 @@ async function readAsyncIterableJson(body) {
   } catch {
     return { ok: false };
   } finally {
-    if (!normal) await cancelQuietly(body);
+    if (!normal) cancelQuietly(body);
   }
 }
 
-async function readReaderJson(body) {
+async function readReaderJson(body, signal) {
   let reader;
   try {
     reader = body.getReader();
@@ -141,7 +165,7 @@ async function readReaderJson(body) {
   let normal = false;
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      const { done, value } = await awaitBounded(reader.read(), signal);
       if (done) break;
       if (!(value instanceof Uint8Array) || total + value.byteLength > maximumResponseBytes) return { ok: false };
       chunks.push(Buffer.from(value));
@@ -153,19 +177,28 @@ async function readReaderJson(body) {
   } catch {
     return { ok: false };
   } finally {
-    if (!normal) await cancelQuietly(reader);
-    await releaseQuietly(reader);
+    if (!normal) cancelQuietly(reader);
+    releaseQuietly(reader);
   }
 }
 
-async function readBoundedJson(response) {
+async function readBoundedJson(response, signal) {
   const body = response?.body;
   if (declaredLength(response) === null) {
-    await cancelQuietly(body);
+    cancelQuietly(body);
     return { ok: false };
   }
-  if (body && typeof body.getReader === "function") return readReaderJson(body);
-  if (body && typeof body[Symbol.asyncIterator] === "function") return readAsyncIterableJson(body);
+  const read = body && typeof body.getReader === "function" ? readReaderJson(body, signal)
+    : body && typeof body[Symbol.asyncIterator] === "function" ? readAsyncIterableJson(body, signal)
+      : undefined;
+  if (read) {
+    try {
+      return await awaitBounded(read, signal);
+    } catch {
+      cancelQuietly(body);
+      return { ok: false };
+    }
+  }
   return { ok: false };
 }
 
@@ -196,9 +229,14 @@ function requestBody(job, model, quality, referenceInputs) {
   return { endpoint: editEndpoint, headers: {}, body };
 }
 
-async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, requestTimeoutMs }) {
+async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs }) {
   let attempts = 0;
   while (attempts < maximumAttempts) {
+    try {
+      await referenceVerifier?.();
+    } catch {
+      return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-generation-reference" };
+    }
     attempts += 1;
     let response;
     let timedOut = false;
@@ -220,7 +258,7 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
       if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
-    const parsed = await readBoundedJson(response);
+    const parsed = await readBoundedJson(response, controller.signal);
     clearTimeout(timeout);
     if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
     if (!parsed.ok) {
@@ -266,10 +304,12 @@ export async function generateOpenAIImages({
   now = () => new Date().toISOString(),
   stagingRoot,
   requestTimeoutMs = defaultRequestTimeoutMs,
+  beforeProvider,
 } = {}) {
   if (!Array.isArray(jobs) || jobs.length > maximumJobs || typeof apiKey !== "string" || apiKey.length === 0
     || !safeModel.test(model) || !qualities.has(quality) || typeof fetchFn !== "function" || typeof sleepFn !== "function"
-    || !Number.isInteger(requestTimeoutMs) || requestTimeoutMs < minimumRequestTimeoutMs || requestTimeoutMs > maximumRequestTimeoutMs) throw requestError();
+    || !Number.isInteger(requestTimeoutMs) || requestTimeoutMs < minimumRequestTimeoutMs || requestTimeoutMs > maximumRequestTimeoutMs
+    || (beforeProvider !== undefined && typeof beforeProvider !== "function")) throw requestError();
   const results = [];
   const failures = [];
   for (const job of jobs) {
@@ -294,7 +334,14 @@ export async function generateOpenAIImages({
       failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
       continue;
     }
-    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, requestTimeoutMs });
+    try {
+      await beforeProvider?.({ asset_id: job.asset_id });
+      await references.verify?.();
+    } catch {
+      failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
+      continue;
+    }
+    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs });
     if (!requested.ok) {
       failures.push(failure(job.asset_id, requested.generationState, requested.reason, requested.attempts));
       continue;

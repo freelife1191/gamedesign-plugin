@@ -197,8 +197,8 @@ function applyCompiledPromptDisposition(manifest, existingManifest) {
   return next;
 }
 
-async function generateViaOpenAI({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, requestTimeoutMs, generateOpenAIImagesFn }) {
-  return generateOpenAIImagesFn({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, requestTimeoutMs });
+async function generateViaOpenAI({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, requestTimeoutMs, beforeProvider, generateOpenAIImagesFn }) {
+  return generateOpenAIImagesFn({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, requestTimeoutMs, beforeProvider });
 }
 
 function applyProviderResults(manifest, providerResult, provider, config, generationReceipts = new Map()) {
@@ -392,22 +392,30 @@ function validateHostResult(value, jobs) {
 }
 
 async function hostJobsForCallback(root, jobs) {
-  return Promise.all(jobs.map(async ({ asset_id, prompt, output, asset_set_id, derivative_of, reference_images, consistency_profile, prompt_lineage }) => ({
-    asset_id,
-    prompt,
-    output: {
-      width: output.width, height: output.height, aspect_ratio: output.aspect_ratio, format: output.format, background: output.background,
-    },
-    asset_set_id,
-    derivative_of,
-    reference_images: clone(reference_images ?? []),
-    consistency_profile: clone(consistency_profile ?? { style_anchor_asset_ids: [], character_anchor_asset_ids: [] }),
-    prompt_lineage: clone(prompt_lineage ?? { parent_prompt_digests: [] }),
-    reference_inputs: (await loadSecureReferenceInputs({ artifactRoot: root, references: reference_images ?? [] }))
-      .map(({ asset_id: referenceAssetId, path: referencePath, sha256: referenceDigest, bytes }) => ({
-        asset_id: referenceAssetId, path: referencePath, sha256: referenceDigest, bytes,
-      })),
-  })));
+  const loaded = await Promise.all(jobs.map(async ({ asset_id, prompt, output, asset_set_id, derivative_of, reference_images, consistency_profile, prompt_lineage }) => {
+    const references = await loadSecureReferenceInputs({ artifactRoot: root, references: reference_images ?? [] });
+    return {
+      asset_id,
+      prompt,
+      output: {
+        width: output.width, height: output.height, aspect_ratio: output.aspect_ratio, format: output.format, background: output.background,
+      },
+      asset_set_id,
+      derivative_of,
+      reference_images: clone(reference_images ?? []),
+      consistency_profile: clone(consistency_profile ?? { style_anchor_asset_ids: [], character_anchor_asset_ids: [] }),
+      prompt_lineage: clone(prompt_lineage ?? { parent_prompt_digests: [] }),
+      reference_inputs: references.inputs
+        .map(({ asset_id: referenceAssetId, path: referencePath, sha256: referenceDigest, bytes }) => ({
+          asset_id: referenceAssetId, path: referencePath, sha256: referenceDigest, bytes,
+        })),
+      verifyReferences: references.verify,
+    };
+  }));
+  return {
+    jobs: loaded.map(({ verifyReferences, ...job }) => job),
+    verify: async () => { for (const { verifyReferences } of loaded) await verifyReferences(); },
+  };
 }
 
 async function bindDeclaredReferenceInputs(root, manifest, job) {
@@ -499,6 +507,7 @@ export async function generateImageAssetWorkflow({
   sleepFn,
   now,
   hostGenerate,
+  beforeProvider,
   generateOpenAIImagesFn = generateOpenAIImages,
   attemptIdFactory = randomUUID,
 } = {}) {
@@ -546,13 +555,16 @@ export async function generateImageAssetWorkflow({
       if (decision.provider === "openai") {
         one = await generateViaOpenAI({
           jobs: [boundJob], apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
-          requestTimeoutMs: config.requestTimeoutMs ?? 30_000, generateOpenAIImagesFn,
+          requestTimeoutMs: config.requestTimeoutMs ?? 30_000, beforeProvider, generateOpenAIImagesFn,
         });
       } else if (typeof hostGenerate !== "function") {
         one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" }] };
       } else {
         try {
-          one = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: await hostJobsForCallback(root, [boundJob]) }), [boundJob]), [boundJob], preparedHostOutputs);
+          const callback = await hostJobsForCallback(root, [boundJob]);
+          await beforeProvider?.({ asset_id: boundJob.asset_id });
+          await callback.verify();
+          one = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: callback.jobs }), [boundJob]), [boundJob], preparedHostOutputs);
         } catch (error) {
           if (error?.message?.startsWith("Host generation")) throw error;
           one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } }] };
@@ -570,7 +582,7 @@ export async function generateImageAssetWorkflow({
   } else if (jobs.length > 0 && decision.provider === "openai") {
     providerResult = await generateViaOpenAI({
       jobs, apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
-      requestTimeoutMs: config.requestTimeoutMs ?? 30_000, generateOpenAIImagesFn,
+      requestTimeoutMs: config.requestTimeoutMs ?? 30_000, beforeProvider, generateOpenAIImagesFn,
     });
     executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "codex") {
@@ -578,7 +590,10 @@ export async function generateImageAssetWorkflow({
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
       try {
-        providerResult = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: await hostJobsForCallback(root, jobs) }), jobs), jobs, preparedHostOutputs);
+        const callback = await hostJobsForCallback(root, jobs);
+        await beforeProvider?.();
+        await callback.verify();
+        providerResult = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: callback.jobs }), jobs), jobs, preparedHostOutputs);
       } catch (error) {
         if (error?.message?.startsWith("Host generation")) throw error;
         providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };

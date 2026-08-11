@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -329,6 +329,27 @@ test("Studio rejects a stale host derivative before invoking the host provider",
     hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
   }), /current image manifest/i);
   assert.equal(hostCalls, 0);
+});
+
+test("Studio rechecks pinned parent identities after a deterministic rename-away-and-restore before host delivery", async (t) => {
+  const { root, manifest, master, character } = await masterDerivativeFixture(t);
+  master.generation_state = "generated";
+  let hostCalls = 0;
+  const result = await generateImageAssetWorkflow({
+    artifactRoot: root, manifest,
+    config: { mode: "select", model: "gpt-image-2", quality: "low", apiKeyPresent: false }, codexCapability: { status: "available" },
+    selectedAssetIds: [character.asset_id],
+    selectionReceipt: { kind: "host-user-image-selection", channel: "host-user-input", event_id: "evt-pinned-host-reference", asset_ids: [character.asset_id] },
+    beforeProvider: async () => {
+      const assets = path.join(root, "assets");
+      const moved = path.join(root, "assets-moved");
+      await rename(assets, moved);
+      await rename(moved, assets);
+    },
+    hostGenerate: async () => { hostCalls += 1; return { results: [], failures: [] }; },
+  });
+  assert.equal(hostCalls, 0);
+  assert.deepEqual(result.providerResult.failures.map(({ asset_id, reason }) => ({ asset_id, reason })), [{ asset_id: character.asset_id, reason: "host-callback-failed" }]);
 });
 
 test("Studio rejects an image that names itself as its master or reference", async (t) => {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -194,6 +194,34 @@ test("generateOpenAIImages sends master-referenced gpt-image-2 jobs as ordered m
   assert.deepEqual(Buffer.from(await calls[0].options.body.getAll("image[]")[0].arrayBuffer()), png());
 });
 
+test("generateOpenAIImages pins root-to-leaf identities and rejects deterministic root or parent swaps before provider delivery", async (t) => {
+  for (const swap of ["root", "parent-symlink"]) {
+    const root = await staging(t);
+    await mkdir(path.join(root, "assets", "generated"), { recursive: true });
+    await writeFile(path.join(root, "assets", "generated", "hero-master.png"), png());
+    let calls = 0;
+    let hooks = 0;
+    const result = await generateOpenAIImages({
+      jobs: [derivativeJob()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root,
+      beforeProvider: async () => {
+        hooks += 1;
+        if (swap === "root") {
+          await rename(root, `${root}-moved`);
+          await mkdir(root, { recursive: true });
+          t.after(() => rm(`${root}-moved`, { recursive: true, force: true }));
+        } else {
+          await rename(path.join(root, "assets"), path.join(root, "assets-moved"));
+          await symlink(path.join(root, "assets-moved"), path.join(root, "assets"));
+        }
+      },
+      fetchFn: async () => { calls += 1; return successResponse(); }, sleepFn: async () => {},
+    });
+    assert.equal(hooks, 1, swap);
+    assert.equal(calls, 0, swap);
+    assert.deepEqual(result.failures, [{ asset_id: "hero-derivative", generation_state: "qa-failed", reason: "invalid-generation-reference", attempts: 0 }], swap);
+  }
+});
+
 test("generateOpenAIImages rejects excess reference inputs before any provider request", async (t) => {
   const root = await staging(t);
   await mkdir(path.join(root, "assets", "generated"), { recursive: true });
@@ -291,6 +319,27 @@ test("generateOpenAIImages keeps its timeout active until a streamed response bo
   assert.equal(calls, 1);
   assert.equal(cancels, 1);
   assert.deepEqual(result.failures, [{ asset_id: "body-timeout", generation_state: "generation-failed", reason: "provider-timeout", attempts: 1 }]);
+});
+
+test("generateOpenAIImages times out body readers and async iterators that ignore AbortSignal without publishing partial output", async (t) => {
+  for (const [kind, body] of [
+    ["reader", { getReader() { return { read() { return new Promise(() => {}); }, cancel() {}, releaseLock() {} }; } }],
+    ["iterator", { [Symbol.asyncIterator]() { return { next() { return new Promise(() => {}); }, return() {} }; }, cancel() {} }],
+  ]) {
+    const root = await staging(t);
+    let calls = 0;
+    const result = await Promise.race([
+      generateOpenAIImages({
+        jobs: [job({ asset_id: `ignored-${kind}`, output: { path: `assets/generated/ignored-${kind}.png`, width: 1024, height: 1024, format: "png" } })],
+        apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, requestTimeoutMs: 5,
+        fetchFn: async () => { calls += 1; return { status: 200, headers: { get: () => null }, body }; }, sleepFn: async () => {},
+      }),
+      new Promise((_resolve, reject) => setTimeout(() => reject(new Error(`${kind} body ignored deadline`)), 50)),
+    ]);
+    assert.equal(calls, 1, kind);
+    assert.deepEqual(result.failures, [{ asset_id: `ignored-${kind}`, generation_state: "generation-failed", reason: "provider-timeout", attempts: 1 }], kind);
+    await assert.rejects(lstat(path.join(root, "assets", "generated", `ignored-${kind}.png`)), kind);
+  }
 });
 
 test("generateOpenAIImages rejects empty or unsafe model and quality without a network call or secret echo", async (t) => {
