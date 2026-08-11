@@ -1,5 +1,6 @@
 .omx/
 .superpowers/
+.worktrees/
 .build/
 .tmp/
 node_modules/
@@ -7,6 +8,7 @@ coverage/
 test-results/
 __pycache__/
 *.py[cod]
+.DS_Store
 .env
 .env.*
 !.env.example
