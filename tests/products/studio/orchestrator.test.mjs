@@ -30,14 +30,14 @@ const domainRouteFixtures = [
   },
   {
     role: "level-puzzle-reviewer",
-    triggerIntents: ["puzzle", "level", "soft lock", "reset/retry"],
+    triggerIntents: ["puzzle", "level design", "secret route", "soft lock", "reset", "retry"],
   },
 ];
 
-const reviewRoutingFixture = {
-  id: "review",
+const contentRoutingFixture = {
+  id: "content",
   maxReviewers: 3,
-  defaultReviewers: ["lead-game-designer", "production-feasibility-critic", "ux-accessibility-reviewer"],
+  defaultReviewers: ["content-narrative-designer", "lead-game-designer"],
   conditionalReviewers: domainRouteFixtures.map(({ role, triggerIntents }) => ({ role, triggerIntents, reviewers: [role] })),
 };
 
@@ -87,14 +87,21 @@ function assertReviewerBounds(route) {
   }
 }
 
+function selectedReviewers(route, role) {
+  const selection = route.conditionalReviewers?.find((candidate) => candidate.role === role);
+  assert.ok(selection, `${role}: conditional selection`);
+  return [...new Set([...route.defaultReviewers, ...selection.reviewers])];
+}
+
 function assertDomainIntentRouting(route) {
-  assert.equal(route.id, "review");
+  assert.equal(route.id, "content");
   assertReviewerBounds(route);
+  assert.ok(Array.isArray(route.conditionalReviewers), "content: conditional reviewer list");
   for (const { role, triggerIntents } of domainRouteFixtures) {
-    const selection = route.conditionalReviewers?.find((candidate) => candidate.role === role);
-    assert.ok(selection, `${role}: conditional selection`);
+    const selection = route.conditionalReviewers.find((candidate) => candidate.role === role);
     assert.deepEqual(selection.triggerIntents, triggerIntents, `${role}: trigger intents`);
     assert.deepEqual(selection.reviewers, [role], `${role}: exact reviewer selection`);
+    assert.ok(selectedReviewers(route, role).length <= 3, `${role}: selected reviewer bound`);
   }
 }
 
@@ -161,27 +168,27 @@ test("Career routing does not adopt Studio-only combat and level reviewers", asy
   }
 });
 
-test("domain intent routing fixture rejects missing intents and fourth reviewers", () => {
-  assert.doesNotThrow(() => assertDomainIntentRouting(reviewRoutingFixture));
+test("content routing fixture rejects missing intents and a fourth selected reviewer", () => {
+  assert.doesNotThrow(() => assertDomainIntentRouting(contentRoutingFixture));
   for (const { role, triggerIntents } of domainRouteFixtures) {
     for (const triggerIntent of triggerIntents) {
-      const mutation = structuredClone(reviewRoutingFixture);
+      const mutation = structuredClone(contentRoutingFixture);
       const selection = mutation.conditionalReviewers.find((candidate) => candidate.role === role);
       selection.triggerIntents = selection.triggerIntents.filter((intent) => intent !== triggerIntent);
       assert.throws(() => assertDomainIntentRouting(mutation), undefined, `${role}: ${triggerIntent} mutation survived`);
     }
   }
-  const mutation = structuredClone(reviewRoutingFixture);
-  mutation.conditionalReviewers[0].reviewers.push("system-economy-designer", "content-narrative-designer", "liveops-data-designer");
-  assert.throws(() => assertDomainIntentRouting(mutation), undefined, "fourth reviewer mutation survived");
+  const mutation = structuredClone(contentRoutingFixture);
+  mutation.defaultReviewers.push("production-feasibility-critic");
+  assert.throws(() => assertDomainIntentRouting(mutation), undefined, "default three plus conditional one survived");
 });
 
-test("Studio review route selects domain reviewers for combat and puzzle intents", async () => {
+test("Studio content route selects domain reviewers for combat and puzzle intents", async () => {
   const routing = await readRouting();
-  const reviewRoute = routing.routes.find(({ id }) => id === "review");
+  const contentRoute = routing.routes.find(({ id }) => id === "content");
 
-  assert.ok(reviewRoute, "review route");
-  assertDomainIntentRouting(reviewRoute);
+  assert.ok(contentRoute, "content route");
+  assertDomainIntentRouting(contentRoute);
 });
 
 test("authoritative routing registry caps every route and conditional selection at three reviewers", async () => {

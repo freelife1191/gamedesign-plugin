@@ -68,8 +68,13 @@ const copiedBugConstraints = [
   { literal: "three shops", pattern: /\bthree shops\b/iu },
   { literal: "3 shops", pattern: /\b3 shops\b/iu },
   { literal: "Higgsfield", pattern: /\bHiggsfield\b/iu },
-  { literal: "Steam", pattern: /\bSteam\b/u },
   { literal: "automatic approval", pattern: /\b(?:automatic(?:ally)?\s+(?:approve|approved|approval)|(?:approve|approved|approval)\s+automatically)\b/iu },
+  { literal: "automatically approved", pattern: /\bautomatically approved\b/iu },
+];
+
+const unsupportedSteamCommitments = [
+  { literal: "Launch exclusively on Steam with workshop support.", pattern: /\blaunch exclusively on Steam with workshop support\b/iu },
+  { literal: "Steam-only release includes controller support.", pattern: /\bSteam-only release includes controller support\b/iu },
 ];
 
 const domainFindingFixtures = domainReviewFixtures.map(({ role }) => ({
@@ -152,6 +157,9 @@ function assertDomainRolePromptContract({ role, requiredReviewQuestions }, markd
   assert.match(findingSchema, /`applicableGate`[^\n]*`none` only/iu);
   for (const { pattern } of copiedBugConstraints) {
     assert.doesNotMatch(markdown, pattern, `${role}: copied BUG constraint`);
+  }
+  for (const { pattern } of unsupportedSteamCommitments) {
+    assert.doesNotMatch(markdown, pattern, `${role}: unsupported Steam commitment`);
   }
 }
 
@@ -280,6 +288,17 @@ test("domain prompt contracts validate independent fixtures and reject every que
         `${fixture.role}: ${literal} mutation survived`,
       );
     }
+    assert.doesNotThrow(
+      () => assertDomainRolePromptContract(fixture, `${markdown}\nSteam player reports supplied as evidence require a source citation.`),
+      `${fixture.role}: evidence-backed Steam mention was rejected`,
+    );
+    for (const { literal } of unsupportedSteamCommitments) {
+      assert.throws(
+        () => assertDomainRolePromptContract(fixture, `${markdown}\n${literal}`),
+        undefined,
+        `${fixture.role}: unsupported Steam commitment survived`,
+      );
+    }
   }
 });
 
@@ -302,7 +321,7 @@ test("domain finding contracts allow only findings-only severities and no gate",
   }
 });
 
-test("merger accepts domain high medium low findings but fails closed on blocker findings", async () => {
+test("merger accepts domain high medium and low findings", async () => {
   const { mergeRoleFindings } = await loadMerger();
   for (const fixture of domainFindingFixtures) {
     for (const severity of ["high", "medium", "low"]) {
@@ -310,9 +329,15 @@ test("merger accepts domain high medium low findings but fails closed on blocker
       assertDomainFindingContract(valid);
       assert.doesNotThrow(() => mergeRoleFindings({ schemaVersion: 1, findings: [valid] }), `${fixture.role}: ${severity}`);
     }
+  }
+});
+
+test("merger rejects a domain reviewer's blocker finding with blocker authority", async () => {
+  const { mergeRoleFindings } = await loadMerger();
+  for (const fixture of domainFindingFixtures) {
     assert.throws(
       () => mergeRoleFindings({ schemaVersion: 1, findings: [{ ...fixture, findingId: `${fixture.findingId}-blocker`, severity: "blocker" }] }),
-      undefined,
+      /blocker authority/iu,
       `${fixture.role}: blocker was accepted`,
     );
   }
