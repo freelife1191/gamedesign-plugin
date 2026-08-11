@@ -35,5 +35,10 @@ route: career
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 feedback과 팀 기여는 미정으로 남깁니다.
 
-## 사람 검토
-사람 멘토, career reviewer와 작성자가 공개 범위와 다음 task를 검토합니다. 상태: pending. 결과 보장 없음: 기록은 채용·승진·이직을 보장하지 않습니다.
+## 사람 결정
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback입니다. **검토 체크포인트:** `interview-question-answer-log` → `junior-growth-review` → `transition-readiness` 순서로 읽고 honest gap, feedback, 다음 proof task를 확인합니다. **사람 결정:** 작성자와 멘토·manager·career reviewer, public-rights reviewer가 공개 범위와 다음 task를 결정합니다. 이 기록은 자동 승인을 하지 않으며 채용, 승진, 이직, 팀 기여 또는 시장 가치를 보장하지 않습니다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 기록은 채용·승진·이직을 보장하지 않습니다.

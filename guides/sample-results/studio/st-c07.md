@@ -34,5 +34,10 @@ route: studio
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 telemetry와 수치는 미정으로 남깁니다.
 
-## 사람 검토
-사람 economy, LiveOps, policy와 accessibility owner가 실행·중단·rollback을 검토합니다. 상태: blocked. 결과 보장 없음: simulation은 경제 효과를 확정하지 않습니다.
+## 사람 결정
+**읽는 순서:** resource flow → progression/recovery → price·probability evidence → experiment → guardrail·rollback → decisions입니다. 중간 결과에서 source 없는 수치, 다중 변수, 복구 불가 변경을 blocker로 봅니다. **사람 결정:** economy, LiveOps, policy와 accessibility owner가 실험 실행·중단·rollback을 승인합니다. simulation, telemetry 수집과 reviewer 권고는 자동 승인하지 않습니다.
+
+- 결정 상태: blocked
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: simulation은 경제 효과를 확정하지 않습니다.

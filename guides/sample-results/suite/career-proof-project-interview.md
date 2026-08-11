@@ -30,5 +30,10 @@ route: suite
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 수행 시간과 면접 결과는 미정으로 남깁니다.
 
-## 사람 검토
-사람 decision owner가 proof의 공개 범위와 다음 질문을 검토합니다. 상태: pending. 결과 보장 없음: 답변은 면접 결과를 보장하지 않습니다.
+## 사람 결정
+named human decision owner가 career-proof-project-interview handoff의 공개 범위를 승인 또는 보류한다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 답변은 면접 결과를 보장하지 않습니다.

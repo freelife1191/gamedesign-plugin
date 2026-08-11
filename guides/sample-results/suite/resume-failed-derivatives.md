@@ -32,11 +32,18 @@ route: suite
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 provider 상태와 권리 정보는 미정으로 남깁니다.
 
-## 사람 검토
-사람 decision owner와 rights owner가 재개 전 blocker와 공개 범위를 검토합니다. 상태: blocked. 결과 보장 없음: resume receipt는 파생 이미지 승인을 보장하지 않습니다.
+## 사람 결정
+named human decision owner가 resume-failed-derivatives handoff의 공개 범위를 승인 또는 보류한다.
 
-## 이미지 계보와 승인
-masterAssetId: `MASTER-LIGHTHOUSE-01`
-derivativeAssetIds: `DERIVATIVE-LIGHTHOUSE-BANNER-FAILED`
-approvalState: blocked
-concept-draft이며 document-approved 상태가 아닙니다.
+- 결정 상태: blocked
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: resume receipt는 파생 이미지 승인을 보장하지 않습니다.
+
+## 이미지 계보와 검토 상태
+- `asset_id`: `lighthouse-banner`
+- `derivative_of`: `lighthouse-master`
+- `approval_state`: `concept-draft`
+- `review_decision`: `blocked`
+
+이 이미지는 concept-draft이며 document-approved 또는 production-candidate가 아닙니다.

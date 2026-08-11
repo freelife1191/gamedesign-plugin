@@ -34,5 +34,10 @@ route: career
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 시장 반응과 팀 성과는 미정으로 남깁니다.
 
-## 사람 검토
-사람 작성자, 멘토와 portfolio reviewer가 수정·발표 범위를 검토합니다. 상태: pending. 결과 보장 없음: review는 합격이나 반응을 보장하지 않습니다.
+## 사람 결정
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → backlog입니다. **검토 체크포인트:** `five-axis-review` → `portfolio-backlog` → `introduction-motivation` 순서로 읽고 finding, repair, 발표 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer와 멘토가 수정·발표·공개 범위를 결정합니다. review는 자동 승인을 하지 않으며 합격, 시장 반응 또는 팀 성과를 보장하지 않습니다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: review는 합격이나 반응을 보장하지 않습니다.

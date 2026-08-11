@@ -31,5 +31,10 @@ route: career
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 내부 규칙과 권리 정보는 미정으로 남깁니다.
 
-## 사람 검토
-사람 작성자와 public-rights reviewer가 인용과 공개 범위를 검토합니다. 상태: blocked. 결과 보장 없음: 분석은 품질이나 공개를 보장하지 않습니다.
+## 사람 결정
+**읽는 순서:** observation evidence ID → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `reverse-design-document` → `game-analysis-report` 순서로 읽고 관찰 evidence와 분석 claim을 확인합니다. **사람 결정:** 작성자와 public-rights reviewer가 공개 범위, 인용·capture 권리와 개인 기여 서술을 승인·수정·보류합니다. 분석은 자동 승인을 하지 않으며 품질, 채용 또는 공개를 보장하지 않습니다.
+
+- 결정 상태: blocked
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 분석은 품질이나 공개를 보장하지 않습니다.

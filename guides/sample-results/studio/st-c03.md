@@ -33,5 +33,10 @@ route: studio
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 수치와 우선순위는 미정으로 남깁니다.
 
-## 사람 검토
-사람 design owner와 engineering owner가 precedence, migration과 rollback을 검토합니다. 상태: blocked. 결과 보장 없음: 표와 lint 결과는 배포 승인을 뜻하지 않습니다.
+## 사람 결정
+**읽는 순서:** system boundary → rule table → exception matrix → data mapping → evidence·decisions입니다. 중간 결과에서 rule ID마다 state, feedback, failure와 test case가 있는지 봅니다. **사람 결정:** design owner와 engineering owner가 authority, precedence, migration과 rollback을 승인합니다. reviewer finding과 lint는 자동 승인하지 않습니다.
+
+- 결정 상태: blocked
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 표와 lint 결과는 배포 승인을 뜻하지 않습니다.

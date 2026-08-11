@@ -36,5 +36,10 @@ route: studio
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 제작 비용과 권리 정보는 미정으로 남깁니다.
 
-## 사람 검토
-사람 content, system, production과 rights owner가 분기와 provenance를 검토합니다. 상태: pending. 결과 보장 없음: 생성된 서사와 이미지는 공개 승인을 얻지 않습니다.
+## 사람 결정
+**읽는 순서:** purpose → entry/state → choice·consequence → dependency → production·rights evidence → decisions입니다. 중간 결과에서 연결되지 않은 system/data ID와 근거 없는 제작 비용을 blocker로 봅니다. **사람 결정:** content owner, system owner, production owner와 권리 담당자가 분기, 범위, provenance·consent를 승인합니다. 생성된 서사나 이미지가 자동 승인되지는 않습니다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 생성된 서사와 이미지는 공개 승인을 얻지 않습니다.

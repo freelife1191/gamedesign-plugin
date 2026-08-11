@@ -33,5 +33,10 @@ route: studio
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 반응과 이탈 원인은 미정으로 남깁니다.
 
-## 사람 검토
-사람 design owner와 accessibility owner가 의미 있는 선택과 stop condition을 검토합니다. 상태: pending. 결과 보장 없음: 루프 초안은 재미나 retention을 확정하지 않습니다.
+## 사람 결정
+**읽는 순서:** `content.md`의 loop와 rule ID, `evidence.yml`의 관찰, `decisions/`의 대안 순서입니다. 중간 결과에서 모든 단계가 입력과 feedback을 갖고 실패 뒤 복구 가능한지 확인합니다. **사람 결정:** design owner와 player-protection owner가 의미 있는 선택, stop condition과 다음 prototype을 승인하거나 보류합니다. 자동화는 재미나 retention을 승인하지 않습니다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 루프 초안은 재미나 retention을 확정하지 않습니다.

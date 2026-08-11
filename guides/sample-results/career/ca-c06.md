@@ -31,5 +31,10 @@ route: career
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 개인 기여와 asset 권리는 미정으로 남깁니다.
 
-## 사람 검토
-사람 portfolio reviewer와 rights reviewer가 공개 claim과 asset을 검토합니다. 상태: pending. 결과 보장 없음: 포트폴리오는 채용을 보장하지 않습니다.
+## 사람 결정
+**읽는 순서:** evidence ID → observation → inference → proposal → 개인 기여 → public-rights review입니다. **검토 체크포인트:** `portfolio-project-brief` → `creative-design-portfolio` 순서로 읽고 개인 기여와 공개 claim을 확인합니다. **사람 결정:** 작성자, portfolio reviewer, public-rights reviewer가 공개 가능한 claim과 asset을 결정합니다. 생성 결과는 자동 승인을 하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: 포트폴리오는 채용을 보장하지 않습니다.

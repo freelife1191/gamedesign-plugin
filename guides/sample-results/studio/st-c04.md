@@ -33,5 +33,10 @@ route: studio
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 접근성 요구와 플랫폼 제약은 미정으로 남깁니다.
 
-## 사람 검토
-사람 accessibility owner와 design owner가 지원 플랫폼과 blocker를 검토합니다. 상태: pending. 결과 보장 없음: mockup과 renderer는 접근성 승인을 대신하지 않습니다.
+## 사람 결정
+**읽는 순서:** user goal → critical action table → state coverage → platform matrix → evidence·decision입니다. 중간 결과에서 loading·empty·error·interruption과 대체 입력 누락을 먼저 봅니다. **사람 결정:** accessibility owner와 design owner가 지원 플랫폼, 검증 방법과 blocker를 승인·수정·보류합니다. mockup, renderer와 reviewer는 자동 승인하지 않습니다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: mockup과 renderer는 접근성 승인을 대신하지 않습니다.

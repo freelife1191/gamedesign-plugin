@@ -29,5 +29,10 @@ route: suite
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 개인 기여와 권리 정보는 미정으로 남깁니다.
 
-## 사람 검토
-사람 decision owner가 handoff의 공개 범위를 검토합니다. 상태: pending. 결과 보장 없음: handoff는 포트폴리오 품질이나 채용을 보장하지 않습니다.
+## 사람 결정
+named human decision owner가 studio-to-career-handoff handoff의 공개 범위를 승인 또는 보류한다.
+
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: handoff는 포트폴리오 품질이나 채용을 보장하지 않습니다.

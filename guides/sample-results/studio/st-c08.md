@@ -36,11 +36,18 @@ route: studio
 ## 보호한 가정
 가상의 사례이며 허구 데이터만 사용합니다. 확인되지 않은 capacity와 asset 권리는 미정으로 남깁니다.
 
-## 사람 검토
-사람 production, review, rights와 export owner가 scope와 이미지 transition을 검토합니다. 상태: pending. 결과 보장 없음: render와 lint는 format QA 승인을 대신하지 않습니다.
+## 사람 결정
+**읽는 순서:** `content.md → evidence.yml → decisions/ → assets/ → export-manifest.yml`. 중간 결과에서 blocker, capacity gap, image lifecycle, renderer capability와 형식별 QA를 따로 봅니다. **사람 결정:** production owner가 scope·kill, review decision owner가 finding disposition, rights/asset owner가 이미지 transition, export owner가 실제 format QA를 승인합니다. 생성, render, lint, reviewer finding과 state 문자열은 자동 승인하지 않습니다.
 
-## 이미지 계보와 승인
-masterAssetId: `MASTER-WIND-ISLAND-01`
-derivativeAssetIds: `DERIVATIVE-WIND-ISLAND-01`
-approvalState: pending
-concept-draft이며 document-approved 상태가 아닙니다.
+- 결정 상태: pending
+- 가능한 행동: 승인·수정·보류
+
+결과 보장 없음: render와 lint는 format QA 승인을 대신하지 않습니다.
+
+## 이미지 계보와 검토 상태
+- `asset_id`: `wind-island-flow-diagram`
+- `derivative_of`: `wind-island-master`
+- `approval_state`: `concept-draft`
+- `review_decision`: `pending`
+
+이 이미지는 concept-draft이며 document-approved 또는 production-candidate가 아닙니다.

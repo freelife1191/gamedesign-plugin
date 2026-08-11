@@ -61,6 +61,10 @@ function assertValues(value, expected, label) {
   assert.deepEqual(codeValues(value), expected, label);
 }
 
+function normalizedExcerpt(value) {
+  return value.normalize("NFC").replace(/\s+/gu, " ").trim();
+}
+
 function visibleText(markdown) {
   return markdown.replace(/^---\n[\s\S]*?\n---\n/u, "").replace(/```[\s\S]*?```/gu, "");
 }
@@ -93,17 +97,18 @@ function validateSampleDocument({ entry, markdown, relativePath }) {
   assertValues(section(body, "참여 역할", relativePath), entry.specialist_roles, `${relativePath}: agent roles`);
   const excerpt = section(body, "이 요청으로 받는 결과", relativePath);
   if (!/[가-힣]/u.test(excerpt) || excerpt.length < 40) throw contractError("SAMPLE_EXCERPT", relativePath);
+  if (/확인 정보:[^.\n]*(?:\d|[０-９])/u.test(excerpt) && !/(?:입력 ID|evidence ID):\s*`[^`]+`/u.test(excerpt)) throw contractError("SAMPLE_UNSOURCED_QUANTIFIED_FACT", relativePath);
   assertValues(section(body, "산출물", relativePath), entry.minimum_outputs, `${relativePath}: artifact list`);
   assertValues(section(body, "읽는 순서", relativePath), entry.read_order, `${relativePath}: read order`);
   const assumptions = section(body, "보호한 가정", relativePath);
   if (!/허구 데이터|가상의 사례/u.test(assumptions) || !assumptions.includes("확인되지 않은")) throw contractError("SAMPLE_PROTECTED_ASSUMPTION", relativePath);
-  const review = section(body, "사람 검토", relativePath);
-  if (!/사람|멘토|owner/u.test(review) || !/상태:\s*(?:pending|blocked)/u.test(review) || !review.includes("결과 보장 없음") || /자동 승인(?:됨|한다|완료)|상태:\s*approved/u.test(review)) throw contractError("SAMPLE_AUTO_APPROVAL", relativePath);
-  if (body.includes("## 이미지 계보와 승인\n")) {
-    const image = section(body, "이미지 계보와 승인", relativePath);
-    if (!/masterAssetId:\s*`[^`]+`/u.test(image) || !/approvalState:\s*(?:pending|blocked)/u.test(image) || /approvalState:\s*approved|자동 승인/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
+  const review = section(body, "사람 결정", relativePath);
+  if (!review.includes(entry.human_review_boundary) || !/- 결정 상태:\s*(?:pending|blocked)/u.test(review) || !/- 가능한 행동: 승인·수정·보류/u.test(review) || !review.includes("결과 보장 없음") || /자동 승인(?:됨|한다|완료)|결정 상태:\s*approved/u.test(review)) throw contractError("SAMPLE_HUMAN_DECISION_BOUNDARY", relativePath);
+  if (body.includes("## 이미지 계보와 검토 상태\n")) {
+    const image = section(body, "이미지 계보와 검토 상태", relativePath);
+    if (!/`asset_id`:\s*`[a-z][a-z0-9-]*`/u.test(image) || !/`derivative_of`:\s*`[a-z][a-z0-9-]*`/u.test(image) || !/`approval_state`:\s*`(?:concept-draft|document-approved|production-candidate)`/u.test(image) || !/`review_decision`:\s*`(?:pending|blocked)`/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
   }
-  return fields.source_prompt_id;
+  return { id: fields.source_prompt_id, excerpt: normalizedExcerpt(excerpt) };
 }
 
 async function validateSampleResults({ catalog, markdown, root }) {
@@ -124,6 +129,7 @@ async function validateSampleResults({ catalog, markdown, root }) {
   }
   if (linked.size !== expectedPromptIds.length) throw contractError("SAMPLE_DUPLICATE_LINK", "README");
   const seen = new Map();
+  const excerpts = new Map();
   for (const relativePath of files) {
     const markdownFile = await readFile(path.join(root, relativePath), "utf8");
     const { fields } = parseFrontmatter(markdownFile, relativePath);
@@ -131,7 +137,9 @@ async function validateSampleResults({ catalog, markdown, root }) {
     if (!entry) throw contractError("SAMPLE_PROMPT_ID_MISMATCH", relativePath);
     if (seen.has(entry.id)) throw contractError("SAMPLE_DUPLICATE_PROMPT_ID", relativePath);
     seen.set(entry.id, relativePath);
-    validateSampleDocument({ entry, markdown: markdownFile, relativePath });
+    const result = validateSampleDocument({ entry, markdown: markdownFile, relativePath });
+    if (excerpts.has(result.excerpt)) throw contractError("SAMPLE_DUPLICATE_EXCERPT", relativePath);
+    excerpts.set(result.excerpt, relativePath);
   }
   for (const id of expectedPromptIds) if (!seen.has(id)) throw contractError("SAMPLE_MISSING_ID", id);
   return { count: files.length, ids: expectedPromptIds };
@@ -148,7 +156,7 @@ function sampleMarkdown(entry) {
     "## 간단 요청 예시", entry.app_prompt.example, "", "## 선택된 작업 순서", list(entry.skill_chain), "", "## 참여 역할", list(entry.specialist_roles), "",
     "## 이 요청으로 받는 결과", `이 예시는 ${entry.purpose}라는 가상의 상황에서, 확인한 입력과 미정 항목을 분리해 다음 사람이 검토할 수 있는 문장으로 정리한 일부입니다.`, "",
     "## 산출물", list(entry.minimum_outputs), "", "## 읽는 순서", list(entry.read_order), "", "## 보호한 가정", "가상의 사례이며 허구 데이터만 사용합니다.", "확인되지 않은 내용은 사실처럼 채우지 않고 미정으로 남깁니다.", "",
-    "## 사람 검토", entry.human_review_boundary, "상태: pending", "결과 보장 없음: 사람의 승인·보류 결정 전에는 결과를 확정하지 않습니다.", "",
+    "## 사람 결정", entry.human_review_boundary, "- 결정 상태: pending", "- 가능한 행동: 승인·수정·보류", "결과 보장 없음: 사람의 승인·보류 결정 전에는 결과를 확정하지 않습니다.", "",
   ].join("\n");
 }
 
@@ -202,19 +210,39 @@ test("sample results reject duplicate source prompt IDs", async (t) => {
 test("sample results reject a prompt document in the wrong route", async (t) => {
   await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("route: studio", "route: career")); }, { code: "SAMPLE_ROUTE_MISMATCH", target: "studio/01.md" });
 });
+test("sample results reject an altered catalog human decision boundary", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace(catalog.byId.get("studio:case:ST-C01").human_review_boundary, "다른 담당자가 자동으로 승인합니다.")); }, { code: "SAMPLE_HUMAN_DECISION_BOUNDARY", target: "studio/01.md" });
+});
 test("sample results reject automatic human approval", async (t) => {
-  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("상태: pending", "상태: approved\n자동 승인됨")); }, { code: "SAMPLE_AUTO_APPROVAL", target: "studio/01.md" });
+  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("결정 상태: pending", "결정 상태: approved\n자동 승인됨")); }, { code: "SAMPLE_HUMAN_DECISION_BOUNDARY", target: "studio/01.md" });
 });
 test("sample results reject invented evidence in a concrete excerpt", async (t) => {
   await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, `${await readFile(target, "utf8")}\n확인된 증거: 120명이 완료했다.\n`); }, { code: "SAMPLE_INVENTED_EVIDENCE", target: "studio/01.md" });
 });
+test("sample results reject an unsourced quantified confirmation", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => { const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)); await writeFile(target, (await readFile(target, "utf8")).replace("이 예시는", "확인 정보: 120명 중 87%가 완료했다. 이 예시는")); }, { code: "SAMPLE_UNSOURCED_QUANTIFIED_FACT", target: "studio/01.md" });
+});
+test("sample results reject a normalized result excerpt copied from another sample", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => {
+    const source = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
+    const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C02"), 1));
+    const copied = section((await readFile(source, "utf8")).split("---\n").slice(2).join("---\n"), "이 요청으로 받는 결과", "source");
+    await writeFile(target, (await readFile(target, "utf8")).replace(/(## 이 요청으로 받는 결과\n)[\s\S]*?(?=\n## )/u, `$1${copied}`));
+  }, { code: "SAMPLE_DUPLICATE_EXCERPT", target: "studio/02.md" });
+});
 test("sample results reject a code-only document without a visible Korean sample", async (t) => {
   await assertMutationRejected(t, ({ root }, catalog) => writeFile(path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0)), ["---", "source_prompt_id: studio:case:ST-C01", "route: studio", "---", "", "```json", "{\"sample\":true}", "```", ""].join("\n")), { code: "SAMPLE_CODE_ONLY", target: "studio/01.md" });
 });
-test("sample results allow optional image lineage only with pending human approval", async (t) => {
+test("sample results allow schema-bound image lineage only with a separate pending human decision", async (t) => {
   const catalog = await productionCatalog();
   const fixture = await createValidFixture(t, catalog);
   const target = path.join(fixture.root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
-  await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 승인\nmasterAssetId: \`MASTER-ST-C01\`\nderivativeAssetIds: \`DERIVATIVE-ST-C01-01\`\napprovalState: pending\n`);
+  await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
   assert.deepEqual(await validateSampleResults({ catalog, markdown: fixture.markdown, root: fixture.root }), { count: 18, ids: expectedPromptIds });
+});
+test("sample results reject a non-schema image approval state", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => {
+    const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`pending\`\n- \`review_decision\`: \`pending\`\n`);
+  }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
 });
