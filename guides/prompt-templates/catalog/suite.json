@@ -3,8 +3,8 @@
     "id": "suite:studio-to-career-handoff:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "studio-to-career-handoff suite case",
-    "purpose": "studio-to-career-handoff의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "스튜디오 검토 결과를 커리어 포트폴리오로 인계",
+    "purpose": "Studio의 검토 결과 가운데 공개 가능한 근거만 추려 Career 포트폴리오로 넘긴다.",
     "audiences": [
       "game-designer"
     ],
@@ -13,24 +13,24 @@
       "studio-to-career-handoff"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "Studio에서 정리한 문제·판단·검증 근거를 Career 포트폴리오에 이어 쓸 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 studio-to-career-handoff handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 studio-to-career-handoff handoff를 작성해."
+      "example": "@Game Design Studio의 검토 결과에서 공개 가능한 근거만 골라 @Game Design Career 포트폴리오 인계 문서로 정리해 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 studio-to-career-handoff 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio studio-to-career-handoff handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio [공개 정보] studio-to-career-handoff handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio studio-to-career-handoff에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio [공개 정보]를 사실·추론·제안으로 나눠 studio-to-career-handoff에 기록해."
     },
     "skill": "review-game-design",
     "skill_chain": [
@@ -52,7 +52,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/studio-to-career-handoff/content.md"
@@ -62,32 +62,32 @@
       "suite/studio-to-career-handoff/evidence.yml",
       "suite/studio-to-career-handoff/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 studio-to-career-handoff handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 studio-to-career-handoff의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "studio-to-career-handoff의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "studio-to-career-handoff에 보존된 파일과 막힌 이유를 먼저 읽고, 공개 정보만 반영해 인계를 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "Studio 검토 결과를 Career 포트폴리오로 넘기는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: studio-to-career-handoff suite case",
-    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 공개 가능한 문제·판단·검증 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: suite:studio-to-career-handoff:case; 파일: suite/studio-to-career-handoff/content.md)"
+    "display_title": "스튜디오 검토 결과를 포트폴리오로 넘기기",
+    "sample_result_excerpt": "공개용 인계 초안에는 협동 보스전의 문제를 ‘초반 전멸 원인 불명’, 판단을 ‘공격 예고 보강’, 검증을 ‘다음 플레이테스트’로 나눠 적었습니다. 관찰 근거가 부족한 항목은 포트폴리오 공개를 보류했습니다. (ID: suite:studio-to-career-handoff:case; 파일: suite/studio-to-career-handoff/content.md)"
   },
   {
     "id": "suite:reverse-to-system-proposal:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "reverse-to-system-proposal suite case",
-    "purpose": "reverse-to-system-proposal의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "역기획을 시스템 제안으로 인계",
+    "purpose": "Career에서 분리한 역기획의 사실과 추론을 Studio의 시스템 제안으로 차례대로 넘긴다.",
     "audiences": [
       "game-designer"
     ],
@@ -96,24 +96,24 @@
       "reverse-to-system-proposal"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "역기획에서 찾은 규칙을 새 시스템 명세와 검토안으로 발전시킬 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 reverse-to-system-proposal handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 reverse-to-system-proposal handoff를 작성해."
+      "example": "@Game Design Career의 역기획을 @Game Design Studio의 시스템 제안으로 넘길 수 있게 사실과 추론을 분리해 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 reverse-to-system-proposal 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-career:reverse-engineer-game-design $game-design-studio:design-game-systems $game-design-studio:review-game-design reverse-to-system-proposal handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-career:reverse-engineer-game-design $game-design-studio:design-game-systems $game-design-studio:review-game-design [공개 정보] reverse-to-system-proposal handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-career:reverse-engineer-game-design $game-design-studio:design-game-systems $game-design-studio:review-game-design reverse-to-system-proposal에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-career:reverse-engineer-game-design $game-design-studio:design-game-systems $game-design-studio:review-game-design [공개 정보]를 사실·추론·제안으로 나눠 reverse-to-system-proposal에 기록해."
     },
     "skill": "reverse-engineer-game-design",
     "skill_chain": [
@@ -137,7 +137,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/reverse-to-system-proposal/content.md"
@@ -147,32 +147,32 @@
       "suite/reverse-to-system-proposal/evidence.yml",
       "suite/reverse-to-system-proposal/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 reverse-to-system-proposal handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 reverse-to-system-proposal의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "reverse-to-system-proposal의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "reverse-to-system-proposal에 보존된 역기획과 막힌 이유를 읽고, 확인된 규칙부터 시스템 제안으로 다시 연결해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "역기획 근거를 시스템 제안으로 넘기는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: reverse-to-system-proposal suite case",
-    "sample_result_excerpt": "검토용 가상 산출물: 역기획과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: suite:reverse-to-system-proposal:case; 파일: suite/reverse-to-system-proposal/content.md)"
+    "display_title": "역기획에서 시스템 제안 만들기",
+    "sample_result_excerpt": "역기획 검토에서는 ‘회피 뒤 반격’이 핵심 규칙이라는 사실과, 스태미나 회복 지연이 긴장감을 만든다는 추론을 분리했습니다. 회복 규칙 제안은 Studio 담당자의 검토 전이라 보류했습니다. (ID: suite:reverse-to-system-proposal:case; 파일: suite/reverse-to-system-proposal/content.md)"
   },
   {
     "id": "suite:multi-domain-portfolio:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "multi-domain-portfolio suite case",
-    "purpose": "multi-domain-portfolio의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "여러 기획 분야를 포트폴리오로 인계",
+    "purpose": "Studio의 시스템·플레이어 경험·경제 기획을 Career 포트폴리오에서 개인 판단과 근거로 엮는다.",
     "audiences": [
       "game-designer"
     ],
@@ -181,24 +181,24 @@
       "multi-domain-portfolio"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "서로 다른 기획 분야의 작업을 하나의 포트폴리오 사례로 묶을 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 multi-domain-portfolio handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 multi-domain-portfolio handoff를 작성해."
+      "example": "@Game Design Studio의 시스템·플레이어 경험·경제 기획을 @Game Design Career 포트폴리오 사례로 연결해 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 multi-domain-portfolio 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio multi-domain-portfolio handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio [공개 정보] multi-domain-portfolio handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio multi-domain-portfolio에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio [공개 정보]를 사실·추론·제안으로 나눠 multi-domain-portfolio에 기록해."
     },
     "skill": "design-game-systems",
     "skill_chain": [
@@ -224,7 +224,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/multi-domain-portfolio/content.md"
@@ -234,32 +234,32 @@
       "suite/multi-domain-portfolio/evidence.yml",
       "suite/multi-domain-portfolio/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 multi-domain-portfolio handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 multi-domain-portfolio의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "multi-domain-portfolio의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "multi-domain-portfolio에 보존된 분야별 파일과 막힌 이유를 읽고, 근거가 확인된 사례부터 포트폴리오 작업을 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "여러 기획 분야를 포트폴리오 사례로 묶는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: multi-domain-portfolio suite case",
-    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)"
+    "display_title": "여러 기획 분야를 한 포트폴리오로 묶기",
+    "sample_result_excerpt": "포트폴리오 초안은 섬 복구 게임의 자원 순환, 협동 동선, 보상 경제를 한 사례로 묶고 각 결정 옆에 담당한 판단과 근거 위치를 적었습니다. 플레이테스트가 없는 경제 효과 주장은 공개 보류로 남겼습니다. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)"
   },
   {
     "id": "suite:gdd-image-presentation:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "gdd-image-presentation suite case",
-    "purpose": "gdd-image-presentation의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "기획서와 이미지를 발표 자료로 인계",
+    "purpose": "Studio의 기획서와 검토된 이미지를 발표 자료로 내보내기 전에 순서와 공개 범위를 점검한다.",
     "audiences": [
       "game-designer"
     ],
@@ -268,24 +268,24 @@
       "gdd-image-presentation"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "기획 본문과 이미지가 준비되어 발표 자료의 흐름과 내보내기 상태를 함께 확인할 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 gdd-image-presentation handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 gdd-image-presentation handoff를 작성해."
+      "example": "@Game Design Studio의 기획 본문과 검토된 이미지를 발표 자료 순서로 묶고 공개 전 확인 항목을 남겨 줘. @Game Design Career에는 공개 가능한 결과만 인계해.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 gdd-image-presentation 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:orchestrate-game-design-project $game-design-studio:plan-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents gdd-image-presentation handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-studio:orchestrate-game-design-project $game-design-studio:plan-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents [공개 정보] gdd-image-presentation handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-studio:orchestrate-game-design-project $game-design-studio:plan-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents gdd-image-presentation에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-studio:orchestrate-game-design-project $game-design-studio:plan-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents [공개 정보]를 사실·추론·제안으로 나눠 gdd-image-presentation에 기록해."
     },
     "skill": "orchestrate-game-design-project",
     "skill_chain": [
@@ -309,7 +309,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/gdd-image-presentation/content.md"
@@ -319,32 +319,32 @@
       "suite/gdd-image-presentation/evidence.yml",
       "suite/gdd-image-presentation/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 gdd-image-presentation handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 gdd-image-presentation의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "gdd-image-presentation의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "gdd-image-presentation에 보존된 본문과 이미지 검토 기록을 읽고, 해소된 내보내기 항목부터 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "기획서와 이미지를 발표 자료로 내보내는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: gdd-image-presentation suite case",
-    "sample_result_excerpt": "초안 결과: 내보내기 전 점검에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: suite:gdd-image-presentation:case; 파일: suite/gdd-image-presentation/content.md)"
+    "display_title": "기획서와 이미지를 발표 자료로 엮기",
+    "sample_result_excerpt": "발표 자료 초안은 게임 목표, 핵심 순환, 보스전 흐름 뒤에 검토된 콘셉트 이미지를 배치했습니다. 이미지 권리 기록이 비어 있어 내보내기는 보류 상태로 남겼습니다. (ID: suite:gdd-image-presentation:case; 파일: suite/gdd-image-presentation/content.md)"
   },
   {
     "id": "suite:career-proof-project-interview:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "career-proof-project-interview suite case",
-    "purpose": "career-proof-project-interview의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "커리어 근거를 프로젝트와 면접으로 인계",
+    "purpose": "Career의 역할 목표를 Studio 프로젝트로 증명하고, 그 근거를 다시 면접 답변으로 이어 준다.",
     "audiences": [
       "game-designer"
     ],
@@ -353,24 +353,24 @@
       "career-proof-project-interview"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "목표 역할, 실습 프로젝트, 면접 답변을 하나의 근거 흐름으로 연결할 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 career-proof-project-interview handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 career-proof-project-interview handoff를 작성해."
+      "example": "@Game Design Career의 목표 역할을 @Game Design Studio 프로젝트로 증명하고, 그 근거를 면접 답변까지 이어 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 career-proof-project-interview 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-career:map-game-design-career $game-design-studio:design-game-systems $game-design-career:practice-game-design-interview career-proof-project-interview handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-career:map-game-design-career $game-design-studio:design-game-systems $game-design-career:practice-game-design-interview [공개 정보] career-proof-project-interview handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-career:map-game-design-career $game-design-studio:design-game-systems $game-design-career:practice-game-design-interview career-proof-project-interview에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-career:map-game-design-career $game-design-studio:design-game-systems $game-design-career:practice-game-design-interview [공개 정보]를 사실·추론·제안으로 나눠 career-proof-project-interview에 기록해."
     },
     "skill": "map-game-design-career",
     "skill_chain": [
@@ -394,7 +394,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/career-proof-project-interview/content.md"
@@ -404,32 +404,32 @@
       "suite/career-proof-project-interview/evidence.yml",
       "suite/career-proof-project-interview/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 career-proof-project-interview handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 career-proof-project-interview의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "career-proof-project-interview의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "career-proof-project-interview에 보존된 역할 목표와 프로젝트 근거를 읽고, 확인된 경험부터 면접 답변 작성을 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "역할 목표를 프로젝트 근거와 면접 답변으로 잇는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: career-proof-project-interview suite case",
-    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: suite:career-proof-project-interview:case; 파일: suite/career-proof-project-interview/content.md)"
+    "display_title": "역할 목표를 프로젝트와 면접 답변으로 잇기",
+    "sample_result_excerpt": "12주 프로젝트 초안은 전투 규칙 명세와 플레이테스트 회고를 시스템 기획 역량의 근거로 연결했습니다. ‘충돌 규칙을 직접 설계했다’는 답변은 담당 범위 확인 전까지 면접 검토 보류로 표시했습니다. (ID: suite:career-proof-project-interview:case; 파일: suite/career-proof-project-interview/content.md)"
   },
   {
     "id": "suite:student-mentor-review:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "student-mentor-review suite case",
-    "purpose": "student-mentor-review의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "학생 과제를 멘토 검토로 인계",
+    "purpose": "Studio에서 만든 과제와 수정 기록을 Career의 포트폴리오 검토 기준에 맞춰 멘토에게 넘긴다.",
     "audiences": [
       "game-designer"
     ],
@@ -438,24 +438,24 @@
       "student-mentor-review"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "학생의 시스템 기획 과제를 루브릭과 수정 기록으로 함께 검토할 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 student-mentor-review handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 student-mentor-review handoff를 작성해."
+      "example": "@Game Design Studio의 시스템 기획 과제를 @Game Design Career의 포트폴리오 루브릭으로 검토할 수 있게 멘토 인계 문서를 작성해 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 student-mentor-review 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio student-mentor-review handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio [공개 정보] student-mentor-review handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio student-mentor-review에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio [공개 정보]를 사실·추론·제안으로 나눠 student-mentor-review에 기록해."
     },
     "skill": "design-game-systems",
     "skill_chain": [
@@ -477,7 +477,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/student-mentor-review/content.md"
@@ -487,32 +487,32 @@
       "suite/student-mentor-review/evidence.yml",
       "suite/student-mentor-review/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 student-mentor-review handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 student-mentor-review의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "student-mentor-review의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "student-mentor-review에 보존된 과제와 루브릭을 읽고, 학생이 반영한 수정 항목부터 멘토 검토를 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "학생 과제를 멘토의 포트폴리오 검토로 넘기는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: student-mentor-review suite case",
-    "sample_result_excerpt": "예시 산출물 조각: 과제, 루브릭, 수정 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)"
+    "display_title": "학생 과제와 수정 기록을 멘토에게 넘기기",
+    "sample_result_excerpt": "멘토 검토 초안에는 스태미나 규칙의 예외가 빠졌다는 지적과 학생이 추가한 사망 후 회복 규칙을 나란히 남겼습니다. 루브릭 점수는 멘토가 근거를 확인할 때까지 미정입니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)"
   },
   {
     "id": "suite:work-to-public-case:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "work-to-public-case suite case",
-    "purpose": "work-to-public-case의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "실무 기획을 공개 사례로 인계",
+    "purpose": "Studio의 실무 기획에서 공개 가능한 판단과 근거만 남겨 Career의 포트폴리오 사례로 바꾼다.",
     "audiences": [
       "game-designer"
     ],
@@ -521,24 +521,24 @@
       "work-to-public-case"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "실무 산출물의 기밀 내용을 덜어 내고 공개 포트폴리오 사례로 정리할 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 work-to-public-case handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 work-to-public-case handoff를 작성해."
+      "example": "@Game Design Studio의 실무 기획에서 공개 가능한 판단만 골라 @Game Design Career 포트폴리오 사례로 정리해 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 work-to-public-case 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio work-to-public-case handoff의 공개 가능한 evidence summary를 작성해.",
-      "template": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio [공개 정보] work-to-public-case handoff의 fact, inference, recommendation을 작성해."
+      "example": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio work-to-public-case에 넣을 공개 가능한 근거 요약을 작성해.",
+      "template": "$game-design-studio:review-game-design $game-design-career:build-game-design-portfolio [공개 정보]를 사실·추론·제안으로 나눠 work-to-public-case에 기록해."
     },
     "skill": "review-game-design",
     "skill_chain": [
@@ -560,7 +560,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/work-to-public-case/content.md"
@@ -570,32 +570,32 @@
       "suite/work-to-public-case/evidence.yml",
       "suite/work-to-public-case/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 work-to-public-case handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 work-to-public-case의 공개 범위를 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "work-to-public-case의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "work-to-public-case에 보존된 공개 요약과 제외 기록을 읽고, 공개 허가가 확인된 항목만 반영해 재개해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "실무 기획에서 공개 가능한 포트폴리오 사례를 만드는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: work-to-public-case suite case",
-    "sample_result_excerpt": "가상 결과 조각: 공개 요약과 제외 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: suite:work-to-public-case:case; 파일: suite/work-to-public-case/content.md)"
+    "display_title": "실무 기획을 공개 포트폴리오 사례로 바꾸기",
+    "sample_result_excerpt": "공개본 초안에는 ‘협동 임무의 중도 이탈을 줄이려 재합류 규칙을 설계했다’는 판단만 남기고 사내 지표와 미출시 기능명은 제외 기록으로 옮겼습니다. 권리 담당자의 검토 전까지 배포는 보류했습니다. (ID: suite:work-to-public-case:case; 파일: suite/work-to-public-case/content.md)"
   },
   {
     "id": "suite:resume-failed-derivatives:case",
     "kind": "suite-case",
     "product": "suite",
-    "title": "resume-failed-derivatives suite case",
-    "purpose": "resume-failed-derivatives의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.",
+    "title": "실패한 파생 산출물을 보존해 재개",
+    "purpose": "이미지나 문서 내보내기가 실패해도 원본과 실패 원인을 보존하고 안전한 단계부터 다시 시작한다.",
     "audiences": [
       "game-designer"
     ],
@@ -604,24 +604,24 @@
       "resume-failed-derivatives"
     ],
     "level": "advanced",
-    "when_to_use": "두 제품의 canonical artifact handoff가 필요할 때 사용한다.",
-    "when_not_to_use": "비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.",
+    "when_to_use": "이미지 생성이나 문서 내보내기가 중단되어 보존 파일과 재개 지점을 함께 넘길 때 사용한다.",
+    "when_not_to_use": "비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.",
     "required_inputs": [
-      "공개 가능한 evidence summary"
+      "공개 가능한 근거 요약"
     ],
     "optional_inputs": [
-      "named human approval receipt"
+      "지정된 사람의 승인 기록"
     ],
     "placeholders": [
       "[공개 정보]"
     ],
     "app_prompt": {
-      "example": "@Game Design Studio와 @Game Design Career에서 resume-failed-derivatives handoff를 public/evidence-safe하게 작성해.",
-      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 resume-failed-derivatives handoff를 작성해."
+      "example": "@Game Design Studio와 @Game Design Career에서 실패한 이미지·문서 작업의 원본과 막힌 이유를 보존하고 재개 지점을 정리해 줘.",
+      "template": "@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 resume-failed-derivatives 인계 문서를 작성해 줘."
     },
     "cli_prompt": {
-      "example": "$game-design-studio:plan-image-assets $game-design-studio:generate-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents $game-design-career:export-career-documents canonical artifact를 보존하고 failed image/export blocker를 기록한 뒤 retry receipt로 재개해.",
-      "template": "$game-design-studio:plan-image-assets $game-design-studio:generate-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents $game-design-career:export-career-documents [공개 정보] canonical artifact, failed image/export blocker, retry receipt를 fact, inference, recommendation으로 기록해."
+      "example": "$game-design-studio:plan-image-assets $game-design-studio:generate-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents $game-design-career:export-career-documents 원본 산출물을 보존하고 이미지·내보내기가 막힌 이유를 기록한 뒤 재시도 기록부터 재개해.",
+      "template": "$game-design-studio:plan-image-assets $game-design-studio:generate-image-assets $game-design-studio:review-image-assets $game-design-studio:export-game-design-documents $game-design-career:export-career-documents [공개 정보]의 원본 산출물, 이미지·내보내기 실패 원인, 재시도 기록을 사실·추론·제안으로 나눠 적어."
     },
     "skill": "plan-image-assets",
     "skill_chain": [
@@ -647,7 +647,7 @@
       "제외 기록"
     ],
     "extended_outputs": [
-      "resume receipt"
+      "재개 기록"
     ],
     "expected_file_tree": [
       "suite/resume-failed-derivatives/content.md"
@@ -657,24 +657,24 @@
       "suite/resume-failed-derivatives/evidence.yml",
       "suite/resume-failed-derivatives/export-manifest.yml"
     ],
-    "human_review_boundary": "named human decision owner가 resume-failed-derivatives handoff의 공개 범위를 승인 또는 보류한다.",
+    "human_review_boundary": "지정된 의사결정권자가 resume-failed-derivatives의 공개 범위와 재개 지점을 승인하거나 보류한다.",
     "hold_conditions": [
-      "rights, evidence, 또는 approval receipt가 없으면 보류"
+      "권리, 근거 또는 승인 기록이 없으면 보류"
     ],
-    "resume_prompt": "resume-failed-derivatives의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.",
+    "resume_prompt": "resume-failed-derivatives에 남은 원본, 실패 원인, 재개 기록을 읽고 마지막으로 안전했던 단계부터 다시 시작해.",
     "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.",
     "diagram_binding": {
       "id": "st-s01",
       "svg": "guides/assets/game-design-studio/skills/apply-document-quality-profile.svg",
       "png": "guides/assets/game-design-studio/skills/apply-document-quality-profile.png",
-      "alt": "Suite handoff flow"
+      "alt": "실패한 파생 산출물을 보존하고 안전한 단계부터 재개하는 흐름"
     },
     "related_use_cases": [],
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
     ],
-    "display_title": "게임 기획 결과: resume-failed-derivatives suite case",
-    "sample_result_excerpt": "가상의 검토 기록 — 보존 파일, ,: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: suite:resume-failed-derivatives:case; 파일: suite/resume-failed-derivatives/content.md)"
+    "display_title": "실패한 이미지와 문서 작업 이어서 하기",
+    "sample_result_excerpt": "이미지 생성 실패 뒤 원본 기획서와 프롬프트는 보존했고, 내보내기 단계는 실행하지 않은 채 보류했습니다. 재개 기록에는 권리 확인이 끝나면 이미지 검토부터 다시 시작한다고 적었습니다. (ID: suite:resume-failed-derivatives:case; 파일: suite/resume-failed-derivatives/content.md)"
   }
 ]
