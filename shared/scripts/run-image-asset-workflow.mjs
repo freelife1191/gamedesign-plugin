@@ -196,8 +196,8 @@ function applyCompiledPromptDisposition(manifest, existingManifest) {
   return next;
 }
 
-async function generateViaOpenAI({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, generateOpenAIImagesFn }) {
-  return generateOpenAIImagesFn({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now });
+async function generateViaOpenAI({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, requestTimeoutMs, generateOpenAIImagesFn }) {
+  return generateOpenAIImagesFn({ jobs, apiKey, model, quality, stagingRoot, fetchFn, sleepFn, now, requestTimeoutMs });
 }
 
 function applyProviderResults(manifest, providerResult, provider, config, generationReceipts = new Map()) {
@@ -286,6 +286,11 @@ async function reserveGenerationAttempt(root, jobs, provider, config, now, attem
     requested_model: config.model,
     requested_quality: config.quality,
     generated_at: receiptTimestamp(now),
+    lineage: jobs.map(({ asset_id, asset_set_id, derivative_of, reference_images, prompt_lineage }) => ({
+      asset_id, asset_set_id, derivative_of,
+      reference_images: (reference_images ?? []).map(({ asset_id: reference_asset_id, path, sha256 }) => ({ asset_id: reference_asset_id, path, sha256 })),
+      parent_prompt_digests: prompt_lineage?.parent_prompt_digests ?? [],
+    })),
   };
   const path = `assets/receipts/image-generation-attempt-${attemptId}.json`;
   const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, "utf8");
@@ -321,6 +326,12 @@ async function writeGenerationReceipts(root, jobs, providerResult, provider, con
       applied_quality: provenance.applied_quality,
       failure_reason: result ? null : receiptFailureReason(failure?.reason),
     };
+    if (job.derivative_of !== null && job.derivative_of !== undefined) Object.assign(receipt, {
+      asset_set_id: job.asset_set_id,
+      derivative_of: job.derivative_of,
+      reference_images: (job.reference_images ?? []).map(({ asset_id, path, sha256 }) => ({ asset_id, path, sha256 })),
+      parent_prompt_digests: job.prompt_lineage?.parent_prompt_digests ?? [],
+    });
     const relativePath = `assets/receipts/image-generation-${job.asset_id}-${attemptId}.json`;
     const bytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, "utf8");
     await safeWriteArtifactFile({ artifactRoot: root, relativePath, data: bytes, policy: "create-once" });
@@ -379,14 +390,22 @@ function validateHostResult(value, jobs) {
   return { results, failures };
 }
 
-function hostJobsForCallback(jobs) {
-  return jobs.map(({ asset_id, prompt, output }) => ({
+async function hostJobsForCallback(root, jobs) {
+  return Promise.all(jobs.map(async ({ asset_id, prompt, output, asset_set_id, derivative_of, reference_images, consistency_profile, prompt_lineage }) => ({
     asset_id,
     prompt,
     output: {
       width: output.width, height: output.height, aspect_ratio: output.aspect_ratio, format: output.format, background: output.background,
     },
-  }));
+    asset_set_id,
+    derivative_of,
+    reference_images: clone(reference_images ?? []),
+    consistency_profile: clone(consistency_profile ?? { style_anchor_asset_ids: [], character_anchor_asset_ids: [] }),
+    prompt_lineage: clone(prompt_lineage ?? { parent_prompt_digests: [] }),
+    reference_inputs: await Promise.all((reference_images ?? []).map(async (reference) => ({
+      ...clone(reference), bytes: await readRegularArtifactBytes(root, reference.path),
+    }))),
+  })));
 }
 
 async function prepareHostOutputs(root, jobs) {
@@ -485,14 +504,15 @@ export async function generateImageAssetWorkflow({
   let providerResult = { results: [], failures: [] };
   if (jobs.length > 0 && decision.provider === "openai") {
     providerResult = await generateViaOpenAI({
-      jobs, apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now, generateOpenAIImagesFn,
+      jobs, apiKey, model: publicConfig.model, quality: publicConfig.quality, stagingRoot: root, fetchFn, sleepFn, now,
+      requestTimeoutMs: config.requestTimeoutMs ?? 30_000, generateOpenAIImagesFn,
     });
   } else if (jobs.length > 0 && decision.provider === "codex") {
     if (typeof hostGenerate !== "function") {
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
       try {
-        providerResult = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: hostJobsForCallback(jobs) }), jobs), jobs, preparedHostOutputs);
+        providerResult = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: await hostJobsForCallback(root, jobs) }), jobs), jobs, preparedHostOutputs);
       } catch (error) {
         if (error?.message?.startsWith("Host generation")) throw error;
         providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };

@@ -1,14 +1,22 @@
 import { createHash } from "node:crypto";
+import { lstat, readFile } from "node:fs/promises";
+import path from "node:path";
 
 import { decodeOpenAIImage, prepareImageOutput, promoteValidatedPng } from "./lib/image-file-validation.mjs";
+import { inspectCompletePng } from "./lib/complete-png-validation.mjs";
 
-const endpoint = "https://api.openai.com/v1/images/generations";
+const generationEndpoint = "https://api.openai.com/v1/images/generations";
+const editEndpoint = "https://api.openai.com/v1/images/edits";
 const maximumAttempts = 3;
 const maximumJobs = 64;
 const retryDelayCeilingMs = 2_000;
 const safeRequestId = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u;
 const safeModel = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,127})$/u;
 const qualities = new Set(["low", "medium", "high", "auto"]);
+const digestPattern = /^[a-f0-9]{64}$/u;
+const defaultRequestTimeoutMs = 30_000;
+const minimumRequestTimeoutMs = 1;
+const maximumRequestTimeoutMs = 120_000;
 
 // A 20 MiB JSON response admits a 12 MiB PNG encoded as base64 plus normal
 // Images API metadata, while bounding both declared and streamed responses.
@@ -31,6 +39,45 @@ function requestError() {
 function validJob(job) {
   return job && typeof job === "object" && typeof job.asset_id === "string" && /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(job.asset_id)
     && typeof job.prompt === "string" && job.prompt.trim() !== "" && job.output && typeof job.output === "object";
+}
+
+function safeReferencePath(value) {
+  return typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\\")
+    && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value.startsWith("assets/generated/");
+}
+
+function isReferenceJob(job) {
+  return Array.isArray(job?.reference_images) && job.reference_images.length > 0;
+}
+
+async function readReferenceInputs(job, stagingRoot) {
+  if (!isReferenceJob(job)) return { ok: true, inputs: [] };
+  if (typeof stagingRoot !== "string" || stagingRoot.length === 0) return { ok: false };
+  const root = path.resolve(stagingRoot);
+  const references = [];
+  const seen = new Set();
+  for (const reference of job.reference_images) {
+    if (!reference || typeof reference !== "object" || Object.keys(reference).length !== 3
+      || typeof reference.asset_id !== "string" || !safeReferencePath(reference.path) || !digestPattern.test(reference.sha256 ?? "")
+      || seen.has(reference.asset_id)) return { ok: false };
+    seen.add(reference.asset_id);
+    let cursor = root;
+    try {
+      for (const segment of reference.path.split("/")) {
+        cursor = path.resolve(cursor, segment);
+        const stats = await lstat(cursor);
+        if (stats.isSymbolicLink()) return { ok: false };
+      }
+      const stats = await lstat(cursor);
+      if (!stats.isFile() || stats.size > 12 * 1024 * 1024) return { ok: false };
+      const bytes = await readFile(cursor);
+      if (createHash("sha256").update(bytes).digest("hex") !== reference.sha256 || !inspectCompletePng(bytes).ok) return { ok: false };
+      references.push({ ...reference, bytes, filename: path.posix.basename(reference.path) });
+    } catch {
+      return { ok: false };
+    }
+  }
+  return { ok: true, inputs: references };
 }
 
 function gptImageSizeIsValid(output) {
@@ -160,20 +207,49 @@ function providerErrorClass(body) {
   return { policy, noRetry };
 }
 
-async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now }) {
+function requestBody(job, model, quality, referenceInputs) {
+  if (referenceInputs.length === 0) {
+    return {
+      endpoint: generationEndpoint,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model, quality, prompt: job.prompt, size: `${job.output.width}x${job.output.height}`, n: 1 }),
+    };
+  }
+  const body = new FormData();
+  body.set("model", model);
+  body.set("quality", quality);
+  body.set("prompt", job.prompt);
+  body.set("size", `${job.output.width}x${job.output.height}`);
+  body.set("n", "1");
+  for (const reference of referenceInputs) body.append("image[]", new Blob([reference.bytes], { type: "image/png" }), reference.filename);
+  return { endpoint: editEndpoint, headers: {}, body };
+}
+
+async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, requestTimeoutMs }) {
   let attempts = 0;
   while (attempts < maximumAttempts) {
     attempts += 1;
     let response;
+    let timedOut = false;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, requestTimeoutMs);
     try {
-      response = await fetchFn(endpoint, {
+      const request = requestBody(job, model, quality, referenceInputs);
+      response = await fetchFn(request.endpoint, {
         method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, quality, prompt: job.prompt, size: `${job.output.width}x${job.output.height}`, n: 1 }),
+        headers: { Authorization: `Bearer ${apiKey}`, ...request.headers },
+        body: request.body,
+        signal: controller.signal,
       });
     } catch {
+      clearTimeout(timeout);
+      if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
       return { ok: false, attempts, generationState: "generation-failed", reason: "provider-request-failed" };
     }
+    clearTimeout(timeout);
     const parsed = await readBoundedJson(response);
     if (!parsed.ok) {
       if (response?.status >= 500 && attempts < maximumAttempts) {
@@ -217,9 +293,11 @@ export async function generateOpenAIImages({
   sleepFn = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   now = () => new Date().toISOString(),
   stagingRoot,
+  requestTimeoutMs = defaultRequestTimeoutMs,
 } = {}) {
   if (!Array.isArray(jobs) || jobs.length > maximumJobs || typeof apiKey !== "string" || apiKey.length === 0
-    || !safeModel.test(model) || !qualities.has(quality) || typeof fetchFn !== "function" || typeof sleepFn !== "function") throw requestError();
+    || !safeModel.test(model) || !qualities.has(quality) || typeof fetchFn !== "function" || typeof sleepFn !== "function"
+    || !Number.isInteger(requestTimeoutMs) || requestTimeoutMs < minimumRequestTimeoutMs || requestTimeoutMs > maximumRequestTimeoutMs) throw requestError();
   const results = [];
   const failures = [];
   for (const job of jobs) {
@@ -239,7 +317,12 @@ export async function generateOpenAIImages({
       failures.push(failure(job.asset_id, "qa-failed", "unsafe-output-path", 0));
       continue;
     }
-    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now });
+    const references = await readReferenceInputs(job, stagingRoot);
+    if (!references.ok) {
+      failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
+      continue;
+    }
+    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, requestTimeoutMs });
     if (!requested.ok) {
       failures.push(failure(job.asset_id, requested.generationState, requested.reason, requested.attempts));
       continue;

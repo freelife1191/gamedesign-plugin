@@ -54,6 +54,25 @@ function generationJob(asset) {
   return job;
 }
 
+function orderGenerationJobs(jobs) {
+  const byId = new Map(jobs.map((job) => [job.asset_id, job]));
+  const ordered = [];
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = (job) => {
+    if (visited.has(job.asset_id)) return;
+    if (visiting.has(job.asset_id)) throw new Error("Image generation lineage contains a cycle.");
+    visiting.add(job.asset_id);
+    const parent = typeof job.derivative_of === "string" ? byId.get(job.derivative_of) : undefined;
+    if (parent) visit(parent);
+    visiting.delete(job.asset_id);
+    visited.add(job.asset_id);
+    ordered.push(job);
+  };
+  for (const job of jobs) visit(job);
+  return ordered;
+}
+
 function aspectRatio(width, height) {
   let left = width;
   let right = height;
@@ -79,7 +98,7 @@ function documentedPurpose(purpose) {
   return purpose.split(" Scene direction: ", 1)[0];
 }
 
-function planAsset(need, slot, requirement) {
+function planAsset(need, slot, requirement, assetSetId) {
   assertObject(need, "image need");
   const assetId = assetIdFor(need);
   const type = assertText(need.type, `image need ${assetId} type`);
@@ -113,6 +132,11 @@ function planAsset(need, slot, requirement) {
   };
   return {
     asset_id: assetId,
+    asset_set_id: assetSetId,
+    derivative_of: null,
+    reference_images: [],
+    consistency_profile: { style_anchor_asset_ids: [], character_anchor_asset_ids: [] },
+    prompt_lineage: { parent_prompt_digests: [] },
     type,
     requirement,
     generation_state: "prompt-ready",
@@ -177,6 +201,9 @@ function mergeExistingAsset(existing, planned) {
     reviews: clone(existing.reviews),
   };
   if (Object.hasOwn(existing, "generation_receipts")) next.generation_receipts = clone(existing.generation_receipts);
+  for (const field of ["asset_set_id", "derivative_of", "reference_images", "consistency_profile", "prompt_lineage"]) {
+    if (Object.hasOwn(existing, field)) next[field] = clone(existing[field]);
+  }
   if (existing.generation_state === "generated") next.output = clone(existing.output);
   if (Object.hasOwn(existing, "technical_fit")) next.technical_fit = existing.technical_fit;
   if (Object.hasOwn(existing, "gameplay_readability")) next.gameplay_readability = existing.gameplay_readability;
@@ -189,6 +216,8 @@ export function buildImageAssetPlan({ artifact, qualityProfile, existingManifest
   if (!profileValidation.ok) throw new Error(validationError(profileValidation, "Invalid quality profile"));
   const needs = artifact.image_needs;
   if (!Array.isArray(needs)) throw new Error("artifact.image_needs must be an array of explicit image needs.");
+  const assetSetId = assertText(artifact.artifact_id, "artifact artifact_id");
+  if (!stableId.test(assetSetId)) throw new Error("artifact artifact_id must be a stable asset-set identifier.");
   const slots = new Map();
   for (const slot of qualityProfile.required_images) slots.set(slot.id, { ...slot, requirement: "required" });
   for (const slot of qualityProfile.recommended_images) slots.set(slot.id, { ...slot, requirement: "recommended" });
@@ -202,7 +231,7 @@ export function buildImageAssetPlan({ artifact, qualityProfile, existingManifest
     const assetId = assetIdFor(need);
     if (seenIds.has(assetId)) throw new Error(`Duplicate image asset ID: ${assetId}`);
     seenIds.add(assetId);
-    planned.push(planAsset(need, slot, need.variant === undefined ? slot.requirement : "variant"));
+    planned.push(planAsset(need, slot, need.variant === undefined ? slot.requirement : "variant", assetSetId));
   }
 
   const existingById = new Map();
@@ -237,8 +266,8 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
   assertSafeSelectionStrings(manifest);
   if (mode === "prompt-only") return [];
   if (manifest.assets.some((asset) => asset.planning === undefined)) throw selectorError("legacy_manifest_requires_replan");
-  if (mode === "required") return manifest.assets.filter(({ requirement, generation_state, planning }) => requirement === "required" && generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob);
-  if (mode === "all") return manifest.assets.filter(({ generation_state, planning }) => generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob);
+  if (mode === "required") return orderGenerationJobs(manifest.assets.filter(({ requirement, generation_state, planning }) => requirement === "required" && generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob));
+  if (mode === "all") return orderGenerationJobs(manifest.assets.filter(({ generation_state, planning }) => generation_state === "prompt-ready" && planning.disposition === "active").map(generationJob));
   const selected = new Set();
   for (const assetId of selectedAssetIds) {
     if (selected.has(assetId)) throw new Error(`Duplicate selected asset ID: ${assetId}`);
@@ -248,5 +277,5 @@ export function selectGenerationJobs({ manifest, mode, selectedAssetIds = [] } =
     if (asset.planning.disposition !== "active") throw new Error(`Selected asset requires replan review: ${assetId}`);
     if (!(asset.generation_state === "prompt-ready" || ["generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"].includes(asset.generation_state))) throw new Error(`Selected asset is not prompt-ready or retryable: ${assetId}`);
   }
-  return manifest.assets.filter(({ asset_id }) => selected.has(asset_id)).map(generationJob);
+  return orderGenerationJobs(manifest.assets.filter(({ asset_id }) => selected.has(asset_id)).map(generationJob));
 }

@@ -22,6 +22,38 @@
       ],
       "properties": {
         "asset_id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "asset_set_id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "derivative_of": { "type": ["string", "null"], "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "reference_images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["asset_id", "path", "sha256"],
+            "properties": {
+              "asset_id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+              "path": { "type": "string", "pattern": "^assets/generated/[A-Za-z0-9._/-]+$" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          }
+        },
+        "consistency_profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["style_anchor_asset_ids", "character_anchor_asset_ids"],
+          "properties": {
+            "style_anchor_asset_ids": { "type": "array", "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" } },
+            "character_anchor_asset_ids": { "type": "array", "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" } }
+          }
+        },
+        "prompt_lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["parent_prompt_digests"],
+          "properties": {
+            "parent_prompt_digests": { "type": "array", "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+          }
+        },
         "type": { "enum": ["character", "npc", "monster-boss", "skill-vfx", "environment-landmark", "item-equipment", "ui-icon", "story-storyboard", "key-art-pitch-concept", "document-illustration-cover", "skillstead-diagram"] },
         "requirement": { "enum": ["required", "recommended", "variant"] },
         "generation_state": { "enum": ["planned", "prompt-ready", "selected", "generation-pending", "generated", "generation-unavailable", "generation-failed", "policy-blocked", "qa-failed"] },

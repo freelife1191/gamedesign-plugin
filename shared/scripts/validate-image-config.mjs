@@ -6,6 +6,7 @@ const supportedKeys = Object.freeze({
   IMAGE_GEN_MODE: "mode",
   IMAGE_MODEL: "model",
   IMAGE_QUALITY: "quality",
+  IMAGE_REQUEST_TIMEOUT_MS: "requestTimeoutMs",
   OPENAI_API_KEY: "apiKey",
 });
 const legacyKeys = new Set(["IMAGE_GEN_ENABLE", "IMAGE_GENERATOR"]);
@@ -15,7 +16,7 @@ const safeModelPattern = /^[A-Za-z0-9](?:[A-Za-z0-9._:-]{0,127})$/u;
 const safeSecretPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/u;
 const safeEnvValuePattern = /^[\t ]*[A-Za-z0-9._:-]*[\t ]*$/u;
 const maximumEnvBytes = 64 * 1024;
-const defaults = Object.freeze({ mode: "prompt-only", model: "gpt-image-2", quality: "low" });
+const defaults = Object.freeze({ mode: "prompt-only", model: "gpt-image-2", quality: "low", requestTimeoutMs: "30000" });
 
 function validationError(code, pathName, message) {
   return { code, path: pathName, message };
@@ -34,6 +35,9 @@ export function validateImageConfig(value) {
   }
   if (!allowedQualities.has(value.quality)) {
     errors.push(validationError("invalid_quality", "quality", "Image quality is not allowed."));
+  }
+  if (value.requestTimeoutMs !== undefined && (!Number.isInteger(value.requestTimeoutMs) || value.requestTimeoutMs < 1_000 || value.requestTimeoutMs > 120_000)) {
+    errors.push(validationError("invalid_request_timeout", "requestTimeoutMs", "Image request timeout must be a bounded millisecond integer."));
   }
   if (value.apiKey !== undefined && (typeof value.apiKey !== "string" || !safeSecretPattern.test(value.apiKey))) {
     errors.push(validationError("invalid_api_key", "apiKey", "OpenAI API key contains unsupported characters."));
@@ -218,6 +222,15 @@ export async function loadImageConfig({
     }
   }
 
+  const rawTimeout = resolved.requestTimeoutMs;
+  if (typeof rawTimeout !== "string" || !/^\d+$/u.test(rawTimeout)) {
+    const error = new Error("Invalid image configuration.");
+    error.validation = { ok: false, errors: [validationError("invalid_request_timeout", "requestTimeoutMs", "Image request timeout must be a bounded millisecond integer.")] };
+    throw error;
+  }
+  resolved.requestTimeoutMs = Number(rawTimeout);
+  delete sources.requestTimeoutMs;
+
   const validation = validateImageConfig(resolved);
   if (!validation.ok) {
     const error = new Error("Invalid image configuration.");
@@ -229,6 +242,7 @@ export async function loadImageConfig({
     mode: resolved.mode,
     model: resolved.model,
     quality: resolved.quality,
+    requestTimeoutMs: resolved.requestTimeoutMs,
     apiKey: resolved.apiKey,
     apiKeyPresent: resolved.apiKey !== undefined,
     sources,

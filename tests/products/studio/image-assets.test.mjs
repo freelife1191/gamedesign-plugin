@@ -77,6 +77,7 @@ async function masterDerivativeFixture(t) {
   const masterBytes = png();
   await writeFile(path.join(root, master.output.path), masterBytes);
   for (const asset of manifest.assets) {
+    asset.prompt_digest = digest(asset.prompt);
     asset.asset_set_id = "wind-island";
     asset.derivative_of = null;
     asset.reference_images = [];
