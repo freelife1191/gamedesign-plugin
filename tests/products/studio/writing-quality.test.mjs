@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
-import { lstat, mkdtemp, readFile, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildProduct } from "../../../tooling/lib/build-product.mjs";
+import { collectTree } from "../../../tooling/lib/copy-tree.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-studio/plugin");
 const validatorUrl = new URL("../../../shared/scripts/validate-writing-revision.mjs", import.meta.url);
+const vendorLockPath = path.join(repoRoot, "shared/vendor/im-not-ai/vendor.lock.json");
 const skillId = "polish-game-design-writing";
 const specialistId = "game-design-writing-editor";
 
@@ -27,6 +30,7 @@ const expectedSkillContract = {
     skill: "humanize-korean",
     path: "../humanize-korean/SKILL.md",
   },
+  sharedWrapper: "shared/scripts/run-game-design-writing-polish.mjs",
   workflow: [
     "lock-protected-content",
     "run-bundled-humanize-korean",
@@ -35,6 +39,8 @@ const expectedSkillContract = {
     "wait-for-human-review",
   ],
 };
+
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 async function buildInstalledProduct(t) {
   const stagingRoot = await mkdtemp(path.join(tmpdir(), "studio-humanize-install-"));
@@ -61,6 +67,16 @@ function extractJsonContract(markdown, name) {
   ));
   assert.ok(match, `${name} contract is missing`);
   return JSON.parse(match[1]);
+}
+
+async function assertInstalledHumanizeTree(build) {
+  const lock = JSON.parse(await readFile(vendorLockPath, "utf8"));
+  const [installed, packaged] = await Promise.all([
+    collectTree(path.join(build.outputDir, "skills/humanize-korean"), { label: "Studio installed humanize-korean" }),
+    collectTree(build.outputDir, { label: "Studio installed package" }),
+  ]);
+  assert.deepEqual(installed.map(({ relativePath, bytes }) => ({ path: relativePath, size: bytes.length, sha256: sha256(bytes) })), lock.tree.files);
+  assert.deepEqual(packaged.filter(({ relativePath }) => relativePath.endsWith("/sync-im-not-ai.mjs") || relativePath === "sync-im-not-ai.mjs").map(({ relativePath }) => relativePath), []);
 }
 
 test("Studio registry exposes bundled humanize-korean and a dedicated writing specialist pass", async () => {
@@ -104,16 +120,14 @@ test("Studio writing-polish wrapper uses bundled humanize-korean before the stri
   assert.deepEqual(extractJsonContract(skill, "game-design-writing-contract"), expectedSkillContract);
 });
 
-test("Studio install materializes humanize-korean locally without packaging the network updater", async (t) => {
+test("Studio install materializes the exact local humanize-korean tree and no updater", async (t) => {
   const build = await buildInstalledProduct(t);
   const installedSkill = path.join(build.outputDir, "skills/humanize-korean/SKILL.md");
-  const installedStat = await lstat(installedSkill);
 
-  assert.equal(installedStat.isFile() && !installedStat.isSymbolicLink(), true, "bundled humanize-korean SKILL.md is a regular installed file");
   const installedMetadata = parseFrontmatter(await readFile(installedSkill, "utf8"));
   assert.deepEqual(installedMetadata.name, "humanize-korean");
   assert.equal(`$${installedMetadata.name}`, "$humanize-korean", "bundled skill has a direct command");
-  await assert.rejects(lstat(path.join(build.outputDir, "scripts/sync-im-not-ai.mjs")), { code: "ENOENT" });
+  await assertInstalledHumanizeTree(build);
 });
 
 test("Studio writing specialist records bounded revisions without approval authority", async () => {

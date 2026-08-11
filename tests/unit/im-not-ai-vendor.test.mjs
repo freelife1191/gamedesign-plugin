@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { cp, lstat, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -8,7 +8,6 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const vendorRoot = path.join(repoRoot, "shared/vendor/im-not-ai");
-const bundleRoot = path.join(vendorRoot, "humanize-korean/v2.3.0");
 const updaterUrl = new URL("../../tooling/sync-im-not-ai.mjs", import.meta.url);
 
 const expectedFiles = [
@@ -31,27 +30,29 @@ const expectedFiles = [
 
 const expectedLock = {
   schemaVersion: 1,
-  upstream: {
-    repository: "https://github.com/epoko77-ai/im-not-ai",
-    tag: "v2.3.0",
-    commit: "82137e858763dadb99561f194c5c00465735017b",
-    releasedAt: "2026-07-22T06:28:52Z",
-    skillPath: "codex/skills/humanize-korean",
-    referencesSource: ".claude/skills/humanize-korean/references",
-  },
-  license: {
-    spdx: "MIT",
-    path: "LICENSE",
-    sha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f",
-  },
-  tree: {
-    root: "humanize-korean/v2.3.0",
-    files: expectedFiles,
-  },
+  upstream: { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.0", commit: "82137e858763dadb99561f194c5c00465735017b", releasedAt: "2026-07-22T06:28:52Z", skillPath: "codex/skills/humanize-korean", referencesSource: ".claude/skills/humanize-korean/references" },
+  license: { spdx: "MIT", path: "LICENSE", sha256: "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f" },
+  tree: { root: "humanize-korean/v2.3.0", files: expectedFiles },
 };
+const futureRelease = { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" };
 
-function sha256(bytes) {
-  return createHash("sha256").update(bytes).digest("hex");
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+
+async function listRegularFiles(root, prefix = "") {
+  const output = [];
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const absolutePath = path.join(root, entry.name);
+    const stat = await lstat(absolutePath);
+    assert.equal(stat.isSymbolicLink(), false, `non-symlink: ${relativePath}`);
+    if (stat.isDirectory()) output.push(...await listRegularFiles(absolutePath, relativePath));
+    else {
+      assert.equal(stat.isFile(), true, `regular file: ${relativePath}`);
+      const bytes = await readFile(absolutePath);
+      output.push({ path: relativePath, sha256: sha256(bytes), size: bytes.length });
+    }
+  }
+  return output.sort((left, right) => left.path < right.path ? -1 : left.path > right.path ? 1 : 0);
 }
 
 function parseFrontmatter(markdown) {
@@ -66,27 +67,17 @@ function parseFrontmatter(markdown) {
 
 async function assertLiteralVendorTree(root = vendorRoot) {
   assert.deepEqual(JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")), expectedLock);
-  for (const filename of ["LICENSE", "THIRD_PARTY_NOTICES.md"]) {
-    const stat = await lstat(path.join(root, filename));
-    assert.equal(stat.isFile() && !stat.isSymbolicLink(), true, `regular attribution file: ${filename}`);
-  }
-  assert.equal(sha256(await readFile(path.join(root, "LICENSE"))), expectedLock.license.sha256);
-  for (const file of expectedFiles) {
-    const target = path.join(root, expectedLock.tree.root, file.path);
-    const stat = await lstat(target);
-    assert.equal(stat.isFile() && !stat.isSymbolicLink(), true, `regular vendored file: ${file.path}`);
-    const bytes = await readFile(target);
-    assert.equal(bytes.length, file.size, `byte length: ${file.path}`);
-    assert.equal(sha256(bytes), file.sha256, `SHA-256: ${file.path}`);
-  }
+  const actual = await listRegularFiles(root);
+  const expected = [
+    "LICENSE", "THIRD_PARTY_NOTICES.md", "vendor.lock.json",
+    ...expectedFiles.map((file) => `${expectedLock.tree.root}/${file.path}`),
+  ].sort();
+  assert.deepEqual(actual.map((entry) => entry.path), expected, "vendor tree has no unregistered files");
+  assert.deepEqual(actual.filter((entry) => entry.path.startsWith(expectedLock.tree.root)).map((entry) => ({ ...entry, path: entry.path.slice(`${expectedLock.tree.root}/`.length) })), expectedFiles, "bundle path set, sizes, and hashes are exact");
+  assert.deepEqual(actual.find((entry) => entry.path === "LICENSE"), { path: "LICENSE", sha256: expectedLock.license.sha256, size: 1067 });
   const notices = await readFile(path.join(root, "THIRD_PARTY_NOTICES.md"), "utf8");
-  for (const literal of [
-    "https://github.com/epoko77-ai/im-not-ai",
-    "v2.3.0",
-    "MIT",
-    "4cc7e8c439fe42f09d98457599c129ea6df9e5d0e622750d75952b441a38343f",
-  ]) assert.ok(notices.includes(literal), `MIT notice retains ${literal}`);
-  assert.deepEqual(parseFrontmatter(await readFile(path.join(root, expectedLock.tree.root, "SKILL.md"), "utf8")).name, "humanize-korean");
+  for (const literal of ["https://github.com/epoko77-ai/im-not-ai", "v2.3.0", "MIT", expectedLock.license.sha256]) assert.ok(notices.includes(literal), `MIT notice retains ${literal}`);
+  assert.equal(parseFrontmatter(await readFile(path.join(root, expectedLock.tree.root, "SKILL.md"), "utf8")).name, "humanize-korean");
 }
 
 async function copiedVendor(t) {
@@ -97,66 +88,102 @@ async function copiedVendor(t) {
   return fixture;
 }
 
-test("im-not-ai vendor lock pins the official release, MIT license, and deterministic tree", async () => {
+async function assertVerifierRejects(t, mutate, expected) {
+  const { verifyVendoredImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  await mutate(fixture);
+  await assert.rejects(verifyVendoredImNotAi({ root: fixture }), (error) => {
+    assert.deepEqual({ code: error.code, path: error.path }, expected);
+    return true;
+  });
+}
+
+async function snapshotVendor(root) {
+  return { lock: await readFile(path.join(root, "vendor.lock.json")), files: await listRegularFiles(root) };
+}
+
+async function trustedFutureArchive(root) {
+  return {
+    ...futureRelease,
+    files: [
+      { path: "LICENSE", bytes: await readFile(path.join(root, "LICENSE")) },
+      { path: "codex/skills/humanize-korean/SKILL.md", bytes: await readFile(path.join(root, expectedLock.tree.root, "SKILL.md")) },
+      ...await Promise.all(expectedFiles.filter((file) => file.path.startsWith("references/")).map(async (file) => ({ path: `.claude/skills/humanize-korean/references/${file.path.slice("references/".length)}`, bytes: await readFile(path.join(root, expectedLock.tree.root, file.path)) }))),
+    ],
+  };
+}
+
+test("im-not-ai vendor lock pins the official release, MIT license, and exact regular tree", async () => {
   await assertLiteralVendorTree();
-  const { verifyImNotAiVendorRoot } = await import(updaterUrl.href);
-  assert.equal(await verifyImNotAiVendorRoot(vendorRoot), expectedFiles.length);
 });
 
-test("im-not-ai verifier rejects each independent trust-boundary mutation", async (t) => {
-  const mutations = [
-    ["tag", async (root) => {
-      const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8"));
-      lock.upstream.tag = "v9.9.9";
-      await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
-    }, /tag/u],
-    ["commit", async (root) => {
-      const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8"));
-      lock.upstream.commit = "0".repeat(40);
-      await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
-    }, /commit/u],
-    ["file hash", async (root) => {
-      const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8"));
-      lock.tree.files[0].sha256 = "0".repeat(64);
-      await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
-    }, /hash|digest/u],
-    ["license", async (root) => writeFile(path.join(root, "LICENSE"), "tampered license\n"), /license|hash|digest/u],
-    ["symlink", async (root) => {
-      const target = path.join(root, expectedLock.tree.root, "references/quick-rules.md");
-      await rm(target);
-      await symlink("../rewriting-playbook.md", target);
-    }, /symlink/u],
-    ["missing reference", async (root) => rm(path.join(root, expectedLock.tree.root, "references/rewriting-playbook.md")), /missing/u],
-    ["untrusted repository", async (root) => {
-      const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8"));
-      lock.upstream.repository = "https://example.invalid/untrusted/im-not-ai";
-      await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
-    }, /repository|upstream|trusted/u],
-  ];
-
-  for (const [label, mutate, error] of mutations) {
-    await t.test(label, async (t) => {
-      const { verifyImNotAiVendorRoot } = await import(updaterUrl.href);
-      const fixture = await copiedVendor(t);
-      await mutate(fixture);
-      await assert.rejects(verifyImNotAiVendorRoot(fixture), error, `${label} mutation must be rejected`);
-    });
+test("pure offline verifier accepts the pinned vendor without a network capability", async () => {
+  const { verifyVendoredImNotAi } = await import(updaterUrl.href);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error("pure verifier must not call global fetch"); };
+  try {
+    assert.deepEqual(await verifyVendoredImNotAi({ root: vendorRoot }), { verifiedFiles: 15, tag: "v2.3.0" });
+  } finally {
+    globalThis.fetch = originalFetch;
   }
 });
 
-test("im-not-ai updater exposes offline verification and explicit networked release modes", async () => {
-  const { parseImNotAiUpdaterArgs, runImNotAiUpdater } = await import(updaterUrl.href);
+test("im-not-ai verifier rejects a tampered tag with its exact lock target", async (t) => {
+  await assertVerifierRejects(t, async (root) => { const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")); lock.upstream.tag = "v9.9.9"; await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`); }, { code: "IM_NOT_AI_UPSTREAM_TAG_MISMATCH", path: "upstream.tag" });
+});
+test("im-not-ai verifier rejects a tampered commit with its exact lock target", async (t) => {
+  await assertVerifierRejects(t, async (root) => { const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")); lock.upstream.commit = "0".repeat(40); await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`); }, { code: "IM_NOT_AI_UPSTREAM_COMMIT_MISMATCH", path: "upstream.commit" });
+});
+test("im-not-ai verifier rejects an altered registered hash with its exact lock target", async (t) => {
+  await assertVerifierRejects(t, async (root) => { const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")); lock.tree.files[0].sha256 = "0".repeat(64); await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`); }, { code: "IM_NOT_AI_LOCK_FILE_HASH_MISMATCH", path: "tree.files[0].sha256" });
+});
+test("im-not-ai verifier rejects tampered quick-rules bytes while the lock stays intact", async (t) => {
+  await assertVerifierRejects(t, (root) => writeFile(path.join(root, expectedLock.tree.root, "references/quick-rules.md"), "tampered quick rules\n"), { code: "IM_NOT_AI_FILE_HASH_MISMATCH", path: "humanize-korean/v2.3.0/references/quick-rules.md" });
+});
+test("im-not-ai verifier rejects a tampered MIT license with its exact target", async (t) => {
+  await assertVerifierRejects(t, (root) => writeFile(path.join(root, "LICENSE"), "tampered license\n"), { code: "IM_NOT_AI_LICENSE_HASH_MISMATCH", path: "LICENSE" });
+});
+test("im-not-ai verifier rejects a symlinked reference with its exact target", async (t) => {
+  await assertVerifierRejects(t, async (root) => { const target = path.join(root, expectedLock.tree.root, "references/quick-rules.md"); await rm(target); await symlink("rewriting-playbook.md", target); }, { code: "IM_NOT_AI_SYMLINK", path: "humanize-korean/v2.3.0/references/quick-rules.md" });
+});
+test("im-not-ai verifier rejects a missing reference with its exact target", async (t) => {
+  await assertVerifierRejects(t, (root) => rm(path.join(root, expectedLock.tree.root, "references/rewriting-playbook.md")), { code: "IM_NOT_AI_FILE_MISSING", path: "humanize-korean/v2.3.0/references/rewriting-playbook.md" });
+});
+test("im-not-ai verifier rejects an untrusted repository with its exact target", async (t) => {
+  await assertVerifierRejects(t, async (root) => { const lock = JSON.parse(await readFile(path.join(root, "vendor.lock.json"), "utf8")); lock.upstream.repository = "https://example.invalid/untrusted/im-not-ai"; await writeFile(path.join(root, "vendor.lock.json"), `${JSON.stringify(lock, null, 2)}\n`); }, { code: "IM_NOT_AI_UNTRUSTED_REPOSITORY", path: "upstream.repository" });
+});
+test("im-not-ai verifier rejects an unregistered extra reference with its exact target", async (t) => {
+  await assertVerifierRejects(t, (root) => writeFile(path.join(root, expectedLock.tree.root, "references/unreviewed.md"), "unreviewed\n"), { code: "IM_NOT_AI_UNREGISTERED_FILE", path: "humanize-korean/v2.3.0/references/unreviewed.md" });
+});
+test("im-not-ai verifier rejects an unregistered extra script with its exact target", async (t) => {
+  await assertVerifierRejects(t, async (root) => { const scripts = path.join(root, expectedLock.tree.root, "scripts"); await mkdir(scripts); await writeFile(path.join(scripts, "update.mjs"), "export default null;\n"); }, { code: "IM_NOT_AI_UNREGISTERED_FILE", path: "humanize-korean/v2.3.0/scripts/update.mjs" });
+});
+
+test("im-not-ai updater parses offline and explicitly networked modes", async () => {
+  const { parseImNotAiUpdaterArgs } = await import(updaterUrl.href);
   assert.deepEqual(parseImNotAiUpdaterArgs(["--check"]), { mode: "check", network: false });
   assert.deepEqual(parseImNotAiUpdaterArgs(["--check-latest"]), { mode: "check-latest", network: true });
   assert.deepEqual(parseImNotAiUpdaterArgs(["--update"]), { mode: "update", network: true });
-  let fetchCalls = 0;
-  await runImNotAiUpdater({
-    args: ["--check"],
-    repoRoot,
-    fetchImpl: async () => {
-      fetchCalls += 1;
-      throw new Error("offline check must not fetch");
-    },
-  });
-  assert.equal(fetchCalls, 0, "offline --check must not access the network");
+});
+test("check-latest uses the injected release capability and leaves the tree and lock unchanged", async (t) => {
+  const { checkLatestImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const before = await snapshotVendor(fixture);
+  const calls = [];
+  const result = await checkLatestImNotAi({ root: fixture, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; } });
+  assert.deepEqual(calls, ["fetchRelease"]);
+  assert.deepEqual(result, { status: "outdated", installedTag: "v2.3.0", latestTag: "v2.3.1", updateAvailable: true });
+  assert.deepEqual(await snapshotVendor(fixture), before);
+});
+test("update writes only a trusted future archive to staging and refreshes its lock", async (t) => {
+  const { updateImNotAi } = await import(updaterUrl.href);
+  const fixture = await copiedVendor(t);
+  const stagingRoot = path.join(path.dirname(fixture), "staged-im-not-ai");
+  const archive = await trustedFutureArchive(fixture);
+  const calls = [];
+  const result = await updateImNotAi({ root: fixture, stagingRoot, fetchRelease: async () => { calls.push("fetchRelease"); return futureRelease; }, fetchArchive: async (release) => { calls.push({ fetchArchive: release }); return archive; } });
+  assert.deepEqual(calls, ["fetchRelease", { fetchArchive: futureRelease }]);
+  assert.deepEqual(result, { status: "updated", tag: "v2.3.1", verifiedFiles: 15 });
+  assert.deepEqual(JSON.parse(await readFile(path.join(stagingRoot, "vendor.lock.json"), "utf8")), { ...expectedLock, upstream: { ...expectedLock.upstream, tag: "v2.3.1", commit: "1111111111111111111111111111111111111111", releasedAt: "2026-08-12T00:00:00Z" }, tree: { ...expectedLock.tree, root: "humanize-korean/v2.3.1" } });
+  assert.deepEqual(await listRegularFiles(path.join(stagingRoot, "humanize-korean/v2.3.1")), expectedFiles);
 });

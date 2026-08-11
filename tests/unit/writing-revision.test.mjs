@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 const validatorUrl = new URL("../../shared/scripts/validate-writing-revision.mjs", import.meta.url);
+const polishRunnerUrl = new URL("../../shared/scripts/run-game-design-writing-polish.mjs", import.meta.url);
 
 const original = `# 보스전 보상 규칙
 
@@ -92,6 +93,76 @@ test("writing revision accepts a natural Korean restatement and issues a protect
   assert.equal(revised.includes("대응 수단"), false);
   assert.equal(revised.includes("보상 안내의 순서"), false);
   assert.equal(revised.includes("플레이어 경험을 더 좋게 하기 위한 목적"), true);
+});
+
+test("writing polish runs bundled humanize before validation and validates the humanized revision", async () => {
+  const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  const calls = [];
+  const humanized = "사람이 쓴 듯 다듬은 문장";
+  const receipt = { status: "preserved", protectedKinds: ["gate-state"] };
+  const result = await runGameDesignWritingPolish({
+    source: "보스 보상 문장",
+    humanize: async (input) => {
+      calls.push({ step: "humanize", input });
+      return humanized;
+    },
+    validate: async (input) => {
+      calls.push({ step: "validate", input });
+      return { valid: true, errors: [], receipt };
+    },
+  });
+
+  assert.deepEqual(calls, [
+    { step: "humanize", input: "보스 보상 문장" },
+    { step: "validate", input: { original: "보스 보상 문장", revised: "사람이 쓴 듯 다듬은 문장" } },
+  ]);
+  assert.deepEqual(result, {
+    revised: "사람이 쓴 듯 다듬은 문장",
+    receipt: { status: "preserved", protectedKinds: ["gate-state"] },
+  });
+});
+
+test("writing polish fails closed when bundled humanize fails", async () => {
+  const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  let validatorCalls = 0;
+  await assert.rejects(
+    runGameDesignWritingPolish({
+      source: "보스 보상 문장",
+      humanize: async () => { throw new Error("humanize interrupted"); },
+      validate: async () => { validatorCalls += 1; return { valid: true, errors: [], receipt: {} }; },
+    }),
+    (error) => {
+      assert.deepEqual({ code: error.code, stage: error.stage }, { code: "WRITING_POLISH_HUMANIZE_FAILED", stage: "humanize" });
+      return true;
+    },
+  );
+  assert.equal(validatorCalls, 0, "humanizer failure must not continue to validation");
+});
+
+test("writing polish fails closed when the stricter validator rejects the humanized revision", async () => {
+  const { runGameDesignWritingPolish } = await import(polishRunnerUrl.href);
+  const validation = {
+    valid: false,
+    errors: [{ code: "gate-state-changed", detail: { before: "pending", after: "approved" } }],
+  };
+  await assert.rejects(
+    runGameDesignWritingPolish({
+      source: "- gate: pending",
+      humanize: async () => "- gate: approved",
+      validate: async (input) => {
+        assert.deepEqual(input, { original: "- gate: pending", revised: "- gate: approved" });
+        return validation;
+      },
+    }),
+    (error) => {
+      assert.deepEqual({ code: error.code, stage: error.stage, errors: error.errors }, {
+        code: "WRITING_POLISH_VALIDATION_FAILED",
+        stage: "validate",
+        errors: [{ code: "gate-state-changed", detail: { before: "pending", after: "approved" } }],
+      });
+      return true;
+    },
+  );
 });
 
 const hostileMutations = [
