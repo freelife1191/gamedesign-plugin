@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:design-game-content:beginner -->
 ## studio:design-game-content:beginner
 
-**게임 기획 결과: 퀘스트와 NPC 한 개를 설계하는 게임 콘텐츠**
+**퀘스트와 비플레이어 캐릭터(NPC) 하나 설계하기**
 
 한 퀘스트 또는 NPC의 목적, 선택, 상태, 결과, 보상과 실패 복구를 시스템 ID에 연결한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: content-narrative-designer → lead-game-designer
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 콘텐츠 목적: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:design-game-content:beginner; 파일: game-design/studio-foundations/content-beginner/content.md)
+역무원 NPC는 플레이어에게 세 신호 중 하나를 골라 복구하게 하고, 잘못 고르면 다음 밤에 새 단서를 제공합니다. 보상 수치와 실패 뒤 대사는 콘텐츠 담당자 검토 전까지 비워 둡니다. (ID: studio:design-game-content:beginner; 파일: game-design/studio-foundations/content-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -128,7 +128,7 @@ content-beginner의 quest state와 NPC 반응을 보존하고 확인된 system I
 <!-- PROMPT-CARD: studio:design-game-content:standard -->
 ## studio:design-game-content:standard
 
-**게임 기획 결과: Content graph와 보상을 연결하는 게임 콘텐츠**
+**콘텐츠 관계도와 보상을 연결하는 게임 콘텐츠**
 
 퀘스트·캐릭터·보스 encounter의 content graph, 상태, reward와 production resource를 연결한다.
 
@@ -142,7 +142,7 @@ content-beginner의 quest state와 NPC 반응을 보존하고 확인된 system I
 - 함께 검토하는 역할: content-narrative-designer → production-feasibility-critic → lead-game-designer
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:design-game-content:standard; 파일: game-design/studio-foundations/content-standard/content.md)
+봄 장터 퀘스트를 마치면 씨앗 상점과 여름 의뢰가 열리지만, 희귀 씨앗 보상은 생산 비용 근거가 없어 보류했습니다. 필요한 NPC 표정 3종도 제작 자원 목록에 넣었습니다. (ID: studio:design-game-content:standard; 파일: game-design/studio-foundations/content-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -253,7 +253,7 @@ content-standard의 graph와 reward 연결을 유지하고 새로 측정된 enco
 <!-- PROMPT-CARD: studio:design-game-content:advanced -->
 ## studio:design-game-content:advanced
 
-**게임 기획 결과: 서사·제작·권리 경계를 갖춘 게임 콘텐츠**
+**서사·제작·권리 경계를 갖춘 게임 콘텐츠**
 
 narrative choice, production scope, rights·consent·provenance와 사람 승인 조건을 함께 기록한다.
 
@@ -267,7 +267,7 @@ narrative choice, production scope, rights·consent·provenance와 사람 승인
 - 함께 검토하는 역할: content-narrative-designer → production-feasibility-critic → lead-game-designer
 
 ### 이 요청으로 받는 결과
-검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:design-game-content:advanced; 파일: game-design/studio-foundations/content-advanced/content.md)
+견습생이 금지된 바람길을 공개하는 선택은 다음 지역의 경비 상태와 대사를 바꿉니다. 참고 민요의 사용 권리와 성우 동의가 확인되기 전에는 제작 관문을 넘기지 않습니다. (ID: studio:design-game-content:advanced; 파일: game-design/studio-foundations/content-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

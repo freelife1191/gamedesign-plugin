@@ -91,7 +91,7 @@ system ID가 바뀌거나 rights evidence가 빠지면 해당 stage를 `blocked`
 <!-- PROMPT-CARD: studio:recipe:content-quest-design -->
 #### studio:recipe:content-quest-design
 
-**content-quest-design recipe**
+**콘텐츠와 퀘스트 설계 절차**
 
 content-quest-design recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -105,7 +105,7 @@ content-quest-design recipe의 ordered CLI calls와 artifact read order를 보�
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/narrative-quest-npc/content.md`에 narrative-quest-npc canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+폐광 퀘스트는 입구 조사→광부 구조 또는 광맥 봉쇄→귀환으로 나뉘며, 각 선택에 상태 ID와 실패 복구를 붙였습니다. 외부 원작을 참고한 대사는 권리와 동의 확인 전까지 막힘으로 남습니다. (ID: studio:recipe:content-quest-design; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

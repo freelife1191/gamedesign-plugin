@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 14개, 일반 역할 7개와 이미지 전문 역할 2개, Canonical Artifact 템플릿 15개, 1개 universal core와 3개 선택 프로필, 17개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 vendored Skillstead를 합쳐 스킬이 15개입니다.
+플러그인은 제품 스킬 15개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 구조 HTML 도식용 Archify, 한국어 문장 검토용 humanize-korean, Skillstead `svg-infographic` 0.9.0을 함께 번들해 설치 스킬이 18개입니다.
 
 ## 설치
 
@@ -79,9 +79,11 @@ codex plugin marketplace remove game-design-suite
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
 ├── skills/ (15개)
-│   ├── <14개 Studio 제품 스킬>/
+│   ├── <15개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
-│   └── svg-infographic/             # vendored Skillstead 0.8.3
+│   ├── archify/                      # vendored Archify 2.13.0
+│   ├── humanize-korean/              # vendored im-not-ai
+│   └── svg-infographic/              # vendored Skillstead 0.9.0
 ├── agents/ (9개)                    # 일반 7개와 이미지 전문 2개의 이식 가능한 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
@@ -125,7 +127,7 @@ plugins/game-design-studio/
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
-검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (15개)`는 제품 스킬 14개와 `skills/svg-infographic/`이고 `agents/ (9개)`는 일반 registry 7개와 image specialist registry 2개로, 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 자산입니다.
+검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (18개)`는 제품 스킬 15개와 `skills/archify/`, `skills/humanize-korean/`, `skills/svg-infographic/`이고 `agents/ (12개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 자산입니다.
 
 ## 설치된 top-level scripts
 

@@ -5,13 +5,13 @@
 <!-- PROMPT-CARD: suite:multi-domain-portfolio:case -->
 ## suite:multi-domain-portfolio:case
 
-**게임 기획 결과: multi-domain-portfolio suite case**
+**여러 기획 분야를 한 포트폴리오로 묶기**
 
-multi-domain-portfolio의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
+Studio의 시스템·플레이어 경험·경제 기획을 Career 포트폴리오에서 개인 판단과 근거로 엮는다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio와 @Game Design Career에서 multi-domain-portfolio handoff를 public/evidence-safe하게 작성해.
+@Game Design Studio의 시스템·플레이어 경험·경제 기획을 @Game Design Career 포트폴리오 사례로 연결해 줘.
 ```
 
 ### 짧은 흐름
@@ -19,23 +19,23 @@ multi-domain-portfolio의 Studio와 Career ordered handoff를 public/evidence-sa
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)
+포트폴리오 초안은 섬 복구 게임의 자원 순환, 협동 동선, 보상 경제를 한 사례로 묶고 각 결정 옆에 담당한 판단과 근거 위치를 적었습니다. 플레이테스트가 없는 경제 효과 주장은 공개 보류로 남겼습니다. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
-두 제품의 canonical artifact handoff가 필요할 때 사용한다.
+서로 다른 기획 분야의 작업을 하나의 포트폴리오 사례로 묶을 때 사용한다.
 
 ### 사용하지 않는 경우
-비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.
+비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.
 
 ### 준비 입력
 #### 필수 입력
-- 공개 가능한 evidence summary
+- 공개 가능한 근거 요약
 
 #### 선택 입력
-- named human approval receipt
+- 지정된 사람의 승인 기록
 
 ### 바꿀 자리표시자
 - [공개 정보]
@@ -45,17 +45,17 @@ multi-domain-portfolio의 Studio와 Career ordered handoff를 public/evidence-sa
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 multi-domain-portfolio handoff를 작성해.
+@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 multi-domain-portfolio 인계 문서를 작성해 줘.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio multi-domain-portfolio handoff의 공개 가능한 evidence summary를 작성해.
+$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio multi-domain-portfolio에 넣을 공개 가능한 근거 요약을 작성해.
 ```
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio [공개 정보] multi-domain-portfolio handoff의 fact, inference, recommendation을 작성해.
+$game-design-studio:design-game-systems $game-design-studio:design-player-experience $game-design-studio:design-game-economy-and-liveops $game-design-career:build-game-design-portfolio [공개 정보]를 사실·추론·제안으로 나눠 multi-domain-portfolio에 기록해.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -77,7 +77,7 @@ $game-design-studio:design-game-systems $game-design-studio:design-player-experi
 - 제외 기록
 
 #### 확장 결과물
-- resume receipt
+- 재개 기록
 
 ### 파일 구조
 - suite/multi-domain-portfolio/content.md
@@ -91,21 +91,21 @@ $game-design-studio:design-game-systems $game-design-studio:design-player-experi
 - ID: st-s01
 - SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
 - PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
-- 대체 텍스트: Suite handoff flow
+- 대체 텍스트: 여러 기획 분야를 포트폴리오 사례로 묶는 흐름
 
 ### 사람 검토
 #### 승인 경계
-named human decision owner가 multi-domain-portfolio handoff의 공개 범위를 승인 또는 보류한다.
+지정된 의사결정권자가 multi-domain-portfolio의 공개 범위를 승인하거나 보류한다.
 
 #### 보류 조건
-- rights, evidence, 또는 approval receipt가 없으면 보류
+- 권리, 근거 또는 승인 기록이 없으면 보류
 
 #### 안전 경계
 모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
 
 ### 실패와 재개
 ```text
-multi-domain-portfolio의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.
+multi-domain-portfolio에 보존된 분야별 파일과 막힌 이유를 읽고, 근거가 확인된 사례부터 포트폴리오 작업을 재개해.
 ```
 
 </details>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Polish Game Design Writing"
+  short_description: "Protect facts while improving Korean readability"
+  default_prompt: "Use $polish-game-design-writing to revise this Korean game design draft without changing protected content."

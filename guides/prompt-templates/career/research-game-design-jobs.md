@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:research-game-design-jobs:beginner -->
 ## career:research-game-design-jobs:beginner
 
-**게임 기획 결과: 공식 공고 한 개를 근거로 읽는 채용 조사**
+**공식 채용 공고 한 건에서 역할 단서 찾기**
 
 공식 공고 한 개의 requirement를 dated fact로 기록하고 inference와 recommendation을 분리한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: evidence-auditor
 
 ### 이 요청으로 받는 결과
-초안 결과: 공식 출처 주소에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:research-game-design-jobs:beginner; 파일: game-design-career/career-foundations/research-beginner/content.md)
+연습용 기록에서는 서울 지역의 공식 공고 한 건에서 협업 문서 작성과 라이브 지표 해석을 요구사항으로 뽑았습니다. 표본이 한 건뿐이라 시장 전반의 요구로 확대하지 않으며 실제 출처 검토 전에는 활용하지 않습니다. (ID: career:research-game-design-jobs:beginner; 파일: game-design-career/career-foundations/research-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -127,7 +127,7 @@ research-beginner source record를 보존하고 fresh source URL과 retrieval da
 <!-- PROMPT-CARD: career:research-game-design-jobs:standard -->
 ## career:research-game-design-jobs:standard
 
-**게임 기획 결과: 날짜·지역·표본을 경계로 하는 채용 조사**
+**날짜·지역·표본 범위를 밝히는 채용 조사**
 
 여러 공식 공고의 날짜, 지역, 표본 경계를 기록하고 fact, inference, recommendation을 분리한다.
 
@@ -141,7 +141,7 @@ research-beginner source record를 보존하고 fresh source URL과 retrieval da
 - 함께 검토하는 역할: evidence-auditor → career-strategist
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 공식 출처 주소 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:research-game-design-jobs:standard; 파일: game-design-career/career-foundations/research-standard/content.md)
+연습용 조사표는 기준일을 2026년 7월, 국내 공고 표본을 8건으로 두었고 이 중 5건에 데이터 도구 활용을 표시했습니다. 이 수치는 실제 근거 검토 전의 가상 관찰이며 채용 시장의 기준으로 쓸 수 없습니다. (ID: career:research-game-design-jobs:standard; 파일: game-design-career/career-foundations/research-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -250,7 +250,7 @@ research-standard의 source records와 sample boundary를 보존하고 만료된
 <!-- PROMPT-CARD: career:research-game-design-jobs:advanced -->
 ## career:research-game-design-jobs:advanced
 
-**게임 기획 결과: 최신성·blind spot·일반화 한계를 검토하는 채용 조사**
+**채용 자료의 최신성과 놓친 범위 점검**
 
 freshness와 blind spot을 보이는 sample의 일반화 한계를 기록하고 fact, inference, recommendation을 분리한다.
 
@@ -264,7 +264,7 @@ freshness와 blind spot을 보이는 sample의 일반화 한계를 기록하고 
 - 함께 검토하는 역할: evidence-auditor → career-strategist
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:research-game-design-jobs:advanced; 파일: game-design-career/career-foundations/research-advanced/content.md)
+가정한 조사 묶음은 모바일 RPG 공고에 치우쳐 콘솔·인디 스튜디오 요구를 충분히 담지 못했습니다. 90일이 지난 공고는 최신성 재확인 대상으로 표시했으며 결론은 근거 검토 전 잠정안입니다. (ID: career:research-game-design-jobs:advanced; 파일: game-design-career/career-foundations/research-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

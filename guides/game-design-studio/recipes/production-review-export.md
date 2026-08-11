@@ -97,7 +97,7 @@ unsafe output, preflight failure 또는 unavailable renderer는 canonical text�
 <!-- PROMPT-CARD: studio:recipe:production-review-export -->
 #### studio:recipe:production-review-export
 
-**production-review-export recipe**
+**제작 범위 검토와 문서 출력 준비 절차**
 
 production-review-export recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -111,7 +111,7 @@ production-review-export recipe의 ordered CLI calls와 artifact read order를 �
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/production-scope-risk/content.md`에 production-scope-risk canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+등대섬 기능 목록에서 협동 전력 퍼즐만 이번 주요 일정에 남기고 사진 모드는 제외 후보로 표시했습니다. 검토 막힘이 해소된 `content.md`만 출력 준비 명세로 넘기며 실제 변환은 아직 하지 않습니다. (ID: studio:recipe:production-review-export; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

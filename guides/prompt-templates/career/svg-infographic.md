@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:svg-infographic:beginner -->
 ## career:svg-infographic:beginner
 
-**게임 기획 결과: 학습 roadmap SVG 초안**
+**편집 가능한 학습 로드맵 초안 (SVG)**
 
 source-mapped 학습 roadmap을 editable SVG로 계획하고 아직 생성·문서·포트폴리오 승인을 주장하지 않는다.
 
@@ -19,7 +19,7 @@ source-mapped 학습 roadmap을 editable SVG로 계획하고 아직 생성·문�
 - 함께 검토하는 역할: game-design-mentor
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:svg-infographic:beginner; 파일: career/visual/svg-infographic/beginner/content.md)
+1~4주 규칙표, 5~8주 시뮬레이션, 9~12주 검토 과정을 편집 가능한 벡터 도식(SVG)으로 배치했습니다. PNG 출력은 아직 만들지 않았고 읽기 순서와 색 대비는 사람 검토 전입니다. (ID: career:svg-infographic:beginner; 파일: career/visual/svg-infographic/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -131,7 +131,7 @@ svg-infographic/beginner의 canonical artifact, stable IDs, source·attribution,
 <!-- PROMPT-CARD: career:svg-infographic:standard -->
 ## career:svg-infographic:standard
 
-**게임 기획 결과: evidence map editable SVG와 render 상태**
+**편집 가능한 근거 지도와 렌더링 상태**
 
 evidence map의 SVG authority, derivative PNG, lint·render receipt와 accessibility metadata를 분리한다.
 
@@ -145,7 +145,7 @@ evidence map의 SVG authority, derivative PNG, lint·render receipt와 accessibi
 - 함께 검토하는 역할: game-design-mentor
 
 ### 이 요청으로 받는 결과
-검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:svg-infographic:standard; 파일: career/visual/svg-infographic/standard/content.md)
+역량 노드 여섯 개와 근거 문서 네 개를 잇는 벡터 도식(SVG)을 만들고 렌더링 명령 결과를 기록했습니다. 2배 PNG 출력은 생성됐지만 두 연결선의 겹침 때문에 시각 검토가 더 필요합니다. (ID: career:svg-infographic:standard; 파일: career/visual/svg-infographic/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -257,7 +257,7 @@ svg-infographic/standard의 canonical artifact, stable IDs, source·attribution,
 <!-- PROMPT-CARD: career:svg-infographic:advanced -->
 ## career:svg-infographic:advanced
 
-**게임 기획 결과: lint·2× render·접근성·승인 SVG QA**
+**벡터 도식의 문법·2배 렌더링·접근성 종합 점검**
 
 lint 0 warning/error, exact 2× PNG, accessibility와 human approval evidence를 갖춘 구조 SVG QA를 수행한다.
 
@@ -271,7 +271,7 @@ lint 0 warning/error, exact 2× PNG, accessibility와 human approval evidence를
 - 함께 검토하는 역할: game-design-mentor
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:svg-infographic:advanced; 파일: career/visual/svg-infographic/advanced/content.md)
+벡터 도식의 SVG 문법 검사와 정확한 2배 PNG 렌더링은 통과했지만 스크린 리더용 제목이 두 노드를 구분하지 못했습니다. 접근성 문구를 수정한 뒤 멘토가 최종 사용 여부를 검토합니다. (ID: career:svg-infographic:advanced; 파일: career/visual/svg-infographic/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

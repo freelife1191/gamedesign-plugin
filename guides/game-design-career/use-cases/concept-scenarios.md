@@ -86,7 +86,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/system-st
 <!-- PROMPT-CARD: career:case:CA-T01 -->
 #### career:case:CA-T01
 
-**CA-T01 source-bound scenario**
+**상태·규칙·예외로 보여 주는 시스템 기획 (CA-T01)**
 
 CA-T01 manifest의 audience, skill, template, result를 보존한다.
 
@@ -100,7 +100,7 @@ CA-T01 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-design-role-map/content.md`에 game-design-role-map, competency-matrix, learning-roadmap을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+상점 재고를 ‘잠김·판매 중·품절’로 나누고 상태 전환 조건과 중복 구매 예외를 표로 만들었습니다. 빠진 예외와 다음 검증 질문은 시스템 기획 멘토 검토 전입니다. (ID: career:case:CA-T01; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -278,7 +278,7 @@ NPC 대사를 시스템처럼 단정했는가? 협업 계약은 CA-T06, 공간 �
 <!-- PROMPT-CARD: career:case:CA-T02 -->
 #### career:case:CA-T02
 
-**CA-T02 source-bound scenario**
+**분기와 실패 복구를 설계하는 콘텐츠 기획 (CA-T02)**
 
 CA-T02 manifest의 audience, skill, template, result를 보존한다.
 
@@ -292,7 +292,7 @@ CA-T02 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-design-role-map/content.md`에 game-design-role-map, portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+구조 요청을 거절한 플레이어에게 잠입 경로가 열리고, 실패하면 경비의 신뢰를 회복하는 보조 임무로 이어지게 구성했습니다. 분기 수와 실제 제작 범위는 콘텐츠 기획 멘토 검토 전입니다. (ID: career:case:CA-T02; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -470,7 +470,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/com
 <!-- PROMPT-CARD: career:case:CA-T03 -->
 #### career:case:CA-T03
 
-**CA-T03 source-bound scenario**
+**관찰과 반례로 다듬는 전투 기획 사례 (CA-T03)**
 
 CA-T03 manifest의 audience, skill, template, result를 보존한다.
 
@@ -484,7 +484,7 @@ CA-T03 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+강공격 뒤 1.2초 빈틈이 선택을 만든다는 관찰을 스킬 명세로 옮겼습니다. 회피 위주 플레이에서는 빈틈이 의미 없다는 반례가 있어 수치와 재미 판단은 전투 기획 멘토 검토 전입니다. (ID: career:case:CA-T03; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -662,7 +662,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/eco
 <!-- PROMPT-CARD: career:case:CA-T04 -->
 #### career:case:CA-T04
 
-**CA-T04 source-bound scenario**
+**재화 흐름과 보호 기준을 세우는 경제 기획 (CA-T04)**
 
 CA-T04 manifest의 audience, skill, template, result를 보존한다.
 
@@ -676,7 +676,7 @@ CA-T04 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, portfolio-project-brief, five-axis-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+일일 퀘스트를 주요 재화 공급원, 장비 강화와 상점을 소비처로 놓고 14일 흐름 가설을 작성했습니다. 재화 고갈 시 완화 기준과 되돌림 조건은 경제·밸런스 검토자가 확인해야 합니다. (ID: career:case:CA-T04; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -854,7 +854,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux
 <!-- PROMPT-CARD: career:case:CA-T05 -->
 #### career:case:CA-T05
 
-**CA-T05 source-bound scenario**
+**오류와 대체 입력을 살피는 접근성 기획 (UX·CA-T05)**
 
 CA-T05 manifest의 audience, skill, template, result를 보존한다.
 
@@ -868,7 +868,7 @@ CA-T05 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/competency-matrix/content.md`에 competency-matrix, portfolio-project-brief, five-axis-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+키보드만 사용할 때 제작 창의 재료 목록으로 초점이 이동하지 않는 문제를 기록했습니다. 방향키 이동과 검색 입력을 대안으로 제안했으며 접근성 적합성은 전문 검토 전까지 확정하지 않습니다. (ID: career:case:CA-T05; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1046,7 +1046,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/narr
 <!-- PROMPT-CARD: career:case:CA-T06 -->
 #### career:case:CA-T06
 
-**CA-T06 source-bound scenario**
+**장면 목적과 협업 경계를 밝히는 내러티브 기획 (CA-T06)**
 
 CA-T06 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1060,7 +1060,7 @@ CA-T06 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-design-role-map/content.md`에 game-design-role-map, portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+폐역 재회 장면의 목적을 ‘동료를 믿을지 선택하게 하기’로 정하고 대사 선택 뒤 필요한 연출 전달사항을 적었습니다. 대사와 연출의 작업 경계는 내러티브 기획 멘토가 검토합니다. (ID: career:case:CA-T06; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1238,7 +1238,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/lev
 <!-- PROMPT-CARD: career:case:CA-T07 -->
 #### career:case:CA-T07
 
-**CA-T07 source-bound scenario**
+**동선과 시야를 플레이 질문으로 바꾸는 레벨 기획 (CA-T07)**
 
 CA-T07 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1252,7 +1252,7 @@ CA-T07 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, portfolio-project-brief, five-axis-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+첫 갈림길에서 목표물이 벽에 가려져 세 명 중 두 명이 반대편으로 이동했다는 관찰을 남겼습니다. 조명과 표지 위치 수정안은 검토 전이며 다음 플레이테스트 뒤 채택 여부를 정합니다. (ID: career:case:CA-T07; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1430,7 +1430,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/new-
 <!-- PROMPT-CARD: career:case:CA-T08 -->
 #### career:case:CA-T08
 
-**CA-T08 source-bound scenario**
+**수정 전후와 개인 기여를 보여 주는 신입 포트폴리오 (CA-T08)**
 
 CA-T08 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1444,7 +1444,7 @@ CA-T08 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: portfolio-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/career-stage-goal/content.md`에 career-stage-goal, portfolio-project-brief, portfolio-backlog을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+튜토리얼 목표 문구를 바꾸기 전후의 화면과 테스트 메모를 나란히 놓고, 문구 설계와 기록 정리만 개인 기여로 적었습니다. 변화의 원인 해석은 포트폴리오 검토자가 확인합니다. (ID: career:case:CA-T08; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1622,7 +1622,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/transitio
 <!-- PROMPT-CARD: career:case:CA-T09 -->
 #### career:case:CA-T09
 
-**CA-T09 source-bound scenario**
+**이전 경험을 새 직무 증거로 잇는 전환 계획 (CA-T09)**
 
 CA-T09 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1636,7 +1636,7 @@ CA-T09 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/transition-readiness/content.md`에 transition-readiness, game-design-role-map, portfolio-project-brief을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+QA 경험에서 재현 절차 작성은 확인된 강점으로, 규칙 설계는 새로 증명할 영역으로 나눴습니다. 다음 과제는 상태 전이 문서이며 이직 준비도는 진로 검토자의 판단 전입니다. (ID: career:case:CA-T09; 파일: game-design-career/[경력 ID]/transition-readiness/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1814,7 +1814,7 @@ $game-design-career:plan-junior-growth artifact=game-design-career/growth-transi
 <!-- PROMPT-CARD: career:case:CA-T10 -->
 #### career:case:CA-T10
 
-**CA-T10 source-bound scenario**
+**성장 기록을 다음 면접 답변으로 잇기 (CA-T10)**
 
 CA-T10 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1828,7 +1828,7 @@ CA-T10 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: career-strategist → interview-coach
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/junior-growth-review/content.md`에 junior-growth-review, transition-readiness, interview-question-answer-log을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+지난 검토 뒤 경제표의 예외 규칙을 3건 보완했고, 아직 지표 해석 사례는 없습니다. 면접 답변에는 이 차이를 솔직히 밝히고 다음 검토일을 적었으며 승진·이직 판단과는 분리했습니다. (ID: career:case:CA-T10; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

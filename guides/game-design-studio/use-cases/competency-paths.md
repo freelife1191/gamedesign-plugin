@@ -103,7 +103,7 @@ $game-design-studio:define-game-vision 기존 game-design/island-restoration/vis
 <!-- PROMPT-CARD: studio:case:ST-C01 -->
 #### studio:case:ST-C01
 
-**ST-C01 source-bound scenario**
+**플레이어 경험과 게임 비전 정리 (ST-C01)**
 
 ST-C01의 source manifest skill과 artifact를 보존한다.
 
@@ -117,7 +117,7 @@ ST-C01의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/vision-pillars/content.md`에 vision-pillars, game-design-brief, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+플레이 약속은 ‘둘이서 바람길을 읽고 섬 사이를 잇는다’, 핵심 원칙은 협동 항해로 적었습니다. 대상 플레이어 근거와 배제 원칙은 비전 책임자가 확인해야 합니다. (ID: studio:case:ST-C01; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -309,7 +309,7 @@ verb가 추상적이거나 모든 분기가 같은 결과면 해당 단계는 `b
 <!-- PROMPT-CARD: studio:case:ST-C02 -->
 #### studio:case:ST-C02
 
-**ST-C02 source-bound scenario**
+**행동·핵심 반복 플레이·의미 있는 선택 설계 (ST-C02)**
 
 ST-C02의 source manifest skill과 artifact를 보존한다.
 
@@ -323,7 +323,7 @@ ST-C02의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/core-motivation-loop/content.md`에 core-motivation-loop, system-specification, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+산호 채집→정원 복원→새 생물 발견을 핵심 반복 플레이로 두고, 제한된 산소를 탐사와 돌봄 중 어디에 쓸지 선택하게 했습니다. 선택의 재미가 유지되는지는 플레이 관찰이 필요합니다. (ID: studio:case:ST-C02; 파일: game-design/[프로젝트 ID]/core-motivation-loop/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -515,7 +515,7 @@ $game-design-studio:design-game-systems game-design/shared-workbench/system-spec
 <!-- PROMPT-CARD: studio:case:ST-C03 -->
 #### studio:case:ST-C03
 
-**ST-C03 source-bound scenario**
+**규칙·상태·예외·데이터 계약 설계 (ST-C03)**
 
 ST-C03의 source manifest skill과 artifact를 보존한다.
 
@@ -529,7 +529,7 @@ ST-C03의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: lead-game-designer → system-economy-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/system-specification/content.md`에 system-specification, rule-exception-matrix, data-schema-table-contract을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+엔진 부품 장착은 전력 확인 뒤 내구도 차감 순서로 처리하고, 두 명이 동시에 장착할 때는 첫 요청만 반영하는 예외를 제안했습니다. 권위 데이터와 동시성 규칙은 개발 검토 전까지 임시입니다. (ID: studio:case:ST-C03; 파일: game-design/[프로젝트 ID]/system-specification/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -722,7 +722,7 @@ current platform 근거나 테스트 환경이 없으면 compliance를 주장하
 <!-- PROMPT-CARD: studio:case:ST-C04 -->
 #### studio:case:ST-C04
 
-**ST-C04 source-bound scenario**
+**화면 흐름·첫 진입 안내·접근성 검토 (ST-C04)**
 
 ST-C04의 source manifest skill과 artifact를 보존한다.
 
@@ -736,7 +736,7 @@ ST-C04의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: ux-accessibility-reviewer → lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/ui-ux-flow-state/content.md`에 ui-ux-flow-state, accessibility-platform-matrix, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+지도 조각을 얻으면 보관함 버튼이 점멸하고 화면 읽기 도구가 새 항목 이름을 알리도록 흐름을 잡았습니다. 초점 이동 순서와 글자 확대 기준은 접근성 담당자가 살펴봐야 합니다. (ID: studio:case:ST-C04; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -928,7 +928,7 @@ $game-design-studio:design-game-content 기존 Q-ARCH-01과 승인된 state를 �
 <!-- PROMPT-CARD: studio:case:ST-C05 -->
 #### studio:case:ST-C05
 
-**ST-C05 source-bound scenario**
+**콘텐츠·서사·퀘스트·비플레이어 캐릭터 설계 (ST-C05)**
 
 ST-C05의 source manifest skill과 artifact를 보존한다.
 
@@ -942,7 +942,7 @@ ST-C05의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: content-narrative-designer → system-economy-designer → production-feasibility-critic → visual-asset-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/narrative-quest-npc/content.md`에 narrative-quest-npc, character-skill-combat-monster, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초보 수비대 퀘스트는 주민 대피와 성문 방어 중 하나를 고르게 하며, 선택에 따라 다음 날 NPC 대사가 달라집니다. 보상과 제작 분량은 콘텐츠 책임자 검토 뒤 정합니다. (ID: studio:case:ST-C05; 파일: game-design/[프로젝트 ID]/narrative-quest-npc/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1134,7 +1134,7 @@ canonical rule 또는 prototype evidence가 없으면 숫자를 채우지 않고
 <!-- PROMPT-CARD: studio:case:ST-C06 -->
 #### studio:case:ST-C06
 
-**ST-C06 source-bound scenario**
+**캐릭터·기술·전투·몬스터 설계 (ST-C06)**
 
 ST-C06의 source manifest skill과 artifact를 보존한다.
 
@@ -1148,7 +1148,7 @@ ST-C06의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: system-economy-designer → ux-accessibility-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/character-skill-combat-monster/content.md`에 character-skill-combat-monster, system-specification, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+탐험가의 ‘빛줄기 연결’ 기술은 동료가 반사판을 맞출 때만 보호막을 끊는 안으로 적었습니다. 피해량과 재사용 시간은 전투 데이터가 없어 시스템 담당자 확인이 필요합니다. (ID: studio:case:ST-C06; 파일: game-design/[프로젝트 ID]/character-skill-combat-monster/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1340,7 +1340,7 @@ $game-design-studio:design-game-economy-and-liveops EXP-FEST-01의 가정과 con
 <!-- PROMPT-CARD: studio:case:ST-C07 -->
 #### studio:case:ST-C07
 
-**ST-C07 source-bound scenario**
+**성장·경제·균형·라이브 운영 실험 설계 (ST-C07)**
 
 ST-C07의 source manifest skill과 artifact를 보존한다.
 
@@ -1354,7 +1354,7 @@ ST-C07의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: system-economy-designer → liveops-data-designer → ux-accessibility-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/economy-balance/content.md`에 economy-balance, liveops-experiment-event, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+신호 해독 토큰은 탐사에서 얻고 장비 보정에 쓰는 구조로 잡았으며, 보유 한도는 미정으로 남겼습니다. 운영 실험의 중단 기준과 되돌리기 절차도 경제 책임자의 근거가 필요합니다. (ID: studio:case:ST-C07; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1548,7 +1548,7 @@ $game-design-studio:export-game-design-documents game-design/exploration-prototy
 <!-- PROMPT-CARD: studio:case:ST-C08 -->
 #### studio:case:ST-C08
 
-**ST-C08 source-bound scenario**
+**제작·검토·이미지·출력 준비 연결 (ST-C08)**
 
 ST-C08의 source manifest skill과 artifact를 보존한다.
 
@@ -1562,7 +1562,7 @@ ST-C08의 source manifest skill과 artifact를 보존한다.
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → visual-asset-reviewer → document-quality-editor
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/production-scope-risk/content.md`에 production-scope-risk, game-design-review, export-preparation-manifest을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+계절 시장 시제품에는 노점 4종과 하루 일정만 포함하고 축제 연출은 제외했습니다. 이미지 자산과 문서 출력은 범위·권리 검토가 끝난 항목만 준비 대상으로 넘깁니다. (ID: studio:case:ST-C08; 파일: game-design/[프로젝트 ID]/production-scope-risk/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -13,6 +13,7 @@ Require stable asset ID, profile slot, source section IDs, art brief, prompt dig
 - Does the purpose and placement match the source section and selected slot?
 - Is the subject, silhouette, composition, and play-distance readability adequate for that purpose?
 - Do prompt and variant instructions preserve established identity without introducing third-party identity or unsupported details?
+- Are visual style anchors traceable to supplied source sections, preserve/exclude constraints, or approved references?
 
 ## Scope
 

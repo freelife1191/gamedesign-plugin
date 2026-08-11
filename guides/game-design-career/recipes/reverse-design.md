@@ -85,7 +85,7 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 <!-- PROMPT-CARD: career:recipe:reverse-design -->
 #### career:recipe:reverse-design
 
-**reverse-design recipe**
+**관찰에서 검증 가능한 역기획까지 (reverse-design)**
 
 reverse-design recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -99,7 +99,7 @@ reverse-design recipe의 ordered CLI calls와 artifact read order를 보존한�
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/reverse-design-document/content.md`에 reverse-design-document canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+플레이 장면을 기록하고 규칙 가설, 반례, 확인 방법 순서로 역기획 문서를 구성했습니다. 내부 의도처럼 보일 수 있는 문장은 추론으로 표시했으며 공개 범위는 권리 검토 뒤 정합니다. (ID: career:recipe:reverse-design; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:design-game-systems:beginner -->
 ## studio:design-game-systems:beginner
 
-**게임 기획 결과: 규칙과 상태를 정의하는 게임 시스템**
+**규칙과 상태를 정의하는 게임 시스템**
 
 단일 mechanic의 input, rule, state transition, output, failure recovery를 실행 가능한 초안으로 만든다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: system-economy-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 규칙 적용 순서 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:design-game-systems:beginner; 파일: game-design/studio-foundations/systems-beginner/content.md)
+지도를 펼치면 단서 토큰 1개를 쓰고 ‘탐색 중’ 상태로 바뀌며, 토큰이 없으면 행동을 취소합니다. 토큰 원본 데이터와 취소 뒤 상태는 시스템 담당자가 확인해야 합니다. (ID: studio:design-game-systems:beginner; 파일: game-design/studio-foundations/systems-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -128,7 +128,7 @@ systems-beginner의 rule과 transition을 보존하고 확인된 authoritative d
 <!-- PROMPT-CARD: studio:design-game-systems:standard -->
 ## studio:design-game-systems:standard
 
-**게임 기획 결과: 예외와 데이터를 연결하는 게임 시스템**
+**예외 규칙과 데이터를 연결하는 게임 시스템**
 
 concurrency exception, rule precedence, authoritative state와 test case를 rule·state·exception·data 계약으로 연결한다.
 
@@ -142,7 +142,7 @@ concurrency exception, rule precedence, authoritative state와 test case를 rule
 - 함께 검토하는 역할: system-economy-designer → ux-accessibility-reviewer → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:design-game-systems:standard; 파일: game-design/studio-foundations/systems-standard/content.md)
+두 수비대가 같은 성문을 동시에 수리하면 먼저 완료된 요청만 내구도를 반영하고 나머지는 자원을 돌려주는 규칙을 제안했습니다. 동시 처리 순서는 서버 구현과 대조해야 합니다. (ID: studio:design-game-systems:standard; 파일: game-design/studio-foundations/systems-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -253,7 +253,7 @@ systems-standard의 exception matrix를 보존하고 새로 확인된 concurrenc
 <!-- PROMPT-CARD: studio:design-game-systems:advanced -->
 ## studio:design-game-systems:advanced
 
-**게임 기획 결과: 상호 시스템 반례와 engineering handoff**
+**시스템 간 반례와 개발 인계 사항**
 
 여러 시스템의 상호작용, 반례, runtime mapping과 engineering 검토 경계를 명시한다.
 
@@ -267,7 +267,7 @@ systems-standard의 exception matrix를 보존하고 새로 확인된 concurrenc
 - 함께 검토하는 역할: system-economy-designer → lead-game-designer → production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 상호 시스템: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:design-game-systems:advanced; 파일: game-design/studio-foundations/systems-advanced/content.md)
+두 탐험가가 동시에 등대 전력을 복구하면 보상 시스템이 완료 횟수를 두 번 셀 수 있다는 반례를 남겼습니다. 임시 상태 구조와 원자적 처리 여부는 개발 담당자가 검토합니다. (ID: studio:design-game-systems:advanced; 파일: game-design/studio-foundations/systems-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -79,7 +79,7 @@ $game-design-career:map-game-design-career artifact=game-design-career/role-map 
 <!-- PROMPT-CARD: career:case:CA-C01 -->
 #### career:case:CA-C01
 
-**CA-C01 source-bound scenario**
+**역할 후보와 학습 과제를 잇는 진로 탐색 (CA-C01)**
 
 CA-C01 manifest의 audience, skill, template, result를 보존한다.
 
@@ -93,7 +93,7 @@ CA-C01 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/career-stage-goal/content.md`에 game-design-role-map, learning-roadmap을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+시스템 기획과 콘텐츠 기획을 역할 후보로 남기고, 각각 규칙표 작성과 퀘스트 흐름 설계를 첫 증명 과제로 잡았습니다. 어느 역할을 우선할지는 과제 결과를 본 뒤 사용자와 멘토가 검토해 결정합니다. (ID: career:case:CA-C01; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -263,7 +263,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/ana
 <!-- PROMPT-CARD: career:case:CA-C02 -->
 #### career:case:CA-C02
 
-**CA-C02 source-bound scenario**
+**관찰과 반례로 완성하는 게임 역기획 (CA-C02)**
 
 CA-C02 manifest의 audience, skill, template, result를 보존한다.
 
@@ -277,7 +277,7 @@ CA-C02 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: reverse-design-critic → game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, reverse-design-document을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+보스전에서 회피 구간이 두 번 반복된다는 관찰과 ‘전투 속도 조절’ 가설을 나눠 적었습니다. 난이도 완화 목적일 수 있다는 반례와 화면 인용 범위는 작성자와 멘토의 검토 전입니다. (ID: career:case:CA-C02; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -448,7 +448,7 @@ $game-design-career:research-game-design-jobs role=systems-designer level=entry 
 <!-- PROMPT-CARD: career:case:CA-C03 -->
 #### career:case:CA-C03
 
-**CA-C03 source-bound scenario**
+**채용 공고 근거로 역할 지도를 고치는 조사 (CA-C03)**
 
 CA-C03 manifest의 audience, skill, template, result를 보존한다.
 
@@ -462,7 +462,7 @@ CA-C03 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: evidence-auditor → portfolio-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/job-posting-evidence/content.md`에 job-posting-evidence, game-design-role-map을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+연습용 조사에서는 국내 시스템 기획 공고 6건을 표본으로 두고 협업 문서와 데이터 표 경험을 역할 지도에 연결했습니다. 실제 지역과 조사 날짜를 확인하지 않았으므로 요구사항의 우선순위는 조사 담당자 검토 전입니다. (ID: career:case:CA-C03; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -632,7 +632,7 @@ gap이 능력의 낙인 대신 검증 가능한 다음 작업으로 적혔는가
 <!-- PROMPT-CARD: career:case:CA-C04 -->
 #### career:case:CA-C04
 
-**CA-C04 source-bound scenario**
+**역량 차이를 학습 일정으로 바꾸는 성장 계획 (CA-C04)**
 
 CA-C04 manifest의 audience, skill, template, result를 보존한다.
 
@@ -646,7 +646,7 @@ CA-C04 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/competency-matrix/content.md`에 competency-matrix, learning-roadmap을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+규칙 문서화는 기존 사례가 있지만 수치 검증 기록은 비어 있어 우선 보완 항목으로 뒀습니다. 격주로 밸런스 가설과 실험표를 한 세트씩 만들겠다는 일정은 멘토가 실행 가능성을 검토합니다. (ID: career:case:CA-C04; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -816,7 +816,7 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/rev
 <!-- PROMPT-CARD: career:case:CA-C05 -->
 #### career:case:CA-C05
 
-**CA-C05 source-bound scenario**
+**공개 근거와 개인 기여를 밝히는 역기획 사례 (CA-C05)**
 
 CA-C05 manifest의 audience, skill, template, result를 보존한다.
 
@@ -830,7 +830,7 @@ CA-C05 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: reverse-design-critic → visual-asset-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/reverse-design-document/content.md`에 reverse-design-document, game-analysis-report을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+전투 보상 구조 분석에는 직접 기록한 플레이 시점과 해석을 연결하고, 표 구성만 개인 작업으로 표시했습니다. 캡처 사용 범위와 분석 문구는 공개 권리 검토가 끝날 때까지 보류합니다. (ID: career:case:CA-C05; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -999,7 +999,7 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/crea
 <!-- PROMPT-CARD: career:case:CA-C06 -->
 #### career:case:CA-C06
 
-**CA-C06 source-bound scenario**
+**근거 있는 프로젝트를 포트폴리오로 엮기 (CA-C06)**
 
 CA-C06 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1013,7 +1013,7 @@ CA-C06 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: portfolio-reviewer → visual-asset-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/portfolio-project-brief/content.md`에 portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+협동 퍼즐 사례는 문제, 선택, 테스트 관찰, 개인 기여 순서로 한 페이지에 배치했습니다. 플레이 화면과 팀 작업물은 공개 범위 검토가 끝난 뒤에만 최종 포트폴리오 후보가 됩니다. (ID: career:case:CA-C06; 파일: game-design-career/[경력 ID]/portfolio-project-brief/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1183,7 +1183,7 @@ $game-design-career:review-game-design-portfolio artifact=game-design-career/por
 <!-- PROMPT-CARD: career:case:CA-C07 -->
 #### career:case:CA-C07
 
-**CA-C07 source-bound scenario**
+**포트폴리오 진단에서 발표 수정안까지 (CA-C07)**
 
 CA-C07 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1197,7 +1197,7 @@ CA-C07 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: portfolio-reviewer → game-design-mentor → visual-asset-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/five-axis-review/content.md`에 five-axis-review, portfolio-backlog, introduction-motivation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토에서 ‘선택 이유가 약함’을 높은 우선순위로 잡고, 첫 사례에 비교안을 추가하는 수정 작업을 등록했습니다. 자기소개에 넣을 문구와 공개 범위는 포트폴리오 검토자와 멘토가 함께 확인합니다. (ID: career:case:CA-C07; 파일: game-design-career/[경력 ID]/five-axis-review/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -1368,7 +1368,7 @@ $game-design-career:practice-game-design-interview artifact=game-design-career/g
 <!-- PROMPT-CARD: career:case:CA-C08 -->
 #### career:case:CA-C08
 
-**CA-C08 source-bound scenario**
+**면접 답변에서 다음 성장 과제를 찾기 (CA-C08)**
 
 CA-C08 manifest의 audience, skill, template, result를 보존한다.
 
@@ -1382,7 +1382,7 @@ CA-C08 manifest의 audience, skill, template, result를 보존한다.
 - 함께 검토하는 역할: game-design-mentor → career-strategist → portfolio-reviewer → visual-asset-reviewer
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/interview-question-answer-log/content.md`에 interview-question-answer-log, junior-growth-review, transition-readiness을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+라이브 운영 경험을 묻는 질문에는 직접 경험이 없다고 쓰고, 이벤트 보상표를 만든 유사 경험을 근거로 붙였습니다. 코치 피드백 뒤 지표 분석 과제를 다음 성장 항목으로 제안했지만 전환 준비 판단은 아직 미정입니다. (ID: career:case:CA-C08; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

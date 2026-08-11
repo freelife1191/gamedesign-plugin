@@ -102,7 +102,7 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 <!-- PROMPT-CARD: career:recipe:portfolio-build-review -->
 #### career:recipe:portfolio-build-review
 
-**portfolio-build-review recipe**
+**포트폴리오 제작과 검토를 잇는 순서 (portfolio-build-review)**
 
 portfolio-build-review recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -116,7 +116,7 @@ portfolio-build-review recipe의 ordered CLI calls와 artifact read order를 보
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/creative-design-portfolio/content.md`에 creative-design-portfolio canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+역기획 사례의 문제·판단·근거를 한 문서로 묶은 뒤 다섯 기준으로 검토해 수정 목록을 만들었습니다. 공개 권리와 개인 기여 문구가 확인되기 전에는 완성본으로 표시하지 않습니다. (ID: career:recipe:portfolio-build-review; 파일: game-design-career/[경력 ID]/creative-design-portfolio/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

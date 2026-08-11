@@ -57,10 +57,15 @@ export async function collectProductInventory(repoRoot, productId) {
     repoRoot,
     "shared/vendor/skillstead/svg-infographic/0.9.0/SKILL.md",
   );
-  await assertRegularFile(vendorSkill);
+  const sharedSkills = [
+    ["svg-infographic", vendorSkill],
+    ["archify", path.join(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md")],
+    ["humanize-korean", path.join(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md")],
+  ];
+  for (const [, skillPath] of sharedSkills) await assertRegularFile(skillPath);
   const templateIds = await directoryIds(path.join(productRoot, "assets/templates"), "content.md");
   return {
-    skillIds: [...productSkills, "svg-infographic"].sort(compareIds),
+    skillIds: [...productSkills, ...sharedSkills.map(([id]) => id)].sort(compareIds),
     templateIds: templateIds.sort(compareIds),
   };
 }

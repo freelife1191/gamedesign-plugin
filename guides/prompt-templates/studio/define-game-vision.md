@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:define-game-vision:beginner -->
 ## studio:define-game-vision:beginner
 
-**게임 기획 결과: 대상과 player promise를 정하는 게임 비전**
+**대상 플레이어와 플레이 약속을 정하는 게임 비전**
 
 한 문장 게임 아이디어를 대상 플레이어, player promise, pillar와 검증 질문이 있는 짧은 비전 브리프로 바꾼다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: lead-game-designer → content-narrative-designer
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 대상 플레이어: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:define-game-vision:beginner; 파일: game-design/studio-foundations/vision-beginner/content.md)
+대상 플레이어는 짧은 협동을 선호하는 2인 친구이며, 플레이 약속은 ‘매일 하나씩 등대섬을 되살린다’입니다. 이 가설은 인터뷰 근거와 연결한 뒤 채택 여부를 정합니다. (ID: studio:define-game-vision:beginner; 파일: game-design/studio-foundations/vision-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -125,7 +125,7 @@ vision-beginner의 player promise와 질문을 보존하고 새 플레이어 관
 <!-- PROMPT-CARD: studio:define-game-vision:standard -->
 ## studio:define-game-vision:standard
 
-**게임 기획 결과: Pillar와 anti-pillar를 검증하는 게임 비전**
+**핵심 원칙과 배제 원칙을 검증하는 게임 비전**
 
 pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기능 선택에 쓸 기준을 만든다.
 
@@ -139,7 +139,7 @@ pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기
 - 함께 검토하는 역할: lead-game-designer → content-narrative-designer
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 기획 원칙: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:define-game-vision:standard; 파일: game-design/studio-foundations/vision-standard/content.md)
+핵심 원칙은 ‘관찰로 푸는 협동 추리’, 배제 원칙은 ‘반복 전투로 진행 막기’로 적었습니다. 폐역 신호 해독 프로토타입에서 두 원칙이 실제 선택 기준이 되는지 살펴봐야 합니다. (ID: studio:define-game-vision:standard; 파일: game-design/studio-foundations/vision-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -248,7 +248,7 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 <!-- PROMPT-CARD: studio:define-game-vision:advanced -->
 ## studio:define-game-vision:advanced
 
-**게임 기획 결과: 상충 기능과 근거 owner를 다루는 게임 비전**
+**상충하는 기능과 근거 책임자를 다루는 게임 비전**
 
 상충하는 feature 제안을 pillar·non-goal과 evidence 상태로 비교하고 사람 owner가 판단할 수 있게 만든다.
 
@@ -262,7 +262,7 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → content-narrative-designer
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 비교 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)
+‘자동 가격 조정’은 시장 운영의 이해도를 낮출 수 있어 ‘직접 흥정’ 기능과 나란히 비교했습니다. 플레이 관찰 자료의 책임자가 근거를 보완한 뒤 기능 채택을 판단합니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -2,7 +2,7 @@
 
 Game Design Career는 게임 기획 입문, 첫 취업, 주니어 성장, 이직 준비를 검증 가능한 산출물로 바꾸는 Codex 플러그인입니다. 진로를 단정하거나 합격을 보장하지 않고, 현재 자료와 제약에서 확인할 수 있는 근거·공백·다음 실험을 분리합니다.
 
-플러그인은 14개 워크플로 스킬, 일반 역할 7개와 이미지 전문 역할 2개, 15개 Canonical Artifact 템플릿, 13개 Document Quality Profile, Skillstead `svg-infographic` 0.8.3, MD/PDF/DOCX/PPTX 내보내기 계약을 하나의 독립 패키지에 포함합니다. vendored Skillstead를 포함한 설치 스킬은 15개입니다.
+플러그인은 15개 워크플로 스킬, 전문 역할 10개, 15개 Canonical Artifact 템플릿과 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 구조 HTML 도식용 Archify, 한국어 문장 검토용 humanize-korean, Skillstead `svg-infographic` 0.9.0까지 포함한 설치 스킬은 18개입니다.
 
 ## 대표 작업 경로
 
@@ -197,11 +197,13 @@ codex plugin marketplace remove game-design-suite
 ```text
 <staging>/game-design-career/
 ├── .codex-plugin/plugin.json
-├── skills/ (15개)
-│   ├── <14개 Career 제품 스킬>/
+├── skills/ (18개)
+│   ├── <15개 Career 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
-│   └── svg-infographic/             # vendored Skillstead 0.8.3
-├── agents/ (9개)                    # 일반 7개와 이미지 전문 2개의 이식 가능한 역할 프롬프트
+│   ├── archify/                      # vendored Archify 2.13.0
+│   ├── humanize-korean/              # vendored im-not-ai
+│   └── svg-infographic/              # vendored Skillstead 0.9.0
+├── agents/ (10개)                   # 이식 가능한 전문 역할 프롬프트
 ├── hooks/
 │   └── hooks.json
 ├── scripts/                         # shared runtime
@@ -239,7 +241,7 @@ codex plugin marketplace remove game-design-suite
 
 경로 계약을 검색하기 쉽게 요약하면 `references/shared/knowledge/core/`는 검토된 Core 지식, `references/shared/knowledge/trends/`는 Current 근거와 갱신 정책, `references/source/docs/ (49개)`는 원문 provenance입니다. 내보내기 스키마는 `references/shared/export/schema/`에 있고, 문서 품질 계약은 `references/shared/document-quality/`와 `references/document-quality/template-profile-map.json`에 있으며, Career 전용 job·fact/inference·evidence schemas는 제품 references에 있습니다.
 
-`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (15개)`는 제품 스킬 14개와 `skills/svg-infographic/` 한 개이며, `agents/ (9개)`는 일반 registry 7개와 image specialist registry 2개로 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 역할 프롬프트입니다.
+`assets/templates/ (15개)`와 `assets/product-mark.svg`는 Career source overlay에서 옵니다. 최종 `skills/ (18개)`는 제품 스킬 15개와 `skills/archify/`, `skills/humanize-korean/`, `skills/svg-infographic/`이며, `agents/ (10개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 프롬프트입니다.
 
 ## 설치된 top-level scripts
 

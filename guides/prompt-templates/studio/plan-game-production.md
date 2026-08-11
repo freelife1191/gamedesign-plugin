@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:plan-game-production:beginner -->
 ## studio:plan-game-production:beginner
 
-**게임 기획 결과: 범위와 제외 항목을 갖춘 최소 제작 계획**
+**포함 범위와 제외 항목을 갖춘 최소 제작 계획**
 
 vertical slice의 포함·제외 범위, 알려진 위험과 decision owner를 production-scope-risk에 기록한다.
 
@@ -19,7 +19,7 @@ vertical slice의 포함·제외 범위, 알려진 위험과 decision owner를 p
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 범위 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:plan-game-production:beginner; 파일: game-design/studio-production/production-beginner/content.md)
+눈 마을 수비 시제품에는 성문 1곳과 적 2종만 넣고, 날씨 변화와 음성 연출은 제외했습니다. 전투 담당자가 핵심 반복 플레이를 검토한 뒤 범위를 고정합니다. (ID: studio:plan-game-production:beginner; 파일: game-design/studio-production/production-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ production-beginner의 Must 범위와 제외 항목을 보존하고 새 prototyp
 <!-- PROMPT-CARD: studio:plan-game-production:standard -->
 ## studio:plan-game-production:standard
 
-**게임 기획 결과: Milestone 의존성과 owner를 갖춘 제작 계획**
+**주요 일정의 의존 관계와 책임자를 갖춘 제작 계획**
 
 승인된 scope를 observable milestone, dependency, owner와 definition of done으로 연결한다.
 
@@ -140,7 +140,7 @@ production-beginner의 Must 범위와 제외 항목을 보존하고 새 prototyp
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 와: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:plan-game-production:standard; 파일: game-design/studio-production/production-standard/content.md)
+등대 복구 시제품은 전력 퍼즐 구현 뒤 협동 동기화 시험으로 이어지며, 각 단계에 시스템·네트워크 책임자를 지정했습니다. 완료 기준은 실제 인력 산정과 대조해야 합니다. (ID: studio:plan-game-production:standard; 파일: game-design/studio-production/production-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -250,7 +250,7 @@ production-standard의 milestone·dependency·DoD를 보존하고 새 throughput
 <!-- PROMPT-CARD: studio:plan-game-production:advanced -->
 ## studio:plan-game-production:advanced
 
-**게임 기획 결과: Kill criteria와 외주·license 위험을 검토하는 제작 계획**
+**중단 기준과 외주·사용권 위험을 검토하는 제작 계획**
 
 변경 요청의 core-loop 기여를 kill criteria, outsource·license 위험과 사람 결정에 연결한다.
 
@@ -264,7 +264,7 @@ production-standard의 milestone·dependency·DoD를 보존하고 새 throughput
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → document-quality-editor
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:plan-game-production:advanced; 파일: game-design/studio-production/production-advanced/content.md)
+폐역 음성 해독 기능은 2주 안에 인식률 기준을 못 맞추면 범위에서 빼는 안을 적었습니다. 외주 음성 데이터의 사용권 조항은 법무와 제작 책임자가 확인해야 합니다. (ID: studio:plan-game-production:advanced; 파일: game-design/studio-production/production-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

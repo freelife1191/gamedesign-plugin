@@ -85,7 +85,7 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 <!-- PROMPT-CARD: career:recipe:interview-preparation -->
 #### career:recipe:interview-preparation
 
-**interview-preparation recipe**
+**근거 중심 면접 준비 순서 (interview-preparation)**
 
 interview-preparation recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -99,7 +99,7 @@ interview-preparation recipe의 ordered CLI calls와 artifact read order를 보�
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/interview-question-answer-log/content.md`에 interview-question-answer-log canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+공고 근거를 갱신한 뒤 문제 해결·협업·실패·성장 질문에 사례 주소를 붙였습니다. 빈 경험은 보완 과제로 남겼고 답변 사용 여부는 면접 코치 검토 뒤 결정합니다. (ID: career:recipe:interview-preparation; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

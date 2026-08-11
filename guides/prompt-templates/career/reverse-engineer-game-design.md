@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:beginner -->
 ## career:reverse-engineer-game-design:beginner
 
-**게임 기획 결과: 관찰과 추론을 분리하는 게임 역기획**
+**관찰과 해석을 나누어 쓰는 게임 역기획**
 
 공개 build의 observation과 inference를 분리해 UI, rule, economy 가설을 안전하게 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: reverse-design-critic → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 관찰 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:reverse-engineer-game-design:beginner; 파일: game-design-career/career-foundations/reverse-beginner/content.md)
+관찰: 보스 체력이 절반 아래로 내려가면 회피 구간이 두 번 반복됩니다. 해석: 전투 속도를 늦추려는 규칙일 수 있으나 내부 설계 의도는 알 수 없어 검토 전 가설로 남겼습니다. (ID: career:reverse-engineer-game-design:beginner; 파일: game-design-career/career-foundations/reverse-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -124,7 +124,7 @@ reverse-beginner observation과 rights note를 보존하고 공개 source를 확
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:standard -->
 ## career:reverse-engineer-game-design:standard
 
-**게임 기획 결과: rule·UI·economy 가설을 검증하는 게임 역기획**
+**규칙·화면·경제 가설을 검증하는 게임 역기획**
 
 rule, UI, economy 가설에 observation, inference, alternative와 validation method를 연결한다.
 
@@ -138,7 +138,7 @@ rule, UI, economy 가설에 observation, inference, alternative와 validation me
 - 함께 검토하는 역할: reverse-design-critic → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 관찰 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:reverse-engineer-game-design:standard; 파일: game-design-career/career-foundations/reverse-standard/content.md)
+상점 새로고침 비용이 구매를 늦춘다는 가설을 세웠지만, 희귀 상품을 기다리는 행동이라는 반례도 적었습니다. 두 설명 모두 검토 전이며 다음 플레이에서 보유 재화와 새로고침 횟수를 함께 기록합니다. (ID: career:reverse-engineer-game-design:standard; 파일: game-design-career/career-foundations/reverse-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -247,7 +247,7 @@ reverse-standard claim record와 counterexample을 보존하고 새 관찰을 �
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:advanced -->
 ## career:reverse-engineer-game-design:advanced
 
-**게임 기획 결과: 반증·rights·대안을 갖춘 게임 역기획**
+**반증 조건과 인용 권리를 갖춘 게임 역기획**
 
 반증 가능한 reverse engineering claim에 rights, alternative, validation queue를 연결해 observation과 inference를 엄격히 분리한다.
 
@@ -261,7 +261,7 @@ reverse-standard claim record와 counterexample을 보존하고 새 관찰을 �
 - 함께 검토하는 역할: reverse-design-critic → evidence-auditor
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 관찰 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:reverse-engineer-game-design:advanced; 파일: game-design-career/career-foundations/reverse-advanced/content.md)
+‘짧은 부활 대기 시간이 재도전을 늘린다’는 가설은 대기 시간이 같아도 이탈이 늘면 기각합니다. 공개 문서에는 직접 촬영한 화면만 후보로 두고 사용 권리는 별도 검토로 넘겼습니다. (ID: career:reverse-engineer-game-design:advanced; 파일: game-design-career/career-foundations/reverse-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -33,7 +33,7 @@ async function filesIn(directory) {
 test("prompt guide library publishes the complete deterministic card graph", async () => {
   const catalog = await loadPromptTemplateCatalog({ repoRoot: root });
   const detailPages = new Set(catalog.entries.filter((entry) => entry.kind === "skill-template" || entry.kind === "suite-case").map(detailPath));
-  assert.equal(detailPages.size, 38, "15 Studio + 15 Career + 8 suite detail pages");
+  assert.equal(detailPages.size, 40, "16 Studio + 16 Career + 8 suite detail pages");
   assert.deepEqual(await filesIn("guides/prompt-templates/studio"), [...detailPages].filter((file) => file.includes("/studio/")).map((file) => path.basename(file)).sort());
   assert.deepEqual(await filesIn("guides/prompt-templates/career"), [...detailPages].filter((file) => file.includes("/career/")).map((file) => path.basename(file)).sort());
   assert.deepEqual(await filesIn("guides/prompt-templates/suite"), [...detailPages].filter((file) => file.includes("/suite/")).map((file) => path.basename(file)).sort());
@@ -50,19 +50,19 @@ test("prompt guide library publishes the complete deterministic card graph", asy
   const markdown = documents.join("\n");
   const cards = documents.flatMap(renderedCards);
   const rendered = cards.join("\n");
-  assert.equal(cards.length, 146);
+  assert.equal(cards.length, catalog.entries.length);
   assert.equal(
     count(rendered, /^#{3,} Codex (?:App|CLI) 완성 예시$/gmu),
-    292,
-    "146 cards expose one App and one CLI execution path",
+    catalog.entries.length * 2,
+    "every card exposes one App and one CLI execution path",
   );
   assert.equal(
     count(rendered, /^#{3,} Codex (?:App|CLI) (?:완성 예시|재사용 템플릿)$/gmu),
-    584,
+    catalog.entries.length * 4,
     "each execution path has an example and reusable template",
   );
-  assert.equal(count(rendered, /^```text$/gmu), 730);
-  assert.equal(count(rendered, /^#{3,} 실패와 재개$/gmu), 146);
+  assert.equal(count(rendered, /^```text$/gmu), catalog.entries.length * 5);
+  assert.equal(count(rendered, /^#{3,} 실패와 재개$/gmu), catalog.entries.length);
 
   for (const skill of catalog.entries.filter((entry) => entry.kind === "skill-template")) {
     const guide = await readFile(path.join(root, `guides/${products.get(skill.product)}/skills/${skill.skill}.md`), "utf8");
@@ -109,4 +109,22 @@ test("rendered cards reject chain, result, namespace, reviewer, and diagram muta
   for (const [label, mutated] of mutations) {
     assert.throws(() => validateRenderedPromptCard(entry, mutated), undefined, label);
   }
+});
+
+test("suite CLI cards reject a duplicate or foreign catalog command", async () => {
+  const catalog = await loadPromptTemplateCatalog({ repoRoot: root });
+  const entry = catalog.entries.find((candidate) => candidate.kind === "suite-case");
+  assert.ok(entry, "suite catalog entry exists");
+  const card = renderPromptCard(entry);
+  const foreign = entry.cli_prompt.template.includes("$game-design-studio:")
+    ? "$game-design-career:build-game-design-portfolio"
+    : "$game-design-studio:orchestrate-game-design-project";
+  assert.throws(
+    () => validateRenderedPromptCard(entry, card.replace(entry.cli_prompt.template, `${entry.cli_prompt.template}\n${foreign}`)),
+    /text block differs from catalog/u,
+  );
+  assert.throws(
+    () => validateRenderedPromptCard(entry, card.replace(entry.cli_prompt.example, entry.cli_prompt.example.replace(/\$game-design-(?:studio|career):[^\s]+/u, foreign))),
+    /text block differs from catalog/u,
+  );
 });

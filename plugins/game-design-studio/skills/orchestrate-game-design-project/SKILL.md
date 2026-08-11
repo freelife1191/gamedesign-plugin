@@ -20,13 +20,14 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 5. Create or update the Canonical Artifact. Keep `content.md` authoritative and link evidence, decisions, reviews, and assets instead of scattering conclusions across chat.
 6. Dispatch independent review envelopes when subagents exist. Otherwise execute the identical envelope list sequentially in declared role priority.
 7. Merge findings deterministically. Preserve disagreements as decision items; never let completion timing determine order or resolution.
-8. Read [completion-gates.md](references/completion-gates.md). Apply document-quality, domain, responsible-design, Canonical Artifact, visualization, image approval, and requested-format gates before claiming completion.
+8. After content and domain review, use `polish-game-design-writing` only when a Korean readability pass is requested or useful. It runs the bundled `humanize-korean` skill and protected-content validator as a separate specialist pass, creates a draft and receipt, and waits for a named person. It is outside the three-role review limit and never changes the Canonical Artifact in place.
+9. Read [completion-gates.md](references/completion-gates.md). Apply document-quality, domain, responsible-design, Canonical Artifact, visualization, image approval, and requested-format gates before claiming completion.
 
 ## Optional Archify structural-diagram route
 
-For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before dispatching visualization. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+For component boundaries, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON specification. Preserve its checked HTML and receipt as separate evidence; an architecture diagram never replaces the Canonical Artifact or grants approval.
 
-Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+Use the packaged `$svg-infographic` skill for document-friendly static flows, comparisons, and 2× PNG fallback. Keep Archify HTML and Skillstead SVG/PNG receipts distinct, and never auto-approve either diagram.
 
 ## Operating Rules
 
@@ -35,7 +36,7 @@ Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, wi
 - Honor an explicit user-selected skill when it is compatible with the requested result and all safety, rights, evidence, and human-approval boundaries.
 - Keep unknown or ambiguous intent in this orchestrator; never guess a specialist.
 - Treat profiles as additional questions and gates, not permission to invent facts.
-- Select one to three roles for distinct review questions. Do not add a role merely to fill the limit.
+- Select one to three roles for distinct review questions. Apply a route's conditional reviewers only when the normalized intent is listed in that condition's `triggerIntents`; deduplicate the final reviewer set and do not add a role merely to fill the limit.
 - Preserve the canonical Markdown artifact when optional review, visualization, export, or host capabilities are absent.
 - Report the selected skills, selected review roles, artifact paths, and remaining decisions. Also report assumptions, unresolved questions, blocked gates, requested format status, and the next decision owner.
 - Automatic route selection is not automatic approval. A named human still approves, revises, or holds every applicable result and derivative.

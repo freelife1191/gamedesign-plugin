@@ -70,6 +70,11 @@
       "conditionalOwners": []
     },
     {
+      "skill": "humanize-korean",
+      "owners": ["game-design-writing-editor"],
+      "conditionalOwners": []
+    },
+    {
       "skill": "map-game-design-career",
       "owners": ["career-strategist"],
       "conditionalOwners": []
@@ -87,6 +92,11 @@
     {
       "skill": "plan-junior-growth",
       "owners": ["game-design-mentor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "polish-game-design-writing",
+      "owners": ["game-design-writing-editor"],
       "conditionalOwners": []
     },
     {

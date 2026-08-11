@@ -95,7 +95,7 @@ telemetry, 가격 정책 또는 rollback capability가 없으면 affected experi
 <!-- PROMPT-CARD: studio:recipe:economy-liveops -->
 #### studio:recipe:economy-liveops
 
-**economy-liveops recipe**
+**게임 경제와 라이브 운영 설계 절차**
 
 economy-liveops recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -109,7 +109,7 @@ economy-liveops recipe의 ordered CLI calls와 artifact read order를 보존한�
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/economy-balance/content.md`에 economy-balance canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+골드는 전투에서 얻어 장비 강화에 쓰고, 토큰은 행사 임무에서만 얻는 구조로 분리했습니다. 가격·확률·천장 수치는 근거 없음으로 표시했으며 실험 중단 기준과 되돌리기는 경제 책임자 확인 대기입니다. (ID: studio:recipe:economy-liveops; 파일: game-design/[프로젝트 ID]/economy-balance/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:plan-image-assets:beginner -->
 ## studio:plan-image-assets:beginner
 
-**게임 기획 결과: prompt-only 이미지 slot과 placeholder 계획**
+**프롬프트 전용 이미지 자리와 대체 표시 계획**
 
 생성 없이 profile slot 하나의 stable asset ID·alt text·명시적 count·placeholder를 concept-draft 계획으로 고정한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: art-brief-director
 
 ### 이 요청으로 받는 결과
-검토용 가상 산출물: 내보내기 전 점검 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:plan-image-assets:beginner; 파일: game-design/studio-visual/plan-beginner/content.md)
+글라이더 조작 설명 옆에 들어갈 바람길 개념도 1개를 `concept-draft`로 계획하고 대체 텍스트 초안을 붙였습니다. 이미지는 생성하지 않았으며 배치와 문구는 담당자 검토가 필요합니다. (ID: studio:plan-image-assets:beginner; 파일: game-design/studio-visual/plan-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -133,7 +133,7 @@ plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot
 <!-- PROMPT-CARD: studio:plan-image-assets:standard -->
 ## studio:plan-image-assets:standard
 
-**게임 기획 결과: stable ID·alt·count를 갖춘 이미지 manifest 계획**
+**고정 식별자(ID)·대체 텍스트·수량을 갖춘 이미지 명세 계획**
 
 여러 profile slot의 stable ID, alt text, count와 preserve/exclude를 reusable prompt package에 분리한다.
 
@@ -147,7 +147,7 @@ plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot
 - 함께 검토하는 역할: art-brief-director → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 자산 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:plan-image-assets:standard; 파일: game-design/studio-visual/plan-standard/content.md)
+해저 정원 문서에 수질 순환도 1개와 협동 작업 삽화 2개를 배정하고 각각 고정 자산 ID를 붙였습니다. 보존·제외 대상과 대체 텍스트는 편집자가 확인해야 합니다. (ID: studio:plan-image-assets:standard; 파일: game-design/studio-visual/plan-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -261,7 +261,7 @@ plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 sl
 <!-- PROMPT-CARD: studio:plan-image-assets:advanced -->
 ## studio:plan-image-assets:advanced
 
-**게임 기획 결과: profile slot·rights·diagram handoff가 있는 자산 계획**
+**프로필 자리·권리 조건·도식 인계를 포함한 자산 계획**
 
 권리 제약과 Skillstead diagram slot을 illustration과 분리해 finite manifest와 visualization handoff로 기록한다.
 
@@ -275,7 +275,7 @@ plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 sl
 - 함께 검토하는 역할: art-brief-director → visual-asset-reviewer → lead-game-designer
 
 ### 이 요청으로 받는 결과
-초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:plan-image-assets:advanced; 파일: game-design/studio-visual/plan-advanced/content.md)
+우주선 수리 절차도는 도식 작업으로 넘기고 승무원 삽화는 별도 자산 자리에 배정했습니다. 참고 사진의 권리와 철회 조건이 비어 있어 두 자산 모두 기획 초안 상태입니다. (ID: studio:plan-image-assets:advanced; 파일: game-design/studio-visual/plan-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:review-image-assets:beginner -->
 ## career:review-image-assets:beginner
 
-**게임 기획 결과: 문서 concept 이미지 검토 요청**
+**문서용 이미지 시안 검토 요청**
 
 concept-draft 이미지를 문서 삽입 후보로 검토하되 portfolio publication이나 실제 game resource를 승인하지 않는다.
 
@@ -19,7 +19,7 @@ concept-draft 이미지를 문서 삽입 후보로 검토하되 portfolio public
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 검토 발견 사항: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:review-image-assets:beginner; 파일: career/visual/review-image-assets/beginner/content.md)
+표지 시안은 문서 주제와 맞지만 작은 화면에서 부제가 읽히지 않는다는 의견을 남겼습니다. 글자 크기를 키운 수정안과 권리 근거를 사람이 확인하기 전에는 보류 상태입니다. (ID: career:review-image-assets:beginner; 파일: career/visual/review-image-assets/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -131,7 +131,7 @@ review-image-assets/beginner의 canonical artifact, stable IDs, source·attribut
 <!-- PROMPT-CARD: career:review-image-assets:standard -->
 ## career:review-image-assets:standard
 
-**게임 기획 결과: 공개 권리·가독성 document approval**
+**이미지 공개 권리와 문서 가독성 검토**
 
 공개 권리, source·attribution, alt text, readability와 named human reviewer evidence로 document-approved 전이를 검토한다.
 
@@ -145,7 +145,7 @@ review-image-assets/beginner의 canonical artifact, stable IDs, source·attribut
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-초안 결과: 검토 발견 사항에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:review-image-assets:standard; 파일: career/visual/review-image-assets/standard/content.md)
+검토한 ASSET-CASE-02는 출처 표기가 확인됐지만 대체 문구가 화면의 핵심 변화를 설명하지 못합니다. 문구 수정과 배치 확인이 끝난 뒤에만 문서 사용 여부를 결정합니다. (ID: career:review-image-assets:standard; 파일: career/visual/review-image-assets/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -276,7 +276,7 @@ review-image-assets/standard의 검증된 evidence만 보존하고, repair/verif
 <!-- PROMPT-CARD: career:review-image-assets:advanced -->
 ## career:review-image-assets:advanced
 
-**게임 기획 결과: production candidate·review cycle 증빙**
+**제작 후보 이미지의 반복 검토 기록**
 
 production-candidate 검토 주기를 기록하되 실제 portfolio publication·game resource 승격·legal approval을 자동 승인하지 않는다.
 
@@ -290,7 +290,7 @@ production-candidate 검토 주기를 기록하되 실제 portfolio publication�
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 검토 발견 사항 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:review-image-assets:advanced; 파일: career/visual/review-image-assets/advanced/content.md)
+세 번째 검토본은 색 대비 기준을 통과했지만 원본 라이선스의 유효 기간을 다시 확인해야 합니다. 기술 규격은 적합 후보로 표시했고 실제 포트폴리오 공개 승인은 별도로 남겨 뒀습니다. (ID: career:review-image-assets:advanced; 파일: career/visual/review-image-assets/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -94,7 +94,7 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 <!-- PROMPT-CARD: career:recipe:role-learning-roadmap -->
 #### career:recipe:role-learning-roadmap
 
-**role-learning-roadmap recipe**
+**역할 탐색에서 학습 로드맵까지 (role-learning-roadmap)**
 
 role-learning-roadmap recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -108,7 +108,7 @@ role-learning-roadmap recipe의 ordered CLI calls와 artifact read order를 보�
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/career-stage-goal/content.md`에 career-stage-goal canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+역할 후보 두 개를 비교하고 현재 증거가 약한 수치 설계를 8주 학습 과제로 바꿨습니다. 과제 난이도와 역할 우선순위는 사용자와 멘토가 검토한 뒤 조정합니다. (ID: career:recipe:role-learning-roadmap; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,13 +5,13 @@
 <!-- PROMPT-CARD: suite:student-mentor-review:case -->
 ## suite:student-mentor-review:case
 
-**게임 기획 결과: student-mentor-review suite case**
+**학생 과제와 수정 기록을 멘토에게 넘기기**
 
-student-mentor-review의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
+Studio에서 만든 과제와 수정 기록을 Career의 포트폴리오 검토 기준에 맞춰 멘토에게 넘긴다.
 
 ### 간단 요청 예시
 ```text
-@Game Design Studio와 @Game Design Career에서 student-mentor-review handoff를 public/evidence-safe하게 작성해.
+@Game Design Studio의 시스템 기획 과제를 @Game Design Career의 포트폴리오 루브릭으로 검토할 수 있게 멘토 인계 문서를 작성해 줘.
 ```
 
 ### 짧은 흐름
@@ -19,23 +19,23 @@ student-mentor-review의 Studio와 Career ordered handoff를 public/evidence-saf
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 과제, 루브릭, 수정 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)
+멘토 검토 초안에는 스태미나 규칙의 예외가 빠졌다는 지적과 학생이 추가한 사망 후 회복 규칙을 나란히 남겼습니다. 루브릭 점수는 멘토가 근거를 확인할 때까지 미정입니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
-두 제품의 canonical artifact handoff가 필요할 때 사용한다.
+학생의 시스템 기획 과제를 루브릭과 수정 기록으로 함께 검토할 때 사용한다.
 
 ### 사용하지 않는 경우
-비공개 자료, raw 개인 정보, 또는 미승인 결과를 전달할 때는 사용하지 않는다.
+비공개 자료, 가공하지 않은 개인 정보, 미승인 결과를 넘길 때는 사용하지 않는다.
 
 ### 준비 입력
 #### 필수 입력
-- 공개 가능한 evidence summary
+- 공개 가능한 근거 요약
 
 #### 선택 입력
-- named human approval receipt
+- 지정된 사람의 승인 기록
 
 ### 바꿀 자리표시자
 - [공개 정보]
@@ -45,17 +45,17 @@ student-mentor-review의 Studio와 Career ordered handoff를 public/evidence-saf
 
 ### Codex App 재사용 템플릿
 ```text
-@Game Design Studio와 @Game Design Career에서 [공개 정보]를 fact, inference, recommendation으로 분리해 student-mentor-review handoff를 작성해.
+@Game Design Studio와 @Game Design Career에서 [공개 정보]를 사실·추론·제안으로 나눠 student-mentor-review 인계 문서를 작성해 줘.
 ```
 
 ### Codex CLI 완성 예시
 ```text
-$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio student-mentor-review handoff의 공개 가능한 evidence summary를 작성해.
+$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio student-mentor-review에 넣을 공개 가능한 근거 요약을 작성해.
 ```
 
 ### Codex CLI 재사용 템플릿
 ```text
-$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio [공개 정보] student-mentor-review handoff의 fact, inference, recommendation을 작성해.
+$game-design-studio:design-game-systems $game-design-career:review-game-design-portfolio [공개 정보]를 사실·추론·제안으로 나눠 student-mentor-review에 기록해.
 ```
 
 ### 스킬·전문 역할 흐름
@@ -75,7 +75,7 @@ $game-design-studio:design-game-systems $game-design-career:review-game-design-p
 - 제외 기록
 
 #### 확장 결과물
-- resume receipt
+- 재개 기록
 
 ### 파일 구조
 - suite/student-mentor-review/content.md
@@ -89,21 +89,21 @@ $game-design-studio:design-game-systems $game-design-career:review-game-design-p
 - ID: st-s01
 - SVG: guides/assets/game-design-studio/skills/apply-document-quality-profile.svg
 - PNG: guides/assets/game-design-studio/skills/apply-document-quality-profile.png
-- 대체 텍스트: Suite handoff flow
+- 대체 텍스트: 학생 과제를 멘토의 포트폴리오 검토로 넘기는 흐름
 
 ### 사람 검토
 #### 승인 경계
-named human decision owner가 student-mentor-review handoff의 공개 범위를 승인 또는 보류한다.
+지정된 의사결정권자가 student-mentor-review의 공개 범위를 승인하거나 보류한다.
 
 #### 보류 조건
-- rights, evidence, 또는 approval receipt가 없으면 보류
+- 권리, 근거 또는 승인 기록이 없으면 보류
 
 #### 안전 경계
 모르는 정보는 미정으로 남긴다. Do not request credentials, personal data, or private materials.
 
 ### 실패와 재개
 ```text
-student-mentor-review의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.
+student-mentor-review에 보존된 과제와 루브릭을 읽고, 학생이 반영한 수정 항목부터 멘토 검토를 재개해.
 ```
 
 </details>

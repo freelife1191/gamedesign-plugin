@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:review-game-design:beginner -->
 ## studio:review-game-design:beginner
 
-**게임 기획 결과: 누락과 모순을 질문으로 남기는 기획 검토**
+**누락과 모순을 질문으로 남기는 기획 검토**
 
 작은 Canonical Artifact의 누락·모순을 direct evidence와 owner 질문으로 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: lead-game-designer
 
 ### 이 요청으로 받는 결과
-초안 결과: 근거 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:review-game-design:beginner; 파일: game-design/studio-production/review-beginner/content.md)
+수리 재료는 ‘탐사에서 획득’으로 적혔지만 탐사 보상표에는 항목이 없어 근거 위치를 묻는 질문을 남겼습니다. 수정안은 재료 출처를 한 곳에 연결하는 수준이며 채택은 담당자가 결정합니다. (ID: studio:review-game-design:beginner; 파일: game-design/studio-production/review-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ review-beginner의 evidence-backed 질문과 source-unavailable hold를 보존�
 <!-- PROMPT-CARD: studio:review-game-design:standard -->
 ## studio:review-game-design:standard
 
-**게임 기획 결과: Evidence gap과 severity를 owner에게 배정하는 검토**
+**근거 공백과 심각도를 책임자에게 배정하는 검토**
 
 stable section 기반 finding을 evidence gap, severity, impact, minimal fix와 responsible owner로 정규화한다.
 
@@ -140,7 +140,7 @@ stable section 기반 finding을 evidence gap, severity, impact, minimal fix와 
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 검토 발견 사항 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:review-game-design:standard; 파일: game-design/studio-production/review-standard/content.md)
+F-012는 지도 조각 소모 규칙의 원문 근거가 없다는 ‘높음’ 심각도 발견 사항입니다. 영향 범위와 최소 수정안을 적었지만 심각도와 담당자는 검토 책임자가 확인해야 합니다. (ID: studio:review-game-design:standard; 파일: game-design/studio-production/review-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -250,7 +250,7 @@ review-standard의 finding ID·severity·evidence gap을 보존하고 최소 수
 <!-- PROMPT-CARD: studio:review-game-design:advanced -->
 ## studio:review-game-design:advanced
 
-**게임 기획 결과: 교차 도메인 finding과 decision queue를 분리하는 검토**
+**분야 간 발견 사항과 결정 대기열을 나누는 검토**
 
 economy·UX·production 교차 도메인 finding을 evidence, impact, disagreement와 decision queue로 분리한다.
 
@@ -264,7 +264,7 @@ economy·UX·production 교차 도메인 finding을 evidence, impact, disagreeme
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 검토 발견 사항 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:review-game-design:advanced; 파일: game-design/studio-production/review-advanced/content.md)
+성문 수리 비용 증가는 경제와 사용자 경험 양쪽에 영향을 주므로 근거·영향·이견을 한 발견 사항에 묶었습니다. 비용 유지 여부는 제작 결정 대기열에 남아 있습니다. (ID: studio:review-game-design:advanced; 파일: game-design/studio-production/review-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

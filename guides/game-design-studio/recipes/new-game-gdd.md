@@ -93,7 +93,7 @@ Canonical Artifact의 `content.md`, evidence와 결정 기록을 함께 전달�
 <!-- PROMPT-CARD: studio:recipe:new-game-gdd -->
 #### studio:recipe:new-game-gdd
 
-**new-game-gdd recipe**
+**새 게임 기획서(GDD) 작성 절차**
 
 new-game-gdd recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -107,7 +107,7 @@ new-game-gdd recipe의 ordered CLI calls와 artifact read order를 보존한다.
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/vision-pillars/content.md`에 vision-pillars canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+협동 역할수행게임의 핵심 재미는 ‘서로 다른 단서를 합쳐 길을 찾는 경험’으로 적고, 혼자서 모든 역할을 해결하는 기능은 배제했습니다. 대상 플레이어 가정과 다음 시제품 범위는 수석 기획자 결정 전까지 미정입니다. (ID: studio:recipe:new-game-gdd; 파일: game-design/[프로젝트 ID]/vision-pillars/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

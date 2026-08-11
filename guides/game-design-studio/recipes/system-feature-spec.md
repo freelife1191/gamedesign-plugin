@@ -92,7 +92,7 @@ Canonical Artifact의 `content.md`, 예외 결정과 test case를 함께 전달�
 <!-- PROMPT-CARD: studio:recipe:system-feature-spec -->
 #### studio:recipe:system-feature-spec
 
-**system-feature-spec recipe**
+**시스템 기능 명세 작성 절차**
 
 system-feature-spec recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -106,7 +106,7 @@ system-feature-spec recipe의 ordered CLI calls와 artifact read order를 보존
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/system-specification/content.md`에 system-specification canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+제작 기능은 재료 선택→수량 검사→제작 대기→결과 수령 순서이며, 취소와 재접속 예외를 따로 적었습니다. 표 데이터와 실행 중 상태의 연결, 접근성 핵심 행동은 설계 책임자가 검토해야 합니다. (ID: studio:recipe:system-feature-spec; 파일: game-design/[프로젝트 ID]/system-specification/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

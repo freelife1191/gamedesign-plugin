@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:beginner -->
 ## studio:apply-document-quality-profile:beginner
 
-**게임 기획 결과: 문서 목적과 대상에 맞는 품질 프로필 선택**
+**문서 목적과 독자에 맞는 품질 프로필 선택**
 
 짧은 기획 브리프에 필요한 primary profile과 누락 입력을 안전하게 선택한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: document-quality-editor
 
 ### 이 요청으로 받는 결과
-초안 결과: 문서 품질 프로필에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)
+주 품질 프로필은 ‘간결한 기획 브리프’로 잡았고, 독자 역할과 출력 형식은 아직 비어 있습니다. 두 값을 담당자가 확인하기 전에는 체크리스트를 확정하지 않습니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ document-quality-editor가 profile 선택을 검토하지만 선택 기록 자�
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:standard -->
 ## studio:apply-document-quality-profile:standard
 
-**게임 기획 결과: Overlay와 preset manifest를 갖춘 품질 프로필 선택**
+**덧씌움 규칙과 프리셋 명세를 포함한 품질 프로필 선택**
 
 시스템 명세의 primary profile, additive overlay, neutral preset과 requirement manifest를 일관되게 정한다.
 
@@ -140,7 +140,7 @@ document-quality-editor가 profile 선택을 검토하지만 선택 기록 자�
 - 함께 검토하는 역할: document-quality-editor → system-economy-designer
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 문서 품질 프로필 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:apply-document-quality-profile:standard; 파일: game-design/studio-foundations/profile-standard/content.md)
+시스템 명세에는 기본 프로필과 ‘접근성 검토’ 덧씌움 규칙을 함께 제안했습니다. 요구사항 명세의 적용 범위는 문서 책임자가 검토해야 합니다. (ID: studio:apply-document-quality-profile:standard; 파일: game-design/studio-foundations/profile-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -248,7 +248,7 @@ profile-standard의 기존 manifest와 digest-bound selection record를 보존�
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:advanced -->
 ## studio:apply-document-quality-profile:advanced
 
-**게임 기획 결과: Fallback과 state receipt를 가진 품질 프로필 검토**
+**대체 규칙과 상태 기록을 갖춘 품질 프로필 검토**
 
 profile 충돌을 fail-closed로 분리하고 사람 승인 전까지 state receipt를 보존한다.
 
@@ -262,7 +262,7 @@ profile 충돌을 fail-closed로 분리하고 사람 승인 전까지 state rece
 - 함께 검토하는 역할: document-quality-editor → lead-game-designer → production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:apply-document-quality-profile:advanced; 파일: game-design/studio-foundations/profile-advanced/content.md)
+‘상세 명세’와 ‘경영진 요약’ 프로필이 충돌해 안전한 기본 프로필로 되돌리는 안을 남겼습니다. 충돌 해소와 상태 기록 승인은 결정 담당자 몫입니다. (ID: studio:apply-document-quality-profile:advanced; 파일: game-design/studio-foundations/profile-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

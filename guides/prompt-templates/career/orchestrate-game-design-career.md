@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:orchestrate-game-design-career:beginner -->
 ## career:orchestrate-game-design-career:beginner
 
-**게임 기획 결과: 단계와 목표를 정하는 Career orchestration brief**
+**현재 단계와 다음 목표를 정하는 진로 작업안**
 
 career stage와 목표를 짧은 brief로 정리하고 다음 skill handoff의 fact, inference, recommendation을 분리한다.
 
@@ -19,7 +19,7 @@ career stage와 목표를 짧은 brief로 정리하고 다음 skill handoff의 f
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:orchestrate-game-design-career:beginner; 파일: game-design-career/career-foundations/orchestrate-beginner/content.md)
+현재 단계는 역할 탐색, 이번 목표는 시스템 기획과 레벨 기획의 작은 과제를 각각 완성하는 것입니다. 다음 작업은 역할 지도 작성이며 2주 뒤 사용자와 멘토가 방향을 검토합니다. (ID: career:orchestrate-game-design-career:beginner; 파일: game-design-career/career-foundations/orchestrate-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -124,7 +124,7 @@ orchestrate-beginner brief와 uncertainty를 보존하고 확인된 stage만 반
 <!-- PROMPT-CARD: career:orchestrate-game-design-career:standard -->
 ## career:orchestrate-game-design-career:standard
 
-**게임 기획 결과: research에서 portfolio로 잇는 Career orchestration**
+**채용 조사에서 포트폴리오 과제로 잇는 진로 계획**
 
 research → role map → portfolio handoff의 evidence boundary와 fact, inference, recommendation을 분리한다.
 
@@ -138,7 +138,7 @@ research → role map → portfolio handoff의 evidence boundary와 fact, infere
 - 함께 검토하는 역할: career-strategist → evidence-auditor → portfolio-reviewer
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:orchestrate-game-design-career:standard; 파일: game-design-career/career-foundations/orchestrate-standard/content.md)
+공고 조사에서 반복된 ‘경제 지표 해석’을 4주 상점 밸런스 사례로 연결했습니다. 출처가 오래되면 과제 시작을 멈추고 최신 공고를 확인하도록 담당자 검토용 재개 조건을 적었습니다. (ID: career:orchestrate-game-design-career:standard; 파일: game-design-career/career-foundations/orchestrate-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -245,7 +245,7 @@ orchestrate-standard의 research state와 portfolio handoff를 보존하고 fres
 <!-- PROMPT-CARD: career:orchestrate-game-design-career:advanced -->
 ## career:orchestrate-game-design-career:advanced
 
-**게임 기획 결과: 역할 검토·handoff·재개를 관리하는 Career orchestration**
+**역할 검토와 작업 인계·재개를 관리하는 진로 계획**
 
 복수 role review, owner handoff, hold, resume 조건을 기록하고 fact, inference, recommendation을 분리한다.
 
@@ -259,7 +259,7 @@ orchestrate-standard의 research state와 portfolio handoff를 보존하고 fres
 - 함께 검토하는 역할: career-strategist → game-design-mentor → evidence-auditor
 
 ### 이 요청으로 받는 결과
-초안 결과: 검토 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:orchestrate-game-design-career:advanced; 파일: game-design-career/career-foundations/orchestrate-advanced/content.md)
+역할 조사 완료 뒤 포트폴리오 사례 작성으로 넘기고, 공개 권리가 불분명하면 근거 검토 단계에서 멈추도록 정했습니다. 담당자, 보류 사유, 재개 입력을 표에 남겼으며 역할 선택은 사용자 검토 전입니다. (ID: career:orchestrate-game-design-career:advanced; 파일: game-design-career/career-foundations/orchestrate-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -328,6 +328,15 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       const license = await readFile(path.join(absoluteRepoRoot, "shared/vendor/im-not-ai/LICENSE"));
       addEntry(targets, { relativePath: "LICENSE", bytes: license }, "third-party/im-not-ai", "shared:im-not-ai-license");
     }
+    if (moduleName === "archify") {
+      const lock = await readFile(path.join(absoluteRepoRoot, "shared/vendor/archify/vendor.lock.json"));
+      addEntry(
+        targets,
+        { relativePath: "vendor.lock.json", bytes: lock },
+        "references/shared/vendor/archify",
+        "shared:archify-lock",
+      );
+    }
   }
 
   for (const [sourceRelative, destinationPrefix] of [["shared/hooks", "hooks"], ["shared/scripts", "scripts"]]) {

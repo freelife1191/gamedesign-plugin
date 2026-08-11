@@ -24,6 +24,8 @@
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `apply-document-quality-profile` | `$game-design-studio:apply-document-quality-profile` — profile 선택 | route가 섞였을 때 | template·artifact·owner | selection record | 선택된 domain skill | [직접 호출](../skills/apply-document-quality-profile.md#직접-호출-활용-apply-document-quality-profile) |
+| `humanize-korean` | `$game-design-studio:humanize-korean` — 문체만 검토 | 규칙·수치·결정을 바꿔야 할 때 | 원문·독자·보호 항목 | 수정안·변경 요약 | 사람의 의미 확인 | [직접 호출](../skills/humanize-korean.md#직접-호출-활용-humanize-korean) |
+| `polish-game-design-writing` | `$game-design-studio:polish-game-design-writing` — 긴 문장 윤문 | 근거·범위를 다시 설계할 때 | 원문·용어집·보호 항목 | 수정안·보호 확인표 | 사람의 의미 확인 | [직접 호출](../skills/polish-game-design-writing.md#직접-호출-활용-polish-game-design-writing) |
 | `review-game-design` | `$game-design-studio:review-game-design` — finding·owner | artifact가 없을 때 | canonical artifact·question | review·change log | fix, diagram 또는 export | [직접 호출](../skills/review-game-design.md#직접-호출-활용-review-game-design) |
 
 ## 이미지
@@ -39,6 +41,7 @@
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `visualize-game-design` | `$game-design-studio:visualize-game-design` — 관계 설명 | 장식 이미지 | source artifact·audience | SVG·2× PNG evidence | review 또는 export | [직접 호출](../skills/visualize-game-design.md#직접-호출-활용-visualize-game-design) |
+| `archify` | `$game-design-studio:archify` — 탐색 가능한 구조 HTML | 단순 표나 장식 이미지 | 사실 관계·독자·도식 유형 | JSON 원본·HTML·검증 영수증 | 구조 의미 검토 | [직접 호출](../skills/archify.md#직접-호출-활용-archify) |
 | `svg-infographic` | `$game-design-studio:svg-infographic` — wrapper 선택 뒤 authoring | preset·source mapping 전 | structural source·ratio | editable SVG·render evidence | wrapper validation | [직접 호출](../skills/svg-infographic.md#직접-호출-활용-svg-infographic) |
 
 ## 출력

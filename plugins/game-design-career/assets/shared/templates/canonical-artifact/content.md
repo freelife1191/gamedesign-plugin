@@ -3,21 +3,21 @@ title: Canonical Game Design Artifact
 artifact_id: canonical-game-design-artifact
 version: 1
 ---
-# Canonical Game Design Artifact {#canonical-game-design-artifact}
+# 게임 기획 기준 산출물 {#canonical-game-design-artifact}
 
-## Player Experience {#player-experience}
+## 플레이어 경험 {#player-experience}
 
 Describe the intended player experience and the choices that create it.
 
-## Design {#design}
+## 설계 {#design}
 
 Describe the system, content, or production design at the level needed for review.
 
-## Evidence {#evidence}
+## 근거 {#evidence}
 
 Link each material claim to `evidence.yml` and state important limitations.
 
-## Decisions and Risks {#decisions-and-risks}
+## 결정과 위험 {#decisions-and-risks}
 
 Link durable decisions from `decisions/` and record unresolved risks.
 

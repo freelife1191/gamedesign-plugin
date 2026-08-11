@@ -94,7 +94,7 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 <!-- PROMPT-CARD: career:recipe:junior-growth-transition -->
 #### career:recipe:junior-growth-transition
 
-**junior-growth-transition recipe**
+**주니어 성장 기록에서 전환 준비까지 (junior-growth-transition)**
 
 junior-growth-transition recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -108,7 +108,7 @@ junior-growth-transition recipe의 ordered CLI calls와 artifact read order를 �
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/junior-growth-review/content.md`에 junior-growth-review canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+12주 성장 기록에서 규칙 문서와 피드백 반영 사례를 골라 전환 준비표에 연결했습니다. 부족한 라이브 지표 경험은 다음 증명 과제로 남겼으며 준비 상태는 멘토 검토 전입니다. (ID: career:recipe:junior-growth-transition; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

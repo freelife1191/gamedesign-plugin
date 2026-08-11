@@ -91,7 +91,7 @@ Canonical Artifact의 `content.md`, 플랫폼 matrix, 사용자 관찰과 미해
 <!-- PROMPT-CARD: studio:recipe:ux-accessibility -->
 #### studio:recipe:ux-accessibility
 
-**ux-accessibility recipe**
+**사용자 경험과 접근성 설계 절차**
 
 ux-accessibility recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -105,7 +105,7 @@ ux-accessibility recipe의 ordered CLI calls와 artifact read order를 보존한
 - 함께 검토하는 역할: lead-game-designer
 
 ##### 이 요청으로 받는 결과
-예: `game-design/[프로젝트 ID]/ui-ux-flow-state/content.md`에 ui-ux-flow-state canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+첫 세션의 상품 진열 행동을 모바일 터치와 PC 키보드 입력으로 나누고, 초점·글자 확대·시각 및 소리 대안을 함께 적었습니다. 오프라인 복구와 입력 우선순위는 접근성 책임자 확인 전까지 제안 상태입니다. (ID: studio:recipe:ux-accessibility; 파일: game-design/[프로젝트 ID]/ui-ux-flow-state/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

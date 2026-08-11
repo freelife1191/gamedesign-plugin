@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:generate-image-assets:beginner -->
 ## career:generate-image-assets:beginner
 
-**게임 기획 결과: 선택한 포트폴리오 cover concept 생성 경로**
+**선택한 포트폴리오 표지 시안 만들기**
 
 실제 사용자가 선택한 stable asset ID의 cover concept를 제한된 생성 경로로 보내고 concept-draft 상태를 보존한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:generate-image-assets:beginner; 파일: career/visual/generate-image-assets/beginner/content.md)
+표지 자산 ASSET-COVER-01에는 격자 종이 위 규칙 카드와 연필이 놓인 차분한 시안을 선택했습니다. 생성 기록과 프롬프트는 남겼지만 포트폴리오 사용 여부는 시각 담당자 검토 전입니다. (ID: career:generate-image-assets:beginner; 파일: career/visual/generate-image-assets/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -129,7 +129,7 @@ generate-image-assets/beginner의 canonical artifact, stable IDs, source·attrib
 <!-- PROMPT-CARD: career:generate-image-assets:standard -->
 ## career:generate-image-assets:standard
 
-**게임 기획 결과: proof 이미지 receipt와 provenance 기록**
+**증명 이미지의 생성 이력과 출처 기록**
 
 선택한 proof 이미지의 provider result, prompt/output digest, receipt와 provenance를 named human review 이전에 기록한다.
 
@@ -143,7 +143,7 @@ generate-image-assets/beginner의 canonical artifact, stable IDs, source·attrib
 - 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:generate-image-assets:standard; 파일: career/visual/generate-image-assets/standard/content.md)
+수정 전후 비교 도표 두 장에 선택 자산 ID, 생성 방식, 프롬프트, 원본 근거 주소를 연결했습니다. 두 결과 모두 사람 검토 전 시안이며 실제 작업 증거를 대신하지 않습니다. (ID: career:generate-image-assets:standard; 파일: career/visual/generate-image-assets/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -253,7 +253,7 @@ generate-image-assets/standard의 canonical artifact, stable IDs, source·attrib
 <!-- PROMPT-CARD: career:generate-image-assets:advanced -->
 ## career:generate-image-assets:advanced
 
-**게임 기획 결과: provider failure·provenance·retry handoff**
+**이미지 생성 실패 기록과 재시도 인계**
 
 provider failure를 숨기지 않고 prompt·placeholder·provenance를 보존해 재시도 조건과 review handoff를 분리한다.
 
@@ -267,7 +267,7 @@ provider failure를 숨기지 않고 prompt·placeholder·provenance를 보존�
 - 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
 
 ### 이 요청으로 받는 결과
-검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:generate-image-assets:advanced; 파일: career/visual/generate-image-assets/advanced/content.md)
+과정 이미지 ASSET-PROCESS-03 생성이 시간 초과로 멈춰 실패 시각과 사용한 입력을 기록했습니다. 자산 식별자는 유지하고 낮은 해상도 재시도안을 남겼으며 실행 여부는 담당자 검토 뒤 정합니다. (ID: career:generate-image-assets:advanced; 파일: career/visual/generate-image-assets/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

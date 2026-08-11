@@ -4,11 +4,27 @@
 
 - Upstream: https://github.com/kyungseo/skillstead
 - Component: `svg-infographic`
-- Version: 0.8.3
+- Version: 0.9.0 (`svg-infographic/v0.9.0`, `6e5b850f66716af9eb3c6a79f60e4f8ff5716dee`)
 - License: Apache-2.0
 - Copyright 2026 Kyungseo Park
 
 The vendored component is preserved with its upstream `LICENSE.txt`. The Game Design Career wrapper selects career-specific diagram presets and invokes the vendored lint and render scripts; it does not relicense the upstream component.
+
+## Archify
+
+- Upstream: https://github.com/tt-a1i/archify
+- Version: 2.13.0 (`v2.13.0`, `2c1f8ac2ca28a26d0b68043ec80c9554e20ff0e3`)
+- License: MIT
+
+The packaged `$archify` skill is a regular-file, SHA-256-locked local release closure. It produces checked architecture HTML and receipts; it does not approve a career decision or portfolio claim.
+
+## im-not-ai humanize-korean
+
+- Upstream: https://github.com/epoko77-ai/im-not-ai
+- Version: `v2.3.0` (`82137e858763dadb99561f194c5c00465735017b`)
+- License: MIT
+
+The packaged `$humanize-korean` skill is a regular-file, SHA-256-locked copy. Installation uses this local bundle and never runs remote update code.
 
 ## Project-provided game-design documents
 

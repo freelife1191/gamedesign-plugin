@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:beginner -->
 ## studio:design-game-economy-and-liveops:beginner
 
-**게임 기획 결과: Source·sink 가설을 기록하는 경제 기초**
+**재화 획득처와 소비처 가설을 기록하는 경제 기초**
 
 한 자원의 source·sink와 보유 한도를 근거 상태와 함께 economy-balance에 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: system-economy-designer
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 · 표: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:design-game-economy-and-liveops:beginner; 파일: game-design/studio-production/economy-beginner/content.md)
+산호 조각은 정원 손질에서 얻고 묘목 구매에 쓰며, 임시 보유 한도는 200개로 두었습니다. 획득량과 한도는 플레이 기록이 없어 경제 담당자가 다시 정해야 합니다. (ID: studio:design-game-economy-and-liveops:beginner; 파일: game-design/studio-production/economy-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -125,7 +125,7 @@ economy-beginner의 source·sink 표와 미정 근거를 보존한 뒤 새 관�
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:standard -->
 ## studio:design-game-economy-and-liveops:standard
 
-**게임 기획 결과: Progression·guardrail·rollback을 갖춘 경제 계획**
+**성장 목표·안전 기준·되돌리기 절차를 갖춘 경제 계획**
 
 progression target을 guardrail, stop과 tested rollback에 연결해 economy-balance의 안전한 변경 경계를 기록한다.
 
@@ -139,7 +139,7 @@ progression target을 guardrail, stop과 tested rollback에 연결해 economy-ba
 - 함께 검토하는 역할: liveops-data-designer → system-economy-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:design-game-economy-and-liveops:standard; 파일: game-design/studio-production/economy-standard/content.md)
+우주선 부품 해금 목표를 3회 탐사로 잡고, 평균 소요 시간이 기준을 넘으면 보상 변경을 멈추도록 적었습니다. 되돌리기 절차는 시험 이력이 확인된 뒤에만 사용할 수 있습니다. (ID: studio:design-game-economy-and-liveops:standard; 파일: game-design/studio-production/economy-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -247,7 +247,7 @@ economy-standard의 progression·guardrail·rollback 기록과 현재 stop 상�
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:advanced -->
 ## studio:design-game-economy-and-liveops:advanced
 
-**게임 기획 결과: Experiment·telemetry·player protection을 분리하는 경제 검토**
+**실험·행동 데이터·플레이어 보호를 분리하는 경제 검토**
 
 experiment의 telemetry 근거 공백과 player protection을 blocked decision으로 분리한다.
 
@@ -261,7 +261,7 @@ experiment의 telemetry 근거 공백과 player protection을 blocked decision�
 - 함께 검토하는 역할: system-economy-designer → liveops-data-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:design-game-economy-and-liveops:advanced; 파일: game-design/studio-production/economy-advanced/content.md)
+지도 조각 묶음 가격 실험은 구매 전환 정의와 천장 보장 근거가 없어 ‘진행 불가’로 분리했습니다. 가격·확률·보호 기준은 각 책임자가 자료를 보완해야 합니다. (ID: studio:design-game-economy-and-liveops:advanced; 파일: game-design/studio-production/economy-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

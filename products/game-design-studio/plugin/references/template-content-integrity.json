@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "algorithm": "sha256",
   "contentHashes": {
-    "economy-balance": "18d2dd9ca5d5c7b010798f64dc12fa86f2a8078f2ad9b6657b50e2bf315d4c2a",
-    "game-design-review": "3674d400eb322a1bee77fa3dc704d73c3ee8da89b6e0fabfa4c498cffd8e1a78",
-    "liveops-experiment-event": "a6ae8cee4a750b8a81ac72c4eea2df235ab57865db478ec1aa4294829dfe6cdb",
-    "narrative-quest-npc": "728f44035c4b4303348703e47cda76a3f867b5cb3c1bf3f517cdbd21817765d5",
-    "system-specification": "9fa0adae044c0e5a5bd6cac1505f639c62c60cea6c5f13dc8212da94eaf0779a",
-    "ui-ux-flow-state": "87c1012582d4c49662f609d9f61f1c72b52a207956fabcfaaf117a26c9ab1fb5"
+    "economy-balance": "2bf41b4b755bf6e55d47c5e63d81ae31d6ef43b99ea4e34d0a9d1d484b1a2349",
+    "game-design-review": "472c6ad263eebf457f46d3dbf2804dbee04369ef7eefd14773a0156a812d677f",
+    "liveops-experiment-event": "8c2c65833f9f6a6db6cd16133864e2a4ea42b92e8f5b09f05543d1b4c66fea73",
+    "narrative-quest-npc": "8f5285edbc941f8f9ee8f60b2d0a6605c3697007029f5b128ea6347afe7dd19b",
+    "system-specification": "32932507ae69e5243b57c4b00d38ec806daffe2f2886b1b3c699cbeb5dda7a54",
+    "ui-ux-flow-state": "7b1cd76451482da7bb3bd8d40efd98e700b48b87a008e307ed797e7265404ebe"
   }
 }

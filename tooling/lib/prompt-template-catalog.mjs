@@ -629,5 +629,8 @@ export function productPromptProjection(catalog, productId) {
   const product = productId === "game-design-studio" ? "studio" : productId === "game-design-career" ? "career" : productId;
   if (product !== "studio" && product !== "career") throw new Error(`unknown prompt catalog product: ${String(productId)}`);
   if (!catalog || !Array.isArray(catalog.entries)) throw new Error("prompt catalog must contain an entries array");
-  return catalog.entries.filter((entry) => entry.product === product || entry.product === "suite");
+  // A packaged product must stay self-contained. Suite examples remain in the
+  // repository-wide guide library; copying them into each package would embed
+  // sibling product commands and fail the package isolation contract.
+  return catalog.entries.filter((entry) => entry.product === product);
 }

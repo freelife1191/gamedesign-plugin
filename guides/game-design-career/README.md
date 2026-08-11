@@ -44,7 +44,7 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 - 고급: [개인 기여 포트폴리오](../prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
 - 사례: [프로젝트 증거와 면접](../prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
 
-Career에는 18개 사례, 15개 직접 스킬, 18개 FAQ와 33개 도식 쌍이 있습니다. 도식은 사례나 직접 호출의 입력·검토·결과 흐름을 설명할 뿐, 결과의 품질·합격·채용을 보장하지 않습니다.
+Career에는 18개 사례, 18개 직접 스킬, 18개 FAQ와 33개 도식 쌍이 있습니다. 도식은 사례나 직접 호출의 입력·검토·결과 흐름을 설명할 뿐, 결과의 품질·합격·채용을 보장하지 않습니다.
 
 ## 대표 사례
 

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:build-game-design-portfolio:beginner -->
 ## career:build-game-design-portfolio:beginner
 
-**게임 기획 결과: 문제·판단·근거로 포트폴리오 사례 시작**
+**문제와 판단을 근거로 엮는 포트폴리오 사례**
 
 한 사례의 문제, 설계 판단, evidence ID와 주소를 연결하고 claim을 사실, 추론, 제안으로 구분한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 근거 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:build-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/portfolio-beginner/content.md)
+첫 세션 이탈 지점은 튜토리얼 목표가 늦게 드러난다는 관찰입니다. 내 기여는 퀘스트 순서 수정안 작성으로 표시했으며, 플레이테스트 근거 연결은 검토 대기 중입니다. (ID: career:build-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/portfolio-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -122,7 +122,7 @@ portfolio-beginner의 claimId와 evidence record를 보존하고 확인된 문�
 <!-- PROMPT-CARD: career:build-game-design-portfolio:standard -->
 ## career:build-game-design-portfolio:standard
 
-**게임 기획 결과: claim-evidence index로 사례 검증**
+**주장과 근거 목록으로 포트폴리오 사례 점검**
 
 claim-evidence index에 주소 가능한 source와 개인·팀 기여를 기록해 사실, 추론, 제안을 분리한다.
 
@@ -136,7 +136,7 @@ claim-evidence index에 주소 가능한 source와 개인·팀 기여를 기록�
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 주장·근거 연결: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:build-game-design-portfolio:standard; 파일: game-design-career/career-evidence/portfolio-standard/content.md)
+‘보상 선택이 탐색을 늘렸다’는 주장은 플레이 로그 EVID-07과 연결했고, 팀 기여와 개인 기여는 별도 항목으로 나눴습니다. 로그 해석이 맞는지는 근거 검토자가 확인해야 합니다. (ID: career:build-game-design-portfolio:standard; 파일: game-design-career/career-evidence/portfolio-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -240,7 +240,7 @@ portfolio-standard의 claim-evidence index를 보존하고 source 확인이 끝�
 <!-- PROMPT-CARD: career:build-game-design-portfolio:advanced -->
 ## career:build-game-design-portfolio:advanced
 
-**게임 기획 결과: 사례 선택·기여·공개 gate**
+**포트폴리오 사례의 기여 범위와 공개 조건 검토**
 
 사례 선택과 공개 gate를 claim evidence, personal contribution, team contribution, 미정·비공개 상태로 검토한다.
 
@@ -254,7 +254,7 @@ portfolio-standard의 claim-evidence index를 보존하고 source 확인이 끝�
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 근거 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:build-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/portfolio-advanced/content.md)
+협동 퍼즐 난이도 조정 사례는 분석 과정이 잘 드러나 후보로 남겼지만, 사내 지표 이미지는 비공개로 분류했습니다. 대체 도표와 개인 기여 문구는 공개 담당자의 검토 전 초안입니다. (ID: career:build-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/portfolio-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -13,6 +13,7 @@ Require the review envelope fields `artifact`, `role`, `questions`, and `finding
 - Does each commitment contribute to the core loop and target experience?
 - Which dependency, maintenance, license, outsource, staffing, or technology assumption is unverified?
 - What prototype evidence, definition of done, or kill criterion bounds the commitment?
+- What is the strongest counterargument, and which tooling, test seam, or low-complexity alternative would make the commitment inspectable?
 
 ## Scope
 

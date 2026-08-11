@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:apply-document-quality-profile:beginner -->
 ## career:apply-document-quality-profile:beginner
 
-**게임 기획 결과: 목표 역할 문서의 품질 프로필 선택**
+**목표 역할 문서에 맞는 품질 기준 고르기**
 
 목표 역할 문서 하나에 맞는 template과 primary quality profile을 선택하고 fact, inference, recommendation을 분리한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: document-quality-editor
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:apply-document-quality-profile:beginner; 파일: game-design-career/career-foundations/profile-beginner/content.md)
+입문용 시스템 기획 역할 지도에는 ‘경력 탐색 문서’ 품질 기준을 선택했습니다. 독자와 문서 형식은 확인됐지만 역할 근거가 빠져 있어 선택은 편집자 검토 전 상태입니다. (ID: career:apply-document-quality-profile:beginner; 파일: game-design-career/career-foundations/profile-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -123,7 +123,7 @@ profile-beginner selection record를 보존하고 확인된 대상과 형식만 
 <!-- PROMPT-CARD: career:apply-document-quality-profile:standard -->
 ## career:apply-document-quality-profile:standard
 
-**게임 기획 결과: 대상·형식·preset을 맞춘 문서 품질 선택**
+**독자와 형식에 맞춘 문서 품질 설정**
 
 audience, format, preset을 한 Artifact에 맞추고 fact, inference, recommendation 경계를 기록한다.
 
@@ -137,7 +137,7 @@ audience, format, preset을 한 Artifact에 맞추고 fact, inference, recommend
 - 함께 검토하는 역할: document-quality-editor → portfolio-reviewer
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 대상·형식·설정값: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:apply-document-quality-profile:standard; 파일: game-design-career/career-foundations/profile-standard/content.md)
+포트폴리오 검토자용 마크다운 문서에 간결한 사례 중심 설정을 골랐습니다. 첫 화면에서 문제·판단·근거가 보이는지 확인하는 항목을 추가했으며 최종 선택은 검토자가 결정합니다. (ID: career:apply-document-quality-profile:standard; 파일: game-design-career/career-foundations/profile-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -242,7 +242,7 @@ profile-standard의 preset과 checklist를 보존하고 확인된 audience와 fo
 <!-- PROMPT-CARD: career:apply-document-quality-profile:advanced -->
 ## career:apply-document-quality-profile:advanced
 
-**게임 기획 결과: evidence state와 fallback을 검토하는 문서 품질 선택**
+**근거 상태와 대체 기준을 함께 보는 문서 품질 설정**
 
 evidence state, fallback, reviewer boundary를 확인해 profile conflict를 안전하게 보류하고 fact, inference, recommendation을 분리한다.
 
@@ -256,7 +256,7 @@ evidence state, fallback, reviewer boundary를 확인해 profile conflict를 안
 - 함께 검토하는 역할: document-quality-editor → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 근거 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:apply-document-quality-profile:advanced; 파일: game-design-career/career-foundations/profile-advanced/content.md)
+역기획 문서의 플레이 로그가 일부만 남아 있어 근거 상태를 ‘부분 확인’으로 표시했습니다. 원본 영상을 대신할 캡처 목록은 제안일 뿐이며 근거 감사자의 확인 전에는 적용하지 않습니다. (ID: career:apply-document-quality-profile:advanced; 파일: game-design-career/career-foundations/profile-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

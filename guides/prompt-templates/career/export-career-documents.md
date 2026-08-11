@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:export-career-documents:beginner -->
 ## career:export-career-documents:beginner
 
-**게임 기획 결과: MD 요약 preflight**
+**마크다운 요약본 내보내기 전 점검**
 
 canonical artifact의 MD 요약을 canonical preflight, capability, renderer, format QA와 human review 전 non-terminal job으로 준비한다.
 
@@ -19,7 +19,7 @@ canonical artifact의 MD 요약을 canonical preflight, capability, renderer, fo
 - 함께 검토하는 역할: document-quality-editor → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 내보내기 전 점검: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:export-career-documents:beginner; 파일: game-design-career/career-evidence/export-beginner/content.md)
+마크다운 요약본은 제목 단계와 내부 링크를 통과했지만, 사례 2의 근거 주소가 비어 있어 작업을 보류했습니다. 주소를 채운 뒤 사람이 내용을 확인해야 내보내기 단계로 넘길 수 있습니다. (ID: career:export-career-documents:beginner; 파일: game-design-career/career-evidence/export-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -117,7 +117,7 @@ export-beginner의 canonical preflight와 MD job을 보존하고 capability prob
 <!-- PROMPT-CARD: career:export-career-documents:standard -->
 ## career:export-career-documents:standard
 
-**게임 기획 결과: PDF·DOCX preflight**
+**문서 내보내기 준비 점검 (PDF·DOCX)**
 
 PDF·DOCX 요청을 canonical preflight, capability probe, renderer, format QA와 human review의 non-terminal job으로 정리한다.
 
@@ -131,7 +131,7 @@ PDF·DOCX 요청을 canonical preflight, capability probe, renderer, format QA�
 - 함께 검토하는 역할: document-quality-editor → evidence-auditor
 
 ### 이 요청으로 받는 결과
-초안 결과: 내보내기 전 점검에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:export-career-documents:standard; 파일: game-design-career/career-evidence/export-standard/content.md)
+두 형식을 확인한 결과 PDF에서는 표가 페이지 밖으로 밀리고 DOCX에서는 각주 링크가 끊겼습니다. 렌더링 재검토 전에는 어느 쪽도 전달 가능 상태로 바꾸지 않습니다. (ID: career:export-career-documents:standard; 파일: game-design-career/career-evidence/export-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -231,7 +231,7 @@ export-standard의 PDF·DOCX preflight를 보존하고 capability probe 결과 �
 <!-- PROMPT-CARD: career:export-career-documents:advanced -->
 ## career:export-career-documents:advanced
 
-**게임 기획 결과: recruiter PPTX·format QA·재개**
+**채용 담당자용 형식 점검과 재개 기록 (PPTX)**
 
 recruiter PPTX를 canonical preflight와 renderer capability, format QA, human review로 fail-closed 준비하고 재개 조건을 남긴다.
 
@@ -245,7 +245,7 @@ recruiter PPTX를 canonical preflight와 renderer capability, format QA, human r
 - 함께 검토하는 역할: document-quality-editor → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 내보내기 전 점검 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:export-career-documents:advanced; 파일: game-design-career/career-evidence/export-advanced/content.md)
+채용 담당자용 PPTX 6쪽의 비교 도표는 작은 화면에서 글자가 읽히지 않아 보류 사유로 남겼습니다. 수정본의 글자 크기와 근거 표기를 사람이 확인하면 6쪽부터 검토를 재개합니다. (ID: career:export-career-documents:advanced; 파일: game-design-career/career-evidence/export-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

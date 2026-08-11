@@ -38,7 +38,8 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 
 7. In parallel mode, dispatch independent envelopes. In sequential fallback, filter the fixed `rolePriority` to the selected roles and run the same roles with the same `questionsByRole` entries. Do not rewrite or broaden questions between modes.
 8. Merge findings by `severity`, `evidence-gap-id`, `artifact-section-id`, then `role-priority`. Preserve conflicting recommendations as explicit decisions.
-9. Apply every applicable evidence and responsible-design gate. Missing evidence remains a visible gap and never becomes approval.
+9. After content and domain review, use `polish-game-design-writing` only when a Korean readability pass is requested or useful. It runs the bundled `humanize-korean` skill and protected-content validator as a separate specialist pass, creates a draft and receipt, and waits for a named person. It is outside the three-role review limit and never changes the Canonical Artifact in place.
+10. Apply every applicable evidence and responsible-design gate. Missing evidence remains a visible gap and never becomes approval.
 
 ## Natural-Language Routing Rules
 
@@ -50,9 +51,9 @@ Users do not need to name a skill or case ID. Read an ordinary natural-language 
 
 ## Optional Archify structural-diagram route
 
-For architecture, workflow, sequence, dataflow, or lifecycle relationships, inspect `capabilities.archify.status` before dispatching visualization. When the status is `available`, use the host Archify lane with a source-backed JSON spec, checked HTML, and receipt as separate evidence; that lane never replaces the packaged asset lane.
+For component boundaries, workflow, sequence, dataflow, or lifecycle relationships, use the packaged `$archify` skill with a source-backed JSON specification. Preserve its checked HTML and receipt as separate evidence; an architecture diagram never replaces the Canonical Artifact or grants approval.
 
-Always provide the packaged Skillstead SVG and 2× PNG fallback for Markdown, with its own lint, render, and verification evidence. If the status is `unavailable`, record `archify-unavailable`; if the status is `unknown`, record `archify-unknown`. A nonzero host execution or failed receipt records `archify-failed`. Never label the Skillstead fallback as Archify output, and never auto-approve either asset: each requires its own stated evidence and applicable review.
+Use the packaged `$svg-infographic` skill for document-friendly static flows, comparisons, and 2× PNG fallback. Keep Archify HTML and Skillstead SVG/PNG receipts distinct, and never auto-approve either diagram.
 
 ## Output Contract
 

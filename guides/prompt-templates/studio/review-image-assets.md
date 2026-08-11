@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:review-image-assets:beginner -->
 ## studio:review-image-assets:beginner
 
-**게임 기획 결과: concept-draft 문서 적합성 검토**
+**개념 초안 이미지의 문서 적합성 검토**
 
 concept-draft asset의 purpose·placement·alt text·readability gap을 발견하지만 사람 결정 없이 lifecycle을 바꾸지 않는다.
 
@@ -19,7 +19,7 @@ concept-draft asset의 purpose·placement·alt text·readability gap을 발견�
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-가상의 검토 기록 — 검토 발견 사항: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:review-image-assets:beginner; 파일: game-design/studio-visual/review-beginner/content.md)
+폐역 신호판 삽화는 본문 배치 목적과 맞지만, 작은 화면에서 글자가 뭉개지고 대체 텍스트에 신호 순서가 빠져 있습니다. 이 발견 사항만으로 문서 승인 상태로 바꾸지는 않습니다. (ID: studio:review-image-assets:beginner; 파일: game-design/studio-visual/review-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -127,7 +127,7 @@ review-beginner의 concept-draft finding을 보존하고 새 artifact-local evid
 <!-- PROMPT-CARD: studio:review-image-assets:standard -->
 ## studio:review-image-assets:standard
 
-**게임 기획 결과: rights·readability·placement 문서 승인 검토**
+**사용 권리·가독성·배치를 살피는 문서 승인 검토**
 
 named human decision receipt가 있는 concept-draft asset을 document-approved 전환 요건과 blocker로 분리한다.
 
@@ -141,7 +141,7 @@ named human decision receipt가 있는 concept-draft asset을 document-approved 
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:review-image-assets:standard; 파일: game-design/studio-visual/review-standard/content.md)
+계절 시장 전경은 배치와 가독성 기준을 충족한다는 검토 의견이 있지만, 사용 권리 결정 기록이 첨부되지 않았습니다. 이름이 적힌 사람의 결정 기록이 들어오기 전에는 승인 보류입니다. (ID: studio:review-image-assets:standard; 파일: game-design/studio-visual/review-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -251,7 +251,7 @@ review-standard의 named human decision과 blocked evidence를 보존하고 해�
 <!-- PROMPT-CARD: studio:review-image-assets:advanced -->
 ## studio:review-image-assets:advanced
 
-**게임 기획 결과: production-candidate 재검토와 권리 revocation**
+**제작 후보 재검토와 사용 권리 철회 대응**
 
 document-approved asset의 active rights·technical fit·gameplay readability를 named human evidence로 재검토해 production-candidate 또는 hold를 결정한다.
 
@@ -265,7 +265,7 @@ document-approved asset의 active rights·technical fit·gameplay readability를
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:review-image-assets:advanced; 파일: game-design/studio-visual/review-advanced/content.md)
+글라이더 삽화는 문서 승인 기록이 있으나 최신 권리 확인 날짜가 비어 있어 제작 후보 전환을 보류했습니다. 기술 적합성과 플레이 중 식별성도 지정 검토자가 다시 살펴봐야 합니다. (ID: studio:review-image-assets:advanced; 파일: game-design/studio-visual/review-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

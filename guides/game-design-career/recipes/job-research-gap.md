@@ -102,7 +102,7 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 <!-- PROMPT-CARD: career:recipe:job-research-gap -->
 #### career:recipe:job-research-gap
 
-**job-research-gap recipe**
+**채용 조사에서 역량 차이를 찾는 순서 (job-research-gap)**
 
 job-research-gap recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
@@ -116,7 +116,7 @@ job-research-gap recipe의 ordered CLI calls와 artifact read order를 보존한
 - 함께 검토하는 역할: career-strategist
 
 ##### 이 요청으로 받는 결과
-예: `game-design-career/[경력 ID]/job-posting-evidence/content.md`에 job-posting-evidence canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+공식 공고의 날짜와 지역을 기록하고 반복 요구를 현재 증거와 대조했습니다. 데이터 분석 경험 부족을 우선 과제 후보로 뒀지만 표본 범위와 우선순위는 담당자 검토 전입니다. (ID: career:recipe:job-research-gap; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

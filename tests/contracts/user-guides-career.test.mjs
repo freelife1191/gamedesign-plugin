@@ -487,7 +487,7 @@ function assertSkillContract(markdown, skillId) {
 
 test("Career documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-career");
-  assert.equal(inventory.skillIds.length, 15);
+  assert.equal(inventory.skillIds.length, 18);
 
   for (const skillId of inventory.skillIds) {
     const markdown = await readFile(
@@ -694,10 +694,10 @@ test("Career skill workbench inventories every installed skill once by lane", as
   const inventory = await collectProductInventory(root, "game-design-career");
   const workbench = await readFile(path.join(root, "guides/game-design-career/use-cases/skill-workbench.md"), "utf8");
   const expectedGroups = {
-    "역할·근거 lane": ["apply-document-quality-profile", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs"],
+    "역할·근거 lane": ["apply-document-quality-profile", "humanize-korean", "polish-game-design-writing", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs"],
     "역기획·포트폴리오 lane": ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"],
     "면접·성장 lane": ["practice-game-design-interview", "plan-junior-growth"],
-    "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "visualize-career-roadmap"],
+    "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "archify", "visualize-career-roadmap"],
     "export lane": ["export-career-documents"],
   };
   const observed = [];

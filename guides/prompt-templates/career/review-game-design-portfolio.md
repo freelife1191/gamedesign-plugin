@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:review-game-design-portfolio:beginner -->
 ## career:review-game-design-portfolio:beginner
 
-**게임 기획 결과: 5축 빠른 검토**
+**다섯 기준으로 빠르게 보는 포트폴리오**
 
 다섯 축을 finding, severity, repair queue로 기록하고 사실, 추론, 제안을 분리한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: portfolio-reviewer
 
 ### 이 요청으로 받는 결과
-가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 관찰 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:review-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/review-beginner/content.md)
+문제 정의는 분명하지만 선택 근거가 화면 설명에 묻혀 있어 ‘보완 필요’로 기록했습니다. 첫 페이지에 관찰과 판단을 나눠 쓰는 수정안은 포트폴리오 검토 전 제안입니다. (ID: career:review-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/review-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -117,7 +117,7 @@ review-beginner의 finding과 queue를 보존하고 evidence 접근 확인부터
 <!-- PROMPT-CARD: career:review-game-design-portfolio:standard -->
 ## career:review-game-design-portfolio:standard
 
-**게임 기획 결과: finding·severity·queue 검토**
+**발견 사항의 심각도와 수정 순서 정리**
 
 typed finding, severity, dependency queue와 evidence 주소를 이용해 수정을 재현 가능하게 만든다.
 
@@ -131,7 +131,7 @@ typed finding, severity, dependency queue와 evidence 주소를 이용해 수정
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예시 산출물 조각: 검토 발견 사항 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:review-game-design-portfolio:standard; 파일: game-design-career/career-evidence/review-standard/content.md)
+개인 기여가 보이지 않는 문제는 심각도 ‘높음’, 캡션 길이 문제는 ‘낮음’으로 분류했습니다. 먼저 기여 범위를 밝힌 뒤 근거 링크와 화면 캡션을 손보는 순서가 검토안에 담겼습니다. (ID: career:review-game-design-portfolio:standard; 파일: game-design-career/career-evidence/review-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -230,7 +230,7 @@ review-standard의 finding, severity, queue를 보존하고 최상위 repair부�
 <!-- PROMPT-CARD: career:review-game-design-portfolio:advanced -->
 ## career:review-game-design-portfolio:advanced
 
-**게임 기획 결과: mutation·발표 readiness·승인 검토**
+**수정 이력과 발표 준비 상태를 함께 검토**
 
 finding mutation, severity queue, presentation readiness와 named human approval을 분리하며 자동 합격 판정을 금지한다.
 
@@ -244,7 +244,7 @@ finding mutation, severity queue, presentation readiness와 named human approval
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-가상 결과 조각: 검토 발견 사항: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:review-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/review-advanced/content.md)
+두 번째 검토에서 ‘성과 단정’ 문구를 ‘테스트에서 관찰한 변화’로 고친 이력을 남겼습니다. 발표 자료는 권리 확인이 끝나지 않아 준비 상태를 보류로 표시했습니다. (ID: career:review-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/review-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
