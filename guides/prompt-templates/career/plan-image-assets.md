@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:plan-image-assets:beginner -->
 ## career:plan-image-assets:beginner
 
-**포트폴리오 placeholder 이미지 슬롯 계획**
+**게임 기획 결과: 포트폴리오 placeholder 이미지 슬롯 계획**
 
 생성 없이 포트폴리오 사례의 placeholder 이미지 슬롯, stable asset ID, count와 alt text를 concept-draft로 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: art-brief-director
 
 ### 이 요청으로 받는 결과
-예: `career/visual/plan-image-assets/beginner/content.md`에 profile-slot preflight, stable asset ID·count·placeholder, alt text·rights/attribution handoff, concept-draft plan을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 내보내기 전 점검 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:plan-image-assets:beginner; 파일: career/visual/plan-image-assets/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -131,7 +131,7 @@ plan-image-assets/beginner의 canonical artifact, stable IDs, source·attributio
 <!-- PROMPT-CARD: career:plan-image-assets:standard -->
 ## career:plan-image-assets:standard
 
-**proof 이미지·alt·권리 manifest 계획**
+**게임 기획 결과: proof 이미지·alt·권리 manifest 계획**
 
 proof 이미지의 source·attribution·rights 상태, alt text와 readability 목표를 prompt package와 분리해 기록한다.
 
@@ -145,7 +145,7 @@ proof 이미지의 source·attribution·rights 상태, alt text와 readability �
 - 함께 검토하는 역할: art-brief-director
 
 ### 이 요청으로 받는 결과
-예: `career/visual/plan-image-assets/standard/content.md`에 profile-slot preflight, stable asset ID·count·placeholder, alt text·rights/attribution handoff, concept-draft plan을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 내보내기 전 점검 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:plan-image-assets:standard; 파일: career/visual/plan-image-assets/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -257,7 +257,7 @@ plan-image-assets/standard의 canonical artifact, stable IDs, source·attributio
 <!-- PROMPT-CARD: career:plan-image-assets:advanced -->
 ## career:plan-image-assets:advanced
 
-**profile 슬롯과 presentation handoff 계획**
+**게임 기획 결과: profile 슬롯과 presentation handoff 계획**
 
 profile 슬롯, presentation placement, 권리·privacy hold와 named human reviewer evidence 요청을 가진 handoff를 계획한다.
 
@@ -271,7 +271,7 @@ profile 슬롯, presentation placement, 권리·privacy hold와 named human revi
 - 함께 검토하는 역할: art-brief-director
 
 ### 이 요청으로 받는 결과
-예: `career/visual/plan-image-assets/advanced/content.md`에 profile-slot preflight, stable asset ID·count·placeholder, alt text·rights/attribution handoff, concept-draft plan을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 내보내기 전 점검: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:plan-image-assets:advanced; 파일: career/visual/plan-image-assets/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

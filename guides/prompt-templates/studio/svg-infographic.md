@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:svg-infographic:beginner -->
 ## studio:svg-infographic:beginner
 
-**간단한 source-mapped SVG 흐름**
+**게임 기획 결과: 간단한 source-mapped SVG 흐름**
 
 wrapper가 선택한 구조 관계를 간단한 editable SVG, title·desc와 adjacent alt text로 작성한다.
 
@@ -19,7 +19,7 @@ wrapper가 선택한 구조 관계를 간단한 editable SVG, title·desc와 adj
 - 함께 검토하는 역할: lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/svg-beginner/content.md`에 editable SVG, nonempty title, nonempty desc, adjacent alt text, stable source mapping을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:svg-infographic:beginner; 파일: game-design/studio-visual/svg-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -130,7 +130,7 @@ svg-beginner의 editable SVG와 source mapping을 보존하고 누락된 title·
 <!-- PROMPT-CARD: studio:svg-infographic:standard -->
 ## studio:svg-infographic:standard
 
-**source-backed 2× PNG가 있는 SVG handoff**
+**게임 기획 결과: source-backed 2× PNG가 있는 SVG handoff**
 
 source-mapped editable SVG를 product wrapper lint와 canonical renderer를 통해 정확한 2× PNG handoff로 분리한다.
 
@@ -144,7 +144,7 @@ source-mapped editable SVG를 product wrapper lint와 canonical renderer를 통�
 - 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/svg-standard/content.md`에 editable SVG authority, source mapping, wrapper lint result, canonical renderer result, exact 2× PNG을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:svg-infographic:standard; 파일: game-design/studio-visual/svg-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -255,7 +255,7 @@ svg-standard의 editable SVG와 renderer evidence를 보존하고 실패한 lint
 <!-- PROMPT-CARD: studio:svg-infographic:advanced -->
 ## studio:svg-infographic:advanced
 
-**lint 0 warning/error·접근성·human approval SVG QA**
+**게임 기획 결과: lint 0 warning/error·접근성·human approval SVG QA**
 
 고급 구조 SVG의 lint 0 warning/error, exact 2× PNG render, accessibility metadata와 human approval을 독립 evidence로 검증한다.
 
@@ -269,7 +269,7 @@ svg-standard의 editable SVG와 renderer evidence를 보존하고 실패한 lint
 - 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer → production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/svg-advanced/content.md`에 lint 0 warning/error result, exact 2× PNG render, title·desc·adjacent alt accessibility metadata, fit-to-page·close-up visual QA, named human approval record을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:svg-infographic:advanced; 파일: game-design/studio-visual/svg-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

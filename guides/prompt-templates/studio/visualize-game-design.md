@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:visualize-game-design:beginner -->
 ## studio:visualize-game-design:beginner
 
-**source-backed 규칙 흐름 도식**
+**게임 기획 결과: source-backed 규칙 흐름 도식**
 
 검증된 rule state와 recovery 관계만 prose보다 명확할 때 editable SVG 계획으로 표현한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/visualize-beginner/content.md`에 diagram decision, one preset, source mapping, editable SVG request, adjacent alt text을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 도식 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:visualize-game-design:beginner; 파일: game-design/studio-visual/visualize-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -129,7 +129,7 @@ visualize-beginner의 source mapping과 rejected alternative를 보존하고 확
 <!-- PROMPT-CARD: studio:visualize-game-design:standard -->
 ## studio:visualize-game-design:standard
 
-**Archify 우선 구조 도식과 honest fallback**
+**게임 기획 결과: Archify 우선 구조 도식과 honest fallback**
 
 architecture·workflow·sequence·dataflow·lifecycle 관계에 host Archify가 available이면 우선하고 absent 또는 failure이면 Skillstead editable SVG와 2× PNG fallback을 정확한 상태로 기록한다.
 
@@ -143,7 +143,7 @@ architecture·workflow·sequence·dataflow·lifecycle 관계에 host Archify가 
 - 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/visualize-standard/content.md`에 Archify capability decision, selected preset, source mapping, editable SVG, 2× PNG fallback state을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:visualize-game-design:standard; 파일: game-design/studio-visual/visualize-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -255,7 +255,7 @@ visualize-standard의 Archify capability decision과 Skillstead fallback state�
 <!-- PROMPT-CARD: studio:visualize-game-design:advanced -->
 ## studio:visualize-game-design:advanced
 
-**source mapping·receipt·visual QA를 갖춘 lifecycle 도식**
+**게임 기획 결과: source mapping·receipt·visual QA를 갖춘 lifecycle 도식**
 
 lifecycle 관계를 source locator, execution receipt와 independent visual QA로 분리해 verified 상태를 과장하지 않는다.
 
@@ -269,7 +269,7 @@ lifecycle 관계를 source locator, execution receipt와 independent visual QA�
 - 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer → production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/visualize-advanced/content.md`에 source mapping, requested/generated/linted/rendered/verified states, lint receipt, render receipt, fit-to-page·close-up QA을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:visualize-game-design:advanced; 파일: game-design/studio-visual/visualize-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

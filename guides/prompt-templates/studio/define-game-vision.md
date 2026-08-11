@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:define-game-vision:beginner -->
 ## studio:define-game-vision:beginner
 
-**대상과 player promise를 정하는 게임 비전**
+**게임 기획 결과: 대상과 player promise를 정하는 게임 비전**
 
 한 문장 게임 아이디어를 대상 플레이어, player promise, pillar와 검증 질문이 있는 짧은 비전 브리프로 바꾼다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: lead-game-designer → content-narrative-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/vision-beginner/content.md`에 target player, player promise, pillar 하나, 검증 질문을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 대상 플레이어: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:define-game-vision:beginner; 파일: game-design/studio-foundations/vision-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -125,7 +125,7 @@ vision-beginner의 player promise와 질문을 보존하고 새 플레이어 관
 <!-- PROMPT-CARD: studio:define-game-vision:standard -->
 ## studio:define-game-vision:standard
 
-**Pillar와 anti-pillar를 검증하는 게임 비전**
+**게임 기획 결과: Pillar와 anti-pillar를 검증하는 게임 비전**
 
 pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기능 선택에 쓸 기준을 만든다.
 
@@ -139,7 +139,7 @@ pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기
 - 함께 검토하는 역할: lead-game-designer → content-narrative-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/vision-standard/content.md`에 pillar, anti-pillar, non-goal, prototype 관찰 질문을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 기획 원칙: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:define-game-vision:standard; 파일: game-design/studio-foundations/vision-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -248,7 +248,7 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 <!-- PROMPT-CARD: studio:define-game-vision:advanced -->
 ## studio:define-game-vision:advanced
 
-**상충 기능과 근거 owner를 다루는 게임 비전**
+**게임 기획 결과: 상충 기능과 근거 owner를 다루는 게임 비전**
 
 상충하는 feature 제안을 pillar·non-goal과 evidence 상태로 비교하고 사람 owner가 판단할 수 있게 만든다.
 
@@ -262,7 +262,7 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → content-narrative-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/vision-advanced/content.md`에 feature 비교, 근거 상태, owner 질문을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 비교 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:define-game-vision:advanced; 파일: game-design/studio-foundations/vision-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

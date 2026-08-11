@@ -1,47 +1,1646 @@
 [
   {
-    "id": "studio:plan-image-assets:beginner", "kind": "skill-template", "product": "studio", "title": "prompt-only 이미지 slot과 placeholder 계획", "purpose": "생성 없이 profile slot 하나의 stable asset ID·alt text·명시적 count·placeholder를 concept-draft 계획으로 고정한다.", "audiences": ["game-designer", "art-brief-director"], "intents": ["이미지 계획", "placeholder 작성"], "level": "beginner", "when_to_use": "선택된 profile에 맞는 한 개의 이미지 slot을 생성 전에 안전하게 기록할 때 사용한다.", "when_not_to_use": "이미지 bytes를 만들거나 승인 상태를 변경할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "selected quality profile", "profile slot", "stable source section ID", "명시적 count", "placement", "alt text", "decision owner"], "optional_inputs": ["dimensions", "accessibility intent"], "placeholders": ["[Canonical Artifact]", "[profile slot]", "[stable source section ID]", "[명시적 count]"], "app_prompt": {"example": "@Game Design Studio 협동 RPG brief의 design-context-image slot 하나를 prompt-only로 계획해. stable asset ID, count, alt text와 placeholder만 기록하고 생성이나 승인은 하지 마.", "template": "@Game Design Studio [Canonical Artifact]의 [profile slot]을 prompt-only로 계획해. [stable source section ID]에 연결한 [명시적 count]개의 stable asset ID, alt text와 placeholder만 기록하고 생성이나 승인은 하지 마."}, "cli_prompt": {"example": "$game-design-studio:plan-image-assets artifact=game-design/coop/brief profile=game-design-brief needs=design-context-image:1 IMAGE_GEN_MODE=prompt-only stable ID, alt text, count와 placeholder만 계획해.", "template": "$game-design-studio:plan-image-assets artifact=[Canonical Artifact] needs=[profile slot] source=[stable source section ID] count=[명시적 count] IMAGE_GEN_MODE=prompt-only stable ID, alt text와 placeholder만 계획해."}, "skill": "plan-image-assets", "skill_chain": ["apply-document-quality-profile", "plan-image-assets"], "specialist_roles": ["art-brief-director"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["profile-slot preflight", "stable asset ID", "명시적 count", "alt text와 placeholder", "concept-draft 계획"], "optional_outputs": ["dimensions", "accessibility intent"], "extended_outputs": ["assets/image-assets.yml", "assets/prompts/image-prompts.md", "assets/prompts/image-prompts.json"], "expected_file_tree": ["game-design/studio-visual/plan-beginner/content.md", "game-design/studio-visual/plan-beginner/evidence.yml", "game-design/studio-visual/plan-beginner/export-manifest.yml", "game-design/studio-visual/plan-beginner/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/plan-beginner/content.md", "game-design/studio-visual/plan-beginner/evidence.yml", "game-design/studio-visual/plan-beginner/export-manifest.yml", "game-design/studio-visual/plan-beginner/assets/image-assets.yml"], "human_review_boundary": "art-brief-director owner가 slot·placement를 승인·수정·보류하며 계획은 생성 또는 document-approved가 아니다.", "hold_conditions": ["profile slot이 없음", "명시적 count가 미정", "stable source section ID가 없음"], "resume_prompt": "plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot과 count만 반영해 preflight부터 재개해.", "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s11", "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg", "png": "guides/assets/game-design-studio/skills/plan-image-assets.png", "alt": "이미지 자산 계획 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["content-quest-design"], "source_references": ["guides/game-design-studio/skills/plan-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:plan-image-assets:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "prompt-only 이미지 slot과 placeholder 계획",
+    "purpose": "생성 없이 profile slot 하나의 stable asset ID·alt text·명시적 count·placeholder를 concept-draft 계획으로 고정한다.",
+    "audiences": [
+      "game-designer",
+      "art-brief-director"
+    ],
+    "intents": [
+      "이미지 계획",
+      "placeholder 작성"
+    ],
+    "level": "beginner",
+    "when_to_use": "선택된 profile에 맞는 한 개의 이미지 slot을 생성 전에 안전하게 기록할 때 사용한다.",
+    "when_not_to_use": "이미지 bytes를 만들거나 승인 상태를 변경할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "selected quality profile",
+      "profile slot",
+      "stable source section ID",
+      "명시적 count",
+      "placement",
+      "alt text",
+      "decision owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "accessibility intent"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[profile slot]",
+      "[stable source section ID]",
+      "[명시적 count]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 협동 RPG brief의 design-context-image slot 하나를 prompt-only로 계획해. stable asset ID, count, alt text와 placeholder만 기록하고 생성이나 승인은 하지 마.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [profile slot]을 prompt-only로 계획해. [stable source section ID]에 연결한 [명시적 count]개의 stable asset ID, alt text와 placeholder만 기록하고 생성이나 승인은 하지 마."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:plan-image-assets artifact=game-design/coop/brief profile=game-design-brief needs=design-context-image:1 IMAGE_GEN_MODE=prompt-only stable ID, alt text, count와 placeholder만 계획해.",
+      "template": "$game-design-studio:plan-image-assets artifact=[Canonical Artifact] needs=[profile slot] source=[stable source section ID] count=[명시적 count] IMAGE_GEN_MODE=prompt-only stable ID, alt text와 placeholder만 계획해."
+    },
+    "skill": "plan-image-assets",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "plan-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "profile-slot preflight",
+      "stable asset ID",
+      "명시적 count",
+      "alt text와 placeholder",
+      "concept-draft 계획"
+    ],
+    "optional_outputs": [
+      "dimensions",
+      "accessibility intent"
+    ],
+    "extended_outputs": [
+      "assets/image-assets.yml",
+      "assets/prompts/image-prompts.md",
+      "assets/prompts/image-prompts.json"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/plan-beginner/content.md",
+      "game-design/studio-visual/plan-beginner/evidence.yml",
+      "game-design/studio-visual/plan-beginner/export-manifest.yml",
+      "game-design/studio-visual/plan-beginner/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/plan-beginner/content.md",
+      "game-design/studio-visual/plan-beginner/evidence.yml",
+      "game-design/studio-visual/plan-beginner/export-manifest.yml",
+      "game-design/studio-visual/plan-beginner/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "art-brief-director owner가 slot·placement를 승인·수정·보류하며 계획은 생성 또는 document-approved가 아니다.",
+    "hold_conditions": [
+      "profile slot이 없음",
+      "명시적 count가 미정",
+      "stable source section ID가 없음"
+    ],
+    "resume_prompt": "plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot과 count만 반영해 preflight부터 재개해.",
+    "safety_boundary": "모르는 정보는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s11",
+      "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/plan-image-assets.png",
+      "alt": "이미지 자산 계획 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "content-quest-design"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/plan-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: prompt-only 이미지 slot과 placeholder 계획",
+    "sample_result_excerpt": "검토용 가상 산출물: 내보내기 전 점검 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:plan-image-assets:beginner; 파일: game-design/studio-visual/plan-beginner/content.md)"
   },
   {
-    "id": "studio:plan-image-assets:standard", "kind": "skill-template", "product": "studio", "title": "stable ID·alt·count를 갖춘 이미지 manifest 계획", "purpose": "여러 profile slot의 stable ID, alt text, count와 preserve/exclude를 reusable prompt package에 분리한다.", "audiences": ["game-designer", "art-brief-director"], "intents": ["이미지 manifest", "접근성 계획"], "level": "standard", "when_to_use": "선택된 profile의 required·recommended slot을 유한 수량으로 계획할 때 사용한다.", "when_not_to_use": "profile 밖 slot을 발명하거나 provider 호출을 시작할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "quality-profile selection record", "profile slots", "stable source IDs", "slot별 count", "placement와 alt text", "decision owner"], "optional_inputs": ["dimensions", "variants", "preserve/exclude"], "placeholders": ["[Canonical Artifact]", "[profile slots]", "[stable source IDs]", "[slot별 count]", "[decision owner]"], "app_prompt": {"example": "@Game Design Studio 승인 전 GDD의 required·recommended image slot을 계획해. stable ID, alt, count, preserve/exclude와 Markdown/JSON prompt를 분리하고 미정 count는 placeholder로 남겨.", "template": "@Game Design Studio [Canonical Artifact]의 [profile slots]을 계획해. [stable source IDs]에 연결한 [slot별 count], alt, preserve/exclude와 [decision owner] handoff를 Markdown/JSON prompt로 분리해."}, "cli_prompt": {"example": "$game-design-studio:plan-image-assets artifact=game-design/coop/brief profile=game-design-brief needs=design-context-image:1,ui-key-screen:2 stable ID, alt, count와 prompt package를 계획해.", "template": "$game-design-studio:plan-image-assets artifact=[Canonical Artifact] needs=[profile slots] sources=[stable source IDs] counts=[slot별 count] decisionOwner=[decision owner] manifest와 prompt package를 계획해."}, "skill": "plan-image-assets", "skill_chain": ["apply-document-quality-profile", "plan-image-assets"], "specialist_roles": ["art-brief-director", "ux-accessibility-reviewer"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["slot별 stable asset ID", "alt text", "명시적 count", "Markdown/JSON prompt", "placeholder 목록"], "optional_outputs": ["preserve/exclude", "variant 수량"], "extended_outputs": ["required·recommended·variant count receipt", "review handoff"], "expected_file_tree": ["game-design/studio-visual/plan-standard/content.md", "game-design/studio-visual/plan-standard/evidence.yml", "game-design/studio-visual/plan-standard/export-manifest.yml", "game-design/studio-visual/plan-standard/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/plan-standard/content.md", "game-design/studio-visual/plan-standard/evidence.yml", "game-design/studio-visual/plan-standard/export-manifest.yml", "game-design/studio-visual/plan-standard/assets/image-assets.yml"], "human_review_boundary": "art-brief-director owner와 ux-accessibility-reviewer가 count·alt·placement를 승인·수정·보류하며 manifest 계획은 사람 승인이나 생성 결과가 아니다.", "hold_conditions": ["selection record가 없음", "slot별 count가 없음", "alt text가 없음"], "resume_prompt": "plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 slot별 count와 alt text만 반영해 manifest 검증부터 재개해.", "safety_boundary": "모르는 수량·identity는 미정과 placeholder로 남긴다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s11", "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg", "png": "guides/assets/game-design-studio/skills/plan-image-assets.png", "alt": "이미지 자산 계획 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["new-game-gdd"], "source_references": ["guides/game-design-studio/skills/plan-image-assets.md", "guides/game-design-studio/document-quality.md"]
+    "id": "studio:plan-image-assets:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "stable ID·alt·count를 갖춘 이미지 manifest 계획",
+    "purpose": "여러 profile slot의 stable ID, alt text, count와 preserve/exclude를 reusable prompt package에 분리한다.",
+    "audiences": [
+      "game-designer",
+      "art-brief-director"
+    ],
+    "intents": [
+      "이미지 manifest",
+      "접근성 계획"
+    ],
+    "level": "standard",
+    "when_to_use": "선택된 profile의 required·recommended slot을 유한 수량으로 계획할 때 사용한다.",
+    "when_not_to_use": "profile 밖 slot을 발명하거나 provider 호출을 시작할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "quality-profile selection record",
+      "profile slots",
+      "stable source IDs",
+      "slot별 count",
+      "placement와 alt text",
+      "decision owner"
+    ],
+    "optional_inputs": [
+      "dimensions",
+      "variants",
+      "preserve/exclude"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[profile slots]",
+      "[stable source IDs]",
+      "[slot별 count]",
+      "[decision owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 승인 전 GDD의 required·recommended image slot을 계획해. stable ID, alt, count, preserve/exclude와 Markdown/JSON prompt를 분리하고 미정 count는 placeholder로 남겨.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [profile slots]을 계획해. [stable source IDs]에 연결한 [slot별 count], alt, preserve/exclude와 [decision owner] handoff를 Markdown/JSON prompt로 분리해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:plan-image-assets artifact=game-design/coop/brief profile=game-design-brief needs=design-context-image:1,ui-key-screen:2 stable ID, alt, count와 prompt package를 계획해.",
+      "template": "$game-design-studio:plan-image-assets artifact=[Canonical Artifact] needs=[profile slots] sources=[stable source IDs] counts=[slot별 count] decisionOwner=[decision owner] manifest와 prompt package를 계획해."
+    },
+    "skill": "plan-image-assets",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "plan-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "slot별 stable asset ID",
+      "alt text",
+      "명시적 count",
+      "Markdown/JSON prompt",
+      "placeholder 목록"
+    ],
+    "optional_outputs": [
+      "preserve/exclude",
+      "variant 수량"
+    ],
+    "extended_outputs": [
+      "required·recommended·variant count receipt",
+      "review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/plan-standard/content.md",
+      "game-design/studio-visual/plan-standard/evidence.yml",
+      "game-design/studio-visual/plan-standard/export-manifest.yml",
+      "game-design/studio-visual/plan-standard/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/plan-standard/content.md",
+      "game-design/studio-visual/plan-standard/evidence.yml",
+      "game-design/studio-visual/plan-standard/export-manifest.yml",
+      "game-design/studio-visual/plan-standard/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "art-brief-director owner와 ux-accessibility-reviewer가 count·alt·placement를 승인·수정·보류하며 manifest 계획은 사람 승인이나 생성 결과가 아니다.",
+    "hold_conditions": [
+      "selection record가 없음",
+      "slot별 count가 없음",
+      "alt text가 없음"
+    ],
+    "resume_prompt": "plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 slot별 count와 alt text만 반영해 manifest 검증부터 재개해.",
+    "safety_boundary": "모르는 수량·identity는 미정과 placeholder로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s11",
+      "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/plan-image-assets.png",
+      "alt": "이미지 자산 계획 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "new-game-gdd"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/plan-image-assets.md",
+      "guides/game-design-studio/document-quality.md"
+    ],
+    "display_title": "게임 기획 결과: stable ID·alt·count를 갖춘 이미지 manifest 계획",
+    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 자산 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:plan-image-assets:standard; 파일: game-design/studio-visual/plan-standard/content.md)"
   },
   {
-    "id": "studio:plan-image-assets:advanced", "kind": "skill-template", "product": "studio", "title": "profile slot·rights·diagram handoff가 있는 자산 계획", "purpose": "권리 제약과 Skillstead diagram slot을 illustration과 분리해 finite manifest와 visualization handoff로 기록한다.", "audiences": ["art-brief-director", "visual-asset-reviewer"], "intents": ["권리 제약", "diagram handoff"], "level": "advanced", "when_to_use": "profile slot별 rights gap과 source-mapped diagram handoff를 함께 계획할 때 사용한다.", "when_not_to_use": "Skillstead SVG·PNG를 여기서 생성하거나 plan만으로 game resource를 자동 승격할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "quality-profile selection record", "finite profile slots", "rights constraint", "stable source IDs", "decision owner"], "optional_inputs": ["revocation state", "diagram preset", "accessibility intent"], "placeholders": ["[Canonical Artifact]", "[finite profile slots]", "[rights constraint]", "[stable source IDs]", "[decision owner]"], "app_prompt": {"example": "@Game Design Studio profile slot의 finite image manifest와 rights gap을 계획해. 구조 diagram slot은 source mapping·editable SVG·2× PNG QA handoff로 분리하고 생성·승인·게임 리소스 승격은 하지 마.", "template": "@Game Design Studio [Canonical Artifact]의 [finite profile slots]을 계획해. [rights constraint], [stable source IDs], [decision owner]을 기록하고 diagram slot은 editable SVG·2× PNG QA handoff로 분리해."}, "cli_prompt": {"example": "$game-design-studio:plan-image-assets artifact=game-design/coop/system profile=system-specification needs=skillstead-design-flow-diagram:1 mode=required rights=unreviewed diagram handoff와 finite manifest만 기록해.", "template": "$game-design-studio:plan-image-assets artifact=[Canonical Artifact] needs=[finite profile slots] rights=[rights constraint] sources=[stable source IDs] decisionOwner=[decision owner] diagram handoff와 finite manifest만 기록해."}, "skill": "plan-image-assets", "skill_chain": ["apply-document-quality-profile", "plan-image-assets", "visualize-game-design"], "specialist_roles": ["art-brief-director", "visual-asset-reviewer", "lead-game-designer"], "intermediate_artifacts": ["system-specification"], "minimum_outputs": ["finite slot manifest", "rights·revocation gap", "stable source ID", "Skillstead visualization handoff", "concept-draft 상태"], "optional_outputs": ["diagram preset", "accessibility intent"], "extended_outputs": ["separate illustration·diagram provenance", "named review handoff"], "expected_file_tree": ["game-design/studio-visual/plan-advanced/content.md", "game-design/studio-visual/plan-advanced/evidence.yml", "game-design/studio-visual/plan-advanced/export-manifest.yml", "game-design/studio-visual/plan-advanced/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/plan-advanced/content.md", "game-design/studio-visual/plan-advanced/evidence.yml", "game-design/studio-visual/plan-advanced/export-manifest.yml", "game-design/studio-visual/plan-advanced/assets/image-assets.yml"], "human_review_boundary": "visual-asset-reviewer owner가 rights gap과 handoff를 승인·수정·보류하며 plan은 document-approved, production-candidate 또는 game resource 승격이 아니다.", "hold_conditions": ["rights constraint가 미정", "finite slot count가 없음", "diagram source mapping이 없음"], "resume_prompt": "plan-advanced의 finite manifest와 rights gap을 보존하고 확인된 source ID나 named owner만 반영해 diagram handoff 이전 단계부터 재개해.", "safety_boundary": "모르는 rights·revocation 상태는 미정으로 남기고 game resource 자동 승격을 금지한다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s11", "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg", "png": "guides/assets/game-design-studio/skills/plan-image-assets.png", "alt": "이미지 자산 계획 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["ux-accessibility"], "source_references": ["guides/game-design-studio/skills/plan-image-assets.md", "guides/game-design-studio/image-assets.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:plan-image-assets:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "profile slot·rights·diagram handoff가 있는 자산 계획",
+    "purpose": "권리 제약과 Skillstead diagram slot을 illustration과 분리해 finite manifest와 visualization handoff로 기록한다.",
+    "audiences": [
+      "art-brief-director",
+      "visual-asset-reviewer"
+    ],
+    "intents": [
+      "권리 제약",
+      "diagram handoff"
+    ],
+    "level": "advanced",
+    "when_to_use": "profile slot별 rights gap과 source-mapped diagram handoff를 함께 계획할 때 사용한다.",
+    "when_not_to_use": "Skillstead SVG·PNG를 여기서 생성하거나 plan만으로 game resource를 자동 승격할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "quality-profile selection record",
+      "finite profile slots",
+      "rights constraint",
+      "stable source IDs",
+      "decision owner"
+    ],
+    "optional_inputs": [
+      "revocation state",
+      "diagram preset",
+      "accessibility intent"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[finite profile slots]",
+      "[rights constraint]",
+      "[stable source IDs]",
+      "[decision owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio profile slot의 finite image manifest와 rights gap을 계획해. 구조 diagram slot은 source mapping·editable SVG·2× PNG QA handoff로 분리하고 생성·승인·게임 리소스 승격은 하지 마.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [finite profile slots]을 계획해. [rights constraint], [stable source IDs], [decision owner]을 기록하고 diagram slot은 editable SVG·2× PNG QA handoff로 분리해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:plan-image-assets artifact=game-design/coop/system profile=system-specification needs=skillstead-design-flow-diagram:1 mode=required rights=unreviewed diagram handoff와 finite manifest만 기록해.",
+      "template": "$game-design-studio:plan-image-assets artifact=[Canonical Artifact] needs=[finite profile slots] rights=[rights constraint] sources=[stable source IDs] decisionOwner=[decision owner] diagram handoff와 finite manifest만 기록해."
+    },
+    "skill": "plan-image-assets",
+    "skill_chain": [
+      "apply-document-quality-profile",
+      "plan-image-assets",
+      "visualize-game-design"
+    ],
+    "specialist_roles": [
+      "art-brief-director",
+      "visual-asset-reviewer",
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "finite slot manifest",
+      "rights·revocation gap",
+      "stable source ID",
+      "Skillstead visualization handoff",
+      "concept-draft 상태"
+    ],
+    "optional_outputs": [
+      "diagram preset",
+      "accessibility intent"
+    ],
+    "extended_outputs": [
+      "separate illustration·diagram provenance",
+      "named review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/plan-advanced/content.md",
+      "game-design/studio-visual/plan-advanced/evidence.yml",
+      "game-design/studio-visual/plan-advanced/export-manifest.yml",
+      "game-design/studio-visual/plan-advanced/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/plan-advanced/content.md",
+      "game-design/studio-visual/plan-advanced/evidence.yml",
+      "game-design/studio-visual/plan-advanced/export-manifest.yml",
+      "game-design/studio-visual/plan-advanced/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "visual-asset-reviewer owner가 rights gap과 handoff를 승인·수정·보류하며 plan은 document-approved, production-candidate 또는 game resource 승격이 아니다.",
+    "hold_conditions": [
+      "rights constraint가 미정",
+      "finite slot count가 없음",
+      "diagram source mapping이 없음"
+    ],
+    "resume_prompt": "plan-advanced의 finite manifest와 rights gap을 보존하고 확인된 source ID나 named owner만 반영해 diagram handoff 이전 단계부터 재개해.",
+    "safety_boundary": "모르는 rights·revocation 상태는 미정으로 남기고 game resource 자동 승격을 금지한다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s11",
+      "svg": "guides/assets/game-design-studio/skills/plan-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/plan-image-assets.png",
+      "alt": "이미지 자산 계획 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/plan-image-assets.md",
+      "guides/game-design-studio/image-assets.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: profile slot·rights·diagram handoff가 있는 자산 계획",
+    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:plan-image-assets:advanced; 파일: game-design/studio-visual/plan-advanced/content.md)"
   },
   {
-    "id": "studio:generate-image-assets:beginner", "kind": "skill-template", "product": "studio", "title": "사용자 선택 stable asset 하나 생성", "purpose": "select mode의 실제 user receipt가 지정한 stable asset ID 하나만 생성 경로에 넣고 concept-draft provenance를 보존한다.", "audiences": ["game-designer", "visual-asset-reviewer"], "intents": ["선택 이미지 생성", "provenance 기록"], "level": "beginner", "when_to_use": "실제 사용자가 선택한 stable asset ID 하나와 immutable selection receipt가 있을 때 사용한다.", "when_not_to_use": "label·순번·agent 추측으로 asset을 고르거나 document-approved를 주장할 때는 사용하지 않는다.", "required_inputs": ["validated image manifest", "compiled prompt package", "IMAGE_GEN_MODE=select", "actual user selection receipt", "ordered stable asset ID", "capability snapshot"], "optional_inputs": ["redacted configuration", "existing failure state"], "placeholders": ["[Canonical Artifact]", "[stable asset ID]", "[selection event ID]"], "app_prompt": {"example": "@Game Design Studio 실제 user selection receipt의 hero-keyart-01만 select mode로 생성해. provider decision과 digest를 분리하고 결과는 concept-draft로 유지해.", "template": "@Game Design Studio [Canonical Artifact]에서 selection event [selection event ID]가 고른 [stable asset ID]만 select mode로 생성해. 결과는 concept-draft와 provenance로 유지해."}, "cli_prompt": {"example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=select assetIds=hero-keyart-01 selectionEvent=host-event-17 selected stable ID 하나만 concept-draft로 기록해.", "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=select assetIds=[stable asset ID] selectionEvent=[selection event ID] 선택된 stable ID 하나만 concept-draft로 기록해."}, "skill": "generate-image-assets", "skill_chain": ["generate-image-assets", "review-image-assets"], "specialist_roles": ["visual-asset-reviewer"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["selected stable asset ID", "redacted provider decision", "per-asset result", "concept-draft provenance"], "optional_outputs": ["output digest", "failed state"], "extended_outputs": ["named human review handoff"], "expected_file_tree": ["game-design/studio-visual/generate-beginner/content.md", "game-design/studio-visual/generate-beginner/evidence.yml", "game-design/studio-visual/generate-beginner/export-manifest.yml", "game-design/studio-visual/generate-beginner/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/generate-beginner/content.md", "game-design/studio-visual/generate-beginner/evidence.yml", "game-design/studio-visual/generate-beginner/export-manifest.yml", "game-design/studio-visual/generate-beginner/assets/image-assets.yml"], "human_review_boundary": "visual-asset-reviewer owner가 생성 결과의 검토 handoff를 승인·수정·보류하며 생성은 승인이 아니고 상태는 concept-draft에 머문다.", "hold_conditions": ["actual user selection receipt가 없음", "stable asset ID가 manifest에 없음", "mode가 select가 아님"], "resume_prompt": "generate-beginner의 selection receipt와 concept-draft provenance를 보존하고 같은 stable asset ID의 명시된 실패 상태부터 재개해.", "safety_boundary": "모르는 provider 결과는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s08", "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg", "png": "guides/assets/game-design-studio/skills/generate-image-assets.png", "alt": "이미지 자산 생성 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["new-game-gdd"], "source_references": ["guides/game-design-studio/skills/generate-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:generate-image-assets:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "사용자 선택 stable asset 하나 생성",
+    "purpose": "select mode의 실제 user receipt가 지정한 stable asset ID 하나만 생성 경로에 넣고 concept-draft provenance를 보존한다.",
+    "audiences": [
+      "game-designer",
+      "visual-asset-reviewer"
+    ],
+    "intents": [
+      "선택 이미지 생성",
+      "provenance 기록"
+    ],
+    "level": "beginner",
+    "when_to_use": "실제 사용자가 선택한 stable asset ID 하나와 immutable selection receipt가 있을 때 사용한다.",
+    "when_not_to_use": "label·순번·agent 추측으로 asset을 고르거나 document-approved를 주장할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "validated image manifest",
+      "compiled prompt package",
+      "IMAGE_GEN_MODE=select",
+      "actual user selection receipt",
+      "ordered stable asset ID",
+      "capability snapshot"
+    ],
+    "optional_inputs": [
+      "redacted configuration",
+      "existing failure state"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[selection event ID]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 실제 user selection receipt의 hero-keyart-01만 select mode로 생성해. provider decision과 digest를 분리하고 결과는 concept-draft로 유지해.",
+      "template": "@Game Design Studio [Canonical Artifact]에서 selection event [selection event ID]가 고른 [stable asset ID]만 select mode로 생성해. 결과는 concept-draft와 provenance로 유지해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=select assetIds=hero-keyart-01 selectionEvent=host-event-17 selected stable ID 하나만 concept-draft로 기록해.",
+      "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=select assetIds=[stable asset ID] selectionEvent=[selection event ID] 선택된 stable ID 하나만 concept-draft로 기록해."
+    },
+    "skill": "generate-image-assets",
+    "skill_chain": [
+      "generate-image-assets",
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "selected stable asset ID",
+      "redacted provider decision",
+      "per-asset result",
+      "concept-draft provenance"
+    ],
+    "optional_outputs": [
+      "output digest",
+      "failed state"
+    ],
+    "extended_outputs": [
+      "named human review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/generate-beginner/content.md",
+      "game-design/studio-visual/generate-beginner/evidence.yml",
+      "game-design/studio-visual/generate-beginner/export-manifest.yml",
+      "game-design/studio-visual/generate-beginner/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/generate-beginner/content.md",
+      "game-design/studio-visual/generate-beginner/evidence.yml",
+      "game-design/studio-visual/generate-beginner/export-manifest.yml",
+      "game-design/studio-visual/generate-beginner/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "visual-asset-reviewer owner가 생성 결과의 검토 handoff를 승인·수정·보류하며 생성은 승인이 아니고 상태는 concept-draft에 머문다.",
+    "hold_conditions": [
+      "actual user selection receipt가 없음",
+      "stable asset ID가 manifest에 없음",
+      "mode가 select가 아님"
+    ],
+    "resume_prompt": "generate-beginner의 selection receipt와 concept-draft provenance를 보존하고 같은 stable asset ID의 명시된 실패 상태부터 재개해.",
+    "safety_boundary": "모르는 provider 결과는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s08",
+      "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/generate-image-assets.png",
+      "alt": "이미지 자산 생성 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "new-game-gdd"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/generate-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: 사용자 선택 stable asset 하나 생성",
+    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 자산 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:generate-image-assets:beginner; 파일: game-design/studio-visual/generate-beginner/content.md)"
   },
   {
-    "id": "studio:generate-image-assets:standard", "kind": "skill-template", "product": "studio", "title": "required mode receipt와 no-key capability 경계", "purpose": "required mode의 declared finite jobs만 처리하고 key가 없는 host capability unavailable 경로에서는 호출 없이 prompt와 placeholder를 보존한다.", "audiences": ["game-designer", "visual-asset-reviewer"], "intents": ["필수 자산 생성", "capability fallback"], "level": "standard", "when_to_use": "manifest의 required finite jobs와 redacted capability snapshot이 있을 때 사용한다.", "when_not_to_use": "선언 밖 variant를 만들거나 host capability unknown·unavailable에서 generation call을 할 때는 사용하지 않는다.", "required_inputs": ["validated image manifest", "compiled prompt package", "IMAGE_GEN_MODE=required", "redacted configuration", "capability snapshot", "declared required stable IDs"], "optional_inputs": ["partial success receipt", "resume target"], "placeholders": ["[Canonical Artifact]", "[declared required stable IDs]", "[capability snapshot]"], "app_prompt": {"example": "@Game Design Studio required finite assets만 처리해. key가 없고 host capability가 available이면 해당 jobs만 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.", "template": "@Game Design Studio [Canonical Artifact]의 [declared required stable IDs]를 required mode로 처리해. [capability snapshot]에서 key가 없고 host가 available일 때만 jobs를 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해."}, "cli_prompt": {"example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=required capability=unavailable required declared jobs는 unavailable로 두고 prompt와 placeholder를 보존해.", "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=required assetIds=[declared required stable IDs] capability=[capability snapshot] key가 없고 host가 available일 때만 jobs를 사용하고 아니면 호출 없이 보존해."}, "skill": "generate-image-assets", "skill_chain": ["generate-image-assets", "review-image-assets"], "specialist_roles": ["visual-asset-reviewer", "art-brief-director"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["required finite job selection", "capability decision", "unavailable 또는 per-asset result", "preserved prompts and placeholders"], "optional_outputs": ["partial success state", "resumable handoff"], "extended_outputs": ["redacted no-key receipt", "concept-draft provenance"], "expected_file_tree": ["game-design/studio-visual/generate-standard/content.md", "game-design/studio-visual/generate-standard/evidence.yml", "game-design/studio-visual/generate-standard/export-manifest.yml", "game-design/studio-visual/generate-standard/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/generate-standard/content.md", "game-design/studio-visual/generate-standard/evidence.yml", "game-design/studio-visual/generate-standard/export-manifest.yml", "game-design/studio-visual/generate-standard/assets/image-assets.yml"], "human_review_boundary": "visual-asset-reviewer owner가 provider result와 review handoff를 승인·수정·보류하며 unavailable·생성 결과는 document-approved가 아니다.", "hold_conditions": ["required stable ID가 선언되지 않음", "capability snapshot이 없음", "manifest validation 실패"], "resume_prompt": "generate-standard의 prompt·placeholder와 unavailable receipt를 보존하고 available로 바뀐 capability 또는 실패 stable ID만 반영해 해당 job부터 재개해.", "safety_boundary": "모르는 host capability는 미정으로 남기고 no-key unknown 또는 unavailable에서는 호출하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s08", "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg", "png": "guides/assets/game-design-studio/skills/generate-image-assets.png", "alt": "이미지 자산 생성 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["content-quest-design"], "source_references": ["guides/game-design-studio/skills/generate-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:generate-image-assets:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "required mode receipt와 no-key capability 경계",
+    "purpose": "required mode의 declared finite jobs만 처리하고 key가 없는 host capability unavailable 경로에서는 호출 없이 prompt와 placeholder를 보존한다.",
+    "audiences": [
+      "game-designer",
+      "visual-asset-reviewer"
+    ],
+    "intents": [
+      "필수 자산 생성",
+      "capability fallback"
+    ],
+    "level": "standard",
+    "when_to_use": "manifest의 required finite jobs와 redacted capability snapshot이 있을 때 사용한다.",
+    "when_not_to_use": "선언 밖 variant를 만들거나 host capability unknown·unavailable에서 generation call을 할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "validated image manifest",
+      "compiled prompt package",
+      "IMAGE_GEN_MODE=required",
+      "redacted configuration",
+      "capability snapshot",
+      "declared required stable IDs"
+    ],
+    "optional_inputs": [
+      "partial success receipt",
+      "resume target"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[declared required stable IDs]",
+      "[capability snapshot]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio required finite assets만 처리해. key가 없고 host capability가 available이면 해당 jobs만 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [declared required stable IDs]를 required mode로 처리해. [capability snapshot]에서 key가 없고 host가 available일 때만 jobs를 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=required capability=unavailable required declared jobs는 unavailable로 두고 prompt와 placeholder를 보존해.",
+      "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=required assetIds=[declared required stable IDs] capability=[capability snapshot] key가 없고 host가 available일 때만 jobs를 사용하고 아니면 호출 없이 보존해."
+    },
+    "skill": "generate-image-assets",
+    "skill_chain": [
+      "generate-image-assets",
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "required finite job selection",
+      "capability decision",
+      "unavailable 또는 per-asset result",
+      "preserved prompts and placeholders"
+    ],
+    "optional_outputs": [
+      "partial success state",
+      "resumable handoff"
+    ],
+    "extended_outputs": [
+      "redacted no-key receipt",
+      "concept-draft provenance"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/generate-standard/content.md",
+      "game-design/studio-visual/generate-standard/evidence.yml",
+      "game-design/studio-visual/generate-standard/export-manifest.yml",
+      "game-design/studio-visual/generate-standard/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/generate-standard/content.md",
+      "game-design/studio-visual/generate-standard/evidence.yml",
+      "game-design/studio-visual/generate-standard/export-manifest.yml",
+      "game-design/studio-visual/generate-standard/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "visual-asset-reviewer owner가 provider result와 review handoff를 승인·수정·보류하며 unavailable·생성 결과는 document-approved가 아니다.",
+    "hold_conditions": [
+      "required stable ID가 선언되지 않음",
+      "capability snapshot이 없음",
+      "manifest validation 실패"
+    ],
+    "resume_prompt": "generate-standard의 prompt·placeholder와 unavailable receipt를 보존하고 available로 바뀐 capability 또는 실패 stable ID만 반영해 해당 job부터 재개해.",
+    "safety_boundary": "모르는 host capability는 미정으로 남기고 no-key unknown 또는 unavailable에서는 호출하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s08",
+      "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/generate-image-assets.png",
+      "alt": "이미지 자산 생성 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "content-quest-design"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/generate-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: required mode receipt와 no-key capability 경계",
+    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:generate-image-assets:standard; 파일: game-design/studio-visual/generate-standard/content.md)"
   },
   {
-    "id": "studio:generate-image-assets:advanced", "kind": "skill-template", "product": "studio", "title": "all mode OpenAI-only failure와 provenance 분리", "purpose": "all mode의 declared required·recommended·variant jobs만 실행하고 API key가 있으면 OpenAI only failure를 Codex fallback 없이 provenance에 남긴다.", "audiences": ["art-brief-director", "visual-asset-reviewer"], "intents": ["전체 선언 자산", "provider failure"], "level": "advanced", "when_to_use": "all mode로 manifest에 이미 선언된 finite jobs의 provider 결과를 asset별로 기록할 때 사용한다.", "when_not_to_use": "API key가 있을 때 다른 provider로 fallback하거나 선언되지 않은 asset을 만들 때는 사용하지 않는다.", "required_inputs": ["validated image manifest", "compiled prompt package", "IMAGE_GEN_MODE=all", "redacted provider configuration", "capability snapshot", "declared finite jobs"], "optional_inputs": ["partial failure state", "provenance receipt"], "placeholders": ["[Canonical Artifact]", "[declared finite jobs]", "[provider failure state]"], "app_prompt": {"example": "@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. OPENAI_API_KEY가 있으면 OpenAI only로 시도하고 auth·quota·policy·network 실패 후 Codex fallback은 금지하며 provenance를 분리해.", "template": "@Game Design Studio [Canonical Artifact]의 [declared finite jobs]만 all mode로 처리해. [provider failure state]를 asset별 provenance로 보존하고 key가 있으면 OpenAI only이며 실패 후 Codex fallback은 금지해."}, "cli_prompt": {"example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=all declared=required,recommended,variant provider=OpenAI OpenAI only failure를 보존하고 fallback 없이 provenance를 분리해.", "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all assetIds=[declared finite jobs] failureState=[provider failure state] OpenAI only failure를 보존하고 Codex fallback 없이 provenance를 분리해."}, "skill": "generate-image-assets", "skill_chain": ["generate-image-assets", "review-image-assets"], "specialist_roles": ["art-brief-director", "visual-asset-reviewer"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["all declared finite job list", "OpenAI only or host decision", "per-asset provenance", "explicit failure state", "concept-draft result"], "optional_outputs": ["partial successes", "prompt digest"], "extended_outputs": ["named human review handoff", "resumable same-provider retry"], "expected_file_tree": ["game-design/studio-visual/generate-advanced/content.md", "game-design/studio-visual/generate-advanced/evidence.yml", "game-design/studio-visual/generate-advanced/export-manifest.yml", "game-design/studio-visual/generate-advanced/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/generate-advanced/content.md", "game-design/studio-visual/generate-advanced/evidence.yml", "game-design/studio-visual/generate-advanced/export-manifest.yml", "game-design/studio-visual/generate-advanced/assets/image-assets.yml"], "human_review_boundary": "visual-asset-reviewer owner가 provenance와 failure handoff를 승인·수정·보류하며 provider 성공은 document-approved나 production-candidate가 아니다.", "hold_conditions": ["declared finite job이 없음", "provider policy가 불명확함", "manifest validation 실패"], "resume_prompt": "generate-advanced의 successful concept-draft와 provider failure provenance를 보존하고 같은 provider 정책에서 failed stable ID만 재개해.", "safety_boundary": "기본 IMAGE_MODEL은 gpt-image-2, IMAGE_QUALITY는 low이며 실제 credential 값은 미정으로 다루고 노출하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s08", "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg", "png": "guides/assets/game-design-studio/skills/generate-image-assets.png", "alt": "이미지 자산 생성 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["new-game-gdd"], "source_references": ["guides/game-design-studio/skills/generate-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:generate-image-assets:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "all mode OpenAI-only failure와 provenance 분리",
+    "purpose": "all mode의 declared required·recommended·variant jobs만 실행하고 API key가 있으면 OpenAI only failure를 Codex fallback 없이 provenance에 남긴다.",
+    "audiences": [
+      "art-brief-director",
+      "visual-asset-reviewer"
+    ],
+    "intents": [
+      "전체 선언 자산",
+      "provider failure"
+    ],
+    "level": "advanced",
+    "when_to_use": "all mode로 manifest에 이미 선언된 finite jobs의 provider 결과를 asset별로 기록할 때 사용한다.",
+    "when_not_to_use": "API key가 있을 때 다른 provider로 fallback하거나 선언되지 않은 asset을 만들 때는 사용하지 않는다.",
+    "required_inputs": [
+      "validated image manifest",
+      "compiled prompt package",
+      "IMAGE_GEN_MODE=all",
+      "redacted provider configuration",
+      "capability snapshot",
+      "declared finite jobs"
+    ],
+    "optional_inputs": [
+      "partial failure state",
+      "provenance receipt"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[declared finite jobs]",
+      "[provider failure state]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. OPENAI_API_KEY가 있으면 OpenAI only로 시도하고 auth·quota·policy·network 실패 후 Codex fallback은 금지하며 provenance를 분리해.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [declared finite jobs]만 all mode로 처리해. [provider failure state]를 asset별 provenance로 보존하고 key가 있으면 OpenAI only이며 실패 후 Codex fallback은 금지해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:generate-image-assets artifact=game-design/coop/brief mode=all declared=required,recommended,variant provider=OpenAI OpenAI only failure를 보존하고 fallback 없이 provenance를 분리해.",
+      "template": "$game-design-studio:generate-image-assets artifact=[Canonical Artifact] mode=all assetIds=[declared finite jobs] failureState=[provider failure state] OpenAI only failure를 보존하고 Codex fallback 없이 provenance를 분리해."
+    },
+    "skill": "generate-image-assets",
+    "skill_chain": [
+      "generate-image-assets",
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "art-brief-director",
+      "visual-asset-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "all declared finite job list",
+      "OpenAI only or host decision",
+      "per-asset provenance",
+      "explicit failure state",
+      "concept-draft result"
+    ],
+    "optional_outputs": [
+      "partial successes",
+      "prompt digest"
+    ],
+    "extended_outputs": [
+      "named human review handoff",
+      "resumable same-provider retry"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/generate-advanced/content.md",
+      "game-design/studio-visual/generate-advanced/evidence.yml",
+      "game-design/studio-visual/generate-advanced/export-manifest.yml",
+      "game-design/studio-visual/generate-advanced/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/generate-advanced/content.md",
+      "game-design/studio-visual/generate-advanced/evidence.yml",
+      "game-design/studio-visual/generate-advanced/export-manifest.yml",
+      "game-design/studio-visual/generate-advanced/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "visual-asset-reviewer owner가 provenance와 failure handoff를 승인·수정·보류하며 provider 성공은 document-approved나 production-candidate가 아니다.",
+    "hold_conditions": [
+      "declared finite job이 없음",
+      "provider policy가 불명확함",
+      "manifest validation 실패"
+    ],
+    "resume_prompt": "generate-advanced의 successful concept-draft와 provider failure provenance를 보존하고 같은 provider 정책에서 failed stable ID만 재개해.",
+    "safety_boundary": "기본 IMAGE_MODEL은 gpt-image-2, IMAGE_QUALITY는 low이며 실제 credential 값은 미정으로 다루고 노출하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s08",
+      "svg": "guides/assets/game-design-studio/skills/generate-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/generate-image-assets.png",
+      "alt": "이미지 자산 생성 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "new-game-gdd"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/generate-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: all mode OpenAI-only failure와 provenance 분리",
+    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:generate-image-assets:advanced; 파일: game-design/studio-visual/generate-advanced/content.md)"
   },
   {
-    "id": "studio:review-image-assets:beginner", "kind": "skill-template", "product": "studio", "title": "concept-draft 문서 적합성 검토", "purpose": "concept-draft asset의 purpose·placement·alt text·readability gap을 발견하지만 사람 결정 없이 lifecycle을 바꾸지 않는다.", "audiences": ["visual-asset-reviewer", "game-designer"], "intents": ["문서 이미지 검토", "blocker 발견"], "level": "beginner", "when_to_use": "concept-draft asset의 문서 삽입 전 검토 질문과 evidence gap을 기록할 때 사용한다.", "when_not_to_use": "agent finding만으로 document-approved를 기록하거나 새 이미지를 만들 때는 사용하지 않는다.", "required_inputs": ["validated image manifest", "stable asset ID", "current lifecycle state", "placement", "alt text", "artifact-local evidence"], "optional_inputs": ["readability finding", "rights question"], "placeholders": ["[Canonical Artifact]", "[stable asset ID]", "[current lifecycle state]"], "app_prompt": {"example": "@Game Design Studio concept-draft hero-keyart-01의 purpose, placement, alt text와 readability evidence gap을 검토해. named human 결정 없이는 상태를 바꾸지 마.", "template": "@Game Design Studio [Canonical Artifact]의 [stable asset ID]가 [current lifecycle state]일 때 purpose, placement, alt text와 readability gap을 검토해. named human 결정 없이는 상태를 바꾸지 마."}, "cli_prompt": {"example": "$game-design-studio:review-image-assets artifact=game-design/coop/brief assetId=hero-keyart-01 targetState=document-approved concept-draft evidence gap만 기록해.", "template": "$game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[stable asset ID] state=[current lifecycle state] evidence gap만 기록하고 사람 결정 없이는 transition하지 마."}, "skill": "review-image-assets", "skill_chain": ["review-image-assets"], "specialist_roles": ["visual-asset-reviewer", "art-brief-director"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["stable asset ID finding", "placement·alt·readability gap", "blocked document approval", "derivative ineligibility"], "optional_outputs": ["rights question", "recommended revision"], "extended_outputs": ["named human decision handoff"], "expected_file_tree": ["game-design/studio-visual/review-beginner/content.md", "game-design/studio-visual/review-beginner/evidence.yml", "game-design/studio-visual/review-beginner/export-manifest.yml", "game-design/studio-visual/review-beginner/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/review-beginner/content.md", "game-design/studio-visual/review-beginner/evidence.yml", "game-design/studio-visual/review-beginner/export-manifest.yml", "game-design/studio-visual/review-beginner/assets/image-assets.yml"], "human_review_boundary": "이름 있는 사람인 visual-asset-reviewer owner가 evidence gap을 승인·수정·보류하며 specialist finding은 document-approved가 아니다.", "hold_conditions": ["stable asset ID가 없음", "placement 또는 alt text가 없음", "human decision evidence가 없음"], "resume_prompt": "review-beginner의 concept-draft finding을 보존하고 새 artifact-local evidence만 연결해 placement와 alt text 검토부터 재개해.", "safety_boundary": "모르는 review evidence는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s13", "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg", "png": "guides/assets/game-design-studio/skills/review-image-assets.png", "alt": "이미지 자산 검토 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["ux-accessibility"], "source_references": ["guides/game-design-studio/skills/review-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:review-image-assets:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "concept-draft 문서 적합성 검토",
+    "purpose": "concept-draft asset의 purpose·placement·alt text·readability gap을 발견하지만 사람 결정 없이 lifecycle을 바꾸지 않는다.",
+    "audiences": [
+      "visual-asset-reviewer",
+      "game-designer"
+    ],
+    "intents": [
+      "문서 이미지 검토",
+      "blocker 발견"
+    ],
+    "level": "beginner",
+    "when_to_use": "concept-draft asset의 문서 삽입 전 검토 질문과 evidence gap을 기록할 때 사용한다.",
+    "when_not_to_use": "agent finding만으로 document-approved를 기록하거나 새 이미지를 만들 때는 사용하지 않는다.",
+    "required_inputs": [
+      "validated image manifest",
+      "stable asset ID",
+      "current lifecycle state",
+      "placement",
+      "alt text",
+      "artifact-local evidence"
+    ],
+    "optional_inputs": [
+      "readability finding",
+      "rights question"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[current lifecycle state]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio concept-draft hero-keyart-01의 purpose, placement, alt text와 readability evidence gap을 검토해. named human 결정 없이는 상태를 바꾸지 마.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [stable asset ID]가 [current lifecycle state]일 때 purpose, placement, alt text와 readability gap을 검토해. named human 결정 없이는 상태를 바꾸지 마."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:review-image-assets artifact=game-design/coop/brief assetId=hero-keyart-01 targetState=document-approved concept-draft evidence gap만 기록해.",
+      "template": "$game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[stable asset ID] state=[current lifecycle state] evidence gap만 기록하고 사람 결정 없이는 transition하지 마."
+    },
+    "skill": "review-image-assets",
+    "skill_chain": [
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "stable asset ID finding",
+      "placement·alt·readability gap",
+      "blocked document approval",
+      "derivative ineligibility"
+    ],
+    "optional_outputs": [
+      "rights question",
+      "recommended revision"
+    ],
+    "extended_outputs": [
+      "named human decision handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/review-beginner/content.md",
+      "game-design/studio-visual/review-beginner/evidence.yml",
+      "game-design/studio-visual/review-beginner/export-manifest.yml",
+      "game-design/studio-visual/review-beginner/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/review-beginner/content.md",
+      "game-design/studio-visual/review-beginner/evidence.yml",
+      "game-design/studio-visual/review-beginner/export-manifest.yml",
+      "game-design/studio-visual/review-beginner/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "이름 있는 사람인 visual-asset-reviewer owner가 evidence gap을 승인·수정·보류하며 specialist finding은 document-approved가 아니다.",
+    "hold_conditions": [
+      "stable asset ID가 없음",
+      "placement 또는 alt text가 없음",
+      "human decision evidence가 없음"
+    ],
+    "resume_prompt": "review-beginner의 concept-draft finding을 보존하고 새 artifact-local evidence만 연결해 placement와 alt text 검토부터 재개해.",
+    "safety_boundary": "모르는 review evidence는 미정으로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s13",
+      "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/review-image-assets.png",
+      "alt": "이미지 자산 검토 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/review-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: concept-draft 문서 적합성 검토",
+    "sample_result_excerpt": "가상의 검토 기록 — 검토 발견 사항: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:review-image-assets:beginner; 파일: game-design/studio-visual/review-beginner/content.md)"
   },
   {
-    "id": "studio:review-image-assets:standard", "kind": "skill-template", "product": "studio", "title": "rights·readability·placement 문서 승인 검토", "purpose": "named human decision receipt가 있는 concept-draft asset을 document-approved 전환 요건과 blocker로 분리한다.", "audiences": ["visual-asset-reviewer", "art-brief-director"], "intents": ["문서 승인", "rights 검토"], "level": "standard", "when_to_use": "실제 named human의 document approval decision과 artifact-local rights evidence를 검증할 때 사용한다.", "when_not_to_use": "timestamp·agent ID·파일 존재만으로 transition하거나 production-candidate로 건너뛸 때는 사용하지 않는다.", "required_inputs": ["validated image manifest", "stable asset ID", "requested transition", "named human decision receipt", "placement·alt·readability evidence", "rights/provenance decision"], "optional_inputs": ["restriction", "revocation evidence"], "placeholders": ["[Canonical Artifact]", "[stable asset ID]", "[named human reviewer]", "[requested transition]"], "app_prompt": {"example": "@Game Design Studio hero-keyart-01의 named human document-approved receipt, placement, alt text, readability와 rights/provenance를 검토해. 누락 증거는 blocked로 남겨.", "template": "@Game Design Studio [Canonical Artifact]의 [stable asset ID]에 대해 [named human reviewer]의 [requested transition] receipt, placement, alt text, readability와 rights/provenance를 검토해."}, "cli_prompt": {"example": "$game-design-studio:review-image-assets artifact=game-design/coop/brief assetId=hero-keyart-01 targetState=document-approved reviewer=Jin decision=approve placement·alt·rights evidence를 검토해.", "template": "$game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[stable asset ID] targetState=[requested transition] reviewer=[named human reviewer] placement·alt·rights evidence를 검토해."}, "skill": "review-image-assets", "skill_chain": ["review-image-assets", "export-game-design-documents"], "specialist_roles": ["visual-asset-reviewer", "art-brief-director"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["requested transition", "named human decision record", "rights·readability·placement findings", "document-approved or blocked state"], "optional_outputs": ["restriction", "revocation handoff"], "extended_outputs": ["derivative eligibility", "export handoff condition"], "expected_file_tree": ["game-design/studio-visual/review-standard/content.md", "game-design/studio-visual/review-standard/evidence.yml", "game-design/studio-visual/review-standard/export-manifest.yml", "game-design/studio-visual/review-standard/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/review-standard/content.md", "game-design/studio-visual/review-standard/evidence.yml", "game-design/studio-visual/review-standard/export-manifest.yml", "game-design/studio-visual/review-standard/assets/image-assets.yml"], "human_review_boundary": "실제 담당자인 visual-asset-reviewer owner가 named human receipt와 rights를 승인·수정·보류하며 document-approved만 export binding 후보이고 agent는 승인할 수 없다.", "hold_conditions": ["named human receipt가 없음", "rights/provenance가 unreviewed", "placement·alt·readability evidence가 없음"], "resume_prompt": "review-standard의 named human decision과 blocked evidence를 보존하고 해결된 rights 또는 placement 증거 하나만 반영해 document-approved 검토부터 재개해.", "safety_boundary": "모르는 rights와 결정은 미정 또는 blocked로 남긴다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s13", "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg", "png": "guides/assets/game-design-studio/skills/review-image-assets.png", "alt": "이미지 자산 검토 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["production-review-export"], "source_references": ["guides/game-design-studio/skills/review-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:review-image-assets:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "rights·readability·placement 문서 승인 검토",
+    "purpose": "named human decision receipt가 있는 concept-draft asset을 document-approved 전환 요건과 blocker로 분리한다.",
+    "audiences": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intents": [
+      "문서 승인",
+      "rights 검토"
+    ],
+    "level": "standard",
+    "when_to_use": "실제 named human의 document approval decision과 artifact-local rights evidence를 검증할 때 사용한다.",
+    "when_not_to_use": "timestamp·agent ID·파일 존재만으로 transition하거나 production-candidate로 건너뛸 때는 사용하지 않는다.",
+    "required_inputs": [
+      "validated image manifest",
+      "stable asset ID",
+      "requested transition",
+      "named human decision receipt",
+      "placement·alt·readability evidence",
+      "rights/provenance decision"
+    ],
+    "optional_inputs": [
+      "restriction",
+      "revocation evidence"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[named human reviewer]",
+      "[requested transition]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio hero-keyart-01의 named human document-approved receipt, placement, alt text, readability와 rights/provenance를 검토해. 누락 증거는 blocked로 남겨.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [stable asset ID]에 대해 [named human reviewer]의 [requested transition] receipt, placement, alt text, readability와 rights/provenance를 검토해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:review-image-assets artifact=game-design/coop/brief assetId=hero-keyart-01 targetState=document-approved reviewer=Jin decision=approve placement·alt·rights evidence를 검토해.",
+      "template": "$game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[stable asset ID] targetState=[requested transition] reviewer=[named human reviewer] placement·alt·rights evidence를 검토해."
+    },
+    "skill": "review-image-assets",
+    "skill_chain": [
+      "review-image-assets",
+      "export-game-design-documents"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "requested transition",
+      "named human decision record",
+      "rights·readability·placement findings",
+      "document-approved or blocked state"
+    ],
+    "optional_outputs": [
+      "restriction",
+      "revocation handoff"
+    ],
+    "extended_outputs": [
+      "derivative eligibility",
+      "export handoff condition"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/review-standard/content.md",
+      "game-design/studio-visual/review-standard/evidence.yml",
+      "game-design/studio-visual/review-standard/export-manifest.yml",
+      "game-design/studio-visual/review-standard/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/review-standard/content.md",
+      "game-design/studio-visual/review-standard/evidence.yml",
+      "game-design/studio-visual/review-standard/export-manifest.yml",
+      "game-design/studio-visual/review-standard/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "실제 담당자인 visual-asset-reviewer owner가 named human receipt와 rights를 승인·수정·보류하며 document-approved만 export binding 후보이고 agent는 승인할 수 없다.",
+    "hold_conditions": [
+      "named human receipt가 없음",
+      "rights/provenance가 unreviewed",
+      "placement·alt·readability evidence가 없음"
+    ],
+    "resume_prompt": "review-standard의 named human decision과 blocked evidence를 보존하고 해결된 rights 또는 placement 증거 하나만 반영해 document-approved 검토부터 재개해.",
+    "safety_boundary": "모르는 rights와 결정은 미정 또는 blocked로 남긴다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s13",
+      "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/review-image-assets.png",
+      "alt": "이미지 자산 검토 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "production-review-export"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/review-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: rights·readability·placement 문서 승인 검토",
+    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:review-image-assets:standard; 파일: game-design/studio-visual/review-standard/content.md)"
   },
   {
-    "id": "studio:review-image-assets:advanced", "kind": "skill-template", "product": "studio", "title": "production-candidate 재검토와 권리 revocation", "purpose": "document-approved asset의 active rights·technical fit·gameplay readability를 named human evidence로 재검토해 production-candidate 또는 hold를 결정한다.", "audiences": ["visual-asset-reviewer", "art-brief-director"], "intents": ["production 후보", "권리 재검토"], "level": "advanced", "when_to_use": "document-approved asset의 production-candidate 요청, revocation 또는 restriction 재검토가 필요할 때 사용한다.", "when_not_to_use": "production-candidate를 release, legal, production approval로 해석하거나 실제 game resource를 자동 승격할 때는 사용하지 않는다.", "required_inputs": ["validated image manifest", "stable asset ID", "document-approved lifecycle receipt", "named human rights reviewer", "technical fit", "gameplay readability", "active rights decision"], "optional_inputs": ["restriction", "revocation record", "rework request"], "placeholders": ["[Canonical Artifact]", "[stable asset ID]", "[named human rights reviewer]", "[active rights decision]"], "app_prompt": {"example": "@Game Design Studio document-approved hero-keyart-01의 active rights, technical fit와 gameplay readability를 named human rights reviewer가 재검토하도록 정리해. production-candidate는 release, legal, production approval이 아니며 게임 리소스 자동 승격은 금지해.", "template": "@Game Design Studio [Canonical Artifact]의 [stable asset ID]에 대해 [named human rights reviewer]가 [active rights decision], technical fit와 gameplay readability를 재검토하도록 정리해. 자동 승격은 금지해."}, "cli_prompt": {"example": "$game-design-studio:review-image-assets artifact=game-design/coop/brief assetId=hero-keyart-01 targetState=production-candidate reviewer=Jin rights=active document-approved receipt를 재검토하고 release approval로 표시하지 마.", "template": "$game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[stable asset ID] targetState=production-candidate reviewer=[named human rights reviewer] rights=[active rights decision] 재검토·hold 조건을 기록해."}, "skill": "review-image-assets", "skill_chain": ["review-image-assets"], "specialist_roles": ["visual-asset-reviewer", "art-brief-director"], "intermediate_artifacts": ["game-design-brief"], "minimum_outputs": ["concept-draft → document-approved → production-candidate lifecycle receipt", "active rights decision", "technical fit와 gameplay readability", "production-candidate or hold"], "optional_outputs": ["revocation", "restriction", "rework request"], "extended_outputs": ["no game-resource promotion receipt", "re-review handoff"], "expected_file_tree": ["game-design/studio-visual/review-advanced/content.md", "game-design/studio-visual/review-advanced/evidence.yml", "game-design/studio-visual/review-advanced/export-manifest.yml", "game-design/studio-visual/review-advanced/assets/image-assets.yml"], "read_order": ["game-design/studio-visual/review-advanced/content.md", "game-design/studio-visual/review-advanced/evidence.yml", "game-design/studio-visual/review-advanced/export-manifest.yml", "game-design/studio-visual/review-advanced/assets/image-assets.yml"], "human_review_boundary": "이름 있는 사람인 visual-asset-reviewer owner와 rights reviewer가 active rights·technical fit를 승인·수정·보류하며 production-candidate는 release·legal·production approval이 아니고 game resource 자동 승격을 금지한다.", "hold_conditions": ["document-approved receipt가 없음", "active rights가 아님", "technical fit 또는 gameplay readability evidence가 없음"], "resume_prompt": "review-advanced의 lifecycle receipt와 revocation record를 보존하고 새 named-human rights decision만 반영해 production-candidate 재검토부터 재개해.", "safety_boundary": "모르는 rights·lifecycle은 미정 또는 blocked로 남기고 production-candidate를 실제 게임 리소스로 자동 승격하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s13", "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg", "png": "guides/assets/game-design-studio/skills/review-image-assets.png", "alt": "이미지 자산 검토 직접 호출 흐름"}, "related_use_cases": ["ST-C08"], "related_recipes": ["production-review-export"], "source_references": ["guides/game-design-studio/skills/review-image-assets.md", "guides/game-design-studio/image-assets.md"]
+    "id": "studio:review-image-assets:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "production-candidate 재검토와 권리 revocation",
+    "purpose": "document-approved asset의 active rights·technical fit·gameplay readability를 named human evidence로 재검토해 production-candidate 또는 hold를 결정한다.",
+    "audiences": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intents": [
+      "production 후보",
+      "권리 재검토"
+    ],
+    "level": "advanced",
+    "when_to_use": "document-approved asset의 production-candidate 요청, revocation 또는 restriction 재검토가 필요할 때 사용한다.",
+    "when_not_to_use": "production-candidate를 release, legal, production approval로 해석하거나 실제 game resource를 자동 승격할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "validated image manifest",
+      "stable asset ID",
+      "document-approved lifecycle receipt",
+      "named human rights reviewer",
+      "technical fit",
+      "gameplay readability",
+      "active rights decision"
+    ],
+    "optional_inputs": [
+      "restriction",
+      "revocation record",
+      "rework request"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable asset ID]",
+      "[named human rights reviewer]",
+      "[active rights decision]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio document-approved hero-keyart-01의 active rights, technical fit와 gameplay readability를 named human rights reviewer가 재검토하도록 정리해. production-candidate는 release, legal, production approval이 아니며 게임 리소스 자동 승격은 금지해.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [stable asset ID]에 대해 [named human rights reviewer]가 [active rights decision], technical fit와 gameplay readability를 재검토하도록 정리해. 자동 승격은 금지해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:review-image-assets artifact=game-design/coop/brief assetId=hero-keyart-01 targetState=production-candidate reviewer=Jin rights=active document-approved receipt를 재검토하고 release approval로 표시하지 마.",
+      "template": "$game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[stable asset ID] targetState=production-candidate reviewer=[named human rights reviewer] rights=[active rights decision] 재검토·hold 조건을 기록해."
+    },
+    "skill": "review-image-assets",
+    "skill_chain": [
+      "review-image-assets"
+    ],
+    "specialist_roles": [
+      "visual-asset-reviewer",
+      "art-brief-director"
+    ],
+    "intermediate_artifacts": [
+      "game-design-brief"
+    ],
+    "minimum_outputs": [
+      "concept-draft → document-approved → production-candidate lifecycle receipt",
+      "active rights decision",
+      "technical fit와 gameplay readability",
+      "production-candidate or hold"
+    ],
+    "optional_outputs": [
+      "revocation",
+      "restriction",
+      "rework request"
+    ],
+    "extended_outputs": [
+      "no game-resource promotion receipt",
+      "re-review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/review-advanced/content.md",
+      "game-design/studio-visual/review-advanced/evidence.yml",
+      "game-design/studio-visual/review-advanced/export-manifest.yml",
+      "game-design/studio-visual/review-advanced/assets/image-assets.yml"
+    ],
+    "read_order": [
+      "game-design/studio-visual/review-advanced/content.md",
+      "game-design/studio-visual/review-advanced/evidence.yml",
+      "game-design/studio-visual/review-advanced/export-manifest.yml",
+      "game-design/studio-visual/review-advanced/assets/image-assets.yml"
+    ],
+    "human_review_boundary": "이름 있는 사람인 visual-asset-reviewer owner와 rights reviewer가 active rights·technical fit를 승인·수정·보류하며 production-candidate는 release·legal·production approval이 아니고 game resource 자동 승격을 금지한다.",
+    "hold_conditions": [
+      "document-approved receipt가 없음",
+      "active rights가 아님",
+      "technical fit 또는 gameplay readability evidence가 없음"
+    ],
+    "resume_prompt": "review-advanced의 lifecycle receipt와 revocation record를 보존하고 새 named-human rights decision만 반영해 production-candidate 재검토부터 재개해.",
+    "safety_boundary": "모르는 rights·lifecycle은 미정 또는 blocked로 남기고 production-candidate를 실제 게임 리소스로 자동 승격하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s13",
+      "svg": "guides/assets/game-design-studio/skills/review-image-assets.svg",
+      "png": "guides/assets/game-design-studio/skills/review-image-assets.png",
+      "alt": "이미지 자산 검토 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "production-review-export"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/review-image-assets.md",
+      "guides/game-design-studio/image-assets.md"
+    ],
+    "display_title": "게임 기획 결과: production-candidate 재검토와 권리 revocation",
+    "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:review-image-assets:advanced; 파일: game-design/studio-visual/review-advanced/content.md)"
   },
   {
-    "id": "studio:visualize-game-design:beginner", "kind": "skill-template", "product": "studio", "title": "source-backed 규칙 흐름 도식", "purpose": "검증된 rule state와 recovery 관계만 prose보다 명확할 때 editable SVG 계획으로 표현한다.", "audiences": ["game-designer", "lead-game-designer"], "intents": ["규칙 흐름", "source mapping"], "level": "beginner", "when_to_use": "Canonical Artifact의 state·transition·guard 관계가 prose보다 명확할 때 사용한다.", "when_not_to_use": "source 없는 node·edge를 발명하거나 character illustration을 만들 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "artifact version", "stable source IDs", "relationship question", "audience", "output directory"], "optional_inputs": ["language", "ratio", "acceptance criteria"], "placeholders": ["[Canonical Artifact]", "[stable source IDs]", "[relationship question]"], "app_prompt": {"example": "@Game Design Studio 검증된 system state와 recovery 관계만 source mapping해 규칙 흐름이 prose보다 명확한지 판단하고 editable SVG draft를 준비해.", "template": "@Game Design Studio [Canonical Artifact]의 [stable source IDs]로 [relationship question]을 source mapping해 규칙 흐름이 prose보다 명확할 때만 editable SVG draft를 준비해."}, "cli_prompt": {"example": "$game-design-studio:visualize-game-design artifact=game-design/coop/system sources=state-01,recovery-02 relationship=state-transition source-backed rule flow만 준비해.", "template": "$game-design-studio:visualize-game-design artifact=[Canonical Artifact] sources=[stable source IDs] relationship=[relationship question] source-backed rule flow만 준비해."}, "skill": "visualize-game-design", "skill_chain": ["visualize-game-design"], "specialist_roles": ["lead-game-designer"], "intermediate_artifacts": ["system-specification"], "minimum_outputs": ["diagram decision", "one preset", "source mapping", "editable SVG request", "adjacent alt text"], "optional_outputs": ["rejected alternatives", "diagram-not-warranted"], "extended_outputs": ["review handoff"], "expected_file_tree": ["game-design/studio-visual/visualize-beginner/content.md", "game-design/studio-visual/visualize-beginner/evidence.yml", "game-design/studio-visual/visualize-beginner/export-manifest.yml", "game-design/studio-visual/visualize-beginner/assets/rule-flow.svg"], "read_order": ["game-design/studio-visual/visualize-beginner/content.md", "game-design/studio-visual/visualize-beginner/evidence.yml", "game-design/studio-visual/visualize-beginner/export-manifest.yml", "game-design/studio-visual/visualize-beginner/assets/rule-flow.svg"], "human_review_boundary": "lead-game-designer owner가 source mapping과 diagram decision을 승인·수정·보류하며 SVG draft는 문서 승인이나 verified PNG가 아니다.", "hold_conditions": ["stable source IDs가 없음", "관계가 prose보다 명확하지 않음", "artifact version이 없음"], "resume_prompt": "visualize-beginner의 source mapping과 rejected alternative를 보존하고 확인된 relationship question만 반영해 diagram decision부터 재개해.", "safety_boundary": "모르는 관계는 미정으로 남기고 source 없는 node·edge는 만들지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s15", "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg", "png": "guides/assets/game-design-studio/skills/visualize-game-design.png", "alt": "게임 기획 시각화 직접 호출 흐름"}, "related_use_cases": ["ST-C03"], "related_recipes": ["system-feature-spec"], "source_references": ["guides/game-design-studio/skills/visualize-game-design.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:visualize-game-design:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "source-backed 규칙 흐름 도식",
+    "purpose": "검증된 rule state와 recovery 관계만 prose보다 명확할 때 editable SVG 계획으로 표현한다.",
+    "audiences": [
+      "game-designer",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "규칙 흐름",
+      "source mapping"
+    ],
+    "level": "beginner",
+    "when_to_use": "Canonical Artifact의 state·transition·guard 관계가 prose보다 명확할 때 사용한다.",
+    "when_not_to_use": "source 없는 node·edge를 발명하거나 character illustration을 만들 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "artifact version",
+      "stable source IDs",
+      "relationship question",
+      "audience",
+      "output directory"
+    ],
+    "optional_inputs": [
+      "language",
+      "ratio",
+      "acceptance criteria"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable source IDs]",
+      "[relationship question]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio 검증된 system state와 recovery 관계만 source mapping해 규칙 흐름이 prose보다 명확한지 판단하고 editable SVG draft를 준비해.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [stable source IDs]로 [relationship question]을 source mapping해 규칙 흐름이 prose보다 명확할 때만 editable SVG draft를 준비해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:visualize-game-design artifact=game-design/coop/system sources=state-01,recovery-02 relationship=state-transition source-backed rule flow만 준비해.",
+      "template": "$game-design-studio:visualize-game-design artifact=[Canonical Artifact] sources=[stable source IDs] relationship=[relationship question] source-backed rule flow만 준비해."
+    },
+    "skill": "visualize-game-design",
+    "skill_chain": [
+      "visualize-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "diagram decision",
+      "one preset",
+      "source mapping",
+      "editable SVG request",
+      "adjacent alt text"
+    ],
+    "optional_outputs": [
+      "rejected alternatives",
+      "diagram-not-warranted"
+    ],
+    "extended_outputs": [
+      "review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/visualize-beginner/content.md",
+      "game-design/studio-visual/visualize-beginner/evidence.yml",
+      "game-design/studio-visual/visualize-beginner/export-manifest.yml",
+      "game-design/studio-visual/visualize-beginner/assets/rule-flow.svg"
+    ],
+    "read_order": [
+      "game-design/studio-visual/visualize-beginner/content.md",
+      "game-design/studio-visual/visualize-beginner/evidence.yml",
+      "game-design/studio-visual/visualize-beginner/export-manifest.yml",
+      "game-design/studio-visual/visualize-beginner/assets/rule-flow.svg"
+    ],
+    "human_review_boundary": "lead-game-designer owner가 source mapping과 diagram decision을 승인·수정·보류하며 SVG draft는 문서 승인이나 verified PNG가 아니다.",
+    "hold_conditions": [
+      "stable source IDs가 없음",
+      "관계가 prose보다 명확하지 않음",
+      "artifact version이 없음"
+    ],
+    "resume_prompt": "visualize-beginner의 source mapping과 rejected alternative를 보존하고 확인된 relationship question만 반영해 diagram decision부터 재개해.",
+    "safety_boundary": "모르는 관계는 미정으로 남기고 source 없는 node·edge는 만들지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s15",
+      "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg",
+      "png": "guides/assets/game-design-studio/skills/visualize-game-design.png",
+      "alt": "게임 기획 시각화 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/visualize-game-design.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: source-backed 규칙 흐름 도식",
+    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 도식 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:visualize-game-design:beginner; 파일: game-design/studio-visual/visualize-beginner/content.md)"
   },
   {
-    "id": "studio:visualize-game-design:standard", "kind": "skill-template", "product": "studio", "title": "Archify 우선 구조 도식과 honest fallback", "purpose": "architecture·workflow·sequence·dataflow·lifecycle 관계에 host Archify가 available이면 우선하고 absent 또는 failure이면 Skillstead editable SVG와 2× PNG fallback을 정확한 상태로 기록한다.", "audiences": ["lead-game-designer", "ux-accessibility-reviewer"], "intents": ["Archify 도식", "fallback 상태"], "level": "standard", "when_to_use": "source-backed architecture, workflow, sequence, dataflow 또는 lifecycle 관계의 접근 가능한 도식이 필요할 때 사용한다.", "when_not_to_use": "Archify absent/failure fallback을 Archify 결과로 표시하거나 fallback만으로 자동 승인할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "artifact version", "stable source IDs", "relationship type", "Archify capability state", "output directory"], "optional_inputs": ["language", "ratio", "accessibility intent"], "placeholders": ["[Canonical Artifact]", "[stable source IDs]", "[relationship type]", "[Archify capability state]"], "app_prompt": {"example": "@Game Design Studio source-backed workflow 관계를 시각화해. Archify가 available이면 우선하고 absent 또는 failure이면 bundled Skillstead editable SVG와 2× PNG fallback을 Archify 결과로 표시하지 말고 정확한 상태로 기록해.", "template": "@Game Design Studio [Canonical Artifact]의 [stable source IDs]로 [relationship type]을 시각화해. [Archify capability state]에서 Archify가 available이면 우선하고 absent 또는 failure이면 Skillstead editable SVG와 2× PNG fallback을 정확히 기록해."}, "cli_prompt": {"example": "$game-design-studio:visualize-game-design artifact=game-design/coop/workflow sources=stage-01,gate-02 relationship=workflow archify=absent Skillstead editable SVG와 2x PNG fallback을 non-Archify 상태로 기록해.", "template": "$game-design-studio:visualize-game-design artifact=[Canonical Artifact] sources=[stable source IDs] relationship=[relationship type] archify=[Archify capability state] Archify 우선 또는 Skillstead fallback 상태를 기록해."}, "skill": "visualize-game-design", "skill_chain": ["visualize-game-design", "svg-infographic"], "specialist_roles": ["lead-game-designer", "ux-accessibility-reviewer"], "intermediate_artifacts": ["system-specification"], "minimum_outputs": ["Archify capability decision", "selected preset", "source mapping", "editable SVG", "2× PNG fallback state"], "optional_outputs": ["Archify result receipt", "Skillstead fallback receipt"], "extended_outputs": ["accessibility metadata", "human review handoff"], "expected_file_tree": ["game-design/studio-visual/visualize-standard/content.md", "game-design/studio-visual/visualize-standard/evidence.yml", "game-design/studio-visual/visualize-standard/export-manifest.yml", "game-design/studio-visual/visualize-standard/assets/workflow.svg"], "read_order": ["game-design/studio-visual/visualize-standard/content.md", "game-design/studio-visual/visualize-standard/evidence.yml", "game-design/studio-visual/visualize-standard/export-manifest.yml", "game-design/studio-visual/visualize-standard/assets/workflow.svg"], "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 Archify decision·source mapping·fallback을 승인·수정·보류하며 Skillstead fallback은 Archify 결과나 자동 승인이 아니다.", "hold_conditions": ["source mapping이 없음", "Archify capability state가 미정", "fallback renderer evidence가 없음"], "resume_prompt": "visualize-standard의 Archify capability decision과 Skillstead fallback state를 보존하고 변경된 available·absent·failure evidence만 반영해 마지막 검증 단계부터 재개해.", "safety_boundary": "모르는 capability와 renderer 상태는 미정 또는 blocked로 남기며 fallback을 Archify 결과나 자동 승인으로 표시하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s15", "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg", "png": "guides/assets/game-design-studio/skills/visualize-game-design.png", "alt": "게임 기획 시각화 직접 호출 흐름"}, "related_use_cases": ["ST-C03", "ST-C08"], "related_recipes": ["system-feature-spec"], "source_references": ["guides/game-design-studio/skills/visualize-game-design.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:visualize-game-design:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "Archify 우선 구조 도식과 honest fallback",
+    "purpose": "architecture·workflow·sequence·dataflow·lifecycle 관계에 host Archify가 available이면 우선하고 absent 또는 failure이면 Skillstead editable SVG와 2× PNG fallback을 정확한 상태로 기록한다.",
+    "audiences": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intents": [
+      "Archify 도식",
+      "fallback 상태"
+    ],
+    "level": "standard",
+    "when_to_use": "source-backed architecture, workflow, sequence, dataflow 또는 lifecycle 관계의 접근 가능한 도식이 필요할 때 사용한다.",
+    "when_not_to_use": "Archify absent/failure fallback을 Archify 결과로 표시하거나 fallback만으로 자동 승인할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "artifact version",
+      "stable source IDs",
+      "relationship type",
+      "Archify capability state",
+      "output directory"
+    ],
+    "optional_inputs": [
+      "language",
+      "ratio",
+      "accessibility intent"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable source IDs]",
+      "[relationship type]",
+      "[Archify capability state]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio source-backed workflow 관계를 시각화해. Archify가 available이면 우선하고 absent 또는 failure이면 bundled Skillstead editable SVG와 2× PNG fallback을 Archify 결과로 표시하지 말고 정확한 상태로 기록해.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [stable source IDs]로 [relationship type]을 시각화해. [Archify capability state]에서 Archify가 available이면 우선하고 absent 또는 failure이면 Skillstead editable SVG와 2× PNG fallback을 정확히 기록해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:visualize-game-design artifact=game-design/coop/workflow sources=stage-01,gate-02 relationship=workflow archify=absent Skillstead editable SVG와 2x PNG fallback을 non-Archify 상태로 기록해.",
+      "template": "$game-design-studio:visualize-game-design artifact=[Canonical Artifact] sources=[stable source IDs] relationship=[relationship type] archify=[Archify capability state] Archify 우선 또는 Skillstead fallback 상태를 기록해."
+    },
+    "skill": "visualize-game-design",
+    "skill_chain": [
+      "visualize-game-design",
+      "svg-infographic"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "system-specification"
+    ],
+    "minimum_outputs": [
+      "Archify capability decision",
+      "selected preset",
+      "source mapping",
+      "editable SVG",
+      "2× PNG fallback state"
+    ],
+    "optional_outputs": [
+      "Archify result receipt",
+      "Skillstead fallback receipt"
+    ],
+    "extended_outputs": [
+      "accessibility metadata",
+      "human review handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/visualize-standard/content.md",
+      "game-design/studio-visual/visualize-standard/evidence.yml",
+      "game-design/studio-visual/visualize-standard/export-manifest.yml",
+      "game-design/studio-visual/visualize-standard/assets/workflow.svg"
+    ],
+    "read_order": [
+      "game-design/studio-visual/visualize-standard/content.md",
+      "game-design/studio-visual/visualize-standard/evidence.yml",
+      "game-design/studio-visual/visualize-standard/export-manifest.yml",
+      "game-design/studio-visual/visualize-standard/assets/workflow.svg"
+    ],
+    "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 Archify decision·source mapping·fallback을 승인·수정·보류하며 Skillstead fallback은 Archify 결과나 자동 승인이 아니다.",
+    "hold_conditions": [
+      "source mapping이 없음",
+      "Archify capability state가 미정",
+      "fallback renderer evidence가 없음"
+    ],
+    "resume_prompt": "visualize-standard의 Archify capability decision과 Skillstead fallback state를 보존하고 변경된 available·absent·failure evidence만 반영해 마지막 검증 단계부터 재개해.",
+    "safety_boundary": "모르는 capability와 renderer 상태는 미정 또는 blocked로 남기며 fallback을 Archify 결과나 자동 승인으로 표시하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s15",
+      "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg",
+      "png": "guides/assets/game-design-studio/skills/visualize-game-design.png",
+      "alt": "게임 기획 시각화 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03",
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/visualize-game-design.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: Archify 우선 구조 도식과 honest fallback",
+    "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:visualize-game-design:standard; 파일: game-design/studio-visual/visualize-standard/content.md)"
   },
   {
-    "id": "studio:visualize-game-design:advanced", "kind": "skill-template", "product": "studio", "title": "source mapping·receipt·visual QA를 갖춘 lifecycle 도식", "purpose": "lifecycle 관계를 source locator, execution receipt와 independent visual QA로 분리해 verified 상태를 과장하지 않는다.", "audiences": ["lead-game-designer", "ux-accessibility-reviewer", "production-feasibility-critic"], "intents": ["lifecycle 도식", "visual QA"], "level": "advanced", "when_to_use": "여러 lifecycle gate와 owner handoff의 source mapping·lint·render·two-pass QA evidence가 필요할 때 사용한다.", "when_not_to_use": "linted·rendered·verified를 서로 추정하거나 diagram receipt로 human approval을 대체할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "artifact version", "stable source IDs", "lifecycle relationship", "selected preset", "acceptance criteria", "output directory"], "optional_inputs": ["Archify capability receipt", "existing SVG", "review question"], "placeholders": ["[Canonical Artifact]", "[stable source IDs]", "[lifecycle relationship]", "[selected preset]"], "app_prompt": {"example": "@Game Design Studio source-backed lifecycle의 node·connector·label을 mapping하고 preset, lint·render receipt, exact 2× PNG와 fit-to-page·close-up QA를 각각 기록해. Archify/Skillstead 결과와 human approval은 분리해.", "template": "@Game Design Studio [Canonical Artifact]의 [stable source IDs]로 [lifecycle relationship]을 [selected preset]에 mapping해. lint·render receipt, exact 2× PNG와 two-pass QA를 분리하고 human approval을 추정하지 마."}, "cli_prompt": {"example": "$game-design-studio:visualize-game-design artifact=game-design/coop/lifecycle sources=gate-01,gate-02 relationship=lifecycle preset=state-rule-flow source mapping·receipt·2x PNG·visual QA를 분리해.", "template": "$game-design-studio:visualize-game-design artifact=[Canonical Artifact] sources=[stable source IDs] relationship=[lifecycle relationship] preset=[selected preset] source mapping·receipt·visual QA를 분리해."}, "skill": "visualize-game-design", "skill_chain": ["visualize-game-design", "svg-infographic", "review-game-design"], "specialist_roles": ["lead-game-designer", "ux-accessibility-reviewer", "production-feasibility-critic"], "intermediate_artifacts": ["production-scope-risk"], "minimum_outputs": ["source mapping", "requested/generated/linted/rendered/verified states", "lint receipt", "render receipt", "fit-to-page·close-up QA"], "optional_outputs": ["Archify receipt", "Skillstead fallback receipt"], "extended_outputs": ["finding handoff", "export eligibility condition"], "expected_file_tree": ["game-design/studio-visual/visualize-advanced/content.md", "game-design/studio-visual/visualize-advanced/evidence.yml", "game-design/studio-visual/visualize-advanced/export-manifest.yml", "game-design/studio-visual/visualize-advanced/assets/lifecycle.svg"], "read_order": ["game-design/studio-visual/visualize-advanced/content.md", "game-design/studio-visual/visualize-advanced/evidence.yml", "game-design/studio-visual/visualize-advanced/export-manifest.yml", "game-design/studio-visual/visualize-advanced/assets/lifecycle.svg"], "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 source fidelity·visual QA를 승인·수정·보류하며 lint·render receipt는 document approval 또는 production approval이 아니다.", "hold_conditions": ["source locator가 없음", "preset이 정확히 하나가 아님", "lint·render·QA evidence가 불완전함"], "resume_prompt": "visualize-advanced의 source mapping과 passed evidence를 보존하고 실패한 lint·render·QA 상태 하나만 반영해 해당 검증 단계부터 재개해.", "safety_boundary": "모르는 source·QA 상태는 미정 또는 blocked로 남기고 receipt가 human approval을 대체하지 않게 한다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s15", "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg", "png": "guides/assets/game-design-studio/skills/visualize-game-design.png", "alt": "게임 기획 시각화 직접 호출 흐름"}, "related_use_cases": ["ST-C03", "ST-C08"], "related_recipes": ["production-review-export"], "source_references": ["guides/game-design-studio/skills/visualize-game-design.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:visualize-game-design:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "source mapping·receipt·visual QA를 갖춘 lifecycle 도식",
+    "purpose": "lifecycle 관계를 source locator, execution receipt와 independent visual QA로 분리해 verified 상태를 과장하지 않는다.",
+    "audiences": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer",
+      "production-feasibility-critic"
+    ],
+    "intents": [
+      "lifecycle 도식",
+      "visual QA"
+    ],
+    "level": "advanced",
+    "when_to_use": "여러 lifecycle gate와 owner handoff의 source mapping·lint·render·two-pass QA evidence가 필요할 때 사용한다.",
+    "when_not_to_use": "linted·rendered·verified를 서로 추정하거나 diagram receipt로 human approval을 대체할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "artifact version",
+      "stable source IDs",
+      "lifecycle relationship",
+      "selected preset",
+      "acceptance criteria",
+      "output directory"
+    ],
+    "optional_inputs": [
+      "Archify capability receipt",
+      "existing SVG",
+      "review question"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[stable source IDs]",
+      "[lifecycle relationship]",
+      "[selected preset]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio source-backed lifecycle의 node·connector·label을 mapping하고 preset, lint·render receipt, exact 2× PNG와 fit-to-page·close-up QA를 각각 기록해. Archify/Skillstead 결과와 human approval은 분리해.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [stable source IDs]로 [lifecycle relationship]을 [selected preset]에 mapping해. lint·render receipt, exact 2× PNG와 two-pass QA를 분리하고 human approval을 추정하지 마."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:visualize-game-design artifact=game-design/coop/lifecycle sources=gate-01,gate-02 relationship=lifecycle preset=state-rule-flow source mapping·receipt·2x PNG·visual QA를 분리해.",
+      "template": "$game-design-studio:visualize-game-design artifact=[Canonical Artifact] sources=[stable source IDs] relationship=[lifecycle relationship] preset=[selected preset] source mapping·receipt·visual QA를 분리해."
+    },
+    "skill": "visualize-game-design",
+    "skill_chain": [
+      "visualize-game-design",
+      "svg-infographic",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer",
+      "production-feasibility-critic"
+    ],
+    "intermediate_artifacts": [
+      "production-scope-risk"
+    ],
+    "minimum_outputs": [
+      "source mapping",
+      "requested/generated/linted/rendered/verified states",
+      "lint receipt",
+      "render receipt",
+      "fit-to-page·close-up QA"
+    ],
+    "optional_outputs": [
+      "Archify receipt",
+      "Skillstead fallback receipt"
+    ],
+    "extended_outputs": [
+      "finding handoff",
+      "export eligibility condition"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/visualize-advanced/content.md",
+      "game-design/studio-visual/visualize-advanced/evidence.yml",
+      "game-design/studio-visual/visualize-advanced/export-manifest.yml",
+      "game-design/studio-visual/visualize-advanced/assets/lifecycle.svg"
+    ],
+    "read_order": [
+      "game-design/studio-visual/visualize-advanced/content.md",
+      "game-design/studio-visual/visualize-advanced/evidence.yml",
+      "game-design/studio-visual/visualize-advanced/export-manifest.yml",
+      "game-design/studio-visual/visualize-advanced/assets/lifecycle.svg"
+    ],
+    "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 source fidelity·visual QA를 승인·수정·보류하며 lint·render receipt는 document approval 또는 production approval이 아니다.",
+    "hold_conditions": [
+      "source locator가 없음",
+      "preset이 정확히 하나가 아님",
+      "lint·render·QA evidence가 불완전함"
+    ],
+    "resume_prompt": "visualize-advanced의 source mapping과 passed evidence를 보존하고 실패한 lint·render·QA 상태 하나만 반영해 해당 검증 단계부터 재개해.",
+    "safety_boundary": "모르는 source·QA 상태는 미정 또는 blocked로 남기고 receipt가 human approval을 대체하지 않게 한다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s15",
+      "svg": "guides/assets/game-design-studio/skills/visualize-game-design.svg",
+      "png": "guides/assets/game-design-studio/skills/visualize-game-design.png",
+      "alt": "게임 기획 시각화 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03",
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "production-review-export"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/visualize-game-design.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: source mapping·receipt·visual QA를 갖춘 lifecycle 도식",
+    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:visualize-game-design:advanced; 파일: game-design/studio-visual/visualize-advanced/content.md)"
   },
   {
-    "id": "studio:svg-infographic:beginner", "kind": "skill-template", "product": "studio", "title": "간단한 source-mapped SVG 흐름", "purpose": "wrapper가 선택한 구조 관계를 간단한 editable SVG, title·desc와 adjacent alt text로 작성한다.", "audiences": ["game-designer", "lead-game-designer"], "intents": ["간단 SVG", "접근성 metadata"], "level": "beginner", "when_to_use": "visualize-game-design이 선택한 preset과 source mapping으로 간단한 flow를 authoring할 때 사용한다.", "when_not_to_use": "illustration·logo·statistical chart를 만들거나 source 없이 SVG를 검증 완료로 표시할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "selected preset", "stable source IDs", "relationship structure", "audience", "output directory"], "optional_inputs": ["language", "ratio", "style preference"], "placeholders": ["[Canonical Artifact]", "[selected preset]", "[stable source IDs]", "[relationship structure]"], "app_prompt": {"example": "@Game Design Studio wrapper가 고른 state-rule-flow preset과 source mapping으로 간단한 editable SVG를 작성해. nonempty title·desc와 adjacent alt text를 넣고 PNG나 승인을 주장하지 마.", "template": "@Game Design Studio [Canonical Artifact]의 [selected preset]과 [stable source IDs]로 [relationship structure] editable SVG를 작성해. title·desc와 adjacent alt text를 넣고 PNG나 승인을 주장하지 마."}, "cli_prompt": {"example": "$game-design-studio:svg-infographic artifact=game-design/coop/system preset=state-rule-flow sources=state-01,recovery-02 source-mapped SVG와 title·desc·alt text만 작성해.", "template": "$game-design-studio:svg-infographic artifact=[Canonical Artifact] preset=[selected preset] sources=[stable source IDs] structure=[relationship structure] SVG와 title·desc·alt text만 작성해."}, "skill": "svg-infographic", "skill_chain": ["visualize-game-design", "svg-infographic"], "specialist_roles": ["lead-game-designer"], "intermediate_artifacts": ["rule-exception-matrix"], "minimum_outputs": ["editable SVG", "nonempty title", "nonempty desc", "adjacent alt text", "stable source mapping"], "optional_outputs": ["numeric layout plan", "SVG-only draft state"], "extended_outputs": ["visualize-game-design handoff"], "expected_file_tree": ["game-design/studio-visual/svg-beginner/content.md", "game-design/studio-visual/svg-beginner/evidence.yml", "game-design/studio-visual/svg-beginner/export-manifest.yml", "game-design/studio-visual/svg-beginner/assets/rule-flow.svg"], "read_order": ["game-design/studio-visual/svg-beginner/content.md", "game-design/studio-visual/svg-beginner/evidence.yml", "game-design/studio-visual/svg-beginner/export-manifest.yml", "game-design/studio-visual/svg-beginner/assets/rule-flow.svg"], "human_review_boundary": "lead-game-designer owner가 structure와 accessibility metadata를 승인·수정·보류하며 editable SVG는 linted, rendered, verified 또는 human-approved가 아니다.", "hold_conditions": ["selected preset이 없음", "stable source IDs가 없음", "title·desc 또는 alt text가 없음"], "resume_prompt": "svg-beginner의 editable SVG와 source mapping을 보존하고 누락된 title·desc·alt text만 반영해 source checklist부터 재개해.", "safety_boundary": "모르는 structure는 미정으로 남기고 SVG-only draft를 verified PNG로 표시하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s14", "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg", "png": "guides/assets/game-design-studio/skills/svg-infographic.png", "alt": "SVG 인포그래픽 직접 호출 흐름"}, "related_use_cases": ["ST-C03"], "related_recipes": ["system-feature-spec"], "source_references": ["guides/game-design-studio/skills/svg-infographic.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:svg-infographic:beginner",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "간단한 source-mapped SVG 흐름",
+    "purpose": "wrapper가 선택한 구조 관계를 간단한 editable SVG, title·desc와 adjacent alt text로 작성한다.",
+    "audiences": [
+      "game-designer",
+      "lead-game-designer"
+    ],
+    "intents": [
+      "간단 SVG",
+      "접근성 metadata"
+    ],
+    "level": "beginner",
+    "when_to_use": "visualize-game-design이 선택한 preset과 source mapping으로 간단한 flow를 authoring할 때 사용한다.",
+    "when_not_to_use": "illustration·logo·statistical chart를 만들거나 source 없이 SVG를 검증 완료로 표시할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "selected preset",
+      "stable source IDs",
+      "relationship structure",
+      "audience",
+      "output directory"
+    ],
+    "optional_inputs": [
+      "language",
+      "ratio",
+      "style preference"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[selected preset]",
+      "[stable source IDs]",
+      "[relationship structure]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio wrapper가 고른 state-rule-flow preset과 source mapping으로 간단한 editable SVG를 작성해. nonempty title·desc와 adjacent alt text를 넣고 PNG나 승인을 주장하지 마.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [selected preset]과 [stable source IDs]로 [relationship structure] editable SVG를 작성해. title·desc와 adjacent alt text를 넣고 PNG나 승인을 주장하지 마."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:svg-infographic artifact=game-design/coop/system preset=state-rule-flow sources=state-01,recovery-02 source-mapped SVG와 title·desc·alt text만 작성해.",
+      "template": "$game-design-studio:svg-infographic artifact=[Canonical Artifact] preset=[selected preset] sources=[stable source IDs] structure=[relationship structure] SVG와 title·desc·alt text만 작성해."
+    },
+    "skill": "svg-infographic",
+    "skill_chain": [
+      "visualize-game-design",
+      "svg-infographic"
+    ],
+    "specialist_roles": [
+      "lead-game-designer"
+    ],
+    "intermediate_artifacts": [
+      "rule-exception-matrix"
+    ],
+    "minimum_outputs": [
+      "editable SVG",
+      "nonempty title",
+      "nonempty desc",
+      "adjacent alt text",
+      "stable source mapping"
+    ],
+    "optional_outputs": [
+      "numeric layout plan",
+      "SVG-only draft state"
+    ],
+    "extended_outputs": [
+      "visualize-game-design handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/svg-beginner/content.md",
+      "game-design/studio-visual/svg-beginner/evidence.yml",
+      "game-design/studio-visual/svg-beginner/export-manifest.yml",
+      "game-design/studio-visual/svg-beginner/assets/rule-flow.svg"
+    ],
+    "read_order": [
+      "game-design/studio-visual/svg-beginner/content.md",
+      "game-design/studio-visual/svg-beginner/evidence.yml",
+      "game-design/studio-visual/svg-beginner/export-manifest.yml",
+      "game-design/studio-visual/svg-beginner/assets/rule-flow.svg"
+    ],
+    "human_review_boundary": "lead-game-designer owner가 structure와 accessibility metadata를 승인·수정·보류하며 editable SVG는 linted, rendered, verified 또는 human-approved가 아니다.",
+    "hold_conditions": [
+      "selected preset이 없음",
+      "stable source IDs가 없음",
+      "title·desc 또는 alt text가 없음"
+    ],
+    "resume_prompt": "svg-beginner의 editable SVG와 source mapping을 보존하고 누락된 title·desc·alt text만 반영해 source checklist부터 재개해.",
+    "safety_boundary": "모르는 structure는 미정으로 남기고 SVG-only draft를 verified PNG로 표시하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s14",
+      "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg",
+      "png": "guides/assets/game-design-studio/skills/svg-infographic.png",
+      "alt": "SVG 인포그래픽 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "system-feature-spec"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/svg-infographic.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: 간단한 source-mapped SVG 흐름",
+    "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:svg-infographic:beginner; 파일: game-design/studio-visual/svg-beginner/content.md)"
   },
   {
-    "id": "studio:svg-infographic:standard", "kind": "skill-template", "product": "studio", "title": "source-backed 2× PNG가 있는 SVG handoff", "purpose": "source-mapped editable SVG를 product wrapper lint와 canonical renderer를 통해 정확한 2× PNG handoff로 분리한다.", "audiences": ["lead-game-designer", "ux-accessibility-reviewer"], "intents": ["2× PNG", "renderer evidence"], "level": "standard", "when_to_use": "source-backed topology·flow·roadmap의 SVG와 검증 가능한 2× PNG handoff가 필요할 때 사용한다.", "when_not_to_use": "PNG만 수정하거나 wrapper를 우회해 vendored path를 직접 호출할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "selected preset", "stable source IDs", "numeric layout plan", "output directory", "acceptance criteria"], "optional_inputs": ["language", "ratio", "existing SVG"], "placeholders": ["[Canonical Artifact]", "[selected preset]", "[stable source IDs]", "[acceptance criteria]"], "app_prompt": {"example": "@Game Design Studio source-backed flow SVG를 numeric layout으로 작성하고 product wrapper lint와 canonical renderer로 exact 2× PNG를 준비해. SVG authority와 PNG derivative를 분리하고 renderer evidence를 남겨.", "template": "@Game Design Studio [Canonical Artifact]의 [selected preset]과 [stable source IDs]로 SVG를 작성해. [acceptance criteria]에 따라 wrapper lint와 canonical renderer exact 2× PNG evidence를 남기고 SVG authority를 유지해."}, "cli_prompt": {"example": "$game-design-studio:svg-infographic artifact=game-design/coop/roadmap preset=liveops-roadmap sources=phase-01,gate-02 wrapper lint와 canonical renderer 2x PNG evidence를 준비해.", "template": "$game-design-studio:svg-infographic artifact=[Canonical Artifact] preset=[selected preset] sources=[stable source IDs] acceptance=[acceptance criteria] wrapper lint와 canonical renderer 2x PNG evidence를 준비해."}, "skill": "svg-infographic", "skill_chain": ["visualize-game-design", "svg-infographic"], "specialist_roles": ["lead-game-designer", "ux-accessibility-reviewer"], "intermediate_artifacts": ["production-scope-risk"], "minimum_outputs": ["editable SVG authority", "source mapping", "wrapper lint result", "canonical renderer result", "exact 2× PNG"], "optional_outputs": ["browser identity", "manual fallback status"], "extended_outputs": ["fit-to-page·close-up QA handoff"], "expected_file_tree": ["game-design/studio-visual/svg-standard/content.md", "game-design/studio-visual/svg-standard/evidence.yml", "game-design/studio-visual/svg-standard/export-manifest.yml", "game-design/studio-visual/svg-standard/assets/roadmap.svg"], "read_order": ["game-design/studio-visual/svg-standard/content.md", "game-design/studio-visual/svg-standard/evidence.yml", "game-design/studio-visual/svg-standard/export-manifest.yml", "game-design/studio-visual/svg-standard/assets/roadmap.svg"], "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 source mapping·renderer evidence를 승인·수정·보류하며 2× PNG render는 document approval이 아니다.", "hold_conditions": ["source mapping이 없음", "lint warning 또는 error가 미처리", "renderer 또는 dimensions evidence가 없음"], "resume_prompt": "svg-standard의 editable SVG와 renderer evidence를 보존하고 실패한 lint 또는 render 단계만 반영해 2× PNG handoff부터 재개해.", "safety_boundary": "모르는 lint·renderer 상태는 미정 또는 blocked로 남기고 PNG만 patch하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s14", "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg", "png": "guides/assets/game-design-studio/skills/svg-infographic.png", "alt": "SVG 인포그래픽 직접 호출 흐름"}, "related_use_cases": ["ST-C03"], "related_recipes": ["production-review-export"], "source_references": ["guides/game-design-studio/skills/svg-infographic.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:svg-infographic:standard",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "source-backed 2× PNG가 있는 SVG handoff",
+    "purpose": "source-mapped editable SVG를 product wrapper lint와 canonical renderer를 통해 정확한 2× PNG handoff로 분리한다.",
+    "audiences": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intents": [
+      "2× PNG",
+      "renderer evidence"
+    ],
+    "level": "standard",
+    "when_to_use": "source-backed topology·flow·roadmap의 SVG와 검증 가능한 2× PNG handoff가 필요할 때 사용한다.",
+    "when_not_to_use": "PNG만 수정하거나 wrapper를 우회해 vendored path를 직접 호출할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "selected preset",
+      "stable source IDs",
+      "numeric layout plan",
+      "output directory",
+      "acceptance criteria"
+    ],
+    "optional_inputs": [
+      "language",
+      "ratio",
+      "existing SVG"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[selected preset]",
+      "[stable source IDs]",
+      "[acceptance criteria]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio source-backed flow SVG를 numeric layout으로 작성하고 product wrapper lint와 canonical renderer로 exact 2× PNG를 준비해. SVG authority와 PNG derivative를 분리하고 renderer evidence를 남겨.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [selected preset]과 [stable source IDs]로 SVG를 작성해. [acceptance criteria]에 따라 wrapper lint와 canonical renderer exact 2× PNG evidence를 남기고 SVG authority를 유지해."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:svg-infographic artifact=game-design/coop/roadmap preset=liveops-roadmap sources=phase-01,gate-02 wrapper lint와 canonical renderer 2x PNG evidence를 준비해.",
+      "template": "$game-design-studio:svg-infographic artifact=[Canonical Artifact] preset=[selected preset] sources=[stable source IDs] acceptance=[acceptance criteria] wrapper lint와 canonical renderer 2x PNG evidence를 준비해."
+    },
+    "skill": "svg-infographic",
+    "skill_chain": [
+      "visualize-game-design",
+      "svg-infographic"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer"
+    ],
+    "intermediate_artifacts": [
+      "production-scope-risk"
+    ],
+    "minimum_outputs": [
+      "editable SVG authority",
+      "source mapping",
+      "wrapper lint result",
+      "canonical renderer result",
+      "exact 2× PNG"
+    ],
+    "optional_outputs": [
+      "browser identity",
+      "manual fallback status"
+    ],
+    "extended_outputs": [
+      "fit-to-page·close-up QA handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/svg-standard/content.md",
+      "game-design/studio-visual/svg-standard/evidence.yml",
+      "game-design/studio-visual/svg-standard/export-manifest.yml",
+      "game-design/studio-visual/svg-standard/assets/roadmap.svg"
+    ],
+    "read_order": [
+      "game-design/studio-visual/svg-standard/content.md",
+      "game-design/studio-visual/svg-standard/evidence.yml",
+      "game-design/studio-visual/svg-standard/export-manifest.yml",
+      "game-design/studio-visual/svg-standard/assets/roadmap.svg"
+    ],
+    "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 source mapping·renderer evidence를 승인·수정·보류하며 2× PNG render는 document approval이 아니다.",
+    "hold_conditions": [
+      "source mapping이 없음",
+      "lint warning 또는 error가 미처리",
+      "renderer 또는 dimensions evidence가 없음"
+    ],
+    "resume_prompt": "svg-standard의 editable SVG와 renderer evidence를 보존하고 실패한 lint 또는 render 단계만 반영해 2× PNG handoff부터 재개해.",
+    "safety_boundary": "모르는 lint·renderer 상태는 미정 또는 blocked로 남기고 PNG만 patch하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s14",
+      "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg",
+      "png": "guides/assets/game-design-studio/skills/svg-infographic.png",
+      "alt": "SVG 인포그래픽 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03"
+    ],
+    "related_recipes": [
+      "production-review-export"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/svg-infographic.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: source-backed 2× PNG가 있는 SVG handoff",
+    "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:svg-infographic:standard; 파일: game-design/studio-visual/svg-standard/content.md)"
   },
   {
-    "id": "studio:svg-infographic:advanced", "kind": "skill-template", "product": "studio", "title": "lint 0 warning/error·접근성·human approval SVG QA", "purpose": "고급 구조 SVG의 lint 0 warning/error, exact 2× PNG render, accessibility metadata와 human approval을 독립 evidence로 검증한다.", "audiences": ["lead-game-designer", "ux-accessibility-reviewer", "production-feasibility-critic"], "intents": ["SVG visual QA", "접근성 승인"], "level": "advanced", "when_to_use": "source-mapped SVG의 machine lint, render, two-pass visual QA와 human approval evidence를 모두 관리할 때 사용한다.", "when_not_to_use": "warning/error가 남은 lint를 통과로 표시하거나 fallback을 Archify 결과·자동 승인으로 표시할 때는 사용하지 않는다.", "required_inputs": ["Canonical Artifact", "selected preset", "stable source IDs", "numeric layout plan", "accessibility metadata", "human approval owner", "output directory"], "optional_inputs": ["Archify capability state", "Node-free fallback evidence", "existing SVG"], "placeholders": ["[Canonical Artifact]", "[selected preset]", "[stable source IDs]", "[human approval owner]"], "app_prompt": {"example": "@Game Design Studio source-mapped structural SVG를 lint 0 warning/error로 정리하고 exact 2× PNG, title·desc·alt 접근성 metadata, fit-to-page·close-up QA와 named human approval을 각각 evidence로 남겨. Archify available이면 우선하고 absent 또는 failure이면 Skillstead fallback을 Archify 결과로 표시하지 마.", "template": "@Game Design Studio [Canonical Artifact]의 [selected preset]과 [stable source IDs]로 structural SVG를 작성해. lint 0 warning/error, exact 2× PNG, accessibility metadata와 [human approval owner]의 human approval을 각각 evidence로 남겨."}, "cli_prompt": {"example": "$game-design-studio:svg-infographic artifact=game-design/coop/system preset=state-rule-flow sources=state-01,gate-02 lint=0-warnings-0-errors render=2x accessibility=title-desc-alt humanApproval=Jin full QA evidence를 기록해.", "template": "$game-design-studio:svg-infographic artifact=[Canonical Artifact] preset=[selected preset] sources=[stable source IDs] humanApproval=[human approval owner] lint 0 warning/error, 2x render와 accessibility evidence를 기록해."}, "skill": "svg-infographic", "skill_chain": ["visualize-game-design", "svg-infographic", "review-game-design"], "specialist_roles": ["lead-game-designer", "ux-accessibility-reviewer", "production-feasibility-critic"], "intermediate_artifacts": ["rule-exception-matrix"], "minimum_outputs": ["lint 0 warning/error result", "exact 2× PNG render", "title·desc·adjacent alt accessibility metadata", "fit-to-page·close-up visual QA", "named human approval record"], "optional_outputs": ["Archify priority receipt", "Skillstead fallback state"], "extended_outputs": ["verified or blocked evidence state", "review finding handoff"], "expected_file_tree": ["game-design/studio-visual/svg-advanced/content.md", "game-design/studio-visual/svg-advanced/evidence.yml", "game-design/studio-visual/svg-advanced/export-manifest.yml", "game-design/studio-visual/svg-advanced/assets/state-flow.svg"], "read_order": ["game-design/studio-visual/svg-advanced/content.md", "game-design/studio-visual/svg-advanced/evidence.yml", "game-design/studio-visual/svg-advanced/export-manifest.yml", "game-design/studio-visual/svg-advanced/assets/state-flow.svg"], "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 lint 0 warning/error, accessibility metadata와 visual QA를 승인·수정·보류하고 named human approval 없이는 verified handoff를 승인하지 않는다.", "hold_conditions": ["lint warning 또는 error가 0이 아님", "2× render·visual QA evidence가 없음", "accessibility metadata 또는 named human approval이 없음"], "resume_prompt": "svg-advanced의 editable SVG와 통과한 evidence를 보존하고 해결된 lint·render·accessibility·human approval gate 하나만 반영해 해당 QA 단계부터 재개해.", "safety_boundary": "모르는 lint·render·approval 상태는 미정 또는 blocked로 남기고 fallback을 Archify 결과나 자동 승인으로 표시하지 않는다. Do not request API keys, credentials, personal data, or private materials.", "diagram_binding": {"id": "st-s14", "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg", "png": "guides/assets/game-design-studio/skills/svg-infographic.png", "alt": "SVG 인포그래픽 직접 호출 흐름"}, "related_use_cases": ["ST-C03", "ST-C08"], "related_recipes": ["ux-accessibility"], "source_references": ["guides/game-design-studio/skills/svg-infographic.md", "guides/game-design-studio/visualization.md"]
+    "id": "studio:svg-infographic:advanced",
+    "kind": "skill-template",
+    "product": "studio",
+    "title": "lint 0 warning/error·접근성·human approval SVG QA",
+    "purpose": "고급 구조 SVG의 lint 0 warning/error, exact 2× PNG render, accessibility metadata와 human approval을 독립 evidence로 검증한다.",
+    "audiences": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer",
+      "production-feasibility-critic"
+    ],
+    "intents": [
+      "SVG visual QA",
+      "접근성 승인"
+    ],
+    "level": "advanced",
+    "when_to_use": "source-mapped SVG의 machine lint, render, two-pass visual QA와 human approval evidence를 모두 관리할 때 사용한다.",
+    "when_not_to_use": "warning/error가 남은 lint를 통과로 표시하거나 fallback을 Archify 결과·자동 승인으로 표시할 때는 사용하지 않는다.",
+    "required_inputs": [
+      "Canonical Artifact",
+      "selected preset",
+      "stable source IDs",
+      "numeric layout plan",
+      "accessibility metadata",
+      "human approval owner",
+      "output directory"
+    ],
+    "optional_inputs": [
+      "Archify capability state",
+      "Node-free fallback evidence",
+      "existing SVG"
+    ],
+    "placeholders": [
+      "[Canonical Artifact]",
+      "[selected preset]",
+      "[stable source IDs]",
+      "[human approval owner]"
+    ],
+    "app_prompt": {
+      "example": "@Game Design Studio source-mapped structural SVG를 lint 0 warning/error로 정리하고 exact 2× PNG, title·desc·alt 접근성 metadata, fit-to-page·close-up QA와 named human approval을 각각 evidence로 남겨. Archify available이면 우선하고 absent 또는 failure이면 Skillstead fallback을 Archify 결과로 표시하지 마.",
+      "template": "@Game Design Studio [Canonical Artifact]의 [selected preset]과 [stable source IDs]로 structural SVG를 작성해. lint 0 warning/error, exact 2× PNG, accessibility metadata와 [human approval owner]의 human approval을 각각 evidence로 남겨."
+    },
+    "cli_prompt": {
+      "example": "$game-design-studio:svg-infographic artifact=game-design/coop/system preset=state-rule-flow sources=state-01,gate-02 lint=0-warnings-0-errors render=2x accessibility=title-desc-alt humanApproval=Jin full QA evidence를 기록해.",
+      "template": "$game-design-studio:svg-infographic artifact=[Canonical Artifact] preset=[selected preset] sources=[stable source IDs] humanApproval=[human approval owner] lint 0 warning/error, 2x render와 accessibility evidence를 기록해."
+    },
+    "skill": "svg-infographic",
+    "skill_chain": [
+      "visualize-game-design",
+      "svg-infographic",
+      "review-game-design"
+    ],
+    "specialist_roles": [
+      "lead-game-designer",
+      "ux-accessibility-reviewer",
+      "production-feasibility-critic"
+    ],
+    "intermediate_artifacts": [
+      "rule-exception-matrix"
+    ],
+    "minimum_outputs": [
+      "lint 0 warning/error result",
+      "exact 2× PNG render",
+      "title·desc·adjacent alt accessibility metadata",
+      "fit-to-page·close-up visual QA",
+      "named human approval record"
+    ],
+    "optional_outputs": [
+      "Archify priority receipt",
+      "Skillstead fallback state"
+    ],
+    "extended_outputs": [
+      "verified or blocked evidence state",
+      "review finding handoff"
+    ],
+    "expected_file_tree": [
+      "game-design/studio-visual/svg-advanced/content.md",
+      "game-design/studio-visual/svg-advanced/evidence.yml",
+      "game-design/studio-visual/svg-advanced/export-manifest.yml",
+      "game-design/studio-visual/svg-advanced/assets/state-flow.svg"
+    ],
+    "read_order": [
+      "game-design/studio-visual/svg-advanced/content.md",
+      "game-design/studio-visual/svg-advanced/evidence.yml",
+      "game-design/studio-visual/svg-advanced/export-manifest.yml",
+      "game-design/studio-visual/svg-advanced/assets/state-flow.svg"
+    ],
+    "human_review_boundary": "lead-game-designer owner와 ux-accessibility-reviewer가 lint 0 warning/error, accessibility metadata와 visual QA를 승인·수정·보류하고 named human approval 없이는 verified handoff를 승인하지 않는다.",
+    "hold_conditions": [
+      "lint warning 또는 error가 0이 아님",
+      "2× render·visual QA evidence가 없음",
+      "accessibility metadata 또는 named human approval이 없음"
+    ],
+    "resume_prompt": "svg-advanced의 editable SVG와 통과한 evidence를 보존하고 해결된 lint·render·accessibility·human approval gate 하나만 반영해 해당 QA 단계부터 재개해.",
+    "safety_boundary": "모르는 lint·render·approval 상태는 미정 또는 blocked로 남기고 fallback을 Archify 결과나 자동 승인으로 표시하지 않는다. Do not request API keys, credentials, personal data, or private materials.",
+    "diagram_binding": {
+      "id": "st-s14",
+      "svg": "guides/assets/game-design-studio/skills/svg-infographic.svg",
+      "png": "guides/assets/game-design-studio/skills/svg-infographic.png",
+      "alt": "SVG 인포그래픽 직접 호출 흐름"
+    },
+    "related_use_cases": [
+      "ST-C03",
+      "ST-C08"
+    ],
+    "related_recipes": [
+      "ux-accessibility"
+    ],
+    "source_references": [
+      "guides/game-design-studio/skills/svg-infographic.md",
+      "guides/game-design-studio/visualization.md"
+    ],
+    "display_title": "게임 기획 결과: lint 0 warning/error·접근성·human approval SVG QA",
+    "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:svg-infographic:advanced; 파일: game-design/studio-visual/svg-advanced/content.md)"
   }
 ]

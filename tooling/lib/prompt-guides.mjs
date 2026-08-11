@@ -24,9 +24,9 @@ function textBlock(value) {
   return `${fence}text\n${value}\n${fence}`;
 }
 
-function countTextBlocks(markdown) {
+function textBlocks(markdown) {
   const lines = markdown.split("\n");
-  let blocks = 0;
+  const blocks = [];
   for (let index = 0; index < lines.length; index += 1) {
     const opening = /^(?<fence>`{3,})text\s*$/u.exec(lines[index]);
     if (!opening) continue;
@@ -34,7 +34,7 @@ function countTextBlocks(markdown) {
     let cursor = index + 1;
     while (cursor < lines.length && !closing.test(lines[cursor])) cursor += 1;
     if (cursor === lines.length) throw new Error("rendered prompt card has an unterminated matching text fence");
-    blocks += 1;
+    blocks.push(lines.slice(index + 1, cursor).join("\n"));
     index = cursor;
   }
   return blocks;
@@ -73,7 +73,7 @@ export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
     `<!-- PROMPT-CARD: ${entry.id} -->`,
     heading(headingLevel, entry.id),
     "",
-    `**${entry.title}**`,
+    `**${entry.display_title}**`,
     "",
     entry.purpose,
     "",
@@ -85,7 +85,7 @@ export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
     `- 함께 검토하는 역할: ${entry.specialist_roles.join(" → ")}`,
     "",
     heading(section, "이 요청으로 받는 결과"),
-    `예: \`${entry.expected_file_tree[0]}\`에 ${entry.minimum_outputs.join(", ")}을 기록하고, 확인되지 않은 값은 \`미정\`으로 남깁니다.`,
+    entry.sample_result_excerpt,
     "",
     "<details>",
     "<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>",
@@ -174,6 +174,8 @@ export function validateRenderedPromptCard(entry, markdown) {
     "이 요청으로 받는 결과",
     "<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>",
     `- 스킬 흐름: ${entry.skill_chain.join(" → ")}`,
+    `- 작업 순서: ${entry.skill_chain.join(" → ")}`,
+    `- 함께 검토하는 역할: ${entry.specialist_roles.join(" → ")}`,
     "최소 결과물",
     "선택 결과물",
     "확장 결과물",
@@ -181,17 +183,26 @@ export function validateRenderedPromptCard(entry, markdown) {
     entry.diagram_binding.id,
     entry.diagram_binding.svg,
     entry.diagram_binding.png,
+    entry.sample_result_excerpt,
+  ];
+  for (const fragment of required) {
+    if (!markdown.includes(fragment)) throw new Error(`rendered prompt card is missing required contract: ${entry.id}`);
+  }
+  const expectedTextBlocks = [
     entry.app_prompt.example,
     entry.app_prompt.template,
     entry.cli_prompt.example,
     entry.cli_prompt.template,
     entry.resume_prompt,
   ];
-  for (const fragment of required) {
-    if (!markdown.includes(fragment)) throw new Error(`rendered prompt card is missing required contract: ${entry.id}`);
-  }
-  if (countTextBlocks(markdown) !== 5) {
+  const renderedTextBlocks = textBlocks(markdown);
+  if (renderedTextBlocks.length !== expectedTextBlocks.length) {
     throw new Error(`rendered prompt card must have five matching text fences: ${entry.id}`);
+  }
+  for (const [index, expected] of expectedTextBlocks.entries()) {
+    if (renderedTextBlocks[index] !== expected) {
+      throw new Error(`rendered prompt card text block differs from catalog: ${entry.id}:${index + 1}`);
+    }
   }
   const expectedNamespace = entry.product === "studio" ? "$game-design-studio:" : entry.product === "career" ? "$game-design-career:" : null;
   if (expectedNamespace && (!entry.cli_prompt.example.includes(expectedNamespace) || !entry.cli_prompt.template.includes(expectedNamespace))) {

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:reverse-to-system-proposal:case -->
 ## suite:reverse-to-system-proposal:case
 
-**reverse-to-system-proposal suite case**
+**게임 기획 결과: reverse-to-system-proposal suite case**
 
 reverse-to-system-proposal의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ reverse-to-system-proposal의 Studio와 Career ordered handoff를 public/evidenc
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/reverse-to-system-proposal/content.md`에 fact/inference 역기획과 system specification을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 역기획과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: suite:reverse-to-system-proposal:case; 파일: suite/reverse-to-system-proposal/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

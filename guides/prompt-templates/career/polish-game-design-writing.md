@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:polish-game-design-writing:beginner -->
 ## career:polish-game-design-writing:beginner
 
-**커리어 문장 윤문 초안**
+**게임 기획 결과: 커리어 문장 윤문 초안**
 
 제공된 커리어 증거의 의미를 바꾸지 않고 한국어 표현만 다듬는 초안을 만든다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: game-design-writing-editor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-writing/beginner/content.md`에 수정본, 검수 기록, 보호 receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 수정본에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:polish-game-design-writing:beginner; 파일: game-design-career/career-writing/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -118,7 +118,7 @@ career writing beginner의 원문과 receipt를 보존하고 확인된 문장만
 <!-- PROMPT-CARD: career:polish-game-design-writing:standard -->
 ## career:polish-game-design-writing:standard
 
-**증거 receipt가 있는 커리어 문장 검수**
+**게임 기획 결과: 증거 receipt가 있는 커리어 문장 검수**
 
 수정본과 증거 검수 기록을 나누어 사실·추론·제안의 경계를 보존한다.
 
@@ -132,7 +132,7 @@ career writing beginner의 원문과 receipt를 보존하고 확인된 문장만
 - 함께 검토하는 역할: game-design-writing-editor → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-writing/standard/content.md`에 수정본, 변경 검수 기록, 보호 receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 수정본 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:polish-game-design-writing:standard; 파일: game-design-career/career-writing/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -231,7 +231,7 @@ career writing standard의 수정본과 보호 receipt를 보존하고 보류된
 <!-- PROMPT-CARD: career:polish-game-design-writing:advanced -->
 ## career:polish-game-design-writing:advanced
 
-**보류 claim을 보존하는 커리어 윤문**
+**게임 기획 결과: 보류 claim을 보존하는 커리어 윤문**
 
 불확실한 경력 claim, 보류 gate, 외부 인용문을 데이터로 보존하며 fail-closed 윤문을 준비한다.
 
@@ -245,7 +245,7 @@ career writing standard의 수정본과 보호 receipt를 보존하고 보류된
 - 함께 검토하는 역할: game-design-writing-editor → career-strategist → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-writing/advanced/content.md`에 수정본, fail-closed 검수 기록, 보호 receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 수정본 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:polish-game-design-writing:advanced; 파일: game-design-career/career-writing/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

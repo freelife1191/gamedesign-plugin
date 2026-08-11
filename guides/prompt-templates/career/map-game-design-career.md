@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:map-game-design-career:beginner -->
 ## career:map-game-design-career:beginner
 
-**두 게임 기획 역할을 비교하는 Career map**
+**게임 기획 결과: 두 게임 기획 역할을 비교하는 Career map**
 
 두 역할 family의 현재 증거와 제약을 비교해 fact, inference, recommendation이 분리된 provisional role map을 만든다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-foundations/map-beginner/content.md`에 두 provisional role path, 각 path의 tradeoff, fact/inference/recommendation label, 다음 smallest exercise을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 역할 경로 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:map-game-design-career:beginner; 파일: game-design-career/career-foundations/map-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -123,7 +123,7 @@ map-beginner의 두 provisional path와 tradeoff를 보존하고 새 evidence만
 <!-- PROMPT-CARD: career:map-game-design-career:standard -->
 ## career:map-game-design-career:standard
 
-**역량 gap과 12주 evidence 과제를 잇는 Career map**
+**게임 기획 결과: 역량 gap과 12주 evidence 과제를 잇는 Career map**
 
 선택한 역할의 competency gap을 12주 evidence task와 feedback cadence로 바꾸며 fact, inference, recommendation을 분리한다.
 
@@ -137,7 +137,7 @@ map-beginner의 두 provisional path와 tradeoff를 보존하고 새 evidence만
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-foundations/map-standard/content.md`에 competency gap, 12주 learning tasks, proof Artifacts, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 역량 차이 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:map-game-design-career:standard; 파일: game-design-career/career-foundations/map-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -243,7 +243,7 @@ map-standard의 gap과 12주 task를 보존하고 새 feedback만 연결해 가�
 <!-- PROMPT-CARD: career:map-game-design-career:advanced -->
 ## career:map-game-design-career:advanced
 
-**복수 경로·교환조건·재평가를 다루는 Career map**
+**게임 기획 결과: 복수 경로·교환조건·재평가를 다루는 Career map**
 
 복수 career path를 single-path 강요 없이 비교하고 tradeoff, 교환 조건, 재평가 조건을 fact, inference, recommendation으로 구분한다.
 
@@ -257,7 +257,7 @@ map-standard의 gap과 12주 task를 보존하고 새 feedback만 연결해 가�
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-foundations/map-advanced/content.md`에 multiple provisional paths, tradeoff, 교환 조건, re-evaluation conditions, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:map-game-design-career:advanced; 파일: game-design-career/career-foundations/map-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

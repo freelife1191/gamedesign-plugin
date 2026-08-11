@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:polish-game-design-writing:beginner -->
 ## studio:polish-game-design-writing:beginner
 
-**게임 기획 문장 윤문 초안**
+**게임 기획 결과: 게임 기획 문장 윤문 초안**
 
 확정된 기획 내용을 바꾸지 않고 한국어 문장만 자연스럽게 다듬는 초안을 만든다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: game-design-writing-editor
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-writing/beginner/content.md`에 수정본, 검수 기록, 보호 receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 수정본 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:polish-game-design-writing:beginner; 파일: game-design/studio-writing/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -118,7 +118,7 @@ studio writing beginner의 원문과 receipt를 보존하고 확인된 문장만
 <!-- PROMPT-CARD: studio:polish-game-design-writing:standard -->
 ## studio:polish-game-design-writing:standard
 
-**보호 receipt가 있는 기획 문장 검수**
+**게임 기획 결과: 보호 receipt가 있는 기획 문장 검수**
 
 수정본과 검수 기록을 분리해 ID·수치·링크·판단 경계를 추적한다.
 
@@ -132,7 +132,7 @@ studio writing beginner의 원문과 receipt를 보존하고 확인된 문장만
 - 함께 검토하는 역할: game-design-writing-editor → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-writing/standard/content.md`에 수정본, 변경 검수 기록, 보호 receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 수정본 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:polish-game-design-writing:standard; 파일: game-design/studio-writing/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -231,7 +231,7 @@ studio writing standard의 수정본과 보호 receipt를 보존하고 보류된
 <!-- PROMPT-CARD: studio:polish-game-design-writing:advanced -->
 ## studio:polish-game-design-writing:advanced
 
-**보류 gate를 보존하는 기획 윤문**
+**게임 기획 결과: 보류 gate를 보존하는 기획 윤문**
 
 불확실성·보류 gate·프롬프트 주입 문장을 데이터로 보존하며 fail-closed 윤문을 준비한다.
 
@@ -245,7 +245,7 @@ studio writing standard의 수정본과 보호 receipt를 보존하고 보류된
 - 함께 검토하는 역할: game-design-writing-editor → lead-game-designer → production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-writing/advanced/content.md`에 수정본, fail-closed 검수 기록, 보호 receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 수정본: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:polish-game-design-writing:advanced; 파일: game-design/studio-writing/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

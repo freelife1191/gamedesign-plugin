@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:beginner -->
 ## career:reverse-engineer-game-design:beginner
 
-**관찰과 추론을 분리하는 게임 역기획**
+**게임 기획 결과: 관찰과 추론을 분리하는 게임 역기획**
 
 공개 build의 observation과 inference를 분리해 UI, rule, economy 가설을 안전하게 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: reverse-design-critic → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-foundations/reverse-beginner/content.md`에 observation, UI/rule/economy hypothesis, inference, rights note, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 관찰 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:reverse-engineer-game-design:beginner; 파일: game-design-career/career-foundations/reverse-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -124,7 +124,7 @@ reverse-beginner observation과 rights note를 보존하고 공개 source를 확
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:standard -->
 ## career:reverse-engineer-game-design:standard
 
-**rule·UI·economy 가설을 검증하는 게임 역기획**
+**게임 기획 결과: rule·UI·economy 가설을 검증하는 게임 역기획**
 
 rule, UI, economy 가설에 observation, inference, alternative와 validation method를 연결한다.
 
@@ -138,7 +138,7 @@ rule, UI, economy 가설에 observation, inference, alternative와 validation me
 - 함께 검토하는 역할: reverse-design-critic → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-foundations/reverse-standard/content.md`에 rule/UI/economy hypothesis — observation/fact/inference/recommendation label, observation/fact/inference/recommendation split, counterexample — observation/fact/inference/recommendation label, alternative — observation/fact/inference/recommendation label, rights — observation/fact/inference/recommendation label, validation method — observation/fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 관찰 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:reverse-engineer-game-design:standard; 파일: game-design-career/career-foundations/reverse-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -247,7 +247,7 @@ reverse-standard claim record와 counterexample을 보존하고 새 관찰을 �
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:advanced -->
 ## career:reverse-engineer-game-design:advanced
 
-**반증·rights·대안을 갖춘 게임 역기획**
+**게임 기획 결과: 반증·rights·대안을 갖춘 게임 역기획**
 
 반증 가능한 reverse engineering claim에 rights, alternative, validation queue를 연결해 observation과 inference를 엄격히 분리한다.
 
@@ -261,7 +261,7 @@ reverse-standard claim record와 counterexample을 보존하고 새 관찰을 �
 - 함께 검토하는 역할: reverse-design-critic → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-foundations/reverse-advanced/content.md`에 falsifiable observation/fact/inference/recommendation claim, counterexample — observation/fact/inference/recommendation label, alternative — observation/fact/inference/recommendation label, rights evidence — observation/fact/inference/recommendation label, validation queue — observation/fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 관찰 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:reverse-engineer-game-design:advanced; 파일: game-design-career/career-foundations/reverse-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

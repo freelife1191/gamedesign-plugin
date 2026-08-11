@@ -96,7 +96,9 @@
       "source_references": [
         "guides/game-design-career/skills/apply-document-quality-profile.md",
         "guides/game-design-career/document-quality.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 목표 역할 문서의 품질 프로필 선택",
+      "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:apply-document-quality-profile:beginner; 파일: game-design-career/career-foundations/profile-beginner/content.md)"
     },
     {
       "id": "career:apply-document-quality-profile:standard",
@@ -196,7 +198,9 @@
       "source_references": [
         "guides/game-design-career/skills/apply-document-quality-profile.md",
         "guides/game-design-career/templates.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 대상·형식·preset을 맞춘 문서 품질 선택",
+      "sample_result_excerpt": "가상 결과 조각: 대상·형식·설정값: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:apply-document-quality-profile:standard; 파일: game-design-career/career-foundations/profile-standard/content.md)"
     },
     {
       "id": "career:case:CA-C01",
@@ -287,7 +291,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C01 source-bound scenario",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 기획 산출물 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:case:CA-C01; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
     },
     {
       "id": "career:case:CA-C02",
@@ -379,7 +385,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C02 source-bound scenario",
+      "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:case:CA-C02; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
     },
     {
       "id": "career:apply-document-quality-profile:advanced",
@@ -480,7 +488,9 @@
       "source_references": [
         "guides/game-design-career/skills/apply-document-quality-profile.md",
         "guides/game-design-career/document-quality.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: evidence state와 fallback을 검토하는 문서 품질 선택",
+      "sample_result_excerpt": "가상의 검토 기록 — 근거 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:apply-document-quality-profile:advanced; 파일: game-design-career/career-foundations/profile-advanced/content.md)"
     },
     {
       "id": "career:case:CA-C04",
@@ -573,7 +583,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C04 source-bound scenario",
+      "sample_result_excerpt": "가상의 검토 기록 — 역량 차이: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:case:CA-C04; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
     },
     {
       "id": "career:case:CA-C05",
@@ -664,7 +676,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C05 source-bound scenario",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:case:CA-C05; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
     },
     {
       "id": "career:case:CA-C06",
@@ -756,7 +770,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C06 source-bound scenario",
+      "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:case:CA-C06; 파일: game-design-career/[경력 ID]/portfolio-project-brief/content.md)"
     },
     {
       "id": "career:build-game-design-portfolio:beginner",
@@ -853,7 +869,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/build-game-design-portfolio.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 문제·판단·근거로 포트폴리오 사례 시작",
+      "sample_result_excerpt": "가상 결과 조각: 근거 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:build-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/portfolio-beginner/content.md)"
     },
     {
       "id": "career:build-game-design-portfolio:standard",
@@ -951,7 +969,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/build-game-design-portfolio.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: claim-evidence index로 사례 검증",
+      "sample_result_excerpt": "가상의 검토 기록 — 주장·근거 연결: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:build-game-design-portfolio:standard; 파일: game-design-career/career-evidence/portfolio-standard/content.md)"
     },
     {
       "id": "career:recipe:portfolio-build-review",
@@ -1062,7 +1082,9 @@
       ],
       "source_references": [
         "guides/game-design-career/recipes/portfolio-build-review.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: portfolio-build-review recipe",
+      "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:recipe:portfolio-build-review; 파일: game-design-career/[경력 ID]/creative-design-portfolio/content.md)"
     },
     {
       "id": "career:build-game-design-portfolio:advanced",
@@ -1161,7 +1183,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/build-game-design-portfolio.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 사례 선택·기여·공개 gate",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 근거 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:build-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/portfolio-advanced/content.md)"
     },
     {
       "id": "career:export-career-documents:beginner",
@@ -1251,7 +1275,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/skills/export-career-documents.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: MD 요약 preflight",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 내보내기 전 점검: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:export-career-documents:beginner; 파일: game-design-career/career-evidence/export-beginner/content.md)"
     },
     {
       "id": "career:export-career-documents:standard",
@@ -1343,7 +1369,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/skills/export-career-documents.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: PDF·DOCX preflight",
+      "sample_result_excerpt": "초안 결과: 내보내기 전 점검에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:export-career-documents:standard; 파일: game-design-career/career-evidence/export-standard/content.md)"
     },
     {
       "id": "career:export-career-documents:advanced",
@@ -1436,7 +1464,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/skills/export-career-documents.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: recruiter PPTX·format QA·재개",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 내보내기 전 점검 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:export-career-documents:advanced; 파일: game-design-career/career-evidence/export-advanced/content.md)"
     },
     {
       "id": "career:generate-image-assets:beginner",
@@ -1538,7 +1568,9 @@
       "source_references": [
         "guides/game-design-career/skills/generate-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 선택한 포트폴리오 cover concept 생성 경로",
+      "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:generate-image-assets:beginner; 파일: career/visual/generate-image-assets/beginner/content.md)"
     },
     {
       "id": "career:generate-image-assets:standard",
@@ -1641,7 +1673,9 @@
       "source_references": [
         "guides/game-design-career/skills/generate-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: proof 이미지 receipt와 provenance 기록",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:generate-image-assets:standard; 파일: career/visual/generate-image-assets/standard/content.md)"
     },
     {
       "id": "career:generate-image-assets:advanced",
@@ -1746,7 +1780,9 @@
       "source_references": [
         "guides/game-design-career/skills/generate-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: provider failure·provenance·retry handoff",
+      "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:generate-image-assets:advanced; 파일: career/visual/generate-image-assets/advanced/content.md)"
     },
     {
       "id": "career:map-game-design-career:beginner",
@@ -1845,7 +1881,9 @@
       "source_references": [
         "guides/game-design-career/skills/map-game-design-career.md",
         "guides/game-design-career/templates.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 두 게임 기획 역할을 비교하는 Career map",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 역할 경로 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:map-game-design-career:beginner; 파일: game-design-career/career-foundations/map-beginner/content.md)"
     },
     {
       "id": "career:case:CA-T01",
@@ -1934,7 +1972,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T01 source-bound scenario",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 기획 산출물 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:case:CA-T01; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
     },
     {
       "id": "career:case:CA-T02",
@@ -2023,7 +2063,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T02 source-bound scenario",
+      "sample_result_excerpt": "예시 산출물 조각: 기획 산출물 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:case:CA-T02; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
     },
     {
       "id": "career:case:CA-T05",
@@ -2112,7 +2154,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T05 source-bound scenario",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 역량 차이 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:case:CA-T05; 파일: game-design-career/[경력 ID]/competency-matrix/content.md)"
     },
     {
       "id": "career:case:CA-T06",
@@ -2201,7 +2245,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T06 source-bound scenario",
+      "sample_result_excerpt": "검토용 가상 산출물: 기획 산출물 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:case:CA-T06; 파일: game-design-career/[경력 ID]/game-design-role-map/content.md)"
     },
     {
       "id": "career:case:CA-T08",
@@ -2291,7 +2337,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T08 source-bound scenario",
+      "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:case:CA-T08; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
     },
     {
       "id": "career:case:CA-T09",
@@ -2380,7 +2428,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T09 source-bound scenario",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 핵심 결과 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:case:CA-T09; 파일: game-design-career/[경력 ID]/transition-readiness/content.md)"
     },
     {
       "id": "career:map-game-design-career:standard",
@@ -2481,7 +2531,9 @@
       "source_references": [
         "guides/game-design-career/skills/map-game-design-career.md",
         "guides/game-design-career/recipes/role-learning-roadmap.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 역량 gap과 12주 evidence 과제를 잇는 Career map",
+      "sample_result_excerpt": "검토용 가상 산출물: 역량 차이 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:map-game-design-career:standard; 파일: game-design-career/career-foundations/map-standard/content.md)"
     },
     {
       "id": "career:map-game-design-career:advanced",
@@ -2585,7 +2637,9 @@
       "source_references": [
         "guides/game-design-career/skills/map-game-design-career.md",
         "guides/game-design-career/workflow.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 복수 경로·교환조건·재평가를 다루는 Career map",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:map-game-design-career:advanced; 파일: game-design-career/career-foundations/map-advanced/content.md)"
     },
     {
       "id": "career:orchestrate-game-design-career:beginner",
@@ -2686,7 +2740,9 @@
       "source_references": [
         "guides/game-design-career/skills/orchestrate-game-design-career.md",
         "guides/game-design-career/workflow.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 단계와 목표를 정하는 Career orchestration brief",
+      "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:orchestrate-game-design-career:beginner; 파일: game-design-career/career-foundations/orchestrate-beginner/content.md)"
     },
     {
       "id": "career:orchestrate-game-design-career:standard",
@@ -2795,7 +2851,9 @@
       "source_references": [
         "guides/game-design-career/skills/orchestrate-game-design-career.md",
         "guides/game-design-career/recipes/job-research-gap.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: research에서 portfolio로 잇는 Career orchestration",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:orchestrate-game-design-career:standard; 파일: game-design-career/career-foundations/orchestrate-standard/content.md)"
     },
     {
       "id": "career:recipe:role-learning-roadmap",
@@ -2895,7 +2953,9 @@
       ],
       "source_references": [
         "guides/game-design-career/recipes/role-learning-roadmap.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: role-learning-roadmap recipe",
+      "sample_result_excerpt": "초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:recipe:role-learning-roadmap; 파일: game-design-career/[경력 ID]/career-stage-goal/content.md)"
     },
     {
       "id": "career:orchestrate-game-design-career:advanced",
@@ -3007,7 +3067,9 @@
       "source_references": [
         "guides/game-design-career/skills/orchestrate-game-design-career.md",
         "products/game-design-career/plugin/references/routing.json"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 역할 검토·handoff·재개를 관리하는 Career orchestration",
+      "sample_result_excerpt": "초안 결과: 검토 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:orchestrate-game-design-career:advanced; 파일: game-design-career/career-foundations/orchestrate-advanced/content.md)"
     },
     {
       "id": "career:plan-image-assets:beginner",
@@ -3110,7 +3172,9 @@
       "source_references": [
         "guides/game-design-career/skills/plan-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 포트폴리오 placeholder 이미지 슬롯 계획",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 내보내기 전 점검 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:plan-image-assets:beginner; 파일: career/visual/plan-image-assets/beginner/content.md)"
     },
     {
       "id": "career:plan-image-assets:standard",
@@ -3213,7 +3277,9 @@
       "source_references": [
         "guides/game-design-career/skills/plan-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: proof 이미지·alt·권리 manifest 계획",
+      "sample_result_excerpt": "예시 산출물 조각: 내보내기 전 점검 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:plan-image-assets:standard; 파일: career/visual/plan-image-assets/standard/content.md)"
     },
     {
       "id": "career:plan-image-assets:advanced",
@@ -3317,7 +3383,9 @@
       "source_references": [
         "guides/game-design-career/skills/plan-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: profile 슬롯과 presentation handoff 계획",
+      "sample_result_excerpt": "가상 결과 조각: 내보내기 전 점검: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:plan-image-assets:advanced; 파일: career/visual/plan-image-assets/advanced/content.md)"
     },
     {
       "id": "career:plan-junior-growth:beginner",
@@ -3411,7 +3479,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/plan-junior-growth.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 4주 관찰 가능한 성장 목표",
+      "sample_result_excerpt": "가상의 검토 기록 — 근거 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:plan-junior-growth:beginner; 파일: game-design-career/career-evidence/growth-beginner/content.md)"
     },
     {
       "id": "career:plan-junior-growth:standard",
@@ -3505,7 +3575,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/plan-junior-growth.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 12주 증거 프로젝트",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 근거 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:plan-junior-growth:standard; 파일: game-design-career/career-evidence/growth-standard/content.md)"
     },
     {
       "id": "career:recipe:junior-growth-transition",
@@ -3606,7 +3678,9 @@
       ],
       "source_references": [
         "guides/game-design-career/recipes/junior-growth-transition.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: junior-growth-transition recipe",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 검토 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:recipe:junior-growth-transition; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
     },
     {
       "id": "career:case:CA-T10",
@@ -3698,7 +3772,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T10 source-bound scenario",
+      "sample_result_excerpt": "예시 산출물 조각: 검토 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:case:CA-T10; 파일: game-design-career/[경력 ID]/junior-growth-review/content.md)"
     },
     {
       "id": "career:plan-junior-growth:advanced",
@@ -3794,7 +3870,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/plan-junior-growth.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 전환 준비도와 fresh requirement",
+      "sample_result_excerpt": "검토용 가상 산출물: 근거 기록 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:plan-junior-growth:advanced; 파일: game-design-career/career-evidence/growth-advanced/content.md)"
     },
     {
       "id": "career:polish-game-design-writing:beginner",
@@ -3882,7 +3960,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/skills/polish-game-design-writing.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 커리어 문장 윤문 초안",
+      "sample_result_excerpt": "초안 결과: 수정본에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:polish-game-design-writing:beginner; 파일: game-design-career/career-writing/beginner/content.md)"
     },
     {
       "id": "career:polish-game-design-writing:standard",
@@ -3972,7 +4052,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/skills/polish-game-design-writing.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 증거 receipt가 있는 커리어 문장 검수",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 수정본 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:polish-game-design-writing:standard; 파일: game-design-career/career-writing/standard/content.md)"
     },
     {
       "id": "career:polish-game-design-writing:advanced",
@@ -4066,7 +4148,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/skills/polish-game-design-writing.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 보류 claim을 보존하는 커리어 윤문",
+      "sample_result_excerpt": "예시 산출물 조각: 수정본 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:polish-game-design-writing:advanced; 파일: game-design-career/career-writing/advanced/content.md)"
     },
     {
       "id": "career:practice-game-design-interview:beginner",
@@ -4158,7 +4242,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/practice-game-design-interview.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 근거 질문 한 개 연습",
+      "sample_result_excerpt": "검토용 가상 산출물: 근거 기록 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:practice-game-design-interview:beginner; 파일: game-design-career/career-evidence/interview-beginner/content.md)"
     },
     {
       "id": "career:practice-game-design-interview:standard",
@@ -4252,7 +4338,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/practice-game-design-interview.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 네 질문 유형과 답변 기록",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:practice-game-design-interview:standard; 파일: game-design-career/career-evidence/interview-standard/content.md)"
     },
     {
       "id": "career:recipe:interview-preparation",
@@ -4341,7 +4429,9 @@
       ],
       "source_references": [
         "guides/game-design-career/recipes/interview-preparation.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: interview-preparation recipe",
+      "sample_result_excerpt": "가상 결과 조각: 질문과 답변: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:recipe:interview-preparation; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
     },
     {
       "id": "career:case:CA-C08",
@@ -4435,7 +4525,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C08 source-bound scenario",
+      "sample_result_excerpt": "초안 결과: 질문과 답변에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:case:CA-C08; 파일: game-design-career/[경력 ID]/interview-question-answer-log/content.md)"
     },
     {
       "id": "career:practice-game-design-interview:advanced",
@@ -4530,7 +4622,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/practice-game-design-interview.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: stale 갱신·정직한 답변·coach 검토",
+      "sample_result_excerpt": "초안 결과: 근거 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:practice-game-design-interview:advanced; 파일: game-design-career/career-evidence/interview-advanced/content.md)"
     },
     {
       "id": "career:research-game-design-jobs:beginner",
@@ -4632,7 +4726,9 @@
       "source_references": [
         "guides/game-design-career/skills/research-game-design-jobs.md",
         "guides/game-design-career/templates.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 공식 공고 한 개를 근거로 읽는 채용 조사",
+      "sample_result_excerpt": "초안 결과: 공식 출처 주소에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:research-game-design-jobs:beginner; 파일: game-design-career/career-foundations/research-beginner/content.md)"
     },
     {
       "id": "career:recipe:job-research-gap",
@@ -4743,7 +4839,9 @@
       ],
       "source_references": [
         "guides/game-design-career/recipes/job-research-gap.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: job-research-gap recipe",
+      "sample_result_excerpt": "가상의 검토 기록 — 근거 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:recipe:job-research-gap; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
     },
     {
       "id": "career:research-game-design-jobs:standard",
@@ -4848,7 +4946,9 @@
       "source_references": [
         "guides/game-design-career/skills/research-game-design-jobs.md",
         "guides/game-design-career/recipes/job-research-gap.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 날짜·지역·표본을 경계로 하는 채용 조사",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 공식 출처 주소 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:research-game-design-jobs:standard; 파일: game-design-career/career-foundations/research-standard/content.md)"
     },
     {
       "id": "career:case:CA-C03",
@@ -4939,7 +5039,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C03 source-bound scenario",
+      "sample_result_excerpt": "가상 결과 조각: 근거 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:case:CA-C03; 파일: game-design-career/[경력 ID]/job-posting-evidence/content.md)"
     },
     {
       "id": "career:research-game-design-jobs:advanced",
@@ -5045,7 +5147,9 @@
       "source_references": [
         "guides/game-design-career/skills/research-game-design-jobs.md",
         "guides/game-design-career/workflow.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 최신성·blind spot·일반화 한계를 검토하는 채용 조사",
+      "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:research-game-design-jobs:advanced; 파일: game-design-career/career-foundations/research-advanced/content.md)"
     },
     {
       "id": "career:reverse-engineer-game-design:beginner",
@@ -5146,7 +5250,9 @@
       "source_references": [
         "guides/game-design-career/skills/reverse-engineer-game-design.md",
         "guides/game-design-career/templates.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 관찰과 추론을 분리하는 게임 역기획",
+      "sample_result_excerpt": "가상 결과 조각: 관찰 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:reverse-engineer-game-design:beginner; 파일: game-design-career/career-foundations/reverse-beginner/content.md)"
     },
     {
       "id": "career:case:CA-T03",
@@ -5235,7 +5341,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T03 source-bound scenario",
+      "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:case:CA-T03; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
     },
     {
       "id": "career:case:CA-T04",
@@ -5324,7 +5432,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T04 source-bound scenario",
+      "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:case:CA-T04; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
     },
     {
       "id": "career:case:CA-T07",
@@ -5413,7 +5523,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/concept-scenarios.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-T07 source-bound scenario",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:case:CA-T07; 파일: game-design-career/[경력 ID]/game-analysis-report/content.md)"
     },
     {
       "id": "career:recipe:reverse-design",
@@ -5502,7 +5614,9 @@
       ],
       "source_references": [
         "guides/game-design-career/recipes/reverse-design.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: reverse-design recipe",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:recipe:reverse-design; 파일: game-design-career/[경력 ID]/reverse-design-document/content.md)"
     },
     {
       "id": "career:reverse-engineer-game-design:standard",
@@ -5606,7 +5720,9 @@
       "source_references": [
         "guides/game-design-career/skills/reverse-engineer-game-design.md",
         "products/game-design-career/plugin/references/fact-inference-schema.json"
-      ]
+      ],
+      "display_title": "게임 기획 결과: rule·UI·economy 가설을 검증하는 게임 역기획",
+      "sample_result_excerpt": "가상의 검토 기록 — 관찰 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:reverse-engineer-game-design:standard; 파일: game-design-career/career-foundations/reverse-standard/content.md)"
     },
     {
       "id": "career:reverse-engineer-game-design:advanced",
@@ -5711,7 +5827,9 @@
       "source_references": [
         "guides/game-design-career/skills/reverse-engineer-game-design.md",
         "products/game-design-career/plugin/references/fact-inference-schema.json"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 반증·rights·대안을 갖춘 게임 역기획",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 관찰 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:reverse-engineer-game-design:advanced; 파일: game-design-career/career-foundations/reverse-advanced/content.md)"
     },
     {
       "id": "career:review-game-design-portfolio:beginner",
@@ -5802,7 +5920,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/review-game-design-portfolio.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 5축 빠른 검토",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 관찰 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:review-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/review-beginner/content.md)"
     },
     {
       "id": "career:review-game-design-portfolio:standard",
@@ -5895,7 +6015,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/review-game-design-portfolio.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: finding·severity·queue 검토",
+      "sample_result_excerpt": "예시 산출물 조각: 검토 발견 사항 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:review-game-design-portfolio:standard; 파일: game-design-career/career-evidence/review-standard/content.md)"
     },
     {
       "id": "career:case:CA-C07",
@@ -5989,7 +6111,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/game-design-career/use-cases/competency-paths.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: CA-C07 source-bound scenario",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 검토 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:case:CA-C07; 파일: game-design-career/[경력 ID]/five-axis-review/content.md)"
     },
     {
       "id": "career:review-game-design-portfolio:advanced",
@@ -6087,7 +6211,9 @@
       ],
       "source_references": [
         "guides/game-design-career/skills/review-game-design-portfolio.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: mutation·발표 readiness·승인 검토",
+      "sample_result_excerpt": "가상 결과 조각: 검토 발견 사항: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:review-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/review-advanced/content.md)"
     },
     {
       "id": "career:review-image-assets:beginner",
@@ -6190,7 +6316,9 @@
       "source_references": [
         "guides/game-design-career/skills/review-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 문서 concept 이미지 검토 요청",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 검토 발견 사항: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:review-image-assets:beginner; 파일: career/visual/review-image-assets/beginner/content.md)"
     },
     {
       "id": "career:review-image-assets:standard",
@@ -6312,7 +6440,9 @@
       "source_references": [
         "guides/game-design-career/skills/review-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 공개 권리·가독성 document approval",
+      "sample_result_excerpt": "초안 결과: 검토 발견 사항에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:review-image-assets:standard; 파일: career/visual/review-image-assets/standard/content.md)"
     },
     {
       "id": "career:review-image-assets:advanced",
@@ -6437,7 +6567,9 @@
       "source_references": [
         "guides/game-design-career/skills/review-image-assets.md",
         "guides/game-design-career/image-assets.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: production candidate·review cycle 증빙",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 검토 발견 사항 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: career:review-image-assets:advanced; 파일: career/visual/review-image-assets/advanced/content.md)"
     },
     {
       "id": "career:svg-infographic:beginner",
@@ -6539,7 +6671,9 @@
       "source_references": [
         "guides/game-design-career/skills/svg-infographic.md",
         "guides/game-design-career/visualization.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 학습 roadmap SVG 초안",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:svg-infographic:beginner; 파일: career/visual/svg-infographic/beginner/content.md)"
     },
     {
       "id": "career:svg-infographic:standard",
@@ -6642,7 +6776,9 @@
       "source_references": [
         "guides/game-design-career/skills/svg-infographic.md",
         "guides/game-design-career/visualization.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: evidence map editable SVG와 render 상태",
+      "sample_result_excerpt": "검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:svg-infographic:standard; 파일: career/visual/svg-infographic/standard/content.md)"
     },
     {
       "id": "career:svg-infographic:advanced",
@@ -6745,7 +6881,9 @@
       "source_references": [
         "guides/game-design-career/skills/svg-infographic.md",
         "guides/game-design-career/visualization.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: lint·2× render·접근성·승인 SVG QA",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:svg-infographic:advanced; 파일: career/visual/svg-infographic/advanced/content.md)"
     },
     {
       "id": "career:visualize-career-roadmap:beginner",
@@ -6849,7 +6987,9 @@
       "source_references": [
         "guides/game-design-career/skills/visualize-career-roadmap.md",
         "guides/game-design-career/visualization.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 역할 비교 흐름 시각화",
+      "sample_result_excerpt": "예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:visualize-career-roadmap:beginner; 파일: career/visual/visualize-career-roadmap/beginner/content.md)"
     },
     {
       "id": "career:visualize-career-roadmap:standard",
@@ -6954,7 +7094,9 @@
       "source_references": [
         "guides/game-design-career/skills/visualize-career-roadmap.md",
         "guides/game-design-career/visualization.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: 역량 dependency와 evidence map",
+      "sample_result_excerpt": "가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:visualize-career-roadmap:standard; 파일: career/visual/visualize-career-roadmap/standard/content.md)"
     },
     {
       "id": "career:visualize-career-roadmap:advanced",
@@ -7058,7 +7200,9 @@
       "source_references": [
         "guides/game-design-career/skills/visualize-career-roadmap.md",
         "guides/game-design-career/visualization.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: Archify 우선 로드맵 fallback·receipt",
+      "sample_result_excerpt": "가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:visualize-career-roadmap:advanced; 파일: career/visual/visualize-career-roadmap/advanced/content.md)"
     },
     {
       "id": "suite:multi-domain-portfolio:case",
@@ -7143,7 +7287,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: multi-domain-portfolio suite case",
+      "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)"
     },
     {
       "id": "suite:student-mentor-review:case",
@@ -7224,7 +7370,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: student-mentor-review suite case",
+      "sample_result_excerpt": "예시 산출물 조각: 과제, 루브릭, 수정 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)"
     },
     {
       "id": "suite:career-proof-project-interview:case",
@@ -7307,7 +7455,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: career-proof-project-interview suite case",
+      "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: suite:career-proof-project-interview:case; 파일: suite/career-proof-project-interview/content.md)"
     },
     {
       "id": "suite:gdd-image-presentation:case",
@@ -7390,7 +7540,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: gdd-image-presentation suite case",
+      "sample_result_excerpt": "초안 결과: 내보내기 전 점검에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: suite:gdd-image-presentation:case; 파일: suite/gdd-image-presentation/content.md)"
     },
     {
       "id": "suite:resume-failed-derivatives:case",
@@ -7475,7 +7627,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: resume-failed-derivatives suite case",
+      "sample_result_excerpt": "가상의 검토 기록 — 보존 파일, ,: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: suite:resume-failed-derivatives:case; 파일: suite/resume-failed-derivatives/content.md)"
     },
     {
       "id": "suite:reverse-to-system-proposal:case",
@@ -7558,7 +7712,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: reverse-to-system-proposal suite case",
+      "sample_result_excerpt": "검토용 가상 산출물: 역기획과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: suite:reverse-to-system-proposal:case; 파일: suite/reverse-to-system-proposal/content.md)"
     },
     {
       "id": "suite:studio-to-career-handoff:case",
@@ -7639,7 +7795,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: studio-to-career-handoff suite case",
+      "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 공개 가능한 문제·판단·검증 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: suite:studio-to-career-handoff:case; 파일: suite/studio-to-career-handoff/content.md)"
     },
     {
       "id": "suite:work-to-public-case:case",
@@ -7720,7 +7878,9 @@
       "related_recipes": [],
       "source_references": [
         "guides/use-cases/output-catalog.md"
-      ]
+      ],
+      "display_title": "게임 기획 결과: work-to-public-case suite case",
+      "sample_result_excerpt": "가상 결과 조각: 공개 요약과 제외 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: suite:work-to-public-case:case; 파일: suite/work-to-public-case/content.md)"
     }
   ]
 }

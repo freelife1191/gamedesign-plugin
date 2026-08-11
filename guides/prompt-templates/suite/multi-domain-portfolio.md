@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:multi-domain-portfolio:case -->
 ## suite:multi-domain-portfolio:case
 
-**multi-domain-portfolio suite case**
+**게임 기획 결과: multi-domain-portfolio suite case**
 
 multi-domain-portfolio의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ multi-domain-portfolio의 Studio와 Career ordered handoff를 public/evidence-sa
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/multi-domain-portfolio/content.md`에 개인 판단과 evidence index을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

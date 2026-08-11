@@ -33,6 +33,8 @@ function validEntry(index, kind = "skill-template") {
     kind,
     product: kind === "suite-case" ? "suite" : "studio",
     title: `Prompt ${index}`,
+    display_title: `프롬프트 ${index}`,
+    sample_result_excerpt: `가상 결과 조각: 핵심 항목은 검토 전 초안으로 둡니다. 확인할 점: 근거 연결 여부. (ID: ${id}; 파일: artifacts/${id}/content.md)`,
     purpose: `Purpose ${index}`,
     audiences: ["game-designer"],
     intents: [`intent-${index}`],
@@ -1614,6 +1616,12 @@ test("validator closes unknown fields and rejects unsafe or sensitive prompt con
   const unsafeResult = validatePromptTemplateCatalog({ entries: [unsafe] });
   assert.equal(unsafeResult.ok, false);
   assert.match(unsafeResult.errors.join("\n"), /unsafe path|API key/u);
+
+  const unnaturalExcerpt = validEntry(3);
+  unnaturalExcerpt.sample_result_excerpt = "PT-003 예: `artifacts/PT-003/content.md`에 target player을 기록하고 미정 값은 남깁니다.";
+  const excerptResult = validatePromptTemplateCatalog({ entries: [unnaturalExcerpt] });
+  assert.equal(excerptResult.ok, false);
+  assert.match(excerptResult.errors.join("\n"), /English-first particle or repeated example skeleton/u);
 });
 
 test("validator resolves intermediate artifact templates against the product inventory", () => {

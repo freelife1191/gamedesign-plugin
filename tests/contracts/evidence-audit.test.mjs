@@ -25,14 +25,14 @@ function validFixture() {
     documents: [["fixture.md", `# Fixture\n\n\`\`\`claim\n${JSON.stringify(claim)}\n\`\`\``]],
     index: { documents: [{ id: "local-source-001" }] },
     register: {
-      retrievedAt: "2026-08-04",
+      retrievedAt: "2026-08-11",
       sources: [{
         id: "EXT-FIXTURE-001",
         title: "Fixture primary source",
         publisher: "Example Government",
         url,
         publishedOrUpdatedAt: "2026-08-04",
-        retrievedAt: "2026-08-04",
+        retrievedAt: "2026-08-11",
         regionScope: "fixture 범위",
         claimIds: [claim.id],
         limitations: "실제 외부 자료가 아니다.",
@@ -130,7 +130,7 @@ const invalidFixtures = [
     mutate(fixture) {
       fixture.register.sources[0].retrievedAt = "2026-08-03";
     },
-    expected: /retrievedAt must be 2026-08-04/,
+    expected: /retrievedAt must be 2026-08-11/,
   },
 ];
 

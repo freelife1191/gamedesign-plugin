@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:work-to-public-case:case -->
 ## suite:work-to-public-case:case
 
-**work-to-public-case suite case**
+**게임 기획 결과: work-to-public-case suite case**
 
 work-to-public-case의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ work-to-public-case의 Studio와 Career ordered handoff를 public/evidence-safe�
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/work-to-public-case/content.md`에 공개 요약과 제외 기록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 공개 요약과 제외 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: suite:work-to-public-case:case; 파일: suite/work-to-public-case/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

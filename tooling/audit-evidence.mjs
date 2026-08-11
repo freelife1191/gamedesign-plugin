@@ -13,6 +13,7 @@ const CORE_FILES = [
 ];
 const CLAIM_TYPES = ["evergreen", "contextual", "time-sensitive"];
 const BASIS_TYPES = ["source-fact", "synthesis", "current-external-claim"];
+const AUDIT_RETRIEVED_AT = "2026-08-11";
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function nonEmpty(value) {
@@ -89,7 +90,7 @@ export function auditEvidenceData({ documents, index, register, initialErrors = 
   const externalIds = new Set(externalSources.map(({ id }) => id));
   const claimIds = new Set();
 
-  if (register.retrievedAt !== "2026-08-04") errors.push("source register: retrievedAt must be 2026-08-04");
+  if (register.retrievedAt !== AUDIT_RETRIEVED_AT) errors.push(`source register: retrievedAt must be ${AUDIT_RETRIEVED_AT}`);
   if (externalIds.size !== externalSources.length) errors.push("source register: source IDs must be unique");
 
   for (const claim of claims) {
@@ -147,7 +148,7 @@ export function auditEvidenceData({ documents, index, register, initialErrors = 
     }
     if (source.primary !== true) errors.push(`${label}: source must be marked primary`);
     if (!/^https:\/\//.test(source.url ?? "")) errors.push(`${label}: url must be HTTPS`);
-    if (source.retrievedAt !== "2026-08-04") errors.push(`${label}: retrievedAt must be 2026-08-04`);
+    if (source.retrievedAt !== AUDIT_RETRIEVED_AT) errors.push(`${label}: retrievedAt must be ${AUDIT_RETRIEVED_AT}`);
     if (source.publishedOrUpdatedAt !== null && !validDate(source.publishedOrUpdatedAt)) {
       errors.push(`${label}: publishedOrUpdatedAt must be a date or null`);
     }

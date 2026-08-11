@@ -58,22 +58,40 @@
 }
 ```
 
-## 플레이테스트와 Steam Early Access: 현재 빌드와 약속을 분리한다
+## Steam Early Access: 현재 빌드와 약속을 분리한다
 
 ```claim
 {
   "id": "CUR-PLAYTEST-EARLY-ACCESS-001",
   "type": "time-sensitive",
   "basis": "current-external-claim",
-  "guidance": "플레이테스트는 검증할 질문, 참가 범위, 관찰·피드백 기록, 다음 결정과 중단 조건을 먼저 정한다. Steam Early Access로 판매할 때는 현재 플레이 가능한 빌드와 현재 상태를 설명하고, 완료 시점·향후 기능을 확정 약속으로 제시하지 않는다.",
+  "guidance": "Steam Early Access로 판매할 때는 현재 플레이 가능한 빌드와 현재 상태를 설명하고, 완료 시점·향후 기능을 확정 약속으로 제시하지 않는다.",
   "sourceIds": ["EXT-STEAM-EARLY-ACCESS"],
-  "applicability": "Steam Early Access 또는 제한된 외부 플레이테스트로 개발 중인 게임의 재미·안정성·피드백을 확인할 때 적용한다.",
+  "applicability": "Steam Early Access에서 개발 중인 게임의 현재 상태와 앞으로의 계획을 안내할 때 적용한다.",
   "counterexamples": ["완성된 기능의 최종 버그 확인만 필요하거나 현재 플레이 가능한 빌드가 없으면 Early Access는 적절한 검증 수단이 아닐 수 있다."],
   "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-11",
   "primaryUrls": ["https://partner.steamgames.com/doc/store/earlyaccess"],
   "regionScope": "Steamworks의 Steam Early Access 배포 및 상점 정보 범위",
   "limitations": "Steam의 플랫폼별 정책과 권고를 다른 스토어, 판매법 또는 프로젝트 성공 가능성으로 일반화하지 않는다. 가격, 환불, 개인정보, 지역 법률은 별도 검토한다."
+}
+```
+
+## 내부 플레이테스트: 저장소 절차를 종합한 검토 항목
+
+```claim
+{
+  "id": "CUR-PLAYTEST-INTERNAL-001",
+  "type": "contextual",
+  "basis": "synthesis",
+  "guidance": "내부 플레이테스트는 검증할 질문, 참가 범위, 관찰·피드백 기록, 다음 결정과 중단 조건을 먼저 정한다.",
+  "sourceIds": ["career-7143bd076592"],
+  "applicability": "이 저장소에서 제한된 내부 플레이테스트의 재미·안정성·피드백을 검토할 때 적용한다.",
+  "counterexamples": ["완성된 기능의 최종 버그 확인만 필요하면 별도 품질 보증 절차가 더 알맞을 수 있다."],
+  "verifiedAt": "2026-08-11",
+  "reviewAfter": "2027-08-11",
+  "regionScope": "이 저장소의 Career 근거·검토 기록 절차",
+  "limitations": "외부 플랫폼 정책, 통계적 표본 설계, 개인정보 또는 프로젝트 성공 가능성에 관한 공식 지침이 아니다. 해당 분야와 프로젝트의 검토 절차를 별도로 따른다."
 }
 ```
 

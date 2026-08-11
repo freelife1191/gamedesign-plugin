@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:practice-game-design-interview:beginner -->
 ## career:practice-game-design-interview:beginner
 
-**근거 질문 한 개 연습**
+**게임 기획 결과: 근거 질문 한 개 연습**
 
 questionId 하나를 evidence link와 honest-answer pattern에 연결해 사실, 추론, 제안을 구분한다.
 
@@ -19,7 +19,7 @@ questionId 하나를 evidence link와 honest-answer pattern에 연결해 사실,
 - 함께 검토하는 역할: interview-coach
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/interview-beginner/content.md`에 questionId와 evidence link가 있는 질문·답변, stale posting이면 최신 evidence 갱신 후 재개, fact/inference/recommendation 및 honest-answer pattern을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 근거 기록 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:practice-game-design-interview:beginner; 파일: game-design-career/career-evidence/interview-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -118,7 +118,7 @@ interview-beginner의 questionId와 evidence link를 보존하고 답변 claim �
 <!-- PROMPT-CARD: career:practice-game-design-interview:standard -->
 ## career:practice-game-design-interview:standard
 
-**네 질문 유형과 답변 기록**
+**게임 기획 결과: 네 질문 유형과 답변 기록**
 
 base, follow-up, objection, situational questionId를 evidence link와 stale posting 갱신 기록에 연결한다.
 
@@ -132,7 +132,7 @@ base, follow-up, objection, situational questionId를 evidence link와 stale pos
 - 함께 검토하는 역할: interview-coach → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/interview-standard/content.md`에 네 questionId 유형과 evidence link, stale posting 갱신·재개 조건, fact/inference/recommendation 및 honest-answer을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: career:practice-game-design-interview:standard; 파일: game-design-career/career-evidence/interview-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -232,7 +232,7 @@ interview-standard의 questionId 기록을 보존하고 최신 evidence 갱신 �
 <!-- PROMPT-CARD: career:practice-game-design-interview:advanced -->
 ## career:practice-game-design-interview:advanced
 
-**stale 갱신·정직한 답변·coach 검토**
+**게임 기획 결과: stale 갱신·정직한 답변·coach 검토**
 
 stale posting을 최신 evidence로 갱신한 뒤 questionId별 honest-answer와 coach 검토를 추적한다.
 
@@ -246,7 +246,7 @@ stale posting을 최신 evidence로 갱신한 뒤 questionId별 honest-answer와
 - 함께 검토하는 역할: interview-coach → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/interview-advanced/content.md`에 questionId별 latest evidence link와 stale 갱신 기록, honest-answer, coach feedback, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 근거 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: career:practice-game-design-interview:advanced; 파일: game-design-career/career-evidence/interview-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

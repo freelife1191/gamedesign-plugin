@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:gdd-image-presentation:case -->
 ## suite:gdd-image-presentation:case
 
-**gdd-image-presentation suite case**
+**게임 기획 결과: gdd-image-presentation suite case**
 
 gdd-image-presentation의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ gdd-image-presentation의 Studio와 Career ordered handoff를 public/evidence-sa
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/gdd-image-presentation/content.md`에 content.md, approved images, PPTX preflight을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 내보내기 전 점검에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: suite:gdd-image-presentation:case; 파일: suite/gdd-image-presentation/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

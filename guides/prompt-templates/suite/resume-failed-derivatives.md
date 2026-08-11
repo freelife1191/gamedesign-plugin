@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:resume-failed-derivatives:case -->
 ## suite:resume-failed-derivatives:case
 
-**resume-failed-derivatives suite case**
+**게임 기획 결과: resume-failed-derivatives suite case**
 
 resume-failed-derivatives의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ resume-failed-derivatives의 Studio와 Career ordered handoff를 public/evidence
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/resume-failed-derivatives/content.md`에 보존 파일, blocker, resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 보존 파일, ,: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: suite:resume-failed-derivatives:case; 파일: suite/resume-failed-derivatives/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

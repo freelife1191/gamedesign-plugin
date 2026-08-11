@@ -27,8 +27,9 @@ const PRODUCT_REPOSITORY_IDS = Object.freeze({
   studio: "game-design-studio",
   career: "game-design-career",
 });
+const BUNDLED_DEPENDENCY_SKILL_IDS = new Set(["archify", "humanize-korean"]);
 const ENTRY_KEYS = new Set([
-  "id", "kind", "product", "title", "purpose", "audiences", "intents", "level",
+  "id", "kind", "product", "title", "display_title", "sample_result_excerpt", "purpose", "audiences", "intents", "level",
   "source_case_id",
   "when_to_use", "when_not_to_use", "required_inputs", "optional_inputs", "placeholders",
   "app_prompt", "cli_prompt", "skill", "skill_chain", "specialist_roles",
@@ -285,6 +286,20 @@ function validateEntry(entry, index, errors, ids, texts) {
     errors.push(`${label}.suite product cannot define a skill-template`);
   }
   requireString(entry.title, `${label}.title`, errors);
+  requireString(entry.display_title, `${label}.display_title`, errors);
+  requireString(entry.sample_result_excerpt, `${label}.sample_result_excerpt`, errors);
+  if (isNonemptyString(entry.display_title) && !/[가-힣]/u.test(entry.display_title)) errors.push(`${label}.display_title must be Korean-first`);
+  if (isNonemptyString(entry.sample_result_excerpt)) {
+    const expectedPath = entry.expected_file_tree?.[0];
+    if (!/[가-힣]/u.test(entry.sample_result_excerpt) || !entry.sample_result_excerpt.includes(entry.id) || !isNonemptyString(expectedPath) || !entry.sample_result_excerpt.includes(expectedPath)) {
+      errors.push(`${label}.sample_result_excerpt must be a Korean source-bound example`);
+    }
+    if (/\b(?:target player|pillar|tutorial skip\/revisit|ordered rule|content purpose)\b/iu.test(entry.sample_result_excerpt)
+      || /\b[A-Za-z][A-Za-z /-]*(?:을|를|은|는|이|가)\b/u.test(entry.sample_result_excerpt)
+      || /\s예:\s*`/u.test(entry.sample_result_excerpt)) {
+      errors.push(`${label}.sample_result_excerpt must not use an English-first particle or repeated example skeleton`);
+    }
+  }
   requireString(entry.purpose, `${label}.purpose`, errors);
   for (const field of ["audiences", "intents", "required_inputs", "intermediate_artifacts", "minimum_outputs", "expected_file_tree", "read_order", "hold_conditions", "source_references"]) {
     validateStringArray(entry[field], `${label}.${field}`, errors, {
@@ -497,7 +512,7 @@ function validateSkillTemplateCardinality(entries, inventories, errors) {
       errors.push(`complete prompt catalog requires ${product} skill inventory`);
       continue;
     }
-    for (const skill of inventory.skillIds) {
+    for (const skill of inventory.skillIds.filter((skill) => !BUNDLED_DEPENDENCY_SKILL_IDS.has(skill))) {
       for (const level of PROMPT_LEVELS) {
         const count = entries.filter((entry) => (
           entry?.kind === "skill-template"

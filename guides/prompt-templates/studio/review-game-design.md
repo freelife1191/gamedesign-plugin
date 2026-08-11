@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:review-game-design:beginner -->
 ## studio:review-game-design:beginner
 
-**누락과 모순을 질문으로 남기는 기획 검토**
+**게임 기획 결과: 누락과 모순을 질문으로 남기는 기획 검토**
 
 작은 Canonical Artifact의 누락·모순을 direct evidence와 owner 질문으로 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/review-beginner/content.md`에 evidence-backed 질문, affected section ID, 최소 수정 후보, decision owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 근거 기록에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:review-game-design:beginner; 파일: game-design/studio-production/review-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ review-beginner의 evidence-backed 질문과 source-unavailable hold를 보존�
 <!-- PROMPT-CARD: studio:review-game-design:standard -->
 ## studio:review-game-design:standard
 
-**Evidence gap과 severity를 owner에게 배정하는 검토**
+**게임 기획 결과: Evidence gap과 severity를 owner에게 배정하는 검토**
 
 stable section 기반 finding을 evidence gap, severity, impact, minimal fix와 responsible owner로 정규화한다.
 
@@ -140,7 +140,7 @@ stable section 기반 finding을 evidence gap, severity, impact, minimal fix와 
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/review-standard/content.md`에 finding ID와 severity, direct evidence와 impact, minimal fix, responsible owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 검토 발견 사항 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:review-game-design:standard; 파일: game-design/studio-production/review-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -250,7 +250,7 @@ review-standard의 finding ID·severity·evidence gap을 보존하고 최소 수
 <!-- PROMPT-CARD: studio:review-game-design:advanced -->
 ## studio:review-game-design:advanced
 
-**교차 도메인 finding과 decision queue를 분리하는 검토**
+**게임 기획 결과: 교차 도메인 finding과 decision queue를 분리하는 검토**
 
 economy·UX·production 교차 도메인 finding을 evidence, impact, disagreement와 decision queue로 분리한다.
 
@@ -264,7 +264,7 @@ economy·UX·production 교차 도메인 finding을 evidence, impact, disagreeme
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/review-advanced/content.md`에 cross-domain finding, direct evidence와 impact, decision queue, blocked handoff 조건을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 검토 발견 사항 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:review-game-design:advanced; 파일: game-design/studio-production/review-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

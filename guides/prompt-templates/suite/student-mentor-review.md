@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:student-mentor-review:case -->
 ## suite:student-mentor-review:case
 
-**student-mentor-review suite case**
+**게임 기획 결과: student-mentor-review suite case**
 
 student-mentor-review의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ student-mentor-review의 Studio와 Career ordered handoff를 public/evidence-saf
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/student-mentor-review/content.md`에 과제, 루브릭, 수정 기록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 과제, 루브릭, 수정 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:beginner -->
 ## studio:design-game-economy-and-liveops:beginner
 
-**Source·sink 가설을 기록하는 경제 기초**
+**게임 기획 결과: Source·sink 가설을 기록하는 경제 기초**
 
 한 자원의 source·sink와 보유 한도를 근거 상태와 함께 economy-balance에 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: system-economy-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/economy-beginner/content.md`에 source·sink 표, source·sink 보유 한도 기록, source·sink 미정 근거 목록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 · 표: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:design-game-economy-and-liveops:beginner; 파일: game-design/studio-production/economy-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -125,7 +125,7 @@ economy-beginner의 source·sink 표와 미정 근거를 보존한 뒤 새 관�
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:standard -->
 ## studio:design-game-economy-and-liveops:standard
 
-**Progression·guardrail·rollback을 갖춘 경제 계획**
+**게임 기획 결과: Progression·guardrail·rollback을 갖춘 경제 계획**
 
 progression target을 guardrail, stop과 tested rollback에 연결해 economy-balance의 안전한 변경 경계를 기록한다.
 
@@ -139,7 +139,7 @@ progression target을 guardrail, stop과 tested rollback에 연결해 economy-ba
 - 함께 검토하는 역할: liveops-data-designer → system-economy-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/economy-standard/content.md`에 progression·guardrail·rollback target, progression·guardrail·rollback stop 조건, progression·guardrail·rollback tested 상태을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:design-game-economy-and-liveops:standard; 파일: game-design/studio-production/economy-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -247,7 +247,7 @@ economy-standard의 progression·guardrail·rollback 기록과 현재 stop 상�
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:advanced -->
 ## studio:design-game-economy-and-liveops:advanced
 
-**Experiment·telemetry·player protection을 분리하는 경제 검토**
+**게임 기획 결과: Experiment·telemetry·player protection을 분리하는 경제 검토**
 
 experiment의 telemetry 근거 공백과 player protection을 blocked decision으로 분리한다.
 
@@ -261,7 +261,7 @@ experiment의 telemetry 근거 공백과 player protection을 blocked decision�
 - 함께 검토하는 역할: system-economy-designer → liveops-data-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/economy-advanced/content.md`에 experiment·telemetry·player protection evidence gap, experiment·telemetry·player protection blocked decision, experiment·telemetry·player protection No-Go receipt, experiment·telemetry·player protection owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:design-game-economy-and-liveops:advanced; 파일: game-design/studio-production/economy-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

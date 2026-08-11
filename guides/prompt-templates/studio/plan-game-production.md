@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:plan-game-production:beginner -->
 ## studio:plan-game-production:beginner
 
-**범위와 제외 항목을 갖춘 최소 제작 계획**
+**게임 기획 결과: 범위와 제외 항목을 갖춘 최소 제작 계획**
 
 vertical slice의 포함·제외 범위, 알려진 위험과 decision owner를 production-scope-risk에 기록한다.
 
@@ -19,7 +19,7 @@ vertical slice의 포함·제외 범위, 알려진 위험과 decision owner를 p
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/production-beginner/content.md`에 Must 범위, 제외 항목, known risk, decision owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 범위 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:plan-game-production:beginner; 파일: game-design/studio-production/production-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ production-beginner의 Must 범위와 제외 항목을 보존하고 새 prototyp
 <!-- PROMPT-CARD: studio:plan-game-production:standard -->
 ## studio:plan-game-production:standard
 
-**Milestone 의존성과 owner를 갖춘 제작 계획**
+**게임 기획 결과: Milestone 의존성과 owner를 갖춘 제작 계획**
 
 승인된 scope를 observable milestone, dependency, owner와 definition of done으로 연결한다.
 
@@ -140,7 +140,7 @@ production-beginner의 Must 범위와 제외 항목을 보존하고 새 prototyp
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/production-standard/content.md`에 milestone와 dependency, named owner, definition of done, risk gate을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 와: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:plan-game-production:standard; 파일: game-design/studio-production/production-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -250,7 +250,7 @@ production-standard의 milestone·dependency·DoD를 보존하고 새 throughput
 <!-- PROMPT-CARD: studio:plan-game-production:advanced -->
 ## studio:plan-game-production:advanced
 
-**Kill criteria와 외주·license 위험을 검토하는 제작 계획**
+**게임 기획 결과: Kill criteria와 외주·license 위험을 검토하는 제작 계획**
 
 변경 요청의 core-loop 기여를 kill criteria, outsource·license 위험과 사람 결정에 연결한다.
 
@@ -264,7 +264,7 @@ production-standard의 milestone·dependency·DoD를 보존하고 새 throughput
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → document-quality-editor
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/production-advanced/content.md`에 kill criteria, outsource·license risk, named decision owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:plan-game-production:advanced; 파일: game-design/studio-production/production-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:generate-image-assets:beginner -->
 ## studio:generate-image-assets:beginner
 
-**사용자 선택 stable asset 하나 생성**
+**게임 기획 결과: 사용자 선택 stable asset 하나 생성**
 
 select mode의 실제 user receipt가 지정한 stable asset ID 하나만 생성 경로에 넣고 concept-draft provenance를 보존한다.
 
@@ -19,7 +19,7 @@ select mode의 실제 user receipt가 지정한 stable asset ID 하나만 생성
 - 함께 검토하는 역할: visual-asset-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/generate-beginner/content.md`에 selected stable asset ID, redacted provider decision, per-asset result, concept-draft provenance을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 자산 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:generate-image-assets:beginner; 파일: game-design/studio-visual/generate-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -127,7 +127,7 @@ generate-beginner의 selection receipt와 concept-draft provenance를 보존하�
 <!-- PROMPT-CARD: studio:generate-image-assets:standard -->
 ## studio:generate-image-assets:standard
 
-**required mode receipt와 no-key capability 경계**
+**게임 기획 결과: required mode receipt와 no-key capability 경계**
 
 required mode의 declared finite jobs만 처리하고 key가 없는 host capability unavailable 경로에서는 호출 없이 prompt와 placeholder를 보존한다.
 
@@ -141,7 +141,7 @@ required mode의 declared finite jobs만 처리하고 key가 없는 host capabil
 - 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/generate-standard/content.md`에 required finite job selection, capability decision, unavailable 또는 per-asset result, preserved prompts and placeholders을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:generate-image-assets:standard; 파일: game-design/studio-visual/generate-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -250,7 +250,7 @@ generate-standard의 prompt·placeholder와 unavailable receipt를 보존하고 
 <!-- PROMPT-CARD: studio:generate-image-assets:advanced -->
 ## studio:generate-image-assets:advanced
 
-**all mode OpenAI-only failure와 provenance 분리**
+**게임 기획 결과: all mode OpenAI-only failure와 provenance 분리**
 
 all mode의 declared required·recommended·variant jobs만 실행하고 API key가 있으면 OpenAI only failure를 Codex fallback 없이 provenance에 남긴다.
 
@@ -264,7 +264,7 @@ all mode의 declared required·recommended·variant jobs만 실행하고 API key
 - 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/generate-advanced/content.md`에 all declared finite job list, OpenAI only or host decision, per-asset provenance, explicit failure state, concept-draft result을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:generate-image-assets:advanced; 파일: game-design/studio-visual/generate-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

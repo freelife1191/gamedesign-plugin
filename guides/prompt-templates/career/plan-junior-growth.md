@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:plan-junior-growth:beginner -->
 ## career:plan-junior-growth:beginner
 
-**4주 관찰 가능한 성장 목표**
+**게임 기획 결과: 4주 관찰 가능한 성장 목표**
 
 4주 evidence project 하나를 observable proof와 fact, inference, recommendation으로 연결한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: game-design-mentor → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/growth-beginner/content.md`에 4주 observable evidence project와 proof artifact, requirement ID, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 근거 기록: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:plan-junior-growth:beginner; 파일: game-design-career/career-evidence/growth-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -119,7 +119,7 @@ growth-beginner의 4주 proof artifact를 보존하고 feedback 일정부터 재
 <!-- PROMPT-CARD: career:plan-junior-growth:standard -->
 ## career:plan-junior-growth:standard
 
-**12주 증거 프로젝트**
+**게임 기획 결과: 12주 증거 프로젝트**
 
 12주 evidence project를 approved/provisional requirement, observable proof, feedback cadence로 만든다.
 
@@ -133,7 +133,7 @@ growth-beginner의 4주 proof artifact를 보존하고 feedback 일정부터 재
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/growth-standard/content.md`에 12주 evidence project와 observable proof artifact, approved/provisional requirement와 fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 근거 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:plan-junior-growth:standard; 파일: game-design-career/career-evidence/growth-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -233,7 +233,7 @@ growth-standard의 12주 evidence project를 보존하고 provisional requiremen
 <!-- PROMPT-CARD: career:plan-junior-growth:advanced -->
 ## career:plan-junior-growth:advanced
 
-**전환 준비도와 fresh requirement**
+**게임 기획 결과: 전환 준비도와 fresh requirement**
 
 fresh requirement를 바탕으로 observable transition evidence와 re-evaluation decision을 기록한다.
 
@@ -247,7 +247,7 @@ fresh requirement를 바탕으로 observable transition evidence와 re-evaluatio
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/growth-advanced/content.md`에 fresh requirement와 observable transition evidence, re-evaluation decision, provisional readiness, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 근거 기록 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: career:plan-junior-growth:advanced; 파일: game-design-career/career-evidence/growth-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

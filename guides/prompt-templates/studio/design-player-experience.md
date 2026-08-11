@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:design-player-experience:beginner -->
 ## studio:design-player-experience:beginner
 
-**행동과 피드백이 있는 첫 세션 UX**
+**게임 기획 결과: 행동과 피드백이 있는 첫 세션 UX**
 
 첫 critical action의 행동, feedback, 오류와 recovery를 QA 가능한 UI 흐름으로 정리한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: ux-accessibility-reviewer → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/ux-beginner/content.md`에 critical action, UI state, feedback, 오류 recovery을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 핵심 결과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:design-player-experience:beginner; 파일: game-design/studio-foundations/ux-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -128,7 +128,7 @@ ux-beginner의 action과 recovery를 보존하고 실제 관찰된 오류 feedba
 <!-- PROMPT-CARD: studio:design-player-experience:standard -->
 ## studio:design-player-experience:standard
 
-**Onboarding과 접근성을 검토하는 플레이어 경험**
+**게임 기획 결과: Onboarding과 접근성을 검토하는 플레이어 경험**
 
 tutorial skip/revisit, input alternative, sensory cue와 오류 복구를 하나의 onboarding 흐름으로 연결한다.
 
@@ -142,7 +142,7 @@ tutorial skip/revisit, input alternative, sensory cue와 오류 복구를 하나
 - 함께 검토하는 역할: ux-accessibility-reviewer → lead-game-designer → system-economy-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/ux-standard/content.md`에 tutorial skip/revisit, input alternative, sensory cue, error recovery을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 튜토리얼 건너뛰기·다시 보기: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:design-player-experience:standard; 파일: game-design/studio-foundations/ux-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -253,7 +253,7 @@ ux-standard의 onboarding state를 유지하고 새 controller test 결과와 �
 <!-- PROMPT-CARD: studio:design-player-experience:advanced -->
 ## studio:design-player-experience:advanced
 
-**멀티모달 UX와 책임 gate를 갖춘 플레이어 경험**
+**게임 기획 결과: 멀티모달 UX와 책임 gate를 갖춘 플레이어 경험**
 
 멀티모달 feedback이 authoritative game state를 발명하지 않는지 확인하고 책임 owner의 gate를 남긴다.
 
@@ -267,7 +267,7 @@ ux-standard의 onboarding state를 유지하고 새 controller test 결과와 �
 - 함께 검토하는 역할: ux-accessibility-reviewer → system-economy-designer → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/ux-advanced/content.md`에 authority finding, multimodal cue mapping, critical action gate을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 검토 발견 사항에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:design-player-experience:advanced; 파일: game-design/studio-foundations/ux-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

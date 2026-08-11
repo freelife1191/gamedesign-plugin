@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:studio-to-career-handoff:case -->
 ## suite:studio-to-career-handoff:case
 
-**studio-to-career-handoff suite case**
+**게임 기획 결과: studio-to-career-handoff suite case**
 
 studio-to-career-handoff의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ studio-to-career-handoff의 Studio와 Career ordered handoff를 public/evidence-
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/studio-to-career-handoff/content.md`에 공개 가능한 문제·판단·검증 summary을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 공개 가능한 문제·판단·검증 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: suite:studio-to-career-handoff:case; 파일: suite/studio-to-career-handoff/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

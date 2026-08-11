@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:build-game-design-portfolio:beginner -->
 ## career:build-game-design-portfolio:beginner
 
-**문제·판단·근거로 포트폴리오 사례 시작**
+**게임 기획 결과: 문제·판단·근거로 포트폴리오 사례 시작**
 
 한 사례의 문제, 설계 판단, evidence ID와 주소를 연결하고 claim을 사실, 추론, 제안으로 구분한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/portfolio-beginner/content.md`에 claimId, evidenceAddress, provenance이 있는 문제·판단·근거, personal contribution state, team contribution, 미정·비공개와 fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 근거 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:build-game-design-portfolio:beginner; 파일: game-design-career/career-evidence/portfolio-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -122,7 +122,7 @@ portfolio-beginner의 claimId와 evidence record를 보존하고 확인된 문�
 <!-- PROMPT-CARD: career:build-game-design-portfolio:standard -->
 ## career:build-game-design-portfolio:standard
 
-**claim-evidence index로 사례 검증**
+**게임 기획 결과: claim-evidence index로 사례 검증**
 
 claim-evidence index에 주소 가능한 source와 개인·팀 기여를 기록해 사실, 추론, 제안을 분리한다.
 
@@ -136,7 +136,7 @@ claim-evidence index에 주소 가능한 source와 개인·팀 기여를 기록�
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/portfolio-standard/content.md`에 claimId/evidenceAddress/provenance claim-evidence index, personal contribution, team contribution, 미정·비공개 상태, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 주장·근거 연결: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:build-game-design-portfolio:standard; 파일: game-design-career/career-evidence/portfolio-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -240,7 +240,7 @@ portfolio-standard의 claim-evidence index를 보존하고 source 확인이 끝�
 <!-- PROMPT-CARD: career:build-game-design-portfolio:advanced -->
 ## career:build-game-design-portfolio:advanced
 
-**사례 선택·기여·공개 gate**
+**게임 기획 결과: 사례 선택·기여·공개 gate**
 
 사례 선택과 공개 gate를 claim evidence, personal contribution, team contribution, 미정·비공개 상태로 검토한다.
 
@@ -254,7 +254,7 @@ portfolio-standard의 claim-evidence index를 보존하고 source 확인이 끝�
 - 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
 
 ### 이 요청으로 받는 결과
-예: `game-design-career/career-evidence/portfolio-advanced/content.md`에 claimId/evidenceAddress와 사례 선택 이유, personal contribution, team contribution, 미정·비공개 구분, fact/inference/recommendation 및 공개 hold을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 근거 기록 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: career:build-game-design-portfolio:advanced; 파일: game-design-career/career-evidence/portfolio-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

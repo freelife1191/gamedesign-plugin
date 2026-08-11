@@ -43,7 +43,7 @@ async function collectFiles(repoRoot, roots) {
 
 function englishFirstLabel(text) {
   if (!/^#{1,6}\s+/u.test(text)) return false;
-  const label = text.replace(/^#{1,6}\s+/u, "").trim();
+  const label = text.replace(/^#{1,6}\s+/u, "").replace(/\s+\{#[a-z0-9-]+\}\s*$/u, "").trim();
   if (/^[a-z][a-z0-9-]*$/u.test(label)) return false;
   if (!/^[A-Za-z][A-Za-z0-9 /&-]*$/u.test(label)) return false;
   return !label.split(/[ /&-]+/u).every((word) => STANDARD_TERMS.has(word));
@@ -52,7 +52,7 @@ function englishFirstLabel(text) {
 function issuesForLine(line, lineNumber, pathname, conclusions) {
   const issues = [];
   const visible = line.trim();
-  if (englishFirstLabel(visible)) issues.push({ code: "ENGLISH_FIRST_LABEL", path: pathname, line: lineNumber, severity: "high", text: visible.replace(/^#{1,6}\s+/u, "") });
+  if (englishFirstLabel(visible)) issues.push({ code: "ENGLISH_FIRST_LABEL", path: pathname, line: lineNumber, severity: "high", text: visible.replace(/^#{1,6}\s+/u, "").replace(/\s+\{#[a-z0-9-]+\}\s*$/u, "") });
   if (/자동으로\s+[^.!?\n]{0,40}(?:됩니다|되었다|되었습니다|된다)\./u.test(visible)) issues.push({ code: "TRANSLATION_LIKE_PASSIVE", path: pathname, line: lineNumber, severity: "high", text: visible });
   if (/(?:최고(?:의)?|완벽(?:한)?|혁신(?:적)?)[^.!?\n]{0,50}(?:결과|품질|성공)?[^.!?\n]{0,20}보장(?:합니다|한다)\./u.test(visible)) issues.push({ code: "UNSUPPORTED_HYPE", path: pathname, line: lineNumber, severity: "high", text: visible });
   if (visible.includes("결론적으로")) {
@@ -81,6 +81,22 @@ export async function auditGameDesignDocs({ repoRoot, roots = SOURCE_ROOTS } = {
     fileResults.push({ path: pathname, issueCount: fileIssues.length });
   }
   return { files: fileResults, issues };
+}
+
+export function validateAuditEvidenceRegister(register, { retrievedAt = "2026-08-11" } = {}) {
+  if (!register || typeof register !== "object" || Array.isArray(register)) {
+    throw new Error("audit evidence register must be an object");
+  }
+  if (register.retrievedAt !== retrievedAt) {
+    throw new Error(`audit evidence retrievedAt must equal ${retrievedAt}`);
+  }
+  if (!Array.isArray(register.sources)) throw new Error("audit evidence register must contain sources");
+  for (const source of register.sources) {
+    if (!source || typeof source !== "object" || source.retrievedAt !== retrievedAt) {
+      throw new Error(`audit evidence source retrievedAt must equal ${retrievedAt}: ${source?.id ?? "unknown"}`);
+    }
+  }
+  return true;
 }
 
 export function formatAuditReport(result) {

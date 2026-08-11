@@ -78,7 +78,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: studio-to-career-handoff suite case",
+    "sample_result_excerpt": "결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 공개 가능한 문제·판단·검증 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: suite:studio-to-career-handoff:case; 파일: suite/studio-to-career-handoff/content.md)"
   },
   {
     "id": "suite:reverse-to-system-proposal:case",
@@ -161,7 +163,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: reverse-to-system-proposal suite case",
+    "sample_result_excerpt": "검토용 가상 산출물: 역기획과 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: suite:reverse-to-system-proposal:case; 파일: suite/reverse-to-system-proposal/content.md)"
   },
   {
     "id": "suite:multi-domain-portfolio:case",
@@ -246,7 +250,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: multi-domain-portfolio suite case",
+    "sample_result_excerpt": "가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 근거 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: suite:multi-domain-portfolio:case; 파일: suite/multi-domain-portfolio/content.md)"
   },
   {
     "id": "suite:gdd-image-presentation:case",
@@ -329,7 +335,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: gdd-image-presentation suite case",
+    "sample_result_excerpt": "초안 결과: 내보내기 전 점검에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: suite:gdd-image-presentation:case; 파일: suite/gdd-image-presentation/content.md)"
   },
   {
     "id": "suite:career-proof-project-interview:case",
@@ -412,7 +420,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: career-proof-project-interview suite case",
+    "sample_result_excerpt": "가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: suite:career-proof-project-interview:case; 파일: suite/career-proof-project-interview/content.md)"
   },
   {
     "id": "suite:student-mentor-review:case",
@@ -493,7 +503,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: student-mentor-review suite case",
+    "sample_result_excerpt": "예시 산출물 조각: 과제, 루브릭, 수정 기록 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: suite:student-mentor-review:case; 파일: suite/student-mentor-review/content.md)"
   },
   {
     "id": "suite:work-to-public-case:case",
@@ -574,7 +586,9 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: work-to-public-case suite case",
+    "sample_result_excerpt": "가상 결과 조각: 공개 요약과 제외 기록: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: suite:work-to-public-case:case; 파일: suite/work-to-public-case/content.md)"
   },
   {
     "id": "suite:resume-failed-derivatives:case",
@@ -659,6 +673,8 @@
     "related_recipes": [],
     "source_references": [
       "guides/use-cases/output-catalog.md"
-    ]
+    ],
+    "display_title": "게임 기획 결과: resume-failed-derivatives suite case",
+    "sample_result_excerpt": "가상의 검토 기록 — 보존 파일, ,: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: suite:resume-failed-derivatives:case; 파일: suite/resume-failed-derivatives/content.md)"
   }
 ]

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:orchestrate-game-design-project:beginner -->
 ## studio:orchestrate-game-design-project:beginner
 
-**제한된 brief를 한 route로 라우팅**
+**게임 기획 결과: 제한된 brief를 한 route로 라우팅**
 
 제한된 게임 brief를 최소 specialist route, Canonical Artifact와 completion gate로 정리한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/orchestrate-beginner/content.md`에 bounded brief, 선택 route 하나, completion gate, next owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:orchestrate-game-design-project:beginner; 파일: game-design/studio-production/orchestrate-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ orchestrate-beginner의 bounded brief와 선택 route를 보존하고 새로 확
 <!-- PROMPT-CARD: studio:orchestrate-game-design-project:standard -->
 ## studio:orchestrate-game-design-project:standard
 
-**여러 Artifact를 연결하는 프로젝트 라우팅**
+**게임 기획 결과: 여러 Artifact를 연결하는 프로젝트 라우팅**
 
 선택된 domain Artifact를 exact route, role, gate와 최대 세 review finding으로 연결한다.
 
@@ -140,7 +140,7 @@ orchestrate-beginner의 bounded brief와 선택 route를 보존하고 새로 확
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → document-quality-editor
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/orchestrate-standard/content.md`에 exact route 목록, Artifact 연결, role·gate record, 최대 세 finding을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 목록 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:orchestrate-game-design-project:standard; 파일: game-design/studio-production/orchestrate-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -251,7 +251,7 @@ orchestrate-standard의 route·role·gate record와 기존 finding을 보존하�
 <!-- PROMPT-CARD: studio:orchestrate-game-design-project:advanced -->
 ## studio:orchestrate-game-design-project:advanced
 
-**역할 검토와 결정 병합을 갖춘 재개 라우팅**
+**게임 기획 결과: 역할 검토와 결정 병합을 갖춘 재개 라우팅**
 
 blocked gate만 재개하며 역할별 finding과 disagreement를 named decision owner의 병합 queue로 보존한다.
 
@@ -265,7 +265,7 @@ blocked gate만 재개하며 역할별 finding과 disagreement를 named decision
 - 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/orchestrate-advanced/content.md`에 blocked route receipt, role finding 병합, disagreement queue, resume 조건을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 핵심 결과 항목: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:orchestrate-game-design-project:advanced; 파일: game-design/studio-production/orchestrate-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

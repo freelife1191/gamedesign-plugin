@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: career:visualize-career-roadmap:beginner -->
 ## career:visualize-career-roadmap:beginner
 
-**역할 비교 흐름 시각화**
+**게임 기획 결과: 역할 비교 흐름 시각화**
 
 역할군과 인접 경로의 차이를 source-mapped structural workflow로 표현하고 사실·추론·제안을 분리한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `career/visual/visualize-career-roadmap/beginner/content.md`에 selectedPresetId·rationale·excluded presets, source-mapped relationship record, SVG/PNG state and separated receipts, resumable QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: career:visualize-career-roadmap:beginner; 파일: career/visual/visualize-career-roadmap/beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -131,7 +131,7 @@ visualize-career-roadmap/beginner의 canonical artifact, stable IDs, source·att
 <!-- PROMPT-CARD: career:visualize-career-roadmap:standard -->
 ## career:visualize-career-roadmap:standard
 
-**역량 dependency와 evidence map**
+**게임 기획 결과: 역량 dependency와 evidence map**
 
 역량 dependency와 proof evidence를 숫자나 진척률을 발명하지 않고 editable diagram으로 연결한다.
 
@@ -145,7 +145,7 @@ visualize-career-roadmap/beginner의 canonical artifact, stable IDs, source·att
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `career/visual/visualize-career-roadmap/standard/content.md`에 selectedPresetId·rationale·excluded presets, source-mapped relationship record, SVG/PNG state and separated receipts, resumable QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: career:visualize-career-roadmap:standard; 파일: career/visual/visualize-career-roadmap/standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -257,7 +257,7 @@ visualize-career-roadmap/standard의 canonical artifact, stable IDs, source·att
 <!-- PROMPT-CARD: career:visualize-career-roadmap:advanced -->
 ## career:visualize-career-roadmap:advanced
 
-**Archify 우선 로드맵 fallback·receipt**
+**게임 기획 결과: Archify 우선 로드맵 fallback·receipt**
 
 Archify가 available이면 structural workflow를 우선하고 absence/failure에서는 Skillstead editable SVG와 exact 2× PNG fallback 및 분리된 receipt를 기록한다.
 
@@ -271,7 +271,7 @@ Archify가 available이면 structural workflow를 우선하고 absence/failure�
 - 함께 검토하는 역할: career-strategist → game-design-mentor
 
 ### 이 요청으로 받는 결과
-예: `career/visual/visualize-career-roadmap/advanced/content.md`에 selectedPresetId·rationale·excluded presets, source-mapped relationship record, SVG/PNG state and separated receipts, resumable QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 핵심 결과 항목: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: career:visualize-career-roadmap:advanced; 파일: career/visual/visualize-career-roadmap/advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

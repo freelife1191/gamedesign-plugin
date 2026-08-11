@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:export-game-design-documents:beginner -->
 ## studio:export-game-design-documents:beginner
 
-**Markdown terminal handoff를 준비하는 문서 출력**
+**게임 기획 결과: Markdown terminal handoff를 준비하는 문서 출력**
 
 승인 가능한 Canonical Artifact의 MD preparation과 downstream terminal validation ownership을 export manifest에 기록한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/export-beginner/content.md`에 MD preparation manifest, canonical preflight 상태, downstream terminal validation owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 조각: 핵심 결과 항목: 등대섬을 함께 복구하는 두 명의 탐험가 기준의 검토 전 초안입니다. 확인할 점: 근거 연결 여부. (ID: studio:export-game-design-documents:beginner; 파일: game-design/studio-production/export-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -125,7 +125,7 @@ export-beginner의 source preservation receipt와 MD preparation을 보존하고
 <!-- PROMPT-CARD: studio:export-game-design-documents:standard -->
 ## studio:export-game-design-documents:standard
 
-**PDF·DOCX capability preflight를 갖춘 문서 출력**
+**게임 기획 결과: PDF·DOCX capability preflight를 갖춘 문서 출력**
 
 PDF·DOCX 요청을 format별 capability snapshot, preflight와 downstream renderer·QA handoff로 분리한다.
 
@@ -139,7 +139,7 @@ PDF·DOCX 요청을 format별 capability snapshot, preflight와 downstream rende
 - 함께 검토하는 역할: production-feasibility-critic → document-quality-editor
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/export-standard/content.md`에 format별 capability snapshot, canonical preflight, pending·unavailable·blocked jobs, downstream renderer·QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상의 검토 기록 — 별: 폐역의 신호를 해독하는 소규모 팀에 맞춰 임시로 정리했습니다. 사람 검토 전에는 미정으로 둡니다. (ID: studio:export-game-design-documents:standard; 파일: game-design/studio-production/export-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -248,7 +248,7 @@ export-standard의 capability snapshot과 blocked format job을 보존하고 ava
 <!-- PROMPT-CARD: studio:export-game-design-documents:advanced -->
 ## studio:export-game-design-documents:advanced
 
-**PPTX story·format QA와 부분 재개를 갖춘 문서 출력**
+**게임 기획 결과: PPTX story·format QA와 부분 재개를 갖춘 문서 출력**
 
 PPTX 독립 story와 format별 partial resume 조건을 capability·preflight·renderer·QA ownership에 맞춰 준비한다.
 
@@ -262,7 +262,7 @@ PPTX 독립 story와 format별 partial resume 조건을 capability·preflight·r
 - 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-production/export-advanced/content.md`에 PPTX independent story, format별 capability·preflight 상태, not-run renderer·QA receipt, partial resume 조건을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+결과 미리보기: 계절 시장을 운영하는 마을 주민에 맞춘 핵심 결과 항목을 기록했습니다. 확인할 점은 관찰 근거이며, 승인 여부는 미정입니다. (ID: studio:export-game-design-documents:advanced; 파일: game-design/studio-production/export-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

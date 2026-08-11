@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { auditGameDesignDocs, formatAuditReport } from "../../tooling/audit-game-design-docs.mjs";
-import { renderPromptCard } from "../../tooling/lib/prompt-guides.mjs";
+import { auditGameDesignDocs, formatAuditReport, validateAuditEvidenceRegister } from "../../tooling/audit-game-design-docs.mjs";
+import { renderPromptCard, validateRenderedPromptCard } from "../../tooling/lib/prompt-guides.mjs";
 
 async function temporaryRepo(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), "game-design-doc-audit-"));
@@ -19,12 +19,43 @@ async function write(root, relativePath, contents) {
   await writeFile(target, contents);
 }
 
+async function contentTemplateFiles(root) {
+  const roots = [
+    "products/game-design-studio/plugin/assets/templates",
+    "products/game-design-career/plugin/assets/templates",
+  ];
+  const files = [];
+  for (const templateRoot of roots) {
+    for (const entry of await readdir(path.join(root, templateRoot), { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      files.push(path.join(templateRoot, entry.name, "content.md"));
+    }
+  }
+  return files.sort();
+}
+
+async function templateContractFiles(root) {
+  const contentFiles = await contentTemplateFiles(root);
+  const files = contentFiles.flatMap((contentFile) => {
+    const directory = path.dirname(contentFile);
+    return ["content.md", "evidence.yml", "export-manifest.yml"].map((name) => path.join(directory, name));
+  }).sort();
+  for (const file of files) {
+    const stats = await lstat(path.join(root, file));
+    assert.equal(stats.isSymbolicLink(), false, `${file}: symbolic links are not template contracts`);
+    assert.equal(stats.isFile(), true, `${file}: regular file`);
+  }
+  return files;
+}
+
 function promptEntry() {
   return {
     id: "studio:define-game-vision:beginner",
     kind: "skill-template",
     product: "studio",
     title: "게임 비전 초안",
+    display_title: "게임 비전 초안",
+    sample_result_excerpt: "studio:define-game-vision:beginner 예: `game-design/island/vision/content.md`에 협동 섬 복구의 핵심 경험과 검증 질문을 기록하고 미정 값은 남깁니다.",
     purpose: "한 문장 게임 아이디어를 검토 가능한 비전 초안으로 정리한다.",
     audiences: ["game-designer"],
     intents: ["게임 비전 작성"],
@@ -65,7 +96,7 @@ function promptEntry() {
 test("auditGameDesignDocs reports only deterministic high-severity Korean documentation defects", async (t) => {
   const root = await temporaryRepo(t);
   await write(root, "shared/templates/quality.md", [
-    "## Result",
+    "## Result {#result}",
     "문서는 자동으로 생성됩니다.",
     "이 방식은 최고의 결과를 보장합니다.",
     "결론적으로 검토가 필요합니다.",
@@ -113,6 +144,26 @@ test("renderPromptCard keeps a Korean-first request and result excerpt before co
   assert.ok(markdown.indexOf("### 간단 요청 예시") < markdown.indexOf("<details>"));
   assert.match(markdown, /\$game-design-studio:define-game-vision/u);
   assert.match(markdown, /lead-game-designer가 초안을 검토/u);
+  assert.match(markdown, /studio:define-game-vision:beginner 예: `game-design\/island\/vision\/content\.md`/u);
+});
+
+test("rendered simple work order and reviewer are exact catalog contracts while advanced text fences remain intact", () => {
+  const entry = promptEntry();
+  const card = renderPromptCard(entry);
+  assert.equal(validateRenderedPromptCard(entry, card), true);
+
+  assert.throws(
+    () => validateRenderedPromptCard(entry, card.replace("- 작업 순서: define-game-vision → review-game-design", "- 작업 순서: review-game-design → define-game-vision")),
+    /missing required contract: studio:define-game-vision:beginner/u,
+  );
+  assert.throws(
+    () => validateRenderedPromptCard(entry, card.replace(entry.human_review_boundary, "자동 승인됨")),
+    /missing required contract: studio:define-game-vision:beginner/u,
+  );
+  assert.throws(
+    () => validateRenderedPromptCard(entry, card.replace(entry.resume_prompt, "검토를 생략하고 재개해.")),
+    /text block differs from catalog: studio:define-game-vision:beginner:5/u,
+  );
 });
 
 test("representative Studio and Career artifact templates present Korean-first labels without changing stable IDs", async () => {
@@ -124,10 +175,38 @@ test("representative Studio and Career artifact templates present Korean-first l
 
   assert.match(studio, /^artifact_id: game-design-brief$/mu);
   assert.match(studio, /^# 게임 기획 브리프 \{#game-design-brief\}$/mu);
-  assert.match(studio, /^## 작업 기록 \{#working-record\}$/mu);
+  assert.match(studio, /^## 기획 항목: 작업 기록 \{#working-record\}$/mu);
   assert.match(studio, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
   assert.match(career, /^artifact_id: game-analysis-report$/mu);
   assert.match(career, /^# 게임 분석 보고서 \{#game-analysis-report\}$/mu);
-  assert.match(career, /^## 작업 기록 \{#working-record\}$/mu);
+  assert.match(career, /^## 기획 항목: 작업 기록 \{#working-record\}$/mu);
   assert.match(career, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu);
+});
+
+test("all 30 artifact content templates keep anchored visible headings and table labels Korean-first", async () => {
+  const repoRoot = path.resolve(import.meta.dirname, "../..");
+  const files = await contentTemplateFiles(repoRoot);
+  assert.equal(files.length, 30);
+  assert.equal((await templateContractFiles(repoRoot)).length, 90, "30 template roots × content/evidence/export contracts");
+  for (const file of files) {
+    const body = await readFile(path.join(repoRoot, file), "utf8");
+    const headings = [...body.matchAll(/^#{1,6}\s+(.+?)\s*$/gmu)].map(([, label]) => label.replace(/\s+\{#[a-z0-9-]+\}\s*$/u, ""));
+    assert.ok(headings.length > 0, `${file}: visible heading`);
+    for (const heading of headings) assert.match(heading, /[가-힣]/u, `${file}: ${heading}`);
+    assert.match(body, /^\| 항목 ID \| 현재 상태 \| 근거 또는 다음 작업 \| 담당자 \|$/mu, `${file}: work table labels`);
+    assert.match(body, /^\| 버전 \| 날짜 \| 담당자 \| 변경 내용 \| 승인 \|$/mu, `${file}: history table labels`);
+  }
+});
+
+test("audit evidence keeps the top-level and every source at the same retrieval date", async () => {
+  const repoRoot = path.resolve(import.meta.dirname, "../..");
+  const register = JSON.parse(await readFile(path.join(repoRoot, "shared/knowledge/trends/source-register.json"), "utf8"));
+  assert.equal(validateAuditEvidenceRegister(register), true);
+
+  const drifted = structuredClone(register);
+  drifted.sources[0].retrievedAt = "2026-08-10";
+  assert.throws(
+    () => validateAuditEvidenceRegister(drifted),
+    /audit evidence source retrievedAt must equal 2026-08-11: EXT-NIST-AI-600-1/u,
+  );
 });

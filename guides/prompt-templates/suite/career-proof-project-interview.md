@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: suite:career-proof-project-interview:case -->
 ## suite:career-proof-project-interview:case
 
-**career-proof-project-interview suite case**
+**게임 기획 결과: career-proof-project-interview suite case**
 
 career-proof-project-interview의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
@@ -19,7 +19,7 @@ career-proof-project-interview의 Studio와 Career ordered handoff를 public/evi
 - 함께 검토하는 역할: lead-game-designer → career-strategist
 
 ### 이 요청으로 받는 결과
-예: `suite/career-proof-project-interview/content.md`에 12주 proof와 evidence-linked 답변을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 근거 기록 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: suite:career-proof-project-interview:case; 파일: suite/career-proof-project-interview/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

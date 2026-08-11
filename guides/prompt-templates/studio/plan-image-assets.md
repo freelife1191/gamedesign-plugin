@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:plan-image-assets:beginner -->
 ## studio:plan-image-assets:beginner
 
-**prompt-only 이미지 slot과 placeholder 계획**
+**게임 기획 결과: prompt-only 이미지 slot과 placeholder 계획**
 
 생성 없이 profile slot 하나의 stable asset ID·alt text·명시적 count·placeholder를 concept-draft 계획으로 고정한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: art-brief-director
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/plan-beginner/content.md`에 profile-slot preflight, stable asset ID, 명시적 count, alt text와 placeholder, concept-draft 계획을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+검토용 가상 산출물: 내보내기 전 점검 항목은 바람 길을 잇는 글라이더 견습생 상황을 기준으로 작성했습니다. 다음 결정은 담당자 검토 후 정합니다. (ID: studio:plan-image-assets:beginner; 파일: game-design/studio-visual/plan-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -133,7 +133,7 @@ plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot
 <!-- PROMPT-CARD: studio:plan-image-assets:standard -->
 ## studio:plan-image-assets:standard
 
-**stable ID·alt·count를 갖춘 이미지 manifest 계획**
+**게임 기획 결과: stable ID·alt·count를 갖춘 이미지 manifest 계획**
 
 여러 profile slot의 stable ID, alt text, count와 preserve/exclude를 reusable prompt package에 분리한다.
 
@@ -147,7 +147,7 @@ plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot
 - 함께 검토하는 역할: art-brief-director → ux-accessibility-reviewer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/plan-standard/content.md`에 slot별 stable asset ID, alt text, 명시적 count, Markdown/JSON prompt, placeholder 목록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 문서 조각 — 해저 정원을 돌보는 협동 플레이어의 자산 기록: 현재는 초안입니다. 확인할 점: 추가 입력과 근거 주소. (ID: studio:plan-image-assets:standard; 파일: game-design/studio-visual/plan-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -261,7 +261,7 @@ plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 sl
 <!-- PROMPT-CARD: studio:plan-image-assets:advanced -->
 ## studio:plan-image-assets:advanced
 
-**profile slot·rights·diagram handoff가 있는 자산 계획**
+**게임 기획 결과: profile slot·rights·diagram handoff가 있는 자산 계획**
 
 권리 제약과 Skillstead diagram slot을 illustration과 분리해 finite manifest와 visualization handoff로 기록한다.
 
@@ -275,7 +275,7 @@ plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 sl
 - 함께 검토하는 역할: art-brief-director → visual-asset-reviewer → lead-game-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-visual/plan-advanced/content.md`에 finite slot manifest, rights·revocation gap, stable source ID, Skillstead visualization handoff, concept-draft 상태을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 핵심 결과 항목에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:plan-image-assets:advanced; 파일: game-design/studio-visual/plan-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>

@@ -5,7 +5,7 @@
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:beginner -->
 ## studio:apply-document-quality-profile:beginner
 
-**문서 목적과 대상에 맞는 품질 프로필 선택**
+**게임 기획 결과: 문서 목적과 대상에 맞는 품질 프로필 선택**
 
 짧은 기획 브리프에 필요한 primary profile과 누락 입력을 안전하게 선택한다.
 
@@ -19,7 +19,7 @@
 - 함께 검토하는 역할: document-quality-editor
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/profile-beginner/content.md`에 선택한 primary profile, 누락 입력 목록, stable checklist을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+초안 결과: 문서 품질 프로필에 낡은 우주선을 수리하는 탐사대 맥락을 반영했습니다. 사람의 확인 전까지 값과 결정은 미정입니다. (ID: studio:apply-document-quality-profile:beginner; 파일: game-design/studio-foundations/profile-beginner/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -126,7 +126,7 @@ document-quality-editor가 profile 선택을 검토하지만 선택 기록 자�
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:standard -->
 ## studio:apply-document-quality-profile:standard
 
-**Overlay와 preset manifest를 갖춘 품질 프로필 선택**
+**게임 기획 결과: Overlay와 preset manifest를 갖춘 품질 프로필 선택**
 
 시스템 명세의 primary profile, additive overlay, neutral preset과 requirement manifest를 일관되게 정한다.
 
@@ -140,7 +140,7 @@ document-quality-editor가 profile 선택을 검토하지만 선택 기록 자�
 - 함께 검토하는 역할: document-quality-editor → system-economy-designer
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/profile-standard/content.md`에 primary profile, 허용된 overlay 목록, requirement manifest을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+가상 결과 기록: 도서관의 잃은 지도를 찾는 모험가 맥락에서 필요한 문서 품질 프로필 항목을 먼저 적었습니다. 확인할 점: 적용 범위와 검토자 결정. (ID: studio:apply-document-quality-profile:standard; 파일: game-design/studio-foundations/profile-standard/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
@@ -248,7 +248,7 @@ profile-standard의 기존 manifest와 digest-bound selection record를 보존�
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:advanced -->
 ## studio:apply-document-quality-profile:advanced
 
-**Fallback과 state receipt를 가진 품질 프로필 검토**
+**게임 기획 결과: Fallback과 state receipt를 가진 품질 프로필 검토**
 
 profile 충돌을 fail-closed로 분리하고 사람 승인 전까지 state receipt를 보존한다.
 
@@ -262,7 +262,7 @@ profile 충돌을 fail-closed로 분리하고 사람 승인 전까지 state rece
 - 함께 검토하는 역할: document-quality-editor → lead-game-designer → production-feasibility-critic
 
 ### 이 요청으로 받는 결과
-예: `game-design/studio-foundations/profile-advanced/content.md`에 fail-closed fallback, blocked requirement, immutable state receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+예시 산출물 조각: 핵심 결과 항목은 눈 덮인 마을을 지키는 초보 수비대에 관한 임시 제안입니다. 근거가 확인되기 전에는 확정하지 않습니다. (ID: studio:apply-document-quality-profile:advanced; 파일: game-design/studio-foundations/profile-advanced/content.md)
 
 <details>
 <summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
