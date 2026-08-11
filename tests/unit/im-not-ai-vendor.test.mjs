@@ -233,6 +233,19 @@ test("im-not-ai updater parses offline and explicitly networked modes", async ()
   assert.deepEqual(parseImNotAiUpdaterArgs(["--check-latest"]), { mode: "check-latest", network: true });
   assert.deepEqual(parseImNotAiUpdaterArgs(["--update"]), { mode: "update", network: true });
 });
+test("official latest adapter selects stable SemVer and peels an annotated tag to an immutable commit", async () => {
+  const { fetchOfficialLatestImNotAiRelease } = await import(updaterUrl.href);
+  const calls = [];
+  const result = await fetchOfficialLatestImNotAiRelease({ fetchJsonImpl: async (url) => {
+    calls.push(url);
+    if (url.endsWith("releases?per_page=100")) return [{ tag_name: "v2.3.0", published_at: "2026-07-22T00:00:00Z", draft: false, prerelease: false }, { tag_name: "v2.4.0-rc.1", draft: false, prerelease: true }, { tag_name: "v2.3.1", published_at: "2026-08-12T00:00:00Z", draft: false, prerelease: false }];
+    if (url.endsWith("ref/tags/v2.3.1")) return { object: { type: "tag", sha: "a".repeat(40) } };
+    if (url.endsWith(`git/tags/${"a".repeat(40)}`)) return { object: { type: "commit", sha: "b".repeat(40) } };
+    throw new Error(url);
+  } });
+  assert.deepEqual(result, { repository: "https://github.com/epoko77-ai/im-not-ai", tag: "v2.3.1", commit: "b".repeat(40), releasedAt: "2026-08-12T00:00:00Z" });
+  assert.equal(calls.some((url) => url.includes("raw.githubusercontent.com")), false);
+});
 test("check-latest uses the injected release capability and leaves the tree and lock unchanged", async (t) => {
   const { checkLatestImNotAi } = await import(updaterUrl.href);
   const fixture = await copiedVendor(t);

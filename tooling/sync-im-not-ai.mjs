@@ -164,15 +164,27 @@ async function fetchJson(url) {
   return response.json();
 }
 
-async function officialLatestRelease() {
-  const release = await fetchJson("https://api.github.com/repos/epoko77-ai/im-not-ai/releases/latest");
-  const ref = await fetchJson(`https://api.github.com/repos/epoko77-ai/im-not-ai/git/ref/tags/${encodeURIComponent(release.tag_name)}`);
-  const commit = ref.object?.type === "commit" ? ref.object.sha : undefined;
-  if (!commit || !/^[a-f0-9]{40}$/u.test(commit)) throw new Error("Official release tag must resolve to a commit");
+async function peelTagObject(object, fetchJsonImpl) {
+  if (object?.type === "commit" && /^[a-f0-9]{40}$/u.test(object.sha)) return object.sha;
+  if (object?.type !== "tag" || !/^[a-f0-9]{40}$/u.test(object.sha)) throw new Error("Official release tag must resolve to a commit");
+  const tag = await fetchJsonImpl(`https://api.github.com/repos/epoko77-ai/im-not-ai/git/tags/${object.sha}`);
+  return peelTagObject(tag.object, fetchJsonImpl);
+}
+
+/** Resolve a stable GitHub release to the immutable commit behind its tag. */
+export async function fetchOfficialLatestImNotAiRelease({ fetchJsonImpl = fetchJson } = {}) {
+  const releases = await fetchJsonImpl("https://api.github.com/repos/epoko77-ai/im-not-ai/releases?per_page=100");
+  if (!Array.isArray(releases)) throw new Error("Official release response must be an array");
+  const stable = releases.filter((release) => !release.draft && !release.prerelease && /^v?\d+\.\d+\.\d+$/u.test(release.tag_name));
+  if (stable.length === 0) throw new Error("No stable official im-not-ai release is available");
+  stable.sort((left, right) => compareSemver(right.tag_name, left.tag_name));
+  const release = stable[0];
+  const ref = await fetchJsonImpl(`https://api.github.com/repos/epoko77-ai/im-not-ai/git/ref/tags/${encodeURIComponent(release.tag_name)}`);
+  const commit = await peelTagObject(ref.object, fetchJsonImpl);
   return { repository: OFFICIAL_REPOSITORY, tag: release.tag_name, commit, releasedAt: release.published_at };
 }
 
-export async function checkLatestImNotAi({ root = DEFAULT_VENDOR_ROOT, fetchRelease = officialLatestRelease } = {}) {
+export async function checkLatestImNotAi({ root = DEFAULT_VENDOR_ROOT, fetchRelease = fetchOfficialLatestImNotAiRelease } = {}) {
   const lock = await readJson(path.join(root, "vendor.lock.json"));
   const latest = await fetchRelease();
   if (latest.repository !== OFFICIAL_REPOSITORY) throw vendorError("IM_NOT_AI_UNTRUSTED_REPOSITORY", "release.repository");
@@ -187,7 +199,7 @@ async function defaultArchive(release) {
     ...["ai-tell-taxonomy.md", "baseline.json", "baseline_v2.json", "design-notes.md", "diagnosis-rules.md", "empirical-validation.md", "metrics.py", "metrics_v2.py", "quick-rules.footer.md", "quick-rules.header.md", "quick-rules.md", "rewriting-playbook.md", "scholarship.md", "web-service-spec.md"].map((file) => `${PINNED.referencesSource}/${file}`),
   ];
   const files = await Promise.all(paths.map(async (sourcePath) => {
-    const response = await fetch(`https://raw.githubusercontent.com/epoko77-ai/im-not-ai/${encodeURIComponent(release.tag)}/${sourcePath}`);
+    const response = await fetch(`https://raw.githubusercontent.com/epoko77-ai/im-not-ai/${release.commit}/${sourcePath}`);
     if (!response.ok) throw new Error(`Official im-not-ai archive file unavailable: ${sourcePath}`);
     return { path: sourcePath, bytes: Buffer.from(await response.arrayBuffer()) };
   }));
@@ -277,7 +289,7 @@ export async function publishPreparedImNotAi({ root = DEFAULT_VENDOR_ROOT, stagi
   return { status: "published", root: vendorRoot };
 }
 
-export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, publish = false, fetchRelease = officialLatestRelease, fetchArchive = defaultArchive } = {}) {
+export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, publish = false, fetchRelease = fetchOfficialLatestImNotAiRelease, fetchArchive = defaultArchive } = {}) {
   if (typeof stagingRoot !== "string") throw new Error("stagingRoot is required for a non-destructive vendor update");
   const oldLock = await readJson(path.join(root, "vendor.lock.json"));
   const release = await fetchRelease();
