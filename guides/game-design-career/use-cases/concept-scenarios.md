@@ -90,6 +90,21 @@ $game-design-career:map-game-design-career artifact=game-design-career/system-st
 
 CA-T01 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → plan-junior-growth
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/game-design-role-map/content.md`에 game-design-role-map, competency-matrix, learning-roadmap을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T01의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -108,9 +123,7 @@ CA-T01의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -177,6 +190,8 @@ $game-design-career:map-game-design-career $game-design-career:build-game-design
 ```text
 CA-T01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t01 -->
 
 ## CA-T02 콘텐츠·퀘스트 기획 준비생
@@ -267,6 +282,21 @@ NPC 대사를 시스템처럼 단정했는가? 협업 계약은 CA-T06, 공간 �
 
 CA-T02 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/game-design-role-map/content.md`에 game-design-role-map, portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T02의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -285,9 +315,7 @@ CA-T02의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -354,6 +382,8 @@ $game-design-career:map-game-design-career $game-design-career:build-game-design
 ```text
 CA-T02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t02 -->
 
 ## CA-T03 전투·캐릭터 기획 준비생
@@ -444,6 +474,21 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/com
 
 CA-T03 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T03의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -462,9 +507,7 @@ CA-T03의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -531,6 +574,8 @@ $game-design-career:reverse-engineer-game-design $game-design-career:build-game-
 ```text
 CA-T03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t03 -->
 
 ## CA-T04 경제·밸런스·LiveOps 준비생
@@ -621,6 +666,21 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/eco
 
 CA-T04 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, portfolio-project-brief, five-axis-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T04의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -639,9 +699,7 @@ CA-T04의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -708,6 +766,8 @@ $game-design-career:reverse-engineer-game-design $game-design-career:build-game-
 ```text
 CA-T04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t04 -->
 
 ## CA-T05 UI·UX 기획 준비생
@@ -798,6 +858,21 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/uiux
 
 CA-T05 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/competency-matrix/content.md`에 competency-matrix, portfolio-project-brief, five-axis-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T05의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -816,9 +891,7 @@ CA-T05의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -885,6 +958,8 @@ $game-design-career:map-game-design-career $game-design-career:build-game-design
 ```text
 CA-T05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t05 -->
 
 ## CA-T06 내러티브 기획 준비생
@@ -975,6 +1050,21 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/narr
 
 CA-T06 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/game-design-role-map/content.md`에 game-design-role-map, portfolio-project-brief, creative-design-portfolio을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T06의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -993,9 +1083,7 @@ CA-T06의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1062,6 +1150,8 @@ $game-design-career:map-game-design-career $game-design-career:build-game-design
 ```text
 CA-T06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t06 -->
 
 ## CA-T07 레벨 디자인 준비생
@@ -1152,6 +1242,21 @@ $game-design-career:reverse-engineer-game-design artifact=game-design-career/lev
 
 CA-T07 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: game-design-mentor
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/game-analysis-report/content.md`에 game-analysis-report, portfolio-project-brief, five-axis-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T07의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -1170,9 +1275,7 @@ CA-T07의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1239,6 +1342,8 @@ $game-design-career:reverse-engineer-game-design $game-design-career:build-game-
 ```text
 CA-T07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t07 -->
 
 ## CA-T08 실무 경험이 없는 신입
@@ -1329,6 +1434,21 @@ $game-design-career:build-game-design-portfolio artifact=game-design-career/new-
 
 CA-T08 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/career-stage-goal/content.md`에 career-stage-goal, portfolio-project-brief, portfolio-backlog을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T08의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -1347,9 +1467,7 @@ CA-T08의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1416,6 +1534,8 @@ $game-design-career:map-game-design-career $game-design-career:build-game-design
 ```text
 CA-T08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t08 -->
 
 ## CA-T09 비전공자·다른 직군 전환자
@@ -1506,6 +1626,21 @@ $game-design-career:map-game-design-career artifact=game-design-career/transitio
 
 CA-T09 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T09의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: map-game-design-career → research-game-design-jobs → build-game-design-portfolio → plan-junior-growth
+- 함께 검토하는 역할: career-strategist
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/transition-readiness/content.md`에 transition-readiness, game-design-role-map, portfolio-project-brief을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T09의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -1524,9 +1659,7 @@ CA-T09의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T09의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1593,6 +1726,8 @@ $game-design-career:map-game-design-career $game-design-career:research-game-des
 ```text
 CA-T09의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t09 -->
 
 ## CA-T10 주니어의 성장·이직
@@ -1683,6 +1818,21 @@ $game-design-career:plan-junior-growth artifact=game-design-career/growth-transi
 
 CA-T10 manifest의 audience, skill, template, result를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career CA-T10의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: plan-junior-growth → research-game-design-jobs → practice-game-design-interview → visualize-career-roadmap → export-career-documents
+- 함께 검토하는 역할: career-strategist → interview-coach
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/junior-growth-review/content.md`에 junior-growth-review, transition-readiness, interview-question-answer-log을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 CA-T10의 공개 가능한 evidence와 canonical artifact가 필요할 때 사용한다.
 
@@ -1701,9 +1851,7 @@ CA-T10의 공개 가능한 evidence와 canonical artifact가 필요할 때 사�
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career CA-T10의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1770,6 +1918,8 @@ $game-design-career:plan-junior-growth $game-design-career:research-game-design-
 ```text
 CA-T10의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END ca-t10 -->
 
 ## 직무별 비교

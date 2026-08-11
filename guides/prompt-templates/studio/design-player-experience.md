@@ -9,6 +9,21 @@
 
 첫 critical action의 행동, feedback, 오류와 recovery를 QA 가능한 UI 흐름으로 정리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 섬 복구 게임 첫 세션의 다리 수리 행동을 UI state, feedback, 오류 메시지와 recovery까지 정리해 줘. 검증되지 않은 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-player-experience
+- 함께 검토하는 역할: ux-accessibility-reviewer → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/ux-beginner/content.md`에 critical action, UI state, feedback, 오류 recovery을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 첫 5분의 first success와 하나의 critical action에 필요한 UI state를 정의할 때 사용한다.
 
@@ -37,9 +52,7 @@ authoritative rule이 비어 있거나 경제 수치와 확률을 결정해야 �
 - [오류 상황]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 섬 복구 게임 첫 세션의 다리 수리 행동을 UI state, feedback, 오류 메시지와 recovery까지 정리해 줘. 검증되지 않은 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -110,12 +123,29 @@ ux-accessibility-reviewer가 critical action의 state와 recovery를 검토하�
 ```text
 ux-beginner의 action과 recovery를 보존하고 실제 관찰된 오류 feedback만 evidence.yml에 연결해 blocked state부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-player-experience:standard -->
 ## studio:design-player-experience:standard
 
 **Onboarding과 접근성을 검토하는 플레이어 경험**
 
 tutorial skip/revisit, input alternative, sensory cue와 오류 복구를 하나의 onboarding 흐름으로 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 모바일 협동 복구 게임의 onboarding에 tutorial skip/revisit, 터치·controller 대안, sensory cue, 오류 복구와 접근성 검토 질문을 연결해 줘. 최신 근거가 없으면 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-player-experience → review-game-design
+- 함께 검토하는 역할: ux-accessibility-reviewer → lead-game-designer → system-economy-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/ux-standard/content.md`에 tutorial skip/revisit, input alternative, sensory cue, error recovery을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 첫 세션의 튜토리얼, platform별 입력과 접근 가능한 대안이 함께 필요할 때 사용한다.
@@ -144,9 +174,7 @@ tutorial skip/revisit, input alternative, sensory cue와 오류 복구를 하나
 - [sensory cue]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 모바일 협동 복구 게임의 onboarding에 tutorial skip/revisit, 터치·controller 대안, sensory cue, 오류 복구와 접근성 검토 질문을 연결해 줘. 최신 근거가 없으면 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -220,12 +248,29 @@ ux-accessibility-reviewer가 accessible alternative와 test gap을 판정하고 
 ```text
 ux-standard의 onboarding state를 유지하고 새 controller test 결과와 접근성 근거만 연결해 inaccessible-critical-action부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-player-experience:advanced -->
 ## studio:design-player-experience:advanced
 
 **멀티모달 UX와 책임 gate를 갖춘 플레이어 경험**
 
 멀티모달 feedback이 authoritative game state를 발명하지 않는지 확인하고 책임 owner의 gate를 남긴다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 보스 전투의 화면·진동·사운드 cue가 authoritative state를 발명하지 않는지 검토하고, critical action 접근성 gate와 책임 owner의 승인 대기를 정리해 줘. 증거가 없으면 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-player-experience → design-game-systems → review-game-design
+- 함께 검토하는 역할: ux-accessibility-reviewer → system-economy-designer → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/ux-advanced/content.md`에 authority finding, multimodal cue mapping, critical action gate을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 복수 입력·시각·청각 cue가 있는 UX에서 state authority, accessibility, release gate를 함께 검토할 때 사용한다.
@@ -253,9 +298,7 @@ UI feedback만으로 authoritative state를 확정하거나 근거 없는 thresh
 - [responsible owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 보스 전투의 화면·진동·사운드 cue가 authoritative state를 발명하지 않는지 검토하고, critical action 접근성 gate와 책임 owner의 승인 대기를 정리해 줘. 증거가 없으면 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -330,3 +373,5 @@ responsible UX·system owner가 authority finding과 release gate를 승인·수
 ```text
 ux-advanced의 authority finding과 멀티모달 mapping을 보존하고 owner가 확인한 source state만 반영해 blocked critical action부터 재개해.
 ```
+
+</details>

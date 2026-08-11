@@ -1,10 +1,10 @@
 ---
-title: Game Design Brief
+title: 게임 기획 브리프
 artifact_id: game-design-brief
 quality_profile: game-design-brief
 version: 1
 ---
-# Game Design Brief {#game-design-brief}
+# 게임 기획 브리프 {#game-design-brief}
 
 ## Brief Contract {#brief-contract}
 
@@ -14,9 +14,9 @@ Define the target player, experience intent, desired emotion, platform, genre, b
 
 A concept may remain provisional. Do not approve production commitment while target experience, prototype evidence, owner, or success criteria are missing.
 
-## Working Record {#working-record}
+## 작업 기록 {#working-record}
 
-| Field ID | Current state | Evidence or next action | Owner |
+| 항목 ID | 현재 상태 | 근거 또는 다음 작업 | 담당자 |
 | --- | --- | --- | --- |
 | `target-player` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
 | `experience-intent` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |

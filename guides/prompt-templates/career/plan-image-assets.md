@@ -9,6 +9,21 @@
 
 생성 없이 포트폴리오 사례의 placeholder 이미지 슬롯, stable asset ID, count와 alt text를 concept-draft로 기록한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → plan-image-assets
+- 함께 검토하는 역할: art-brief-director
+
+### 이 요청으로 받는 결과
+예: `career/visual/plan-image-assets/beginner/content.md`에 profile-slot preflight, stable asset ID·count·placeholder, alt text·rights/attribution handoff, concept-draft plan을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 포트폴리오 placeholder 이미지 슬롯 계획에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
 
@@ -36,9 +51,7 @@
 - [명시적 count]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [source section ID], [명시적 count]를 사용해 포트폴리오 placeholder 이미지 슬롯 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -113,12 +126,29 @@ art-brief-director owner가 입력, source, rights/attribution, alt text와 hand
 ```text
 plan-image-assets/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:plan-image-assets:standard -->
 ## career:plan-image-assets:standard
 
 **proof 이미지·alt·권리 manifest 계획**
 
 proof 이미지의 source·attribution·rights 상태, alt text와 readability 목표를 prompt package와 분리해 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → plan-image-assets
+- 함께 검토하는 역할: art-brief-director
+
+### 이 요청으로 받는 결과
+예: `career/visual/plan-image-assets/standard/content.md`에 profile-slot preflight, stable asset ID·count·placeholder, alt text·rights/attribution handoff, concept-draft plan을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 proof 이미지·alt·권리 manifest 계획에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -147,9 +177,7 @@ proof 이미지·alt·권리 manifest 계획에 필요한 실제 artifact와 검
 - [rights owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [source IDs], [rights owner]를 사용해 proof 이미지·alt·권리 manifest 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -224,12 +252,29 @@ art-brief-director owner가 입력, source, rights/attribution, alt text와 hand
 ```text
 plan-image-assets/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:plan-image-assets:advanced -->
 ## career:plan-image-assets:advanced
 
 **profile 슬롯과 presentation handoff 계획**
 
 profile 슬롯, presentation placement, 권리·privacy hold와 named human reviewer evidence 요청을 가진 handoff를 계획한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → plan-image-assets → review-image-assets
+- 함께 검토하는 역할: art-brief-director
+
+### 이 요청으로 받는 결과
+예: `career/visual/plan-image-assets/advanced/content.md`에 profile-slot preflight, stable asset ID·count·placeholder, alt text·rights/attribution handoff, concept-draft plan을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 profile 슬롯과 presentation handoff 계획에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -258,9 +303,7 @@ profile 슬롯과 presentation handoff 계획에 필요한 실제 artifact와 �
 - [reviewer evidence path]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [decision owner], [reviewer evidence path]를 사용해 profile 슬롯과 presentation handoff 계획를 수행해. prompt와 placeholder와 manifest, generation handoff만 준비하고 provider/image generation 호출 0회다. provider 전달은 generate-image-assets handoff 뒤에만 가능하다. 계획은 concept-draft만 만들며 image bytes, portfolio publication, document-approved를 만들지 않는다. IMAGE_GEN_MODE=prompt-only.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -335,3 +378,5 @@ art-brief-director owner가 입력, source, rights/attribution, alt text와 hand
 ```text
 plan-image-assets/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>

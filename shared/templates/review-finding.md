@@ -6,18 +6,18 @@
 - Severity: `low | medium | high | critical`
 - Owner: `[human owner]`
 
-## Finding
+## 발견 사항
 
 [Observed issue and the exact affected artifact section.]
 
-## Evidence
+## 근거
 
 [Reproduction, source, test, screenshot, or decision record.]
 
-## Required correction
+## 필요한 수정
 
 [Smallest change that clears the finding and how it will be verified.]
 
-## Approval
+## 승인
 
 [Approver, date, evidence links, and any explicit residual risk.]

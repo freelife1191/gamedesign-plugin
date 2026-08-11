@@ -1,10 +1,10 @@
 ---
-title: Game Analysis Report
+title: 게임 분석 보고서
 artifact_id: game-analysis-report
 quality_profile: game-analysis-report
 version: 1
 ---
-# Game Analysis Report {#game-analysis-report}
+# 게임 분석 보고서 {#game-analysis-report}
 
 ## Analysis Claims {#analysis-claims}
 
@@ -14,9 +14,9 @@ For each stable claim, record observation, source-address, source type, scope, i
 
 State what a designer may learn, what remains unknown, and which evidence would change the analysis. Avoid reconstructing undocumented internal intent as fact.
 
-## Working Record {#working-record}
+## 작업 기록 {#working-record}
 
-| Field ID | Current state | Evidence or next action | Owner |
+| 항목 ID | 현재 상태 | 근거 또는 다음 작업 | 담당자 |
 | --- | --- | --- | --- |
 | `claim-id` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |
 | `observation` | not-observed | Record a project-specific value and evidence address before approval. | artifact-owner |

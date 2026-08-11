@@ -9,7 +9,20 @@
 
 studio-to-career-handoff의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
-[한국어 Archify Studio → Career 공개 근거 handoff 열기](../../assets/archify/suite/suite-studio-career-handoff.html)
+### 간단 요청 예시
+```text
+@Game Design Studio와 @Game Design Career에서 studio-to-career-handoff handoff를 public/evidence-safe하게 작성해.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design → build-game-design-portfolio
+- 함께 검토하는 역할: lead-game-designer → career-strategist
+
+### 이 요청으로 받는 결과
+예: `suite/studio-to-career-handoff/content.md`에 공개 가능한 문제·판단·검증 summary을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 두 제품의 canonical artifact handoff가 필요할 때 사용한다.
@@ -28,9 +41,7 @@ studio-to-career-handoff의 Studio와 Career ordered handoff를 public/evidence-
 - [공개 정보]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio와 @Game Design Career에서 studio-to-career-handoff handoff를 public/evidence-safe하게 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -94,3 +105,5 @@ named human decision owner가 studio-to-career-handoff handoff의 공개 범위�
 ```text
 studio-to-career-handoff의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>

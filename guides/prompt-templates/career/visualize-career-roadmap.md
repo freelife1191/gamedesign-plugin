@@ -9,6 +9,21 @@
 
 역할군과 인접 경로의 차이를 source-mapped structural workflow로 표현하고 사실·추론·제안을 분리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [source IDs], [audience]를 사용해 역할 비교 흐름 시각화를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.
+```
+
+### 짧은 흐름
+- 작업 순서: map-game-design-career → visualize-career-roadmap
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `career/visual/visualize-career-roadmap/beginner/content.md`에 selectedPresetId·rationale·excluded presets, source-mapped relationship record, SVG/PNG state and separated receipts, resumable QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 역할 비교 흐름 시각화에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
 
@@ -36,9 +51,7 @@
 - [audience]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [source IDs], [audience]를 사용해 역할 비교 흐름 시각화를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -113,12 +126,29 @@ game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수�
 ```text
 visualize-career-roadmap/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:visualize-career-roadmap:standard -->
 ## career:visualize-career-roadmap:standard
 
 **역량 dependency와 evidence map**
 
 역량 dependency와 proof evidence를 숫자나 진척률을 발명하지 않고 editable diagram으로 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [evidence IDs], [selected preset]를 사용해 역량 dependency와 evidence map를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.
+```
+
+### 짧은 흐름
+- 작업 순서: map-game-design-career → visualize-career-roadmap → svg-infographic
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `career/visual/visualize-career-roadmap/standard/content.md`에 selectedPresetId·rationale·excluded presets, source-mapped relationship record, SVG/PNG state and separated receipts, resumable QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 역량 dependency와 evidence map에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -147,9 +177,7 @@ visualize-career-roadmap/beginner의 canonical artifact, stable IDs, source·att
 - [selected preset]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [evidence IDs], [selected preset]를 사용해 역량 dependency와 evidence map를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -224,12 +252,29 @@ game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수�
 ```text
 visualize-career-roadmap/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:visualize-career-roadmap:advanced -->
 ## career:visualize-career-roadmap:advanced
 
 **Archify 우선 로드맵 fallback·receipt**
 
 Archify가 available이면 structural workflow를 우선하고 absence/failure에서는 Skillstead editable SVG와 exact 2× PNG fallback 및 분리된 receipt를 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [Archify capability state], [human approval owner]를 사용해 Archify 우선 로드맵 fallback·receipt를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-career-roadmap → svg-infographic
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `career/visual/visualize-career-roadmap/advanced/content.md`에 selectedPresetId·rationale·excluded presets, source-mapped relationship record, SVG/PNG state and separated receipts, resumable QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 Archify 우선 로드맵 fallback·receipt에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -258,9 +303,7 @@ Archify 우선 로드맵 fallback·receipt에 필요한 실제 artifact와 검�
 - [human approval owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [Archify capability state], [human approval owner]를 사용해 Archify 우선 로드맵 fallback·receipt를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -335,3 +378,5 @@ game-design-mentor owner가 source mapping, receipt와 human approval를 승인�
 ```text
 visualize-career-roadmap/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>

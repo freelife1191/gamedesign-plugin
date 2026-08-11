@@ -97,6 +97,21 @@ Canonical Artifact의 `content.md`, evidence와 결정 기록을 함께 전달�
 
 new-game-gdd recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio 새 협동 RPG의 대상 플레이어, 핵심 재미, pillar, anti-pillar와 non-goal을 분리해 GDD 기준을 만들어 줘. 근거 없는 주장은 assumption으로 남기고 lead design owner의 승인을 기다려.
+```
+
+##### 짧은 흐름
+- 작업 순서: orchestrate-game-design-project → apply-document-quality-profile → define-game-vision → review-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/vision-pillars/content.md`에 vision-pillars canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
 
@@ -114,9 +129,7 @@ evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용�
 - [프로젝트 ID]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio 새 협동 RPG의 대상 플레이어, 핵심 재미, pillar, anti-pillar와 non-goal을 분리해 GDD 기준을 만들어 줘. 근거 없는 주장은 assumption으로 남기고 lead design owner의 승인을 기다려.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -189,4 +202,6 @@ named human decision owner가 new-game-gdd의 approval 또는 보류를 결정�
 ```text
 new-game-gdd의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END game-design-studio:recipe:new-game-gdd -->

@@ -9,6 +9,21 @@
 
 wrapper가 선택한 구조 관계를 간단한 editable SVG, title·desc와 adjacent alt text로 작성한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio wrapper가 고른 state-rule-flow preset과 source mapping으로 간단한 editable SVG를 작성해. nonempty title·desc와 adjacent alt text를 넣고 PNG나 승인을 주장하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-game-design → svg-infographic
+- 함께 검토하는 역할: lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/svg-beginner/content.md`에 editable SVG, nonempty title, nonempty desc, adjacent alt text, stable source mapping을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 visualize-game-design이 선택한 preset과 source mapping으로 간단한 flow를 authoring할 때 사용한다.
 
@@ -36,9 +51,7 @@ illustration·logo·statistical chart를 만들거나 source 없이 SVG를 검�
 - [relationship structure]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio wrapper가 고른 state-rule-flow preset과 source mapping으로 간단한 editable SVG를 작성해. nonempty title·desc와 adjacent alt text를 넣고 PNG나 승인을 주장하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -112,12 +125,29 @@ lead-game-designer owner가 structure와 accessibility metadata를 승인·수�
 ```text
 svg-beginner의 editable SVG와 source mapping을 보존하고 누락된 title·desc·alt text만 반영해 source checklist부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:svg-infographic:standard -->
 ## studio:svg-infographic:standard
 
 **source-backed 2× PNG가 있는 SVG handoff**
 
 source-mapped editable SVG를 product wrapper lint와 canonical renderer를 통해 정확한 2× PNG handoff로 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio source-backed flow SVG를 numeric layout으로 작성하고 product wrapper lint와 canonical renderer로 exact 2× PNG를 준비해. SVG authority와 PNG derivative를 분리하고 renderer evidence를 남겨.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-game-design → svg-infographic
+- 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/svg-standard/content.md`에 editable SVG authority, source mapping, wrapper lint result, canonical renderer result, exact 2× PNG을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 source-backed topology·flow·roadmap의 SVG와 검증 가능한 2× PNG handoff가 필요할 때 사용한다.
@@ -146,9 +176,7 @@ PNG만 수정하거나 wrapper를 우회해 vendored path를 직접 호출할 �
 - [acceptance criteria]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio source-backed flow SVG를 numeric layout으로 작성하고 product wrapper lint와 canonical renderer로 exact 2× PNG를 준비해. SVG authority와 PNG derivative를 분리하고 renderer evidence를 남겨.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -222,12 +250,29 @@ lead-game-designer owner와 ux-accessibility-reviewer가 source mapping·rendere
 ```text
 svg-standard의 editable SVG와 renderer evidence를 보존하고 실패한 lint 또는 render 단계만 반영해 2× PNG handoff부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:svg-infographic:advanced -->
 ## studio:svg-infographic:advanced
 
 **lint 0 warning/error·접근성·human approval SVG QA**
 
 고급 구조 SVG의 lint 0 warning/error, exact 2× PNG render, accessibility metadata와 human approval을 독립 evidence로 검증한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio source-mapped structural SVG를 lint 0 warning/error로 정리하고 exact 2× PNG, title·desc·alt 접근성 metadata, fit-to-page·close-up QA와 named human approval을 각각 evidence로 남겨. Archify available이면 우선하고 absent 또는 failure이면 Skillstead fallback을 Archify 결과로 표시하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-game-design → svg-infographic → review-game-design
+- 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer → production-feasibility-critic
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/svg-advanced/content.md`에 lint 0 warning/error result, exact 2× PNG render, title·desc·adjacent alt accessibility metadata, fit-to-page·close-up visual QA, named human approval record을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 source-mapped SVG의 machine lint, render, two-pass visual QA와 human approval evidence를 모두 관리할 때 사용한다.
@@ -257,9 +302,7 @@ warning/error가 남은 lint를 통과로 표시하거나 fallback을 Archify �
 - [human approval owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio source-mapped structural SVG를 lint 0 warning/error로 정리하고 exact 2× PNG, title·desc·alt 접근성 metadata, fit-to-page·close-up QA와 named human approval을 각각 evidence로 남겨. Archify available이면 우선하고 absent 또는 failure이면 Skillstead fallback을 Archify 결과로 표시하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -334,3 +377,5 @@ lead-game-designer owner와 ux-accessibility-reviewer가 lint 0 warning/error, a
 ```text
 svg-advanced의 editable SVG와 통과한 evidence를 보존하고 해결된 lint·render·accessibility·human approval gate 하나만 반영해 해당 QA 단계부터 재개해.
 ```
+
+</details>

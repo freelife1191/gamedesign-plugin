@@ -9,6 +9,7 @@
     "catalog/career-visual.json",
     "catalog/studio-scenarios.json",
     "catalog/career-scenarios.json",
-    "catalog/suite.json"
+    "catalog/suite.json",
+    "catalog/writing-quality.json"
   ]
 }

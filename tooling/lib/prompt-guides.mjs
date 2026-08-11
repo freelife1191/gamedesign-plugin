@@ -77,6 +77,19 @@ export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
     "",
     entry.purpose,
     "",
+    heading(section, "간단 요청 예시"),
+    textBlock(entry.app_prompt.example),
+    "",
+    heading(section, "짧은 흐름"),
+    `- 작업 순서: ${entry.skill_chain.join(" → ")}`,
+    `- 함께 검토하는 역할: ${entry.specialist_roles.join(" → ")}`,
+    "",
+    heading(section, "이 요청으로 받는 결과"),
+    `예: \`${entry.expected_file_tree[0]}\`에 ${entry.minimum_outputs.join(", ")}을 기록하고, 확인되지 않은 값은 \`미정\`으로 남깁니다.`,
+    "",
+    "<details>",
+    "<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>",
+    "",
     heading(section, "사용하는 경우"),
     entry.when_to_use,
     "",
@@ -94,7 +107,7 @@ export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
     list(entry.placeholders),
     "",
     heading(section, "Codex App 완성 예시"),
-    textBlock(entry.app_prompt.example),
+    "위의 간단 요청 예시를 그대로 사용합니다.",
     "",
     heading(section, "Codex App 재사용 템플릿"),
     textBlock(entry.app_prompt.template),
@@ -147,6 +160,8 @@ export function renderPromptCard(entry, { headingLevel = 2 } = {}) {
     "",
     heading(section, "실패와 재개"),
     textBlock(entry.resume_prompt),
+    "",
+    "</details>",
   ].join("\n");
 }
 
@@ -154,6 +169,10 @@ export function validateRenderedPromptCard(entry, markdown) {
   if (typeof markdown !== "string") throw new Error(`rendered prompt card must be text: ${entry.id}`);
   const required = [
     `<!-- PROMPT-CARD: ${entry.id} -->`,
+    "간단 요청 예시",
+    "짧은 흐름",
+    "이 요청으로 받는 결과",
+    "<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>",
     `- 스킬 흐름: ${entry.skill_chain.join(" → ")}`,
     "최소 결과물",
     "선택 결과물",

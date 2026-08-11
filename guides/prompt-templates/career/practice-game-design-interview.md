@@ -9,6 +9,21 @@
 
 questionId 하나를 evidence link와 honest-answer pattern에 연결해 사실, 추론, 제안을 구분한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career Q-01 질문을 EVID-PT-01 evidence link에 연결하고, 검증할 수 없는 결과는 honest-answer로 남겨 줘. fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: practice-game-design-interview
+- 함께 검토하는 역할: interview-coach
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/interview-beginner/content.md`에 questionId와 evidence link가 있는 질문·답변, stale posting이면 최신 evidence 갱신 후 재개, fact/inference/recommendation 및 honest-answer pattern을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 포트폴리오 evidence 하나로 질문과 답변을 처음 연습할 때 사용한다.
 
@@ -30,9 +45,7 @@ questionId 하나를 evidence link와 honest-answer pattern에 연결해 사실,
 - [답변 claim]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career Q-01 질문을 EVID-PT-01 evidence link에 연결하고, 검증할 수 없는 결과는 honest-answer로 남겨 줘. fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -100,12 +113,29 @@ interview-coach owner가 evidence link와 답변 범위를 검토하고 승인 �
 ```text
 interview-beginner의 questionId와 evidence link를 보존하고 답변 claim 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:practice-game-design-interview:standard -->
 ## career:practice-game-design-interview:standard
 
 **네 질문 유형과 답변 기록**
 
 base, follow-up, objection, situational questionId를 evidence link와 stale posting 갱신 기록에 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career posting과 portfolio evidence link로 base, follow-up, objection, situational questionId를 기록해. stale이면 최신 evidence를 갱신한 뒤 재개하고 fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: practice-game-design-interview
+- 함께 검토하는 역할: interview-coach → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/interview-standard/content.md`에 네 questionId 유형과 evidence link, stale posting 갱신·재개 조건, fact/inference/recommendation 및 honest-answer을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 공고와 포트폴리오 근거로 네 유형의 면접 연습을 기록할 때 사용한다.
@@ -129,9 +159,7 @@ stale posting을 현재 요구사항으로 단정하거나 evidence 없는 답�
 - [stale 확인 날짜]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career posting과 portfolio evidence link로 base, follow-up, objection, situational questionId를 기록해. stale이면 최신 evidence를 갱신한 뒤 재개하고 fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -199,12 +227,29 @@ interview-coach owner와 evidence-auditor가 stale evidence를 검토하고 승�
 ```text
 interview-standard의 questionId 기록을 보존하고 최신 evidence 갱신 후 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:practice-game-design-interview:advanced -->
 ## career:practice-game-design-interview:advanced
 
 **stale 갱신·정직한 답변·coach 검토**
 
 stale posting을 최신 evidence로 갱신한 뒤 questionId별 honest-answer와 coach 검토를 추적한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career stale posting evidence를 최신 evidence link로 갱신한 뒤 questionId 로그의 honest-answer와 coach 검토를 기록해. fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: practice-game-design-interview → research-game-design-jobs
+- 함께 검토하는 역할: interview-coach → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/interview-advanced/content.md`에 questionId별 latest evidence link와 stale 갱신 기록, honest-answer, coach feedback, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 공고 변경 가능성이 있는 인터뷰 기록을 재검증하고 coach feedback을 받을 때 사용한다.
@@ -229,9 +274,7 @@ stale posting을 최신 evidence로 갱신한 뒤 questionId별 honest-answer와
 - [coach]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career stale posting evidence를 최신 evidence link로 갱신한 뒤 questionId 로그의 honest-answer와 coach 검토를 기록해. fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -298,3 +341,5 @@ named interview-coach owner가 latest evidence와 답변 범위를 검토하고 
 ```text
 interview-advanced의 questionId와 stale 기록을 보존하고 latest evidence 확인 후 재개해.
 ```
+
+</details>

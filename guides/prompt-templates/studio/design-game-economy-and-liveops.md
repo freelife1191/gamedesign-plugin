@@ -9,6 +9,21 @@
 
 한 자원의 source·sink와 보유 한도를 근거 상태와 함께 economy-balance에 기록한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 탐험 게임의 골드 source·sink와 보유 한도를 economy-balance로 정리해 줘. 근거 없는 수치는 provisional 또는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-economy-and-liveops
+- 함께 검토하는 역할: system-economy-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/economy-beginner/content.md`에 source·sink 표, source·sink 보유 한도 기록, source·sink 미정 근거 목록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 한 자원의 유입·소비와 플레이어 보호 질문을 처음 정리할 때 사용한다.
 
@@ -34,9 +49,7 @@
 - [보유 한도]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 탐험 게임의 골드 source·sink와 보유 한도를 economy-balance로 정리해 줘. 근거 없는 수치는 provisional 또는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -107,12 +120,29 @@ system-economy-designer owner가 자원 정의를 승인·수정·보류하며 �
 ```text
 economy-beginner의 source·sink 표와 미정 근거를 보존한 뒤 새 관찰 근거만 연결해 provisional 가설 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:standard -->
 ## studio:design-game-economy-and-liveops:standard
 
 **Progression·guardrail·rollback을 갖춘 경제 계획**
 
 progression target을 guardrail, stop과 tested rollback에 연결해 economy-balance의 안전한 변경 경계를 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 탐험 게임의 초반 progression target을 guardrail, stop과 tested rollback에 연결해 economy-balance로 정리해 줘. 근거 없는 수치는 provisional로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-economy-and-liveops → review-game-design
+- 함께 검토하는 역할: liveops-data-designer → system-economy-designer → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/economy-standard/content.md`에 progression·guardrail·rollback target, progression·guardrail·rollback stop 조건, progression·guardrail·rollback tested 상태을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 progression target과 guardrail이 있고 되돌릴 수 있는 economy 변경을 준비할 때 사용한다.
@@ -139,9 +169,7 @@ telemetry 기반 experiment 설계를 이 단계의 progression·guardrail·roll
 - [guardrail]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 탐험 게임의 초반 progression target을 guardrail, stop과 tested rollback에 연결해 economy-balance로 정리해 줘. 근거 없는 수치는 provisional로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -214,12 +242,29 @@ system-economy-designer owner와 liveops-data-designer가 progression·guardrail
 ```text
 economy-standard의 progression·guardrail·rollback 기록과 현재 stop 상태를 보존하고 새 rollback rehearsal 증거만 반영해 guardrail 검토부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-game-economy-and-liveops:advanced -->
 ## studio:design-game-economy-and-liveops:advanced
 
 **Experiment·telemetry·player protection을 분리하는 경제 검토**
 
 experiment의 telemetry 근거 공백과 player protection을 blocked decision으로 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 기존 economy Artifact의 experiment hypothesis, telemetry 정의와 price·probability·pity 근거 공백을 분리하고 player protection owner의 blocked decision queue를 만들어 줘. 근거 없는 metric은 provisional로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-economy-and-liveops → review-game-design
+- 함께 검토하는 역할: system-economy-designer → liveops-data-designer → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/economy-advanced/content.md`에 experiment·telemetry·player protection evidence gap, experiment·telemetry·player protection blocked decision, experiment·telemetry·player protection No-Go receipt, experiment·telemetry·player protection owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 region 또는 실험의 telemetry, odds와 player protection을 함께 검토해야 할 때 사용한다.
@@ -247,9 +292,7 @@ experiment의 telemetry 근거 공백과 player protection을 blocked decision�
 - [보호 owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 기존 economy Artifact의 experiment hypothesis, telemetry 정의와 price·probability·pity 근거 공백을 분리하고 player protection owner의 blocked decision queue를 만들어 줘. 근거 없는 metric은 provisional로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -325,3 +368,5 @@ system-economy-designer player protection owner와 named decision owner가 block
 ```text
 economy-advanced의 blocked decision queue와 telemetry evidence gap을 보존하고 공개된 근거 하나만 연결해 해당 blocker 확인부터 재개해.
 ```
+
+</details>

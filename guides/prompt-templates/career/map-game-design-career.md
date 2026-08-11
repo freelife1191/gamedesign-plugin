@@ -9,6 +9,21 @@
 
 두 역할 family의 현재 증거와 제약을 비교해 fact, inference, recommendation이 분리된 provisional role map을 만든다.
 
+### 간단 요청 예시
+```text
+@Game Design Career 시스템 기획과 콘텐츠 기획 두 역할을 현재 evidence, 제약, tradeoff와 다음 작은 evidence 과제로 비교해 줘. fact, inference, recommendation을 구분하고 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: map-game-design-career
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/map-beginner/content.md`에 두 provisional role path, 각 path의 tradeoff, fact/inference/recommendation label, 다음 smallest exercise을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 관심 역할이 둘이라 한 경로를 강요하지 않고 차이를 비교할 때 사용한다.
 
@@ -34,9 +49,7 @@
 - [제약]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 시스템 기획과 콘텐츠 기획 두 역할을 현재 evidence, 제약, tradeoff와 다음 작은 evidence 과제로 비교해 줘. fact, inference, recommendation을 구분하고 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -105,12 +118,29 @@ career-strategist owner와 game-design-mentor가 두 path를 검토하고 승인
 ```text
 map-beginner의 두 provisional path와 tradeoff를 보존하고 새 evidence만 연결해 비교부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:map-game-design-career:standard -->
 ## career:map-game-design-career:standard
 
 **역량 gap과 12주 evidence 과제를 잇는 Career map**
 
 선택한 역할의 competency gap을 12주 evidence task와 feedback cadence로 바꾸며 fact, inference, recommendation을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 시스템 기획 목표의 competency gap을 12주 learning task, proof Artifact, feedback cadence와 재평가 질문으로 바꿔 줘. fact, inference, recommendation을 분리해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: map-game-design-career
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/map-standard/content.md`에 competency gap, 12주 learning tasks, proof Artifacts, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 목표 역할과 현재 evidence 사이의 gap을 제한된 기간의 observable task로 나눌 때 사용한다.
@@ -137,9 +167,7 @@ map-beginner의 두 provisional path와 tradeoff를 보존하고 새 evidence만
 - [12주 시간 예산]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 시스템 기획 목표의 competency gap을 12주 learning task, proof Artifact, feedback cadence와 재평가 질문으로 바꿔 줘. fact, inference, recommendation을 분리해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -210,12 +238,29 @@ career-strategist owner가 gap-to-task 연결을 검토하고 game-design-mentor
 ```text
 map-standard의 gap과 12주 task를 보존하고 새 feedback만 연결해 가장 작은 proof task부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:map-game-design-career:advanced -->
 ## career:map-game-design-career:advanced
 
 **복수 경로·교환조건·재평가를 다루는 Career map**
 
 복수 career path를 single-path 강요 없이 비교하고 tradeoff, 교환 조건, 재평가 조건을 fact, inference, recommendation으로 구분한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 시스템 기획과 UI UX 기획의 복수 path를 evidence, tradeoff, 교환 조건, 반증 가능한 재평가 날짜와 다음 task로 비교해 줘. 단일 경로를 강요하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: map-game-design-career
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/map-advanced/content.md`에 multiple provisional paths, tradeoff, 교환 조건, re-evaluation conditions, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 역할 family·지역·시간 제약이 달라 여러 현실적인 path를 유지해야 할 때 사용한다.
@@ -243,9 +288,7 @@ map-standard의 gap과 12주 task를 보존하고 새 feedback만 연결해 가�
 - [재평가 날짜]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 시스템 기획과 UI UX 기획의 복수 path를 evidence, tradeoff, 교환 조건, 반증 가능한 재평가 날짜와 다음 task로 비교해 줘. 단일 경로를 강요하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -317,3 +360,5 @@ career-strategist owner와 game-design-mentor가 복수 path의 tradeoff를 검�
 ```text
 map-advanced의 복수 path, tradeoff와 재평가 조건을 보존하고 새 evidence를 반영해 비교부터 재개해.
 ```
+
+</details>

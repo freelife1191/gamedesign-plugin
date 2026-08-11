@@ -9,6 +9,21 @@
 
 한 사례의 문제, 설계 판단, evidence ID와 주소를 연결하고 claim을 사실, 추론, 제안으로 구분한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career onboarding 사례의 문제, 판단, EVID-ON-01 evidence address와 실제 개인 기여 상태를 claimId로 연결해. fact, inference, recommendation을 구분하고 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: build-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/portfolio-beginner/content.md`에 claimId, evidenceAddress, provenance이 있는 문제·판단·근거, personal contribution state, team contribution, 미정·비공개와 fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 관찰 가능한 문제와 설계 판단 하나를 검토 가능한 사례로 정리할 때 사용한다.
 
@@ -35,9 +50,7 @@
 - [개인 기여 상태]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career onboarding 사례의 문제, 판단, EVID-ON-01 evidence address와 실제 개인 기여 상태를 claimId로 연결해. fact, inference, recommendation을 구분하고 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -104,12 +117,29 @@ portfolio-reviewer owner가 claim과 evidence address를 검토하고 승인 또
 ```text
 portfolio-beginner의 claimId와 evidence record를 보존하고 확인된 문제부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:build-game-design-portfolio:standard -->
 ## career:build-game-design-portfolio:standard
 
 **claim-evidence index로 사례 검증**
 
 claim-evidence index에 주소 가능한 source와 개인·팀 기여를 기록해 사실, 추론, 제안을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career combat 사례의 claim-evidence index에 EVID-CB-01 source, personal contribution과 team contribution을 기록해. 미정·비공개는 숨기지 말고 fact, inference, recommendation으로 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: build-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/portfolio-standard/content.md`에 claimId/evidenceAddress/provenance claim-evidence index, personal contribution, team contribution, 미정·비공개 상태, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 material claim을 evidence record와 provenance로 검토할 때 사용한다.
@@ -137,9 +167,7 @@ team outcome을 개인 성과로 바꾸거나 근거 없는 결과를 제시할 
 - [team contribution]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career combat 사례의 claim-evidence index에 EVID-CB-01 source, personal contribution과 team contribution을 기록해. 미정·비공개는 숨기지 말고 fact, inference, recommendation으로 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -207,12 +235,29 @@ portfolio-reviewer owner와 evidence-auditor가 attribution을 검토하고 승�
 ```text
 portfolio-standard의 claim-evidence index를 보존하고 source 확인이 끝난 claim부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:build-game-design-portfolio:advanced -->
 ## career:build-game-design-portfolio:advanced
 
 **사례 선택·기여·공개 gate**
 
 사례 선택과 공개 gate를 claim evidence, personal contribution, team contribution, 미정·비공개 상태로 검토한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 두 후보 사례의 claim evidence index, personal contribution, team contribution, 미정·비공개 및 공개 gate를 비교해. fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: build-game-design-portfolio → review-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/portfolio-advanced/content.md`에 claimId/evidenceAddress와 사례 선택 이유, personal contribution, team contribution, 미정·비공개 구분, fact/inference/recommendation 및 공개 hold을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 공개 후보 사례의 inspectability와 rights boundary를 결정하기 전 사용한다.
@@ -239,9 +284,7 @@ portfolio-standard의 claim-evidence index를 보존하고 source 확인이 끝�
 - [공개 상태]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 두 후보 사례의 claim evidence index, personal contribution, team contribution, 미정·비공개 및 공개 gate를 비교해. fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -310,3 +353,5 @@ portfolio-reviewer owner와 evidence-auditor가 공개 가능 claim을 검토하
 ```text
 portfolio-advanced의 공개 gate와 claim evidence를 보존하고 rights 확인 후 재개해.
 ```
+
+</details>

@@ -9,6 +9,21 @@
 
 실제 사용자가 선택한 stable asset ID의 cover concept를 제한된 생성 경로로 보내고 concept-draft 상태를 보존한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [selection receipt]를 사용해 선택한 포트폴리오 cover concept 생성 경로를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=select.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-image-assets → generate-image-assets
+- 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
+
+### 이 요청으로 받는 결과
+예: `career/visual/generate-image-assets/beginner/content.md`에 mode·selected IDs·provider decision, prompt·placeholder·provenance receipt, concept-draft per-asset result, named human review handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 선택한 포트폴리오 cover concept 생성 경로에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
 
@@ -34,9 +49,7 @@
 - [selection receipt]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [selection receipt]를 사용해 선택한 포트폴리오 cover concept 생성 경로를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=select.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -111,12 +124,29 @@ art-brief-director owner가 입력, source, rights/attribution, alt text와 hand
 ```text
 generate-image-assets/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:generate-image-assets:standard -->
 ## career:generate-image-assets:standard
 
 **proof 이미지 receipt와 provenance 기록**
 
 선택한 proof 이미지의 provider result, prompt/output digest, receipt와 provenance를 named human review 이전에 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [source attribution]를 사용해 proof 이미지 receipt와 provenance 기록를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=required.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-image-assets → generate-image-assets → review-image-assets
+- 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
+
+### 이 요청으로 받는 결과
+예: `career/visual/generate-image-assets/standard/content.md`에 mode·selected IDs·provider decision, prompt·placeholder·provenance receipt, concept-draft per-asset result, named human review handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 proof 이미지 receipt와 provenance 기록에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -143,9 +173,7 @@ proof 이미지 receipt와 provenance 기록에 필요한 실제 artifact와 검
 - [source attribution]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [source attribution]를 사용해 proof 이미지 receipt와 provenance 기록를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=required.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -220,12 +248,29 @@ art-brief-director owner가 입력, source, rights/attribution, alt text와 hand
 ```text
 generate-image-assets/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:generate-image-assets:advanced -->
 ## career:generate-image-assets:advanced
 
 **provider failure·provenance·retry handoff**
 
 provider failure를 숨기지 않고 prompt·placeholder·provenance를 보존해 재시도 조건과 review handoff를 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [retry owner], [failure receipt]를 사용해 provider failure·provenance·retry handoff를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=all.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-image-assets → generate-image-assets → review-image-assets
+- 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
+
+### 이 요청으로 받는 결과
+예: `career/visual/generate-image-assets/advanced/content.md`에 mode·selected IDs·provider decision, prompt·placeholder·provenance receipt, concept-draft per-asset result, named human review handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 provider failure·provenance·retry handoff에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -254,9 +299,7 @@ provider failure·provenance·retry handoff에 필요한 실제 artifact와 검�
 - [failure receipt]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [retry owner], [failure receipt]를 사용해 provider failure·provenance·retry handoff를 수행해. IMAGE_MODEL=gpt-image-2와 IMAGE_QUALITY=low를 기본으로 쓴다. OPENAI_API_KEY가 있으면 OpenAI only이며 실패 뒤 fallback 전환 금지다. key가 없고 host available이면 selected jobs만 전달하며 unknown 또는 unavailable이면 generator를 호출하지 않고 prompt와 placeholder를 보존한다. 생성 결과는 concept-draft이며 portfolio ownership, document use 또는 publication을 증명하지 않는다. IMAGE_GEN_MODE=all.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -331,3 +374,5 @@ art-brief-director owner가 입력, source, rights/attribution, alt text와 hand
 ```text
 generate-image-assets/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>

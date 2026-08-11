@@ -9,6 +9,21 @@
 
 승인 가능한 Canonical Artifact의 MD preparation과 downstream terminal validation ownership을 export manifest에 기록한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 승인 가능한 Canonical Artifact의 MD export preparation을 만들고 canonical preflight와 downstream terminal validation owner를 기록해 줘. 이 단계에서는 actual output이나 passed/failed를 주장하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: export-game-design-documents
+- 함께 검토하는 역할: production-feasibility-critic
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/export-beginner/content.md`에 MD preparation manifest, canonical preflight 상태, downstream terminal validation owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 사람이 검토할 source Artifact와 Markdown 형식이 정해졌을 때 사용한다.
 
@@ -34,9 +49,7 @@ source blocker를 무시하거나 preparation 단계에서 실제 MD 생성·ter
 - [안전 출력 경로]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 승인 가능한 Canonical Artifact의 MD export preparation을 만들고 canonical preflight와 downstream terminal validation owner를 기록해 줘. 이 단계에서는 actual output이나 passed/failed를 주장하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -107,12 +120,29 @@ production-feasibility-critic owner가 source eligibility와 handoff를 승인·
 ```text
 export-beginner의 source preservation receipt와 MD preparation을 보존하고 해결된 safe output path만 반영해 preflight 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:export-game-design-documents:standard -->
 ## studio:export-game-design-documents:standard
 
 **PDF·DOCX capability preflight를 갖춘 문서 출력**
 
 PDF·DOCX 요청을 format별 capability snapshot, preflight와 downstream renderer·QA handoff로 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 승인 가능한 Artifact의 PDF·DOCX format jobs를 준비해 줘. capability snapshot과 canonical preflight를 기록하고, renderer와 format QA를 통과할 때만 downstream이 결과를 표시하도록 해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: export-game-design-documents
+- 함께 검토하는 역할: production-feasibility-critic → document-quality-editor
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/export-standard/content.md`에 format별 capability snapshot, canonical preflight, pending·unavailable·blocked jobs, downstream renderer·QA handoff을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 승인 가능한 source Artifact에 PDF 또는 DOCX의 형식별 handoff가 필요할 때 사용한다.
@@ -139,9 +169,7 @@ capability 부재나 preflight failure를 무시하고 PDF·DOCX 파일, digest,
 - [capability 근거]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 승인 가능한 Artifact의 PDF·DOCX format jobs를 준비해 줘. capability snapshot과 canonical preflight를 기록하고, renderer와 format QA를 통과할 때만 downstream이 결과를 표시하도록 해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -215,12 +243,29 @@ production-feasibility-critic owner가 capability·preflight·handoff를 승인�
 ```text
 export-standard의 capability snapshot과 blocked format job을 보존하고 available로 바뀐 capability 근거만 반영해 preflight 이전 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:export-game-design-documents:advanced -->
 ## studio:export-game-design-documents:advanced
 
 **PPTX story·format QA와 부분 재개를 갖춘 문서 출력**
 
 PPTX 독립 story와 format별 partial resume 조건을 capability·preflight·renderer·QA ownership에 맞춰 준비한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 의사결정자용 PPTX 독립 story와 PDF·DOCX job의 partial resume 조건을 준비해 줘. capability·preflight·renderer·format QA를 통과할 때만 downstream이 형식 결과를 표시하고, 이 단계는 not-run 상태를 유지해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: export-game-design-documents
+- 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/export-advanced/content.md`에 PPTX independent story, format별 capability·preflight 상태, not-run renderer·QA receipt, partial resume 조건을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 의사결정자용 PPTX story와 여러 형식 job의 capability 변화·부분 재개 조건을 관리할 때 사용한다.
@@ -247,9 +292,7 @@ Markdown heading만으로 PPTX story를 대체하거나 renderer/format QA 증�
 - [capability 근거]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 의사결정자용 PPTX 독립 story와 PDF·DOCX job의 partial resume 조건을 준비해 줘. capability·preflight·renderer·format QA를 통과할 때만 downstream이 형식 결과를 표시하고, 이 단계는 not-run 상태를 유지해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -324,3 +367,5 @@ production-feasibility-critic와 lead-game-designer owner가 PPTX story·capabil
 ```text
 export-advanced의 independent story와 not-run format jobs를 보존하고 available capability 또는 해소된 preflight 하나만 반영해 해당 format의 partial resume부터 재개해.
 ```
+
+</details>

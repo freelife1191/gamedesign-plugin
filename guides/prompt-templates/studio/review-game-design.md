@@ -9,6 +9,21 @@
 
 작은 Canonical Artifact의 누락·모순을 direct evidence와 owner 질문으로 기록한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 이 시스템 명세의 누락과 모순을 direct evidence가 있는 질문으로 점검해 줘. stable section, 최소 수정 후보와 decision owner를 기록하고 source를 재작성하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/review-beginner/content.md`에 evidence-backed 질문, affected section ID, 최소 수정 후보, decision owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 명확한 review question이 있는 한 Artifact에서 최소 수정 전 확인할 질문을 만들 때 사용한다.
 
@@ -34,9 +49,7 @@ source 없이 가상의 finding을 만들거나 source 내용을 다시 작성�
 - [decision owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 이 시스템 명세의 누락과 모순을 direct evidence가 있는 질문으로 점검해 줘. stable section, 최소 수정 후보와 decision owner를 기록하고 source를 재작성하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -108,12 +121,29 @@ lead-game-designer decision owner가 finding과 최소 수정을 승인·수정�
 ```text
 review-beginner의 evidence-backed 질문과 source-unavailable hold를 보존하고 복구된 version만 연결해 같은 질문부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:review-game-design:standard -->
 ## studio:review-game-design:standard
 
 **Evidence gap과 severity를 owner에게 배정하는 검토**
 
 stable section 기반 finding을 evidence gap, severity, impact, minimal fix와 responsible owner로 정규화한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 이 Artifact의 evidence gap을 severity, impact, affected section, minimal fix와 responsible owner로 정규화해 줘. reviewer 권고는 승인으로 표시하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design → export-game-design-documents
+- 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/review-standard/content.md`에 finding ID와 severity, direct evidence와 impact, minimal fix, responsible owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 Artifact version과 review boundary가 있고 여러 severity의 evidence gap을 우선순위로 정리할 때 사용한다.
@@ -140,9 +170,7 @@ reviewer 권고를 gate 승인으로 선언하거나 owner 없는 finding을 완
 - [responsible owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 이 Artifact의 evidence gap을 severity, impact, affected section, minimal fix와 responsible owner로 정규화해 줘. reviewer 권고는 승인으로 표시하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -217,12 +245,29 @@ responsible owner와 lead-game-designer가 severity·minimal fix·gate 상태를
 ```text
 review-standard의 finding ID·severity·evidence gap을 보존하고 최소 수정 반영 증거 하나만 연결해 같은 owner의 재검토부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:review-game-design:advanced -->
 ## studio:review-game-design:advanced
 
 **교차 도메인 finding과 decision queue를 분리하는 검토**
 
 economy·UX·production 교차 도메인 finding을 evidence, impact, disagreement와 decision queue로 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio economy·UX·production Artifact의 교차 도메인 finding을 direct evidence, impact, owner와 decision queue로 분리해 줘. diagram gap과 export readiness는 승인과 별개로 blocked 상태를 유지해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design → visualize-game-design → export-game-design-documents
+- 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/review-advanced/content.md`에 cross-domain finding, direct evidence와 impact, decision queue, blocked handoff 조건을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 domain Artifact의 blocker, diagram gap, export readiness와 disagreement를 함께 점검할 때 사용한다.
@@ -249,9 +294,7 @@ economy·UX·production 교차 도메인 finding을 evidence, impact, disagreeme
 - [decision owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio economy·UX·production Artifact의 교차 도메인 finding을 direct evidence, impact, owner와 decision queue로 분리해 줘. diagram gap과 export readiness는 승인과 별개로 blocked 상태를 유지해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -328,3 +371,5 @@ lead-game-designer named decision owner와 affected domain owner가 cross-domain
 ```text
 review-advanced의 cross-domain finding과 disagreement receipt를 보존하고 승인된 최소 수정 하나만 연결해 decision queue 확인부터 재개해.
 ```
+
+</details>

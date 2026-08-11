@@ -9,6 +9,21 @@
 
 source-mapped 학습 roadmap을 editable SVG로 계획하고 아직 생성·문서·포트폴리오 승인을 주장하지 않는다.
 
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [source IDs], [alt text]를 사용해 학습 roadmap SVG 초안를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.
+```
+
+### 짧은 흐름
+- 작업 순서: svg-infographic
+- 함께 검토하는 역할: game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `career/visual/svg-infographic/beginner/content.md`에 editable SVG authority, lint/render commands and receipts, exact 2× PNG state, accessibility and human approval record을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 학습 roadmap SVG 초안에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
 
@@ -36,9 +51,7 @@ source-mapped 학습 roadmap을 editable SVG로 계획하고 아직 생성·문�
 - [alt text]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [source IDs], [alt text]를 사용해 학습 roadmap SVG 초안를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -113,12 +126,29 @@ game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수�
 ```text
 svg-infographic/beginner의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:svg-infographic:standard -->
 ## career:svg-infographic:standard
 
 **evidence map editable SVG와 render 상태**
 
 evidence map의 SVG authority, derivative PNG, lint·render receipt와 accessibility metadata를 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [evidence IDs], [output directory]를 사용해 evidence map editable SVG와 render 상태를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.
+```
+
+### 짧은 흐름
+- 작업 순서: svg-infographic → visualize-career-roadmap
+- 함께 검토하는 역할: game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `career/visual/svg-infographic/standard/content.md`에 editable SVG authority, lint/render commands and receipts, exact 2× PNG state, accessibility and human approval record을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 evidence map editable SVG와 render 상태에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -147,9 +177,7 @@ evidence map editable SVG와 render 상태에 필요한 실제 artifact와 검�
 - [output directory]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [evidence IDs], [output directory]를 사용해 evidence map editable SVG와 render 상태를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -224,12 +252,29 @@ game-design-mentor owner가 source mapping, receipt와 visual QA를 승인·수�
 ```text
 svg-infographic/standard의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:svg-infographic:advanced -->
 ## career:svg-infographic:advanced
 
 **lint·2× render·접근성·승인 SVG QA**
 
 lint 0 warning/error, exact 2× PNG, accessibility와 human approval evidence를 갖춘 구조 SVG QA를 수행한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career career/sample-artifact, sample-input, [human approval owner], [renderer evidence]를 사용해 lint·2× render·접근성·승인 SVG QA를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.
+```
+
+### 짧은 흐름
+- 작업 순서: svg-infographic → visualize-career-roadmap
+- 함께 검토하는 역할: game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `career/visual/svg-infographic/advanced/content.md`에 editable SVG authority, lint/render commands and receipts, exact 2× PNG state, accessibility and human approval record을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 lint·2× render·접근성·승인 SVG QA에 필요한 실제 artifact와 검토 경계를 갖췄을 때 사용한다.
@@ -258,9 +303,7 @@ lint·2× render·접근성·승인 SVG QA에 필요한 실제 artifact와 검�
 - [renderer evidence]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career career/sample-artifact, sample-input, [human approval owner], [renderer evidence]를 사용해 lint·2× render·접근성·승인 SVG QA를 수행해. Archify가 available이면 structural workflow를 우선한다. Archify absence 또는 failure면 Skillstead editable SVG와 exact 2× PNG fallback을 사용하고 source receipt와 render receipt를 분리한다. fallback을 Archify 결과로 표시하지 않으며 Skillstead 자동 승인하지 않는다. lint 0 warning/error, exact 2× PNG, accessibility title·desc·adjacent alt text, fit-to-page·close-up QA와 human approval을 각각 evidence로 기록한다. SVG와 PNG는 source·권리·portfolio publication의 승인 증거가 아니다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -335,3 +378,5 @@ game-design-mentor owner가 source mapping, receipt와 human approval를 승인�
 ```text
 svg-infographic/advanced의 canonical artifact, stable IDs, source·attribution, existing receipt와 unresolved blocker를 보존하고 확정된 owner evidence만 반영해 마지막 안전한 단계부터 재개해.
 ```
+
+</details>

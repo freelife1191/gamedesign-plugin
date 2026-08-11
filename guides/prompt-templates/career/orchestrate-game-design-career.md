@@ -9,6 +9,21 @@
 
 career stage와 목표를 짧은 brief로 정리하고 다음 skill handoff의 fact, inference, recommendation을 분리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career entrant stage의 시스템 기획 목표를 current evidence, 제약, 다음 작은 skill과 review date가 있는 brief로 정리해 줘. fact, inference, recommendation을 분리해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: orchestrate-game-design-career → map-game-design-career
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/orchestrate-beginner/content.md`에 stage, goal, next skill handoff, review date, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 현재 stage와 목표가 섞여 있어 한 번에 할 다음 작은 career 작업을 고를 때 사용한다.
 
@@ -34,9 +49,7 @@ career stage와 목표를 짧은 brief로 정리하고 다음 skill handoff의 f
 - [constraints]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career entrant stage의 시스템 기획 목표를 current evidence, 제약, 다음 작은 skill과 review date가 있는 brief로 정리해 줘. fact, inference, recommendation을 분리해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -106,12 +119,29 @@ career-strategist owner가 stage와 next skill을 검토하고 game-design-mento
 ```text
 orchestrate-beginner brief와 uncertainty를 보존하고 확인된 stage만 반영해 next skill 선택부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:orchestrate-game-design-career:standard -->
 ## career:orchestrate-game-design-career:standard
 
 **research에서 portfolio로 잇는 Career orchestration**
 
 research → role map → portfolio handoff의 evidence boundary와 fact, inference, recommendation을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career fresh job research에서 role map과 portfolio proof Artifact로 이어지는 handoff를 owner, hold condition, review date와 함께 정리해 줘. fact, inference, recommendation을 분리해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: orchestrate-game-design-career → research-game-design-jobs → map-game-design-career → build-game-design-portfolio
+- 함께 검토하는 역할: career-strategist → evidence-auditor → portfolio-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/orchestrate-standard/content.md`에 research→portfolio handoff, owner, hold condition, review date, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 fresh job research를 portfolio evidence task에 연결하되 source와 recommendation을 분리할 때 사용한다.
@@ -139,9 +169,7 @@ stale 공고를 current fact로 쓰거나 포트폴리오가 채용 적합성·�
 - [review date]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career fresh job research에서 role map과 portfolio proof Artifact로 이어지는 handoff를 owner, hold condition, review date와 함께 정리해 줘. fact, inference, recommendation을 분리해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -212,12 +240,29 @@ career-strategist owner가 research→portfolio handoff를 검토하고 evidence
 ```text
 orchestrate-standard의 research state와 portfolio handoff를 보존하고 fresh evidence를 확인해 hold condition부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:orchestrate-game-design-career:advanced -->
 ## career:orchestrate-game-design-career:advanced
 
 **역할 검토·handoff·재개를 관리하는 Career orchestration**
 
 복수 role review, owner handoff, hold, resume 조건을 기록하고 fact, inference, recommendation을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 복수 role path의 active handoff를 owner, hold condition, resume evidence, 재평가 날짜와 함께 검토해 줘. research·portfolio·reverse 작업은 각각의 실제 skill로 넘기고 fact, inference, recommendation을 분리해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: orchestrate-game-design-career → research-game-design-jobs → map-game-design-career → reverse-engineer-game-design → build-game-design-portfolio
+- 함께 검토하는 역할: career-strategist → game-design-mentor → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/orchestrate-advanced/content.md`에 role review, actual skill handoffs, owner/hold/resume matrix, re-evaluation condition, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 role path와 research·portfolio·reverse handoff가 동시에 보류되어 owner별 재개 순서를 정할 때 사용한다.
@@ -247,9 +292,7 @@ orchestrate-standard의 research state와 portfolio handoff를 보존하고 fres
 - [re-evaluation date]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 복수 role path의 active handoff를 owner, hold condition, resume evidence, 재평가 날짜와 함께 검토해 줘. research·portfolio·reverse 작업은 각각의 실제 skill로 넘기고 fact, inference, recommendation을 분리해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -321,3 +364,5 @@ career-strategist owner가 role review를 검토하고 game-design-mentor·evide
 ```text
 orchestrate-advanced의 owner/hold/resume matrix를 보존하고 named owner가 확인한 evidence만 반영해 blocked handoff부터 재개해.
 ```
+
+</details>

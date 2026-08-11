@@ -9,6 +9,21 @@
 
 단일 mechanic의 input, rule, state transition, output, failure recovery를 실행 가능한 초안으로 만든다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 섬 복구 게임의 나무 수집 규칙을 actor, input, state transition, output, 실패와 recovery로 명세해 줘. 승인 근거가 없는 수치는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-systems
+- 함께 검토하는 역할: system-economy-designer → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/systems-beginner/content.md`에 ordered rule, state transition, failure recovery, authoritative data note을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 스태미나·제작처럼 한 시스템의 실행 규칙과 실패 복구를 명확히 해야 할 때 사용한다.
 
@@ -37,9 +52,7 @@ player promise가 아직 모호하거나 전체 콘텐츠 제작 범위를 정�
 - [failure case]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 섬 복구 게임의 나무 수집 규칙을 actor, input, state transition, output, 실패와 recovery로 명세해 줘. 승인 근거가 없는 수치는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -110,12 +123,29 @@ system owner가 rule과 state transition을 결정하고 engineering handoff는 
 ```text
 systems-beginner의 rule과 transition을 보존하고 확인된 authoritative data만 연결해 실패 복구 섹션부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-game-systems:standard -->
 ## studio:design-game-systems:standard
 
 **예외와 데이터를 연결하는 게임 시스템**
 
 concurrency exception, rule precedence, authoritative state와 test case를 rule·state·exception·data 계약으로 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 두 플레이어가 같은 수리 재료를 동시에 쓰는 상황의 rule precedence, authoritative state, exception, recovery와 test case를 데이터 ID에 연결해 줘. 검증되지 않은 값은 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-systems → review-game-design
+- 함께 검토하는 역할: system-economy-designer → ux-accessibility-reviewer → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/systems-standard/content.md`에 rule precedence, exception matrix, authoritative state, test case을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 동시 행동, rule precedence, state authority와 검증 가능한 exception 처리까지 정해야 할 때 사용한다.
@@ -143,9 +173,7 @@ balance 근거 없는 확률을 확정하거나 cross-system economy를 단일 m
 - [data ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 두 플레이어가 같은 수리 재료를 동시에 쓰는 상황의 rule precedence, authoritative state, exception, recovery와 test case를 데이터 ID에 연결해 줘. 검증되지 않은 값은 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -220,12 +248,29 @@ system owner가 exception precedence와 authoritative data를 승인·수정·�
 ```text
 systems-standard의 exception matrix를 보존하고 새로 확인된 concurrency evidence만 연결해 미해결 precedence부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-game-systems:advanced -->
 ## studio:design-game-systems:advanced
 
 **상호 시스템 반례와 engineering handoff**
 
 여러 시스템의 상호작용, 반례, runtime mapping과 engineering 검토 경계를 명시한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 공동 창고와 제작 대기열이 동시에 재료를 소비하는 반례를 분석해 rule·state·exception·data mapping과 engineering 검토 질문으로 정리해 줘. unknown schema는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-systems → review-game-design
+- 함께 검토하는 역할: system-economy-designer → lead-game-designer → production-feasibility-critic
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/systems-advanced/content.md`에 상호 시스템 counterexample, provisional schema, engineering question을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 제작·인벤토리·동기화 등 서로 다른 system의 authority와 data contract가 충돌할 수 있을 때 사용한다.
@@ -253,9 +298,7 @@ unknown schema를 완성된 runtime mapping으로 선언하거나 engineering �
 - [engineering owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 공동 창고와 제작 대기열이 동시에 재료를 소비하는 반례를 분석해 rule·state·exception·data mapping과 engineering 검토 질문으로 정리해 줘. unknown schema는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -330,3 +373,5 @@ engineering owner가 runtime feasibility와 implementation을 결정하며 시�
 ```text
 systems-advanced의 counterexample과 provisional schema를 보존하고 engineering owner가 확인한 runtime mapping만 추가해 handoff 질문부터 재개해.
 ```
+
+</details>

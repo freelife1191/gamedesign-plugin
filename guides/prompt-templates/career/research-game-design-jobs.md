@@ -9,6 +9,21 @@
 
 공식 공고 한 개의 requirement를 dated fact로 기록하고 inference와 recommendation을 분리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career KR entry 시스템 기획의 사용자가 제공한 단일 공식 공고 URL 또는 미정 상태를 retrieval date, as-of date, region, sample scope, blind spots와 함께 기록하고 requirement fact, inference, recommendation을 나눠 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: research-game-design-jobs
+- 함께 검토하는 역할: evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/research-beginner/content.md`에 source URL, retrieval/as-of dates, region와 sample scope, posting fact, inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 한 role·level·region의 공식 current posting을 source와 날짜로 읽을 때 사용한다.
 
@@ -37,9 +52,7 @@
 - [blind spots]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career KR entry 시스템 기획의 사용자가 제공한 단일 공식 공고 URL 또는 미정 상태를 retrieval date, as-of date, region, sample scope, blind spots와 함께 기록하고 requirement fact, inference, recommendation을 나눠 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -109,12 +122,29 @@ evidence-auditor owner가 source와 날짜를 검토하고 current claim을 승�
 ```text
 research-beginner source record를 보존하고 fresh source URL과 retrieval date를 확인해 fact 분리부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:research-game-design-jobs:standard -->
 ## career:research-game-design-jobs:standard
 
 **날짜·지역·표본을 경계로 하는 채용 조사**
 
 여러 공식 공고의 날짜, 지역, 표본 경계를 기록하고 fact, inference, recommendation을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career KR entry 시스템 기획의 사용자가 제공한 복수 공식 공고 URL 목록 또는 미정 상태를 retrieval date, as-of date, region, sample scope, blind spots와 함께 비교해 repeated signal과 evidence gap의 fact, inference, recommendation을 분리해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: research-game-design-jobs
+- 함께 검토하는 역할: evidence-auditor → career-strategist
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/research-standard/content.md`에 source URL/date/region/sample boundary, repeated signal 조건, fact/inference/recommendation label, evidence gap을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 동일 role·level의 공식 posting sample에서 반복 signal과 candidate gap을 비교할 때 사용한다.
@@ -145,9 +175,7 @@ research-beginner source record를 보존하고 fresh source URL과 retrieval da
 - [blind spots]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career KR entry 시스템 기획의 사용자가 제공한 복수 공식 공고 URL 목록 또는 미정 상태를 retrieval date, as-of date, region, sample scope, blind spots와 함께 비교해 repeated signal과 evidence gap의 fact, inference, recommendation을 분리해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -217,12 +245,29 @@ evidence-auditor owner와 career-strategist가 표본 경계를 검토하고 rep
 ```text
 research-standard의 source records와 sample boundary를 보존하고 만료된 공고만 재검색해 validator 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:research-game-design-jobs:advanced -->
 ## career:research-game-design-jobs:advanced
 
 **최신성·blind spot·일반화 한계를 검토하는 채용 조사**
 
 freshness와 blind spot을 보이는 sample의 일반화 한계를 기록하고 fact, inference, recommendation을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 사용자가 제공한 복수 공식 공고 URL 목록 또는 미정 상태의 retrieval date, as-of date, region, sample scope, blind spots, reviewAfter를 audit해 fact, inference, recommendation과 일반화 제한을 구분해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: research-game-design-jobs
+- 함께 검토하는 역할: evidence-auditor → career-strategist
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/research-advanced/content.md`에 freshness status, source URL/date/region/sample scope, blind spots, generalization limits, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 current posting conclusion의 freshness, source coverage, blind spot, reviewAfter를 audit할 때 사용한다.
@@ -254,9 +299,7 @@ current posting conclusion의 freshness, source coverage, blind spot, reviewAfte
 - [reviewAfter]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 사용자가 제공한 복수 공식 공고 URL 목록 또는 미정 상태의 retrieval date, as-of date, region, sample scope, blind spots, reviewAfter를 audit해 fact, inference, recommendation과 일반화 제한을 구분해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -327,3 +370,5 @@ evidence-auditor owner가 freshness와 blind spots를 검토하고 career-strate
 ```text
 research-advanced의 dated sample과 blind spots를 보존하고 reviewAfter가 지난 source만 갱신해 freshness audit부터 재개해.
 ```
+
+</details>

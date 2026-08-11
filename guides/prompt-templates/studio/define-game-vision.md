@@ -9,6 +9,21 @@
 
 한 문장 게임 아이디어를 대상 플레이어, player promise, pillar와 검증 질문이 있는 짧은 비전 브리프로 바꾼다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 낯선 섬 협동 복구 게임의 대상 플레이어, player promise, pillar 하나와 검증 질문을 짧은 기획 브리프로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: define-game-vision
+- 함께 검토하는 역할: lead-game-designer → content-narrative-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/vision-beginner/content.md`에 target player, player promise, pillar 하나, 검증 질문을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 새 게임의 핵심 경험과 기능 선택 기준을 처음 정할 때 사용한다.
 
@@ -33,9 +48,7 @@
 - [검토자 역할]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 낯선 섬 협동 복구 게임의 대상 플레이어, player promise, pillar 하나와 검증 질문을 짧은 기획 브리프로 만들어 줘. 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -107,12 +120,29 @@ lead-game-designer가 player promise와 pillar를 승인·수정·보류하며 �
 ```text
 vision-beginner의 player promise와 질문을 보존하고 새 플레이어 관찰 근거를 evidence.yml에 연결한 뒤 provisional 기준부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:define-game-vision:standard -->
 ## studio:define-game-vision:standard
 
 **Pillar와 anti-pillar를 검증하는 게임 비전**
 
 pillar·anti-pillar·non-goal을 prototype 관찰 질문과 연결해 팀이 기능 선택에 쓸 기준을 만든다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 복구 게임의 pillar, anti-pillar, non-goal을 prototype 관찰 질문과 연결하고 각 가정의 근거 상태를 구분해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: define-game-vision → design-game-systems
+- 함께 검토하는 역할: lead-game-designer → content-narrative-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/vision-standard/content.md`에 pillar, anti-pillar, non-goal, prototype 관찰 질문을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 핵심 재미는 설명할 수 있지만 유사 기능의 포함·제외 기준과 prototype 관찰 방법이 필요할 때 사용한다.
@@ -139,9 +169,7 @@ Pillar 승인 전에 세부 rule이나 수치 밸런스를 확정하려 할 때�
 - [검증 방법]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 복구 게임의 pillar, anti-pillar, non-goal을 prototype 관찰 질문과 연결하고 각 가정의 근거 상태를 구분해 줘. 확인되지 않은 수치는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -215,12 +243,29 @@ lead-game-designer가 non-goal과 prototype 기준을 결정하고 content-narra
 ```text
 vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 결과만 evidence.yml에 붙여 검증 질문부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:define-game-vision:advanced -->
 ## studio:define-game-vision:advanced
 
 **상충 기능과 근거 owner를 다루는 게임 비전**
 
 상충하는 feature 제안을 pillar·non-goal과 evidence 상태로 비교하고 사람 owner가 판단할 수 있게 만든다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 복구 게임의 경쟁 PvP 기능과 비동기 도움 기능을 pillar·non-goal·플레이테스트 근거로 비교하고, 결정 owner가 승인할 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: define-game-vision → review-game-design
+- 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → content-narrative-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/vision-advanced/content.md`에 feature 비교, 근거 상태, owner 질문을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 feature 제안이 같은 player promise를 주장하지만 범위·근거·비전 적합성이 충돌할 때 사용한다.
@@ -248,9 +293,7 @@ vision-standard의 pillar와 anti-pillar를 유지하고 새 prototype 관찰 �
 - [vision ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 복구 게임의 경쟁 PvP 기능과 비동기 도움 기능을 pillar·non-goal·플레이테스트 근거로 비교하고, 결정 owner가 승인할 질문을 남겨 줘. 불명확한 근거는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -323,3 +366,5 @@ design owner가 상충 기능의 채택·수정·보류를 결정하며 evidence
 ```text
 vision-advanced의 비교표와 owner 질문을 보존하고 새로 확인된 플레이테스트 evidence만 연결해 provisional 선택지부터 재개해.
 ```
+
+</details>

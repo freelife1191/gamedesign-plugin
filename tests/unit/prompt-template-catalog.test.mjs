@@ -16,14 +16,14 @@ const STUDIO_SKILLS = [
   "design-game-economy-and-liveops", "design-game-systems", "design-player-experience",
   "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project",
   "plan-game-production", "plan-image-assets", "review-game-design", "review-image-assets",
-  "svg-infographic", "visualize-game-design",
+  "svg-infographic", "visualize-game-design", "polish-game-design-writing",
 ];
 const CAREER_SKILLS = [
   "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents",
   "generate-image-assets", "map-game-design-career", "orchestrate-game-design-career",
   "plan-image-assets", "plan-junior-growth", "practice-game-design-interview",
   "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio",
-  "review-image-assets", "svg-infographic", "visualize-career-roadmap",
+  "review-image-assets", "svg-infographic", "visualize-career-roadmap", "polish-game-design-writing",
 ];
 
 function validEntry(index, kind = "skill-template") {
@@ -82,7 +82,7 @@ function completeFixture() {
       return { ...entry, level, skill, skill_chain: [skill] };
     })),
     ...CAREER_SKILLS.flatMap((skill, skillIndex) => ["beginner", "standard", "advanced"].map((level, levelIndex) => {
-      const index = 46 + skillIndex * 3 + levelIndex;
+      const index = STUDIO_SKILLS.length * 3 + skillIndex * 3 + levelIndex + 1;
       const entry = validEntry(index, "skill-template");
       return {
         ...entry,
@@ -104,11 +104,11 @@ function completeFixture() {
   return [
     ...skillTemplates,
     ...Array.from({ length: 36 }, (_, index) => ({
-      ...validEntry(index + 91, "use-case"),
+      ...validEntry(index + 97, "use-case"),
       source_case_id: `SOURCE-${index + 1}`,
     })),
-    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 127, "recipe")),
-    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 139, "suite-case")),
+    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 133, "recipe")),
+    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 145, "suite-case")),
   ];
 }
 
@@ -153,13 +153,13 @@ test("complete catalog has exact kind and prompt counts", () => {
   });
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    skillTemplates: 90,
+    skillTemplates: 96,
     useCases: 36,
     recipes: 12,
     suiteCases: 8,
-    total: 146,
-    appPrompts: 146,
-    cliPrompts: 146,
+    total: 152,
+    appPrompts: 152,
+    cliPrompts: 152,
   });
 });
 
@@ -1665,7 +1665,7 @@ test("complete catalogs require every installed product skill at each level exac
     requireComplete: true,
   });
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 30/u);
+  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 32/u);
   assert.match(result.errors.join("\n"), /skill-template cardinality.*found 0/u);
 });
 

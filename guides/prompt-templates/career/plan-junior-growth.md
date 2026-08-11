@@ -9,6 +9,21 @@
 
 4주 evidence project 하나를 observable proof와 fact, inference, recommendation으로 연결한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career 4주 목표를 observable evidence project와 proof artifact로 만들고 feedback owner를 정해. fact, inference, recommendation과 미정을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-junior-growth
+- 함께 검토하는 역할: game-design-mentor → career-strategist
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/growth-beginner/content.md`에 4주 observable evidence project와 proof artifact, requirement ID, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 짧은 기간에 검토 가능한 proof artifact를 만들 목표를 정할 때 사용한다.
 
@@ -32,9 +47,7 @@
 - [feedback owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 4주 목표를 observable evidence project와 proof artifact로 만들고 feedback owner를 정해. fact, inference, recommendation과 미정을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -101,12 +114,29 @@ game-design-mentor owner가 4주 evidence project를 검토하고 승인 또는 
 ```text
 growth-beginner의 4주 proof artifact를 보존하고 feedback 일정부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:plan-junior-growth:standard -->
 ## career:plan-junior-growth:standard
 
 **12주 증거 프로젝트**
 
 12주 evidence project를 approved/provisional requirement, observable proof, feedback cadence로 만든다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 12주 evidence project를 requirement ID, approved 또는 provisional status, observable proof artifact와 feedback cadence로 계획해. fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-junior-growth
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/growth-standard/content.md`에 12주 evidence project와 observable proof artifact, approved/provisional requirement와 fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 분기 목표를 요구사항과 검토 가능한 evidence project로 연결할 때 사용한다.
@@ -131,9 +161,7 @@ growth-beginner의 4주 proof artifact를 보존하고 feedback 일정부터 재
 - [proof artifact]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 12주 evidence project를 requirement ID, approved 또는 provisional status, observable proof artifact와 feedback cadence로 계획해. fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -200,12 +228,29 @@ career-strategist owner와 game-design-mentor가 requirement status를 검토하
 ```text
 growth-standard의 12주 evidence project를 보존하고 provisional requirement 검증부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:plan-junior-growth:advanced -->
 ## career:plan-junior-growth:advanced
 
 **전환 준비도와 fresh requirement**
 
 fresh requirement를 바탕으로 observable transition evidence와 re-evaluation decision을 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career fresh requirement evidence와 transition evidence를 observable project에 연결하고 re-evaluation decision을 기록해. fact, inference, recommendation과 provisional readiness를 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-junior-growth → research-game-design-jobs
+- 함께 검토하는 역할: career-strategist → game-design-mentor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/growth-advanced/content.md`에 fresh requirement와 observable transition evidence, re-evaluation decision, provisional readiness, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 역할 전환을 current requirement evidence와 검토 가능한 proof로 재평가할 때 사용한다.
@@ -230,9 +275,7 @@ fresh requirement를 바탕으로 observable transition evidence와 re-evaluatio
 - [re-evaluation date]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career fresh requirement evidence와 transition evidence를 observable project에 연결하고 re-evaluation decision을 기록해. fact, inference, recommendation과 provisional readiness를 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -300,3 +343,5 @@ career-strategist owner와 game-design-mentor가 fresh requirement와 re-evaluat
 ```text
 growth-advanced의 fresh requirement와 transition evidence를 보존하고 재평가 날짜에 재개해.
 ```
+
+</details>

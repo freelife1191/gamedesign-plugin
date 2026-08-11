@@ -95,6 +95,21 @@ Canonical Artifact의 `content.md`, 플랫폼 matrix, 사용자 관찰과 미해
 
 ux-accessibility recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio 첫 세션의 critical action을 모바일과 PC 입력, focus, text scale, visual/audio alternative, loading·error·offline recovery까지 설계해. 현재 근거와 가정을 분리하고 accessibility owner 승인을 대기해.
+```
+
+##### 짧은 흐름
+- 작업 순서: design-player-experience → apply-document-quality-profile → review-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/ui-ux-flow-state/content.md`에 ui-ux-flow-state canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
 
@@ -112,9 +127,7 @@ evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용�
 - [프로젝트 ID]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio 첫 세션의 critical action을 모바일과 PC 입력, focus, text scale, visual/audio alternative, loading·error·offline recovery까지 설계해. 현재 근거와 가정을 분리하고 accessibility owner 승인을 대기해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -186,4 +199,6 @@ named human decision owner가 ux-accessibility의 approval 또는 보류를 결�
 ```text
 ux-accessibility의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END game-design-studio:recipe:ux-accessibility -->

@@ -9,6 +9,21 @@
 
 concept-draft asset의 purpose·placement·alt text·readability gap을 발견하지만 사람 결정 없이 lifecycle을 바꾸지 않는다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio concept-draft hero-keyart-01의 purpose, placement, alt text와 readability evidence gap을 검토해. named human 결정 없이는 상태를 바꾸지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: review-image-assets
+- 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/review-beginner/content.md`에 stable asset ID finding, placement·alt·readability gap, blocked document approval, derivative ineligibility을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 concept-draft asset의 문서 삽입 전 검토 질문과 evidence gap을 기록할 때 사용한다.
 
@@ -34,9 +49,7 @@ agent finding만으로 document-approved를 기록하거나 새 이미지를 만
 - [current lifecycle state]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio concept-draft hero-keyart-01의 purpose, placement, alt text와 readability evidence gap을 검토해. named human 결정 없이는 상태를 바꾸지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -109,12 +122,29 @@ $game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[s
 ```text
 review-beginner의 concept-draft finding을 보존하고 새 artifact-local evidence만 연결해 placement와 alt text 검토부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:review-image-assets:standard -->
 ## studio:review-image-assets:standard
 
 **rights·readability·placement 문서 승인 검토**
 
 named human decision receipt가 있는 concept-draft asset을 document-approved 전환 요건과 blocker로 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio hero-keyart-01의 named human document-approved receipt, placement, alt text, readability와 rights/provenance를 검토해. 누락 증거는 blocked로 남겨.
+```
+
+### 짧은 흐름
+- 작업 순서: review-image-assets → export-game-design-documents
+- 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/review-standard/content.md`에 requested transition, named human decision record, rights·readability·placement findings, document-approved or blocked state을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 실제 named human의 document approval decision과 artifact-local rights evidence를 검증할 때 사용한다.
@@ -142,9 +172,7 @@ timestamp·agent ID·파일 존재만으로 transition하거나 production-candi
 - [requested transition]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio hero-keyart-01의 named human document-approved receipt, placement, alt text, readability와 rights/provenance를 검토해. 누락 증거는 blocked로 남겨.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -218,12 +246,29 @@ $game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[s
 ```text
 review-standard의 named human decision과 blocked evidence를 보존하고 해결된 rights 또는 placement 증거 하나만 반영해 document-approved 검토부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:review-image-assets:advanced -->
 ## studio:review-image-assets:advanced
 
 **production-candidate 재검토와 권리 revocation**
 
 document-approved asset의 active rights·technical fit·gameplay readability를 named human evidence로 재검토해 production-candidate 또는 hold를 결정한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio document-approved hero-keyart-01의 active rights, technical fit와 gameplay readability를 named human rights reviewer가 재검토하도록 정리해. production-candidate는 release, legal, production approval이 아니며 게임 리소스 자동 승격은 금지해.
+```
+
+### 짧은 흐름
+- 작업 순서: review-image-assets
+- 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/review-advanced/content.md`에 concept-draft → document-approved → production-candidate lifecycle receipt, active rights decision, technical fit와 gameplay readability, production-candidate or hold을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 document-approved asset의 production-candidate 요청, revocation 또는 restriction 재검토가 필요할 때 사용한다.
@@ -253,9 +298,7 @@ production-candidate를 release, legal, production approval로 해석하거나 �
 - [active rights decision]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio document-approved hero-keyart-01의 active rights, technical fit와 gameplay readability를 named human rights reviewer가 재검토하도록 정리해. production-candidate는 release, legal, production approval이 아니며 게임 리소스 자동 승격은 금지해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -330,3 +373,5 @@ $game-design-studio:review-image-assets artifact=[Canonical Artifact] assetId=[s
 ```text
 review-advanced의 lifecycle receipt와 revocation record를 보존하고 새 named-human rights decision만 반영해 production-candidate 재검토부터 재개해.
 ```
+
+</details>

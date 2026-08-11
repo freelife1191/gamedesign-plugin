@@ -9,6 +9,21 @@
 
 생성 없이 profile slot 하나의 stable asset ID·alt text·명시적 count·placeholder를 concept-draft 계획으로 고정한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 RPG brief의 design-context-image slot 하나를 prompt-only로 계획해. stable asset ID, count, alt text와 placeholder만 기록하고 생성이나 승인은 하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → plan-image-assets
+- 함께 검토하는 역할: art-brief-director
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/plan-beginner/content.md`에 profile-slot preflight, stable asset ID, 명시적 count, alt text와 placeholder, concept-draft 계획을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 선택된 profile에 맞는 한 개의 이미지 slot을 생성 전에 안전하게 기록할 때 사용한다.
 
@@ -37,9 +52,7 @@
 - [명시적 count]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 RPG brief의 design-context-image slot 하나를 prompt-only로 계획해. stable asset ID, count, alt text와 placeholder만 기록하고 생성이나 승인은 하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -115,12 +128,29 @@ art-brief-director owner가 slot·placement를 승인·수정·보류하며 계�
 ```text
 plan-beginner의 stable ID와 placeholder를 보존하고 확정된 profile slot과 count만 반영해 preflight부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:plan-image-assets:standard -->
 ## studio:plan-image-assets:standard
 
 **stable ID·alt·count를 갖춘 이미지 manifest 계획**
 
 여러 profile slot의 stable ID, alt text, count와 preserve/exclude를 reusable prompt package에 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 승인 전 GDD의 required·recommended image slot을 계획해. stable ID, alt, count, preserve/exclude와 Markdown/JSON prompt를 분리하고 미정 count는 placeholder로 남겨.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → plan-image-assets
+- 함께 검토하는 역할: art-brief-director → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/plan-standard/content.md`에 slot별 stable asset ID, alt text, 명시적 count, Markdown/JSON prompt, placeholder 목록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 선택된 profile의 required·recommended slot을 유한 수량으로 계획할 때 사용한다.
@@ -151,9 +181,7 @@ profile 밖 slot을 발명하거나 provider 호출을 시작할 때는 사용�
 - [decision owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 승인 전 GDD의 required·recommended image slot을 계획해. stable ID, alt, count, preserve/exclude와 Markdown/JSON prompt를 분리하고 미정 count는 placeholder로 남겨.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -228,12 +256,29 @@ art-brief-director owner와 ux-accessibility-reviewer가 count·alt·placement�
 ```text
 plan-standard의 stable ID와 prompt package를 보존하고 새로 확정된 slot별 count와 alt text만 반영해 manifest 검증부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:plan-image-assets:advanced -->
 ## studio:plan-image-assets:advanced
 
 **profile slot·rights·diagram handoff가 있는 자산 계획**
 
 권리 제약과 Skillstead diagram slot을 illustration과 분리해 finite manifest와 visualization handoff로 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio profile slot의 finite image manifest와 rights gap을 계획해. 구조 diagram slot은 source mapping·editable SVG·2× PNG QA handoff로 분리하고 생성·승인·게임 리소스 승격은 하지 마.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → plan-image-assets → visualize-game-design
+- 함께 검토하는 역할: art-brief-director → visual-asset-reviewer → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/plan-advanced/content.md`에 finite slot manifest, rights·revocation gap, stable source ID, Skillstead visualization handoff, concept-draft 상태을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 profile slot별 rights gap과 source-mapped diagram handoff를 함께 계획할 때 사용한다.
@@ -263,9 +308,7 @@ Skillstead SVG·PNG를 여기서 생성하거나 plan만으로 game resource를 
 - [decision owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio profile slot의 finite image manifest와 rights gap을 계획해. 구조 diagram slot은 source mapping·editable SVG·2× PNG QA handoff로 분리하고 생성·승인·게임 리소스 승격은 하지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -340,3 +383,5 @@ visual-asset-reviewer owner가 rights gap과 handoff를 승인·수정·보류�
 ```text
 plan-advanced의 finite manifest와 rights gap을 보존하고 확인된 source ID나 named owner만 반영해 diagram handoff 이전 단계부터 재개해.
 ```
+
+</details>

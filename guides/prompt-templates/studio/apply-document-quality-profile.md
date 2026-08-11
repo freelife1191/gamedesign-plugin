@@ -9,6 +9,21 @@
 
 짧은 기획 브리프에 필요한 primary profile과 누락 입력을 안전하게 선택한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 섬 복구 게임의 신규 플레이어용 기획 브리프에 맞는 목적, 대상, Markdown 형식을 정리하고 적용할 품질 profile과 빠진 입력을 골라 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile
+- 함께 검토하는 역할: document-quality-editor
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/profile-beginner/content.md`에 선택한 primary profile, 누락 입력 목록, stable checklist을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 한 Artifact의 목적·대상·형식이 정해졌고 본문 작성 전에 구조 계약이 필요할 때 사용한다.
 
@@ -36,9 +51,7 @@
 - [형식]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 섬 복구 게임의 신규 플레이어용 기획 브리프에 맞는 목적, 대상, Markdown 형식을 정리하고 적용할 품질 profile과 빠진 입력을 골라 줘. 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -108,12 +121,29 @@ document-quality-editor가 profile 선택을 검토하지만 선택 기록 자�
 ```text
 기존 profile-beginner selection record를 보존하고 새로 확인된 대상 독자와 형식만 반영해 누락 입력 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:standard -->
 ## studio:apply-document-quality-profile:standard
 
 **Overlay와 preset manifest를 갖춘 품질 프로필 선택**
 
 시스템 명세의 primary profile, additive overlay, neutral preset과 requirement manifest를 일관되게 정한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 라이브 서비스 RPG 스태미나 시스템 명세에 system-feature-specification profile을 고르고 live-service overlay와 호환 preset을 manifest로 정리해 줘. 충돌과 미확정 값은 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → design-game-systems
+- 함께 검토하는 역할: document-quality-editor → system-economy-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/profile-standard/content.md`에 primary profile, 허용된 overlay 목록, requirement manifest을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 명세 템플릿과 플랫폼·live-service 제약이 알려져 있고 overlay의 호환성을 검토해야 할 때 사용한다.
@@ -140,9 +170,7 @@ unknown override를 강제로 적용하거나 rule/state 자체를 설계할 때
 - [preset ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 라이브 서비스 RPG 스태미나 시스템 명세에 system-feature-specification profile을 고르고 live-service overlay와 호환 preset을 manifest로 정리해 줘. 충돌과 미확정 값은 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -215,12 +243,29 @@ document-quality-editor가 additive source의 호환성을 확인하고 system o
 ```text
 profile-standard의 기존 manifest와 digest-bound selection record를 보존하고 확인된 live-service overlay만 다시 합성해 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:apply-document-quality-profile:advanced -->
 ## studio:apply-document-quality-profile:advanced
 
 **Fallback과 state receipt를 가진 품질 프로필 검토**
 
 profile 충돌을 fail-closed로 분리하고 사람 승인 전까지 state receipt를 보존한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 보스 전투 검토 문서의 profile 충돌을 분리하고 fallback, immutable state receipt, blocked requirement와 사람 승인 대기 지점을 정리해 줘. 근거 없는 값은 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → review-game-design
+- 함께 검토하는 역할: document-quality-editor → lead-game-designer → production-feasibility-critic
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/profile-advanced/content.md`에 fail-closed fallback, blocked requirement, immutable state receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 review Artifact에서 profile 충돌, blocked requirement, evidence 상태와 named decision owner를 함께 다뤄야 할 때 사용한다.
@@ -247,9 +292,7 @@ review Artifact에서 profile 충돌, blocked requirement, evidence 상태와 na
 - [fallback profile]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 보스 전투 검토 문서의 profile 충돌을 분리하고 fallback, immutable state receipt, blocked requirement와 사람 승인 대기 지점을 정리해 줘. 근거 없는 값은 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -323,3 +366,5 @@ named decision owner가 fallback과 document-approved 전이를 승인·수정·
 ```text
 profile-advanced의 immutable state receipt와 blocked requirement를 그대로 두고 사람 결정으로 해소된 충돌 하나만 반영해 재개해.
 ```
+
+</details>

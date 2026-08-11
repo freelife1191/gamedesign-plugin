@@ -106,6 +106,21 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 
 job-research-gap recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 한국의 공개 공식 공고만 사용해. 관찰 사실·추론·제안, 출처와 표본 한계를 분리해 역할 gap과 portfolio project brief를 만들어.
+```
+
+##### 짧은 흐름
+- 작업 순서: research-game-design-jobs → map-game-design-career → build-game-design-portfolio
+- 함께 검토하는 역할: career-strategist
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/job-posting-evidence/content.md`에 job-posting-evidence canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
 
@@ -123,9 +138,7 @@ evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는�
 - [경력 ID]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 한국의 공개 공식 공고만 사용해. 관찰 사실·추론·제안, 출처와 표본 한계를 분리해 역할 gap과 portfolio project brief를 만들어.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -217,4 +230,6 @@ named human decision owner가 job-research-gap의 approval 또는 보류를 결�
 ```text
 job-research-gap의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END game-design-career:recipe:job-research-gap -->

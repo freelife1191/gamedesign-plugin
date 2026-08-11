@@ -1,6 +1,6 @@
 # 2026 현재 실무 등록부
 
-검증일은 2026-08-04다. 이 문서는 현재 공식 자료에서 도출한 설계 검토 항목이며 법률 자문, 플랫폼 승인 보장, 업계 전체의 합의를 뜻하지 않는다. 갱신 조건은 각 `claim` 블록의 최신성 메타데이터에 기록한다.
+검증일은 2026-08-11이다. 이 문서는 현재 공식 자료에서 도출한 설계 검토 항목이며 법률 자문, 플랫폼 승인 보장, 업계 전체의 합의를 뜻하지 않는다. 갱신 조건은 각 `claim` 블록의 최신성 메타데이터에 기록한다.
 
 ## AI 제작: 권리·출처·사람의 승인
 
@@ -13,7 +13,7 @@
   "sourceIds": ["EXT-NIST-AI-600-1", "EXT-USCO-AI-PART2", "EXT-SAG-IMA-2025"],
   "applicability": "AI가 텍스트, 코드, 이미지, 음성, 캐릭터 표현 또는 제작 의사결정에 관여하는 프로젝트에 적용한다.",
   "counterexamples": ["권리와 출처를 확인할 수 없는 출력은 사람이 수정했다는 이유만으로 출시 준비 상태가 되지 않는다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf", "https://www.copyright.gov/newsnet/2025/1060.html", "https://www.sagaftra.org/member-message-sag-aftra-members-approve-2025-interactive-media-agreement"],
   "regionScope": "NIST는 자발적 범분야 위험관리 지침, 저작권 자료는 미국, SAG-AFTRA 자료는 해당 Interactive Media Agreement와 조합원 범위",
@@ -31,7 +31,7 @@
   "sourceIds": ["EXT-XBOX-ACCESS-TOOLKIT", "EXT-ESA-ESSENTIAL-2025"],
   "applicability": "폭넓은 플레이어와 여러 장치를 대상으로 하는 게임의 기획, 프로토타입, QA에 적용한다.",
   "counterexamples": ["체크리스트 기능 수만 늘리고 실제 과업 성공 여부를 시험하지 않는 방식은 접근성 검증을 대신하지 못한다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-08-04",
   "primaryUrls": ["https://developer.microsoft.com/en-us/games/articles/2024/05/game-accessibility-workshop-toolkit/", "https://www.theesa.com/resources/essential-facts-about-the-us-video-game-industry/2025-data/"],
   "regionScope": "Xbox 툴킷은 전 세계 개발팀이 조정해 쓸 수 있는 방법론 예시, ESA 자료는 미국 조사 맥락",
@@ -47,14 +47,51 @@
   "type": "time-sensitive",
   "basis": "current-external-claim",
   "guidance": "실험 전에 가설, 대조군, 한 번에 바꿀 변수, 표본과 기간, 성공 지표와 부작용 가드레일, 중지·롤백 조건을 정하고 이벤트의 이름·주체·시각·관련 데이터를 추적한다.",
-  "sourceIds": ["EXT-UNITY-AB-TEST", "EXT-PLAYFAB-ANALYTICS"],
+  "sourceIds": ["EXT-UNITY-AB-TEST", "EXT-PLAYFAB-ANALYTICS", "EXT-PLAYFAB-EVENT-MODEL"],
   "applicability": "라이브 밸런스, 온보딩, 이벤트, 경제 변경을 일부 플레이어에게 단계적으로 적용할 때 사용한다.",
   "counterexamples": ["매출 하나만 최적화하거나 겹치는 실험을 같은 변수에 실행하면 원인 해석과 플레이어 보호가 약해진다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
-  "primaryUrls": ["https://docs.unity.com/en-us/game-overrides/ab-testing", "https://learn.microsoft.com/en-us/xbox/playfab/data-analytics/ingest-data/real-time-analytics-core-concepts"],
+  "primaryUrls": ["https://docs.unity.com/en-us/game-overrides/ab-testing", "https://learn.microsoft.com/en-us/xbox/playfab/data-analytics/ingest-data/real-time-analytics-core-concepts", "https://learn.microsoft.com/en-us/xbox/playfab/api-references/events/"],
   "regionScope": "Unity Game Overrides와 Microsoft PlayFab 제품 문서의 기능 범위",
   "limitations": "제품 문서는 보편 통계 표준이 아니다. 표본 설계, 다중 검정, 개인정보, 취약 이용자 영향은 별도 전문가 검토가 필요하다."
+}
+```
+
+## 플레이테스트와 Steam Early Access: 현재 빌드와 약속을 분리한다
+
+```claim
+{
+  "id": "CUR-PLAYTEST-EARLY-ACCESS-001",
+  "type": "time-sensitive",
+  "basis": "current-external-claim",
+  "guidance": "플레이테스트는 검증할 질문, 참가 범위, 관찰·피드백 기록, 다음 결정과 중단 조건을 먼저 정한다. Steam Early Access로 판매할 때는 현재 플레이 가능한 빌드와 현재 상태를 설명하고, 완료 시점·향후 기능을 확정 약속으로 제시하지 않는다.",
+  "sourceIds": ["EXT-STEAM-EARLY-ACCESS"],
+  "applicability": "Steam Early Access 또는 제한된 외부 플레이테스트로 개발 중인 게임의 재미·안정성·피드백을 확인할 때 적용한다.",
+  "counterexamples": ["완성된 기능의 최종 버그 확인만 필요하거나 현재 플레이 가능한 빌드가 없으면 Early Access는 적절한 검증 수단이 아닐 수 있다."],
+  "verifiedAt": "2026-08-11",
+  "reviewAfter": "2027-02-11",
+  "primaryUrls": ["https://partner.steamgames.com/doc/store/earlyaccess"],
+  "regionScope": "Steamworks의 Steam Early Access 배포 및 상점 정보 범위",
+  "limitations": "Steam의 플랫폼별 정책과 권고를 다른 스토어, 판매법 또는 프로젝트 성공 가능성으로 일반화하지 않는다. 가격, 환불, 개인정보, 지역 법률은 별도 검토한다."
+}
+```
+
+## 학생 포트폴리오: 관찰과 개인 기여의 경계를 남긴다
+
+```claim
+{
+  "id": "CUR-STUDENT-PORTFOLIO-001",
+  "type": "contextual",
+  "basis": "synthesis",
+  "guidance": "학생 포트폴리오에는 관찰한 사실, 본인의 추론과 제안, 개인 기여, 공개 권한과 확인하지 못한 내용을 분리해 기록한다. 팀 결과나 채용 가능성을 확정한 것처럼 쓰지 않고, 공개 전에는 권리 담당자 또는 멘토의 결정을 기다린다.",
+  "sourceIds": ["career-7143bd076592", "career-880924f0c787"],
+  "applicability": "학생·주니어 기획자가 수업, 팀 프로젝트, 역기획 또는 공개 포트폴리오의 근거와 기여를 정리할 때 적용한다.",
+  "counterexamples": ["개인 비공개 메모에는 공개 권한 표기가 필요하지 않을 수 있지만, 사실·추론의 구분은 여전히 필요하다."],
+  "verifiedAt": "2026-08-11",
+  "reviewAfter": "2027-08-11",
+  "regionScope": "이 저장소의 Career 공개·근거·개인 기여 기록 절차",
+  "limitations": "채용 기준이나 저작권·비밀유지 계약의 법적 판단이 아니다. 학교, 팀, 고용주, 플랫폼의 최신 공개·권리 조건을 별도로 확인한다."
 }
 ```
 
@@ -69,7 +106,7 @@
   "sourceIds": ["EXT-EC-CPC-CURRENCY", "EXT-FTC-HOYOVERSE", "EXT-APPLE-REVIEW"],
   "applicability": "유료 가상 화폐, 확률형 아이템, 기간 한정 판매, 미성년자 이용 가능성이 있는 경제에 적용한다.",
   "counterexamples": ["재화 단위를 여러 번 환전하게 하면서 현금 비용과 확률을 숨기는 설계는 내부 경제 균형만으로 정당화할 수 없다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://commission.europa.eu/news-and-media/news/european-commission-hosts-stakeholders-talks-application-cpc-networks-key-principles-games-virtual-2025-06-03_en", "https://www.ftc.gov/news-events/news/press-releases/2025/01/genshin-impact-game-developer-will-be-banned-selling-lootboxes-teens-under-16-without-parental", "https://developer.apple.com/app-store/review/guidelines/"],
   "regionScope": "EU CPC 원칙 맥락, 미국 FTC의 특정 집행 사례, Apple App Store 배포 정책",
@@ -88,7 +125,7 @@
   "sourceIds": ["EXT-PLAYFAB-FOUNDATION"],
   "applicability": "두 개 이상의 플랫폼에서 동일한 커뮤니티, 진행 또는 경제를 공유하는 게임에 적용한다.",
   "counterexamples": ["단일 플레이 로컬 게임이나 별도 백엔드를 이미 운영하는 팀에는 이 제품 범위가 필요하지 않을 수 있다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://developer.microsoft.com/en-us/games/articles/2026/03/gdc-2026-introducing-foundation-mode-for-playfab/"],
   "regionScope": "Xbox 출판 계약과 PlayFab Foundation Mode Public Preview 제품 범위",
@@ -122,7 +159,7 @@
   "sourceIds": ["EXT-STEAM-WORKSHOP", "EXT-APPLE-REVIEW"],
   "applicability": "플레이어가 파일, 레벨, 아이템, 텍스트, 음성 또는 소셜 콘텐츠를 게시하는 기능에 적용한다.",
   "counterexamples": ["무검수 즉시 배포 모델은 대규모 창작을 돕지만 검증 도구와 운영 대응 없이 안전하다고 볼 수 없다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://partner.steamgames.com/doc/features/workshop?l=english&language=english", "https://developer.apple.com/app-store/review/guidelines/"],
   "regionScope": "Steam Workshop 통합 모델과 Apple App Store UGC 정책 범위",
@@ -141,7 +178,7 @@
   "sourceIds": ["EXT-NIST-AI-600-1"],
   "applicability": "생성형 모델이 플레이어 입력에 실시간으로 반응하는 대화나 행동을 만드는 기능에 적용한다.",
   "counterexamples": ["모델 출력이 보상 지급이나 승패를 직접 확정하게 두면 환각, 악용, 재현 불가능성의 영향이 커진다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf"],
   "regionScope": "NIST의 자발적 범분야 생성형 AI 위험관리 프로필을 게임 운영에 종합 적용",
@@ -160,7 +197,7 @@
   "sourceIds": ["EXT-GDC-STATE-2025", "EXT-GDC-STATE-2026"],
   "applicability": "인력·자금·도구·플랫폼에 관한 계획 가정이 현재 업계 상황과 어긋나는지 점검할 때 적용한다.",
   "counterexamples": ["설문에서 많이 언급된 기술이나 장르를 개별 프로젝트의 수요 예측 또는 구현 우선순위로 직접 사용하지 않는다."],
-  "verifiedAt": "2026-08-04",
+  "verifiedAt": "2026-08-11",
   "reviewAfter": "2027-02-04",
   "primaryUrls": ["https://gdconf.com/article/gdc-2025-state-of-the-game-industry-devs-weigh-in-on-layoffs-ai-and-more/", "https://gdconf.com/article/gdc-2026-state-of-the-game-industry-reveals-impact-of-layoffs-generative-ai-and-more/"],
   "regionScope": "GDC가 조사한 게임 업계 종사자 표본과 해당 연도 산업 맥락",

@@ -9,6 +9,21 @@
 
 검증된 rule state와 recovery 관계만 prose보다 명확할 때 editable SVG 계획으로 표현한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 검증된 system state와 recovery 관계만 source mapping해 규칙 흐름이 prose보다 명확한지 판단하고 editable SVG draft를 준비해.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/visualize-beginner/content.md`에 diagram decision, one preset, source mapping, editable SVG request, adjacent alt text을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 Canonical Artifact의 state·transition·guard 관계가 prose보다 명확할 때 사용한다.
 
@@ -35,9 +50,7 @@ source 없는 node·edge를 발명하거나 character illustration을 만들 때
 - [relationship question]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 검증된 system state와 recovery 관계만 source mapping해 규칙 흐름이 prose보다 명확한지 판단하고 editable SVG draft를 준비해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -111,12 +124,29 @@ lead-game-designer owner가 source mapping과 diagram decision을 승인·수정
 ```text
 visualize-beginner의 source mapping과 rejected alternative를 보존하고 확인된 relationship question만 반영해 diagram decision부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:visualize-game-design:standard -->
 ## studio:visualize-game-design:standard
 
 **Archify 우선 구조 도식과 honest fallback**
 
 architecture·workflow·sequence·dataflow·lifecycle 관계에 host Archify가 available이면 우선하고 absent 또는 failure이면 Skillstead editable SVG와 2× PNG fallback을 정확한 상태로 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio source-backed workflow 관계를 시각화해. Archify가 available이면 우선하고 absent 또는 failure이면 bundled Skillstead editable SVG와 2× PNG fallback을 Archify 결과로 표시하지 말고 정확한 상태로 기록해.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-game-design → svg-infographic
+- 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/visualize-standard/content.md`에 Archify capability decision, selected preset, source mapping, editable SVG, 2× PNG fallback state을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 source-backed architecture, workflow, sequence, dataflow 또는 lifecycle 관계의 접근 가능한 도식이 필요할 때 사용한다.
@@ -145,9 +175,7 @@ Archify absent/failure fallback을 Archify 결과로 표시하거나 fallback만
 - [Archify capability state]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio source-backed workflow 관계를 시각화해. Archify가 available이면 우선하고 absent 또는 failure이면 bundled Skillstead editable SVG와 2× PNG fallback을 Archify 결과로 표시하지 말고 정확한 상태로 기록해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -222,12 +250,29 @@ lead-game-designer owner와 ux-accessibility-reviewer가 Archify decision·sourc
 ```text
 visualize-standard의 Archify capability decision과 Skillstead fallback state를 보존하고 변경된 available·absent·failure evidence만 반영해 마지막 검증 단계부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:visualize-game-design:advanced -->
 ## studio:visualize-game-design:advanced
 
 **source mapping·receipt·visual QA를 갖춘 lifecycle 도식**
 
 lifecycle 관계를 source locator, execution receipt와 independent visual QA로 분리해 verified 상태를 과장하지 않는다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio source-backed lifecycle의 node·connector·label을 mapping하고 preset, lint·render receipt, exact 2× PNG와 fit-to-page·close-up QA를 각각 기록해. Archify/Skillstead 결과와 human approval은 분리해.
+```
+
+### 짧은 흐름
+- 작업 순서: visualize-game-design → svg-infographic → review-game-design
+- 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer → production-feasibility-critic
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/visualize-advanced/content.md`에 source mapping, requested/generated/linted/rendered/verified states, lint receipt, render receipt, fit-to-page·close-up QA을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 lifecycle gate와 owner handoff의 source mapping·lint·render·two-pass QA evidence가 필요할 때 사용한다.
@@ -257,9 +302,7 @@ linted·rendered·verified를 서로 추정하거나 diagram receipt로 human ap
 - [selected preset]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio source-backed lifecycle의 node·connector·label을 mapping하고 preset, lint·render receipt, exact 2× PNG와 fit-to-page·close-up QA를 각각 기록해. Archify/Skillstead 결과와 human approval은 분리해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -334,3 +377,5 @@ lead-game-designer owner와 ux-accessibility-reviewer가 source fidelity·visual
 ```text
 visualize-advanced의 source mapping과 passed evidence를 보존하고 실패한 lint·render·QA 상태 하나만 반영해 해당 검증 단계부터 재개해.
 ```
+
+</details>

@@ -89,6 +89,21 @@ Chromium renderer 또는 필요한 capability가 unavailable이면 PNG unavailab
 
 reverse-design recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해.
+```
+
+##### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design → visualize-career-roadmap → export-career-documents
+- 함께 검토하는 역할: career-strategist
+
+##### 이 요청으로 받는 결과
+예: `game-design-career/[경력 ID]/reverse-design-document/content.md`에 reverse-design-document canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
 
@@ -106,9 +121,7 @@ evidence, rights, 또는 approval gate를 건너뛸 때는 사용하지 않는�
 - [경력 ID]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Career 개인정보·실명·회사기밀 raw input은 입력하지 말고 익명화된 공개 evidence ID와 공개 build 관찰만 사용해 crafting system 역기획을 써 줘. 관찰 사실·추론·제안과 반례·검증 방법을 분리해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -178,4 +191,6 @@ named human decision owner가 reverse-design의 approval 또는 보류를 결정
 ```text
 reverse-design의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END game-design-career:recipe:reverse-design -->

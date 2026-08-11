@@ -107,6 +107,21 @@ $game-design-studio:define-game-vision 기존 game-design/island-restoration/vis
 
 ST-C01의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → define-game-vision → orchestrate-game-design-project → review-game-design
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/vision-pillars/content.md`에 vision-pillars, game-design-brief, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C01의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -125,9 +140,7 @@ ST-C01의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C01의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -193,6 +206,8 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:define-ga
 ```text
 ST-C01의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c01 -->
 
 ## ST-C02 행동·핵심 루프·의미 있는 선택
@@ -298,6 +313,21 @@ verb가 추상적이거나 모든 분기가 같은 결과면 해당 단계는 `b
 
 ST-C02의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: define-game-vision → design-game-systems → design-player-experience → review-game-design
+- 함께 검토하는 역할: lead-game-designer → ux-accessibility-reviewer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/core-motivation-loop/content.md`에 core-motivation-loop, system-specification, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C02의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -316,9 +346,7 @@ ST-C02의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C02의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -384,6 +412,8 @@ $game-design-studio:define-game-vision $game-design-studio:design-game-systems $
 ```text
 ST-C02의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c02 -->
 
 ## ST-C03 규칙·상태·예외·데이터
@@ -489,6 +519,21 @@ $game-design-studio:design-game-systems game-design/shared-workbench/system-spec
 
 ST-C03의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → design-game-systems → design-player-experience → review-game-design
+- 함께 검토하는 역할: lead-game-designer → system-economy-designer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/system-specification/content.md`에 system-specification, rule-exception-matrix, data-schema-table-contract을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C03의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -507,9 +552,7 @@ ST-C03의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C03의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -576,6 +619,8 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-ga
 ```text
 ST-C03의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c03 -->
 
 ## ST-C04 UI·UX·온보딩·접근성
@@ -681,6 +726,21 @@ current platform 근거나 테스트 환경이 없으면 compliance를 주장하
 
 ST-C04의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → design-player-experience → review-game-design → visualize-game-design
+- 함께 검토하는 역할: ux-accessibility-reviewer → lead-game-designer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/ui-ux-flow-state/content.md`에 ui-ux-flow-state, accessibility-platform-matrix, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C04의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -699,9 +759,7 @@ ST-C04의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C04의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -767,6 +825,8 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-pl
 ```text
 ST-C04의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c04 -->
 
 ## ST-C05 콘텐츠·내러티브·퀘스트·NPC
@@ -872,6 +932,21 @@ $game-design-studio:design-game-content 기존 Q-ARCH-01과 승인된 state를 �
 
 ST-C05의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → design-game-content → design-game-systems → plan-game-production → review-game-design
+- 함께 검토하는 역할: content-narrative-designer → system-economy-designer → production-feasibility-critic → visual-asset-reviewer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/narrative-quest-npc/content.md`에 narrative-quest-npc, character-skill-combat-monster, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C05의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -890,9 +965,7 @@ ST-C05의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C05의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -958,6 +1031,8 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-ga
 ```text
 ST-C05의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c05 -->
 
 ## ST-C06 캐릭터·스킬·전투·몬스터
@@ -1063,6 +1138,21 @@ canonical rule 또는 prototype evidence가 없으면 숫자를 채우지 않고
 
 ST-C06의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → design-game-content → design-game-systems → review-game-design
+- 함께 검토하는 역할: system-economy-designer → ux-accessibility-reviewer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/character-skill-combat-monster/content.md`에 character-skill-combat-monster, system-specification, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C06의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -1081,9 +1171,7 @@ ST-C06의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C06의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1149,6 +1237,8 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-ga
 ```text
 ST-C06의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c06 -->
 
 ## ST-C07 성장·경제·밸런스·LiveOps
@@ -1254,6 +1344,21 @@ $game-design-studio:design-game-economy-and-liveops EXP-FEST-01의 가정과 con
 
 ST-C07의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: apply-document-quality-profile → design-game-economy-and-liveops → design-game-systems → review-game-design
+- 함께 검토하는 역할: system-economy-designer → liveops-data-designer → ux-accessibility-reviewer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/economy-balance/content.md`에 economy-balance, liveops-experiment-event, game-design-review을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C07의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -1272,9 +1377,7 @@ ST-C07의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C07의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1340,6 +1443,8 @@ $game-design-studio:apply-document-quality-profile $game-design-studio:design-ga
 ```text
 ST-C07의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c07 -->
 
 ## ST-C08 제작·검토·이미지·출력
@@ -1447,6 +1552,21 @@ $game-design-studio:export-game-design-documents game-design/exploration-prototy
 
 ST-C08의 source manifest skill과 artifact를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio ST-C08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
+```
+
+##### 짧은 흐름
+- 작업 순서: plan-game-production → review-game-design → plan-image-assets → visualize-game-design → export-game-design-documents
+- 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → visual-asset-reviewer → document-quality-editor
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/production-scope-risk/content.md`에 production-scope-risk, game-design-review, export-preparation-manifest을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 ST-C08의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다.
 
@@ -1465,9 +1585,7 @@ ST-C08의 공개 가능한 가정과 검증 경계를 작업할 때 사용한다
 - [공개 정보]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio ST-C08의 공개 가능한 사실, 추론, 제안을 분리해 canonical artifact를 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -1534,4 +1652,6 @@ $game-design-studio:plan-game-production $game-design-studio:review-game-design 
 ```text
 ST-C08의 보존 artifact와 blocker receipt를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END st-c08 -->

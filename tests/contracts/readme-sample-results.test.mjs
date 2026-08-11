@@ -76,10 +76,13 @@ function quantifiedConfirmations(value) {
 }
 
 function imageRecords(value) {
-  const records = [];
-  const pattern = /- `asset_id`:\s*`([a-z][a-z0-9-]*)`\n- `derivative_of`:\s*`([a-z][a-z0-9-]*|null)`\n- `approval_state`:\s*`(concept-draft|document-approved|production-candidate)`/gu;
-  for (const match of value.matchAll(pattern)) records.push({ assetId: match[1], derivativeOf: match[2], approvalState: match[3] });
-  return records;
+  const pattern = /^- `asset_id`:\s*`([a-z][a-z0-9-]*)`\n- `derivative_of`:\s*`([a-z][a-z0-9-]*|null)`\n- `approval_state`:\s*`(concept-draft|document-approved|production-candidate)`\n- `asset_id`:\s*`([a-z][a-z0-9-]*)`\n- `derivative_of`:\s*`([a-z][a-z0-9-]*|null)`\n- `approval_state`:\s*`(concept-draft|document-approved|production-candidate)`\n- `review_decision`:\s*`(pending|blocked)`(?:\n\n이 이미지는 concept-draft이며 document-approved 또는 production-candidate가 아닙니다\.)?$/u;
+  const match = pattern.exec(value);
+  if (!match) return null;
+  return [
+    { assetId: match[1], derivativeOf: match[2], approvalState: match[3] },
+    { assetId: match[4], derivativeOf: match[5], approvalState: match[6] },
+  ];
 }
 
 function visibleText(markdown) {
@@ -130,8 +133,8 @@ function validateSampleDocument({ entry, markdown, relativePath }) {
   if (body.includes("## 이미지 계보와 검토 상태\n")) {
     const image = section(body, "이미지 계보와 검토 상태", relativePath);
     const records = imageRecords(image);
-    const ids = new Set(records.map((record) => record.assetId));
-    if (records.length < 2 || ids.size !== records.length || records.some((record) => record.derivativeOf !== "null" && (!ids.has(record.derivativeOf) || record.derivativeOf === record.assetId)) || !records.some((record) => record.derivativeOf === "null") || !records.some((record) => record.derivativeOf !== "null") || !/`review_decision`:\s*`(?:pending|blocked)`/u.test(image)) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
+    const ids = new Set(records?.map((record) => record.assetId));
+    if (!records || ids.size !== records.length || records.some((record) => record.derivativeOf !== "null" && (!ids.has(record.derivativeOf) || record.derivativeOf === record.assetId)) || !records.some((record) => record.derivativeOf === "null") || !records.some((record) => record.derivativeOf !== "null")) throw contractError("SAMPLE_IMAGE_LINEAGE", relativePath);
   }
   return { id: fields.source_prompt_id, excerpt: normalizedExcerpt(excerpt) };
 }
@@ -271,15 +274,33 @@ test("sample results allow schema-bound image lineage only with a separate pendi
   await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
   assert.deepEqual(await validateSampleResults({ catalog, markdown: fixture.markdown, root: fixture.root }), { count: 18, ids: expectedPromptIds });
 });
-test("sample results reject a non-schema image approval state", async (t) => {
+test("sample results reject a future-approved image approval state", async (t) => {
   await assertMutationRejected(t, async ({ root }, catalog) => {
     const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
-    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`pending\`\n- \`review_decision\`: \`pending\`\n`);
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`future-approved\`\n- \`review_decision\`: \`pending\`\n`);
   }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
 });
 test("sample results reject a derivative whose parent record is absent", async (t) => {
   await assertMutationRejected(t, async ({ root }, catalog) => {
     const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
     await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`does-not-exist\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
+  }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
+});
+test("sample results reject an unknown field inside an image asset block", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => {
+    const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`untrusted_field\`: \`true\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
+  }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
+});
+test("sample results reject an incomplete image asset block", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => {
+    const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`review_decision\`: \`pending\`\n`);
+  }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
+});
+test("sample results reject a third image asset record after a complete pair", async (t) => {
+  await assertMutationRejected(t, async ({ root }, catalog) => {
+    const target = path.join(root, fixturePath(catalog.byId.get("studio:case:ST-C01"), 0));
+    await writeFile(target, `${await readFile(target, "utf8")}\n## 이미지 계보와 검토 상태\n- \`asset_id\`: \`st-c01-master\`\n- \`derivative_of\`: \`null\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-flow\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`asset_id\`: \`st-c01-extra\`\n- \`derivative_of\`: \`st-c01-master\`\n- \`approval_state\`: \`concept-draft\`\n- \`review_decision\`: \`pending\`\n`);
   }, { code: "SAMPLE_IMAGE_LINEAGE", target: "studio/01.md" });
 });

@@ -99,6 +99,21 @@ telemetry, 가격 정책 또는 rollback capability가 없으면 affected experi
 
 economy-liveops recipe의 ordered CLI calls와 artifact read order를 보존한다.
 
+##### 간단 요청 예시
+```text
+@Game Design Studio 골드와 토큰의 source/sink, target inventory, progression, price·odds·pity 가정을 기록하고 LiveOps 실험의 control, guardrail, stop과 rollback을 설계해. 근거 없는 수치와 monetization 승인은 만들지 마.
+```
+
+##### 짧은 흐름
+- 작업 순서: design-game-economy-and-liveops → design-game-systems → plan-game-production
+- 함께 검토하는 역할: lead-game-designer
+
+##### 이 요청으로 받는 결과
+예: `game-design/[프로젝트 ID]/economy-balance/content.md`에 economy-balance canonical artifact, blocker와 resume receipt을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ##### 사용하는 경우
 canonical artifact의 안전한 다음 작업 순서가 필요할 때 사용한다.
 
@@ -116,9 +131,7 @@ evidence, rights, image, export 또는 approval gate를 건너뛸 때는 사용�
 - [프로젝트 ID]
 
 ##### Codex App 완성 예시
-```text
-@Game Design Studio 골드와 토큰의 source/sink, target inventory, progression, price·odds·pity 가정을 기록하고 LiveOps 실험의 control, guardrail, stop과 rollback을 설계해. 근거 없는 수치와 monetization 승인은 만들지 마.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ##### Codex App 재사용 템플릿
 ```text
@@ -199,4 +212,6 @@ named human decision owner가 economy-liveops의 approval 또는 보류를 결�
 ```text
 economy-liveops의 보존 canonical artifact와 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
 <!-- PROMPT-TEMPLATES:END game-design-studio:recipe:economy-liveops -->

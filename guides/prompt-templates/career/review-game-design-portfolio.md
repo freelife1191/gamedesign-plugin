@@ -9,6 +9,21 @@
 
 다섯 축을 finding, severity, repair queue로 기록하고 사실, 추론, 제안을 분리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career section IDs와 evidence IDs로 5축 빠른 검토를 하고 finding, severity, queue를 작성해. fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/review-beginner/content.md`에 5축 observation state와 finding/severity/queue, evidence-addressable fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 사례 하나의 evidence 접근성과 최소 수정을 빠르게 검토할 때 사용한다.
 
@@ -30,9 +45,7 @@
 - [review owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career section IDs와 evidence IDs로 5축 빠른 검토를 하고 finding, severity, queue를 작성해. fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -99,12 +112,29 @@ portfolio-reviewer owner가 finding을 검토하고 승인 또는 보류한다. 
 ```text
 review-beginner의 finding과 queue를 보존하고 evidence 접근 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:review-game-design-portfolio:standard -->
 ## career:review-game-design-portfolio:standard
 
 **finding·severity·queue 검토**
 
 typed finding, severity, dependency queue와 evidence 주소를 이용해 수정을 재현 가능하게 만든다.
+
+### 간단 요청 예시
+```text
+@Game Design Career five-axis records와 finding evidence IDs를 검토해 typed finding, severity, dependency queue를 작성해. fact, inference, recommendation을 구분해.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/review-standard/content.md`에 typed finding, severity, dependency queue, evidence-addressable fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 finding의 영향과 minimum repair 순서를 정할 때 사용한다.
@@ -127,9 +157,7 @@ typed finding, severity, dependency queue와 evidence 주소를 이용해 수정
 - [queue owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career five-axis records와 finding evidence IDs를 검토해 typed finding, severity, dependency queue를 작성해. fact, inference, recommendation을 구분해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -197,12 +225,29 @@ portfolio-reviewer owner와 evidence-auditor가 queue 순서를 검토하고 승
 ```text
 review-standard의 finding, severity, queue를 보존하고 최상위 repair부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:review-game-design-portfolio:advanced -->
 ## career:review-game-design-portfolio:advanced
 
 **mutation·발표 readiness·승인 검토**
 
 finding mutation, severity queue, presentation readiness와 named human approval을 분리하며 자동 합격 판정을 금지한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career finding mutation과 evidence IDs의 severity queue를 검토해 presentation readiness와 human approval을 분리해. named-human reviewer ID와 approval state를 기록하고 자동 합격/채용 판정 금지; portfolio-reviewer agent는 finding만 내며 승인자 아님; fact, inference, recommendation을 기록해.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design-portfolio
+- 함께 검토하는 역할: portfolio-reviewer → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/review-advanced/content.md`에 finding mutation, severity, queue, presentation readiness와 named human approval 상태, 자동 합격 판정 금지, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 발표 전 evidence 변화와 reviewer handoff를 재검토할 때 사용한다.
@@ -229,9 +274,7 @@ presentation readiness를 자동 합격 판정이나 공개 승인으로 바꿀 
 - [presentation readiness]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career finding mutation과 evidence IDs의 severity queue를 검토해 presentation readiness와 human approval을 분리해. named-human reviewer ID와 approval state를 기록하고 자동 합격/채용 판정 금지; portfolio-reviewer agent는 finding만 내며 승인자 아님; fact, inference, recommendation을 기록해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -300,3 +343,5 @@ portfolio-reviewer agent는 finding만 내며 승인자 아님이다. named-huma
 ```text
 review-advanced의 mutation과 severity queue를 보존하고 named human 검토 후 재개해.
 ```
+
+</details>

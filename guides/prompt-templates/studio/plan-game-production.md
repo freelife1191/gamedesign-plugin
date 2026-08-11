@@ -9,6 +9,21 @@
 
 vertical slice의 포함·제외 범위, 알려진 위험과 decision owner를 production-scope-risk에 기록한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 4인 협동 탐험 RPG의 target experience, Must 범위, 제외 항목, 알려진 위험과 decision owner를 최소 production-scope-risk로 정리해 줘. 근거 없는 일정은 provisional로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-game-production
+- 함께 검토하는 역할: production-feasibility-critic → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/production-beginner/content.md`에 Must 범위, 제외 항목, known risk, decision owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 target experience가 있고 가장 작은 prototype 범위를 정해야 할 때 사용한다.
 
@@ -34,9 +49,7 @@ core loop 없이 일정·인원·비용을 확정하거나 제작 성공을 약�
 - [팀 제약]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 4인 협동 탐험 RPG의 target experience, Must 범위, 제외 항목, 알려진 위험과 decision owner를 최소 production-scope-risk로 정리해 줘. 근거 없는 일정은 provisional로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -108,12 +121,29 @@ production-feasibility-critic owner와 lead-game-designer가 scope를 승인·�
 ```text
 production-beginner의 Must 범위와 제외 항목을 보존하고 새 prototype 근거만 연결해 위험 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:plan-game-production:standard -->
 ## studio:plan-game-production:standard
 
 **Milestone 의존성과 owner를 갖춘 제작 계획**
 
 승인된 scope를 observable milestone, dependency, owner와 definition of done으로 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 승인된 협동 RPG vertical slice를 milestone, dependency, owner, definition of done과 risk gate로 연결해 줘. capacity 근거가 약한 일정은 provisional로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-game-production → review-game-design
+- 함께 검토하는 역할: production-feasibility-critic → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/production-standard/content.md`에 milestone와 dependency, named owner, definition of done, risk gate을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 scope와 prototype 근거가 있고 milestone별 dependency와 done 기준을 검토할 때 사용한다.
@@ -140,9 +170,7 @@ throughput 근거 없이 마감일을 확정하거나 dependency owner를 자동
 - [capacity 근거]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 승인된 협동 RPG vertical slice를 milestone, dependency, owner, definition of done과 risk gate로 연결해 줘. capacity 근거가 약한 일정은 provisional로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -217,12 +245,29 @@ milestone owner와 production-feasibility-critic가 dependency·DoD·risk gate�
 ```text
 production-standard의 milestone·dependency·DoD를 보존하고 새 throughput 근거만 반영해 provisional effort range 검토부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:plan-game-production:advanced -->
 ## studio:plan-game-production:advanced
 
 **Kill criteria와 외주·license 위험을 검토하는 제작 계획**
 
 변경 요청의 core-loop 기여를 kill criteria, outsource·license 위험과 사람 결정에 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 기존 vertical slice plan의 변경 요청을 core-loop 기여, kill criteria, outsourcing·license 위험과 decision owner에 연결해 줘. 확정되지 않은 비용과 일정은 provisional로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: plan-game-production → review-game-design
+- 함께 검토하는 역할: production-feasibility-critic → lead-game-designer → document-quality-editor
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/production-advanced/content.md`에 kill criteria, outsource·license risk, named decision owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 기존 production plan의 변경 요청, outsourcing 또는 license 조건을 재평가할 때 사용한다.
@@ -249,9 +294,7 @@ procurement·staffing·license 계약을 자동 승인하거나 irreversible sco
 - [kill criteria]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 기존 vertical slice plan의 변경 요청을 core-loop 기여, kill criteria, outsourcing·license 위험과 decision owner에 연결해 줘. 확정되지 않은 비용과 일정은 provisional로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -325,3 +368,5 @@ named decision owner와 production-feasibility-critic가 kill criteria·outsourc
 ```text
 production-advanced의 kill criteria와 license risk 기록을 보존하고 확인된 계약 검토 상태 하나만 반영해 보류 결정부터 재개해.
 ```
+
+</details>

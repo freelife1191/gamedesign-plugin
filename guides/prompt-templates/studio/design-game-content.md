@@ -9,6 +9,21 @@
 
 한 퀘스트 또는 NPC의 목적, 선택, 상태, 결과, 보상과 실패 복구를 시스템 ID에 연결한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 폭풍 전 등대를 복구하는 퀘스트와 안내 NPC 하나를 목적, player choice, 상태 변화, 결과, 보상과 실패 복구로 정리하고 system ID에 연결해 줘. 모르는 제작 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-content
+- 함께 검토하는 역할: content-narrative-designer → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/content-beginner/content.md`에 content purpose, player choice, state delta, outcome, recovery을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 목적이 분명한 퀘스트·NPC 하나의 player choice와 outcome을 작성할 때 사용한다.
 
@@ -36,9 +51,7 @@
 - [reward]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 폭풍 전 등대를 복구하는 퀘스트와 안내 NPC 하나를 목적, player choice, 상태 변화, 결과, 보상과 실패 복구로 정리하고 system ID에 연결해 줘. 모르는 제작 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -110,12 +123,29 @@ content-narrative-designer가 choice와 NPC 반응을 검토하고 lead-game-des
 ```text
 content-beginner의 quest state와 NPC 반응을 보존하고 확인된 system ID만 연결해 failure recovery부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-game-content:standard -->
 ## studio:design-game-content:standard
 
 **Content graph와 보상을 연결하는 게임 콘텐츠**
 
 퀘스트·캐릭터·보스 encounter의 content graph, 상태, reward와 production resource를 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 섬 복구의 세 퀘스트와 보스 encounter를 content graph로 연결하고, 각 상태·보상·counterplay·monster telegraph·production resource를 system/data ID에 붙여 줘. 불확실한 제작량은 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-content → design-game-systems → review-game-design
+- 함께 검토하는 역할: content-narrative-designer → production-feasibility-critic → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/content-standard/content.md`에 content graph, state dependency, reward, production resource을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 content node의 흐름, combat role, reward와 생산 자원을 같은 계약으로 검토할 때 사용한다.
@@ -144,9 +174,7 @@ content-beginner의 quest state와 NPC 반응을 보존하고 확인된 system I
 - [production evidence]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 섬 복구의 세 퀘스트와 보스 encounter를 content graph로 연결하고, 각 상태·보상·counterplay·monster telegraph·production resource를 system/data ID에 붙여 줘. 불확실한 제작량은 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -220,12 +248,29 @@ content-narrative-designer가 content graph를 검토하고 production-feasibili
 ```text
 content-standard의 graph와 reward 연결을 유지하고 새로 측정된 encounter 제작 근거만 더해 production blocker부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:design-game-content:advanced -->
 ## studio:design-game-content:advanced
 
 **서사·제작·권리 경계를 갖춘 게임 콘텐츠**
 
 narrative choice, production scope, rights·consent·provenance와 사람 승인 조건을 함께 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 분기 퀘스트의 선택 의미와 재합류를 system state에 연결하고, 반복성·제작 비용·AI 보조 대사의 provenance·rights·consent와 사람 승인 gate를 분리해 줘. 근거 없는 상태는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: design-game-content → design-game-systems → plan-game-production → review-game-design
+- 함께 검토하는 역할: content-narrative-designer → production-feasibility-critic → lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-foundations/content-advanced/content.md`에 narrative state dependency, production blocker, rights/provenance status, approval gate을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 반복성·제작 비용·서사 선택·AI 또는 UGC 자료의 rights 경계가 상충할 때 사용한다.
@@ -253,9 +298,7 @@ provenance·rights·consent 없이 AI·UGC 자료를 승인하거나 사람 appr
 - [human approver]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 분기 퀘스트의 선택 의미와 재합류를 system state에 연결하고, 반복성·제작 비용·AI 보조 대사의 provenance·rights·consent와 사람 승인 gate를 분리해 줘. 근거 없는 상태는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -331,3 +374,5 @@ narrative·production·rights owner가 선택 의미, 제작 범위와 rights ga
 ```text
 content-advanced의 narrative dependency와 rights gate를 보존하고 human approver가 확인한 provenance 또는 production evidence만 반영해 blocker부터 재개해.
 ```
+
+</details>

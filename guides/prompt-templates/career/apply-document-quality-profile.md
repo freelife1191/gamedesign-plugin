@@ -9,6 +9,21 @@
 
 목표 역할 문서 하나에 맞는 template과 primary quality profile을 선택하고 fact, inference, recommendation을 분리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career 시스템 기획 입문 role map Artifact의 대상 독자와 Markdown 형식에 맞는 template, primary quality profile, 누락 입력을 선택해 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile
+- 함께 검토하는 역할: document-quality-editor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/profile-beginner/content.md`에 primary quality profile, 선택 이유, 누락 입력, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 role map을 쓰기 전에 목표 역할 문서의 대상과 형식을 고정할 때 사용한다.
 
@@ -34,9 +49,7 @@ role map을 쓰기 전에 목표 역할 문서의 대상과 형식을 고정할 
 - [template ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 시스템 기획 입문 role map Artifact의 대상 독자와 Markdown 형식에 맞는 template, primary quality profile, 누락 입력을 선택해 줘. 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -105,12 +118,29 @@ document-quality-editor owner가 profile 선택을 검토하고 승인 또는 �
 ```text
 profile-beginner selection record를 보존하고 확인된 대상과 형식만 반영해 누락 입력 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:apply-document-quality-profile:standard -->
 ## career:apply-document-quality-profile:standard
 
 **대상·형식·preset을 맞춘 문서 품질 선택**
 
 audience, format, preset을 한 Artifact에 맞추고 fact, inference, recommendation 경계를 기록한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career portfolio-reviewer audience의 Markdown portfolio brief에 맞게 template, preset, quality checklist와 빠진 입력을 선택해 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile
+- 함께 검토하는 역할: document-quality-editor → portfolio-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/profile-standard/content.md`에 audience/format/preset 선택, quality checklist, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 포트폴리오 brief와 reviewer audience에 맞는 preset을 고정할 때 사용한다.
@@ -138,9 +168,7 @@ audience, format, preset을 한 Artifact에 맞추고 fact, inference, recommend
 - [template ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career portfolio-reviewer audience의 Markdown portfolio brief에 맞게 template, preset, quality checklist와 빠진 입력을 선택해 줘. 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -209,12 +237,29 @@ document-quality-editor owner와 portfolio-reviewer가 preset을 검토하고 �
 ```text
 profile-standard의 preset과 checklist를 보존하고 확인된 audience와 format만 반영해 conflict 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:apply-document-quality-profile:advanced -->
 ## career:apply-document-quality-profile:advanced
 
 **evidence state와 fallback을 검토하는 문서 품질 선택**
 
 evidence state, fallback, reviewer boundary를 확인해 profile conflict를 안전하게 보류하고 fact, inference, recommendation을 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career reverse-design Artifact의 evidence state와 fallback 후보를 확인하고 reviewer가 검토할 profile conflict와 resume 조건을 정리해 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: apply-document-quality-profile
+- 함께 검토하는 역할: document-quality-editor → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/profile-advanced/content.md`에 evidence state, fallback 조건, reviewer boundary, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 기존 evidence 상태가 불완전하거나 profile fallback이 필요한 Artifact를 검토할 때 사용한다.
@@ -242,9 +287,7 @@ evidence state, fallback, reviewer boundary를 확인해 profile conflict를 안
 - [template ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career reverse-design Artifact의 evidence state와 fallback 후보를 확인하고 reviewer가 검토할 profile conflict와 resume 조건을 정리해 줘. 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -314,3 +357,5 @@ document-quality-editor owner가 evidence state와 fallback을 검토하고 evid
 ```text
 profile-advanced evidence state와 conflict record를 보존하고 reviewer 확인을 반영해 fallback 검토부터 재개해.
 ```
+
+</details>

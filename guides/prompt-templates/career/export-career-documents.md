@@ -9,6 +9,21 @@
 
 canonical artifact의 MD 요약을 canonical preflight, capability, renderer, format QA와 human review 전 non-terminal job으로 준비한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career canonical artifact의 MD 요약을 canonical preflight, capability, renderer, format QA와 human review로 준비해. actual output 전 전달 완료를 표시하지 말고 fact, inference, recommendation을 구분해. canonical preflight, capability, renderer, format QA, human review가 모두 통과하기 전 actual output과 delivery completion 모두 표시 금지. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다. document-quality-editor는 구조/format finding만, evidence-auditor는 evidence completion gate를 검토하고 named human decision owner가 승인/보류한다.
+```
+
+### 짧은 흐름
+- 작업 순서: export-career-documents
+- 함께 검토하는 역할: document-quality-editor → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/export-beginner/content.md`에 canonical preflight와 MD capability/renderer/format QA 상태, human review 전 non-terminal job, fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 canonical portfolio 또는 growth artifact의 MD 파생본을 준비할 때 사용한다.
 
@@ -30,9 +45,7 @@ canonical validation이나 human review 전에 actual output 또는 전달 완�
 - [canonical preflight]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career canonical artifact의 MD 요약을 canonical preflight, capability, renderer, format QA와 human review로 준비해. actual output 전 전달 완료를 표시하지 말고 fact, inference, recommendation을 구분해. canonical preflight, capability, renderer, format QA, human review가 모두 통과하기 전 actual output과 delivery completion 모두 표시 금지. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다. document-quality-editor는 구조/format finding만, evidence-auditor는 evidence completion gate를 검토하고 named human decision owner가 승인/보류한다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -99,12 +112,29 @@ document-quality-editor는 구조/format finding만 검토한다. evidence-audit
 ```text
 export-beginner의 canonical preflight와 MD job을 보존하고 capability probe 후 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:export-career-documents:standard -->
 ## career:export-career-documents:standard
 
 **PDF·DOCX preflight**
 
 PDF·DOCX 요청을 canonical preflight, capability probe, renderer, format QA와 human review의 non-terminal job으로 정리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career canonical artifact의 PDF·DOCX를 preflight하고 capability probe, renderer, format QA, human review를 정리해. actual output 전 전달 완료를 표시하지 말고 fact, inference, recommendation을 구분해. canonical preflight, capability, renderer, format QA, human review가 모두 통과하기 전 actual output과 delivery completion 모두 표시 금지. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다. document-quality-editor는 구조/format finding만, evidence-auditor는 evidence completion gate를 검토하고 named human decision owner가 승인/보류한다.
+```
+
+### 짧은 흐름
+- 작업 순서: export-career-documents
+- 함께 검토하는 역할: document-quality-editor → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/export-standard/content.md`에 PDF·DOCX canonical preflight, capability, renderer, format QA, human review 전 non-terminal status와 fact/inference/recommendation을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 검증된 canonical artifact의 PDF와 DOCX 파생본을 준비할 때 사용한다.
@@ -129,9 +159,7 @@ renderer capability나 format QA 없이 generated file·전달 완료를 주장�
 - [capability probes]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career canonical artifact의 PDF·DOCX를 preflight하고 capability probe, renderer, format QA, human review를 정리해. actual output 전 전달 완료를 표시하지 말고 fact, inference, recommendation을 구분해. canonical preflight, capability, renderer, format QA, human review가 모두 통과하기 전 actual output과 delivery completion 모두 표시 금지. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다. document-quality-editor는 구조/format finding만, evidence-auditor는 evidence completion gate를 검토하고 named human decision owner가 승인/보류한다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -198,12 +226,29 @@ document-quality-editor는 구조/format finding만 검토한다. evidence-audit
 ```text
 export-standard의 PDF·DOCX preflight를 보존하고 capability probe 결과 후 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:export-career-documents:advanced -->
 ## career:export-career-documents:advanced
 
 **recruiter PPTX·format QA·재개**
 
 recruiter PPTX를 canonical preflight와 renderer capability, format QA, human review로 fail-closed 준비하고 재개 조건을 남긴다.
+
+### 간단 요청 예시
+```text
+@Game Design Career recruiter PPTX를 canonical preflight, renderer capability, format QA, human review와 resumable hold로 준비해. actual output 전 전달 완료를 표시하지 말고 fact, inference, recommendation을 구분해. canonical preflight, capability, renderer, format QA, human review가 모두 통과하기 전 actual output과 delivery completion 모두 표시 금지. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다. document-quality-editor는 구조/format finding만, evidence-auditor는 evidence completion gate를 검토하고 named human decision owner가 승인/보류한다.
+```
+
+### 짧은 흐름
+- 작업 순서: export-career-documents
+- 함께 검토하는 역할: document-quality-editor → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-evidence/export-advanced/content.md`에 recruiter PPTX canonical preflight, capability, renderer, format QA, human review와 hold/resume non-terminal job, fact/inference/recommendation; actual output 전 전달 완료 금지을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 recruiter audience용 PPTX와 복수 포맷의 downstream QA handoff를 준비할 때 사용한다.
@@ -228,9 +273,7 @@ canonical preflight·renderer·format QA·human review 전 actual output 또는 
 - [renderer capability]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career recruiter PPTX를 canonical preflight, renderer capability, format QA, human review와 resumable hold로 준비해. actual output 전 전달 완료를 표시하지 말고 fact, inference, recommendation을 구분해. canonical preflight, capability, renderer, format QA, human review가 모두 통과하기 전 actual output과 delivery completion 모두 표시 금지. downstream workflow가 actual output을 소유하며 이 prompt는 preparation/hold만 소유한다. document-quality-editor는 구조/format finding만, evidence-auditor는 evidence completion gate를 검토하고 named human decision owner가 승인/보류한다.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -298,3 +341,5 @@ document-quality-editor는 구조/format finding만 검토한다. evidence-audit
 ```text
 export-advanced의 canonical preflight와 PPTX hold를 보존하고 renderer capability와 human review 확인 후 재개해.
 ```
+
+</details>

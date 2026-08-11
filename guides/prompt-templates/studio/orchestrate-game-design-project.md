@@ -9,6 +9,21 @@
 
 제한된 게임 brief를 최소 specialist route, Canonical Artifact와 completion gate로 정리한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 섬 복구 게임의 아이디어, 목표 산출물, 대상과 제약을 bounded brief로 정리하고 다음 specialist route 하나와 completion gate를 골라 줘. 모르는 정보는 미정으로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: orchestrate-game-design-project
+- 함께 검토하는 역할: lead-game-designer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/orchestrate-beginner/content.md`에 bounded brief, 선택 route 하나, completion gate, next owner을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 아이디어·대상·제약은 있으나 하나의 다음 specialist route를 정해야 할 때 사용한다.
 
@@ -34,9 +49,7 @@
 - [decision owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 섬 복구 게임의 아이디어, 목표 산출물, 대상과 제약을 bounded brief로 정리하고 다음 specialist route 하나와 completion gate를 골라 줘. 모르는 정보는 미정으로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -108,12 +121,29 @@ lead-game-designer decision owner가 route와 completion gate를 승인·수정�
 ```text
 orchestrate-beginner의 bounded brief와 선택 route를 보존하고 새로 확인된 제약만 반영해 completion gate 확인부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:orchestrate-game-design-project:standard -->
 ## studio:orchestrate-game-design-project:standard
 
 **여러 Artifact를 연결하는 프로젝트 라우팅**
 
 선택된 domain Artifact를 exact route, role, gate와 최대 세 review finding으로 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 협동 RPG의 vision, economy, production Artifact를 exact route와 owner·gate로 연결하고 최대 세 review finding을 분리해 줘. 승인되지 않은 연결은 blocked로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: orchestrate-game-design-project → review-game-design
+- 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → document-quality-editor
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/orchestrate-standard/content.md`에 exact route 목록, Artifact 연결, role·gate record, 최대 세 finding을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 vision·system·economy·production처럼 여러 Artifact의 순서와 owner를 정리해야 할 때 사용한다.
@@ -140,9 +170,7 @@ vision·system·economy·production처럼 여러 Artifact의 순서와 owner를 
 - [role boundary]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 협동 RPG의 vision, economy, production Artifact를 exact route와 owner·gate로 연결하고 최대 세 review finding을 분리해 줘. 승인되지 않은 연결은 blocked로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -218,12 +246,29 @@ lead-game-designer와 각 route owner가 Artifact 연결과 gate를 승인·수�
 ```text
 orchestrate-standard의 route·role·gate record와 기존 finding을 보존하고 해소된 gate 하나만 반영해 다음 owner handoff부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:orchestrate-game-design-project:advanced -->
 ## studio:orchestrate-game-design-project:advanced
 
 **역할 검토와 결정 병합을 갖춘 재개 라우팅**
 
 blocked gate만 재개하며 역할별 finding과 disagreement를 named decision owner의 병합 queue로 보존한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio 기존 Canonical Artifact의 blocked gate만 재개하고 역할별 finding·disagreement를 named decision owner의 decision queue로 병합해 줘. 미해결 route는 그대로 hold로 남겨 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: orchestrate-game-design-project → review-game-design
+- 함께 검토하는 역할: lead-game-designer → production-feasibility-critic → ux-accessibility-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-production/orchestrate-advanced/content.md`에 blocked route receipt, role finding 병합, disagreement queue, resume 조건을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 기존 route가 blocked이고 여러 role finding의 우선순위·disagreement·재개 조건을 정해야 할 때 사용한다.
@@ -250,9 +295,7 @@ blocked gate만 재개하며 역할별 finding과 disagreement를 named decision
 - [decision owner]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 기존 Canonical Artifact의 blocked gate만 재개하고 역할별 finding·disagreement를 named decision owner의 decision queue로 병합해 줘. 미해결 route는 그대로 hold로 남겨 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -328,3 +371,5 @@ lead-game-designer named decision owner가 finding 병합·disagreement·재개�
 ```text
 orchestrate-advanced의 blocked route receipt와 disagreement queue를 보존하고 사람 결정으로 해소된 gate 하나만 반영해 one-route handoff부터 재개해.
 ```
+
+</details>

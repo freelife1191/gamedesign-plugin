@@ -9,6 +9,21 @@
 
 select mode의 실제 user receipt가 지정한 stable asset ID 하나만 생성 경로에 넣고 concept-draft provenance를 보존한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio 실제 user selection receipt의 hero-keyart-01만 select mode로 생성해. provider decision과 digest를 분리하고 결과는 concept-draft로 유지해.
+```
+
+### 짧은 흐름
+- 작업 순서: generate-image-assets → review-image-assets
+- 함께 검토하는 역할: visual-asset-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/generate-beginner/content.md`에 selected stable asset ID, redacted provider decision, per-asset result, concept-draft provenance을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 실제 사용자가 선택한 stable asset ID 하나와 immutable selection receipt가 있을 때 사용한다.
 
@@ -34,9 +49,7 @@ label·순번·agent 추측으로 asset을 고르거나 document-approved를 주
 - [selection event ID]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio 실제 user selection receipt의 hero-keyart-01만 select mode로 생성해. provider decision과 digest를 분리하고 결과는 concept-draft로 유지해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -109,12 +122,29 @@ visual-asset-reviewer owner가 생성 결과의 검토 handoff를 승인·수정
 ```text
 generate-beginner의 selection receipt와 concept-draft provenance를 보존하고 같은 stable asset ID의 명시된 실패 상태부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:generate-image-assets:standard -->
 ## studio:generate-image-assets:standard
 
 **required mode receipt와 no-key capability 경계**
 
 required mode의 declared finite jobs만 처리하고 key가 없는 host capability unavailable 경로에서는 호출 없이 prompt와 placeholder를 보존한다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio required finite assets만 처리해. key가 없고 host capability가 available이면 해당 jobs만 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.
+```
+
+### 짧은 흐름
+- 작업 순서: generate-image-assets → review-image-assets
+- 함께 검토하는 역할: visual-asset-reviewer → art-brief-director
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/generate-standard/content.md`에 required finite job selection, capability decision, unavailable 또는 per-asset result, preserved prompts and placeholders을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 manifest의 required finite jobs와 redacted capability snapshot이 있을 때 사용한다.
@@ -141,9 +171,7 @@ manifest의 required finite jobs와 redacted capability snapshot이 있을 때 �
 - [capability snapshot]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio required finite assets만 처리해. key가 없고 host capability가 available이면 해당 jobs만 사용하고 unknown 또는 unavailable이면 호출하지 말고 prompt와 placeholder를 보존해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -217,12 +245,29 @@ visual-asset-reviewer owner가 provider result와 review handoff를 승인·수�
 ```text
 generate-standard의 prompt·placeholder와 unavailable receipt를 보존하고 available로 바뀐 capability 또는 실패 stable ID만 반영해 해당 job부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: studio:generate-image-assets:advanced -->
 ## studio:generate-image-assets:advanced
 
 **all mode OpenAI-only failure와 provenance 분리**
 
 all mode의 declared required·recommended·variant jobs만 실행하고 API key가 있으면 OpenAI only failure를 Codex fallback 없이 provenance에 남긴다.
+
+### 간단 요청 예시
+```text
+@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. OPENAI_API_KEY가 있으면 OpenAI only로 시도하고 auth·quota·policy·network 실패 후 Codex fallback은 금지하며 provenance를 분리해.
+```
+
+### 짧은 흐름
+- 작업 순서: generate-image-assets → review-image-assets
+- 함께 검토하는 역할: art-brief-director → visual-asset-reviewer
+
+### 이 요청으로 받는 결과
+예: `game-design/studio-visual/generate-advanced/content.md`에 all declared finite job list, OpenAI only or host decision, per-asset provenance, explicit failure state, concept-draft result을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 all mode로 manifest에 이미 선언된 finite jobs의 provider 결과를 asset별로 기록할 때 사용한다.
@@ -249,9 +294,7 @@ API key가 있을 때 다른 provider로 fallback하거나 선언되지 않은 a
 - [provider failure state]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio all mode에서 declared required·recommended·variant jobs만 처리해. OPENAI_API_KEY가 있으면 OpenAI only로 시도하고 auth·quota·policy·network 실패 후 Codex fallback은 금지하며 provenance를 분리해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -326,3 +369,5 @@ visual-asset-reviewer owner가 provenance와 failure handoff를 승인·수정·
 ```text
 generate-advanced의 successful concept-draft와 provider failure provenance를 보존하고 같은 provider 정책에서 failed stable ID만 재개해.
 ```
+
+</details>

@@ -9,6 +9,21 @@
 
 공개 build의 observation과 inference를 분리해 UI, rule, economy 가설을 안전하게 기록한다.
 
+### 간단 요청 예시
+```text
+@Game Design Career 공개 build의 crafting UI와 rule, economy 변화 한 개를 observation과 inference로 나누고 unknown은 미정으로 남겨 줘. 공개 자료의 rights를 기록해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design
+- 함께 검토하는 역할: reverse-design-critic → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/reverse-beginner/content.md`에 observation, UI/rule/economy hypothesis, inference, rights note, fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 공개 build에서 보이는 UI, rule, economy 변화를 observation으로 기록할 때 사용한다.
 
@@ -34,9 +49,7 @@
 - [surface]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 공개 build의 crafting UI와 rule, economy 변화 한 개를 observation과 inference로 나누고 unknown은 미정으로 남겨 줘. 공개 자료의 rights를 기록해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -106,12 +119,29 @@ reverse-design-critic owner와 evidence-auditor가 observation, inference와 rig
 ```text
 reverse-beginner observation과 rights note를 보존하고 공개 source를 확인해 inference 분리부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:standard -->
 ## career:reverse-engineer-game-design:standard
 
 **rule·UI·economy 가설을 검증하는 게임 역기획**
 
 rule, UI, economy 가설에 observation, inference, alternative와 validation method를 연결한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 공개 build의 crafting rule, UI와 economy 가설을 observation, inference, counterexample, alternative, validation method와 rights note로 기록해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design
+- 함께 검토하는 역할: reverse-design-critic → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/reverse-standard/content.md`에 rule/UI/economy hypothesis — observation/fact/inference/recommendation label, observation/fact/inference/recommendation split, counterexample — observation/fact/inference/recommendation label, alternative — observation/fact/inference/recommendation label, rights — observation/fact/inference/recommendation label, validation method — observation/fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 관찰된 player action을 rule, UI, economy의 가설과 validation task로 추적할 때 사용한다.
@@ -140,9 +170,7 @@ rule, UI, economy 가설에 observation, inference, alternative와 validation me
 - [alternative]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 공개 build의 crafting rule, UI와 economy 가설을 observation, inference, counterexample, alternative, validation method와 rights note로 기록해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -214,12 +242,29 @@ reverse-design-critic owner가 rule/UI/economy 가설과 counterexample을 검�
 ```text
 reverse-standard claim record와 counterexample을 보존하고 새 관찰을 연결해 alternative 검토부터 재개해.
 ```
+
+</details>
 <!-- PROMPT-CARD: career:reverse-engineer-game-design:advanced -->
 ## career:reverse-engineer-game-design:advanced
 
 **반증·rights·대안을 갖춘 게임 역기획**
 
 반증 가능한 reverse engineering claim에 rights, alternative, validation queue를 연결해 observation과 inference를 엄격히 분리한다.
+
+### 간단 요청 예시
+```text
+@Game Design Career 공개 build 관찰로 만든 rule, UI, economy claim을 반증 가능성, counterexample, alternative, validation method, rights와 unresolved uncertainty로 audit해 줘.
+```
+
+### 짧은 흐름
+- 작업 순서: reverse-engineer-game-design
+- 함께 검토하는 역할: reverse-design-critic → evidence-auditor
+
+### 이 요청으로 받는 결과
+예: `game-design-career/career-foundations/reverse-advanced/content.md`에 falsifiable observation/fact/inference/recommendation claim, counterexample — observation/fact/inference/recommendation label, alternative — observation/fact/inference/recommendation label, rights evidence — observation/fact/inference/recommendation label, validation queue — observation/fact/inference/recommendation label을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
 
 ### 사용하는 경우
 여러 공개 관찰에서 독립적으로 반증 가능한 rule, UI, economy claim을 정리할 때 사용한다.
@@ -248,9 +293,7 @@ reverse-standard claim record와 counterexample을 보존하고 새 관찰을 �
 - [rights evidence]
 
 ### Codex App 완성 예시
-```text
-@Game Design Career 공개 build 관찰로 만든 rule, UI, economy claim을 반증 가능성, counterexample, alternative, validation method, rights와 unresolved uncertainty로 audit해 줘.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -321,3 +364,5 @@ reverse-design-critic owner와 evidence-auditor가 falsifiability와 rights를 �
 ```text
 reverse-advanced claim, rights evidence와 validation queue를 보존하고 공개 관찰만 추가해 counterexample 검토부터 재개해.
 ```
+
+</details>

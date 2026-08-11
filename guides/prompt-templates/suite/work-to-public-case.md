@@ -9,6 +9,21 @@
 
 work-to-public-case의 Studio와 Career ordered handoff를 public/evidence-safe하게 연결한다.
 
+### 간단 요청 예시
+```text
+@Game Design Studio와 @Game Design Career에서 work-to-public-case handoff를 public/evidence-safe하게 작성해.
+```
+
+### 짧은 흐름
+- 작업 순서: review-game-design → build-game-design-portfolio
+- 함께 검토하는 역할: lead-game-designer → career-strategist
+
+### 이 요청으로 받는 결과
+예: `suite/work-to-public-case/content.md`에 공개 요약과 제외 기록을 기록하고, 확인되지 않은 값은 `미정`으로 남깁니다.
+
+<details>
+<summary>고급 정보: 명령어·안전 경계·재개 기록</summary>
+
 ### 사용하는 경우
 두 제품의 canonical artifact handoff가 필요할 때 사용한다.
 
@@ -26,9 +41,7 @@ work-to-public-case의 Studio와 Career ordered handoff를 public/evidence-safe�
 - [공개 정보]
 
 ### Codex App 완성 예시
-```text
-@Game Design Studio와 @Game Design Career에서 work-to-public-case handoff를 public/evidence-safe하게 작성해.
-```
+위의 간단 요청 예시를 그대로 사용합니다.
 
 ### Codex App 재사용 템플릿
 ```text
@@ -92,3 +105,5 @@ named human decision owner가 work-to-public-case handoff의 공개 범위를 �
 ```text
 work-to-public-case의 보존 파일과 blocker를 읽고 공개 정보만으로 재개해.
 ```
+
+</details>
