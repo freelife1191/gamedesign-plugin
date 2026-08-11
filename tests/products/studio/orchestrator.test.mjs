@@ -44,6 +44,7 @@ const contentRoutingFixture = {
 const conditionalReviewerSelectionContract = {
   intentInput: "conditionalIntent",
   selectionSource: "routing.routes[].conditionalReviewers",
+  matchRule: "conditionalReviewers[].triggerIntents includes conditionalIntent",
   finalReviewerSet: "unique(defaultReviewers + selectedConditionalReviewers)",
   deduplicate: true,
   maxReviewers: 3,
@@ -195,7 +196,7 @@ test("content routing fixture rejects missing intents and a fourth selected revi
   assert.throws(() => assertDomainIntentRouting(mutation), undefined, "default three plus conditional one survived");
 });
 
-test("conditional reviewer workflow contract rejects removal of every selection step", () => {
+test("conditional reviewer workflow contract rejects missing or incorrect selection semantics", () => {
   assert.doesNotThrow(() => assertConditionalReviewerSelectionContract(conditionalReviewerSelectionContract));
   for (const field of Object.keys(conditionalReviewerSelectionContract)) {
     const mutation = structuredClone(conditionalReviewerSelectionContract);
@@ -204,6 +205,19 @@ test("conditional reviewer workflow contract rejects removal of every selection 
       () => assertConditionalReviewerSelectionContract(mutation),
       undefined,
       `conditional reviewer workflow: ${field} removal survived`,
+    );
+  }
+
+  for (const [label, matchRule] of [
+    ["intent matched against role", "conditionalReviewers[].role includes conditionalIntent"],
+    ["role matched against trigger intents", "conditionalReviewers[].triggerIntents includes conditionalRole"],
+    ["all conditional roles selected unconditionally", "select all conditionalReviewers"],
+  ]) {
+    const mutation = { ...conditionalReviewerSelectionContract, matchRule };
+    assert.throws(
+      () => assertConditionalReviewerSelectionContract(mutation),
+      undefined,
+      `conditional reviewer workflow: ${label} mutation survived`,
     );
   }
 });
