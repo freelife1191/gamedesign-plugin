@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { lstat, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -57,6 +57,22 @@ function compareSemver(left, right) {
 
 async function readJson(file) {
   return JSON.parse(await readFile(file, "utf8"));
+}
+
+async function assertSafeStagingRoot(root, stagingRoot) {
+  const vendorRoot = await realpath(path.resolve(root));
+  const requested = path.resolve(stagingRoot);
+  const candidate = path.join(await realpath(path.dirname(requested)), path.basename(requested));
+  if (path.dirname(candidate) !== path.dirname(vendorRoot) || candidate === vendorRoot) {
+    throw vendorError("IM_NOT_AI_UNSAFE_STAGING_ROOT", candidate);
+  }
+  for (let current = vendorRoot; current !== path.dirname(current); current = path.dirname(current)) {
+    const stat = await lstat(current);
+    if (stat.isSymbolicLink()) throw vendorError("IM_NOT_AI_SYMLINK", current);
+  }
+  const existing = await lstat(candidate).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error));
+  if (existing) throw vendorError("IM_NOT_AI_STAGING_EXISTS", candidate);
+  return candidate;
 }
 
 async function regularFiles(root, prefix = "") {
@@ -231,13 +247,13 @@ export async function updateImNotAi({ root = DEFAULT_VENDOR_ROOT, stagingRoot, f
   });
   const lockedRelease = { ...release, archive };
   const nextLock = makeLock(lockedRelease, oldLock, files);
-  await rm(stagingRoot, { recursive: true, force: true });
-  await mkdir(path.join(stagingRoot, nextLock.tree.root), { recursive: true });
-  await writeFile(path.join(stagingRoot, "LICENSE"), archiveFile(archive, "LICENSE"));
-  await writeFile(path.join(stagingRoot, "THIRD_PARTY_NOTICES.md"), `# im-not-ai\n\n- Upstream: ${OFFICIAL_REPOSITORY}\n- Pinned release: \`${release.tag}\` (\`${release.commit}\`)\n- License: MIT\n- License SHA-256: \`${nextLock.license.sha256}\`\n`);
-  await writeFile(path.join(stagingRoot, "vendor.lock.json"), `${JSON.stringify(nextLock, null, 2)}\n`);
+  const safeStagingRoot = await assertSafeStagingRoot(root, stagingRoot);
+  await mkdir(path.join(safeStagingRoot, nextLock.tree.root), { recursive: true });
+  await writeFile(path.join(safeStagingRoot, "LICENSE"), archiveFile(archive, "LICENSE"));
+  await writeFile(path.join(safeStagingRoot, "THIRD_PARTY_NOTICES.md"), `# im-not-ai\n\n- Upstream: ${OFFICIAL_REPOSITORY}\n- Pinned release: \`${release.tag}\` (\`${release.commit}\`)\n- License: MIT\n- License SHA-256: \`${nextLock.license.sha256}\`\n`);
+  await writeFile(path.join(safeStagingRoot, "vendor.lock.json"), `${JSON.stringify(nextLock, null, 2)}\n`);
   for (const file of files) {
-    const destination = path.join(stagingRoot, nextLock.tree.root, ...file.path.split("/"));
+    const destination = path.join(safeStagingRoot, nextLock.tree.root, ...file.path.split("/"));
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, file.bytes);
   }

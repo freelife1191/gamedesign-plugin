@@ -271,3 +271,12 @@ test("update rejects altered archive payload bytes without staging or original w
 test("update rejects an extra archive script without staging or original writes", async (t) => {
   await assertArchiveRejectedWithoutWrites(t, (archive) => { const bytes = Buffer.from("export default null;\n"); archive.files.push({ path: "scripts/update.mjs", bytes, sha256: sha256(bytes) }); }, { code: "IM_NOT_AI_ARCHIVE_UNREGISTERED_FILE", path: "scripts/update.mjs" });
 });
+
+test("update rejects a staging root outside the vendor parent without deleting it", async (t) => {
+  const fixture = await copiedVendor(t);
+  const outside = await mkdtemp(path.join(tmpdir(), "unrelated-im-not-ai-"));
+  await writeFile(path.join(outside, "keep.txt"), "keep\n");
+  const { updateImNotAi } = await import(updaterUrl.href);
+  await assert.rejects(updateImNotAi({ root: fixture, stagingRoot: outside, fetchRelease: async () => futureRelease, fetchArchive: async () => trustedFutureArchive(fixture) }), (error) => error.code === "IM_NOT_AI_UNSAFE_STAGING_ROOT");
+  assert.equal(await readFile(path.join(outside, "keep.txt"), "utf8"), "keep\n");
+});

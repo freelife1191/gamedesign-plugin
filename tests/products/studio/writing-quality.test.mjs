@@ -30,7 +30,7 @@ const expectedSkillContract = {
     skill: "humanize-korean",
     path: "../humanize-korean/SKILL.md",
   },
-  sharedWrapper: "shared/scripts/run-game-design-writing-polish.mjs",
+  sharedWrapper: "scripts/run-game-design-writing-polish.mjs",
   workflow: [
     "lock-protected-content",
     "run-bundled-humanize-korean",

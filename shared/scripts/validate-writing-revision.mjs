@@ -17,7 +17,7 @@ const PROTECTED_KINDS = Object.freeze([
 
 const CONTROL_CHARACTER = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u;
 const CODE_SPAN = /`([^`\n]+)`/gu;
-const STABLE_ID = /\b[A-Z][A-Z0-9]+(?:-[A-Z0-9]+)+\b/gu;
+const STABLE_ID = /\b(?:[A-Z][A-Z0-9]+(?:-[A-Z0-9]+)+|[a-z][a-z0-9]*(?:-[a-z0-9]+)+)\b/gu;
 const NUMERIC_TOKEN_WITH_UNIT = /(?<![\d.])\d+(?:\.\d+)?\s?(?:FPS|fps|초|분|시간|일|주|개월|년|회|명|개|원|%|px|km)(?![\p{L}\d])/gu;
 const CALENDAR_DATE = /\b\d{4}-\d{2}-\d{2}\b/gu;
 const MARKDOWN_LINK_DESTINATION = /\[[^\]\n]+\]\((https?:\/\/[^\s)]+)\)/gu;
@@ -67,6 +67,12 @@ function collectFilePaths(source) {
   return collectMatches(withoutUrls, FILE_PATH, 0);
 }
 
+function collectStableIds(source) {
+  const withoutUrls = source.replace(/https?:\/\/[^\s)]+/gu, "");
+  const withoutPaths = withoutUrls.replace(FILE_PATH, " ");
+  return collectMatches(withoutPaths, STABLE_ID, 0);
+}
+
 function firstDifference(before, after) {
   const length = Math.max(before.length, after.length);
   for (let index = 0; index < length; index += 1) {
@@ -85,6 +91,22 @@ function invalidInput(source, name) {
   if (source !== source.normalize("NFC")) return { code: "non-nfc-text", detail: { kind: name, before: null, after: null } };
   if (/\.{2}(?:\/|\\)/u.test(source)) return { code: "path-traversal", detail: { kind: name, before: null, after: null } };
   return undefined;
+}
+
+function validateProtectedStrings(value, label) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || item.length === 0 || item !== item.normalize("NFC"))) {
+    throw new TypeError(`${label} must be an NFC string array`);
+  }
+  return [...new Set(value)];
+}
+
+function validateProtectedSpans(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.some((item) => item === null || Object.getPrototypeOf(item) !== Object.prototype || typeof item.id !== "string" || typeof item.text !== "string" || item.id.length === 0 || item.text.length === 0)) {
+    throw new TypeError("protectedSpans must contain plain { id, text } records");
+  }
+  return value;
 }
 
 function sequenceError(source, revised, { expression, kind, code, group = 1 }) {
@@ -114,14 +136,24 @@ function designFieldError(source, revised, field) {
  * Reject revisions that alter game-design facts, evidence, decisions, or approval states.
  * The validator deliberately checks only concrete protected tokens; it is not a truth engine.
  */
-export function validateWritingRevision({ original, revised }) {
+export function validateWritingRevision({ original, revised, protectedTerms, protectedSpans }) {
   const inputError = invalidInput(original, "original") ?? invalidInput(revised, "revised");
   if (inputError) return { valid: false, errors: [inputError], receipt: { status: "rejected", protectedKinds: PROTECTED_KINDS } };
 
   const reject = (error) => error ? { valid: false, errors: [error], receipt: { status: "rejected", protectedKinds: PROTECTED_KINDS, originalDigest: digest(original), revisedDigest: digest(revised) } } : undefined;
+  for (const term of validateProtectedStrings(protectedTerms, "protectedTerms")) {
+    if (!revised.includes(term)) return reject(changed("protected-term-changed", "protected-term", term, null));
+  }
+  for (const span of validateProtectedSpans(protectedSpans)) {
+    if (!original.includes(span.text)) throw new TypeError(`protected span is absent from original: ${span.id}`);
+    if (!revised.includes(span.text)) return reject(changed("protected-span-changed", "protected-span", span.text, null));
+  }
   const checks = [
     () => sequenceError(original, revised, { expression: CODE_SPAN, kind: "code-span", code: "code-span-changed" }),
-    () => sequenceError(original, revised, { expression: STABLE_ID, kind: "stable-id", code: "stable-id-changed", group: 0 }),
+    () => {
+      const difference = firstDifference(collectStableIds(original), collectStableIds(revised));
+      return difference ? changed("stable-id-changed", "stable-id", difference.before, difference.after) : undefined;
+    },
     () => sequenceError(original, revised, { expression: NUMERIC_TOKEN_WITH_UNIT, kind: "numeric-token-with-unit", code: "numeric-token-with-unit-changed", group: 0 }),
     () => sequenceError(original, revised, { expression: CALENDAR_DATE, kind: "calendar-date", code: "calendar-date-changed", group: 0 }),
     () => sequenceError(original, revised, { expression: MARKDOWN_LINK_DESTINATION, kind: "markdown-link-destination", code: "markdown-link-destination-changed" }),

@@ -12,7 +12,8 @@ const sharedMappings = {
   templates: ["shared/templates", "assets/shared/templates"],
   "responsible-design": ["shared/responsible-design", "references/shared/responsible-design"],
   export: ["shared/export", "references/shared/export"],
-  vendor: ["shared/vendor/skillstead/svg-infographic/0.8.3", "skills/svg-infographic"],
+  vendor: ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"],
+  archify: ["shared/vendor/archify/archify/2.13.0", "skills/archify"],
   "im-not-ai": ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
   "document-quality": ["shared/document-quality", "references/shared/document-quality"],
   "image-assets": ["shared/image-assets", "references/shared/image-assets"],
@@ -20,11 +21,11 @@ const sharedMappings = {
 const sourceOnlySkillsteadFallbacks = Object.freeze({
   "game-design-career": Object.freeze({
     path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
-    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
+    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
   "game-design-studio": Object.freeze({
     path: "skills/visualize-game-design/scripts/run-skillstead.mjs",
-    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.8.3"),\n',
+    source: '    path.resolve(path.dirname(ownPath), "../../../../../../shared/vendor/skillstead/svg-infographic/0.9.0"),\n',
   }),
 });
 const snapshotStagingCapabilities = new WeakSet();
@@ -322,6 +323,10 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       const example = entries.find(({ relativePath }) => relativePath === ".env.example");
       if (!example) throw new Error("Missing shared/image-assets/.env.example");
       addEntry(targets, example, "", "shared:image-assets-root-example");
+    }
+    if (moduleName === "im-not-ai") {
+      const license = await readFile(path.join(absoluteRepoRoot, "shared/vendor/im-not-ai/LICENSE"));
+      addEntry(targets, { relativePath: "LICENSE", bytes: license }, "third-party/im-not-ai", "shared:im-not-ai-license");
     }
   }
 
