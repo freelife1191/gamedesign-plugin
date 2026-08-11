@@ -318,6 +318,27 @@ test("production batch rejects a boundary nextRoutes target absent from installe
   );
 });
 
+test("production batch accepts the published content combat and puzzle routing intents", async () => {
+  const { sources, routing } = await readStudioProductionInputs();
+  assert.deepStrictEqual(studioRoute(routing, "content").triggerIntents, [
+    "quest",
+    "level content",
+    "narrative",
+    "character",
+    "enemy",
+    "combat",
+    "boss",
+    "encounter",
+    "puzzle",
+    "level design",
+    "soft lock",
+    "secret route",
+    "reset",
+    "retry",
+  ]);
+  assert.doesNotThrow(() => studioProductionContract.validateStudioDiagramProductionBatch(sources, routing));
+});
+
 test("builder propagates zero-exit Skillstead warnings from its fixed wrapper", async (t) => {
   const repoRoot = await writeFixture(t, { wrapper: wrapperSource({ lint: "check-svg: 0 error(s), 1 warning(s) across 1 file(s)" }) });
 
