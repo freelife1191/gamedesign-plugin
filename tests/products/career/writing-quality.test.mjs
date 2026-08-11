@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
-import { lstat, readFile } from "node:fs/promises";
+import { lstat, mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
@@ -20,10 +23,24 @@ const expectedSkillContract = {
     humanReviewHandoff: "writing-revision/human-review-handoff.md",
   },
   humanizeKorean: {
-    host: { skill: "humanize-korean", optional: true },
-    bundledFallback: "references/shared/document-quality/game-design-writing-style.md",
+    source: "bundled-im-not-ai-v2.3.0",
+    skill: "humanize-korean",
+    path: "../humanize-korean/SKILL.md",
   },
+  workflow: [
+    "lock-protected-content",
+    "run-bundled-humanize-korean",
+    "apply-game-design-protected-content-validator",
+    "write-separate-revision-and-receipt",
+    "wait-for-human-review",
+  ],
 };
+
+async function buildInstalledProduct(t) {
+  const stagingRoot = await mkdtemp(path.join(tmpdir(), "career-humanize-install-"));
+  t.after(() => rm(stagingRoot, { recursive: true, force: true }));
+  return buildProduct({ repoRoot, productName: "game-design-career", stagingRoot });
+}
 
 function extractJsonContract(markdown, name) {
   const match = markdown.match(new RegExp(
@@ -46,17 +63,18 @@ function parseFrontmatter(markdown) {
   }));
 }
 
-test("Career registry exposes writing polish as a dedicated specialist pass, outside primary reviewer bounds", async () => {
+test("Career registry exposes bundled humanize-korean and a dedicated writing specialist pass", async () => {
   const routing = JSON.parse(await readFile(path.join(pluginRoot, "references/routing.json"), "utf8"));
 
   assert.ok(routing.skillIds.includes(skillId));
+  assert.ok(routing.skillIds.includes("humanize-korean"));
   assert.deepEqual(routing.writingSpecialistIds, [specialistId]);
   assert.deepEqual(routing.writingWorkflow, {
     skill: skillId,
     role: specialistId,
     placement: "after-content-domain-review-before-export",
     reviewerBound: "dedicated-specialist-pass-outside-primary-reviewer-cap",
-    bundledStylePath: "references/shared/document-quality/game-design-writing-style.md",
+    humanizeKoreanSkill: "humanize-korean",
   });
   for (const route of routing.routes) {
     assert.ok(route.roles.length <= 3, `${route.id}: primary reviewer cap`);
@@ -77,16 +95,22 @@ test("Career writing-polish skill is directly discoverable through parsed skill 
   assert.match(openai, /^interface:\n  display_name: "Polish Game Design Writing"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$polish-game-design-writing [^"]+"\n$/u);
 });
 
-test("Career writing-polish skill publishes a direct command, separate outputs, and a safe host fallback", async () => {
-  const [skill, routing] = await Promise.all([
-    readFile(path.join(pluginRoot, `skills/${skillId}/SKILL.md`), "utf8"),
-    readFile(path.join(pluginRoot, "references/routing.json"), "utf8").then(JSON.parse),
-  ]);
+test("Career writing-polish wrapper uses bundled humanize-korean before the stricter validator", async () => {
+  const skill = await readFile(path.join(pluginRoot, `skills/${skillId}/SKILL.md`), "utf8");
 
   assert.deepEqual(extractJsonContract(skill, "game-design-writing-contract"), expectedSkillContract);
-  const fallback = path.join(pluginRoot, routing.writingWorkflow.bundledStylePath);
-  const fallbackStat = await lstat(fallback);
-  assert.equal(fallbackStat.isFile() && !fallbackStat.isSymbolicLink(), true, `bundled fallback must be a regular product file: ${fallback}`);
+});
+
+test("Career install materializes humanize-korean locally without packaging the network updater", async (t) => {
+  const build = await buildInstalledProduct(t);
+  const installedSkill = path.join(build.outputDir, "skills/humanize-korean/SKILL.md");
+  const installedStat = await lstat(installedSkill);
+
+  assert.equal(installedStat.isFile() && !installedStat.isSymbolicLink(), true, "bundled humanize-korean SKILL.md is a regular installed file");
+  const installedMetadata = parseFrontmatter(await readFile(installedSkill, "utf8"));
+  assert.deepEqual(installedMetadata.name, "humanize-korean");
+  assert.equal(`$${installedMetadata.name}`, "$humanize-korean", "bundled skill has a direct command");
+  await assert.rejects(lstat(path.join(build.outputDir, "scripts/sync-im-not-ai.mjs")), { code: "ENOENT" });
 });
 
 test("Career writing specialist records bounded revisions without approval authority", async () => {
