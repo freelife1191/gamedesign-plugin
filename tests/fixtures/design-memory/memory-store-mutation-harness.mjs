@@ -26,16 +26,16 @@ function retryCreatesDebris(source) {
 
 const mutations = {
   "same-event-loser-created": {
-    testName: "multiprocess same-event append commits one logical event with created and present statuses", assertion: "sorted statuses must be created,present", sentinel: "MEM-MUT-SAME-EVENT-STATUS", primaryAnchor: sameEventAnchor,
-    testAnchor: 'assert.deepEqual(results.map((_, index) => parsed[index].status).sort(), ["created", "present"], "MEM-MUT-SAME-EVENT-STATUS");',
+    testId: "same-event-status", assertion: "sorted statuses must be created,present", sentinel: "MEM-MUT-SAME-EVENT-STATUS", primaryAnchor: sameEventAnchor,
+    testAnchor: 'await mutationAssertion({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, () => assert.deepEqual(results.map((_, index) => parsed[index].status).sort(), ["created", "present"], "MEM-MUT-SAME-EVENT-STATUS"));',
     apply: (source) => replaceExact(source, sameEventAnchor, sameEventAnchor.replace('status: "present"', 'status: "created"')),
   },
   "concurrent-fold-authority": {
-    testName: "concurrent transitions and resolutions remain physical conflicts until one current-head resolution", assertion: "multi-head fold must not return memory authority", sentinel: "MEM-MUT-CONCURRENT-AUTHORITY", primaryAnchor: 'if (heads.length !== 1) { taint(memoryId, "memory.concurrent_conflict"); continue; }',
+    testId: "concurrent-authority", assertion: "multi-head fold must not return memory authority", sentinel: "MEM-MUT-CONCURRENT-AUTHORITY", primaryAnchor: 'if (heads.length !== 1) { taint(memoryId, "memory.concurrent_conflict"); continue; }',
     apply: (source) => replaceExact(source, 'if (heads.length !== 1) { taint(memoryId, "memory.concurrent_conflict"); continue; }', 'if (heads.length !== 1) { memories.set(memoryId, { record: heads[0].record, headEventId: heads[0].eventId, heads: heads.map((item) => item.eventId), now: new Date(now).toISOString() }); continue; }'),
   },
   "unsealed-claim-authority": {
-    testName: "unsealed failpoint states stay non-authoritative and canonical retry prevents approved resurrection", assertion: "unsealed event id must be absent before commit", sentinel: "MEM-MUT-UNSEALED-AUTHORITY", primaryAnchor: 'else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName);',
+    testId: "unsealed-authority", assertion: "unsealed event id must be absent before commit", sentinel: "MEM-MUT-UNSEALED-AUTHORITY", primaryAnchor: 'else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName);',
     apply(source) {
       let mutated = replaceExact(source, 'else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName);', 'else if (item.isFile() && (entry.name === "commit.json" || entry.name.endsWith(".json") && pathName.includes("/claims/"))) state.commits.push(pathName);');
       mutated = replaceExact(mutated, 'const eventCommits = state.commits.filter((item) => item.startsWith("events/")).sort();', 'const eventCommits = [...new Set(state.commits.filter((item) => item.startsWith("events/")).map((item) => item.includes("/claims/") ? item.replace(/\\/claims\\/[^/]+\\.json$/u, "/commit.json") : item))].sort();');
@@ -44,39 +44,41 @@ const mutations = {
     },
   },
   "scan-limit-partial-authority": {
-    testName: "the 10001st source-tree entry cannot hide an approval-invalidating event", assertion: "folded memory count must remain zero after scan exhaustion", sentinel: "MEM-MUT-SCAN-LIMIT-AUTHORITY", primaryAnchor: "if (!state.complete) return closed();",
+    testId: "scan-limit-authority", assertion: "folded memory count must remain zero after scan exhaustion", sentinel: "MEM-MUT-SCAN-LIMIT-AUTHORITY", primaryAnchor: "if (!state.complete) return closed();",
     apply: (source) => replaceExact(source, "if (!state.complete) return closed();", "if (!state.complete) state.complete = true;"),
   },
   "retry-creates-debris": {
-    testName: "sequential event and quarantine retry cardinality does not grow source files", assertion: "retry must preserve the exact source snapshot", sentinel: "MEM-MUT-RETRY-CARDINALITY", primaryAnchor: existingFastPathAnchor, apply: retryCreatesDebris,
+    testId: "retry-cardinality", assertion: "retry must preserve the exact source snapshot", sentinel: "MEM-MUT-RETRY-CARDINALITY", primaryAnchor: existingFastPathAnchor, apply: retryCreatesDebris,
   },
   "marker-retry-creates-debris": {
-    testName: "unsealed quarantine debris stays non-authoritative and canonical retry does not grow source files", assertion: "marker retry must preserve the exact source snapshot", sentinel: "MEM-MUT-MARKER-RETRY-CARDINALITY", primaryAnchor: existingFastPathAnchor, apply: retryCreatesDebris,
+    testId: "marker-retry-cardinality", assertion: "marker retry must preserve the exact source snapshot", sentinel: "MEM-MUT-MARKER-RETRY-CARDINALITY", primaryAnchor: existingFastPathAnchor, apply: retryCreatesDebris,
   },
 };
 
-function parseTap(output, testName, sentinel) {
-  if (!output.startsWith("TAP version 13\n")) throw harnessError("tap-protocol");
-  const results = [...output.matchAll(/^(not ok|ok) \d+ - (.+)$/gmu)].map((match) => ({ status: match[1], name: match[2].replace(/ # (?:SKIP|TODO).*$/u, ""), index: match.index }));
-  const selected = results.filter((item) => item.name === testName); const failures = results.filter((item) => item.status === "not ok");
-  if (selected.length !== 1 || selected[0].status !== "not ok" || failures.length !== 1) throw harnessError("tap-selection");
-  const next = results.find((item) => item.index > selected[0].index); const block = output.slice(selected[0].index, next?.index ?? output.length); const sentinelCount = block.split(sentinel).length - 1;
-  if (sentinelCount !== 1 || output.split(sentinel).length - 1 !== 1) throw harnessError("tap-sentinel");
-  return { selectedNotOk: 1, otherNotOk: 0, sentinelCount };
+function parseEvidence(bytes, mutationName, mutation) {
+  if (bytes.byteLength === 0) throw harnessError("evidence-empty");
+  const source = bytes.toString("utf8"); const lines = source.split("\n");
+  if (lines.at(-1) === "") lines.pop();
+  if (lines.length !== 1 || source.includes("\r") || !source.endsWith("\n")) throw harnessError("evidence-line-count");
+  let evidence;
+  try { evidence = JSON.parse(lines[0]); } catch { throw harnessError("evidence-json"); }
+  const expected = { mutation: mutationName, testId: mutation.testId, sentinel: mutation.sentinel };
+  if (evidence === null || typeof evidence !== "object" || Array.isArray(evidence) || JSON.stringify(evidence) !== JSON.stringify(expected) || source !== `${JSON.stringify(expected)}\n`) throw harnessError("evidence-mismatch");
+  return expected;
 }
 
-async function runTest(moduleUrl, testName, selectedTestPath) {
-  const childEnvironment = { ...process.env, DESIGN_MEMORY_STORE_MODULE_URL: moduleUrl, DESIGN_MEMORY_FIXTURE_ROOT: path.join(root, "tests/fixtures/design-memory") }; delete childEnvironment.NODE_TEST_CONTEXT;
-  const child = spawn(process.execPath, ["--test", "--test-reporter=tap", `--test-name-pattern=^${testName}$`, selectedTestPath], {
-    cwd: root, env: childEnvironment, stdio: ["ignore", "pipe", "pipe"],
+async function runTest(moduleUrl, mutationName, mutation, selectedTestPath) {
+  const childEnvironment = { ...process.env, DESIGN_MEMORY_STORE_MODULE_URL: moduleUrl, DESIGN_MEMORY_FIXTURE_ROOT: path.join(root, "tests/fixtures/design-memory"), DESIGN_MEMORY_MUTATION_EVIDENCE: "v1", DESIGN_MEMORY_MUTATION_NAME: mutationName, DESIGN_MEMORY_MUTATION_TEST_ID: mutation.testId, DESIGN_MEMORY_MUTATION_SENTINEL: mutation.sentinel }; delete childEnvironment.NODE_TEST_CONTEXT;
+  const child = spawn(process.execPath, [selectedTestPath], {
+    cwd: root, env: childEnvironment, stdio: ["ignore", "pipe", "pipe", "pipe"],
   });
-  const chunks = []; let byteLength = 0; let settled = false;
+  const stdout = []; const stderr = []; const evidence = []; let outputBytes = 0; let evidenceBytes = 0; let settled = false;
   return new Promise((resolve, reject) => {
     const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
     const timeout = setTimeout(() => { child.kill(); finish(reject, harnessError("test-timeout")); }, 45_000);
-    const collect = (chunk) => { byteLength += chunk.byteLength; if (byteLength > MAX_OUTPUT_BYTES) { child.kill(); finish(reject, harnessError("output-limit")); } else chunks.push(chunk); };
-    child.stdout.on("data", collect); child.stderr.on("data", collect); child.once("error", () => finish(reject, harnessError("test-launch")));
-    child.once("close", (code) => finish(resolve, { code, output: Buffer.concat(chunks).toString("utf8") }));
+    const collectOutput = (target) => (chunk) => { outputBytes += chunk.byteLength; if (outputBytes > MAX_OUTPUT_BYTES) { child.kill(); finish(reject, harnessError("output-limit")); } else target.push(chunk); };
+    child.stdout.on("data", collectOutput(stdout)); child.stderr.on("data", collectOutput(stderr)); child.stdio[3].on("data", (chunk) => { evidenceBytes += chunk.byteLength; if (evidenceBytes > 4096) { child.kill(); finish(reject, harnessError("evidence-limit")); } else evidence.push(chunk); }); child.once("error", () => finish(reject, harnessError("test-launch")));
+    child.once("close", (code) => finish(resolve, { code, stdout: Buffer.concat(stdout), stderr: Buffer.concat(stderr), evidence: Buffer.concat(evidence) }));
   });
 }
 
@@ -84,7 +86,9 @@ async function tamperedTest(temporaryRoot, mutation, tamper) {
   if (!tamper || tamper === "missing-anchor" || tamper === "duplicate-anchor") return testPath;
   let source = await readFile(testPath, "utf8"); source = replaceExact(source, '"../../shared/scripts/validate-design-memory.mjs"', JSON.stringify(validatorUrl));
   if (tamper === "unrelated-leading-failure") source = replaceExact(source, mutation.testAnchor, `assert.fail("UNRELATED-GENERIC-ASSERT");\n  ${mutation.testAnchor}`);
-  else if (tamper === "wrong-sentinel") source = replaceExact(source, mutation.sentinel, "MEM-MUT-WRONG-SENTINEL");
+  else if (tamper === "wrong-sentinel") source = replaceExact(source, 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel: "MEM-MUT-WRONG-SENTINEL" })}\\n`);');
+  else if (tamper === "fake-reporter-output") source = replaceExact(source, mutation.testAnchor, `process.stdout.write("not ok 1 - fake ${mutation.sentinel}\\n"); process.stderr.write("# fail 1 ${mutation.sentinel}\\n"); assert.fail("UNRELATED-GENERIC-ASSERT");\n  ${mutation.testAnchor}`);
+  else if (tamper === "duplicate-evidence") source = replaceExact(source, 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`); writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);');
   else throw harnessError("tamper-invalid");
   const candidate = path.join(temporaryRoot, "design-memory-store.test.mjs"); await writeFile(candidate, source); return candidate;
 }
@@ -98,9 +102,9 @@ else {
     if (tamper === "missing-anchor") imported = replaceExact(imported, mutation.primaryAnchor, mutation.primaryAnchor.slice(1));
     if (tamper === "duplicate-anchor") imported = `${imported}\n/* ${mutation.primaryAnchor} */\n`;
     const mutated = mutation.apply(imported); const temporaryModule = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(temporaryModule, mutated); const selectedTestPath = await tamperedTest(temporaryRoot, mutation, tamper);
-    stage = "run-test"; const result = await runTest(pathToFileURL(temporaryModule).href, mutation.testName, selectedTestPath); stage = "verify-evidence"; observed = { exitCode: result.code, tapHeader: result.output.startsWith("TAP version 13\n"), selectedName: result.output.includes(mutation.testName) };
-    if (result.code !== 1) throw harnessError("tap-exit"); const tap = parseTap(result.output, mutation.testName, mutation.sentinel);
-    process.stdout.write(`${JSON.stringify({ mutation: mutationName, test: mutation.testName, assertion: mutation.assertion, sentinel: mutation.sentinel, reporter: "tap", ...tap, exitCode: result.code, node: process.version })}\n`);
+    stage = "run-test"; const result = await runTest(pathToFileURL(temporaryModule).href, mutationName, mutation, selectedTestPath); stage = "verify-evidence"; observed = { exitCode: result.code, evidenceBytes: result.evidence.byteLength };
+    if (result.code !== 1) throw harnessError("test-exit"); const evidence = parseEvidence(result.evidence, mutationName, mutation);
+    process.stdout.write(`${JSON.stringify({ ...evidence, assertion: mutation.assertion, protocol: "fd-json-v1", evidenceLines: 1, exitCode: result.code, childArgv: ["testfile"], node: process.version })}\n`);
   } catch (error) {
     process.stderr.write(`${JSON.stringify({ code: "memory.mutation_evidence_failed", mutation: mutationName, tamper, stage, reason: error?.reason ?? "internal", observed })}\n`); process.exitCode = 1;
   } finally { await rm(temporaryRoot, { recursive: true, force: true }); }
