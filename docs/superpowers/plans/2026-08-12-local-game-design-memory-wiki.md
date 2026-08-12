@@ -4,7 +4,7 @@
 
 **Goal:** Studio와 Career가 승인된 프로젝트 기억만 로컬에서 안전하게 다시 사용하고, 의미 있는 작업 결과만 검토 대기 교훈으로 축적하도록 구현한다.
 
-**Architecture:** Markdown 기억 문서를 유일한 원본으로 두고 결정적 JSON 색인을 검색 캐시로 생성한다. 공통 설정·검사·저장·검색·상태 전이 런타임을 두 제품에 동일하게 패키징하고, 각 오케스트레이터는 작업 시작 전 검색과 결과 검증 후 후보 작성을 호출한다. 기억은 보조 기능이므로 읽기·저장 장애에서는 기존 기획을 계속하지만, 검증되지 않은 기억을 적용했다고 주장하는 경로는 실패 처리한다.
+**Architecture:** 한 번만 추가하는 Markdown 기억 이벤트를 유일한 원본으로 두고 결정적 접기(`fold`)에서 현재 `head`와 변경 불가 JSON 색인 세대를 만든다. 공통 설정·검사·추가·접기·검색·상태 전이 런타임을 두 제품에 동일하게 패키징하고, 각 오케스트레이터는 작업 시작 전 검색과 결과 검증 후 후보 작성을 호출한다. 기억은 보조 기능이므로 읽기·저장 장애에서는 기존 기획을 계속하지만, 검증되지 않은 기억을 적용했다고 주장하는 경로는 실패 처리한다.
 
 **Tech Stack:** Node.js `>=18`, ESM `.mjs`, `node:test`, 제한된 YAML 앞부분, Markdown, JSON Schema, SHA-256, Git 로컬 제외 파일, 기존 재현 가능한 product builder
 
@@ -12,7 +12,7 @@
 
 - 기본 설정은 `GAME_DESIGN_MEMORY_ENABLED=true`, `GAME_DESIGN_MEMORY_SCOPE=project`, `GAME_DESIGN_MEMORY_MAX_ITEMS=5`, `GAME_DESIGN_MEMORY_CANDIDATE_TTL_DAYS=30`, `GAME_DESIGN_MEMORY_GIT_MODE=local`이다.
 - `GAME_DESIGN_MEMORY_ENABLED=false`와 요청 단위 제외에서는 기억 저장소 읽기·쓰기·생성, 후보, 색인과 영수증이 0건이어야 한다.
-- Markdown이 기억의 유일한 원본이며 `memory-index.json`은 삭제 후 재생성 가능한 검색 캐시다.
+- append-only Markdown 이벤트와 quarantine marker가 기억의 유일한 원본이며 JSON·Markdown 파생 세대(`derived generation`)는 삭제 후 재생성 가능한 캐시다.
 - AI가 추론한 교훈과 플레이테스트·검토 결과는 `candidate`까지만 만들 수 있다. 명시적인 사용자 지속 선호만 `explicit-user-instruction` 근거로 바로 승인할 수 있다.
 - 기억은 프로젝트 결과물의 근거를 대신하지 않는다. 적용된 사실과 결정은 기존 `evidence.yml` 또는 `decisions/` 원본에도 연결한다.
 - 프로젝트 ID를 기존 결과물이나 사용자 입력에서 확인하지 못하면 추측하지 않고 해당 실행의 기억 검색·후보 작성을 건너뛴다.
@@ -23,6 +23,8 @@
 - 기억 본문은 신뢰하지 않는 자료다. 본문에 들어 있는 스킬 호출, 승인 변경, 파일 조작 또는 네트워크 명령을 실행하지 않는다.
 - 현재 `SessionStart`와 `Stop` Hook 계약은 변경하지 않는다. SQLite, 임베딩과 외부 검색 서비스는 이 계획에 포함하지 않는다.
 - 현재 Node `>=18`과 외부 런타임 의존성 0개를 유지한다.
+- Node `>=18` 표준 라이브러리만 사용한다. runtime compiler, C helper와 외부
+  dependency는 허용하지 않는다.
 - 모든 runtime `now` 인자는 유효한 `Date` 객체다. 저장 시각은
   `toISOString()` UTC로 기록하고 테스트는 고정된 `Date`를 주입한다.
 - `plugins/game-design-studio`와 `plugins/game-design-career`는 직접 수정하지 않고 마지막 통합 작업에서 표준 빌드로 재생성한다.
@@ -43,19 +45,20 @@
 ### 기억 원본과 안전한 저장
 
 - `shared/memory/schema/memory-record.schema.json`: 기억 종류, 상태, 범위, lane, 출처와 승인 근거의 닫힌 스키마다.
-- `shared/memory/schema/memory-index.schema.json`: 원본 트리 digest와 정렬된 검색 항목 스키마다.
+- `shared/memory/schema/memory-event.schema.json`: capture·transition·resolution envelope와 완전한 record snapshot의 닫힌 스키마다.
+- `shared/memory/schema/memory-index.schema.json`: fold source tree digest, head event와 정렬된 검색 항목 스키마다.
 - `shared/memory/schema/memory-receipt.schema.json`: 적용·제외·후보 수와 사용한 ID·해시만 허용하는 로컬 영수증 스키마다.
 - `shared/memory/templates/memory-record.md`: 한국어 기억 문서 골격이다.
 - `shared/memory/templates/index.md`: 사람이 읽는 기억 목록 골격이다.
 - `shared/memory/templates/log.md`: 시간순 변경 기록 골격이다.
-- `shared/scripts/validate-design-memory.mjs`: Markdown 파싱, 순수 레코드 검사, 상태 전이와 출처 검증을 담당한다.
-- `shared/scripts/lib/safe-memory-store.mjs`: 프로젝트·작업 공간·전역 로컬 루트 해석, 심볼릭 링크 없는 제한 읽기, 원자 쓰기·이동과 Git 로컬 제외를 담당한다.
+- `shared/scripts/validate-design-memory.mjs`: Markdown event 파싱, 순수 레코드 검사, 상태 전이와 출처 검증을 담당한다.
+- `shared/scripts/lib/safe-memory-store.mjs`: 프로젝트·작업 공간·전역 로컬 루트 해석, 심볼릭 링크 없는 제한 읽기, `O_EXCL` immutable append와 별도 best-effort Git 로컬 제외를 담당한다.
 
 ### 색인과 작업
 
-- `shared/scripts/retrieve-design-memory.mjs`: 원본에서 결정적 색인을 만들고 승인된 관련 기억만 제한적으로 반환한다.
-- `shared/scripts/capture-design-memory.mjs`: 허용된 사건을 안정 ID의 후보 또는 명시적 선호 기록으로 만든다.
-- `shared/scripts/maintain-design-memory.mjs`: 승인·거부·폐기·만료·충돌 처리, 격리와 색인 재생성을 수행한다.
+- `shared/scripts/retrieve-design-memory.mjs`: raw 이벤트와 marker를 scan/fold해 결정적 색인 세대를 만들고 승인된 관련 기억만 제한적으로 반환한다.
+- `shared/scripts/capture-design-memory.mjs`: 허용된 사건을 content-addressed capture event로 append한다.
+- `shared/scripts/maintain-design-memory.mjs`: 승인·거부·폐기·만료 transition, branch resolution, quarantine marker와 derived generation 생성을 수행한다.
 
 ### 공통 스킬과 제품 통합
 
@@ -269,9 +272,10 @@ git commit -m "feat: add safe game design memory settings"
 
 ---
 
-### Task 2: 기억 문서 스키마와 안전한 로컬 저장소
+### Task 2: 변경 불가 기억 이벤트와 안전한 추가 저장소
 
 **Files:**
+- Create: `shared/memory/schema/memory-event.schema.json`
 - Create: `shared/memory/schema/memory-record.schema.json`
 - Create: `shared/memory/schema/memory-index.schema.json`
 - Create: `shared/memory/schema/memory-receipt.schema.json`
@@ -280,65 +284,43 @@ git commit -m "feat: add safe game design memory settings"
 - Create: `shared/memory/templates/log.md`
 - Create: `shared/scripts/validate-design-memory.mjs`
 - Create: `shared/scripts/lib/safe-memory-store.mjs`
+- Delete: `shared/scripts/lib/memory-store-posix-helper.c`
 - Create: `tests/unit/design-memory-record.test.mjs`
 - Create: `tests/unit/design-memory-store.test.mjs`
 
 **Interfaces:**
-- Consumes: `MemoryConfig` from Task 1
-- Produces: `parseMemoryDocument(source, { sourceName }) -> { record, sections }`
-- Produces: `validateMemoryRecord(record) -> { ok, errors }`
-- Produces: `validateMemoryTransition({ from, to, approvalBasis }) -> { ok, errors }`
-- Produces: `validateMemorySourceBindings(record, { workspaceRoot }) -> Promise<{ ok, errors }>`
-- Produces: `resolveMemoryStore({ workspaceRoot, config, platform, home }) -> Promise<MemoryStorePaths>`
-- Produces: `readMemoryFile({ store, relativePath, maxBytes }) -> Promise<Buffer>`
-- Produces: `writeMemoryFileAtomic({ store, relativePath, bytes, policy }) -> Promise<void>`
-- Produces: `moveMemoryFileAtomic({ store, from, to }) -> Promise<void>`
-- Produces: `ensureMemoryGitExclusion({ workspaceRoot, gitMode, runGit }) -> Promise<{ status }>`
+- Consumes: Task 1 `MemoryConfig`
+- Retains: `resolveMemoryStore`, immutable bounded `readMemoryFile`, `parseMemoryDocument`, `validateMemoryRecord`, `validateMemoryTransition`, `validateMemorySourceBindings`
+- Produces: `memoryEventRelativePath({ memoryId, eventId }) -> string`
+- Produces: `appendImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ status: "created"|"present" }>`
+- Produces: `parseMemoryEventDocument(source, { sourceName, eventId }) -> { event, record, sections }`
+- Produces: `appendMemoryEvent({ store, eventDocument }) -> Promise<{ status: "created"|"present", eventId, relativePath, fileSha256 }>`
+- Produces: `scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents }) -> Promise<MemoryEventScan>`
+- Produces: `foldMemoryEvents(scan, { now }) -> MemoryFold`
+- Produces: `appendQuarantineMarker(...) -> Promise<AppendResult>`
+- Retains separately: `ensureMemoryGitExclusion(...) -> Promise<{ status: "ready"|"warning"|"skipped", code? }>`
+- Removes: `MEMORY_PLATFORM_CAPABILITIES`, `createMemoryStorePlatformAdapter`, `writeMemoryFileAtomic`, `moveMemoryFileAtomic`, `memoryRecordRelativePath`
 
-- [ ] **Step 1: 기억 문서의 실패 테스트를 작성한다**
+- [ ] **Step 1: 이벤트 구조와 record RED를 작성한다**
 
-`tests/unit/design-memory-record.test.mjs`에 유효한 fixture를 만들고 다음 변이를
-각각 거부하도록 한다.
+`memory-event.schema.json`은 `schema_version: 1`, `event_type:
+capture|transition|resolution`, `memory_id`, `operation_id`, 정렬되고 중복 없는
+`parent_event_ids`, `effective_at`, `actor`, `reason`, resolution 전용
+`chosen_parent_event_id`와 완전한 record snapshot을 닫힌 필드로 고정한다.
 
-```js
-const validRecord = {
-  schema_version: 1,
-  memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef",
-  event_sha256: "b".repeat(64),
-  kind: "design-lesson",
-  lane: "studio",
-  status: "candidate",
-  scope: "project",
-  project_id: "wind-island",
-  created_at: "2026-08-12T09:00:00+09:00",
-  updated_at: "2026-08-12T09:00:00+09:00",
-  review_after: "2026-09-11",
-  expires_at: "2026-09-11",
-  approved_by: null,
-  approval_basis: null,
-  supersedes: null,
-  artifact_types: ["character-skill-combat-monster"],
-  related_ids: ["boss-phase-2"],
-  tags: ["boss", "counterplay"],
-  sources: [{
-    artifact_id: "combat-loop-v3",
-    locator: "content.md#보스-전투",
-    sha256: "a".repeat(64),
-  }],
-};
-```
+capture는 parent 0개, transition은 parent 1개, resolution은 현재 head 전체를
+parent로 가져야 한다. 기존 record의 kind·lane·scope·status·source·민감정보와
+필수 본문 검사는 그대로 유지한다. 알 수 없는 key, 비-NFC ID, 잘못된 SHA-256,
+정렬되지 않은 배열과 승인 근거 누락을 각각 실패 fixture로 둔다.
 
-- 알 수 없는 key, 상태, 종류, lane, scope
-- 대문자·경로 구분자·Unicode 비정규화가 들어간 ID
-- 누락되거나 64자리 lowercase SHA-256이 아닌 `event_sha256`
-- 중복·정렬되지 않은 `sources`, `tags`, `related_ids`, `artifact_types`
-- `approved`인데 승인자·근거가 없음
-- 일반 교훈인데 `sources`가 비어 있음
-- `style-preference`가 아닌데 `instruction_sha256`만 있음
-- 명시적 선호인데 `approval_basis`가 `explicit-user-instruction`이 아님
-- 본문 필수 절 `발견한 내용`, `적용 조건`, `적용하면 안 되는 경우`, `근거` 누락
+- [ ] **Step 2: event ID, operation ID와 fold RED를 확인한다**
 
-- [ ] **Step 2: 기억 문서 테스트의 RED를 확인한다**
+`event-id = mev1-<sha256(canonical UTF-8 Markdown bytes)>`이며 ID는 문서 안에 넣지
+않는다. capture `operation_id`는 upstream `eventId`, transition은
+`sha256(memory_id + sorted parent ids + action + actor + reason + effective_at)`이다.
+같은 operation ID의 다른 bytes는 `duplicate-operation`이다. orphan parent,
+duplicate root, 불법 전이, snapshot identity·본문 변경과 supersedes cycle도
+제외해야 한다.
 
 Run:
 
@@ -346,109 +328,69 @@ Run:
 node --test tests/unit/design-memory-record.test.mjs
 ```
 
-Expected: `validate-design-memory.mjs`가 없어 실패한다.
+Expected: event parser와 fold가 없어 RED다.
 
-- [ ] **Step 3: 닫힌 JSON Schema와 Markdown 검사기를 구현한다**
+- [ ] **Step 3: 결정적 scan과 fold를 구현한다**
 
-허용 enum을 다음으로 고정한다.
+물리 저장 구조는 다음으로 고정한다.
 
-```js
-export const MEMORY_KINDS = Object.freeze([
-  "project-fact", "decision", "design-lesson", "style-preference", "career-lesson", "external-note",
-]);
-export const MEMORY_STATUSES = Object.freeze([
-  "candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale",
-]);
-export const MEMORY_LANES = Object.freeze(["common", "studio", "career"]);
-export const MEMORY_SCOPES = Object.freeze(["project", "workspace", "global"]);
+```text
+<store-root>/v1/
+├── events/<memory-shard>/<memory-id>/<event-id>.md
+├── controls/quarantine/<target-shard>/<target-event-id>/<marker-event-id>.md
+└── derived/
+    ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
+    ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
+    └── logs/<source-tree-sha256>/<log-sha256>/<instance-id>.md
 ```
 
-`parseMemoryDocument()`는 `parseRestrictedYaml()`을 사용하되 JSON Schema와 같은
-닫힌 key 검사를 다시 수행한다. `style-preference`의 직접 승인만
-`instruction_sha256`을 출처 대용으로 허용하고 원문 요청 내용은 저장하지 않는다.
+`memory-shard = sha256(memory_id).slice(0,2)`다.
+scanner는 NFC/UTF-8 byte 순으로 읽고 symlink, 특수 파일, oversize, 비정규 경로와
+filename/hash 불일치를 진단한다. fold는 유효 event DAG만 사용한다. head 1개는
+현재 record, head 2개 이상은 `concurrent-conflict`이며 memory 전체를 검색에서
+제외한다. human actor·reason·chosen head가 있는 resolution만 모든 head를 소비해
+새 head 하나를 만든다. mtime, wall clock과 순회 순서로 winner를 고르지 않는다.
 
-상태 전이는 다음 표 외에 모두 거부한다.
+- [ ] **Step 4: 변경 불가 추가 연산의 적대적 RED를 작성한다**
 
-```js
-const transitions = Object.freeze({
-  candidate: ["verified", "expired", "rejected", "disputed"],
-  verified: ["approved", "expired", "rejected", "disputed"],
-  approved: ["disputed", "superseded", "stale"],
-  disputed: ["verified", "rejected", "superseded"],
-  stale: ["verified", "rejected", "superseded"],
-  expired: ["verified", "rejected"],
-  rejected: [],
-  superseded: [],
-});
-```
+`APPEND-IDEMPOTENT`, `APPEND-CONFLICT`, `APPEND-PARALLEL`, `BRANCH`, `PATH`,
+`FAILPOINT` fixture를 만든다. 두 프로세스가 같은 bytes/event ID를 쓰면 하나는
+`created`, 하나는 `present`여야 한다. 같은 경로의 다른 bytes는 원본을 그대로
+둔 채 conflict다. 서로 다른 이벤트는 둘 다 남아야 한다. 절대 경로, `..`,
+역슬래시, NUL, 비-NFC, ancestor·final symlink, FIFO·socket, oversize와 pre-existing
+identity swap은 파일을 만들지 않는다.
 
-- [ ] **Step 4: 안전한 저장소의 실패 테스트를 작성한다**
+같은 OS 계정의 악의적 프로세스가 syscall 사이 디렉터리를 swap하는 race는
+Node 18 path API가 보장하지 않는 non-goal이다. 이 injected case는 skipped 경계
+문서화로만 남기고 보안 PASS로 세지 않는다.
 
-`tests/unit/design-memory-store.test.mjs`는 다음을 검증한다.
+- [ ] **Step 5: Node 전용 추가 연산을 구현한다**
 
-- 읽기 전용 `resolveMemoryStore()`와 빈 저장소 검색은 `.game-design/`을 만들지 않는다.
-- 초기화는 프로젝트 작업 공간 안에만 정해진 디렉터리를 만든다.
-- 절대 경로, `..`, 역슬래시, NUL, 심볼릭 링크와 특수 파일을 거부한다.
-- 열기 전·후 루트와 부모 `dev`·`ino`가 바뀌면 쓰지 않는다.
-- 임시 파일 쓰기 실패·rename 전 교체·rename 실패에서 원본 bytes를 보존한다.
-- `project`와 `workspace`는 작업 공간 저장소를, `global`은 주입된 운영체제별
-  로컬 데이터 디렉터리를 사용한다.
-- Git 저장소에서 표식 블록을 한 번만 추가하고 기존 `info/exclude` bytes를
-  앞뒤 그대로 보존한다.
-- Git이 없거나 `tracked`이면 제외 파일을 변경하지 않는다.
+경로·크기 검증, 기존 ancestor `lstat/realpath`, 고정 디렉터리
+`mkdir({ recursive: true, mode: 0o700 })`, ancestor 재검사 뒤 final을
+`O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`와 mode `0o600`으로 연다. write loop,
+`FileHandle.sync()`, close, parent best-effort sync 순서를 지킨다. `EEXIST`이면
+일반 파일·무-symlink·bounded read 뒤 exact bytes를 비교한다. 기존 event를
+truncate, rename, unlink하지 않는다. runtime compiler, C helper, replace, move와
+current pointer를 모두 제거한다.
 
-- [ ] **Step 5: 안전한 저장 도구를 구현한다**
+전역 저장소는 임의 환경 경로를 받지 않고 `home`과 `platform`으로만 정한다.
+`project`와 `workspace`는 작업 공간 저장소를 공유하되 `project_id`로 구분한다.
 
-파일 경로 정책은 다음 함수로 중앙화한다.
+- [ ] **Step 6: quarantine marker, 출처와 Git trust separation을 구현한다**
 
-```js
-export function memoryRecordRelativePath(record) {
-  if (record.kind === "style-preference") return `preferences/${record.memory_id}.md`;
-  if (["project-fact", "decision", "external-note"].includes(record.kind)) {
-    return `projects/${record.project_id}/${record.memory_id}.md`;
-  }
-  if (record.status === "approved") return `lessons/approved/${record.memory_id}.md`;
-  if (["expired", "rejected", "superseded", "stale"].includes(record.status)) {
-    return `lessons/retired/${record.memory_id}.md`;
-  }
-  return `lessons/candidates/${record.memory_id}.md`;
-}
-```
+손상은 overwrite하거나 이동하지 않는다. scanner 오류는 안전한 상대 path,
+reason code와 가능한 observed digest만 포함한다. marker는
+`v1/controls/quarantine/<target-shard>/<target-event-id>/<marker-event-id>.md`에
+append하며 target, observed digest|null, reason, actor, `recorded_at`만 저장한다.
+유효 marker는 target과 descendant를 fold에서 제외한다.
 
-모든 쓰기는 같은 부모의 `O_CREAT|O_EXCL|O_NOFOLLOW` 임시 파일, `fsync`, 부모
-정체성 재검증과 `rename`을 사용한다. 읽기는 항목당 256 KiB를 넘기지 않는다.
-Git 경로는 `git rev-parse --git-common-dir`와
-`git rev-parse --path-format=absolute --git-path info/exclude` 결과가 서로
-일치할 때만 사용하고, 플러그인 표식 블록 외의 bytes는 수정하지 않는다.
-
-전역 로컬 저장소는 임의 환경 경로를 받지 않고 `home`과 `platform`으로만
-결정한다.
-
-```js
-const globalMemoryPath = {
-  darwin: path.join(home, "Library", "Application Support", "game-design-plugin", "memory"),
-  linux: path.join(home, ".local", "share", "game-design-plugin", "memory"),
-  win32: path.join(home, "AppData", "Local", "game-design-plugin", "memory"),
-};
-```
-
-- [ ] **Step 6: 출처 결속과 민감정보 경계를 구현한다**
-
-`validateMemorySourceBindings()`는 모든 `locator`의 파일 부분이 작업 공간 안
-일반 파일이고 저장된 SHA-256과 같은지 확인한다. 다음 패턴은 레코드 본문과
-메타데이터 저장 전에 거부하되 입력 원문을 오류에 넣지 않는다.
-
-```js
-const forbiddenMemoryContent = [
-  /(?:api[_ -]?key|authorization|bearer|access[_ -]?token|password)/iu,
-  /\b(?:sk|rk|pk)_[A-Za-z0-9_-]{8,}\b/u,
-  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/iu,
-  /\b01[016789]-?\d{3,4}-?\d{4}\b/u,
-  /\b\d{6}-?[1-4]\d{6}\b/u,
-];
-```
-
-민감정보로 거부된 경우에는 `memory.prohibited_content` code만 반환한다.
+`validateMemorySourceBindings()`와 민감정보 거부 규칙은 기존 계약을 유지한다.
+Git 제외는 기억 append 성공 뒤 별도 best-effort 단계다. repo별
+`.git/info/.game-design-memory-exclude.lock`를 `open('wx')`로 얻은 프로세스만
+bounded read와 marker 검증 뒤 `info/exclude` 끝에 한 번 append하고 sync한다.
+lock 충돌·stale lock·사용자 파일 변화·malformed marker는 warning이며 기억
+event를 rollback하지 않는다.
 
 - [ ] **Step 7: Task 2 검증을 실행한다**
 
@@ -458,21 +400,23 @@ Run:
 node --test tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
 node --check shared/scripts/validate-design-memory.mjs
 node --check shared/scripts/lib/safe-memory-store.mjs
+test ! -e shared/scripts/lib/memory-store-posix-helper.c
+! rg 'MEMORY_PLATFORM_CAPABILITIES|createMemoryStorePlatformAdapter|writeMemoryFileAtomic|moveMemoryFileAtomic|memoryRecordRelativePath' shared tests
 git diff --check
 ```
 
-Expected: 모두 PASS한다.
+Expected: 모두 PASS하며 runtime compiler, helper, replace·move 공개 계약이 없다.
 
 - [ ] **Step 8: Task 2를 커밋한다**
 
 ```bash
-git add shared/memory/schema/memory-record.schema.json shared/memory/schema/memory-index.schema.json shared/memory/schema/memory-receipt.schema.json shared/memory/templates/memory-record.md shared/memory/templates/index.md shared/memory/templates/log.md shared/scripts/validate-design-memory.mjs shared/scripts/lib/safe-memory-store.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
-git commit -m "feat: define secure local design memory records"
+git add shared/memory/schema/memory-event.schema.json shared/memory/schema/memory-record.schema.json shared/memory/schema/memory-index.schema.json shared/memory/schema/memory-receipt.schema.json shared/memory/templates/memory-record.md shared/memory/templates/index.md shared/memory/templates/log.md shared/scripts/validate-design-memory.mjs shared/scripts/lib/safe-memory-store.mjs shared/scripts/lib/memory-store-posix-helper.c tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
+git commit -m "feat: define append-only design memory events"
 ```
 
 ---
 
-### Task 3: 결정적 색인과 승인 기억 검색
+### Task 3: 결정적 접기(`fold`) 색인 세대와 승인 기억 검색
 
 **Files:**
 - Create: `shared/scripts/retrieve-design-memory.mjs`
@@ -481,8 +425,10 @@ git commit -m "feat: define secure local design memory records"
 - Modify: `shared/memory/schema/memory-receipt.schema.json`
 
 **Interfaces:**
-- Consumes: Task 1 `MemoryConfig`, Task 2 record/store APIs
+- Consumes: Task 1 `MemoryConfig`, Task 2 event/store/fold APIs
 - Produces: `rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>`
+- Produces: `publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256 }) -> Promise<{ status, generationPath, indexSha256 }>`
+- Produces: `loadCurrentMemoryIndex({ store, fold }) -> Promise<{ index, bytes, sourceTreeSha256, indexSha256, warnings }>`
 - Produces: `rankMemoryEntries(entries, requestContext) -> MemoryIndexEntry[]`
 - Produces: `retrieveApprovedDesignMemory({ workspaceRoot, config, requestContext, now }) -> Promise<MemoryRetrievalResult>`
 - Defines: `requestContext = { projectId, lane, artifactIds, artifactTypes, tags, disabledForRequest }`
@@ -504,8 +450,8 @@ const requestContext = {
 
 다음 결과를 고정한다.
 
-- 같은 입력 트리는 파일 생성 순서와 무관하게 같은 `sourceTreeSha256`과 JSON을
-  만든다.
+- 같은 raw event/control 입력 트리는 파일 생성 순서와 무관하게 같은
+  `sourceTreeSha256`과 JSON bytes를 만든다.
 - index entry는 `memoryId` 오름차순으로 저장된다.
 - 검색 결과는 exact related ID, artifact type, tag, kind priority,
   `memoryId` 순으로 결정된다.
@@ -514,8 +460,9 @@ const requestContext = {
   남긴다.
 - 프로젝트 ID가 없거나 `disabledForRequest=true`이면 저장소 adapter 호출이
   0회이고 `status=disabled`다.
-- 손상된 JSON index를 믿지 않고 Markdown에서 재생성한다.
-- index의 상태를 `approved`로 변조해도 Markdown 원본 재검증에서 거부한다.
+- 손상·누락·복수 JSON generation을 권위로 쓰지 않고 raw fold에서 재생성한다.
+- index의 상태를 `approved`로 변조해도 head event와 fold 재검증에서 거부한다.
+- branch, quarantined target, orphan과 손상 event가 있는 memory는 전체 제외한다.
 - 최대 항목 수 5와 전체 반환 본문 64 KiB를 넘지 않는다.
 
 - [ ] **Step 2: 검색 테스트의 RED를 확인한다**
@@ -526,20 +473,22 @@ Run:
 node --test tests/unit/design-memory-retrieval.test.mjs
 ```
 
-Expected: 검색 모듈이 없어 실패한다.
+Expected: 검색 모듈과 generation resolver가 없어 실패한다.
 
 - [ ] **Step 3: 결정적 색인 생성을 구현한다**
 
-색인 형식을 다음으로 고정한다.
+`sourceTreeSha256`은 NFC/UTF-8 byte 순으로 정렬한 `(relativePath,
+observedSha256, classification)` tuple의 canonical JSON hash다. corrupt entry도
+입력 트리 정체성에 포함한다. 색인 형식은 다음으로 고정한다.
 
 ```js
 {
   schemaVersion: 1,
-  sourceUpdatedAt: "2026-08-12T00:00:00.000Z",
   sourceTreeSha256: "a".repeat(64),
   entries: [{
     memoryId: "memory-studio-design-lesson-0f2a4c61d9ab34ef",
-    relativePath: "lessons/approved/memory-studio-design-lesson-0f2a4c61d9ab34ef.md",
+    headEventId: `mev1-${"b".repeat(64)}`,
+    headEventPath: `v1/events/91/memory-studio-design-lesson-0f2a4c61d9ab34ef/mev1-${"b".repeat(64)}.md`,
     fileSha256: "b".repeat(64),
     kind: "design-lesson",
     lane: "studio",
@@ -553,11 +502,17 @@ Expected: 검색 모듈이 없어 실패한다.
 }
 ```
 
-`sourceUpdatedAt`은 유효한 원본 레코드의 가장 큰 `updated_at` 값이다. 원본이
-같으면 wall clock과 실행 시각에 관계없이 index JSON bytes가 같아야 한다.
-원본 경로·파일 SHA 목록을 NFC/UTF-8 byte 순으로 정렬해 digest를 만든다.
-같은 입력에서 `index.md`도 byte 동일하게 생성하며 항목을 lane, kind,
-`memory_id` 순으로 표시한다.
+`rebuildMemoryIndex`는 언제나 raw events와 quarantine controls를 scan/fold한다.
+canonical index bytes와 `indexSha256`을 만든 뒤
+`v1/derived/indexes/<source-tree-sha256>/<index-sha256>/<randomUUID>.json`에
+create-once append한다. current pointer는 만들지 않는다. 같은 입력이면 wall
+clock, 실행 시각과 UUID에 관계없이 반환 JSON bytes가 같다. `index.md`와 `log.md`
+derived generation도 같은 결정성 규칙을 따른다.
+
+fresh fold의 `sourceTreeSha256`와 `indexSha256`가 모두 일치하는 valid generation만
+현재 색인이다. 여러 instance는 논리적으로 동등하며 bytewise-lowest valid
+instance 경로를 읽는다. 없거나 모두 손상됐으면 새 instance를 append한다. 이전
+generation은 수정하거나 삭제하지 않는다.
 
 - [ ] **Step 4: 관련성 순위와 원본 재검증을 구현한다**
 
@@ -600,9 +555,9 @@ export function rankMemoryEntries(entries, context) {
 }
 ```
 
-선택된 각 entry는 Markdown 파일을 다시 열어 file digest, 레코드 상태, 범위,
-lane과 출처를 검사한다. JSON index는 후보 탐색에만 사용하고 승인 권한으로
-사용하지 않는다.
+선택된 각 entry는 `headEventPath`를 다시 열어 file digest와 event ID를 확인하고,
+현재 raw DAG fold의 head, 레코드 상태, 범위, lane과 출처를 다시 검사한다. JSON
+index는 후보 탐색에만 사용하고 승인 권한으로 사용하지 않는다.
 
 반환값은 다음 필드로 닫는다. `guidance`의 문자열은 실행 명령이 아니라
 `untrustedMemoryData`로 표시된 자료이며 스킬 계약은 이 배열의 문장을 호출·승인
@@ -628,10 +583,11 @@ lane과 출처를 검사한다. JSON index는 후보 탐색에만 사용하고 �
 }
 ```
 
-- [ ] **Step 5: 로컬 사용 영수증을 구현한다**
+- [ ] **Step 5: 변경 불가 로컬 사용 영수증을 구현한다**
 
-적용 항목이 있을 때만 `memory/receipts/${requestSha256}.json`을 create-once로
-쓴다. 영수증은 다음 필드만 허용한다.
+적용 항목이 있을 때만 canonical receipt bytes를 immutable derived log
+generation으로 append한다. request hash와 receipt hash로 논리 중복을 판정하고
+물리 instance는 UUID로 구분한다. 영수증은 다음 필드만 허용한다.
 
 ```js
 {
@@ -639,12 +595,13 @@ lane과 출처를 검사한다. JSON index는 후보 탐색에만 사용하고 �
   requestSha256: "c".repeat(64),
   projectId: "wind-island",
   lane: "studio",
-  applied: [{ memoryId: "memory-studio-design-lesson-0f2a4c61d9ab34ef", fileSha256: "b".repeat(64) }],
+  applied: [{ memoryId: "memory-studio-design-lesson-0f2a4c61d9ab34ef", headEventId: `mev1-${"b".repeat(64)}`, fileSha256: "b".repeat(64) }],
   excluded: [{ memoryId: "memory-studio-design-lesson-old", reason: "stale-source" }],
 }
 ```
 
-기억 본문, 환경 값과 절대 경로는 영수증에 넣지 않는다.
+기억 본문, 환경 값, 절대 경로, instance UUID와 wall clock은 논리 영수증에 넣지
+않는다. 기존 receipt나 log를 전체 교체하지 않는다.
 
 - [ ] **Step 6: Task 3 검증을 실행한다**
 
@@ -674,14 +631,16 @@ git commit -m "feat: retrieve verified project design memories"
 - Create: `shared/scripts/maintain-design-memory.mjs`
 - Create: `tests/unit/design-memory-capture.test.mjs`
 - Create: `tests/unit/design-memory-maintenance.test.mjs`
+- Modify: `shared/memory/schema/memory-event.schema.json`
 - Modify: `shared/memory/schema/memory-record.schema.json`
 
 **Interfaces:**
-- Consumes: Task 1 config, Task 2 store/validator, Task 3 index rebuild
+- Consumes: Task 1 config, Task 2 append/validator/fold, Task 3 generation rebuild
 - Produces: `captureDesignMemory({ workspaceRoot, config, projectId, lane, event, now, disabledForRequest }) -> Promise<CaptureResult>`
-- Produces: `maintainDesignMemory({ workspaceRoot, config, action, memoryId, actor, reason, now }) -> Promise<MaintenanceResult>`
+- Retains: `CaptureResult.status = created | present | conflict | skipped`
+- Produces: `maintainDesignMemory({ workspaceRoot, config, action, memoryId, actor, reason, chosenParentEventId, now }) -> Promise<MaintenanceResult>`
 - Defines: `event.type = explicit-preference | human-decision | playtest-finding | review-finding | lesson-revision`
-- Defines: `action = list | lint | verify | approve | reject | retire | sweep | quarantine | rebuild | sync-git-exclusion`
+- Defines: `action = list | lint | verify | approve | reject | retire | sweep | resolution | quarantine | rebuild | sync-git-exclusion`
 
 - [ ] **Step 1: 후보 작성의 실패 테스트를 작성한다**
 
@@ -721,11 +680,12 @@ const playtestEvent = {
 - explicit preference만 `approved`, `explicit-user-instruction`,
   `interactive-user`로 기록한다.
 - 이벤트 ID와 프로젝트 ID로 만든 기억 ID는 재실행해도 같다.
-- 같은 이벤트의 동일 `event_sha256`은 no-op이고 다른 event digest는 conflict다.
+- 같은 canonical event의 동일 content-addressed ID는 `present`이고, 같은 event
+  경로의 다른 bytes와 같은 operation ID의 다른 event는 conflict다.
 - 맞춤법 수정, 일반 대화, 알 수 없는 사건 유형은 `skipped`이고 파일을 만들지
   않는다.
 - 비활성화·요청 단위 제외·프로젝트 ID 없음은 저장소 호출 0회다.
-- 민감정보, 누락 출처, 변조 출처는 후보 파일과 log를 만들지 않는다.
+- 민감정보, 누락 출처, 변조 출처는 event와 derived log를 만들지 않는다.
 
 - [ ] **Step 2: 후보 작성 RED를 확인한다**
 
@@ -737,7 +697,7 @@ node --test tests/unit/design-memory-capture.test.mjs
 
 Expected: capture 모듈이 없어 실패한다.
 
-- [ ] **Step 3: 안정 ID와 후보 작성을 구현한다**
+- [ ] **Step 3: 안정 memory ID와 capture event append를 구현한다**
 
 기억 ID는 다음 규칙을 사용한다.
 
@@ -751,14 +711,14 @@ export function memoryIdForEvent({ lane, kind, projectId, eventId }) {
 }
 ```
 
-`event_sha256`은 event의 `type`, `summary`, `applicability`, `exclusions`, 정렬된
-artifact type·related ID·tag·source와 actor를 canonical JSON으로 직렬화한
-SHA-256이다. 기존 ID가 있으면 현재 시각으로 문서를 다시 만들지 않고 저장된
-`event_sha256`을 비교한다. 같으면 no-op, 다르면 conflict다.
+capture의 `operation_id`는 upstream `eventId`다. event envelope와 완전한 record
+snapshot을 canonical Markdown으로 만든 뒤 bytes SHA-256에서 event ID와 경로를
+계산한다. `appendMemoryEvent`가 `created|present`를 반환하면 기억 저장은
+성공이다. 같은 operation ID의 다른 event bytes는 자동 winner 없이 conflict다.
 
-파일과 `log.md`는 모두 검증된 뒤 같은 저장소 세대에서 기록한다. 둘 중 하나가
-실패하면 새 후보를 성공으로 보고하지 않는다. 로그는 기존 digest를 다시
-확인한 뒤 전체 파일을 원자 교체해 동시 변경을 덮어쓰지 않는다.
+사용 기록은 Task 3의 immutable derived log generation으로 별도 append한다. log
+실패는 이미 저장된 event를 rollback·rewrite하지 않고 warning으로 반환한다.
+기존 event, log와 index를 replace하거나 이동하지 않는다.
 
 - [ ] **Step 4: 상태 관리의 실패 테스트를 작성한다**
 
@@ -767,14 +727,19 @@ SHA-256이다. 기존 ID가 있으면 현재 시각으로 문서를 다시 만�
 - `approve`는 actor와 reason이 있는 verified 후보만 승인한다.
 - candidate 직접 approve, AI actor의 approve와 빈 reason을 거부한다.
 - `verify`는 모든 source binding을 다시 확인한 candidate만 verified로 바꾼다.
-- 승인 기억 충돌은 둘 다 `disputed`이고 자동 병합하지 않는다.
+- 같은 parent에서 나온 승인·거부 transition은 둘 다 보존하고
+  `concurrent-conflict`로 검색 제외한다.
+- `resolution`은 human actor·reason·현재 head 전체 parent와 선택한 head를 요구하고
+  branch를 하나의 새 head로 닫는다. snapshot은 선택한 head와 같거나 그 head에서
+  허용된 전이 하나를 적용한 값이어야 한다. 자동 병합하거나 mtime으로 고르지 않는다.
 - `sweep`은 후보 30일 경과를 `expired`, 외부 정보 review date 경과를
   `stale`로 바꾸고 다른 기록은 수정하지 않는다.
 - `retire`는 `superseded` 또는 `rejected`만 만들고 파일을 삭제하지 않는다.
-- `quarantine`은 명시한 손상 문서만 원래 bytes를 보존한 채
-  `quarantine/`으로 원자 이동하고 index에서 제외한다.
-- `sync-git-exclusion`은 `local`에서 exact marker를 추가하고 `tracked`에서
-  플러그인 marker만 제거한다.
+- `quarantine`은 원본 bytes를 옮기거나 고치지 않고 content-addressed marker를
+  append해 target과 descendant를 fold에서 제외한다.
+- `sync-git-exclusion`은 `local`에서 lock을 얻었을 때 exact marker를 끝에 한 번
+  append한다. `tracked`, lock 충돌, stale lock과 사용자 파일 변화는 skip/warning이며
+  기존 `info/exclude`를 rewrite하거나 marker를 자동 제거하지 않는다.
 - `list`와 `lint`는 어떤 파일도 수정하지 않는다.
 - `rebuild` 결과는 Task 3 색인과 byte 동일하다.
 - `lint`는 수정 없이 중복 ID, orphan source, cycle과 stale source code를
@@ -793,18 +758,22 @@ export async function maintainDesignMemory({
   memoryId,
   actor,
   reason,
+  chosenParentEventId,
   now,
 } = {}) {
   if (action === "list") return listMemoryRecords({ workspaceRoot, config });
   if (action === "lint") return lintMemoryStore({ workspaceRoot, config, now });
   if (action === "rebuild") return rebuildMemoryIndex({ workspaceRoot, config, now });
   if (action === "sync-git-exclusion") return ensureMemoryGitExclusion({ workspaceRoot, gitMode: config.gitMode });
-  return transitionStoredMemory({ workspaceRoot, config, action, memoryId, actor, reason, now });
+  if (action === "quarantine") return appendQuarantineMarkerForTarget({ workspaceRoot, config, memoryId, actor, reason, now });
+  return appendMemoryTransition({ workspaceRoot, config, action, memoryId, actor, reason, chosenParentEventId, now });
 }
 ```
 
 오류 JSON은 code와 안전한 상대 ID만 포함하며 절대 경로·문서 본문·환경 값을
-포함하지 않는다.
+포함하지 않는다. approve·reject·retire·sweep·resolution은 기존 파일을 고치지
+않고 transition 또는 resolution event를 append한다. `rebuild`는 raw fold에서
+generation을 publish하며 current pointer를 만들지 않는다.
 
 - [ ] **Step 6: Task 4 검증을 실행한다**
 
@@ -822,7 +791,7 @@ Expected: 모두 PASS한다.
 - [ ] **Step 7: Task 4를 커밋한다**
 
 ```bash
-git add shared/scripts/capture-design-memory.mjs shared/scripts/maintain-design-memory.mjs shared/memory/schema/memory-record.schema.json tests/unit/design-memory-capture.test.mjs tests/unit/design-memory-maintenance.test.mjs
+git add shared/scripts/capture-design-memory.mjs shared/scripts/maintain-design-memory.mjs shared/memory/schema/memory-event.schema.json shared/memory/schema/memory-record.schema.json tests/unit/design-memory-capture.test.mjs tests/unit/design-memory-maintenance.test.mjs
 git commit -m "feat: capture and review project design lessons"
 ```
 
@@ -1276,14 +1245,19 @@ Codex plugin home에 설치하는 격리 fixture를 사용한다.
 
 ```js
 const memorySentinel = Buffer.from("local-memory-must-survive\n", "utf8");
-await writeFile(path.join(workspace, ".game-design/memory/log.md"), memorySentinel);
+const memorySentinelPath = path.join(
+  workspace,
+  `.game-design/memory/v1/events/aa/memory-sentinel/mev1-${"a".repeat(64)}.md`,
+);
+await mkdir(path.dirname(memorySentinelPath), { recursive: true });
+await writeFile(memorySentinelPath, memorySentinel);
 
 await installBuiltPlugin({ product: "game-design-studio", codexHome });
 await replaceBuiltPlugin({ product: "game-design-studio", codexHome });
 await removeInstalledPlugin({ product: "game-design-studio", codexHome });
 
 assert.deepEqual(
-  await readFile(path.join(workspace, ".game-design/memory/log.md")),
+  await readFile(memorySentinelPath),
   memorySentinel,
 );
 ```
@@ -1299,7 +1273,7 @@ Studio와 Career 각각 다음을 검증한다.
 - 설치본에 세 기억 스킬, schema, reference와 runtime script가 존재한다.
 - 업데이트는 installed plugin만 교체하고 memory bytes·mode·mtime을 보존한다.
 - 제거는 installed plugin만 삭제하고 memory와 `.git/info/exclude`를 보존한다.
-- 실제 `.env`, memory 문서와 receipt는 plugin package에 포함되지 않는다.
+- 실제 `.env`, memory event·control·derived generation은 plugin package에 포함되지 않는다.
 - 네트워크 호출 수는 0이다.
 - committed `plugins/game-design-studio/skills/`와
   `plugins/game-design-career/skills/`에도 공통 기억 스킬 세 개가 존재한다.
@@ -1343,8 +1317,8 @@ Expected: Career와 Studio snapshot이 새 source와 exact 일치하고 각 제�
 
 - [ ] **Step 4: dirty-worktree 보존 회귀를 확대한다**
 
-기존 dirty fixture에 추적되지 않은 `.game-design/memory/lessons/candidates/`
-문서와 수정 중인 `.git/info/exclude` bytes를 추가한다. build, memory retrieval,
+기존 dirty fixture에 추적되지 않은 `.game-design/memory/v1/events/` 이벤트와 수정
+중인 `.git/info/exclude` bytes를 추가한다. build, memory retrieval,
 capture 실패와 install lifecycle 전후에 정확한 bytes가 유지되는지 검사한다.
 
 - [ ] **Step 5: 전체 정적·동적 검증을 실행한다**
@@ -1392,15 +1366,22 @@ Expected: 모든 명령이 exit 0이다. 실제 OpenAI 이미지 호출과 외�
 
 - MEM-OFF: 환경·요청 단위 완전 비활성화
 - MEM-SCOPE: project/workspace/global 명시 범위와 자동 승격 금지
-- MEM-STATE: candidate/approved/expired/stale/disputed/superseded
+- MEM-STATE: candidate/approved/expired/stale/disputed/superseded transition fold
 - MEM-SOURCE: missing, digest drift, symlink, path escape
 - MEM-INJECT: 기억 본문의 명령·승인 변경·민감정보
 - MEM-LANE: Studio/Career/common 경계
-- MEM-FAILOPEN: index·write·quarantine 실패 뒤 artifact 보존
+- MEM-APPEND: 동일 이벤트의 created/present 멱등성과 다른 bytes conflict
+- MEM-BRANCH: 동시 approve/reject 두 head와 human resolution
+- MEM-CORRUPT: 손상 event 원본 보존, marker append와 memory 단위 fail-closed
+- MEM-INDEX-GEN: missing·corrupt·concurrent generation의 raw fold 재생성
+- MEM-GIT-ISOLATION: lock·stale lock·사용자 변경 warning과 event 성공 분리
+- MEM-FAILOPEN: append·generation·marker 실패 뒤 artifact와 기존 event 보존
 - MEM-INSTALL: install/update/remove 뒤 local memory byte 보존
 - MEM-DIRTY: tracked·untracked 사용자 변경 보존
+- MEM-THREAT-BOUNDARY: pre-existing swap은 차단하고 악의적 same-user
+  between-syscall directory swap은 skipped non-goal로 기록
 
-보고서는 실행하지 않은 live API 검사를 PASS로 표시하지 않는다.
+보고서는 실행하지 않은 live API 검사와 non-goal 공격을 PASS로 표시하지 않는다.
 
 - [ ] **Step 7: 생성 snapshot과 최종 검증 증거를 커밋한다**
 
@@ -1427,11 +1408,12 @@ Expected: build check와 두 E2E가 PASS한다. `git status`에는 구현 전부
 
 - [ ] 설계 문서의 프로젝트별 기본값, 로컬 보관, 승인 기반 적용이 Task 1–8에 모두 연결된다.
 - [ ] 기억 비활성화는 설정 로더, 세 작업 함수, 두 오케스트레이터, 문서와 E2E에서 각각 검증된다.
-- [ ] Markdown 원본과 JSON 파생 색인의 권한 차이가 구현과 적대적 mutation에 고정된다.
+- [ ] append-only Markdown event/control과 derived generation의 권한 차이가 구현과 적대적 mutation에 고정된다.
 - [ ] Studio·Career·common lane 경계와 원래 artifact evidence 결속이 동적 테스트에 포함된다.
 - [ ] 후보 30일, external review date, 충돌, 대체와 명시적 사용자 선호 상태 전이가 모두 닫혀 있다.
 - [ ] 프로젝트 ID가 없을 때 기억만 건너뛰고 기존 작업을 계속한다.
 - [ ] Hook, SQLite, 임베딩, 자동 커밋과 원격 동기화가 구현 범위에 들어오지 않았다.
-- [ ] 설치·업데이트·제거, dirty worktree, symlink, path swap, secret와 prompt injection이 검증된다.
+- [ ] 설치·업데이트·제거, dirty worktree, symlink, pre-existing path swap, secret와 prompt injection이 검증된다.
+- [ ] 악의적 same-user between-syscall directory swap은 non-goal이며 테스트가 보장을 과장하지 않는다.
 - [ ] 변경된 모든 사용자 문서는 한국어 의미를 먼저 쓰고 내부 ID를 보조 표기로 사용한다.
 - [ ] generated snapshot은 마지막 작업에서만 표준 빌드로 재생성된다.

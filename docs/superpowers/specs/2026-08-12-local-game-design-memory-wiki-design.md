@@ -6,7 +6,7 @@
 - 상태: 사용자 승인
 - 대상: Game Design Studio, Game Design Career, 공통 런타임과 사용자 가이드
 - 기본 정책: 프로젝트별·로컬 전용·승인 기반 기억
-- 1차 검색 계층: Markdown 원본과 재생성 가능한 JSON 색인
+- 1차 검색 계층: append-only Markdown 이벤트와 재생성 가능한 JSON 색인 세대
 
 ## 결정 요약
 
@@ -21,8 +21,8 @@ Studio와 Career에 가벼운 장기 기억 기능을 추가한다. 기억은 LL
 밝힌 지속적인 표현·작업 선호는 명시적 사용자 지시라는 근거와 함께 승인된
 선호로 기록할 수 있다.
 
-Markdown을 기억의 원본으로 사용하고 `memory-index.json`은 검색용 생성
-파일로 둔다. SQLite는 1차 구현에서 제외한다. 기억이 없거나 손상돼도 기존
+한 번만 추가하는 Markdown 이벤트를 기억의 원본으로 사용하고 JSON 색인 세대는
+삭제 후 재생성할 수 있는 검색 캐시로 둔다. SQLite는 1차 구현에서 제외한다. 기억이 없거나 손상돼도 기존
 기획, 검토, 이미지, 도식화, 한국어 문장 검수와 내보내기는 계속 동작한다.
 
 ## 배경과 설계 근거
@@ -66,17 +66,17 @@ Markdown을 기억의 원본으로 사용하고 `memory-index.json`은 검색용
 
 ### Markdown 위키만 사용
 
-`index.md`, `log.md`와 기억 문서만 읽는 가장 단순한 방식이다. 사람이 바로
+`index.md`, `log.md`와 기억 이벤트만 읽는 가장 단순한 방식이다. 사람이 바로
 열어볼 수 있고 추가 런타임이 없지만, 문서가 늘어나면 매번 전체 파일에서 ID,
 상태, 범위와 출처를 확인해야 한다. 작은 실험에는 적합하지만 제품 계약으로는
 검색과 중복 검사가 약하다.
 
 ### Markdown 원본과 재생성 가능한 JSON 색인
 
-Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.json`을
-생성한다. 사람이 읽는 기록과 기계 검색을 분리하며, 색인이 손상돼도 원본에서
-다시 만들 수 있다. 현재 Node 18 지원을 유지하면서 외부 의존성을 추가하지
-않는다. 이 방식을 채택한다.
+Markdown 이벤트를 유일한 원본으로 두고 결정적 접기(`fold`)가 현재 `head`와 JSON 색인
+세대를 생성한다. 사람이 읽는 기록과 기계 검색을 분리하며, 색인이 손상돼도
+원본에서 다시 만들 수 있다. Node `>=18` 표준 라이브러리만 사용하고 런타임
+compiler나 외부 의존성을 추가하지 않는다. 이 방식을 채택한다.
 
 ### Markdown과 SQLite를 처음부터 사용
 
@@ -120,7 +120,7 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 - 기존 교훈을 대체하거나 반박하는 결과
                          │
                          ▼
-로컬 기억 저장·색인 갱신·짧은 사용 기록
+로컬 기억 이벤트 append·색인 세대 생성·짧은 사용 기록
 ```
 
 기억은 검색 보조 계층이다. 결과 문서가 로컬 기억에만 의존하면 안 된다.
@@ -141,22 +141,27 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 후보 작성을 건너뛰고 프로젝트 식별이 필요하다는 비차단 안내만 남긴다.
 
 ```text
-<workspace-root>/.game-design/
-├── memory/
-│   ├── index.md
-│   ├── log.md
-│   ├── projects/
-│   ├── lessons/
-│   │   ├── candidates/
-│   │   ├── approved/
-│   │   └── retired/
-│   ├── preferences/
-│   ├── conflicts/
-│   └── receipts/
-├── generated/
-│   └── memory-index.json
-└── quarantine/
+<store-root>/
+└── v1/
+    ├── events/
+    │   └── <memory-shard>/<memory-id>/<event-id>.md
+    ├── controls/
+    │   └── quarantine/<target-shard>/<target-event-id>/<marker-event-id>.md
+    └── derived/
+        ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
+        ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
+        └── logs/<source-tree-sha256>/<log-sha256>/<instance-id>.md
 ```
+
+`memory-shard`는 `sha256(memory_id).slice(0, 2)`다. 이벤트 ID는 정규화한 UTF-8
+Markdown bytes에서 계산한 `mev1-<sha256>`이며, 순환 해시를 피하려고 문서
+내용에는 넣지 않는다. `instance-id`는 `randomUUID()`로 만든다. 같은 논리 결과를
+여러 프로세스가 동시에 생성할 때 물리 파일을 구분할 뿐 색인 내용에는 들어가지
+않는다. 상태별 디렉터리와 current pointer는 두지 않는다. 경로는 권한이나
+상태를 나타내지 않으며, 유효한 이벤트 DAG를 fold한 head가 현재 상태다.
+
+Markdown 이벤트와 quarantine marker만 감사 가능한 영구 기록이다. `derived/`
+아래 JSON과 Markdown 세대는 모두 삭제 가능한 캐시이며 원본을 대신하지 않는다.
 
 - `project`: 현재 `project_id`와 공통 프로젝트 사실만 검색한다.
 - `workspace`: 같은 작업 공간에 있는 여러 `project_id`의 승인 기록을 검색할
@@ -171,8 +176,8 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 
 ### 로컬 Git 제외
 
-기본 `local` 모드에서는 최초 초기화 때 현재 Git 저장소의
-`.git/info/exclude`에 플러그인 소유 표식 블록만 추가한다.
+기본 `local` 모드에서는 기억 이벤트 append가 성공한 뒤 별도 best-effort 단계로
+현재 Git 저장소의 `.git/info/exclude`에 플러그인 소유 표식 블록만 추가한다.
 
 ```gitignore
 # game-design-plugin:memory:start
@@ -187,15 +192,98 @@ Markdown을 유일한 원본으로 두고 결정적 검사기가 `memory-index.j
 - `tracked` 모드는 기억을 자동 커밋하지 않는다.
 - 표식 제거는 명시적인 기억 관리 작업에서만 수행한다.
 
-## 기억 문서 계약
+repo별 `.git/info/.game-design-memory-exclude.lock`를 `open('wx')`로 만든
+프로세스만 기존 파일을 제한된 크기로 읽고 표식이 없을 때 끝에 한 번 append한
+뒤 sync한다. lock 충돌·stale lock·사용자 파일 변화·잘못된 표식은 warning으로
+건너뛴다. Git 제외 실패는 이미 저장한 기억 이벤트를 rollback하거나 다시 쓰지
+않는다. 이 경로는 기억 이벤트 저장 계약과 신뢰 경계를 공유하지 않는다.
 
-각 기억은 Markdown 한 파일이다. YAML 앞부분에는 검색과 검증에 필요한 닫힌
-필드 집합만 허용한다. 여러 출처는 정렬된 `sources` 목록으로 기록한다.
+### 변경 불가 추가와 동시 실행
+
+`appendImmutableMemoryFile({ store, relativePath, bytes })`는 경로와 크기를
+검사하고, 기존 ancestor를 `lstat`과 `realpath`로 확인해 symlink와 비디렉터리를
+거부한다. 필요한 고정 디렉터리를 mode `0o700`으로 만든 뒤 ancestor를 다시
+검사하고, final 파일은 `O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`와 mode `0o600`으로
+한 번만 생성한다. write loop, `FileHandle.sync()`, close, parent directory
+best-effort sync 순서를 지킨다.
+
+`EEXIST`이면 final이 일반 파일이고 symlink가 아님을 확인한 다음 bounded read로
+bytes를 비교한다. 같으면 `present`, 다르면 conflict다. 기존 이벤트를
+truncate, rename, unlink하는 경로는 없다. Studio와 Career가 동시에 같은
+이벤트를 쓰면 커널 `O_EXCL`로 한 writer만 `created`를 받고, 나머지는
+`present` 또는 conflict가 된다. 서로 다른 이벤트는 모두 남아 fold에서 선형
+head나 branch로 판정한다.
+
+### 공개 저장·접기 API
+
+다음 공개 형태를 사용한다.
+
+```js
+memoryEventRelativePath({ memoryId, eventId }) -> string
+appendImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ status: "created"|"present" }>
+parseMemoryEventDocument(source, { sourceName, eventId }) -> { event, record, sections }
+appendMemoryEvent({ store, eventDocument }) -> Promise<{ status, eventId, relativePath, fileSha256 }>
+scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents }) -> Promise<MemoryEventScan>
+foldMemoryEvents(scan, { now }) -> MemoryFold
+appendQuarantineMarker({ store, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>
+publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256 }) -> Promise<{ status, generationPath, indexSha256 }>
+loadCurrentMemoryIndex({ store, fold }) -> Promise<{ index, bytes, sourceTreeSha256, indexSha256, warnings }>
+rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>
+```
+
+`resolveMemoryStore`, immutable bounded `readMemoryFile`, `parseMemoryDocument`,
+`validateMemoryRecord`, `validateMemoryTransition`, `validateMemorySourceBindings`는
+유지한다. `captureDesignMemory` 결과의 `created|present|conflict` 의미도 유지한다.
+`maintainDesignMemory`의 approve·reject·sweep는 transition 이벤트를 append하고,
+quarantine은 marker를 append한다.
+
+`MEMORY_PLATFORM_CAPABILITIES`, `createMemoryStorePlatformAdapter`,
+`writeMemoryFileAtomic`, `moveMemoryFileAtomic`, `memoryRecordRelativePath`와
+`memory-store-posix-helper.c`는 구현 후 공개 surface에 남기지 않는다. runtime
+C compiler, 외부 helper, replace, move, 상태별 경로 또는 current pointer에
+의존하지 않는다. `ensureMemoryGitExclusion`은 별도 best-effort trust path로만
+유지한다.
+
+### 손상, 논리 격리와 색인 세대
+
+scanner는 손상 항목의 안전한 상대 `path`, `reasonCode`, 가능한 경우
+`observedSha256`만 보고한다. raw bytes와 절대 경로를 오류에 넣지 않는다. 유효한
+이벤트가 손상되면 그 memory 전체를 검색에서 제외하지만 관련 없는 memory는
+계속 fold한다.
+
+격리는 원본 이동이 아니라 `controls/quarantine/`에 immutable Markdown marker를
+append하는 작업이다. marker에는 target event ID와 상대 경로, observed digest
+또는 `null`, reason code, actor, `recorded_at`만 둔다. 유효한 marker는 target과
+descendant를 논리 입력에서 제외하며 원본 bytes는 그대로 보존한다. 복구할 때도
+기존 파일을 수정하지 않고 정상 capture 또는 repair 이벤트를 새로 append한다.
+
+`sourceTreeSha256`은 정렬된 `(relativePath, observedSha256, classification)`
+tuple의 canonical JSON hash다. 손상 항목도 입력 트리 정체성에 포함한다.
+`rebuildMemoryIndex`는 매번 raw 이벤트와 marker를 scan/fold해 canonical index
+bytes와 `indexSha256`을 만들고 새 generation을 create-once로 publish한다. current
+pointer는 없다. fresh fold의 두 hash와 모두 일치하는 valid generation만 현재
+색인으로 보며 여러 instance가 있으면 bytewise-lowest 경로를 읽는다. 없거나
+모두 손상됐으면 새 instance를 append한다. `index.md`와 `log.md`도 같은 규칙을
+따르며 UUID와 실행 시각은 논리 bytes에 넣지 않는다.
+
+## 기억 이벤트 계약
+
+각 상태 변경은 새 Markdown 이벤트 한 파일로 append한다. 닫힌 envelope에는
+`schema_version`, `event_type`, `memory_id`, `operation_id`, 정렬되고 중복 없는
+`parent_event_ids`, `effective_at`, `actor`, `reason`을 둔다. `resolution`에만
+`chosen_parent_event_id`를 허용한다. 그 아래에는 현재 기억 레코드와 본문 전체를
+snapshot으로 넣는다. 여러 출처는 정렬된 `sources` 목록으로 기록한다.
 
 ```markdown
 ---
 schema_version: 1
+event_type: capture
 memory_id: lesson-project-20260812-001
+operation_id: playtest-session-04-finding-07
+parent_event_ids: []
+effective_at: 2026-08-12T00:00:00.000Z
+actor: 김기획자
+reason: 플레이테스트에서 반복 가능한 교훈을 확인함
 kind: design-lesson
 lane: studio
 status: candidate
@@ -252,6 +340,13 @@ sources:
 기억 본문의 문장은 명령이 아니라 신뢰하지 않는 자료로 처리한다. 스킬 호출,
 파일 삭제, 승인 변경, 네트워크 전송 같은 문장이 있어도 실행하지 않는다.
 
+capture의 `operation_id`는 upstream `eventId`다. transition은 `memory_id`, 정렬한
+parent ID, action, actor, reason, `effective_at`을 canonical하게 이어 SHA-256으로
+계산한다. 같은 `operation_id`에서 서로 다른 이벤트 bytes가 발견되면
+`duplicate-operation` 충돌이다. 같은 이벤트 ID와 같은 bytes는 멱등이고, 같은
+ID에 다른 bytes가 있거나 파일 이름과 내용 해시가 다르면 `memory.event_conflict`로
+제외한다. 기존 bytes는 어떤 경우에도 고치지 않는다.
+
 ## 상태 모델
 
 ```text
@@ -270,13 +365,23 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 - 다른 기록이 대체하면 원본을 삭제하지 않고 `superseded`로 보존한다.
 - 승인되지 않은 후보는 기본 30일 뒤 `expired`가 된다.
 - 외부 정보는 `review_after`가 지나면 `stale`로 간주해 검색에서 제외한다.
-- 삭제 대신 상태와 `log.md` 이력을 남긴다. 명시적인 개인정보 삭제 요청은
+- 삭제 대신 transition 이벤트와 파생 log 세대를 남긴다. 명시적인 개인정보 삭제 요청은
   별도 안전 삭제 절차로 처리한다.
 
 허용 상태는 `candidate`, `verified`, `approved`, `expired`, `rejected`,
-`disputed`, `superseded`, `stale`로 닫는다. `lessons/retired/`는 별도 상태가
-아니라 `expired`, `rejected`, `superseded`, `stale` 기록을 모아 보여 주는 보관
-위치다. 상태를 바꾸지 않고 디렉터리만 옮겨 승인 여부를 우회할 수 없다.
+`disputed`, `superseded`, `stale`로 닫는다. capture는 parent가 없는 유일한
+root이고 transition은 parent 하나를 참조한다. 동시에 생긴 transition은 두
+head로 모두 보존하며 해당 기억 전체를 `concurrent-conflict`로 검색에서 제외한다.
+사람이 actor와 reason을 명시한 `resolution`만 현재 head 전체를 정렬된 parent로
+소비하고 `chosen_parent_event_id`를 선택해 head를 하나로 줄일 수 있다. 새
+snapshot은 선택한 head와 같거나, 그 head에서 허용된 전이 하나를 적용한 값이어야
+한다.
+
+접기(`fold`)는 이벤트 경로를 NFC/UTF-8 byte 순으로 읽고 파일 이름 해시, 닫힌 schema,
+출처와 상태 전이를 검사한다. snapshot의 기억 identity와 본문은 parent와 같아야
+하며 허용된 상태·provenance 필드만 바꿀 수 있다. orphan parent, duplicate root,
+operation 충돌, 불법 전이, supersedes cycle은 excluded conflict다. 순회 순서,
+mtime이나 wall clock으로 승자를 정하지 않는다.
 
 ## 적용 자격과 검색 순서
 
@@ -313,7 +418,8 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 ### `retrieve-approved-design-memory`
 
 - 기억 설정, 프로젝트 ID와 작업 영역을 확인한다.
-- `memory-index.json` 후보를 Markdown 원본과 다시 대조한다.
+- raw Markdown 이벤트와 quarantine marker를 scan/fold한 뒤 일치하는 JSON 색인
+  세대를 후보 탐색에 사용한다.
 - 승인되고 유효한 관련 기록만 최대 설정 개수만큼 반환한다.
 - 적용한 기억 ID와 출처 해시를 로컬 작업 기록에 남긴다.
 - 기억을 읽지 못하면 경고만 반환하고 기존 기획을 계속한다.
@@ -333,12 +439,15 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 
 ### `maintain-game-design-memory`
 
-- 중복 ID, 끊어진 출처, 순환 대체 관계를 검사한다.
+- 중복 operation, 끊어진 parent·출처, branch와 순환 대체 관계를 검사한다.
 - 출처 파일과 SHA-256을 다시 확인한다.
-- 만료·대체·충돌 상태를 갱신한다.
-- `index.md`, `log.md`, `memory-index.json`을 결정적으로 갱신한다.
-- 손상된 문서는 덮어쓰지 않고 복구 가능한 격리 위치로 원자 이동한다.
-- 기억 후보 열람, 승인, 거부, 폐기와 색인 재생성을 직접 요청할 수 있다.
+- 만료·대체·충돌 상태는 새 transition 이벤트로 append한다.
+- `index.md`, `log.md`, JSON 색인은 raw fold에서 결정적으로 만든 immutable
+  derived generation으로 publish한다.
+- 손상된 문서는 이동하거나 덮어쓰지 않고 content-addressed quarantine marker로
+  논리 격리한다.
+- 기억 후보 열람, 승인, 거부, 폐기, branch resolution과 색인 재생성을 직접
+  요청할 수 있다.
 
 세 스킬은 공통 소스에서 두 제품에 패키징한다. 기억 전용 에이전트는 추가하지
 않으며 기존 근거·문서 품질 검토 경계를 재사용한다.
@@ -427,17 +536,18 @@ GAME_DESIGN_MEMORY_GIT_MODE=local
 제외: 만료 1개, 출처 변경 1개
 ```
 
-세부 기록은 `.game-design/memory/receipts/`에 둔다. 기억 ID, 원본 해시,
-적용·제외 이유와 시간만 포함하며 기억 본문, `.env` 값, 비밀정보를 복제하지
-않는다. 기억을 사용하지 않았으면 별도 안내나 영수증을 만들지 않는다.
+세부 기록은 `v1/derived/logs/`의 immutable generation으로 append한다. 기억 ID,
+head event ID와 해시, 적용·제외 이유와 시간만 포함하며 기억 본문, `.env` 값,
+비밀정보를 복제하지 않는다. 기억을 사용하지 않았으면 별도 안내나 영수증을
+만들지 않는다.
 
 ## 오류 처리
 
 | 상황 | 처리 |
 | --- | --- |
 | 기억 폴더 없음 | 첫 기록이 생길 때만 초기화 |
-| JSON 색인 없음·손상 | Markdown 원본에서 다시 생성 |
-| Markdown 기억 손상 | 적용하지 않고 복구 가능한 격리 위치로 이동 |
+| JSON 색인 세대 없음·손상 | raw Markdown 이벤트 fold에서 새 세대 생성 |
+| Markdown 이벤트 손상 | 원본은 그대로 두고 marker로 논리 격리 |
 | 원본 파일 없음 | `stale`로 표시하고 제외 |
 | 출처 해시 불일치 | 자동 갱신하지 않고 재검토 대상으로 전환 |
 | 승인 기록끼리 충돌 | 둘 다 적용하지 않고 결정 항목 생성 |
@@ -467,6 +577,7 @@ shared/memory/
 │   └── maintain-game-design-memory/
 ├── schema/
 │   ├── memory-record.schema.json
+│   ├── memory-event.schema.json
 │   ├── memory-index.schema.json
 │   └── memory-receipt.schema.json
 ├── references/
@@ -491,10 +602,12 @@ shared/scripts/
 
 ## 보안과 개인정보
 
-- 작업 공간, 전역 로컬 데이터 디렉터리와 허용된 프로젝트 경계를 벗어난
-  경로를 거부한다.
-- 루트와 모든 상위 디렉터리, 대상 파일을 일반 파일·디렉터리로 확인하고
-  심볼릭 링크와 교체 경쟁을 방어한다.
+- 반드시 차단한다: 절대 경로, `..`, 역슬래시, NUL, 비-NFC 경로와 lexical
+  escape, 기존 root·ancestor·final symlink, 특수 파일, 크기·항목 수 고갈.
+- 기존 이벤트 overwrite·delete, 같은 이벤트 ID의 bytes 불일치, logical duplicate
+  operation, 잘못된 DAG·상태 전이·provenance·source binding을 거부한다.
+- Studio와 Career 동시 append에서 이벤트를 잃지 않는다. 손상된 derived index가
+  권한을 얻거나 Git 표식 갱신이 사용자 파일을 truncate하지 못하게 한다.
 - 파일은 제한된 크기로 읽고 기억 항목 수와 전체 문맥 바이트를 제한한다.
 - API 키, 토큰, 자격 증명, 개인 식별 정보와 원문 전체 복사를 저장하지 않는다.
 - 기억 본문을 실행 가능한 명령, 스킬 선택 강제 또는 승인 지시로 해석하지
@@ -504,6 +617,13 @@ shared/scripts/
   전송하지 않는다.
 - 로컬 기억은 이미지 생성, Archify, Skillstead, 외부 API의 입력으로 자동
   전달하지 않는다.
+
+같은 OS 계정의 악의적 프로세스가 `lstat`, `realpath`, `mkdir`, `open` syscall
+사이에 디렉터리를 rename하거나 symlink로 바꾸는 공격은 명시적 non-goal이다.
+그 프로세스는 같은 계정의 파일을 직접 수정할 권한도 있으므로 Node 18 path
+API만으로 descriptor-relative 보장을 제공하지 않는다. 관찰 가능한 사전·사후
+identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 차단한다고
+테스트나 문서에서 주장하지 않는다.
 
 ## 테스트 전략
 
@@ -518,11 +638,18 @@ shared/scripts/
 
 ### 저장소와 상태
 
-- 정상 문서의 생성, 검색, 상태 전이와 결정적 색인 재생성을 확인한다.
-- 중복 ID, 알 수 없는 필드·상태·종류, 순환 대체 관계를 거부한다.
+- 동일 이벤트를 두 프로세스가 append하면 하나는 `created`, 하나는 `present`이며
+  bytes가 같은지 확인한다. 같은 경로의 다른 bytes는 원본을 보존하고 conflict다.
+- 서로 다른 동시 이벤트가 모두 남고, 같은 parent의 approve/reject branch는
+  검색에서 제외되며 사람이 만든 resolution이 모든 head를 소비하는지 확인한다.
+- 중복 operation, 알 수 없는 필드·상태·종류, orphan parent와 순환 대체 관계를
+  거부한다.
 - 후보가 적용되지 않고 승인 기록만 적용되는지 확인한다.
 - 만료, 출처 변경, 충돌과 대체 기록이 검색에서 제외되는지 확인한다.
-- 손상 색인은 Markdown에서 복구되고 손상 원본은 덮어쓰지 않는지 확인한다.
+- 손상·누락·복수 색인 세대는 raw fold에서 byte-identical 논리 색인으로 복구하고
+  기존 세대를 수정하지 않는지 확인한다.
+- hash·schema·본문이 손상된 이벤트는 이동·overwrite하지 않으며 marker append 뒤
+  해당 memory만 제외하고 관련 없는 memory는 유지하는지 확인한다.
 
 ### 제품 경계
 
@@ -542,11 +669,23 @@ shared/scripts/
 
 ### 적대적 경계
 
-- 작업 공간 탈출, 절대 경로, 심볼릭 링크, 특수 파일과 파일 교체를 거부한다.
+- `APPEND-IDEMPOTENT`, `APPEND-CONFLICT`, `APPEND-PARALLEL`, `BRANCH` 시나리오로
+  append와 fold의 보수적 동시 실행 계약을 검증한다.
+- `PATH` 시나리오로 절대 경로, `..`, 역슬래시, NUL, 비-NFC, ancestor·final
+  symlink, FIFO·socket과 oversize를 거부한다.
+- `CORRUPT`와 `INDEX` 시나리오로 손상 이벤트의 logical quarantine과 derived
+  generation 재생성을 검증한다.
+- `GIT` 시나리오로 두 플러그인의 lock 직렬화, malformed marker·사용자 변경·
+  stale lock의 warning-only 처리를 확인한다. 기억 이벤트는 그대로 남아야 한다.
+- `FAILPOINT`로 open·write·fsync·close 실패에서 성공을 보고하지 않고 기존
+  이벤트가 바뀌지 않는지 확인한다. 생성된 partial 파일은 권한을 얻지 못한다.
 - 기억 문서의 프롬프트 주입, 승인 변경과 파일 삭제 명령을 실행하지 않는다.
 - 다른 프로젝트 ID 위장, 출처 해시 조작과 만료일 우회를 거부한다.
 - 비밀정보와 개인정보가 기억·영수증·오류에 남지 않는다.
 - 대용량 파일, 과도한 항목 수와 검색 문맥을 제한한다.
+- 사전에 존재하거나 사후 관찰되는 swap은 fail-closed로 검증한다. 같은 OS 계정의
+  악의적 between-syscall directory swap은 `THREAT-BOUNDARY`에서 skipped non-goal로
+  기록하며 보장되는 보안 테스트로 세지 않는다.
 
 ### 패키징과 생명주기
 
