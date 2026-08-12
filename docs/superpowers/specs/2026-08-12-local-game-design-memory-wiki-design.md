@@ -401,28 +401,49 @@ request context, applied/excluded 목록과 derived 실행 시각을 log에 넣�
 JSON 256 KiB(262,144 bytes), Markdown view 1 MiB, Markdown log 1 MiB다. index
 `entries`는 최대 10,000개, receipt의 `observations`, `applied`, `excluded`는 각각
 최대 256개, receipt history 반환은 최대 256개다. 한 logical generation identity의
-instance는 최대 256개, 전체 derived cache의 generation instance는 최대 10,000개다.
+local reservation은 최대 256개, 전체 derived cache의 global generation
+reservation은 최대 10,000개다. leak도 이 quota를 소비하므로 valid instance 수는
+reservation 수를 넘지 않는다.
 byte 상한은 JavaScript string length가 아니라 `Buffer.byteLength`와 filesystem
 `size` 기준이며 정확히 상한인 값은 허용한다.
 
 API의 `limits`는 `{ maxDirectoryEntries, maxCensusEntries,
-maxIdentityInstances, maxGenerationInstances, maxIndexBytes, maxReceiptBytes,
+maxIdentityInstances, maxGenerationReservations, maxIndexBytes, maxReceiptBytes,
 maxViewBytes, maxLogBytes, maxIndexEntries, maxReceiptObservationItems,
 maxReceiptAppliedItems, maxReceiptExcludedItems }`다. 생략하면 차례로 256, 100,000,
 256, 10,000, 1,048,576, 262,144, 1,048,576, 1,048,576, 10,000, 256, 256,
 256을 쓴다. 모두 기본값과 hard maximum이 같으며 호출자는 1 이상의 정수로 낮출
 수만 있다. `listMemoryReceipts.maxItems`도 기본값과 hard maximum이 256이다.
 
+`maxIdentityInstances=256`과 `maxGenerationReservations=10000`은 publisher가
+create-once reservation으로 지키는 유일한 저장소 cardinality invariant다. 반면
+`maxDirectoryEntries=256`과 `maxCensusEntries=100000`은 untrusted derived tree를
+한 번 순회하는 작업량 budget이자 cache-health tripwire일 뿐, 저장소 cardinality
+invariant나 publish postcondition이 아니다.
+
 index, receipt, view와 log publisher·loader·list는 먼저 공통 bounded census를
-완료한다. 모든 directory, regular file, symlink, special entry와 corrupt·oversize
-entry를 하나씩 센다. `.reservations/global`은 정확한 5자리 slot 이름을 최대
-10,000개까지 허용하는 전용 namespace다. 그 밖의 모든 directory는 direct child
-256개, 전체 physical census는 100,000 entries가 hard maximum이다. 257번째 direct
-child나 100,001번째 physical entry 전에 `complete:false`와 각각
+완료한다. 이 traversal은 `indexes|receipts|views|logs` generation/history tree만
+대상으로 하며 `.reservations`와 `_slots` quota namespace는 열거하지 않는다. quota
+namespace는 정해진 slot filename만 `open('wx')`·`lstat`으로 probe한다. 그래야
+global 10,000개·identity 256개 quota와 directory work budget이 독립적으로 유지된다.
+`opendir()` async iterator로 generation tree를 streaming하고 entry를 하나씩 센다.
+`readdir()`로 전체 child array를 만들지 않는다. directory·regular file·symlink·
+special entry와 corrupt·oversize·junk entry가 모두 budget을 소비한다.
+한 directory의 257번째 child 또는 전체 순회의 100,001번째 physical entry를 받는
+즉시 더 읽지 않고 `complete:false`와 각각
 `memory.derived_directory_limit_exceeded`, `memory.derived_census_limit_exceeded`를
-반환한다. global namespace의 잘못된 이름이나 10,001번째 entry도 불완전 scan이다.
-불완전하면 publisher는 쓰지 않고 loader/list는 앞서 본 valid generation이나
-history도 선택하지 않는다.
+반환한다. publisher preflight가 불완전하면 reservation과 generation을 만들지 않고,
+loader/list는 앞서 본 valid generation이나 history도 선택하지 않는다.
+
+완전한 preflight 뒤 이번 publisher 또는 다른 프로세스의 동시 commit이 direct-child
+또는 census threshold를 넘길 수 있다. quota reservation을 얻어 commit한 generation은
+그대로 valid다. publisher는 physical tripwire를 postcondition으로 다시 주장하지
+않는다. 다음 scan/list/load/publish preflight가 `complete:false`로 아무 세대도
+선택하지 않으며,
+raw event/control append·scan과 기존 artifact workflow는 영향을 받지 않는다.
+회복은 derived cache reset이다. 같은 request의 정상 receipt history도 child
+tripwire를 넘을 수 있으며, 이는 데이터 conflict가 아니라 보수적인 cache-health
+상태다.
 
 count-then-create만으로는 cross-process 상한을 지킬 수 없으므로 publisher는 다음
 quota reservation을 사용한다. 입력 byte·array·canonical/schema 검증, bounded
@@ -466,12 +487,13 @@ reservation이 하나뿐이거나 불일치·malformed인 instance는 census bud
 
 앞선 동일 bytes publish가 끝난 뒤의 순차 호출은 census에서 valid instance를 찾아
 `present`와 bytewise-lowest path를 반환하고 reservation이나 파일을 늘리지 않는다.
-반면 같은 census에서 기존 instance를 보지 못한 동시 contender는 각자 quota를
+반면 같은 preflight에서 기존 instance를 보지 못한 동시 contender는 각자 quota를
 선점해 UUID instance를 만들 수 있다. 여유 quota 안에서 성공한 결과는 모두
 `created|present`이고, 같은 bytes instance는 논리적으로 동등하다. 물리 중복은
 contender 수를 넘지 않으며 결함이나 conflict가 아니다. loader는 bytewise-lowest
-valid path를 읽고, 동시 publish 뒤 순차 재시도는 `present`로 끝난다. identity가
-255 slots, global이 9,999 slots인 상태에서 두 contender가 경쟁하면 정확히 하나만
+valid path를 읽고, 동시 publish 뒤 다음 preflight도 완전하면 순차 재시도는
+`present`로 끝난다. identity reservation 255개 또는 global reservation 9,999개가
+사용된 상태에서 두 contender가 마지막 logical quota slot을 경쟁하면 정확히 하나만
 `created`이고 loser는 `complete:false`, `memory.derived_limit_exceeded`다.
 
 publisher는 reservation 전에 입력 byte length와 array 수를 검사한다. 상한을
@@ -960,8 +982,10 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
   확인한다.
 - index·receipt·view·log의 동일 bytes를 quota 여유 상태에서 동시에 publish하면
   결과가 모두 `created|present`, instance bytes가 동일하고 물리 중복 수가 contender
-  수 이내인지 확인한다. 이어 순차 재시도하면 `present`이며 파일이 더 늘지 않는다.
-- identity slot 255개와 global slot 9,999개를 점유한 뒤 두 publisher를 경쟁시키면
+  수 이내인지 확인한다. 다음 preflight도 완전한 상태의 순차 재시도는 `present`이며
+  파일이 더 늘지 않는다.
+- identity reservation 255개 또는 global reservation 9,999개를 점유한 뒤 두
+  publisher가 마지막 logical quota slot을 경쟁하면
   정확히 하나만 `created`, loser는 `complete:false`와
   `memory.derived_limit_exceeded`이고 상한을 넘는 generation이 없는지 확인한다.
 - global/local reservation이 같은 kind·length-prefixed identity hash·generation
@@ -974,10 +998,20 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
   각각 256개의 경계값은 허용하고 limit+1은 reservation·파일 생성 전에 거부한다.
   loader가 `lstat` size 뒤 bounded read, UTF-8, parse, schema/array, canonical bytes,
   hash/path 순으로 검사하는지도 확인한다.
-- global reservation 10,001번째, 일반 directory 257번째 direct child와 전체 physical
-  census 100,001번째 entry 앞에서 `complete:false`와 전용 warning을 반환한다.
-  directory·regular·symlink·special·corrupt·oversize entry를 모두 세며 불완전한
-  census에서는 publisher·loader·list가 generation이나 history를 선택하지 않는다.
+- `opendir()` streaming traversal이 일반 directory의 257번째 child와 전체 순회의
+  100,001번째 physical entry를 받자마자 멈추고 `complete:false`와 전용 warning을
+  반환한다. `readdir()` whole-array를 쓰지 않고 directory·regular·symlink·special·
+  corrupt·oversize·junk entry를 모두 세며, 불완전한 census에서는 publisher·loader·
+  list가 generation이나 history를 선택하지 않는다.
+- 두 publisher가 완전한 preflight 뒤 동시에 commit해 direct-child 또는 전체
+  physical tripwire를 넘겨도 commit 세대는 valid다. 다음 scan/list/load/publish가
+  `complete:false`로 아무 세대도 선택하지 않고, source event/control append·scan과
+  artifact workflow가 계속되는지 확인한다.
+- tripwire 초과와 derived cache reset 전후에 raw fold bytes와 `sourceTreeSha256`가
+  바뀌지 않고 source append·scan budget도 derived junk의 영향을 받지 않는지
+  확인한다.
+- 같은 request의 정상 receipt history가 child tripwire를 넘기는 경우도 conflict가
+  아니라 cache reset이 필요한 보수적 cache-health 상태인지 확인한다.
 - census가 완전한 exact receipt의 oversize instance는 `corrupt`이고, warning에는
   raw bytes와 절대 경로가 없는지 확인한다. global 선점 뒤 crash·local 선점 실패로
   생긴 empty/malformed reservation은 generation 권한 없이 slot만 소비하고 cache
