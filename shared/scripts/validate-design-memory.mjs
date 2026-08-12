@@ -21,6 +21,41 @@ const transitions = Object.freeze({ candidate: ["verified", "expired", "rejected
 
 function error(code, pathName, message) { return { code, path: pathName, message }; }
 function object(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
+function snapshotCanonicalInput(value) {
+  try { return { ok: true, value: snapshot(value, new Set()) }; } catch { return { ok: false }; }
+}
+function snapshot(value, ancestors) {
+  if (value === null || typeof value !== "object") return value;
+  if (ancestors.has(value)) throw new Error();
+  ancestors.add(value);
+  const prototype = Object.getPrototypeOf(value);
+  let copy;
+  if (Array.isArray(value)) {
+    if (prototype !== Array.prototype) throw new Error();
+    const length = Object.getOwnPropertyDescriptor(value, "length");
+    if (!length || !Object.hasOwn(length, "value")) throw new Error();
+    const keys = Reflect.ownKeys(value);
+    if (keys.length !== length.value + 1) throw new Error();
+    copy = [];
+    for (let index = 0; index < length.value; index += 1) {
+      const key = String(index); const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !descriptor.enumerable || !Object.hasOwn(descriptor, "value")) throw new Error();
+      copy.push(snapshot(descriptor.value, ancestors));
+    }
+    if (keys.some((key) => key !== "length" && (!/^(?:0|[1-9]\d*)$/u.test(key) || Number(key) >= length.value))) throw new Error();
+  } else {
+    if (prototype !== Object.prototype && prototype !== null) throw new Error();
+    copy = Object.create(null);
+    for (const key of Reflect.ownKeys(value)) {
+      if (typeof key !== "string") throw new Error();
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !descriptor.enumerable || !Object.hasOwn(descriptor, "value")) throw new Error();
+      copy[key] = snapshot(descriptor.value, ancestors);
+    }
+  }
+  ancestors.delete(value);
+  return Object.freeze(copy);
+}
 function validateCanonicalStringTree(value, seen = new Set()) {
   if (typeof value === "string") return value.includes("\0") || value !== value.normalize("NFC") ? { ok: false } : { ok: true };
   if (value === null || typeof value !== "object") return { ok: true };
@@ -43,6 +78,11 @@ function calendarDate(value) { if (!DATE.test(value ?? "")) return false; const 
 function timestamp(value) { if (typeof value !== "string" || !RFC3339.test(value)) return false; const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|([+-])(\d{2}):(\d{2}))$/u.exec(value); return calendarDate(match?.[1]) && Number(match[2]) <= 23 && Number(match[3]) <= 59 && Number(match[4]) <= 59 && (match[5] === "Z" || (Number(match[7]) <= 14 && Number(match[8]) <= 59 && !(Number(match[7]) === 14 && Number(match[8]) !== 0))); }
 
 export function validateMemoryRecord(record) {
+  const snapshot = snapshotCanonicalInput(record);
+  if (!snapshot.ok) return { ok: false, errors: [error("memory.noncanonical", "", "Memory input must be canonical plain data.")] };
+  return validateMemoryRecordSnapshot(snapshot.value);
+}
+function validateMemoryRecordSnapshot(record) {
   const errors = [];
   if (!object(record)) return { ok: false, errors: [error("memory.invalid_record", "", "Memory record must be an object.")] };
   if (!validateCanonicalStringTree(record).ok) return { ok: false, errors: [error("memory.noncanonical", "", "Memory strings must be NFC and cannot contain NUL.")] };
@@ -126,7 +166,13 @@ function yamlRecord(record, indent = "") {
 function normalizeTime(key, value) { return ["effective_at", "created_at", "updated_at"].includes(key) ? new Date(value).toISOString() : value; }
 function eventFailure(message, code = "memory.event") { const failure = new Error(message); failure.code = code; throw failure; }
 function sensitiveText(value) { return typeof value !== "string" || value.includes("\0") || forbiddenMemoryContent.some((pattern) => pattern.test(value)); }
-function canonicalSection(value) { if (sensitiveText(value)) return undefined; const normalized = value.normalize("NFC").replace(/\r\n?/gu, "\n").split("\n").map((line) => line.replace(/[ \t]+$/gu, "")).join("\n").replace(/^\n+|\n+$/gu, ""); return normalized || undefined; }
+function canonicalSection(value) {
+  if (typeof value !== "string") return { ok: false, code: "memory.prohibited_content" };
+  if (value.includes("\0") || value !== value.normalize("NFC")) return { ok: false, code: "memory.noncanonical" };
+  if (sensitiveText(value)) return { ok: false, code: "memory.prohibited_content" };
+  const normalized = value.replace(/\r\n?/gu, "\n").split("\n").map((line) => line.replace(/[ \t]+$/gu, "")).join("\n").replace(/^\n+|\n+$/gu, "");
+  return normalized ? { ok: true, value: normalized } : { ok: false, code: "memory.prohibited_content" };
+}
 function lengthPrefix(value) { const bytes = Buffer.from(value, "utf8"); const length = Buffer.alloc(8); length.writeBigUInt64BE(BigInt(bytes.byteLength)); return Buffer.concat([length, bytes]); }
 
 export function memoryOperationId({ memory_id, event_type, action, effective_at, actor, reason, parent_event_ids, chosen_parent_event_id } = {}) {
@@ -136,19 +182,27 @@ export function memoryOperationId({ memory_id, event_type, action, effective_at,
 }
 
 export function canonicalMemoryEventDocument(event, sections) {
-  if (!validateCanonicalStringTree(event).ok) eventFailure("Memory event metadata is not canonical.", "memory.noncanonical");
-  const validation = validateMemoryEvent(event);
+  const snapshot = snapshotCanonicalInput({ event, sections });
+  if (!snapshot.ok || !validateCanonicalStringTree(snapshot.value).ok) eventFailure("Memory event input is not canonical.", "memory.noncanonical");
+  const { event: eventSnapshot, sections: sectionsSnapshot } = snapshot.value;
+  const validation = validateMemoryEventSnapshot(eventSnapshot);
   if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
-  if (!object(sections) || ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].some((key) => !canonicalSection(sections[key]))) eventFailure("Memory event sections are invalid.", "memory.prohibited_content");
-  const lines = ["---", `schema_version: ${event.schema_version}`, `event_type: ${quote(event.event_type)}`, `action: ${quote(event.action)}`, `memory_id: ${quote(event.memory_id)}`, `operation_id: ${quote(event.operation_id)}`, event.parent_event_ids.length === 0 ? "parent_event_ids: []" : "parent_event_ids:"];
-  for (const value of event.parent_event_ids) lines.push(`  - ${quote(value)}`);
-  if (event.chosen_parent_event_id !== undefined) lines.push(`chosen_parent_event_id: ${quote(event.chosen_parent_event_id)}`);
-  lines.push(`effective_at: ${quote(normalizeTime("effective_at", event.effective_at))}`, `actor: ${quote(event.actor)}`, `reason: ${quote(event.reason)}`, "record:", ...yamlRecord(event.record, "  "), "---", "");
-  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) lines.push(`## ${section}`, "", canonicalSection(sections[section]), "");
+  const canonicalSections = ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].map((key) => canonicalSection(sectionsSnapshot?.[key]));
+  if (canonicalSections.some((section) => !section.ok)) eventFailure("Memory event sections are invalid.", canonicalSections.find((section) => !section.ok).code);
+  const lines = ["---", `schema_version: ${eventSnapshot.schema_version}`, `event_type: ${quote(eventSnapshot.event_type)}`, `action: ${quote(eventSnapshot.action)}`, `memory_id: ${quote(eventSnapshot.memory_id)}`, `operation_id: ${quote(eventSnapshot.operation_id)}`, eventSnapshot.parent_event_ids.length === 0 ? "parent_event_ids: []" : "parent_event_ids:"];
+  for (const value of eventSnapshot.parent_event_ids) lines.push(`  - ${quote(value)}`);
+  if (eventSnapshot.chosen_parent_event_id !== undefined) lines.push(`chosen_parent_event_id: ${quote(eventSnapshot.chosen_parent_event_id)}`);
+  lines.push(`effective_at: ${quote(normalizeTime("effective_at", eventSnapshot.effective_at))}`, `actor: ${quote(eventSnapshot.actor)}`, `reason: ${quote(eventSnapshot.reason)}`, "record:", ...yamlRecord(eventSnapshot.record, "  "), "---", "");
+  for (const [index, section] of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].entries()) lines.push(`## ${section}`, "", canonicalSections[index].value, "");
   return `${lines.join("\n").replace(/\n+$/u, "")}\n`;
 }
 
 export function validateMemoryEvent(event) {
+  const snapshot = snapshotCanonicalInput(event);
+  if (!snapshot.ok) return { ok: false, errors: [error("memory.noncanonical", "", "Memory input must be canonical plain data.")] };
+  return validateMemoryEventSnapshot(snapshot.value);
+}
+function validateMemoryEventSnapshot(event) {
   const errors = [];
   if (!object(event)) return { ok: false, errors: [error("memory.event", "", "Memory event must be an object.")] };
   if (!validateCanonicalStringTree(event).ok) return { ok: false, errors: [error("memory.noncanonical", "", "Memory strings must be NFC and cannot contain NUL.")] };
@@ -162,7 +216,7 @@ export function validateMemoryEvent(event) {
   if (event.event_type === "transition" && (event.parent_event_ids?.length !== 1 || !MEMORY_STATUSES.includes(event.action) || event.chosen_parent_event_id !== undefined)) errors.push(error("memory.transition", "", "Transition must have one parent and a status action."));
   if (event.event_type === "resolution" && (event.action !== "resolution" || event.parent_event_ids?.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id))) errors.push(error("memory.resolution", "", "Resolution must name an observed parent head."));
   if (["transition", "resolution"].includes(event.event_type)) { try { if (event.operation_id !== memoryOperationId(event)) errors.push(error("memory.operation", "operation_id", "Operation id does not match its tuple.")); } catch { errors.push(error("memory.operation", "operation_id", "Operation id is invalid.")); } }
-  const recordValidation = validateMemoryRecord(event.record); if (!recordValidation.ok || event.record?.memory_id !== event.memory_id) errors.push(error("memory.event_snapshot", "record", "Event record snapshot is invalid."));
+  const recordValidation = validateMemoryRecordSnapshot(event.record); if (!recordValidation.ok || event.record?.memory_id !== event.memory_id) errors.push(error("memory.event_snapshot", "record", "Event record snapshot is invalid."));
   return { ok: errors.length === 0, errors };
 }
 
@@ -180,10 +234,12 @@ export function parseMemoryEventDocument(source, { sourceName = "memory event", 
 
 const MARKER_KEYS = Object.freeze(["schema_version", "memory_id", "target_event_id", "target_relative_path", "observed_sha256", "reason_code", "actor", "recorded_at"]);
 export function canonicalQuarantineMarkerDocument(marker) {
-  if (!validateCanonicalStringTree(marker).ok) eventFailure("Quarantine marker is not canonical.", "memory.noncanonical");
-  const markerErrors = []; scanSensitive(marker, markerErrors);
-  if (!object(marker) || markerErrors.length || Object.keys(marker).some((key) => !MARKER_KEYS.includes(key)) || marker.schema_version !== 1 || !safeId(marker.memory_id) || !/^mev1-[a-f0-9]{64}$/u.test(marker.target_event_id ?? "") || !safeRelative(marker.target_relative_path) || !(marker.observed_sha256 === null || SHA256.test(marker.observed_sha256)) || typeof marker.reason_code !== "string" || marker.reason_code !== marker.reason_code.normalize("NFC") || !marker.reason_code.trim() || typeof marker.actor !== "string" || marker.actor !== marker.actor.normalize("NFC") || !marker.actor.trim() || !timestamp(marker.recorded_at)) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
-  return `---\nschema_version: 1\nmemory_id: ${quote(marker.memory_id)}\ntarget_event_id: ${quote(marker.target_event_id)}\ntarget_relative_path: ${quote(marker.target_relative_path)}\nobserved_sha256: ${marker.observed_sha256 === null ? "null" : quote(marker.observed_sha256)}\nreason_code: ${quote(marker.reason_code)}\nactor: ${quote(marker.actor)}\nrecorded_at: ${quote(new Date(marker.recorded_at).toISOString())}\n---\n\n## Quarantine\n\nsealed quarantine marker\n`;
+  const snapshot = snapshotCanonicalInput(marker);
+  if (!snapshot.ok || !validateCanonicalStringTree(snapshot.value).ok) eventFailure("Quarantine marker is not canonical.", "memory.noncanonical");
+  const markerSnapshot = snapshot.value;
+  const markerErrors = []; scanSensitive(markerSnapshot, markerErrors);
+  if (!object(markerSnapshot) || markerErrors.length || MARKER_KEYS.some((key) => !Object.hasOwn(markerSnapshot, key)) || Object.keys(markerSnapshot).some((key) => !MARKER_KEYS.includes(key)) || markerSnapshot.schema_version !== 1 || !safeId(markerSnapshot.memory_id) || !/^mev1-[a-f0-9]{64}$/u.test(markerSnapshot.target_event_id ?? "") || !safeRelative(markerSnapshot.target_relative_path) || !(markerSnapshot.observed_sha256 === null || SHA256.test(markerSnapshot.observed_sha256)) || typeof markerSnapshot.reason_code !== "string" || !markerSnapshot.reason_code.trim() || typeof markerSnapshot.actor !== "string" || !markerSnapshot.actor.trim() || !timestamp(markerSnapshot.recorded_at)) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
+  return `---\nschema_version: 1\nmemory_id: ${quote(markerSnapshot.memory_id)}\ntarget_event_id: ${quote(markerSnapshot.target_event_id)}\ntarget_relative_path: ${quote(markerSnapshot.target_relative_path)}\nobserved_sha256: ${markerSnapshot.observed_sha256 === null ? "null" : quote(markerSnapshot.observed_sha256)}\nreason_code: ${quote(markerSnapshot.reason_code)}\nactor: ${quote(markerSnapshot.actor)}\nrecorded_at: ${quote(new Date(markerSnapshot.recorded_at).toISOString())}\n---\n\n## Quarantine\n\nsealed quarantine marker\n`;
 }
 export function parseQuarantineMarkerDocument(source, { markerId } = {}) {
   if (typeof source !== "string" || source.includes("\0") || source.includes("\r") || !source.endsWith("\n") || source.endsWith("\n\n") || source !== source.normalize("NFC")) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");

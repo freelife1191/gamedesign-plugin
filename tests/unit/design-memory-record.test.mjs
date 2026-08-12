@@ -25,19 +25,58 @@ const record = Object.freeze({
 });
 const sections = Object.freeze({ "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" });
 const capture = (overrides = {}) => ({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T09:00:00+09:00", actor: "author", reason: "capture", record: { ...record }, ...overrides });
+const marker = () => ({ schema_version: 1, memory_id: record.memory_id, target_event_id: "mev1-" + "1".repeat(64), target_relative_path: "v1/events/aa/x/y", observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T09:00:00+09:00" });
+const assertNoncanonicalWithout = (operation, raw) => assert.throws(operation, (error) => error.code === "memory.noncanonical" && !String(error).includes(raw));
+
+const supportedSchemaKeywords = new Set(["$schema", "$id", "$ref", "type", "additionalProperties", "required", "properties", "const", "enum", "pattern", "uniqueItems", "items", "format", "minLength", "minItems", "maxItems", "allOf", "if", "then", "not"]);
+const schemaDate = /^\d{4}-\d{2}-\d{2}$/u;
+const schemaDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+
+function schemaCalendarDate(value) {
+  if (!schemaDate.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  return month >= 1 && month <= 12 && day >= 1 && day <= new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function schemaFormatAccepts(value, format) {
+  if (format === "date") return schemaCalendarDate(value);
+  if (format === "date-time") {
+    if (!schemaDateTime.test(value)) return false;
+    const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|([+-])(\d{2}):(\d{2}))$/u.exec(value);
+    return schemaCalendarDate(match?.[1]) && Number(match[2]) <= 23 && Number(match[3]) <= 59 && Number(match[4]) <= 59 && (match[5] === "Z" || (Number(match[7]) <= 14 && Number(match[8]) <= 59 && !(Number(match[7]) === 14 && Number(match[8]) !== 0)));
+  }
+  throw new Error(`Unsupported JSON Schema format: ${format}`);
+}
+
+function assertSupportedSchema(schema, schemas, seen = new Set()) {
+  if (schema === null || typeof schema !== "object" || Array.isArray(schema) || seen.has(schema)) return;
+  seen.add(schema);
+  for (const key of Object.keys(schema)) if (!supportedSchemaKeywords.has(key)) throw new Error(`Unsupported JSON Schema keyword: ${key}`);
+  if (schema.$ref && !schemas.has(schema.$ref)) throw new Error(`Unsupported schema reference: ${schema.$ref}`);
+  if (schema.format && !["date", "date-time"].includes(schema.format)) throw new Error(`Unsupported JSON Schema format: ${schema.format}`);
+  for (const child of Object.values(schema.properties ?? {})) assertSupportedSchema(child, schemas, seen);
+  for (const child of [schema.additionalProperties, schema.items, schema.if, schema.then, schema.not]) if (child && typeof child === "object") assertSupportedSchema(child, schemas, seen);
+  for (const child of schema.allOf ?? []) assertSupportedSchema(child, schemas, seen);
+  if (schema.$ref) assertSupportedSchema(schemas.get(schema.$ref), schemas, seen);
+}
 
 function schemaAccepts(value, schema, schemas) {
-  if (schema.$ref) return schemaAccepts(value, schemas.get(schema.$ref) ?? (() => { throw new Error(`Unsupported schema reference: ${schema.$ref}`); })(), schemas);
-  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, part, schemas))) return false;
-  if (schema.if && schemaAccepts(value, schema.if, schemas) && schema.then && !schemaAccepts(value, schema.then, schemas)) return false;
-  if (schema.not && schemaAccepts(value, schema.not, schemas)) return false;
+  assertSupportedSchema(schema, schemas);
+  return schemaAcceptsUnchecked(value, schema, schemas);
+}
+
+function schemaAcceptsUnchecked(value, schema, schemas) {
+  if (schema.$ref) return schemaAcceptsUnchecked(value, schemas.get(schema.$ref), schemas);
+  if (schema.allOf && !schema.allOf.every((part) => schemaAcceptsUnchecked(value, part, schemas))) return false;
+  if (schema.if && schemaAcceptsUnchecked(value, schema.if, schemas) && schema.then && !schemaAcceptsUnchecked(value, schema.then, schemas)) return false;
+  if (schema.not && schemaAcceptsUnchecked(value, schema.not, schemas)) return false;
   if (schema.const !== undefined && JSON.stringify(value) !== JSON.stringify(schema.const)) return false;
   if (schema.enum && !schema.enum.some((candidate) => JSON.stringify(value) === JSON.stringify(candidate))) return false;
   const types = schema.type === undefined ? undefined : Array.isArray(schema.type) ? schema.type : [schema.type];
   if (types && !types.some((type) => (type === "object" && value !== null && typeof value === "object" && !Array.isArray(value)) || (type === "array" && Array.isArray(value)) || (type === "string" && typeof value === "string") || (type === "null" && value === null))) return false;
-  if (typeof value === "string") return value.length >= (schema.minLength ?? 0) && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
-  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || new Set(value.map((item) => JSON.stringify(item))).size === value.length) && (!schema.items || value.every((item) => schemaAccepts(item, schema.items, schemas)));
-  if (value !== null && typeof value === "object") return !(schema.required ?? []).some((key) => !Object.hasOwn(value, key)) && !(schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) && Object.entries(value).every(([key, item]) => !schema.properties?.[key] || schemaAccepts(item, schema.properties[key], schemas));
+  if (typeof value === "string") return value.length >= (schema.minLength ?? 0) && (!schema.pattern || new RegExp(schema.pattern, "u").test(value)) && (!schema.format || schemaFormatAccepts(value, schema.format));
+  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || new Set(value.map((item) => JSON.stringify(item))).size === value.length) && (!schema.items || value.every((item) => schemaAcceptsUnchecked(item, schema.items, schemas)));
+  if (value !== null && typeof value === "object") return !(schema.required ?? []).some((key) => !Object.hasOwn(value, key)) && !(schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) && Object.entries(value).every(([key, item]) => !schema.properties?.[key] || schemaAcceptsUnchecked(item, schema.properties[key], schemas));
   return true;
 }
 
@@ -93,6 +132,42 @@ test("canonical event input rejects NUL and NFD strings without disclosing value
   assert.equal(validateMemoryRecord({ ...record, approval_basis: "review\0hidden" }).errors[0].code, "memory.noncanonical");
 });
 
+test("canonical event sections reject NUL and NFD before whitespace normalization", () => {
+  for (const value of ["e\u0301vidence", "safe\0section-hidden"]) {
+    assertNoncanonicalWithout(() => canonicalMemoryEventDocument(capture(), { ...sections, "근거": value }), "section-hidden");
+  }
+});
+
+test("canonical writers snapshot own data properties before validation and serialization", () => {
+  const raw = "raw-input-sentinel";
+  const changingEvent = capture();
+  let eventReads = 0;
+  Object.defineProperty(changingEvent, "actor", { enumerable: true, get: () => ++eventReads > 5 ? `author\0${raw}` : "author" });
+  assertNoncanonicalWithout(() => canonicalMemoryEventDocument(changingEvent, sections), raw);
+
+  const changingMarker = marker();
+  let markerReads = 0;
+  Object.defineProperty(changingMarker, "actor", { enumerable: true, get: () => ++markerReads > 5 ? `auditor\0${raw}` : "auditor" });
+  assertNoncanonicalWithout(() => canonicalQuarantineMarkerDocument(changingMarker), raw);
+});
+
+test("canonical writers reject inherited, cyclic, accessor, and Proxy inputs without leaks", () => {
+  const raw = "raw-input-sentinel";
+  const inheritedMarker = Object.create({ ...marker(), reason_code: `password ${raw}` });
+  assertNoncanonicalWithout(() => canonicalQuarantineMarkerDocument(inheritedMarker), raw);
+
+  const cyclic = capture();
+  cyclic.record.loop = cyclic.record;
+  assertNoncanonicalWithout(() => canonicalMemoryEventDocument(cyclic, sections), raw);
+
+  const throwingEvent = capture();
+  Object.defineProperty(throwingEvent, "actor", { enumerable: true, get: () => { throw new Error(raw); } });
+  assertNoncanonicalWithout(() => canonicalMemoryEventDocument(throwingEvent, sections), raw);
+
+  const throwingProxy = new Proxy(marker(), { ownKeys: () => { throw new Error(raw); } });
+  assertNoncanonicalWithout(() => canonicalQuarantineMarkerDocument(throwingProxy), raw);
+});
+
 test("canonical quarantine marker input rejects NUL and NFD strings", () => {
   const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: "mev1-" + "1".repeat(64), target_relative_path: "v1/events/aa/x/y", observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T09:00:00+09:00" };
   for (const mutation of [
@@ -129,12 +204,16 @@ test("event runtime validator and JSON Schema agree on canonical event-type fixt
     [resolution, true],
     [capture({ operation_id: "mop1-" + "0".repeat(64) }), false],
     [capture({ actor: "author\0hidden" }), false],
+    [capture({ actor: "author\nreviewer", reason: "review\naccepted" }), true],
+    [capture({ actor: "author\n\0hidden" }), false],
+    [capture({ effective_at: "not-a-time" }), false],
     [forbiddenTransitionParent, false],
     [oneParentResolution, false],
   ]) {
     assert.equal(validateMemoryEvent(fixture).ok, expected);
     assert.equal(schemaAccepts(fixture, eventSchema, schemas), expected);
   }
+  assert.throws(() => schemaAccepts(capture(), { ...eventSchema, unknown_keyword: true }, schemas), /Unsupported JSON Schema keyword/);
 });
 
 test("capture uses a safe upstream operation id while derived events require mop1", () => {
