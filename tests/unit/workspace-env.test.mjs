@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { constants } from "node:fs";
-import { chmod, mkdtemp, open, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, open, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -68,7 +68,6 @@ test("workspace env opens a regular dotenv with no-follow and pins its identity 
       openStats = await handle.stat();
       return handle;
     },
-    readFileFn: readFile,
   });
 
   assert.equal((flags & constants.O_NOFOLLOW) !== 0, true);
@@ -77,6 +76,41 @@ test("workspace env opens a regular dotenv with no-follow and pins its identity 
   assert.equal(openStats.dev, pathStats.dev);
   assert.equal(openStats.ino, pathStats.ino);
   assert.deepEqual(result.values, { ALLOWED: "file-value" });
+});
+
+test("workspace env reads only the opened file when the dotenv path is swapped and restored during reading", async (t) => {
+  const root = await workspace(t);
+  const envPath = await writeEnv(root, "ALLOWED=original-value\n");
+  const originalPath = path.join(root, "original.env");
+  const replacementPath = path.join(root, "replacement.env");
+  await writeFile(replacementPath, "ALLOWED=replacement-value\n", { mode: 0o600 });
+  let swapped = false;
+
+  const result = await readWorkspaceEnv({
+    workspaceRoot: root,
+    env: {},
+    supportedKeys: ["ALLOWED"],
+    readFileFn: async (source, ...args) => {
+      if (!swapped) {
+        swapped = true;
+        await rename(envPath, originalPath);
+        await rename(replacementPath, envPath);
+      }
+
+      const contents = typeof source === "string"
+        ? await readFile(source)
+        : await source.read(...args);
+
+      if (swapped) {
+        await rename(envPath, replacementPath);
+        await rename(originalPath, envPath);
+        swapped = false;
+      }
+      return contents;
+    },
+  });
+
+  assert.deepEqual(result.values, { ALLOWED: "original-value" });
 });
 
 test("workspace env rejects malformed declared values without disclosing values or undeclared keys", async (t) => {

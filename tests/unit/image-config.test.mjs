@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { constants } from "node:fs";
-import { chmod, mkdir, mkdtemp, open, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, open, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -207,19 +207,19 @@ test("only the workspace-root .env is read", async (t) => {
   await mkdir(root);
   await writeEnv(parent, "IMAGE_GEN_MODE=all\n");
   await writeEnv(root, "IMAGE_GEN_MODE=required\n");
-  const reads = [];
+  const reads = new Set();
 
   const config = await loadImageConfig({
     workspaceRoot: root,
     env: {},
-    readFileFn: async (...args) => {
-      reads.push(args[0]);
-      return readFile(...args);
+    readFileFn: async (handle, ...args) => {
+      reads.add(path.join(root, ".env"));
+      return handle.read(...args);
     },
   });
 
   assert.equal(config.mode, "required");
-  assert.deepEqual(reads, [path.join(root, ".env")]);
+  assert.deepEqual([...reads], [path.join(root, ".env")]);
 });
 
 test("a symlink swapped in after lstat is rejected before outside bytes can be parsed", async (t) => {

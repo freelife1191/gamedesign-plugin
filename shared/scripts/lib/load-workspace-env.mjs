@@ -77,13 +77,13 @@ async function defaultReadFileChunk(handle, buffer, offset, length, position) {
   return handle.read(buffer, offset, length, position);
 }
 
-async function readBoundedHandle(handle) {
+async function readBoundedHandle(handle, readChunkFn = defaultReadFileChunk) {
   const chunks = [];
   let total = 0;
   while (total <= maximumEnvBytes) {
     const length = Math.min(8192, maximumEnvBytes + 1 - total);
     const buffer = Buffer.alloc(length);
-    const result = await defaultReadFileChunk(handle, buffer, 0, length, total);
+    const result = await readChunkFn(handle, buffer, 0, length, total);
     if (result === null || typeof result !== "object" || !Number.isInteger(result.bytesRead)
       || result.bytesRead < 0 || result.bytesRead > length) {
       throw new Error("Invalid bounded .env read adapter result.");
@@ -160,10 +160,7 @@ export async function readWorkspaceEnv({
       assertOpenedEnvIdentity(envStats, openedStats, currentPathStats);
       await inspectWorkspacePath(absoluteRoot, lstatFn);
       if (openedStats.size > maximumEnvBytes) throw new Error("Workspace .env is too large.");
-      const contents = readFileFn === undefined ? await readBoundedHandle(handle) : await readFileFn(envPath);
-      if (!Buffer.isBuffer(contents) && typeof contents !== "string") {
-        throw new Error("Invalid workspace environment read adapter result.");
-      }
+      const contents = await readBoundedHandle(handle, readFileFn);
       const [finalOpenedStats, finalPathStats] = await Promise.all([handle.stat(), lstatFn(envPath)]);
       assertOpenedEnvIdentity(envStats, finalOpenedStats, finalPathStats);
       await inspectWorkspacePath(absoluteRoot, lstatFn);
