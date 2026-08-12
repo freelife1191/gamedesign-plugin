@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -78,6 +78,25 @@ test("approval, source, and instruction provenance rules are enforced", () => {
   const style = clone({ kind: "style-preference", lane: "common", sources: [], instruction_sha256: "a".repeat(64), approval_basis: "explicit-user-instruction", approved_by: "user", status: "approved" });
   assert.equal(validateMemoryRecord(style).ok, true);
   assert.equal(validateMemoryRecord({ ...style, approval_basis: "review" }).ok, false);
+  assert.equal(validateMemoryRecord({ ...style, instruction_sha256: undefined }).ok, false);
+});
+
+test("sensitive unknown metadata is rejected before schema errors without exposing its key", () => {
+  const result = validateMemoryRecord({ ...clone(), password: "not-a-secret" });
+  assert.deepEqual(result.errors.map((entry) => entry.code), ["memory.prohibited_content"]);
+  assert.equal(JSON.stringify(result).includes("password"), false);
+});
+
+test("calendar and timestamp values are semantically valid", () => {
+  assert.equal(validateMemoryRecord(clone({ review_after: "2026-02-30" })).ok, false);
+  assert.equal(validateMemoryRecord(clone({ created_at: "2026-02-30T25:61:61+09:00" })).ok, false);
+});
+
+test("approved provenance is retained through an approved-state transition", () => {
+  const approved = clone({ status: "approved", approved_by: "reviewer", approval_basis: "review" });
+  const disputed = { ...approved, status: "disputed" };
+  assert.equal(validateMemoryTransition({ from: approved, to: disputed, approvalBasis: "review" }).ok, true);
+  assert.equal(validateMemoryTransition({ from: approved, to: { ...disputed, approved_by: null, approval_basis: null }, approvalBasis: "review" }).ok, false);
 });
 
 test("Markdown parsing rejects missing mandatory sections and prohibited content without echoing it", () => {
@@ -98,7 +117,7 @@ test("only declared transitions are accepted", () => {
 });
 
 test("source bindings require regular in-workspace files with matching hashes", async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), "memory-source-"));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-source-")));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(path.join(root, "docs"));
   await writeFile(path.join(root, "docs", "source.md"), "source text");
@@ -107,4 +126,16 @@ test("source bindings require regular in-workspace files with matching hashes", 
   assert.deepEqual(await validateMemorySourceBindings(record, { workspaceRoot: root }), { ok: true, errors: [] });
   assert.equal((await validateMemorySourceBindings(clone({ sources: [{ artifact_id: "x", locator: "../outside.md", sha256 }] }), { workspaceRoot: root })).ok, false);
   assert.equal((await validateMemorySourceBindings(clone({ sources: [{ artifact_id: "x", locator: "docs/source.md", sha256: "0".repeat(64) }] }), { workspaceRoot: root })).ok, false);
+});
+
+test("source bindings reject a workspace reached through a symlinked ancestor", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "memory-source-parent-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const actual = path.join(root, "actual");
+  await mkdir(path.join(actual, "docs"), { recursive: true });
+  await writeFile(path.join(actual, "docs", "source.md"), "source text");
+  await symlink(actual, path.join(root, "linked"));
+  const sha256 = createHash("sha256").update("source text").digest("hex");
+  const record = clone({ sources: [{ artifact_id: "combat-loop-v3", locator: "docs/source.md", sha256 }] });
+  assert.equal((await validateMemorySourceBindings(record, { workspaceRoot: path.join(root, "linked", "docs", "..") })).ok, false);
 });

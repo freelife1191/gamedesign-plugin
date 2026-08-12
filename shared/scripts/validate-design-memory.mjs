@@ -22,11 +22,15 @@ function object(value) { return value !== null && typeof value === "object" && !
 function safeId(value) { return typeof value === "string" && value === value.normalize("NFC") && ID.test(value); }
 function sortedUnique(values, predicate) { return Array.isArray(values) && values.every(predicate) && values.every((value, index) => index === 0 || values[index - 1] < value); }
 function addSensitiveError(errors, value) { if (typeof value === "string" && forbiddenMemoryContent.some((pattern) => pattern.test(value))) errors.push(error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")); }
-function scanSensitive(value, errors) { if (typeof value === "string") addSensitiveError(errors, value); else if (Array.isArray(value)) value.forEach((item) => scanSensitive(item, errors)); else if (object(value)) Object.values(value).forEach((item) => scanSensitive(item, errors)); }
+function scanSensitive(value, errors) { if (typeof value === "string") addSensitiveError(errors, value); else if (Array.isArray(value)) value.forEach((item) => scanSensitive(item, errors)); else if (object(value)) for (const [key, item] of Object.entries(value)) { addSensitiveError(errors, key); scanSensitive(item, errors); } }
+function calendarDate(value) { if (!DATE.test(value ?? "")) return false; const [year, month, day] = value.split("-").map(Number); return month >= 1 && month <= 12 && day >= 1 && day <= new Date(Date.UTC(year, month, 0)).getUTCDate(); }
+function timestamp(value) { if (typeof value !== "string" || !RFC3339.test(value)) return false; const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})/u.exec(value); return calendarDate(match?.[1]) && Number(match[2]) <= 23 && Number(match[3]) <= 59 && Number(match[4]) <= 59; }
 
 export function validateMemoryRecord(record) {
   const errors = [];
   if (!object(record)) return { ok: false, errors: [error("memory.invalid_record", "", "Memory record must be an object.")] };
+  scanSensitive(record, errors);
+  if (errors.length > 0) return { ok: false, errors: [error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")] };
   for (const key of Object.keys(record)) if (!RECORD_KEYS.includes(key)) errors.push(error("schema.additional_property", key, "Unknown memory record field."));
   for (const key of RECORD_KEYS.filter((key) => key !== "instruction_sha256")) if (!Object.hasOwn(record, key)) errors.push(error("schema.required", key, "Required memory record field is missing."));
   if (record.schema_version !== 1) errors.push(error("schema.version", "schema_version", "Memory schema version must be 1."));
@@ -36,8 +40,8 @@ export function validateMemoryRecord(record) {
   if (!MEMORY_LANES.includes(record.lane)) errors.push(error("schema.lane", "lane", "Memory lane is not allowed."));
   if (!MEMORY_STATUSES.includes(record.status)) errors.push(error("schema.status", "status", "Memory status is not allowed."));
   if (!MEMORY_SCOPES.includes(record.scope)) errors.push(error("schema.scope", "scope", "Memory scope is not allowed."));
-  for (const key of ["created_at", "updated_at"]) if (typeof record[key] !== "string" || !RFC3339.test(record[key])) errors.push(error("schema.timestamp", key, "Timestamp must be RFC 3339."));
-  for (const key of ["review_after", "expires_at"]) if (typeof record[key] !== "string" || !DATE.test(record[key])) errors.push(error("schema.date", key, "Date must be ISO calendar date."));
+  for (const key of ["created_at", "updated_at"]) if (!timestamp(record[key])) errors.push(error("schema.timestamp", key, "Timestamp must be RFC 3339."));
+  for (const key of ["review_after", "expires_at"]) if (!calendarDate(record[key])) errors.push(error("schema.date", key, "Date must be ISO calendar date."));
   for (const key of ["artifact_types", "related_ids", "tags"]) if (!sortedUnique(record[key], safeId)) errors.push(error("schema.sorted_unique", key, "Values must be normalized, unique, and sorted."));
   if (!Array.isArray(record.sources) || !record.sources.every((source) => object(source) && Object.keys(source).every((key) => ["artifact_id", "locator", "sha256"].includes(key)) && safeId(source.artifact_id) && typeof source.locator === "string" && source.locator.length > 0 && SHA256.test(source.sha256))) {
     errors.push(error("schema.sources", "sources", "Sources must be closed source bindings."));
@@ -47,17 +51,23 @@ export function validateMemoryRecord(record) {
   }
   if (record.kind !== "style-preference" && record.sources?.length === 0) errors.push(error("memory.sources_required", "sources", "Non-style memories require sources."));
   if (Object.hasOwn(record, "instruction_sha256") && (record.kind !== "style-preference" || !SHA256.test(record.instruction_sha256 ?? ""))) errors.push(error("memory.instruction_provenance", "instruction_sha256", "Only style preferences may carry an instruction hash."));
-  if (record.kind === "style-preference" && Object.hasOwn(record, "instruction_sha256") && record.approval_basis !== "explicit-user-instruction") errors.push(error("memory.instruction_approval", "approval_basis", "Direct preference approval requires explicit-user-instruction."));
+  if (record.kind === "style-preference" && record.status === "approved" && (!SHA256.test(record.instruction_sha256 ?? "") || record.approval_basis !== "explicit-user-instruction" || typeof record.approved_by !== "string" || record.approved_by.trim() === "")) errors.push(error("memory.instruction_approval", "approval_basis", "Approved style preferences require instruction hash, actor, and explicit-user-instruction."));
   if (record.status === "approved" && (typeof record.approved_by !== "string" || record.approved_by.trim() === "" || typeof record.approval_basis !== "string" || record.approval_basis.trim() === "")) errors.push(error("memory.approval_required", "approval_basis", "Approved memories require actor and basis."));
-  if (record.status !== "approved" && (record.approved_by !== null || record.approval_basis !== null)) errors.push(error("memory.approval_state", "approval_basis", "Only approved memories may contain approval provenance."));
-  scanSensitive(record, errors);
+  if (record.status === "candidate" && (record.approved_by !== null || record.approval_basis !== null)) errors.push(error("memory.approval_state", "approval_basis", "Candidate memories cannot contain approval provenance."));
+  if ((record.approved_by === null) !== (record.approval_basis === null)) errors.push(error("memory.approval_state", "approval_basis", "Approval provenance must be retained as a pair."));
   return { ok: errors.length === 0, errors };
 }
 
 export function validateMemoryTransition({ from, to, approvalBasis } = {}) {
   const errors = [];
-  if (!MEMORY_STATUSES.includes(from) || !MEMORY_STATUSES.includes(to) || !transitions[from]?.includes(to)) errors.push(error("memory.invalid_transition", "status", "Memory status transition is not allowed."));
-  if (to === "approved" && (typeof approvalBasis !== "string" || approvalBasis.trim() === "")) errors.push(error("memory.approval_required", "approvalBasis", "Approval transition requires a basis."));
+  const fromStatus = typeof from === "string" ? from : from?.status;
+  const toStatus = typeof to === "string" ? to : to?.status;
+  if (!MEMORY_STATUSES.includes(fromStatus) || !MEMORY_STATUSES.includes(toStatus) || !transitions[fromStatus]?.includes(toStatus)) errors.push(error("memory.invalid_transition", "status", "Memory status transition is not allowed."));
+  if (toStatus === "approved" && (typeof approvalBasis !== "string" || approvalBasis.trim() === "")) errors.push(error("memory.approval_required", "approvalBasis", "Approval transition requires a basis."));
+  if (object(from) && object(to)) {
+    if (from.status === "approved" && (to.approved_by !== from.approved_by || to.approval_basis !== from.approval_basis)) errors.push(error("memory.approval_history", "approval_basis", "Approved provenance must be retained through a transition."));
+    if (to.status === "approved" && (to.approved_by === null || to.approval_basis !== approvalBasis)) errors.push(error("memory.approval_required", "approvalBasis", "Approved transition must retain actor and basis."));
+  }
   return { ok: errors.length === 0, errors };
 }
 
@@ -85,19 +95,22 @@ export function parseMemoryDocument(source, { sourceName = "memory document" } =
 
 function safeRelative(value) { return typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\\") && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value !== "."; }
 async function regularDirectory(candidate) { const stats = await lstat(candidate); if (stats.isSymbolicLink() || !stats.isDirectory()) throw new Error("Unsafe memory path."); return stats; }
+async function canonicalWorkspace(candidate) { if (typeof candidate !== "string" || !path.isAbsolute(candidate)) throw new Error("Unsafe memory path."); for (let current = path.resolve(candidate); current !== path.dirname(current); current = path.dirname(current)) if ((await lstat(current)).isSymbolicLink()) throw new Error("Unsafe memory path."); const stats = await regularDirectory(candidate); const canonical = await realpath(candidate); const final = await regularDirectory(canonical); if (stats.dev !== final.dev || stats.ino !== final.ino) throw new Error("Unsafe memory path."); return { path: canonical, identity: final }; }
 
 export async function validateMemorySourceBindings(record, { workspaceRoot } = {}) {
   const errors = [];
   let root;
-  try { await regularDirectory(workspaceRoot); root = await realpath(workspaceRoot); } catch { return { ok: false, errors: [error("memory.source_workspace", "workspaceRoot", "Workspace root is not a safe directory.")] }; }
+  let rootIdentity;
+  try { ({ path: root, identity: rootIdentity } = await canonicalWorkspace(workspaceRoot)); } catch { return { ok: false, errors: [error("memory.source_workspace", "workspaceRoot", "Workspace root is not a safe directory.")] }; }
   for (const [index, source] of (record?.sources ?? []).entries()) {
     try {
       const filePart = typeof source.locator === "string" ? source.locator.split("#", 1)[0] : "";
       if (!safeRelative(filePart)) throw new Error();
-      let current = root;
-      for (const segment of filePart.split("/")) { current = path.join(current, segment); const stats = await lstat(current); if (stats.isSymbolicLink() || (!stats.isDirectory() && segment !== filePart.split("/").at(-1))) throw new Error(); }
+      let current = root; const identities = [{ path: root, stats: rootIdentity }]; const segments = filePart.split("/");
+      for (const [part, segment] of segments.entries()) { current = path.join(current, segment); const stats = await lstat(current); if (stats.isSymbolicLink() || (!stats.isDirectory() && part !== segments.length - 1)) throw new Error(); if (part !== segments.length - 1) identities.push({ path: current, stats }); }
       const stats = await lstat(current); if (stats.isSymbolicLink() || !stats.isFile()) throw new Error();
       const handle = await open(current, "r"); let bytes; try { bytes = await handle.readFile(); const opened = await handle.stat(); if (opened.dev !== stats.dev || opened.ino !== stats.ino || !opened.isFile()) throw new Error(); } finally { await handle.close(); }
+      for (const identity of identities) { const currentStats = await regularDirectory(identity.path); if (currentStats.dev !== identity.stats.dev || currentStats.ino !== identity.stats.ino) throw new Error(); }
       if (createHash("sha256").update(bytes).digest("hex") !== source.sha256) throw new Error();
     } catch { errors.push(error("memory.source_binding", `sources.${index}`, "Source must be an in-workspace regular file matching its hash.")); }
   }

@@ -35,12 +35,42 @@ test("initialization is explicit and scopes determine the root", async (t) => {
   assert.equal(global.root, path.join(root, "home", ".local", "share", "game-design-plugin", "memory"));
 });
 
+test("global storage paths are fixed for each supported operating system", async (t) => {
+  const root = await workspace(t);
+  for (const [platform, segments] of [["darwin", ["Library", "Application Support"]], ["linux", [".local", "share"]], ["win32", ["AppData", "Local"]]]) {
+    const home = path.join(root, platform);
+    const store = await resolveMemoryStore({ workspaceRoot: root, config: config({ scope: "global" }), platform, home, initialize: true });
+    assert.equal(store.root, path.join(home, ...segments, "game-design-plugin", "memory"));
+  }
+  await assert.rejects(() => resolveMemoryStore({ workspaceRoot: root, config: config({ scope: "global" }), platform: "freebsd", home: root, initialize: true }));
+});
+
 test("record paths follow the fixed partition policy", () => {
   const base = { memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef", project_id: "wind-island", kind: "design-lesson", status: "candidate" };
   assert.equal(memoryRecordRelativePath(base), "lessons/candidates/memory-studio-design-lesson-0f2a4c61d9ab34ef.md");
   assert.equal(memoryRecordRelativePath({ ...base, kind: "style-preference" }), "preferences/memory-studio-design-lesson-0f2a4c61d9ab34ef.md");
   assert.equal(memoryRecordRelativePath({ ...base, kind: "decision" }), "projects/wind-island/memory-studio-design-lesson-0f2a4c61d9ab34ef.md");
   assert.equal(memoryRecordRelativePath({ ...base, status: "approved" }), "lessons/approved/memory-studio-design-lesson-0f2a4c61d9ab34ef.md");
+  assert.throws(() => memoryRecordRelativePath({ ...base, memory_id: "../escape" }));
+  assert.throws(() => memoryRecordRelativePath({ ...base, kind: "unknown" }));
+});
+
+test("create-once and move fail closed when a destination appears at publish time", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  await assert.rejects(() => writeMemoryFileAtomic({
+    store, relativePath: "lessons/candidates/race.md", bytes: Buffer.from("new"), policy: {
+      mode: "create-once", beforePublish: async ({ destination }) => writeFile(destination, "racer"),
+    },
+  }));
+  assert.equal(await readFile(path.join(store.root, "lessons", "candidates", "race.md"), "utf8"), "racer");
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/move.md", bytes: Buffer.from("source") });
+  await assert.rejects(() => moveMemoryFileAtomic({
+    store, from: "lessons/candidates/move.md", to: "lessons/approved/move.md", policy: {
+      beforePublish: async ({ destination }) => writeFile(destination, "racer"),
+    },
+  }));
+  assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/candidates/move.md" }), Buffer.from("source"));
 });
 
 test("read/write/move reject escaping, symlink, and preserve originals on failed writes", async (t) => {
@@ -69,4 +99,22 @@ test("git exclusion changes only the local plugin block exactly once", async (t)
   assert.match(bytes, /^before\n# keep\n/u);
   assert.equal((bytes.match(/game-design-plugin:memory:begin/gu) ?? []).length, 1);
   assert.deepEqual(await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "tracked", runGit }), { status: "skipped" });
+});
+
+test("git exclusion rejects partial markers and concurrent replacement without overwriting user bytes", async (t) => {
+  const root = await workspace(t);
+  const exclude = path.join(root, ".git", "info", "exclude");
+  await mkdir(path.dirname(exclude), { recursive: true });
+  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
+  await writeFile(exclude, "# game-design-plugin:memory:begin\n");
+  await assert.rejects(() => ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit }));
+  await writeFile(exclude, "before\n");
+  await assert.rejects(() => ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforePublish: async () => writeFile(exclude, "concurrent\n") }));
+  assert.equal(await readFile(exclude, "utf8"), "concurrent\n");
+});
+
+test("non-Git workspaces leave exclusion files untouched", async (t) => {
+  const root = await workspace(t);
+  assert.deepEqual(await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit: async () => { throw new Error("not a repository"); } }), { status: "skipped" });
+  await assert.rejects(() => readFile(path.join(root, ".git", "info", "exclude")));
 });
