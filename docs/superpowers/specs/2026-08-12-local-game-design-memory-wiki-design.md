@@ -155,6 +155,7 @@ compiler나 외부 의존성을 추가하지 않는다. 이 방식을 채택한�
     │       └── commit.json
     └── derived/
         ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
+        ├── receipts/<request-sha256>/<receipt-sha256>/<instance-id>.json
         ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
         └── logs/<source-tree-sha256>/<log-sha256>/<instance-id>.md
 ```
@@ -252,6 +253,8 @@ foldMemoryEvents(scan, { now }) -> MemoryFold
 appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>
 publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256 }) -> Promise<{ status, generationPath, indexSha256 }>
 loadCurrentMemoryIndex({ store, fold }) -> Promise<{ index, bytes, sourceTreeSha256, indexSha256, warnings }>
+publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256 }) -> Promise<{ status, generationPath, receiptSha256 }>
+loadMemoryReceipt({ store, requestSha256 }) -> Promise<{ status: "ready"|"missing"|"conflict", receipt: object|null, bytes: Buffer|null, receiptSha256: string|null, warnings }>
 rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>
 ```
 
@@ -298,13 +301,57 @@ marker ID는 canonical marker Markdown bytes의
 그대로 보존한다.
 
 `sourceTreeSha256`은 정렬된 `(relativePath, observedSha256, classification)`
-tuple의 canonical JSON hash다. 손상 항목도 입력 트리 정체성에 포함한다.
+tuple의 canonical JSON hash다. `v1/events/`와 `v1/controls/`만 입력이며 손상
+항목도 트리 정체성에 포함한다. `v1/derived/indexes|receipts|views|logs`는
+`sourceTreeSha256`에서 제외해 파생물이 자기 source identity를 바꾸지 않게 한다.
 `rebuildMemoryIndex`는 매번 raw 이벤트와 marker를 scan/fold해 canonical index
 bytes와 `indexSha256`을 만들고 새 generation을 create-once로 publish한다. current
 pointer는 없다. fresh fold의 두 hash와 모두 일치하는 valid generation만 현재
 색인으로 보며 여러 instance가 있으면 bytewise-lowest 경로를 읽는다. 없거나
 모두 손상됐으면 새 instance를 append한다. `index.md`와 `log.md`도 같은 규칙을
 따르며 UUID와 실행 시각은 논리 bytes에 넣지 않는다.
+
+### JSON receipt와 Markdown log 분리
+
+retrieval 사용 기록은 JSON receipt generation이다. `requestSha256`은 다음 request
+identity canonical JSON bytes의 SHA-256이다.
+
+```json
+{"schemaVersion":1,"sourceTreeSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","projectId":"wind-island","lane":"studio","artifactIds":["combat-loop-v3"],"artifactTypes":["character-skill-combat-monster"],"tags":["boss","counterplay"]}
+```
+
+request identity와 receipt는 NFC string, UTF-8, 정렬·중복 제거 array, schema key
+순서, 공백 없는 JSON object와 trailing LF 한 개로 직렬화한다. receipt key 순서는
+`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `applied`,
+`excluded`다. `applied` 항목은 `memoryId`, `headEventId`, `fileSha256`, `excluded`
+항목은 `memoryId`, `reason` 순서며 두 array는 `memoryId`의 UTF-8 byte 순으로
+정렬한다. schema validation을 통과한 canonical receipt 전체 bytes에서
+`receiptSha256`을 계산한다.
+
+```json
+{"schemaVersion":1,"requestSha256":"622b7e79760477132f600eefb517119ffbd1f7d0a27aa826387297687d357f87","sourceTreeSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","projectId":"wind-island","lane":"studio","applied":[{"memoryId":"memory-studio-design-lesson-0f2a4c61d9ab34ef","headEventId":"mev1-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","fileSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}],"excluded":[{"memoryId":"memory-studio-design-lesson-old","reason":"stale-source"}]}
+```
+
+위 request fixture의 exact `requestSha256`은
+`622b7e79760477132f600eefb517119ffbd1f7d0a27aa826387297687d357f87`이다. 같은
+request hash를 receipt 본문에 넣어 schema와 canonical key order를 적용한 예시의
+exact `receiptSha256`은
+`a5e53cbcb9e3ef589e6bb2c5d04f453d349243bcfdada5e8187ec74e7b1a9e51`이다.
+
+receipt는
+`derived/receipts/<request-sha256>/<receipt-sha256>/<randomUUID>.json`에
+create-once publish한다. 같은 request와 같은 bytes의 여러 instance는 동등하며
+loader는 bytewise-lowest valid instance path를 읽는다. 같은 request 아래 서로
+다른 valid `receiptSha256`가 하나라도 있으면 모든 generation을 보존하되
+`status:conflict`로 fail-closed하고 어떤 receipt도 사용 이력으로 선택하지 않는다.
+손상 generation은 warning과 함께 제외하며 valid generation이 없으면 `missing`이다.
+다른 `sourceTreeSha256`은 request identity 자체가 다르므로 별도 request가 된다.
+
+Markdown log는 receipt가 아니다. raw event/control fold에서 source
+`effective_at|recorded_at` 오름차순, 동률이면 event/marker ID의 UTF-8 byte 순으로
+만든 상태 변경 view이며
+`derived/logs/<source-tree-sha256>/<log-sha256>/<randomUUID>.md`에 publish한다.
+request context, applied/excluded 목록과 derived 실행 시각을 log에 넣지 않는다.
 
 ## 기억 이벤트 계약
 
@@ -628,10 +675,10 @@ GAME_DESIGN_MEMORY_GIT_MODE=local
 제외: 만료 1개, 출처 변경 1개
 ```
 
-세부 기록은 `v1/derived/logs/`의 immutable generation으로 append한다. 기억 ID,
-head event ID와 해시, 적용·제외 이유만 포함하며 기억 본문, `.env` 값,
+세부 기록은 `v1/derived/receipts/`의 immutable JSON generation으로 append한다.
+기억 ID, head event ID와 해시, 적용·제외 이유만 포함하며 기억 본문, `.env` 값,
 비밀정보와 derived 생성·실행 시각을 복제하지 않는다. 허용 필드는
-`schemaVersion`, `requestSha256`, `projectId`, `lane`, `applied`의
+`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `applied`의
 `memoryId|headEventId|fileSha256`, `excluded`의 `memoryId|reason`으로 닫는다.
 기억을 사용하지 않았으면 별도 안내나 영수증을 만들지 않는다.
 
@@ -759,6 +806,12 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
 - 만료, 출처 변경, 충돌과 대체 기록이 검색에서 제외되는지 확인한다.
 - 손상·누락·복수 색인 세대는 raw fold에서 byte-identical 논리 색인으로 복구하고
   기존 세대를 수정하지 않는지 확인한다.
+- receipt canonical JSON의 schema·key order·trailing LF와
+  `requestSha256|receiptSha256`를 exact 비교한다. 같은 request/same bytes generation은
+  동등하고 same request/different valid bytes는 모두 보존하되 loader가 conflict로
+  아무 receipt도 선택하지 않는지 확인한다.
+- receipt·log generation 추가가 `sourceTreeSha256`을 바꾸지 않고, Markdown log에
+  request context나 applied/excluded receipt data가 섞이지 않는지 확인한다.
 - hash·schema·본문이 손상된 이벤트는 이동·overwrite하지 않으며 marker append 뒤
   해당 `memory_id` 전체가 영구 제외되고 approved ancestor가 되살아나지 않는지
   확인한다. 복구는 새 memory ID만 허용한다.

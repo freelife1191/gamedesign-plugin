@@ -47,7 +47,7 @@
 - `shared/memory/schema/memory-record.schema.json`: 기억 종류, 상태, 범위, lane, 출처와 승인 근거의 닫힌 스키마다.
 - `shared/memory/schema/memory-event.schema.json`: capture·transition·resolution envelope와 완전한 record snapshot의 닫힌 스키마다.
 - `shared/memory/schema/memory-index.schema.json`: fold source tree digest, head event와 정렬된 검색 항목 스키마다.
-- `shared/memory/schema/memory-receipt.schema.json`: `schemaVersion`, `requestSha256`, `projectId`, `lane`, `applied[{memoryId,headEventId,fileSha256}]`, `excluded[{memoryId,reason}]`만 허용하는 로컬 영수증 스키마다.
+- `shared/memory/schema/memory-receipt.schema.json`: `schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `applied[{memoryId,headEventId,fileSha256}]`, `excluded[{memoryId,reason}]`만 허용하는 retrieval receipt 스키마다.
 - `shared/memory/templates/memory-record.md`: 한국어 기억 문서 골격이다.
 - `shared/memory/templates/index.md`: 사람이 읽는 기억 목록 골격이다.
 - `shared/memory/templates/log.md`: 원천 event의 `effective_at` 순서를 보여 주되 derived 생성·실행 시각은 넣지 않는 변경 view 골격이다.
@@ -56,7 +56,7 @@
 
 ### 색인과 작업
 
-- `shared/scripts/retrieve-design-memory.mjs`: raw 이벤트와 marker를 scan/fold해 결정적 색인 세대를 만들고 승인된 관련 기억만 제한적으로 반환한다.
+- `shared/scripts/retrieve-design-memory.mjs`: raw 이벤트와 marker를 scan/fold해 결정적 색인 세대를 만들고 승인된 관련 기억만 제한적으로 반환하며 JSON receipt generation을 publish/load한다.
 - `shared/scripts/capture-design-memory.mjs`: 허용된 사건을 content-addressed capture event로 append한다.
 - `shared/scripts/maintain-design-memory.mjs`: 승인·거부·폐기·만료 transition, branch resolution, quarantine marker와 derived generation 생성을 수행한다.
 
@@ -284,8 +284,9 @@ Expected: 모든 명령이 exit 0이다.
 node --test tests/unit/workspace-env.test.mjs tests/unit/design-memory-config.test.mjs tests/unit/image-config.test.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
 ```
 
-append-only 작업은 이 baseline을 보존하면서 신규 assertion을 RED로 추가한 뒤 기존
-helper/replace/move 저장 계약을 sealed event 계약으로 교체하는 migration이다.
+append-only 작업은 영향받지 않는 baseline behavior를 보존한다. 폐기할 legacy
+assertion을 신규 append-only assertion으로 먼저 교체해 RED를 만든 뒤 기존
+helper/replace/move 저장 계약을 sealed event 계약으로 바꾸는 migration이다.
 
 **Files:**
 - Create: `shared/memory/schema/memory-event.schema.json`
@@ -329,9 +330,21 @@ transition에서 전이 이름, resolution에서 `resolution`이다. logical rec
 민감정보와 필수 본문 검사는 유지한다. 비-NFC ID, 잘못된 SHA-256, 정렬되지 않은
 배열과 승인 근거 누락을 각각 실패 fixture로 둔다.
 
-기존 record assertion은 계속 PASS해야 한다. 신규 schema·canonical bytes·event DAG
-assertion은 아직 `memory-event.schema.json`과 event API가 없으므로 legacy
-validator/store 구현에서 실패해야 한다.
+영향받지 않는 record kind·status·lane·scope, 필수 본문, 민감정보, source binding,
+허용 상태 전이 assertion은 계속 PASS해야 한다. 다음 legacy assertion은 보존
+대상이 아니며 append-only assertion으로 먼저 교체한다.
+
+- logical record에서 `event_sha256`을 필수로 요구하거나 lowercase hash boundary를
+  검사하는 assertion
+- actor·from/to status·approval basis·`previous_event_sha256`·`event_sha256`·
+  `recorded_at`을 연결하는 transition receipt-chain assertion
+- receipt-chain unknown field와 approval provenance mutation assertion
+
+receipt-chain이 맡던 전이 무결성은 Task 2의 event envelope, parent ID, operation ID,
+snapshot과 `validateMemoryTransition` assertion이 대신한다. `memory-receipt.schema.json`
+은 Task 2에서 승인 전이 권한과 분리된 retrieval usage receipt schema로 바꾸고,
+Task 3이 canonical JSON writer·loader를 구현한다. legacy assertion을 제거만 해서
+GREEN을 만들지 말고 대응하는 event/usage-receipt assertion을 추가해 RED를 만든다.
 
 - [ ] **Step 2: event ID, operation ID와 fold RED를 확인한다**
 
@@ -360,8 +373,8 @@ Run:
 node --test tests/unit/design-memory-record.test.mjs
 ```
 
-Expected: 기존 assertion은 green이고 신규 append-only assertion만 RED다. 현재
-파일이나 기존 validator module의 부재를 기대하지 않는다.
+Expected: 영향받지 않는 assertion은 green이다. 위 legacy assertion을 대체한 신규
+event envelope·transition·usage-receipt schema assertion은 현재 구현에서 RED다.
 
 - [ ] **Step 3: 결정적 scan과 fold를 구현한다**
 
@@ -379,6 +392,7 @@ Expected: 기존 assertion은 green이고 신규 append-only assertion만 RED다
 │   └── commit.json
 └── derived/
     ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
+    ├── receipts/<request-sha256>/<receipt-sha256>/<instance-id>.json
     ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
     └── logs/<source-tree-sha256>/<log-sha256>/<instance-id>.md
 ```
@@ -423,7 +437,17 @@ Node 18 path API가 보장하지 않는 non-goal이다. 이 injected case는 ski
 문서화로만 남기고 보안 PASS로 세지 않는다.
 
 이 RED는 현재 C helper, replace, move와 상태별 record path를 사용하는 legacy
-store에서 실패해야 한다. 기존 store 회귀는 그대로 green이어야 한다.
+store에서 실패해야 한다. 다음 legacy store assertion/API는 보존하지 않고 sealed
+store assertion으로 먼저 교체한다.
+
+- `memoryRecordRelativePath`의 상태별 partition assertion
+- `writeMemoryFileAtomic`의 replace·inode/digest snapshot assertion
+- `moveMemoryFileAtomic`의 destination 경쟁·move assertion
+- `MEMORY_PLATFORM_CAPABILITIES`, `createMemoryStorePlatformAdapter`, platform adapter
+  capability와 runtime C helper assertion
+
+영향받지 않는 store root 해석, bounded read, path escape·symlink·special-file 거부,
+global local path와 Git exclusion assertion은 green으로 보존한다.
 
 - [ ] **Step 5: Node 전용 추가 연산을 구현한다**
 
@@ -475,15 +499,19 @@ event를 rollback하지 않는다.
 Run:
 
 ```bash
+node --test tests/unit/workspace-env.test.mjs tests/unit/design-memory-config.test.mjs tests/unit/image-config.test.mjs
 node --test tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
 node --check shared/scripts/validate-design-memory.mjs
 node --check shared/scripts/lib/safe-memory-store.mjs
 test ! -e shared/scripts/lib/memory-store-posix-helper.c
-! rg 'MEMORY_PLATFORM_CAPABILITIES|createMemoryStorePlatformAdapter|writeMemoryFileAtomic|moveMemoryFileAtomic|memoryRecordRelativePath' shared tests
+! rg 'MEMORY_PLATFORM_CAPABILITIES|createMemoryStorePlatformAdapter|writeMemoryFileAtomic|moveMemoryFileAtomic|memoryRecordRelativePath|memory-store-posix-helper' shared tests
 git diff --check
 ```
 
-Expected: 모두 PASS하며 runtime compiler, helper, replace·move 공개 계약이 없다.
+Expected: 영향받지 않는 config/env/image baseline과 교체가 끝난 record/store suite가
+각각 PASS한다. migration 전 80/80은 시작 증거일 뿐 migration 후 test count
+불변 조건이 아니다. static `! rg`는 runtime compiler helper와 폐기 API가 source·
+tests에 남지 않았음을 확인한다.
 
 - [ ] **Step 8: Task 2를 커밋한다**
 
@@ -500,13 +528,15 @@ git commit -m "feat: define append-only design memory events"
 - Create: `shared/scripts/retrieve-design-memory.mjs`
 - Create: `tests/unit/design-memory-retrieval.test.mjs`
 - Modify: `shared/memory/schema/memory-index.schema.json`
-- Modify: `shared/memory/schema/memory-receipt.schema.json`
+- Consume (defined in Task 2): `shared/memory/schema/memory-receipt.schema.json`
 
 **Interfaces:**
 - Consumes: Task 1 `MemoryConfig`, Task 2 event/store/fold APIs
 - Produces: `rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>`
 - Produces: `publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256 }) -> Promise<{ status, generationPath, indexSha256 }>`
 - Produces: `loadCurrentMemoryIndex({ store, fold }) -> Promise<{ index, bytes, sourceTreeSha256, indexSha256, warnings }>`
+- Produces: `publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256 }) -> Promise<{ status, generationPath, receiptSha256 }>`
+- Produces: `loadMemoryReceipt({ store, requestSha256 }) -> Promise<{ status: "ready"|"missing"|"conflict", receipt: object|null, bytes: Buffer|null, receiptSha256: string|null, warnings }>`
 - Produces: `rankMemoryEntries(entries, requestContext) -> MemoryIndexEntry[]`
 - Produces: `retrieveApprovedDesignMemory({ workspaceRoot, config, requestContext, now }) -> Promise<MemoryRetrievalResult>`
 - Defines: `requestContext = { projectId, lane, artifactIds, artifactTypes, tags, disabledForRequest }`
@@ -544,6 +574,15 @@ const requestContext = {
   memory는 전체 제외한다. 격리 전 approved ancestor도 다시 사용하지 않는다.
 - `complete:false` scan은 store 전체를 승인 검색에서 제외하고 generation을
   publish하지 않는다.
+- `sourceTreeSha256`은 event/control만 포함하고 derived index·receipt·view·log는
+  제외한다.
+- 동일 request identity와 같은 receipt bytes의 복수 generation은 동등하다. 같은
+  request 아래 서로 다른 valid receipt bytes는 모두 보존하고 loader가
+  `status=conflict`로 어떤 이력도 선택하지 않는다.
+- receipt schema unknown/time field 거부, canonical key order·trailing LF,
+  `requestSha256|receiptSha256` exact hash와 corrupt/missing generation을 검증한다.
+- source tree가 달라진 같은 요청은 다른 `requestSha256`를 만들며 receipt·log
+  generation 추가가 source tree hash를 바꾸지 않는다.
 - 최대 항목 수 5와 전체 반환 본문 64 KiB를 넘지 않는다.
 
 - [ ] **Step 2: 검색 테스트의 RED를 확인한다**
@@ -560,7 +599,8 @@ Expected: 검색 모듈과 generation resolver가 없어 실패한다.
 
 `sourceTreeSha256`은 NFC/UTF-8 byte 순으로 정렬한 `(relativePath,
 observedSha256, classification)` tuple의 canonical JSON hash다. corrupt entry도
-입력 트리 정체성에 포함한다. 색인 형식은 다음으로 고정한다.
+입력 트리 정체성에 포함한다. 입력은 `v1/events/`와 `v1/controls/`로 닫고
+`v1/derived/indexes|receipts|views|logs`는 제외한다. 색인 형식은 다음으로 고정한다.
 
 ```js
 {
@@ -676,16 +716,20 @@ index는 후보 탐색에만 사용하고 승인 권한으로 사용하지 않�
 
 - [ ] **Step 5: 변경 불가 로컬 사용 영수증을 구현한다**
 
-적용 항목이 있을 때만 canonical receipt bytes를 immutable derived log
-generation으로 append한다. request hash와 receipt hash로 논리 중복을 판정하고
-물리 instance는 UUID로 구분한다. `memory-receipt.schema.json`은 다음 필드와 중첩
-필드만 허용하고 legacy transition receipt의 actor·status·event hash·`recorded_at`
-필드를 제거한다.
+적용 항목이 있을 때만 canonical receipt bytes를 JSON generation으로 publish한다.
+`requestSha256`은 `schemaVersion`, `sourceTreeSha256`, `projectId`, `lane`, 정렬·중복
+제거한 `artifactIds`, `artifactTypes`, `tags` 순서의 request identity canonical JSON
+bytes를 SHA-256한 값이다. derived receipt·log는 source tree 입력이 아니므로
+receipt publish가 `sourceTreeSha256`을 바꾸지 않는다.
+
+`memory-receipt.schema.json`은 다음 필드와 중첩 필드만 허용하고 legacy transition
+receipt의 actor·status·event hash·`recorded_at` 필드를 허용하지 않는다.
 
 ```js
 {
   schemaVersion: 1,
-  requestSha256: "c".repeat(64),
+  requestSha256: "622b7e79760477132f600eefb517119ffbd1f7d0a27aa826387297687d357f87",
+  sourceTreeSha256: "a".repeat(64),
   projectId: "wind-island",
   lane: "studio",
   applied: [{ memoryId: "memory-studio-design-lesson-0f2a4c61d9ab34ef", headEventId: `mev1-${"b".repeat(64)}`, fileSha256: "b".repeat(64) }],
@@ -693,9 +737,34 @@ generation으로 append한다. request hash와 receipt hash로 논리 중복을 
 }
 ```
 
+canonical receipt key 순서는 `schemaVersion`, `requestSha256`,
+`sourceTreeSha256`, `projectId`, `lane`, `applied`, `excluded`다. `applied` item은
+`memoryId`, `headEventId`, `fileSha256`, `excluded` item은 `memoryId`, `reason`
+순서이며 array는 `memoryId`의 UTF-8 byte 순으로 정렬한다. NFC string, 공백 없는
+JSON object와 trailing LF 한 개로 직렬화하고 schema validation 뒤 전체 bytes의
+`receiptSha256`을 계산한다. 위 fixture의 request hash는
+`622b7e79760477132f600eefb517119ffbd1f7d0a27aa826387297687d357f87`, receipt hash는
+`a5e53cbcb9e3ef589e6bb2c5d04f453d349243bcfdada5e8187ec74e7b1a9e51`로 exact
+비교한다.
+
+publish 경로는
+`v1/derived/receipts/<request-sha256>/<receipt-sha256>/<randomUUID>.json`이다. 같은
+request와 같은 bytes의 여러 instance는 동등하며 loader는 bytewise-lowest valid
+instance를 읽는다. 같은 request 아래 서로 다른 valid `receiptSha256`가 있으면
+모두 보존하지만 `loadMemoryReceipt`는 `status:conflict`로 fail-closed하고 어떤
+receipt도 선택하지 않는다. 손상 instance는 warning과 함께 제외하고 valid
+generation이 없으면 `missing`이다. `sourceTreeSha256`이 다르면 request hash도
+달라 별도 request로 처리한다.
+
 기억 본문, 환경 값, 절대 경로, instance UUID, `now`, `generatedAt`, `recordedAt`,
 `sourceUpdatedAt`과 wall clock은 논리 영수증에 넣지 않는다. receipt에는 원천
-event 시간도 복제하지 않는다. 기존 receipt나 log를 전체 교체하지 않는다.
+event 시간도 복제하지 않는다. 기존 receipt를 교체하지 않는다.
+
+Markdown log는 별도 상태 변경 view다. raw event/control fold에서 source
+`effective_at|recorded_at` 오름차순, 동률이면 event/marker ID의 UTF-8 byte 순으로
+결정적으로 만들고
+`v1/derived/logs/<source-tree-sha256>/<log-sha256>/<randomUUID>.md`에 publish한다.
+request context와 applied/excluded 목록은 log에 넣지 않는다.
 
 - [ ] **Step 6: Task 3 검증을 실행한다**
 
@@ -712,7 +781,7 @@ Expected: 모두 PASS한다.
 - [ ] **Step 7: Task 3을 커밋한다**
 
 ```bash
-git add shared/scripts/retrieve-design-memory.mjs shared/memory/schema/memory-index.schema.json shared/memory/schema/memory-receipt.schema.json tests/unit/design-memory-retrieval.test.mjs
+git add shared/scripts/retrieve-design-memory.mjs shared/memory/schema/memory-index.schema.json tests/unit/design-memory-retrieval.test.mjs
 git commit -m "feat: retrieve verified project design memories"
 ```
 
@@ -811,9 +880,10 @@ envelope와 `event_sha256`이 없는 완전한 record snapshot을 canonical Mark
 계산한다. `appendMemoryEvent`가 `created|present`를 반환하면 기억 저장은
 성공이다. 같은 operation ID의 다른 event bytes는 자동 winner 없이 conflict다.
 
-사용 기록은 Task 3의 immutable derived log generation으로 별도 append한다. log의
-논리 bytes에는 원천 event의 `effective_at`만 필요할 때 투영하고 derived 실행·생성
-시각은 넣지 않는다. log 실패는 이미 저장된 event를 rollback·rewrite하지 않고 warning으로 반환한다.
+capture와 transition 감사 기록은 source event 자체다. Markdown log는 Task 3의
+raw fold 상태 변경 view로 재생성하며 원천 `effective_at`만 투영하고 derived
+실행·생성 시각은 넣지 않는다. retrieval 적용 이력만 JSON receipt로 기록한다.
+log view publish 실패는 이미 저장된 event를 rollback·rewrite하지 않고 warning으로 반환한다.
 기존 event, log와 index를 replace하거나 이동하지 않는다.
 
 - [ ] **Step 4: 상태 관리의 실패 테스트를 작성한다**
@@ -949,6 +1019,9 @@ for (const path of [
 
 추가 mutation은 memory module 누락, extra file, symlink, product overlay 충돌,
 schema의 module 누락과 한쪽 제품만 선언한 상태를 거부한다.
+`memory-receipt.schema.json`의 exact packaged bytes가 source와 같고,
+`memory-policy.md`와 `memory-lifecycle.md`가 JSON receipt 경로·conflict fail-closed와
+Markdown log view 분리를 설명하는지도 검사한다.
 
 같은 RED에 원천과 임시 설치본의 `safe-memory-store.mjs`를 정적으로 검사한다.
 모든 import specifier는 `node:*`여야 하며 `node:child_process`, `spawn`, `exec`,
@@ -976,6 +1049,13 @@ Expected: `Unknown shared module: memory` 또는 설치 skill 누락으로 실�
 - capture: 결과물 검증 완료 확인 → 허용 사건 선별 → 후보 작성 → 자동 승인 금지 →
   후보 수 보고
 - maintain: 후보 목록 → 명시적 approve/reject/retire → lint/rebuild → 변경 log
+
+`memory-policy.md`는 retrieval JSON receipt를
+`derived/receipts/<request-sha256>/<receipt-sha256>/<instance-id>.json`에 기록하고 같은 request의
+서로 다른 valid receipt를 conflict로 처리하는 규칙을 둔다. `memory-lifecycle.md`는
+`derived/logs/`가 source event/control의 상태 변경 Markdown view이며 receipt가
+아님을 명시한다. 두 reference 모두 derived receipt·log가 `sourceTreeSha256` 입력이
+아님을 설명한다.
 
 각 SKILL은 `GAME_DESIGN_MEMORY_ENABLED=false`, 요청 단위 제외, 프로젝트 ID 없음,
 Hook 미지원과 기억 장애에서 기존 작업을 계속하는 규칙을 독립적으로 포함한다.
@@ -1485,6 +1565,8 @@ Expected: 모든 명령이 exit 0이다. 실제 OpenAI 이미지 호출과 외�
 - MEM-CORRUPT: 손상 event 원본 보존, sealed marker와 memory ID 전체 영구 fail-closed
 - MEM-SCAN-LIMIT: 10,001번째 entry와 한도 뒤 invalidating transition에서 store fail-closed
 - MEM-INDEX-GEN: missing·corrupt·concurrent generation의 raw fold 재생성
+- MEM-RECEIPT: canonical JSON hash·schema, same-bytes equivalence, different-bytes
+  conflict fail-closed, sourceTree 분리와 Markdown log view 비혼합
 - MEM-GIT-ISOLATION: lock·stale lock·사용자 변경 warning과 event 성공 분리
 - MEM-NODE-ONLY: 빈 compiler PATH에서 append smoke와 helper·외부 실행 정적 부재
 - MEM-FAILOPEN: append·generation·marker 실패 뒤 artifact와 기존 event 보존
