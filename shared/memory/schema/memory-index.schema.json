@@ -2,38 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "entries"
-  ],
+  "required": ["schemaVersion", "sourceTreeSha256", "entries"],
   "properties": {
-    "schema_version": {
-      "const": 1
-    },
+    "schemaVersion": { "const": 1 },
+    "sourceTreeSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "entries": {
-      "type": "array",
-      "maxItems": 10000,
+      "type": "array", "maxItems": 10000,
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "memory_id",
-          "path",
-          "event_sha256"
-        ],
+        "type": "object", "additionalProperties": false,
+        "required": ["memoryId", "headEventId", "headEventPath", "fileSha256", "kind", "lane", "status", "scope", "projectId", "artifactTypes", "relatedIds", "tags"],
         "properties": {
-          "memory_id": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-          },
-          "path": {
-            "type": "string",
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+"
-          },
-          "event_sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$"
-          }
+          "memoryId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "headEventId": { "type": "string", "pattern": "^mev1-[a-f0-9]{64}$" },
+          "headEventPath": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+" },
+          "fileSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "kind": { "enum": ["project-fact", "decision", "design-lesson", "style-preference", "career-lesson", "external-note"] },
+          "lane": { "enum": ["common", "studio", "career"] },
+          "status": { "enum": ["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"] },
+          "scope": { "enum": ["project", "workspace", "global"] },
+          "projectId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "artifactTypes": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } },
+          "relatedIds": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } },
+          "tags": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" } }
         }
       }
     }

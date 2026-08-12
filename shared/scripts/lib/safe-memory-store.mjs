@@ -178,7 +178,7 @@ export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEv
   if (!Number.isInteger(maxEventBytes) || maxEventBytes < 1 || maxEventBytes > MAX_BYTES || !Number.isInteger(maxEvents) || maxEvents < 1 || maxEvents > MAX_EVENTS) fail("Invalid scan limits.");
   const state = { maxEvents, count: 0, complete: true, diagnostics: [], commits: [], taintedMemoryIds: new Set() };
   const events = []; const quarantines = [];
-  const closed = () => ({ complete: false, entriesScanned: state.count, diagnostics: state.diagnostics, taintedMemoryIds: [], events: [], quarantines: [] });
+  const closed = () => ({ complete: false, entriesScanned: state.count, diagnostics: state.diagnostics, taintedMemoryIds: [], events: [], quarantines: [], sourceEntries: [] });
   if (!await matchesStoreIdentity(store)) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }
   try { await allEntries(path.join(store.root, "v1", "events"), "events", state, true); if (state.complete) await allEntries(path.join(store.root, "v1", "controls", "quarantine"), "controls/quarantine", state, true); } catch { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); }
   if (!state.complete) return closed();
@@ -199,11 +199,15 @@ export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEv
       if (`v1/${base}` !== canonicalPath) fail("Quarantine marker path binding failed.", "memory.quarantine_binding");
       const target = eventById.get(marker.target_event_id); if (!target) fail("Quarantine marker target is unbound.", "memory.unbound_seal");
       if (target.memoryId !== marker.memory_id || target.relativePath !== marker.target_relative_path || marker.observed_sha256 !== null && marker.observed_sha256 !== hash(target.bytes)) fail("Quarantine marker binding failed.", "memory.quarantine_binding");
-      quarantines.push(marker);
+      quarantines.push({ ...marker, markerId: committed.claim.eventId, relativePath: `v1/${base}`, bytes: committed.bytes });
     } catch (error) { state.diagnostics.push({ code: error?.code === "memory.quarantine_binding" ? "memory.quarantine_binding" : "memory.unbound_seal" }); return closed(); }
   }
   if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }
-  return { complete: true, entriesScanned: state.count, diagnostics: state.diagnostics, taintedMemoryIds: [], events: events.sort((a, b) => a.eventId.localeCompare(b.eventId)), quarantines };
+  const sourceEntries = [
+    ...events.map((item) => ({ relativePath: item.relativePath, observedSha256: hash(item.bytes), classification: "event" })),
+    ...quarantines.map((item) => ({ relativePath: item.relativePath, observedSha256: hash(item.bytes), classification: "quarantine" })),
+  ].sort((left, right) => Buffer.compare(Buffer.from(left.relativePath, "utf8"), Buffer.from(right.relativePath, "utf8")));
+  return { complete: true, entriesScanned: state.count, diagnostics: state.diagnostics, taintedMemoryIds: [], events: events.sort((a, b) => a.eventId.localeCompare(b.eventId)), quarantines, sourceEntries };
 }
 
 export function foldMemoryEvents(scan, { now = new Date() } = {}) {

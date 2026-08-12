@@ -1,1 +1,16 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["schema_version","request_sha256","observations","applied","excluded","recorded_at"],"properties":{"schema_version":{"const":1},"request_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"observations":{"type":"array","maxItems":256,"items":{"type":"object"}},"applied":{"type":"array","maxItems":256,"items":{"type":"object"}},"excluded":{"type":"array","maxItems":256,"items":{"type":"object"}},"recorded_at":{"type":"string","format":"date-time"}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "requestSha256", "sourceTreeSha256", "projectId", "lane", "policy", "observations", "applied", "excluded"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "requestSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "sourceTreeSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "projectId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "lane": { "enum": ["common", "studio", "career"] },
+    "policy": { "type": "object", "additionalProperties": false, "required": ["scope", "maxItems", "candidateTtlDays"], "properties": { "scope": { "enum": ["project", "workspace", "global"] }, "maxItems": { "type": "integer", "minimum": 1, "maximum": 10 }, "candidateTtlDays": { "type": "integer", "minimum": 1, "maximum": 365 } } },
+    "observations": { "type": "array", "maxItems": 256, "items": { "type": "object", "additionalProperties": false, "required": ["memoryId", "artifactId", "locator", "expectedSha256", "observedSha256", "status"], "properties": { "memoryId": { "type": "string" }, "artifactId": { "type": "string" }, "locator": { "type": "string" }, "expectedSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "observedSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }, "status": { "enum": ["current", "missing", "drift", "symlink", "unreadable"] } } } },
+    "applied": { "type": "array", "maxItems": 256, "items": { "type": "object", "additionalProperties": false, "required": ["memoryId", "headEventId", "fileSha256"], "properties": { "memoryId": { "type": "string" }, "headEventId": { "type": "string", "pattern": "^mev1-[a-f0-9]{64}$" }, "fileSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } },
+    "excluded": { "type": "array", "maxItems": 256, "items": { "type": "object", "additionalProperties": false, "required": ["memoryId", "reason"], "properties": { "memoryId": { "type": "string" }, "reason": { "type": "string", "minLength": 1 } } } }
+  }
+}
