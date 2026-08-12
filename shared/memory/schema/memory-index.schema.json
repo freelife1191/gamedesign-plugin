@@ -1,1 +1,40 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["schema_version","entries"],"properties":{"schema_version":{"const":1},"entries":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["memory_id","path","event_sha256"],"properties":{"memory_id":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},"path":{"type":"string","pattern":"^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\\\\\).+"},"event_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "memory_id",
+          "path",
+          "event_sha256"
+        ],
+        "properties": {
+          "memory_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+"
+          },
+          "event_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

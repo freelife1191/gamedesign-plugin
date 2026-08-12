@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, mkdir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 import {
+  createMemoryStorePlatformAdapter,
   ensureMemoryGitExclusion,
   memoryRecordRelativePath,
   moveMemoryFileAtomic,
@@ -82,6 +85,31 @@ test("create-once and move fail closed when a destination appears at publish tim
   assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/candidates/move.md" }), Buffer.from("source"));
 });
 
+test("replacement publication rejects a destination inode changed after its snapshot", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  const target = path.join(store.root, "lessons", "candidates", "replace-race.md");
+  const replacement = path.join(store.root, "lessons", "candidates", "replacement.md");
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/replace-race.md", bytes: Buffer.from("old") });
+  await assert.rejects(() => writeMemoryFileAtomic({
+    store, relativePath: "lessons/candidates/replace-race.md", bytes: Buffer.from("new"), policy: {
+      beforePublish: async () => { await writeFile(replacement, "racer"); await rename(replacement, target); },
+    },
+  }));
+  assert.equal(await readFile(target, "utf8"), "racer");
+});
+
+test("replacement publication rejects same-inode byte changes after its digest snapshot", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  const target = path.join(store.root, "lessons", "candidates", "replace-digest-race.md");
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/replace-digest-race.md", bytes: Buffer.from("old") });
+  await assert.rejects(() => writeMemoryFileAtomic({
+    store, relativePath: "lessons/candidates/replace-digest-race.md", bytes: Buffer.from("new"), policy: { beforePublish: () => writeFile(target, "racer") },
+  }));
+  assert.equal(await readFile(target, "utf8"), "racer");
+});
+
 test("read/write/move reject escaping, symlink, and preserve originals on failed writes", async (t) => {
   const root = await workspace(t);
   const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -96,6 +124,25 @@ test("read/write/move reject escaping, symlink, and preserve originals on failed
   assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/approved/a.md" }), Buffer.from("old"));
 });
 
+test("FIFO and Unix-socket targets are rejected without opening special files", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  const parent = path.join(store.root, "lessons", "candidates");
+  await mkdir(parent, { recursive: true });
+  const fifo = path.join(parent, "pipe.md");
+  assert.equal(spawnSync("/usr/bin/mkfifo", [fifo]).status, 0);
+  await assert.rejects(() => readMemoryFile({ store, relativePath: "lessons/candidates/pipe.md" }));
+  await assert.rejects(() => writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/pipe.md", bytes: Buffer.from("new") }));
+  const socket = path.join(parent, "socket.md");
+  const shortSocket = path.join(tmpdir(), `gdm-${process.pid}-${Date.now()}`);
+  const server = createServer();
+  await new Promise((resolve, reject) => { server.once("error", reject); server.listen(shortSocket, resolve); });
+  await rename(shortSocket, socket);
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  await assert.rejects(() => readMemoryFile({ store, relativePath: "lessons/candidates/socket.md" }));
+  await assert.rejects(() => writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/socket.md", bytes: Buffer.from("new") }));
+});
+
 test("temporary and publish failures preserve the original namespace", async (t) => {
   const root = await workspace(t);
   const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -104,6 +151,35 @@ test("temporary and publish failures preserve the original namespace", async (t)
   await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/original.md", bytes: Buffer.from("old") });
   await assert.rejects(() => writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/original.md", bytes: Buffer.from("new"), policy: { beforePublish: () => { throw new Error("publish failure"); } } }));
   assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/candidates/original.md" }), Buffer.from("old"));
+});
+
+test("an adapter without directory-relative atomic capabilities fails before it writes", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  let publishCalls = 0;
+  const unsafeAdapter = createMemoryStorePlatformAdapter({
+    capabilities: { directoryRelative: false, atomicNoReplace: false, atomicReplace: false },
+    linkFn: async () => { publishCalls += 1; },
+    renameFn: async () => { publishCalls += 1; },
+  });
+  await assert.rejects(() => writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/capability.md", bytes: Buffer.from("new"), platformAdapter: unsafeAdapter }), /capability|unsafe/i);
+  assert.equal(publishCalls, 0);
+  await assert.rejects(() => readMemoryFile({ store, relativePath: "lessons/candidates/capability.md" }));
+});
+
+test("a direct-parent swap after Node's final check cannot redirect publication", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  const parent = path.join(store.root, "lessons", "candidates");
+  const displaced = path.join(store.root, "lessons", "candidates-displaced");
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/original.md", bytes: Buffer.from("old") });
+  await assert.rejects(() => writeMemoryFileAtomic({
+    store, relativePath: "lessons/candidates/original.md", bytes: Buffer.from("new"), policy: {
+      beforePublish: async () => { await rename(parent, displaced); await mkdir(parent); },
+    },
+  }));
+  assert.equal(await readFile(path.join(displaced, "original.md"), "utf8"), "old");
+  await assert.rejects(() => readFile(path.join(parent, "original.md")));
 });
 
 test("git exclusion changes only the local plugin block exactly once", async (t) => {
@@ -133,6 +209,9 @@ test("git exclusion rejects partial markers and concurrent replacement without o
   await writeFile(exclude, "before-snapshot\n");
   await assert.rejects(() => ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeSnapshot: () => writeFile(exclude, "read-race\n") }));
   assert.equal(await readFile(exclude, "utf8"), "read-race\n");
+  await rm(exclude);
+  await assert.rejects(() => ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforePublish: () => writeFile(exclude, "created-after-absence\n") }));
+  assert.equal(await readFile(exclude, "utf8"), "created-after-absence\n");
 });
 
 test("non-Git workspaces leave exclusion files untouched", async (t) => {

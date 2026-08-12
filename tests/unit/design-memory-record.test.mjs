@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -147,6 +147,40 @@ test("source bindings reject a final file swapped after opening", async (t) => {
   const sha256 = createHash("sha256").update("trusted").digest("hex");
   const record = clone({ sources: [{ artifact_id: "combat-loop-v3", locator: "source.md", sha256 }] });
   assert.equal((await validateMemorySourceBindings(record, { workspaceRoot: root, beforeFinalRecheck: () => rename(path.join(root, "replacement.md"), path.join(root, "source.md")) })).ok, false);
+});
+
+test("source bindings reject content changed in the same inode after it is read", async (t) => {
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-source-content-race-")));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(path.join(root, "source.md"), "trusted");
+  const sha256 = createHash("sha256").update("trusted").digest("hex");
+  const record = clone({ sources: [{ artifact_id: "combat-loop-v3", locator: "source.md", sha256 }] });
+  const result = await validateMemorySourceBindings(record, {
+    workspaceRoot: root,
+    beforeFinalRecheck: () => writeFile(path.join(root, "source.md"), "changed"),
+  });
+  assert.equal(result.ok, false);
+});
+
+test("receipt chains reject unknown fields and approval provenance mutation", () => {
+  const first = { schema_version: 1, memory_id: validRecord.memory_id, actor: "reviewer", from_status: "candidate", to_status: "verified", approval_basis: null, previous_event_sha256: null, event_sha256: "1".repeat(64), recorded_at: validRecord.created_at };
+  const approved = { ...first, from_status: "verified", to_status: "approved", approval_basis: "review", previous_event_sha256: first.event_sha256, event_sha256: "2".repeat(64) };
+  const disputed = { ...approved, from_status: "approved", to_status: "disputed", previous_event_sha256: approved.event_sha256, event_sha256: "3".repeat(64), actor: "other-reviewer", approval_basis: "other-basis" };
+  assert.equal(validateMemoryReceiptChain([{ ...first, injected: true }, approved]).ok, false);
+  assert.equal(validateMemoryReceiptChain([first, approved, disputed]).ok, false);
+});
+
+test("durable schemas reject a single backslash path and blank approval identities", async () => {
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+  const recordSchema = JSON.parse(await readFile(path.join(root, "shared/memory/schema/memory-record.schema.json"), "utf8"));
+  const indexSchema = JSON.parse(await readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8"));
+  const receiptSchema = JSON.parse(await readFile(path.join(root, "shared/memory/schema/memory-receipt.schema.json"), "utf8"));
+  assert.equal(new RegExp(recordSchema.properties.sources.items.properties.locator.pattern, "u").test("folder\\entry.md"), false);
+  assert.equal(new RegExp(indexSchema.properties.entries.items.properties.path.pattern, "u").test("folder\\entry.md"), false);
+  assert.equal(new RegExp(recordSchema.properties.approved_by.pattern, "u").test("   "), false);
+  assert.equal(new RegExp(recordSchema.properties.approval_basis.pattern, "u").test("   "), false);
+  assert.equal(new RegExp(receiptSchema.properties.actor.pattern, "u").test("   "), false);
+  assert.equal(new RegExp(receiptSchema.properties.approval_basis.pattern, "u").test("   "), false);
 });
 
 test("source bindings reject a workspace reached through a symlinked ancestor", async (t) => {

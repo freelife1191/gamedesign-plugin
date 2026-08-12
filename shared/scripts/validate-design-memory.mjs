@@ -11,6 +11,7 @@ export const MEMORY_LANES = Object.freeze(["common", "studio", "career"]);
 export const MEMORY_SCOPES = Object.freeze(["project", "workspace", "global"]);
 
 const RECORD_KEYS = Object.freeze(["schema_version", "memory_id", "event_sha256", "kind", "lane", "status", "scope", "project_id", "created_at", "updated_at", "review_after", "expires_at", "approved_by", "approval_basis", "supersedes", "artifact_types", "related_ids", "tags", "sources", "instruction_sha256"]);
+const RECEIPT_KEYS = Object.freeze(["schema_version", "memory_id", "actor", "from_status", "to_status", "approval_basis", "previous_event_sha256", "event_sha256", "recorded_at"]);
 const SHA256 = /^[a-f0-9]{64}$/u;
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
@@ -76,12 +77,14 @@ export function validateMemoryTransition({ from, to, approvalBasis } = {}) {
 export function validateMemoryReceiptChain(receipts) {
   const errors = [];
   if (!Array.isArray(receipts) || receipts.length === 0) return { ok: false, errors: [error("memory.receipt_chain", "", "Receipt chain must be nonempty.")] };
-  let previous;
+  let previous; let approval;
   for (const [index, receipt] of receipts.entries()) {
     const context = `receipts.${index}`;
-    if (!object(receipt) || receipt.schema_version !== 1 || !safeId(receipt.memory_id) || typeof receipt.actor !== "string" || receipt.actor.trim() === "" || !MEMORY_STATUSES.includes(receipt.from_status) || !MEMORY_STATUSES.includes(receipt.to_status) || !SHA256.test(receipt.event_sha256 ?? "") || !timestamp(receipt.recorded_at)) { errors.push(error("memory.receipt", context, "Receipt is invalid.")); continue; }
+    if (!object(receipt) || Object.keys(receipt).length !== RECEIPT_KEYS.length || Object.keys(receipt).some((key) => !RECEIPT_KEYS.includes(key)) || receipt.schema_version !== 1 || !safeId(receipt.memory_id) || typeof receipt.actor !== "string" || receipt.actor.trim() === "" || !MEMORY_STATUSES.includes(receipt.from_status) || !MEMORY_STATUSES.includes(receipt.to_status) || !SHA256.test(receipt.event_sha256 ?? "") || !timestamp(receipt.recorded_at) || !(receipt.approval_basis === null || typeof receipt.approval_basis === "string" && receipt.approval_basis.trim() !== "") || !(receipt.previous_event_sha256 === null || SHA256.test(receipt.previous_event_sha256))) { errors.push(error("memory.receipt", context, "Receipt is invalid.")); continue; }
     const transition = validateMemoryTransition({ from: receipt.from_status, to: receipt.to_status, approvalBasis: receipt.approval_basis });
     if (!transition.ok || (previous && (receipt.memory_id !== previous.memory_id || receipt.previous_event_sha256 !== previous.event_sha256 || receipt.from_status !== previous.to_status)) || (!previous && receipt.previous_event_sha256 !== null)) errors.push(error("memory.receipt_chain", context, "Receipt chain linkage is invalid."));
+    if (receipt.to_status === "approved") approval ??= { actor: receipt.actor, basis: receipt.approval_basis };
+    if (approval && (receipt.actor !== approval.actor || receipt.approval_basis !== approval.basis)) errors.push(error("memory.receipt_provenance", context, "Approval actor and basis are immutable across the receipt chain."));
     previous = receipt;
   }
   return { ok: errors.length === 0, errors };
@@ -126,9 +129,9 @@ export async function validateMemorySourceBindings(record, { workspaceRoot, befo
       for (const [part, segment] of segments.entries()) { current = path.join(current, segment); const stats = await lstat(current); if (stats.isSymbolicLink() || (!stats.isDirectory() && part !== segments.length - 1)) throw new Error(); if (part !== segments.length - 1) identities.push({ path: current, stats }); }
       const stats = await lstat(current); if (stats.isSymbolicLink() || !stats.isFile()) throw new Error();
       if (!constants.O_NOFOLLOW) throw new Error();
-      const handle = await open(current, constants.O_RDONLY | constants.O_NOFOLLOW); let bytes; try { bytes = await handle.readFile(); const opened = await handle.stat(); if (opened.dev !== stats.dev || opened.ino !== stats.ino || !opened.isFile()) throw new Error(); } finally { await handle.close(); }
+      const handle = await open(current, constants.O_RDONLY | constants.O_NOFOLLOW); let bytes; let opened; try { opened = await handle.stat(); if (opened.dev !== stats.dev || opened.ino !== stats.ino || !opened.isFile()) throw new Error(); bytes = await handle.readFile(); const after = await handle.stat(); if (after.dev !== opened.dev || after.ino !== opened.ino || after.size !== opened.size || after.mtimeMs !== opened.mtimeMs || after.ctimeMs !== opened.ctimeMs) throw new Error(); } finally { await handle.close(); }
       if (typeof beforeFinalRecheck === "function") await beforeFinalRecheck({ locator: filePart });
-      const final = await lstat(current); if (final.isSymbolicLink() || !final.isFile() || final.dev !== stats.dev || final.ino !== stats.ino) throw new Error();
+      const final = await lstat(current); if (final.isSymbolicLink() || !final.isFile() || final.dev !== opened.dev || final.ino !== opened.ino || final.size !== opened.size || final.mtimeMs !== opened.mtimeMs || final.ctimeMs !== opened.ctimeMs) throw new Error();
       for (const identity of identities) { const currentStats = await regularDirectory(identity.path); if (currentStats.dev !== identity.stats.dev || currentStats.ino !== identity.stats.ino) throw new Error(); }
       if (createHash("sha256").update(bytes).digest("hex") !== source.sha256) throw new Error();
     } catch { errors.push(error("memory.source_binding", `sources.${index}`, "Source must be an in-workspace regular file matching its hash.")); }
