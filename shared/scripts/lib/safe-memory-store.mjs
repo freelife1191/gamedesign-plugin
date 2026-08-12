@@ -109,20 +109,35 @@ async function readCommitted(store, relativePath, expectedId, kind = "event") {
 export async function appendMemoryEvent({ store, eventDocument } = {}) {
   const bytes = Buffer.isBuffer(eventDocument) ? eventDocument : Buffer.from(eventDocument ?? ""); if (bytes.byteLength > MAX_BYTES) fail("Memory event exceeds the bounded write limit.");
   const eventId = `mev1-${hash(bytes)}`; const parsed = parseMemoryEventDocument(bytes.toString("utf8"), { sourceName: "event document", eventId }); const relativePath = memoryEventRelativePath({ memoryId: parsed.event.memory_id, eventId });
-  const scan = await scanMemoryEvents({ store }); if (!scan.complete) fail("Memory scan is incomplete.", "memory.scan_limit_exceeded");
+  const scan = await scanMemoryEvents({ store }); if (!scan.complete) fail("Memory scan is incomplete.", "memory.scan_incomplete");
   const duplicate = scan.events.find((item) => item.event.memory_id === parsed.event.memory_id && item.event.operation_id === parsed.event.operation_id);
   if (duplicate?.bytes.equals(bytes)) return { status: "present", eventId, relativePath, fileSha256: hash(bytes) };
+  const authorization = authorizeMemoryAppend({ scan, parsed });
   if (duplicate) fail("duplicate-operation: different event bytes.", "duplicate-operation");
   if (parsed.event.event_type === "resolution") {
-    const prior = scan.events.filter((item) => item.event.memory_id === parsed.event.memory_id); const byId = new Map(prior.map((item) => [item.eventId, item])); const used = new Set(prior.flatMap((item) => item.event.parent_event_ids)); const heads = [...byId.keys()].filter((id) => !used.has(id)).sort(); const parents = [...parsed.event.parent_event_ids].sort();
-    if (JSON.stringify(parents) !== JSON.stringify(heads) || !parents.includes(parsed.event.chosen_parent_event_id)) fail("Resolution parents are not the current heads.", "memory.resolution_heads");
-    const chosen = byId.get(parsed.event.chosen_parent_event_id); if (!chosen || !resolutionSnapshotAllowed(chosen, { record: parsed.record, sections: parsed.sections })) fail("Resolution snapshot is not authorized.", "memory.resolution_snapshot");
+    const chosen = authorization.byId.get(parsed.event.chosen_parent_event_id); if (!chosen || !resolutionSnapshotAllowed(chosen, { record: parsed.record, sections: parsed.sections })) fail("Resolution snapshot is not authorized.", "memory.resolution_snapshot");
   }
   return sealEvent(store, relativePath, eventId, bytes, "event");
 }
 
 function stableSnapshot(from, to) { return ["schema_version", "memory_id", "kind", "lane", "scope", "project_id", "created_at", "artifact_types", "related_ids", "tags", "sources", "instruction_sha256"].every((key) => JSON.stringify(from.record[key]) === JSON.stringify(to.record[key])) && JSON.stringify(from.sections) === JSON.stringify(to.sections); }
 function resolutionSnapshotAllowed(chosen, candidate) { return JSON.stringify(chosen.record) === JSON.stringify(candidate.record) && JSON.stringify(chosen.sections) === JSON.stringify(candidate.sections) || stableSnapshot(chosen, candidate) && validateMemoryTransition({ from: chosen.record, to: candidate.record, approvalBasis: candidate.record.approval_basis }).ok; }
+function sameEventIds(left, right) { return left.length === right.length && left.every((eventId, index) => eventId === right[index]); }
+function authorizeMemoryAppend({ scan, parsed } = {}) {
+  if (!scan?.complete) fail("Memory scan is incomplete.", "memory.scan_incomplete");
+  const memoryId = parsed?.event?.memory_id;
+  if ((scan.quarantines ?? []).some((marker) => marker.memory_id === memoryId) || (scan.taintedMemoryIds ?? []).includes?.(memoryId)) fail("Memory is quarantined.", "memory.quarantined");
+  const prior = (scan.events ?? []).filter((item) => item.event.memory_id === memoryId);
+  const folded = foldMemoryEvents(scan); const diagnostics = folded.diagnostics.filter((item) => item.memory_id === memoryId);
+  if (diagnostics.some((item) => item.code !== "memory.concurrent_conflict")) fail("Memory history is not authorized.", "memory.invalid_event_dag");
+  const byId = new Map(prior.map((item) => [item.eventId, item])); const used = new Set(prior.flatMap((item) => item.event.parent_event_ids)); const heads = [...byId.keys()].filter((eventId) => !used.has(eventId)).sort();
+  const foldedMemory = folded.memories.get(memoryId);
+  if (heads.length === 1 && foldedMemory?.headEventId !== heads[0]) fail("Memory history is not authorized.", "memory.invalid_event_dag");
+  if (parsed.event.event_type === "capture") { if (prior.length) fail("Memory already has a capture event.", "memory.capture_exists"); return { prior, heads, byId }; }
+  if (parsed.event.event_type === "transition" && (heads.length !== 1 || parsed.event.parent_event_ids[0] !== heads[0])) fail("Transition parent is not the current head.", "memory.transition_heads");
+  if (parsed.event.event_type === "resolution" && (!sameEventIds(parsed.event.parent_event_ids, heads) || !heads.includes(parsed.event.chosen_parent_event_id))) fail("Resolution parents are not the current heads.", "memory.resolution_heads");
+  return { prior, heads, byId };
+}
 
 async function allEntries(root, relative = "", state, traversal, sourceRoot = false) {
   let directoryHandle; try { directoryHandle = await traversal.opendir(root); } catch (error) { if (sourceRoot && error?.code === "ENOENT") return; throw error; }

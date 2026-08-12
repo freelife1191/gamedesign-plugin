@@ -17,6 +17,10 @@ function transitionDocument(parentEventId, action, effectiveAt) {
   const event = { schema_version: 1, event_type: "transition", action, memory_id: record.memory_id, parent_event_ids: [parentEventId], effective_at: effectiveAt, actor: "reviewer", reason: action, record: { ...record, status: action, updated_at: effectiveAt, ...(action === "approved" ? { approved_by: "reviewer", approval_basis: "review" } : {}) } };
   return canonicalMemoryEventDocument({ ...event, operation_id: memoryOperationId(event) }, sections);
 }
+function resolutionDocument(parentEventIds, chosenParentEventId, chosenRecord, effectiveAt = "2026-08-12T04:00:00.000Z") {
+  const event = { schema_version: 1, event_type: "resolution", action: "resolution", memory_id: record.memory_id, parent_event_ids: [...parentEventIds].sort(), chosen_parent_event_id: chosenParentEventId, effective_at: effectiveAt, actor: "resolver", reason: "resolution", record: chosenRecord };
+  return canonicalMemoryEventDocument({ ...event, operation_id: memoryOperationId(event) }, sections);
+}
 async function sealMarkerForTest(store, marker, physicalTarget = marker) {
   const bytes = Buffer.from(canonicalQuarantineMarkerDocument(marker)); const markerId = `qmv1-${createHash("sha256").update(bytes).digest("hex")}`; const instanceHash = createHash("sha256").update(markerId).digest("hex"); const instanceId = `${instanceHash.slice(0, 8)}-${instanceHash.slice(8, 12)}-${instanceHash.slice(12, 16)}-${instanceHash.slice(16, 20)}-${instanceHash.slice(20, 32)}`;
   const relativePath = `v1/controls/quarantine/${createHash("sha256").update(physicalTarget.memory_id).digest("hex").slice(0, 2)}/${physicalTarget.target_event_id}/${markerId}`; const base = path.join(store.root, relativePath);
@@ -34,6 +38,31 @@ async function sealCommittedForTest(store, { relativePath, eventId, bytes, persi
   await mkdir(path.join(base, "instances"), { recursive: true }); await mkdir(path.join(base, "claims"), { recursive: true }); await writeFile(path.join(base, "instances", `${instanceId}.md`), bytes);
   const claimPath = path.join(base, "claims", `${instanceId}.json`); await writeFile(claimPath, persistedClaim ?? `${JSON.stringify(claim)}\n`); await link(claimPath, path.join(base, "commit.json"));
   return claim;
+}
+async function sealTransitionForTest(store, parentEventId, action, effectiveAt) {
+  const bytes = Buffer.from(transitionDocument(parentEventId, action, effectiveAt)); const eventId = `mev1-${digest(bytes)}`; const relativePath = memoryEventRelativePath({ memoryId: record.memory_id, eventId });
+  await sealCommittedForTest(store, { relativePath, eventId, bytes }); return { eventId, relativePath };
+}
+async function sourceTreeSnapshot(store) {
+  const root = path.join(store.root, "v1"); const files = [];
+  async function visit(directory, relative = "") {
+    let handle;
+    try { handle = await opendir(directory); } catch (error) { if (error.code === "ENOENT") return; throw error; }
+    try {
+      for await (const entry of handle) {
+        const entryPath = path.join(directory, entry.name); const entryRelative = relative ? `${relative}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) await visit(entryPath, entryRelative);
+        else if (entry.isFile()) { const bytes = await readFile(entryPath); files.push([entryRelative, bytes.byteLength, digest(bytes)]); }
+        else files.push([entryRelative, "non-file"]);
+      }
+    } finally { await handle.close().catch(() => {}); }
+  }
+  await visit(root); return files.sort((left, right) => left[0].localeCompare(right[0]));
+}
+async function assertRejectedWithoutSourceChange(store, operation, code) {
+  const before = await sourceTreeSnapshot(store);
+  await assert.rejects(operation, (error) => error?.code === code);
+  assert.deepEqual(await sourceTreeSnapshot(store), before);
 }
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
@@ -60,7 +89,42 @@ test("sealed append is idempotent, conflict preserving, and uses event shard pat
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const bytes = document();
   const first = await appendMemoryEvent({ store, eventDocument: bytes }); const second = await appendMemoryEvent({ store, eventDocument: bytes });
   assert.equal(first.status, "created"); assert.equal(second.status, "present"); assert.equal(first.relativePath, memoryEventRelativePath({ memoryId: record.memory_id, eventId: first.eventId }));
-  await assert.rejects(() => appendMemoryEvent({ store, eventDocument: document({ reason: "other" }) }), /duplicate-operation/i);
+  await assert.rejects(() => appendMemoryEvent({ store, eventDocument: document({ reason: "other" }) }), (error) => error?.code === "memory.capture_exists");
+});
+
+test("quarantined append rejects transition and resolution without creating source files", async (t) => {
+  for (const eventType of ["transition", "resolution"]) {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+    const verified = await sealTransitionForTest(store, captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); const disputed = await sealTransitionForTest(store, captured.eventId, "disputed", "2026-08-12T02:00:00.000Z");
+    await appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: captured.eventId, targetRelativePath: captured.relativePath, observedSha256: captured.fileSha256, reasonCode: "memory.bad", actor: "auditor", now: new Date("2026-08-12T03:00:00.000Z") });
+    const candidate = eventType === "transition" ? transitionDocument(verified.eventId, "approved", "2026-08-12T04:00:00.000Z") : resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z" });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: candidate }), "memory.quarantined");
+  }
+});
+
+test("incomplete scan append rejects before creating source files", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  await writeFile(path.join(store.root, captured.relativePath, "commit.json"), "broken\n");
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }), "memory.scan_incomplete");
+});
+
+test("capture exists rejects a second capture without creating source files", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); await appendMemoryEvent({ store, eventDocument: document() });
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: document({ operation_id: "capture-upstream-2", reason: "second capture" }) }), "memory.capture_exists");
+});
+
+test("transition heads and resolution heads reject stale, missing, and extra parent sets without creating source files", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  const verified = await sealTransitionForTest(store, captured.eventId, "verified", "2026-08-12T01:00:00.000Z");
+  const disputed = await sealTransitionForTest(store, captured.eventId, "disputed", "2026-08-12T02:00:00.000Z");
+  const expired = await sealTransitionForTest(store, captured.eventId, "expired", "2026-08-12T03:00:00.000Z");
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T04:00:00.000Z") }), "memory.transition_heads");
+  const verifiedRecord = { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z" };
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, verifiedRecord, "2026-08-12T05:00:00.000Z") }), "memory.resolution_heads");
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId, expired.eventId, captured.eventId], captured.eventId, record, "2026-08-12T06:00:00.000Z") }), "memory.resolution_heads");
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId, captured.eventId], captured.eventId, record, "2026-08-12T07:00:00.000Z") }), "memory.resolution_heads");
+  const resolved = await appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId, expired.eventId], verified.eventId, verifiedRecord, "2026-08-12T08:00:00.000Z") });
+  assert.equal(resolved.status, "created"); assert.equal(foldMemoryEvents(await scanMemoryEvents({ store })).memories.get(record.memory_id).headEventId, resolved.eventId);
 });
 
 test("staged files are immutable, commit claims seal only complete events, and fold is deterministic", async (t) => {
@@ -80,7 +144,7 @@ test("scan is fail-closed at maxEvents and quarantine permanently excludes a mem
 
 test("moved disputed event closes the scan instead of restoring approved memory", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
-  const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "approved", "2026-08-12T01:00:00.000Z") }); const disputed = await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T02:00:00.000Z") });
+  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") }); const disputed = await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z") });
   const moved = path.join(store.root, "v1", "events", "zz", "invalid-memory", disputed.eventId); await mkdir(path.dirname(moved), { recursive: true }); await rename(path.join(store.root, disputed.relativePath), moved);
   assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.path_binding");
 });
