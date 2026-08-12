@@ -22,6 +22,12 @@ test("store roots and bounded reads retain safe local behavior", async (t) => {
   await assert.rejects(() => readMemoryFile({ store, relativePath: "v1/link/x" }));
 });
 
+test("a pre-existing .game-design symlink cannot redirect store initialization", async (t) => {
+  const root = await workspace(t); const outside = path.join(root, "outside"); await mkdir(outside); await symlink(outside, path.join(root, ".game-design"));
+  await assert.rejects(() => resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }));
+  await assert.rejects(() => readFile(path.join(outside, "memory")));
+});
+
 test("sealed append is idempotent, conflict preserving, and uses event shard paths", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const bytes = document();
   const first = await appendMemoryEvent({ store, eventDocument: bytes }); const second = await appendMemoryEvent({ store, eventDocument: bytes });
@@ -42,6 +48,16 @@ test("scan is fail-closed at maxEvents and quarantine permanently excludes a mem
   const marker = await appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: appended.eventId, targetRelativePath: appended.relativePath, observedSha256: appended.fileSha256, reasonCode: "memory.bad", actor: "auditor", now: new Date("2026-08-12T00:00:00.000Z") });
   assert.equal(marker.status, "created"); assert.equal(foldMemoryEvents(await scanMemoryEvents({ store }), { now: new Date() }).memories.has(record.memory_id), false);
   const limited = await scanMemoryEvents({ store, maxEvents: 1 }); assert.equal(limited.complete, false); assert.equal(limited.diagnostics[0].code, "memory.scan_limit_exceeded");
+});
+
+test("fold taints a memory for duplicate roots, descendants of invalid events, and operation collisions", () => {
+  const id = (digit) => `mev1-${digit.repeat(64)}`;
+  const item = (eventId, event) => ({ eventId, event: { schema_version: 1, memory_id: record.memory_id, operation_id: "mop1-" + "1".repeat(64), event_type: "capture", action: "capture", parent_event_ids: [], actor: "a", reason: "r", ...event }, record });
+  for (const events of [[item(id("1"), {}), item(id("2"), {})], [item(id("1"), {}), item(id("2"), { event_type: "transition", action: "approved", parent_event_ids: [id("1")] })], [item(id("1"), {}), item(id("2"), { operation_id: "mop1-" + "2".repeat(64) }), item(id("3"), { operation_id: "mop1-" + "2".repeat(64) })]]) {
+    const folded = foldMemoryEvents({ complete: true, diagnostics: [], events, quarantines: [] }, { now: new Date() });
+    assert.equal(folded.memories.has(record.memory_id), false);
+    assert.equal(folded.diagnostics.some((entry) => entry.code), true);
+  }
 });
 
 test("same-user directory swap is explicitly a skipped non-goal", { skip: "Node 18 path APIs cannot prevent malicious same-user between-syscall directory swaps." }, () => {});

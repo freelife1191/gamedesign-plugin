@@ -110,10 +110,19 @@ function yamlRecord(record, indent = "") {
 }
 function normalizeTime(key, value) { return ["effective_at", "created_at", "updated_at"].includes(key) ? new Date(value).toISOString() : value; }
 function eventFailure(message, code = "memory.event") { const failure = new Error(message); failure.code = code; throw failure; }
+function sensitiveText(value) { return typeof value !== "string" || value.includes("\0") || forbiddenMemoryContent.some((pattern) => pattern.test(value)); }
+function lengthPrefix(value) { const bytes = Buffer.from(value, "utf8"); const length = Buffer.alloc(8); length.writeBigUInt64BE(BigInt(bytes.byteLength)); return Buffer.concat([length, bytes]); }
+
+export function memoryOperationId({ memory_id, event_type, action, effective_at, actor, reason, parent_event_ids, chosen_parent_event_id } = {}) {
+  if (!safeId(memory_id) || !["transition", "resolution"].includes(event_type) || typeof action !== "string" || !timestamp(effective_at) || typeof actor !== "string" || !actor.trim() || typeof reason !== "string" || !reason.trim() || !sortedUnique(parent_event_ids, (id) => /^mev1-[a-f0-9]{64}$/u.test(id))) eventFailure("Invalid operation tuple.", "memory.operation");
+  const values = ["memory-operation-v1", memory_id, event_type, action, new Date(effective_at).toISOString(), actor, reason, String(parent_event_ids.length), ...parent_event_ids, chosen_parent_event_id ?? ""];
+  return `mop1-${createHash("sha256").update(Buffer.concat(values.map(lengthPrefix))).digest("hex")}`;
+}
 
 export function canonicalMemoryEventDocument(event, sections) {
   const validation = validateMemoryEvent(event);
   if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
+  if (!object(sections) || ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].some((key) => sensitiveText(sections[key]) || !sections[key].trim())) eventFailure("Memory event sections are invalid.", "memory.prohibited_content");
   const lines = ["---", `schema_version: ${event.schema_version}`, `event_type: ${quote(event.event_type)}`, `action: ${quote(event.action)}`, `memory_id: ${quote(event.memory_id)}`, `operation_id: ${quote(event.operation_id)}`, event.parent_event_ids.length === 0 ? "parent_event_ids: []" : "parent_event_ids:"];
   for (const value of event.parent_event_ids) lines.push(`  - ${quote(value)}`);
   if (event.chosen_parent_event_id !== undefined) lines.push(`chosen_parent_event_id: ${quote(event.chosen_parent_event_id)}`);
@@ -133,12 +142,13 @@ export function validateMemoryEvent(event) {
   if (event.event_type === "capture" && (event.action !== "capture" || event.parent_event_ids?.length !== 0 || event.chosen_parent_event_id !== undefined)) errors.push(error("memory.capture", "", "Capture must have no parents."));
   if (event.event_type === "transition" && (event.parent_event_ids?.length !== 1 || !MEMORY_STATUSES.includes(event.action))) errors.push(error("memory.transition", "", "Transition must have one parent and a status action."));
   if (event.event_type === "resolution" && (event.action !== "resolution" || event.parent_event_ids?.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id))) errors.push(error("memory.resolution", "", "Resolution must name an observed parent head."));
+  if (["transition", "resolution"].includes(event.event_type)) { try { if (event.operation_id !== memoryOperationId(event)) errors.push(error("memory.operation", "operation_id", "Operation id does not match its tuple.")); } catch { errors.push(error("memory.operation", "operation_id", "Operation id is invalid.")); } }
   const recordValidation = validateMemoryRecord(event.record); if (!recordValidation.ok || event.record?.memory_id !== event.memory_id) errors.push(error("memory.event_snapshot", "record", "Event record snapshot is invalid."));
   return { ok: errors.length === 0, errors };
 }
 
 export function parseMemoryEventDocument(source, { sourceName = "memory event", eventId } = {}) {
-  if (typeof source !== "string" || source !== source.normalize("NFC") || source.startsWith("\uFEFF") || source.includes("\r") || !source.endsWith("\n")) eventFailure("Memory event must be canonical UTF-8 Markdown.");
+  if (typeof source !== "string" || source !== source.normalize("NFC") || source.startsWith("\uFEFF") || source.includes("\r") || source.includes("\0") || !source.endsWith("\n") || forbiddenMemoryContent.some((pattern) => pattern.test(source))) eventFailure("Memory event must be canonical UTF-8 Markdown.", "memory.prohibited_content");
   if (eventId !== undefined && eventId !== `mev1-${createHash("sha256").update(source).digest("hex")}`) eventFailure("Memory event id does not match its bytes.", "memory.event_id");
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/u.exec(source); if (!match) eventFailure("Memory event requires closed YAML frontmatter.");
   const event = parseRestrictedYaml(match[1].replace(/^parent_event_ids: \[\]$/mu, "parent_event_ids:\n  - __empty__"), sourceName); if (event.parent_event_ids?.length === 1 && event.parent_event_ids[0] === "__empty__") event.parent_event_ids = [];
