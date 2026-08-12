@@ -35,12 +35,11 @@ async function boundedFile(candidate, maxBytes = MAX_BYTES) { const prior = awai
 
 export async function resolveMemoryStore({ workspaceRoot, config, platform, home, initialize = false } = {}) {
   if (!config?.enabled || !safeId(config.projectId)) return null;
-  const workspace = await canonicalDirectory(workspaceRoot);
   const global = { darwin: ["Library", "Application Support"], linux: [".local", "share"], win32: ["AppData", "Local"] };
-  let root;
+  let root; let base;
   if (config.scope === "global") { if (!global[platform] || typeof home !== "string" || !path.isAbsolute(home)) fail("Unsafe memory store path."); if (initialize) await ensureDirectory(home); const homeRoot = await canonicalDirectory(home); root = path.join(homeRoot.path, ...global[platform], "game-design-plugin", "memory"); }
-  else root = path.join(workspace.path, ".game-design", "memory");
-  const base = config.scope === "global" ? await canonicalDirectory(home) : workspace; const segments = path.relative(base.path, root).split(path.sep).filter(Boolean);
+  else { const workspace = await canonicalDirectory(workspaceRoot); root = path.join(workspace.path, ".game-design", "memory"); base = workspace; }
+  base ??= await canonicalDirectory(home); const segments = path.relative(base.path, root).split(path.sep).filter(Boolean);
   const canonical = initialize ? await ensureNested(base, segments) : await canonicalDirectory(root);
   return { root: canonical.path, identity: canonical.identity, scope: config.scope, projectId: config.projectId };
 }
@@ -118,7 +117,7 @@ export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEv
   for (const relativePath of state.commits.sort()) {
     const base = relativePath.slice(0, -"/commit.json".length); const name = path.posix.basename(base); try {
       const parts = base.split("/");
-      if (parts[0] === "events") { const [, shard, memoryId, eventId] = parts; if (parts.length !== 4 || !safeId(memoryId) || shard !== hash(memoryId).slice(0, 2) || eventId !== name || !EVENT_ID.test(name)) throw new Error(); const committed = await readCommitted(store, `v1/${base}`, name); const parsed = parseMemoryEventDocument(committed.bytes.toString("utf8"), { sourceName: base, eventId: name }); if (committed.bytes.byteLength > maxEventBytes || parsed.event.memory_id !== memoryId) throw new Error(); events.push({ eventId: name, relativePath: `v1/${base}`, bytes: committed.bytes, event: parsed.event, record: parsed.record }); }
+      if (parts[0] === "events") { const [, shard, memoryId, eventId] = parts; if (parts.length !== 4 || !safeId(memoryId) || shard !== hash(memoryId).slice(0, 2) || eventId !== name || !EVENT_ID.test(name)) throw new Error(); const committed = await readCommitted(store, `v1/${base}`, name); const parsed = parseMemoryEventDocument(committed.bytes.toString("utf8"), { sourceName: base, eventId: name }); if (committed.bytes.byteLength > maxEventBytes || parsed.event.memory_id !== memoryId) throw new Error(); events.push({ eventId: name, relativePath: `v1/${base}`, bytes: committed.bytes, event: parsed.event, record: parsed.record, sections: parsed.sections }); }
       else { const [, kind, shard, targetEventId, markerId] = parts; if (parts.length !== 5 || kind !== "quarantine" || !EVENT_ID.test(targetEventId)) throw new Error(); const committed = await readCommitted(store, `v1/${base}`, markerId, "marker"); const marker = JSON.parse(committed.bytes.toString("utf8")); if (!safeId(marker.memory_id) || shard !== hash(marker.memory_id).slice(0, 2) || marker.target_event_id !== targetEventId) throw new Error(); quarantines.push(marker); }
     } catch { state.diagnostics.push({ code: "memory.invalid_seal", path: base }); }
   }
@@ -139,12 +138,12 @@ export function foldMemoryEvents(scan, { now = new Date() } = {}) {
     }
     const roots = items.filter((item) => item.event.event_type === "capture"); if (roots.length !== 1) { taint(memoryId, "memory.invalid_root"); continue; }
     for (const item of items) for (const parent of item.event.parent_event_ids ?? []) { if (!byId.has(parent)) invalid.add(item.eventId); else (children.get(parent) ?? children.set(parent, []).get(parent)).push(item.eventId); }
-    const stableIdentity = (from, to) => ["memory_id", "kind", "lane", "scope", "project_id", "created_at", "artifact_types", "related_ids", "tags", "sources"].every((key) => JSON.stringify(from[key]) === JSON.stringify(to[key]));
+    const stableIdentity = (from, to, fromSections, toSections) => ["memory_id", "kind", "lane", "scope", "project_id", "created_at", "artifact_types", "related_ids", "tags", "sources"].every((key) => JSON.stringify(from[key]) === JSON.stringify(to[key])) && JSON.stringify(fromSections) === JSON.stringify(toSections);
     for (const item of items) {
       const { event } = item;
       if (event.event_type === "capture" && event.parent_event_ids.length !== 0) invalid.add(item.eventId);
-      if (event.event_type === "transition") { const parent = byId.get(event.parent_event_ids[0]); if (!parent || event.parent_event_ids.length !== 1 || !stableIdentity(parent.record, item.record) || !validateMemoryTransition({ from: parent.record, to: item.record, approvalBasis: item.record.approval_basis }).ok) invalid.add(item.eventId); }
-      if (event.event_type === "resolution") { if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id)) invalid.add(item.eventId); const chosen = byId.get(event.chosen_parent_event_id); if (!chosen || !stableIdentity(chosen.record, item.record)) invalid.add(item.eventId); }
+      if (event.event_type === "transition") { const parent = byId.get(event.parent_event_ids[0]); if (!parent || event.action !== item.record.status || event.parent_event_ids.length !== 1 || !stableIdentity(parent.record, item.record, parent.sections, item.sections) || !validateMemoryTransition({ from: parent.record, to: item.record, approvalBasis: item.record.approval_basis }).ok) invalid.add(item.eventId); }
+      if (event.event_type === "resolution") { if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id)) invalid.add(item.eventId); const chosen = byId.get(event.chosen_parent_event_id); if (!chosen || !stableIdentity(chosen.record, item.record, chosen.sections, item.sections)) invalid.add(item.eventId); }
       if (item.record.supersedes === memoryId) invalid.add(item.eventId);
     }
     const queue = [...invalid]; while (queue.length) for (const child of children.get(queue.shift()) ?? []) if (!invalid.has(child)) invalid.add(child), queue.push(child);

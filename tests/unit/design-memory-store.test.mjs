@@ -28,6 +28,12 @@ test("a pre-existing .game-design symlink cannot redirect store initialization",
   await assert.rejects(() => readFile(path.join(outside, "memory")));
 });
 
+test("global storage does not require a workspace path", async (t) => {
+  const home = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: path.join(home, "missing-workspace"), config: config({ scope: "global" }), platform: "linux", home, initialize: true });
+  assert.equal(store.root, path.join(home, ".local", "share", "game-design-plugin", "memory"));
+});
+
 test("sealed append is idempotent, conflict preserving, and uses event shard paths", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const bytes = document();
   const first = await appendMemoryEvent({ store, eventDocument: bytes }); const second = await appendMemoryEvent({ store, eventDocument: bytes });
