@@ -13,9 +13,9 @@ const config = (overrides = {}) => ({ enabled: true, scope: "project", gitMode: 
 const record = { schema_version: 1, memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef", kind: "design-lesson", lane: "studio", status: "candidate", scope: "project", project_id: "wind-island", created_at: "2026-08-12T00:00:00.000Z", updated_at: "2026-08-12T00:00:00.000Z", review_after: "2026-09-11", expires_at: "2026-09-11", approved_by: null, approval_basis: null, supersedes: null, artifact_types: ["artifact"], related_ids: ["related"], tags: ["tag"], sources: [{ artifact_id: "source", locator: "content.md#h", sha256: "a".repeat(64) }] };
 const sections = { "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" };
 const document = (overrides = {}) => canonicalMemoryEventDocument({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T00:00:00.000Z", actor: "author", reason: "capture", record, ...overrides }, sections);
-function transitionDocument(parentEventId, action, effectiveAt) {
-  const event = { schema_version: 1, event_type: "transition", action, memory_id: record.memory_id, parent_event_ids: [parentEventId], effective_at: effectiveAt, actor: "reviewer", reason: action, record: { ...record, status: action, updated_at: effectiveAt, ...(action === "approved" ? { approved_by: "reviewer", approval_basis: "review" } : {}) } };
-  return canonicalMemoryEventDocument({ ...event, operation_id: memoryOperationId(event) }, sections);
+function transitionDocument(parentEventId, action, effectiveAt, { memoryId = record.memory_id, baseRecord = record, recordOverrides = {}, sectionOverrides = {} } = {}) {
+  const event = { schema_version: 1, event_type: "transition", action, memory_id: memoryId, parent_event_ids: [parentEventId], effective_at: effectiveAt, actor: "reviewer", reason: action, record: { ...baseRecord, status: action, updated_at: effectiveAt, ...(action === "approved" ? { approved_by: "reviewer", approval_basis: "review" } : {}), ...recordOverrides } };
+  return canonicalMemoryEventDocument({ ...event, operation_id: memoryOperationId(event) }, { ...sections, ...sectionOverrides });
 }
 function resolutionDocument(parentEventIds, chosenParentEventId, chosenRecord, effectiveAt = "2026-08-12T04:00:00.000Z") {
   const event = { schema_version: 1, event_type: "resolution", action: "resolution", memory_id: record.memory_id, parent_event_ids: [...parentEventIds].sort(), chosen_parent_event_id: chosenParentEventId, effective_at: effectiveAt, actor: "resolver", reason: "resolution", record: chosenRecord };
@@ -92,6 +92,48 @@ test("sealed append is idempotent, conflict preserving, and uses event shard pat
   await assert.rejects(() => appendMemoryEvent({ store, eventDocument: document({ reason: "other" }) }), (error) => error?.code === "memory.capture_exists");
 });
 
+test("quarantined exact retries of capture, transition, and resolution reject without creating source files", async (t) => {
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const capture = document(); const captured = await appendMemoryEvent({ store, eventDocument: capture });
+    await appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: captured.eventId, targetRelativePath: captured.relativePath, observedSha256: captured.fileSha256, reasonCode: "memory.bad", actor: "auditor" });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: capture }), "memory.quarantined");
+  }
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const transition = transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); const transitioned = await appendMemoryEvent({ store, eventDocument: transition });
+    await appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: transitioned.eventId, targetRelativePath: transitioned.relativePath, observedSha256: transitioned.fileSha256, reasonCode: "memory.bad", actor: "auditor" });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transition }), "memory.quarantined");
+  }
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const verified = await sealTransitionForTest(store, captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); const disputed = await sealTransitionForTest(store, captured.eventId, "disputed", "2026-08-12T02:00:00.000Z"); const resolution = resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z" }); const resolved = await appendMemoryEvent({ store, eventDocument: resolution });
+    await appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: resolved.eventId, targetRelativePath: resolved.relativePath, observedSha256: resolved.fileSha256, reasonCode: "memory.bad", actor: "auditor" });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolution }), "memory.quarantined");
+  }
+});
+
+test("append rejects invalid transition edges without creating source files", async (t) => {
+  const cases = [
+    ["action-status", ({ captured }) => transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z", { recordOverrides: { status: "candidate" } })],
+    ["tags", ({ captured }) => transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z", { recordOverrides: { tags: ["changed-tag"] } })],
+    ["sources", ({ captured }) => transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z", { recordOverrides: { sources: [{ ...record.sources[0], sha256: "b".repeat(64) }] } })],
+    ["body", ({ captured }) => transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z", { sectionOverrides: { "근거": "changed body" } })],
+    ["state", ({ captured }) => transitionDocument(captured.eventId, "approved", "2026-08-12T01:00:00.000Z")],
+    ["instruction", async ({ store }) => {
+      const styleRecord = { ...record, memory_id: "memory-style-instruction-0f2a4c61d9ab34ef", kind: "style-preference", instruction_sha256: "a".repeat(64) }; const captured = await appendMemoryEvent({ store, eventDocument: document({ memory_id: styleRecord.memory_id, operation_id: "capture-style-1", record: styleRecord }) });
+      return transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z", { memoryId: styleRecord.memory_id, baseRecord: styleRecord, recordOverrides: { instruction_sha256: "b".repeat(64) } });
+    }],
+  ];
+  for (const [, create] of cases) {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const candidate = await create({ store, captured });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: candidate }), "memory.invalid_event_edge");
+  }
+});
+
+test("append rejects a resolution whose chosen snapshot mutates immutable fields", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const verified = await sealTransitionForTest(store, captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); const disputed = await sealTransitionForTest(store, captured.eventId, "disputed", "2026-08-12T02:00:00.000Z");
+  const mutated = { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z", tags: ["changed-tag"] };
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, mutated) }), "memory.invalid_event_edge");
+});
+
 test("quarantined append rejects transition and resolution without creating source files", async (t) => {
   for (const eventType of ["transition", "resolution"]) {
     const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
@@ -144,7 +186,7 @@ test("scan is fail-closed at maxEvents and quarantine permanently excludes a mem
 
 test("moved disputed event closes the scan instead of restoring approved memory", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
-  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") }); const disputed = await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z") });
+  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") }); const disputed = await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) });
   const moved = path.join(store.root, "v1", "events", "zz", "invalid-memory", disputed.eventId); await mkdir(path.dirname(moved), { recursive: true }); await rename(path.join(store.root, disputed.relativePath), moved);
   assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.path_binding");
 });

@@ -110,23 +110,35 @@ export async function appendMemoryEvent({ store, eventDocument } = {}) {
   const bytes = Buffer.isBuffer(eventDocument) ? eventDocument : Buffer.from(eventDocument ?? ""); if (bytes.byteLength > MAX_BYTES) fail("Memory event exceeds the bounded write limit.");
   const eventId = `mev1-${hash(bytes)}`; const parsed = parseMemoryEventDocument(bytes.toString("utf8"), { sourceName: "event document", eventId }); const relativePath = memoryEventRelativePath({ memoryId: parsed.event.memory_id, eventId });
   const scan = await scanMemoryEvents({ store }); if (!scan.complete) fail("Memory scan is incomplete.", "memory.scan_incomplete");
+  assertMemoryAppendNotQuarantined(scan, parsed.event.memory_id);
   const duplicate = scan.events.find((item) => item.event.memory_id === parsed.event.memory_id && item.event.operation_id === parsed.event.operation_id);
   if (duplicate?.bytes.equals(bytes)) return { status: "present", eventId, relativePath, fileSha256: hash(bytes) };
-  const authorization = authorizeMemoryAppend({ scan, parsed });
+  authorizeMemoryAppend({ scan, parsed });
   if (duplicate) fail("duplicate-operation: different event bytes.", "duplicate-operation");
-  if (parsed.event.event_type === "resolution") {
-    const chosen = authorization.byId.get(parsed.event.chosen_parent_event_id); if (!chosen || !resolutionSnapshotAllowed(chosen, { record: parsed.record, sections: parsed.sections })) fail("Resolution snapshot is not authorized.", "memory.resolution_snapshot");
-  }
   return sealEvent(store, relativePath, eventId, bytes, "event");
 }
 
 function stableSnapshot(from, to) { return ["schema_version", "memory_id", "kind", "lane", "scope", "project_id", "created_at", "artifact_types", "related_ids", "tags", "sources", "instruction_sha256"].every((key) => JSON.stringify(from.record[key]) === JSON.stringify(to.record[key])) && JSON.stringify(from.sections) === JSON.stringify(to.sections); }
 function resolutionSnapshotAllowed(chosen, candidate) { return JSON.stringify(chosen.record) === JSON.stringify(candidate.record) && JSON.stringify(chosen.sections) === JSON.stringify(candidate.sections) || stableSnapshot(chosen, candidate) && validateMemoryTransition({ from: chosen.record, to: candidate.record, approvalBasis: candidate.record.approval_basis }).ok; }
 function sameEventIds(left, right) { return left.length === right.length && left.every((eventId, index) => eventId === right[index]); }
+function assertMemoryAppendNotQuarantined(scan, memoryId) { if ((scan.quarantines ?? []).some((marker) => marker.memory_id === memoryId) || (scan.taintedMemoryIds ?? []).includes?.(memoryId)) fail("Memory is quarantined.", "memory.quarantined"); }
+function validMemoryEventEdge({ item, byId, ancestors, currentHeads } = {}) {
+  const { event } = item ?? {};
+  if (event?.event_type === "capture") return event.parent_event_ids.length === 0;
+  if (event?.event_type === "transition") {
+    const parent = byId.get(event.parent_event_ids[0]);
+    return Boolean(parent && event.parent_event_ids.length === 1 && event.action === item.record.status && stableSnapshot(parent, item) && validateMemoryTransition({ from: parent.record, to: item.record, approvalBasis: item.record.approval_basis }).ok);
+  }
+  if (event?.event_type === "resolution") {
+    if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id) || currentHeads && (!sameEventIds(event.parent_event_ids, currentHeads) || !currentHeads.includes(event.chosen_parent_event_id)) || ancestors && event.parent_event_ids.some((left, index) => event.parent_event_ids.slice(index + 1).some((right) => ancestors(left).has(right) || ancestors(right).has(left)))) return false;
+    const chosen = byId.get(event.chosen_parent_event_id); return Boolean(chosen && resolutionSnapshotAllowed(chosen, item));
+  }
+  return false;
+}
 function authorizeMemoryAppend({ scan, parsed } = {}) {
   if (!scan?.complete) fail("Memory scan is incomplete.", "memory.scan_incomplete");
   const memoryId = parsed?.event?.memory_id;
-  if ((scan.quarantines ?? []).some((marker) => marker.memory_id === memoryId) || (scan.taintedMemoryIds ?? []).includes?.(memoryId)) fail("Memory is quarantined.", "memory.quarantined");
+  assertMemoryAppendNotQuarantined(scan, memoryId);
   const prior = (scan.events ?? []).filter((item) => item.event.memory_id === memoryId);
   const folded = foldMemoryEvents(scan); const diagnostics = folded.diagnostics.filter((item) => item.memory_id === memoryId);
   if (diagnostics.some((item) => item.code !== "memory.concurrent_conflict")) fail("Memory history is not authorized.", "memory.invalid_event_dag");
@@ -136,6 +148,7 @@ function authorizeMemoryAppend({ scan, parsed } = {}) {
   if (parsed.event.event_type === "capture") { if (prior.length) fail("Memory already has a capture event.", "memory.capture_exists"); return { prior, heads, byId }; }
   if (parsed.event.event_type === "transition" && (heads.length !== 1 || parsed.event.parent_event_ids[0] !== heads[0])) fail("Transition parent is not the current head.", "memory.transition_heads");
   if (parsed.event.event_type === "resolution" && (!sameEventIds(parsed.event.parent_event_ids, heads) || !heads.includes(parsed.event.chosen_parent_event_id))) fail("Resolution parents are not the current heads.", "memory.resolution_heads");
+  if (!validMemoryEventEdge({ item: { event: parsed.event, record: parsed.record, sections: parsed.sections }, byId, currentHeads: heads })) fail("Memory event edge is not authorized.", "memory.invalid_event_edge");
   return { prior, heads, byId };
 }
 
@@ -190,13 +203,8 @@ export function foldMemoryEvents(scan, { now = new Date() } = {}) {
     const roots = items.filter((item) => item.event.event_type === "capture"); if (roots.length !== 1) { taint(memoryId, "memory.invalid_root"); continue; }
     for (const item of items) for (const parent of item.event.parent_event_ids ?? []) { if (!byId.has(parent)) invalid.add(item.eventId); else (children.get(parent) ?? children.set(parent, []).get(parent)).push(item.eventId); }
     const ancestorMemo = new Map(); const ancestors = (eventId, stack = new Set()) => { if (ancestorMemo.has(eventId)) return ancestorMemo.get(eventId); if (stack.has(eventId)) return new Set([eventId]); const item = byId.get(eventId); const values = new Set(); for (const parent of item?.event.parent_event_ids ?? []) { values.add(parent); for (const ancestor of ancestors(parent, new Set([...stack, eventId]))) values.add(ancestor); } ancestorMemo.set(eventId, values); return values; };
-    const stableIdentity = (from, to, fromSections, toSections) => stableSnapshot({ record: from, sections: fromSections }, { record: to, sections: toSections });
     for (const item of items) {
-      const { event } = item;
-      if (event.event_type === "capture" && event.parent_event_ids.length !== 0) invalid.add(item.eventId);
-      if (event.event_type === "transition") { const parent = byId.get(event.parent_event_ids[0]); if (!parent || event.action !== item.record.status || event.parent_event_ids.length !== 1 || !stableIdentity(parent.record, item.record, parent.sections, item.sections) || !validateMemoryTransition({ from: parent.record, to: item.record, approvalBasis: item.record.approval_basis }).ok) invalid.add(item.eventId); }
-      if (event.event_type === "resolution") { if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id) || event.parent_event_ids.some((left, index) => event.parent_event_ids.slice(index + 1).some((right) => ancestors(left).has(right) || ancestors(right).has(left)))) invalid.add(item.eventId); const chosen = byId.get(event.chosen_parent_event_id); if (!chosen || !resolutionSnapshotAllowed(chosen, item)) invalid.add(item.eventId); }
-      if (item.record.supersedes === memoryId) invalid.add(item.eventId);
+      if (!validMemoryEventEdge({ item, byId, ancestors }) || item.record.supersedes === memoryId) invalid.add(item.eventId);
     }
     const queue = [...invalid]; while (queue.length) for (const child of children.get(queue.shift()) ?? []) if (!invalid.has(child)) invalid.add(child), queue.push(child);
     if (invalid.size) { taint(memoryId, operation.size < items.length ? "memory.duplicate_operation" : "memory.invalid_event_dag"); continue; }
