@@ -19,19 +19,19 @@
 
 ## 검토한 접근
 
-### 1. 손상 항목 하나만 있어도 저장소 전체 닫기
+### 1. 손상 항목 하나만 있어도 해당 scan 전체 닫기
 
-구현은 가장 단순하지만, 하나의 복구 가능한 경로 오류 때문에 관계없는 정상 기억도
-모두 사용할 수 없게 된다. 안전하되 운영성이 지나치게 낮아 채택하지 않는다.
+한 항목의 물리 경로·seal·canonical 문서가 잘못되면 그 scan에서는 어떤 기억도
+사용하지 않는다. 정상적으로 읽히는 이벤트에 사람이 추가한 quarantine marker는
+계속 memory 단위로 적용한다. 물리 손상을 부분 복구하는 코드가 없어 권한 경계가
+가장 작고 분명하다. V1은 이 방식을 채택한다.
 
-### 2. sealed 내용 우선의 2단계 권한 판정
+### 2. sealed 내용 우선의 부분 복구
 
-먼저 `commit.json`이 가리키는 claim과 instance를 bounded read로 검증하고, 그
-문서에서 논리 정체성을 복구한다. 그 다음 물리 경로, 대상 이벤트, 격리 표식과
-DAG를 결속한다. 정체성을 복구할 수 있는 손상은 해당 기억만 격리하고, 누구의
-기억인지 알 수 없는 손상만 저장소 전체를 닫는다.
-
-기존 기능을 보존하면서 과거 승인 상태의 부활을 막을 수 있어 이 방식을 채택한다.
+sealed 문서에서 `memory_id`를 복구해 해당 기억만 막으면 관계없는 기억은 계속 쓸 수
+있다. 하지만 물리 경로와 문서 정체성이 다를 때 어느 쪽을 기준으로 삼을지 판단하는
+코드가 다시 필요하고, marker 추론까지 더해지면 지금과 같은 권한 누수가 반복될 수
+있다. V1에서는 채택하지 않는다.
 
 ### 3. 전이·resolution·격리 기능 제거
 
@@ -47,23 +47,23 @@ scanner는 각 `commit.json`을 다음 순서로 처리한다.
 3. claim의 event ID, instance ID, 길이와 SHA-256을 검증한 뒤 sealed instance를 연다.
 4. instance를 canonical event 또는 quarantine marker로 파싱해 논리 정체성을 얻는다.
 5. 논리 정체성에서 계산한 canonical 상대 경로와 실제 상대 경로를 비교한다.
-6. 이벤트를 먼저 확정한 뒤 marker의 memory/event/path tuple을 실제 committed
-   이벤트와 결속한다.
-7. 검증 결과를 `valid`, `tainted-memory`, `fatal-store` 중 하나로 닫는다.
+6. 이벤트를 먼저 확정한 뒤 marker의 memory/event/path/digest tuple을 실제
+   committed 이벤트와 결속한다. `observed_sha256`이 null이 아니면 target bytes의
+   SHA-256과 같아야 한다.
+7. 하나라도 틀리면 `scan.complete = false`로 닫고 `events`와 `quarantines`를 빈
+   배열로 반환한다.
 
-`tainted-memory`는 문서에서 안전한 `memory_id`를 복구했지만 경로·seal·target
-결속이 틀린 경우다. 해당 기억 전체를 검색, 색인, transition과 resolution 입력에서
-제외한다. `fatal-store`는 문서를 읽거나 정체성을 복구할 수 없어 어느 기억을
-격리해야 하는지 알 수 없는 경우다. 이때 `scan.complete`는 `false`이며 저장소
-전체를 검색과 색인 생성에서 제외한다. 진단만 남기고 과거 head를 반환하는 경로는
-없다.
+물리 경로·seal·canonical 문서·marker target 결속 오류는 모두 같은 권한 결과를
+낸다. 진단에는 오류 코드와 안전한 상대 경로만 남긴다. 사람이 저장소를 복구하거나
+초기화하기 전까지 승인 검색과 색인 생성, 새 append를 모두 중단한다. 진단만 남기고
+과거 head를 반환하는 경로는 없다.
 
 ## 추가 권한
 
 `appendMemoryEvent()`는 scan 결과와 fold 권한을 공통으로 사용한다.
 
 - scan이 불완전하면 모든 append를 거부한다.
-- 격리되거나 taint된 memory ID에는 capture, transition, resolution을 모두 거부한다.
+- 유효한 marker로 격리된 memory ID에는 capture, transition, resolution을 모두 거부한다.
 - capture는 같은 memory ID가 아직 없을 때만 허용한다.
 - transition은 관찰한 유효 head 하나를 parent로 삼아야 한다. scan 뒤 동시 append가
   생기면 두 이벤트가 branch로 남는 것은 정상적인 보수적 충돌 처리다.
@@ -104,11 +104,10 @@ identity를 다시 확인한다. 불일치, symlink, 특수 파일, 경로 이�
 ## 오류 처리
 
 - `memory.scan_limit_exceeded`: source scan 예산을 초과해 저장소 전체를 닫음
-- `memory.unbound_seal`: sealed bytes에서 논리 정체성을 복구하지 못해 저장소 전체를 닫음
-- `memory.path_binding`: 정체성은 복구했지만 canonical 물리 경로가 달라 해당 기억 격리
-- `memory.quarantine_binding`: marker와 실제 target event가 달라 해당 기억 격리
+- `memory.unbound_seal`: sealed bytes에서 논리 정체성을 복구하지 못해 scan 전체를 닫음
+- `memory.path_binding`: canonical 물리 경로가 달라 scan 전체를 닫음
+- `memory.quarantine_binding`: marker와 실제 target event가 달라 scan 전체를 닫음
 - `memory.quarantined`: 격리된 기억에 append 시도
-- `memory.tainted`: 손상된 기억에 append 시도
 - `memory.noncanonical`: NFC, NUL, LF 또는 schema canonical 계약 위반
 - `memory.git_exclude_*`: Git 제외 보정 실패. 기억 저장 성공 여부와 무관한 warning
 
@@ -119,9 +118,10 @@ identity를 다시 확인한다. 불일치, symlink, 특수 파일, 경로 이�
 다음 적대 사례는 실제 생산 함수를 실행해야 하며 source text 존재 여부만 검사하지
 않는다.
 
-1. 최신 disputed event를 비정규 경로로 옮겨도 approved가 재노출되지 않는다.
-2. 격리·taint된 기억은 transition과 resolution을 추가할 수 없다.
-3. marker의 memory ID, target event ID와 target path 중 하나라도 틀리면 격리된다.
+1. 최신 disputed event를 비정규 경로로 옮기면 scan 전체가 닫히고 approved가 재노출되지 않는다.
+2. 격리된 기억과 incomplete scan에는 transition과 resolution을 추가할 수 없다.
+3. marker의 memory ID, target event ID, target path와 observed digest 중 하나라도
+   틀리면 scan 전체가 닫힌다.
 4. event와 marker의 NUL·NFD key/value를 writer와 parser가 모두 거부한다.
 5. 호출 전에 존재하는 root·ancestor·final symlink는 파일을 만들지 않는다.
 6. Git exclude가 같은 inode에서 읽기 뒤 바뀌거나 최종 pathname identity가 바뀌면
