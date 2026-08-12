@@ -45,7 +45,7 @@ export function validateMemoryRecord(record) {
   for (const key of ["created_at", "updated_at"]) if (!timestamp(record[key])) errors.push(error("schema.timestamp", key, "Timestamp must be RFC 3339."));
   for (const key of ["review_after", "expires_at"]) if (!calendarDate(record[key])) errors.push(error("schema.date", key, "Date must be ISO calendar date."));
   for (const key of ["artifact_types", "related_ids", "tags"]) if (!sortedUnique(record[key], safeId)) errors.push(error("schema.sorted_unique", key, "Values must be normalized, unique, and sorted."));
-  if (!Array.isArray(record.sources) || !record.sources.every((source) => object(source) && Object.keys(source).every((key) => ["artifact_id", "locator", "sha256"].includes(key)) && safeId(source.artifact_id) && typeof source.locator === "string" && source.locator.length > 0 && SHA256.test(source.sha256))) {
+  if (!Array.isArray(record.sources) || !record.sources.every((source) => object(source) && Object.keys(source).every((key) => ["artifact_id", "locator", "sha256"].includes(key)) && safeId(source.artifact_id) && safeLocator(source.locator) && SHA256.test(source.sha256))) {
     errors.push(error("schema.sources", "sources", "Sources must be closed source bindings."));
   } else {
     const order = record.sources.map((source) => `${source.artifact_id}\u0000${source.locator}`);
@@ -55,9 +55,12 @@ export function validateMemoryRecord(record) {
   if (record.kind === "style-preference" && record.sources?.length === 0 && (record.status !== "approved" || !SHA256.test(record.instruction_sha256 ?? "") || record.approval_basis !== "explicit-user-instruction" || typeof record.approved_by !== "string" || record.approved_by.trim() === "")) errors.push(error("memory.instruction_provenance", "instruction_sha256", "Source-less style preferences require an approved instruction event with actor and explicit basis."));
   if (Object.hasOwn(record, "instruction_sha256") && (record.kind !== "style-preference" || !SHA256.test(record.instruction_sha256 ?? ""))) errors.push(error("memory.instruction_provenance", "instruction_sha256", "Only style preferences may carry an instruction hash."));
   if (record.kind === "style-preference" && record.status === "approved" && (!SHA256.test(record.instruction_sha256 ?? "") || record.approval_basis !== "explicit-user-instruction" || typeof record.approved_by !== "string" || record.approved_by.trim() === "")) errors.push(error("memory.instruction_approval", "approval_basis", "Approved style preferences require instruction hash, actor, and explicit-user-instruction."));
-  if (record.status === "approved" && (typeof record.approved_by !== "string" || record.approved_by.trim() === "" || typeof record.approval_basis !== "string" || record.approval_basis.trim() === "")) errors.push(error("memory.approval_required", "approval_basis", "Approved memories require actor and basis."));
-  if (record.status === "candidate" && (record.approved_by !== null || record.approval_basis !== null)) errors.push(error("memory.approval_state", "approval_basis", "Candidate memories cannot contain approval provenance."));
-  if ((record.approved_by === null) !== (record.approval_basis === null)) errors.push(error("memory.approval_state", "approval_basis", "Approval provenance must be retained as a pair."));
+  const noApproval = record.approved_by === null && record.approval_basis === null;
+  const namedApproval = typeof record.approved_by === "string" && record.approved_by.trim() !== "" && typeof record.approval_basis === "string" && record.approval_basis.trim() !== "";
+  if (!noApproval && !namedApproval) errors.push(error("memory.approval_state", "approval_basis", "Approval provenance must be either a named pair or null."));
+  if (record.status === "approved" && !namedApproval) errors.push(error("memory.approval_required", "approval_basis", "Approved memories require actor and basis."));
+  if (record.status === "candidate" && !noApproval) errors.push(error("memory.approval_state", "approval_basis", "Candidate memories cannot contain approval provenance."));
+  if (!(record.supersedes === null || safeId(record.supersedes)) || record.supersedes === record.memory_id) errors.push(error("memory.supersedes", "supersedes", "Superseded memory must reference another normalized memory id."));
   return { ok: errors.length === 0, errors };
 }
 
@@ -113,6 +116,12 @@ export function parseMemoryDocument(source, { sourceName = "memory document" } =
 }
 
 function safeRelative(value) { return typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\\") && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value !== "."; }
+function safeLocator(value) {
+  if (typeof value !== "string" || value.length === 0 || value !== value.normalize("NFC")) return false;
+  const separator = value.indexOf("#");
+  const filePart = separator === -1 ? value : value.slice(0, separator);
+  return safeRelative(filePart);
+}
 async function regularDirectory(candidate) { const stats = await lstat(candidate); if (stats.isSymbolicLink() || !stats.isDirectory()) throw new Error("Unsafe memory path."); return stats; }
 async function canonicalWorkspace(candidate) { if (typeof candidate !== "string" || !path.isAbsolute(candidate)) throw new Error("Unsafe memory path."); for (let current = path.resolve(candidate); current !== path.dirname(current); current = path.dirname(current)) if ((await lstat(current)).isSymbolicLink()) throw new Error("Unsafe memory path."); const stats = await regularDirectory(candidate); const canonical = await realpath(candidate); const final = await regularDirectory(canonical); if (stats.dev !== final.dev || stats.ino !== final.ino) throw new Error("Unsafe memory path."); return { path: canonical, identity: final }; }
 

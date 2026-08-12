@@ -72,6 +72,20 @@ test("record validation closes enum, key, identifier, hash, and ordering boundar
   for (const [name, overrides] of mutations) assert.equal(validateMemoryRecord(clone(overrides)).ok, false, name);
 });
 
+test("record validation matches durable approval, supersession, and locator boundaries", () => {
+  const unsafe = [
+    ["numeric approver", { approved_by: 42, approval_basis: "review" }],
+    ["numeric basis", { approved_by: "reviewer", approval_basis: 42 }],
+    ["numeric supersedes", { supersedes: 42 }],
+    ["path supersedes", { supersedes: "../other-memory" }],
+    ["self supersedes", { supersedes: validRecord.memory_id }],
+    ["traversal locator", { sources: [{ ...validRecord.sources[0], locator: "../outside.md" }] }],
+    ["backslash locator", { sources: [{ ...validRecord.sources[0], locator: "docs\\source.md" }] }],
+    ["empty file locator", { sources: [{ ...validRecord.sources[0], locator: "#section" }] }],
+  ];
+  for (const [name, overrides] of unsafe) assert.equal(validateMemoryRecord(clone(overrides)).ok, false, name);
+});
+
 test("approval, source, and instruction provenance rules are enforced", () => {
   assert.equal(validateMemoryRecord(clone({ status: "approved" })).ok, false);
   assert.equal(validateMemoryRecord(clone({ sources: [] })).ok, false);
