@@ -144,9 +144,15 @@ compiler나 외부 의존성을 추가하지 않는다. 이 방식을 채택한�
 <store-root>/
 └── v1/
     ├── events/
-    │   └── <memory-shard>/<memory-id>/<event-id>.md
+    │   └── <memory-shard>/<memory-id>/<event-id>/
+    │       ├── instances/<instance-id>.md
+    │       ├── claims/<instance-id>.json
+    │       └── commit.json
     ├── controls/
-    │   └── quarantine/<target-shard>/<target-event-id>/<marker-event-id>.md
+    │   └── quarantine/<target-shard>/<target-event-id>/<marker-event-id>/
+    │       ├── instances/<instance-id>.md
+    │       ├── claims/<instance-id>.json
+    │       └── commit.json
     └── derived/
         ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
         ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
@@ -154,9 +160,11 @@ compiler나 외부 의존성을 추가하지 않는다. 이 방식을 채택한�
 ```
 
 `memory-shard`는 `sha256(memory_id).slice(0, 2)`다. 이벤트 ID는 정규화한 UTF-8
-Markdown bytes에서 계산한 `mev1-<sha256>`이며, 순환 해시를 피하려고 문서
-내용에는 넣지 않는다. `instance-id`는 `randomUUID()`로 만든다. 같은 논리 결과를
-여러 프로세스가 동시에 생성할 때 물리 파일을 구분할 뿐 색인 내용에는 들어가지
+Markdown bytes에서 계산한 `mev1-<sha256>`이다. 논리 record에는 `event_id`와
+`event_sha256`을 넣지 않으며 validator는 두 필드를 알 수 없는 key로 거부한다.
+이렇게 해야 event ID를 계산할 Markdown이 자기 해시를 포함하는 순환을 피한다.
+`instance-id`는 `randomUUID()`로 만든다. 같은 논리 결과를 여러 프로세스가 동시에
+생성할 때 물리 파일을 구분할 뿐 record, event ID와 색인 내용에는 들어가지
 않는다. 상태별 디렉터리와 current pointer는 두지 않는다. 경로는 권한이나
 상태를 나타내지 않으며, 유효한 이벤트 DAG를 fold한 head가 현재 상태다.
 
@@ -200,19 +208,35 @@ repo별 `.git/info/.game-design-memory-exclude.lock`를 `open('wx')`로 만든
 
 ### 변경 불가 추가와 동시 실행
 
-`appendImmutableMemoryFile({ store, relativePath, bytes })`는 경로와 크기를
-검사하고, 기존 ancestor를 `lstat`과 `realpath`로 확인해 symlink와 비디렉터리를
-거부한다. 필요한 고정 디렉터리를 mode `0o700`으로 만든 뒤 ancestor를 다시
-검사하고, final 파일은 `O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`와 mode `0o600`으로
-한 번만 생성한다. write loop, `FileHandle.sync()`, close, parent directory
-best-effort sync 순서를 지킨다.
+권한이 있는 final 경로를 `O_EXCL`로 직접 쓰지 않는다. write·sync 도중 프로세스가
+중단되면 partial 파일이 content-addressed 경로를 영구 점유해 같은 event를 다시
+쓸 수 없기 때문이다. `appendMemoryEvent`와 `appendQuarantineMarker`는 다음 sealed
+instance protocol을 사용한다.
 
-`EEXIST`이면 final이 일반 파일이고 symlink가 아님을 확인한 다음 bounded read로
-bytes를 비교한다. 같으면 `present`, 다르면 conflict다. 기존 이벤트를
-truncate, rename, unlink하는 경로는 없다. Studio와 Career가 동시에 같은
-이벤트를 쓰면 커널 `O_EXCL`로 한 writer만 `created`를 받고, 나머지는
-`present` 또는 conflict가 된다. 서로 다른 이벤트는 모두 남아 fold에서 선형
-head나 branch로 판정한다.
+1. 경로와 크기를 검사하고 기존 ancestor를 `lstat`과 `realpath`로 확인한다.
+2. `randomUUID()`로 고른 `instances/<instance-id>.md`를 mode `0o600`,
+   `O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`로 연다. write loop, `FileHandle.sync()`,
+   close를 마친 뒤 bytes의 event ID·schema를 다시 검증한다.
+3. event ID, instance ID, file SHA-256과 byte length만 담은 canonical JSON claim을
+   `claims/<instance-id>.json`에 같은 방식으로 완전히 쓰고 sync한다. claim은
+   key 순서가 `schemaVersion`, `eventId`, `instanceId`, `fileSha256`, `byteLength`인
+   공백 없는 JSON object와 trailing LF 한 개다. `schemaVersion`은 1이다.
+4. 완전히 sync한 claim에 `link(claimPath, commit.json)`을 호출한다. 같은
+   filesystem의 hard link 생성은 create-once commit 지점이다. 성공 후 event
+   디렉터리를 best-effort sync하고 read-back 검증을 통과해야 `created`다.
+5. `EEXIST`이면 기존 `commit.json`, 가리키는 instance와 canonical bytes를 bounded
+   read로 검증한다. 모두 같으면 `present`, 하나라도 다르면 conflict다.
+
+instance나 claim 쓰기 중 중단되면 `commit.json`이 없으므로 scanner가 무시한다.
+재시도는 새 instance ID를 사용한다. claim이 완전히 sync된 뒤 hard link가
+생기므로 partial commit marker는 존재할 수 없다. commit 뒤 instance·claim·marker
+중 하나라도 없거나 hash·length·schema가 다르면 해당 memory를 fail-closed한다.
+scanner는 유효한 `commit.json`이 seal한 instance만 논리 event나 control로 인정한다.
+
+Studio와 Career가 동시에 같은 이벤트를 쓰면 한 프로세스만 hard link 생성에
+성공해 `created`를 받고 loser는 기존 commit을 검증해 `present`를 받는다. 서로
+다른 이벤트는 모두 남아 fold에서 선형 head나 branch로 판정한다. plugin API는
+source event와 control에 truncate, rename, unlink를 호출하지 않는다.
 
 ### 공개 저장·접기 API
 
@@ -220,12 +244,12 @@ head나 branch로 판정한다.
 
 ```js
 memoryEventRelativePath({ memoryId, eventId }) -> string
-appendImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ status: "created"|"present" }>
+stageImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ instancePath, fileSha256, byteLength }>
 parseMemoryEventDocument(source, { sourceName, eventId }) -> { event, record, sections }
 appendMemoryEvent({ store, eventDocument }) -> Promise<{ status, eventId, relativePath, fileSha256 }>
-scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents }) -> Promise<MemoryEventScan>
+scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents = 10000 }) -> Promise<MemoryEventScan>
 foldMemoryEvents(scan, { now }) -> MemoryFold
-appendQuarantineMarker({ store, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>
+appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>
 publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256 }) -> Promise<{ status, generationPath, indexSha256 }>
 loadCurrentMemoryIndex({ store, fold }) -> Promise<{ index, bytes, sourceTreeSha256, indexSha256, warnings }>
 rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>
@@ -251,11 +275,27 @@ scanner는 손상 항목의 안전한 상대 `path`, `reasonCode`, 가능한 경
 이벤트가 손상되면 그 memory 전체를 검색에서 제외하지만 관련 없는 memory는
 계속 fold한다.
 
-격리는 원본 이동이 아니라 `controls/quarantine/`에 immutable Markdown marker를
-append하는 작업이다. marker에는 target event ID와 상대 경로, observed digest
-또는 `null`, reason code, actor, `recorded_at`만 둔다. 유효한 marker는 target과
-descendant를 논리 입력에서 제외하며 원본 bytes는 그대로 보존한다. 복구할 때도
-기존 파일을 수정하지 않고 정상 capture 또는 repair 이벤트를 새로 append한다.
+`maxEvents` 기본값과 hard maximum은 모두 10,000이다. 호출자는 1~10,000만 줄일
+수 있고 그 밖의 값은 scan 전에 거부한다. 이 예산은 `events/`와
+`controls/quarantine/` 아래에서 만난 directory, regular file, symlink와 special
+entry를 유효 여부와 seal 여부에 관계없이 하나씩 센다. 10,001번째 entry를
+처리하기 전에 `complete:false`, `memory.scan_limit_exceeded`로 중단한다. scan이
+불완전하면 그 store 전체를 승인 검색·색인 publish에 사용하지 않는다. 한도 뒤에
+있는 무효화 transition을 놓치고 이전 approved head를 되살리는 경로는 없다.
+`MemoryEventScan`은 `complete`, `entriesScanned`, `events`, `controls`, `diagnostics`를
+반환하며 `entriesScanned`는 10,000을 넘지 않는다.
+
+격리는 원본 이동이 아니라 `controls/quarantine/`에 sealed immutable Markdown
+marker를 append하는 작업이다. marker에는 target memory ID, target event ID와
+상대 경로, observed digest 또는 `null`, reason code, actor, `recorded_at`만 둔다.
+marker ID는 canonical marker Markdown bytes의
+`qmv1-<sha256>`이며 event와 같은 sealed instance protocol을 쓴다.
+유효한 marker 하나가 있으면 해당 `memory_id` 전체를 영구 fail-closed 격리한다.
+이전 approved ancestor와 이후 event도 검색·
+색인·resolution 입력으로 돌아올 수 없다. v1에는 `unquarantine`과 `repair`가
+없다. 복구가 필요하면 출처와 감사 연결을 갖춘 새 `memory_id`의 capture event를
+만들어야 하며, 격리된 DAG를 parent로 참조할 수 없다. 원본 bytes와 marker는
+그대로 보존한다.
 
 `sourceTreeSha256`은 정렬된 `(relativePath, observedSha256, classification)`
 tuple의 canonical JSON hash다. 손상 항목도 입력 트리 정체성에 포함한다.
@@ -269,40 +309,51 @@ pointer는 없다. fresh fold의 두 hash와 모두 일치하는 valid generatio
 ## 기억 이벤트 계약
 
 각 상태 변경은 새 Markdown 이벤트 한 파일로 append한다. 닫힌 envelope에는
-`schema_version`, `event_type`, `memory_id`, `operation_id`, 정렬되고 중복 없는
-`parent_event_ids`, `effective_at`, `actor`, `reason`을 둔다. `resolution`에만
-`chosen_parent_event_id`를 허용한다. 그 아래에는 현재 기억 레코드와 본문 전체를
-snapshot으로 넣는다. 여러 출처는 정렬된 `sources` 목록으로 기록한다.
+`schema_version`, `event_type`, `action`, `memory_id`, `operation_id`, 정렬되고
+중복 없는 `parent_event_ids`, `effective_at`, `actor`, `reason`을 둔다.
+`resolution`에만 `chosen_parent_event_id`를 허용한다. `action`은 capture에서
+`capture`, transition에서 실제 전이 이름, resolution에서 `resolution`이다. 그
+아래에는 현재 기억 레코드와 본문 전체를 snapshot으로 넣는다. logical record는
+`event_sha256`과 `event_id`를 포함하지 않으며 schema, template과 validator가 두
+필드를 거부한다. 여러 출처는 정렬된 `sources` 목록으로 기록한다.
 
 ```markdown
 ---
 schema_version: 1
-event_type: capture
-memory_id: lesson-project-20260812-001
-operation_id: playtest-session-04-finding-07
+event_type: "capture"
+action: "capture"
+memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef"
+operation_id: "playtest-session-04-finding-07"
 parent_event_ids: []
-effective_at: 2026-08-12T00:00:00.000Z
-actor: 김기획자
-reason: 플레이테스트에서 반복 가능한 교훈을 확인함
-kind: design-lesson
-lane: studio
-status: candidate
-scope: project
-project_id: wind-island
-created_at: 2026-08-12T09:00:00+09:00
-updated_at: 2026-08-12T09:00:00+09:00
-review_after: 2026-09-11
-expires_at: 2026-09-11
+effective_at: "2026-08-12T00:00:00.000Z"
+actor: "김기획자"
+reason: "플레이테스트에서 반복 가능한 교훈을 확인함"
+kind: "design-lesson"
+lane: "studio"
+status: "candidate"
+scope: "project"
+project_id: "wind-island"
+created_at: "2026-08-12T09:00:00+09:00"
+updated_at: "2026-08-12T09:00:00+09:00"
+review_after: "2026-09-11"
+expires_at: "2026-09-11"
 approved_by: null
 approval_basis: null
 supersedes: null
+artifact_types:
+  - "character-skill-combat-monster"
+related_ids:
+  - "boss-phase-2"
+tags:
+  - "boss"
+  - "counterplay"
 sources:
-  - artifact_id: combat-loop-v3
-    locator: content.md#보스-전투
-    sha256: <sha256>
-  - artifact_id: playtest-session-04
-    locator: evidence.yml#finding-07
-    sha256: <sha256>
+  - artifact_id: "combat-loop-v3"
+    locator: "content.md#보스-전투"
+    sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - artifact_id: "playtest-session-04"
+    locator: "evidence.yml#finding-07"
+    sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 ---
 
 # 보스전의 대응 수단은 공격 방식과 함께 검토한다
@@ -340,12 +391,46 @@ sources:
 기억 본문의 문장은 명령이 아니라 신뢰하지 않는 자료로 처리한다. 스킬 호출,
 파일 삭제, 승인 변경, 네트워크 전송 같은 문장이 있어도 실행하지 않는다.
 
-capture의 `operation_id`는 upstream `eventId`다. transition은 `memory_id`, 정렬한
-parent ID, action, actor, reason, `effective_at`을 canonical하게 이어 SHA-256으로
-계산한다. 같은 `operation_id`에서 서로 다른 이벤트 bytes가 발견되면
-`duplicate-operation` 충돌이다. 같은 이벤트 ID와 같은 bytes는 멱등이고, 같은
-ID에 다른 bytes가 있거나 파일 이름과 내용 해시가 다르면 `memory.event_conflict`로
-제외한다. 기존 bytes는 어떤 경우에도 고치지 않는다.
+canonical Markdown은 다음 규칙 하나로만 만든다.
+
+- Unicode string은 NFC로 정규화하고 NUL을 거부한다. 파일은 BOM 없는 UTF-8,
+  LF line ending을 사용하며 정확히 한 개의 trailing LF로 끝난다.
+- frontmatter는 `---\n`으로 시작하고 `---\n\n`으로 끝난다. key 순서는 envelope의
+  `schema_version`, `event_type`, `action`, `memory_id`, `operation_id`,
+  `parent_event_ids`, `effective_at`, `actor`, `reason`, 조건부
+  `chosen_parent_event_id` 뒤에 record의 `kind`, `lane`, `status`, `scope`,
+  `project_id`, `created_at`, `updated_at`, `review_after`, `expires_at`,
+  `approved_by`, `approval_basis`, `supersedes`, 조건부 `instruction_sha256`,
+  `artifact_types`, `related_ids`, `tags`, `sources` 순이다.
+- string scalar는 NFC 값의 JSON double-quoted form, null은 `null`, integer는 leading
+  zero 없는 base-10으로 쓴다. 빈 array는 `[]`, scalar array는 정렬·중복 제거 후
+  두 칸 들여쓴 `- <scalar>` block sequence로 쓴다. `sources`는
+  `artifact_id`, `locator`, `sha256` key 순서의 block mapping이며 tuple의 UTF-8
+  byte 순으로 정렬한다. schema가 허용하지 않는 optional key는 쓰지 않는다.
+- 본문은 `# 제목`, `## 발견한 내용`, `## 적용 조건`,
+  `## 적용하면 안 되는 경우`, `## 근거` 순서다. 각 값은 NFC와 LF로 바꾸고 각
+  line의 trailing space·tab과 앞뒤 blank line을 제거하되 내부 blank line은
+  보존한다. heading과 section 사이에는 빈 줄 하나만 둔다.
+
+event ID는 이 canonical Markdown 전체 bytes의 SHA-256이다. capture의
+`operation_id`는 검증된 upstream `eventId`다. transition과 resolution은 다음
+length-prefixed tuple로 `mop1-<sha256>`을 만든다. 각 tuple element는 UTF-8 byte
+앞에 unsigned 64-bit big-endian byte length를 붙이며, tuple 전체는 별도 구분자
+없이 이어 붙인다.
+
+```text
+[
+  "memory-operation-v1", memory_id, event_type, action, effective_at, actor, reason,
+  decimal(parent_count), ...sorted_parent_event_ids, chosen_parent_event_id_or_empty
+]
+```
+
+operation uniqueness 범위는 `(memory_id, operation_id)`다. 같은 memory 안에서
+같은 operation ID와 다른 event bytes가 발견되면 `duplicate-operation` 충돌이며,
+다른 memory가 같은 upstream ID를 쓰는 것은 충돌이 아니다. 같은 이벤트 ID와
+같은 canonical bytes는 멱등이고, 같은 ID에 다른 bytes가 있거나 commit 경로와
+내용 해시가 다르면 `memory.event_conflict`로 제외한다. 기존 bytes는 plugin API로
+고치지 않는다.
 
 ## 상태 모델
 
@@ -372,15 +457,19 @@ candidate ──근거 확인──> verified ──사람 승인──> approve
 `disputed`, `superseded`, `stale`로 닫는다. capture는 parent가 없는 유일한
 root이고 transition은 parent 하나를 참조한다. 동시에 생긴 transition은 두
 head로 모두 보존하며 해당 기억 전체를 `concurrent-conflict`로 검색에서 제외한다.
-사람이 actor와 reason을 명시한 `resolution`만 현재 head 전체를 정렬된 parent로
-소비하고 `chosen_parent_event_id`를 선택해 head를 하나로 줄일 수 있다. 새
-snapshot은 선택한 head와 같거나, 그 head에서 허용된 전이 하나를 적용한 값이어야
-한다.
+사람이 actor와 reason을 명시한 `resolution`은 작성 시 관찰한 head 집합만 정렬된
+parent로 기록하고 `chosen_parent_event_id`를 선택한다. parent는 최소 두 개이며
+서로의 ancestor일 수 없다. resolution은 기록한 parent만 소비한다. 작성자가
+관찰하지 못한 동시 transition은 별도 head로 남으므로 memory는 계속
+`concurrent-conflict`다. 같은 parent 집합에서 두 resolution이 동시에 생겨도 두
+resolution head가 모두 남아 conflict다. 새 snapshot은 선택한 head와 같거나, 그
+head에서 허용된 전이 하나를 적용한 값이어야 한다.
 
-접기(`fold`)는 이벤트 경로를 NFC/UTF-8 byte 순으로 읽고 파일 이름 해시, 닫힌 schema,
-출처와 상태 전이를 검사한다. snapshot의 기억 identity와 본문은 parent와 같아야
+접기(`fold`)는 sealed event 경로를 NFC/UTF-8 byte 순으로 읽고 commit claim,
+파일 이름 해시, 닫힌 schema, 출처와 상태 전이를 검사한다. snapshot의 기억
+identity와 본문은 parent와 같아야
 하며 허용된 상태·provenance 필드만 바꿀 수 있다. orphan parent, duplicate root,
-operation 충돌, 불법 전이, supersedes cycle은 excluded conflict다. 순회 순서,
+`(memory_id, operation_id)` 충돌, 불법 전이, supersedes cycle은 excluded conflict다. 순회 순서,
 mtime이나 wall clock으로 승자를 정하지 않는다.
 
 ## 적용 자격과 검색 순서
@@ -604,8 +693,12 @@ shared/scripts/
 
 - 반드시 차단한다: 절대 경로, `..`, 역슬래시, NUL, 비-NFC 경로와 lexical
   escape, 기존 root·ancestor·final symlink, 특수 파일, 크기·항목 수 고갈.
-- 기존 이벤트 overwrite·delete, 같은 이벤트 ID의 bytes 불일치, logical duplicate
-  operation, 잘못된 DAG·상태 전이·provenance·source binding을 거부한다.
+- plugin API는 source event·control을 overwrite·delete하는 기능을 제공하지 않고
+  truncate·rename·unlink를 호출하지 않는다. 외부 프로세스의 파일 변경이나 삭제
+  자체를 막는다고 주장하지 않으며, 사전·사후에 관찰한 identity·hash·seal 변화는
+  fail-closed한다.
+- 같은 이벤트 ID의 bytes 불일치, `(memory_id, operation_id)` 중복 충돌, 잘못된
+  DAG·상태 전이·provenance·source binding을 거부한다.
 - Studio와 Career 동시 append에서 이벤트를 잃지 않는다. 손상된 derived index가
   권한을 얻거나 Git 표식 갱신이 사용자 파일을 truncate하지 못하게 한다.
 - 파일은 제한된 크기로 읽고 기억 항목 수와 전체 문맥 바이트를 제한한다.
@@ -640,8 +733,14 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
 
 - 동일 이벤트를 두 프로세스가 append하면 하나는 `created`, 하나는 `present`이며
   bytes가 같은지 확인한다. 같은 경로의 다른 bytes는 원본을 보존하고 conflict다.
+- instance·claim write와 sync, commit hard link 전후에 프로세스를 중단한다. unsealed
+  partial은 권한을 얻지 못하며 같은 event 재시도가 `created|present`로 회복되는지
+  확인한다.
 - 서로 다른 동시 이벤트가 모두 남고, 같은 parent의 approve/reject branch는
-  검색에서 제외되며 사람이 만든 resolution이 모든 head를 소비하는지 확인한다.
+  검색에서 제외되며 사람이 만든 resolution이 기록한 branch head만 소비하는지
+  확인한다.
+- transition과 resolution, resolution 두 개가 동시에 생기면 resolution이 기록한
+  parent만 소비하고 새 event는 별도 head로 남아 conflict인지 확인한다.
 - 중복 operation, 알 수 없는 필드·상태·종류, orphan parent와 순환 대체 관계를
   거부한다.
 - 후보가 적용되지 않고 승인 기록만 적용되는지 확인한다.
@@ -649,7 +748,11 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
 - 손상·누락·복수 색인 세대는 raw fold에서 byte-identical 논리 색인으로 복구하고
   기존 세대를 수정하지 않는지 확인한다.
 - hash·schema·본문이 손상된 이벤트는 이동·overwrite하지 않으며 marker append 뒤
-  해당 memory만 제외하고 관련 없는 memory는 유지하는지 확인한다.
+  해당 `memory_id` 전체가 영구 제외되고 approved ancestor가 되살아나지 않는지
+  확인한다. 복구는 새 memory ID만 허용한다.
+- source scan의 10,001번째 entry 앞에서 `complete:false`로 중단하고, 한도 뒤의
+  invalidating transition을 놓쳐도 이전 approved head를 반환하거나 색인을
+  publish하지 않는지 확인한다.
 
 ### 제품 경계
 
@@ -678,7 +781,8 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
 - `GIT` 시나리오로 두 플러그인의 lock 직렬화, malformed marker·사용자 변경·
   stale lock의 warning-only 처리를 확인한다. 기억 이벤트는 그대로 남아야 한다.
 - `FAILPOINT`로 open·write·fsync·close 실패에서 성공을 보고하지 않고 기존
-  이벤트가 바뀌지 않는지 확인한다. 생성된 partial 파일은 권한을 얻지 못한다.
+  이벤트가 바뀌지 않는지 확인한다. 생성된 partial instance·claim은 권한을 얻지
+  못하며 재시도가 성공한다.
 - 기억 문서의 프롬프트 주입, 승인 변경과 파일 삭제 명령을 실행하지 않는다.
 - 다른 프로젝트 ID 위장, 출처 해시 조작과 만료일 우회를 거부한다.
 - 비밀정보와 개인정보가 기억·영수증·오류에 남지 않는다.

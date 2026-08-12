@@ -52,7 +52,7 @@
 - `shared/memory/templates/index.md`: 사람이 읽는 기억 목록 골격이다.
 - `shared/memory/templates/log.md`: 시간순 변경 기록 골격이다.
 - `shared/scripts/validate-design-memory.mjs`: Markdown event 파싱, 순수 레코드 검사, 상태 전이와 출처 검증을 담당한다.
-- `shared/scripts/lib/safe-memory-store.mjs`: 프로젝트·작업 공간·전역 로컬 루트 해석, 심볼릭 링크 없는 제한 읽기, `O_EXCL` immutable append와 별도 best-effort Git 로컬 제외를 담당한다.
+- `shared/scripts/lib/safe-memory-store.mjs`: 프로젝트·작업 공간·전역 로컬 루트 해석, 심볼릭 링크 없는 제한 읽기, sealed instance append와 별도 best-effort Git 로컬 제외를 담당한다.
 
 ### 색인과 작업
 
@@ -292,33 +292,44 @@ git commit -m "feat: add safe game design memory settings"
 - Consumes: Task 1 `MemoryConfig`
 - Retains: `resolveMemoryStore`, immutable bounded `readMemoryFile`, `parseMemoryDocument`, `validateMemoryRecord`, `validateMemoryTransition`, `validateMemorySourceBindings`
 - Produces: `memoryEventRelativePath({ memoryId, eventId }) -> string`
-- Produces: `appendImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ status: "created"|"present" }>`
+- Produces: `stageImmutableMemoryFile({ store, relativePath, bytes }) -> Promise<{ instancePath, fileSha256, byteLength }>`
 - Produces: `parseMemoryEventDocument(source, { sourceName, eventId }) -> { event, record, sections }`
 - Produces: `appendMemoryEvent({ store, eventDocument }) -> Promise<{ status: "created"|"present", eventId, relativePath, fileSha256 }>`
-- Produces: `scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents }) -> Promise<MemoryEventScan>`
+- Produces: `scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents = 10000 }) -> Promise<MemoryEventScan>`
 - Produces: `foldMemoryEvents(scan, { now }) -> MemoryFold`
-- Produces: `appendQuarantineMarker(...) -> Promise<AppendResult>`
+- Produces: `appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>`
 - Retains separately: `ensureMemoryGitExclusion(...) -> Promise<{ status: "ready"|"warning"|"skipped", code? }>`
 - Removes: `MEMORY_PLATFORM_CAPABILITIES`, `createMemoryStorePlatformAdapter`, `writeMemoryFileAtomic`, `moveMemoryFileAtomic`, `memoryRecordRelativePath`
 
 - [ ] **Step 1: 이벤트 구조와 record RED를 작성한다**
 
 `memory-event.schema.json`은 `schema_version: 1`, `event_type:
-capture|transition|resolution`, `memory_id`, `operation_id`, 정렬되고 중복 없는
+capture|transition|resolution`, `action`, `memory_id`, `operation_id`, 정렬되고 중복 없는
 `parent_event_ids`, `effective_at`, `actor`, `reason`, resolution 전용
 `chosen_parent_event_id`와 완전한 record snapshot을 닫힌 필드로 고정한다.
 
-capture는 parent 0개, transition은 parent 1개, resolution은 현재 head 전체를
-parent로 가져야 한다. 기존 record의 kind·lane·scope·status·source·민감정보와
-필수 본문 검사는 그대로 유지한다. 알 수 없는 key, 비-NFC ID, 잘못된 SHA-256,
-정렬되지 않은 배열과 승인 근거 누락을 각각 실패 fixture로 둔다.
+capture는 parent 0개, transition은 parent 1개, resolution은 작성 시 관찰한 head
+집합을 parent로 가져야 한다. `action`은 capture에서 `capture`,
+transition에서 전이 이름, resolution에서 `resolution`이다. logical record에서
+`event_sha256`과 `event_id`를 제거하고 record schema, template과 validator가 두
+필드를 unknown key로 거부하게 한다. 기존 record의 kind·lane·scope·status·source·
+민감정보와 필수 본문 검사는 유지한다. 비-NFC ID, 잘못된 SHA-256, 정렬되지 않은
+배열과 승인 근거 누락을 각각 실패 fixture로 둔다.
 
 - [ ] **Step 2: event ID, operation ID와 fold RED를 확인한다**
 
-`event-id = mev1-<sha256(canonical UTF-8 Markdown bytes)>`이며 ID는 문서 안에 넣지
-않는다. capture `operation_id`는 upstream `eventId`, transition은
-`sha256(memory_id + sorted parent ids + action + actor + reason + effective_at)`이다.
-같은 operation ID의 다른 bytes는 `duplicate-operation`이다. orphan parent,
+`event-id = mev1-<sha256(canonical UTF-8 Markdown bytes)>`이며 `event_id`와
+`event_sha256`은 문서 안에 넣지 않는다. canonical serializer fixture는 NFC,
+BOM 없는 UTF-8, LF, 정확히 한 trailing LF, frontmatter delimiter와 고정 key 순서,
+JSON double-quoted string, literal null, base-10 integer, 정렬된 block array/source,
+조건부 key 생략, 고정 본문 section 순서와 blank-line 규칙을 byte fixture로 고정한다.
+
+capture `operation_id`는 검증된 upstream `eventId`다. transition과 resolution은
+8-byte unsigned big-endian length 뒤 UTF-8 value를 붙인 tuple
+`["memory-operation-v1", memory_id, event_type, action, effective_at, actor, reason,
+decimal(parent_count), ...sorted_parent_event_ids, chosen_parent_or_empty]`의 SHA-256을
+`mop1-<sha256>`으로 쓴다. uniqueness는 `(memory_id, operation_id)` 범위다. 같은
+memory에서 같은 operation ID의 다른 bytes는 `duplicate-operation`이다. orphan parent,
 duplicate root, 불법 전이, snapshot identity·본문 변경과 supersedes cycle도
 제외해야 한다.
 
@@ -336,8 +347,14 @@ Expected: event parser와 fold가 없어 RED다.
 
 ```text
 <store-root>/v1/
-├── events/<memory-shard>/<memory-id>/<event-id>.md
-├── controls/quarantine/<target-shard>/<target-event-id>/<marker-event-id>.md
+├── events/<memory-shard>/<memory-id>/<event-id>/
+│   ├── instances/<instance-id>.md
+│   ├── claims/<instance-id>.json
+│   └── commit.json
+├── controls/quarantine/<target-shard>/<target-event-id>/<marker-event-id>/
+│   ├── instances/<instance-id>.md
+│   ├── claims/<instance-id>.json
+│   └── commit.json
 └── derived/
     ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
     ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
@@ -346,19 +363,38 @@ Expected: event parser와 fold가 없어 RED다.
 
 `memory-shard = sha256(memory_id).slice(0,2)`다.
 scanner는 NFC/UTF-8 byte 순으로 읽고 symlink, 특수 파일, oversize, 비정규 경로와
-filename/hash 불일치를 진단한다. fold는 유효 event DAG만 사용한다. head 1개는
+commit claim·instance hash 불일치를 진단한다. 유효한 `commit.json`이 seal한
+instance만 logical event/control이다. fold는 유효 event DAG만 사용한다. head 1개는
 현재 record, head 2개 이상은 `concurrent-conflict`이며 memory 전체를 검색에서
-제외한다. human actor·reason·chosen head가 있는 resolution만 모든 head를 소비해
-새 head 하나를 만든다. mtime, wall clock과 순회 순서로 winner를 고르지 않는다.
+제외한다. human actor·reason·chosen head가 있는 resolution은 작성 시 기록한
+pairwise-incomparable parent head만 소비한다. 이후 concurrent transition은 별도
+head로 남고, 같은 parent의 동시 resolution도 두 head를 만든다. mtime, wall clock과
+순회 순서로 winner를 고르지 않는다.
+
+`maxEvents` 기본값과 hard maximum은 10,000이다. 1~10,000만 허용하며 source
+`events/`와 `controls/quarantine/` 아래의 모든 directory·regular file·symlink·
+special entry를 유효·sealed 여부와 관계없이 센다. 10,001번째를 처리하기 전에
+`complete:false`, `memory.scan_limit_exceeded`로 중단한다. 불완전 scan은 store
+전체를 승인 검색과 index generation publish에서 제외한다.
 
 - [ ] **Step 4: 변경 불가 추가 연산의 적대적 RED를 작성한다**
 
 `APPEND-IDEMPOTENT`, `APPEND-CONFLICT`, `APPEND-PARALLEL`, `BRANCH`, `PATH`,
-`FAILPOINT` fixture를 만든다. 두 프로세스가 같은 bytes/event ID를 쓰면 하나는
+`FAILPOINT`, `SCAN-LIMIT` fixture를 만든다. 두 프로세스가 같은 bytes/event ID를 쓰면 하나는
 `created`, 하나는 `present`여야 한다. 같은 경로의 다른 bytes는 원본을 그대로
 둔 채 conflict다. 서로 다른 이벤트는 둘 다 남아야 한다. 절대 경로, `..`,
 역슬래시, NUL, 비-NFC, ancestor·final symlink, FIFO·socket, oversize와 pre-existing
 identity swap은 파일을 만들지 않는다.
+
+instance·claim write, sync와 commit hard link 전후 중단을 주입한다. unsealed
+partial은 scanner 권한을 얻지 못하고 같은 event 재시도가 `created|present`로
+회복해야 한다. 10,001번째 source entry 뒤에 approved 상태를 무효화하는 transition을
+두면 scan이 불완전 상태로 끝나며 이전 approved head를 반환하거나 index를
+publish하지 않아야 한다.
+
+transition과 resolution 동시 실행, 같은 parent 집합의 resolution 두 개도 만든다.
+resolution은 기록한 parent만 소비하며 나중 event는 별도 head로 남아 검색에서
+제외돼야 한다.
 
 같은 OS 계정의 악의적 프로세스가 syscall 사이 디렉터리를 swap하는 race는
 Node 18 path API가 보장하지 않는 non-goal이다. 이 injected case는 skipped 경계
@@ -367,12 +403,24 @@ Node 18 path API가 보장하지 않는 non-goal이다. 이 injected case는 ski
 - [ ] **Step 5: Node 전용 추가 연산을 구현한다**
 
 경로·크기 검증, 기존 ancestor `lstat/realpath`, 고정 디렉터리
-`mkdir({ recursive: true, mode: 0o700 })`, ancestor 재검사 뒤 final을
-`O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`와 mode `0o600`으로 연다. write loop,
-`FileHandle.sync()`, close, parent best-effort sync 순서를 지킨다. `EEXIST`이면
-일반 파일·무-symlink·bounded read 뒤 exact bytes를 비교한다. 기존 event를
-truncate, rename, unlink하지 않는다. runtime compiler, C helper, replace, move와
-current pointer를 모두 제거한다.
+`mkdir({ recursive: true, mode: 0o700 })`와 ancestor 재검사 뒤 random
+`instances/<uuid>.md`를 `O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW`, mode `0o600`으로
+연다. write loop, `FileHandle.sync()`, close 뒤 bytes의 ID·schema를 read-back
+검증한다. event ID, instance ID, file SHA-256과 byte length만 담은 canonical JSON을
+`claims/<uuid>.json`에 완전히 쓰고 sync한다. claim은 `schemaVersion`, `eventId`,
+`instanceId`, `fileSha256`, `byteLength` key 순서, 공백 없는 JSON과 trailing LF
+한 개로 고정한다.
+
+완전히 sync한 claim을 `link(claimPath, commit.json)`로 hard link해 create-once
+commit한다. 성공 뒤 parent best-effort sync와 commit/instance read-back 검증을
+마쳐야 `created`다. `EEXIST`이면 기존 commit claim과 sealed instance의 exact
+canonical bytes를 bounded read로 검증해 같으면 `present`, 다르면 conflict다.
+instance·claim partial과 commit 없는 완성본은 scanner가 무시하며 재시도는 새
+UUID를 사용한다. commit marker는 sync된 claim의 hard link여서 partial일 수 없다.
+
+plugin API는 source event/control에 truncate, rename, unlink를 호출하거나
+overwrite/delete 기능을 노출하지 않는다. runtime compiler, C helper, external
+process, replace, move와 current pointer를 모두 제거한다.
 
 전역 저장소는 임의 환경 경로를 받지 않고 `home`과 `platform`으로만 정한다.
 `project`와 `workspace`는 작업 공간 저장소를 공유하되 `project_id`로 구분한다.
@@ -381,9 +429,14 @@ current pointer를 모두 제거한다.
 
 손상은 overwrite하거나 이동하지 않는다. scanner 오류는 안전한 상대 path,
 reason code와 가능한 observed digest만 포함한다. marker는
-`v1/controls/quarantine/<target-shard>/<target-event-id>/<marker-event-id>.md`에
-append하며 target, observed digest|null, reason, actor, `recorded_at`만 저장한다.
-유효 marker는 target과 descendant를 fold에서 제외한다.
+`v1/controls/quarantine/<target-shard>/<target-event-id>/<marker-event-id>/`에 Task 2의
+sealed instance protocol로 append하며 target memory ID, event ID·상대 path,
+observed digest|null, reason, actor, `recorded_at`만 저장한다. marker ID는 canonical
+marker Markdown bytes의 `qmv1-<sha256>`이다. 유효 marker는 해당 `memory_id`
+전체를 영구 fail-closed한다. approved
+ancestor와 이후 event도 검색·색인·resolution 입력에서 제외한다. v1에는
+`unquarantine`과 `repair` action이 없다. 복구는 격리 DAG를 parent로 삼지 않는 새
+memory ID capture만 허용한다.
 
 `validateMemorySourceBindings()`와 민감정보 거부 규칙은 기존 계약을 유지한다.
 Git 제외는 기억 append 성공 뒤 별도 best-effort 단계다. repo별
@@ -462,7 +515,10 @@ const requestContext = {
   0회이고 `status=disabled`다.
 - 손상·누락·복수 JSON generation을 권위로 쓰지 않고 raw fold에서 재생성한다.
 - index의 상태를 `approved`로 변조해도 head event와 fold 재검증에서 거부한다.
-- branch, quarantined target, orphan과 손상 event가 있는 memory는 전체 제외한다.
+- branch, quarantine marker가 지정한 memory ID, orphan과 손상 event가 있는
+  memory는 전체 제외한다. 격리 전 approved ancestor도 다시 사용하지 않는다.
+- `complete:false` scan은 store 전체를 승인 검색에서 제외하고 generation을
+  publish하지 않는다.
 - 최대 항목 수 5와 전체 반환 본문 64 KiB를 넘지 않는다.
 
 - [ ] **Step 2: 검색 테스트의 RED를 확인한다**
@@ -488,7 +544,7 @@ observedSha256, classification)` tuple의 canonical JSON hash다. corrupt entry�
   entries: [{
     memoryId: "memory-studio-design-lesson-0f2a4c61d9ab34ef",
     headEventId: `mev1-${"b".repeat(64)}`,
-    headEventPath: `v1/events/91/memory-studio-design-lesson-0f2a4c61d9ab34ef/mev1-${"b".repeat(64)}.md`,
+    headEventPath: `v1/events/91/memory-studio-design-lesson-0f2a4c61d9ab34ef/mev1-${"b".repeat(64)}`,
     fileSha256: "b".repeat(64),
     kind: "design-lesson",
     lane: "studio",
@@ -503,6 +559,8 @@ observedSha256, classification)` tuple의 canonical JSON hash다. corrupt entry�
 ```
 
 `rebuildMemoryIndex`는 언제나 raw events와 quarantine controls를 scan/fold한다.
+scan이 `complete:false`면 index를 반환·publish하지 않고 안전한 warning 상태로
+끝난다.
 canonical index bytes와 `indexSha256`을 만든 뒤
 `v1/derived/indexes/<source-tree-sha256>/<index-sha256>/<randomUUID>.json`에
 create-once append한다. current pointer는 만들지 않는다. 같은 입력이면 wall
@@ -555,7 +613,8 @@ export function rankMemoryEntries(entries, context) {
 }
 ```
 
-선택된 각 entry는 `headEventPath`를 다시 열어 file digest와 event ID를 확인하고,
+선택된 각 entry는 `headEventPath/commit.json`과 sealed instance를 다시 열어 file
+digest와 event ID를 확인하고,
 현재 raw DAG fold의 head, 레코드 상태, 범위, lane과 출처를 다시 검사한다. JSON
 index는 후보 탐색에만 사용하고 승인 권한으로 사용하지 않는다.
 
@@ -681,7 +740,7 @@ const playtestEvent = {
   `interactive-user`로 기록한다.
 - 이벤트 ID와 프로젝트 ID로 만든 기억 ID는 재실행해도 같다.
 - 같은 canonical event의 동일 content-addressed ID는 `present`이고, 같은 event
-  경로의 다른 bytes와 같은 operation ID의 다른 event는 conflict다.
+  경로의 다른 bytes와 같은 `(memory_id, operation_id)`의 다른 event는 conflict다.
 - 맞춤법 수정, 일반 대화, 알 수 없는 사건 유형은 `skipped`이고 파일을 만들지
   않는다.
 - 비활성화·요청 단위 제외·프로젝트 ID 없음은 저장소 호출 0회다.
@@ -711,8 +770,9 @@ export function memoryIdForEvent({ lane, kind, projectId, eventId }) {
 }
 ```
 
-capture의 `operation_id`는 upstream `eventId`다. event envelope와 완전한 record
-snapshot을 canonical Markdown으로 만든 뒤 bytes SHA-256에서 event ID와 경로를
+capture의 `operation_id`는 upstream `eventId`다. `action: capture`를 포함한 event
+envelope와 `event_sha256`이 없는 완전한 record snapshot을 canonical Markdown으로
+만든 뒤 bytes SHA-256에서 event ID와 경로를
 계산한다. `appendMemoryEvent`가 `created|present`를 반환하면 기억 저장은
 성공이다. 같은 operation ID의 다른 event bytes는 자동 winner 없이 conflict다.
 
@@ -729,14 +789,18 @@ snapshot을 canonical Markdown으로 만든 뒤 bytes SHA-256에서 event ID와 
 - `verify`는 모든 source binding을 다시 확인한 candidate만 verified로 바꾼다.
 - 같은 parent에서 나온 승인·거부 transition은 둘 다 보존하고
   `concurrent-conflict`로 검색 제외한다.
-- `resolution`은 human actor·reason·현재 head 전체 parent와 선택한 head를 요구하고
-  branch를 하나의 새 head로 닫는다. snapshot은 선택한 head와 같거나 그 head에서
-  허용된 전이 하나를 적용한 값이어야 한다. 자동 병합하거나 mtime으로 고르지 않는다.
+- `resolution`은 human actor·reason, 작성 시 관찰한 head 집합과 선택한 head를
+  요구한다. recorded parent만 소비하므로
+  concurrent transition은 별도 head로 남는다. 같은 parent의 동시 resolution 두
+  개도 두 head다. snapshot은 선택한 head와 같거나 그 head에서 허용된 전이 하나를
+  적용한 값이어야 한다. 자동 병합하거나 mtime으로 고르지 않는다.
 - `sweep`은 후보 30일 경과를 `expired`, 외부 정보 review date 경과를
   `stale`로 바꾸고 다른 기록은 수정하지 않는다.
 - `retire`는 `superseded` 또는 `rejected`만 만들고 파일을 삭제하지 않는다.
 - `quarantine`은 원본 bytes를 옮기거나 고치지 않고 content-addressed marker를
-  append해 target과 descendant를 fold에서 제외한다.
+  sealed append해 해당 memory ID 전체를 영구 격리한다. 이전 approved ancestor와
+  이후 event도 제외하며 v1에는 `unquarantine`·`repair`가 없다. 복구는 새 memory
+  ID capture만 허용한다.
 - `sync-git-exclusion`은 `local`에서 lock을 얻었을 때 exact marker를 끝에 한 번
   append한다. `tracked`, lock 충돌, stale lock과 사용자 파일 변화는 skip/warning이며
   기존 `info/exclude`를 rewrite하거나 marker를 자동 제거하지 않는다.
@@ -838,6 +902,7 @@ for (const skillId of memorySkillIds) {
 }
 for (const path of [
   "references/shared/memory/schema/memory-config.schema.json",
+  "references/shared/memory/schema/memory-event.schema.json",
   "references/shared/memory/schema/memory-record.schema.json",
   "references/shared/memory/schema/memory-index.schema.json",
   "references/shared/memory/schema/memory-receipt.schema.json",
@@ -848,6 +913,13 @@ for (const path of [
 
 추가 mutation은 memory module 누락, extra file, symlink, product overlay 충돌,
 schema의 module 누락과 한쪽 제품만 선언한 상태를 거부한다.
+
+같은 RED에 원천과 임시 설치본의 `safe-memory-store.mjs`를 정적으로 검사한다.
+모든 import specifier는 `node:*`여야 하며 `node:child_process`, `spawn`, `exec`,
+`fork`, compiler command, helper binary와 `.c` source 참조는 없어야 한다. 임시
+제품을 만든 뒤 `PATH`를 빈 디렉터리, `CC`와 `CXX`를 존재하지 않는 경로로 둔
+child Node(`process.execPath`)에서 sealed append와 재시도 `present` smoke를
+실행한다. compiler나 외부 실행 파일이 없어도 통과해야 한다.
 
 - [ ] **Step 2: 패키징 RED를 확인한다**
 
@@ -954,7 +1026,8 @@ git diff --check
 ```
 
 Expected: temporary build와 source contract가 PASS한다. Snapshot 자체와 이를 읽는
-aggregate package/isolation tests는 아직 실행하지 않는다.
+aggregate package/isolation tests는 아직 실행하지 않는다. package exact path에
+`memory-event.schema.json`이 포함되고, compiler 없는 sealed append smoke도 PASS한다.
 
 - [ ] **Step 9: Task 5를 커밋한다**
 
@@ -1371,10 +1444,13 @@ Expected: 모든 명령이 exit 0이다. 실제 OpenAI 이미지 호출과 외�
 - MEM-INJECT: 기억 본문의 명령·승인 변경·민감정보
 - MEM-LANE: Studio/Career/common 경계
 - MEM-APPEND: 동일 이벤트의 created/present 멱등성과 다른 bytes conflict
-- MEM-BRANCH: 동시 approve/reject 두 head와 human resolution
-- MEM-CORRUPT: 손상 event 원본 보존, marker append와 memory 단위 fail-closed
+- MEM-SEAL-RECOVERY: instance·claim·commit failpoint 뒤 unsealed partial 무시와 재시도 회복
+- MEM-BRANCH: 동시 approve/reject, transition+resolution, resolution+resolution head
+- MEM-CORRUPT: 손상 event 원본 보존, sealed marker와 memory ID 전체 영구 fail-closed
+- MEM-SCAN-LIMIT: 10,001번째 entry와 한도 뒤 invalidating transition에서 store fail-closed
 - MEM-INDEX-GEN: missing·corrupt·concurrent generation의 raw fold 재생성
 - MEM-GIT-ISOLATION: lock·stale lock·사용자 변경 warning과 event 성공 분리
+- MEM-NODE-ONLY: 빈 compiler PATH에서 append smoke와 helper·외부 실행 정적 부재
 - MEM-FAILOPEN: append·generation·marker 실패 뒤 artifact와 기존 event 보존
 - MEM-INSTALL: install/update/remove 뒤 local memory byte 보존
 - MEM-DIRTY: tracked·untracked 사용자 변경 보존
