@@ -19,6 +19,9 @@
 - 스킬 ID를 몰라도 쓸 수 있는 짧은 자연어 질문을 제공한다.
 - 새 dependency를 추가하지 않는다.
 - 미추적 `docs/에이전트/`와 `package-lock.json`은 수정하거나 커밋하지 않는다.
+- Markdown 구분 개선 범위는 루트 README와 `guides/README.md`, Studio·Career
+  제품 README로 한정한다.
+- 네 문서의 모든 H2 앞에 `---`를 두고, 기존 H2 문구와 앵커는 바꾸지 않는다.
 
 ---
 
@@ -103,3 +106,25 @@ Run `npm run validate:guides` and `node tooling/audit-game-design-docs.mjs`. Exp
 
 Run `node --test tests/contracts/root-readme-user-guides.test.mjs`, `npm run validate:archify-catalog`, `git diff --check` and `git status --short`. Expect all validations to pass and only the pre-existing untracked paths outside this task to remain.
 
+### Task 4: Improve visual section boundaries
+
+**Files:**
+- Modify: `README.md`
+- Modify: `guides/README.md`
+- Modify: `guides/game-design-studio/README.md`
+- Modify: `guides/game-design-career/README.md`
+- Test: `tests/contracts/root-readme-user-guides.test.mjs`
+
+- [ ] **Step 1: Add section dividers without changing anchors**
+
+Put `---` immediately before every H2 in the four documents. Keep all existing H2 text.
+
+- [ ] **Step 2: Add restrained document cues**
+
+Use `🧭` for the root and global guide, `🎮` for Studio and `🎓` for Career in one
+short opening callout per document.
+
+- [ ] **Step 3: Lock and verify the formatting contract**
+
+Require every visible H2 to have a preceding divider and every hub to contain its expected
+emoji. Run the focused README contract and guide validator.

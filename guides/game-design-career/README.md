@@ -2,9 +2,16 @@
 
 Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채용 근거와 역량 격차를 학습·증거 프로젝트·포트폴리오·면접·성장 계획으로 연결합니다. 사실, 추론, 공백과 다음 검증 작업을 보존하는 Canonical Artifact(기준 작업 폴더)를 사용하며, 합격이나 한 가지 정답 진로를 약속하지 않습니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
+> 🎓 목표 직무, 학습 계획, 포트폴리오와 면접 준비를 연결하려면 여기서
+> 시작하세요. 처음에는 `처음 시작하기`와 목적별 레시피 하나만 읽으면 됩니다.
+
+---
+
 ## Curated Archify 상태
 
 [Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Career 후보의 검증·시각 QA 근거를 확인합니다. [한국어 Career 증거·포트폴리오 워크플로](../assets/archify/career/career-evidence-workflow.html)는 단계 진단, 증거 프로젝트, 포트폴리오·면접·성장 분기와 사람 검토 후 재개를 대화형 HTML로 보여 줍니다.
+
+---
 
 ## 사례 탐색 경로
 
@@ -27,6 +34,8 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 | 면접 | 근거 연결 질문·답변과 다음 proof task | [근거 연결 면접 연습](recipes/interview-preparation.md) |
 | 성장 | 학습 로드맵과 재검토할 증거 작업 | [주니어 성장·전환](recipes/junior-growth-transition.md) |
 
+---
+
 ## 상세 참조
 
 | 문서 | 용도 |
@@ -46,6 +55,8 @@ Game Design Career는 목표 역할과 경력 단계를 진단하고, 현재 채
 
 Career에는 18개 사례, 18개 직접 스킬, 18개 FAQ와 33개 도식 쌍이 있습니다. 도식은 사례나 직접 호출의 입력·검토·결과 흐름을 설명할 뿐, 결과의 품질·합격·채용을 보장하지 않습니다.
 
+---
+
 ## 대표 사례
 
 각 행의 전체 스킬 경로는 canonical 사례의 순서를 모두 보존합니다. 명시적 직접 요청은 그 경로를 축약하지 않는 시작 명령 하나이며, 입력과 결과는 해당 사례 카드의 원문을 따릅니다.
@@ -59,6 +70,8 @@ Career에는 18개 사례, 18개 직접 스킬, 18개 FAQ와 33개 도식 쌍이
 | `CA-C06` — 창작 기획 포트폴리오 — AUD-02 · AUD-03 · AUD-04 · AUD-05 · AUD-06 | - 최소 입력: 문제, 설계 제약, `evidence ID`, 실제 개인 기여, public-rights review owner.<br>- 선택 입력: feedback, prototype 관찰, 기각한 대안, 공개 목표. | $game-design-career:apply-document-quality-profile → $game-design-career:build-game-design-portfolio → $game-design-career:review-game-design-portfolio | $game-design-career:build-game-design-portfolio artifact=game-design-career/creative-case EVID-CP-01과 개인 기여 경계를 보존해 creative-design-portfolio를 작성해. | `portfolio-project-brief` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/portfolio-project-brief`<br>`creative-design-portfolio` ($game-design-career:build-game-design-portfolio) → `game-design-career/<career-id>/creative-design-portfolio` | evidence ID → observation → inference → proposal → 개인 기여 → public-rights review |
 | `CA-C08` — 면접·주니어 성장·직무 전환 — AUD-03 · AUD-05 · AUD-06 | - 최소 입력: posting 또는 portfolio `evidence ID`, 개인 기여 경계, feedback owner, public-rights review owner.<br>- 선택 입력: target role, reviewAfter, 실험할 proof task, 공개 가능 여부. | $game-design-career:practice-game-design-interview → $game-design-career:plan-junior-growth → $game-design-career:visualize-career-roadmap → $game-design-career:export-career-documents | $game-design-career:practice-game-design-interview artifact=game-design-career/growth-transition EVID-GR-01을 보존하고 interview-question-answer-log와 다음 proof task를 연결해. | `interview-question-answer-log` ($game-design-career:practice-game-design-interview) → `game-design-career/<career-id>/interview-question-answer-log`<br>`junior-growth-review` ($game-design-career:plan-junior-growth) → `game-design-career/<career-id>/junior-growth-review`<br>`transition-readiness` ($game-design-career:plan-junior-growth) → `game-design-career/<career-id>/transition-readiness` | evidence ID → observation → inference → proposal → 개인 기여 → public-rights review → feedback |
 
+---
+
 ## 처음 시작하기
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
@@ -70,6 +83,8 @@ Career에는 18개 사례, 18개 직접 스킬, 18개 FAQ와 33개 도식 쌍이
 7. [Career 시각화](visualization.md)에서 Skillstead SVG와 PNG 검증을 준비합니다.
 8. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
 9. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
+
+---
 
 ## 목적별 레시피
 
@@ -86,6 +101,8 @@ Career에는 18개 사례, 18개 직접 스킬, 18개 FAQ와 33개 도식 쌍이
 - [경력 단계 라우팅 SVG 열기](../assets/game-design-career/career-stage-routing.svg)
 - [![역할 gap과 학습 로드맵](../assets/game-design-career/role-gap-learning-roadmap.png)](../assets/game-design-career/role-gap-learning-roadmap.svg)
 - [역할 gap과 학습 로드맵 SVG 열기](../assets/game-design-career/role-gap-learning-roadmap.svg)
+
+---
 
 ## 가이드 목차
 
@@ -113,6 +130,8 @@ Career에는 18개 사례, 18개 직접 스킬, 18개 FAQ와 33개 도식 쌍이
 목적별 레시피의 안정 경로는 `recipes/`입니다. 각 레시피는 current evidence의 출처·검색일·지역·표본 경계·재검색 시점을 보존하며, 생성·렌더 결과와 사람 승인을 분리합니다.
 
 각 스킬 ID는 [스킬 레퍼런스](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [Canonical Artifact 템플릿](templates.md)에 있습니다.
+
+---
 
 ## 작업 원칙
 

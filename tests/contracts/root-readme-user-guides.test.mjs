@@ -19,6 +19,7 @@ const guideRoot = path.join(root, "guides");
 const products = ["game-design-studio", "game-design-career"];
 const requiredRootHeadings = [
   "목차",
+  "플러그인 소개",
   "30초 안에 플러그인 선택하기",
   "설치하기",
   "5분 안에 첫 결과 만들기",
@@ -31,6 +32,21 @@ const requiredRootHeadings = [
   "안전·권리·사람 승인 경계",
   "문제를 해결하고 작업 재개하기",
   "기술 문서·기여·라이선스",
+];
+const pluginIntroductionHeadings = [
+  "어떤 플러그인인가요?",
+  "왜 만들었나요?",
+  "이런 분께 잘 맞습니다",
+  "이 플러그인으로 할 수 있는 일",
+  "처음에는 이렇게 물어보세요",
+  "어떤 자료를 참고했나요?",
+  "자료를 답으로 바꾸는 방식",
+  "레퍼런스와 더 읽을 문서",
+];
+const pluginIntroductionPrompts = [
+  "@Game Design Studio 4인 협동 RPG의 핵심 재미와 첫 10분 플레이 흐름을 정리해 줘.",
+  "@Game Design Career 시스템 기획 취업을 위해 지금 가진 경험과 12주 준비 계획을 정리해 줘.",
+  "Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례와 면접 준비로 연결해 줘.",
 ];
 const representativeCards = {
   studio: [
@@ -1092,6 +1108,52 @@ async function assertStructuredRootReadme(markdown, { validateLinks = true } = {
   if (validateLinks) await assertRootLinks(markdown);
 }
 
+async function assertPluginIntroduction(markdown) {
+  const introduction = exactSection(markdown, "플러그인 소개");
+  const headings = visibleMarkdownHeadings(introduction)
+    .filter(({ level }) => level === 3)
+    .map(({ label }) => label.replace(/^[^\p{L}\p{N}]+/u, ""));
+  assert.deepEqual(headings, pluginIntroductionHeadings, "plugin introduction has the approved readable sequence");
+
+  const referenceIndex = JSON.parse(await readFile(path.join(root, "shared/knowledge/reference-index.json"), "utf8"));
+  const currentSources = JSON.parse(await readFile(path.join(root, "shared/knowledge/trends/source-register.json"), "utf8"));
+  const documents = referenceIndex.documents;
+  const categories = new Map();
+  for (const document of documents) categories.set(document.category, (categories.get(document.category) ?? 0) + 1);
+  const yuriringReports = documents.filter(({ sourcePath }) => sourcePath.startsWith("docs/유리링의 게임 기획 이야기/"));
+  const coreFiles = (await readdir(path.join(root, "shared/knowledge/core"))).filter((name) => name.endsWith(".md"));
+
+  assert.match(introduction, /https:\/\/www\.youtube\.com\/@GameDesignerYuriring/u, "introduction links the official Yuriring channel");
+  assert.match(introduction, new RegExp(`원문[^\n]{0,40}${documents.length}편`, "u"), "introduction states the indexed source count");
+  assert.match(introduction, new RegExp(`유리링[^\n]{0,40}${yuriringReports.length}편`, "u"), "introduction states the Yuriring report count");
+  assert.match(introduction, new RegExp(`핵심 실무 원칙[^\n]{0,40}${coreFiles.length}개`), "introduction states the Core document count");
+  assert.match(introduction, new RegExp(`현재 1차 자료[^\n]{0,40}${currentSources.sources.length}건`), "introduction states the current primary-source count");
+  assert.ok(introduction.includes(currentSources.retrievedAt), "introduction preserves the current-source retrieval date");
+  for (const [label, category] of [
+    ["취업·경력", "career"], ["재미·기획 의도", "fun-intent"], ["시스템 기획", "systems"],
+    ["콘텐츠 기획", "content"], ["기획서 피드백", "feedback"],
+  ]) assert.match(introduction, new RegExp(`${escapeRegExp(label)}[^\n]{0,30}${categories.get(category)}편`, "u"), `${label}: source count`);
+
+  for (const prompt of pluginIntroductionPrompts) assert.ok(introduction.includes(prompt), `natural-language introduction prompt: ${prompt}`);
+  assert.doesNotMatch(introduction, /\$game-design-(?:studio|career):/u, "introduction starts with natural language rather than skill IDs");
+  assert.match(introduction, /공식 자막이나 채널 운영자의 검수본은 아닙니다/u, "introduction does not overstate the Yuriring reports");
+  assert.match(introduction, /최신 공식 자료를 다시 확인/u, "introduction requires current external verification");
+  assert.match(introduction, /흥행·매출·채용 합격[^\n]{0,80}보장하지 않습니다/u, "introduction states non-guarantee boundaries");
+  assert.match(introduction, /이름 있는 사람[^\n]{0,80}검토/u, "introduction keeps named human review");
+
+  for (const target of [
+    "shared/knowledge/reference-index.json",
+    "architecture/knowledge-and-evidence.md",
+    "shared/knowledge/trends/source-register.json",
+  ]) assert.ok(introduction.includes(`](${target})`), `introduction links canonical evidence: ${target}`);
+}
+
+function assertHorizontalSectionDividers(markdown, label) {
+  for (const heading of h2Headings(markdown)) {
+    assert.ok(markdown.includes(`\n---\n\n## ${heading}\n`), `${label}: divider immediately precedes ${heading}`);
+  }
+}
+
 async function assertSuiteArchitectureEmbed(markdown) {
   const architecture = section(markdown, suiteArchitectureEmbed.section);
   const readableArchitecture = architecture.replace(/\s+/gu, " ");
@@ -1321,6 +1383,9 @@ async function buildValidStructuredReadmeFixture() {
     "",
     "## 목차",
     ...expectedToc,
+    "",
+    "## 플러그인 소개",
+    "소개 안내",
     "",
     "## 30초 안에 플러그인 선택하기",
     "선택 안내",
@@ -1934,6 +1999,35 @@ test("root README follows the approved task-oriented information architecture", 
   await assertStructuredRootReadme(readme);
   assertPortfolioQuickStart(readme);
   assertBeginnerReadableRootAdditions(readme);
+});
+
+test("root README explains the plugin purpose, audience, evidence, and honest limits", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  await assertPluginIntroduction(readme);
+  const mutations = [
+    ["missing Yuriring channel", readme.replaceAll("https://www.youtube.com/@GameDesignerYuriring", "")],
+    ["wrong source count", readme.replaceAll("원문 49편", "원문 50편")],
+    ["false official transcript claim", readme.replace("공식 자막이나 채널 운영자의 검수본은 아닙니다", "공식 자막이며 채널 운영자가 검수한 자료입니다")],
+    ["missing freshness boundary", readme.replace("최신 공식 자료를 다시 확인", "기존 자료만 확인")],
+    ["skill-ID-only first prompt", readme.replace(pluginIntroductionPrompts[0], "$game-design-studio:define-game-vision")],
+  ];
+  for (const [label, mutated] of mutations) {
+    assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
+    await assert.rejects(() => assertPluginIntroduction(mutated), undefined, label);
+  }
+});
+
+test("primary user-facing README hubs separate major sections and use purposeful emoji cues", async () => {
+  for (const [file, emoji] of [
+    ["README.md", "🧭"],
+    ["guides/README.md", "🧭"],
+    ["guides/game-design-studio/README.md", "🎮"],
+    ["guides/game-design-career/README.md", "🎓"],
+  ]) {
+    const markdown = await readFile(path.join(root, file), "utf8");
+    assertHorizontalSectionDividers(markdown, file);
+    assert.ok(markdown.includes(emoji), `${file}: contains its purposeful emoji cue ${emoji}`);
+  }
 });
 
 test("root README starts with simple natural-language requests and keeps explicit routes advanced", async () => {

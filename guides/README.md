@@ -2,6 +2,11 @@
 
 이 가이드는 처음 사용하는 사람이 Game Design Studio와 Game Design Career 중 하나를 고르고, 지원되는 환경에 설치해 첫 Canonical Artifact(기준 작업 폴더)를 만드는 데 필요한 출발점입니다.
 
+> 🧭 처음이라면 아래에서 목표에 맞는 플러그인을 고른 뒤 `처음 시작하기` 순서만
+> 따라가세요. 나머지 문서는 필요한 작업이 생겼을 때 찾아보면 됩니다.
+
+---
+
 ## 어떤 플러그인을 선택할까요?
 
 | 목표 | 선택 | 첫 결과 |
@@ -15,6 +20,8 @@
 - [Studio 목적별 레시피 6개](game-design-studio/README.md#목적별-레시피)
 - [Game Design Career 가이드](game-design-career/README.md)
 
+---
+
 ## Curated Archify 상태
 
 [Curated Archify 상태 인덱스](archify-diagrams/README.md)는 검증된 Archify HTML 공개물과 차단된 후보의 근거·재시도 경계를 분리해 기록합니다. 현재 공개된 한국어 Archify diagram은 **3개**입니다.
@@ -25,6 +32,8 @@
 
 두 플러그인은 독립적으로 설치합니다. 게임을 설계하면서 동시에 취업 증거를 만들려면 둘 다 설치할 수 있지만, 각 작업의 기준 Artifact와 승인 상태는 섞지 마세요.
 
+---
+
 ## 목표에서 다음 문서까지
 
 | 목표 | 대표 문서 | 예상 결과 | 다음 상세 문서 |
@@ -33,6 +42,8 @@
 | 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
 | 직무 탐색·역기획·포트폴리오·면접 준비 | [Career 활용 사례 인덱스](game-design-career/use-cases/README.md) | 근거·개인 기여·다음 증거 작업 | [Career 스킬 워크벤치](game-design-career/use-cases/skill-workbench.md) · [Career FAQ](game-design-career/faq.md) |
 | 현재 상황과 결과 경계를 먼저 확인 | [사용자 경로](use-cases/audience-paths.md) | 권장 시작점, 최소 결과와 사람 검토 경계 | [공통 활용 허브](use-cases/README.md) · [결과물 카탈로그](use-cases/output-catalog.md) |
+
+---
 
 ## 처음 시작하기
 
@@ -58,6 +69,8 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 - Career 입문·표준·고급: [직무 가설](prompt-templates/career/map-game-design-career.md#careermap-game-design-careerbeginner), [역기획](prompt-templates/career/reverse-engineer-game-design.md#careerreverse-engineer-game-designstandard), [포트폴리오](prompt-templates/career/build-game-design-portfolio.md#careerbuild-game-design-portfolioadvanced)
 - 사례: [프로젝트 증거와 면접](prompt-templates/suite/career-proof-project-interview.md#suitecareer-proof-project-interviewcase)
 
+---
+
 ## 전체 가이드 탐색
 
 각 제품 인덱스는 15개 스킬, 15개 템플릿, 6개 목적별 레시피와 설치·빠른 시작·workflow·품질·이미지·시각화·내보내기·문제 해결을 모두 연결합니다.
@@ -66,6 +79,8 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 | --- | --- | --- | --- |
 | Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 15개](game-design-studio/skills/README.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
 | Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 15개](game-design-career/skills/README.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
+
+---
 
 ## 활용 사례와 결과물
 
@@ -79,12 +94,16 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 | 대표 사례 | [ST-C03 규칙·상태·예외·데이터](game-design-studio/use-cases/competency-paths.md#st-c03-규칙상태예외데이터) | [CA-C06 창작 기획 포트폴리오](game-design-career/use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오) |
 | 제품 질문 | [Studio FAQ](game-design-studio/faq.md) | [Career FAQ](game-design-career/faq.md) |
 
+---
+
 ## 입문에서 포트폴리오까지 읽기
 
 1. **입문:** [AUD-01 사용자 경로](use-cases/audience-paths.md#aud-01-게임-기획-입문-학생)에서 작은 관찰과 규칙 실습을 고릅니다.
 2. **기초·응용:** Studio 또는 Career의 역량·콘셉트·직접 스킬 중 현재 입력에 맞는 하나를 선택합니다.
 3. **포트폴리오:** [결과물 카탈로그](use-cases/output-catalog.md#studio-career-handoff)의 공개·권리·개인 기여 경계를 읽고, Studio 원본을 합치지 않은 별도 Career Artifact를 만듭니다.
 4. **전체 프로젝트:** 범위와 검토 게이트가 여러 개면 제품 오케스트레이터와 workflow로 돌아가 사람 결정을 남깁니다.
+
+---
 
 ## 지원 환경
 
@@ -96,6 +115,8 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 
 공식 동작은 [OpenAI Plugins 안내](https://learn.chatgpt.com/docs/plugins)와 [Codex CLI plugin 명령](https://learn.chatgpt.com/docs/developer-commands?surface=cli#cli-codex-plugin)에서 확인할 수 있습니다.
 
+---
+
 ## 초보자 읽기 경로
 
 | 상황 | 읽기 순서 |
@@ -105,6 +126,8 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 | Studio로 제작 문서 작성 | [처음 시작하기](#처음-시작하기) 3–8단계에서 Studio 템플릿·스킬·레시피·workflow를 순서대로 선택 |
 | Career로 취업 준비 | [처음 시작하기](#처음-시작하기) 3–8단계에서 Career 템플릿·스킬·레시피·workflow를 순서대로 선택 |
 | 중단된 작업 재개 | [처음 시작하기](#처음-시작하기) 9단계와 제품 문제 해결에서 보존된 `content.md`와 차단 상태를 지정 |
+
+---
 
 ## 용어
 

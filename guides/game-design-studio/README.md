@@ -2,9 +2,16 @@
 
 Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스템·콘텐츠·플레이어 경험·경제·LiveOps·제작 계획, 검토, 자산과 내보내기까지 연결합니다. `content.md`를 기준으로 근거, 결정, 미해결 위험과 사람 승인 상태를 보존하는 Canonical Artifact(기준 작업 폴더)를 사용합니다. [공통 용어](../README.md#용어)를 먼저 확인하세요.
 
+> 🎮 게임의 방향, 규칙, 콘텐츠, 화면 흐름과 제작 범위를 정리하려면 여기서
+> 시작하세요. 처음에는 `처음 시작하기`와 목적별 레시피 하나만 읽으면 됩니다.
+
+---
+
 ## Curated Archify 상태
 
 [Curated Archify 상태 인덱스](../archify-diagrams/README.md)에서 Studio 후보의 검증·시각 QA 근거를 확인합니다. [한국어 Studio 전체 프로젝트 워크플로](../assets/archify/studio/studio-project-workflow.html)는 비전, 설계, 검토, 자산, 내보내기와 보류 후 재개 경로를 대화형 HTML로 보여 줍니다.
+
+---
 
 ## 작업 규모와 결과
 
@@ -15,6 +22,8 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 | 전체 프로젝트 | [새 게임 GDD 레시피](recipes/new-game-gdd.md) | 범위·검토 gate와 재개 조건이 있는 Studio Artifact | [결과물 카탈로그](../use-cases/output-catalog.md) |
 
 작은 실습과 단일 명세도 `content.md`와 근거를 남기며, 전체 프로젝트는 이를 대체하지 않고 범위와 사람 결정을 추가합니다. 최소·선택·확장 결과와 Studio → Career handoff는 [결과물 카탈로그](../use-cases/output-catalog.md)에서 확인합니다.
+
+---
 
 ## 활용 사례와 진입점
 
@@ -54,6 +63,8 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [요청문 템플릿 허브](../prompt-templates/README.md): 사용자 유형·난이도별 요청과 예상 결과를 비교합니다.
 - 대표 카드: [비전 입문](../prompt-templates/studio/define-game-vision.md#studiodefine-game-visionbeginner), [시스템 표준](../prompt-templates/studio/design-game-systems.md#studiodesign-game-systemsstandard), [UX 표준](../prompt-templates/studio/design-player-experience.md#studiodesign-player-experiencestandard), [프로젝트 재개 고급](../prompt-templates/studio/orchestrate-game-design-project.md#studioorchestrate-game-design-projectadvanced)
 
+---
+
 ## 처음 시작하기
 
 1. [설치](installation.md)에서 App 또는 CLI 중 한 환경의 절차만 따라 설치합니다.
@@ -65,6 +76,8 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 7. [시각화](visualization.md)에서 Skillstead SVG와 PNG 검증을 준비합니다.
 8. [MD·PDF·DOCX·PPTX 내보내기](exports.md)에서 필요한 형식만 준비합니다.
 9. 막히면 [문제 해결](troubleshooting.md)에서 보존된 결과로 재개합니다.
+
+---
 
 ## 목적별 레시피
 
@@ -81,6 +94,8 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [Studio 오케스트레이션 맵 SVG 열기](../assets/game-design-studio/studio-orchestration-map.svg)
 - [![비전에서 GDD 승인까지](../assets/game-design-studio/vision-to-gdd-approval.png)](../assets/game-design-studio/vision-to-gdd-approval.svg)
 - [비전에서 GDD 승인까지 SVG 열기](../assets/game-design-studio/vision-to-gdd-approval.svg)
+
+---
 
 ## 가이드 목차
 
@@ -101,6 +116,8 @@ Game Design Studio는 게임 디자인 문서(GDD)를 게임 비전에서 시스
 - [MD·PDF·DOCX·PPTX 내보내기](exports.md)
 
 각 스킬 ID는 [스킬 18개](skills/README.md)에서 해당 상세 가이드로 직접 연결됩니다. 각 템플릿의 용도와 복사 가능한 요청문은 [템플릿 15개](templates.md)에 있습니다.
+
+---
 
 ## 작업 원칙
 
