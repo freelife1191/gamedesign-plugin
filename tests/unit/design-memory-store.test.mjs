@@ -8,7 +8,9 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
-import { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, memoryEventRelativePath, readMemoryFile, resolveMemoryStore, scanMemoryEvents, stageImmutableMemoryFile } from "../../shared/scripts/lib/safe-memory-store.mjs";
+
+const storeModuleUrl = process.env.DESIGN_MEMORY_STORE_MODULE_URL ?? new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href;
+const { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, memoryEventRelativePath, readMemoryFile, resolveMemoryStore, scanMemoryEvents, stageImmutableMemoryFile } = await import(storeModuleUrl);
 
 async function workspace(t) { const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-store-"))); t.after(() => rm(root, { recursive: true, force: true })); return root; }
 const config = (overrides = {}) => ({ enabled: true, scope: "project", gitMode: "local", projectId: "wind-island", ...overrides });
@@ -68,19 +70,25 @@ async function assertRejectedWithoutSourceChange(store, operation, code) {
   assert.deepEqual(await sourceTreeSnapshot(store), before);
 }
 async function absent(candidate) { await assert.rejects(() => lstat(candidate), (error) => error?.code === "ENOENT"); }
-async function runAppendChild(payload, start) {
-  const fixture = fileURLToPath(new URL("../fixtures/design-memory/child-append.mjs", import.meta.url));
-  const child = spawn(process.execPath, [fixture], { stdio: ["pipe", "pipe", "pipe"] });
-  const stdout = []; const stderr = [];
-  child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk));
+async function runAppendChild(payload, start, { fixtureName = "child-append.mjs", maxOutputBytes = 64 * 1024, childEnv = {} } = {}) {
+  const fixture = fileURLToPath(new URL(`../fixtures/design-memory/${fixtureName}`, import.meta.url));
+  const child = spawn(process.execPath, [fixture], { env: { ...process.env, ...childEnv }, stdio: ["pipe", "pipe", "pipe"] });
+  const stdout = []; const stderr = []; let outputBytes = 0; let settled = false;
   const completed = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => { child.kill(); reject(new Error("child append timed out")); }, 15_000);
-    child.once("error", reject);
+    const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
+    const timeout = setTimeout(() => { child.kill(); finish(reject, new Error("child append timed out")); }, 15_000);
+    const collect = (target) => (chunk) => {
+      outputBytes += chunk.byteLength;
+      if (outputBytes > maxOutputBytes) { child.kill(); finish(reject, new Error("child append output exceeded limit")); return; }
+      target.push(chunk);
+    };
+    child.stdout.on("data", collect(stdout)); child.stderr.on("data", collect(stderr));
+    child.once("error", () => finish(reject, new Error("child append failed")));
     child.once("close", (code, signal) => {
-      clearTimeout(timeout);
       const output = Buffer.concat(stdout).toString("utf8"); const errors = Buffer.concat(stderr).toString("utf8");
-      if (code !== 0) reject(new Error(`child append exited with code ${code}, signal ${signal ?? "none"}, stderr ${errors}`));
-      else resolve({ output, errors });
+      if (code !== 0) finish(reject, new Error(`child append failed with code ${code}, signal ${signal ?? "none"}`));
+      else if (!/^[^\r\n]+\n$/u.test(output)) finish(reject, new Error("child append output is not exactly one line"));
+      else finish(resolve, { output, errors });
     });
   });
   await start;
@@ -161,13 +169,27 @@ test("multiprocess same-event append commits one logical event with created and 
   release();
   const results = await Promise.all(children); const parsed = results.map(({ output, errors }) => {
     assert.equal(errors, ""); assert.equal(output.split("\n").filter(Boolean).length, 1); assert.equal(output.includes(root), false); assert.equal(output.includes(eventDocument), false); assert.equal(output.includes('"actor"'), false); assert.equal(output.includes('"reason"'), false);
-    const value = JSON.parse(output); assert.deepEqual(Object.keys(value).sort(), ["eventId", "relativePath", "status"]); return value;
+    const value = JSON.parse(output); assert.deepEqual(Object.keys(value).sort(), ["eventId", "relativePath", "status"]); assert.equal(output, `${JSON.stringify(value)}\n`); return value;
   });
   assert.deepEqual(results.map((_, index) => parsed[index].status).sort(), ["created", "present"]);
   const expectedEventId = `mev1-${digest(Buffer.from(eventDocument))}`; const expectedRelativePath = eventRelativePathForTest(record.memory_id, expectedEventId);
   assert.equal(parsed.every((value) => value.eventId === expectedEventId && value.relativePath === expectedRelativePath), true);
   const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root }); const scan = await scanMemoryEvents({ store });
   assert.equal(scan.events.filter((item) => item.eventId === expectedEventId).length, 1);
+});
+
+test("child output rejects an extra blank line", async () => {
+  await assert.rejects(
+    () => runAppendChild({ workspaceRoot: "/unused", eventDocument: "unused" }, Promise.resolve(), { fixtureName: "child-output-hostile.mjs", childEnv: { DESIGN_MEMORY_CHILD_OUTPUT_SEAM: "extra-blank" } }),
+    (error) => error?.message === "child append output is not exactly one line",
+  );
+});
+
+test("child output kills an oversized stream at the byte limit", async () => {
+  await assert.rejects(
+    () => runAppendChild({ workspaceRoot: "/unused", eventDocument: "unused" }, Promise.resolve(), { fixtureName: "child-output-hostile.mjs", maxOutputBytes: 1024, childEnv: { DESIGN_MEMORY_CHILD_OUTPUT_SEAM: "oversized" } }),
+    (error) => error?.message === "child append output exceeded limit",
+  );
 });
 
 test("concurrent transitions and resolutions remain physical conflicts until one current-head resolution", async (t) => {
@@ -210,6 +232,30 @@ test("unsealed failpoint states stay non-authoritative and canonical retry preve
   const recovered = await scanMemoryEvents({ store }); assert.equal(recovered.events.filter((item) => item.eventId === eventId).length, 1); assert.equal(foldMemoryEvents(recovered).memories.get(record.memory_id).record.status, "disputed");
 });
 
+test("unsealed quarantine debris stays non-authoritative and canonical retry does not grow source files", { timeout: 20_000 }, async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true }); const target = await appendMemoryEvent({ store, eventDocument: document() }); const now = new Date("2026-08-12T06:00:00.000Z");
+  const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: target.eventId, target_relative_path: target.relativePath, observed_sha256: target.fileSha256, reason_code: "memory.bad", actor: "auditor", recorded_at: now.toISOString() }; const bytes = Buffer.from(canonicalQuarantineMarkerDocument(marker)); const markerId = `qmv1-${digest(bytes)}`;
+  const relativePath = `v1/controls/quarantine/${digest(record.memory_id).slice(0, 2)}/${target.eventId}/${markerId}`; const base = path.join(store.root, relativePath); await mkdir(path.join(base, "instances"), { recursive: true }); await mkdir(path.join(base, "claims"), { recursive: true });
+  const candidates = [
+    ["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "instance-only"],
+    ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "valid-claim"],
+    ["cccccccc-cccc-cccc-cccc-cccccccccccc", "wrong-length"],
+    ["dddddddd-dddd-dddd-dddd-dddddddddddd", "wrong-hash"],
+  ];
+  for (const [instanceId, kind] of candidates) {
+    await writeFile(path.join(base, "instances", `${instanceId}.md`), bytes);
+    if (kind !== "instance-only") {
+      const claim = { schemaVersion: 1, eventId: markerId, instanceId, fileSha256: kind === "wrong-hash" ? "b".repeat(64) : digest(bytes), byteLength: kind === "wrong-length" ? bytes.byteLength + 1 : bytes.byteLength }; const claimPath = path.join(base, "claims", `${instanceId}.json`);
+      await writeFile(claimPath, `${JSON.stringify(claim)}\n`); assert.equal((await lstat(claimPath)).nlink, 1);
+    }
+  }
+  await absent(path.join(base, "commit.json")); const before = await scanMemoryEvents({ store }); assert.equal(before.complete, true); assert.equal(before.quarantines.length, 0); assert.equal(foldMemoryEvents(before).memories.has(record.memory_id), true);
+  const input = { store, targetMemoryId: record.memory_id, targetEventId: target.eventId, targetRelativePath: target.relativePath, observedSha256: target.fileSha256, reasonCode: "memory.bad", actor: "auditor", now };
+  const created = await appendQuarantineMarker(input); const afterCreated = await sourceTreeSnapshot(store); const present = await appendQuarantineMarker(input);
+  assert.equal(created.status, "created"); assert.equal(created.eventId, markerId); assert.equal(created.relativePath, relativePath); assert.equal(present.status, "present"); assert.deepEqual(await sourceTreeSnapshot(store), afterCreated);
+  const recovered = await scanMemoryEvents({ store }); assert.equal(recovered.complete, true); assert.equal(recovered.quarantines.length, 1); assert.equal(recovered.quarantines[0].target_event_id, target.eventId); assert.equal(foldMemoryEvents(recovered).memories.has(record.memory_id), false);
+});
+
 test("the 10001st source-tree entry cannot hide an approval-invalidating event", { timeout: 30_000 }, async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
   const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") });
@@ -219,7 +265,7 @@ test("the 10001st source-tree entry cannot hide an approval-invalidating event",
   for (let offset = 0; offset < fillerCount; offset += 100) await Promise.all(Array.from({ length: Math.min(100, fillerCount - offset) }, (_, index) => writeFile(path.join(fillerRoot, `${String(offset + index).padStart(5, "0")}.entry`), "")));
   const traversal = await sourceTraversalEntries(sourceRoot); assert.equal(traversal.indexOf(disputedCommit) + 1, 10_001);
   const scan = await scanMemoryEvents({ store }); const folded = foldMemoryEvents(scan);
-  assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(folded.memories.size, 0); assert.equal(scan.entriesScanned <= 10_000, true); assert.deepEqual(scan.diagnostics, [{ code: "memory.scan_limit_exceeded" }]);
+  assert.equal(folded.memories.size, 0); assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(scan.entriesScanned <= 10_000, true); assert.deepEqual(scan.diagnostics, [{ code: "memory.scan_limit_exceeded" }]);
 });
 
 test("sequential event and quarantine retry cardinality does not grow source files", async (t) => {

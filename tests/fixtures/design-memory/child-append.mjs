@@ -1,6 +1,6 @@
-import { appendMemoryEvent, resolveMemoryStore } from "../../../shared/scripts/lib/safe-memory-store.mjs";
-
 const MAX_INPUT_BYTES = 1024 * 1024;
+const storeModuleUrl = process.env.DESIGN_MEMORY_STORE_MODULE_URL ?? new URL("../../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href;
+const { appendMemoryEvent, resolveMemoryStore } = await import(storeModuleUrl);
 
 async function readInputLine() {
   const chunks = [];
