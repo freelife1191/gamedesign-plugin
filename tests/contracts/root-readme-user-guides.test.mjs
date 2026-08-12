@@ -36,6 +36,8 @@ const requiredRootHeadings = [
 const pluginIntroductionHeadings = [
   "어떤 플러그인인가요?",
   "왜 만들었나요?",
+  "왜 일반 AI 대화보다 이 플러그인을 써야 하나요?",
+  "짧게 요청해도 체계가 작동합니다",
   "이런 분께 잘 맞습니다",
   "이 플러그인으로 할 수 있는 일",
   "처음에는 이렇게 물어보세요",
@@ -133,6 +135,18 @@ const archifyStatusRoute = {
 const readmeSkillsteadDiagrams = [
   {
     section: "플러그인 소개",
+    subsection: "⚙️ 짧게 요청해도 체계가 작동합니다",
+    id: "simple-prompt-design-system",
+    alt: "한 줄 요청을 전문 게임 기획 작업으로 바꾸는 플러그인 시스템 흐름",
+    phrases: [
+      "한 줄 요청", "시작할 때 작업 환경 확인", "요청 목적과 범위 분석",
+      "필요한 스킬과 작업 순서 선택", "근거 자료와 전문 검토 역할",
+      "한국어·도식·이미지 다듬기", "기준 기획 결과물", "마칠 때 결과물 점검",
+      "검토 담당자 승인·보류", "검토된 문서·도식·이미지",
+    ],
+  },
+  {
+    section: "플러그인 소개",
     id: "evidence-to-design-flow",
     alt: "자료가 검토 가능한 기획 결과와 담당자 승인으로 이어지는 흐름",
     phrases: [
@@ -198,6 +212,24 @@ const readmeSkillsteadDiagrams = [
   },
 ];
 const readmeSkillsteadGraphContracts = new Map([
+  ["simple-prompt-design-system", {
+    nodes: [
+      "request", "session-hook", "intent-router", "skill-workflow", "evidence-and-review",
+      "quality-work", "canonical-artifact", "stop-hook", "human-review", "verified-outputs",
+    ],
+    edges: [
+      ["request-to-router", "request", "intent-router"],
+      ["session-hook-to-router", "session-hook", "intent-router"],
+      ["router-to-skill-workflow", "intent-router", "skill-workflow"],
+      ["evidence-to-skill-workflow", "evidence-and-review", "skill-workflow"],
+      ["skill-workflow-to-quality-work", "skill-workflow", "quality-work"],
+      ["quality-work-to-artifact", "quality-work", "canonical-artifact"],
+      ["artifact-to-stop-hook", "canonical-artifact", "stop-hook"],
+      ["stop-hook-to-human-review", "stop-hook", "human-review"],
+      ["human-review-to-outputs", "human-review", "verified-outputs"],
+      ["human-review-to-skill-workflow", "human-review", "skill-workflow"],
+    ],
+  }],
   ["evidence-to-design-flow", {
     nodes: [
       "source-docs", "current-sources", "evidence-boundary", "core-principles",
@@ -593,6 +625,44 @@ function assertExactOrderedValues(value, expected, label) {
 
 function normalizePromptWhitespace(value) {
   return value.trim().replace(/\s+/gu, " ");
+}
+
+function collectHardWrappedProseLines(markdown) {
+  const lines = markdown.split("\n");
+  const findings = [];
+  let fence = null;
+  const fenceMarker = (line) => /^\s{0,3}(`{3,}|~{3,})/u.exec(line)?.[1] ?? null;
+  const isStructural = (line) => {
+    const trimmed = line.trim();
+    return trimmed === ""
+      || /^#{1,6}\s/u.test(trimmed)
+      || /^(?:-{3,}|\*{3,}|_{3,})$/u.test(trimmed)
+      || /^\|.*\|$/u.test(trimmed)
+      || /^<\/?[A-Za-z][^>]*>$/u.test(trimmed)
+      || /^\[[^\]]+\]:\s/u.test(trimmed)
+      || /^!\[[^\]]*\]\([^)]*\)$/u.test(trimmed)
+      || /^ {4}\S/u.test(line);
+  };
+  const startsListItem = (line) => /^\s*(?:[-+*]|\d+[.)])\s+/u.test(line);
+  const quoteText = (line) => /^\s*>\s*\S/u.test(line);
+  const hasExplicitBreak = (line) => /(?:\\| {2}|<br\s*\/?>)\s*$/iu.test(line);
+
+  for (let index = 0; index < lines.length - 1; index += 1) {
+    const line = lines[index];
+    const marker = fenceMarker(line);
+    if (marker) {
+      if (!fence) fence = marker[0];
+      else if (marker[0] === fence) fence = null;
+      continue;
+    }
+    if (fence || isStructural(line) || hasExplicitBreak(line)) continue;
+    const next = lines[index + 1];
+    if (fenceMarker(next) || isStructural(next) || startsListItem(next)) continue;
+    const sameQuoteParagraph = quoteText(line) && quoteText(next);
+    const plainContinuation = !quoteText(line) && !quoteText(next);
+    if (sameQuoteParagraph || plainContinuation) findings.push(index + 2);
+  }
+  return findings;
 }
 
 function promptSurfaceBody(promptBlock, label, nextLabel) {
@@ -1173,6 +1243,22 @@ async function assertPluginIntroduction(markdown) {
     "architecture/knowledge-and-evidence.md",
     "shared/knowledge/trends/source-register.json",
   ]) assert.ok(introduction.includes(`](${target})`), `introduction links canonical evidence: ${target}`);
+  for (const [label, target] of [
+    ["Skillstead", "https://github.com/kyungseo/skillstead"],
+    ["Archify", "https://github.com/tt-a1i/archify"],
+    ["im-not-ai", "https://github.com/epoko77-ai/im-not-ai"],
+  ]) assert.ok(introduction.includes("[" + label + "](" + target + ")"), "introduction links the bundled upstream project: " + label);
+
+  for (const phrase of [
+    "일반 AI 대화", "요청 목적과 범위", "전문 스킬", "오케스트레이터", "최대 세 개",
+    "SessionStart", "Stop", "기준 기획 결과물", "보류한 지점부터 다시 시작",
+    "gpt-image-2", "마스터 이미지", "파생 이미지", "프롬프트 계보", "권리와 사용 범위",
+  ]) assert.ok(introduction.includes(phrase), "introduction explains the system advantage: " + phrase);
+  assert.match(introduction, /제품마다[^\n]{0,80}스킬 18개/u, "introduction states the installed skill count per product");
+  assert.match(introduction, /Studio[^\n]{0,60}전문 역할 12개/u, "introduction states the Studio specialist-role count");
+  assert.match(introduction, /Career[^\n]{0,60}전문 역할 10개/u, "introduction states the Career specialist-role count");
+  assert.match(introduction, /전문 기획자[^\n]{0,100}(?:대신|대체)[^\n]{0,40}않/u, "introduction does not claim to replace a professional designer");
+  assert.match(introduction, /자동으로 승인하지 않/u, "introduction keeps automatic routing separate from approval");
 }
 
 function assertHorizontalSectionDividers(markdown, label) {
@@ -1690,6 +1776,33 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
     assert.doesNotMatch(svgSource, /자동 (?:승인|처리)/u, `${id}: human review is never automatic`);
     assert.doesNotMatch(svgSource, />\s*Artifact\s*</u, `${id}: Artifact never appears as an English-only visible label`);
   }
+  if (id === "simple-prompt-design-system") {
+    assert.match(
+      svgSource,
+      /<g\b[^>]*data-flow-node="session-hook"[^>]*data-hook-event="SessionStart"/u,
+      id + ": binds the session capability hook",
+    );
+    assert.match(
+      svgSource,
+      /<g\b[^>]*data-flow-node="stop-hook"[^>]*data-hook-event="Stop"/u,
+      id + ": binds the final artifact-review hook",
+    );
+    assert.match(svgSource, /im-not-ai/u, id + ": shows the Korean writing review skill");
+    assert.match(svgSource, /Skillstead/u, id + ": shows the static diagram skill");
+    assert.match(svgSource, /Archify/u, id + ": shows the interactive architecture skill");
+    assert.match(svgSource, /gpt-image-2/u, id + ": shows the configured image-generation route");
+    assert.match(
+      svgSource,
+      /<g\b[^>]*data-flow-node="human-review"[^>]*data-human-gate="검토 담당자"[^>]*data-gate-role="approval-hold"[^>]*data-gate-label="승인·보류"/u,
+      id + ": keeps a named-role human approval and hold gate",
+    );
+    assert.match(
+      svgSource,
+      /<path\b[^>]*data-flow-edge="human-review-to-skill-workflow"[^>]*data-from="human-review"[^>]*data-to="skill-workflow"[^>]*stroke-dasharray="[^"]+"/u,
+      id + ": held work returns to the selected workflow through a dashed edge",
+    );
+    assert.doesNotMatch(svgSource, /자동 승인/u, id + ": the system never claims automatic approval");
+  }
 }
 
 async function assertReadmeSkillsteadDiagrams(markdown) {
@@ -1725,7 +1838,7 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
 
 function assertReadmeSkillsteadAssetNames(files) {
   const expectedFiles = readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]).sort();
-  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly nine Skillstead PNG/SVG pairs");
+  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly ten Skillstead PNG/SVG pairs");
 }
 
 function assertReadmeSkillsteadSourceRejected(source, diagram, label) {
@@ -2045,6 +2158,15 @@ test("root README follows the approved task-oriented information architecture", 
   assertBeginnerReadableRootAdditions(readme);
 });
 
+test("root README lets Markdown render prose without source hard wraps", async () => {
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+  assert.deepEqual(
+    collectHardWrappedProseLines(readme),
+    [],
+    "prose paragraphs, list items, and blockquotes stay on one source line unless a hard break is intentional",
+  );
+});
+
 test("root README explains the plugin purpose, audience, evidence, and honest limits", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertPluginIntroduction(readme);
@@ -2054,6 +2176,10 @@ test("root README explains the plugin purpose, audience, evidence, and honest li
     ["false official transcript claim", readme.replace("공식 자막이나 채널 운영자의 검수본은 아닙니다", "공식 자막이며 채널 운영자가 검수한 자료입니다")],
     ["missing freshness boundary", readme.replace("최신 공식 자료를 다시 확인", "기존 자료만 확인")],
     ["skill-ID-only first prompt", readme.replace(pluginIntroductionPrompts[0], "$game-design-studio:define-game-vision")],
+    ["missing Skillstead upstream", readme.replace("https://github.com/kyungseo/skillstead", "")],
+    ["missing Archify upstream", readme.replace("https://github.com/tt-a1i/archify", "")],
+    ["missing im-not-ai upstream", readme.replace("https://github.com/epoko77-ai/im-not-ai", "")],
+    ["automatic system approval", readme.replaceAll("자동으로 승인하지 않습니다", "자동으로 승인합니다")],
   ];
   for (const [label, mutated] of mutations) {
     assert.notEqual(mutated, readme, `${label}: mutation changes the README`);
@@ -2109,7 +2235,7 @@ test("Suite architecture embed rejects missing, unwrapped, stale, and wrong targ
   }
 });
 
-test("root README embeds nine machine-linted Skillstead explanation diagrams", async () => {
+test("root README embeds ten machine-linted Skillstead explanation diagrams", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertReadmeSkillsteadDiagrams(readme);
 });
@@ -2117,7 +2243,7 @@ test("root README embeds nine machine-linted Skillstead explanation diagrams", a
 test("README Skillstead explanation diagrams reject semantic and distortion regressions", async () => {
   assert.throws(
     () => assertReadmeSkillsteadAssetNames([...readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]), "fourth-flow.svg"]),
-    /exactly nine Skillstead PNG\/SVG pairs/u,
+    /exactly ten Skillstead PNG\/SVG pairs/u,
     "an unowned explainer file is rejected",
   );
   for (const diagram of readmeSkillsteadDiagrams) {

@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title>한 줄 요청도 전문 기획 작업의 순서를 따릅니다</title>
+  <desc>한 줄 요청을 분석해 필요한 스킬과 전문 검토 역할을 고릅니다. 한국어와 도식 및 이미지를 다듬고 결과물을 점검한 뒤 담당자가 승인하거나 보류합니다.</desc>
+  <style>
+    svg{--paper:#F5F7FA;--ink:#263142;--muted:#5B6778;--line:#6A7687;--blue:#2F6FB0;--blue-soft:#EAF2FC;--violet:#6156B3;--violet-soft:#F0EEFC;--green:#1F8064;--green-soft:#E8F6F1;--orange:#D96532;--orange-soft:#FFF0E8;--rose:#AF3D68;--rose-soft:#FDECF3;--border:#D5DCE6}.title{font-size:40px;font-weight:700;fill:var(--ink)}.subtitle{font-size:18px;fill:var(--muted)}.card-title{font-size:19px;font-weight:700}.body{font-size:16px;fill:var(--muted)}.pill{font-size:16px;font-weight:600}.edge-label{font-size:16px;font-weight:700;fill:var(--orange)}.edge{fill:none;stroke:var(--line);stroke-width:3;marker-end:url(#arrow)}.feedback{fill:none;stroke:var(--orange);stroke-width:3;stroke-dasharray:9 8;marker-end:url(#arrow-orange)}.panel{fill:#FFFFFF;stroke:var(--border);stroke-width:2}.card{stroke-width:2}.support{stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13.5" markerHeight="13.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#6A7687" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-orange" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="13.5" markerHeight="13.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#D96532" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="var(--paper)"/>
+  <rect x="52" y="45" width="6" height="64" rx="3" fill="var(--blue)"/>
+  <text x="78" y="70" class="title">한 줄 요청도 전문 기획 작업의 순서를 따릅니다</text>
+  <text x="78" y="106" class="subtitle">라우팅·스킬·전문 검토·자동 점검으로 일을 나누고 마지막 판단은 사람이 내립니다.</text>
+  <rect x="38" y="138" width="1324" height="702" rx="24" class="panel"/>
+
+  <!-- main-flow -->
+  <path class="edge" data-flow-edge="request-to-router" data-from="request" data-to="intent-router" d="M290 262H348"/>
+  <path class="edge" data-flow-edge="session-hook-to-router" data-from="session-hook" data-to="intent-router" d="M200 390V355H490V337"/>
+  <path class="edge" data-flow-edge="router-to-skill-workflow" data-from="intent-router" data-to="skill-workflow" d="M620 262H688"/>
+  <path class="edge" data-flow-edge="evidence-to-skill-workflow" data-from="evidence-and-review" data-to="skill-workflow" d="M520 390V350H850V337"/>
+  <path class="edge" data-flow-edge="skill-workflow-to-quality-work" data-from="skill-workflow" data-to="quality-work" d="M850 325V378"/>
+  <path class="edge" data-flow-edge="quality-work-to-artifact" data-from="quality-work" data-to="canonical-artifact" d="M1180 390V350H1200V337"/>
+  <path class="edge" data-flow-edge="artifact-to-stop-hook" data-from="canonical-artifact" data-to="stop-hook" d="M1330 262H1342V580H330V608"/>
+  <path class="edge" data-flow-edge="stop-hook-to-human-review" data-from="stop-hook" data-to="human-review" d="M460 682H558"/>
+  <path class="edge" data-flow-edge="human-review-to-outputs" data-from="human-review" data-to="verified-outputs" d="M870 682H978"/>
+  <path class="feedback" data-flow-edge="human-review-to-skill-workflow" data-from="human-review" data-to="skill-workflow" stroke-dasharray="9 8" d="M570 730H55V160H850V188"/>
+  <text x="82" y="802" class="edge-label">보류되면 선택한 작업 단계로 돌아가 수정</text>
+
+  <g data-flow-node="request" data-stage-label="한 줄 요청">
+    <rect x="70" y="200" width="220" height="125" rx="18" fill="var(--blue-soft)" stroke="var(--blue)" class="card"/>
+    <text x="180" y="238" class="card-title" fill="var(--blue)" text-anchor="middle">한 줄 요청</text>
+    <text x="180" y="273" class="body" text-anchor="middle">“첫 10분 플레이 흐름을</text>
+    <text x="180" y="299" class="body" text-anchor="middle">기획해 줘.”</text>
+  </g>
+  <g data-flow-node="session-hook" data-hook-event="SessionStart" data-stage-label="시작할 때 작업 환경 확인">
+    <rect x="70" y="390" width="260" height="140" rx="18" fill="#F7F9FC" stroke="#8994A3" class="support"/>
+    <text x="200" y="429" class="card-title" fill="#566171" text-anchor="middle">시작할 때 작업 환경 확인</text>
+    <text x="200" y="463" class="body" text-anchor="middle">SessionStart 훅</text>
+    <text x="200" y="491" class="body" text-anchor="middle">문서 변환·브라우저·이미지 기능</text>
+  </g>
+  <g data-flow-node="intent-router" data-stage-label="요청 목적과 범위 분석">
+    <rect x="360" y="200" width="260" height="125" rx="18" fill="var(--orange-soft)" stroke="var(--orange)" class="card"/>
+    <text x="490" y="241" class="card-title" fill="var(--orange)" text-anchor="middle">요청 목적과 범위 분석</text>
+    <text x="490" y="276" class="body" text-anchor="middle">결과물·제약·미정 항목 확인</text>
+    <text x="490" y="302" class="body" text-anchor="middle">단일 작업인지 복합 작업인지 판단</text>
+  </g>
+  <g data-flow-node="skill-workflow" data-stage-label="필요한 스킬과 작업 순서 선택">
+    <rect x="700" y="200" width="300" height="125" rx="18" fill="var(--violet-soft)" stroke="var(--violet)" class="card"/>
+    <text x="850" y="241" class="card-title" fill="var(--violet)" text-anchor="middle">필요한 스킬과 작업 순서 선택</text>
+    <text x="850" y="276" class="body" text-anchor="middle">전문 스킬 또는 오케스트레이터</text>
+    <text x="850" y="302" class="body" text-anchor="middle">필요한 경로만 실행</text>
+  </g>
+  <g data-flow-node="evidence-and-review" data-stage-label="근거 자료와 전문 검토 역할">
+    <rect x="370" y="390" width="300" height="140" rx="18" fill="var(--green-soft)" stroke="var(--green)" class="support"/>
+    <text x="520" y="429" class="card-title" fill="var(--green)" text-anchor="middle">근거 자료와 전문 검토 역할</text>
+    <text x="520" y="463" class="body" text-anchor="middle">원문·현재 자료·선택 이유 확인</text>
+    <text x="520" y="491" class="body" text-anchor="middle">서로 다른 질문의 역할 최대 세 개</text>
+  </g>
+  <g data-flow-node="quality-work" data-stage-label="한국어·도식·이미지 다듬기">
+    <rect x="710" y="390" width="620" height="160" rx="18" fill="#F7F9FC" stroke="#8994A3" class="support"/>
+    <text x="1020" y="421" class="card-title" fill="#566171" text-anchor="middle">한국어·도식·이미지 다듬기</text>
+    <rect x="735" y="449" width="170" height="58" rx="14" fill="var(--orange-soft)" stroke="var(--orange)"/>
+    <text x="820" y="478" class="pill" fill="var(--orange)" text-anchor="middle">한국어 윤문</text>
+    <text x="820" y="499" class="body" text-anchor="middle">im-not-ai</text>
+    <rect x="925" y="449" width="180" height="58" rx="14" fill="var(--blue-soft)" stroke="var(--blue)"/>
+    <text x="1015" y="478" class="pill" fill="var(--blue)" text-anchor="middle">도식과 구조 설명</text>
+    <text x="1015" y="499" class="body" text-anchor="middle">Skillstead · Archify</text>
+    <rect x="1125" y="449" width="180" height="58" rx="14" fill="var(--violet-soft)" stroke="var(--violet)"/>
+    <text x="1215" y="478" class="pill" fill="var(--violet)" text-anchor="middle">마스터·파생 이미지</text>
+    <text x="1215" y="499" class="body" text-anchor="middle">gpt-image-2</text>
+  </g>
+  <g data-flow-node="canonical-artifact" data-stage-label="기준 기획 결과물">
+    <rect x="1070" y="200" width="260" height="125" rx="18" fill="#F0F3F7" stroke="#657284" class="card"/>
+    <text x="1200" y="241" class="card-title" fill="#536071" text-anchor="middle">기준 기획 결과물</text>
+    <text x="1200" y="276" class="body" text-anchor="middle">본문·근거·결정·미정 항목</text>
+    <text x="1200" y="302" class="body" text-anchor="middle">수정과 내보내기의 기준</text>
+  </g>
+  <g data-flow-node="stop-hook" data-hook-event="Stop" data-stage-label="마칠 때 결과물 점검">
+    <rect x="200" y="620" width="260" height="125" rx="18" fill="#F7F9FC" stroke="#8994A3" class="card"/>
+    <text x="330" y="658" class="card-title" fill="#566171" text-anchor="middle">마칠 때 결과물 점검</text>
+    <text x="330" y="691" class="body" text-anchor="middle">Stop 훅</text>
+    <text x="330" y="717" class="body" text-anchor="middle">구조·자산·요청 형식 확인</text>
+  </g>
+  <g data-flow-node="human-review" data-human-gate="검토 담당자" data-gate-role="approval-hold" data-gate-label="승인·보류" data-stage-label="검토 담당자 승인·보류">
+    <rect x="570" y="620" width="300" height="125" rx="18" fill="var(--rose-soft)" stroke="var(--rose)" class="card"/>
+    <text x="720" y="658" class="card-title" fill="var(--rose)" text-anchor="middle">검토 담당자 승인·보류</text>
+    <text x="720" y="691" class="body" text-anchor="middle">사실·권리·범위·품질 확인</text>
+    <text x="720" y="717" class="body" text-anchor="middle">수정 이유와 다음 담당자 기록</text>
+  </g>
+  <g data-flow-node="verified-outputs" data-stage-label="검토된 문서·도식·이미지">
+    <rect x="990" y="620" width="320" height="125" rx="18" fill="var(--green-soft)" stroke="var(--green)" class="card"/>
+    <text x="1150" y="658" class="card-title" fill="var(--green)" text-anchor="middle">검토된 문서·도식·이미지</text>
+    <text x="1150" y="691" class="body" text-anchor="middle">MD·PDF·DOCX·PPTX</text>
+    <text x="1150" y="717" class="body" text-anchor="middle">SVG·PNG·HTML</text>
+  </g>
+</svg>

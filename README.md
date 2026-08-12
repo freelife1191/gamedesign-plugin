@@ -30,36 +30,50 @@
 
 ## 플러그인 소개
 
-> 🧭 아이디어 한 줄을 검토 가능한 게임 기획 문서로 발전시켜 그 결과를
-> 학습·포트폴리오 작업까지 이어 주는 게임 기획 도구 모음입니다.
+> 🧭 아이디어 한 줄을 그럴듯한 답변으로 끝내지 않고 근거와 선택 이유를 확인할 수 있는 게임 기획 문서로 발전시킵니다. 어떤 스킬과 검토 역할을 썼는지 남기므로 다음 수정과 포트폴리오 작업도 같은 기준에서 이어 갑니다.
 
 ### 🧩 어떤 플러그인인가요?
 
 이 저장소에는 목적이 다른 두 플러그인이 들어 있습니다.
 
-- **Game Design Studio**는 게임의 방향, 규칙, 콘텐츠, 화면 흐름, 경제와
-  제작 범위를 설계하고 검토합니다.
-- **Game Design Career**는 직무 탐색, 역기획, 학습 계획, 포트폴리오,
-  면접과 주니어 성장 계획을 정리합니다.
-- 두 제품을 함께 쓰면 Studio에서 검토한 기획을 Career의 포트폴리오와
-  면접 준비 자료로 연결합니다. 두 결과 폴더와 승인 기록은
-  따로 관리합니다.
+- **Game Design Studio**는 게임의 방향, 규칙, 콘텐츠, 화면 흐름, 경제와 제작 범위를 설계하고 검토합니다.
+- **Game Design Career**는 직무 탐색, 역기획, 학습 계획, 포트폴리오, 면접과 주니어 성장 계획을 정리합니다.
+- 두 제품을 함께 쓰면 Studio에서 검토한 기획을 Career의 포트폴리오와 면접 준비 자료로 연결합니다. 두 결과 폴더와 승인 기록은 따로 관리합니다.
 
-간단한 요청은 플러그인이 목적을 파악해 필요한 스킬과 검토 역할을 고릅니다.
-작업 순서를 세밀하게 조정해야 할 때만 상세 가이드의 스킬 ID와 실행 순서를
-직접 지정하면 됩니다. 결과를 자동으로 승인하지 않습니다. 검토 담당자의 이름을
-기록한 뒤 그 담당자가 사실·권리·범위를 확인해 승인하거나 보류합니다.
+간단한 요청은 플러그인이 목적을 파악해 필요한 스킬과 검토 역할을 고릅니다. 작업 순서를 세밀하게 조정해야 할 때만 상세 가이드의 스킬 ID와 실행 순서를 직접 지정하면 됩니다. 결과를 자동으로 승인하지 않습니다. 검토 담당자의 이름을 기록한 뒤 그 담당자가 사실·권리·범위를 확인해 승인하거나 보류합니다.
 
 ### 🎯 왜 만들었나요?
 
-좋은 게임 기획 자료라도 실제 프로젝트에 곧바로 적용하기는 어렵습니다.
-아이디어, 경험담, 실무 원칙과 최신 정보가 한데 섞이면 무엇을 근거로 삼아야
-할지 불분명해집니다.
+좋은 게임 기획 자료라도 실제 프로젝트에 곧바로 적용하기는 어렵습니다. 아이디어, 경험담, 실무 원칙과 최신 정보가 한데 섞이면 무엇을 근거로 삼아야 할지 불분명해집니다.
 
-이 플러그인은 흩어진 자료를 그대로 답처럼 복사하지 않습니다. 질문을 작업
-순서로 바꿉니다. 모르는 내용은 `미정`으로 남기고 근거와 선택 이유를 결과물에
-함께 기록합니다. 초안부터 검토, 수정, 시각화, 내보내기까지 같은 기준으로
-작업하도록 만들었습니다.
+이 플러그인은 흩어진 자료를 그대로 답처럼 복사하지 않습니다. 질문을 작업 순서로 바꿉니다. 모르는 내용은 `미정`으로 남기고 근거와 선택 이유를 결과물에 함께 기록합니다. 초안부터 검토, 수정, 시각화, 내보내기까지 같은 기준으로 작업하도록 만들었습니다.
+
+### 🥇 왜 일반 AI 대화보다 이 플러그인을 써야 하나요?
+
+일반 AI 대화는 아이디어를 넓히고 문장 초안을 빠르게 만드는 데 유용합니다. 하지만 기획이 길어질수록 문제가 생깁니다. 어떤 내용을 사실로 보았는지, 어떤 전제를 임의로 세웠는지, 왜 이 안을 골랐는지 다시 확인하기 어렵습니다. 검토 의견과 수정 이유도 대화 속에 흩어져 다음 작업에서 빠지기 쉽습니다.
+
+이 플러그인은 답변 한 번이 아니라 **기획이 만들어지고 검토되는 과정**을 관리합니다. 짧은 요청에서도 요청 목적과 범위를 먼저 읽고 한 분야가 분명하면 전문 스킬로 바로 보냅니다. 여러 분야가 얽혔거나 범위가 모호하면 오케스트레이터가 필요한 작업 순서를 고릅니다. 관련 전문 역할은 최대 세 개만 선택해 서로 다른 질문으로 검토합니다. 의견이 부딪히면 한쪽을 지우지 않고 사람이 결정할 항목으로 남깁니다.
+
+| 일반 AI 대화에서 놓치기 쉬운 점 | 이 플러그인이 보완하는 방식 |
+| --- | --- |
+| 요청할 때마다 범위와 답변 형식이 달라짐 | 라우팅 규칙이 목적·결과물·완료 조건에 맞는 스킬 경로를 선택 |
+| 사실, 해석과 제안이 한 문장에 섞임 | 근거, 가정, 미정 항목과 선택 이유를 분리해 기록 |
+| 길어진 대화에서 이전 결정과 수정 이유를 잃음 | 기준 기획 결과물 폴더에 본문·근거·결정·미해결 항목을 함께 보존 |
+| 한 번의 자기 검토로 여러 분야를 두루 판단 | 시스템·콘텐츠·UX·경제·제작·취업 분야의 전문 역할이 서로 다른 질문으로 검토 |
+| 문장을 다듬다가 수치·이름·승인 상태까지 바뀔 수 있음 | 한국어 윤문과 보호 내용 검증을 분리해 뜻과 식별자를 보존 |
+| 결과 파일이 생기면 작업이 끝났다고 보기 쉬움 | 자동 점검과 검토 담당자의 승인·보류를 통과해야 완료 상태로 기록 |
+
+전문 기획자를 대신하거나 대체하지는 않습니다. 대신 전문 기획자가 실제로 확인해야 할 질문, 근거, 책임과 재검토 순서를 빠뜨리지 않도록 작업을 구조화합니다. 아이디어를 한 번 듣고 끝나는 답변과 달리 팀 검토와 다음 수정에 필요한 정보가 남는다는 점이 핵심입니다.
+
+### ⚙️ 짧게 요청해도 체계가 작동합니다
+
+제품마다 설치할 때 스킬 18개가 함께 들어갑니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
+
+시작할 때 `SessionStart` 훅이 문서 변환기, 브라우저와 이미지 생성 기능을 확인합니다. 작업이 끝날 때는 `Stop` 훅이 표시된 기준 기획 결과물과 요청한 형식을 다시 점검합니다. 두 훅 모두 결과를 자동으로 승인하지 않습니다. 검토 담당자가 승인하거나 보류합니다. 보류 이유와 남은 작업을 기록해 다음 요청에서 보류한 지점부터 다시 시작합니다.
+
+아래 Skillstead 도식은 한 줄 요청이 어떤 내부 단계를 거쳐 검토 가능한 결과로 바뀌는지 보여 줍니다. 이미지를 누르면 편집 가능한 SVG 원본이 열립니다.
+
+[![한 줄 요청을 전문 게임 기획 작업으로 바꾸는 플러그인 시스템 흐름](guides/assets/readme/simple-prompt-design-system.png)](guides/assets/readme/simple-prompt-design-system.svg)
 
 ### 👥 이런 분께 잘 맞습니다
 
@@ -72,20 +86,27 @@
 
 ### 🛠️ 이 플러그인으로 할 수 있는 일
 
-- 게임의 방향과 핵심 재미를 짧은 기획 요약서로 정리합니다.
-- 규칙, 상태, 예외, 데이터, 콘텐츠, UX, 경제와 제작 위험을 검토합니다.
-- 직무 탐색, 역기획, 학습 계획, 포트폴리오, 면접 답변을 근거와 연결합니다.
-- 긴 문서의 어색한 한국어 표현을 다듬되 사실, 수치, 식별자(ID)와 승인 상태는
-  바꾸지 않습니다.
-- Skillstead와 Archify로 흐름도와 시스템 구조도를 만들고 검증합니다.
-- 승인된 결과를 MD·PDF·DOCX·PPTX로 내보낼 준비를 합니다.
-- 필요하면 마스터 이미지를 기준 삼아 게임 이미지를 계획하고 생성·검토 기록을
-  남깁니다.
+| 하려는 일 | 플러그인이 돕는 범위 | 남는 결과 |
+| --- | --- | --- |
+| 게임의 방향 잡기 | 목표 플레이어, 핵심 재미, 하지 않을 일과 확인할 가정을 한 묶음으로 정리 | 게임 방향 원칙, 게임 기획 요약서, 핵심 동기 흐름 |
+| 규칙과 콘텐츠 설계 | 규칙·상태·예외·데이터, 전투·퀘스트·레벨·퍼즐과 반복 플레이를 서로 연결해 검토 | 시스템 명세, 콘텐츠 명세, 전투·레벨 검토 의견 |
+| 화면 흐름과 접근성 점검 | 첫 플레이, 입력, 오류·복구 상태, 튜토리얼과 접근성 대안을 확인 | 화면·사용자 경험 흐름, 접근성·플랫폼 확인표 |
+| 경제와 운영 계획 검토 | 재화의 획득·소비, 성장 속도, 상점, 이벤트 실험, 중단·되돌리기 조건을 분리 | 경제 균형 명세, 라이브 운영 실험 계획 |
+| 제작 범위 정하기 | 팀·일정·의존성·시제품·완료 기준과 포기할 조건을 함께 검토 | 제작 범위·일정·위험 계획, 검토 결정 기록 |
+| 학습과 취업 준비 | 직무 탐색, 채용 공고 조사, 역기획, 학습 계획, 포트폴리오, 면접과 성장 계획을 연결 | 역할 지도, 역량 차이, 12주 계획, 포트폴리오 사례, 면접 기록 |
+| 한국어 문서 다듬기 | [im-not-ai](https://github.com/epoko77-ai/im-not-ai)를 내부 스킬로 사용해 번역투와 기계적인 문장을 찾고 사실·수치·식별자(ID)·승인 상태를 보호한 채 수정안과 검증 기록을 남김 | 윤문 초안, 변경 검증 기록, 사람이 반영할 수정안 |
+| 흐름과 구조 설명하기 | [Skillstead](https://github.com/kyungseo/skillstead)로 편집 가능한 SVG와 검증용 2배 PNG를 만들고 [Archify](https://github.com/tt-a1i/archify)로 관계를 따라가며 살펴볼 수 있는 HTML 구조도를 제작 | SVG·PNG 도식, Archify HTML, 렌더·검수 기록 |
+| 문서 형식으로 전달하기 | 기준 결과와 승인된 자산을 보존한 채 MD·PDF·DOCX·PPTX 형식별 준비와 화면 검수를 분리 | 원본 MD, 검증된 PDF·DOCX·PPTX, 형식별 결과 기록 |
+
+#### 🎨 게임 이미지는 먼저 기준부터 정합니다
+
+이미지가 필요하다고 곧바로 생성부터 시작하지 않습니다. 문서의 용도와 품질 기준을 먼저 확인하고 필요한 이미지마다 고정 식별자, 수량, 들어갈 위치, 대체 텍스트, 유지할 요소와 제외할 요소를 정리합니다. 캐릭터나 세계관의 모습이 계속 이어져야 하면 마스터 이미지를 기준으로 삼습니다. 파생 이미지는 어떤 원본을 참조했는지와 프롬프트 계보를 함께 기록합니다.
+
+기본 설정은 외부 호출이 없는 `prompt-only`입니다. 사용자가 `.env`에 `OPENAI_API_KEY`와 생성 범위를 설정한 경우에만 `gpt-image-2` 작업을 실행합니다. 생성 중 일부가 실패해도 작성한 프롬프트, 성공한 파일과 재개 지점은 남습니다. 생성된 이미지는 모두 검토 전 초안으로 시작합니다. 검토 담당자가 문서 안에서의 쓰임, 읽기 쉬움, 대체 텍스트, 출처, 권리와 사용 범위를 확인해 승인해야 최종 MD·PDF·DOCX·PPTX에 넣을 수 있습니다.
 
 ### 💬 처음에는 이렇게 물어보세요
 
-스킬 이름이나 사례 번호를 몰라도 됩니다. 가진 자료와 원하는 결과를 한 문장으로
-말하세요. 모르는 항목은 `미정`이라고 적으면 됩니다.
+스킬 이름이나 사례 번호를 몰라도 됩니다. 가진 자료와 원하는 결과를 한 문장으로 말하세요. 모르는 항목은 `미정`이라고 적으면 됩니다.
 
 ```text
 @Game Design Studio 4인 협동 RPG의 핵심 재미와 첫 10분 플레이 흐름을 정리해 줘.
@@ -98,21 +119,14 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 처음 요청할 때는 아래 세 가지를 적으면 충분합니다.
 
 1. **무엇을 만들지:** 전투 시스템, 온보딩, 포트폴리오 사례처럼 결과를 적습니다.
-2. **어떤 자료가 있는지:** 메모, 관찰 기록, 기존 문서와 공개 가능한 범위를
-   알려 줍니다.
+2. **어떤 자료가 있는지:** 메모, 관찰 기록, 기존 문서와 공개 가능한 범위를 알려 줍니다.
 3. **무엇이 아직 미정인지:** 결정하지 못한 내용과 사람이 확인할 항목을 남깁니다.
 
 ### 📚 어떤 자료를 참고했나요?
 
-게임 기획자 유리링의
-[YouTube 채널](https://www.youtube.com/@GameDesignerYuriring)과 저장소에 정리한
-관련 리포트도 주요 참고 자료로 삼았습니다. 신입 면접, 말하기와 협업,
-포트폴리오, 학벌·전공·자격증, 게임 개발 경험, 취업 준비 전략을 다룬 유리링
-관련 리포트 6편을 참고했습니다.
+게임 기획자 유리링의 [YouTube 채널](https://www.youtube.com/@GameDesignerYuriring)과 저장소에 정리한 관련 리포트도 주요 참고 자료로 삼았습니다. 신입 면접, 말하기와 협업, 포트폴리오, 학벌·전공·자격증, 게임 개발 경험, 취업 준비 전략을 다룬 유리링 관련 리포트 6편을 참고했습니다.
 
-유리링 관련 리포트 6편은 채널 내용을 저장소 안에 학습용으로 정리한 자료입니다.
-공식 자막이나 채널 운영자의 검수본은 아닙니다. 영상 속 경험과 조언도 모든 팀과
-프로젝트에 그대로 적용되는 보편 법칙으로 다루지 않습니다.
+유리링 관련 리포트 6편은 채널 내용을 저장소 안에 학습용으로 정리한 자료입니다. 공식 자막이나 채널 운영자의 검수본은 아닙니다. 영상 속 경험과 조언도 모든 팀과 프로젝트에 그대로 적용되는 보편 법칙으로 다루지 않습니다.
 
 전체 원문 49편은 다음 범주로 관리합니다.
 
@@ -124,8 +138,7 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 | 콘텐츠 기획 | 10편 | 퀘스트, 캐릭터, 전투, 레벨과 서사 |
 | 기획서 피드백 | 3편 | 문서 검토, 수정 방향과 전달 방식 |
 
-아래 도식은 자료가 기획 문서와 담당자 검토로 이어지는 순서를 보여 줍니다.
-이미지를 누르면 편집 가능한 SVG 원본이 열립니다.
+아래 도식은 자료가 기획 문서와 담당자 검토로 이어지는 순서를 보여 줍니다. 이미지를 누르면 편집 가능한 SVG 원본이 열립니다.
 
 [![자료가 검토 가능한 기획 결과와 담당자 승인으로 이어지는 흐름](guides/assets/readme/evidence-to-design-flow.png)](guides/assets/readme/evidence-to-design-flow.svg)
 
@@ -139,11 +152,7 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 | 핵심 원칙 (Core) | 기획에 계속 적용할 원칙 7개로 정리 | 작업마다 다시 확인할 질문과 기준 제공 |
 | 현재 자료 (Current) | 최근 확인한 1차 자료 16건, 확인일 2026-08-11 | 도구·플랫폼·채용처럼 바뀔 수 있는 사실을 재확인 |
 
-시점에 따라 달라지는 주장은 사용 시점에 최신 공식 자료를 다시 확인합니다.
-자료로 확인하지 못한 수치나 경험은 지어내지 않습니다. `미정`, 가정 또는
-다음에 확인할 항목으로 남깁니다. 이 플러그인은 흥행·매출·채용 합격을 보장하지
-않습니다. 최종 결과와 공개 여부는 검토 담당자를 정해 근거와 권리를 확인한 뒤
-결정합니다.
+시점에 따라 달라지는 주장은 사용 시점에 최신 공식 자료를 다시 확인합니다. 자료로 확인하지 못한 수치나 경험은 지어내지 않습니다. `미정`, 가정 또는 다음에 확인할 항목으로 남깁니다. 이 플러그인은 흥행·매출·채용 합격을 보장하지 않습니다. 최종 결과와 공개 여부는 검토 담당자를 정해 근거와 권리를 확인한 뒤 결정합니다.
 
 ### 🔗 참고 자료와 더 읽을 문서
 
@@ -154,9 +163,7 @@ Studio에서 검토한 전투 시스템 기획을 Career 포트폴리오 사례�
 - [Studio와 Career 전체 사용자 가이드](guides/README.md)
 - [사실·추론·가정 구분 기준](architecture/knowledge-and-evidence.md#사실추론가정-경계)
 
-> ⚠️ 저장소의 MIT 라이선스는 원문과 제3자 자료의 권리를 다시 허가하지
-> 않습니다. 원문을 공개하거나 재사용하기 전에 해당 자료의 이용 조건과 권리를
-> 따로 확인하세요.
+> ⚠️ 저장소의 MIT 라이선스는 원문과 제3자 자료의 권리를 다시 허가하지 않습니다. 원문을 공개하거나 재사용하기 전에 해당 자료의 이용 조건과 권리를 따로 확인하세요.
 
 ---
 
@@ -268,9 +275,7 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 
 ## 5분 안에 첫 결과 만들기
 
-스킬 이름과 사례 번호를 외울 필요는 없습니다. `@Game Design Studio` 또는
-`@Game Design Career` 뒤에 원하는 결과와 가진 자료를 한 문장으로 요청하세요.
-모르는 정보는 `미정`으로 남겨도 됩니다.
+스킬 이름과 사례 번호를 외울 필요는 없습니다. `@Game Design Studio` 또는 `@Game Design Career` 뒤에 원하는 결과와 가진 자료를 한 문장으로 요청하세요. 모르는 정보는 `미정`으로 남겨도 됩니다.
 
 플러그인은 다음 일을 알아서 처리합니다.
 
@@ -280,12 +285,9 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 4. 서로 다른 검토가 필요할 때만 전문 역할을 최대 세 개 선택합니다.
 5. 선택한 스킬과 검토 역할, 결과 파일, 남은 결정을 마지막에 알려 줍니다.
 
-자동 선택은 자동 승인을 뜻하지 않습니다. 기획 결과와 파생 자료는 이름과
-역할을 기록한 사람이 승인·수정·보류합니다.
+자동 선택은 자동 승인을 뜻하지 않습니다. 기획 결과와 파생 자료는 이름과 역할을 기록한 사람이 승인·수정·보류합니다.
 
-아래 Skillstead 흐름도는 한 문장 요청이 전문 스킬 또는 오케스트레이터를 거쳐
-첫 결과와 사람 승인으로 이어지는 과정을 보여 줍니다. 이미지를 누르면 편집
-가능한 SVG 원본이 열립니다.
+아래 Skillstead 흐름도는 한 문장 요청이 전문 스킬 또는 오케스트레이터를 거쳐 첫 결과와 사람 승인으로 이어지는 과정을 보여 줍니다. 이미지를 누르면 편집 가능한 SVG 원본이 열립니다.
 
 [![한 문장 요청에서 스킬 선택과 사람 승인까지 이어지는 첫 결과 흐름](guides/assets/readme/first-result-routing-flow.png)](guides/assets/readme/first-result-routing-flow.svg)
 
@@ -298,8 +300,7 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 게임 기획 요약서로 정리해 줘. 확인되지 않은 내용은 미정으로 남겨 줘.
 ```
 
-받게 되는 첫 결과는 **게임 기획 요약서** (`game-design-brief`)입니다.
-`content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
+받게 되는 첫 결과는 **게임 기획 요약서** (`game-design-brief`)입니다. `content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
 
 ### Career에서 첫 경력 계획 만들기
 
@@ -310,14 +311,12 @@ Git marketplace를 등록했다면 재설치 전에 `codex plugin marketplace up
 현재 경험을 바탕으로 부족한 역량과 12주 학습 계획을 정리해 줘.
 ```
 
-받게 되는 첫 결과는 **게임 기획 경력 계획** (`game-design-career-plan`)입니다.
-`content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
+받게 되는 첫 결과는 **게임 기획 경력 계획** (`game-design-career-plan`)입니다. `content.md`, `evidence.yml`, `export-manifest.yml` 순서로 확인하면 됩니다.
 
 <details>
 <summary>고급 사용: 실행 경로를 직접 고정하기</summary>
 
-같은 경로를 다시 실행하거나 특정 단계부터 재개해야 할 때만 명시적 스킬을
-사용합니다.
+같은 경로를 다시 실행하거나 특정 단계부터 재개해야 할 때만 명시적 스킬을 사용합니다.
 
 ```text
 $game-design-studio:orchestrate-game-design-project
@@ -331,18 +330,13 @@ $game-design-career:orchestrate-game-design-career
 
 ### 완성한 게임 기획을 취업용 포트폴리오 사례로 정리하기
 
-Studio에서 사람이 검토한 기획서 하나를 바탕으로, 내가 해결한 문제와
-기여를 보여 주는 취업용 포트폴리오 사례를 만듭니다.
+Studio에서 사람이 검토한 기획서 하나를 바탕으로, 내가 해결한 문제와 기여를 보여 주는 취업용 포트폴리오 사례를 만듭니다.
 
-**이럴 때 사용:** 수업·개인 프로젝트에서 완성한 기획서를 포트폴리오와
-면접 준비에 활용하고 싶을 때 사용합니다.
+**이럴 때 사용:** 수업·개인 프로젝트에서 완성한 기획서를 포트폴리오와 면접 준비에 활용하고 싶을 때 사용합니다.
 
-**준비물:** Studio에서 작성하고 검토한 기획서 1개와 내가 실제로 맡은
-범위, 공개 가능한 정보입니다.
+**준비물:** Studio에서 작성하고 검토한 기획서 1개와 내가 실제로 맡은 범위, 공개 가능한 정보입니다.
 
-**실행 순서:** 먼저 Studio 기획 검토(`review-game-design`)로 공개할
-내용을 구분한 뒤, Career 포트폴리오 작성(`build-game-design-portfolio`)으로
-사례를 재구성합니다.
+**실행 순서:** 먼저 Studio 기획 검토(`review-game-design`)로 공개할 내용을 구분한 뒤, Career 포트폴리오 작성(`build-game-design-portfolio`)으로 사례를 재구성합니다.
 
 ```text
 App
@@ -369,19 +363,12 @@ $game-design-career:build-game-design-portfolio
 
 **얻게 되는 결과:**
 
-- **포트폴리오 사례 본문** (`creative-design-portfolio/content.md`):
-  문제, 내 역할, 판단과 검증 결과를 읽는 사람이 따라갈 수 있게 정리합니다.
-- **개인 기여와 선택 근거** (`creative-design-portfolio/evidence.yml`):
-  내가 한 일과 그 선택을 뒷받침하는 내용을 분리해 기록합니다.
-- **주요 의사결정 기록** (`creative-design-portfolio/decisions/`):
-  선택한 판단, 대안과 다음 결정을 바꿀 조건을 기록합니다. 이 기록은
-  이후 별도 면접 연습(`practice-game-design-interview`)에서 질문과 답변을
-  준비할 때 참고할 수 있습니다.
-- **공개 전 확인 목록** (`creative-design-portfolio/export-manifest.yml`):
-  공개할 파일, 보류 항목과 내보내기 상태를 확인합니다.
+- **포트폴리오 사례 본문** (`creative-design-portfolio/content.md`): 문제, 내 역할, 판단과 검증 결과를 읽는 사람이 따라갈 수 있게 정리합니다.
+- **개인 기여와 선택 근거** (`creative-design-portfolio/evidence.yml`): 내가 한 일과 그 선택을 뒷받침하는 내용을 분리해 기록합니다.
+- **주요 의사결정 기록** (`creative-design-portfolio/decisions/`): 선택한 판단, 대안과 다음 결정을 바꿀 조건을 기록합니다. 이 기록은 이후 별도 면접 연습(`practice-game-design-interview`)에서 질문과 답변을 준비할 때 참고할 수 있습니다.
+- **공개 전 확인 목록** (`creative-design-portfolio/export-manifest.yml`): 공개할 파일, 보류 항목과 내보내기 상태를 확인합니다.
 
-**공개 전 확인:** 작성자가 실제 기여 범위와 공개 권한을 직접 확인합니다.
-이 플러그인은 공개를 자동 승인하지 않으며, 미정·제외 내용은 보존합니다.
+**공개 전 확인:** 작성자가 실제 기여 범위와 공개 권한을 직접 확인합니다. 이 플러그인은 공개를 자동 승인하지 않으며, 미정·제외 내용은 보존합니다.
 
 ---
 
@@ -391,17 +378,14 @@ $game-design-career:build-game-design-portfolio
 
 #### 빈칸 요청문을 읽는 법
 
-`복사할 요청문`의 빈칸 템플릿은 전체 제작용 요청문 카탈로그 (Production catalog)와
-호환되어야 하므로 고정된 영문 용어를 유지합니다. 다음 뜻으로 읽으면 됩니다.
+`복사할 요청문`의 빈칸 템플릿은 전체 제작용 요청문 카탈로그 (Production catalog)와 호환되어야 하므로 고정된 영문 용어를 유지합니다. 다음 뜻으로 읽으면 됩니다.
 
 - `fact, inference, recommendation`: 확인한 사실, 그 사실에서 나온 추론, 아직 결정하지 않은 제안
 - `handoff`: 다음 플러그인이나 작업자에게 넘기는 인계
 - `canonical artifact`: 검토 기준이 되는 기준 결과 폴더
 - `failed image/export blocker`: 실패한 이미지·내보내기를 멈춘 중단 항목
 
-처음 사용하는 사람은 아래의 간단한 요청 표에서 목적에 맞는 문장을 골라
-시작하세요. 세부 카드는 같은 작업을 반복하거나 경로를 직접 고정할 때
-참고하면 됩니다.
+처음 사용하는 사람은 아래의 간단한 요청 표에서 목적에 맞는 문장을 골라 시작하세요. 세부 카드는 같은 작업을 반복하거나 경로를 직접 고정할 때 참고하면 됩니다.
 
 [![요청문에서 기획 결과와 다음 요청으로 이어지는 흐름](guides/assets/readme/prompt-to-result-flow.png)](guides/assets/readme/prompt-to-result-flow.svg)
 
@@ -409,8 +393,7 @@ $game-design-career:build-game-design-portfolio
 
 게임의 규칙, 콘텐츠, 경험과 제작 범위를 설계하려는 기획자가 Studio 사례를 고릅니다. 각 사례는 검토 가능한 기획 결과 폴더 (Artifact)와 사람 검토 지점을 남깁니다.
 
-한 줄 요청만으로 시작할 수 있습니다. 플러그인은 요청에 따라 선택하고 필요한
-경로만 실행한 뒤, 결과를 사람 검토에 넘깁니다.
+한 줄 요청만으로 시작할 수 있습니다. 플러그인은 요청에 따라 선택하고 필요한 경로만 실행한 뒤, 결과를 사람 검토에 넘깁니다.
 
 [![Studio 한 줄 요청이 필요한 스킬과 사람 검토로 이어지는 흐름](guides/assets/readme/studio-smart-request-flow.png)](guides/assets/readme/studio-smart-request-flow.svg)
 
@@ -431,13 +414,11 @@ $game-design-career:build-game-design-portfolio
 
 #### 사용 시점
 
-아이디어의 대상 플레이어와 핵심 재미를 아직 한 문장으로 설명하기 어려울 때
-사용합니다.
+아이디어의 대상 플레이어와 핵심 재미를 아직 한 문장으로 설명하기 어려울 때 사용합니다.
 
 #### 준비 입력
 
-게임 한 줄 소개, 예상 플레이 시간, 대상 플레이어와 확인한 사실·미정 항목을
-적습니다.
+게임 한 줄 소개, 예상 플레이 시간, 대상 플레이어와 확인한 사실·미정 항목을 적습니다.
 
 #### 바로 써 보는 요청
 
@@ -510,8 +491,7 @@ ST-C01의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 #### 사용 시점
 
-반복 플레이가 단순 작업처럼 느껴지거나 보상과 선택의 연결이 약할 때
-사용합니다.
+반복 플레이가 단순 작업처럼 느껴지거나 보상과 선택의 연결이 약할 때 사용합니다.
 
 #### 준비 입력
 
@@ -664,14 +644,11 @@ ST-C03의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 #### 사용 시점
 
-튜토리얼 첫 화면에서 목표 행동을 찾지 못하거나 모바일과 PC에서 입력 방식이
-달라질 때 사용합니다. 로딩·빈 상태·오류·중단 후 복귀까지 설계해야 할 때
-특히 유용합니다.
+튜토리얼 첫 화면에서 목표 행동을 찾지 못하거나 모바일과 PC에서 입력 방식이 달라질 때 사용합니다. 로딩·빈 상태·오류·중단 후 복귀까지 설계해야 할 때 특히 유용합니다.
 
 #### 준비 입력
 
-첫 세션의 핵심 행동 2~3개, 지원 플랫폼과 입력 방식, 화면별 현재 문제,
-접근성 요구(키보드 조작·자막·색상 외 신호 등)를 준비합니다.
+첫 세션의 핵심 행동 2~3개, 지원 플랫폼과 입력 방식, 화면별 현재 문제, 접근성 요구(키보드 조작·자막·색상 외 신호 등)를 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -707,11 +684,9 @@ $game-design-studio:visualize-game-design 달빛항구-모바일RPG ST-C04의
 
 #### 받게 되는 결과
 
-`화면 흐름·상태 명세 (ui-ux-flow-state)` → `접근성·플랫폼 매트릭스
-(accessibility-platform-matrix)` → `게임 기획 검토 (game-design-review)`
+`화면 흐름·상태 명세 (ui-ux-flow-state)` → `접근성·플랫폼 매트릭스 (accessibility-platform-matrix)` → `게임 기획 검토 (game-design-review)`
 
-이 요청을 사용하면 첫 세션 화면 목록, 상태별 입력·피드백 표, 플랫폼별 대체
-입력 경로, 검토 의견 (finding)과 화면 전환·오류 복구 도식이 생성됩니다.
+이 요청을 사용하면 첫 세션 화면 목록, 상태별 입력·피드백 표, 플랫폼별 대체 입력 경로, 검토 의견 (finding)과 화면 전환·오류 복구 도식이 생성됩니다.
 
 #### 읽는 순서
 
@@ -725,8 +700,7 @@ $game-design-studio:visualize-game-design 달빛항구-모바일RPG ST-C04의
 
 ST-C04의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
-예: “보상 수령 화면의 색상 외 피드백과 키보드 대체 입력을 추가하고,
-오류 상태에서 재시도·나가기 선택을 비교해 줘.”
+예: “보상 수령 화면의 색상 외 피드백과 키보드 대체 입력을 추가하고, 오류 상태에서 재시도·나가기 선택을 비교해 줘.”
 
 [Sample 결과 보기](guides/sample-results/studio/st-c04.md)
 
@@ -739,14 +713,11 @@ ST-C04의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 #### 사용 시점
 
-퀘스트의 선택이 대사만 바꾸고 플레이 결과로 이어지지 않거나, 캐릭터·스킬·
-몬스터의 역할과 제작 범위가 서로 어긋날 때 사용합니다. 선택 전후 상태와
-재플레이 가능성까지 한 번에 정리할 때 적합합니다.
+퀘스트의 선택이 대사만 바꾸고 플레이 결과로 이어지지 않거나, 캐릭터·스킬· 몬스터의 역할과 제작 범위가 서로 어긋날 때 사용합니다. 선택 전후 상태와 재플레이 가능성까지 한 번에 정리할 때 적합합니다.
 
 #### 준비 입력
 
-퀘스트 목표와 진입 조건, NPC 상태, 플레이어 선택, 결과·보상, 연결할 전투
-요소, 반복 여부, 제작 예산과 공개 가능한 저작권·출처 범위를 준비합니다.
+퀘스트 목표와 진입 조건, NPC 상태, 플레이어 선택, 결과·보상, 연결할 전투 요소, 반복 여부, 제작 예산과 공개 가능한 저작권·출처 범위를 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -783,11 +754,9 @@ $game-design-studio:review-game-design 유리숲-구조대장 퀘스트의
 
 #### 받게 되는 결과
 
-`내러티브·퀘스트·NPC 명세 (narrative-quest-npc)` → `캐릭터·스킬·전투·몬스터
-명세 (character-skill-combat-monster)` → `게임 기획 검토 (game-design-review)`
+`내러티브·퀘스트·NPC 명세 (narrative-quest-npc)` → `캐릭터·스킬·전투·몬스터 명세 (character-skill-combat-monster)` → `게임 기획 검토 (game-design-review)`
 
-이 요청을 사용하면 NPC 상태와 선택·결과 표, 전투 역할·텔레그래프·카운터플레이
-명세, 제작 의존성, 권리 확인 항목과 검토 의견 (finding)이 생성됩니다.
+이 요청을 사용하면 NPC 상태와 선택·결과 표, 전투 역할·텔레그래프·카운터플레이 명세, 제작 의존성, 권리 확인 항목과 검토 의견 (finding)이 생성됩니다.
 
 #### 읽는 순서
 
@@ -801,8 +770,7 @@ $game-design-studio:review-game-design 유리숲-구조대장 퀘스트의
 
 ST-C05의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
-예: “신뢰도 2단계의 협상·전투 분기를 비교하고, 각 분기에 필요한 NPC 대사,
-스킬 텔레그래프와 제작 리소스의 최소 범위를 정리해 줘.”
+예: “신뢰도 2단계의 협상·전투 분기를 비교하고, 각 분기에 필요한 NPC 대사, 스킬 텔레그래프와 제작 리소스의 최소 범위를 정리해 줘.”
 
 [Sample 결과 보기](guides/sample-results/studio/st-c05.md)
 
@@ -815,14 +783,11 @@ ST-C05의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 #### 사용 시점
 
-성장 보상이 과도하게 쌓이거나 부족하고 이벤트가 경제를 흔들 수 있을 때
-사용합니다. 재화의 유입·소비·보유량과 실험 중단·되돌리기 기준을 함께
-설계해야 하는 라이브 서비스 기획에 적합합니다.
+성장 보상이 과도하게 쌓이거나 부족하고 이벤트가 경제를 흔들 수 있을 때 사용합니다. 재화의 유입·소비·보유량과 실험 중단·되돌리기 기준을 함께 설계해야 하는 라이브 서비스 기획에 적합합니다.
 
 #### 준비 입력
 
-재화 종류와 현재 유입·소비량, 성장 목표, 이벤트 가설과 대조군, 기간·대상
-세그먼트, 보호 지표와 중단·되돌리기 기준 (rollback)을 준비합니다.
+재화 종류와 현재 유입·소비량, 성장 목표, 이벤트 가설과 대조군, 기간·대상 세그먼트, 보호 지표와 중단·되돌리기 기준 (rollback)을 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -856,12 +821,9 @@ $game-design-studio:review-game-design 별빛농장 시즌 이벤트의 재화
 
 #### 받게 되는 결과
 
-`경제·밸런스 명세 (economy-balance)` → `LiveOps 실험·이벤트 계획
-(liveops-experiment-event)` → `게임 기획 검토 (game-design-review)`
+`경제·밸런스 명세 (economy-balance)` → `LiveOps 실험·이벤트 계획 (liveops-experiment-event)` → `게임 기획 검토 (game-design-review)`
 
-이 요청을 사용하면 재화 유입·소비 (source/sink)와 목표 보유량 표, 이벤트 가설·대조군·
-보호 지표·중단·되돌리기 계획 (rollback), 그리고 수치 근거에 대한 검토 의견 (finding)이
-생성됩니다.
+이 요청을 사용하면 재화 유입·소비 (source/sink)와 목표 보유량 표, 이벤트 가설·대조군· 보호 지표·중단·되돌리기 계획 (rollback), 그리고 수치 근거에 대한 검토 의견 (finding)이 생성됩니다.
 
 #### 읽는 순서
 
@@ -877,8 +839,7 @@ $game-design-studio:review-game-design 별빛농장 시즌 이벤트의 재화
 
 ST-C07의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
-예: “신규·복귀 플레이어의 7일 보유량을 보호하는 상한을 제안하고,
-실험 중단 조건과 이전 설정으로 되돌리는 절차를 추가해 줘.”
+예: “신규·복귀 플레이어의 7일 보유량을 보호하는 상한을 제안하고, 실험 중단 조건과 이전 설정으로 되돌리는 절차를 추가해 줘.”
 
 [Sample 결과 보기](guides/sample-results/studio/st-c07.md)
 
@@ -891,14 +852,11 @@ ST-C07의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 #### 사용 시점
 
-핵심 시제품 (vertical slice)의 범위가 계속 늘거나 일정·인력·외주·권리 의존성이 출시를
-위협할 때 사용합니다. 무엇을 먼저 만들고 무엇을 중단할지, 이미지와 문서를
-어떤 형식으로 검수할지 함께 정해야 할 때 적합합니다.
+핵심 시제품 (vertical slice)의 범위가 계속 늘거나 일정·인력·외주·권리 의존성이 출시를 위협할 때 사용합니다. 무엇을 먼저 만들고 무엇을 중단할지, 이미지와 문서를 어떤 형식으로 검수할지 함께 정해야 할 때 적합합니다.
 
 #### 준비 입력
 
-목표 경험과 팀 역할, 일정·기술 제약, 기능 의존성, 필수·선택 범위, 이미지
-제작 계획, 출시 형식과 각 단계의 완료 기준·중단 기준을 준비합니다.
+목표 경험과 팀 역할, 일정·기술 제약, 기능 의존성, 필수·선택 범위, 이미지 제작 계획, 출시 형식과 각 단계의 완료 기준·중단 기준을 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -935,11 +893,9 @@ slice의
 
 #### 받게 되는 결과
 
-`제작 범위·리스크 명세 (production-scope-risk)` → `게임 기획 검토
-(game-design-review)` → `출력 준비 매니페스트 (export-preparation-manifest)`
+`제작 범위·리스크 명세 (production-scope-risk)` → `게임 기획 검토 (game-design-review)` → `출력 준비 매니페스트 (export-preparation-manifest)`
 
-이 요청을 사용하면 우선순위 범위표 (MoSCoW), 의존성·역량 공백·중단 기준 (kill criteria), 이미지 작업
-목록과 문서 형식별 품질 확인 (QA) 항목, 최종 출력 준비 상태가 생성됩니다.
+이 요청을 사용하면 우선순위 범위표 (MoSCoW), 의존성·역량 공백·중단 기준 (kill criteria), 이미지 작업 목록과 문서 형식별 품질 확인 (QA) 항목, 최종 출력 준비 상태가 생성됩니다.
 
 #### 읽는 순서
 
@@ -953,8 +909,7 @@ slice의
 
 ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 공개 정보만으로 재개해.
 
-예: “8주 안에 전투 한 판을 검증해야 한다면 NPC 장식과 추가 이벤트를
-후순위로 미루고, 이미지 생성 실패와 PDF 변환 실패의 대체 경로를 추가해 줘.”
+예: “8주 안에 전투 한 판을 검증해야 한다면 NPC 장식과 추가 이벤트를 후순위로 미루고, 이미지 생성 실패와 PDF 변환 실패의 대체 경로를 추가해 줘.”
 
 [Sample 결과 보기](guides/sample-results/studio/st-c08.md)
 
@@ -962,12 +917,9 @@ ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 ### Career 학습·취업 사례 7개
 
-게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 근거와 다음
-과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오
-결과물을 만듭니다.
+게임 기획을 배우거나 취업을 준비하는 사람은 Career 사례로 역할, 근거와 다음 과제를 정리합니다. 각 사례는 멘토와 함께 검토할 수 있는 학습 또는 포트폴리오 결과물을 만듭니다.
 
-한 줄 요청만으로 시작할 수 있습니다. 경력 단계와 목표를 진단한 뒤 최소 스킬
-경로만 실행하고, 결과는 멘토 또는 본인 검토를 거칩니다.
+한 줄 요청만으로 시작할 수 있습니다. 경력 단계와 목표를 진단한 뒤 최소 스킬 경로만 실행하고, 결과는 멘토 또는 본인 검토를 거칩니다.
 
 [![Career 한 줄 요청이 최소 스킬 경로와 멘토 검토로 이어지는 흐름](guides/assets/readme/career-smart-request-flow.png)](guides/assets/readme/career-smart-request-flow.svg)
 
@@ -992,8 +944,7 @@ ST-C08의 보존 결과 폴더 (`artifact`)와 중단·재개 기록을 읽고 �
 
 #### 준비 입력
 
-현재 해 본 작업 목록, 관심 직무 2~3개, 공개된 채용 공고 또는 학습 자료와
-멘토에게 물어볼 질문을 준비합니다. 비공개 회사 자료나 개인정보는 넣지 않습니다.
+현재 해 본 작업 목록, 관심 직무 2~3개, 공개된 채용 공고 또는 학습 자료와 멘토에게 물어볼 질문을 준비합니다. 비공개 회사 자료나 개인정보는 넣지 않습니다.
 
 #### 바로 써 보는 요청
 
@@ -1025,37 +976,27 @@ $game-design-career:research-game-design-jobs 민서-첫기획 공개 공고
 
 #### 플러그인이 선택하는 작업 순서
 
-`apply-document-quality-profile` → `map-game-design-career` →
-`research-game-design-jobs`
+`apply-document-quality-profile` → `map-game-design-career` → `research-game-design-jobs`
 
-작성 기준을 맞춘 뒤 역할 후보를 비교하고, 현재 자료로 확인할 수 없는 부분은
-추가 조사나 학습 과제로 남깁니다.
+작성 기준을 맞춘 뒤 역할 후보를 비교하고, 현재 자료로 확인할 수 없는 부분은 추가 조사나 학습 과제로 남깁니다.
 
 #### 받게 되는 결과
 
-`게임 기획 역할 비교표 (game-design-role-map)` →
-`학습 로드맵 (learning-roadmap)`
+`게임 기획 역할 비교표 (game-design-role-map)` → `학습 로드맵 (learning-roadmap)`
 
-역할별 핵심 역량, 내 현재 근거, 부족한 근거, 1~2주 안에 해 볼 작은 과제가
-생성됩니다.
+역할별 핵심 역량, 내 현재 근거, 부족한 근거, 1~2주 안에 해 볼 작은 과제가 생성됩니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/career-stage-goal/content.md` →
-`game-design-career/[경력 ID]/career-stage-goal/evidence.yml` →
-`game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml`
+`game-design-career/[경력 ID]/career-stage-goal/content.md` → `game-design-career/[경력 ID]/career-stage-goal/evidence.yml` → `game-design-career/[경력 ID]/career-stage-goal/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** 목표 → 근거 → 격차 → 연습 과제 → 결정 기록입니다.
-**검토 체크포인트:** 역할 비교표의 각 주장에 출처가 있고 학습 과제가
-실행 가능한지 확인합니다. **사람 결정:** 사용자와 멘토가 목표 역할과 공개
-범위를 승인·수정·보류합니다. 도구 실행과 결과물은 자동 승인하지 않습니다.
+**읽는 순서:** 목표 → 근거 → 격차 → 연습 과제 → 결정 기록입니다. **검토 체크포인트:** 역할 비교표의 각 주장에 출처가 있고 학습 과제가 실행 가능한지 확인합니다. **사람 결정:** 사용자와 멘토가 목표 역할과 공개 범위를 승인·수정·보류합니다. 도구 실행과 결과물은 자동 승인하지 않습니다.
 
 #### 다음 요청
 
-CA-C01의 보존 결과물과 중단 기록을 읽고, 역할 비교에 필요한 공개 자료를
-보완한 뒤 재개해.
+CA-C01의 보존 결과물과 중단 기록을 읽고, 역할 비교에 필요한 공개 자료를 보완한 뒤 재개해.
 
 [Sample 결과 보기](guides/sample-results/career/ca-c01.md)
 
@@ -1072,8 +1013,7 @@ CA-C01의 보존 결과물과 중단 기록을 읽고, 역할 비교에 필요�
 
 #### 준비 입력
 
-현재 포트폴리오의 역량별 근거, 주당 학습 가능 시간, 목표 기간, 피드백을 줄
-멘토와 공개 가능한 학습 자료를 준비합니다.
+현재 포트폴리오의 역량별 근거, 주당 학습 가능 시간, 목표 기간, 피드백을 줄 멘토와 공개 가능한 학습 자료를 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -1107,33 +1047,25 @@ CA-C04로 정리해.
 
 #### 플러그인이 선택하는 작업 순서
 
-`apply-document-quality-profile` → `map-game-design-career` →
-`visualize-career-roadmap` → `export-career-documents`
+`apply-document-quality-profile` → `map-game-design-career` → `visualize-career-roadmap` → `export-career-documents`
 
 #### 받게 되는 결과
 
 `역량 매트릭스 (competency-matrix)` → `학습 로드맵 (learning-roadmap)`
 
-역량별 현재 상태, 부족한 근거, 주차별 증거 결과물 (proof artifact), 피드백 일정과 보류된
-가정을 얻습니다.
+역량별 현재 상태, 부족한 근거, 주차별 증거 결과물 (proof artifact), 피드백 일정과 보류된 가정을 얻습니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/competency-matrix/content.md` →
-`game-design-career/[경력 ID]/competency-matrix/evidence.yml` →
-`game-design-career/[경력 ID]/competency-matrix/export-manifest.yml`
+`game-design-career/[경력 ID]/competency-matrix/content.md` → `game-design-career/[경력 ID]/competency-matrix/evidence.yml` → `game-design-career/[경력 ID]/competency-matrix/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** 현재 근거 → 격차 → 증거 과제 (proof task) → 피드백 주기 → 결정입니다.
-**검토 체크포인트:** 각 주차 과제가 실제로 제출 가능한 크기인지, 멘토 피드백
-시점이 있는지 확인합니다. 사람은 우선순위와 공개 범위를 승인·수정·보류하며
-계획 생성은 자동 승인을 하지 않고 성장을 보장하지 않습니다.
+**읽는 순서:** 현재 근거 → 격차 → 증거 과제 (proof task) → 피드백 주기 → 결정입니다. **검토 체크포인트:** 각 주차 과제가 실제로 제출 가능한 크기인지, 멘토 피드백 시점이 있는지 확인합니다. 사람은 우선순위와 공개 범위를 승인·수정·보류하며 계획 생성은 자동 승인을 하지 않고 성장을 보장하지 않습니다.
 
 #### 다음 요청
 
-CA-C04의 보존 결과물과 중단 기록을 읽고, 미완료 증거 과제 (proof task)와 다음 피드백
-시점을 확인한 뒤 재개해.
+CA-C04의 보존 결과물과 중단 기록을 읽고, 미완료 증거 과제 (proof task)와 다음 피드백 시점을 확인한 뒤 재개해.
 
 [Sample 결과 보기](guides/sample-results/career/ca-c04.md)
 
@@ -1150,8 +1082,7 @@ CA-C04의 보존 결과물과 중단 기록을 읽고, 미완료 증거 과제 (
 
 #### 준비 입력
 
-직접 플레이한 구간, 버전·날짜, 캡처 또는 공개 링크, 관찰 메모와 분석할
-기능 범위를 준비합니다. 보지 못한 구현을 사실처럼 적지 않습니다.
+직접 플레이한 구간, 버전·날짜, 캡처 또는 공개 링크, 관찰 메모와 분석할 기능 범위를 준비합니다. 보지 못한 구현을 사실처럼 적지 않습니다.
 
 #### 바로 써 보는 요청
 
@@ -1182,28 +1113,21 @@ $game-design-career:export-career-documents 별빛원정대 튜토리얼의
 
 #### 플러그인이 선택하는 작업 순서
 
-`apply-document-quality-profile` → `reverse-engineer-game-design` →
-`export-career-documents`
+`apply-document-quality-profile` → `reverse-engineer-game-design` → `export-career-documents`
 
 #### 받게 되는 결과
 
-`역기획 문서 (reverse-design-document)` →
-`게임 분석 보고서 (game-analysis-report)`
+`역기획 문서 (reverse-design-document)` → `게임 분석 보고서 (game-analysis-report)`
 
-관찰 증거 ID, 관찰과 추론의 경계, 반례, 개선 제안과 공개 권리 확인 목록을
-얻습니다.
+관찰 증거 ID, 관찰과 추론의 경계, 반례, 개선 제안과 공개 권리 확인 목록을 얻습니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/reverse-design-document/content.md` →
-`game-design-career/[경력 ID]/reverse-design-document/evidence.yml` →
-`game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml`
+`game-design-career/[경력 ID]/reverse-design-document/content.md` → `game-design-career/[경력 ID]/reverse-design-document/evidence.yml` → `game-design-career/[경력 ID]/reverse-design-document/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** 관찰 증거 ID → 추론 → 제안 → 개인 기여 → 공개 권리 검토입니다.
-관찰과 해석이 섞이지 않았는지, 캡처·인용 권리가 확인됐는지 사람이 승인·수정·
-보류합니다. 분석은 자동 승인하지 않으며 채용이나 공개를 보장하지 않습니다.
+**읽는 순서:** 관찰 증거 ID → 추론 → 제안 → 개인 기여 → 공개 권리 검토입니다. 관찰과 해석이 섞이지 않았는지, 캡처·인용 권리가 확인됐는지 사람이 승인·수정· 보류합니다. 분석은 자동 승인하지 않으며 채용이나 공개를 보장하지 않습니다.
 
 #### 다음 요청
 
@@ -1224,8 +1148,7 @@ CA-C05의 보존 결과물과 중단 기록을 읽고 누락된 관찰 링크나
 
 #### 준비 입력
 
-문제와 대상 플레이어, 핵심 루프 초안, 직접 만든 규칙·화면·도식, 개인 기여
-범위와 공개 가능한 이미지·문서만 준비합니다.
+문제와 대상 플레이어, 핵심 루프 초안, 직접 만든 규칙·화면·도식, 개인 기여 범위와 공개 가능한 이미지·문서만 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -1257,29 +1180,21 @@ $game-design-career:review-game-design-portfolio 해류도시-첫시즌의
 
 #### 플러그인이 선택하는 작업 순서
 
-`apply-document-quality-profile` → `build-game-design-portfolio` →
-`review-game-design-portfolio`
+`apply-document-quality-profile` → `build-game-design-portfolio` → `review-game-design-portfolio`
 
 #### 받게 되는 결과
 
-`포트폴리오 프로젝트 브리프 (portfolio-project-brief)` →
-`창작 기획 포트폴리오 (creative-design-portfolio)`
+`포트폴리오 프로젝트 브리프 (portfolio-project-brief)` → `창작 기획 포트폴리오 (creative-design-portfolio)`
 
-문제 정의, 설계 선택과 대안, 개인 기여, evidence 링크, 공개 전 수정 목록을
-얻습니다. 5축 검토를 선택하면 발표 전 보완할 항목도 함께 나옵니다.
+문제 정의, 설계 선택과 대안, 개인 기여, evidence 링크, 공개 전 수정 목록을 얻습니다. 5축 검토를 선택하면 발표 전 보완할 항목도 함께 나옵니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/portfolio-project-brief/content.md` →
-`game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml` →
-`game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml`
+`game-design-career/[경력 ID]/portfolio-project-brief/content.md` → `game-design-career/[경력 ID]/portfolio-project-brief/evidence.yml` → `game-design-career/[경력 ID]/portfolio-project-brief/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** evidence ID → 관찰 → 추론 → 제안 → 개인 기여 → 공개 권리 검토입니다.
-작성자와 포트폴리오 검토자가 실제로 만든 부분과 팀·가정 부분을 구분하고,
-공개 가능한 주장과 이미지를 승인·수정·보류합니다. 결과물은 자동 승인하지
-않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.
+**읽는 순서:** evidence ID → 관찰 → 추론 → 제안 → 개인 기여 → 공개 권리 검토입니다. 작성자와 포트폴리오 검토자가 실제로 만든 부분과 팀·가정 부분을 구분하고, 공개 가능한 주장과 이미지를 승인·수정·보류합니다. 결과물은 자동 승인하지 않으며 포트폴리오 품질이나 채용을 보장하지 않습니다.
 
 #### 다음 요청
 
@@ -1300,8 +1215,7 @@ CA-C06의 보존 결과물과 중단 기록을 읽고 미완성 evidence와 공�
 
 #### 준비 입력
 
-포트폴리오 섹션 ID, 각 주장에 연결된 evidence ID, 현재 피드백, 공개 권한과
-발표 대상(멘토·채용 담당자 등)을 준비합니다.
+포트폴리오 섹션 ID, 각 주장에 연결된 evidence ID, 현재 피드백, 공개 권한과 발표 대상(멘토·채용 담당자 등)을 준비합니다.
 
 #### 바로 써 보는 요청
 
@@ -1334,34 +1248,25 @@ $game-design-career:export-career-documents 시스템 기획
 
 #### 플러그인이 선택하는 작업 순서
 
-`review-game-design-portfolio` → `build-game-design-portfolio` →
-`practice-game-design-interview` → `export-career-documents`
+`review-game-design-portfolio` → `build-game-design-portfolio` → `practice-game-design-interview` → `export-career-documents`
 
 #### 받게 되는 결과
 
-`5축 포트폴리오 검토 (five-axis-review)` →
-`포트폴리오 수정 목록 (portfolio-backlog)` →
-`자기소개·지원동기 (introduction-motivation)`
+`5축 포트폴리오 검토 (five-axis-review)` → `포트폴리오 수정 목록 (portfolio-backlog)` → `자기소개·지원동기 (introduction-motivation)`
 
-발견된 문제의 심각도, 최소 수정 작업, 발표 전에 확인할 질문과 근거 기반의
-자기소개 초안을 얻습니다.
+발견된 문제의 심각도, 최소 수정 작업, 발표 전에 확인할 질문과 근거 기반의 자기소개 초안을 얻습니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/five-axis-review/content.md` →
-`game-design-career/[경력 ID]/five-axis-review/evidence.yml` →
-`game-design-career/[경력 ID]/five-axis-review/export-manifest.yml`
+`game-design-career/[경력 ID]/five-axis-review/content.md` → `game-design-career/[경력 ID]/five-axis-review/evidence.yml` → `game-design-career/[경력 ID]/five-axis-review/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** evidence ID → 관찰 → 추론 → 제안 → 개인 기여 → 공개 권리 →
-수정 백로그입니다. 작성자와 검토자가 finding의 근거와 수정 우선순위를 승인·
-수정·보류합니다. review는 자동 승인하지 않으며 합격이나 시장 반응을 보장하지 않습니다.
+**읽는 순서:** evidence ID → 관찰 → 추론 → 제안 → 개인 기여 → 공개 권리 → 수정 백로그입니다. 작성자와 검토자가 finding의 근거와 수정 우선순위를 승인· 수정·보류합니다. review는 자동 승인하지 않으며 합격이나 시장 반응을 보장하지 않습니다.
 
 #### 다음 요청
 
-CA-C07의 보존 결과물과 중단 기록을 읽고 심각도별 (severity) 문제 가운데
-가장 높은 항목의 근거와 수정부터 재개해.
+CA-C07의 보존 결과물과 중단 기록을 읽고 심각도별 (severity) 문제 가운데 가장 높은 항목의 근거와 수정부터 재개해.
 
 [Sample 결과 보기](guides/sample-results/career/ca-c07.md)
 
@@ -1378,8 +1283,7 @@ CA-C07의 보존 결과물과 중단 기록을 읽고 심각도별 (severity) �
 
 #### 준비 입력
 
-지원할 역할의 공개 공고, 포트폴리오 evidence ID, 예상 질문, 실제 개인 기여와
-멘토 피드백을 준비합니다. 경험·성과·합격을 추측해 채우지 않습니다.
+지원할 역할의 공개 공고, 포트폴리오 evidence ID, 예상 질문, 실제 개인 기여와 멘토 피드백을 준비합니다. 경험·성과·합격을 추측해 채우지 않습니다.
 
 #### 바로 써 보는 요청
 
@@ -1412,29 +1316,21 @@ $game-design-career:export-career-documents 시스템 기획 지원용
 
 #### 플러그인이 선택하는 작업 순서
 
-`practice-game-design-interview` → `plan-junior-growth` →
-`visualize-career-roadmap` → `export-career-documents`
+`practice-game-design-interview` → `plan-junior-growth` → `visualize-career-roadmap` → `export-career-documents`
 
 #### 받게 되는 결과
 
-`면접 질문·답변 기록 (interview-question-answer-log)` →
-`주니어 성장 검토 (junior-growth-review)` →
-`전환 준비도 (transition-readiness)`
+`면접 질문·답변 기록 (interview-question-answer-log)` → `주니어 성장 검토 (junior-growth-review)` → `전환 준비도 (transition-readiness)`
 
-질문별 근거 링크 (evidence), 답변의 사실·추론·제안 구분, 정직한 부족점 (honest gap), 멘토 피드백과
-다음 검증 과제를 얻습니다. readiness는 사람 검토 전 임시 상태입니다.
+질문별 근거 링크 (evidence), 답변의 사실·추론·제안 구분, 정직한 부족점 (honest gap), 멘토 피드백과 다음 검증 과제를 얻습니다. readiness는 사람 검토 전 임시 상태입니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/interview-question-answer-log/content.md` →
-`game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml` →
-`game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml`
+`game-design-career/[경력 ID]/interview-question-answer-log/content.md` → `game-design-career/[경력 ID]/interview-question-answer-log/evidence.yml` → `game-design-career/[경력 ID]/interview-question-answer-log/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** 질문·근거 (evidence) → 답변의 경계 → 정직한 부족점 (honest gap) → 피드백 → 다음
-증거 과제 (proof task)입니다. 작성자와 멘토가 실제 기여와 공개 범위, 다음 과제를 승인·수정·
-보류합니다. 이 기록은 자동 승인하지 않으며 채용·승진·이직을 보장하지 않습니다.
+**읽는 순서:** 질문·근거 (evidence) → 답변의 경계 → 정직한 부족점 (honest gap) → 피드백 → 다음 증거 과제 (proof task)입니다. 작성자와 멘토가 실제 기여와 공개 범위, 다음 과제를 승인·수정· 보류합니다. 이 기록은 자동 승인하지 않으며 채용·승진·이직을 보장하지 않습니다.
 
 #### 다음 요청
 
@@ -1455,8 +1351,7 @@ CA-C08의 보존 결과물과 중단 기록을 읽고 질문별 최신 evidence�
 
 #### 준비 입력
 
-관심 직무 2~3개, 해 본 작은 기획 작업, 주당 가능 시간, 목표 기간과 멘토에게
-확인할 질문을 준비합니다. 적합성을 단정할 개인 정보나 비공개 자료는 넣지 않습니다.
+관심 직무 2~3개, 해 본 작은 기획 작업, 주당 가능 시간, 목표 기간과 멘토에게 확인할 질문을 준비합니다. 적합성을 단정할 개인 정보나 비공개 자료는 넣지 않습니다.
 
 #### 바로 써 보는 요청
 
@@ -1491,23 +1386,17 @@ $game-design-career:plan-junior-growth 신입-역할선택의 역할 후보,
 
 #### 받게 되는 결과
 
-`게임 기획 역할 비교표 (game-design-role-map)` →
-`역량 매트릭스 (competency-matrix)` → `학습 로드맵 (learning-roadmap)`
+`게임 기획 역할 비교표 (game-design-role-map)` → `역량 매트릭스 (competency-matrix)` → `학습 로드맵 (learning-roadmap)`
 
-역할 후보별 판단 근거, 현재·목표 역량 차이, 작은 포트폴리오 과제와 주차별
-학습 순서를 얻습니다. 역할 적합성은 멘토 검토 전 확정하지 않습니다.
+역할 후보별 판단 근거, 현재·목표 역량 차이, 작은 포트폴리오 과제와 주차별 학습 순서를 얻습니다. 역할 적합성은 멘토 검토 전 확정하지 않습니다.
 
 #### 읽는 순서
 
-`game-design-career/[경력 ID]/game-design-role-map/content.md` →
-`game-design-career/[경력 ID]/game-design-role-map/evidence.yml` →
-`game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml`
+`game-design-career/[경력 ID]/game-design-role-map/content.md` → `game-design-career/[경력 ID]/game-design-role-map/evidence.yml` → `game-design-career/[경력 ID]/game-design-role-map/export-manifest.yml`
 
 #### 사람 검토
 
-**읽는 순서:** 역할 비교 → 근거와 미정 → 역량 격차 → 학습 과제입니다.
-멘토가 역할 후보와 예외, 학습 가능 범위를 검토해 승인·수정·보류합니다.
-스킬 실행은 자동 승인하지 않으며 실제 역할 적합성을 확정하지 않습니다.
+**읽는 순서:** 역할 비교 → 근거와 미정 → 역량 격차 → 학습 과제입니다. 멘토가 역할 후보와 예외, 학습 가능 범위를 검토해 승인·수정·보류합니다. 스킬 실행은 자동 승인하지 않으며 실제 역할 적합성을 확정하지 않습니다.
 
 #### 다음 요청
 
@@ -1519,12 +1408,9 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 
 ### Studio와 Career 연계 사례 4개
 
-제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로
-발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도
-되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다.
+제작 기획을 포트폴리오, 면접 연습, 발표 자료 또는 재개 계획으로 발전시키려면 아래에서 목적에 맞는 사례를 고릅니다. 각 사례는 공개해도 되는 자료만 골라내고, 이름과 역할을 적은 담당자의 검토를 거칩니다.
 
-한 줄 요청에서 공개 범위를 먼저 확인하고 필요한 경로만 실행합니다. 결과는
-사람 승인 또는 보류가 기록되기 전까지 공개·제출 완료로 표시하지 않습니다.
+한 줄 요청에서 공개 범위를 먼저 확인하고 필요한 경로만 실행합니다. 결과는 사람 승인 또는 보류가 기록되기 전까지 공개·제출 완료로 표시하지 않습니다.
 
 [![Studio 결과가 Career 활용 자료와 사람 승인으로 이어지는 흐름](guides/assets/readme/suite-smart-request-flow.png)](guides/assets/readme/suite-smart-request-flow.svg)
 
@@ -1542,8 +1428,7 @@ CA-T01의 보존 결과물과 중단 기록을 읽고 미정인 역할 근거와
 
 #### 사용 시점
 
-기획서와 검토 결과는 있지만 포트폴리오에 넣을 이야기 구조가 없을 때
-사용합니다. 실제 회사 자료나 개인정보가 섞여 있으면 먼저 제외합니다.
+기획서와 검토 결과는 있지만 포트폴리오에 넣을 이야기 구조가 없을 때 사용합니다. 실제 회사 자료나 개인정보가 섞여 있으면 먼저 제외합니다.
 
 #### 준비 입력
 
@@ -1578,24 +1463,19 @@ $game-design-career:build-game-design-portfolio \
 
 #### 받게 되는 결과
 
-`포트폴리오 사례 content.md`, `주요 결정 목록`, `검증 결과 요약`,
-`공개하지 않을 항목 목록`
+`포트폴리오 사례 content.md`, `주요 결정 목록`, `검증 결과 요약`, `공개하지 않을 항목 목록`
 
 #### 읽는 순서
 
-`suite/studio-to-career-handoff/content.md` →
-`suite/studio-to-career-handoff/evidence.yml` →
-`suite/studio-to-career-handoff/export-manifest.yml`
+`suite/studio-to-career-handoff/content.md` → `suite/studio-to-career-handoff/evidence.yml` → `suite/studio-to-career-handoff/export-manifest.yml`
 
 #### 사람 검토
 
-포트폴리오 공개 담당자(이름·역할·검토일을 기록)가 공개 범위를 검토합니다.
-승인 전에는 게시용 사례로 표시하지 않으며 자동 승인하지 않습니다.
+포트폴리오 공개 담당자(이름·역할·검토일을 기록)가 공개 범위를 검토합니다. 승인 전에는 게시용 사례로 표시하지 않으며 자동 승인하지 않습니다.
 
 #### 다음 요청
 
-`studio-to-career-handoff`의 보존 파일과 미해결 항목을 읽고, 공개 가능한
-자료만 남겨 포트폴리오 사례 정리를 재개해. 담당자 검토 전 상태로 유지해.
+`studio-to-career-handoff`의 보존 파일과 미해결 항목을 읽고, 공개 가능한 자료만 남겨 포트폴리오 사례 정리를 재개해. 담당자 검토 전 상태로 유지해.
 
 [Sample 결과 보기](guides/sample-results/suite/studio-to-career-handoff.md)
 
@@ -1608,8 +1488,7 @@ $game-design-career:build-game-design-portfolio \
 
 #### 사용 시점
 
-지원 직무 공고와 자신의 기획 결과는 있지만, 답변을 구조화하지 못했을 때
-사용합니다. 아직 확인하지 않은 성과를 사실처럼 쓰지 않습니다.
+지원 직무 공고와 자신의 기획 결과는 있지만, 답변을 구조화하지 못했을 때 사용합니다. 아직 확인하지 않은 성과를 사실처럼 쓰지 않습니다.
 
 #### 준비 입력
 
@@ -1642,30 +1521,23 @@ $game-design-career:practice-game-design-interview \
 
 #### 플러그인이 선택하는 작업 순서
 
-`map-game-design-career` → `design-game-systems` →
-`practice-game-design-interview` → 멘토 모의 면접
+`map-game-design-career` → `design-game-systems` → `practice-game-design-interview` → 멘토 모의 면접
 
 #### 받게 되는 결과
 
-`12주 학습 계획`, `질문별 답변 초안`, `답변에 연결된 기획 근거`,
-`추가 학습 과제`
+`12주 학습 계획`, `질문별 답변 초안`, `답변에 연결된 기획 근거`, `추가 학습 과제`
 
 #### 읽는 순서
 
-`suite/career-proof-project-interview/content.md` →
-`suite/career-proof-project-interview/evidence.yml` →
-`suite/career-proof-project-interview/export-manifest.yml`
+`suite/career-proof-project-interview/content.md` → `suite/career-proof-project-interview/evidence.yml` → `suite/career-proof-project-interview/export-manifest.yml`
 
 #### 사람 검토
 
-멘토 또는 취업 담당자(이름·역할·검토일을 기록)가 답변의 사실성·공개
-범위를 검토합니다. 연습 결과를 합격 판정으로 자동 표시하지 않습니다.
+멘토 또는 취업 담당자(이름·역할·검토일을 기록)가 답변의 사실성·공개 범위를 검토합니다. 연습 결과를 합격 판정으로 자동 표시하지 않습니다.
 
 #### 다음 요청
 
-`career-proof-project-interview`의 질문별 미완성 답변과 피드백을 읽고,
-가장 낮은 점수의 질문 하나를 골라 답변을 다시 작성해. 멘토 검토 전으로
-남겨 둬.
+`career-proof-project-interview`의 질문별 미완성 답변과 피드백을 읽고, 가장 낮은 점수의 질문 하나를 골라 답변을 다시 작성해. 멘토 검토 전으로 남겨 둬.
 
 [Sample 결과 보기](guides/sample-results/suite/career-proof-project-interview.md)
 
@@ -1678,14 +1550,11 @@ $game-design-career:practice-game-design-interview \
 
 #### 사용 시점
 
-기획 내용은 확정됐고 발표 자료를 만들어야 하지만, 필요한 이미지 목록과
-PPT 순서를 아직 정하지 못했을 때 사용합니다. 미승인 이미지는 최종 자료로
-표시하지 않습니다.
+기획 내용은 확정됐고 발표 자료를 만들어야 하지만, 필요한 이미지 목록과 PPT 순서를 아직 정하지 못했을 때 사용합니다. 미승인 이미지는 최종 자료로 표시하지 않습니다.
 
 #### 준비 입력
 
-확정된 기획 본문, 필요한 이미지 목록, 이미지 생성 모드, 발표 대상과
-슬라이드 수, 사용 가능한 이미지 권리 정보
+확정된 기획 본문, 필요한 이미지 목록, 이미지 생성 모드, 발표 대상과 슬라이드 수, 사용 가능한 이미지 권리 정보
 
 #### 바로 써 보는 요청
 
@@ -1716,31 +1585,23 @@ $game-design-studio:export-game-design-documents \
 
 #### 플러그인이 선택하는 작업 순서
 
-`orchestrate-game-design-project` → `plan-image-assets` →
-`review-image-assets` → `export-game-design-documents` → 사람 검토
+`orchestrate-game-design-project` → `plan-image-assets` → `review-image-assets` → `export-game-design-documents` → 사람 검토
 
 #### 받게 되는 결과
 
-`기획서 content.md`, `이미지 프롬프트·생성 기록`, `검토된 이미지 목록`,
-`PPTX 초안과 형식 점검 결과`
+`기획서 content.md`, `이미지 프롬프트·생성 기록`, `검토된 이미지 목록`, `PPTX 초안과 형식 점검 결과`
 
 #### 읽는 순서
 
-`suite/gdd-image-presentation/content.md` →
-`suite/gdd-image-presentation/evidence.yml` →
-`suite/gdd-image-presentation/export-manifest.yml`
+`suite/gdd-image-presentation/content.md` → `suite/gdd-image-presentation/evidence.yml` → `suite/gdd-image-presentation/export-manifest.yml`
 
 #### 사람 검토
 
-발표 자료 담당자(이름·역할·검토일을 기록)가 기획 일치·가독성·권리와
-공개 범위를 검토합니다. 생성·렌더링 결과만으로 이미지를 자동 승인하지
-않습니다.
+발표 자료 담당자(이름·역할·검토일을 기록)가 기획 일치·가독성·권리와 공개 범위를 검토합니다. 생성·렌더링 결과만으로 이미지를 자동 승인하지 않습니다.
 
 #### 다음 요청
 
-`gdd-image-presentation`의 이미지별 검토 상태와 PPT 점검 결과를 읽고,
-가장 먼저 보류된 이미지의 프롬프트 또는 슬라이드만 수정해 재개해.
-담당자 검토 전 상태를 유지해.
+`gdd-image-presentation`의 이미지별 검토 상태와 PPT 점검 결과를 읽고, 가장 먼저 보류된 이미지의 프롬프트 또는 슬라이드만 수정해 재개해. 담당자 검토 전 상태를 유지해.
 
 [Sample 결과 보기](guides/sample-results/suite/gdd-image-presentation.md)
 
@@ -1753,13 +1614,11 @@ $game-design-studio:export-game-design-documents \
 
 #### 사용 시점
 
-실패한 파일의 위치, 오류 메시지, 마지막 성공 단계와 재시도 가능 여부가
-기록되어 있을 때 사용합니다. 원본 기획서가 없으면 먼저 원본부터 복구합니다.
+실패한 파일의 위치, 오류 메시지, 마지막 성공 단계와 재시도 가능 여부가 기록되어 있을 때 사용합니다. 원본 기획서가 없으면 먼저 원본부터 복구합니다.
 
 #### 준비 입력
 
-실패한 파일 경로, 오류 메시지, 마지막 성공 단계, 이미지 생성·내보내기
-설정과 재시도하지 말아야 할 파일 목록
+실패한 파일 경로, 오류 메시지, 마지막 성공 단계, 이미지 생성·내보내기 설정과 재시도하지 말아야 할 파일 목록
 
 #### 바로 써 보는 요청
 
@@ -1792,30 +1651,23 @@ $game-design-studio:export-game-design-documents \
 
 #### 플러그인이 선택하는 작업 순서
 
-`plan-image-assets` → `generate-image-assets` → `review-image-assets` →
-`export-game-design-documents` → `export-career-documents` → 실패 항목만 재실행
+`plan-image-assets` → `generate-image-assets` → `review-image-assets` → `export-game-design-documents` → `export-career-documents` → 실패 항목만 재실행
 
 #### 받게 되는 결과
 
-`원본 보존 목록`, `실패 원인과 재시도 순서`, `재실행 결과 기록`,
-`사람 검토 대기 목록`
+`원본 보존 목록`, `실패 원인과 재시도 순서`, `재실행 결과 기록`, `사람 검토 대기 목록`
 
 #### 읽는 순서
 
-`suite/resume-failed-derivatives/content.md` →
-`suite/resume-failed-derivatives/evidence.yml` →
-`suite/resume-failed-derivatives/export-manifest.yml`
+`suite/resume-failed-derivatives/content.md` → `suite/resume-failed-derivatives/evidence.yml` → `suite/resume-failed-derivatives/export-manifest.yml`
 
 #### 사람 검토
 
-출력 복구 담당자(이름·역할·검토일을 기록)가 재실행 범위와 공개 여부를
-검토합니다. 자동화는 성공 여부만 기록하고 완료 승인을 하지 않습니다.
+출력 복구 담당자(이름·역할·검토일을 기록)가 재실행 범위와 공개 여부를 검토합니다. 자동화는 성공 여부만 기록하고 완료 승인을 하지 않습니다.
 
 #### 다음 요청
 
-`resume-failed-derivatives`의 보존 목록과 실패 기록을 읽고, 재실행하지
-못한 첫 번째 항목부터 원인·수정·결과를 기록하며 재개해. 담당자 검토 전
-상태로 남겨 둬.
+`resume-failed-derivatives`의 보존 목록과 실패 기록을 읽고, 재실행하지 못한 첫 번째 항목부터 원인·수정·결과를 기록하며 재개해. 담당자 검토 전 상태로 남겨 둬.
 
 [Sample 결과 보기](guides/sample-results/suite/resume-failed-derivatives.md)
 
@@ -1967,8 +1819,7 @@ project-artifact/
 
 ### 결과 폴더의 다섯 파일을 이렇게 읽습니다
 
-아래 이름은 모든 결과물에서 같은 역할을 합니다. 영문 파일명은 프로그램과
-파일 탐색에 쓰는 고정 ID이고, 실제로는 왼쪽의 한국어 의미부터 확인하면 됩니다.
+아래 이름은 모든 결과물에서 같은 역할을 합니다. 영문 파일명은 프로그램과 파일 탐색에 쓰는 고정 ID이고, 실제로는 왼쪽의 한국어 의미부터 확인하면 됩니다.
 
 | 한국어 역할과 파일 ID | 무엇을 담는가 | 짧은 내용 예시 |
 | --- | --- | --- |
@@ -2003,30 +1854,21 @@ MD는 항상 보존합니다. PDF, DOCX와 PPTX는 렌더러와 시각 품질 �
 
 ## 플러그인 구조와 전체 시스템 아키텍처
 
-`products/<product>/plugin/`은 사람이 편집하는 원본이고 `plugins/<product>/`는
-표준 빌드가 만드는 설치용 생성본 (generated snapshot)입니다. 생성본은 직접 수정하지
-않으며, 파일 목록과 무결성 정보 (manifest)는 빌드에서만 갱신합니다.
+`products/<product>/plugin/`은 사람이 편집하는 원본이고 `plugins/<product>/`는 표준 빌드가 만드는 설치용 생성본 (generated snapshot)입니다. 생성본은 직접 수정하지 않으며, 파일 목록과 무결성 정보 (manifest)는 빌드에서만 갱신합니다.
 
 ### 전체 시스템 구조를 먼저 확인하기
 
-두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요.
-**시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계**를
-한 화면에서 보여 줍니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를
-확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지
-빠르게 파악할 수 있습니다.
+두 플러그인을 함께 쓰는 흐름이 처음이라면, 먼저 전체 구조를 확인하세요. **시작점부터 두 제품, 기준 기획 결과물, 자동 검증과 사람 결정을 잇는 큰 경계**를 한 화면에서 보여 줍니다. **두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때** 열면, 어느 결과가 자동 검증을 거치고 어느 결정이 사람에게 남는지 빠르게 파악할 수 있습니다.
 
 [![게임 기획 플러그인 모음 전체 시스템 구조](guides/assets/readme/plugin-system-overview.png)](guides/assets/readme/plugin-system-overview.svg)
 
-▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html)
-— 확대·축소, 밝은 화면과 어두운 화면, 단계별 집중 보기를 사용할 수 있습니다.
+▶ [Archify HTML에서 전체 시스템 구조 열기](guides/assets/archify/suite/suite-plugin-system-architecture.html) — 확대·축소, 밝은 화면과 어두운 화면, 단계별 집중 보기를 사용할 수 있습니다.
 
-Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·보류**를 한눈에
-보여 줍니다. 더 자세한 연결과 단계별 집중 보기는 위 Archify HTML에서 확인하세요.
+Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·보류**를 한눈에 보여 줍니다. 더 자세한 연결과 단계별 집중 보기는 위 Archify HTML에서 확인하세요.
 
 ### Studio 설치 패키지 구조
 
-Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 18개, 템플릿 15개와
-지원 스크립트 16개를 포함합니다.
+Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 18개, 템플릿 15개와 지원 스크립트 16개를 포함합니다.
 
 ```text
 plugins/game-design-studio/
@@ -2053,8 +1895,7 @@ generated snapshot: plugins/game-design-studio/
 
 ### Career 설치 패키지 구조
 
-Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 18개, 템플릿 15개와
-지원 스크립트 16개를 포함합니다.
+Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 18개, 템플릿 15개와 지원 스크립트 16개를 포함합니다.
 
 ```text
 plugins/game-design-career/
@@ -2081,8 +1922,7 @@ generated snapshot: plugins/game-design-career/
 
 ### 경로별 역할과 편집 경계
 
-제품 편집 원본 (source)을 편집한 뒤 표준 빌드로 설치용 생성본 (generated snapshot)을
-갱신합니다.
+제품 편집 원본 (source)을 편집한 뒤 표준 빌드로 설치용 생성본 (generated snapshot)을 갱신합니다.
 
 | 경로 | 확인하는 내용 | 직접 편집 여부 |
 | --- | --- | --- |
@@ -2098,9 +1938,7 @@ generated snapshot: plugins/game-design-career/
 <details>
 <summary><strong>설치 패키지의 공통 검증 파일까지 확인하기</strong></summary>
 
-처음 사용할 때는 이 목록을 외울 필요가 없습니다. 설치본이 어떤 검증·이미지·문서
-품질 도구를 포함하는지 감사하거나, 플러그인을 수정한 뒤 생성본 누락을 확인할 때
-펼쳐 보세요.
+처음 사용할 때는 이 목록을 외울 필요가 없습니다. 설치본이 어떤 검증·이미지·문서 품질 도구를 포함하는지 감사하거나, 플러그인을 수정한 뒤 생성본 누락을 확인할 때 펼쳐 보세요.
 
 ### 설치된 최상위 스크립트 (top-level scripts)
 
@@ -2125,9 +1963,7 @@ generated snapshot: plugins/game-design-career/
 
 ### 설치된 문서 품질 경로 (document-quality)
 
-두 설치 패키지는 Studio 17개와 Career 13개 품질 기준 목록, 추가형 오버레이
-(additive overlay) 3개, 중립 참고 사전 설정 (neutral reference preset) 7개를
-검사 가능한 복사본으로 포함합니다.
+두 설치 패키지는 Studio 17개와 Career 13개 품질 기준 목록, 추가형 오버레이 (additive overlay) 3개, 중립 참고 사전 설정 (neutral reference preset) 7개를 검사 가능한 복사본으로 포함합니다.
 
 | 상대 경로 | 들어 있는 내용 |
 | --- | --- |
@@ -2144,46 +1980,30 @@ generated snapshot: plugins/game-design-career/
 | `schema/quality-profile.schema.json` | 문서 품질 기준 스키마 |
 | `schema/reference-preset.schema.json` | 중립 참고 사전 설정 스키마 |
 
-중립 참고 사전 설정은 저작용 전용 출처 (authoring-only source)의 귀속이나 공식
-추천·보증 (공식 endorsement)을 뜻하지 않습니다. 실제 설치 복사본은
-`plugins/game-design-studio/references/shared/document-quality/`와
-`plugins/game-design-career/references/shared/document-quality/`에서 확인합니다.
+중립 참고 사전 설정은 저작용 전용 출처 (authoring-only source)의 귀속이나 공식 추천·보증 (공식 endorsement)을 뜻하지 않습니다. 실제 설치 복사본은 `plugins/game-design-studio/references/shared/document-quality/`와 `plugins/game-design-career/references/shared/document-quality/`에서 확인합니다.
 
 </details>
 
 ### 상황별로 열어볼 Archify 도식 4종
 
-필요한 질문에 맞는 도식만 여세요. 각 HTML은 검증을 통과한 한국어 도식이며,
-선택·검토·재개 경계를 텍스트보다 빠르게 확인하는 보조 자료입니다.
+필요한 질문에 맞는 도식만 여세요. 각 HTML은 검증을 통과한 한국어 도식이며, 선택·검토·재개 경계를 텍스트보다 빠르게 확인하는 보조 자료입니다.
 
-- [전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html):
-  Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결을
-  설명합니다. 두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때
-  엽니다.
-- [Studio 기획 프로젝트 흐름](guides/assets/archify/studio/studio-project-workflow.html):
-  게임 비전부터 설계, 검토와 내보내기까지의 제작 흐름을 설명합니다. 새 게임
-  기획 프로젝트를 시작하거나 제작 순서를 점검할 때 엽니다.
-- [Career 학습·취업 흐름](guides/assets/archify/career/career-evidence-workflow.html):
-  역할 탐색, 학습 과제, 포트폴리오와 면접 준비의 연결을 설명합니다. 학습 계획이나
-  취업 준비 결과를 다음 과제로 연결할 때 엽니다.
-- [Studio 결과를 Career로 정리하는 흐름](guides/assets/archify/suite/suite-studio-career-handoff.html):
-  검토한 제작 결과를 공개 가능한 포트폴리오 자료로 정리하는 순서를 설명합니다.
-  완성한 기획서를 포트폴리오 사례나 면접 근거로 바꿀 때 엽니다.
+- [전체 플러그인 시스템 구조](guides/assets/archify/suite/suite-plugin-system-architecture.html): Studio와 Career 플러그인, 기획 결과물, 검토와 사람 승인의 전체 연결을 설명합니다. 두 플러그인을 처음 함께 사용하거나 전체 승인 경계를 확인할 때 엽니다.
+- [Studio 기획 프로젝트 흐름](guides/assets/archify/studio/studio-project-workflow.html): 게임 비전부터 설계, 검토와 내보내기까지의 제작 흐름을 설명합니다. 새 게임 기획 프로젝트를 시작하거나 제작 순서를 점검할 때 엽니다.
+- [Career 학습·취업 흐름](guides/assets/archify/career/career-evidence-workflow.html): 역할 탐색, 학습 과제, 포트폴리오와 면접 준비의 연결을 설명합니다. 학습 계획이나 취업 준비 결과를 다음 과제로 연결할 때 엽니다.
+- [Studio 결과를 Career로 정리하는 흐름](guides/assets/archify/suite/suite-studio-career-handoff.html): 검토한 제작 결과를 공개 가능한 포트폴리오 자료로 정리하는 순서를 설명합니다. 완성한 기획서를 포트폴리오 사례나 면접 근거로 바꿀 때 엽니다.
 
 ### Archify 검증 자료
 
-도식의 공개 상태, 원본 명세와 시각 품질 검토 근거는 아래 별도 자료에서
-확인합니다. 도식 자체를 열기 전에 최신 검증 상태를 확인하고 싶을 때 사용하세요.
+도식의 공개 상태, 원본 명세와 시각 품질 검토 근거는 아래 별도 자료에서 확인합니다. 도식 자체를 열기 전에 최신 검증 상태를 확인하고 싶을 때 사용하세요.
 
-- [Archify 검증 상태·원본·QA 근거](guides/archify-diagrams/README.md):
-  도식의 질문, 원본 명세, 공개 HTML과 품질 검토 근거를 한곳에서 확인합니다.
+- [Archify 검증 상태·원본·QA 근거](guides/archify-diagrams/README.md): 도식의 질문, 원본 명세, 공개 HTML과 품질 검토 근거를 한곳에서 확인합니다.
 
 ---
 
 ## 이미지·도식·문서 내보내기
 
-이미지 생성, 편집 가능한 도식과 문서 파생본은 서로 다른 작업 경로 (lane)이며,
-모두 기준 기획 결과물 (Canonical Artifact)과 사람 승인 경계를 유지합니다.
+이미지 생성, 편집 가능한 도식과 문서 파생본은 서로 다른 작업 경로 (lane)이며, 모두 기준 기획 결과물 (Canonical Artifact)과 사람 승인 경계를 유지합니다.
 
 ### 이미지 생성 모드
 
@@ -2198,22 +2018,17 @@ cp .env.example .env
 - `IMAGE_GEN_MODE=required`: 필수 자산만 생성하되 이미지 제공자 (provider)가 없으면 차단
 - `IMAGE_GEN_MODE=all`: 목록 (manifest)의 모든 생성 가능한 자산을 후보로 전달
 
-비어 있지 않은 `OPENAI_API_KEY`가 있으면 OpenAI Images API만 사용합니다. 키가
-없고 호스트 이미지 기능 (host capability)이 `available`일 때만 호스트 대체 경로
-(fallback)를 사용합니다. 그 외에는 프롬프트만 보존하는 `prompt-only`로 유지합니다.
+비어 있지 않은 `OPENAI_API_KEY`가 있으면 OpenAI Images API만 사용합니다. 키가 없고 호스트 이미지 기능 (host capability)이 `available`일 때만 호스트 대체 경로 (fallback)를 사용합니다. 그 외에는 프롬프트만 보존하는 `prompt-only`로 유지합니다.
 
 ### 편집 가능한 도식
 
-관계 설명에는 Skillstead의 편집 가능한 SVG (editable SVG)를 기준 자산으로
-사용합니다. 렌더러 (renderer)와 품질 검사 (QA)가 가능할 때만 2× PNG를 만듭니다.
+관계 설명에는 Skillstead의 편집 가능한 SVG (editable SVG)를 기준 자산으로 사용합니다. 렌더러 (renderer)와 품질 검사 (QA)가 가능할 때만 2× PNG를 만듭니다.
 
 [Studio 시각화 가이드](guides/game-design-studio/visualization.md)와 [Career 시각화 가이드](guides/game-design-career/visualization.md)에서 SVG·PNG 검증 경계를 확인하세요.
 
 ### 문서 내보내기 상태
 
-MD는 렌더러 사용 가능 여부 (renderer capability)와 무관하게 항상 보존합니다.
-PDF, DOCX와 PPTX는 렌더러와 형식별 시각 품질 검사 (visual QA)가 필요하며,
-실패하면 안전하게 막는 방식 (fail-closed)으로 해당 형식만 차단합니다.
+MD는 렌더러 사용 가능 여부 (renderer capability)와 무관하게 항상 보존합니다. PDF, DOCX와 PPTX는 렌더러와 형식별 시각 품질 검사 (visual QA)가 필요하며, 실패하면 안전하게 막는 방식 (fail-closed)으로 해당 형식만 차단합니다.
 
 | 상태 | 의미 |
 | --- | --- |

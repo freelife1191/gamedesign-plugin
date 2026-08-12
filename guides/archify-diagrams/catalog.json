@@ -22,7 +22,7 @@
       "product": "suite",
       "source_document": "README.md",
       "source_section": "플러그인 구조와 전체 시스템 아키텍처",
-      "source_digest": "2d5785be2e24cf6c6f30f118e3296bc984c616d4d74f6cdf14d234ad4eb31101",
+      "source_digest": "68401a98fc87b7db384ece4ea721c093ee802c0f8484cb184436315158c1d39f",
       "question": "사용자 진입점에서 두 기획 플러그인의 작업, 기준 기획 결과물, 자동 검증과 사람 검토·승인을 거쳐 결과가 어떻게 전달되는가?",
       "decision": "selected",
       "decision_reason": "Studio와 Career의 분리된 플러그인 경계가 전문 스킬, Canonical Artifact, 검증 및 사람 승인과 만나는 전체 전달 구조를 함께 설명한다.",
