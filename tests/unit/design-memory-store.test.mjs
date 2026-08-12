@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { writeSync } from "node:fs";
-import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { cp, link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -424,6 +424,23 @@ test("moved disputed event closes the scan instead of restoring approved memory"
   assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.path_binding");
 });
 
+test("a stale store root cannot resurrect an older approved snapshot or append source files", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") });
+  const snapshot = path.join(root, "approved-snapshot"); await cp(store.root, snapshot, { recursive: true }); await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) });
+  const retired = path.join(root, "retired-memory-root"); await rename(store.root, retired); await rename(snapshot, store.root);
+  assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) }), "memory.scan_incomplete");
+  await assertRejectedWithoutSourceChange(store, () => appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: approved.eventId, targetRelativePath: approved.relativePath, observedSha256: approved.fileSha256, reasonCode: "memory.bad", actor: "auditor" }), "memory.scan_incomplete");
+});
+
+test("incomplete scans reject quarantine marker appends without changing the source tree", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const target = await appendMemoryEvent({ store, eventDocument: document() }); const other = await appendMemoryEvent({ store, eventDocument: transitionDocument(target.eventId, "verified", "2026-08-12T01:00:00.000Z") });
+  await writeFile(path.join(store.root, other.relativePath, "commit.json"), "broken\n");
+  assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+  await assertRejectedWithoutSourceChange(store, () => appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: target.eventId, targetRelativePath: target.relativePath, observedSha256: target.fileSha256, reasonCode: "memory.bad", actor: "auditor" }), "memory.scan_incomplete");
+});
+
 test("marker binding closes the scan when a sealed marker target tuple is forged", async (t) => {
   const forgeries = ["target_relative_path", "target_event_id", "memory_id", "observed_sha256"];
   for (const forged of forgeries) {
@@ -479,15 +496,10 @@ test("scan diagnostics do not expose untrusted physical path components", async 
   }
 });
 
-test("traversal failures and special entries close scans without leaking filesystem errors", async (t) => {
-  for (const failurePoint of ["opendir", "lstat", "close"]) {
-    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const attacker = "sk-live-TRAVERSAL-SECRET"; const nested = path.join(store.root, "v1", "events", attacker); await mkdir(nested, { recursive: true }); const failure = Object.assign(new Error(`EACCES ${nested}`), { code: "EACCES", path: nested });
-    const traversal = {
-      opendir: async (candidate) => { if (failurePoint === "opendir" && candidate === nested) throw failure; return opendir(candidate); },
-      lstat: async (candidate) => { if (failurePoint === "lstat" && candidate === nested) throw failure; return lstat(candidate); },
-      close: async (handle) => { if (failurePoint === "close") { try { await handle.close(); } catch {} throw failure; } return handle.close().catch((error) => { if (error?.code !== "ERR_DIR_CLOSED") throw error; }); },
-    };
-    const scan = await scanMemoryEvents({ store, traversal }); assertClosedScan(scan, record.memory_id, "memory.unbound_seal"); const diagnostics = JSON.stringify(scan.diagnostics); assert.equal(diagnostics.includes(attacker), false); assert.equal(diagnostics.includes(root), false);
+test("public scans do not accept traversal adapters and special entries close scans without leaking filesystem errors", async (t) => {
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const disputed = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "disputed", "2026-08-12T01:00:00.000Z") }); await writeFile(path.join(store.root, disputed.relativePath, "commit.json"), "broken\n");
+    const hostile = new Proxy({}, { get() { throw new Error("public traversal input was consumed"); } }); const scan = await scanMemoryEvents({ store, traversal: hostile }); assertClosedScan(scan, record.memory_id, "memory.unbound_seal");
   }
   {
     const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const attacker = "special-sk-live-ENTRY"; await mkdir(path.join(store.root, "v1", "events"), { recursive: true }); await symlink(root, path.join(store.root, "v1", "events", attacker));

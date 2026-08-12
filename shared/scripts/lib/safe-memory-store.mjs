@@ -164,20 +164,25 @@ function authorizeMemoryAppend({ scan, parsed } = {}) {
   return { prior, heads, byId };
 }
 
-async function allEntries(root, relative = "", state, traversal, sourceRoot = false) {
-  let directoryHandle; try { directoryHandle = await traversal.opendir(root); } catch (error) { if (sourceRoot && error?.code === "ENOENT") return; throw error; }
-  const entries = []; try { for await (const entry of directoryHandle) { entries.push(entry); if (entries.length > state.maxEvents - state.count) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } } } finally { await traversal.close(directoryHandle); }
-  for (const entry of entries.sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) { if (state.count === state.maxEvents) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } state.count += 1; const next = path.join(root, entry.name); const pathName = relative ? `${relative}/${entry.name}` : entry.name; const item = await traversal.lstat(next); if (item.isDirectory() && !item.isSymbolicLink()) { await allEntries(next, pathName, state, traversal); if (!state.complete) return; } else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName); else if (item.isSymbolicLink() || !item.isFile()) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return; } }
+async function allEntries(root, relative = "", state, sourceRoot = false) {
+  let directoryHandle; try { directoryHandle = await opendir(root); } catch (error) { if (sourceRoot && error?.code === "ENOENT") return; throw error; }
+  const entries = []; try { for await (const entry of directoryHandle) { entries.push(entry); if (entries.length > state.maxEvents - state.count) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } } } finally { await closeTraversalDirectory(directoryHandle); }
+  for (const entry of entries.sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) { if (state.count === state.maxEvents) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } state.count += 1; const next = path.join(root, entry.name); const pathName = relative ? `${relative}/${entry.name}` : entry.name; const item = await lstat(next); if (item.isDirectory() && !item.isSymbolicLink()) { await allEntries(next, pathName, state); if (!state.complete) return; } else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName); else if (item.isSymbolicLink() || !item.isFile()) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return; } }
 }
 async function closeTraversalDirectory(handle) { try { await handle.close(); } catch (error) { if (error?.code !== "ERR_DIR_CLOSED") throw error; } }
+async function matchesStoreIdentity(store) {
+  try { const root = await canonicalDirectory(store?.root); return Boolean(store?.identity && same(root.identity, store.identity)); } catch { return false; }
+}
 function markerRelativePath({ targetMemoryId, targetEventId, markerId }) { return `v1/controls/quarantine/${hash(targetMemoryId).slice(0, 2)}/${targetEventId}/${markerId}`; }
-export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEvents = MAX_EVENTS, traversal: injectedTraversal } = {}) {
+export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEvents = MAX_EVENTS } = {}) {
   if (!Number.isInteger(maxEventBytes) || maxEventBytes < 1 || maxEventBytes > MAX_BYTES || !Number.isInteger(maxEvents) || maxEvents < 1 || maxEvents > MAX_EVENTS) fail("Invalid scan limits.");
-  await canonicalDirectory(store?.root); const state = { maxEvents, count: 0, complete: true, diagnostics: [], commits: [], taintedMemoryIds: new Set() }; const traversal = { opendir: injectedTraversal?.opendir ?? opendir, lstat: injectedTraversal?.lstat ?? lstat, close: injectedTraversal?.close ?? closeTraversalDirectory };
+  const state = { maxEvents, count: 0, complete: true, diagnostics: [], commits: [], taintedMemoryIds: new Set() };
   const events = []; const quarantines = [];
   const closed = () => ({ complete: false, entriesScanned: state.count, diagnostics: state.diagnostics, taintedMemoryIds: [], events: [], quarantines: [] });
-  try { await allEntries(path.join(store.root, "v1", "events"), "events", state, traversal, true); if (state.complete) await allEntries(path.join(store.root, "v1", "controls", "quarantine"), "controls/quarantine", state, traversal, true); } catch { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); }
+  if (!await matchesStoreIdentity(store)) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }
+  try { await allEntries(path.join(store.root, "v1", "events"), "events", state, true); if (state.complete) await allEntries(path.join(store.root, "v1", "controls", "quarantine"), "controls/quarantine", state, true); } catch { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); }
   if (!state.complete) return closed();
+  if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }
   const eventCommits = state.commits.filter((item) => item.startsWith("events/")).sort(); const markerCommits = state.commits.filter((item) => item.startsWith("controls/quarantine/")).sort();
   if (eventCommits.length + markerCommits.length !== state.commits.length) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }
   for (const relativePath of eventCommits) {
@@ -197,6 +202,7 @@ export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEv
       quarantines.push(marker);
     } catch (error) { state.diagnostics.push({ code: error?.code === "memory.quarantine_binding" ? "memory.quarantine_binding" : "memory.unbound_seal" }); return closed(); }
   }
+  if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }
   return { complete: true, entriesScanned: state.count, diagnostics: state.diagnostics, taintedMemoryIds: [], events: events.sort((a, b) => a.eventId.localeCompare(b.eventId)), quarantines };
 }
 
@@ -235,7 +241,8 @@ export function foldMemoryEvents(scan, { now = new Date() } = {}) {
 
 export async function appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now = new Date() } = {}) {
   if (!safeId(targetMemoryId) || !EVENT_ID.test(targetEventId ?? "") || targetRelativePath !== memoryEventRelativePath({ memoryId: targetMemoryId, eventId: targetEventId }) || !(observedSha256 === null || /^[a-f0-9]{64}$/u.test(observedSha256)) || typeof reasonCode !== "string" || !reasonCode || typeof actor !== "string" || !actor.trim()) fail("Invalid quarantine marker.");
-  const target = await readCommitted(store, targetRelativePath, targetEventId).catch(() => undefined); if (!target) fail("Quarantine target is not a committed event.", "memory.quarantine_target"); const parsed = parseMemoryEventDocument(target.bytes.toString("utf8"), { eventId: targetEventId }); if (parsed.event.memory_id !== targetMemoryId) fail("Quarantine target identity mismatch.", "memory.quarantine_target");
+  const scan = await scanMemoryEvents({ store }); if (!scan.complete) fail("Memory scan is incomplete.", "memory.scan_incomplete");
+  const target = scan.events.find((item) => item.memoryId === targetMemoryId && item.eventId === targetEventId && item.relativePath === targetRelativePath && (observedSha256 === null || observedSha256 === hash(item.bytes))); if (!target) fail("Quarantine target is not a committed event.", "memory.quarantine_target");
   const marker = { schema_version: 1, memory_id: targetMemoryId, target_event_id: targetEventId, target_relative_path: targetRelativePath, observed_sha256: observedSha256, reason_code: reasonCode, actor, recorded_at: new Date(now).toISOString() }; const bytes = Buffer.from(canonicalQuarantineMarkerDocument(marker)); const markerId = `qmv1-${hash(bytes)}`; return sealEvent(store, markerRelativePath({ targetMemoryId, targetEventId, markerId }), markerId, bytes, "marker");
 }
 
