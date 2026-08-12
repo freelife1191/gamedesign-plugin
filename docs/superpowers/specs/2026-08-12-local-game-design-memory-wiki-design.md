@@ -333,8 +333,8 @@ lane: "studio"
 status: "candidate"
 scope: "project"
 project_id: "wind-island"
-created_at: "2026-08-12T09:00:00+09:00"
-updated_at: "2026-08-12T09:00:00+09:00"
+created_at: "2026-08-12T00:00:00.000Z"
+updated_at: "2026-08-12T00:00:00.000Z"
 review_after: "2026-09-11"
 expires_at: "2026-09-11"
 approved_by: null
@@ -407,6 +407,9 @@ canonical Markdown은 다음 규칙 하나로만 만든다.
   두 칸 들여쓴 `- <scalar>` block sequence로 쓴다. `sources`는
   `artifact_id`, `locator`, `sha256` key 순서의 block mapping이며 tuple의 UTF-8
   byte 순으로 정렬한다. schema가 허용하지 않는 optional key는 쓰지 않는다.
+- `effective_at`, `created_at`, `updated_at`은 유효한 timestamp를 파싱한 뒤
+  `Date.prototype.toISOString()`의 UTC `YYYY-MM-DDTHH:mm:ss.sssZ` bytes로 쓴다.
+  입력 offset 표기는 canonical Markdown에 그대로 남기지 않는다.
 - 본문은 `# 제목`, `## 발견한 내용`, `## 적용 조건`,
   `## 적용하면 안 되는 경우`, `## 근거` 순서다. 각 값은 NFC와 LF로 바꾸고 각
   line의 trailing space·tab과 앞뒤 blank line을 제거하되 내부 blank line은
@@ -626,9 +629,18 @@ GAME_DESIGN_MEMORY_GIT_MODE=local
 ```
 
 세부 기록은 `v1/derived/logs/`의 immutable generation으로 append한다. 기억 ID,
-head event ID와 해시, 적용·제외 이유와 시간만 포함하며 기억 본문, `.env` 값,
-비밀정보를 복제하지 않는다. 기억을 사용하지 않았으면 별도 안내나 영수증을
-만들지 않는다.
+head event ID와 해시, 적용·제외 이유만 포함하며 기억 본문, `.env` 값,
+비밀정보와 derived 생성·실행 시각을 복제하지 않는다. 허용 필드는
+`schemaVersion`, `requestSha256`, `projectId`, `lane`, `applied`의
+`memoryId|headEventId|fileSha256`, `excluded`의 `memoryId|reason`으로 닫는다.
+기억을 사용하지 않았으면 별도 안내나 영수증을 만들지 않는다.
+
+event의 `effective_at`, record의 `created_at|updated_at`, quarantine marker의
+`recorded_at`은 입력 Markdown에 포함된 원천 시간이라 source ID와 fold의 일부다.
+derived log가 사건 순서를 보여 줄 때는 이 원천 값을 그대로 투영할 수 있다.
+반면 rebuild·retrieve·publish 실행 시각,
+`now`, `generatedAt`, `recordedAt`, `sourceUpdatedAt`은 receipt·log·index·view의
+논리 bytes에 넣지 않는다.
 
 ## 오류 처리
 
@@ -643,7 +655,7 @@ head event ID와 해시, 적용·제외 이유와 시간만 포함하며 기억 
 | 기억 저장 실패 | 완성된 기획 결과물을 보존하고 경고 |
 | 잘못된 환경 설정 | 범위를 축소하거나 기억 기능만 중지 |
 | 비밀정보·개인정보 탐지 | 저장을 거부하고 값을 출력하지 않음 |
-| 저장소가 너무 큼 | 제한된 항목만 읽고 유지 관리 필요 상태 표시 |
+| 저장소가 너무 큼 | scan 중단, `complete:false`, 해당 store 전체의 승인 검색·색인 publish 제외, 유지 관리 필요 상태 표시 |
 
 기억 장애는 기본적으로 기존 기획을 계속하는 `fail-open` 보조 기능이다. 다만
 기억을 적용했다고 주장하는 경로는 ID, 상태, 범위와 출처 검증이 하나라도

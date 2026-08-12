@@ -47,10 +47,10 @@
 - `shared/memory/schema/memory-record.schema.json`: 기억 종류, 상태, 범위, lane, 출처와 승인 근거의 닫힌 스키마다.
 - `shared/memory/schema/memory-event.schema.json`: capture·transition·resolution envelope와 완전한 record snapshot의 닫힌 스키마다.
 - `shared/memory/schema/memory-index.schema.json`: fold source tree digest, head event와 정렬된 검색 항목 스키마다.
-- `shared/memory/schema/memory-receipt.schema.json`: 적용·제외·후보 수와 사용한 ID·해시만 허용하는 로컬 영수증 스키마다.
+- `shared/memory/schema/memory-receipt.schema.json`: `schemaVersion`, `requestSha256`, `projectId`, `lane`, `applied[{memoryId,headEventId,fileSha256}]`, `excluded[{memoryId,reason}]`만 허용하는 로컬 영수증 스키마다.
 - `shared/memory/templates/memory-record.md`: 한국어 기억 문서 골격이다.
 - `shared/memory/templates/index.md`: 사람이 읽는 기억 목록 골격이다.
-- `shared/memory/templates/log.md`: 시간순 변경 기록 골격이다.
+- `shared/memory/templates/log.md`: 원천 event의 `effective_at` 순서를 보여 주되 derived 생성·실행 시각은 넣지 않는 변경 view 골격이다.
 - `shared/scripts/validate-design-memory.mjs`: Markdown event 파싱, 순수 레코드 검사, 상태 전이와 출처 검증을 담당한다.
 - `shared/scripts/lib/safe-memory-store.mjs`: 프로젝트·작업 공간·전역 로컬 루트 해석, 심볼릭 링크 없는 제한 읽기, sealed instance append와 별도 best-effort Git 로컬 제외를 담당한다.
 
@@ -85,18 +85,23 @@
 
 ---
 
-### Task 1: 안전한 `.env` 읽기와 기억 설정 계약
+### Task 1: 안전한 `.env` 읽기와 기억 설정 계약 — 완료 baseline/audit
 
-**Files:**
-- Create: `shared/scripts/lib/load-workspace-env.mjs`
-- Create: `shared/scripts/load-memory-config.mjs`
-- Create: `shared/memory/schema/memory-config.schema.json`
-- Create: `tests/unit/workspace-env.test.mjs`
-- Create: `tests/unit/design-memory-config.test.mjs`
-- Modify: `shared/scripts/validate-image-config.mjs`
-- Modify: `tests/unit/image-config.test.mjs`
-- Modify: `shared/image-assets/.env.example`
-- Modify: `.env.example`
+**Execution status at `d82a23e`: COMPLETE.** 이 Task의 구현과 회귀 테스트는 이미
+완료됐다. 아래 내용은 baseline 감사 기록이며 다시 구현하거나 별도 Task 1 커밋을
+만들지 않는다. append-only 후속 작업은 이 공개 계약과 green baseline을
+보존해야 한다.
+
+**Baseline files (already present):**
+- Existing: `shared/scripts/lib/load-workspace-env.mjs`
+- Existing: `shared/scripts/load-memory-config.mjs`
+- Existing: `shared/memory/schema/memory-config.schema.json`
+- Existing: `tests/unit/workspace-env.test.mjs`
+- Existing: `tests/unit/design-memory-config.test.mjs`
+- Existing: `shared/scripts/validate-image-config.mjs`
+- Existing: `tests/unit/image-config.test.mjs`
+- Existing: `shared/image-assets/.env.example`
+- Existing: `.env.example`
 
 **Interfaces:**
 - Produces: `readWorkspaceEnv({ workspaceRoot, env, supportedKeys, legacyKeys, lstatFn, openFileFn, readFileFn }) -> Promise<{ values, sources, warnings, legacyKeys }>`
@@ -105,7 +110,7 @@
 - Produces: `toPublicMemoryConfig(config) -> { enabled, scope, maxItems, candidateTtlDays, gitMode, sources, warnings }`
 - Preserves: `loadImageConfig()` and `toPublicImageConfig()`의 현재 export, 반환 필드, 우선순위와 오류 비공개 계약
 
-- [ ] **Step 1: 기억 설정의 실패 테스트를 작성한다**
+- [x] **Step 1: 기억 설정의 실패 테스트를 작성했다**
 
 `tests/unit/design-memory-config.test.mjs`에 다음 행위를 고정한다.
 
@@ -161,7 +166,7 @@ test("disabled memory ignores invalid subordinate values without widening scope"
 - 최대 개수 0·11과 후보 기간 0·366은 기본값으로 축소된다.
 - `.env` 심볼릭 링크, NUL, 중복 지원 키, 셸 치환과 64 KiB 초과는 거부된다.
 
-- [ ] **Step 2: 실패를 확인한다**
+- [x] **Step 2: 현재 baseline을 감사한다**
 
 Run:
 
@@ -169,9 +174,9 @@ Run:
 node --test tests/unit/design-memory-config.test.mjs
 ```
 
-Expected: `ERR_MODULE_NOT_FOUND`로 실패한다.
+Expected at `d82a23e`: PASS. 원래 RED는 구현 전 이력이며 현재 baseline은 green이다.
 
-- [ ] **Step 3: 공통 작업 공간 환경 읽기 도구의 실패 테스트와 최소 구현을 작성한다**
+- [x] **Step 3: 공통 작업 공간 환경 읽기 도구와 회귀를 구현했다**
 
 `tests/unit/workspace-env.test.mjs`는 정규 파일을 `O_NOFOLLOW`로 열고 열기 전·후
 `dev`와 `ino`가 같아야 하며, 지정하지 않은 키와 실제 값이 오류에 나타나지
@@ -203,7 +208,7 @@ export async function readWorkspaceEnv({
 - 환경 값이 비어 있지 않으면 `.env`보다 우선한다.
 - 반환 `sources[key]`는 `environment`, `.env`, `unset` 중 하나다.
 
-- [ ] **Step 4: 이미지 설정을 공통 읽기 도구로 이관하고 회귀를 확인한다**
+- [x] **Step 4: 이미지 설정을 공통 읽기 도구로 이관하고 회귀를 확인했다**
 
 `validate-image-config.mjs`의 자체 `.env` 열기·파싱을 제거하고
 `readWorkspaceEnv()` 결과를 기존 `mode`, `model`, `quality`,
@@ -218,7 +223,7 @@ node --test tests/unit/workspace-env.test.mjs tests/unit/image-config.test.mjs
 
 Expected: 모든 기존 이미지 설정 테스트와 새 작업 공간 경계 테스트가 PASS한다.
 
-- [ ] **Step 5: 기억 설정 로더와 스키마를 구현한다**
+- [x] **Step 5: 기억 설정 로더와 스키마를 구현했다**
 
 `load-memory-config.mjs`는 다음 닫힌 값을 사용한다.
 
@@ -244,12 +249,12 @@ const supportedKeys = Object.freeze([
 `local`로 축소하고 구조화된 warning code만 반환한다. 오류와 warning에 입력값을
 복제하지 않는다.
 
-- [ ] **Step 6: 두 `.env.example`에 동일한 한국어 기억 설정 주석을 추가한다**
+- [x] **Step 6: 두 `.env.example`에 동일한 한국어 기억 설정 주석을 추가했다**
 
 두 파일의 bytes가 같아야 한다. 기존 이미지 설정은 보존하고 그 아래에 설계
 문서의 다섯 기억 변수를 허용 값, 기본값, 완전 비활성화 의미와 함께 추가한다.
 
-- [ ] **Step 7: Task 1 검증을 실행한다**
+- [x] **Step 7: Task 1 baseline 검증을 실행했다**
 
 Run:
 
@@ -263,30 +268,38 @@ git diff --check
 
 Expected: 모든 명령이 exit 0이다.
 
-- [ ] **Step 8: Task 1을 커밋한다**
+- [x] **Step 8: Task 1 baseline 커밋은 완료됐다**
 
-```bash
-git add .env.example shared/image-assets/.env.example shared/memory/schema/memory-config.schema.json shared/scripts/lib/load-workspace-env.mjs shared/scripts/load-memory-config.mjs shared/scripts/validate-image-config.mjs tests/unit/workspace-env.test.mjs tests/unit/design-memory-config.test.mjs tests/unit/image-config.test.mjs
-git commit -m "feat: add safe game design memory settings"
-```
+후속 구현자는 이 단계의 파일을 재생성하거나 Task 1 커밋을 반복하지 않는다.
 
 ---
 
 ### Task 2: 변경 불가 기억 이벤트와 안전한 추가 저장소
 
+**Starting state at `d82a23e`: legacy baseline is green; migrate, do not recreate.**
+현재 record/schema/template/validator/store/tests와 C helper 기반 replace·move 구현이
+존재한다. 다음 5개 기존 테스트는 변경 전 80/80 PASS한다.
+
+```bash
+node --test tests/unit/workspace-env.test.mjs tests/unit/design-memory-config.test.mjs tests/unit/image-config.test.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
+```
+
+append-only 작업은 이 baseline을 보존하면서 신규 assertion을 RED로 추가한 뒤 기존
+helper/replace/move 저장 계약을 sealed event 계약으로 교체하는 migration이다.
+
 **Files:**
 - Create: `shared/memory/schema/memory-event.schema.json`
-- Create: `shared/memory/schema/memory-record.schema.json`
-- Create: `shared/memory/schema/memory-index.schema.json`
-- Create: `shared/memory/schema/memory-receipt.schema.json`
-- Create: `shared/memory/templates/memory-record.md`
-- Create: `shared/memory/templates/index.md`
-- Create: `shared/memory/templates/log.md`
-- Create: `shared/scripts/validate-design-memory.mjs`
-- Create: `shared/scripts/lib/safe-memory-store.mjs`
+- Modify: `shared/memory/schema/memory-record.schema.json`
+- Modify: `shared/memory/schema/memory-index.schema.json`
+- Modify: `shared/memory/schema/memory-receipt.schema.json`
+- Modify: `shared/memory/templates/memory-record.md`
+- Modify: `shared/memory/templates/index.md`
+- Modify: `shared/memory/templates/log.md`
+- Modify: `shared/scripts/validate-design-memory.mjs`
+- Modify: `shared/scripts/lib/safe-memory-store.mjs`
 - Delete: `shared/scripts/lib/memory-store-posix-helper.c`
-- Create: `tests/unit/design-memory-record.test.mjs`
-- Create: `tests/unit/design-memory-store.test.mjs`
+- Modify: `tests/unit/design-memory-record.test.mjs`
+- Modify: `tests/unit/design-memory-store.test.mjs`
 
 **Interfaces:**
 - Consumes: Task 1 `MemoryConfig`
@@ -301,7 +314,7 @@ git commit -m "feat: add safe game design memory settings"
 - Retains separately: `ensureMemoryGitExclusion(...) -> Promise<{ status: "ready"|"warning"|"skipped", code? }>`
 - Removes: `MEMORY_PLATFORM_CAPABILITIES`, `createMemoryStorePlatformAdapter`, `writeMemoryFileAtomic`, `moveMemoryFileAtomic`, `memoryRecordRelativePath`
 
-- [ ] **Step 1: 이벤트 구조와 record RED를 작성한다**
+- [ ] **Step 1: 기존 record 테스트에 append-only 이벤트 RED를 추가한다**
 
 `memory-event.schema.json`은 `schema_version: 1`, `event_type:
 capture|transition|resolution`, `action`, `memory_id`, `operation_id`, 정렬되고 중복 없는
@@ -316,6 +329,10 @@ transition에서 전이 이름, resolution에서 `resolution`이다. logical rec
 민감정보와 필수 본문 검사는 유지한다. 비-NFC ID, 잘못된 SHA-256, 정렬되지 않은
 배열과 승인 근거 누락을 각각 실패 fixture로 둔다.
 
+기존 record assertion은 계속 PASS해야 한다. 신규 schema·canonical bytes·event DAG
+assertion은 아직 `memory-event.schema.json`과 event API가 없으므로 legacy
+validator/store 구현에서 실패해야 한다.
+
 - [ ] **Step 2: event ID, operation ID와 fold RED를 확인한다**
 
 `event-id = mev1-<sha256(canonical UTF-8 Markdown bytes)>`이며 `event_id`와
@@ -323,6 +340,10 @@ transition에서 전이 이름, resolution에서 `resolution`이다. logical rec
 BOM 없는 UTF-8, LF, 정확히 한 trailing LF, frontmatter delimiter와 고정 key 순서,
 JSON double-quoted string, literal null, base-10 integer, 정렬된 block array/source,
 조건부 key 생략, 고정 본문 section 순서와 blank-line 규칙을 byte fixture로 고정한다.
+`effective_at`, `created_at`, `updated_at`은 offset 입력도 `toISOString()`의 UTC
+`YYYY-MM-DDTHH:mm:ss.sssZ`로 직렬화한다. fixture의 `created_at|updated_at`은 정확히
+`"2026-08-12T00:00:00.000Z"`여야 하며 전체 canonical Markdown bytes와 event ID를
+exact 비교한다.
 
 capture `operation_id`는 검증된 upstream `eventId`다. transition과 resolution은
 8-byte unsigned big-endian length 뒤 UTF-8 value를 붙인 tuple
@@ -339,7 +360,8 @@ Run:
 node --test tests/unit/design-memory-record.test.mjs
 ```
 
-Expected: event parser와 fold가 없어 RED다.
+Expected: 기존 assertion은 green이고 신규 append-only assertion만 RED다. 현재
+파일이나 기존 validator module의 부재를 기대하지 않는다.
 
 - [ ] **Step 3: 결정적 scan과 fold를 구현한다**
 
@@ -399,6 +421,9 @@ resolution은 기록한 parent만 소비하며 나중 event는 별도 head로 �
 같은 OS 계정의 악의적 프로세스가 syscall 사이 디렉터리를 swap하는 race는
 Node 18 path API가 보장하지 않는 non-goal이다. 이 injected case는 skipped 경계
 문서화로만 남기고 보안 PASS로 세지 않는다.
+
+이 RED는 현재 C helper, replace, move와 상태별 record path를 사용하는 legacy
+store에서 실패해야 한다. 기존 store 회귀는 그대로 green이어야 한다.
 
 - [ ] **Step 5: Node 전용 추가 연산을 구현한다**
 
@@ -572,6 +597,13 @@ fresh fold의 `sourceTreeSha256`와 `indexSha256`가 모두 일치하는 valid g
 instance 경로를 읽는다. 없거나 모두 손상됐으면 새 instance를 append한다. 이전
 generation은 수정하거나 삭제하지 않는다.
 
+event의 `effective_at`, record의 `created_at|updated_at`, quarantine marker의
+`recorded_at`은 원천 Markdown bytes에 속하므로 source ID와 fold 입력에 남는다.
+derived log는 사건 순서를 표시할 때 이 원천 시간을 그대로 투영할 수 있다.
+rebuild·retrieve·publish가 실행된 시각은 다른 범주다. `now`, `generatedAt`,
+`recordedAt`, `sourceUpdatedAt`이나 동등한
+derived 실행 시각은 index·view·log·receipt 논리 bytes에 넣지 않는다.
+
 - [ ] **Step 4: 관련성 순위와 원본 재검증을 구현한다**
 
 점수는 다음처럼 계산한다.
@@ -646,7 +678,9 @@ index는 후보 탐색에만 사용하고 승인 권한으로 사용하지 않�
 
 적용 항목이 있을 때만 canonical receipt bytes를 immutable derived log
 generation으로 append한다. request hash와 receipt hash로 논리 중복을 판정하고
-물리 instance는 UUID로 구분한다. 영수증은 다음 필드만 허용한다.
+물리 instance는 UUID로 구분한다. `memory-receipt.schema.json`은 다음 필드와 중첩
+필드만 허용하고 legacy transition receipt의 actor·status·event hash·`recorded_at`
+필드를 제거한다.
 
 ```js
 {
@@ -659,8 +693,9 @@ generation으로 append한다. request hash와 receipt hash로 논리 중복을 
 }
 ```
 
-기억 본문, 환경 값, 절대 경로, instance UUID와 wall clock은 논리 영수증에 넣지
-않는다. 기존 receipt나 log를 전체 교체하지 않는다.
+기억 본문, 환경 값, 절대 경로, instance UUID, `now`, `generatedAt`, `recordedAt`,
+`sourceUpdatedAt`과 wall clock은 논리 영수증에 넣지 않는다. receipt에는 원천
+event 시간도 복제하지 않는다. 기존 receipt나 log를 전체 교체하지 않는다.
 
 - [ ] **Step 6: Task 3 검증을 실행한다**
 
@@ -776,8 +811,9 @@ envelope와 `event_sha256`이 없는 완전한 record snapshot을 canonical Mark
 계산한다. `appendMemoryEvent`가 `created|present`를 반환하면 기억 저장은
 성공이다. 같은 operation ID의 다른 event bytes는 자동 winner 없이 conflict다.
 
-사용 기록은 Task 3의 immutable derived log generation으로 별도 append한다. log
-실패는 이미 저장된 event를 rollback·rewrite하지 않고 warning으로 반환한다.
+사용 기록은 Task 3의 immutable derived log generation으로 별도 append한다. log의
+논리 bytes에는 원천 event의 `effective_at`만 필요할 때 투영하고 derived 실행·생성
+시각은 넣지 않는다. log 실패는 이미 저장된 event를 rollback·rewrite하지 않고 warning으로 반환한다.
 기존 event, log와 index를 replace하거나 이동하지 않는다.
 
 - [ ] **Step 4: 상태 관리의 실패 테스트를 작성한다**
