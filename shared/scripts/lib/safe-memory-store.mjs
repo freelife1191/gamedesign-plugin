@@ -3,7 +3,7 @@ import { constants } from "node:fs";
 import { appendFile, link, lstat, mkdir, open, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { parseMemoryEventDocument, validateMemoryTransition } from "../validate-design-memory.mjs";
+import { canonicalQuarantineMarkerDocument, parseMemoryEventDocument, parseQuarantineMarkerDocument, validateMemoryTransition } from "../validate-design-memory.mjs";
 
 const MAX_BYTES = 256 * 1024;
 const MAX_EVENTS = 10000;
@@ -71,10 +71,12 @@ export async function stageImmutableMemoryFile({ store, relativePath, bytes } = 
 
 function claimBytes({ eventId, instanceId, fileSha256, byteLength }) { return Buffer.from(`${JSON.stringify({ schemaVersion: 1, eventId, instanceId, fileSha256, byteLength })}\n`); }
 async function sealEvent(store, relativePath, eventId, eventDocument, kind = "event") {
+  const existing = await readCommitted(store, relativePath, eventId, kind).catch(() => undefined);
+  if (existing?.bytes.equals(Buffer.from(eventDocument))) return { status: "present", eventId, relativePath, fileSha256: hash(eventDocument) };
   const staged = await writeSealedFile(store, relativePath, Buffer.from(eventDocument), ".md");
-  const claimPath = path.join(store.root, relativePath, "claims", `${staged.instanceId}.json`); await mkdir(path.dirname(claimPath), { recursive: true, mode: 0o700 });
+  const claimParent = await parentFor(store, `${relativePath}/claims/.placeholder`, true); const claimPath = path.join(claimParent.path, `${staged.instanceId}.json`);
   const claim = claimBytes({ eventId, ...staged }); const handle = await open(claimPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600); try { await handle.writeFile(claim); await handle.sync(); } finally { await handle.close(); }
-  const commitPath = path.join(store.root, relativePath, "commit.json");
+  const commitParent = await parentFor(store, `${relativePath}/commit.json`, false); const commitPath = commitParent.target;
   try { await link(claimPath, commitPath); await syncDirectory(path.dirname(commitPath)); } catch (error) {
     if (error.code !== "EEXIST") throw error;
     const current = await readCommitted(store, relativePath, eventId, kind).catch(() => undefined);
@@ -87,10 +89,11 @@ async function sealEvent(store, relativePath, eventId, eventDocument, kind = "ev
 async function readCommitted(store, relativePath, expectedId, kind = "event") {
   const base = path.join(store.root, relativePath); const commitPath = path.join(base, "commit.json"); const commitStats = await safeFile(commitPath); if (!commitStats) return undefined;
   const claim = JSON.parse((await boundedFile(commitPath)).toString("utf8"));
-  if (!claim || claim.schemaVersion !== 1 || claim.eventId !== expectedId || typeof claim.instanceId !== "string" || !/^[a-f0-9]{64}$/u.test(claim.fileSha256) || !Number.isInteger(claim.byteLength)) fail("Invalid sealed commit.", "memory.invalid_commit");
+  if (!claim || claim.schemaVersion !== 1 || claim.eventId !== expectedId || typeof claim.instanceId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u.test(claim.instanceId) || !/^[a-f0-9]{64}$/u.test(claim.fileSha256) || !Number.isInteger(claim.byteLength)) fail("Invalid sealed commit.", "memory.invalid_commit");
   const claimPath = path.join(base, "claims", `${claim.instanceId}.json`); const claimStats = await safeFile(claimPath); if (!claimStats || !same(commitStats, claimStats) || !(await boundedFile(claimPath)).equals(await boundedFile(commitPath))) fail("Invalid sealed claim.", "memory.invalid_commit");
   const instancePath = path.join(base, "instances", `${claim.instanceId}.md`); const bytes = await boundedFile(instancePath); if (bytes.byteLength !== claim.byteLength || hash(bytes) !== claim.fileSha256) fail("Invalid sealed instance.", "memory.invalid_commit");
   if (kind === "event") parseMemoryEventDocument(bytes.toString("utf8"), { sourceName: relativePath, eventId: expectedId });
+  else parseQuarantineMarkerDocument(bytes.toString("utf8"), { markerId: expectedId });
   return { claim, bytes };
 }
 
@@ -106,7 +109,7 @@ export async function appendMemoryEvent({ store, eventDocument } = {}) {
 
 async function allEntries(root, relative = "", state) {
   const entries = await readdir(root, { withFileTypes: true }).catch((error) => error.code === "ENOENT" ? [] : Promise.reject(error));
-  for (const entry of entries.sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) { state.count += 1; if (state.count > state.maxEvents) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } const next = path.join(root, entry.name); const pathName = relative ? `${relative}/${entry.name}` : entry.name; const item = await lstat(next); if (item.isDirectory() && !item.isSymbolicLink()) { await allEntries(next, pathName, state); if (!state.complete) return; } else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName); else if (!item.isFile()) state.diagnostics.push({ code: "memory.unsafe_entry", path: pathName }); }
+  for (const entry of entries.sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) { if (state.count === state.maxEvents) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } state.count += 1; const next = path.join(root, entry.name); const pathName = relative ? `${relative}/${entry.name}` : entry.name; const item = await lstat(next); if (item.isDirectory() && !item.isSymbolicLink()) { await allEntries(next, pathName, state); if (!state.complete) return; } else if (item.isFile() && entry.name === "commit.json") state.commits.push(pathName); else if (!item.isFile()) state.diagnostics.push({ code: "memory.unsafe_entry", path: pathName }); }
 }
 function markerRelativePath({ targetMemoryId, targetEventId, markerId }) { return `v1/controls/quarantine/${hash(targetMemoryId).slice(0, 2)}/${targetEventId}/${markerId}`; }
 export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEvents = MAX_EVENTS } = {}) {
@@ -118,7 +121,7 @@ export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEv
     const base = relativePath.slice(0, -"/commit.json".length); const name = path.posix.basename(base); try {
       const parts = base.split("/");
       if (parts[0] === "events") { const [, shard, memoryId, eventId] = parts; if (parts.length !== 4 || !safeId(memoryId) || shard !== hash(memoryId).slice(0, 2) || eventId !== name || !EVENT_ID.test(name)) throw new Error(); const committed = await readCommitted(store, `v1/${base}`, name); const parsed = parseMemoryEventDocument(committed.bytes.toString("utf8"), { sourceName: base, eventId: name }); if (committed.bytes.byteLength > maxEventBytes || parsed.event.memory_id !== memoryId) throw new Error(); events.push({ eventId: name, relativePath: `v1/${base}`, bytes: committed.bytes, event: parsed.event, record: parsed.record, sections: parsed.sections }); }
-      else { const [, kind, shard, targetEventId, markerId] = parts; if (parts.length !== 5 || kind !== "quarantine" || !EVENT_ID.test(targetEventId)) throw new Error(); const committed = await readCommitted(store, `v1/${base}`, markerId, "marker"); const marker = JSON.parse(committed.bytes.toString("utf8")); if (!safeId(marker.memory_id) || shard !== hash(marker.memory_id).slice(0, 2) || marker.target_event_id !== targetEventId) throw new Error(); quarantines.push(marker); }
+      else { const [, kind, shard, targetEventId, markerId] = parts; if (parts.length !== 5 || kind !== "quarantine" || !EVENT_ID.test(targetEventId)) throw new Error(); const committed = await readCommitted(store, `v1/${base}`, markerId, "marker"); const marker = parseQuarantineMarkerDocument(committed.bytes.toString("utf8"), { markerId }); if (!safeId(marker.memory_id) || shard !== hash(marker.memory_id).slice(0, 2) || marker.target_event_id !== targetEventId) throw new Error(); quarantines.push(marker); }
     } catch { state.diagnostics.push({ code: "memory.invalid_seal", path: base }); }
   }
   return { complete: true, entriesScanned: state.count, diagnostics: state.diagnostics, events: events.sort((a, b) => a.eventId.localeCompare(b.eventId)), quarantines };
@@ -138,12 +141,13 @@ export function foldMemoryEvents(scan, { now = new Date() } = {}) {
     }
     const roots = items.filter((item) => item.event.event_type === "capture"); if (roots.length !== 1) { taint(memoryId, "memory.invalid_root"); continue; }
     for (const item of items) for (const parent of item.event.parent_event_ids ?? []) { if (!byId.has(parent)) invalid.add(item.eventId); else (children.get(parent) ?? children.set(parent, []).get(parent)).push(item.eventId); }
+    const ancestorMemo = new Map(); const ancestors = (eventId, stack = new Set()) => { if (ancestorMemo.has(eventId)) return ancestorMemo.get(eventId); if (stack.has(eventId)) return new Set([eventId]); const item = byId.get(eventId); const values = new Set(); for (const parent of item?.event.parent_event_ids ?? []) { values.add(parent); for (const ancestor of ancestors(parent, new Set([...stack, eventId]))) values.add(ancestor); } ancestorMemo.set(eventId, values); return values; };
     const stableIdentity = (from, to, fromSections, toSections) => ["memory_id", "kind", "lane", "scope", "project_id", "created_at", "artifact_types", "related_ids", "tags", "sources"].every((key) => JSON.stringify(from[key]) === JSON.stringify(to[key])) && JSON.stringify(fromSections) === JSON.stringify(toSections);
     for (const item of items) {
       const { event } = item;
       if (event.event_type === "capture" && event.parent_event_ids.length !== 0) invalid.add(item.eventId);
       if (event.event_type === "transition") { const parent = byId.get(event.parent_event_ids[0]); if (!parent || event.action !== item.record.status || event.parent_event_ids.length !== 1 || !stableIdentity(parent.record, item.record, parent.sections, item.sections) || !validateMemoryTransition({ from: parent.record, to: item.record, approvalBasis: item.record.approval_basis }).ok) invalid.add(item.eventId); }
-      if (event.event_type === "resolution") { if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id)) invalid.add(item.eventId); const chosen = byId.get(event.chosen_parent_event_id); if (!chosen || !stableIdentity(chosen.record, item.record, chosen.sections, item.sections)) invalid.add(item.eventId); }
+      if (event.event_type === "resolution") { if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id) || event.parent_event_ids.some((left, index) => event.parent_event_ids.slice(index + 1).some((right) => ancestors(left).has(right) || ancestors(right).has(left)))) invalid.add(item.eventId); const chosen = byId.get(event.chosen_parent_event_id); if (!chosen || !stableIdentity(chosen.record, item.record, chosen.sections, item.sections)) invalid.add(item.eventId); }
       if (item.record.supersedes === memoryId) invalid.add(item.eventId);
     }
     const queue = [...invalid]; while (queue.length) for (const child of children.get(queue.shift()) ?? []) if (!invalid.has(child)) invalid.add(child), queue.push(child);
@@ -154,12 +158,15 @@ export function foldMemoryEvents(scan, { now = new Date() } = {}) {
     memories.set(memoryId, { record: heads[0].record, headEventId: heads[0].eventId, heads: [heads[0].eventId], now: new Date(now).toISOString() });
   }
   for (const marker of scan.quarantines ?? []) if (!safeId(marker.memory_id)) return { complete: false, memories: new Map(), diagnostics: [...diagnostics, { code: "memory.invalid_quarantine" }] };
+  const supersedes = new Map(); for (const [memoryId, value] of memories) if (value.record.supersedes !== null) supersedes.set(memoryId, value.record.supersedes);
+  const bad = new Set(); for (const [memoryId, target] of supersedes) { if (!memories.has(target) || target === memoryId) { bad.add(memoryId); if (memories.has(target)) bad.add(target); continue; } const seen = new Set([memoryId]); let cursor = target; while (supersedes.has(cursor)) { if (seen.has(cursor)) { for (const id of seen) bad.add(id); break; } seen.add(cursor); cursor = supersedes.get(cursor); } }
+  for (const memoryId of bad) { memories.delete(memoryId); taint(memoryId, "memory.supersedes_graph"); }
   return { complete: true, memories, diagnostics };
 }
 
 export async function appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now = new Date() } = {}) {
   if (!safeId(targetMemoryId) || !EVENT_ID.test(targetEventId ?? "") || !safeRelative(targetRelativePath) || !(observedSha256 === null || /^[a-f0-9]{64}$/u.test(observedSha256)) || typeof reasonCode !== "string" || !reasonCode || typeof actor !== "string" || !actor.trim()) fail("Invalid quarantine marker.");
-  const marker = { schema_version: 1, memory_id: targetMemoryId, target_event_id: targetEventId, target_relative_path: targetRelativePath, observed_sha256: observedSha256, reason_code: reasonCode, actor, recorded_at: new Date(now).toISOString() }; const bytes = Buffer.from(`${JSON.stringify(marker)}\n`); const markerId = `qmv1-${hash(bytes)}`; return sealEvent(store, markerRelativePath({ targetMemoryId, targetEventId, markerId }), markerId, bytes, "marker");
+  const marker = { schema_version: 1, memory_id: targetMemoryId, target_event_id: targetEventId, target_relative_path: targetRelativePath, observed_sha256: observedSha256, reason_code: reasonCode, actor, recorded_at: new Date(now).toISOString() }; const bytes = Buffer.from(canonicalQuarantineMarkerDocument(marker)); const markerId = `qmv1-${hash(bytes)}`; return sealEvent(store, markerRelativePath({ targetMemoryId, targetEventId, markerId }), markerId, bytes, "marker");
 }
 
 export async function ensureMemoryGitExclusion({ workspaceRoot, gitMode, runGit } = {}) {

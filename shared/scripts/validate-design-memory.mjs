@@ -153,9 +153,23 @@ export function parseMemoryEventDocument(source, { sourceName = "memory event", 
   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/u.exec(source); if (!match) eventFailure("Memory event requires closed YAML frontmatter.");
   const event = parseRestrictedYaml(match[1].replace(/^parent_event_ids: \[\]$/mu, "parent_event_ids:\n  - __empty__"), sourceName); if (event.parent_event_ids?.length === 1 && event.parent_event_ids[0] === "__empty__") event.parent_event_ids = [];
   const validation = validateMemoryEvent(event); if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
-  const sections = Object.create(null);
-  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) { const marker = new RegExp(`^## ${section}\\n\\n([^]*?)(?=^## |\\n?$)`, "mu"); const found = marker.exec(match[2]); if (!found || !found[1].trim()) eventFailure(`Memory event is missing required section: ${section}.`); sections[section] = found[1].trim(); }
+  const sections = Object.create(null); let remainder = match[2].startsWith("\n") ? match[2].slice(1) : match[2];
+  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) { const prefix = `## ${section}\n\n`; if (!remainder.startsWith(prefix)) eventFailure(`Memory event is missing required section: ${section}.`); remainder = remainder.slice(prefix.length); const boundary = remainder.indexOf("\n\n## "); const body = boundary === -1 ? remainder.slice(0, -2) : remainder.slice(0, boundary); if (!body || body.includes("\n\0")) eventFailure(`Memory event is missing required section: ${section}.`); sections[section] = body; remainder = boundary === -1 ? "" : remainder.slice(boundary + 2); }
+  if (remainder || canonicalMemoryEventDocument(event, sections) !== source) eventFailure("Memory event is not canonical.", "memory.noncanonical");
   return { event, record: event.record, sections };
+}
+
+const MARKER_KEYS = Object.freeze(["schema_version", "memory_id", "target_event_id", "target_relative_path", "observed_sha256", "reason_code", "actor", "recorded_at"]);
+export function canonicalQuarantineMarkerDocument(marker) {
+  if (!object(marker) || Object.keys(marker).some((key) => !MARKER_KEYS.includes(key)) || marker.schema_version !== 1 || !safeId(marker.memory_id) || !/^mev1-[a-f0-9]{64}$/u.test(marker.target_event_id ?? "") || !safeRelative(marker.target_relative_path) || !(marker.observed_sha256 === null || SHA256.test(marker.observed_sha256)) || typeof marker.reason_code !== "string" || !marker.reason_code.trim() || typeof marker.actor !== "string" || !marker.actor.trim() || !timestamp(marker.recorded_at)) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
+  return `---\nschema_version: 1\nmemory_id: ${quote(marker.memory_id)}\ntarget_event_id: ${quote(marker.target_event_id)}\ntarget_relative_path: ${quote(marker.target_relative_path)}\nobserved_sha256: ${marker.observed_sha256 === null ? "null" : quote(marker.observed_sha256)}\nreason_code: ${quote(marker.reason_code)}\nactor: ${quote(marker.actor)}\nrecorded_at: ${quote(new Date(marker.recorded_at).toISOString())}\n---\n\n## Quarantine\n\nsealed quarantine marker\n`;
+}
+export function parseQuarantineMarkerDocument(source, { markerId } = {}) {
+  if (typeof source !== "string" || source.includes("\0") || source.includes("\r") || !source.endsWith("\n") || source !== source.normalize("NFC")) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
+  if (markerId && markerId !== `qmv1-${createHash("sha256").update(source).digest("hex")}`) eventFailure("Quarantine marker id does not match its bytes.", "memory.quarantine_marker");
+  const match = /^---\n([\s\S]*?)\n---\n\n## Quarantine\n\nsealed quarantine marker\n$/u.exec(source); if (!match) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
+  const marker = parseRestrictedYaml(match[1], "quarantine marker"); if (canonicalQuarantineMarkerDocument(marker) !== source) eventFailure("Quarantine marker is not canonical.", "memory.quarantine_marker");
+  return marker;
 }
 
 function safeRelative(value) { return typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\\") && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value !== "."; }

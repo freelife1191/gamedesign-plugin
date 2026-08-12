@@ -7,9 +7,11 @@ import test from "node:test";
 
 import {
   canonicalMemoryEventDocument,
+  canonicalQuarantineMarkerDocument,
   memoryOperationId,
   parseMemoryDocument,
   parseMemoryEventDocument,
+  parseQuarantineMarkerDocument,
   validateMemoryRecord,
   validateMemorySourceBindings,
   validateMemoryTransition,
@@ -70,6 +72,13 @@ test("event sections reject NUL and sensitive content without echoing it", () =>
   const secret = "sk_this_is_not_a_memory_value";
   assert.throws(() => canonicalMemoryEventDocument(capture(), { ...sections, "근거": secret }), (error) => !String(error).includes(secret));
   assert.throws(() => parseMemoryEventDocument(canonicalMemoryEventDocument(capture(), sections).replace("근거\n\n근거", "근거\n\n\0"), {}), (error) => !String(error).includes("\\0"));
+});
+
+test("quarantine marker is canonical Markdown and byte-addressed", () => {
+  const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: "mev1-" + "1".repeat(64), target_relative_path: "v1/events/aa/x/y", observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T09:00:00+09:00" };
+  const bytes = canonicalQuarantineMarkerDocument(marker); const id = `qmv1-${createHash("sha256").update(bytes).digest("hex")}`;
+  assert.equal(canonicalQuarantineMarkerDocument(parseQuarantineMarkerDocument(bytes, { markerId: id })), bytes);
+  assert.throws(() => parseQuarantineMarkerDocument(bytes.replace("actor:", "actor: unquoted"), { markerId: id }));
 });
 
 test("schema limits accept the boundary and reject limit plus one", async () => {
