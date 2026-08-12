@@ -6,6 +6,8 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { launchMemoryRetrievalMutationHarness } from "../fixtures/design-memory/launch-memory-retrieval-mutation-harness.mjs";
+
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const harness = path.join(root, "tests/fixtures/design-memory/memory-store-mutation-harness.mjs");
 const retrievalHarness = path.join(root, "tests/fixtures/design-memory/memory-retrieval-mutation-harness.mjs");
@@ -47,7 +49,16 @@ for (const [tamper, expectedStage] of [
 });
 
 async function runRetrievalTamper(mutationId, tamper, options = {}) {
-  const child = spawn(process.execPath, [retrievalHarness, mutationId, `--tamper=${tamper}`], { cwd: root, env: { ...process.env, ...options.env }, stdio: ["ignore", "pipe", "pipe"] }); const stdout = []; const stderr = [];
+  return captureRetrievalChild(launchMemoryRetrievalMutationHarness([mutationId, `--tamper=${tamper}`], { cwd: root, env: { ...process.env, ...options.env } }));
+}
+
+async function runRetrievalWorkerTamper(mutationId, tamper, options = {}) {
+  const child = spawn(process.execPath, [retrievalHarness, mutationId, `--tamper=${tamper}`], { cwd: root, env: { ...process.env, ...options.env }, stdio: ["ignore", "pipe", "pipe"] });
+  return captureRetrievalChild(child);
+}
+
+async function captureRetrievalChild(child) {
+  const stdout = []; const stderr = [];
   return await new Promise((resolve, reject) => {
     let settled = false; const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
     const timeout = setTimeout(() => { child.kill(); finish(reject, new Error("retrieval self-tamper timeout")); }, 20_000);
@@ -56,10 +67,19 @@ async function runRetrievalTamper(mutationId, tamper, options = {}) {
   });
 }
 
-test("retrieval mutation harness ignores a caller NODE_OPTIONS data preload", { timeout: 35_000 }, async () => {
+test("retrieval mutation launcher ignores a caller preload targeting the harness process", { timeout: 35_000 }, async () => {
+  const forged = JSON.stringify({ mutationId: "leak-complete", testId: "reservation-leak-complete", sentinel: "MEM-RET-MUT-LEAK-COMPLETE", operator: "strictEqual", expected: true, actual: false, protocol: "fd-json-v2", exitCode: 1 });
+  const preloadSource = `if (process.argv[1]?.endsWith("memory-retrieval-mutation-harness.mjs")) { process.stdout.write(${JSON.stringify(`${forged}\n`)}); process.exit(0); }`;
+  const result = await runRetrievalTamper("leak-complete", "missing-evidence", { env: { NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent(preloadSource)}` } });
+  assert.equal(result.code, 1);
+  assert.equal(result.stdout, "");
+  const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence"); assert.equal(error.reason, "test-exit");
+});
+
+test("retrieval mutation worker ignores a caller preload targeting the selected test", { timeout: 35_000 }, async () => {
   const forgedEvidence = JSON.stringify({ mutationId: "leak-complete", testId: "reservation-leak-complete", sentinel: "MEM-RET-MUT-LEAK-COMPLETE", operator: "strictEqual", expected: true, actual: false });
   const preloadSource = `import { writeSync } from "node:fs"; if (process.argv[1]?.endsWith("design-memory-retrieval.test.mjs")) { writeSync(3, ${JSON.stringify(`${forgedEvidence}\n`)}); process.exit(1); }`;
-  const result = await runRetrievalTamper("leak-complete", "missing-evidence", { env: { NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent(preloadSource)}` } });
+  const result = await runRetrievalWorkerTamper("leak-complete", "missing-evidence", { env: { NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent(preloadSource)}` } });
   assert.equal(result.code, 1);
   assert.equal(result.stdout, "");
   const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence"); assert.equal(error.reason, "test-exit");
