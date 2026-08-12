@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -9,6 +9,7 @@ import {
   parseMemoryDocument,
   validateMemoryRecord,
   validateMemorySourceBindings,
+  validateMemoryReceiptChain,
   validateMemoryTransition,
 } from "../../shared/scripts/validate-design-memory.mjs";
 
@@ -99,6 +100,14 @@ test("approved provenance is retained through an approved-state transition", () 
   const disputed = { ...approved, status: "disputed" };
   assert.equal(validateMemoryTransition({ from: approved, to: disputed, approvalBasis: "review" }).ok, true);
   assert.equal(validateMemoryTransition({ from: approved, to: { ...disputed, approved_by: null, approval_basis: null }, approvalBasis: "review" }).ok, false);
+  assert.equal(validateMemoryTransition({ from: disputed, to: { ...disputed, status: "verified", approved_by: null, approval_basis: null }, approvalBasis: "review" }).ok, false);
+});
+
+test("receipt chains bind actor, basis, statuses, and prior event hashes", () => {
+  const first = { schema_version: 1, memory_id: validRecord.memory_id, actor: "reviewer", from_status: "candidate", to_status: "verified", approval_basis: null, previous_event_sha256: null, event_sha256: "1".repeat(64), recorded_at: validRecord.created_at };
+  const second = { ...first, from_status: "verified", to_status: "approved", approval_basis: "review", previous_event_sha256: first.event_sha256, event_sha256: "2".repeat(64) };
+  assert.deepEqual(validateMemoryReceiptChain([first, second]), { ok: true, errors: [] });
+  assert.equal(validateMemoryReceiptChain([first, { ...second, actor: "", previous_event_sha256: "0".repeat(64) }]).ok, false);
 });
 
 test("Markdown parsing rejects missing mandatory sections and prohibited content without echoing it", () => {
@@ -128,6 +137,16 @@ test("source bindings require regular in-workspace files with matching hashes", 
   assert.deepEqual(await validateMemorySourceBindings(record, { workspaceRoot: root }), { ok: true, errors: [] });
   assert.equal((await validateMemorySourceBindings(clone({ sources: [{ artifact_id: "x", locator: "../outside.md", sha256 }] }), { workspaceRoot: root })).ok, false);
   assert.equal((await validateMemorySourceBindings(clone({ sources: [{ artifact_id: "x", locator: "docs/source.md", sha256: "0".repeat(64) }] }), { workspaceRoot: root })).ok, false);
+});
+
+test("source bindings reject a final file swapped after opening", async (t) => {
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-source-swap-")));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await writeFile(path.join(root, "source.md"), "trusted");
+  await writeFile(path.join(root, "replacement.md"), "replacement");
+  const sha256 = createHash("sha256").update("trusted").digest("hex");
+  const record = clone({ sources: [{ artifact_id: "combat-loop-v3", locator: "source.md", sha256 }] });
+  assert.equal((await validateMemorySourceBindings(record, { workspaceRoot: root, beforeFinalRecheck: () => rename(path.join(root, "replacement.md"), path.join(root, "source.md")) })).ok, false);
 });
 
 test("source bindings reject a workspace reached through a symlinked ancestor", async (t) => {

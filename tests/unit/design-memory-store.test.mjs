@@ -96,6 +96,16 @@ test("read/write/move reject escaping, symlink, and preserve originals on failed
   assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/approved/a.md" }), Buffer.from("old"));
 });
 
+test("temporary and publish failures preserve the original namespace", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  await assert.rejects(() => writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/fail.md", bytes: Buffer.from("new"), policy: { beforeWrite: () => { throw new Error("temp failure"); } } }));
+  await assert.rejects(() => readMemoryFile({ store, relativePath: "lessons/candidates/fail.md" }));
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/original.md", bytes: Buffer.from("old") });
+  await assert.rejects(() => writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/original.md", bytes: Buffer.from("new"), policy: { beforePublish: () => { throw new Error("publish failure"); } } }));
+  assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/candidates/original.md" }), Buffer.from("old"));
+});
+
 test("git exclusion changes only the local plugin block exactly once", async (t) => {
   const root = await workspace(t);
   const exclude = path.join(root, ".git", "info", "exclude");
@@ -120,6 +130,9 @@ test("git exclusion rejects partial markers and concurrent replacement without o
   await writeFile(exclude, "before\n");
   await assert.rejects(() => ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforePublish: async () => writeFile(exclude, "concurrent\n") }));
   assert.equal(await readFile(exclude, "utf8"), "concurrent\n");
+  await writeFile(exclude, "before-snapshot\n");
+  await assert.rejects(() => ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeSnapshot: () => writeFile(exclude, "read-race\n") }));
+  assert.equal(await readFile(exclude, "utf8"), "read-race\n");
 });
 
 test("non-Git workspaces leave exclusion files untouched", async (t) => {
