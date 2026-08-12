@@ -348,8 +348,11 @@ request identity와 receipt는 NFC string, UTF-8, 정렬·중복 제거 array, s
 `schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `policy`,
 `observations`, `applied`, `excluded`다. `policy`는 `scope`, `maxItems`,
 `candidateTtlDays` 순서다. `observations` 항목은 `memoryId`, `artifactId`, `locator`,
-`expectedSha256`, `observedSha256`, `status` 순서다. `observedSha256`은 source가
-없을 때만 `null`이고 status는 `current|missing|drift|symlink|unreadable` 중 하나다.
+`expectedSha256`, `observedSha256`, `status` 순서다. status와 digest는 다음처럼
+결속한다. `current`는 `observedSha256`이 non-null이고 `expectedSha256`과 같아야
+한다. `drift`는 non-null이고 expected와 달라야 한다. `missing|symlink|unreadable`은
+원문 bytes를 권한 있게 관찰하지 못한 상태이므로 `observedSha256:null`이어야 한다.
+이 조건을 벗어난 receipt는 schema와 runtime 모두 거부한다.
 `applied` 항목은 `memoryId`, `headEventId`, `fileSha256`, `excluded` 항목은
 `memoryId`, `reason` 순서다. observations는 `(memoryId, artifactId, locator)`, 나머지
 두 array는 `memoryId`의 UTF-8 byte 순으로 정렬한다. schema validation을 통과한
@@ -481,6 +484,10 @@ content hash다.
 generation은 짝을 이룬 global/local reservation이 모두 존재하고 kind·identity·
 generation·global slot·instance와 path가 맞을 때만 valid다. local reservation의
 `localSlot`은 자기 filename과 같아야 한다.
+하나의 global slot은 정확히 하나의 local slot과만 짝을 이룬다. 같은 global slot을
+참조하는 두 번째 local reservation은 occupied invalid leak로 quota를 소비하고
+`memory.derived_reservation_invalid` warning을 남기며 어떠한 generation 권한도
+얻지 못한다. 원래의 exact pair만 계속 valid하다.
 reservation이 하나뿐이거나 불일치·malformed인 instance는 census budget을
 소비하는 corrupt generation이며 선택하지 않는다. warning에는 slot 번호, 안전한
 상대 path와 reason code만 넣는다.

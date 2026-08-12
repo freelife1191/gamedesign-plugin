@@ -761,6 +761,11 @@ global/local reservation의 kind·identity·generation·global slot·instance·p
 reservation이 없거나 불일치·malformed인 instance는 census에 세는 corrupt
 generation이며 선택하지 않는다. warning은 slot 번호, 안전한 상대 path와 reason
 code만 포함한다.
+같은 global slot을 참조하는 local reservation이 둘 이상이면 bytewise-lowest exact
+local path 하나만 원래 pair 후보로 남고 나머지는 occupied invalid leak로 처리한다.
+중복 local slot은 quota를 소비하지만 `memory.derived_reservation_invalid` warning을
+남기고 generation authority를 얻지 못한다. scan 순서나 mtime으로 다른 winner를
+고르지 않는다.
 
 global 또는 local 선점 실패는 `complete:false`, `status:null`,
 `generationPath:null`, `memory.derived_limit_exceeded`이며 generation을 만들지
@@ -896,8 +901,10 @@ canonical receipt key 순서는 `schemaVersion`, `requestSha256`,
 `sourceTreeSha256`, `projectId`, `lane`, `policy`, `observations`, `applied`,
 `excluded`다. `policy`는 `scope`, `maxItems`, `candidateTtlDays` 순서다.
 `observations` item은 `memoryId`, `artifactId`, `locator`, `expectedSha256`,
-`observedSha256`, `status` 순서이며 `observedSha256`은 source가 없을 때만 `null`,
-status는 `current|missing|drift|symlink|unreadable` 중 하나다. `applied` item은
+`observedSha256`, `status` 순서다. `current`는 observed digest가 non-null이고
+expected와 같아야 하며 `drift`는 non-null이고 expected와 달라야 한다.
+`missing|symlink|unreadable`은 observed digest가 `null`이어야 한다. 이 의미 관계를
+JSON Schema evaluator와 runtime publisher·loader가 동일하게 거부한다. `applied` item은
 `memoryId`, `headEventId`, `fileSha256`, `excluded` item은 `memoryId`, `reason`
 순서다. observations는 `(memoryId, artifactId, locator)`, 나머지 두 array는
 `memoryId`의 UTF-8 byte 순으로 정렬한다. NFC string, 공백 없는 JSON object와
