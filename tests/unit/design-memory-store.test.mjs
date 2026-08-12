@@ -64,6 +64,7 @@ async function assertRejectedWithoutSourceChange(store, operation, code) {
   await assert.rejects(operation, (error) => error?.code === code);
   assert.deepEqual(await sourceTreeSnapshot(store), before);
 }
+async function absent(candidate) { await assert.rejects(() => lstat(candidate), (error) => error?.code === "ENOENT"); }
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -77,6 +78,28 @@ test("a pre-existing .game-design symlink cannot redirect store initialization",
   const root = await workspace(t); const outside = path.join(root, "outside"); await mkdir(outside); await symlink(outside, path.join(root, ".game-design"));
   await assert.rejects(() => resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }));
   await assert.rejects(() => readFile(path.join(outside, "memory")));
+});
+
+test("workspace ancestor symlinks cannot redirect store initialization", async (t) => {
+  for (const shape of ["parent", "intermediate"]) {
+    const root = await workspace(t); const outside = path.join(root, "outside"); const logical = path.join(root, "logical"); await mkdir(outside);
+    if (shape === "parent") { await mkdir(path.join(outside, "workspace")); await symlink(outside, logical); }
+    else { await mkdir(path.join(outside, "nested", "workspace"), { recursive: true }); await mkdir(logical); await symlink(path.join(outside, "nested"), path.join(logical, "nested")); }
+    const workspaceRoot = shape === "parent" ? path.join(logical, "workspace") : path.join(logical, "nested", "workspace");
+    await assert.rejects(() => resolveMemoryStore({ workspaceRoot, config: config(), platform: "linux", home: root, initialize: true }));
+    await absent(path.join(outside, shape === "parent" ? "workspace" : "nested", "workspace", ".game-design"));
+  }
+});
+
+test("home ancestor symlinks cannot redirect global store initialization", async (t) => {
+  for (const shape of ["parent", "intermediate"]) {
+    const root = await workspace(t); const outside = path.join(root, "outside"); const logical = path.join(root, "logical"); await mkdir(outside);
+    if (shape === "parent") { await mkdir(path.join(outside, "home")); await symlink(outside, logical); }
+    else { await mkdir(path.join(outside, "nested", "home"), { recursive: true }); await mkdir(logical); await symlink(path.join(outside, "nested"), path.join(logical, "nested")); }
+    const home = shape === "parent" ? path.join(logical, "home") : path.join(logical, "nested", "home");
+    await assert.rejects(() => resolveMemoryStore({ workspaceRoot: path.join(root, "unused"), config: config({ scope: "global" }), platform: "linux", home, initialize: true }));
+    await absent(path.join(outside, shape === "parent" ? "home" : "nested", "home", ".local"));
+  }
 });
 
 test("global storage does not require a workspace path", async (t) => {
@@ -322,4 +345,28 @@ test("Git exclusion leaves a symlink victim unchanged", async (t) => {
   const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
   const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
   assert.equal(result.status, "warning"); assert.equal(await readFile(victim, "utf8"), "user bytes\n");
+});
+
+test("Git common and info ancestor symlinks cannot redirect exclude writes", async (t) => {
+  for (const shape of ["common", "info"]) {
+    const root = await workspace(t); const outside = path.join(root, "outside"); const logical = path.join(root, `logical-${shape}`); const common = path.join(logical, "common"); await mkdir(path.join(outside, "common", "info"), { recursive: true }); await symlink(outside, logical);
+    const victim = path.join(outside, "common", "info", "exclude"); await writeFile(victim, "user bytes\n");
+    const runGit = async (args) => args[1] === "--git-common-dir" ? common : victim;
+    const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
+    assert.equal(result.status, "warning"); assert.equal(await readFile(victim, "utf8"), "user bytes\n");
+  }
+});
+
+test("Git exclude identity changes before append leave same-inode user bytes unchanged", async (t) => {
+  const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n");
+  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeAppend: async () => writeFile(exclude, "changed user bytes\n") });
+  assert.equal(result.status, "warning"); assert.equal(await readFile(exclude, "utf8"), "changed user bytes\n");
+});
+
+test("Git exclude pathname swaps never report ready", async (t) => {
+  const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); const original = path.join(root, "original-exclude"); const replacement = path.join(root, "replacement-exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n"); await link(exclude, original); await writeFile(replacement, "replacement user bytes\n");
+  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeFinalRecheck: async () => rename(replacement, exclude) });
+  assert.equal(result.status, "warning"); assert.equal(await readFile(exclude, "utf8"), "replacement user bytes\n"); assert.match(await readFile(original, "utf8"), /game-design-plugin:memory:begin/u);
 });
