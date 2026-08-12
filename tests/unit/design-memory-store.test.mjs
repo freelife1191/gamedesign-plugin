@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { writeSync } from "node:fs";
-import { cp, link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
 
@@ -64,7 +64,10 @@ async function sealMarkerForTest(store, marker, physicalTarget = marker) {
   const claimPath = path.join(base, "claims", `${instanceId}.json`); await writeFile(claimPath, `${JSON.stringify({ schemaVersion: 1, eventId: markerId, instanceId, fileSha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength })}\n`); await link(claimPath, path.join(base, "commit.json"));
 }
 function assertClosedScan(scan, memoryId, code) {
-  const fold = foldMemoryEvents(scan);
+  return assertClosedScanWith({ foldMemoryEvents }, scan, memoryId, code);
+}
+function assertClosedScanWith(api, scan, memoryId, code) {
+  const fold = api.foldMemoryEvents(scan);
   assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(fold.memories.has(memoryId), false); assert.equal(scan.diagnostics.some((item) => item.code === code), true);
 }
 function digest(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
@@ -143,6 +146,18 @@ async function sourceTraversalEntries(root, relative = "") {
     if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...await sourceTraversalEntries(path.join(root, entry.name), entryRelative));
   }
   return result;
+}
+
+async function assertStaleRootAuthorityClosed(t, api) {
+  const disputedRoot = await workspace(t); const approvedRoot = await workspace(t);
+  const disputedStore = await api.resolveMemoryStore({ workspaceRoot: disputedRoot, config: config(), platform: "linux", home: disputedRoot, initialize: true }); const approvedStore = await api.resolveMemoryStore({ workspaceRoot: approvedRoot, config: config(), platform: "linux", home: approvedRoot, initialize: true });
+  const disputedCapture = await api.appendMemoryEvent({ store: disputedStore, eventDocument: document() }); const disputedVerified = await api.appendMemoryEvent({ store: disputedStore, eventDocument: transitionDocument(disputedCapture.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const disputedApproved = await api.appendMemoryEvent({ store: disputedStore, eventDocument: transitionDocument(disputedVerified.eventId, "approved", "2026-08-12T02:00:00.000Z") }); await api.appendMemoryEvent({ store: disputedStore, eventDocument: transitionDocument(disputedApproved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) });
+  const approvedCapture = await api.appendMemoryEvent({ store: approvedStore, eventDocument: document() }); const approvedVerified = await api.appendMemoryEvent({ store: approvedStore, eventDocument: transitionDocument(approvedCapture.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await api.appendMemoryEvent({ store: approvedStore, eventDocument: transitionDocument(approvedVerified.eventId, "approved", "2026-08-12T02:00:00.000Z") });
+  assert.equal(api.foldMemoryEvents(await api.scanMemoryEvents({ store: disputedStore })).memories.get(record.memory_id).record.status, "disputed"); assert.equal((await api.scanMemoryEvents({ store: approvedStore })).complete, true); assert.equal(api.foldMemoryEvents(await api.scanMemoryEvents({ store: approvedStore })).memories.get(record.memory_id).record.status, "approved");
+  const retired = path.join(disputedRoot, "retired-memory-root"); await rename(disputedStore.root, retired); await rename(approvedStore.root, disputedStore.root);
+  const scan = await api.scanMemoryEvents({ store: disputedStore }); assertClosedScanWith(api, scan, record.memory_id, "memory.unbound_seal");
+  await assertRejectedWithoutSourceChange(disputedStore, () => api.appendMemoryEvent({ store: disputedStore, eventDocument: transitionDocument(disputedApproved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) }), "memory.scan_incomplete");
+  await assertRejectedWithoutSourceChange(disputedStore, () => api.appendQuarantineMarker({ store: disputedStore, targetMemoryId: record.memory_id, targetEventId: approved.eventId, targetRelativePath: approved.relativePath, observedSha256: approved.fileSha256, reasonCode: "memory.bad", actor: "auditor" }), "memory.scan_incomplete");
 }
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
@@ -425,13 +440,19 @@ test("moved disputed event closes the scan instead of restoring approved memory"
 });
 
 test("a stale store root cannot resurrect an older approved snapshot or append source files", async (t) => {
-  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
-  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") });
-  const snapshot = path.join(root, "approved-snapshot"); await cp(store.root, snapshot, { recursive: true }); await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) });
-  const retired = path.join(root, "retired-memory-root"); await rename(store.root, retired); await rename(snapshot, store.root);
-  assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
-  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }) }), "memory.scan_incomplete");
-  await assertRejectedWithoutSourceChange(store, () => appendQuarantineMarker({ store, targetMemoryId: record.memory_id, targetEventId: approved.eventId, targetRelativePath: approved.relativePath, observedSha256: approved.fileSha256, reasonCode: "memory.bad", actor: "auditor" }), "memory.scan_incomplete");
+  await assertStaleRootAuthorityClosed(t, { appendMemoryEvent, appendQuarantineMarker, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents });
+});
+
+test("the stale-root authority regression fails when all root identity checks are removed", async (t) => {
+  const sourcePath = fileURLToPath(new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url)); const source = await readFile(sourcePath, "utf8"); const validatorUrl = pathToFileURL(path.join(path.dirname(path.dirname(sourcePath)), "validate-design-memory.mjs")).href;
+  const initialCheck = 'if (!await matchesStoreIdentity(store)) { state.complete = false; state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }'; const laterCheck = 'if (!await matchesStoreIdentity(store)) { state.diagnostics.push({ code: "memory.unbound_seal" }); return closed(); }';
+  assert.equal(source.split(initialCheck).length - 1, 1); assert.equal(source.split(laterCheck).length - 1, 2);
+  const mutated = source.replace('"../validate-design-memory.mjs"', JSON.stringify(validatorUrl)).replace(initialCheck, "").split(laterCheck).join(""); const temporaryRoot = await mkdtemp(path.join(tmpdir(), "memory-root-identity-mutation-")); t.after(() => rm(temporaryRoot, { recursive: true, force: true })); const modulePath = path.join(temporaryRoot, "safe-memory-store.mjs"); await writeFile(modulePath, mutated);
+  const api = await import(`${pathToFileURL(modulePath).href}?root-identity-mutation=${Date.now()}`);
+  await assert.rejects(
+    () => assertStaleRootAuthorityClosed(t, api),
+    (error) => error instanceof assert.AssertionError && error.actual === true && error.expected === false,
+  );
 });
 
 test("incomplete scans reject quarantine marker appends without changing the source tree", async (t) => {
