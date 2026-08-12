@@ -10,8 +10,8 @@ export const MEMORY_STATUSES = Object.freeze(["candidate", "verified", "approved
 export const MEMORY_LANES = Object.freeze(["common", "studio", "career"]);
 export const MEMORY_SCOPES = Object.freeze(["project", "workspace", "global"]);
 
-const RECORD_KEYS = Object.freeze(["schema_version", "memory_id", "event_sha256", "kind", "lane", "status", "scope", "project_id", "created_at", "updated_at", "review_after", "expires_at", "approved_by", "approval_basis", "supersedes", "artifact_types", "related_ids", "tags", "sources", "instruction_sha256"]);
-const RECEIPT_KEYS = Object.freeze(["schema_version", "memory_id", "actor", "from_status", "to_status", "approval_basis", "previous_event_sha256", "event_sha256", "recorded_at"]);
+const RECORD_KEYS = Object.freeze(["schema_version", "memory_id", "kind", "lane", "status", "scope", "project_id", "created_at", "updated_at", "review_after", "expires_at", "approved_by", "approval_basis", "supersedes", "artifact_types", "related_ids", "tags", "sources", "instruction_sha256"]);
+const EVENT_KEYS = Object.freeze(["schema_version", "event_type", "action", "memory_id", "operation_id", "parent_event_ids", "chosen_parent_event_id", "effective_at", "actor", "reason", "record"]);
 const SHA256 = /^[a-f0-9]{64}$/u;
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
@@ -37,7 +37,6 @@ export function validateMemoryRecord(record) {
   for (const key of RECORD_KEYS.filter((key) => key !== "instruction_sha256")) if (!Object.hasOwn(record, key)) errors.push(error("schema.required", key, "Required memory record field is missing."));
   if (record.schema_version !== 1) errors.push(error("schema.version", "schema_version", "Memory schema version must be 1."));
   for (const key of ["memory_id", "project_id"]) if (!safeId(record[key])) errors.push(error("schema.identifier", key, "Identifier must be normalized lowercase kebab-case."));
-  if (!SHA256.test(record.event_sha256 ?? "")) errors.push(error("schema.sha256", "event_sha256", "Hash must be lowercase SHA-256."));
   if (!MEMORY_KINDS.includes(record.kind)) errors.push(error("schema.kind", "kind", "Memory kind is not allowed."));
   if (!MEMORY_LANES.includes(record.lane)) errors.push(error("schema.lane", "lane", "Memory lane is not allowed."));
   if (!MEMORY_STATUSES.includes(record.status)) errors.push(error("schema.status", "status", "Memory status is not allowed."));
@@ -77,22 +76,6 @@ export function validateMemoryTransition({ from, to, approvalBasis } = {}) {
   return { ok: errors.length === 0, errors };
 }
 
-export function validateMemoryReceiptChain(receipts) {
-  const errors = [];
-  if (!Array.isArray(receipts) || receipts.length === 0) return { ok: false, errors: [error("memory.receipt_chain", "", "Receipt chain must be nonempty.")] };
-  let previous; let approval;
-  for (const [index, receipt] of receipts.entries()) {
-    const context = `receipts.${index}`;
-    if (!object(receipt) || Object.keys(receipt).length !== RECEIPT_KEYS.length || Object.keys(receipt).some((key) => !RECEIPT_KEYS.includes(key)) || receipt.schema_version !== 1 || !safeId(receipt.memory_id) || typeof receipt.actor !== "string" || receipt.actor.trim() === "" || !MEMORY_STATUSES.includes(receipt.from_status) || !MEMORY_STATUSES.includes(receipt.to_status) || !SHA256.test(receipt.event_sha256 ?? "") || !timestamp(receipt.recorded_at) || !(receipt.approval_basis === null || typeof receipt.approval_basis === "string" && receipt.approval_basis.trim() !== "") || !(receipt.previous_event_sha256 === null || SHA256.test(receipt.previous_event_sha256))) { errors.push(error("memory.receipt", context, "Receipt is invalid.")); continue; }
-    const transition = validateMemoryTransition({ from: receipt.from_status, to: receipt.to_status, approvalBasis: receipt.approval_basis });
-    if (!transition.ok || (previous && (receipt.memory_id !== previous.memory_id || receipt.previous_event_sha256 !== previous.event_sha256 || receipt.from_status !== previous.to_status)) || (!previous && receipt.previous_event_sha256 !== null)) errors.push(error("memory.receipt_chain", context, "Receipt chain linkage is invalid."));
-    if (receipt.to_status === "approved") approval ??= { actor: receipt.actor, basis: receipt.approval_basis };
-    if (approval && (receipt.actor !== approval.actor || receipt.approval_basis !== approval.basis)) errors.push(error("memory.receipt_provenance", context, "Approval actor and basis are immutable across the receipt chain."));
-    previous = receipt;
-  }
-  return { ok: errors.length === 0, errors };
-}
-
 export function parseMemoryDocument(source, { sourceName = "memory document" } = {}) {
   if (typeof source !== "string") throw new TypeError(`${sourceName} must be text.`);
   if (forbiddenMemoryContent.some((pattern) => pattern.test(source))) { const failure = new Error("Memory content contains prohibited sensitive information."); failure.code = "memory.prohibited_content"; throw failure; }
@@ -113,6 +96,56 @@ export function parseMemoryDocument(source, { sourceName = "memory document" } =
     if (!sections[section]) throw new Error(`Memory document section is empty: ${section}.`);
   }
   return { record, sections };
+}
+
+function quote(value) { return JSON.stringify(value); }
+function yamlRecord(record, indent = "") {
+  const scalar = ["schema_version", "memory_id", "kind", "lane", "status", "scope", "project_id", "created_at", "updated_at", "review_after", "expires_at", "approved_by", "approval_basis", "supersedes"];
+  const lines = [];
+  for (const key of scalar) lines.push(`${indent}${key}: ${record[key] === null ? "null" : typeof record[key] === "number" ? record[key] : quote(normalizeTime(key, record[key]))}`);
+  if (Object.hasOwn(record, "instruction_sha256")) lines.push(`${indent}instruction_sha256: ${quote(record.instruction_sha256)}`);
+  for (const key of ["artifact_types", "related_ids", "tags"]) { lines.push(`${indent}${key}:`); for (const value of record[key]) lines.push(`${indent}  - ${quote(value)}`); }
+  lines.push(`${indent}sources:`); for (const source of record.sources) { lines.push(`${indent}  - artifact_id: ${quote(source.artifact_id)}`, `${indent}    locator: ${quote(source.locator)}`, `${indent}    sha256: ${quote(source.sha256)}`); }
+  return lines;
+}
+function normalizeTime(key, value) { return ["effective_at", "created_at", "updated_at"].includes(key) ? new Date(value).toISOString() : value; }
+function eventFailure(message, code = "memory.event") { const failure = new Error(message); failure.code = code; throw failure; }
+
+export function canonicalMemoryEventDocument(event, sections) {
+  const validation = validateMemoryEvent(event);
+  if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
+  const lines = ["---", `schema_version: ${event.schema_version}`, `event_type: ${quote(event.event_type)}`, `action: ${quote(event.action)}`, `memory_id: ${quote(event.memory_id)}`, `operation_id: ${quote(event.operation_id)}`, event.parent_event_ids.length === 0 ? "parent_event_ids: []" : "parent_event_ids:"];
+  for (const value of event.parent_event_ids) lines.push(`  - ${quote(value)}`);
+  if (event.chosen_parent_event_id !== undefined) lines.push(`chosen_parent_event_id: ${quote(event.chosen_parent_event_id)}`);
+  lines.push(`effective_at: ${quote(normalizeTime("effective_at", event.effective_at))}`, `actor: ${quote(event.actor)}`, `reason: ${quote(event.reason)}`, "record:", ...yamlRecord(event.record, "  "), "---", "");
+  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) lines.push(`## ${section}`, "", sections[section], "");
+  return `${lines.join("\n")}\n`;
+}
+
+export function validateMemoryEvent(event) {
+  const errors = [];
+  if (!object(event)) return { ok: false, errors: [error("memory.event", "", "Memory event must be an object.")] };
+  scanSensitive(event, errors); if (errors.length) return { ok: false, errors: [error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")] };
+  if (Object.keys(event).some((key) => !EVENT_KEYS.includes(key))) errors.push(error("schema.additional_property", "", "Unknown memory event field."));
+  for (const key of EVENT_KEYS.filter((key) => key !== "chosen_parent_event_id")) if (!Object.hasOwn(event, key)) errors.push(error("schema.required", key, "Required memory event field is missing."));
+  if (event.schema_version !== 1 || !["capture", "transition", "resolution"].includes(event.event_type) || !safeId(event.memory_id) || !/^(?:mev1|mop1)-[a-f0-9]{64}$/u.test(event.operation_id ?? "") || !timestamp(event.effective_at) || typeof event.actor !== "string" || !event.actor.trim() || typeof event.reason !== "string" || !event.reason.trim()) errors.push(error("memory.event", "", "Memory event metadata is invalid."));
+  if (!sortedUnique(event.parent_event_ids, (id) => /^mev1-[a-f0-9]{64}$/u.test(id))) errors.push(error("memory.event_parent", "parent_event_ids", "Parents must be sorted event identifiers."));
+  if (event.event_type === "capture" && (event.action !== "capture" || event.parent_event_ids?.length !== 0 || event.chosen_parent_event_id !== undefined)) errors.push(error("memory.capture", "", "Capture must have no parents."));
+  if (event.event_type === "transition" && (event.parent_event_ids?.length !== 1 || !MEMORY_STATUSES.includes(event.action))) errors.push(error("memory.transition", "", "Transition must have one parent and a status action."));
+  if (event.event_type === "resolution" && (event.action !== "resolution" || event.parent_event_ids?.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id))) errors.push(error("memory.resolution", "", "Resolution must name an observed parent head."));
+  const recordValidation = validateMemoryRecord(event.record); if (!recordValidation.ok || event.record?.memory_id !== event.memory_id) errors.push(error("memory.event_snapshot", "record", "Event record snapshot is invalid."));
+  return { ok: errors.length === 0, errors };
+}
+
+export function parseMemoryEventDocument(source, { sourceName = "memory event", eventId } = {}) {
+  if (typeof source !== "string" || source !== source.normalize("NFC") || source.startsWith("\uFEFF") || source.includes("\r") || !source.endsWith("\n")) eventFailure("Memory event must be canonical UTF-8 Markdown.");
+  if (eventId !== undefined && eventId !== `mev1-${createHash("sha256").update(source).digest("hex")}`) eventFailure("Memory event id does not match its bytes.", "memory.event_id");
+  const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/u.exec(source); if (!match) eventFailure("Memory event requires closed YAML frontmatter.");
+  const event = parseRestrictedYaml(match[1].replace(/^parent_event_ids: \[\]$/mu, "parent_event_ids:\n  - __empty__"), sourceName); if (event.parent_event_ids?.length === 1 && event.parent_event_ids[0] === "__empty__") event.parent_event_ids = [];
+  const validation = validateMemoryEvent(event); if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
+  const sections = Object.create(null);
+  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) { const marker = new RegExp(`^## ${section}\\n\\n([^]*?)(?=^## |\\n?$)`, "mu"); const found = marker.exec(match[2]); if (!found || !found[1].trim()) eventFailure(`Memory event is missing required section: ${section}.`); sections[section] = found[1].trim(); }
+  return { event, record: event.record, sections };
 }
 
 function safeRelative(value) { return typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\\") && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value !== "."; }

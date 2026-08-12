@@ -1,3 +1,3 @@
 # Design Memory Index
 
-Markdown memory records are the source of truth. Any JSON index is derived and disposable.
+Sealed append-only event Markdown is the source of truth. Any JSON index is derived and disposable.

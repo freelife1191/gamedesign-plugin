@@ -1,149 +1,153 @@
-import { constants } from "node:fs";
-import { link, lstat, mkdir, mkdtemp, open, realpath, rename, unlink } from "node:fs/promises";
-import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
-import { tmpdir } from "node:os";
+import { constants } from "node:fs";
+import { appendFile, link, lstat, mkdir, open, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { parseMemoryEventDocument } from "../validate-design-memory.mjs";
 
 const MAX_BYTES = 256 * 1024;
-const MARKER_START = "# game-design-plugin:memory:begin";
-const MARKER_END = "# game-design-plugin:memory:end";
-const MARKER = `${MARKER_START}\n.game-design/memory/\n${MARKER_END}\n`;
+const MAX_EVENTS = 10000;
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const EVENT_ID = /^mev1-[a-f0-9]{64}$/u;
+const MARKER = "# game-design-plugin:memory:begin\n.game-design/memory/\n# game-design-plugin:memory:end\n";
 
-export const MEMORY_PLATFORM_CAPABILITIES = Object.freeze(["directoryRelative", "atomicNoReplace", "atomicReplace"]);
-
-function unsafe() { throw new Error("Unsafe memory store path."); }
-function unsupported() { const failure = new Error("Memory store capability is unavailable on this platform."); failure.code = "memory.platform_unsupported"; throw failure; }
-function same(left, right) { return left.dev === right.dev && left.ino === right.ino; }
-function sameFileVersion(left, right) { return same(left, right) && left.size === right.size && left.mtimeMs === right.mtimeMs && left.ctimeMs === right.ctimeMs; }
+function fail(message, code = "memory.unsafe_path") { const error = new Error(message); error.code = code; throw error; }
+function hash(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
+function safeId(value) { return typeof value === "string" && value === value.normalize("NFC") && ID.test(value); }
 function safeRelative(value) { return typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\\") && !path.posix.isAbsolute(value) && path.posix.normalize(value) === value && !value.startsWith("../") && value !== "." && value !== ".."; }
-async function directory(candidate) { const stats = await lstat(candidate); if (stats.isSymbolicLink() || !stats.isDirectory()) unsafe(); return stats; }
-async function canonicalDirectory(candidate) { if (typeof candidate !== "string" || !path.isAbsolute(candidate) || candidate.includes("\0")) unsafe(); const requested = path.resolve(candidate); const initial = await directory(requested); const canonical = await realpath(requested); const final = await directory(canonical); if (!same(initial, final)) unsafe(); return { path: canonical, identity: final }; }
-async function assertIdentities(values) { for (const item of values) { const current = await directory(item.path); if (!same(current, item.identity)) unsafe(); } }
-async function parentFor(store, relativePath) { if (!safeRelative(relativePath)) unsafe(); const root = await canonicalDirectory(store?.root); if (!store?.identity || !same(root.identity, store.identity)) unsafe(); const segments = relativePath.split("/").slice(0, -1); let current = root.path; const identities = [{ path: current, identity: root.identity }]; for (const segment of segments) { const next = path.join(current, segment); const stats = await lstat(next).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error)); if (!stats || stats.isSymbolicLink() || !stats.isDirectory() || await realpath(next) !== next) unsafe(); current = next; identities.push({ path: current, identity: stats }); } await assertIdentities(identities); return { path: current, relative: segments.join("/"), identities, target: path.join(current, path.posix.basename(relativePath)) }; }
-async function targetFile(candidate) { const stats = await lstat(candidate).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error)); if (stats && (stats.isSymbolicLink() || !stats.isFile())) unsafe(); return stats; }
+function same(left, right) { return left.dev === right.dev && left.ino === right.ino; }
+async function stat(candidate) { return lstat(candidate).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error)); }
+async function directory(candidate) { const current = await stat(candidate); if (!current || current.isSymbolicLink() || !current.isDirectory()) fail("Unsafe memory store path."); return current; }
+async function canonicalDirectory(candidate) { if (typeof candidate !== "string" || !path.isAbsolute(candidate) || candidate.includes("\0")) fail("Unsafe memory store path."); const initial = await directory(path.resolve(candidate)); const resolved = await realpath(candidate); const final = await directory(resolved); if (!same(initial, final)) fail("Unsafe memory store path."); return { path: resolved, identity: final }; }
+async function ensureDirectory(candidate) { await mkdir(candidate, { recursive: true, mode: 0o700 }); return canonicalDirectory(candidate); }
+async function parentFor(store, relativePath, create = false) {
+  if (!store?.root || !safeRelative(relativePath)) fail("Unsafe memory store path.");
+  const root = await canonicalDirectory(store.root); if (!same(root.identity, store.identity)) fail("Unsafe memory store path.");
+  let current = root.path; const identities = [{ path: current, identity: root.identity }];
+  for (const segment of relativePath.split("/").slice(0, -1)) { const next = path.join(current, segment); if (create) await mkdir(next, { recursive: false, mode: 0o700 }).catch((error) => error.code === "EEXIST" ? undefined : Promise.reject(error)); const item = await directory(next); current = next; identities.push({ path: current, identity: item }); }
+  for (const item of identities) { const present = await directory(item.path); if (!same(present, item.identity)) fail("Unsafe memory store path."); }
+  return { root, path: current, target: path.join(current, path.posix.basename(relativePath)), identities };
+}
+async function safeFile(candidate) { const item = await stat(candidate); if (item && (item.isSymbolicLink() || !item.isFile())) fail("Unsafe memory store path."); return item; }
 async function syncDirectory(candidate) { const handle = await open(candidate, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)); try { await handle.sync(); } finally { await handle.close(); } }
-
-const POSIX_HELPER_SOURCE = fileURLToPath(new URL("./memory-store-posix-helper.c", import.meta.url));
-let posixHelper;
-function helperError(message) { const failure = new Error(message || "Memory store helper failed."); failure.code = /^memory\.[a-z_]+$/u.test(message ?? "") ? message : "memory.helper_failed"; return failure; }
-async function helperBinary() {
-  if (!(["darwin", "linux"].includes(process.platform))) unsupported();
-  if (!posixHelper) posixHelper = (async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), "game-design-memory-helper-"));
-    const binary = path.join(directory, "memory-store-posix-helper");
-    await new Promise((resolve, reject) => {
-      const compiler = spawn("/usr/bin/cc", ["-std=c11", "-D_GNU_SOURCE", "-D_DARWIN_C_SOURCE", POSIX_HELPER_SOURCE, "-o", binary], { stdio: ["ignore", "ignore", "pipe"] }); let stderr = "";
-      compiler.stderr.on("data", (chunk) => { stderr += chunk; }); compiler.on("error", () => reject(helperError("memory.platform_unsupported"))); compiler.on("close", (code) => code === 0 ? resolve() : reject(helperError(stderr.includes("renameat") ? "memory.platform_unsupported" : "memory.helper_compile")));
-    });
-    return binary;
-  })();
-  return posixHelper;
-}
-async function runPosixHelper({ root, parent, mode, temporary, destination, bytes, expected, sourceParent, source } = {}) {
-  const binary = await helperBinary();
-  const args = sourceParent ? ["move", `${root.identity.dev}`, `${root.identity.ino}`, sourceParent.relative, `${sourceParent.identities.at(-1).identity.dev}`, `${sourceParent.identities.at(-1).identity.ino}`, parent.relative, `${parent.identities.at(-1).identity.dev}`, `${parent.identities.at(-1).identity.ino}`, source, destination] : ["write", `${root.identity.dev}`, `${root.identity.ino}`, parent.relative, `${parent.identities.at(-1).identity.dev}`, `${parent.identities.at(-1).identity.ino}`, mode, temporary, destination, `${bytes.byteLength}`, expected ? `${expected.dev}` : "-", expected ? `${expected.ino}` : "-"];
-  await new Promise((resolve, reject) => {
-    const child = spawn(binary, args, { cwd: root.path, stdio: [bytes ? "pipe" : "ignore", "ignore", "pipe"] }); let stderr = "";
-    child.stderr.on("data", (chunk) => { stderr += chunk; }); child.on("error", () => reject(helperError("memory.platform_unsupported"))); child.on("close", (code) => code === 0 ? resolve() : reject(helperError(stderr.trim())));
-    if (bytes) child.stdin.end(bytes);
-  });
-}
-async function runPosixMkdir(root, relative) {
-  if (!safeRelative(relative)) unsafe();
-  const binary = await helperBinary();
-  await new Promise((resolve, reject) => {
-    const child = spawn(binary, ["mkdir", `${root.identity.dev}`, `${root.identity.ino}`, relative], { cwd: root.path, stdio: ["ignore", "ignore", "pipe"] }); let stderr = "";
-    child.stderr.on("data", (chunk) => { stderr += chunk; }); child.on("error", () => reject(helperError("memory.platform_unsupported"))); child.on("close", (code) => code === 0 ? resolve() : reject(helperError(stderr.trim())));
-  });
-}
-function requireCapabilities(adapter) { if (!adapter) return false; if (!adapter.capabilities || !MEMORY_PLATFORM_CAPABILITIES.every((name) => adapter.capabilities[name])) unsupported(); return true; }
-export function createMemoryStorePlatformAdapter({ linkFn = link, renameFn = rename, unlinkFn = unlink, syncDirectoryFn = syncDirectory } = {}) {
-  return Object.freeze({
-    capabilities: Object.freeze({ directoryRelative: false, atomicNoReplace: false, atomicReplace: false }),
-    async publishCreate(temporary, destination) { await linkFn(temporary, destination); await unlinkFn(temporary); },
-    async publishReplace(temporary, destination) { await renameFn(temporary, destination); },
-    async publishMove(source, destination) { await linkFn(source, destination); await unlinkFn(source); },
-    syncDirectory: syncDirectoryFn,
-  });
-}
-const defaultPlatformAdapter = undefined;
-async function safeReplace(parent, destination, bytes, { beforePublish, expected } = {}) {
-  const original = expected?.identity ?? await targetFile(destination); const temporary = path.join(parent.path, `.${path.basename(destination)}.tmp-${randomUUID()}`);
-  if (typeof beforePublish === "function") await beforePublish({ destination, temporary });
-  await assertIdentities(parent.identities);
-  const current = await targetFile(destination);
-  if ((original === undefined) !== (current === undefined) || original && !sameFileVersion(original, current)) unsafe();
-  if (original && expected?.digest && (await readMemoryLikeFile(parent, destination)).digest !== expected.digest) unsafe();
-  await runPosixHelper({ root: parent.root, parent, mode: original ? "replace-existing" : "create", temporary: path.basename(temporary), destination: path.basename(destination), bytes, expected: original });
-}
-
-export function memoryRecordRelativePath(record) {
-  if (!record || Object.keys(record).some((key) => !["memory_id", "project_id", "kind", "status"].includes(key)) || !safeId(record.memory_id) || !safeId(record.project_id) || !["style-preference", "project-fact", "decision", "design-lesson", "career-lesson", "external-note"].includes(record.kind) || !["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"].includes(record.status)) unsafe();
-  if (record.kind === "style-preference") return `preferences/${record.memory_id}.md`;
-  if (["project-fact", "decision", "external-note"].includes(record.kind)) return `projects/${record.project_id}/${record.memory_id}.md`;
-  if (record.status === "approved") return `lessons/approved/${record.memory_id}.md`;
-  if (["expired", "rejected", "superseded", "stale"].includes(record.status)) return `lessons/retired/${record.memory_id}.md`;
-  return `lessons/candidates/${record.memory_id}.md`;
-}
+async function boundedFile(candidate, maxBytes = MAX_BYTES) { const prior = await safeFile(candidate); if (!prior) fail("Memory file does not exist.", "ENOENT"); if (prior.size > maxBytes) fail("Memory file exceeds the bounded read limit."); const handle = await open(candidate, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)); try { const opened = await handle.stat(); if (!opened.isFile() || !same(opened, prior) || opened.size > maxBytes) fail("Unsafe memory store path."); const bytes = await handle.readFile(); const after = await handle.stat(); const final = await safeFile(candidate); if (!same(opened, after) || !final || !same(final, prior) || bytes.byteLength > maxBytes) fail("Unsafe memory store path."); return bytes; } finally { await handle.close(); } }
 
 export async function resolveMemoryStore({ workspaceRoot, config, platform, home, initialize = false } = {}) {
   if (!config?.enabled || !safeId(config.projectId)) return null;
   const workspace = await canonicalDirectory(workspaceRoot);
-  const global = { darwin: ["Library", "Application Support", "game-design-plugin", "memory"], linux: [".local", "share", "game-design-plugin", "memory"], win32: ["AppData", "Local", "game-design-plugin", "memory"] };
+  const global = { darwin: ["Library", "Application Support"], linux: [".local", "share"], win32: ["AppData", "Local"] };
   let root;
-  if (config.scope === "global") { if (!global[platform] || typeof home !== "string" || !path.isAbsolute(home)) unsafe(); let homeRoot; try { homeRoot = await canonicalDirectory(home); } catch (error) { if (!initialize || error?.code !== "ENOENT") throw error; await mkdir(home, { recursive: true, mode: 0o700 }); homeRoot = await canonicalDirectory(home); } if (initialize) await runPosixMkdir(homeRoot, global[platform].join("/")); root = { path: path.join(homeRoot.path, ...global[platform]) }; }
-  else { if (initialize) await runPosixMkdir(workspace, ".game-design/memory"); root = { path: path.join(workspace.path, ".game-design", "memory") }; }
-  if (!initialize) { const stats = await lstat(root.path).catch((error) => error.code === "ENOENT" ? undefined : Promise.reject(error)); if (!stats) throw new Error("Memory store is not initialized."); }
-  const canonical = await canonicalDirectory(root.path);
+  if (config.scope === "global") { if (!global[platform] || typeof home !== "string" || !path.isAbsolute(home)) fail("Unsafe memory store path."); if (initialize) await ensureDirectory(home); const homeRoot = await canonicalDirectory(home); root = path.join(homeRoot.path, ...global[platform], "game-design-plugin", "memory"); }
+  else root = path.join(workspace.path, ".game-design", "memory");
+  if (initialize) await ensureDirectory(root); else if (!await stat(root)) fail("Memory store is not initialized.");
+  const canonical = await canonicalDirectory(root);
   return { root: canonical.path, identity: canonical.identity, scope: config.scope, projectId: config.projectId };
 }
-function safeId(value) { return typeof value === "string" && value === value.normalize("NFC") && ID.test(value); }
 
 export async function readMemoryFile({ store, relativePath, maxBytes = MAX_BYTES } = {}) {
-  if (!store?.root || !Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_BYTES) unsafe();
-  const parent = await parentFor(store, relativePath); const prior = await targetFile(parent.target); if (!prior) throw new Error("Memory file does not exist.");
-  const handle = await open(parent.target, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
-  try { const opened = await handle.stat(); if (!opened.isFile() || !sameFileVersion(opened, prior) || opened.size > maxBytes) unsafe(); const bytes = await handle.readFile(); const after = await handle.stat(); await assertIdentities(parent.identities); const current = await targetFile(parent.target); if (!sameFileVersion(after, opened) || !current || !sameFileVersion(current, prior) || bytes.byteLength > maxBytes) unsafe(); return bytes; } finally { await handle.close(); }
+  if (!Number.isInteger(maxBytes) || maxBytes < 1 || maxBytes > MAX_BYTES) fail("Invalid bounded read limit.");
+  const parent = await parentFor(store, relativePath); const bytes = await boundedFile(parent.target, maxBytes);
+  for (const item of parent.identities) if (!same(await directory(item.path), item.identity)) fail("Unsafe memory store path.");
+  return bytes;
 }
 
-export async function writeMemoryFileAtomic({ store, relativePath, bytes, policy = "replace", platformAdapter = defaultPlatformAdapter } = {}) {
-  if (!Buffer.isBuffer(bytes) || bytes.byteLength > MAX_BYTES) unsafe(); const createOnce = policy === "create-once" || policy?.mode === "create-once"; if (!(policy === "replace" || policy === "create-once" || (policy && typeof policy === "object" && [undefined, "replace", "create-once"].includes(policy.mode)))) unsafe();
-  requireCapabilities(platformAdapter);
-  const parentPath = relativePath?.split("/").slice(0, -1).join("/"); if (parentPath) await runPosixMkdir({ path: store.root, identity: store.identity }, parentPath);
-  const parent = await parentFor(store, relativePath); const original = await targetFile(parent.target); const originalSnapshot = original ? await readMemoryLikeFile(parent, parent.target) : undefined; if (createOnce && original) throw new Error("Memory file already exists.");
-  const temporary = path.join(parent.path, `.${path.basename(parent.target)}.tmp-${randomUUID()}`); let handle;
-  if (typeof policy?.beforeWrite === "function") await policy.beforeWrite({ temporary });
-  if (typeof policy?.beforeRename === "function") await policy.beforeRename({ destination: parent.target, temporary });
-  if (typeof policy?.beforePublish === "function") await policy.beforePublish({ destination: parent.target, temporary });
-  if (originalSnapshot && (await readMemoryLikeFile(parent, parent.target)).digest !== originalSnapshot.digest) unsafe();
-  await runPosixHelper({ root: { path: store.root, identity: store.identity }, parent, mode: original ? "replace-existing" : "create", temporary: path.basename(temporary), destination: path.basename(parent.target), bytes, expected: original });
+export function memoryEventRelativePath({ memoryId, eventId } = {}) {
+  if (!safeId(memoryId) || !EVENT_ID.test(eventId ?? "")) fail("Invalid memory event path.");
+  return `v1/events/${hash(memoryId).slice(0, 2)}/${memoryId}/${eventId}`;
 }
 
-export async function moveMemoryFileAtomic({ store, from, to, policy = {}, platformAdapter = defaultPlatformAdapter } = {}) {
-  requireCapabilities(platformAdapter); const source = await parentFor(store, from); const sourceStats = await targetFile(source.target); if (!sourceStats) throw new Error("Memory file does not exist."); const destinationPath = to?.split("/").slice(0, -1).join("/"); if (destinationPath) await runPosixMkdir({ path: store.root, identity: store.identity }, destinationPath); const destination = await parentFor(store, to); if (await targetFile(destination.target)) throw new Error("Memory destination already exists."); if (typeof policy?.beforePublish === "function") await policy.beforePublish({ source: source.target, destination: destination.target });
-  await runPosixHelper({ root: { path: store.root, identity: store.identity }, parent: destination, sourceParent: source, source: path.basename(source.target), destination: path.basename(destination.target) });
+async function writeSealedFile(store, relativePath, bytes, extension) {
+  if (!Buffer.isBuffer(bytes) || bytes.byteLength > MAX_BYTES) fail("Memory bytes are invalid.");
+  const parent = await parentFor(store, `${relativePath}/instances/.placeholder`, true);
+  const instanceId = randomUUID(); const instancePath = path.join(parent.path, `${instanceId}${extension}`);
+  const flags = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0);
+  const handle = await open(instancePath, flags, 0o600);
+  try { let offset = 0; while (offset < bytes.byteLength) offset += (await handle.write(bytes, offset)).bytesWritten; await handle.sync(); } finally { await handle.close(); }
+  const readBack = await boundedFile(instancePath); if (!readBack.equals(bytes)) fail("Sealed file read-back failed.");
+  return { instanceId, instancePath, fileSha256: hash(bytes), byteLength: bytes.byteLength };
 }
 
-export async function ensureMemoryGitExclusion({ workspaceRoot, gitMode, runGit, beforePublish, beforeSnapshot } = {}) {
-  if (gitMode !== "local") return { status: "skipped" }; if (typeof runGit !== "function") return { status: "skipped" };
-  let common; let exclude;
+export async function stageImmutableMemoryFile({ store, relativePath, bytes } = {}) { return writeSealedFile(store, relativePath, bytes, ".md"); }
+
+function claimBytes({ eventId, instanceId, fileSha256, byteLength }) { return Buffer.from(`${JSON.stringify({ schemaVersion: 1, eventId, instanceId, fileSha256, byteLength })}\n`); }
+async function sealEvent(store, relativePath, eventId, eventDocument, kind = "event") {
+  const staged = await writeSealedFile(store, relativePath, Buffer.from(eventDocument), ".md");
+  const claimPath = path.join(store.root, relativePath, "claims", `${staged.instanceId}.json`); await mkdir(path.dirname(claimPath), { recursive: true, mode: 0o700 });
+  const claim = claimBytes({ eventId, ...staged }); const handle = await open(claimPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600); try { await handle.writeFile(claim); await handle.sync(); } finally { await handle.close(); }
+  const commitPath = path.join(store.root, relativePath, "commit.json");
+  try { await link(claimPath, commitPath); await syncDirectory(path.dirname(commitPath)); } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    const current = await readCommitted(store, relativePath, eventId, kind).catch(() => undefined);
+    if (current?.bytes.equals(Buffer.from(eventDocument))) return { status: "present", eventId, relativePath, fileSha256: staged.fileSha256 };
+    fail("A different event already uses this path.", "memory.append_conflict");
+  }
+  const committed = await readCommitted(store, relativePath, eventId, kind); if (!committed || !committed.bytes.equals(Buffer.from(eventDocument))) fail("Sealed event commit verification failed.");
+  return { status: "created", eventId, relativePath, fileSha256: staged.fileSha256 };
+}
+async function readCommitted(store, relativePath, expectedId, kind = "event") {
+  const base = path.join(store.root, relativePath); const commitPath = path.join(base, "commit.json"); const commitStats = await safeFile(commitPath); if (!commitStats) return undefined;
+  const claim = JSON.parse((await boundedFile(commitPath)).toString("utf8"));
+  if (!claim || claim.schemaVersion !== 1 || claim.eventId !== expectedId || typeof claim.instanceId !== "string" || !/^[a-f0-9]{64}$/u.test(claim.fileSha256) || !Number.isInteger(claim.byteLength)) fail("Invalid sealed commit.", "memory.invalid_commit");
+  const claimPath = path.join(base, "claims", `${claim.instanceId}.json`); const claimStats = await safeFile(claimPath); if (!claimStats || !same(commitStats, claimStats) || !(await boundedFile(claimPath)).equals(await boundedFile(commitPath))) fail("Invalid sealed claim.", "memory.invalid_commit");
+  const instancePath = path.join(base, "instances", `${claim.instanceId}.md`); const bytes = await boundedFile(instancePath); if (bytes.byteLength !== claim.byteLength || hash(bytes) !== claim.fileSha256) fail("Invalid sealed instance.", "memory.invalid_commit");
+  if (kind === "event") parseMemoryEventDocument(bytes.toString("utf8"), { sourceName: relativePath, eventId: expectedId });
+  return { claim, bytes };
+}
+
+export async function appendMemoryEvent({ store, eventDocument } = {}) {
+  const bytes = Buffer.isBuffer(eventDocument) ? eventDocument : Buffer.from(eventDocument ?? ""); if (bytes.byteLength > MAX_BYTES) fail("Memory event exceeds the bounded write limit.");
+  const eventId = `mev1-${hash(bytes)}`; const parsed = parseMemoryEventDocument(bytes.toString("utf8"), { sourceName: "event document", eventId }); const relativePath = memoryEventRelativePath({ memoryId: parsed.event.memory_id, eventId });
+  const scan = await scanMemoryEvents({ store }); if (!scan.complete) fail("Memory scan is incomplete.", "memory.scan_limit_exceeded");
+  const duplicate = scan.events.find((item) => item.event.memory_id === parsed.event.memory_id && item.event.operation_id === parsed.event.operation_id); if (duplicate && !duplicate.bytes.equals(bytes)) fail("duplicate-operation: different event bytes.", "duplicate-operation");
+  return sealEvent(store, relativePath, eventId, bytes, "event");
+}
+
+async function allEntries(root, relative = "", state) {
+  const entries = await readdir(root, { withFileTypes: true }).catch((error) => error.code === "ENOENT" ? [] : Promise.reject(error));
+  for (const entry of entries.sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) { state.count += 1; if (state.count > state.maxEvents) { state.complete = false; state.diagnostics.push({ code: "memory.scan_limit_exceeded" }); return; } const next = path.join(root, entry.name); const pathName = relative ? `${relative}/${entry.name}` : entry.name; const item = await lstat(next); if (item.isDirectory() && !item.isSymbolicLink()) { state.directories.push(pathName); await allEntries(next, pathName, state); if (!state.complete) return; } else if (!item.isFile()) state.diagnostics.push({ code: "memory.unsafe_entry", path: pathName }); }
+}
+function markerRelativePath({ targetMemoryId, targetEventId, markerId }) { return `v1/controls/quarantine/${hash(targetMemoryId).slice(0, 2)}/${targetEventId}/${markerId}`; }
+export async function scanMemoryEvents({ store, maxEventBytes = MAX_BYTES, maxEvents = MAX_EVENTS } = {}) {
+  if (!Number.isInteger(maxEventBytes) || maxEventBytes < 1 || maxEventBytes > MAX_BYTES || !Number.isInteger(maxEvents) || maxEvents < 1 || maxEvents > MAX_EVENTS) fail("Invalid scan limits.");
+  await canonicalDirectory(store?.root); const state = { maxEvents, count: 0, complete: true, diagnostics: [], directories: [] }; await allEntries(path.join(store.root, "v1", "events"), "events", state); if (state.complete) await allEntries(path.join(store.root, "v1", "controls", "quarantine"), "controls/quarantine", state);
+  const events = []; const quarantines = [];
+  if (!state.complete) return { complete: false, diagnostics: state.diagnostics, events, quarantines };
+  for (const directoryPath of state.directories.sort()) {
+    if (!directoryPath.endsWith("commit.json")) continue;
+  }
+  const bases = [];
+  for (const rootPath of [path.join(store.root, "v1", "events"), path.join(store.root, "v1", "controls", "quarantine")]) await collectCommits(rootPath, store.root, bases);
+  for (const relativePath of bases.sort()) {
+    const base = relativePath.slice(0, -"/commit.json".length); const name = path.posix.basename(base); try {
+      if (base.startsWith("v1/events/")) { if (!EVENT_ID.test(name)) throw new Error(); const committed = await readCommitted(store, base, name); const parsed = parseMemoryEventDocument(committed.bytes.toString("utf8"), { sourceName: base, eventId: name }); if (committed.bytes.byteLength > maxEventBytes) throw new Error(); events.push({ eventId: name, relativePath: base, bytes: committed.bytes, event: parsed.event, record: parsed.record }); }
+      else if (base.startsWith("v1/controls/quarantine/")) { const committed = await readCommitted(store, base, name, "marker"); const marker = JSON.parse(committed.bytes.toString("utf8")); if (!safeId(marker.memory_id)) throw new Error(); quarantines.push(marker); }
+    } catch { state.diagnostics.push({ code: "memory.invalid_seal", path: base }); }
+  }
+  return { complete: true, diagnostics: state.diagnostics, events: events.sort((a, b) => a.eventId.localeCompare(b.eventId)), quarantines };
+}
+async function collectCommits(root, storeRoot, values) { const entries = await readdir(root, { withFileTypes: true }).catch((error) => error.code === "ENOENT" ? [] : Promise.reject(error)); for (const entry of entries) { const full = path.join(root, entry.name); if (entry.isDirectory()) await collectCommits(full, storeRoot, values); else if (entry.name === "commit.json" && entry.isFile()) values.push(path.relative(storeRoot, full).split(path.sep).join("/")); } }
+
+export function foldMemoryEvents(scan, { now = new Date() } = {}) {
+  const memories = new Map(); if (!scan?.complete) return { complete: false, memories, diagnostics: scan?.diagnostics ?? [] };
+  const quarantined = new Set((scan.quarantines ?? []).map((item) => item.memory_id)); const groups = new Map();
+  for (const item of scan.events ?? []) { if (!quarantined.has(item.event.memory_id)) (groups.get(item.event.memory_id) ?? groups.set(item.event.memory_id, []).get(item.event.memory_id)).push(item); }
+  for (const [memoryId, items] of groups) {
+    const byId = new Map(items.map((item) => [item.eventId, item])); const invalid = new Set(); const used = new Set();
+    for (const item of items) { for (const parent of item.event.parent_event_ids) { if (!byId.has(parent)) invalid.add(item.eventId); else used.add(parent); } if (item.event.event_type !== "capture") { const parent = byId.get(item.event.parent_event_ids[0]); if (parent && !item.event.parent_event_ids.every((id) => byId.has(id)) || parent && item.event.event_type === "transition" && !validateTransition(parent.record, item.record, item.event.action)) invalid.add(item.eventId); if (item.record.supersedes === memoryId) invalid.add(item.eventId); } }
+    const valid = items.filter((item) => !invalid.has(item.eventId)); const heads = valid.filter((item) => !used.has(item.eventId)); if (heads.length === 1) memories.set(memoryId, { record: heads[0].record, headEventId: heads[0].eventId, heads: [heads[0].eventId], now: new Date(now).toISOString() }); else if (heads.length > 1) memories.set(memoryId, { state: "concurrent-conflict", heads: heads.map((item) => item.eventId).sort() });
+  }
+  for (const [id, value] of memories) if (value.state === "concurrent-conflict") memories.delete(id);
+  return { complete: true, memories, diagnostics: scan.diagnostics };
+}
+function validateTransition(from, to, action) { return action === to.status && from.memory_id === to.memory_id && from.kind === to.kind && from.lane === to.lane && from.scope === to.scope && from.project_id === to.project_id; }
+
+export async function appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now = new Date() } = {}) {
+  if (!safeId(targetMemoryId) || !EVENT_ID.test(targetEventId ?? "") || !safeRelative(targetRelativePath) || !(observedSha256 === null || /^[a-f0-9]{64}$/u.test(observedSha256)) || typeof reasonCode !== "string" || !reasonCode || typeof actor !== "string" || !actor.trim()) fail("Invalid quarantine marker.");
+  const marker = { schema_version: 1, memory_id: targetMemoryId, target_event_id: targetEventId, target_relative_path: targetRelativePath, observed_sha256: observedSha256, reason_code: reasonCode, actor, recorded_at: new Date(now).toISOString() }; const bytes = Buffer.from(`${JSON.stringify(marker)}\n`); const markerId = `qmv1-${hash(bytes)}`; return sealEvent(store, markerRelativePath({ targetMemoryId, targetEventId, markerId }), markerId, bytes, "marker");
+}
+
+export async function ensureMemoryGitExclusion({ workspaceRoot, gitMode, runGit } = {}) {
+  if (gitMode !== "local" || typeof runGit !== "function") return { status: "skipped" }; let common; let exclude;
   try { common = String(await runGit(["rev-parse", "--git-common-dir"], workspaceRoot)).trim(); exclude = String(await runGit(["rev-parse", "--path-format=absolute", "--git-path", "info/exclude"], workspaceRoot)).trim(); } catch { return { status: "skipped" }; }
-  let workspace; let commonRoot;
-  try { workspace = await canonicalDirectory(workspaceRoot); const commonPath = path.isAbsolute(common) ? path.resolve(common) : path.resolve(workspace.path, common); commonRoot = await canonicalDirectory(commonPath); } catch { return { status: "skipped" }; }
-  const expected = path.resolve(commonRoot.path, "info", "exclude");
-  if (!path.isAbsolute(exclude) || path.resolve(exclude) !== expected) return { status: "skipped" };
-  let info; try { await runPosixMkdir(commonRoot, "info"); info = await canonicalDirectory(path.join(commonRoot.path, "info")); } catch { return { status: "skipped" }; }
-  const parent = { path: info.path, relative: "info", root: commonRoot, identities: [{ path: commonRoot.path, identity: commonRoot.identity }, { path: info.path, identity: info.identity }] };
-  const snapshot = await readMemoryLikeFile(parent, exclude).catch((error) => error?.code === "ENOENT" ? { bytes: Buffer.alloc(0), identity: undefined } : Promise.reject(error)); if (typeof beforeSnapshot === "function") await beforeSnapshot({ exclude }); const existing = snapshot.bytes; const text = existing.toString("utf8"); const blocks = [...text.matchAll(/^# game-design-plugin:memory:begin\n\.game-design\/memory\/\n# game-design-plugin:memory:end\n?$/gmu)]; const markerLines = (text.match(/^# game-design-plugin:memory:(?:begin|end)$/gmu) ?? []).length;
-  if (blocks.length === 1 && markerLines === 2) return { status: "present" }; if (blocks.length !== 0 || markerLines !== 0) throw new Error("Malformed game-design memory exclusion marker.");
-  const separator = existing.byteLength === 0 || text.endsWith("\n") ? "" : "\n"; await safeReplace(parent, exclude, Buffer.concat([existing, Buffer.from(`${separator}${MARKER}`)]), { beforePublish, expected: snapshot }); return { status: "added" };
-}
-
-async function readMemoryLikeFile(parent, target) {
-  const prior = await targetFile(target); if (!prior) { const missing = new Error("missing"); missing.code = "ENOENT"; throw missing; }
-  const handle = await open(target, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
-  try { const opened = await handle.stat(); if (!opened.isFile() || !sameFileVersion(opened, prior) || opened.size > MAX_BYTES) unsafe(); const bytes = await handle.readFile(); const after = await handle.stat(); await assertIdentities(parent.identities); const current = await targetFile(target); if (!sameFileVersion(after, opened) || !current || !sameFileVersion(current, prior) || bytes.byteLength > MAX_BYTES) unsafe(); return { bytes, identity: prior, digest: createHash("sha256").update(bytes).digest("hex") }; } finally { await handle.close(); }
+  try { const root = await canonicalDirectory(workspaceRoot); const commonPath = path.isAbsolute(common) ? common : path.join(root.path, common); const expected = path.join(await realpath(commonPath), "info", "exclude"); if (path.resolve(exclude) !== path.resolve(expected)) return { status: "warning", code: "memory.git_exclude_path" }; await mkdir(path.dirname(expected), { recursive: true, mode: 0o700 }); const lock = `${expected}.game-design-memory-exclude.lock`; let lockHandle; try { lockHandle = await open(lock, "wx", 0o600); } catch { return { status: "warning", code: "memory.git_exclude_lock" }; } try { const existing = await readFile(expected).catch((error) => error.code === "ENOENT" ? Buffer.alloc(0) : Promise.reject(error)); const text = existing.toString("utf8"); const begin = (text.match(/# game-design-plugin:memory:begin/gu) ?? []).length; const end = (text.match(/# game-design-plugin:memory:end/gu) ?? []).length; if (begin !== end || begin > 1) return { status: "warning", code: "memory.git_exclude_marker" }; if (begin === 0) { await appendFile(expected, `${text && !text.endsWith("\n") ? "\n" : ""}${MARKER}`, { mode: 0o600 }); const file = await open(expected, constants.O_RDONLY); try { await file.sync(); } finally { await file.close(); } } return { status: "ready" }; } finally { await lockHandle.close(); await rm(lock, { force: true }); } } catch { return { status: "warning", code: "memory.git_exclude" }; }
 }

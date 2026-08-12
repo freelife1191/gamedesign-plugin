@@ -1,7 +1,6 @@
 ---
 schema_version: 1
 memory_id: memory-example
-event_sha256: "<sha256>"
 kind: design-lesson
 lane: studio
 status: candidate

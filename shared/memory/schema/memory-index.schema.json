@@ -12,6 +12,7 @@
     },
     "entries": {
       "type": "array",
+      "maxItems": 10000,
       "items": {
         "type": "object",
         "additionalProperties": false,
