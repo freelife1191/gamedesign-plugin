@@ -53,3 +53,36 @@ git diff --check
 - 변경 파일은 Task 4 소유 파일 세 개뿐이다.
 - 같은 OS 사용자가 승인된 syscall 사이에서 path를 바꾸는 공격은 기존 명시적
   non-goal로 남긴다.
+
+## Fix round 1 — hard-link 및 최종 metadata identity
+
+독립 리뷰의 Important 두 건을 RED로 재현했다.
+
+```sh
+node --test --test-name-pattern='hard-link victim|metadata changes after sync' tests/unit/design-memory-store.test.mjs
+```
+
+결과: 0 PASS, 2 FAIL. 기존 hard-link exclude는 `ready`를 반환했고 victim alias에
+marker를 추가했으며, `beforeFinalRecheck`의 `utimes(..., 2000-01-01)` metadata-only
+변경도 `ready`를 반환했다.
+
+GREEN 구현은 모든 Git snapshot과 pathname 검증에 `nlink === 1`을 포함하고,
+write+sync 직후 handle에서 기대 post-append snapshot을 고정한다. seam 뒤 handle과
+pathname은 expected dev/ino/size/mtime/ctime/nlink 및 exact bytes와 각각 같아야 한다.
+hard-link 거부 전에도 열린 handle은 항상 닫힌다.
+
+```sh
+node --check shared/scripts/lib/safe-memory-store.mjs
+node --test --test-name-pattern='hard-link victim|metadata changes after sync|Git exclusion is best-effort|identity changes before append|pathname swaps' tests/unit/design-memory-store.test.mjs
+node --test tests/unit/design-memory-store.test.mjs
+node --test tests/unit/design-memory-config.test.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
+node --check tests/unit/design-memory-store.test.mjs
+git diff --check
+```
+
+결과:
+
+- focused: 5 PASS, 0 FAIL.
+- store: 34 PASS, 0 FAIL, same-user between-syscall non-goal 1 SKIP.
+- config/record/store: 83 PASS, 0 FAIL, 같은 non-goal 1 SKIP.
+- 두 syntax check와 diff check 모두 성공.

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -347,6 +347,13 @@ test("Git exclusion leaves a symlink victim unchanged", async (t) => {
   assert.equal(result.status, "warning"); assert.equal(await readFile(victim, "utf8"), "user bytes\n");
 });
 
+test("Git exclusion leaves a hard-link victim and its exclude alias unchanged", async (t) => {
+  const root = await workspace(t); const victim = path.join(root, "victim"); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(victim, "user bytes\n"); await link(victim, exclude);
+  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
+  assert.equal(result.status, "warning"); assert.equal(result.code, "memory.git_exclude"); assert.equal(await readFile(victim, "utf8"), "user bytes\n"); assert.equal(await readFile(exclude, "utf8"), "user bytes\n");
+});
+
 test("Git common and info ancestor symlinks cannot redirect exclude writes", async (t) => {
   for (const shape of ["common", "info"]) {
     const root = await workspace(t); const outside = path.join(root, "outside"); const logical = path.join(root, `logical-${shape}`); const common = path.join(logical, "common"); await mkdir(path.join(outside, "common", "info"), { recursive: true }); await symlink(outside, logical);
@@ -365,8 +372,15 @@ test("Git exclude identity changes before append leave same-inode user bytes unc
 });
 
 test("Git exclude pathname swaps never report ready", async (t) => {
-  const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); const original = path.join(root, "original-exclude"); const replacement = path.join(root, "replacement-exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n"); await link(exclude, original); await writeFile(replacement, "replacement user bytes\n");
+  const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); const original = path.join(root, "original-exclude"); const replacement = path.join(root, "replacement-exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n"); await writeFile(replacement, "replacement user bytes\n");
   const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeFinalRecheck: async () => rename(replacement, exclude) });
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeFinalRecheck: async () => { await rename(exclude, original); await rename(replacement, exclude); } });
   assert.equal(result.status, "warning"); assert.equal(await readFile(exclude, "utf8"), "replacement user bytes\n"); assert.match(await readFile(original, "utf8"), /game-design-plugin:memory:begin/u);
+});
+
+test("Git exclude metadata changes after sync never report ready", async (t) => {
+  const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); const prefix = "before\n"; const suffix = "# game-design-plugin:memory:begin\n.game-design/memory/\n# game-design-plugin:memory:end\n"; await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, prefix);
+  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeFinalRecheck: async () => utimes(exclude, new Date("2000-01-01T00:00:00.000Z"), new Date("2000-01-01T00:00:00.000Z")) });
+  assert.equal(result.status, "warning"); assert.equal(result.code, "memory.git_exclude"); assert.equal(await readFile(exclude, "utf8"), `${prefix}${suffix}`);
 });
