@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -10,6 +10,7 @@ import { appendMemoryEvent, resolveMemoryStore } from "../../shared/scripts/lib/
 import {
   loadCurrentMemoryIndex,
   loadMemoryReceipt,
+  loadMemoryView,
   listMemoryReceipts,
   publishMemoryIndexGeneration,
   publishMemoryReceiptGeneration,
@@ -139,4 +140,29 @@ test("disabled output never echoes an oversized request field", async () => {
   const result = await retrieveApprovedDesignMemory({ workspaceRoot: "/must-not-be-read", config, requestContext: { ...context, disabledForRequest: true, projectId: "x".repeat(70_000) } });
   assert.equal(Buffer.byteLength(JSON.stringify(result), "utf8") <= 64 * 1024, true);
   assert.equal(result.projectId, null);
+});
+
+test("derived root symlink, BOM publisher, and hostile Markdown loader all fail closed", async (t) => {
+  const { store } = await approvedStore(t); const hash = "a".repeat(64);
+  const first = await publishMemoryViewGeneration({ store, sourceTreeSha256: hash, viewBytes: Buffer.from("# view\n") });
+  assert.equal(first.complete, true);
+  for (const bytes of [Buffer.from([0xef, 0xbb, 0xbf, 0x23, 0x0a]), Buffer.from([0xff, 0x0a])]) {
+    const rejected = await publishMemoryViewGeneration({ store, sourceTreeSha256: hash, viewBytes: bytes }); assert.equal(rejected.complete, false);
+  }
+  await writeFile(path.join(store.root, "v1", "derived", first.generationPath), Buffer.from([0xff, 0x0a]));
+  const hostile = await loadMemoryView({ store, sourceTreeSha256: hash, viewSha256: first.generationSha256 });
+  assert.equal(hostile.status, "corrupt");
+  await rm(path.join(store.root, "v1", "derived"), { recursive: true }); const outside = await workspace(t); await mkdir(path.join(outside, "derived")); await symlink(path.join(outside, "derived"), path.join(store.root, "v1", "derived"));
+  const scan = await scanDerivedGenerations({ store }); assert.equal(scan.complete, false); assert.deepEqual(scan.entries, []);
+});
+
+test("lowered receipt loader limit rejects an otherwise canonical history", async (t) => {
+  const { store } = await approvedStore(t); const requestSha256 = "a".repeat(64);
+  const base = { schemaVersion: 1, requestSha256, sourceTreeSha256: "b".repeat(64), projectId: "wind-island", lane: "studio", policy: { scope: "project", maxItems: 5, candidateTtlDays: 30 }, observations: [
+    { memoryId: "memory-a", artifactId: "artifact-a", locator: "a.md#x", expectedSha256: "c".repeat(64), observedSha256: "c".repeat(64), status: "current" },
+    { memoryId: "memory-b", artifactId: "artifact-b", locator: "b.md#x", expectedSha256: "c".repeat(64), observedSha256: "c".repeat(64), status: "current" },
+  ], applied: [], excluded: [] };
+  const bytes = Buffer.from(`${JSON.stringify(base)}\n`); const published = await publishMemoryReceiptGeneration({ store, requestSha256, receiptBytes: bytes }); assert.equal(published.complete, true);
+  const loaded = await loadMemoryReceipt({ store, requestSha256, receiptSha256: published.receiptSha256, limits: { maxReceiptObservationItems: 1 } });
+  assert.equal(loaded.status, "corrupt");
 });
