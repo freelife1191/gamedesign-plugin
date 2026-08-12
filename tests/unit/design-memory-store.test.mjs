@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
 import { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, memoryEventRelativePath, readMemoryFile, resolveMemoryStore, scanMemoryEvents, stageImmutableMemoryFile } from "../../shared/scripts/lib/safe-memory-store.mjs";
@@ -32,6 +34,7 @@ function assertClosedScan(scan, memoryId, code) {
   assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(fold.memories.has(memoryId), false); assert.equal(scan.diagnostics.some((item) => item.code === code), true);
 }
 function digest(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
+function eventRelativePathForTest(memoryId, eventId) { return `v1/events/${digest(memoryId).slice(0, 2)}/${memoryId}/${eventId}`; }
 function sealedInstanceId(eventId) { const value = digest(eventId); return `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20, 32)}`; }
 async function sealCommittedForTest(store, { relativePath, eventId, bytes, persistedClaim } = {}) {
   const base = path.join(store.root, relativePath); const instanceId = sealedInstanceId(eventId); const claim = { schemaVersion: 1, eventId, instanceId, fileSha256: digest(bytes), byteLength: bytes.byteLength };
@@ -65,6 +68,42 @@ async function assertRejectedWithoutSourceChange(store, operation, code) {
   assert.deepEqual(await sourceTreeSnapshot(store), before);
 }
 async function absent(candidate) { await assert.rejects(() => lstat(candidate), (error) => error?.code === "ENOENT"); }
+async function runAppendChild(payload, start) {
+  const fixture = fileURLToPath(new URL("../fixtures/design-memory/child-append.mjs", import.meta.url));
+  const child = spawn(process.execPath, [fixture], { stdio: ["pipe", "pipe", "pipe"] });
+  const stdout = []; const stderr = [];
+  child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk));
+  const completed = new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => { child.kill(); reject(new Error("child append timed out")); }, 15_000);
+    child.once("error", reject);
+    child.once("close", (code, signal) => {
+      clearTimeout(timeout);
+      const output = Buffer.concat(stdout).toString("utf8"); const errors = Buffer.concat(stderr).toString("utf8");
+      if (code !== 0) reject(new Error(`child append exited with code ${code}, signal ${signal ?? "none"}, stderr ${errors}`));
+      else resolve({ output, errors });
+    });
+  });
+  await start;
+  child.stdin.end(`${JSON.stringify(payload)}\n`);
+  return completed;
+}
+async function sealEventForTest(store, eventDocument) {
+  const bytes = Buffer.from(eventDocument); const eventId = `mev1-${digest(bytes)}`; const relativePath = eventRelativePathForTest(record.memory_id, eventId);
+  await sealCommittedForTest(store, { relativePath, eventId, bytes });
+  return { bytes, eventId, relativePath };
+}
+async function sourceTraversalEntries(root, relative = "") {
+  let handle;
+  try { handle = await opendir(root); } catch (error) { if (error.code === "ENOENT") return []; throw error; }
+  const entries = [];
+  try { for await (const entry of handle) entries.push(entry); } finally { await handle.close().catch(() => {}); }
+  const result = [];
+  for (const entry of entries.sort((left, right) => Buffer.compare(Buffer.from(left.name), Buffer.from(right.name)))) {
+    const entryRelative = relative ? `${relative}/${entry.name}` : entry.name; result.push(entryRelative);
+    if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...await sourceTraversalEntries(path.join(root, entry.name), entryRelative));
+  }
+  return result;
+}
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -113,6 +152,83 @@ test("sealed append is idempotent, conflict preserving, and uses event shard pat
   const first = await appendMemoryEvent({ store, eventDocument: bytes }); const second = await appendMemoryEvent({ store, eventDocument: bytes });
   assert.equal(first.status, "created"); assert.equal(second.status, "present"); assert.equal(first.relativePath, memoryEventRelativePath({ memoryId: record.memory_id, eventId: first.eventId }));
   await assert.rejects(() => appendMemoryEvent({ store, eventDocument: document({ reason: "other" }) }), (error) => error?.code === "duplicate-operation");
+});
+
+test("multiprocess same-event append commits one logical event with created and present statuses", { timeout: 20_000 }, async (t) => {
+  const root = await workspace(t); const eventDocument = document(); let release;
+  const start = new Promise((resolve) => { release = resolve; });
+  const children = [runAppendChild({ workspaceRoot: root, eventDocument }, start), runAppendChild({ workspaceRoot: root, eventDocument }, start)];
+  release();
+  const results = await Promise.all(children); const parsed = results.map(({ output, errors }) => {
+    assert.equal(errors, ""); assert.equal(output.split("\n").filter(Boolean).length, 1); assert.equal(output.includes(root), false); assert.equal(output.includes(eventDocument), false); assert.equal(output.includes('"actor"'), false); assert.equal(output.includes('"reason"'), false);
+    const value = JSON.parse(output); assert.deepEqual(Object.keys(value).sort(), ["eventId", "relativePath", "status"]); return value;
+  });
+  assert.deepEqual(results.map((_, index) => parsed[index].status).sort(), ["created", "present"]);
+  const expectedEventId = `mev1-${digest(Buffer.from(eventDocument))}`; const expectedRelativePath = eventRelativePathForTest(record.memory_id, expectedEventId);
+  assert.equal(parsed.every((value) => value.eventId === expectedEventId && value.relativePath === expectedRelativePath), true);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root }); const scan = await scanMemoryEvents({ store });
+  assert.equal(scan.events.filter((item) => item.eventId === expectedEventId).length, 1);
+});
+
+test("concurrent transitions and resolutions remain physical conflicts until one current-head resolution", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  const verifiedDocument = transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); const disputedDocument = transitionDocument(captured.eventId, "disputed", "2026-08-12T02:00:00.000Z");
+  const verified = await sealEventForTest(store, verifiedDocument); const disputed = await sealEventForTest(store, disputedDocument);
+  let scan = await scanMemoryEvents({ store }); let fold = foldMemoryEvents(scan);
+  assert.equal(scan.events.filter((item) => [verified.eventId, disputed.eventId].includes(item.eventId)).length, 2); assert.equal(fold.memories.has(record.memory_id), false); assert.equal(fold.diagnostics.some((item) => item.code === "memory.concurrent_conflict"), true);
+  const verifiedRecord = { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z" }; const disputedRecord = { ...record, status: "disputed", updated_at: "2026-08-12T02:00:00.000Z" };
+  const left = await sealEventForTest(store, resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, verifiedRecord, "2026-08-12T03:00:00.000Z"));
+  const right = await sealEventForTest(store, resolutionDocument([verified.eventId, disputed.eventId], disputed.eventId, disputedRecord, "2026-08-12T04:00:00.000Z"));
+  scan = await scanMemoryEvents({ store }); fold = foldMemoryEvents(scan);
+  assert.equal(scan.events.filter((item) => [left.eventId, right.eventId].includes(item.eventId)).length, 2); assert.equal(fold.memories.has(record.memory_id), false); assert.equal(fold.diagnostics.some((item) => item.code === "memory.concurrent_conflict"), true);
+  const resolved = await appendMemoryEvent({ store, eventDocument: resolutionDocument([left.eventId, right.eventId], left.eventId, verifiedRecord, "2026-08-12T05:00:00.000Z") });
+  assert.equal(resolved.status, "created"); assert.equal(foldMemoryEvents(await scanMemoryEvents({ store })).memories.get(record.memory_id).headEventId, resolved.eventId);
+});
+
+test("unsealed failpoint states stay non-authoritative and canonical retry prevents approved resurrection", { timeout: 20_000 }, async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") });
+  const disputedDocument = transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }); const bytes = Buffer.from(disputedDocument); const eventId = `mev1-${digest(bytes)}`; const relativePath = eventRelativePathForTest(record.memory_id, eventId); const base = path.join(store.root, relativePath);
+  await mkdir(path.join(base, "instances"), { recursive: true }); await mkdir(path.join(base, "claims"), { recursive: true });
+  const candidates = [
+    ["11111111-1111-1111-1111-111111111111", "instance-only"],
+    ["22222222-2222-2222-2222-222222222222", "valid-claim"],
+    ["33333333-3333-3333-3333-333333333333", "wrong-length"],
+    ["44444444-4444-4444-4444-444444444444", "wrong-hash"],
+  ];
+  for (const [instanceId, kind] of candidates) {
+    await writeFile(path.join(base, "instances", `${instanceId}.md`), bytes);
+    if (kind !== "instance-only") {
+      const claim = { schemaVersion: 1, eventId, instanceId, fileSha256: kind === "wrong-hash" ? "b".repeat(64) : digest(bytes), byteLength: kind === "wrong-length" ? bytes.byteLength + 1 : bytes.byteLength };
+      const claimPath = path.join(base, "claims", `${instanceId}.json`); await writeFile(claimPath, `${JSON.stringify(claim)}\n`); assert.equal((await lstat(claimPath)).nlink, 1);
+    }
+  }
+  await absent(path.join(base, "commit.json"));
+  const before = await scanMemoryEvents({ store }); assert.equal(before.complete, true); assert.equal(before.events.some((item) => item.eventId === eventId), false); assert.equal(foldMemoryEvents(before).memories.get(record.memory_id).record.status, "approved");
+  const created = await appendMemoryEvent({ store, eventDocument: disputedDocument }); const afterCreated = await sourceTreeSnapshot(store); const present = await appendMemoryEvent({ store, eventDocument: disputedDocument });
+  assert.equal(created.status, "created"); assert.equal(present.status, "present"); assert.deepEqual(await sourceTreeSnapshot(store), afterCreated);
+  const recovered = await scanMemoryEvents({ store }); assert.equal(recovered.events.filter((item) => item.eventId === eventId).length, 1); assert.equal(foldMemoryEvents(recovered).memories.get(record.memory_id).record.status, "disputed");
+});
+
+test("the 10001st source-tree entry cannot hide an approval-invalidating event", { timeout: 30_000 }, async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  const verified = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z") }); const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(verified.eventId, "approved", "2026-08-12T02:00:00.000Z") });
+  const disputedDocument = transitionDocument(approved.eventId, "disputed", "2026-08-12T03:00:00.000Z", { recordOverrides: { approved_by: "reviewer", approval_basis: "review" } }); const disputed = await sealEventForTest(store, disputedDocument); const sourceRoot = path.join(store.root, "v1", "events");
+  const initial = await sourceTraversalEntries(sourceRoot); const disputedCommit = `${disputed.relativePath.slice("v1/events/".length)}/commit.json`; const initialOrdinal = initial.indexOf(disputedCommit) + 1; assert.equal(initialOrdinal > 0, true);
+  const fillerCount = 10_000 - initialOrdinal; const fillerRoot = path.join(sourceRoot, "00-budget"); await mkdir(fillerRoot);
+  for (let offset = 0; offset < fillerCount; offset += 100) await Promise.all(Array.from({ length: Math.min(100, fillerCount - offset) }, (_, index) => writeFile(path.join(fillerRoot, `${String(offset + index).padStart(5, "0")}.entry`), "")));
+  const traversal = await sourceTraversalEntries(sourceRoot); assert.equal(traversal.indexOf(disputedCommit) + 1, 10_001);
+  const scan = await scanMemoryEvents({ store }); const folded = foldMemoryEvents(scan);
+  assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(folded.memories.size, 0); assert.equal(scan.entriesScanned <= 10_000, true); assert.deepEqual(scan.diagnostics, [{ code: "memory.scan_limit_exceeded" }]);
+});
+
+test("sequential event and quarantine retry cardinality does not grow source files", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true }); const eventDocument = document(); const appended = await appendMemoryEvent({ store, eventDocument }); const afterEvent = await sourceTreeSnapshot(store);
+  for (let attempt = 0; attempt < 3; attempt += 1) assert.equal((await appendMemoryEvent({ store, eventDocument })).status, "present");
+  assert.deepEqual(await sourceTreeSnapshot(store), afterEvent);
+  const markerInput = { store, targetMemoryId: record.memory_id, targetEventId: appended.eventId, targetRelativePath: appended.relativePath, observedSha256: appended.fileSha256, reasonCode: "memory.bad", actor: "auditor", now: new Date("2026-08-12T00:00:00.000Z") }; await appendQuarantineMarker(markerInput); const afterMarker = await sourceTreeSnapshot(store);
+  for (let attempt = 0; attempt < 3; attempt += 1) assert.equal((await appendQuarantineMarker(markerInput)).status, "present");
+  assert.deepEqual(await sourceTreeSnapshot(store), afterMarker); const scan = await scanMemoryEvents({ store }); assert.equal(scan.events.length, 1); assert.equal(scan.quarantines.length, 1);
 });
 
 test("different bytes with an existing capture, transition, or resolution operation reject without creating source files", async (t) => {
