@@ -72,6 +72,13 @@ test("cross-memory supersedes cycles taint every involved memory", () => {
   assert.equal(folded.memories.has(left), false); assert.equal(folded.memories.has(right), false); assert.equal(folded.diagnostics.filter((item) => item.code === "memory.supersedes_graph").length, 2);
 });
 
+test("a corrupt committed event taints its canonical memory path", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const appended = await appendMemoryEvent({ store, eventDocument: document() });
+  await writeFile(path.join(store.root, appended.relativePath, "commit.json"), "broken\n");
+  const scan = await scanMemoryEvents({ store }); const fold = foldMemoryEvents(scan);
+  assert.deepEqual(scan.taintedMemoryIds, [record.memory_id]); assert.equal(fold.memories.has(record.memory_id), false); assert.equal(fold.diagnostics.find((item) => item.code === "memory.corrupt_seal")?.memory_id, record.memory_id);
+});
+
 test("same-user directory swap is explicitly a skipped non-goal", { skip: "Node 18 path APIs cannot prevent malicious same-user between-syscall directory swaps." }, () => {});
 
 test("Git exclusion is best-effort and independent from append trust", async (t) => {

@@ -111,6 +111,7 @@ function yamlRecord(record, indent = "") {
 function normalizeTime(key, value) { return ["effective_at", "created_at", "updated_at"].includes(key) ? new Date(value).toISOString() : value; }
 function eventFailure(message, code = "memory.event") { const failure = new Error(message); failure.code = code; throw failure; }
 function sensitiveText(value) { return typeof value !== "string" || value.includes("\0") || forbiddenMemoryContent.some((pattern) => pattern.test(value)); }
+function canonicalSection(value) { if (sensitiveText(value)) return undefined; const normalized = value.normalize("NFC").replace(/\r\n?/gu, "\n").split("\n").map((line) => line.replace(/[ \t]+$/gu, "")).join("\n").replace(/^\n+|\n+$/gu, ""); return normalized || undefined; }
 function lengthPrefix(value) { const bytes = Buffer.from(value, "utf8"); const length = Buffer.alloc(8); length.writeBigUInt64BE(BigInt(bytes.byteLength)); return Buffer.concat([length, bytes]); }
 
 export function memoryOperationId({ memory_id, event_type, action, effective_at, actor, reason, parent_event_ids, chosen_parent_event_id } = {}) {
@@ -122,12 +123,12 @@ export function memoryOperationId({ memory_id, event_type, action, effective_at,
 export function canonicalMemoryEventDocument(event, sections) {
   const validation = validateMemoryEvent(event);
   if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
-  if (!object(sections) || ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].some((key) => sensitiveText(sections[key]) || !sections[key].trim())) eventFailure("Memory event sections are invalid.", "memory.prohibited_content");
+  if (!object(sections) || ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].some((key) => !canonicalSection(sections[key]))) eventFailure("Memory event sections are invalid.", "memory.prohibited_content");
   const lines = ["---", `schema_version: ${event.schema_version}`, `event_type: ${quote(event.event_type)}`, `action: ${quote(event.action)}`, `memory_id: ${quote(event.memory_id)}`, `operation_id: ${quote(event.operation_id)}`, event.parent_event_ids.length === 0 ? "parent_event_ids: []" : "parent_event_ids:"];
   for (const value of event.parent_event_ids) lines.push(`  - ${quote(value)}`);
   if (event.chosen_parent_event_id !== undefined) lines.push(`chosen_parent_event_id: ${quote(event.chosen_parent_event_id)}`);
   lines.push(`effective_at: ${quote(normalizeTime("effective_at", event.effective_at))}`, `actor: ${quote(event.actor)}`, `reason: ${quote(event.reason)}`, "record:", ...yamlRecord(event.record, "  "), "---", "");
-  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) lines.push(`## ${section}`, "", sections[section], "");
+  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) lines.push(`## ${section}`, "", canonicalSection(sections[section]), "");
   return `${lines.join("\n")}\n`;
 }
 
