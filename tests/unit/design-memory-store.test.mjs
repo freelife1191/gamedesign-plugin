@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { link, mkdtemp, mkdir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { canonicalMemoryEventDocument } from "../../shared/scripts/validate-design-memory.mjs";
+import { canonicalMemoryEventDocument, canonicalQuarantineMarkerDocument, memoryOperationId } from "../../shared/scripts/validate-design-memory.mjs";
 import { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, memoryEventRelativePath, readMemoryFile, resolveMemoryStore, scanMemoryEvents, stageImmutableMemoryFile } from "../../shared/scripts/lib/safe-memory-store.mjs";
 
 async function workspace(t) { const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-store-"))); t.after(() => rm(root, { recursive: true, force: true })); return root; }
@@ -13,6 +13,20 @@ const config = (overrides = {}) => ({ enabled: true, scope: "project", gitMode: 
 const record = { schema_version: 1, memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef", kind: "design-lesson", lane: "studio", status: "candidate", scope: "project", project_id: "wind-island", created_at: "2026-08-12T00:00:00.000Z", updated_at: "2026-08-12T00:00:00.000Z", review_after: "2026-09-11", expires_at: "2026-09-11", approved_by: null, approval_basis: null, supersedes: null, artifact_types: ["artifact"], related_ids: ["related"], tags: ["tag"], sources: [{ artifact_id: "source", locator: "content.md#h", sha256: "a".repeat(64) }] };
 const sections = { "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" };
 const document = (overrides = {}) => canonicalMemoryEventDocument({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T00:00:00.000Z", actor: "author", reason: "capture", record, ...overrides }, sections);
+function transitionDocument(parentEventId, action, effectiveAt) {
+  const event = { schema_version: 1, event_type: "transition", action, memory_id: record.memory_id, parent_event_ids: [parentEventId], effective_at: effectiveAt, actor: "reviewer", reason: action, record: { ...record, status: action, updated_at: effectiveAt, ...(action === "approved" ? { approved_by: "reviewer", approval_basis: "review" } : {}) } };
+  return canonicalMemoryEventDocument({ ...event, operation_id: memoryOperationId(event) }, sections);
+}
+async function sealMarkerForTest(store, marker, physicalTarget = marker) {
+  const bytes = Buffer.from(canonicalQuarantineMarkerDocument(marker)); const markerId = `qmv1-${createHash("sha256").update(bytes).digest("hex")}`; const instanceHash = createHash("sha256").update(markerId).digest("hex"); const instanceId = `${instanceHash.slice(0, 8)}-${instanceHash.slice(8, 12)}-${instanceHash.slice(12, 16)}-${instanceHash.slice(16, 20)}-${instanceHash.slice(20, 32)}`;
+  const relativePath = `v1/controls/quarantine/${createHash("sha256").update(physicalTarget.memory_id).digest("hex").slice(0, 2)}/${physicalTarget.target_event_id}/${markerId}`; const base = path.join(store.root, relativePath);
+  await mkdir(path.join(base, "instances"), { recursive: true }); await mkdir(path.join(base, "claims"), { recursive: true }); await writeFile(path.join(base, "instances", `${instanceId}.md`), bytes);
+  const claimPath = path.join(base, "claims", `${instanceId}.json`); await writeFile(claimPath, `${JSON.stringify({ schemaVersion: 1, eventId: markerId, instanceId, fileSha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength })}\n`); await link(claimPath, path.join(base, "commit.json"));
+}
+function assertClosedScan(scan, memoryId, code) {
+  const fold = foldMemoryEvents(scan);
+  assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(fold.memories.has(memoryId), false); assert.equal(scan.diagnostics.some((item) => item.code === code), true);
+}
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -56,6 +70,32 @@ test("scan is fail-closed at maxEvents and quarantine permanently excludes a mem
   const limited = await scanMemoryEvents({ store, maxEvents: 1 }); assert.equal(limited.complete, false); assert.equal(limited.diagnostics[0].code, "memory.scan_limit_exceeded");
 });
 
+test("moved disputed event closes the scan instead of restoring approved memory", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
+  const approved = await appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "approved", "2026-08-12T01:00:00.000Z") }); const disputed = await appendMemoryEvent({ store, eventDocument: transitionDocument(approved.eventId, "disputed", "2026-08-12T02:00:00.000Z") });
+  const moved = path.join(store.root, "v1", "events", "zz", "invalid-memory", disputed.eventId); await mkdir(path.dirname(moved), { recursive: true }); await rename(path.join(store.root, disputed.relativePath), moved);
+  assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.path_binding");
+});
+
+test("marker binding closes the scan when a sealed marker target tuple is forged", async (t) => {
+  const forgeries = ["target_relative_path", "target_event_id", "memory_id", "observed_sha256"];
+  for (const forged of forgeries) {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const target = await appendMemoryEvent({ store, eventDocument: document() }); const otherEventId = `mev1-${"b".repeat(64)}`;
+    const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: target.eventId, target_relative_path: target.relativePath, observed_sha256: target.fileSha256, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T00:00:00.000Z" };
+    if (forged === "target_relative_path") marker.target_relative_path = memoryEventRelativePath({ memoryId: "other-memory", eventId: target.eventId });
+    if (forged === "target_event_id") marker.target_event_id = otherEventId;
+    if (forged === "memory_id") marker.memory_id = "other-memory";
+    if (forged === "observed_sha256") marker.observed_sha256 = "b".repeat(64);
+    await sealMarkerForTest(store, marker, { memory_id: record.memory_id, target_event_id: target.eventId }); assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.quarantine_binding");
+  }
+});
+
+test("unbound sealed marker target closes the entire scan", async (t) => {
+  const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); await appendMemoryEvent({ store, eventDocument: document() }); const missingEventId = `mev1-${"c".repeat(64)}`;
+  await sealMarkerForTest(store, { schema_version: 1, memory_id: record.memory_id, target_event_id: missingEventId, target_relative_path: memoryEventRelativePath({ memoryId: record.memory_id, eventId: missingEventId }), observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T00:00:00.000Z" });
+  assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+});
+
 test("fold taints a memory for duplicate roots, descendants of invalid events, and operation collisions", () => {
   const id = (digit) => `mev1-${digit.repeat(64)}`;
   const item = (eventId, event) => ({ eventId, event: { schema_version: 1, memory_id: record.memory_id, operation_id: "mop1-" + "1".repeat(64), event_type: "capture", action: "capture", parent_event_ids: [], actor: "a", reason: "r", ...event }, record });
@@ -81,11 +121,10 @@ test("transition snapshots cannot mutate instruction provenance, tags, or source
   }
 });
 
-test("a corrupt committed event taints its canonical memory path", async (t) => {
+test("a corrupt committed event closes the entire scan", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const appended = await appendMemoryEvent({ store, eventDocument: document() });
   await writeFile(path.join(store.root, appended.relativePath, "commit.json"), "broken\n");
-  const scan = await scanMemoryEvents({ store }); const fold = foldMemoryEvents(scan);
-  assert.deepEqual(scan.taintedMemoryIds, [record.memory_id]); assert.equal(fold.memories.has(record.memory_id), false); assert.equal(fold.diagnostics.find((item) => item.code === "memory.corrupt_seal")?.memory_id, record.memory_id);
+  assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
 });
 
 test("same-user directory swap is explicitly a skipped non-goal", { skip: "Node 18 path APIs cannot prevent malicious same-user between-syscall directory swaps." }, () => {});
