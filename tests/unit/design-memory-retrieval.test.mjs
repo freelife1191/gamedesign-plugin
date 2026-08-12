@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
+import { writeSync } from "node:fs";
 import { lstat, mkdir, mkdtemp, opendir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -32,6 +33,15 @@ function test(name, optionsOrFunction, maybeFunction) {
   if (!selectedTestName || name === selectedTestName) return maybeFunction === undefined ? nodeTest(name, optionsOrFunction) : nodeTest(name, optionsOrFunction, maybeFunction);
   const options = typeof optionsOrFunction === "function" ? {} : optionsOrFunction; const operation = typeof optionsOrFunction === "function" ? optionsOrFunction : maybeFunction;
   return nodeTest(name, { ...options, skip: true }, operation);
+}
+
+function mutationEvidenceMatches(error, { mutationId, testId, sentinel }) {
+  return error instanceof assert.AssertionError && error.code === "ERR_ASSERTION" && error.operator === "strictEqual" && error.message.startsWith(`${sentinel}\n`)
+    && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_EVIDENCE === "fd-json-v2" && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_ID === mutationId
+    && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_TEST_ID === testId && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_SENTINEL === sentinel;
+}
+function mutationEqual({ mutationId, testId, sentinel }, actual, expected) {
+  try { assert.equal(actual, expected, sentinel); } catch (error) { if (mutationEvidenceMatches(error, { mutationId, testId, sentinel })) writeSync(3, `${JSON.stringify({ mutationId, testId, sentinel, operator: "strictEqual", expected, actual })}\n`); throw error; }
 }
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
@@ -80,6 +90,17 @@ async function resealMarkdownGeneration({ store, kind, first, created, bytes }) 
   const globalPath = path.join(root, ".reservations", "global", `${String(local.globalSlot).padStart(5, "0")}.json`); const global = JSON.parse(await readFile(globalPath, "utf8"));
   await writeFile(globalPath, canonicalBytes({ ...global, identitySha256, generationSha256 }));
   return generationSha256;
+}
+
+async function resealReceiptGeneration({ store, requestSha256, created, bytes }) {
+  const root = path.join(store.root, "v1", "derived"); const oldBase = path.join(root, "receipts", requestSha256, created.receiptSha256); const receiptSha256 = digest(bytes); const newBase = path.join(root, "receipts", requestSha256, receiptSha256);
+  const instanceId = path.basename(created.generationPath, ".json"); const oldLocal = JSON.parse(await readFile(path.join(oldBase, "_slots", "000.json"), "utf8"));
+  await writeFile(path.join(oldBase, "instances", `${instanceId}.json`), bytes); await rename(oldBase, newBase);
+  const identitySha256 = derivedIdentity("receipt", requestSha256, receiptSha256); const local = { ...oldLocal, identitySha256, generationSha256: receiptSha256 };
+  await writeFile(path.join(newBase, "_slots", "000.json"), canonicalBytes(local));
+  const globalPath = path.join(root, ".reservations", "global", `${String(local.globalSlot).padStart(5, "0")}.json`); const global = JSON.parse(await readFile(globalPath, "utf8"));
+  await writeFile(globalPath, canonicalBytes({ ...global, identitySha256, generationSha256: receiptSha256 }));
+  return receiptSha256;
 }
 
 async function mutateReservation({ store, created, kind = "view", first = "a".repeat(64), scope, mutate }) {
@@ -263,9 +284,19 @@ test("a local reservation relocated across source request or generation bases gr
     const derived = path.join(store.root, "v1", "derived"); const local = path.join(derived, collection, first, generation, "_slots", "000.json"); const target = path.join(derived, collection, targetFirst, targetGeneration, "_slots", "000.json"); await mkdir(path.dirname(target), { recursive: true }); await rename(local, target);
     if (movedPart === "first") { const instanceName = path.basename(created.generationPath); const targetInstance = path.join(derived, collection, targetFirst, targetGeneration, "instances", instanceName); await mkdir(path.dirname(targetInstance), { recursive: true }); await writeFile(targetInstance, bytes); }
     const scan = await scanDerivedGenerations({ store }); assert.equal(scan.complete, true, `${kind}/${movedPart}`); assert.equal(scan.warnings.some((item) => item.code === "memory.derived_reservation_invalid"), true, `${kind}/${movedPart}`);
-    const original = kind === "view" ? await loadMemoryView({ store, sourceTreeSha256: first, viewSha256: generation }) : await loadMemoryReceipt({ store, requestSha256: first, receiptSha256: generation }); assert.equal(original.status, "corrupt", `${kind}/${movedPart}`);
+    const original = kind === "view" ? await loadMemoryView({ store, sourceTreeSha256: first, viewSha256: generation }) : await loadMemoryReceipt({ store, requestSha256: first, receiptSha256: generation }); mutationEqual({ mutationId: "local-path", testId: "relocated-local-path", sentinel: "MEM-RET-MUT-LOCAL-PATH" }, original.status, "corrupt");
     const moved = kind === "view" ? await loadMemoryView({ store, sourceTreeSha256: targetFirst, viewSha256: targetGeneration }) : await loadMemoryReceipt({ store, requestSha256: targetFirst, receiptSha256: targetGeneration }); assert.notEqual(moved.status, "ready", `${kind}/${movedPart}`);
   }
+});
+
+test("one global reservation grants only the bytewise-lowest exact local path authority", async (t) => {
+  const { store } = await approvedStore(t); const first = "a".repeat(64); const created = await publishMemoryViewGeneration({ store, sourceTreeSha256: first, viewBytes: Buffer.from("# view\n") }); assert.equal(created.complete, true);
+  const base = path.join(store.root, "v1", "derived", "views", first, created.generationSha256); const original = JSON.parse(await readFile(path.join(base, "_slots", "000.json"), "utf8"));
+  for (const localSlot of [2, 1]) await writeFile(path.join(base, "_slots", `${String(localSlot).padStart(3, "0")}.json`), canonicalBytes({ ...original, localSlot }));
+  const scan = await scanDerivedGenerations({ store });
+  assert.equal(scan.complete, true); mutationEqual({ mutationId: "local-path", testId: "duplicate-global-local-path", sentinel: "MEM-RET-MUT-LOCAL-PATH" }, scan.warnings.filter((item) => item.code === "memory.derived_reservation_invalid").length >= 2, true);
+  const loaded = await loadMemoryView({ store, sourceTreeSha256: first, viewSha256: created.generationSha256 });
+  assert.equal(loaded.status, "ready"); assert.equal(loaded.generationPath, created.generationPath);
 });
 
 test("view and log writers reject six malformed Markdown forms without derived growth", async (t) => {
@@ -283,7 +314,7 @@ test("view and log loaders reach the Markdown validator for six consistently res
     const { store } = await approvedStore(t); const first = "a".repeat(64); const created = await publish({ store, sourceTreeSha256: first, [`${kind}Bytes`]: Buffer.from(`# ${kind}\n`) }); assert.equal(created.complete, true);
     const generationSha256 = await resealMarkdownGeneration({ store, kind, first, created, bytes }); const beforeLoad = await treeSnapshot(path.join(store.root, "v1", "derived"));
     const loaded = kind === "view" ? await loadGeneration({ store, sourceTreeSha256: first, viewSha256: generationSha256 }) : await loadGeneration({ store, sourceTreeSha256: first, logSha256: generationSha256 });
-    assert.equal(loaded.status, "corrupt", kind); assert.equal(loaded.warnings[0].code, "memory.derived_generation_invalid", kind); assert.deepEqual(await treeSnapshot(path.join(store.root, "v1", "derived")), beforeLoad, kind);
+    mutationEqual({ mutationId: "markdown-loader", testId: "resealed-markdown-loader", sentinel: "MEM-RET-MUT-MARKDOWN-LOADER" }, loaded.status, "corrupt"); assert.equal(loaded.warnings[0].code, "memory.derived_generation_invalid", kind); assert.deepEqual(await treeSnapshot(path.join(store.root, "v1", "derived")), beforeLoad, kind);
   }
 });
 
@@ -327,7 +358,7 @@ test("fixed reservation slot leaks consume quota without making the derived cens
     else if (mutation === "oversize") await writeFile(global, "x".repeat(4097));
     else if (mutation === "special") { await rm(global); await mkdir(global); }
     else { const localDirectory = path.join(store.root, "v1", "derived", "views", "a".repeat(64), created.generationSha256, "_slots"); const name = (await treeSnapshot(localDirectory))[0]?.path; assert.ok(name); await rm(path.join(localDirectory, name)); }
-    const scan = await scanDerivedGenerations({ store }); assert.equal(scan.complete, true, mutation); assert.equal(scan.warnings.some((item) => item.code === "memory.derived_reservation_invalid"), true, mutation);
+    const scan = await scanDerivedGenerations({ store }); mutationEqual({ mutationId: "leak-complete", testId: "reservation-leak-complete", sentinel: "MEM-RET-MUT-LEAK-COMPLETE" }, scan.complete, true); assert.equal(scan.warnings.some((item) => item.code === "memory.derived_reservation_invalid"), true, mutation);
     const healthy = await publishMemoryLogGeneration({ store, sourceTreeSha256: "b".repeat(64), logBytes: Buffer.from("# unrelated\n") });
     assert.equal(healthy.complete, true, mutation);
   }
@@ -346,7 +377,7 @@ test("receipt history retains distinct exact pairs while corrupt siblings do not
   await writeFile(path.join(instances, "00000000-0000-4000-8000-000000000005.json"), Buffer.concat([receipt("memory-b"), Buffer.from("\n")]));
   await writeFile(path.join(instances, "00000000-0000-4000-8000-000000000006.json"), receipt("memory-c"));
   const exact = await loadMemoryReceipt({ store, requestSha256, receiptSha256: first.receiptSha256 }); assert.equal(exact.status, "ready"); assert.equal(exact.receipt.applied[0].memoryId, "memory-a");
-  const history = await listMemoryReceipts({ store, requestSha256 }); assert.equal(history.items.length, 2); assert.equal(history.items.find((item) => item.receiptSha256 === second.receiptSha256).corruptInstanceCount, 7);
+  const history = await listMemoryReceipts({ store, requestSha256 }); assert.equal(history.items.length, 2); mutationEqual({ mutationId: "receipt-physical-count", testId: "receipt-physical-siblings", sentinel: "MEM-RET-MUT-RECEIPT-COUNT" }, history.items.find((item) => item.receiptSha256 === second.receiptSha256).corruptInstanceCount, 7);
   assert.deepEqual(history.warnings.filter((item) => item.code === "memory.derived_generation_invalid").map((item) => item.relativePath).sort(), Array.from({ length: 7 }, (_, index) => `receipts/${requestSha256}/${second.receiptSha256}/instances/00000000-0000-4000-8000-00000000000${index}.json`));
   assert.equal((await rebuildMemoryIndex({ workspaceRoot: root, config })).sourceTreeSha256, before);
 });
@@ -360,7 +391,7 @@ test("runtime validators execute packaged schemas with canonical Unicode and sem
     const value = { ...canonical, [key]: [entry, { ...entry, memoryId: "memory-b" }] }; const rejected = await publishMemoryReceiptGeneration({ store, requestSha256: canonical.requestSha256, receiptBytes: Buffer.from(`${JSON.stringify(value)}\n`), limits: { [`maxReceipt${key[0].toUpperCase()}${key.slice(1)}Items`]: 1 } }); assert.equal(rejected.complete, false, key);
   }
   const exactEmojiReason = { ...canonical, excluded: [{ memoryId: "memory-a", reason: "😀".repeat(1024) }] };
-  assert.equal(validateMemoryReceiptSchema(exactEmojiReason), true); assert.equal((await publishMemoryReceiptGeneration({ store, requestSha256: canonical.requestSha256, receiptBytes: Buffer.from(`${JSON.stringify(exactEmojiReason)}\n`) })).complete, true);
+  mutationEqual({ mutationId: "schema-code-points", testId: "emoji-code-point-limit", sentinel: "MEM-RET-MUT-SCHEMA-CODE-POINTS" }, validateMemoryReceiptSchema(exactEmojiReason), true); assert.equal((await publishMemoryReceiptGeneration({ store, requestSha256: canonical.requestSha256, receiptBytes: Buffer.from(`${JSON.stringify(exactEmojiReason)}\n`) })).complete, true);
   for (const value of [
     { ...canonical, extra: true },
     { ...canonical, excluded: [{ memoryId: "memory-a", reason: "😀".repeat(1025) }] },
@@ -368,6 +399,26 @@ test("runtime validators execute packaged schemas with canonical Unicode and sem
     { ...canonical, applied: [{ memoryId: "memory-b", headEventId: "mev1-" + "c".repeat(64), fileSha256: "c".repeat(64) }, { memoryId: "memory-a", headEventId: "mev1-" + "c".repeat(64), fileSha256: "c".repeat(64) }] },
   ]) { assert.equal(validateMemoryReceiptSchema(value), false); assert.equal((await publishMemoryReceiptGeneration({ store, requestSha256: canonical.requestSha256, receiptBytes: Buffer.from(`${JSON.stringify(value)}\n`) })).complete, false); }
   const validIndex = { schemaVersion: 1, sourceTreeSha256: "a".repeat(64), entries: [] }; assert.equal(validateMemoryIndexSchema(validIndex), true); assert.equal(validateMemoryIndexSchema({ ...validIndex, entries: [{ memoryId: "memory-b", headEventId: "mev1-" + "b".repeat(64), headEventPath: "v1/events/a", fileSha256: "b".repeat(64), kind: "decision", lane: "studio", status: "approved", scope: "project", projectId: "wind-island", artifactTypes: ["z", "a"], relatedIds: [], tags: [] }] }), false);
+});
+
+test("receipt observation status and digest matrix is identical for evaluator publisher and loader", async (t) => {
+  const { store } = await approvedStore(t); const requestSha256 = "a".repeat(64); const expectedSha256 = "c".repeat(64); const differentSha256 = "d".repeat(64);
+  const variants = [["equal", expectedSha256], ["different", differentSha256], ["null", null]];
+  const validFor = { current: "equal", drift: "different", missing: "null", symlink: "null", unreadable: "null" };
+  for (const status of Object.keys(validFor)) for (const [variant, observedSha256] of variants) {
+    const candidate = receiptFixture({ observations: [{ memoryId: "memory-a", artifactId: "artifact-a", locator: "a.md#x", expectedSha256, observedSha256, status }] }); const expected = variant === validFor[status];
+    mutationEqual({ mutationId: "receipt-observation-semantic", testId: "observation-status-digest-matrix", sentinel: "MEM-RET-MUT-OBSERVATION-SEMANTIC" }, validateMemoryReceiptSchema(candidate), expected);
+    const published = await publishMemoryReceiptGeneration({ store, requestSha256, receiptBytes: canonicalBytes(candidate) });
+    assert.equal(published.complete, expected, `${status}/${variant}/publisher`);
+    if (expected) {
+      assert.equal((await loadMemoryReceipt({ store, requestSha256, receiptSha256: published.receiptSha256 })).status, "ready", `${status}/${variant}/loader`);
+    } else {
+      const valid = receiptFixture({ observations: [{ ...candidate.observations[0], observedSha256: validFor[status] === "null" ? null : validFor[status] === "equal" ? expectedSha256 : differentSha256 }] });
+      const base = await publishMemoryReceiptGeneration({ store, requestSha256, receiptBytes: canonicalBytes(valid) }); assert.equal(base.complete, true, `${status}/${variant}/base`);
+      const receiptSha256 = await resealReceiptGeneration({ store, requestSha256, created: base, bytes: canonicalBytes(candidate) });
+      assert.equal((await loadMemoryReceipt({ store, requestSha256, receiptSha256 })).status, "corrupt", `${status}/${variant}/loader`);
+    }
+  }
 });
 
 test("schema evaluator imports from an installed layout when authoring schemas are absent", async (t) => {
@@ -378,6 +429,13 @@ test("schema evaluator imports from an installed layout when authoring schemas a
   const installedEvaluator = await import(`${new URL(`file://${evaluator}`).href}?smoke=${Date.now()}`);
   assert.equal(installedEvaluator.validateMemoryIndexSchema({ schemaVersion: 1, sourceTreeSha256: "a".repeat(64), entries: [] }), true);
   assert.equal(installedEvaluator.validateMemoryReceiptSchema(receiptFixture()), true);
+});
+
+test("packaged observation digest relation annotation is mandatory evaluator authority", async (t) => {
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const installed = await workspace(t); const evaluator = path.join(installed, "scripts", "lib", "memory-schema-evaluator.mjs"); const schemaRoot = path.join(installed, "references", "shared", "memory", "schema");
+  await mkdir(path.dirname(evaluator), { recursive: true }); await mkdir(schemaRoot, { recursive: true }); await writeFile(evaluator, await readFile(path.join(root, "shared", "scripts", "lib", "memory-schema-evaluator.mjs")));
+  for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) { const schema = JSON.parse(await readFile(path.join(root, "shared", "memory", "schema", name), "utf8")); if (name === "memory-receipt.schema.json") schema.properties.observations.items["x-memory-observation-digest-relation"] = false; await writeFile(path.join(schemaRoot, name), canonicalBytes(schema)); }
+  await assert.rejects(() => import(`${new URL(`file://${evaluator}`).href}?missing-relation=${Date.now()}`), /memory schema unavailable/u);
 });
 
 test("receipt arrays accept exactly 256 items and reject limit plus one in schema and publisher", async (t) => {
@@ -472,26 +530,7 @@ test("index view log and receipt publication leave the raw source tree hash unch
 test("a canonical result at exactly 64 KiB publishes a truthful receipt and limit plus one publishes none", async (t) => {
   const baseline = await approvedStore(t); const small = await retrieveApprovedDesignMemory({ workspaceRoot: baseline.root, config, requestContext: context }); const delta = 64 * 1024 - canonicalBytes(small).byteLength; assert.equal(delta > 0, true);
   const exactSections = { ...sections, "발견한 내용": sections["발견한 내용"] + "x".repeat(delta) }; const exactStore = await approvedStore(t, exactSections); const exact = await retrieveApprovedDesignMemory({ workspaceRoot: exactStore.root, config, requestContext: context });
-  assert.equal(canonicalBytes(exact).byteLength, 64 * 1024); assert.equal(exact.status, "ready"); const receipt = await loadMemoryReceipt({ store: exactStore.store, requestSha256: exact.requestSha256, receiptSha256: exact.receiptSha256 }); assert.equal(receipt.status, "ready"); assert.equal(receipt.receipt.applied[0].memoryId, exact.guidance[0].memoryId);
+  mutationEqual({ mutationId: "result-preflight", testId: "result-exact-limit", sentinel: "MEM-RET-MUT-RESULT-PREFLIGHT" }, canonicalBytes(exact).byteLength, 64 * 1024); assert.equal(exact.status, "ready"); const receipt = await loadMemoryReceipt({ store: exactStore.store, requestSha256: exact.requestSha256, receiptSha256: exact.receiptSha256 }); assert.equal(receipt.status, "ready"); assert.equal(receipt.receipt.applied[0].memoryId, exact.guidance[0].memoryId);
   const overflowSections = { ...exactSections, "발견한 내용": `${exactSections["발견한 내용"]}x` }; const overflowStore = await approvedStore(t, overflowSections); const before = await treeSnapshot(path.join(overflowStore.store.root, "v1", "derived", "receipts")); const overflow = await retrieveApprovedDesignMemory({ workspaceRoot: overflowStore.root, config, requestContext: context });
   assert.equal(overflow.status, "unavailable"); assert.equal(overflow.warnings[0].code, "memory.result_limit_exceeded"); assert.deepEqual(await treeSnapshot(path.join(overflowStore.store.root, "v1", "derived", "receipts")), before);
-});
-
-test("each derived authority defense has assertion-specific single-anchor self-tamper evidence", { skip: process.env.DESIGN_MEMORY_RETRIEVAL_SELF_TAMPER_CHILD === "1" }, async (t) => {
-  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const retrievalSource = await readFile(path.join(root, "shared/scripts/retrieve-design-memory.mjs"), "utf8"); const evaluatorSource = await readFile(path.join(root, "shared/scripts/lib/memory-schema-evaluator.mjs"), "utf8"); const temporary = await mkdtemp(path.join(tmpdir(), "memory-retrieval-mutation-")); t.after(() => rm(temporary, { recursive: true, force: true }));
-  const cases = [
-    { name: "leak-complete", target: "retrieval", selectedTest: "fixed reservation slot leaks consume quota without making the derived census incomplete", anchor: "for (const [slot, item] of global.entries) if (item.invalid || !matchedGlobals.has(slot)) warnings.push(warning(\"memory.derived_reservation_invalid\", { relativePath: item.relativePath }));", replacement: "for (const [slot, item] of global.entries) if (item.invalid || !matchedGlobals.has(slot)) { complete = false; warnings.push(warning(\"memory.derived_reservation_invalid\", { relativePath: item.relativePath })); }" },
-    { name: "local-path", target: "retrieval", selectedTest: "a local reservation relocated across source request or generation bases grants neither side authority", anchor: "if (value.identitySha256 !== identitySha256) return null;", replacement: "if (false && value.identitySha256 !== identitySha256) return null;" },
-    { name: "markdown-loader", target: "retrieval", selectedTest: "view and log loaders reach the Markdown validator for six consistently resealed malformed forms", anchor: ": validMarkdownBytes(bytesResult.bytes) ? utf8.decode(bytesResult.bytes) : null;", replacement: ": utf8.decode(bytesResult.bytes);" },
-    { name: "receipt-physical-count", target: "retrieval", selectedTest: "receipt history retains distinct exact pairs while corrupt siblings do not replace valid evidence", anchor: "for (const candidate of candidates) if (!validPaths.has(candidate.relativePath)) warnings.push(warning(\"memory.derived_generation_invalid\", { relativePath: candidate.relativePath }));", replacement: "for (const candidate of candidates) if (candidate.type !== \"file\") warnings.push(warning(\"memory.derived_generation_invalid\", { relativePath: candidate.relativePath }));" },
-    { name: "schema-code-points", target: "evaluator", selectedTest: "runtime validators execute packaged schemas with canonical Unicode and semantic array parity", anchor: "if (typeof value === \"string\") return Array.from(value).length >= (schema.minLength ?? 0) && Array.from(value).length <= (schema.maxLength ?? Number.POSITIVE_INFINITY) && (!schema.pattern || new RegExp(schema.pattern, \"u\").test(value));", replacement: "if (typeof value === \"string\") return value.length >= (schema.minLength ?? 0) && value.length <= (schema.maxLength ?? Number.POSITIVE_INFINITY) && (!schema.pattern || new RegExp(schema.pattern, \"u\").test(value));" },
-    { name: "result-preflight", target: "retrieval", selectedTest: "a canonical result at exactly 64 KiB publishes a truthful receipt and limit plus one publishes none", anchor: "if (canonicalBytes(preview).byteLength > RESULT_MAX_BYTES)", replacement: "if (canonicalBytes(preview).byteLength >= RESULT_MAX_BYTES)" },
-  ];
-  for (const item of cases) {
-    const source = item.target === "retrieval" ? retrievalSource : evaluatorSource; assert.equal(source.split(item.anchor).length - 1, 1, item.name); let mutated = source.replace(item.anchor, item.replacement); const env = { ...process.env, DESIGN_MEMORY_RETRIEVAL_SELF_TAMPER_CHILD: "1", DESIGN_MEMORY_RETRIEVAL_SELECTED_TEST: item.selectedTest }; delete env.NODE_TEST_CONTEXT;
-    if (item.target === "retrieval") { mutated = mutated.replace('"./lib/safe-memory-store.mjs"', JSON.stringify(new URL("../../shared/scripts/lib/safe-memory-store.mjs", import.meta.url).href)).replace('"./lib/memory-schema-evaluator.mjs"', JSON.stringify(new URL("../../shared/scripts/lib/memory-schema-evaluator.mjs", import.meta.url).href)).replace('"./validate-design-memory.mjs"', JSON.stringify(new URL("../../shared/scripts/validate-design-memory.mjs", import.meta.url).href)); const modulePath = path.join(temporary, `${item.name}.mjs`); await writeFile(modulePath, mutated); env.DESIGN_MEMORY_RETRIEVAL_MODULE_URL = new URL(`file://${modulePath}`).href; }
-    else { const schemaRoot = path.join(temporary, "memory", "schema"); const evaluatorPath = path.join(temporary, "scripts", "lib", `${item.name}.mjs`); await mkdir(schemaRoot, { recursive: true }); await mkdir(path.dirname(evaluatorPath), { recursive: true }); for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) await writeFile(path.join(schemaRoot, name), await readFile(path.join(root, "shared", "memory", "schema", name))); await writeFile(evaluatorPath, mutated); env.DESIGN_MEMORY_SCHEMA_EVALUATOR_MODULE_URL = new URL(`file://${evaluatorPath}`).href; }
-    const child = spawn(process.execPath, [path.join(root, "tests/unit/design-memory-retrieval.test.mjs")], { cwd: root, env, stdio: ["ignore", "pipe", "pipe"] }); const stdout = []; const stderr = []; const result = await new Promise((resolve, reject) => { child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk)); child.once("error", reject); child.once("close", (code) => resolve({ code, output: Buffer.concat([...stdout, ...stderr]).toString("utf8") })); });
-    assert.equal(result.code, 1, `${item.name}\n${result.output}`); assert.match(result.output, /fail 1/u, item.name);
-  }
 });

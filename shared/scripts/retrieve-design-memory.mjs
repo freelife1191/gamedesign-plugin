@@ -180,11 +180,11 @@ export async function scanDerivedGenerations({ store, limits } = {}) {
   const paired = new Map();
   if (!global.missing) {
     const matchedGlobals = new Set();
-    for (const local of localReservations) {
+    for (const local of localReservations.sort((left, right) => byteCompare(left.relativePath, right.relativePath))) {
       const globalEntry = global.entries.get(local.value.globalSlot);
       if (!globalEntry?.value || globalEntry.value.kind !== local.value.kind || globalEntry.value.identitySha256 !== local.value.identitySha256 || globalEntry.value.generationSha256 !== local.value.generationSha256 || globalEntry.value.globalSlot !== local.value.globalSlot || globalEntry.value.localSlot !== null || globalEntry.value.instanceId !== local.value.instanceId || !reservationHasInstance(local.binding, entries)) { warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
+      if ([...paired.values()].some((pair) => pair.globalSlot === local.value.globalSlot)) { warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
       const key = reservationKey(local.binding);
-      if (paired.has(key)) { warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
       matchedGlobals.add(local.value.globalSlot); paired.set(key, { ...local.binding, instanceId: local.value.instanceId, globalSlot: local.value.globalSlot, localSlot: local.value.localSlot, globalRelativePath: globalEntry.relativePath });
     }
     for (const [slot, item] of global.entries) if (item.invalid || !matchedGlobals.has(slot)) warnings.push(warning("memory.derived_reservation_invalid", { relativePath: item.relativePath }));

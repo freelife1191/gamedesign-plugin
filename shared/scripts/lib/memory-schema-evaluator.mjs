@@ -13,6 +13,8 @@ function packagedSchemaBytes(name) {
 }
 const indexSchema = JSON.parse(packagedSchemaBytes("memory-index.schema.json").toString("utf8"));
 const receiptSchema = JSON.parse(packagedSchemaBytes("memory-receipt.schema.json").toString("utf8"));
+const observationRelationKey = "x-memory-observation-digest-relation";
+if (receiptSchema?.properties?.observations?.items?.[observationRelationKey] !== true) throw new Error("memory schema unavailable");
 
 function equalJson(left, right) {
   if (left === right) return true;
@@ -30,6 +32,13 @@ function matchesType(value, type) {
 }
 function schemaAccepts(value, schema) {
   if (typeof schema === "boolean") return schema;
+  if (Object.hasOwn(schema, observationRelationKey) && (schema[observationRelationKey] !== true || !observationStatusMatches(value))) return false;
+  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, part))) return false;
+  if (schema.anyOf && !schema.anyOf.some((part) => schemaAccepts(value, part))) return false;
+  if (schema.oneOf && schema.oneOf.filter((part) => schemaAccepts(value, part)).length !== 1) return false;
+  if (schema.not && schemaAccepts(value, schema.not)) return false;
+  if (schema.if && schemaAccepts(value, schema.if) && schema.then && !schemaAccepts(value, schema.then)) return false;
+  if (schema.if && !schemaAccepts(value, schema.if) && schema.else && !schemaAccepts(value, schema.else)) return false;
   if (Object.hasOwn(schema, "const") && !equalJson(value, schema.const)) return false;
   if (schema.enum && !schema.enum.some((item) => equalJson(value, item))) return false;
   const types = schema.type === undefined ? [] : Array.isArray(schema.type) ? schema.type : [schema.type];
@@ -50,6 +59,9 @@ const safeId = (value) => canonicalString(value) && id.test(value);
 const safeRelative = (value) => canonicalString(value) && !value.includes("\\") && !value.startsWith("/") && !value.startsWith("../") && !value.split("/").includes("..");
 const sortedUniqueIds = (values) => Array.isArray(values) && values.every(safeId) && values.every((item, index) => index === 0 || utf8Compare(values[index - 1], item) < 0);
 const safeLocator = (value) => canonicalString(value) && safeRelative(value.split("#", 1)[0]);
+function observationStatusMatches({ expectedSha256, observedSha256, status }) { return (status === "current" && observedSha256 === expectedSha256)
+  || (status === "drift" && typeof observedSha256 === "string" && observedSha256 !== expectedSha256)
+  || (["missing", "symlink", "unreadable"].includes(status) && observedSha256 === null); }
 
 export function validateMemoryIndexSchema(value) {
   return schemaAccepts(value, indexSchema) && value.entries.every((entry, index) => safeId(entry.memoryId) && safeRelative(entry.headEventPath) && (!index || utf8Compare(value.entries[index - 1].memoryId, entry.memoryId) < 0) && [entry.artifactTypes, entry.relatedIds, entry.tags].every(sortedUniqueIds));
@@ -57,7 +69,7 @@ export function validateMemoryIndexSchema(value) {
 export function validateMemoryReceiptSchema(value) {
   return schemaAccepts(value, receiptSchema)
     && safeId(value.projectId)
-    && value.observations.every((item, index) => safeId(item.memoryId) && safeId(item.artifactId) && safeLocator(item.locator) && (!index || utf8Compare(`${value.observations[index - 1].memoryId}\0${value.observations[index - 1].artifactId}\0${value.observations[index - 1].locator}`, `${item.memoryId}\0${item.artifactId}\0${item.locator}`) < 0))
+    && value.observations.every((item, index) => safeId(item.memoryId) && safeId(item.artifactId) && safeLocator(item.locator) && observationStatusMatches(item) && (!index || utf8Compare(`${value.observations[index - 1].memoryId}\0${value.observations[index - 1].artifactId}\0${value.observations[index - 1].locator}`, `${item.memoryId}\0${item.artifactId}\0${item.locator}`) < 0))
     && value.applied.every((item, index) => safeId(item.memoryId) && (!index || utf8Compare(value.applied[index - 1].memoryId, item.memoryId) < 0))
     && value.excluded.every((item, index) => safeId(item.memoryId) && canonicalString(item.reason) && (!index || utf8Compare(value.excluded[index - 1].memoryId, item.memoryId) < 0));
 }
