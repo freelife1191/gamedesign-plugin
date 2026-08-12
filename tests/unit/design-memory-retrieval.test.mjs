@@ -166,3 +166,12 @@ test("lowered receipt loader limit rejects an otherwise canonical history", asyn
   const loaded = await loadMemoryReceipt({ store, requestSha256, receiptSha256: published.receiptSha256, limits: { maxReceiptObservationItems: 1 } });
   assert.equal(loaded.status, "corrupt");
 });
+
+test("global quota namespace symlink is never accepted as derived authority", async (t) => {
+  const { store } = await approvedStore(t); const hash = "a".repeat(64);
+  const created = await publishMemoryViewGeneration({ store, sourceTreeSha256: hash, viewBytes: Buffer.from("# view\n") }); assert.equal(created.complete, true);
+  const outside = await workspace(t); await mkdir(path.join(outside, "reservations", "global"), { recursive: true });
+  await rm(path.join(store.root, "v1", "derived", ".reservations"), { recursive: true }); await symlink(path.join(outside, "reservations"), path.join(store.root, "v1", "derived", ".reservations"));
+  const scan = await scanDerivedGenerations({ store }); assert.equal(scan.complete, false);
+  const loaded = await loadMemoryView({ store, sourceTreeSha256: hash, viewSha256: created.generationSha256 }); assert.equal(loaded.complete, false);
+});
