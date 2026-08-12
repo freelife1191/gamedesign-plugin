@@ -87,15 +87,48 @@ async function readBounded(candidate, maxBytes) {
     return { ok: true, bytes };
   } catch { return { ok: false, code: "memory.derived_generation_invalid" }; } finally { await handle.close(); }
 }
-async function probeReservationDirectory(directory, width, maximum, warnings) {
-  for (let slot = 0; slot < maximum; slot += 1) {
-    const relative = path.basename(directory) === ".reservations" ? `.reservations/${String(slot).padStart(width, "0")}.json` : `reservation/${String(slot).padStart(width, "0")}.json`;
-    const candidate = path.join(directory, `${String(slot).padStart(width, "0")}.json`);
-    try {
-      const read = await readBounded(candidate, 4096); if (!read.ok) warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative }));
-      else { const parsed = JSON.parse(utf8.decode(read.bytes)); if (!isObject(parsed) || !equalCanonicalJson(read.bytes, parsed) || Object.keys(parsed).join(",") !== "schemaVersion,kind,identitySha256,generationSha256,globalSlot,localSlot,instanceId") warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative })); }
-    } catch (error) { if (error?.code !== "ENOENT") warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative })); }
-  }
+const derivedHealth = new WeakMap();
+function reservationKey(value) { return `${value.kind}\0${value.identitySha256}\0${value.generationSha256}\0${value.instanceId}`; }
+function validReservationEnvelope(value, { slot, scope, maximum }) {
+  return isObject(value)
+    && Object.keys(value).join(",") === "schemaVersion,kind,identitySha256,generationSha256,globalSlot,localSlot,instanceId"
+    && value.schemaVersion === 1
+    && ["index", "receipt", "view", "log"].includes(value.kind)
+    && HEX.test(value.identitySha256 ?? "")
+    && HEX.test(value.generationSha256 ?? "")
+    && Number.isInteger(value.globalSlot) && value.globalSlot >= 0 && value.globalSlot < HARD_LIMITS.maxGenerationReservations
+    && UUID.test(value.instanceId ?? "")
+    && (scope === "global" ? value.globalSlot === slot && value.localSlot === null : Number.isInteger(value.localSlot) && value.localSlot === slot && value.localSlot >= 0 && value.localSlot < maximum);
+}
+async function scanReservationDirectory({ pinned, relative, width, maximum, scope }) {
+  let quota;
+  try { quota = await pinQuotaDirectory(pinned, relative); } catch (error) { if (error?.code === "ENOENT") return { missing: true, entries: new Map() }; return { invalid: true, entries: new Map() }; }
+  const entries = new Map(); let handle;
+  try { handle = await opendir(quota.path); } catch { return { invalid: true, entries }; }
+  try {
+    for await (const item of handle) {
+      const name = item.name; const match = new RegExp(`^\\d{${width}}\\.json$`, "u").exec(name);
+      const slot = match ? Number.parseInt(name.slice(0, -5), 10) : -1;
+      if (!match || slot >= maximum || entries.has(slot)) return { invalid: true, entries };
+      const candidate = path.join(quota.path, name); const read = await readBounded(candidate, 4096);
+      if (!read.ok) return { invalid: true, entries };
+      let value; try { value = JSON.parse(utf8.decode(read.bytes)); } catch { return { invalid: true, entries }; }
+      if (!equalCanonicalJson(read.bytes, value) || !validReservationEnvelope(value, { slot, scope, maximum })) return { invalid: true, entries };
+      entries.set(slot, { value, relativePath: `${relative}/${name}` });
+    }
+    await verifyQuotaPinned(quota);
+    return { entries };
+  } catch { return { invalid: true, entries }; } finally { await handle.close().catch(() => {}); }
+}
+function reservationHasInstance(value, entries) {
+  const collection = value.kind === "receipt" ? "receipts" : value.kind === "index" ? "indexes" : `${value.kind}s`;
+  const extension = extensionFor(value.kind);
+  return entries.some((entry) => {
+    if (entry.type !== "file") return false;
+    const parts = entry.relativePath.split("/");
+    if (parts.length !== 5 || parts[0] !== collection || !HEX.test(parts[1] ?? "") || parts[2] !== value.generationSha256 || parts[3] !== "instances" || parts[4] !== `${value.instanceId}${extension}`) return false;
+    return identityHash(value.kind, [parts[1], parts[2]]) === value.identitySha256;
+  });
 }
 
 export async function scanDerivedGenerations({ store, limits } = {}) {
@@ -105,18 +138,19 @@ export async function scanDerivedGenerations({ store, limits } = {}) {
   if (!source.complete) return { complete: false, entries: [], warnings: [warning("memory.scan_incomplete")] };
   let pinned; try { pinned = await pinDerivedRoot(store, { allowMissing: true }); } catch { return { complete: false, entries: [], warnings: [warning("memory.derived_root_invalid")] }; }
   if (pinned.missing) return { complete: true, entries: [], warnings: [] };
-  const entries = []; const warnings = []; let count = 0; let complete = true;
+  const entries = []; const warnings = []; const localQuotaDirectories = []; let count = 0; let complete = true;
   async function visit(directory, relative = "") {
     let handle;
     try { handle = await opendir(directory); } catch (error) { if (error?.code === "ENOENT") return; complete = false; warnings.push(warning("memory.derived_census_invalid")); return; }
     let children = 0;
     try {
       for await (const entry of handle) {
-        if (entry.name === ".reservations" || entry.name === "_slots") continue;
+        const nextRelative = relative ? `${relative}/${entry.name}` : entry.name;
+        if (entry.name === ".reservations") continue;
+        if (entry.name === "_slots") { localQuotaDirectories.push(nextRelative); continue; }
         children += 1; count += 1;
         if (children > actualLimits.maxDirectoryEntries) { complete = false; warnings.push(warning("memory.derived_directory_limit_exceeded")); return; }
         if (count > actualLimits.maxCensusEntries) { complete = false; warnings.push(warning("memory.derived_census_limit_exceeded")); return; }
-        const nextRelative = relative ? `${relative}/${entry.name}` : entry.name;
         const next = path.join(directory, entry.name); let stat;
         try { stat = await lstat(next); } catch { complete = false; warnings.push(warning("memory.derived_census_invalid")); return; }
         entries.push({ relativePath: nextRelative, type: stat.isDirectory() && !stat.isSymbolicLink() ? "directory" : stat.isFile() && !stat.isSymbolicLink() ? "file" : "other", size: stat.size });
@@ -126,10 +160,32 @@ export async function scanDerivedGenerations({ store, limits } = {}) {
     } catch { complete = false; warnings.push(warning("memory.derived_census_invalid")); } finally { await handle.close().catch(() => {}); }
   }
   await visit(pinned.root);
-  try { const quotas = await pinQuotaDirectory(pinned, ".reservations/global"); await probeReservationDirectory(quotas.path, 5, actualLimits.maxGenerationReservations, warnings); await verifyQuotaPinned(quotas); } catch (error) { if (error?.code !== "ENOENT") { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: ".reservations/global" })); } }
+  const hasInstances = entries.some((entry) => entry.relativePath.includes("/instances/") && entry.type === "file");
+  const global = await scanReservationDirectory({ pinned, relative: ".reservations/global", width: 5, maximum: actualLimits.maxGenerationReservations, scope: "global" });
+  if (global.invalid || global.missing && hasInstances) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: ".reservations/global" })); }
+  const localReservations = [];
+  for (const relative of localQuotaDirectories.sort(byteCompare)) {
+    const local = await scanReservationDirectory({ pinned, relative, width: 3, maximum: actualLimits.maxIdentityInstances, scope: "local" });
+    if (local.invalid || local.missing) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative })); continue; }
+    for (const item of local.entries.values()) localReservations.push({ ...item, directory: relative });
+  }
+  const paired = new Map();
+  if (!global.missing) {
+    const matchedGlobals = new Set();
+    for (const local of localReservations) {
+      const globalEntry = global.entries.get(local.value.globalSlot);
+      if (!globalEntry || globalEntry.value.kind !== local.value.kind || globalEntry.value.identitySha256 !== local.value.identitySha256 || globalEntry.value.generationSha256 !== local.value.generationSha256 || globalEntry.value.instanceId !== local.value.instanceId || !reservationHasInstance(local.value, entries)) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
+      const key = reservationKey(local.value);
+      if (paired.has(key)) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
+      matchedGlobals.add(local.value.globalSlot); paired.set(key, { globalSlot: local.value.globalSlot, localSlot: local.value.localSlot, localRelativePath: local.relativePath, globalRelativePath: globalEntry.relativePath });
+    }
+    for (const [slot, item] of global.entries) if (!matchedGlobals.has(slot)) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: item.relativePath })); }
+  }
   try { await verifyPinned(pinned); } catch { complete = false; warnings.push(warning("memory.derived_root_invalid")); }
   if (!complete) return { complete: false, entries: [], warnings };
-  return { complete: true, entries: entries.sort((a, b) => byteCompare(a.relativePath, b.relativePath)), warnings };
+  const result = { complete: true, entries: entries.sort((a, b) => byteCompare(a.relativePath, b.relativePath)), warnings };
+  derivedHealth.set(result, paired);
+  return result;
 }
 
 function sourceTree(scan) {
@@ -183,38 +239,37 @@ async function reserveSlot(directory, max, width, make) {
   return null;
 }
 function extensionFor(kind) { return kind === "view" || kind === "log" ? ".md" : ".json"; }
-async function validInstance({ store, kind, base, first, second, identitySha256, generationSha256, relativePath, limits }) {
+async function validInstance({ store, kind, base, first, second, identitySha256, generationSha256, relativePath, limits, census }) {
   const extension = extensionFor(kind); const prefix = path.relative(derivedRoot(store), path.join(base, "instances")).split(path.sep).join("/") + "/";
-  if (!relativePath.startsWith(prefix) || !relativePath.endsWith(extension)) return null;
-  const instanceId = path.basename(relativePath, extension); if (!UUID.test(instanceId)) return null;
+  if (!relativePath.startsWith(prefix) || !relativePath.endsWith(extension)) return { code: "memory.derived_generation_invalid" };
+  const instanceId = path.basename(relativePath, extension); if (!UUID.test(instanceId)) return { code: "memory.derived_generation_invalid" };
+  const health = derivedHealth.get(census); const reservation = health?.get(reservationKey({ kind, identitySha256, generationSha256, instanceId }));
+  if (!reservation) return { code: "memory.derived_reservation_invalid" };
   const localSlotDirectory = path.join(base, "_slots"); const globalReservationDirectory = path.join(derivedRoot(store), ".reservations", "global");
-  try { const pinned = await pinDerivedRoot(store); await verifyQuotaPinned(await pinQuotaDirectory(pinned, path.relative(pinned.root, localSlotDirectory))); await verifyQuotaPinned(await pinQuotaDirectory(pinned, ".reservations/global")); } catch { return null; }
-  let localSlot = null; let localGlobalSlot = null;
-  for (let slot = 0; slot < limits.maxIdentityInstances; slot += 1) {
-    const local = path.join(localSlotDirectory, `${String(slot).padStart(3, "0")}.json`);
-    try { const read = await readBounded(local, 4096); if (!read.ok) continue; const value = JSON.parse(utf8.decode(read.bytes)); if (value.instanceId === instanceId && value.kind === kind && value.identitySha256 === identitySha256 && value.generationSha256 === generationSha256 && Number.isInteger(value.globalSlot) && value.localSlot === slot && await reservationValid(local, { kind, identitySha256, generationSha256, globalSlot: value.globalSlot, localSlot: slot, instanceId })) { localSlot = slot; localGlobalSlot = value.globalSlot; break; } } catch { /* invalid reservation is not authority */ }
-  }
-  if (localSlot === null) return null;
-  let globalSlot = null;
-  for (let slot = 0; slot < limits.maxGenerationReservations; slot += 1) {
-    const global = path.join(globalReservationDirectory, `${String(slot).padStart(5, "0")}.json`);
-    try { const read = await readBounded(global, 4096); if (!read.ok) continue; const value = JSON.parse(utf8.decode(read.bytes)); if (value.instanceId === instanceId && value.kind === kind && value.identitySha256 === identitySha256 && value.generationSha256 === generationSha256 && value.globalSlot === slot && value.localSlot === null && await reservationValid(global, { kind, identitySha256, generationSha256, globalSlot: slot, localSlot: null, instanceId })) { globalSlot = slot; break; } } catch { /* invalid reservation is not authority */ }
-  }
-  if (globalSlot === null || globalSlot !== localGlobalSlot) return null;
+  try { const pinned = await pinDerivedRoot(store); await verifyQuotaPinned(await pinQuotaDirectory(pinned, path.relative(pinned.root, localSlotDirectory))); await verifyQuotaPinned(await pinQuotaDirectory(pinned, ".reservations/global")); } catch { return { code: "memory.derived_reservation_invalid" }; }
   const bytesResult = await readBounded(path.join(derivedRoot(store), relativePath), kind === "receipt" ? limits.maxReceiptBytes : kind === "index" ? limits.maxIndexBytes : kind === "view" ? limits.maxViewBytes : limits.maxLogBytes);
-  if (!bytesResult.ok || sha(bytesResult.bytes) !== generationSha256) return null;
+  if (!bytesResult.ok) return { code: bytesResult.code };
+  if (sha(bytesResult.bytes) !== generationSha256) return { code: "memory.derived_generation_invalid" };
   const value = kind === "index" ? parseCanonical(bytesResult.bytes, (item) => validateIndex(item, limits)) : kind === "receipt" ? parseCanonical(bytesResult.bytes, (item) => validateReceipt(item, limits)) : validMarkdownBytes(bytesResult.bytes) ? utf8.decode(bytesResult.bytes) : null;
-  if (!value || (kind === "index" && (value.sourceTreeSha256 !== first || second !== generationSha256)) || (kind === "receipt" && (value.requestSha256 !== first || second !== generationSha256))) return null;
-  return { bytes: bytesResult.bytes, relativePath, value, globalSlot, localSlot };
+  if (!value || (kind === "index" && (value.sourceTreeSha256 !== first || second !== generationSha256)) || (kind === "receipt" && (value.requestSha256 !== first || second !== generationSha256))) return { code: "memory.derived_generation_invalid" };
+  return { bytes: bytesResult.bytes, relativePath, value, globalSlot: reservation.globalSlot, localSlot: reservation.localSlot };
 }
 async function findInstances({ store, kind, first, second, limits, census }) {
   const root = store.root; const base = baseFor(kind, root, first, second); const identitySha256 = identityHash(kind, [first, second]); const generationSha256 = second;
   const candidates = census.entries.filter((entry) => entry.type === "file").map((entry) => entry.relativePath);
-  const valid = [];
+  const valid = []; const codes = new Set();
   for (const relativePath of candidates) {
-    const current = await validInstance({ store, kind, base, first, second, identitySha256, generationSha256, relativePath, limits }); if (current) valid.push(current);
+    const current = await validInstance({ store, kind, base, first, second, identitySha256, generationSha256, relativePath, limits, census }); if (current.bytes) valid.push(current); else codes.add(current.code);
   }
-  return valid.sort((left, right) => byteCompare(left.relativePath, right.relativePath));
+  return { valid: valid.sort((left, right) => byteCompare(left.relativePath, right.relativePath)), codes };
+}
+async function scanForPublish(store, limits) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const census = await scanDerivedGenerations({ store, limits });
+    if (census.complete || !census.warnings.length || !census.warnings.every((item) => item.code === "memory.derived_reservation_invalid")) return census;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  return scanDerivedGenerations({ store, limits });
 }
 async function publish({ store, kind, bytes, first, limits }) {
   let actualLimits;
@@ -226,10 +281,10 @@ async function publish({ store, kind, bytes, first, limits }) {
   const validInput = Buffer.isBuffer(bytes) && bytes.byteLength <= maxBytes && (kind === "index" || kind === "receipt" ? Boolean(parsedInput) : validator(bytes)) && (kind === "index" ? parsedInput.sourceTreeSha256 === first : kind === "receipt" ? parsedInput.requestSha256 === first : true);
   if (!validInput) return emptyPublish([warning("memory.derived_input_limit_exceeded")]);
   let pinned; try { pinned = await pinDerivedRoot(store, { create: true }); } catch { return emptyPublish([warning("memory.derived_root_invalid")]); }
-  const second = sha(bytes); const census = await scanDerivedGenerations({ store, limits: actualLimits });
+  const second = sha(bytes); const census = await scanForPublish(store, actualLimits);
   if (!census.complete) return emptyPublish(census.warnings);
   const present = await findInstances({ store, kind, first, second, limits: actualLimits, census });
-  if (present.length) return { complete: true, status: "present", generationPath: present[0].relativePath, generationSha256: second, warnings: census.warnings };
+  if (present.valid.length) return { complete: true, status: "present", generationPath: present.valid[0].relativePath, generationSha256: second, warnings: census.warnings };
   const base = baseFor(kind, store.root, first, second); const identitySha256 = identityHash(kind, [first, second]); const instanceId = randomUUID();
   try {
     const globalDirectory = await ensureDirectories(store.root, "v1/derived/.reservations/global");
@@ -265,10 +320,10 @@ async function load({ store, kind, first, second, limits }) {
   if (!HEX.test(first ?? "") || !HEX.test(second ?? "")) return { complete: true, status: "missing", bytes: null, generationPath: null, warnings: [] };
   const census = await scanDerivedGenerations({ store, limits: actualLimits });
   if (!census.complete) return { complete: false, status: null, bytes: null, generationPath: null, warnings: census.warnings };
-  const valid = await findInstances({ store, kind, first, second, limits: actualLimits, census });
+  const found = await findInstances({ store, kind, first, second, limits: actualLimits, census }); const valid = found.valid;
   const prefix = `${kind === "receipt" ? "receipts" : kind === "index" ? "indexes" : `${kind}s`}/${first}/${second}/instances/`;
   const relevant = census.entries.some((entry) => entry.relativePath.startsWith(prefix));
-  if (!valid.length) return { complete: true, status: relevant ? "corrupt" : "missing", bytes: null, generationPath: null, warnings: relevant ? [warning("memory.derived_generation_invalid")] : [] };
+  if (!valid.length) { const code = found.codes.has("memory.derived_generation_oversize") ? "memory.derived_generation_oversize" : found.codes.has("memory.derived_reservation_invalid") ? "memory.derived_reservation_invalid" : "memory.derived_generation_invalid"; return { complete: true, status: relevant ? "corrupt" : "missing", bytes: null, generationPath: null, warnings: relevant ? [warning(code)] : [] }; }
   return { complete: true, status: "ready", bytes: valid[0].bytes, generationPath: valid[0].relativePath, warnings: [] };
 }
 export async function loadCurrentMemoryIndex({ store, fold, limits } = {}) {
@@ -297,7 +352,7 @@ export async function listMemoryReceipts({ store, requestSha256, maxItems = 256,
   const prefix = `receipts/${requestSha256}/`; const hashes = [...new Set(census.entries.map((entry) => entry.relativePath.split("/", 3)).filter((parts) => parts[0] === "receipts" && parts[1] === requestSha256 && HEX.test(parts[2] ?? "")).map((parts) => parts[2]))].sort(byteCompare);
   const items = [];
   for (const receiptSha256 of hashes) {
-    const valid = await findInstances({ store, kind: "receipt", first: requestSha256, second: receiptSha256, limits: actualLimits, census });
+    const found = await findInstances({ store, kind: "receipt", first: requestSha256, second: receiptSha256, limits: actualLimits, census }); const valid = found.valid;
     const candidatePrefix = `${prefix}${receiptSha256}/instances/`; const candidates = census.entries.filter((entry) => entry.relativePath.startsWith(candidatePrefix) && entry.type === "file");
     items.push({ receiptSha256, status: valid.length ? "valid" : "corrupt", validInstanceCount: valid.length, corruptInstanceCount: Math.max(0, candidates.length - valid.length), firstValidRelativePath: valid[0]?.relativePath ?? null });
   }

@@ -14,7 +14,7 @@
         "properties": {
           "memoryId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
           "headEventId": { "type": "string", "pattern": "^mev1-[a-f0-9]{64}$" },
-          "headEventPath": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+" },
+          "headEventPath": { "type": "string", "pattern": "^(?!.*[\\u0000\\uFEFF\\r])(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+" },
           "fileSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
           "kind": { "enum": ["project-fact", "decision", "design-lesson", "style-preference", "career-lesson", "external-note"] },
           "lane": { "enum": ["common", "studio", "career"] },
