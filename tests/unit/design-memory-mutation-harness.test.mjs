@@ -47,13 +47,26 @@ for (const [tamper, expectedStage] of [
 
 async function runRetrievalTamper(mutationId, tamper) {
   const child = spawn(process.execPath, [retrievalHarness, mutationId, `--tamper=${tamper}`], { cwd: root, stdio: ["ignore", "pipe", "pipe"] }); const stdout = []; const stderr = [];
-  return await new Promise((resolve, reject) => { child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk)); child.once("error", reject); child.once("close", (code) => resolve({ code, stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") })); });
+  return await new Promise((resolve, reject) => {
+    let settled = false; const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
+    const timeout = setTimeout(() => { child.kill(); finish(reject, new Error("retrieval self-tamper timeout")); }, 20_000);
+    child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk)); child.once("error", (error) => finish(reject, error));
+    child.once("close", (code) => finish(resolve, { code, stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") }));
+  });
 }
 
 test("retrieval authority defenses emit one canonical assertion-specific fd record for every mutation", { timeout: 60_000 }, async () => {
-  for (const mutationId of ["leak-complete", "local-path", "markdown-loader", "receipt-physical-count", "schema-code-points", "result-preflight", "receipt-observation-semantic"]) {
+  for (const [mutationId, testId, sentinel, expected, actual] of [
+    ["leak-complete", "reservation-leak-complete", "MEM-RET-MUT-LEAK-COMPLETE", true, false],
+    ["local-path", "duplicate-global-local-path", "MEM-RET-MUT-LOCAL-PATH", true, false],
+    ["markdown-loader", "resealed-markdown-loader", "MEM-RET-MUT-MARKDOWN-LOADER", "corrupt", "ready"],
+    ["receipt-physical-count", "receipt-physical-siblings", "MEM-RET-MUT-RECEIPT-COUNT", 7, 5],
+    ["schema-code-points", "emoji-code-point-limit", "MEM-RET-MUT-SCHEMA-CODE-POINTS", true, false],
+    ["result-preflight", "result-exact-limit", "MEM-RET-MUT-RESULT-PREFLIGHT", 65536, 180],
+    ["receipt-observation-semantic", "observation-status-digest-matrix", "MEM-RET-MUT-OBSERVATION-SEMANTIC", false, true],
+  ]) {
     const result = await runRetrievalTamper(mutationId, "normal"); assert.equal(result.code, 0, mutationId); assert.equal(result.stderr, "", mutationId);
-    const evidence = JSON.parse(result.stdout); assert.equal(evidence.protocol, "fd-json-v2", mutationId); assert.equal(evidence.mutationId, mutationId); assert.equal(evidence.operator, "strictEqual", mutationId);
+    assert.equal(result.stdout, `${JSON.stringify({ mutationId, testId, sentinel, operator: "strictEqual", expected, actual, protocol: "fd-json-v2", exitCode: 1 })}\n`, mutationId);
   }
 });
 
@@ -62,7 +75,20 @@ test("retrieval mutation harness uses assertion-specific canonical fd evidence i
   assert.match(source, /stdio: \["ignore", "pipe", "pipe", "pipe"\]/u); assert.equal(source.includes("fail 1"), false); assert.equal(source.includes("TAP"), false);
 });
 
-for (const tamper of ["unrelated-failure", "wrong-env", "wrong-operator", "wrong-message", "missing-evidence", "duplicate-evidence", "oversize-evidence"]) test(`retrieval mutation harness fails closed for ${tamper}`, { timeout: 35_000 }, async () => {
+for (const [tamper, expectedStage, expectedReason] of [
+  ["unrelated-failure", "unrelated", "unrelated-failure"],
+  ["unrelated-helper-assertion", "verify-evidence", "evidence-empty"],
+  ["helper-type-error", "verify-evidence", "evidence-empty"],
+  ["observation-value-error", "verify-evidence", "evidence-empty"],
+  ["wrong-env", "verify-evidence", "evidence-empty"],
+  ["wrong-operator", "verify-evidence", "evidence-empty"],
+  ["wrong-message", "verify-evidence", "evidence-empty"],
+  ["forged-stdout-stderr", "verify-evidence", "evidence-empty"],
+  ["missing-evidence", "verify-evidence", "test-exit"],
+  ["duplicate-evidence", "verify-evidence", "evidence-line-count"],
+  ["oversize-evidence", "run-test", "evidence-limit"],
+  ["oversize-stdout-stderr", "run-test", "output-limit"],
+]) test(`retrieval mutation harness fails closed for ${tamper}`, { timeout: 35_000 }, async () => {
   const result = await runRetrievalTamper("leak-complete", tamper);
-  assert.equal(result.code, 1); assert.equal(result.stdout, ""); const error = JSON.parse(result.stderr); assert.equal(error.code, "memory.mutation_evidence_failed"); assert.equal(error.mutationId, "leak-complete"); assert.equal(error.tamper, tamper);
+  assert.equal(result.code, 1); assert.equal(result.stdout, ""); const error = JSON.parse(result.stderr); assert.equal(error.code, "memory.mutation_evidence_failed"); assert.equal(error.mutationId, "leak-complete"); assert.equal(error.tamper, tamper); assert.equal(error.stage, expectedStage); assert.equal(error.reason, expectedReason);
 });

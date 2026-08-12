@@ -35,13 +35,14 @@ function test(name, optionsOrFunction, maybeFunction) {
   return nodeTest(name, { ...options, skip: true }, operation);
 }
 
-function mutationEvidenceMatches(error, { mutationId, testId, sentinel }) {
+function mutationEvidenceMatches(error, { mutationId, testId, sentinel }, actual, expected) {
   return error instanceof assert.AssertionError && error.code === "ERR_ASSERTION" && error.operator === "strictEqual" && error.message.startsWith(`${sentinel}\n`)
+    && Object.is(error.actual, actual) && Object.is(error.expected, expected)
     && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_EVIDENCE === "fd-json-v2" && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_ID === mutationId
     && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_TEST_ID === testId && process.env.DESIGN_MEMORY_RETRIEVAL_MUTATION_SENTINEL === sentinel;
 }
 function mutationEqual({ mutationId, testId, sentinel }, actual, expected) {
-  try { assert.equal(actual, expected, sentinel); } catch (error) { if (mutationEvidenceMatches(error, { mutationId, testId, sentinel })) writeSync(3, `${JSON.stringify({ mutationId, testId, sentinel, operator: "strictEqual", expected, actual })}\n`); throw error; }
+  try { assert.equal(actual, expected, sentinel); } catch (error) { if (mutationEvidenceMatches(error, { mutationId, testId, sentinel }, actual, expected)) writeSync(3, `${JSON.stringify({ mutationId, testId, sentinel, operator: "strictEqual", expected: error.expected, actual: error.actual })}\n`); throw error; }
 }
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
@@ -418,6 +419,12 @@ test("receipt observation status and digest matrix is identical for evaluator pu
       const receiptSha256 = await resealReceiptGeneration({ store, requestSha256, created: base, bytes: canonicalBytes(candidate) });
       assert.equal((await loadMemoryReceipt({ store, requestSha256, receiptSha256 })).status, "corrupt", `${status}/${variant}/loader`);
     }
+  }
+});
+
+test("receipt evaluator returns false for null and non-object observations", () => {
+  for (const observationValue of [null, "not-an-observation", 1, true]) {
+    assert.equal(validateMemoryReceiptSchema(receiptFixture({ observations: [observationValue] })), false);
   }
 });
 

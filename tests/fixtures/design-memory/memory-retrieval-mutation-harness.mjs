@@ -9,6 +9,8 @@ const retrievalPath = path.join(root, "shared/scripts/retrieve-design-memory.mjs
 const evaluatorPath = path.join(root, "shared/scripts/lib/memory-schema-evaluator.mjs");
 const testPath = path.join(root, "tests/unit/design-memory-retrieval.test.mjs");
 const MAX_EVIDENCE_BYTES = 4096;
+const MAX_OUTPUT_BYTES = 64 * 1024;
+const TEST_TIMEOUT_MS = 15_000;
 
 function harnessError(reason) { const error = new Error(reason); error.reason = reason; return error; }
 function replaceExact(source, before, after) { const count = source.split(before).length - 1; if (count !== 1) throw harnessError("anchor-count"); return source.replace(before, after); }
@@ -34,12 +36,43 @@ function parseEvidence(bytes, mutation) {
   return expected;
 }
 
-async function runTest(moduleUrl, mutation, tamper) {
+async function tamperedTest(temporary, mutation, tamper) {
+  if (!tamper || ["normal", "unrelated-failure", "wrong-env", "missing-evidence"].includes(tamper)) return testPath;
+  let source = await readFile(testPath, "utf8");
+  for (const [relative, absolute] of [
+    ["../../shared/scripts/validate-design-memory.mjs", path.join(root, "shared/scripts/validate-design-memory.mjs")],
+    ["../../shared/scripts/lib/safe-memory-store.mjs", path.join(root, "shared/scripts/lib/safe-memory-store.mjs")],
+    ["../../shared/scripts/lib/memory-schema-evaluator.mjs", path.join(root, "shared/scripts/lib/memory-schema-evaluator.mjs")],
+    ["../../shared/scripts/retrieve-design-memory.mjs", path.join(root, "shared/scripts/retrieve-design-memory.mjs")],
+  ]) source = source.replaceAll(JSON.stringify(relative), JSON.stringify(pathToFileURL(absolute).href));
+  const assertion = `mutationEqual({ mutationId: ${JSON.stringify(mutation.id)}, testId: ${JSON.stringify(mutation.testId)}, sentinel: ${JSON.stringify(mutation.sentinel)} }, scan.complete, true);`;
+  const assertionCall = 'try { assert.equal(actual, expected, sentinel); }';
+  const evidenceWrite = 'writeSync(3, `${JSON.stringify({ mutationId, testId, sentinel, operator: "strictEqual", expected: error.expected, actual: error.actual })}\\n`);';
+  if (tamper === "unrelated-helper-assertion") source = replaceExact(source, assertionCall, 'try { assert.equal("unrelated-actual", "unrelated-expected", sentinel); }');
+  else if (tamper === "helper-type-error") source = replaceExact(source, assertionCall, "try { undefined.missing(); }");
+  else if (tamper === "observation-value-error") source = replaceExact(source, assertion, assertion.replace("scan.complete", '(() => { throw new TypeError("OBSERVATION-VALUE"); })()'));
+  else if (tamper === "wrong-operator") source = replaceExact(source, assertionCall, "try { assert.deepEqual(actual, expected, sentinel); }");
+  else if (tamper === "wrong-message") source = replaceExact(source, assertionCall, 'try { assert.equal(actual, expected, "MEM-RET-MUT-WRONG-MESSAGE"); }');
+  else if (tamper === "forged-stdout-stderr") source = replaceExact(source, assertion, `process.stdout.write(${JSON.stringify(`${JSON.stringify({ mutationId: mutation.id, testId: mutation.testId, sentinel: mutation.sentinel, operator: "strictEqual", expected: mutation.expected, actual: mutation.actual })}\n`)}); process.stderr.write(${JSON.stringify(`# ${mutation.sentinel}\n`)}); assert.fail("FORGED-REPORTER");\n    ${assertion}`);
+  else if (tamper === "duplicate-evidence") source = replaceExact(source, evidenceWrite, `${evidenceWrite} ${evidenceWrite}`);
+  else if (tamper === "oversize-evidence") source = replaceExact(source, evidenceWrite, 'writeSync(3, "x".repeat(4097));');
+  else if (tamper === "oversize-stdout-stderr") source = replaceExact(source, assertion, `process.stdout.write("x".repeat(${MAX_OUTPUT_BYTES})); process.stderr.write("y");\n    ${assertion}`);
+  else throw harnessError("tamper-invalid");
+  const candidate = path.join(temporary, "design-memory-retrieval.test.mjs"); await writeFile(candidate, source); return candidate;
+}
+
+async function runTest(moduleUrl, mutation, tamper, selectedTestPath) {
   const env = { ...process.env, DESIGN_MEMORY_RETRIEVAL_MUTATION_EVIDENCE: tamper === "wrong-env" ? "wrong" : "fd-json-v2", DESIGN_MEMORY_RETRIEVAL_MUTATION_ID: mutation.id, DESIGN_MEMORY_RETRIEVAL_MUTATION_TEST_ID: mutation.testId, DESIGN_MEMORY_RETRIEVAL_MUTATION_SENTINEL: mutation.sentinel, DESIGN_MEMORY_RETRIEVAL_SELECTED_TEST: mutation.selectedTest }; delete env.NODE_TEST_CONTEXT;
   if (mutation.target === "retrieval") env.DESIGN_MEMORY_RETRIEVAL_MODULE_URL = moduleUrl; else env.DESIGN_MEMORY_SCHEMA_EVALUATOR_MODULE_URL = moduleUrl;
-  const child = spawn(process.execPath, [testPath], { cwd: root, env, stdio: ["ignore", "pipe", "pipe", "pipe"] }); const evidence = []; const stdout = []; const stderr = []; let evidenceLength = 0;
-  const result = await new Promise((resolve, reject) => { child.stdout.on("data", (chunk) => stdout.push(chunk)); child.stderr.on("data", (chunk) => stderr.push(chunk)); child.stdio[3].on("data", (chunk) => { evidenceLength += chunk.byteLength; evidence.push(chunk); }); child.once("error", reject); child.once("close", (code) => resolve({ code, evidence: Buffer.concat(evidence), evidenceLength, output: Buffer.concat([...stdout, ...stderr]).toString("utf8") })); });
-  return result;
+  const child = spawn(process.execPath, [selectedTestPath], { cwd: root, env, stdio: ["ignore", "pipe", "pipe", "pipe"] }); const evidence = []; const stdout = []; const stderr = []; let evidenceLength = 0; let outputLength = 0; let settled = false;
+  return await new Promise((resolve, reject) => {
+    const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
+    const fail = (reason) => { child.kill("SIGKILL"); finish(reject, harnessError(reason)); };
+    const timeout = setTimeout(() => fail("test-timeout"), TEST_TIMEOUT_MS);
+    const collectOutput = (target) => (chunk) => { outputLength += chunk.byteLength; if (outputLength > MAX_OUTPUT_BYTES) fail("output-limit"); else target.push(chunk); };
+    child.stdout.on("data", collectOutput(stdout)); child.stderr.on("data", collectOutput(stderr)); child.stdio[3].on("data", (chunk) => { evidenceLength += chunk.byteLength; if (evidenceLength > MAX_EVIDENCE_BYTES) fail("evidence-limit"); else evidence.push(chunk); });
+    child.once("error", () => finish(reject, harnessError("test-launch"))); child.once("close", (code) => finish(resolve, { code, evidence: Buffer.concat(evidence), output: Buffer.concat([...stdout, ...stderr]).toString("utf8") }));
+  });
 }
 
 const mutationId = process.argv[2]; const mutation = mutations[mutationId]; const argument = process.argv[3]; const tamper = argument?.startsWith("--tamper=") ? argument.slice(9) : undefined;
@@ -55,13 +88,9 @@ else {
     if (mutation.target === "evaluator") { modulePath = path.join(temporary, "scripts", "lib", `${mutationId}.mjs`); const schemaDirectory = path.join(temporary, "memory", "schema"); await mkdir(path.dirname(modulePath), { recursive: true }); await mkdir(schemaDirectory, { recursive: true }); for (const name of ["memory-index.schema.json", "memory-receipt.schema.json"]) await writeFile(path.join(schemaDirectory, name), await readFile(path.join(root, "shared", "memory", "schema", name))); }
     await writeFile(modulePath, source);
     if (tamper === "unrelated-failure") { stage = "unrelated"; throw harnessError("unrelated-failure"); }
-    stage = "run-test"; const result = await runTest(pathToFileURL(modulePath).href, mutation, tamper); stage = "verify-evidence";
-    let evidence = result.evidence;
-    if (tamper === "missing-evidence") evidence = Buffer.alloc(0);
-    if (tamper === "wrong-operator") evidence = Buffer.from(`${JSON.stringify({ mutationId, testId: mutation.testId, sentinel: mutation.sentinel, operator: "deepStrictEqual", expected: mutation.expected, actual: mutation.actual })}\n`);
-    if (tamper === "wrong-message") evidence = Buffer.from(`${JSON.stringify({ mutationId, testId: mutation.testId, sentinel: "WRONG", operator: "strictEqual", expected: mutation.expected, actual: mutation.actual })}\n`);
-    if (tamper === "duplicate-evidence") evidence = Buffer.concat([evidence, evidence]);
-    if (tamper === "oversize-evidence") evidence = Buffer.alloc(MAX_EVIDENCE_BYTES + 1, 0x78);
+    const selectedTestPath = await tamperedTest(temporary, mutation, tamper);
+    stage = "run-test"; const result = await runTest(pathToFileURL(modulePath).href, mutation, tamper, selectedTestPath); stage = "verify-evidence";
+    const evidence = result.evidence;
     if (result.code !== 1) throw harnessError("test-exit"); if (!evidence.byteLength) { const error = harnessError("evidence-empty"); error.output = result.output; throw error; } const verified = parseEvidence(evidence, mutation);
     process.stdout.write(`${JSON.stringify({ ...verified, protocol: "fd-json-v2", exitCode: result.code })}\n`);
   } catch (error) { process.stderr.write(`${JSON.stringify({ code: "memory.mutation_evidence_failed", mutationId, tamper, stage, reason: error?.reason ?? "internal" })}\n`); process.exitCode = 1; }

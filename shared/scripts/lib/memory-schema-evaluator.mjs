@@ -59,7 +59,7 @@ const safeId = (value) => canonicalString(value) && id.test(value);
 const safeRelative = (value) => canonicalString(value) && !value.includes("\\") && !value.startsWith("/") && !value.startsWith("../") && !value.split("/").includes("..");
 const sortedUniqueIds = (values) => Array.isArray(values) && values.every(safeId) && values.every((item, index) => index === 0 || utf8Compare(values[index - 1], item) < 0);
 const safeLocator = (value) => canonicalString(value) && safeRelative(value.split("#", 1)[0]);
-function observationStatusMatches({ expectedSha256, observedSha256, status }) { return (status === "current" && observedSha256 === expectedSha256)
+function observationStatusMatches(value) { if (value === null || typeof value !== "object" || Array.isArray(value)) return false; const { expectedSha256, observedSha256, status } = value; return (status === "current" && observedSha256 === expectedSha256)
   || (status === "drift" && typeof observedSha256 === "string" && observedSha256 !== expectedSha256)
   || (["missing", "symlink", "unreadable"].includes(status) && observedSha256 === null); }
 
