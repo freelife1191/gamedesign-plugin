@@ -113,8 +113,8 @@ export async function appendMemoryEvent({ store, eventDocument } = {}) {
   assertMemoryAppendNotQuarantined(scan, parsed.event.memory_id);
   const duplicate = scan.events.find((item) => item.event.memory_id === parsed.event.memory_id && item.event.operation_id === parsed.event.operation_id);
   if (duplicate?.bytes.equals(bytes)) return { status: "present", eventId, relativePath, fileSha256: hash(bytes) };
-  authorizeMemoryAppend({ scan, parsed });
   if (duplicate) fail("duplicate-operation: different event bytes.", "duplicate-operation");
+  authorizeMemoryAppend({ scan, parsed });
   return sealEvent(store, relativePath, eventId, bytes, "event");
 }
 

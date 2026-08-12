@@ -89,7 +89,22 @@ test("sealed append is idempotent, conflict preserving, and uses event shard pat
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const bytes = document();
   const first = await appendMemoryEvent({ store, eventDocument: bytes }); const second = await appendMemoryEvent({ store, eventDocument: bytes });
   assert.equal(first.status, "created"); assert.equal(second.status, "present"); assert.equal(first.relativePath, memoryEventRelativePath({ memoryId: record.memory_id, eventId: first.eventId }));
-  await assert.rejects(() => appendMemoryEvent({ store, eventDocument: document({ reason: "other" }) }), (error) => error?.code === "memory.capture_exists");
+  await assert.rejects(() => appendMemoryEvent({ store, eventDocument: document({ reason: "other" }) }), (error) => error?.code === "duplicate-operation");
+});
+
+test("different bytes with an existing capture, transition, or resolution operation reject without creating source files", async (t) => {
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); await appendMemoryEvent({ store, eventDocument: document() });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: document({ reason: "different capture bytes" }) }), "duplicate-operation");
+  }
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const transition = transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); await appendMemoryEvent({ store, eventDocument: transition });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T01:00:00.000Z", { recordOverrides: { tags: ["changed-tag"] } }) }), "duplicate-operation");
+  }
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() }); const verified = await sealTransitionForTest(store, captured.eventId, "verified", "2026-08-12T01:00:00.000Z"); const disputed = await sealTransitionForTest(store, captured.eventId, "disputed", "2026-08-12T02:00:00.000Z"); const verifiedRecord = { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z" }; const resolution = resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, verifiedRecord); await appendMemoryEvent({ store, eventDocument: resolution });
+    await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, { ...verifiedRecord, tags: ["changed-tag"] }) }), "duplicate-operation");
+  }
 });
 
 test("quarantined exact retries of capture, transition, and resolution reject without creating source files", async (t) => {
