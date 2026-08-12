@@ -41,7 +41,7 @@ const pluginIntroductionHeadings = [
   "처음에는 이렇게 물어보세요",
   "어떤 자료를 참고했나요?",
   "자료를 답으로 바꾸는 방식",
-  "레퍼런스와 더 읽을 문서",
+  "참고 자료와 더 읽을 문서",
 ];
 const pluginIntroductionPrompts = [
   "@Game Design Studio 4인 협동 RPG의 핵심 재미와 첫 10분 플레이 흐름을 정리해 줘.",
@@ -132,6 +132,16 @@ const archifyStatusRoute = {
 };
 const readmeSkillsteadDiagrams = [
   {
+    section: "플러그인 소개",
+    id: "evidence-to-design-flow",
+    alt: "자료가 검토 가능한 기획 결과와 담당자 승인으로 이어지는 흐름",
+    phrases: [
+      "원문 49편", "최근 확인한 1차 자료 16건", "사실·추론·가정을 나눠 기록",
+      "기획에 계속 쓸 원칙 7개", "제작 기획 (Studio)", "학습·취업 준비 (Career)",
+      "기준 기획 결과물", "담당자를 정해 검토",
+    ],
+  },
+  {
     section: "5분 안에 첫 결과 만들기",
     id: "first-result-routing-flow",
     alt: "한 문장 요청에서 스킬 선택과 사람 승인까지 이어지는 첫 결과 흐름",
@@ -188,6 +198,23 @@ const readmeSkillsteadDiagrams = [
   },
 ];
 const readmeSkillsteadGraphContracts = new Map([
+  ["evidence-to-design-flow", {
+    nodes: [
+      "source-docs", "current-sources", "evidence-boundary", "core-principles",
+      "studio-work", "career-work", "canonical-artifact", "human-review",
+    ],
+    edges: [
+      ["source-to-evidence", "source-docs", "evidence-boundary"],
+      ["current-to-evidence", "current-sources", "evidence-boundary"],
+      ["evidence-to-core", "evidence-boundary", "core-principles"],
+      ["core-to-studio", "core-principles", "studio-work"],
+      ["core-to-career", "core-principles", "career-work"],
+      ["studio-to-artifact", "studio-work", "canonical-artifact"],
+      ["career-to-artifact", "career-work", "canonical-artifact"],
+      ["artifact-to-human", "canonical-artifact", "human-review"],
+      ["human-to-evidence", "human-review", "evidence-boundary"],
+    ],
+  }],
   ["first-result-routing-flow", {
     nodes: ["request", "analysis", "decision", "specialist", "orchestrator", "roles", "artifact", "human", "resume"],
     edges: [
@@ -1126,8 +1153,8 @@ async function assertPluginIntroduction(markdown) {
   assert.match(introduction, /https:\/\/www\.youtube\.com\/@GameDesignerYuriring/u, "introduction links the official Yuriring channel");
   assert.match(introduction, new RegExp(`원문[^\n]{0,40}${documents.length}편`, "u"), "introduction states the indexed source count");
   assert.match(introduction, new RegExp(`유리링[^\n]{0,40}${yuriringReports.length}편`, "u"), "introduction states the Yuriring report count");
-  assert.match(introduction, new RegExp(`핵심 실무 원칙[^\n]{0,40}${coreFiles.length}개`), "introduction states the Core document count");
-  assert.match(introduction, new RegExp(`현재 1차 자료[^\n]{0,40}${currentSources.sources.length}건`), "introduction states the current primary-source count");
+  assert.match(introduction, new RegExp(`기획에 계속 적용할 원칙[^\n]{0,40}${coreFiles.length}개`), "introduction states the Core document count");
+  assert.match(introduction, new RegExp(`최근 확인한 1차 자료[^\n]{0,40}${currentSources.sources.length}건`), "introduction states the current primary-source count");
   assert.ok(introduction.includes(currentSources.retrievedAt), "introduction preserves the current-source retrieval date");
   for (const [label, category] of [
     ["취업·경력", "career"], ["재미·기획 의도", "fun-intent"], ["시스템 기획", "systems"],
@@ -1138,8 +1165,8 @@ async function assertPluginIntroduction(markdown) {
   assert.doesNotMatch(introduction, /\$game-design-(?:studio|career):/u, "introduction starts with natural language rather than skill IDs");
   assert.match(introduction, /공식 자막이나 채널 운영자의 검수본은 아닙니다/u, "introduction does not overstate the Yuriring reports");
   assert.match(introduction, /최신 공식 자료를 다시 확인/u, "introduction requires current external verification");
-  assert.match(introduction, /흥행·매출·채용 합격[^\n]{0,80}보장하지 않습니다/u, "introduction states non-guarantee boundaries");
-  assert.match(introduction, /이름 있는 사람[^\n]{0,80}검토/u, "introduction keeps named human review");
+  assert.match(introduction, /흥행·매출·채용 합격[\s\S]{0,100}보장하지[\s\S]{0,10}않습니다/u, "introduction states non-guarantee boundaries");
+  assert.match(introduction, /검토 담당자[^\n]{0,120}(?:이름|확인|검토)/u, "introduction keeps an accountable human reviewer");
 
   for (const target of [
     "shared/knowledge/reference-index.json",
@@ -1646,6 +1673,23 @@ function assertReadmeSkillsteadDiagramSource(svgSource, { id, phrases }) {
       `${id}: binds export-manifest to the named human gate`,
     );
   }
+  if (id === "evidence-to-design-flow") {
+    assert.match(svgSource, /유리링 관련 리포트 6편/u, `${id}: source card preserves the Yuriring report count`);
+    assert.match(svgSource, /2026-08-11/u, `${id}: current-source card preserves the retrieval date`);
+    assert.match(svgSource, /확인하지 못한 내용은 미정/u, `${id}: unknown information stays undecided`);
+    assert.match(
+      svgSource,
+      /<g\b[^>]*data-flow-node="human-review"[^>]*data-human-gate="이름을 기록한 검토 담당자"[^>]*data-gate-role="approval-hold"[^>]*data-gate-label="승인·보류"/u,
+      `${id}: named human owns approval and hold`,
+    );
+    assert.match(
+      svgSource,
+      /<path\b[^>]*data-flow-edge="human-to-evidence"[^>]*data-from="human-review"[^>]*data-to="evidence-boundary"[^>]*stroke-dasharray="[^"]+"/u,
+      `${id}: held work returns to the evidence boundary through a dashed edge`,
+    );
+    assert.doesNotMatch(svgSource, /자동 (?:승인|처리)/u, `${id}: human review is never automatic`);
+    assert.doesNotMatch(svgSource, />\s*Artifact\s*</u, `${id}: Artifact never appears as an English-only visible label`);
+  }
 }
 
 async function assertReadmeSkillsteadDiagrams(markdown) {
@@ -1681,7 +1725,7 @@ async function assertReadmeSkillsteadDiagrams(markdown) {
 
 function assertReadmeSkillsteadAssetNames(files) {
   const expectedFiles = readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]).sort();
-  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly eight Skillstead PNG/SVG pairs");
+  assert.deepEqual([...files].sort(), expectedFiles, "README explainers own exactly nine Skillstead PNG/SVG pairs");
 }
 
 function assertReadmeSkillsteadSourceRejected(source, diagram, label) {
@@ -2065,7 +2109,7 @@ test("Suite architecture embed rejects missing, unwrapped, stale, and wrong targ
   }
 });
 
-test("root README embeds eight machine-linted Skillstead explanation diagrams", async () => {
+test("root README embeds nine machine-linted Skillstead explanation diagrams", async () => {
   const readme = await readFile(path.join(root, "README.md"), "utf8");
   await assertReadmeSkillsteadDiagrams(readme);
 });
@@ -2073,7 +2117,7 @@ test("root README embeds eight machine-linted Skillstead explanation diagrams", 
 test("README Skillstead explanation diagrams reject semantic and distortion regressions", async () => {
   assert.throws(
     () => assertReadmeSkillsteadAssetNames([...readmeSkillsteadDiagrams.flatMap(({ id }) => [`${id}.png`, `${id}.svg`]), "fourth-flow.svg"]),
-    /exactly eight Skillstead PNG\/SVG pairs/u,
+    /exactly nine Skillstead PNG\/SVG pairs/u,
     "an unowned explainer file is rejected",
   );
   for (const diagram of readmeSkillsteadDiagrams) {
@@ -2148,6 +2192,19 @@ test("README Skillstead explanation diagrams reject semantic and distortion regr
   ]) {
     assert.notEqual(mutated, artifactSource, `${label}: mutation changes Artifact flow source`);
     assertReadmeSkillsteadSourceRejected(mutated, artifactFlow, label);
+  }
+  const evidenceFlow = readmeSkillsteadDiagrams.find(({ id }) => id === "evidence-to-design-flow");
+  assert.ok(evidenceFlow, "evidence-to-design diagram registry exists");
+  const evidenceSource = await readFile(path.join(root, "guides/assets/readme/evidence-to-design-flow.svg"), "utf8");
+  for (const [label, mutated] of [
+    ["missing Yuriring count", evidenceSource.replace("유리링 관련 리포트 6편", "유리링 관련 자료")],
+    ["wrong retrieval date", evidenceSource.replace("2026-08-11", "날짜 미상")],
+    ["automatic approval", evidenceSource.replaceAll("승인·보류", "자동 승인")],
+    ["English-only Artifact", evidenceSource.replaceAll("기준 기획 결과물", "Artifact")],
+    ["solid feedback edge", evidenceSource.replace('data-flow-edge="human-to-evidence" data-from="human-review" data-to="evidence-boundary" stroke-dasharray="9 8"', 'data-flow-edge="human-to-evidence" data-from="human-review" data-to="evidence-boundary"')],
+  ]) {
+    assert.notEqual(mutated, evidenceSource, `${label}: mutation changes evidence flow source`);
+    assertReadmeSkillsteadSourceRejected(mutated, evidenceFlow, label);
   }
 });
 

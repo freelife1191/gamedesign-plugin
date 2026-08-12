@@ -3,6 +3,7 @@
 .worktrees/
 .build/
 .tmp/
+_workspace/
 node_modules/
 coverage/
 test-results/

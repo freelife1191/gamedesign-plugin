@@ -44,9 +44,9 @@ Chromium, Node test runner
 
 ```js
 [
-  "원문 49편", "현재 1차 자료 16건", "사실·추론·가정 구분",
-  "핵심 실무 원칙 7개", "Studio 제작 기획", "Career 학습·취업 준비",
-  "기준 기획 결과물", "이름 있는 사람의 검토",
+  "원문 49편", "최근 확인한 1차 자료 16건", "사실·추론·가정을 나눠 기록",
+  "기획에 계속 쓸 원칙 7개", "제작 기획 (Studio)", "학습·취업 준비 (Career)",
+  "기준 기획 결과물", "담당자를 정해 검토",
 ]
 ```
 
@@ -92,7 +92,7 @@ Expected: 새 SVG·PNG와 README embed가 없어서 도식 계약만 실패한�
 사람 검토 노드에는 다음 속성을 둔다.
 
 ```xml
-data-human-gate="이름 있는 사람"
+data-human-gate="이름을 기록한 검토 담당자"
 data-gate-role="approval-hold"
 data-gate-label="승인·보류"
 ```
@@ -124,7 +124,7 @@ Expected: Chromium 실행 정보와 2800×1800 PNG 확인이 출력된다.
 `어떤 자료를 참고했나요?`의 자료 표 다음에 도식 설명과 아래 링크를 넣는다.
 
 ```markdown
-[![자료가 검토 가능한 기획 결과와 사람 승인으로 이어지는 흐름](guides/assets/readme/evidence-to-design-flow.png)](guides/assets/readme/evidence-to-design-flow.svg)
+[![자료가 검토 가능한 기획 결과와 담당자 승인으로 이어지는 흐름](guides/assets/readme/evidence-to-design-flow.png)](guides/assets/readme/evidence-to-design-flow.svg)
 ```
 
 - [ ] **Step 5: 픽셀 시각 검수**
@@ -214,4 +214,3 @@ Expected: 가이드와 카탈로그 통과, 문서 감사 고심각도 0건, dif
 Run `npm test`. 모든 테스트가 통과하면 커밋하고 `main`에 fast-forward로
 병합한다. 병합 결과에서 README·Archify focused 계약을 다시 실행한 뒤 작업
 worktree와 기능 브랜치를 제거한다.
-

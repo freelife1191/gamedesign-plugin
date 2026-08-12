@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" role="img" style="font-family:Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif">
+  <title>자료를 그대로 답으로 쓰지 않습니다</title>
+  <desc>원문과 최근 자료를 따로 확인하고 사실, 추론, 가정을 나눠 기록한 뒤 제작 기획이나 학습과 취업 준비를 거쳐 기준 기획 결과물과 담당자 검토로 이어지는 흐름입니다.</desc>
+  <style>
+    svg{--paper:#F5F5F5;--ink:#2D3142;--muted:#5F6675;--accent:#EB6C36;--blue:#3C6EAF;--green:#238266;--violet:#6257B5;--rose:#B03A67;--line:#6C7686}.title{font-size:40px;font-weight:700;fill:var(--ink)}.sub{font-size:18px;fill:var(--muted)}.node-title{font-size:19px;font-weight:700}.node-body{font-size:16px;fill:var(--muted)}.edge-label{font-size:16px;font-weight:600;fill:var(--accent)}.edge{fill:none;stroke:var(--line);stroke-width:3;marker-end:url(#arrow)}.feedback{fill:none;stroke:var(--accent);stroke-width:3;stroke-dasharray:9 8;marker-end:url(#arrow-accent)}.panel{fill:#FFFFFF;stroke:#D5DAE2;stroke-width:2}.card{stroke-width:2}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#6C7686" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-accent" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M2 2L10 6L2 10" fill="none" stroke="#EB6C36" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1400" height="900" fill="var(--paper)"/>
+  <text x="54" y="66" class="title">자료를 그대로 답으로 쓰지 않습니다</text>
+  <text x="54" y="102" class="sub">원문과 최신 자료를 따로 확인해, 근거를 남긴 기획 문서와 담당자 검토로 이어 갑니다.</text>
+  <rect x="38" y="138" width="1324" height="692" rx="24" class="panel"/>
+
+  <path class="edge" data-flow-edge="source-to-evidence" data-from="source-docs" data-to="evidence-boundary" d="M320 275H350V380H363"/>
+  <path class="edge" data-flow-edge="current-to-evidence" data-from="current-sources" data-to="evidence-boundary" d="M335 515H350V420H363"/>
+  <path class="edge" data-flow-edge="evidence-to-core" data-from="evidence-boundary" data-to="core-principles" d="M655 400H693"/>
+  <path class="edge" data-flow-edge="core-to-studio" data-from="core-principles" data-to="studio-work" d="M985 370H1010V285H1048"/>
+  <path class="edge" data-flow-edge="core-to-career" data-from="core-principles" data-to="career-work" d="M985 430H1010V535H1048"/>
+  <path class="edge" data-flow-edge="studio-to-artifact" data-from="studio-work" data-to="canonical-artifact" d="M1190 350V625H910V648"/>
+  <path class="edge" data-flow-edge="career-to-artifact" data-from="career-work" data-to="canonical-artifact" d="M1190 600V625H965V648"/>
+  <path class="edge" data-flow-edge="artifact-to-human" data-from="canonical-artifact" data-to="human-review" d="M760 722H692"/>
+  <path class="feedback" data-flow-edge="human-to-evidence" data-from="human-review" data-to="evidence-boundary" stroke-dasharray="9 8" d="M420 722H350V490H515V482"/>
+  <text x="82" y="690" class="edge-label">보류하면 근거와 내용 수정</text>
+
+  <!-- main-flow -->
+  <g data-flow-node="source-docs" data-stage-label="원문 49편"><rect x="70" y="210" width="250" height="130" rx="18" fill="#EAF2FC" stroke="var(--blue)" class="card"/><text x="195" y="250" class="node-title" fill="var(--blue)" text-anchor="middle">원문 49편</text><text x="195" y="282" class="node-body" text-anchor="middle">유리링 관련 리포트 6편 포함</text><text x="195" y="310" class="node-body" text-anchor="middle">작성 당시 맥락과 경험을 확인</text></g>
+  <g data-flow-node="current-sources" data-stage-label="최근 확인한 1차 자료 16건"><rect x="55" y="450" width="280" height="130" rx="18" fill="#F0EEFC" stroke="var(--violet)" class="card"/><text x="195" y="490" class="node-title" fill="var(--violet)" text-anchor="middle">최근 확인한 1차 자료 16건</text><text x="195" y="522" class="node-body" text-anchor="middle">2026-08-11 확인</text><text x="195" y="550" class="node-body" text-anchor="middle">바뀔 수 있는 정보는 따로 확인</text></g>
+  <g data-flow-node="evidence-boundary" data-stage-label="사실·추론·가정을 나눠 기록"><rect x="375" y="330" width="280" height="140" rx="18" fill="#FFF1EA" stroke="var(--accent)" class="card"/><text x="515" y="372" class="node-title" fill="var(--accent)" text-anchor="middle">사실·추론·가정을 나눠 기록</text><text x="515" y="406" class="node-body" text-anchor="middle">확인하지 못한 내용은 미정</text><text x="515" y="436" class="node-body" text-anchor="middle">근거와 해석을 섞지 않음</text></g>
+  <g data-flow-node="core-principles" data-stage-label="기획에 계속 쓸 원칙 7개"><rect x="705" y="330" width="280" height="140" rx="18" fill="#E8F6F1" stroke="var(--green)" class="card"/><text x="845" y="372" class="node-title" fill="var(--green)" text-anchor="middle">기획에 계속 쓸 원칙 7개</text><text x="845" y="406" class="node-body" text-anchor="middle">자료에서 겹치는 원칙을 정리</text><text x="845" y="436" class="node-body" text-anchor="middle">작업마다 확인할 질문</text></g>
+  <g data-flow-node="studio-work" data-stage-label="제작 기획 (Studio)"><rect x="1060" y="220" width="260" height="130" rx="18" fill="#EAF2FC" stroke="var(--blue)" class="card"/><text x="1190" y="260" class="node-title" fill="var(--blue)" text-anchor="middle">제작 기획 (Studio)</text><text x="1190" y="292" class="node-body" text-anchor="middle">규칙·콘텐츠·UX·경제</text><text x="1190" y="320" class="node-body" text-anchor="middle">제작 범위와 검토 기준</text></g>
+  <g data-flow-node="career-work" data-stage-label="학습·취업 준비 (Career)"><rect x="1060" y="470" width="260" height="130" rx="18" fill="#F0EEFC" stroke="var(--violet)" class="card"/><text x="1190" y="510" class="node-title" fill="var(--violet)" text-anchor="middle">학습·취업 준비 (Career)</text><text x="1190" y="542" class="node-body" text-anchor="middle">역할·학습·포트폴리오</text><text x="1190" y="570" class="node-body" text-anchor="middle">면접과 성장 계획</text></g>
+  <g data-flow-node="canonical-artifact" data-stage-label="기준 기획 결과물"><rect x="760" y="660" width="270" height="125" rx="18" fill="#F1F3F6" stroke="#697587" class="card"/><text x="895" y="700" class="node-title" fill="#536071" text-anchor="middle">기준 기획 결과물</text><text x="895" y="732" class="node-body" text-anchor="middle">본문·근거·결정·미해결 항목</text><text x="895" y="760" class="node-body" text-anchor="middle">수정과 내보내기의 기준</text></g>
+  <g data-flow-node="human-review" data-stage-label="담당자를 정해 검토" data-human-gate="이름을 기록한 검토 담당자" data-gate-role="approval-hold" data-gate-label="승인·보류"><rect x="420" y="660" width="260" height="125" rx="18" fill="#FDECF3" stroke="var(--rose)" class="card"/><text x="550" y="700" class="node-title" fill="var(--rose)" text-anchor="middle">담당자를 정해 검토</text><text x="550" y="732" class="node-body" text-anchor="middle">승인·보류·수정 결정</text><text x="550" y="760" class="node-body" text-anchor="middle">결정 이유까지 기록</text></g>
+</svg>
