@@ -27,7 +27,7 @@ function retryCreatesDebris(source) {
 const mutations = {
   "same-event-loser-created": {
     testId: "same-event-status", assertion: "sorted statuses must be created,present", sentinel: "MEM-MUT-SAME-EVENT-STATUS", primaryAnchor: sameEventAnchor,
-    testAnchor: 'await mutationAssertion({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, () => assert.deepEqual(results.map((_, index) => parsed[index].status).sort(), ["created", "present"], "MEM-MUT-SAME-EVENT-STATUS"));',
+    testAnchor: 'mutationDeepEqual({ mutation: "same-event-loser-created", testId: "same-event-status", sentinel: "MEM-MUT-SAME-EVENT-STATUS" }, actualStatuses, ["created", "present"]);',
     apply: (source) => replaceExact(source, sameEventAnchor, sameEventAnchor.replace('status: "present"', 'status: "created"')),
   },
   "concurrent-fold-authority": {
@@ -86,9 +86,14 @@ async function tamperedTest(temporaryRoot, mutation, tamper) {
   if (!tamper || tamper === "missing-anchor" || tamper === "duplicate-anchor") return testPath;
   let source = await readFile(testPath, "utf8"); source = replaceExact(source, '"../../shared/scripts/validate-design-memory.mjs"', JSON.stringify(validatorUrl));
   if (tamper === "unrelated-leading-failure") source = replaceExact(source, mutation.testAnchor, `assert.fail("UNRELATED-GENERIC-ASSERT");\n  ${mutation.testAnchor}`);
-  else if (tamper === "wrong-sentinel") source = replaceExact(source, 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel: "MEM-MUT-WRONG-SENTINEL" })}\\n`);');
+  else if (tamper === "unrelated-helper-assertion") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", 'try { assert.fail("UNRELATED-IN-HELPER"); }');
+  else if (tamper === "helper-type-error") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", "try { undefined.missing(); }");
+  else if (tamper === "wrong-operator") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", "try { assert.equal(actual, expected, sentinel); }");
+  else if (tamper === "wrong-message") source = replaceExact(source, "try { assert.deepEqual(actual, expected, sentinel); }", 'try { assert.deepEqual(actual, expected, "MEM-MUT-WRONG-MESSAGE"); }');
+  else if (tamper === "observed-value-error") source = replaceExact(source, "const actualStatuses = results.map((_, index) => parsed[index].status).sort();", 'const actualStatuses = (() => { throw new TypeError("OBSERVED-VALUE"); })();');
+  else if (tamper === "wrong-sentinel") source = replaceExact(source, 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel: "MEM-MUT-WRONG-SENTINEL" })}\\n`);');
   else if (tamper === "fake-reporter-output") source = replaceExact(source, mutation.testAnchor, `process.stdout.write("not ok 1 - fake ${mutation.sentinel}\\n"); process.stderr.write("# fail 1 ${mutation.sentinel}\\n"); assert.fail("UNRELATED-GENERIC-ASSERT");\n  ${mutation.testAnchor}`);
-  else if (tamper === "duplicate-evidence") source = replaceExact(source, 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`); writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);');
+  else if (tamper === "duplicate-evidence") source = replaceExact(source, 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);', 'if (mutationEvidenceMatches(error, { mutation, testId, sentinel }, "deepStrictEqual")) {\n      writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`); writeSync(3, `${JSON.stringify({ mutation, testId, sentinel })}\\n`);');
   else throw harnessError("tamper-invalid");
   const candidate = path.join(temporaryRoot, "design-memory-store.test.mjs"); await writeFile(candidate, source); return candidate;
 }

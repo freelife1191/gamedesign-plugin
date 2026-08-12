@@ -28,6 +28,11 @@ async function runTamper(tamper) {
 
 for (const [tamper, expectedStage] of [
   ["unrelated-leading-failure", ["verify-evidence", "evidence-empty"]],
+  ["unrelated-helper-assertion", ["verify-evidence", "evidence-empty"]],
+  ["helper-type-error", ["verify-evidence", "evidence-empty"]],
+  ["wrong-operator", ["verify-evidence", "evidence-empty"]],
+  ["wrong-message", ["verify-evidence", "evidence-empty"]],
+  ["observed-value-error", ["verify-evidence", "evidence-empty"]],
   ["missing-anchor", ["apply-mutation", "anchor-count"]],
   ["duplicate-anchor", ["apply-mutation", "anchor-count"]],
   ["wrong-sentinel", ["verify-evidence", "evidence-mismatch"]],
