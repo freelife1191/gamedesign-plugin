@@ -27,6 +27,14 @@ function assertClosedScan(scan, memoryId, code) {
   const fold = foldMemoryEvents(scan);
   assert.equal(scan.complete, false); assert.deepEqual(scan.events, []); assert.deepEqual(scan.quarantines, []); assert.equal(fold.memories.has(memoryId), false); assert.equal(scan.diagnostics.some((item) => item.code === code), true);
 }
+function digest(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
+function sealedInstanceId(eventId) { const value = digest(eventId); return `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20, 32)}`; }
+async function sealCommittedForTest(store, { relativePath, eventId, bytes, persistedClaim } = {}) {
+  const base = path.join(store.root, relativePath); const instanceId = sealedInstanceId(eventId); const claim = { schemaVersion: 1, eventId, instanceId, fileSha256: digest(bytes), byteLength: bytes.byteLength };
+  await mkdir(path.join(base, "instances"), { recursive: true }); await mkdir(path.join(base, "claims"), { recursive: true }); await writeFile(path.join(base, "instances", `${instanceId}.md`), bytes);
+  const claimPath = path.join(base, "claims", `${instanceId}.json`); await writeFile(claimPath, persistedClaim ?? `${JSON.stringify(claim)}\n`); await link(claimPath, path.join(base, "commit.json"));
+  return claim;
+}
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -94,6 +102,42 @@ test("unbound sealed marker target closes the entire scan", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); await appendMemoryEvent({ store, eventDocument: document() }); const missingEventId = `mev1-${"c".repeat(64)}`;
   await sealMarkerForTest(store, { schema_version: 1, memory_id: record.memory_id, target_event_id: missingEventId, target_relative_path: memoryEventRelativePath({ memoryId: record.memory_id, eventId: missingEventId }), observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T00:00:00.000Z" });
   assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+});
+
+test("raw sealed event and marker bytes require fatal UTF-8 and raw content IDs", async (t) => {
+  const rawEvent = Buffer.from(document()); rawEvent[rawEvent.indexOf(Buffer.from("내용"))] = 0xff; const decodedEventId = `mev1-${digest(Buffer.from(rawEvent.toString("utf8")))}`;
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+    await sealCommittedForTest(store, { relativePath: memoryEventRelativePath({ memoryId: record.memory_id, eventId: decodedEventId }), eventId: decodedEventId, bytes: rawEvent }); assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+  }
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const target = await appendMemoryEvent({ store, eventDocument: document() }); const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: target.eventId, target_relative_path: target.relativePath, observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T00:00:00.000Z" };
+    const rawMarker = Buffer.from(canonicalQuarantineMarkerDocument(marker)); rawMarker[rawMarker.indexOf(Buffer.from("auditor"))] = 0x80; const decodedMarkerId = `qmv1-${digest(Buffer.from(rawMarker.toString("utf8")))}`;
+    await sealCommittedForTest(store, { relativePath: `v1/controls/quarantine/${digest(record.memory_id).slice(0, 2)}/${target.eventId}/${decodedMarkerId}`, eventId: decodedMarkerId, bytes: rawMarker }); assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+  }
+});
+
+test("sealed claims require an exact canonical envelope", async (t) => {
+  const malformed = [
+    (claim) => `${JSON.stringify({ ...claim, unexpected: "extra-field" })}\n`,
+    (claim) => `${JSON.stringify({ schemaVersion: claim.schemaVersion, eventId: claim.eventId, instanceId: claim.instanceId, fileSha256: claim.fileSha256 })}\n`,
+    (claim) => `{\"schemaVersion\":1,\"schemaVersion\":1,\"eventId\":${JSON.stringify(claim.eventId)},\"instanceId\":${JSON.stringify(claim.instanceId)},\"fileSha256\":${JSON.stringify(claim.fileSha256)},\"byteLength\":${claim.byteLength}}\n`,
+    (claim) => ` ${JSON.stringify(claim)}\n`,
+    () => "[]\n",
+  ];
+  for (const persist of malformed) {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const bytes = Buffer.from(document()); const eventId = `mev1-${digest(bytes)}`;
+    await sealCommittedForTest(store, { relativePath: memoryEventRelativePath({ memoryId: record.memory_id, eventId }), eventId, bytes, persistedClaim: persist({ schemaVersion: 1, eventId, instanceId: sealedInstanceId(eventId), fileSha256: digest(bytes), byteLength: bytes.byteLength }) }); assertClosedScan(await scanMemoryEvents({ store }), record.memory_id, "memory.unbound_seal");
+  }
+});
+
+test("scan diagnostics do not expose untrusted physical path components", async (t) => {
+  const attackers = ["sk-live-DO-NOT-EXPOSE", "line\ncontrol-\u0001", "x".repeat(240), "invalid-\uD800-component"];
+  for (const attacker of attackers) {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const appended = await appendMemoryEvent({ store, eventDocument: document() }); const moved = path.join(store.root, "v1", "events", attacker, "wrong-memory", appended.eventId);
+    await mkdir(path.dirname(moved), { recursive: true }); await rename(path.join(store.root, appended.relativePath), moved); const scan = await scanMemoryEvents({ store }); assertClosedScan(scan, record.memory_id, "memory.path_binding"); const diagnostics = JSON.stringify(scan.diagnostics);
+    assert.equal(diagnostics.includes(attacker), false); assert.equal(diagnostics.includes(root), false);
+  }
 });
 
 test("fold taints a memory for duplicate roots, descendants of invalid events, and operation collisions", () => {

@@ -54,3 +54,57 @@ git diff --check
 
 append 전 권한 통합(Task 3), symlink/Git exclude(Task 4), multiprocess 및 failpoint
 복구(Task 5)는 이번 변경에 포함하지 않았다.
+
+## Fix round 1 — sealed bytes, claim envelope, diagnostics
+
+독립 리뷰의 세 Important를 TDD로 보정했다.
+
+### RED
+
+```sh
+node --test --test-name-pattern="raw sealed|canonical envelope|do not expose" tests/unit/design-memory-store.test.mjs
+```
+
+결과: 3개 중 0 통과, 3 실패.
+
+- invalid leading/continuation byte를 가진 raw event/marker instance가 lossy UTF-8
+  decode와 decoded-content ID로 authority를 얻었다.
+- extra, missing, duplicate, whitespace 변경, non-object claim envelope이 완전히
+  닫히지 않았다.
+- secret-looking, newline/control, 긴 component와 invalid Unicode component를 가진
+  물리 경로가 diagnostics에 그대로 포함됐다.
+
+### GREEN
+
+- raw instance는 fatal UTF-8 decode를 통과해야 하며, event/marker ID는 decoded
+  문자열이 아니라 raw Buffer SHA-256과 일치해야 한다.
+- claim/commit bytes는 exact five-key plain-object envelope 및 `claimBytes()`의
+  canonical JSON/LF와 일치해야 한다.
+- scanner diagnostics는 stable code만 기록하고 untrusted physical path나 raw
+  document bytes를 복사하지 않는다.
+
+```sh
+node --test --test-name-pattern="raw sealed|canonical envelope|do not expose" tests/unit/design-memory-store.test.mjs
+```
+
+결과: 3/3 통과, 실패 0.
+
+```sh
+node --test tests/unit/design-memory-store.test.mjs
+```
+
+결과: 총 19개 중 18 통과, 실패 0, 의도된 same-user directory-swap non-goal 1 skip.
+
+```sh
+node --test tests/unit/design-memory-config.test.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
+```
+
+결과: 총 68개 중 67 통과, 실패 0, 의도된 non-goal 1 skip.
+
+```sh
+node --check shared/scripts/lib/safe-memory-store.mjs
+node --check tests/unit/design-memory-store.test.mjs
+git diff --check
+```
+
+결과: 모두 성공, 출력 없음.
