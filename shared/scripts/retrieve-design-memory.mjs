@@ -1,12 +1,13 @@
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { lstat, mkdir, open, opendir, readFile, writeFile } from "node:fs/promises";
+import { lstat, mkdir, open, opendir } from "node:fs/promises";
 import path from "node:path";
 
-import { resolveMemoryStore, scanMemoryEvents, foldMemoryEvents } from "./lib/safe-memory-store.mjs";
-import { validateMemorySourceBindings } from "./validate-design-memory.mjs";
+import { readCommittedMemoryEvent, resolveMemoryStore, scanMemoryEvents, foldMemoryEvents } from "./lib/safe-memory-store.mjs";
+import { observeMemorySourceBindings } from "./validate-design-memory.mjs";
 
-const HARD_LIMITS = Object.freeze({ maxDirectoryEntries: 256, maxCensusEntries: 100000, maxIdentityInstances: 256, maxGenerationReservations: 10000, maxIndexBytes: 1024 * 1024, maxReceiptBytes: 256 * 1024, maxViewBytes: 1024 * 1024, maxLogBytes: 1024 * 1024, maxIndexEntries: 10000, maxReceiptItems: 256 });
+const HARD_LIMITS = Object.freeze({ maxDirectoryEntries: 256, maxCensusEntries: 100000, maxIdentityInstances: 256, maxGenerationReservations: 10000, maxIndexBytes: 1024 * 1024, maxReceiptBytes: 256 * 1024, maxViewBytes: 1024 * 1024, maxLogBytes: 1024 * 1024, maxIndexEntries: 10000, maxReceiptObservationItems: 256, maxReceiptAppliedItems: 256, maxReceiptExcludedItems: 256 });
+const RESULT_MAX_BYTES = 64 * 1024;
 const HEX = /^[a-f0-9]{64}$/u;
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/u;
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -22,6 +23,7 @@ function isObject(value) { return value !== null && typeof value === "object" &&
 function canonicalBytes(value) { return Buffer.from(`${JSON.stringify(value)}\n`, "utf8"); }
 function equalCanonicalJson(bytes, value) { return Buffer.isBuffer(bytes) && bytes.equals(canonicalBytes(value)); }
 function normalizedList(value) { return [...new Set(Array.isArray(value) ? value : [])].filter(safeId).sort(byteCompare); }
+function validMarkdownBytes(bytes) { try { const value = utf8.decode(bytes); return value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\uFEFF") && !value.includes("\r") && value.endsWith("\n") && !value.endsWith("\n\n"); } catch { return false; } }
 function limitsFor(override = {}) {
   if (!isObject(override)) throw new Error("Invalid derived limits.");
   const result = { ...HARD_LIMITS };
@@ -77,6 +79,7 @@ export async function scanDerivedGenerations({ store, limits } = {}) {
     let children = 0;
     try {
       for await (const entry of handle) {
+        if (entry.name === ".reservations" || entry.name === "_slots") continue;
         children += 1; count += 1;
         if (children > actualLimits.maxDirectoryEntries) { complete = false; warnings.push(warning("memory.derived_directory_limit_exceeded")); return; }
         if (count > actualLimits.maxCensusEntries) { complete = false; warnings.push(warning("memory.derived_census_limit_exceeded")); return; }
@@ -84,7 +87,7 @@ export async function scanDerivedGenerations({ store, limits } = {}) {
         const next = path.join(directory, entry.name); let stat;
         try { stat = await lstat(next); } catch { complete = false; warnings.push(warning("memory.derived_census_invalid")); return; }
         entries.push({ relativePath: nextRelative, type: stat.isDirectory() && !stat.isSymbolicLink() ? "directory" : stat.isFile() && !stat.isSymbolicLink() ? "file" : "other", size: stat.size });
-        if (stat.isDirectory() && !stat.isSymbolicLink() && entry.name !== ".reservations" && entry.name !== "_slots") await visit(next, nextRelative);
+        if (stat.isDirectory() && !stat.isSymbolicLink()) await visit(next, nextRelative);
         if (!complete) return;
       }
     } catch { complete = false; warnings.push(warning("memory.derived_census_invalid")); } finally { await handle.close().catch(() => {}); }
@@ -106,13 +109,13 @@ function indexEntry({ memoryId, memory }) {
 }
 function sortedUniqueIds(list) { return Array.isArray(list) && list.every(safeId) && list.every((item, index) => index === 0 || byteCompare(list[index - 1], item) < 0); }
 function exactKeys(value, keys) { return isObject(value) && Object.keys(value).join(",") === keys.join(","); }
-function validateIndex(value) {
-  return exactKeys(value, ["schemaVersion", "sourceTreeSha256", "entries"]) && value.schemaVersion === 1 && HEX.test(value.sourceTreeSha256 ?? "") && Array.isArray(value.entries) && value.entries.length <= HARD_LIMITS.maxIndexEntries && value.entries.every((entry, index) => exactKeys(entry, ["memoryId", "headEventId", "headEventPath", "fileSha256", "kind", "lane", "status", "scope", "projectId", "artifactTypes", "relatedIds", "tags"]) && safeId(entry.memoryId) && (!index || byteCompare(value.entries[index - 1].memoryId, entry.memoryId) < 0) && /^mev1-[a-f0-9]{64}$/u.test(entry.headEventId ?? "") && safeRelative(entry.headEventPath) && HEX.test(entry.fileSha256 ?? "") && KIND_PRIORITY.has(entry.kind) && ["common", "studio", "career"].includes(entry.lane) && ["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"].includes(entry.status) && ["project", "workspace", "global"].includes(entry.scope) && safeId(entry.projectId) && [entry.artifactTypes, entry.relatedIds, entry.tags].every(sortedUniqueIds));
+function validateIndex(value, limits = HARD_LIMITS) {
+  return exactKeys(value, ["schemaVersion", "sourceTreeSha256", "entries"]) && value.schemaVersion === 1 && HEX.test(value.sourceTreeSha256 ?? "") && Array.isArray(value.entries) && value.entries.length <= limits.maxIndexEntries && value.entries.every((entry, index) => exactKeys(entry, ["memoryId", "headEventId", "headEventPath", "fileSha256", "kind", "lane", "status", "scope", "projectId", "artifactTypes", "relatedIds", "tags"]) && safeId(entry.memoryId) && (!index || byteCompare(value.entries[index - 1].memoryId, entry.memoryId) < 0) && /^mev1-[a-f0-9]{64}$/u.test(entry.headEventId ?? "") && safeRelative(entry.headEventPath) && HEX.test(entry.fileSha256 ?? "") && KIND_PRIORITY.has(entry.kind) && ["common", "studio", "career"].includes(entry.lane) && ["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"].includes(entry.status) && ["project", "workspace", "global"].includes(entry.scope) && safeId(entry.projectId) && [entry.artifactTypes, entry.relatedIds, entry.tags].every(sortedUniqueIds));
 }
-function validateReceipt(value) {
+function validateReceipt(value, limits = HARD_LIMITS) {
   const hashes = [value?.requestSha256, value?.sourceTreeSha256];
   const arrays = [value?.observations, value?.applied, value?.excluded];
-  if (!exactKeys(value, ["schemaVersion", "requestSha256", "sourceTreeSha256", "projectId", "lane", "policy", "observations", "applied", "excluded"]) || value.schemaVersion !== 1 || !hashes.every((item) => HEX.test(item ?? "")) || !safeId(value.projectId) || !["common", "studio", "career"].includes(value.lane) || !exactKeys(value.policy, ["scope", "maxItems", "candidateTtlDays"]) || !["project", "workspace", "global"].includes(value.policy.scope) || !Number.isInteger(value.policy.maxItems) || value.policy.maxItems < 1 || value.policy.maxItems > 10 || !Number.isInteger(value.policy.candidateTtlDays) || value.policy.candidateTtlDays < 1 || value.policy.candidateTtlDays > 365 || !arrays.every((item) => Array.isArray(item) && item.length <= HARD_LIMITS.maxReceiptItems)) return false;
+  if (!exactKeys(value, ["schemaVersion", "requestSha256", "sourceTreeSha256", "projectId", "lane", "policy", "observations", "applied", "excluded"]) || value.schemaVersion !== 1 || !hashes.every((item) => HEX.test(item ?? "")) || !safeId(value.projectId) || !["common", "studio", "career"].includes(value.lane) || !exactKeys(value.policy, ["scope", "maxItems", "candidateTtlDays"]) || !["project", "workspace", "global"].includes(value.policy.scope) || !Number.isInteger(value.policy.maxItems) || value.policy.maxItems < 1 || value.policy.maxItems > 10 || !Number.isInteger(value.policy.candidateTtlDays) || value.policy.candidateTtlDays < 1 || value.policy.candidateTtlDays > 365 || !Array.isArray(value.observations) || value.observations.length > limits.maxReceiptObservationItems || !Array.isArray(value.applied) || value.applied.length > limits.maxReceiptAppliedItems || !Array.isArray(value.excluded) || value.excluded.length > limits.maxReceiptExcludedItems) return false;
   return value.observations.every((item, index) => exactKeys(item, ["memoryId", "artifactId", "locator", "expectedSha256", "observedSha256", "status"]) && safeId(item.memoryId) && safeId(item.artifactId) && typeof item.locator === "string" && HEX.test(item.expectedSha256 ?? "") && (item.observedSha256 === null || HEX.test(item.observedSha256)) && ["current", "missing", "drift", "symlink", "unreadable"].includes(item.status) && (!index || byteCompare(`${value.observations[index - 1].memoryId}\0${value.observations[index - 1].artifactId}\0${value.observations[index - 1].locator}`, `${item.memoryId}\0${item.artifactId}\0${item.locator}`) < 0)) && value.applied.every((item, index) => exactKeys(item, ["memoryId", "headEventId", "fileSha256"]) && safeId(item.memoryId) && /^mev1-[a-f0-9]{64}$/u.test(item.headEventId ?? "") && HEX.test(item.fileSha256 ?? "") && (!index || byteCompare(value.applied[index - 1].memoryId, item.memoryId) < 0)) && value.excluded.every((item, index) => exactKeys(item, ["memoryId", "reason"]) && safeId(item.memoryId) && typeof item.reason === "string" && item.reason.length > 0 && (!index || byteCompare(value.excluded[index - 1].memoryId, item.memoryId) < 0));
 }
 function parseCanonical(bytes, validator) {
@@ -179,9 +182,10 @@ async function publish({ store, kind, bytes, first, limits }) {
   let actualLimits;
   try { actualLimits = limitsFor(limits); } catch { return emptyPublish([warning("memory.derived_invalid_limits")]); }
   const maxBytes = kind === "index" ? actualLimits.maxIndexBytes : kind === "receipt" ? actualLimits.maxReceiptBytes : kind === "view" ? actualLimits.maxViewBytes : actualLimits.maxLogBytes;
-  const validator = kind === "index" ? validateIndex : kind === "receipt" ? validateReceipt : (value) => typeof value === "string" && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\r") && value.endsWith("\n");
+  if (!HEX.test(first ?? "")) return emptyPublish([warning("memory.derived_input_limit_exceeded")]);
+  const validator = kind === "index" ? (value) => validateIndex(value, actualLimits) : kind === "receipt" ? (value) => validateReceipt(value, actualLimits) : validMarkdownBytes;
   const parsedInput = kind === "index" || kind === "receipt" ? parseCanonical(bytes, validator) : null;
-  const validInput = Buffer.isBuffer(bytes) && bytes.byteLength <= maxBytes && (kind === "index" || kind === "receipt" ? Boolean(parsedInput) : validator(bytes.toString("utf8"))) && (kind === "index" ? parsedInput.sourceTreeSha256 === first : kind === "receipt" ? parsedInput.requestSha256 === first : true);
+  const validInput = Buffer.isBuffer(bytes) && bytes.byteLength <= maxBytes && (kind === "index" || kind === "receipt" ? Boolean(parsedInput) : validator(bytes)) && (kind === "index" ? parsedInput.sourceTreeSha256 === first : kind === "receipt" ? parsedInput.requestSha256 === first : true);
   if (!validInput) return emptyPublish([warning("memory.derived_input_limit_exceeded")]);
   const second = sha(bytes); const census = await scanDerivedGenerations({ store, limits: actualLimits });
   if (!census.complete) return emptyPublish(census.warnings);
@@ -281,29 +285,18 @@ export async function rebuildMemoryIndex({ workspaceRoot, config, now } = {}) {
 
 function requestIdentity(context) { return { schemaVersion: 1, projectId: context.projectId, lane: context.lane, artifactIds: normalizedList(context.artifactIds), artifactTypes: normalizedList(context.artifactTypes), tags: normalizedList(context.tags) }; }
 function validRequestContext(context, config) {
-  return isObject(context) && safeId(context.projectId) && context.projectId === config?.projectId && ["common", "studio", "career"].includes(context.lane) && [context.artifactIds, context.artifactTypes, context.tags].every((list) => Array.isArray(list) && list.every(safeId)) && Number.isInteger(config?.maxItems) && config.maxItems >= 1 && config.maxItems <= 10 && Number.isInteger(config?.candidateTtlDays) && config.candidateTtlDays >= 1 && config.candidateTtlDays <= 365;
+  return isObject(context) && safeId(context.projectId) && context.projectId === config?.projectId && ["common", "studio", "career"].includes(context.lane) && [context.artifactIds, context.artifactTypes, context.tags].every((list) => Array.isArray(list) && list.every(safeId)) && canonicalBytes(requestIdentity(context)).byteLength <= RESULT_MAX_BYTES && Number.isInteger(config?.maxItems) && config.maxItems >= 1 && config.maxItems <= 10 && Number.isInteger(config?.candidateTtlDays) && config.candidateTtlDays >= 1 && config.candidateTtlDays <= 365;
 }
-async function observationFor(record, workspaceRoot) {
-  const items = [];
-  for (const source of record.sources) {
-    const file = source.locator.split("#", 1)[0]; let observedSha256 = null; let status = "unreadable";
-    const candidate = path.resolve(workspaceRoot, file);
-    try {
-      if (!safeRelative(file) || !(candidate === workspaceRoot || candidate.startsWith(`${workspaceRoot}${path.sep}`))) throw Object.assign(new Error(), { code: "unsafe" });
-      const before = await lstat(candidate);
-      if (before.isSymbolicLink()) status = "symlink";
-      else if (!before.isFile()) status = "unreadable";
-      else {
-        const data = await readFile(candidate); const after = await lstat(candidate);
-        if (after.isSymbolicLink() || after.dev !== before.dev || after.ino !== before.ino || after.size !== before.size || after.mtimeMs !== before.mtimeMs || after.ctimeMs !== before.ctimeMs) status = "unreadable";
-        else { observedSha256 = sha(data); status = observedSha256 === source.sha256 ? "current" : "drift"; }
-      }
-    } catch (error) { status = error?.code === "ENOENT" ? "missing" : "unreadable"; }
-    items.push({ memoryId: record.memory_id, artifactId: source.artifact_id, locator: source.locator, expectedSha256: source.sha256, observedSha256, status });
-  }
-  return items.sort((left, right) => byteCompare(`${left.memoryId}\0${left.artifactId}\0${left.locator}`, `${right.memoryId}\0${right.artifactId}\0${right.locator}`));
+function eligible(record, store, context, today) {
+  const scope = record.scope === store.scope && (record.scope !== "project" || record.project_id === context.projectId);
+  const lane = record.lane === context.lane || record.lane === "common" && ["project-fact", "decision"].includes(record.kind);
+  if (!scope || !lane) return "scope-or-lane";
+  if (record.expires_at < today) return "expired";
+  if (record.kind === "external-note" && record.review_after < today) return "stale-source";
+  return null;
 }
-function closedResult(status, context, warnings = []) { return { schemaVersion: 1, status, projectId: context.projectId, lane: context.lane, untrustedMemoryData: true, guidance: [], excluded: [], warnings }; }
+function boundedResult(result) { return canonicalBytes(result).byteLength <= RESULT_MAX_BYTES ? result : { schemaVersion: 1, status: "unavailable", projectId: null, lane: null, untrustedMemoryData: true, guidance: [], excluded: [], warnings: [warning("memory.result_limit_exceeded")] }; }
+function closedResult(status, context, warnings = []) { return boundedResult({ schemaVersion: 1, status, projectId: safeId(context.projectId) ? context.projectId : null, lane: ["common", "studio", "career"].includes(context.lane) ? context.lane : null, untrustedMemoryData: true, guidance: [], excluded: [], warnings }); }
 export async function retrieveApprovedDesignMemory({ workspaceRoot, config, requestContext = {}, now = new Date() } = {}) {
   const context = { ...requestContext, projectId: requestContext.projectId };
   if (!config?.enabled || context.disabledForRequest || !validRequestContext(context, config)) return closedResult("disabled", context);
@@ -312,18 +305,21 @@ export async function retrieveApprovedDesignMemory({ workspaceRoot, config, requ
   const eventById = new Map(rebuilt.scan.events.map((item) => [item.eventId, item]));
   for (const entry of selected) {
     const memory = rebuilt.fold.memories.get(entry.memoryId); const head = eventById.get(entry.headEventId);
-    if (!memory || !head || memory.headEventId !== entry.headEventId || sha(head.bytes) !== entry.fileSha256 || memory.record.status !== "approved") { excluded.push({ memoryId: entry.memoryId, reason: "head-revalidation" }); continue; }
-    if (memory.record.scope !== "project" || memory.record.project_id !== context.projectId || !(memory.record.lane === context.lane || memory.record.lane === "common")) { excluded.push({ memoryId: entry.memoryId, reason: "scope-or-lane" }); continue; }
-    if (memory.record.expires_at < new Date(now).toISOString().slice(0, 10)) { excluded.push({ memoryId: entry.memoryId, reason: "expired" }); continue; }
-    const sourceCheck = await validateMemorySourceBindings(memory.record, { workspaceRoot }); const itemObservations = await observationFor(memory.record, workspaceRoot); observations.push(...itemObservations);
+    if (!memory || !head || memory.headEventId !== entry.headEventId || memory.record.status !== "approved") { excluded.push({ memoryId: entry.memoryId, reason: "head-revalidation" }); continue; }
+    const reason = eligible(memory.record, rebuilt.store, context, new Date(now).toISOString().slice(0, 10)); if (reason) { excluded.push({ memoryId: entry.memoryId, reason }); continue; }
+    let sealed; try { sealed = await readCommittedMemoryEvent({ store: rebuilt.store, relativePath: entry.headEventPath, eventId: entry.headEventId }); } catch { excluded.push({ memoryId: entry.memoryId, reason: "head-revalidation" }); continue; }
+    if (sealed.event.memory_id !== entry.memoryId || sealed.fileSha256 !== entry.fileSha256 || sha(sealed.bytes) !== entry.fileSha256 || sealed.relativePath !== head.relativePath || !sealed.bytes.equals(head.bytes)) { excluded.push({ memoryId: entry.memoryId, reason: "head-revalidation" }); continue; }
+    const sourceCheck = await observeMemorySourceBindings(memory.record, { workspaceRoot }); const itemObservations = sourceCheck.observations.map((item) => ({ memoryId: entry.memoryId, ...item })); observations.push(...itemObservations);
     if (!sourceCheck.ok || itemObservations.some((item) => item.status !== "current")) { excluded.push({ memoryId: entry.memoryId, reason: "stale-source" }); continue; }
-    guidance.push({ memoryId: entry.memoryId, kind: memory.record.kind, summary: head.sections["발견한 내용"], applyWhen: head.sections["적용 조건"], avoidWhen: head.sections["적용하면 안 되는 경우"], sourceRefs: memory.record.sources.map((source) => `${source.artifact_id}/${source.locator}`) });
+    guidance.push({ memoryId: entry.memoryId, kind: memory.record.kind, summary: sealed.sections["발견한 내용"], applyWhen: sealed.sections["적용 조건"], avoidWhen: sealed.sections["적용하면 안 되는 경우"], sourceRefs: memory.record.sources.map((source) => `${source.artifact_id}/${source.locator}`) });
     if (guidance.length >= config.maxItems) break;
   }
-  const result = { schemaVersion: 1, status: "ready", projectId: context.projectId, lane: context.lane, untrustedMemoryData: true, guidance, excluded: excluded.sort((left, right) => byteCompare(left.memoryId, right.memoryId)), warnings: rebuilt.warnings };
+  if (observations.length > HARD_LIMITS.maxReceiptObservationItems || excluded.length > HARD_LIMITS.maxReceiptExcludedItems || guidance.length > HARD_LIMITS.maxReceiptAppliedItems) return closedResult("unavailable", context, [warning("memory.receipt_limit_exceeded")]);
+  const result = boundedResult({ schemaVersion: 1, status: "ready", projectId: context.projectId, lane: context.lane, untrustedMemoryData: true, guidance, excluded: excluded.sort((left, right) => byteCompare(left.memoryId, right.memoryId)), warnings: rebuilt.warnings });
+  if (result.status !== "ready") return result;
   const requestSha256 = sha(canonicalBytes(requestIdentity(context)));
   if (guidance.length) {
-    const receipt = { schemaVersion: 1, requestSha256, sourceTreeSha256: rebuilt.sourceTreeSha256, projectId: context.projectId, lane: context.lane, policy: { scope: config.scope, maxItems: config.maxItems, candidateTtlDays: config.candidateTtlDays }, observations: observations.slice(0, HARD_LIMITS.maxReceiptItems), applied: guidance.map((item) => ({ memoryId: item.memoryId, headEventId: rebuilt.fold.memories.get(item.memoryId).headEventId, fileSha256: rebuilt.index.entries.find((entry) => entry.memoryId === item.memoryId).fileSha256 })).sort((left, right) => byteCompare(left.memoryId, right.memoryId)), excluded: result.excluded.slice(0, HARD_LIMITS.maxReceiptItems) };
+    const receipt = { schemaVersion: 1, requestSha256, sourceTreeSha256: rebuilt.sourceTreeSha256, projectId: context.projectId, lane: context.lane, policy: { scope: config.scope, maxItems: config.maxItems, candidateTtlDays: config.candidateTtlDays }, observations, applied: guidance.map((item) => ({ memoryId: item.memoryId, headEventId: rebuilt.fold.memories.get(item.memoryId).headEventId, fileSha256: rebuilt.index.entries.find((entry) => entry.memoryId === item.memoryId).fileSha256 })).sort((left, right) => byteCompare(left.memoryId, right.memoryId)), excluded: result.excluded };
     const receiptBytes = canonicalBytes(receipt); const published = await publishMemoryReceiptGeneration({ store: rebuilt.store, receiptBytes, requestSha256 });
     if (published.complete) Object.assign(result, { requestSha256, receiptSha256: published.receiptSha256, receiptGenerationPath: published.generationPath }); else result.warnings.push(...published.warnings);
   }

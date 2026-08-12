@@ -259,25 +259,33 @@ function safeLocator(value) {
 async function regularDirectory(candidate) { const stats = await lstat(candidate); if (stats.isSymbolicLink() || !stats.isDirectory()) throw new Error("Unsafe memory path."); return stats; }
 async function canonicalWorkspace(candidate) { if (typeof candidate !== "string" || !path.isAbsolute(candidate)) throw new Error("Unsafe memory path."); for (let current = path.resolve(candidate); current !== path.dirname(current); current = path.dirname(current)) if ((await lstat(current)).isSymbolicLink()) throw new Error("Unsafe memory path."); const stats = await regularDirectory(candidate); const canonical = await realpath(candidate); const final = await regularDirectory(canonical); if (stats.dev !== final.dev || stats.ino !== final.ino) throw new Error("Unsafe memory path."); return { path: canonical, identity: final }; }
 
-export async function validateMemorySourceBindings(record, { workspaceRoot, beforeFinalRecheck } = {}) {
+export async function observeMemorySourceBindings(record, { workspaceRoot, beforeFinalRecheck } = {}) {
   const errors = [];
+  const observations = [];
   let root;
   let rootIdentity;
-  try { ({ path: root, identity: rootIdentity } = await canonicalWorkspace(workspaceRoot)); } catch { return { ok: false, errors: [error("memory.source_workspace", "workspaceRoot", "Workspace root is not a safe directory.")] }; }
+  try { ({ path: root, identity: rootIdentity } = await canonicalWorkspace(workspaceRoot)); } catch {
+    for (const source of record?.sources ?? []) observations.push({ artifactId: source?.artifact_id ?? "unknown", locator: source?.locator ?? "", expectedSha256: source?.sha256 ?? null, observedSha256: null, status: "unreadable" });
+    return { ok: false, errors: [error("memory.source_workspace", "workspaceRoot", "Workspace root is not a safe directory.")], observations };
+  }
   for (const [index, source] of (record?.sources ?? []).entries()) {
+    let status = "unreadable"; let observedSha256 = null;
     try {
       const filePart = typeof source.locator === "string" ? source.locator.split("#", 1)[0] : "";
       if (!safeRelative(filePart)) throw new Error();
       let current = root; const identities = [{ path: root, stats: rootIdentity }]; const segments = filePart.split("/");
-      for (const [part, segment] of segments.entries()) { current = path.join(current, segment); const stats = await lstat(current); if (stats.isSymbolicLink() || (!stats.isDirectory() && part !== segments.length - 1)) throw new Error(); if (part !== segments.length - 1) identities.push({ path: current, stats }); }
-      const stats = await lstat(current); if (stats.isSymbolicLink() || !stats.isFile()) throw new Error();
+      for (const [part, segment] of segments.entries()) { current = path.join(current, segment); const stats = await lstat(current); if (stats.isSymbolicLink()) { status = "symlink"; throw new Error(); } if (!stats.isDirectory() && part !== segments.length - 1) throw new Error(); if (part !== segments.length - 1) identities.push({ path: current, stats }); }
+      const stats = await lstat(current); if (stats.isSymbolicLink()) { status = "symlink"; throw new Error(); } if (!stats.isFile()) throw new Error();
       if (!constants.O_NOFOLLOW) throw new Error();
       const handle = await open(current, constants.O_RDONLY | constants.O_NOFOLLOW); let bytes; let opened; try { opened = await handle.stat(); if (opened.dev !== stats.dev || opened.ino !== stats.ino || !opened.isFile()) throw new Error(); bytes = await handle.readFile(); const after = await handle.stat(); if (after.dev !== opened.dev || after.ino !== opened.ino || after.size !== opened.size || after.mtimeMs !== opened.mtimeMs || after.ctimeMs !== opened.ctimeMs) throw new Error(); } finally { await handle.close(); }
       if (typeof beforeFinalRecheck === "function") await beforeFinalRecheck({ locator: filePart });
       const final = await lstat(current); if (final.isSymbolicLink() || !final.isFile() || final.dev !== opened.dev || final.ino !== opened.ino || final.size !== opened.size || final.mtimeMs !== opened.mtimeMs || final.ctimeMs !== opened.ctimeMs) throw new Error();
       for (const identity of identities) { const currentStats = await regularDirectory(identity.path); if (currentStats.dev !== identity.stats.dev || currentStats.ino !== identity.stats.ino) throw new Error(); }
-      if (createHash("sha256").update(bytes).digest("hex") !== source.sha256) throw new Error();
-    } catch { errors.push(error("memory.source_binding", `sources.${index}`, "Source must be an in-workspace regular file matching its hash.")); }
+      observedSha256 = createHash("sha256").update(bytes).digest("hex"); if (observedSha256 !== source.sha256) { status = "drift"; throw new Error(); }
+      status = "current";
+    } catch (failure) { if (failure?.code === "ENOENT") status = "missing"; errors.push(error("memory.source_binding", `sources.${index}`, "Source must be an in-workspace regular file matching its hash.")); }
+    observations.push({ artifactId: source?.artifact_id ?? "unknown", locator: source?.locator ?? "", expectedSha256: source?.sha256 ?? null, observedSha256, status });
   }
-  return { ok: errors.length === 0, errors };
+  return { ok: errors.length === 0, errors, observations };
 }
+export async function validateMemorySourceBindings(record, options = {}) { const result = await observeMemorySourceBindings(record, options); return { ok: result.ok, errors: result.errors }; }

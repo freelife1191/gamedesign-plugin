@@ -123,3 +123,20 @@ test("derived input is exact-bound and bounded census ignores reservation slots"
   const census = await scanDerivedGenerations({ store });
   assert.equal(census.complete, true);
 });
+
+test("lowered runtime limits and view UTF-8/hash contracts reject before reservation", async (t) => {
+  const { root, store } = await approvedStore(t); const rebuilt = await rebuildMemoryIndex({ workspaceRoot: root, config });
+  const twoEntries = { ...rebuilt.index, entries: [rebuilt.index.entries[0], { ...rebuilt.index.entries[0], memoryId: "memory-z" }] };
+  const index = await publishMemoryIndexGeneration({ store, sourceTreeSha256: rebuilt.sourceTreeSha256, indexBytes: Buffer.from(`${JSON.stringify(twoEntries)}\n`), limits: { maxIndexEntries: 1 } });
+  assert.equal(index.complete, false);
+  for (const input of [
+    { sourceTreeSha256: "not-a-hash", viewBytes: Buffer.from("# view\n") },
+    { sourceTreeSha256: "a".repeat(64), viewBytes: Buffer.from([0xff, 0x0a]) },
+  ]) assert.equal((await publishMemoryViewGeneration({ store, ...input })).complete, false);
+});
+
+test("disabled output never echoes an oversized request field", async () => {
+  const result = await retrieveApprovedDesignMemory({ workspaceRoot: "/must-not-be-read", config, requestContext: { ...context, disabledForRequest: true, projectId: "x".repeat(70_000) } });
+  assert.equal(Buffer.byteLength(JSON.stringify(result), "utf8") <= 64 * 1024, true);
+  assert.equal(result.projectId, null);
+});

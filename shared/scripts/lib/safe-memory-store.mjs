@@ -66,6 +66,13 @@ export async function readMemoryFile({ store, relativePath, maxBytes = MAX_BYTES
   return bytes;
 }
 
+export async function readCommittedMemoryEvent({ store, relativePath, eventId } = {}) {
+  if (!safeRelative(relativePath) || !EVENT_ID.test(eventId ?? "") || !await matchesStoreIdentity(store)) fail("Unsafe memory store path.");
+  const committed = await readSealedCommit(store, relativePath);
+  if (!committed || committed.claim.eventId !== eventId || memoryEventRelativePath({ memoryId: committed.parsed.event.memory_id, eventId }) !== relativePath) fail("Invalid sealed event.", "memory.unbound_seal");
+  return { eventId, relativePath, bytes: committed.bytes, fileSha256: committed.claim.fileSha256, event: committed.parsed.event, record: committed.parsed.record, sections: committed.parsed.sections };
+}
+
 export function memoryEventRelativePath({ memoryId, eventId } = {}) {
   if (!safeId(memoryId) || !EVENT_ID.test(eventId ?? "")) fail("Invalid memory event path.");
   return `v1/events/${hash(memoryId).slice(0, 2)}/${memoryId}/${eventId}`;
