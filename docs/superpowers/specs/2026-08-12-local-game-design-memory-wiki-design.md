@@ -251,10 +251,16 @@ appendMemoryEvent({ store, eventDocument }) -> Promise<{ status, eventId, relati
 scanMemoryEvents({ store, maxEventBytes = 262144, maxEvents = 10000 }) -> Promise<MemoryEventScan>
 foldMemoryEvents(scan, { now }) -> MemoryFold
 appendQuarantineMarker({ store, targetMemoryId, targetEventId, targetRelativePath, observedSha256, reasonCode, actor, now }) -> Promise<AppendResult>
-publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256 }) -> Promise<{ status, generationPath, indexSha256 }>
-loadCurrentMemoryIndex({ store, fold }) -> Promise<{ index, bytes, sourceTreeSha256, indexSha256, warnings }>
-publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256 }) -> Promise<{ status, generationPath, receiptSha256 }>
-loadMemoryReceipt({ store, requestSha256 }) -> Promise<{ status: "ready"|"missing"|"conflict", receipt: object|null, bytes: Buffer|null, receiptSha256: string|null, warnings }>
+publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath, indexSha256, warnings }>
+loadCurrentMemoryIndex({ store, fold, limits }) -> Promise<{ complete, index, bytes, sourceTreeSha256, indexSha256, warnings }>
+publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath, receiptSha256, warnings }>
+loadMemoryReceipt({ store, requestSha256, receiptSha256, limits }) -> Promise<{ complete, status: "ready"|"missing"|"corrupt"|null, receipt: object|null, bytes: Buffer|null, warnings }>
+listMemoryReceipts({ store, requestSha256, maxItems = 256, limits }) -> Promise<{ complete, items: ReceiptHistoryMetadata[], warnings }>
+publishMemoryViewGeneration({ store, viewBytes, sourceTreeSha256, limits }) -> Promise<DerivedPublishResult>
+loadMemoryView({ store, sourceTreeSha256, viewSha256, limits }) -> Promise<DerivedLoadResult>
+publishMemoryLogGeneration({ store, logBytes, sourceTreeSha256, limits }) -> Promise<DerivedPublishResult>
+loadMemoryLog({ store, sourceTreeSha256, logSha256, limits }) -> Promise<DerivedLoadResult>
+scanDerivedGenerations({ store, maxDirectoryEntries = 256, maxDerivedEntries = 10000 }) -> Promise<DerivedGenerationScan>
 rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>
 ```
 
@@ -313,45 +319,92 @@ pointer는 없다. fresh fold의 두 hash와 모두 일치하는 valid generatio
 
 ### JSON receipt와 Markdown log 분리
 
-retrieval 사용 기록은 JSON receipt generation이다. `requestSha256`은 다음 request
-identity canonical JSON bytes의 SHA-256이다.
+retrieval 사용 기록은 JSON receipt generation이다. receipt의 논리 identity는
+`(requestSha256, receiptSha256)` pair다. `requestSha256`은 정규화된 사용자 request
+context만 식별하며 다음 canonical JSON bytes의 SHA-256이다.
 
 ```json
-{"schemaVersion":1,"sourceTreeSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","projectId":"wind-island","lane":"studio","artifactIds":["combat-loop-v3"],"artifactTypes":["character-skill-combat-monster"],"tags":["boss","counterplay"]}
+{"schemaVersion":1,"projectId":"wind-island","lane":"studio","artifactIds":["combat-loop-v3"],"artifactTypes":["character-skill-combat-monster"],"tags":["boss","counterplay"]}
 ```
 
 request identity와 receipt는 NFC string, UTF-8, 정렬·중복 제거 array, schema key
 순서, 공백 없는 JSON object와 trailing LF 한 개로 직렬화한다. receipt key 순서는
-`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `applied`,
-`excluded`다. `applied` 항목은 `memoryId`, `headEventId`, `fileSha256`, `excluded`
-항목은 `memoryId`, `reason` 순서며 두 array는 `memoryId`의 UTF-8 byte 순으로
-정렬한다. schema validation을 통과한 canonical receipt 전체 bytes에서
-`receiptSha256`을 계산한다.
+`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `policy`,
+`observations`, `applied`, `excluded`다. `policy`는 `scope`, `maxItems`,
+`candidateTtlDays` 순서다. `observations` 항목은 `memoryId`, `artifactId`, `locator`,
+`expectedSha256`, `observedSha256`, `status` 순서다. `observedSha256`은 source가
+없을 때만 `null`이고 status는 `current|missing|drift|symlink|unreadable` 중 하나다.
+`applied` 항목은 `memoryId`, `headEventId`, `fileSha256`, `excluded` 항목은
+`memoryId`, `reason` 순서다. observations는 `(memoryId, artifactId, locator)`, 나머지
+두 array는 `memoryId`의 UTF-8 byte 순으로 정렬한다. schema validation을 통과한
+canonical receipt 전체 bytes에서 `receiptSha256`을 계산한다.
 
 ```json
-{"schemaVersion":1,"requestSha256":"622b7e79760477132f600eefb517119ffbd1f7d0a27aa826387297687d357f87","sourceTreeSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","projectId":"wind-island","lane":"studio","applied":[{"memoryId":"memory-studio-design-lesson-0f2a4c61d9ab34ef","headEventId":"mev1-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","fileSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}],"excluded":[{"memoryId":"memory-studio-design-lesson-old","reason":"stale-source"}]}
+{"schemaVersion":1,"requestSha256":"0968f05ea689b0628fd0e7857c397c5c40d6662f3b7eaeb250e37999a4aba4e6","sourceTreeSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","projectId":"wind-island","lane":"studio","policy":{"scope":"project","maxItems":5,"candidateTtlDays":30},"observations":[{"memoryId":"memory-studio-design-lesson-0f2a4c61d9ab34ef","artifactId":"playtest-session-04","locator":"evidence.yml#finding-07","expectedSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","observedSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","status":"current"}],"applied":[{"memoryId":"memory-studio-design-lesson-0f2a4c61d9ab34ef","headEventId":"mev1-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","fileSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}],"excluded":[{"memoryId":"memory-studio-design-lesson-old","reason":"stale-source"}]}
 ```
 
 위 request fixture의 exact `requestSha256`은
-`622b7e79760477132f600eefb517119ffbd1f7d0a27aa826387297687d357f87`이다. 같은
+`0968f05ea689b0628fd0e7857c397c5c40d6662f3b7eaeb250e37999a4aba4e6`이다. 같은
 request hash를 receipt 본문에 넣어 schema와 canonical key order를 적용한 예시의
 exact `receiptSha256`은
-`a5e53cbcb9e3ef589e6bb2c5d04f453d349243bcfdada5e8187ec74e7b1a9e51`이다.
+`bd0c7ff75debd6e3abdc1607cde38b2e249f0cb5eba2d930b46b5ea3e96de358`이다.
 
 receipt는
 `derived/receipts/<request-sha256>/<receipt-sha256>/<randomUUID>.json`에
-create-once publish한다. 같은 request와 같은 bytes의 여러 instance는 동등하며
-loader는 bytewise-lowest valid instance path를 읽는다. 같은 request 아래 서로
-다른 valid `receiptSha256`가 하나라도 있으면 모든 generation을 보존하되
-`status:conflict`로 fail-closed하고 어떤 receipt도 사용 이력으로 선택하지 않는다.
-손상 generation은 warning과 함께 제외하며 valid generation이 없으면 `missing`이다.
-다른 `sourceTreeSha256`은 request identity 자체가 다르므로 별도 request가 된다.
+create-once publish한다. publisher는 해당 pair의 bounded instance scan을 먼저
+완료하고 같은 valid canonical bytes가 있으면 새 파일을 만들지 않고 `present`와
+기존 bytewise-lowest path를 반환한다. 없을 때만 새 UUID instance를 만든다.
+
+같은 request 아래 서로 다른 `receiptSha256`는 정상 append-only history다. maxItems,
+관찰한 source tree, source digest drift, expiry boundary나 적용 결과가 달라지면 새
+receipt가 공존한다. receipt는 실제 판단에 사용한 `sourceTreeSha256`, `policy`와
+source binding별 expected/observed digest·상태, applied/excluded 결과를 기록한다.
+반면 request identity에는 관찰 상태, runtime config, `now`와 결과를 넣지 않아
+request hash를 현재값 권한으로 오인하지 않는다.
+
+`loadMemoryReceipt`는 exact `(requestSha256, receiptSha256)`만 읽는다. path에 적힌
+receipt hash와 canonical bytes hash·schema가 모두 맞는 valid instance가 있으면
+`ready`, instance가 없으면 `missing`, instance는 있지만 모두 hash/schema가 틀리면
+`corrupt`다. 다른 receipt hash는 이 결과에 영향을 주지 않는다.
+`listMemoryReceipts`는 request 아래 receipt hash별 valid/corrupt instance count와
+bytewise-lowest valid 상대 path만 UTF-8 byte 순으로 반환한다. 각
+`ReceiptHistoryMetadata`는 `receiptSha256`, `status: "valid"|"corrupt"`,
+`validInstanceCount`, `corruptInstanceCount`, `firstValidRelativePath: string|null`만
+포함한다. valid instance가 하나라도 있으면 `valid`, 없으면 `corrupt`다. winner나
+현재값은 선택하지 않는다.
 
 Markdown log는 receipt가 아니다. raw event/control fold에서 source
 `effective_at|recorded_at` 오름차순, 동률이면 event/marker ID의 UTF-8 byte 순으로
 만든 상태 변경 view이며
 `derived/logs/<source-tree-sha256>/<log-sha256>/<randomUUID>.md`에 publish한다.
 request context, applied/excluded 목록과 derived 실행 시각을 log에 넣지 않는다.
+
+### Derived generation 탐색 한도
+
+index, receipt, view와 log publisher·loader·list는 공통 bounded census를 먼저
+완료한다. `v1/derived/` 아래에서 만난 모든 directory, regular file, symlink와
+special entry를 종류와 유효성에 관계없이 센다. 모든 directory는 direct child를
+최대 256개까지 허용하고, 전체 derived tree hard maximum은 10,000 entries다.
+API의 `limits`는 `{ maxDirectoryEntries, maxDerivedEntries }`다. `limits`와
+`scanDerivedGenerations` 인자는 이 두 상한을 1 이상으로 낮출 수만 있다. 상한을
+높이거나 정수가 아닌 값은 scan 전에 거부한다.
+257번째 direct child를 처리하기 전에는 `complete:false`와
+`memory.derived_directory_limit_exceeded`, 전체 10,001번째 entry 전에는
+`complete:false`와 `memory.derived_total_limit_exceeded`를 반환한다. symlink,
+special file과 corrupt generation도 budget을 소비한다.
+
+bounded census가 불완전하면 publisher는 새 instance를 만들지 않고 loader/list는
+generation이나 history metadata를 하나도 선택하지 않는다. 반환은
+`complete:false`, 빈 결과와 전용 warning이다. publisher는 추가 후 directory
+256개 또는 전체 10,000개를 넘길 경우도 쓰기 전에 거부한다.
+
+census가 완전하면 모든 publisher는 대상 logical generation directory의 valid
+instances를 최대 256개까지 검사한다. 같은 canonical bytes의 valid instance가
+있으면 bytewise-lowest path를 `present`로 반환하며 물리 파일을 늘리지 않는다.
+없을 때만 UUID instance를 create-once로 추가한다. index·view·log loader도 exact
+logical hash의 valid instance만 읽고 다른 hash를 winner로 고르지 않는다.
+`listMemoryReceipts`의 `maxItems`는 1~256이고 scan hard limit을 늘릴 수 없으며,
+반환 metadata만 줄인다.
 
 ## 기억 이벤트 계약
 
@@ -676,10 +729,13 @@ GAME_DESIGN_MEMORY_GIT_MODE=local
 ```
 
 세부 기록은 `v1/derived/receipts/`의 immutable JSON generation으로 append한다.
-기억 ID, head event ID와 해시, 적용·제외 이유만 포함하며 기억 본문, `.env` 값,
-비밀정보와 derived 생성·실행 시각을 복제하지 않는다. 허용 필드는
-`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `applied`의
-`memoryId|headEventId|fileSha256`, `excluded`의 `memoryId|reason`으로 닫는다.
+기억 ID, head event ID와 해시, 적용 정책, source binding 관찰값과 적용·제외 이유만
+포함하며 기억 본문, `.env` 원문, 비밀정보와 derived 생성·실행 시각을 복제하지
+않는다. 허용 필드는
+`schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`,
+`policy{scope,maxItems,candidateTtlDays}`, `applied`의
+`memoryId|headEventId|fileSha256`, `excluded`의 `memoryId|reason`, `observations`의
+`memoryId|artifactId|locator|expectedSha256|observedSha256|status`로 닫는다.
 기억을 사용하지 않았으면 별도 안내나 영수증을 만들지 않는다.
 
 event의 `effective_at`, record의 `created_at|updated_at`, quarantine marker의
@@ -808,8 +864,18 @@ identity 변화는 계속 fail-closed하지만, 이 syscall 사이 race까지 �
   기존 세대를 수정하지 않는지 확인한다.
 - receipt canonical JSON의 schema·key order·trailing LF와
   `requestSha256|receiptSha256`를 exact 비교한다. 같은 request/same bytes generation은
-  동등하고 same request/different valid bytes는 모두 보존하되 loader가 conflict로
-  아무 receipt도 선택하지 않는지 확인한다.
+  기존 valid instance를 `present`로 반환해 물리 파일이 늘지 않는지 확인한다. 같은
+  request에서 적어도 한 건은 계속 적용한 채 maxItems 변경, source digest drift와
+  expiry boundary로 생긴 서로 다른 valid receipt는 정상 이력으로 공존한다. 각
+  receipt의 policy와 source observation이 실제 판단 입력과 일치하고 exact pair
+  loader와 bounded history list가 winner나 현재값을 고르지 않는지 확인한다.
+- receipt path가 주장한 hash와 canonical bytes hash·schema가 어긋나면 해당 logical
+  receipt의 instance만 corrupt로 세고, 같은 request의 다른 receipt를 conflict로
+  취급하지 않는지 확인한다.
+- index·receipt·view·log 아래 모든 directory의 257번째 direct child와 전체 derived
+  tree의 10,001번째 entry 앞에서 `complete:false`와 전용 warning을 반환한다.
+  directory·regular·symlink·special·corrupt entry를 모두 세며 불완전한 scan에서는
+  publisher·loader·list가 generation이나 history를 선택하지 않는지 확인한다.
 - receipt·log generation 추가가 `sourceTreeSha256`을 바꾸지 않고, Markdown log에
   request context나 applied/excluded receipt data가 섞이지 않는지 확인한다.
 - hash·schema·본문이 손상된 이벤트는 이동·overwrite하지 않으며 marker append 뒤
