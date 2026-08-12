@@ -29,6 +29,7 @@ const marker = () => ({ schema_version: 1, memory_id: record.memory_id, target_e
 const assertNoncanonicalWithout = (operation, raw) => assert.throws(operation, (error) => error.code === "memory.noncanonical" && !String(error).includes(raw));
 
 const supportedSchemaKeywords = new Set(["$schema", "$id", "$ref", "type", "additionalProperties", "required", "properties", "const", "enum", "pattern", "uniqueItems", "items", "format", "minLength", "minItems", "maxItems", "allOf", "if", "then", "not"]);
+const supportedSchemaTypes = new Set(["object", "array", "string", "null"]);
 const schemaDate = /^\d{4}-\d{2}-\d{2}$/u;
 const schemaDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 
@@ -49,15 +50,33 @@ function schemaFormatAccepts(value, format) {
 }
 
 function assertSupportedSchema(schema, schemas, seen = new Set()) {
-  if (schema === null || typeof schema !== "object" || Array.isArray(schema) || seen.has(schema)) return;
+  if (typeof schema === "boolean") return;
+  if (schema === null || typeof schema !== "object" || Array.isArray(schema)) throw new Error("Unsupported JSON Schema value type.");
+  if (seen.has(schema)) return;
   seen.add(schema);
   for (const key of Object.keys(schema)) if (!supportedSchemaKeywords.has(key)) throw new Error(`Unsupported JSON Schema keyword: ${key}`);
-  if (schema.$ref && !schemas.has(schema.$ref)) throw new Error(`Unsupported schema reference: ${schema.$ref}`);
-  if (schema.format && !["date", "date-time"].includes(schema.format)) throw new Error(`Unsupported JSON Schema format: ${schema.format}`);
+  for (const key of ["$schema", "$id"]) if (Object.hasOwn(schema, key) && typeof schema[key] !== "string") throw new Error(`Unsupported JSON Schema value type: ${key}`);
+  if (Object.hasOwn(schema, "$ref")) {
+    if (typeof schema.$ref !== "string" || schema.$ref === "" || !schemas.has(schema.$ref)) throw new Error(`Unsupported schema reference: ${String(schema.$ref)}`);
+    if (Object.keys(schema).some((key) => key !== "$ref")) throw new Error("Unsupported JSON Schema reference sibling.");
+    assertSupportedSchema(schemas.get(schema.$ref), schemas, seen);
+    return;
+  }
+  if (Object.hasOwn(schema, "type")) {
+    const types = Array.isArray(schema.type) ? schema.type : [schema.type];
+    if (types.length === 0 || !types.every((type) => typeof type === "string" && supportedSchemaTypes.has(type))) throw new Error("Unsupported JSON Schema value type: type");
+  }
+  if (Object.hasOwn(schema, "format") && (typeof schema.format !== "string" || !["date", "date-time"].includes(schema.format))) throw new Error(`Unsupported JSON Schema format: ${String(schema.format)}`);
+  if (Object.hasOwn(schema, "pattern") && typeof schema.pattern !== "string") throw new Error("Unsupported JSON Schema value type: pattern");
+  for (const key of ["minLength", "minItems", "maxItems"]) if (Object.hasOwn(schema, key) && (!Number.isInteger(schema[key]) || schema[key] < 0)) throw new Error(`Unsupported JSON Schema value type: ${key}`);
+  if (Object.hasOwn(schema, "uniqueItems") && typeof schema.uniqueItems !== "boolean") throw new Error("Unsupported JSON Schema value type: uniqueItems");
+  if (Object.hasOwn(schema, "required") && (!Array.isArray(schema.required) || !schema.required.every((key) => typeof key === "string"))) throw new Error("Unsupported JSON Schema value type: required");
+  if (Object.hasOwn(schema, "enum") && (!Array.isArray(schema.enum) || schema.enum.length === 0)) throw new Error("Unsupported JSON Schema value type: enum");
+  if (Object.hasOwn(schema, "properties") && (schema.properties === null || typeof schema.properties !== "object" || Array.isArray(schema.properties))) throw new Error("Unsupported JSON Schema value type: properties");
+  if (Object.hasOwn(schema, "allOf") && (!Array.isArray(schema.allOf) || schema.allOf.length === 0)) throw new Error("Unsupported JSON Schema value type: allOf");
   for (const child of Object.values(schema.properties ?? {})) assertSupportedSchema(child, schemas, seen);
-  for (const child of [schema.additionalProperties, schema.items, schema.if, schema.then, schema.not]) if (child && typeof child === "object") assertSupportedSchema(child, schemas, seen);
+  for (const key of ["additionalProperties", "items", "if", "then", "not"]) if (Object.hasOwn(schema, key)) assertSupportedSchema(schema[key], schemas, seen);
   for (const child of schema.allOf ?? []) assertSupportedSchema(child, schemas, seen);
-  if (schema.$ref) assertSupportedSchema(schemas.get(schema.$ref), schemas, seen);
 }
 
 function schemaAccepts(value, schema, schemas) {
@@ -66,17 +85,22 @@ function schemaAccepts(value, schema, schemas) {
 }
 
 function schemaAcceptsUnchecked(value, schema, schemas) {
-  if (schema.$ref) return schemaAcceptsUnchecked(value, schemas.get(schema.$ref), schemas);
-  if (schema.allOf && !schema.allOf.every((part) => schemaAcceptsUnchecked(value, part, schemas))) return false;
-  if (schema.if && schemaAcceptsUnchecked(value, schema.if, schemas) && schema.then && !schemaAcceptsUnchecked(value, schema.then, schemas)) return false;
-  if (schema.not && schemaAcceptsUnchecked(value, schema.not, schemas)) return false;
+  if (typeof schema === "boolean") return schema;
+  if (Object.hasOwn(schema, "$ref")) return schemaAcceptsUnchecked(value, schemas.get(schema.$ref), schemas);
+  if (Object.hasOwn(schema, "allOf") && !schema.allOf.every((part) => schemaAcceptsUnchecked(value, part, schemas))) return false;
+  if (Object.hasOwn(schema, "if") && schemaAcceptsUnchecked(value, schema.if, schemas) && Object.hasOwn(schema, "then") && !schemaAcceptsUnchecked(value, schema.then, schemas)) return false;
+  if (Object.hasOwn(schema, "not") && schemaAcceptsUnchecked(value, schema.not, schemas)) return false;
   if (schema.const !== undefined && JSON.stringify(value) !== JSON.stringify(schema.const)) return false;
   if (schema.enum && !schema.enum.some((candidate) => JSON.stringify(value) === JSON.stringify(candidate))) return false;
   const types = schema.type === undefined ? undefined : Array.isArray(schema.type) ? schema.type : [schema.type];
   if (types && !types.some((type) => (type === "object" && value !== null && typeof value === "object" && !Array.isArray(value)) || (type === "array" && Array.isArray(value)) || (type === "string" && typeof value === "string") || (type === "null" && value === null))) return false;
-  if (typeof value === "string") return value.length >= (schema.minLength ?? 0) && (!schema.pattern || new RegExp(schema.pattern, "u").test(value)) && (!schema.format || schemaFormatAccepts(value, schema.format));
-  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || new Set(value.map((item) => JSON.stringify(item))).size === value.length) && (!schema.items || value.every((item) => schemaAcceptsUnchecked(item, schema.items, schemas)));
-  if (value !== null && typeof value === "object") return !(schema.required ?? []).some((key) => !Object.hasOwn(value, key)) && !(schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) && Object.entries(value).every(([key, item]) => !schema.properties?.[key] || schemaAcceptsUnchecked(item, schema.properties[key], schemas));
+  if (typeof value === "string") return value.length >= (schema.minLength ?? 0) && (!Object.hasOwn(schema, "pattern") || new RegExp(schema.pattern, "u").test(value)) && (!Object.hasOwn(schema, "format") || schemaFormatAccepts(value, schema.format));
+  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || new Set(value.map((item) => JSON.stringify(item))).size === value.length) && (!Object.hasOwn(schema, "items") || value.every((item) => schemaAcceptsUnchecked(item, schema.items, schemas)));
+  if (value !== null && typeof value === "object") return !(schema.required ?? []).some((key) => !Object.hasOwn(value, key)) && Object.entries(value).every(([key, item]) => {
+    if (Object.hasOwn(schema.properties ?? {}, key)) return schemaAcceptsUnchecked(item, schema.properties[key], schemas);
+    if (!Object.hasOwn(schema, "additionalProperties")) return true;
+    return schema.additionalProperties === true || (schema.additionalProperties !== false && schemaAcceptsUnchecked(item, schema.additionalProperties, schemas));
+  });
   return true;
 }
 
@@ -214,6 +238,15 @@ test("event runtime validator and JSON Schema agree on canonical event-type fixt
     assert.equal(schemaAccepts(fixture, eventSchema, schemas), expected);
   }
   assert.throws(() => schemaAccepts(capture(), { ...eventSchema, unknown_keyword: true }, schemas), /Unsupported JSON Schema keyword/);
+  for (const schema of [
+    { type: "string", format: "" },
+    { type: "string", format: "unregistered-format" },
+    { $ref: "" },
+    { $ref: "unregistered.schema.json" },
+  ]) assert.throws(() => schemaAccepts("value", schema, schemas), /Unsupported (JSON Schema format|schema reference)/);
+  assert.equal(schemaAccepts("value", true, schemas), true);
+  assert.equal(schemaAccepts("value", false, schemas), false);
+  for (const schema of [null, [], "not-a-schema", 1]) assert.throws(() => schemaAccepts("value", schema, schemas), /Unsupported JSON Schema value type/);
 });
 
 test("capture uses a safe upstream operation id while derived events require mop1", () => {
