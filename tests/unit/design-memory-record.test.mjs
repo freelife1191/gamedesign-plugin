@@ -79,6 +79,7 @@ test("approval, source, and instruction provenance rules are enforced", () => {
   assert.equal(validateMemoryRecord(style).ok, true);
   assert.equal(validateMemoryRecord({ ...style, approval_basis: "review" }).ok, false);
   assert.equal(validateMemoryRecord({ ...style, instruction_sha256: undefined }).ok, false);
+  assert.equal(validateMemoryRecord(clone({ kind: "style-preference", lane: "common", sources: [] })).ok, false);
 });
 
 test("sensitive unknown metadata is rejected before schema errors without exposing its key", () => {
@@ -90,6 +91,7 @@ test("sensitive unknown metadata is rejected before schema errors without exposi
 test("calendar and timestamp values are semantically valid", () => {
   assert.equal(validateMemoryRecord(clone({ review_after: "2026-02-30" })).ok, false);
   assert.equal(validateMemoryRecord(clone({ created_at: "2026-02-30T25:61:61+09:00" })).ok, false);
+  assert.equal(validateMemoryRecord(clone({ created_at: "2026-08-12T09:00:00+99:99" })).ok, false);
 });
 
 test("approved provenance is retained through an approved-state transition", () => {

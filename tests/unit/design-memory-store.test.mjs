@@ -53,6 +53,15 @@ test("record paths follow the fixed partition policy", () => {
   assert.equal(memoryRecordRelativePath({ ...base, status: "approved" }), "lessons/approved/memory-studio-design-lesson-0f2a4c61d9ab34ef.md");
   assert.throws(() => memoryRecordRelativePath({ ...base, memory_id: "../escape" }));
   assert.throws(() => memoryRecordRelativePath({ ...base, kind: "unknown" }));
+  assert.throws(() => memoryRecordRelativePath({ ...base, unknown: true }));
+});
+
+test("replace atomically updates an existing regular memory file", async (t) => {
+  const root = await workspace(t);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/replace.md", bytes: Buffer.from("old") });
+  await writeMemoryFileAtomic({ store, relativePath: "lessons/candidates/replace.md", bytes: Buffer.from("new"), policy: "replace" });
+  assert.deepEqual(await readMemoryFile({ store, relativePath: "lessons/candidates/replace.md" }), Buffer.from("new"));
 });
 
 test("create-once and move fail closed when a destination appears at publish time", async (t) => {
