@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["schema_version","memory_id","actor","event_sha256","recorded_at"],"properties":{"schema_version":{"const":1},"memory_id":{"type":"string"},"actor":{"type":"string"},"event_sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"recorded_at":{"type":"string"}}}
