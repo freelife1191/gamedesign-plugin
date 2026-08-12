@@ -57,13 +57,13 @@ function snapshot(value, ancestors) {
   return Object.freeze(copy);
 }
 function validateCanonicalStringTree(value, seen = new Set()) {
-  if (typeof value === "string") return value.includes("\0") || value !== value.normalize("NFC") ? { ok: false } : { ok: true };
+  if (typeof value === "string") return value.includes("\0") || value.includes("\uFEFF") || value.includes("\r") || value !== value.normalize("NFC") ? { ok: false } : { ok: true };
   if (value === null || typeof value !== "object") return { ok: true };
   if (seen.has(value)) return { ok: false };
   seen.add(value);
   const entries = Array.isArray(value) ? value.map((item, index) => [String(index), item]) : Object.entries(value);
   for (const [key, item] of entries) {
-    if (key.includes("\0") || key !== key.normalize("NFC")) return { ok: false };
+    if (key.includes("\0") || key.includes("\uFEFF") || key.includes("\r") || key !== key.normalize("NFC")) return { ok: false };
     const validation = validateCanonicalStringTree(item, seen);
     if (!validation.ok) return validation;
   }
@@ -168,7 +168,7 @@ function eventFailure(message, code = "memory.event") { const failure = new Erro
 function sensitiveText(value) { return typeof value !== "string" || value.includes("\0") || forbiddenMemoryContent.some((pattern) => pattern.test(value)); }
 function canonicalSection(value) {
   if (typeof value !== "string") return { ok: false, code: "memory.prohibited_content" };
-  if (value.includes("\0") || value !== value.normalize("NFC")) return { ok: false, code: "memory.noncanonical" };
+  if (value.includes("\0") || value.includes("\uFEFF") || value.includes("\r") || value !== value.normalize("NFC")) return { ok: false, code: "memory.noncanonical" };
   if (sensitiveText(value)) return { ok: false, code: "memory.prohibited_content" };
   const normalized = value.replace(/\r\n?/gu, "\n").split("\n").map((line) => line.replace(/[ \t]+$/gu, "")).join("\n").replace(/^\n+|\n+$/gu, "");
   return normalized ? { ok: true, value: normalized } : { ok: false, code: "memory.prohibited_content" };

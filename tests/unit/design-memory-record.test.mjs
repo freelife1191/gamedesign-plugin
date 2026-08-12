@@ -49,34 +49,57 @@ function schemaFormatAccepts(value, format) {
   throw new Error(`Unsupported JSON Schema format: ${format}`);
 }
 
-function assertSupportedSchema(schema, schemas, seen = new Set()) {
+function jsonValueEquals(left, right) {
+  if (left === right) return true;
+  if (left === null || right === null || typeof left !== "object" || typeof right !== "object" || Array.isArray(left) !== Array.isArray(right)) return false;
+  if (Array.isArray(left)) return left.length === right.length && left.every((item, index) => jsonValueEquals(item, right[index]));
+  const leftKeys = Object.keys(left); const rightKeys = Object.keys(right);
+  return leftKeys.length === rightKeys.length && leftKeys.every((key) => Object.hasOwn(right, key) && jsonValueEquals(left[key], right[key]));
+}
+
+function assertUniqueSchemaValues(values, key) {
+  if (values.some((value, index) => values.slice(0, index).some((previous) => jsonValueEquals(previous, value)))) throw new Error(`Unsupported JSON Schema value type: duplicate ${key}`);
+}
+
+function assertSupportedSchema(schema, schemas, seen = new Set(), references = new Set()) {
   if (typeof schema === "boolean") return;
   if (schema === null || typeof schema !== "object" || Array.isArray(schema)) throw new Error("Unsupported JSON Schema value type.");
-  if (seen.has(schema)) return;
-  seen.add(schema);
   for (const key of Object.keys(schema)) if (!supportedSchemaKeywords.has(key)) throw new Error(`Unsupported JSON Schema keyword: ${key}`);
   for (const key of ["$schema", "$id"]) if (Object.hasOwn(schema, key) && typeof schema[key] !== "string") throw new Error(`Unsupported JSON Schema value type: ${key}`);
   if (Object.hasOwn(schema, "$ref")) {
     if (typeof schema.$ref !== "string" || schema.$ref === "" || !schemas.has(schema.$ref)) throw new Error(`Unsupported schema reference: ${String(schema.$ref)}`);
     if (Object.keys(schema).some((key) => key !== "$ref")) throw new Error("Unsupported JSON Schema reference sibling.");
-    assertSupportedSchema(schemas.get(schema.$ref), schemas, seen);
+    if (references.has(schema.$ref)) throw new Error("Unsupported schema reference cycle.");
+    references.add(schema.$ref); assertSupportedSchema(schemas.get(schema.$ref), schemas, seen, references); references.delete(schema.$ref);
     return;
   }
+  if (seen.has(schema)) return;
+  seen.add(schema);
   if (Object.hasOwn(schema, "type")) {
     const types = Array.isArray(schema.type) ? schema.type : [schema.type];
     if (types.length === 0 || !types.every((type) => typeof type === "string" && supportedSchemaTypes.has(type))) throw new Error("Unsupported JSON Schema value type: type");
+    assertUniqueSchemaValues(types, "type");
   }
   if (Object.hasOwn(schema, "format") && (typeof schema.format !== "string" || !["date", "date-time"].includes(schema.format))) throw new Error(`Unsupported JSON Schema format: ${String(schema.format)}`);
-  if (Object.hasOwn(schema, "pattern") && typeof schema.pattern !== "string") throw new Error("Unsupported JSON Schema value type: pattern");
+  if (Object.hasOwn(schema, "pattern")) {
+    if (typeof schema.pattern !== "string") throw new Error("Unsupported JSON Schema value type: pattern");
+    try { new RegExp(schema.pattern, "u"); } catch { throw new Error("Unsupported JSON Schema pattern."); }
+  }
   for (const key of ["minLength", "minItems", "maxItems"]) if (Object.hasOwn(schema, key) && (!Number.isInteger(schema[key]) || schema[key] < 0)) throw new Error(`Unsupported JSON Schema value type: ${key}`);
   if (Object.hasOwn(schema, "uniqueItems") && typeof schema.uniqueItems !== "boolean") throw new Error("Unsupported JSON Schema value type: uniqueItems");
-  if (Object.hasOwn(schema, "required") && (!Array.isArray(schema.required) || !schema.required.every((key) => typeof key === "string"))) throw new Error("Unsupported JSON Schema value type: required");
-  if (Object.hasOwn(schema, "enum") && (!Array.isArray(schema.enum) || schema.enum.length === 0)) throw new Error("Unsupported JSON Schema value type: enum");
+  if (Object.hasOwn(schema, "required")) {
+    if (!Array.isArray(schema.required) || !schema.required.every((key) => typeof key === "string")) throw new Error("Unsupported JSON Schema value type: required");
+    assertUniqueSchemaValues(schema.required, "required");
+  }
+  if (Object.hasOwn(schema, "enum")) {
+    if (!Array.isArray(schema.enum) || schema.enum.length === 0) throw new Error("Unsupported JSON Schema value type: enum");
+    assertUniqueSchemaValues(schema.enum, "enum");
+  }
   if (Object.hasOwn(schema, "properties") && (schema.properties === null || typeof schema.properties !== "object" || Array.isArray(schema.properties))) throw new Error("Unsupported JSON Schema value type: properties");
   if (Object.hasOwn(schema, "allOf") && (!Array.isArray(schema.allOf) || schema.allOf.length === 0)) throw new Error("Unsupported JSON Schema value type: allOf");
-  for (const child of Object.values(schema.properties ?? {})) assertSupportedSchema(child, schemas, seen);
-  for (const key of ["additionalProperties", "items", "if", "then", "not"]) if (Object.hasOwn(schema, key)) assertSupportedSchema(schema[key], schemas, seen);
-  for (const child of schema.allOf ?? []) assertSupportedSchema(child, schemas, seen);
+  for (const child of Object.values(schema.properties ?? {})) assertSupportedSchema(child, schemas, seen, references);
+  for (const key of ["additionalProperties", "items", "if", "then", "not"]) if (Object.hasOwn(schema, key)) assertSupportedSchema(schema[key], schemas, seen, references);
+  for (const child of schema.allOf ?? []) assertSupportedSchema(child, schemas, seen, references);
 }
 
 function schemaAccepts(value, schema, schemas) {
@@ -90,12 +113,12 @@ function schemaAcceptsUnchecked(value, schema, schemas) {
   if (Object.hasOwn(schema, "allOf") && !schema.allOf.every((part) => schemaAcceptsUnchecked(value, part, schemas))) return false;
   if (Object.hasOwn(schema, "if") && schemaAcceptsUnchecked(value, schema.if, schemas) && Object.hasOwn(schema, "then") && !schemaAcceptsUnchecked(value, schema.then, schemas)) return false;
   if (Object.hasOwn(schema, "not") && schemaAcceptsUnchecked(value, schema.not, schemas)) return false;
-  if (schema.const !== undefined && JSON.stringify(value) !== JSON.stringify(schema.const)) return false;
-  if (schema.enum && !schema.enum.some((candidate) => JSON.stringify(value) === JSON.stringify(candidate))) return false;
+  if (Object.hasOwn(schema, "const") && !jsonValueEquals(value, schema.const)) return false;
+  if (Object.hasOwn(schema, "enum") && !schema.enum.some((candidate) => jsonValueEquals(value, candidate))) return false;
   const types = schema.type === undefined ? undefined : Array.isArray(schema.type) ? schema.type : [schema.type];
   if (types && !types.some((type) => (type === "object" && value !== null && typeof value === "object" && !Array.isArray(value)) || (type === "array" && Array.isArray(value)) || (type === "string" && typeof value === "string") || (type === "null" && value === null))) return false;
   if (typeof value === "string") return value.length >= (schema.minLength ?? 0) && (!Object.hasOwn(schema, "pattern") || new RegExp(schema.pattern, "u").test(value)) && (!Object.hasOwn(schema, "format") || schemaFormatAccepts(value, schema.format));
-  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || new Set(value.map((item) => JSON.stringify(item))).size === value.length) && (!Object.hasOwn(schema, "items") || value.every((item) => schemaAcceptsUnchecked(item, schema.items, schemas)));
+  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || value.every((item, index) => !value.slice(0, index).some((previous) => jsonValueEquals(previous, item)))) && (!Object.hasOwn(schema, "items") || value.every((item) => schemaAcceptsUnchecked(item, schema.items, schemas)));
   if (value !== null && typeof value === "object") return !(schema.required ?? []).some((key) => !Object.hasOwn(value, key)) && Object.entries(value).every(([key, item]) => {
     if (Object.hasOwn(schema.properties ?? {}, key)) return schemaAcceptsUnchecked(item, schema.properties[key], schemas);
     if (!Object.hasOwn(schema, "additionalProperties")) return true;
@@ -154,6 +177,20 @@ test("canonical event input rejects NUL and NFD strings without disclosing value
     );
   }
   assert.equal(validateMemoryRecord({ ...record, approval_basis: "review\0hidden" }).errors[0].code, "memory.noncanonical");
+});
+
+test("canonical writers reject BOM and CR in every string boundary without round-tripping", () => {
+  const raw = "raw-input-sentinel";
+  for (const mutation of [
+    { actor: `author\uFEFF${raw}` },
+    { reason: `capture\r${raw}` },
+    { record: { ...record, sources: [{ ...record.sources[0], locator: `content\uFEFF${raw}` }] } },
+  ]) assertNoncanonicalWithout(() => canonicalMemoryEventDocument(capture(mutation), sections), raw);
+  for (const mutation of [
+    { reason_code: `memory.bad\uFEFF${raw}` },
+    { actor: `auditor\r${raw}` },
+  ]) assertNoncanonicalWithout(() => canonicalQuarantineMarkerDocument({ ...marker(), ...mutation }), raw);
+  for (const value of [`proof\uFEFF${raw}`, `proof\r${raw}`]) assertNoncanonicalWithout(() => canonicalMemoryEventDocument(capture(), { ...sections, "근거": value }), raw);
 });
 
 test("canonical event sections reject NUL and NFD before whitespace normalization", () => {
@@ -222,6 +259,7 @@ test("event runtime validator and JSON Schema agree on canonical event-type fixt
   forbiddenTransitionParent.operation_id = memoryOperationId(forbiddenTransitionParent);
   const oneParentResolution = { ...resolution, parent_event_ids: [heads[0]] };
   oneParentResolution.operation_id = memoryOperationId(oneParentResolution);
+  const reorderedDuplicateSources = capture({ record: { ...record, sources: [record.sources[0], { sha256: record.sources[0].sha256, locator: record.sources[0].locator, artifact_id: record.sources[0].artifact_id }] } });
   for (const [fixture, expected] of [
     [capture(), true],
     [transition, true],
@@ -231,6 +269,7 @@ test("event runtime validator and JSON Schema agree on canonical event-type fixt
     [capture({ actor: "author\nreviewer", reason: "review\naccepted" }), true],
     [capture({ actor: "author\n\0hidden" }), false],
     [capture({ effective_at: "not-a-time" }), false],
+    [reorderedDuplicateSources, false],
     [forbiddenTransitionParent, false],
     [oneParentResolution, false],
   ]) {
@@ -247,6 +286,19 @@ test("event runtime validator and JSON Schema agree on canonical event-type fixt
   assert.equal(schemaAccepts("value", true, schemas), true);
   assert.equal(schemaAccepts("value", false, schemas), false);
   for (const schema of [null, [], "not-a-schema", 1]) assert.throws(() => schemaAccepts("value", schema, schemas), /Unsupported JSON Schema value type/);
+  for (const schema of [
+    { type: ["string", "string"] },
+    { required: ["value", "value"] },
+    { enum: ["value", "value"] },
+    { enum: [{ enabled: false, count: 0 }, { count: 0, enabled: false }] },
+    { pattern: "[" },
+    { properties: { nested: { format: "" } } },
+    { items: { $ref: "" } },
+  ]) assert.throws(() => schemaAccepts("value", schema, schemas), /Unsupported (JSON Schema (value type|format|pattern)|schema reference)/);
+  assert.throws(() => schemaAccepts(null, { pattern: "[" }, schemas), /Unsupported JSON Schema pattern/);
+  assert.equal(schemaAccepts({ nested: { enabled: false, count: 0, value: null, text: "" } }, { const: { nested: { enabled: false, count: 0, value: null, text: "" } } }, schemas), true);
+  assert.equal(schemaAccepts({ nested: { enabled: false } }, { enum: [{ nested: { enabled: false } }] }, schemas), true);
+  assert.throws(() => schemaAccepts("value", { $ref: "a" }, new Map([["a", { $ref: "b" }], ["b", { $ref: "a" }]])), /Unsupported schema reference cycle/);
 });
 
 test("capture uses a safe upstream operation id while derived events require mop1", () => {
