@@ -46,8 +46,8 @@
 
 - `shared/memory/schema/memory-record.schema.json`: 기억 종류, 상태, 범위, lane, 출처와 승인 근거의 닫힌 스키마다.
 - `shared/memory/schema/memory-event.schema.json`: capture·transition·resolution envelope와 완전한 record snapshot의 닫힌 스키마다.
-- `shared/memory/schema/memory-index.schema.json`: fold source tree digest, head event와 정렬된 검색 항목 스키마다.
-- `shared/memory/schema/memory-receipt.schema.json`: `schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `policy{scope,maxItems,candidateTtlDays}`, `observations[{memoryId,artifactId,locator,expectedSha256,observedSha256,status}]`, `applied[{memoryId,headEventId,fileSha256}]`, `excluded[{memoryId,reason}]`만 허용하는 retrieval receipt 스키마다.
+- `shared/memory/schema/memory-index.schema.json`: fold source tree digest, head event와 최대 10,000개의 정렬된 검색 항목 스키마다.
+- `shared/memory/schema/memory-receipt.schema.json`: `schemaVersion`, `requestSha256`, `sourceTreeSha256`, `projectId`, `lane`, `policy{scope,maxItems,candidateTtlDays}`, 최대 256개의 `observations[{memoryId,artifactId,locator,expectedSha256,observedSha256,status}]`, `applied[{memoryId,headEventId,fileSha256}]`, `excluded[{memoryId,reason}]`만 허용하는 retrieval receipt 스키마다. 세 array는 각각 독립적으로 256개까지 허용한다.
 - `shared/memory/templates/memory-record.md`: 한국어 기억 문서 골격이다.
 - `shared/memory/templates/index.md`: 사람이 읽는 기억 목록 골격이다.
 - `shared/memory/templates/log.md`: 원천 event의 `effective_at` 순서를 보여 주되 derived 생성·실행 시각은 넣지 않는 변경 view 골격이다.
@@ -330,6 +330,10 @@ transition에서 전이 이름, resolution에서 `resolution`이다. logical rec
 민감정보와 필수 본문 검사는 유지한다. 비-NFC ID, 잘못된 SHA-256, 정렬되지 않은
 배열과 승인 근거 누락을 각각 실패 fixture로 둔다.
 
+`memory-index.schema.json`의 `entries.maxItems`는 10,000,
+`memory-receipt.schema.json`의 `observations|applied|excluded.maxItems`는 각각
+256으로 고정한다. 경계값은 통과하고 limit+1은 schema RED에서 거부한다.
+
 영향받지 않는 record kind·status·lane·scope, 필수 본문, 민감정보, source binding,
 허용 상태 전이 assertion은 계속 PASS해야 한다. 다음 legacy assertion은 보존
 대상이 아니며 append-only assertion으로 먼저 교체한다.
@@ -391,10 +395,19 @@ event envelope·transition·usage-receipt schema assertion은 현재 구현에�
 │   ├── claims/<instance-id>.json
 │   └── commit.json
 └── derived/
-    ├── indexes/<source-tree-sha256>/<index-sha256>/<instance-id>.json
-    ├── receipts/<request-sha256>/<receipt-sha256>/<instance-id>.json
-    ├── views/<source-tree-sha256>/<view-sha256>/<instance-id>.md
-    └── logs/<source-tree-sha256>/<log-sha256>/<instance-id>.md
+    ├── .reservations/global/<00000..09999>.json
+    ├── indexes/<source-tree-sha256>/<index-sha256>/
+    │   ├── instances/<instance-id>.json
+    │   └── _slots/<000..255>.json
+    ├── receipts/<request-sha256>/<receipt-sha256>/
+    │   ├── instances/<instance-id>.json
+    │   └── _slots/<000..255>.json
+    ├── views/<source-tree-sha256>/<view-sha256>/
+    │   ├── instances/<instance-id>.md
+    │   └── _slots/<000..255>.json
+    └── logs/<source-tree-sha256>/<log-sha256>/
+        ├── instances/<instance-id>.md
+        └── _slots/<000..255>.json
 ```
 
 `memory-shard = sha256(memory_id).slice(0,2)`다.
@@ -533,19 +546,26 @@ git commit -m "feat: define append-only design memory events"
 **Interfaces:**
 - Consumes: Task 1 `MemoryConfig`, Task 2 event/store/fold APIs
 - Produces: `rebuildMemoryIndex({ workspaceRoot, config, now }) -> Promise<MemoryIndex>`
-- Produces: `publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath, indexSha256, warnings }>`
-- Produces: `loadCurrentMemoryIndex({ store, fold, limits }) -> Promise<{ complete, index, bytes, sourceTreeSha256, indexSha256, warnings }>`
-- Produces: `publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath, receiptSha256, warnings }>`
+- Produces: `publishMemoryIndexGeneration({ store, indexBytes, sourceTreeSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath: string|null, indexSha256: string|null, warnings }>`
+- Produces: `loadCurrentMemoryIndex({ store, fold, limits }) -> Promise<{ complete, index: object|null, bytes: Buffer|null, sourceTreeSha256: string|null, indexSha256: string|null, warnings }>`
+- Produces: `publishMemoryReceiptGeneration({ store, receiptBytes, requestSha256, limits }) -> Promise<{ complete, status: "created"|"present"|null, generationPath: string|null, receiptSha256: string|null, warnings }>`
 - Produces: `loadMemoryReceipt({ store, requestSha256, receiptSha256, limits }) -> Promise<{ complete, status: "ready"|"missing"|"corrupt"|null, receipt: object|null, bytes: Buffer|null, warnings }>`
 - Produces: `listMemoryReceipts({ store, requestSha256, maxItems = 256, limits }) -> Promise<{ complete, items: ReceiptHistoryMetadata[], warnings }>`
 - Produces: `publishMemoryViewGeneration({ store, viewBytes, sourceTreeSha256, limits }) -> Promise<DerivedPublishResult>`
 - Produces: `loadMemoryView({ store, sourceTreeSha256, viewSha256, limits }) -> Promise<DerivedLoadResult>`
 - Produces: `publishMemoryLogGeneration({ store, logBytes, sourceTreeSha256, limits }) -> Promise<DerivedPublishResult>`
 - Produces: `loadMemoryLog({ store, sourceTreeSha256, logSha256, limits }) -> Promise<DerivedLoadResult>`
-- Produces: `scanDerivedGenerations({ store, maxDirectoryEntries = 256, maxDerivedEntries = 10000 }) -> Promise<DerivedGenerationScan>`
+- Produces: `scanDerivedGenerations({ store, limits }) -> Promise<DerivedGenerationScan>`
 - Produces: `rankMemoryEntries(entries, requestContext) -> MemoryIndexEntry[]`
 - Produces: `retrieveApprovedDesignMemory({ workspaceRoot, config, requestContext, now }) -> Promise<MemoryRetrievalResult>`
 - Defines: `requestContext = { projectId, lane, artifactIds, artifactTypes, tags, disabledForRequest }`
+
+`DerivedPublishResult`는 `{ complete, status: "created"|"present"|null,
+generationPath: string|null, generationSha256: string|null, warnings }`, `DerivedLoadResult`는
+`{ complete, status: "ready"|"missing"|"corrupt"|null, bytes: Buffer|null,
+generationPath: string|null, warnings }`다. census·quota 실패는 `complete:false`,
+`status:null`, `generationPath:null`이며 loader/list의 object·bytes·items는 각각
+`null`, `null`, `[]`다.
 
 - [ ] **Step 1: 검색 계약의 실패 테스트를 작성한다**
 
@@ -582,9 +602,19 @@ const requestContext = {
   publish하지 않는다.
 - `sourceTreeSha256`은 event/control만 포함하고 derived index·receipt·view·log는
   제외한다.
-- 동일 `(requestSha256, receiptSha256)`와 같은 bytes를 다시 publish하면 기존 valid
+- 동일 `(requestSha256, receiptSha256)`와 같은 bytes를 순차 재시도하면 기존 valid
   instance를 `present`로 반환하고 물리 파일 수가 늘지 않는다. 같은 request 아래
   서로 다른 receipt hash는 정상 이력으로 공존한다.
+- quota 여유 상태에서 index·receipt·view·log 동일 bytes를 동시에 publish하면 모든
+  결과가 `created|present`, bytes가 동일하고 물리 중복은 contender 수 이하다. 이어
+  순차 재시도하면 `present`이며 추가 파일이 없다.
+- identity slot 255개와 global slot 9,999개를 점유한 상태의 두 contender 중 정확히
+  하나만 `created`, loser는 `complete:false`와
+  `memory.derived_limit_exceeded`다. generation은 identity 256개·전체 10,000개
+  quota를 넘지 않는다.
+- global/local reservation의 canonical JSON, 4 KiB 상한, kind·length-prefixed
+  identity hash·generation hash·slot·instance ID 결속과 두 reservation sync 전
+  generation 미생성을 검사한다.
 - receipt schema unknown/time field 거부, canonical key order·trailing LF,
   `requestSha256|receiptSha256` exact hash와 corrupt/missing generation을 검증한다.
 - `loadMemoryReceipt`는 exact pair만 ready/missing/corrupt로 읽는다.
@@ -596,13 +626,21 @@ const requestContext = {
   scope·maxItems·candidateTtlDays, source binding별 expected/observed digest·상태와
   결과를 기록하는지 확인한다.
 - receipt·log generation 추가가 source tree hash를 바꾸지 않는다.
-- index·receipt·view·log의 각 directory에 257번째 entry, 전체 derived tree에
-  10,001번째 entry를 넣으면 `complete:false`와 전용 warning이며 아무 generation·
-  history를 선택하지 않는다. directory·regular·symlink·special·corrupt entry를
-  모두 budget에 포함한다.
-- derived limit 인자는 1 이상으로 상한을 낮출 수만 있고 256/10,000보다 큰 값이나
-  정수가 아닌 값은 scan 전에 거부한다. `listMemoryReceipts.maxItems`도 1~256만
-  허용하며 scan 범위를 늘리지 않고 반환 metadata 수만 줄인다.
+- index/receipt/view/log의 byte 상한 1 MiB/256 KiB/1 MiB/1 MiB, index entries
+  10,000개, receipt 세 array 각각 256개는 경계값을 허용하고 limit+1을 reservation
+  전에 거부한다. loader는 lstat size, bounded read, UTF-8, parse, schema/array,
+  canonical bytes, hash/path 순서로 검사한다.
+- global reservation 10,001번째, 일반 directory 257번째 direct child와 전체
+  physical census 100,001번째 entry에서 `complete:false`와 전용 warning이며 아무
+  generation·history를 선택하지 않는다. directory·regular·symlink·special·corrupt·
+  oversize entry를 모두 budget에 포함한다.
+- census가 완전한 exact receipt의 oversize instance는 `corrupt`다. warning은 raw
+  bytes와 절대 경로를 포함하지 않는다. global 선점 뒤 crash나 local 선점 실패로
+  남은 empty/malformed reservation은 generation 권한 없이 slot만 소비하고 cache
+  reset 전까지 용량만 줄인다.
+- derived limit 인자는 1 이상으로 상한을 낮출 수만 있고 hard maximum보다 큰 값이나
+  정수가 아닌 값은 scan/publish 전에 거부한다. `listMemoryReceipts.maxItems`도
+  1~256만 허용하며 scan 범위를 늘리지 않고 반환 metadata 수만 줄인다.
 - 최대 항목 수 5와 전체 반환 본문 64 KiB를 넘지 않는다.
 
 - [ ] **Step 2: 검색 테스트의 RED를 확인한다**
@@ -647,7 +685,7 @@ observedSha256, classification)` tuple의 canonical JSON hash다. corrupt entry�
 scan이 `complete:false`면 index를 반환·publish하지 않고 안전한 warning 상태로
 끝난다.
 canonical index bytes와 `indexSha256`을 만든 뒤
-`v1/derived/indexes/<source-tree-sha256>/<index-sha256>/<randomUUID>.json`에
+`v1/derived/indexes/<source-tree-sha256>/<index-sha256>/instances/<randomUUID>.json`에
 create-once append한다. current pointer는 만들지 않는다. 같은 입력이면 wall
 clock, 실행 시각과 UUID에 관계없이 반환 JSON bytes가 같다. `index.md`와 `log.md`
 derived generation도 같은 결정성 규칙을 따른다.
@@ -657,19 +695,69 @@ fresh fold의 `sourceTreeSha256`와 `indexSha256`가 모두 일치하는 valid g
 instance 경로를 읽는다. 없거나 모두 손상됐으면 새 instance를 append한다. 이전
 generation은 수정하거나 삭제하지 않는다.
 
-index·receipt·view·log publisher와 loader/list는 먼저 `v1/derived/` 전체 bounded
-census를 완료한다. 모든 directory의 direct child hard maximum은 256, 전체 derived
-tree는 10,000 entries다. directory, regular file, symlink, special file과 corrupt
-entry를 모두 센다. limit 인자는 두 상한을 1 이상으로 낮출 수만 있으며, 상한보다
-큰 값이나 정수가 아닌 값은 scan 전에 거부한다. 257번째 direct child 전에는
-`memory.derived_directory_limit_exceeded`, 전체 10,001번째 전에는
-`memory.derived_total_limit_exceeded`와 `complete:false`를 반환한다. 이 경우
-publisher는 쓰지 않고 loader/list는 아무 generation·history도 선택하지 않는다.
+파생 내용 기본값과 hard maximum은 index JSON 1,048,576 bytes, receipt JSON
+262,144 bytes, Markdown view/log 각각 1,048,576 bytes다. index `entries`는 10,000개,
+receipt `observations|applied|excluded`는 각각 256개까지다. 한 identity instance는
+256개, 전체 generation instance는 10,000개까지다. 공통 `limits`는
+`maxDirectoryEntries=256`, `maxCensusEntries=100000`, `maxIdentityInstances=256`,
+`maxGenerationInstances=10000`과 위 byte·array 상한을 담으며 호출자는 1 이상의
+정수로 낮출 수만 있다.
+byte 상한은 string length가 아니라 `Buffer.byteLength`와 filesystem `size`로
+판정하며 정확히 상한인 값은 허용한다.
 
-census가 완전할 때 publisher는 대상 logical hash directory의 valid instances를
-전부 검사해 같은 bytes가 있으면 bytewise-lowest path를 `present`로 반환한다.
-동일 bytes가 없고 새 entry를 추가해도 두 hard maximum 안일 때만 UUID instance를
-만든다. 이 규칙은 네 derived kind에 똑같이 적용한다.
+publisher와 loader/list는 먼저 `v1/derived/` 전체 bounded census를 완료한다.
+`.reservations/global`은 `00000.json`부터 `09999.json`만 최대 10,000개 허용한다.
+그 밖의 모든 directory는 direct child 256개, 전체 physical census는 100,000
+entries가 상한이다. directory, regular file, symlink, special file, corrupt와
+oversize entry를 모두 센다. 한도 초과는 `complete:false`와 전용 warning이며
+publisher는 쓰지 않고 loader/list는 앞서 본 generation·history도 선택하지 않는다.
+
+publisher는 입력 byte·array·canonical/schema 검증, bounded census, sequential 동일
+bytes 탐색을 차례로 수행한다. 기존 valid instance가 있으면 bytewise-lowest path와
+`present`를 반환한다. 없으면 UUID를 고르고 global slot을 `open('wx')`로 먼저
+선점한 채 identity `_slots/000.json`부터
+`255.json`까지 첫 빈 slot을 `open('wx')`로 선점한다. global reservation에는
+`localSlot:null`, local reservation에는 두 slot 번호를 넣는다. 공통 key는
+`schemaVersion`, `kind`, `identitySha256`, `generationSha256`, `globalSlot`,
+`localSlot`, `instanceId` 순서의 4 KiB 이하 canonical JSON과 trailing LF를 쓰고
+sync한다. 그 뒤에만 `instances/<uuid>.(json|md)`를 create-once로 쓰고 sync·
+read-back 검증한다.
+
+`kind`는 `index|receipt|view|log`다. `identitySha256`은 8-byte unsigned big-endian
+length로 구분한 `["memory-derived-identity-v1", kind, ...pathIdentityParts]`의
+SHA-256이다. path identity는 index/view/log에서 source tree와 generation hash,
+receipt에서 request와 receipt hash다. `generationSha256`은 canonical content
+hash다.
+
+global/local reservation의 kind·identity·generation·global slot·instance·path가
+모두 맞고 local slot은 자기 filename과 같아야 generation이 valid다. 한쪽 reservation 누락이나
+불일치·malformed instance는 census에 세는 corrupt generation이고 선택하지 않는다.
+warning은 slot 번호, 안전한 상대 path와 reason code만 포함한다.
+
+global 또는 local 선점 실패는 `complete:false`, `status:null`,
+`generationPath:null`, `memory.derived_limit_exceeded`이며 generation을 만들지
+않는다. crash·두 번째 선점·generation write 실패 뒤 남은 reservation은 용량만
+줄이고 상한을 늘리지 않는다. recovery는 raw source를 보존한 derived cache 전체
+reset만 허용한다.
+비어 있거나 oversize·malformed인 reservation과 generation이 없는 reservation도
+occupied leak로 세고 `memory.derived_reservation_invalid` warning만 남긴다.
+generation 권한은 없지만 census 자체를 불완전하게 만들지는 않는다.
+
+동시 contender는 같은 census 뒤 각자 reservation과 UUID instance를 만들 수 있다.
+여유 quota에서 결과는 모두 `created|present`, 물리 중복은 contender 수 이하이며
+같은 bytes 세대는 논리적으로 동등하고 conflict가 아니다. loader는
+bytewise-lowest valid path를 읽는다. 동시 실행 뒤 순차 재시도는 `present`이며
+파일을 늘리지 않는다. 255 local/9,999 global 경계의 두 contender는 정확히 하나만
+`created`이고 loser는 quota warning으로 실패한다.
+
+publisher는 reservation 전에 byte length와 array 수를 검사해 limit+1이면
+`complete:false`, `memory.derived_input_limit_exceeded`를 반환하고 파일을 만들지
+않는다. loader는 entry를 census에 포함한 뒤 lstat type·size, `limit + 1`
+bounded read, UTF-8, JSON/Markdown parse, schema·array bounds, canonical bytes,
+content hash·claimed path 순으로 검사한다. oversize를 포함한 corrupt warning에는
+안전한 상대 path와 reason code만 넣고 raw bytes·절대 경로를 넣지 않는다. oversize
+generation code는 `memory.derived_generation_oversize`다. census가 완전한 exact
+receipt의 모든 instance가 oversize면 `status:corrupt`다.
 
 event의 `effective_at`, record의 `created_at|updated_at`, quarantine marker의
 `recorded_at`은 원천 Markdown bytes에 속하므로 source ID와 fold 입력에 남는다.
@@ -790,10 +878,11 @@ trailing LF 한 개로 직렬화하고 schema validation 뒤 전체 bytes의
 비교한다.
 
 publish 경로는
-`v1/derived/receipts/<request-sha256>/<receipt-sha256>/<randomUUID>.json`이다.
-publisher는 bounded scan이 완전할 때 exact pair의 same canonical bytes가 이미
-있으면 `present`와 bytewise-lowest valid path를 반환하고 새 instance를 만들지
-않는다. 없을 때만 UUID instance를 추가한다.
+`v1/derived/receipts/<request-sha256>/<receipt-sha256>/instances/<randomUUID>.json`이다.
+publisher는 bounded census가 완전할 때 exact pair의 same canonical bytes를 순차
+재시도하면 `present`와 bytewise-lowest valid path를 반환하고 reservation이나 새
+instance를 만들지 않는다. 없을 때만 공통 global/local reservation을 거쳐 UUID
+instance를 추가한다. 동시 contender의 동등한 물리 instance는 허용한다.
 
 같은 request 아래 서로 다른 receipt hash는 정상 history로 공존한다. maxItems,
 관찰 source digest, expiry boundary나 결과가 달라져도 conflict가 아니다. 각 receipt는
@@ -817,7 +906,8 @@ event 시간도 복제하지 않는다. 기존 receipt를 교체하지 않는다
 Markdown log는 별도 상태 변경 view다. raw event/control fold에서 source
 `effective_at|recorded_at` 오름차순, 동률이면 event/marker ID의 UTF-8 byte 순으로
 결정적으로 만들고
-`v1/derived/logs/<source-tree-sha256>/<log-sha256>/<randomUUID>.md`에 publish한다.
+`v1/derived/logs/<source-tree-sha256>/<log-sha256>/instances/<randomUUID>.md`에
+publish한다.
 request context와 applied/excluded 목록은 log에 넣지 않는다.
 
 - [ ] **Step 6: Task 3 검증을 실행한다**
@@ -1075,8 +1165,10 @@ for (const path of [
 schema의 module 누락과 한쪽 제품만 선언한 상태를 거부한다.
 `memory-receipt.schema.json`의 exact packaged bytes가 source와 같고,
 `memory-policy.md`와 `memory-lifecycle.md`가 JSON receipt의 exact pair identity,
-동일 request 아래 immutable history, 개별 corrupt 판정, bounded derived scan과
-Markdown log view 분리를 설명하는지도 검사한다.
+동일 request 아래 immutable history, 개별 corrupt 판정, byte·array 상한,
+global/local quota reservation, 동시 동등 instance와 bounded census, Markdown log
+view 분리를 설명하는지도 검사한다. packaged index schema의 `entries.maxItems=10000`,
+receipt schema의 세 array `maxItems=256`도 exact 검사한다.
 
 같은 RED에 원천과 임시 설치본의 `safe-memory-store.mjs`를 정적으로 검사한다.
 모든 import specifier는 `node:*`여야 하며 `node:child_process`, `spawn`, `exec`,
@@ -1106,15 +1198,20 @@ Expected: `Unknown shared module: memory` 또는 설치 skill 누락으로 실�
 - maintain: 후보 목록 → 명시적 approve/reject/retire → lint/rebuild → 변경 log
 
 `memory-policy.md`는 retrieval JSON receipt를
-`derived/receipts/<request-sha256>/<receipt-sha256>/<instance-id>.json`에 기록한다.
-exact pair의 같은 canonical bytes는 `present`로 재사용하고, 같은 request의 서로
-다른 valid receipt는 현재값을 고르지 않는 immutable history로 보존한다. 개별
-receipt의 claimed hash·bytes hash·schema 불일치만 corrupt로 판정한다.
+`derived/receipts/<request-sha256>/<receipt-sha256>/instances/<instance-id>.json`에
+기록한다. exact pair의 같은 canonical bytes를 순차 재시도하면 `present`로
+재사용하고, 같은 request의 서로 다른 valid receipt는 현재값을 고르지 않는
+immutable history로 보존한다. 동시 동일 bytes publish는 quota 안에서 동등한 UUID
+instance를 만들 수 있으며 conflict가 아니다. 개별 receipt의 oversize, claimed
+hash·bytes hash·schema 불일치만 corrupt로 판정한다.
 `memory-lifecycle.md`는
 `derived/logs/`가 source event/control의 상태 변경 Markdown view이며 receipt가
 아님을 명시한다. 두 reference 모두 derived receipt·log가 `sourceTreeSha256` 입력이
-아니며 directory당 256개, 전체 derived tree 10,000개를 넘긴 불완전한 scan에서는
-어떤 generation이나 history도 선택하지 않는다고 설명한다.
+아니며 identity 256개·global 10,000개 quota를 global-first/local-second
+`open('wx')` reservation으로 지킨다고 설명한다. 일반 directory 256개·전체 physical
+census 100,000개를 넘긴 불완전한 scan에서는 어떤 generation이나 history도
+선택하지 않는다. index/receipt/view/log의 1 MiB/256 KiB/1 MiB/1 MiB와 array 상한,
+reservation 누수는 cache reset 전까지 용량만 줄인다는 점도 포함한다.
 
 각 SKILL은 `GAME_DESIGN_MEMORY_ENABLED=false`, 요청 단위 제외, 프로젝트 ID 없음,
 Hook 미지원과 기억 장애에서 기존 작업을 계속하는 규칙을 독립적으로 포함한다.
@@ -1322,9 +1419,17 @@ intake에 다음 두 필드를 추가한다.
    scope·maxItems·candidateTtlDays, source binding별 expected/observed digest·상태와
    결과가 남고, exact pair loader와 bounded list는 conflict나 현재 receipt를 만들지
    않는다.
-10. derived directory의 257번째 direct child와 전체 tree의 10,001번째 entry는
-    전용 warning과 `complete:false`를 만들며 오케스트레이터가 어떤 generation이나
-    receipt history도 선택하지 않고 기존 artifact workflow를 계속한다.
+10. global reservation 10,001번째, 일반 derived directory의 257번째 direct child와
+    전체 physical census 100,001번째 entry는 전용 warning과 `complete:false`를
+    만들며 오케스트레이터가 어떤 generation이나 receipt history도 선택하지 않고
+    기존 artifact workflow를 계속한다.
+11. oversize index·receipt·view·log와 index entries 10,001개, receipt array 257개를
+    쓰기 전에 거부한다. exact receipt의 oversize instance는 census가 완전하면
+    `corrupt`이며 warning에 raw bytes와 절대 경로가 없다.
+12. quota 여유 상태의 동시 동일 receipt publish는 모두 `created|present`이고 물리
+    중복은 contender 수 이하다. 이어 순차 재시도는 `present`이며 파일을 늘리지
+    않는다. 255 local/9,999 global 경계에서는 정확히 하나만 생성되고 loser는
+    `memory.derived_limit_exceeded`다.
 
 - [ ] **Step 6: Task 6 검증을 실행한다**
 
@@ -1633,11 +1738,18 @@ Expected: 모든 명령이 exit 0이다. 실제 OpenAI 이미지 호출과 외�
 - MEM-CORRUPT: 손상 event 원본 보존, sealed marker와 memory ID 전체 영구 fail-closed
 - MEM-SCAN-LIMIT: 10,001번째 entry와 한도 뒤 invalidating transition에서 store fail-closed
 - MEM-INDEX-GEN: missing·corrupt·concurrent generation의 raw fold 재생성
-- MEM-RECEIPT: canonical JSON hash·schema, exact pair same-bytes `present`와 물리 증가
-  없음, 같은 request의 서로 다른 receipt 정상 이력, 개별 corrupt 판정, exact
-  loader·bounded history list, sourceTree 분리와 Markdown log view 비혼합
-- MEM-DERIVED-LIMIT: 각 directory 257번째와 전체 10,001번째 entry에서
+- MEM-RECEIPT: canonical JSON hash·schema, exact pair 순차 `present`와 추가 파일
+  없음, 같은 request의 서로 다른 receipt 정상 이력, oversize 포함 개별 corrupt
+  판정, exact loader·bounded history list, sourceTree 분리와 Markdown log view 비혼합
+- MEM-DERIVED-CONCURRENT: 여유 quota의 동시 동일 bytes publish가 모두
+  `created|present`, 동등한 instance가 contender 수 이하이고 순차 retry는
+  `present`; 255 local/9,999 global 경계에서는 하나만 생성
+- MEM-DERIVED-LIMIT: global-first/local-second create-once reservation, global
+  10,001번째·일반 directory 257번째·physical census 100,001번째에서
   `complete:false`, 전용 warning, generation·history 미선택
+- MEM-DERIVED-SIZE: index/receipt/view/log byte 상한, index entries와 receipt 세
+  array limit+1 사전 거부, lstat-first bounded read, oversize corrupt와 diagnostic
+  redaction
 - MEM-GIT-ISOLATION: lock·stale lock·사용자 변경 warning과 event 성공 분리
 - MEM-NODE-ONLY: 빈 compiler PATH에서 append smoke와 helper·외부 실행 정적 부재
 - MEM-FAILOPEN: append·generation·marker 실패 뒤 artifact와 기존 event 보존
