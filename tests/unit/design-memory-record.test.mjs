@@ -12,6 +12,7 @@ import {
   parseMemoryDocument,
   parseMemoryEventDocument,
   parseQuarantineMarkerDocument,
+  validateMemoryEvent,
   validateMemoryRecord,
   validateMemorySourceBindings,
   validateMemoryTransition,
@@ -24,6 +25,21 @@ const record = Object.freeze({
 });
 const sections = Object.freeze({ "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" });
 const capture = (overrides = {}) => ({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T09:00:00+09:00", actor: "author", reason: "capture", record: { ...record }, ...overrides });
+
+function schemaAccepts(value, schema, schemas) {
+  if (schema.$ref) return schemaAccepts(value, schemas.get(schema.$ref) ?? (() => { throw new Error(`Unsupported schema reference: ${schema.$ref}`); })(), schemas);
+  if (schema.allOf && !schema.allOf.every((part) => schemaAccepts(value, part, schemas))) return false;
+  if (schema.if && schemaAccepts(value, schema.if, schemas) && schema.then && !schemaAccepts(value, schema.then, schemas)) return false;
+  if (schema.not && schemaAccepts(value, schema.not, schemas)) return false;
+  if (schema.const !== undefined && JSON.stringify(value) !== JSON.stringify(schema.const)) return false;
+  if (schema.enum && !schema.enum.some((candidate) => JSON.stringify(value) === JSON.stringify(candidate))) return false;
+  const types = schema.type === undefined ? undefined : Array.isArray(schema.type) ? schema.type : [schema.type];
+  if (types && !types.some((type) => (type === "object" && value !== null && typeof value === "object" && !Array.isArray(value)) || (type === "array" && Array.isArray(value)) || (type === "string" && typeof value === "string") || (type === "null" && value === null))) return false;
+  if (typeof value === "string") return value.length >= (schema.minLength ?? 0) && (!schema.pattern || new RegExp(schema.pattern, "u").test(value));
+  if (Array.isArray(value)) return value.length >= (schema.minItems ?? 0) && value.length <= (schema.maxItems ?? Number.POSITIVE_INFINITY) && (!schema.uniqueItems || new Set(value.map((item) => JSON.stringify(item))).size === value.length) && (!schema.items || value.every((item) => schemaAccepts(item, schema.items, schemas)));
+  if (value !== null && typeof value === "object") return !(schema.required ?? []).some((key) => !Object.hasOwn(value, key)) && !(schema.additionalProperties === false && Object.keys(value).some((key) => !Object.hasOwn(schema.properties ?? {}, key))) && Object.entries(value).every(([key, item]) => !schema.properties?.[key] || schemaAccepts(item, schema.properties[key], schemas));
+  return true;
+}
 
 test("append-only event envelope is closed and logical records reject event identity fields", () => {
   assert.equal(validateMemoryRecord(record).ok, true);
@@ -60,6 +76,65 @@ test("canonical serializer is NFC, UTC, LF terminated, and byte-addressed", () =
   assert.equal(bytes.includes("2026-08-12T00:00:00.000Z"), true);
   assert.equal(bytes.normalize("NFC"), bytes);
   assert.equal(bytes, canonicalMemoryEventDocument(capture(), sections));
+});
+
+test("canonical event input rejects NUL and NFD strings without disclosing values", () => {
+  for (const mutation of [
+    { actor: "author\0hidden" },
+    { reason: "e\u0301vidence" },
+    { record: { ...record, approval_basis: "review\0hidden" } },
+  ]) {
+    assert.equal(validateMemoryEvent(capture(mutation)).errors[0].code, "memory.noncanonical");
+    assert.throws(
+      () => canonicalMemoryEventDocument(capture(mutation), sections),
+      (error) => error.code === "memory.noncanonical" && !String(error).includes("hidden"),
+    );
+  }
+  assert.equal(validateMemoryRecord({ ...record, approval_basis: "review\0hidden" }).errors[0].code, "memory.noncanonical");
+});
+
+test("canonical quarantine marker input rejects NUL and NFD strings", () => {
+  const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: "mev1-" + "1".repeat(64), target_relative_path: "v1/events/aa/x/y", observed_sha256: null, reason_code: "memory.bad", actor: "auditor", recorded_at: "2026-08-12T09:00:00+09:00" };
+  for (const mutation of [
+    { reason_code: "memory.bad\0hidden" },
+    { actor: "audite\u0301r" },
+  ]) {
+    assert.throws(
+      () => canonicalQuarantineMarkerDocument({ ...marker, ...mutation }),
+      (error) => error.code === "memory.noncanonical" && !String(error).includes("hidden"),
+    );
+  }
+});
+
+test("event runtime validator and JSON Schema agree on canonical event-type fixtures", async () => {
+  const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
+  const [eventSchema, recordSchema] = await Promise.all([
+    readFile(path.join(root, "shared/memory/schema/memory-event.schema.json"), "utf8").then(JSON.parse),
+    readFile(path.join(root, "shared/memory/schema/memory-record.schema.json"), "utf8").then(JSON.parse),
+  ]);
+  const schemas = new Map([["memory-record.schema.json", recordSchema]]);
+  const parent = "mev1-" + "1".repeat(64);
+  const transitionBase = { memory_id: record.memory_id, event_type: "transition", action: "verified", parent_event_ids: [parent], effective_at: "2026-08-12T09:00:00+09:00", actor: "author", reason: "capture" };
+  const transition = capture({ ...transitionBase, operation_id: memoryOperationId(transitionBase), record: { ...record, status: "verified", updated_at: "2026-08-13T00:00:00.000Z" } });
+  const heads = ["mev1-" + "3".repeat(64), "mev1-" + "4".repeat(64)];
+  const resolutionBase = { memory_id: record.memory_id, event_type: "resolution", action: "resolution", parent_event_ids: heads, chosen_parent_event_id: heads[0], effective_at: "2026-08-12T09:00:00+09:00", actor: "author", reason: "capture" };
+  const resolution = capture({ ...resolutionBase, operation_id: memoryOperationId(resolutionBase) });
+  const forbiddenTransitionParent = { ...transition, chosen_parent_event_id: parent };
+  forbiddenTransitionParent.operation_id = memoryOperationId(forbiddenTransitionParent);
+  const oneParentResolution = { ...resolution, parent_event_ids: [heads[0]] };
+  oneParentResolution.operation_id = memoryOperationId(oneParentResolution);
+  for (const [fixture, expected] of [
+    [capture(), true],
+    [transition, true],
+    [resolution, true],
+    [capture({ operation_id: "mop1-" + "0".repeat(64) }), false],
+    [capture({ actor: "author\0hidden" }), false],
+    [forbiddenTransitionParent, false],
+    [oneParentResolution, false],
+  ]) {
+    assert.equal(validateMemoryEvent(fixture).ok, expected);
+    assert.equal(schemaAccepts(fixture, eventSchema, schemas), expected);
+  }
 });
 
 test("capture uses a safe upstream operation id while derived events require mop1", () => {

@@ -21,6 +21,20 @@ const transitions = Object.freeze({ candidate: ["verified", "expired", "rejected
 
 function error(code, pathName, message) { return { code, path: pathName, message }; }
 function object(value) { return value !== null && typeof value === "object" && !Array.isArray(value); }
+function validateCanonicalStringTree(value, seen = new Set()) {
+  if (typeof value === "string") return value.includes("\0") || value !== value.normalize("NFC") ? { ok: false } : { ok: true };
+  if (value === null || typeof value !== "object") return { ok: true };
+  if (seen.has(value)) return { ok: false };
+  seen.add(value);
+  const entries = Array.isArray(value) ? value.map((item, index) => [String(index), item]) : Object.entries(value);
+  for (const [key, item] of entries) {
+    if (key.includes("\0") || key !== key.normalize("NFC")) return { ok: false };
+    const validation = validateCanonicalStringTree(item, seen);
+    if (!validation.ok) return validation;
+  }
+  seen.delete(value);
+  return { ok: true };
+}
 function safeId(value) { return typeof value === "string" && value === value.normalize("NFC") && ID.test(value); }
 function sortedUnique(values, predicate) { return Array.isArray(values) && values.every(predicate) && values.every((value, index) => index === 0 || values[index - 1] < value); }
 function addSensitiveError(errors, value) { if (typeof value === "string" && forbiddenMemoryContent.some((pattern) => pattern.test(value))) errors.push(error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")); }
@@ -31,6 +45,7 @@ function timestamp(value) { if (typeof value !== "string" || !RFC3339.test(value
 export function validateMemoryRecord(record) {
   const errors = [];
   if (!object(record)) return { ok: false, errors: [error("memory.invalid_record", "", "Memory record must be an object.")] };
+  if (!validateCanonicalStringTree(record).ok) return { ok: false, errors: [error("memory.noncanonical", "", "Memory strings must be NFC and cannot contain NUL.")] };
   scanSensitive(record, errors);
   if (errors.length > 0) return { ok: false, errors: [error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")] };
   for (const key of Object.keys(record)) if (!RECORD_KEYS.includes(key)) errors.push(error("schema.additional_property", key, "Unknown memory record field."));
@@ -121,6 +136,7 @@ export function memoryOperationId({ memory_id, event_type, action, effective_at,
 }
 
 export function canonicalMemoryEventDocument(event, sections) {
+  if (!validateCanonicalStringTree(event).ok) eventFailure("Memory event metadata is not canonical.", "memory.noncanonical");
   const validation = validateMemoryEvent(event);
   if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
   if (!object(sections) || ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"].some((key) => !canonicalSection(sections[key]))) eventFailure("Memory event sections are invalid.", "memory.prohibited_content");
@@ -135,6 +151,7 @@ export function canonicalMemoryEventDocument(event, sections) {
 export function validateMemoryEvent(event) {
   const errors = [];
   if (!object(event)) return { ok: false, errors: [error("memory.event", "", "Memory event must be an object.")] };
+  if (!validateCanonicalStringTree(event).ok) return { ok: false, errors: [error("memory.noncanonical", "", "Memory strings must be NFC and cannot contain NUL.")] };
   scanSensitive(event, errors); if (errors.length) return { ok: false, errors: [error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")] };
   if (Object.keys(event).some((key) => !EVENT_KEYS.includes(key))) errors.push(error("schema.additional_property", "", "Unknown memory event field."));
   for (const key of EVENT_KEYS.filter((key) => key !== "chosen_parent_event_id")) if (!Object.hasOwn(event, key)) errors.push(error("schema.required", key, "Required memory event field is missing."));
@@ -142,7 +159,7 @@ export function validateMemoryEvent(event) {
   if (event.schema_version !== 1 || !["capture", "transition", "resolution"].includes(event.event_type) || !safeId(event.memory_id) || !(event.event_type === "capture" ? captureOperation.test(event.operation_id ?? "") : /^mop1-[a-f0-9]{64}$/u.test(event.operation_id ?? "")) || !timestamp(event.effective_at) || typeof event.actor !== "string" || !event.actor.trim() || typeof event.reason !== "string" || !event.reason.trim()) errors.push(error("memory.event", "", "Memory event metadata is invalid."));
   if (!sortedUnique(event.parent_event_ids, (id) => /^mev1-[a-f0-9]{64}$/u.test(id))) errors.push(error("memory.event_parent", "parent_event_ids", "Parents must be sorted event identifiers."));
   if (event.event_type === "capture" && (event.action !== "capture" || event.parent_event_ids?.length !== 0 || event.chosen_parent_event_id !== undefined)) errors.push(error("memory.capture", "", "Capture must have no parents."));
-  if (event.event_type === "transition" && (event.parent_event_ids?.length !== 1 || !MEMORY_STATUSES.includes(event.action))) errors.push(error("memory.transition", "", "Transition must have one parent and a status action."));
+  if (event.event_type === "transition" && (event.parent_event_ids?.length !== 1 || !MEMORY_STATUSES.includes(event.action) || event.chosen_parent_event_id !== undefined)) errors.push(error("memory.transition", "", "Transition must have one parent and a status action."));
   if (event.event_type === "resolution" && (event.action !== "resolution" || event.parent_event_ids?.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id))) errors.push(error("memory.resolution", "", "Resolution must name an observed parent head."));
   if (["transition", "resolution"].includes(event.event_type)) { try { if (event.operation_id !== memoryOperationId(event)) errors.push(error("memory.operation", "operation_id", "Operation id does not match its tuple.")); } catch { errors.push(error("memory.operation", "operation_id", "Operation id is invalid.")); } }
   const recordValidation = validateMemoryRecord(event.record); if (!recordValidation.ok || event.record?.memory_id !== event.memory_id) errors.push(error("memory.event_snapshot", "record", "Event record snapshot is invalid."));
@@ -163,6 +180,7 @@ export function parseMemoryEventDocument(source, { sourceName = "memory event", 
 
 const MARKER_KEYS = Object.freeze(["schema_version", "memory_id", "target_event_id", "target_relative_path", "observed_sha256", "reason_code", "actor", "recorded_at"]);
 export function canonicalQuarantineMarkerDocument(marker) {
+  if (!validateCanonicalStringTree(marker).ok) eventFailure("Quarantine marker is not canonical.", "memory.noncanonical");
   const markerErrors = []; scanSensitive(marker, markerErrors);
   if (!object(marker) || markerErrors.length || Object.keys(marker).some((key) => !MARKER_KEYS.includes(key)) || marker.schema_version !== 1 || !safeId(marker.memory_id) || !/^mev1-[a-f0-9]{64}$/u.test(marker.target_event_id ?? "") || !safeRelative(marker.target_relative_path) || !(marker.observed_sha256 === null || SHA256.test(marker.observed_sha256)) || typeof marker.reason_code !== "string" || marker.reason_code !== marker.reason_code.normalize("NFC") || !marker.reason_code.trim() || typeof marker.actor !== "string" || marker.actor !== marker.actor.normalize("NFC") || !marker.actor.trim() || !timestamp(marker.recorded_at)) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
   return `---\nschema_version: 1\nmemory_id: ${quote(marker.memory_id)}\ntarget_event_id: ${quote(marker.target_event_id)}\ntarget_relative_path: ${quote(marker.target_relative_path)}\nobserved_sha256: ${marker.observed_sha256 === null ? "null" : quote(marker.observed_sha256)}\nreason_code: ${quote(marker.reason_code)}\nactor: ${quote(marker.actor)}\nrecorded_at: ${quote(new Date(marker.recorded_at).toISOString())}\n---\n\n## Quarantine\n\nsealed quarantine marker\n`;

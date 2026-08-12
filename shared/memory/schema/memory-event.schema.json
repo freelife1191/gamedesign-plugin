@@ -7,14 +7,14 @@
   "properties": {
     "schema_version": { "const": 1 },
     "event_type": { "enum": ["capture", "transition", "resolution"] },
-    "action": { "type": "string", "pattern": ".*\\S.*" },
+    "action": { "type": "string", "pattern": "^(?!.*\\u0000).*\\S.*$" },
     "memory_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "operation_id": { "type": "string", "pattern": "^(?:(?!(?:mev1|mop1)-)[a-z0-9]+(?:-[a-z0-9]+)*|mop1-[a-f0-9]{64})$" },
     "parent_event_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^mev1-[a-f0-9]{64}$" } },
     "chosen_parent_event_id": { "type": "string", "pattern": "^mev1-[a-f0-9]{64}$" },
-    "effective_at": { "type": "string", "format": "date-time" },
-    "actor": { "type": "string", "minLength": 1, "pattern": ".*\\S.*" },
-    "reason": { "type": "string", "minLength": 1, "pattern": ".*\\S.*" },
+    "effective_at": { "type": "string", "format": "date-time", "pattern": "^(?!.*\\u0000).*$" },
+    "actor": { "type": "string", "minLength": 1, "pattern": "^(?!.*\\u0000).*\\S.*$" },
+    "reason": { "type": "string", "minLength": 1, "pattern": "^(?!.*\\u0000).*\\S.*$" },
     "record": { "$ref": "memory-record.schema.json" }
   },
   "allOf": [
