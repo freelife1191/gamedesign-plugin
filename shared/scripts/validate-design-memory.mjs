@@ -129,7 +129,7 @@ export function canonicalMemoryEventDocument(event, sections) {
   if (event.chosen_parent_event_id !== undefined) lines.push(`chosen_parent_event_id: ${quote(event.chosen_parent_event_id)}`);
   lines.push(`effective_at: ${quote(normalizeTime("effective_at", event.effective_at))}`, `actor: ${quote(event.actor)}`, `reason: ${quote(event.reason)}`, "record:", ...yamlRecord(event.record, "  "), "---", "");
   for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) lines.push(`## ${section}`, "", canonicalSection(sections[section]), "");
-  return `${lines.join("\n")}\n`;
+  return `${lines.join("\n").replace(/\n+$/u, "")}\n`;
 }
 
 export function validateMemoryEvent(event) {
@@ -138,7 +138,8 @@ export function validateMemoryEvent(event) {
   scanSensitive(event, errors); if (errors.length) return { ok: false, errors: [error("memory.prohibited_content", "", "Memory content contains prohibited sensitive information.")] };
   if (Object.keys(event).some((key) => !EVENT_KEYS.includes(key))) errors.push(error("schema.additional_property", "", "Unknown memory event field."));
   for (const key of EVENT_KEYS.filter((key) => key !== "chosen_parent_event_id")) if (!Object.hasOwn(event, key)) errors.push(error("schema.required", key, "Required memory event field is missing."));
-  if (event.schema_version !== 1 || !["capture", "transition", "resolution"].includes(event.event_type) || !safeId(event.memory_id) || !/^(?:mev1|mop1)-[a-f0-9]{64}$/u.test(event.operation_id ?? "") || !timestamp(event.effective_at) || typeof event.actor !== "string" || !event.actor.trim() || typeof event.reason !== "string" || !event.reason.trim()) errors.push(error("memory.event", "", "Memory event metadata is invalid."));
+  const captureOperation = /^(?!(?:mev1|mop1)-)[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+  if (event.schema_version !== 1 || !["capture", "transition", "resolution"].includes(event.event_type) || !safeId(event.memory_id) || !(event.event_type === "capture" ? captureOperation.test(event.operation_id ?? "") : /^mop1-[a-f0-9]{64}$/u.test(event.operation_id ?? "")) || !timestamp(event.effective_at) || typeof event.actor !== "string" || !event.actor.trim() || typeof event.reason !== "string" || !event.reason.trim()) errors.push(error("memory.event", "", "Memory event metadata is invalid."));
   if (!sortedUnique(event.parent_event_ids, (id) => /^mev1-[a-f0-9]{64}$/u.test(id))) errors.push(error("memory.event_parent", "parent_event_ids", "Parents must be sorted event identifiers."));
   if (event.event_type === "capture" && (event.action !== "capture" || event.parent_event_ids?.length !== 0 || event.chosen_parent_event_id !== undefined)) errors.push(error("memory.capture", "", "Capture must have no parents."));
   if (event.event_type === "transition" && (event.parent_event_ids?.length !== 1 || !MEMORY_STATUSES.includes(event.action))) errors.push(error("memory.transition", "", "Transition must have one parent and a status action."));
@@ -155,18 +156,19 @@ export function parseMemoryEventDocument(source, { sourceName = "memory event", 
   const event = parseRestrictedYaml(match[1].replace(/^parent_event_ids: \[\]$/mu, "parent_event_ids:\n  - __empty__"), sourceName); if (event.parent_event_ids?.length === 1 && event.parent_event_ids[0] === "__empty__") event.parent_event_ids = [];
   const validation = validateMemoryEvent(event); if (!validation.ok) eventFailure("Memory event metadata is invalid.", validation.errors[0].code);
   const sections = Object.create(null); let remainder = match[2].startsWith("\n") ? match[2].slice(1) : match[2];
-  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) { const prefix = `## ${section}\n\n`; if (!remainder.startsWith(prefix)) eventFailure(`Memory event is missing required section: ${section}.`); remainder = remainder.slice(prefix.length); const boundary = remainder.indexOf("\n\n## "); const body = boundary === -1 ? remainder.slice(0, -2) : remainder.slice(0, boundary); if (!body || body.includes("\n\0")) eventFailure(`Memory event is missing required section: ${section}.`); sections[section] = body; remainder = boundary === -1 ? "" : remainder.slice(boundary + 2); }
+  for (const section of ["발견한 내용", "적용 조건", "적용하면 안 되는 경우", "근거"]) { const prefix = `## ${section}\n\n`; if (!remainder.startsWith(prefix)) eventFailure(`Memory event is missing required section: ${section}.`); remainder = remainder.slice(prefix.length); const boundary = remainder.indexOf("\n\n## "); const body = boundary === -1 ? remainder.endsWith("\n") ? remainder.slice(0, -1) : remainder : remainder.slice(0, boundary); if (!body || body.includes("\n\0")) eventFailure(`Memory event is missing required section: ${section}.`); sections[section] = body; remainder = boundary === -1 ? "" : remainder.slice(boundary + 2); }
   if (remainder || canonicalMemoryEventDocument(event, sections) !== source) eventFailure("Memory event is not canonical.", "memory.noncanonical");
   return { event, record: event.record, sections };
 }
 
 const MARKER_KEYS = Object.freeze(["schema_version", "memory_id", "target_event_id", "target_relative_path", "observed_sha256", "reason_code", "actor", "recorded_at"]);
 export function canonicalQuarantineMarkerDocument(marker) {
-  if (!object(marker) || Object.keys(marker).some((key) => !MARKER_KEYS.includes(key)) || marker.schema_version !== 1 || !safeId(marker.memory_id) || !/^mev1-[a-f0-9]{64}$/u.test(marker.target_event_id ?? "") || !safeRelative(marker.target_relative_path) || !(marker.observed_sha256 === null || SHA256.test(marker.observed_sha256)) || typeof marker.reason_code !== "string" || !marker.reason_code.trim() || typeof marker.actor !== "string" || !marker.actor.trim() || !timestamp(marker.recorded_at)) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
+  const markerErrors = []; scanSensitive(marker, markerErrors);
+  if (!object(marker) || markerErrors.length || Object.keys(marker).some((key) => !MARKER_KEYS.includes(key)) || marker.schema_version !== 1 || !safeId(marker.memory_id) || !/^mev1-[a-f0-9]{64}$/u.test(marker.target_event_id ?? "") || !safeRelative(marker.target_relative_path) || !(marker.observed_sha256 === null || SHA256.test(marker.observed_sha256)) || typeof marker.reason_code !== "string" || marker.reason_code !== marker.reason_code.normalize("NFC") || !marker.reason_code.trim() || typeof marker.actor !== "string" || marker.actor !== marker.actor.normalize("NFC") || !marker.actor.trim() || !timestamp(marker.recorded_at)) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
   return `---\nschema_version: 1\nmemory_id: ${quote(marker.memory_id)}\ntarget_event_id: ${quote(marker.target_event_id)}\ntarget_relative_path: ${quote(marker.target_relative_path)}\nobserved_sha256: ${marker.observed_sha256 === null ? "null" : quote(marker.observed_sha256)}\nreason_code: ${quote(marker.reason_code)}\nactor: ${quote(marker.actor)}\nrecorded_at: ${quote(new Date(marker.recorded_at).toISOString())}\n---\n\n## Quarantine\n\nsealed quarantine marker\n`;
 }
 export function parseQuarantineMarkerDocument(source, { markerId } = {}) {
-  if (typeof source !== "string" || source.includes("\0") || source.includes("\r") || !source.endsWith("\n") || source !== source.normalize("NFC")) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
+  if (typeof source !== "string" || source.includes("\0") || source.includes("\r") || !source.endsWith("\n") || source.endsWith("\n\n") || source !== source.normalize("NFC")) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
   if (markerId && markerId !== `qmv1-${createHash("sha256").update(source).digest("hex")}`) eventFailure("Quarantine marker id does not match its bytes.", "memory.quarantine_marker");
   const match = /^---\n([\s\S]*?)\n---\n\n## Quarantine\n\nsealed quarantine marker\n$/u.exec(source); if (!match) eventFailure("Quarantine marker is invalid.", "memory.quarantine_marker");
   const marker = parseRestrictedYaml(match[1], "quarantine marker"); if (canonicalQuarantineMarkerDocument(marker) !== source) eventFailure("Quarantine marker is not canonical.", "memory.quarantine_marker");

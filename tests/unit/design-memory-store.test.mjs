@@ -12,7 +12,7 @@ async function workspace(t) { const root = await realpath(await mkdtemp(path.joi
 const config = (overrides = {}) => ({ enabled: true, scope: "project", gitMode: "local", projectId: "wind-island", ...overrides });
 const record = { schema_version: 1, memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef", kind: "design-lesson", lane: "studio", status: "candidate", scope: "project", project_id: "wind-island", created_at: "2026-08-12T00:00:00.000Z", updated_at: "2026-08-12T00:00:00.000Z", review_after: "2026-09-11", expires_at: "2026-09-11", approved_by: null, approval_basis: null, supersedes: null, artifact_types: ["artifact"], related_ids: ["related"], tags: ["tag"], sources: [{ artifact_id: "source", locator: "content.md#h", sha256: "a".repeat(64) }] };
 const sections = { "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" };
-const document = (overrides = {}) => canonicalMemoryEventDocument({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "mev1-" + "1".repeat(64), parent_event_ids: [], effective_at: "2026-08-12T00:00:00.000Z", actor: "author", reason: "capture", record, ...overrides }, sections);
+const document = (overrides = {}) => canonicalMemoryEventDocument({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T00:00:00.000Z", actor: "author", reason: "capture", record, ...overrides }, sections);
 
 test("store roots and bounded reads retain safe local behavior", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true });
@@ -72,6 +72,15 @@ test("cross-memory supersedes cycles taint every involved memory", () => {
   assert.equal(folded.memories.has(left), false); assert.equal(folded.memories.has(right), false); assert.equal(folded.diagnostics.filter((item) => item.code === "memory.supersedes_graph").length, 2);
 });
 
+test("transition snapshots cannot mutate instruction provenance, tags, or sources", () => {
+  const rootId = `mev1-${"1".repeat(64)}`; const changedId = `mev1-${"2".repeat(64)}`;
+  const root = { eventId: rootId, event: { memory_id: record.memory_id, operation_id: "capture-root", event_type: "capture", action: "capture", parent_event_ids: [] }, record, sections };
+  for (const mutation of [{ instruction_sha256: "b".repeat(64) }, { tags: ["other"] }, { sources: [{ ...record.sources[0], sha256: "b".repeat(64) }] }]) {
+    const changed = { eventId: changedId, event: { memory_id: record.memory_id, operation_id: `mop1-${"2".repeat(64)}`, event_type: "transition", action: "verified", parent_event_ids: [rootId] }, record: { ...record, ...mutation, status: "verified" }, sections };
+    const folded = foldMemoryEvents({ complete: true, diagnostics: [], quarantines: [], events: [root, changed] }); assert.equal(folded.memories.has(record.memory_id), false); assert.equal(folded.diagnostics.find((entry) => entry.code === "memory.invalid_event_dag")?.memory_id, record.memory_id);
+  }
+});
+
 test("a corrupt committed event taints its canonical memory path", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const appended = await appendMemoryEvent({ store, eventDocument: document() });
   await writeFile(path.join(store.root, appended.relativePath, "commit.json"), "broken\n");
@@ -86,4 +95,11 @@ test("Git exclusion is best-effort and independent from append trust", async (t)
   const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
   assert.equal((await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit })).status, "ready");
   assert.match(await readFile(exclude, "utf8"), /game-design-plugin:memory:begin/u);
+});
+
+test("Git exclusion leaves a symlink victim unchanged", async (t) => {
+  const root = await workspace(t); const victim = path.join(root, "victim"); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(victim, "user bytes\n"); await symlink(victim, exclude);
+  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
+  assert.equal(result.status, "warning"); assert.equal(await readFile(victim, "utf8"), "user bytes\n");
 });

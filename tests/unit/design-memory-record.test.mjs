@@ -23,7 +23,7 @@ const record = Object.freeze({
   artifact_types: ["character-skill-combat-monster"], related_ids: ["boss-phase-2"], tags: ["boss", "counterplay"], sources: [{ artifact_id: "combat-loop-v3", locator: "content.md#boss", sha256: "a".repeat(64) }],
 });
 const sections = Object.freeze({ "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" });
-const capture = (overrides = {}) => ({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "mev1-" + "1".repeat(64), parent_event_ids: [], effective_at: "2026-08-12T09:00:00+09:00", actor: "author", reason: "capture", record: { ...record }, ...overrides });
+const capture = (overrides = {}) => ({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T09:00:00+09:00", actor: "author", reason: "capture", record: { ...record }, ...overrides });
 
 test("append-only event envelope is closed and logical records reject event identity fields", () => {
   assert.equal(validateMemoryRecord(record).ok, true);
@@ -56,9 +56,15 @@ test("canonical serializer is NFC, UTC, LF terminated, and byte-addressed", () =
   const bytes = canonicalMemoryEventDocument(capture({ effective_at: "2026-08-12T09:00:00+09:00" }), sections);
   assert.equal(bytes.includes("\r"), false);
   assert.equal(bytes.endsWith("\n"), true);
+  assert.equal(bytes.endsWith("\n\n"), false);
   assert.equal(bytes.includes("2026-08-12T00:00:00.000Z"), true);
   assert.equal(bytes.normalize("NFC"), bytes);
   assert.equal(bytes, canonicalMemoryEventDocument(capture(), sections));
+});
+
+test("capture uses a safe upstream operation id while derived events require mop1", () => {
+  assert.doesNotThrow(() => canonicalMemoryEventDocument(capture({ operation_id: "capture-upstream-1" }), sections));
+  assert.throws(() => canonicalMemoryEventDocument(capture({ operation_id: "mev1-" + "1".repeat(64) }), sections));
 });
 
 test("transition and resolution operation ids use the fixed length-prefixed tuple", () => {
@@ -81,6 +87,11 @@ test("quarantine marker is canonical Markdown and byte-addressed", () => {
   assert.throws(() => parseQuarantineMarkerDocument(bytes.replace("actor:", "actor: unquoted"), { markerId: id }));
 });
 
+test("quarantine marker rejects secret actor and reason without disclosure", () => {
+  const marker = { schema_version: 1, memory_id: record.memory_id, target_event_id: "mev1-" + "1".repeat(64), target_relative_path: "v1/events/aa/x/y", observed_sha256: null, reason_code: "password proof", actor: "sk_this_marker_secret", recorded_at: "2026-08-12T09:00:00+09:00" };
+  assert.throws(() => canonicalQuarantineMarkerDocument(marker), (error) => !String(error).includes("sk_this_marker_secret"));
+});
+
 test("schema limits accept the boundary and reject limit plus one", async () => {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../..");
   const index = JSON.parse(await readFile(path.join(root, "shared/memory/schema/memory-index.schema.json"), "utf8"));
@@ -89,10 +100,9 @@ test("schema limits accept the boundary and reject limit plus one", async () => 
   for (const key of ["observations", "applied", "excluded"]) assert.equal(receipt.properties[key].maxItems, 256);
 });
 
-test("required body, sensitive content, and source bindings retain their prior protection", () => {
+test("required body and sensitive content retain their prior protection", () => {
   assert.throws(() => parseMemoryDocument("---\nschema_version: 1\n---\n", { sourceName: "bad.md" }));
   assert.equal(validateMemoryRecord({ ...record, password: "x" }).ok, false);
-  assert.equal(validateMemorySourceBindings, validateMemorySourceBindings);
 });
 
 for (const status of ["candidate", "verified", "expired", "rejected", "disputed", "superseded", "stale"]) test(`record status ${status} remains closed`, () => assert.equal(validateMemoryRecord({ ...record, status }).ok, true));
