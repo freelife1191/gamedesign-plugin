@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { link, mkdtemp, mkdir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdtemp, mkdir, opendir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -137,6 +137,22 @@ test("scan diagnostics do not expose untrusted physical path components", async 
     const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const appended = await appendMemoryEvent({ store, eventDocument: document() }); const moved = path.join(store.root, "v1", "events", attacker, "wrong-memory", appended.eventId);
     await mkdir(path.dirname(moved), { recursive: true }); await rename(path.join(store.root, appended.relativePath), moved); const scan = await scanMemoryEvents({ store }); assertClosedScan(scan, record.memory_id, "memory.path_binding"); const diagnostics = JSON.stringify(scan.diagnostics);
     assert.equal(diagnostics.includes(attacker), false); assert.equal(diagnostics.includes(root), false);
+  }
+});
+
+test("traversal failures and special entries close scans without leaking filesystem errors", async (t) => {
+  for (const failurePoint of ["opendir", "lstat", "close"]) {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const attacker = "sk-live-TRAVERSAL-SECRET"; const nested = path.join(store.root, "v1", "events", attacker); await mkdir(nested, { recursive: true }); const failure = Object.assign(new Error(`EACCES ${nested}`), { code: "EACCES", path: nested });
+    const traversal = {
+      opendir: async (candidate) => { if (failurePoint === "opendir" && candidate === nested) throw failure; return opendir(candidate); },
+      lstat: async (candidate) => { if (failurePoint === "lstat" && candidate === nested) throw failure; return lstat(candidate); },
+      close: async (handle) => { if (failurePoint === "close") { try { await handle.close(); } catch {} throw failure; } return handle.close().catch((error) => { if (error?.code !== "ERR_DIR_CLOSED") throw error; }); },
+    };
+    const scan = await scanMemoryEvents({ store, traversal }); assertClosedScan(scan, record.memory_id, "memory.unbound_seal"); const diagnostics = JSON.stringify(scan.diagnostics); assert.equal(diagnostics.includes(attacker), false); assert.equal(diagnostics.includes(root), false);
+  }
+  {
+    const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const attacker = "special-sk-live-ENTRY"; await mkdir(path.join(store.root, "v1", "events"), { recursive: true }); await symlink(root, path.join(store.root, "v1", "events", attacker));
+    const scan = await scanMemoryEvents({ store }); assertClosedScan(scan, record.memory_id, "memory.unbound_seal"); assert.equal(JSON.stringify(scan.diagnostics).includes(attacker), false);
   }
 });
 

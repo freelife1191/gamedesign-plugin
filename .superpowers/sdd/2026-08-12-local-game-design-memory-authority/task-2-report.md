@@ -108,3 +108,53 @@ git diff --check
 ```
 
 결과: 모두 성공, 출력 없음.
+
+## Fix round 2 — traversal failure fail-closed
+
+### RED
+
+```sh
+node --test --test-name-pattern="traversal failures" tests/unit/design-memory-store.test.mjs
+```
+
+결과: 0/1 통과, 1 실패.
+
+기존 scanner는 injected nested traversal failure를 사용하지 않아 `complete:true`를
+반환했다. 따라서 nested `opendir`/`lstat`/`close` 오류가 stable incomplete scan으로
+정규화된다는 보장이 없었다.
+
+### GREEN
+
+- source root 자체의 `ENOENT`만 빈 source tree로 처리한다.
+- nested `opendir`, `lstat`, close 및 scan 중 read 오류는 raw system exception을
+  전파하지 않고 `memory.unbound_seal` 진단의 empty incomplete scan으로 닫는다.
+- real symlink special entry와 deterministic traversal seam 모두 attacker component,
+  절대 store/workspace path, raw error를 diagnostics에 포함하지 않는다.
+- 자연스러운 async directory iteration 종료 뒤의 `ERR_DIR_CLOSED`만 정상 종료로
+  구분하며, 실제 injected close failure는 fail-closed한다.
+
+```sh
+node --test --test-name-pattern="traversal failures" tests/unit/design-memory-store.test.mjs
+```
+
+결과: 1/1 통과, 실패 0.
+
+```sh
+node --test tests/unit/design-memory-store.test.mjs
+```
+
+결과: 총 20개 중 19 통과, 실패 0, 의도된 same-user directory-swap non-goal 1 skip.
+
+```sh
+node --test tests/unit/design-memory-config.test.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-store.test.mjs
+```
+
+결과: 총 69개 중 68 통과, 실패 0, 의도된 non-goal 1 skip.
+
+```sh
+node --check shared/scripts/lib/safe-memory-store.mjs
+node --check tests/unit/design-memory-store.test.mjs
+git diff --check
+```
+
+결과: 모두 성공, 출력 없음.
