@@ -4,6 +4,7 @@ import { lstat, mkdir, open, opendir, realpath } from "node:fs/promises";
 import path from "node:path";
 
 import { readCommittedMemoryEvent, resolveMemoryStore, scanMemoryEvents, foldMemoryEvents } from "./lib/safe-memory-store.mjs";
+import { validateMemoryIndexSchema, validateMemoryReceiptSchema } from "./lib/memory-schema-evaluator.mjs";
 import { observeMemorySourceBindings } from "./validate-design-memory.mjs";
 
 const HARD_LIMITS = Object.freeze({ maxDirectoryEntries: 256, maxCensusEntries: 100000, maxIdentityInstances: 256, maxGenerationReservations: 10000, maxIndexBytes: 1024 * 1024, maxReceiptBytes: 256 * 1024, maxViewBytes: 1024 * 1024, maxLogBytes: 1024 * 1024, maxIndexEntries: 10000, maxReceiptObservationItems: 256, maxReceiptAppliedItems: 256, maxReceiptExcludedItems: 256 });
@@ -88,7 +89,7 @@ async function readBounded(candidate, maxBytes) {
   } catch { return { ok: false, code: "memory.derived_generation_invalid" }; } finally { await handle.close(); }
 }
 const derivedHealth = new WeakMap();
-function reservationKey(value) { return `${value.kind}\0${value.identitySha256}\0${value.generationSha256}\0${value.instanceId}`; }
+function reservationKey({ kind, first, generationSha256, identitySha256, localRelativePath, instanceId }) { return `${kind}\0${first}\0${generationSha256}\0${identitySha256}\0${localRelativePath}\0${instanceId}`; }
 function validReservationEnvelope(value, { slot, scope, maximum }) {
   return isObject(value)
     && Object.keys(value).join(",") === "schemaVersion,kind,identitySha256,generationSha256,globalSlot,localSlot,instanceId"
@@ -102,32 +103,33 @@ function validReservationEnvelope(value, { slot, scope, maximum }) {
 }
 async function scanReservationDirectory({ pinned, relative, width, maximum, scope }) {
   let quota;
-  try { quota = await pinQuotaDirectory(pinned, relative); } catch (error) { if (error?.code === "ENOENT") return { missing: true, entries: new Map() }; return { invalid: true, entries: new Map() }; }
-  const entries = new Map(); let handle;
-  try { handle = await opendir(quota.path); } catch { return { invalid: true, entries }; }
-  try {
-    for await (const item of handle) {
-      const name = item.name; const match = new RegExp(`^\\d{${width}}\\.json$`, "u").exec(name);
-      const slot = match ? Number.parseInt(name.slice(0, -5), 10) : -1;
-      if (!match || slot >= maximum || entries.has(slot)) return { invalid: true, entries };
-      const candidate = path.join(quota.path, name); const read = await readBounded(candidate, 4096);
-      if (!read.ok) return { invalid: true, entries };
-      let value; try { value = JSON.parse(utf8.decode(read.bytes)); } catch { return { invalid: true, entries }; }
-      if (!equalCanonicalJson(read.bytes, value) || !validReservationEnvelope(value, { slot, scope, maximum })) return { invalid: true, entries };
-      entries.set(slot, { value, relativePath: `${relative}/${name}` });
-    }
-    await verifyQuotaPinned(quota);
-    return { entries };
-  } catch { return { invalid: true, entries }; } finally { await handle.close().catch(() => {}); }
+  try { quota = await pinQuotaDirectory(pinned, relative); } catch (error) { if (error?.code === "ENOENT") return { missing: true, entries: new Map() }; return { unsafe: true, entries: new Map() }; }
+  const entries = new Map();
+  for (let slot = 0; slot < maximum; slot += 1) {
+    const name = `${String(slot).padStart(width, "0")}.json`; const candidate = path.join(quota.path, name);
+    let stat;
+    try { stat = await lstat(candidate); } catch (error) { if (error?.code === "ENOENT") continue; return { unsafe: true, entries }; }
+    const relativePath = `${relative}/${name}`;
+    const read = await readBounded(candidate, 4096);
+    if (!read.ok) { entries.set(slot, { value: null, relativePath, invalid: true }); continue; }
+    let value; try { value = JSON.parse(utf8.decode(read.bytes)); } catch { entries.set(slot, { value: null, relativePath, invalid: true }); continue; }
+    entries.set(slot, equalCanonicalJson(read.bytes, value) && validReservationEnvelope(value, { slot, scope, maximum }) ? { value, relativePath } : { value: null, relativePath, invalid: true });
+    if (stat.isSymbolicLink()) entries.set(slot, { value: null, relativePath, invalid: true });
+  }
+  try { await verifyQuotaPinned(quota); } catch { return { unsafe: true, entries }; }
+  return { entries };
 }
-function reservationHasInstance(value, entries) {
-  const collection = value.kind === "receipt" ? "receipts" : value.kind === "index" ? "indexes" : `${value.kind}s`;
-  const extension = extensionFor(value.kind);
+function localReservationBinding(relative, value) {
+  const parts = relative.split("/"); const collection = value.kind === "receipt" ? "receipts" : value.kind === "index" ? "indexes" : `${value.kind}s`;
+  if (parts.length !== 5 || parts[0] !== collection || !HEX.test(parts[1] ?? "") || parts[2] !== value.generationSha256 || parts[3] !== "_slots" || parts[4] !== `${String(value.localSlot).padStart(3, "0")}.json`) return null;
+  const first = parts[1]; const identitySha256 = identityHash(value.kind, [first, parts[2]]);
+  if (value.identitySha256 !== identitySha256) return null;
+  return { kind: value.kind, first, generationSha256: parts[2], identitySha256, localRelativePath: relative, instanceRelativePath: `${collection}/${first}/${parts[2]}/instances/${value.instanceId}${extensionFor(value.kind)}` };
+}
+function reservationHasInstance(binding, entries) {
   return entries.some((entry) => {
     if (entry.type !== "file") return false;
-    const parts = entry.relativePath.split("/");
-    if (parts.length !== 5 || parts[0] !== collection || !HEX.test(parts[1] ?? "") || parts[2] !== value.generationSha256 || parts[3] !== "instances" || parts[4] !== `${value.instanceId}${extension}`) return false;
-    return identityHash(value.kind, [parts[1], parts[2]]) === value.identitySha256;
+    return entry.relativePath === binding.instanceRelativePath;
   });
 }
 
@@ -162,24 +164,30 @@ export async function scanDerivedGenerations({ store, limits } = {}) {
   await visit(pinned.root);
   const hasInstances = entries.some((entry) => entry.relativePath.includes("/instances/") && entry.type === "file");
   const global = await scanReservationDirectory({ pinned, relative: ".reservations/global", width: 5, maximum: actualLimits.maxGenerationReservations, scope: "global" });
-  if (global.invalid || global.missing && hasInstances) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: ".reservations/global" })); }
+  if (global.unsafe) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: ".reservations/global" })); }
+  if (global.missing && hasInstances) warnings.push(warning("memory.derived_reservation_invalid", { relativePath: ".reservations/global" }));
   const localReservations = [];
   for (const relative of localQuotaDirectories.sort(byteCompare)) {
     const local = await scanReservationDirectory({ pinned, relative, width: 3, maximum: actualLimits.maxIdentityInstances, scope: "local" });
-    if (local.invalid || local.missing) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative })); continue; }
-    for (const item of local.entries.values()) localReservations.push({ ...item, directory: relative });
+    if (local.unsafe) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative })); continue; }
+    if (local.missing) { warnings.push(warning("memory.derived_reservation_invalid", { relativePath: relative })); continue; }
+    for (const item of local.entries.values()) {
+      const binding = item.value && localReservationBinding(item.relativePath, item.value);
+      if (item.invalid || !binding || !item.relativePath.startsWith(`${relative}/`)) warnings.push(warning("memory.derived_reservation_invalid", { relativePath: item.relativePath }));
+      else localReservations.push({ ...item, directory: relative, binding });
+    }
   }
   const paired = new Map();
   if (!global.missing) {
     const matchedGlobals = new Set();
     for (const local of localReservations) {
       const globalEntry = global.entries.get(local.value.globalSlot);
-      if (!globalEntry || globalEntry.value.kind !== local.value.kind || globalEntry.value.identitySha256 !== local.value.identitySha256 || globalEntry.value.generationSha256 !== local.value.generationSha256 || globalEntry.value.instanceId !== local.value.instanceId || !reservationHasInstance(local.value, entries)) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
-      const key = reservationKey(local.value);
-      if (paired.has(key)) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
-      matchedGlobals.add(local.value.globalSlot); paired.set(key, { globalSlot: local.value.globalSlot, localSlot: local.value.localSlot, localRelativePath: local.relativePath, globalRelativePath: globalEntry.relativePath });
+      if (!globalEntry?.value || globalEntry.value.kind !== local.value.kind || globalEntry.value.identitySha256 !== local.value.identitySha256 || globalEntry.value.generationSha256 !== local.value.generationSha256 || globalEntry.value.globalSlot !== local.value.globalSlot || globalEntry.value.localSlot !== null || globalEntry.value.instanceId !== local.value.instanceId || !reservationHasInstance(local.binding, entries)) { warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
+      const key = reservationKey(local.binding);
+      if (paired.has(key)) { warnings.push(warning("memory.derived_reservation_invalid", { relativePath: local.relativePath })); continue; }
+      matchedGlobals.add(local.value.globalSlot); paired.set(key, { ...local.binding, instanceId: local.value.instanceId, globalSlot: local.value.globalSlot, localSlot: local.value.localSlot, globalRelativePath: globalEntry.relativePath });
     }
-    for (const [slot, item] of global.entries) if (!matchedGlobals.has(slot)) { complete = false; warnings.push(warning("memory.derived_reservation_invalid", { relativePath: item.relativePath })); }
+    for (const [slot, item] of global.entries) if (item.invalid || !matchedGlobals.has(slot)) warnings.push(warning("memory.derived_reservation_invalid", { relativePath: item.relativePath }));
   }
   try { await verifyPinned(pinned); } catch { complete = false; warnings.push(warning("memory.derived_root_invalid")); }
   if (!complete) return { complete: false, entries: [], warnings };
@@ -203,13 +211,13 @@ function exactKeys(value, keys) { return isObject(value) && Object.keys(value).j
 function canonicalString(value) { return typeof value === "string" && value === value.normalize("NFC") && !value.includes("\0") && !value.includes("\uFEFF") && !value.includes("\r"); }
 function safeLocator(value) { const [file] = typeof value === "string" ? value.split("#", 1) : [""]; return canonicalString(value) && safeRelative(file); }
 function validateIndex(value, limits = HARD_LIMITS) {
-  return exactKeys(value, ["schemaVersion", "sourceTreeSha256", "entries"]) && value.schemaVersion === 1 && HEX.test(value.sourceTreeSha256 ?? "") && Array.isArray(value.entries) && value.entries.length <= limits.maxIndexEntries && value.entries.every((entry, index) => exactKeys(entry, ["memoryId", "headEventId", "headEventPath", "fileSha256", "kind", "lane", "status", "scope", "projectId", "artifactTypes", "relatedIds", "tags"]) && safeId(entry.memoryId) && (!index || byteCompare(value.entries[index - 1].memoryId, entry.memoryId) < 0) && /^mev1-[a-f0-9]{64}$/u.test(entry.headEventId ?? "") && safeRelative(entry.headEventPath) && HEX.test(entry.fileSha256 ?? "") && KIND_PRIORITY.has(entry.kind) && ["common", "studio", "career"].includes(entry.lane) && ["candidate", "verified", "approved", "expired", "rejected", "disputed", "superseded", "stale"].includes(entry.status) && ["project", "workspace", "global"].includes(entry.scope) && safeId(entry.projectId) && [entry.artifactTypes, entry.relatedIds, entry.tags].every(sortedUniqueIds));
+  return validateMemoryIndexSchema(value) && exactKeys(value, ["schemaVersion", "sourceTreeSha256", "entries"]) && value.entries.length <= limits.maxIndexEntries && value.entries.every((entry, index) => safeId(entry.memoryId) && (!index || byteCompare(value.entries[index - 1].memoryId, entry.memoryId) < 0) && safeRelative(entry.headEventPath) && [entry.artifactTypes, entry.relatedIds, entry.tags].every(sortedUniqueIds));
 }
 function validateReceipt(value, limits = HARD_LIMITS) {
   const hashes = [value?.requestSha256, value?.sourceTreeSha256];
   const arrays = [value?.observations, value?.applied, value?.excluded];
-  if (!exactKeys(value, ["schemaVersion", "requestSha256", "sourceTreeSha256", "projectId", "lane", "policy", "observations", "applied", "excluded"]) || value.schemaVersion !== 1 || !hashes.every((item) => HEX.test(item ?? "")) || !safeId(value.projectId) || !["common", "studio", "career"].includes(value.lane) || !exactKeys(value.policy, ["scope", "maxItems", "candidateTtlDays"]) || !["project", "workspace", "global"].includes(value.policy.scope) || !Number.isInteger(value.policy.maxItems) || value.policy.maxItems < 1 || value.policy.maxItems > 10 || !Number.isInteger(value.policy.candidateTtlDays) || value.policy.candidateTtlDays < 1 || value.policy.candidateTtlDays > 365 || !Array.isArray(value.observations) || value.observations.length > limits.maxReceiptObservationItems || !Array.isArray(value.applied) || value.applied.length > limits.maxReceiptAppliedItems || !Array.isArray(value.excluded) || value.excluded.length > limits.maxReceiptExcludedItems) return false;
-  return value.observations.every((item, index) => exactKeys(item, ["memoryId", "artifactId", "locator", "expectedSha256", "observedSha256", "status"]) && safeId(item.memoryId) && safeId(item.artifactId) && safeLocator(item.locator) && HEX.test(item.expectedSha256 ?? "") && (item.observedSha256 === null || HEX.test(item.observedSha256)) && ["current", "missing", "drift", "symlink", "unreadable"].includes(item.status) && (!index || byteCompare(`${value.observations[index - 1].memoryId}\0${value.observations[index - 1].artifactId}\0${value.observations[index - 1].locator}`, `${item.memoryId}\0${item.artifactId}\0${item.locator}`) < 0)) && value.applied.every((item, index) => exactKeys(item, ["memoryId", "headEventId", "fileSha256"]) && safeId(item.memoryId) && /^mev1-[a-f0-9]{64}$/u.test(item.headEventId ?? "") && HEX.test(item.fileSha256 ?? "") && (!index || byteCompare(value.applied[index - 1].memoryId, item.memoryId) < 0)) && value.excluded.every((item, index) => exactKeys(item, ["memoryId", "reason"]) && safeId(item.memoryId) && canonicalString(item.reason) && item.reason.length > 0 && item.reason.length <= 1024 && (!index || byteCompare(value.excluded[index - 1].memoryId, item.memoryId) < 0));
+  if (!validateMemoryReceiptSchema(value) || !exactKeys(value, ["schemaVersion", "requestSha256", "sourceTreeSha256", "projectId", "lane", "policy", "observations", "applied", "excluded"]) || !hashes.every((item) => HEX.test(item ?? "")) || !safeId(value.projectId) || !exactKeys(value.policy, ["scope", "maxItems", "candidateTtlDays"]) || !Array.isArray(value.observations) || value.observations.length > limits.maxReceiptObservationItems || !Array.isArray(value.applied) || value.applied.length > limits.maxReceiptAppliedItems || !Array.isArray(value.excluded) || value.excluded.length > limits.maxReceiptExcludedItems) return false;
+  return value.observations.every((item, index) => safeId(item.memoryId) && safeId(item.artifactId) && safeLocator(item.locator) && (!index || byteCompare(`${value.observations[index - 1].memoryId}\0${value.observations[index - 1].artifactId}\0${value.observations[index - 1].locator}`, `${item.memoryId}\0${item.artifactId}\0${item.locator}`) < 0)) && value.applied.every((item, index) => safeId(item.memoryId) && (!index || byteCompare(value.applied[index - 1].memoryId, item.memoryId) < 0)) && value.excluded.every((item, index) => safeId(item.memoryId) && canonicalString(item.reason) && Array.from(item.reason).length > 0 && Array.from(item.reason).length <= 1024 && (!index || byteCompare(value.excluded[index - 1].memoryId, item.memoryId) < 0));
 }
 function parseCanonical(bytes, validator) {
   try { const value = JSON.parse(utf8.decode(bytes)); return validator(value) && equalCanonicalJson(bytes, value) ? value : null; } catch { return null; }
@@ -238,12 +246,19 @@ async function reserveSlot(directory, max, width, make) {
   }
   return null;
 }
+async function firstVacantSlot(directory, max, width) {
+  await ensureDirectories(directory, "");
+  for (let slot = 0; slot < max; slot += 1) {
+    try { await lstat(path.join(directory, `${String(slot).padStart(width, "0")}.json`)); } catch (error) { if (error?.code === "ENOENT") return slot; throw error; }
+  }
+  return null;
+}
 function extensionFor(kind) { return kind === "view" || kind === "log" ? ".md" : ".json"; }
 async function validInstance({ store, kind, base, first, second, identitySha256, generationSha256, relativePath, limits, census }) {
   const extension = extensionFor(kind); const prefix = path.relative(derivedRoot(store), path.join(base, "instances")).split(path.sep).join("/") + "/";
   if (!relativePath.startsWith(prefix) || !relativePath.endsWith(extension)) return { code: "memory.derived_generation_invalid" };
   const instanceId = path.basename(relativePath, extension); if (!UUID.test(instanceId)) return { code: "memory.derived_generation_invalid" };
-  const health = derivedHealth.get(census); const reservation = health?.get(reservationKey({ kind, identitySha256, generationSha256, instanceId }));
+  const health = derivedHealth.get(census); const reservation = [...(health?.values() ?? [])].find((item) => item.kind === kind && item.first === first && item.identitySha256 === identitySha256 && item.generationSha256 === generationSha256 && item.instanceId === instanceId && item.instanceRelativePath === relativePath);
   if (!reservation) return { code: "memory.derived_reservation_invalid" };
   const localSlotDirectory = path.join(base, "_slots"); const globalReservationDirectory = path.join(derivedRoot(store), ".reservations", "global");
   try { const pinned = await pinDerivedRoot(store); await verifyQuotaPinned(await pinQuotaDirectory(pinned, path.relative(pinned.root, localSlotDirectory))); await verifyQuotaPinned(await pinQuotaDirectory(pinned, ".reservations/global")); } catch { return { code: "memory.derived_reservation_invalid" }; }
@@ -291,9 +306,20 @@ async function publish({ store, kind, bytes, first, limits }) {
     const globalSlot = await reserveSlot(globalDirectory, actualLimits.maxGenerationReservations, 5, (slot) => reservationBytes({ kind, identitySha256, generationSha256: second, globalSlot: slot, localSlot: null, instanceId }));
     if (globalSlot === null) return emptyPublish([warning("memory.derived_limit_exceeded")]);
     const localDirectory = await ensureDirectories(base, "_slots");
-    const localSlot = await reserveSlot(localDirectory, actualLimits.maxIdentityInstances, 3, (slot) => reservationBytes({ kind, identitySha256, generationSha256: second, globalSlot, localSlot: slot, instanceId }));
+    const localSlot = await firstVacantSlot(localDirectory, actualLimits.maxIdentityInstances, 3);
     if (localSlot === null) return emptyPublish([warning("memory.derived_limit_exceeded")]);
-    const globalReservation = path.join(globalDirectory, `${String(globalSlot).padStart(5, "0")}.json`); const localReservation = path.join(localDirectory, `${String(localSlot).padStart(3, "0")}.json`);
+    const localReservation = path.join(localDirectory, `${String(localSlot).padStart(3, "0")}.json`);
+    try { await writeExclusive(localReservation, reservationBytes({ kind, identitySha256, generationSha256: second, globalSlot, localSlot, instanceId })); } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        const refreshed = await scanForPublish(store, actualLimits); if (!refreshed.complete) return emptyPublish(refreshed.warnings);
+        const present = await findInstances({ store, kind, first, second, limits: actualLimits, census: refreshed });
+        if (present.valid.length) return { complete: true, status: "present", generationPath: present.valid[0].relativePath, generationSha256: second, warnings: refreshed.warnings };
+      }
+      return emptyPublish([warning("memory.derived_limit_exceeded")]);
+    }
+    const globalReservation = path.join(globalDirectory, `${String(globalSlot).padStart(5, "0")}.json`);
     if (!await reservationValid(globalReservation, { kind, identitySha256, generationSha256: second, globalSlot, localSlot: null, instanceId }) || !await reservationValid(localReservation, { kind, identitySha256, generationSha256: second, globalSlot, localSlot, instanceId })) return emptyPublish([warning("memory.derived_reservation_invalid")]);
     const instances = await ensureDirectories(base, "instances"); const filename = `${instanceId}${extensionFor(kind)}`; const output = path.join(instances, filename); await writeExclusive(output, bytes);
     const readBack = await readBounded(output, maxBytes); if (!readBack.ok || !readBack.bytes.equals(bytes)) return emptyPublish([warning("memory.derived_generation_invalid")]);
@@ -350,13 +376,19 @@ export async function listMemoryReceipts({ store, requestSha256, maxItems = 256,
   if (!HEX.test(requestSha256 ?? "")) return { complete: true, items: [], warnings: [] };
   const census = await scanDerivedGenerations({ store, limits: actualLimits }); if (!census.complete) return { complete: false, items: [], warnings: census.warnings };
   const prefix = `receipts/${requestSha256}/`; const hashes = [...new Set(census.entries.map((entry) => entry.relativePath.split("/", 3)).filter((parts) => parts[0] === "receipts" && parts[1] === requestSha256 && HEX.test(parts[2] ?? "")).map((parts) => parts[2]))].sort(byteCompare);
-  const items = [];
+  const items = []; const warnings = [];
   for (const receiptSha256 of hashes) {
     const found = await findInstances({ store, kind: "receipt", first: requestSha256, second: receiptSha256, limits: actualLimits, census }); const valid = found.valid;
-    const candidatePrefix = `${prefix}${receiptSha256}/instances/`; const candidates = census.entries.filter((entry) => entry.relativePath.startsWith(candidatePrefix) && entry.type === "file");
+    const candidatePrefix = `${prefix}${receiptSha256}/instances/`; const candidates = census.entries.filter((entry) => {
+      if (!entry.relativePath.startsWith(candidatePrefix)) return false;
+      const name = entry.relativePath.slice(candidatePrefix.length);
+      return !name.includes("/") && UUID.test(name.slice(0, -5)) && name.endsWith(".json");
+    });
     items.push({ receiptSha256, status: valid.length ? "valid" : "corrupt", validInstanceCount: valid.length, corruptInstanceCount: Math.max(0, candidates.length - valid.length), firstValidRelativePath: valid[0]?.relativePath ?? null });
+    const validPaths = new Set(valid.map((item) => item.relativePath));
+    for (const candidate of candidates) if (!validPaths.has(candidate.relativePath)) warnings.push(warning("memory.derived_generation_invalid", { relativePath: candidate.relativePath }));
   }
-  return { complete: true, items: items.slice(0, maxItems), warnings: [] };
+  return { complete: true, items: items.slice(0, maxItems), warnings };
 }
 
 export function rankMemoryEntries(entries, requestContext = {}) {
