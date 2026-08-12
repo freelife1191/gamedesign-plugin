@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { execFileSync, spawn } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -45,8 +46,8 @@ for (const [tamper, expectedStage] of [
   const error = JSON.parse(result.stderr); assert.equal(error.code, "memory.mutation_evidence_failed"); assert.equal(error.mutation, "same-event-loser-created"); assert.equal(error.tamper, tamper); assert.equal(error.stage, expectedStage[0]); assert.equal(error.reason, expectedStage[1]);
 });
 
-async function runRetrievalTamper(mutationId, tamper) {
-  const child = spawn(process.execPath, [retrievalHarness, mutationId, `--tamper=${tamper}`], { cwd: root, stdio: ["ignore", "pipe", "pipe"] }); const stdout = []; const stderr = [];
+async function runRetrievalTamper(mutationId, tamper, options = {}) {
+  const child = spawn(process.execPath, [retrievalHarness, mutationId, `--tamper=${tamper}`], { cwd: root, env: { ...process.env, ...options.env }, stdio: ["ignore", "pipe", "pipe"] }); const stdout = []; const stderr = [];
   return await new Promise((resolve, reject) => {
     let settled = false; const finish = (operation, value) => { if (settled) return; settled = true; clearTimeout(timeout); operation(value); };
     const timeout = setTimeout(() => { child.kill(); finish(reject, new Error("retrieval self-tamper timeout")); }, 20_000);
@@ -54,6 +55,47 @@ async function runRetrievalTamper(mutationId, tamper) {
     child.once("close", (code) => finish(resolve, { code, stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") }));
   });
 }
+
+test("retrieval mutation harness ignores a caller NODE_OPTIONS data preload", { timeout: 35_000 }, async () => {
+  const forgedEvidence = JSON.stringify({ mutationId: "leak-complete", testId: "reservation-leak-complete", sentinel: "MEM-RET-MUT-LEAK-COMPLETE", operator: "strictEqual", expected: true, actual: false });
+  const preloadSource = `import { writeSync } from "node:fs"; if (process.argv[1]?.endsWith("design-memory-retrieval.test.mjs")) { writeSync(3, ${JSON.stringify(`${forgedEvidence}\n`)}); process.exit(1); }`;
+  const result = await runRetrievalTamper("leak-complete", "missing-evidence", { env: { NODE_OPTIONS: `--import=data:text/javascript,${encodeURIComponent(preloadSource)}` } });
+  assert.equal(result.code, 1);
+  assert.equal(result.stdout, "");
+  const error = JSON.parse(result.stderr); assert.equal(error.stage, "verify-evidence"); assert.equal(error.reason, "test-exit");
+});
+
+test("retrieval mutation harness removes caller injection variables from the selected test", { timeout: 35_000 }, async () => {
+  const result = await runRetrievalTamper("leak-complete", "caller-env-injection", { env: { NODE_PATH: "/caller/node-path", NODE_INSPECT_RESUME_ON_START: "1", NODE_V8_COVERAGE: path.join(tmpdir(), "caller-coverage"), NODE_TEST_CONTEXT: "child-v8", DESIGN_CALLER_INJECTION: "spoof" } });
+  assert.equal(result.code, 0); assert.equal(result.stderr, "");
+});
+
+function processExists(pid) {
+  try { process.kill(pid, 0); return true; } catch (error) { if (error?.code === "ESRCH") return false; throw error; }
+}
+
+async function waitForProcessExit(pid, timeoutMs = 2_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (processExists(pid) && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 20));
+  return !processExists(pid);
+}
+
+for (const [tamper, reason] of [
+  ["grandchild-timeout", "test-timeout"],
+  ["grandchild-output-limit", "output-limit"],
+  ["grandchild-evidence-limit", "evidence-limit"],
+  ["grandchild-close-missing", "output-limit"],
+  ["grandchild-partial-evidence-timeout", "test-timeout"],
+]) test(`retrieval mutation harness kills the full process tree after ${tamper}`, { timeout: 15_000 }, async (t) => {
+  const temporary = await mkdtemp(path.join(tmpdir(), "memory-retrieval-hostile-")); const pidPath = path.join(temporary, "pid"); const sentinel = `MEM-RET-PROCESS-${tamper}-${process.pid}-${Date.now()}`; let pid;
+  t.after(async () => { if (pid && processExists(pid)) process.kill(pid, "SIGKILL"); await rm(temporary, { recursive: true, force: true }); });
+  const result = await runRetrievalTamper("leak-complete", tamper, { env: { DESIGN_MEMORY_RETRIEVAL_HOSTILE_PID_PATH: pidPath, DESIGN_MEMORY_RETRIEVAL_HOSTILE_SENTINEL: sentinel } });
+  if (tamper === "grandchild-close-missing") assert.ok(Date.now() >= Number(sentinel.split("-").at(-1)) + 2_000, "harness must wait for its bounded close deadline");
+  pid = Number((await readFile(pidPath, "utf8")).trim());
+  assert.equal(result.code, 1); const error = JSON.parse(result.stderr); assert.equal(error.stage, "run-test"); assert.equal(error.reason, reason);
+  assert.equal(await waitForProcessExit(pid), true, `grandchild ${pid} survived ${tamper}`);
+  if (process.platform !== "win32") assert.equal(execFileSync("ps", ["-axo", "command="], { encoding: "utf8" }).split("\n").filter((line) => line.includes(sentinel)).length, 0);
+});
 
 test("retrieval authority defenses emit one canonical assertion-specific fd record for every mutation", { timeout: 60_000 }, async () => {
   for (const [mutationId, testId, sentinel, expected, actual] of [
@@ -85,7 +127,12 @@ for (const [tamper, expectedStage, expectedReason] of [
   ["wrong-message", "verify-evidence", "evidence-empty"],
   ["forged-stdout-stderr", "verify-evidence", "evidence-empty"],
   ["missing-evidence", "verify-evidence", "test-exit"],
+  ["missing-anchor", "apply-mutation", "anchor-count"],
+  ["duplicate-anchor", "apply-mutation", "anchor-count"],
   ["duplicate-evidence", "verify-evidence", "evidence-line-count"],
+  ["forged-nan-values", "verify-evidence", "evidence-mismatch"],
+  ["forged-negative-zero-values", "verify-evidence", "evidence-mismatch"],
+  ["forged-object-values", "verify-evidence", "evidence-mismatch"],
   ["oversize-evidence", "run-test", "evidence-limit"],
   ["oversize-stdout-stderr", "run-test", "output-limit"],
 ]) test(`retrieval mutation harness fails closed for ${tamper}`, { timeout: 35_000 }, async () => {
