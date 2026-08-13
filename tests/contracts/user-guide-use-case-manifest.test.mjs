@@ -187,6 +187,21 @@ const CAREER_FAQ_ANSWER_FIELDS = [
   "실패·재개·관련 경로",
 ];
 const CAREER_FAQ_CONTRACT = Object.freeze(CAREER_ROUTING.faqContracts ?? []);
+const CAREER_MEMORY_FAQ = Object.freeze({
+  id: "Q19",
+  question: "이전 학습·포트폴리오 교훈을 다음 작업에 어떻게 안전하게 쓰는가?",
+  primarySkill: "retrieve-approved-design-memory",
+  routingSource: { kind: "direct-use", id: "retrieve-approved-design-memory" },
+  expectedOutputs: [{ id: "approved-memory-guidance", kind: "skill-owned", path: "memory-application-report" }],
+  completionTokens: ["적용·제외 사유"],
+  fields: ["memory ID", "source binding", "apply/exclusion reason"],
+  readOrderId: "memory-guidance",
+  case: { id: "CA-C06", path: "use-cases/competency-paths.md", anchor: "ca-c06-창작-기획-포트폴리오" },
+  skillPath: "memory.md",
+  skillSource: "shared-memory",
+  recipePath: "recipes/portfolio-build-review.md",
+  recovery: { owner: "사람", sequence: ["보존", "사람 확인", "재개"] },
+});
 const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["규칙, mechanic, system과 core loop는 어떻게 다른가?", ["규칙", "mechanic", "system", "core loop"], ["입력", "상태", "루프"], ["rule", "state"], ["ST-C02", "ST-C03", "`core-motivation-loop`"], ["사람", "검토"]],
   ["처음부터 긴 GDD를 만들어야 하는가?", ["긴 GDD", "처음", "없으며"], ["비전", "가정", "경계"], ["vision", "content.md"], ["ST-C01", "`game-design-brief`", "`vision-pillars`"], ["승인", "가정"]],
@@ -1809,16 +1824,17 @@ function faqReadOrder(contract, routing) {
 
 async function assertCareerFaqMetadata(routing, {
   skillRoot = CAREER_SKILL_SOURCE_ROOT,
+  sharedMemorySkillRoot = path.join(repoRoot, "shared", "memory", "skills"),
   templateRoot = CAREER_TEMPLATE_SOURCE_ROOT,
   specQuestions,
 } = {}) {
   assert.ok(Array.isArray(routing.faqContracts), "routing.json faqContracts array");
-  assert.equal(routing.faqContracts.length, 18, "routing.json Career FAQ contract count");
-  const expectedIds = Array.from({ length: 18 }, (_, index) => `Q${String(index + 1).padStart(2, "0")}`);
+  assert.equal(routing.faqContracts.length, 19, "routing.json Career FAQ contract count");
+  const expectedIds = Array.from({ length: 19 }, (_, index) => `Q${String(index + 1).padStart(2, "0")}`);
   assert.deepEqual(routing.faqContracts.map(({ id }) => id), expectedIds, "Career FAQ exact ordered IDs");
-  assert.equal(new Set(routing.faqContracts.map(({ id }) => id)).size, 18, "Career FAQ unique IDs");
-  assert.equal(new Set(routing.faqContracts.map(({ question }) => question)).size, 18, "Career FAQ unique questions");
-  if (specQuestions) assert.deepEqual(routing.faqContracts.map(({ question }) => question), specQuestions, "Career FAQ spec questions");
+  assert.equal(new Set(routing.faqContracts.map(({ id }) => id)).size, 19, "Career FAQ unique IDs");
+  assert.equal(new Set(routing.faqContracts.map(({ question }) => question)).size, 19, "Career FAQ unique questions");
+  if (specQuestions) assert.deepEqual(routing.faqContracts.map(({ question }) => question), [...specQuestions, CAREER_MEMORY_FAQ.question], "Career FAQ spec questions plus memory safety question");
 
   const installedSkills = new Set(routing.skillIds);
   const routeById = new Map(routing.routes.map((route) => [route.id, route]));
@@ -1828,7 +1844,12 @@ async function assertCareerFaqMetadata(routing, {
   assert.equal(directUseById.size, routing.directUseSources.length, "unique direct-use source IDs");
   for (const contract of routing.faqContracts) {
     assert.ok(installedSkills.has(contract.primarySkill), `${contract.id} installed primary skill`);
-    assert.equal(contract.skillPath, `skills/${contract.primarySkill}.md`, `${contract.id} canonical skill path`);
+    if (contract.skillSource === "shared-memory") {
+      assert.deepEqual(contract, CAREER_MEMORY_FAQ, "Q19 exact shared-memory FAQ contract");
+    } else {
+      assert.equal(contract.skillPath, `skills/${contract.primarySkill}.md`, `${contract.id} canonical skill path`);
+      assert.equal(contract.skillSource, undefined, `${contract.id} product skill source`);
+    }
     assert.ok(Array.isArray(contract.expectedOutputs) && contract.expectedOutputs.length > 0, `${contract.id} expected outputs`);
     assert.equal(new Set(contract.expectedOutputs.map(({ id }) => id)).size, contract.expectedOutputs.length, `${contract.id} unique output IDs`);
     if (contract.routingSource.kind === "route") {
@@ -1848,7 +1869,9 @@ async function assertCareerFaqMetadata(routing, {
       assert.deepEqual(contract.expectedOutputs.map(({ id }) => id), directUse.outputTypes, `${contract.id} exact direct-use-owned outputs`);
     }
 
-    const skillSource = await readFile(path.join(skillRoot, contract.primarySkill, "SKILL.md"), "utf8");
+    const skillSource = await readFile(contract.skillSource === "shared-memory"
+      ? path.join(sharedMemorySkillRoot, contract.primarySkill, "SKILL.md")
+      : path.join(skillRoot, contract.primarySkill, "SKILL.md"), "utf8");
     const outputContract = skillSection(skillSource, "Output contract");
     const completionContract = skillSection(skillSource, "Completion(?: Criteria)?");
     for (const output of contract.expectedOutputs) {
@@ -3112,7 +3135,7 @@ test("Studio FAQ contract rejects missing requests, swapped answers, and wrong q
   );
 });
 
-test("Career FAQ contains the eighteen approved questions with executable, bounded answers", async () => {
+test("Career FAQ contains the nineteen approved questions with executable, bounded answers", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-career", "faq.md");
   const stat = await lstat(faqPath);
   assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Career FAQ must be a regular file");
@@ -3170,7 +3193,7 @@ test("Career FAQ routing sources reject every wrong-valid route and direct-use r
       const wrongDirectUse = CAREER_ROUTING.directUseSources.find(({ id }) => id !== contract.routingSource.id);
       const swapped = structuredClone(CAREER_ROUTING);
       swapped.faqContracts[index].routingSource.id = wrongDirectUse.id;
-      await assert.rejects(() => assertCareerFaqMetadata(swapped), /direct-use primary skill|exact direct-use-owned outputs/, `${contract.id} direct-use skill mismatch`);
+      await assert.rejects(() => assertCareerFaqMetadata(swapped), /exact shared-memory FAQ contract|direct-use primary skill|exact direct-use-owned outputs/, `${contract.id} direct-use skill mismatch`);
 
       const omittedOutputs = structuredClone(CAREER_ROUTING);
       omittedOutputs.directUseSources.find(({ id }) => id === contract.routingSource.id).outputTypes = [];
@@ -3178,7 +3201,7 @@ test("Career FAQ routing sources reject every wrong-valid route and direct-use r
 
       const swappedOutputs = structuredClone(CAREER_ROUTING);
       swappedOutputs.directUseSources.find(({ id }) => id === contract.routingSource.id).outputTypes = wrongDirectUse.outputTypes;
-      await assert.rejects(() => assertCareerFaqMetadata(swappedOutputs), /exact direct-use-owned outputs/, `${contract.id} direct-use output swap`);
+      await assert.rejects(() => assertCareerFaqMetadata(swappedOutputs), /exact shared-memory FAQ contract|exact direct-use-owned outputs/, `${contract.id} direct-use output swap`);
     }
   }
 });
@@ -3186,12 +3209,14 @@ test("Career FAQ routing sources reject every wrong-valid route and direct-use r
 test("Career FAQ rejects product SKILL Output and Completion source mutations", async () => {
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "career-faq-skills-"));
   const skillRoot = path.join(temporaryRoot, "skills");
+  const sharedMemorySkillRoot = path.join(temporaryRoot, "shared-memory-skills");
   const allOutputIds = [...new Set(CAREER_FAQ_CONTRACT.flatMap(({ expectedOutputs }) => expectedOutputs.map(({ id }) => id)))];
   const allCompletionTokens = [...new Set(CAREER_FAQ_CONTRACT.flatMap(({ completionTokens }) => completionTokens))];
   try {
     await cp(CAREER_SKILL_SOURCE_ROOT, skillRoot, { recursive: true });
+    await cp(path.join(repoRoot, "shared", "memory", "skills"), sharedMemorySkillRoot, { recursive: true });
     for (const contract of CAREER_FAQ_CONTRACT) {
-      const skillPath = path.join(skillRoot, contract.primarySkill, "SKILL.md");
+      const skillPath = path.join(contract.skillSource === "shared-memory" ? sharedMemorySkillRoot : skillRoot, contract.primarySkill, "SKILL.md");
       const canonical = await readFile(skillPath, "utf8");
       for (const { id } of contract.expectedOutputs) {
         const outputSection = skillSection(canonical, "Output contract");
@@ -3200,7 +3225,7 @@ test("Career FAQ rejects product SKILL Output and Completion source mutations", 
           const mutatedSection = outputSection.replace(`\`${id}\``, replacement);
           assert.notEqual(mutatedSection, outputSection, `${contract.id} Output source mutation precondition: ${id}`);
           await writeFile(skillPath, canonical.replace(outputSection, mutatedSection), "utf8");
-          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot }), /source-owned output ID/, `${contract.id} ${id} Output ${label}`);
+          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot, sharedMemorySkillRoot }), /source-owned output ID/, `${contract.id} ${id} Output ${label}`);
           await writeFile(skillPath, canonical, "utf8");
         }
       }
@@ -3211,7 +3236,7 @@ test("Career FAQ rejects product SKILL Output and Completion source mutations", 
           const mutatedSection = completionSection.replace(token, replacement);
           assert.notEqual(mutatedSection, completionSection, `${contract.id} Completion source mutation precondition: ${token}`);
           await writeFile(skillPath, canonical.replace(completionSection, mutatedSection), "utf8");
-          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot }), /source-owned Completion token/, `${contract.id} ${token} Completion ${label}`);
+          await assert.rejects(() => assertCareerFaqMetadata(CAREER_ROUTING, { skillRoot, sharedMemorySkillRoot }), /source-owned Completion token/, `${contract.id} ${token} Completion ${label}`);
           await writeFile(skillPath, canonical, "utf8");
         }
       }
@@ -3268,7 +3293,7 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
     }
     const readOrder = faqReadOrder(contract, CAREER_ROUTING);
     for (const inventoryItem of readOrder) {
-      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(inventoryItem, ""))), /canonical full read order/, `${answer.heading} ${inventoryItem} inventory omission`);
+      assert.throws(() => assertCareerFaq(markdown.replace(outcome, outcome.replace(inventoryItem, ""))), /canonical output field|canonical full read order/, `${answer.heading} ${inventoryItem} inventory omission`);
     }
     for (let orderIndex = 0; orderIndex < readOrder.length - 1; orderIndex += 1) {
       const swapped = [...readOrder];
@@ -3303,10 +3328,12 @@ test("Career FAQ exactly follows routing metadata and rejects exhaustive contrac
   }
 });
 
-test("Career FAQ primary skills expose product-source Output Contract sections", async () => {
-  for (const { primarySkill } of CAREER_FAQ_CONTRACT) {
-    const source = await readFile(path.join(repoRoot, "products/game-design-career/plugin/skills", primarySkill, "SKILL.md"), "utf8");
-    assert.match(source, /^## Output contract$/mi, `Career FAQ ${primarySkill} product Output Contract`);
+test("Career FAQ primary skills expose product or shared-memory Output Contract sections", async () => {
+  for (const { primarySkill, skillSource } of CAREER_FAQ_CONTRACT) {
+    const source = await readFile(skillSource === "shared-memory"
+      ? path.join(repoRoot, "shared", "memory", "skills", primarySkill, "SKILL.md")
+      : path.join(repoRoot, "products/game-design-career/plugin/skills", primarySkill, "SKILL.md"), "utf8");
+    assert.match(source, /^## Output contract$/mi, `Career FAQ ${primarySkill} Output Contract`);
   }
 });
 

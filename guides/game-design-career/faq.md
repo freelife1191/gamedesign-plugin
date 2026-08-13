@@ -410,4 +410,12 @@ $game-design-career:orchestrate-game-design-career artifact=game-design-career/<
 @Game Design Career 기억 후보와 승인 기록을 보여 주고, 현재 포트폴리오 작업에 적용할 수 없는 항목은 이유와 함께 제외해.
 ```
 
-**비활성화와 관련 문서:** 완전히 끄려면 `GAME_DESIGN_MEMORY_ENABLED=false`를 설정하고, 한 번만 제외하려면 “이번 작업에서는 이전 기억을 사용하지 마.”라고 요청합니다. 자세한 관리와 복구 순서는 [Career 프로젝트 기억](memory.md)을 따릅니다.
+```text
+$game-design-career:retrieve-approved-design-memory project=career-project-id context=portfolio-work
+```
+
+**예상 결과·읽는 순서:** `approved-memory-guidance` 결과를 `memory-application-report → memory ID → source binding → apply/exclusion reason` 순서로 읽습니다. 현재 포트폴리오에 적용한 승인 기록과 제외한 기록을 함께 보여 주므로, 출처 연결과 적용 범위를 다시 확인할 수 있습니다.
+
+**사람 검토·근거·권리·비보장:** 사람 포트폴리오 검토자가 출처, 공개 권리와 개인 기여 경계를 다시 확인합니다. `적용·제외 사유`가 있어도 기억은 공고·피드백·개인 기여 근거나 합격 가능성을 대신하거나 보장하지 않습니다.
+
+**실패·재개·관련 경로:** 기억 저장소가 없거나 출처가 달라지면 해당 항목과 이유를 **보존 → 사람 확인 → 재개**하고, 기억 없이 기존 작업을 이어 갑니다. [CA-C06](use-cases/competency-paths.md#ca-c06-창작-기획-포트폴리오), [Career 프로젝트 기억](memory.md), [포트폴리오 레시피](recipes/portfolio-build-review.md)를 따릅니다.

@@ -14,3 +14,15 @@ description: Use when a game-design task needs approved project memory, prior le
 7. 사용한 memory ID와 제외 사유를 보고한다.
 
 Hook을 사용할 수 없거나 기억 저장소·receipt·검색이 실패하면 오류를 기획 결과로 바꾸지 말고, 기억 없이 기존 작업을 계속한다.
+
+## Output contract
+
+- `approved-memory-guidance`: 현재 요청에 적용 가능한 승인 기억과 제외한 항목을 구분한 자료다.
+- `memory ID`: 적용하거나 제외한 각 기억을 식별한다.
+- `source binding`: 원본 근거와 현재 출처 연결 상태를 보존한다.
+- `apply/exclusion reason`: 적용 또는 제외한 이유를 함께 남긴다.
+
+## Completion Criteria
+
+- `적용·제외 사유`와 기억을 쓰지 않은 경우의 이유를 요청 결과에 남긴다.
+- 기억 저장소가 없거나 손상돼도 기존 기획 작업은 중단하지 않는다.
