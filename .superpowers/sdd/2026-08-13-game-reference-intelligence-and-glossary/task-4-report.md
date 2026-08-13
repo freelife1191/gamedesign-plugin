@@ -101,3 +101,41 @@ Both isolated source mutations were restored before final verification. Existing
 - `git diff --check` → exit 0.
 
 Remaining concern: package mirror layout is owned by the later packaging task; this round adds the source production evaluator and verifies it against the source schema contract.
+
+## Fix round 3/5 — RED → GREEN
+
+### RED
+
+Command: `node --test tests/unit/game-design-glossary.test.mjs`
+
+Output: `✖ schema extension and runtime fail closed for strict canonical effective glossary limits`; `AssertionError: true !== false` for an empty `effective` glossary; `tests 18`, `pass 17`, `fail 1`.
+
+Why expected: the first declarative evaluator pass loaded the schema but the schema only made `shared` non-empty, so the required `effective` scope boundary still passed. The new test catches removal of the effective `allOf` condition; the 256/257 `examples` case catches removal of the evaluator's `maxItems` branch.
+
+### Implementation and non-vacuity review
+
+- Replaced the static JSON import and extension-only check with one packaged evaluator that safely resolves only the source/installed fixed paths, requires byte equality when both exist, and executes the schema's closed keyword set (`type`, object/array/string constraints, composition, conditionals, references, and extension). Unsupported keywords, unknown root keys/extensions, malformed UTF-8/JSON, missing/symlink/special leaves, and altered annotation/identity fail closed.
+- Added the effective scope declarative condition. `validateGameDesignGlossary` now delegates structural bounds to that evaluator and retains only deterministic ordering, ambiguity, lifecycle, and graph semantics, avoiding duplicated structural constraints.
+- Added a real temporary production-layout import smoke: copied evaluator/canonical helper/schema succeeds with source-only and equal installed mirrors, then fails for mismatch, invalid UTF-8/JSON, missing, symlink, and special schema leaves. It does not modify Task 6's product mirror.
+- Added exact 256/257 array, exact 2 MiB/2 MiB+1 UTF-8, BOM/NUL/control/NFD/CR, empty effective, unknown schema key/order/duplicate, lifecycle cycle/missing replacement, and override hash/changed-ID regressions.
+- Added literal one-case diagnostic assertions for abbreviation, forbidden/deprecated, translation, ambiguity, bilingual preferred pair, explicit semantic replacement/false-positive, case/plural drift, heading/fragment, and locale mix.
+- Added a test-only copied-module harness that wraps the private safe writer dependency (no public hook), throws on the second final publish after all staged writes, and proves exact preexisting tree byte/path equality plus no leftover stage directory. This catches removal or corruption of production rollback behavior.
+
+### GREEN
+
+- `node --test tests/unit/game-design-glossary.test.mjs tests/unit/reference-intelligence.test.mjs` → `tests 67`, `pass 67`, `fail 0`.
+- `node --check shared/scripts/lib/game-design-glossary-schema-evaluator.mjs`; `node --check shared/scripts/validate-reference-intelligence.mjs`; `node --check shared/scripts/manage-game-design-glossary.mjs`; `node --check tests/unit/game-design-glossary.test.mjs` → all exit 0.
+- `node -e 'for (const file of ["shared/reference-intelligence/schema/game-design-glossary.schema.json"]) JSON.parse(require("node:fs").readFileSync(file,"utf8")); console.log("schema parse: ok")'` → `schema parse: ok`.
+- `git diff --check` → exit 0.
+
+### Files changed
+
+- `shared/reference-intelligence/schema/game-design-glossary.schema.json`
+- `shared/scripts/lib/game-design-glossary-schema-evaluator.mjs`
+- `shared/scripts/manage-game-design-glossary.mjs`
+- `shared/scripts/validate-reference-intelligence.mjs`
+- `tests/unit/game-design-glossary.test.mjs`
+
+### Concerns
+
+The safe artifact boundary is function-level failure atomicity only, not crash-wide filesystem atomicity. The installed-layout proof is deliberately temporary; product Studio/Career packaging remains Task 6 ownership.

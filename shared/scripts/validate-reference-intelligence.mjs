@@ -227,28 +227,15 @@ export function validateReferenceAnalysis(value) {
 export function validateGameDesignGlossary(value) {
   return resultOf((issue) => {
     if (!evaluateGameDesignGlossarySchema(value).ok) issue("", "glossary-schema.invalid");
-    closedObject(value, ["schemaVersion", "scope", "version", "terms"], "", issue);
-    if (value?.schemaVersion !== 1) issue("/schemaVersion", "schema-version.invalid");
-    enumValue(value?.scope, ["shared", "project-overlay", "effective"], "/scope", issue);
-    if (!Number.isInteger(value?.version) || value.version < 1) issue("/version", "version.invalid");
-    sortedRecords(value?.terms, "/terms", issue, "termId", (term, path, add) => {
-      const keys = ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"];
-      closedObject(term, keys, path, add);
-      safeTermId(term?.termId, `${path}/termId`, add); if (!isGlossaryText(term?.koPreferred)) add(`${path}/koPreferred`, "text.invalid"); if (!isGlossaryText(term?.enPreferred)) add(`${path}/enPreferred`, "text.invalid"); if (!isGlossaryText(term?.definition)) add(`${path}/definition`, "text.invalid"); safeId(term?.scope, `${path}/scope`, add);
-      for (const key of ["contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "confusedConceptIds", "decisionIds", "evidenceIds"]) { sortedUnique(term?.[key], `${path}/${key}`, add, key === "decisionIds" ? isId : isGlossaryText, { allowEmpty: true }); if (Array.isArray(term?.[key]) && term[key].length > 256) add(`${path}/${key}`, "array.oversized"); }
-      closedObject(term?.grammar, ["ko", "en"], `${path}/grammar`, add); if (!isGlossaryText(term?.grammar?.ko)) add(`${path}/grammar/ko`, "text.invalid"); if (!isGlossaryText(term?.grammar?.en)) add(`${path}/grammar/en`, "text.invalid");
-      sortedUnique(term?.examples, `${path}/examples`, add, isGlossaryText, { allowEmpty: true });
-      enumValue(term?.state, ["proposed", "approved", "deprecated"], `${path}/state`, add);
-      if (term?.approver !== null && !isGlossaryText(term?.approver)) add(`${path}/approver`, "text.invalid");
-      if (term?.replacementTermId !== null && !isTermId(term?.replacementTermId)) add(`${path}/replacementTermId`, "term-id.invalid");
-      if (!Number.isInteger(term?.version) || term.version < 1) add(`${path}/version`, "version.invalid");
-      if (!isSafeText(term?.changedAt) || Number.isNaN(new Date(term.changedAt).valueOf()) || new Date(term.changedAt).toISOString() !== term.changedAt) add(`${path}/changedAt`, "timestamp.invalid");
-      for (const key of ["koPreferred", "enPreferred", "definition"]) if (Buffer.byteLength(term?.[key] ?? "", "utf8") > 1024 * 1024) add(`${path}/${key}`, "text.oversized");
-    }, { allowEmpty: value?.scope === "project-overlay" });
-    if (Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) issue("", "glossary.oversized");
+    if (!Array.isArray(value?.terms)) return;
+    const orderedFields = ["contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "confusedConceptIds", "decisionIds", "evidenceIds", "examples"];
+    for (const [index, term] of value.terms.entries()) {
+      if (index > 0 && compareUtf8(value.terms[index - 1]?.termId, term?.termId) >= 0) issue("/terms", "array.unsorted-or-duplicate");
+      for (const field of orderedFields) if (Array.isArray(term?.[field]) && term[field].some((item, itemIndex) => itemIndex > 0 && compareUtf8(term[field][itemIndex - 1], item) >= 0)) issue(`/terms/${index}/${field}`, "array.unsorted-or-duplicate");
+    }
     const labels = new Set();
-    const byTermId = new Map((value?.terms ?? []).map((term) => [term?.termId, term]));
-    for (const term of value?.terms ?? []) {
+    const byTermId = new Map(value.terms.map((term) => [term?.termId, term]));
+    for (const term of value.terms) {
       for (const label of [term?.koPreferred, term?.enPreferred]) { const key = `${term?.scope}\0${label}`; if (labels.has(key)) issue("/terms", "concept.ambiguous"); labels.add(key); }
       if (term?.state === "proposed" && (term?.approver !== null || term?.replacementTermId !== null)) issue("/terms", "lifecycle.invalid");
       if (term?.state === "approved" && (!isSafeText(term?.approver) || term?.replacementTermId !== null)) issue("/terms", "lifecycle.invalid");

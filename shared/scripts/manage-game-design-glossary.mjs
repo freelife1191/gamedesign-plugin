@@ -73,6 +73,9 @@ function replacementAttempt(value, terms) { if (value === undefined) return fals
 export function validateDocumentTerminology({ text, language, documentId, effectiveGlossary, receipt, replacementAttempt: attempt } = {}) {
   if (!canonicalText(text, 2 * 1024 * 1024) || !["ko", "en"].includes(language) || !id.test(documentId ?? "")) fail(); const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective") fail(); const blocking = []; const warnings = []; const receiptOk = receiptMatches(receipt, documentId, glossary); if (!receiptOk) blocking.push(finding("stale-glossary-receipt")); const selected = new Set(receipt?.termIds ?? []);
   const terms = new Map(glossary.terms.map((item) => [item.termId, item])); const hasReplacementAttempt = replacementAttempt(attempt, terms);
+  const labels = new Map();
+  for (const item of glossary.terms.filter(({ termId: value }) => selected.has(value))) for (const label of [language === "ko" ? item.koPreferred : item.enPreferred, ...item.allowedVariants]) if (termMatch(text, label, language, language === "en")) { const key = language === "en" ? label.toLocaleLowerCase("en-US") : label; const matches = labels.get(key) ?? new Set(); matches.add(item.termId); labels.set(key, matches); }
+  for (const matches of labels.values()) if (matches.size > 1) for (const value of matches) blocking.push(finding("ambiguous-concept-label", value));
   for (const item of glossary.terms) {
     const preferred = language === "ko" ? item.koPreferred : item.enPreferred; const alternative = language === "ko" ? item.enPreferred : item.koPreferred; const usedPreferred = termMatch(text, preferred, language, language === "en"); const usedAllowed = item.allowedVariants.some((value) => termMatch(text, value, language, language === "en"));
     if ((usedPreferred || usedAllowed) && !selected.has(item.termId)) blocking.push(finding("stale-glossary-receipt"));

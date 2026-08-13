@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, readdir, rm, symlink } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 import { canonicalJson, sha256Canonical, validateGameDesignGlossary, validateGlossaryReceipt } from "../../shared/scripts/validate-reference-intelligence.mjs";
@@ -80,8 +81,8 @@ test("replacement and deprecation require a distinct approved replacement and re
   assert.throws(() => applyGlossaryDecision({ glossary: current, ...issueGlossaryHumanDecision({ ...issued.receipt, replacementTermId: "TERM-PLAYER-POWER", eventId: "bad-replacement" }) }), /glossary/i);
   const replaced = applyGlossaryDecision({ glossary: current, ...issueGlossaryHumanDecision({ action: "replace", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "replace-power", glossarySha256: sha256Canonical(current), glossaryVersion: 1, changedAt }) });
   assert.equal(replaced.terms.find(({ termId }) => termId === "TERM-PLAYER-POWER").state, "deprecated");
-  const missing = structuredClone(current); missing.terms[1].replacementTermId = "TERM-MISSING"; missing.terms[1].state = "deprecated"; assert.equal(validateGameDesignGlossary(missing).ok, false);
-  const cycle = structuredClone(current); cycle.terms[0] = { ...cycle.terms[0], state: "deprecated", replacementTermId: "TERM-PLAYER-POWER" }; cycle.terms[1] = { ...cycle.terms[1], state: "deprecated", replacementTermId: "TERM-COMBAT-POWER" }; assert.equal(validateGameDesignGlossary(cycle).ok, false);
+  const missing = structuredClone(current); missing.terms[1].replacementTermId = "TERM-MISSING"; missing.terms[1].state = "deprecated"; assert.equal(validateGameDesignGlossary(missing).errors.some(({ code }) => code === "lifecycle.invalid"), true);
+  const cycle = structuredClone(current); cycle.terms[0] = { ...cycle.terms[0], state: "deprecated", replacementTermId: "TERM-COMBAT-POWER" }; cycle.terms[1] = { ...cycle.terms[1], state: "deprecated", replacementTermId: "TERM-PLAYER-POWER" }; assert.equal(validateGameDesignGlossary(cycle).errors.some(({ code }) => code === "lifecycle.cycle"), true);
 });
 
 test("effective glossary merge is deterministic and rejects unapproved shared overrides and bilingual ambiguity", () => {
@@ -144,6 +145,9 @@ test("shared semantic overrides require live hash-bound human provenance and a m
   assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: overlay, overrideReceipt: structuredClone(issued.receipt), overrideCapability: issued.capability, changeReason: "Project combat terminology differs." }), /glossary/i);
   assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: overlay, overrideReceipt: issued.receipt, overrideCapability: issued.capability, changeReason: "Different reason." }), /glossary/i);
   assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: { ...shared, version: 2 }, projectOverlay: overlay, overrideReceipt: issued.receipt, overrideCapability: issued.capability, changeReason: "Project combat terminology differs." }), /glossary/i);
+  assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: { ...overlay, terms: [{ ...overlay.terms[0], definition: "Tampered definition." }] }, overrideReceipt: issued.receipt, overrideCapability: issued.capability, changeReason: "Project combat terminology differs." }), /glossary/i);
+  const extraShared = approvedGlossary({ terms: [shared.terms[0], term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["combat"] })] }); const extraOverlay = { ...overlay, terms: [...overlay.terms, term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", definition: "Override", state: "approved", approver: "Lead", decisionIds: ["combat"] })].sort((left, right) => left.termId.localeCompare(right.termId)) };
+  assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: extraShared, projectOverlay: extraOverlay, overrideReceipt: issued.receipt, overrideCapability: issued.capability, changeReason: "Project combat terminology differs." }), /glossary/i);
 });
 
 test("lifecycle, document selection, and persisted receipt bindings fail closed", async (t) => {
@@ -179,7 +183,64 @@ test("schema extension and runtime fail closed for strict canonical effective gl
     (value) => { value.terms[0].definition = "e\u0301"; },
     (value) => { value.terms = []; },
   ]) { const value = structuredClone(approvedEffective()); mutate(value); assert.equal(evaluateGameDesignGlossarySchema(value, { schema }).ok, false); assert.equal(validateGameDesignGlossary(value).ok, false); }
-  for (const badSchema of [{ ...schema, "x-game-design-glossary": undefined }, { ...schema, "x-game-design-glossary": { ...schema["x-game-design-glossary"], maxCanonicalUtf8Bytes: 1 } }, { ...schema, "x-unknown": true }]) assert.equal(evaluateGameDesignGlossarySchema(approvedEffective(), { schema: badSchema }).ok, false);
+  for (const badSchema of [{ ...schema, "x-game-design-glossary": undefined }, { ...schema, "x-game-design-glossary": { ...schema["x-game-design-glossary"], maxCanonicalUtf8Bytes: 1 } }, { ...schema, "$id": "tampered" }, { ...schema, "x-unknown": true }]) assert.equal(evaluateGameDesignGlossarySchema(approvedEffective(), { schema: badSchema }).ok, false);
+});
+
+test("declarative schema authority enforces every glossary boundary and fixed installed resolution", async (t) => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/game-design-glossary.schema.json", import.meta.url), "utf8"));
+  const atLimit = structuredClone(approvedEffective()); atLimit.terms[0].examples = Array.from({ length: 256 }, (_, index) => `example-${String(index).padStart(3, "0")}`);
+  const aboveLimit = structuredClone(atLimit); aboveLimit.terms[0].examples.push("example-over-limit");
+  assert.equal(evaluateGameDesignGlossarySchema(atLimit, { schema }).ok, true);
+  assert.equal(validateGameDesignGlossary(atLimit).ok, true);
+  assert.equal(evaluateGameDesignGlossarySchema(aboveLimit, { schema }).ok, false);
+  assert.equal(validateGameDesignGlossary(aboveLimit).ok, false);
+  const totalLimit = structuredClone(approvedEffective()); totalLimit.terms.push({ ...structuredClone(totalLimit.terms[0]), termId: "TERM-Z-POWER", koPreferred: "제트 파워", enPreferred: "Z Power", decisionIds: ["z-power"] }); totalLimit.terms.sort((left, right) => left.termId.localeCompare(right.termId)); totalLimit.terms[0].definition = ""; totalLimit.terms[1].definition = "";
+  const remaining = 2 * 1024 * 1024 - Buffer.byteLength(canonicalJson(totalLimit), "utf8"); totalLimit.terms[0].definition = "x".repeat(Math.min(1024 * 1024, remaining - 1)); totalLimit.terms[1].definition = "x".repeat(remaining - totalLimit.terms[0].definition.length);
+  assert.equal(Buffer.byteLength(canonicalJson(totalLimit), "utf8"), 2 * 1024 * 1024); assert.equal(evaluateGameDesignGlossarySchema(totalLimit, { schema }).ok, true); assert.equal(validateGameDesignGlossary(totalLimit).ok, true);
+  totalLimit.terms[1].definition += "x"; assert.equal(evaluateGameDesignGlossarySchema(totalLimit, { schema }).ok, false); assert.equal(validateGameDesignGlossary(totalLimit).ok, false);
+  const root = await mkdtemp(join(tmpdir(), "glossary-schema-layout-")); t.after(() => rm(root, { recursive: true, force: true }));
+  const lib = join(root, "scripts", "lib"); const source = join(root, "reference-intelligence", "schema"); const installed = join(root, "references", "shared", "reference-intelligence", "schema");
+  await mkdir(lib, { recursive: true }); await mkdir(source, { recursive: true }); await writeFile(join(root, "package.json"), '{"type":"module"}\n');
+  await Promise.all([
+    cp(new URL("../../shared/scripts/lib/game-design-glossary-schema-evaluator.mjs", import.meta.url), join(lib, "game-design-glossary-schema-evaluator.mjs")),
+    cp(new URL("../../shared/scripts/lib/reference-intelligence-canonical.mjs", import.meta.url), join(lib, "reference-intelligence-canonical.mjs")),
+    cp(new URL("../../shared/reference-intelligence/schema/game-design-glossary.schema.json", import.meta.url), join(source, "game-design-glossary.schema.json")),
+  ]);
+  const imported = await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?source-only`);
+  assert.equal(imported.evaluateGameDesignGlossarySchema(atLimit).ok, true);
+  await mkdir(installed, { recursive: true }); await cp(join(source, "game-design-glossary.schema.json"), join(installed, "game-design-glossary.schema.json"));
+  const mirrored = await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?equal-mirror`);
+  assert.equal(mirrored.evaluateGameDesignGlossarySchema(atLimit).ok, true);
+  await writeFile(join(installed, "game-design-glossary.schema.json"), "{}\n");
+  const tampered = await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?tampered-mirror`);
+  assert.equal(tampered.evaluateGameDesignGlossarySchema(atLimit).ok, false);
+  const schemaPath = join(source, "game-design-glossary.schema.json"); await rm(join(installed, "game-design-glossary.schema.json")); await writeFile(schemaPath, Buffer.from([0xff, 0xfe]));
+  assert.equal((await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?invalid-utf8`)).evaluateGameDesignGlossarySchema(atLimit).ok, false);
+  await writeFile(schemaPath, "{not-json}\n"); assert.equal((await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?invalid-json`)).evaluateGameDesignGlossarySchema(atLimit).ok, false);
+  await rm(schemaPath); assert.equal((await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?missing`)).evaluateGameDesignGlossarySchema(atLimit).ok, false);
+  await symlink(join(root, "absent"), schemaPath); assert.equal((await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?symlink`)).evaluateGameDesignGlossarySchema(atLimit).ok, false);
+  await rm(schemaPath); await mkdir(schemaPath); assert.equal((await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?special`)).evaluateGameDesignGlossarySchema(atLimit).ok, false);
+});
+
+test("mid-publish filesystem failure rolls every artifact byte and path back", async (t) => {
+  const root = await mkdtemp(join(tmpdir(), "glossary-rollback-root-")); const moduleRoot = await mkdtemp(join(tmpdir(), "glossary-rollback-module-"));
+  t.after(() => Promise.all([rm(root, { recursive: true, force: true }), rm(moduleRoot, { recursive: true, force: true })]));
+  const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] }); const initial = decision();
+  await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: initial.receipt.eventId, receipt: initial.receipt, capability: initial.capability } });
+  const tree = async (directory, prefix = "") => {
+    const entries = await readdir(directory, { withFileTypes: true }); const result = {};
+    for (const entry of entries) { const relative = prefix ? `${prefix}/${entry.name}` : entry.name; if (entry.isDirectory()) Object.assign(result, await tree(join(directory, entry.name), relative)); else result[relative] = (await readFile(join(directory, entry.name))).toString("base64"); }
+    return result;
+  };
+  const before = await tree(root);
+  await cp(new URL("../../shared/scripts/", import.meta.url), join(moduleRoot, "scripts"), { recursive: true }); await mkdir(join(moduleRoot, "reference-intelligence"), { recursive: true }); await cp(new URL("../../shared/reference-intelligence/schema/", import.meta.url), join(moduleRoot, "reference-intelligence", "schema"), { recursive: true }); await writeFile(join(moduleRoot, "package.json"), '{"type":"module"}\n');
+  const safePath = join(moduleRoot, "scripts", "lib", "safe-artifact-write.mjs"); await cp(safePath, join(moduleRoot, "scripts", "lib", "safe-artifact-write-original.mjs"));
+  await writeFile(safePath, 'import * as base from "./safe-artifact-write-original.mjs";\nexport const canonicalArtifactRoot = base.canonicalArtifactRoot;\nexport const ensureArtifactDirectories = base.ensureArtifactDirectories;\nlet writes = 0;\nexport async function safeWriteArtifactFile(value) { writes += 1; if (writes === 8) throw new Error("mid-publish failure"); return base.safeWriteArtifactFile(value); }\n');
+  const copiedCapabilities = await import(pathToFileURL(join(moduleRoot, "scripts", "lib", "game-design-glossary-capabilities.mjs")).href); const copiedManage = await import(`${pathToFileURL(join(moduleRoot, "scripts", "manage-game-design-glossary.mjs")).href}?rollback`);
+  const copied = copiedCapabilities.issueGlossaryHumanDecision(decisionInput());
+  await assert.rejects(() => copiedManage.writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: copied.receipt.eventId, receipt: copied.receipt, capability: copied.capability } }), /mid-publish failure/);
+  assert.deepEqual(await tree(root), before);
+  assert.equal((await readdir(root)).some((entry) => entry.startsWith(".glossary-stage-")), false);
 });
 
 test("terminology restores preferred-pair and dedicated English writing diagnostics", () => {
@@ -193,4 +254,24 @@ test("terminology restores preferred-pair and dedicated English writing diagnost
   const addition = term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["combat"] }); const expanded = mergeGameDesignGlossaries({ sharedGlossary: approvedGlossary(), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [addition] } }); const expandedReceipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: expanded, termIds: ["TERM-COMBAT-POWER", "TERM-PLAYER-POWER"] });
   assert.equal(validateDocumentTerminology({ text: "플레이어 파워와 전투 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: expanded, receipt: expandedReceipt }).blocking.some(({ code }) => code === "semantic-auto-replacement"), false);
   assert.equal(validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: expanded, receipt: expandedReceipt, replacementAttempt: { action: "replace", fromTermId: "TERM-PLAYER-POWER", toTermId: "TERM-COMBAT-POWER" } }).blocking.some(({ code }) => code === "semantic-auto-replacement"), true);
+});
+
+test("terminology diagnostic matrix emits each literal code without co-occurrence inference", () => {
+  const effective = structuredClone(approvedEffective()); effective.terms[0].abbreviations = ["PP"]; effective.terms[0].deprecatedTerms = ["Old Power"];
+  const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
+  const warningCodes = (text, language) => validateDocumentTerminology({ text, language, documentId: "combat-v1", effectiveGlossary: effective, receipt }).warnings.map(({ code }) => code);
+  assert.deepEqual(warningCodes("PP", "en"), ["unexplained-abbreviation"]);
+  assert.deepEqual(warningCodes("전투력", "ko"), ["deprecated-term"]);
+  assert.deepEqual(warningCodes("Old Power", "en"), ["deprecated-term"]);
+  assert.deepEqual(warningCodes("Player Power", "ko"), ["translation-mismatch"]);
+  assert.deepEqual(warningCodes("player power", "en"), ["orthography-variant"]);
+  assert.deepEqual(warningCodes("player powers", "en"), ["orthography-variant"]);
+  const pair = validateDocumentTerminology({ text: "플레이어 파워 Player Power", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt });
+  assert.deepEqual(pair.blocking.map(({ code }) => code), ["multiple-preferred-terms"]);
+  const overlap = term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", allowedVariants: ["Player Power"], state: "approved", approver: "Lead", decisionIds: ["combat"] }); const expanded = mergeGameDesignGlossaries({ sharedGlossary: approvedGlossary(), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [overlap] } }); const expandedReceipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: expanded, termIds: ["TERM-COMBAT-POWER", "TERM-PLAYER-POWER"] });
+  assert.deepEqual(validateDocumentTerminology({ text: "Player Power", language: "en", documentId: "combat-v1", effectiveGlossary: expanded, receipt: expandedReceipt }).blocking.map(({ code }) => code), ["ambiguous-concept-label", "ambiguous-concept-label"]);
+  assert.deepEqual(validateDocumentTerminology({ text: "플레이어 파워와 전투 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: expanded, receipt: expandedReceipt }).blocking, []);
+  assert.deepEqual(validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: expanded, receipt: expandedReceipt, replacementAttempt: { action: "replace", fromTermId: "TERM-PLAYER-POWER", toTermId: "TERM-COMBAT-POWER" } }).blocking.map(({ code }) => code), ["semantic-auto-replacement"]);
+  const writing = validateGameDesignWritingLanguage({ text: "# Combat Terms\n# combat terms\nThe armour is blue\nFragment", language: "en", locale: "en-US", documentId: "combat-v1", effectiveGlossary: effective, receipt });
+  assert.deepEqual(writing.warnings.map(({ code }) => code).sort(), ["heading-style-drift", "mixed-english-locale", "sentence-fragment"]);
 });
