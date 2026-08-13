@@ -73,7 +73,7 @@ function validReferenceAnalysis() {
     priority: [{ systemId: "system-reveal-loop", rank: 1, rationale: "Directly answers the brief.", relevance: 5, playerExperienceImpact: 5, economyProgressionImpact: 1, differentiationPotential: 3, evidenceStrength: 5, uncertainty: 1, researchCost: 1 }],
     deepDives: [{
       systemId: "system-reveal-loop",
-      claimKind: "inference",
+      claimKind: "observation",
       finding: "A choice after a reveal preserves agency.",
       evidenceIds: ["evidence-cinematic-loop"],
       referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1,
@@ -96,7 +96,7 @@ function validReferenceAnalysis() {
       reviewState: "pending-review",
     }],
     verificationQueue: [{
-      verificationId: "verify-reveal-loop",
+      verificationId: "verify-system-reveal-loop",
       question: "Does the choice remain legible in a playable prototype?",
       evidenceIds: ["evidence-cinematic-loop"],
       state: "open",
@@ -924,11 +924,11 @@ test("fix2 holds unavailable-only systems but allows two observed references to 
   await writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis: sufficient });
   for (const relativePath of ["comparison-matrix.md", "transfer-decisions.md"]) {
     const outputLines = (await readFile(join(root, "reference-intelligence", relativePath), "utf8")).trim().split("\n");
-    const template = await readFile(new URL(`../../shared/reference-intelligence/templates/${relativePath}`, import.meta.url), "utf8");
-    assert.equal(outputLines[2], template.trim().split("\n")[2]);
-    const lines = outputLines.slice(2);
-    const cells = lines[0].split("|").length;
-    assert.equal(lines.every((line) => line.split("|").length === cells), true);
+    const templateLines = (await readFile(new URL(`../../shared/reference-intelligence/templates/${relativePath}`, import.meta.url), "utf8")).trim().split("\n");
+    assert.equal(outputLines[2], templateLines[2]);
+    const cellCount = (line) => line.split("|").length - 2;
+    const expectedColumns = relativePath === "comparison-matrix.md" ? 7 : 13;
+    assert.equal([templateLines[2], templateLines[3], templateLines[4], ...outputLines.slice(2)].every((line) => cellCount(line) === expectedColumns), true);
   }
   const unavailableOnly = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{
     evidenceId: "ev-alpha-offline", referenceId: "ref-alpha", contextId: "ctx-alpha-v1", systemIds: ["core-play"], sourceType: "official-site", claimKind: "observation", claim: "Unavailable core-loop source.", availability: "unavailable", limitation: "Offline.", verificationQuestion: "Which official page can verify the loop?",
@@ -975,4 +975,62 @@ test("fix2 accepts declared core, session, and meta cycles but rejects a missing
   const maps = buildSystemMaps({ inventory, edges: definitions.map(({ loopId, kind, ...definition }) => definition), loops: definitions.map(({ mapId, loopId, kind }) => ({ mapId, loopId, kind, nodeIds: ["action", "resolve", "reward"] })) });
   assert.deepEqual(maps.flatMap(({ loops }) => loops.map(({ kind }) => kind)), ["core", "session", "meta"]);
   assert.throws(() => buildSystemMaps({ inventory: [inventory[0]], edges: [{ mapId: "map-missing-process", systemId: "core-play", nodes: [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "reward", kind: "output", label: "Reward" }], connections: [{ connectionId: "action-to-reward", fromNodeId: "action", toNodeId: "reward", connectedSystemIds: ["core-play"] }] }], loops: [] }), { code: "reference-analysis.invalid-map" });
+});
+
+test("fix3 public APIs reject self-cycles and certainty or transfer trace downgrades", () => {
+  const inventory = [{ systemId: "core-play", name: "Core play", applicability: "unknown", evidenceIds: [] }];
+  assert.throws(() => buildSystemMaps({ inventory, edges: [{
+    mapId: "map-self-edge", systemId: "core-play",
+    nodes: [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "resolve", kind: "process", label: "Resolve" }, { nodeId: "reward", kind: "output", label: "Reward" }],
+    connections: [{ connectionId: "action-to-resolve", fromNodeId: "action", toNodeId: "resolve", connectedSystemIds: ["core-play"] }, { connectionId: "resolve-to-reward", fromNodeId: "resolve", toNodeId: "reward", connectedSystemIds: ["core-play"] }, { connectionId: "reward-to-reward", fromNodeId: "reward", toNodeId: "reward", connectedSystemIds: ["core-play"] }],
+  }], loops: [] }), { code: "reference-analysis.invalid-map" });
+  const certaintyUpgrade = structuredClone(validReferenceAnalysis());
+  certaintyUpgrade.evidence[0].claimKind = "hypothesis";
+  certaintyUpgrade.deepDives[0].claimKind = "observation";
+  assert.equal(validateReferenceAnalysis(certaintyUpgrade).ok, false);
+  const [evidence] = registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-fix3", systemIds: ["system-reveal-loop"] })] });
+  assert.throws(() => buildDesignTransfers({
+    deepDives: [{ systemId: "system-reveal-loop", claimKind: "unknown", finding: "Observed.", evidenceIds: ["ev-fix3"], referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1 }],
+    projectConstraints: ["ten-minute-session"], evidence: [evidence], referenceContexts: [{ contextId: "ctx-cinematic-v1", referenceId: "ref-cinematic-sample", version: "1", platform: "pc" }], referenceSet: validReferenceAnalysis().referenceSet,
+  }), { code: "reference-analysis.invalid-transfer" });
+  const selfEdge = structuredClone(validReferenceAnalysis());
+  selfEdge.systemMaps[0].connections.push({ connectionId: "z-choice-loop", fromNodeId: "choice", toNodeId: "choice", connectedSystemIds: ["system-reveal-loop"] });
+  assert.equal(validateReferenceAnalysis(selfEdge).ok, false);
+});
+
+test("fix3 keeps priority and deep dives in rank order and requires every real verification entry", async () => {
+  const { atlas } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
+  const coreMap = analysisMapFixture()[0];
+  const progressionMap = {
+    ...coreMap,
+    mapId: "map-progression-loop",
+    systemId: "progression",
+    connections: coreMap.connections.map((connection) => ({ ...connection, connectedSystemIds: ["progression"] })),
+  };
+  const coreEvidence = analysisEvidenceFixture()[0];
+  const analysis = buildReferenceAnalysis(await analysisInputFixture({
+    atlas: { atlas, genreIds: ["action-rpg"] },
+    evidence: [...analysisEvidenceFixture(), { ...coreEvidence, evidenceId: "ev-alpha-progression", systemIds: ["progression"], claim: "The player advances through a distinct progression loop." }],
+    edges: [coreMap, progressionMap],
+    priorities: {
+      "core-play": { relevance: 4, playerExperienceImpact: 4, economyProgressionImpact: 3, differentiationPotential: 4, evidenceStrength: 5, uncertainty: 2, researchCost: 2 },
+      progression: { relevance: 5, playerExperienceImpact: 5, economyProgressionImpact: 5, differentiationPotential: 5, evidenceStrength: 5, uncertainty: 1, researchCost: 1 },
+    },
+  }));
+  assert.deepEqual(analysis.priority.map(({ systemId, rank }) => [systemId, rank]), [["progression", 1], ["core-play", 2]]);
+  assert.deepEqual(analysis.deepDives.map(({ systemId }) => systemId), ["progression", "core-play"]);
+  assert.equal(validateReferenceAnalysis(analysis).ok, true);
+  const reordered = structuredClone(analysis);
+  reordered.priority.reverse();
+  assert.equal(validateReferenceAnalysis(reordered).ok, false);
+  const downgraded = structuredClone(buildReferenceAnalysis(await analysisInputFixture({ evidence: [
+    coreEvidence,
+    { ...coreEvidence, evidenceId: "ev-beta-loop", referenceId: "ref-beta", contextId: "ctx-beta-v1", claim: "A second reference observes the same core loop." },
+  ] })));
+  downgraded.deepDives[0].claimKind = "unknown";
+  downgraded.transferDecisions[0].decision = "hold";
+  assert.equal(validateReferenceAnalysis(downgraded).ok, false);
+  const missingQueue = structuredClone(buildReferenceAnalysis(await analysisInputFixture()));
+  missingQueue.verificationQueue.pop();
+  assert.equal(validateReferenceAnalysis(missingQueue).ok, false);
 });

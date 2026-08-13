@@ -1,5 +1,6 @@
 import { canonicalJson, sha256Canonical } from "./lib/reference-intelligence-canonical.mjs";
 import { evidenceSourceTypes, tierForSourceType } from "./lib/reference-evidence-contract.mjs";
+import { deriveAvailableClaimKind } from "./lib/reference-evidence.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
 
 export { canonicalJson, sha256Canonical };
@@ -47,13 +48,13 @@ function sortedUnique(values, path, issue, predicate = isSafeText, { allowEmpty 
   }
 }
 
-function sortedRecords(records, path, issue, key, validate, { allowEmpty = false } = {}) {
+function sortedRecords(records, path, issue, key, validate, { allowEmpty = false, requireSorted = true } = {}) {
   if (!Array.isArray(records) || (!allowEmpty && records.length === 0)) { issue(path, "array.empty"); return; }
   let previous;
   for (const [index, record] of records.entries()) {
     validate(record, `${path}/${index}`, issue);
     const value = isObject(record) ? (typeof key === "function" ? key(record) : record[key]) : undefined;
-    if (typeof value !== "string" || (previous !== undefined && compareUtf8(previous, value) >= 0)) issue(path, "array.unsorted-or-duplicate");
+    if (typeof value !== "string" || (requireSorted && previous !== undefined && compareUtf8(previous, value) >= 0)) issue(path, "array.unsorted-or-duplicate");
     previous = value;
   }
 }
@@ -127,7 +128,7 @@ export function validateReferenceAnalysis(value) {
       sortedRecords(record?.connections, `${path}/connections`, add, "connectionId", (connection, connectionPath, connectionIssue) => { closedObject(connection, ["connectionId", "fromNodeId", "toNodeId", "connectedSystemIds"], connectionPath, connectionIssue); safeId(connection?.connectionId, `${connectionPath}/connectionId`, connectionIssue); safeId(connection?.fromNodeId, `${connectionPath}/fromNodeId`, connectionIssue); safeId(connection?.toNodeId, `${connectionPath}/toNodeId`, connectionIssue); sortedUnique(connection?.connectedSystemIds, `${connectionPath}/connectedSystemIds`, connectionIssue, isId); });
       if (!Array.isArray(record?.loops)) add(`${path}/loops`, "schema.type"); else for (const [loopIndex, loop] of record.loops.entries()) { const loopPath = `${path}/loops/${loopIndex}`; closedObject(loop, ["loopId", "kind", "nodeIds"], loopPath, add); safeId(loop?.loopId, `${loopPath}/loopId`, add); enumValue(loop?.kind, ["core", "session", "meta"], `${loopPath}/kind`, add); if (!Array.isArray(loop?.nodeIds) || loop.nodeIds.length < 2 || loop.nodeIds.some((nodeId) => !isId(nodeId)) || new Set(loop.nodeIds).size !== loop.nodeIds.length) add(`${loopPath}/nodeIds`, "loop.invalid"); if (loopIndex > 0 && compareUtf8(record.loops[loopIndex - 1]?.loopId, loop?.loopId) >= 0) add(`${path}/loops`, "array.unsorted-or-duplicate"); }
     });
-    sortedRecords(value?.priority, "/priority", issue, "systemId", (record, path, add) => {
+    sortedRecords(value?.priority, "/priority", issue, (record) => String(record.rank).padStart(12, "0"), (record, path, add) => {
       closedObject(record, ["systemId", "rank", "rationale", "relevance", "playerExperienceImpact", "economyProgressionImpact", "differentiationPotential", "evidenceStrength", "uncertainty", "researchCost"], path, add); safeId(record?.systemId, `${path}/systemId`, add);
       if (!Number.isInteger(record?.rank) || record.rank < 1) add(`${path}/rank`, "rank.invalid"); nonEmptyText(record?.rationale, `${path}/rationale`, add);
       for (const key of ["relevance", "playerExperienceImpact", "economyProgressionImpact", "differentiationPotential", "evidenceStrength", "uncertainty", "researchCost"]) if (!Number.isInteger(record?.[key]) || record[key] < 1 || record[key] > 5) add(`${path}/${key}`, "priority.invalid");
@@ -136,7 +137,7 @@ export function validateReferenceAnalysis(value) {
       closedObject(record, ["systemId", "claimKind", "finding", "evidenceIds", "referenceIds", "contextIds", "coverageCount"], path, add); safeId(record?.systemId, `${path}/systemId`, add);
       enumValue(record?.claimKind, ["observation", "inference", "hypothesis", "unknown"], `${path}/claimKind`, add); nonEmptyText(record?.finding, `${path}/finding`, add);
       sortedUnique(record?.evidenceIds, `${path}/evidenceIds`, add, isId, { allowEmpty: true }); sortedUnique(record?.referenceIds, `${path}/referenceIds`, add, isId, { allowEmpty: true }); sortedUnique(record?.contextIds, `${path}/contextIds`, add, isId, { allowEmpty: true }); if (!Number.isInteger(record?.coverageCount) || record.coverageCount !== record?.referenceIds?.length) add(`${path}/coverageCount`, "coverage.invalid");
-    });
+    }, { requireSorted: false });
     sortedRecords(value?.comparison, "/comparison", issue, "comparisonId", (record, path, add) => {
       closedObject(record, ["comparisonId", "subject", "finding", "evidenceIds", "referenceIds", "contextIds", "coverageCount"], path, add); safeId(record?.comparisonId, `${path}/comparisonId`, add);
       nonEmptyText(record?.subject, `${path}/subject`, add); nonEmptyText(record?.finding, `${path}/finding`, add); sortedUnique(record?.evidenceIds, `${path}/evidenceIds`, add, isId, { allowEmpty: true }); sortedUnique(record?.referenceIds, `${path}/referenceIds`, add, isId, { allowEmpty: true }); sortedUnique(record?.contextIds, `${path}/contextIds`, add, isId, { allowEmpty: true }); if (!Number.isInteger(record?.coverageCount) || record.coverageCount !== record?.referenceIds?.length) add(`${path}/coverageCount`, "coverage.invalid");
@@ -176,7 +177,35 @@ export function validateReferenceAnalysis(value) {
       const available = linked.filter((evidence) => evidence.availability === "available"); const expectedReferences = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compareUtf8); const expectedContexts = [...new Set(available.map(({ contextId }) => contextId))].sort(compareUtf8);
       if ((record?.referenceIds ?? []).join("\0") !== expectedReferences.join("\0") || (record?.contextIds ?? []).join("\0") !== expectedContexts.join("\0") || record?.coverageCount !== expectedReferences.length) issue(`/${systemField === "systemId" ? "deepDives" : systemField === "sourceSystemId" ? "transferDecisions" : "comparison"}/${index}/coverageCount`, "coverage.invalid");
     }
-    for (const [index, record] of (value?.transferDecisions ?? []).entries()) if (record?.coverageCount < 2 && record?.decision !== "hold") issue(`/transferDecisions/${index}/decision`, "coverage.hold-required");
+    const priorities = Array.isArray(value?.priority) ? value.priority : [];
+    const dives = Array.isArray(value?.deepDives) ? value.deepDives : [];
+    if (new Set(priorities.map(({ systemId }) => systemId)).size !== priorities.length) issue("/priority", "priority.duplicate-system");
+    for (const [index, record] of priorities.entries()) if (record?.rank !== index + 1) issue(`/priority/${index}/rank`, "priority.rank-order");
+    if (dives.length !== priorities.length) issue("/deepDives", "priority.mismatch");
+    for (const [index, dive] of dives.entries()) {
+      if (priorities[index]?.systemId !== dive?.systemId) issue(`/deepDives/${index}/systemId`, "priority.mismatch");
+      const linked = (dive?.evidenceIds ?? []).map((evidenceId) => evidenceById.get(evidenceId));
+      if (dive?.claimKind !== deriveAvailableClaimKind(linked)) issue(`/deepDives/${index}/claimKind`, "certainty.invalid");
+    }
+    const divesBySystem = new Map(dives.map((dive) => [dive?.systemId, dive]));
+    const transfers = Array.isArray(value?.transferDecisions) ? value.transferDecisions : [];
+    if (transfers.length !== dives.length || new Set(transfers.map(({ sourceSystemId }) => sourceSystemId)).size !== transfers.length) issue("/transferDecisions", "transfer.mismatch");
+    for (const [index, transfer] of transfers.entries()) {
+      const dive = divesBySystem.get(transfer?.sourceSystemId);
+      if (!dive || ["evidenceIds", "referenceIds", "contextIds", "coverageCount"].some((field) => JSON.stringify(transfer?.[field]) !== JSON.stringify(dive[field]))) issue(`/transferDecisions/${index}`, "transfer.mismatch");
+      if (!dive || dive.coverageCount < 2 || dive.claimKind === "unknown") if (transfer?.decision !== "hold") issue(`/transferDecisions/${index}/decision`, "coverage.hold-required");
+    }
+    const expectedQueue = new Map();
+    const requireQueue = (verificationId, ids) => {
+      const previous = expectedQueue.get(verificationId);
+      if (previous && JSON.stringify(previous) !== JSON.stringify(ids)) issue("/verificationQueue", "verification.conflict");
+      expectedQueue.set(verificationId, ids);
+    };
+    for (const evidence of (value?.evidence ?? []).filter(({ availability }) => availability === "unavailable")) requireQueue(`verify-${evidence.evidenceId}`, [evidence.evidenceId]);
+    for (const dive of dives.filter(({ coverageCount, claimKind }) => coverageCount < 2 || claimKind === "unknown")) requireQueue(`verify-${dive.systemId}`, dive.evidenceIds);
+    const queueById = new Map((value?.verificationQueue ?? []).map((entry) => [entry?.verificationId, entry]));
+    for (const [verificationId, ids] of expectedQueue) if (JSON.stringify(queueById.get(verificationId)?.evidenceIds) !== JSON.stringify(ids)) issue("/verificationQueue", "verification.required");
+    for (const entry of (value?.verificationQueue ?? [])) if (!expectedQueue.has(entry?.verificationId) || JSON.stringify(expectedQueue.get(entry.verificationId)) !== JSON.stringify(entry.evidenceIds)) issue("/verificationQueue", "verification.unexpected");
     if (!validateReferenceSystemMaps({ maps: value?.systemMaps, inventorySystemIds: [...systemIds].sort(compareUtf8) })) issue("/systemMaps", "map.invalid");
     for (const [index, map] of (value?.systemMaps ?? []).entries()) { const nodes = new Set((map?.nodes ?? []).map(({ nodeId }) => nodeId)); for (const [connectionIndex, connection] of (map?.connections ?? []).entries()) { if (!nodes.has(connection?.fromNodeId) || !nodes.has(connection?.toNodeId)) issue(`/systemMaps/${index}/connections/${connectionIndex}`, "reference.dangling"); for (const [systemIndex, systemId] of (connection?.connectedSystemIds ?? []).entries()) if (!systemIds.has(systemId)) issue(`/systemMaps/${index}/connections/${connectionIndex}/connectedSystemIds/${systemIndex}`, "reference.dangling"); } }
   });

@@ -12,7 +12,14 @@ export { tierBySourceType };
 const evidenceIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const claimKinds = new Set(evidenceClaimKinds);
 const claimCategories = new Set(["general", "monetization", "retention", "performance"]);
-const certaintyRank = Object.freeze({ observation: 3, inference: 2, hypothesis: 1, unknown: 0 });
+export const claimKindCertainty = Object.freeze({ observation: 3, inference: 2, hypothesis: 1, unknown: 0 });
+
+/** Derives the strongest allowed persisted kind: the least-certain available source wins. */
+export function deriveAvailableClaimKind(records) {
+  const available = records.filter((record) => record?.availability === "available");
+  if (available.length === 0) return "unknown";
+  return available.reduce((lowest, record) => claimKindCertainty[record.claimKind] < claimKindCertainty[lowest] ? record.claimKind : lowest, available[0].claimKind);
+}
 
 function fail(code = "invalid") {
   const error = new Error("reference evidence is invalid");
@@ -171,7 +178,7 @@ export function validateClaimAgainstEvidence(input = {}) {
   if (available.length === 0) return { ok: false, code: "evidence_unavailable" };
   const coveredSystems = new Set(available.flatMap(({ systemIds }) => systemIds));
   if (safeClaim.systemIds.some((systemId) => !coveredSystems.has(systemId))) return { ok: false, code: "evidence_system_mismatch" };
-  if (available.some(({ claimKind }) => certaintyRank[claimKind] < certaintyRank[safeClaim.kind])) return { ok: false, code: "unsupported_claim_kind" };
+  if (available.some(({ claimKind }) => claimKindCertainty[claimKind] < claimKindCertainty[safeClaim.kind])) return { ok: false, code: "unsupported_claim_kind" };
   if (safeClaim.causal && available.every(({ tier }) => tier === "discovery")) {
     return { ok: false, code: "unsupported_causal_claim" };
   }

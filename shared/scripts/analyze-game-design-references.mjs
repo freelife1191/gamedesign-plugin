@@ -1,12 +1,11 @@
 import { canonicalReferenceAnalysis, canonicalJson, sha256Canonical, validateReferenceAnalysis } from "./validate-reference-intelligence.mjs";
-import { registerReferenceEvidence, validateClaimAgainstEvidence, validateEvidenceBindings } from "./lib/reference-evidence.mjs";
+import { deriveAvailableClaimKind, registerReferenceEvidence, validateClaimAgainstEvidence, validateEvidenceBindings } from "./lib/reference-evidence.mjs";
 import { mergeSystemAtlas } from "./lib/system-atlas.mjs";
 import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
 
 const roles = Object.freeze(["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"]);
 const dimensions = Object.freeze(["relevance", "playerExperienceImpact", "economyProgressionImpact", "differentiationPotential", "evidenceStrength", "uncertainty", "researchCost"]);
-const claimKindRank = Object.freeze({ observation: 3, inference: 2, hypothesis: 1, unknown: 0 });
 const artifactFiles = Object.freeze(["reference-intelligence/brief.md", "reference-intelligence/reference-set.yml", "reference-intelligence/evidence-register.yml", "reference-intelligence/system-inventory.json", "reference-intelligence/analysis-priority.md", "reference-intelligence/comparison-matrix.md", "reference-intelligence/transfer-decisions.md", "reference-intelligence/verification-queue.md"]);
 const id = (value) => typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value);
 const text = (value) => typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\r") && value === value.normalize("NFC");
@@ -125,7 +124,7 @@ function deepDives(priority, inventory, evidence) {
     const available = records.filter((record) => record.availability === "available");
     if (records.length === 0) return { systemId, claimKind: "unknown", finding: "Not observed; verification required.", evidenceIds: [], referenceIds: [], contextIds: [], coverageCount: 0 };
     if (available.length === 0) return { systemId, claimKind: "unknown", finding: "Not observed; verification required.", evidenceIds: records.map(({ evidenceId }) => evidenceId), referenceIds: [], contextIds: [], coverageCount: 0 };
-    const claimKind = available.reduce((lowest, record) => claimKindRank[record.claimKind] < claimKindRank[lowest] ? record.claimKind : lowest, available[0].claimKind);
+    const claimKind = deriveAvailableClaimKind(records);
     const referenceIds = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compare); const contextIds = [...new Set(available.map(({ contextId }) => contextId))].sort(compare);
     return { systemId, claimKind, finding: available[0].claim, evidenceIds: available.map(({ evidenceId }) => evidenceId), referenceIds, contextIds, coverageCount: referenceIds.length };
   });
@@ -148,6 +147,7 @@ export function buildDesignTransfers({ deepDives, projectConstraints, evidence, 
     if (linked.some((record) => !record || !record.systemIds.includes(dive.systemId))) fail("invalid-transfer");
     const available = linked.filter(({ availability }) => availability === "available"); const computedReferenceIds = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compare); const computedContextIds = [...new Set(available.map(({ contextId }) => contextId))].sort(compare);
     if (computedReferenceIds.some((referenceId) => !referenceIds.has(referenceId)) || computedContextIds.some((contextId) => !contextsById.has(contextId)) || computedContextIds.some((contextId) => contextsById.get(contextId).referenceId !== available.find((record) => record.contextId === contextId).referenceId) || dive.referenceIds.join("\0") !== computedReferenceIds.join("\0") || dive.contextIds.join("\0") !== computedContextIds.join("\0") || dive.coverageCount !== computedReferenceIds.length) fail("invalid-transfer");
+    if (dive.claimKind !== deriveAvailableClaimKind(linked)) fail("invalid-transfer");
     const hold = computedReferenceIds.length < 2 || dive.claimKind === "unknown";
     return { transferId: `transfer-${dive.systemId}`, sourceSystemId: dive.systemId, decision: hold ? "hold" : "adapt", rationale: hold ? "Hold until independent reference coverage and verification are available." : "Adapt as a proposal subject to review.", evidenceIds: dive.evidenceIds, referenceIds: computedReferenceIds, contextIds: computedContextIds, coverageCount: computedReferenceIds.length, projectConstraints: sortedConstraints, risks: ["Evidence coverage must be independently verified."], validationSteps: ["Run a constrained prototype review."], validationState: "not-run", glossaryReceipt: null, reviewState: "pending-review" };
   }).sort((left, right) => compare(left.transferId, right.transferId)));
