@@ -9,6 +9,8 @@
 - GREEN (fix round 1): `tests/e2e/suite/design-memory.e2e.test.mjs` now contains exactly 13 direct `node:test` cases. Each case calls public production APIs against its own real temporary filesystem and uses the actual opaque capture/maintenance issuers. It neither imports test files nor spawns a child test runner.
 - RED (fix round 2): a deliberately wrong #7 warning expectation (`memory.derived_reservation_invalid`) failed against the public index loader's actual `memory.derived_generation_invalid` warning. #9's initial receipt-content expectations also failed until the immutable receipt records were asserted against the runtime's actual policy/ranking outcomes.
 - GREEN (fix round 2): direct scenarios now use an actual `git init --quiet` temporary workspace; #6 obtains its disabled config through `loadMemoryConfig`; #7 asserts the exact corrupt-generation warning; #9 loads and checks every immutable receipt field; #10 and #13 assert no derived selection when cache health is closed; #11 proves 10,000/256 schema-valid boundaries before rejecting 10,001/257 inputs; and #13 proves the public concurrent-commit/cache-closure observable outcome plus source control continuity.
+- RED (fix round 3): #10/#13 intentionally expected the census warning. The direct public APIs instead returned `memory.derived_directory_limit_exceeded`; #13 also retained additional reservation diagnostics after the leading cache-health warning.
+- GREEN (fix round 3): #10 now proves direct-child scan `entries: []` plus load/list/publish no-selection behavior and the exact directory-limit warning. #13 checks that every closed normal/fake load, list, and publish has the exact leading directory-limit warning, and compares complete canonical source physical snapshots—including event and quarantine marker IDs, paths, classifications, and bytes hashes—across the manual derived-only reset.
 
 ## Verification
 
@@ -18,7 +20,8 @@
 - `node --test --test-name-pattern='^11\\.' tests/e2e/suite/design-memory.e2e.test.mjs` → 1 passed, 0 failed (3.92s): valid 10,000/256 schema boundaries and limit+1 rejection.
 - `node --test --test-name-pattern='^13\\.' tests/e2e/suite/design-memory.e2e.test.mjs` → 1 passed, 0 failed (6.33s): concurrent commit/cache-health/source-control continuity.
 - `node --test --test-name-pattern='^10\\.' tests/e2e/suite/design-memory.e2e.test.mjs` → 1 passed, 0 failed (21.55s) with exactly 100,001 physical entries.
-- `node --test tests/e2e/suite/design-memory.e2e.test.mjs` → 13 passed, 0 failed (65.42s) with the exact default 257-child, 100,001-entry, and 9,999-global-slot boundaries.
+- `node --test --test-name-pattern='^(10|13)\\.' tests/e2e/suite/design-memory.e2e.test.mjs` → 2 passed, 0 failed (28.02s) after the direct-child/no-selection and canonical-reset repairs.
+- `node --test tests/e2e/suite/design-memory.e2e.test.mjs` → 13 passed, 0 failed (62.88s) with the exact default 257-child, 100,001-entry, and 9,999-global-slot boundaries.
 - `node --test tests/unit/design-memory-capabilities.test.mjs tests/unit/design-memory-capture.test.mjs tests/unit/design-memory-config.test.mjs tests/unit/design-memory-maintenance.test.mjs tests/unit/design-memory-mutation-harness.test.mjs tests/unit/design-memory-record.test.mjs tests/unit/design-memory-retrieval.test.mjs tests/unit/design-memory-store.test.mjs` → 219 passed, 0 failed, 1 explicit Node-18 non-goal skip (90.10s).
 - `node --check products/game-design-studio/plugin/skills/orchestrate-game-design-project/scripts/validate-studio-scenario.mjs` → success.
 - `node --check tests/e2e/suite/design-memory.e2e.test.mjs` → success.

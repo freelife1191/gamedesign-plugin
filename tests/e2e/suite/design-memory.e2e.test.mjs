@@ -78,6 +78,13 @@ async function retrieve(fixture, request = context(fixture.projectId, fixture.la
 function disclosure(value, root) { const text = JSON.stringify(value); assert.equal(text.includes(root), false); assert.equal(text.includes("counterplay is missing"), false); }
 async function storeFor(fixture) { return resolveMemoryStore({ workspaceRoot: fixture.root, config: fixture.cfg, platform: process.platform, home: fixture.root }); }
 async function assertArtifactValidAndUnchanged(fixture, before) { assert.equal((await validateArtifact(fixture.canonicalArtifact)).ok, true); assert.deepEqual(await snapshot(fixture.canonicalArtifact), before); }
+function sourcePhysicalSnapshot(scan) {
+  return {
+    events: scan.events.map(({ memoryId, eventId, relativePath, bytes: eventBytes }) => ({ memoryId, eventId, relativePath, sha256: hash(eventBytes) })),
+    quarantines: scan.quarantines.map(({ markerId, relativePath, bytes: markerBytes, memory_id, target_event_id, target_relative_path, observed_sha256, reason_code, actor, recorded_at, schema_version }) => ({ markerId, relativePath, sha256: hash(markerBytes), memory_id, target_event_id, target_relative_path, observed_sha256, reason_code, actor, recorded_at, schema_version })),
+    sourceEntries: scan.sourceEntries.map(({ relativePath, observedSha256, classification }) => ({ relativePath, observedSha256, classification })),
+  };
+}
 
 test("1. approved Studio lesson applies only to exact related IDs and writes its exact receipt", async (t) => {
   const fixture = await createWorkspace(t); const captured = await captureAndApprove(fixture);
@@ -179,7 +186,7 @@ test("9. normalized request keeps immutable receipt history across policy, drift
 });
 
 test("10. default 257-child and 100,001-entry tripwires fail close without source blockage", { concurrency: false, timeout: 120000 }, async (t) => {
-  const direct = await createWorkspace(t, { projectId: "tripwire-direct" }); const directStore = await resolveMemoryStore({ workspaceRoot: direct.root, config: direct.cfg, platform: process.platform, home: direct.root, initialize: true }); const directRoot = path.join(directStore.root, "v1", "derived"); await mkdir(directRoot, { recursive: true }); for (let index = 0; index < 257; index += 1) await mkdir(path.join(directRoot, `child-${String(index).padStart(3, "0")}`)); const directScan = await scanDerivedGenerations({ store: directStore }); assert.equal(directScan.complete, false); assert.equal(directScan.warnings[0].code, "memory.derived_directory_limit_exceeded");
+  const direct = await createWorkspace(t, { projectId: "tripwire-direct" }); const directStore = await resolveMemoryStore({ workspaceRoot: direct.root, config: direct.cfg, platform: process.platform, home: direct.root, initialize: true }); const directRoot = path.join(directStore.root, "v1", "derived"); await mkdir(directRoot, { recursive: true }); for (let index = 0; index < 257; index += 1) await mkdir(path.join(directRoot, `child-${String(index).padStart(3, "0")}`)); const directScan = await scanDerivedGenerations({ store: directStore }); assert.equal(directScan.complete, false); assert.deepEqual(directScan.entries, []); assert.deepEqual(directScan.warnings.map((item) => item.code), ["memory.derived_directory_limit_exceeded"]); const directLoad = await loadMemoryReceipt({ store: directStore, requestSha256: "a".repeat(64), receiptSha256: "b".repeat(64) }); const directList = await listMemoryReceipts({ store: directStore, requestSha256: "a".repeat(64) }); const directPublish = await publishMemoryViewGeneration({ store: directStore, sourceTreeSha256: "a".repeat(64), viewBytes: Buffer.from("# direct\n") }); for (const result of [directLoad, directPublish]) { assert.equal(result.complete, false); assert.equal(result.status, null); assert.deepEqual(result.warnings.map((item) => item.code), ["memory.derived_directory_limit_exceeded"]); } assert.equal(directList.complete, false); assert.deepEqual(directList.items, []); assert.deepEqual(directList.warnings.map((item) => item.code), ["memory.derived_directory_limit_exceeded"]);
   const census = await createWorkspace(t, { projectId: "tripwire-census" }); const censusStore = await resolveMemoryStore({ workspaceRoot: census.root, config: census.cfg, platform: process.platform, home: census.root, initialize: true }); const root = path.join(censusStore.root, "v1", "derived"); await mkdir(root, { recursive: true }); let created = 0; for (let group = 0; group < 2 && created < 100001; group += 1) { const groupDirectory = path.join(root, `group-${group}`); await mkdir(groupDirectory); created += 1; for (let bucket = 0; bucket < 196 && created < 100001; bucket += 1) { const directory = path.join(groupDirectory, `bucket-${String(bucket).padStart(3, "0")}`); await mkdir(directory); created += 1; const batch = []; for (let child = 0; child < 256 && created < 100001; child += 1) { created += 1; batch.push(writeFile(path.join(directory, `junk-${String(child).padStart(3, "0")}`), "x")); if (batch.length === 32) await Promise.all(batch.splice(0)); } await Promise.all(batch); } } assert.equal(created, 100001);
   const closed = await scanDerivedGenerations({ store: censusStore }); assert.equal(closed.complete, false); assert.equal(closed.warnings[0].code, "memory.derived_census_limit_exceeded"); const sourceBefore = await snapshot(path.join(censusStore.root, "v1", "events")); const publish = await publishMemoryViewGeneration({ store: censusStore, sourceTreeSha256: "a".repeat(64), viewBytes: Buffer.from("# view\n") }); assert.equal(publish.complete, false); const absent = await loadMemoryReceipt({ store: censusStore, requestSha256: "a".repeat(64), receiptSha256: "b".repeat(64) }); const listed = await listMemoryReceipts({ store: censusStore, requestSha256: "a".repeat(64) }); assert.equal(absent.complete, false); assert.equal(absent.status, null); assert.equal(listed.complete, false); assert.deepEqual(listed.items, []); assert.deepEqual(await snapshot(path.join(censusStore.root, "v1", "events")), sourceBefore); const source = await readFile("shared/scripts/retrieve-design-memory.mjs", "utf8"); assert.match(source, /opendir\(/u); assert.doesNotMatch(source, /readdir\(/u);
 });
@@ -235,9 +242,8 @@ test("13. post-commit 257th child closes only derived cache; raw source survives
   const loaded = await loadMemoryReceipt({ store: rebuilt.store, requestSha256: "a".repeat(64), receiptSha256: "b".repeat(64) });
   const listed = await listMemoryReceipts({ store: rebuilt.store, requestSha256: "a".repeat(64) });
   const blocked = await publishMemoryViewGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.from("# three\n") });
-  for (const result of [normalLoad, loaded]) { assert.equal(result.complete, false); assert.equal(result.status, null); }
-  for (const result of [normalHistory, listed]) { assert.equal(result.complete, false); assert.deepEqual(result.items, []); }
-  assert.equal(blocked.complete, false);
+  for (const result of [normalLoad, loaded, blocked]) { assert.equal(result.complete, false); assert.equal(result.status, null); assert.equal(result.warnings[0].code, "memory.derived_directory_limit_exceeded"); }
+  for (const result of [normalHistory, listed]) { assert.equal(result.complete, false); assert.deepEqual(result.items, []); assert.equal(result.warnings[0].code, "memory.derived_directory_limit_exceeded"); }
   assert.equal((await captureCandidate(fixture, { event: eventFor({ ...fixture, eventId: "after-cache-close" }) })).status, "created");
   const sourceScan = await scanMemoryEvents({ store: rebuilt.store });
   assert.equal(sourceScan.quarantines.length, 0);
@@ -245,7 +251,7 @@ test("13. post-commit 257th child closes only derived cache; raw source survives
   const quarantine = await appendQuarantineMarker({ store: rebuilt.store, targetMemoryId: target.memoryId, targetEventId: target.eventId, targetRelativePath: target.relativePath, observedSha256: hash(target.bytes), reasonCode: "memory.e2e-cache-health", actor: "named-reviewer", now: NOW });
   assert.match(quarantine.status, /^(created|present)$/);
   const sourceAfterControl = await scanMemoryEvents({ store: rebuilt.store });
-  const rawBeforeReset = sourceAfterControl.events.map((item) => hash(item.bytes));
+  const sourceBeforeReset = sourcePhysicalSnapshot(sourceAfterControl);
   assert.equal(sourceAfterControl.complete, true);
   assert.equal(sourceAfterControl.events.length, sourceScan.events.length);
   assert.equal(sourceAfterControl.quarantines.length, 1);
@@ -266,6 +272,6 @@ test("13. post-commit 257th child closes only derived cache; raw source survives
   const reset = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW });
   assert.equal(reset.complete, true);
   assert.equal(reset.sourceTreeSha256, closedRebuild.sourceTreeSha256);
-  assert.deepEqual((await scanMemoryEvents({ store: rebuilt.store })).events.map((item) => hash(item.bytes)), rawBeforeReset);
+  assert.deepEqual(sourcePhysicalSnapshot(await scanMemoryEvents({ store: rebuilt.store })), sourceBeforeReset);
   assert.equal(captured.memoryId.startsWith("memory-"), true);
 });
