@@ -1,18 +1,21 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, opendir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, mkdtemp, opendir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import { captureDesignMemory } from "../../shared/scripts/capture-design-memory.mjs";
 import { issueCaptureClassificationReceipt, issueMaintenanceHumanReceipt } from "../../shared/scripts/lib/design-memory-capabilities.mjs";
-import { foldMemoryEvents, scanMemoryEvents } from "../../shared/scripts/lib/safe-memory-store.mjs";
+import { appendMemoryEvent, foldMemoryEvents, memoryEventRelativePath, resolveMemoryStore, scanMemoryEvents } from "../../shared/scripts/lib/safe-memory-store.mjs";
 import { maintainDesignMemory } from "../../shared/scripts/maintain-design-memory.mjs";
 import { rebuildMemoryIndex } from "../../shared/scripts/retrieve-design-memory.mjs";
+import { canonicalMemoryEventDocument, memoryOperationId, parseMemoryEventDocument } from "../../shared/scripts/validate-design-memory.mjs";
 
 const config = { enabled: true, scope: "project", projectId: "wind-island", candidateTtlDays: 30, maxItems: 5, gitMode: "tracked" };
+const exec = promisify(execFile);
 const captureTime = new Date("2026-08-01T00:00:00Z");
 async function workspace(t) { const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-maintain-"))); t.after(() => rm(root, { recursive: true, force: true })); return root; }
 function digest(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
@@ -43,6 +46,12 @@ async function logDocuments(store) {
   const root = path.join(store.root, "v1", "derived", "logs"); const files = [];
   async function visit(directory) { let handle; try { handle = await opendir(directory); } catch (error) { if (error?.code === "ENOENT") return; throw error; } try { for await (const entry of handle) { const candidate = path.join(directory, entry.name); if (entry.isDirectory()) await visit(candidate); else if (entry.isFile() && entry.name.endsWith(".md")) files.push(await readFile(candidate, "utf8")); } } finally { await handle.close().catch(() => {}); } }
   await visit(root); return files;
+}
+async function sealEventFixture(store, eventDocument) {
+  const bytes = Buffer.from(eventDocument); const eventId = `mev1-${digest(bytes)}`; const relativePath = memoryEventRelativePath({ memoryId: parseMemoryEventDocument(eventDocument).event.memory_id, eventId });
+  const value = digest(eventId); const instanceId = `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20, 32)}`; const base = path.join(store.root, relativePath);
+  await mkdir(path.join(base, "instances"), { recursive: true }); await mkdir(path.join(base, "claims"), { recursive: true }); await writeFile(path.join(base, "instances", `${instanceId}.md`), bytes);
+  const claimPath = path.join(base, "claims", `${instanceId}.json`); await writeFile(claimPath, `${JSON.stringify({ schemaVersion: 1, eventId, instanceId, fileSha256: digest(bytes), byteLength: bytes.byteLength })}\n`); await link(claimPath, path.join(base, "commit.json")); return { eventId, relativePath };
 }
 
 test("verified candidate with an exact human receipt is the only direct approval path and exact retry is present", async (t) => {
@@ -76,8 +85,9 @@ test("verify refuses source drift and lint reports the stale source without writ
 
 test("sweep expires candidates and retire maps candidate and approved records without rewriting source events", async (t) => {
   const first = await captured(t); const sweepAt = new Date("2026-10-02T00:00:00Z");
-  const swept = await mutate({ root: first.root, action: "sweep", observedParentEventIds: [first.capture.eventId], reason: "scheduled review", now: sweepAt });
-  assert.equal(swept.changed.length, 1); assert.equal(foldMemoryEvents(await scanMemoryEvents({ store: first.capture.store })).memories.get(first.capture.memoryId).record.status, "expired");
+  const sweepReceipt = humanReceipt({ action: "sweep", observedParentEventIds: [first.capture.eventId], reason: "scheduled review", now: sweepAt }); const sweepRequest = { root: first.root, action: "sweep", observedParentEventIds: [first.capture.eventId], reason: "scheduled review", now: sweepAt, humanReceipt: sweepReceipt };
+  const swept = await mutate(sweepRequest); const sweepRetry = await mutate(sweepRequest);
+  assert.equal(swept.changed.length, 1); assert.equal(sweepRetry.changed[0].status, "present"); assert.equal(foldMemoryEvents(await scanMemoryEvents({ store: first.capture.store })).memories.get(first.capture.memoryId).record.status, "expired");
 
   const second = await captured(t, { eventOverrides: { eventId: "playtest-2" } }); const retiredCandidate = await mutate({ root: second.root, action: "retire", memoryId: second.capture.memoryId, observedParentEventIds: [second.capture.eventId], now: new Date("2026-08-02T00:00:00Z") });
   assert.equal((await scanMemoryEvents({ store: second.capture.store })).events.find((item) => item.eventId === retiredCandidate.eventId).record.status, "rejected");
@@ -108,6 +118,42 @@ test("quarantine permanently excludes a memory and publishes exact source-time l
   const expected = `# design-memory\n${captureTime.toISOString()} event ${capture.eventId} ${capture.memoryId} capture candidate\n${at.toISOString()} quarantine ${marker.markerId} ${capture.memoryId} quarantine quarantined\n`;
   const logs = await logDocuments(capture.store); assert.equal(logs.includes(expected), true, logs.join("\n---\n"));
   assert.equal(expected.includes("reviewer"), false); assert.equal(expected.includes("unsafe"), false); assert.equal(quarantined.warnings.length, 0);
+});
+
+test("transition logs use source effective times and exact safe fields", async (t) => {
+  const { root, capture } = await captured(t); const at = new Date("2026-08-02T00:00:00Z");
+  const verified = await mutate({ root, action: "verify", memoryId: capture.memoryId, observedParentEventIds: [capture.eventId], reason: "sources current", now: at });
+  const expected = `# design-memory\n${captureTime.toISOString()} event ${capture.eventId} ${capture.memoryId} capture candidate\n${at.toISOString()} event ${verified.eventId} ${capture.memoryId} verified verified\n`;
+  assert.equal((await logDocuments(capture.store)).includes(expected), true);
+  assert.equal(expected.includes("reviewer"), false); assert.equal(expected.includes("sources current"), false); assert.equal(expected.includes(root), false);
+});
+
+test("resolution with an exact live receipt is idempotent", async (t) => {
+  const { root, capture } = await captured(t); const source = (await scanMemoryEvents({ store: capture.store })).events[0];
+  const makeTransition = (status, effectiveAt) => { const record = { ...source.record, status, updated_at: effectiveAt }; const event = { schema_version: 1, event_type: "transition", action: status, memory_id: capture.memoryId, parent_event_ids: [capture.eventId], effective_at: effectiveAt, actor: "reviewer", reason: status, record }; event.operation_id = memoryOperationId(event); return canonicalMemoryEventDocument(event, source.sections); };
+  const left = await sealEventFixture(capture.store, makeTransition("verified", "2026-08-02T00:00:00.000Z")); const right = await sealEventFixture(capture.store, makeTransition("rejected", "2026-08-02T01:00:00.000Z"));
+  const observedParentEventIds = [left.eventId, right.eventId].sort(); const chosenParentEventId = left.eventId; const now = new Date("2026-08-03T00:00:00Z");
+  const receipt = humanReceipt({ action: "resolution", memoryId: capture.memoryId, actor: "reviewer", reason: "choose verified", observedParentEventIds, chosenParentEventId, now });
+  const request = { root, action: "resolution", memoryId: capture.memoryId, actor: "reviewer", reason: "choose verified", observedParentEventIds, chosenParentEventId, now, humanReceipt: receipt };
+  const first = await mutate(request); const retry = await mutate(request); assert.equal(first.status, "created"); assert.equal(retry.status, "present");
+});
+
+test("sweep marks an approved external note stale after its review date", async (t) => {
+  const root = await workspace(t); await mkdir(path.join(root, "artifact")); const bytes = Buffer.from("external evidence\n"); await writeFile(path.join(root, "artifact", "note.md"), bytes);
+  const store = await resolveMemoryStore({ workspaceRoot: root, config, platform: process.platform, home: root, initialize: true }); const effectiveAt = "2026-08-01T00:00:00.000Z";
+  const record = { schema_version: 1, memory_id: "memory-studio-external-note-abc", kind: "external-note", lane: "studio", status: "approved", scope: "project", project_id: "wind-island", created_at: effectiveAt, updated_at: effectiveAt, review_after: "2026-08-31", expires_at: "2027-08-01", approved_by: "reviewer", approval_basis: "human-review", supersedes: null, artifact_types: ["combat"], related_ids: [], tags: ["external"], sources: [{ artifact_id: "artifact", locator: "note.md#x", sha256: digest(bytes) }] };
+  const event = { schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "external-note-1", parent_event_ids: [], effective_at: effectiveAt, actor: "reviewer", reason: "capture", record }; const sections = { "발견한 내용": "외부 자료에서 확인한 내용", "적용 조건": "자료가 최신인 경우", "적용하면 안 되는 경우": "자료가 만료된 경우", "근거": "artifact/note.md#x" };
+  const capturedExternal = await appendMemoryEvent({ store, eventDocument: canonicalMemoryEventDocument(event, sections) });
+  const result = await mutate({ root, action: "sweep", observedParentEventIds: [capturedExternal.eventId], reason: "scheduled review", now: new Date("2026-09-01T00:00:00Z") }); assert.equal(result.changed.length, 1);
+  assert.equal(foldMemoryEvents(await scanMemoryEvents({ store })).memories.get(record.memory_id).record.status, "stale");
+});
+
+test("git exclusion honors tracked mode, local idempotence, and an existing lock", async (t) => {
+  const root = await workspace(t); await exec("git", ["init", "-q", root]);
+  assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config, action: "sync-git-exclusion" }), { status: "skipped" });
+  const local = { ...config, gitMode: "local" }; assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "ready" }); assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "ready" });
+  const exclude = path.join(root, ".git", "info", "exclude"); const text = await readFile(exclude, "utf8"); assert.equal((text.match(/# game-design-plugin:memory:begin/gu) ?? []).length, 1); assert.equal((text.match(/# game-design-plugin:memory:end/gu) ?? []).length, 1);
+  await writeFile(`${exclude}.game-design-memory-exclude.lock`, "stale\n"); const locked = await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }); assert.equal(locked.status, "warning"); assert.equal(locked.code, "memory.git_exclude_lock"); assert.equal(await readFile(exclude, "utf8"), text);
 });
 
 test("log publication failure preserves the already appended source transition", async (t) => {

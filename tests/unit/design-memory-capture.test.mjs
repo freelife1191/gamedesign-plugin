@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -87,4 +87,26 @@ test("capture command does not re-export capability issuers", async () => {
   const command = await import("../../shared/scripts/capture-design-memory.mjs");
   assert.equal(Object.hasOwn(command, "issueCaptureClassificationReceipt"), false);
   assert.equal(Object.hasOwn(command, "issueDurableCaptureReceipt"), false);
+});
+
+test("every durable event type captures as a candidate and same operation bytes conflict", async (t) => {
+  for (const [type, kind] of [["human-decision", "decision"], ["playtest-finding", "design-lesson"], ["review-finding", "design-lesson"], ["lesson-revision", "design-lesson"]]) {
+    const { root, event } = await fixture(t); const typed = { ...event, eventId: `${type}-1`, type }; const classificationReceipt = receiptFor(typed);
+    const result = await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event: typed, classificationReceipt, now: captureNow });
+    assert.equal(result.status, "created"); const sealed = (await scanMemoryEvents({ store: result.store })).events[0]; assert.equal(sealed.record.status, "candidate"); assert.equal(sealed.record.kind, kind);
+  }
+  const { root, event, classificationReceipt } = await fixture(t);
+  const first = await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow }); assert.equal(first.status, "created");
+  const changed = { ...event, summary: "반격 기회를 더 명확하게 제공해야 한다." }; const changedReceipt = receiptFor(changed);
+  const conflict = await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event: changed, classificationReceipt: changedReceipt, now: captureNow }); assert.equal(conflict.status, "conflict");
+  assert.equal((await scanMemoryEvents({ store: first.store })).events.length, 1);
+});
+
+test("capture log publication failure preserves the committed source event", async (t) => {
+  const { root, event, classificationReceipt } = await fixture(t);
+  const { resolveMemoryStore } = await import("../../shared/scripts/lib/safe-memory-store.mjs");
+  const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: process.platform, home: root, initialize: true });
+  await mkdir(path.join(store.root, "v1", "derived"), { recursive: true }); await symlink(path.join(root, "playtest-session-04"), path.join(store.root, "v1", "derived", "logs"));
+  const result = await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow });
+  assert.equal(result.status, "created"); assert.deepEqual(result.warnings, [{ code: "memory.log_publish" }]); assert.equal((await scanMemoryEvents({ store })).events.length, 1);
 });

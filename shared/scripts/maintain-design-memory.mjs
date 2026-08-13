@@ -58,8 +58,7 @@ async function transition(input) {
 }
 async function resolution(input) {
   const authority = authorityFor(input); const store = await storeFor(input.workspaceRoot, input.config, true); const scan = await scanned(store);
-  const events = scan.events.filter((item) => item.memoryId === input.memoryId); const currentHeads = heads(events).map((item) => item.eventId);
-  if (!input.observedParentEventIds.every((eventId) => currentHeads.includes(eventId))) fail("memory.resolution_heads");
+  const events = scan.events.filter((item) => item.memoryId === input.memoryId);
   const chosen = events.find((item) => item.eventId === input.chosenParentEventId); if (!chosen) fail();
   const event = { schema_version: 1, event_type: "resolution", action: "resolution", memory_id: input.memoryId, parent_event_ids: input.observedParentEventIds, chosen_parent_event_id: input.chosenParentEventId, effective_at: authority.effectiveAt, actor: input.actor, reason: input.reason, record: chosen.record };
   event.operation_id = memoryOperationId(event);
@@ -80,14 +79,16 @@ async function listMemoryRecords({ workspaceRoot, config }) {
 }
 async function sweep(input) {
   const authority = authorityFor(input); const store = await storeFor(input.workspaceRoot, input.config, true); const scan = await scanned(store); const allHeads = heads(scan.events).map((item) => item.eventId);
-  if (!sameIds(input.observedParentEventIds, allHeads)) fail("memory.sweep_heads");
-  const fold = foldMemoryEvents(scan, { now: authority.effectiveAt }); const date = authority.effectiveAt.slice(0, 10); const changed = [];
-  for (const [memoryId, value] of fold.memories) {
-    const action = value.record.status === "candidate" && value.record.expires_at < date ? "expired" : value.record.kind === "external-note" && value.record.review_after < date ? "stale" : null;
-    if (!action) continue;
-    const parent = scan.events.find((item) => item.eventId === value.headEventId); const record = update(parent.record, action, authority.effectiveAt); const event = { schema_version: 1, event_type: "transition", action, memory_id: memoryId, parent_event_ids: [parent.eventId], effective_at: authority.effectiveAt, actor: input.actor, reason: input.reason, record }; event.operation_id = memoryOperationId(event);
-    changed.push({ ...await appendMemoryEvent({ store, eventDocument: canonicalMemoryEventDocument(event, parent.sections) }), memoryId });
+  const date = authority.effectiveAt.slice(0, 10); const statusFor = (record) => record.status === "candidate" && record.expires_at < date ? "expired" : record.kind === "external-note" && record.review_after < date ? "stale" : null;
+  const build = (parent) => { const action = statusFor(parent.record); if (!action) return null; const record = update(parent.record, action, authority.effectiveAt); const event = { schema_version: 1, event_type: "transition", action, memory_id: parent.memoryId, parent_event_ids: [parent.eventId], effective_at: authority.effectiveAt, actor: input.actor, reason: input.reason, record }; event.operation_id = memoryOperationId(event); return { memoryId: parent.memoryId, event, eventDocument: canonicalMemoryEventDocument(event, parent.sections) }; };
+  const currentMatches = sameIds(input.observedParentEventIds, allHeads); let built;
+  if (currentMatches) {
+    const fold = foldMemoryEvents(scan, { now: authority.effectiveAt }); built = [...fold.memories.values()].map((value) => scan.events.find((item) => item.eventId === value.headEventId)).map(build).filter(Boolean);
+  } else {
+    const parents = input.observedParentEventIds.map((eventId) => scan.events.find((item) => item.eventId === eventId)); if (parents.some((item) => !item)) fail("memory.sweep_heads"); built = parents.map(build).filter(Boolean);
+    const exactRetry = built.length > 0 && built.every((candidate) => scan.events.some((item) => item.event.operation_id === candidate.event.operation_id && item.bytes.equals(Buffer.from(candidate.eventDocument)))); if (!exactRetry) fail("memory.sweep_heads");
   }
+  const changed = []; for (const candidate of built.sort((left, right) => byteCompare(left.memoryId, right.memoryId))) changed.push({ ...await appendMemoryEvent({ store, eventDocument: candidate.eventDocument }), memoryId: candidate.memoryId });
   return withLog({ status: "ready", changed, store }, input.workspaceRoot, input.config, input.now);
 }
 async function quarantine(input) {
