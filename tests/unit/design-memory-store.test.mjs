@@ -174,6 +174,15 @@ test("a pre-existing .game-design symlink cannot redirect store initialization",
   await assert.rejects(() => readFile(path.join(outside, "memory")));
 });
 
+test("non-initializing resolution distinguishes safe absence from an unsafe existing path without writes", async (t) => {
+  const root = await workspace(t);
+  const before = await sourceTreeSnapshot({ root });
+  assert.equal(await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: false }), null);
+  assert.deepEqual(await sourceTreeSnapshot({ root }), before);
+  const outside = path.join(root, "outside"); await mkdir(outside); await symlink(outside, path.join(root, ".game-design"));
+  await assert.rejects(() => resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: false }), (error) => error?.code === "memory.unsafe_path");
+});
+
 test("workspace ancestor symlinks cannot redirect store initialization", async (t) => {
   for (const shape of ["parent", "intermediate"]) {
     const root = await workspace(t); const outside = path.join(root, "outside"); const logical = path.join(root, "logical"); await mkdir(outside);
@@ -403,17 +412,21 @@ test("capture exists rejects a second capture without creating source files", as
   await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: document({ operation_id: "capture-upstream-2", reason: "second capture" }) }), "memory.capture_exists");
 });
 
-test("transition heads and resolution heads reject stale, missing, and extra parent sets without creating source files", async (t) => {
+test("resolution consumes an observed incomparable head subset while retaining an unobserved late head", async (t) => {
   const root = await workspace(t); const store = await resolveMemoryStore({ workspaceRoot: root, config: config(), platform: "linux", home: root, initialize: true }); const captured = await appendMemoryEvent({ store, eventDocument: document() });
   const verified = await sealTransitionForTest(store, captured.eventId, "verified", "2026-08-12T01:00:00.000Z");
   const disputed = await sealTransitionForTest(store, captured.eventId, "disputed", "2026-08-12T02:00:00.000Z");
   const expired = await sealTransitionForTest(store, captured.eventId, "expired", "2026-08-12T03:00:00.000Z");
   await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: transitionDocument(captured.eventId, "verified", "2026-08-12T04:00:00.000Z") }), "memory.transition_heads");
   const verifiedRecord = { ...record, status: "verified", updated_at: "2026-08-12T01:00:00.000Z" };
-  await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, verifiedRecord, "2026-08-12T05:00:00.000Z") }), "memory.resolution_heads");
+  const subset = await appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId], verified.eventId, verifiedRecord, "2026-08-12T05:00:00.000Z") });
+  let scan = await scanMemoryEvents({ store });
+  const used = new Set(scan.events.flatMap((item) => item.event.parent_event_ids));
+  assert.deepEqual(scan.events.filter((item) => !used.has(item.eventId)).map((item) => item.eventId).sort(), [expired.eventId, subset.eventId].sort());
+  assert.equal(foldMemoryEvents(scan).diagnostics.some((item) => item.code === "memory.concurrent_conflict"), true);
   await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId, expired.eventId, captured.eventId], captured.eventId, record, "2026-08-12T06:00:00.000Z") }), "memory.resolution_heads");
   await assertRejectedWithoutSourceChange(store, () => appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId, captured.eventId], captured.eventId, record, "2026-08-12T07:00:00.000Z") }), "memory.resolution_heads");
-  const resolved = await appendMemoryEvent({ store, eventDocument: resolutionDocument([verified.eventId, disputed.eventId, expired.eventId], verified.eventId, verifiedRecord, "2026-08-12T08:00:00.000Z") });
+  const resolved = await appendMemoryEvent({ store, eventDocument: resolutionDocument([subset.eventId, expired.eventId], subset.eventId, verifiedRecord, "2026-08-12T08:00:00.000Z") });
   assert.equal(resolved.status, "created"); assert.equal(foldMemoryEvents(await scanMemoryEvents({ store })).memories.get(record.memory_id).headEventId, resolved.eventId);
 });
 

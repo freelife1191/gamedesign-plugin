@@ -55,7 +55,13 @@ export async function resolveMemoryStore({ workspaceRoot, config, platform, home
   if (config.scope === "global") { if (!global[platform] || typeof home !== "string" || !path.isAbsolute(home)) fail("Unsafe memory store path."); if (initialize) await ensureDirectory(home); const homeRoot = await canonicalDirectory(home); root = path.join(homeRoot.path, ...global[platform], "game-design-plugin", "memory"); }
   else { const workspace = await canonicalDirectory(workspaceRoot); root = path.join(workspace.path, ".game-design", "memory"); base = workspace; }
   base ??= await canonicalDirectory(home); const segments = path.relative(base.path, root).split(path.sep).filter(Boolean);
-  const canonical = initialize ? await ensureNested(base, segments) : await canonicalDirectory(root);
+  let canonical;
+  if (initialize) canonical = await ensureNested(base, segments);
+  else {
+    await inspectExistingPathChain(root);
+    if (!await stat(root)) return null;
+    canonical = await canonicalDirectory(root);
+  }
   return { root: canonical.path, identity: canonical.identity, scope: config.scope, projectId: config.projectId };
 }
 
@@ -139,7 +145,6 @@ export async function appendMemoryEvent({ store, eventDocument } = {}) {
 
 function stableSnapshot(from, to) { return ["schema_version", "memory_id", "kind", "lane", "scope", "project_id", "created_at", "artifact_types", "related_ids", "tags", "sources", "instruction_sha256"].every((key) => JSON.stringify(from.record[key]) === JSON.stringify(to.record[key])) && JSON.stringify(from.sections) === JSON.stringify(to.sections); }
 function resolutionSnapshotAllowed(chosen, candidate) { return JSON.stringify(chosen.record) === JSON.stringify(candidate.record) && JSON.stringify(chosen.sections) === JSON.stringify(candidate.sections) || stableSnapshot(chosen, candidate) && validateMemoryTransition({ from: chosen.record, to: candidate.record, approvalBasis: candidate.record.approval_basis }).ok; }
-function sameEventIds(left, right) { return left.length === right.length && left.every((eventId, index) => eventId === right[index]); }
 function assertMemoryAppendNotQuarantined(scan, memoryId) { if ((scan.quarantines ?? []).some((marker) => marker.memory_id === memoryId) || (scan.taintedMemoryIds ?? []).includes?.(memoryId)) fail("Memory is quarantined.", "memory.quarantined"); }
 function validMemoryEventEdge({ item, byId, ancestors, currentHeads } = {}) {
   const { event } = item ?? {};
@@ -149,7 +154,7 @@ function validMemoryEventEdge({ item, byId, ancestors, currentHeads } = {}) {
     return Boolean(parent && event.parent_event_ids.length === 1 && event.action === item.record.status && stableSnapshot(parent, item) && validateMemoryTransition({ from: parent.record, to: item.record, approvalBasis: item.record.approval_basis }).ok);
   }
   if (event?.event_type === "resolution") {
-    if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id) || currentHeads && (!sameEventIds(event.parent_event_ids, currentHeads) || !currentHeads.includes(event.chosen_parent_event_id)) || ancestors && event.parent_event_ids.some((left, index) => event.parent_event_ids.slice(index + 1).some((right) => ancestors(left).has(right) || ancestors(right).has(left)))) return false;
+    if (event.parent_event_ids.length < 2 || !event.parent_event_ids.includes(event.chosen_parent_event_id) || currentHeads && (!event.parent_event_ids.every((eventId) => currentHeads.includes(eventId)) || !currentHeads.includes(event.chosen_parent_event_id)) || ancestors && event.parent_event_ids.some((left, index) => event.parent_event_ids.slice(index + 1).some((right) => ancestors(left).has(right) || ancestors(right).has(left)))) return false;
     const chosen = byId.get(event.chosen_parent_event_id); return Boolean(chosen && resolutionSnapshotAllowed(chosen, item));
   }
   return false;
@@ -166,8 +171,9 @@ function authorizeMemoryAppend({ scan, parsed } = {}) {
   if (heads.length === 1 && foldedMemory?.headEventId !== heads[0]) fail("Memory history is not authorized.", "memory.invalid_event_dag");
   if (parsed.event.event_type === "capture") { if (prior.length) fail("Memory already has a capture event.", "memory.capture_exists"); return { prior, heads, byId }; }
   if (parsed.event.event_type === "transition" && (heads.length !== 1 || parsed.event.parent_event_ids[0] !== heads[0])) fail("Transition parent is not the current head.", "memory.transition_heads");
-  if (parsed.event.event_type === "resolution" && (!sameEventIds(parsed.event.parent_event_ids, heads) || !heads.includes(parsed.event.chosen_parent_event_id))) fail("Resolution parents are not the current heads.", "memory.resolution_heads");
-  if (!validMemoryEventEdge({ item: { event: parsed.event, record: parsed.record, sections: parsed.sections }, byId, currentHeads: heads })) fail("Memory event edge is not authorized.", "memory.invalid_event_edge");
+  if (parsed.event.event_type === "resolution" && (!parsed.event.parent_event_ids.every((eventId) => heads.includes(eventId)) || !heads.includes(parsed.event.chosen_parent_event_id))) fail("Resolution parents are not the current heads.", "memory.resolution_heads");
+  const ancestorMemo = new Map(); const ancestors = (eventId, stack = new Set()) => { if (ancestorMemo.has(eventId)) return ancestorMemo.get(eventId); if (stack.has(eventId)) return new Set([eventId]); const item = byId.get(eventId); const values = new Set(); for (const parent of item?.event.parent_event_ids ?? []) { values.add(parent); for (const ancestor of ancestors(parent, new Set([...stack, eventId]))) values.add(ancestor); } ancestorMemo.set(eventId, values); return values; };
+  if (!validMemoryEventEdge({ item: { event: parsed.event, record: parsed.record, sections: parsed.sections }, byId, ancestors, currentHeads: heads })) fail("Memory event edge is not authorized.", "memory.invalid_event_edge");
   return { prior, heads, byId };
 }
 
