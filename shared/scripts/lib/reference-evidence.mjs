@@ -54,6 +54,11 @@ function validEvidenceId(value) {
   return typeof value === "string" && evidenceIdPattern.test(value);
 }
 
+function sortedUniqueIds(values) {
+  return Array.isArray(values) && values.length > 0 && values.every(validEvidenceId)
+    && values.every((value, index) => index === 0 || byteCompare(values[index - 1], value) < 0);
+}
+
 function hasExactEvidenceKeys(value, { allowMissingTier = false } = {}) {
   const keys = allowMissingTier ? evidenceRecordKeys.filter((key) => key !== "tier") : evidenceRecordKeys;
   return isRecord(value)
@@ -65,6 +70,8 @@ function validTieredEvidence(value) {
   return hasExactEvidenceKeys(value)
     && validEvidenceId(value.evidenceId)
     && validEvidenceId(value.referenceId)
+    && validEvidenceId(value.contextId)
+    && sortedUniqueIds(value.systemIds)
     && typeof value.sourceType === "string"
     && evidenceSourceTypes.includes(value.sourceType)
     && value.tier === tierForSourceType(value.sourceType)
@@ -76,13 +83,10 @@ function validTieredEvidence(value) {
 }
 
 function validClaim(value) {
-  const keys = ["category", "causal", "claimId", "evidenceIds", "kind"];
+  const keys = ["category", "causal", "claimId", "evidenceIds", "kind", "systemIds"];
   if (!isRecord(value) || Object.keys(value).sort().join("\u0000") !== keys.join("\u0000")) return false;
   if (!validEvidenceId(value.claimId) || !claimKinds.has(value.kind) || !claimCategories.has(value.category) || typeof value.causal !== "boolean") return false;
-  return Array.isArray(value.evidenceIds)
-    && value.evidenceIds.length > 0
-    && value.evidenceIds.every(validEvidenceId)
-    && value.evidenceIds.every((id, index) => index === 0 || byteCompare(value.evidenceIds[index - 1], id) < 0);
+  return sortedUniqueIds(value.evidenceIds) && sortedUniqueIds(value.systemIds);
 }
 
 function isIntrinsicMap(value) {
@@ -103,7 +107,7 @@ export function registerReferenceEvidence(input = {}) {
   const ids = new Set();
   const registered = copy.records.map((record) => {
     if (!hasExactEvidenceKeys(record, { allowMissingTier: true }) && !hasExactEvidenceKeys(record)) fail();
-    if (!validEvidenceId(record.evidenceId) || !validEvidenceId(record.referenceId) || !evidenceSourceTypes.includes(record.sourceType) || !claimKinds.has(record.claimKind) || !nonEmptyText(record.claim)) fail();
+    if (!validEvidenceId(record.evidenceId) || !validEvidenceId(record.referenceId) || !validEvidenceId(record.contextId) || !sortedUniqueIds(record.systemIds) || !evidenceSourceTypes.includes(record.sourceType) || !claimKinds.has(record.claimKind) || !nonEmptyText(record.claim)) fail();
     const tier = tierForSourceType(record.sourceType);
     if (!tier || (Object.hasOwn(record, "tier") && record.tier !== tier)) fail("tier");
     if (ids.has(record.evidenceId)) fail("duplicate-id");
@@ -114,6 +118,8 @@ export function registerReferenceEvidence(input = {}) {
     return {
       evidenceId: record.evidenceId,
       referenceId: record.referenceId,
+      contextId: record.contextId,
+      systemIds: record.systemIds,
       sourceType: record.sourceType,
       tier,
       claimKind: record.claimKind,
@@ -158,6 +164,7 @@ export function validateClaimAgainstEvidence(input = {}) {
       return { ok: false, code: "invalid_evidence" };
     }
     if (!validTieredEvidence(item) || item.evidenceId !== evidenceId) return { ok: false, code: "invalid_evidence" };
+    if (!item.systemIds.some((systemId) => safeClaim.systemIds.includes(systemId))) return { ok: false, code: "evidence_system_mismatch" };
     evidence.push(item);
   }
   const available = evidence.filter(({ availability }) => availability === "available");
@@ -167,4 +174,32 @@ export function validateClaimAgainstEvidence(input = {}) {
     return { ok: false, code: "unsupported_causal_claim" };
   }
   return { ok: true, code: "supported" };
+}
+
+/** Validates context and Atlas-system bindings after the shared registry has normalized records. */
+export function validateEvidenceBindings({ evidence, contexts, systemIds } = {}) {
+  let records;
+  let safeContexts;
+  let safeSystemIds;
+  try {
+    records = canonicalCopy(evidence);
+    safeContexts = canonicalCopy(contexts);
+    safeSystemIds = canonicalCopy(systemIds);
+  } catch {
+    fail("binding");
+  }
+  if (!Array.isArray(records) || !Array.isArray(safeContexts) || !Array.isArray(safeSystemIds) || !safeSystemIds.every(validEvidenceId)) fail("binding");
+  const contextsById = new Map();
+  for (const context of safeContexts) {
+    if (!isRecord(context) || Object.keys(context).sort().join("\0") !== ["contextId", "platform", "referenceId", "version"].join("\0")
+      || !validEvidenceId(context.contextId) || !validEvidenceId(context.referenceId) || !validEvidenceId(context.platform) || !nonEmptyText(context.version) || contextsById.has(context.contextId)) fail("binding");
+    contextsById.set(context.contextId, context);
+  }
+  const knownSystems = new Set(safeSystemIds);
+  for (const record of records) {
+    if (!validTieredEvidence(record)) fail("binding");
+    const context = contextsById.get(record.contextId);
+    if (!context || context.referenceId !== record.referenceId || record.systemIds.some((systemId) => !knownSystems.has(systemId))) fail("binding");
+  }
+  return true;
 }
