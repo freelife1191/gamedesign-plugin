@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
 import { verifyMaintenanceHumanReceipt } from "./lib/design-memory-capabilities.mjs";
-import { appendMemoryEvent, appendQuarantineMarker, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents } from "./lib/safe-memory-store.mjs";
+import { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents } from "./lib/safe-memory-store.mjs";
 import { rebuildMemoryIndex } from "./retrieve-design-memory.mjs";
 import { canonicalMemoryEventDocument, memoryOperationId, observeMemorySourceBindings, validateMemorySourceBindings } from "./validate-design-memory.mjs";
 import { publishDesignMemoryLog } from "./capture-design-memory.mjs";
@@ -100,7 +100,11 @@ async function quarantine(input) {
   const appended = await appendQuarantineMarker({ store, targetMemoryId: input.memoryId, targetEventId: target.eventId, targetRelativePath: target.relativePath, observedSha256: createHash("sha256").update(target.bytes).digest("hex"), reasonCode: "memory.user-quarantine", actor: input.actor, now: input.now });
   return withLog({ ...appended, memoryId: input.memoryId, store }, input.workspaceRoot, input.config, input.now);
 }
-async function syncGit() { return { status: "skipped" }; }
+async function syncGit(workspaceRoot, config) {
+  if (config?.gitMode === "tracked") return { status: "skipped" };
+  if (config?.gitMode !== "local") return { status: "warning", code: "memory.git_metadata" };
+  return ensureMemoryGitExclusion({ workspaceRoot, store: await storeFor(workspaceRoot, config, false) });
+}
 
 export async function maintainDesignMemory({ workspaceRoot, config, action, memoryId, actor, reason, observedParentEventIds, chosenParentEventId, now = new Date(), humanReceipt } = {}) {
   if (!config?.enabled) return { status: "disabled" };

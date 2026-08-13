@@ -237,10 +237,50 @@ test("sweep marks an approved external note stale after its review date", async 
   assert.equal(foldMemoryEvents(await scanMemoryEvents({ store })).memories.get(record.memory_id).record.status, "stale");
 });
 
-test("git exclusion command remains skipped without spawning a helper binary", async (t) => {
-  const root = await workspace(t);
+test("Node-only local git metadata writes one idempotent exclusion marker and preserves lock warnings", async (t) => {
+  const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude");
+  await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "existing rule\n");
+  const local = { ...config, gitMode: "local" };
+  assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "ready" });
+  const first = await readFile(exclude);
+  assert.equal(first.toString("utf8"), "existing rule\n# game-design-plugin:memory:begin\n.game-design/memory/\n# game-design-plugin:memory:end\n");
+  assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "ready" });
+  assert.deepEqual(await readFile(exclude), first);
+  await writeFile(`${exclude}.game-design-memory-exclude.lock`, "stale\n");
+  assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "warning", code: "memory.git_exclude_lock" });
+  assert.deepEqual(await readFile(exclude), first);
   assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config, action: "sync-git-exclusion" }), { status: "skipped" });
-  assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" }), { status: "skipped" });
+});
+
+test("Node-only linked worktree gitdir resolves its common info exclude", async (t) => {
+  const root = await workspace(t); const gitDir = path.join(root, "git-common", "worktrees", "memory-maintain"); const common = path.join(root, "git-common");
+  await mkdir(gitDir, { recursive: true }); await mkdir(path.join(common, "info"), { recursive: true });
+  await writeFile(path.join(root, ".git"), "gitdir: git-common/worktrees/memory-maintain\n");
+  await writeFile(path.join(gitDir, "commondir"), "../..\n");
+  const result = await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" });
+  assert.deepEqual(result, { status: "ready" });
+  assert.match(await readFile(path.join(common, "info", "exclude"), "utf8"), /# game-design-plugin:memory:begin/u);
+});
+
+test("unsafe or malformed git metadata warns without creating memory or exclude files", async (t) => {
+  for (const [name, createMetadata] of [
+    ["missing git metadata", async () => {}],
+    ["malformed gitdir", async (root) => writeFile(path.join(root, ".git"), "gitdir: ../metadata\r\n")],
+    ["missing gitdir target", async (root) => writeFile(path.join(root, ".git"), "gitdir: ../metadata\n")],
+    ["escaped common directory", async (root) => { await mkdir(path.join(root, "metadata")); await mkdir(path.join(root, "outside")); await writeFile(path.join(root, ".git"), "gitdir: metadata\n"); return writeFile(path.join(root, "metadata", "commondir"), "../outside\n"); }],
+    ["non-worktrees gitdir layout", async (root) => { const common = path.join(root, "git-common"); await mkdir(path.join(common, "other", "memory-maintain"), { recursive: true }); await writeFile(path.join(root, ".git"), "gitdir: git-common/other/memory-maintain\n"); return writeFile(path.join(common, "other", "memory-maintain", "commondir"), "../..\n"); }],
+    ["unsafe gitdir symlink", async (root) => symlink(path.join(root, "outside"), path.join(root, ".git"))],
+  ]) await t.test(name, async (t) => {
+    const root = await workspace(t); await createMetadata(root);
+    assert.deepEqual(
+      await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" }),
+      { status: "warning", code: "memory.git_metadata" },
+    );
+    await assert.rejects(() => lstat(path.join(root, ".game-design")), /ENOENT/);
+    await assert.rejects(() => lstat(path.join(root, ".git", "info", "exclude")), /ENOENT|ENOTDIR/);
+    if (name === "escaped common directory") await assert.rejects(() => lstat(path.join(root, "outside", "info", "exclude")), /ENOENT/);
+    if (name === "non-worktrees gitdir layout") await assert.rejects(() => lstat(path.join(root, "git-common", "info", "exclude")), /ENOENT/);
+  });
 });
 
 test("log publication failure preserves the already appended source transition", async (t) => {

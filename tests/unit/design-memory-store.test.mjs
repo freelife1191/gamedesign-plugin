@@ -576,52 +576,50 @@ test("same-user directory swap is explicitly a skipped non-goal", { skip: "Node 
 
 test("Git exclusion is best-effort and independent from append trust", async (t) => {
   const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n");
-  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  assert.equal((await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit })).status, "ready");
+  assert.equal((await ensureMemoryGitExclusion({ workspaceRoot: root })).status, "ready");
   assert.match(await readFile(exclude, "utf8"), /game-design-plugin:memory:begin/u);
 });
 
 test("Git exclusion leaves a symlink victim unchanged", async (t) => {
   const root = await workspace(t); const victim = path.join(root, "victim"); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(victim, "user bytes\n"); await symlink(victim, exclude);
-  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root });
   assert.equal(result.status, "warning"); assert.equal(await readFile(victim, "utf8"), "user bytes\n");
 });
 
 test("Git exclusion leaves a hard-link victim and its exclude alias unchanged", async (t) => {
   const root = await workspace(t); const victim = path.join(root, "victim"); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(victim, "user bytes\n"); await link(victim, exclude);
-  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root });
   assert.equal(result.status, "warning"); assert.equal(result.code, "memory.git_exclude"); assert.equal(await readFile(victim, "utf8"), "user bytes\n"); assert.equal(await readFile(exclude, "utf8"), "user bytes\n");
 });
 
 test("Git common and info ancestor symlinks cannot redirect exclude writes", async (t) => {
   for (const shape of ["common", "info"]) {
-    const root = await workspace(t); const outside = path.join(root, "outside"); const logical = path.join(root, `logical-${shape}`); const common = path.join(logical, "common"); await mkdir(path.join(outside, "common", "info"), { recursive: true }); await symlink(outside, logical);
-    const victim = path.join(outside, "common", "info", "exclude"); await writeFile(victim, "user bytes\n");
-    const runGit = async (args) => args[1] === "--git-common-dir" ? common : victim;
-    const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit });
+    const root = await workspace(t); const outside = path.join(root, "outside"); const victim = path.join(outside, "info", "exclude"); await mkdir(path.dirname(victim), { recursive: true }); await writeFile(victim, "user bytes\n");
+    if (shape === "common") {
+      const gitDir = path.join(root, "git-common", "worktrees", "memory"); await mkdir(gitDir, { recursive: true }); await symlink(outside, path.join(root, "logical-common"));
+      await writeFile(path.join(root, ".git"), "gitdir: git-common/worktrees/memory\n"); await writeFile(path.join(gitDir, "commondir"), "../../../logical-common\n");
+    } else {
+      await mkdir(path.join(root, ".git")); await symlink(path.join(outside, "info"), path.join(root, ".git", "info"));
+    }
+    const result = await ensureMemoryGitExclusion({ workspaceRoot: root });
     assert.equal(result.status, "warning"); assert.equal(await readFile(victim, "utf8"), "user bytes\n");
   }
 });
 
 test("Git exclude identity changes before append leave same-inode user bytes unchanged", async (t) => {
   const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n");
-  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeAppend: async () => writeFile(exclude, "changed user bytes\n") });
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, beforeAppend: async () => writeFile(exclude, "changed user bytes\n") });
   assert.equal(result.status, "warning"); assert.equal(await readFile(exclude, "utf8"), "changed user bytes\n");
 });
 
 test("Git exclude pathname swaps never report ready", async (t) => {
   const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); const original = path.join(root, "original-exclude"); const replacement = path.join(root, "replacement-exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n"); await writeFile(replacement, "replacement user bytes\n");
-  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeFinalRecheck: async () => { await rename(exclude, original); await rename(replacement, exclude); } });
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, beforeFinalRecheck: async () => { await rename(exclude, original); await rename(replacement, exclude); } });
   assert.equal(result.status, "warning"); assert.equal(await readFile(exclude, "utf8"), "replacement user bytes\n"); assert.match(await readFile(original, "utf8"), /game-design-plugin:memory:begin/u);
 });
 
 test("Git exclude metadata changes after sync never report ready", async (t) => {
   const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); const prefix = "before\n"; const suffix = "# game-design-plugin:memory:begin\n.game-design/memory/\n# game-design-plugin:memory:end\n"; await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, prefix);
-  const runGit = async (args) => args[1] === "--git-common-dir" ? ".git" : exclude;
-  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, gitMode: "local", runGit, beforeFinalRecheck: async () => utimes(exclude, new Date("2000-01-01T00:00:00.000Z"), new Date("2000-01-01T00:00:00.000Z")) });
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, beforeFinalRecheck: async () => utimes(exclude, new Date("2000-01-01T00:00:00.000Z"), new Date("2000-01-01T00:00:00.000Z")) });
   assert.equal(result.status, "warning"); assert.equal(result.code, "memory.git_exclude"); assert.equal(await readFile(exclude, "utf8"), `${prefix}${suffix}`);
 });
