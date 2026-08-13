@@ -1,6 +1,6 @@
 # Game Design Career 스킬 레퍼런스
 
-설치된 Career 제품 스킬 15개와 공통 스킬 Archify, humanize-korean, Skillstead를 합친 18개 스킬을 정리합니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
+설치된 Career 제품 스킬 15개와 공통 스킬 6개를 합친 설치 스킬 21개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead와 프로젝트 기억 스킬 3개입니다. 단계나 목표 역할이 불명확하면 오케스트레이터로 시작하고, 산출물이 명확하면 해당 스킬을 직접 호출합니다.
 
 ## 오케스트레이터와 직접 호출
 
@@ -15,10 +15,12 @@
 | --- | --- | --- | --- | --- | --- |
 | [`apply-document-quality-profile`](apply-document-quality-profile.md) | artifact별 품질 profile과 checklist 결정 | `$game-design-career:apply-document-quality-profile` | 요청에 맞는 설치 템플릿 | goal, audience, artifact type, format | selection record, checklist, manifest |
 | [`archify`](archify.md) | 경력 경로와 작업 흐름을 탐색 가능한 HTML로 설명 | `$game-design-career:archify` | 선택된 canonical artifact | 근거, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
+| [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Career 교훈을 후보로 기록 | `$game-design-career:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`build-game-design-portfolio`](build-game-design-portfolio.md) | 결정·실험·협업 증거를 case study로 구성 | `$game-design-career:build-game-design-portfolio` | `creative-design-portfolio` | 목표 역량, claim, 기여, evidence | case study와 claim-evidence index |
 | [`export-career-documents`](export-career-documents.md) | Career 문서의 다중 형식 작업 준비 | `$game-design-career:export-career-documents` | 선택된 canonical artifact | artifact, MD/PDF/DOCX/PPTX, capability | renderer-neutral job manifest |
 | [`generate-image-assets`](generate-image-assets.md) | mode와 사용자 선택에 맞는 이미지 생성 라우팅 | `$game-design-career:generate-image-assets` | 선택된 canonical artifact | manifest, prompt, mode, selection receipt | generation 결과와 review handoff |
 | [`humanize-korean`](humanize-korean.md) | 증거·주장 경계를 보존한 한국어 문체 검토 | `$game-design-career:humanize-korean` | 선택된 canonical artifact | 원문, 독자, 보호 항목 | 자연스러운 수정안과 변경 요약 |
+| [`maintain-game-design-memory`](../memory.md#후보-확인승인거부폐기-예시) | 후보 확인과 사람 승인·거부·폐기 | `$game-design-career:maintain-game-design-memory` | 프로젝트 기억 | 기억 ID, 이름 있는 사람, 결정 이유 | 상태 변경 이력 또는 충돌 안내 |
 | [`map-game-design-career`](map-game-design-career.md) | 역할군·목표 수준·역량 gap 비교 | `$game-design-career:map-game-design-career` | `game-design-role-map` | 현재 증거, 제약, 역할 후보 | provisional role paths와 증거 과제 |
 | [`orchestrate-game-design-career`](orchestrate-game-design-career.md) | 단계 진단과 전체 Career workflow routing | `$game-design-career:orchestrate-game-design-career` | `career-stage-goal` | 목표, 단계, 보유 증거, 제약 | stage brief와 최소 skill chain |
 | [`plan-image-assets`](plan-image-assets.md) | portfolio 이미지·diagram slot과 prompt package 계획 | `$game-design-career:plan-image-assets` | 선택된 canonical artifact | profile, source section, 수량, placement | manifest, prompt, placeholder |
@@ -29,6 +31,7 @@
 | [`reverse-engineer-game-design`](reverse-engineer-game-design.md) | 관찰 기반 게임 역기획 | `$game-design-career:reverse-engineer-game-design` | `reverse-design-document` | build, platform, 관찰, source | 사실·추론 claim과 validation queue |
 | [`review-game-design-portfolio`](review-game-design-portfolio.md) | recruiter 관점 5축 portfolio 검토 | `$game-design-career:review-game-design-portfolio` | `five-axis-review` | section/evidence IDs, review goal | finding, score, minimum repair backlog |
 | [`review-image-assets`](review-image-assets.md) | 이미지 권리·가독성·placement 사람 승인 | `$game-design-career:review-image-assets` | 선택된 canonical artifact | asset ID, evidence, named reviewer | lifecycle transition 또는 blocker |
+| [`retrieve-approved-design-memory`](../memory.md#어떤-기록을-기억하는가) | 현재 작업과 관련된 승인 기록 조회 | `$game-design-career:retrieve-approved-design-memory` | 프로젝트 기억 | 프로젝트 ID, Career 요청 맥락 | 적용 가능한 기록과 제외 이유 |
 | [`svg-infographic`](svg-infographic.md) | Career 구조용 editable SVG와 정확한 2× PNG | `$game-design-career:svg-infographic` | 선택된 canonical artifact | 구조, audience, ratio, language | editable SVG와 검증 evidence |
 | [`visualize-career-roadmap`](visualize-career-roadmap.md) | 역할·역량·학습 dependency 도식화 | `$game-design-career:visualize-career-roadmap` | 선택된 canonical artifact | stable source IDs, 관계, audience | source-mapped SVG/PNG state |
 
@@ -39,4 +42,5 @@
 - 현재 공고·회사·도구 claim은 `research-game-design-jobs`의 fresh primary evidence를 먼저 확보합니다.
 - portfolio, 면접, 성장, transition 결과는 합격·승진·전환을 보장하지 않습니다.
 - `archify`는 관계를 자세히 탐색할 HTML이 필요할 때, `humanize-korean`과 `polish-game-design-writing`은 경험·증거를 바꾸지 않는 문장 검토가 필요할 때 사용합니다.
+- 프로젝트 기억의 조회·후보 기록·상태 변경은 [Career 프로젝트 기억](../memory.md)의 로컬 보관과 사람 승인 경계를 따릅니다.
 - 생성·렌더·agent 권고는 이름 있는 사람의 권리·품질·공개 승인을 대신하지 않습니다.
