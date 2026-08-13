@@ -125,7 +125,8 @@ function transition(parentEventId, status, sectionValues = sections) {
 }
 async function approvedStore(t, sectionValues = sections) {
   const root = await workspace(t);
-  await writeFile(path.join(root, "evidence.yml"), "finding-07\n");
+  await mkdir(path.join(root, "playtest-session-04"));
+  await writeFile(path.join(root, "playtest-session-04", "evidence.yml"), "finding-07\n");
   const store = await resolveMemoryStore({ workspaceRoot: root, config, platform: process.platform, home: root, initialize: true });
   const captured = await appendMemoryEvent({ store, eventDocument: capture(sectionValues) });
   const verified = await appendMemoryEvent({ store, eventDocument: transition(captured.eventId, "verified", sectionValues) });
@@ -196,9 +197,21 @@ test("source digest drift excludes a formerly approved item and never treats cac
   const { root } = await approvedStore(t);
   const first = await retrieveApprovedDesignMemory({ workspaceRoot: root, config, requestContext: context, now: new Date("2026-08-12T02:00:00.000Z") });
   assert.equal(first.guidance.length, 1);
-  await writeFile(path.join(root, "evidence.yml"), "changed evidence\n");
+  await writeFile(path.join(root, "playtest-session-04", "evidence.yml"), "changed evidence\n");
   const second = await retrieveApprovedDesignMemory({ workspaceRoot: root, config, requestContext: context, now: new Date("2026-08-12T02:00:00.000Z") });
   assert.equal(second.status, "ready"); assert.equal(second.guidance.length, 0); assert.deepEqual(second.excluded, [{ memoryId: record().memory_id, reason: "stale-source" }]);
+});
+
+test("retrieval treats a crafted legacy workspace-root fallback source as stale", async (t) => {
+  const root = await workspace(t);
+  await writeFile(path.join(root, "evidence.yml"), "finding-07\n");
+  const store = await resolveMemoryStore({ workspaceRoot: root, config, platform: process.platform, home: root, initialize: true });
+  const captured = await appendMemoryEvent({ store, eventDocument: capture() });
+  const verified = await appendMemoryEvent({ store, eventDocument: transition(captured.eventId, "verified") });
+  await appendMemoryEvent({ store, eventDocument: transition(verified.eventId, "approved") });
+  const result = await retrieveApprovedDesignMemory({ workspaceRoot: root, config, requestContext: context, now: new Date("2026-08-12T02:00:00.000Z") });
+  assert.equal(result.guidance.length, 0);
+  assert.deepEqual(result.excluded, [{ memoryId: record().memory_id, reason: "stale-source" }]);
 });
 
 test("derived input is exact-bound and bounded census ignores reservation slots", async (t) => {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -349,9 +349,24 @@ for (const lane of ["common", "studio", "career"]) test(`record lane ${lane} rem
 for (const scope of ["project", "workspace", "global"]) test(`record scope ${scope} remains closed`, () => assert.equal(validateMemoryRecord({ ...record, scope }).ok, true));
 for (const [field, value] of [["memory_id", "Memory"], ["tags", ["z", "a"]], ["sources", []], ["review_after", "2026-02-30"]]) test(`record rejects invalid ${field}`, () => assert.equal(validateMemoryRecord({ ...record, [field]: value }).ok, false));
 
-test("source binding fixtures reject changed bytes and final inode swaps", async (t) => {
-  const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-source-"))); t.after(() => rm(root, { recursive: true, force: true })); await mkdir(path.join(root, "docs")); await writeFile(path.join(root, "docs", "source.md"), "trusted"); await writeFile(path.join(root, "docs", "replacement.md"), "other");
-  const source = { artifact_id: "source", locator: "docs/source.md#heading", sha256: createHash("sha256").update("trusted").digest("hex") };
+test("source bindings are artifact-bound and reject unsafe directories and final inode swaps", async (t) => {
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-source-"))); t.after(() => rm(root, { recursive: true, force: true }));
+  await mkdir(path.join(root, "artifact", "docs"), { recursive: true });
+  await mkdir(path.join(root, "root-only"));
+  await writeFile(path.join(root, "artifact", "docs", "source.md"), "trusted");
+  await writeFile(path.join(root, "artifact", "docs", "replacement.md"), "other");
+  await writeFile(path.join(root, "root-only", "source.md"), "trusted");
+  const digest = createHash("sha256").update("trusted").digest("hex");
+  const source = { artifact_id: "artifact", locator: "docs/source.md#heading", sha256: digest };
   assert.equal((await validateMemorySourceBindings({ ...record, sources: [source] }, { workspaceRoot: root })).ok, true);
-  assert.equal((await validateMemorySourceBindings({ ...record, sources: [source] }, { workspaceRoot: root, beforeFinalRecheck: () => rename(path.join(root, "docs", "replacement.md"), path.join(root, "docs", "source.md")) })).ok, false);
+  assert.equal((await validateMemorySourceBindings({ ...record, sources: [{ ...source, artifact_id: "missing-artifact", locator: "root-only/source.md#heading" }] }, { workspaceRoot: root })).ok, false);
+  assert.equal((await validateMemorySourceBindings({ ...record, sources: [source] }, { workspaceRoot: root, beforeFinalRecheck: () => rename(path.join(root, "artifact", "docs", "replacement.md"), path.join(root, "artifact", "docs", "source.md")) })).ok, false);
+
+  await symlink(path.join(root, "artifact"), path.join(root, "artifact-link"));
+  assert.equal((await validateMemorySourceBindings({ ...record, sources: [{ ...source, artifact_id: "artifact-link" }] }, { workspaceRoot: root })).ok, false);
+  await writeFile(path.join(root, "artifact-file"), "not a directory");
+  assert.equal((await validateMemorySourceBindings({ ...record, sources: [{ ...source, artifact_id: "artifact-file" }] }, { workspaceRoot: root })).ok, false);
+  await mkdir(path.join(root, "artifact-with-link"));
+  await symlink(path.join(root, "artifact", "docs"), path.join(root, "artifact-with-link", "docs"));
+  assert.equal((await validateMemorySourceBindings({ ...record, sources: [{ ...source, artifact_id: "artifact-with-link" }] }, { workspaceRoot: root })).ok, false);
 });
