@@ -52,6 +52,18 @@ const conditionalReviewerSelectionContract = {
   maxReviewers: 3,
 };
 
+const memoryWorkflowContract = {
+  retrieveSkill: "retrieve-approved-design-memory",
+  captureSkill: "capture-game-design-memory",
+  maintenanceSkill: "maintain-game-design-memory",
+  retrievePlacement: "after-intake-before-specialist-routing",
+  capturePlacement: "after-completion-gates",
+  defaultScope: "project",
+  defaultMaxItems: 5,
+  requiresProjectId: true,
+  dedicatedAgent: false,
+};
+
 async function readSkill(relativePath) {
   return readFile(path.join(skillRoot, relativePath), "utf8");
 }
@@ -120,6 +132,32 @@ function assertConditionalReviewerSelectionContract(contract) {
   assert.deepEqual(contract, conditionalReviewerSelectionContract);
 }
 
+function assertStudioMemoryOrchestration({ skill, intake, workflow, gates, routing }) {
+  assert.deepEqual(routing.memoryWorkflow, memoryWorkflowContract);
+  assert.match(intake, /"projectId"\s*:\s*"existing-artifact-or-explicit-user-id"/u);
+  assert.match(intake, /"memoryDisabledForRequest"\s*:\s*false/u);
+  assert.match(intake, /no project ID[\s\S]*?skipped-project-id-missing[\s\S]*?continue/u);
+  assert.match(intake, /previous memory[\s\S]*?memoryDisabledForRequest\s*=\s*true/iu);
+  assert.match(intake, /Memory unavailability never blocks/u);
+  assert.match(skill, /intake and configuration[\s\S]*?retrieve approved memory[\s\S]*?specialist[\s\S]*?completion gates[\s\S]*?allowed[- ]event[\s\S]*?summary/iu);
+  assert.match(skill, /4\. [^\n]*completion gates[^\n]*\n5\. [^\n]*Capture only allowed-event candidates/u);
+  assert.match(workflow, /retrieve-approved-design-memory[\s\S]*?before specialist routing/iu);
+  assert.match(workflow, /after completion gates[\s\S]*?capture-game-design-memory/iu);
+  assert.match(`${skill}\n${workflow}`, /no dedicated memory agent/iu);
+  assert.match(workflow, /no dedicated memory agent/iu);
+  assert.match(`${skill}\n${workflow}`, /maximum of three primary review roles/iu);
+  assert.match(`${skill}\n${workflow}`, /memory text[\s\S]*?evidence and input only/iu);
+  assert.match(`${skill}\n${workflow}`, /\$skill|shell|state command/iu);
+  assert.match(`${skill}\n${workflow}`, /never auto-approve memory candidates/iu);
+  assert.match(`${skill}\n${workflow}`, /Career-only memory never becomes a Studio fact/iu);
+  assert.match(workflow, /Career-only memory never becomes a Studio fact/iu);
+  assert.match(gates, /project-fact[\s\S]*?artifact_id[\s\S]*?locator[\s\S]*?SHA/iu);
+  assert.match(gates, /decision[\s\S]*?artifact_id[\s\S]*?locator[\s\S]*?SHA/iu);
+  assert.match(gates, /design-lesson[\s\S]*?(question|proposal)[\s\S]*?new decision state/iu);
+  assert.match(gates, /style-preference[\s\S]*?expression[\s\S]*?(fact|number|ID|approval)/iu);
+  assert.match(gates, /source drift[\s\S]*?exclude[\s\S]*?continue[\s\S]*?existing workflow/iu);
+}
+
 test("orchestrator skill uses the official minimal metadata and interface contract", async () => {
   const [skill, openai] = await Promise.all([readSkill("SKILL.md"), readSkill("agents/openai.yaml")]);
   const frontmatter = skill.match(/^---\n([\s\S]*?)\n---/u)?.[1];
@@ -135,6 +173,26 @@ test("orchestrator skill uses the official minimal metadata and interface contra
   assert.match(openai, /display_name: "Game Design Project Orchestrator"/u);
   assert.match(openai, /short_description: "[^"]{25,64}"/u);
   assert.match(openai, /default_prompt: "Use \$orchestrate-game-design-project /u);
+});
+
+test("Studio orchestrator preserves the memory workflow order and rejects unsafe document mutations", async () => {
+  const [skill, intake, workflow, gates, routing] = await Promise.all([
+    readSkill("SKILL.md"), readSkill("references/intake.md"), readSkill("references/workflow.md"), readSkill("references/completion-gates.md"), readRouting(),
+  ]);
+  const contract = { skill, intake, workflow, gates, routing };
+  assert.doesNotThrow(() => assertStudioMemoryOrchestration(contract));
+  const mutations = [
+    { key: "skill", from: "2. Retrieve approved memory", to: "2. Specialist workflow before memory retrieval" },
+    { key: "skill", from: "5. Capture only allowed-event candidates", to: "4. Capture only allowed-event candidates" },
+    { key: "skill", from: "Never auto-approve memory candidates", to: "Automatically approve memory candidates" },
+    { key: "workflow", from: "no dedicated memory agent", to: "a dedicated memory agent" },
+    { key: "intake", from: "Memory unavailability never blocks", to: "Memory unavailability stops the Canonical Artifact" },
+    { key: "workflow", from: "Career-only memory never becomes a Studio fact", to: "Career-only memory becomes a Studio fact" },
+  ];
+  for (const mutation of mutations) {
+    const changed = { ...contract, [mutation.key]: contract[mutation.key].replace(mutation.from, mutation.to) };
+    assert.throws(() => assertStudioMemoryOrchestration(changed), undefined, `${mutation.key}: ${mutation.from}`);
+  }
 });
 
 test("authoritative routing registry maps all ten direct route variants", async () => {

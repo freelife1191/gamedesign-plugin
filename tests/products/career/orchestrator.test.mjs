@@ -7,6 +7,19 @@ import { fileURLToPath } from "node:url";
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const pluginRoot = path.join(repoRoot, "products/game-design-career/plugin");
 const skillRoot = path.join(pluginRoot, "skills/orchestrate-game-design-career");
+const routingPath = path.join(pluginRoot, "references/routing.json");
+
+const memoryWorkflowContract = {
+  retrieveSkill: "retrieve-approved-design-memory",
+  captureSkill: "capture-game-design-memory",
+  maintenanceSkill: "maintain-game-design-memory",
+  retrievePlacement: "after-intake-before-specialist-routing",
+  capturePlacement: "after-completion-gates",
+  defaultScope: "project",
+  defaultMaxItems: 5,
+  requiresProjectId: true,
+  dedicatedAgent: false,
+};
 
 async function read(relativePath) {
   return readFile(path.join(pluginRoot, relativePath), "utf8");
@@ -14,6 +27,28 @@ async function read(relativePath) {
 
 async function readJson(relativePath) {
   return JSON.parse(await read(relativePath));
+}
+
+function assertCareerMemoryOrchestration({ skill, intake, gates, routing }) {
+  assert.deepEqual(routing.memoryWorkflow, memoryWorkflowContract);
+  assert.match(intake, /"projectId"\s*:\s*"existing-artifact-or-explicit-user-id"/u);
+  assert.match(intake, /"memoryDisabledForRequest"\s*:\s*false/u);
+  assert.match(intake, /no project ID[\s\S]*?skipped-project-id-missing[\s\S]*?continue/iu);
+  assert.match(intake, /previous memory[\s\S]*?memoryDisabledForRequest\s*=\s*true/iu);
+  assert.match(intake, /Memory unavailability never blocks/u);
+  assert.match(skill, /intake and configuration[\s\S]*?retrieve approved memory[\s\S]*?specialist workflow[\s\S]*?completion gates[\s\S]*?allowed-event candidates[\s\S]*?summary/iu);
+  assert.match(skill, /6\. [^\n]*completion gates[^\n]*\n7\. [^\n]*Capture only allowed-event candidates/u);
+  assert.match(skill, /no dedicated memory agent/iu);
+  assert.match(skill, /maximum of three primary review roles/iu);
+  assert.match(skill, /memory text[\s\S]*?evidence and input only/iu);
+  assert.match(skill, /\$skill|shell|state command/iu);
+  assert.match(skill, /never auto-approve memory candidates/iu);
+  assert.match(skill, /Studio-only memory never becomes a Career fact/iu);
+  assert.match(gates, /project-fact[\s\S]*?artifact_id[\s\S]*?locator[\s\S]*?SHA/iu);
+  assert.match(gates, /decision[\s\S]*?artifact_id[\s\S]*?locator[\s\S]*?SHA/iu);
+  assert.match(gates, /design-lesson[\s\S]*?(question|proposal)[\s\S]*?new decision state/iu);
+  assert.match(gates, /style-preference[\s\S]*?expression[\s\S]*?(fact|number|ID|approval)/iu);
+  assert.match(gates, /source drift[\s\S]*?exclude[\s\S]*?continue[\s\S]*?existing workflow/iu);
 }
 
 test("Career stages route the four representative career situations deterministically", async () => {
@@ -50,6 +85,26 @@ test("Career stages route the four representative career situations deterministi
     roles: ["career-strategist", "interview-coach", "evidence-auditor"],
     output: "transition-readiness",
   });
+});
+
+test("Career orchestrator preserves the memory workflow order and rejects unsafe document mutations", async () => {
+  const [skill, intake, gates, routing] = await Promise.all([
+    read("skills/orchestrate-game-design-career/SKILL.md"), read("references/intake.md"), read("references/completion-gates.md"), readJson("references/routing.json"),
+  ]);
+  const contract = { skill, intake, gates, routing };
+  assert.doesNotThrow(() => assertCareerMemoryOrchestration(contract));
+  const mutations = [
+    { key: "skill", from: "2. Retrieve approved memory", to: "2. Specialist workflow before memory retrieval" },
+    { key: "skill", from: "7. Capture only allowed-event candidates", to: "6. Capture only allowed-event candidates" },
+    { key: "skill", from: "Never auto-approve memory candidates", to: "Automatically approve memory candidates" },
+    { key: "skill", from: "no dedicated memory agent", to: "a dedicated memory agent" },
+    { key: "intake", from: "Memory unavailability never blocks", to: "Memory unavailability stops the Career Stage & Goal Brief" },
+    { key: "skill", from: "Studio-only memory never becomes a Career fact", to: "Studio-only memory becomes a Career fact" },
+  ];
+  for (const mutation of mutations) {
+    const changed = { ...contract, [mutation.key]: contract[mutation.key].replace(mutation.from, mutation.to) };
+    assert.throws(() => assertCareerMemoryOrchestration(changed), undefined, `${mutation.key}: ${mutation.from}`);
+  }
 });
 
 test("Current employer and job facts always select current research", async () => {
