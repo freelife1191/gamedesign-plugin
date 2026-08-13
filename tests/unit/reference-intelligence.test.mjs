@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { test } from "node:test";
 
 import {
@@ -34,6 +37,10 @@ function validReferenceAnalysis() {
       evidenceId: "evidence-cinematic-loop",
       referenceId: "ref-cinematic-sample",
       tier: "primary",
+      sourceType: "direct-play",
+      availability: "available",
+      limitation: null,
+      verificationQuestion: null,
       claimKind: "observation",
       claim: "The player receives a movement choice after the reveal.",
     }],
@@ -83,6 +90,40 @@ function validReferenceAnalysis() {
       evidenceIds: ["evidence-cinematic-loop"],
       state: "open",
     }],
+  };
+}
+
+const referenceSystemIds = [
+  "core-play", "player-character", "progression", "collection-crafting",
+  "economy", "rewards", "content", "social", "monetization", "retention",
+  "meta-liveops", "ux-accessibility", "account-platform", "session-network",
+  "failure-recovery", "operations-telemetry",
+];
+const bundledReferenceRoot = fileURLToPath(new URL("../../shared/reference-intelligence/", import.meta.url));
+
+function atlasQuestion(questionId, applicability, conditions = []) {
+  return {
+    questionId,
+    systemId: "economy",
+    applicability,
+    rationale: "Test question.",
+    conditions,
+    verificationPrompts: ["Verify this question."],
+  };
+}
+
+function strictAtlas(overlays) {
+  return {
+    version: 1,
+    systems: referenceSystemIds.map((systemId) => ({ systemId, name: `${systemId} system` })),
+    questions: [],
+    overlays: {
+      genre: [],
+      "play-mode": [],
+      platform: [],
+      "business-model": [],
+      ...overlays,
+    },
   };
 }
 
@@ -285,18 +326,20 @@ test("reference analysis permits exactly one entry for each default role", async
 });
 
 test("Atlas merge is order-independent and genre convention is not a requirement", async () => {
-  const { atlas } = await loadBundledReferenceCatalog({
-    moduleRoot: new URL("../../shared/reference-intelligence/", import.meta.url),
-  });
+  const { atlas } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
   const selection = {
     atlas,
-    genreIds: ["action-rpg"],
-    playModeIds: ["single-player"],
+    genreIds: ["action-rpg", "survival-crafting"],
+    playModeIds: ["cooperative", "single-player"],
     platformIds: ["pc-console"],
     businessModelIds: ["premium"],
   };
   const left = mergeSystemAtlas(selection);
-  const right = mergeSystemAtlas({ ...selection, genreIds: [...selection.genreIds].reverse() });
+  const right = mergeSystemAtlas({
+    ...selection,
+    genreIds: [...selection.genreIds].reverse(),
+    playModeIds: [...selection.playModeIds].reverse(),
+  });
   assert.deepEqual(left, right);
   assert.equal(left.every(({ applicability }) => applicability !== "mandatory"), true);
   assert.equal(left.some(({ questionId }) => questionId === "core-play-action-rpg-loop"), true);
@@ -304,32 +347,37 @@ test("Atlas merge is order-independent and genre convention is not a requirement
 
 test("discovery evidence cannot independently prove monetization causality", () => {
   const result = validateClaimAgainstEvidence({
-    claim: { claimId: "claim-bm-1", kind: "observation", evidenceIds: ["ev-community-1"], causal: true },
-    evidenceById: new Map([["ev-community-1", { tier: "discovery", sourceType: "community" }]]),
+    claim: { claimId: "claim-bm-1", kind: "observation", category: "monetization", causal: true, evidenceIds: ["ev-community-1"] },
+    evidenceById: new Map([["ev-community-1", { tier: "discovery", sourceType: "community", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" }]]),
   });
   assert.deepEqual(result, { ok: false, code: "unsupported_causal_claim" });
 });
 
 test("evidence registry derives and preserves source tiers without trusting supplied tiers", () => {
   assert.deepEqual(registerReferenceEvidence({ records: [
-    { evidenceId: "ev-video", sourceType: "video" },
-    { evidenceId: "ev-patch", sourceType: "official-patch-note" },
-    { evidenceId: "ev-talk", sourceType: "developer-talk" },
+    { evidenceId: "ev-video", sourceType: "video", availability: "available", limitation: null, verificationQuestion: null },
+    { evidenceId: "ev-patch", sourceType: "official-patch-note", availability: "available", limitation: null, verificationQuestion: null },
+    { evidenceId: "ev-talk", sourceType: "developer-talk", availability: "available", limitation: null, verificationQuestion: null },
   ] }).map(({ evidenceId, tier }) => [evidenceId, tier]), [
     ["ev-patch", "primary"],
     ["ev-talk", "supporting"],
     ["ev-video", "discovery"],
   ]);
   assert.throws(
-    () => registerReferenceEvidence({ records: [{ evidenceId: "ev-mismatched", sourceType: "community", tier: "primary" }] }),
+    () => registerReferenceEvidence({ records: [{ evidenceId: "ev-mismatched", sourceType: "community", tier: "primary", availability: "available", limitation: null, verificationQuestion: null }] }),
     { code: "reference-evidence.tier" },
+  );
+  assert.throws(
+    () => registerReferenceEvidence({ records: [
+      { evidenceId: "ev-duplicate", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null },
+      { evidenceId: "ev-duplicate", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null },
+    ] }),
+    { code: "reference-evidence.duplicate-id" },
   );
 });
 
 test("bundled catalog preserves optional source fallbacks and exact registered URLs", async () => {
-  const { sourceRegister } = await loadBundledReferenceCatalog({
-    moduleRoot: new URL("../../shared/reference-intelligence/", import.meta.url),
-  });
+  const { sourceRegister } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
   assert.deepEqual(sourceRegister.sources.map(({ id, url, required }) => [id, url, required]), [
     ["steamworks-tags", "https://partner.steamgames.com/doc/store/tags?l=english&language=english", false],
     ["gamerefinery-genres", "https://docs.gamerefinery.com/en/articles/2278730-what-are-categories-genres-and-subgenres", false],
@@ -345,62 +393,164 @@ test("bundled catalog preserves optional source fallbacks and exact registered U
     sourceType: "official-site",
     availability: "unavailable",
     limitation: "Offline source unavailable; direct verification remains open.",
+    verificationQuestion: "Which official source can verify this when access returns?",
   }] }), [{
     evidenceId: "ev-offline-source",
     sourceType: "official-site",
     availability: "unavailable",
     limitation: "Offline source unavailable; direct verification remains open.",
+    verificationQuestion: "Which official source can verify this when access returns?",
     tier: "primary",
   }]);
 });
 
 test("Atlas rejects unknown and duplicate overlay selections", async () => {
-  const { atlas } = await loadBundledReferenceCatalog({
-    moduleRoot: new URL("../../shared/reference-intelligence/", import.meta.url),
-  });
+  const { atlas } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
   assert.throws(() => mergeSystemAtlas({ atlas, genreIds: ["unknown-genre"] }), { code: "reference-atlas.unknown-overlay" });
   assert.throws(() => mergeSystemAtlas({ atlas, genreIds: ["action-rpg", "action-rpg"] }), { code: "reference-atlas.duplicate-overlay" });
 });
 
 test("Atlas conflicts preserve cautious applicability and bytewise question order", () => {
-  const atlas = {
-    questions: [],
-    overlays: {
-      genre: [{
+  const atlas = strictAtlas({
+    genre: [{
         overlayId: "alpha",
         questions: [
-          { questionId: "a-question", systemId: "economy", applicability: "not-applicable", rationale: "Unavailable.", conditions: [], verificationPrompts: ["Check absence."] },
-          { questionId: "z-question", systemId: "economy", applicability: "required-candidate", rationale: "High priority.", conditions: [], verificationPrompts: ["Check loop."] },
+          atlasQuestion("a-question", "not-applicable"),
+          atlasQuestion("z-question", "required-candidate"),
         ],
       }],
-      "play-mode": [{
+    "play-mode": [{
         overlayId: "beta",
-        questions: [{ questionId: "a-question", systemId: "economy", applicability: "optional", rationale: "May apply.", conditions: [], verificationPrompts: ["Check choice."] }],
+        questions: [atlasQuestion("a-question", "optional")],
       }],
-      platform: [],
-      "business-model": [],
-    },
-  };
+  });
   const merged = mergeSystemAtlas({ atlas, genreIds: ["alpha"], playModeIds: ["beta"] });
   assert.deepEqual(merged.map(({ questionId }) => questionId), ["a-question", "z-question"]);
   assert.equal(merged[0].applicability, "unknown");
 });
 
 test("Atlas rejects duplicate catalog question pairs before selecting an overlay", () => {
-  const atlas = {
-    questions: [],
-    overlays: {
-      genre: [{
+  const atlas = strictAtlas({
+    genre: [{
         overlayId: "duplicate-pair",
         questions: [
-          { questionId: "duplicate-question", systemId: "economy", applicability: "optional", rationale: "First.", conditions: [], verificationPrompts: ["Check first."] },
-          { questionId: "duplicate-question", systemId: "economy", applicability: "optional", rationale: "Second.", conditions: [], verificationPrompts: ["Check second."] },
+          atlasQuestion("duplicate-question", "optional"),
+          atlasQuestion("duplicate-question", "optional"),
         ],
       }],
-      "play-mode": [],
-      platform: [],
-      "business-model": [],
-    },
-  };
+  });
   assert.throws(() => mergeSystemAtlas({ atlas }), { code: "reference-atlas.duplicate-question" });
+});
+
+test("evidence closes availability, preserves unavailable limitations, and excludes unavailable support", async () => {
+  assert.throws(() => registerReferenceEvidence({ records: [{ evidenceId: "ev-open", sourceType: "official-site" }] }), { code: "reference-evidence.availability" });
+  assert.deepEqual(registerReferenceEvidence({ records: [{
+    evidenceId: "ev-unavailable", sourceType: "official-site", availability: "unavailable",
+    limitation: "No access.", verificationQuestion: "What official page can verify this?",
+  }] })[0].availability, "unavailable");
+  const unavailable = { tier: "primary", sourceType: "official-site", availability: "unavailable", limitation: "No access.", verificationQuestion: "What official page can verify this?", claimKind: "observation" };
+  const claim = { claimId: "claim-unavailable", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-unavailable"] };
+  assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([["ev-unavailable", unavailable]]) }), { ok: false, code: "evidence_unavailable" });
+  const analysis = validReferenceAnalysis();
+  analysis.evidence[0] = {
+    ...registerReferenceEvidence({ records: [{
+      evidenceId: "evidence-cinematic-loop", referenceId: "ref-cinematic-sample", sourceType: "official-site", availability: "unavailable",
+      limitation: "The official page is unavailable offline.", verificationQuestion: "Which official patch note confirms the movement choice?",
+      claimKind: "observation", claim: "The player receives a movement choice after the reveal.",
+    }] })[0],
+  };
+  const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
+  assert.deepEqual([schemaAccepts(analysis, schema, schema), validateReferenceAnalysis(analysis).ok], [true, true]);
+});
+
+test("claim support closes shape, certainty escalation, causal omission, and discovery mixing", () => {
+  const hypothesis = { tier: "primary", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null, claimKind: "hypothesis" };
+  const observation = { tier: "primary", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" };
+  const discovery = { tier: "discovery", sourceType: "community", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" };
+  assert.deepEqual(validateClaimAgainstEvidence({
+    claim: { claimId: "claim-observation", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-hypothesis"] },
+    evidenceById: new Map([["ev-hypothesis", hypothesis]]),
+  }), { ok: false, code: "unsupported_claim_kind" });
+  for (const claim of [
+    { claimId: "claim-no-category", kind: "observation", causal: false, evidenceIds: ["ev-observation"] },
+    { claimId: "claim-no-causal", kind: "observation", category: "general", evidenceIds: ["ev-observation"] },
+    { claimId: "claim-unsorted", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-z", "ev-a"] },
+  ]) assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([["ev-observation", observation], ["ev-z", observation], ["ev-a", observation]]) }), { ok: false, code: "invalid_claim" });
+  const causal = { claimId: "claim-causal", kind: "observation", category: "general", causal: true, evidenceIds: ["ev-discovery"] };
+  assert.deepEqual(validateClaimAgainstEvidence({ claim: causal, evidenceById: new Map([["ev-discovery", discovery]]) }), { ok: false, code: "unsupported_causal_claim" });
+  assert.deepEqual(validateClaimAgainstEvidence({
+    claim: { ...causal, evidenceIds: ["ev-discovery", "ev-primary"] },
+    evidenceById: new Map([["ev-discovery", discovery], ["ev-primary", observation]]),
+  }), { ok: true, code: "supported" });
+});
+
+test("claim evidence rejects Map subclasses and proxies without exposing thrown data", () => {
+  class DerivedMap extends Map {}
+  const claim = { claimId: "claim-map", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-map"] };
+  const evidence = { tier: "primary", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" };
+  for (const evidenceById of [
+    new DerivedMap([["ev-map", evidence]]),
+    new Proxy(new Map([["ev-map", evidence]]), {}),
+    new Proxy(new Map([["ev-map", evidence]]), { getPrototypeOf() { throw new Error("/Users/private/credential"); } }),
+  ]) {
+    const result = validateClaimAgainstEvidence({ claim, evidenceById });
+    assert.deepEqual(result, { ok: false, code: "invalid_evidence" });
+    assert.equal(JSON.stringify(result).includes("Users"), false);
+    assert.equal(JSON.stringify(result).includes("credential"), false);
+  }
+});
+
+test("Atlas closes exact systems, object keys, and cross-axis duplicate pairs", () => {
+  const atlas = strictAtlas();
+  for (const mutate of [
+    (value) => { value.systems.pop(); },
+    (value) => { value.systems[0].systemId = "unknown-system"; },
+    (value) => { value.extra = true; },
+    (value) => { value.systems[0].extra = true; },
+    (value) => { value.overlays.extra = []; },
+    (value) => { value.questions.push({ ...atlasQuestion("a-question", "optional"), extra: true }); },
+    (value) => { value.overlays.genre.push({ overlayId: "extra", questions: [], extra: true }); },
+    (value) => { value.overlays.genre.push({ overlayId: "cross-axis", questions: [atlasQuestion("cross-axis-question", "optional")] }); value.overlays.platform.push({ overlayId: "cross-axis", questions: [atlasQuestion("cross-axis-question", "optional")] }); },
+  ]) {
+    const value = structuredClone(atlas);
+    mutate(value);
+    assert.throws(() => mergeSystemAtlas({ atlas: value }), (error) => error?.code?.startsWith("reference-atlas.") === true);
+  }
+});
+
+test("not-applicable requires unanimous contributors regardless of conditions", () => {
+  for (const conditions of [[], ["Condition is asserted but cannot be selected."]]) {
+    const atlas = strictAtlas({
+      genre: [{ overlayId: "na", questions: [atlasQuestion("na-question", "not-applicable", conditions)] }],
+      platform: [{ overlayId: "other", questions: [atlasQuestion("na-question", "optional")] }],
+    });
+    assert.equal(mergeSystemAtlas({ atlas, genreIds: ["na"], platformIds: ["other"] })[0].applicability, "unknown");
+  }
+  const atlas = strictAtlas({ genre: [{ overlayId: "all-na", questions: [atlasQuestion("all-na-question", "not-applicable")] }] });
+  assert.equal(mergeSystemAtlas({ atlas, genreIds: ["all-na"] })[0].applicability, "not-applicable");
+});
+
+test("catalog loader rejects coercion, source mutation, and symlink leaves", async () => {
+  const root = await mkdtemp(join(tmpdir(), "reference-atlas-"));
+  const rootLink = `${root}-link`;
+  try {
+    await cp(bundledReferenceRoot, root, { recursive: true });
+    assert.equal((await loadBundledReferenceCatalog({ moduleRoot: root })).sourceRegister.sources.length, 8);
+    await symlink(root, rootLink);
+    await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: rootLink }), { code: "reference-atlas.catalog-load" });
+    await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: { toString: () => root } }), { code: "reference-atlas.catalog-load" });
+    await assert.rejects(() => loadBundledReferenceCatalog(new Proxy({}, { getOwnPropertyDescriptor() { throw new Error("/Users/private/credential"); } })), { code: "reference-atlas.catalog-load" });
+    const sourceRegisterPath = join(root, "catalog/source-register.json");
+    const sourceRegister = JSON.parse(await readFile(sourceRegisterPath, "utf8"));
+    sourceRegister.sources[0].url = "https://example.invalid/tampered";
+    await writeFile(sourceRegisterPath, JSON.stringify(sourceRegister));
+    await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: root }), { code: "reference-atlas.catalog-load" });
+    await cp(bundledReferenceRoot, root, { recursive: true, force: true });
+    await rm(join(root, "catalog/source-register.json"));
+    await symlink(join(bundledReferenceRoot, "catalog/source-register.json"), join(root, "catalog/source-register.json"));
+    await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: root }), { code: "reference-atlas.catalog-load" });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(rootLink, { recursive: true, force: true });
+  }
 });

@@ -12,6 +12,7 @@ const isId = (value) => isSafeText(value) && idPattern.test(value);
 const isTermId = (value) => isSafeText(value) && termIdPattern.test(value);
 const isHash = (value) => isSafeText(value) && sha256Pattern.test(value);
 const referenceRoles = ["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"];
+const evidenceSourceTypes = ["direct-play", "official-site", "official-patch-note", "official-odds", "official-store", "developer-talk", "curated-wiki", "expert-guide", "community", "video", "review", "unofficial-tracker"];
 
 function resultOf(validate) {
   const errors = [];
@@ -91,9 +92,16 @@ export function validateReferenceAnalysis(value) {
       if (record?.availability === "unavailable") nonEmptyText(record?.limitation, `${path}/limitation`, add);
     });
     sortedRecords(value?.evidence, "/evidence", issue, "evidenceId", (record, path, add) => {
-      closedObject(record, ["evidenceId", "referenceId", "tier", "claimKind", "claim"], path, add);
+      closedObject(record, ["evidenceId", "referenceId", "tier", "sourceType", "availability", "limitation", "verificationQuestion", "claimKind", "claim"], path, add);
       safeId(record?.evidenceId, `${path}/evidenceId`, add); safeId(record?.referenceId, `${path}/referenceId`, add);
       enumValue(record?.tier, ["primary", "supporting", "discovery"], `${path}/tier`, add);
+      enumValue(record?.sourceType, evidenceSourceTypes, `${path}/sourceType`, add);
+      enumValue(record?.availability, ["available", "unavailable"], `${path}/availability`, add);
+      if (record?.availability === "available" && (record?.limitation !== null || record?.verificationQuestion !== null)) add(`${path}/availability`, "availability.detail-invalid");
+      if (record?.availability === "unavailable") {
+        nonEmptyText(record?.limitation, `${path}/limitation`, add);
+        nonEmptyText(record?.verificationQuestion, `${path}/verificationQuestion`, add);
+      }
       enumValue(record?.claimKind, ["observation", "inference", "hypothesis", "unknown"], `${path}/claimKind`, add);
       nonEmptyText(record?.claim, `${path}/claim`, add);
     });

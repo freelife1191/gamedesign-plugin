@@ -17,6 +17,8 @@ export const tierBySourceType = Object.freeze({
 
 const evidenceIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const claimKinds = new Set(["observation", "inference", "hypothesis", "unknown"]);
+const claimCategories = new Set(["general", "monetization", "retention", "performance"]);
+const certaintyRank = Object.freeze({ observation: 3, inference: 2, hypothesis: 1, unknown: 0 });
 
 function fail(code = "invalid") {
   const error = new Error("reference evidence is invalid");
@@ -45,9 +47,13 @@ function nonEmptyText(value) {
 }
 
 function dataField(value, key) {
-  if (!isRecord(value)) return undefined;
-  const descriptor = Object.getOwnPropertyDescriptor(value, key);
-  return descriptor && Object.hasOwn(descriptor, "value") ? descriptor.value : undefined;
+  try {
+    if (!isRecord(value)) return undefined;
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return descriptor && Object.hasOwn(descriptor, "value") ? descriptor.value : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function validEvidenceId(value) {
@@ -58,7 +64,29 @@ function validTieredEvidence(value) {
   return isRecord(value)
     && typeof value.sourceType === "string"
     && Object.hasOwn(tierBySourceType, value.sourceType)
-    && value.tier === tierBySourceType[value.sourceType];
+    && value.tier === tierBySourceType[value.sourceType]
+    && ["available", "unavailable"].includes(value.availability)
+    && claimKinds.has(value.claimKind)
+    && ((value.availability === "available" && value.limitation === null && value.verificationQuestion === null)
+      || (value.availability === "unavailable" && nonEmptyText(value.limitation) && nonEmptyText(value.verificationQuestion)));
+}
+
+function validClaim(value) {
+  const keys = ["category", "causal", "claimId", "evidenceIds", "kind"];
+  if (!isRecord(value) || Object.keys(value).sort().join("\u0000") !== keys.join("\u0000")) return false;
+  if (!validEvidenceId(value.claimId) || !claimKinds.has(value.kind) || !claimCategories.has(value.category) || typeof value.causal !== "boolean") return false;
+  return Array.isArray(value.evidenceIds)
+    && value.evidenceIds.length > 0
+    && value.evidenceIds.every(validEvidenceId)
+    && value.evidenceIds.every((id, index) => index === 0 || byteCompare(value.evidenceIds[index - 1], id) < 0);
+}
+
+function isIntrinsicMap(value) {
+  try {
+    return value !== null && typeof value === "object" && Object.getPrototypeOf(value) === Map.prototype;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -75,7 +103,9 @@ export function registerReferenceEvidence(input = {}) {
     if (!tier || (Object.hasOwn(record, "tier") && record.tier !== tier)) fail("tier");
     if (ids.has(record.evidenceId)) fail("duplicate-id");
     ids.add(record.evidenceId);
-    if (record.availability === "unavailable" && !nonEmptyText(record.limitation)) fail("limitation");
+    if (!["available", "unavailable"].includes(record.availability)) fail("availability");
+    if (record.availability === "available" && (record.limitation !== null || record.verificationQuestion !== null)) fail("availability");
+    if (record.availability === "unavailable" && (!nonEmptyText(record.limitation) || !nonEmptyText(record.verificationQuestion))) fail("unavailable");
     return { ...record, tier };
   });
   return registered.sort((left, right) => byteCompare(left.evidenceId, right.evidenceId));
@@ -93,23 +123,32 @@ export function validateClaimAgainstEvidence(input = {}) {
   } catch {
     return { ok: false, code: "invalid_claim" };
   }
-  if (!isRecord(safeClaim) || !claimKinds.has(safeClaim.kind) || !Array.isArray(safeClaim.evidenceIds) || safeClaim.evidenceIds.length === 0) {
+  if (!validClaim(safeClaim)) {
     return { ok: false, code: "invalid_claim" };
   }
-  if (!(evidenceById instanceof Map)) return { ok: false, code: "evidence_missing" };
+  if (!isIntrinsicMap(evidenceById)) return { ok: false, code: "invalid_evidence" };
   const evidence = [];
   for (const evidenceId of safeClaim.evidenceIds) {
-    if (!validEvidenceId(evidenceId) || !evidenceById.has(evidenceId)) return { ok: false, code: "evidence_missing" };
+    let found;
+    try {
+      found = Map.prototype.has.call(evidenceById, evidenceId);
+    } catch {
+      return { ok: false, code: "invalid_evidence" };
+    }
+    if (!found) return { ok: false, code: "evidence_missing" };
     let item;
     try {
-      item = canonicalCopy(evidenceById.get(evidenceId));
+      item = canonicalCopy(Map.prototype.get.call(evidenceById, evidenceId));
     } catch {
       return { ok: false, code: "invalid_evidence" };
     }
     if (!validTieredEvidence(item)) return { ok: false, code: "invalid_evidence" };
     evidence.push(item);
   }
-  if (safeClaim.causal === true && evidence.every(({ tier }) => tier === "discovery")) {
+  const available = evidence.filter(({ availability }) => availability === "available");
+  if (available.length === 0) return { ok: false, code: "evidence_unavailable" };
+  if (available.some(({ claimKind }) => certaintyRank[claimKind] < certaintyRank[safeClaim.kind])) return { ok: false, code: "unsupported_claim_kind" };
+  if (safeClaim.causal && available.every(({ tier }) => tier === "discovery")) {
     return { ok: false, code: "unsupported_causal_claim" };
   }
   return { ok: true, code: "supported" };
