@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { captureDesignMemory } from "../../shared/scripts/capture-design-memory.mjs";
+import { captureDesignMemory, issueDurableCaptureReceipt } from "../../shared/scripts/capture-design-memory.mjs";
 import { maintainDesignMemory } from "../../shared/scripts/maintain-design-memory.mjs";
 import { foldMemoryEvents, scanMemoryEvents } from "../../shared/scripts/lib/safe-memory-store.mjs";
 import { rebuildMemoryIndex } from "../../shared/scripts/retrieve-design-memory.mjs";
@@ -14,7 +14,7 @@ const config = { enabled: true, scope: "project", projectId: "wind-island", cand
 async function workspace(t) { const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-maintain-"))); t.after(() => rm(root, { recursive: true, force: true })); return root; }
 async function captured(t) {
   const root = await workspace(t); await mkdir(path.join(root, "artifact")); const bytes = Buffer.from("evidence\n"); await writeFile(path.join(root, "artifact", "evidence.yml"), bytes);
-  const capture = await captureDesignMemory({ workspaceRoot: root, config, projectId: "wind-island", lane: "studio", now: new Date("2026-08-01T00:00:00Z"), event: { eventId: "playtest-1", type: "playtest-finding", classification: "durable-finding", actorType: "human", humanAttested: true, summary: "반격 수단이 없다.", applicability: "보스전", exclusions: "퍼즐", artifactTypes: ["combat"], relatedIds: ["boss"], tags: ["counterplay"], actor: "author", sources: [{ artifact_id: "artifact", locator: "evidence.yml#x", sha256: (await import("node:crypto")).createHash("sha256").update(bytes).digest("hex") }] } });
+  const event = { eventId: "playtest-1", type: "playtest-finding", summary: "반격 수단이 없다.", applicability: "보스전", exclusions: "퍼즐", artifactTypes: ["combat"], relatedIds: ["boss"], tags: ["counterplay"], actor: "author", sources: [{ artifact_id: "artifact", locator: "evidence.yml#x", sha256: (await import("node:crypto")).createHash("sha256").update(bytes).digest("hex") }] }; event.receipt = issueDurableCaptureReceipt({ event, classification: "durable-finding" }); const capture = await captureDesignMemory({ workspaceRoot: root, config, projectId: "wind-island", lane: "studio", now: new Date("2026-08-01T00:00:00Z"), event });
   return { root, capture };
 }
 
