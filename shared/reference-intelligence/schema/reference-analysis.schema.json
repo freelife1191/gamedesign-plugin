@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://game-design-plugin.local/schema/reference-analysis.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "analysisId", "brief", "referenceSet", "evidence", "atlasSelection", "systemInventory", "systemMaps", "priority", "deepDives", "comparison", "transferDecisions", "verificationQueue"],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "text": { "type": "string", "minLength": 1 },
+    "idList": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "receipt": { "type": "object", "additionalProperties": false, "required": ["documentId", "glossaryVersion", "glossarySha256", "termIds"], "properties": { "documentId": { "$ref": "#/$defs/id" }, "glossaryVersion": { "type": "integer", "minimum": 1 }, "glossarySha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "termIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" } } } }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "analysisId": { "$ref": "#/$defs/id" },
+    "brief": { "type": "object", "additionalProperties": false, "required": ["objective", "decisionQuestions"], "properties": { "objective": { "$ref": "#/$defs/text" }, "decisionQuestions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } } } },
+    "referenceSet": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["referenceId", "label"], "properties": { "referenceId": { "$ref": "#/$defs/id" }, "label": { "$ref": "#/$defs/text" } } } },
+    "evidence": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["evidenceId", "referenceId", "tier", "claimKind", "claim"], "properties": { "evidenceId": { "$ref": "#/$defs/id" }, "referenceId": { "$ref": "#/$defs/id" }, "tier": { "enum": ["primary", "supporting", "discovery"] }, "claimKind": { "enum": ["observation", "inference", "hypothesis", "unknown"] }, "claim": { "$ref": "#/$defs/text" } } } },
+    "atlasSelection": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["systemId", "rationale"], "properties": { "systemId": { "$ref": "#/$defs/id" }, "rationale": { "$ref": "#/$defs/text" } } } },
+    "systemInventory": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["systemId", "name", "applicability", "evidenceIds"], "properties": { "systemId": { "$ref": "#/$defs/id" }, "name": { "$ref": "#/$defs/text" }, "applicability": { "enum": ["required-candidate", "conditional", "optional", "not-applicable", "unknown"] }, "evidenceIds": { "$ref": "#/$defs/idList" } } } },
+    "systemMaps": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["mapId", "systemId", "nodes", "edges"], "properties": { "mapId": { "$ref": "#/$defs/id" }, "systemId": { "$ref": "#/$defs/id" }, "nodes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } }, "edges": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } } } } },
+    "priority": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["systemId", "rank", "rationale"], "properties": { "systemId": { "$ref": "#/$defs/id" }, "rank": { "type": "integer", "minimum": 1 }, "rationale": { "$ref": "#/$defs/text" } } } },
+    "deepDives": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["systemId", "claimKind", "finding", "evidenceIds"], "properties": { "systemId": { "$ref": "#/$defs/id" }, "claimKind": { "enum": ["observation", "inference", "hypothesis", "unknown"] }, "finding": { "$ref": "#/$defs/text" }, "evidenceIds": { "$ref": "#/$defs/idList" } } } },
+    "comparison": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["comparisonId", "subject", "finding", "evidenceIds"], "properties": { "comparisonId": { "$ref": "#/$defs/id" }, "subject": { "$ref": "#/$defs/text" }, "finding": { "$ref": "#/$defs/text" }, "evidenceIds": { "$ref": "#/$defs/idList" } } } },
+    "transferDecisions": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["transferId", "sourceSystemId", "decision", "rationale", "evidenceIds", "glossaryReceipt", "reviewState"], "properties": { "transferId": { "$ref": "#/$defs/id" }, "sourceSystemId": { "$ref": "#/$defs/id" }, "decision": { "enum": ["adopt", "adapt", "reject", "hold"] }, "rationale": { "$ref": "#/$defs/text" }, "evidenceIds": { "$ref": "#/$defs/idList" }, "glossaryReceipt": { "$ref": "#/$defs/receipt" }, "reviewState": { "enum": ["pending-review"] } } } },
+    "verificationQueue": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["verificationId", "question", "evidenceIds", "state"], "properties": { "verificationId": { "$ref": "#/$defs/id" }, "question": { "$ref": "#/$defs/text" }, "evidenceIds": { "$ref": "#/$defs/idList" }, "state": { "enum": ["open"] } } } }
+  }
+}
