@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import {
@@ -71,4 +72,28 @@ test("glossary receipt fails closed when the binding does not match its supplied
   }
   assert.equal(validateGlossaryReceipt(receipt).ok, false);
   assert.equal(canonicalGlossary(glossary), canonicalJson(glossary));
+});
+
+function assertClosedObjects(schema) {
+  if (!schema || typeof schema !== "object") return;
+  if (schema.type === "object") assert.equal(schema.additionalProperties, false);
+  for (const value of Object.values(schema)) {
+    if (Array.isArray(value)) value.forEach(assertClosedObjects);
+    else assertClosedObjects(value);
+  }
+}
+
+test("glossary and receipt schemas expose the same closed root, enum, and ID contracts", async () => {
+  const [glossary, receipt] = await Promise.all([
+    readFile(new URL("../../shared/reference-intelligence/schema/game-design-glossary.schema.json", import.meta.url), "utf8").then(JSON.parse),
+    readFile(new URL("../../shared/reference-intelligence/schema/glossary-receipt.schema.json", import.meta.url), "utf8").then(JSON.parse),
+  ]);
+  assertClosedObjects(glossary);
+  assertClosedObjects(receipt);
+  assert.deepEqual(glossary.required, ["schemaVersion", "scope", "version", "terms"]);
+  assert.deepEqual(glossary.properties.scope.enum, ["shared", "project-overlay"]);
+  assert.equal(glossary.properties.terms.items.properties.termId.pattern, "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$");
+  assert.deepEqual(receipt.required, ["schemaVersion", "documentId", "glossaryVersion", "glossarySha256", "termIds"]);
+  assert.equal(receipt.properties.documentId.pattern, "^[a-z0-9]+(?:-[a-z0-9]+)*$");
+  assert.equal(receipt.properties.termIds.items.pattern, "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$");
 });

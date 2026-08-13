@@ -6,6 +6,16 @@ function fail() {
   throw error;
 }
 
+function safeKey(key) {
+  return typeof key === "string" && !key.includes("\0") && !key.includes("\r") && key === key.normalize("NFC");
+}
+
+function dataDescriptor(value, key) {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  if (!descriptor || !descriptor.enumerable || !Object.hasOwn(descriptor, "value")) fail();
+  return descriptor.value;
+}
+
 function snapshot(value, seen = new Set()) {
   if (value === null || typeof value === "boolean") return value;
   if (typeof value === "string") {
@@ -13,23 +23,34 @@ function snapshot(value, seen = new Set()) {
     return value;
   }
   if (typeof value === "number") {
-    if (!Number.isFinite(value)) fail();
+    if (!Number.isFinite(value) || Object.is(value, -0)) fail();
     return value;
   }
   if (Array.isArray(value)) {
     if (seen.has(value)) fail();
     seen.add(value);
-    const copy = value.map((item) => snapshot(item, seen));
+    const keys = Reflect.ownKeys(value);
+    if (keys.length !== value.length + 1 || !keys.includes("length")) fail();
+    const copy = [];
+    for (let index = 0; index < value.length; index += 1) {
+      const key = String(index);
+      if (!keys.includes(key)) fail();
+      copy.push(snapshot(dataDescriptor(value, key), seen));
+    }
     seen.delete(value);
     return copy;
   }
-  if (value === null || typeof value !== "object" || Object.getPrototypeOf(value) !== Object.prototype || seen.has(value)) fail();
+  if (value === null || typeof value !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(value)) || seen.has(value)) fail();
   seen.add(value);
-  const copy = {};
-  for (const key of Object.keys(value)) {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (!descriptor || !Object.hasOwn(descriptor, "value")) fail();
-    copy[key] = snapshot(descriptor.value, seen);
+  const copy = Object.create(null);
+  for (const key of Reflect.ownKeys(value)) {
+    if (!safeKey(key)) fail();
+    Object.defineProperty(copy, key, {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: snapshot(dataDescriptor(value, key), seen),
+    });
   }
   seen.delete(value);
   return copy;
