@@ -40,13 +40,25 @@ function isolatedEnvironment(root) {
     CODEX_HOME: path.join(root, "codex-home"),
     TMPDIR: path.join(root, "tmp"),
     PATH: process.env.PATH ?? "",
+    HTTP_PROXY: "http://127.0.0.1:9",
+    HTTPS_PROXY: "http://127.0.0.1:9",
+    ALL_PROXY: "http://127.0.0.1:9",
+    NO_PROXY: "",
   };
 }
 
-function runLocalPluginCommand({ codex, args, env, evidence, stage }) {
+function hasExternalUrl(value) {
+  if (typeof value === "string") return /https?:\/\//iu.test(value);
+  if (Array.isArray(value)) return value.some(hasExternalUrl);
+  if (value !== null && typeof value === "object") return Object.values(value).some(hasExternalUrl);
+  return false;
+}
+
+function runLocalPluginCommand({ codex, cwd, args, env, evidence, stage }) {
   assert.equal(args.includes("exec"), false, `${stage}: lifecycle must not run codex exec`);
+  assert.equal(hasExternalUrl(args), false, `${stage}: local marketplace input must not contain an external URL`);
   const result = spawnSync(codex, ["plugin", ...args, "--json"], {
-    cwd: repoRoot,
+    cwd,
     env,
     encoding: "utf8",
     timeout: 30_000,
@@ -60,7 +72,8 @@ function runLocalPluginCommand({ codex, args, env, evidence, stage }) {
   } catch (error) {
     assert.fail(`${stage}: invalid CLI JSON: ${error.message}`);
   }
-  evidence.push({ stage, args, exitCode: result.status, json });
+  assert.equal(hasExternalUrl(json), false, `${stage}: command receipt must not contain an external URL`);
+  evidence.push({ stage, cwd: path.resolve(cwd), args, exitCode: result.status, json });
   return json;
 }
 
@@ -88,77 +101,90 @@ async function assertMemoryPackage(pluginRoot, product) {
   assert.equal(skills.length, 21, `${product}: cache exposes exactly 21 skills`);
 }
 
-test("local Codex CLI install, re-add, and removal preserve project memory and local Git exclusion", async (t) => {
+test("one local Codex workspace preserves project memory while both products install, re-add, and remove", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "memory-install-lifecycle-"));
   t.after(() => rm(root, { recursive: true, force: true }));
   const codex = localCodex();
+  await Promise.all(products.map((product) => assertMemoryPackage(path.join(repoRoot, "plugins", product), `${product} built source`)));
+
+  const workspace = path.join(root, "workspace");
+  const env = isolatedEnvironment(root);
+  const memoryFile = path.join(workspace, ".game-design", "memory", "v1", "events", "aa", "memory-sentinel", `mev1-${"a".repeat(64)}.md`);
+  const excludeFile = path.join(workspace, ".git", "info", "exclude");
+  const siblingFile = path.join(env.CODEX_HOME, "plugins", "unrelated-plugin", "sentinel.txt");
+  await Promise.all([mkdir(path.dirname(memoryFile), { recursive: true }), mkdir(path.dirname(excludeFile), { recursive: true }), mkdir(path.dirname(siblingFile), { recursive: true }), mkdir(env.HOME, { recursive: true }), mkdir(env.TMPDIR, { recursive: true })]);
+  await writeFile(memoryFile, "local-memory-must-survive\n");
+  await writeFile(excludeFile, "existing local exclusion\n.game-design/memory/\n");
+  await writeFile(siblingFile, "sibling plugin survives\n");
+  await chmod(memoryFile, 0o640);
+  await chmod(excludeFile, 0o600);
+  const timestamp = new Date("2026-08-12T00:00:00.000Z");
+  await Promise.all([utimes(memoryFile, timestamp, timestamp), utimes(excludeFile, timestamp, timestamp)]);
+  const before = await Promise.all([fileIdentity(memoryFile), fileIdentity(excludeFile), fileIdentity(siblingFile)]);
+  const evidence = [];
+  const assertPreserved = async (stage) => {
+    await assertSameIdentity(memoryFile, before[0], `${stage}: workspace memory`);
+    await assertSameIdentity(excludeFile, before[1], `${stage}: .git/info/exclude`);
+    await assertSameIdentity(siblingFile, before[2], `${stage}: unrelated sibling plugin`);
+  };
+  const command = ({ stage, args }) => runLocalPluginCommand({ codex, cwd: workspace, env, evidence, stage, args });
+  const selector = (product) => `${product}@${marketplace}`;
+  const cacheRoot = (product) => path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.0");
+
+  const market = command({ stage: "marketplace-add", args: ["marketplace", "add", repoRoot] });
+  assert.equal(market.marketplaceName, marketplace, "exact local marketplace name");
+  assert.equal(market.installedRoot, path.resolve(repoRoot), "marketplace points to the local repository");
+  await assertPreserved("marketplace-add");
 
   for (const product of products) {
-    await t.test(product, async () => {
-      const productRoot = path.join(root, product);
-      const workspace = path.join(productRoot, "workspace");
-      const env = isolatedEnvironment(productRoot);
-      const memoryFile = path.join(workspace, ".game-design", "memory", "v1", "events", "aa", "memory-sentinel", `mev1-${"a".repeat(64)}.md`);
-      const excludeFile = path.join(workspace, ".git", "info", "exclude");
-      const siblingFile = path.join(env.CODEX_HOME, "plugins", "unrelated-plugin", "sentinel.txt");
-      await Promise.all([mkdir(path.dirname(memoryFile), { recursive: true }), mkdir(path.dirname(excludeFile), { recursive: true }), mkdir(path.dirname(siblingFile), { recursive: true }), mkdir(env.HOME, { recursive: true }), mkdir(env.TMPDIR, { recursive: true })]);
-      await writeFile(memoryFile, "local-memory-must-survive\n");
-      await writeFile(excludeFile, "existing local exclusion\n.game-design/memory/\n");
-      await writeFile(siblingFile, "sibling plugin survives\n");
-      await chmod(memoryFile, 0o640);
-      await chmod(excludeFile, 0o600);
-      const timestamp = new Date("2026-08-12T00:00:00.000Z");
-      await Promise.all([utimes(memoryFile, timestamp, timestamp), utimes(excludeFile, timestamp, timestamp)]);
-      const before = await Promise.all([fileIdentity(memoryFile), fileIdentity(excludeFile), fileIdentity(siblingFile)]);
-      const evidence = [];
-      const assertPreserved = async (stage) => {
-        await assertSameIdentity(memoryFile, before[0], `${product}:${stage}: workspace memory`);
-        await assertSameIdentity(excludeFile, before[1], `${product}:${stage}: .git/info/exclude`);
-        await assertSameIdentity(siblingFile, before[2], `${product}:${stage}: sibling plugin`);
-      };
-
-      const market = runLocalPluginCommand({ codex, env, evidence, stage: "marketplace-add", args: ["marketplace", "add", repoRoot] });
-      assert.equal(market.marketplaceName, marketplace, `${product}: exact local marketplace name`);
-      assert.equal(market.installedRoot, path.resolve(repoRoot), `${product}: marketplace points to the local repository`);
-      await assertPreserved("marketplace-add");
-
-      const selector = `${product}@${marketplace}`;
-      const installed = runLocalPluginCommand({ codex, env, evidence, stage: "plugin-add", args: ["add", selector] });
-      assert.equal(installed.pluginId, selector, `${product}: add receipt binds exact plugin`);
-      assert.equal(installed.marketplaceName, marketplace, `${product}: add receipt binds local marketplace`);
-      const cacheRoot = path.join(env.CODEX_HOME, "plugins", "cache", marketplace, product, "0.1.0");
-      await assertMemoryPackage(cacheRoot, product);
-      await assertPreserved("plugin-add");
-
-      const listed = runLocalPluginCommand({ codex, env, evidence, stage: "plugin-list-initial", args: ["list"] });
-      assert.ok(listed.installed.some((entry) => entry.pluginId === selector), `${product}: list exposes installed plugin`);
-      await assertPreserved("plugin-list-initial");
-
-      const removed = runLocalPluginCommand({ codex, env, evidence, stage: "plugin-remove-for-update", args: ["remove", selector] });
-      assert.equal(removed.pluginId, selector, `${product}: remove receipt binds exact plugin`);
-      await assert.rejects(lstat(cacheRoot), { code: "ENOENT" }, `${product}: removal removes only its cache`);
-      await assertPreserved("plugin-remove-for-update");
-
-      const readded = runLocalPluginCommand({ codex, env, evidence, stage: "plugin-readd", args: ["add", selector] });
-      assert.equal(readded.pluginId, selector, `${product}: re-add receipt binds exact plugin`);
-      await assertMemoryPackage(cacheRoot, product);
-      await assertPreserved("plugin-readd");
-
-      runLocalPluginCommand({ codex, env, evidence, stage: "plugin-remove-final", args: ["remove", selector] });
-      await assert.rejects(lstat(cacheRoot), { code: "ENOENT" }, `${product}: final removal removes cache`);
-      await assertPreserved("plugin-remove-final");
-
-      const marketRemoved = runLocalPluginCommand({ codex, env, evidence, stage: "marketplace-remove", args: ["marketplace", "remove", marketplace] });
-      assert.equal(marketRemoved.marketplaceName, marketplace, `${product}: marketplace removal receipt binds exact name`);
-      const finalList = runLocalPluginCommand({ codex, env, evidence, stage: "marketplace-list-final", args: ["marketplace", "list"] });
-      assert.deepEqual(finalList.marketplaces, [], `${product}: isolated marketplace list is empty after removal`);
-      await assertPreserved("marketplace-remove");
-
-      const evidencePath = path.join(productRoot, "local-cli-lifecycle-evidence.json");
-      await writeFile(evidencePath, JSON.stringify({ network: "none", commands: evidence }, null, 2) + "\n");
-      const persisted = JSON.parse(await readFile(evidencePath, "utf8"));
-      assert.deepEqual(persisted.commands, evidence, `${product}: command receipts survive evidence serialization`);
-      assert.equal(evidence.every((entry) => entry.exitCode === 0 && !entry.args.includes("exec")), true, `${product}: every lifecycle command is local plugin CLI only`);
-    });
+    const installed = command({ stage: `${product}-add`, args: ["add", selector(product)] });
+    assert.equal(installed.pluginId, selector(product), `${product}: add receipt binds exact plugin`);
+    assert.equal(installed.marketplaceName, marketplace, `${product}: add receipt binds local marketplace`);
+    await assertMemoryPackage(cacheRoot(product), product);
+    await assertPreserved(`${product}-add`);
   }
+
+  const initialList = command({ stage: "plugin-list-both", args: ["list"] });
+  for (const product of products) assert.ok(initialList.installed.some((entry) => entry.pluginId === selector(product)), `${product}: both-product list exposes installed plugin`);
+  await assertPreserved("plugin-list-both");
+
+  const studio = "game-design-studio";
+  const career = "game-design-career";
+  const studioRemoved = command({ stage: "studio-remove-for-update", args: ["remove", selector(studio)] });
+  assert.equal(studioRemoved.pluginId, selector(studio), "Studio removal receipt binds exact plugin");
+  await assert.rejects(lstat(cacheRoot(studio)), { code: "ENOENT" }, "Studio removal removes only Studio cache");
+  await assertMemoryPackage(cacheRoot(career), "Career survives Studio removal");
+  await assertPreserved("studio-remove-for-update");
+
+  const studioReadded = command({ stage: "studio-readd", args: ["add", selector(studio)] });
+  assert.equal(studioReadded.pluginId, selector(studio), "Studio re-add receipt binds exact plugin");
+  await Promise.all(products.map((product) => assertMemoryPackage(cacheRoot(product), `${product} after Studio re-add`)));
+  const readdList = command({ stage: "plugin-list-after-studio-readd", args: ["list"] });
+  for (const product of products) assert.ok(readdList.installed.some((entry) => entry.pluginId === selector(product)), `${product}: list preserves both after Studio re-add`);
+  await assertPreserved("studio-readd");
+
+  command({ stage: "studio-remove-final", args: ["remove", selector(studio)] });
+  await assert.rejects(lstat(cacheRoot(studio)), { code: "ENOENT" }, "final Studio removal removes Studio cache");
+  await assertMemoryPackage(cacheRoot(career), "Career survives final Studio removal");
+  await assertPreserved("studio-remove-final");
+
+  command({ stage: "career-remove-final", args: ["remove", selector(career)] });
+  await assert.rejects(lstat(cacheRoot(career)), { code: "ENOENT" }, "final Career removal removes Career cache");
+  await assertPreserved("career-remove-final");
+
+  const marketRemoved = command({ stage: "marketplace-remove", args: ["marketplace", "remove", marketplace] });
+  assert.equal(marketRemoved.marketplaceName, marketplace, "marketplace removal receipt binds exact name");
+  const finalList = command({ stage: "marketplace-list-final", args: ["marketplace", "list"] });
+  assert.deepEqual(finalList.marketplaces, [], "isolated marketplace list is empty after removal");
+  await assertPreserved("marketplace-remove");
+
+  const evidencePath = path.join(root, "local-cli-lifecycle-evidence.json");
+  const externalUrlInCommandEvidence = hasExternalUrl(evidence);
+  assert.equal(externalUrlInCommandEvidence, false, "local command evidence has no external URL");
+  const networkControl = { proxy: env.HTTPS_PROXY, externalUrlInCommandEvidence, directSocketAccess: "not-measured" };
+  await writeFile(evidencePath, JSON.stringify({ networkControl, commands: evidence }, null, 2) + "\n");
+  const persisted = JSON.parse(await readFile(evidencePath, "utf8"));
+  assert.deepEqual(persisted.networkControl, networkControl, "network control evidence survives serialization");
+  assert.deepEqual(persisted.commands, evidence, "command receipts survive evidence serialization");
+  assert.equal(evidence.every((entry) => entry.cwd === workspace && entry.exitCode === 0 && !entry.args.includes("exec")), true, "every lifecycle command runs in the sentinel workspace through local plugin CLI only");
 });

@@ -2,7 +2,7 @@
 
 ## 범위와 판정 기준
 
-이 보고서는 프로젝트 기억 기능의 설치 수명주기, 패키지 인벤토리, 가이드 연결, 격리 설치본을 검증한 Task 8 실행 기록입니다. 검증은 외부 네트워크와 `codex exec`를 사용하지 않았고, 실제 사용자 홈이 아닌 임시 `HOME`·`CODEX_HOME`에서만 실행했습니다.
+이 보고서는 프로젝트 기억 기능의 설치 수명주기, 패키지 인벤토리, 가이드 연결, 격리 설치본을 검증한 Task 8 실행 기록입니다. 실제 사용자 홈이 아닌 임시 `HOME`·`CODEX_HOME`에서 로컬 저장소 경로만 마켓플레이스 입력으로 사용했고 `codex exec`는 호출하지 않았습니다. 프록시는 닫힌 localhost 주소로 고정하고 명령 인자·JSON receipt의 외부 URL 부재를 검증했지만, 직접 소켓 접근은 이 회귀 테스트에서 계측하지 않았습니다.
 
 제품별 설치 인벤토리는 제품 스킬 15개와 공통 스킬 6개, 총 21개입니다. 공통 기억 스킬 `capture-game-design-memory`, `maintain-game-design-memory`, `retrieve-approved-design-memory`는 개별 가이드 세 장이 아니라 제품별 `memory.md` 한 문서가 함께 설명하는 source-bound 예외입니다. 이 예외는 인벤토리·가이드·프롬프트 카탈로그 계약에서 세 ID로 닫아 검증합니다.
 
@@ -25,23 +25,23 @@
 | 패키지 구조 | `node tooling/validate-packages.mjs plugins` | Studio·Career 2/2 통과 |
 | 스킬 구조 | `node tooling/validate-packages.mjs skills` | 설치 스킬 42/42 통과 |
 | 스냅샷 동기화 | `npm run build -- --check` | 두 제품 원천과 generated snapshot 일치 |
-| 기억 lifecycle | `memory-install-lifecycle.e2e.test.mjs` | Studio·Career 설치→교체→제거 2/2 통과, memory·`.git/info/exclude`·형제 플러그인 bytes/mode/mtime 보존 |
+| 기억 lifecycle | `memory-install-lifecycle.e2e.test.mjs` | 하나의 workspace·격리 홈에서 Studio·Career 동시 설치→Studio 교체→순차 제거 1/1 통과, memory·`.git/info/exclude`·형제 플러그인 bytes/mode/mtime 보존 |
 | dirty worktree | `dirty-worktree-preservation.e2e.test.mjs` | 6/6 통과, memory sentinel과 Git local exclude를 독립 비교 |
 | 설치 격리 | `plugin-smoke.test.mjs` | 8/8 통과, 21개 정확한 스킬 목록·vendored runtime·symlink 방어 확인 |
 | 가이드·카탈로그 | guide/product/root README/prompt catalog focused 묶음 | 234/234 통과 |
 
 ## 실제 로컬 Codex CLI 수명주기
 
-`/opt/homebrew/bin/codex`를 발견해 실제 CLI 검증을 수행했습니다. 격리된 임시 홈에서 로컬 저장소 경로만 마켓플레이스로 등록하고 다음 순서를 실행했습니다.
+`/opt/homebrew/bin/codex`를 발견해 실제 CLI 검증을 수행했습니다. 하나의 격리된 임시 홈과 실제 memory sentinel workspace에서 로컬 저장소 경로만 마켓플레이스로 등록하고 다음 순서를 실행했습니다.
 
 ```text
 marketplace add local-repository
-Studio add → Career add → list
-Studio remove → Studio add → list
+Studio add → Career add → both list
+Studio remove → Studio add → both list
 Studio remove → Career remove → marketplace remove → empty list
 ```
 
-각 캐시에서 21개 스킬, 기억 capture 스킬, memory record schema, retrieve runtime을 확인했습니다. 최종 실제 실행은 `LOCAL_CLI_FINAL=PASS products=2 skills=21 network=0 codex_exec=0 cleanup=trash`였습니다. 첫 수동 시도는 `game-design`이라는 잘못된 marketplace 별칭을 사용해 add 단계에서 즉시 실패했고, 결과를 성공으로 취급하지 않았습니다. 선언된 정확한 이름 `game-design-suite`를 확인한 뒤 `set -e`로 재실행해 위 PASS를 얻었습니다. 두 임시 홈은 Finder 휴지통으로 회수했습니다.
+각 캐시에서 21개 스킬, 기억 capture 스킬, memory record schema, retrieve runtime을 확인했습니다. Studio 제거·재설치 중 Career cache와 workspace memory·`.git/info/exclude`·무관 플러그인 sentinel의 bytes/mode/mtime도 유지됐습니다. 모든 명령은 JSON exit code 0과 receipt를 evidence artifact로 남긴 뒤 fixture와 함께 제거했습니다. HTTP/HTTPS/ALL proxy는 닫힌 `127.0.0.1:9`로 고정했고 receipt에 외부 URL이 없음을 검사했습니다. 이 검증은 직접 소켓 접근을 계측하지 않았으므로 네트워크 0을 주장하지 않습니다.
 
 ## UltraQA 시나리오 행렬
 
@@ -51,9 +51,9 @@ Studio remove → Career remove → marketplace remove → empty list
 | MEM-APPEND, MEM-SEAL-RECOVERY, MEM-BRANCH, MEM-CORRUPT, MEM-SCAN-LIMIT | append·봉인·분기·손상·대형 scan | hostile store/record fixture | 별도 memory gate | 손상·경합을 안전하게 보류 | 이 lifecycle lane에서 재실행하지 않음 | memory store owner가 검증 | 별도 root gate에 기록 | 보류 |
 | MEM-INDEX-GEN, MEM-RECEIPT, MEM-DERIVED-CONCURRENT, MEM-DERIVED-LIMIT, MEM-DERIVED-TRIPWIRE, MEM-DERIVED-SIZE | derived index·receipt·동시성·제한·변조 | derived store fixture | 별도 memory gate | 파생 데이터 fail-closed | 이 lifecycle lane에서 재실행하지 않음 | derived API owner가 검증 | 별도 root gate에 기록 | 보류 |
 | MEM-GIT-ISOLATION, MEM-DIRTY | Git local exclude·수정 중 작업트리 | memory sentinel·`.git/info/exclude` sentinel | `dirty-worktree-preservation.e2e.test.mjs` | bytes/mode/mtime 불변 | 6/6 통과 | `.git` 전체 snapshot 제외와 sentinel 독립 비교 | fixture 자동 삭제 | PASS |
-| MEM-INSTALL, INSTALL-LOCAL-CLI | 실제 Codex 설치 사용자 | 격리 `HOME`·`CODEX_HOME`, local marketplace | `memory-install-lifecycle.e2e.test.mjs` | install→remove→re-add→remove, 21 skills, JSON receipt | Studio·Career 3/3 통과 | cp/rm self-validation을 실제 public Codex CLI JSON lifecycle로 교체 | `local-cli-lifecycle-evidence.json`을 검증 후 fixture 삭제 | PASS |
+| MEM-INSTALL, INSTALL-LOCAL-CLI | 실제 Codex 설치 사용자 | 하나의 sentinel workspace·격리 `HOME`·`CODEX_HOME`, local marketplace | `memory-install-lifecycle.e2e.test.mjs` | 두 제품 install→both list→Studio remove/re-add→둘 remove, 21 skills, JSON receipt | 1/1 통과 | cp/rm self-validation을 실제 public Codex CLI JSON lifecycle로 교체하고 CLI cwd를 sentinel workspace로 고정 | `local-cli-lifecycle-evidence.json`을 검증 후 fixture 삭제 | PASS |
 | MEM-THREAT-BOUNDARY | local state·`.env` 누출을 노리는 패키지 | 실제 CLI cache | 같은 lifecycle E2E | `.env`, event/control/derived package 0 | 두 제품 모두 누출 0 | cache tree를 실제 설치본에서 검사 | 격리 home 삭제 | PASS |
-| MEM-NODE-ONLY, MEM-FAILOPEN | Node runtime·기억 오류 뒤 기획 계속 | production memory runtime | 별도 memory gate | Node-only/fail-open contract | 이 lifecycle lane에서 재실행하지 않음 | no-network CLI 입력은 별도 증거일 뿐 fail-open 증거가 아님 | 별도 root gate에 기록 | 보류 |
+| MEM-NODE-ONLY, MEM-FAILOPEN | Node runtime·기억 오류 뒤 기획 계속 | production memory runtime | 별도 memory gate | Node-only/fail-open contract | 이 lifecycle lane에서 재실행하지 않음 | local-only CLI input·proxy poison은 fail-open 증거가 아니며 직접 socket 접근도 미계측 | 별도 root gate에 기록 | 보류 |
 | PACKAGE-PLUGIN-CREATOR | plugin manifest·설치 구조 | generated plugins | `node tooling/validate-packages.mjs plugins` | 두 plugin validator 통과 | 2/2 통과 | package contract 21 skills 반영 | 출력은 실행 로그 | PASS |
 | PACKAGE-SKILL-CREATOR | 모든 설치 스킬 구조 | generated skills | `node tooling/validate-packages.mjs skills` | 모든 SKILL validator 통과 | 42/42 통과 | 15+6 inventory contract | 출력은 실행 로그 | PASS |
 | KO-HUMANIZE, KO-IM-NOT-AI | 한국어 문체·vendor integrity | root README·memory guide·vendored im-not-ai | `npm run check:im-not-ai` | 고정 vendor와 한국어 경계 통과 | `verifiedFiles=15`, `tag=v2.3.0`으로 통과 | 문장 내용은 memory guide contract로 보호 | 검사에 임시 상태 없음 | PASS |
@@ -78,4 +78,4 @@ npm run check:curated-archify                                  → FAIL (same ca
 
 ## 남은 통합 경계
 
-이 보고서는 설치·인벤토리·가이드·실제 CLI 수명주기 증거만 확정합니다. Archify 카탈로그와 curated 도식 가드는 새 memory mirror·보고서 등록 및 stale digest 갱신 전까지 보류이며, 통과로 주장하지 않습니다. 실제 MD/PDF/DOCX/PPTX 대표 생성과 30장 시각 확인도 별도 검증 lane의 결과를 이 문서에 합치기 전까지 완료로 주장하지 않습니다. 네트워크 API, OpenAI 이미지 API, GitHub·원격 저장소 쓰기는 수행하지 않았습니다.
+이 보고서는 설치·인벤토리·가이드·실제 CLI 수명주기 증거만 확정합니다. Archify 카탈로그와 curated 도식 가드는 새 memory mirror·보고서 등록 및 stale digest 갱신 전까지 보류이며, 통과로 주장하지 않습니다. 실제 MD/PDF/DOCX/PPTX 대표 생성과 30장 시각 확인도 별도 검증 lane의 결과를 이 문서에 합치기 전까지 완료로 주장하지 않습니다. 이 lifecycle 회귀는 로컬 입력·proxy poison·receipt 검사까지 증명하며, 직접 네트워크 소켓 접근이나 원격 서비스 쓰기는 측정·수행하지 않았습니다.
