@@ -276,31 +276,54 @@ function sameGitExcludeSnapshot(left, right) { return sameFileState(left, right)
 async function verifyGitExcludePathname(expected, handle, expectedSnapshot) { const pathname = await safeFile(expected); const opened = await handle.stat(); if (!pathname || opened.nlink !== 1 || !sameFileState(pathname, opened) || expectedSnapshot && !sameFileState(expectedSnapshot, opened)) fail("Unsafe git exclude."); }
 
 function gitMetadataPath(value) {
-  if (typeof value !== "string" || value.length === 0 || value.length > MAX_GIT_METADATA_BYTES || value !== value.normalize("NFC") || value.includes("\0") || value.includes("\r") || value.includes("\n")) fail("Unsafe git metadata.");
+  if (typeof value !== "string" || value.length === 0 || value.length > MAX_GIT_METADATA_BYTES || value !== value.normalize("NFC") || /[\0-\x1f\x7f]/u.test(value)) fail("Unsafe git metadata.");
   return value;
 }
-function decodeGitMetadata(bytes) { try { const value = UTF8.decode(bytes); if (value.includes("\r") || value.includes("\0")) fail("Unsafe git metadata."); return value; } catch { fail("Unsafe git metadata."); } }
+function decodeGitMetadata(bytes) { try { return UTF8.decode(bytes); } catch { fail("Unsafe git metadata."); } }
 async function gitDirectoryReference(base, value) { return canonicalDirectory(path.isAbsolute(gitMetadataPath(value)) ? path.resolve(value) : path.resolve(base, value)); }
+async function gitMetadataSnapshot(candidate) {
+  const initial = await safeFile(candidate); if (!initial) fail("Unsafe git metadata.");
+  const bytes = await boundedFile(candidate, MAX_GIT_METADATA_BYTES); const final = await safeFile(candidate);
+  if (!final || !sameFileState(initial, final)) fail("Unsafe git metadata.");
+  return { path: candidate, identity: final, bytes, digest: hash(bytes) };
+}
+function sameGitMetadataSnapshot(left, right) { return left.path === right.path && sameFileState(left.identity, right.identity) && left.digest === right.digest; }
+function gitMetadataLine(snapshot, expression) {
+  const value = expression.exec(decodeGitMetadata(snapshot.bytes))?.[1];
+  if (!value) fail("Unsafe git metadata.");
+  return gitMetadataPath(value);
+}
 async function gitCommonDirectory(workspaceRoot) {
   const workspace = await canonicalDirectory(workspaceRoot); const dotGit = path.join(workspace.path, ".git"); const metadata = await stat(dotGit);
   if (!metadata || metadata.isSymbolicLink()) fail("Unsafe git metadata.");
-  if (metadata.isDirectory()) return canonicalDirectory(dotGit);
+  if (metadata.isDirectory()) return { workspace, commonRoot: await canonicalDirectory(dotGit) };
   if (!metadata.isFile()) fail("Unsafe git metadata.");
-  const gitdir = /^gitdir: ([^\n]+)\n?$/u.exec(decodeGitMetadata(await boundedFile(dotGit, MAX_GIT_METADATA_BYTES)))?.[1];
-  if (!gitdir) fail("Unsafe git metadata.");
+  const dotGitSnapshot = await gitMetadataSnapshot(dotGit); const gitdir = gitMetadataLine(dotGitSnapshot, /^gitdir: ([^\n]+)\n$/u);
   const worktreeGit = await gitDirectoryReference(workspace.path, gitdir); const commonMetadata = path.join(worktreeGit.path, "commondir"); const commonStat = await stat(commonMetadata);
-  if (!commonStat) return worktreeGit;
+  if (!commonStat) fail("Unsafe git metadata.");
   if (commonStat.isSymbolicLink() || !commonStat.isFile()) fail("Unsafe git metadata.");
-  const common = /^([^\n]+)\n?$/u.exec(decodeGitMetadata(await boundedFile(commonMetadata, MAX_GIT_METADATA_BYTES)))?.[1];
-  if (!common) fail("Unsafe git metadata.");
+  const commonSnapshot = await gitMetadataSnapshot(commonMetadata); const common = gitMetadataLine(commonSnapshot, /^([^\n]+)\n$/u);
   const commonRoot = await gitDirectoryReference(worktreeGit.path, common);
   const relation = path.relative(commonRoot.path, worktreeGit.path).split(path.sep);
-  if (!isInside(commonRoot.path, worktreeGit.path) || relation.length !== 2 || relation[0] !== "worktrees" || !relation[1]) fail("Unsafe git metadata.");
-  return commonRoot;
+  if (!isInside(commonRoot.path, worktreeGit.path) || relation.length !== 2 || relation[0] !== "worktrees" || !safeId(relation[1])) fail("Unsafe git metadata.");
+  const backlinkSnapshot = await gitMetadataSnapshot(path.join(worktreeGit.path, "gitdir")); const backlink = gitMetadataLine(backlinkSnapshot, /^([^\n]+)\n$/u);
+  const backlinkPath = path.isAbsolute(backlink) ? path.resolve(backlink) : path.resolve(worktreeGit.path, backlink);
+  if (backlinkPath !== dotGit) fail("Unsafe git metadata.");
+  return { workspace, commonRoot, worktreeGit, dotGitSnapshot, commonSnapshot, backlinkSnapshot };
+}
+async function recheckGitAuthority(authority) {
+  const workspace = await canonicalDirectory(authority.workspace.path); const commonRoot = await canonicalDirectory(authority.commonRoot.path);
+  if (!same(workspace.identity, authority.workspace.identity) || !same(commonRoot.identity, authority.commonRoot.identity)) fail("Unsafe git metadata.");
+  if (!authority.dotGitSnapshot) return;
+  const worktreeGit = await canonicalDirectory(authority.worktreeGit.path);
+  if (!same(worktreeGit.identity, authority.worktreeGit.identity)) fail("Unsafe git metadata.");
+  for (const snapshot of [authority.dotGitSnapshot, authority.commonSnapshot, authority.backlinkSnapshot]) {
+    if (!sameGitMetadataSnapshot(snapshot, await gitMetadataSnapshot(snapshot.path))) fail("Unsafe git metadata.");
+  }
 }
 
-export async function ensureMemoryGitExclusion({ workspaceRoot, store, beforeAppend, beforeFinalRecheck } = {}) {
-  let commonRoot;
-  try { commonRoot = await gitCommonDirectory(workspaceRoot); } catch { return { status: "warning", code: "memory.git_metadata" }; }
-  try { const infoPath = path.join(commonRoot.path, "info"); await inspectExistingPathChain(infoPath); await mkdir(infoPath, { recursive: false, mode: 0o700 }).catch((error) => error.code === "EEXIST" ? undefined : Promise.reject(error)); await canonicalDirectory(infoPath); const expected = path.join(infoPath, "exclude"); const lock = `${expected}.game-design-memory-exclude.lock`; let lockHandle; try { lockHandle = await open(lock, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600); } catch { return { status: "warning", code: "memory.git_exclude_lock" }; } try { const existingStat = await safeFile(expected); const handle = existingStat ? await open(expected, constants.O_RDWR | (constants.O_NOFOLLOW ?? 0)) : await open(expected, constants.O_RDWR | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600); try { if (existingStat) { const opened = await handle.stat(); if (!opened.isFile() || opened.nlink !== 1 || !same(opened, existingStat) || opened.size > MAX_BYTES) fail("Unsafe git exclude."); } const initial = await readGitExcludeSnapshot(handle); await verifyGitExcludePathname(expected, handle, initial); const text = initial.bytes.toString("utf8"); const begin = (text.match(/# game-design-plugin:memory:begin/gu) ?? []).length; const end = (text.match(/# game-design-plugin:memory:end/gu) ?? []).length; if (begin !== end || begin > 1) return { status: "warning", code: "memory.git_exclude_marker" }; if (begin === 0) { if (typeof beforeAppend === "function") await beforeAppend(); const beforeAppendSnapshot = await readGitExcludeSnapshot(handle); if (!sameGitExcludeSnapshot(initial, beforeAppendSnapshot)) fail("Unsafe git exclude."); const suffix = Buffer.from(`${text && !text.endsWith("\n") ? "\n" : ""}${MARKER}`); let offset = initial.bytes.byteLength; while (offset < initial.bytes.byteLength + suffix.byteLength) offset += (await handle.write(suffix, offset - initial.bytes.byteLength, suffix.byteLength - (offset - initial.bytes.byteLength), offset)).bytesWritten; await handle.sync(); const expectedFinal = await readGitExcludeSnapshot(handle); if (!expectedFinal.bytes.equals(Buffer.concat([initial.bytes, suffix]))) fail("Unsafe git exclude."); if (typeof beforeFinalRecheck === "function") await beforeFinalRecheck(); const final = await readGitExcludeSnapshot(handle); if (!sameGitExcludeSnapshot(expectedFinal, final)) fail("Unsafe git exclude."); await verifyGitExcludePathname(expected, handle, expectedFinal); } else await verifyGitExcludePathname(expected, handle, initial); return { status: "ready" }; } finally { await handle.close(); } } finally { await lockHandle.close(); await rm(lock, { force: true }); } } catch { return { status: "warning", code: "memory.git_exclude" }; }
+export async function ensureMemoryGitExclusion({ workspaceRoot, beforeAppend, beforeFinalRecheck } = {}) {
+  let authority;
+  try { authority = await gitCommonDirectory(workspaceRoot); } catch { return { status: "warning", code: "memory.git_metadata" }; }
+  try { const infoPath = path.join(authority.commonRoot.path, "info"); await inspectExistingPathChain(infoPath); await mkdir(infoPath, { recursive: false, mode: 0o700 }).catch((error) => error.code === "EEXIST" ? undefined : Promise.reject(error)); await canonicalDirectory(infoPath); const expected = path.join(infoPath, "exclude"); const lock = `${expected}.game-design-memory-exclude.lock`; let lockHandle; try { lockHandle = await open(lock, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600); } catch { return { status: "warning", code: "memory.git_exclude_lock" }; } try { const existingStat = await safeFile(expected); const handle = existingStat ? await open(expected, constants.O_RDWR | (constants.O_NOFOLLOW ?? 0)) : await open(expected, constants.O_RDWR | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0), 0o600); try { if (existingStat) { const opened = await handle.stat(); if (!opened.isFile() || opened.nlink !== 1 || !same(opened, existingStat) || opened.size > MAX_BYTES) fail("Unsafe git exclude."); } const initial = await readGitExcludeSnapshot(handle); await verifyGitExcludePathname(expected, handle, initial); const text = initial.bytes.toString("utf8"); const begin = (text.match(/# game-design-plugin:memory:begin/gu) ?? []).length; const end = (text.match(/# game-design-plugin:memory:end/gu) ?? []).length; if (begin !== end || begin > 1) return { status: "warning", code: "memory.git_exclude_marker" }; if (begin === 0) { if (typeof beforeAppend === "function") await beforeAppend(); await recheckGitAuthority(authority); const beforeAppendSnapshot = await readGitExcludeSnapshot(handle); if (!sameGitExcludeSnapshot(initial, beforeAppendSnapshot)) fail("Unsafe git exclude."); const suffix = Buffer.from(`${text && !text.endsWith("\n") ? "\n" : ""}${MARKER}`); let offset = initial.bytes.byteLength; while (offset < initial.bytes.byteLength + suffix.byteLength) offset += (await handle.write(suffix, offset - initial.bytes.byteLength, suffix.byteLength - (offset - initial.bytes.byteLength), offset)).bytesWritten; await handle.sync(); const expectedFinal = await readGitExcludeSnapshot(handle); if (!expectedFinal.bytes.equals(Buffer.concat([initial.bytes, suffix]))) fail("Unsafe git exclude."); if (typeof beforeFinalRecheck === "function") await beforeFinalRecheck(); const final = await readGitExcludeSnapshot(handle); if (!sameGitExcludeSnapshot(expectedFinal, final)) fail("Unsafe git exclude."); await verifyGitExcludePathname(expected, handle, expectedFinal); } else await verifyGitExcludePathname(expected, handle, initial); return { status: "ready" }; } finally { await handle.close(); } } finally { await lockHandle.close(); await rm(lock, { force: true }); } } catch { return { status: "warning", code: "memory.git_exclude" }; }
 }

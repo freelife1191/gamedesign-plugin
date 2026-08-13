@@ -606,6 +606,14 @@ test("Git common and info ancestor symlinks cannot redirect exclude writes", asy
   }
 });
 
+test("linked worktree authority rechecks its gitdir backlink before appending", async (t) => {
+  const root = await workspace(t); const common = path.join(root, "git-common"); const worktreeGit = path.join(common, "worktrees", "memory-store"); const exclude = path.join(common, "info", "exclude");
+  await mkdir(path.dirname(exclude), { recursive: true }); await mkdir(worktreeGit, { recursive: true }); await writeFile(exclude, "before\n");
+  await writeFile(path.join(root, ".git"), "gitdir: git-common/worktrees/memory-store\n"); await writeFile(path.join(worktreeGit, "commondir"), "../..\n"); await writeFile(path.join(worktreeGit, "gitdir"), "../../../.git\n");
+  const result = await ensureMemoryGitExclusion({ workspaceRoot: root, beforeAppend: async () => writeFile(path.join(worktreeGit, "gitdir"), "../../../foreign/.git\n") });
+  assert.equal(result.status, "warning"); assert.equal(await readFile(exclude, "utf8"), "before\n");
+});
+
 test("Git exclude identity changes before append leave same-inode user bytes unchanged", async (t) => {
   const root = await workspace(t); const exclude = path.join(root, ".git", "info", "exclude"); await mkdir(path.dirname(exclude), { recursive: true }); await writeFile(exclude, "before\n");
   const result = await ensureMemoryGitExclusion({ workspaceRoot: root, beforeAppend: async () => writeFile(exclude, "changed user bytes\n") });

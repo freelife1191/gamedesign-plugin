@@ -257,9 +257,31 @@ test("Node-only linked worktree gitdir resolves its common info exclude", async 
   await mkdir(gitDir, { recursive: true }); await mkdir(path.join(common, "info"), { recursive: true });
   await writeFile(path.join(root, ".git"), "gitdir: git-common/worktrees/memory-maintain\n");
   await writeFile(path.join(gitDir, "commondir"), "../..\n");
+  await writeFile(path.join(gitDir, "gitdir"), "../../../.git\n");
   const result = await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" });
   assert.deepEqual(result, { status: "ready" });
   assert.match(await readFile(path.join(common, "info", "exclude"), "utf8"), /# game-design-plugin:memory:begin/u);
+});
+
+test("local git marker remains independent from an unsafe memory store path", async (t) => {
+  const root = await workspace(t); const victim = path.join(root, "memory-victim"); const exclude = path.join(root, ".git", "info", "exclude");
+  await writeFile(victim, "memory victim\n"); await symlink(victim, path.join(root, ".game-design")); await mkdir(path.dirname(exclude), { recursive: true });
+  assert.deepEqual(
+    await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" }),
+    { status: "ready" },
+  );
+  assert.match(await readFile(exclude, "utf8"), /# game-design-plugin:memory:begin/u);
+  assert.equal(await readFile(victim, "utf8"), "memory victim\n");
+});
+
+test("absolute foreign linked gitdir cannot create an external exclude file", async (t) => {
+  const root = await workspace(t); const foreign = await mkdtemp(path.join(tmpdir(), "foreign-linked-git-")); const common = path.join(foreign, "common"); const worktreeGit = path.join(common, "worktrees", "memory-maintain"); const externalExclude = path.join(common, "info", "exclude");
+  t.after(() => rm(foreign, { recursive: true, force: true })); await mkdir(worktreeGit, { recursive: true }); await writeFile(path.join(root, ".git"), `gitdir: ${worktreeGit}\n`); await writeFile(path.join(worktreeGit, "commondir"), "../..\n"); await writeFile(path.join(worktreeGit, "gitdir"), "../../../foreign/.git\n");
+  assert.deepEqual(
+    await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" }),
+    { status: "warning", code: "memory.git_metadata" },
+  );
+  await assert.rejects(() => lstat(externalExclude), /ENOENT/);
 });
 
 test("unsafe or malformed git metadata warns without creating memory or exclude files", async (t) => {
@@ -267,6 +289,9 @@ test("unsafe or malformed git metadata warns without creating memory or exclude 
     ["missing git metadata", async () => {}],
     ["malformed gitdir", async (root) => writeFile(path.join(root, ".git"), "gitdir: ../metadata\r\n")],
     ["missing gitdir target", async (root) => writeFile(path.join(root, ".git"), "gitdir: ../metadata\n")],
+    ["gitdir without commondir", async (root) => { await mkdir(path.join(root, "metadata")); return writeFile(path.join(root, ".git"), "gitdir: metadata\n"); }],
+    ["missing worktree backlink", async (root) => { const gitDir = path.join(root, "git-common", "worktrees", "memory-maintain"); await mkdir(gitDir, { recursive: true }); await writeFile(path.join(root, ".git"), "gitdir: git-common/worktrees/memory-maintain\n"); return writeFile(path.join(gitDir, "commondir"), "../..\n"); }],
+    ["foreign worktree backlink", async (root) => { const gitDir = path.join(root, "git-common", "worktrees", "memory-maintain"); await mkdir(path.join(root, "foreign"), { recursive: true }); await mkdir(gitDir, { recursive: true }); await writeFile(path.join(root, ".git"), "gitdir: git-common/worktrees/memory-maintain\n"); await writeFile(path.join(gitDir, "commondir"), "../..\n"); return writeFile(path.join(gitDir, "gitdir"), "../../../foreign/.git\n"); }],
     ["escaped common directory", async (root) => { await mkdir(path.join(root, "metadata")); await mkdir(path.join(root, "outside")); await writeFile(path.join(root, ".git"), "gitdir: metadata\n"); return writeFile(path.join(root, "metadata", "commondir"), "../outside\n"); }],
     ["non-worktrees gitdir layout", async (root) => { const common = path.join(root, "git-common"); await mkdir(path.join(common, "other", "memory-maintain"), { recursive: true }); await writeFile(path.join(root, ".git"), "gitdir: git-common/other/memory-maintain\n"); return writeFile(path.join(common, "other", "memory-maintain", "commondir"), "../..\n"); }],
     ["unsafe gitdir symlink", async (root) => symlink(path.join(root, "outside"), path.join(root, ".git"))],

@@ -79,3 +79,18 @@
 - `node --test tests/unit/build-product.test.mjs tests/contracts/shared-contract.test.mjs` → 44 passed, 0 failed. recursive source/Studio/Career import graph와 양 제품 compilerless sealed append smoke 포함.
 - `node --check shared/scripts/lib/safe-memory-store.mjs`, `node --check shared/scripts/maintain-design-memory.mjs`, `git diff --check` → success.
 - committed `plugins/*` snapshot과 aggregate snapshot test는 수정하거나 실행하지 않았다.
+
+## Fix round 3 — Gitdir authority와 marker 독립성
+
+- RED: `.git` file이 `commondir` 없이 arbitrary directory를 가리키거나, linked worktree가 `gitdir` backlink 없이 또는 다른 workspace를 backlink해도 기존 helper는 `ready`를 반환했다. `absolute foreign gitdir` probe도 external common `info/exclude` 쓰기 후보가 됐다.
+- RED: 안전한 local `.git` directory와 `.game-design` memory symlink를 함께 두면 `syncGit`이 store preflight의 `memory.unsafe_path` 예외로 중단되어 marker action이 store에 결합돼 있었다.
+- GREEN: `.git` file은 정확히 한 LF인 bounded NFC metadata만 받고, regular non-symlink `commondir`, canonical `<common>/worktrees/<safe-id>`, regular `gitdir` backlink을 모두 요구한다. backlink은 canonical current workspace `.git` file path/identity와 exact match해야 한다. missing commondir/backlink, foreign backlink/repo, absolute external arbitrary gitdir, malformed/control/escape/symlink/special metadata는 generic `memory.git_metadata` warning으로 fail-close하며 external `info/exclude`를 만들지 않는다.
+- GREEN: linked metadata snapshots와 workspace/common/worktree identities를 marker append 바로 전에 재검증한다. backlink 변경 seam은 warning을 반환하고 기존 exclude bytes를 보존한다.
+- GREEN: `ensureMemoryGitExclusion`의 `store` parameter와 maintenance store preflight를 제거했다. `tracked`만 skipped, local marker는 unsafe/corrupt `.game-design/memory`와 독립적으로 완료하고 victim bytes를 바꾸지 않는다. memory event append 경로는 변경하지 않았다.
+
+## Fix round 3 검증
+
+- `node --test tests/unit/design-memory-maintenance.test.mjs tests/unit/design-memory-store.test.mjs` → 79 passed, 0 failed, 1 explicit same-user directory-swap non-goal skipped.
+- `node --test tests/unit/build-product.test.mjs tests/contracts/shared-contract.test.mjs` → 44 passed, 0 failed. recursive source/Studio/Career graph와 양 제품 compilerless sealed append smoke 포함.
+- `node --check shared/scripts/lib/safe-memory-store.mjs`, `node --check shared/scripts/maintain-design-memory.mjs`, `git diff --check` → success.
+- committed `plugins/*` snapshot과 aggregate snapshot test는 수정하거나 실행하지 않았다.

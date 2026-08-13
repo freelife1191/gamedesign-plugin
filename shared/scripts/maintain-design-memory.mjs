@@ -103,7 +103,7 @@ async function quarantine(input) {
 async function syncGit(workspaceRoot, config) {
   if (config?.gitMode === "tracked") return { status: "skipped" };
   if (config?.gitMode !== "local") return { status: "warning", code: "memory.git_metadata" };
-  return ensureMemoryGitExclusion({ workspaceRoot, store: await storeFor(workspaceRoot, config, false) });
+  return ensureMemoryGitExclusion({ workspaceRoot });
 }
 
 export async function maintainDesignMemory({ workspaceRoot, config, action, memoryId, actor, reason, observedParentEventIds, chosenParentEventId, now = new Date(), humanReceipt } = {}) {
