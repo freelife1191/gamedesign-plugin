@@ -24,6 +24,29 @@ const sharedMappings = {
     ["shared/memory/templates", "references/shared/memory/templates"],
   ],
 };
+const sharedMemoryInventory = Object.freeze({
+  "shared/memory/skills": Object.freeze([
+    "capture-game-design-memory/SKILL.md",
+    "maintain-game-design-memory/SKILL.md",
+    "retrieve-approved-design-memory/SKILL.md",
+  ]),
+  "shared/memory/schema": Object.freeze([
+    "memory-config.schema.json",
+    "memory-event.schema.json",
+    "memory-index.schema.json",
+    "memory-receipt.schema.json",
+    "memory-record.schema.json",
+  ]),
+  "shared/memory/references": Object.freeze([
+    "memory-lifecycle.md",
+    "memory-policy.md",
+  ]),
+  "shared/memory/templates": Object.freeze([
+    "index.md",
+    "log.md",
+    "memory-record.md",
+  ]),
+});
 const sourceOnlySkillsteadFallbacks = Object.freeze({
   "game-design-career": Object.freeze({
     path: "skills/visualize-career-roadmap/scripts/run-skillstead.mjs",
@@ -310,6 +333,15 @@ function assertNoRealEnvironmentFiles(entries, sourceLabel) {
   }
 }
 
+function assertExactSharedMemoryInventory(sourceRelative, entries) {
+  const expected = sharedMemoryInventory[sourceRelative];
+  if (!expected) throw new Error(`Unknown shared memory package root: ${sourceRelative}`);
+  const actual = entries.map(({ relativePath }) => relativePath).sort(comparePaths);
+  if (actual.length !== expected.length || actual.some((relativePath, index) => relativePath !== expected[index])) {
+    throw new Error(`Unexpected shared memory package file in ${sourceRelative}`);
+  }
+}
+
 function rejectFileDirectoryCollisions(entries) {
   const files = new Set(entries.map(({ relativePath }) => relativePath));
   for (const { relativePath } of entries) {
@@ -366,6 +398,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
       const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
       assertNoRealEnvironmentFiles(entries, sourceRelative);
+      if (moduleName === "memory") assertExactSharedMemoryInventory(sourceRelative, entries);
       moduleEntries.push(...entries);
       for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
     }

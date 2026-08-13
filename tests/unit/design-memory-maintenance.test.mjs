@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
-import { execFile, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { link, lstat, mkdir, mkdtemp, opendir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
 import { captureDesignMemory } from "../../shared/scripts/capture-design-memory.mjs";
 import { issueCaptureClassificationReceipt, issueMaintenanceHumanReceipt } from "../../shared/scripts/lib/design-memory-capabilities.mjs";
@@ -15,7 +14,6 @@ import { rebuildMemoryIndex } from "../../shared/scripts/retrieve-design-memory.
 import { canonicalMemoryEventDocument, memoryOperationId, parseMemoryEventDocument } from "../../shared/scripts/validate-design-memory.mjs";
 
 const config = { enabled: true, scope: "project", projectId: "wind-island", candidateTtlDays: 30, maxItems: 5, gitMode: "tracked" };
-const exec = promisify(execFile);
 const captureTime = new Date("2026-08-01T00:00:00Z");
 async function workspace(t) { const root = await realpath(await mkdtemp(path.join(tmpdir(), "memory-maintain-"))); t.after(() => rm(root, { recursive: true, force: true })); return root; }
 function digest(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
@@ -239,12 +237,10 @@ test("sweep marks an approved external note stale after its review date", async 
   assert.equal(foldMemoryEvents(await scanMemoryEvents({ store })).memories.get(record.memory_id).record.status, "stale");
 });
 
-test("git exclusion honors tracked mode, local idempotence, and an existing lock", async (t) => {
-  const root = await workspace(t); await exec("git", ["init", "-q", root]);
+test("git exclusion command remains skipped without spawning a helper binary", async (t) => {
+  const root = await workspace(t);
   assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config, action: "sync-git-exclusion" }), { status: "skipped" });
-  const local = { ...config, gitMode: "local" }; assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "ready" }); assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }), { status: "ready" });
-  const exclude = path.join(root, ".git", "info", "exclude"); const text = await readFile(exclude, "utf8"); assert.equal((text.match(/# game-design-plugin:memory:begin/gu) ?? []).length, 1); assert.equal((text.match(/# game-design-plugin:memory:end/gu) ?? []).length, 1);
-  await writeFile(`${exclude}.game-design-memory-exclude.lock`, "stale\n"); const locked = await maintainDesignMemory({ workspaceRoot: root, config: local, action: "sync-git-exclusion" }); assert.equal(locked.status, "warning"); assert.equal(locked.code, "memory.git_exclude_lock"); assert.equal(await readFile(exclude, "utf8"), text);
+  assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config: { ...config, gitMode: "local" }, action: "sync-git-exclusion" }), { status: "skipped" });
 });
 
 test("log publication failure preserves the already appended source transition", async (t) => {

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { validateArtifact } from "../../shared/scripts/validate-artifact.mjs";
 import { discoverSourceFiles } from "../../tooling/index-references.mjs";
@@ -149,20 +149,67 @@ function installedSkillIds(files) {
     .sort();
 }
 
-async function assertCompilerlessSealedAppend({ build, stagingRoot }) {
-  const storeSource = await readFile(path.join(repoRoot, "shared/scripts/lib/safe-memory-store.mjs"), "utf8");
-  const packagedStore = await readFile(path.join(build.outputDir, "scripts/lib/safe-memory-store.mjs"), "utf8");
-  for (const source of [storeSource, packagedStore]) {
-    const specifiers = [...source.matchAll(/(?:^|\n)\s*import(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu)].map((match) => match[1]);
-    assert.ok(specifiers.every((specifier) => specifier.startsWith("node:") || specifier.startsWith(".")), "safe memory store imports only Node built-ins or local modules");
-    assert.doesNotMatch(source, /node:child_process|\b(?:spawn|exec|fork)\b|\.(?:c|cc|cpp)\b|\b(?:gcc|clang|make)\b/u);
+function isInsideAllowedRoot(candidate, allowedRoots) {
+  return allowedRoots.some((root) => {
+    const relative = path.relative(root, candidate);
+    return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+  });
+}
+
+async function assertMemoryRuntimeGraph({ root, entryPaths, allowedRoots }) {
+  const pending = entryPaths.map((relativePath) => path.resolve(root, relativePath));
+  const visited = new Set();
+  while (pending.length) {
+    const current = pending.pop();
+    if (visited.has(current)) continue;
+    assert.ok(isInsideAllowedRoot(current, allowedRoots), `memory runtime import escapes allowed roots: ${current}`);
+    const stats = await lstat(current);
+    assert.equal(stats.isSymbolicLink(), false, `memory runtime import is a symlink: ${current}`);
+    assert.equal(stats.isFile(), true, `memory runtime import is not a regular file: ${current}`);
+    visited.add(current);
+    const source = await readFile(current, "utf8");
+    assert.doesNotMatch(source, /node:child_process|(?<!\.)\b(?:spawn|exec|fork)(?:Sync|File)?\s*\(|["'][^"']*\.(?:c|cc|cpp|cxx)["']|\b(?:gcc|clang|cc|c\+\+)\s*\(/u);
+    assert.doesNotMatch(source, /\bimport\s*\(/u, "memory runtime dynamic imports must be statically auditable");
+    const specifiers = [...source.matchAll(/(?:^|\n)\s*(?:import|export)(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu)].map((match) => match[1]);
+    for (const specifier of specifiers) {
+      if (specifier.startsWith("node:")) continue;
+      assert.ok(specifier.startsWith("."), `memory runtime uses a non-Node bare specifier: ${specifier}`);
+      const target = fileURLToPath(new URL(specifier, pathToFileURL(current)));
+      assert.ok(isInsideAllowedRoot(target, allowedRoots), `memory runtime import escapes allowed roots: ${specifier}`);
+      pending.push(target);
+    }
+  }
+  return visited;
+}
+
+async function assertCompilerlessSealedAppend({ builds, stagingRoot }) {
+  const entryPaths = [
+    "scripts/capture-design-memory.mjs",
+    "scripts/maintain-design-memory.mjs",
+    "scripts/retrieve-design-memory.mjs",
+    "scripts/load-memory-config.mjs",
+    "scripts/validate-design-memory.mjs",
+    "scripts/lib/safe-memory-store.mjs",
+  ];
+  await assertMemoryRuntimeGraph({
+    root: repoRoot,
+    entryPaths: entryPaths.map((relativePath) => `shared/${relativePath}`),
+    allowedRoots: [path.join(repoRoot, "shared/scripts"), path.join(repoRoot, "shared/memory/schema")],
+  });
+  for (const build of builds) {
+    await assertMemoryRuntimeGraph({
+      root: build.outputDir,
+      entryPaths,
+      allowedRoots: [path.join(build.outputDir, "scripts"), path.join(build.outputDir, "references/shared/memory/schema")],
+    });
   }
   const emptyPath = await mkdtemp(path.join(stagingRoot, "empty-path-"));
-  const workspaceRoot = await realpath(await mkdtemp(path.join(stagingRoot, "sealed-append-")));
-  const script = `
+  for (const build of builds) {
+    const workspaceRoot = await realpath(await mkdtemp(path.join(stagingRoot, "sealed-append-")));
+    const script = `
     import { rm } from "node:fs/promises";
-    import { resolveMemoryStore, appendMemoryEvent } from ${JSON.stringify(new URL(`file://${path.join(build.outputDir, "scripts/lib/safe-memory-store.mjs")}`).href)};
-    import { canonicalMemoryEventDocument } from ${JSON.stringify(new URL(`file://${path.join(build.outputDir, "scripts/validate-design-memory.mjs")}`).href)};
+    import { resolveMemoryStore, appendMemoryEvent } from ${JSON.stringify(pathToFileURL(path.join(build.outputDir, "scripts/lib/safe-memory-store.mjs")).href)};
+    import { canonicalMemoryEventDocument } from ${JSON.stringify(pathToFileURL(path.join(build.outputDir, "scripts/validate-design-memory.mjs")).href)};
     const workspaceRoot = ${JSON.stringify(workspaceRoot)};
     const record = { schema_version: 1, memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef", kind: "design-lesson", lane: "studio", status: "candidate", scope: "project", project_id: "wind-island", created_at: "2026-08-12T00:00:00.000Z", updated_at: "2026-08-12T00:00:00.000Z", review_after: "2026-09-11", expires_at: "2026-09-11", approved_by: null, approval_basis: null, supersedes: null, artifact_types: ["artifact"], related_ids: ["related"], tags: ["tag"], sources: [{ artifact_id: "source", locator: "content.md#h", sha256: "${"a".repeat(64)}" }] };
     try {
@@ -173,14 +220,15 @@ async function assertCompilerlessSealedAppend({ build, stagingRoot }) {
       if (created.status !== "created" || present.status !== "present") throw new Error("sealed append retry failed");
       process.stdout.write(JSON.stringify({ created: created.status, present: present.status }));
     } finally { await rm(workspaceRoot, { recursive: true, force: true }); }
-  `;
-  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
-    cwd: build.outputDir,
-    env: { PATH: emptyPath, CC: "/nonexistent/cc", CXX: "/nonexistent/cxx" },
-    encoding: "utf8",
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), { created: "created", present: "present" });
+    `;
+    const result = spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
+      cwd: build.outputDir,
+      env: { PATH: emptyPath, CC: "/nonexistent/cc", CXX: "/nonexistent/cxx" },
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), { created: "created", present: "present" });
+  }
   await rm(emptyPath, { recursive: true, force: true });
 }
 
@@ -439,16 +487,41 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       "maintain-game-design-memory": ["evidence-auditor"],
     },
   };
+  const expectedCareerSkillIds = [
+    "orchestrate-game-design-career",
+    "map-game-design-career",
+    "research-game-design-jobs",
+    "build-game-design-portfolio",
+    "reverse-engineer-game-design",
+    "practice-game-design-interview",
+    "review-game-design-portfolio",
+    "plan-junior-growth",
+    "visualize-career-roadmap",
+    "export-career-documents",
+    "apply-document-quality-profile",
+    "plan-image-assets",
+    "generate-image-assets",
+    "review-image-assets",
+    "polish-game-design-writing",
+    "humanize-korean",
+    "archify",
+    "retrieve-approved-design-memory",
+    "capture-game-design-memory",
+    "maintain-game-design-memory",
+  ];
   for (const [productName, owners] of Object.entries(routingOwners)) {
     const routing = await readJson(`products/${productName}/plugin/references/routing.json`);
+    if (productName === "game-design-career") assert.deepEqual(routing.skillIds, expectedCareerSkillIds);
     assert.deepEqual(routing.memoryWorkflow, expectedWorkflow);
+    const expectedPlannedSkills = routing.skillIds.map((skillId) => `skills/${skillId}/SKILL.md`);
+    assert.deepEqual(routing.plannedPaths.skills, expectedPlannedSkills, `${productName}: planned skill paths are complete and canonical`);
+    assert.equal(new Set(routing.plannedPaths.skills.map((skillPath) => skillPath.normalize("NFC"))).size, routing.plannedPaths.skills.length);
     for (const skillId of Object.keys(owners)) {
       assert.ok(routing.skillIds.includes(skillId));
-      assert.ok(routing.plannedPaths.skills.includes(`skills/${skillId}/SKILL.md`));
       assert.deepEqual(routing.directUseReviewOwners.find((entry) => entry.skill === skillId)?.owners, owners[skillId]);
     }
   }
-  await assertCompilerlessSealedAppend({ build: studioBuild, stagingRoot });
+  await assertCompilerlessSealedAppend({ builds: [studioBuild, careerBuild], stagingRoot });
   await assert.rejects(
     () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLocks }),
     /Unexpected product contract: products\/unexpected-product\/product\.json/,

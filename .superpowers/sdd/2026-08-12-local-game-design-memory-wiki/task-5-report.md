@@ -32,3 +32,19 @@
 ## 우려
 
 - committed `plugins/*` snapshot과 aggregate snapshot test는 Task 8 전까지 의도적으로 수정하거나 실행하지 않았다.
+
+## Fix round 1 — RED → GREEN
+
+- Career routing RED: `node --test tests/contracts/shared-contract.test.mjs`는 `plannedPaths.skills`가 memory 3개만 포함하여 `skillIds` 20개와의 exact equality에서 실패했다. GREEN: `skills/<id>/SKILL.md` 20개를 `skillIds` 순서로 명시하고, exact set·NFC uniqueness 계약을 고정했다.
+- Node-only runtime RED: 새 compilerless helper의 단일-build 인자 사용은 `Cannot read properties of undefined (reading 'outputDir')`로 실패했고, 그 뒤 실제 source graph는 `maintain-design-memory.mjs`의 `node:child_process`와 `exec("git", …)`를 검출했다. GREEN: 두 temporary product build와 source의 static import graph를 재귀 검사하고, child-process/git helper를 제거했다. 각 설치본은 빈 `PATH`, `/nonexistent/cc`, `/nonexistent/cxx`에서 sealed append `created`와 동일 retry `present`를 통과한다.
+- Tuple mapping RED: 기존 테스트에는 memory 없는 fixture의 모든 기존 source→destination pair를 source bytes와 비교하는 독립 oracle이 없었다. oracle의 vendor destination 변이에서 `skills/svg-infographic/SKILL.md`가 `ENOENT`로 실패함을 확인했다. GREEN: knowledge, templates, responsible-design, export, vendor, archify, im-not-ai, document-quality, image-assets와 image-assets root example·archify lock·im-not-ai license까지 exact recursive byte oracle로 고정했다.
+- Memory inventory RED: `shared/memory/references/unexpected.md`가 build에 허용되어 `Missing expected rejection`으로 실패했다. GREEN: skills의 정확한 세 `SKILL.md`, canonical schema 다섯 개, policy/lifecycle, intended templates 세 개만 허용하는 inventory를 build 전에 검사하고, output directory가 생기기 전에 거부한다.
+
+## Fix round 1 검증
+
+- `node --test tests/unit/build-product.test.mjs` → 43 passed, 0 failed.
+- `node --test tests/contracts/shared-contract.test.mjs` → 1 passed, 0 failed. source + Studio/Career package import graph와 양 제품 compilerless sealed append smoke 포함.
+- `node --test tests/unit/design-memory-maintenance.test.mjs` → 19 passed, 0 failed.
+- 세 memory skill에 `quick_validate.py` → 모두 `Skill is valid!`.
+- `node --check tooling/lib/build-product.mjs`, `node --check shared/scripts/maintain-design-memory.mjs`, `jq empty ...`, `git diff --check` → success.
+- committed `plugins/*` snapshot과 aggregate snapshot test는 계속 수정하거나 실행하지 않았다.
