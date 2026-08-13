@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { collectTree } from "../../../tooling/lib/copy-tree.mjs";
+import { buildProduct } from "../../../tooling/lib/build-product.mjs";
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 const marketplace = "game-design-suite";
@@ -101,6 +102,24 @@ async function assertMemoryPackage(pluginRoot, product) {
   assert.equal(skills.length, 21, `${product}: cache exposes exactly 21 skills`);
 }
 
+async function installBuiltPlugin({ buildDir, codexHome, product }) {
+  const destination = path.join(codexHome, "plugins", product);
+  await mkdir(path.dirname(destination), { recursive: true });
+  await cp(buildDir, destination, { recursive: true, errorOnExist: true, force: false });
+  return destination;
+}
+
+async function replaceBuiltPlugin({ buildDir, codexHome, product }) {
+  const destination = path.join(codexHome, "plugins", product);
+  await rm(destination, { recursive: true, force: true });
+  await cp(buildDir, destination, { recursive: true, errorOnExist: true, force: false });
+  return destination;
+}
+
+async function removeInstalledPlugin({ codexHome, product }) {
+  await rm(path.join(codexHome, "plugins", product), { recursive: true, force: true });
+}
+
 test("one local Codex workspace preserves project memory while both products install, re-add, and remove", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "memory-install-lifecycle-"));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -187,4 +206,62 @@ test("one local Codex workspace preserves project memory while both products ins
   assert.deepEqual(persisted.networkControl, networkControl, "network control evidence survives serialization");
   assert.deepEqual(persisted.commands, evidence, "command receipts survive evidence serialization");
   assert.equal(evidence.every((entry) => entry.cwd === workspace && entry.exitCode === 0 && !entry.args.includes("exec")), true, "every lifecycle command runs in the sentinel workspace through local plugin CLI only");
+});
+
+test("fresh production builds install, replace, and remove without touching local memory or leaving staging artifacts", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "memory-build-install-lifecycle-"));
+  t.after(async () => {
+    await rm(root, { recursive: true, force: true });
+    await assert.rejects(lstat(root), { code: "ENOENT" }, "build lifecycle root is removed after the test");
+  });
+
+  for (const product of products) {
+    await t.test(product, async () => {
+      const workspace = path.join(root, `${product}-workspace`);
+      const codexHome = path.join(root, `${product}-codex-home`);
+      const firstStagingRoot = path.join(root, `${product}-first-build`);
+      const replacementStagingRoot = path.join(root, `${product}-replacement-build`);
+      const memoryFile = path.join(workspace, ".game-design", "memory", "v1", "events", "bb", "memory-sentinel", `mev1-${"b".repeat(64)}.md`);
+      const excludeFile = path.join(workspace, ".git", "info", "exclude");
+      const siblingFile = path.join(codexHome, "plugins", "unrelated-plugin", "sentinel.txt");
+      await Promise.all([mkdir(path.dirname(memoryFile), { recursive: true }), mkdir(path.dirname(excludeFile), { recursive: true }), mkdir(path.dirname(siblingFile), { recursive: true })]);
+      await writeFile(memoryFile, "built-plugin-lifecycle-memory\n");
+      await writeFile(excludeFile, "existing local exclusion\n.game-design/memory/\n");
+      await writeFile(siblingFile, "sibling plugin survives\n");
+      await chmod(memoryFile, 0o640);
+      await chmod(excludeFile, 0o600);
+      const timestamp = new Date("2026-08-12T00:00:00.000Z");
+      await Promise.all([utimes(memoryFile, timestamp, timestamp), utimes(excludeFile, timestamp, timestamp)]);
+      const before = await Promise.all([fileIdentity(memoryFile), fileIdentity(excludeFile), fileIdentity(siblingFile)]);
+      const assertPreserved = async (stage) => {
+        await assertSameIdentity(memoryFile, before[0], `${product}:${stage}: workspace memory`);
+        await assertSameIdentity(excludeFile, before[1], `${product}:${stage}: .git/info/exclude`);
+        await assertSameIdentity(siblingFile, before[2], `${product}:${stage}: sibling plugin`);
+      };
+
+      try {
+        const firstBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: firstStagingRoot, sourceDateEpoch: 0 });
+        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`);
+        const installed = await installBuiltPlugin({ buildDir: firstBuild.outputDir, codexHome, product });
+        await assertMemoryPackage(installed, `${product} installed production build`);
+        await assertPreserved("install");
+
+        const replacementBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: replacementStagingRoot, sourceDateEpoch: 0 });
+        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`);
+        const replaced = await replaceBuiltPlugin({ buildDir: replacementBuild.outputDir, codexHome, product });
+        await assertMemoryPackage(replaced, `${product} replacement install`);
+        await assertPreserved("replace");
+
+        await removeInstalledPlugin({ codexHome, product });
+        await assert.rejects(lstat(replaced), { code: "ENOENT" }, `${product}: removal removes only the installed build`);
+        await assertPreserved("remove");
+      } finally {
+        await Promise.all([rm(firstStagingRoot, { recursive: true, force: true }), rm(replacementStagingRoot, { recursive: true, force: true })]);
+      }
+      await Promise.all([
+        assert.rejects(lstat(firstStagingRoot), { code: "ENOENT" }, `${product}: first build staging is removed`),
+        assert.rejects(lstat(replacementStagingRoot), { code: "ENOENT" }, `${product}: replacement build staging is removed`),
+      ]);
+    });
+  }
 });

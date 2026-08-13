@@ -26,6 +26,7 @@
 | 스킬 구조 | `node tooling/validate-packages.mjs skills` | 설치 스킬 42/42 통과 |
 | 스냅샷 동기화 | `npm run build -- --check` | 두 제품 원천과 generated snapshot 일치 |
 | 기억 lifecycle | `memory-install-lifecycle.e2e.test.mjs` | 하나의 workspace·격리 홈에서 Studio·Career 동시 설치→Studio 교체→순차 제거 1/1 통과, memory·`.git/info/exclude`·형제 플러그인 bytes/mode/mtime 보존 |
+| 임시 build lifecycle | 같은 E2E의 `buildProduct()` subtest | Studio·Career fresh 임시 build 설치→교체→제거 2/2 통과, source build와 staging root를 모두 제거하고 memory·`.git/info/exclude`·형제 플러그인 bytes/mode/mtime 보존 |
 | dirty worktree | `dirty-worktree-preservation.e2e.test.mjs` | 6/6 통과, memory sentinel과 Git local exclude를 독립 비교 |
 | 설치 격리 | `plugin-smoke.test.mjs` | 8/8 통과, 21개 정확한 스킬 목록·vendored runtime·symlink 방어 확인 |
 | 가이드·카탈로그 | guide/product/root README/prompt catalog focused 묶음 | 234/234 통과 |
@@ -52,6 +53,7 @@ Studio remove → Career remove → marketplace remove → empty list
 | MEM-INDEX-GEN, MEM-RECEIPT, MEM-DERIVED-CONCURRENT, MEM-DERIVED-LIMIT, MEM-DERIVED-TRIPWIRE, MEM-DERIVED-SIZE | derived index·receipt·동시성·제한·변조 | derived store fixture | 별도 memory gate | 파생 데이터 fail-closed | 이 lifecycle lane에서 재실행하지 않음 | derived API owner가 검증 | 별도 root gate에 기록 | 보류 |
 | MEM-GIT-ISOLATION, MEM-DIRTY | Git local exclude·수정 중 작업트리 | memory sentinel·`.git/info/exclude` sentinel | `dirty-worktree-preservation.e2e.test.mjs` | bytes/mode/mtime 불변 | 6/6 통과 | `.git` 전체 snapshot 제외와 sentinel 독립 비교 | fixture 자동 삭제 | PASS |
 | MEM-INSTALL, INSTALL-LOCAL-CLI | 실제 Codex 설치 사용자 | 하나의 sentinel workspace·격리 `HOME`·`CODEX_HOME`, local marketplace | `memory-install-lifecycle.e2e.test.mjs` | 두 제품 install→both list→Studio remove/re-add→둘 remove, 21 skills, JSON receipt | 1/1 통과 | cp/rm self-validation을 실제 public Codex CLI JSON lifecycle로 교체하고 CLI cwd를 sentinel workspace로 고정 | `local-cli-lifecycle-evidence.json`을 검증 후 fixture 삭제 | PASS |
+| MEM-BUILD-INSTALL, MEM-BUILD-REPLACE, MEM-BUILD-REMOVE | fresh production build 설치 사용자 | 제품별 임시 `buildProduct()` output·격리 plugin home·workspace sentinel | 같은 E2E의 build lifecycle subtest | Studio·Career build output install→replace→remove, 21 skills 및 memory/runtime 포함, local file identity 불변 | Studio·Career 2/2 통과 | production `buildProduct()` helper를 직접 호출하고 install directory만 cp/rm | 두 staging root와 test root가 제거됐는지 assertion | PASS |
 | MEM-THREAT-BOUNDARY | local state·`.env` 누출을 노리는 패키지 | 실제 CLI cache | 같은 lifecycle E2E | `.env`, event/control/derived package 0 | 두 제품 모두 누출 0 | cache tree를 실제 설치본에서 검사 | 격리 home 삭제 | PASS |
 | MEM-NODE-ONLY, MEM-FAILOPEN | Node runtime·기억 오류 뒤 기획 계속 | production memory runtime | 별도 memory gate | Node-only/fail-open contract | 이 lifecycle lane에서 재실행하지 않음 | local-only CLI input·proxy poison은 fail-open 증거가 아니며 직접 socket 접근도 미계측 | 별도 root gate에 기록 | 보류 |
 | PACKAGE-PLUGIN-CREATOR | plugin manifest·설치 구조 | generated plugins | `node tooling/validate-packages.mjs plugins` | 두 plugin validator 통과 | 2/2 통과 | package contract 21 skills 반영 | 출력은 실행 로그 | PASS |
@@ -78,4 +80,4 @@ npm run check:curated-archify                                  → FAIL (same ca
 
 ## 남은 통합 경계
 
-이 보고서는 설치·인벤토리·가이드·실제 CLI 수명주기 증거만 확정합니다. Archify 카탈로그와 curated 도식 가드는 새 memory mirror·보고서 등록 및 stale digest 갱신 전까지 보류이며, 통과로 주장하지 않습니다. 실제 MD/PDF/DOCX/PPTX 대표 생성과 30장 시각 확인도 별도 검증 lane의 결과를 이 문서에 합치기 전까지 완료로 주장하지 않습니다. 이 lifecycle 회귀는 로컬 입력·proxy poison·receipt 검사까지 증명하며, 직접 네트워크 소켓 접근이나 원격 서비스 쓰기는 측정·수행하지 않았습니다.
+이 보고서는 실제 CLI 수명주기와 fresh production build 수명주기 증거를 확정합니다. Archify 카탈로그와 curated 도식 가드는 새 memory mirror·보고서 등록 및 stale digest 갱신 전까지 보류이며, 통과로 주장하지 않습니다. MEM-NODE-ONLY·MEM-FAILOPEN 및 memory/root gate의 hostile scenario는 이 lifecycle lane에서 재실행하지 않았고 별도 root gate에 남아 있습니다. 실제 MD/PDF/DOCX/PPTX 대표 생성과 30장 시각 확인도 별도 검증 lane의 결과를 이 문서에 합치기 전까지 완료로 주장하지 않습니다. 이 lifecycle 회귀는 로컬 입력·proxy poison·receipt 검사까지 증명하며, 직접 네트워크 소켓 접근이나 원격 서비스 쓰기는 측정·수행하지 않았습니다.
