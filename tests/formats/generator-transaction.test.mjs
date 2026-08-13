@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmod, mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -8,6 +9,7 @@ import test from "node:test";
 import {
   FORMAT_COVERAGE,
   commitGeneratedTrees,
+  preparePresentationWorkspace,
   renderDocxQa,
   renderSavedPptxQa,
   resolveChrome,
@@ -73,6 +75,70 @@ test("CODEX_HOME overrides the user-home plugin cache", async (t) => {
   await mkdir(skill, { recursive: true });
 
   assert.equal(await resolvePluginSkill("presentations", { env: { CODEX_HOME: root }, home: "/unused" }), skill);
+});
+
+test("current presentation layout prepares a writable artifact-tool workspace without the removed setup helper", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "formats-presentation-workspace-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const presentations = path.join(root, "presentations");
+  const dependenciesRoot = path.join(root, "dependencies");
+  const nodeModules = path.join(dependenciesRoot, "node", "node_modules");
+  const runtimeBinDir = path.join(dependenciesRoot, "bin", "override");
+  const workspace = path.join(root, "build");
+  const artifactTool = path.join(nodeModules, "@oai", "artifact-tool");
+  await Promise.all([
+    mkdir(path.join(presentations, "container_tools"), { recursive: true }),
+    mkdir(artifactTool, { recursive: true }),
+    mkdir(runtimeBinDir, { recursive: true }),
+  ]);
+  await Promise.all([
+    writeFile(path.join(artifactTool, "package.json"), JSON.stringify({ name: "@oai/artifact-tool", type: "module", exports: "./index.mjs" })),
+    writeFile(path.join(artifactTool, "index.mjs"), "export const runtimeMarker = 'artifact-tool-loaded';\n"),
+  ]);
+
+  const env = await preparePresentationWorkspace({
+    presentations,
+    runtime: { dependenciesRoot, commands: { node: process.execPath } },
+    workspace,
+  });
+
+  assert.equal(await realpath(path.join(workspace, "node_modules")), await realpath(nodeModules));
+  assert.equal(env.RUNTIME_NODE, process.execPath);
+  assert.equal(env.RUNTIME_NODE_MODULES, nodeModules);
+  assert.equal(env.RUNTIME_BIN_DIR, runtimeBinDir);
+  const generator = path.join(workspace, "generator.mjs");
+  await writeFile(generator, "import { runtimeMarker } from '@oai/artifact-tool'; console.log(runtimeMarker, process.env.RUNTIME_NODE_MODULES);\n");
+  const generated = spawnSync(process.execPath, [generator], { encoding: "utf8", env: { ...process.env, ...env } });
+  assert.equal(generated.status, 0, generated.stderr);
+  assert.equal(generated.stdout.trim(), `artifact-tool-loaded ${nodeModules}`);
+});
+
+test("older presentation layout keeps using its packaged workspace setup helper", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "formats-legacy-presentation-workspace-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const presentations = path.join(root, "presentations");
+  const dependenciesRoot = path.join(root, "dependencies");
+  const helper = path.join(presentations, "container_tools", "setup_artifact_tool_workspace.mjs");
+  const workspace = path.join(root, "build");
+  await Promise.all([
+    mkdir(path.dirname(helper), { recursive: true }),
+    mkdir(path.join(dependenciesRoot, "node", "node_modules"), { recursive: true }),
+    mkdir(path.join(dependenciesRoot, "bin", "override"), { recursive: true }),
+  ]);
+  await writeFile(helper, `
+    import { mkdir, writeFile } from "node:fs/promises";
+    const workspace = process.argv[process.argv.indexOf("--workspace") + 1];
+    await mkdir(workspace, { recursive: true });
+    await writeFile(new URL("legacy-helper-ran", new URL(\`file://\${workspace}/\`)), "yes");
+  `);
+
+  await preparePresentationWorkspace({
+    presentations,
+    runtime: { dependenciesRoot, commands: { node: process.execPath } },
+    workspace,
+  });
+
+  assert.equal(await readFile(path.join(workspace, "legacy-helper-ran"), "utf8"), "yes");
 });
 
 test("Chrome resolution honors CHROME_BIN then portable PATH candidates", async (t) => {
