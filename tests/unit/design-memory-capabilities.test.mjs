@@ -114,3 +114,8 @@ test("sweep and quarantine receipts bind complete observed-head snapshots", () =
   assert.doesNotThrow(() => issueMaintenanceHumanReceipt({ ...common, action: "sweep", observedParentEventIds: [] }));
   assert.doesNotThrow(() => issueMaintenanceHumanReceipt({ ...common, action: "quarantine", memoryId: "memory-studio-design-lesson-abc", observedParentEventIds: [`mev1-${"a".repeat(64)}`, `mev1-${"b".repeat(64)}`] }));
 });
+
+test("issuers reject proxied clocks and oversized human text", () => {
+  assert.throws(() => issueCaptureClassificationReceipt(captureArgs({ now: new Proxy(new Date("2026-08-12T00:00:00Z"), {}) })), (error) => error?.code === "memory.capability_request");
+  assert.throws(() => issueMaintenanceHumanReceipt({ projectId: "wind-island", scope: "project", action: "verify", memoryId: "memory-studio-design-lesson-abc", actor: "reviewer", reason: "x".repeat(1025), observedParentEventIds: [`mev1-${"a".repeat(64)}`], now: new Date("2026-08-13T00:00:00Z") }), (error) => error?.code === "memory.capability_request");
+});

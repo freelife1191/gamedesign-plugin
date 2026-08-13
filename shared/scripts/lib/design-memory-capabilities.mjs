@@ -81,7 +81,9 @@ function requestObject(value, allowed) {
 }
 
 function instant(value) {
-  const date = new Date(value);
+  if (types.isProxy(value) || (typeof value !== "string" && !(value instanceof Date && Object.getPrototypeOf(value) === Date.prototype))) throw failure("memory.capability_request");
+  if (typeof value === "string" && !safeString(value)) throw failure("memory.capability_request");
+  const date = new Date(value instanceof Date ? value.getTime() : value);
   if (Number.isNaN(date.valueOf())) throw failure("memory.capability_request");
   return date.toISOString();
 }
@@ -142,7 +144,7 @@ export function verifyCaptureClassificationReceipt(receipt, input = {}) {
 
 function maintenanceRequest(input) {
   const value = requestObject(input, new Set(["projectId", "scope", "action", "memoryId", "actor", "reason", "observedParentEventIds", "chosenParentEventId", "now"]));
-  if (!safeId(value.projectId) || !SCOPES.has(value.scope) || !HUMAN_ACTIONS.has(value.action) || value.action !== "sweep" && !safeId(value.memoryId) || !safeString(value.actor) || !safeString(value.reason)) throw failure("memory.capability_request");
+  if (!safeId(value.projectId) || !SCOPES.has(value.scope) || !HUMAN_ACTIONS.has(value.action) || (value.action !== "sweep" && !safeId(value.memoryId)) || !safeString(value.actor) || Array.from(value.actor).length > 256 || !safeString(value.reason) || Array.from(value.reason).length > 1024) throw failure("memory.capability_request");
   const observed = detached(value.observedParentEventIds);
   if (!Array.isArray(observed) || observed.some((item) => !EVENT_ID.test(item))) throw failure("memory.capability_request");
   if (value.action === "resolution") {

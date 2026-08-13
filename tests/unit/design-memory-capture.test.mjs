@@ -41,11 +41,10 @@ test("only an explicit preference is directly approved with interactive-user pro
   assert.equal(record.status, "approved"); assert.equal(record.approved_by, "interactive-user"); assert.equal(record.approval_basis, "explicit-user-instruction");
 });
 
-test("capture rejects a missing artifact even when workspace root has matching bytes, and rejects spoofed classifications", async (t) => {
+test("capture rejects a missing artifact even when workspace root has matching bytes and has no receipt", async (t) => {
   const root = await workspace(t); const bytes = Buffer.from("same bytes\n"); await writeFile(path.join(root, "evidence.yml"), bytes);
-  const event = { eventId: "finding-missing-artifact", type: "playtest-finding", classification: "durable-finding", actorType: "human", humanAttested: true, actor: "human", summary: "반격이 없다.", applicability: "보스전", exclusions: "퍼즐", artifactTypes: ["combat"], relatedIds: [], tags: ["boss"], sources: [{ artifact_id: "missing-artifact", locator: "evidence.yml#x", sha256: createHash("sha256").update(bytes).digest("hex") }] };
+  const event = { eventId: "finding-missing-artifact", type: "playtest-finding", actor: "human", summary: "반격이 없다.", applicability: "보스전", exclusions: "퍼즐", artifactTypes: ["combat"], relatedIds: [], tags: ["boss"], sources: [{ artifact_id: "missing-artifact", locator: "evidence.yml#x", sha256: createHash("sha256").update(bytes).digest("hex") }] };
   assert.equal((await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event })).status, "skipped");
-  for (const hostile of [{ ...event, classification: "chat" }, { ...event, type: "review-finding", classification: "explicit-user-preference" }, { ...event, actorType: "system" }, { ...event, humanAttested: false }]) assert.equal((await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event: hostile })).status, "skipped");
 });
 
 test("an approved explicit preference remains retrievable after candidate TTL", async (t) => {

@@ -250,7 +250,10 @@ Expected: 기존 append가 quarantine을 무시하거나 stale parent를 저장�
 `authorizeMemoryAppend()`는 incomplete scan을 먼저 거부한다. parsed memory ID가
 quarantine 집합에 있으면 event type과 관계없이 거부한다. capture는 해당
 memory event가 없을 때만 허용한다. transition parent는 관찰한 현재 head 하나여야
-한다. resolution parent는 pairwise-incomparable 현재 head 전체와 같아야 한다.
+한다. resolution parent는 두 개 이상의 정렬된 고유 ID로 이루어진 관찰 집합이며,
+모두 현재 head이고 서로 비교 불가능해야 한다. 관찰 집합은 현재 head 전체의 진부분집합일
+수 있다. 이때 관찰하지 못한 late head는 resolution에 소비되지 않고 새 resolution head와
+함께 남으므로 fold는 계속 conflict로 닫힌다.
 
 append가 scan한 뒤 다른 process가 먼저 저장하는 것은 정상 race다. create-once seal은
 두 event를 모두 남기고 다음 fold에서 conflict로 닫는다. mtime이나 순회 순서로
