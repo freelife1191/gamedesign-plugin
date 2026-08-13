@@ -1,0 +1,12 @@
+[
+  {
+    "availability": "available",
+    "claim": "Record only what the source directly supports.",
+    "claimKind": "observation",
+    "evidenceId": "evidence-id",
+    "limitation": null,
+    "referenceId": "reference-id",
+    "sourceType": "direct-play",
+    "verificationQuestion": null
+  }
+]

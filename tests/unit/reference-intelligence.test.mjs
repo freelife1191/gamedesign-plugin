@@ -19,6 +19,15 @@ import {
   loadBundledReferenceCatalog,
   mergeSystemAtlas,
 } from "../../shared/scripts/lib/system-atlas.mjs";
+import {
+  buildDesignTransfers,
+  buildReferenceAnalysis,
+  buildReferenceBrief,
+  buildSystemMaps,
+  inventoryReferenceSystems,
+  rankDeepDiveCandidates,
+  writeReferenceAnalysisWorkspace,
+} from "../../shared/scripts/analyze-game-design-references.mjs";
 
 function validReferenceAnalysis() {
   return {
@@ -627,5 +636,155 @@ test("catalog loader rejects ancestor symlinks and swapped catalog directories",
     await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: canonicalInstalled }), { code: "reference-atlas.catalog-load" });
   } finally {
     await rm(container, { recursive: true, force: true });
+  }
+});
+
+function analysisBriefFixture(overrides = {}) {
+  return {
+    analysisId: "reference-analysis-fixture",
+    objective: "Identify transferable session-loop patterns.",
+    decisionQuestions: ["Which loop supports a ten-minute session?"],
+    ...overrides,
+  };
+}
+
+function analysisReferenceSetFixture({ singleGame = false } = {}) {
+  const shared = { referenceId: "ref-alpha", label: "Alpha", availability: "available", limitation: null };
+  return [
+    { ...shared, role: "direct-competitor" },
+    singleGame ? { ...shared, role: "core-system-exemplar" } : { referenceId: "ref-beta", label: "Beta", role: "core-system-exemplar", availability: "available", limitation: null },
+    singleGame
+      ? { ...shared, role: "operations-monetization-comparator" }
+      : { referenceId: "ref-gamma", label: "Gamma", role: "operations-monetization-comparator", availability: "unavailable", limitation: "Offline source is unavailable." },
+  ];
+}
+
+function analysisEvidenceFixture(overrides = {}) {
+  return [
+    {
+      evidenceId: "ev-alpha-loop",
+      referenceId: "ref-alpha",
+      sourceType: "direct-play",
+      claimKind: "observation",
+      claim: "The player completes a short loop before choosing a reward.",
+      availability: "available",
+      limitation: null,
+      verificationQuestion: null,
+    },
+    {
+      evidenceId: "ev-beta-offline",
+      referenceId: "ref-gamma",
+      sourceType: "official-site",
+      claimKind: "observation",
+      claim: "The unavailable source may describe operations offers.",
+      availability: "unavailable",
+      limitation: "Offline source is unavailable.",
+      verificationQuestion: "Which official page can verify the offer?",
+    },
+    ...(overrides.records ?? []),
+  ];
+}
+
+function analysisMapFixture(overrides = {}) {
+  return [{
+    mapId: "map-core-play-loop",
+    systemId: "core-play",
+    nodes: ["action", "reward"],
+    edges: ["action-to-reward"],
+    ...overrides,
+  }];
+}
+
+async function analysisInputFixture(overrides = {}) {
+  const { atlas } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
+  return {
+    brief: analysisBriefFixture(),
+    referenceSet: analysisReferenceSetFixture(),
+    atlas: { atlas },
+    evidence: analysisEvidenceFixture(),
+    claims: [],
+    edges: analysisMapFixture(),
+    loops: [],
+    projectConstraints: ["ten-minute-session"],
+    priorities: { "core-play": { relevance: 5, playerExperienceImpact: 5, economyProgressionImpact: 3, differentiationPotential: 4, evidenceStrength: 5, uncertainty: 2, researchCost: 2 } },
+    ...overrides,
+  };
+}
+
+async function analysisArtifactRoot(t) {
+  const root = await mkdtemp(join(tmpdir(), "reference-analysis-artifacts-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  return root;
+}
+
+test("analysis stages preserve evidence and never auto-approve transfer", async (t) => {
+  const analysis = buildReferenceAnalysis(await analysisInputFixture());
+  assert.equal(analysis.referenceSet.map(({ role }) => role).join(","), "direct-competitor,core-system-exemplar,operations-monetization-comparator");
+  assert.equal(analysis.transferDecisions.every(({ reviewState }) => reviewState === "pending-review"), true);
+  assert.equal(analysis.verificationQueue.some(({ question }) => question.includes("official page")), true);
+  const written = await writeReferenceAnalysisWorkspace({ artifactRoot: await analysisArtifactRoot(t), analysis });
+  assert.match(written.analysisSha256, /^[a-f0-9]{64}$/u);
+  assert.equal(written.files.includes("reference-intelligence/system-maps/map-core-play-loop.json"), true);
+  assert.equal(written.files.includes("reference-intelligence/deep-dives/core-play.md"), true);
+});
+
+test("analysis holds comparison and transfer decisions for a single unique reference", async () => {
+  const input = await analysisInputFixture({ referenceSet: analysisReferenceSetFixture({ singleGame: true }), evidence: analysisEvidenceFixture({ records: [] }).filter(({ referenceId }) => referenceId === "ref-alpha") });
+  const analysis = buildReferenceAnalysis(input);
+  assert.equal(analysis.comparison.every(({ finding }) => finding.includes("Hold")), true);
+  assert.equal(analysis.transferDecisions.every(({ decision }) => decision === "hold"), true);
+});
+
+test("analysis keeps unavailable evidence in verification instead of inventing a finding", async () => {
+  const analysis = buildReferenceAnalysis(await analysisInputFixture());
+  assert.equal(analysis.deepDives.every(({ evidenceIds }) => !evidenceIds.includes("ev-beta-offline")), true);
+  assert.equal(analysis.verificationQueue.some(({ evidenceIds }) => evidenceIds.includes("ev-beta-offline")), true);
+});
+
+test("analysis rejects conflicting version or platform observations and invalid map relationships", async () => {
+  const input = await analysisInputFixture({
+    referenceContexts: [
+      { referenceId: "ref-alpha", platform: "pc", version: "1.0" },
+      { referenceId: "ref-alpha", platform: "console", version: "1.0" },
+    ],
+  });
+  assert.throws(() => buildReferenceAnalysis(input), { code: "reference-analysis.conflicting-claim" });
+  const inventory = [{ systemId: "core-play", name: "Core play", applicability: "unknown", evidenceIds: ["ev-alpha-loop"] }];
+  for (const edges of [
+    [{ mapId: "map-orphan", systemId: "unknown-system", nodes: ["action"], edges: ["action-loop"] }],
+    [{ mapId: "invalid map", systemId: "core-play", nodes: ["action"], edges: ["action-loop"] }],
+  ]) assert.throws(() => buildSystemMaps({ inventory, edges, loops: [] }), { code: "reference-analysis.invalid-map" });
+  assert.throws(() => buildSystemMaps({ inventory, edges: analysisMapFixture(), loops: [{ mapId: "map-core-play-loop", nodes: ["action", "reward"] }] }), { code: "reference-analysis.cycle" });
+});
+
+test("priority leaves a missing dimension unscored and artifact paths fail closed", async (t) => {
+  const inventory = [{ systemId: "core-play", name: "Core play", applicability: "unknown", evidenceIds: ["ev-alpha-loop"] }];
+  const maps = buildSystemMaps({ inventory, edges: analysisMapFixture(), loops: [] });
+  assert.deepEqual(rankDeepDiveCandidates({ inventory, maps, questions: { "core-play": { relevance: 5 } } }), []);
+  const analysis = buildReferenceAnalysis(await analysisInputFixture());
+  const root = await analysisArtifactRoot(t);
+  await assert.rejects(() => writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis, relativePath: "../outside" }), /unsafe/i);
+  const link = `${root}-link`;
+  t.after(() => rm(link, { recursive: true, force: true }));
+  await symlink(root, link);
+  await assert.rejects(() => writeReferenceAnalysisWorkspace({ artifactRoot: link, analysis }), /unsafe/i);
+  const transfers = buildDesignTransfers({ deepDives: analysis.deepDives, projectConstraints: ["ten-minute-session"] });
+  assert.equal(transfers.every(({ reviewState }) => reviewState === "pending-review"), true);
+  assert.deepEqual(buildReferenceBrief(analysisBriefFixture()), analysis.brief);
+  assert.equal(inventoryReferenceSystems({ brief: analysis.brief, atlas: analysis.atlasSelection, evidence: analysis.evidence, claims: [] }).length > 0, true);
+});
+
+test("reference analysis machine templates, catalog, and schema parse as JSON", async () => {
+  const files = [
+    "../../shared/reference-intelligence/templates/reference-set.yml",
+    "../../shared/reference-intelligence/templates/evidence-register.yml",
+    "../../shared/reference-intelligence/templates/system-inventory.json",
+    "../../shared/reference-intelligence/catalog/system-atlas.json",
+    "../../shared/reference-intelligence/catalog/source-register.json",
+    "../../shared/reference-intelligence/schema/reference-analysis.schema.json",
+  ];
+  for (const file of files) {
+    const contents = await readFile(new URL(file, import.meta.url), "utf8");
+    assert.doesNotThrow(() => JSON.parse(contents));
   }
 });
