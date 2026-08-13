@@ -206,6 +206,32 @@ test("closure localisation rewrites representative viewer UI only in the private
   assert.match(await readFile(path.join(path.dirname(path.dirname(f.cli)), "assets/template.html"), "utf8"), /Explore this system/u);
 });
 
+test("closure localisation supports footerless Archify releases while preserving structural guards", async (t) => {
+  const f = await fixture(t);
+  const sharedCli = path.join(path.dirname(path.dirname(f.cli)), "renderers/shared/cli.mjs");
+  const installed = await readFile(sharedCli, "utf8");
+  await writeFile(sharedCli, installed.replace("export const footer = 'Built with Archify';\n", ""));
+  let localized;
+  await stageCuratedArchify({
+    repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions,
+    __testHooks: { "after-closure-copy": async ({ closure }) => { localized = await readFile(path.join(closure, "renderers/shared/cli.mjs"), "utf8"); } },
+  });
+  assert.doesNotMatch(localized, /Built with Archify/u);
+  assert.match(localized, /const localizedTemplate = applyTemplate/u);
+  assert.match(localized, /replace\('<html lang="en"', '<html lang="ko"'\)/u);
+});
+
+test("closure localisation rejects ambiguous duplicate legacy footer markers", async (t) => {
+  const f = await fixture(t);
+  const sharedCli = path.join(path.dirname(path.dirname(f.cli)), "renderers/shared/cli.mjs");
+  const installed = await readFile(sharedCli, "utf8");
+  await writeFile(sharedCli, installed.replace("export const footer = 'Built with Archify';", "export const footer = 'Built with Archify';\nexport const duplicateFooter = 'Built with Archify';"));
+  await assert.rejects(
+    () => stageCuratedArchify({ repoRoot: f.root, env: f.env, archifyOptions: f.archifyOptions }),
+    /at most one CLI footer marker/u,
+  );
+});
+
 test("closure localisation replaces complete viewer tokens without corrupting ordinary labels", async (t) => {
   const f = await fixture(t);
   let localized;

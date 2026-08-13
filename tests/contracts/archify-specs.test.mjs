@@ -93,6 +93,13 @@ function assertPrimaryNodeBound(spec) {
   assert.ok(spec.nodes.length <= 12, `workflow has ${spec.nodes.length} primary nodes; at most 12 are allowed`);
 }
 
+function assertNoGroupLabelNodeOverlap(spec) {
+  const overlaps = (spec.groups ?? []).flatMap((group) => spec.nodes
+    .filter((node) => node.lane === group.lane && node.col >= group.fromCol && node.col <= group.toCol)
+    .map((node) => `${group.id}:${node.id}`));
+  assert.deepEqual(overlaps, [], "workflow group labels must not occupy the same lane-and-column cells as nodes");
+}
+
 function assertResumeReturnsToBlockedImageReview(spec) {
   const branch = spec.edges.find((edge) => edge.from === "image_asset_review" && edge.to === "resume_context");
   assert.deepEqual(branch && { role: branch.role, label: branch.label }, { role: "branch", label: "보류" });
@@ -114,6 +121,8 @@ function assertCareerHoldResumesEvidenceResearch(spec) {
     role: "return",
     label: "재개",
   });
+  const resumeView = spec.meta.views.find((view) => view.id === "resume-contract");
+  assert.deepEqual(resumeView?.focus, ["held_context", "evidence_research"]);
 }
 
 function assertCareerRouteAndReviewTopology(spec) {
@@ -611,6 +620,13 @@ test("Career workflow preserves evidence, human review, disclosure, and the actu
   assertCareerHoldResumesEvidenceResearch(spec);
   assert.equal(spec.nodes.find((node) => node.id === "human_review")?.type, "external");
   assertCareerSafetyLanguage(spec);
+});
+
+test("selected workflow group labels never share node cells", async () => {
+  for (const product of ["career", "studio"]) {
+    const { specsById } = await loadProductionSpecs(repoRoot, product);
+    for (const spec of specsById.values()) assertNoGroupLabelNodeOverlap(spec);
+  }
 });
 
 test("Career workflow contract rejects a resume mutation that changes the held work", async () => {

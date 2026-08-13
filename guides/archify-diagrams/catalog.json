@@ -11650,7 +11650,7 @@
       "product": "suite",
       "source_document": "guides/reviews/2026-08-12-memory-wiki-ultraqa-report.md",
       "source_section": "프로젝트 기억 UltraQA 보고서",
-      "source_digest": "2bea5b6386b91bd8a7c07dbbfd6548415bf348e07392fab424362f8825586547",
+      "source_digest": "50ef975119788bcd5760149533180c18c36640e35cc8e56402a0743ae06ac04a",
       "decision": "excluded",
       "exclusion_code": "excluded-better-as-text",
       "decision_reason": "“프로젝트 기억 UltraQA 보고서”는 설치·인벤토리·격리 검증의 실행 순서와 보류 상태를 표로 남긴 기록이다. 근거: `이 보고서는 프로젝트 기억 기능의 설치 수명주기, 패키지 인벤토리, 가이드 연결, 격리 설치본을 검증한 Task 8 실행 기록입니다.` 시간순 명령 결과와 예외 사유를 함께 읽어야 하므로 별도 도식보다 본문이 정확하다.",

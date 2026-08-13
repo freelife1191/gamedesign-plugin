@@ -41,7 +41,6 @@ const KOREAN_UI = Object.freeze([
 
 const REQUIRED_LOCALIZATION_MARKERS = Object.freeze([
   ["assets/template.html", '<strong id="guided-view-label">Explore this system</strong>'],
-  ["renderers/shared/cli.mjs", "Built with Archify"],
   ["renderers/shared/legend.mjs", ">Legend<"],
 ]);
 
@@ -453,6 +452,13 @@ function replaceOnce(bytes, expected, replacement, label) {
   return Buffer.from(text.replace(expected, replacement));
 }
 
+function replaceOptionalOnce(bytes, expected, replacement, label) {
+  const text = bytes.toString("utf8");
+  const count = text.split(expected).length - 1;
+  if (count > 1) throw new Error(`Archify Korean localization requires at most one ${label} marker; found ${count}`);
+  return Buffer.from(count === 1 ? text.replace(expected, replacement) : text);
+}
+
 async function localizeExecutionClosure(manifest) {
   const files = new Map(manifest.files.map((record) => [record.relative, record]));
   for (const [relative, marker] of REQUIRED_LOCALIZATION_MARKERS) {
@@ -468,7 +474,10 @@ async function localizeExecutionClosure(manifest) {
   const legend = files.get("renderers/shared/legend.mjs");
   const localizedTemplate = replaceOnce(await readFile(template.copy.path), "</body>", `${koreanRuntimeLocalizer()}</body>`, "template closing body");
   await writeFile(template.copy.path, localizedTemplate);
-  let localizedCli = replaceOnce(await readFile(cli.copy.path), "Built with Archify", "Archify로 제작", "CLI footer");
+  // Archify 2.14 removed its promotional footer. Older releases still carry
+  // the marker, so localize it when present while keeping the structural
+  // output guards below exact and mandatory for every supported release.
+  let localizedCli = replaceOptionalOnce(await readFile(cli.copy.path), "Built with Archify", "Archify로 제작", "CLI footer");
   localizedCli = replaceOnce(localizedCli, "fs.writeFileSync(outPath, applyTemplate(template, {", "const localizedTemplate = applyTemplate(template, {", "CLI output start");
   localizedCli = replaceOnce(localizedCli, "  }));\n  outputPathGuards.delete(outPath);", "  });\n  fs.writeFileSync(outPath, localizedTemplate.replace('<html lang=\"en\"', '<html lang=\"ko\"'));\n  outputPathGuards.delete(outPath);", "CLI output finish");
   await writeFile(cli.copy.path, localizedCli);

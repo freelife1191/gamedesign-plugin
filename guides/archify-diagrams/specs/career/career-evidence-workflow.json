@@ -30,7 +30,7 @@
       {
         "id": "resume-contract",
         "label": "보류 조사 재개",
-        "focus": ["held_context"],
+        "focus": ["held_context", "evidence_research"],
         "note": "보류된 주장·근거 날짜·다음 확인 작업을 남기고 같은 최신성 확인을 재개합니다."
       }
     ]
@@ -45,10 +45,6 @@
     { "id": "frame", "label": "진단", "fromCol": 0, "toCol": 1, "variant": "emphasis" },
     { "id": "evidence", "label": "근거 만들기", "fromCol": 2, "toCol": 3 },
     { "id": "review_export", "label": "검토와 내보내기", "fromCol": 4, "toCol": 5, "variant": "dashed" }
-  ],
-  "groups": [
-    { "id": "claim_record", "label": "날짜가 있는 주장 기록", "lane": "career", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
-    { "id": "review_boundary", "label": "세 가지 검토 층", "lane": "review", "fromCol": 5, "toCol": 5, "variant": "security" }
   ],
   "mainPath": ["stage_diagnosis", "disclosure_approval", "evidence_research", "evidence_project", "portfolio_case", "human_review", "export_prepare"],
   "nodes": [

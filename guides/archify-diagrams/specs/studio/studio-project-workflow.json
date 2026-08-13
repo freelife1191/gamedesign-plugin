@@ -41,10 +41,6 @@
     { "id": "design", "label": "설계와 결정", "fromCol": 2, "toCol": 3 },
     { "id": "evidence", "label": "자산과 내보내기 근거", "fromCol": 4, "toCol": 5, "variant": "dashed" }
   ],
-  "groups": [
-    { "id": "canonical_design", "label": "기준 설계 기록", "lane": "studio", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
-    { "id": "asset_evidence", "label": "제공자와 형식 근거", "lane": "assets_renderer", "fromCol": 4, "toCol": 5, "variant": "security" }
-  ],
   "mainPath": ["vision_approval", "canonical_artifact", "domain_design", "specialist_review", "finding_decision", "image_asset_plan", "image_asset_review", "format_qa_export"],
   "nodes": [
     { "id": "vision_approval", "lane": "human", "col": 0, "type": "external", "label": "비전 승인", "sublabel": "플레이어·재미·비목표" },
