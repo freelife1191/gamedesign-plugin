@@ -36,6 +36,13 @@ const sharedMappings = new Map([
     ["shared/memory/references", "references/shared/memory/references"],
     ["shared/memory/templates", "references/shared/memory/templates"],
   ]],
+  ["reference-intelligence", [
+    ["shared/reference-intelligence/skills", "skills"],
+    ["shared/reference-intelligence/schema", "references/shared/reference-intelligence/schema"],
+    ["shared/reference-intelligence/catalog", "references/shared/reference-intelligence/catalog"],
+    ["shared/reference-intelligence/references", "references/shared/reference-intelligence/references"],
+    ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
+  ]],
 ]);
 
 async function readJson(relativePath) {
@@ -113,7 +120,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -156,26 +163,28 @@ function isInsideAllowedRoot(candidate, allowedRoots) {
   });
 }
 
-async function assertMemoryRuntimeGraph({ root, entryPaths, allowedRoots }) {
+async function assertCompilerlessRuntimeGraph({ root, entryPaths, allowedRoots, label }) {
   const pending = entryPaths.map((relativePath) => path.resolve(root, relativePath));
   const visited = new Set();
   while (pending.length) {
     const current = pending.pop();
     if (visited.has(current)) continue;
-    assert.ok(isInsideAllowedRoot(current, allowedRoots), `memory runtime import escapes allowed roots: ${current}`);
+    assert.ok(isInsideAllowedRoot(current, allowedRoots), `${label} runtime import escapes allowed roots: ${current}`);
     const stats = await lstat(current);
-    assert.equal(stats.isSymbolicLink(), false, `memory runtime import is a symlink: ${current}`);
-    assert.equal(stats.isFile(), true, `memory runtime import is not a regular file: ${current}`);
+    assert.equal(stats.isSymbolicLink(), false, `${label} runtime import is a symlink: ${current}`);
+    assert.equal(stats.isFile(), true, `${label} runtime import is not a regular file: ${current}`);
     visited.add(current);
     const source = await readFile(current, "utf8");
     assert.doesNotMatch(source, /node:child_process|(?<!\.)\b(?:spawn|exec|fork)(?:Sync|File)?\s*\(|["'][^"']*\.(?:c|cc|cpp|cxx)["']|\b(?:gcc|clang|cc|c\+\+)\s*\(/u);
-    assert.doesNotMatch(source, /\bimport\s*\(/u, "memory runtime dynamic imports must be statically auditable");
-    const specifiers = [...source.matchAll(/(?:^|\n)\s*(?:import|export)(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu)].map((match) => match[1]);
+    const specifiers = [
+      ...source.matchAll(/(?:^|\n)\s*(?:import|export)(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu),
+      ...source.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/gu),
+    ].map((match) => match[1]);
     for (const specifier of specifiers) {
       if (specifier.startsWith("node:")) continue;
-      assert.ok(specifier.startsWith("."), `memory runtime uses a non-Node bare specifier: ${specifier}`);
+      assert.ok(specifier.startsWith("."), `${label} runtime uses a non-Node bare specifier: ${specifier}`);
       const target = fileURLToPath(new URL(specifier, pathToFileURL(current)));
-      assert.ok(isInsideAllowedRoot(target, allowedRoots), `memory runtime import escapes allowed roots: ${specifier}`);
+      assert.ok(isInsideAllowedRoot(target, allowedRoots), `${label} runtime import escapes allowed roots: ${specifier}`);
       pending.push(target);
     }
   }
@@ -191,16 +200,18 @@ async function assertCompilerlessSealedAppend({ builds, stagingRoot }) {
     "scripts/validate-design-memory.mjs",
     "scripts/lib/safe-memory-store.mjs",
   ];
-  await assertMemoryRuntimeGraph({
+  await assertCompilerlessRuntimeGraph({
     root: repoRoot,
     entryPaths: entryPaths.map((relativePath) => `shared/${relativePath}`),
     allowedRoots: [path.join(repoRoot, "shared/scripts"), path.join(repoRoot, "shared/memory/schema")],
+    label: "memory source",
   });
   for (const build of builds) {
-    await assertMemoryRuntimeGraph({
+    await assertCompilerlessRuntimeGraph({
       root: build.outputDir,
       entryPaths,
       allowedRoots: [path.join(build.outputDir, "scripts"), path.join(build.outputDir, "references/shared/memory/schema")],
+      label: `${build.name} memory package`,
     });
   }
   const emptyPath = await mkdtemp(path.join(stagingRoot, "empty-path-"));
@@ -355,7 +366,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory"],
+    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;
@@ -398,6 +409,17 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "references/shared/memory/references/memory-policy.md",
     "references/shared/memory/references/memory-lifecycle.md",
   ]) assert.ok(built.files.includes(relativePath), relativePath);
+  for (const relativePath of [
+    "skills/analyze-game-design-references/SKILL.md",
+    "skills/maintain-game-design-glossary/SKILL.md",
+    "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+    "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
+    "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+    "references/shared/reference-intelligence/catalog/system-atlas.json",
+    "references/shared/reference-intelligence/catalog/source-register.json",
+    "references/shared/reference-intelligence/references/evidence-policy.md",
+    "references/shared/reference-intelligence/templates/reference-set.yml",
+  ]) assert.ok(built.files.includes(relativePath), relativePath);
 
   await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLocks });
   const [studioBuild, careerBuild] = await Promise.all([
@@ -424,9 +446,11 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     );
   }
   const expectedSharedSkillIds = [
+    "analyze-game-design-references",
     "archify",
     "capture-game-design-memory",
     "humanize-korean",
+    "maintain-game-design-glossary",
     "maintain-game-design-memory",
     "retrieve-approved-design-memory",
     "svg-infographic",
@@ -440,7 +464,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     const sharedSkillIds = installed.filter((skillId) => !sourceSkillIds.includes(skillId));
     assert.equal(sourceSkillIds.length, 15);
     assert.deepEqual(sharedSkillIds, expectedSharedSkillIds);
-    assert.equal(installed.length, 21);
+    assert.equal(installed.length, 23);
   }
 
   const receiptSource = await readFile(path.join(repoRoot, "shared/memory/schema/memory-receipt.schema.json"));
@@ -449,6 +473,25 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       await readFile(path.join(build.outputDir, "references/shared/memory/schema/memory-receipt.schema.json")),
       receiptSource,
     );
+  }
+  for (const build of [studioBuild, careerBuild]) {
+    for (const relativePath of [
+      "skills/analyze-game-design-references/SKILL.md",
+      "skills/maintain-game-design-glossary/SKILL.md",
+      "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+      "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
+      "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+      "references/shared/reference-intelligence/catalog/system-atlas.json",
+      "references/shared/reference-intelligence/catalog/source-register.json",
+      "references/shared/reference-intelligence/references/evidence-policy.md",
+      "references/shared/reference-intelligence/templates/reference-set.yml",
+    ]) {
+      assert.deepEqual(
+        await readFile(path.join(build.outputDir, relativePath)),
+        await readFile(path.join(repoRoot, relativePath.startsWith("skills/") ? `shared/reference-intelligence/skills/${relativePath.slice("skills/".length)}` : `shared/reference-intelligence/${relativePath.slice("references/shared/reference-intelligence/".length)}`)),
+        `${build.name}: ${relativePath} is byte-identical to the shared reference-intelligence source`,
+      );
+    }
   }
   const [indexSchema, receiptSchema] = await Promise.all([
     readJson("shared/memory/schema/memory-index.schema.json"),
@@ -508,6 +551,8 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     "retrieve-approved-design-memory",
     "capture-game-design-memory",
     "maintain-game-design-memory",
+    "analyze-game-design-references",
+    "maintain-game-design-glossary",
   ];
   for (const [productName, owners] of Object.entries(routingOwners)) {
     const routing = await readJson(`products/${productName}/plugin/references/routing.json`);
@@ -522,6 +567,42 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     }
   }
   await assertCompilerlessSealedAppend({ builds: [studioBuild, careerBuild], stagingRoot });
+  const referenceEntryPaths = [
+    "scripts/analyze-game-design-references.mjs",
+    "scripts/manage-game-design-glossary.mjs",
+    "scripts/validate-game-design-writing-language.mjs",
+    "scripts/validate-reference-intelligence.mjs",
+  ];
+  await assertCompilerlessRuntimeGraph({
+    root: repoRoot,
+    entryPaths: referenceEntryPaths.map((relativePath) => `shared/${relativePath}`),
+    allowedRoots: [path.join(repoRoot, "shared/scripts"), path.join(repoRoot, "shared/reference-intelligence")],
+    label: "reference-intelligence source",
+  });
+  for (const build of [studioBuild, careerBuild]) {
+    await assertCompilerlessRuntimeGraph({
+      root: build.outputDir,
+      entryPaths: referenceEntryPaths,
+      allowedRoots: [path.join(build.outputDir, "scripts"), path.join(build.outputDir, "references/shared/reference-intelligence")],
+      label: `${build.name} reference-intelligence package`,
+    });
+    const emptyPath = await mkdtemp(path.join(stagingRoot, "reference-empty-path-"));
+    const smoke = spawnSync(process.execPath, ["--input-type=module", "--eval", `
+      await import(${JSON.stringify(pathToFileURL(path.join(build.outputDir, "scripts/analyze-game-design-references.mjs")).href)});
+      await import(${JSON.stringify(pathToFileURL(path.join(build.outputDir, "scripts/manage-game-design-glossary.mjs")).href)});
+      await import(${JSON.stringify(pathToFileURL(path.join(build.outputDir, "scripts/validate-game-design-writing-language.mjs")).href)});
+      const validator = await import(${JSON.stringify(pathToFileURL(path.join(build.outputDir, "scripts/validate-reference-intelligence.mjs")).href)});
+      if (validator.validateGameDesignGlossary({})?.ok !== false) throw new Error("installed glossary evaluator smoke failed");
+      process.stdout.write(JSON.stringify({ imported: true }));
+    `], {
+      cwd: build.outputDir,
+      env: { PATH: emptyPath, CC: "/nonexistent/cc", CXX: "/nonexistent/cxx" },
+      encoding: "utf8",
+    });
+    await rm(emptyPath, { recursive: true, force: true });
+    assert.equal(smoke.status, 0, smoke.stderr);
+    assert.deepEqual(JSON.parse(smoke.stdout), { imported: true });
+  }
   await assert.rejects(
     () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLocks }),
     /Unexpected product contract: products\/unexpected-product\/product\.json/,

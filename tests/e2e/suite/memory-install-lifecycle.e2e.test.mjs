@@ -17,6 +17,16 @@ const memorySkills = [
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
 ];
+const referenceSkills = ["analyze-game-design-references", "maintain-game-design-glossary"];
+const referenceFiles = [
+  "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+  "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
+  "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+  "references/shared/reference-intelligence/catalog/system-atlas.json",
+  "references/shared/reference-intelligence/catalog/source-register.json",
+  "references/shared/reference-intelligence/references/evidence-policy.md",
+  "references/shared/reference-intelligence/templates/reference-set.yml",
+];
 
 async function fileIdentity(filename) {
   const [bytes, stats] = await Promise.all([readFile(filename), lstat(filename)]);
@@ -78,7 +88,7 @@ function runLocalPluginCommand({ codex, cwd, args, env, evidence, stage }) {
   return json;
 }
 
-async function assertMemoryPackage(pluginRoot, product) {
+async function assertMemoryPackage(pluginRoot, product, { expectedSkillCount = 21, requireReferenceIntelligence = false } = {}) {
   for (const skill of memorySkills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
   for (const required of [
     "references/shared/memory/schema/memory-config.schema.json",
@@ -99,7 +109,17 @@ async function assertMemoryPackage(pluginRoot, product) {
   assert.equal(files.some((file) => path.basename(file) === ".env"), false, `${product}: actual .env must not be packaged`);
   assert.equal(files.some((file) => file.startsWith("references/shared/memory/v1/") || file.includes("/derived/")), false, `${product}: local memory data must not be packaged`);
   const skills = (await readdir(path.join(pluginRoot, "skills"), { withFileTypes: true })).filter((entry) => entry.isDirectory());
-  assert.equal(skills.length, 21, `${product}: cache exposes exactly 21 skills`);
+  assert.equal(skills.length, expectedSkillCount, `${product}: cache exposes exactly ${expectedSkillCount} skills`);
+  if (requireReferenceIntelligence) {
+    for (const skill of referenceSkills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
+    for (const relativePath of referenceFiles) {
+      assert.deepEqual(
+        await readFile(path.join(pluginRoot, relativePath)),
+        await readFile(path.join(repoRoot, relativePath.startsWith("skills/") ? `shared/reference-intelligence/skills/${relativePath.slice("skills/".length)}` : `shared/reference-intelligence/${relativePath.slice("references/shared/reference-intelligence/".length)}`)),
+        `${product}: ${relativePath} is a byte-exact reference-intelligence package file`,
+      );
+    }
+  }
 }
 
 async function installBuiltPlugin({ buildDir, codexHome, product }) {
@@ -237,19 +257,23 @@ test("fresh production builds install, replace, and remove without touching loca
         await assertSameIdentity(memoryFile, before[0], `${product}:${stage}: workspace memory`);
         await assertSameIdentity(excludeFile, before[1], `${product}:${stage}: .git/info/exclude`);
         await assertSameIdentity(siblingFile, before[2], `${product}:${stage}: sibling plugin`);
+        for (const privatePath of [
+          path.join(workspace, ".game-design", "reference-intelligence"),
+          path.join(workspace, ".game-design", "glossary"),
+        ]) await assert.rejects(lstat(privatePath), { code: "ENOENT" }, `${product}:${stage}: install does not create private reference cache`);
       };
 
       try {
         const firstBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: firstStagingRoot, sourceDateEpoch: 0 });
-        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`);
+        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
         const installed = await installBuiltPlugin({ buildDir: firstBuild.outputDir, codexHome, product });
-        await assertMemoryPackage(installed, `${product} installed production build`);
+        await assertMemoryPackage(installed, `${product} installed production build`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
         await assertPreserved("install");
 
         const replacementBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: replacementStagingRoot, sourceDateEpoch: 0 });
-        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`);
+        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
         const replaced = await replaceBuiltPlugin({ buildDir: replacementBuild.outputDir, codexHome, product });
-        await assertMemoryPackage(replaced, `${product} replacement install`);
+        await assertMemoryPackage(replaced, `${product} replacement install`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
         await assertPreserved("replace");
 
         await removeInstalledPlugin({ codexHome, product });

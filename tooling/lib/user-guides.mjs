@@ -16,6 +16,10 @@ export const SOURCE_BOUND_MEMORY_SKILL_IDS = Object.freeze([
   "maintain-game-design-memory",
   "retrieve-approved-design-memory",
 ]);
+export const SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS = Object.freeze([
+  "analyze-game-design-references",
+  "maintain-game-design-glossary",
+]);
 
 const REQUIRED_CONFIGURATION_VALUES = [
   "prompt-only",
@@ -67,6 +71,7 @@ export async function collectProductInventory(repoRoot, productId) {
     ["archify", path.join(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md")],
     ["humanize-korean", path.join(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md")],
     ...SOURCE_BOUND_MEMORY_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/memory/skills", id, "SKILL.md")]),
+    ...SOURCE_BOUND_REFERENCE_INTELLIGENCE_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/reference-intelligence/skills", id, "SKILL.md")]),
   ];
   for (const [, skillPath] of sharedSkills) await assertRegularFile(skillPath);
   const templateIds = await directoryIds(path.join(productRoot, "assets/templates"), "content.md");

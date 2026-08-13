@@ -35,7 +35,7 @@ const skillIds = [
   "maintain-game-design-glossary",
 ];
 const directSkillIds = skillIds.slice(0, 15);
-const installedSkillIds = [...directSkillIds, "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
+const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
 
 const roleIds = [
   "career-strategist",
@@ -130,7 +130,7 @@ test("Career product selects the complete shared contract and source corpus", as
   const product = await loadProductContract({ repoRoot, productName: "game-design-career" });
 
   assert.equal(product.name, "game-design-career");
-  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory"]);
+  assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"]);
   assert.equal(product.sharedRuntime, true);
   assert.deepEqual(product.sourceRoots, ["plugin"]);
   assert.deepEqual(product.sourceDocumentCategories, ["career", "fun-intent", "systems", "content", "feedback"]);
@@ -147,12 +147,12 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.equal(new Set(routing.roleIds).size, 8);
 });
 
-test("Career keeps the 15-direct and 21-installed skill inventory contract", async () => {
+test("Career keeps the 15-direct and 23-installed skill inventory contract", async () => {
   const inventory = await collectProductInventory(repoRoot, "game-design-career");
 
   assert.equal(directSkillIds.length, 15, "Career has exactly 15 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 21, "Career installs the 15 direct skills plus six shared skills");
+  assert.equal(inventory.skillIds.length, 23, "Career installs the 15 direct skills plus eight shared skills");
 });
 
 test("Every route declares deterministic evidence and completion decisions", async () => {

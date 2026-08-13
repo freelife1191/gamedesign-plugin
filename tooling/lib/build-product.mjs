@@ -23,6 +23,13 @@ const sharedMappings = {
     ["shared/memory/references", "references/shared/memory/references"],
     ["shared/memory/templates", "references/shared/memory/templates"],
   ],
+  "reference-intelligence": [
+    ["shared/reference-intelligence/skills", "skills"],
+    ["shared/reference-intelligence/schema", "references/shared/reference-intelligence/schema"],
+    ["shared/reference-intelligence/catalog", "references/shared/reference-intelligence/catalog"],
+    ["shared/reference-intelligence/references", "references/shared/reference-intelligence/references"],
+    ["shared/reference-intelligence/templates", "references/shared/reference-intelligence/templates"],
+  ],
 };
 const sharedMemoryInventory = Object.freeze({
   "shared/memory/skills": Object.freeze([
@@ -45,6 +52,39 @@ const sharedMemoryInventory = Object.freeze({
     "index.md",
     "log.md",
     "memory-record.md",
+  ]),
+});
+const sharedReferenceIntelligenceInventory = Object.freeze({
+  "shared/reference-intelligence/skills": Object.freeze([
+    "analyze-game-design-references/SKILL.md",
+    "maintain-game-design-glossary/SKILL.md",
+  ]),
+  "shared/reference-intelligence/schema": Object.freeze([
+    "game-design-glossary.schema.json",
+    "glossary-receipt.schema.json",
+    "reference-analysis.schema.json",
+  ]),
+  "shared/reference-intelligence/catalog": Object.freeze([
+    "overlays/business-model.json",
+    "overlays/genre.json",
+    "overlays/platform.json",
+    "overlays/play-mode.json",
+    "source-register.json",
+    "system-atlas.json",
+  ]),
+  "shared/reference-intelligence/references": Object.freeze([
+    "evidence-policy.md",
+    "reference-analysis-flow.md",
+  ]),
+  "shared/reference-intelligence/templates": Object.freeze([
+    "analysis-priority.md",
+    "brief.md",
+    "comparison-matrix.md",
+    "evidence-register.yml",
+    "reference-set.yml",
+    "system-inventory.json",
+    "transfer-decisions.md",
+    "verification-queue.md",
   ]),
 });
 const sourceOnlySkillsteadFallbacks = Object.freeze({
@@ -342,6 +382,15 @@ function assertExactSharedMemoryInventory(sourceRelative, entries) {
   }
 }
 
+function assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries) {
+  const expected = sharedReferenceIntelligenceInventory[sourceRelative];
+  if (!expected) throw new Error(`Unknown shared reference-intelligence package root: ${sourceRelative}`);
+  const actual = entries.map(({ relativePath }) => relativePath).sort(comparePaths);
+  if (actual.length !== expected.length || actual.some((relativePath, index) => relativePath !== expected[index])) {
+    throw new Error(`Unexpected shared reference-intelligence package file in ${sourceRelative}`);
+  }
+}
+
 function rejectFileDirectoryCollisions(entries) {
   const files = new Set(entries.map(({ relativePath }) => relativePath));
   for (const { relativePath } of entries) {
@@ -399,6 +448,7 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
       const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
       assertNoRealEnvironmentFiles(entries, sourceRelative);
       if (moduleName === "memory") assertExactSharedMemoryInventory(sourceRelative, entries);
+      if (moduleName === "reference-intelligence") assertExactSharedReferenceIntelligenceInventory(sourceRelative, entries);
       moduleEntries.push(...entries);
       for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
     }

@@ -159,7 +159,7 @@ function containsRawVendorCli(text) {
   return false;
 }
 
-function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths }) {
+function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbiddenAbsolutePaths, isInactiveRelativeReference }) {
   for (const sibling of siblingNames) {
     if (relativePath.includes(sibling) || text.includes(sibling)) {
       throw new Error(`${relativePath} references sibling package ${sibling}`);
@@ -178,6 +178,7 @@ function assertTextIsSafe({ text, relativePath, packageRoot, siblingNames, forbi
     const pathPart = token.split(/[?#]/u, 1)[0];
     const resolved = path.resolve(packageRoot, path.dirname(relativePath), pathPart);
     if (!inside(packageRoot, resolved)) {
+      if (isInactiveRelativeReference?.({ relativePath, pathPart }) === true) continue;
       if (/(?:^|[/\\])shared[/\\]/u.test(token)) {
         throw new Error(`${relativePath} contains repo-only shared fallback: ${token}`);
       }
@@ -191,8 +192,9 @@ export async function auditTree({
   packageName,
   siblingNames = [],
   forbiddenAbsolutePaths = [],
+  isInactiveRelativeReference,
 }) {
-  if (typeof root !== "string" || typeof packageName !== "string" || packageName.length === 0) {
+  if (typeof root !== "string" || typeof packageName !== "string" || packageName.length === 0 || (isInactiveRelativeReference !== undefined && typeof isInactiveRelativeReference !== "function")) {
     throw new TypeError("root and packageName are required");
   }
   const absoluteRoot = path.resolve(root);
@@ -238,6 +240,7 @@ export async function auditTree({
         packageRoot: canonicalRoot,
         siblingNames: siblings,
         forbiddenAbsolutePaths: forbidden,
+        isInactiveRelativeReference,
       });
       files += 1;
       utf8Files += 1;

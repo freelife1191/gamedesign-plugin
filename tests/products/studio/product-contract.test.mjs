@@ -39,7 +39,7 @@ const skillIds = [
   "maintain-game-design-glossary",
 ];
 const directSkillIds = skillIds.slice(0, 15);
-const installedSkillIds = [...directSkillIds, "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
+const installedSkillIds = [...directSkillIds, "analyze-game-design-references", "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-glossary", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
 
 const roleIds = [
   "lead-game-designer",
@@ -207,7 +207,7 @@ test("Studio product selects the complete shared contract and 49-document corpus
     name: "game-design-studio",
     displayName: "Game Design Studio",
     description: "Professional game design, review, visualization, and export workflows.",
-    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory"],
+    sharedModules: ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory", "reference-intelligence"],
     sharedRuntime: true,
     sourceRoots: ["plugin"],
     sourceDocumentCategories: ["career", "fun-intent", "systems", "content", "feedback"],
@@ -236,12 +236,12 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   assert.deepEqual(routing.plannedPaths, plannedPaths);
 });
 
-test("Studio keeps the 15-direct and 21-installed skill inventory contract", async () => {
+test("Studio keeps the 15-direct and 23-installed skill inventory contract", async () => {
   const inventory = await collectProductInventory(repoRoot, "game-design-studio");
 
   assert.equal(directSkillIds.length, 15, "Studio has exactly 15 direct product skills");
   assert.deepEqual(inventory.skillIds, installedSkillIds);
-  assert.equal(inventory.skillIds.length, 21, "Studio installs the 15 direct skills plus six shared skills");
+  assert.equal(inventory.skillIds.length, 23, "Studio installs the 15 direct skills plus eight shared skills");
 });
 
 test("Studio orchestrator accepts ordinary natural-language requests without explicit skill names", async () => {
