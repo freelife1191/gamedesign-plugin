@@ -20,7 +20,9 @@
     "archify",
     "retrieve-approved-design-memory",
     "capture-game-design-memory",
-    "maintain-game-design-memory"
+    "maintain-game-design-memory",
+    "analyze-game-design-references",
+    "maintain-game-design-glossary"
   ],
   "roleIds": [
     "career-strategist",
@@ -90,6 +92,16 @@
     {
       "skill": "maintain-game-design-memory",
       "owners": ["evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "analyze-game-design-references",
+      "owners": ["reverse-design-critic", "evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-glossary",
+      "owners": ["evidence-auditor", "document-quality-editor"],
       "conditionalOwners": []
     },
     {
@@ -174,7 +186,9 @@
       "skills/archify/SKILL.md",
       "skills/retrieve-approved-design-memory/SKILL.md",
       "skills/capture-game-design-memory/SKILL.md",
-      "skills/maintain-game-design-memory/SKILL.md"
+      "skills/maintain-game-design-memory/SKILL.md",
+      "skills/analyze-game-design-references/SKILL.md",
+      "skills/maintain-game-design-glossary/SKILL.md"
     ]
   },
   "memoryWorkflow": {
@@ -187,6 +201,12 @@
     "defaultMaxItems": 5,
     "requiresProjectId": true,
     "dedicatedAgent": false
+  },
+  "referenceIntelligenceWorkflow": {
+    "analysisSkill": "analyze-game-design-references",
+    "glossarySkill": "maintain-game-design-glossary",
+    "transferState": "pending-review",
+    "outputs": ["reverse-design-document", "game-analysis-report"]
   },
   "directUseSources": [
     {
@@ -208,6 +228,16 @@
       "id": "retrieve-approved-design-memory",
       "skill": "retrieve-approved-design-memory",
       "outputTypes": ["approved-memory-guidance"]
+    },
+    {
+      "id": "reference-game-analysis",
+      "skill": "analyze-game-design-references",
+      "outputTypes": ["reverse-design-document", "game-analysis-report"]
+    },
+    {
+      "id": "project-glossary-maintenance",
+      "skill": "maintain-game-design-glossary",
+      "outputTypes": ["game-design-glossary", "terminology-findings", "glossary-receipt"]
     }
   ],
   "stages": ["entry", "new-hire", "junior-growth", "transition"],
