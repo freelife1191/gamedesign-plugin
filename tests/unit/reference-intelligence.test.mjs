@@ -66,8 +66,8 @@ function validReferenceAnalysis() {
     systemMaps: [{
       mapId: "map-reveal-loop",
       systemId: "system-reveal-loop",
-      nodes: [{ nodeId: "choice", kind: "output", label: "Choice" }, { nodeId: "reveal", kind: "input", label: "Reveal" }],
-      connections: [{ connectionId: "reveal-to-choice", fromNodeId: "reveal", toNodeId: "choice", connectedSystemIds: ["system-reveal-loop"] }],
+      nodes: [{ nodeId: "choice", kind: "output", label: "Choice" }, { nodeId: "process", kind: "process", label: "Process" }, { nodeId: "reveal", kind: "input", label: "Reveal" }],
+      connections: [{ connectionId: "process-to-choice", fromNodeId: "process", toNodeId: "choice", connectedSystemIds: ["system-reveal-loop"] }, { connectionId: "reveal-to-process", fromNodeId: "reveal", toNodeId: "process", connectedSystemIds: ["system-reveal-loop"] }],
       loops: [],
     }],
     priority: [{ systemId: "system-reveal-loop", rank: 1, rationale: "Directly answers the brief.", relevance: 5, playerExperienceImpact: 5, economyProgressionImpact: 1, differentiationPotential: 3, evidenceStrength: 5, uncertainty: 1, researchCost: 1 }],
@@ -88,7 +88,7 @@ function validReferenceAnalysis() {
     transferDecisions: [{
       transferId: "transfer-reveal-loop",
       sourceSystemId: "system-reveal-loop",
-      decision: "adapt",
+      decision: "hold",
       rationale: "Keep the agency beat while changing fiction.",
       evidenceIds: ["evidence-cinematic-loop"],
       referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1,
@@ -284,9 +284,11 @@ function schemaAccepts(value, schema, root) {
   if (schema.if && schemaAccepts(value, schema.if, root) && schema.then && !schemaAccepts(value, schema.then, root)) return false;
   if (schema.const !== undefined && !equalsJson(value, schema.const)) return false;
   if (schema.enum && !schema.enum.some((candidate) => equalsJson(value, candidate))) return false;
+  if (Array.isArray(schema.type)) return schema.type.some((type) => schemaAccepts(value, { ...schema, type }, root));
   if (schema.type === "object" && (value === null || typeof value !== "object" || Array.isArray(value))) return false;
   if (schema.type === "array" && !Array.isArray(value)) return false;
   if (schema.type === "string" && typeof value !== "string") return false;
+  if (schema.type === "null" && value !== null) return false;
   if (schema.type === "null" && value !== null) return false;
   if (schema.type === "integer" && !Number.isInteger(value)) return false;
   if (typeof value === "string" && schema.pattern && !new RegExp(schema.pattern, "u").test(value)) return false;
@@ -702,8 +704,8 @@ function analysisMapFixture(overrides = {}) {
   return [{
     mapId: "map-core-play-loop",
     systemId: "core-play",
-    nodes: [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "reward", kind: "output", label: "Reward" }],
-    connections: [{ connectionId: "action-to-reward", fromNodeId: "action", toNodeId: "reward", connectedSystemIds: ["core-play"] }],
+    nodes: [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "resolve", kind: "process", label: "Resolve" }, { nodeId: "reward", kind: "output", label: "Reward" }],
+    connections: [{ connectionId: "action-to-resolve", fromNodeId: "action", toNodeId: "resolve", connectedSystemIds: ["core-play"] }, { connectionId: "resolve-to-reward", fromNodeId: "resolve", toNodeId: "reward", connectedSystemIds: ["core-play"] }],
     ...overrides,
   }];
 }
@@ -788,7 +790,7 @@ test("priority leaves a missing dimension unscored and artifact paths fail close
   t.after(() => rm(link, { recursive: true, force: true }));
   await symlink(root, link);
   await assert.rejects(() => writeReferenceAnalysisWorkspace({ artifactRoot: link, analysis }), /unsafe/i);
-  const transfers = buildDesignTransfers({ deepDives: analysis.deepDives, projectConstraints: ["ten-minute-session"] });
+  const transfers = buildDesignTransfers({ deepDives: analysis.deepDives, projectConstraints: ["ten-minute-session"], evidence: analysis.evidence, referenceContexts: analysis.referenceContexts, referenceSet: analysis.referenceSet });
   assert.equal(transfers.every(({ reviewState }) => reviewState === "pending-review"), true);
   assert.deepEqual(buildReferenceBrief(analysisBriefFixture()), analysis.brief);
   assert.equal(inventoryReferenceSystems({ brief: analysis.brief, atlas: analysis.atlasSelection, evidence: analysis.evidence, claims: [] }).length > 0, true);
@@ -812,7 +814,7 @@ test("reference analysis machine templates, catalog, and schema parse as JSON", 
 test("fix1 preserves evidence context bindings, structured loops, priority trace, and transfer audit", () => {
   const [evidence] = registerReferenceEvidence({ records: [{
     ...registryEvidence(),
-    contextId: "ctx-alpha-pc-v1",
+    contextId: "ctx-cinematic-v1",
     systemIds: ["core-play"],
   }] });
   assert.deepEqual(Object.keys(evidence), ["evidenceId", "referenceId", "contextId", "systemIds", "sourceType", "tier", "claimKind", "claim", "availability", "limitation", "verificationQuestion"]);
@@ -822,23 +824,22 @@ test("fix1 preserves evidence context bindings, structured loops, priority trace
     edges: [{
       mapId: "map-core-play-loop",
       systemId: "core-play",
-      nodes: [
-        { nodeId: "action", kind: "input", label: "Action" },
-        { nodeId: "reward", kind: "output", label: "Reward" },
-      ],
+      nodes: [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "resolve", kind: "process", label: "Resolve" }, { nodeId: "reward", kind: "output", label: "Reward" }],
       connections: [
-        { connectionId: "action-to-reward", fromNodeId: "action", toNodeId: "reward", connectedSystemIds: ["core-play"] },
+        { connectionId: "action-to-resolve", fromNodeId: "action", toNodeId: "resolve", connectedSystemIds: ["core-play"] },
+        { connectionId: "resolve-to-reward", fromNodeId: "resolve", toNodeId: "reward", connectedSystemIds: ["core-play"] },
         { connectionId: "reward-to-action", fromNodeId: "reward", toNodeId: "action", connectedSystemIds: ["core-play"] },
       ],
     }],
-    loops: [{ loopId: "loop-core-play", mapId: "map-core-play-loop", kind: "core", nodeIds: ["action", "reward"] }],
+    loops: [{ loopId: "loop-core-play", mapId: "map-core-play-loop", kind: "core", nodeIds: ["action", "resolve", "reward"] }],
   });
   assert.equal(maps[0].loops[0].kind, "core");
   const priority = rankDeepDiveCandidates({ inventory, maps, questions: {
     "core-play": { relevance: 5, playerExperienceImpact: 5, economyProgressionImpact: 4, differentiationPotential: 4, evidenceStrength: 5, uncertainty: 2, researchCost: 1 },
   } });
   assert.equal(priority[0].researchCost, 1);
-  const transfers = buildDesignTransfers({ deepDives: [{ systemId: "core-play", claimKind: "observation", finding: "Observed.", evidenceIds: ["ev-default"], referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-alpha-pc-v1"], coverageCount: 1 }], projectConstraints: ["ten-minute-session"] });
+  const transferContexts = [{ contextId: "ctx-cinematic-v1", referenceId: "ref-cinematic-sample", version: "1", platform: "pc" }];
+  const transfers = buildDesignTransfers({ deepDives: [{ systemId: "core-play", claimKind: "observation", finding: "Observed.", evidenceIds: ["ev-default"], referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1 }], projectConstraints: ["ten-minute-session"], evidence: [evidence], referenceContexts: transferContexts, referenceSet: validReferenceAnalysis().referenceSet });
   assert.deepEqual(transfers[0].glossaryReceipt, null);
   assert.equal(transfers[0].validationState, "not-run");
 });
@@ -869,7 +870,7 @@ test("fix1 rejects orphan, dangling, undeclared-cycle, and noncycle-loop maps", 
   assert.throws(() => buildSystemMaps({ inventory, edges: map([...nodes, { nodeId: "unused", kind: "process", label: "Unused" }]), loops: [] }), { code: "reference-analysis.invalid-map" });
   assert.throws(() => buildSystemMaps({ inventory, edges: map(nodes, [{ ...connection, toNodeId: "missing" }]), loops: [] }), { code: "reference-analysis.invalid-map" });
   const cycleConnections = [...map(nodes)[0].connections, { connectionId: "reward-to-action", fromNodeId: "reward", toNodeId: "action", connectedSystemIds: ["core-play"] }];
-  assert.throws(() => buildSystemMaps({ inventory, edges: map(nodes, cycleConnections), loops: [] }), { code: "reference-analysis.cycle" });
+  assert.throws(() => buildSystemMaps({ inventory, edges: map(nodes, cycleConnections), loops: [] }), { code: "reference-analysis.invalid-map" });
   assert.throws(() => buildSystemMaps({ inventory, edges: map(nodes), loops: [{ loopId: "loop-core", mapId: "map-core-play", kind: "core", nodeIds: ["action", "reward"] }] }), { code: "reference-analysis.invalid-map" });
 });
 
@@ -887,4 +888,91 @@ test("fix1 rejects oversized projection before creating an artifact tree", async
   analysis.brief.objective = "x".repeat(2 * 1024 * 1024);
   await assert.rejects(() => writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis }), /unsafe/i);
   assert.deepEqual(await readdir(root), []);
+});
+
+test("fix2 recomputes transfer coverage from authoritative evidence instead of caller trace", () => {
+  const evidence = registerReferenceEvidence({ records: [{
+    ...registryEvidence({ evidenceId: "ev-authoritative", contextId: "ctx-authoritative", referenceId: "ref-cinematic-sample" }),
+    systemIds: ["system-reveal-loop"],
+  }] });
+  assert.throws(() => buildDesignTransfers({
+    deepDives: [{ systemId: "system-reveal-loop", claimKind: "observation", finding: "Observed.", evidenceIds: ["ev-authoritative"], referenceIds: ["fake-reference", "ref-cinematic-sample"], contextIds: ["ctx-authoritative"], coverageCount: 2 }],
+    projectConstraints: ["ten-minute-session"],
+    evidence,
+    referenceContexts: [{ contextId: "ctx-authoritative", referenceId: "ref-cinematic-sample", version: "1", platform: "pc" }],
+    referenceSet: validReferenceAnalysis().referenceSet,
+  }), { code: "reference-analysis.invalid-transfer" });
+  const transfers = buildDesignTransfers({
+    deepDives: [{ systemId: "system-reveal-loop", claimKind: "observation", finding: "Observed.", evidenceIds: ["ev-authoritative"], referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-authoritative"], coverageCount: 1 }],
+    projectConstraints: ["ten-minute-session"], evidence,
+    referenceContexts: [{ contextId: "ctx-authoritative", referenceId: "ref-cinematic-sample", version: "1", platform: "pc" }], referenceSet: validReferenceAnalysis().referenceSet,
+  });
+  assert.equal(transfers[0].decision, "hold");
+  assert.deepEqual(transfers[0].referenceIds, ["ref-cinematic-sample"]);
+});
+
+test("fix2 holds unavailable-only systems but allows two observed references to clear the queue", async (t) => {
+  const observed = analysisEvidenceFixture()[0];
+  const sufficient = buildReferenceAnalysis(await analysisInputFixture({ evidence: [
+    observed,
+    { ...observed, evidenceId: "ev-beta-loop", referenceId: "ref-beta", contextId: "ctx-beta-v1", claim: "A second reference observes the same core loop." },
+  ] }));
+  assert.equal(sufficient.transferDecisions[0].decision, "adapt");
+  assert.deepEqual(sufficient.verificationQueue, []);
+  assert.equal(validateReferenceAnalysis(sufficient).ok, true);
+  const root = await analysisArtifactRoot(t);
+  await writeReferenceAnalysisWorkspace({ artifactRoot: root, analysis: sufficient });
+  for (const relativePath of ["comparison-matrix.md", "transfer-decisions.md"]) {
+    const outputLines = (await readFile(join(root, "reference-intelligence", relativePath), "utf8")).trim().split("\n");
+    const template = await readFile(new URL(`../../shared/reference-intelligence/templates/${relativePath}`, import.meta.url), "utf8");
+    assert.equal(outputLines[2], template.trim().split("\n")[2]);
+    const lines = outputLines.slice(2);
+    const cells = lines[0].split("|").length;
+    assert.equal(lines.every((line) => line.split("|").length === cells), true);
+  }
+  const unavailableOnly = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{
+    evidenceId: "ev-alpha-offline", referenceId: "ref-alpha", contextId: "ctx-alpha-v1", systemIds: ["core-play"], sourceType: "official-site", claimKind: "observation", claim: "Unavailable core-loop source.", availability: "unavailable", limitation: "Offline.", verificationQuestion: "Which official page can verify the loop?",
+  }] }));
+  assert.equal(unavailableOnly.systemInventory.some(({ systemId, evidenceIds }) => systemId === "core-play" && evidenceIds.includes("ev-alpha-offline")), true);
+  assert.deepEqual(unavailableOnly.deepDives[0].referenceIds, []);
+  assert.equal(unavailableOnly.transferDecisions[0].decision, "hold");
+  assert.equal(unavailableOnly.verificationQueue.length > 0, true);
+  assert.equal(validateReferenceAnalysis(unavailableOnly).ok, true);
+});
+
+test("fix2 closes partial claim bindings, context references, availability branches, and empty constraints", async () => {
+  const evidence = registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-core", systemIds: ["core-play"] })] })[0];
+  assert.deepEqual(validateClaimAgainstEvidence({
+    claim: { claimId: "claim-partial", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-core"], systemIds: ["core-play", "progression"] },
+    evidenceById: new Map([["ev-core", evidence]]),
+  }), { ok: false, code: "evidence_system_mismatch" });
+  assert.throws(() => buildDesignTransfers({ deepDives: [], projectConstraints: [], evidence: [evidence], referenceContexts: [], referenceSet: [] }), /Reference analysis is invalid/u);
+  const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
+  const contextValue = structuredClone(validReferenceAnalysis());
+  contextValue.referenceContexts[0].referenceId = "missing-reference";
+  assert.deepEqual([schemaAccepts(contextValue, schema, schema), validateReferenceAnalysis(contextValue).ok], [true, false]);
+  for (const mutate of [
+    (value) => { value.referenceSet[0].limitation = "available cannot carry a limitation"; },
+    (value) => { value.referenceSet[2].limitation = null; },
+    (value) => { value.evidence[0].verificationQuestion = "available cannot carry a verification question"; },
+    (value) => { value.evidence[0].availability = "unavailable"; value.evidence[0].limitation = null; value.evidence[0].verificationQuestion = null; },
+  ]) {
+    const value = structuredClone(validReferenceAnalysis());
+    mutate(value);
+    assert.deepEqual([schemaAccepts(value, schema, schema), validateReferenceAnalysis(value).ok], [false, false]);
+  }
+});
+
+test("fix2 accepts declared core, session, and meta cycles but rejects a missing process path", () => {
+  const inventory = ["core-play", "progression", "rewards"].map((systemId) => ({ systemId, name: systemId, applicability: "unknown", evidenceIds: [] }));
+  const nodes = [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "resolve", kind: "process", label: "Resolve" }, { nodeId: "reward", kind: "output", label: "Reward" }];
+  const map = (mapId, systemId, loopId, kind) => ({ mapId, systemId, nodes, connections: [
+    { connectionId: "action-to-resolve", fromNodeId: "action", toNodeId: "resolve", connectedSystemIds: [systemId] },
+    { connectionId: "resolve-to-reward", fromNodeId: "resolve", toNodeId: "reward", connectedSystemIds: [systemId] },
+    { connectionId: "reward-to-action", fromNodeId: "reward", toNodeId: "action", connectedSystemIds: [systemId] },
+  ], loopId, kind });
+  const definitions = [map("map-core", "core-play", "loop-core", "core"), map("map-progression", "progression", "loop-session", "session"), map("map-rewards", "rewards", "loop-meta", "meta")];
+  const maps = buildSystemMaps({ inventory, edges: definitions.map(({ loopId, kind, ...definition }) => definition), loops: definitions.map(({ mapId, loopId, kind }) => ({ mapId, loopId, kind, nodeIds: ["action", "resolve", "reward"] })) });
+  assert.deepEqual(maps.flatMap(({ loops }) => loops.map(({ kind }) => kind)), ["core", "session", "meta"]);
+  assert.throws(() => buildSystemMaps({ inventory: [inventory[0]], edges: [{ mapId: "map-missing-process", systemId: "core-play", nodes: [{ nodeId: "action", kind: "input", label: "Action" }, { nodeId: "reward", kind: "output", label: "Reward" }], connections: [{ connectionId: "action-to-reward", fromNodeId: "action", toNodeId: "reward", connectedSystemIds: ["core-play"] }] }], loops: [] }), { code: "reference-analysis.invalid-map" });
 });

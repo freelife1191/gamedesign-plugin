@@ -169,6 +169,8 @@ export function validateClaimAgainstEvidence(input = {}) {
   }
   const available = evidence.filter(({ availability }) => availability === "available");
   if (available.length === 0) return { ok: false, code: "evidence_unavailable" };
+  const coveredSystems = new Set(available.flatMap(({ systemIds }) => systemIds));
+  if (safeClaim.systemIds.some((systemId) => !coveredSystems.has(systemId))) return { ok: false, code: "evidence_system_mismatch" };
   if (available.some(({ claimKind }) => certaintyRank[claimKind] < certaintyRank[safeClaim.kind])) return { ok: false, code: "unsupported_claim_kind" };
   if (safeClaim.causal && available.every(({ tier }) => tier === "discovery")) {
     return { ok: false, code: "unsupported_causal_claim" };

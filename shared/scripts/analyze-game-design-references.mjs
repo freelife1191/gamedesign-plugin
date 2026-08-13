@@ -2,6 +2,7 @@ import { canonicalReferenceAnalysis, canonicalJson, sha256Canonical, validateRef
 import { registerReferenceEvidence, validateClaimAgainstEvidence, validateEvidenceBindings } from "./lib/reference-evidence.mjs";
 import { mergeSystemAtlas } from "./lib/system-atlas.mjs";
 import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
+import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
 
 const roles = Object.freeze(["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"]);
 const dimensions = Object.freeze(["relevance", "playerExperienceImpact", "economyProgressionImpact", "differentiationPotential", "evidenceStrength", "uncertainty", "researchCost"]);
@@ -14,7 +15,7 @@ const compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffe
 function fail(code = "invalid") { const error = new Error("Reference analysis is invalid."); error.code = `reference-analysis.${code}`; throw error; }
 function copy(value) { try { return JSON.parse(canonicalJson(value)); } catch { fail(); } }
 function exact(value, keys) { return value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)); }
-function sorted(values, predicate = text) { return Array.isArray(values) && values.length > 0 && values.every(predicate) && values.every((value, index) => index === 0 || compare(values[index - 1], value) < 0); }
+function sorted(values, predicate = text, { allowEmpty = false } = {}) { return Array.isArray(values) && (allowEmpty || values.length > 0) && values.every(predicate) && values.every((value, index) => index === 0 || compare(values[index - 1], value) < 0); }
 function freeze(value) { if (value && typeof value === "object" && !Object.isFrozen(value)) { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; }
 function availability(value) { return (value.availability === "available" && value.limitation === null) || (value.availability === "unavailable" && text(value.limitation)); }
 
@@ -77,30 +78,10 @@ export function inventoryReferenceSystems({ brief, atlas, evidence, claims = [] 
     systems.set(question.systemId, [...(systems.get(question.systemId) ?? []), question]);
   }
   return freeze([...systems.entries()].map(([systemId, questions]) => {
-    const evidenceIds = registered.filter((record) => record.availability === "available" && record.systemIds.includes(systemId)).map(({ evidenceId }) => evidenceId);
-    return evidenceIds.length === 0 ? undefined : { systemId, name: systemId.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" "), applicability: questions.some(({ applicability }) => applicability === "unknown") ? "unknown" : questions[0].applicability, evidenceIds };
-  }).filter(Boolean).sort((left, right) => compare(left.systemId, right.systemId)));
-}
-
-function loopKey(nodeIds) {
-  const rotations = nodeIds.map((_, index) => [...nodeIds.slice(index), ...nodeIds.slice(0, index)].join("\0"));
-  return rotations.sort(compare)[0];
-}
-
-function cycles(connections) {
-  const next = new Map();
-  for (const connection of connections) next.set(connection.fromNodeId, [...(next.get(connection.fromNodeId) ?? []), connection.toNodeId]);
-  const found = new Set();
-  for (const start of [...next.keys()].sort(compare)) {
-    const visit = (node, path) => {
-      for (const target of next.get(node) ?? []) {
-        if (target === start && path.length >= 2) found.add(loopKey(path));
-        else if (!path.includes(target)) visit(target, [...path, target]);
-      }
-    };
-    visit(start, [start]);
-  }
-  return found;
+    const evidenceIds = registered.filter((record) => record.systemIds.includes(systemId)).map(({ evidenceId }) => evidenceId);
+    const hasAvailableEvidence = registered.some((record) => record.availability === "available" && record.systemIds.includes(systemId));
+    return { systemId, name: systemId.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" "), applicability: hasAvailableEvidence && !questions.some(({ applicability }) => applicability === "unknown") ? questions[0].applicability : "unknown", evidenceIds };
+  }).sort((left, right) => compare(left.systemId, right.systemId)));
 }
 
 /** Stage 5: treats edges as structured map definitions and groups external loop definitions by mapId. */
@@ -115,21 +96,13 @@ export function buildSystemMaps({ inventory, edges, loops = [] } = {}) {
   const result = maps.map((map) => {
     if (!exact(map, ["mapId", "systemId", "nodes", "connections"]) || !id(map.mapId) || !systems.has(map.systemId) || mapIds.has(map.mapId) || !Array.isArray(map.nodes) || !Array.isArray(map.connections)) fail("invalid-map");
     mapIds.add(map.mapId);
-    if (!sorted(map.nodes.map(({ nodeId } = {}) => nodeId), id) || !map.nodes.every((node) => exact(node, ["nodeId", "kind", "label"]) && id(node.nodeId) && ["input", "process", "output"].includes(node.kind) && text(node.label))) fail("invalid-map");
-    const nodeIds = new Set(map.nodes.map(({ nodeId }) => nodeId));
-    if (!sorted(map.connections.map(({ connectionId } = {}) => connectionId), id) || !map.connections.every((connection) => exact(connection, ["connectionId", "fromNodeId", "toNodeId", "connectedSystemIds"]) && id(connection.connectionId) && nodeIds.has(connection.fromNodeId) && nodeIds.has(connection.toNodeId) && sorted(connection.connectedSystemIds, id) && connection.connectedSystemIds.every((systemId) => systems.has(systemId)))) fail("invalid-map");
     const declared = groupedLoops.get(map.mapId) ?? [];
-    if (declared.some((loop) => loop.nodeIds.some((nodeId) => !nodeIds.has(nodeId)))) fail("invalid-map");
-    const pairs = new Set(map.connections.map(({ fromNodeId, toNodeId }) => `${fromNodeId}\0${toNodeId}`));
-    for (const loop of declared) for (let index = 0; index < loop.nodeIds.length; index += 1) if (!pairs.has(`${loop.nodeIds[index]}\0${loop.nodeIds[(index + 1) % loop.nodeIds.length]}`)) fail("invalid-map");
-    const referenced = new Set([...map.connections.flatMap(({ fromNodeId, toNodeId }) => [fromNodeId, toNodeId]), ...declared.flatMap(({ nodeIds }) => nodeIds)]);
-    if ([...nodeIds].some((nodeId) => !referenced.has(nodeId))) fail("invalid-map");
-    const declaredCycles = new Set(declared.map(({ nodeIds }) => loopKey(nodeIds)));
-    if ([...cycles(map.connections)].some((key) => !declaredCycles.has(key))) fail("cycle");
-    return { ...map, loops: declared.sort((left, right) => compare(left.loopId, right.loopId)) };
+    return { ...map, loops: declared.sort((left, right) => compare(left.loopId, right.loopId)).map(({ loopId, kind, nodeIds }) => ({ loopId, kind, nodeIds })) };
   });
   if ([...groupedLoops.keys()].some((mapId) => !mapIds.has(mapId))) fail("invalid-map");
-  return freeze(result.sort((left, right) => compare(left.mapId, right.mapId)));
+  const sortedMaps = result.sort((left, right) => compare(left.mapId, right.mapId));
+  if (!validateReferenceSystemMaps({ maps: sortedMaps, inventorySystemIds: [...systems].sort(compare) })) fail("invalid-map");
+  return freeze(sortedMaps);
 }
 
 function completePriority(value) { return exact(value, dimensions) && dimensions.every((field) => Number.isInteger(value[field]) && value[field] >= 1 && value[field] <= 5); }
@@ -148,11 +121,13 @@ export function rankDeepDiveCandidates({ inventory, maps, questions = {} } = {})
 function deepDives(priority, inventory, evidence) {
   const inventoryBySystem = new Map(inventory.map((item) => [item.systemId, item])); const evidenceById = new Map(evidence.map((item) => [item.evidenceId, item]));
   return priority.map(({ systemId }) => {
-    const records = inventoryBySystem.get(systemId).evidenceIds.map((evidenceId) => evidenceById.get(evidenceId)).filter((record) => record?.availability === "available" && record.systemIds.includes(systemId)).sort((left, right) => compare(left.evidenceId, right.evidenceId));
-    if (records.length === 0) fail("missing-evidence");
-    const claimKind = records.reduce((lowest, record) => claimKindRank[record.claimKind] < claimKindRank[lowest] ? record.claimKind : lowest, records[0].claimKind);
-    const referenceIds = [...new Set(records.map(({ referenceId }) => referenceId))].sort(compare); const contextIds = [...new Set(records.map(({ contextId }) => contextId))].sort(compare);
-    return { systemId, claimKind, finding: records[0].claim, evidenceIds: records.map(({ evidenceId }) => evidenceId), referenceIds, contextIds, coverageCount: referenceIds.length };
+    const records = inventoryBySystem.get(systemId).evidenceIds.map((evidenceId) => evidenceById.get(evidenceId)).filter((record) => record?.systemIds.includes(systemId)).sort((left, right) => compare(left.evidenceId, right.evidenceId));
+    const available = records.filter((record) => record.availability === "available");
+    if (records.length === 0) return { systemId, claimKind: "unknown", finding: "Not observed; verification required.", evidenceIds: [], referenceIds: [], contextIds: [], coverageCount: 0 };
+    if (available.length === 0) return { systemId, claimKind: "unknown", finding: "Not observed; verification required.", evidenceIds: records.map(({ evidenceId }) => evidenceId), referenceIds: [], contextIds: [], coverageCount: 0 };
+    const claimKind = available.reduce((lowest, record) => claimKindRank[record.claimKind] < claimKindRank[lowest] ? record.claimKind : lowest, available[0].claimKind);
+    const referenceIds = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compare); const contextIds = [...new Set(available.map(({ contextId }) => contextId))].sort(compare);
+    return { systemId, claimKind, finding: available[0].claim, evidenceIds: available.map(({ evidenceId }) => evidenceId), referenceIds, contextIds, coverageCount: referenceIds.length };
   });
 }
 
@@ -161,15 +136,20 @@ function comparison(deepDiveValues) {
 }
 
 /** Stage 9: returns proposal-only transfers; no caller-supplied coverage or validation state is accepted. */
-export function buildDesignTransfers({ deepDives, projectConstraints = [], glossaryReceipt = null, ...unknown } = {}) {
+export function buildDesignTransfers({ deepDives, projectConstraints, evidence, referenceContexts, referenceSet, glossaryReceipt = null, ...unknown } = {}) {
   if (Object.keys(unknown).length !== 0 || glossaryReceipt !== null) fail("invalid-transfer");
-  const dives = copy(deepDives); const constraints = copy(projectConstraints);
-  if (!Array.isArray(dives) || !Array.isArray(constraints) || !constraints.every(text) || new Set(constraints).size !== constraints.length) fail("invalid-transfer");
+  const dives = copy(deepDives); const constraints = copy(projectConstraints); const records = registerReferenceEvidence({ records: evidence }); const references = normalizeReferences(referenceSet); const contexts = normalizeContexts(referenceContexts, references);
+  if (!Array.isArray(dives) || !Array.isArray(constraints) || constraints.length === 0 || !constraints.every(text) || new Set(constraints).size !== constraints.length) fail("invalid-transfer");
+  const contextsById = new Map(contexts.map((context) => [context.contextId, context])); const referenceIds = new Set(references.map(({ referenceId }) => referenceId)); const evidenceById = new Map(records.map((record) => [record.evidenceId, record]));
   const sortedConstraints = [...constraints].sort(compare);
   return freeze(dives.map((dive) => {
-    if (!exact(dive, ["systemId", "claimKind", "finding", "evidenceIds", "referenceIds", "contextIds", "coverageCount"]) || !id(dive.systemId) || !["observation", "inference", "hypothesis", "unknown"].includes(dive.claimKind) || !sorted(dive.evidenceIds, id) || !sorted(dive.referenceIds, id) || !sorted(dive.contextIds, id) || dive.coverageCount !== dive.referenceIds.length) fail("invalid-transfer");
-    const hold = dive.coverageCount < 2 || dive.claimKind === "unknown";
-    return { transferId: `transfer-${dive.systemId}`, sourceSystemId: dive.systemId, decision: hold ? "hold" : "adapt", rationale: hold ? "Hold until independent reference coverage and verification are available." : "Adapt as a proposal subject to review.", evidenceIds: dive.evidenceIds, referenceIds: dive.referenceIds, contextIds: dive.contextIds, coverageCount: dive.coverageCount, projectConstraints: sortedConstraints, risks: ["Evidence coverage must be independently verified."], validationSteps: ["Run a constrained prototype review."], validationState: "not-run", glossaryReceipt: null, reviewState: "pending-review" };
+    if (!exact(dive, ["systemId", "claimKind", "finding", "evidenceIds", "referenceIds", "contextIds", "coverageCount"]) || !id(dive.systemId) || !["observation", "inference", "hypothesis", "unknown"].includes(dive.claimKind) || !Array.isArray(dive.evidenceIds) || !dive.evidenceIds.every(id) || !sorted(dive.referenceIds, id, { allowEmpty: true }) || !sorted(dive.contextIds, id, { allowEmpty: true }) || !Number.isInteger(dive.coverageCount)) fail("invalid-transfer");
+    const linked = dive.evidenceIds.map((evidenceId) => evidenceById.get(evidenceId));
+    if (linked.some((record) => !record || !record.systemIds.includes(dive.systemId))) fail("invalid-transfer");
+    const available = linked.filter(({ availability }) => availability === "available"); const computedReferenceIds = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compare); const computedContextIds = [...new Set(available.map(({ contextId }) => contextId))].sort(compare);
+    if (computedReferenceIds.some((referenceId) => !referenceIds.has(referenceId)) || computedContextIds.some((contextId) => !contextsById.has(contextId)) || computedContextIds.some((contextId) => contextsById.get(contextId).referenceId !== available.find((record) => record.contextId === contextId).referenceId) || dive.referenceIds.join("\0") !== computedReferenceIds.join("\0") || dive.contextIds.join("\0") !== computedContextIds.join("\0") || dive.coverageCount !== computedReferenceIds.length) fail("invalid-transfer");
+    const hold = computedReferenceIds.length < 2 || dive.claimKind === "unknown";
+    return { transferId: `transfer-${dive.systemId}`, sourceSystemId: dive.systemId, decision: hold ? "hold" : "adapt", rationale: hold ? "Hold until independent reference coverage and verification are available." : "Adapt as a proposal subject to review.", evidenceIds: dive.evidenceIds, referenceIds: computedReferenceIds, contextIds: computedContextIds, coverageCount: computedReferenceIds.length, projectConstraints: sortedConstraints, risks: ["Evidence coverage must be independently verified."], validationSteps: ["Run a constrained prototype review."], validationState: "not-run", glossaryReceipt: null, reviewState: "pending-review" };
   }).sort((left, right) => compare(left.transferId, right.transferId)));
 }
 
@@ -186,13 +166,13 @@ export function buildReferenceAnalysis(input = {}) {
   validateClaims(value.claims ?? [], evidence);
   const names = atlasNames(value.atlas); const systemInventory = inventoryReferenceSystems({ brief, atlas: atlasQuestions, evidence, claims: value.claims ?? [] }).map((item) => ({ ...item, name: names.get(item.systemId) ?? item.name }));
   const systemMaps = buildSystemMaps({ inventory: systemInventory, edges: value.edges, loops: value.loops ?? [] }); const priority = rankDeepDiveCandidates({ inventory: systemInventory, maps: systemMaps, questions: value.priorities ?? {} }); if (priority.length === 0) fail("unscored-priority");
-  const deepDiveValues = deepDives(priority, systemInventory, evidence); const comparisonValues = comparison(deepDiveValues); const transfers = buildDesignTransfers({ deepDives: deepDiveValues, projectConstraints: value.projectConstraints ?? [] }); const queue = verificationQueue(evidence, deepDiveValues);
+  const deepDiveValues = deepDives(priority, systemInventory, evidence); const comparisonValues = comparison(deepDiveValues); const transfers = buildDesignTransfers({ deepDives: deepDiveValues, projectConstraints: value.projectConstraints, evidence, referenceContexts, referenceSet }); const queue = verificationQueue(evidence, deepDiveValues);
   const analysis = { schemaVersion: 1, analysisId, brief, referenceSet, referenceContexts, evidence, atlasSelection, systemInventory, systemMaps, priority, deepDives: deepDiveValues, comparison: comparisonValues, transferDecisions: transfers, verificationQueue: queue };
   if (!validateReferenceAnalysis(analysis).ok) fail("invalid-output");
   return freeze(JSON.parse(canonicalReferenceAnalysis(analysis)));
 }
 
-function table(columns, records) { const escape = (value) => String(value).replaceAll("|", "\\|").replaceAll("\n", " "); return `${columns.join(" | ")}\n${columns.map(() => "---").join(" | ")}\n${records.map((record) => columns.map((column) => escape(record[column] ?? "")).join(" | ")).join("\n")}\n`; }
+function table(columns, records) { const escape = (value) => String(value).replaceAll("|", "\\|").replaceAll("\n", " "); const row = (values) => `| ${values.join(" | ")} |`; return `${row(columns)}\n${row(columns.map(() => "---"))}\n${records.map((record) => row(columns.map((column) => escape(record[column] ?? "")))).join("\n")}\n`; }
 function markdown(title, columns, records) { return `# ${title}\n\n${table(columns, records)}`; }
 
 /** Precomputes all bounded outputs before any directory creation or artifact write. */
@@ -206,7 +186,7 @@ export async function writeReferenceAnalysisWorkspace({ artifactRoot, analysis, 
     [artifactFiles[3], canonicalJson(safeAnalysis.systemInventory)],
     [artifactFiles[4], markdown("Analysis priority", ["rank", "systemId", ...dimensions, "rationale"], safeAnalysis.priority)],
     [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "subject", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
-    [artifactFiles[6], markdown("Transfer decisions", ["transferId", "decision", "coverageCount", "evidenceIds", "referenceIds", "contextIds", "projectConstraints", "risks", "validationSteps", "validationState", "reviewState", "rationale"], safeAnalysis.transferDecisions.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", "), projectConstraints: item.projectConstraints.join(", "), risks: item.risks.join(", "), validationSteps: item.validationSteps.join(", ") })))],
+    [artifactFiles[6], markdown("Transfer decisions", ["transferId", "sourceSystemId", "decision", "coverageCount", "evidenceIds", "referenceIds", "contextIds", "projectConstraints", "risks", "validationSteps", "validationState", "reviewState", "rationale"], safeAnalysis.transferDecisions.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", "), projectConstraints: item.projectConstraints.join(", "), risks: item.risks.join(", "), validationSteps: item.validationSteps.join(", ") })))],
     [artifactFiles[7], markdown("Verification queue", ["verificationId", "state", "question", "evidenceIds"], safeAnalysis.verificationQueue.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", ") })))]
   ]);
   for (const map of safeAnalysis.systemMaps) outputs.set(`reference-intelligence/system-maps/${map.mapId}.json`, canonicalJson(map));
