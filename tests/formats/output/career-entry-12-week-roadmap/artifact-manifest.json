@@ -51,13 +51,13 @@
       "sha256": "5fdbf0d0e103a58dfce74ed38efc930cc1ff1f365733544ffef66114b57d6a91"
     },
     "brief.pdf": {
-      "sha256": "1d591baa1dd0ddd9f658559cbdb560af202a7d8c38b02731712c99476086369f"
+      "sha256": "78966f85508bd282fee081d3c9a7cc2425c1c6178f95eadcf46c697381023345"
     },
     "brief.docx": {
-      "sha256": "bfa465678b774f782fdc2b4e236b96e49bc8668b059296a5b86a22bf9de3bc72"
+      "sha256": "8802cd61e4669c706a593cf1a67b231f5f4a7e57f3e784fdab278681e33b2529"
     },
     "brief.pptx": {
-      "sha256": "9e1112abcbe76a2376a0da66d88a5fa85d515a15b25bea9a7149ef7ee592dc0d"
+      "sha256": "79ce4aa3d6a30a1c5642af7c8f44b653a5dd43bfab2d79f0e1ddcf3f7a9dab39"
     },
     "visualization.svg": {
       "sha256": "d866533204515fcc65484cde251093761d9713b1ebe3bfd182b0fd5c0c45672f"
@@ -68,12 +68,12 @@
   },
   "runtime": {
     "runtimeSourceClass": "official-cache",
-    "node": "24.14.0",
+    "node": "24.19.0",
     "python": "Python 3.12.13",
-    "artifactTool": "2.8.39",
+    "artifactTool": "2.8.43",
     "libreOffice": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
     "poppler": "pdftoppm version 26.05.0",
-    "chromium": "Google Chrome 151.0.7922.108",
+    "chromium": "Google Chrome 151.0.7922.137",
     "docxVisualRenderer": "macOS-quick-look-html+fixed-page-furniture+chromium-print",
     "pptxVisualRenderer": "saved-pptx+macOS-quick-look-html+chromium-screenshot"
   },
@@ -108,7 +108,7 @@
   "renderBinding": {
     "pdf": {
       "artifact": "brief.pdf",
-      "artifactSha256": "1d591baa1dd0ddd9f658559cbdb560af202a7d8c38b02731712c99476086369f",
+      "artifactSha256": "78966f85508bd282fee081d3c9a7cc2425c1c6178f95eadcf46c697381023345",
       "qaFiles": [
         {
           "path": "pdf/page-1.png",
@@ -130,11 +130,11 @@
     },
     "docx": {
       "artifact": "brief.docx",
-      "artifactSha256": "bfa465678b774f782fdc2b4e236b96e49bc8668b059296a5b86a22bf9de3bc72",
+      "artifactSha256": "8802cd61e4669c706a593cf1a67b231f5f4a7e57f3e784fdab278681e33b2529",
       "qaFiles": [
         {
           "path": "docx/brief.pdf",
-          "sha256": "fd21c508c42377bf1c973e618dd089b4a05881f90a64b39b9083445edb43119d"
+          "sha256": "22a3c0764275df364eb83655fa6d5732235761b2fdc89e2b043aa8089fd1262d"
         },
         {
           "path": "docx/page-1.png",
@@ -156,7 +156,7 @@
     },
     "pptx": {
       "artifact": "brief.pptx",
-      "artifactSha256": "9e1112abcbe76a2376a0da66d88a5fa85d515a15b25bea9a7149ef7ee592dc0d",
+      "artifactSha256": "79ce4aa3d6a30a1c5642af7c8f44b653a5dd43bfab2d79f0e1ddcf3f7a9dab39",
       "qaFiles": [
         {
           "path": "pptx/slide-1.png",
@@ -201,7 +201,7 @@
   },
   "visualAttestation": {
     "status": "approved",
-    "reviewedOn": "2026-08-12",
+    "reviewedOn": "2026-08-13",
     "reviewers": [
       "independent-vision-agent",
       "primary-agent"
@@ -229,7 +229,7 @@
       "pptx/slide-6.png",
       "visualization.png"
     ],
-    "artifactSetSha256": "d55906f7c740c208a2b2f4249c69dd9b24708947f6062b1a734174f926079d97",
-    "qaSetSha256": "1a310d2bd1ffd7b9848bfa9dbe4ecb970f992465819e47b01f5c29ec77997fcf"
+    "artifactSetSha256": "3395016dba2e1c24917a9bfb141b686cdb87386655c5720667e4eec9cea306be",
+    "qaSetSha256": "2d364c2b5577f1db0716804f25be81538f6d1b3d4ae8448fdee058760a167f47"
   }
 }

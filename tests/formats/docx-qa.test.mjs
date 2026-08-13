@@ -68,3 +68,12 @@ test("Career DOCX week table preserves explicit week labels and cell margins at 
   assert.match(document, /<w:t>10주<\/w:t>/u);
   assert.match(document, /<w:tcMar>.*?<w:left\b[^>]*w:w="120".*?<w:right\b[^>]*w:w="120".*?<\/w:tcMar>/u);
 });
+
+test("Studio DOCX keeps the inventory sentence together with an intentional line break", async () => {
+  const docx = openZip(await readFile(path.resolve("tests/formats/output/studio-live-service-rpg-economy/brief.docx")));
+  const document = docx.read("word/document.xml").toString("utf8");
+  assert.match(
+    document,
+    /<w:t>일일 미션에서 소프트 재화를 공급하고 업그레이드에서 소비한다\.<\/w:t><\/w:r><w:r><w:br\/><\/w:r><w:r>.*?<w:t>목표 보유량은 5,000이다\.<\/w:t>/u,
+  );
+});
