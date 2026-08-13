@@ -1,22 +1,16 @@
 import { canonicalJson } from "./reference-intelligence-canonical.mjs";
+import {
+  evidenceClaimKinds,
+  evidenceRecordKeys,
+  evidenceSourceTypes,
+  tierBySourceType,
+  tierForSourceType,
+} from "./reference-evidence-contract.mjs";
 
-export const tierBySourceType = Object.freeze({
-  "direct-play": "primary",
-  "official-site": "primary",
-  "official-patch-note": "primary",
-  "official-odds": "primary",
-  "official-store": "primary",
-  "developer-talk": "supporting",
-  "curated-wiki": "supporting",
-  "expert-guide": "supporting",
-  community: "discovery",
-  video: "discovery",
-  review: "discovery",
-  "unofficial-tracker": "discovery",
-});
+export { tierBySourceType };
 
 const evidenceIdPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
-const claimKinds = new Set(["observation", "inference", "hypothesis", "unknown"]);
+const claimKinds = new Set(evidenceClaimKinds);
 const claimCategories = new Set(["general", "monetization", "retention", "performance"]);
 const certaintyRank = Object.freeze({ observation: 3, inference: 2, hypothesis: 1, unknown: 0 });
 
@@ -60,13 +54,23 @@ function validEvidenceId(value) {
   return typeof value === "string" && evidenceIdPattern.test(value);
 }
 
-function validTieredEvidence(value) {
+function hasExactEvidenceKeys(value, { allowMissingTier = false } = {}) {
+  const keys = allowMissingTier ? evidenceRecordKeys.filter((key) => key !== "tier") : evidenceRecordKeys;
   return isRecord(value)
+    && Object.keys(value).length === keys.length
+    && keys.every((key) => Object.hasOwn(value, key));
+}
+
+function validTieredEvidence(value) {
+  return hasExactEvidenceKeys(value)
+    && validEvidenceId(value.evidenceId)
+    && validEvidenceId(value.referenceId)
     && typeof value.sourceType === "string"
-    && Object.hasOwn(tierBySourceType, value.sourceType)
-    && value.tier === tierBySourceType[value.sourceType]
+    && evidenceSourceTypes.includes(value.sourceType)
+    && value.tier === tierForSourceType(value.sourceType)
     && ["available", "unavailable"].includes(value.availability)
     && claimKinds.has(value.claimKind)
+    && nonEmptyText(value.claim)
     && ((value.availability === "available" && value.limitation === null && value.verificationQuestion === null)
       || (value.availability === "unavailable" && nonEmptyText(value.limitation) && nonEmptyText(value.verificationQuestion)));
 }
@@ -98,15 +102,26 @@ export function registerReferenceEvidence(input = {}) {
   if (!Array.isArray(copy.records)) fail();
   const ids = new Set();
   const registered = copy.records.map((record) => {
-    if (!isRecord(record) || !validEvidenceId(record.evidenceId) || typeof record.sourceType !== "string") fail();
-    const tier = tierBySourceType[record.sourceType];
+    if (!hasExactEvidenceKeys(record, { allowMissingTier: true }) && !hasExactEvidenceKeys(record)) fail();
+    if (!validEvidenceId(record.evidenceId) || !validEvidenceId(record.referenceId) || !evidenceSourceTypes.includes(record.sourceType) || !claimKinds.has(record.claimKind) || !nonEmptyText(record.claim)) fail();
+    const tier = tierForSourceType(record.sourceType);
     if (!tier || (Object.hasOwn(record, "tier") && record.tier !== tier)) fail("tier");
     if (ids.has(record.evidenceId)) fail("duplicate-id");
     ids.add(record.evidenceId);
     if (!["available", "unavailable"].includes(record.availability)) fail("availability");
     if (record.availability === "available" && (record.limitation !== null || record.verificationQuestion !== null)) fail("availability");
     if (record.availability === "unavailable" && (!nonEmptyText(record.limitation) || !nonEmptyText(record.verificationQuestion))) fail("unavailable");
-    return { ...record, tier };
+    return {
+      evidenceId: record.evidenceId,
+      referenceId: record.referenceId,
+      sourceType: record.sourceType,
+      tier,
+      claimKind: record.claimKind,
+      claim: record.claim,
+      availability: record.availability,
+      limitation: record.limitation,
+      verificationQuestion: record.verificationQuestion,
+    };
   });
   return registered.sort((left, right) => byteCompare(left.evidenceId, right.evidenceId));
 }
@@ -142,7 +157,7 @@ export function validateClaimAgainstEvidence(input = {}) {
     } catch {
       return { ok: false, code: "invalid_evidence" };
     }
-    if (!validTieredEvidence(item)) return { ok: false, code: "invalid_evidence" };
+    if (!validTieredEvidence(item) || item.evidenceId !== evidenceId) return { ok: false, code: "invalid_evidence" };
     evidence.push(item);
   }
   const available = evidence.filter(({ availability }) => availability === "available");

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -99,7 +99,7 @@ const referenceSystemIds = [
   "meta-liveops", "ux-accessibility", "account-platform", "session-network",
   "failure-recovery", "operations-telemetry",
 ];
-const bundledReferenceRoot = fileURLToPath(new URL("../../shared/reference-intelligence/", import.meta.url));
+const bundledReferenceRoot = await realpath(fileURLToPath(new URL("../../shared/reference-intelligence/", import.meta.url)));
 
 function atlasQuestion(questionId, applicability, conditions = []) {
   return {
@@ -124,6 +124,20 @@ function strictAtlas(overlays) {
       "business-model": [],
       ...overlays,
     },
+  };
+}
+
+function registryEvidence(overrides = {}) {
+  return {
+    evidenceId: "ev-default",
+    referenceId: "ref-cinematic-sample",
+    sourceType: "official-site",
+    claimKind: "observation",
+    claim: "A direct evidence record for registry validation.",
+    availability: "available",
+    limitation: null,
+    verificationQuestion: null,
+    ...overrides,
   };
 }
 
@@ -348,29 +362,31 @@ test("Atlas merge is order-independent and genre convention is not a requirement
 test("discovery evidence cannot independently prove monetization causality", () => {
   const result = validateClaimAgainstEvidence({
     claim: { claimId: "claim-bm-1", kind: "observation", category: "monetization", causal: true, evidenceIds: ["ev-community-1"] },
-    evidenceById: new Map([["ev-community-1", { tier: "discovery", sourceType: "community", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" }]]),
+    evidenceById: new Map([
+      ["ev-community-1", registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-community-1", sourceType: "community" })] })[0]],
+    ]),
   });
   assert.deepEqual(result, { ok: false, code: "unsupported_causal_claim" });
 });
 
 test("evidence registry derives and preserves source tiers without trusting supplied tiers", () => {
   assert.deepEqual(registerReferenceEvidence({ records: [
-    { evidenceId: "ev-video", sourceType: "video", availability: "available", limitation: null, verificationQuestion: null },
-    { evidenceId: "ev-patch", sourceType: "official-patch-note", availability: "available", limitation: null, verificationQuestion: null },
-    { evidenceId: "ev-talk", sourceType: "developer-talk", availability: "available", limitation: null, verificationQuestion: null },
+    registryEvidence({ evidenceId: "ev-video", sourceType: "video" }),
+    registryEvidence({ evidenceId: "ev-patch", sourceType: "official-patch-note" }),
+    registryEvidence({ evidenceId: "ev-talk", sourceType: "developer-talk" }),
   ] }).map(({ evidenceId, tier }) => [evidenceId, tier]), [
     ["ev-patch", "primary"],
     ["ev-talk", "supporting"],
     ["ev-video", "discovery"],
   ]);
   assert.throws(
-    () => registerReferenceEvidence({ records: [{ evidenceId: "ev-mismatched", sourceType: "community", tier: "primary", availability: "available", limitation: null, verificationQuestion: null }] }),
+    () => registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-mismatched", sourceType: "community", tier: "primary" })] }),
     { code: "reference-evidence.tier" },
   );
   assert.throws(
     () => registerReferenceEvidence({ records: [
-      { evidenceId: "ev-duplicate", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null },
-      { evidenceId: "ev-duplicate", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null },
+      registryEvidence({ evidenceId: "ev-duplicate" }),
+      registryEvidence({ evidenceId: "ev-duplicate" }),
     ] }),
     { code: "reference-evidence.duplicate-id" },
   );
@@ -378,6 +394,7 @@ test("evidence registry derives and preserves source tiers without trusting supp
 
 test("bundled catalog preserves optional source fallbacks and exact registered URLs", async () => {
   const { sourceRegister } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
+  assert.equal((await loadBundledReferenceCatalog()).sourceRegister.sources.length, 8);
   assert.deepEqual(sourceRegister.sources.map(({ id, url, required }) => [id, url, required]), [
     ["steamworks-tags", "https://partner.steamgames.com/doc/store/tags?l=english&language=english", false],
     ["gamerefinery-genres", "https://docs.gamerefinery.com/en/articles/2278730-what-are-categories-genres-and-subgenres", false],
@@ -388,19 +405,21 @@ test("bundled catalog preserves optional source fallbacks and exact registered U
     ["steamdb-faq", "https://steamdb.info/faq/", false],
     ["igdb-api", "https://api-docs.igdb.com/", false],
   ]);
-  assert.deepEqual(registerReferenceEvidence({ records: [{
+  assert.deepEqual(registerReferenceEvidence({ records: [registryEvidence({
     evidenceId: "ev-offline-source",
-    sourceType: "official-site",
     availability: "unavailable",
     limitation: "Offline source unavailable; direct verification remains open.",
     verificationQuestion: "Which official source can verify this when access returns?",
-  }] }), [{
+  })] }), [{
     evidenceId: "ev-offline-source",
+    referenceId: "ref-cinematic-sample",
     sourceType: "official-site",
-    availability: "unavailable",
-    limitation: "Offline source unavailable; direct verification remains open.",
-    verificationQuestion: "Which official source can verify this when access returns?",
     tier: "primary",
+    claimKind: "observation",
+    claim: "A direct evidence record for registry validation.",
+    availability: "unavailable",
+    limitation: "Offline source unavailable; direct verification remains open.",
+    verificationQuestion: "Which official source can verify this when access returns?",
   }]);
 });
 
@@ -443,51 +462,57 @@ test("Atlas rejects duplicate catalog question pairs before selecting an overlay
 });
 
 test("evidence closes availability, preserves unavailable limitations, and excludes unavailable support", async () => {
-  assert.throws(() => registerReferenceEvidence({ records: [{ evidenceId: "ev-open", sourceType: "official-site" }] }), { code: "reference-evidence.availability" });
-  assert.deepEqual(registerReferenceEvidence({ records: [{
-    evidenceId: "ev-unavailable", sourceType: "official-site", availability: "unavailable",
+  assert.throws(() => registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-open", availability: undefined })] }), { code: "reference-evidence.invalid" });
+  assert.deepEqual(registerReferenceEvidence({ records: [registryEvidence({
+    evidenceId: "ev-unavailable", availability: "unavailable",
     limitation: "No access.", verificationQuestion: "What official page can verify this?",
-  }] })[0].availability, "unavailable");
-  const unavailable = { tier: "primary", sourceType: "official-site", availability: "unavailable", limitation: "No access.", verificationQuestion: "What official page can verify this?", claimKind: "observation" };
+  })] })[0].availability, "unavailable");
+  const unavailable = registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-unavailable", availability: "unavailable", limitation: "No access.", verificationQuestion: "What official page can verify this?" })] })[0];
   const claim = { claimId: "claim-unavailable", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-unavailable"] };
   assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([["ev-unavailable", unavailable]]) }), { ok: false, code: "evidence_unavailable" });
   const analysis = validReferenceAnalysis();
   analysis.evidence[0] = {
-    ...registerReferenceEvidence({ records: [{
-      evidenceId: "evidence-cinematic-loop", referenceId: "ref-cinematic-sample", sourceType: "official-site", availability: "unavailable",
+    ...registerReferenceEvidence({ records: [registryEvidence({
+      evidenceId: "evidence-cinematic-loop", availability: "unavailable",
       limitation: "The official page is unavailable offline.", verificationQuestion: "Which official patch note confirms the movement choice?",
-      claimKind: "observation", claim: "The player receives a movement choice after the reveal.",
-    }] })[0],
+      claim: "The player receives a movement choice after the reveal.",
+    })] })[0],
   };
   const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
   assert.deepEqual([schemaAccepts(analysis, schema, schema), validateReferenceAnalysis(analysis).ok], [true, true]);
 });
 
 test("claim support closes shape, certainty escalation, causal omission, and discovery mixing", () => {
-  const hypothesis = { tier: "primary", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null, claimKind: "hypothesis" };
-  const observation = { tier: "primary", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" };
-  const discovery = { tier: "discovery", sourceType: "community", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" };
+  const hypothesis = registryEvidence({ evidenceId: "ev-hypothesis", claimKind: "hypothesis" });
+  const observation = registryEvidence({ evidenceId: "ev-primary" });
+  const discovery = registryEvidence({ evidenceId: "ev-discovery", sourceType: "community" });
   assert.deepEqual(validateClaimAgainstEvidence({
     claim: { claimId: "claim-observation", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-hypothesis"] },
-    evidenceById: new Map([["ev-hypothesis", hypothesis]]),
+    evidenceById: new Map([
+      ["ev-hypothesis", registerReferenceEvidence({ records: [hypothesis] })[0]],
+    ]),
   }), { ok: false, code: "unsupported_claim_kind" });
   for (const claim of [
     { claimId: "claim-no-category", kind: "observation", causal: false, evidenceIds: ["ev-observation"] },
     { claimId: "claim-no-causal", kind: "observation", category: "general", evidenceIds: ["ev-observation"] },
     { claimId: "claim-unsorted", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-z", "ev-a"] },
-  ]) assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([["ev-observation", observation], ["ev-z", observation], ["ev-a", observation]]) }), { ok: false, code: "invalid_claim" });
+  ]) assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([
+    ["ev-observation", registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-observation" })] })[0]],
+    ["ev-z", registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-z" })] })[0]],
+    ["ev-a", registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-a" })] })[0]],
+  ]) }), { ok: false, code: "invalid_claim" });
   const causal = { claimId: "claim-causal", kind: "observation", category: "general", causal: true, evidenceIds: ["ev-discovery"] };
-  assert.deepEqual(validateClaimAgainstEvidence({ claim: causal, evidenceById: new Map([["ev-discovery", discovery]]) }), { ok: false, code: "unsupported_causal_claim" });
+  assert.deepEqual(validateClaimAgainstEvidence({ claim: causal, evidenceById: new Map([["ev-discovery", registerReferenceEvidence({ records: [discovery] })[0]]]) }), { ok: false, code: "unsupported_causal_claim" });
   assert.deepEqual(validateClaimAgainstEvidence({
     claim: { ...causal, evidenceIds: ["ev-discovery", "ev-primary"] },
-    evidenceById: new Map([["ev-discovery", discovery], ["ev-primary", observation]]),
+    evidenceById: new Map([["ev-discovery", registerReferenceEvidence({ records: [discovery] })[0]], ["ev-primary", registerReferenceEvidence({ records: [observation] })[0]]]),
   }), { ok: true, code: "supported" });
 });
 
 test("claim evidence rejects Map subclasses and proxies without exposing thrown data", () => {
   class DerivedMap extends Map {}
   const claim = { claimId: "claim-map", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-map"] };
-  const evidence = { tier: "primary", sourceType: "official-site", availability: "available", limitation: null, verificationQuestion: null, claimKind: "observation" };
+  const evidence = registerReferenceEvidence({ records: [registryEvidence({ evidenceId: "ev-map" })] })[0];
   for (const evidenceById of [
     new DerivedMap([["ev-map", evidence]]),
     new Proxy(new Map([["ev-map", evidence]]), {}),
@@ -531,7 +556,7 @@ test("not-applicable requires unanimous contributors regardless of conditions", 
 });
 
 test("catalog loader rejects coercion, source mutation, and symlink leaves", async () => {
-  const root = await mkdtemp(join(tmpdir(), "reference-atlas-"));
+  const root = await realpath(await mkdtemp(join(tmpdir(), "reference-atlas-")));
   const rootLink = `${root}-link`;
   try {
     await cp(bundledReferenceRoot, root, { recursive: true });
@@ -552,5 +577,55 @@ test("catalog loader rejects coercion, source mutation, and symlink leaves", asy
   } finally {
     await rm(root, { recursive: true, force: true });
     await rm(rootLink, { recursive: true, force: true });
+  }
+});
+
+test("registry emits exact EvidenceRecord values that immediately compose with claim validation", () => {
+  const record = {
+    evidenceId: "ev-registry-observation",
+    referenceId: "ref-cinematic-sample",
+    sourceType: "official-site",
+    claimKind: "observation",
+    claim: "The official page lists the observed movement choice.",
+    availability: "available",
+    limitation: null,
+    verificationQuestion: null,
+  };
+  const [registered] = registerReferenceEvidence({ records: [record] });
+  assert.deepEqual(Object.keys(registered), ["evidenceId", "referenceId", "sourceType", "tier", "claimKind", "claim", "availability", "limitation", "verificationQuestion"]);
+  const claim = { claimId: "claim-registry-observation", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-registry-observation"] };
+  assert.deepEqual(validateClaimAgainstEvidence({ claim, evidenceById: new Map([[registered.evidenceId, registered]]) }), { ok: true, code: "supported" });
+  assert.throws(() => registerReferenceEvidence({ records: [{ ...record, extra: true }] }), { code: "reference-evidence.invalid" });
+  assert.throws(() => registerReferenceEvidence({ records: [{ ...record, claimKind: "fact" }] }), { code: "reference-evidence.invalid" });
+});
+
+test("reference analysis schema and runtime reject persisted source tier spoofing", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
+  for (const mutate of [
+    (value) => { value.evidence[0].sourceType = "community"; value.evidence[0].tier = "primary"; },
+    (value) => { value.evidence[0].sourceType = "official-site"; value.evidence[0].tier = "discovery"; },
+  ]) {
+    const value = structuredClone(validReferenceAnalysis());
+    mutate(value);
+    assert.deepEqual([schemaAccepts(value, schema, schema), validateReferenceAnalysis(value).ok], [false, false]);
+  }
+});
+
+test("catalog loader rejects ancestor symlinks and swapped catalog directories", async () => {
+  const container = await realpath(await mkdtemp(join(tmpdir(), "reference-atlas-ancestor-")));
+  const installed = join(container, "installed");
+  const link = join(container, "linked-parent");
+  const movedCatalog = join(container, "catalog-before-swap");
+  try {
+    await cp(bundledReferenceRoot, installed, { recursive: true });
+    const canonicalInstalled = await realpath(installed);
+    assert.equal((await loadBundledReferenceCatalog({ moduleRoot: canonicalInstalled })).atlas.systems.length, 16);
+    await symlink(container, link);
+    await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: join(link, "installed") }), { code: "reference-atlas.catalog-load" });
+    await rename(join(installed, "catalog"), movedCatalog);
+    await symlink(join(bundledReferenceRoot, "catalog"), join(installed, "catalog"));
+    await assert.rejects(() => loadBundledReferenceCatalog({ moduleRoot: canonicalInstalled }), { code: "reference-atlas.catalog-load" });
+  } finally {
+    await rm(container, { recursive: true, force: true });
   }
 });

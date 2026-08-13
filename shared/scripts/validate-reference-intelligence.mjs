@@ -1,4 +1,5 @@
 import { canonicalJson, sha256Canonical } from "./lib/reference-intelligence-canonical.mjs";
+import { evidenceSourceTypes, tierForSourceType } from "./lib/reference-evidence-contract.mjs";
 
 export { canonicalJson, sha256Canonical };
 
@@ -12,7 +13,6 @@ const isId = (value) => isSafeText(value) && idPattern.test(value);
 const isTermId = (value) => isSafeText(value) && termIdPattern.test(value);
 const isHash = (value) => isSafeText(value) && sha256Pattern.test(value);
 const referenceRoles = ["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"];
-const evidenceSourceTypes = ["direct-play", "official-site", "official-patch-note", "official-odds", "official-store", "developer-talk", "curated-wiki", "expert-guide", "community", "video", "review", "unofficial-tracker"];
 
 function resultOf(validate) {
   const errors = [];
@@ -96,6 +96,7 @@ export function validateReferenceAnalysis(value) {
       safeId(record?.evidenceId, `${path}/evidenceId`, add); safeId(record?.referenceId, `${path}/referenceId`, add);
       enumValue(record?.tier, ["primary", "supporting", "discovery"], `${path}/tier`, add);
       enumValue(record?.sourceType, evidenceSourceTypes, `${path}/sourceType`, add);
+      if (tierForSourceType(record?.sourceType) !== record?.tier) add(`${path}/tier`, "evidence.tier-source-mismatch");
       enumValue(record?.availability, ["available", "unavailable"], `${path}/availability`, add);
       if (record?.availability === "available" && (record?.limitation !== null || record?.verificationQuestion !== null)) add(`${path}/availability`, "availability.detail-invalid");
       if (record?.availability === "unavailable") {

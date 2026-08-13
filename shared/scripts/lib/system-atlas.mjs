@@ -1,5 +1,5 @@
-import { lstat, readFile, realpath } from "node:fs/promises";
-import { isAbsolute, relative, resolve } from "node:path";
+import { lstat, open, realpath } from "node:fs/promises";
+import { isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalJson } from "./reference-intelligence-canonical.mjs";
 
@@ -33,6 +33,7 @@ const expectedSourceRegister = Object.freeze([
   ["igdb-api", "https://api-docs.igdb.com/"],
 ]);
 const invalidDataField = Symbol("invalid-data-field");
+const maximumCatalogBytes = 256 * 1024;
 
 function fail(code = "invalid") {
   const error = new Error("reference atlas is invalid");
@@ -201,14 +202,45 @@ function staysWithin(root, path) {
   return pathToRoot !== "" && !pathToRoot.startsWith("..") && !isAbsolute(pathToRoot);
 }
 
-async function checkedDirectory(path, root) {
+function sameIdentity(left, right) {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+async function directoryIdentity(path, root) {
   try {
     if (!staysWithin(root, path)) fail("catalog-load");
     const info = await lstat(path);
     if (!info.isDirectory() || info.isSymbolicLink()) fail("catalog-load");
     const resolved = await realpath(path);
-    if (!staysWithin(root, resolved)) fail("catalog-load");
-    return resolved;
+    if (resolved !== path || !staysWithin(root, resolved)) fail("catalog-load");
+    return { path, info };
+  } catch {
+    fail("catalog-load");
+  }
+}
+
+async function ancestorIdentities(root) {
+  const parsed = parse(root);
+  const snapshots = [];
+  let current = parsed.root;
+  const rootInfo = await lstat(current);
+  if (!rootInfo.isDirectory() || rootInfo.isSymbolicLink()) fail("catalog-load");
+  snapshots.push({ path: current, info: rootInfo });
+  for (const component of root.slice(parsed.root.length).split(sep).filter(Boolean)) {
+    current = join(current, component);
+    const info = await lstat(current);
+    if (!info.isDirectory() || info.isSymbolicLink()) fail("catalog-load");
+    snapshots.push({ path: current, info });
+  }
+  return snapshots;
+}
+
+async function verifySnapshots(snapshots) {
+  try {
+    for (const snapshot of snapshots) {
+      const current = await lstat(snapshot.path);
+      if (!current.isDirectory() || current.isSymbolicLink() || !sameIdentity(snapshot.info, current)) fail("catalog-load");
+    }
   } catch {
     fail("catalog-load");
   }
@@ -216,28 +248,50 @@ async function checkedDirectory(path, root) {
 
 async function checkedJson(root, parts) {
   const path = resolve(root, ...parts);
+  let handle;
   try {
     if (!staysWithin(root, path)) fail("catalog-load");
     const before = await lstat(path);
     if (!before.isFile() || before.isSymbolicLink()) fail("catalog-load");
     const resolved = await realpath(path);
-    if (!staysWithin(root, resolved)) fail("catalog-load");
-    const contents = await readFile(path, "utf8");
+    if (resolved !== path || !staysWithin(root, resolved) || before.size > maximumCatalogBytes) fail("catalog-load");
+    handle = await open(path, "r");
+    const handleBefore = await handle.stat();
+    if (!handleBefore.isFile() || !sameIdentity(before, handleBefore) || handleBefore.size > maximumCatalogBytes) fail("catalog-load");
+    const bytes = await handle.readFile();
+    const handleAfter = await handle.stat();
     const after = await lstat(path);
-    if (before.dev !== after.dev || before.ino !== after.ino || before.size !== after.size || !after.isFile() || after.isSymbolicLink()) fail("catalog-load");
+    if (!sameIdentity(before, handleAfter) || !sameIdentity(before, after) || before.size !== handleAfter.size || before.size !== after.size || bytes.length !== before.size || !after.isFile() || after.isSymbolicLink() || bytes.length > maximumCatalogBytes) fail("catalog-load");
+    if (bytes.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf]))) fail("catalog-load");
+    let contents;
+    try {
+      contents = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      fail("catalog-load");
+    }
+    if (contents.includes("\0") || contents.includes("\r") || contents !== contents.normalize("NFC")) fail("catalog-load");
     return JSON.parse(contents);
   } catch {
     fail("catalog-load");
+  } finally {
+    try {
+      await handle?.close();
+    } catch {
+      fail("catalog-load");
+    }
   }
 }
 
 async function moduleRootPath(moduleRoot) {
-  const root = moduleRoot === undefined ? fileURLToPath(new URL("../../reference-intelligence/", import.meta.url)) : moduleRoot;
+  const defaultRoot = fileURLToPath(new URL("../../reference-intelligence/", import.meta.url));
+  const root = moduleRoot === undefined ? defaultRoot : moduleRoot;
   if (typeof root !== "string" || !isAbsolute(root)) fail("catalog-load");
   try {
-    const info = await lstat(root);
-    if (!info.isDirectory() || info.isSymbolicLink()) fail("catalog-load");
-    return await realpath(root);
+    const canonicalRoot = await realpath(root);
+    if (moduleRoot !== undefined && canonicalRoot !== root) fail("catalog-load");
+    const snapshots = await ancestorIdentities(canonicalRoot);
+    if (snapshots.length === 0) fail("catalog-load");
+    return { root: canonicalRoot, snapshots };
   } catch {
     fail("catalog-load");
   }
@@ -262,9 +316,10 @@ function validateSourceRegister(sourceRegister) {
 export async function loadBundledReferenceCatalog(input = {}) {
   const moduleRoot = dataField(input, "moduleRoot");
   if (moduleRoot === invalidDataField) fail("catalog-load");
-  const root = await moduleRootPath(moduleRoot);
-  const catalogRoot = await checkedDirectory(resolve(root, "catalog"), root);
-  const overlaysRoot = await checkedDirectory(resolve(catalogRoot, "overlays"), root);
+  const rootState = await moduleRootPath(moduleRoot);
+  const { root } = rootState;
+  const catalogRoot = await directoryIdentity(resolve(root, "catalog"), root);
+  const overlaysRoot = await directoryIdentity(resolve(catalogRoot.path, "overlays"), root);
   const [base, genre, playMode, platform, businessModel, sourceRegister] = await Promise.all([
     checkedJson(root, ["catalog", "system-atlas.json"]),
     checkedJson(root, ["catalog", "overlays", "genre.json"]),
@@ -273,7 +328,7 @@ export async function loadBundledReferenceCatalog(input = {}) {
     checkedJson(root, ["catalog", "overlays", "business-model.json"]),
     checkedJson(root, ["catalog", "source-register.json"]),
   ]);
-  void overlaysRoot;
+  await verifySnapshots([...rootState.snapshots, catalogRoot, overlaysRoot]);
   if (!hasExactKeys(base, ["version", "systems", "questions"]) || base.version !== 1) fail("catalog-load");
   for (const document of [genre, playMode, platform, businessModel]) validateCatalogDocument(document);
   validateSourceRegister(sourceRegister);
