@@ -135,8 +135,7 @@ export function validateReferenceAnalysis(value) {
       closedObject(record, ["verificationId", "question", "evidenceIds", "state"], path, add); safeId(record?.verificationId, `${path}/verificationId`, add);
       nonEmptyText(record?.question, `${path}/question`, add); sortedUnique(record?.evidenceIds, `${path}/evidenceIds`, add, isId); enumValue(record?.state, ["open"], `${path}/state`, add);
     });
-    const roleSet = new Set((value?.referenceSet ?? []).map(({ role }) => role));
-    for (const role of referenceRoles) if (!roleSet.has(role)) issue("/referenceSet", "reference.role-missing");
+    for (const role of referenceRoles) if ((value?.referenceSet ?? []).filter((entry) => entry?.role === role).length !== 1) issue("/referenceSet", "reference.role-cardinality");
     const referenceIds = new Set((value?.referenceSet ?? []).map(({ referenceId }) => referenceId));
     const evidenceIds = new Set((value?.evidence ?? []).map(({ evidenceId }) => evidenceId));
     const systemIds = new Set((value?.systemInventory ?? []).map(({ systemId }) => systemId));

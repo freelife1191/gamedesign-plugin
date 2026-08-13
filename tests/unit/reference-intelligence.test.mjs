@@ -217,7 +217,10 @@ function schemaAccepts(value, schema, root) {
     if (value.length < (schema.minItems ?? 0)) return false;
     if (schema.uniqueItems && value.some((item, index) => value.slice(0, index).some((previous) => equalsJson(item, previous)))) return false;
     if (schema.items && !value.every((item) => schemaAccepts(item, schema.items, root))) return false;
-    if (schema.contains && !value.some((item) => schemaAccepts(item, schema.contains, root))) return false;
+    if (schema.contains) {
+      const count = value.filter((item) => schemaAccepts(item, schema.contains, root)).length;
+      if (count < (schema.minContains ?? 1) || count > (schema.maxContains ?? Number.POSITIVE_INFINITY)) return false;
+    }
   }
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
     if ((schema.required ?? []).some((key) => !Object.hasOwn(value, key))) return false;
@@ -258,4 +261,17 @@ test("reference analysis schema and runtime reject the same hand-authored ID con
     assert.equal(schemaAccepts(value, schema, schema), false);
     assert.equal(validateReferenceAnalysis(value).ok, false);
   }
+});
+
+test("reference analysis permits exactly one entry for each default role", async () => {
+  const schema = JSON.parse(await readFile(new URL("../../shared/reference-intelligence/schema/reference-analysis.schema.json", import.meta.url), "utf8"));
+  const value = validReferenceAnalysis();
+  value.referenceSet.push({
+    referenceId: "ref-second-sample",
+    label: "Second cinematic sample",
+    role: "direct-competitor",
+    availability: "available",
+    limitation: null,
+  });
+  assert.deepEqual([schemaAccepts(value, schema, schema), validateReferenceAnalysis(value).ok], [false, false]);
 });
