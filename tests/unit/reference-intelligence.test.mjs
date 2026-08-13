@@ -1109,3 +1109,9 @@ test("fix5 derives comparison state and rejects contradictory comparison present
   assert.equal(transferDiagnostic.ok, false);
   assert.equal(transferDiagnostic.errors.some(({ path }) => path === "/transferDecisions/0/coverageCount"), true);
 });
+
+test("reference analysis retains its pre-glossary tab-safe text contract", () => {
+  const value = validReferenceAnalysis();
+  value.brief.objective = "Identify\tusable pacing patterns.";
+  assert.equal(validateReferenceAnalysis(value).ok, true);
+});

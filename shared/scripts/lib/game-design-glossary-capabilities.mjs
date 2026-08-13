@@ -11,10 +11,11 @@ const id = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const termId = /^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$/u;
 const hash = /^[a-f0-9]{64}$/u;
 const unsafe = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\uFEFF\r]/u;
+const sensitive = [/(?:sk|pk)_(?:live|test)_[A-Za-z0-9_-]+/iu, /(?:api[_-]?key|password|secret|token)\s*[=:]/iu, /(?:^|\s)\/[\w./-]+/u];
 const compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 
 function reject() { throw new Error("A live human glossary decision is required."); }
-function text(value, max = 4096) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !unsafe.test(value); }
+function text(value, max = 4096) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !unsafe.test(value) && !sensitive.some((pattern) => pattern.test(value)); }
 function timestamp(value) { return text(value) && !Number.isNaN(new Date(value).valueOf()) && new Date(value).toISOString() === value; }
 function plain(value, keys) {
   if (!value || typeof value !== "object" || Array.isArray(value) || types.isProxy(value) || Object.getPrototypeOf(value) !== Object.prototype || Reflect.ownKeys(value).some((key) => typeof key !== "string" || !keys.includes(key))) reject();

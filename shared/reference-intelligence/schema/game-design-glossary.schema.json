@@ -15,10 +15,10 @@
         "required": ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"],
         "properties": {
           "termId": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$", "maxLength": 128 },
-          "koPreferred": { "type": "string", "minLength": 1, "maxLength": 65536 }, "enPreferred": { "type": "string", "minLength": 1, "maxLength": 65536 }, "definition": { "type": "string", "minLength": 1, "maxLength": 1048576 }, "scope": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
+          "koPreferred": { "$ref": "#/$defs/strictText" }, "enPreferred": { "$ref": "#/$defs/strictText" }, "definition": { "$ref": "#/$defs/strictLongText" }, "scope": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
           "contexts": { "$ref": "#/$defs/textArray" }, "abbreviations": { "$ref": "#/$defs/textArray" }, "allowedVariants": { "$ref": "#/$defs/textArray" }, "forbiddenTerms": { "$ref": "#/$defs/textArray" }, "deprecatedTerms": { "$ref": "#/$defs/textArray" }, "untranslatedExpressions": { "$ref": "#/$defs/textArray" }, "examples": { "$ref": "#/$defs/textArray" }, "confusedConceptIds": { "$ref": "#/$defs/textArray" }, "decisionIds": { "$ref": "#/$defs/textArray" }, "evidenceIds": { "$ref": "#/$defs/textArray" },
-          "grammar": { "type": "object", "additionalProperties": false, "required": ["ko", "en"], "properties": { "ko": { "type": "string", "minLength": 1, "maxLength": 4096 }, "en": { "type": "string", "minLength": 1, "maxLength": 4096 } } },
-          "state": { "enum": ["proposed", "approved", "deprecated"] }, "approver": { "type": ["string", "null"], "maxLength": 4096 }, "replacementTermId": { "type": ["string", "null"], "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "version": { "type": "integer", "minimum": 1 }, "changedAt": { "type": "string", "format": "date-time", "maxLength": 64 }
+          "grammar": { "type": "object", "additionalProperties": false, "required": ["ko", "en"], "properties": { "ko": { "$ref": "#/$defs/strictSmallText" }, "en": { "$ref": "#/$defs/strictSmallText" } } },
+          "state": { "enum": ["proposed", "approved", "deprecated"] }, "approver": { "anyOf": [{ "$ref": "#/$defs/strictSmallText" }, { "type": "null" }] }, "replacementTermId": { "type": ["string", "null"], "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "version": { "type": "integer", "minimum": 1 }, "changedAt": { "type": "string", "format": "date-time", "maxLength": 64, "pattern": "^(?![\\s\\S]*[\\u0000-\\u0009\\u000B-\\u001F\\u007F-\\u009F\\uFEFF])[\\s\\S]+$" }
         },
         "allOf": [
           { "if": { "properties": { "state": { "const": "proposed" } } }, "then": { "properties": { "approver": { "const": null }, "replacementTermId": { "const": null } } } },
@@ -29,5 +29,6 @@
     }
   },
   "allOf": [{ "if": { "properties": { "scope": { "const": "shared" } } }, "then": { "properties": { "terms": { "minItems": 1 } } } }],
-  "$defs": { "textArray": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 65536 } } }
+  "$defs": { "strictText": { "type": "string", "minLength": 1, "maxLength": 65536, "pattern": "^(?![\\s\\S]*[\\u0000-\\u0009\\u000B-\\u001F\\u007F-\\u009F\\uFEFF])[\\s\\S]+$" }, "strictLongText": { "type": "string", "minLength": 1, "maxLength": 1048576, "pattern": "^(?![\\s\\S]*[\\u0000-\\u0009\\u000B-\\u001F\\u007F-\\u009F\\uFEFF])[\\s\\S]+$" }, "strictSmallText": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?![\\s\\S]*[\\u0000-\\u0009\\u000B-\\u001F\\u007F-\\u009F\\uFEFF])[\\s\\S]+$" }, "textArray": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/strictText" } } },
+  "x-game-design-glossary": { "canonicalText": { "allowLf": true, "forbidBom": true, "forbidControlsExceptLf": true, "requireNfc": true }, "maxCanonicalUtf8Bytes": 2097152, "requiredScopeTerms": { "effective": 1, "shared": 1 } }
 }

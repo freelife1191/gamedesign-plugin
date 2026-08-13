@@ -10,7 +10,7 @@ const id = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const termId = /^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$/u;
 const control = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\uFEFF\r]/u;
 const sensitive = [/(?:sk|pk)_(?:live|test)_[A-Za-z0-9_-]+/iu, /(?:api[_-]?key|password|secret|token)\s*[=:]/iu, /(?:^|\s)\/[\w./-]+/u];
-const findingCodes = new Set(["multiple-preferred-terms", "ambiguous-concept-label", "missing-bilingual-mapping", "stale-glossary-receipt", "semantic-auto-replacement", "unapproved-term", "deprecated-term", "unexplained-abbreviation", "orthography-variant", "unnecessary-english", "translation-mismatch"]);
+const findingCodes = new Set(["multiple-preferred-terms", "ambiguous-concept-label", "missing-bilingual-mapping", "stale-glossary-receipt", "semantic-auto-replacement", "unapproved-term", "deprecated-term", "unexplained-abbreviation", "orthography-variant", "unnecessary-english", "translation-mismatch", "mixed-english-locale", "heading-style-drift", "sentence-fragment"]);
 const glossaryDirectory = "reference-intelligence/glossary";
 const fixedPaths = Object.freeze([`${glossaryDirectory}/terms.json`, `${glossaryDirectory}/glossary.ko.md`, `${glossaryDirectory}/glossary.en.md`, `${glossaryDirectory}/terminology-findings.md`, `${glossaryDirectory}/glossary-receipt.json`]);
 const applied = new WeakMap();
@@ -21,6 +21,7 @@ function copy(value) { try { return JSON.parse(canonicalJson(value)); } catch { 
 function valid(value) { return validateGameDesignGlossary(value).ok; }
 function safeText(value, max = 65536) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !control.test(value) && !sensitive.some((pattern) => pattern.test(value)); }
 function canonicalText(value, max = 65536) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !control.test(value); }
+function persistedSafe(value, seen = new Set()) { if (value === null || typeof value === "boolean" || typeof value === "number") return true; if (typeof value === "string") return safeText(value, 2 * 1024 * 1024); if (!value || typeof value !== "object" || seen.has(value)) return false; seen.add(value); const result = Array.isArray(value) ? value.every((item) => persistedSafe(item, seen)) : Object.values(value).every((item) => persistedSafe(item, seen)); seen.delete(value); return result; }
 function approved(value) { return value?.state === "approved"; }
 function finding(code, termIdValue = undefined) { return Object.freeze(termIdValue ? { code, termId: termIdValue } : { code }); }
 function sortFindings(values) { return freeze(values.sort((left, right) => compare(`${left.code}\0${left.termId ?? ""}`, `${right.code}\0${right.termId ?? ""}`))); }
@@ -67,13 +68,16 @@ export function extractGlossaryCandidates({ documents, effectiveGlossary } = {})
 function receiptMatches(receipt, documentId, glossary) { return id.test(documentId ?? "") && receipt?.documentId === documentId && validateGlossaryReceipt(receipt, { glossary }).ok && receipt.glossaryVersion === glossary.version && receipt.glossarySha256 === sha256Canonical(glossary); }
 function escaped(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 function termMatch(text, value, language, insensitive = false) { if (!value) return false; const flags = `${insensitive ? "iu" : "u"}`; return new RegExp(`(?<![\\p{L}\\p{N}])${escaped(value)}(?![\\p{L}\\p{N}])`, flags).test(text); }
+function replacementAttempt(value, terms) { if (value === undefined) return false; const copyValue = copy(value); if (!copyValue || Object.keys(copyValue).sort().join("\0") !== "action\0fromTermId\0toTermId" || copyValue.action !== "replace" || !termId.test(copyValue.fromTermId) || !termId.test(copyValue.toTermId) || copyValue.fromTermId === copyValue.toTermId || !terms.has(copyValue.fromTermId) || !terms.has(copyValue.toTermId)) fail(); return true; }
 
-export function validateDocumentTerminology({ text, language, documentId, effectiveGlossary, receipt } = {}) {
+export function validateDocumentTerminology({ text, language, documentId, effectiveGlossary, receipt, replacementAttempt: attempt } = {}) {
   if (!canonicalText(text, 2 * 1024 * 1024) || !["ko", "en"].includes(language) || !id.test(documentId ?? "")) fail(); const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective") fail(); const blocking = []; const warnings = []; const receiptOk = receiptMatches(receipt, documentId, glossary); if (!receiptOk) blocking.push(finding("stale-glossary-receipt")); const selected = new Set(receipt?.termIds ?? []);
+  const terms = new Map(glossary.terms.map((item) => [item.termId, item])); const hasReplacementAttempt = replacementAttempt(attempt, terms);
   for (const item of glossary.terms) {
     const preferred = language === "ko" ? item.koPreferred : item.enPreferred; const alternative = language === "ko" ? item.enPreferred : item.koPreferred; const usedPreferred = termMatch(text, preferred, language, language === "en"); const usedAllowed = item.allowedVariants.some((value) => termMatch(text, value, language, language === "en"));
     if ((usedPreferred || usedAllowed) && !selected.has(item.termId)) blocking.push(finding("stale-glossary-receipt"));
     if (!selected.has(item.termId)) continue;
+    if (termMatch(text, item.koPreferred, language, language === "en") && termMatch(text, item.enPreferred, language, language === "en")) blocking.push(finding("multiple-preferred-terms", item.termId));
     if (item.state === "proposed" && (usedPreferred || usedAllowed)) warnings.push(finding("unapproved-term", item.termId));
     if (item.state === "deprecated" && (usedPreferred || usedAllowed)) warnings.push(finding("deprecated-term", item.termId));
     if (item.forbiddenTerms.some((value) => termMatch(text, value, language, language === "en")) || item.deprecatedTerms.some((value) => termMatch(text, value, language, language === "en"))) warnings.push(finding("deprecated-term", item.termId));
@@ -82,6 +86,7 @@ export function validateDocumentTerminology({ text, language, documentId, effect
     if (termMatch(text, alternative, language, language === "en") && !usedPreferred) warnings.push(finding("translation-mismatch", item.termId));
     for (const abbreviation of item.abbreviations) if (termMatch(text, abbreviation, language, false) && !usedPreferred && !usedAllowed) warnings.push(finding("unexplained-abbreviation", item.termId));
   }
+  if (hasReplacementAttempt) blocking.push(finding("semantic-auto-replacement"));
   return freeze({ ok: blocking.length === 0, blocking: sortFindings(blocking), warnings: sortFindings(warnings) });
 }
 
@@ -94,7 +99,7 @@ async function cleanupEmpty(root, directories) { for (const directory of [...dir
 export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary, receipt, findings, decision, ...unknown } = {}) {
   if (Object.keys(unknown).length !== 0 || glossary?.scope !== "effective" || !receiptMatches(receipt, receipt?.documentId, glossary) || !decision || decision.eventId !== decision.receipt?.eventId) fail();
   try { assertGlossaryHumanDecision(decision.receipt, decision.capability); } catch { fail(); }
-  const value = copy(glossary); if (!valid(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail(); const safeFindings = validateFindings(findings); const safeDecision = copy(decision.receipt); const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`;
+  const value = copy(glossary); if (!valid(value) || !persistedSafe(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail(); const safeFindings = validateFindings(findings); const safeDecision = copy(decision.receipt); if (!persistedSafe(safeDecision)) fail(); const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`;
   const outputs = new Map([[fixedPaths[0], `${canonicalJson(value)}\n`], [fixedPaths[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [fixedPaths[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [fixedPaths[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [fixedPaths[4], `${canonicalJson(receipt)}\n`], [decisionPath, `${canonicalJson(safeDecision)}\n`]]);
   if ([...outputs.entries()].some(([relativePath, data]) => !fixedPaths.includes(relativePath) && relativePath !== decisionPath || Buffer.byteLength(data, "utf8") > 2 * 1024 * 1024)) fail(); const files = [...outputs.keys()].sort(compare);
   const root = await canonicalArtifactRoot(artifactRoot); const before = new Map(); for (const relativePath of files) before.set(relativePath, await targetState(root.path, relativePath));

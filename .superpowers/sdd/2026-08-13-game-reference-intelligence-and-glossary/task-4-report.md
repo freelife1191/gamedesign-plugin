@@ -68,3 +68,36 @@ Why expected: the existing two-argument merge had no live, hash-bound override p
 - `git diff --check` → exit 0.
 
 Remaining concern: none identified within Task 4 scope.
+
+## Fix round 2/5 — RED → GREEN
+
+### RED
+
+Command: `node --test --test-name-pattern='decision provenance|schema extension|terminology restores' tests/unit/game-design-glossary.test.mjs`
+
+Output: `ERR_MODULE_NOT_FOUND` for `shared/scripts/lib/game-design-glossary-schema-evaluator.mjs`; `tests 1`, `pass 0`, `fail 1`.
+
+Why expected: the prior implementation had no executable schema-extension evaluator for NFC/whole-document size constraints, no sensitive-decision rejection, and no dedicated recovered terminology diagnostic coverage.
+
+### Non-vacuity evidence
+
+- Removed the credential/path-sensitive predicate from the production capability issuer; `node --test --test-name-pattern='decision provenance rejects sensitive' tests/unit/game-design-glossary.test.mjs` failed with `Missing expected exception` for `password=SECRET-SENTINEL`.
+- Removed the production `multiple-preferred-terms` branch; `node --test --test-name-pattern='terminology restores preferred-pair' tests/unit/game-design-glossary.test.mjs` failed because the expected blocking finding disappeared.
+
+Both isolated source mutations were restored before final verification. Existing real-filesystem artifact tests retain symlink/special-leaf/no-write coverage; transaction staging remains private and exposes no failure-injection hook.
+
+### Implementation and self-review
+
+- Added a packaged production evaluator `game-design-glossary-schema-evaluator.mjs` that verifies an exact executable schema annotation and fail-closes missing, unknown, or altered extension contracts while enforcing NFC/control/2 MiB/effective-term constraints.
+- Restored pre-Task4 reference-analysis text policy and introduced glossary-only stricter canonical checks; a reference-analysis tab regression now proves the unchanged legacy behavior.
+- Rejected sensitive actor/reason strings both at issuing time and immediately before artifact serialization; findings now accept the three ledgered dedicated English writing codes.
+- Restored token-bound bilingual preferred-pair blocking; explicit closed replacement-attempt evidence is the only path to `semantic-auto-replacement`; ordinary co-occurrence remains non-blocking.
+
+### GREEN
+
+- `node --test tests/unit/game-design-glossary.test.mjs tests/unit/reference-intelligence.test.mjs` → `tests 64`, `pass 64`, `fail 0`.
+- `node --check shared/scripts/lib/game-design-glossary-schema-evaluator.mjs shared/scripts/lib/game-design-glossary-capabilities.mjs shared/scripts/manage-game-design-glossary.mjs shared/scripts/validate-game-design-writing-language.mjs shared/scripts/validate-reference-intelligence.mjs` → exit 0.
+- JSON parse of `game-design-glossary.schema.json` and `glossary-receipt.schema.json` → exit 0.
+- `git diff --check` → exit 0.
+
+Remaining concern: package mirror layout is owned by the later packaging task; this round adds the source production evaluator and verifies it against the source schema contract.

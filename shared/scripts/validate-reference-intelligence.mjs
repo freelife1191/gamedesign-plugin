@@ -3,6 +3,7 @@ import { evidenceSourceTypes, tierForSourceType } from "./lib/reference-evidence
 import { deriveAvailableClaimKind } from "./lib/reference-evidence.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
 import { comparePriorityEntries, deriveComparisonPresentation, evidenceVerificationId, systemVerificationId, systemVerificationQuestion } from "./lib/reference-analysis-derivations.mjs";
+import { evaluateGameDesignGlossarySchema } from "./lib/game-design-glossary-schema-evaluator.mjs";
 
 export { canonicalJson, sha256Canonical };
 
@@ -11,7 +12,8 @@ const termIdPattern = /^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$/u;
 const sha256Pattern = /^[a-f0-9]{64}$/u;
 const compareUtf8 = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
-const isSafeText = (value) => typeof value === "string" && value.length > 0 && !/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\uFEFF\r]/u.test(value) && value === value.normalize("NFC");
+const isSafeText = (value) => typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\r") && value === value.normalize("NFC");
+const isGlossaryText = (value) => isSafeText(value) && !/[\u0001-\u0009\u000b-\u001f\u007f-\u009f\uFEFF]/u.test(value);
 const isId = (value) => isSafeText(value) && idPattern.test(value);
 const isTermId = (value) => isSafeText(value) && termIdPattern.test(value);
 const isHash = (value) => isSafeText(value) && sha256Pattern.test(value);
@@ -224,6 +226,7 @@ export function validateReferenceAnalysis(value) {
 
 export function validateGameDesignGlossary(value) {
   return resultOf((issue) => {
+    if (!evaluateGameDesignGlossarySchema(value).ok) issue("", "glossary-schema.invalid");
     closedObject(value, ["schemaVersion", "scope", "version", "terms"], "", issue);
     if (value?.schemaVersion !== 1) issue("/schemaVersion", "schema-version.invalid");
     enumValue(value?.scope, ["shared", "project-overlay", "effective"], "/scope", issue);
@@ -231,12 +234,12 @@ export function validateGameDesignGlossary(value) {
     sortedRecords(value?.terms, "/terms", issue, "termId", (term, path, add) => {
       const keys = ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"];
       closedObject(term, keys, path, add);
-      safeTermId(term?.termId, `${path}/termId`, add); nonEmptyText(term?.koPreferred, `${path}/koPreferred`, add); nonEmptyText(term?.enPreferred, `${path}/enPreferred`, add); nonEmptyText(term?.definition, `${path}/definition`, add); safeId(term?.scope, `${path}/scope`, add);
-      for (const key of ["contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "confusedConceptIds", "decisionIds", "evidenceIds"]) { sortedUnique(term?.[key], `${path}/${key}`, add, key === "decisionIds" ? isId : isSafeText, { allowEmpty: true }); if (Array.isArray(term?.[key]) && term[key].length > 256) add(`${path}/${key}`, "array.oversized"); }
-      closedObject(term?.grammar, ["ko", "en"], `${path}/grammar`, add); nonEmptyText(term?.grammar?.ko, `${path}/grammar/ko`, add); nonEmptyText(term?.grammar?.en, `${path}/grammar/en`, add);
-      sortedUnique(term?.examples, `${path}/examples`, add, isSafeText, { allowEmpty: true });
+      safeTermId(term?.termId, `${path}/termId`, add); if (!isGlossaryText(term?.koPreferred)) add(`${path}/koPreferred`, "text.invalid"); if (!isGlossaryText(term?.enPreferred)) add(`${path}/enPreferred`, "text.invalid"); if (!isGlossaryText(term?.definition)) add(`${path}/definition`, "text.invalid"); safeId(term?.scope, `${path}/scope`, add);
+      for (const key of ["contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "confusedConceptIds", "decisionIds", "evidenceIds"]) { sortedUnique(term?.[key], `${path}/${key}`, add, key === "decisionIds" ? isId : isGlossaryText, { allowEmpty: true }); if (Array.isArray(term?.[key]) && term[key].length > 256) add(`${path}/${key}`, "array.oversized"); }
+      closedObject(term?.grammar, ["ko", "en"], `${path}/grammar`, add); if (!isGlossaryText(term?.grammar?.ko)) add(`${path}/grammar/ko`, "text.invalid"); if (!isGlossaryText(term?.grammar?.en)) add(`${path}/grammar/en`, "text.invalid");
+      sortedUnique(term?.examples, `${path}/examples`, add, isGlossaryText, { allowEmpty: true });
       enumValue(term?.state, ["proposed", "approved", "deprecated"], `${path}/state`, add);
-      if (term?.approver !== null && !isSafeText(term?.approver)) add(`${path}/approver`, "text.invalid");
+      if (term?.approver !== null && !isGlossaryText(term?.approver)) add(`${path}/approver`, "text.invalid");
       if (term?.replacementTermId !== null && !isTermId(term?.replacementTermId)) add(`${path}/replacementTermId`, "term-id.invalid");
       if (!Number.isInteger(term?.version) || term.version < 1) add(`${path}/version`, "version.invalid");
       if (!isSafeText(term?.changedAt) || Number.isNaN(new Date(term.changedAt).valueOf()) || new Date(term.changedAt).toISOString() !== term.changedAt) add(`${path}/changedAt`, "timestamp.invalid");
