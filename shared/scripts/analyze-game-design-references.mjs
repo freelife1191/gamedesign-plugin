@@ -3,9 +3,10 @@ import { deriveAvailableClaimKind, registerReferenceEvidence, validateClaimAgain
 import { mergeSystemAtlas } from "./lib/system-atlas.mjs";
 import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
+import { comparePriorityEntries, priorityDimensions, evidenceVerificationId, systemVerificationId, systemVerificationQuestion } from "./lib/reference-analysis-derivations.mjs";
 
 const roles = Object.freeze(["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"]);
-const dimensions = Object.freeze(["relevance", "playerExperienceImpact", "economyProgressionImpact", "differentiationPotential", "evidenceStrength", "uncertainty", "researchCost"]);
+const dimensions = priorityDimensions;
 const artifactFiles = Object.freeze(["reference-intelligence/brief.md", "reference-intelligence/reference-set.yml", "reference-intelligence/evidence-register.yml", "reference-intelligence/system-inventory.json", "reference-intelligence/analysis-priority.md", "reference-intelligence/comparison-matrix.md", "reference-intelligence/transfer-decisions.md", "reference-intelligence/verification-queue.md"]);
 const id = (value) => typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value);
 const text = (value) => typeof value === "string" && value.length > 0 && !value.includes("\0") && !value.includes("\r") && value === value.normalize("NFC");
@@ -111,10 +112,7 @@ export function rankDeepDiveCandidates({ inventory, maps, questions = {} } = {})
   const items = copy(inventory); const mapValues = copy(maps); const scoring = copy(questions);
   if (!Array.isArray(items) || !Array.isArray(mapValues) || !scoring || typeof scoring !== "object" || Array.isArray(scoring)) fail("invalid-priority");
   const mapped = new Set(mapValues.map(({ systemId }) => systemId));
-  return freeze(items.filter(({ systemId }) => mapped.has(systemId) && completePriority(scoring[systemId])).map((item) => ({ ...item, ...scoring[item.systemId] })).sort((left, right) => {
-    const score = (value) => dimensions.slice(0, 6).reduce((sum, field) => sum + value[field], 0);
-    return score(right) - score(left) || left.researchCost - right.researchCost || compare(left.systemId, right.systemId);
-  }).map((item, index) => ({ systemId: item.systemId, rank: index + 1, rationale: "All seven priority dimensions are explicitly scored.", ...Object.fromEntries(dimensions.map((field) => [field, item[field]])) })));
+  return freeze(items.filter(({ systemId }) => mapped.has(systemId) && completePriority(scoring[systemId])).map((item) => ({ ...item, ...scoring[item.systemId] })).sort(comparePriorityEntries).map((item, index) => ({ systemId: item.systemId, rank: index + 1, rationale: "All seven priority dimensions are explicitly scored.", ...Object.fromEntries(dimensions.map((field) => [field, item[field]])) })));
 }
 
 function deepDives(priority, inventory, evidence) {
@@ -131,7 +129,7 @@ function deepDives(priority, inventory, evidence) {
 }
 
 function comparison(deepDiveValues) {
-  return deepDiveValues.map((dive) => ({ comparisonId: `comparison-${dive.systemId}`, subject: dive.systemId.split("-").join(" "), finding: dive.coverageCount < 2 || dive.claimKind === "unknown" ? "Hold comparison conclusion pending sufficient observed reference coverage." : "Comparison remains evidence-bounded and pending review.", evidenceIds: dive.evidenceIds, referenceIds: dive.referenceIds, contextIds: dive.contextIds, coverageCount: dive.coverageCount })).sort((left, right) => compare(left.comparisonId, right.comparisonId));
+  return deepDiveValues.map((dive) => ({ comparisonId: `comparison-${dive.systemId}`, sourceSystemId: dive.systemId, subject: dive.systemId.split("-").join(" "), claimKind: dive.claimKind, finding: dive.coverageCount < 2 || dive.claimKind === "unknown" ? "Hold comparison conclusion pending sufficient observed reference coverage." : "Comparison remains evidence-bounded and pending review.", evidenceIds: dive.evidenceIds, referenceIds: dive.referenceIds, contextIds: dive.contextIds, coverageCount: dive.coverageCount })).sort((left, right) => compare(left.comparisonId, right.comparisonId));
 }
 
 /** Stage 9: returns proposal-only transfers; no caller-supplied coverage or validation state is accepted. */
@@ -154,8 +152,8 @@ export function buildDesignTransfers({ deepDives, projectConstraints, evidence, 
 }
 
 function verificationQueue(evidence, dives) {
-  const entries = evidence.filter(({ availability }) => availability === "unavailable").map((record) => ({ verificationId: `verify-${record.evidenceId}`, question: record.verificationQuestion, evidenceIds: [record.evidenceId], state: "open" }));
-  for (const dive of dives.filter(({ coverageCount, claimKind }) => coverageCount < 2 || claimKind === "unknown")) entries.push({ verificationId: `verify-${dive.systemId}`, question: `What independent observation can verify ${dive.systemId}?`, evidenceIds: dive.evidenceIds, state: "open" });
+  const entries = evidence.filter(({ availability }) => availability === "unavailable").map((record) => ({ verificationId: evidenceVerificationId(record.evidenceId), question: record.verificationQuestion, evidenceIds: [record.evidenceId], state: "open" }));
+  for (const dive of dives.filter(({ coverageCount, claimKind }) => coverageCount < 2 || claimKind === "unknown")) entries.push({ verificationId: systemVerificationId(dive.systemId), question: systemVerificationQuestion(dive.systemId), evidenceIds: dive.evidenceIds, state: "open" });
   return entries.sort((left, right) => compare(left.verificationId, right.verificationId));
 }
 
@@ -185,7 +183,7 @@ export async function writeReferenceAnalysisWorkspace({ artifactRoot, analysis, 
     [artifactFiles[2], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence })],
     [artifactFiles[3], canonicalJson(safeAnalysis.systemInventory)],
     [artifactFiles[4], markdown("Analysis priority", ["rank", "systemId", ...dimensions, "rationale"], safeAnalysis.priority)],
-    [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "subject", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
+    [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "sourceSystemId", "subject", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
     [artifactFiles[6], markdown("Transfer decisions", ["transferId", "sourceSystemId", "decision", "coverageCount", "evidenceIds", "referenceIds", "contextIds", "projectConstraints", "risks", "validationSteps", "validationState", "reviewState", "rationale"], safeAnalysis.transferDecisions.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", "), projectConstraints: item.projectConstraints.join(", "), risks: item.risks.join(", "), validationSteps: item.validationSteps.join(", ") })))],
     [artifactFiles[7], markdown("Verification queue", ["verificationId", "state", "question", "evidenceIds"], safeAnalysis.verificationQueue.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", ") })))]
   ]);

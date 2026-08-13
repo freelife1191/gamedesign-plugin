@@ -79,8 +79,10 @@ function validReferenceAnalysis() {
       referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1,
     }],
     comparison: [{
-      comparisonId: "comparison-reveal-loop",
+      comparisonId: "comparison-system-reveal-loop",
+      sourceSystemId: "system-reveal-loop",
       subject: "Reveal loop",
+      claimKind: "observation",
       finding: "Choice timing is the differentiator.",
       evidenceIds: ["evidence-cinematic-loop"],
       referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1,
@@ -96,8 +98,8 @@ function validReferenceAnalysis() {
       reviewState: "pending-review",
     }],
     verificationQueue: [{
-      verificationId: "verify-system-reveal-loop",
-      question: "Does the choice remain legible in a playable prototype?",
+      verificationId: "verify-system-system-reveal-loop",
+      question: "What independent observation can verify system-reveal-loop?",
       evidenceIds: ["evidence-cinematic-loop"],
       state: "open",
     }],
@@ -737,6 +739,7 @@ async function analysisArtifactRoot(t) {
 
 test("analysis stages preserve evidence and never auto-approve transfer", async (t) => {
   const analysis = structuredClone(buildReferenceAnalysis(await analysisInputFixture()));
+  assert.equal(validateReferenceAnalysis(analysis).ok, true, JSON.stringify(validateReferenceAnalysis(analysis).errors));
   assert.equal(analysis.referenceSet.map(({ role }) => role).join(","), "direct-competitor,core-system-exemplar,operations-monetization-comparator");
   assert.equal(analysis.transferDecisions.every(({ reviewState }) => reviewState === "pending-review"), true);
   assert.equal(analysis.verificationQueue.some(({ question }) => question.includes("official page")), true);
@@ -927,7 +930,7 @@ test("fix2 holds unavailable-only systems but allows two observed references to 
     const templateLines = (await readFile(new URL(`../../shared/reference-intelligence/templates/${relativePath}`, import.meta.url), "utf8")).trim().split("\n");
     assert.equal(outputLines[2], templateLines[2]);
     const cellCount = (line) => line.split("|").length - 2;
-    const expectedColumns = relativePath === "comparison-matrix.md" ? 7 : 13;
+    const expectedColumns = relativePath === "comparison-matrix.md" ? 9 : 13;
     assert.equal([templateLines[2], templateLines[3], templateLines[4], ...outputLines.slice(2)].every((line) => cellCount(line) === expectedColumns), true);
   }
   const unavailableOnly = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{
@@ -1033,4 +1036,42 @@ test("fix3 keeps priority and deep dives in rank order and requires every real v
   const missingQueue = structuredClone(buildReferenceAnalysis(await analysisInputFixture()));
   missingQueue.verificationQueue.pop();
   assert.equal(validateReferenceAnalysis(missingQueue).ok, false);
+});
+
+test("fix4 final validator rejects a score order that contradicts contiguous ranks", async () => {
+  const { atlas } = await loadBundledReferenceCatalog({ moduleRoot: bundledReferenceRoot });
+  const coreMap = analysisMapFixture()[0];
+  const progressionMap = { ...coreMap, mapId: "map-progression-loop", systemId: "progression", connections: coreMap.connections.map((connection) => ({ ...connection, connectedSystemIds: ["progression"] })) };
+  const coreEvidence = analysisEvidenceFixture()[0];
+  const analysis = buildReferenceAnalysis(await analysisInputFixture({
+    atlas: { atlas, genreIds: ["action-rpg"] },
+    evidence: [...analysisEvidenceFixture(), { ...coreEvidence, evidenceId: "ev-fix4-progression", systemIds: ["progression"], claim: "A progression loop is observed." }],
+    edges: [coreMap, progressionMap],
+    priorities: {
+      "core-play": { relevance: 4, playerExperienceImpact: 4, economyProgressionImpact: 3, differentiationPotential: 4, evidenceStrength: 5, uncertainty: 2, researchCost: 2 },
+      progression: { relevance: 5, playerExperienceImpact: 5, economyProgressionImpact: 5, differentiationPotential: 5, evidenceStrength: 5, uncertainty: 1, researchCost: 1 },
+    },
+  }));
+  const contradictory = structuredClone(analysis);
+  contradictory.priority[0].evidenceStrength = 1;
+  contradictory.priority[0].relevance = 1;
+  assert.equal(validateReferenceAnalysis(contradictory).ok, false);
+  const reordered = structuredClone(analysis);
+  reordered.priority.reverse().forEach((entry, index) => { entry.rank = index + 1; });
+  reordered.deepDives.reverse();
+  assert.equal(validateReferenceAnalysis(reordered).ok, false);
+  const substitutedComparison = structuredClone(analysis);
+  const coreComparison = substitutedComparison.comparison.find(({ sourceSystemId }) => sourceSystemId === "core-play");
+  const progressionDive = substitutedComparison.deepDives.find(({ systemId }) => systemId === "progression");
+  coreComparison.evidenceIds = progressionDive.evidenceIds;
+  coreComparison.referenceIds = progressionDive.referenceIds;
+  coreComparison.contextIds = progressionDive.contextIds;
+  coreComparison.coverageCount = progressionDive.coverageCount;
+  assert.equal(validateReferenceAnalysis(substitutedComparison).ok, false);
+  const queued = buildReferenceAnalysis(await analysisInputFixture());
+  assert.equal(queued.verificationQueue.some(({ verificationId }) => verificationId === "verify-evidence-ev-beta-offline"), true);
+  assert.equal(queued.verificationQueue.some(({ verificationId }) => verificationId === "verify-system-core-play"), true);
+  const alteredQuestion = structuredClone(queued);
+  alteredQuestion.verificationQueue.find(({ verificationId }) => verificationId === "verify-evidence-ev-beta-offline").question = "Arbitrary pending question.";
+  assert.equal(validateReferenceAnalysis(alteredQuestion).ok, false);
 });
