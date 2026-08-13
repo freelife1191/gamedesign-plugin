@@ -14,6 +14,17 @@ const commonSkillIds = [
   "retrieve-approved-design-memory",
   "svg-infographic",
 ];
+const productSkillIds = Object.freeze({
+  "game-design-studio": [
+    "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project", "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "visualize-game-design",
+  ],
+  "game-design-career": [
+    "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "generate-image-assets", "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing", "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets", "visualize-career-roadmap",
+  ],
+});
+const topLevelScripts = [
+  "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "generate-openai-images.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-design-memory.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
+];
 const memoryHeadings = [
   "어떤 기록을 기억하는가",
   "기억하지 않는 내용",
@@ -68,6 +79,27 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
 }
 
+function listedSkillIds(markdown) {
+  return [...markdown.matchAll(/^\| \[`([a-z0-9-]+)`\]\([^)]*\) \|/gmu)].map((match) => match[1]).sort();
+}
+
+function listedTopLevelScripts(markdown) {
+  const section = markdown.split("## 설치된 top-level scripts\n", 2)[1]?.split("\n## ", 1)[0];
+  assert.ok(section, "product README keeps the top-level scripts section");
+  return [...section.matchAll(/^\| `([a-z0-9-]+\.mjs)` \|/gmu)].map((match) => match[1]).sort();
+}
+
+function assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide, productReadme }) {
+  const expectedSkills = [...productSkillIds[product], ...commonSkillIds].sort();
+  assert.deepEqual(actualProductSkillIds, [...productSkillIds[product]].sort(), `${product}: source product skill IDs`);
+  assert.deepEqual(actualCommonSkillIds, [...commonSkillIds].sort(), `${product}: source common skill IDs`);
+  assert.deepEqual(actualScripts, [...topLevelScripts].sort(), `${product}: source top-level scripts`);
+  assert.equal(expectedSkills.length, 21, `${product}: expected installed skills`);
+  assert.equal(topLevelScripts.length, 21, `${product}: expected top-level scripts`);
+  assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed 21 IDs`);
+  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 21 top-level scripts`);
+}
+
 function assertKoreanMemoryContract(markdown, label, laneHeading) {
   for (const heading of [...memoryHeadings, laneHeading]) {
     assert.match(markdown, new RegExp(`^## ${escapeRegExp(heading)}$`, "mu"), `${label}: ${heading}`);
@@ -87,6 +119,8 @@ function assertKoreanMemoryContract(markdown, label, laneHeading) {
     /검토·만료 시점/u,
     /출처 파일/u,
     /충돌/u,
+    /목록에 표시된 기억 ID\(memory-\.\.\.\)/u,
+    /현재 충돌한 최신 기록 갈래/u,
     /기억 없이 기존 기획 작업을 계속/u,
     /기준 (?:기획 |작업 )?결과(?:물)? 폴더/u,
   ];
@@ -111,7 +145,7 @@ test("memory guides are Korean-first, local-only, human-approved, and fail-open"
   }
 });
 
-test("source inventories derive 15 product skills plus 6 common skills and 21 top-level scripts", async () => {
+test("source inventories and product documentation list exactly the installed 21 skills and 21 scripts", async () => {
   const buildSource = await readFile(path.join(root, "tooling/lib/build-product.mjs"), "utf8");
   for (const id of ["svg-infographic", "archify", "humanize-korean"]) {
     assert.match(buildSource, new RegExp(`skills/${id.replace(/-/gu, "\\-")}`), id);
@@ -119,24 +153,20 @@ test("source inventories derive 15 product skills plus 6 common skills and 21 to
   assert.match(buildSource, /\["shared\/memory\/skills", "skills"\]/u);
 
   const memoryIds = await directoryIds("shared/memory/skills");
-  assert.deepEqual(commonSkillIds, ["archify", ...memoryIds, "humanize-korean", "svg-infographic"].sort());
+  const actualCommonSkillIds = ["archify", ...memoryIds, "humanize-korean", "svg-infographic"].sort();
 
   const scripts = (await readdir(path.join(root, "shared/scripts"), { withFileTypes: true }))
     .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
     .map((entry) => entry.name)
     .sort();
-  assert.equal(scripts.length, 21);
   assert.equal(scripts.filter((name) => /(?:capture|maintain|retrieve|validate-design-memory|load-memory-config)/u.test(name)).length, 5);
 
   for (const product of products) {
-    const productIds = await directoryIds(`products/${product}/plugin/skills`);
-    assert.equal(productIds.length, 15, product);
-    const expected = [...productIds, ...commonSkillIds].sort();
-    assert.equal(expected.length, 21, product);
+    const actualProductSkillIds = await directoryIds(`products/${product}/plugin/skills`);
 
     const skillGuide = await readFile(path.join(root, "guides", product, "skills/README.md"), "utf8");
     const productReadme = await readFile(path.join(root, "products", product, "plugin/README.md"), "utf8");
-    for (const id of expected) assert.match(skillGuide, new RegExp(`\\b${escapeRegExp(id)}\\b`, "u"), `${product}: ${id}`);
+    assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts: scripts, skillGuide, productReadme });
     for (const markdown of [skillGuide, productReadme]) {
       assert.match(markdown, /제품 스킬 15개/u);
       assert.match(markdown, /공통 스킬 6개/u);
@@ -221,10 +251,24 @@ test("hostile documentation mutations are non-vacuously rejected", async () => {
     assert.throws(() => assertKoreanMemoryContract(mutated, `mutation ${index + 1}`, "Studio 전용 경계"));
   }
 
-  const skillGuide = await readFile(path.join(root, "guides/game-design-studio/skills/README.md"), "utf8");
-  for (const [index, id] of commonSkillIds.entries()) {
-    const mutated = skillGuide.replaceAll(id, `${id}-mutated`);
-    assert.notEqual(mutated, skillGuide, `skill mutation ${index + 1} changed the fixture`);
-    assert.equal(mutated.includes("[`" + id + "`]"), false);
+  const actualCommonSkillIds = ["archify", ...(await directoryIds("shared/memory/skills")), "humanize-korean", "svg-infographic"].sort();
+  const actualScripts = (await readdir(path.join(root, "shared/scripts"), { withFileTypes: true }))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".mjs"))
+    .map((entry) => entry.name)
+    .sort();
+  for (const product of products) {
+    const actualProductSkillIds = await directoryIds(`products/${product}/plugin/skills`);
+    const skillGuide = await readFile(path.join(root, "guides", product, "skills/README.md"), "utf8");
+    const productReadme = await readFile(path.join(root, "products", product, "plugin/README.md"), "utf8");
+    for (const id of [...productSkillIds[product], ...commonSkillIds]) {
+      const mutated = skillGuide.replace("[`" + id + "`]", "[`" + id + "-mutated`]");
+      assert.notEqual(mutated, skillGuide, `${product}: skill mutation changed ${id}`);
+      assert.throws(() => assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide: mutated, productReadme }), `${product}: skill mutation rejects ${id}`);
+    }
+    for (const script of topLevelScripts) {
+      const mutated = productReadme.replace("| `" + script + "` |", "| `" + script + "-mutated` |");
+      assert.notEqual(mutated, productReadme, `${product}: script mutation changed ${script}`);
+      assert.throws(() => assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide, productReadme: mutated }), `${product}: script mutation rejects ${script}`);
+    }
   }
 });

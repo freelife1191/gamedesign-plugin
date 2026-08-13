@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -20,6 +20,12 @@ async function fixture(t) {
   const root = await workspace(t); const evidenceBytes = Buffer.from("finding-07: 회피 뒤 반격 수단이 없어 기다리는 시간이 길어졌다.\n", "utf8");
   await mkdir(path.join(root, "playtest-session-04")); await writeFile(path.join(root, "playtest-session-04", "evidence.yml"), evidenceBytes);
   const event = { eventId: "playtest-session-04-finding-07", type: "playtest-finding", summary: "회피 뒤 반격 수단이 없어 기다리는 시간이 길어졌다.", applicability: "같은 전투 구조와 플레이어 능력을 사용하는 보스전", exclusions: "회피 자체가 핵심 재미이거나 반격 규칙이 정해지지 않은 전투", artifactTypes: ["character-skill-combat-monster"], relatedIds: ["boss-phase-2"], tags: ["boss", "counterplay"], sources: [{ artifact_id: "playtest-session-04", locator: "evidence.yml#finding-07", sha256: createHash("sha256").update(evidenceBytes).digest("hex") }], actor: "김기획자" }; return { root, event, classificationReceipt: receiptFor(event) };
+}
+async function localGit(root, contents = "before\n") {
+  const exclude = path.join(root, ".git", "info", "exclude");
+  await mkdir(path.dirname(exclude), { recursive: true });
+  await writeFile(exclude, contents);
+  return exclude;
 }
 
 test("capture creates a stable candidate and idempotently recognizes the same source event", async (t) => {
@@ -44,7 +50,8 @@ test("only an explicit preference is directly approved with interactive-user pro
 test("capture rejects a missing artifact even when workspace root has matching bytes and has no receipt", async (t) => {
   const root = await workspace(t); const bytes = Buffer.from("same bytes\n"); await writeFile(path.join(root, "evidence.yml"), bytes);
   const event = { eventId: "finding-missing-artifact", type: "playtest-finding", actor: "human", summary: "반격이 없다.", applicability: "보스전", exclusions: "퍼즐", artifactTypes: ["combat"], relatedIds: [], tags: ["boss"], sources: [{ artifact_id: "missing-artifact", locator: "evidence.yml#x", sha256: createHash("sha256").update(bytes).digest("hex") }] };
-  assert.equal((await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event })).status, "skipped");
+  assert.equal((await captureDesignMemory({ workspaceRoot: root, config: config({ gitMode: "local" }), projectId: "wind-island", lane: "studio", event })).status, "skipped");
+  await assert.rejects(() => import("node:fs/promises").then(({ lstat }) => lstat(path.join(root, ".git"))), (error) => error?.code === "ENOENT");
 });
 
 test("an approved explicit preference remains retrievable after candidate TTL", async (t) => {
@@ -108,4 +115,32 @@ test("capture log publication failure preserves the committed source event", asy
   await mkdir(path.join(store.root, "v1", "derived"), { recursive: true }); await symlink(path.join(root, "playtest-session-04"), path.join(store.root, "v1", "derived", "logs"));
   const result = await captureDesignMemory({ workspaceRoot: root, config: config(), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow });
   assert.equal(result.status, "created"); assert.deepEqual(result.warnings, [{ code: "memory.log_publish" }]); assert.equal((await scanMemoryEvents({ store })).events.length, 1);
+});
+
+test("a successful local capture adds exactly one Git exclusion marker and retries idempotently", async (t) => {
+  const { root, event, classificationReceipt } = await fixture(t); const exclude = await localGit(root);
+  const first = await captureDesignMemory({ workspaceRoot: root, config: config({ gitMode: "local" }), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow });
+  const second = await captureDesignMemory({ workspaceRoot: root, config: config({ gitMode: "local" }), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow });
+  assert.equal(first.status, "created"); assert.equal(second.status, "present"); assert.deepEqual(first.warnings, []); assert.deepEqual(second.warnings, []);
+  const text = await readFile(exclude, "utf8");
+  assert.equal((text.match(/# game-design-plugin:memory:begin/g) ?? []).length, 1); assert.equal((text.match(/# game-design-plugin:memory:end/g) ?? []).length, 1); assert.match(text, /\.game-design\/memory\//u);
+});
+
+test("tracked capture does not create or alter a Git exclusion marker", async (t) => {
+  const { root, event, classificationReceipt } = await fixture(t); const exclude = await localGit(root, "user exclusion\n");
+  const result = await captureDesignMemory({ workspaceRoot: root, config: config({ gitMode: "tracked" }), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow });
+  assert.equal(result.status, "created"); assert.deepEqual(result.warnings, []); assert.equal(await readFile(exclude, "utf8"), "user exclusion\n");
+});
+
+test("local Git exclusion warnings preserve successful capture events without disclosure", async (t) => {
+  for (const setup of [
+    async (root) => localGit(root, "# game-design-plugin:memory:begin\n"),
+    async (root) => { const exclude = await localGit(root); await writeFile(`${exclude}.game-design-memory-exclude.lock`, "held\n"); },
+    async (root) => { await mkdir(path.join(root, ".git")); await symlink(path.join(root, "outside"), path.join(root, ".git", "info")); },
+    async () => {},
+  ]) {
+    const { root, event, classificationReceipt } = await fixture(t); await setup(root);
+    const result = await captureDesignMemory({ workspaceRoot: root, config: config({ gitMode: "local" }), projectId: "wind-island", lane: "studio", event, classificationReceipt, now: captureNow });
+    assert.equal(result.status, "created"); assert.equal((await scanMemoryEvents({ store: result.store })).events.length, 1); assert.equal(result.warnings.length, 1); assert.match(result.warnings[0].code, /^memory\.git_(?:exclude|exclude_lock|exclude_marker|metadata)$/u); assert.equal(JSON.stringify(result.warnings).includes(root), false);
+  }
 });

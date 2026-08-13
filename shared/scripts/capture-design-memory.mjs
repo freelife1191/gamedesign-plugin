@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 
-import { appendMemoryEvent, resolveMemoryStore } from "./lib/safe-memory-store.mjs";
+import { appendMemoryEvent, ensureMemoryGitExclusion, resolveMemoryStore } from "./lib/safe-memory-store.mjs";
 import { verifyCaptureClassificationReceipt } from "./lib/design-memory-capabilities.mjs";
 import { publishMemoryLogGeneration, rebuildMemoryIndex } from "./retrieve-design-memory.mjs";
 import { canonicalMemoryEventDocument, validateMemorySourceBindings } from "./validate-design-memory.mjs";
@@ -46,6 +46,16 @@ export async function publishDesignMemoryLog({ workspaceRoot, config, now }) {
   return published.complete ? [] : published.warnings ?? [];
 }
 
+async function syncLocalMemoryGitExclusion(workspaceRoot, config) {
+  if (config?.gitMode !== "local") return [];
+  try {
+    const result = await ensureMemoryGitExclusion({ workspaceRoot });
+    return result.status === "warning" ? [{ code: result.code ?? "memory.git_exclude" }] : [];
+  } catch {
+    return [{ code: "memory.git_exclude" }];
+  }
+}
+
 export async function captureDesignMemory({ workspaceRoot, config, projectId, lane, event, classificationReceipt, now = new Date(), disabledForRequest = false } = {}) {
   if (!config?.enabled || disabledForRequest || !safeId(projectId) || projectId !== config.projectId || !LANES.has(lane) || !event || !safeId(event.eventId) || !Object.hasOwn(TYPE, event.type)) return { status: "skipped" };
   const kind = TYPE[event.type]; const explicit = event.type === "explicit-preference";
@@ -65,6 +75,7 @@ export async function captureDesignMemory({ workspaceRoot, config, projectId, la
     const appended = await appendMemoryEvent({ store, eventDocument });
     let warnings = [];
     try { warnings = await publishDesignMemoryLog({ workspaceRoot, config, now }); } catch { warnings = [{ code: "memory.log_publish" }]; }
+    warnings.push(...await syncLocalMemoryGitExclusion(workspaceRoot, config));
     return { status: appended.status, memoryId, eventId: appended.eventId, relativePath: appended.relativePath, store, warnings };
   } catch (error) { if (["duplicate-operation", "memory.append_conflict"].includes(error?.code)) return { status: "conflict", memoryId, store }; return { status: "skipped", memoryId, store }; }
 }
