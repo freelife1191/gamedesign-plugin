@@ -14,14 +14,14 @@ const skillRoot = path.join(repoRoot, "shared/reference-intelligence/skills");
 const analysisWorkflow = ["reference-brief", "role-based-reference-set", "evidence-registry", "system-atlas", "inventory-without-evaluation", "system-maps-and-loops", "priority", "deep-dives", "cross-game-comparison", "adopt-adapt-reject-hold", "verification-queue", "glossary-candidates"];
 const analysisLayouts = {
   installed: {
-    runtime: "../../scripts/analyze-game-design-references.mjs",
+    runtimes: ["../../scripts/analyze-game-design-references.mjs"],
     references: ["../../references/shared/reference-intelligence/references/evidence-policy.md", "../../references/shared/reference-intelligence/references/reference-analysis-flow.md"],
     templates: ["../../references/shared/reference-intelligence/templates/analysis-priority.md", "../../references/shared/reference-intelligence/templates/brief.md", "../../references/shared/reference-intelligence/templates/comparison-matrix.md", "../../references/shared/reference-intelligence/templates/evidence-register.yml", "../../references/shared/reference-intelligence/templates/reference-set.yml", "../../references/shared/reference-intelligence/templates/system-inventory.json", "../../references/shared/reference-intelligence/templates/transfer-decisions.md", "../../references/shared/reference-intelligence/templates/verification-queue.md"],
     schemas: ["../../references/shared/reference-intelligence/schema/reference-analysis.schema.json"],
     catalogs: ["../../references/shared/reference-intelligence/catalog/overlays/business-model.json", "../../references/shared/reference-intelligence/catalog/overlays/genre.json", "../../references/shared/reference-intelligence/catalog/overlays/platform.json", "../../references/shared/reference-intelligence/catalog/overlays/play-mode.json", "../../references/shared/reference-intelligence/catalog/source-register.json", "../../references/shared/reference-intelligence/catalog/system-atlas.json"],
   },
   source: {
-    runtime: "../../../scripts/analyze-game-design-references.mjs",
+    runtimes: ["../../../scripts/analyze-game-design-references.mjs"],
     references: ["../../references/evidence-policy.md", "../../references/reference-analysis-flow.md"],
     templates: ["../../templates/analysis-priority.md", "../../templates/brief.md", "../../templates/comparison-matrix.md", "../../templates/evidence-register.yml", "../../templates/reference-set.yml", "../../templates/system-inventory.json", "../../templates/transfer-decisions.md", "../../templates/verification-queue.md"],
     schemas: ["../../schema/reference-analysis.schema.json"],
@@ -56,16 +56,31 @@ async function createLayouts(t, skillId) {
   await mkdir(path.join(installed, "skills", skillId), { recursive: true });
   await cp(path.join(sourceShared, "reference-intelligence/skills", skillId, "SKILL.md"), path.join(installed, "skills", skillId, "SKILL.md"));
   return {
-    source: path.join(sourceShared, "reference-intelligence/skills", skillId, "SKILL.md"),
-    installed: path.join(installed, "skills", skillId, "SKILL.md"),
+    source: await realpath(path.join(sourceShared, "reference-intelligence/skills", skillId, "SKILL.md")),
+    installed: await realpath(path.join(installed, "skills", skillId, "SKILL.md")),
   };
 }
 
 function layoutEntries(declaration) {
-  return [["runtime", [declaration.runtime]], ["references", declaration.references], ["templates", declaration.templates], ["schemas", declaration.schemas], ["catalogs", declaration.catalogs]].flatMap(([category, values]) => values.map((value) => [category, value]));
+  return [["runtimes", declaration.runtimes], ["references", declaration.references], ["templates", declaration.templates], ["schemas", declaration.schemas], ["catalogs", declaration.catalogs]].flatMap(([category, values]) => values.map((value) => [category, value]));
 }
 
 function invalidLayout() { throw new Error("reference-skill layout invalid"); }
+
+function sameIdentity(left, right) { return left.dev === right.dev && left.ino === right.ino && left.mode === right.mode; }
+
+async function canonicalRoot(rawRoot) {
+  const lexical = path.resolve(rawRoot); const parts = lexical.slice(path.parse(lexical).root.length).split(path.sep).filter(Boolean);
+  let cursor = path.parse(lexical).root; const snapshots = [];
+  const capture = async () => { const info = await lstat(cursor).catch(() => invalidLayout()); if (info.isSymbolicLink() || !info.isDirectory()) invalidLayout(); snapshots.push([cursor, info]); };
+  await capture(); for (const part of parts) { cursor = path.join(cursor, part); await capture(); }
+  const root = await realpath(lexical).catch(() => invalidLayout());
+  if (path.normalize(root) !== path.normalize(lexical)) invalidLayout();
+  const snapshot = await lstat(root); if (snapshot.isSymbolicLink() || !snapshot.isDirectory()) invalidLayout();
+  return { root, snapshot, snapshots };
+}
+
+async function recheckRoot({ root, snapshot, snapshots }) { for (const [target, before] of snapshots) { const after = await lstat(target).catch(() => invalidLayout()); if (!sameIdentity(before, after) || after.isSymbolicLink() || !after.isDirectory()) invalidLayout(); } const after = await lstat(root).catch(() => invalidLayout()); if (!sameIdentity(snapshot, after) || after.isSymbolicLink() || !after.isDirectory()) invalidLayout(); }
 
 async function stableRegular(root, target) {
   const relative = path.relative(root, target);
@@ -77,7 +92,7 @@ async function stableRegular(root, target) {
     if (info.isSymbolicLink() || (cursor === target ? !info.isFile() : !info.isDirectory())) invalidLayout();
   }
   const before = await lstat(target); const bytes = await readFile(target); const after = await lstat(target);
-  if (before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode || before.size !== after.size) invalidLayout();
+  if (!sameIdentity(before, after) || before.size !== after.size) invalidLayout();
   return bytes;
 }
 
@@ -85,7 +100,8 @@ async function consumeAnalysisLayout(skillPath, contract, layout) {
   if (layout !== "source" && layout !== "installed") invalidLayout();
   if (JSON.stringify(contract.layouts) !== JSON.stringify(analysisLayouts)) invalidLayout();
   const declaration = analysisLayouts[layout];
-  const root = layout === "installed" ? path.resolve(path.dirname(skillPath), "../..") : path.resolve(path.dirname(skillPath), "../../../..");
+  const rootState = await canonicalRoot(layout === "installed" ? path.resolve(path.dirname(skillPath), "../..") : path.resolve(path.dirname(skillPath), "../../../.."));
+  const { root } = rootState;
   const expectedSkill = layout === "installed" ? path.join(root, "skills/analyze-game-design-references/SKILL.md") : path.join(root, "shared/reference-intelligence/skills/analyze-game-design-references/SKILL.md");
   if (path.resolve(skillPath) !== expectedSkill) invalidLayout();
   await stableRegular(root, expectedSkill);
@@ -101,7 +117,8 @@ async function consumeAnalysisLayout(skillPath, contract, layout) {
     if (target !== expected || !target.startsWith(`${root}${path.sep}`)) invalidLayout();
     files.push([category, declared, await stableRegular(root, target)]);
   }
-  const runtime = path.resolve(path.dirname(skillPath), declaration.runtime);
+  await recheckRoot(rootState);
+  const runtime = path.resolve(path.dirname(skillPath), declaration.runtimes[0]);
   return { root, runtime, files, referenceRoot: await realpath(layout === "installed" ? path.join(root, "references/shared/reference-intelligence") : path.join(root, "shared/reference-intelligence")) };
 }
 
@@ -204,15 +221,15 @@ test("analysis consumer rejects partial installed, escaped, and non-regular iden
   const fixtureRoot = path.resolve(path.dirname(layouts.installed), "../..");
   const sourceDecoy = layouts.source;
   const expectInvalid = async () => assert.rejects(() => loadAnalysisRuntime(layouts.installed, contract, "installed", source.files), /reference-skill layout invalid/u);
-  for (const [category, declared] of [["runtime", contract.layouts.installed.runtime], ...contract.layouts.installed.references.map((value) => ["references", value]), ...contract.layouts.installed.templates.map((value) => ["templates", value]), ...contract.layouts.installed.schemas.map((value) => ["schemas", value]), ...contract.layouts.installed.catalogs.map((value) => ["catalogs", value])]) {
+  for (const [category, declared] of [...contract.layouts.installed.runtimes.map((value) => ["runtimes", value]), ...contract.layouts.installed.references.map((value) => ["references", value]), ...contract.layouts.installed.templates.map((value) => ["templates", value]), ...contract.layouts.installed.schemas.map((value) => ["schemas", value]), ...contract.layouts.installed.catalogs.map((value) => ["catalogs", value])]) {
     const target = path.resolve(path.dirname(layouts.installed), declared); const bytes = await readFile(target);
     await unlink(target); await expectInvalid(); await writeFile(target, bytes);
     await writeFile(target, Buffer.concat([bytes, Buffer.from("\n ")])); await expectInvalid(); await writeFile(target, bytes);
     assert.ok(category);
   }
-  const malformed = structuredClone(contract); malformed.layouts.installed.runtime = "/tmp/not-a-runtime.mjs";
+  const malformed = structuredClone(contract); malformed.layouts.installed.runtimes[0] = "/tmp/not-a-runtime.mjs";
   await assert.rejects(() => loadAnalysisRuntime(layouts.installed, malformed, "installed"), /reference-skill layout invalid/u);
-  malformed.layouts.installed.runtime = "../../../escape.mjs";
+  malformed.layouts.installed.runtimes[0] = "../../../escape.mjs";
   await assert.rejects(() => loadAnalysisRuntime(layouts.installed, malformed, "installed"), /reference-skill layout invalid/u);
   const manifest = path.join(fixtureRoot, ".codex-plugin/plugin.json"); const originalManifest = await readFile(manifest);
   await writeFile(manifest, JSON.stringify({ name: "wrong" })); await expectInvalid(); await writeFile(manifest, originalManifest);
