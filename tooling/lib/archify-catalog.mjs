@@ -60,6 +60,30 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     sourceRoot: "shared/vendor/im-not-ai/humanize-korean/v2.3.0",
     destinationRoot: "skills/humanize-korean",
   }),
+  Object.freeze({
+    id: "memory",
+    module: "memory",
+    sourceRoot: "shared/memory",
+    destinationRoot: "references/shared/memory",
+  }),
+  Object.freeze({
+    id: "memory",
+    module: "memory",
+    sourceRoot: "shared/memory/skills/capture-game-design-memory",
+    destinationRoot: "skills/capture-game-design-memory",
+  }),
+  Object.freeze({
+    id: "memory",
+    module: "memory",
+    sourceRoot: "shared/memory/skills/maintain-game-design-memory",
+    destinationRoot: "skills/maintain-game-design-memory",
+  }),
+  Object.freeze({
+    id: "memory",
+    module: "memory",
+    sourceRoot: "shared/memory/skills/retrieve-approved-design-memory",
+    destinationRoot: "skills/retrieve-approved-design-memory",
+  }),
 ]);
 const DIAGRAM_TYPES = new Set(["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
 const SPEC_REQUIRED_STATES = new Set([

@@ -6,6 +6,7 @@ import test from "node:test";
 import {
   discoverArchifySourceDocuments,
   loadArchifyCatalog,
+  validateArchifyCatalog,
 } from "../../tooling/lib/archify-catalog.mjs";
 import { findStructuralDuplicates } from "../../tooling/lib/archify-signature.mjs";
 import {
@@ -43,7 +44,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 692, "catalog must retain exactly 692 entries");
+  assert.equal(catalog.entries.length, 711, "catalog must retain exactly 711 entries");
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -253,7 +254,7 @@ test("production exclusions retain exact package classes and source-specific evi
 test("production shared package mirrors retain structured build origins", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const origins = catalog.entries.filter((entry) => Object.hasOwn(entry, "origin_source"));
-  assert.equal(origins.length, 42, "only shared-source package mirrors declare an origin_source");
+  assert.equal(origins.length, 58, "only shared-source package mirrors declare an origin_source");
 
   const mappings = new Map([
     ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
@@ -263,7 +264,11 @@ test("production shared package mirrors retain structured build origins", async 
   for (const entry of origins) {
     assert.equal(entry.exclusion_code, "excluded-package-mirror", entry.id);
     assert.deepEqual(Object.keys(entry.origin_source).sort(), ["build_mapping", "source_document"]);
-    const [sourceRoot, destinationRoot] = mappings.get(entry.origin_source.build_mapping) ?? [];
+    const [sourceRoot, destinationRoot] = entry.origin_source.build_mapping === "memory"
+      ? (entry.source_document.includes("/references/shared/memory/")
+        ? ["shared/memory", "references/shared/memory"]
+        : ["shared/memory/skills", "skills"])
+      : (mappings.get(entry.origin_source.build_mapping) ?? []);
     assert.ok(sourceRoot, `${entry.id}: origin source uses an approved build mapping`);
     const productName = `game-design-${entry.product}`;
     const suffix = entry.source_document.slice(`plugins/${productName}/${destinationRoot}/`.length);
@@ -281,6 +286,62 @@ test("production shared package mirrors retain structured build origins", async 
     assert.equal(mirrorStats.isFile() && !mirrorStats.isSymbolicLink(), true, `${entry.id}: mirror is a regular non-symlink file`);
     assert.deepEqual(sourceBytes, mirrorBytes, `${entry.id}: mirror remains byte-identical to its origin`);
   }
+});
+
+test("memory package mirrors recognize their reference and skill build destinations", async () => {
+  const catalog = {
+    schema_version: 1,
+    scan_roots: [
+      "README.md", "guides", "products/game-design-studio", "products/game-design-career",
+      "plugins/game-design-studio", "plugins/game-design-career",
+    ],
+    scan_excludes: ["guides/assets/archify", "shared/vendor", ".git", ".worktrees", ".tmp", ".build"],
+    entries: [
+      {
+        id: "memory-reference-mirror",
+        product: "studio",
+        source_document: "plugins/game-design-studio/references/shared/memory/references/memory-lifecycle.md",
+        source_section: "게임 기획 기억 수명주기",
+        source_digest: "a".repeat(64),
+        decision: "excluded",
+        exclusion_code: "excluded-package-mirror",
+        decision_reason: "공유 build mapping으로 설치되는 memory reference mirror다.",
+        diagnostics: [],
+        spec: null,
+        html: null,
+        receipt: null,
+        delivery_status: "not-applicable",
+        visual_review: "not-applicable",
+        origin_source: {
+          source_document: "shared/memory/references/memory-lifecycle.md",
+          build_mapping: "memory",
+        },
+      },
+      {
+        id: "memory-skill-mirror",
+        product: "career",
+        source_document: "plugins/game-design-career/skills/capture-game-design-memory/SKILL.md",
+        source_section: "게임 기획 기억 후보 캡처",
+        source_digest: "b".repeat(64),
+        decision: "excluded",
+        exclusion_code: "excluded-package-mirror",
+        decision_reason: "공유 build mapping으로 설치되는 memory skill mirror다.",
+        diagnostics: [],
+        spec: null,
+        html: null,
+        receipt: null,
+        delivery_status: "not-applicable",
+        visual_review: "not-applicable",
+        origin_source: {
+          source_document: "shared/memory/skills/capture-game-design-memory/SKILL.md",
+          build_mapping: "memory",
+        },
+      },
+    ],
+  };
+
+  const result = await validateArchifyCatalog(catalog);
+  assert.deepEqual(result, { ok: true, errors: [], uncovered: [] });
 });
 
 test("root README selects the Suite system architecture without changing corpus coverage", async () => {
@@ -356,11 +417,11 @@ test("curated Archify index rejects stale counts and spec links presented as sou
 test("Suite catalog cardinality rejects an appended record or duplicate README record", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
-  appended.entries.push({ ...appended.entries[0], id: "unexpected-693rd-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /692/u);
+  appended.entries.push({ ...appended.entries[0], id: "unexpected-712th-record", source_document: "guides/README.md" });
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /711/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /692/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /711/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);
