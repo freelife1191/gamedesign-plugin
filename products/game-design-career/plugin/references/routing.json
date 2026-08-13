@@ -17,7 +17,10 @@
     "review-image-assets",
     "polish-game-design-writing",
     "humanize-korean",
-    "archify"
+    "archify",
+    "retrieve-approved-design-memory",
+    "capture-game-design-memory",
+    "maintain-game-design-memory"
   ],
   "roleIds": [
     "career-strategist",
@@ -72,6 +75,21 @@
     {
       "skill": "humanize-korean",
       "owners": ["game-design-writing-editor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "retrieve-approved-design-memory",
+      "owners": ["career-strategist"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "capture-game-design-memory",
+      "owners": ["evidence-auditor"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-memory",
+      "owners": ["evidence-auditor"],
       "conditionalOwners": []
     },
     {
@@ -135,6 +153,24 @@
       "conditionalOwners": []
     }
   ],
+  "plannedPaths": {
+    "skills": [
+      "skills/retrieve-approved-design-memory/SKILL.md",
+      "skills/capture-game-design-memory/SKILL.md",
+      "skills/maintain-game-design-memory/SKILL.md"
+    ]
+  },
+  "memoryWorkflow": {
+    "retrieveSkill": "retrieve-approved-design-memory",
+    "captureSkill": "capture-game-design-memory",
+    "maintenanceSkill": "maintain-game-design-memory",
+    "retrievePlacement": "after-intake-before-specialist-routing",
+    "capturePlacement": "after-completion-gates",
+    "defaultScope": "project",
+    "defaultMaxItems": 5,
+    "requiresProjectId": true,
+    "dedicatedAgent": false
+  },
   "directUseSources": [
     {
       "id": "map-game-design-career",

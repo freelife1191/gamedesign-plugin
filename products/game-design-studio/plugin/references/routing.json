@@ -17,7 +17,10 @@
     "review-image-assets",
     "polish-game-design-writing",
     "humanize-korean",
-    "archify"
+    "archify",
+    "retrieve-approved-design-memory",
+    "capture-game-design-memory",
+    "maintain-game-design-memory"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -64,7 +67,10 @@
       "skills/review-image-assets/SKILL.md",
       "skills/polish-game-design-writing/SKILL.md",
       "skills/humanize-korean/SKILL.md",
-      "skills/archify/SKILL.md"
+      "skills/archify/SKILL.md",
+      "skills/retrieve-approved-design-memory/SKILL.md",
+      "skills/capture-game-design-memory/SKILL.md",
+      "skills/maintain-game-design-memory/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -99,6 +105,34 @@
       "references/visualization-presets.json",
       "references/export-recipes.md"
     ]
+  },
+  "directUseReviewOwners": [
+    {
+      "skill": "retrieve-approved-design-memory",
+      "owners": ["lead-game-designer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "capture-game-design-memory",
+      "owners": ["lead-game-designer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-memory",
+      "owners": ["document-quality-editor"],
+      "conditionalOwners": []
+    }
+  ],
+  "memoryWorkflow": {
+    "retrieveSkill": "retrieve-approved-design-memory",
+    "captureSkill": "capture-game-design-memory",
+    "maintenanceSkill": "maintain-game-design-memory",
+    "retrievePlacement": "after-intake-before-specialist-routing",
+    "capturePlacement": "after-completion-gates",
+    "defaultScope": "project",
+    "defaultMaxItems": 5,
+    "requiresProjectId": true,
+    "dedicatedAgent": false
   },
   "qualityWorkflow": {
     "skill": "apply-document-quality-profile",

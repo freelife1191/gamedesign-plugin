@@ -8,15 +8,21 @@ import { assertNoSymlinkPath, comparePaths, joinWithin, normalizeRelativePath } 
 import { loadProductContract } from "./product-contract.mjs";
 
 const sharedMappings = {
-  knowledge: ["shared/knowledge", "references/shared/knowledge"],
-  templates: ["shared/templates", "assets/shared/templates"],
-  "responsible-design": ["shared/responsible-design", "references/shared/responsible-design"],
-  export: ["shared/export", "references/shared/export"],
-  vendor: ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"],
-  archify: ["shared/vendor/archify/archify/2.13.0", "skills/archify"],
-  "im-not-ai": ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"],
-  "document-quality": ["shared/document-quality", "references/shared/document-quality"],
-  "image-assets": ["shared/image-assets", "references/shared/image-assets"],
+  knowledge: [["shared/knowledge", "references/shared/knowledge"]],
+  templates: [["shared/templates", "assets/shared/templates"]],
+  "responsible-design": [["shared/responsible-design", "references/shared/responsible-design"]],
+  export: [["shared/export", "references/shared/export"]],
+  vendor: [["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]],
+  archify: [["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
+  "im-not-ai": [["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
+  "document-quality": [["shared/document-quality", "references/shared/document-quality"]],
+  "image-assets": [["shared/image-assets", "references/shared/image-assets"]],
+  memory: [
+    ["shared/memory/skills", "skills"],
+    ["shared/memory/schema", "references/shared/memory/schema"],
+    ["shared/memory/references", "references/shared/memory/references"],
+    ["shared/memory/templates", "references/shared/memory/templates"],
+  ],
 };
 const sourceOnlySkillsteadFallbacks = Object.freeze({
   "game-design-career": Object.freeze({
@@ -355,13 +361,16 @@ export async function buildProduct({ repoRoot, productName, stagingRoot, staging
   const targets = new Map();
 
   for (const moduleName of product.sharedModules) {
-    const [sourceRelative, destinationPrefix] = sharedMappings[moduleName];
-    await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
-    const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
-    assertNoRealEnvironmentFiles(entries, sourceRelative);
-    for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+    const moduleEntries = [];
+    for (const [sourceRelative, destinationPrefix] of sharedMappings[moduleName]) {
+      await assertNoSymlinkPath(absoluteRepoRoot, sourceRelative, "shared module");
+      const entries = await collectTree(joinWithin(absoluteRepoRoot, sourceRelative), { label: sourceRelative });
+      assertNoRealEnvironmentFiles(entries, sourceRelative);
+      moduleEntries.push(...entries);
+      for (const entry of entries) addEntry(targets, entry, destinationPrefix, `shared:${moduleName}`);
+    }
     if (moduleName === "image-assets") {
-      const example = entries.find(({ relativePath }) => relativePath === ".env.example");
+      const example = moduleEntries.find(({ relativePath }) => relativePath === ".env.example");
       if (!example) throw new Error("Missing shared/image-assets/.env.example");
       addEntry(targets, example, "", "shared:image-assets-root-example");
     }

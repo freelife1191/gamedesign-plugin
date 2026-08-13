@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, cp, lstat, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { access, cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -21,15 +21,21 @@ const productLanes = new Map([
   ["game-design-career", "career"],
 ]);
 const sharedMappings = new Map([
-  ["knowledge", ["shared/knowledge", "references/shared/knowledge"]],
-  ["templates", ["shared/templates", "assets/shared/templates"]],
-  ["responsible-design", ["shared/responsible-design", "references/shared/responsible-design"]],
-  ["export", ["shared/export", "references/shared/export"]],
-  ["vendor", ["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]],
-  ["archify", ["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
-  ["im-not-ai", ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
-  ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
-  ["image-assets", ["shared/image-assets", "references/shared/image-assets"]],
+  ["knowledge", [["shared/knowledge", "references/shared/knowledge"]]],
+  ["templates", [["shared/templates", "assets/shared/templates"]]],
+  ["responsible-design", [["shared/responsible-design", "references/shared/responsible-design"]]],
+  ["export", [["shared/export", "references/shared/export"]]],
+  ["vendor", [["shared/vendor/skillstead/svg-infographic/0.9.0", "skills/svg-infographic"]]],
+  ["archify", [["shared/vendor/archify/archify/2.13.0", "skills/archify"]]],
+  ["im-not-ai", [["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]]],
+  ["document-quality", [["shared/document-quality", "references/shared/document-quality"]]],
+  ["image-assets", [["shared/image-assets", "references/shared/image-assets"]]],
+  ["memory", [
+    ["shared/memory/skills", "skills"],
+    ["shared/memory/schema", "references/shared/memory/schema"],
+    ["shared/memory/references", "references/shared/memory/references"],
+    ["shared/memory/templates", "references/shared/memory/templates"],
+  ]],
 ]);
 
 async function readJson(relativePath) {
@@ -43,11 +49,19 @@ async function mappedTreeFiles(sourceRoot, source, destination) {
 }
 
 async function assertBuiltProductContract({ build, product, sourceRoot, referenceIndex, vendorLocks }) {
-  for (const [moduleName, [source, destination]] of sharedMappings) {
+  const destinationMappings = new Map();
+  for (const [moduleName, mappings] of sharedMappings) {
     if (!product.sharedModules.includes(moduleName)) continue;
+    for (const [source, destination] of mappings) {
+      (destinationMappings.get(destination) ?? destinationMappings.set(destination, []).get(destination)).push(source);
+    }
+  }
+  for (const [destination, sources] of destinationMappings) {
+    if (destination === "skills") continue;
+    const expected = (await Promise.all(sources.map((source) => mappedTreeFiles(sourceRoot, source, destination)))).flat().sort();
     assert.deepEqual(
       build.files.filter((file) => file.startsWith(`${destination}/`)).sort(),
-      await mappedTreeFiles(sourceRoot, source, destination),
+      expected,
       `${product.name}: reserved ${destination}`,
     );
   }
@@ -99,7 +113,7 @@ async function validateDiscoveredProducts({ sourceRoot, stagingRoot, referenceIn
   for (const productName of productNames) {
     if (!productLanes.has(productName)) throw new Error(`Unexpected product contract: products/${productName}/product.json`);
     const product = await loadProductContract({ repoRoot: sourceRoot, productName });
-    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets"]);
+    assert.deepEqual(product.sharedModules, ["knowledge", "templates", "responsible-design", "export", "vendor", "archify", "im-not-ai", "document-quality", "image-assets", "memory"]);
     assert.equal(product.sharedRuntime, true);
     assert.deepEqual(product.sourceRoots, ["plugin"]);
     assert.deepEqual(product.sourceDocumentCategories, sourceDocumentCategories);
@@ -126,6 +140,48 @@ function runBuiltHook({ outputDir, scriptName, input }) {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, "");
   return JSON.parse(result.stdout);
+}
+
+function installedSkillIds(files) {
+  return files
+    .map((file) => /^skills\/([^/]+)\/SKILL\.md$/u.exec(file)?.[1])
+    .filter(Boolean)
+    .sort();
+}
+
+async function assertCompilerlessSealedAppend({ build, stagingRoot }) {
+  const storeSource = await readFile(path.join(repoRoot, "shared/scripts/lib/safe-memory-store.mjs"), "utf8");
+  const packagedStore = await readFile(path.join(build.outputDir, "scripts/lib/safe-memory-store.mjs"), "utf8");
+  for (const source of [storeSource, packagedStore]) {
+    const specifiers = [...source.matchAll(/(?:^|\n)\s*import(?:[\s\S]*?\sfrom\s*)?["']([^"']+)["']/gu)].map((match) => match[1]);
+    assert.ok(specifiers.every((specifier) => specifier.startsWith("node:") || specifier.startsWith(".")), "safe memory store imports only Node built-ins or local modules");
+    assert.doesNotMatch(source, /node:child_process|\b(?:spawn|exec|fork)\b|\.(?:c|cc|cpp)\b|\b(?:gcc|clang|make)\b/u);
+  }
+  const emptyPath = await mkdtemp(path.join(stagingRoot, "empty-path-"));
+  const workspaceRoot = await realpath(await mkdtemp(path.join(stagingRoot, "sealed-append-")));
+  const script = `
+    import { rm } from "node:fs/promises";
+    import { resolveMemoryStore, appendMemoryEvent } from ${JSON.stringify(new URL(`file://${path.join(build.outputDir, "scripts/lib/safe-memory-store.mjs")}`).href)};
+    import { canonicalMemoryEventDocument } from ${JSON.stringify(new URL(`file://${path.join(build.outputDir, "scripts/validate-design-memory.mjs")}`).href)};
+    const workspaceRoot = ${JSON.stringify(workspaceRoot)};
+    const record = { schema_version: 1, memory_id: "memory-studio-design-lesson-0f2a4c61d9ab34ef", kind: "design-lesson", lane: "studio", status: "candidate", scope: "project", project_id: "wind-island", created_at: "2026-08-12T00:00:00.000Z", updated_at: "2026-08-12T00:00:00.000Z", review_after: "2026-09-11", expires_at: "2026-09-11", approved_by: null, approval_basis: null, supersedes: null, artifact_types: ["artifact"], related_ids: ["related"], tags: ["tag"], sources: [{ artifact_id: "source", locator: "content.md#h", sha256: "${"a".repeat(64)}" }] };
+    try {
+      const store = await resolveMemoryStore({ workspaceRoot, config: { enabled: true, scope: "project", gitMode: "local", projectId: "wind-island" }, platform: process.platform, home: workspaceRoot, initialize: true });
+      const eventDocument = canonicalMemoryEventDocument({ schema_version: 1, event_type: "capture", action: "capture", memory_id: record.memory_id, operation_id: "capture-upstream-1", parent_event_ids: [], effective_at: "2026-08-12T00:00:00.000Z", actor: "author", reason: "capture", record }, { "발견한 내용": "내용", "적용 조건": "조건", "적용하면 안 되는 경우": "제외", "근거": "근거" });
+      const created = await appendMemoryEvent({ store, eventDocument });
+      const present = await appendMemoryEvent({ store, eventDocument });
+      if (created.status !== "created" || present.status !== "present") throw new Error("sealed append retry failed");
+      process.stdout.write(JSON.stringify({ created: created.status, present: present.status }));
+    } finally { await rm(workspaceRoot, { recursive: true, force: true }); }
+  `;
+  const result = spawnSync(process.execPath, ["--input-type=module", "--eval", script], {
+    cwd: build.outputDir,
+    env: { PATH: emptyPath, CC: "/nonexistent/cc", CXX: "/nonexistent/cxx" },
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), { created: "created", present: "present" });
+  await rm(emptyPath, { recursive: true, force: true });
 }
 
 function assertCapability(capability, availableKeys) {
@@ -251,7 +307,7 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
   const selectableFixture = {
     ...fixtureProduct,
     name: "game-design-studio",
-    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets"],
+    sharedModules: [...fixtureProduct.sharedModules, "archify", "im-not-ai", "document-quality", "image-assets", "memory"],
     sourceDocumentCategories,
   };
   delete selectableFixture.sourceDocuments;
@@ -282,6 +338,18 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
     vendorLocks,
   });
   assert.equal(built.files.filter((file) => file.startsWith("references/source/docs/")).length, 49);
+  for (const skillId of ["capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory"]) {
+    assert.ok(built.files.includes(`skills/${skillId}/SKILL.md`));
+  }
+  for (const relativePath of [
+    "references/shared/memory/schema/memory-config.schema.json",
+    "references/shared/memory/schema/memory-event.schema.json",
+    "references/shared/memory/schema/memory-record.schema.json",
+    "references/shared/memory/schema/memory-index.schema.json",
+    "references/shared/memory/schema/memory-receipt.schema.json",
+    "references/shared/memory/references/memory-policy.md",
+    "references/shared/memory/references/memory-lifecycle.md",
+  ]) assert.ok(built.files.includes(relativePath), relativePath);
 
   await validateDiscoveredProducts({ sourceRoot: repoRoot, stagingRoot, referenceIndex, vendorLocks });
   const [studioBuild, careerBuild] = await Promise.all([
@@ -307,6 +375,80 @@ test("shared-contract-v1 exposes the complete product-lane contract", async (t) 
       `${relativePath}: products receive byte-identical shared quality contracts`,
     );
   }
+  const expectedSharedSkillIds = [
+    "archify",
+    "capture-game-design-memory",
+    "humanize-korean",
+    "maintain-game-design-memory",
+    "retrieve-approved-design-memory",
+    "svg-infographic",
+  ];
+  for (const [productName, build] of [["game-design-studio", studioBuild], ["game-design-career", careerBuild]]) {
+    const sourceSkillIds = (await readdir(path.join(repoRoot, "products", productName, "plugin", "skills"), { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+    const installed = installedSkillIds(build.files);
+    const sharedSkillIds = installed.filter((skillId) => !sourceSkillIds.includes(skillId));
+    assert.equal(sourceSkillIds.length, 15);
+    assert.deepEqual(sharedSkillIds, expectedSharedSkillIds);
+    assert.equal(installed.length, 21);
+  }
+
+  const receiptSource = await readFile(path.join(repoRoot, "shared/memory/schema/memory-receipt.schema.json"));
+  for (const build of [studioBuild, careerBuild]) {
+    assert.deepEqual(
+      await readFile(path.join(build.outputDir, "references/shared/memory/schema/memory-receipt.schema.json")),
+      receiptSource,
+    );
+  }
+  const [indexSchema, receiptSchema] = await Promise.all([
+    readJson("shared/memory/schema/memory-index.schema.json"),
+    readJson("shared/memory/schema/memory-receipt.schema.json"),
+  ]);
+  assert.equal(indexSchema.properties.entries.maxItems, 10000);
+  for (const field of ["observations", "applied", "excluded"]) assert.equal(receiptSchema.properties[field].maxItems, 256);
+  const policy = await readFile(path.join(repoRoot, "shared/memory/references/memory-policy.md"), "utf8");
+  const lifecycle = await readFile(path.join(repoRoot, "shared/memory/references/memory-lifecycle.md"), "utf8");
+  for (const text of [policy, lifecycle]) {
+    for (const clause of ["derived/receipts/<request-sha256>/<receipt-sha256>/instances/<instance-id>.json", "immutable history", "open('wx')", "global-first/local-second", "opendir()", "100,000", "cache reset", "fail-closed", "1 MiB/256 KiB/1 MiB/1 MiB", "256개", "10,000개"]) assert.match(text, new RegExp(clause.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+  assert.match(lifecycle, /derived\/logs\//u);
+  assert.match(lifecycle, /Markdown view/u);
+
+  const expectedWorkflow = {
+    retrieveSkill: "retrieve-approved-design-memory",
+    captureSkill: "capture-game-design-memory",
+    maintenanceSkill: "maintain-game-design-memory",
+    retrievePlacement: "after-intake-before-specialist-routing",
+    capturePlacement: "after-completion-gates",
+    defaultScope: "project",
+    defaultMaxItems: 5,
+    requiresProjectId: true,
+    dedicatedAgent: false,
+  };
+  const routingOwners = {
+    "game-design-studio": {
+      "retrieve-approved-design-memory": ["lead-game-designer"],
+      "capture-game-design-memory": ["lead-game-designer"],
+      "maintain-game-design-memory": ["document-quality-editor"],
+    },
+    "game-design-career": {
+      "retrieve-approved-design-memory": ["career-strategist"],
+      "capture-game-design-memory": ["evidence-auditor"],
+      "maintain-game-design-memory": ["evidence-auditor"],
+    },
+  };
+  for (const [productName, owners] of Object.entries(routingOwners)) {
+    const routing = await readJson(`products/${productName}/plugin/references/routing.json`);
+    assert.deepEqual(routing.memoryWorkflow, expectedWorkflow);
+    for (const skillId of Object.keys(owners)) {
+      assert.ok(routing.skillIds.includes(skillId));
+      assert.ok(routing.plannedPaths.skills.includes(`skills/${skillId}/SKILL.md`));
+      assert.deepEqual(routing.directUseReviewOwners.find((entry) => entry.skill === skillId)?.owners, owners[skillId]);
+    }
+  }
+  await assertCompilerlessSealedAppend({ build: studioBuild, stagingRoot });
   await assert.rejects(
     () => validateDiscoveredProducts({ sourceRoot: fixtureRoot, stagingRoot, referenceIndex, vendorLocks }),
     /Unexpected product contract: products\/unexpected-product\/product\.json/,

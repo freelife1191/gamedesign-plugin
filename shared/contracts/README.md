@@ -11,7 +11,7 @@ Product lane은 루트에서 `npm run test:shared-contract`를 실행해 이 체
 - `schemaVersion`: `1`
 - `name`: 정규화된 kebab-case이며 디렉터리 이름과 동일
 - `displayName`, `description`: 비어 있지 않은 문자열
-- `sharedModules`: 중복 없는 `knowledge`, `templates`, `responsible-design`, `export`, `vendor`, `archify`, `im-not-ai`, `document-quality`, `image-assets`의 부분집합. 두 제품은 현재 아홉 모듈을 모두 선언한다.
+- `sharedModules`: 중복 없는 `knowledge`, `templates`, `responsible-design`, `export`, `vendor`, `archify`, `im-not-ai`, `document-quality`, `image-assets`, `memory`의 부분집합. 두 제품은 현재 열 모듈을 모두 선언한다.
 - `sharedRuntime`: `true`
 - `sourceRoots`: product 디렉터리 안의 중복 없는 상대 경로 배열
 - `sourceDocuments` 또는 `sourceDocumentCategories`: 정확히 하나만 선언하는 중복 없는 배열
@@ -33,6 +33,7 @@ Studio와 Career는 `sourceDocumentCategories`에 `career`, `fun-intent`, `syste
 | `vendor` | `shared/vendor/skillstead/svg-infographic/0.9.0/` | `skills/svg-infographic/` |
 | `archify` | `shared/vendor/archify/archify/2.13.0/` | `skills/archify/` |
 | `im-not-ai` | `shared/vendor/im-not-ai/humanize-korean/v2.3.0/` | `skills/humanize-korean/` |
+| `memory` | `shared/memory/skills/`, `shared/memory/schema/`, `shared/memory/references/`, `shared/memory/templates/` | `skills/`, `references/shared/memory/schema/`, `references/shared/memory/references/`, `references/shared/memory/templates/` |
 | shared runtime | `shared/hooks/`, `shared/scripts/` | `hooks/`, `scripts/` |
 | indexed source | selected `docs/**` | `references/source/docs/**` |
 | product overlay | each `sourceRoots` tree | package root |
