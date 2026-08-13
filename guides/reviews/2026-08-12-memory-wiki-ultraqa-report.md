@@ -45,24 +45,22 @@ Studio remove → Career remove → marketplace remove → empty list
 
 ## UltraQA 시나리오 행렬
 
-| ID | 공격·사용자 모델 | 실제 검증과 결과 | 상태 |
-| --- | --- | --- | --- |
-| MEM-OFF, MEM-SCOPE, MEM-STATE, MEM-SOURCE, MEM-INJECT, MEM-LANE | 비활성화·범위·상태·근거·지시 오염 | memory unit/E2E 및 source-bound guide 계약에서 fail-closed 경계 확인 | 관련 memory gate |
-| MEM-APPEND, MEM-SEAL-RECOVERY, MEM-BRANCH, MEM-CORRUPT, MEM-SCAN-LIMIT | append·봉인·분기·손상·대형 scan | memory store/record/retrieval hostile matrix는 별도 memory gate에서 소유·검증 | 관련 memory gate |
-| MEM-INDEX-GEN, MEM-RECEIPT, MEM-DERIVED-CONCURRENT, MEM-DERIVED-LIMIT, MEM-DERIVED-TRIPWIRE, MEM-DERIVED-SIZE | derived index·receipt·동시성·제한·변조 | 관련 memory gate의 production API/E2E 범위 | 관련 memory gate |
-| MEM-GIT-ISOLATION | Git local exclude 보존 | dirty E2E 6/6 및 lifecycle E2E 2/2에서 bytes/mode/mtime 보존 | PASS |
-| MEM-NODE-ONLY, MEM-FAILOPEN | Node runtime·기억 오류 시 기존 작업 계속 | package isolation과 memory lifecycle의 no-network/패키지 누출 0 확인 | PASS |
-| MEM-INSTALL | 설치·교체·제거 | lifecycle E2E 2/2, 각 설치본의 21 skills·schema·policy·runtime 확인 | PASS |
-| MEM-DIRTY | 사용자 수정 중인 저장소 | dirty E2E 6/6, `.git/info/exclude` 별도 보존 | PASS |
-| MEM-THREAT-BOUNDARY | package에 local state·`.env` 누출 | lifecycle E2E가 `.env`, memory event/control/derived package 누출 0 확인 | PASS |
-| INSTALL-LOCAL-CLI | 실제 Codex CLI 사용자 | 로컬 marketplace add/readd/remove 전체 순서, 캐시 21 skills | PASS |
-| PACKAGE-PLUGIN-CREATOR | plugin manifest·설치 구조 | plugins validator 2/2 | PASS |
-| PACKAGE-SKILL-CREATOR | 모든 설치 스킬 구조 | skills validator 42/42 | PASS |
-| KO-HUMANIZE, KO-IM-NOT-AI | 한국어 안내·윤문 경계 | memory guide/root README contract 및 기존 writing polish E2E가 focused 묶음에서 통과 | PASS |
-| DIAGRAM-SKILLSTEAD, DIAGRAM-ARCHIFY | 도식 vendor·guide 연결 | root README/guide contract와 isolation smoke가 focused 묶음에서 통과 | PASS |
-| FORMAT-GENERATE, FORMAT-VERIFY, FORMAT-VISUAL-30 | MD/PDF/DOCX/PPTX 실생성·30장 시각 점검 | 이 실행 lane에서는 수행하지 않음. 별도 format/visual QA lane의 증거가 합쳐지기 전 PASS로 표시하지 않음 | 별도 lane |
-| INTERRUPTION-RESUME, MISLEADING-OUTPUT | 중단 재개·거짓 성공 문자열 | 기존 root UltraQA suite의 별도 범위. 이 lifecycle lane에서 재실행하지 않음 | 별도 gate |
-| CLEANUP | 임시 파일·프로세스 잔존 | CLI temp homes와 final recovery bundle 휴지통 회수, focused 명령의 child 종료 확인 | PASS |
+| ID | 사용자·공격자 모델 | Setup | 명령 | 기대 결과 | 실제 결과 | 수정·근거 | 증거·정리 | 상태 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| MEM-OFF, MEM-SCOPE, MEM-STATE, MEM-SOURCE, MEM-INJECT, MEM-LANE | 비활성화·범위·상태·근거·지시 오염 | memory production API fixture | 별도 memory gate | 각 경계 fail-closed | 이 lifecycle lane에서 재실행하지 않음 | memory API owner가 검증 | 별도 root gate에 기록 | 보류 |
+| MEM-APPEND, MEM-SEAL-RECOVERY, MEM-BRANCH, MEM-CORRUPT, MEM-SCAN-LIMIT | append·봉인·분기·손상·대형 scan | hostile store/record fixture | 별도 memory gate | 손상·경합을 안전하게 보류 | 이 lifecycle lane에서 재실행하지 않음 | memory store owner가 검증 | 별도 root gate에 기록 | 보류 |
+| MEM-INDEX-GEN, MEM-RECEIPT, MEM-DERIVED-CONCURRENT, MEM-DERIVED-LIMIT, MEM-DERIVED-TRIPWIRE, MEM-DERIVED-SIZE | derived index·receipt·동시성·제한·변조 | derived store fixture | 별도 memory gate | 파생 데이터 fail-closed | 이 lifecycle lane에서 재실행하지 않음 | derived API owner가 검증 | 별도 root gate에 기록 | 보류 |
+| MEM-GIT-ISOLATION, MEM-DIRTY | Git local exclude·수정 중 작업트리 | memory sentinel·`.git/info/exclude` sentinel | `dirty-worktree-preservation.e2e.test.mjs` | bytes/mode/mtime 불변 | 6/6 통과 | `.git` 전체 snapshot 제외와 sentinel 독립 비교 | fixture 자동 삭제 | PASS |
+| MEM-INSTALL, INSTALL-LOCAL-CLI | 실제 Codex 설치 사용자 | 격리 `HOME`·`CODEX_HOME`, local marketplace | `memory-install-lifecycle.e2e.test.mjs` | install→remove→re-add→remove, 21 skills, JSON receipt | Studio·Career 3/3 통과 | cp/rm self-validation을 실제 public Codex CLI JSON lifecycle로 교체 | `local-cli-lifecycle-evidence.json`을 검증 후 fixture 삭제 | PASS |
+| MEM-THREAT-BOUNDARY | local state·`.env` 누출을 노리는 패키지 | 실제 CLI cache | 같은 lifecycle E2E | `.env`, event/control/derived package 0 | 두 제품 모두 누출 0 | cache tree를 실제 설치본에서 검사 | 격리 home 삭제 | PASS |
+| MEM-NODE-ONLY, MEM-FAILOPEN | Node runtime·기억 오류 뒤 기획 계속 | production memory runtime | 별도 memory gate | Node-only/fail-open contract | 이 lifecycle lane에서 재실행하지 않음 | no-network CLI 입력은 별도 증거일 뿐 fail-open 증거가 아님 | 별도 root gate에 기록 | 보류 |
+| PACKAGE-PLUGIN-CREATOR | plugin manifest·설치 구조 | generated plugins | `node tooling/validate-packages.mjs plugins` | 두 plugin validator 통과 | 2/2 통과 | package contract 21 skills 반영 | 출력은 실행 로그 | PASS |
+| PACKAGE-SKILL-CREATOR | 모든 설치 스킬 구조 | generated skills | `node tooling/validate-packages.mjs skills` | 모든 SKILL validator 통과 | 42/42 통과 | 15+6 inventory contract | 출력은 실행 로그 | PASS |
+| KO-HUMANIZE, KO-IM-NOT-AI | 한국어 문체·vendor integrity | root README·memory guide·vendored im-not-ai | `npm run check:im-not-ai` | 고정 vendor와 한국어 경계 통과 | `verifiedFiles=15`, `tag=v2.3.0`으로 통과 | 문장 내용은 memory guide contract로 보호 | 검사에 임시 상태 없음 | PASS |
+| DIAGRAM-SKILLSTEAD, DIAGRAM-ARCHIFY | 도식 vendor·catalog·guide 연결 | vendored Skillstead/Archify와 generated guides | `npm run check:diagram-skills`, `npm run validate:archify-catalog`, `npm run check:curated-archify` | vendor lock·catalog·도식 guide 통과 | Skillstead 55개·Archify 60개는 통과. 카탈로그/curated는 새 memory mirror 16개·보고서 1개 미등록 및 기존 digest 11개 stale로 실패 | root README/guide/isolation contract 보강은 유지, 카탈로그 소유 lane에 정확한 실패 목록 인계 | 검사에 임시 상태 없음 | 보류 |
+| FORMAT-GENERATE, FORMAT-VERIFY, FORMAT-VISUAL-30 | MD/PDF/DOCX/PPTX 실생성·30장 시각 점검 | 별도 format worktree | 별도 format/visual QA lane | 대표 결과 생성·검증·30장 확인 | 이 lane에서 미실행 | format owner가 처리 | 별도 lane 정리 필요 | 보류 |
+| INTERRUPTION-RESUME, MISLEADING-OUTPUT | 중단 재개·거짓 성공 문자열 | root UltraQA harness | 별도 root gate | 거짓 성공 거부·재개 기록 | 이 lifecycle lane에서 미실행 | root UltraQA 범위 | 별도 root gate에 기록 | 보류 |
+| CLEANUP | 임시 파일·프로세스 잔존 | CLI home·snapshot recovery bundle | test cleanup·Finder Trash | test fixture와 recovery bundle 회수 | lifecycle fixture 자동 삭제, recovery bundle 휴지통 회수 | cleanup assertion과 final status | 사용자 파일은 건드리지 않음 | PASS |
 
 ## 최종 focused 명령 기록
 
@@ -72,8 +70,12 @@ node tooling/validate-packages.mjs plugins                     → 2/2 PASS
 node tooling/validate-packages.mjs skills                      → 42/42 PASS
 node --test [guide/product/catalog/lifecycle/dirty/isolation] → 234/234 PASS
 git diff --check                                               → PASS
+npm run check:im-not-ai                                        → PASS (verifiedFiles=15, tag=v2.3.0)
+npm run check:diagram-skills                                   → PASS (Skillstead=55, Archify=60)
+npm run validate:archify-catalog                               → FAIL (unregistered memory mirrors/report, 11 stale digests)
+npm run check:curated-archify                                  → FAIL (same catalog boundary; no success claim)
 ```
 
 ## 남은 통합 경계
 
-이 보고서는 설치·인벤토리·가이드·실제 CLI 수명주기 증거만 확정합니다. 실제 MD/PDF/DOCX/PPTX 대표 생성과 30장 시각 확인은 별도 검증 lane의 결과를 이 문서에 합치기 전까지 완료로 주장하지 않습니다. 네트워크 API, OpenAI 이미지 API, GitHub·원격 저장소 쓰기는 수행하지 않았습니다.
+이 보고서는 설치·인벤토리·가이드·실제 CLI 수명주기 증거만 확정합니다. Archify 카탈로그와 curated 도식 가드는 새 memory mirror·보고서 등록 및 stale digest 갱신 전까지 보류이며, 통과로 주장하지 않습니다. 실제 MD/PDF/DOCX/PPTX 대표 생성과 30장 시각 확인도 별도 검증 lane의 결과를 이 문서에 합치기 전까지 완료로 주장하지 않습니다. 네트워크 API, OpenAI 이미지 API, GitHub·원격 저장소 쓰기는 수행하지 않았습니다.

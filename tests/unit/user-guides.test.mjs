@@ -754,7 +754,9 @@ test("production guide graph has the exact installed skill IDs and visible link 
   }
   const files = await markdownFiles(path.join(repoRoot, "guides"));
   const links = (await Promise.all(files.map(async (filename) => extractMarkdownLinks(await readFile(filename, "utf8"))))).flat();
-  assert.equal(files.length, 149);
+  const validation = await validateUserGuides({ repoRoot, requireComplete: true });
+  assert.equal(validation.ok, true, "every Markdown guide included in the graph passes the production guide validator");
+  assert.equal(files.length, validation.counts.guides, "the visible graph contains exactly the regular Markdown guides scanned by the production validator");
   assert.equal(links.length, 2362);
   assert.equal(links.filter(({ label }) => label === "").length, 0);
   assert.equal(links.filter(({ target }) => !/^(?:https?|mailto):/iu.test(target)).length, 2350);
