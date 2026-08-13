@@ -19,16 +19,17 @@ function same(left, right) { try { return canonicalJson(left) === canonicalJson(
 function result(ok, code = "glossary-schema.invalid") { return ok ? { ok: true, errors: [] } : { ok: false, errors: [{ code }] }; }
 function sameIdentity(left, right) { return left.dev === right.dev && left.ino === right.ino && left.size === right.size && left.mode === right.mode; }
 function inspectSchemaCandidate(candidate) {
-  try {
-    const absolute = path.resolve(candidate); const parsed = path.parse(absolute); const segments = path.relative(parsed.root, absolute).split(path.sep).filter(Boolean);
-    if (segments.length === 0 || segments.length > 32) return { status: "invalid" };
-    let current = parsed.root;
-    for (const [index, segment] of segments.entries()) {
-      current = path.join(current, segment); const initial = lstatSync(current); const canonical = realpathSync(current); const resolved = lstatSync(canonical);
-      if (initial.isSymbolicLink() || canonical !== current || !sameIdentity(initial, resolved) || index < segments.length - 1 && !initial.isDirectory() || index === segments.length - 1 && !initial.isFile()) return { status: "invalid" };
-    }
-    return { status: "present", stats: lstatSync(absolute) };
-  } catch (error) { return error?.code === "ENOENT" ? { status: "absent" } : { status: "invalid" }; }
+  const absolute = path.resolve(candidate); const parsed = path.parse(absolute); const segments = path.relative(parsed.root, absolute).split(path.sep).filter(Boolean);
+  if (segments.length === 0 || segments.length > 32) return { status: "invalid" };
+  let current = parsed.root;
+  for (const [index, segment] of segments.entries()) {
+    current = path.join(current, segment); let initial;
+    try { initial = lstatSync(current); } catch (error) { return error?.code === "ENOENT" ? { status: "absent" } : { status: "invalid" }; }
+    let canonical; let resolved;
+    try { canonical = realpathSync(current); resolved = lstatSync(canonical); } catch { return { status: "invalid" }; }
+    if (initial.isSymbolicLink() || canonical !== current || !sameIdentity(initial, resolved) || index < segments.length - 1 && !initial.isDirectory() || index === segments.length - 1 && !initial.isFile()) return { status: "invalid" };
+  }
+  try { return { status: "present", stats: lstatSync(absolute) }; } catch { return { status: "invalid" }; }
 }
 function readSchema(candidate, identity) {
   try {

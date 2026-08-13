@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 import { canonicalJson, sha256Canonical, validateGameDesignGlossary, validateGlossaryReceipt } from "../../shared/scripts/validate-reference-intelligence.mjs";
-import { assertGlossaryHumanDecision, assertGlossaryOverrideDecision, issueGlossaryHumanDecision, issueGlossaryOverrideDecision } from "../../shared/scripts/lib/game-design-glossary-capabilities.mjs";
+import { assertGlossaryHumanDecision, assertGlossaryOverrideDecision, issueGlossaryHumanDecision, issueGlossaryMappingObservation, issueGlossaryOverrideDecision } from "../../shared/scripts/lib/game-design-glossary-capabilities.mjs";
 import { applyGlossaryDecision, createGlossarySnapshot, extractGlossaryCandidates, mergeGameDesignGlossaries, validateDocumentTerminology, writeGameDesignGlossaryArtifacts } from "../../shared/scripts/manage-game-design-glossary.mjs";
 import { validateGameDesignWritingLanguage } from "../../shared/scripts/validate-game-design-writing-language.mjs";
 import { evaluateGameDesignGlossarySchema } from "../../shared/scripts/lib/game-design-glossary-schema-evaluator.mjs";
@@ -221,6 +221,14 @@ test("declarative schema authority enforces every glossary boundary and fixed in
   assert.equal(mirrored.evaluateGameDesignGlossarySchema(atLimit).ok, true);
   await rm(join(installed, "game-design-glossary.schema.json")); await symlink(join(source, "game-design-glossary.schema.json"), join(installed, "game-design-glossary.schema.json"));
   const symlinkLeaf = (await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?installed-symlink-leaf`)).evaluateGameDesignGlossarySchema(atLimit); assert.deepEqual(symlinkLeaf, { ok: false, errors: [{ code: "glossary-schema.extension" }] }); assert.equal(JSON.stringify(symlinkLeaf).includes(root), false);
+  await rm(join(installed, "game-design-glossary.schema.json")); await symlink(join(root, "absent-installed-leaf"), join(installed, "game-design-glossary.schema.json"));
+  const danglingLeaf = (await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?installed-dangling-leaf`)).evaluateGameDesignGlossarySchema(atLimit); assert.deepEqual(danglingLeaf, { ok: false, errors: [{ code: "glossary-schema.extension" }] }); assert.equal(JSON.stringify(danglingLeaf).includes(root), false);
+  await rm(join(root, "references"), { recursive: true }); await mkdir(join(root, "references")); await symlink(join(root, "absent-installed-ancestor"), join(root, "references", "shared"));
+  const danglingAncestor = (await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?installed-dangling-ancestor`)).evaluateGameDesignGlossarySchema(atLimit); assert.deepEqual(danglingAncestor, { ok: false, errors: [{ code: "glossary-schema.extension" }] }); assert.equal(JSON.stringify(danglingAncestor).includes(root), false);
+  await rm(join(root, "references"), { recursive: true }); await mkdir(installed, { recursive: true }); await cp(join(source, "game-design-glossary.schema.json"), join(installed, "game-design-glossary.schema.json"));
+  const sourceSchema = join(source, "game-design-glossary.schema.json"); await rm(sourceSchema); await symlink(join(root, "absent-source-leaf"), sourceSchema);
+  const danglingSource = (await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?source-dangling-leaf`)).evaluateGameDesignGlossarySchema(atLimit); assert.deepEqual(danglingSource, { ok: false, errors: [{ code: "glossary-schema.extension" }] }); assert.equal(JSON.stringify(danglingSource).includes(root), false);
+  await rm(sourceSchema); await cp(join(installed, "game-design-glossary.schema.json"), sourceSchema);
   await rm(join(installed, "game-design-glossary.schema.json")); await mkdir(join(installed, "game-design-glossary.schema.json"));
   assert.equal((await import(`${pathToFileURL(join(lib, "game-design-glossary-schema-evaluator.mjs")).href}?installed-directory-leaf`)).evaluateGameDesignGlossarySchema(atLimit).ok, false);
   await rm(join(installed, "game-design-glossary.schema.json"), { recursive: true });
@@ -300,7 +308,7 @@ test("terminology diagnostic matrix emits each literal code without co-occurrenc
   assert.deepEqual(writing.warnings.map(({ code }) => code).sort(), ["heading-style-drift", "mixed-english-locale", "sentence-fragment"]);
 });
 
-test("terminology emits only explicit unapproved, Korean-English, and mapping-observation findings", () => {
+test("terminology accepts only live issued mapping observation provenance", () => {
   const proposed = term({ termId: "TERM-EXPERIMENTAL-POWER", koPreferred: "실험 파워", enPreferred: "Experimental Power" });
   const effective = structuredClone(approvedEffective()); effective.terms.push(proposed); effective.terms.sort((left, right) => left.termId.localeCompare(right.termId));
   const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
@@ -308,10 +316,19 @@ test("terminology emits only explicit unapproved, Korean-English, and mapping-ob
   assert.deepEqual(unapproved.blocking, []); assert.deepEqual(unapproved.warnings, [{ code: "unapproved-term", termId: "TERM-EXPERIMENTAL-POWER" }]);
   const unnecessary = validateDocumentTerminology({ text: "플레이어 파워와 roguelike", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt });
   assert.deepEqual(unnecessary.warnings, [{ code: "unnecessary-english" }]); assert.equal(JSON.stringify(unnecessary).includes("roguelike"), false); assert.equal(Object.hasOwn(unnecessary, "revisedText"), false);
-  const observation = Object.freeze({ termId: "TERM-PLAYER-POWER", targetLanguage: "en", status: "missing" }); const missing = validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: observation });
+  const issued = issueGlossaryMappingObservation({ documentId: "combat-v1", glossarySha256: sha256Canonical(effective), termIds: ["TERM-PLAYER-POWER"], termId: "TERM-PLAYER-POWER", targetLanguage: "en", status: "missing" });
+  const missing = validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: issued.observation, mappingCapability: issued.capability });
   assert.deepEqual(missing.blocking, [{ code: "missing-bilingual-mapping", termId: "TERM-PLAYER-POWER" }]);
-  for (const invalid of [structuredClone(observation), new Proxy(observation, {}), Object.freeze({ ...observation, unknown: true })]) assert.throws(() => validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: invalid }), /glossary/i);
-  const staleObservation = validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: Object.freeze({ termId: "TERM-EXPERIMENTAL-POWER", targetLanguage: "en", status: "missing" }) });
-  assert.deepEqual(staleObservation.blocking, [{ code: "stale-glossary-receipt" }]);
+  for (const [observation, capability] of [[structuredClone(issued.observation), issued.capability], [Object.freeze(structuredClone(issued.observation)), issued.capability], [issued.observation, structuredClone(issued.capability)], [new Proxy(issued.observation, {}), issued.capability], [{ ...issued.observation, targetLanguage: "ko" }, issued.capability]]) assert.throws(() => validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: observation, mappingCapability: capability }), /glossary/i);
+  const differentDocument = createGlossarySnapshot({ documentId: "other-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
+  assert.throws(() => validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "other-v1", effectiveGlossary: effective, receipt: differentDocument, mappingObservation: issued.observation, mappingCapability: issued.capability }), /glossary/i);
+  const differentGlossary = structuredClone(effective); differentGlossary.version = 2;
+  const changedReceipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: differentGlossary, termIds: ["TERM-PLAYER-POWER"] });
+  assert.throws(() => validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: differentGlossary, receipt: changedReceipt, mappingObservation: issued.observation, mappingCapability: issued.capability }), /glossary/i);
+  const unselectedReceipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
+  const unselected = issueGlossaryMappingObservation({ documentId: "combat-v1", glossarySha256: sha256Canonical(effective), termIds: ["TERM-EXPERIMENTAL-POWER"], termId: "TERM-EXPERIMENTAL-POWER", targetLanguage: "en", status: "missing" });
+  assert.throws(() => validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt: unselectedReceipt, mappingObservation: unselected.observation, mappingCapability: unselected.capability }), /glossary/i);
+  assert.throws(() => issueGlossaryMappingObservation({ documentId: "combat-v1", glossarySha256: sha256Canonical(effective), termIds: ["TERM-PLAYER-POWER"], termId: "TERM-PLAYER-POWER", targetLanguage: "en", status: "missing", unknown: true }), /glossary/i);
+  assert.throws(() => validateDocumentTerminology({ text: "Player Power", language: "en", documentId: "combat-v1", effectiveGlossary: effective, receipt, mappingObservation: issued.observation, mappingCapability: issued.capability }), /glossary/i);
   assert.deepEqual(validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt }).blocking, []);
 });

@@ -5,6 +5,8 @@ const decisionCapabilities = new WeakMap();
 const decisionReceipts = new WeakMap();
 const overrideCapabilities = new WeakMap();
 const overrideReceipts = new WeakMap();
+const mappingCapabilities = new WeakMap();
+const mappingObservations = new WeakMap();
 const actions = new Set(["approve", "deprecate", "replace"]);
 const roleLike = /(?:^|\s)(?:chatgpt|assistant|agent|bot|model|system)(?:\s|$)/iu;
 const id = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
@@ -38,6 +40,26 @@ function normalizeDecision(input) {
 export function issueGlossaryHumanDecision(input = {}) { return opaque(decisionReceipts, decisionCapabilities, normalizeDecision(input)); }
 export function assertGlossaryHumanDecision(receipt, capability) {
   try { if (!receipt || !capability || types.isProxy(receipt) || types.isProxy(capability) || decisionReceipts.get(receipt) !== capability || decisionCapabilities.get(capability) !== sha256Canonical(receipt)) reject(); return receipt; } catch { reject(); }
+}
+
+function normalizeMappingObservation(input) {
+  const value = plain(input, ["documentId", "glossarySha256", "status", "targetLanguage", "termId", "termIds"]);
+  if (!id.test(value.documentId ?? "") || !hash.test(value.glossarySha256 ?? "") || value.status !== "missing" || !["ko", "en"].includes(value.targetLanguage) || !termId.test(value.termId ?? "") || !sortedTermIds(value.termIds) || !value.termIds.includes(value.termId)) reject();
+  return Object.freeze({ documentId: value.documentId, glossarySha256: value.glossarySha256, status: value.status, targetLanguage: value.targetLanguage, termId: value.termId, termIds: Object.freeze([...value.termIds]) });
+}
+
+/** Issues an opaque, live observation only after closed plain-data canonicalization. */
+export function issueGlossaryMappingObservation(input = {}) {
+  const issued = opaque(mappingObservations, mappingCapabilities, normalizeMappingObservation(input));
+  return Object.freeze({ receipt: issued.receipt, observation: issued.receipt, capability: issued.capability });
+}
+
+export function assertGlossaryMappingObservation(observation, capability, { documentId, effectiveGlossary, termIds, targetLanguage } = {}) {
+  try {
+    if (!observation || !capability || types.isProxy(observation) || types.isProxy(capability) || mappingObservations.get(observation) !== capability || mappingCapabilities.get(capability) !== sha256Canonical(observation)) reject();
+    if (!id.test(documentId ?? "") || observation.documentId !== documentId || observation.glossarySha256 !== glossary(effectiveGlossary) || !sortedTermIds(termIds) || canonicalJson(observation.termIds) !== canonicalJson(termIds) || observation.targetLanguage !== targetLanguage) reject();
+    return observation;
+  } catch { reject(); }
 }
 
 function normalizeOverride(input) {

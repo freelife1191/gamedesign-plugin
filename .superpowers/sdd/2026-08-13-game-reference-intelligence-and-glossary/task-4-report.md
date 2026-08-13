@@ -169,3 +169,26 @@ The safe artifact boundary is function-level failure atomicity only, not crash-w
 ### Concerns
 
 The schema read checks identity before and after the bounded read, providing function-level TOCTOU detection rather than a cross-process filesystem lock. FIFO coverage is skipped only on Windows where `mkfifo` is unavailable.
+
+## Fix round 5/5 — RED → GREEN
+
+### RED
+
+- `node --test --test-name-pattern='declarative schema authority|live issued mapping observation' tests/unit/game-design-glossary.test.mjs` → `ERR_MODULE_NOT_FOUND`: the capabilities module did not export `issueGlossaryMappingObservation` (`tests 1`, `pass 0`, `fail 1`). The new hostile public-API test therefore could not issue a live observation, as expected before the production authority implementation.
+- With the prior `realpathSync` error branch restored in isolation, `node --test --test-name-pattern='declarative schema authority' tests/unit/game-design-glossary.test.mjs` → `AssertionError`: dangling installed leaf produced `{ ok: true, errors: [] }` rather than the generic closed `{ ok: false, errors: [{ code: 'glossary-schema.extension' }] }`.
+
+### Implementation and non-vacuity review
+
+- Candidate inspection now treats only an `ENOENT` returned directly by lexical `lstat` as mirror absence. Once a leaf or ancestor exists, `realpath`, follow-up `lstat`, read, and identity failures (including `ENOENT`) are invalid and surface only the generic schema-unavailable finding.
+- Added public `issueGlossaryMappingObservation` / `assertGlossaryMappingObservation`. The issuer accepts closed plain own-data input, canonicalizes and freezes the observation, and issues a module-private WeakMap capability. Terminology validation requires the exact observation/capability pair and binds it to document ID, effective-glossary hash, sorted snapshot term IDs, and the opposite target language.
+- The temporary production mutation that again classified `realpath` `ENOENT` as absence made the dangling-leaf assertion fail at its unique generic-result assertion. A second mutation that returned a mapping object without calling the private assertion made the copied-observation assertion fail with `Missing expected exception`. Both mutations were restored before GREEN.
+
+### GREEN
+
+- `node --test --test-name-pattern='declarative schema authority|live issued mapping observation' tests/unit/game-design-glossary.test.mjs` → `tests 2`, `pass 2`, `fail 0`.
+- `node --test tests/unit/game-design-glossary.test.mjs tests/unit/reference-intelligence.test.mjs` → `tests 68`, `pass 68`, `fail 0`.
+
+### Added hostile coverage
+
+- Public temporary-layout imports reject dangling installed schema leaf and ancestor symlinks, plus a dangling source candidate even when the other mirror is valid; all failures remain path-free and generic. Source-only, equal mirrors, and an ordinary missing second mirror remain accepted by the existing assertions.
+- Issued mapping observations emit exactly once for their selected term. Copied, re-frozen, proxied, field-tampered observations; copied capabilities; unknown issuer keys; document/glossary/selection/language replays all fail closed. A call with no observation continues to add no mapping false positive.

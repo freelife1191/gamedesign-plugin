@@ -2,7 +2,7 @@ import { lstat, mkdir, readFile, rename, rm, rmdir, unlink } from "node:fs/promi
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { canonicalJson, sha256Canonical, validateGameDesignGlossary, validateGlossaryReceipt } from "./validate-reference-intelligence.mjs";
-import { assertGlossaryHumanDecision, assertGlossaryOverrideDecision } from "./lib/game-design-glossary-capabilities.mjs";
+import { assertGlossaryHumanDecision, assertGlossaryMappingObservation, assertGlossaryOverrideDecision } from "./lib/game-design-glossary-capabilities.mjs";
 import { canonicalArtifactRoot, ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 
 const compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
@@ -69,12 +69,12 @@ function receiptMatches(receipt, documentId, glossary) { return id.test(document
 function escaped(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 function termMatch(text, value, language, insensitive = false) { if (!value) return false; const flags = `${insensitive ? "iu" : "u"}`; return new RegExp(`(?<![\\p{L}\\p{N}])${escaped(value)}(?![\\p{L}\\p{N}])`, flags).test(text); }
 function replacementAttempt(value, terms) { if (value === undefined) return false; const copyValue = copy(value); if (!copyValue || Object.keys(copyValue).sort().join("\0") !== "action\0fromTermId\0toTermId" || copyValue.action !== "replace" || !termId.test(copyValue.fromTermId) || !termId.test(copyValue.toTermId) || copyValue.fromTermId === copyValue.toTermId || !terms.has(copyValue.fromTermId) || !terms.has(copyValue.toTermId)) fail(); return true; }
-function mappingObservation(value, selected) { if (value === undefined) return null; let copyValue; try { if (!Object.isFrozen(value)) fail(); copyValue = structuredClone(value); } catch { fail(); } if (!copyValue || Object.getPrototypeOf(copyValue) !== Object.prototype || Object.keys(copyValue).sort().join("\0") !== "status\0targetLanguage\0termId" || copyValue.status !== "missing" || !termId.test(copyValue.termId) || !["ko", "en"].includes(copyValue.targetLanguage)) fail(); return selected.has(copyValue.termId) ? copyValue : "stale"; }
+function mappingObservation(observation, capability, { documentId, glossary, termIds, language }) { if (observation === undefined && capability === undefined) return null; if (observation === undefined || capability === undefined) fail(); try { return assertGlossaryMappingObservation(observation, capability, { documentId, effectiveGlossary: glossary, termIds, targetLanguage: language === "ko" ? "en" : "ko" }); } catch { fail(); } }
 function hasUnnecessaryEnglish(text, glossary) { const known = new Set(glossary.terms.filter(approved).flatMap((item) => [item.enPreferred, ...item.allowedVariants]).filter((value) => /[A-Za-z]/u.test(value)).map((value) => value.toLocaleLowerCase("en-US"))); return [...text.matchAll(/\b[A-Za-z][A-Za-z'’-]*(?:[ \t]+[A-Za-z][A-Za-z'’-]*){0,5}\b/gu)].some(([value]) => !known.has(value.toLocaleLowerCase("en-US"))); }
 
-export function validateDocumentTerminology({ text, language, documentId, effectiveGlossary, receipt, replacementAttempt: attempt, mappingObservation: observation } = {}) {
+export function validateDocumentTerminology({ text, language, documentId, effectiveGlossary, receipt, replacementAttempt: attempt, mappingObservation: observation, mappingCapability } = {}) {
   if (!canonicalText(text, 2 * 1024 * 1024) || !["ko", "en"].includes(language) || !id.test(documentId ?? "")) fail(); const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective") fail(); const blocking = []; const warnings = []; const receiptOk = receiptMatches(receipt, documentId, glossary); if (!receiptOk) blocking.push(finding("stale-glossary-receipt")); const selected = new Set(receipt?.termIds ?? []);
-  const terms = new Map(glossary.terms.map((item) => [item.termId, item])); const hasReplacementAttempt = replacementAttempt(attempt, terms); const mapping = mappingObservation(observation, selected);
+  const terms = new Map(glossary.terms.map((item) => [item.termId, item])); const hasReplacementAttempt = replacementAttempt(attempt, terms); const mapping = mappingObservation(observation, mappingCapability, { documentId, glossary, termIds: receipt?.termIds, language });
   const labels = new Map();
   for (const item of glossary.terms.filter(({ termId: value }) => selected.has(value))) for (const label of [language === "ko" ? item.koPreferred : item.enPreferred, ...item.allowedVariants]) if (termMatch(text, label, language, language === "en")) { const key = language === "en" ? label.toLocaleLowerCase("en-US") : label; const matches = labels.get(key) ?? new Set(); matches.add(item.termId); labels.set(key, matches); }
   for (const matches of labels.values()) if (matches.size > 1) for (const value of matches) blocking.push(finding("ambiguous-concept-label", value));
@@ -92,7 +92,7 @@ export function validateDocumentTerminology({ text, language, documentId, effect
     for (const abbreviation of item.abbreviations) if (termMatch(text, abbreviation, language, false) && !usedPreferred && !usedAllowed) warnings.push(finding("unexplained-abbreviation", item.termId));
   }
   if (language === "ko" && hasUnnecessaryEnglish(text, glossary)) warnings.push(finding("unnecessary-english"));
-  if (mapping === "stale") blocking.push(finding("stale-glossary-receipt")); else if (mapping) blocking.push(finding("missing-bilingual-mapping", mapping.termId));
+  if (mapping) blocking.push(finding("missing-bilingual-mapping", mapping.termId));
   if (hasReplacementAttempt) blocking.push(finding("semantic-auto-replacement"));
   return freeze({ ok: blocking.length === 0, blocking: sortFindings(blocking), warnings: sortFindings(warnings) });
 }
