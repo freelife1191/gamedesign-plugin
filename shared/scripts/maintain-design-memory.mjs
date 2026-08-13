@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { verifyMaintenanceHumanReceipt } from "./lib/design-memory-capabilities.mjs";
 import { appendMemoryEvent, appendQuarantineMarker, ensureMemoryGitExclusion, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents } from "./lib/safe-memory-store.mjs";
 import { rebuildMemoryIndex } from "./retrieve-design-memory.mjs";
-import { canonicalMemoryEventDocument, memoryOperationId, validateMemorySourceBindings } from "./validate-design-memory.mjs";
+import { canonicalMemoryEventDocument, memoryOperationId, observeMemorySourceBindings, validateMemorySourceBindings } from "./validate-design-memory.mjs";
 import { publishDesignMemoryLog } from "./capture-design-memory.mjs";
 
 const exec = promisify(execFile);
@@ -28,7 +28,7 @@ function authorityFor({ config, action, memoryId, actor, reason, observedParentE
 }
 async function withLog(result, workspaceRoot, config, now) { try { return { ...result, warnings: await publishDesignMemoryLog({ workspaceRoot, config, now }) }; } catch { return { ...result, warnings: [{ code: "memory.log_publish" }] }; } }
 function transitionTarget(action, base) {
-  if (action === "verify") return "verified";
+  if (action === "verify") { if (base.status !== "candidate") fail(); return "verified"; }
   if (action === "approve") { if (base.status !== "verified") fail(); return "approved"; }
   if (action === "reject") return "rejected";
   if (action === "retire") return ["approved", "disputed", "stale"].includes(base.status) ? "superseded" : "rejected";
@@ -67,8 +67,13 @@ async function resolution(input) {
 }
 async function lintMemoryStore({ workspaceRoot, config, now }) {
   const store = await storeFor(workspaceRoot, config, false); if (!store) return { status: "ready", memories: [], diagnostics: [] };
-  const scan = await scanned(store); const fold = foldMemoryEvents(scan, { now }); const diagnostics = [...scan.diagnostics, ...fold.diagnostics]; const orphaned = new Set();
-  for (const item of scan.events) { const checked = await validateMemorySourceBindings(item.record, { workspaceRoot }); if (!checked.ok && !orphaned.has(item.memoryId)) { diagnostics.push({ code: "memory.orphan_source", memory_id: item.memoryId }); orphaned.add(item.memoryId); } }
+  const scan = await scanned(store); const fold = foldMemoryEvents(scan, { now }); const diagnostics = [...scan.diagnostics, ...fold.diagnostics]; const reported = new Set();
+  for (const item of scan.events) {
+    const checked = await observeMemorySourceBindings(item.record, { workspaceRoot }); const statuses = new Set(checked.observations.map((observation) => observation.status));
+    for (const code of [statuses.has("drift") ? "memory.stale_source" : null, [...statuses].some((status) => !["current", "drift"].includes(status)) ? "memory.orphan_source" : null].filter(Boolean)) {
+      const key = `${code}\0${item.memoryId}`; if (!reported.has(key)) { diagnostics.push({ code, memory_id: item.memoryId }); reported.add(key); }
+    }
+  }
   return { status: "ready", memories: [...fold.memories.keys()].sort(byteCompare), diagnostics };
 }
 async function listMemoryRecords({ workspaceRoot, config }) {

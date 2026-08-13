@@ -42,6 +42,28 @@ async function tree(root, relative = "") {
   try { for await (const entry of handle) { const next = relative ? `${relative}/${entry.name}` : entry.name; result.push(next); if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...await tree(root, next)); } } finally { await handle.close().catch(() => {}); }
   return result.sort();
 }
+async function sourceTreeSnapshot(store) {
+  const root = path.join(store.root, "v1"); const result = [];
+  async function visit(directory, relative = "") {
+    let handle; try { handle = await opendir(directory); } catch (error) { if (error?.code === "ENOENT") return; throw error; }
+    try {
+      for await (const entry of handle) {
+        if (!relative && entry.name === "derived") continue;
+        const next = relative ? `${relative}/${entry.name}` : entry.name; const candidate = path.join(directory, entry.name);
+        if (entry.isDirectory() && !entry.isSymbolicLink()) await visit(candidate, next);
+        else result.push([next, entry.isFile() ? digest(await readFile(candidate)) : "non-file"]);
+      }
+    } finally { await handle.close().catch(() => {}); }
+  }
+  await visit(root); return result.sort((left, right) => left[0].localeCompare(right[0]));
+}
+async function appendStatus(store, parentEventId, status, effectiveAt) {
+  const scan = await scanMemoryEvents({ store }); const parent = scan.events.find((item) => item.eventId === parentEventId); assert.ok(parent);
+  const record = { ...parent.record, status, updated_at: effectiveAt, ...(status === "approved" ? { approved_by: "reviewer", approval_basis: "human-review" } : {}) };
+  const event = { schema_version: 1, event_type: "transition", action: status, memory_id: parent.memoryId, parent_event_ids: [parent.eventId], effective_at: effectiveAt, actor: "reviewer", reason: status, record };
+  event.operation_id = memoryOperationId(event);
+  return appendMemoryEvent({ store, eventDocument: canonicalMemoryEventDocument(event, parent.sections) });
+}
 async function logDocuments(store) {
   const root = path.join(store.root, "v1", "derived", "logs"); const files = [];
   async function visit(directory) { let handle; try { handle = await opendir(directory); } catch (error) { if (error?.code === "ENOENT") return; throw error; } try { for await (const entry of handle) { const candidate = path.join(directory, entry.name); if (entry.isDirectory()) await visit(candidate); else if (entry.isFile() && entry.name.endsWith(".md")) files.push(await readFile(candidate, "utf8")); } } finally { await handle.close().catch(() => {}); } }
@@ -66,6 +88,28 @@ test("verified candidate with an exact human receipt is the only direct approval
   assert.equal(foldMemoryEvents(await scanMemoryEvents({ store: capture.store })).memories.get(capture.memoryId).record.status, "approved");
 });
 
+test("verify rejects every non-candidate status without event or source-tree growth", async (t) => {
+  for (const [status, chain] of [
+    ["expired", ["expired"]],
+    ["disputed", ["disputed"]],
+    ["stale", ["verified", "approved", "stale"]],
+    ["rejected", ["rejected"]],
+    ["superseded", ["verified", "approved", "superseded"]],
+    ["verified", ["verified"]],
+  ]) {
+    const { root, capture } = await captured(t, { eventOverrides: { eventId: `playtest-${status}` } }); let head = capture.eventId;
+    for (const [index, next] of chain.entries()) head = (await appendStatus(capture.store, head, next, `2026-08-${String(index + 2).padStart(2, "0")}T00:00:00.000Z`)).eventId;
+    const before = await sourceTreeSnapshot(capture.store);
+    await assert.rejects(
+      () => mutate({ root, action: "verify", memoryId: capture.memoryId, observedParentEventIds: [head], reason: "must remain terminal", now: new Date("2026-09-01T00:00:00Z") }),
+      (error) => error?.code === "memory.maintenance",
+      status,
+    );
+    assert.deepEqual(await sourceTreeSnapshot(capture.store), before, status);
+    const folded = foldMemoryEvents(await scanMemoryEvents({ store: capture.store })); assert.equal(folded.memories.get(capture.memoryId).record.status, status);
+  }
+});
+
 test("maintenance rejects copied authority and every request-field mutation before append", async (t) => {
   const { root, capture } = await captured(t); const now = new Date("2026-08-02T00:00:00Z"); const base = { workspaceRoot: root, config, action: "verify", memoryId: capture.memoryId, actor: "reviewer", reason: "sources current", observedParentEventIds: [capture.eventId], now };
   const receipt = humanReceipt(base); const before = (await scanMemoryEvents({ store: capture.store })).events.length;
@@ -77,10 +121,27 @@ test("maintenance rejects copied authority and every request-field mutation befo
 });
 
 test("verify refuses source drift and lint reports the stale source without writing", async (t) => {
-  const { root, capture } = await captured(t); await writeFile(path.join(root, "artifact", "evidence.yml"), "changed\n"); const before = await tree(root);
+  const { root, capture } = await captured(t); const changed = "changed confidential bytes\n"; await writeFile(path.join(root, "artifact", "evidence.yml"), changed); const before = await tree(root);
   await assert.rejects(() => mutate({ root, action: "verify", memoryId: capture.memoryId, observedParentEventIds: [capture.eventId], reason: "check", now: new Date("2026-08-02T00:00:00Z") }), (error) => error?.code === "memory.maintenance");
-  const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" }); assert.equal(linted.diagnostics.some((item) => item.code === "memory.orphan_source"), true);
+  const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" }); const serialized = JSON.stringify(linted.diagnostics);
+  assert.equal(linted.diagnostics.some((item) => item.code === "memory.stale_source" && item.memory_id === capture.memoryId), true);
+  assert.equal(linted.diagnostics.some((item) => item.code === "memory.orphan_source" && item.memory_id === capture.memoryId), false);
+  assert.equal(serialized.includes(root), false); assert.equal(serialized.includes(changed.trim()), false);
   assert.deepEqual(await tree(root), before);
+});
+
+test("lint classifies missing, unreadable, and symlink evidence as orphan without writes or path disclosure", async (t) => {
+  for (const mode of ["missing", "unreadable", "symlink"]) {
+    const { root, capture } = await captured(t, { eventOverrides: { eventId: `playtest-${mode}` } }); const evidence = path.join(root, "artifact", "evidence.yml");
+    await rm(evidence);
+    if (mode === "symlink") { const target = path.join(root, "private-evidence.txt"); await writeFile(target, "private evidence bytes\n"); await symlink(target, evidence); }
+    if (mode === "unreadable") await mkdir(evidence);
+    const before = await tree(root); const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" }); const serialized = JSON.stringify(linted.diagnostics);
+    assert.equal(linted.diagnostics.some((item) => item.code === "memory.orphan_source" && item.memory_id === capture.memoryId), true, mode);
+    assert.equal(linted.diagnostics.some((item) => item.code === "memory.stale_source" && item.memory_id === capture.memoryId), false, mode);
+    assert.equal(serialized.includes(root), false); assert.equal(serialized.includes("private evidence bytes"), false);
+    assert.deepEqual(await tree(root), before, mode);
+  }
 });
 
 test("sweep expires candidates and retire maps candidate and approved records without rewriting source events", async (t) => {

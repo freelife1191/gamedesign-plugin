@@ -77,3 +77,84 @@
 ### Remaining concern
 
 - Store suite의 기존 documented skip 1건은 Node 18 path API가 악의적인 same-user between-syscall directory swap을 완전히 예방할 수 없다는 플랫폼 제한이다. 이번 Fix 2의 artifact identity swap·final inode swap·root identity 재검사는 통과했으며, 추가 blocker는 없다.
+
+## Scoped fix — candidate-only verify와 lint source diagnostics
+
+### RED → GREEN 명령과 출력
+
+- N1 RED:
+
+  ```text
+  $ node --test --test-name-pattern='verify rejects every non-candidate' tests/unit/design-memory-maintenance.test.mjs
+  ✖ verify rejects every non-candidate status without event or source-tree growth
+  AssertionError: Missing expected rejection: expired
+  tests 1, pass 0, fail 1
+  ```
+
+  기준 구현의 `transitionTarget("verify", base)`가 status를 확인하지 않아 첫 hostile
+  fixture인 `expired` head에서 실제 `verified` event를 append했다.
+
+- N1 GREEN:
+
+  ```text
+  $ node --test --test-name-pattern='verify rejects every non-candidate|verified candidate with' tests/unit/design-memory-maintenance.test.mjs
+  ✔ verified candidate with an exact human receipt is the only direct approval path and exact retry is present
+  ✔ verify rejects every non-candidate status without event or source-tree growth
+  tests 2, pass 2, fail 0
+  ```
+
+  verify는 이제 `base.status === "candidate"`만 허용한다. `expired`, `disputed`,
+  `stale`, `rejected`, `superseded`, `verified` 각각에서 public append/maintenance API와
+  실제 filesystem을 사용해 거부를 확인하고, event/control source tree의 상대 경로와
+  bytes digest가 요청 전후 동일함을 검증했다.
+
+- N2 RED:
+
+  ```text
+  $ node --test --test-name-pattern='verify refuses source drift|lint classifies missing' tests/unit/design-memory-maintenance.test.mjs
+  ✖ verify refuses source drift and lint reports the stale source without writing
+  ✔ lint classifies missing and symlink evidence as orphan without writing or disclosing paths
+  AssertionError: false !== true
+  tests 2, pass 1, fail 1
+  ```
+
+  digest drift fixture가 `memory.stale_source`를 찾지 못해 실패했고, 기존 구현이 모든
+  source failure를 `memory.orphan_source`로 합치는 것을 확인했다.
+
+- N2 GREEN:
+
+  ```text
+  $ node --test --test-name-pattern='verify refuses source drift|lint classifies missing|verify rejects every non-candidate|verified candidate with' tests/unit/design-memory-maintenance.test.mjs
+  ✔ verified candidate with an exact human receipt is the only direct approval path and exact retry is present
+  ✔ verify rejects every non-candidate status without event or source-tree growth
+  ✔ verify refuses source drift and lint reports the stale source without writing
+  ✔ lint classifies missing, unreadable, and symlink evidence as orphan without writes or path disclosure
+  tests 4, pass 4, fail 0
+  ```
+
+  lint는 `observeMemorySourceBindings()`의 observation status를 사용한다. `drift`는
+  `memory.stale_source`, `missing`/`unreadable`/`symlink`는
+  `memory.orphan_source`로 memory ID당 중복 없이 보고한다. diagnostics는 code와
+  `memory_id`만 포함하며 absolute path와 변경 bytes를 포함하지 않는다. 모든 lint
+  fixture에서 filesystem tree 무변경도 확인했다.
+
+### Mutation / non-vacuity evidence
+
+- candidate status guard를 제거한 production 변형은 N1 RED에서 첫 `expired` fixture가
+  성공 append되어 즉시 실패했다. 따라서 테스트는 단순 error-path assertion이 아니라
+  부활 가능 transition을 실제로 검출한다.
+- drift 분기를 orphan으로 되돌린 production 변형은 N2 RED에서 literal
+  `memory.stale_source` assertion이 실패한다. 반대로 missing/unreadable/symlink fixture는
+  stale diagnostic이 없고 orphan diagnostic이 있음을 각각 확인하므로 두 분류가 서로
+  대체될 수 없다.
+- no-growth 기대값은 production helper가 아니라 요청 직전 실제 source tree의 상대 경로와
+  file SHA-256 snapshot에서 독립적으로 만들어진다.
+
+### Final regression
+
+- `node --test tests/unit/design-memory-maintenance.test.mjs` → 16 passed, 0 failed.
+- 관련 최소 회귀: capture 9/9, record 35/35, store 46 passed + 1 documented skip,
+  retrieval 37/37. 합계 144 tests, 143 passed, 1 documented skip, 0 failed.
+- `node --check shared/scripts/maintain-design-memory.mjs` 및 `git diff --check` 통과.
+- 변경 범위는 `shared/scripts/maintain-design-memory.mjs`, maintenance unit test와 이
+  보고서뿐이며 Task 5+ 파일은 변경하지 않았다.
