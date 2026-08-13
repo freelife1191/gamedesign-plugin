@@ -159,8 +159,8 @@ function yamlRecord(record, indent = "") {
   const lines = [];
   for (const key of scalar) lines.push(`${indent}${key}: ${record[key] === null ? "null" : typeof record[key] === "number" ? record[key] : quote(normalizeTime(key, record[key]))}`);
   if (Object.hasOwn(record, "instruction_sha256")) lines.push(`${indent}instruction_sha256: ${quote(record.instruction_sha256)}`);
-  for (const key of ["artifact_types", "related_ids", "tags"]) { lines.push(`${indent}${key}:`); for (const value of record[key]) lines.push(`${indent}  - ${quote(value)}`); }
-  lines.push(`${indent}sources:`); for (const source of record.sources) { lines.push(`${indent}  - artifact_id: ${quote(source.artifact_id)}`, `${indent}    locator: ${quote(source.locator)}`, `${indent}    sha256: ${quote(source.sha256)}`); }
+  for (const key of ["artifact_types", "related_ids", "tags"]) { if (record[key].length === 0) lines.push(`${indent}${key}: []`); else { lines.push(`${indent}${key}:`); for (const value of record[key]) lines.push(`${indent}  - ${quote(value)}`); } }
+  if (record.sources.length === 0) lines.push(`${indent}sources: []`); else { lines.push(`${indent}sources:`); for (const source of record.sources) { lines.push(`${indent}  - artifact_id: ${quote(source.artifact_id)}`, `${indent}    locator: ${quote(source.locator)}`, `${indent}    sha256: ${quote(source.sha256)}`); } }
   return lines;
 }
 function normalizeTime(key, value) { return ["effective_at", "created_at", "updated_at"].includes(key) ? new Date(value).toISOString() : value; }
@@ -273,7 +273,11 @@ export async function observeMemorySourceBindings(record, { workspaceRoot, befor
     try {
       const filePart = typeof source.locator === "string" ? source.locator.split("#", 1)[0] : "";
       if (!safeRelative(filePart)) throw new Error();
-      let current = root; const identities = [{ path: root, stats: rootIdentity }]; const segments = filePart.split("/");
+      let boundFilePart = filePart;
+      if (safeId(source.artifact_id)) {
+        try { const artifact = await lstat(path.join(root, source.artifact_id)); if (!artifact.isSymbolicLink() && artifact.isDirectory()) boundFilePart = `${source.artifact_id}/${filePart}`; } catch {}
+      }
+      let current = root; const identities = [{ path: root, stats: rootIdentity }]; const segments = boundFilePart.split("/");
       for (const [part, segment] of segments.entries()) { current = path.join(current, segment); const stats = await lstat(current); if (stats.isSymbolicLink()) { status = "symlink"; throw new Error(); } if (!stats.isDirectory() && part !== segments.length - 1) throw new Error(); if (part !== segments.length - 1) identities.push({ path: current, stats }); }
       const stats = await lstat(current); if (stats.isSymbolicLink()) { status = "symlink"; throw new Error(); } if (!stats.isFile()) throw new Error();
       if (!constants.O_NOFOLLOW) throw new Error();
