@@ -81,9 +81,10 @@ function validReferenceAnalysis() {
     comparison: [{
       comparisonId: "comparison-system-reveal-loop",
       sourceSystemId: "system-reveal-loop",
-      subject: "Reveal loop",
+      state: "hold",
+      subject: "system reveal loop",
       claimKind: "observation",
-      finding: "Choice timing is the differentiator.",
+      finding: "Hold comparison conclusion pending sufficient observed reference coverage.",
       evidenceIds: ["evidence-cinematic-loop"],
       referenceIds: ["ref-cinematic-sample"], contextIds: ["ctx-cinematic-v1"], coverageCount: 1,
     }],
@@ -930,7 +931,7 @@ test("fix2 holds unavailable-only systems but allows two observed references to 
     const templateLines = (await readFile(new URL(`../../shared/reference-intelligence/templates/${relativePath}`, import.meta.url), "utf8")).trim().split("\n");
     assert.equal(outputLines[2], templateLines[2]);
     const cellCount = (line) => line.split("|").length - 2;
-    const expectedColumns = relativePath === "comparison-matrix.md" ? 9 : 13;
+    const expectedColumns = relativePath === "comparison-matrix.md" ? 10 : 13;
     assert.equal([templateLines[2], templateLines[3], templateLines[4], ...outputLines.slice(2)].every((line) => cellCount(line) === expectedColumns), true);
   }
   const unavailableOnly = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{
@@ -1074,4 +1075,37 @@ test("fix4 final validator rejects a score order that contradicts contiguous ran
   const alteredQuestion = structuredClone(queued);
   alteredQuestion.verificationQueue.find(({ verificationId }) => verificationId === "verify-evidence-ev-beta-offline").question = "Arbitrary pending question.";
   assert.equal(validateReferenceAnalysis(alteredQuestion).ok, false);
+});
+
+test("fix5 derives comparison state and rejects contradictory comparison presentation", async () => {
+  const observed = analysisEvidenceFixture()[0];
+  const coverageOne = buildReferenceAnalysis(await analysisInputFixture());
+  assert.equal(coverageOne.comparison[0].state, "hold");
+  const coverageZeroUnknown = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{
+    ...observed, evidenceId: "ev-fix5-offline", availability: "unavailable", limitation: "Offline.", verificationQuestion: "Which official page can verify the loop?",
+  }] }));
+  assert.deepEqual([coverageZeroUnknown.comparison[0].coverageCount, coverageZeroUnknown.comparison[0].claimKind, coverageZeroUnknown.comparison[0].state], [0, "unknown", "hold"]);
+  const unknownCoverageOne = buildReferenceAnalysis(await analysisInputFixture({ evidence: [{ ...observed, claimKind: "unknown", claim: "The available source remains unknown." }] }));
+  assert.deepEqual([unknownCoverageOne.comparison[0].coverageCount, unknownCoverageOne.comparison[0].claimKind, unknownCoverageOne.comparison[0].state], [1, "unknown", "hold"]);
+  const ready = buildReferenceAnalysis(await analysisInputFixture({ evidence: [observed, { ...observed, evidenceId: "ev-fix5-beta", referenceId: "ref-beta", contextId: "ctx-beta-v1", claim: "A second reference observes the same loop." }] }));
+  assert.equal(ready.comparison[0].state, "ready");
+  for (const mutate of [
+    (value) => { value.comparison[0].state = "hold"; },
+    (value) => { value.comparison[0].subject = "Contradictory subject"; },
+    (value) => { value.comparison[0].finding = "Hold comparison conclusion pending sufficient observed reference coverage."; },
+  ]) {
+    const value = structuredClone(ready);
+    mutate(value);
+    assert.equal(validateReferenceAnalysis(value).ok, false);
+  }
+  const wrongTrace = structuredClone(coverageOne);
+  wrongTrace.comparison[0].evidenceIds = [];
+  const diagnostic = validateReferenceAnalysis(wrongTrace);
+  assert.equal(diagnostic.ok, false);
+  assert.equal(diagnostic.errors.some(({ path }) => path === "/comparison/0/coverageCount"), true);
+  const wrongTransfer = structuredClone(coverageOne);
+  wrongTransfer.transferDecisions[0].evidenceIds = [];
+  const transferDiagnostic = validateReferenceAnalysis(wrongTransfer);
+  assert.equal(transferDiagnostic.ok, false);
+  assert.equal(transferDiagnostic.errors.some(({ path }) => path === "/transferDecisions/0/coverageCount"), true);
 });

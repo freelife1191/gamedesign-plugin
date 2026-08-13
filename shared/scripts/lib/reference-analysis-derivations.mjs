@@ -18,3 +18,15 @@ export function comparePriorityEntries(left, right) {
 export function evidenceVerificationId(evidenceId) { return `verify-evidence-${evidenceId}`; }
 export function systemVerificationId(systemId) { return `verify-system-${systemId}`; }
 export function systemVerificationQuestion(systemId) { return `What independent observation can verify ${systemId}?`; }
+
+/** Canonical comparison presentation; insufficient or unknown evidence never reads as ready. */
+export function deriveComparisonPresentation({ systemId, coverageCount, claimKind }) {
+  const state = coverageCount < 2 || claimKind === "unknown" ? "hold" : "ready";
+  return {
+    state,
+    subject: systemId.split("-").join(" "),
+    finding: state === "hold"
+      ? "Hold comparison conclusion pending sufficient observed reference coverage."
+      : "Comparison remains evidence-bounded and pending review.",
+  };
+}

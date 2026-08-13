@@ -3,7 +3,7 @@ import { deriveAvailableClaimKind, registerReferenceEvidence, validateClaimAgain
 import { mergeSystemAtlas } from "./lib/system-atlas.mjs";
 import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
-import { comparePriorityEntries, priorityDimensions, evidenceVerificationId, systemVerificationId, systemVerificationQuestion } from "./lib/reference-analysis-derivations.mjs";
+import { comparePriorityEntries, priorityDimensions, deriveComparisonPresentation, evidenceVerificationId, systemVerificationId, systemVerificationQuestion } from "./lib/reference-analysis-derivations.mjs";
 
 const roles = Object.freeze(["direct-competitor", "core-system-exemplar", "operations-monetization-comparator"]);
 const dimensions = priorityDimensions;
@@ -129,7 +129,7 @@ function deepDives(priority, inventory, evidence) {
 }
 
 function comparison(deepDiveValues) {
-  return deepDiveValues.map((dive) => ({ comparisonId: `comparison-${dive.systemId}`, sourceSystemId: dive.systemId, subject: dive.systemId.split("-").join(" "), claimKind: dive.claimKind, finding: dive.coverageCount < 2 || dive.claimKind === "unknown" ? "Hold comparison conclusion pending sufficient observed reference coverage." : "Comparison remains evidence-bounded and pending review.", evidenceIds: dive.evidenceIds, referenceIds: dive.referenceIds, contextIds: dive.contextIds, coverageCount: dive.coverageCount })).sort((left, right) => compare(left.comparisonId, right.comparisonId));
+  return deepDiveValues.map((dive) => ({ comparisonId: `comparison-${dive.systemId}`, sourceSystemId: dive.systemId, claimKind: dive.claimKind, ...deriveComparisonPresentation(dive), evidenceIds: dive.evidenceIds, referenceIds: dive.referenceIds, contextIds: dive.contextIds, coverageCount: dive.coverageCount })).sort((left, right) => compare(left.comparisonId, right.comparisonId));
 }
 
 /** Stage 9: returns proposal-only transfers; no caller-supplied coverage or validation state is accepted. */
@@ -183,7 +183,7 @@ export async function writeReferenceAnalysisWorkspace({ artifactRoot, analysis, 
     [artifactFiles[2], canonicalJson({ referenceContexts: safeAnalysis.referenceContexts, evidence: safeAnalysis.evidence })],
     [artifactFiles[3], canonicalJson(safeAnalysis.systemInventory)],
     [artifactFiles[4], markdown("Analysis priority", ["rank", "systemId", ...dimensions, "rationale"], safeAnalysis.priority)],
-    [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "sourceSystemId", "subject", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
+    [artifactFiles[5], markdown("Comparison matrix", ["comparisonId", "sourceSystemId", "state", "subject", "claimKind", "coverageCount", "referenceIds", "contextIds", "finding", "evidenceIds"], safeAnalysis.comparison.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", ") })))],
     [artifactFiles[6], markdown("Transfer decisions", ["transferId", "sourceSystemId", "decision", "coverageCount", "evidenceIds", "referenceIds", "contextIds", "projectConstraints", "risks", "validationSteps", "validationState", "reviewState", "rationale"], safeAnalysis.transferDecisions.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", "), referenceIds: item.referenceIds.join(", "), contextIds: item.contextIds.join(", "), projectConstraints: item.projectConstraints.join(", "), risks: item.risks.join(", "), validationSteps: item.validationSteps.join(", ") })))],
     [artifactFiles[7], markdown("Verification queue", ["verificationId", "state", "question", "evidenceIds"], safeAnalysis.verificationQueue.map((item) => ({ ...item, evidenceIds: item.evidenceIds.join(", ") })))]
   ]);
