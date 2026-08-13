@@ -8,6 +8,14 @@ import {
   sha256Canonical,
   validateReferenceAnalysis,
 } from "../../shared/scripts/validate-reference-intelligence.mjs";
+import {
+  registerReferenceEvidence,
+  validateClaimAgainstEvidence,
+} from "../../shared/scripts/lib/reference-evidence.mjs";
+import {
+  loadBundledReferenceCatalog,
+  mergeSystemAtlas,
+} from "../../shared/scripts/lib/system-atlas.mjs";
 
 function validReferenceAnalysis() {
   return {
@@ -274,4 +282,125 @@ test("reference analysis permits exactly one entry for each default role", async
     limitation: null,
   });
   assert.deepEqual([schemaAccepts(value, schema, schema), validateReferenceAnalysis(value).ok], [false, false]);
+});
+
+test("Atlas merge is order-independent and genre convention is not a requirement", async () => {
+  const { atlas } = await loadBundledReferenceCatalog({
+    moduleRoot: new URL("../../shared/reference-intelligence/", import.meta.url),
+  });
+  const selection = {
+    atlas,
+    genreIds: ["action-rpg"],
+    playModeIds: ["single-player"],
+    platformIds: ["pc-console"],
+    businessModelIds: ["premium"],
+  };
+  const left = mergeSystemAtlas(selection);
+  const right = mergeSystemAtlas({ ...selection, genreIds: [...selection.genreIds].reverse() });
+  assert.deepEqual(left, right);
+  assert.equal(left.every(({ applicability }) => applicability !== "mandatory"), true);
+  assert.equal(left.some(({ questionId }) => questionId === "core-play-action-rpg-loop"), true);
+});
+
+test("discovery evidence cannot independently prove monetization causality", () => {
+  const result = validateClaimAgainstEvidence({
+    claim: { claimId: "claim-bm-1", kind: "observation", evidenceIds: ["ev-community-1"], causal: true },
+    evidenceById: new Map([["ev-community-1", { tier: "discovery", sourceType: "community" }]]),
+  });
+  assert.deepEqual(result, { ok: false, code: "unsupported_causal_claim" });
+});
+
+test("evidence registry derives and preserves source tiers without trusting supplied tiers", () => {
+  assert.deepEqual(registerReferenceEvidence({ records: [
+    { evidenceId: "ev-video", sourceType: "video" },
+    { evidenceId: "ev-patch", sourceType: "official-patch-note" },
+    { evidenceId: "ev-talk", sourceType: "developer-talk" },
+  ] }).map(({ evidenceId, tier }) => [evidenceId, tier]), [
+    ["ev-patch", "primary"],
+    ["ev-talk", "supporting"],
+    ["ev-video", "discovery"],
+  ]);
+  assert.throws(
+    () => registerReferenceEvidence({ records: [{ evidenceId: "ev-mismatched", sourceType: "community", tier: "primary" }] }),
+    { code: "reference-evidence.tier" },
+  );
+});
+
+test("bundled catalog preserves optional source fallbacks and exact registered URLs", async () => {
+  const { sourceRegister } = await loadBundledReferenceCatalog({
+    moduleRoot: new URL("../../shared/reference-intelligence/", import.meta.url),
+  });
+  assert.deepEqual(sourceRegister.sources.map(({ id, url, required }) => [id, url, required]), [
+    ["steamworks-tags", "https://partner.steamgames.com/doc/store/tags?l=english&language=english", false],
+    ["gamerefinery-genres", "https://docs.gamerefinery.com/en/articles/2278730-what-are-categories-genres-and-subgenres", false],
+    ["gamerefinery-intelligence", "https://www.gamerefinery.com/game-intelligence-tools/", false],
+    ["gdc-postmortems", "https://gdcvault.com/browse/postmortem/?media=s", false],
+    ["game-ui-database", "https://www.gameuidatabase.com/", false],
+    ["interface-in-game", "https://interfaceingame.com/screenshots/", false],
+    ["steamdb-faq", "https://steamdb.info/faq/", false],
+    ["igdb-api", "https://api-docs.igdb.com/", false],
+  ]);
+  assert.deepEqual(registerReferenceEvidence({ records: [{
+    evidenceId: "ev-offline-source",
+    sourceType: "official-site",
+    availability: "unavailable",
+    limitation: "Offline source unavailable; direct verification remains open.",
+  }] }), [{
+    evidenceId: "ev-offline-source",
+    sourceType: "official-site",
+    availability: "unavailable",
+    limitation: "Offline source unavailable; direct verification remains open.",
+    tier: "primary",
+  }]);
+});
+
+test("Atlas rejects unknown and duplicate overlay selections", async () => {
+  const { atlas } = await loadBundledReferenceCatalog({
+    moduleRoot: new URL("../../shared/reference-intelligence/", import.meta.url),
+  });
+  assert.throws(() => mergeSystemAtlas({ atlas, genreIds: ["unknown-genre"] }), { code: "reference-atlas.unknown-overlay" });
+  assert.throws(() => mergeSystemAtlas({ atlas, genreIds: ["action-rpg", "action-rpg"] }), { code: "reference-atlas.duplicate-overlay" });
+});
+
+test("Atlas conflicts preserve cautious applicability and bytewise question order", () => {
+  const atlas = {
+    questions: [],
+    overlays: {
+      genre: [{
+        overlayId: "alpha",
+        questions: [
+          { questionId: "a-question", systemId: "economy", applicability: "not-applicable", rationale: "Unavailable.", conditions: [], verificationPrompts: ["Check absence."] },
+          { questionId: "z-question", systemId: "economy", applicability: "required-candidate", rationale: "High priority.", conditions: [], verificationPrompts: ["Check loop."] },
+        ],
+      }],
+      "play-mode": [{
+        overlayId: "beta",
+        questions: [{ questionId: "a-question", systemId: "economy", applicability: "optional", rationale: "May apply.", conditions: [], verificationPrompts: ["Check choice."] }],
+      }],
+      platform: [],
+      "business-model": [],
+    },
+  };
+  const merged = mergeSystemAtlas({ atlas, genreIds: ["alpha"], playModeIds: ["beta"] });
+  assert.deepEqual(merged.map(({ questionId }) => questionId), ["a-question", "z-question"]);
+  assert.equal(merged[0].applicability, "unknown");
+});
+
+test("Atlas rejects duplicate catalog question pairs before selecting an overlay", () => {
+  const atlas = {
+    questions: [],
+    overlays: {
+      genre: [{
+        overlayId: "duplicate-pair",
+        questions: [
+          { questionId: "duplicate-question", systemId: "economy", applicability: "optional", rationale: "First.", conditions: [], verificationPrompts: ["Check first."] },
+          { questionId: "duplicate-question", systemId: "economy", applicability: "optional", rationale: "Second.", conditions: [], verificationPrompts: ["Check second."] },
+        ],
+      }],
+      "play-mode": [],
+      platform: [],
+      "business-model": [],
+    },
+  };
+  assert.throws(() => mergeSystemAtlas({ atlas }), { code: "reference-atlas.duplicate-question" });
 });
