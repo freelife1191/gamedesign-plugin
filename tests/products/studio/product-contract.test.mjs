@@ -35,6 +35,8 @@ const skillIds = [
   "retrieve-approved-design-memory",
   "capture-game-design-memory",
   "maintain-game-design-memory",
+  "analyze-game-design-references",
+  "maintain-game-design-glossary",
 ];
 const directSkillIds = skillIds.slice(0, 15);
 const installedSkillIds = [...directSkillIds, "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
@@ -78,6 +80,11 @@ const plannedPaths = {
     "assets/templates/game-design-review/content.md",
     "references/visualization-presets.json",
     "references/export-recipes.md",
+    "references/shared/reference-intelligence/references/evidence-policy.md",
+    "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+    "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+    "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+    "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
   ],
 };
 
@@ -151,6 +158,18 @@ const routeContract = {
     artifactType: "canonical-artifact",
     outputArtifacts: ["requested-md", "requested-pdf", "requested-docx", "requested-pptx", "qa-manifest"],
   },
+  "reference-game-analysis": {
+    skill: "analyze-game-design-references",
+    reference: "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+    artifactType: "reference-system-analysis",
+    outputTypes: ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+  },
+  "project-glossary-maintenance": {
+    skill: "maintain-game-design-glossary",
+    reference: "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+    artifactType: "game-design-glossary",
+    outputTypes: ["game-design-glossary", "terminology-findings", "glossary-receipt"],
+  },
 };
 
 async function readJson(relativePath) {
@@ -207,7 +226,7 @@ test("Studio routing enumerates the planned skills, roles, and composable profil
   const routing = await readJson("references/routing.json");
 
   assert.deepEqual(routing.skillIds, skillIds);
-  assert.equal(new Set(routing.skillIds).size, 20);
+  assert.equal(new Set(routing.skillIds).size, 22);
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.equal(new Set(routing.roleIds).size, 10);
@@ -240,7 +259,7 @@ test("Studio orchestrator accepts ordinary natural-language requests without exp
 test("Every Studio route is deterministic and points at its planned artifact source", async () => {
   const routing = await readJson("references/routing.json");
   assert.equal(routing.schemaVersion, 1);
-  assert.equal(routing.routes.length, 11);
+  assert.equal(routing.routes.length, 13);
 
   const routes = new Map(routing.routes.map((route) => [route.id, route]));
   assert.deepEqual([...routes.keys()], Object.keys(routeContract));
@@ -260,6 +279,7 @@ test("Every Studio route is deterministic and points at its planned artifact sou
       "skill",
       "triggerIntents",
       ...(expected.outputArtifacts ? ["outputArtifacts"] : []),
+      ...(expected.outputTypes ? ["outputTypes"] : []),
     ].sort();
     assert.deepEqual(Object.keys(route).sort(), expectedKeys);
     assert.deepEqual(
@@ -279,6 +299,7 @@ test("Every Studio route is deterministic and points at its planned artifact sou
       assert.deepEqual(route.conditionalReviewers, expected.conditionalReviewers);
     }
     if (expected.outputArtifacts) assert.deepEqual(route.outputArtifacts, expected.outputArtifacts);
+    if (expected.outputTypes) assert.deepEqual(route.outputTypes, expected.outputTypes);
     assert.ok(route.completionGates.length > 0, `${routeId}: completionGates`);
   }
 });

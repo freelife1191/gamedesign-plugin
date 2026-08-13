@@ -31,6 +31,8 @@ const skillIds = [
   "retrieve-approved-design-memory",
   "capture-game-design-memory",
   "maintain-game-design-memory",
+  "analyze-game-design-references",
+  "maintain-game-design-glossary",
 ];
 const directSkillIds = skillIds.slice(0, 15);
 const installedSkillIds = [...directSkillIds, "archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].sort();
@@ -141,7 +143,7 @@ test("Career routing enumerates exactly the approved skills, roles, and stages",
   assert.deepEqual(routing.roleIds, roleIds);
   assert.deepEqual(routing.imageSpecialistIds, imageSpecialistIds);
   assert.deepEqual(routing.stages, stages);
-  assert.equal(new Set(routing.skillIds).size, 20);
+  assert.equal(new Set(routing.skillIds).size, 22);
   assert.equal(new Set(routing.roleIds).size, 8);
 });
 
