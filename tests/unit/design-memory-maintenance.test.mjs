@@ -36,11 +36,22 @@ async function mutate({ root, action, memoryId, observedParentEventIds, chosenPa
   const humanReceiptValue = receipt ?? humanReceipt({ action, memoryId, actor, reason, observedParentEventIds, chosenParentEventId, now });
   return maintainDesignMemory({ workspaceRoot: root, config, action, memoryId, actor, reason, observedParentEventIds, chosenParentEventId, now, humanReceipt: humanReceiptValue });
 }
-async function tree(root, relative = "") {
-  const directory = relative ? path.join(root, relative) : root; const result = []; let handle;
-  try { handle = await opendir(directory); } catch (error) { if (error?.code === "ENOENT") return result; throw error; }
-  try { for await (const entry of handle) { const next = relative ? `${relative}/${entry.name}` : entry.name; result.push(next); if (entry.isDirectory() && !entry.isSymbolicLink()) result.push(...await tree(root, next)); } } finally { await handle.close().catch(() => {}); }
-  return result.sort();
+async function filesystemSnapshot(root) {
+  const result = [];
+  async function visit(directory, relative = "") {
+    let handle;
+    try { handle = await opendir(directory); } catch (error) { if (error?.code === "ENOENT") return; throw error; }
+    try {
+      for await (const entry of handle) {
+        const relativePath = relative ? `${relative}/${entry.name}` : entry.name; const candidate = path.join(directory, entry.name); const stat = await lstat(candidate);
+        const type = stat.isFile() ? "file" : stat.isDirectory() ? "directory" : stat.isSymbolicLink() ? "symlink" : "special";
+        result.push({ relativePath, type, sha256: type === "file" ? digest(await readFile(candidate)) : null });
+        if (type === "directory") await visit(candidate, relativePath);
+      }
+    } finally { await handle.close().catch(() => {}); }
+  }
+  await visit(root);
+  return result.sort((left, right) => Buffer.compare(Buffer.from(left.relativePath, "utf8"), Buffer.from(right.relativePath, "utf8")));
 }
 async function sourceTreeSnapshot(store) {
   const root = path.join(store.root, "v1"); const result = [];
@@ -120,27 +131,46 @@ test("maintenance rejects copied authority and every request-field mutation befo
   assert.equal((await scanMemoryEvents({ store: capture.store })).events.length, before);
 });
 
-test("verify refuses source drift and lint reports the stale source without writing", async (t) => {
-  const { root, capture } = await captured(t); const changed = "changed confidential bytes\n"; await writeFile(path.join(root, "artifact", "evidence.yml"), changed); const before = await tree(root);
+test("verify refuses source drift", async (t) => {
+  const { root, capture } = await captured(t); await writeFile(path.join(root, "artifact", "evidence.yml"), "changed confidential bytes\n");
   await assert.rejects(() => mutate({ root, action: "verify", memoryId: capture.memoryId, observedParentEventIds: [capture.eventId], reason: "check", now: new Date("2026-08-02T00:00:00Z") }), (error) => error?.code === "memory.maintenance");
-  const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" }); const serialized = JSON.stringify(linted.diagnostics);
-  assert.equal(linted.diagnostics.some((item) => item.code === "memory.stale_source" && item.memory_id === capture.memoryId), true);
-  assert.equal(linted.diagnostics.some((item) => item.code === "memory.orphan_source" && item.memory_id === capture.memoryId), false);
-  assert.equal(serialized.includes(root), false); assert.equal(serialized.includes(changed.trim()), false);
-  assert.deepEqual(await tree(root), before);
 });
 
-test("lint classifies missing, unreadable, and symlink evidence as orphan without writes or path disclosure", async (t) => {
+test("lint reports source drift with the exact safe diagnostic shape", async (t) => {
+  const { root, capture } = await captured(t); await writeFile(path.join(root, "artifact", "evidence.yml"), "changed confidential bytes\n");
+  const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" });
+  assert.deepEqual(linted.diagnostics, [{ code: "memory.stale_source", memory_id: capture.memoryId }]);
+});
+
+test("lint leaves drift workspace and store bytes unchanged", async (t) => {
+  const { root, capture } = await captured(t); await writeFile(path.join(root, "artifact", "evidence.yml"), "changed confidential bytes\n");
+  const workspaceBefore = await filesystemSnapshot(root); const storeBefore = await filesystemSnapshot(capture.store.root);
+  await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" });
+  assert.deepEqual(await filesystemSnapshot(root), workspaceBefore);
+  assert.deepEqual(await filesystemSnapshot(capture.store.root), storeBefore);
+});
+
+test("lint reports missing, unreadable, and symlink evidence with the exact safe orphan diagnostic shape", async (t) => {
   for (const mode of ["missing", "unreadable", "symlink"]) {
     const { root, capture } = await captured(t, { eventOverrides: { eventId: `playtest-${mode}` } }); const evidence = path.join(root, "artifact", "evidence.yml");
     await rm(evidence);
     if (mode === "symlink") { const target = path.join(root, "private-evidence.txt"); await writeFile(target, "private evidence bytes\n"); await symlink(target, evidence); }
     if (mode === "unreadable") await mkdir(evidence);
-    const before = await tree(root); const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" }); const serialized = JSON.stringify(linted.diagnostics);
-    assert.equal(linted.diagnostics.some((item) => item.code === "memory.orphan_source" && item.memory_id === capture.memoryId), true, mode);
-    assert.equal(linted.diagnostics.some((item) => item.code === "memory.stale_source" && item.memory_id === capture.memoryId), false, mode);
-    assert.equal(serialized.includes(root), false); assert.equal(serialized.includes("private evidence bytes"), false);
-    assert.deepEqual(await tree(root), before, mode);
+    const linted = await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" });
+    assert.deepEqual(linted.diagnostics, [{ code: "memory.orphan_source", memory_id: capture.memoryId }], mode);
+  }
+});
+
+test("lint leaves missing, unreadable, and symlink workspaces and stores unchanged", async (t) => {
+  for (const mode of ["missing", "unreadable", "symlink"]) {
+    const { root, capture } = await captured(t, { eventOverrides: { eventId: `playtest-no-write-${mode}` } }); const evidence = path.join(root, "artifact", "evidence.yml");
+    await rm(evidence);
+    if (mode === "symlink") { const target = path.join(root, "private-evidence.txt"); await writeFile(target, "private evidence bytes\n"); await symlink(target, evidence); }
+    if (mode === "unreadable") await mkdir(evidence);
+    const workspaceBefore = await filesystemSnapshot(root); const storeBefore = await filesystemSnapshot(capture.store.root);
+    await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" });
+    assert.deepEqual(await filesystemSnapshot(root), workspaceBefore, mode);
+    assert.deepEqual(await filesystemSnapshot(capture.store.root), storeBefore, mode);
   }
 });
 
@@ -160,10 +190,10 @@ test("sweep expires candidates and retire maps candidate and approved records wi
 });
 
 test("safe absent list and lint are empty read-only results while unsafe and incomplete stores fail closed", async (t) => {
-  const root = await workspace(t); const before = await tree(root);
+  const root = await workspace(t); const before = await filesystemSnapshot(root);
   assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config, action: "list" }), { status: "ready", memories: [], diagnostics: [] });
   assert.deepEqual(await maintainDesignMemory({ workspaceRoot: root, config, action: "lint" }), { status: "ready", memories: [], diagnostics: [] });
-  assert.deepEqual(await tree(root), before);
+  assert.deepEqual(await filesystemSnapshot(root), before);
   const outside = path.join(root, "outside"); await mkdir(outside); await symlink(outside, path.join(root, ".game-design"));
   await assert.rejects(() => maintainDesignMemory({ workspaceRoot: root, config, action: "list" }), (error) => error?.code === "memory.unsafe_path");
 

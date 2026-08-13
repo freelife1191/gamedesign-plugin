@@ -158,3 +158,63 @@
 - `node --check shared/scripts/maintain-design-memory.mjs` 및 `git diff --check` 통과.
 - 변경 범위는 `shared/scripts/maintain-design-memory.mjs`, maintenance unit test와 이
   보고서뿐이며 Task 5+ 파일은 변경하지 않았다.
+
+## Test-only closure — lint 무기록성과 exact diagnostic shape
+
+### RED → GREEN 명령과 결과
+
+- RED (격리된 byte-rewrite mutation): `shared/`와 maintenance test를 임시 디렉터리에
+  복사하고, 복사본의 lint가 기존 `artifact/evidence.yml`에 bytes를 append하도록
+  mutation한 뒤 다음을 실행했다.
+
+  ```text
+  $ node --test --test-name-pattern='lint leaves drift workspace and store bytes unchanged' <tmp-copy>/tests/unit/design-memory-maintenance.test.mjs
+  ✖ lint leaves drift workspace and store bytes unchanged
+  AssertionError: artifact/evidence.yml sha256 actual 35fedd... !== expected 2eb98e...
+  tests 1, pass 0, fail 1
+  ```
+
+- RED (격리된 diagnostic-leak mutation): 복사본의 stale/orphan diagnostic에
+  `locator`, `sha256`, `artifact_id`, `absolute_path`, `raw`, `extra`를 추가하고 다음을
+  실행했다.
+
+  ```text
+  $ node --test --test-name-pattern='lint reports source drift with the exact safe diagnostic shape|lint reports missing, unreadable, and symlink evidence with the exact safe orphan diagnostic shape' <tmp-copy>/tests/unit/design-memory-maintenance.test.mjs
+  ✖ lint reports source drift with the exact safe diagnostic shape
+  ✖ lint reports missing, unreadable, and symlink evidence with the exact safe orphan diagnostic shape
+  tests 2, pass 0, fail 2
+  ```
+
+  두 실패 모두 `deepStrictEqual`이 허용된 `{ code, memory_id }` 외의 모든 필드를
+  실제로 표시하며 거부했다.
+
+- GREEN (기준 source):
+
+  ```text
+  $ node --test tests/unit/design-memory-maintenance.test.mjs
+  tests 19, pass 19, fail 0
+  ```
+
+### 보강 내용과 mutation evidence
+
+- `filesystemSnapshot()`은 workspace와 store를 각각 상대 경로의 UTF-8 byte 순서로
+  정렬하고, 모든 entry를 `{ relativePath, type, sha256 }`로 기록한다. regular file만
+  bytes SHA-256을 계산하고 directory/symlink/special은 따라가지 않으며 type과
+  `sha256: null`을 보존한다.
+- drift와 missing/unreadable/symlink 각각에서 lint 전후 workspace/store snapshot을
+  deep equality로 비교한다. 따라서 새 파일뿐 아니라 기존 evidence, source event,
+  derived file의 byte rewrite와 entry type 변경도 검출한다.
+- drift diagnostic은 정확히
+  `{ code: "memory.stale_source", memory_id }`, orphan diagnostic은 정확히
+  `{ code: "memory.orphan_source", memory_id }`인 단일 객체 배열이어야 한다.
+  locator, source digest, artifact ID, 절대경로, 원문 또는 임의 extra key는 exact
+  equality를 통과할 수 없다.
+- mutation은 원본 worktree production source를 수정하지 않고 임시 복사본에서만
+  실행했다. 기준 source나 persisted fixture의 mutation은 없다.
+
+### Final regression
+
+- maintenance targeted: 19 passed, 0 failed.
+- 관련 최소 memory 회귀(capture, record, store, retrieval): 128 tests,
+  127 passed, 1 documented skip, 0 failed.
+- 변경 범위는 `tests/unit/design-memory-maintenance.test.mjs`와 이 보고서뿐이다.
