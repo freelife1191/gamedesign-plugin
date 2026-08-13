@@ -17,14 +17,35 @@ const installedPath = path.resolve(evaluatorDir, "../../references/shared/refere
 
 function same(left, right) { try { return canonicalJson(left) === canonicalJson(right); } catch { return false; } }
 function result(ok, code = "glossary-schema.invalid") { return ok ? { ok: true, errors: [] } : { ok: false, errors: [{ code }] }; }
-function regularFile(candidate) { try { const stats = lstatSync(candidate); return stats.isFile() && !stats.isSymbolicLink() && realpathSync(candidate) === candidate; } catch { return false; } }
-function parseSchema(candidate) { try { const bytes = readFileSync(candidate); const text = bytes.toString("utf8"); if (!Buffer.from(text, "utf8").equals(bytes) || text.includes("\0") || text.includes("\uFEFF")) return null; return JSON.parse(text); } catch { return null; } }
+function sameIdentity(left, right) { return left.dev === right.dev && left.ino === right.ino && left.size === right.size && left.mode === right.mode; }
+function inspectSchemaCandidate(candidate) {
+  try {
+    const absolute = path.resolve(candidate); const parsed = path.parse(absolute); const segments = path.relative(parsed.root, absolute).split(path.sep).filter(Boolean);
+    if (segments.length === 0 || segments.length > 32) return { status: "invalid" };
+    let current = parsed.root;
+    for (const [index, segment] of segments.entries()) {
+      current = path.join(current, segment); const initial = lstatSync(current); const canonical = realpathSync(current); const resolved = lstatSync(canonical);
+      if (initial.isSymbolicLink() || canonical !== current || !sameIdentity(initial, resolved) || index < segments.length - 1 && !initial.isDirectory() || index === segments.length - 1 && !initial.isFile()) return { status: "invalid" };
+    }
+    return { status: "present", stats: lstatSync(absolute) };
+  } catch (error) { return error?.code === "ENOENT" ? { status: "absent" } : { status: "invalid" }; }
+}
+function readSchema(candidate, identity) {
+  try {
+    const bytes = readFileSync(candidate); const final = inspectSchemaCandidate(candidate);
+    if (final.status !== "present" || !sameIdentity(identity, final.stats)) return null;
+    const text = bytes.toString("utf8"); if (!Buffer.from(text, "utf8").equals(bytes) || text.includes("\0") || text.includes("\uFEFF")) return null;
+    return { bytes, schema: JSON.parse(text) };
+  } catch { return null; }
+}
 
 /** Resolves only fixed source/installed schema locations; when both exist they must be byte-identical. */
 export function loadGameDesignGlossarySchema() {
-  const candidates = [sourcePath, installedPath].filter(regularFile); if (candidates.length === 0) return null;
-  const bytes = candidates.map((candidate) => readFileSync(candidate)); if (bytes.length === 2 && !bytes[0].equals(bytes[1])) return null;
-  const schema = parseSchema(candidates[0]); return schema && validateSchemaShape(schema) ? schema : null;
+  const source = inspectSchemaCandidate(sourcePath); const installed = inspectSchemaCandidate(installedPath);
+  if (source.status === "invalid" || installed.status === "invalid" || source.status === "absent" && installed.status === "absent") return null;
+  const sourceValue = source.status === "present" ? readSchema(sourcePath, source.stats) : null; const installedValue = installed.status === "present" ? readSchema(installedPath, installed.stats) : null;
+  if (source.status === "present" && !sourceValue || installed.status === "present" && !installedValue || sourceValue && installedValue && !sourceValue.bytes.equals(installedValue.bytes)) return null;
+  const schema = sourceValue?.schema ?? installedValue?.schema; return schema && validateSchemaShape(schema) ? schema : null;
 }
 
 function safeTree(value, seen = new Set()) {

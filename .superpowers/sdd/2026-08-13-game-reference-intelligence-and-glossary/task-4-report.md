@@ -139,3 +139,33 @@ Why expected: the first declarative evaluator pass loaded the schema but the sch
 ### Concerns
 
 The safe artifact boundary is function-level failure atomicity only, not crash-wide filesystem atomicity. The installed-layout proof is deliberately temporary; product Studio/Career packaging remains Task 6 ownership.
+
+## Fix round 4/5 — RED → GREEN
+
+### RED
+
+- `node --test --test-name-pattern='declarative schema authority|terminology emits only explicit' tests/unit/game-design-glossary.test.mjs` → `tests 2`, `pass 0`, `fail 2`. The installed schema symlink leaf was silently filtered and source schema still loaded (`true !== false`); a valid effective glossary's unselected proposed term produced `stale-glossary-receipt` rather than `unapproved-term`.
+- `node --test --test-name-pattern='terminology emits only explicit' tests/unit/game-design-glossary.test.mjs` → `Missing expected exception` for a copied mapping observation. This proved the new closed evidence test would catch acceptance of copied evidence.
+
+### Implementation and self-review
+
+- Fixed candidates now distinguish only `ENOENT` absence. Any present source or installed candidate verifies every bounded lexical ancestor and leaf through `lstat`/`realpath` identity checks; symlink, non-directory ancestor, special leaf, race-changed identity, invalid UTF-8/JSON, unknown schema, and byte-mismatched mirrors all produce the existing generic schema-unavailable result without path or byte disclosure.
+- Replaced the count-based rollback harness with an exact-one source-transform test wrapper. It separates staging from the six exact final paths by canonical artifact root and relative path, allows the first final publish, then fails the second. The bounded 12-second child process proves byte/path restoration and no stage directory while avoiding a production test hook.
+- Unselected proposed terms now issue `unapproved-term`; Korean documents issue value-minimal `unnecessary-english` only for English expressions absent from approved preferred/allowed labels. Optional frozen, exact-shape mapping observations issue `missing-bilingual-mapping` only for a selected concept; copied/proxied/unknown observations fail closed and selected-term mismatch is stale. No normal bilingual glossary infers the blocking code.
+
+### GREEN
+
+- `node --test tests/unit/game-design-glossary.test.mjs tests/unit/reference-intelligence.test.mjs` → `tests 68`, `pass 68`, `fail 0`.
+- `node --check shared/scripts/lib/game-design-glossary-schema-evaluator.mjs`; `node --check shared/scripts/manage-game-design-glossary.mjs`; `node --check tests/unit/game-design-glossary.test.mjs` → all exit 0.
+- JSON parse of `shared/reference-intelligence/schema/game-design-glossary.schema.json` → `schema parse: ok`.
+- `git diff --check` → exit 0.
+
+### Files changed
+
+- `shared/scripts/lib/game-design-glossary-schema-evaluator.mjs`
+- `shared/scripts/manage-game-design-glossary.mjs`
+- `tests/unit/game-design-glossary.test.mjs`
+
+### Concerns
+
+The schema read checks identity before and after the bounded read, providing function-level TOCTOU detection rather than a cross-process filesystem lock. FIFO coverage is skipped only on Windows where `mkfifo` is unavailable.
