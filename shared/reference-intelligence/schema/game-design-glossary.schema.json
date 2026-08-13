@@ -1,13 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://game-design-plugin.local/schema/game-design-glossary.schema.json",
-  "type": "object",
-  "additionalProperties": false,
+  "type": "object", "additionalProperties": false,
   "required": ["schemaVersion", "scope", "version", "terms"],
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "scope": { "enum": ["shared", "project-overlay"] },
-    "version": { "type": "integer", "minimum": 1 },
-    "terms": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["termId", "conceptId", "preferredTerm", "translations", "state"], "properties": { "termId": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "conceptId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }, "preferredTerm": { "type": "string", "minLength": 1 }, "translations": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["locale", "term"], "properties": { "locale": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }, "term": { "type": "string", "minLength": 1 } } } }, "state": { "enum": ["proposed", "approved", "deprecated"] } } } }
-  }
+    "schemaVersion": { "const": 1 }, "scope": { "enum": ["shared", "project-overlay"] }, "version": { "type": "integer", "minimum": 1 },
+    "terms": { "type": "array", "uniqueItems": true, "items": { "type": "object", "additionalProperties": false,
+      "required": ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"],
+      "properties": {
+        "termId": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "koPreferred": { "type": "string", "minLength": 1 }, "enPreferred": { "type": "string", "minLength": 1 }, "definition": { "type": "string", "minLength": 1 }, "scope": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "contexts": { "$ref": "#/$defs/textArray" }, "abbreviations": { "$ref": "#/$defs/textArray" }, "allowedVariants": { "$ref": "#/$defs/textArray" }, "forbiddenTerms": { "$ref": "#/$defs/textArray" }, "deprecatedTerms": { "$ref": "#/$defs/textArray" }, "untranslatedExpressions": { "$ref": "#/$defs/textArray" }, "examples": { "$ref": "#/$defs/textArray" }, "confusedConceptIds": { "$ref": "#/$defs/textArray" }, "decisionIds": { "$ref": "#/$defs/textArray" }, "evidenceIds": { "$ref": "#/$defs/textArray" },
+        "grammar": { "type": "object", "additionalProperties": false, "required": ["ko", "en"], "properties": { "ko": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } } }, "state": { "enum": ["proposed", "approved", "deprecated"] }, "approver": { "type": ["string", "null"] }, "replacementTermId": { "type": ["string", "null"], "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "version": { "type": "integer", "minimum": 1 }, "changedAt": { "type": "string", "format": "date-time" }
+      }
+    } }
+  },
+  "allOf": [{ "if": { "properties": { "scope": { "const": "shared" } } }, "then": { "properties": { "terms": { "minItems": 1 } } } }],
+  "$defs": { "textArray": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } }
 }

@@ -229,15 +229,21 @@ export function validateGameDesignGlossary(value) {
     enumValue(value?.scope, ["shared", "project-overlay"], "/scope", issue);
     if (!Number.isInteger(value?.version) || value.version < 1) issue("/version", "version.invalid");
     sortedRecords(value?.terms, "/terms", issue, "termId", (term, path, add) => {
-      closedObject(term, ["termId", "conceptId", "preferredTerm", "translations", "state"], path, add);
-      safeTermId(term?.termId, `${path}/termId`, add); safeId(term?.conceptId, `${path}/conceptId`, add); nonEmptyText(term?.preferredTerm, `${path}/preferredTerm`, add);
+      const keys = ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"];
+      closedObject(term, keys, path, add);
+      safeTermId(term?.termId, `${path}/termId`, add); nonEmptyText(term?.koPreferred, `${path}/koPreferred`, add); nonEmptyText(term?.enPreferred, `${path}/enPreferred`, add); nonEmptyText(term?.definition, `${path}/definition`, add); safeId(term?.scope, `${path}/scope`, add);
+      for (const key of ["contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "confusedConceptIds", "decisionIds", "evidenceIds"]) sortedUnique(term?.[key], `${path}/${key}`, add, key === "decisionIds" ? isId : isSafeText, { allowEmpty: true });
+      closedObject(term?.grammar, ["ko", "en"], `${path}/grammar`, add); nonEmptyText(term?.grammar?.ko, `${path}/grammar/ko`, add); nonEmptyText(term?.grammar?.en, `${path}/grammar/en`, add);
+      sortedUnique(term?.examples, `${path}/examples`, add, isSafeText, { allowEmpty: true });
       enumValue(term?.state, ["proposed", "approved", "deprecated"], `${path}/state`, add);
-      sortedRecords(term?.translations, `${path}/translations`, add, "locale", (translation, translationPath, translationIssue) => {
-        closedObject(translation, ["locale", "term"], translationPath, translationIssue); safeId(translation?.locale, `${translationPath}/locale`, translationIssue); nonEmptyText(translation?.term, `${translationPath}/term`, translationIssue);
-      });
-    });
-    const concepts = value?.terms?.map((term) => term?.conceptId) ?? [];
-    if (new Set(concepts).size !== concepts.length) issue("/terms", "concept.ambiguous");
+      if (term?.approver !== null && !isSafeText(term?.approver)) add(`${path}/approver`, "text.invalid");
+      if (term?.replacementTermId !== null && !isTermId(term?.replacementTermId)) add(`${path}/replacementTermId`, "term-id.invalid");
+      if (!Number.isInteger(term?.version) || term.version < 1) add(`${path}/version`, "version.invalid");
+      if (!isSafeText(term?.changedAt) || Number.isNaN(new Date(term.changedAt).valueOf()) || new Date(term.changedAt).toISOString() !== term.changedAt) add(`${path}/changedAt`, "timestamp.invalid");
+      for (const key of ["koPreferred", "enPreferred", "definition"]) if (Buffer.byteLength(term?.[key] ?? "", "utf8") > 1024 * 1024) add(`${path}/${key}`, "text.oversized");
+    }, { allowEmpty: value?.scope === "project-overlay" });
+    const labels = new Set();
+    for (const term of value?.terms ?? []) for (const label of [term?.koPreferred, term?.enPreferred]) { const key = `${term?.scope}\0${label}`; if (labels.has(key)) issue("/terms", "concept.ambiguous"); labels.add(key); }
   });
 }
 
@@ -245,12 +251,12 @@ export function validateGlossaryReceipt(value, { glossary } = {}) {
   return resultOf((issue) => {
     if (value?.schemaVersion !== 1) issue("/schemaVersion", "schema-version.invalid");
     validateReceiptShape(value, "", issue, { includeSchemaVersion: true });
-    const glossaryResult = validateGameDesignGlossary(glossary);
+    const glossaryResult = glossary?.scope === "effective" ? validateGameDesignGlossary({ ...glossary, scope: "shared" }) : validateGameDesignGlossary(glossary);
     if (!glossaryResult.ok) { issue("/glossary", "glossary.invalid"); return; }
     if (value?.glossaryVersion !== glossary.version) issue("/glossaryVersion", "glossary-version.mismatch");
     if (value?.glossarySha256 !== sha256Canonical(glossary)) issue("/glossarySha256", "glossary-hash.mismatch");
-    const termIds = new Set(glossary.terms.map(({ termId }) => termId));
-    for (const [index, termId] of (value?.termIds ?? []).entries()) if (!termIds.has(termId)) issue(`/termIds/${index}`, "term.unknown");
+    const terms = new Map(glossary.terms.map((term) => [term.termId, term]));
+    for (const [index, termId] of (value?.termIds ?? []).entries()) if (!terms.has(termId) || terms.get(termId)?.state !== "approved") issue(`/termIds/${index}`, "term.unknown");
   });
 }
 
