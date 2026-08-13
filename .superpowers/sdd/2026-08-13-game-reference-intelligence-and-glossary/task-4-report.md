@@ -41,4 +41,30 @@ All three mutations were restored before GREEN verification.
 
 ## Self-review and concerns
 
-Reviewed all Task 4 diffs for closed input handling, hash/capability replay rules, deterministic UTF-8 order, safe artifact paths, input immutability, and diagnostics leakage. No unresolved concern found; `validateDocumentTerminology` intentionally receives no document ID, so document-specific receipt binding is created and consumed by the caller through `createGlossarySnapshot`.
+Reviewed all Task 4 diffs for closed input handling, hash/capability replay rules, deterministic UTF-8 order, safe artifact paths, input immutability, and diagnostics leakage. The fix round now requires `documentId` at terminology-validation time and compares it to the snapshot receipt.
+
+## Fix round 1/5 — RED → GREEN
+
+### RED
+
+Command: `node --test --test-name-pattern='shared semantic overrides|lifecycle, document selection' tests/unit/game-design-glossary.test.mjs`
+
+Output: `SyntaxError: ... does not provide an export named 'assertGlossaryOverrideDecision'`; `tests 1`, `pass 0`, `fail 1`.
+
+Why expected: the existing two-argument merge had no live, hash-bound override provenance API and did not carry document selection binding.
+
+### Implementation and self-review
+
+- Added separate WeakMap-backed override provenance binding shared/overlay hashes, exact override IDs, reason, actor, timestamp, and event; colliding semantic overlays require it while add-only overlays remain pure.
+- Enforced lifecycle state invariants, replacement graph checks, effective v1 scope parity, document/selected-term receipt binding, closed findings, sensitive persisted-value rejection, canonical size/control limits, and token-aware terminology scanning.
+- Reworked projection into a function-level staged transaction with preflight leaf validation, rollback of file bytes/new targets, and cleanup of created directories. This is function-level failure atomicity; it deliberately does not claim crash-wide filesystem atomicity.
+- Reviewed final diff for receipt hash/scope parity: `terms.json` stores the exact `effective` object and a fresh parsed terms/receipt pair validates successfully.
+
+### GREEN
+
+- `node --test tests/unit/game-design-glossary.test.mjs tests/unit/reference-intelligence.test.mjs` → `tests 60`, `pass 60`, `fail 0`.
+- `node --check shared/scripts/lib/game-design-glossary-capabilities.mjs shared/scripts/manage-game-design-glossary.mjs shared/scripts/validate-game-design-writing-language.mjs shared/scripts/validate-reference-intelligence.mjs` → exit 0.
+- JSON parse of `game-design-glossary.schema.json` and `glossary-receipt.schema.json` → exit 0.
+- `git diff --check` → exit 0.
+
+Remaining concern: none identified within Task 4 scope.

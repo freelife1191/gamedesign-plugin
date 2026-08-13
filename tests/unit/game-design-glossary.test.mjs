@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { canonicalJson, sha256Canonical, validateGameDesignGlossary, validateGlossaryReceipt } from "../../shared/scripts/validate-reference-intelligence.mjs";
-import { assertGlossaryHumanDecision, issueGlossaryHumanDecision } from "../../shared/scripts/lib/game-design-glossary-capabilities.mjs";
+import { assertGlossaryHumanDecision, assertGlossaryOverrideDecision, issueGlossaryHumanDecision, issueGlossaryOverrideDecision } from "../../shared/scripts/lib/game-design-glossary-capabilities.mjs";
 import { applyGlossaryDecision, createGlossarySnapshot, extractGlossaryCandidates, mergeGameDesignGlossaries, validateDocumentTerminology, writeGameDesignGlossaryArtifacts } from "../../shared/scripts/manage-game-design-glossary.mjs";
 import { validateGameDesignWritingLanguage } from "../../shared/scripts/validate-game-design-writing-language.mjs";
 
@@ -100,31 +100,60 @@ test("snapshot binds exact document, glossary hash/version, sorted approved term
 
 test("terminology finds stale receipt and never rewrites caller text", () => {
   const effective = approvedEffective(); const text = "Player Power를 전투력이라고도 부른다."; const before = Buffer.from(text, "utf8");
-  const result = validateDocumentTerminology({ text, language: "ko", effectiveGlossary: effective, receipt: { ...createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] }), glossarySha256: "f".repeat(64) } });
+  const result = validateDocumentTerminology({ text, language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt: { ...createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] }), glossarySha256: "f".repeat(64) } });
   assert.equal(result.revisedText, undefined); assert.equal(Buffer.compare(before, Buffer.from(text, "utf8")), 0); assert.equal(result.blocking.some(({ code }) => code === "stale-glossary-receipt"), true);
 });
 
 test("Korean and English language validators return findings-only handoffs", () => {
   const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
-  const ko = validateGameDesignWritingLanguage({ text: "플레이어 파워 PP", language: "ko", locale: "ko-KR", effectiveGlossary: effective, receipt });
+  const ko = validateGameDesignWritingLanguage({ text: "플레이어 파워 PP", language: "ko", locale: "ko-KR", documentId: "combat-v1", effectiveGlossary: effective, receipt });
   assert.equal(ko.handoff, "polish-game-design-writing");
-  const us = validateGameDesignWritingLanguage({ text: "# heading\nThe player customises gear. player powers are shown.", language: "en", locale: "en-US", effectiveGlossary: effective, receipt });
+  const us = validateGameDesignWritingLanguage({ text: "# heading\nThe player customises gear. player powers are shown.", language: "en", locale: "en-US", documentId: "combat-v1", effectiveGlossary: effective, receipt });
   assert.equal(us.handoff, "named-human-english-writing-review"); assert.equal(us.warnings.some(({ code }) => code === "orthography-variant"), true);
   assert.throws(() => validateGameDesignWritingLanguage({ text: "text", language: "en", locale: "en-AU", effectiveGlossary: effective, receipt }), /writing validation/i);
 });
 
 test("findings stay value-minimal and never leak source text or secret-like input", () => {
   const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] }); const secret = "SECRET-TERMINOLOGY-SENTINEL";
-  const result = validateDocumentTerminology({ text: `${secret} Player Power`, language: "ko", effectiveGlossary: effective, receipt });
+  const result = validateDocumentTerminology({ text: `${secret} Player Power`, language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt });
   assert.equal(JSON.stringify(result).includes(secret), false);
   assert.equal(JSON.stringify(result).includes("/Users/"), false);
 });
 
 test("artifact projection permits only fixed paths and leaves a failed batch untouched", async (t) => {
-  const root = await mkdtemp(join(tmpdir(), "glossary-")); t.after(() => rm(root, { recursive: true, force: true })); const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
-  const output = await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "decision-player-power", receipt: decision().receipt } });
+  const root = await mkdtemp(join(tmpdir(), "glossary-")); t.after(() => rm(root, { recursive: true, force: true })); const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] }); const issued = decision();
+  const output = await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "decision-player-power", receipt: issued.receipt, capability: issued.capability } });
   assert.deepEqual(output.files, [...output.files].sort()); assert.deepEqual((await readdir(join(root, "reference-intelligence", "glossary"))).sort(), ["glossary.en.md", "glossary.ko.md", "glossary-receipt.json", "terms.json", "terminology-findings.md"].sort());
   const bytes = await readFile(join(root, "reference-intelligence", "glossary", "terms.json")); assert.equal(JSON.parse(bytes).terms[0].termId, "TERM-PLAYER-POWER");
-  const blocked = await mkdtemp(join(tmpdir(), "glossary-link-")); await symlink(blocked, join(root, "reference-intelligence-link")); await assert.rejects(() => writeGameDesignGlossaryArtifacts({ artifactRoot: join(root, "reference-intelligence-link"), glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "bad", receipt: decision().receipt } }), /unsafe/i); assert.deepEqual(await readdir(blocked), []); await rm(blocked, { recursive: true, force: true });
-  const emptyRoot = await mkdtemp(join(tmpdir(), "glossary-oversized-")); t.after(() => rm(emptyRoot, { recursive: true, force: true })); const oversized = { ...effective, terms: [{ ...effective.terms[0], definition: "x".repeat(2 * 1024 * 1024) }] }; await assert.rejects(() => writeGameDesignGlossaryArtifacts({ artifactRoot: emptyRoot, glossary: oversized, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "oversized", receipt: decision().receipt } }), /glossary/i); assert.deepEqual(await readdir(emptyRoot), []);
+  const blocked = await mkdtemp(join(tmpdir(), "glossary-link-")); await symlink(blocked, join(root, "reference-intelligence-link")); await assert.rejects(() => writeGameDesignGlossaryArtifacts({ artifactRoot: join(root, "reference-intelligence-link"), glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "decision-player-power", receipt: issued.receipt, capability: issued.capability } }), /unsafe/i); assert.deepEqual(await readdir(blocked), []); await rm(blocked, { recursive: true, force: true });
+  const emptyRoot = await mkdtemp(join(tmpdir(), "glossary-oversized-")); t.after(() => rm(emptyRoot, { recursive: true, force: true })); const oversized = { ...effective, terms: [{ ...effective.terms[0], definition: "x".repeat(2 * 1024 * 1024) }] }; await assert.rejects(() => writeGameDesignGlossaryArtifacts({ artifactRoot: emptyRoot, glossary: oversized, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "decision-player-power", receipt: issued.receipt, capability: issued.capability } }), /glossary/i); assert.deepEqual(await readdir(emptyRoot), []);
+});
+
+test("shared semantic overrides require live hash-bound human provenance and a matching reason", () => {
+  const shared = approvedGlossary();
+  const overlay = { schemaVersion: 1, scope: "project-overlay", version: 2, terms: [term({ definition: "A project-specific combat strength measure.", state: "approved", approver: "Lead", decisionIds: ["override-power"] })] };
+  assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: overlay }), /glossary/i);
+  const issued = issueGlossaryOverrideDecision({ sharedGlossary: shared, projectOverlay: overlay, termIds: ["TERM-PLAYER-POWER"], reason: "Project combat terminology differs.", actor: "Lead", eventId: "override-power", changedAt });
+  assert.doesNotThrow(() => assertGlossaryOverrideDecision(issued.receipt, issued.capability));
+  assert.equal(mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: overlay, overrideReceipt: issued.receipt, overrideCapability: issued.capability, changeReason: "Project combat terminology differs." }).terms[0].definition, overlay.terms[0].definition);
+  assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: overlay, overrideReceipt: structuredClone(issued.receipt), overrideCapability: issued.capability, changeReason: "Project combat terminology differs." }), /glossary/i);
+  assert.throws(() => mergeGameDesignGlossaries({ sharedGlossary: shared, projectOverlay: overlay, overrideReceipt: issued.receipt, overrideCapability: issued.capability, changeReason: "Different reason." }), /glossary/i);
+});
+
+test("lifecycle, document selection, and persisted receipt bindings fail closed", async (t) => {
+  const invalid = approvedGlossary({ terms: [term({ state: "approved", approver: null })] }); assert.equal(validateGameDesignGlossary(invalid).ok, false);
+  const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
+  assert.equal(validateDocumentTerminology({ text: "플레이어 파워", language: "ko", documentId: "other-v1", effectiveGlossary: effective, receipt }).blocking.some(({ code }) => code === "stale-glossary-receipt"), true);
+  const root = await mkdtemp(join(tmpdir(), "glossary-persist-")); t.after(() => rm(root, { recursive: true, force: true })); const issued = decision(); await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: "decision-player-power", receipt: issued.receipt, capability: issued.capability } });
+  assert.equal((await readdir(root)).length > 0, true);
+  const [storedGlossary, storedReceipt] = await Promise.all([readFile(join(root, "reference-intelligence", "glossary", "terms.json"), "utf8").then(JSON.parse), readFile(join(root, "reference-intelligence", "glossary", "glossary-receipt.json"), "utf8").then(JSON.parse)]);
+  assert.equal(validateGlossaryReceipt(storedReceipt, { glossary: storedGlossary }).ok, true);
+});
+
+test("receipt selection and locale-aware terminology boundaries avoid false positives", () => {
+  const effective = mergeGameDesignGlossaries({ sharedGlossary: approvedGlossary(), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [term({ termId: "TERM-POWER-CAP", koPreferred: "파워 캡", enPreferred: "Power Cap", state: "approved", approver: "Lead", decisionIds: ["cap"] })] } }); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
+  assert.equal(validateDocumentTerminology({ text: "파워 캡", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt }).blocking.some(({ code }) => code === "stale-glossary-receipt"), true);
+  const gb = validateGameDesignWritingLanguage({ text: "# Combat Terms\n# combat terms\nThe player customizes gear\n| Fragment |", language: "en", locale: "en-GB", documentId: "combat-v1", effectiveGlossary: effective, receipt });
+  assert.equal(gb.handoff, "named-human-english-writing-review"); assert.equal(gb.warnings.some(({ code }) => code === "orthography-variant"), true); assert.equal(gb.warnings.some(({ code }) => code === "unnecessary-english"), true);
+  assert.equal(validateDocumentTerminology({ text: "플레이어 파워업", language: "ko", documentId: "combat-v1", effectiveGlossary: effective, receipt }).warnings.length, 0);
 });

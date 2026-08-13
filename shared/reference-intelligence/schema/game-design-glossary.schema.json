@@ -1,19 +1,33 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://game-design-plugin.local/schema/game-design-glossary.schema.json",
-  "type": "object", "additionalProperties": false,
+  "type": "object",
+  "additionalProperties": false,
   "required": ["schemaVersion", "scope", "version", "terms"],
   "properties": {
-    "schemaVersion": { "const": 1 }, "scope": { "enum": ["shared", "project-overlay"] }, "version": { "type": "integer", "minimum": 1 },
-    "terms": { "type": "array", "uniqueItems": true, "items": { "type": "object", "additionalProperties": false,
-      "required": ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"],
-      "properties": {
-        "termId": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "koPreferred": { "type": "string", "minLength": 1 }, "enPreferred": { "type": "string", "minLength": 1 }, "definition": { "type": "string", "minLength": 1 }, "scope": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "contexts": { "$ref": "#/$defs/textArray" }, "abbreviations": { "$ref": "#/$defs/textArray" }, "allowedVariants": { "$ref": "#/$defs/textArray" }, "forbiddenTerms": { "$ref": "#/$defs/textArray" }, "deprecatedTerms": { "$ref": "#/$defs/textArray" }, "untranslatedExpressions": { "$ref": "#/$defs/textArray" }, "examples": { "$ref": "#/$defs/textArray" }, "confusedConceptIds": { "$ref": "#/$defs/textArray" }, "decisionIds": { "$ref": "#/$defs/textArray" }, "evidenceIds": { "$ref": "#/$defs/textArray" },
-        "grammar": { "type": "object", "additionalProperties": false, "required": ["ko", "en"], "properties": { "ko": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } } }, "state": { "enum": ["proposed", "approved", "deprecated"] }, "approver": { "type": ["string", "null"] }, "replacementTermId": { "type": ["string", "null"], "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "version": { "type": "integer", "minimum": 1 }, "changedAt": { "type": "string", "format": "date-time" }
+    "schemaVersion": { "const": 1 },
+    "scope": { "enum": ["shared", "project-overlay", "effective"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "terms": {
+      "type": "array", "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["termId", "koPreferred", "enPreferred", "definition", "scope", "contexts", "abbreviations", "allowedVariants", "forbiddenTerms", "deprecatedTerms", "untranslatedExpressions", "grammar", "examples", "confusedConceptIds", "decisionIds", "evidenceIds", "state", "approver", "replacementTermId", "version", "changedAt"],
+        "properties": {
+          "termId": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$", "maxLength": 128 },
+          "koPreferred": { "type": "string", "minLength": 1, "maxLength": 65536 }, "enPreferred": { "type": "string", "minLength": 1, "maxLength": 65536 }, "definition": { "type": "string", "minLength": 1, "maxLength": 1048576 }, "scope": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
+          "contexts": { "$ref": "#/$defs/textArray" }, "abbreviations": { "$ref": "#/$defs/textArray" }, "allowedVariants": { "$ref": "#/$defs/textArray" }, "forbiddenTerms": { "$ref": "#/$defs/textArray" }, "deprecatedTerms": { "$ref": "#/$defs/textArray" }, "untranslatedExpressions": { "$ref": "#/$defs/textArray" }, "examples": { "$ref": "#/$defs/textArray" }, "confusedConceptIds": { "$ref": "#/$defs/textArray" }, "decisionIds": { "$ref": "#/$defs/textArray" }, "evidenceIds": { "$ref": "#/$defs/textArray" },
+          "grammar": { "type": "object", "additionalProperties": false, "required": ["ko", "en"], "properties": { "ko": { "type": "string", "minLength": 1, "maxLength": 4096 }, "en": { "type": "string", "minLength": 1, "maxLength": 4096 } } },
+          "state": { "enum": ["proposed", "approved", "deprecated"] }, "approver": { "type": ["string", "null"], "maxLength": 4096 }, "replacementTermId": { "type": ["string", "null"], "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" }, "version": { "type": "integer", "minimum": 1 }, "changedAt": { "type": "string", "format": "date-time", "maxLength": 64 }
+        },
+        "allOf": [
+          { "if": { "properties": { "state": { "const": "proposed" } } }, "then": { "properties": { "approver": { "const": null }, "replacementTermId": { "const": null } } } },
+          { "if": { "properties": { "state": { "const": "approved" } } }, "then": { "properties": { "approver": { "type": "string", "minLength": 1 }, "replacementTermId": { "const": null } } } },
+          { "if": { "properties": { "state": { "const": "deprecated" } } }, "then": { "properties": { "approver": { "type": "string", "minLength": 1 }, "replacementTermId": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" } } } }
+        ]
       }
-    } }
+    }
   },
   "allOf": [{ "if": { "properties": { "scope": { "const": "shared" } } }, "then": { "properties": { "terms": { "minItems": 1 } } } }],
-  "$defs": { "textArray": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } }
+  "$defs": { "textArray": { "type": "array", "maxItems": 256, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 65536 } } }
 }

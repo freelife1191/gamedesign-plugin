@@ -1,103 +1,112 @@
-import { canonicalGlossary, canonicalJson, sha256Canonical, validateGameDesignGlossary, validateGlossaryReceipt } from "./validate-reference-intelligence.mjs";
-import { assertGlossaryHumanDecision } from "./lib/game-design-glossary-capabilities.mjs";
-import { ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
+import { lstat, mkdir, readFile, rename, rm, rmdir, unlink } from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { canonicalJson, sha256Canonical, validateGameDesignGlossary, validateGlossaryReceipt } from "./validate-reference-intelligence.mjs";
+import { assertGlossaryHumanDecision, assertGlossaryOverrideDecision } from "./lib/game-design-glossary-capabilities.mjs";
+import { canonicalArtifactRoot, ensureArtifactDirectories, safeWriteArtifactFile } from "./lib/safe-artifact-write.mjs";
 
 const compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 const id = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
-const termsPath = "reference-intelligence/glossary";
-const allowedFiles = Object.freeze([`${termsPath}/terms.json`, `${termsPath}/glossary.ko.md`, `${termsPath}/glossary.en.md`, `${termsPath}/terminology-findings.md`, `${termsPath}/glossary-receipt.json`]);
-const appliedDecisions = new WeakMap();
-function fail() { throw new Error("Game design glossary is invalid."); }
-function copy(value) { try { return JSON.parse(canonicalJson(value)); } catch { fail(); } }
-function freeze(value) { if (value && typeof value === "object" && !Object.isFrozen(value)) { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; }
-function valid(value) { return validateGameDesignGlossary(value).ok; }
-function approved(term) { return term?.state === "approved"; }
-function effectiveHash(value) { return sha256Canonical(value); }
-function finding(code, termId = undefined) { return Object.freeze(termId ? { code, termId } : { code }); }
-function contains(text, term) { return term.length > 0 && text.includes(term); }
+const termId = /^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$/u;
+const control = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\uFEFF\r]/u;
+const sensitive = [/(?:sk|pk)_(?:live|test)_[A-Za-z0-9_-]+/iu, /(?:api[_-]?key|password|secret|token)\s*[=:]/iu, /(?:^|\s)\/[\w./-]+/u];
+const findingCodes = new Set(["multiple-preferred-terms", "ambiguous-concept-label", "missing-bilingual-mapping", "stale-glossary-receipt", "semantic-auto-replacement", "unapproved-term", "deprecated-term", "unexplained-abbreviation", "orthography-variant", "unnecessary-english", "translation-mismatch"]);
+const glossaryDirectory = "reference-intelligence/glossary";
+const fixedPaths = Object.freeze([`${glossaryDirectory}/terms.json`, `${glossaryDirectory}/glossary.ko.md`, `${glossaryDirectory}/glossary.en.md`, `${glossaryDirectory}/terminology-findings.md`, `${glossaryDirectory}/glossary-receipt.json`]);
+const applied = new WeakMap();
 
-export function mergeGameDesignGlossaries({ sharedGlossary, projectOverlay } = {}) {
+function fail() { throw new Error("Game design glossary is invalid."); }
+function freeze(value) { if (value && typeof value === "object" && !Object.isFrozen(value)) { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; }
+function copy(value) { try { return JSON.parse(canonicalJson(value)); } catch { fail(); } }
+function valid(value) { return validateGameDesignGlossary(value).ok; }
+function safeText(value, max = 65536) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !control.test(value) && !sensitive.some((pattern) => pattern.test(value)); }
+function canonicalText(value, max = 65536) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !control.test(value); }
+function approved(value) { return value?.state === "approved"; }
+function finding(code, termIdValue = undefined) { return Object.freeze(termIdValue ? { code, termId: termIdValue } : { code }); }
+function sortFindings(values) { return freeze(values.sort((left, right) => compare(`${left.code}\0${left.termId ?? ""}`, `${right.code}\0${right.termId ?? ""}`))); }
+function exactTermChanges(shared, overlay) { return overlay.terms.filter((item) => shared.terms.some(({ termId: existing }) => existing === item.termId) && canonicalJson(item) !== canonicalJson(shared.terms.find(({ termId: existing }) => existing === item.termId))).map(({ termId: value }) => value).sort(compare); }
+
+export function mergeGameDesignGlossaries({ sharedGlossary, projectOverlay, overrideReceipt, overrideCapability, changeReason } = {}) {
   const shared = copy(sharedGlossary); const overlay = copy(projectOverlay);
   if (!valid(shared) || !valid(overlay) || shared.scope !== "shared" || overlay.scope !== "project-overlay") fail();
-  const byId = new Map(shared.terms.map((item) => [item.termId, item]));
-  for (const item of overlay.terms) {
-    const previous = byId.get(item.termId);
-    if (previous && canonicalJson(previous) !== canonicalJson(item)) {
-      const changed = previous.koPreferred !== item.koPreferred || previous.enPreferred !== item.enPreferred || previous.definition !== item.definition;
-      if (!changed || !approved(item) || item.decisionIds.length === 0 || item.definition === previous.definition && item.koPreferred === previous.koPreferred && item.enPreferred === previous.enPreferred) fail();
-    }
-    byId.set(item.termId, item);
-  }
-  const terms = [...byId.values()].sort((a, b) => compare(a.termId, b.termId));
-  const labels = new Map();
-  for (const item of terms) {
-    if (item.state === "deprecated" && (!item.replacementTermId || !byId.has(item.replacementTermId) || !approved(byId.get(item.replacementTermId)))) fail();
-    for (const label of [item.koPreferred, item.enPreferred]) { const prior = labels.get(`${item.scope}\0${label}`); if (prior && prior !== item.termId) fail(); labels.set(`${item.scope}\0${label}`, item.termId); }
-  }
-  for (const item of terms) { const visited = new Set(); let current = item; while (current?.replacementTermId) { if (visited.has(current.termId)) fail(); visited.add(current.termId); current = byId.get(current.replacementTermId); } }
-  return freeze({ schemaVersion: 1, scope: "effective", version: Math.max(shared.version, overlay.version), terms });
+  const overrides = exactTermChanges(shared, overlay);
+  if (overrides.length > 0) {
+    if (!safeText(changeReason, 1024)) fail();
+    try { assertGlossaryOverrideDecision(overrideReceipt, overrideCapability, { sharedGlossary: shared, projectOverlay: overlay, termIds: overrides, reason: changeReason }); } catch { fail(); }
+  } else if (overrideReceipt !== undefined || overrideCapability !== undefined || changeReason !== undefined) fail();
+  const byId = new Map(shared.terms.map((item) => [item.termId, item])); for (const item of overlay.terms) byId.set(item.termId, item);
+  const result = { schemaVersion: 1, scope: "effective", version: Math.max(shared.version, overlay.version), terms: [...byId.values()].sort((left, right) => compare(left.termId, right.termId)) };
+  if (!valid(result)) fail(); return freeze(result);
 }
 
 export function applyGlossaryDecision({ glossary, receipt, capability } = {}) {
-  const current = copy(glossary); if (!valid(current)) fail(); const decision = assertGlossaryHumanDecision(receipt, capability);
-  const selected = new Set(decision.termIds); const byId = new Map(current.terms.map((item) => [item.termId, item]));
-  if ([...selected].some((item) => !byId.has(item))) fail();
-  if (decision.glossaryVersion !== current.version || decision.glossarySha256 !== sha256Canonical(current)) {
-    if (appliedDecisions.get(receipt) === sha256Canonical(current)) return freeze(current);
-    fail();
-  }
-  const replacement = decision.replacementTermId ? byId.get(decision.replacementTermId) : null;
-  if ((decision.action === "deprecate" || decision.action === "replace") && (!replacement || !approved(replacement))) fail();
-  const next = current.terms.map((item) => {
-    if (!selected.has(item.termId)) return item;
-    if (decision.action === "approve") { if (item.state === "approved" && item.decisionIds.includes(decision.eventId)) return item; if (item.state !== "proposed") fail(); return { ...item, state: "approved", approver: decision.actor, decisionIds: [...new Set([...item.decisionIds, decision.eventId])].sort(compare), changedAt: decision.changedAt, version: item.version + 1 }; }
-    if (item.state !== "approved") fail();
-    return { ...item, state: "deprecated", approver: decision.actor, replacementTermId: replacement.termId, decisionIds: [...new Set([...item.decisionIds, decision.eventId])].sort(compare), changedAt: decision.changedAt, version: item.version + 1 };
-  }).sort((a, b) => compare(a.termId, b.termId));
-  const result = { ...current, version: current.version + 1, terms: next };
-  if (!valid(result)) fail();
-  const frozen = freeze(result); appliedDecisions.set(receipt, sha256Canonical(frozen)); return frozen;
+  const current = copy(glossary); if (!valid(current) || !["shared", "project-overlay"].includes(current.scope)) fail();
+  let decision; try { decision = assertGlossaryHumanDecision(receipt, capability); } catch { fail(); }
+  const currentHash = sha256Canonical(current); if (decision.glossaryVersion !== current.version || decision.glossarySha256 !== currentHash) { if (applied.get(receipt) === currentHash) return freeze(current); fail(); }
+  const byId = new Map(current.terms.map((item) => [item.termId, item])); if (decision.termIds.some((value) => !byId.has(value))) fail(); const replacement = decision.replacementTermId ? byId.get(decision.replacementTermId) : null;
+  if (decision.action !== "approve" && (!approved(replacement) || decision.termIds.includes(replacement.termId))) fail();
+  const terms = current.terms.map((item) => {
+    if (!decision.termIds.includes(item.termId)) return item;
+    if (decision.action === "approve") { if (item.state !== "proposed") fail(); return { ...item, state: "approved", approver: decision.actor, decisionIds: [...new Set([...item.decisionIds, decision.eventId])].sort(compare), changedAt: decision.changedAt, version: item.version + 1 }; }
+    if (item.state !== "approved") fail(); return { ...item, state: "deprecated", approver: decision.actor, replacementTermId: replacement.termId, decisionIds: [...new Set([...item.decisionIds, decision.eventId])].sort(compare), changedAt: decision.changedAt, version: item.version + 1 };
+  }).sort((left, right) => compare(left.termId, right.termId));
+  const result = { ...current, version: current.version + 1, terms }; if (!valid(result)) fail(); const frozen = freeze(result); applied.set(receipt, sha256Canonical(frozen)); return frozen;
 }
 
 export function createGlossarySnapshot({ documentId, effectiveGlossary, termIds } = {}) {
-  const glossary = copy(effectiveGlossary); if (!id.test(documentId ?? "") || glossary.scope !== "effective" || !valid({ ...glossary, scope: "shared" }) || !Array.isArray(termIds) || termIds.length === 0 || termIds.some((item, index) => typeof item !== "string" || index > 0 && compare(termIds[index - 1], item) >= 0)) fail();
-  const byId = new Map(glossary.terms.map((item) => [item.termId, item])); if (termIds.some((item) => !approved(byId.get(item)))) fail();
-  return freeze({ schemaVersion: 1, documentId, glossaryVersion: glossary.version, glossarySha256: effectiveHash(glossary), termIds: [...termIds] });
+  const glossary = copy(effectiveGlossary); if (!id.test(documentId ?? "") || !valid(glossary) || glossary.scope !== "effective" || !Array.isArray(termIds) || termIds.length === 0 || termIds.some((value, index) => !termId.test(value) || index > 0 && compare(termIds[index - 1], value) >= 0)) fail();
+  const byId = new Map(glossary.terms.map((item) => [item.termId, item])); if (termIds.some((value) => !approved(byId.get(value)))) fail(); return freeze({ schemaVersion: 1, documentId, glossaryVersion: glossary.version, glossarySha256: sha256Canonical(glossary), termIds: [...termIds] });
 }
 
 export function extractGlossaryCandidates({ documents, effectiveGlossary } = {}) {
-  const glossary = copy(effectiveGlossary); if (!Array.isArray(documents) || glossary.scope !== "effective") fail();
-  const known = new Set(glossary.terms.flatMap((item) => [item.koPreferred, item.enPreferred, ...item.allowedVariants])); const candidates = [];
-  for (const document of documents) {
-    if (!id.test(document?.documentId ?? "") || typeof document?.text !== "string") fail();
-    for (const token of [...new Set(document.text.match(/[A-Za-z가-힣][A-Za-z가-힣 -]{1,40}/gu) ?? [])].map((item) => item.trim()).filter((item) => item.length > 1 && !known.has(item))) candidates.push({ candidateId: `candidate-${sha256Canonical({ documentId: document.documentId, token }).slice(0, 16)}`, documentId: document.documentId, term: token, state: "proposed", evidenceIds: [`document-${document.documentId}`] });
-  }
-  return freeze(candidates.sort((a, b) => compare(a.candidateId, b.candidateId)));
+  const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective" || !Array.isArray(documents)) fail(); const known = new Set(glossary.terms.flatMap((item) => [item.koPreferred, item.enPreferred, ...item.allowedVariants])); const candidates = [];
+  for (const document of documents) { if (!id.test(document?.documentId ?? "") || !canonicalText(document?.text, 2 * 1024 * 1024)) fail(); for (const value of [...new Set(document.text.match(/[A-Za-z가-힣][A-Za-z가-힣 -]{1,40}/gu) ?? [])].map((item) => item.trim()).filter((item) => item.length > 1 && !known.has(item) && safeText(item))) candidates.push({ candidateId: `candidate-${sha256Canonical({ documentId: document.documentId, value }).slice(0, 16)}`, documentId: document.documentId, term: value, state: "proposed", evidenceIds: [`document-${document.documentId}`] }); }
+  return freeze(candidates.sort((left, right) => compare(left.candidateId, right.candidateId)));
 }
 
-function receiptMatches(receipt, glossary) { return validateGlossaryReceipt(receipt, { glossary }).ok && receipt.glossaryVersion === glossary.version && receipt.glossarySha256 === sha256Canonical(glossary); }
-export function validateDocumentTerminology({ text, language, effectiveGlossary, receipt } = {}) {
-  if (typeof text !== "string" || !["ko", "en"].includes(language) || !effectiveGlossary || effectiveGlossary.scope !== "effective") fail(); const glossary = copy(effectiveGlossary); const blocking = []; const warnings = [];
-  if (!receiptMatches(receipt, glossary)) blocking.push(finding("stale-glossary-receipt"));
-  const labels = new Map();
+function receiptMatches(receipt, documentId, glossary) { return id.test(documentId ?? "") && receipt?.documentId === documentId && validateGlossaryReceipt(receipt, { glossary }).ok && receipt.glossaryVersion === glossary.version && receipt.glossarySha256 === sha256Canonical(glossary); }
+function escaped(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function termMatch(text, value, language, insensitive = false) { if (!value) return false; const flags = `${insensitive ? "iu" : "u"}`; return new RegExp(`(?<![\\p{L}\\p{N}])${escaped(value)}(?![\\p{L}\\p{N}])`, flags).test(text); }
+
+export function validateDocumentTerminology({ text, language, documentId, effectiveGlossary, receipt } = {}) {
+  if (!canonicalText(text, 2 * 1024 * 1024) || !["ko", "en"].includes(language) || !id.test(documentId ?? "")) fail(); const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective") fail(); const blocking = []; const warnings = []; const receiptOk = receiptMatches(receipt, documentId, glossary); if (!receiptOk) blocking.push(finding("stale-glossary-receipt")); const selected = new Set(receipt?.termIds ?? []);
   for (const item of glossary.terms) {
-    const label = language === "ko" ? item.koPreferred : item.enPreferred; const previous = labels.get(label); if (previous && previous !== item.termId) blocking.push(finding("ambiguous-concept-label", item.termId)); labels.set(label, item.termId);
-    if (!item.koPreferred || !item.enPreferred) blocking.push(finding("missing-bilingual-mapping", item.termId));
-    if (contains(text, item.koPreferred) && contains(text, item.enPreferred)) blocking.push(finding("multiple-preferred-terms", item.termId));
-    if (item.state === "proposed" && contains(text, label)) warnings.push(finding("unapproved-term", item.termId)); if (item.state === "deprecated" && contains(text, label)) warnings.push(finding("deprecated-term", item.termId));
-    if ((language === "ko" && contains(text, item.enPreferred) && !contains(text, item.koPreferred)) || (language === "en" && contains(text, item.koPreferred) && !contains(text, item.enPreferred))) warnings.push(finding("translation-mismatch", item.termId));
-    if (item.state === "deprecated" && item.replacementTermId && contains(text, label) && contains(text, glossary.terms.find(({ termId }) => termId === item.replacementTermId)?.[language === "ko" ? "koPreferred" : "enPreferred"] ?? "")) blocking.push(finding("semantic-auto-replacement", item.termId));
-    if (item.forbiddenTerms.some((value) => contains(text, value))) warnings.push(finding("orthography-variant", item.termId));
-    for (const abbreviation of item.abbreviations) if (contains(text, abbreviation) && !contains(text, label)) warnings.push(finding("unexplained-abbreviation", item.termId));
+    const preferred = language === "ko" ? item.koPreferred : item.enPreferred; const alternative = language === "ko" ? item.enPreferred : item.koPreferred; const usedPreferred = termMatch(text, preferred, language, language === "en"); const usedAllowed = item.allowedVariants.some((value) => termMatch(text, value, language, language === "en"));
+    if ((usedPreferred || usedAllowed) && !selected.has(item.termId)) blocking.push(finding("stale-glossary-receipt"));
+    if (!selected.has(item.termId)) continue;
+    if (item.state === "proposed" && (usedPreferred || usedAllowed)) warnings.push(finding("unapproved-term", item.termId));
+    if (item.state === "deprecated" && (usedPreferred || usedAllowed)) warnings.push(finding("deprecated-term", item.termId));
+    if (item.forbiddenTerms.some((value) => termMatch(text, value, language, language === "en")) || item.deprecatedTerms.some((value) => termMatch(text, value, language, language === "en"))) warnings.push(finding("deprecated-term", item.termId));
+    if (language === "en" && termMatch(text, preferred, language, true) && !termMatch(text, preferred, language, false) && !usedAllowed) warnings.push(finding("orthography-variant", item.termId));
+    if (language === "en" && termMatch(text, `${preferred}s`, language, true) && !termMatch(text, `${preferred}s`, language, false) && !usedAllowed) warnings.push(finding("orthography-variant", item.termId));
+    if (termMatch(text, alternative, language, language === "en") && !usedPreferred) warnings.push(finding("translation-mismatch", item.termId));
+    for (const abbreviation of item.abbreviations) if (termMatch(text, abbreviation, language, false) && !usedPreferred && !usedAllowed) warnings.push(finding("unexplained-abbreviation", item.termId));
   }
-  if (language === "ko" && /[A-Za-z]{4,}/u.test(text)) warnings.push(finding("unnecessary-english"));
-  return freeze({ ok: blocking.length === 0, blocking: blocking.sort((a, b) => compare(a.code, b.code)), warnings: warnings.sort((a, b) => compare(`${a.code}${a.termId ?? ""}`, `${b.code}${b.termId ?? ""}`)) });
+  return freeze({ ok: blocking.length === 0, blocking: sortFindings(blocking), warnings: sortFindings(warnings) });
 }
 
-function markdown(title, terms, field) { return `# ${title}\n\n${terms.map((item) => `- ${item[field]} (${item.termId})`).join("\n")}\n`; }
+function validateFindings(value) { const copyValue = copy(value); if (!copyValue || typeof copyValue.ok !== "boolean" || !Array.isArray(copyValue.blocking) || !Array.isArray(copyValue.warnings) || Object.keys(copyValue).sort().join("\0") !== "blocking\0ok\0warnings") fail(); for (const item of [...copyValue.blocking, ...copyValue.warnings]) if (!item || typeof item !== "object" || Object.keys(item).some((key) => !["code", "termId"].includes(key)) || !findingCodes.has(item.code) || item.termId !== undefined && !termId.test(item.termId)) fail(); return copyValue; }
+function markdown(title, terms, key) { return `# ${title}\n\n${terms.map((item) => `- ${item[key]} (${item.termId})`).join("\n")}\n`; }
+async function targetState(root, relativePath) { const target = path.join(root, relativePath); const stats = await lstat(target).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error)); if (stats && (!stats.isFile() || stats.isSymbolicLink())) fail(); return stats ? await readFile(target) : null; }
+async function cleanupEmpty(root, directories) { for (const directory of [...directories].sort((a, b) => b.length - a.length)) await rmdir(path.join(root, directory)).catch(() => {}); }
+
+/** Function-level transaction: failures roll back targets and newly created directories; crash-wide atomicity is intentionally not claimed. */
 export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary, receipt, findings, decision, ...unknown } = {}) {
-  if (Object.keys(unknown).length !== 0 || glossary?.scope !== "effective" || !decision || !id.test(decision.eventId ?? "") || !receiptMatches(receipt, glossary)) fail(); const value = copy(glossary); const safeFindings = copy(findings); const safeDecision = copy(decision.receipt);
-  const outputs = new Map([[allowedFiles[0], `${canonicalGlossary({ ...value, scope: "shared" })}\n`], [allowedFiles[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [allowedFiles[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [allowedFiles[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [allowedFiles[4], `${canonicalJson(receipt)}\n`], [`reference-intelligence/decisions/glossary-${decision.eventId}.json`, `${canonicalJson(safeDecision)}\n`]]);
-  if ([...outputs.values()].some((data) => Buffer.byteLength(data, "utf8") > 2 * 1024 * 1024)) fail(); const files = [...outputs.keys()].sort(compare);
-  await ensureArtifactDirectories({ artifactRoot, directories: ["reference-intelligence", termsPath, "reference-intelligence/decisions"] }); for (const relativePath of files) await safeWriteArtifactFile({ artifactRoot, relativePath, data: outputs.get(relativePath) }); return freeze({ files });
+  if (Object.keys(unknown).length !== 0 || glossary?.scope !== "effective" || !receiptMatches(receipt, receipt?.documentId, glossary) || !decision || decision.eventId !== decision.receipt?.eventId) fail();
+  try { assertGlossaryHumanDecision(decision.receipt, decision.capability); } catch { fail(); }
+  const value = copy(glossary); if (!valid(value) || Buffer.byteLength(canonicalJson(value), "utf8") > 2 * 1024 * 1024) fail(); const safeFindings = validateFindings(findings); const safeDecision = copy(decision.receipt); const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`;
+  const outputs = new Map([[fixedPaths[0], `${canonicalJson(value)}\n`], [fixedPaths[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [fixedPaths[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [fixedPaths[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [fixedPaths[4], `${canonicalJson(receipt)}\n`], [decisionPath, `${canonicalJson(safeDecision)}\n`]]);
+  if ([...outputs.entries()].some(([relativePath, data]) => !fixedPaths.includes(relativePath) && relativePath !== decisionPath || Buffer.byteLength(data, "utf8") > 2 * 1024 * 1024)) fail(); const files = [...outputs.keys()].sort(compare);
+  const root = await canonicalArtifactRoot(artifactRoot); const before = new Map(); for (const relativePath of files) before.set(relativePath, await targetState(root.path, relativePath));
+  const directories = ["reference-intelligence", glossaryDirectory, "reference-intelligence/decisions"]; const created = new Set(); for (const directory of directories) if (!await lstat(path.join(root.path, directory)).catch(() => null)) created.add(directory);
+  const stage = `.glossary-stage-${randomUUID()}`;
+  try {
+    await ensureArtifactDirectories({ artifactRoot: root.path, directories: [stage, ...directories, `${stage}/reference-intelligence`, `${stage}/${glossaryDirectory}`, `${stage}/reference-intelligence/decisions`] });
+    for (const [relativePath, data] of outputs) await safeWriteArtifactFile({ artifactRoot: root.path, relativePath: `${stage}/${relativePath}`, data });
+    for (const relativePath of files) await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: await readFile(path.join(root.path, stage, relativePath)) });
+    await rm(path.join(root.path, stage), { recursive: true, force: true }); return freeze({ files });
+  } catch (error) {
+    for (const relativePath of files) { const prior = before.get(relativePath); if (prior === null) await unlink(path.join(root.path, relativePath)).catch(() => {}); else await safeWriteArtifactFile({ artifactRoot: root.path, relativePath, data: prior }).catch(() => {}); }
+    await rm(path.join(root.path, stage), { recursive: true, force: true }); await cleanupEmpty(root.path, created); throw error;
+  }
 }

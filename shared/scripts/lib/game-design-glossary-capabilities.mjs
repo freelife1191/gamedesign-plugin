@@ -1,46 +1,57 @@
 import { types } from "node:util";
 import { canonicalJson, sha256Canonical } from "./reference-intelligence-canonical.mjs";
 
-const issuedCapabilities = new WeakMap();
-const issuedReceipts = new WeakMap();
+const decisionCapabilities = new WeakMap();
+const decisionReceipts = new WeakMap();
+const overrideCapabilities = new WeakMap();
+const overrideReceipts = new WeakMap();
 const actions = new Set(["approve", "deprecate", "replace"]);
-const roleLike = /^(?:chatgpt|assistant|agent|bot|model|system)$/iu;
+const roleLike = /(?:^|\s)(?:chatgpt|assistant|agent|bot|model|system)(?:\s|$)/iu;
 const id = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const termId = /^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$/u;
 const hash = /^[a-f0-9]{64}$/u;
-const control = /[\u0000-\u001f\u007f-\u009f\uFEFF]/u;
+const unsafe = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\uFEFF\r]/u;
 const compare = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 
 function reject() { throw new Error("A live human glossary decision is required."); }
-function text(value) { return typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !control.test(value); }
-function ownPlain(value, keys) {
+function text(value, max = 4096) { return typeof value === "string" && value.length > 0 && Buffer.byteLength(value, "utf8") <= max && value === value.normalize("NFC") && !unsafe.test(value); }
+function timestamp(value) { return text(value) && !Number.isNaN(new Date(value).valueOf()) && new Date(value).toISOString() === value; }
+function plain(value, keys) {
   if (!value || typeof value !== "object" || Array.isArray(value) || types.isProxy(value) || Object.getPrototypeOf(value) !== Object.prototype || Reflect.ownKeys(value).some((key) => typeof key !== "string" || !keys.includes(key))) reject();
-  const result = Object.create(null);
-  for (const key of keys) if (Object.hasOwn(value, key)) { const descriptor = Object.getOwnPropertyDescriptor(value, key); if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) reject(); result[key] = descriptor.value; }
-  return result;
+  const output = Object.create(null);
+  for (const key of keys) if (Object.hasOwn(value, key)) { const descriptor = Object.getOwnPropertyDescriptor(value, key); if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) reject(); output[key] = descriptor.value; }
+  return output;
 }
-function timestamp(value) { if (!text(value) || Number.isNaN(new Date(value).valueOf()) || new Date(value).toISOString() !== value) reject(); return value; }
-function decision(input) {
-  const value = ownPlain(input, ["action", "termIds", "replacementTermId", "actor", "eventId", "glossarySha256", "glossaryVersion", "changedAt", "channel"]);
-  if (!actions.has(value.action) || !text(value.actor) || roleLike.test(value.actor) || value.channel !== undefined || !id.test(value.eventId ?? "") || !hash.test(value.glossarySha256 ?? "") || !Number.isInteger(value.glossaryVersion) || value.glossaryVersion < 1 || !Array.isArray(value.termIds) || value.termIds.length === 0 || value.termIds.some((item) => !termId.test(item)) || value.termIds.some((item, index) => index > 0 && compare(value.termIds[index - 1], item) >= 0)) reject();
-  const replacement = value.replacementTermId ?? null;
-  if ((value.action === "approve" && replacement !== null) || ((value.action === "deprecate" || value.action === "replace") && (!termId.test(replacement ?? "") || value.termIds.includes(replacement)))) reject();
-  return Object.freeze({ action: value.action, actor: value.actor, changedAt: timestamp(value.changedAt), eventId: value.eventId, glossarySha256: value.glossarySha256, glossaryVersion: value.glossaryVersion, replacementTermId: replacement, termIds: Object.freeze([...value.termIds]) });
+function sortedTermIds(value) { return Array.isArray(value) && value.length > 0 && value.every((item) => termId.test(item)) && value.every((item, index) => index === 0 || compare(value[index - 1], item) < 0); }
+function glossary(value) { return value && typeof value === "object" && !types.isProxy(value) ? sha256Canonical(value) : reject(); }
+function opaque(receipts, capabilities, receipt) { const capability = Object.freeze(Object.create(null)); capabilities.set(capability, sha256Canonical(receipt)); receipts.set(receipt, capability); return Object.freeze({ receipt, capability }); }
+
+function normalizeDecision(input) {
+  const value = plain(input, ["action", "termIds", "replacementTermId", "actor", "eventId", "glossarySha256", "glossaryVersion", "changedAt", "channel"]);
+  if (!actions.has(value.action) || !text(value.actor) || roleLike.test(value.actor) || value.channel !== undefined || !id.test(value.eventId ?? "") || !hash.test(value.glossarySha256 ?? "") || !Number.isInteger(value.glossaryVersion) || value.glossaryVersion < 1 || !sortedTermIds(value.termIds) || !timestamp(value.changedAt)) reject();
+  const replacementTermId = value.replacementTermId ?? null;
+  if ((value.action === "approve" && replacementTermId !== null) || (value.action !== "approve" && (!termId.test(replacementTermId ?? "") || value.termIds.includes(replacementTermId)))) reject();
+  return Object.freeze({ action: value.action, actor: value.actor, changedAt: value.changedAt, eventId: value.eventId, glossarySha256: value.glossarySha256, glossaryVersion: value.glossaryVersion, replacementTermId, termIds: Object.freeze([...value.termIds]) });
 }
 
-export function issueGlossaryHumanDecision(input = {}) {
-  const receipt = decision(input);
-  const capability = Object.freeze(Object.create(null));
-  issuedCapabilities.set(capability, sha256Canonical(receipt));
-  issuedReceipts.set(receipt, capability);
-  return Object.freeze({ receipt, capability });
-}
-
+export function issueGlossaryHumanDecision(input = {}) { return opaque(decisionReceipts, decisionCapabilities, normalizeDecision(input)); }
 export function assertGlossaryHumanDecision(receipt, capability) {
+  try { if (!receipt || !capability || types.isProxy(receipt) || types.isProxy(capability) || decisionReceipts.get(receipt) !== capability || decisionCapabilities.get(capability) !== sha256Canonical(receipt)) reject(); return receipt; } catch { reject(); }
+}
+
+function normalizeOverride(input) {
+  const value = plain(input, ["sharedGlossary", "projectOverlay", "termIds", "reason", "actor", "eventId", "changedAt"]);
+  if (!text(value.reason, 1024) || !text(value.actor) || roleLike.test(value.actor) || !id.test(value.eventId ?? "") || !timestamp(value.changedAt) || !sortedTermIds(value.termIds)) reject();
+  return Object.freeze({ actor: value.actor, changedAt: value.changedAt, eventId: value.eventId, overlaySha256: glossary(value.projectOverlay), reason: value.reason, sharedSha256: glossary(value.sharedGlossary), termIds: Object.freeze([...value.termIds]) });
+}
+
+export function issueGlossaryOverrideDecision(input = {}) { return opaque(overrideReceipts, overrideCapabilities, normalizeOverride(input)); }
+export function assertGlossaryOverrideDecision(receipt, capability, { sharedGlossary, projectOverlay, termIds, reason } = {}) {
   try {
-    if (!receipt || !capability || types.isProxy(receipt) || types.isProxy(capability) || issuedReceipts.get(receipt) !== capability || issuedCapabilities.get(capability) !== sha256Canonical(receipt)) reject();
+    if (!receipt || !capability || types.isProxy(receipt) || types.isProxy(capability) || overrideReceipts.get(receipt) !== capability || overrideCapabilities.get(capability) !== sha256Canonical(receipt)) reject();
+    if (sharedGlossary !== undefined && (receipt.sharedSha256 !== glossary(sharedGlossary) || receipt.overlaySha256 !== glossary(projectOverlay) || receipt.reason !== reason || canonicalJson(receipt.termIds) !== canonicalJson(termIds))) reject();
     return receipt;
   } catch { reject(); }
 }
 
-export function canonicalGlossaryDecision(input = {}) { return canonicalJson(decision(input)); }
+export function canonicalGlossaryDecision(input = {}) { return canonicalJson(normalizeDecision(input)); }
