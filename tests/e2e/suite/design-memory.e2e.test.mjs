@@ -1,19 +1,24 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cp, lstat, mkdir, mkdtemp, opendir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import { captureDesignMemory } from "../../../shared/scripts/capture-design-memory.mjs";
 import { issueCaptureClassificationReceipt, issueMaintenanceHumanReceipt } from "../../../shared/scripts/lib/design-memory-capabilities.mjs";
-import { appendMemoryEvent, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents } from "../../../shared/scripts/lib/safe-memory-store.mjs";
+import { loadMemoryConfig } from "../../../shared/scripts/load-memory-config.mjs";
+import { validateMemoryIndexSchema, validateMemoryReceiptSchema } from "../../../shared/scripts/lib/memory-schema-evaluator.mjs";
+import { appendQuarantineMarker, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents } from "../../../shared/scripts/lib/safe-memory-store.mjs";
 import { maintainDesignMemory } from "../../../shared/scripts/maintain-design-memory.mjs";
 import { listMemoryReceipts, loadCurrentMemoryIndex, loadMemoryReceipt, publishMemoryIndexGeneration, publishMemoryLogGeneration, publishMemoryReceiptGeneration, publishMemoryViewGeneration, rebuildMemoryIndex, retrieveApprovedDesignMemory, scanDerivedGenerations } from "../../../shared/scripts/retrieve-design-memory.mjs";
-import { observeMemorySourceBindings, validateMemorySourceBindings } from "../../../shared/scripts/validate-design-memory.mjs";
+import { observeMemorySourceBindings } from "../../../shared/scripts/validate-design-memory.mjs";
 import { validateArtifact } from "../../../shared/scripts/validate-artifact.mjs";
 
 const NOW = new Date("2026-08-12T00:00:00.000Z");
+const execFileAsync = promisify(execFile);
 const hash = (value) => createHash("sha256").update(value).digest("hex");
 const bytes = (value) => Buffer.from(`${JSON.stringify(value)}\n`, "utf8");
 const config = (projectId, extra = {}) => ({ enabled: true, scope: "project", projectId, candidateTtlDays: 30, maxItems: 5, gitMode: "tracked", ...extra });
@@ -41,7 +46,7 @@ async function snapshot(root) {
 async function createWorkspace(t, { projectId = "wind-island", lane = "studio" } = {}) {
   const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "design-memory-e2e-direct-")));
   t.after(async () => { await rm(root, { recursive: true, force: true }); await assert.rejects(lstat(root), { code: "ENOENT" }); });
-  await mkdir(path.join(root, ".git"));
+  try { await execFileAsync("git", ["init", "--quiet", root]); } catch (error) { if (error?.code === "ENOENT") throw new Error("Task 6 E2E requires git on PATH to initialize its temporary workspace."); throw error; }
   await mkdir(path.join(root, "artifact"));
   const evidence = Buffer.from("finding-07: counterplay is missing\n", "utf8");
   await writeFile(path.join(root, "artifact", "evidence.yml"), evidence);
@@ -117,8 +122,8 @@ test("5. source drift produces stale-source while canonical artifact validation 
 });
 
 test("6. disabled and request-opt-out retrieval perform black-box zero I/O on a nonexistent workspace", async (t) => {
-  const fixture = await createWorkspace(t); const missing = path.join(fixture.root, "not-created"); const before = await snapshot(fixture.root);
-  const disabled = await retrieveApprovedDesignMemory({ workspaceRoot: missing, config: config(fixture.projectId, { enabled: false }), requestContext: context(fixture.projectId) }); const optedOut = await retrieveApprovedDesignMemory({ workspaceRoot: missing, config: fixture.cfg, requestContext: { ...context(fixture.projectId), disabledForRequest: true } });
+  const fixture = await createWorkspace(t); const missing = path.join(fixture.root, "not-created"); const envConfig = await loadMemoryConfig({ workspaceRoot: fixture.root, env: { GAME_DESIGN_MEMORY_ENABLED: "false" } }); assert.equal(envConfig.enabled, false); const before = await snapshot(fixture.root);
+  const disabled = await retrieveApprovedDesignMemory({ workspaceRoot: missing, config: { ...envConfig, projectId: fixture.projectId }, requestContext: context(fixture.projectId) }); const optedOut = await retrieveApprovedDesignMemory({ workspaceRoot: missing, config: fixture.cfg, requestContext: { ...context(fixture.projectId), disabledForRequest: true } });
   assert.equal(disabled.status, "disabled"); assert.equal(optedOut.status, "disabled"); assert.deepEqual(await snapshot(fixture.root), before); await assert.rejects(lstat(missing), { code: "ENOENT" });
 });
 
@@ -127,7 +132,12 @@ test("7. corrupt derived index is non-authoritative while source corruption fail
   const artifactBefore = await snapshot(fixture.canonicalArtifact);
   const captured = await captureAndApprove(fixture);
   const rebuilt = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW }); assert.equal(rebuilt.complete, true); const index = await loadCurrentMemoryIndex({ store: rebuilt.store, fold: rebuilt.fold }); assert.equal(index.complete, true);
-  const derivedBefore = await snapshot(path.join(rebuilt.store.root, "v1", "derived")); for (const [relative, type] of derivedBefore) if (type.startsWith("file:") && relative.includes("indexes/")) await writeFile(path.join(rebuilt.store.root, "v1", "derived", relative), "corrupt\n");
+  const derivedBefore = await snapshot(path.join(rebuilt.store.root, "v1", "derived"));
+  for (const [relative, type] of derivedBefore) if (type.startsWith("file:") && /indexes\/[^/]+\/[^/]+\/instances\/[^/]+\.json$/u.test(relative)) await writeFile(path.join(rebuilt.store.root, "v1", "derived", relative), "corrupt\n");
+  const invalid = await loadCurrentMemoryIndex({ store: rebuilt.store, fold: rebuilt.fold });
+  assert.equal(invalid.complete, true);
+  assert.equal(invalid.index, null);
+  assert.deepEqual(invalid.warnings.map((item) => item.code), ["memory.derived_generation_invalid"]);
   const recovered = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW }); assert.equal(recovered.complete, true); await assertArtifactValidAndUnchanged(fixture, artifactBefore);
   const scan = await scanMemoryEvents({ store: captured.store }); const first = scan.events[0]; await writeFile(path.join(captured.store.root, first.relativePath, "commit.json"), "bad\n"); assert.equal((await scanMemoryEvents({ store: captured.store })).complete, false);
 });
@@ -140,20 +150,56 @@ test("8. hostile memory prose is untrusted input and cannot execute or alter app
 });
 
 test("9. normalized request keeps immutable receipt history across policy, drift, and expiry", async (t) => {
-  const fixture = await createWorkspace(t); const lesson = await captureAndApprove(fixture); const explicitEvent = eventFor({ ...fixture, type: "explicit-preference", eventId: "persistent-style", summary: "Use concise prose.", relatedIds: ["boss-phase-2"] }); await captureCandidate(fixture, { event: explicitEvent });
+  const fixture = await createWorkspace(t); const lesson = await captureAndApprove(fixture); const explicitEvent = eventFor({ ...fixture, type: "explicit-preference", eventId: "persistent-style", summary: "Use concise prose.", relatedIds: ["boss-phase-2"] }); const explicit = await captureCandidate(fixture, { event: explicitEvent });
   const request = context(fixture.projectId); const first = await retrieve(fixture, request, new Date("2026-08-20T00:00:00Z")); fixture.cfg = config(fixture.projectId, { maxItems: 1 }); const limited = await retrieve(fixture, request, new Date("2026-08-20T00:00:00Z")); fixture.cfg = config(fixture.projectId); await writeFile(path.join(fixture.root, "artifact", "evidence.yml"), "drift\n"); const drift = await retrieve(fixture, request, new Date("2026-08-20T00:00:00Z")); await writeFile(path.join(fixture.root, "artifact", "evidence.yml"), fixture.evidence); const expired = await retrieve(fixture, request, new Date("2026-09-13T00:00:00Z"));
-  const hashes = new Set([first.receiptSha256, limited.receiptSha256, drift.receiptSha256, expired.receiptSha256]); assert.equal(hashes.size, 4, JSON.stringify({ first, limited, drift, expired })); assert.ok(expired.guidance.some((item) => item.memoryId !== lesson.memoryId)); const store = await storeFor(fixture); const history = await listMemoryReceipts({ store, requestSha256: first.requestSha256 }); assert.ok(history.items.length >= 4); for (const receiptSha256 of hashes) assert.equal((await loadMemoryReceipt({ store, requestSha256: first.requestSha256, receiptSha256 })).status, "ready");
+  const hashes = new Set([first.receiptSha256, limited.receiptSha256, drift.receiptSha256, expired.receiptSha256]); assert.equal(hashes.size, 4, JSON.stringify({ first, limited, drift, expired })); assert.ok(expired.guidance.some((item) => item.memoryId !== lesson.memoryId)); const store = await storeFor(fixture); const history = await listMemoryReceipts({ store, requestSha256: first.requestSha256 }); assert.ok(history.items.length >= 4);
+  const index = await loadCurrentMemoryIndex({ store }); const entryByMemoryId = new Map(index.index.entries.map((item) => [item.memoryId, item]));
+  const expectedApplied = (ids) => ids.map((memoryId) => ({ memoryId, headEventId: entryByMemoryId.get(memoryId).headEventId, fileSha256: entryByMemoryId.get(memoryId).fileSha256 })).sort((left, right) => left.memoryId.localeCompare(right.memoryId));
+  const currentObservation = { memoryId: lesson.memoryId, artifactId: "artifact", locator: "evidence.yml#finding-07", expectedSha256: hash(fixture.evidence), observedSha256: hash(fixture.evidence), status: "current" };
+  const driftObservation = { ...currentObservation, observedSha256: hash(Buffer.from("drift\n")), status: "drift" };
+  const receiptCases = [
+    ["first", first, { scope: "project", maxItems: 5, candidateTtlDays: 30 }, [lesson.memoryId, explicit.memoryId], [], [currentObservation]],
+    ["limited", limited, { scope: "project", maxItems: 1, candidateTtlDays: 30 }, [explicit.memoryId], [], []],
+    ["drift", drift, { scope: "project", maxItems: 5, candidateTtlDays: 30 }, [explicit.memoryId], [{ memoryId: lesson.memoryId, reason: "stale-source" }], [driftObservation]],
+    ["expired", expired, { scope: "project", maxItems: 5, candidateTtlDays: 30 }, [explicit.memoryId], [{ memoryId: lesson.memoryId, reason: "expired" }], []],
+  ];
+  for (const [label, result, policy, appliedIds, excluded, observations] of receiptCases) {
+    const loaded = await loadMemoryReceipt({ store, requestSha256: first.requestSha256, receiptSha256: result.receiptSha256 });
+    assert.equal(loaded.status, "ready");
+    assert.deepEqual(Object.keys(loaded.receipt), ["schemaVersion", "requestSha256", "sourceTreeSha256", "projectId", "lane", "policy", "observations", "applied", "excluded"]);
+    assert.equal(loaded.receipt.requestSha256, first.requestSha256);
+    assert.equal(loaded.receipt.sourceTreeSha256, index.sourceTreeSha256);
+    assert.equal(loaded.receipt.projectId, fixture.projectId);
+    assert.equal(loaded.receipt.lane, "studio");
+    assert.deepEqual(loaded.receipt.policy, policy);
+    assert.deepEqual(loaded.receipt.observations, observations, label);
+    assert.deepEqual(loaded.receipt.applied, expectedApplied(appliedIds));
+    assert.deepEqual(loaded.receipt.excluded, excluded);
+  }
 });
 
 test("10. default 257-child and 100,001-entry tripwires fail close without source blockage", { concurrency: false, timeout: 120000 }, async (t) => {
   const direct = await createWorkspace(t, { projectId: "tripwire-direct" }); const directStore = await resolveMemoryStore({ workspaceRoot: direct.root, config: direct.cfg, platform: process.platform, home: direct.root, initialize: true }); const directRoot = path.join(directStore.root, "v1", "derived"); await mkdir(directRoot, { recursive: true }); for (let index = 0; index < 257; index += 1) await mkdir(path.join(directRoot, `child-${String(index).padStart(3, "0")}`)); const directScan = await scanDerivedGenerations({ store: directStore }); assert.equal(directScan.complete, false); assert.equal(directScan.warnings[0].code, "memory.derived_directory_limit_exceeded");
   const census = await createWorkspace(t, { projectId: "tripwire-census" }); const censusStore = await resolveMemoryStore({ workspaceRoot: census.root, config: census.cfg, platform: process.platform, home: census.root, initialize: true }); const root = path.join(censusStore.root, "v1", "derived"); await mkdir(root, { recursive: true }); let created = 0; for (let group = 0; group < 2 && created < 100001; group += 1) { const groupDirectory = path.join(root, `group-${group}`); await mkdir(groupDirectory); created += 1; for (let bucket = 0; bucket < 196 && created < 100001; bucket += 1) { const directory = path.join(groupDirectory, `bucket-${String(bucket).padStart(3, "0")}`); await mkdir(directory); created += 1; const batch = []; for (let child = 0; child < 256 && created < 100001; child += 1) { created += 1; batch.push(writeFile(path.join(directory, `junk-${String(child).padStart(3, "0")}`), "x")); if (batch.length === 32) await Promise.all(batch.splice(0)); } await Promise.all(batch); } } assert.equal(created, 100001);
-  const closed = await scanDerivedGenerations({ store: censusStore }); assert.equal(closed.complete, false); assert.equal(closed.warnings[0].code, "memory.derived_census_limit_exceeded"); const sourceBefore = await snapshot(path.join(censusStore.root, "v1", "events")); const publish = await publishMemoryViewGeneration({ store: censusStore, sourceTreeSha256: "a".repeat(64), viewBytes: Buffer.from("# view\n") }); assert.equal(publish.complete, false); assert.deepEqual(await snapshot(path.join(censusStore.root, "v1", "events")), sourceBefore); const source = await readFile("shared/scripts/retrieve-design-memory.mjs", "utf8"); assert.match(source, /opendir\(/u); assert.doesNotMatch(source, /readdir\(/u);
+  const closed = await scanDerivedGenerations({ store: censusStore }); assert.equal(closed.complete, false); assert.equal(closed.warnings[0].code, "memory.derived_census_limit_exceeded"); const sourceBefore = await snapshot(path.join(censusStore.root, "v1", "events")); const publish = await publishMemoryViewGeneration({ store: censusStore, sourceTreeSha256: "a".repeat(64), viewBytes: Buffer.from("# view\n") }); assert.equal(publish.complete, false); const absent = await loadMemoryReceipt({ store: censusStore, requestSha256: "a".repeat(64), receiptSha256: "b".repeat(64) }); const listed = await listMemoryReceipts({ store: censusStore, requestSha256: "a".repeat(64) }); assert.equal(absent.complete, false); assert.equal(absent.status, null); assert.equal(listed.complete, false); assert.deepEqual(listed.items, []); assert.deepEqual(await snapshot(path.join(censusStore.root, "v1", "events")), sourceBefore); const source = await readFile("shared/scripts/retrieve-design-memory.mjs", "utf8"); assert.match(source, /opendir\(/u); assert.doesNotMatch(source, /readdir\(/u);
 });
 
 test("11. default byte, index, receipt-array limits reject before write and conceal corrupt oversize bytes", async (t) => {
-  const fixture = await createWorkspace(t); const captured = await captureAndApprove(fixture); const ready = await retrieve(fixture); const store = await storeFor(fixture); const rebuilt = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW }); const before = await snapshot(path.join(store.root, "v1", "derived"));
-  const entry = rebuilt.index.entries[0]; const badIndex = { ...rebuilt.index, entries: Array.from({ length: 10001 }, () => entry) }; const receipt = (await loadMemoryReceipt({ store, requestSha256: ready.requestSha256, receiptSha256: ready.receiptSha256 })).receipt; const badReceipt = { ...receipt, applied: Array.from({ length: 257 }, () => receipt.applied[0]) };
+  const fixture = await createWorkspace(t); const captured = await captureAndApprove(fixture); const ready = await retrieve(fixture); const store = await storeFor(fixture); const rebuilt = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW });
+  const entry = { memoryId: "memory-00000", headEventId: `mev1-${"a".repeat(64)}`, headEventPath: "events/head.json", fileSha256: "b".repeat(64), kind: "design-lesson", lane: "studio", status: "approved", scope: "project", projectId: fixture.projectId, artifactTypes: [], relatedIds: [], tags: [] };
+  const validIndex = { ...rebuilt.index, entries: Array.from({ length: 10000 }, (_, index) => ({ ...entry, memoryId: `memory-${String(index).padStart(5, "0")}` })) };
+  const badIndex = { ...validIndex, entries: [...validIndex.entries, { ...entry, memoryId: "memory-10000" }] };
+  const receipt = (await loadMemoryReceipt({ store, requestSha256: ready.requestSha256, receiptSha256: ready.receiptSha256 })).receipt;
+  const validReceipt = { ...receipt, applied: Array.from({ length: 256 }, (_, index) => ({ ...receipt.applied[0], memoryId: `memory-${String(index).padStart(3, "0")}` })) };
+  const badReceipt = { ...validReceipt, applied: [...validReceipt.applied, { ...receipt.applied[0], memoryId: "memory-256" }] };
+  assert.equal(validateMemoryIndexSchema(validIndex), true);
+  assert.equal(validateMemoryIndexSchema(badIndex), false);
+  assert.equal(validateMemoryReceiptSchema(validReceipt), true);
+  assert.equal(validateMemoryReceiptSchema(badReceipt), false);
+  const validReceiptPublish = await publishMemoryReceiptGeneration({ store, requestSha256: ready.requestSha256, receiptBytes: bytes(validReceipt) });
+  assert.equal(validReceiptPublish.complete, true);
+  assert.match(validReceiptPublish.status, /^(created|present)$/);
+  const before = await snapshot(path.join(store.root, "v1", "derived"));
   for (const result of [await publishMemoryIndexGeneration({ store, sourceTreeSha256: rebuilt.sourceTreeSha256, indexBytes: bytes(badIndex) }), await publishMemoryReceiptGeneration({ store, requestSha256: ready.requestSha256, receiptBytes: bytes(badReceipt) }), await publishMemoryViewGeneration({ store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.alloc(1024 * 1024 + 1, 65) }), await publishMemoryLogGeneration({ store, sourceTreeSha256: rebuilt.sourceTreeSha256, logBytes: Buffer.alloc(1024 * 1024 + 1, 65) })]) { assert.equal(result.complete, false); assert.equal(result.warnings[0].code, "memory.derived_input_limit_exceeded"); }
   assert.deepEqual(await snapshot(path.join(store.root, "v1", "derived")), before); const exact = await loadMemoryReceipt({ store, requestSha256: ready.requestSha256, receiptSha256: ready.receiptSha256 }); const instance = path.join(store.root, "v1", "derived", exact.bytes ? ready.receiptGenerationPath : ""); await writeFile(instance, Buffer.alloc(256 * 1024 + 1, 66)); const corrupt = await loadMemoryReceipt({ store, requestSha256: ready.requestSha256, receiptSha256: ready.receiptSha256 }); assert.equal(corrupt.status, "corrupt"); disclosure(corrupt, fixture.root); assert.equal(captured.memoryId.startsWith("memory-"), true);
 });
@@ -164,5 +210,62 @@ test("12. concurrent idempotence and the default 9,999-reservation final-slot ra
 });
 
 test("13. post-commit 257th child closes only derived cache; raw source survives derived-only reset", { concurrency: false }, async (t) => {
-  const fixture = await createWorkspace(t); const captured = await captureAndApprove(fixture); const rebuilt = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW }); const parent = path.join(rebuilt.store.root, "v1", "derived", "views", rebuilt.sourceTreeSha256); await mkdir(parent, { recursive: true }); for (let index = 0; index < 254; index += 1) await mkdir(path.join(parent, `junk-${String(index).padStart(3, "0")}`)); assert.equal((await scanDerivedGenerations({ store: rebuilt.store })).complete, true); await mkdir(path.join(parent, "junk-254")); const first = await publishMemoryViewGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.from("# one\n") }); assert.equal(first.complete, true); const healthy = await scanDerivedGenerations({ store: rebuilt.store }); assert.equal(healthy.complete, true); const second = await publishMemoryViewGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.from("# two\n") }); assert.equal(second.complete, true); const closed = await scanDerivedGenerations({ store: rebuilt.store }); assert.equal(closed.complete, false); assert.equal(closed.warnings[0].code, "memory.derived_directory_limit_exceeded"); const sourceBefore = (await scanMemoryEvents({ store: rebuilt.store })).events.map((item) => hash(item.bytes)); assert.equal((await validateMemorySourceBindings({ sources: [] }, { workspaceRoot: fixture.root })).ok, true); await rm(path.join(rebuilt.store.root, "v1", "derived"), { recursive: true, force: true }); const reset = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW }); assert.equal(reset.sourceTreeSha256, rebuilt.sourceTreeSha256); assert.deepEqual((await scanMemoryEvents({ store: rebuilt.store })).events.map((item) => hash(item.bytes)), sourceBefore); assert.equal(captured.memoryId.startsWith("memory-"), true);
+  const fixture = await createWorkspace(t);
+  const artifactBefore = await snapshot(fixture.canonicalArtifact);
+  const captured = await captureAndApprove(fixture);
+  const normalReceipt = await retrieve(fixture);
+  const rebuilt = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW });
+  const parent = path.join(rebuilt.store.root, "v1", "derived", "views", rebuilt.sourceTreeSha256);
+  await mkdir(parent, { recursive: true });
+  for (let index = 0; index < 254; index += 1) await mkdir(path.join(parent, `junk-${String(index).padStart(3, "0")}`));
+  assert.equal((await scanDerivedGenerations({ store: rebuilt.store })).complete, true);
+  await mkdir(path.join(parent, "junk-254"));
+  const [first, second] = await Promise.all([
+    publishMemoryViewGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.from("# one\n") }),
+    publishMemoryViewGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.from("# two\n") }),
+  ]);
+  assert.equal(first.status, "created");
+  assert.equal(second.status, "created");
+  const closed = await scanDerivedGenerations({ store: rebuilt.store });
+  assert.equal(closed.complete, false);
+  assert.deepEqual(closed.entries, []);
+  assert.equal(closed.warnings[0].code, "memory.derived_directory_limit_exceeded");
+  const normalLoad = await loadMemoryReceipt({ store: rebuilt.store, requestSha256: normalReceipt.requestSha256, receiptSha256: normalReceipt.receiptSha256 });
+  const normalHistory = await listMemoryReceipts({ store: rebuilt.store, requestSha256: normalReceipt.requestSha256 });
+  const loaded = await loadMemoryReceipt({ store: rebuilt.store, requestSha256: "a".repeat(64), receiptSha256: "b".repeat(64) });
+  const listed = await listMemoryReceipts({ store: rebuilt.store, requestSha256: "a".repeat(64) });
+  const blocked = await publishMemoryViewGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, viewBytes: Buffer.from("# three\n") });
+  for (const result of [normalLoad, loaded]) { assert.equal(result.complete, false); assert.equal(result.status, null); }
+  for (const result of [normalHistory, listed]) { assert.equal(result.complete, false); assert.deepEqual(result.items, []); }
+  assert.equal(blocked.complete, false);
+  assert.equal((await captureCandidate(fixture, { event: eventFor({ ...fixture, eventId: "after-cache-close" }) })).status, "created");
+  const sourceScan = await scanMemoryEvents({ store: rebuilt.store });
+  assert.equal(sourceScan.quarantines.length, 0);
+  const target = sourceScan.events.find((item) => item.memoryId === captured.memoryId);
+  const quarantine = await appendQuarantineMarker({ store: rebuilt.store, targetMemoryId: target.memoryId, targetEventId: target.eventId, targetRelativePath: target.relativePath, observedSha256: hash(target.bytes), reasonCode: "memory.e2e-cache-health", actor: "named-reviewer", now: NOW });
+  assert.match(quarantine.status, /^(created|present)$/);
+  const sourceAfterControl = await scanMemoryEvents({ store: rebuilt.store });
+  const rawBeforeReset = sourceAfterControl.events.map((item) => hash(item.bytes));
+  assert.equal(sourceAfterControl.complete, true);
+  assert.equal(sourceAfterControl.events.length, sourceScan.events.length);
+  assert.equal(sourceAfterControl.quarantines.length, 1);
+  assert.equal(sourceAfterControl.sourceEntries.filter((item) => item.classification === "event").length, sourceScan.events.length);
+  assert.equal(sourceAfterControl.sourceEntries.filter((item) => item.classification === "quarantine").length, 1);
+  const { bytes: markerBytes, markerId, relativePath: markerPath, ...marker } = sourceAfterControl.quarantines[0];
+  assert.match(markerId, /^qmv1-[a-f0-9]{64}$/u);
+  assert.match(markerPath, /^v1\/controls\/quarantine\//u);
+  assert.ok(Buffer.isBuffer(markerBytes));
+  assert.deepEqual(marker, { memory_id: target.memoryId, target_event_id: target.eventId, target_relative_path: target.relativePath, observed_sha256: hash(target.bytes), reason_code: "memory.e2e-cache-health", actor: "named-reviewer", recorded_at: NOW.toISOString(), schema_version: 1 });
+  const closedRebuild = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW });
+  assert.equal(closedRebuild.complete, false);
+  assert.equal(closedRebuild.warnings[0].code, "memory.derived_directory_limit_exceeded");
+  await assertArtifactValidAndUnchanged(fixture, artifactBefore);
+  const resetGuidance = await readFile("shared/memory/references/memory-policy.md", "utf8");
+  assert.match(resetGuidance, /cache reset/u);
+  await rm(path.join(rebuilt.store.root, "v1", "derived"), { recursive: true, force: true });
+  const reset = await rebuildMemoryIndex({ workspaceRoot: fixture.root, config: fixture.cfg, now: NOW });
+  assert.equal(reset.complete, true);
+  assert.equal(reset.sourceTreeSha256, closedRebuild.sourceTreeSha256);
+  assert.deepEqual((await scanMemoryEvents({ store: rebuilt.store })).events.map((item) => hash(item.bytes)), rawBeforeReset);
+  assert.equal(captured.memoryId.startsWith("memory-"), true);
 });
