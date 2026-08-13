@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { lstat } from "node:fs/promises";
+import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 
-import { appendMemoryEvent, foldMemoryEvents, resolveMemoryStore, scanMemoryEvents } from "./lib/safe-memory-store.mjs";
+import { appendMemoryEvent, resolveMemoryStore } from "./lib/safe-memory-store.mjs";
 import { verifyCaptureClassificationReceipt } from "./lib/design-memory-capabilities.mjs";
 import { publishMemoryLogGeneration, rebuildMemoryIndex } from "./retrieve-design-memory.mjs";
 import { canonicalMemoryEventDocument, validateMemorySourceBindings } from "./validate-design-memory.mjs";
@@ -18,6 +18,14 @@ function dayAfter(iso, days) { const date = new Date(iso); date.setUTCDate(date.
 function sectionsFor(event) { return { "발견한 내용": event.summary, "적용 조건": event.applicability, "적용하면 안 되는 경우": event.exclusions, "근거": (event.sources ?? []).map((source) => `${source.artifact_id}/${source.locator}`).join("\n") || "interactive-user instruction" }; }
 function sourceList(event) { return Array.isArray(event.sources) ? event.sources.map((source) => ({ artifact_id: source?.artifact_id, locator: source?.locator, sha256: source?.sha256 })).sort((a, b) => Buffer.compare(Buffer.from(`${a.artifact_id}\0${a.locator}`, "utf8"), Buffer.from(`${b.artifact_id}\0${b.locator}`, "utf8"))) : []; }
 async function artifactDirectoriesExist(workspaceRoot, sources) { try { return (await Promise.all(sources.map(async (source) => { const stats = await lstat(path.join(workspaceRoot, source.artifact_id)); return !stats.isSymbolicLink() && stats.isDirectory(); }))).every(Boolean); } catch { return false; } }
+async function assertSafeExistingLogPath(storeRoot, sourceTreeSha256, logSha256) {
+  let current = storeRoot;
+  for (const segment of ["v1", "derived", "logs", sourceTreeSha256, logSha256]) {
+    current = path.join(current, segment); let stats;
+    try { stats = await lstat(current); } catch (error) { if (error?.code === "ENOENT") return; throw error; }
+    if (stats.isSymbolicLink() || !stats.isDirectory() || await realpath(current) !== current) throw new Error("Unsafe memory log path.");
+  }
+}
 
 export function memoryIdForEvent({ lane, kind, projectId, eventId } = {}) {
   const digest = createHash("sha256").update(`${projectId}\0${eventId}`, "utf8").digest("hex").slice(0, 16);
@@ -27,8 +35,14 @@ export function memoryIdForEvent({ lane, kind, projectId, eventId } = {}) {
 export async function publishDesignMemoryLog({ workspaceRoot, config, now }) {
   const rebuilt = await rebuildMemoryIndex({ workspaceRoot, config, now });
   if (!rebuilt.complete) return rebuilt.warnings ?? [];
-  const lines = rebuilt.scan.events.slice().sort((left, right) => left.event.effective_at.localeCompare(right.event.effective_at) || left.eventId.localeCompare(right.eventId)).map((item) => `- ${item.eventId} ${item.event.action} ${item.event.effective_at} ${item.record.status}`);
-  const published = await publishMemoryLogGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, logBytes: Buffer.from(`# design-memory\n${lines.join("\n")}\n`, "utf8") });
+  const entries = [
+    ...rebuilt.scan.events.map((item) => ({ time: item.event.effective_at, id: item.eventId, line: `${item.event.effective_at} event ${item.eventId} ${item.memoryId} ${item.event.action} ${item.record.status}` })),
+    ...rebuilt.scan.quarantines.map((item) => ({ time: item.recorded_at, id: item.markerId, line: `${item.recorded_at} quarantine ${item.markerId} ${item.memory_id} quarantine quarantined` })),
+  ].sort((left, right) => left.time.localeCompare(right.time) || Buffer.compare(Buffer.from(left.id, "utf8"), Buffer.from(right.id, "utf8")));
+  const lines = entries.map((item) => item.line);
+  const logBytes = Buffer.from(`# design-memory\n${lines.join("\n")}\n`, "utf8");
+  await assertSafeExistingLogPath(rebuilt.store.root, rebuilt.sourceTreeSha256, createHash("sha256").update(logBytes).digest("hex"));
+  const published = await publishMemoryLogGeneration({ store: rebuilt.store, sourceTreeSha256: rebuilt.sourceTreeSha256, logBytes });
   return published.complete ? [] : published.warnings ?? [];
 }
 

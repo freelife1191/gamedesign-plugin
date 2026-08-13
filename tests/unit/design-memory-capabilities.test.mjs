@@ -108,3 +108,9 @@ test("maintenance issuer rejects copied authority inputs and invalid resolution 
     (error) => error?.code === "memory.capability_request",
   );
 });
+
+test("sweep and quarantine receipts bind complete observed-head snapshots", () => {
+  const common = { projectId: "wind-island", scope: "project", actor: "reviewer", reason: "scheduled", now: new Date("2026-08-13T00:00:00Z") };
+  assert.doesNotThrow(() => issueMaintenanceHumanReceipt({ ...common, action: "sweep", observedParentEventIds: [] }));
+  assert.doesNotThrow(() => issueMaintenanceHumanReceipt({ ...common, action: "quarantine", memoryId: "memory-studio-design-lesson-abc", observedParentEventIds: [`mev1-${"a".repeat(64)}`, `mev1-${"b".repeat(64)}`] }));
+});

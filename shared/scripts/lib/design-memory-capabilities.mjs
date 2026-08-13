@@ -142,13 +142,17 @@ export function verifyCaptureClassificationReceipt(receipt, input = {}) {
 
 function maintenanceRequest(input) {
   const value = requestObject(input, new Set(["projectId", "scope", "action", "memoryId", "actor", "reason", "observedParentEventIds", "chosenParentEventId", "now"]));
-  if (!safeId(value.projectId) || !SCOPES.has(value.scope) || !HUMAN_ACTIONS.has(value.action) || !safeId(value.memoryId) || !safeString(value.actor) || !safeString(value.reason)) throw failure("memory.capability_request");
+  if (!safeId(value.projectId) || !SCOPES.has(value.scope) || !HUMAN_ACTIONS.has(value.action) || value.action !== "sweep" && !safeId(value.memoryId) || !safeString(value.actor) || !safeString(value.reason)) throw failure("memory.capability_request");
   const observed = detached(value.observedParentEventIds);
   if (!Array.isArray(observed) || observed.some((item) => !EVENT_ID.test(item))) throw failure("memory.capability_request");
   if (value.action === "resolution") {
     if (observed.length < 2 || !EVENT_ID.test(value.chosenParentEventId ?? "") || !observed.includes(value.chosenParentEventId)) throw failure("memory.capability_request");
+  } else if (value.action === "sweep") {
+    if (value.memoryId !== undefined || value.chosenParentEventId !== undefined) throw failure("memory.capability_request");
+  } else if (value.action === "quarantine") {
+    if (observed.length < 1 || value.chosenParentEventId !== undefined) throw failure("memory.capability_request");
   } else if (observed.length !== 1 || value.chosenParentEventId !== undefined) throw failure("memory.capability_request");
-  return detached({ projectId: value.projectId, scope: value.scope, action: value.action, memoryId: value.memoryId, actor: value.actor, reason: value.reason, observedParentEventIds: observed, ...(value.chosenParentEventId === undefined ? {} : { chosenParentEventId: value.chosenParentEventId }), effectiveAt: instant(value.now) });
+  return detached({ projectId: value.projectId, scope: value.scope, action: value.action, ...(value.memoryId === undefined ? {} : { memoryId: value.memoryId }), actor: value.actor, reason: value.reason, observedParentEventIds: observed, ...(value.chosenParentEventId === undefined ? {} : { chosenParentEventId: value.chosenParentEventId }), effectiveAt: instant(value.now) });
 }
 
 export function issueMaintenanceHumanReceipt(input = {}) {
