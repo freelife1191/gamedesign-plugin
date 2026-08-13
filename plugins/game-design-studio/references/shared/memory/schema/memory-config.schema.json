@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Game Design Memory Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "enabled",
+    "scope",
+    "maxItems",
+    "candidateTtlDays",
+    "gitMode"
+  ],
+  "properties": {
+    "enabled": {
+      "type": "boolean"
+    },
+    "scope": {
+      "enum": ["project", "workspace", "global"]
+    },
+    "maxItems": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "candidateTtlDays": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365
+    },
+    "gitMode": {
+      "enum": ["local", "tracked"]
+    }
+  }
+}

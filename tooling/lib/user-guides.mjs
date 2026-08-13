@@ -11,6 +11,11 @@ export const PRODUCT_IDS = Object.freeze([
   "game-design-career",
   "game-design-studio",
 ]);
+export const SOURCE_BOUND_MEMORY_SKILL_IDS = Object.freeze([
+  "capture-game-design-memory",
+  "maintain-game-design-memory",
+  "retrieve-approved-design-memory",
+]);
 
 const REQUIRED_CONFIGURATION_VALUES = [
   "prompt-only",
@@ -61,6 +66,7 @@ export async function collectProductInventory(repoRoot, productId) {
     ["svg-infographic", vendorSkill],
     ["archify", path.join(repoRoot, "shared/vendor/archify/archify/2.13.0/SKILL.md")],
     ["humanize-korean", path.join(repoRoot, "shared/vendor/im-not-ai/humanize-korean/v2.3.0/SKILL.md")],
+    ...SOURCE_BOUND_MEMORY_SKILL_IDS.map((id) => [id, path.join(repoRoot, "shared/memory/skills", id, "SKILL.md")]),
   ];
   for (const [, skillPath] of sharedSkills) await assertRegularFile(skillPath);
   const templateIds = await directoryIds(path.join(productRoot, "assets/templates"), "content.md");
@@ -1472,6 +1478,12 @@ export async function validateUserGuides({ repoRoot, requireComplete }) {
         if (skillId !== "README") {
           documentedSkillIds.get(productId).add(skillId);
           if (inventories.get(productId).skillIds.includes(skillId)) counts.skillGuides += 1;
+        }
+      }
+      if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "memory.md") {
+        for (const skillId of SOURCE_BOUND_MEMORY_SKILL_IDS) {
+          documentedSkillIds.get(relative[0]).add(skillId);
+          counts.skillGuides += 1;
         }
       }
       if (relative.length === 2 && PRODUCT_IDS.includes(relative[0]) && relative[1] === "templates.md") {

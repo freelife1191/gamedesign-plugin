@@ -14,7 +14,7 @@ import { sha256 } from "./lib/hash.mjs";
 import { artifactTreeIdentity, runMarketplaceProof, validateRouteReceipt } from "./lib/marketplace-proof-harness.mjs";
 
 const MARKETPLACE = "game-design-suite";
-export const PACKAGED_SKILL_COUNT = 18;
+export const PACKAGED_SKILL_COUNT = 21;
 export const CODEX_EXEC_TIMEOUT_MS = 300_000;
 const PRODUCTS = Object.freeze([
   {

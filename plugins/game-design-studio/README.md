@@ -2,7 +2,7 @@
 
 Game Design Studio는 게임 비전부터 시스템·콘텐츠·플레이어 경험·경제·LiveOps·프로덕션 설계, 전문 검토, 도식화, 문서 내보내기까지 하나의 검증 가능한 작업 흐름으로 연결하는 Codex 플러그인입니다. 그럴듯한 수치나 승인을 조작하지 않고 근거, 가정, 결정, 차단 조건을 Canonical Artifact에 남깁니다.
 
-플러그인은 제품 스킬 15개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 배포 스냅샷에는 구조 HTML 도식용 Archify, 한국어 문장 검토용 humanize-korean, Skillstead `svg-infographic` 0.9.0을 함께 번들해 설치 스킬이 18개입니다.
+플러그인은 제품 스킬 15개, 전문 역할 12개, Canonical Artifact 템플릿 15개와 문서·이미지·내보내기 계약을 하나의 독립 패키지에 포함합니다. 공통 스킬 6개는 Archify, humanize-korean, Skillstead `svg-infographic` 0.9.0과 프로젝트 기억 스킬 3개이며, 제품 스킬과 합친 설치 스킬은 21개입니다.
 
 ## 설치
 
@@ -78,11 +78,14 @@ codex plugin marketplace remove game-design-suite
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json
-├── skills/ (18개)
+├── skills/ (21개)
 │   ├── <15개 Studio 제품 스킬>/
 │   │   └── scripts/                 # 필요한 스킬에만 있는 product helper
 │   ├── archify/                      # vendored Archify 2.13.0
+│   ├── capture-game-design-memory/   # 검증한 교훈을 후보로 기록
 │   ├── humanize-korean/              # vendored im-not-ai
+│   ├── maintain-game-design-memory/  # 후보와 승인 이력 관리
+│   ├── retrieve-approved-design-memory/ # 승인된 관련 기억 조회
 │   └── svg-infographic/              # vendored Skillstead 0.9.0
 ├── agents/ (9개)                    # 일반 7개와 이미지 전문 2개의 이식 가능한 역할 프롬프트
 ├── hooks/
@@ -127,7 +130,7 @@ plugins/game-design-studio/
 
 제품 source overlay의 package-local Markdown 링크가 저장소 밖으로 나가지 않도록, 실제 실행 경로와 같은 `references/shared/...` 및 `assets/shared/...` 위치에 필요한 shared 계약의 byte-identical authoring mirror를 둡니다. Canonical shared 파일이 먼저 package target에 매핑되고 같은 바이트의 mirror는 build에서 중복 제거됩니다. mirror drift는 README 계약 테스트가 차단합니다.
 
-검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (18개)`는 제품 스킬 15개와 `skills/archify/`, `skills/humanize-korean/`, `skills/svg-infographic/`이고 `agents/ (12개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 자산입니다.
+검색 가능한 경로 계약은 `references/shared/knowledge/core/`, `references/shared/knowledge/trends/`, `references/source/docs/ (49개)`, `references/shared/export/schema/`, `references/shared/document-quality/`, `references/shared/image-assets/`, `references/shared/memory/`, `references/document-quality/template-profile-map.json`, `references/profiles/`, `assets/templates/ (15개)`, `assets/product-mark.svg`입니다. 최종 `skills/ (21개)`는 제품 스킬 15개와 공통 스킬 6개입니다. 공통 스킬은 `archify`, `humanize-korean`, `svg-infographic`, `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory`이며 `agents/ (12개)`는 네이티브 발견 여부와 무관하게 오케스트레이터가 전달할 수 있는 전문 역할 자산입니다.
 
 ## 설치된 top-level scripts
 
@@ -135,20 +138,35 @@ plugins/game-design-studio/
 | --- | --- |
 | `build-image-asset-plan.mjs` | profile과 artifact에서 image asset plan 생성 |
 | `capability-probe.mjs` | 선택 renderer capability 점검 |
+| `capture-design-memory.mjs` | 검증한 작업의 교훈을 검토 대기 후보로 기록 |
 | `compile-image-prompts.mjs` | Markdown/JSON prompt package 생성 |
 | `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
+| `load-memory-config.mjs` | 프로젝트 기억 설정을 안전한 값으로 읽기 |
+| `maintain-design-memory.mjs` | 후보·사람 결정·충돌·복구 관리 |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
+| `retrieve-design-memory.mjs` | 승인된 관련 기억과 적용·제외 기록 조회 |
 | `run-game-design-writing-polish.mjs` | writing specialist와 bundled humanize-korean을 거치는 bounded revision 실행 |
 | `run-image-asset-workflow.mjs` | image workflow composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-design-memory.mjs` | 기억 원본·상태 전이·출처 연결 검증 |
 | `validate-image-assets.mjs` | image manifest/lifecycle 검증 |
 | `validate-image-config.mjs` | redacted image configuration 검증 |
 | `validate-quality-profile.mjs` | closed Quality Profile 검증 |
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
 | `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
+
+이 표는 기존 16개와 기억 스크립트 5개를 합친 최상위 실행 스크립트 21개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+
+## 프로젝트 기억
+
+프로젝트 기억은 이전 플레이테스트와 검토에서 확인한 설계 교훈을 출처·범위·상태와 함께 로컬에 보관합니다. 현재 프로젝트를 뜻하는 `project`가 기본 범위이며 `.game-design/`을 자동으로 Git에 커밋하거나 원격 저장소로 보내지 않습니다. 설치·업데이트·제거도 이 폴더를 만들거나 지우지 않습니다.
+
+자동으로 남는 것은 검토 대기 후보뿐입니다. 후보를 자동 승인하지 않으며 이름이 확인된 사람이 출처와 적용 조건을 검증한 뒤 승인·거부·폐기합니다. 출처가 달라지거나 검토·만료 시점을 지난 기록, 충돌한 기록은 적용하지 않습니다. `GAME_DESIGN_MEMORY_ENABLED=false` 또는 “이번 작업에서는 이전 기억을 사용하지 마.”라는 요청으로 제외할 수 있고, 기억 기능에 문제가 생겨도 기존 Studio 작업은 기억 없이 계속합니다.
+
+사용법과 복구 절차는 저장소 checkout의 `guides/game-design-studio/memory.md`에서 확인합니다. 설치 패키지 안에서는 `retrieve-approved-design-memory`, `capture-game-design-memory`, `maintain-game-design-memory` 스킬을 직접 호출할 수 있습니다.
 
 ## 설치된 document-quality 경로
 

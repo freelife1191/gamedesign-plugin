@@ -17,7 +17,7 @@ test("each generated plugin passes a standalone byte- and process-verified smoke
   const report = await runIsolationSmoke({ repoRoot });
   assert.deepEqual(report.map(({ name }) => name), products);
   for (const result of report) {
-    assert.equal(result.skillCount, 18);
+    assert.equal(result.skillCount, 21);
     assert.deepEqual(result.vendorFiles, [
       { name: "skillstead", files: 55 },
       { name: "archify", files: 60 },

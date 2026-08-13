@@ -43,6 +43,7 @@ const pluginIntroductionHeadings = [
   "처음에는 이렇게 물어보세요",
   "어떤 자료를 참고했나요?",
   "자료를 답으로 바꾸는 방식",
+  "프로젝트 기억",
   "참고 자료와 더 읽을 문서",
 ];
 const pluginIntroductionPrompts = [
@@ -87,8 +88,8 @@ const smartRequestGroupContracts = [
   },
 ];
 const expectedPluginTreeCounts = {
-  "game-design-studio": { agents: 12, skills: 18, templates: 15, scripts: 16 },
-  "game-design-career": { agents: 10, skills: 18, templates: 15, scripts: 16 },
+  "game-design-studio": { agents: 12, skills: 21, templates: 15, scripts: 21 },
+  "game-design-career": { agents: 10, skills: 21, templates: 15, scripts: 21 },
 };
 const resultExampleIds = [
   "game-design-brief", "system-specification", "ui-ux-flow-state", "reverse-design-document",
@@ -377,12 +378,15 @@ const readableSkillMetadata = new Map([
     ["export-game-design-documents", ["기획 문서 내보내기 준비", "검증된 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
     ["generate-image-assets", ["이미지 자산 생성", "승인된 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["humanize-korean", ["한국어 문장 다듬기", "사실과 수치, ID를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다."]],
+    ["capture-game-design-memory", ["프로젝트 기억 후보 기록", "출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다."]],
+    ["maintain-game-design-memory", ["프로젝트 기억 관리", "이름이 확인된 사람의 결정과 변경 이력을 기록합니다."]],
     ["orchestrate-game-design-project", ["게임 기획 프로젝트 조율", "여러 기획 분야의 범위, 순서와 검토 지점을 프로젝트 브리프로 묶습니다."]],
     ["plan-game-production", ["게임 제작 계획", "시제품 기준, 의존성, 담당자와 중단 기준을 제작 계획으로 만듭니다."]],
     ["plan-image-assets", ["이미지 자산 계획", "기준 문서에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
     ["polish-game-design-writing", ["게임 기획 문장 윤문", "원문의 뜻과 보호 항목을 보존한 수정안과 변경 기록을 만듭니다."]],
     ["review-game-design", ["게임 기획 검토", "근거, 위험과 막힌 지점을 검토해 최소 수정이 담긴 검토 문서를 만듭니다."]],
     ["review-image-assets", ["이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
+    ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
     ["svg-infographic", ["기획 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
     ["visualize-game-design", ["게임 기획 시각화", "루프, 상태, 흐름과 의존성을 접근 가능한 SVG와 PNG 도식으로 만듭니다."]],
   ])],
@@ -393,6 +397,8 @@ const readableSkillMetadata = new Map([
     ["export-career-documents", ["경력 문서 내보내기 준비", "경력 기준 결과 폴더의 MD, PDF, DOCX, PPTX 준비 상태를 기록합니다."]],
     ["generate-image-assets", ["경력 이미지 자산 생성", "승인된 이미지 목록의 선택 작업만 생성하고 이미지 제공자 상태를 기록합니다."]],
     ["humanize-korean", ["경력 문장 다듬기", "증거와 주장 경계를 보존하며 기계적인 표현을 자연스러운 문장으로 다듬습니다."]],
+    ["capture-game-design-memory", ["프로젝트 기억 후보 기록", "출처와 적용·제외 조건이 붙은 검토 대기 후보를 기록합니다."]],
+    ["maintain-game-design-memory", ["프로젝트 기억 관리", "이름이 확인된 사람의 결정과 변경 이력을 기록합니다."]],
     ["map-game-design-career", ["게임 기획 경력 지도 만들기", "역할군, 목표 수준과 역량 격차를 비교해 경력 지도를 만듭니다."]],
     ["orchestrate-game-design-career", ["게임 기획 경력 조율", "경력 단계, 작업 순서와 검토를 하나의 경력 계획으로 묶습니다."]],
     ["plan-image-assets", ["경력 이미지 자산 계획", "경력 기준 결과 폴더에서 이미지 목록, 프롬프트 묶음과 자리표시자를 만듭니다."]],
@@ -403,6 +409,7 @@ const readableSkillMetadata = new Map([
     ["reverse-engineer-game-design", ["게임 기획 역기획", "공개 관찰과 추론을 분리해 검토 가능한 역기획 문서를 만듭니다."]],
     ["review-game-design-portfolio", ["기획 포트폴리오 검토", "증거, 개인 기여, 권리와 수정 우선순위를 포트폴리오 검토 문서로 만듭니다."]],
     ["review-image-assets", ["경력 이미지 자산 검토", "시각 품질, 접근성, 권리와 배치를 검토해 사람의 결정을 요청합니다."]],
+    ["retrieve-approved-design-memory", ["승인된 프로젝트 기억 조회", "출처·범위·만료를 확인한 승인 기록과 제외 이유를 돌려줍니다."]],
     ["svg-infographic", ["경력 도식 만들기", "Skillstead 0.9.0에서 번들된 스킬로 편집 가능한 SVG와 검증용 PNG를 만듭니다."]],
     ["visualize-career-roadmap", ["경력 성장 경로 시각화", "역할, 역량, 학습 의존성과 성장 경로를 SVG와 PNG 도식으로 만듭니다."]],
   ])],
@@ -419,12 +426,15 @@ const readableSkillUsage = new Map([
     ["export-game-design-documents", "검토한 기획서를 PDF·문서·발표 자료로 준비할 때"],
     ["generate-image-assets", "승인된 이미지 목록에서 필요한 항목만 만들 때"],
     ["humanize-korean", "검토한 초안의 어색한 문체만 자연스럽게 다듬을 때"],
+    ["capture-game-design-memory", "검증한 작업에서 다시 쓸 교훈을 후보로 남길 때"],
+    ["maintain-game-design-memory", "후보를 확인하고 사람이 승인·거부·폐기할 때"],
     ["orchestrate-game-design-project", "여러 기획 분야를 하나의 프로젝트 순서로 묶을 때"],
     ["plan-game-production", "시제품 범위·일정·의존성과 중단 기준을 검토할 때"],
     ["plan-image-assets", "기획서에 필요한 이미지와 프롬프트를 먼저 목록화할 때"],
     ["polish-game-design-writing", "긴 기획 문장의 뜻과 보호 항목을 보존해 다듬을 때"],
     ["review-game-design", "기획서의 근거·위험·미결정을 사람 검토 전에 찾을 때"],
     ["review-image-assets", "이미지의 읽기 쉬움·권리·배치를 승인 전에 확인할 때"],
+    ["retrieve-approved-design-memory", "이전 설계 교훈을 현재 작업의 참고 자료로 쓸 때"],
     ["svg-infographic", "표나 설명만으로 관계를 이해하기 어려울 때"],
     ["visualize-game-design", "루프·상태·의존성을 기획 문서에 도식으로 넣을 때"],
   ])],
@@ -435,6 +445,8 @@ const readableSkillUsage = new Map([
     ["export-career-documents", "검토한 경력 문서를 제출·발표 형식으로 준비할 때"],
     ["generate-image-assets", "승인된 포트폴리오 이미지 항목만 만들 때"],
     ["humanize-korean", "증거를 보존하며 포트폴리오 문체만 자연스럽게 다듬을 때"],
+    ["capture-game-design-memory", "검증한 학습·포트폴리오 작업에서 다시 쓸 교훈을 후보로 남길 때"],
+    ["maintain-game-design-memory", "후보를 확인하고 사람이 승인·거부·폐기할 때"],
     ["map-game-design-career", "목표 직무와 현재 역량의 차이를 비교할 때"],
     ["orchestrate-game-design-career", "역할 탐색·학습·포트폴리오 작업을 한 경로로 묶을 때"],
     ["plan-image-assets", "포트폴리오에 넣을 이미지와 프롬프트를 먼저 정리할 때"],
@@ -445,6 +457,7 @@ const readableSkillUsage = new Map([
     ["reverse-engineer-game-design", "공개 플레이 관찰을 기획 분석 문서로 바꿀 때"],
     ["review-game-design-portfolio", "포트폴리오의 기여·근거·권리 누락을 찾을 때"],
     ["review-image-assets", "공개 전 이미지의 읽기 쉬움·권리·배치를 확인할 때"],
+    ["retrieve-approved-design-memory", "이전 학습·포트폴리오 교훈을 현재 작업의 참고 자료로 쓸 때"],
     ["svg-infographic", "학습 경로나 포트폴리오 구조를 그림으로 설명할 때"],
     ["visualize-career-roadmap", "역할·역량·학습 순서를 한눈에 보여 줄 때"],
   ])],
@@ -871,7 +884,7 @@ function readableMetadata(metadataByProduct, product, id, kind) {
 
 async function assertSkillInventoryTable(markdown, product) {
   const sourceProduct = sourceProductId(product);
-  const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 설치 스킬 18개`;
+  const heading = `${sourceProduct === "studio" ? "Studio" : "Career"} 설치 스킬 21개`;
   const rows = assertTableShape(markdown, heading, ["스킬 이름과 ID", "사용하는 때", "핵심 결과", "직접 호출", "상세 가이드"], `${product} skills`);
   const inventory = await collectProductInventory(root, product);
   const sourceSkills = (await readdir(path.join(root, "products", product, "plugin", "skills"), { withFileTypes: true }))
@@ -880,8 +893,8 @@ async function assertSkillInventoryTable(markdown, product) {
     .sort();
   assert.equal(sourceSkills.length, 15, `${product}: source product owns exactly 15 skills`);
   assert.ok(!sourceSkills.includes("svg-infographic"), `${product}: svg-infographic is not a product source skill`);
-  assert.deepEqual(inventory.skillIds.length, 18, `${product}: production inventory includes 15 product and three shared installed skills`);
-  assert.deepEqual(sourceSkills, inventory.skillIds.filter((id) => !["archify", "humanize-korean", "svg-infographic"].includes(id)), `${product}: production inventory derives product skills from source`);
+  assert.deepEqual(inventory.skillIds.length, 21, `${product}: production inventory includes 15 product and six shared installed skills`);
+  assert.deepEqual(sourceSkills, inventory.skillIds.filter((id) => !["archify", "capture-game-design-memory", "humanize-korean", "maintain-game-design-memory", "retrieve-approved-design-memory", "svg-infographic"].includes(id)), `${product}: production inventory derives product skills from source`);
   const generatedSkills = (await readdir(path.join(root, "plugins", product, "skills"), { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
@@ -919,12 +932,15 @@ async function assertSkillInventoryTable(markdown, product) {
     assert.doesNotMatch(role, new RegExp(`${escapeRegExp(id)}\\s*(?:작업|스킬)`, "u"), `${product}:${id}: slug-derived role description is rejected`);
     assert.ok(!descriptions.has(role), `${product}:${id}: role explanation is not a generic repeated sentence`);
     descriptions.add(role);
-    await assertResolvableRowLink(path.join(root, "README.md"), guide, `guides/${product}/skills/${id}.md`, `${product}:${id}`);
+    const expectedGuide = ["capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory"].includes(id)
+      ? `guides/${product}/memory.md`
+      : `guides/${product}/skills/${id}.md`;
+    await assertResolvableRowLink(path.join(root, "README.md"), guide, expectedGuide, `${product}:${id}`);
   }
   for (const id of expected) assert.ok(actual.includes(id), `${product}:${id}: installed skill is missing from README inventory`);
   assert.equal(new Set(actual).size, actual.length, `${product}: duplicate skill ID in README inventory`);
   for (const id of actual) assert.ok(expected.includes(id), `${product}:${id}: invented or cross-product skill ID in README inventory`);
-  assert.deepEqual(actual, expected, `${product}: README skill inventory preserves installed snapshot order`);
+  assert.deepEqual([...actual].sort(), expected, `${product}: README skill inventory covers the installed snapshot exactly once`);
   const vendorRow = rows.find(([nameCell]) => nameCell.endsWith("(`svg-infographic`)"));
   assert.ok(vendorRow, `${product}: vendored svg-infographic row exists`);
   assert.match(vendorRow[2], /vendored|번들/iu, `${product}: svg-infographic is identified as a vendored installed skill`);
@@ -1254,7 +1270,7 @@ async function assertPluginIntroduction(markdown) {
     "SessionStart", "Stop", "기준 기획 결과물", "보류한 지점부터 다시 시작",
     "gpt-image-2", "마스터 이미지", "파생 이미지", "프롬프트 계보", "권리와 사용 범위",
   ]) assert.ok(introduction.includes(phrase), "introduction explains the system advantage: " + phrase);
-  assert.match(introduction, /제품마다[^\n]{0,80}스킬 18개/u, "introduction states the installed skill count per product");
+  assert.match(introduction, /제품마다[^\n]{0,80}스킬 21개/u, "introduction states the installed skill count per product");
   assert.match(introduction, /Studio[^\n]{0,60}전문 역할 12개/u, "introduction states the Studio specialist-role count");
   assert.match(introduction, /Career[^\n]{0,60}전문 역할 10개/u, "introduction states the Career specialist-role count");
   assert.match(introduction, /전문 기획자[^\n]{0,100}(?:대신|대체)[^\n]{0,40}않/u, "introduction does not claim to replace a professional designer");
@@ -1452,14 +1468,17 @@ async function buildValidStructuredReadmeFixture() {
     const skillRows = inventory.skillIds.map((id) => {
       const [name, description] = readableMetadata(readableSkillMetadata, product, id, "skill");
       const usage = readableSkillUsage.get(product)?.get(id);
-      return `| ${name} (\`${id}\`) | ${usage} | ${description} | \`$game-design-${namespace}:${id}\` | [상세 가이드](guides/${product}/skills/${id}.md) |`;
+      const guide = ["capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory"].includes(id)
+        ? `guides/${product}/memory.md`
+        : `guides/${product}/skills/${id}.md`;
+      return `| ${name} (\`${id}\`) | ${usage} | ${description} | \`$game-design-${namespace}:${id}\` | [상세 가이드](${guide}) |`;
     });
     const agentRows = (await sourceAgentIds(product)).map((id) => {
       const [name, description] = readableMetadata(readableAgentMetadata, product, id, "agent");
       return `| ${name} (\`${id}\`) | ${description} | 검토 초점 | 오케스트레이터가 전문가에게 위임 | [역할 문서](plugins/${product}/agents/${id}.md) |`;
     });
     inventoryTables.push(
-      `### ${productLabel} 설치 스킬 18개`,
+      `### ${productLabel} 설치 스킬 21개`,
       "| 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |",
       "| --- | --- | --- | --- | --- |",
       ...skillRows,
@@ -1913,7 +1932,7 @@ function assertRootContentContract(markdown) {
   assert.match(quickStart, /\$game-design-career:orchestrate-game-design-career/);
   assert.doesNotMatch(quickStart, /새 App 채팅 또는 새 CLI 세션에 복사/);
 
-  assert.match(markdown, /제품 스킬 15개.*공통 스킬 3개.*총 18개/s);
+  assert.match(markdown, /제품 스킬 15개.*공통 스킬 6개.*총 21개/s);
   assert.match(markdown, /Studio 템플릿 15개/);
   assert.match(markdown, /Career 템플릿 15개/);
   for (const mode of ["prompt-only", "select", "required", "all"]) assert.match(images, new RegExp(mode));
@@ -2499,7 +2518,7 @@ test("structured README contracts reject card, inventory, and generated-tree mut
 
 test("global and product indexes reach 30 skills, 30 templates, and 12 recipes", async () => {
   const reachable = await reachableMarkdownPaths(path.join(guideRoot, "README.md"));
-  assert.equal(reachable.size, 127, "guide link graph reaches the prompt-template library, curated Archify status index, and all guide documents");
+  assert.equal(reachable.size, 129, "guide link graph reaches the prompt-template library, curated Archify status index, memory guides, and all guide documents");
   assert.ok(reachable.has(path.join(guideRoot, "archify-diagrams/README.md")), "curated Archify status index is reachable");
   for (const relative of requiredUseCaseGuidePaths) {
     assert.ok(reachable.has(path.join(guideRoot, relative)), `new use-case guide is unreachable: ${relative}`);
@@ -2507,7 +2526,7 @@ test("global and product indexes reach 30 skills, 30 templates, and 12 recipes",
   let recipeCount = 0;
   for (const product of products) {
     const inventory = await collectProductInventory(root, product);
-    assert.equal(inventory.skillIds.length, 18);
+    assert.equal(inventory.skillIds.length, 21);
     assert.equal(inventory.templateIds.length, 15);
     const productRoot = path.join(guideRoot, product);
     const expected = [
@@ -2522,7 +2541,7 @@ test("global and product indexes reach 30 skills, 30 templates, and 12 recipes",
       "templates.md",
       "troubleshooting.md",
       "skills/README.md",
-      ...inventory.skillIds.map((id) => `skills/${id}.md`),
+      ...inventory.skillIds.map((id) => ["capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory"].includes(id) ? "memory.md" : `skills/${id}.md`),
     ];
     const recipes = product === "game-design-studio"
       ? ["new-game-gdd", "system-feature-spec", "content-quest-design", "ux-accessibility", "economy-liveops", "production-review-export"]

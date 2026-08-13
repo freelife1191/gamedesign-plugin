@@ -29,3 +29,7 @@ Record each applicable gate as `pending`, `blocked`, `approved`, or `not-applica
 - Verify that required artifact sections, evidence gaps, review findings, and minimum repairs are present.
 - Confirm that the canonical artifact is preserved when an optional reviewer, visualization tool, renderer, or export format is unavailable. Record a structured warning and resumable next step.
 - Approve handoff only when all applicable blockers are cleared by evidence or assigned to a named human decision owner.
+
+## Memory evidence boundary
+
+When applying a `project-fact` or `decision`, bind the original `artifact_id`, locator, and SHA in `evidence.yml` or `decisions/`; a memory ID is never the independent source of truth. A `design-lesson` is a question or proposal and creates no new decision state. A `style-preference` changes expression only: it never changes a fact, number, ID, or approval state. On source drift, exclude the memory and continue the existing workflow.

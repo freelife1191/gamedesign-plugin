@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "3bedc6c9d4c4eebb01c958dbd05a125cb7bcdf958281ace72a8c7a5783176b94",
+  "treeSha256": "3e3c58b3bdf706af66a1c026b3fd145f937ef65a4718f73d87101d8d9981169d",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -11,8 +11,8 @@
     },
     {
       "path": ".env.example",
-      "sha256": "4a97417a6073622a9097bdfed2e5ac3eb50d12dc44c27e320b8c0acaf8a10b76",
-      "size": 1940
+      "sha256": "dff68d154a530c0dbbb234676e9d90815c92a664c017fa5139c8d179a7fd9e18",
+      "size": 3060
     },
     {
       "path": "LICENSE",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "a573bb89af9d7fb22e6320b31daa137a1864cd26b197f667d1b58c144e907cde",
-      "size": 59740
+      "sha256": "43262d0cf0fc632be5e69f8500d7fe06edb8e19a0057863973d3ed4fc2277186",
+      "size": 62072
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -621,8 +621,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "0a878345c274720cf8052190735abf4a5d3379d70bf8bd6b039a8ee4a5e9962a",
-      "size": 13676
+      "sha256": "79a91be06bb1e98f5aaf9e47aacc07d75d861c17c559df9f88aa757637326750",
+      "size": 14795
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -916,8 +916,8 @@
     },
     {
       "path": "references/shared/image-assets/.env.example",
-      "sha256": "4a97417a6073622a9097bdfed2e5ac3eb50d12dc44c27e320b8c0acaf8a10b76",
-      "size": 1940
+      "sha256": "dff68d154a530c0dbbb234676e9d90815c92a664c017fa5139c8d179a7fd9e18",
+      "size": 3060
     },
     {
       "path": "references/shared/image-assets/prompt-patterns/base.json",
@@ -1043,6 +1043,56 @@
       "path": "references/shared/knowledge/trends/source-register.json",
       "sha256": "410f5e1b7445ff2587ed4a7b0b4a48250ddd7f4416226d4af1bf1933390a9d80",
       "size": 10335
+    },
+    {
+      "path": "references/shared/memory/references/memory-lifecycle.md",
+      "sha256": "36e53d38e65b40d6e4baa53b3cf35b3445ac11472170cbf4ea0bbeca8657b3d5",
+      "size": 1787
+    },
+    {
+      "path": "references/shared/memory/references/memory-policy.md",
+      "sha256": "5ab9d295cbfae9f585af3c0a3a3db7ba5107a9a2cec5056e73b74e5e25038a1d",
+      "size": 1726
+    },
+    {
+      "path": "references/shared/memory/schema/memory-config.schema.json",
+      "sha256": "7af4cf7cd6706e5e26a787c904bc0d21401ee759231ffa407e84329a3ccbcae9",
+      "size": 656
+    },
+    {
+      "path": "references/shared/memory/schema/memory-event.schema.json",
+      "sha256": "ba15d217c93ab9e40f4085e0e17a3578c6774f41ee84811135b5cdb7f3ef5dc9",
+      "size": 2302
+    },
+    {
+      "path": "references/shared/memory/schema/memory-index.schema.json",
+      "sha256": "53517aef23d2643faa460666ad180b813d24efaf58160854ed745513cedee8d7",
+      "size": 1923
+    },
+    {
+      "path": "references/shared/memory/schema/memory-receipt.schema.json",
+      "sha256": "f1e0f2b64e27defac6a17d42a45edd2c9001e92569080209514c830a8eeb34a6",
+      "size": 3144
+    },
+    {
+      "path": "references/shared/memory/schema/memory-record.schema.json",
+      "sha256": "7691d74187be3b785739c45ec22a780ace2d8405fc55f1a9b5afc79a2bd18c1c",
+      "size": 3379
+    },
+    {
+      "path": "references/shared/memory/templates/index.md",
+      "sha256": "963a25ff44cb16ff4c6ff3bee0b1cbc7cf5e3cb74db6b0731bdee4797f9dce89",
+      "size": 123
+    },
+    {
+      "path": "references/shared/memory/templates/log.md",
+      "sha256": "29fad7ef662b49ae6ae40b35500627e381006c1c3d85074530df87c0967e2616",
+      "size": 141
+    },
+    {
+      "path": "references/shared/memory/templates/memory-record.md",
+      "sha256": "18556f22f269a3d143558d453190d39749365ef830e388f0ae4905d4ddd35e36",
+      "size": 583
     },
     {
       "path": "references/shared/responsible-design/README.md",
@@ -1335,6 +1385,11 @@
       "size": 19947
     },
     {
+      "path": "scripts/capture-design-memory.mjs",
+      "sha256": "92f1dfa9df033e252d15afa8bc78c720d0381cde8b197f893a303cf58c51085e",
+      "size": 8250
+    },
+    {
       "path": "scripts/compile-image-prompts.mjs",
       "sha256": "d077395a4d14f81543e2f7779972e0b872240674389613e2c71e6c0af137e365",
       "size": 9482
@@ -1353,6 +1408,11 @@
       "path": "scripts/lib/complete-png-validation.mjs",
       "sha256": "609f74e472047c2d87375d2308d8cb51269579f4f2baf40b736565b0e59a9436",
       "size": 8586
+    },
+    {
+      "path": "scripts/lib/design-memory-capabilities.mjs",
+      "sha256": "5ab893352e341a7793680645550cb8251c7cbbb565fd4300258320dd514da27a",
+      "size": 9895
     },
     {
       "path": "scripts/lib/image-file-validation.mjs",
@@ -1375,6 +1435,16 @@
       "size": 5954
     },
     {
+      "path": "scripts/lib/load-workspace-env.mjs",
+      "sha256": "94dfc8d3156ef6f106903471207a91785f1dfd10efa979f2d421823e23e2d7d4",
+      "size": 8054
+    },
+    {
+      "path": "scripts/lib/memory-schema-evaluator.mjs",
+      "sha256": "6dfb89f282d4a5258a23b87fcf529cb3055df7604c435aeb9b97f01299b52734",
+      "size": 6755
+    },
+    {
       "path": "scripts/lib/rfc3339.mjs",
       "sha256": "cd521aefa8afc6bfd4a1e5acc4e02effbd15615c4e8b5d57ed4f7b13a534d263",
       "size": 949
@@ -1385,9 +1455,24 @@
       "size": 6057
     },
     {
+      "path": "scripts/lib/safe-memory-store.mjs",
+      "sha256": "08f0d33dbbbd73da4ad8dad6f71f948cc00e1564074be7d604973a2afc38f3bc",
+      "size": 40421
+    },
+    {
       "path": "scripts/lib/skillstead-svg-evidence.mjs",
       "sha256": "2bd63e14655e6741c875ddb058e65f9ae6af444e0951608ccec58c8200c2a36c",
       "size": 4286
+    },
+    {
+      "path": "scripts/load-memory-config.mjs",
+      "sha256": "e1e9aca9b962fcafa091fe2d621bf35c468fea839fe979fa89fd7e55fae9e2f4",
+      "size": 5432
+    },
+    {
+      "path": "scripts/maintain-design-memory.mjs",
+      "sha256": "f114b6f98b9629bd8c9fdaacbd1e3c2427dae29b1ae7dfcd96301a28a767995c",
+      "size": 13282
     },
     {
       "path": "scripts/quality-source-anchors.mjs",
@@ -1398,6 +1483,11 @@
       "path": "scripts/resolve-quality-profile.mjs",
       "sha256": "44f40aabf64cd9886503a0068e66360adc78cba55c0b607ed1ed2f006d7a800f",
       "size": 71907
+    },
+    {
+      "path": "scripts/retrieve-design-memory.mjs",
+      "sha256": "24ee84698d985446175a93fabdc90ec13ab3ff1b73b26125c3b3a72b8a6b2743",
+      "size": 49463
     },
     {
       "path": "scripts/run-game-design-writing-polish.mjs",
@@ -1416,8 +1506,13 @@
     },
     {
       "path": "scripts/validate-artifact.mjs",
-      "sha256": "27d71aa55d379a3a659d61adafa85b2485a18cc633e5e3ead14399e549743865",
-      "size": 25986
+      "sha256": "98f2a55b00db70478ea5d9562f69d5954acefbbeba196ad96e792c39f3938ca5",
+      "size": 26063
+    },
+    {
+      "path": "scripts/validate-design-memory.mjs",
+      "sha256": "5055806760cc4af8eed7cf188763b5ee8509097aade04651d09799913d687159",
+      "size": 33458
     },
     {
       "path": "scripts/validate-image-assets.mjs",
@@ -1426,8 +1521,8 @@
     },
     {
       "path": "scripts/validate-image-config.mjs",
-      "sha256": "2d176e335690cebfea4120ee390fd4dd674929f0f3e2abd01d9c4abcce3503b3",
-      "size": 10902
+      "sha256": "8278612bb17f325a85b1cb28aeb3b9addc94f32566c088820a0679871586b4c3",
+      "size": 4375
     },
     {
       "path": "scripts/validate-quality-profile.mjs",
@@ -1755,6 +1850,11 @@
       "size": 1178
     },
     {
+      "path": "skills/capture-game-design-memory/SKILL.md",
+      "sha256": "2b80229b06f9558ee152fd069cf86f7d97934e59d7e12681cac3f20e89eb4c59",
+      "size": 1227
+    },
+    {
       "path": "skills/define-game-vision/SKILL.md",
       "sha256": "97755be3cd92a56d8f95559d3b11324d8f3b2a7ef68bea3e0467fa0995d3a28a",
       "size": 3502
@@ -1915,9 +2015,14 @@
       "size": 8010
     },
     {
+      "path": "skills/maintain-game-design-memory/SKILL.md",
+      "sha256": "dd853dbebd860c0c7d86d5a174f934e7050b5450aaae8b78b50fb9271d4915c5",
+      "size": 1114
+    },
+    {
       "path": "skills/orchestrate-game-design-project/SKILL.md",
-      "sha256": "040d5f97bc375bb03137f7fa87fe789bd020030fce6c59545ccf3acc979a842e",
-      "size": 4589
+      "sha256": "7c83de9b012ffa7e460e6e7e0c80cbbf43bcad62ad7d5dec929e9b401ea6d5be",
+      "size": 4075
     },
     {
       "path": "skills/orchestrate-game-design-project/agents/openai.yaml",
@@ -1926,18 +2031,18 @@
     },
     {
       "path": "skills/orchestrate-game-design-project/references/completion-gates.md",
-      "sha256": "ed24d950dbc4a3179a174bffa5b5bb509477a5d0063ea3bfe47a9ce7055b66cc",
-      "size": 4339
+      "sha256": "2e9993aaf9911bd0c68983bc6c75bc1142495f3f41db5e211476040a355f1059",
+      "size": 4807
     },
     {
       "path": "skills/orchestrate-game-design-project/references/intake.md",
-      "sha256": "e1c41ded41117749d4afbbdb9d42a8d4d3a517ba9fcef062694d3e7ceab0c3a5",
-      "size": 1570
+      "sha256": "075fd79ac3067271cb94f38dd65b84d8f28deca07ae722ad7128eb04c64e9733",
+      "size": 2196
     },
     {
       "path": "skills/orchestrate-game-design-project/references/workflow.md",
-      "sha256": "37fc56e31ff4632d018dedd73a482cd5965f1770dfd9edebe428722e63817a3f",
-      "size": 3676
+      "sha256": "cab9634a66d54b191e214ce89bb554405ffe17cb1ad4ff18e98f0d2a6716ff03",
+      "size": 4354
     },
     {
       "path": "skills/orchestrate-game-design-project/scripts/check-source-document-redistribution.mjs",
@@ -1988,6 +2093,11 @@
       "path": "skills/polish-game-design-writing/agents/openai.yaml",
       "sha256": "fb796d8b39742b61e34f8970fc56a879a03be3b106f6759cd1284d11ae9e83eb",
       "size": 256
+    },
+    {
+      "path": "skills/retrieve-approved-design-memory/SKILL.md",
+      "sha256": "f7f0bd89f0dac94d8cb1689e07dd03287e25406c02900f6f59dadc4e2ba6c389",
+      "size": 1777
     },
     {
       "path": "skills/review-game-design/SKILL.md",

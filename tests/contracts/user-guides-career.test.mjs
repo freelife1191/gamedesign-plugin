@@ -4,10 +4,13 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
+import { collectProductInventory, SOURCE_BOUND_MEMORY_SKILL_IDS } from "../../tooling/lib/user-guides.mjs";
 import { applyImageReviewTransition } from "../../shared/scripts/validate-image-assets.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
+const sourceBoundMemorySkillIds = new Set(SOURCE_BOUND_MEMORY_SKILL_IDS);
+const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId));
+const workbenchLink = (skillId) => `[\`${skillId}\`](${sourceBoundMemorySkillIds.has(skillId) ? "../memory.md" : `../skills/${skillId}.md`})`;
 const requiredHeadings = [
   "목적과 최종 산출물",
   "사용할 때",
@@ -487,9 +490,9 @@ function assertSkillContract(markdown, skillId) {
 
 test("Career documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-career");
-  assert.equal(inventory.skillIds.length, 18);
+  assert.equal(inventory.skillIds.length, 21);
 
-  for (const skillId of inventory.skillIds) {
+  for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(
       path.join(root, "guides/game-design-career/skills", skillId + ".md"),
       "utf8",
@@ -699,24 +702,25 @@ test("Career skill workbench inventories every installed skill once by lane", as
     "면접·성장 lane": ["practice-game-design-interview", "plan-junior-growth"],
     "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "archify", "visualize-career-roadmap"],
     "export lane": ["export-career-documents"],
+    "프로젝트 기억 lane": [...SOURCE_BOUND_MEMORY_SKILL_IDS],
   };
   const observed = [];
   for (const [heading, skills] of Object.entries(expectedGroups)) {
     const section = extractSection(workbench, heading);
     for (const skill of skills) {
-      const link = "[`" + skill + "`](../skills/" + skill + ".md)";
+      const link = workbenchLink(skill);
       assert.ok(section.includes(link), `${heading}: ${skill}`);
       observed.push(skill);
     }
   }
   assert.deepEqual(observed.sort(), inventory.skillIds, "workbench exact skill inventory once");
   for (const skill of inventory.skillIds) {
-    const link = "[`" + skill + "`](../skills/" + skill + ".md)";
+    const link = workbenchLink(skill);
     assert.equal(workbench.split(link).length - 1, 1, `${skill}: no missing or duplicate workbench entry`);
   }
   const assertWorkbenchInventory = (candidate) => {
     for (const skill of inventory.skillIds) {
-      const link = "[`" + skill + "`](../skills/" + skill + ".md)";
+      const link = workbenchLink(skill);
       assert.equal(candidate.split(link).length - 1, 1, `${skill}: workbench inventory mutation`);
     }
   };
@@ -806,7 +810,7 @@ test("Career skill handoffs are derived from canonical routes and source-backed 
     for (const target of scenarioTargets) assert.ok(scoped.includes(target), `${skillId}: missing scenario target ${target}`);
   }
 
-  for (const skillId of inventory.skillIds) {
+  for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(path.join(root, "guides/game-design-career/skills", `${skillId}.md`), "utf8");
     const documentedIds = extractSection(markdown, "이미지·도식화 조건").match(/\b(?:skillstead-[a-z0-9-]+|[a-z0-9-]+-image)\b/g) ?? [];
     const mappedProfileIds = routing.routes.filter((route) => route.skill === skillId)
@@ -1127,17 +1131,18 @@ test("Career entry indexes bind exploration links and representative case tables
   assert.deepEqual(details.rows, [
     ["[Career 활용 사례 인덱스](use-cases/README.md)", "직무·대상·직접 스킬 중 현재 목표의 출발점을 고름"],
     ["[Career FAQ](faq.md)", "요청문·읽는 순서·재개 경로"],
+    ["[프로젝트 기억](memory.md)", "승인된 학습·포트폴리오 교훈의 로컬 보관과 후보 관리"],
     ["[공통 결과물 카탈로그](../use-cases/output-catalog.md)", "원본·선택 자산·파생 형식과 사람 검토"],
   ], "Career FAQ and output catalog remain separate detail rows");
-  for (const target of ["use-cases/README.md", "faq.md", "../use-cases/output-catalog.md"]) {
+  for (const target of ["use-cases/README.md", "faq.md", "memory.md", "../use-cases/output-catalog.md"]) {
     const resolved = path.resolve(root, "guides/game-design-career", target);
     await lstat(resolved);
   }
   for (const summary of [
-    `${careerCases.length}개 사례`,
-    `${inventory.skillIds.length}개 직접 스킬`,
-    `${routing.faqContracts.length}개 FAQ`,
-    `${diagramPairs}개 도식`,
+    `사례 ${careerCases.length}개`,
+    `설치 스킬 ${inventory.skillIds.length}개`,
+    `FAQ ${routing.faqContracts.length}개`,
+    `도식 ${diagramPairs}쌍`,
   ]) assert.ok(guide.includes(summary), `Career catalog relationship: ${summary}`);
 
   assert.match(skillIndex, /여러 Career 단계와 산출물.*orchestrate-game-design-career/su, "orchestrator boundary");

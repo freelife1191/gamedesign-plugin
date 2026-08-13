@@ -50,4 +50,12 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `export-game-design-documents` | `$game-design-studio:export-game-design-documents` — approved format handoff | blocker·rights가 남을 때 | canonical artifact·formats·audience | export manifest·format jobs | pending→downstream; unavailable→resume | [직접 호출](../skills/export-game-design-documents.md#직접-호출-활용-export-game-design-documents) |
 
+## 프로젝트 기억
+
+| 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `retrieve-approved-design-memory` | `$game-design-studio:retrieve-approved-design-memory` — 승인된 프로젝트 교훈 조회 | 이번 요청에서 기억을 쓰지 않기로 했을 때 | project ID·현재 요청·설정 | 적용·제외 기록 | 선택된 Studio 작업 | [프로젝트 기억](../memory.md) |
+| `capture-game-design-memory` | `$game-design-studio:capture-game-design-memory` — 근거 있는 교훈 후보 제안 | 추측·일회성 문구·민감 정보만 있을 때 | 검증한 결과·출처·분류 receipt | candidate 기록 | 사람 확인·관리 | [프로젝트 기억](../memory.md) |
+| `maintain-game-design-memory` | `$game-design-studio:maintain-game-design-memory` — 후보 확인·승인·거부·폐기 | 이름이 확인된 사람의 판단이 없을 때 | 후보 ID·출처·사람의 결정 | 상태 이력·충돌 안내 | Studio 작업 재개 | [프로젝트 기억](../memory.md) |
+
 이미지 mode는 `prompt-only`, `select`, `required`, `all`의 기존 artifact-local 선택을 그대로 따릅니다. `prompt-only`는 prompt·placeholder만 보존하고 생성 없음입니다. `select`는 사용자가 제공한 ordered exact stable IDs로 finite generation을 선택합니다. host adapter가 immutable selection receipt를 공급합니다. `required`와 `all`은 declared finite generation만 허용합니다. 이 generation selection은 승인 결정이 아닙니다. named human decision은 `concept-draft → document-approved → production-candidate` lifecycle promotion에만 필요하며, 각 승격의 reviewer·scope·evidence를 대체하지 않습니다. SVG는 Skillstead wrapper의 source mapping·lint·renderer fallback 경계를 우회하지 않습니다.

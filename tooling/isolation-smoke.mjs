@@ -28,12 +28,14 @@ const EXACT_SKILL_IDS = Object.freeze({
     "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "generate-image-assets", "humanize-korean",
     "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing",
     "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets",
+    "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
     "svg-infographic", "archify", "visualize-career-roadmap",
   ].sort()),
   "game-design-studio": Object.freeze([
     "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems",
     "design-player-experience", "export-game-design-documents", "generate-image-assets", "humanize-korean", "orchestrate-game-design-project",
     "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "svg-infographic", "archify", "visualize-game-design",
+    "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
   ].sort()),
 });
 const EXPECTED_HOOKS = Object.freeze({
