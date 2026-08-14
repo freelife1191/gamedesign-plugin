@@ -29,6 +29,7 @@ import {
 } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { planImageAssetWorkflow } from "../../shared/scripts/run-image-asset-workflow.mjs";
 import { readSecureReferenceFile } from "../../shared/scripts/lib/image-reference-loader.mjs";
+import { cutsceneApprovalBinding, issueCutsceneHumanApproval, validateHostCutsceneApproval } from "../../shared/scripts/lib/cutscene-generation-approval.mjs";
 
 const SHA = "a".repeat(64);
 const WAVES = ["style-master", "reference-masters", "keyframes", "storyboard"];
@@ -290,6 +291,61 @@ const validContinuityReview = (overrides = {}) => ({
 });
 
 const currentPlan = () => validCutscenePlan();
+
+test("approval binding derives plan and prompt hashes from the closed generation-ready package", () => {
+  const plan = validCutscenePlan();
+  const planSha256 = cutsceneDocumentSha256(plan);
+  const promptPackage = {
+    kind: "generation-ready",
+    cutsceneId: plan.cutsceneId,
+    planSha256,
+    dagSha256: SHA,
+    references: [{ assetId: "cutscene-escape-style-master-01", sha256: SHA }],
+    prompts: [],
+  };
+  promptPackage.promptPackageSha256 = cutsceneDocumentSha256(promptPackage);
+  const estimate = {
+    sha256: "b".repeat(64),
+    waveId: "style-master",
+    assetIds: ["cutscene-escape-style-master-01"],
+    planSha256: "0".repeat(64),
+    pricingSnapshotSha256: "c".repeat(64),
+    retryReserve: 1,
+    minimumUsd: 0,
+    expectedUsd: 0,
+    maximumUsd: 1,
+  };
+  const binding = cutsceneApprovalBinding({
+    plan: { plan, promptPackage, sha256: "0".repeat(64), promptPackageSha256: "0".repeat(64), referenceBindings: [] },
+    pricingSnapshot: { sha256: "c".repeat(64) },
+    estimate,
+  });
+  assert.equal(binding.planSha256, planSha256);
+  assert.equal(binding.promptPackageSha256, promptPackage.promptPackageSha256);
+});
+
+test("a changed closed plan is stale even when a caller wrapper retains its old digest", () => {
+  const plan = validCutscenePlan();
+  const promptPackage = {
+    kind: "generation-ready",
+    cutsceneId: plan.cutsceneId,
+    planSha256: cutsceneDocumentSha256(plan),
+    dagSha256: SHA,
+    references: [{ assetId: "cutscene-escape-style-master-01", sha256: SHA }],
+    prompts: [],
+  };
+  promptPackage.promptPackageSha256 = cutsceneDocumentSha256(promptPackage);
+  const estimate = { sha256: "b".repeat(64), waveId: "style-master", assetIds: ["cutscene-escape-style-master-01"], planSha256: "0".repeat(64), pricingSnapshotSha256: "c".repeat(64), retryReserve: 1, minimumUsd: 0, expectedUsd: 0, maximumUsd: 1 };
+  const pricingSnapshot = { sha256: "c".repeat(64), retrievedAt: "2026-08-13T00:00:00.000Z" };
+  const authority = { plan, promptPackage, sha256: "0".repeat(64), promptPackageSha256: "0".repeat(64), referenceBindings: [] };
+  const binding = cutsceneApprovalBinding({ plan: authority, pricingSnapshot, estimate });
+  const event = { eventId: "approve-style-01", actor: "Kim", reviewer: "Kim", decidedAt: "2026-08-13T00:00:00.000Z" };
+  const issued = issueCutsceneHumanApproval({ ...event, decision: "approved", context: binding });
+  const changedPlan = structuredClone(plan);
+  changedPlan.beats[0].beatId = "BEAT-02";
+  changedPlan.shots[0].beatId = "BEAT-02";
+  assert.throws(() => validateHostCutsceneApproval({ receipt: issued.receipt, capability: issued.capability, approvalEvent: event, plan: { ...authority, plan: changedPlan }, pricingSnapshot, estimate, now: "2026-08-13T00:01:00.000Z" }), { code: "cutscene.approval_binding_stale", path: "/planSha256" });
+});
 
 function completedPlan() {
   const plan = validCutscenePlan();
