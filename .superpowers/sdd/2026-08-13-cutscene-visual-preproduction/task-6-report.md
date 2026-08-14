@@ -156,3 +156,41 @@ workflow task before that broader suite can be green.
 
 - Task 4/5/6 plus Studio/Career source matrix → 240 passing, 0 failing,
   including temporary Studio/Career shared runtime/schema parity.
+
+## Fix round 4 — hostile public envelope boundary
+
+### Baseline and RED
+
+- The predecessor snapshot protected the nested `plan`, but both exported
+  entrypoints still observed their outer input first: initial dispatch read
+  `input.plan`, and retry destructured/rest-spread raw input. An outer getter
+  or Proxy could therefore write an artifact marker before the guard; symbols,
+  non-enumerable fields, and accessors were not closed at this public boundary.
+- The forward RED contracts reproduced those side effects for initial and retry
+  and showed that deleted and `undefined` predecessor completions did not both
+  return the stable missing-completion diagnostic.
+
+### Forward result
+
+- Both public APIs now accept one raw argument and first copy only an explicit
+  allowlist of enumerable data descriptors after `types.isProxy` rejection.
+  Symbols, non-enumerable fields, accessors, unknown keys, and Proxy input fail
+  `cutscene.hostile_input` at stable paths without evaluating a getter. Opaque
+  callback, capability, and receipt values remain data values and are never
+  cloned or invoked by this envelope step.
+- Explicit retry now uses a private boolean path instead of destructuring or
+  spreading raw input. Revalidation continues to use the same safe envelope,
+  current plan snapshot, approval, cost, journal, and predecessor checks.
+- Missing predecessor completion is normalized for deleted, `undefined`, and
+  `null` values at `/completion`; wrong kind and asset-set mismatch retain their
+  precise `/completion/kind` and `/completion/assetIds` diagnostics.
+
+### Fix validation
+
+- New real-filesystem public tests cover initial and retry plan getters,
+  transparent Proxy traps, symbol, non-enumerable, and accessor envelopes:
+  each returns `cutscene.hostile_input`, has zero provider calls/traps/journal
+  writes, and preserves files, directories, symlinks, types, and bytes.
+- Focused Task 4/5/6 plus Studio/Career source matrix → 240 passing, 0 failing,
+  including normal callback/authority, initial/retry, and temporary
+  Studio/Career shared runtime/schema byte-parity coverage. No live calls.

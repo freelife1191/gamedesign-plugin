@@ -637,10 +637,50 @@ test("predecessor guard snapshots hostile plan structures before reflection, pro
   ]);
 });
 
+test("public cutscene entrypoints reject hostile outer envelopes before property access or I/O", async (t) => {
+  const outcomes = [];
+  for (const entry of [
+    ["initial", (input) => runApprovedCutsceneImageWave(input)],
+    ["retry", (input) => retryCutsceneFailedAssets(input)],
+  ]) {
+    for (const name of ["plan-getter", "proxy", "symbol", "non-enumerable", "accessor"]) {
+      const artifactRoot = await mkdtemp(path.join(tmpdir(), `cutscene-outer-hostile-${entry[0]}-${name}-`));
+      t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+      await mkdir(path.join(artifactRoot, "empty"));
+      await writeFile(path.join(artifactRoot, "keep.txt"), "unchanged\n");
+      await symlink("keep.txt", path.join(artifactRoot, "keep-link"));
+      const fixture = stageFixture({ ceilings: [0.4] });
+      let providerCalls = 0;
+      const input = { ...fixture, artifactRoot, workspaceRoot: artifactRoot, failedAssetIds: [...fixture.selectedAssetIds], fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); } };
+      const marker = path.join(artifactRoot, "outer-getter-write.txt");
+      let traps = 0;
+      let hostileInput = input;
+      if (name === "plan-getter") Object.defineProperty(input, "plan", { enumerable: true, get() { writeFileSync(marker, "must-not-write\n"); return fixture.plan; } });
+      if (name === "symbol") input[Symbol("hostile")] = true;
+      if (name === "non-enumerable") Object.defineProperty(input, "hidden", { value: true });
+      if (name === "accessor") Object.defineProperty(input, "receipt", { enumerable: true, get() { writeFileSync(marker, "must-not-write\n"); return fixture.receipt; } });
+      if (name === "proxy") hostileInput = new Proxy(input, {
+        get(target, key, receiver) { traps += 1; writeFileSync(marker, "must-not-write\n"); return Reflect.get(target, key, receiver); },
+        getOwnPropertyDescriptor(target, key) { traps += 1; writeFileSync(marker, "must-not-write\n"); return Reflect.getOwnPropertyDescriptor(target, key); },
+        ownKeys(target) { traps += 1; writeFileSync(marker, "must-not-write\n"); return Reflect.ownKeys(target); },
+      });
+      const before = await artifactSnapshot(artifactRoot);
+      let error;
+      try { await entry[1](hostileInput); } catch (caught) { error = caught; }
+      outcomes.push({ entry: entry[0], name, code: error?.code, path: error?.path, providerCalls, traps, markerExists: await lstat(marker).then(() => true).catch(() => false), unchanged: JSON.stringify(await artifactSnapshot(artifactRoot)) === JSON.stringify(before) });
+    }
+  }
+  assert.deepEqual(outcomes, [
+    ...["initial", "retry"].flatMap((entry) => [["plan-getter", "/plan"], ["proxy", ""], ["symbol", "/Symbol(hostile)"], ["non-enumerable", "/hidden"], ["accessor", "/receipt"]].map(([name, pathValue]) => ({ entry, name, code: "cutscene.hostile_input", path: pathValue, providerCalls: 0, traps: 0, markerExists: false, unchanged: true }))),
+  ]);
+});
+
 test("predecessor completion diagnostics distinguish missing, wrong-kind, and stale asset-set evidence", async (t) => {
   const outcomes = [];
   for (const [name, mutate, expected] of [
-    ["missing", (wave) => { wave.completion = null; }, { code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion" }],
+    ["deleted", (wave) => { delete wave.completion; }, { code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion" }],
+    ["undefined", (wave) => { wave.completion = undefined; }, { code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion" }],
+    ["null", (wave) => { wave.completion = null; }, { code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion" }],
     ["wrong-kind", (wave) => { wave.completion = { kind: "generation-ready", references: [] }; }, { code: "cutscene.predecessor_completion_kind_invalid", path: "/cutsceneWorkflow/waves/1/completion/kind" }],
     ["asset-set", (wave) => { wave.completion = { kind: "completed", assetIds: [wave.assetIds[0]] }; }, { code: "cutscene.predecessor_completion_asset_set_mismatch", path: "/cutsceneWorkflow/waves/1/completion/assetIds" }],
   ]) {
@@ -662,7 +702,9 @@ test("predecessor completion diagnostics distinguish missing, wrong-kind, and st
     outcomes.push({ name, code: error?.code, path: error?.path, providerCalls, unchanged: JSON.stringify(await artifactSnapshot(artifactRoot)) === JSON.stringify(before) });
   }
   assert.deepEqual(outcomes, [
-    { name: "missing", code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion", providerCalls: 0, unchanged: true },
+    { name: "deleted", code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion", providerCalls: 0, unchanged: true },
+    { name: "undefined", code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion", providerCalls: 0, unchanged: true },
+    { name: "null", code: "cutscene.predecessor_completion_missing", path: "/cutsceneWorkflow/waves/1/completion", providerCalls: 0, unchanged: true },
     { name: "wrong-kind", code: "cutscene.predecessor_completion_kind_invalid", path: "/cutsceneWorkflow/waves/1/completion/kind", providerCalls: 0, unchanged: true },
     { name: "asset-set", code: "cutscene.predecessor_completion_asset_set_mismatch", path: "/cutsceneWorkflow/waves/1/completion/assetIds", providerCalls: 0, unchanged: true },
   ]);

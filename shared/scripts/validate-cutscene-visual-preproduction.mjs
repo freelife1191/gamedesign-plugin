@@ -56,7 +56,7 @@ function safeData(value, seen = new Set()) {
 export function snapshotCutscenePlainData(value) {
   const hostile = (path) => { throw Object.assign(new TypeError("Cutscene input must be plain data."), { code: "cutscene.hostile_input", path }); };
   const copy = (current, path, stack = new Set()) => {
-    if (current === null || typeof current === "boolean" || typeof current === "string") return current;
+    if (current === undefined || current === null || typeof current === "boolean" || typeof current === "string") return current;
     if (typeof current === "number") return Number.isFinite(current) ? current : hostile(path);
     if (typeof current !== "object" || types.isProxy(current) || stack.has(current)) hostile(path);
     let keys; let descriptors; let prototype;
