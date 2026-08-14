@@ -21,27 +21,34 @@ function selectedWave(plan, waveId, selectedAssetIds, allowSubset = false) {
   return wave;
 }
 
-function assertAttemptState(state, estimate, receipt, attemptOrdinal) {
+function assertAttemptState(state, estimate, receipt) {
   if (!state || !Number.isInteger(state.failedAttempts) || state.failedAttempts < 0) throw coded("cutscene.attempt_state_invalid", "/attemptState/failedAttempts");
   if (!Number.isFinite(state.accumulatedUsd) || state.accumulatedUsd < 0) throw coded("cutscene.attempt_state_invalid", "/attemptState/accumulatedUsd");
-  if (state.failedAttempts + attemptOrdinal - 1 > estimate.retryReserve) throw coded("cutscene.retry_reserve_exhausted", "/cutsceneWorkflow/waves/0/attempts/1");
+  if (state.failedAttempts > estimate.retryReserve) throw coded("cutscene.retry_reserve_exhausted", "/cutsceneWorkflow/waves/0/attempts/1");
   if (state.accumulatedUsd + estimate.maximumUsd > receipt.maximumApprovedUsd) throw coded("cutscene.maximum_possible_cost_exceeded", "/cutsceneWorkflow/waves/0/estimate/maximumUsd");
 }
 
 async function receiptLedger(artifactRoot, waveId, assetIds) {
-  const result = { failedAttempts: 0, accumulatedUsd: 0, failedAssetIds: new Set() };
+  const result = { failedAttempts: 0, accumulatedUsd: 0, unavailableAttempts: 0, failedAssetIds: new Set(), latest: new Map() };
   const base = path.join(artifactRoot, "cutscene", "usage-receipts", waveId);
   for (const assetId of assetIds) {
     const directory = path.join(base, assetId);
     const names = await readdir(directory).catch((error) => error?.code === "ENOENT" ? [] : Promise.reject(error));
+    const ordinals = new Set();
     for (const name of names) {
-      if (!requestId.test(name.replace(/\.json$/u, "")) || !name.endsWith(".json")) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}`);
+      if (!name.endsWith(".json")) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}`);
       let record;
       try { record = JSON.parse(await readFile(path.join(directory, name), "utf8")); } catch { throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}/${name}`); }
-      if (!record || record.waveId !== waveId || record.assetId !== assetId || !Number.isInteger(record.attemptOrdinal) || !["success", "provider-failure", "transport-failure"].includes(record.outcome)) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}/${name}`);
-      if (record.outcome !== "success") { result.failedAttempts += 1; result.failedAssetIds.add(assetId); }
+      if (!record || record.schemaVersion !== 1 || record.waveId !== waveId || record.assetId !== assetId || !requestId.test(record.attemptId ?? "") || !Number.isInteger(record.attemptOrdinal) || record.attemptOrdinal < 1 || !["success", "provider-failure", "transport-failure"].includes(record.outcome) || !requestId.test(record.providerRequestId ?? "")) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}/${name}`);
+      if (name !== `${record.attemptId}-${record.providerRequestId}.json` || ordinals.has(record.attemptOrdinal)) throw coded("cutscene.usage_receipt_corrupt", `/cutscene/usage-receipts/${waveId}/${assetId}/${name}`);
+      ordinals.add(record.attemptOrdinal);
+      const prior = result.latest.get(assetId);
+      if (!prior || prior.attemptOrdinal < record.attemptOrdinal) result.latest.set(assetId, record);
       if (record.actualCost?.status === "known" && Number.isFinite(record.actualCost.usd)) result.accumulatedUsd += record.actualCost.usd;
+      else result.unavailableAttempts += 1;
     }
+    const latest = result.latest.get(assetId);
+    if (latest && latest.outcome !== "success") { result.failedAttempts += 1; result.failedAssetIds.add(assetId); }
   }
   return result;
 }
@@ -100,7 +107,8 @@ export async function runApprovedCutsceneImageWave(input = {}) {
     const ledger = await receiptLedger(input.artifactRoot, input.waveId, wave.assetIds);
     if (!callerStateValidated && input.attemptState && (input.attemptState.failedAttempts !== ledger.failedAttempts || input.attemptState.accumulatedUsd !== ledger.accumulatedUsd)) throw coded("cutscene.attempt_state_stale", "/attemptState");
     callerStateValidated = true;
-    assertAttemptState(ledger, input.estimate, approved, attempt_ordinal);
+    const perAttemptWorstCase = input.estimate.maximumUsd / (wave.assetIds.length * (input.estimate.retryReserve + 1));
+    assertAttemptState({ failedAttempts: ledger.failedAttempts, accumulatedUsd: ledger.accumulatedUsd + ledger.unavailableAttempts * perAttemptWorstCase }, input.estimate, approved);
     const key = `${asset_id}:${attempt_ordinal}`;
     if (!attempts.has(key)) attempts.set(key, Object.freeze({ waveId: input.waveId, assetId: asset_id, attemptId: randomUUID(), attemptOrdinal: attempt_ordinal }));
     return attempts.get(key);
