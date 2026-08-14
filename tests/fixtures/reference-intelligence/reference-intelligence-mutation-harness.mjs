@@ -15,8 +15,8 @@ const hostilePath = path.join(root, "tests/fixtures/design-memory/process-tree-h
 const mutations = {
   "evidence-tier": {
     target: "shared/scripts/lib/reference-evidence.mjs",
-    anchor: 'if (safeClaim.causal && available.every(({ tier }) => tier === "discovery")) {',
-    replacement: 'if (false && safeClaim.causal && available.every(({ tier }) => tier === "discovery")) {',
+    anchor: 'if (safeClaim.causal && positive.every(({ tier }) => tier === "discovery")) {',
+    replacement: 'if (false && safeClaim.causal && positive.every(({ tier }) => tier === "discovery")) {',
     testId: "discovery-causal-claim",
     message: "RI-MUT-EVIDENCE-TIER",
     expected: false,

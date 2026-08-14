@@ -367,15 +367,17 @@ test("Studio and Career projections preserve claim and evidence IDs", async (t) 
     ]);
     const current = { schemaVersion: 1, scope: "shared", version: 1, terms: [
       glossaryTerm({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["new"] }),
+      glossaryTerm({ termId: "TERM-HISTORICAL-NEW", koPreferred: "신규 용어", enPreferred: "Historical New", state: "approved", approver: "Lead", decisionIds: ["historical-new"] }),
+      glossaryTerm({ termId: "TERM-HISTORICAL-OLD", koPreferred: "이전 용어", enPreferred: "Historical Old", state: "deprecated", approver: "Lead", decisionIds: ["historical-old"], replacementTermId: "TERM-HISTORICAL-NEW" }),
       glossaryTerm({ state: "approved", approver: "Lead", decisionIds: ["old"] }),
-    ] };
+    ].sort((left, right) => left.termId.localeCompare(right.termId, "en")) };
     const issued = capabilityApi.issueGlossaryHumanDecision({ action: "deprecate", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "deprecate-player-power", glossarySha256: sha256Canonical(current), glossaryVersion: 1, changedAt });
     const effective = glossaryApi.mergeGameDesignGlossaries({ sharedGlossary: glossaryApi.applyGlossaryDecision({ glossary: current, ...issued }), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
     const receipt = glossaryApi.createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
-    const documents = [{ documentId: "combat-v1", text: "플레이어 파워" }];
+    const documents = [{ documentId: "combat-v1", text: "플레이어 파워. 이전 용어." }];
     await glossaryApi.writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents });
     const impact = JSON.parse(await readFile(path.join(root, "reference-intelligence/glossary/impact-list.json"), "utf8"));
-    assert.deepEqual(impact.items, glossaryApi.analyzeGlossaryImpact({ documents, effectiveGlossary: effective }));
+    assert.deepEqual(impact.items, glossaryApi.analyzeGlossaryImpact({ documents, effectiveGlossary: effective, transition: { termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER" } }));
     assert.deepEqual(impact.items, [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement", reason: "approved-replacement" }]);
     assert.equal(impact.glossarySha256, sha256Canonical(effective));
     assert.equal(impact.decisionEventId, issued.receipt.eventId);

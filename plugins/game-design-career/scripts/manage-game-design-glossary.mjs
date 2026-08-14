@@ -66,9 +66,15 @@ export function extractGlossaryCandidates({ documents, effectiveGlossary } = {})
 }
 
 /** Reports only stable document and term IDs; source text is never persisted in an impact artifact. */
-export function analyzeGlossaryImpact({ documents, effectiveGlossary } = {}) {
+export function analyzeGlossaryImpact({ documents, effectiveGlossary, transition } = {}) {
   const glossary = copy(effectiveGlossary); if (!valid(glossary) || glossary.scope !== "effective" || !Array.isArray(documents)) fail();
-  const affected = glossary.terms.filter((item) => item.state === "deprecated" && item.replacementTermId !== null);
+  let affected = glossary.terms.filter((item) => item.state === "deprecated" && item.replacementTermId !== null);
+  if (transition !== undefined) {
+    const scoped = copy(transition);
+    if (!scoped || Object.keys(scoped).sort().join("\0") !== "replacementTermId\0termIds" || !termId.test(scoped.replacementTermId) || !Array.isArray(scoped.termIds) || scoped.termIds.length === 0 || scoped.termIds.some((termIdValue, index) => !termId.test(termIdValue) || index > 0 && compare(scoped.termIds[index - 1], termIdValue) >= 0)) fail();
+    const selected = new Set(scoped.termIds); affected = affected.filter((item) => selected.has(item.termId) && item.replacementTermId === scoped.replacementTermId);
+    if (affected.length !== scoped.termIds.length) fail();
+  }
   const results = [];
   for (const document of documents) {
     if (!id.test(document?.documentId ?? "") || !canonicalText(document?.text, 2 * 1024 * 1024)) fail();
@@ -123,7 +129,8 @@ export async function writeGameDesignGlossaryArtifacts({ artifactRoot, glossary,
   const selected = new Set(liveDecision.termIds); const termsById = new Map(value.terms.map((item) => [item.termId, item])); const replacement = liveDecision.replacementTermId === null ? null : termsById.get(liveDecision.replacementTermId);
   if (liveDecision.action === "approve" ? [...selected].some((termIdValue) => termsById.get(termIdValue)?.state !== "approved") : !replacement || replacement.state !== "approved" || [...selected].some((termIdValue) => { const item = termsById.get(termIdValue); return !item || item.state !== "deprecated" || item.replacementTermId !== replacement.termId; })) fail();
   const safeFindings = validateFindings(findings); const safeDecision = copy(liveDecision); if (!persistedSafe(safeDecision)) fail();
-  const computedImpact = analyzeGlossaryImpact({ documents, effectiveGlossary: value });
+  const transition = liveDecision.action === "approve" ? null : { termIds: liveDecision.termIds, replacementTermId: liveDecision.replacementTermId };
+  const computedImpact = transition === null ? [] : analyzeGlossaryImpact({ documents, effectiveGlossary: value, transition });
   const safeImpact = { schemaVersion: 1, glossaryVersion: value.version, glossarySha256: sha256Canonical(value), decisionEventId: liveDecision.eventId, decisionSha256: sha256Canonical(liveDecision), items: computedImpact };
   const decisionPath = `reference-intelligence/decisions/glossary-${decision.eventId}.json`; const impactPath = `${glossaryDirectory}/impact-list.json`;
   const outputs = new Map([[fixedPaths[0], `${canonicalJson(value)}\n`], [fixedPaths[1], markdown("Game Design Glossary (Korean)", value.terms, "koPreferred")], [fixedPaths[2], markdown("Game Design Glossary (English)", value.terms, "enPreferred")], [fixedPaths[3], `# Terminology findings\n\n${canonicalJson(safeFindings)}\n`], [fixedPaths[4], `${canonicalJson(receipt)}\n`], [impactPath, `${canonicalJson(safeImpact)}\n`], [decisionPath, `${canonicalJson(safeDecision)}\n`]]);

@@ -561,6 +561,29 @@ test("claim support closes shape, certainty escalation, causal omission, and dis
   }), { ok: true, code: "supported" });
 });
 
+test("counterexample and conflicting-only evidence cannot support a claim or promote analysis", async () => {
+  const positive = registryEvidence({ evidenceId: "ev-positive", systemIds: ["system-reveal-loop"] });
+  const counterexample = registryEvidence({ evidenceId: "ev-counterexample", systemIds: ["system-reveal-loop"], conflictState: "conflicting", counterexampleOf: "ev-positive" });
+  const conflicting = registryEvidence({ evidenceId: "ev-conflicting", systemIds: ["system-reveal-loop"], conflictState: "conflicting" });
+  const records = registerReferenceEvidence({ records: [positive, counterexample, conflicting] });
+  const evidenceById = new Map(records.map((record) => [record.evidenceId, record]));
+  for (const evidenceId of ["ev-counterexample", "ev-conflicting"]) assert.deepEqual(
+    validateClaimAgainstEvidence({ claim: { claimId: `claim-${evidenceId}`, systemIds: ["system-reveal-loop"], evidenceIds: [evidenceId], kind: "observation", category: "general", causal: true }, evidenceById }),
+    { ok: false, code: "evidence_nonpositive" },
+  );
+  const catalog = await loadBundledReferenceCatalog();
+  const input = await analysisInputFixture({ evidence: [
+    { ...analysisEvidenceFixture()[0], evidenceId: "ev-alpha-conflicting", conflictState: "conflicting" },
+    { ...analysisEvidenceFixture()[0], evidenceId: "ev-beta-conflicting", referenceId: "ref-beta", contextId: "ctx-beta-v1", conflictState: "conflicting" },
+  ] });
+  input.atlas.atlas = catalog.atlas;
+  const analysis = buildReferenceAnalysis(input);
+  assert.equal(analysis.deepDives[0].claimKind, "unknown");
+  assert.equal(analysis.comparison[0].state, "hold");
+  assert.equal(analysis.transferDecisions[0].decision, "hold");
+  assert.equal(analysis.verificationQueue.some(({ verificationId }) => verificationId === "verify-system-core-play"), true);
+});
+
 test("claim evidence rejects Map subclasses and proxies without exposing thrown data", () => {
   class DerivedMap extends Map {}
   const claim = { claimId: "claim-map", kind: "observation", category: "general", causal: false, evidenceIds: ["ev-map"], systemIds: ["system-reveal-loop"] };

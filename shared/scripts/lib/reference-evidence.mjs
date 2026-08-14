@@ -14,9 +14,14 @@ const claimKinds = new Set(evidenceClaimKinds);
 const claimCategories = new Set(["general", "monetization", "retention", "performance"]);
 export const claimKindCertainty = Object.freeze({ observation: 3, inference: 2, hypothesis: 1, unknown: 0 });
 
+/** Only independent, non-conflicting available evidence can establish positive support. */
+export function isPositiveEvidence(record) {
+  return record?.availability === "available" && record.conflictState === "none" && record.counterexampleOf === null;
+}
+
 /** Derives the strongest allowed persisted kind: the least-certain available source wins. */
 export function deriveAvailableClaimKind(records) {
-  const available = records.filter((record) => record?.availability === "available" && record.conflictState === "none" && record.counterexampleOf === null);
+  const available = records.filter(isPositiveEvidence);
   if (available.length === 0) return "unknown";
   return available.reduce((lowest, record) => claimKindCertainty[record.claimKind] < claimKindCertainty[lowest] ? record.claimKind : lowest, available[0].claimKind);
 }
@@ -220,10 +225,12 @@ export function validateClaimAgainstEvidence(input = {}) {
   }
   const available = evidence.filter(({ availability }) => availability === "available");
   if (available.length === 0) return { ok: false, code: "evidence_unavailable" };
-  const coveredSystems = new Set(available.flatMap(({ systemIds }) => systemIds));
+  const positive = available.filter(isPositiveEvidence);
+  if (positive.length === 0) return { ok: false, code: "evidence_nonpositive" };
+  const coveredSystems = new Set(positive.flatMap(({ systemIds }) => systemIds));
   if (safeClaim.systemIds.some((systemId) => !coveredSystems.has(systemId))) return { ok: false, code: "evidence_system_mismatch" };
-  if (available.some(({ claimKind }) => claimKindCertainty[claimKind] < claimKindCertainty[safeClaim.kind])) return { ok: false, code: "unsupported_claim_kind" };
-  if (safeClaim.causal && available.every(({ tier }) => tier === "discovery")) {
+  if (positive.some(({ claimKind }) => claimKindCertainty[claimKind] < claimKindCertainty[safeClaim.kind])) return { ok: false, code: "unsupported_claim_kind" };
+  if (safeClaim.causal && positive.every(({ tier }) => tier === "discovery")) {
     return { ok: false, code: "unsupported_causal_claim" };
   }
   return { ok: true, code: "supported" };

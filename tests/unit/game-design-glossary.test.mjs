@@ -141,6 +141,24 @@ test("impact publication recomputes a receipt-bound deprecated replacement resul
   assert.equal(JSON.stringify(stored).includes("플레이어 파워"), false);
 });
 
+test("impact publication excludes unrelated historical deprecated transitions", async (t) => {
+  const current = glossary({ terms: [
+    term({ termId: "TERM-COMBAT-POWER", koPreferred: "전투 파워", enPreferred: "Combat Power", state: "approved", approver: "Lead", decisionIds: ["new-player"] }),
+    term({ termId: "TERM-HISTORICAL-NEW", koPreferred: "신규 용어", enPreferred: "Historical New", state: "approved", approver: "Lead", decisionIds: ["new-history"] }),
+    term({ termId: "TERM-HISTORICAL-OLD", koPreferred: "이전 용어", enPreferred: "Historical Old", state: "deprecated", approver: "Lead", decisionIds: ["old-history"], replacementTermId: "TERM-HISTORICAL-NEW" }),
+    term({ state: "approved", approver: "Lead", decisionIds: ["old-player"] }),
+  ].sort((left, right) => left.termId.localeCompare(right.termId, "en")) });
+  const issued = issueGlossaryHumanDecision({ action: "deprecate", termIds: ["TERM-PLAYER-POWER"], replacementTermId: "TERM-COMBAT-POWER", actor: "Lead", eventId: "deprecate-player-power", glossarySha256: sha256Canonical(current), glossaryVersion: current.version, changedAt });
+  const effective = mergeGameDesignGlossaries({ sharedGlossary: applyGlossaryDecision({ glossary: current, ...issued }), projectOverlay: { schemaVersion: 1, scope: "project-overlay", version: 1, terms: [] } });
+  const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-COMBAT-POWER"] });
+  const root = await mkdtemp(join(tmpdir(), "glossary-impact-transition-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await writeGameDesignGlossaryArtifacts({ artifactRoot: root, glossary: effective, receipt, findings: { ok: true, blocking: [], warnings: [] }, decision: { eventId: issued.receipt.eventId, receipt: issued.receipt, capability: issued.capability }, documents: [{ documentId: "combat-v1", text: "플레이어 파워. 이전 용어." }] });
+  const stored = JSON.parse(await readFile(join(root, "reference-intelligence", "glossary", "impact-list.json"), "utf8"));
+  assert.deepEqual(stored.items, [{ documentId: "combat-v1", termIds: ["TERM-PLAYER-POWER"], status: "deprecated-replacement", reason: "approved-replacement" }]);
+  assert.equal(JSON.stringify(stored).includes("이전 용어"), false);
+});
+
 test("snapshot binds exact document, glossary hash/version, sorted approved term ids", () => {
   const effective = approvedEffective(); const receipt = createGlossarySnapshot({ documentId: "combat-v1", effectiveGlossary: effective, termIds: ["TERM-PLAYER-POWER"] });
   assert.equal(validateGlossaryReceipt(receipt, { glossary: effective }).ok, true);

@@ -1,6 +1,6 @@
 import { canonicalJson, sha256Canonical } from "./lib/reference-intelligence-canonical.mjs";
 import { evidenceSourceTypes, tierForSourceType } from "./lib/reference-evidence-contract.mjs";
-import { deriveAvailableClaimKind, validateClaimAgainstEvidence } from "./lib/reference-evidence.mjs";
+import { deriveAvailableClaimKind, isPositiveEvidence, validateClaimAgainstEvidence } from "./lib/reference-evidence.mjs";
 import { validateReferenceSystemMaps } from "./lib/reference-system-maps.mjs";
 import { comparePriorityEntries, deriveComparisonPresentation, evidenceVerificationId, systemVerificationId, systemVerificationQuestion } from "./lib/reference-analysis-derivations.mjs";
 import { evaluateGameDesignGlossarySchema } from "./lib/game-design-glossary-schema-evaluator.mjs";
@@ -210,7 +210,7 @@ export function validateReferenceAnalysis(value) {
     for (const { collectionName, collection, systemField } of [{ collectionName: "deepDives", collection: value?.deepDives, systemField: "systemId" }, { collectionName: "comparison", collection: value?.comparison, systemField: "sourceSystemId" }, { collectionName: "transferDecisions", collection: value?.transferDecisions, systemField: "sourceSystemId" }]) for (const [index, record] of (collection ?? []).entries()) {
       const linked = (record?.evidenceIds ?? []).map((evidenceId) => evidenceById.get(evidenceId)); const systemId = systemField ? record?.[systemField] : undefined;
       if (linked.some((evidence) => !evidence || systemId && !evidence.systemIds.includes(systemId))) { issue(`/${collectionName}/${index}/evidenceIds`, "reference.dangling"); continue; }
-      const available = linked.filter((evidence) => evidence.availability === "available" && evidence.conflictState === "none" && evidence.counterexampleOf === null); const expectedReferences = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compareUtf8); const expectedContexts = [...new Set(available.map(({ contextId }) => contextId))].sort(compareUtf8);
+      const available = linked.filter(isPositiveEvidence); const expectedReferences = [...new Set(available.map(({ referenceId }) => referenceId))].sort(compareUtf8); const expectedContexts = [...new Set(available.map(({ contextId }) => contextId))].sort(compareUtf8);
       if ((record?.referenceIds ?? []).join("\0") !== expectedReferences.join("\0") || (record?.contextIds ?? []).join("\0") !== expectedContexts.join("\0") || record?.coverageCount !== expectedReferences.length) issue(`/${collectionName}/${index}/coverageCount`, "coverage.invalid");
     }
     const priorities = Array.isArray(value?.priority) ? value.priority : [];

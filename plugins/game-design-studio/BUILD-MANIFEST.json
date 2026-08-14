@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "8731e5cb23b2b06eb015628051328cff52d24c2e9372d7e149d8a6f91c4255dd",
+  "treeSha256": "58e22e105f488a5239f796c4ea86d6f8ac442e268c7c57d424c63936d4b9d456",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -1496,8 +1496,8 @@
     },
     {
       "path": "scripts/analyze-game-design-references.mjs",
-      "sha256": "ce0f7664863fd8afd53525a46faf99f378c7ec27d993cb4e8550dc398f72c66c",
-      "size": 23979
+      "sha256": "32499470208c09febdf0fe209289fe8f2255d8aaebe8604563297d280b4d1089",
+      "size": 23697
     },
     {
       "path": "scripts/build-image-asset-plan.mjs",
@@ -1591,8 +1591,8 @@
     },
     {
       "path": "scripts/lib/reference-evidence.mjs",
-      "sha256": "1edbc8556b782bf4e89bdea29712b9ef7a8112c6f07a332ee1e13f2204e05df1",
-      "size": 12558
+      "sha256": "f4420f27630e145bca6c54a099d8842a7627f0664be850bb3b32d52ade64124b",
+      "size": 12850
     },
     {
       "path": "scripts/lib/reference-intelligence-canonical.mjs",
@@ -1641,8 +1641,8 @@
     },
     {
       "path": "scripts/manage-game-design-glossary.mjs",
-      "sha256": "2838919adf1bf83aaf2db806ec5a91fe0708f1e422dd9fbf8122e2ad98bb2227",
-      "size": 21643
+      "sha256": "972a2264573321ecbea48414d7522af0b5b94c0b7fd82c8f6f45c50723359983",
+      "size": 22491
     },
     {
       "path": "scripts/quality-source-anchors.mjs",
@@ -1706,8 +1706,8 @@
     },
     {
       "path": "scripts/validate-reference-intelligence.mjs",
-      "sha256": "e31cb8eba7eb41620e9db95750db88c9a87f6a71562fe427ebf28ed90da3ef02",
-      "size": 35299
+      "sha256": "7dc5abdcdb36d0adcd183452dc6d1cf81a8c1c398c3f3d69fa8ab14a017dc665",
+      "size": 35211
     },
     {
       "path": "scripts/validate-reference-preset.mjs",
