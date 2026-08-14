@@ -44,7 +44,7 @@ function assertNoRepeatedGenericReasonTemplates(entries) {
 }
 
 function assertSuiteCatalogCardinality(catalog) {
-  assert.equal(catalog.entries.length, 733, "catalog must retain exactly 733 entries");
+  assert.equal(catalog.entries.length, 744, "catalog must retain exactly 744 entries");
   assert.equal(
     catalog.entries.filter((entry) => entry.source_document === "README.md").length,
     1,
@@ -211,7 +211,7 @@ test("production inventory has bounded diagrams and explicit package exclusions"
   for (const entry of catalog.entries.filter((item) => item.source_document.startsWith("plugins/"))) {
     assert.equal(entry.decision, "excluded");
     if (Object.hasOwn(entry, "origin_source")) {
-      assert.match(entry.decision_reason, /공유 build mapping/u);
+      assert.match(entry.decision_reason, /(?:build mapping|products\/game-design-(?:studio|career))/u);
     } else {
       assert.match(entry.decision_reason, /products\/game-design-(?:studio|career)/u);
     }
@@ -254,13 +254,15 @@ test("production exclusions retain exact package classes and source-specific evi
 test("production shared package mirrors retain structured build origins", async () => {
   const catalog = await loadArchifyCatalog({ repoRoot });
   const origins = catalog.entries.filter((entry) => Object.hasOwn(entry, "origin_source"));
-  assert.equal(origins.length, 76, "only shared-source package mirrors declare an origin_source");
+  assert.equal(origins.length, 89, "shared and product-source package mirrors declare an origin_source");
 
   const mappings = new Map([
     ["document-quality", ["shared/document-quality", "references/shared/document-quality"]],
     ["archify", ["shared/vendor/archify/archify/2.13.0", "skills/archify"]],
     ["im-not-ai", ["shared/vendor/im-not-ai/humanize-korean/v2.3.0", "skills/humanize-korean"]],
     ["reference-intelligence", ["shared/reference-intelligence", "references/shared/reference-intelligence"]],
+    ["image-assets", ["shared/image-assets", "references/shared/image-assets"]],
+    ["studio-cutscene-skill", ["products/game-design-studio/plugin/skills/design-cutscene-visual-preproduction", "skills/design-cutscene-visual-preproduction"]],
   ]);
   for (const entry of origins) {
     assert.equal(entry.exclusion_code, "excluded-package-mirror", entry.id);
@@ -288,6 +290,34 @@ test("production shared package mirrors retain structured build origins", async 
     assert.equal(sourceStats.isFile() && !sourceStats.isSymbolicLink(), true, `${entry.id}: origin is a regular non-symlink file`);
     assert.equal(mirrorStats.isFile() && !mirrorStats.isSymbolicLink(), true, `${entry.id}: mirror is a regular non-symlink file`);
     assert.deepEqual(sourceBytes, mirrorBytes, `${entry.id}: mirror remains byte-identical to its origin`);
+  }
+});
+
+test("cutscene visual-preproduction source and generated mirrors retain exact catalog records", async () => {
+  const catalog = await loadArchifyCatalog({ repoRoot });
+  const expected = new Map([
+    ["guides/game-design-studio/cutscene-visual-preproduction.md", undefined],
+    ["guides/game-design-studio/skills/design-cutscene-visual-preproduction.md", undefined],
+    ["guides/prompt-templates/studio/design-cutscene-visual-preproduction.md", undefined],
+    ["products/game-design-studio/plugin/skills/design-cutscene-visual-preproduction/SKILL.md", undefined],
+    ["plugins/game-design-studio/skills/design-cutscene-visual-preproduction/SKILL.md", "studio-cutscene-skill"],
+  ]);
+  for (const product of ["game-design-studio", "game-design-career"]) {
+    for (const relative of [
+      "references/shared/image-assets/references/cutscene-generation-policy.md",
+      "references/shared/image-assets/templates/cutscene/cutscene-brief.md",
+      "references/shared/image-assets/templates/cutscene/generation-guide.md",
+    ]) expected.set(`plugins/${product}/${relative}`, "image-assets");
+  }
+  for (const [sourceDocument, buildMapping] of expected) {
+    const entry = catalog.entries.find((candidate) => candidate.source_document === sourceDocument);
+    assert.ok(entry, `${sourceDocument}: catalog entry exists`);
+    assert.equal(entry.decision, "excluded", `${sourceDocument}: no duplicate diagram selection`);
+    if (buildMapping === undefined) {
+      assert.equal(Object.hasOwn(entry, "origin_source"), false, `${sourceDocument}: source surface is not a generated mirror`);
+    } else {
+      assert.equal(entry.origin_source?.build_mapping, buildMapping, `${sourceDocument}: exact build mapping`);
+    }
   }
 });
 
@@ -421,10 +451,10 @@ test("Suite catalog cardinality rejects an appended record or duplicate README r
   const catalog = await loadArchifyCatalog({ repoRoot });
   const appended = structuredClone(catalog);
   appended.entries.push({ ...appended.entries[0], id: "unexpected-712th-record", source_document: "guides/README.md" });
-  assert.throws(() => assertSuiteCatalogCardinality(appended), /733/u);
+  assert.throws(() => assertSuiteCatalogCardinality(appended), /744/u);
   const duplicateReadme = structuredClone(catalog);
   duplicateReadme.entries.push({ ...duplicateReadme.entries[0], id: "duplicate-readme-record" });
-  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /733/u);
+  assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /744/u);
   duplicateReadme.entries.pop();
   duplicateReadme.entries[1] = { ...duplicateReadme.entries[1], source_document: "README.md" };
   assert.throws(() => assertSuiteCatalogCardinality(duplicateReadme), /exactly one catalog record/u);

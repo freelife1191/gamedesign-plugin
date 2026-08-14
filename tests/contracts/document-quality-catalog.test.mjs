@@ -44,6 +44,7 @@ const catalogs = {
     "production-scope-milestone-risk-plan", "playtest-metrics-report",
     "design-review-decision-log", "executive-pitch", "design-transfer-decision",
     "reference-comparison", "reference-system-analysis",
+    "cutscene-visual-preproduction",
   ],
   career: [
     "career-stage-role-map", "competency-matrix", "learning-roadmap", "job-posting-evidence",

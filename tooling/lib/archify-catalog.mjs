@@ -49,6 +49,12 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     destinationRoot: "references/shared/document-quality",
   }),
   Object.freeze({
+    id: "image-assets",
+    module: "image-assets",
+    sourceRoot: "shared/image-assets",
+    destinationRoot: "references/shared/image-assets",
+  }),
+  Object.freeze({
     id: "archify",
     module: "archify",
     sourceRoot: "shared/vendor/archify/archify/2.13.0",
@@ -101,6 +107,13 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     module: "reference-intelligence",
     sourceRoot: "shared/reference-intelligence/skills/maintain-game-design-glossary",
     destinationRoot: "skills/maintain-game-design-glossary",
+  }),
+  Object.freeze({
+    id: "studio-cutscene-skill",
+    module: null,
+    product: "studio",
+    sourceRoot: "products/game-design-studio/plugin/skills/design-cutscene-visual-preproduction",
+    destinationRoot: "skills/design-cutscene-visual-preproduction",
   }),
 ]);
 const DIAGRAM_TYPES = new Set(["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
@@ -372,7 +385,10 @@ async function assertPackageMirrorOrigin(repoRoot, entry) {
   if (mapping === undefined) return;
   const label = `entry ${entry.id}`;
   const product = await loadProductContract({ repoRoot, productName: PRODUCT_PACKAGE_NAMES[entry.product] });
-  if (!product.sharedModules.includes(mapping.module)) {
+  if (mapping.module === null && mapping.product !== entry.product) {
+    throw new Error(`${label}.origin_source.build_mapping does not match its product source`);
+  }
+  if (mapping.module !== null && !product.sharedModules.includes(mapping.module)) {
     throw new Error(`${label}.origin_source.build_mapping is not enabled by products/${product.name}/product.json`);
   }
   const [mirrorFile, originFile] = await Promise.all([
