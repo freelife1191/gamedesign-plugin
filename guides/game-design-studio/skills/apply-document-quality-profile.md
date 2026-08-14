@@ -85,6 +85,7 @@ $game-design-studio:apply-document-quality-profile goal=live-service RPG 스태�
 | `export` | `$game-design-studio:export-game-design-documents` |
 | `reference-game-analysis` | `$game-design-studio:analyze-game-design-references` |
 | `project-glossary-maintenance` | `$game-design-studio:maintain-game-design-glossary` |
+| `cutscene-visual-preproduction` | `$game-design-studio:design-cutscene-visual-preproduction` |
 
 ## 생성 파일과 결과 구조
 

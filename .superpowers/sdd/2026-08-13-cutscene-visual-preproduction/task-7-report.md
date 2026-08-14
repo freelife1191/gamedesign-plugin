@@ -1,0 +1,11 @@
+# Task 7 report — cutscene user guides and prompt templates
+
+- Status: GREEN complete; package snapshot refresh remains Task 8 ownership.
+- RED: the cutscene How-to did not exist. Studio documentation still exposed 23 installed skills and 25 top-level scripts, while the frozen contract requires routing 23, installed 24, and 30 scripts. Product READMEs, lifecycle tests, and guide inventory tests therefore failed on the old values.
+- GREEN: added the Korean cutscene How-to with ten ordered copyable requests, Prompt Only, Estimate Only, Generate After Approval, serial `style-master → reference-masters → keyframes → storyboard` dispatch, current named approval, unavailable-price/provider-0 stop, retry, dialogue-only overlay, visual derivative, and continuity-gate boundaries.
+- GREEN: Studio now documents the 24-skill/30-script inventory while Career remains absent from the cutscene route and stays 23 skills/30 scripts. Root, guide, Studio and product README paths, isolated inventory checks, lifecycle checks, and mutation-sensitive guide tests use those counts.
+- Discovered integration gap: Task 6 added a routed Studio skill but did not supply the normal skill guide or prompt-template coverage expected by the source catalog. This Task 7 repair adds the skill guide, workbench and canonical route rows, one source shard, and beginner/standard/advanced prompt cards. The advanced card is mutation-tested for the full cost and named-approval input set, including `costStatus`.
+- Prompt generator: `node tooling/build-prompt-guides.mjs --check` reports 91 Markdown and two source projections current. It does not write `plugins/`.
+- Archify: no new Archify source, asset, or catalog digest is required. The cards bind the existing image-planning SVG/PNG because this task adds a workflow guide rather than a new visual artifact.
+- Cost boundary: this task makes no provider or live image call. Real generation remains blocked until an exact current-wave estimate and named approval are supplied.
+- Known handoff: `tests/contracts/package-contents.test.mjs` correctly detects that `plugins/*` snapshots are stale against the updated source projection. Refreshing those generated plugin snapshots is explicitly Task 8 ownership and was not performed here.

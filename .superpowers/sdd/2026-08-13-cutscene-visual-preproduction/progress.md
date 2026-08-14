@@ -166,7 +166,7 @@ Task self-consistency:
 - Task 5 validation: targeted RED failures covered missing planner export, per-shot derivative coalescing, closed public impact, forged review manifest, and lifecycle splice. GREEN matrix `node --test tests/unit/cutscene-visual-preproduction.test.mjs tests/unit/cutscene-generation-approval.test.mjs tests/unit/generate-openai-images.test.mjs tests/unit/image-asset-plan.test.mjs tests/unit/image-assets.test.mjs tests/unit/image-config.test.mjs tests/unit/image-prompts.test.mjs tests/unit/image-provider.test.mjs tests/unit/smoke-openai-image.test.mjs tests/products/studio/image-assets.test.mjs` → 189 pass, 0 fail; schema parse, three modified-module `node --check`, temporary Studio/Career continuity-schema byte parity, and `git diff --check` passed. No provider, host, journal, or artifact I/O is reachable from overlay/review/gate.
 - Task 5: complete — one scoped commit follows this ledger entry.
 - Task 6: complete — Fix rounds 1–5 are recorded above; see Task 6 completion evidence.
-- Task 7: pending
+- Task 7: complete — Korean How-to, exact inventories, lifecycle guides, and the discovered Task 6→7 prompt-template integration repair. Generated `plugins/*` snapshot refresh remains Task 8 ownership.
 - Task 8: pending
 
 ## Task 6 completion evidence

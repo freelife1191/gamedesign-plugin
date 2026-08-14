@@ -78,6 +78,12 @@ $game-design-studio:orchestrate-game-design-project 모바일 협동 RPG 아이�
 
 ## 다음 요청
 
+컷씬을 준비할 때는 먼저 비용 없는 프롬프트 패키지를 만듭니다. 이미지 생성은 [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md)의 wave별 비용 공개와 이름을 기록한 승인 뒤에만 요청합니다.
+
+```text
+컷씬 brief와 beat만 작성
+```
+
 ```text
 방금 만든 Canonical Artifact의 미정 항목과 차단 게이트를 우선순위로 정리하고, 다음에 확정할 한 가지 설계 결정을 제안해줘.
 ```

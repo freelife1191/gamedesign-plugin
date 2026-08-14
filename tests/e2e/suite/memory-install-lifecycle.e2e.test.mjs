@@ -88,7 +88,7 @@ function runLocalPluginCommand({ codex, cwd, args, env, evidence, stage }) {
   return json;
 }
 
-async function assertMemoryPackage(pluginRoot, product, { expectedSkillCount = 21, requireReferenceIntelligence = false } = {}) {
+async function assertMemoryPackage(pluginRoot, product, { expectedSkillCount = product.includes("studio") ? 24 : 23, requireReferenceIntelligence = false } = {}) {
   for (const skill of memorySkills) await lstat(path.join(pluginRoot, "skills", skill, "SKILL.md"));
   for (const required of [
     "references/shared/memory/schema/memory-config.schema.json",
@@ -265,15 +265,15 @@ test("fresh production builds install, replace, and remove without touching loca
 
       try {
         const firstBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: firstStagingRoot, sourceDateEpoch: 0 });
-        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
+        await assertMemoryPackage(firstBuild.outputDir, `${product} first production build`, { expectedSkillCount: product === "game-design-studio" ? 24 : 23, requireReferenceIntelligence: true });
         const installed = await installBuiltPlugin({ buildDir: firstBuild.outputDir, codexHome, product });
-        await assertMemoryPackage(installed, `${product} installed production build`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
+        await assertMemoryPackage(installed, `${product} installed production build`, { expectedSkillCount: product === "game-design-studio" ? 24 : 23, requireReferenceIntelligence: true });
         await assertPreserved("install");
 
         const replacementBuild = await buildProduct({ repoRoot, productName: product, stagingRoot: replacementStagingRoot, sourceDateEpoch: 0 });
-        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
+        await assertMemoryPackage(replacementBuild.outputDir, `${product} replacement production build`, { expectedSkillCount: product === "game-design-studio" ? 24 : 23, requireReferenceIntelligence: true });
         const replaced = await replaceBuiltPlugin({ buildDir: replacementBuild.outputDir, codexHome, product });
-        await assertMemoryPackage(replaced, `${product} replacement install`, { expectedSkillCount: 23, requireReferenceIntelligence: true });
+        await assertMemoryPackage(replaced, `${product} replacement install`, { expectedSkillCount: product === "game-design-studio" ? 24 : 23, requireReferenceIntelligence: true });
         await assertPreserved("replace");
 
         await removeInstalledPlugin({ codexHome, product });

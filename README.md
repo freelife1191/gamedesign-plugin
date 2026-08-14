@@ -67,7 +67,7 @@
 
 ### ⚙️ 짧게 요청해도 체계가 작동합니다
 
-제품마다 제품 스킬 15개와 공통 스킬 8개, 모두 설치 스킬 23개가 함께 들어갑니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리도 포함합니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
+Studio에는 제품 스킬 16개와 공통 스킬 8개, 설치 스킬 24개가 들어갑니다. Career에는 제품 스킬 15개와 공통 스킬 8개, 설치 스킬 23개가 들어갑니다. 공통 스킬에는 레퍼런스 분석과 용어 사전 관리도 포함합니다. Studio에는 전문 역할 12개, Career에는 전문 역할 10개가 있으며 요청에 맞는 역할만 골라 씁니다. 사용자가 스킬 이름을 일일이 나열할 필요는 없습니다. 요청이 분명하면 가장 짧은 전문 경로를 선택하고 복합 요청은 오케스트레이터가 필요한 단계만 묶습니다.
 
 시작할 때 `SessionStart` 훅이 문서 변환기, 브라우저와 이미지 생성 기능을 확인합니다. 작업이 끝날 때는 `Stop` 훅이 표시된 기준 기획 결과물과 요청한 형식을 다시 점검합니다. 두 훅 모두 결과를 자동으로 승인하지 않습니다. 검토 담당자가 승인하거나 보류합니다. 보류 이유와 남은 작업을 기록해 다음 요청에서 보류한 지점부터 다시 시작합니다.
 
@@ -1717,12 +1717,12 @@ $game-design-studio:export-game-design-documents \
 | 검토·품질 | 게임 기획 검토 (`review-game-design`)·문서 품질 기준 적용 (`apply-document-quality-profile`): 결과물 또는 출력 목적이 있을 때 호출 → 검토 보고서·품질 기준 기록 | 포트폴리오 검토 (`review-game-design-portfolio`)·경력 문서 품질 기준 적용 (`apply-document-quality-profile`): 근거 묶음 또는 출력 목적이 있을 때 호출 → 포트폴리오 검토·품질 기준 기록 |
 | 이미지·도식·출력 | 이미지 자산 계획 (`plan-image-assets`) → 이미지 자산 생성 (`generate-image-assets`) → 이미지 자산 검토 (`review-image-assets`), 게임 기획 시각화 (`visualize-game-design`)·문서 내보내기 준비 (`export-game-design-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 | 경력 이미지 자산 계획 (`plan-image-assets`) → 경력 이미지 자산 생성 (`generate-image-assets`) → 경력 이미지 자산 검토 (`review-image-assets`), 경력 성장 경로 시각화 (`visualize-career-roadmap`)·경력 문서 내보내기 준비 (`export-career-documents`): 승인된 기준 문서가 있을 때 호출 → SVG·PNG·내보내기 준비 목록 |
 
-각 제품은 제품 스킬 15개와 공통 스킬 8개를 설치하므로 총 23개가 됩니다. 공통 스킬은 `analyze-game-design-references`, `maintain-game-design-glossary`, `archify`, `humanize-korean`, `svg-infographic`과 프로젝트 기억 조회·후보 기록·관리 스킬 3개입니다. `polish-game-design-writing`은 제품 스킬에 포함됩니다. 공통 스킬은 제품 원본 디렉터리가 아니라 표준 빌드가 번들합니다.
+Studio는 제품 스킬 16개와 공통 스킬 8개로 총 24개, Career는 제품 스킬 15개와 공통 스킬 8개로 총 23개를 설치합니다. 공통 스킬은 `analyze-game-design-references`, `maintain-game-design-glossary`, `archify`, `humanize-korean`, `svg-infographic`과 프로젝트 기억 조회·후보 기록·관리 스킬 3개입니다. `polish-game-design-writing`은 제품 스킬에 포함됩니다. 공통 스킬은 제품 원본 디렉터리가 아니라 표준 빌드가 번들합니다.
 
 <details>
 <summary>Studio 설치 스킬 전체 보기</summary>
 
-### Studio 설치 스킬 23개
+### Studio 설치 스킬 24개
 
 | 스킬 이름과 ID | 사용하는 때 | 핵심 결과 | 직접 호출 | 상세 가이드 |
 | --- | --- | --- | --- | --- |
@@ -1730,6 +1730,7 @@ $game-design-studio:export-game-design-documents \
 | 경쟁작 레퍼런스 분석 (`analyze-game-design-references`) | 경쟁작 관찰을 시스템 비교와 검토 대기 설계 전환 제안으로 정리할 때 | 시스템 지도, 심층 분석과 `pending-review` 설계 전환 제안을 기록합니다. | `$game-design-studio:analyze-game-design-references` | [Studio 경쟁작 레퍼런스 분석 가이드](guides/game-design-studio/reference-analysis.md) |
 | 기획 구조 도식 만들기 (`archify`) | 시스템 구성·작업 흐름을 탐색 가능한 HTML로 설명할 때 | 시스템 구성과 작업 흐름을 탐색 가능한 HTML 구조 도식으로 만듭니다. | `$game-design-studio:archify` | [기획 구조 도식 만들기 상세 가이드](guides/game-design-studio/skills/archify.md) |
 | 게임 비전 정의 (`define-game-vision`) | 대상 플레이어와 핵심 재미를 한 문장으로 정할 때 | 대상 플레이어, 핵심 재미와 검증 기준을 정리해 게임 방향 원칙을 만듭니다. | `$game-design-studio:define-game-vision` | [게임 비전 정의 상세 가이드](guides/game-design-studio/skills/define-game-vision.md) |
+| 컷씬 비주얼 프리프로덕션 (`design-cutscene-visual-preproduction`) | 컷씬의 shot, 마스터 프롬프트, 파생 이미지와 연속성을 순서대로 준비할 때 | 컷씬 brief, shot, 프롬프트, 비용 승인과 연속성 검토를 순서대로 묶습니다. | `$game-design-studio:design-cutscene-visual-preproduction` | [컷씬 비주얼 프리프로덕션 스킬](guides/game-design-studio/skills/design-cutscene-visual-preproduction.md) |
 | 게임 콘텐츠 설계 (`design-game-content`) | 퀘스트·레벨·캐릭터의 선택과 결과를 설계할 때 | 퀘스트, 레벨, 조우와 캐릭터를 제작 가능한 콘텐츠 명세로 만듭니다. | `$game-design-studio:design-game-content` | [게임 콘텐츠 설계 상세 가이드](guides/game-design-studio/skills/design-game-content.md) |
 | 경제와 라이브 운영 설계 (`design-game-economy-and-liveops`) | 재화·보상·이벤트의 측정 기준을 정할 때 | 재화 흐름, 성장, 보상과 운영 결정을 경제 명세로 만듭니다. | `$game-design-studio:design-game-economy-and-liveops` | [경제와 라이브 운영 설계 상세 가이드](guides/game-design-studio/skills/design-game-economy-and-liveops.md) |
 | 게임 시스템 설계 (`design-game-systems`) | 규칙·상태·예외를 구현 가능한 기준으로 정리할 때 | 규칙, 상태, 우선순위, 예외와 데이터 관계를 시스템 명세로 만듭니다. | `$game-design-studio:design-game-systems` | [게임 시스템 설계 상세 가이드](guides/game-design-studio/skills/design-game-systems.md) |
@@ -1897,13 +1898,13 @@ Skillstead 미리보기는 **Studio·Career의 결과 경계와 사람 승인·�
 
 ### Studio 설치 패키지 구조
 
-Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 25개를 포함합니다.
+Studio 생성본 (snapshot)은 에이전트 12개, 설치 스킬 24개, 템플릿 15개와 최상위 실행 스크립트 30개를 포함합니다.
 
 ```text
 plugins/game-design-studio/
 ├── .codex-plugin/plugin.json   # 플러그인 manifest
 ├── agents/                     # 전문 에이전트 12개
-├── skills/                     # 제품 스킬 15개 + 공통 스킬 8개
+├── skills/                     # 제품 스킬 16개 + 공통 스킬 8개
 ├── assets/
 │   ├── templates/              # Canonical Artifact 템플릿 15개
 │   └── shared/                 # 공통 템플릿·지원 자산
@@ -1912,7 +1913,7 @@ plugins/game-design-studio/
 │   ├── methods/                # 기획 방법 reference
 │   ├── shared/                 # 공통 계약과 책임 설계
 │   └── source/                 # 근거 문서의 설치 snapshot
-├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 모두 25개
+├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 모두 30개
 ├── hooks/hooks.json            # 중단·검토 hook
 ├── .env.example                # 이미지 생성 설정 예시
 ├── README.md
@@ -1924,7 +1925,7 @@ generated snapshot: plugins/game-design-studio/
 
 ### Career 설치 패키지 구조
 
-Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 25개를 포함합니다.
+Career 생성본 (snapshot)은 에이전트 10개, 설치 스킬 23개, 템플릿 15개와 최상위 실행 스크립트 30개를 포함합니다.
 
 ```text
 plugins/game-design-career/
@@ -1939,7 +1940,7 @@ plugins/game-design-career/
 │   ├── methods/                # 학습·취업 방법 reference
 │   ├── shared/                 # 공통 계약과 책임 설계
 │   └── source/                 # 근거 문서의 설치 snapshot
-├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 모두 25개
+├── scripts/ # 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개, 모두 30개
 ├── hooks/hooks.json            # 중단·검토 hook
 ├── .env.example                # 이미지 생성 설정 예시
 ├── README.md
@@ -1979,17 +1980,22 @@ generated snapshot: plugins/game-design-career/
 | `capture-design-memory.mjs` | 검증된 작업에서 재사용할 교훈을 검토 대기 후보로 기록합니다. |
 | `compile-image-prompts.mjs` | 이미지 프롬프트 묶음을 Markdown과 JSON으로 만듭니다. |
 | `data-only-snapshot.mjs` | 검토 경계를 넘는 입력이 순수 데이터인지 확인합니다. |
+| `estimate-cutscene-image-cost.mjs` | 현재 컷씬 wave의 비용 범위와 cap을 계산합니다. |
 | `generate-openai-images.mjs` | 설정된 OpenAI Images API 호출을 제한된 범위에서 실행합니다. |
 | `load-memory-config.mjs` | 로컬 기억 사용 범위와 개수·기간·Git 모드를 안전한 값으로 읽습니다. |
 | `maintain-design-memory.mjs` | 후보 목록, 사람 승인·거부·폐기, 충돌과 색인 복구를 관리합니다. |
 | `manage-game-design-glossary.mjs` | 용어 후보, 오버레이와 사람 결정 기록을 관리합니다. |
+| `plan-cutscene-visual-preproduction.mjs` | 컷씬 brief, shot, 프롬프트와 serial wave 계획을 만듭니다. |
 | `quality-source-anchors.mjs` | 문서 품질 원본의 바이트와 의미 기준점을 고정합니다. |
 | `resolve-quality-profile.mjs` | 문서 품질 기준을 선택·합성하고 상태 기록을 만듭니다. |
 | `retrieve-design-memory.mjs` | 승인된 관련 기억만 조회하고 적용·제외 기록을 남깁니다. |
+| `review-cutscene-continuity.mjs` | 컷씬 결과의 continuity receipt와 gate를 검토합니다. |
+| `run-approved-cutscene-image-stage.mjs` | 현재 승인된 컷씬 wave만 provider dispatch로 전달합니다. |
 | `run-game-design-writing-polish.mjs` | 문장 편집 전문가와 한국어 다듬기 도구를 차례로 실행해 최소 수정안을 만듭니다. |
 | `run-image-asset-workflow.mjs` | 이미지 계획·생성·검토 단계를 연결합니다. |
 | `stop-artifact-review.mjs` | 완료 직전 결과물을 검토하고 한 번의 수정 재개를 관리합니다. |
 | `validate-artifact.mjs` | 기준 기획 결과물 폴더의 필수 파일과 상태를 검사합니다. |
+| `validate-cutscene-visual-preproduction.mjs` | 컷씬 계획, wave 순서와 approval binding을 검사합니다. |
 | `validate-design-memory.mjs` | 기억 원본, 상태 전이와 출처 연결을 검사합니다. |
 | `validate-game-design-writing-language.mjs` | 게임 기획 문서의 용어와 문체 경계를 검사합니다. |
 | `validate-image-assets.mjs` | 이미지 목록, 승인 단계와 파일 정합성을 검사합니다. |
@@ -1999,7 +2005,7 @@ generated snapshot: plugins/game-design-career/
 | `validate-reference-preset.mjs` | 중립 참고 사전 설정의 허용 범위를 검사합니다. |
 | `validate-writing-revision.mjs` | 글의 핵심 사실과 수치가 바뀌지 않았는지, 수정 기록이 빠지지 않았는지 검사합니다. |
 
-위 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개를 합친 최상위 실행 스크립트 25개입니다. `scripts/lib/*.mjs`는 이 스크립트들이 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+위 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개를 합친 최상위 실행 스크립트 30개입니다. `scripts/lib/*.mjs`는 이 스크립트들이 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
 
 ### 설치된 문서 품질 경로 (document-quality)
 
@@ -2143,7 +2149,7 @@ Source tree, build·release·검증 명령과 패키지 내부 계약은 기술 
 <details>
 <summary>패키지 기술 inventory</summary>
 
-표준 빌드는 Studio에 전문 에이전트 12개, Career에 10개, 각 제품에 설치 스킬 23개와 Canonical Artifact 템플릿 15개, 최상위 실행 스크립트 25개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
+표준 빌드는 Studio에 전문 에이전트 12개와 설치 스킬 24개, Career에 전문 에이전트 10개와 설치 스킬 23개, 각 제품에 Canonical Artifact 템플릿 15개와 최상위 실행 스크립트 30개를 포함합니다. 공통 변경은 `shared/`, 제품 변경은 `products/<product>/plugin/`에서 작성합니다.
 
 | 기술 경로 | 역할 |
 | --- | --- |

@@ -20,14 +20,14 @@ const commonSkillIds = [
 ];
 const productSkillIds = Object.freeze({
   "game-design-studio": [
-    "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project", "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "visualize-game-design",
+    "apply-document-quality-profile", "define-game-vision", "design-cutscene-visual-preproduction", "design-game-content", "design-game-economy-and-liveops", "design-game-systems", "design-player-experience", "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project", "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "visualize-game-design",
   ],
   "game-design-career": [
     "apply-document-quality-profile", "build-game-design-portfolio", "export-career-documents", "generate-image-assets", "map-game-design-career", "orchestrate-game-design-career", "plan-image-assets", "plan-junior-growth", "polish-game-design-writing", "practice-game-design-interview", "research-game-design-jobs", "reverse-engineer-game-design", "review-game-design-portfolio", "review-image-assets", "visualize-career-roadmap",
   ],
 });
 const topLevelScripts = [
-  "analyze-game-design-references.mjs", "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "generate-openai-images.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "manage-game-design-glossary.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-design-memory.mjs", "validate-game-design-writing-language.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-intelligence.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
+  "analyze-game-design-references.mjs", "build-image-asset-plan.mjs", "capability-probe.mjs", "capture-design-memory.mjs", "compile-image-prompts.mjs", "data-only-snapshot.mjs", "estimate-cutscene-image-cost.mjs", "generate-openai-images.mjs", "load-memory-config.mjs", "maintain-design-memory.mjs", "manage-game-design-glossary.mjs", "plan-cutscene-visual-preproduction.mjs", "quality-source-anchors.mjs", "resolve-quality-profile.mjs", "retrieve-design-memory.mjs", "review-cutscene-continuity.mjs", "run-approved-cutscene-image-stage.mjs", "run-game-design-writing-polish.mjs", "run-image-asset-workflow.mjs", "stop-artifact-review.mjs", "validate-artifact.mjs", "validate-cutscene-visual-preproduction.mjs", "validate-design-memory.mjs", "validate-game-design-writing-language.mjs", "validate-image-assets.mjs", "validate-image-config.mjs", "validate-quality-profile.mjs", "validate-reference-intelligence.mjs", "validate-reference-preset.mjs", "validate-writing-revision.mjs",
 ];
 const memoryHeadings = [
   "어떤 기록을 기억하는가",
@@ -68,6 +68,18 @@ const changedMarkdown = [
     `guides/${product}/skills/README.md`,
   ]),
 ];
+const cutsceneGuideRequests = [
+  "컷씬 brief와 beat만 작성",
+  "shot list와 continuity bible 작성",
+  "마스터 프롬프트 패키지만 작성",
+  "스타일 마스터 비용과 승인",
+  "승인한 스타일 master 생성",
+  "reference master bound prompt 재계산",
+  "reference master 비용과 승인",
+  "keyframe 비용과 승인",
+  "storyboard와 variant 비용과 승인",
+  "continuity 검토와 실패 ID 재시도",
+];
 
 async function directoryIds(relative) {
   const entries = await readdir(path.join(root, relative), { withFileTypes: true });
@@ -93,15 +105,23 @@ function listedTopLevelScripts(markdown) {
   return [...section.matchAll(/^\| `([a-z0-9-]+\.mjs)` \|/gmu)].map((match) => match[1]).sort();
 }
 
+function parseCutsceneGuide(markdown) {
+  return {
+    headings: [...markdown.matchAll(/^## (.+)$/gmu)].map(([, heading]) => heading),
+    requestBlocks: [...markdown.matchAll(/```text\n([^`]+)```/gmu)].map(([, request]) => request.trim()),
+  };
+}
+
 function assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts, skillGuide, productReadme }) {
   const expectedSkills = [...productSkillIds[product], ...commonSkillIds].sort();
   assert.deepEqual(actualProductSkillIds, [...productSkillIds[product]].sort(), `${product}: source product skill IDs`);
   assert.deepEqual(actualCommonSkillIds, [...commonSkillIds].sort(), `${product}: source common skill IDs`);
   assert.deepEqual(actualScripts, [...topLevelScripts].sort(), `${product}: source top-level scripts`);
-  assert.equal(expectedSkills.length, 23, `${product}: expected installed skills`);
-  assert.equal(topLevelScripts.length, 25, `${product}: expected top-level scripts`);
-  assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed 23 IDs`);
-  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 25 top-level scripts`);
+  const expectedSkillCount = product === "game-design-studio" ? 24 : 23;
+  assert.equal(expectedSkills.length, expectedSkillCount, `${product}: expected installed skills`);
+  assert.equal(topLevelScripts.length, 30, `${product}: expected top-level scripts`);
+  assert.deepEqual(listedSkillIds(skillGuide), expectedSkills, `${product}: skill guide lists exactly the installed skill IDs`);
+  assert.deepEqual(listedTopLevelScripts(productReadme), [...topLevelScripts].sort(), `${product}: README lists exactly the 30 top-level scripts`);
 }
 
 function assertKoreanMemoryContract(markdown, label, laneHeading) {
@@ -149,7 +169,7 @@ test("memory guides are Korean-first, local-only, human-approved, and fail-open"
   }
 });
 
-test("source inventories and product documentation list exactly the installed 23 skills and 25 scripts", async () => {
+test("source inventories and product documentation list the frozen cutscene inventory", async () => {
   const buildSource = await readFile(path.join(root, "tooling/lib/build-product.mjs"), "utf8");
   for (const id of ["svg-infographic", "archify", "humanize-korean"]) {
     assert.match(buildSource, new RegExp(`skills/${id.replace(/-/gu, "\\-")}`), id);
@@ -173,9 +193,9 @@ test("source inventories and product documentation list exactly the installed 23
     const productReadme = await readFile(path.join(root, "products", product, "plugin/README.md"), "utf8");
     assertExactInstallInventory({ product, actualProductSkillIds, actualCommonSkillIds, actualScripts: scripts, skillGuide, productReadme });
     for (const markdown of [skillGuide, productReadme]) {
-      assert.match(markdown, /제품 스킬 15개/u);
+      assert.match(markdown, product === "game-design-studio" ? /제품 스킬 16개/u : /제품 스킬 15개/u);
       assert.match(markdown, /공통 스킬 8개/u);
-      assert.match(markdown, /설치 스킬(?:은)? 23개/u);
+      assert.match(markdown, product === "game-design-studio" ? /설치 스킬(?:은)? 24개/u : /설치 스킬(?:은)? 23개/u);
     }
     const visibleLinks = extractMarkdownLinks(productReadme);
     for (const [label, target] of [
@@ -184,10 +204,42 @@ test("source inventories and product documentation list exactly the installed 23
     ]) {
       assert.ok(visibleLinks.some((link) => link.label === label && link.target === target), `${product}: visible source link ${label}`);
     }
-    assert.match(productReadme, /기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개/u);
-    assert.match(productReadme, /최상위 실행 스크립트 25개/u);
+    assert.match(productReadme, /기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개/u);
+    assert.match(productReadme, /최상위 실행 스크립트 30개/u);
     assert.match(productReadme, /`scripts\/lib\/\*\.mjs`.*내부 도구/u);
   }
+});
+
+test("cutscene guide keeps copyable requests and frozen Studio/Career inventories", async () => {
+  const guide = parseCutsceneGuide(await readFile(path.join(root, "guides/game-design-studio/cutscene-visual-preproduction.md"), "utf8"));
+  assert.deepEqual(guide.headings.slice(0, 4), ["컷씬 비주얼 프리프로덕션", "Prompt Only", "Estimate Only", "Generate After Approval"]);
+  assert.deepEqual(guide.requestBlocks, cutsceneGuideRequests);
+
+  const inventories = {};
+  for (const product of products) {
+    const routing = JSON.parse(await readFile(path.join(root, "products", product, "plugin/references/routing.json"), "utf8"));
+    const installed = [...(await directoryIds(`products/${product}/plugin/skills`)), ...commonSkillIds].sort();
+    inventories[product === "game-design-studio" ? "studio" : "career"] = {
+      routing: routing.skillIds.length,
+      installed: installed.length,
+      topLevelScripts: (await readdir(path.join(root, "shared/scripts"))).filter((name) => name.endsWith(".mjs")).length,
+    };
+  }
+  assert.deepEqual(inventories, {
+    studio: { routing: 23, installed: 24, topLevelScripts: 30 },
+    career: { routing: 22, installed: 23, topLevelScripts: 30 },
+  });
+});
+
+test("cutscene guide contracts reject reordered requests and unsafe generation wording", async () => {
+  const source = await readFile(path.join(root, "guides/game-design-studio/cutscene-visual-preproduction.md"), "utf8");
+  const reordered = source.replace(cutsceneGuideRequests[0], "임시 요청").replace(cutsceneGuideRequests[1], cutsceneGuideRequests[0]).replace("임시 요청", cutsceneGuideRequests[1]);
+  assert.notEqual(reordered, source, "request-order mutation changes the fixture");
+  assert.notDeepEqual(parseCutsceneGuide(reordered).requestBlocks, cutsceneGuideRequests);
+  const unsafe = source.replace("이름을 기록한 실시간 승인", "자동 승인");
+  assert.notEqual(unsafe, source, "approval mutation changes the fixture");
+  assert.doesNotMatch(source, /자동 승인/u);
+  assert.match(source, /이름을 기록한 실시간 승인/u);
 });
 
 test("entry, install, quick-start, workflow, FAQ, and skill guides link to product memory guidance", async () => {

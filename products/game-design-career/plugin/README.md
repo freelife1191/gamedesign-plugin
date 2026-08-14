@@ -258,17 +258,22 @@ codex plugin marketplace remove game-design-suite
 | `capture-design-memory.mjs` | 검증한 작업의 교훈을 검토 대기 후보로 기록 |
 | `compile-image-prompts.mjs` | Markdown/JSON prompt package 생성 |
 | `data-only-snapshot.mjs` | 신뢰 경계의 data-only snapshot 검증 |
+| `estimate-cutscene-image-cost.mjs` | 현재 컷씬 wave의 비용 범위와 cap 계산 |
 | `generate-openai-images.mjs` | OpenAI Images API bounded adapter |
 | `load-memory-config.mjs` | 프로젝트 기억 설정을 안전한 값으로 읽기 |
 | `maintain-design-memory.mjs` | 후보·사람 결정·충돌·복구 관리 |
 | `manage-game-design-glossary.mjs` | 용어 후보·오버레이·사람 결정 기록 관리 |
+| `plan-cutscene-visual-preproduction.mjs` | 컷씬 brief, shot, 프롬프트와 serial wave 계획 생성 |
 | `quality-source-anchors.mjs` | canonical quality source byte·semantic anchor |
 | `resolve-quality-profile.mjs` | profile 선택·합성·manifest·상태 전이 |
 | `retrieve-design-memory.mjs` | 승인된 관련 기억과 적용·제외 기록 조회 |
+| `review-cutscene-continuity.mjs` | 컷씬 결과의 continuity receipt와 gate 검토 |
+| `run-approved-cutscene-image-stage.mjs` | 현재 승인된 컷씬 wave만 provider dispatch로 전달 |
 | `run-game-design-writing-polish.mjs` | writing specialist와 bundled humanize-korean을 거치는 bounded revision 실행 |
 | `run-image-asset-workflow.mjs` | image workflow composition |
 | `stop-artifact-review.mjs` | one-retry Stop artifact review |
 | `validate-artifact.mjs` | Canonical Artifact 검증 |
+| `validate-cutscene-visual-preproduction.mjs` | 컷씬 계획, wave 순서와 approval binding 검증 |
 | `validate-design-memory.mjs` | 기억 원본·상태 전이·출처 연결 검증 |
 | `validate-game-design-writing-language.mjs` | 게임 기획 문서의 용어·문체 검증 |
 | `validate-image-assets.mjs` | image manifest/lifecycle 검증 |
@@ -278,7 +283,7 @@ codex plugin marketplace remove game-design-suite
 | `validate-reference-preset.mjs` | neutral reference preset 검증 |
 | `validate-writing-revision.mjs` | protected content와 bounded writing revision 검증 |
 
-이 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개를 합친 최상위 실행 스크립트 25개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
+이 표는 기존 16개와 기억 스크립트 5개, 레퍼런스 인텔리전스 스크립트 4개, 컷씬 프리프로덕션 스크립트 5개를 합친 최상위 실행 스크립트 30개입니다. `scripts/lib/*.mjs`는 최상위 스크립트가 쓰는 내부 도구이며 직접 실행 목록에 포함하지 않습니다.
 
 ## 프로젝트 기억
 

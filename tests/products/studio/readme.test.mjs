@@ -55,6 +55,7 @@ const skillIds = [
   "define-game-vision",
   "design-game-systems",
   "design-game-content",
+  "design-cutscene-visual-preproduction",
   "design-player-experience",
   "design-game-economy-and-liveops",
   "plan-game-production",
@@ -127,17 +128,22 @@ const topLevelScriptIds = [
   "capture-design-memory.mjs",
   "compile-image-prompts.mjs",
   "data-only-snapshot.mjs",
+  "estimate-cutscene-image-cost.mjs",
   "generate-openai-images.mjs",
   "load-memory-config.mjs",
   "maintain-design-memory.mjs",
   "manage-game-design-glossary.mjs",
+  "plan-cutscene-visual-preproduction.mjs",
   "quality-source-anchors.mjs",
   "resolve-quality-profile.mjs",
   "retrieve-design-memory.mjs",
+  "review-cutscene-continuity.mjs",
+  "run-approved-cutscene-image-stage.mjs",
   "run-game-design-writing-polish.mjs",
   "run-image-asset-workflow.mjs",
   "stop-artifact-review.mjs",
   "validate-artifact.mjs",
+  "validate-cutscene-visual-preproduction.mjs",
   "validate-design-memory.mjs",
   "validate-game-design-writing-language.mjs",
   "validate-image-assets.mjs",
@@ -523,8 +529,8 @@ test("release documentation ships the plugin license and third-party notices", a
 
 test("README exposes every shipped skill, role asset, profile, and canonical template", async () => {
   const readme = await readFile(readmePath, "utf8");
-  assert.match(readme, /제품 스킬 15개/u, "README states the direct product-skill count");
-  assert.match(readme, /설치 스킬(?:은|이) 23개/u, "README states the complete installed-skill count");
+  assert.match(readme, /제품 스킬 16개/u, "README states the direct product-skill count");
+  assert.match(readme, /설치 스킬(?:은|이) 24개/u, "README states the complete installed-skill count");
   assert.doesNotMatch(readme, /Skillstead `svg-infographic` 0\.8\.3/u, "README does not advertise the superseded Skillstead release");
   assert.deepEqual(tableIds(readme, "스킬 카탈로그"), skillIds);
   assert.deepEqual(tableIds(readme, "전문 역할 프롬프트"), roleIds);
@@ -930,8 +936,8 @@ test("README explains the source overlay and complete independent built-plugin s
     "products/game-design-studio/plugin",
     "plugins/game-design-studio",
     ".codex-plugin/plugin.json",
-    "skills/ (23개)",
-    "<15개 Studio 제품 스킬>",
+    "skills/ (24개)",
+    "<16개 Studio 제품 스킬>",
     "svg-infographic/",
     "agents/ (12개)",
     "hooks/hooks.json",

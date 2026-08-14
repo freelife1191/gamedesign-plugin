@@ -34,6 +34,7 @@ const sourceSkillIdsByProduct = Object.freeze({
   "game-design-studio": [
     "apply-document-quality-profile",
     "define-game-vision",
+    "design-cutscene-visual-preproduction",
     "design-game-content",
     "design-game-economy-and-liveops",
     "design-game-systems",
@@ -181,7 +182,7 @@ async function writeUseCaseValidationFixture(root, manifest) {
   ]);
 }
 
-test("product inventory matches each product's 15 source skills and eight shared skills", async () => {
+test("product inventory matches the frozen product and shared skill sets", async () => {
   for (const productId of Object.keys(sourceSkillIdsByProduct)) {
     const inventory = await collectProductInventory(repoRoot, productId);
     assert.deepEqual(inventory.skillIds, expectedSkillIdsByProduct[productId]);
@@ -776,7 +777,7 @@ test("production guide graph has the exact installed skill IDs and visible link 
 test("complete guide validation maps each product source-bound guide to its installed skills", async () => {
   await withGuideFixture({}, async (root) => {
     const result = await validateUserGuides({ repoRoot: root, requireComplete: true });
-    assert.equal(result.counts.skillGuides, 46);
+    assert.equal(result.counts.skillGuides, 47);
     assert.equal(result.errors.some((error) => error.includes("skill guide inventory mismatch")), false);
   });
 });

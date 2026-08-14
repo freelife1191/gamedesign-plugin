@@ -38,7 +38,7 @@ const EXACT_SKILL_IDS = Object.freeze({
   ].sort()),
   "game-design-studio": Object.freeze([
     "apply-document-quality-profile", "define-game-vision", "design-game-content", "design-game-economy-and-liveops", "design-game-systems",
-    "design-player-experience", "export-game-design-documents", "generate-image-assets", "humanize-korean", "orchestrate-game-design-project",
+    "design-cutscene-visual-preproduction", "design-player-experience", "export-game-design-documents", "generate-image-assets", "humanize-korean", "orchestrate-game-design-project",
     "plan-game-production", "plan-image-assets", "polish-game-design-writing", "review-game-design", "review-image-assets", "svg-infographic", "archify", "visualize-game-design",
     "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
     "analyze-game-design-references", "maintain-game-design-glossary",

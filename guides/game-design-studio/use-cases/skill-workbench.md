@@ -33,6 +33,7 @@
 | 스킬 | 직접 호출 신호 | 피할 때 | 입력 | 결과 | 다음 스킬 | 상세 가이드 |
 | --- | --- | --- | --- | --- | --- | --- |
 | `plan-image-assets` | `$game-design-studio:plan-image-assets` — finite slot | bytes 생성·승인 때 | profile·stable ID·mode | manifest·prompts | select/required/all 생성 또는 diagram | [직접 호출](../skills/plan-image-assets.md#직접-호출-활용-plan-image-assets) |
+| `design-cutscene-visual-preproduction` | `$game-design-studio:design-cutscene-visual-preproduction` — cutscene wave·continuity | provider 호출·포괄 승인 때 | beat·shot·continuity·finite cap | prompt package·estimate·continuity review | current 승인 wave만 image dispatch | [직접 호출](../skills/design-cutscene-visual-preproduction.md#직접-호출-활용-design-cutscene-visual-preproduction) |
 | `generate-image-assets` | `$game-design-studio:generate-image-assets` — finite declared job | prompt-only·diagram slot | selected receipt·prompt | draft·provenance | named human image review | [직접 호출](../skills/generate-image-assets.md#직접-호출-활용-generate-image-assets) |
 | `review-image-assets` | `$game-design-studio:review-image-assets` — named human review | rights·reviewer가 없을 때 | draft·source·placement | lifecycle receipt | approved export preflight | [직접 호출](../skills/review-image-assets.md#직접-호출-활용-review-image-assets) |
 

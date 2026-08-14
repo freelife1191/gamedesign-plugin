@@ -1,6 +1,6 @@
 # Game Design Studio 스킬 레퍼런스
 
-설치된 Studio 제품 스킬 15개와 공통 스킬 8개를 합친 설치 스킬 23개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개와 레퍼런스 분석·용어 사전 스킬 2개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
+설치된 Studio 제품 스킬 16개와 공통 스킬 8개를 합친 설치 스킬 24개를 정리합니다. 공통 스킬은 Archify, humanize-korean, Skillstead, 프로젝트 기억 스킬 3개와 레퍼런스 분석·용어 사전 스킬 2개입니다. 복합 요청은 오케스트레이터로 시작하고, 목적이 한 영역으로 분명하면 해당 스킬을 직접 호출합니다.
 
 ## 활용 경로
 
@@ -19,6 +19,7 @@
 | [`archify`](archify.md) | 구조와 흐름을 탐색 가능한 HTML로 설명 | `$game-design-studio:archify` | 선택된 canonical artifact | 구성 요소, 관계, 독자 | JSON 원본, HTML, 검증 영수증 |
 | [`capture-game-design-memory`](../memory.md#기본-작업-흐름) | 검증한 Studio 교훈을 후보로 기록 | `$game-design-studio:capture-game-design-memory` | 프로젝트 기억 | 출처가 연결된 결과, 적용·제외 조건 | 검토 대기 후보와 기록 결과 |
 | [`define-game-vision`](define-game-vision.md) | 플레이어 약속과 검증 가능한 비전 정의 | `$game-design-studio:define-game-vision` | `vision-pillars` | 대상 플레이어, 핵심 재미, 제약 | pillar, loop, 성공 기준 |
+| [`design-cutscene-visual-preproduction`](design-cutscene-visual-preproduction.md) | 컷씬 brief, shot, 프롬프트, 비용 승인과 continuity를 순서대로 준비 | `$game-design-studio:design-cutscene-visual-preproduction` | 컷씬 비주얼 프리프로덕션 | cutscene brief, game-state return, shot, cap | wave별 계획·estimate·approval·continuity review |
 | [`design-game-content`](design-game-content.md) | 퀘스트·NPC·전투 콘텐츠 명세 | `$game-design-studio:design-game-content` | `narrative-quest-npc` | 콘텐츠 목적, system/data ID, 생산 근거 | 플레이 가능한 콘텐츠 계약 |
 | [`design-game-economy-and-liveops`](design-game-economy-and-liveops.md) | 경제 흐름과 안전한 LiveOps 실험 설계 | `$game-design-studio:design-game-economy-and-liveops` | `economy-balance` | 통화, source/sink, 실험·보호 근거 | 경제 명세 또는 실험 계획 |
 | [`design-game-systems`](design-game-systems.md) | 규칙·상태·예외·데이터 명세 | `$game-design-studio:design-game-systems` | `system-specification` | 규칙, 상태, 권위 데이터, 실패 기대 | 구현 가능한 시스템 계약 |

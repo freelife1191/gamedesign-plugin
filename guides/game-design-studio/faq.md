@@ -339,3 +339,15 @@ Studio의 사례·스킬·템플릿을 선택할 때 자주 생기는 질문입�
 ```
 
 **비활성화와 관련 문서:** 완전히 끄려면 `GAME_DESIGN_MEMORY_ENABLED=false`를 설정하고, 한 번만 제외하려면 “이번 작업에서는 이전 기억을 사용하지 마.”라고 요청합니다. 자세한 관리와 복구 순서는 [Studio 프로젝트 기억](memory.md)을 따릅니다.
+
+### Q20. 컷씬 이미지는 언제 생성하고, 비용을 어떻게 통제하는가?
+
+**결론:** 컷씬은 prompt 작성, 비용 산정, 생성, 연속성 검토를 분리합니다. `style-master → reference-masters → keyframes → storyboard` 순서로만 진행하며, 각 wave는 count, model, quality, size, USD 범위, cap, retryReserve, pricing time과 `costStatus`를 공개한 뒤 이름을 기록한 실시간 승인을 받아야 합니다.
+
+**이유와 경계:** host 비용이 `unavailable`이면 무료로 간주하지 않고 provider 호출 0회로 멈춥니다. 이전 승인이나 포괄 승인은 재사용하지 않습니다. 대사만 바뀌는 variant에는 이미지를 만들지 않으며, visual variant는 새 derivative ID와 별도 비용·승인을 사용합니다. 실패 재시도는 현재 full-wave estimate와 남은 retryReserve가 그대로일 때 최신 실패 stable ID에만 허용합니다.
+
+```text
+컷씬 brief와 beat만 작성
+```
+
+**관련 가이드:** [컷씬 비주얼 프리프로덕션](cutscene-visual-preproduction.md), [이미지 자산](image-assets.md), [이미지 생성 스킬](skills/generate-image-assets.md), [이미지 검토 스킬](skills/review-image-assets.md)을 참조합니다.

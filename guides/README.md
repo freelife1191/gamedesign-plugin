@@ -40,6 +40,7 @@
 | --- | --- | --- | --- |
 | 작은 규칙·루프·시스템·UX를 학습 | [Studio 활용 사례 인덱스](game-design-studio/use-cases/README.md) | 작게 검토할 가정, 규칙 또는 UX 초안 | [Studio 스킬 워크벤치](game-design-studio/use-cases/skill-workbench.md) · [Studio FAQ](game-design-studio/faq.md) |
 | 전체 GDD와 제작 검토를 연결 | [Game Design Studio 가이드](game-design-studio/README.md) | 범위·검토 게이트가 있는 Studio Artifact | [결과물 카탈로그](use-cases/output-catalog.md) |
+| 컷씬의 shot·프롬프트·이미지 비용을 분리해 준비 | [컷씬 비주얼 프리프로덕션](game-design-studio/cutscene-visual-preproduction.md) | 승인 전 provider 호출 0회의 컷씬 패키지와 wave별 비용·연속성 검토 | [Studio 이미지 자산](game-design-studio/image-assets.md) |
 | 직무 탐색·역기획·포트폴리오·면접 준비 | [Career 활용 사례 인덱스](game-design-career/use-cases/README.md) | 근거·개인 기여·다음 증거 작업 | [Career 스킬 워크벤치](game-design-career/use-cases/skill-workbench.md) · [Career FAQ](game-design-career/faq.md) |
 | 현재 상황과 결과 경계를 먼저 확인 | [사용자 경로](use-cases/audience-paths.md) | 권장 시작점, 최소 결과와 사람 검토 경계 | [공통 활용 허브](use-cases/README.md) · [결과물 카탈로그](use-cases/output-catalog.md) |
 
@@ -73,11 +74,11 @@ Studio 또는 Career 한 제품을 고른 뒤 다음 순서로 진행합니다.
 
 ## 전체 가이드 탐색
 
-각 제품 인덱스는 23개 설치 스킬, 15개 템플릿, 6개 목적별 레시피와 설치·빠른 시작·workflow·품질·이미지·시각화·내보내기·문제 해결을 모두 연결합니다.
+Studio 인덱스는 설치 스킬 24개, Career 인덱스는 설치 스킬 23개와 각각 15개 템플릿, 6개 목적별 레시피, 설치·빠른 시작·workflow·품질·이미지·시각화·내보내기·문제 해결을 연결합니다.
 
 | 제품 | 시작 | 전체 카탈로그 | 목적별 작업 |
 | --- | --- | --- | --- |
-| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 23개](game-design-studio/skills/README.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
+| Studio | [제품 인덱스](game-design-studio/README.md) · [설치](game-design-studio/installation.md) · [5분 시작](game-design-studio/quick-start.md) | [스킬 24개](game-design-studio/skills/README.md) · [컷씬 비주얼 프리프로덕션](game-design-studio/cutscene-visual-preproduction.md) · [템플릿 15개](game-design-studio/templates.md) | [레시피 6개](game-design-studio/README.md#목적별-레시피) |
 | Career | [제품 인덱스](game-design-career/README.md) · [설치](game-design-career/installation.md) · [5분 시작](game-design-career/quick-start.md) | [스킬 23개](game-design-career/skills/README.md) · [템플릿 15개](game-design-career/templates.md) | [레시피 6개](game-design-career/README.md#목적별-레시피) |
 
 ---

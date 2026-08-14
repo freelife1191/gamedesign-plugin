@@ -12,7 +12,7 @@ import {
 import { collectProductInventory } from "../../tooling/lib/user-guides.mjs";
 
 const STUDIO_SKILLS = [
-  "apply-document-quality-profile", "define-game-vision", "design-game-content",
+  "apply-document-quality-profile", "define-game-vision", "design-cutscene-visual-preproduction", "design-game-content",
   "design-game-economy-and-liveops", "design-game-systems", "design-player-experience",
   "export-game-design-documents", "generate-image-assets", "orchestrate-game-design-project",
   "plan-game-production", "plan-image-assets", "review-game-design", "review-image-assets",
@@ -106,11 +106,11 @@ function completeFixture() {
   return [
     ...skillTemplates,
     ...Array.from({ length: 36 }, (_, index) => ({
-      ...validEntry(index + 97, "use-case"),
+      ...validEntry(index + 100, "use-case"),
       source_case_id: `SOURCE-${index + 1}`,
     })),
-    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 133, "recipe")),
-    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 145, "suite-case")),
+    ...Array.from({ length: 12 }, (_, index) => validEntry(index + 136, "recipe")),
+    ...Array.from({ length: 8 }, (_, index) => validEntry(index + 148, "suite-case")),
   ];
 }
 
@@ -155,13 +155,13 @@ test("complete catalog has exact kind and prompt counts", () => {
   });
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    skillTemplates: 96,
+    skillTemplates: 99,
     useCases: 36,
     recipes: 12,
     suiteCases: 8,
-    total: 152,
-    appPrompts: 152,
-    cliPrompts: 152,
+    total: 155,
+    appPrompts: 155,
+    cliPrompts: 155,
   });
 });
 
@@ -800,6 +800,38 @@ test("Studio visual catalog has exact skill-level bindings and matching Studio p
     assert.match(entry.cli_prompt.example, new RegExp(`\\$game-design-studio:${entry.skill}(?:\\s|$)`, "u"), entry.id);
     assert.match(entry.cli_prompt.template, new RegExp(`\\$game-design-studio:${entry.skill}(?:\\s|$)`, "u"), entry.id);
   }
+});
+
+function assertCutscenePromptCards(entries) {
+  const cards = entries.filter((entry) => entry.skill === "design-cutscene-visual-preproduction");
+  assert.deepEqual(cards.map((entry) => entry.id), [
+    "studio:design-cutscene-visual-preproduction:beginner",
+    "studio:design-cutscene-visual-preproduction:standard",
+    "studio:design-cutscene-visual-preproduction:advanced",
+  ]);
+  assert.deepEqual(cards.map((entry) => entry.level), ["beginner", "standard", "advanced"]);
+  for (const card of cards) {
+    assert.equal(card.product, "studio");
+    assert.match(card.cli_prompt.example, /^\$game-design-studio:design-cutscene-visual-preproduction\b/u);
+    assert.ok(card.source_references.includes("guides/game-design-studio/skills/design-cutscene-visual-preproduction.md"));
+    assert.ok(card.source_references.includes("guides/game-design-studio/cutscene-visual-preproduction.md"));
+  }
+  const advanced = cards.at(-1);
+  for (const field of ["count", "model", "quality", "size", "USD min/expected/max", "finite cap", "retryReserve", "pricing time", "costStatus", "named approval"]) {
+    assert.ok(advanced.required_inputs.includes(field), `advanced cutscene card requires ${field}`);
+  }
+  assert.match(advanced.when_not_to_use, /과거·포괄 승인/u);
+  assert.match(advanced.resume_prompt, /최신 retryable stable ID.*같은 current full-wave estimate.*named live approval/u);
+}
+
+test("Studio cutscene prompt catalog keeps three ordered approval-safe cards and rejects mutations", async () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+  const catalog = await loadPromptTemplateCatalog({ repoRoot });
+  assertCutscenePromptCards(catalog.entries);
+  const mutated = catalog.entries.map((entry) => entry.id === "studio:design-cutscene-visual-preproduction:advanced"
+    ? { ...entry, required_inputs: entry.required_inputs.filter((value) => value !== "costStatus") }
+    : entry);
+  assert.throws(() => assertCutscenePromptCards(mutated), /costStatus/u);
 });
 
 test("Studio visual catalog preserves image mode routing, no-key capability boundaries, and defaults", async () => {
@@ -1602,14 +1634,14 @@ test("loader rejects duplicate IDs and symlink shards", async (t) => {
   );
 });
 
-test("all 152 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
+test("all 155 catalog cards use Korean-first titles and distinct source-bound result excerpts", async () => {
   const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
   const catalogDir = path.join(repoRoot, "guides", "prompt-templates");
   const index = JSON.parse(await readFile(path.join(catalogDir, "catalog.json"), "utf8"));
   const entries = (await Promise.all(index.sources.map(async (source) => (
     JSON.parse(await readFile(path.join(catalogDir, source), "utf8"))
   )))).flat();
-  assert.equal(entries.length, 152);
+  assert.equal(entries.length, 155);
   assert.deepEqual(koreanPresentationErrors(entries), []);
 });
 
@@ -1774,7 +1806,7 @@ test("complete catalogs require every installed product skill at each level exac
     requireComplete: true,
   });
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 32/u);
+  assert.match(result.errors.join("\n"), /skill-template cardinality.*found 33/u);
   assert.match(result.errors.join("\n"), /skill-template cardinality.*found 0/u);
 });
 

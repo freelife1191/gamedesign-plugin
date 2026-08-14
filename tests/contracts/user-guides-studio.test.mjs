@@ -78,6 +78,7 @@ const WORKBENCH_LANES = Object.freeze({
   "polish-game-design-writing": "품질·검토",
   "review-game-design": "품질·검토",
   "plan-image-assets": "이미지",
+  "design-cutscene-visual-preproduction": "이미지",
   "generate-image-assets": "이미지",
   "review-image-assets": "이미지",
   "visualize-game-design": "시각화",
@@ -273,7 +274,7 @@ function assertStudioGuideRouting(index, skillIndex) {
 
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
-  assert.equal(inventory.skillIds.length, 23);
+  assert.equal(inventory.skillIds.length, 24);
 
   for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(
