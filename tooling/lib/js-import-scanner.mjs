@@ -15,22 +15,56 @@ function readQuoted(source, index, quote, end = source.length) {
   return { end, value, invalid: true };
 }
 
-function previousSignificant(source, index, start) {
-  let cursor = index - 1;
-  while (cursor >= start && /\s/u.test(source[cursor])) cursor -= 1;
-  if (cursor < start) return "";
-  const end = cursor + 1;
-  if (/[A-Za-z0-9_$]/u.test(source[cursor])) {
-    while (cursor >= start && /[A-Za-z0-9_$]/u.test(source[cursor])) cursor -= 1;
-    return source.slice(cursor + 1, end);
-  }
-  return source[cursor];
+const CONTROL_CONDITIONS = new Set(["catch", "for", "if", "switch", "while", "with"]);
+const EXPRESSION_START_WORDS = new Set(["case", "delete", "do", "else", "in", "instanceof", "new", "of", "return", "throw", "typeof", "void", "yield"]);
+
+function syntaxContext() {
+  return { braces: [], parentheses: [], previousWord: "", regexAllowed: true, statementPending: false };
 }
 
-function isRegexStart(source, index, start) {
-  const previous = previousSignificant(source, index, start);
-  return previous === "" || /[([{:;,!?=+*%&|^~<>]/u.test(previous)
-    || ["case", "delete", "do", "else", "in", "instanceof", "new", "of", "return", "throw", "typeof", "void", "yield"].includes(previous);
+function noteWord(context, word) {
+  context.previousWord = word;
+  context.regexAllowed = EXPRESSION_START_WORDS.has(word);
+  if (["do", "else", "finally", "try"].includes(word)) context.statementPending = true;
+}
+
+function noteLiteral(context) {
+  context.previousWord = "";
+  context.regexAllowed = false;
+  context.statementPending = false;
+}
+
+function notePunctuation(context, value) {
+  if (value === "(") {
+    context.parentheses.push({ control: CONTROL_CONDITIONS.has(context.previousWord) });
+    context.previousWord = "";
+    context.regexAllowed = true;
+    return;
+  }
+  if (value === ")") {
+    const parenthesis = context.parentheses.pop();
+    context.previousWord = "";
+    context.regexAllowed = Boolean(parenthesis?.control);
+    context.statementPending = Boolean(parenthesis?.control);
+    return;
+  }
+  if (value === "{") {
+    context.braces.push({ statement: context.statementPending });
+    context.previousWord = "";
+    context.regexAllowed = true;
+    context.statementPending = false;
+    return;
+  }
+  if (value === "}") {
+    const brace = context.braces.pop();
+    context.previousWord = "";
+    context.regexAllowed = Boolean(brace?.statement);
+    context.statementPending = Boolean(brace?.statement);
+    return;
+  }
+  context.previousWord = "";
+  context.statementPending = false;
+  context.regexAllowed = value === ";" || /[\[,:;!?=+*%&|^~<>/]/u.test(value);
 }
 
 function skipRegex(source, index, end) {
@@ -64,14 +98,20 @@ function skipTemplate(source, index, end) {
 
 function findTemplateExpressionEnd(source, start, end) {
   let depth = 1;
+  const context = syntaxContext();
   for (let cursor = start; cursor < end; cursor += 1) {
     const character = source[cursor];
-    if (character === "'" || character === '"') { cursor = readQuoted(source, cursor, character, end).end - 1; continue; }
-    if (character === "`") { cursor = skipTemplate(source, cursor, end) - 1; continue; }
+    if (character === "'" || character === '"') { cursor = readQuoted(source, cursor, character, end).end - 1; noteLiteral(context); continue; }
+    if (character === "`") { cursor = skipTemplate(source, cursor, end) - 1; noteLiteral(context); continue; }
     if (character === "/" && source[cursor + 1] === "/") { const newline = source.indexOf("\n", cursor + 2); cursor = (newline < 0 || newline >= end ? end : newline) - 1; continue; }
     if (character === "/" && source[cursor + 1] === "*") { const close = source.indexOf("*/", cursor + 2); cursor = (close < 0 || close >= end ? end : close + 2) - 1; continue; }
-    if (character === "/" && isRegexStart(source, cursor, start)) { cursor = skipRegex(source, cursor, end) - 1; continue; }
-    if (character === "{") { depth += 1; continue; }
+    if (character === "/" && context.regexAllowed) { cursor = skipRegex(source, cursor, end) - 1; noteLiteral(context); continue; }
+    if (/[A-Za-z_$]/u.test(character)) {
+      let wordEnd = cursor + 1; while (/[A-Za-z0-9_$]/u.test(source[wordEnd] ?? "")) wordEnd += 1;
+      noteWord(context, source.slice(cursor, wordEnd)); cursor = wordEnd - 1; continue;
+    }
+    if (character === "{") depth += 1;
+    notePunctuation(context, character);
     if (character === "}" && --depth === 0) return cursor;
   }
   return end;
@@ -98,26 +138,27 @@ function readTemplate(source, index, end, result) {
   return { end, substitution, value, invalid: true };
 }
 
-function tokens(source, start = 0, end = source.length, result = []) {
+function tokens(source, start = 0, end = source.length, result = [], context = syntaxContext()) {
   for (let index = start; index < end;) {
     const character = source[index];
     if (/\s/u.test(character)) { index += 1; continue; }
     if (character === "/" && source[index + 1] === "/") { const newline = source.indexOf("\n", index + 2); index = newline < 0 || newline >= end ? end : newline; continue; }
     if (character === "/" && source[index + 1] === "*") { const close = source.indexOf("*/", index + 2); index = close < 0 || close >= end ? end : close + 2; continue; }
-    if (character === "/" && isRegexStart(source, index, start)) { index = skipRegex(source, index, end); continue; }
+    if (character === "/" && context.regexAllowed) { index = skipRegex(source, index, end); noteLiteral(context); continue; }
     if (character === "'" || character === '"') {
       const quoted = readQuoted(source, index, character, end);
-      result.push({ ...quoted, index, type: "string" }); index = quoted.end; continue;
+      result.push({ ...quoted, index, type: "string" }); index = quoted.end; noteLiteral(context); continue;
     }
     if (character === "`") {
       const template = readTemplate(source, index, end, result);
-      result.push({ ...template, index, type: "template" }); index = template.end; continue;
+      result.push({ ...template, index, type: "template" }); index = template.end; noteLiteral(context); continue;
     }
     if (/[A-Za-z_$]/u.test(character)) {
       let tokenEnd = index + 1; while (/[A-Za-z0-9_$]/u.test(source[tokenEnd] ?? "")) tokenEnd += 1;
-      result.push({ index, type: "word", value: source.slice(index, tokenEnd) }); index = tokenEnd; continue;
+      const value = source.slice(index, tokenEnd);
+      result.push({ index, type: "word", value }); index = tokenEnd; noteWord(context, value); continue;
     }
-    result.push({ index, type: "punct", value: character }); index += 1;
+    result.push({ index, type: "punct", value: character }); index += 1; notePunctuation(context, character);
   }
   return result;
 }

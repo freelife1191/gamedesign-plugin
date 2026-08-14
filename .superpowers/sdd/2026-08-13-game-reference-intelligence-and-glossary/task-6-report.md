@@ -127,3 +127,64 @@ Output:
 game-design-career: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
 game-design-studio: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
 ```
+
+## Fix round 3/5 — control-statement regex boundaries
+
+### RED
+
+Command:
+
+```text
+node --test tests/unit/js-import-scanner.test.mjs
+```
+
+Output:
+
+```text
+✔ scanner returns each static form and literal dynamic import once
+✔ scanner ignores comments and strings but rejects nonliteral dynamic imports
+✔ scanner recursively scans JavaScript expressions inside template literals
+✖ scanner treats regexes after control statements as literals without bypassing division imports
+ℹ tests 4
+ℹ pass 3
+ℹ fail 1
+
+actual errors: ['dynamic-import-nonliteral', 'dynamic-import-nonliteral', 'dynamic-import-nonliteral', 'dynamic-import-nonliteral']
+expected errors: ['dynamic-import-nonliteral']
+```
+
+### GREEN
+
+- The scanner now tracks parentheses marked as control conditions and braces marked as control-statement bodies. A closing control condition or body therefore permits a following regex literal, whereas ordinary expression closings still treat `/` as division and continue to inspect a following `import(path)`.
+- Exact regressions cover `if (ready) /import(foo)/`, `while (ready) /import(foo)/`, and `if (ready) {} /import(foo)/`; the adjacent `total / import(path)` remains fail-closed.
+
+Command:
+
+```text
+node --test tests/unit/build-product.test.mjs tests/contracts/shared-contract.test.mjs tests/contracts/reference-intelligence-package.test.mjs tests/e2e/suite/memory-install-lifecycle.e2e.test.mjs tests/unit/js-import-scanner.test.mjs tests/unit/reference-intelligence-contract.test.mjs
+```
+
+Output:
+
+```text
+ℹ tests 67
+ℹ pass 67
+ℹ fail 0
+```
+
+Command:
+
+```text
+node --test tests/isolation/plugin-smoke.test.mjs tests/products/studio/product-contract.test.mjs tests/products/career/product-contract.test.mjs
+node tooling/isolation-smoke.mjs
+```
+
+Output:
+
+```text
+ℹ tests 31
+ℹ pass 31
+ℹ fail 0
+game-design-career: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
+game-design-studio: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
+```

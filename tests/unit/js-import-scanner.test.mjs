@@ -36,3 +36,14 @@ test("scanner recursively scans JavaScript expressions inside template literals"
   assert.deepEqual(result.specifiers.map(({ specifier }) => specifier), ["./hidden.mjs", "./nested.mjs"]);
   assert.deepEqual(result.errors.map(({ code }) => code), ["dynamic-import-nonliteral"]);
 });
+
+test("scanner treats regexes after control statements as literals without bypassing division imports", () => {
+  const result = scanJavaScriptImports(`
+    if (ready) /import(foo)/.test(text);
+    while (ready) /import(foo)/.test(text);
+    if (ready) {} /import(foo)/.test(text);
+    const quotient = total / import(path);
+  `);
+  assert.deepEqual(result.specifiers, []);
+  assert.deepEqual(result.errors.map(({ code }) => code), ["dynamic-import-nonliteral"]);
+});
