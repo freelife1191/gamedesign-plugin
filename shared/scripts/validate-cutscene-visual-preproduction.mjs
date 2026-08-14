@@ -143,7 +143,7 @@ function validateWave(value, index, mode, issue) {
 
 function validateForwardDag(downstream, issue) {
   if (!Array.isArray(downstream)) { issue("cutscene.dag_invalid", "/cutsceneWorkflow/downstream"); return; }
-  let previous = "";
+  let previous;
   downstream.forEach((edge, index) => {
     const path = `/cutsceneWorkflow/downstream/${index}`;
     closed(edge, ["fromWaveId", "toWaveId"], path, issue, { unknownCode: "cutscene.dag_unknown_key", requiredCode: "cutscene.dag_required" });
@@ -151,9 +151,12 @@ function validateForwardDag(downstream, issue) {
     if (from < 0) issue("cutscene.dag_reference_unknown", `${path}/fromWaveId`);
     if (to < 0) issue("cutscene.dag_reference_unknown", `${path}/toWaveId`);
     if (from >= 0 && to >= 0 && from >= to) issue("cutscene.dag_not_forward", `${path}/toWaveId`);
-    const key = `${edge?.fromWaveId}\0${edge?.toWaveId}`;
-    if (previous && compareUtf8(previous, key) >= 0) issue("cutscene.dag_unsorted_or_duplicate", "/cutsceneWorkflow/downstream");
-    previous = key;
+    const sortable = typeof edge?.fromWaveId === "string" && typeof edge?.toWaveId === "string" && from >= 0 && to >= 0;
+    if (sortable) {
+      const key = `${edge.fromWaveId}\0${edge.toWaveId}`;
+      if (previous !== undefined && compareUtf8(previous, key) >= 0) issue("cutscene.dag_unsorted_or_duplicate", "/cutsceneWorkflow/downstream");
+      previous = key;
+    }
   });
 }
 
@@ -167,9 +170,9 @@ export function validateCutsceneVisualPlan(value) {
     if (!MODES.includes(value?.mode)) issue("cutscene.mode_invalid", "/mode");
     const beatIds = new Set();
     if (!Array.isArray(value?.beats) || value.beats.length === 0) issue("cutscene.beats_empty", "/beats");
-    else value.beats.forEach((beat, index) => { closed(beat, ["beatId"], `/beats/${index}`, issue, { unknownCode: "cutscene.beat_unknown_key", requiredCode: "cutscene.beat_required" }); if (!RECORD_ID.test(beat?.beatId ?? "")) issue("cutscene.beat_id_invalid", `/beats/${index}/beatId`); beatIds.add(beat?.beatId); if (index > 0 && compareUtf8(value.beats[index - 1].beatId, beat.beatId) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/beats"); });
+    else value.beats.forEach((beat, index) => { closed(beat, ["beatId"], `/beats/${index}`, issue, { unknownCode: "cutscene.beat_unknown_key", requiredCode: "cutscene.beat_required" }); const current = beat?.beatId; const previous = index > 0 ? value.beats[index - 1]?.beatId : undefined; const valid = typeof current === "string" && RECORD_ID.test(current); if (!valid) issue("cutscene.beat_id_invalid", `/beats/${index}/beatId`); if (valid) beatIds.add(current); if (index > 0 && typeof previous === "string" && RECORD_ID.test(previous) && valid && compareUtf8(previous, current) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/beats"); });
     if (!Array.isArray(value?.shots) || value.shots.length === 0) issue("cutscene.shots_empty", "/shots");
-    else value.shots.forEach((shot, index) => { closed(shot, ["shotId", "beatId"], `/shots/${index}`, issue, { unknownCode: "cutscene.shot_unknown_key", requiredCode: "cutscene.shot_required" }); if (!RECORD_ID.test(shot?.shotId ?? "")) issue("cutscene.shot_id_invalid", `/shots/${index}/shotId`); if (!beatIds.has(shot?.beatId)) issue("cutscene.shot_beat_unknown", `/shots/${index}/beatId`); if (index > 0 && compareUtf8(value.shots[index - 1].shotId, shot.shotId) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/shots"); });
+    else value.shots.forEach((shot, index) => { closed(shot, ["shotId", "beatId"], `/shots/${index}`, issue, { unknownCode: "cutscene.shot_unknown_key", requiredCode: "cutscene.shot_required" }); const current = shot?.shotId; const previous = index > 0 ? value.shots[index - 1]?.shotId : undefined; const valid = typeof current === "string" && RECORD_ID.test(current); if (!valid) issue("cutscene.shot_id_invalid", `/shots/${index}/shotId`); if (!beatIds.has(shot?.beatId)) issue("cutscene.shot_beat_unknown", `/shots/${index}/beatId`); if (index > 0 && typeof previous === "string" && RECORD_ID.test(previous) && valid && compareUtf8(previous, current) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/shots"); });
     closed(value?.cutsceneWorkflow, ["schemaVersion", "waves", "downstream", "derived"], "/cutsceneWorkflow", issue, { unknownCode: "cutscene.workflow_unknown_key", requiredCode: "cutscene.workflow_required" });
     if (value?.cutsceneWorkflow?.schemaVersion !== 1) issue("cutscene.workflow_schema_version_invalid", "/cutsceneWorkflow/schemaVersion");
     if (!Array.isArray(value?.cutsceneWorkflow?.waves) || value.cutsceneWorkflow.waves.length !== WAVE_IDS.length) issue("cutscene.wave_count_invalid", "/cutsceneWorkflow/waves");
@@ -205,7 +208,7 @@ export function validateCutsceneGenerationApproval(value) {
     if (!Number.isInteger(value?.retryReserve) || value.retryReserve < 0) issue("cutscene.retry_reserve_invalid", "/retryReserve");
     for (const field of ["planSha256", "promptPackageSha256", "pricingSnapshotSha256", "costEstimateSha256"]) if (!isHash(value?.[field])) issue("cutscene.hash_invalid", `/${field}`);
     if (!Array.isArray(value?.referenceBindings) || value.referenceBindings.length === 0) issue("cutscene.reference_bindings_empty", "/referenceBindings");
-    else value.referenceBindings.forEach((binding, index) => { closed(binding, ["assetId", "sha256"], `/referenceBindings/${index}`, issue); if (!CUTSCENE_ID.test(binding?.assetId ?? "")) issue("cutscene.reference_asset_id_invalid", `/referenceBindings/${index}/assetId`); if (!isHash(binding?.sha256)) issue("cutscene.hash_invalid", `/referenceBindings/${index}/sha256`); if (index > 0 && compareUtf8(value.referenceBindings[index - 1].assetId, binding.assetId) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/referenceBindings"); });
+    else value.referenceBindings.forEach((binding, index) => { closed(binding, ["assetId", "sha256"], `/referenceBindings/${index}`, issue); const current = binding?.assetId; const previous = index > 0 ? value.referenceBindings[index - 1]?.assetId : undefined; const valid = typeof current === "string" && CUTSCENE_ID.test(current); if (!valid) issue("cutscene.reference_asset_id_invalid", `/referenceBindings/${index}/assetId`); if (!isHash(binding?.sha256)) issue("cutscene.hash_invalid", `/referenceBindings/${index}/sha256`); if (index > 0 && typeof previous === "string" && CUTSCENE_ID.test(previous) && valid && compareUtf8(previous, current) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/referenceBindings"); });
   });
 }
 
@@ -233,11 +236,12 @@ export function validateCutsceneContinuityReview(value) {
     if (!isHash(value?.planSha256)) issue("cutscene.hash_invalid", "/planSha256");
     if (!isRfc3339DateTime(value?.reviewedAt)) issue("cutscene.timestamp_invalid", "/reviewedAt");
     const expectedBlockers = [];
+    const findingDocuments = new Set();
     if (!Array.isArray(value?.findings)) issue("cutscene.findings_invalid", "/findings");
-    else value.findings.forEach((finding, index) => { const path = `/findings/${index}`; closed(finding, ["findingId", "code", "path", "sourceMasterIds", "affectedAssetIds", "blocking"], path, issue); if (!RECORD_ID.test(finding?.findingId ?? "")) issue("cutscene.finding_id_invalid", `${path}/findingId`); if (!isText(finding?.code)) issue("cutscene.finding_code_invalid", `${path}/code`); if (!isText(finding?.path)) issue("cutscene.finding_path_invalid", `${path}/path`); nonEmptySortedUnique(finding?.sourceMasterIds, `${path}/sourceMasterIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); nonEmptySortedUnique(finding?.affectedAssetIds, `${path}/affectedAssetIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); if (typeof finding?.blocking !== "boolean") issue("cutscene.finding_blocking_invalid", `${path}/blocking`); if (finding?.blocking === true) expectedBlockers.push(finding.findingId); });
+    else value.findings.forEach((finding, index) => { const path = `/findings/${index}`; const document = canonicalCutsceneDocument(finding); if (findingDocuments.has(document)) issue("cutscene.findings_duplicate", path); findingDocuments.add(document); closed(finding, ["findingId", "code", "path", "sourceMasterIds", "affectedAssetIds", "blocking"], path, issue); const validFindingId = typeof finding?.findingId === "string" && RECORD_ID.test(finding.findingId); if (!validFindingId) issue("cutscene.finding_id_invalid", `${path}/findingId`); if (!isText(finding?.code)) issue("cutscene.finding_code_invalid", `${path}/code`); if (!isText(finding?.path)) issue("cutscene.finding_path_invalid", `${path}/path`); nonEmptySortedUnique(finding?.sourceMasterIds, `${path}/sourceMasterIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); nonEmptySortedUnique(finding?.affectedAssetIds, `${path}/affectedAssetIds`, issue, { predicate: (id) => CUTSCENE_ID.test(id ?? "") }); if (typeof finding?.blocking !== "boolean") issue("cutscene.finding_blocking_invalid", `${path}/blocking`); if (finding?.blocking === true && validFindingId) expectedBlockers.push(finding.findingId); });
     if (!Array.isArray(value?.blockingFindingIds)) issue("cutscene.blockers_invalid", "/blockingFindingIds");
     else {
-      value.blockingFindingIds.forEach((id, index) => { if (!RECORD_ID.test(id ?? "")) issue("cutscene.id_invalid", `/blockingFindingIds/${index}`); if (index > 0 && compareUtf8(value.blockingFindingIds[index - 1], id) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/blockingFindingIds"); });
+      value.blockingFindingIds.forEach((id, index) => { const previous = index > 0 ? value.blockingFindingIds[index - 1] : undefined; const valid = typeof id === "string" && RECORD_ID.test(id); if (!valid) issue("cutscene.id_invalid", `/blockingFindingIds/${index}`); if (index > 0 && typeof previous === "string" && RECORD_ID.test(previous) && valid && compareUtf8(previous, id) >= 0) issue("cutscene.ids_unsorted_or_duplicate", "/blockingFindingIds"); });
       const actual = value.blockingFindingIds; const expected = [...new Set(expectedBlockers)].sort(compareUtf8);
       if (actual.length !== expected.length || actual.some((id, index) => id !== expected[index])) issue("cutscene.blocker_set_mismatch", "/blockingFindingIds");
     }

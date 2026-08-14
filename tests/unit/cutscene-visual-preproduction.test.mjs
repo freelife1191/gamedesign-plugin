@@ -134,14 +134,40 @@ function approvedManifest() {
 
 const schemaKeywords = new Set(["$schema", "$id", "$defs", "$ref", "type", "const", "enum", "required", "additionalProperties", "properties", "items", "pattern", "minLength", "minItems", "maxItems", "uniqueItems", "minimum", "maximum", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "format"]);
 const schemaType = (value, type) => type === "null" ? value === null : type === "object" ? value !== null && typeof value === "object" && !Array.isArray(value) : type === "array" ? Array.isArray(value) : type === "string" ? typeof value === "string" : type === "integer" ? Number.isInteger(value) : type === "number" ? typeof value === "number" && Number.isFinite(value) : type === "boolean" ? typeof value === "boolean" : false;
+const schemaStructuralJson = (value) => value === null || typeof value !== "object" ? JSON.stringify(value) : Array.isArray(value) ? `[${value.map(schemaStructuralJson).join(",")}]` : `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${schemaStructuralJson(value[key])}`).join(",")}}`;
 
-function schemaAccepts(value, rootSchema, schemas, schema = rootSchema) {
+function resolveSchemaReference(reference, rootSchema, schemas) {
+  if (typeof reference !== "string") return null;
+  if (reference.startsWith("#/")) return { rootSchema, schema: reference.slice(2).split("/").reduce((current, key) => current?.[key], rootSchema) };
+  const external = schemas.get(reference);
+  return external === undefined ? null : { rootSchema: external, schema: external };
+}
+
+function schemaPreflight(rootSchema, schemas, schema = rootSchema, seen = new Set()) {
+  if (typeof schema === "boolean") return true;
+  if (schema === null || typeof schema !== "object" || seen.has(schema) || Object.keys(schema).some((key) => !schemaKeywords.has(key))) return false;
+  seen.add(schema);
+  const nested = [];
+  if (schema.$ref) { const resolved = resolveSchemaReference(schema.$ref, rootSchema, schemas); if (!resolved || !schemaPreflight(resolved.rootSchema, schemas, resolved.schema, seen)) { seen.delete(schema); return false; } }
+  if (schema.$defs) nested.push(...Object.values(schema.$defs));
+  if (schema.properties) nested.push(...Object.values(schema.properties));
+  if (schema.items !== undefined) nested.push(schema.items);
+  if (schema.additionalProperties && typeof schema.additionalProperties === "object") nested.push(schema.additionalProperties);
+  for (const key of ["allOf", "anyOf", "oneOf"]) if (schema[key]) { if (!Array.isArray(schema[key])) return false; nested.push(...schema[key]); }
+  for (const key of ["not", "if", "then", "else"]) if (schema[key] !== undefined) nested.push(schema[key]);
+  const accepted = nested.every((child) => schemaPreflight(rootSchema, schemas, child, seen));
+  seen.delete(schema);
+  return accepted;
+}
+
+function schemaAccepts(value, rootSchema, schemas, schema = rootSchema, preflight = true) {
+  if (preflight && !schemaPreflight(rootSchema, schemas)) return false;
   if (typeof schema === "boolean") return schema;
   if (schema === null || typeof schema !== "object" || Object.keys(schema).some((key) => !schemaKeywords.has(key))) return false;
   if (schema.$ref) {
     if (Object.keys(schema).some((key) => !["$ref", "$schema", "$id"].includes(key))) return false;
-    const target = schema.$ref.startsWith("#/") ? schema.$ref.slice(2).split("/").reduce((current, key) => current?.[key], rootSchema) : schemas.get(schema.$ref);
-    return target === undefined ? false : schemaAccepts(value, rootSchema, schemas, target);
+    const resolved = resolveSchemaReference(schema.$ref, rootSchema, schemas);
+    return resolved === null || resolved.schema === undefined ? false : schemaAccepts(value, resolved.rootSchema, schemas, resolved.schema, false);
   }
   if (Object.hasOwn(schema, "const") && !Object.is(value, schema.const)) return false;
   if (schema.enum && (!Array.isArray(schema.enum) || !schema.enum.some((candidate) => Object.is(candidate, value)))) return false;
@@ -160,15 +186,15 @@ function schemaAccepts(value, rootSchema, schemas, schema = rootSchema) {
     if (schema.required && (!Array.isArray(schema.required) || schema.required.some((key) => !Object.hasOwn(value, key)))) return false;
     for (const [key, child] of Object.entries(value)) {
       const property = schema.properties?.[key];
-      if (property !== undefined) { if (!schemaAccepts(child, rootSchema, schemas, property)) return false; }
+      if (property !== undefined) { if (!schemaAccepts(child, rootSchema, schemas, property, false)) return false; }
       else if (schema.additionalProperties === false) return false;
-      else if (schema.additionalProperties !== undefined && !schemaAccepts(child, rootSchema, schemas, schema.additionalProperties)) return false;
+      else if (schema.additionalProperties !== undefined && !schemaAccepts(child, rootSchema, schemas, schema.additionalProperties, false)) return false;
     }
   }
   if (Array.isArray(value)) {
     if (schema.minItems !== undefined && value.length < schema.minItems || schema.maxItems !== undefined && value.length > schema.maxItems) return false;
-    if (schema.uniqueItems && new Set(value.map((item) => JSON.stringify(item))).size !== value.length) return false;
-    if (schema.items !== undefined && !value.every((item) => schemaAccepts(item, rootSchema, schemas, schema.items))) return false;
+    if (schema.uniqueItems && new Set(value.map(schemaStructuralJson)).size !== value.length) return false;
+    if (schema.items !== undefined && !value.every((item) => schemaAccepts(item, rootSchema, schemas, schema.items, false))) return false;
   }
   return true;
 }
@@ -374,6 +400,21 @@ test("schema evaluator fails closed for unsupported keywords, dates, and referen
   assert.equal(schemaAccepts(null, { type: ["string", "null"] }, new Map()), true);
 });
 
+test("schema evaluator preflights unused properties, definitions, and both conditional branches", () => {
+  assert.equal(schemaAccepts({ used: "safe" }, { type: "object", properties: { used: { type: "string" }, unused: { unsupported: true } } }, new Map()), false);
+  assert.equal(schemaAccepts({ mode: "selected" }, { type: "object", properties: { mode: { const: "selected" } }, $defs: { unreachable: { $ref: "missing.schema.json" } } }, new Map()), false);
+  assert.equal(schemaAccepts({ mode: "selected" }, { type: "object", properties: { mode: { const: "selected" } }, if: { properties: { mode: { const: "selected" } } }, then: { type: "object" }, else: { unsupported: true } }, new Map()), false);
+});
+
+test("continuity findings reject structural duplicates independent of object key order in runtime and schema", async () => {
+  const first = { findingId: "non-blocking", code: "continuity.note", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: false };
+  const second = { blocking: false, affectedAssetIds: ["cutscene-escape-style-master-01"], sourceMasterIds: ["cutscene-escape-style-master-01"], path: "/shots/0", code: "continuity.note", findingId: "non-blocking" };
+  const review = validContinuityReview({ findings: [first, second] });
+  const { byName, byFile } = await cutsceneSchemas();
+  assert.equal(validateCutsceneContinuityReview(review).ok, false);
+  assert.equal(schemaAccepts(review, byName.get("cutscene-continuity-review"), byFile), false);
+});
+
 test("every expressible ID, collection, closed-shape, and timestamp rule has schema/runtime parity", async () => {
   const { byName, byFile } = await cutsceneSchemas();
   const cases = [
@@ -414,6 +455,23 @@ test("malformed IDs and hostile Proxy input return deterministic errors without 
   }
   const proxy = new Proxy(validCutscenePlan(), { ownKeys() { throw new Error("hostile"); } });
   assert.deepEqual(firstError(validateCutsceneVisualPlan(proxy)), { code: "cutscene.hostile_input", path: "" });
+});
+
+test("every sorted comparison rejects malformed beat, shot, reference, blocker, and DAG IDs without TypeError", () => {
+  const plans = [];
+  const beats = validCutscenePlan(); beats.beats = [{ beatId: 1 }, { beatId: 2 }]; plans.push(beats);
+  const shots = validCutscenePlan(); shots.shots = [{ shotId: 1, beatId: "BEAT-01" }, { shotId: 2, beatId: "BEAT-01" }]; plans.push(shots);
+  const dag = validCutscenePlan(); dag.cutsceneWorkflow.downstream = [{ fromWaveId: 1, toWaveId: "reference-masters" }]; plans.push(dag);
+  for (const plan of plans) { assert.doesNotThrow(() => validateCutsceneVisualPlan(plan)); assert.equal(validateCutsceneVisualPlan(plan).ok, false); }
+  const approval = validApproval(); approval.referenceBindings = [{ assetId: 1, sha256: SHA }, { assetId: 2, sha256: SHA }];
+  assert.doesNotThrow(() => validateCutsceneGenerationApproval(approval)); assert.equal(validateCutsceneGenerationApproval(approval).ok, false);
+  const review = validContinuityReview({ blockingFindingIds: [1, 2] });
+  assert.doesNotThrow(() => validateCutsceneContinuityReview(review)); assert.equal(validateCutsceneContinuityReview(review).ok, false);
+  const malformedFindings = validContinuityReview({ findings: [
+    { findingId: 1, code: "continuity.note", path: "/shots/0", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true },
+    { findingId: 2, code: "continuity.note", path: "/shots/1", sourceMasterIds: ["cutscene-escape-style-master-01"], affectedAssetIds: ["cutscene-escape-style-master-01"], blocking: true },
+  ], blockingFindingIds: [] });
+  assert.doesNotThrow(() => validateCutsceneContinuityReview(malformedFindings)); assert.equal(validateCutsceneContinuityReview(malformedFindings).ok, false);
 });
 
 test("programmer errors inside the validator are not swallowed as input errors", async (t) => {
