@@ -170,6 +170,7 @@ async function readJournal(artifactRoot, waveId, assetIds, { estimate, pricingSn
 
 function assertCurrent(rawInput, explicitRetry = false) {
   const input = normalizePublicInput(rawInput);
+  if (!Object.hasOwn(input, "plan") || input.plan === undefined) throw coded("cutscene.hostile_input", "/plan");
   const plan = snapshotCutscenePlainData(input.plan);
   if (plan.mode !== "generate-after-approval") throw coded("cutscene.mode_generation_forbidden", "/mode");
   if (Object.hasOwn(input, "authorizeProviderAttempt")) throw coded("cutscene.authorization_seam_forbidden", "/authorizeProviderAttempt");

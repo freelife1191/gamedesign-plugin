@@ -675,6 +675,37 @@ test("public cutscene entrypoints reject hostile outer envelopes before property
   ]);
 });
 
+test("public cutscene entrypoints reject absent root plans before provider or artifact I/O", async (t) => {
+  const outcomes = [];
+  for (const [entryName, invoke] of [
+    ["initial", (input) => runApprovedCutsceneImageWave(input)],
+    ["retry", (input) => retryCutsceneFailedAssets(input)],
+  ]) {
+    for (const name of ["empty", "undefined", "missing", "inherited"]) {
+      const artifactRoot = await mkdtemp(path.join(tmpdir(), `cutscene-root-plan-${entryName}-${name}-`));
+      t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+      await mkdir(path.join(artifactRoot, "empty"));
+      await writeFile(path.join(artifactRoot, "keep.txt"), "unchanged\n");
+      await symlink("keep.txt", path.join(artifactRoot, "keep-link"));
+      const fixture = stageFixture({ ceilings: [0.4] });
+      let providerCalls = 0;
+      const input = { ...fixture, artifactRoot, workspaceRoot: artifactRoot, failedAssetIds: [...fixture.selectedAssetIds], fetchFn: async () => { providerCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); } };
+      let rawInput = input;
+      if (name === "empty") rawInput = {};
+      if (name === "undefined") input.plan = undefined;
+      if (name === "missing") delete input.plan;
+      if (name === "inherited") { rawInput = Object.create({ plan: fixture.plan }); Object.assign(rawInput, input); delete rawInput.plan; }
+      const before = await artifactSnapshot(artifactRoot);
+      let error;
+      try { await invoke(rawInput); } catch (caught) { error = caught; }
+      outcomes.push({ entryName, name, code: error?.code, path: error?.path, providerCalls, unchanged: JSON.stringify(await artifactSnapshot(artifactRoot)) === JSON.stringify(before) });
+    }
+  }
+  assert.deepEqual(outcomes, [
+    ...["initial", "retry"].flatMap((entryName) => ["empty", "undefined", "missing", "inherited"].map((name) => ({ entryName, name, code: "cutscene.hostile_input", path: "/plan", providerCalls: 0, unchanged: true }))),
+  ]);
+});
+
 test("predecessor completion diagnostics distinguish missing, wrong-kind, and stale asset-set evidence", async (t) => {
   const outcomes = [];
   for (const [name, mutate, expected] of [

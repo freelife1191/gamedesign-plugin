@@ -194,3 +194,28 @@ workflow task before that broader suite can be green.
 - Focused Task 4/5/6 plus Studio/Career source matrix → 240 passing, 0 failing,
   including normal callback/authority, initial/retry, and temporary
   Studio/Career shared runtime/schema byte-parity coverage. No live calls.
+
+## Fix round 5 — root plan presence boundary
+
+### Baseline and RED
+
+- Allowing nested `undefined` in the safe plan snapshot accidentally also
+  admitted an `undefined` root. Consequently `runApprovedCutsceneImageWave({})`,
+  retry with `{}`, an own `plan: undefined`, a missing own plan, and an
+  inherited-only plan could reach a raw `plan.mode` TypeError.
+
+### Forward result
+
+- `assertCurrent` now requires an own, defined `plan` on the already-normalized
+  envelope before snapshotting and returns `cutscene.hostile_input` at `/plan`.
+  `snapshotCutscenePlainData` again rejects an undefined root while retaining
+  safe nested `undefined`, so the predecessor guard still reports deleted,
+  undefined, and null completion as its stable missing-completion diagnostic.
+
+### Fix validation
+
+- New real-filesystem public contracts cover empty, own-undefined, missing-own,
+  and inherited-only root plans for initial and retry; all have provider 0 and
+  full-tree equality. Relevant Task 4/5/6 plus Studio/Career matrix → 167
+  passing, 0 failing, including temporary package schema/runtime parity. No live
+  calls.
