@@ -16,6 +16,7 @@ import {
 } from "../../shared/scripts/lib/cutscene-generation-approval.mjs";
 import { bindCutscenePromptPackage, planCutsceneVisualPreproduction } from "../../shared/scripts/plan-cutscene-visual-preproduction.mjs";
 import { cutsceneDocumentSha256 } from "../../shared/scripts/validate-cutscene-visual-preproduction.mjs";
+import { runApprovedCutsceneImageWave } from "../../shared/scripts/run-approved-cutscene-image-stage.mjs";
 
 const REFERENCE_SHA = "3".repeat(64);
 const TASK2_MASTER_SOURCE_IDS = [
@@ -214,6 +215,24 @@ test("actual cost never invents cached usage", () => {
   const pricingSnapshot = pricingSnapshotFixture();
   const usage = { inputTokens: 10, inputTextTokens: 6, inputImageTokens: 4, outputTokens: 8, totalTokens: 18 };
   assert.deepEqual(calculateActualCost({ pricingSnapshot, usage }), { status: "unavailable", reason: "cached-token-breakdown-unavailable" });
+});
+
+test("non-generation modes reject before authority, provider dispatch, or artifact writes", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-mode-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const authority = authorityFixture();
+  const issued = issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", ...authority });
+  let calls = 0;
+  const plan = structuredClone(authority.plan);
+  plan.mode = "prompt-only";
+  await assert.rejects(() => runApprovedCutsceneImageWave({
+    artifactRoot, waveId: "style-master", selectedAssetIds: authority.estimate.assetIds, attemptState: { failedAttempts: 0, accumulatedUsd: 0 },
+    plan, promptPackage: authority.promptPackage, manifest: planCutsceneVisualPreproduction({ cutsceneId: "cutscene-escape", mode: "prompt-only", beats: [{ beatId: "BEAT-01" }], shots: [{ shotId: "SHOT-01", beatId: "BEAT-01" }] }).manifest,
+    pricingSnapshot: authority.pricingSnapshot, estimate: authority.estimate, approvalEvent: approvalEvent(), receipt: issued.receipt, capability: issued.capability,
+    now: "2026-08-13T00:01:00.000Z", env: {}, fetchFn: async () => { calls += 1; throw new Error("must not fetch"); },
+  }), { code: "cutscene.mode_generation_forbidden", path: "/mode" });
+  assert.equal(calls, 0);
+  assert.deepEqual(await (await import("node:fs/promises")).readdir(artifactRoot), []);
 });
 
 test("a two-reference Task 2 package issues and validates with an internally canonical receipt binding", () => {

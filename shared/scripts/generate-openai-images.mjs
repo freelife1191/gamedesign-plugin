@@ -229,9 +229,20 @@ function requestBody(job, model, quality, referenceInputs) {
   return { endpoint: editEndpoint, headers: {}, body };
 }
 
-async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs }) {
+async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs, referenceVerifier, requestTimeoutMs, beforeProvider }) {
   let attempts = 0;
   while (attempts < maximumAttempts) {
+    try {
+      await referenceVerifier?.();
+    } catch {
+      return { ok: false, attempts, generationState: "qa-failed", reason: "invalid-generation-reference" };
+    }
+    // Authorization belongs to the dispatch boundary: a retry is a new
+    // provider attempt and must not inherit a previous authorization.
+    await beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempts + 1 });
+    // The authorization hook may take time or deliberately trigger a
+    // filesystem race in a test harness. Verify pinned references once more
+    // before consuming an attempt or delivering bytes to the provider.
     try {
       await referenceVerifier?.();
     } catch {
@@ -334,14 +345,7 @@ export async function generateOpenAIImages({
       failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
       continue;
     }
-    try {
-      await beforeProvider?.({ asset_id: job.asset_id });
-      await references.verify?.();
-    } catch {
-      failures.push(failure(job.asset_id, "qa-failed", "invalid-generation-reference", 0));
-      continue;
-    }
-    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs });
+    const requested = await requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now, referenceInputs: references.inputs, referenceVerifier: references.verify, requestTimeoutMs, beforeProvider });
     if (!requested.ok) {
       failures.push(failure(job.asset_id, requested.generationState, requested.reason, requested.attempts));
       continue;

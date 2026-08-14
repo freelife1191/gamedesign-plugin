@@ -470,6 +470,23 @@ async function publishHostOutputs(value, jobs, prepared) {
   return { results, failures };
 }
 
+async function generateHostWithRetries({ root, jobs, prepared, hostGenerate, beforeProvider }) {
+  let outcome;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const callback = await hostJobsForCallback(root, jobs);
+      for (const job of jobs) await beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempt });
+      await callback.verify();
+      outcome = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: callback.jobs }), jobs), jobs, prepared);
+    } catch (error) {
+      if (error?.code) throw error;
+      outcome = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
+    }
+    if (outcome.results.length > 0 || outcome.failures.some(({ generation_state }) => generation_state !== "generation-failed") || attempt === 3) return outcome;
+  }
+  return outcome;
+}
+
 export async function runImageAssetWorkflow(options = {}) {
   const planned = await planImageAssetWorkflow(options);
   const generated = await generateImageAssetWorkflow({ ...options, manifest: planned.manifest });
@@ -480,6 +497,21 @@ export async function runConfiguredImageAssetWorkflow({ workspaceRoot, env, ...o
   const config = await loadImageConfig({ workspaceRoot, env });
   const result = await runImageAssetWorkflow({ ...options, config });
   return { ...result, config: toPublicImageConfig(config) };
+}
+
+// Cutscene dispatch has already established its own closed human approval.
+// It must not manufacture a second host-user selection receipt merely to use
+// the shared provider adapter.
+export async function runConfiguredSelectedImageAssetWorkflow({ workspaceRoot, env, manifest, selectedAssetIds, provider, apiKey, fetchFn, hostGenerate, beforeProvider, artifactRoot, now, sleepFn } = {}) {
+  const loaded = await loadImageConfig({ workspaceRoot, env });
+  if (!['openai', 'codex-host'].includes(provider)) throw new Error("Cutscene provider is not allowed.");
+  const config = {
+    ...loaded,
+    mode: "select",
+    apiKey: provider === "openai" ? apiKey : undefined,
+    apiKeyPresent: provider === "openai",
+  };
+  return generateImageAssetWorkflow({ artifactRoot, manifest, config, selectedAssetIds, fetchFn, hostGenerate, beforeProvider, now, sleepFn, codexCapability: provider === "codex-host" ? true : undefined, internalSelection: true });
 }
 
 export async function planImageAssetWorkflow({ artifactRoot, artifact, qualityProfile, existingManifest = null, patternCatalog, cutsceneManifest } = {}) {
@@ -516,6 +548,7 @@ export async function generateImageAssetWorkflow({
   beforeProvider,
   generateOpenAIImagesFn = generateOpenAIImages,
   attemptIdFactory = randomUUID,
+  internalSelection = false,
 } = {}) {
   const root = (await canonicalArtifactRoot(artifactRoot)).path;
   if (!manifest || typeof manifest !== "object") throw new Error("A planned image manifest is required for generation.");
@@ -527,9 +560,9 @@ export async function generateImageAssetWorkflow({
   assertCompiledPromptBindings(manifest);
   const sourceValidation = validateImageAssetManifest(manifest, { artifactRoot: root });
   if (!sourceValidation.ok) throw new Error(`Generation requires a current image manifest: ${sourceValidation.errors.map(({ code }) => code).join(", ")}`);
-  const receipt = publicConfig.mode === "select" ? validateSelectionReceipt(selectionReceipt, selectedAssetIds) : undefined;
+  const receipt = publicConfig.mode === "select" && !internalSelection ? validateSelectionReceipt(selectionReceipt, selectedAssetIds) : undefined;
   const jobs = selectGenerationJobs({ manifest, mode: publicConfig.mode, selectedAssetIds });
-  const selection = selectionRecord(publicConfig.mode, selectedAssetIds, receipt);
+  const selection = internalSelection ? { mode: "select", asset_ids: [...selectedAssetIds], source: "cutscene-approved" } : selectionRecord(publicConfig.mode, selectedAssetIds, receipt);
   if (receipt) await safeWriteArtifactFile({
     artifactRoot: root, relativePath: `assets/prompts/image-generation-selection-${receipt.event_id}.json`, data: `${JSON.stringify(selection, null, 2)}\n`, policy: "create-once",
   });
@@ -566,15 +599,7 @@ export async function generateImageAssetWorkflow({
       } else if (typeof hostGenerate !== "function") {
         one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" }] };
       } else {
-        try {
-          const callback = await hostJobsForCallback(root, [boundJob]);
-          await beforeProvider?.({ asset_id: boundJob.asset_id });
-          await callback.verify();
-          one = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: callback.jobs }), [boundJob]), [boundJob], preparedHostOutputs);
-        } catch (error) {
-          if (error?.message?.startsWith("Host generation")) throw error;
-          one = { results: [], failures: [{ asset_id: boundJob.asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } }] };
-        }
+        one = await generateHostWithRetries({ root, jobs: [boundJob], prepared: preparedHostOutputs, hostGenerate, beforeProvider });
       }
       providerResult.results.push(...one.results);
       providerResult.failures.push(...one.failures);
@@ -595,15 +620,7 @@ export async function generateImageAssetWorkflow({
     if (typeof hostGenerate !== "function") {
       providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-unavailable", reason: "host-generator-unavailable" })) };
     } else {
-      try {
-        const callback = await hostJobsForCallback(root, jobs);
-        await beforeProvider?.();
-        await callback.verify();
-        providerResult = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: callback.jobs }), jobs), jobs, preparedHostOutputs);
-      } catch (error) {
-        if (error?.message?.startsWith("Host generation")) throw error;
-        providerResult = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
-      }
+      providerResult = await generateHostWithRetries({ root, jobs, prepared: preparedHostOutputs, hostGenerate, beforeProvider });
     }
     executedJobs.push(...jobs);
   } else if (jobs.length > 0 && decision.provider === "unavailable") {

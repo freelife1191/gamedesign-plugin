@@ -125,6 +125,23 @@ test("generateOpenAIImages posts one bounded OpenAI request and atomically promo
   assert.match(result.results[0].provenance.prompt_digest, /^[a-f0-9]{64}$/u);
 });
 
+test("generateOpenAIImages authorizes every retried provider attempt immediately before fetch", async (t) => {
+  const root = await staging(t);
+  const authorizations = [];
+  let fetches = 0;
+  const result = await generateOpenAIImages({
+    jobs: [job()], apiKey: key, model: "gpt-image-2", quality: "low", now, stagingRoot: root, sleepFn: async () => {},
+    beforeProvider: ({ asset_id, attempt_ordinal }) => authorizations.push([asset_id, attempt_ordinal]),
+    fetchFn: async () => {
+      fetches += 1;
+      return fetches === 1 ? response({ status: 500, body: { error: {} } }) : successResponse();
+    },
+  });
+  assert.deepEqual(authorizations, [["hero-image", 1], ["hero-image", 2]]);
+  assert.equal(fetches, 2);
+  assert.equal(result.results[0].asset_id, "hero-image");
+});
+
 test("promoteValidatedPng rejects truncated, corrupt, and incomplete PNG structures before publishing", async (t) => {
   const root = await staging(t);
   const valid = png();
