@@ -174,8 +174,7 @@ test("Career routing and specialist roles expose image workflows without self-ap
   assert.ok(routing.skillIds.includes("review-image-assets"));
   assert.ok(routing.imageSpecialistIds.includes("art-brief-director"));
   assert.ok(routing.imageSpecialistIds.includes("visual-asset-reviewer"));
-  assert.match(orchestrator, /apply-document-quality-profile.*plan-image-assets/is);
-  assert.match(orchestrator, /generate-image-assets.*review-image-assets/is);
+  assert.match(orchestrator, /select the ordered skill chain, quality\/image work/is);
   assert.match(artDirector, /purpose.*readability.*prompt.*variant/is);
   assert.match(reviewer, /visual.*accessibility.*rights.*placement/is);
   assert.match(artDirector, /recommend/is);

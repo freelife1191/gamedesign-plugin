@@ -64,6 +64,8 @@ export const STUDIO_CANONICAL_ROUTE_PRODUCTION_CONTRACT = Object.freeze({
   review: { triggerIntents: ["design review", "critique", "launch readiness", "risk review"], skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
   visualization: { triggerIntents: ["diagram", "visualize", "flow chart", "economy map", "roadmap diagram"], skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
   export: { triggerIntents: ["export", "PDF", "DOCX", "presentation", "PPTX"], skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
+  "reference-game-analysis": { triggerIntents: ["reference game analysis", "game comparison", "design transfer decision"], skill: "analyze-game-design-references", requiredInputs: ["reference brief", "reference set", "evidence scope", "project constraints"], artifactType: "reference-system-analysis" },
+  "project-glossary-maintenance": { triggerIntents: ["game design glossary", "terminology maintenance", "terminology findings"], skill: "maintain-game-design-glossary", requiredInputs: ["glossary candidates", "glossary snapshot", "human decision owner"], artifactType: "game-design-glossary" },
 });
 
 function indexUniqueById(values, label) {

@@ -9,8 +9,12 @@ import { applyImageReviewTransition } from "../../shared/scripts/validate-image-
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const sourceBoundMemorySkillIds = new Set(SOURCE_BOUND_MEMORY_SKILL_IDS);
-const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId));
-const workbenchLink = (skillId) => `[\`${skillId}\`](${sourceBoundMemorySkillIds.has(skillId) ? "../memory.md" : `../skills/${skillId}.md`})`;
+const sourceBoundReferenceSkillPaths = new Map([
+  ["analyze-game-design-references", "../reference-analysis.md"],
+  ["maintain-game-design-glossary", "../glossary.md"],
+]);
+const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId) && !sourceBoundReferenceSkillPaths.has(skillId));
+const workbenchLink = (skillId) => `[\`${skillId}\`](${sourceBoundMemorySkillIds.has(skillId) ? "../memory.md" : (sourceBoundReferenceSkillPaths.get(skillId) ?? `../skills/${skillId}.md`)})`;
 const requiredHeadings = [
   "목적과 최종 산출물",
   "사용할 때",
@@ -490,7 +494,7 @@ function assertSkillContract(markdown, skillId) {
 
 test("Career documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-career");
-  assert.equal(inventory.skillIds.length, 21);
+  assert.equal(inventory.skillIds.length, 23);
 
   for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(
@@ -697,7 +701,7 @@ test("Career skill workbench inventories every installed skill once by lane", as
   const inventory = await collectProductInventory(root, "game-design-career");
   const workbench = await readFile(path.join(root, "guides/game-design-career/use-cases/skill-workbench.md"), "utf8");
   const expectedGroups = {
-    "역할·근거 lane": ["apply-document-quality-profile", "humanize-korean", "polish-game-design-writing", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs"],
+    "역할·근거 lane": ["apply-document-quality-profile", "humanize-korean", "polish-game-design-writing", "map-game-design-career", "orchestrate-game-design-career", "research-game-design-jobs", "analyze-game-design-references", "maintain-game-design-glossary"],
     "역기획·포트폴리오 lane": ["reverse-engineer-game-design", "build-game-design-portfolio", "review-game-design-portfolio"],
     "면접·성장 lane": ["practice-game-design-interview", "plan-junior-growth"],
     "이미지·시각화 lane": ["plan-image-assets", "generate-image-assets", "review-image-assets", "svg-infographic", "archify", "visualize-career-roadmap"],
@@ -1132,9 +1136,11 @@ test("Career entry indexes bind exploration links and representative case tables
     ["[Career 활용 사례 인덱스](use-cases/README.md)", "직무·대상·직접 스킬 중 현재 목표의 출발점을 고름"],
     ["[Career FAQ](faq.md)", "요청문·읽는 순서·재개 경로"],
     ["[프로젝트 기억](memory.md)", "승인된 학습·포트폴리오 교훈의 로컬 보관과 후보 관리"],
+    ["[경쟁작·레퍼런스 분석](reference-analysis.md)", "관찰 근거로 시스템을 비교하고 포트폴리오 반영 전 사람 검토를 준비"],
+    ["[용어 사전 검토](glossary.md)", "후보 용어를 사람 승인과 스냅샷에 묶고 원문 자동 치환을 막음"],
     ["[공통 결과물 카탈로그](../use-cases/output-catalog.md)", "원본·선택 자산·파생 형식과 사람 검토"],
   ], "Career FAQ and output catalog remain separate detail rows");
-  for (const target of ["use-cases/README.md", "faq.md", "memory.md", "../use-cases/output-catalog.md"]) {
+  for (const target of ["use-cases/README.md", "faq.md", "memory.md", "reference-analysis.md", "glossary.md", "../use-cases/output-catalog.md"]) {
     const resolved = path.resolve(root, "guides/game-design-career", target);
     await lstat(resolved);
   }

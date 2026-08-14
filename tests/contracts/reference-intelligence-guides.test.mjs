@@ -51,12 +51,6 @@ const rootGuideLinks = [
   { label: "Career 분석", target: "guides/game-design-career/reference-analysis.md" },
   { label: "Career 용어 사전", target: "guides/game-design-career/glossary.md" },
 ];
-const baselineArchifyErrors = [
-  "stale-source: products/game-design-career/plugin/skills/reverse-engineer-game-design/SKILL.md",
-  "stale-source: products/game-design-studio/plugin/skills/design-game-systems/SKILL.md",
-  "stale-source: products/game-design-career/plugin/skills/polish-game-design-writing/SKILL.md",
-  "stale-source: products/game-design-studio/plugin/skills/polish-game-design-writing/SKILL.md",
-];
 const referenceGuideCatalogRecords = [
   {
     id: "excluded-6cfb0f7c2ba4",
@@ -245,10 +239,10 @@ test("guide validation count follows the actual Markdown inventory", async () =>
   assert.equal(validation.counts.guides, files.length);
 });
 
-test("Task 7 Archify records leave only the a061964 baseline validator errors", async () => {
+test("Task 8 Archify records close the prior stale baseline and cover generated mirrors", async () => {
   const catalog = JSON.parse(await readFile(path.join(repoRoot, "guides/archify-diagrams/catalog.json"), "utf8"));
   const validation = await validateArchifyCatalog(catalog, { repoRoot });
-  assert.deepEqual(validation.errors, baselineArchifyErrors);
+  assert.deepEqual(validation.errors, []);
   assert.deepEqual(validation.uncovered, []);
 
   for (const record of referenceGuideCatalogRecords) {

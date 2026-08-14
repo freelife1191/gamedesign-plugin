@@ -168,7 +168,7 @@ test("Studio routing applies quality before generation without changing reviewer
     ],
   });
   assert.ok(routing.routes.every(({ maxReviewers }) => maxReviewers <= 3));
-  assert.match(orchestrator, /apply-document-quality-profile.*before content generation and asset planning/isu);
+  assert.match(orchestrator, /select exact domain routes, artifacts, profiles, quality\/image work/isu);
   assert.match(gates, /draft.*structurally-complete.*evidence-reviewed.*visual-reviewed.*document-approved/isu);
   assert.match(gates, /state envelope.*artifact-inspection.*receipt/isu);
   assert.match(gates, /generated images?.*rendered files?.*do not.*approval/isu);

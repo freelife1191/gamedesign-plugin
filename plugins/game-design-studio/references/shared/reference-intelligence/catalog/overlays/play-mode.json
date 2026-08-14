@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "overlays": [
+    {
+      "overlayId": "cooperative",
+      "questions": [
+        { "questionId": "session-network-cooperative-recovery", "systemId": "session-network", "applicability": "conditional", "rationale": "Network continuity matters when cooperative state can be interrupted.", "conditions": ["Apply when a cooperative session uses networked state."], "verificationPrompts": ["What happens when a participant leaves or reconnects?"] },
+        { "questionId": "social-cooperative-coordination", "systemId": "social", "applicability": "conditional", "rationale": "Coordination is relevant when players share goals or resources.", "conditions": ["Apply when the reference supports cooperative play."], "verificationPrompts": ["How are roles, communication, and shared outcomes coordinated?"] }
+      ]
+    },
+    {
+      "overlayId": "competitive-pvp",
+      "questions": [
+        { "questionId": "content-pvp-match-structure", "systemId": "content", "applicability": "conditional", "rationale": "Match rules and queues are relevant when players compete directly.", "conditions": ["Apply when competitive player-versus-player play is present."], "verificationPrompts": ["What determines match entry, objectives, and completion?"] },
+        { "questionId": "social-pvp-safety", "systemId": "social", "applicability": "conditional", "rationale": "Reporting and safety paths need review when strangers interact competitively.", "conditions": ["Apply when social interaction between competitors is observable."], "verificationPrompts": ["What reporting, mute, block, or moderation paths are exposed?"] }
+      ]
+    },
+    {
+      "overlayId": "single-player",
+      "questions": [
+        { "questionId": "session-network-single-player-offline", "systemId": "session-network", "applicability": "optional", "rationale": "Session continuity remains a check even when multiplayer is absent.", "conditions": ["Apply when the reference has saves, cloud state, or online checks."], "verificationPrompts": ["What play, save, and recovery behavior is available without a party?"] }
+      ]
+    }
+  ]
+}

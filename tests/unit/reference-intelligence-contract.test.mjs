@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { classifyInactiveReferenceIntelligenceSourcePaths, parseReferenceIntelligenceContract, referenceIntelligenceContractLayouts } from "../../tooling/lib/reference-intelligence-contract.mjs";
+import { syncShared } from "../../tooling/sync-shared.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -20,6 +22,17 @@ test("classifier returns exactly the three closed inactive source-runtime tuples
     tuples.push(...classifyInactiveReferenceIntelligenceSourcePaths({ packageRoot: repoRoot, skillPath, contract, installedCounterparts: counterparts(repoRoot, skillPath, layout) }));
   }
   assert.deepEqual(tuples.map(({ tuple }) => tuple).sort(), [
+    "skills/analyze-game-design-references/SKILL.md\0../../../scripts/analyze-game-design-references.mjs",
+    "skills/maintain-game-design-glossary/SKILL.md\0../../../scripts/manage-game-design-glossary.mjs",
+    "skills/maintain-game-design-glossary/SKILL.md\0../../../scripts/validate-game-design-writing-language.mjs",
+  ]);
+});
+
+test("snapshot staging audits closed inactive source runtimes without weakening package paths", async (t) => {
+  const stagingRoot = await mkdtemp(path.join(tmpdir(), "reference-intelligence-sync-audit-"));
+  t.after(() => rm(stagingRoot, { recursive: true, force: true }));
+  const result = await syncShared({ repoRoot, productName: "game-design-studio", stagingRoot, sourceDateEpoch: 0 });
+  assert.deepEqual(result.audit.usedInactiveRelativeReferenceTuples, [
     "skills/analyze-game-design-references/SKILL.md\0../../../scripts/analyze-game-design-references.mjs",
     "skills/maintain-game-design-glossary/SKILL.md\0../../../scripts/manage-game-design-glossary.mjs",
     "skills/maintain-game-design-glossary/SKILL.md\0../../../scripts/validate-game-design-writing-language.mjs",

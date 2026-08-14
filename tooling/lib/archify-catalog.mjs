@@ -84,6 +84,24 @@ const SHARED_PACKAGE_MIRROR_MAPPINGS = Object.freeze([
     sourceRoot: "shared/memory/skills/retrieve-approved-design-memory",
     destinationRoot: "skills/retrieve-approved-design-memory",
   }),
+  Object.freeze({
+    id: "reference-intelligence",
+    module: "reference-intelligence",
+    sourceRoot: "shared/reference-intelligence",
+    destinationRoot: "references/shared/reference-intelligence",
+  }),
+  Object.freeze({
+    id: "reference-intelligence",
+    module: "reference-intelligence",
+    sourceRoot: "shared/reference-intelligence/skills/analyze-game-design-references",
+    destinationRoot: "skills/analyze-game-design-references",
+  }),
+  Object.freeze({
+    id: "reference-intelligence",
+    module: "reference-intelligence",
+    sourceRoot: "shared/reference-intelligence/skills/maintain-game-design-glossary",
+    destinationRoot: "skills/maintain-game-design-glossary",
+  }),
 ]);
 const DIAGRAM_TYPES = new Set(["architecture", "workflow", "sequence", "dataflow", "lifecycle"]);
 const SPEC_REQUIRED_STATES = new Set([

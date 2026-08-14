@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "overlays": [
+    {
+      "overlayId": "mobile",
+      "questions": [
+        { "questionId": "ux-accessibility-mobile-session", "systemId": "ux-accessibility", "applicability": "conditional", "rationale": "Touch input and short-session constraints may change the critical path.", "conditions": ["Apply when the reference is playable on a mobile device."], "verificationPrompts": ["How do touch input, interruption, and resume affect the path?"] }
+      ]
+    },
+    {
+      "overlayId": "pc-console",
+      "questions": [
+        { "questionId": "account-platform-pc-console-input", "systemId": "account-platform", "applicability": "conditional", "rationale": "Input, save, and entitlement behavior may differ across PC and console.", "conditions": ["Apply when the reference supports PC, console, or both."], "verificationPrompts": ["What differs by input method, platform account, or entitlement?"] }
+      ]
+    },
+    {
+      "overlayId": "web",
+      "questions": [
+        { "questionId": "session-network-web-continuity", "systemId": "session-network", "applicability": "conditional", "rationale": "Browser session and account continuity may constrain the experience.", "conditions": ["Apply when the reference is browser-delivered."], "verificationPrompts": ["What happens on refresh, sign-in change, or interrupted browser session?"] }
+      ]
+    }
+  ]
+}

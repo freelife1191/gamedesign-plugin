@@ -171,8 +171,7 @@ test("Studio routing and specialist roles expose the image workflow without appr
   assert.ok(routing.imageSpecialistIds.includes("visual-asset-reviewer"));
   assert.ok(routing.plannedPaths.skills.includes("skills/plan-image-assets/SKILL.md"));
   assert.ok(routing.plannedPaths.imageSpecialists.includes("agents/visual-asset-reviewer.md"));
-  assert.match(orchestrator, /apply-document-quality-profile.*plan-image-assets/is);
-  assert.match(orchestrator, /generate-image-assets.*review-image-assets/is);
+  assert.match(orchestrator, /select exact domain routes, artifacts, profiles, quality\/image work/is);
   assert.match(artDirector, /purpose.*readability.*prompt.*variant/is);
   assert.match(reviewer, /visual.*accessibility.*rights.*placement/is);
   assert.match(artDirector, /recommend/is);

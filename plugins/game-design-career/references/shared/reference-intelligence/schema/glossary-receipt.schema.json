@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://game-design-plugin.local/schema/glossary-receipt.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "documentId", "glossaryVersion", "glossarySha256", "termIds"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "documentId": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "glossaryVersion": { "type": "integer", "minimum": 1 },
+    "glossarySha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "termIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^TERM-[A-Z0-9]+(?:-[A-Z0-9]+)*$" } }
+  }
+}

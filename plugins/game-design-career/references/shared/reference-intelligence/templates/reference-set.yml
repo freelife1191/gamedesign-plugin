@@ -1,0 +1,23 @@
+[
+  {
+    "availability": "available",
+    "label": "Reference label",
+    "limitation": null,
+    "referenceId": "reference-id",
+    "role": "direct-competitor"
+  },
+  {
+    "availability": "available",
+    "label": "Reference label",
+    "limitation": null,
+    "referenceId": "reference-id-two",
+    "role": "core-system-exemplar"
+  },
+  {
+    "availability": "unavailable",
+    "label": "Reference label",
+    "limitation": "State the unavailable-source limitation.",
+    "referenceId": "reference-id-three",
+    "role": "operations-monetization-comparator"
+  }
+]

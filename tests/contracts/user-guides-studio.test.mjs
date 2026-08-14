@@ -87,10 +87,16 @@ const WORKBENCH_LANES = Object.freeze({
   "retrieve-approved-design-memory": "프로젝트 기억",
   "capture-game-design-memory": "프로젝트 기억",
   "maintain-game-design-memory": "프로젝트 기억",
+  "analyze-game-design-references": "레퍼런스 분석·용어 사전",
+  "maintain-game-design-glossary": "레퍼런스 분석·용어 사전",
 });
 
 const sourceBoundMemorySkillIds = new Set(SOURCE_BOUND_MEMORY_SKILL_IDS);
-const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId));
+const sourceBoundReferenceSkillPaths = new Map([
+  ["analyze-game-design-references", "../reference-analysis.md"],
+  ["maintain-game-design-glossary", "../glossary.md"],
+]);
+const directSkillGuideIds = (inventory) => inventory.skillIds.filter((skillId) => !sourceBoundMemorySkillIds.has(skillId) && !sourceBoundReferenceSkillPaths.has(skillId));
 
 function h2Headings(markdown) {
   return [...markdown.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
@@ -267,7 +273,7 @@ function assertStudioGuideRouting(index, skillIndex) {
 
 test("Studio documents every installed skill with the common contract", async () => {
   const inventory = await collectProductInventory(root, "game-design-studio");
-  assert.equal(inventory.skillIds.length, 21);
+  assert.equal(inventory.skillIds.length, 23);
 
   for (const skillId of directSkillGuideIds(inventory)) {
     const markdown = await readFile(
@@ -300,7 +306,7 @@ test("Studio skill workbench routes every direct-use case through its own lane",
     assert.match(row, new RegExp(`\\$game-design-studio:${skillId}\\b`), `${skillId}: direct CLI signal`);
     const guideTarget = sourceBoundMemorySkillIds.has(skillId)
       ? "../memory.md"
-      : `../skills/${skillId}.md#직접-호출-활용-${skillId}`;
+      : (sourceBoundReferenceSkillPaths.get(skillId) ?? `../skills/${skillId}.md#직접-호출-활용-${skillId}`);
     assert.ok(row.includes(guideTarget), `${skillId}: direct-use guide anchor`);
   }
   assert.deepEqual(workbenchLaneMap(workbench), WORKBENCH_LANES, "closed skill-to-lane map");
@@ -423,7 +429,7 @@ test("Studio skill handoffs are derived from canonical routes and source-backed 
   const sources = await sourceInventory("game-design-studio");
   const routing = JSON.parse(await readFile(path.join(root, "products/game-design-studio/plugin/references/routing.json"), "utf8"));
   const profileMap = JSON.parse(await readFile(path.join(root, "products/game-design-studio/plugin/references/document-quality/template-profile-map.json"), "utf8")).templates;
-  const directRoutes = routing.routes.filter(({ skill }) => skill !== "orchestrate-game-design-project" && !sourceExceptions[skill]);
+  const directRoutes = routing.routes.filter(({ skill }) => skill !== "orchestrate-game-design-project" && !sourceExceptions[skill] && !sourceBoundReferenceSkillPaths.has(skill));
   const directSkills = [...new Set(directRoutes.map(({ skill }) => skill))];
   const allowedNextTargets = new Set([...inventory.skillIds, "downstream"]);
 

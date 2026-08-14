@@ -20,7 +20,9 @@
     "archify",
     "retrieve-approved-design-memory",
     "capture-game-design-memory",
-    "maintain-game-design-memory"
+    "maintain-game-design-memory",
+    "analyze-game-design-references",
+    "maintain-game-design-glossary"
   ],
   "roleIds": [
     "lead-game-designer",
@@ -70,7 +72,9 @@
       "skills/archify/SKILL.md",
       "skills/retrieve-approved-design-memory/SKILL.md",
       "skills/capture-game-design-memory/SKILL.md",
-      "skills/maintain-game-design-memory/SKILL.md"
+      "skills/maintain-game-design-memory/SKILL.md",
+      "skills/analyze-game-design-references/SKILL.md",
+      "skills/maintain-game-design-glossary/SKILL.md"
     ],
     "roles": [
       "agents/lead-game-designer.md",
@@ -103,7 +107,12 @@
       "references/methods/production.md",
       "assets/templates/game-design-review/content.md",
       "references/visualization-presets.json",
-      "references/export-recipes.md"
+      "references/export-recipes.md",
+      "references/shared/reference-intelligence/references/evidence-policy.md",
+      "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+      "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+      "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+      "references/shared/reference-intelligence/schema/glossary-receipt.schema.json"
     ]
   },
   "directUseReviewOwners": [
@@ -121,6 +130,16 @@
       "skill": "maintain-game-design-memory",
       "owners": ["document-quality-editor"],
       "conditionalOwners": []
+    },
+    {
+      "skill": "analyze-game-design-references",
+      "owners": ["lead-game-designer"],
+      "conditionalOwners": []
+    },
+    {
+      "skill": "maintain-game-design-glossary",
+      "owners": ["document-quality-editor"],
+      "conditionalOwners": []
     }
   ],
   "memoryWorkflow": {
@@ -133,6 +152,13 @@
     "defaultMaxItems": 5,
     "requiresProjectId": true,
     "dedicatedAgent": false
+  },
+  "referenceIntelligenceWorkflow": {
+    "analysisSkill": "analyze-game-design-references",
+    "glossarySkill": "maintain-game-design-glossary",
+    "transferState": "pending-review",
+    "outputs": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+    "profileIds": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"]
   },
   "qualityWorkflow": {
     "skill": "apply-document-quality-profile",
@@ -318,6 +344,32 @@
       "artifactType": "canonical-artifact",
       "outputArtifacts": ["requested-md", "requested-pdf", "requested-docx", "requested-pptx", "qa-manifest"],
       "completionGates": ["canonical-artifact-valid", "format-preflight-complete", "requested-formats-recorded-in-qa-manifest", "canonical-artifact-preserved-on-failure"]
+    },
+    {
+      "id": "reference-game-analysis",
+      "triggerIntents": ["reference game analysis", "game comparison", "design transfer decision"],
+      "requiredInputs": ["reference brief", "reference set", "evidence scope", "project constraints"],
+      "skill": "analyze-game-design-references",
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["lead-game-designer"],
+      "maxReviewers": 3,
+      "references": ["references/shared/reference-intelligence/references/evidence-policy.md", "references/shared/reference-intelligence/references/reference-analysis-flow.md", "references/shared/reference-intelligence/schema/reference-analysis.schema.json"],
+      "artifactType": "reference-system-analysis",
+      "outputTypes": ["reference-system-analysis", "reference-comparison", "design-transfer-decision"],
+      "completionGates": ["inventory-before-evaluation", "evidence-and-claim-bindings-preserved", "transfer-pending-review"]
+    },
+    {
+      "id": "project-glossary-maintenance",
+      "triggerIntents": ["game design glossary", "terminology maintenance", "terminology findings"],
+      "requiredInputs": ["glossary candidates", "glossary snapshot", "human decision owner"],
+      "skill": "maintain-game-design-glossary",
+      "eligibleProfiles": ["live-service-rpg", "mobile", "pc-console"],
+      "defaultReviewers": ["document-quality-editor"],
+      "maxReviewers": 3,
+      "references": ["references/shared/reference-intelligence/references/evidence-policy.md", "references/shared/reference-intelligence/schema/game-design-glossary.schema.json", "references/shared/reference-intelligence/schema/glossary-receipt.schema.json"],
+      "artifactType": "game-design-glossary",
+      "outputTypes": ["game-design-glossary", "terminology-findings", "glossary-receipt"],
+      "completionGates": ["candidate-findings-emitted", "host-human-capability-required", "source-text-preserved"]
     }
   ]
 }

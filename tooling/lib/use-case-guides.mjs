@@ -12,7 +12,7 @@ export const USE_CASE_EXPECTED_COUNTS = Object.freeze({
   studioSkillCases: 15,
   careerSkillCases: 15,
 });
-const MINIMUM_FAQ_COUNT = 48;
+const MINIMUM_FAQ_COUNT = 50;
 const FAQ_PATHS = Object.freeze([
   "guides/use-cases/README.md",
   "guides/game-design-studio/faq.md",

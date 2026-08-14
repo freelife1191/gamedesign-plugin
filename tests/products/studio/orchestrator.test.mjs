@@ -195,7 +195,7 @@ test("Studio orchestrator preserves the memory workflow order and rejects unsafe
   }
 });
 
-test("authoritative routing registry maps all ten direct route variants", async () => {
+test("authoritative routing registry maps all twelve direct route variants", async () => {
   const routing = await readRouting();
   const directRoutes = routing.routes.filter(({ id }) => id !== "project-orchestration");
   const routeMap = Object.fromEntries(directRoutes.map(({ id, skill }) => [id, skill]));
@@ -211,8 +211,10 @@ test("authoritative routing registry maps all ten direct route variants", async 
     review: "review-game-design",
     visualization: "visualize-game-design",
     export: "export-game-design-documents",
+    "reference-game-analysis": "analyze-game-design-references",
+    "project-glossary-maintenance": "maintain-game-design-glossary",
   });
-  assert.equal(directRoutes.length, 10);
+  assert.equal(directRoutes.length, 12);
   assert.deepEqual([...new Set(directRoutes.map(({ skill }) => skill))], [
     "define-game-vision",
     "design-game-systems",
@@ -223,6 +225,8 @@ test("authoritative routing registry maps all ten direct route variants", async 
     "review-game-design",
     "visualize-game-design",
     "export-game-design-documents",
+    "analyze-game-design-references",
+    "maintain-game-design-glossary",
   ]);
 });
 

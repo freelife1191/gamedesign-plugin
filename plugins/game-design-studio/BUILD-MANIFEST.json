@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "game-design-studio",
   "sourceDateEpoch": 0,
-  "treeSha256": "3e3c58b3bdf706af66a1c026b3fd145f937ef65a4718f73d87101d8d9981169d",
+  "treeSha256": "43ab77ef4768a84f2b25d3232c0fe49b70e867a79d4200cad259b8342118cda2",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "43262d0cf0fc632be5e69f8500d7fe06edb8e19a0057863973d3ed4fc2277186",
-      "size": 62072
+      "sha256": "e8ecd771050818fe3aff300c15e2636f07ef97bdc5d89edf25b8db91f86b82e5",
+      "size": 63120
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -621,8 +621,8 @@
     },
     {
       "path": "references/routing.json",
-      "sha256": "79a91be06bb1e98f5aaf9e47aacc07d75d861c17c559df9f88aa757637326750",
-      "size": 14795
+      "sha256": "423751a9f613d358e6bd6c1bcc7dbfe8cf33f7b489a35b891db57ab1413bfa48",
+      "size": 18024
     },
     {
       "path": "references/shared/document-quality/game-design-writing-style.md",
@@ -636,8 +636,8 @@
     },
     {
       "path": "references/shared/document-quality/indexes/studio.json",
-      "sha256": "24cf14a02d15c0a2484e7d5c899d090229d0e6d6e2d98af21cd05a683860c177",
-      "size": 6131
+      "sha256": "c37e038a9190ee9d21243f40d3986e7018b36a50c399e05fdb49285ee78258dd",
+      "size": 7157
     },
     {
       "path": "references/shared/document-quality/overlays/live-service.json",
@@ -780,6 +780,11 @@
       "size": 1535
     },
     {
+      "path": "references/shared/document-quality/profiles/studio/design-transfer-decision.json",
+      "sha256": "06dd8fd6a6468bf43d5a01c49f82bb33a6fe86ffc68510dacdd4b5fd9098f753",
+      "size": 1603
+    },
+    {
       "path": "references/shared/document-quality/profiles/studio/economy-balance-specification.json",
       "sha256": "bbcce09307d1326ee2df050b74a40c9cdd385f9827b7cce0a017b55caac580bf",
       "size": 1571
@@ -818,6 +823,16 @@
       "path": "references/shared/document-quality/profiles/studio/production-scope-milestone-risk-plan.json",
       "sha256": "5cf8ae9a930f82f0185ed8ad3e4f6681a9dd1e20637a2f16f0eb53925a8ff99e",
       "size": 1591
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/reference-comparison.json",
+      "sha256": "d00933f1e476a5a91e36191bd2b2cf37a70ff2731107b06b420c0eacfacef8d5",
+      "size": 1502
+    },
+    {
+      "path": "references/shared/document-quality/profiles/studio/reference-system-analysis.json",
+      "sha256": "6f99561c98a1037e6ff514d04cf4d63259743c23a5d0a84ef9431b0d0635a470",
+      "size": 1524
     },
     {
       "path": "references/shared/document-quality/profiles/studio/rule-state-exception-matrix.json",
@@ -1093,6 +1108,101 @@
       "path": "references/shared/memory/templates/memory-record.md",
       "sha256": "18556f22f269a3d143558d453190d39749365ef830e388f0ae4905d4ddd35e36",
       "size": 583
+    },
+    {
+      "path": "references/shared/reference-intelligence/catalog/overlays/business-model.json",
+      "sha256": "280a18dc0513fc44dd442aaac18b54ed45fa3ff77856f83821291e8325d6da8c",
+      "size": 2837
+    },
+    {
+      "path": "references/shared/reference-intelligence/catalog/overlays/genre.json",
+      "sha256": "f75bd8176e2d0e3dd80d9fa930ca278e594878f4b315a38c6b1649e5a8fab8f8",
+      "size": 2661
+    },
+    {
+      "path": "references/shared/reference-intelligence/catalog/overlays/platform.json",
+      "sha256": "46c92d4f896afd0262b39b4021934989bce62a71a2737eaccdd9bc1d5f5b0c37",
+      "size": 1386
+    },
+    {
+      "path": "references/shared/reference-intelligence/catalog/overlays/play-mode.json",
+      "sha256": "70ad682d070e9d610fd993f2a22fa03606ef20ea149fb7fdc6c2d8bd6f4a9081",
+      "size": 2121
+    },
+    {
+      "path": "references/shared/reference-intelligence/catalog/source-register.json",
+      "sha256": "f877251cdecf4049da8173d52dc730dfd91eedbdeb734a0624c9e0567572ccea",
+      "size": 1392
+    },
+    {
+      "path": "references/shared/reference-intelligence/catalog/system-atlas.json",
+      "sha256": "ff67b8d8b851e4a22a7f4a4e83db58e4305fd6f6fce638135574bafa9a14872d",
+      "size": 5583
+    },
+    {
+      "path": "references/shared/reference-intelligence/references/evidence-policy.md",
+      "sha256": "3d415a87f17d2d39dbc328c387b1e2dfae858e2020451f1cd477cdb9b057e94c",
+      "size": 1168
+    },
+    {
+      "path": "references/shared/reference-intelligence/references/reference-analysis-flow.md",
+      "sha256": "a2b0fabf957190013f44e8afdb40a53095be024a1032160e38d4d66b8fac8f43",
+      "size": 3588
+    },
+    {
+      "path": "references/shared/reference-intelligence/schema/game-design-glossary.schema.json",
+      "sha256": "ef7b330fe7fa3b69ac026a499c96e59b7d6eeb0d3d315ca5195480b17701d1d4",
+      "size": 4301
+    },
+    {
+      "path": "references/shared/reference-intelligence/schema/glossary-receipt.schema.json",
+      "sha256": "0315619dfc57d710311d8b2f07eb0e33d77d263638e025d2bfa49253cd1dc681",
+      "size": 715
+    },
+    {
+      "path": "references/shared/reference-intelligence/schema/reference-analysis.schema.json",
+      "sha256": "5c5bead1d8c023c5090f6940b4b99946d782abc8b2715d9fa29ef44c88e4bead",
+      "size": 12301
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/analysis-priority.md",
+      "sha256": "e902b1b42e9ba562a64f05f1792e557381f32b58e26143dc7d30b5df68c41ed2",
+      "size": 355
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/brief.md",
+      "sha256": "134687d472878b43cf9db7d56ea27ddb686b30f029a04e9579ffa80574569550",
+      "size": 142
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/comparison-matrix.md",
+      "sha256": "cd4cbde86d214792387a10960f75f2346c22ecba04da4976bff756c58b3fbe6a",
+      "size": 405
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/evidence-register.yml",
+      "sha256": "7c48bd3b63bfa73ba8f270b82a918b1eea34d23ce67e329b453fd19db8336f27",
+      "size": 504
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/reference-set.yml",
+      "sha256": "a7da14fd3a6ab9abf626626558d943a48201844e5c4f3449bd00bf1154223d6f",
+      "size": 568
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/system-inventory.json",
+      "sha256": "a5fc9b8300576cded290cb1a53dd3d80b9c653ea610fa8308bb1d40878f8ae9f",
+      "size": 135
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/transfer-decisions.md",
+      "sha256": "c4ba098e01984ce36a4dc785b09d46b7cb0557839837a9d689fd38643a46af99",
+      "size": 596
+    },
+    {
+      "path": "references/shared/reference-intelligence/templates/verification-queue.md",
+      "sha256": "6a36a13954077f7706dae1da9483a483d0dccf097adbf37c4b6114447ce786bc",
+      "size": 299
     },
     {
       "path": "references/shared/responsible-design/README.md",
@@ -1375,6 +1485,11 @@
       "size": 6026
     },
     {
+      "path": "scripts/analyze-game-design-references.mjs",
+      "sha256": "78ab257ad236b2d18a2bd3fba9aab3d533eda08d7fa38075e304f6b27fcb0ce9",
+      "size": 21978
+    },
+    {
       "path": "scripts/build-image-asset-plan.mjs",
       "sha256": "b873ab7acda1b11bedb4cd62292dca73be66a031aabc16b6f16f2967cdb20fce",
       "size": 16226
@@ -1415,6 +1530,16 @@
       "size": 9895
     },
     {
+      "path": "scripts/lib/game-design-glossary-capabilities.mjs",
+      "sha256": "208ca8749752a20e91116863f35b5583b28d2bd9d5ad3c734ef09bc458c7c787",
+      "size": 7367
+    },
+    {
+      "path": "scripts/lib/game-design-glossary-schema-evaluator.mjs",
+      "sha256": "45726e6b0e8163f49e3bf3c487334c3374386a224f45740014c8f1f40bdf0da2",
+      "size": 12526
+    },
+    {
       "path": "scripts/lib/image-file-validation.mjs",
       "sha256": "5b2bdb619a80aadb9367409103c9853d3c9924248b5e9ca48e26d0fb0b81b426",
       "size": 5459
@@ -1445,6 +1570,31 @@
       "size": 6755
     },
     {
+      "path": "scripts/lib/reference-analysis-derivations.mjs",
+      "sha256": "42f60d68aee81fdcf6769c81b71dec80afe00f45e527623c81435f57857834c3",
+      "size": 1713
+    },
+    {
+      "path": "scripts/lib/reference-evidence-contract.mjs",
+      "sha256": "523b000ff51b4c97fb8eedd1c1920f9a23634a29676ed376ea6f2c8890c6362a",
+      "size": 900
+    },
+    {
+      "path": "scripts/lib/reference-evidence.mjs",
+      "sha256": "70dcbd916e3d049c3f351745c17c61737c6204e17c4d7f76fd312d8edf2268a4",
+      "size": 9372
+    },
+    {
+      "path": "scripts/lib/reference-intelligence-canonical.mjs",
+      "sha256": "282941ba17bab1e84be01d2a65663f73265a5389bb4c429aa3f97c02f971be01",
+      "size": 2460
+    },
+    {
+      "path": "scripts/lib/reference-system-maps.mjs",
+      "sha256": "be7cb538c9b1767a31bb1ef7e126678b86a4cfd954045fd69e67344deab7b068",
+      "size": 5513
+    },
+    {
       "path": "scripts/lib/rfc3339.mjs",
       "sha256": "cd521aefa8afc6bfd4a1e5acc4e02effbd15615c4e8b5d57ed4f7b13a534d263",
       "size": 949
@@ -1465,6 +1615,11 @@
       "size": 4286
     },
     {
+      "path": "scripts/lib/system-atlas.mjs",
+      "sha256": "50994efaa757f1d745b6e0e13510a9751869de0ce6b28bbd2bbc4ddda1cca21c",
+      "size": 14729
+    },
+    {
       "path": "scripts/load-memory-config.mjs",
       "sha256": "e1e9aca9b962fcafa091fe2d621bf35c468fea839fe979fa89fd7e55fae9e2f4",
       "size": 5432
@@ -1475,14 +1630,19 @@
       "size": 13282
     },
     {
+      "path": "scripts/manage-game-design-glossary.mjs",
+      "sha256": "82a024e48113c03ea7b7e9e65ef7c839523cd28d64601668a943979b1fe1f335",
+      "size": 18827
+    },
+    {
       "path": "scripts/quality-source-anchors.mjs",
-      "sha256": "2f4300a2d038c47d54fbc6dd5b167c124fcccd573529aa303fd2d6549028a900",
-      "size": 10472
+      "sha256": "7b94aaf5e91c91357bd0318841ebe254a9c50c3a002f5ede80f93e6e2f040215",
+      "size": 11183
     },
     {
       "path": "scripts/resolve-quality-profile.mjs",
-      "sha256": "44f40aabf64cd9886503a0068e66360adc78cba55c0b607ed1ed2f006d7a800f",
-      "size": 71907
+      "sha256": "f6fbd5010226a8d0c7cdfc4776c1c2969d1f29017ea8e3d75bb7d0f15010f1ba",
+      "size": 71988
     },
     {
       "path": "scripts/retrieve-design-memory.mjs",
@@ -1515,6 +1675,11 @@
       "size": 33458
     },
     {
+      "path": "scripts/validate-game-design-writing-language.mjs",
+      "sha256": "155b60b8e932c3d8ac9bd8b02cadbca0f28503088e31e7952f943035f9d1776c",
+      "size": 1627
+    },
+    {
       "path": "scripts/validate-image-assets.mjs",
       "sha256": "43c446e57fd5bc4f8fb2a9e866503f69b874c5b769ee49733d4eeb54a9e5e055",
       "size": 35683
@@ -1530,6 +1695,11 @@
       "size": 16366
     },
     {
+      "path": "scripts/validate-reference-intelligence.mjs",
+      "sha256": "48eeac502a3c21f7fbbbca0861a32a660e6fb486131c67e627d34cb83f166ccc",
+      "size": 29353
+    },
+    {
       "path": "scripts/validate-reference-preset.mjs",
       "sha256": "aaf5d54297a637d97d0642da4de477af9ad1146d383407d00617605b6d042564",
       "size": 4127
@@ -1538,6 +1708,11 @@
       "path": "scripts/validate-writing-revision.mjs",
       "sha256": "04b71cc7fc7bf315f5e89a76fb9d24fba67030748a45d3853dc9ed87af687a23",
       "size": 20788
+    },
+    {
+      "path": "skills/analyze-game-design-references/SKILL.md",
+      "sha256": "8d4ffd347a985f69a7650853327ff30e0deabfb9f062796b08dcc8585ed83312",
+      "size": 5231
     },
     {
       "path": "skills/apply-document-quality-profile/SKILL.md",
@@ -1886,8 +2061,8 @@
     },
     {
       "path": "skills/design-game-systems/SKILL.md",
-      "sha256": "9ac743547433ee2099c108923f50494fef912760823185c3c8cfe6caf6f253ff",
-      "size": 3559
+      "sha256": "44680e3038e54fa472e9188a6850b96b692ff8eedcd095a92c75490c8ce03873",
+      "size": 3911
     },
     {
       "path": "skills/design-game-systems/agents/openai.yaml",
@@ -2015,6 +2190,11 @@
       "size": 8010
     },
     {
+      "path": "skills/maintain-game-design-glossary/SKILL.md",
+      "sha256": "15ad4923e78815d7c4ebf04bf92fd9b50f756eed0e2af6a9bddeb1fb298503ee",
+      "size": 3571
+    },
+    {
       "path": "skills/maintain-game-design-memory/SKILL.md",
       "sha256": "dd853dbebd860c0c7d86d5a174f934e7050b5450aaae8b78b50fb9271d4915c5",
       "size": 1114
@@ -2086,8 +2266,8 @@
     },
     {
       "path": "skills/polish-game-design-writing/SKILL.md",
-      "sha256": "aee3c0fbee12f215d0a806c5108d5624fe46f38c2b51f90122ba2e94878e0313",
-      "size": 3632
+      "sha256": "41783c75a9b3ac14d4135a040f433d7776f6becb57b88e8a4fca23f46ace7012",
+      "size": 4301
     },
     {
       "path": "skills/polish-game-design-writing/agents/openai.yaml",

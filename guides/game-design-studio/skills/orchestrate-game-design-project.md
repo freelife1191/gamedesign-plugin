@@ -85,6 +85,8 @@ intake를 정리하고 `routing.json.routes`의 exact route와 artifact를 고�
 | `review` | `$game-design-studio:review-game-design` |
 | `visualization` | `$game-design-studio:visualize-game-design` |
 | `export` | `$game-design-studio:export-game-design-documents` |
+| `reference-game-analysis` | `$game-design-studio:analyze-game-design-references` |
+| `project-glossary-maintenance` | `$game-design-studio:maintain-game-design-glossary` |
 
 ## 생성 파일과 결과 구조
 

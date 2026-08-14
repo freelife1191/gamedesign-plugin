@@ -33,7 +33,15 @@ const CAREER_TEMPLATE_SOURCE_ROOT = path.join(repoRoot, "products/game-design-ca
 const CAREER_SKILL_SOURCE_ROOT = path.join(repoRoot, "products/game-design-career/plugin/skills");
 const CAREER_FAQ_SPEC_PATH = path.join(repoRoot, "docs/superpowers/specs/2026-08-06-game-design-plugin-use-case-learning-guide-design.md");
 const CAREER_ROUTING = JSON.parse(await readFile(CAREER_ROUTING_PATH, "utf8"));
-const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set(["archify", "humanize-korean", "polish-game-design-writing"]);
+const DIRECT_USE_EXCLUDED_SKILL_IDS = new Set([
+  "archify", "humanize-korean", "polish-game-design-writing",
+  "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+  "analyze-game-design-references", "maintain-game-design-glossary",
+]);
+const ROUTE_BOUNDARY_SKILL_IDS = new Set([
+  "archify", "humanize-korean", "polish-game-design-writing",
+  "capture-game-design-memory", "maintain-game-design-memory", "retrieve-approved-design-memory",
+]);
 
 test("result-boundary readability rejects dense visible prose and accepts result cards", () => {
   const denseBoundary = "**최소 결과:** 초안. **선택 결과:** 도식. **확장 결과:** 검토 패키지. **승인 주체:** 멘토. **보류 대상:** 패키지. **재개 조건:** 권한 확인. **안전·증거 경계:** 자동 승인은 하지 않음.";
@@ -221,6 +229,7 @@ const STUDIO_FAQ_CONTRACT = Object.freeze([
   ["renderer가 없을 때 어떤 결과를 전달할 수 있는가?", ["renderer", "Canonical Artifact", "unavailable"], ["capability", "lint", "SVG source"], ["content.md", "SVG"], ["ST-C08", "`visualize-game-design`", "`export-game-design-documents`"], ["PNG", "승인"]],
   ["학생 과제에서 결과를 그대로 제출해도 되는가?", ["학생 과제", "그대로", "제출"], ["답안 대행", "AI 정책", "출처 표기"], ["contribution", "evidence"], ["ST-C01", "ST-C08", "`game-design-review`"], ["학교 정책", "승인"]],
   ["서로 다른 장르 사례를 내 아이디어에 어떻게 적용하는가?", ["서로 다른 장르", "아이디어", "적용"], ["player context", "입력 장치", "사회적 위험"], ["assumption", "validation"], ["ST-G01", "ST-G10", "`game-design-brief`"], ["일반화", "사람"]],
+  ["이전 프로젝트 교훈을 다음 기획에 어떻게 안전하게 쓰는가?", ["이름이 확인된", "승인", "자동 승인되지"], ["출처 파일", "적용·제외", "충돌", "기억 없이"], [], [], []],
 ].map(([question, conclusion, reason, result, related, safety], index) => ({
   heading: `Q${String(index + 1).padStart(2, "0")}. ${question}`,
   conclusion,
@@ -1748,6 +1757,15 @@ function assertStudioFaq(markdown) {
   for (const [index, answer] of answers.entries()) {
     const contract = STUDIO_FAQ_CONTRACT[index];
     const fields = inlineFields(answer.body);
+    if (index === STUDIO_FAQ_CONTRACT.length - 1) {
+      assert.deepEqual(inlineFieldLabels(answer.body), ["결론", "이유와 경계", "실행 요청", "비활성화와 관련 문서"], `${answer.heading} shared-memory answer shape`);
+      const byLabel = new Map(fields.map((field) => [field.label, field.value]));
+      for (const term of contract.conclusion) assert.ok(byLabel.get("결론").includes(term), `${answer.heading} conclusion term: ${term}`);
+      for (const term of contract.reason) assert.ok(byLabel.get("이유와 경계").includes(term), `${answer.heading} reason term: ${term}`);
+      assert.equal(fencedCodeBlocks(byLabel.get("실행 요청"), "text").length, 1, `${answer.heading} one executable request block`);
+      assert.match(byLabel.get("비활성화와 관련 문서"), /GAME_DESIGN_MEMORY_ENABLED=false[\s\S]*\]\(memory\.md\)/u, `${answer.heading} disable and recovery path`);
+      continue;
+    }
     assert.deepEqual(inlineFieldLabels(answer.body), STUDIO_FAQ_ANSWER_FIELDS, `${answer.heading} answer shape`);
     const byLabel = new Map(fields.map((field) => [field.label, field.value]));
     for (const field of fields) {
@@ -1991,7 +2009,7 @@ test("complete use-case validation reports the exact production coverage includi
     careerCases: 18,
     studioSkillCases: 15,
     careerSkillCases: 15,
-    faq: 48,
+    faq: 50,
   });
 });
 
@@ -2000,15 +2018,15 @@ test("complete aggregate guide validation composes the production use-case cover
 
   assert.equal(result.ok, true, result.errors.join("\n"));
   assert.deepEqual(result.counts, {
-    guides: 147,
-    skillGuides: 36,
+    guides: 154,
+    skillGuides: 46,
     templates: 30,
     svg: 90,
     png: 90,
     audiencePaths: 6,
     useCases: 36,
     skillCases: 30,
-    faq: 48,
+    faq: 50,
   });
 });
 
@@ -2069,7 +2087,7 @@ test("complete validation reads production document anchors and App/CLI request 
     }, /App request marker/u],
     ["missing FAQ heading", async () => {
       await writeFile(faqDocument, canonicalDocuments.get(faqDocument).replace("### Q01.", "### FAQ01."));
-    }, /faq>=48/u],
+    }, /faq>=50/u],
   ];
 
   for (const [label, mutate, expected] of mutations) {
@@ -2685,7 +2703,7 @@ function assertStudioSkillCaseRouting({ cases, inventory, routing }) {
     "generate-image-assets",
     "review-image-assets",
     "svg-infographic",
-    ...DIRECT_USE_EXCLUDED_SKILL_IDS,
+    ...ROUTE_BOUNDARY_SKILL_IDS,
   ]);
   assert.ok(routing.routes.length > 0, "canonical routing.routes must not be empty");
   assert.deepEqual(
@@ -3092,7 +3110,7 @@ test("each common FAQ answer provides the six executable and evidence fields", a
   }
 });
 
-test("Studio FAQ contains all eighteen approved questions with executable, bounded answers", async () => {
+test("Studio FAQ contains all nineteen approved questions with executable, bounded answers", async () => {
   const faqPath = path.join(repoRoot, "guides", "game-design-studio", "faq.md");
   const stat = await lstat(faqPath);
   assert.ok(stat.isFile() && !stat.isSymbolicLink(), "Studio FAQ must be a regular file");
@@ -3762,6 +3780,8 @@ const STUDIO_CANONICAL_ROUTE_EXPECTED = Object.freeze({
   review: { triggerIntents: ["design review", "critique", "launch readiness", "risk review"], skill: "review-game-design", requiredInputs: ["canonical artifact", "review questions", "decision owner"], artifactType: "game-design-review" },
   visualization: { triggerIntents: ["diagram", "visualize", "flow chart", "economy map", "roadmap diagram"], skill: "visualize-game-design", requiredInputs: ["valid canonical artifact", "relationship to clarify", "target audience"], artifactType: "canonical-artifact" },
   export: { triggerIntents: ["export", "PDF", "DOCX", "presentation", "PPTX"], skill: "export-game-design-documents", requiredInputs: ["valid canonical artifact", "requested formats", "audience", "purpose"], artifactType: "canonical-artifact" },
+  "reference-game-analysis": { triggerIntents: ["reference game analysis", "game comparison", "design transfer decision"], skill: "analyze-game-design-references", requiredInputs: ["reference brief", "reference set", "evidence scope", "project constraints"], artifactType: "reference-system-analysis" },
+  "project-glossary-maintenance": { triggerIntents: ["game design glossary", "terminology maintenance", "terminology findings"], skill: "maintain-game-design-glossary", requiredInputs: ["glossary candidates", "glossary snapshot", "human decision owner"], artifactType: "game-design-glossary" },
 });
 
 function cloneStudioDiagramSource(source) {
