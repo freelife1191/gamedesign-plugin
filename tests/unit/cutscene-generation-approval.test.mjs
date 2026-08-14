@@ -33,7 +33,8 @@ function promptPackageFixture(plan = planFixture()) {
     cutsceneId: plan.cutsceneId,
     planSha256: digest(plan),
     dagSha256: digest(plan.cutsceneWorkflow.downstream),
-    references: [{ assetId: assetIds[0], sha256: REFERENCE_SHA }],
+    // Task 2 preserves manifest order (style then reference), which is not UTF-8 order.
+    references: [{ assetId: assetIds[0], sha256: REFERENCE_SHA }, { assetId: assetIds[1], sha256: "4".repeat(64) }],
     prompts: assetIds.map((assetId) => {
       const prompt = `Cutscene asset: ${assetId}`;
       return { assetId, prompt, promptSha256: promptDigest(prompt) };
@@ -65,7 +66,7 @@ const approvalEvent = () => ({ eventId: "approve-style-01", actor: "Kim", review
 const bindingFixture = (authority = authorityFixture()) => cutsceneApprovalBinding(authority);
 const issue = (authority = authorityFixture()) => {
   const binding = bindingFixture(authority);
-  return { authority, binding, issued: issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", context: binding }) };
+  return { authority, binding, issued: issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", ...authority }) };
 };
 const context = (binding, overrides = {}) => ({ ...approvalEvent(), now: "2026-08-13T00:01:00.000Z", ...binding, ...overrides });
 
@@ -75,6 +76,16 @@ test("only the approval issuer mints a live capability", async () => {
   const { binding, issued } = issue();
   assert.throws(() => assertCutsceneHumanApproval({ receipt: issued.receipt, capability: Object.freeze(Object.create(null)), context: context(binding) }), { code: "cutscene.approval_capability_invalid", path: "/capability" });
   assert.throws(() => assertCutsceneHumanApproval({ receipt: { ...issued.receipt }, capability: issued.capability, context: context(binding) }), { code: "cutscene.approval_capability_invalid", path: "/capability" });
+});
+
+test("issuance rejects caller hash context and invalid current authority before minting a pair", () => {
+  const authority = authorityFixture();
+  const forgedContext = { waveId: "style-master", assetIds: ["forged"], maximumApprovedUsd: 0, retryReserve: 0, planSha256: "0".repeat(64), promptPackageSha256: "0".repeat(64), referenceBindings: [{ assetId: "forged", sha256: "0".repeat(64) }], pricingSnapshotSha256: "0".repeat(64), costEstimateSha256: "0".repeat(64) };
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", ...authority, context: forgedContext }), { code: "cutscene.approval_context_forbidden", path: "/context" });
+  const invalidPlan = { ...authority, plan: { sha256: "0".repeat(64), waves: [] } };
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", ...invalidPlan }), { code: "cutscene.plan_invalid", path: "/plan" });
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", ...authority, pricingSnapshot: { ...authority.pricingSnapshot, sha256: "0".repeat(64) } }), { code: "cutscene.pricing_snapshot_invalid", path: "/pricingSnapshot/sha256" });
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", ...authority, estimate: { ...authority.estimate, sha256: "0".repeat(64) } }), { code: "cutscene.cost_estimate_invalid", path: "/estimate/sha256" });
 });
 
 test("approval and estimate reject digest wrappers and require a closed plan plus generation-ready package", () => {
@@ -125,13 +136,13 @@ test("package cutscene, DAG, and reference fields must remain current after cano
   }
 });
 
-test("role-like actor and reviewer variants reject after NFKC normalization while named humans pass", () => {
-  const binding = bindingFixture();
+test("role-like actor and reviewer variants reject after NFKC normalization while real names pass", () => {
+  const authority = authorityFixture();
   for (const identity of ["OpenAI", "ＯｐｅｎＡＩ", "Kim-Agent", "reviewer.bot", "MinaModel", "SYSTEM-01"]) {
-    assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), actor: identity, reviewer: identity, decision: "approved", context: binding }), { code: "cutscene.actor_role_like", path: "/actor" });
+    assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), actor: identity, reviewer: identity, decision: "approved", ...authority }), { code: "cutscene.actor_role_like", path: "/actor" });
   }
-  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), reviewer: "Jae Bot", decision: "approved", context: binding }), { code: "cutscene.reviewer_role_like", path: "/reviewer" });
-  assert.doesNotThrow(() => issueCutsceneHumanApproval({ ...approvalEvent(), actor: "Minji Kim", reviewer: "Minji Kim", decision: "approved", context: binding }));
+  for (const name of ["Kai", "Mai", "Mihai", "Minji Kim"]) assert.doesNotThrow(() => issueCutsceneHumanApproval({ ...approvalEvent(), actor: name, reviewer: name, decision: "approved", ...authority }));
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), reviewer: "Jae Bot", decision: "approved", ...authority }), { code: "cutscene.reviewer_role_like", path: "/reviewer" });
 });
 
 test("binding stale paths, timestamps, and freshness boundaries remain deterministic", () => {
@@ -143,11 +154,11 @@ test("binding stale paths, timestamps, and freshness boundaries remain determini
     [(value) => ({ ...value, retryReserve: 2 }), "/retryReserve"],
     [(value) => ({ ...value, planSha256: "6".repeat(64) }), "/planSha256"],
     [(value) => ({ ...value, promptPackageSha256: "6".repeat(64) }), "/promptPackageSha256"],
-    [(value) => ({ ...value, referenceBindings: [{ ...value.referenceBindings[0], sha256: "6".repeat(64) }] }), "/referenceBindings/0/sha256"],
+    [(value) => ({ ...value, referenceBindings: [{ ...value.referenceBindings[0], sha256: "6".repeat(64) }, value.referenceBindings[1]] }), "/referenceBindings/0/sha256"],
     [(value) => ({ ...value, pricingSnapshotSha256: "6".repeat(64) }), "/pricingSnapshotSha256"],
     [(value) => ({ ...value, costEstimateSha256: "6".repeat(64) }), "/costEstimateSha256"],
   ]) assert.throws(() => assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(mutate(binding)) }), { code: "cutscene.approval_binding_stale", path });
-  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", decidedAt: "2026-08-13", context: binding }), { code: "cutscene.timestamp_invalid", path: "/decidedAt" });
+  assert.throws(() => issueCutsceneHumanApproval({ ...approvalEvent(), decision: "approved", decidedAt: "2026-08-13", ...authority }), { code: "cutscene.timestamp_invalid", path: "/decidedAt" });
   assert.throws(() => assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding, { now: "2026-08-13" }) }), { code: "cutscene.timestamp_invalid", path: "/now" });
   assert.throws(() => assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding, { now: "2026-08-13T00:15:00.001Z" }) }), { code: "cutscene.approval_receipt_stale", path: "/decidedAt" });
   assert.equal(assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding, { now: "2026-08-13T00:15:00.000Z" }) }), issued.receipt);
@@ -169,4 +180,11 @@ test("actual cost never invents cached usage", () => {
   const pricingSnapshot = pricingSnapshotFixture();
   const usage = { inputTokens: 10, inputTextTokens: 6, inputImageTokens: 4, outputTokens: 8, totalTokens: 18 };
   assert.deepEqual(calculateActualCost({ pricingSnapshot, usage }), { status: "unavailable", reason: "cached-token-breakdown-unavailable" });
+});
+
+test("a two-reference Task 2 package issues and validates with an internally canonical receipt binding", () => {
+  const { authority, binding, issued } = issue();
+  assert.equal(authority.promptPackage.references[0].assetId > authority.promptPackage.references[1].assetId, true);
+  assert.deepEqual(issued.receipt.referenceBindings.map(({ assetId }) => assetId), [...binding.referenceBindings].map(({ assetId }) => assetId).sort());
+  assert.equal(assertCutsceneHumanApproval({ receipt: issued.receipt, capability: issued.capability, context: context(binding) }), issued.receipt);
 });

@@ -8,7 +8,8 @@ const liveApprovals = new WeakMap();
 const APPROVAL_MAX_AGE_MS = 15 * 60_000;
 const PRICING_MAX_AGE_MS = 24 * 60 * 60_000;
 const HASH = /^[a-f0-9]{64}$/u;
-const ROLE_SUFFIX = /(?:openai|chatgpt|assistant|agent|reviewer|bot|model|system|specialist|designer|ai)\d*$/iu;
+const ROLE_TOKEN = /^(?:openai|chatgpt|ai|assistant|agent|reviewer|bot|model|system|specialist|designer)(?:\d+)?$/iu;
+const ROLE_COMPOUND_SUFFIX = /(?:openai|chatgpt|assistant|agent|reviewer|bot|model|system|specialist|designer)(?:\d+)?$/iu;
 const compareUtf8 = (left, right) => Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 const coded = (code, path) => Object.assign(new Error(code), { code, path });
 const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
@@ -18,7 +19,7 @@ function humanName(value, path, code) {
   const normalized = value.normalize("NFKC").trim();
   const compact = normalized.toLocaleLowerCase("und").replace(/[^\p{L}\p{N}]/gu, "");
   const tokens = normalized.toLocaleLowerCase("und").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  if (!normalized || normalized.length > 128 || /[\u0000-\u001f\u007f-\u009f]/u.test(normalized) || ROLE_SUFFIX.test(compact) || tokens.some((token) => ROLE_SUFFIX.test(token))) throw coded(code, path);
+  if (!normalized || normalized.length > 128 || /[\u0000-\u001f\u007f-\u009f]/u.test(normalized) || ROLE_COMPOUND_SUFFIX.test(compact) || tokens.some((token) => ROLE_TOKEN.test(token))) throw coded(code, path);
   return normalized;
 }
 
@@ -33,9 +34,8 @@ function sortedReferences(references, path = "/referenceBindings") {
   if (!Array.isArray(references) || references.length === 0) throw coded("cutscene.reference_bindings_empty", path);
   const normalized = references.map((reference) => ({ assetId: reference?.assetId, sha256: reference?.sha256 }));
   if (normalized.some(({ assetId, sha256 }) => typeof assetId !== "string" || !HASH.test(sha256 ?? ""))) throw coded("cutscene.reference_binding_invalid", path);
-  const sorted = [...normalized].sort((left, right) => compareUtf8(left.assetId, right.assetId));
-  if (!sameJson(sorted, normalized) || new Set(sorted.map(({ assetId }) => assetId)).size !== sorted.length) throw coded("cutscene.ids_unsorted_or_duplicate", path);
-  return sorted;
+  if (new Set(normalized.map(({ assetId }) => assetId)).size !== normalized.length) throw coded("cutscene.ids_unsorted_or_duplicate", path);
+  return normalized.sort((left, right) => compareUtf8(left.assetId, right.assetId));
 }
 
 function bindingFromCurrent({ plan, promptPackage, pricingSnapshot, estimate }) {
@@ -66,18 +66,17 @@ function referenceMismatchPath(issued, current) {
 
 export function cutsceneApprovalBinding(input = {}) { return bindingFromCurrent(input); }
 
-export function issueCutsceneHumanApproval({ eventId, actor, reviewer, decision, decidedAt, context } = {}) {
+export function issueCutsceneHumanApproval(input = {}) {
+  if (Object.hasOwn(input, "context")) throw coded("cutscene.approval_context_forbidden", "/context");
+  const { eventId, actor, reviewer, decision, decidedAt, plan, promptPackage, pricingSnapshot, estimate } = input;
   const actorName = humanName(actor, "/actor", "cutscene.actor_role_like");
   const reviewerName = humanName(reviewer, "/reviewer", "cutscene.reviewer_role_like");
   if (actorName !== reviewerName) throw coded("cutscene.approval_actor_mismatch", "/actor");
   if (decision !== "approved") throw coded("cutscene.approval_decision_invalid", "/decision");
   if (typeof eventId !== "string" || !eventId) throw coded("cutscene.approval_event_required", "/eventId");
   if (!isRfc3339DateTime(decidedAt)) throw coded("cutscene.timestamp_invalid", "/decidedAt");
-  const assetIds = sortedAssetIds(context?.assetIds);
-  const referenceBindings = sortedReferences(context?.referenceBindings);
-  for (const field of ["planSha256", "promptPackageSha256", "pricingSnapshotSha256", "costEstimateSha256"]) if (!HASH.test(context?.[field] ?? "")) throw coded("cutscene.hash_invalid", `/${field}`);
-  if (typeof context?.waveId !== "string" || !Number.isFinite(context?.maximumApprovedUsd) || context.maximumApprovedUsd < 0 || !Number.isInteger(context?.retryReserve) || context.retryReserve < 0) throw coded("cutscene.approval_context_invalid", "/context");
-  const receipt = Object.freeze({ schemaVersion: 1, eventId, actor: actorName, reviewer: reviewerName, decision, decidedAt, waveId: context.waveId, assetIds: Object.freeze(assetIds), maximumApprovedUsd: context.maximumApprovedUsd, retryReserve: context.retryReserve, planSha256: context.planSha256, promptPackageSha256: context.promptPackageSha256, referenceBindings: Object.freeze(referenceBindings.map((binding) => Object.freeze(binding))), pricingSnapshotSha256: context.pricingSnapshotSha256, costEstimateSha256: context.costEstimateSha256 });
+  const binding = bindingFromCurrent({ plan, promptPackage, pricingSnapshot, estimate });
+  const receipt = Object.freeze({ schemaVersion: 1, eventId, actor: actorName, reviewer: reviewerName, decision, decidedAt, waveId: binding.waveId, assetIds: Object.freeze(binding.assetIds), maximumApprovedUsd: binding.maximumApprovedUsd, retryReserve: binding.retryReserve, planSha256: binding.planSha256, promptPackageSha256: binding.promptPackageSha256, referenceBindings: Object.freeze(binding.referenceBindings.map((reference) => Object.freeze(reference))), pricingSnapshotSha256: binding.pricingSnapshotSha256, costEstimateSha256: binding.costEstimateSha256 });
   const capability = Object.freeze(Object.create(null));
   liveApprovals.set(capability, receipt);
   return Object.freeze({ receipt, capability });

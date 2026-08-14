@@ -52,3 +52,22 @@
 - capability는 issuer 외부에서 등록하거나 복원할 수 없고, receipt/capability proxy·clone은 live pair 검사에서 거절된다.
 - snapshot units/retrievedAt와 estimate minimum/expected/maximum을 각각 같은 caller SHA로 바꾸는 적대 테스트가 canonical digest mismatch를 검출한다.
 - 승인 freshness는 정확히 15분까지, pricing freshness는 정확히 24시간까지 허용하며 그 다음 밀리초부터 stale이다.
+
+## Fix 2 — issuer-owned current binding and Task 2 reference order
+
+### 변경
+
+- `issueCutsceneHumanApproval`은 live event와 `{plan,promptPackage,pricingSnapshot,estimate}`만 받고, same current-binding validator를 직접 호출해 receipt를 구성한다. caller `context`는 `cutscene.approval_context_forbidden`으로 거절하며 WeakMap pair를 만들지 않는다.
+- generation-ready package의 Task 2 manifest reference order는 type, duplicate, current asset binding만 확인하고 보존한다. approval receipt에는 그 목록을 UTF-8 canonical order의 immutable binding으로 저장한다.
+- named-human 판정은 NFKC와 separator-aware token을 사용하되 `ai`는 독립 token으로만 차단한다. 따라서 `image_agent`, `reviewer_01`, `OpenAI`는 거절하고 `Kai`, `Mai`, `Mihai`는 허용한다.
+
+### RED/GREEN
+
+- RED: actual authority fixture와 manifest-order two-reference package를 사용한 focused test는 precomputed context acceptance와 package reference sort rejection으로 실패했다.
+- GREEN: `node --test tests/unit/cutscene-generation-approval.test.mjs` — 11 passed, 0 failed.
+- 최종: Task 3/cutscene/image-assets 스위트 82 passed, 0 failed; syntax, schema JSON, `git diff --check` 통과.
+
+### 자체 검토
+
+- arbitrary hash context는 발급 API의 authority input이 아니며, invalid plan/package/pricing/estimate는 receipt/capability 생성 이전에 실패한다.
+- source reference order가 unsorted여도 valid Task 2 package는 issue 및 host assertion을 통과하고, receipt의 reference binding은 단일 canonical comparison order를 사용한다.

@@ -31,9 +31,8 @@ function sortedReferences(references) {
     if (!exact(reference, ["assetId", "sha256"]) || typeof reference.assetId !== "string" || !isHash(reference.sha256)) throw coded("cutscene.prompt_package_invalid", `/promptPackage/references/${index}`);
     return { assetId: reference.assetId, sha256: reference.sha256 };
   });
-  const sorted = [...normalized].sort((left, right) => compareUtf8(left.assetId, right.assetId));
-  if (!sameJson(sorted, normalized) || new Set(sorted.map(({ assetId }) => assetId)).size !== sorted.length) throw coded("cutscene.ids_unsorted_or_duplicate", "/promptPackage/references");
-  return sorted;
+  if (new Set(normalized.map(({ assetId }) => assetId)).size !== normalized.length) throw coded("cutscene.ids_unsorted_or_duplicate", "/promptPackage/references");
+  return normalized;
 }
 
 export function resolveCutsceneGenerationAuthority({ plan, promptPackage } = {}) {
