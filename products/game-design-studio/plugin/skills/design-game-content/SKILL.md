@@ -1,6 +1,6 @@
 ---
 name: design-game-content
-description: Use when a quest, level, encounter, character, enemy, narrative unit, or repeatable activity needs a playable and production-aware specification.
+description: Use when a non-cutscene narrative or game-content request needs a playable and production-aware specification.
 ---
 
 # Design Game Content
@@ -19,7 +19,7 @@ Specify a content unit as a playable expression of canonical systems. Connect pl
 - Use `define-game-vision` for the overall player promise or design pillars.
 - Use `design-game-systems` when rules, state transitions, or schemas are not yet canonical.
 - Use `plan-game-production` for portfolio-wide staffing, milestones, or scheduling.
-- Use `design-cutscene-visual-preproduction` for 컷씬, 시네마틱, 스토리보드, master image, prompt, or continuity packages.
+- Use `design-cutscene-visual-preproduction` only for qualified 컷씬 or 시네마틱 visual-preproduction packages: storyboard shots, master-image prompts, or cutscene continuity.
 
 ## Required input
 

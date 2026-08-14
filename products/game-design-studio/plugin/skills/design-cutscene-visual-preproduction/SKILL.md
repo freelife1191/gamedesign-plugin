@@ -1,6 +1,6 @@
 ---
 name: design-cutscene-visual-preproduction
-description: Use when a Studio request includes 컷씬, 시네마틱, 스토리보드, master image, prompt, or continuity work.
+description: "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or cutscene continuity."
 ---
 
 # Design Cutscene Visual Preproduction
@@ -31,7 +31,7 @@ Generate only after the current exact wave discloses count, quality, size, USD m
 
 Run `style-master`, `reference-masters`, `keyframes`, then `storyboard`. For every wave, rebind the current prompt, references, and output request identity; make a per-wave estimate and obtain per-wave approval before dispatch. Stop the next wave when the predecessor lacks current approval or completion.
 
-Preserve partial success, bytes, states, and receipts. Retry only the latest retryable failed stable IDs after a new current estimate and approval. Do not retry terminal failures or overwrite successful assets. Pass the continuity gate with `review-cutscene-continuity.mjs` before declaring `document-approved` or `production-candidate`; generation alone is neither state.
+Preserve partial success, bytes, states, and receipts. Retry only the latest retryable failed stable IDs with the same still-current full-wave estimate, pricing snapshot, and request schedule; never create a subset estimate. If a prior receipt is stale, obtain fresh named live host-user approval bound to that same current estimate, then show the remaining approved worst-case and remaining retryReserve as the current cost status. If the estimate, pricing, or request schedule drifted or expired, fail closed with provider calls: 0: a new journal epoch or replan is unsupported by the current runtime, so do not promise a retry. Do not retry terminal failures or overwrite successful assets. Pass the continuity gate with `review-cutscene-continuity.mjs` before declaring `document-approved` or `production-candidate`; generation alone is neither state.
 
 ## Handle variants and handoffs
 

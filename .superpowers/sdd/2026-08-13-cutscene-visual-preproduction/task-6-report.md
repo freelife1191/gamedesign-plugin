@@ -47,3 +47,47 @@ and `throw-secret-never-persist`). Task 6 changes no Career image runtime or
 Career skill; the same two failures occurred in the initial RED matrix. They
 remain outside this Studio-only route/skill scope and require their owning image
 workflow task before that broader suite can be green.
+
+## Fix round 1 — retry journal and discovery narrowing
+
+### Baseline and RED
+
+- Reviewer final recorded C0/I2/M0: the skill and generation handoff promised a
+  new/subset retry estimate even though the frozen v2 journal accepts only the
+  still-current full-wave estimate, pricing snapshot, request schedule, and
+  remaining reserve. The cutscene description also triggered on generic
+  `prompt`/`continuity`, while game-content did not explicitly exclude cutscene
+  work.
+- The forward RED product contract failed three checks: the broad cutscene
+  frontmatter, the non-exclusive content frontmatter, and the stale retry
+  handoff wording. The existing public runtime already failed pricing/estimate
+  drift closed; a new regression proves that result without a provider call or
+  journal mutation.
+
+### Forward result
+
+- The Studio skill and `generate-image-assets` now state that a retry reuses
+  the same still-current full-wave estimate, pricing snapshot, and request
+  schedule; it never creates a subset estimate. A stale receipt needs fresh
+  named live approval for that exact current estimate. Drift or expiry remains
+  provider-0 fail-closed because a new journal epoch/replan is unsupported by
+  the current runtime. Both handoffs show remaining approved worst-case and
+  `retryReserve` as current cost status.
+- New public runtime contracts prove changed pricing/estimate with an existing
+  journal returns `cutscene.usage_receipt_corrupt`, makes zero provider calls,
+  and leaves the journal snapshot unchanged; a fresh named approval with the identical
+  full-wave authority retries only the failed ID and preserves successful bytes.
+- Discovery is now constrained to qualified 컷씬/시네마틱 visual-preproduction
+  prompt/continuity work. The executable corpus accepts cutscene master-image
+  prompt, cinematic storyboard, and cutscene continuity requests, while
+  rejecting generic prompts, gameplay continuity, and quest dialogue.
+
+### Fix validation
+
+- Forward retry public-runtime tests → 2 passing, 0 failing.
+- Focused Task 1–6 and Studio/Career product matrix → 130 passing, 0 failing,
+  including source core/image/contracts and temporary Studio/Career runtime and
+  schema byte parity.
+- `quick_validate.py` → pass. The Career image suite was re-run unchanged and
+  still has the same two pre-existing host-callback failures documented above
+  (29 passing, 2 failing); Fix round 1 does not touch that runtime or product.

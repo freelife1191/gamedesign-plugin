@@ -15,6 +15,11 @@ const careerRoot = path.join(repoRoot, "products/game-design-career/plugin");
 const skillRoot = path.join(studioRoot, "skills/design-cutscene-visual-preproduction");
 const waves = ["style-master", "reference-masters", "keyframes", "storyboard"];
 
+function isQualifiedCutsceneVisualPreproductionRequest(request) {
+  return /(?:컷씬|시네마틱)/u.test(request)
+    && /(?:비주얼 프리프로덕션|스토리보드|마스터 이미지|프롬프트|연속성)/u.test(request);
+}
+
 test("Studio route has the closed cutscene workflow contract while Career exposes neither route nor skill", async () => {
   const [routing, careerRouting] = await Promise.all([
     readFile(path.join(studioRoot, "references/routing.json"), "utf8").then(JSON.parse),
@@ -54,17 +59,39 @@ test("cutscene skill makes each mode and paid-wave gate explicit under pressure"
   assert.ok(frontmatter);
   assert.deepEqual(frontmatter.split("\n").map((line) => line.split(":", 1)[0]), ["name", "description"]);
   assert.match(frontmatter, /^name: design-cutscene-visual-preproduction$/mu);
-  assert.match(frontmatter, /^description: Use when .*컷씬.*시네마틱.*스토리보드.*master image.*prompt.*continuity/mu);
+  assert.match(frontmatter, /^description: "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or cutscene continuity\."$/mu);
   assert.match(openai, /^interface:\n  display_name: "[^"]+"\n  short_description: "[^"]{25,64}"\n  default_prompt: "Use \$design-cutscene-visual-preproduction [^"]+"\n$/u);
   for (const phrase of [
     "Prompt Only", "Estimate Only", "Generate After Approval", "provider calls: 0", "USD 0",
     "minimum", "expected", "maximum", "costStatus", "finite ceiling", "approval-pending",
     "current exact", "named live host-user approval", "previous or general approval does not carry",
     "style-master", "reference-masters", "keyframes", "storyboard", "per-wave estimate", "per-wave approval",
-    "partial success", "latest retryable failed stable IDs", "terminal failure", "continuity gate",
+    "partial success", "latest retryable failed stable IDs", "same still-current full-wave estimate", "pricing snapshot", "request schedule", "remaining approved worst-case", "remaining retryReserve", "fresh named live host-user approval", "new journal epoch", "unsupported by the current runtime", "provider calls: 0", "continuity gate",
     "document-approved", "production-candidate", "dialogue-only", "no image", "no provider", "no approval",
     "new derivative IDs", "planner", "never overwrite base",
   ]) assert.match(skill, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"), "iu"), phrase);
+});
+
+test("cutscene discovery corpus requires qualified cinematic visual-preproduction intent and excludes content work", async () => {
+  const [cutsceneSkill, contentSkill, routing] = await Promise.all([
+    readFile(path.join(skillRoot, "SKILL.md"), "utf8"),
+    readFile(path.join(studioRoot, "skills/design-game-content/SKILL.md"), "utf8"),
+    readFile(path.join(studioRoot, "references/routing.json"), "utf8").then(JSON.parse),
+  ]);
+  const cutsceneDescription = cutsceneSkill.match(/^description: "(.+)"$/mu)?.[1];
+  const contentDescription = contentSkill.match(/^description: (.+)$/mu)?.[1];
+  assert.equal(cutsceneDescription, "Use when a Studio request needs 컷씬 or 시네마틱 visual preproduction: storyboard shots, master-image prompts, or cutscene continuity.");
+  assert.equal(contentDescription, "Use when a non-cutscene narrative or game-content request needs a playable and production-aware specification.");
+  const corpus = [
+    ["컷씬 마스터 이미지 프롬프트 패키지를 만들어줘", true],
+    ["시네마틱 스토리보드와 샷을 준비해줘", true],
+    ["컷씬 연속성 검토가 포함된 비주얼 프리프로덕션이 필요해", true],
+    ["generic prompt를 작성해줘", false],
+    ["게임플레이 연속성을 검토해줘", false],
+    ["퀘스트 대사를 설계해줘", false],
+  ];
+  assert.deepEqual(corpus.map(([request]) => isQualifiedCutsceneVisualPreproductionRequest(request)), corpus.map(([, expected]) => expected));
+  assert.equal(routing.routes.find(({ id }) => id === "cutscene-visual-preproduction").skill, "design-cutscene-visual-preproduction");
 });
 
 test("cutscene handoffs preserve existing authorities instead of recreating a general-image bypass", async () => {
@@ -80,6 +107,10 @@ test("cutscene handoffs preserve existing authorities instead of recreating a ge
   assert.match(plan, /Do not call the general image planner/u);
   assert.match(generate, /run-approved-cutscene-image-stage|design-cutscene-visual-preproduction/u);
   assert.match(generate, /current wave.*approval|approval.*current wave/isu);
+  assert.match(generate, /same still-current full-wave estimate.*pricing snapshot.*request schedule/isu);
+  assert.match(generate, /fresh named live host-user approval.*remaining retryReserve/isu);
+  assert.match(generate, /remaining approved worst-case.*current cost status/isu);
+  assert.match(generate, /new journal epoch.*unsupported by the current runtime/isu);
   assert.match(review, /review-cutscene-continuity|design-cutscene-visual-preproduction/u);
   assert.match(review, /continuity.*document-approved|document-approved.*continuity/isu);
 });

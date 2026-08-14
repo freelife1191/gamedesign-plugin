@@ -139,6 +139,18 @@ async function journalRecords(artifactRoot, waveId) {
   return records.sort((left, right) => left.attemptSequence - right.attemptSequence || left.kind.localeCompare(right.kind));
 }
 
+async function journalSnapshot(artifactRoot, waveId) {
+  const base = path.join(artifactRoot, "cutscene", "usage-receipts", waveId);
+  const entries = [];
+  for (const assetId of (await readdir(base)).sort()) {
+    for (const name of (await readdir(path.join(base, assetId))).sort()) {
+      const absolute = path.join(base, assetId, name);
+      entries.push([path.relative(artifactRoot, absolute), await readFile(absolute, "utf8")]);
+    }
+  }
+  return entries;
+}
+
 function imageResponse({ status = 200, requestId = "req-cutscene", corrupt = false, usage } = {}) {
   const body = status >= 200 && status < 300
     ? { data: [{ b64_json: corrupt ? Buffer.from("not-png").toString("base64") : validPng(1024, 1024).toString("base64") }], usage: usage ?? { input_tokens: 8, output_tokens: 4, total_tokens: 12, input_tokens_details: { text_tokens: 3, image_tokens: 5, cached_text_tokens: 0, cached_image_tokens: 0 } } }
@@ -354,6 +366,111 @@ test("v2 journal keeps a wave-global sequence across internal and explicit retri
   assert.equal(outcomes.filter(({ assetOutcome }) => assetOutcome === "success").length, 2);
   assert.equal(records.every(({ schemaVersion, sha256 }) => schemaVersion === 2 && /^[a-f0-9]{64}$/u.test(sha256)), true);
   assert.equal(records.every((record) => validateCutsceneGenerationUsage(record).ok), true);
+});
+
+test("a retry rejects a changed full-wave estimate or pricing journal epoch before provider access and without writes", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-retry-drift-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = stageFixture({ waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
+  let firstCalls = 0;
+  const first = await runApprovedCutsceneImageWave({
+    ...fixture, artifactRoot, workspaceRoot: artifactRoot,
+    fetchFn: async () => {
+      firstCalls += 1;
+      if (firstCalls === 1) return imageResponse({ status: 500, requestId: "req-drift-500" });
+      if (firstCalls === 2) return imageResponse({ requestId: "req-drift-recovered" });
+      throw new Error("transport-down");
+    },
+  });
+  const failedAssetId = first.providerResult.failures[0].asset_id;
+  const beforeJournal = await journalSnapshot(artifactRoot, fixture.waveId);
+  const changedPricingSnapshot = pricingSnapshotFixture({
+    retrievedAt: "2026-08-13T00:02:00.000Z",
+    units: { ...fixture.pricingSnapshot.units, imageOutput: 31 },
+  });
+  const changedEstimate = estimateCutsceneImageCost({
+    plan: fixture.plan,
+    promptPackage: fixture.promptPackage,
+    manifest: fixture.manifest,
+    waveId: fixture.waveId,
+    pricingSnapshot: changedPricingSnapshot,
+    retryReserve: fixture.estimate.retryReserve,
+    attemptCeilings: fixture.estimate.attemptCeilings.map(({ assetId, maximumUsd }) => ({ assetId, maximumUsd })),
+  });
+  const changedApprovalEvent = { ...fixture.approvalEvent, eventId: "approve-reference-drift-02", decidedAt: "2026-08-13T00:02:00.000Z" };
+  const changedApproval = issueCutsceneHumanApproval({
+    ...changedApprovalEvent,
+    decision: "approved",
+    plan: fixture.plan,
+    promptPackage: fixture.promptPackage,
+    manifest: fixture.manifest,
+    pricingSnapshot: changedPricingSnapshot,
+    estimate: changedEstimate,
+  });
+  let retryCalls = 0;
+  await assert.rejects(
+    () => retryCutsceneFailedAssets({
+      ...fixture,
+      artifactRoot,
+      workspaceRoot: artifactRoot,
+      failedAssetIds: [failedAssetId],
+      pricingSnapshot: changedPricingSnapshot,
+      estimate: changedEstimate,
+      approvalEvent: changedApprovalEvent,
+      receipt: changedApproval.receipt,
+      capability: changedApproval.capability,
+      now: "2026-08-13T00:03:00.000Z",
+      fetchFn: async () => { retryCalls += 1; return imageResponse({ requestId: "must-not-dispatch" }); },
+    }),
+    (error) => error?.code === "cutscene.usage_receipt_corrupt" && error.path.startsWith(`/cutscene/usage-receipts/${fixture.waveId}/`),
+  );
+  assert.equal(retryCalls, 0);
+  assert.deepEqual(await journalSnapshot(artifactRoot, fixture.waveId), beforeJournal);
+});
+
+test("a fresh named approval for the still-current full-wave retry preserves prior successes", async (t) => {
+  const artifactRoot = await mkdtemp(path.join(tmpdir(), "cutscene-retry-current-"));
+  t.after(() => rm(artifactRoot, { recursive: true, force: true }));
+  const fixture = stageFixture({ waveId: "reference-masters", retryReserve: 2, ceilings: [0.3, 0.5] });
+  let firstCalls = 0;
+  const first = await runApprovedCutsceneImageWave({
+    ...fixture, artifactRoot, workspaceRoot: artifactRoot,
+    fetchFn: async () => {
+      firstCalls += 1;
+      if (firstCalls === 1) return imageResponse({ status: 500, requestId: "req-current-500" });
+      if (firstCalls === 2) return imageResponse({ requestId: "req-current-recovered" });
+      throw new Error("transport-down");
+    },
+  });
+  const failedAssetId = first.providerResult.failures[0].asset_id;
+  const succeededAssetId = first.providerResult.results[0].asset_id;
+  const succeededOutput = fixture.manifest.assets.find(({ asset_id: assetId }) => assetId === succeededAssetId).output.path;
+  const preservedBytes = await readFile(path.join(artifactRoot, succeededOutput));
+  const freshApprovalEvent = { ...fixture.approvalEvent, eventId: "approve-reference-current-02", decidedAt: "2026-08-13T00:02:00.000Z" };
+  const freshApproval = issueCutsceneHumanApproval({
+    ...freshApprovalEvent,
+    decision: "approved",
+    plan: fixture.plan,
+    promptPackage: fixture.promptPackage,
+    manifest: fixture.manifest,
+    pricingSnapshot: fixture.pricingSnapshot,
+    estimate: fixture.estimate,
+  });
+  const retried = await retryCutsceneFailedAssets({
+    ...fixture,
+    artifactRoot,
+    workspaceRoot: artifactRoot,
+    failedAssetIds: [failedAssetId],
+    approvalEvent: freshApprovalEvent,
+    receipt: freshApproval.receipt,
+    capability: freshApproval.capability,
+    now: "2026-08-13T00:03:00.000Z",
+    fetchFn: async () => imageResponse({ requestId: "req-current-retry" }),
+  });
+  assert.deepEqual(retried.retriedIds, [failedAssetId]);
+  assert.deepEqual(retried.output.providerResult.results.map(({ asset_id: assetId }) => assetId), [failedAssetId]);
+  assert.deepEqual(await readFile(path.join(artifactRoot, succeededOutput)), preservedBytes);
+  assert.equal(retried.output.journal.retryConsumed, 2);
 });
 
 test("authorization without outcome consumes its full ceiling and blocks ordinary reentry while legacy records fail closed", async (t) => {
