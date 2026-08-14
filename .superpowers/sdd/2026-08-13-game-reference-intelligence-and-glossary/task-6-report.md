@@ -44,3 +44,86 @@ Implemented and verified. The source contracts now append the canonical `referen
 - `tooling/lib/js-import-scanner.mjs` provides the shared lexer used by both contract graph checks and isolation fixture runtime collection. It recognizes static/bare/export imports and literal dynamic imports with options, ignores comments/string/template text, and rejects nonliteral dynamic imports.
 - `tooling/lib/reference-intelligence-contract.mjs` owns the exact closed dual-layout parser/classifier. Direct tests fix the three allowed source-runtime tuples and reject contract or counterpart mutation. Tree audit consumes an opaque tuple set and isolation requires all three exact tuples to be consumed once; a byte-mutated source declaration now reaches semantic classification before byte verification.
 - Focused verification: 64 primary tests and 31 isolation/product tests pass; isolation smoke passes both products at 23 exact skills. MJS syntax, repository JSON parsing, and diff checks pass.
+
+## Fix round 2/5 — template-expression scanner and immutable authority
+
+### RED
+
+Command:
+
+```text
+node --test tests/unit/js-import-scanner.test.mjs tests/unit/reference-intelligence-contract.test.mjs
+```
+
+Output:
+
+```text
+✔ scanner returns each static form and literal dynamic import once
+✔ scanner ignores comments and strings but rejects nonliteral dynamic imports
+✖ scanner recursively scans JavaScript expressions inside template literals
+✔ classifier returns exactly the three closed inactive source-runtime tuples
+✔ classifier rejects changed contracts and missing installed counterparts
+✖ closed classifier authority is recursively immutable and cannot be poisoned
+ℹ tests 6
+ℹ pass 4
+ℹ fail 2
+
+scanner failure: actual specifiers [] vs expected ['./hidden.mjs', './nested.mjs'].
+classifier failure: Object.isFrozen(referenceIntelligenceContractLayouts[...].source.runtimes) was false.
+```
+
+### GREEN
+
+- `js-import-scanner.mjs` now follows nested template substitutions and recursively tokenizes only the `${...}` JavaScript expression. Its boundary scanner balances braces while skipping quoted strings, nested templates, comments, and regex literals; static and dynamic imports found in those expressions use their original locations. Template text and `/import(foo)/` remain inert.
+- The closed classifier uses a private recursively frozen layout authority. The exported layout data is a separate recursively frozen snapshot, so an external mutation attempt cannot change authorization. The exact three source-runtime tuples remain unchanged.
+
+Command:
+
+```text
+node --test tests/unit/js-import-scanner.test.mjs tests/unit/reference-intelligence-contract.test.mjs
+```
+
+Output:
+
+```text
+✔ scanner returns each static form and literal dynamic import once
+✔ scanner ignores comments and strings but rejects nonliteral dynamic imports
+✔ scanner recursively scans JavaScript expressions inside template literals
+✔ classifier returns exactly the three closed inactive source-runtime tuples
+✔ classifier rejects changed contracts and missing installed counterparts
+✔ closed classifier authority is recursively immutable and cannot be poisoned
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0
+```
+
+Command:
+
+```text
+node --test tests/unit/build-product.test.mjs tests/contracts/shared-contract.test.mjs tests/contracts/reference-intelligence-package.test.mjs tests/e2e/suite/memory-install-lifecycle.e2e.test.mjs tests/unit/js-import-scanner.test.mjs tests/unit/reference-intelligence-contract.test.mjs
+```
+
+Output:
+
+```text
+ℹ tests 66
+ℹ pass 66
+ℹ fail 0
+```
+
+Command:
+
+```text
+node --test tests/isolation/plugin-smoke.test.mjs tests/products/studio/product-contract.test.mjs tests/products/career/product-contract.test.mjs
+node tooling/isolation-smoke.mjs
+```
+
+Output:
+
+```text
+ℹ tests 31
+ℹ pass 31
+ℹ fail 0
+game-design-career: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
+game-design-studio: PASS (23 exact skills, skillstead:55, archify:60 vendor files, network:0, canonical MD + quality profile + hooks)
+```

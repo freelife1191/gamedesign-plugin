@@ -1,6 +1,12 @@
 import path from "node:path";
 
-const layouts = Object.freeze({
+function deepFreeze(value) {
+  if (!value || typeof value !== "object") return value;
+  for (const nested of Object.values(value)) deepFreeze(nested);
+  return Object.freeze(value);
+}
+
+const layouts = deepFreeze({
   "analyze-game-design-references": Object.freeze({
     installed: Object.freeze({ runtimes: ["../../scripts/analyze-game-design-references.mjs"], references: ["../../references/shared/reference-intelligence/references/evidence-policy.md", "../../references/shared/reference-intelligence/references/reference-analysis-flow.md"], templates: ["../../references/shared/reference-intelligence/templates/analysis-priority.md", "../../references/shared/reference-intelligence/templates/brief.md", "../../references/shared/reference-intelligence/templates/comparison-matrix.md", "../../references/shared/reference-intelligence/templates/evidence-register.yml", "../../references/shared/reference-intelligence/templates/reference-set.yml", "../../references/shared/reference-intelligence/templates/system-inventory.json", "../../references/shared/reference-intelligence/templates/transfer-decisions.md", "../../references/shared/reference-intelligence/templates/verification-queue.md"], schemas: ["../../references/shared/reference-intelligence/schema/reference-analysis.schema.json"], catalogs: ["../../references/shared/reference-intelligence/catalog/overlays/business-model.json", "../../references/shared/reference-intelligence/catalog/overlays/genre.json", "../../references/shared/reference-intelligence/catalog/overlays/platform.json", "../../references/shared/reference-intelligence/catalog/overlays/play-mode.json", "../../references/shared/reference-intelligence/catalog/source-register.json", "../../references/shared/reference-intelligence/catalog/system-atlas.json"] }),
     source: Object.freeze({ runtimes: ["../../../scripts/analyze-game-design-references.mjs"], references: ["../../references/evidence-policy.md", "../../references/reference-analysis-flow.md"], templates: ["../../templates/analysis-priority.md", "../../templates/brief.md", "../../templates/comparison-matrix.md", "../../templates/evidence-register.yml", "../../templates/reference-set.yml", "../../templates/system-inventory.json", "../../templates/transfer-decisions.md", "../../templates/verification-queue.md"], schemas: ["../../schema/reference-analysis.schema.json"], catalogs: ["../../catalog/overlays/business-model.json", "../../catalog/overlays/genre.json", "../../catalog/overlays/platform.json", "../../catalog/overlays/play-mode.json", "../../catalog/source-register.json", "../../catalog/system-atlas.json"] }),
@@ -42,4 +48,4 @@ export function classifyInactiveReferenceIntelligenceSourcePaths({ packageRoot, 
   return Object.freeze(expected.source.runtimes.map((sourcePath) => Object.freeze({ skillPath: relativeSkill, sourcePath, tuple: key({ skillPath: relativeSkill, sourcePath }) })));
 }
 
-export const referenceIntelligenceContractLayouts = layouts;
+export const referenceIntelligenceContractLayouts = deepFreeze(structuredClone(layouts));

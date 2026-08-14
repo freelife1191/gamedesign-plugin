@@ -30,3 +30,9 @@ test("scanner ignores comments and strings but rejects nonliteral dynamic import
   assert.deepEqual(result.specifiers, []);
   assert.deepEqual(result.errors.map(({ code }) => code), ["dynamic-import-nonliteral"]);
 });
+
+test("scanner recursively scans JavaScript expressions inside template literals", () => {
+  const result = scanJavaScriptImports("const text = `x ${await import(\"./hidden.mjs\")} ${() => import(`./nested.mjs`)} ${({ pattern: /import(foo)/, nested: { closing: \"}\" } }).pattern} ${import(path)} y`; const regex = /import(foo)/;");
+  assert.deepEqual(result.specifiers.map(({ specifier }) => specifier), ["./hidden.mjs", "./nested.mjs"]);
+  assert.deepEqual(result.errors.map(({ code }) => code), ["dynamic-import-nonliteral"]);
+});

@@ -38,3 +38,27 @@ test("classifier rejects changed contracts and missing installed counterparts", 
   installedCounterparts.delete([...installedCounterparts][0]);
   assert.throws(() => classifyInactiveReferenceIntelligenceSourcePaths({ packageRoot: repoRoot, skillPath, contract, installedCounterparts }), /installed counterpart mismatch/u);
 });
+
+function assertRecursivelyFrozen(value) {
+  assert.equal(Object.isFrozen(value), true);
+  for (const nested of Object.values(value)) {
+    if (nested && typeof nested === "object") assertRecursivelyFrozen(nested);
+  }
+}
+
+test("closed classifier authority is recursively immutable and cannot be poisoned", async () => {
+  assertRecursivelyFrozen(referenceIntelligenceContractLayouts);
+  assert.throws(() => { referenceIntelligenceContractLayouts["analyze-game-design-references"].source.runtimes[0] = "../../../scripts/poison.mjs"; }, TypeError);
+  const skillId = "analyze-game-design-references";
+  const skillPath = path.join(repoRoot, "skills", skillId, "SKILL.md");
+  const contract = parseReferenceIntelligenceContract(await readFile(path.join(repoRoot, "shared/reference-intelligence/skills", skillId, "SKILL.md"), "utf8"));
+  assert.deepEqual(
+    classifyInactiveReferenceIntelligenceSourcePaths({
+      packageRoot: repoRoot,
+      skillPath,
+      contract,
+      installedCounterparts: counterparts(repoRoot, skillPath, referenceIntelligenceContractLayouts[skillId]),
+    }).map(({ sourcePath }) => sourcePath),
+    ["../../../scripts/analyze-game-design-references.mjs"],
+  );
+});

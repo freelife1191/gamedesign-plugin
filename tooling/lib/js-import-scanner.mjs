@@ -3,36 +3,119 @@ function location(source, index) {
   return { column: index - (prefix.lastIndexOf("\n") + 1) + 1, line: prefix.split("\n").length };
 }
 
-function readQuoted(source, index, quote) {
+function readQuoted(source, index, quote, end = source.length) {
   let value = "";
-  for (let cursor = index + 1; cursor < source.length; cursor += 1) {
+  for (let cursor = index + 1; cursor < end; cursor += 1) {
     const character = source[cursor];
     if (character === "\\") { value += source[cursor + 1] ?? ""; cursor += 1; continue; }
     if (character === quote) return { end: cursor + 1, value };
     if (character === "\n" || character === "\r") return { end: cursor + 1, value, invalid: true };
     value += character;
   }
-  return { end: source.length, value, invalid: true };
+  return { end, value, invalid: true };
 }
 
-function tokens(source) {
-  const result = [];
-  for (let index = 0; index < source.length;) {
+function previousSignificant(source, index, start) {
+  let cursor = index - 1;
+  while (cursor >= start && /\s/u.test(source[cursor])) cursor -= 1;
+  if (cursor < start) return "";
+  const end = cursor + 1;
+  if (/[A-Za-z0-9_$]/u.test(source[cursor])) {
+    while (cursor >= start && /[A-Za-z0-9_$]/u.test(source[cursor])) cursor -= 1;
+    return source.slice(cursor + 1, end);
+  }
+  return source[cursor];
+}
+
+function isRegexStart(source, index, start) {
+  const previous = previousSignificant(source, index, start);
+  return previous === "" || /[([{:;,!?=+*%&|^~<>]/u.test(previous)
+    || ["case", "delete", "do", "else", "in", "instanceof", "new", "of", "return", "throw", "typeof", "void", "yield"].includes(previous);
+}
+
+function skipRegex(source, index, end) {
+  let inClass = false;
+  for (let cursor = index + 1; cursor < end; cursor += 1) {
+    const character = source[cursor];
+    if (character === "\\") { cursor += 1; continue; }
+    if (character === "[") { inClass = true; continue; }
+    if (character === "]") { inClass = false; continue; }
+    if (character === "/" && !inClass) {
+      cursor += 1;
+      while (/[A-Za-z]/u.test(source[cursor] ?? "")) cursor += 1;
+      return cursor;
+    }
+    if (character === "\n" || character === "\r") return cursor;
+  }
+  return end;
+}
+
+function skipTemplate(source, index, end) {
+  for (let cursor = index + 1; cursor < end; cursor += 1) {
+    const character = source[cursor];
+    if (character === "\\") { cursor += 1; continue; }
+    if (character === "`") return cursor + 1;
+    if (character === "$" && source[cursor + 1] === "{") {
+      cursor = findTemplateExpressionEnd(source, cursor + 2, end);
+    }
+  }
+  return end;
+}
+
+function findTemplateExpressionEnd(source, start, end) {
+  let depth = 1;
+  for (let cursor = start; cursor < end; cursor += 1) {
+    const character = source[cursor];
+    if (character === "'" || character === '"') { cursor = readQuoted(source, cursor, character, end).end - 1; continue; }
+    if (character === "`") { cursor = skipTemplate(source, cursor, end) - 1; continue; }
+    if (character === "/" && source[cursor + 1] === "/") { const newline = source.indexOf("\n", cursor + 2); cursor = (newline < 0 || newline >= end ? end : newline) - 1; continue; }
+    if (character === "/" && source[cursor + 1] === "*") { const close = source.indexOf("*/", cursor + 2); cursor = (close < 0 || close >= end ? end : close + 2) - 1; continue; }
+    if (character === "/" && isRegexStart(source, cursor, start)) { cursor = skipRegex(source, cursor, end) - 1; continue; }
+    if (character === "{") { depth += 1; continue; }
+    if (character === "}" && --depth === 0) return cursor;
+  }
+  return end;
+}
+
+function readTemplate(source, index, end, result) {
+  let substitution = false;
+  let value = "";
+  let cursor = index + 1;
+  for (; cursor < end; cursor += 1) {
+    const character = source[cursor];
+    if (character === "\\") { value += source[cursor + 1] ?? ""; cursor += 1; continue; }
+    if (character === "`") return { end: cursor + 1, substitution, value };
+    if (character === "$" && source[cursor + 1] === "{") {
+      substitution = true;
+      const expressionStart = cursor + 2;
+      const expressionEnd = findTemplateExpressionEnd(source, expressionStart, end);
+      tokens(source, expressionStart, expressionEnd, result);
+      cursor = expressionEnd;
+      continue;
+    }
+    value += character;
+  }
+  return { end, substitution, value, invalid: true };
+}
+
+function tokens(source, start = 0, end = source.length, result = []) {
+  for (let index = start; index < end;) {
     const character = source[index];
     if (/\s/u.test(character)) { index += 1; continue; }
-    if (character === "/" && source[index + 1] === "/") { index = source.indexOf("\n", index + 2); if (index < 0) break; continue; }
-    if (character === "/" && source[index + 1] === "*") { const end = source.indexOf("*/", index + 2); index = end < 0 ? source.length : end + 2; continue; }
+    if (character === "/" && source[index + 1] === "/") { const newline = source.indexOf("\n", index + 2); index = newline < 0 || newline >= end ? end : newline; continue; }
+    if (character === "/" && source[index + 1] === "*") { const close = source.indexOf("*/", index + 2); index = close < 0 || close >= end ? end : close + 2; continue; }
+    if (character === "/" && isRegexStart(source, index, start)) { index = skipRegex(source, index, end); continue; }
     if (character === "'" || character === '"') {
-      const quoted = readQuoted(source, index, character);
+      const quoted = readQuoted(source, index, character, end);
       result.push({ ...quoted, index, type: "string" }); index = quoted.end; continue;
     }
     if (character === "`") {
-      const quoted = readQuoted(source, index, "`");
-      result.push({ ...quoted, index, type: "template", substitution: quoted.value.includes("${") }); index = quoted.end; continue;
+      const template = readTemplate(source, index, end, result);
+      result.push({ ...template, index, type: "template" }); index = template.end; continue;
     }
     if (/[A-Za-z_$]/u.test(character)) {
-      let end = index + 1; while (/[A-Za-z0-9_$]/u.test(source[end] ?? "")) end += 1;
-      result.push({ index, type: "word", value: source.slice(index, end) }); index = end; continue;
+      let tokenEnd = index + 1; while (/[A-Za-z0-9_$]/u.test(source[tokenEnd] ?? "")) tokenEnd += 1;
+      result.push({ index, type: "word", value: source.slice(index, tokenEnd) }); index = tokenEnd; continue;
     }
     result.push({ index, type: "punct", value: character }); index += 1;
   }
