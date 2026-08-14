@@ -92,11 +92,12 @@ export async function runApprovedCutsceneImageWave(input = {}) {
   // authority check: prompt/estimate-only is a zero-provider, zero-write mode.
   assertCurrent(input);
   const provider = providerFrom(input);
+  const wave = selectedWave(input.plan, input.waveId, input.selectedAssetIds, input.retry === true);
   const attempts = new Map();
   let callerStateValidated = false;
   const beforeProvider = async ({ asset_id, attempt_ordinal }) => {
     const approved = assertCurrent(input);
-    const ledger = await receiptLedger(input.artifactRoot, input.waveId, input.selectedAssetIds);
+    const ledger = await receiptLedger(input.artifactRoot, input.waveId, wave.assetIds);
     if (!callerStateValidated && input.attemptState && (input.attemptState.failedAttempts !== ledger.failedAttempts || input.attemptState.accumulatedUsd !== ledger.accumulatedUsd)) throw coded("cutscene.attempt_state_stale", "/attemptState");
     callerStateValidated = true;
     assertAttemptState(ledger, input.estimate, approved, attempt_ordinal);

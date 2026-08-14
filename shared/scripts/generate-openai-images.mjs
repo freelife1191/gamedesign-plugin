@@ -283,7 +283,8 @@ async function requestImage({ job, apiKey, model, quality, fetchFn, sleepFn, now
     clearTimeout(timeout);
     const providerRequestId = headerValue(response, "x-request-id");
     const safeProviderRequestId = providerRequestId && safeRequestId.test(providerRequestId) ? providerRequestId : "no-request-id";
-    await afterProvider?.({ ...dispatch, asset_id: job.asset_id, attempt_ordinal: attempts, providerRequestId: safeProviderRequestId, outcome: response?.status >= 200 && response.status < 300 && parsed.ok ? "success" : "provider-failure", usage: parsed.ok ? openAiUsage(parsed.value) : undefined });
+    const validImageResponse = parsed.ok && Array.isArray(parsed.value.data) && parsed.value.data.length === 1 && typeof parsed.value.data[0]?.b64_json === "string";
+    await afterProvider?.({ ...dispatch, asset_id: job.asset_id, attempt_ordinal: attempts, providerRequestId: safeProviderRequestId, outcome: response?.status >= 200 && response.status < 300 && validImageResponse ? "success" : "provider-failure", usage: parsed.ok ? openAiUsage(parsed.value) : undefined });
     if (timedOut) return { ok: false, attempts, generationState: "generation-failed", reason: "provider-timeout" };
     if (!parsed.ok) {
       if (response?.status >= 500 && attempts < maximumAttempts) {

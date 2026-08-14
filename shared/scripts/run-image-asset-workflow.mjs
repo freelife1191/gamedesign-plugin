@@ -473,14 +473,20 @@ async function publishHostOutputs(value, jobs, prepared) {
 async function generateHostWithRetries({ root, jobs, prepared, hostGenerate, beforeProvider, afterProvider }) {
   let outcome;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
+    let dispatches = [];
+    let physicalDispatch = false;
     try {
       const callback = await hostJobsForCallback(root, jobs);
-      const dispatches = await Promise.all(jobs.map((job) => beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempt })));
+      dispatches = await Promise.all(jobs.map((job) => beforeProvider?.({ asset_id: job.asset_id, attempt_ordinal: attempt })));
       await callback.verify();
-      outcome = await publishHostOutputs(validateHostResult(await hostGenerate({ jobs: callback.jobs }), jobs), jobs, prepared);
+      physicalDispatch = true;
+      const hostResult = await hostGenerate({ jobs: callback.jobs });
+      outcome = await publishHostOutputs(validateHostResult(hostResult, jobs), jobs, prepared);
       await Promise.all(jobs.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, attempt_ordinal: attempt, providerRequestId: "no-request-id", outcome: outcome.results.some(({ asset_id }) => asset_id === job.asset_id) ? "success" : "provider-failure", usage: undefined })));
     } catch (error) {
+      if (physicalDispatch) await Promise.all(jobs.map((job, index) => afterProvider?.({ ...dispatches[index], asset_id: job.asset_id, attempt_ordinal: attempt, providerRequestId: "no-request-id", outcome: "provider-failure", usage: undefined })));
       if (error?.code) throw error;
+      if (physicalDispatch) throw error;
       outcome = { results: [], failures: jobs.map(({ asset_id }) => ({ asset_id, generation_state: "generation-failed", reason: "host-callback-failed", provenance: { provider: "codex-host" } })) };
     }
     if (outcome.results.length > 0 || outcome.failures.some(({ generation_state }) => generation_state !== "generation-failed") || attempt === 3) return outcome;
