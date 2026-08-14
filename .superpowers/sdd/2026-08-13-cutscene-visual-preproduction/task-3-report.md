@@ -30,3 +30,25 @@
 ## 위험 / 후속 작업
 
 - 실제 request token budget, retry reserve/cap preflight, provider usage receipt 쓰기는 Task 4 dispatch 경계의 책임이다. 이 Task는 network/provider call을 수행하지 않는다.
+
+## Fix 1 — closed authority and canonical snapshot remediation
+
+### 변경
+
+- public capability mint 모듈을 제거하고, `WeakMap`과 capability 발급을 `issueCutsceneHumanApproval`의 private closure로 이동했다.
+- legacy `{sha256,waves}` authority fallback을 제거했다. estimate와 approval binding은 현재 closed plan 및 Task 2 generation-ready prompt package를 함께 검증한다.
+- pricing snapshot, cost estimate, prompt package의 digest를 caller SHA가 아니라 exact closed content의 canonical SHA-256으로 재계산한다.
+- package의 cutscene ID, plan digest, DAG digest, reference asset set, prompt ID/order/hash를 plan과 대조한다. stale package는 새 approval을 만들 수 없다.
+- reviewer/actor는 기존 named-human NFKC/canonical-key 방식에 맞춰 separator·suffix role variants를 차단하고, 모든 approval/pricing timestamp는 RFC3339 validator를 사용한다.
+
+### RED/GREEN
+
+- RED: 실제 plan/package fixture로 전환한 focused suite는 public mint, legacy wrapper acceptance, mutable pricing/estimate digest, stale package, role-like identity, loose timestamp assertions에서 7개 실패했다.
+- GREEN: `node --test tests/unit/cutscene-generation-approval.test.mjs` — 9 passed, 0 failed.
+- 최종: cutscene/image-assets 관련 80개 테스트, script syntax, schema JSON parsing, `git diff --check`가 통과했다.
+
+### 자체 검토
+
+- capability는 issuer 외부에서 등록하거나 복원할 수 없고, receipt/capability proxy·clone은 live pair 검사에서 거절된다.
+- snapshot units/retrievedAt와 estimate minimum/expected/maximum을 각각 같은 caller SHA로 바꾸는 적대 테스트가 canonical digest mismatch를 검출한다.
+- 승인 freshness는 정확히 15분까지, pricing freshness는 정확히 24시간까지 허용하며 그 다음 밀리초부터 stale이다.
